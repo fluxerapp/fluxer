@@ -1,0 +1,106 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.label {
+	margin-bottom: 0.5rem;
+	font-weight: 500;
+	color: var(--text-primary);
+	font-size: 0.875rem;
+}
+
+.content {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}
+
+.actionButton {
+	align-self: flex-start;
+}
+
+.testInfo {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.levelInfo {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	font-size: 0.875rem;
+}
+
+.levelLabel {
+	color: var(--text-primary-muted);
+}
+
+.levelStatus {
+	font-weight: 500;
+}
+
+.levelQuiet {
+	color: rgb(107 114 128);
+}
+
+.levelGood {
+	color: rgb(34 197 94);
+}
+
+.levelOptimal {
+	color: rgb(234 179 8);
+}
+
+.levelLoud {
+	color: rgb(239 68 68);
+}
+
+.meterContainer {
+	position: relative;
+	height: 1.5rem;
+	width: 100%;
+	overflow: hidden;
+	border-radius: 0.5rem;
+	background-color: var(--background-modifier-accent);
+}
+
+.meterBar {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	height: 100%;
+	transition:
+		width 75ms ease-out,
+		background-color 75ms ease-out;
+}
+
+.meterPeak {
+	position: absolute;
+	bottom: 0;
+	height: 100%;
+	width: 2px;
+	background-color: white;
+	opacity: 0.75;
+	transition: left 1500ms ease-out;
+}
+
+.helpText {
+	color: var(--text-primary-muted);
+	font-size: 0.75rem;
+}

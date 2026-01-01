@@ -1,0 +1,75 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.container {
+	max-width: 288px;
+	padding: 16px;
+	overflow: hidden;
+	background: var(--background-secondary);
+	font-weight: 600;
+	color: var(--text-primary);
+	border-radius: 0.75rem;
+	border: 1px solid var(--background-modifier-accent);
+	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+.emoji {
+	width: 32px;
+	height: 32px;
+}
+
+.textContainer {
+	margin-left: 12px;
+	font-size: 14px;
+	line-height: 1.28571;
+	color: var(--text-primary);
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	min-height: 56px;
+	min-width: 160px;
+	justify-content: center;
+}
+
+.loading {
+	align-items: center;
+}
+
+.subtext {
+	font-size: 12px;
+	font-weight: 400;
+	color: var(--text-secondary);
+	opacity: 0.8;
+}
+
+.inner {
+	pointer-events: all;
+	display: flex;
+	align-items: center;
+	word-break: break-word;
+	hyphens: auto;
+}
+
+button.inner {
+	cursor: pointer;
+}
+
+button.inner:hover a {
+	text-decoration: underline;
+}

@@ -1,0 +1,64 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.tooltipContent {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 6px;
+}
+
+.label {
+	color: var(--text-primary);
+}
+
+.keybindHint {
+	display: inline-flex;
+	align-items: center;
+	gap: 2px;
+}
+
+.key {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 20px;
+	height: 20px;
+	padding: 0 5px;
+	border-radius: 4px;
+	background-color: var(--background-secondary);
+	color: var(--text-secondary);
+	font-family: inherit;
+	font-size: 11px;
+	font-weight: 600;
+	line-height: 1;
+	text-transform: uppercase;
+}
+
+.keySymbol {
+	composes: key;
+	font-size: 13px;
+	min-width: 22px;
+}
+
+:global(.theme-light) .key,
+:global(.theme-light) .keySymbol {
+	background-color: hsl(0, 0%, 18%);
+	color: var(--text-on-brand-primary);
+}

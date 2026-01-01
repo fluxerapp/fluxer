@@ -1,0 +1,278 @@
+name: deploy gateway
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - canary
+      - main
+    paths:
+      - 'fluxer_gateway/**'
+
+concurrency:
+  group: deploy-gateway
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy (hot patch)
+    runs-on: blacksmith-2vcpu-ubuntu-2404
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: fluxer_gateway
+
+      - name: Set up Erlang
+        uses: erlef/setup-beam@v1
+        with:
+          otp-version: "28"
+          rebar3-version: "3.24.0"
+
+      - name: Compile
+        working-directory: fluxer_gateway
+        run: |
+          set -euo pipefail
+          rebar3 as prod compile
+
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.9.1
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY_SERVER }}
+
+      - name: Add server to known hosts
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+
+      - name: Deploy
+        env:
+          SERVER: ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}
+          GATEWAY_ADMIN_SECRET: ${{ secrets.GATEWAY_ADMIN_SECRET }}
+        run: |
+          set -euo pipefail
+
+          CONTAINER_ID="$(ssh "${SERVER}" "docker ps -q --filter label=com.docker.swarm.service.name=fluxer-gateway_app | head -1")"
+          if [ -z "${CONTAINER_ID}" ]; then
+            echo "::error::No running container found for service fluxer-gateway_app"
+            ssh "${SERVER}" "docker ps --filter 'name=fluxer-gateway_app' --format '{{.ID}} {{.Names}} {{.Status}}'" || true
+            exit 1
+          fi
+          echo "Container: ${CONTAINER_ID}"
+
+          LOCAL_MD5_LINES="$(
+            erl -noshell -eval '
+              Files = filelib:wildcard("fluxer_gateway/_build/prod/lib/fluxer_gateway/ebin/*.beam"),
+              lists:foreach(
+                fun(F) ->
+                  {ok, {M, Md5}} = beam_lib:md5(F),
+                  Hex = binary:encode_hex(Md5, lowercase),
+                  io:format("~s ~s ~s~n", [atom_to_list(M), binary_to_list(Hex), F])
+                end,
+                Files
+              ),
+              halt().'
+          )"
+
+          REMOTE_MD5_LINES="$(
+            ssh "${SERVER}" "docker exec ${CONTAINER_ID} /opt/fluxer_gateway/bin/fluxer_gateway eval '
+              Mods = hot_reload:get_loaded_modules(),
+              lists:foreach(
+                fun(M) ->
+                  case hot_reload:get_module_info(M) of
+                    {ok, Info} ->
+                      V = maps:get(loaded_md5, Info),
+                      S = case V of
+                            null -> \"null\";
+                            B when is_binary(B) -> binary_to_list(B)
+                          end,
+                      io:format(\"~s ~s~n\", [atom_to_list(M), S]);
+                    _ ->
+                      ok
+                  end
+                end,
+                Mods
+              ),
+              ok.
+            ' " | tr -d '\r'
+          )"
+
+          LOCAL_MD5_FILE="$(mktemp)"
+          REMOTE_MD5_FILE="$(mktemp)"
+          CHANGED_FILE_LIST="$(mktemp)"
+          CHANGED_MAIN_LIST="$(mktemp)"
+          CHANGED_SELF_LIST="$(mktemp)"
+          RELOAD_RESULT_MAIN="$(mktemp)"
+          RELOAD_RESULT_SELF="$(mktemp)"
+          trap 'rm -f "${LOCAL_MD5_FILE}" "${REMOTE_MD5_FILE}" "${CHANGED_FILE_LIST}" "${CHANGED_MAIN_LIST}" "${CHANGED_SELF_LIST}" "${RELOAD_RESULT_MAIN}" "${RELOAD_RESULT_SELF}"' EXIT
+
+          printf '%s' "${LOCAL_MD5_LINES}" > "${LOCAL_MD5_FILE}"
+          printf '%s' "${REMOTE_MD5_LINES}" > "${REMOTE_MD5_FILE}"
+
+          python3 - <<'PY' "${LOCAL_MD5_FILE}" "${REMOTE_MD5_FILE}" "${CHANGED_FILE_LIST}"
+          import sys
+
+          local_path, remote_path, out_path = sys.argv[1:4]
+
+          remote = {}
+          with open(remote_path, "r", encoding="utf-8") as f:
+              for line in f:
+                  line = line.strip()
+                  if not line:
+                      continue
+                  parts = line.split(None, 1)
+                  if len(parts) != 2:
+                      continue
+                  mod, md5 = parts
+                  remote[mod] = md5.strip()
+
+          changed_paths = []
+          with open(local_path, "r", encoding="utf-8") as f:
+              for line in f:
+                  line = line.strip()
+                  if not line:
+                      continue
+                  parts = line.split(" ", 2)
+                  if len(parts) != 3:
+                      continue
+                  mod, md5, path = parts
+                  r = remote.get(mod)
+                  if r is None or r == "null" or r != md5:
+                      changed_paths.append(path)
+
+          with open(out_path, "w", encoding="utf-8") as f:
+              for p in changed_paths:
+                  f.write(p + "\n")
+          PY
+
+          mapfile -t CHANGED_FILES < "${CHANGED_FILE_LIST}"
+
+          if [ "${#CHANGED_FILES[@]}" -eq 0 ]; then
+            echo "No BEAM changes detected, nothing to hot-reload."
+            exit 0
+          fi
+
+          echo "Changed modules count: ${#CHANGED_FILES[@]}"
+
+          while IFS= read -r p; do
+            [ -n "${p}" ] || continue
+            m="$(basename "${p}")"
+            m="${m%.beam}"
+            if [ "${m}" = "hot_reload" ] || [ "${m}" = "hot_reload_handler" ]; then
+              printf '%s\n' "${p}" >> "${CHANGED_SELF_LIST}"
+            else
+              printf '%s\n' "${p}" >> "${CHANGED_MAIN_LIST}"
+            fi
+          done < "${CHANGED_FILE_LIST}"
+
+          build_json() {
+            python3 - "$1" <<'PY'
+          import sys, json, base64, os
+          list_path = sys.argv[1]
+          beams = []
+          with open(list_path, "r", encoding="utf-8") as f:
+              for path in f:
+                  path = path.strip()
+                  if not path:
+                      continue
+                  mod = os.path.basename(path)
+                  if not mod.endswith(".beam"):
+                      continue
+                  mod = mod[:-5]
+                  with open(path, "rb") as bf:
+                      b = bf.read()
+                  beams.append({"module": mod, "beam_b64": base64.b64encode(b).decode("ascii")})
+          print(json.dumps({"beams": beams, "purge": "soft"}, separators=(",", ":")))
+          PY
+          }
+
+          strict_verify() {
+            python3 -c '
+          import json, sys
+          raw = sys.stdin.read()
+          if not raw.strip():
+              print("::error::Empty reload response")
+              raise SystemExit(1)
+          try:
+              data = json.loads(raw)
+          except Exception as e:
+              print(f"::error::Invalid JSON reload response: {e}")
+              raise SystemExit(1)
+          results = data.get("results", [])
+          if not isinstance(results, list):
+              print("::error::Reload response missing results array")
+              raise SystemExit(1)
+          bad = [
+              r for r in results
+              if r.get("status") != "ok"
+              or r.get("verified") is not True
+              or r.get("purged_old_code") is not True
+              or (r.get("lingering_count") or 0) != 0
+          ]
+          if bad:
+              print("::error::Hot reload verification failed")
+              print(json.dumps(bad, indent=2))
+              raise SystemExit(1)
+          print(f"Verified {len(results)} modules")
+          '
+          }
+
+          self_verify() {
+            python3 -c '
+          import json, sys
+          raw = sys.stdin.read()
+          if not raw.strip():
+              print("::error::Empty reload response")
+              raise SystemExit(1)
+          try:
+              data = json.loads(raw)
+          except Exception as e:
+              print(f"::error::Invalid JSON reload response: {e}")
+              raise SystemExit(1)
+          results = data.get("results", [])
+          if not isinstance(results, list):
+              print("::error::Reload response missing results array")
+              raise SystemExit(1)
+          bad = [
+              r for r in results
+              if r.get("status") != "ok"
+              or r.get("verified") is not True
+          ]
+          if bad:
+              print("::error::Hot reload verification failed")
+              print(json.dumps(bad, indent=2))
+              raise SystemExit(1)
+          warns = [
+              r for r in results
+              if r.get("purged_old_code") is not True
+              or (r.get("lingering_count") or 0) != 0
+          ]
+          if warns:
+              print("::warning::Self-reload modules may linger until request completes")
+              print(json.dumps(warns, indent=2))
+          print(f"Verified {len(results)} self modules")
+          '
+          }
+
+          if [ -s "${CHANGED_MAIN_LIST}" ]; then
+            if ! build_json "${CHANGED_MAIN_LIST}" | ssh "${SERVER}" "docker exec -i ${CONTAINER_ID} curl -fsS -X POST -H 'Authorization: Bearer ${GATEWAY_ADMIN_SECRET}' -H 'Content-Type: application/json' --data @- http://localhost:8081/_admin/reload" | tee "${RELOAD_RESULT_MAIN}" | strict_verify; then
+              echo "::group::Hot reload response (main)"
+              cat "${RELOAD_RESULT_MAIN}" || true
+              echo "::endgroup::"
+              exit 1
+            fi
+          fi
+
+          if [ -s "${CHANGED_SELF_LIST}" ]; then
+            if ! build_json "${CHANGED_SELF_LIST}" | ssh "${SERVER}" "docker exec -i ${CONTAINER_ID} curl -fsS -X POST -H 'Authorization: Bearer ${GATEWAY_ADMIN_SECRET}' -H 'Content-Type: application/json' --data @- http://localhost:8081/_admin/reload" | tee "${RELOAD_RESULT_SELF}" | self_verify; then
+              echo "::group::Hot reload response (self)"
+              cat "${RELOAD_RESULT_SELF}" || true
+              echo "::endgroup::"
+              exit 1
+            fi
+          fi

@@ -1,0 +1,164 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.container {
+	display: flex;
+	flex-direction: column;
+	gap: 1.25rem;
+	max-width: 32rem;
+	margin: 0 auto;
+	text-align: left;
+}
+
+.stepIndicator {
+	font-size: 0.75rem;
+	line-height: 1rem;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--text-muted);
+	text-align: center;
+}
+
+.title {
+	margin-bottom: 0.25rem;
+	text-align: center;
+	font-size: 1.25rem;
+	line-height: 1.75rem;
+	font-weight: 600;
+	letter-spacing: 0.025em;
+	color: var(--text-primary);
+}
+
+.description {
+	margin-bottom: 0.75rem;
+	text-align: center;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--text-tertiary);
+}
+
+.metaLine {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--text-tertiary);
+	text-align: center;
+}
+
+.metaValue {
+	color: var(--text-primary);
+	font-weight: 500;
+}
+
+.metaSpacer {
+	color: var(--text-muted);
+}
+
+.form {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+}
+
+.footer {
+	margin-top: 1.25rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	align-items: center;
+	text-align: center;
+}
+
+.footerRow {
+	display: flex;
+	gap: 1rem;
+	justify-content: center;
+	flex-wrap: wrap;
+}
+
+.link {
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--text-tertiary);
+	text-decoration: none;
+	background: none;
+	border: none;
+	cursor: pointer;
+	transition-property: color;
+	transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+	transition-duration: 150ms;
+	padding: 0;
+}
+
+.link:hover {
+	color: var(--text-primary);
+	text-decoration: underline;
+}
+
+.link:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+	text-decoration: none;
+}
+
+.errorBox {
+	margin-bottom: 0.5rem;
+	padding: 0.75rem 1rem;
+	border-radius: var(--radius-lg);
+	background-color: color-mix(in srgb, var(--status-danger) 15%, transparent);
+	color: var(--status-danger);
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	text-align: left;
+}
+
+.successBox {
+	margin-top: 0.25rem;
+	padding: 0.75rem 1rem;
+	border-radius: var(--radius-lg);
+	background-color: color-mix(in srgb, var(--status-success) 12%, transparent);
+	color: var(--text-primary);
+	text-align: left;
+}
+
+.successLabel {
+	font-size: 0.75rem;
+	line-height: 1rem;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--text-tertiary);
+	margin-bottom: 0.25rem;
+}
+
+.successValue {
+	font-size: 1rem;
+	line-height: 1.5rem;
+	font-weight: 600;
+	letter-spacing: 0.02em;
+	word-break: break-word;
+}
+
+.helperText {
+	font-size: 0.75rem;
+	color: var(--text-muted);
+	text-align: left;
+}

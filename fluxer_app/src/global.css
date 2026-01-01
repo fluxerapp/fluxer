@@ -1,0 +1,394 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+html,
+body {
+	touch-action: pan-y;
+}
+
+button,
+input,
+select,
+textarea,
+a {
+	touch-action: manipulation;
+}
+
+:root {
+	--saturation-factor: 1;
+	--user-select: auto;
+
+	--z-index-base: 0;
+	--z-index-elevated-1: 10;
+	--z-index-elevated-2: 20;
+	--z-index-elevated-3: 30;
+
+	--z-index-modal: 10000;
+	--z-index-popout: 15000;
+	--z-index-modal-swap: 25000;
+	--z-index-popout-above-swap: 30000;
+	--z-index-overlay: 40000;
+	--z-index-tooltip: 45000;
+	--z-index-toast: 50000;
+	--z-index-titlebar: 100000;
+	--z-index-contextmenu: 2147483647;
+	--native-titlebar-height: 32px;
+
+	--radius-sm: 0.25rem;
+	--radius-md: 0.375rem;
+	--radius-lg: 0.5rem;
+	--radius-xl: 0.75rem;
+	--radius-2xl: 1rem;
+	--radius-full: 9999px;
+
+	--media-border-radius: 4px;
+
+	--input-container-padding: 0.625rem;
+	--footer-row-height: 72px;
+	--input-container-min-height: var(--footer-row-height);
+	--input-wrapper-padding-x: 0.5rem;
+	--input-wrapper-padding-bottom: 0.5rem;
+	--textarea-top-bar-height: 40px;
+	--textarea-line-height: 1.375rem;
+	--textarea-content-offset: calc((var(--user-area-content-height) - var(--textarea-line-height)) / 2);
+
+	--typing-indicator-height: 16px;
+	--typing-pill-height: 20px;
+	--slowmode-indicator-height: var(--typing-pill-height);
+	--scroller-spacer-height: 28px;
+	--typing-avatar-size: 12px;
+	--typing-indicator-animation-size: 20px;
+	--typing-indicator-gap: 0px;
+	--typing-upload-column-width: calc(
+		var(--user-area-content-height) +
+		(var(--textarea-side-button-padding, 0.34375rem) * 2)
+	);
+
+	--spoiler-border-radius: 6px;
+
+	--font-size-xs: 0.75rem;
+
+	--spacing-0: 0;
+	--spacing-1: 0.25rem;
+	--spacing-1-5: 0.375rem;
+	--spacing-2: 0.5rem;
+	--spacing-3: 0.75rem;
+	--spacing-4: 1rem;
+	--spacing-5: 1.25rem;
+	--spacing-6: 1.5rem;
+	--spacing-8: 2rem;
+	--spacing-10: 2.5rem;
+	--spacing-12: 3rem;
+	--spacing-16: 4rem;
+	--spacing-20: 5rem;
+	--spacing-24: 6rem;
+
+	--layout-guild-list-width: 4.5rem;
+	--layout-sidebar-width: 16.875rem;
+	--layout-header-height: 3.5rem;
+	--layout-user-area-height: var(--input-container-min-height);
+	--layout-user-area-reserved-height: 0px;
+	--layout-mobile-bottom-nav-reserved-height: 0px;
+	--user-area-content-height: 36px;
+	--user-area-padding-y: calc((var(--layout-user-area-height) - var(--user-area-content-height)) / 2);
+	--user-area-padding-x: var(--spacing-4);
+	--voice-connection-padding-y: var(--spacing-2);
+	--footer-row-padding-y: var(--user-area-padding-y);
+	--layout-header-popout-width: calc(var(--layout-sidebar-width) - (var(--spacing-4) * 2));
+
+	--layout-gap: var(--spacing-4);
+	--layout-gap-sm: var(--spacing-2);
+	--layout-gap-lg: var(--spacing-6);
+
+	--content-padding: var(--spacing-4);
+	--content-padding-sm: var(--spacing-3);
+	--content-padding-lg: var(--spacing-6);
+
+	--guild-icon-size: 3rem;
+	--guild-icon-gap: var(--spacing-2);
+
+	--mobile-bottom-nav-height: 60px;
+
+	--form-surface-background: var(--background-tertiary);
+	--surface-interactive-hover-bg: var(--background-modifier-hover);
+	--surface-interactive-selected-bg: var(--background-modifier-selected);
+	--surface-interactive-selected-color: var(--text-primary);
+	--scrollbar-thumb-bg: color-mix(in srgb, var(--background-textarea) 35%, var(--text-tertiary) 65%);
+	--scrollbar-thumb-bg-hover: color-mix(in srgb, var(--background-textarea) 25%, var(--text-secondary) 75%);
+	--scrollbar-track-bg: color-mix(in srgb, var(--background-secondary) 80%, transparent);
+
+	--focus-primary: #00b0f4;
+}
+
+html.platform-native.platform-macos {
+	--layout-guild-list-width: 4.75rem;
+}
+
+.theme-light {
+	--form-surface-background: var(--background-primary);
+	--surface-interactive-hover-bg: var(--background-modifier-hover);
+	--surface-interactive-selected-bg: var(--background-modifier-selected);
+	--surface-interactive-selected-color: var(--text-primary);
+	--scrollbar-thumb-bg: color-mix(in srgb, var(--background-header-secondary) 40%, var(--text-secondary) 60%);
+	--scrollbar-thumb-bg-hover: color-mix(in srgb, var(--background-header-secondary) 30%, var(--text-primary) 70%);
+	--scrollbar-track-bg: color-mix(in srgb, var(--background-secondary) 50%, transparent);
+}
+
+html {
+	background-color: var(--background-secondary);
+	color: var(--text-primary);
+	overflow: hidden;
+	overscroll-behavior: none;
+	user-select: var(--user-select);
+	-webkit-user-select: var(--user-select);
+	font-family: var(--font-sans);
+	font-size: 16px;
+	line-height: 1.5;
+	font-optical-sizing: auto;
+}
+
+body {
+	scrollbar-color: var(--scrollbar-thumb-bg) var(--scrollbar-track-bg);
+	margin: 0;
+	padding: 0;
+}
+
+*:focus {
+	outline: none;
+}
+
+input,
+textarea,
+select,
+button {
+	font-family: inherit;
+	font-size: inherit;
+}
+
+input {
+	color-scheme: dark;
+}
+.theme-light input {
+	color-scheme: light;
+}
+
+img[alt] {
+	text-indent: -9999px;
+}
+
+code {
+	font-family: var(--font-mono);
+	font-size: 0.9em;
+	line-height: 1.5;
+	padding: 0.2em 0.4em;
+	border-radius: var(--radius-sm);
+	background-color: var(--bg-code);
+}
+
+pre {
+	padding: 1em;
+	overflow: auto;
+	border-radius: var(--radius-md);
+	background-color: var(--bg-code-block);
+}
+
+pre code {
+	padding: 0;
+	background-color: transparent;
+}
+
+a {
+	color: var(--text-link);
+	text-decoration: none;
+}
+@media (hover: hover) {
+	a:hover {
+		color: var(--text-link);
+		text-decoration: underline;
+	}
+}
+
+blockquote {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	background-color: transparent;
+}
+
+table {
+	border-collapse: collapse;
+	margin: 1em 0;
+}
+table th {
+	text-align: left;
+	font-weight: bold;
+}
+table td {
+	padding: 0.5em;
+}
+
+@media (prefers-contrast: more) {
+	:root {
+		--text-primary: hsl(0, 0%, 100%);
+		--text-secondary: hsl(0, 0%, 90%);
+		--text-tertiary: hsl(0, 0%, 80%);
+		--text-link: hsl(210, 100%, 70%);
+		--border-color: hsl(0, 0%, 50%);
+	}
+	.theme-light {
+		--text-primary: hsl(0, 0%, 0%);
+		--text-secondary: hsl(0, 0%, 10%);
+		--text-tertiary: hsl(0, 0%, 20%);
+		--text-link: hsl(210, 100%, 40%);
+		--border-color: hsl(0, 0%, 40%);
+	}
+}
+
+.emoji {
+	--emoji-size: 1.375em;
+	width: var(--emoji-size);
+	height: var(--emoji-size);
+	object-fit: contain;
+	vertical-align: bottom;
+}
+.emoji.jumboable {
+	--emoji-size-jumbo-emoji: 3rem;
+	height: var(--emoji-size-jumbo-emoji);
+	min-height: var(--emoji-size-jumbo-emoji);
+	width: var(--emoji-size-jumbo-emoji);
+	font-size: var(--emoji-size-jumbo-emoji);
+	line-height: 1;
+	vertical-align: bottom;
+}
+
+.text-smol {
+	font-size: 14px;
+	font-weight: 400;
+	line-height: 1.2857142857;
+}
+
+.clamp {
+	--clamp-lines: 3;
+	display: -webkit-box;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: var(--clamp-lines);
+	line-clamp: var(--clamp-lines);
+	overflow: hidden;
+}
+
+.truncate {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	min-width: 0;
+}
+
+.zalgo-contain {
+	--zalgo-line-height: 1.25em;
+	line-height: var(--zalgo-line-height);
+	max-height: var(--zalgo-line-height);
+	overflow: hidden;
+	display: block;
+}
+
+.zalgo-contain-inline {
+	--zalgo-line-height: 1.25em;
+	line-height: var(--zalgo-line-height);
+	overflow: clip;
+	overflow-clip-margin: 0px;
+	display: inline-block;
+	vertical-align: bottom;
+	max-height: var(--zalgo-line-height);
+}
+
+.user-text {
+	--user-text-line-height: 1.25em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	min-width: 0;
+	line-height: var(--user-text-line-height);
+	max-height: var(--user-text-line-height);
+	display: block;
+}
+
+.user-text-inline {
+	--user-text-line-height: 1.25em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	line-height: var(--user-text-line-height);
+	max-height: var(--user-text-line-height);
+	display: inline-block;
+	vertical-align: bottom;
+	max-width: 100%;
+}
+
+.user-text-flex {
+	--user-text-line-height: 1.25em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	min-width: 0;
+	line-height: var(--user-text-line-height);
+	max-height: var(--user-text-line-height);
+	flex: 1 1 auto;
+}
+
+.emoji {
+	vertical-align: -0.3em;
+	display: inline-block;
+}
+
+@media (max-width: 840px) {
+	:root {
+		--user-select: none;
+	}
+	*,
+	.select-text {
+		user-select: none !important;
+		-webkit-user-select: none !important;
+		-moz-user-select: none !important;
+		-ms-user-select: none !important;
+	}
+	input,
+	textarea {
+		user-select: auto !important;
+		-webkit-user-select: auto !important;
+		-moz-user-select: auto !important;
+		-ms-user-select: auto !important;
+	}
+}
+
+strong {
+	font-weight: 600;
+}
+
+.modal-backdrop-centered {
+	background: rgba(0, 0, 0, 0.35);
+	backdrop-filter: blur(8px);
+	-webkit-backdrop-filter: blur(8px);
+}
+
+html.reduced-motion * {
+	animation-duration: 0.01ms;
+	animation-iteration-count: 1;
+	transition-duration: 0.01ms;
+	scroll-behavior: auto;
+}

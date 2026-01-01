@@ -1,0 +1,74 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.accordion {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-4);
+	padding-top: var(--spacing-6);
+	padding-bottom: var(--spacing-6);
+	border-top: 1px solid var(--background-modifier-accent);
+}
+
+.accordion:first-child {
+	padding-top: 0;
+	border-top: none;
+}
+
+.header {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	width: 100%;
+	padding: 0;
+	border: none;
+	background: transparent;
+	cursor: pointer;
+	text-align: left;
+	gap: 12px;
+}
+
+.headerContent {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	flex: 1;
+	min-width: 0;
+}
+
+.caret {
+	flex-shrink: 0;
+	color: var(--text-secondary);
+	transition: transform 0.2s ease;
+	margin-top: 4px;
+}
+
+.caretExpanded {
+	transform: rotate(180deg);
+}
+
+.contentWrapper {
+	overflow: hidden;
+}
+
+.content {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-4);
+}

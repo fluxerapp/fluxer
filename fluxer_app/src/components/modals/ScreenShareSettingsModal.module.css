@@ -1,0 +1,148 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.content {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+}
+
+.section {
+	display: flex;
+	flex-direction: column;
+}
+
+.sectionLabel {
+	margin-bottom: 8px;
+	font-weight: 500;
+	color: var(--text-primary);
+	font-size: 14px;
+}
+
+.optionGrid {
+	display: flex;
+	gap: 4px;
+}
+
+.optionButton {
+	display: flex;
+	flex: 1;
+	align-items: center;
+	justify-content: center;
+	gap: 4px;
+	border-radius: 6px;
+	padding: 8px 12px;
+	font-weight: 500;
+	font-size: 14px;
+	transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+	transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+	transition-duration: 150ms;
+}
+
+.optionButtonSelected {
+	background-color: var(--brand-primary);
+	color: white;
+	cursor: pointer;
+}
+
+.optionButtonSelected:hover {
+	background-color: var(--brand-secondary);
+}
+
+.optionButtonSelectedLocked {
+	background-color: var(--background-modifier-selected);
+	color: var(--text-primary);
+}
+
+.optionButtonUnselected {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-primary);
+	cursor: pointer;
+}
+
+.optionButtonUnselected:hover {
+	background-color: var(--background-modifier-selected);
+}
+
+.optionButtonUnselectedLocked {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-primary-muted);
+	cursor: pointer;
+}
+
+.optionButtonUnselectedLocked:hover {
+	background-color: var(--background-modifier-selected);
+}
+
+.lockIcon {
+	color: var(--text-tertiary);
+}
+
+.premiumBanner {
+	border-radius: 8px;
+	border: 1px solid var(--background-modifier-accent);
+	background-color: var(--background-secondary);
+	padding: 12px;
+}
+
+.premiumBannerHeader {
+	margin-bottom: 8px;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.premiumBannerIcon {
+	color: var(--text-tertiary);
+}
+
+.premiumBannerTitle {
+	font-weight: 500;
+	color: var(--text-primary);
+	font-size: 14px;
+}
+
+.premiumBannerDescription {
+	color: var(--text-primary-muted);
+	font-size: 12px;
+}
+
+.audioToggleRow {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 12px;
+	background-color: var(--background-secondary);
+	border-radius: 8px;
+}
+
+.audioToggleInfo {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.audioToggleInfo .sectionLabel {
+	margin-bottom: 0;
+}
+
+.audioToggleDescription {
+	color: var(--text-primary-muted);
+	font-size: 12px;
+}

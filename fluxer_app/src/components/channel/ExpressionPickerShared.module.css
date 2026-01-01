@@ -1,0 +1,129 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.emptyState {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: var(--spacing-3);
+	padding: var(--spacing-6);
+	text-align: center;
+	height: 100%;
+}
+
+.emptyStateContent {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--spacing-2);
+}
+
+.emptyStateIcon {
+	height: 3.5rem;
+	width: 3.5rem;
+	color: var(--text-primary-muted);
+}
+
+.emptyStateTextContainer {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--spacing-2);
+}
+
+.emptyStateTitle {
+	font-size: 1.25rem;
+	font-weight: 600;
+	color: var(--text-primary);
+	margin: 0;
+}
+
+.emptyStateDescription {
+	font-size: 1rem;
+	color: var(--text-primary-muted);
+	max-width: 280px;
+	margin: 0;
+}
+
+.pickerHeader {
+	position: relative;
+	z-index: 10;
+	display: flex;
+	flex-direction: column;
+	padding: var(--spacing-3);
+	gap: var(--spacing-3);
+	background-color: var(--background-tertiary);
+	border-bottom: 1px solid var(--background-modifier-accent);
+}
+
+.searchBarWrapper {
+	display: flex;
+	flex: 1;
+	overflow: hidden;
+	border-radius: var(--radius-md);
+	background-color: var(--background-primary);
+}
+
+:global(.theme-light) .searchBarWrapper {
+	background-color: var(--background-secondary);
+	box-shadow: inset 0 0 0 1px var(--background-modifier-accent);
+}
+
+.pickerContent {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	min-height: 0;
+	overflow: hidden;
+	background-color: var(--background-primary);
+}
+
+.pickerGrid {
+	display: flex;
+	flex-wrap: nowrap;
+	gap: var(--spacing-3);
+	padding: 0 var(--spacing-4);
+	justify-content: flex-start;
+}
+
+.pickerColumn {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	gap: var(--spacing-3);
+	min-width: 227px;
+}
+
+@media (max-width: 768px) {
+	.pickerGrid {
+		gap: var(--spacing-2);
+		padding: 0 var(--spacing-3);
+	}
+
+	.pickerColumn {
+		gap: var(--spacing-2);
+		min-width: calc(50svw - 20px);
+	}
+
+	.pickerHeader {
+		padding: var(--spacing-3);
+	}
+}

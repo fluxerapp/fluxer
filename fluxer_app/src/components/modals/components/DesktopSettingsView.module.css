@@ -1,0 +1,99 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.searchContainer {
+	margin-bottom: 1rem;
+	-webkit-app-region: no-drag;
+}
+
+.backButtonContainer {
+	padding: 0.5rem;
+	padding-bottom: 0.5rem;
+}
+
+.backIcon {
+	height: 1rem;
+	width: 1rem;
+}
+
+.noResults {
+	padding: 1rem 0.5rem;
+	text-align: center;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--text-tertiary);
+}
+
+.tabLabel {
+	display: flex;
+	width: 100%;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.badgeContainer {
+	margin-left: auto;
+}
+
+.footerActions {
+	margin-bottom: 1rem;
+}
+
+.legalLinks {
+	margin-top: 0.75rem;
+	font-size: 0.6875rem;
+	line-height: 1.25;
+	text-align: left;
+}
+
+.footerContent {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	padding-inline-start: 0.75rem;
+	width: 100%;
+}
+
+.legalLink {
+	display: block;
+	color: var(--text-link);
+	cursor: pointer;
+}
+
+.legalLink:hover {
+	text-decoration: underline;
+}
+
+.footerSpacer {
+	height: 12px;
+}
+
+.logoutIcon {
+	height: 1rem;
+	width: 1rem;
+}
+
+.previewDivider {
+	border-bottom: 1px solid var(--background-header-secondary);
+	padding-bottom: 2rem;
+}
+
+.fullWidth {
+	width: 100%;
+}

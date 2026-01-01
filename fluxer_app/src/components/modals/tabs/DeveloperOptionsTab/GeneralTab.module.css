@@ -1,0 +1,50 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.toggleGroup {
+	border-top: 1px solid var(--background-header-secondary);
+	padding-top: 1rem;
+}
+
+.toggleGroupFirst {
+	padding-top: 0;
+	border-top: none;
+}
+
+.groupTitle {
+	margin-top: 0.25rem;
+	margin-bottom: 0.75rem;
+	font-weight: 600;
+	font-size: 0.75rem;
+	color: var(--text-tertiary-muted);
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+}
+
+.toggleList {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}
+
+.buttonGroup {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.75rem;
+}

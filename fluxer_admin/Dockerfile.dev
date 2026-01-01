@@ -1,0 +1,21 @@
+FROM ghcr.io/gleam-lang/gleam:v1.13.0-erlang-alpine
+
+WORKDIR /workspace
+
+# Install dependencies
+RUN apk add --no-cache curl
+
+# Download gleam dependencies
+COPY gleam.toml manifest.toml* ./
+RUN gleam deps download
+
+# Copy source code
+COPY . .
+
+# Download and setup tailwindcss, then build CSS
+RUN mkdir -p build/bin && \
+    curl -sLo build/bin/tailwindcss https://github.com/tailwindlabs/tailwindcss/releases/download/v4.1.17/tailwindcss-linux-x64-musl && \
+    chmod +x build/bin/tailwindcss && \
+    build/bin/tailwindcss -i ./tailwind.css -o ./priv/static/app.css
+
+CMD ["gleam", "run"]

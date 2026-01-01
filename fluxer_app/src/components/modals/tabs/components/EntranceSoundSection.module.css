@@ -1,0 +1,167 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.label {
+	margin-bottom: 0.5rem;
+	font-weight: 500;
+	color: var(--text-primary);
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+}
+
+.premiumCard {
+	border-radius: 0.5rem;
+	border: 1px solid var(--background-modifier-accent);
+	background-color: var(--background-secondary);
+	padding: 1rem;
+}
+
+.premiumCardHeader {
+	margin-bottom: 0.5rem;
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.premiumCardIcon {
+	color: var(--text-tertiary);
+}
+
+.premiumCardTitle {
+	font-weight: 500;
+	color: var(--text-primary);
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+}
+
+.premiumCardDescription {
+	margin-bottom: 0.75rem;
+	color: var(--text-primary-muted);
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+}
+
+.content {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}
+
+.actionButton {
+	align-self: flex-start;
+}
+
+.hint {
+	color: var(--text-primary-muted);
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+}
+
+.soundCard {
+	border-radius: 0.5rem;
+	border: 1px solid var(--background-modifier-accent);
+	background-color: var(--background-secondary);
+	padding: 1rem;
+}
+
+.soundCardContent {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.soundCardMain {
+	display: flex;
+	flex: 1;
+	align-items: center;
+	gap: 0.75rem;
+}
+
+.previewButton {
+	display: flex;
+	height: 2.5rem;
+	width: 2.5rem;
+	align-items: center;
+	justify-content: center;
+	border-radius: 0.5rem;
+	background-color: var(--background-modifier-hover);
+	transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+	transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+	transition-duration: 150ms;
+	cursor: pointer;
+}
+
+.previewButton:enabled:hover {
+	background-color: var(--background-modifier-hover);
+}
+
+.previewButton:disabled {
+	cursor: not-allowed;
+	opacity: 0.5;
+}
+
+.previewIcon {
+	color: var(--text-primary);
+}
+
+.soundInfo {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+}
+
+.soundFileName {
+	font-weight: 500;
+	color: var(--text-primary);
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+}
+
+.soundDuration {
+	color: var(--text-primary-muted);
+	font-size: 0.75rem;
+	line-height: 1rem;
+}
+
+.deleteButton {
+	display: flex;
+	height: 2rem;
+	width: 2rem;
+	align-items: center;
+	justify-content: center;
+	border-radius: 0.25rem;
+	transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+	transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+	transition-duration: 150ms;
+	cursor: pointer;
+}
+
+.deleteButton:hover {
+	background-color: var(--background-modifier-hover);
+}
+
+.deleteIcon {
+	color: var(--status-danger);
+}
+
+.uploadButtonContent {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}

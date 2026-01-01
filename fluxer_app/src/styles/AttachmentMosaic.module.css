@@ -1,0 +1,424 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.oneByTwoGrid {
+	display: flex;
+	flex-direction: row;
+	gap: 4px;
+	max-height: 280px;
+}
+
+.oneByTwoGridItem {
+	flex: 1;
+	min-width: 0;
+}
+
+.oneByTwoLayoutThreeGrid {
+	max-height: 350px;
+}
+
+.oneByTwoSoloItem {
+	flex: 2;
+}
+
+.oneByTwoDuoItem {
+	flex: 1;
+}
+
+.twoByOneGrid {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	height: 100%;
+}
+
+.twoByOneGridItem {
+	flex: 1;
+	min-height: 0;
+}
+
+.twoByTwoGrid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	grid-template-rows: repeat(2, minmax(0, 1fr));
+	gap: 4px;
+	max-height: 350px;
+}
+
+.threeByThreeGrid {
+	display: grid;
+	flex-direction: row;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 4px;
+}
+
+.fiveAttachmentContainer {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	max-height: 350px;
+}
+
+.fiveAttachmentContainer .oneByTwoGrid {
+	flex: 2;
+	margin-bottom: 0;
+	min-height: 0;
+}
+
+.mosaicItem {
+	position: relative;
+	background-color: var(--background-secondary);
+	border: none;
+	padding: 0;
+	margin: 0;
+	font: inherit;
+	color: inherit;
+	text-align: inherit;
+	line-height: inherit;
+	max-width: 100%;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+	border-radius: var(--media-border-radius);
+	cursor: pointer;
+}
+
+.clickableWrapper {
+	position: relative;
+	width: 100%;
+	height: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.clickableButton {
+	cursor: pointer;
+}
+
+.loadingOverlay {
+	position: relative;
+	width: 100%;
+	height: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+}
+
+.mediaContainer {
+	position: relative;
+	width: 100%;
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+}
+
+.oneByOneGrid {
+	width: 100%;
+	max-width: 550px;
+	max-height: 400px;
+	overflow: visible;
+	position: relative;
+	display: flex;
+}
+
+.oneByOneGrid .mosaicItem {
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+}
+
+.oneByOneGrid .mediaContainer,
+.oneByOneGrid .clickableWrapper {
+	width: 100%;
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+}
+
+.oneByOneGrid .loadingOverlay {
+	width: 100%;
+	flex: 1;
+	position: relative;
+	aspect-ratio: auto !important;
+}
+
+.oneByOneGrid .mosaicItem,
+.oneByOneGrid .clickableWrapper {
+	overflow: hidden;
+	border-radius: var(--media-border-radius);
+}
+
+.oneByOneGridMosaic {
+	display: flex;
+	height: 280px;
+}
+
+.oneByOneGridMosaic .mosaicItem {
+	flex: 1;
+	height: 100%;
+}
+
+.oneByOneGridMosaic .mediaContainer,
+.oneByOneGridMosaic .clickableWrapper,
+.oneByOneGridMosaic .loadingOverlay {
+	height: 100%;
+}
+
+.oneByOneGridMosaic .loadingOverlay {
+	aspect-ratio: unset !important;
+}
+
+.mosaicContainer > .oneByOneGrid + .threeByThreeGrid,
+.mosaicContainer > .oneByTwoGrid + .threeByThreeGrid {
+	margin-top: 4px;
+}
+
+.mosaicContainerWrapper {
+	position: relative;
+	overflow: visible;
+	display: block;
+	width: 100%;
+	max-width: 550px;
+}
+
+.mosaicExpiryBadge {
+	position: absolute;
+	bottom: 6px;
+	right: 6px;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	z-index: 3;
+	opacity: 0;
+	visibility: hidden;
+}
+
+.mosaicExpiryBadgeContent {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+	padding: 0.15rem 0.4rem;
+	border-radius: 12px;
+	background: color-mix(in srgb, var(--background-secondary) 86%, transparent);
+	color: var(--text-secondary);
+	border: 1px solid color-mix(in srgb, var(--border-color) 80%, transparent);
+	backdrop-filter: blur(6px);
+	font-size: 0.72rem;
+}
+
+.placeholderImage {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+	min-width: 100%;
+	min-height: 100%;
+	max-width: 100%;
+}
+
+.mediaImage {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+	min-width: 100%;
+	min-height: 100%;
+	max-width: 100%;
+	transition: opacity 0.2s;
+	opacity: 1;
+}
+
+.oneByOneGrid .mediaImage,
+.oneByOneGrid .placeholderImage {
+	object-fit: cover;
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+}
+
+.oneByOneGridMosaic .mediaImage,
+.oneByOneGridMosaic .placeholderImage {
+	object-fit: cover;
+}
+
+.oneByTwoGrid .mosaicItem,
+.oneByTwoGrid .mediaContainer,
+.oneByTwoGrid .clickableWrapper,
+.oneByTwoGrid .loadingOverlay {
+	height: 100%;
+}
+
+.fiveAttachmentContainer .threeByThreeGrid {
+	flex: 1;
+	margin-top: 0;
+}
+
+.threeByThreeGrid .loadingOverlay {
+	aspect-ratio: 1 / 1 !important;
+}
+
+.mediaImageHidden {
+	opacity: 0;
+}
+
+.mediaBlurred {
+	filter: blur(12px);
+	opacity: 0.15;
+}
+
+.nsfwOverlay {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background-color: var(--spoiler-overlay-color);
+	backdrop-filter: blur(12px);
+	z-index: 3;
+	padding: 0.5rem;
+	text-align: center;
+}
+
+.playButtonOverlay {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	pointer-events: none;
+	z-index: 2;
+}
+
+.playButton {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 56px;
+	height: 56px;
+	border-radius: 50%;
+	background-color: rgba(0, 0, 0, 0.75);
+}
+
+.playButton svg {
+	color: white;
+}
+
+.audioPlaceholder {
+	width: 100%;
+	height: 100%;
+	max-width: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: linear-gradient(135deg, var(--background-tertiary) 0%, var(--background-secondary-alt) 100%);
+	overflow: hidden;
+	position: relative;
+}
+
+.audioPlaceholder svg {
+	width: 40%;
+	height: 40%;
+	max-width: 80px;
+	max-height: 80px;
+	opacity: 0.6;
+	color: var(--text-tertiary);
+	flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+	.mosaicContainer {
+		max-width: 100%;
+	}
+
+	.oneByTwoGrid,
+	.oneByTwoDuoContainer,
+	.twoByTwoGrid {
+		max-height: 240px;
+	}
+
+	.oneByOneGrid {
+		max-height: 300px;
+		max-width: 100%;
+	}
+
+	.threeByThreeGrid .mosaicItem {
+		aspect-ratio: 1 / 1;
+	}
+}
+
+.mosaicItemLoading {
+	background: linear-gradient(
+		90deg,
+		var(--background-secondary) 0%,
+		var(--background-tertiary) 50%,
+		var(--background-secondary) 100%
+	);
+	background-size: 200% 100%;
+	animation: loading 1.5s ease-in-out infinite;
+}
+
+@keyframes loading {
+	0% {
+		background-position: 200% 0;
+	}
+	100% {
+		background-position: -200% 0;
+	}
+}
+
+.mosaicContainer {
+	height: 100%;
+	max-width: 550px;
+	width: 100%;
+}
+
+.clickableButton {
+	height: 100%;
+	width: 100%;
+	border: 0;
+	background-color: transparent;
+	padding: 0;
+}
+
+.gifIndicator {
+	position: absolute;
+	top: 8px;
+	left: 8px;
+	z-index: 10;
+	border-radius: 4px;
+	background-color: rgba(0, 0, 0, 0.6);
+	padding: 4px 8px;
+	font-size: 0.875rem;
+	font-weight: 600;
+	color: white;
+	line-height: 1;
+}
+
+.relativeWrapper {
+	position: relative;
+}

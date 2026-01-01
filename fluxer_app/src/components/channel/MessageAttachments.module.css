@@ -1,0 +1,187 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.forwardedContainer {
+	display: flex;
+	width: 100%;
+}
+
+.forwardedBar {
+	width: 0.25rem;
+	flex-shrink: 0;
+	border-radius: 0.25rem;
+	background-color: var(--interactive-muted);
+	margin-right: 0.75rem;
+}
+
+.forwardedContent {
+	flex: 1;
+	padding-top: 0.25rem;
+	padding-bottom: 0.25rem;
+}
+
+.forwardedHeader {
+	display: flex;
+	align-items: center;
+	gap: 0.25rem;
+	margin-bottom: 0.25rem;
+	font-size: 0.75rem;
+	line-height: 1rem;
+	color: var(--text-chat-muted);
+}
+
+.forwardedIcon {
+	height: 0.75rem;
+	width: 0.75rem;
+}
+
+.forwardedLabel {
+	font-style: italic;
+}
+
+.attachmentsContainer {
+	margin-top: 0.5rem;
+}
+
+.forwardedSourceButton {
+	margin-top: 0.5rem;
+	display: flex;
+	align-items: center;
+	gap: 0.375rem;
+	padding: 0.375rem 0.5rem;
+	border-radius: 0.375rem;
+	background-color: var(--background-secondary);
+	font-size: 0.75rem;
+	line-height: 1rem;
+	transition: background-color 0.15s ease;
+	cursor: pointer;
+	border: 1px solid var(--background-modifier-accent);
+	box-sizing: border-box;
+	align-self: flex-start;
+	justify-content: flex-start;
+	width: fit-content;
+	max-width: 100%;
+}
+
+.forwardedSourceButton:hover {
+	background-color: var(--background-secondary-alt);
+}
+
+.forwardedSourceLabel {
+	color: var(--text-chat-muted);
+	flex: 0 0 auto;
+	white-space: nowrap;
+}
+
+.forwardedSourceInfo {
+	display: flex;
+	align-items: center;
+	gap: 0.25rem;
+	flex: 1 1 auto;
+	min-width: 0;
+	overflow: hidden;
+	white-space: nowrap;
+}
+
+.forwardedSourceIcon {
+	width: 1rem;
+	height: 1rem;
+	flex-shrink: 0;
+	color: var(--text-secondary);
+}
+
+.forwardedSourceAvatar {
+	flex-shrink: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.forwardedSourceGuildIcon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	border-radius: 0.25rem;
+	--guild-icon-size: 1rem;
+}
+
+.forwardedSourceChevron {
+	color: var(--text-muted);
+	flex-shrink: 0;
+}
+
+.forwardedSourceName {
+	color: var(--text-primary);
+	font-weight: 500;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	overflow-wrap: normal;
+	word-break: normal;
+}
+
+.stickersContainer {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	margin-top: 0.25rem;
+}
+
+.stickerWrapper {
+	position: relative;
+	height: 10rem;
+	width: 10rem;
+}
+
+.stickerImage {
+	height: 100%;
+	width: 100%;
+	object-fit: contain;
+}
+
+.stickerTooltip {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+}
+
+.stickerName {
+	font-weight: 500;
+}
+
+.stickerGuildInfo {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	color: var(--text-tertiary);
+}
+
+.stickerGuildIcon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	--guild-icon-size: 1rem;
+}
+
+.stickerGuildName {
+	font-size: 0.75rem;
+	line-height: 1rem;
+}

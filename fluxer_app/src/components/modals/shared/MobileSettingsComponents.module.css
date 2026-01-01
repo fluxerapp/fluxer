@@ -1,0 +1,280 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.header {
+	display: flex;
+	height: 3.5rem;
+	flex-shrink: 0;
+	align-items: center;
+	background-color: var(--background-primary);
+	padding-left: 1rem;
+	padding-right: 1rem;
+}
+
+.headerContent {
+	display: flex;
+	width: 100%;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.backButton {
+	display: flex;
+	height: 2rem;
+	width: 2rem;
+	align-items: center;
+	justify-content: center;
+	border-radius: 0.375rem;
+	color: var(--text-primary-muted);
+	transition-property: transform, background-color;
+	transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+	transition-duration: 150ms;
+}
+
+.backButton:active {
+	transform: scale(0.95);
+	background-color: var(--background-modifier-hover);
+}
+
+.backButtonIcon {
+	height: 1.25rem;
+	width: 1.25rem;
+}
+
+.headerTitle {
+	flex: 1;
+	min-width: 0;
+	font-weight: 600;
+	font-size: 1rem;
+	line-height: 1.5rem;
+	color: var(--text-primary);
+	text-align: center;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.headerSpacer {
+	width: 2rem;
+}
+
+.settingsList {
+	min-height: 0;
+	flex: 1 1 0%;
+	padding-left: 1rem;
+	padding-right: 1rem;
+	padding-top: 1rem;
+	padding-bottom: 1rem;
+}
+
+.categoryContainer {
+	margin-bottom: 1.5rem;
+}
+
+.categoryContainer:last-child {
+	margin-bottom: 0;
+}
+
+.categoryHeader {
+	margin-bottom: 0.5rem;
+	padding-left: 0.75rem;
+	padding-right: 0.75rem;
+	font-weight: 600;
+	color: var(--text-tertiary);
+	font-size: 0.75rem;
+	line-height: 1rem;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+}
+
+.categoryTabs {
+	overflow: hidden;
+	border-radius: 0.75rem;
+	background-color: var(--background-secondary-alt);
+}
+
+.dangerButton {
+	display: flex;
+	width: 100%;
+	align-items: center;
+	gap: 1rem;
+	background-color: transparent;
+	padding: 1rem;
+	transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+	cursor: pointer;
+	-webkit-tap-highlight-color: transparent;
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.dangerButton:hover {
+		background-color: color-mix(in srgb, var(--status-danger) 8%, transparent);
+	}
+
+	.dangerButton:active {
+		background-color: color-mix(in srgb, var(--status-danger) 12%, transparent);
+	}
+}
+
+.dangerButtonPressed {
+	background-color: color-mix(in srgb, var(--status-danger) 8%, transparent);
+}
+
+.dangerIcon {
+	height: 1.25rem;
+	width: 1.25rem;
+	color: var(--status-danger);
+}
+
+.dangerContent {
+	flex: 1;
+	text-align: left;
+}
+
+.dangerLabel {
+	font-weight: 500;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--status-danger);
+}
+
+.tabButton {
+	display: flex;
+	width: 100%;
+	align-items: center;
+	gap: 1rem;
+	background-color: transparent;
+	padding: 1rem;
+	transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+	transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+	transition-duration: 150ms;
+	cursor: pointer;
+	-webkit-tap-highlight-color: transparent;
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.tabButton:hover {
+		background-color: var(--background-modifier-hover);
+	}
+
+	.tabButton:active {
+		background-color: var(--background-modifier-hover);
+	}
+}
+
+.tabButtonPressed {
+	background-color: var(--background-modifier-hover);
+}
+
+:global(.theme-light) .tabButton {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-primary);
+}
+
+:global(.theme-light) .tabButton:hover,
+:global(.theme-light) .tabButton:active,
+:global(.theme-light) .tabButtonPressed {
+	background-color: color-mix(in srgb, var(--background-modifier-hover) 40%, transparent);
+}
+
+.tabIcon {
+	height: 1.25rem;
+	width: 1.25rem;
+	color: var(--text-secondary);
+}
+
+.tabContent {
+	flex: 1 1 0%;
+	text-align: left;
+}
+
+.tabLabel {
+	font-weight: 500;
+	color: var(--text-secondary);
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+}
+
+.tabArrow {
+	height: 1rem;
+	width: 1rem;
+	transform: rotate(180deg);
+	color: var(--text-tertiary);
+}
+
+.tabDivider {
+	margin-left: 1rem;
+	margin-right: 1rem;
+	height: 1px;
+	background-color: var(--background-header-secondary);
+}
+
+.additionalContent {
+	margin-top: 2rem;
+}
+
+.footer {
+	margin-top: 1rem;
+	padding-bottom: 1.25rem;
+}
+
+.sectionNavContainer {
+	position: sticky;
+	top: 0;
+	z-index: 5;
+	background: var(--background-secondary);
+	border-bottom: 1px solid var(--background-header-secondary);
+}
+
+.sectionNavScroller {
+	padding: 0.5rem 1rem;
+}
+
+.sectionNavContent {
+	display: flex;
+	gap: 0.5rem;
+}
+
+.sectionNavItem {
+	flex-shrink: 0;
+	padding: 0.5rem 0.875rem;
+	border-radius: 1rem;
+	font-size: 0.8125rem;
+	font-weight: 500;
+	color: var(--text-secondary);
+	background: var(--background-modifier-accent);
+	border: none;
+	cursor: pointer;
+	white-space: nowrap;
+	transition:
+		background-color 0.15s ease,
+		color 0.15s ease;
+	-webkit-tap-highlight-color: transparent;
+}
+
+.sectionNavItemActive {
+	color: var(--text-primary);
+	background: var(--brand-primary);
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.sectionNavItem:hover:not(.sectionNavItemActive) {
+		background: var(--background-modifier-hover);
+		color: var(--text-primary);
+	}
+}

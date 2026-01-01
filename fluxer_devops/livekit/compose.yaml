@@ -1,0 +1,65 @@
+services:
+  valkey:
+    image: valkey/valkey:7.2-alpine
+    hostname: valkey
+    command: >
+      valkey-server
+      --requirepass ${REDIS_PASSWORD}
+      --maxmemory 3gb
+      --maxmemory-policy allkeys-lru
+      --save 900 1
+      --save 300 10
+      --save 60 10000
+      --appendonly yes
+    volumes:
+      - valkey_data:/data
+    restart: unless-stopped
+
+  livekit:
+    image: livekit/livekit-server:latest
+    hostname: livekit
+    entrypoint: /entrypoint.sh
+    env_file:
+      - .env
+    volumes:
+      - ./conf/livekit.yaml.template:/etc/livekit.yaml.template:ro
+      - ./entrypoint.sh:/entrypoint.sh:ro
+    ports:
+      - '7881:7881'
+      - '7882:7882/udp'
+      - '3478:3478/udp'
+    depends_on:
+      - valkey
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 6G
+        reservations:
+          cpus: '1'
+          memory: 2G
+
+  caddy:
+    build:
+      context: .
+      dockerfile: Dockerfile.caddy
+    image: fluxer-livekit-caddy:latest
+    hostname: livekit-caddy
+    entrypoint: /entrypoint-caddy.sh
+    env_file:
+      - .env
+    volumes:
+      - ./caddy.yaml.template:/etc/caddy.yaml.template:ro
+      - ./entrypoint-caddy.sh:/entrypoint-caddy.sh:ro
+      - caddy_data:/data
+    ports:
+      - '443:443'
+      - '80:80'
+    depends_on:
+      - livekit
+    restart: unless-stopped
+
+volumes:
+  valkey_data:
+  caddy_data:

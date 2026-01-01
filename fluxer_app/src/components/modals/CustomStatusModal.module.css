@@ -1,0 +1,146 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.modalRoot {
+	width: min(520px, 90vw);
+	max-width: 520px;
+}
+
+.previewSection {
+	width: 100%;
+	display: flex;
+	justify-content: center;
+	margin-bottom: 1rem;
+}
+
+.previewStatus {
+	word-break: break-word;
+}
+
+.previewStatusPlaceholder {
+	min-height: 1rem;
+}
+
+.statusInputWrapper {
+	width: 100%;
+	max-width: 520px;
+	margin-inline: auto;
+	display: flex;
+	flex-direction: column;
+	gap: 0.35rem;
+}
+
+.characterCount {
+	font-size: 0.75rem;
+	color: var(--text-tertiary);
+	text-align: right;
+}
+
+.inputRight {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.25rem;
+}
+
+.emojiTriggerButton {
+	width: 32px;
+	height: 32px;
+	border-radius: 999px;
+	border: none;
+	background: transparent;
+	color: var(--text-primary-muted);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	transition:
+		background-color var(--transition-normal),
+		color var(--transition-normal);
+}
+
+.emojiPreviewImage {
+	width: 22px;
+	height: 22px;
+	object-fit: contain;
+}
+
+.emojiPreviewNative {
+	font-size: 22px;
+	line-height: 1;
+	font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
+}
+
+.emojiTriggerButton:hover {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-primary);
+}
+
+.emojiTriggerButtonActive {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-primary);
+}
+
+.clearButtonIcon {
+	border: none;
+	background: transparent;
+	color: var(--text-primary-muted);
+	padding: 0;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	border-radius: 999px;
+}
+
+.clearButtonIcon:hover {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-primary);
+}
+
+.clearButtonIcon:disabled {
+	opacity: 0.4;
+}
+
+.footer {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.footer > button {
+	flex: 0 0 auto !important;
+}
+
+.expirationSelectWrapper {
+	position: relative;
+	min-width: fit-content;
+}
+
+.expirationLabel {
+	position: absolute;
+	top: -1.25rem;
+	left: 0;
+	font-size: 0.75rem;
+	color: var(--text-tertiary);
+	pointer-events: none;
+}
+
+.expirationSelect {
+	width: 100%;
+}

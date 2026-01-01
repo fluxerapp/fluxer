@@ -1,0 +1,144 @@
+name: deploy static-proxy
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - fluxer_media_proxy/**/*
+      - .github/workflows/deploy-static-proxy.yaml
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-fluxer-static-proxy
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  SERVICE_NAME: fluxer-static-proxy
+  IMAGE_NAME: fluxer-static-proxy
+  CONTEXT_DIR: fluxer_media_proxy
+  COMPOSE_STACK: fluxer-static-proxy
+
+jobs:
+  deploy:
+    name: Deploy static proxy
+    runs-on: blacksmith-2vcpu-ubuntu-2404
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+      - name: Build image
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ env.CONTEXT_DIR }}
+          file: ${{ env.CONTEXT_DIR }}/Dockerfile
+          tags: ${{ env.IMAGE_NAME }}:${{ github.sha }}
+          load: true
+          platforms: linux/amd64
+          cache-from: type=gha,scope=${{ env.SERVICE_NAME }}
+          cache-to: type=gha,mode=max,scope=${{ env.SERVICE_NAME }}
+        env:
+          DOCKER_BUILD_SUMMARY: false
+          DOCKER_BUILD_RECORD_UPLOAD: false
+
+      - name: Install docker-pussh
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.docker/cli-plugins
+          curl -fsSL https://raw.githubusercontent.com/psviderski/unregistry/v0.3.1/docker-pussh \
+            -o ~/.docker/cli-plugins/docker-pussh
+          chmod +x ~/.docker/cli-plugins/docker-pussh
+
+      - name: Set up SSH agent
+        uses: webfactory/ssh-agent@v0.9.1
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY_SERVER }}
+
+      - name: Add server to known hosts
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+
+      - name: Push image and deploy
+        env:
+          IMAGE_TAG: ${{ env.IMAGE_NAME }}:${{ github.sha }}
+          SERVER: ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}
+        run: |
+          set -euo pipefail
+          docker pussh ${IMAGE_TAG} ${SERVER}
+
+          ssh ${SERVER} "IMAGE_TAG=${IMAGE_TAG} SERVICE_NAME=${SERVICE_NAME} COMPOSE_STACK=${COMPOSE_STACK}" bash << 'EOF'
+            set -euo pipefail
+            sudo mkdir -p /opt/${SERVICE_NAME}
+            sudo chown -R ${USER}:${USER} /opt/${SERVICE_NAME}
+            cd /opt/${SERVICE_NAME}
+
+            cat > compose.yaml << COMPOSEEOF
+          services:
+            app:
+              image: ${IMAGE_TAG}
+              command: ['pnpm', 'start']
+              env_file:
+                - /etc/fluxer/fluxer.env
+              environment:
+                - NODE_ENV=production
+                - FLUXER_MEDIA_PROXY_PORT=8080
+                - FLUXER_MEDIA_PROXY_STATIC_MODE=true
+                - FLUXER_MEDIA_PROXY_REQUIRE_CLOUDFLARE=true
+                - AWS_S3_ENDPOINT=https://s3.us-east-va.io.cloud.ovh.us
+                - AWS_S3_BUCKET_CDN=fluxer
+                - AWS_S3_BUCKET_UPLOADS=fluxer-uploads
+                - AWS_S3_BUCKET_STATIC=fluxer-static
+              deploy:
+                replicas: 2
+                restart_policy:
+                  condition: on-failure
+                  delay: 5s
+                  max_attempts: 3
+                update_config:
+                  parallelism: 1
+                  delay: 10s
+                  order: start-first
+                rollback_config:
+                  parallelism: 1
+                  delay: 10s
+                labels:
+                  - 'caddy=http://fluxerstatic.com'
+                  - 'caddy.reverse_proxy={{upstreams 8080}}'
+                  - 'caddy.header.X-Robots-Tag="noindex, nofollow, nosnippet, noimageindex"'
+                  - 'caddy.header.Strict-Transport-Security="max-age=31536000; includeSubDomains; preload"'
+                  - 'caddy.header.X-Xss-Protection="1; mode=block"'
+                  - 'caddy.header.X-Content-Type-Options=nosniff'
+                  - 'caddy.header.Referrer-Policy=strict-origin-when-cross-origin'
+                  - 'caddy.header.X-Frame-Options=DENY'
+                  - 'caddy.header.Expect-Ct="max-age=86400, report-uri=\"https://o4510149383094272.ingest.us.sentry.io/api/4510205811556352/security/?sentry_key=2670068cd12b6a62f3a30a7f0055f0f1\""'
+              networks:
+                - fluxer-shared
+              healthcheck:
+                test: ['CMD', 'curl', '-f', 'http://localhost:8080/_health']
+                interval: 30s
+                timeout: 10s
+                retries: 3
+                start_period: 40s
+
+          networks:
+            fluxer-shared:
+              external: true
+          COMPOSEEOF
+
+            docker stack deploy -c compose.yaml ${COMPOSE_STACK}
+            docker service update --image ${IMAGE_TAG} fluxer-static-proxy_app
+          EOF

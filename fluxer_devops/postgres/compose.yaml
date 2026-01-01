@@ -1,0 +1,50 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    hostname: postgres
+    environment:
+      - POSTGRES_DB=fluxer
+      - POSTGRES_USER=fluxer
+      - POSTGRES_PASSWORD_FILE=/run/secrets/postgres_password
+    secrets:
+      - postgres_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./conf/postgresql.conf:/etc/postgresql/postgresql.conf
+    command: postgres -c config_file=/etc/postgresql/postgresql.conf
+    networks:
+      - fluxer-shared
+    ports:
+      - '5432:5432'
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 3
+      resources:
+        limits:
+          cpus: '4'
+          memory: 16G
+        reservations:
+          cpus: '2'
+          memory: 8G
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U fluxer -d fluxer']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    shm_size: 2g
+
+networks:
+  fluxer-shared:
+    external: true
+
+volumes:
+  postgres_data:
+    driver: local
+
+secrets:
+  postgres_password:
+    external: true

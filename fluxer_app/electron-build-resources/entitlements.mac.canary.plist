@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- Required for Electron on arm64 -->
+    <key>com.apple.security.cs.allow-jit</key>
+    <true/>
+    <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
+    <true/>
+    <key>com.apple.security.cs.disable-library-validation</key>
+    <true/>
+
+    <!-- Microphone: need BOTH audio-input (hardened runtime) AND microphone (sandbox) -->
+    <key>com.apple.security.device.audio-input</key>
+    <true/>
+    <key>com.apple.security.device.microphone</key>
+    <true/>
+
+    <!-- Camera -->
+    <key>com.apple.security.device.camera</key>
+    <true/>
+
+    <!-- Network -->
+    <key>com.apple.security.network.client</key>
+    <true/>
+    <key>com.apple.security.network.server</key>
+    <true/>
+
+    <!-- Passkeys: application identifier and associated domains (restricted entitlements) -->
+    <key>com.apple.application-identifier</key>
+    <string>3G5837T29K.app.fluxer.canary</string>
+
+    <key>com.apple.developer.associated-domains</key>
+    <array>
+        <string>webcredentials:web.canary.fluxer.app</string>
+    </array>
+</dict>
+</plist>

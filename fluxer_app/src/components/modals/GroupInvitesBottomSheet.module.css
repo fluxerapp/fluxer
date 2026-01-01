@@ -1,0 +1,124 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.container {
+	display: flex;
+	height: 100%;
+	flex-direction: column;
+	overflow: hidden;
+}
+
+.backButton {
+	display: flex;
+	align-items: center;
+	color: var(--text-primary);
+}
+
+.backIcon {
+	height: 20px;
+	width: 20px;
+}
+
+.scroller {
+	flex: 1;
+}
+
+.content {
+	padding: 16px;
+	padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+}
+
+.loadingContainer {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 32px 0;
+}
+
+.loadingText {
+	color: var(--text-primary-muted);
+}
+
+.emptyContainer {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 32px 0;
+}
+
+.emptyText {
+	color: var(--text-primary-muted);
+}
+
+.inviteList {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.inviteItem {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	border-radius: 6px;
+	border: 1px solid var(--background-header-secondary);
+	background-color: var(--background-tertiary);
+	padding: 12px;
+}
+
+.inviteDetails {
+	flex: 1;
+}
+
+.inviteUrl {
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--text-primary);
+}
+
+.inviteInfo {
+	font-size: 12px;
+	color: var(--text-primary-muted);
+}
+
+.revokeButton {
+	display: flex;
+	height: 32px;
+	width: 32px;
+	align-items: center;
+	justify-content: center;
+	border-radius: 9999px;
+	color: var(--text-primary-muted);
+	transition:
+		background-color 0.2s,
+		color 0.2s;
+	cursor: pointer;
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.revokeButton:hover {
+		background-color: color-mix(in srgb, var(--status-danger) 15%, transparent);
+		color: var(--status-danger);
+	}
+}
+
+.revokeIcon {
+	height: 16px;
+	width: 16px;
+}

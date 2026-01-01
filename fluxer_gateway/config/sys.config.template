@@ -1,0 +1,40 @@
+[
+    {fluxer_gateway, [
+        {ws_port, 8080},
+        {rpc_port, 8081},
+        {api_host, "${FLUXER_API_HOST}"},
+        {rpc_secret_key, <<"${GATEWAY_RPC_SECRET}">>},
+        {max_payload_size, 4096},
+        {heartbeat_interval, 41250},
+        {heartbeat_timeout, 45000},
+        {resume_timeout, 10000},
+        {identify_rate_limit_enabled, false},
+        {push_enabled, true},
+        {push_user_guild_settings_cache_mb, 8192},
+        {push_subscriptions_cache_mb, 8192},
+        {push_blocked_ids_cache_mb, 8192},
+        {push_badge_counts_cache_mb, 256},
+        {push_badge_counts_cache_ttl_seconds, 60},
+        {media_proxy_endpoint, "${MEDIA_PROXY_ENDPOINT}"}
+    ]},
+    {kernel, [
+        {logger_level, debug},
+        {logger, [
+            {handler, default, logger_std_h, #{
+                level => debug,
+                config => #{
+                    type => standard_io
+                }
+            }}
+        ]},
+        {inet_dist_use_interface, {0,0,0,0}},
+        {inet_backend, socket},
+        {inet_dist_listen_options, [{reuseaddr, true}]}
+    ]},
+    {sasl, [
+        {errlog_type, error}
+    ]},
+    {inet, [
+        {lookup, [native, file, dns]}
+    ]}
+].

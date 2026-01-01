@@ -1,0 +1,66 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.channelLayoutContainer {
+	display: grid;
+	grid-template-rows: 1fr;
+	height: 100%;
+	min-height: 0;
+	width: 100%;
+	min-width: 0;
+	background-color: var(--background-tertiary);
+}
+
+.channelNotFoundContainer {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: var(--spacing-4);
+	height: 100%;
+	min-height: 0;
+	width: 100%;
+	min-width: 0;
+	padding: var(--spacing-8);
+}
+
+.channelNotFoundContent {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--spacing-1);
+	text-align: center;
+}
+
+.channelNotFoundIcon {
+	height: 4rem;
+	width: 4rem;
+	color: var(--text-tertiary);
+}
+
+.channelNotFoundTitle {
+	font-weight: 600;
+	font-size: 1.5rem;
+	line-height: 2rem;
+	color: var(--text-primary);
+}
+
+.channelNotFoundDescription {
+	color: var(--text-tertiary);
+}

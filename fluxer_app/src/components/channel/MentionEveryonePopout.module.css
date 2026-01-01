@@ -1,0 +1,95 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.container {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	padding: 16px;
+	background-color: var(--background-primary);
+	border-radius: 8px;
+	box-shadow: var(--elevation-high);
+	max-width: 340px;
+}
+
+.header {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.warningIcon {
+	color: var(--status-warning);
+	flex-shrink: 0;
+}
+
+.title {
+	font-size: 16px;
+	font-weight: 600;
+	color: var(--text-primary);
+}
+
+.description {
+	margin: 0;
+	font-size: 14px;
+	line-height: 1.4;
+	color: var(--text-secondary);
+}
+
+.description strong {
+	color: var(--text-primary);
+	font-weight: 600;
+}
+
+.roleName {
+	color: var(--text-primary);
+	font-weight: 600;
+}
+
+.keybindHint {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 20px;
+	height: 18px;
+	padding: 0 4px;
+	margin-left: 6px;
+	border-radius: 3px;
+	background-color: rgba(255, 255, 255, 0.15);
+	color: inherit;
+	font-family: inherit;
+	font-size: 11px;
+	font-weight: 600;
+	line-height: 1;
+}
+
+.keybinds {
+	display: flex;
+	justify-content: flex-end;
+	gap: 12px;
+}
+
+.keybind {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	font-size: 13px;
+	color: var(--text-secondary);
+	text-transform: capitalize;
+}

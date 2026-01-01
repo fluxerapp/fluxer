@@ -1,0 +1,143 @@
+name: restart gateway
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: 'this will cause service interruption for all users. type RESTART to confirm.'
+        required: true
+        type: string
+
+concurrency:
+  group: restart-gateway
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  SERVICE_NAME: fluxer-gateway
+  IMAGE_NAME: fluxer-gateway
+  CONTEXT_DIR: fluxer_gateway
+  COMPOSE_STACK: fluxer-gateway
+
+jobs:
+  restart:
+    name: Restart gateway
+    runs-on: blacksmith-2vcpu-ubuntu-2404
+    timeout-minutes: 10
+    steps:
+      - name: Validate confirmation
+        if: ${{ github.event.inputs.confirmation != 'RESTART' }}
+        run: |
+          echo "::error::Confirmation failed. You must type 'RESTART' to proceed with a full restart."
+          echo "::error::For regular updates, use deploy-gateway.yaml instead."
+          exit 1
+
+      - uses: actions/checkout@v6
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+      - name: Build image
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ env.CONTEXT_DIR }}
+          file: ${{ env.CONTEXT_DIR }}/Dockerfile
+          tags: ${{ env.IMAGE_NAME }}:${{ github.sha }}
+          load: true
+          platforms: linux/amd64
+          cache-from: type=gha,scope=${{ env.SERVICE_NAME }}
+          cache-to: type=gha,mode=max,scope=${{ env.SERVICE_NAME }}
+        env:
+          DOCKER_BUILD_SUMMARY: false
+          DOCKER_BUILD_RECORD_UPLOAD: false
+
+      - name: Install docker-pussh
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.docker/cli-plugins
+          curl -fsSL https://raw.githubusercontent.com/psviderski/unregistry/v0.3.1/docker-pussh \
+            -o ~/.docker/cli-plugins/docker-pussh
+          chmod +x ~/.docker/cli-plugins/docker-pussh
+
+      - name: Set up SSH agent
+        uses: webfactory/ssh-agent@v0.9.1
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY_SERVER }}
+
+      - name: Add server to known hosts
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+
+      - name: Push image and deploy
+        env:
+          IMAGE_TAG: ${{ env.IMAGE_NAME }}:${{ github.sha }}
+          SERVER: ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}
+        run: |
+          set -euo pipefail
+          docker pussh ${IMAGE_TAG} ${SERVER}
+
+          ssh ${SERVER} "IMAGE_TAG=${IMAGE_TAG} SERVICE_NAME=${SERVICE_NAME} COMPOSE_STACK=${COMPOSE_STACK}" bash << 'EOF'
+            set -euo pipefail
+            sudo mkdir -p /opt/${SERVICE_NAME}
+            sudo chown -R ${USER}:${USER} /opt/${SERVICE_NAME}
+            cd /opt/${SERVICE_NAME}
+
+            cat > compose.yaml << COMPOSEEOF
+          services:
+            app:
+              image: ${IMAGE_TAG}
+              hostname: "{{.Node.Hostname}}-{{.Task.Slot}}"
+              env_file:
+                - /etc/fluxer/fluxer.env
+              environment:
+                - API_HOST=fluxer-api_app:8080
+                - API_CANARY_HOST=fluxer-api-canary_app:8080
+                - RELEASE_NODE=fluxer_gateway@{{.Node.Hostname}}-{{.Task.Slot}}
+                - LOGGER_LEVEL=info
+                - VAPID_PUBLIC_KEY=BEIwQxIwfj6m90tLYAR0AU_GJWU4kw8J_zJcHQG55NCUWSyRy-dzMOgvxk8yEDwdVyJZa6xUL4fmwngijq8T2pY
+                - FLUXER_METRICS_HOST=fluxer-metrics_app:8080
+                - MEDIA_PROXY_ENDPOINT=https://fluxerusercontent.com
+              deploy:
+                replicas: 1
+                endpoint_mode: dnsrr
+                restart_policy:
+                  condition: on-failure
+                  delay: 5s
+                  max_attempts: 3
+                update_config:
+                  parallelism: 1
+                  delay: 10s
+                  order: start-first
+                rollback_config:
+                  parallelism: 1
+                  delay: 10s
+                labels:
+                  - 'caddy_gw=gateway.fluxer.app'
+                  - 'caddy_gw.reverse_proxy={{upstreams 8080}}'
+              networks:
+                - fluxer-shared
+              healthcheck:
+                test: ['CMD', 'curl', '-f', 'http://localhost:8080/_health']
+                interval: 30s
+                timeout: 10s
+                retries: 3
+                start_period: 60s
+
+          networks:
+            fluxer-shared:
+              external: true
+          COMPOSEEOF
+
+            docker stack deploy -c compose.yaml ${COMPOSE_STACK}
+            docker service update --image ${IMAGE_TAG} fluxer-gateway_app
+          EOF

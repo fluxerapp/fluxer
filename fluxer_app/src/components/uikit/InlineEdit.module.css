@@ -1,0 +1,110 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.container {
+	display: inline-flex;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 0;
+}
+
+.inlineTextBase {
+	font-size: inherit;
+	line-height: inherit;
+	font-family: inherit;
+	font-weight: inherit;
+	letter-spacing: inherit;
+	color: inherit;
+	white-space: pre;
+}
+
+.idleButton {
+	cursor: pointer;
+	background: none;
+	border: none;
+	padding: 0;
+	margin: 0;
+	text-align: left;
+	min-width: 0;
+	outline: none;
+}
+
+.idleButton:focus {
+	outline: none;
+}
+
+.idleButton:active {
+	background: none;
+}
+
+.wrapper {
+	display: inline-flex;
+	align-items: center;
+	min-width: 0;
+	padding: 4px 8px;
+	border-radius: 4px;
+	box-sizing: border-box;
+	border: 1px solid transparent;
+	background-color: transparent;
+	transition: background-color 0.1s ease;
+	max-width: 100%;
+	width: 100%;
+}
+
+.idleButton:hover .wrapper {
+	background-color: var(--background-secondary);
+}
+
+.placeholder .wrapper {
+	color: var(--text-tertiary);
+}
+
+.container:has(.editable) .wrapper {
+	background-color: var(--background-tertiary);
+}
+
+.affix {
+	display: inline-block;
+	flex-shrink: 0;
+}
+
+.text {
+	display: inline-block;
+	min-width: 0;
+	flex-shrink: 1;
+}
+
+.editable {
+	padding: 0;
+	margin: 0;
+	outline: none;
+	border: none;
+	background: none;
+}
+
+.editable:empty:before {
+	content: attr(data-placeholder);
+	color: var(--text-tertiary);
+	pointer-events: none;
+}
+
+.error {
+	font-size: 12px;
+	color: var(--status-danger);
+}

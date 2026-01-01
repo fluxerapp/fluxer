@@ -1,0 +1,69 @@
+cluster_name: 'fluxer-cluster'
+num_tokens: 256
+partitioner: org.apache.cassandra.dht.Murmur3Partitioner
+seed_provider:
+  - class_name: org.apache.cassandra.locator.SimpleSeedProvider
+    parameters:
+      - seeds: 'cassandra'
+listen_address: auto
+broadcast_address: cassandra
+rpc_address: 0.0.0.0
+broadcast_rpc_address: cassandra
+storage_port: 7000
+ssl_storage_port: 7001
+native_transport_port: 9042
+endpoint_snitch: GossipingPropertyFileSnitch
+data_file_directories:
+  - /var/lib/cassandra/data
+commitlog_directory: /var/lib/cassandra/commitlog
+saved_caches_directory: /var/lib/cassandra/saved_caches
+hints_directory: /var/lib/cassandra/hints
+concurrent_reads: 32
+concurrent_writes: 32
+concurrent_counter_writes: 32
+concurrent_materialized_view_writes: 32
+memtable_allocation_type: heap_buffers
+memtable_flush_writers: 4
+commitlog_sync: periodic
+commitlog_sync_period: 10000ms
+commitlog_segment_size: 32MiB
+commitlog_total_space: 8192MiB
+compaction_throughput: 64MiB/s
+concurrent_compactors: 4
+sstable_preemptive_open_interval: 50MiB
+key_cache_size: 2048MiB
+key_cache_save_period: 14400
+row_cache_size: 0MiB
+counter_cache_size: 256MiB
+counter_cache_save_period: 7200
+read_request_timeout: 10000ms
+write_request_timeout: 10000ms
+counter_write_request_timeout: 10000ms
+range_request_timeout: 20000ms
+request_timeout: 20000ms
+authenticator: PasswordAuthenticator
+authorizer: CassandraAuthorizer
+role_manager: CassandraRoleManager
+native_transport_max_threads: 128
+native_transport_max_frame_size: 256MiB
+auto_snapshot: true
+snapshot_before_compaction: false
+tombstone_warn_threshold: 10000
+tombstone_failure_threshold: 100000
+disk_optimization_strategy: ssd
+disk_access_mode: auto
+stream_throughput_outbound: 400MiB/s
+inter_dc_stream_throughput_outbound: 200MiB/s
+max_hints_delivery_threads: 4
+hints_flush_period: 10000ms
+gc_warn_threshold: 1000ms
+gc_log_threshold: 200ms
+batch_size_warn_threshold: 5KiB
+batch_size_fail_threshold: 50KiB
+prepared_statements_cache_size: 10MiB
+client_encryption_options:
+  enabled: false
+  optional: false
+server_encryption_options:
+  internode_encryption: none
+  optional: false

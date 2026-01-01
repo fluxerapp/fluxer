@@ -1,0 +1,612 @@
+name: build desktop
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Git ref to build (branch, tag, or commit SHA)
+        required: false
+        default: stable
+        type: string
+      skip_windows:
+        description: Skip Windows builds
+        required: false
+        default: false
+        type: boolean
+      skip_macos:
+        description: Skip macOS builds
+        required: false
+        default: false
+        type: boolean
+      skip_linux:
+        description: Skip Linux builds
+        required: false
+        default: false
+        type: boolean
+      skip_windows_x64:
+        description: Skip Windows x64 builds
+        required: false
+        default: false
+        type: boolean
+      skip_windows_arm64:
+        description: Skip Windows ARM64 builds
+        required: false
+        default: false
+        type: boolean
+      skip_macos_x64:
+        description: Skip macOS x64 builds
+        required: false
+        default: false
+        type: boolean
+      skip_macos_arm64:
+        description: Skip macOS ARM64 builds
+        required: false
+        default: false
+        type: boolean
+      skip_linux_x64:
+        description: Skip Linux x64 builds
+        required: false
+        default: false
+        type: boolean
+      skip_linux_arm64:
+        description: Skip Linux ARM64 builds
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+concurrency:
+  group: desktop-stable-${{ inputs.ref || 'stable' }}
+  cancel-in-progress: true
+
+env:
+  CHANNEL: stable
+  SOURCE_REF: ${{ inputs.ref || 'stable' }}
+
+jobs:
+  matrix:
+    name: Resolve build matrix
+    runs-on: blacksmith-2vcpu-ubuntu-2404
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: Build platform matrix
+        id: set-matrix
+        run: |
+          PLATFORMS='[
+            {"platform":"windows","arch":"x64","os":"windows-latest","electron_arch":"x64"},
+            {"platform":"windows","arch":"arm64","os":"windows-11-arm","electron_arch":"arm64"},
+            {"platform":"macos","arch":"x64","os":"macos-15-intel","electron_arch":"x64"},
+            {"platform":"macos","arch":"arm64","os":"macos-15","electron_arch":"arm64"},
+            {"platform":"linux","arch":"x64","os":"ubuntu-24.04","electron_arch":"x64"},
+            {"platform":"linux","arch":"arm64","os":"ubuntu-24.04-arm","electron_arch":"arm64"}
+          ]'
+
+          FILTERED="$(echo "$PLATFORMS" | jq -c \
+            --argjson skipWin '${{ inputs.skip_windows }}' \
+            --argjson skipWinX64 '${{ inputs.skip_windows_x64 }}' \
+            --argjson skipWinArm '${{ inputs.skip_windows_arm64 }}' \
+            --argjson skipMac '${{ inputs.skip_macos }}' \
+            --argjson skipMacX64 '${{ inputs.skip_macos_x64 }}' \
+            --argjson skipMacArm '${{ inputs.skip_macos_arm64 }}' \
+            --argjson skipLinux '${{ inputs.skip_linux }}' \
+            --argjson skipLinuxX64 '${{ inputs.skip_linux_x64 }}' \
+            --argjson skipLinuxArm '${{ inputs.skip_linux_arm64 }}' '
+              [.[] | select(
+                (
+                  ((.platform == "windows") and (
+                    $skipWin or
+                    ((.arch == "x64") and $skipWinX64) or
+                    ((.arch == "arm64") and $skipWinArm)
+                  )) or
+                  ((.platform == "macos") and (
+                    $skipMac or
+                    ((.arch == "x64") and $skipMacX64) or
+                    ((.arch == "arm64") and $skipMacArm)
+                  )) or
+                  ((.platform == "linux") and (
+                    $skipLinux or
+                    ((.arch == "x64") and $skipLinuxX64) or
+                    ((.arch == "arm64") and $skipLinuxArm)
+                  ))
+                ) | not
+              )]
+            ')"
+
+          echo "matrix={\"include\":$FILTERED}" >> "$GITHUB_OUTPUT"
+
+  build:
+    name: Build ${{ matrix.platform }} (${{ matrix.arch }})
+    needs: matrix
+    outputs:
+      version: ${{ steps.metadata.outputs.version }}
+      pub_date: ${{ steps.metadata.outputs.pub_date }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.matrix.outputs.matrix) }}
+    env:
+      APP_WORKDIR: fluxer_app
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ env.SOURCE_REF }}
+
+      - name: Shorten Windows paths (workspace + temp for Squirrel) and pin pnpm store
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          subst W: "$env:GITHUB_WORKSPACE"
+          "APP_WORKDIR=W:\fluxer_app" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+          New-Item -ItemType Directory -Force "C:\t" | Out-Null
+          New-Item -ItemType Directory -Force "C:\sq" | Out-Null
+          New-Item -ItemType Directory -Force "C:\ebcache" | Out-Null
+          "TEMP=C:\t" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          "TMP=C:\t" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          "SQUIRREL_TEMP=C:\sq" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          "ELECTRON_BUILDER_CACHE=C:\ebcache" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+          New-Item -ItemType Directory -Force "C:\pnpm-store" | Out-Null
+          "NPM_CONFIG_STORE_DIR=C:\pnpm-store" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          "npm_config_store_dir=C:\pnpm-store" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+          "store-dir=C:\pnpm-store" | Set-Content -Path "W:\.npmrc" -Encoding ascii
+          git config --global core.longpaths true
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.26.0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20
+
+      - name: Set build metadata
+        id: metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="0.0.${GITHUB_RUN_NUMBER}"
+          PUB_DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          echo "VERSION=${VERSION}" >> "$GITHUB_ENV"
+          echo "PUB_DATE=${PUB_DATE}" >> "$GITHUB_ENV"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "pub_date=${PUB_DATE}" >> "$GITHUB_OUTPUT"
+
+      - name: Resolve pnpm store path (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $store = pnpm store path --silent
+          "PNPM_STORE_PATH=$store" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          New-Item -ItemType Directory -Force $store | Out-Null
+
+      - name: Resolve pnpm store path (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          store="$(pnpm store path --silent)"
+          echo "PNPM_STORE_PATH=$store" >> "$GITHUB_ENV"
+          mkdir -p "$store"
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.PNPM_STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install Python setuptools (Windows ARM64)
+        if: matrix.platform == 'windows' && matrix.arch == 'arm64'
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install "setuptools>=69" wheel
+
+      - name: Install Python setuptools (macOS)
+        if: matrix.platform == 'macos'
+        run: brew install python-setuptools
+
+      - name: Install Linux dependencies
+        if: matrix.platform == 'linux'
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libx11-dev libxtst-dev libxt-dev libxinerama-dev libxkbcommon-dev libxrandr-dev \
+            ruby ruby-dev build-essential rpm \
+            libpixman-1-dev libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev
+          sudo gem install --no-document fpm
+
+      - name: Install dependencies
+        working-directory: ${{ env.APP_WORKDIR }}
+        run: pnpm install --frozen-lockfile
+
+      - name: Update version
+        working-directory: ${{ env.APP_WORKDIR }}
+        run: pnpm version "$VERSION" --no-git-tag-version --allow-same-version
+
+      - name: Build Electron main process
+        working-directory: ${{ env.APP_WORKDIR }}
+        env:
+          BUILD_CHANNEL: stable
+        run: pnpm electron:compile
+
+      - name: Build Electron app (macOS)
+        if: matrix.platform == 'macos'
+        working-directory: ${{ env.APP_WORKDIR }}
+        env:
+          BUILD_CHANNEL: stable
+          CSC_LINK: ${{ secrets.APPLE_CERTIFICATE }}
+          CSC_KEY_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: pnpm exec electron-builder --config electron-builder.yaml --mac --${{ matrix.electron_arch }}
+
+      - name: Build Electron app (Windows)
+        if: matrix.platform == 'windows'
+        working-directory: ${{ env.APP_WORKDIR }}
+        env:
+          BUILD_CHANNEL: stable
+          TEMP: C:\t
+          TMP: C:\t
+          SQUIRREL_TEMP: C:\sq
+          ELECTRON_BUILDER_CACHE: C:\ebcache
+        run: pnpm exec electron-builder --config electron-builder.yaml --win --${{ matrix.electron_arch }}
+
+      - name: Analyze Squirrel nupkg for long paths
+        if: matrix.platform == 'windows'
+        working-directory: ${{ env.APP_WORKDIR }}
+        shell: pwsh
+        env:
+          BUILD_VERSION: ${{ steps.metadata.outputs.version }}
+          MAX_WINDOWS_PATH_LEN: 260
+          PATH_HEADROOM: 10
+        run: |
+          $primaryDir = if ("${{ matrix.arch }}" -eq "arm64") { "dist-electron/squirrel-windows-arm64" } else { "dist-electron/squirrel-windows" }
+          $fallbackDir = if ("${{ matrix.arch }}" -eq "arm64") { "dist-electron/squirrel-windows" } else { "dist-electron/squirrel-windows-arm64" }
+          $dirs = @($primaryDir, $fallbackDir)
+
+          $nupkg = $null
+          foreach ($d in $dirs) {
+            if (Test-Path $d) {
+              $nupkg = Get-ChildItem -Path "$d/*.nupkg" -ErrorAction SilentlyContinue | Select-Object -First 1
+              if ($nupkg) { break }
+            }
+          }
+
+          if (-not $nupkg) {
+            throw "No Squirrel nupkg found in: $($dirs -join ', ')"
+          }
+
+          Write-Host "Analyzing Windows installer $($nupkg.FullName)"
+          $env:NUPKG_PATH = $nupkg.FullName
+
+          $lines = @(
+            'import os'
+            'import zipfile'
+            ''
+            'path = os.environ["NUPKG_PATH"]'
+            'build_ver = os.environ["BUILD_VERSION"]'
+            'prefix = os.path.join(os.environ["LOCALAPPDATA"], "fluxer_app", f"app-{build_ver}", "resources", "app.asar.unpacked")'
+            'max_len = int(os.environ.get("MAX_WINDOWS_PATH_LEN", "260"))'
+            'headroom = int(os.environ.get("PATH_HEADROOM", "10"))'
+            'limit = max_len - headroom'
+            ''
+            'with zipfile.ZipFile(path) as archive:'
+            '    entries = []'
+            '    for info in archive.infolist():'
+            '        normalized = info.filename.lstrip("/\\\\")'
+            '        total_len = len(os.path.join(prefix, normalized)) if normalized else len(prefix)'
+            '        entries.append((total_len, info.filename))'
+            ''
+            'if not entries:'
+            '    raise SystemExit("nupkg archive contains no entries")'
+            ''
+            'entries.sort(reverse=True)'
+            'print(f"Assumed install prefix: {prefix} ({len(prefix)} chars). Maximum allowed path length: {limit} (total reserve {max_len}, headroom {headroom}).")'
+            'print("Top 20 longest archived paths (length includes prefix):")'
+            'for length, name in entries[:20]:'
+            '    print(f"{length:4d} {name}")'
+            ''
+            'longest_len, longest_name = entries[0]'
+            'if longest_len > limit:'
+            '    raise SystemExit(f"Longest path {longest_len} for {longest_name} exceeds limit {limit}")'
+            'print(f"Longest archived path {longest_len} is within the limit of {limit}.")'
+          )
+
+          $scriptPath = Join-Path $env:TEMP "nupkg-long-path-check.py"
+          Set-Content -Path $scriptPath -Value $lines -Encoding utf8
+          python $scriptPath
+
+      - name: Build Electron app (Linux)
+        if: matrix.platform == 'linux'
+        working-directory: ${{ env.APP_WORKDIR }}
+        env:
+          BUILD_CHANNEL: stable
+          USE_SYSTEM_FPM: true
+        run: pnpm exec electron-builder --config electron-builder.yaml --linux --${{ matrix.electron_arch }}
+
+      - name: Prepare artifacts (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force upload_staging | Out-Null
+
+          $dist = Join-Path $env:APP_WORKDIR "dist-electron"
+          $sqDirName = if ("${{ matrix.arch }}" -eq "arm64") { "squirrel-windows-arm64" } else { "squirrel-windows" }
+          $sqFallbackName = if ($sqDirName -eq "squirrel-windows") { "squirrel-windows-arm64" } else { "squirrel-windows" }
+
+          $sq = Join-Path $dist $sqDirName
+          $sqFallback = Join-Path $dist $sqFallbackName
+
+          $picked = $null
+          if (Test-Path $sq) { $picked = $sq }
+          elseif (Test-Path $sqFallback) { $picked = $sqFallback }
+
+          if ($picked) {
+            Copy-Item -Force -ErrorAction SilentlyContinue "$picked\*.exe" "upload_staging\"
+            Copy-Item -Force -ErrorAction SilentlyContinue "$picked\*.exe.blockmap" "upload_staging\"
+            Copy-Item -Force -ErrorAction SilentlyContinue "$picked\RELEASES*" "upload_staging\"
+            Copy-Item -Force -ErrorAction SilentlyContinue "$picked\*.nupkg" "upload_staging\"
+            Copy-Item -Force -ErrorAction SilentlyContinue "$picked\*.nupkg.blockmap" "upload_staging\"
+          }
+
+          if (Test-Path $dist) {
+            Copy-Item -Force -ErrorAction SilentlyContinue "$dist\*.yml" "upload_staging\"
+            Copy-Item -Force -ErrorAction SilentlyContinue "$dist\*.zip" "upload_staging\"
+            Copy-Item -Force -ErrorAction SilentlyContinue "$dist\*.zip.blockmap" "upload_staging\"
+          }
+
+          if (-not (Get-ChildItem upload_staging -Filter *.exe -ErrorAction SilentlyContinue)) {
+            throw "No installer .exe staged. Squirrel outputs were not copied."
+          }
+
+          Get-ChildItem -Force upload_staging | Format-Table -AutoSize
+
+      - name: Prepare artifacts (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          mkdir -p upload_staging
+          DIST="${{ env.APP_WORKDIR }}/dist-electron"
+
+          cp -f "$DIST"/*.dmg upload_staging/ 2>/dev/null || true
+          cp -f "$DIST"/*.zip upload_staging/ 2>/dev/null || true
+          cp -f "$DIST"/*.zip.blockmap upload_staging/ 2>/dev/null || true
+          cp -f "$DIST"/*.yml upload_staging/ 2>/dev/null || true
+
+          cp -f "$DIST"/*.AppImage upload_staging/ 2>/dev/null || true
+          cp -f "$DIST"/*.deb upload_staging/ 2>/dev/null || true
+          cp -f "$DIST"/*.rpm upload_staging/ 2>/dev/null || true
+          cp -f "$DIST"/*.tar.gz upload_staging/ 2>/dev/null || true
+
+          ls -la upload_staging/
+
+      - name: Normalize updater YAML (arm64)
+        if: matrix.arch == 'arm64'
+        shell: bash
+        run: |
+          cd upload_staging
+          [[ "${{ matrix.platform }}" == "macos" && -f latest-mac.yml && ! -f latest-mac-arm64.yml ]] && mv latest-mac.yml latest-mac-arm64.yml || true
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: fluxer-desktop-stable-${{ matrix.platform }}-${{ matrix.arch }}
+          path: |
+            upload_staging/*.exe
+            upload_staging/*.exe.blockmap
+            upload_staging/*.dmg
+            upload_staging/*.zip
+            upload_staging/*.zip.blockmap
+            upload_staging/*.AppImage
+            upload_staging/*.deb
+            upload_staging/*.rpm
+            upload_staging/*.tar.gz
+            upload_staging/*.yml
+            upload_staging/*.nupkg
+            upload_staging/*.nupkg.blockmap
+            upload_staging/RELEASES*
+          retention-days: 30
+
+  upload:
+    name: Upload to S3 (rclone)
+    needs: build
+    runs-on: blacksmith-2vcpu-ubuntu-2404
+    env:
+      CHANNEL: stable
+      S3_ENDPOINT: https://s3.us-east-va.io.cloud.ovh.us
+      S3_BUCKET: fluxer-downloads
+      PUBLIC_DL_BASE: https://api.fluxer.app/dl
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          pattern: fluxer-desktop-stable-*
+
+      - name: Install rclone
+        run: |
+          set -euo pipefail
+          if ! command -v rclone >/dev/null 2>&1; then
+            curl -fsSL https://rclone.org/install.sh | sudo bash
+          fi
+
+      - name: Configure rclone (OVH S3)
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.config/rclone
+          cat > ~/.config/rclone/rclone.conf <<'RCLONEEOF'
+          [ovh]
+          type = s3
+          provider = Other
+          env_auth = true
+          endpoint = https://s3.us-east-va.io.cloud.ovh.us
+          acl = private
+          RCLONEEOF
+
+      - name: Build S3 payload layout (+ manifest.json)
+        env:
+          VERSION: ${{ needs.build.outputs.version }}
+          PUB_DATE: ${{ needs.build.outputs.pub_date }}
+        run: |
+          set -euo pipefail
+
+          mkdir -p s3_payload
+
+          shopt -s nullglob
+          for dir in artifacts/fluxer-desktop-stable-*; do
+            [ -d "$dir" ] || continue
+
+            base="$(basename "$dir")"
+            if [[ "$base" =~ ^fluxer-desktop-stable-([a-z]+)-([a-z0-9]+)$ ]]; then
+              platform="${BASH_REMATCH[1]}"
+              arch="${BASH_REMATCH[2]}"
+            else
+              echo "Skipping unrecognized artifact dir: $base"
+              continue
+            fi
+
+            case "$platform" in
+              windows) plat="win32" ;;
+              macos) plat="darwin" ;;
+              linux) plat="linux" ;;
+              *)
+                echo "Unknown platform: $platform"
+                continue
+                ;;
+            esac
+
+            dest="s3_payload/desktop/${CHANNEL}/${plat}/${arch}"
+            mkdir -p "$dest"
+            cp -av "$dir"/* "$dest/" || true
+
+            if [[ "$plat" == "darwin" ]]; then
+              zip_file=""
+              for z in "$dest"/*.zip; do
+                zip_file="$z"
+                break
+              done
+
+              if [[ -z "$zip_file" ]]; then
+                echo "No .zip found for macOS $arch in $dest (auto-update requires zip artifacts)."
+              else
+                zip_name="$(basename "$zip_file")"
+                url="${PUBLIC_DL_BASE}/desktop/${CHANNEL}/${plat}/${arch}/${zip_name}"
+
+                cat > "$dest/RELEASES.json" <<EOF
+          {
+            "currentRelease": "${VERSION}",
+            "releases": [
+              {
+                "version": "${VERSION}",
+                "updateTo": {
+                  "version": "${VERSION}",
+                  "pub_date": "${PUB_DATE}",
+                  "notes": "",
+                  "name": "${VERSION}",
+                  "url": "${url}"
+                }
+              }
+            ]
+          }
+          EOF
+                cp -f "$dest/RELEASES.json" "$dest/releases.json"
+              fi
+            fi
+
+            setup_file=""
+            dmg_file=""
+            zip_file2=""
+            appimage_file=""
+            deb_file=""
+            rpm_file=""
+            targz_file=""
+
+            if [[ "$plat" == "win32" ]]; then
+              setup_file="$(ls -1 "$dest"/*.exe 2>/dev/null | grep -i 'setup' | head -n1 || true)"
+              if [[ -z "$setup_file" ]]; then
+                setup_file="$(ls -1 "$dest"/*.exe 2>/dev/null | head -n1 || true)"
+              fi
+            fi
+
+            if [[ "$plat" == "darwin" ]]; then
+              dmg_file="$(ls -1 "$dest"/*.dmg 2>/dev/null | head -n1 || true)"
+              zip_file2="$(ls -1 "$dest"/*.zip 2>/dev/null | head -n1 || true)"
+            fi
+
+            if [[ "$plat" == "linux" ]]; then
+              appimage_file="$(ls -1 "$dest"/*.AppImage 2>/dev/null | head -n1 || true)"
+              deb_file="$(ls -1 "$dest"/*.deb 2>/dev/null | head -n1 || true)"
+              rpm_file="$(ls -1 "$dest"/*.rpm 2>/dev/null | head -n1 || true)"
+              targz_file="$(ls -1 "$dest"/*.tar.gz 2>/dev/null | head -n1 || true)"
+            fi
+
+            jq -n \
+              --arg channel "${CHANNEL}" \
+              --arg platform "${plat}" \
+              --arg arch "${arch}" \
+              --arg version "${VERSION}" \
+              --arg pub_date "${PUB_DATE}" \
+              --arg setup "$(basename "${setup_file:-}")" \
+              --arg dmg "$(basename "${dmg_file:-}")" \
+              --arg zip "$(basename "${zip_file2:-}")" \
+              --arg appimage "$(basename "${appimage_file:-}")" \
+              --arg deb "$(basename "${deb_file:-}")" \
+              --arg rpm "$(basename "${rpm_file:-}")" \
+              --arg tar_gz "$(basename "${targz_file:-}")" \
+              '{
+                channel: $channel,
+                platform: $platform,
+                arch: $arch,
+                version: $version,
+                pub_date: $pub_date,
+                files: {
+                  setup: $setup,
+                  dmg: $dmg,
+                  zip: $zip,
+                  appimage: $appimage,
+                  deb: $deb,
+                  rpm: $rpm,
+                  tar_gz: $tar_gz
+                }
+              }' > "$dest/manifest.json"
+          done
+
+          echo "Payload tree:"
+          find s3_payload -maxdepth 6 -type f | sort
+
+      - name: Upload payload to S3
+        run: |
+          set -euo pipefail
+          rclone copy s3_payload/desktop "ovh:${S3_BUCKET}/desktop" \
+            --transfers 32 \
+            --checkers 16 \
+            --fast-list \
+            --s3-upload-concurrency 8 \
+            --s3-chunk-size 16M \
+            -v
+
+      - name: Build summary
+        run: |
+          {
+            echo "## Desktop Stable Upload Complete"
+            echo ""
+            echo "**Version:** ${{ steps.metadata.outputs.version }}"
+            echo ""
+            echo "**S3 prefix:** desktop/${CHANNEL}/"
+            echo ""
+            echo "**Redirect endpoint shape:** /dl/desktop/${CHANNEL}/{plat}/{arch}/{format}"
+          } >> "$GITHUB_STEP_SUMMARY"

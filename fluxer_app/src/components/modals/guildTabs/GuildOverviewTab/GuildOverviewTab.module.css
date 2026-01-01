@@ -1,0 +1,311 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.container {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-10);
+}
+
+.section {
+	border-top: 1px solid var(--background-modifier-accent);
+	padding: var(--spacing-6) 0 var(--spacing-5);
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-4);
+	margin: 0;
+}
+
+.section:first-child {
+	border-top: none;
+	padding-top: 0;
+}
+
+.sectionTitle {
+	margin: 0;
+	font-size: 16px;
+	font-weight: 700;
+	line-height: 1.2;
+	color: var(--text-primary);
+}
+
+.sectionDescription {
+	margin: 0;
+	font-size: 13px;
+	line-height: 1.35;
+	color: var(--text-primary-muted);
+}
+
+.sectionHeader {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-2);
+}
+
+.brandingContent {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-5);
+}
+
+.iconField {
+	margin-bottom: var(--spacing-2);
+	font-size: 13px;
+	font-weight: 700;
+	color: var(--text-primary);
+}
+
+.iconUploadContainer {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-4);
+	min-height: 84px;
+}
+
+.iconPreview {
+	width: 80px;
+	height: 80px;
+	border-radius: 50%;
+	background-size: cover;
+	background-position: center;
+	background-repeat: no-repeat;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+	flex: 0 0 auto;
+}
+
+.iconUploadActions {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-3);
+	min-width: 0;
+	flex: 1 1 auto;
+}
+
+.iconUploadButtons {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-3);
+}
+
+.iconUploadDescription {
+	font-size: 12px;
+	line-height: 1.35;
+	color: var(--text-primary-muted);
+}
+
+.errorMessage {
+	margin: var(--spacing-3) 0 0 0;
+	font-size: 12px;
+	line-height: 1.35;
+	color: var(--status-danger);
+}
+
+.imagePreviewContainer {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-5);
+}
+
+.imageUploadActions {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-4);
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.imageUploadButtons {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-3);
+}
+
+.imageUploadDescription {
+	font-size: 12px;
+	line-height: 1.35;
+	color: var(--text-primary-muted);
+}
+
+.imagePreviewColumn {
+	width: 100%;
+	display: flex;
+	justify-content: flex-end;
+	align-items: flex-start;
+	margin-left: auto;
+}
+
+.imagePreviewColumn > * {
+	width: min(360px, 100%);
+	margin-left: auto;
+}
+
+.settingsContent {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+	gap: var(--spacing-5);
+	align-items: start;
+}
+
+.notificationOptions {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+@media (min-width: 640px) {
+	.iconUploadButtons {
+		flex-direction: row;
+		flex-wrap: wrap;
+	}
+
+	.imagePreviewContainer {
+		flex-direction: row;
+		align-items: flex-start;
+	}
+
+	.imageUploadButtons {
+		flex-direction: row;
+		flex-wrap: wrap;
+	}
+
+	.imagePreviewColumn {
+		width: 360px;
+		max-width: 360px;
+		flex: 0 0 360px;
+	}
+
+	.imagePreviewColumn > * {
+		width: 360px;
+	}
+}
+
+@media (max-width: 520px) {
+	.iconUploadContainer {
+		align-items: flex-start;
+	}
+
+	.iconPreview {
+		width: 72px;
+		height: 72px;
+		border-radius: 50%;
+	}
+}
+
+.previewButtonContainer {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-2);
+}
+
+.previewButtonRow {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.previewButtonDescription {
+	font-size: 12px;
+	line-height: 1.35;
+	color: var(--text-primary-muted);
+}
+
+.alignmentSection {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-2);
+	margin-top: var(--spacing-2);
+}
+
+.alignmentLabel {
+	font-size: 13px;
+	font-weight: 700;
+	color: var(--text-primary);
+}
+
+.alignmentControlsRow {
+	display: flex;
+	justify-content: flex-start;
+	width: 100%;
+}
+
+.cardAlignmentControls {
+	width: fit-content;
+}
+
+.splashSettingsContainer {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-4);
+}
+
+.splashSettingsRow {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-5);
+	align-items: flex-start;
+}
+
+.splashSettingsColumnRight {
+	width: 100%;
+}
+
+.splashSettingsColumn {
+	display: grid;
+	grid-template-rows: auto auto auto;
+	gap: var(--spacing-2);
+}
+
+.splashSettingsButtons {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--spacing-2);
+	align-items: center;
+}
+
+.splashSettingsHelper {
+	margin: 0;
+	font-size: 12px;
+	line-height: 1.35;
+	color: var(--text-primary-muted);
+}
+
+.invitePageButton {
+	display: none;
+}
+
+@media (min-width: 640px) {
+	.invitePageButton {
+		display: flex;
+	}
+
+	.splashSettingsRow {
+		flex-direction: row;
+	}
+
+	.splashSettingsColumn {
+		flex: 1 1 auto;
+		min-width: 0;
+	}
+
+	.splashSettingsColumnRight {
+		width: 360px;
+		max-width: 360px;
+		flex: 0 0 360px;
+	}
+}

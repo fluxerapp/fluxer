@@ -1,0 +1,102 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.row {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}
+
+@media (min-width: 640px) {
+	.row {
+		flex-direction: row;
+		align-items: center;
+		justify-content: space-between;
+		gap: 1.5rem;
+	}
+}
+
+.rowContent {
+	flex: 1;
+}
+
+.label {
+	display: block;
+	margin-bottom: 0.25rem;
+	font-weight: 500;
+	color: var(--text-primary);
+	font-size: 0.875rem;
+}
+
+.description {
+	color: var(--text-primary-muted);
+	font-size: 0.875rem;
+}
+
+.emailRow {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+@media (min-width: 640px) {
+	.emailRow {
+		flex-direction: row;
+		align-items: center;
+		gap: 0.5rem;
+	}
+}
+
+.emailText {
+	color: var(--text-primary-muted);
+	font-size: 0.875rem;
+}
+
+.emailTextSelectable {
+	user-select: text;
+	-webkit-user-select: text;
+}
+
+.toggleButton {
+	margin-top: 0.1em;
+	text-align: left;
+	color: var(--text-link);
+	font-size: 0.875rem;
+	cursor: pointer;
+}
+
+.toggleButton:hover {
+	text-decoration: underline;
+}
+
+@media (min-width: 640px) {
+	.toggleButton {
+		text-align: center;
+	}
+}
+
+.warningText {
+	color: var(--alert-warning-color);
+	font-size: 0.875rem;
+}
+
+.divider {
+	border-top: 1px solid var(--background-header-secondary);
+	padding-top: 1rem;
+}

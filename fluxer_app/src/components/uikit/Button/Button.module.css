@@ -1,0 +1,314 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 10px 16px;
+	font-size: 14px;
+	font-weight: 600;
+	line-height: 20px;
+	height: 44px;
+	min-height: 44px;
+	min-width: 96px;
+	border-radius: 8px;
+	border: none;
+	cursor: pointer;
+	appearance: none;
+	text-decoration: none;
+	position: relative;
+	overflow: hidden;
+	transition:
+		background-color 0.15s ease,
+		color 0.15s ease,
+		transform 0.1s ease,
+		border-color 0.15s ease,
+		box-shadow 0.15s ease;
+}
+
+.button.matchSkeletonHeight {
+	height: 36px;
+	min-height: 36px;
+	width: 100%;
+}
+
+.button:disabled {
+	cursor: not-allowed;
+	opacity: 0.5;
+}
+
+.button:active:not(:disabled) {
+	transform: translateY(1px);
+}
+
+.button.small {
+	height: 40px;
+	min-height: 40px;
+	min-width: 60px;
+	padding: 8px 12px;
+}
+
+.button.compact {
+	height: 32px;
+	min-height: 32px;
+	min-width: 60px;
+	padding: 6px 12px;
+}
+
+.button.superCompact {
+	height: 24px;
+	min-height: 24px;
+	min-width: 0;
+	padding: 4px;
+	font-size: 12px;
+	line-height: 16px;
+	border-radius: 6px;
+}
+
+.button.fitContent {
+	min-width: 0;
+	padding: 10px 16px;
+}
+
+.button.superCompact.fitContent {
+	padding: 4px 8px;
+}
+
+.button.fitContainer {
+	width: 100%;
+}
+
+.button.square {
+	width: 44px;
+	min-width: 44px;
+	padding: 10px;
+}
+
+.button.square.small {
+	width: 40px;
+	min-width: 40px;
+	padding: 8px;
+}
+
+.button.square.compact {
+	width: 32px;
+	min-width: 32px;
+	padding: 6px;
+}
+
+.button.primary {
+	background-color: var(--brand-primary);
+	color: var(--brand-primary-fill);
+}
+
+.button.primary:hover:not(:disabled),
+.button.primary:focus-visible:not(:disabled) {
+	background-color: var(--brand-secondary);
+}
+
+.button.secondary {
+	background-color: var(--background-tertiary);
+	color: var(--button-secondary-text);
+}
+
+:global(.theme-light) .button.secondary {
+	background-color: var(--background-modifier-hover);
+	color: var(--button-ghost-text);
+}
+
+.button.secondary:hover:not(:disabled),
+.button.secondary:focus-visible:not(:disabled) {
+	background-color: var(--button-secondary-active-fill);
+	color: var(--button-secondary-active-text);
+}
+
+:global(.theme-light) .button.secondary:hover:not(:disabled),
+:global(.theme-light) .button.secondary:focus-visible:not(:disabled) {
+	background-color: var(--background-modifier-hover);
+	color: var(--button-ghost-text);
+}
+
+.button.dangerPrimary {
+	background-color: var(--button-danger-fill);
+	color: var(--button-danger-text);
+}
+
+.button.dangerPrimary:hover:not(:disabled),
+.button.dangerPrimary:focus-visible:not(:disabled) {
+	background-color: var(--button-danger-active-fill);
+}
+
+.button.dangerSecondary {
+	background-color: color-mix(in srgb, var(--button-danger-fill) 12%, transparent);
+	color: var(--button-danger-outline-text);
+}
+
+.button.dangerSecondary:hover:not(:disabled),
+.button.dangerSecondary:focus-visible:not(:disabled) {
+	background-color: color-mix(in srgb, var(--button-danger-fill) 20%, transparent);
+}
+
+.button.dangerSecondary:active:not(:disabled) {
+	background-color: color-mix(in srgb, var(--button-danger-fill) 26%, transparent);
+}
+
+.button.inverted {
+	background-color: var(--button-inverted-fill);
+	color: var(--button-inverted-text);
+}
+
+.button.invertedOutline {
+	background-color: transparent;
+	color: white;
+	border: 1px solid white;
+	padding: 4px 8px;
+}
+
+.button.invertedOutline.small {
+	padding: 6px 10px;
+}
+
+.button.invertedOutline.superCompact {
+	padding: 2px 6px;
+}
+
+.button.invertedOutline:hover:not(:disabled),
+.button.invertedOutline:focus-visible:not(:disabled) {
+	background-color: rgba(255, 255, 255, 0.1);
+}
+
+.button.recording {
+	background-color: var(--accent-success, #16a34a);
+	color: var(--brand-primary-fill);
+	border: 1px solid color-mix(in srgb, var(--accent-success, #16a34a) 55%, transparent);
+	animation: buttonRecordingPulse 1.1s infinite;
+}
+
+.button.recording:hover:not(:disabled),
+.button.recording:focus-visible:not(:disabled) {
+	background-color: color-mix(in srgb, var(--accent-success, #16a34a) 90%, #000 0%);
+}
+
+.spinner {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	height: 100%;
+}
+
+.spinnerInner {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	position: relative;
+	width: 28px;
+	height: auto;
+}
+
+.spinnerItem {
+	display: inline-block;
+	width: 6px;
+	height: 6px;
+	margin-right: 2px;
+	background-color: hsl(0, 0%, 100%);
+	border-radius: 4px;
+	opacity: 0.3;
+	animation: spinnerPulsingEllipsis 1.4s ease-in-out infinite;
+}
+
+:global(.theme-light) .button.secondary .spinnerItem {
+	background-color: #000;
+}
+
+.spinnerItemInverted {
+	background-color: #000;
+}
+
+.spinnerItem:nth-of-type(2) {
+	animation-delay: 0.2s;
+}
+
+.spinnerItem:nth-of-type(3) {
+	animation-delay: 0.4s;
+}
+
+.iconWrapper {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	white-space: nowrap;
+}
+
+.spinnerWrapper {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+}
+
+.hidden {
+	opacity: 0;
+	pointer-events: none;
+}
+
+.grid {
+	display: grid;
+	width: 100%;
+	height: 100%;
+}
+
+@keyframes spinnerPulsingEllipsis {
+	0% {
+		opacity: 1;
+		transform: scale(1);
+	}
+	50% {
+		opacity: 0.3;
+		transform: scale(0.8);
+	}
+	100% {
+		opacity: 1;
+		transform: scale(1);
+	}
+}
+
+@keyframes buttonRecordingPulse {
+	0% {
+		box-shadow:
+			0 0 0 0 color-mix(in srgb, var(--accent-success, #16a34a) 18%, transparent),
+			0 0 0 0 color-mix(in srgb, var(--accent-success, #16a34a) 0%, transparent);
+	}
+	50% {
+		box-shadow:
+			0 0 0 0 color-mix(in srgb, var(--accent-success, #16a34a) 28%, transparent),
+			0 0 0 6px color-mix(in srgb, var(--accent-success, #16a34a) 12%, transparent);
+	}
+	100% {
+		box-shadow:
+			0 0 0 0 color-mix(in srgb, var(--accent-success, #16a34a) 18%, transparent),
+			0 0 0 0 color-mix(in srgb, var(--accent-success, #16a34a) 0%, transparent);
+	}
+}

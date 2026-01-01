@@ -1,0 +1,97 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.header {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-3);
+	padding: var(--spacing-5) 0 var(--spacing-3);
+	width: 100%;
+}
+
+.avatarWrapper {
+	width: 3rem;
+	height: 3rem;
+	border-radius: 9999px;
+	overflow: hidden;
+	background-color: var(--background-secondary-alt);
+	flex-shrink: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.icon {
+	--guild-icon-size: 3rem;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.text {
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 0.125rem;
+}
+
+.title {
+	font-weight: 600;
+	font-size: 1rem;
+	color: var(--text-primary);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	line-height: 1.25rem;
+	max-height: 1.25rem;
+}
+
+.stats {
+	display: flex;
+	align-items: center;
+	gap: 0.6rem;
+}
+
+.stat {
+	display: inline-flex;
+	align-items: center;
+}
+
+.statDot {
+	margin-right: 0.3rem;
+	height: 0.5rem;
+	width: 0.5rem;
+	border-radius: 9999px;
+	flex: 0 0 auto;
+}
+
+.statDotOnline {
+	background-color: var(--status-online);
+}
+
+.statDotMembers {
+	background-color: var(--text-tertiary-secondary);
+}
+
+.statText {
+	color: var(--text-tertiary);
+	font-size: 0.8rem;
+	line-height: 1.2;
+	white-space: nowrap;
+}

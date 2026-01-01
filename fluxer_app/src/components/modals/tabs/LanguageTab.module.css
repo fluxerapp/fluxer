@@ -1,0 +1,85 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.notice {
+	border-radius: 0.5rem;
+	border: 1px solid var(--background-modifier-accent);
+	padding: 1rem;
+}
+
+.noticeText {
+	color: var(--text-primary-muted);
+	font-size: 0.875rem;
+}
+
+.link {
+	color: var(--text-link);
+	text-decoration: underline;
+}
+
+.languageOption {
+	display: flex;
+	flex: 1;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem;
+}
+
+.languageName {
+	font-weight: 500;
+	color: var(--text-primary);
+}
+
+.languageNameHighlighted {
+	color: var(--surface-interactive-selected-color);
+}
+
+.languageDetails {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.languageCode {
+	font-size: 0.875rem;
+	color: var(--text-primary-muted);
+}
+
+.languageCodeHighlighted {
+	color: var(--surface-interactive-selected-color);
+}
+
+.flagImage {
+	height: 1.25rem;
+	width: 1.25rem;
+}
+
+.tooltipContent {
+	display: flex;
+	align-items: center;
+	gap: 0.25rem;
+}
+
+.tooltipText {
+	font-style: italic;
+}
+
+.switchWrapper {
+	margin-top: 0.5rem;
+}

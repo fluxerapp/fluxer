@@ -1,0 +1,258 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.container {
+	display: flex;
+	flex-direction: column;
+	gap: 2rem;
+}
+
+.section {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+}
+
+.heading {
+	margin-bottom: 0;
+	font-weight: 600;
+	font-size: 1.25rem;
+}
+
+.subheading {
+	margin-bottom: 1rem;
+	font-weight: 600;
+	font-size: 1.125rem;
+}
+
+.description {
+	color: var(--text-secondary);
+}
+
+.grid {
+	display: grid;
+	gap: 0.75rem;
+}
+
+@media (min-width: 768px) {
+	.grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
+@media (min-width: 1024px) {
+	.grid {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+	}
+}
+
+.card {
+	position: relative;
+	overflow: hidden;
+	border-radius: 0.5rem;
+	background-color: var(--background-secondary);
+	padding: 1rem;
+	transition: background-color 0.15s;
+}
+
+.card:hover {
+	background-color: var(--background-tertiary);
+}
+
+.cardHeader {
+	margin-bottom: 0.5rem;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.cardInfo {
+	display: flex;
+	flex-direction: column;
+}
+
+.fontName {
+	font-weight: 500;
+	font-size: 0.875rem;
+}
+
+.langCode {
+	color: var(--text-tertiary);
+	font-size: 0.75rem;
+}
+
+.fontFamily {
+	font-family: monospace;
+	color: var(--text-tertiary);
+	font-size: 0.75rem;
+}
+
+.sampleText {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.weightCard {
+	border-radius: 0.5rem;
+	background-color: var(--background-secondary);
+	padding: 1rem;
+}
+
+.weightHeader {
+	margin-bottom: 0.5rem;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.weightLabel {
+	font-weight: 500;
+}
+
+.weightValue {
+	font-family: monospace;
+	font-size: 0.875rem;
+	color: var(--text-tertiary);
+}
+
+.weightItalic {
+	margin-top: 0.25rem;
+	font-style: italic;
+}
+
+.scaleList {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.scaleItem {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+	border-radius: 0.5rem;
+	background-color: var(--background-secondary);
+	padding: 0.75rem 1rem;
+}
+
+.scaleSize {
+	width: 5rem;
+	text-align: right;
+}
+
+.scaleSizeText {
+	font-family: monospace;
+	color: var(--text-tertiary);
+	font-size: 0.75rem;
+}
+
+.scaleLabel {
+	width: 4rem;
+	text-align: right;
+}
+
+.scaleLabelText {
+	font-weight: 500;
+	font-size: 0.75rem;
+	color: var(--text-secondary);
+}
+
+.scaleSample {
+	flex: 1;
+}
+
+.styleGrid {
+	display: grid;
+	gap: 0.75rem;
+}
+
+@media (min-width: 768px) {
+	.styleGrid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
+@media (min-width: 1024px) {
+	.styleGrid {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+	}
+}
+
+.styleCard {
+	border-radius: 0.5rem;
+	background-color: var(--background-secondary);
+	padding: 1rem;
+}
+
+.styleLabel {
+	margin-bottom: 0.5rem;
+	color: var(--text-tertiary);
+	font-size: 0.75rem;
+}
+
+.codeGrid {
+	display: grid;
+	gap: 1rem;
+}
+
+@media (min-width: 768px) {
+	.codeGrid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
+.codeCard {
+	border-radius: 0.5rem;
+	background-color: var(--background-secondary);
+	padding: 1rem;
+}
+
+.codeTitle {
+	margin-bottom: 0.75rem;
+	font-weight: 500;
+}
+
+.codeLines {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+	font-family: monospace;
+	font-size: 0.875rem;
+}
+
+.multilingualCard {
+	border-radius: 0.5rem;
+	background-color: var(--background-secondary);
+	padding: 1.5rem;
+}
+
+.multilingualList {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}
+
+.multilingualItem {
+	font-size: 1rem;
+}
+
+.italic {
+	font-style: italic;
+}

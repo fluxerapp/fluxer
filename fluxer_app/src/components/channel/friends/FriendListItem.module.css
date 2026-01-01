@@ -1,0 +1,215 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.friendListItem {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	cursor: pointer;
+	padding: 0.75rem 1rem;
+	position: relative;
+	overflow: hidden;
+	max-width: 100%;
+}
+
+.friendListItem::before {
+	content: '';
+	position: absolute;
+	inset: 0 0.4rem 0 var(--spacing-2);
+	border-radius: 0.375rem;
+	border-top: 1px solid var(--background-modifier-accent);
+	pointer-events: none;
+}
+
+.friendListItem:hover::before {
+	background-color: var(--background-modifier-hover);
+	border-top-color: transparent;
+}
+
+.friendListItem:hover + .friendListItem::before {
+	border-top-color: transparent;
+}
+
+.contextMenuActive::before {
+	background-color: var(--background-modifier-hover) !important;
+	border-top-color: transparent !important;
+}
+
+.contextMenuActive + .friendListItem::before {
+	border-top-color: transparent;
+}
+
+.friendInfo {
+	position: relative;
+	z-index: 1;
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	flex: 1 1 0;
+	width: 0;
+	min-width: 0;
+	overflow: hidden;
+}
+
+.friendInfo > :first-child {
+	flex-shrink: 0;
+}
+
+.friendDetails {
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+	margin-top: 0;
+	gap: 0.0625rem;
+	flex: 1 1 0;
+	min-width: 0;
+	max-width: 100%;
+	overflow: hidden;
+}
+
+.friendNameRow {
+	display: flex;
+	align-items: center;
+	gap: 0.375rem;
+	min-width: 0;
+}
+
+.friendName {
+	font-weight: 600;
+	color: var(--text-primary);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	line-height: 1.25rem;
+	max-height: 1.25rem;
+	min-width: 0;
+}
+
+.friendTag {
+	font-size: 0.75rem;
+	line-height: 1rem;
+	color: var(--text-tertiary);
+	flex-shrink: 0;
+	opacity: 0;
+	transition: opacity var(--transition-fast);
+}
+
+.friendListItem:hover .friendTag,
+.contextMenuActive .friendTag {
+	opacity: 1;
+}
+
+.friendSubtext {
+	font-size: 0.6875rem;
+	line-height: 1rem;
+	color: var(--text-primary-muted);
+	font-weight: 500;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	margin-top: -0.0625rem;
+	opacity: 0.85;
+	width: 100%;
+	min-width: 0;
+}
+
+.friendListItem:hover .friendSubtext {
+	--emoji-show-animated: 1;
+}
+
+.contextMenuActive .friendSubtext {
+	--emoji-show-animated: 1;
+}
+
+.friendStatusOffline {
+	color: var(--text-tertiary);
+}
+
+.friendStatusOnline {
+	color: var(--text-primary-muted);
+}
+
+.friendActions {
+	position: relative;
+	z-index: 1;
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	flex-shrink: 0;
+}
+
+.actionButtonMessage {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-primary-muted);
+	cursor: pointer;
+}
+
+.actionButtonMessage:hover {
+	background-color: var(--background-tertiary);
+	color: var(--text-primary);
+}
+
+.actionButtonMore {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-primary-muted);
+	cursor: pointer;
+}
+
+.actionButtonMore:hover {
+	background-color: var(--background-tertiary);
+	color: var(--text-primary);
+}
+
+.actionButtonAccept {
+	background-color: var(--brand-primary);
+	padding: 0.5rem;
+	color: var(--brand-primary-fill);
+	cursor: pointer;
+}
+
+.actionButtonAccept:hover {
+	filter: brightness(1.05);
+}
+
+.actionButtonIgnore {
+	background-color: var(--background-tertiary);
+	padding: 0.5rem;
+	color: var(--text-primary);
+	cursor: pointer;
+}
+
+.actionButtonIgnore:hover {
+	background-color: var(--background-modifier-hover);
+}
+
+.actionButtonCancel {
+	background-color: var(--status-danger);
+	padding: 0.5rem;
+	color: white;
+	cursor: pointer;
+}
+
+.actionButtonCancel:hover {
+	filter: brightness(1.05);
+}
+
+.iconSize {
+	height: 1.25rem;
+	width: 1.25rem;
+}

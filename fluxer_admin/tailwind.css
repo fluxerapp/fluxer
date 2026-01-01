@@ -1,0 +1,44 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+@import 'tailwindcss';
+
+@theme {
+	--font-sans: Seravek, 'Gill Sans Nova', Ubuntu, Calibri, 'DejaVu Sans', source-sans-pro, sans-serif;
+}
+
+.sidebar-scrollbar {
+	scrollbar-width: thin;
+	scrollbar-color: #475569 #020617;
+}
+
+.sidebar-scrollbar::-webkit-scrollbar {
+	width: 6px;
+}
+
+.sidebar-scrollbar::-webkit-scrollbar-track {
+	background: #020617;
+}
+
+.sidebar-scrollbar::-webkit-scrollbar-thumb {
+	background-color: #475569;
+	border-radius: 999px;
+	border: 2px solid transparent;
+	background-clip: content-box;
+}

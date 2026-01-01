@@ -1,0 +1,73 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.container {
+	width: var(--guild-icon-size, 2.75rem);
+	height: var(--guild-icon-size, 2.75rem);
+	display: flex;
+	flex: 0 0 auto;
+	user-select: none;
+	-webkit-user-select: none;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+	border-radius: 9999px;
+	font-weight: 600;
+	color: var(--text-tertiary);
+	background-color: var(--background-tertiary);
+	background-image: var(--guild-icon-image, none);
+	background-position: center;
+	background-size: cover;
+	transition: background-image 0.3s ease-in-out;
+	container-type: inline-size;
+}
+
+.containerNoIcon {
+	background-image: none;
+	background-color: var(--background-tertiary);
+}
+
+.initials {
+	align-self: center;
+	line-height: 1;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	display: block;
+	width: 100%;
+	text-align: center;
+	font-size: clamp(0.85rem, 45cqi, 1.35rem);
+	letter-spacing: 0.06em;
+}
+
+.container[data-initials-length='medium'] .initials {
+	font-size: clamp(0.85rem, 38cqi, 1.11rem);
+	letter-spacing: 0.02em;
+}
+
+.container[data-initials-length='long'] .initials {
+	font-size: clamp(0.85rem, 32cqi, 0.87rem);
+	letter-spacing: -0.02em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.container {
+		transition: none;
+	}
+}

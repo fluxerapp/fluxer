@@ -1,0 +1,150 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.container {
+	position: relative;
+}
+
+.deleteButton {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	right: -2rem;
+	position: absolute;
+	top: 0.25rem;
+	z-index: 10;
+	width: 1.5rem;
+	height: 1.5rem;
+	border-radius: 4px;
+	background-color: var(--background-tertiary);
+	color: var(--text-tertiary);
+	transition:
+		background-color 150ms ease,
+		color 150ms ease;
+}
+
+@media (hover: hover) {
+	.deleteButton:hover {
+		background-color: var(--status-danger);
+		color: white;
+	}
+}
+
+.attachmentContainer {
+	display: flex;
+	width: 100%;
+	min-width: 0;
+	align-items: center;
+	gap: 0.75rem;
+	overflow: hidden;
+	border-radius: 8px;
+	border: 1px solid var(--background-modifier-accent);
+	background-color: var(--background-secondary);
+	padding: 0.75rem;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.iconContainer {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 3rem;
+	height: 3rem;
+	flex-shrink: 0;
+	border-radius: 8px;
+	background-color: var(--background-tertiary);
+	color: var(--text-tertiary);
+}
+
+.fileInfoContainer {
+	min-width: 0;
+	flex: 1;
+	overflow: hidden;
+}
+
+.fileName {
+	display: block;
+	overflow: hidden;
+	font-size: 0.875rem;
+	font-weight: 600;
+	color: var(--text-primary);
+	line-height: 1.25rem;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.fileNameTruncate {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.fileExtension {
+	color: var(--text-tertiary);
+}
+
+.fileSize {
+	color: var(--text-tertiary);
+	font-size: 0.75rem;
+	line-height: 1rem;
+}
+
+.downloadButton {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 2.5rem;
+	height: 2.5rem;
+	flex-shrink: 0;
+	border-radius: 8px;
+	background-color: var(--brand-primary);
+	color: white;
+	transition: background-color 150ms ease;
+	cursor: pointer;
+}
+
+@media (hover: hover) {
+	.downloadButton:hover {
+		background-color: var(--brand-secondary);
+	}
+}
+
+.downloadButtonDisabled {
+	opacity: 0.4;
+	pointer-events: none;
+}
+
+.statusBadge {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.3rem;
+	padding: 0.25rem 0.45rem;
+	border-radius: 999px;
+	background: color-mix(in srgb, var(--background-secondary) 80%, transparent);
+	color: var(--text-secondary);
+	border: 1px solid var(--border-color);
+	font-size: 0.75rem;
+	backdrop-filter: blur(6px);
+	opacity: 0.92;
+}
+
+.statusIcon {
+	width: 14px;
+	height: 14px;
+}

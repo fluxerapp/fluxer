@@ -1,0 +1,72 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.requestItem {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	padding-left: 1rem;
+	padding-right: 1rem;
+	padding-top: 0.75rem;
+	padding-bottom: 0.75rem;
+}
+
+.userInfo {
+	display: flex;
+	flex: 1 1 0%;
+	flex-direction: column;
+}
+
+.userName {
+	font-weight: 500;
+	font-size: 1rem;
+	line-height: 1.5rem;
+	color: var(--text-primary);
+}
+
+.requestStatus {
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--text-tertiary);
+}
+
+.actionButton {
+	display: flex;
+	height: 2.25rem;
+	width: 2.25rem;
+	align-items: center;
+	justify-content: center;
+	border-radius: var(--radius-full);
+	background-color: var(--background-modifier-hover);
+	color: var(--text-primary-muted);
+	transition-property: color, background-color;
+	transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+	transition-duration: 150ms;
+	cursor: pointer;
+}
+
+.actionButton:active {
+	background-color: var(--background-tertiary);
+	color: var(--text-primary);
+}
+
+.iconSize {
+	height: 1.25rem;
+	width: 1.25rem;
+}

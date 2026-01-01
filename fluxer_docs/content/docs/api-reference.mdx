@@ -1,0 +1,386 @@
+---
+title: API Reference
+description: An overview of how the Fluxer API works and how to use it
+---
+
+Fluxer exposes an HTTP API for most read/write operations. Use it to build bots, automations, and integrations that talk to Fluxer from your code. For real-time events, connect to the Fluxer Gateway over WebSocket.
+
+If you've used the [Discord API](https://discord.dev), Fluxer should feel familiar. Most Discord libraries adapt with only small tweaks (for example, changing the base URL).
+
+## Base URL
+
+All HTTP API requests go through the same base URL:
+
+```text
+https://api.fluxer.app
+```
+
+## API Versioning
+
+Fluxer uses versioned API endpoints. The current version is `v1`, and all documented endpoints are prefixed with `/v1/`.
+
+```text
+GET /v1/...
+```
+
+If you omit the version prefix, you'll hit the latest stable version. That can change over time, so pin a version like `/v1/` for anything you don't want to break unexpectedly.
+
+## Error Responses
+
+### Generic Error Response
+
+When a request fails, the API returns an HTTP status code plus a JSON body with error details:
+
+```json
+{
+	"code": "UNKNOWN_USER",
+	"message": "Unknown User"
+}
+```
+
+`code` is stable and machine-readable. `message` is for humans and may change, so don't rely on it for program logic.
+
+### Form Validation Errors
+
+For endpoints that accept form data, failed validation returns `400 Bad Request` and a list of field-level errors:
+
+```json
+{
+	"code": "INVALID_FORM_BODY",
+	"message": "Input Validation Error",
+	"errors": [
+		{"path": "username", "message": "Username must be at least 3 characters long."},
+		{"path": "email", "message": "Email must be a valid email address."}
+	]
+}
+```
+
+For nested structures, `path` uses dot and index notation to point at the field that failed:
+
+```json
+{
+	"code": "INVALID_FORM_BODY",
+	"message": "Input Validation Error",
+	"errors": [
+		{"path": "profile.address.street", "message": "Street is required."},
+		{"path": "items.0.quantity", "message": "Quantity must be a positive integer."}
+	]
+}
+```
+
+Treat `code` as the stable part of the error and use `errors[*].path` to locate invalid inputs.
+
+## Authentication
+
+Most API requests require authentication. Send your bot token in the `Authorization` header:
+
+```text
+Authorization: Bot YOUR_BOT_TOKEN
+```
+
+Replace `YOUR_BOT_TOKEN` with the token from **User Settings > Applications** in the Fluxer web/desktop app.
+
+Keep bot tokens secret. Don't commit them to source control or ship them in client-side code.
+
+## Encryption
+
+All HTTP and WebSocket connections to Fluxer must use TLS (`https://` and `wss://`). The minimum supported version is TLS 1.2.
+
+Plain `http://` and `ws://` endpoints are not available.
+
+## Snowflakes
+
+Fluxer uses [Twitter Snowflakes](https://github.com/twitter-archive/snowflake/tree/snowflake-2010) as IDs for users, messages, channels, and other entities.
+
+Within a single entity type (for example, messages), Snowflakes are unique. Different entity types may share the same numeric Snowflake, so always track which entity an ID refers to.
+
+Snowflakes are 64-bit unsigned integers that encode a timestamp plus some extra bits. In JSON, they're always sent as strings to avoid precision issues. Treat them as opaque strings unless you need to decode them.
+
+| Component       | Bits | Description                                                                     |
+| --------------- | ---- | ------------------------------------------------------------------------------- |
+| Timestamp       | 42   | Milliseconds since the Fluxer epoch (`1420070400000`, the first second of 2015) |
+| Worker ID       | 5    | ID of the worker that generated the Snowflake                                   |
+| Process ID      | 5    | ID of the process that generated the Snowflake                                  |
+| Sequence Number | 12   | Counter for IDs generated in the same millisecond                               |
+
+If you decode the timestamp part, you can tell when a resource was created.
+
+```ts
+function snowflakeToTimestamp(snowflake: string): number {
+	const fluxerEpoch = 1420070400000n;
+	const timestamp = (BigInt(snowflake) >> 22n) + fluxerEpoch;
+	return Number(timestamp);
+}
+```
+
+### Pagination with Snowflakes
+
+Many API endpoints return lists. These endpoints accept `before`, `after`, and `limit` query parameters. Check the individual endpoint docs to see which ones support pagination.
+
+Because Snowflake IDs encode timestamps, you can generate Snowflakes from timestamps to paginate by time:
+
+```ts
+function timestampToSnowflake(timestamp: number): string {
+	const fluxerEpoch = 1420070400000n;
+	const snowflake = (BigInt(timestamp) - fluxerEpoch) << 22n;
+	return snowflake.toString();
+}
+
+const currentTimeMs = Date.now();
+const currentSnowflake = timestampToSnowflake(currentTimeMs);
+```
+
+To specify the beginning of time, use the Snowflake `0`.
+
+## ISO 8601 Timestamps
+
+Timestamps in Fluxer API responses use the [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601) format in UTC. Parse them with standard libraries in your language of choice.
+
+## Nullable & Optional Fields
+
+To stay close to Discord's API docs, the Fluxer API uses this convention for nullable and optional fields in tables:
+
+| Field Name                 | Type    | Description                                                                |
+| -------------------------- | ------- | -------------------------------------------------------------------------- |
+| `optional_field?`          | string  | An optional field that may be missing in the response                      |
+| `nullable_field`           | ?string | A nullable field that may be `null` in the response, but is always present |
+| `optional_nullable_field?` | ?string | An optional field that may be missing or `null` in the response            |
+
+## Backwards Compatibility
+
+New response fields (documented or not) are backwards-compatible. Your client should ignore fields it doesn't recognize.
+
+Breaking changes will be announced in advance, with a migration period where old and new versions both work.
+
+## HTTP API
+
+### User Agent
+
+When making HTTP requests, set a custom `User-Agent` header that identifies your application. Example:
+
+```text
+User-Agent: MyFluxerBot ($url, $version)
+```
+
+### Content Type
+
+Set the `Content-Type` header to `application/json`, `application/x-www-form-urlencoded`, or `multipart/form-data` as appropriate for your request body.
+
+### Rate Limits
+
+Rate limits are reported via HTTP headers. If you exceed a limit, you'll receive `429 Too Many Requests`. For details, see the [Rate Limits](./rate-limits) documentation.
+
+## Gateway API (WebSocket)
+
+Fluxer's Gateway API lets you maintain a long-lived WebSocket connection for real-time events. For how to connect and interact, see the [Gateway API](./gateway) documentation.
+
+## Message Formatting
+
+Fluxer supports rich message formatting using Markdown-style syntax. Compatibility with most Discord-flavored Markdown is intentional so you can port bots and integrations with minimal changes.
+
+### Format Types
+
+In addition to standard formatting such as bold, italics, underline, strikethrough, inline code, code blocks, blockquotes, headings, lists, and links, Fluxer supports the following formatting options:
+
+| Type                      | Syntax                | Example                                  |
+| ------------------------- | --------------------- | ---------------------------------------- |
+| Spoiler                   | `\|\|text\|\|`        | `\|\|spoiler\|\|` (hidden until clicked) |
+| Subtext (small gray text) | `-# your text`        | `-# extra context / footnote`            |
+| Email link                | `<hello@example.com>` | `<hello@example.com>`                    |
+| Phone link                | `<+1234567890>`       | `<+1234567890>`                          |
+| Mention user              | `<@user_id>`          | `<@123456789012345678>`                  |
+| Mention channel           | `<#channel_id>`       | `<#123456789012345678>`                  |
+| Mention role              | `<@&role_id>`         | `<@&123456789012345678>`                 |
+| Standard emoji            | Unicode emoji         | 😄                                       |
+| Custom emoji              | `<:name:emoji_id>`    | `<:custom_emoji:123456789012345678>`     |
+| Custom emoji (animated)   | `<a:name:emoji_id>`   | `<a:animated_emoji:123456789012345678>`  |
+| Unix timestamp            | `<t:timestamp>`       | `<t:1445444940>`                         |
+| Unix timestamp (styled)   | `<t:timestamp:style>` | `<t:1445444940:R>`                       |
+
+### Timestamp Styles
+
+When using Unix timestamps, you can specify a style character to control how the timestamp is displayed:
+
+| Style | Description             | Example Output                       |
+| ----- | ----------------------- | ------------------------------------ |
+| `t`   | Short time              | 16:29                                |
+| `T`   | Medium time             | 16:29:00                             |
+| `d`   | Short date              | 10/21/2015                           |
+| `D`   | Long date               | October 21, 2015                     |
+| `f`\* | Long date, short time   | October 21, 2015 at 16:29            |
+| `F`   | Full date, short time   | Wednesday, October 21, 2015 at 16:29 |
+| `s`   | Short date, short time  | 10/21/2015, 16:29                    |
+| `S`   | Short date, medium time | 10/21/2015, 16:29:00                 |
+| `R`   | Relative time           | 2 hours ago                          |
+
+\* Default if no style is provided.
+
+## User Content CDN
+
+### Base URL
+
+```text
+https://fluxerusercontent.com
+```
+
+All user-uploaded media content is served through the User Content CDN at the above base URL.
+
+### CDN Endpoints
+
+| Resource Type       | Path Template                                                    | Supported Formats    |
+| ------------------- | ---------------------------------------------------------------- | -------------------- |
+| User Avatar         | `/avatars/{user_id}/{avatar_hash}.{ext}`                         | PNG, JPEG, WebP, GIF |
+| Guild Icon          | `/icons/{guild_id}/{icon_hash}.{ext}`                            | PNG, JPEG, WebP, GIF |
+| Guild Banner        | `/banners/{guild_id}/{banner_hash}.{ext}`                        | PNG, JPEG, WebP, GIF |
+| Guild Splash        | `/splashes/{guild_id}/{splash_hash}.{ext}`                       | PNG, JPEG, WebP, GIF |
+| Guild Embed Splash  | `/embed-splashes/{guild_id}/{embed_splash_hash}.{ext}`           | PNG, JPEG, WebP      |
+| Custom Emoji        | `/emojis/{emoji_id}.{ext}`                                       | PNG, JPEG, WebP, GIF |
+| Sticker             | `/stickers/{sticker_id}.{ext}`                                   | WebP, GIF            |
+| Guild Member Avatar | `/guilds/{guild_id}/users/{user_id}/avatars/{avatar_hash}.{ext}` | PNG, JPEG, WebP, GIF |
+| Guild Member Banner | `/guilds/{guild_id}/users/{user_id}/banners/{banner_hash}.{ext}` | PNG, JPEG, WebP, GIF |
+| Attachment          | `/attachments/{channel_id}/{attachment_id}/{filename}`           | Various              |
+
+All CDN endpoints support query parameters for dynamic image transformation and optimization.
+
+### Query Parameters
+
+CDN endpoints support the following query parameters for transforming and optimizing media on the fly:
+
+#### Avatar, Icon, Banner, Splash, and Emoji Endpoints
+
+These endpoints support the `ImageQuerySchema`:
+
+| Parameter  | Type    | Default | Description                                                                                                                                                                                                                               |
+| ---------- | ------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `size`     | integer | `128`   | The desired width in pixels. Must be one of: 16, 20, 22, 24, 28, 32, 40, 44, 48, 56, 60, 64, 80, 96, 100, 128, 160, 240, 256, 300, 320, 480, 512, 600, 640, 1024, 1280, 1536, 2048, 3072, 4096. The image will be resized proportionally. |
+| `quality`  | string  | `high`  | Image quality preset. Options: `high` (80% quality), `low` (20% quality), `lossless` (100% quality).                                                                                                                                      |
+| `animated` | boolean | `false` | Whether to preserve animation for WebP images. **Note:** GIF images are always animated regardless of this parameter.                                                                                                                     |
+
+#### Attachment Endpoints
+
+Attachment endpoints support more flexible transformations via the `ExternalQuerySchema`:
+
+| Parameter  | Type    | Default    | Description                                                                                                        |
+| ---------- | ------- | ---------- | ------------------------------------------------------------------------------------------------------------------ |
+| `width`    | integer | -          | The desired width in pixels (1-4096). If only width is specified, height is calculated to maintain aspect ratio.   |
+| `height`   | integer | -          | The desired height in pixels (1-4096). If only height is specified, width is calculated to maintain aspect ratio.  |
+| `format`   | string  | -          | Convert the image to the specified format. Options: `png`, `jpg`, `jpeg`, `webp`, `gif`.                           |
+| `quality`  | string  | `lossless` | Image quality preset. Options: `high` (80% quality), `low` (20% quality), `lossless` (100% quality).               |
+| `animated` | boolean | `false`    | Whether to preserve animation for GIF and WebP images. Must be set to `true` to preserve animation in attachments. |
+
+<Callout>
+For attachment endpoints, if no transformations are specified (no `width`, `height`, `format`, or `quality` other than `lossless`), the original file is served directly.
+</Callout>
+
+### Examples
+
+```text
+# Get a 256px user avatar in high quality
+https://fluxerusercontent.com/avatars/123456789012345678/a_abc123.webp?size=256&quality=high
+
+# Get an animated guild icon
+https://fluxerusercontent.com/icons/123456789012345678/a_def456.gif?size=512&animated=true
+
+# Get an attachment resized to 800x600 in WebP format
+https://fluxerusercontent.com/attachments/123/456/image.png?width=800&height=600&format=webp
+
+# Stream a video attachment without transformation
+https://fluxerusercontent.com/attachments/123/456/video.mp4
+```
+
+## Static Assets CDN
+
+### Base URL
+
+```text
+https://fluxerstatic.com
+```
+
+Default avatars can be accessed through the Static Assets CDN at the above base URL.
+
+### CDN Endpoints
+
+| Resource Type  | Path Template            | Supported Formats |
+| -------------- | ------------------------ | ----------------- |
+| Default Avatar | `/avatars/{index}.png`\* | PNG               |
+
+\* `{index}` is a number from `0` to `5`, representing the six default avatar options. Use `index = user_id % 6` to select a default avatar based on the user's ID.
+
+```ts
+function getDefaultAvatarUrl(userId: string): string {
+	const index = Number(BigInt(userId) % 6n);
+	return `https://fluxerstatic.com/avatars/${index}.png`;
+}
+```
+
+## Image Data
+
+Image data is a data URI scheme supporting PNG, JPEG, WebP, and GIF formats. It consists of a prefix indicating the media type and encoding, followed by the base64-encoded image data.
+
+```text
+data:image/{format};base64,{base64_data}
+```
+
+Replace `{format}` with the actual image format (for example, `png`, `jpeg`, `webp`, `gif`) and `{base64_data}` with the base64-encoded string of the image.
+
+## Uploading Files
+
+<Callout>
+	The file upload size limit applies to each file in a request. The default limit is **25 MiB** for free users and **500
+	MiB** for premium users. At most **10 files** can be uploaded in a single message.
+</Callout>
+
+### Multipart Form Data Upload
+
+Upload files directly with your message using `multipart/form-data`:
+
+```javascript
+const form = new FormData();
+
+form.append(
+	'payload_json',
+	JSON.stringify({
+		content: 'Check out these files!',
+		attachments: [
+			{id: 0, filename: 'cat.png', description: 'A cute cat'},
+			{id: 1, filename: 'dog.jpg', description: 'A good dog'},
+		],
+	}),
+);
+
+form.append('files[0]', catImageBlob, 'cat.png');
+form.append('files[1]', dogImageBlob, 'dog.jpg');
+
+const response = await fetch('https://api.fluxer.app/v1/channels/123456789012345678/messages', {
+	method: 'POST',
+	headers: {
+		Authorization: 'Bot YOUR_BOT_TOKEN',
+	},
+	body: form,
+});
+```
+
+### Editing Messages with Attachments
+
+Existing attachments must be specified when `PATCH`ing messages with new attachments. Any attachments not specified will be removed and replaced with the specified list. If you don't specify `attachments` at all, the existing attachments will remain unchanged.
+
+### Using Attachments in Embeds
+
+Use the special `attachment://{filename}` URL format to reference uploaded files within embed objects.
+
+<Callout type="warning">
+	Only PNG, JPEG, WebP, and GIF image formats may be used at this time. Other file types are not supported.
+</Callout>
+
+```json
+{
+	"embeds": [
+		{
+			"title": "Look at this image",
+			"image": {
+				"url": "attachment://cat.png"
+			}
+		}
+	]
+}
+```

@@ -1,0 +1,126 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.container {
+	display: flex;
+	flex-direction: column;
+	padding: 8px 16px 40px;
+}
+
+.optionsContainer {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.option {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	background-color: var(--background-tertiary);
+	border: 1px solid var(--border-color);
+	border-radius: 12px;
+	padding: 16px;
+	cursor: pointer;
+	transition: all 150ms ease;
+	text-align: left;
+	touch-action: manipulation;
+	-webkit-tap-highlight-color: transparent;
+	user-select: none;
+}
+
+.option:active {
+	transform: scale(0.98);
+}
+
+@media (hover: hover) {
+	.option:hover {
+		background-color: var(--background-secondary-hover);
+	}
+}
+
+.optionSelected {
+	border-color: var(--brand-primary-light);
+	background-color: color-mix(in srgb, var(--brand-primary-light) 10%, transparent);
+}
+
+:global(.theme-light) .optionSelected {
+	border-color: var(--brand-primary);
+	background-color: color-mix(in srgb, var(--brand-primary) 10%, transparent);
+}
+
+@media (hover: hover) {
+	.optionSelected:hover {
+		background-color: color-mix(in srgb, var(--brand-primary-light) 15%, transparent);
+	}
+
+	:global(.theme-light) .optionSelected:hover {
+		background-color: color-mix(in srgb, var(--brand-primary) 15%, transparent);
+	}
+}
+
+.optionLeft {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	flex: 1;
+}
+
+.optionIcon {
+	flex-shrink: 0;
+	color: var(--text-secondary);
+}
+
+.optionIconSelected {
+	color: var(--brand-primary-light);
+}
+
+:global(.theme-light) .optionIconSelected {
+	color: var(--brand-primary);
+}
+
+.optionText {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+}
+
+.optionLabel {
+	font-size: 1rem;
+	color: var(--text-primary);
+}
+
+.optionLabelSelected {
+	font-weight: 600;
+}
+
+.optionDescription {
+	font-size: 0.8125rem;
+	color: var(--text-secondary);
+	margin-top: 2px;
+}
+
+.checkIcon {
+	flex-shrink: 0;
+	color: var(--brand-primary-light);
+}
+
+:global(.theme-light) .checkIcon {
+	color: var(--brand-primary);
+}

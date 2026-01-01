@@ -1,0 +1,363 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.channelItemCore {
+	position: relative;
+	margin-left: 0.5rem;
+	margin-right: 0;
+	display: flex;
+	min-width: 0;
+	flex: 1;
+	cursor: pointer;
+	align-items: center;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	border-radius: 0.375rem;
+	padding-left: 0.5rem;
+	padding-right: 0.5rem;
+	gap: 0.375rem;
+	padding-top: 0.375rem;
+	padding-bottom: 0.375rem;
+}
+
+.channelItemCoreNoScrollbar {
+	margin-right: 0.5rem;
+}
+
+.channelItemCoreSelected {
+	background-color: var(--background-modifier-selected);
+	color: var(--surface-interactive-selected-color);
+}
+
+.channelItemCoreUnselected {
+	color: var(--text-tertiary-muted);
+	cursor: pointer;
+}
+
+.channelItemCoreUnselected:hover {
+	background-color: var(--background-modifier-hover);
+}
+
+.typingTooltip {
+	max-width: 32rem;
+	white-space: break-spaces;
+	word-break: break-word;
+	color: var(--text-chat);
+}
+
+.channelTypingIndicator {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.25rem;
+	color: var(--text-primary);
+	flex-shrink: 0;
+	min-width: 1.5rem;
+	height: 1.25rem;
+}
+
+.typingIndicatorIcon {
+	width: 1.25rem;
+	height: 1.25rem;
+	flex-shrink: 0;
+}
+
+:global(.theme-light) .channelItemSelected .typingIndicatorIcon {
+	--typing-indicator-color: var(--surface-interactive-selected-color);
+	color: var(--surface-interactive-selected-color);
+}
+
+.typingAvatars {
+	display: flex;
+	align-items: center;
+}
+
+.channelItemIcon {
+	height: 1.25rem;
+	width: 1.25rem;
+}
+
+.channelItemIconSelected {
+	color: var(--surface-interactive-selected-color);
+}
+
+.channelItemIconUnselected {
+	color: var(--text-tertiary-muted);
+}
+
+.channelItemIconHighlight {
+	color: var(--text-secondary);
+}
+
+.channelItemLabel {
+	flex: 1 1 auto;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-weight: 500;
+	font-size: 1rem;
+	line-height: 1.25rem;
+	max-height: 1.25rem;
+	min-width: 0;
+}
+
+.channelItemActions {
+	margin-left: auto;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.25rem;
+}
+
+.container {
+	position: relative;
+	width: 100%;
+}
+
+.unreadIndicator {
+	position: absolute;
+	top: 50%;
+	left: -0.25rem;
+	transform: translateY(-50%);
+	height: 0.5rem;
+	width: 0.5rem;
+	border-radius: 0 9999px 9999px 0;
+	background-color: var(--text-primary);
+}
+
+.channelItem {
+	position: relative;
+	margin-left: 0.5rem;
+	margin-right: 0;
+	display: flex;
+	min-width: 0;
+	flex: 1;
+	cursor: pointer;
+	align-items: center;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	border-radius: 0.375rem;
+	padding-left: 0.5rem;
+	padding-right: 0.5rem;
+}
+
+.channelItemNoScrollbar {
+	margin-right: 0.5rem;
+}
+
+.channelItemCategory {
+	margin-top: 0.25rem;
+	margin-bottom: 0;
+	gap: 0.25rem;
+	padding-top: 0.375rem;
+	padding-bottom: 0.375rem;
+	color: var(--text-tertiary-muted);
+	cursor: pointer;
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.channelItemCategory:hover {
+		color: var(--text-primary);
+	}
+}
+
+.channelItemRegular {
+	gap: 0.375rem;
+	padding-top: 0.375rem;
+	padding-bottom: 0.375rem;
+	color: var(--text-tertiary-muted);
+}
+
+.channelItemHighlight {
+	color: var(--text-secondary);
+}
+
+.channelItemMuted {
+	color: var(--text-tertiary-muted);
+}
+
+.channelItemSelected {
+	background-color: var(--background-modifier-selected);
+	color: var(--text-primary);
+}
+
+.channelItemSelectedWithUnread {
+	color: var(--text-primary);
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.channelItemHoverable:hover {
+		background-color: var(--background-modifier-hover);
+		color: var(--text-chat);
+	}
+}
+
+.channelItemPressed {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-chat);
+}
+
+.channelItemOver {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-chat);
+}
+
+.channelItemContextMenu {
+	background-color: var(--background-modifier-hover) !important;
+	color: var(--text-chat) !important;
+}
+
+.channelItemCategoryContextMenu {
+	color: var(--text-primary) !important;
+}
+
+.channelItemDragging {
+	opacity: 0.3;
+}
+
+.channelItemDimmed {
+	opacity: 0.6;
+}
+
+.channelItemMutedState {
+	color: var(--text-tertiary-muted);
+	opacity: 0.5;
+}
+
+.hoverAffordance {
+	display: none;
+}
+
+.channelItemCategoryContextMenu .hoverAffordance,
+.channelItemCategory.keyboardFocus .hoverAffordance,
+.channelItemContextMenu .hoverAffordance,
+.channelItem.keyboardFocus .hoverAffordance,
+.channelItemSelected .hoverAffordance {
+	display: flex;
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.channelItemCategory:hover .hoverAffordance,
+	.channelItemHoverable:hover .hoverAffordance {
+		display: flex;
+	}
+}
+
+.channelItemAutocompleteHighlight {
+	box-shadow: 0 0 0 2px var(--brand-primary);
+}
+
+.categoryContent {
+	display: flex;
+	min-width: 0;
+	flex: 1;
+	align-items: center;
+	gap: 0.25rem;
+}
+
+.categoryName {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-weight: 600;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	max-height: 1.25rem;
+	min-width: 0;
+}
+
+.categoryIcon {
+	height: 0.75rem;
+	width: 0.75rem;
+	flex-shrink: 0;
+	color: var(--text-tertiary-muted);
+}
+
+.channelName {
+	flex: 1 1 auto;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-weight: 500;
+	font-size: 1rem;
+	line-height: 1.25rem;
+	max-height: 1.25rem;
+	min-width: 0;
+}
+
+.createChannelButton {
+	display: flex;
+	height: 1rem;
+	width: 1rem;
+	cursor: pointer;
+	align-items: center;
+	justify-content: center;
+	border-radius: 9999px;
+	border: none;
+	background-color: transparent;
+	padding: 0;
+	color: var(--text-tertiary-muted);
+}
+
+.createChannelButton:hover {
+	color: var(--text-primary);
+}
+
+.createChannelIcon {
+	height: 1rem;
+	width: 1rem;
+}
+
+.voiceUserCount {
+	display: flex;
+	flex-shrink: 0;
+}
+
+.channelItemVoice:hover .voiceUserCount,
+.channelItemVoice.contextMenuOpen .voiceUserCount {
+	display: none;
+}
+
+:global(.theme-light) {
+	.channelItemCategory {
+		color: var(--text-primary);
+	}
+
+	.channelItemRegular {
+		color: var(--text-primary);
+	}
+
+	.channelItemMuted {
+		color: var(--text-primary);
+	}
+
+	.channelItemIconUnselected {
+		color: var(--text-primary);
+	}
+
+	.categoryIcon {
+		color: var(--text-primary);
+	}
+
+	.createChannelButton {
+		color: var(--text-primary);
+	}
+}

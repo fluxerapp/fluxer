@@ -1,0 +1,83 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.container {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	border-radius: 0.375rem;
+	border: 1px solid var(--background-header-secondary);
+	background-color: var(--background-secondary);
+	padding: 1rem;
+}
+
+.header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.title {
+	font-weight: 600;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+}
+
+.stats {
+	margin-top: 0.25rem;
+	display: flex;
+	gap: 1rem;
+	color: var(--text-primary-muted);
+	font-size: 0.75rem;
+	line-height: 1rem;
+}
+
+.description {
+	color: var(--text-primary-muted);
+	font-size: 0.75rem;
+	line-height: 1rem;
+}
+
+.icon {
+	height: 1rem;
+	width: 1rem;
+}
+
+.uploadButtonDesktop {
+	display: block;
+}
+
+.uploadButtonMobile {
+	display: none;
+}
+
+@media (max-width: 480px) {
+	.uploadButtonDesktop {
+		display: none;
+	}
+
+	.uploadButtonMobile {
+		display: block;
+		margin-top: 0.5rem;
+	}
+
+	.uploadButtonMobile button {
+		width: 100%;
+	}
+}

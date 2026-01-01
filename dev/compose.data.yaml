@@ -1,0 +1,160 @@
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: fluxer
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - fluxer-shared
+    restart: on-failure
+
+  cassandra:
+    image: scylladb/scylla:latest
+    command: --smp 1 --memory 512M --overprovisioned 1 --developer-mode 1 --api-address 0.0.0.0
+    ports:
+      - '9042:9042'
+    volumes:
+      - scylla_data:/var/lib/scylla
+    networks:
+      - fluxer-shared
+    restart: on-failure
+    healthcheck:
+      test: ['CMD-SHELL', 'cqlsh -e "describe cluster"']
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+
+  redis:
+    image: valkey/valkey:latest
+    volumes:
+      - redis_data:/data
+    command: valkey-server --save 60 1 --loglevel warning
+    networks:
+      - fluxer-shared
+    restart: on-failure
+
+  minio:
+    image: minio/minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - minio_data:/data
+    networks:
+      - fluxer-shared
+    restart: on-failure
+    healthcheck:
+      test: ['CMD', 'mc', 'ready', 'local']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  minio-setup:
+    image: minio/mc
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set minio http://minio:9000 minioadmin minioadmin;
+      mc mb --ignore-existing minio/fluxer-metrics;
+      mc mb --ignore-existing minio/fluxer-uploads;
+      exit 0;
+      "
+    networks:
+      - fluxer-shared
+    restart: 'no'
+
+  clamav:
+    image: clamav/clamav:latest
+    volumes:
+      - clamav_data:/var/lib/clamav
+    environment:
+      CLAMAV_NO_FRESHCLAMD: 'false'
+      CLAMAV_NO_CLAMD: 'false'
+      CLAMAV_NO_MILTERD: 'true'
+    networks:
+      - fluxer-shared
+    restart: on-failure
+    healthcheck:
+      test: ['CMD', '/usr/local/bin/clamdcheck.sh']
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 300s
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.25.0
+    volumes:
+      - meilisearch_data:/meili_data
+    environment:
+      MEILI_ENV: development
+      MEILI_MASTER_KEY: masterKey
+    networks:
+      - fluxer-shared
+    restart: on-failure
+
+  livekit:
+    image: livekit/livekit-server:latest
+    command: --config /etc/livekit.yaml --dev
+    env_file:
+      - ./.env
+    volumes:
+      - ./livekit.yaml:/etc/livekit.yaml:ro
+    ports:
+      - '7880:7880'
+      - '7882:7882/udp'
+      - '7999:7999/udp'
+    networks:
+      - fluxer-shared
+    restart: on-failure
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:24.8
+    hostname: clickhouse
+    profiles:
+      - clickhouse
+    environment:
+      - CLICKHOUSE_DB=fluxer_metrics
+      - CLICKHOUSE_USER=fluxer
+      - CLICKHOUSE_PASSWORD=fluxer_dev
+      - CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT=1
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+      - clickhouse_logs:/var/log/clickhouse-server
+    networks:
+      - fluxer-shared
+    ports:
+      - '8123:8123'
+      - '9000:9000'
+    restart: on-failure
+    healthcheck:
+      test: ['CMD', 'clickhouse-client', '--query', 'SELECT 1']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+
+networks:
+  fluxer-shared:
+    name: fluxer-shared
+    external: true
+
+volumes:
+  postgres_data:
+  scylla_data:
+  redis_data:
+  minio_data:
+  clamav_data:
+  meilisearch_data:
+  clickhouse_data:
+  clickhouse_logs:

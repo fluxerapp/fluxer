@@ -1,0 +1,2062 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026 Fluxer Contributors
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+
+#: src/fluxer_marketing/components/pwa_install_dialog.gleam:190
+msgid " in Chrome"
+msgstr "Chrome naršyklėje"
+
+#: src/fluxer_marketing/components/pwa_install_dialog.gleam:288
+msgid " in Chrome or another browser with PWA support"
+msgstr "Chrome naršyklėje arba kitoje naršyklėje su PWA palaikymu"
+
+#: src/fluxer_marketing/components/pwa_install_dialog.gleam:236
+msgid " in Safari"
+msgstr "Safari naršyklėje"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:1032
+msgid "/forever"
+msgstr "/visam laikui"
+
+#: src/fluxer_marketing/components/plutonium_section.gleam:66
+#: src/fluxer_marketing/pages/plutonium_page.gleam:103
+#: src/fluxer_marketing/pages/plutonium_page.gleam:225
+msgid "/mo"
+msgstr "/mėn."
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:233
+msgid "/year"
+msgstr "/metus"
+
+#: src/fluxer_marketing/components/plutonium_section.gleam:71
+#: src/fluxer_marketing/pages/plutonium_page.gleam:109
+msgid "/yr"
+msgstr "/met."
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:654
+msgid "500MB uploads, 4000 character messages, 300 bookmarks, 50 emoji packs, and much more."
+msgstr "Įkėlimai iki 500 MB, 4000 simbolių žinutės, 300 žymelių, 50 jaustukų paketų ir dar daugiau."
+
+#: src/fluxer_marketing/components/communities_section.gleam:86
+msgid "A chat platform that answers to you, not investors. It's ad-free, open source, community-funded, and never sells your data or nags you with upgrade pop-ups."
+msgstr "Pokalbių platforma, kuri atsiskaito jums, o ne investuotojams. Be reklamų, atvirojo kodo, finansuojama bendruomenės ir niekada neparduodanti jūsų duomenų ar nekvaršinanti galvos atnaujinimo iššokančiais langais."
+
+#: src/fluxer_marketing/pages/careers_page.gleam:219
+msgid "A non-paid role for recurring contributors who help shape Fluxer alongside the core team."
+msgstr "Neapmokamas vaidmuo nuolat prisidedantiems žmonėms, kurie kartu su pagrindine komanda padeda formuoti Fluxer."
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:1074
+msgid "Access to Fluxer Operators community"
+msgstr "Prieiga prie „Fluxer Operators“ bendruomenės"
+
+#: src/fluxer_marketing/pages/partners_page.gleam:225
+msgid "Access to VIP voice servers reserved exclusively for partnered communities."
+msgstr "Prieiga prie VIP balso serverių, skirtų išskirtinai partnerių bendruomenėms."
+
+#: src/fluxer_marketing/components/coming_features.gleam:48
+msgid "Activity sharing"
+msgstr "Veiklos bendrinimas"
+
+#: src/fluxer_marketing/pages/download_page.gleam:228
+msgid "Add Fluxer to your home screen to hide the browser UI."
+msgstr "Pridėkite Fluxer prie pradžios ekrano, kad paslėptumėte naršyklės sąsają."
+
+#: src/fluxer_marketing/components/current_features.gleam:133
+msgid "Add custom emojis, save media for later, and style the app with custom CSS."
+msgstr "Įkelkite savo jaustukus, išsisaugokite mediją vėlesniam laikui ir pritaikykite programą naudodami pasirinktinį CSS."
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:1124
+msgid "After the offer ends, Operator Pass stays available on its own."
+msgstr "Pasibaigus pasiūlymui, „Operator Pass“ ir toliau bus galima įsigyti atskirai."
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:843
+msgid "All current and future Plutonium benefits, forever"
+msgstr "Visos esamos ir būsimos „Plutonium“ privilegijos – visam laikui"
+
+#: src/fluxer_marketing/components/current_features.gleam:55
+msgid "All the basics you expect, plus a few things you don't."
+msgstr "Visi pagrindai, kurių tikitės, ir dar keli malonūs netikėtumai."
+
+#: src/fluxer_marketing/components/locale_selector.gleam:102
+msgid "All translations are currently LLM-generated with minimal human revision. We'd love to get real people to help us out localizing Fluxer into your language! To do so, shoot an email to i18n@fluxer.app and we'll be happy to accept your contributions."
+msgstr "Šiuo metu visi vertimai sugeneruoti didžiaisiais kalbos modeliais (LLM) ir tik minimaliai peržiūrėti žmogaus. Labai norėtume, kad Fluxer lokalizacijoje į jūsų kalbą padėtų tikri žmonės! Parašykite el. laišką i18n@fluxer.app ir mielai priimsime jūsų indėlį."
+
+#: src/fluxer_marketing/components/platform_download_button.gleam:524
+#: src/fluxer_marketing/components/pwa_install_dialog.gleam:97
+msgid "Android"
+msgstr "Android"
+
+#: src/fluxer_marketing/components/platform_download_button.gleam:236
+msgid "Android 8+"
+msgstr "Android 8+"
+
+#: src/fluxer_marketing/pages/partners_page.gleam:178
+msgid "Animated Avatar & Banner"
+msgstr "Animuotas avataras ir baneris"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:399
+#: src/fluxer_marketing/pages/plutonium_page.gleam:591
+msgid "Animated avatars & banners"
+msgstr "Animuoti avatarai ir baneriai"
+
+#: src/fluxer_marketing/components/platform_download_button.gleam:144
+#: src/fluxer_marketing/components/platform_download_button.gleam:160
+msgid "Apple Silicon"
+msgstr "Apple Silicon"
+
+#: src/fluxer_marketing/pages/partners_page.gleam:448
+msgid "Apply at partners@fluxer.app"
+msgstr "Pateikite paraišką: partners@fluxer.app"
+
+#: src/fluxer_marketing/components/get_involved_section.gleam:170
+msgid "Approved reports grant access to Fluxer Testers, where you can earn points for Plutonium codes and the Bug Hunter badge."
+msgstr "Patvirtintos ataskaitos suteikia prieigą prie „Fluxer Testers“, kur galite rinkti taškus „Plutonium“ kodams ir „Bug Hunter“ ženkleliui."
+
+#: src/fluxer_marketing/components/locale_selector.gleam:118
+msgid "Arabic"
+msgstr "Arabų"
+
+#: src/fluxer_marketing/pages/help_category_page.gleam:143
+msgid "Articles in "
+msgstr "Straipsniai skiltyje "
+
+#: src/fluxer_marketing/pages/help_article_page.gleam:291
+msgid "Articles in this section"
+msgstr "Straipsniai šioje skiltyje"
+
+#: src/fluxer_marketing/components/current_features.gleam:106
+msgid "Audit logs for transparency"
+msgstr "Audito žurnalai skaidrumui"
+
+#: src/fluxer_marketing/pages/donate_page.gleam:302
+msgid "Available for Swedish bank accounts"
+msgstr "Prieinamas Švedijos bankų sąskaitoms"
+
+#: src/fluxer_marketing/pages/download_page.gleam:67
+msgid "Available on your desktop — and on the web"
+msgstr "Pasiekiama kompiuteryje – ir naršyklėje"
+
+#: src/fluxer_marketing/pages/help_article_page.gleam:182
+msgid "Back to "
+msgstr "Grįžti į "
+
+#: src/fluxer_marketing/pages/help_article_page.gleam:279
+#: src/fluxer_marketing/pages/help_search_page.gleam:115
+msgid "Back to Help Center"
+msgstr "Grįžti į Pagalbos centrą"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:674
+msgid "Be the first to try new features before they're released to everyone else."
+msgstr "Išbandykite naujas funkcijas pirmieji – dar prieš joms pasirodant visiems."
+
+#: src/fluxer_marketing/components/partner_section.gleam:64
+#: src/fluxer_marketing/pages/careers_page.gleam:173
+#: src/fluxer_marketing/pages/partners_page.gleam:64
+msgid "Become a Fluxer Partner"
+msgstr "Tapkite „Fluxer“ partneriu"
+
+#: src/fluxer_marketing/components/partner_section.gleam:151
+msgid "Become a Partner"
+msgstr "Tapkite partneriu"
+
+#: src/fluxer_marketing/pages/download_page.gleam:322
+#: src/fluxer_marketing/pages/plutonium_page.gleam:876
+msgid "Become a Visionary"
+msgstr "Tapkite „Visionary“"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:318
+#: src/fluxer_marketing/pages/plutonium_page.gleam:325
+#: src/fluxer_marketing/pages/plutonium_page.gleam:374
+#: src/fluxer_marketing/pages/plutonium_page.gleam:626
+#: src/fluxer_marketing/pages/plutonium_page.gleam:636
+#: src/fluxer_marketing/pages/plutonium_page.gleam:646
+msgid "Beta"
+msgstr "Beta"
+
+#: src/fluxer_marketing/components/coming_features.gleam:54
+msgid "Better noise cancellation"
+msgstr "Geresnis triukšmo slopinimas"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:350
+msgid "Bio character limit"
+msgstr "Aprašymo simbolių limitas"
+
+#: src/fluxer_marketing/pages/press_page.gleam:235
+msgid "Black"
+msgstr "Juoda"
+
+#: src/fluxer_marketing/pages/press_page.gleam:117
+msgid "Black Logo"
+msgstr "Juodas logotipas"
+
+#: src/fluxer_marketing/pages/press_page.gleam:171
+msgid "Black Symbol"
+msgstr "Juodas simbolis"
+
+#: src/fluxer_marketing/pages/press_page.gleam:217
+msgid "Blue (Da Ba Dee)"
+msgstr "Mėlyna (Da Ba Dee)"
+
+#: src/fluxer_marketing/components/footer.gleam:157
+#: src/fluxer_marketing/components/navigation.gleam:449
+msgid "Bluesky"
+msgstr "Bluesky"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:343
+msgid "Bookmarked messages"
+msgstr "Pažymėtos žinutės"
+
+#: src/fluxer_marketing/pages/donate_page.gleam:388
+msgid "Both donation types support the same cause equally. The only difference is that Business donations allow you to specify a tax ID (if applicable) and receive a PDF invoice when finalized, which can be useful for company accounting purposes."
+msgstr "Abu aukojimo tipai vienodai remia tą patį tikslą. Vienintelis skirtumas tas, kad „Verslas“ leidžia nurodyti mokesčių mokėtojo kodą (jei taikoma) ir, užbaigus auką, gauti PDF sąskaitą faktūrą – tai gali būti naudinga įmonės apskaitai."
+
+#: src/fluxer_marketing/pages/press_page.gleam:200
+msgid "Brand Colors"
+msgstr "Prekės ženklo spalvos"
+
+#: src/fluxer_marketing/pages/partners_page.gleam:421
+msgid "Brief description of your audience and what you do"
+msgstr "Trumpas jūsų auditorijos ir veiklos aprašymas"
+
+#: src/fluxer_marketing/pages/help_search_page.gleam:150
+msgid "Browse Categories"
+msgstr "Naršyti kategorijas"
+
+#: src/fluxer_marketing/pages/help_center_page.gleam:168
+msgid "Browse articles"
+msgstr "Naršyti straipsnius"
+
+#: src/fluxer_marketing/pages/help_center_page.gleam:95
+msgid "Browse by category"
+msgstr "Naršyti pagal kategorijas"
+
+#: src/fluxer_marketing/pages/help_category_page.gleam:65
+msgid "Browse help articles about "
+msgstr "Naršykite pagalbos straipsnius apie "
+
+#: src/fluxer_marketing/components/communities_section.gleam:44
+msgid "Built for communities of all kinds."
+msgstr "Sukurta visų tipų bendruomenėms."
+
+#: src/fluxer_marketing/components/hero.gleam:64
+msgid "Built for friends, groups, and communities. Text, voice, and video. Open source and community-funded."
+msgstr "Sukurta draugams, grupėms ir bendruomenėms. Tekstas, balsas ir vaizdas. Atvirojo kodo ir finansuojama bendruomenės."
+
+#: src/fluxer_marketing/components/locale_selector.gleam:119
+msgid "Bulgarian"
+msgstr "Bulgarų"
+
+#: src/fluxer_marketing/pages/donate_page.gleam:177
+msgid "Business"
+msgstr "Verslas"
+
+#: src/fluxer_marketing/components/coming_features.gleam:56
+msgid "Call pop-out"
+msgstr "Skambučio lango atskyrimas"
+
+#: src/fluxer_marketing/components/footer.gleam:220
+#: src/fluxer_marketing/components/navigation.gleam:358
+msgid "Careers"
+msgstr "Karjera"
+
+#: src/fluxer_marketing/pages/careers_page.gleam:46
+msgid "Careers at Fluxer"
+msgstr "Karjera Fluxer"
+
+#: src/fluxer_marketing/components/locale_selector.gleam:38
+#: src/fluxer_marketing/components/navigation.gleam:252
+#: src/fluxer_marketing/components/navigation.gleam:257
+msgid "Change language"
+msgstr "Keisti kalbą"
+
+#: src/fluxer_marketing/components/hero.gleam:59
+msgid "Chat that puts you first"
+msgstr "Pokalbiai, kuriuose svarbiausia jūs"
+
+#: src/fluxer_marketing/components/locale_selector.gleam:150
+msgid "Chinese (Simplified)"
+msgstr "Kinų (supaprastinta)"
+
+#: src/fluxer_marketing/components/locale_selector.gleam:151
+msgid "Chinese (Traditional)"
+msgstr "Kinų (tradicinė)"
+
+#: src/fluxer_marketing/components/platform_download_button.gleam:207
+msgid "Choose Linux distribution"
+msgstr "Pasirinkite Linux distribuciją"
+
+#: src/fluxer_marketing/pages/help_category_page.gleam:148
+msgid "Choose a guide below or search again if you don't see what you need."
+msgstr "Pasirinkite žemiau pateiktą vadovą arba ieškokite dar kartą, jei nerandate, ko reikia."
+
+#: src/fluxer_marketing/components/platform_download_button.gleam:409
+msgid "Choose distribution"
+msgstr "Pasirinkti distribuciją"
+
+#: src/fluxer_marketing/components/locale_selector.gleam:63
+msgid "Choose your language"
+msgstr "Pasirinkite kalbą"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:564
+msgid "Choose your own 4-digit tag like #0001, #1337, or #9999 to make your username truly unique."
+msgstr "Pasirinkite savo 4 skaitmenų žymą, pvz., #0001, #1337 ar #9999, kad jūsų naudotojo vardas būtų iš tiesų unikalus."
+
+#: src/fluxer_marketing/pages/help_category_page.gleam:136
+msgid "Clear search"
+msgstr "Išvalyti paiešką"
+
+#: src/fluxer_marketing/pages/download_page.gleam:337
+msgid "Code, issues, docs, and reviews"
+msgstr "Kodas, užduotys, dokumentacija ir apžvalgos"
+
+#: src/fluxer_marketing/pages/press_page.gleam:124
+msgid "Color Logo"
+msgstr "Spalvotas logotipas"
+
+#: src/fluxer_marketing/pages/press_page.gleam:178
+msgid "Color Symbol"
+msgstr "Spalvotas simbolis"
+
+#: src/fluxer_marketing/pages/partners_page.gleam:297
+msgid "Coming Soon"
+msgstr "Netrukus"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:296
+#: src/fluxer_marketing/pages/plutonium_page.gleam:297
+#: src/fluxer_marketing/pages/plutonium_page.gleam:310
+#: src/fluxer_marketing/pages/plutonium_page.gleam:311
+#: src/fluxer_marketing/pages/plutonium_page.gleam:366
+#: src/fluxer_marketing/pages/plutonium_page.gleam:367
+#: src/fluxer_marketing/pages/plutonium_page.gleam:586
+msgid "Coming soon"
+msgstr "Netrukus"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:329
+msgid "Communities"
+msgstr "Bendruomenės"
+
+#: src/fluxer_marketing/pages/careers_page.gleam:140
+msgid "Community"
+msgstr "Bendruomenė"
+
+#: src/fluxer_marketing/components/footer.gleam:260
+#: src/fluxer_marketing/components/navigation.gleam:415
+#: src/fluxer_marketing/pages/guidelines_page.gleam:41
+msgid "Community Guidelines"
+msgstr "Bendruomenės gairės"
+
+#: src/fluxer_marketing/pages/partners_page.gleam:134
+msgid "Community Verification"
+msgstr "Bendruomenės patvirtinimas"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:1040
+msgid "Community support"
+msgstr "Bendruomenės palaikymas"
+
+#: src/fluxer_marketing/components/coming_features.gleam:38
+msgid "Community templates"
+msgstr "Bendruomenių šablonai"
+
+#: src/fluxer_marketing/components/current_features.gleam:139
+msgid "Compact mode and display options"
+msgstr "Kompaktiškas režimas ir rodymo parinktys"
+
+#: src/fluxer_marketing/components/navigation.gleam:348
+msgid "Company"
+msgstr "Įmonė"
+
+#: src/fluxer_marketing/components/footer.gleam:271
+#: src/fluxer_marketing/components/navigation.gleam:376
+#: src/fluxer_marketing/pages/company_page.gleam:41
+#: src/fluxer_marketing/pages/company_page.gleam:44
+msgid "Company Information"
+msgstr "Informacija apie įmonę"
+
+#: src/fluxer_marketing/components/footer.gleam:278
+#: src/fluxer_marketing/components/navigation.gleam:426
+msgid "Connect"
+msgstr "Susisiekite"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:1038
+msgid "Connect from any client"
+msgstr "Prisijunkite iš bet kurio kliento"
+
+#: src/fluxer_marketing/pages/help_article_page.gleam:233
+#: src/fluxer_marketing/pages/help_article_page.gleam:375
+msgid "Contact Support"
+msgstr "Susisiekti su pagalba"
+
+#: src/fluxer_marketing/components/partner_section.gleam:70
+msgid "Content creators and community owners: unlock exclusive perks including free Plutonium, a Partner badge, custom vanity URLs, and more."
+msgstr "Turinio kūrėjams ir bendruomenių savininkams: atrakinkite išskirtines privilegijas, įskaitant nemokamą „Plutonium“, Partnerio ženklelį, pasirinktinius vanity URL ir dar daugiau."
+
+#: src/fluxer_marketing/components/get_involved_section.gleam:178
+msgid "Contribute code"
+msgstr "Prisidėkite kodu"
+
+#: src/fluxer_marketing/pages/download_page.gleam:336
+msgid "Contribute on GitHub"
+msgstr "Prisidėkite per GitHub"
+
+#: src/fluxer_marketing/components/final_cta.gleam:69
+msgid "Create an account and help us build something good."
+msgstr "Susikurkite paskyrą ir padėkite mums kurti kažką gero."
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:1191
+msgid "Create your Fluxer account to get that sweet Plutonium while it's hot."
+msgstr "Susikurkite Fluxer paskyrą ir spėkite pasiimti to saldaus „Plutonium“, kol dar karšta."
+
+#: src/fluxer_marketing/pages/partners_page.gleam:211
+msgid "Creator Monetization"
+msgstr "Kūrėjų monetizacija"
+
+#: src/fluxer_marketing/components/coming_features.gleam:50
+msgid "Creator monetization"
+msgstr "Kūrėjų monetizacija"
+
+#: src/fluxer_marketing/components/communities_section.gleam:62
+msgid "Creators"
+msgstr "Kūrėjai"
+
+#: src/fluxer_marketing/components/locale_selector.gleam:132
+msgid "Croatian"
+msgstr "Kroatų"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:280
+msgid "Custom 4-digit username tag"
+msgstr "Pasirinktinė 4 skaitmenų naudotojo vardo žyma"
+
+#: src/fluxer_marketing/components/current_features.gleam:138
+msgid "Custom CSS themes"
+msgstr "Pasirinktinės CSS temos"
+
+#: src/fluxer_marketing/pages/partners_page.gleam:145
+msgid "Custom Vanity URL"
+msgstr "Pasirinktinis vanity URL"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:315
+#: src/fluxer_marketing/pages/plutonium_page.gleam:631
+msgid "Custom entrance sounds"
+msgstr "Pasirinktiniai prisijungimo garsai"
+
+#: src/fluxer_marketing/components/plutonium_section.gleam:127
+msgid "Custom identity"
+msgstr "Pasirinktinė tapatybė"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:322
+#: src/fluxer_marketing/pages/plutonium_page.gleam:641
+msgid "Custom notification sounds"
+msgstr "Pasirinktiniai pranešimų garsai"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:413
+msgid "Custom themes"
+msgstr "Pasirinktinės temos"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:561
+msgid "Custom username tag"
+msgstr "Pasirinktinė naudotojo vardo žyma"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:308
+msgid "Custom video backgrounds"
+msgstr "Pasirinktiniai vaizdo fonai"
+
+#: src/fluxer_marketing/components/current_features.gleam:130
+msgid "Customization"
+msgstr "Pritaikymas"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:574
+msgid "Customize your profile differently for each community you're part of."
+msgstr "Pritaikykite profilį skirtingai kiekvienai bendruomenei, kurioje esate."
+
+#: src/fluxer_marketing/components/locale_selector.gleam:120
+msgid "Czech"
+msgstr "Čekų"
+
+#: src/fluxer_marketing/components/coming_features.gleam:35
+msgid "DM folders"
+msgstr "Asmeninių žinučių aplankai"
+
+#: src/fluxer_marketing/components/current_features.gleam:69
+msgid "DM your friends, chat with groups, or build communities with channels."
+msgstr "Rašykite asmenines žinutes draugams, bendraukite grupėse arba kurkite bendruomenes su kanalais."
+
+#: src/fluxer_marketing/components/locale_selector.gleam:121
+msgid "Danish"
+msgstr "Danų"
+
+#: src/fluxer_marketing/pages/careers_page.gleam:250
+msgid "Design & branding"
+msgstr "Dizainas ir prekės ženklas"
+
+#: src/fluxer_marketing/components/pwa_install_dialog.gleam:99
+msgid "Desktop"
+msgstr "Darbalaukis"
+
+#: src/fluxer_marketing/components/footer.gleam:209
+msgid "Developer Docs"
+msgstr "Kūrėjų dokumentacija"
+
+#: src/fluxer_marketing/components/communities_section.gleam:74
+msgid "Developers"
+msgstr "Kūrėjai"
+
+#: src/fluxer_marketing/components/partner_section.gleam:137
+#: src/fluxer_marketing/pages/partners_page.gleam:156
+msgid "Direct Team Access"
+msgstr "Tiesioginė prieiga prie komandos"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:1076
+msgid "Direct team support"
+msgstr "Tiesioginis komandos palaikymas"
+
+#: src/fluxer_marketing/components/coming_features.gleam:44
+msgid "Discovery"
+msgstr "Atraskite"
+
+#: src/fluxer_marketing/pages/partners_page.gleam:126
+msgid "Display an exclusive Partner badge on your profile to stand out."
+msgstr "Rodykite išskirtinį Partnerio ženklelį profilyje ir išsiskirkite."
+
+#: src/fluxer_marketing/pages/donate_page.gleam:367
+msgid "Do I get anything in return?"
+msgstr "Ar gausiu ką nors mainais?"
+
+#: src/fluxer_marketing/components/navigation.gleam:111
+#: src/fluxer_marketing/components/navigation.gleam:319
+msgid "Docs"
+msgstr "Dokumentacija"
+
+#: src/fluxer_marketing/components/navigation.gleam:120
+#: src/fluxer_marketing/components/navigation.gleam:367
+msgid "Donate"
+msgstr "Paaukoti"
+
+#: src/fluxer_marketing/pages/donate_page.gleam:216
+#: src/fluxer_marketing/pages/donate_page.gleam:255
+msgid "Donate in EUR"
+msgstr "Aukoti eurais"
+
+#: src/fluxer_marketing/pages/donate_page.gleam:203
+#: src/fluxer_marketing/pages/donate_page.gleam:242
+msgid "Donate in USD"
+msgstr "Aukoti JAV doleriais"
+
+#: src/fluxer_marketing/components/footer.gleam:78
+#: src/fluxer_marketing/pages/download_page.gleam:329
+msgid "Donate to Fluxer"
+msgstr "Paaukokite Fluxer"
+
+#: src/fluxer_marketing/pages/donate_page.gleam:298
+msgid "Donate with Swish"
+msgstr "Paaukoti su Swish"
+
+#: src/fluxer_marketing/pages/donate_page.gleam:370
+msgid "Donations are voluntary gifts and do not provide you with any product, service, ownership, or special rights. If you're looking for premium features, check out {0}."
+msgstr "Aukos yra savanoriškos dovanos ir nesuteikia jums jokio produkto, paslaugos, nuosavybės ar ypatingų teisių. Jei ieškote premium funkcijų, peržiūrėkite {0}."
+
+#: src/fluxer_marketing/components/pwa_install_dialog.gleam:308
+msgid "Done! You can now open Fluxer as if it were a regular program."
+msgstr "Baigta! Dabar galite atidaryti Fluxer lyg tai būtų įprasta programa."
+
+#: src/fluxer_marketing/components/pwa_install_dialog.gleam:206
+#: src/fluxer_marketing/components/pwa_install_dialog.gleam:256
+msgid "Done! You can open Fluxer from your home screen."
+msgstr "Baigta! Galite atidaryti Fluxer iš savo pagrindinio ekrano."
+
+#: src/fluxer_marketing/components/footer.gleam:132
+#: src/fluxer_marketing/components/navigation.gleam:84
+#: src/fluxer_marketing/components/navigation.gleam:280
+#: src/fluxer_marketing/components/platform_download_button.gleam:223
+#: src/fluxer_marketing/pages/press_page.gleam:359
+msgid "Download"
+msgstr "Atsisiųsti"
+
+#: src/fluxer_marketing/components/platform_download_button.gleam:276
+#: src/fluxer_marketing/pages/download_page.gleam:46
+#: src/fluxer_marketing/pages/download_page.gleam:66
+msgid "Download Fluxer"
+msgstr "Atsisiųsti Fluxer"
+
+#: src/fluxer_marketing/pages/download_page.gleam:49
+msgid "Download Fluxer for Windows, macOS, and Linux. Mobile apps are underway."
+msgstr "Atsisiųskite Fluxer „Windows“, „macOS“ ir „Linux“. Mobiliosios programėlės kuriamos."
+
+#: src/fluxer_marketing/pages/press_page.gleam:48
+msgid "Download Fluxer logos, brand assets, and get in touch with our press team"
+msgstr "Atsisiųskite Fluxer logotipus, prekės ženklo medžiagą ir susisiekite su mūsų spaudos komanda"
+
+#: src/fluxer_marketing/components/platform_download_button.gleam:428
+#: src/fluxer_marketing/components/platform_download_button.gleam:538
+msgid "Download for "
+msgstr "Atsisiųsti versiją, skirtą "
+
+#: src/fluxer_marketing/components/platform_download_button.gleam:191
+msgid "Download for Windows"
+msgstr "Atsisiųsti „Windows“ versiją"
+
+#: src/fluxer_marketing/components/platform_download_button.gleam:199
+msgid "Download for macOS"
+msgstr "Atsisiųsti „macOS“ versiją"
+
+#: src/fluxer_marketing/pages/press_page.gleam:68
+msgid "Download our logos, learn about our brand colors, and get in touch with our press team."
+msgstr "Atsisiųskite mūsų logotipus, sužinokite apie prekės ženklo spalvas ir susisiekite su mūsų spaudos komanda."
+
+#: src/fluxer_marketing/components/locale_selector.gleam:139
+msgid "Dutch"
+msgstr "Olandų"
+
+#: src/fluxer_marketing/components/coming_features.gleam:55
+msgid "E2EE calls"
+msgstr "E2EE skambučiai"
+
+#: src/fluxer_marketing/pages/partners_page.gleam:200
+msgid "Early Feature Access"
+msgstr "Ankstyva prieiga prie funkcijų"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:671
+msgid "Early access"
+msgstr "Ankstyva prieiga"
+
+#: src/fluxer_marketing/pages/partners_page.gleam:214
+msgid "Early access to creator monetization features with lower platform fees than non-partners."
+msgstr "Ankstyva prieiga prie kūrėjų monetizacijos funkcijų su mažesniais platformos mokesčiais nei ne partneriams."
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:406
+msgid "Early access to new features"
+msgstr "Ankstyva prieiga prie naujų funkcijų"
+
+#: src/fluxer_marketing/components/communities_section.gleam:67
+msgid "Education"
+msgstr "Švietimas"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:364
+msgid "Emoji & sticker packs"
+msgstr "Jaustukų ir lipdukų paketai"
+
+#: src/fluxer_marketing/components/locale_selector.gleam:124
+msgid "English"
+msgstr "Anglų"
+
+#: src/fluxer_marketing/components/locale_selector.gleam:125
+msgid "English (US)"
+msgstr "Anglų (JAV)"
+
+#: src/fluxer_marketing/components/coming_features.gleam:43
+msgid "Event tickets"
+msgstr "Renginių bilietai"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:1071
+msgid "Everything in Free, plus:"
+msgstr "Viskas, kas yra Nemokamame plane, ir dar:"
+
+#: src/fluxer_marketing/pages/partners_page.gleam:233
+msgid "Exclusive Merch"
+msgstr "Išskirtinė atributika"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:863
+msgid "Exclusive communities"
+msgstr "Išskirtinės bendruomenės"
+
+#: src/fluxer_marketing/components/plutonium_section.gleam:181
+msgid "Exclusive features"
+msgstr "Išskirtinės funkcijos"
+
+#: src/fluxer_marketing/pages/partners_page.gleam:67
+msgid "Exclusive perks and benefits for content creators and large community owners."
+msgstr "Išskirtinės privilegijos ir naudos turinio kūrėjams bei didelių bendruomenių savininkams."
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:257
+msgid "Feature"
+msgstr "Funkcija"
+
+#: src/fluxer_marketing/pages/partners_page.gleam:167
+msgid "Featured in Discovery"
+msgstr "Rodoma skiltyje „Atraskite“"
+
+#: src/fluxer_marketing/components/coming_features.gleam:30
+msgid "Federation"
+msgstr "Federacija"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:357
+msgid "File upload size"
+msgstr "Failo įkėlimo dydis"
+
+#: src/fluxer_marketing/components/current_features.gleam:121
+msgid "Filter by users, dates, and more"
+msgstr "Filtruokite pagal naudotojus, datas ir kt."
+
+#: src/fluxer_marketing/pages/help_center_page.gleam:49
+msgid "Find answers to common questions and learn how to use Fluxer."
+msgstr "Raskite atsakymus į dažniausius klausimus ir sužinokite, kaip naudotis Fluxer."
+
+#: src/fluxer_marketing/components/current_features.gleam:117
+msgid "Find old messages or jump between communities and channels in seconds."
+msgstr "Sekundėmis suraskite senas žinutes arba peršokite tarp bendruomenių ir kanalų."
+
+#: src/fluxer_marketing/pages/help_center_page.gleam:104
+msgid "Find step-by-step guides and answers, organized by topic."
+msgstr "Raskite nuoseklius vadovus ir atsakymus, suskirstytus pagal temas."
+
+#: src/fluxer_marketing/components/locale_selector.gleam:128
+msgid "Finnish"
+msgstr "Suomių"
+
+#: src/fluxer_marketing/pages/careers_page.gleam:121
+msgid "Fix bugs, ship features, or polish the experience in our main repo."
+msgstr "Taisykite klaidas, diekite funkcijas arba poliruokite patirtį mūsų pagrindiniame repozitorijoje."
+
+#: src/fluxer_marketing/components/footer.gleam:99
+msgid "Fluxer"
+msgstr "Fluxer"
+
+#: src/fluxer_marketing/pages/guidelines_page.gleam:44
+msgid "Fluxer Community Guidelines"
+msgstr "Fluxer bendruomenės gairės"
+
+#: src/fluxer_marketing/pages/careers_page.gleam:207
+msgid "Fluxer Community Team"
+msgstr "Fluxer bendruomenės komanda"
+
+#: src/fluxer_marketing/pages/partners_page.gleam:44
+msgid "Fluxer Partner"
+msgstr "Fluxer partneris"
+
+#: src/fluxer_marketing/pages/donate_page.gleam:372
+#: src/fluxer_marketing/pages/plutonium_page.gleam:51
+#: src/fluxer_marketing/pages/plutonium_page.gleam:76
+msgid "Fluxer Plutonium"
+msgstr "Fluxer Plutonium"
+
+#: src/fluxer_marketing/pages/privacy_page.gleam:44
+msgid "Fluxer Privacy Policy"
+msgstr "Fluxer privatumo politika"
+
+#: src/fluxer_marketing/pages/terms_page.gleam:44
+msgid "Fluxer Terms of Service"
+msgstr "Fluxer naudojimo sąlygos"
+
+#: src/fluxer_marketing/pages/careers_page.gleam:105
+msgid "Fluxer is built in the open. Pick the path that fits how you like to help."
+msgstr "Fluxer kuriamas atvirai. Pasirinkite kelią, kuris geriausiai atitinka, kaip mėgstate prisidėti."
+
+#: src/fluxer_marketing/pages/download_page.gleam:303
+msgid "Fluxer is community-funded. If you'd like to help support iOS and Android development:"
+msgstr "Fluxer finansuoja bendruomenė. Jei norite padėti paremti iOS ir Android kūrimą:"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:991
+msgid "Fluxer is free and open source. Anyone can self-host for free."
+msgstr "Fluxer yra nemokamas ir atvirojo kodo. Kiekvienas gali nemokamai paleisti savo instanciją."
+
+#: src/fluxer_marketing/components/get_involved_section.gleam:181
+msgid "Fluxer is open source (AGPLv3). Contribute directly on GitHub by opening pull requests."
+msgstr "Fluxer yra atvirojo kodo (AGPLv3). Prisidėkite tiesiogiai GitHub atidarydami pull request'us."
+
+#: src/fluxer_marketing/components/get_involved_section.gleam:158
+msgid "Follow @fluxer.app"
+msgstr "Sekite @fluxer.app"
+
+#: src/fluxer_marketing/components/get_involved_section.gleam:120
+msgid "Follow us on Bluesky"
+msgstr "Sekite mus Bluesky"
+
+#: src/fluxer_marketing/pages/press_page.gleam:230
+msgid "For backgrounds, text on dark surfaces, and creating contrast."
+msgstr "Fonams, tekstui ant tamsių paviršių ir kontrastui kurti."
+
+#: src/fluxer_marketing/pages/press_page.gleam:111
+#: src/fluxer_marketing/pages/press_page.gleam:165
+msgid "For dark backgrounds"
+msgstr "Tamsiems fonams"
+
+#: src/fluxer_marketing/pages/press_page.gleam:118
+#: src/fluxer_marketing/pages/press_page.gleam:172
+msgid "For light backgrounds"
+msgstr "Šviesiems fonams"
+
+#: src/fluxer_marketing/pages/press_page.gleam:237
+msgid "For text, icons on light surfaces, and creating depth."
+msgstr "Tekstui, piktogramoms ant šviesių paviršių ir gylio efektui kurti."
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:189
+msgid "Forever"
+msgstr "Visam laikui"
+
+#: src/fluxer_marketing/components/get_involved_section.gleam:189
+msgid "Found a security issue?"
+msgstr "Radote saugumo spragą?"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:175
+#: src/fluxer_marketing/pages/plutonium_page.gleam:265
+msgid "Free"
+msgstr "Nemokama"
+
+#: src/fluxer_marketing/components/partner_section.gleam:97
+#: src/fluxer_marketing/pages/partners_page.gleam:112
+msgid "Free Plutonium"
+msgstr "Nemokamas „Plutonium“"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:1024
+msgid "Free Self-Hosting"
+msgstr "Nemokamas savarankiškas talpinimas"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:152
+msgid "Free vs Plutonium"
+msgstr "Nemokamas planas ir „Plutonium“"
+
+#: src/fluxer_marketing/components/locale_selector.gleam:129
+msgid "French"
+msgstr "Prancūzų"
+
+#: src/fluxer_marketing/pages/donate_page.gleam:346
+msgid "Frequently Asked Questions"
+msgstr "Dažniausiai užduodami klausimai"
+
+#: src/fluxer_marketing/components/hackernews_banner.gleam:72
+msgid "From HN?"
+msgstr "Iš HN?"
+
+#: src/fluxer_marketing/components/current_features.gleam:72
+msgid "Full Markdown support in messages"
+msgstr "Visavertis Markdown palaikymas žinutėse"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:1037
+msgid "Full access to all features"
+msgstr "Visiška prieiga prie visų funkcijų"
+
+#: src/fluxer_marketing/pages/press_page.gleam:125
+#: src/fluxer_marketing/pages/press_page.gleam:179
+msgid "Full color version"
+msgstr "Pilnai spalvota versija"
+
+#: src/fluxer_marketing/components/current_features.gleam:152
+msgid "Fully open source (AGPLv3)"
+msgstr "Visiškai atvirojo kodo (AGPLv3)"
+
+#: src/fluxer_marketing/components/communities_section.gleam:57
+msgid "Gaming"
+msgstr "Žaidimai"
+
+#: src/fluxer_marketing/components/locale_selector.gleam:122
+msgid "German"
+msgstr "Vokiečių"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:430
+msgid "Get Plutonium"
+msgstr "Įsigyti „Plutonium“"
+
+#: src/fluxer_marketing/components/plutonium_banner.gleam:79
+msgid "Get Visionary"
+msgstr "Įsigyti „Visionary“"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:1135
+msgid "Get Visionary + Operator Pass"
+msgstr "Įsigyti „Visionary“ + „Operator Pass“"
+
+#: src/fluxer_marketing/pages/partners_page.gleam:148
+msgid "Get an exclusive custom vanity URL like fluxer.gg/yourcommunity."
+msgstr "Gaukite išskirtinį pasirinktinių vanity URL, pvz., fluxer.gg/yourcommunity."
+
+#: src/fluxer_marketing/pages/partners_page.gleam:236
+msgid "Get exclusive Fluxer Partner-only merchandise and swag."
+msgstr "Gaukite išskirtinės, tik Fluxer partneriams skirtos atributikos ir suvenyrų."
+
+#: src/fluxer_marketing/pages/partners_page.gleam:115
+msgid "Get free Plutonium for your account to enjoy all premium features."
+msgstr "Gaukite nemokamą „Plutonium“ savo paskyrai ir naudokitės visomis premium funkcijomis."
+
+#: src/fluxer_marketing/pages/partners_page.gleam:170
+msgid "Get heightened visibility by being featured in Community Discovery."
+msgstr "Tapkite labiau matomi – jūsų bendruomenė bus rodoma Bendruomenių atrankoje."
+
+#: src/fluxer_marketing/pages/not_found_page.gleam:87
+msgid "Get help"
+msgstr "Gauti pagalbą"
+
+#: src/fluxer_marketing/components/get_involved_section.gleam:51
+msgid "Get involved"
+msgstr "Prisidėkite"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:956
+msgid "Get lifetime Plutonium on Fluxer.app plus an Operator Pass for self-hosting. Pay {0} one-time. Available until October 1, 2026 or when {1} slots are claimed."
+msgstr "Gaukite „Plutonium“ visam laikui Fluxer.app ir „Operator Pass“ savarankiškam talpinimui. Sumokėkite vienkartinę {0} kainą. Galioja iki 2026 m. spalio 1 d. arba kol bus užimtos {1} vietos."
+
+#: src/fluxer_marketing/components/plutonium_section.gleam:51
+msgid "Get more with Fluxer Plutonium"
+msgstr "Gaukite daugiau su „Fluxer Plutonium“"
+
+#: src/fluxer_marketing/pages/download_page.gleam:316
+msgid "Get perks and help fund development"
+msgstr "Gaukite privilegijų ir padėkite finansuoti kūrimą"
+
+#: src/fluxer_marketing/pages/download_page.gleam:237
+msgid "Get push notifications when you're away from the app."
+msgstr "Gaukite stumiamuosius pranešimus, kai nesate programoje."
+
+#: src/fluxer_marketing/components/get_involved_section.gleam:89
+msgid "Get updates, see upcoming features, discuss suggestions, and chat with the team."
+msgstr "Gaukite naujienas, pamatykite būsimas funkcijas, aptarkite pasiūlymus ir pabendraukite su komanda."
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:385
+#: src/fluxer_marketing/pages/plutonium_page.gleam:601
+msgid "Global emoji & sticker access"
+msgstr "Globali prieiga prie jaustukų ir lipdukų"
+
+#: src/fluxer_marketing/components/coming_features.gleam:53
+msgid "Global voice regions"
+msgstr "Pasauliniai balso regionai"
+
+#: src/fluxer_marketing/pages/not_found_page.gleam:78
+msgid "Go home"
+msgstr "Grįžti į pradžią"
+
+#: src/fluxer_marketing/components/current_features.gleam:104
+msgid "Granular roles and permissions"
+msgstr "Detalūs vaidmenys ir leidimai"
+
+#: src/fluxer_marketing/components/locale_selector.gleam:123
+msgid "Greek"
+msgstr "Graikų"
+
+#: src/fluxer_marketing/pages/press_page.gleam:285
+msgid "Have a story about Fluxer? Need more information or high-resolution assets?"
+msgstr "Turite istoriją apie Fluxer? Reikia daugiau informacijos ar aukštos raiškos medžiagos?"
+
+#: src/fluxer_marketing/components/locale_selector.gleam:130
+msgid "Hebrew"
+msgstr "Hebrajų"
+
+#: src/fluxer_marketing/components/navigation.gleam:102
+msgid "Help"
+msgstr "Pagalba"
+
+#: src/fluxer_marketing/components/footer.gleam:187
+#: src/fluxer_marketing/components/navigation.gleam:328
+#: src/fluxer_marketing/pages/help_article_page.gleam:56
+#: src/fluxer_marketing/pages/help_article_page.gleam:86
+#: src/fluxer_marketing/pages/help_article_page.gleam:117
+#: src/fluxer_marketing/pages/help_category_page.gleam:64
+#: src/fluxer_marketing/pages/help_center_page.gleam:46
+#: src/fluxer_marketing/pages/help_components.gleam:48
+#: src/fluxer_marketing/pages/help_search_page.gleam:48
+msgid "Help Center"
+msgstr "Pagalbos centras"
+
+#: src/fluxer_marketing/pages/download_page.gleam:291
+msgid "Help make the mobile app a reality"
+msgstr "Padėkite mobiliajai programėlei tapti realybe"
+
+#: src/fluxer_marketing/components/footer.gleam:66
+#: src/fluxer_marketing/pages/donate_page.gleam:53
+msgid "Help support an independent communication platform. Your donation funds the platform's infrastructure and development."
+msgstr "Padėkite paremti nepriklausomą bendravimo platformą. Jūsų auka finansuoja platformos infrastruktūrą ir kūrimą."
+
+#: src/fluxer_marketing/pages/donate_page.gleam:134
+msgid "Help support an independent communication platform. Your donation funds the platform's infrastructure and development. It is a voluntary gift and does not constitute payment for any product or service or give you any ownership or special rights."
+msgstr "Padėkite paremti nepriklausomą bendravimo platformą. Jūsų auka finansuoja platformos infrastruktūrą ir kūrimą. Tai savanoriška dovana – ji nėra mokėjimas už jokį produktą ar paslaugą ir nesuteikia jokios nuosavybės ar ypatingų teisių."
+
+#: src/fluxer_marketing/pages/careers_page.gleam:132
+msgid "Help translate Fluxer and its docs so it feels native everywhere."
+msgstr "Padėkite išversti Fluxer ir jo dokumentaciją, kad visur jaustųsi kaip gimtas."
+
+#: src/fluxer_marketing/pages/careers_page.gleam:69
+msgid "Help us build a different kind of communication platform — open source, community-funded, and built with care."
+msgstr "Padėkite mums kurti kitokią bendravimo platformą – atvirojo kodo, finansuojamą bendruomenės ir kuriamą su rūpesčiu."
+
+#: src/fluxer_marketing/pages/donate_page.gleam:89
+msgid "Help us build an independent communication platform that puts users first."
+msgstr "Padėkite mums kurti nepriklausomą bendravimo platformą, kurioje pirmiausia – naudotojai."
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:651
+msgid "Higher limits everywhere"
+msgstr "Didesni limitai visur"
+
+#: src/fluxer_marketing/components/plutonium_section.gleam:92
+msgid "Higher limits, exclusive features, and early access to new updates"
+msgstr "Didesni limitai, išskirtinės funkcijos ir ankstyva prieiga prie naujų atnaujinimų"
+
+#: src/fluxer_marketing/components/locale_selector.gleam:131
+msgid "Hindi"
+msgstr "Hindi"
+
+#: src/fluxer_marketing/components/communities_section.gleam:72
+msgid "Hobbyists"
+msgstr "Mėgėjai"
+
+#: src/fluxer_marketing/components/current_features.gleam:85
+msgid "Hop in a call with friends or share your screen to work together."
+msgstr "Prisijunkite prie skambučio su draugais arba bendrinkite ekraną ir dirbkite kartu."
+
+#: src/fluxer_marketing/components/current_features.gleam:153
+msgid "Host your own instance"
+msgstr "Paleiskite savo instanciją"
+
+#: src/fluxer_marketing/pages/help_center_page.gleam:64
+#: src/fluxer_marketing/pages/help_search_page.gleam:63
+msgid "How can we help?"
+msgstr "Kuo galime padėti?"
+
+#: src/fluxer_marketing/components/pwa_install_dialog.gleam:39
+msgid "How to install as an app"
+msgstr "Kaip įdiegti kaip programėlę"
+
+#: src/fluxer_marketing/pages/partners_page.gleam:434
+msgid "How you plan to use Fluxer with your community"
+msgstr "Kaip planuojate naudoti Fluxer su savo bendruomene"
+
+#: src/fluxer_marketing/components/locale_selector.gleam:133
+msgid "Hungarian"
+msgstr "Vengrų"
+
+#: src/fluxer_marketing/components/footer.gleam:329
+msgid "IP geolocation data by "
+msgstr "IP geolokacijos duomenis teikia "
+
+#: src/fluxer_marketing/pages/help_article_page.gleam:223
+#: src/fluxer_marketing/pages/help_article_page.gleam:365
+msgid "If you couldn't find what you're looking for, our support team is here to help."
+msgstr "Jei neradote, ko ieškote, mūsų pagalbos komanda pasirengusi padėti."
+
+#: src/fluxer_marketing/pages/careers_page.gleam:176
+msgid "If you're a creator or community owner, explore the Partner program and its perks."
+msgstr "Jei esate kūrėjas ar bendruomenės savininkas, susipažinkite su Partnerių programa ir jos privalumais."
+
+#: src/fluxer_marketing/pages/partners_page.gleam:189
+msgid "Increased Limits"
+msgstr "Padidinti limitai"
+
+#: src/fluxer_marketing/pages/donate_page.gleam:160
+msgid "Individual"
+msgstr "Privatus asmuo"
+
+#: src/fluxer_marketing/components/locale_selector.gleam:134
+msgid "Indonesian"
+msgstr "Indoneziečių"
+
+#: src/fluxer_marketing/components/pwa_install_dialog.gleam:59
+msgid "Install Fluxer as an app"
+msgstr "Įdiekite Fluxer kaip programėlę"
+
+#: src/fluxer_marketing/components/platform_download_button.gleam:145
+#: src/fluxer_marketing/components/platform_download_button.gleam:161
+msgid "Intel"
+msgstr "Intel"
+
+#: src/fluxer_marketing/pages/donate_page.gleam:377
+msgid "Is my donation tax-deductible?"
+msgstr "Ar mano auka atskaitoma iš mokesčių?"
+
+#: src/fluxer_marketing/pages/donate_page.gleam:359
+msgid "Is this a subscription?"
+msgstr "Ar tai prenumerata?"
+
+#: src/fluxer_marketing/components/locale_selector.gleam:135
+msgid "Italian"
+msgstr "Italų"
+
+#: src/fluxer_marketing/components/locale_selector.gleam:136
+msgid "Japanese"
+msgstr "Japonų"
+
+#: src/fluxer_marketing/components/final_cta.gleam:80
+#: src/fluxer_marketing/pages/plutonium_page.gleam:1202
+msgid "Join Fluxer"
+msgstr "Prisijunkite prie Fluxer"
+
+#: src/fluxer_marketing/components/get_involved_section.gleam:86
+#: src/fluxer_marketing/components/get_involved_section.gleam:91
+#: src/fluxer_marketing/pages/careers_page.gleam:145
+msgid "Join Fluxer HQ"
+msgstr "Prisijunkite prie Fluxer HQ"
+
+#: src/fluxer_marketing/pages/careers_page.gleam:442
+msgid "Join Fluxer HQ community"
+msgstr "Prisijunkite prie Fluxer HQ bendruomenės"
+
+#: src/fluxer_marketing/components/get_involved_section.gleam:75
+msgid "Join and spread the word"
+msgstr "Prisijunkite ir paskleiskite žinią"
+
+#: src/fluxer_marketing/components/current_features.gleam:88
+msgid "Join from multiple devices at once"
+msgstr "Prisijunkite iš kelių įrenginių vienu metu"
+
+#: src/fluxer_marketing/pages/partners_page.gleam:47
+msgid "Join the Fluxer Partner Program and unlock exclusive benefits for you and your community"
+msgstr "Prisijunkite prie „Fluxer Partner“ programos ir atrakinkite išskirtines naudas sau ir savo bendruomenei"
+
+#: src/fluxer_marketing/pages/careers_page.gleam:49
+msgid "Join the Fluxer community and help build the future of communication through open source and community contributions."
+msgstr "Prisijunkite prie Fluxer bendruomenės ir padėkite kurti bendravimo ateitį per atvirąjį kodą ir bendruomenės indėlį."
+
+#: src/fluxer_marketing/pages/partners_page.gleam:159
+msgid "Join the exclusive Partners community with direct access to the Fluxer team."
+msgstr "Prisijunkite prie išskirtinės Partnerių bendruomenės ir turėkite tiesioginę prieigą prie Fluxer komandos."
+
+#: src/fluxer_marketing/pages/careers_page.gleam:66
+msgid "Join the team behind Fluxer"
+msgstr "Prisijunkite prie Fluxer komandos"
+
+#: src/fluxer_marketing/components/current_features.gleam:101
+msgid "Keep your community running smoothly with roles, permissions, and logs."
+msgstr "Užtikrinkite sklandų bendruomenės darbą su vaidmenimis, leidimais ir žurnalais."
+
+#: src/fluxer_marketing/components/locale_selector.gleam:137
+msgid "Korean"
+msgstr "Korėjiečių"
+
+#: src/fluxer_marketing/pages/company_page.gleam:42
+msgid "Learn about Fluxer and our mission"
+msgstr "Sužinokite apie Fluxer ir mūsų misiją"
+
+#: src/fluxer_marketing/pages/careers_page.gleam:178
+msgid "Learn about Partners"
+msgstr "Sužinokite apie Partnerius"
+
+#: src/fluxer_marketing/components/plutonium_section.gleam:195
+msgid "Learn more"
+msgstr "Sužinoti daugiau"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:848
+msgid "Lifetime Operator Pass"
+msgstr "„Operator Pass“ visam laikui"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:842
+msgid "Lifetime Plutonium"
+msgstr "„Plutonium“ visam laikui"
+
+#: src/fluxer_marketing/components/plutonium_banner.gleam:38
+msgid "Lifetime Plutonium + Operator Pass with Visionary — limited slots"
+msgstr "„Visionary“: „Plutonium“ visam laikui + „Operator Pass“ — ribotas vietų skaičius"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:1103
+msgid "Limited Offer: Visionary includes Operator Pass"
+msgstr "Ribotas pasiūlymas: „Visionary“ apima „Operator Pass“"
+
+#: src/fluxer_marketing/pages/partners_page.gleam:408
+msgid "Links to your content or community (YouTube, Twitch, Discord, etc.)"
+msgstr "Nuorodos į jūsų turinį ar bendruomenę (YouTube, Twitch, Discord ir kt.)"
+
+#: src/fluxer_marketing/components/platform_download_button.gleam:364
+msgid "Linux"
+msgstr "Linux"
+
+#: src/fluxer_marketing/components/locale_selector.gleam:138
+msgid "Lithuanian"
+msgstr "Lietuvių"
+
+#: src/fluxer_marketing/pages/careers_page.gleam:129
+msgid "Localization"
+msgstr "Lokalizacija"
+
+#: src/fluxer_marketing/pages/press_page.gleam:93
+msgid "Logo"
+msgstr "Logotipas"
+
+#: src/fluxer_marketing/pages/donate_page.gleam:123
+msgid "Make a Donation"
+msgstr "Paaukoti"
+
+#: src/fluxer_marketing/components/current_features.gleam:123
+msgid "Manage friends and block users"
+msgstr "Tvarkykite draugus ir blokuokite naudotojus"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:336
+msgid "Message character limit"
+msgstr "Žinutės simbolių limitas"
+
+#: src/fluxer_marketing/components/coming_features.gleam:34
+msgid "Message components"
+msgstr "Žinučių komponentai"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:294
+#: src/fluxer_marketing/pages/plutonium_page.gleam:581
+msgid "Message scheduling"
+msgstr "Žinučių planavimas"
+
+#: src/fluxer_marketing/components/current_features.gleam:66
+msgid "Messaging"
+msgstr "Žinutės"
+
+#: src/fluxer_marketing/pages/donate_page.gleam:265
+msgid "Minimum donation: $5 / €5"
+msgstr "Minimali auka: 5 $ / 5 €"
+
+#: src/fluxer_marketing/pages/download_page.gleam:203
+msgid "Mobile apps are on the way"
+msgstr "Mobiliosios programėlės jau pakeliui"
+
+#: src/fluxer_marketing/components/platform_download_button.gleam:213
+#: src/fluxer_marketing/components/platform_download_button.gleam:218
+#: src/fluxer_marketing/components/platform_download_button.gleam:311
+msgid "Mobile apps are underway"
+msgstr "Mobiliosios programėlės kuriamos"
+
+#: src/fluxer_marketing/components/current_features.gleam:105
+msgid "Moderation actions and tools"
+msgstr "Moderavimo veiksmai ir įrankiai"
+
+#: src/fluxer_marketing/components/current_features.gleam:98
+msgid "Moderation tools"
+msgstr "Moderavimo įrankiai"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:206
+msgid "Most popular"
+msgstr "Populiariausia"
+
+#: src/fluxer_marketing/components/current_features.gleam:91
+msgid "Mute, deafen, and camera controls"
+msgstr "Mikrofono nutildymas, garso išjungimas ir kameros valdymas"
+
+#: src/fluxer_marketing/pages/help_search_page.gleam:135
+msgid "No articles found"
+msgstr "Straipsnių nerasta"
+
+#: src/fluxer_marketing/pages/help_category_page.gleam:163
+msgid "No articles found."
+msgstr "Straipsnių nerasta."
+
+#: src/fluxer_marketing/pages/help_search_page.gleam:94
+msgid "No results found for"
+msgstr "Nerasta rezultatų pagal"
+
+#: src/fluxer_marketing/pages/donate_page.gleam:380
+msgid "No, donations to Fluxer are not tax-deductible as we are not a registered charitable organization."
+msgstr "Ne, aukos Fluxer nėra atskaitomos iš mokesčių, nes nesame registruota labdaros organizacija."
+
+#: src/fluxer_marketing/pages/donate_page.gleam:362
+msgid "No, this is a one-time donation. You choose the amount you want to give, and there are no recurring charges."
+msgstr "Ne, tai vienkartinė auka. Jūs patys pasirenkate sumą, o pasikartojančių nurašymų nėra."
+
+#: src/fluxer_marketing/components/current_features.gleam:90
+msgid "Noise suppression and echo cancellation"
+msgstr "Triukšmo slopinimas ir aido šalinimas"
+
+#: src/fluxer_marketing/components/locale_selector.gleam:140
+msgid "Norwegian"
+msgstr "Norvegų"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:295
+msgid "Not available"
+msgstr "Nėra prieinamų"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:91
+msgid "Note: Plutonium and Visionary benefits only apply to the official Fluxer.app instance, not third-party or self-hosted instances."
+msgstr "Pastaba: „Plutonium“ ir „Visionary“ privilegijos galioja tik oficialiai Fluxer.app instancijai, bet ne trečiųjų šalių ar savarankiškai talpinamoms instancijoms."
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:788
+msgid "Numbered badge (1-{0}) showing your Visionary status"
+msgstr "Numeruotas ženklelis (1–{0}), rodantis jūsų „Visionary“ statusą"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:786
+msgid "Numbered badge showing your Visionary status"
+msgstr "Numeruotas ženklelis, rodantis jūsų „Visionary“ statusą"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:828
+msgid "One-time purchase, lifetime access"
+msgstr "Vienkartinis pirkimas, prieiga visam laikui"
+
+#: src/fluxer_marketing/components/plutonium_banner.gleam:43
+msgid "Only {0} of {1} Visionary lifetime slots left — lifetime Plutonium + Operator Pass"
+msgstr "Liko tik {0} iš {1} „Visionary“ vietų visam laikui — „Plutonium“ visam laikui + „Operator Pass“"
+
+#: src/fluxer_marketing/components/navigation.gleam:172
+msgid "Open Fluxer"
+msgstr "Atidaryti Fluxer"
+
+#: src/fluxer_marketing/components/hero.gleam:82
+#: src/fluxer_marketing/components/navigation.gleam:473
+msgid "Open in Browser"
+msgstr "Atidaryti naršyklėje"
+
+#: src/fluxer_marketing/pages/careers_page.gleam:118
+msgid "Open source"
+msgstr "Atvirasis kodas"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:1039
+msgid "Open source (AGPL-3.0)"
+msgstr "Atvirasis kodas (AGPL-3.0)"
+
+#: src/fluxer_marketing/components/pwa_install_dialog.gleam:188
+#: src/fluxer_marketing/components/pwa_install_dialog.gleam:234
+#: src/fluxer_marketing/components/pwa_install_dialog.gleam:284
+msgid "Open the web app"
+msgstr "Atidaryti internetinę programėlę"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:1059
+msgid "Operator Pass"
+msgstr "Operator Pass"
+
+#: src/fluxer_marketing/components/coming_features.gleam:31
+msgid "Opt-in E2EE messaging"
+msgstr "Sutinkamas E2EE žinučių siuntimas"
+
+#: src/fluxer_marketing/components/current_features.gleam:74
+msgid "Organized channels for communities"
+msgstr "Tvarkingi kanalai bendruomenėms"
+
+#: src/fluxer_marketing/pages/press_page.gleam:209
+msgid "Our carefully selected color palette that represents the Fluxer brand."
+msgstr "Mūsų kruopščiai atrinkta spalvų paletė, atspindinti Fluxer prekės ženklą."
+
+#: src/fluxer_marketing/pages/press_page.gleam:102
+msgid "Our full logo including the wordmark. Use this as the primary representation of our brand."
+msgstr "Pilnas mūsų logotipas su pavadinimu. Naudokite jį kaip pagrindinį prekės ženklo atvaizdą."
+
+#: src/fluxer_marketing/pages/press_page.gleam:221
+msgid "Our primary brand color. Use this for key brand elements and accents."
+msgstr "Pagrindinė mūsų prekės ženklo spalva. Naudokite ją svarbiausiems elementams ir akcentams."
+
+#: src/fluxer_marketing/pages/press_page.gleam:156
+msgid "Our standalone symbol. Use this only when our brand is clearly visible or well-established elsewhere in the context."
+msgstr "Mūsų atskiras simbolis. Naudokite jį tik tada, kai prekės ženklas kontekste jau aiškiai matomas arba gerai atpažįstamas."
+
+#: src/fluxer_marketing/components/communities_section.gleam:106
+msgid "Over time, we'd love to explore optional monetization tools that help creators and communities earn, with a small, transparent fee that keeps the app sustainable."
+msgstr "Ilgainiui norėtume išbandyti pasirenkamus monetizacijos įrankius, padedančius kūrėjams ir bendruomenėms uždirbti, su nedideliu, skaidriu mokesčiu, kuris padėtų programai išlikti tvariai."
+
+#: src/fluxer_marketing/pages/not_found_page.gleam:101
+msgid "Page Not Found"
+msgstr "Puslapis nerastas"
+
+#: src/fluxer_marketing/pages/not_found_page.gleam:55
+msgid "Page not found"
+msgstr "Puslapis nerastas"
+
+#: src/fluxer_marketing/pages/partners_page.gleam:123
+msgid "Partner Badge"
+msgstr "Partnerio ženklelis"
+
+#: src/fluxer_marketing/pages/partners_page.gleam:90
+msgid "Partner Perks"
+msgstr "Partnerio privilegijos"
+
+#: src/fluxer_marketing/components/footer.gleam:121
+#: src/fluxer_marketing/components/navigation.gleam:298
+msgid "Partners"
+msgstr "Partneriai"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:287
+#: src/fluxer_marketing/pages/plutonium_page.gleam:571
+msgid "Per-community profiles"
+msgstr "Profiliai kiekvienai bendruomenei"
+
+#: src/fluxer_marketing/pages/download_page.gleam:315
+#: src/fluxer_marketing/pages/plutonium_page.gleam:215
+#: src/fluxer_marketing/pages/plutonium_page.gleam:273
+msgid "Plutonium"
+msgstr "Plutonium"
+
+#: src/fluxer_marketing/components/footer.gleam:227
+#: src/fluxer_marketing/components/navigation.gleam:387
+msgid "Policies"
+msgstr "Politikos"
+
+#: src/fluxer_marketing/components/locale_selector.gleam:141
+msgid "Polish"
+msgstr "Lenkų"
+
+#: src/fluxer_marketing/components/coming_features.gleam:41
+msgid "Polls & events"
+msgstr "Apklausos ir renginiai"
+
+#: src/fluxer_marketing/components/locale_selector.gleam:142
+msgid "Portuguese (Brazil)"
+msgstr "Portugalų (Brazilija)"
+
+#: src/fluxer_marketing/components/plutonium_section.gleam:154
+msgid "Premium quality"
+msgstr "Aukščiausia kokybė"
+
+#: src/fluxer_marketing/components/footer.gleam:198
+#: src/fluxer_marketing/components/navigation.gleam:337
+msgid "Press"
+msgstr "Spauda"
+
+#: src/fluxer_marketing/components/pwa_install_dialog.gleam:246
+msgid "Press \"Add to Home Screen\""
+msgstr "Paspauskite „Pridėti prie pagrindinio ekrano“"
+
+#: src/fluxer_marketing/components/pwa_install_dialog.gleam:249
+msgid "Press \"Add\" in the upper-right corner"
+msgstr "Paspauskite „Pridėti“ dešiniajame viršiniame kampe"
+
+#: src/fluxer_marketing/components/pwa_install_dialog.gleam:200
+msgid "Press \"Install app\""
+msgstr "Paspauskite „Įdiegti programą“"
+
+#: src/fluxer_marketing/components/pwa_install_dialog.gleam:301
+msgid "Press \"Install\" in the popup that appears"
+msgstr "Paspauskite „Įdiegti“ pasirodžiusiame iššokančiame langelyje"
+
+#: src/fluxer_marketing/pages/press_page.gleam:45
+#: src/fluxer_marketing/pages/press_page.gleam:65
+msgid "Press & Brand Assets"
+msgstr "Spauda ir prekės ženklo medžiaga"
+
+#: src/fluxer_marketing/pages/press_page.gleam:273
+msgid "Press Contact"
+msgstr "Kontaktai spaudai"
+
+#: src/fluxer_marketing/components/pwa_install_dialog.gleam:197
+msgid "Press the \"More\" (\\u{22EE}) button in the top-right corner"
+msgstr "Paspauskite „Daugiau“ (\\u{22EE}) mygtuką dešiniajame viršiniame kampe"
+
+#: src/fluxer_marketing/components/pwa_install_dialog.gleam:243
+msgid "Press the Share button (rectangle with upwards-pointing arrow)"
+msgstr "Paspauskite bendrinimo mygtuką (stačiakampis su į viršų nukreiptu rodyklę)"
+
+#: src/fluxer_marketing/components/pwa_install_dialog.gleam:296
+msgid "Press the install button (downwards-pointing arrow on monitor) in the address bar"
+msgstr "Paspauskite įdiegimo mygtuką (žemyn nukreipta rodyklė ant ekrano) adresų juostoje"
+
+#: src/fluxer_marketing/components/footer.gleam:110
+#: src/fluxer_marketing/components/navigation.gleam:93
+#: src/fluxer_marketing/components/navigation.gleam:289
+msgid "Pricing"
+msgstr "Kainodara"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:851
+msgid "Priority support and Operators community access for self-hosting"
+msgstr "Prioritetinis palaikymas ir prieiga prie „Operators“ bendruomenės savarankiškam talpinimui"
+
+#: src/fluxer_marketing/components/footer.gleam:249
+#: src/fluxer_marketing/components/navigation.gleam:406
+#: src/fluxer_marketing/pages/privacy_page.gleam:41
+msgid "Privacy Policy"
+msgstr "Privatumo politika"
+
+#: src/fluxer_marketing/components/current_features.gleam:73
+msgid "Private DMs and group chats"
+msgstr "Privatūs asmeniniai pokalbiai ir grupiniai pokalbiai"
+
+#: src/fluxer_marketing/components/navigation.gleam:270
+msgid "Product"
+msgstr "Produktas"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:301
+#: src/fluxer_marketing/pages/plutonium_page.gleam:661
+msgid "Profile badge"
+msgstr "Profilio ženklelis"
+
+#: src/fluxer_marketing/components/coming_features.gleam:47
+msgid "Profile connections"
+msgstr "Profilio ryšiai"
+
+#: src/fluxer_marketing/components/hero.gleam:55
+msgid "Public Beta"
+msgstr "Viešoji beta"
+
+#: src/fluxer_marketing/components/coming_features.gleam:46
+msgid "Public profile URLs"
+msgstr "Vieši profilio URL"
+
+#: src/fluxer_marketing/components/coming_features.gleam:39
+msgid "Publish forums to the web"
+msgstr "Skelbti forumus žiniatinklyje"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:883
+msgid "Purchase Visionary directly in the app after creating your account. Your purchase date and order number will be displayed on your profile (can be hidden in privacy settings)."
+msgstr "Įsigykite „Visionary“ tiesiai programoje po to, kai susikursite paskyrą. Pirkimo data ir užsakymo numeris bus rodomi jūsų profilyje (juos galima paslėpti privatumo nustatymuose)."
+
+#: src/fluxer_marketing/components/current_features.gleam:122
+msgid "Quick switcher with keyboard shortcuts"
+msgstr "Greitas perjungiklis su klaviatūros sparčiaisiais klavišais"
+
+#: src/fluxer_marketing/components/coming_features.gleam:40
+msgid "RSS/Atom feeds for forums"
+msgstr "RSS/Atom srautai forumams"
+
+#: src/fluxer_marketing/pages/help_category_page.gleam:228
+msgid "Read article"
+msgstr "Skaityti straipsnį"
+
+#: src/fluxer_marketing/pages/guidelines_page.gleam:42
+msgid "Read the Fluxer Community Guidelines"
+msgstr "Skaityti Fluxer bendruomenės gaires"
+
+#: src/fluxer_marketing/pages/privacy_page.gleam:42
+msgid "Read the Fluxer Privacy Policy"
+msgstr "Skaityti Fluxer privatumo politiką"
+
+#: src/fluxer_marketing/pages/terms_page.gleam:42
+msgid "Read the Fluxer Terms of Service"
+msgstr "Skaityti Fluxer naudojimo sąlygas"
+
+#: src/fluxer_marketing/components/get_involved_section.gleam:172
+msgid "Read the Guide"
+msgstr "Skaityti vadovą"
+
+#: src/fluxer_marketing/pages/partners_page.gleam:362
+msgid "Ready to become a Partner?"
+msgstr "Pasiruošę tapti partneriu?"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:1180
+msgid "Ready to upgrade?"
+msgstr "Pasiruošę atsinaujinti?"
+
+#: src/fluxer_marketing/components/get_involved_section.gleam:80
+msgid "Register now"
+msgstr "Registruokitės dabar"
+
+#: src/fluxer_marketing/components/footer.gleam:311
+msgid "Report a bug"
+msgstr "Pranešti apie klaidą"
+
+#: src/fluxer_marketing/components/get_involved_section.gleam:167
+msgid "Report bugs"
+msgstr "Pranešti apie klaidas"
+
+#: src/fluxer_marketing/pages/careers_page.gleam:165
+msgid "Report people or communities so we can keep Fluxer safe for everyone."
+msgstr "Praneškite apie žmones ar bendruomenes, kad galėtume išlaikyti Fluxer saugų visiems."
+
+#: src/fluxer_marketing/pages/careers_page.gleam:154
+msgid "Report vulnerabilities and help us keep the platform secure."
+msgstr "Praneškite apie pažeidžiamumus ir padėkite mums išlaikyti platformą saugią."
+
+#: src/fluxer_marketing/components/navigation.gleam:309
+msgid "Resources"
+msgstr "Ištekliai"
+
+#: src/fluxer_marketing/pages/partners_page.gleam:99
+msgid "Rewards that recognize your impact, help your community grow, and give you a direct line to the Fluxer team."
+msgstr "Apdovanojimai, įvertinantys jūsų įtaką, padedantys auginti bendruomenę ir suteikiantys tiesioginį ryšį su Fluxer komanda."
+
+#: src/fluxer_marketing/pages/careers_page.gleam:344
+msgid "Right now we're focused on shipping a great product and keeping Fluxer independent and bootstrapped."
+msgstr "Šiuo metu sutelkiame dėmesį į puikaus produkto kūrimą ir tai, kad Fluxer išliktų nepriklausomas bei vystomas savo jėgomis."
+
+#: src/fluxer_marketing/components/locale_selector.gleam:143
+msgid "Romanian"
+msgstr "Rumunų"
+
+#: src/fluxer_marketing/components/current_features.gleam:149
+msgid "Run the Fluxer backend on your own hardware and connect with our apps."
+msgstr "Paleiskite Fluxer backend'ą savo aparatinėje įrangoje ir prisijunkite naudodami mūsų programėles."
+
+#: src/fluxer_marketing/components/locale_selector.gleam:144
+msgid "Russian"
+msgstr "Rusų"
+
+#: src/fluxer_marketing/components/plutonium_section.gleam:81
+#: src/fluxer_marketing/pages/plutonium_page.gleam:117
+msgid "Save 17%"
+msgstr "Sutaupykite 17%"
+
+#: src/fluxer_marketing/components/current_features.gleam:137
+msgid "Save images, videos, GIFs, and audio"
+msgstr "Išsaugokite nuotraukas, vaizdo įrašus, GIF'ų ir garso įrašus"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:371
+msgid "Saved media"
+msgstr "Išsaugota medija"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:584
+msgid "Schedule messages to be sent at a specific time in the future. No DeLorean required."
+msgstr "Suplanuokite žinutes, kad jos būtų išsiųstos konkrečiu metu ateityje. DeLorean nebūtinas."
+
+#: src/fluxer_marketing/components/current_features.gleam:89
+msgid "Screen sharing built in"
+msgstr "Integruotas ekrano bendrinimas"
+
+#: src/fluxer_marketing/components/pwa_install_dialog.gleam:132
+msgid "Screenshots courtesy of "
+msgstr "Ekrano nuotraukos maloniai pateiktos "
+
+#: src/fluxer_marketing/pages/help_components.gleam:93
+msgid "Search"
+msgstr "Paieška"
+
+#: src/fluxer_marketing/components/current_features.gleam:114
+msgid "Search & quick switcher"
+msgstr "Paieška ir greitas perjungiklis"
+
+#: src/fluxer_marketing/pages/help_search_page.gleam:46
+msgid "Search Results"
+msgstr "Paieškos rezultatai"
+
+#: src/fluxer_marketing/pages/help_center_page.gleam:67
+#: src/fluxer_marketing/pages/help_search_page.gleam:66
+msgid "Search for help..."
+msgstr "Ieškoti pagalbos..."
+
+#: src/fluxer_marketing/pages/help_category_page.gleam:92
+msgid "Search in "
+msgstr "Ieškoti skiltyje "
+
+#: src/fluxer_marketing/pages/help_category_page.gleam:90
+#: src/fluxer_marketing/pages/help_center_page.gleam:65
+#: src/fluxer_marketing/pages/help_search_page.gleam:64
+msgid "Search our help articles or browse by category."
+msgstr "Ieškokite mūsų pagalbos straipsniuose arba naršykite pagal kategorijas."
+
+#: src/fluxer_marketing/pages/help_category_page.gleam:126
+msgid "Search results for"
+msgstr "Paieškos rezultatai pagal"
+
+#: src/fluxer_marketing/pages/help_search_page.gleam:49
+msgid "Search results for: "
+msgstr "Paieškos rezultatai: "
+
+#: src/fluxer_marketing/components/current_features.gleam:120
+msgid "Search through message history"
+msgstr "Ieškokite žinučių istorijoje"
+
+#: src/fluxer_marketing/pages/careers_page.gleam:151
+msgid "Security reports"
+msgstr "Saugumo pranešimai"
+
+#: src/fluxer_marketing/pages/download_page.gleam:232
+msgid "See badge counts on the app icon."
+msgstr "Matykite pranešimų skaičių ant programėlės piktogramos."
+
+#: src/fluxer_marketing/pages/partners_page.gleam:312
+msgid "See perks"
+msgstr "Peržiūrėti privilegijas"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:979
+msgid "Self-Hosting"
+msgstr "Savarankiškas talpinimas"
+
+#: src/fluxer_marketing/components/current_features.gleam:146
+msgid "Self-hosting"
+msgstr "Savarankiškas talpinimas"
+
+#: src/fluxer_marketing/pages/download_page.gleam:330
+msgid "Send a one-time gift"
+msgstr "Nusiųsti vienkartinę dovaną"
+
+#: src/fluxer_marketing/pages/partners_page.gleam:374
+msgid "Send us an email with the following information to get started:"
+msgstr "Atsiųskite mums el. laišką su šia informacija, kad pradėtume:"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:634
+msgid "Set personalized sounds when you join voice channels to make your presence known."
+msgstr "Nustatykite asmeninius garsus, kai prisijungiate prie balso kanalų, kad visi žinotų, jog atėjote."
+
+#: src/fluxer_marketing/pages/careers_page.gleam:408
+msgid "Share a bit about yourself, what you'd like to work on, and links to any relevant work."
+msgstr "Papasakokite šiek tiek apie save, ką norėtumėte daryti, ir pridėkite nuorodas į susijusius darbus."
+
+#: src/fluxer_marketing/pages/careers_page.gleam:143
+msgid "Share feedback, report bugs, and help make Fluxer welcoming for everyone."
+msgstr "Dalinkitės atsiliepimais, praneškite apie klaidas ir padėkite padaryti Fluxer jaukų visiems."
+
+#: src/fluxer_marketing/components/current_features.gleam:75
+msgid "Share files and preview links"
+msgstr "Bendrinkite failus ir peržiūrėkite nuorodas"
+
+#: src/fluxer_marketing/components/platform_download_button.gleam:490
+msgid "Show download options"
+msgstr "Rodyti atsisiuntimo parinktis"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:664
+msgid "Show off your Plutonium status with an exclusive badge on your profile."
+msgstr "Parodykite savo „Plutonium“ statusą – profilyje turėsite išskirtinį ženklelį."
+
+#: src/fluxer_marketing/components/coming_features.gleam:33
+msgid "Slash commands"
+msgstr "„Slash“ komandos"
+
+#: src/fluxer_marketing/pages/careers_page.gleam:236
+msgid "Software development"
+msgstr "Programinės įrangos kūrimas"
+
+#: src/fluxer_marketing/components/coming_features.gleam:57
+msgid "Soundboard"
+msgstr "Garso pultas"
+
+#: src/fluxer_marketing/components/footer.gleam:143
+#: src/fluxer_marketing/components/navigation.gleam:438
+msgid "Source Code"
+msgstr "Šaltinio kodas"
+
+#: src/fluxer_marketing/components/locale_selector.gleam:127
+msgid "Spanish (Latin America)"
+msgstr "Ispanų (Lotynų Amerika)"
+
+#: src/fluxer_marketing/components/locale_selector.gleam:126
+msgid "Spanish (Spain)"
+msgstr "Ispanų (Ispanija)"
+
+#: src/fluxer_marketing/pages/download_page.gleam:323
+msgid "Sponsor the roadmap for mobile"
+msgstr "Paremkite mobiliosios versijos planą"
+
+#: src/fluxer_marketing/components/coming_features.gleam:42
+msgid "Stage channels"
+msgstr "Scenos kanalai"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:594
+msgid "Stand out with animated profile pictures and banners to express your personality."
+msgstr "Išsiskirkite su animuotomis profilio nuotraukomis ir baneriais – parodykite savo asmenybę."
+
+#: src/fluxer_marketing/components/get_involved_section.gleam:127
+msgid "Stay updated on news, service status, and what's happening. You can also follow "
+msgstr "Sekite naujienas, paslaugos būseną ir kas vyksta. Taip pat galite sekti "
+
+#: src/fluxer_marketing/pages/help_article_page.gleam:218
+#: src/fluxer_marketing/pages/help_article_page.gleam:360
+msgid "Still need help?"
+msgstr "Vis dar reikia pagalbos?"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:624
+msgid "Store up to 15 video backgrounds for calls. No more Downloads folder scavenger hunts!"
+msgstr "Išsaugokite iki 15 vaizdo fonų skambučiams. Nebereikės knistis po „Atsisiuntimai“ aplanką!"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:614
+msgid "Stream in up to 4K resolution at 60fps so others can see you in stunning clarity."
+msgstr "Transliuokite iki 4K raiška 60 k./s, kad kiti jus matytų stulbinamai aiškiai."
+
+#: src/fluxer_marketing/components/coming_features.gleam:58
+msgid "Streamer mode"
+msgstr "Transliuotojo režimas"
+
+#: src/fluxer_marketing/pages/donate_page.gleam:50
+#: src/fluxer_marketing/pages/donate_page.gleam:86
+msgid "Support Fluxer"
+msgstr "Paremti Fluxer"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:1077
+msgid "Support future development"
+msgstr "Paremti tolesnį kūrimą"
+
+#: src/fluxer_marketing/components/locale_selector.gleam:145
+msgid "Swedish"
+msgstr "Švedų"
+
+#: src/fluxer_marketing/components/current_features.gleam:155
+msgid "Switch between multiple instances"
+msgstr "Perjunkite tarp kelių instancijų"
+
+#: src/fluxer_marketing/pages/press_page.gleam:147
+msgid "Symbol"
+msgstr "Simbolis"
+
+#: src/fluxer_marketing/components/footer.gleam:238
+#: src/fluxer_marketing/components/navigation.gleam:397
+#: src/fluxer_marketing/pages/terms_page.gleam:41
+msgid "Terms of Service"
+msgstr "Naudojimo sąlygos"
+
+#: src/fluxer_marketing/components/locale_selector.gleam:146
+msgid "Thai"
+msgstr "Tajų"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:998
+msgid "The Operator Pass is optional: pay for support and community access."
+msgstr "„Operator Pass“ yra neprivalomas: mokate už palaikymą ir prieigą prie bendruomenės."
+
+#: src/fluxer_marketing/components/coming_features.gleam:89
+msgid "The future is being built right now. These features are coming soon."
+msgstr "Ateitis kuriama jau dabar. Šios funkcijos pasirodys netrukus."
+
+#: src/fluxer_marketing/pages/careers_page.gleam:313
+msgid "The future of paid roles"
+msgstr "Apmokamų vaidmenų ateitis"
+
+#: src/fluxer_marketing/components/coming_features.gleam:51
+msgid "Theme marketplace"
+msgstr "Temų parduotuvė"
+
+#: src/fluxer_marketing/pages/download_page.gleam:255
+msgid "This isn't a full replacement for the desktop app yet, and some things you'd expect from a mobile chat app are still missing."
+msgstr "Kol kas tai dar nėra pilnavertis kompiuterio programos pakaitalas, o kai kurių dalykų, kurių tikėtumėtės iš mobilios pokalbių programėlės, vis dar trūksta."
+
+#: src/fluxer_marketing/pages/not_found_page.gleam:60
+#: src/fluxer_marketing/pages/not_found_page.gleam:104
+msgid "This page doesn't exist. But there's plenty more to explore."
+msgstr "Šis puslapis neegzistuoja. Tačiau yra daugybė kitų dalykų, kuriuos galite atrasti."
+
+#: src/fluxer_marketing/components/coming_features.gleam:37
+msgid "Threads and forums"
+msgstr "Gijos ir forumai"
+
+#: src/fluxer_marketing/pages/careers_page.gleam:243
+msgid "Translation & localization"
+msgstr "Vertimas ir lokalizacija"
+
+#: src/fluxer_marketing/pages/careers_page.gleam:162
+#: src/fluxer_marketing/pages/careers_page.gleam:257
+msgid "Trust & safety"
+msgstr "Pasitikėjimas ir saugumas"
+
+#: src/fluxer_marketing/pages/help_search_page.gleam:140
+msgid "Try different keywords or browse our categories."
+msgstr "Išbandykite kitus raktažodžius arba naršykite mūsų kategorijas."
+
+#: src/fluxer_marketing/components/hackernews_banner.gleam:75
+msgid "Try it without an email at"
+msgstr "Išbandykite be el. pašto adresu"
+
+#: src/fluxer_marketing/components/locale_selector.gleam:147
+msgid "Turkish"
+msgstr "Turkų"
+
+#: src/fluxer_marketing/components/locale_selector.gleam:148
+msgid "Ukrainian"
+msgstr "Ukrainiečių"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:857
+msgid "Unique profile badge"
+msgstr "Unikalus profilio ženklelis"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:1036
+msgid "Unlimited users"
+msgstr "Neribotas naudotojų skaičius"
+
+#: src/fluxer_marketing/pages/partners_page.gleam:203
+msgid "Unlock and test new features before they're available to everyone."
+msgstr "Atrakinkite ir išbandykite naujas funkcijas dar prieš joms tampant prieinamoms visiems."
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:79
+msgid "Unlock higher limits and exclusive features while supporting an independent communication platform."
+msgstr "Atrakinkite didesnius limitus ir išskirtines funkcijas, kartu paremdami nepriklausomą bendravimo platformą."
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:611
+msgid "Up to 4K video quality"
+msgstr "Iki 4K vaizdo kokybės"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:54
+msgid "Upgrade to Plutonium for $4.99/mo: custom username tags, per-community profiles, message scheduling, 4K streaming, 500MB uploads, and more exclusive features."
+msgstr "Atnaujinkite į „Plutonium“ už $4.99/mėn.: pasirinktinės naudotojo vardo žymos, profiliai kiekvienai bendruomenei, žinučių planavimas, 4K transliavimas, įkėlimai iki 500 MB ir dar daugiau išskirtinių funkcijų."
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:644
+msgid "Upload and use your own notification sounds to personalize your Fluxer experience."
+msgstr "Įkelkite ir naudokite savo pranešimų garsus, kad Fluxer patirtis būtų dar asmeniškesnė."
+
+#: src/fluxer_marketing/pages/partners_page.gleam:181
+msgid "Upload animated GIFs as your community's avatar and banner."
+msgstr "Įkelkite animuotus GIF kaip savo bendruomenės avatarą ir banerį."
+
+#: src/fluxer_marketing/components/current_features.gleam:136
+msgid "Upload custom emojis and stickers"
+msgstr "Įkelkite savo jaustukus ir lipdukus"
+
+#: src/fluxer_marketing/components/platform_download_button.gleam:315
+msgid "Use Fluxer in your mobile browser for now"
+msgstr "Kol kas naudokite Fluxer mobiliojoje naršyklėje"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:378
+msgid "Use animated emojis"
+msgstr "Naudokite animuotus jaustukus"
+
+#: src/fluxer_marketing/components/current_features.gleam:154
+msgid "Use our desktop client (mobile coming soon)"
+msgstr "„Naudokite mūsų darbalaukio klientą (mobilioji versija atkeliauja greitai)“"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:604
+msgid "Use your favorite emojis and stickers from any community, anywhere across Fluxer."
+msgstr "Naudokite mėgstamiausius jaustukus ir lipdukus iš bet kurios bendruomenės – bet kur Fluxer."
+
+#: src/fluxer_marketing/pages/partners_page.gleam:222
+msgid "VIP Voice Servers"
+msgstr "VIP balso serveriai"
+
+#: src/fluxer_marketing/components/partner_section.gleam:117
+msgid "Verified Community"
+msgstr "Patvirtinta bendruomenė"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:621
+msgid "Video backgrounds"
+msgstr "Vaizdo fonai"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:392
+msgid "Video quality"
+msgstr "Vaizdo kokybė"
+
+#: src/fluxer_marketing/components/locale_selector.gleam:149
+msgid "Vietnamese"
+msgstr "Vietnamiečių"
+
+#: src/fluxer_marketing/pages/help_category_page.gleam:172
+msgid "View all articles"
+msgstr "Peržiūrėti visus straipsnius"
+
+#: src/fluxer_marketing/components/get_involved_section.gleam:183
+#: src/fluxer_marketing/pages/careers_page.gleam:123
+msgid "View repository"
+msgstr "Peržiūrėti repozitoriją"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:822
+msgid "Visionary"
+msgstr "Visionary"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:864
+msgid "Visionary & Operators communities with team access"
+msgstr "„Visionary“ ir „Operators“ bendruomenės su prieiga prie komandos"
+
+#: src/fluxer_marketing/components/current_features.gleam:82
+msgid "Voice & video"
+msgstr "Balsas ir vaizdas"
+
+#: src/fluxer_marketing/pages/careers_page.gleam:396
+msgid "Want to help build Fluxer?"
+msgstr "Norite padėti kurti Fluxer?"
+
+#: src/fluxer_marketing/pages/careers_page.gleam:94
+msgid "Ways to contribute"
+msgstr "Kaip galite prisidėti"
+
+#: src/fluxer_marketing/components/get_involved_section.gleam:192
+msgid "We appreciate responsible disclosure to security@fluxer.app. We offer Plutonium codes and Bug Hunter badges based on severity."
+msgstr "Vertiname atsakingą pranešimą el. paštu security@fluxer.app. Atsižvelgdami į rimtumą, siūlome „Plutonium“ kodus ir „Bug Hunter“ ženklelius."
+
+#: src/fluxer_marketing/components/final_cta.gleam:56
+msgid "We need your support to make this work."
+msgstr "Mums reikia jūsų paramos, kad tai veiktų."
+
+#: src/fluxer_marketing/pages/partners_page.gleam:453
+msgid "We review all applications and will get back to you as soon as possible."
+msgstr "Peržiūrime visas paraiškas ir susisieksime su jumis kuo greičiau."
+
+#: src/fluxer_marketing/pages/press_page.gleam:301
+msgid "We typically respond within 24 hours during business days."
+msgstr "Darbo dienomis paprastai atsakome per 24 valandas."
+
+#: src/fluxer_marketing/components/get_involved_section.gleam:62
+msgid "We're building a complete platform with all the features you'd expect. But we can't do it without your help!"
+msgstr "Kuriame pilnavertę platformą su visomis funkcijomis, kurių tikitės. Tačiau be jūsų pagalbos to nepadarysime!"
+
+#: src/fluxer_marketing/pages/download_page.gleam:214
+msgid "We're building apps for iOS and Android. Until they're ready, Fluxer works in your mobile browser — and we've put a lot of effort into making it feel as app-like as possible."
+msgstr "Kuriame programėles iOS ir Android. Kol jos dar neparuoštos, Fluxer veikia jūsų mobiliojoje naršyklėje – ir įdėjome daug pastangų, kad jaustųsi kuo panašiau į programėlę."
+
+#: src/fluxer_marketing/components/get_involved_section.gleam:78
+msgid "We're limiting registrations during beta. Once you're in, you can give friends a code to skip the queue."
+msgstr "Beta metu ribojame registracijas. Kai pateksite, galėsite duoti draugams kodą, kad praleistų eilę."
+
+#: src/fluxer_marketing/pages/careers_page.gleam:324
+msgid "We're still building the business around Fluxer and aren't quite ready for paid roles yet."
+msgstr "Vis dar kuriame verslo modelį aplink Fluxer ir dar nesame pasiruošę apmokamiems vaidmenims."
+
+#: src/fluxer_marketing/components/current_features.gleam:107
+msgid "Webhooks and bot support"
+msgstr "Webhook'ų ir botų palaikymas"
+
+#: src/fluxer_marketing/pages/donate_page.gleam:351
+msgid "What does my donation support?"
+msgstr "Ką remia mano auka?"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:549
+msgid "What you get with Plutonium"
+msgstr "Ką gaunate su „Plutonium“"
+
+#: src/fluxer_marketing/components/current_features.gleam:45
+msgid "What's available today"
+msgstr "Kas prieinama šiandien"
+
+#: src/fluxer_marketing/components/coming_features.gleam:77
+msgid "What's coming next"
+msgstr "Kas bus toliau"
+
+#: src/fluxer_marketing/pages/donate_page.gleam:385
+msgid "What's the difference between Individual and Business?"
+msgstr "Kuo skiriasi „Privatus asmuo“ ir „Verslas“?"
+
+#: src/fluxer_marketing/pages/press_page.gleam:226
+msgid "White"
+msgstr "Balta"
+
+#: src/fluxer_marketing/pages/press_page.gleam:110
+msgid "White Logo"
+msgstr "Baltas logotipas"
+
+#: src/fluxer_marketing/pages/press_page.gleam:164
+msgid "White Symbol"
+msgstr "Baltas simbolis"
+
+#: src/fluxer_marketing/components/platform_download_button.gleam:346
+msgid "Windows"
+msgstr "Windows"
+
+#: src/fluxer_marketing/components/platform_download_button.gleam:232
+msgid "Windows 10+"
+msgstr "Windows 10+"
+
+#: src/fluxer_marketing/pages/careers_page.gleam:357
+msgid "With your support, we hope to make this independent communication platform sustainable and start offering paid roles in the future."
+msgstr "Su jūsų parama tikimės padaryti šią nepriklausomą bendravimo platformą tvarią ir ateityje pradėti siūlyti apmokamus vaidmenis."
+
+#: src/fluxer_marketing/pages/partners_page.gleam:137
+msgid "Your community gets verified status for authenticity and trust."
+msgstr "Jūsų bendruomenė gauna patvirtintos bendruomenės statusą – dėl autentiškumo ir pasitikėjimo."
+
+#: src/fluxer_marketing/pages/partners_page.gleam:192
+msgid "Your community receives increased limits when you need them."
+msgstr "Jūsų bendruomenė gauna padidintus limitus tada, kai jų reikia."
+
+#: src/fluxer_marketing/pages/donate_page.gleam:354
+msgid "Your donation helps fund Fluxer's infrastructure costs, including servers, bandwidth, storage, and ongoing development of new features. It helps us maintain and improve the platform for everyone."
+msgstr "Jūsų auka padeda finansuoti Fluxer infrastruktūros išlaidas – serverius, pralaidumą, saugyklą ir nuolatinį naujų funkcijų kūrimą. Tai padeda mums prižiūrėti ir gerinti platformą visiems."
+
+#: src/fluxer_marketing/pages/partners_page.gleam:395
+msgid "Your name and platform username"
+msgstr "Jūsų vardas ir platformos naudotojo vardas"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:949
+msgid "all"
+msgstr "visi"
+
+#: src/fluxer_marketing/pages/help_center_page.gleam:156
+msgid "article"
+msgstr "straipsnis"
+
+#: src/fluxer_marketing/pages/help_center_page.gleam:157
+msgid "articles"
+msgstr "straipsniai"
+
+#: src/fluxer_marketing/components/platform_download_button.gleam:518
+msgid "iOS"
+msgstr "iOS"
+
+#: src/fluxer_marketing/components/pwa_install_dialog.gleam:98
+msgid "iOS / iPadOS"
+msgstr "iOS / iPadOS"
+
+#: src/fluxer_marketing/components/platform_download_button.gleam:235
+msgid "iOS 15+"
+msgstr "iOS 15+"
+
+#: src/fluxer_marketing/components/platform_download_button.gleam:355
+msgid "macOS"
+msgstr "macOS"
+
+#: src/fluxer_marketing/components/platform_download_button.gleam:233
+msgid "macOS 10.15+"
+msgstr "macOS 10.15+"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:1067
+msgid "one-time purchase"
+msgstr "vienkartinis pirkimas"
+
+#: src/fluxer_marketing/components/plutonium_section.gleam:68
+#: src/fluxer_marketing/pages/donate_page.gleam:284
+#: src/fluxer_marketing/pages/plutonium_page.gleam:106
+#: src/fluxer_marketing/pages/plutonium_page.gleam:230
+msgid "or"
+msgstr "arba"
+
+#: src/fluxer_marketing/components/get_involved_section.gleam:140
+msgid "our RSS feed"
+msgstr "mūsų RSS srautą"
+
+#: src/fluxer_marketing/pages/help_search_page.gleam:96
+msgid "result for"
+msgstr "rezultatas pagal"
+
+#: src/fluxer_marketing/pages/help_search_page.gleam:100
+msgid "results for"
+msgstr "rezultatai pagal"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:801
+msgid "{0} of {1} slots left"
+msgstr "Liko {0} iš {1} vietų"
+
+#: src/fluxer_marketing/components/footer.gleam:325
+msgid "© Fluxer Platform AB (Swedish limited liability company: 559537-3993)"
+msgstr "© Fluxer Platform AB (Švedijos ribotos atsakomybės bendrovė: 559537-3993)"
+

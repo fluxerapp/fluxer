@@ -1,0 +1,155 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.reactionsGrid {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	padding-top: 0.25rem;
+	user-select: none;
+	-webkit-user-select: none;
+}
+
+.reactionContainer {
+	position: relative;
+	border-radius: 0.5rem;
+	margin-bottom: 0;
+	margin-inline-end: 0.25rem;
+}
+
+.reactionButton {
+	appearance: none;
+	background: var(--background-secondary);
+	border: 1px solid transparent;
+	border-radius: 0.5rem;
+	cursor: pointer;
+	padding: 0;
+	transition:
+		background-color 0.1s ease,
+		border-color 0.1s ease;
+	color: var(--text-tertiary);
+}
+
+.reactionButton:hover {
+	background-color: var(--background-modifier-hover);
+	border-color: var(--background-modifier-accent);
+}
+
+.reactionMe .reactionButton {
+	background-color: color-mix(in srgb, var(--brand-primary) 36%, var(--background-secondary) 64%);
+	border-color: var(--brand-primary);
+	color: var(--text-on-brand-primary);
+}
+
+.reactionMe .reactionButton:hover {
+	background-color: color-mix(in srgb, var(--brand-primary) 48%, var(--background-secondary) 52%);
+	border-color: var(--brand-primary);
+}
+
+.reactionInner {
+	display: flex;
+	align-items: center;
+	padding: 0.125rem 0.375rem;
+}
+
+.emoji {
+	height: 1.25rem;
+	width: 1.25rem;
+	margin: 0.125rem 0;
+	min-height: auto;
+	min-width: auto;
+	object-fit: contain;
+	display: block;
+	flex-shrink: 0;
+}
+
+span.emoji {
+	font-size: 1.25rem;
+	line-height: 1;
+	font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.countWrapper {
+	color: var(--text-tertiary);
+	font-weight: 600;
+	min-width: 12px;
+	line-height: 1;
+	position: relative;
+	overflow: hidden;
+	height: 1rem;
+	margin-inline-start: 0.375rem;
+	text-align: center;
+	user-select: none;
+	-webkit-user-select: none;
+}
+
+.reactionMe .countWrapper {
+	color: var(--text-on-brand-primary);
+}
+
+:global(.theme-light) .reactionButton {
+	background-color: color-mix(in srgb, var(--brand-primary-light) 6%, var(--background-secondary) 94%);
+	border-color: color-mix(in srgb, var(--brand-primary-light) 10%, var(--background-secondary) 90%);
+	color: var(--text-primary);
+}
+
+:global(.theme-light) .reactionButton:hover {
+	background-color: color-mix(in srgb, var(--brand-primary-light) 8%, var(--background-secondary) 92%);
+	border-color: color-mix(in srgb, var(--brand-primary) 12%, var(--background-secondary) 88%);
+}
+
+:global(.theme-light) .reactionMe .reactionButton {
+	background-color: color-mix(in srgb, var(--brand-primary) 12%, var(--background-primary) 88%);
+	border-color: color-mix(in srgb, var(--brand-primary) 45%, transparent 55%);
+	color: var(--brand-primary);
+}
+
+:global(.theme-light) .reactionMe .reactionButton:hover {
+	background-color: color-mix(in srgb, var(--brand-primary) 18%, var(--background-primary) 82%);
+	border-color: var(--brand-primary);
+}
+
+:global(.theme-light) .reactionMe .countWrapper {
+	color: var(--brand-primary);
+}
+
+.addReactionButton {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: auto;
+	padding: 0.25rem 0.375rem;
+	border-radius: 0.5rem;
+	background: transparent;
+	border: none;
+	color: var(--text-tertiary);
+	cursor: pointer;
+	transition:
+		background-color 0.1s ease,
+		color 0.1s ease;
+}
+
+.addReactionButton:hover,
+.addReactionButtonActive {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-primary);
+}

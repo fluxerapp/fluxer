@@ -1,0 +1,143 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.incomingCall {
+	z-index: 2001;
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: min(280px, calc(100vw - 24px));
+	pointer-events: auto;
+	isolation: isolate;
+}
+
+.card {
+	border-radius: var(--radius-xl);
+	border: 1px solid color-mix(in srgb, var(--background-modifier-accent) 65%, transparent);
+	background: color-mix(in srgb, var(--background-primary) 90%, transparent);
+	box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+	backdrop-filter: blur(20px);
+	overflow: hidden;
+}
+
+.dragHandle {
+	height: 12px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	cursor: grab;
+	user-select: none;
+	-webkit-user-select: none;
+	touch-action: none;
+}
+
+.dragHandle:active {
+	cursor: grabbing;
+}
+
+.dragPill {
+	width: 48px;
+	height: 4px;
+	border-radius: 999px;
+	background: color-mix(in srgb, var(--text-primary) 18%, transparent);
+}
+
+.stack {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 18px;
+	padding: 16px;
+	text-align: center;
+}
+
+.labelRow {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	justify-content: center;
+	text-transform: uppercase;
+	font-size: 0.75rem;
+	letter-spacing: 0;
+	color: var(--status-online);
+	font-weight: 500;
+}
+
+.incomingLabel {
+	font-weight: 600;
+}
+
+.avatarLarge {
+	width: 80px;
+	height: 80px;
+	border-radius: 999px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: color-mix(in srgb, var(--background-secondary) 80%, transparent);
+}
+
+.callerNameCenter {
+	font-weight: 600;
+	font-size: 1rem;
+	line-height: 1.4rem;
+	color: var(--text-primary);
+	width: 100%;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.incomingIcon {
+	color: var(--status-online);
+	flex-shrink: 0;
+	width: 18px;
+	height: 18px;
+}
+
+.actionsColumn {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	width: 100%;
+}
+
+.actionButton {
+	width: 100%;
+	height: 44px;
+	border-radius: var(--radius-lg);
+	font-weight: 600;
+	letter-spacing: 0.02em;
+}
+
+.screenReaderOnly {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	border: 0;
+	white-space: nowrap;
+}
+
+.bottomSheetStack {
+	padding: 0 1rem 1rem;
+}

@@ -1,0 +1,162 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.control {
+	display: flex;
+	flex-direction: column;
+	flex-grow: 1;
+}
+
+.slider {
+	height: calc(24px + var(--bar-offset));
+	position: relative;
+	width: 100%;
+	--grabber-size: 16px;
+	--bar-size: 4px;
+	--bar-offset: 0px;
+}
+
+.slider.hasMarks {
+	--bar-offset: 24px;
+}
+
+.mini {
+	height: calc(24px + var(--bar-offset));
+}
+
+.mini.hasMarks {
+	--bar-offset: 24px;
+}
+
+.disabled {
+	opacity: 0.6;
+}
+
+.bar {
+	background-color: var(--interactive-muted, #dcddde);
+	border-radius: 4px;
+	display: block;
+	height: var(--bar-size);
+	overflow: hidden;
+	position: relative;
+	top: calc((24px - var(--bar-size)) / 2 + var(--bar-offset));
+}
+
+.hasMarks .bar {
+	top: 34px;
+}
+
+.mini .bar {
+	height: 6px;
+	top: 17px;
+}
+
+.barFill {
+	background-color: var(--bg-brand, var(--brand-primary));
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	height: 100%;
+}
+
+.track {
+	bottom: 0;
+	left: 5px;
+	position: absolute;
+	right: 5px;
+	top: 0;
+}
+
+.grabber {
+	background-color: color-mix(in srgb, var(--background-primary, #fff) 10%, #fff 90%);
+	border: 1px solid color-mix(in srgb, var(--border-normal, #dcddde) 60%, #fff 40%);
+	border-radius: 50%;
+	box-shadow: var(--shadow-low, 0 1px 3px rgba(0, 0, 0, 0.1));
+	box-sizing: border-box;
+	cursor: ew-resize;
+	height: var(--grabber-size);
+	width: var(--grabber-size);
+	margin-left: calc(var(--grabber-size) / -2);
+	margin-top: calc(var(--grabber-size) / -2 + var(--bar-offset) / 2);
+	position: absolute;
+	left: 0;
+	top: 50%;
+}
+
+.disabled .grabber {
+	cursor: not-allowed;
+}
+
+.hasMarks .grabber {
+	margin-top: calc(var(--grabber-size) / -2 + 12px);
+}
+
+.mini .grabber {
+	border-radius: 50%;
+	height: 12px;
+	margin-left: -7px;
+	margin-top: 3px;
+	width: 12px;
+}
+
+.mark {
+	align-items: center;
+	display: flex;
+	flex-direction: column;
+	height: 48px;
+	justify-content: space-between;
+	left: 0;
+	margin-left: -12px;
+	position: absolute;
+	top: 0;
+	user-select: none;
+	-webkit-user-select: none;
+	width: 24px;
+}
+
+.markAbove {
+	top: -6px;
+}
+
+.markBelow {
+	bottom: -12px;
+}
+
+.markValue {
+	color: var(--text-secondary, #b9bbbe);
+	font-size: 12px;
+	font-weight: 500;
+	line-height: 16px;
+	min-height: 10px;
+	padding-left: 1px;
+	white-space: nowrap;
+}
+
+.defaultValue .markValue {
+	color: var(--text-feedback-positive, #3ba55d);
+}
+
+.markDash {
+	background-color: var(--interactive-muted, #dcddde);
+	border-radius: 12px;
+	height: 24px;
+	width: 2px;
+}
+
+.markDashSimple {
+	margin-top: 10px;
+}

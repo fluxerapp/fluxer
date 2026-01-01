@@ -1,0 +1,116 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.giftModeContainer {
+	display: flex;
+	min-height: 0;
+	flex-direction: column;
+	gap: 2rem;
+	padding-bottom: 1.5rem;
+}
+
+.mainContainer {
+	display: flex;
+	min-height: 0;
+	flex-direction: column;
+	gap: 2.5rem;
+	padding-bottom: 2rem;
+}
+
+.header {
+	text-align: center;
+}
+
+.iconContainer {
+	margin-bottom: 1rem;
+	display: flex;
+	justify-content: center;
+}
+
+.icon {
+	height: 4rem;
+	width: 4rem;
+	color: rgb(245 158 11);
+}
+
+.title {
+	margin-bottom: 0.75rem;
+	font-weight: 700;
+	font-size: 1.5rem;
+	line-height: 2rem;
+	color: var(--text-primary);
+}
+
+@media (min-width: 768px) {
+	.title {
+		font-size: 1.875rem;
+		line-height: 2.25rem;
+	}
+}
+
+.description {
+	margin-left: auto;
+	margin-right: auto;
+	max-width: 42rem;
+	font-size: 1rem;
+	line-height: 1.625;
+	color: var(--text-primary-muted);
+}
+
+@media (min-width: 768px) {
+	.description {
+		font-size: 1.125rem;
+		line-height: 1.75rem;
+	}
+}
+
+.subscriptionSection {
+	display: flex;
+	min-height: 0;
+	width: 100%;
+	flex-direction: column;
+	gap: 1rem;
+}
+
+.disclaimerContainer {
+	display: flex;
+	justify-content: center;
+}
+
+.spinnerContainer {
+	display: flex;
+	justify-content: center;
+	padding-top: 2rem;
+	padding-bottom: 2rem;
+}
+
+.perksSection {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+}
+
+.comparisonTableContainer {
+	margin-top: 0.5rem;
+}
+
+.previewContainer {
+	border-bottom: 1px solid var(--background-header-secondary);
+	padding-bottom: 2rem;
+}

@@ -1,0 +1,77 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.scrollIndicatorLayer {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	z-index: var(--z-index-elevated-2);
+}
+
+.indicatorSlot {
+	position: absolute;
+	left: 50%;
+	transform: translateX(-50%);
+	width: 100%;
+	display: flex;
+	justify-content: center;
+	pointer-events: none;
+}
+
+.indicatorSlotTop {
+	top: 8px;
+}
+
+.indicatorSlotBottom {
+	bottom: 8px;
+}
+
+.indicator {
+	pointer-events: auto;
+	border: none;
+	border-radius: 999px;
+	padding: 0.25rem 0.75rem;
+	font-weight: 600;
+	font-size: 0.6875rem;
+	line-height: 1rem;
+	letter-spacing: 0.025em;
+	text-transform: uppercase;
+	color: white;
+	cursor: pointer;
+	box-shadow:
+		0 10px 20px -12px rgba(0, 0, 0, 0.75),
+		0 4px 6px -2px rgba(0, 0, 0, 0.45);
+	transition: transform 0.2s ease;
+}
+
+.indicator:focus-visible {
+	outline: none;
+	box-shadow:
+		0 0 0 2px var(--brand-primary),
+		0 10px 20px -12px rgba(0, 0, 0, 0.75),
+		0 4px 6px -2px rgba(0, 0, 0, 0.45);
+}
+
+.indicatorBrand {
+	background-color: hsl(220, 6%, 30%);
+}
+
+.indicatorMention {
+	background-color: var(--status-danger);
+}

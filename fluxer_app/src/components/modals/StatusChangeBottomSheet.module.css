@@ -1,0 +1,403 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.content {
+	display: flex;
+	flex-direction: column;
+	gap: 1.5rem;
+	padding-bottom: 1rem;
+}
+
+.topSpacer {
+	height: 0.5rem;
+}
+
+.statusSection {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.sectionHeader {
+	font-size: 0.75rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	color: var(--text-tertiary);
+	letter-spacing: 0.02em;
+	padding: 0 0.25rem;
+}
+
+.statusContainer {
+	overflow: hidden;
+	border-radius: 0.75rem;
+	background-color: var(--background-secondary-alt);
+}
+
+.statusItemWrapper {
+	display: flex;
+	flex-direction: column;
+}
+
+.statusItemButton {
+	display: flex;
+	width: 100%;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem;
+	padding: 0.875rem 1rem;
+	text-align: left;
+	transition: background-color 0.15s ease;
+	cursor: pointer;
+}
+
+.statusItemButton:active {
+	background-color: var(--background-modifier-hover);
+}
+
+.statusItemContent {
+	display: flex;
+	align-items: flex-start;
+	gap: 0.75rem;
+	padding-top: 0.125rem;
+}
+
+.statusItemInfo {
+	display: flex;
+	flex-direction: column;
+	gap: 0.125rem;
+}
+
+.statusLabel {
+	font-weight: 500;
+	font-size: 0.9375rem;
+	color: var(--text-primary);
+	line-height: 1.25;
+}
+
+.statusDescription {
+	color: var(--text-tertiary);
+	font-size: 0.75rem;
+	line-height: 1.25;
+}
+
+.statusItemRight {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	flex-shrink: 0;
+}
+
+.selectedIndicator {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 1.25rem;
+	height: 1.25rem;
+	border-radius: 50%;
+	background-color: var(--brand-primary);
+}
+
+.checkIcon {
+	width: 0.75rem;
+	height: 0.75rem;
+	color: var(--white);
+}
+
+.chevronIcon {
+	width: 0.875rem;
+	height: 0.875rem;
+	color: var(--text-tertiary);
+	transition: transform 0.2s ease;
+}
+
+.chevronIconExpanded {
+	transform: rotate(180deg);
+}
+
+.divider {
+	margin-left: 1rem;
+	margin-right: 1rem;
+	height: 1px;
+	background-color: var(--background-header-secondary);
+	opacity: 0.3;
+}
+
+.expiryList {
+	display: flex;
+	flex-direction: column;
+	background-color: var(--background-tertiary);
+	padding: 0.25rem 0;
+}
+
+.expiryItem {
+	width: 100%;
+	padding: 0.625rem 1rem 0.625rem 2.5rem;
+	text-align: left;
+	font-size: 0.875rem;
+	font-weight: 500;
+	color: var(--text-secondary);
+	cursor: pointer;
+	transition:
+		background-color 0.15s ease,
+		color 0.15s ease;
+}
+
+.expiryItem:active {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-primary);
+}
+
+.customStatusSection {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.customStatusHeader {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 0 0.25rem;
+}
+
+.customStatusTitle {
+	font-size: 0.75rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	color: var(--text-tertiary);
+	letter-spacing: 0.02em;
+}
+
+.customStatusButton {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	width: 100%;
+	padding: 0.875rem 1rem;
+	border-radius: 0.75rem;
+	background-color: var(--background-secondary-alt);
+	text-align: left;
+	cursor: pointer;
+	transition: background-color 0.15s ease;
+}
+
+.customStatusButton:active {
+	background-color: var(--background-modifier-hover);
+}
+
+.customStatusButton:hover,
+.customStatusButton:active {
+	--emoji-show-animated: 1;
+}
+
+.customStatusPlaceholder {
+	color: var(--text-tertiary);
+	font-size: 0.875rem;
+}
+
+.clearCustomStatusButton {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	padding: 0.625rem 1rem;
+	border-radius: 0.5rem;
+	background-color: transparent;
+	color: var(--text-danger);
+	font-size: 0.875rem;
+	font-weight: 500;
+	cursor: pointer;
+	transition:
+		background-color 0.15s ease,
+		opacity 0.15s ease;
+}
+
+.clearCustomStatusButton:active {
+	background-color: var(--background-modifier-hover);
+}
+
+.clearCustomStatusButton:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.customStatusEditor {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	padding: 1rem;
+	border-radius: 0.75rem;
+	background-color: var(--background-secondary-alt);
+}
+
+.customStatusEditorFooter {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem;
+	flex-wrap: wrap;
+}
+
+.expirySelector {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.expirySelectorLabel {
+	font-size: 0.75rem;
+	color: var(--text-tertiary);
+	white-space: nowrap;
+}
+
+.expirySelect {
+	padding: 0.375rem 0.5rem;
+	border-radius: 0.375rem;
+	border: 1px solid var(--background-modifier-accent);
+	background-color: var(--background-textarea);
+	color: var(--text-primary);
+	font-size: 0.8125rem;
+	cursor: pointer;
+}
+
+.expirySelect:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.customStatusActions {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.cancelButton {
+	padding: 0.5rem 0.875rem;
+	border-radius: 0.375rem;
+	background-color: transparent;
+	color: var(--text-secondary);
+	font-size: 0.875rem;
+	font-weight: 500;
+	cursor: pointer;
+	transition:
+		background-color 0.15s ease,
+		color 0.15s ease;
+}
+
+.cancelButton:active {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-primary);
+}
+
+.cancelButton:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.saveButton {
+	padding: 0.5rem 1rem;
+	border-radius: 0.375rem;
+	background-color: var(--brand-primary);
+	color: var(--white);
+	font-size: 0.875rem;
+	font-weight: 500;
+	cursor: pointer;
+	transition:
+		background-color 0.15s ease,
+		opacity 0.15s ease;
+}
+
+.saveButton:active {
+	background-color: var(--brand-primary-active);
+}
+
+.saveButton:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.emojiTriggerButton {
+	width: 32px;
+	height: 32px;
+	border-radius: 999px;
+	border: none;
+	background: transparent;
+	color: var(--text-primary-muted);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	transition:
+		background-color var(--transition-normal),
+		color var(--transition-normal);
+}
+
+.emojiTriggerButton:active {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-primary);
+}
+
+.emojiTriggerButtonActive {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-primary);
+}
+
+.emojiTriggerButton:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.emojiPreviewImage {
+	width: 22px;
+	height: 22px;
+	object-fit: contain;
+}
+
+.emojiPreviewNative {
+	font-size: 22px;
+	line-height: 1;
+	font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
+}
+
+.clearButtonIcon {
+	border: none;
+	background: transparent;
+	color: var(--text-primary-muted);
+	padding: 0;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	border-radius: 999px;
+	cursor: pointer;
+	transition:
+		background-color var(--transition-normal),
+		color var(--transition-normal);
+}
+
+.clearButtonIcon:active {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-primary);
+}
+
+.clearButtonIcon:disabled {
+	opacity: 0.4;
+	cursor: not-allowed;
+}

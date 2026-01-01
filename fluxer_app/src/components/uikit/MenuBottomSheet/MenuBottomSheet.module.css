@@ -1,0 +1,208 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.menuItem {
+	display: flex;
+	width: 100%;
+	align-items: center;
+	gap: 0.75rem;
+	padding: 1rem;
+	text-align: left;
+	transition: background-color 0.15s;
+	appearance: none;
+	-webkit-tap-highlight-color: transparent;
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.menuItem:hover {
+		background-color: var(--background-secondary-alt);
+	}
+
+	.menuItem:not(.disabled):not(.danger):active {
+		background-color: var(--background-modifier-hover);
+	}
+
+	.menuItem.danger:not(.disabled):active {
+		background-color: var(--background-secondary);
+	}
+}
+
+.menuItem:not(.disabled):not(.danger) {
+	color: var(--text-primary);
+}
+
+.menuItem.danger:not(.disabled) {
+	color: hsl(350, calc(90% * var(--saturation-factor)), 65%);
+}
+
+.menuItem.disabled {
+	cursor: not-allowed;
+	opacity: 0.5;
+}
+
+.menuItem.pressed {
+	background-color: var(--background-modifier-hover);
+}
+
+.menuItem.pressedDanger {
+	background-color: var(--background-secondary);
+}
+
+.iconContainer {
+	display: flex;
+	height: 1.25rem;
+	width: 1.25rem;
+	flex-shrink: 0;
+	align-items: center;
+	justify-content: center;
+}
+
+.label {
+	flex: 1;
+	font-weight: 500;
+	font-size: 1rem;
+}
+
+.checkboxContainer {
+	display: flex;
+	height: 1.25rem;
+	width: 1.25rem;
+	flex-shrink: 0;
+	align-items: center;
+	justify-content: center;
+}
+
+.checkbox {
+	display: flex;
+	height: 1.25rem;
+	width: 1.25rem;
+	align-items: center;
+	justify-content: center;
+	border-radius: 3px;
+	border: 2px solid var(--background-header-secondary);
+	transition:
+		border-color 0.15s,
+		background-color 0.15s;
+}
+
+.checkbox.checked {
+	border-color: var(--brand-primary);
+	background-color: var(--brand-primary);
+}
+
+.checkIcon {
+	height: 0.75rem;
+	width: 0.75rem;
+	color: white;
+}
+
+.radioContainer {
+	display: flex;
+	height: 1.25rem;
+	width: 1.25rem;
+	flex-shrink: 0;
+	align-items: center;
+	justify-content: center;
+}
+
+.radio {
+	display: flex;
+	height: 1.25rem;
+	width: 1.25rem;
+	align-items: center;
+	justify-content: center;
+	border-radius: 50%;
+	border: 2px solid var(--background-header-secondary);
+	transition:
+		border-color 0.15s,
+		background-color 0.15s;
+}
+
+.radio.radioSelected {
+	border-color: var(--brand-primary);
+}
+
+.radioInner {
+	height: 0.625rem;
+	width: 0.625rem;
+	border-radius: 50%;
+	background-color: var(--brand-primary);
+}
+
+.labelColumn {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	gap: 0.125rem;
+}
+
+.subtext {
+	font-size: 0.75rem;
+	color: var(--text-muted);
+}
+
+.divider {
+	margin-left: 1rem;
+	margin-right: 1rem;
+	height: 1px;
+	background-color: var(--background-header-secondary);
+	opacity: 0.3;
+}
+
+.sliderContainer {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	padding: 1rem;
+}
+
+.sliderLabel {
+	font-weight: 500;
+	font-size: 1rem;
+	color: var(--text-primary);
+}
+
+.groupContainer {
+	overflow: hidden;
+	border-radius: 0.75rem;
+	background-color: var(--background-secondary-alt);
+}
+
+.groupSpacer {
+	height: 1rem;
+}
+
+.bottomSheetContent {
+	display: flex;
+	flex-direction: column;
+	gap: 0;
+}
+
+.headerSlot {
+	padding-bottom: 0.75rem;
+}
+
+.groupStack {
+	display: flex;
+	flex-direction: column;
+}
+
+.groupStackWithHeader {
+	padding-top: 0.75rem;
+}

@@ -1,0 +1,91 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.container {
+	display: flex;
+	height: 100%;
+	width: 100%;
+	flex-direction: column;
+	background-color: var(--background-secondary);
+}
+
+.header {
+	display: flex;
+	height: 3rem;
+	flex-shrink: 0;
+	align-items: center;
+	justify-content: space-between;
+	border-bottom-width: 1px;
+	border-color: var(--background-header-secondary);
+	padding-left: 1rem;
+	padding-right: 1rem;
+}
+
+.title {
+	font-weight: 600;
+	font-size: 1.125rem;
+	color: var(--text-primary);
+}
+
+.bookmarkButton {
+	display: flex;
+	height: 2rem;
+	width: 2rem;
+	align-items: center;
+	justify-content: center;
+	border-radius: 9999px;
+	background-color: var(--background-tertiary);
+	color: var(--text-primary);
+	cursor: pointer;
+}
+
+.bookmarkButton:hover {
+	background-color: var(--background-modifier-hover);
+}
+
+.bookmarkIcon {
+	height: 1.25rem;
+	width: 1.25rem;
+}
+
+.emptyContainer {
+	display: flex;
+	flex: 1 1 0%;
+	align-items: center;
+	justify-content: center;
+	padding-left: 1rem;
+	padding-right: 1rem;
+	text-align: center;
+}
+
+.emptyContent {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.emptyTitle {
+	font-weight: 500;
+	color: var(--text-primary);
+}
+
+.emptyText {
+	font-size: 0.875rem;
+	color: var(--text-primary-muted);
+}

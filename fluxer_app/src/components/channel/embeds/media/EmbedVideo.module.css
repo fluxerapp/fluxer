@@ -1,0 +1,120 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.videoOverlay {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	cursor: pointer;
+	align-items: center;
+	justify-content: center;
+	border: none;
+	background: transparent;
+	padding: 0;
+	outline: none;
+	width: 100%;
+	height: 100%;
+	max-width: 100%;
+}
+
+.playButtonWrapper {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	pointer-events: none;
+	z-index: 1;
+}
+
+.thumbnailPlaceholder {
+	position: absolute;
+	inset: 0;
+	height: 100%;
+	width: 100%;
+	max-width: 100%;
+	object-fit: cover;
+}
+
+.blurContainer {
+	display: flex;
+	flex-direction: column;
+}
+
+.blurContent {
+	display: grid;
+	user-select: none;
+	-webkit-user-select: none;
+	overflow: hidden;
+	border-radius: var(--media-border-radius, 0);
+}
+
+.blurInner {
+	position: relative;
+	display: flex;
+	height: 100%;
+	width: 100%;
+	align-items: center;
+	justify-content: center;
+	background: var(--background-primary);
+}
+
+.blurThumbnail {
+	position: absolute;
+	inset: 0;
+	height: 100%;
+	width: 100%;
+	object-fit: cover;
+}
+
+.mediaContainer {
+	display: grid;
+	margin: 0;
+	user-select: none;
+	-webkit-user-select: none;
+	overflow: hidden;
+	border: 0;
+	padding: 0;
+	cursor: pointer;
+	border-radius: var(--media-border-radius, 0);
+}
+
+.mobileContainer {
+	position: relative;
+	height: 100%;
+	width: 100%;
+	background: var(--background-primary);
+	border-radius: var(--media-border-radius, 0);
+	overflow: hidden;
+}
+
+.videoPlayerBlock {
+	display: block;
+	width: 100%;
+	border-radius: var(--media-border-radius, 0);
+	overflow: hidden;
+}
+
+.videoPlayerFill {
+	width: 100%;
+	height: 100%;
+	border-radius: 0;
+}

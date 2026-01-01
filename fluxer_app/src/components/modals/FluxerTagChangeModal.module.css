@@ -1,0 +1,110 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.confirmDescription {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	font-size: 0.875rem;
+}
+
+.confirmSecondary {
+	color: var(--text-secondary);
+}
+
+.fluxerTagContainer {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+}
+
+.description {
+	margin-bottom: var(--spacing-4);
+}
+
+.fluxerTagLabel {
+	margin-bottom: 0.25rem;
+	font-size: 0.875rem;
+	font-weight: 600;
+	color: var(--text-tertiary);
+}
+
+.fluxerTagInputRow {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.usernameInput {
+	flex: 1;
+}
+
+.separator {
+	font-family: monospace;
+	font-size: 1.125rem;
+	color: var(--text-primary);
+}
+
+.discriminatorInput {
+	width: 5rem;
+}
+
+.discriminatorInputDisabled {
+	position: relative;
+}
+
+.discriminatorInputDisabled input:disabled {
+	cursor: pointer;
+}
+
+.discriminatorOverlay {
+	position: absolute;
+	inset: 0;
+	cursor: pointer;
+}
+
+.errorMessage {
+	font-size: 0.875rem;
+	color: var(--status-danger);
+}
+
+.validationBox {
+	margin-top: 0.5rem;
+	padding: 0.75rem;
+	border-radius: 0.375rem;
+	border: 1px solid var(--background-modifier-accent);
+	background-color: var(--background-secondary);
+}
+
+.premiumUpsell {
+	margin-top: 0.5rem;
+}
+
+.footer {
+	align-items: center;
+	display: flex;
+	flex-wrap: wrap;
+	width: 100%;
+	gap: 8px;
+}
+
+.footer > * {
+	flex: 1;
+	min-width: fit-content;
+}

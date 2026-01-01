@@ -1,0 +1,77 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.container {
+	margin-bottom: 1rem;
+}
+
+.disabled {
+	opacity: 0.5;
+}
+
+.description {
+	margin-top: 0.5rem;
+	font-size: 0.875rem;
+	color: var(--text-primary-muted);
+}
+
+.guildOption,
+.guildValue {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--spacing-1);
+	min-height: 36px;
+	padding: 0 var(--spacing-1);
+	width: 100%;
+}
+
+.guildOptionGlobal {
+	gap: 0;
+	padding-left: 0;
+}
+
+.guildAvatar,
+.guildAvatarPlaceholder {
+	height: 28px;
+	width: 28px;
+	border-radius: 999px;
+	flex-shrink: 0;
+}
+
+.guildAvatar {
+	background-size: cover;
+	background-position: center;
+	background-repeat: no-repeat;
+}
+
+.guildAvatarPlaceholder {
+	background: color-mix(in srgb, #0f1014 80%, var(--background-header-secondary) 20%);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	color: white;
+	font-weight: 700;
+	font-size: 0.85rem;
+	border: 1px solid var(--background-modifier-accent);
+}
+
+.guildOptionLabel {
+	font-size: 0.9rem;
+	color: var(--text-primary);
+}

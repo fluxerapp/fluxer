@@ -1,0 +1,70 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.grid {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: 1rem;
+}
+
+@media (min-width: 768px) {
+	.grid {
+		grid-template-columns: repeat(2, 1fr);
+	}
+}
+
+.gridSingle {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: 1rem;
+}
+
+.inlineEditWrapper {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+}
+
+.inlineEditLabel {
+	font-size: 0.875rem;
+	color: var(--text-tertiary);
+}
+
+.inlineEditWrapper {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+}
+
+.inlineEditCaption {
+	font-size: 0.875rem;
+	color: var(--text-tertiary);
+}
+
+.colorPickersGrid {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: 1rem;
+}
+
+@media (min-width: 768px) {
+	.colorPickersGrid {
+		grid-template-columns: repeat(2, 1fr);
+	}
+}

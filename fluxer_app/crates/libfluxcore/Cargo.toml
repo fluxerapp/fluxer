@@ -1,0 +1,12 @@
+[package]
+name = "libfluxcore"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+gif = "0.13"
+ruzstd = { version = "0.7", default-features = false, features = ["std"] }
+wasm-bindgen = { version = "0.2", features = ["std"] }

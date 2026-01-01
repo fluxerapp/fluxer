@@ -1,0 +1,187 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.container {
+	position: relative;
+	display: grid;
+	width: 100%;
+	max-width: 100%;
+	min-width: 0;
+}
+
+.mobilePlayButton {
+	display: flex;
+	width: 100%;
+	min-width: 0;
+	align-items: center;
+	gap: 0.75rem;
+	overflow: hidden;
+	border-radius: var(--radius-lg);
+	border: 1px solid var(--background-modifier-accent);
+	background: var(--background-secondary);
+	padding: 0.75rem;
+	text-align: left;
+	box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+	transition: background-color 150ms ease;
+	cursor: pointer;
+}
+
+.mobilePlayButton:hover {
+	background: var(--background-tertiary);
+}
+
+.mobileIconContainer {
+	display: flex;
+	height: 3rem;
+	width: 3rem;
+	flex-shrink: 0;
+	align-items: center;
+	justify-content: center;
+	border-radius: var(--radius-lg);
+	background: var(--background-tertiary);
+	color: var(--text-tertiary);
+}
+
+.mobilePlayIconContainer {
+	display: flex;
+	height: 2.5rem;
+	width: 2.5rem;
+	flex-shrink: 0;
+	align-items: center;
+	justify-content: center;
+	border-radius: var(--radius-lg);
+	background: var(--brand-primary);
+	color: white;
+}
+
+.fileInfoContainer {
+	min-width: 0;
+	flex: 1;
+	overflow: hidden;
+}
+
+.fileName {
+	display: block;
+	overflow: hidden;
+	font-weight: 600;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--text-primary);
+	text-align: left;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.fileNameTruncate {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.fileExtension {
+	color: var(--text-tertiary);
+}
+
+.fileSize {
+	display: block;
+	overflow: hidden;
+	font-size: 0.75rem;
+	color: var(--text-tertiary);
+	text-align: left;
+	white-space: nowrap;
+}
+
+.deleteButton {
+	--right-position: -2rem;
+	position: absolute;
+	top: 0.25rem;
+	right: var(--right-position);
+	z-index: 10;
+	display: flex;
+	height: 1.5rem;
+	width: 1.5rem;
+	align-items: center;
+	justify-content: center;
+	border-radius: var(--radius-sm);
+	background: var(--background-tertiary);
+	color: var(--text-tertiary);
+	transition: all 150ms ease;
+	cursor: pointer;
+}
+
+.deleteButtonHover {
+	background: var(--status-danger);
+	color: white;
+}
+
+.audioContainer {
+	display: flex;
+	width: 100%;
+	min-width: 0;
+	align-items: center;
+	gap: 0.75rem;
+	overflow: hidden;
+	border-radius: var(--radius-lg);
+	border: 1px solid var(--background-modifier-accent);
+	background: var(--background-secondary);
+	padding: 0.75rem;
+	box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.buttonContainer {
+	display: flex;
+	flex-shrink: 0;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.actionButton {
+	display: flex;
+	height: 2.5rem;
+	width: 2.5rem;
+	align-items: center;
+	justify-content: center;
+	border-radius: var(--radius-lg);
+	background: var(--background-tertiary);
+	color: var(--text-tertiary);
+	transition: all 150ms ease;
+	cursor: pointer;
+}
+
+.actionButtonHover {
+	background: var(--brand-primary);
+	color: white;
+}
+
+.playButton {
+	display: flex;
+	height: 2.5rem;
+	width: 2.5rem;
+	align-items: center;
+	justify-content: center;
+	border-radius: var(--radius-lg);
+	background: var(--brand-primary);
+	color: white;
+	transition: background-color 150ms ease;
+	cursor: pointer;
+}
+
+.playButtonHover {
+	background: var(--brand-secondary);
+}

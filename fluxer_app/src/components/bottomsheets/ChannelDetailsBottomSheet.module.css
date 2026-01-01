@@ -1,0 +1,924 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.memberListItem {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	padding: 0.75rem 1rem;
+	text-align: left;
+	transition: background-color 0.15s;
+	cursor: pointer;
+	background-color: var(--background-secondary-alt);
+	border-radius: 0;
+}
+
+.memberListItem:active {
+	background-color: var(--background-modifier-hover);
+}
+
+.memberListItemOffline {
+	opacity: 0.3;
+}
+
+.memberContent {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	flex: 1;
+	align-items: flex-start;
+	justify-content: center;
+}
+
+.memberNameRow {
+	display: flex;
+	min-width: 0;
+	width: 100%;
+	align-items: center;
+}
+
+.memberName {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-weight: 500;
+	font-size: 1rem;
+	line-height: 1.5rem;
+}
+
+.memberCustomStatus {
+	font-size: 0.75rem;
+	color: var(--text-secondary);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	max-width: 100%;
+}
+
+.memberListItem:hover .memberCustomStatus,
+.memberListItem:active .memberCustomStatus {
+	--emoji-show-animated: 1;
+}
+
+.crownContainer {
+	margin-top: 0.2em;
+	margin-left: 0.25rem;
+}
+
+.crownIcon {
+	height: 14px;
+	width: 14px;
+	color: hsl(39, 57%, 64%);
+}
+
+.memberTag {
+	margin-left: 0.25rem;
+}
+
+.memberGroupContainer {
+	display: flex;
+	flex-direction: column;
+}
+
+.memberGroupHeader {
+	margin-bottom: 0.5rem;
+	padding-left: 1rem;
+	padding-right: 1rem;
+	font-weight: 600;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--text-primary-muted);
+}
+
+.memberGroupList {
+	overflow: hidden;
+	border-radius: 0.75rem;
+	background-color: var(--background-secondary-alt);
+}
+
+.memberDivider {
+	margin-left: 1rem;
+	margin-right: 1rem;
+	height: 1px;
+	background-color: var(--background-header-secondary);
+	opacity: 0.3;
+}
+
+.memberListContent {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+	padding: 1rem;
+}
+
+.mainScroller {
+	flex: 1;
+	min-height: 0;
+}
+
+.headerActions {
+	display: flex;
+	gap: 0.5rem;
+}
+
+.actionButton {
+	display: flex;
+	height: 2rem;
+	width: 2rem;
+	align-items: center;
+	justify-content: center;
+	border-radius: 9999px;
+	background-color: var(--background-tertiary);
+	color: var(--text-primary);
+	transition: background-color 0.15s;
+	cursor: pointer;
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.actionButton:hover {
+		background-color: var(--background-modifier-hover);
+	}
+}
+
+.actionIcon {
+	height: 1.25rem;
+	width: 1.25rem;
+}
+
+.channelInfo {
+	padding: 0 1rem 1rem 1rem;
+}
+
+.channelHeader {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	margin-bottom: 0.5rem;
+}
+
+.channelIcon {
+	height: 1.5rem;
+	width: 1.5rem;
+	color: var(--text-primary-muted);
+}
+
+.channelName {
+	flex: 1;
+	font-weight: 600;
+	font-size: 1.125rem;
+	line-height: 1.75rem;
+	color: var(--text-primary);
+}
+
+.channelType {
+	font-size: 0.75rem;
+	line-height: 1rem;
+	color: var(--text-tertiary);
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+}
+
+.topicSection {
+	margin-top: 0.5rem;
+}
+
+.topicLabel {
+	margin-bottom: 0.25rem;
+	font-weight: 600;
+	font-size: 0.75rem;
+	line-height: 1rem;
+	color: var(--text-primary-muted);
+	text-transform: uppercase;
+}
+
+.topicContent {
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--text-secondary);
+}
+
+.topicContentCollapsed {
+	display: -webkit-box;
+	-webkit-line-clamp: 3;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+
+.topicToggle {
+	margin-top: 0.25rem;
+	font-size: 0.75rem;
+	line-height: 1rem;
+	color: var(--text-link);
+	cursor: pointer;
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.topicToggle:hover {
+		text-decoration: underline;
+	}
+}
+
+.tabBar {
+	display: flex;
+	gap: 0.5rem;
+	padding: 0 1rem 0.75rem 1rem;
+}
+
+.tab {
+	flex: 1;
+	padding: 0.5rem 1rem;
+	border-radius: 0.5rem;
+	font-weight: 500;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--text-tertiary);
+	text-align: center;
+	transition: all 0.15s;
+	cursor: pointer;
+}
+
+.tabActive {
+	background-color: var(--background-modifier-selected);
+	color: var(--text-primary);
+}
+
+.tabContent {
+	flex: 1;
+	min-height: 0;
+}
+
+.recipientInfo {
+	padding: 0 1rem 1rem 1rem;
+}
+
+.recipientAvatarContainer {
+	display: flex;
+	justify-content: center;
+	margin-bottom: 1rem;
+}
+
+.recipientDetails {
+	text-align: center;
+}
+
+.recipientName {
+	font-weight: 600;
+	font-size: 1.25rem;
+	line-height: 1.75rem;
+	color: var(--text-primary);
+}
+
+.recipientDiscriminator {
+	font-weight: 500;
+	font-size: 1.25rem;
+	line-height: 1.75rem;
+	color: var(--text-tertiary);
+}
+
+.recipientStatus {
+	margin-top: 0.25rem;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--text-secondary);
+}
+
+.muteOption {
+	padding: 0.75rem 1rem;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--text-primary);
+	text-align: left;
+	transition: background-color 0.15s;
+	cursor: pointer;
+}
+
+.muteOption:active {
+	background-color: var(--background-modifier-hover);
+}
+
+.muteOptionSelected {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.muteCheckIcon {
+	height: 1.25rem;
+	width: 1.25rem;
+	color: var(--brand-primary);
+}
+
+.topicMarkup {
+	min-width: 0;
+	flex: 1;
+	cursor: pointer;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--text-secondary);
+	transition: opacity 0.15s;
+}
+
+.topicMarkup:active {
+	opacity: 0.7;
+}
+
+.topicMarkupCollapsed {
+	display: -webkit-box;
+	-webkit-line-clamp: 3;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+
+.tabBarContainer {
+	display: flex;
+}
+
+.tabButton {
+	display: flex;
+	flex: 1;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	border-bottom: 2px solid transparent;
+	padding: 0.75rem 1rem;
+	font-weight: 500;
+	font-size: 1rem;
+	line-height: 1.5rem;
+	transition: color 0.15s;
+}
+
+.tabButtonActive {
+	color: var(--brand-primary-light);
+}
+
+:global(.theme-light) .tabButtonActive {
+	color: var(--brand-primary);
+}
+
+.tabButtonInactive {
+	color: var(--text-tertiary);
+	cursor: pointer;
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.tabButtonInactive:hover {
+		color: var(--text-primary);
+	}
+}
+
+.tabIcon {
+	height: 1.25rem;
+	width: 1.25rem;
+}
+
+.dmMemberList {
+	display: flex;
+	width: 100%;
+	align-items: center;
+	gap: 0.75rem;
+	padding: 1rem;
+	text-align: left;
+	transition: background-color 0.15s;
+	cursor: pointer;
+}
+
+.dmMemberList:active {
+	background-color: var(--background-modifier-hover);
+}
+
+.dmMemberName {
+	flex: 1;
+	font-weight: 500;
+	font-size: 1rem;
+	line-height: 1.5rem;
+	color: var(--text-primary);
+}
+
+.iconSmall {
+	height: 16px;
+	width: 16px;
+}
+
+.iconMedium {
+	height: 20px;
+	width: 20px;
+}
+
+.iconLarge {
+	height: 24px;
+	width: 24px;
+}
+
+.channelInfoSection {
+	position: relative;
+	padding: 1rem;
+}
+
+.closeButton {
+	position: absolute;
+	top: 0.75rem;
+	right: 0.75rem;
+}
+
+.channelInfoContainer {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	padding-right: 2.5rem;
+}
+
+.channelAvatar {
+	display: flex;
+	height: 3rem;
+	width: 3rem;
+	align-items: center;
+	justify-content: center;
+	border-radius: 9999px;
+	background-color: var(--background-tertiary);
+	flex-shrink: 0;
+}
+
+.channelInfoContent {
+	flex: 1;
+	min-width: 0;
+}
+
+.channelInfoUserContainer {
+	display: flex;
+	align-items: center;
+	min-width: 0;
+	overflow: hidden;
+}
+
+.channelInfoUsername {
+	font-weight: 600;
+	font-size: 1.125rem;
+	line-height: 1.75rem;
+	color: var(--text-primary);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.channelInfoDiscriminator {
+	font-weight: 600;
+	font-size: 1.125rem;
+	line-height: 1.75rem;
+	color: var(--text-tertiary);
+	flex-shrink: 0;
+}
+
+.channelInfoTitle {
+	font-weight: 600;
+	font-size: 1.125rem;
+	line-height: 1.75rem;
+	color: var(--text-primary);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.channelInfoSubtitle {
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--text-secondary);
+}
+
+.channelInfoTag {
+	margin-left: 0.25rem;
+}
+
+.channelNameWithIcon {
+	display: flex;
+	align-items: center;
+	gap: 0.375rem;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.channelNameIcon {
+	height: 1.125rem;
+	width: 1.125rem;
+	color: var(--text-tertiary);
+	flex-shrink: 0;
+}
+
+.topicSectionContainer {
+	margin-top: 0.75rem;
+}
+
+.topicWrapper {
+	display: flex;
+	align-items: flex-start;
+	gap: 0.5rem;
+}
+
+.topicExpandButton {
+	margin-top: 0.125rem;
+	flex-shrink: 0;
+	transition: opacity 0.15s;
+	cursor: pointer;
+}
+
+.topicExpandButton:active {
+	opacity: 0.7;
+}
+
+.contentArea {
+	display: flex;
+	flex-direction: column;
+}
+
+.membersTabContent {
+	display: flex;
+	flex-direction: column;
+}
+
+.pinsTabContent {
+	display: flex;
+	flex-direction: column;
+}
+
+.dmMembersContainer {
+	padding: 1rem;
+}
+
+.newGroupButton {
+	margin-top: 0.5rem;
+	margin-bottom: 1.5rem;
+	display: flex;
+	width: 100%;
+	align-items: center;
+	gap: 0.75rem;
+	border-radius: 0.5rem;
+	background-color: var(--background-secondary-alt);
+	padding: 0.75rem;
+	cursor: pointer;
+}
+
+.newGroupIconContainer {
+	display: flex;
+	height: 2.5rem;
+	width: 2.5rem;
+	align-items: center;
+	justify-content: center;
+	border-radius: 9999px;
+	background-color: var(--brand-primary);
+}
+
+.newGroupIconWhite {
+	color: white;
+}
+
+.newGroupContent {
+	flex: 1;
+	text-align: left;
+}
+
+.newGroupTitle {
+	font-weight: 500;
+	color: var(--text-primary);
+}
+
+.newGroupSubtitle {
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--text-tertiary);
+}
+
+.membersHeader {
+	margin-bottom: 0.5rem;
+	font-weight: 600;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--text-primary-muted);
+}
+
+.membersListContainer {
+	overflow: hidden;
+	border-radius: 0.75rem;
+	background-color: var(--background-secondary-alt);
+}
+
+.memberItemButton {
+	display: flex;
+	width: 100%;
+	align-items: center;
+	gap: 0.75rem;
+	padding: 1rem;
+	text-align: left;
+	transition: background-color 0.15s;
+	cursor: pointer;
+}
+
+.memberItemButton:active {
+	background-color: var(--background-modifier-hover);
+}
+
+:global(.theme-light) .memberListItem,
+:global(.theme-light) .memberItemButton {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-primary);
+}
+
+.memberItemContent {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	min-width: 0;
+}
+
+.memberItemName {
+	flex: 1;
+	font-weight: 500;
+	font-size: 1rem;
+	line-height: 1.5rem;
+	color: var(--text-primary);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.memberItemYou {
+	color: var(--text-tertiary);
+	font-weight: 400;
+}
+
+.memberItemTags {
+	display: flex;
+	align-items: center;
+	gap: 0.375rem;
+	margin-top: 0.125rem;
+}
+
+.ownerCrown {
+	height: 14px;
+	width: 14px;
+	color: hsl(39, 57%, 64%);
+}
+
+.memberItemDivider {
+	margin-left: 1rem;
+	margin-right: 1rem;
+	height: 1px;
+	background-color: var(--background-header-secondary);
+	opacity: 0.3;
+}
+
+.muteSheetContainer {
+	display: flex;
+	height: 100%;
+	flex-direction: column;
+	overflow: hidden;
+}
+
+.muteSheetContent {
+	flex: 1;
+	padding: 1rem;
+	padding-top: 1rem;
+}
+
+.muteStatusBanner {
+	margin-bottom: 1rem;
+	border-radius: 0.5rem;
+	background-color: var(--background-secondary-alt);
+	padding: 0.75rem;
+}
+
+.muteStatusText {
+	text-align: center;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--text-secondary);
+}
+
+.muteOptionsContainer {
+	overflow: hidden;
+	border-radius: 0.75rem;
+	background-color: var(--background-secondary-alt);
+}
+
+.muteOptionButton {
+	display: flex;
+	width: 100%;
+	align-items: center;
+	justify-content: space-between;
+	padding: 1rem;
+	text-align: left;
+	color: var(--text-primary);
+	transition: background-color 0.15s;
+	cursor: pointer;
+}
+
+.muteOptionButton:active {
+	background-color: var(--background-modifier-hover);
+}
+
+.muteOptionLabel {
+	font-weight: 500;
+	font-size: 1rem;
+	line-height: 1.5rem;
+}
+
+.muteOptionDivider {
+	margin-left: 1rem;
+	margin-right: 1rem;
+	height: 1px;
+	background-color: var(--background-header-secondary);
+	opacity: 0.3;
+}
+
+.quickActionsRow {
+	padding: 0 1rem 0.75rem;
+}
+
+.quickActionsScroll {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+}
+
+.quickActionButton {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 0.25rem;
+	flex: 1;
+	min-width: fit-content;
+	padding: 0.625rem 0.5rem;
+	border-radius: 0.75rem;
+	background-color: var(--background-secondary-alt);
+	color: var(--text-primary);
+	transition:
+		background-color 0.15s,
+		transform 0.1s;
+	cursor: pointer;
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.quickActionButton:hover {
+		background-color: var(--background-modifier-hover);
+	}
+}
+
+.quickActionButtonPressed {
+	background-color: var(--background-modifier-active);
+	transform: scale(0.97);
+}
+
+.quickActionButtonActive {
+	background-color: var(--brand-primary);
+	color: white;
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.quickActionButtonActive:hover {
+		background-color: var(--brand-primary-light);
+	}
+}
+
+.quickActionButtonDanger {
+	color: hsl(350, calc(90% * var(--saturation-factor)), 65%);
+}
+
+.quickActionButtonDisabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.quickActionIcon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 1.25rem;
+	width: 1.25rem;
+}
+
+.quickActionLabel {
+	font-size: 0.6875rem;
+	font-weight: 500;
+	line-height: 1rem;
+	text-align: center;
+	white-space: nowrap;
+}
+
+:global(.theme-light) .quickActionButton {
+	background-color: var(--background-modifier-hover);
+}
+
+@media (hover: hover) and (pointer: fine) {
+	:global(.theme-light) .quickActionButton:hover {
+		background-color: var(--background-modifier-active);
+	}
+}
+
+.addFriendsContainer {
+	display: flex;
+	height: 100%;
+	flex-direction: column;
+	overflow: hidden;
+}
+
+.addFriendsDescription {
+	padding: 1rem;
+	padding-bottom: 0.5rem;
+	color: var(--text-primary-muted);
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+}
+
+.addFriendsSelectorContainer {
+	flex: 1;
+	min-height: 0;
+	height: 400px;
+	padding: 0 1rem;
+}
+
+.addFriendsFooter {
+	display: flex;
+	flex-shrink: 0;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 0.5rem;
+	padding: 1rem;
+	padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+	border-top: 1px solid var(--border-subtle);
+}
+
+.skeletonItem {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	padding: 0.75rem 1rem;
+}
+
+.skeletonAvatar {
+	width: 40px;
+	height: 40px;
+	border-radius: 50%;
+	flex-shrink: 0;
+}
+
+.skeletonInfo {
+	display: flex;
+	flex-direction: column;
+	gap: 0.375rem;
+	flex: 1;
+	min-width: 0;
+}
+
+.skeletonName {
+	height: 1rem;
+	width: 120px;
+	border-radius: 4px;
+}
+
+.skeletonStatus {
+	height: 0.75rem;
+	width: 80px;
+	border-radius: 4px;
+}
+
+.skeletonHeader {
+	width: 100px;
+	height: 0.875rem;
+	border-radius: 4px;
+}
+
+.skeleton {
+	background: linear-gradient(
+		90deg,
+		var(--background-secondary) 25%,
+		var(--background-tertiary) 50%,
+		var(--background-secondary) 75%
+	);
+	background-size: 200% 100%;
+	animation: skeletonPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes skeletonPulse {
+	0% {
+		background-position: 200% 0;
+	}
+	100% {
+		background-position: -200% 0;
+	}
+}

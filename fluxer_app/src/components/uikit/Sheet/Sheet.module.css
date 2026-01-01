@@ -1,0 +1,237 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.container {
+	border-top-left-radius: 24px;
+	border-top-right-radius: 24px;
+	overflow: hidden;
+	color: var(--text-primary);
+	background-color: var(--sheet-surface, var(--background-secondary));
+}
+
+.surfacePrimary {
+	--sheet-surface: var(--background-primary);
+}
+
+.surfaceSecondary {
+	--sheet-surface: var(--background-secondary);
+}
+
+.surfaceTertiary {
+	--sheet-surface: var(--background-tertiary);
+}
+
+.root {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	min-height: 0;
+	background-color: var(--sheet-surface, var(--background-secondary));
+}
+
+.handle {
+	display: flex;
+	width: 100%;
+	justify-content: center;
+	padding: calc(12px + env(safe-area-inset-top, 0px)) 0 12px;
+	background-color: var(--sheet-surface, var(--background-secondary));
+}
+
+.handleBar {
+	height: 4px;
+	width: 40px;
+	border-radius: 9999px;
+	background-color: var(--text-primary-muted);
+	opacity: 0.5;
+}
+
+.header {
+	background-color: var(--sheet-surface, var(--background-secondary));
+	padding: 12px 16px;
+}
+
+.headerBorder {
+	border-bottom: 1px solid var(--background-modifier-accent);
+}
+
+.headerSafeArea {
+	padding-top: calc(12px + env(safe-area-inset-top, 0px));
+}
+
+.headerPaddingSm {
+	padding-top: 8px;
+	padding-bottom: 8px;
+}
+
+.headerPaddingMd {
+	padding-top: 12px;
+	padding-bottom: 12px;
+}
+
+.headerPaddingLg {
+	padding-top: 16px;
+	padding-bottom: 16px;
+}
+
+.headerGrid {
+	display: grid;
+	grid-template-columns: minmax(44px, auto) minmax(0, 1fr) minmax(44px, auto);
+	align-items: center;
+	gap: 12px;
+}
+
+.headerSlot {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 32px;
+	color: inherit;
+}
+
+.headerSlotLeading {
+	justify-content: flex-start;
+}
+
+.headerSlotTrailing {
+	justify-content: flex-end;
+}
+
+.headerCenter {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	text-align: center;
+	min-width: 0;
+	gap: 4px;
+}
+
+.headerAlignStart .headerCenter {
+	align-items: flex-start;
+	text-align: left;
+}
+
+.headerAlignEnd .headerCenter {
+	align-items: flex-end;
+	text-align: right;
+}
+
+.headerContent {
+	min-width: 0;
+}
+
+.headerAfter {
+	margin-top: 12px;
+	width: 100%;
+}
+
+.title {
+	margin: 0;
+	font-weight: 600;
+	font-size: 18px;
+	color: var(--text-primary);
+}
+
+.subtitle {
+	margin: 0;
+	font-size: 14px;
+	color: var(--text-secondary);
+}
+
+.content {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+	background-color: var(--sheet-surface, var(--background-secondary));
+	padding: 0 16px;
+}
+
+.contentNoPadding {
+	padding: 0;
+}
+
+.contentInner {
+	flex: 1;
+	overflow-y: auto;
+	overflow-x: hidden;
+	overscroll-behavior: contain;
+	padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+}
+
+.contentNoPadding .contentInner {
+	padding-bottom: 0;
+}
+
+.contentStatic {
+	overflow: visible;
+}
+
+.section {
+	padding: 16px;
+	background-color: var(--sheet-surface, var(--background-secondary));
+}
+
+.footer {
+	padding: 16px;
+	padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+	background-color: var(--sheet-surface, var(--background-secondary));
+}
+
+.footerNoBorder {
+	border-top: none;
+}
+
+.actions {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	justify-content: flex-end;
+}
+
+.divider {
+	height: 1px;
+	width: 100%;
+	background-color: var(--background-header-secondary);
+	opacity: 0.6;
+}
+
+.closeButton {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 8px;
+	color: var(--text-primary);
+	border-radius: 50%;
+	transition: background-color 0.15s;
+	cursor: pointer;
+}
+
+.closeButton:hover {
+	background-color: var(--background-modifier-hover);
+}
+
+.closeButton:active {
+	background-color: var(--background-modifier-selected);
+}
+
+.closeButton svg {
+	width: 1.25rem;
+	height: 1.25rem;
+}

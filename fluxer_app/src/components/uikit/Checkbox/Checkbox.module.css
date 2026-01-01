@@ -1,0 +1,194 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.checkboxWrapper {
+	display: flex;
+	align-items: center;
+	position: relative;
+	height: 24px;
+	user-select: none;
+	-webkit-user-select: none;
+	flex: 0 0 auto;
+	cursor: pointer;
+}
+
+.disabled {
+	opacity: 0.6;
+}
+
+.menuDisabled {
+	opacity: 0.4;
+	cursor: not-allowed;
+	pointer-events: none;
+}
+
+.checkbox {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	border: 1px solid var(--background-header-secondary);
+	box-sizing: border-box;
+	cursor: pointer;
+}
+
+.box {
+	border-radius: 3px;
+}
+
+.round {
+	border-radius: 50%;
+}
+
+.checked {
+	background-color: var(--brand-primary);
+	border: 1px solid var(--brand-primary);
+}
+
+.checkedInverted {
+	background-color: var(--text-on-brand-primary);
+	border-color: var(--brand-primary);
+}
+
+.inverted {
+	border-color: white;
+}
+
+.focused {
+	box-shadow: none;
+}
+
+.checkIcon {
+	color: white;
+}
+
+.invertedIcon {
+	color: var(--brand-primary);
+}
+
+.label {
+	padding-left: 8px;
+	color: var(--text-primary);
+	display: inline-flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 4px;
+	margin-top: -2px;
+}
+
+.labelInteractive {
+	cursor: pointer;
+}
+
+.labelText {
+	line-height: 1.25rem;
+}
+
+.keyboardShortcutHints {
+	margin-left: 8px;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px;
+	align-items: flex-start;
+	font-size: 0.75rem;
+	color: var(--text-tertiary);
+}
+
+.keyboardShortcut {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	padding: 1px 0;
+}
+
+.keyboardShortcutKey {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 3px 8px;
+	border-radius: 6px;
+	border: 1px solid var(--background-modifier-accent);
+	background-color: var(--background-secondary-alt);
+	color: var(--text-primary);
+	font-size: 0.75rem;
+	font-weight: 600;
+	line-height: 1;
+	box-shadow:
+		0 2px 4px rgba(0, 0, 0, 0.2),
+		0 1px 0 rgba(255, 255, 255, 0.1) inset,
+		inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.keyboardShortcutLabel {
+	font-size: 0.75rem;
+	color: var(--text-tertiary);
+}
+
+.keyboardShortcutHint {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
+}
+
+.keyboardShortcutPortal {
+	position: absolute;
+	left: 0;
+	top: calc(100% + 4px);
+	display: flex;
+	flex-wrap: wrap;
+	gap: 3px;
+	align-items: flex-start;
+	font-size: 0.75rem;
+	color: var(--text-tertiary);
+	line-height: 1;
+}
+
+.labelFocusRing {
+	border-radius: var(--radius-sm);
+}
+
+.noOutline {
+	outline: none !important;
+}
+
+.menuChecked {
+	background-color: var(--brand-primary);
+	border-color: var(--brand-primary);
+}
+
+.menuChecked:hover {
+	background-color: var(--brand-primary);
+	border-color: var(--brand-primary);
+}
+
+.checkboxIndicator {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	height: 100%;
+	cursor: inherit;
+}

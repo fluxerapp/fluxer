@@ -1,0 +1,248 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.userAreaInnerWrapper {
+	display: flex;
+	flex-direction: column;
+	gap: 0;
+	width: 100%;
+	background-color: var(--panel-control-bg);
+	position: relative;
+}
+
+.separator {
+	height: 1px;
+	background-color: var(--user-area-divider-color);
+}
+
+.userAreaContainer {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-3);
+	margin: 0;
+	padding: var(--user-area-padding-y) var(--user-area-padding-x);
+	box-sizing: border-box;
+	background-color: transparent;
+	width: 100%;
+	min-height: var(--layout-user-area-height);
+}
+
+.userAreaInnerWrapperHasVoiceConnection {
+	min-height: var(--layout-user-area-height);
+}
+
+.userAreaInnerWrapperHasVoiceConnection .userAreaContainer {
+	border-top: 0;
+}
+
+.voiceConnectionWrapper {
+	border-bottom: 0;
+	border-top: 0;
+}
+
+.userInfo {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-2);
+	flex: 1;
+	min-width: 0;
+	cursor: pointer;
+	padding: 0 var(--spacing-2);
+	margin: 0;
+	border-radius: var(--radius-md);
+	height: var(--user-area-content-height);
+	position: relative;
+	transition: color var(--transition-normal);
+	outline: none;
+}
+
+.userInfo::before {
+	content: '';
+	position: absolute;
+	inset: calc(var(--spacing-1) * -1);
+	border-radius: calc(var(--radius-md) + var(--spacing-1));
+	background-color: transparent;
+	z-index: -1;
+	transition: background-color var(--transition-normal);
+}
+
+.userInfo:hover::before,
+.userInfo.active::before,
+.userInfo:focus-visible::before {
+	background-color: color-mix(in srgb, var(--text-primary) 3%, transparent);
+}
+
+.userInfoText {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	min-width: 0;
+	user-select: text;
+	-webkit-user-select: text;
+	gap: 0.0625rem;
+}
+
+.userName {
+	font-weight: 500;
+	font-size: 0.875rem;
+	line-height: 1.125rem;
+	color: var(--text-primary);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	max-width: 100%;
+}
+
+.userStatus {
+	font-size: 0.6875rem;
+	line-height: 1rem;
+	color: var(--text-primary-muted);
+	font-weight: 500;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	max-width: 100%;
+	margin-top: -0.0625rem;
+	opacity: 0.85;
+}
+
+.userStatusLabel {
+	composes: userStatus;
+}
+
+.userCustomStatus {
+	composes: userStatus;
+}
+
+.userInfo:hover .userCustomStatus {
+	--emoji-show-animated: 1;
+}
+
+.hoverRoll {
+	display: inline-block;
+	vertical-align: top;
+	position: relative;
+	width: 100%;
+	contain: paint;
+	overflow: hidden;
+}
+
+.defaultState,
+.hovered {
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	overflow: hidden;
+	display: block;
+	transform-style: preserve-3d;
+	pointer-events: none;
+	width: 100%;
+	transition:
+		transform 0.22s ease,
+		opacity 0.22s ease;
+}
+
+.hovered {
+	opacity: 0;
+	transform: translate3d(0, 107%, 0);
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+}
+
+.forceHover .defaultState,
+.userInfo:hover .hoverRoll .defaultState,
+.userInfo:focus-visible .hoverRoll .defaultState {
+	transform: translate3d(0, 107%, 0);
+	opacity: 0;
+	user-select: none;
+	-webkit-user-select: none;
+}
+
+.forceHover .hovered,
+.userInfo:hover .hoverRoll .hovered,
+.userInfo:focus-visible .hoverRoll .hovered {
+	transform: translate3d(0, 0, 0);
+	opacity: 1;
+}
+
+.controlsContainer {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-1);
+	flex-shrink: 0;
+	padding-left: var(--spacing-3);
+}
+
+.controlButton {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 32px;
+	width: 32px;
+	background-color: transparent;
+	color: var(--control-button-normal-text);
+	border: none;
+	border-radius: var(--radius-md);
+	cursor: pointer;
+	transition:
+		background-color var(--transition-fast),
+		color var(--transition-fast),
+		transform var(--transition-fast);
+	position: relative;
+	padding: 0;
+}
+
+.controlButton:hover {
+	background-color: color-mix(in srgb, var(--control-button-normal-text) 10%, transparent);
+	color: var(--control-button-hover-text);
+}
+
+.controlButton:active {
+	transform: scale(0.95);
+}
+
+.controlButton.active {
+	background-color: color-mix(in srgb, var(--control-button-danger-text) 10%, transparent);
+	color: var(--control-button-danger-text);
+}
+
+.controlButton.active:hover {
+	background-color: color-mix(in srgb, var(--control-button-danger-text) 20%, transparent);
+	color: var(--control-button-danger-text);
+}
+
+.controlButton.disabled {
+	cursor: not-allowed;
+	opacity: 0.5;
+}
+
+.controlButton.disabled:hover {
+	background-color: color-mix(in srgb, var(--control-button-danger-text) 15%, transparent);
+	color: var(--control-button-danger-text);
+}
+
+.controlButton.disabled:active {
+	transform: none;
+}
+
+.controlIcon {
+	height: 20px;
+	width: 20px;
+}

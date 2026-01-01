@@ -1,0 +1,306 @@
+name: test cassandra-backup
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 */2 * * *'
+
+concurrency:
+  group: test-cassandra-backup
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test-backup:
+    name: Test latest Cassandra backup
+    runs-on: blacksmith-2vcpu-ubuntu-2404
+    timeout-minutes: 45
+
+    env:
+      CASSANDRA_IMAGE: cassandra:5.0.6
+      CASS_CONTAINER: cass-${{ github.run_id }}-${{ github.run_attempt }}
+      UTIL_CONTAINER: cass-util-${{ github.run_id }}-${{ github.run_attempt }}
+      CASS_VOLUME: cassandra-data-${{ github.run_id }}-${{ github.run_attempt }}
+      BACKUP_VOLUME: cassandra-backup-${{ github.run_id }}-${{ github.run_attempt }}
+      MAX_HEAP_SIZE: 2G
+      HEAP_NEWSIZE: 512M
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set temp paths
+        run: |
+          set -euo pipefail
+          : "${RUNNER_TEMP:?RUNNER_TEMP is not set}"
+          echo "WORKDIR=$RUNNER_TEMP/cassandra-restore-test" >> "$GITHUB_ENV"
+
+      - name: Pre-clean
+        run: |
+          set -euo pipefail
+          docker rm -f "${CASS_CONTAINER}" "${UTIL_CONTAINER}" 2>/dev/null || true
+          docker volume rm "${CASS_VOLUME}" 2>/dev/null || true
+          docker volume rm "${BACKUP_VOLUME}" 2>/dev/null || true
+          rm -rf "${WORKDIR}" 2>/dev/null || true
+
+      - name: Install tools
+        run: |
+          set -euo pipefail
+          sudo apt-get update -y
+          sudo apt-get install -y --no-install-recommends rclone age ca-certificates
+
+      - name: Find latest backup, validate freshness, download, decrypt, extract into Docker volume
+        env:
+          B2_KEY_ID: ${{ secrets.B2_KEY_ID }}
+          B2_APPLICATION_KEY: ${{ secrets.B2_APPLICATION_KEY }}
+          AGE_PRIVATE_KEY: ${{ secrets.CASSANDRA_AGE_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+
+          rm -rf "$WORKDIR"
+          mkdir -p "$WORKDIR"
+
+          export RCLONE_CONFIG_B2S3_TYPE=s3
+          export RCLONE_CONFIG_B2S3_PROVIDER=Other
+          export RCLONE_CONFIG_B2S3_ACCESS_KEY_ID="${B2_KEY_ID}"
+          export RCLONE_CONFIG_B2S3_SECRET_ACCESS_KEY="${B2_APPLICATION_KEY}"
+          export RCLONE_CONFIG_B2S3_ENDPOINT="https://s3.eu-central-003.backblazeb2.com"
+          export RCLONE_CONFIG_B2S3_REGION="eu-central-003"
+          export RCLONE_CONFIG_B2S3_FORCE_PATH_STYLE=true
+
+          LATEST_BACKUP="$(
+            rclone lsf "B2S3:fluxer" --recursive --files-only --fast-list \
+              | grep -E '(^|/)cassandra-backup-[0-9]{8}-[0-9]{6}\.tar\.age$' \
+              | sort -r \
+              | head -n 1
+          )"
+
+          if [ -z "${LATEST_BACKUP}" ]; then
+            echo "Error: No backup found in bucket"
+            exit 1
+          fi
+
+          echo "LATEST_BACKUP=${LATEST_BACKUP}" >> "$GITHUB_ENV"
+
+          base="$(basename "${LATEST_BACKUP}")"
+          ts="${base#cassandra-backup-}"
+          ts="${ts%.tar.age}"
+
+          if ! [[ "$ts" =~ ^[0-9]{8}-[0-9]{6}$ ]]; then
+            echo "Error: Could not extract timestamp from backup filename: ${base}"
+            exit 1
+          fi
+
+          BACKUP_EPOCH="$(date -u -d "${ts:0:8} ${ts:9:2}:${ts:11:2}:${ts:13:2}" +%s)"
+          CURRENT_EPOCH="$(date -u +%s)"
+          AGE_HOURS=$(( (CURRENT_EPOCH - BACKUP_EPOCH) / 3600 ))
+
+          echo "Backup age: ${AGE_HOURS} hours"
+          if [ "${AGE_HOURS}" -ge 3 ]; then
+            echo "Error: Latest backup is ${AGE_HOURS} hours old (threshold: 3 hours)"
+            exit 1
+          fi
+
+          rclone copyto "B2S3:fluxer/${LATEST_BACKUP}" "${WORKDIR}/backup.tar.age" --fast-list
+
+          umask 077
+          printf '%s' "${AGE_PRIVATE_KEY}" > "${WORKDIR}/age.key"
+
+          docker volume create "${BACKUP_VOLUME}"
+
+          age -d -i "${WORKDIR}/age.key" "${WORKDIR}/backup.tar.age" \
+            | docker run --rm -i \
+                -v "${BACKUP_VOLUME}:/backup" \
+                --entrypoint bash \
+                "${CASSANDRA_IMAGE}" -lc '
+                  set -euo pipefail
+                  rm -rf /backup/*
+                  mkdir -p /backup/_tmp
+                  tar -C /backup/_tmp -xf -
+
+                  top="$(find /backup/_tmp -maxdepth 1 -mindepth 1 -type d -name "cassandra-backup-*" | head -n 1 || true)"
+
+                  if [ -n "$top" ] && [ -f "$top/schema.cql" ]; then
+                    cp -a "$top"/. /backup/
+                  elif [ -f /backup/_tmp/schema.cql ]; then
+                    cp -a /backup/_tmp/. /backup/
+                  else
+                    echo "Error: schema.cql not found after extraction"
+                    find /backup/_tmp -maxdepth 3 -type f -print | sed -n "1,80p" || true
+                    exit 1
+                  fi
+
+                  rm -rf /backup/_tmp
+                '
+
+          docker run --rm \
+            -v "${BACKUP_VOLUME}:/backup:ro" \
+            --entrypoint bash \
+            "${CASSANDRA_IMAGE}" -lc '
+              set -euo pipefail
+              test -f /backup/schema.cql
+              echo "Extracted backup layout (top 3 levels):"
+              find /backup -maxdepth 3 -type d -print | sed -n "1,200p" || true
+              echo "Sample SSTables (*Data.db):"
+              find /backup -type f -name "*Data.db" | sed -n "1,30p" || true
+            '
+
+      - name: Create data volume
+        run: |
+          set -euo pipefail
+          docker volume create "${CASS_VOLUME}"
+
+      - name: Restore keyspaces into volume and promote snapshot SSTables
+        run: |
+          set -euo pipefail
+
+          docker run --rm \
+            --name "${UTIL_CONTAINER}" \
+            -v "${CASS_VOLUME}:/var/lib/cassandra" \
+            -v "${BACKUP_VOLUME}:/backup:ro" \
+            --entrypoint bash \
+            "${CASSANDRA_IMAGE}" -lc '
+              set -euo pipefail
+              shopt -s nullglob
+
+              BASE=/var/lib/cassandra
+              DATA_DIR="$BASE/data"
+              mkdir -p "$DATA_DIR" "$BASE/commitlog" "$BASE/hints" "$BASE/saved_caches"
+
+              ROOT=/backup
+              if [ -d "$ROOT/cassandra_data" ]; then ROOT="$ROOT/cassandra_data"; fi
+              if [ -d "$ROOT/data" ]; then ROOT="$ROOT/data"; fi
+
+              echo "Using backup ROOT=$ROOT"
+              echo "Restoring into DATA_DIR=$DATA_DIR"
+
+              restored=0
+              for keyspace_dir in "$ROOT"/*/; do
+                [ -d "$keyspace_dir" ] || continue
+                ks="$(basename "$keyspace_dir")"
+
+                if [ "$ks" = "system_schema" ] || ! [[ "$ks" =~ ^system ]]; then
+                  echo "Restoring keyspace: $ks"
+                  rm -rf "$DATA_DIR/$ks"
+                  cp -a "$keyspace_dir" "$DATA_DIR/"
+                  restored=$((restored + 1))
+                fi
+              done
+
+              if [ "$restored" -le 0 ]; then
+                echo "Error: No keyspaces restored from backup root: $ROOT"
+                echo "Debug: listing $ROOT:"
+                ls -la "$ROOT" || true
+                find "$ROOT" -maxdepth 2 -type d -print | sed -n "1,100p" || true
+                exit 1
+              fi
+
+              promoted=0
+              for ks_dir in "$DATA_DIR"/*/; do
+                [ -d "$ks_dir" ] || continue
+                ks="$(basename "$ks_dir")"
+
+                if [ "$ks" != "system_schema" ] && [[ "$ks" =~ ^system ]]; then
+                  continue
+                fi
+
+                for table_dir in "$ks_dir"*/; do
+                  [ -d "$table_dir" ] || continue
+
+                  snap_root="$table_dir/snapshots"
+                  [ -d "$snap_root" ] || continue
+
+                  latest_snap="$(ls -1d "$snap_root"/*/ 2>/dev/null | sort -r | head -n 1 || true)"
+                  [ -n "$latest_snap" ] || continue
+
+                  files=( "$latest_snap"* )
+                  if [ "${#files[@]}" -gt 0 ]; then
+                    cp -av "${files[@]}" "$table_dir"
+                    promoted=$((promoted + $(ls -1 "$latest_snap"/*Data.db 2>/dev/null | wc -l || true)))
+                  fi
+                done
+              done
+
+              chown -R cassandra:cassandra "$BASE"
+
+              echo "Promoted Data.db files: $promoted"
+              if [ "$promoted" -le 0 ]; then
+                echo "Error: No *Data.db files were promoted out of snapshots"
+                echo "Debug: first snapshot dirs found:"
+                find "$DATA_DIR" -type d -path "*/snapshots/*" | sed -n "1,50p" || true
+                exit 1
+              fi
+            '
+
+      - name: Start Cassandra
+        run: |
+          set -euo pipefail
+
+          docker run -d \
+            --name "${CASS_CONTAINER}" \
+            -v "${CASS_VOLUME}:/var/lib/cassandra" \
+            -e MAX_HEAP_SIZE="${MAX_HEAP_SIZE}" \
+            -e HEAP_NEWSIZE="${HEAP_NEWSIZE}" \
+            -e JVM_OPTS="-Dcassandra.disable_mlock=true" \
+            "${CASSANDRA_IMAGE}"
+
+          for i in $(seq 1 150); do
+            status="$(docker inspect -f '{{.State.Status}}' "${CASS_CONTAINER}" 2>/dev/null || true)"
+            if [ "${status}" != "running" ]; then
+              docker inspect "${CASS_CONTAINER}" --format 'ExitCode={{.State.ExitCode}} OOMKilled={{.State.OOMKilled}} Error={{.State.Error}}' || true
+              docker logs --tail 300 "${CASS_CONTAINER}" || true
+              exit 1
+            fi
+            if docker exec "${CASS_CONTAINER}" cqlsh -e "SELECT now() FROM system.local;" >/dev/null 2>&1; then
+              break
+            fi
+            sleep 2
+          done
+
+          docker exec "${CASS_CONTAINER}" cqlsh -e "SELECT now() FROM system.local;" >/dev/null 2>&1
+
+      - name: Verify data
+        run: |
+          set -euo pipefail
+
+          USER_COUNT=""
+          for i in $(seq 1 20); do
+            USER_COUNT="$(
+              docker exec "${CASS_CONTAINER}" cqlsh -e "SELECT COUNT(*) FROM fluxer.users;" 2>/dev/null \
+                | awk "/^[[:space:]]*[0-9]+[[:space:]]*$/ {print \$1; exit}" || true
+            )"
+            if [ -n "${USER_COUNT}" ]; then
+              break
+            fi
+            sleep 2
+          done
+
+          if [ -n "${USER_COUNT}" ] && [ "${USER_COUNT}" -gt 0 ] 2>/dev/null; then
+            echo "Backup restore verification passed"
+          else
+            echo "Backup restore verification failed"
+            docker logs --tail 300 "${CASS_CONTAINER}" || true
+            exit 1
+          fi
+
+      - name: Cleanup
+        if: always()
+        run: |
+          set -euo pipefail
+          docker rm -f "${CASS_CONTAINER}" 2>/dev/null || true
+          docker volume rm "${CASS_VOLUME}" 2>/dev/null || true
+          docker volume rm "${BACKUP_VOLUME}" 2>/dev/null || true
+          rm -rf "${WORKDIR}" 2>/dev/null || true
+
+      - name: Report status
+        if: always()
+        run: |
+          set -euo pipefail
+          LATEST_BACKUP_NAME="${LATEST_BACKUP:-unknown}"
+          if [ "${{ job.status }}" = "success" ]; then
+            echo "Backup ${LATEST_BACKUP_NAME} is valid and restorable"
+          else
+            echo "Backup ${LATEST_BACKUP_NAME} test failed"
+          fi

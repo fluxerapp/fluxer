@@ -1,0 +1,108 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.groupContainer {
+	display: flex;
+	flex-direction: column;
+}
+
+.groupHeader {
+	padding-top: 1rem;
+	padding-left: 0.5rem;
+	padding-right: 0.5rem;
+	font-weight: 600;
+	font-size: 0.875rem;
+	color: var(--text-primary-muted);
+}
+
+.membersList {
+	display: flex;
+	flex-direction: column;
+}
+
+.groupSpacer {
+	height: 0.25rem;
+}
+
+.skeletonItem {
+	display: grid;
+	height: 42px;
+	min-width: 0;
+	grid-template-columns: 1fr auto;
+	align-items: center;
+	gap: 0.25rem;
+	padding-left: 0.5rem;
+	padding-right: 0.5rem;
+	margin-top: 1px;
+	margin-bottom: 1px;
+}
+
+.skeletonContent {
+	display: flex;
+	min-width: 0;
+	align-items: center;
+	gap: 0.625rem;
+}
+
+.skeletonAvatar {
+	width: 32px;
+	height: 32px;
+	border-radius: 50%;
+	flex-shrink: 0;
+	background: var(--background-modifier-accent);
+	opacity: 0.45;
+}
+
+.skeletonUserInfoContainer {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	flex-grow: 1;
+	gap: 2px;
+}
+
+.skeletonName {
+	height: 10px;
+	width: 60%;
+	border-radius: 2px;
+	background: var(--background-modifier-accent);
+	opacity: 0.45;
+}
+
+.skeletonStatus {
+	height: 8px;
+	width: 40%;
+	border-radius: 2px;
+	background: var(--background-modifier-accent);
+	opacity: 0.35;
+}
+
+.skeletonHeader {
+	width: 80px;
+	height: 14px;
+	border-radius: 4px;
+	background: var(--background-modifier-accent);
+	opacity: 0.45;
+}
+
+.skeleton {
+	background: var(--background-modifier-accent);
+	opacity: 0.45;
+	border-radius: 4px;
+}

@@ -1,0 +1,168 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.headerWrapper {
+	min-width: 0;
+}
+
+.headerContainer {
+	position: relative;
+	display: flex;
+	align-items: flex-start;
+	overflow: hidden;
+	min-height: var(--layout-header-height);
+	min-width: 0;
+	border-bottom: 1px solid var(--user-area-divider-color);
+	background-color: var(--background-secondary);
+	transition: background-color var(--transition-normal);
+}
+
+.headerRounded {
+	border-top-left-radius: 0;
+}
+
+.headerContainerNoBanner:hover,
+.headerContainerActive {
+	background-color: var(--background-modifier-hover);
+}
+
+.bannerBackground {
+	position: absolute;
+	inset: 0;
+	background-size: cover;
+	background-position: top center;
+	background-repeat: no-repeat;
+	background-color: var(--background-secondary);
+	pointer-events: none;
+}
+
+.bannerBackgroundCentered {
+	background-position: center;
+}
+
+.bannerGradient {
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 0;
+	height: 2.5rem;
+	background: linear-gradient(to bottom, rgba(0, 0, 0, 0.3), transparent);
+	pointer-events: none;
+}
+
+.headerContent {
+	position: relative;
+	z-index: 30;
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-1);
+	height: var(--layout-header-height);
+	width: 100%;
+	min-width: 0;
+	padding: 0 var(--spacing-4);
+	cursor: pointer;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	-webkit-app-region: no-drag;
+}
+
+.headerFocusRing {
+	border-radius: 0;
+}
+
+.verifiedIcon {
+	height: 1rem;
+	width: 1rem;
+	flex-shrink: 0;
+}
+
+.verifiedIconDefault {
+	composes: verifiedIcon;
+	color: var(--text-primary);
+}
+
+.verifiedIconWithBanner {
+	composes: verifiedIcon;
+	color: white;
+	filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.9));
+}
+
+.guildName {
+	flex: 1;
+	min-width: 0;
+	font-weight: 600;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	line-height: 1.25rem;
+	max-height: 1.25rem;
+}
+
+.guildNameDefault {
+	composes: guildName;
+	color: var(--text-primary);
+}
+
+.guildNameWithBanner {
+	composes: guildName;
+	color: white;
+	filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.9));
+}
+
+.caretIcon {
+	margin-left: auto;
+	height: 1rem;
+	width: 1rem;
+	flex-shrink: 0;
+	transition: transform var(--transition-fast);
+}
+
+.caretIconDefault {
+	composes: caretIcon;
+	color: var(--text-primary);
+}
+
+.caretIconWithBanner {
+	composes: caretIcon;
+	color: white;
+	filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.9));
+}
+
+.caretIconOpen {
+	transform: rotate(180deg);
+}
+
+.dotsIcon {
+	margin-left: auto;
+	height: 1.5rem;
+	width: 1.5rem;
+	flex-shrink: 0;
+}
+
+.dotsIconDefault {
+	composes: dotsIcon;
+	color: var(--text-primary);
+}
+
+.dotsIconWithBanner {
+	composes: dotsIcon;
+	color: white;
+	filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.9));
+}

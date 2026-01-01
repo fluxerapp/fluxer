@@ -1,0 +1,75 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.container {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+}
+
+.header {
+	display: flex;
+	flex-direction: column;
+}
+
+.title {
+	margin-bottom: 0.5rem;
+	font-weight: 600;
+	font-size: 1.25rem;
+	line-height: 1.75rem;
+}
+
+.subtitle {
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--text-primary-muted);
+}
+
+.notice {
+	border-radius: 0.375rem;
+	border: 1px solid var(--background-header-secondary);
+	padding: 1.5rem;
+	text-align: center;
+	color: var(--text-primary-muted);
+}
+
+.infoBox {
+	border-radius: 0.375rem;
+	border: 1px solid var(--background-header-secondary);
+	padding: 1rem;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--text-primary-muted);
+}
+
+.infoBox strong {
+	font-weight: 700;
+}
+
+.spinnerContainer {
+	display: flex;
+	justify-content: center;
+	padding: 2rem 0;
+}
+
+.webhookList {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}

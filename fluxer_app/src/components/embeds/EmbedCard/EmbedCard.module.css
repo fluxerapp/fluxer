@@ -1,0 +1,314 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.wrapper {
+	--embed-splash-height: 60px;
+	--embed-radius: 0.75rem;
+
+	width: 100%;
+	max-width: 360px;
+	overflow: clip;
+	border-radius: var(--embed-radius);
+	border: 1px solid var(--background-modifier-accent);
+	background-color: var(--background-secondary);
+	box-shadow:
+		0 6px 12px -6px rgb(0 0 0 / 0.22),
+		0 2px 6px -3px rgb(0 0 0 / 0.16);
+	isolation: isolate;
+}
+
+.wrapper,
+.wrapper *,
+.wrapper *::before,
+.wrapper *::after {
+	box-sizing: border-box;
+}
+
+.splashWrapper {
+	flex-shrink: 0;
+	min-height: var(--embed-splash-height);
+	position: relative;
+}
+
+.splash {
+	min-height: var(--embed-splash-height);
+	width: 100%;
+	background-color: var(--background-tertiary);
+	background-image: var(--embed-splash-url);
+	background-position: center;
+	background-size: cover;
+	background-repeat: no-repeat;
+}
+
+:where(.splash):before {
+	border-bottom: 1px solid var(--background-modifier-accent);
+	bottom: 0;
+	content: '';
+	left: 0;
+	position: absolute;
+	width: 100%;
+}
+
+.grid {
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr);
+	gap: 0.75rem;
+	padding: 0.75rem;
+	align-items: center;
+}
+
+@media (min-width: 640px) {
+	.grid {
+		gap: 0.9rem;
+		padding: 0.85rem;
+	}
+}
+
+.iconSlot {
+	display: grid;
+	place-items: center;
+	width: 3rem;
+}
+
+@media (min-width: 640px) {
+	.iconSlot {
+		width: 3.5rem;
+	}
+}
+
+.content {
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-start;
+	gap: 0.15rem;
+}
+
+.header {
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-start;
+	gap: 0.15rem;
+}
+
+.titleRow {
+	min-width: 0;
+}
+
+.subtitle {
+	min-width: 0;
+}
+
+.body {
+	min-width: 0;
+	margin-top: 0.2rem;
+}
+
+.divider {
+	border-top: 1px solid var(--background-modifier-accent);
+	padding: 0.75rem;
+}
+
+@media (min-width: 640px) {
+	.divider {
+		padding: 0.85rem;
+	}
+}
+
+.title {
+	margin: 0;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-weight: 600;
+	font-size: clamp(0.95rem, 2vw, 1.05rem);
+	line-height: 1.25;
+	letter-spacing: -0.01em;
+}
+
+.titleButton {
+	background: none;
+	border: none;
+	padding: 0;
+	margin: 0;
+	width: 100%;
+	text-align: left;
+	font: inherit;
+	color: inherit;
+	cursor: pointer;
+	display: inline-flex;
+	align-items: center;
+	justify-content: flex-start;
+}
+
+.titleButton:hover,
+.titleButton:focus-visible {
+	text-decoration: underline;
+}
+
+.titleButton:focus-visible {
+	outline: 2px solid var(--brand-primary);
+	outline-offset: 2px;
+}
+
+.titlePrimary {
+	color: var(--text-primary);
+}
+
+.titleDanger {
+	color: var(--status-danger);
+}
+
+.helpText {
+	color: var(--text-tertiary);
+	font-size: clamp(0.7rem, 1.6vw, 0.8rem);
+	line-height: 1.2;
+}
+
+.iconCircleDisabled {
+	display: grid;
+	place-items: center;
+	height: 2.75rem;
+	width: 2.75rem;
+	border-radius: 9999px;
+	background-color: var(--background-tertiary);
+}
+
+@media (min-width: 640px) {
+	.iconCircleDisabled {
+		height: 3rem;
+		width: 3rem;
+	}
+}
+
+.iconError {
+	height: 1.5rem;
+	width: 1.5rem;
+	color: var(--text-tertiary);
+}
+
+@media (min-width: 640px) {
+	.iconError {
+		height: 1.75rem;
+		width: 1.75rem;
+	}
+}
+
+.skeleton {
+	animation: pulse 1.8s ease-in-out infinite;
+	background-color: rgb(75 85 99);
+}
+
+:global(.theme-light) .skeleton {
+	background-color: rgb(209 213 219);
+}
+
+:global(html.reduced-motion) .skeleton {
+	animation: none;
+	opacity: 0.8;
+}
+
+.skeletonCircle {
+	height: 2.75rem;
+	width: 2.75rem;
+	border-radius: 9999px;
+}
+
+@media (min-width: 640px) {
+	.skeletonCircle {
+		height: 3rem;
+		width: 3rem;
+	}
+}
+
+.skeletonTitle {
+	height: 1.1rem;
+	width: 7.5rem;
+	border-radius: 5px;
+}
+
+@media (min-width: 640px) {
+	.skeletonTitle {
+		height: 1.25rem;
+		width: 8rem;
+	}
+}
+
+.skeletonSubtitle {
+	height: 0.7rem;
+	width: 11rem;
+	border-radius: 5px;
+}
+
+@media (min-width: 640px) {
+	.skeletonSubtitle {
+		height: 0.9rem;
+		width: 12rem;
+	}
+}
+
+.skeletonIcon {
+	height: 1rem;
+	width: 1rem;
+	border-radius: 4px;
+}
+
+.skeletonDot {
+	margin-right: 0.3125rem;
+	height: 0.55rem;
+	width: 0.55rem;
+	border-radius: 9999px;
+}
+
+.skeletonStat {
+	height: 0.75rem;
+	border-radius: 5px;
+}
+
+@media (min-width: 640px) {
+	.skeletonStat {
+		height: 0.85rem;
+	}
+}
+
+.skeletonStatShort {
+	width: 3.25rem;
+}
+
+.skeletonStatLong {
+	width: 4.5rem;
+}
+
+.skeletonButton {
+	height: 36px;
+	width: 100%;
+	border-radius: 0.375rem;
+}
+
+@keyframes pulse {
+	0%,
+	100% {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0.5;
+	}
+}

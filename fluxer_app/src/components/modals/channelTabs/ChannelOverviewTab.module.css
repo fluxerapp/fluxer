@@ -1,0 +1,165 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.container {
+	display: flex;
+	flex-direction: column;
+	gap: 1.5rem;
+}
+
+.header {
+	margin-bottom: 0.5rem;
+	font-weight: 600;
+	font-size: 1.25rem;
+	line-height: 1.75rem;
+}
+
+.description {
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--text-primary-muted);
+}
+
+.regionOption {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.regionEmoji {
+	height: 1.25rem;
+	width: 1.25rem;
+}
+
+.voiceQualityLabel {
+	margin-bottom: 0.5rem;
+	font-weight: 500;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--text-primary);
+}
+
+.sliderContainer {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}
+
+.sliderDescription {
+	font-size: 0.75rem;
+	line-height: 1rem;
+	color: var(--text-primary-muted);
+}
+
+.emojiButton {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 2rem;
+	width: 2rem;
+	border-radius: 0.25rem;
+	transition-property: color;
+	transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+	transition-duration: 150ms;
+}
+
+.emojiButtonInactive {
+	color: var(--text-tertiary);
+	cursor: pointer;
+}
+
+.emojiButtonInactive:hover {
+	color: var(--text-primary);
+}
+
+.emojiButtonActive {
+	color: var(--text-primary);
+}
+
+.urlDescription {
+	margin-top: 0.25rem;
+	font-size: 0.75rem;
+	line-height: 1rem;
+	color: var(--text-primary-muted);
+}
+
+.sectionWrapper {
+	display: flex;
+	flex-direction: column;
+	gap: 1.5rem;
+}
+
+.sectionHeader {
+	margin-bottom: 0.5rem;
+	font-weight: 600;
+	font-size: 1.25rem;
+	line-height: 1.75rem;
+}
+
+.sectionDescription {
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--text-primary-muted);
+}
+
+.fieldDescription {
+	margin-top: 0.25rem;
+	font-size: 0.75rem;
+	line-height: 1rem;
+	color: var(--text-primary-muted);
+}
+
+.fieldLabel {
+	margin-bottom: 0.5rem;
+	font-weight: 500;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--text-primary);
+}
+
+.fieldContent {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}
+
+.fieldNote {
+	font-size: 0.75rem;
+	line-height: 1rem;
+	color: var(--text-primary-muted);
+}
+
+.selectField {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+}
+
+.selectLabel {
+	font-weight: 500;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--text-primary);
+}
+
+.selectDescription {
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--text-primary-muted);
+}

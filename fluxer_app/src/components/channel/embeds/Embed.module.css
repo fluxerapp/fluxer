@@ -1,0 +1,283 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.embed {
+	position: relative;
+	display: grid;
+	max-width: max-content;
+	box-sizing: border-box;
+	border-radius: 6px;
+}
+
+.embedFull {
+	background: var(--background-primary);
+	border: 1px solid var(--background-modifier-accent);
+}
+
+.gridContainer {
+	width: 100%;
+}
+
+.grid {
+	overflow: hidden;
+	padding: 12px 12px 14px 12px;
+	display: grid;
+	grid-template-columns: auto;
+	grid-template-rows: auto;
+}
+
+.grid.hasThumbnail {
+	grid-template-columns: auto min-content;
+}
+
+.embedContent {
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.embedContent > *:first-child {
+	margin-top: 4px;
+}
+
+.embedLink {
+	text-decoration: var(--link-decoration);
+	cursor: pointer;
+	color: var(--text-link);
+}
+
+.embedLink code {
+	color: var(--text-link);
+}
+
+.embedLink:hover {
+	text-decoration: underline;
+}
+
+.embedProvider {
+	font-size: 0.75rem;
+	line-height: 1rem;
+	grid-column: 1 / 1;
+	font-weight: 500;
+	color: var(--text-tertiary);
+}
+
+.embedProvider .embedLink {
+	color: inherit;
+}
+
+.embedProvider .embedLink:hover {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.embedAuthor {
+	display: flex;
+	align-items: center;
+	grid-column: 1 / 1;
+	min-width: 0;
+}
+
+.embedAuthorName {
+	font-size: 0.875rem;
+	font-weight: 600;
+	color: var(--text-primary);
+}
+
+.embedAuthorNameLink {
+	color: var(--text-primary);
+	cursor: pointer;
+}
+
+.embedAuthorNameLink:hover {
+	color: var(--text-primary);
+}
+
+.embedAuthorIcon {
+	flex-shrink: 0;
+	margin-right: 8px;
+	width: 24px;
+	height: 24px;
+	object-fit: cover;
+	border-radius: 50%;
+}
+
+.embedTitle {
+	font-size: 1rem;
+	font-weight: 600;
+	display: inline-block;
+	grid-column: 1 / 1;
+	color: var(--text-primary);
+}
+
+.embedDescription {
+	font-size: 0.875rem;
+	line-height: 1.125rem;
+	white-space: pre-line;
+	grid-column: 1 / 1;
+	color: var(--text-primary);
+}
+
+.embedFields {
+	display: grid;
+	grid-column: 1 / 1;
+	grid-template-columns: repeat(12, minmax(0, 1fr));
+	gap: 8px;
+	min-width: 0;
+	margin-top: 8px;
+}
+
+.embedField {
+	font-size: 0.875rem;
+	line-height: 1.125rem;
+	min-width: 0;
+}
+
+.embedFieldName {
+	font-size: 0.875rem;
+	line-height: 1.125rem;
+	font-weight: 600;
+	margin-bottom: 2px;
+	min-width: 0;
+	color: var(--text-primary);
+}
+
+.embedFieldValue {
+	font-size: 0.875rem;
+	line-height: 1.125rem;
+	white-space: pre-line;
+	min-width: 0;
+}
+
+.embedAuthorName,
+.embedAuthorNameLink,
+.embedDescription,
+.embedFieldName,
+.embedFieldValue,
+.embedFooterText,
+.embedLink,
+.embedProvider,
+.embedTitle {
+	text-align: start;
+	unicode-bidi: plaintext;
+}
+
+.embedMedia {
+	grid-column: 1 / 1;
+	border-radius: 4px;
+	contain: paint;
+	margin-top: 4px;
+	overflow: hidden;
+}
+
+.hasThumbnail .embedMedia {
+	grid-column: 1 / 3;
+}
+
+.embedThumbnail {
+	grid-row: 1 / 8;
+	grid-column: 2 / 2;
+	margin-left: 16px;
+	margin-top: 8px;
+	flex-shrink: 0;
+	justify-self: end;
+	max-width: 80px;
+	height: 80px;
+	border-radius: 4px;
+	overflow: hidden;
+}
+
+.embedFooter {
+	display: flex;
+	align-items: center;
+	grid-column: 1 / 1;
+}
+
+.hasThumbnail .embedFooter {
+	grid-column: 1 / 3;
+}
+
+.embedFooterText {
+	font-size: 0.75rem;
+	line-height: 1rem;
+	font-weight: 600;
+	color: var(--text-chat);
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.embedFooterIcon {
+	flex-shrink: 0;
+	margin-right: 8px;
+	width: 20px;
+	height: 20px;
+	object-fit: contain;
+	border-radius: 50%;
+}
+
+.embedFooterSeparator {
+	width: 4px;
+	height: 4px;
+	border-radius: 50%;
+	background-color: var(--text-chat);
+	margin: 0 4px;
+	display: inline-block;
+	vertical-align: middle;
+}
+
+.embedGifvContainer {
+	width: 100%;
+	max-width: var(--embed-width);
+}
+
+.container {
+	position: relative;
+	display: inline-block;
+	max-width: 100%;
+}
+
+.suppressButton {
+	position: absolute;
+	right: -2rem;
+	top: 0.25rem;
+	z-index: 10;
+	display: flex;
+	height: 1.5rem;
+	width: 1.5rem;
+	align-items: center;
+	justify-content: center;
+	color: var(--text-tertiary);
+	transition: color 150ms ease;
+	border: none;
+	background: transparent;
+	cursor: pointer;
+	padding: 0;
+}
+
+.suppressButton:hover {
+	color: var(--status-danger);
+}
+
+@media (max-width: 640px) {
+	.embedGifvContainer {
+		max-width: min(100%, var(--embed-width));
+	}
+}

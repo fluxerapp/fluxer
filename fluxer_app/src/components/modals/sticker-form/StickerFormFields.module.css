@@ -1,0 +1,73 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.tagsContainer {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.tagsHeader {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.tagsLabel {
+	font-size: 0.875rem;
+	font-weight: 500;
+	color: var(--text-primary);
+}
+
+.tagInputRow {
+	display: flex;
+	gap: 0.5rem;
+}
+
+.tagsList {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+}
+
+.tag {
+	display: flex;
+	align-items: center;
+	gap: 0.375rem;
+	padding: 0.375rem 0.75rem;
+	border-radius: 9999px;
+	background-color: var(--brand-primary);
+	color: white;
+	font-size: 0.875rem;
+}
+
+.tagRemoveButton {
+	display: flex;
+	width: 1rem;
+	height: 1rem;
+	align-items: center;
+	justify-content: center;
+	border-radius: 9999px;
+	transition: opacity 0.2s ease;
+	cursor: pointer;
+}
+
+.tagRemoveButton:hover {
+	opacity: 0.7;
+}

@@ -1,0 +1,56 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.container {
+	display: flex;
+	flex-wrap: nowrap;
+	min-width: max-content;
+	border-bottom: 1px solid var(--background-modifier-accent);
+	width: 100%;
+	user-select: none;
+	-webkit-user-select: none;
+}
+
+.tab {
+	padding: 0.5rem 1rem 0.5rem;
+	margin-bottom: -1px;
+	font-size: 0.875rem;
+	font-weight: 500;
+	border-bottom: 2px solid transparent;
+	color: var(--text-primary-muted);
+	background: none;
+	border-top: none;
+	border-left: none;
+	border-right: none;
+	cursor: pointer;
+	border-radius: 4px 4px 0 0;
+	outline: none;
+	user-select: none;
+	-webkit-user-select: none;
+}
+
+.tab.selected {
+	color: var(--brand-primary-light);
+	border-bottom-color: var(--brand-primary-light);
+}
+
+:global(.theme-light) .tab.selected {
+	color: var(--brand-primary);
+	border-bottom-color: var(--brand-primary);
+}

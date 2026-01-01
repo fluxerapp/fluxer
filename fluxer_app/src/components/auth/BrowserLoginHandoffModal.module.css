@@ -1,0 +1,102 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.content {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+}
+
+.description {
+	font-size: 0.875rem;
+	color: var(--text-secondary);
+	margin: 0;
+	line-height: 1.5;
+}
+
+.codeInputSection {
+	padding: 16px 0;
+}
+
+.inputHelper {
+	font-size: 0.8125rem;
+	color: var(--text-muted);
+	margin: 8px 0 0;
+	line-height: 1.4;
+}
+
+.instanceLink {
+	display: block;
+	width: 100%;
+	background: none;
+	border: none;
+	color: var(--text-muted);
+	font-size: 0.8125rem;
+	cursor: pointer;
+	padding: 0;
+	text-align: center;
+}
+
+.instanceLink:hover {
+	color: var(--text-muted);
+	text-decoration: underline;
+}
+
+.prefillHint {
+	font-size: 0.875rem;
+	color: var(--text-secondary);
+	text-align: center;
+	margin: 0;
+}
+
+.instanceBadge {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	padding: 10px 14px;
+	border-radius: 6px;
+}
+
+.instanceBadgeIcon {
+	color: var(--status-online);
+	flex-shrink: 0;
+}
+
+.instanceBadgeText {
+	font-size: 0.8125rem;
+	color: var(--status-online);
+	font-weight: 500;
+}
+
+.instanceBadgeClear {
+	background: none;
+	border: none;
+	color: var(--text-muted);
+	font-size: 0.75rem;
+	cursor: pointer;
+	padding: 2px 6px;
+	margin-left: 4px;
+	border-radius: 4px;
+	transition: color 0.15s ease;
+}
+
+.instanceBadgeClear:hover {
+	color: var(--text-primary);
+}

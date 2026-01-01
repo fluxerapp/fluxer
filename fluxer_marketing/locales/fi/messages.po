@@ -1,0 +1,2062 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026 Fluxer Contributors
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+
+#: src/fluxer_marketing/components/pwa_install_dialog.gleam:190
+msgid " in Chrome"
+msgstr " Chrome-selaimessa"
+
+#: src/fluxer_marketing/components/pwa_install_dialog.gleam:288
+msgid " in Chrome or another browser with PWA support"
+msgstr " Chrome-selaimessa tai muussa selaimessa, jossa on PWA-tuki"
+
+#: src/fluxer_marketing/components/pwa_install_dialog.gleam:236
+msgid " in Safari"
+msgstr " Safarissa"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:1032
+msgid "/forever"
+msgstr "/ikuisesti"
+
+#: src/fluxer_marketing/components/plutonium_section.gleam:66
+#: src/fluxer_marketing/pages/plutonium_page.gleam:103
+#: src/fluxer_marketing/pages/plutonium_page.gleam:225
+msgid "/mo"
+msgstr "/kk"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:233
+msgid "/year"
+msgstr "/vuosi"
+
+#: src/fluxer_marketing/components/plutonium_section.gleam:71
+#: src/fluxer_marketing/pages/plutonium_page.gleam:109
+msgid "/yr"
+msgstr "/v"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:654
+msgid "500MB uploads, 4000 character messages, 300 bookmarks, 50 emoji packs, and much more."
+msgstr "500 MB:n lähetykset, 4 000 merkin viestit, 300 kirjanmerkkiä, 50 emojipakettia ja paljon muuta."
+
+#: src/fluxer_marketing/components/communities_section.gleam:86
+msgid "A chat platform that answers to you, not investors. It's ad-free, open source, community-funded, and never sells your data or nags you with upgrade pop-ups."
+msgstr "Chat-alusta, joka vastaa käyttäjilleen – ei sijoittajille. Se on mainokseton, avoimen lähdekoodin ja yhteisörahoitteinen, eikä se koskaan myy tietojasi tai hoputa sinua päivitysponnahdusikkunoilla."
+
+#: src/fluxer_marketing/pages/careers_page.gleam:219
+msgid "A non-paid role for recurring contributors who help shape Fluxer alongside the core team."
+msgstr "Palkaton rooli säännöllisille kontribuuttoreille, jotka auttavat muovaamaan Fluxeria ydintiimin rinnalla."
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:1074
+msgid "Access to Fluxer Operators community"
+msgstr "Pääsy Fluxer Operators -yhteisöön"
+
+#: src/fluxer_marketing/pages/partners_page.gleam:225
+msgid "Access to VIP voice servers reserved exclusively for partnered communities."
+msgstr "Pääsy VIP-äänipalvelimille, jotka on varattu yksinomaan kumppaniyhteisöille."
+
+#: src/fluxer_marketing/components/coming_features.gleam:48
+msgid "Activity sharing"
+msgstr "Toiminnan jakaminen"
+
+#: src/fluxer_marketing/pages/download_page.gleam:228
+msgid "Add Fluxer to your home screen to hide the browser UI."
+msgstr "Lisää Fluxer aloitusnäytölle, jotta selaimen käyttöliittymä piiloutuu."
+
+#: src/fluxer_marketing/components/current_features.gleam:133
+msgid "Add custom emojis, save media for later, and style the app with custom CSS."
+msgstr "Lisää omia emojeja, tallenna mediaa myöhempää varten ja muokkaa sovelluksen ulkoasua omalla CSS:llä."
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:1124
+msgid "After the offer ends, Operator Pass stays available on its own."
+msgstr "Tarjouksen päätyttyä Operator Pass on edelleen saatavilla erikseen."
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:843
+msgid "All current and future Plutonium benefits, forever"
+msgstr "Kaikki nykyiset ja tulevat Plutonium-edut ikuisesti"
+
+#: src/fluxer_marketing/components/current_features.gleam:55
+msgid "All the basics you expect, plus a few things you don't."
+msgstr "Kaikki odottamasi perusasiat – ja muutama, jota et osannut odottaa."
+
+#: src/fluxer_marketing/components/locale_selector.gleam:102
+msgid "All translations are currently LLM-generated with minimal human revision. We'd love to get real people to help us out localizing Fluxer into your language! To do so, shoot an email to i18n@fluxer.app and we'll be happy to accept your contributions."
+msgstr "Kaikki käännökset ovat tällä hetkellä tekoälyn tuottamia ja vain kevyesti ihmisen tarkistamia. Haluaisimme oikeita ihmisiä auttamaan Fluxerin lokalisoinnissa omalle kielellesi! Lähetä sähköpostia osoitteeseen i18n@fluxer.app, niin otamme mielellämme kontribuutiosi vastaan."
+
+#: src/fluxer_marketing/components/platform_download_button.gleam:524
+#: src/fluxer_marketing/components/pwa_install_dialog.gleam:97
+msgid "Android"
+msgstr "Android"
+
+#: src/fluxer_marketing/components/platform_download_button.gleam:236
+msgid "Android 8+"
+msgstr "Android 8+"
+
+#: src/fluxer_marketing/pages/partners_page.gleam:178
+msgid "Animated Avatar & Banner"
+msgstr "Animoitu profiilikuva ja banneri"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:399
+#: src/fluxer_marketing/pages/plutonium_page.gleam:591
+msgid "Animated avatars & banners"
+msgstr "Animoidut profiilikuvat ja bannerit"
+
+#: src/fluxer_marketing/components/platform_download_button.gleam:144
+#: src/fluxer_marketing/components/platform_download_button.gleam:160
+msgid "Apple Silicon"
+msgstr "Apple Silicon"
+
+#: src/fluxer_marketing/pages/partners_page.gleam:448
+msgid "Apply at partners@fluxer.app"
+msgstr "Hae osoitteessa partners@fluxer.app"
+
+#: src/fluxer_marketing/components/get_involved_section.gleam:170
+msgid "Approved reports grant access to Fluxer Testers, where you can earn points for Plutonium codes and the Bug Hunter badge."
+msgstr "Hyväksytyt raportit antavat pääsyn Fluxer Testers -yhteisöön, jossa voit kerätä pisteitä Plutonium-koodeja ja Bug Hunter -merkkiä varten."
+
+#: src/fluxer_marketing/components/locale_selector.gleam:118
+msgid "Arabic"
+msgstr "arabia"
+
+#: src/fluxer_marketing/pages/help_category_page.gleam:143
+msgid "Articles in "
+msgstr "Artikkelit osiossa "
+
+#: src/fluxer_marketing/pages/help_article_page.gleam:291
+msgid "Articles in this section"
+msgstr "Tämän osion artikkelit"
+
+#: src/fluxer_marketing/components/current_features.gleam:106
+msgid "Audit logs for transparency"
+msgstr "Audit-lokit läpinäkyvyyden tueksi"
+
+#: src/fluxer_marketing/pages/donate_page.gleam:302
+msgid "Available for Swedish bank accounts"
+msgstr "Saatavilla ruotsalaisille pankkitileille"
+
+#: src/fluxer_marketing/pages/download_page.gleam:67
+msgid "Available on your desktop — and on the web"
+msgstr "Saatavilla tietokoneelle — ja verkossa"
+
+#: src/fluxer_marketing/pages/help_article_page.gleam:182
+msgid "Back to "
+msgstr "Takaisin "
+
+#: src/fluxer_marketing/pages/help_article_page.gleam:279
+#: src/fluxer_marketing/pages/help_search_page.gleam:115
+msgid "Back to Help Center"
+msgstr "Takaisin ohjekeskukseen"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:674
+msgid "Be the first to try new features before they're released to everyone else."
+msgstr "Kokeile uusia ominaisuuksia ensimmäisten joukossa ennen kuin ne julkaistaan kaikille."
+
+#: src/fluxer_marketing/components/partner_section.gleam:64
+#: src/fluxer_marketing/pages/careers_page.gleam:173
+#: src/fluxer_marketing/pages/partners_page.gleam:64
+msgid "Become a Fluxer Partner"
+msgstr "Ryhdy Fluxer-kumppaniksi"
+
+#: src/fluxer_marketing/components/partner_section.gleam:151
+msgid "Become a Partner"
+msgstr "Ryhdy kumppaniksi"
+
+#: src/fluxer_marketing/pages/download_page.gleam:322
+#: src/fluxer_marketing/pages/plutonium_page.gleam:876
+msgid "Become a Visionary"
+msgstr "Ryhdy Visionaryksi"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:318
+#: src/fluxer_marketing/pages/plutonium_page.gleam:325
+#: src/fluxer_marketing/pages/plutonium_page.gleam:374
+#: src/fluxer_marketing/pages/plutonium_page.gleam:626
+#: src/fluxer_marketing/pages/plutonium_page.gleam:636
+#: src/fluxer_marketing/pages/plutonium_page.gleam:646
+msgid "Beta"
+msgstr "Beta"
+
+#: src/fluxer_marketing/components/coming_features.gleam:54
+msgid "Better noise cancellation"
+msgstr "Parempi melunvaimennus"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:350
+msgid "Bio character limit"
+msgstr "Bion merkkiraja"
+
+#: src/fluxer_marketing/pages/press_page.gleam:235
+msgid "Black"
+msgstr "Musta"
+
+#: src/fluxer_marketing/pages/press_page.gleam:117
+msgid "Black Logo"
+msgstr "Musta logo"
+
+#: src/fluxer_marketing/pages/press_page.gleam:171
+msgid "Black Symbol"
+msgstr "Musta symboli"
+
+#: src/fluxer_marketing/pages/press_page.gleam:217
+msgid "Blue (Da Ba Dee)"
+msgstr "Sininen (Da Ba Dee)"
+
+#: src/fluxer_marketing/components/footer.gleam:157
+#: src/fluxer_marketing/components/navigation.gleam:449
+msgid "Bluesky"
+msgstr "Bluesky"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:343
+msgid "Bookmarked messages"
+msgstr "Kirjanmerkityt viestit"
+
+#: src/fluxer_marketing/pages/donate_page.gleam:388
+msgid "Both donation types support the same cause equally. The only difference is that Business donations allow you to specify a tax ID (if applicable) and receive a PDF invoice when finalized, which can be useful for company accounting purposes."
+msgstr "Molemmat lahjoitustyypit tukevat samaa asiaa yhtä paljon. Ainoa ero on, että yrityslahjoituksissa voit antaa Y-tunnuksen (tarvittaessa) ja saat vahvistuksen yhteydessä PDF-laskun, mikä voi helpottaa yrityksen kirjanpitoa."
+
+#: src/fluxer_marketing/pages/press_page.gleam:200
+msgid "Brand Colors"
+msgstr "Brändivärit"
+
+#: src/fluxer_marketing/pages/partners_page.gleam:421
+msgid "Brief description of your audience and what you do"
+msgstr "Lyhyt kuvaus yleisöstäsi ja siitä, mitä teet"
+
+#: src/fluxer_marketing/pages/help_search_page.gleam:150
+msgid "Browse Categories"
+msgstr "Selaa kategorioita"
+
+#: src/fluxer_marketing/pages/help_center_page.gleam:168
+msgid "Browse articles"
+msgstr "Selaa artikkeleita"
+
+#: src/fluxer_marketing/pages/help_center_page.gleam:95
+msgid "Browse by category"
+msgstr "Selaa kategorian mukaan"
+
+#: src/fluxer_marketing/pages/help_category_page.gleam:65
+msgid "Browse help articles about "
+msgstr "Selaa ohjeartikkeleita aiheesta "
+
+#: src/fluxer_marketing/components/communities_section.gleam:44
+msgid "Built for communities of all kinds."
+msgstr "Rakennettu kaikenlaisille yhteisöille."
+
+#: src/fluxer_marketing/components/hero.gleam:64
+msgid "Built for friends, groups, and communities. Text, voice, and video. Open source and community-funded."
+msgstr "Tehty ystäville, ryhmille ja yhteisöille. Tekstiä, ääntä ja videota. Avoimen lähdekoodin ja yhteisörahoitteinen."
+
+#: src/fluxer_marketing/components/locale_selector.gleam:119
+msgid "Bulgarian"
+msgstr "bulgaria"
+
+#: src/fluxer_marketing/pages/donate_page.gleam:177
+msgid "Business"
+msgstr "Yritys"
+
+#: src/fluxer_marketing/components/coming_features.gleam:56
+msgid "Call pop-out"
+msgstr "Puhelu omaan ikkunaan"
+
+#: src/fluxer_marketing/components/footer.gleam:220
+#: src/fluxer_marketing/components/navigation.gleam:358
+msgid "Careers"
+msgstr "Työpaikat"
+
+#: src/fluxer_marketing/pages/careers_page.gleam:46
+msgid "Careers at Fluxer"
+msgstr "Työpaikat Fluxerilla"
+
+#: src/fluxer_marketing/components/locale_selector.gleam:38
+#: src/fluxer_marketing/components/navigation.gleam:252
+#: src/fluxer_marketing/components/navigation.gleam:257
+msgid "Change language"
+msgstr "Vaihda kieli"
+
+#: src/fluxer_marketing/components/hero.gleam:59
+msgid "Chat that puts you first"
+msgstr "Chat, jossa sinä olet etusijalla"
+
+#: src/fluxer_marketing/components/locale_selector.gleam:150
+msgid "Chinese (Simplified)"
+msgstr "kiina (yksinkertaistettu)"
+
+#: src/fluxer_marketing/components/locale_selector.gleam:151
+msgid "Chinese (Traditional)"
+msgstr "kiina (perinteinen)"
+
+#: src/fluxer_marketing/components/platform_download_button.gleam:207
+msgid "Choose Linux distribution"
+msgstr "Valitse Linux-jakelu"
+
+#: src/fluxer_marketing/pages/help_category_page.gleam:148
+msgid "Choose a guide below or search again if you don't see what you need."
+msgstr "Valitse alta ohje tai hae uudelleen, jos et näe tarvitsemaasi."
+
+#: src/fluxer_marketing/components/platform_download_button.gleam:409
+msgid "Choose distribution"
+msgstr "Valitse jakelu"
+
+#: src/fluxer_marketing/components/locale_selector.gleam:63
+msgid "Choose your language"
+msgstr "Valitse kieli"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:564
+msgid "Choose your own 4-digit tag like #0001, #1337, or #9999 to make your username truly unique."
+msgstr "Valitse oma 4-numeroinen tunniste, kuten #0001, #1337 tai #9999, jotta käyttäjänimesi on varmasti uniikki."
+
+#: src/fluxer_marketing/pages/help_category_page.gleam:136
+msgid "Clear search"
+msgstr "Tyhjennä haku"
+
+#: src/fluxer_marketing/pages/download_page.gleam:337
+msgid "Code, issues, docs, and reviews"
+msgstr "Koodi, issue-tiketit, dokumentaatio ja katselmoinnit"
+
+#: src/fluxer_marketing/pages/press_page.gleam:124
+msgid "Color Logo"
+msgstr "Värillinen logo"
+
+#: src/fluxer_marketing/pages/press_page.gleam:178
+msgid "Color Symbol"
+msgstr "Värillinen symboli"
+
+#: src/fluxer_marketing/pages/partners_page.gleam:297
+msgid "Coming Soon"
+msgstr "Tulossa pian"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:296
+#: src/fluxer_marketing/pages/plutonium_page.gleam:297
+#: src/fluxer_marketing/pages/plutonium_page.gleam:310
+#: src/fluxer_marketing/pages/plutonium_page.gleam:311
+#: src/fluxer_marketing/pages/plutonium_page.gleam:366
+#: src/fluxer_marketing/pages/plutonium_page.gleam:367
+#: src/fluxer_marketing/pages/plutonium_page.gleam:586
+msgid "Coming soon"
+msgstr "Tulossa pian"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:329
+msgid "Communities"
+msgstr "Yhteisöt"
+
+#: src/fluxer_marketing/pages/careers_page.gleam:140
+msgid "Community"
+msgstr "Yhteisö"
+
+#: src/fluxer_marketing/components/footer.gleam:260
+#: src/fluxer_marketing/components/navigation.gleam:415
+#: src/fluxer_marketing/pages/guidelines_page.gleam:41
+msgid "Community Guidelines"
+msgstr "Yhteisöohjeet"
+
+#: src/fluxer_marketing/pages/partners_page.gleam:134
+msgid "Community Verification"
+msgstr "Yhteisön vahvistus"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:1040
+msgid "Community support"
+msgstr "Yhteisötuki"
+
+#: src/fluxer_marketing/components/coming_features.gleam:38
+msgid "Community templates"
+msgstr "Yhteisöpohjat"
+
+#: src/fluxer_marketing/components/current_features.gleam:139
+msgid "Compact mode and display options"
+msgstr "Kompakti tila ja näyttöasetukset"
+
+#: src/fluxer_marketing/components/navigation.gleam:348
+msgid "Company"
+msgstr "Yritys"
+
+#: src/fluxer_marketing/components/footer.gleam:271
+#: src/fluxer_marketing/components/navigation.gleam:376
+#: src/fluxer_marketing/pages/company_page.gleam:41
+#: src/fluxer_marketing/pages/company_page.gleam:44
+msgid "Company Information"
+msgstr "Yritystiedot"
+
+#: src/fluxer_marketing/components/footer.gleam:278
+#: src/fluxer_marketing/components/navigation.gleam:426
+msgid "Connect"
+msgstr "Yhteys"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:1038
+msgid "Connect from any client"
+msgstr "Yhdistä millä tahansa clientilla"
+
+#: src/fluxer_marketing/pages/help_article_page.gleam:233
+#: src/fluxer_marketing/pages/help_article_page.gleam:375
+msgid "Contact Support"
+msgstr "Ota yhteyttä tukeen"
+
+#: src/fluxer_marketing/components/partner_section.gleam:70
+msgid "Content creators and community owners: unlock exclusive perks including free Plutonium, a Partner badge, custom vanity URLs, and more."
+msgstr "Sisällöntuottajat ja yhteisöjen omistajat: avaa käyttöösi eksklusiivisia etuja, kuten ilmainen Plutonium, Partner-merkki, omat vanity-URL-osoitteet ja paljon muuta."
+
+#: src/fluxer_marketing/components/get_involved_section.gleam:178
+msgid "Contribute code"
+msgstr "Kontribuoi koodia"
+
+#: src/fluxer_marketing/pages/download_page.gleam:336
+msgid "Contribute on GitHub"
+msgstr "Osallistu GitHubissa"
+
+#: src/fluxer_marketing/components/final_cta.gleam:69
+msgid "Create an account and help us build something good."
+msgstr "Luo tili ja auta meitä rakentamaan jotain hyvää."
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:1191
+msgid "Create your Fluxer account to get that sweet Plutonium while it's hot."
+msgstr "Luo Fluxer-tili ja nappaa se makea Plutonium niin kauan kuin sitä on tarjolla."
+
+#: src/fluxer_marketing/pages/partners_page.gleam:211
+msgid "Creator Monetization"
+msgstr "Tekijöiden ansainta"
+
+#: src/fluxer_marketing/components/coming_features.gleam:50
+msgid "Creator monetization"
+msgstr "Tekijöiden ansainta"
+
+#: src/fluxer_marketing/components/communities_section.gleam:62
+msgid "Creators"
+msgstr "Sisällöntuottajat"
+
+#: src/fluxer_marketing/components/locale_selector.gleam:132
+msgid "Croatian"
+msgstr "kroatia"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:280
+msgid "Custom 4-digit username tag"
+msgstr "Mukautettava 4-numeroinen käyttäjänimitunniste"
+
+#: src/fluxer_marketing/components/current_features.gleam:138
+msgid "Custom CSS themes"
+msgstr "Mukautetut CSS-teemat"
+
+#: src/fluxer_marketing/pages/partners_page.gleam:145
+msgid "Custom Vanity URL"
+msgstr "Oma vanity-URL"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:315
+#: src/fluxer_marketing/pages/plutonium_page.gleam:631
+msgid "Custom entrance sounds"
+msgstr "Mukautetut liittymisäänet"
+
+#: src/fluxer_marketing/components/plutonium_section.gleam:127
+msgid "Custom identity"
+msgstr "Oma identiteetti"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:322
+#: src/fluxer_marketing/pages/plutonium_page.gleam:641
+msgid "Custom notification sounds"
+msgstr "Mukautetut ilmoitusäänet"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:413
+msgid "Custom themes"
+msgstr "Mukautetut teemat"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:561
+msgid "Custom username tag"
+msgstr "Mukautettu käyttäjänimitunniste"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:308
+msgid "Custom video backgrounds"
+msgstr "Mukautetut videotaustat"
+
+#: src/fluxer_marketing/components/current_features.gleam:130
+msgid "Customization"
+msgstr "Mukautus"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:574
+msgid "Customize your profile differently for each community you're part of."
+msgstr "Mukauta profiilisi eri tavalla jokaisessa yhteisössä, johon kuulut."
+
+#: src/fluxer_marketing/components/locale_selector.gleam:120
+msgid "Czech"
+msgstr "tsekki"
+
+#: src/fluxer_marketing/components/coming_features.gleam:35
+msgid "DM folders"
+msgstr "YV-kansiot"
+
+#: src/fluxer_marketing/components/current_features.gleam:69
+msgid "DM your friends, chat with groups, or build communities with channels."
+msgstr "Lähetä YV:itä kavereille, juttele ryhmissä tai rakenna yhteisöjä kanavilla."
+
+#: src/fluxer_marketing/components/locale_selector.gleam:121
+msgid "Danish"
+msgstr "tanska"
+
+#: src/fluxer_marketing/pages/careers_page.gleam:250
+msgid "Design & branding"
+msgstr "Muotoilu ja brändäys"
+
+#: src/fluxer_marketing/components/pwa_install_dialog.gleam:99
+msgid "Desktop"
+msgstr "Työpöytä"
+
+#: src/fluxer_marketing/components/footer.gleam:209
+msgid "Developer Docs"
+msgstr "Kehittäjädokumentaatio"
+
+#: src/fluxer_marketing/components/communities_section.gleam:74
+msgid "Developers"
+msgstr "Kehittäjät"
+
+#: src/fluxer_marketing/components/partner_section.gleam:137
+#: src/fluxer_marketing/pages/partners_page.gleam:156
+msgid "Direct Team Access"
+msgstr "Suora yhteys tiimiin"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:1076
+msgid "Direct team support"
+msgstr "Suora tiimituki"
+
+#: src/fluxer_marketing/components/coming_features.gleam:44
+msgid "Discovery"
+msgstr "Discovery"
+
+#: src/fluxer_marketing/pages/partners_page.gleam:126
+msgid "Display an exclusive Partner badge on your profile to stand out."
+msgstr "Näytä profiilissasi ainutlaatuinen Partner-merkki ja erotu joukosta."
+
+#: src/fluxer_marketing/pages/donate_page.gleam:367
+msgid "Do I get anything in return?"
+msgstr "Saanko jotain vastineeksi?"
+
+#: src/fluxer_marketing/components/navigation.gleam:111
+#: src/fluxer_marketing/components/navigation.gleam:319
+msgid "Docs"
+msgstr "Dokumentaatio"
+
+#: src/fluxer_marketing/components/navigation.gleam:120
+#: src/fluxer_marketing/components/navigation.gleam:367
+msgid "Donate"
+msgstr "Lahjoita"
+
+#: src/fluxer_marketing/pages/donate_page.gleam:216
+#: src/fluxer_marketing/pages/donate_page.gleam:255
+msgid "Donate in EUR"
+msgstr "Lahjoita euroissa"
+
+#: src/fluxer_marketing/pages/donate_page.gleam:203
+#: src/fluxer_marketing/pages/donate_page.gleam:242
+msgid "Donate in USD"
+msgstr "Lahjoita dollareissa"
+
+#: src/fluxer_marketing/components/footer.gleam:78
+#: src/fluxer_marketing/pages/download_page.gleam:329
+msgid "Donate to Fluxer"
+msgstr "Lahjoita Fluxerille"
+
+#: src/fluxer_marketing/pages/donate_page.gleam:298
+msgid "Donate with Swish"
+msgstr "Tee lahjoitus Swishillä"
+
+#: src/fluxer_marketing/pages/donate_page.gleam:370
+msgid "Donations are voluntary gifts and do not provide you with any product, service, ownership, or special rights. If you're looking for premium features, check out {0}."
+msgstr "Lahjoitukset ovat vapaaehtoisia lahjoja, eivätkä ne tarjoa sinulle mitään tuotetta, palvelua, omistusta tai erityisoikeuksia. Jos etsit premium-ominaisuuksia, tutustu {0}."
+
+#: src/fluxer_marketing/components/pwa_install_dialog.gleam:308
+msgid "Done! You can now open Fluxer as if it were a regular program."
+msgstr "Valmis! Voit nyt avata Fluxerin ikään kuin se olisi tavallinen ohjelma."
+
+#: src/fluxer_marketing/components/pwa_install_dialog.gleam:206
+#: src/fluxer_marketing/components/pwa_install_dialog.gleam:256
+msgid "Done! You can open Fluxer from your home screen."
+msgstr "Valmis! Voit avata Fluxerin aloitusnäytöltäsi."
+
+#: src/fluxer_marketing/components/footer.gleam:132
+#: src/fluxer_marketing/components/navigation.gleam:84
+#: src/fluxer_marketing/components/navigation.gleam:280
+#: src/fluxer_marketing/components/platform_download_button.gleam:223
+#: src/fluxer_marketing/pages/press_page.gleam:359
+msgid "Download"
+msgstr "Lataa"
+
+#: src/fluxer_marketing/components/platform_download_button.gleam:276
+#: src/fluxer_marketing/pages/download_page.gleam:46
+#: src/fluxer_marketing/pages/download_page.gleam:66
+msgid "Download Fluxer"
+msgstr "Lataa Fluxer"
+
+#: src/fluxer_marketing/pages/download_page.gleam:49
+msgid "Download Fluxer for Windows, macOS, and Linux. Mobile apps are underway."
+msgstr "Lataa Fluxer Windowsille, macOS:lle ja Linuxille. Mobiilisovellukset ovat tekeillä."
+
+#: src/fluxer_marketing/pages/press_page.gleam:48
+msgid "Download Fluxer logos, brand assets, and get in touch with our press team"
+msgstr "Lataa Fluxerin logot ja brändimateriaalit sekä ota yhteyttä lehdistötiimiimme"
+
+#: src/fluxer_marketing/components/platform_download_button.gleam:428
+#: src/fluxer_marketing/components/platform_download_button.gleam:538
+msgid "Download for "
+msgstr "Lataa kohteelle "
+
+#: src/fluxer_marketing/components/platform_download_button.gleam:191
+msgid "Download for Windows"
+msgstr "Lataa Windowsille"
+
+#: src/fluxer_marketing/components/platform_download_button.gleam:199
+msgid "Download for macOS"
+msgstr "Lataa macOS:lle"
+
+#: src/fluxer_marketing/pages/press_page.gleam:68
+msgid "Download our logos, learn about our brand colors, and get in touch with our press team."
+msgstr "Lataa logomme, tutustu brändiväreihimme ja ota yhteyttä lehdistötiimiimme."
+
+#: src/fluxer_marketing/components/locale_selector.gleam:139
+msgid "Dutch"
+msgstr "hollanti"
+
+#: src/fluxer_marketing/components/coming_features.gleam:55
+msgid "E2EE calls"
+msgstr "Päästä päähän -salatut puhelut"
+
+#: src/fluxer_marketing/pages/partners_page.gleam:200
+msgid "Early Feature Access"
+msgstr "Varhainen pääsy ominaisuuksiin"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:671
+msgid "Early access"
+msgstr "Varhainen pääsy"
+
+#: src/fluxer_marketing/pages/partners_page.gleam:214
+msgid "Early access to creator monetization features with lower platform fees than non-partners."
+msgstr "Varhainen pääsy tekijöiden ansaintaominaisuuksiin ja kumppaneille alhaisemmat alustamaksut kuin muille."
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:406
+msgid "Early access to new features"
+msgstr "Varhainen pääsy uusiin ominaisuuksiin"
+
+#: src/fluxer_marketing/components/communities_section.gleam:67
+msgid "Education"
+msgstr "Koulutus"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:364
+msgid "Emoji & sticker packs"
+msgstr "Emoji- ja tarrapaketit"
+
+#: src/fluxer_marketing/components/locale_selector.gleam:124
+msgid "English"
+msgstr "englanti"
+
+#: src/fluxer_marketing/components/locale_selector.gleam:125
+msgid "English (US)"
+msgstr "englanti (US)"
+
+#: src/fluxer_marketing/components/coming_features.gleam:43
+msgid "Event tickets"
+msgstr "Tapahtumaliput"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:1071
+msgid "Everything in Free, plus:"
+msgstr "Kaikki Ilmaisessa, lisäksi:"
+
+#: src/fluxer_marketing/pages/partners_page.gleam:233
+msgid "Exclusive Merch"
+msgstr "Eksklusiiviset fanituotteet"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:863
+msgid "Exclusive communities"
+msgstr "Eksklusiiviset yhteisöt"
+
+#: src/fluxer_marketing/components/plutonium_section.gleam:181
+msgid "Exclusive features"
+msgstr "Eksklusiiviset ominaisuudet"
+
+#: src/fluxer_marketing/pages/partners_page.gleam:67
+msgid "Exclusive perks and benefits for content creators and large community owners."
+msgstr "Eksklusiivisia etuja ja hyötyjä sisällöntuottajille ja suurten yhteisöjen omistajille."
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:257
+msgid "Feature"
+msgstr "Ominaisuus"
+
+#: src/fluxer_marketing/pages/partners_page.gleam:167
+msgid "Featured in Discovery"
+msgstr "Esillä Discoveryssä"
+
+#: src/fluxer_marketing/components/coming_features.gleam:30
+msgid "Federation"
+msgstr "Liitto"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:357
+msgid "File upload size"
+msgstr "Tiedoston lähetyskoko"
+
+#: src/fluxer_marketing/components/current_features.gleam:121
+msgid "Filter by users, dates, and more"
+msgstr "Suodata käyttäjien, päivämäärien ja muun mukaan"
+
+#: src/fluxer_marketing/pages/help_center_page.gleam:49
+msgid "Find answers to common questions and learn how to use Fluxer."
+msgstr "Löydä vastaukset yleisiin kysymyksiin ja opi käyttämään Fluxeria."
+
+#: src/fluxer_marketing/components/current_features.gleam:117
+msgid "Find old messages or jump between communities and channels in seconds."
+msgstr "Etsi vanhoja viestejä tai hyppää yhteisöjen ja kanavien välillä sekunneissa."
+
+#: src/fluxer_marketing/pages/help_center_page.gleam:104
+msgid "Find step-by-step guides and answers, organized by topic."
+msgstr "Löydä vaihe vaiheelta -oppaat ja vastaukset, järjestettyinä aiheittain."
+
+#: src/fluxer_marketing/components/locale_selector.gleam:128
+msgid "Finnish"
+msgstr "suomi"
+
+#: src/fluxer_marketing/pages/careers_page.gleam:121
+msgid "Fix bugs, ship features, or polish the experience in our main repo."
+msgstr "Korjaa bugeja, julkaise ominaisuuksia tai viimeistele käyttökokemus päärepossamme."
+
+#: src/fluxer_marketing/components/footer.gleam:99
+msgid "Fluxer"
+msgstr "Fluxer"
+
+#: src/fluxer_marketing/pages/guidelines_page.gleam:44
+msgid "Fluxer Community Guidelines"
+msgstr "Fluxerin yhteisöohjeet"
+
+#: src/fluxer_marketing/pages/careers_page.gleam:207
+msgid "Fluxer Community Team"
+msgstr "Fluxerin yhteisötiimi"
+
+#: src/fluxer_marketing/pages/partners_page.gleam:44
+msgid "Fluxer Partner"
+msgstr "Fluxer-kumppani"
+
+#: src/fluxer_marketing/pages/donate_page.gleam:372
+#: src/fluxer_marketing/pages/plutonium_page.gleam:51
+#: src/fluxer_marketing/pages/plutonium_page.gleam:76
+msgid "Fluxer Plutonium"
+msgstr "Fluxer Plutonium"
+
+#: src/fluxer_marketing/pages/privacy_page.gleam:44
+msgid "Fluxer Privacy Policy"
+msgstr "Fluxerin tietosuojakäytäntö"
+
+#: src/fluxer_marketing/pages/terms_page.gleam:44
+msgid "Fluxer Terms of Service"
+msgstr "Fluxerin käyttöehdot"
+
+#: src/fluxer_marketing/pages/careers_page.gleam:105
+msgid "Fluxer is built in the open. Pick the path that fits how you like to help."
+msgstr "Fluxer rakennetaan avoimesti. Valitse tapa osallistua, joka sopii sinulle parhaiten."
+
+#: src/fluxer_marketing/pages/download_page.gleam:303
+msgid "Fluxer is community-funded. If you'd like to help support iOS and Android development:"
+msgstr "Fluxer on yhteisörahoitteinen. Jos haluat tukea iOS- ja Android-kehitystä:"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:991
+msgid "Fluxer is free and open source. Anyone can self-host for free."
+msgstr "Fluxer on ilmainen ja avoimen lähdekoodin. Kuka tahansa voi itsehostata ilmaiseksi."
+
+#: src/fluxer_marketing/components/get_involved_section.gleam:181
+msgid "Fluxer is open source (AGPLv3). Contribute directly on GitHub by opening pull requests."
+msgstr "Fluxer on avoimen lähdekoodin (AGPLv3). Osallistu suoraan GitHubissa avaamalla pull requesteja."
+
+#: src/fluxer_marketing/components/get_involved_section.gleam:158
+msgid "Follow @fluxer.app"
+msgstr "Seuraa @fluxer.app"
+
+#: src/fluxer_marketing/components/get_involved_section.gleam:120
+msgid "Follow us on Bluesky"
+msgstr "Seuraa meitä Blueskyssä"
+
+#: src/fluxer_marketing/pages/press_page.gleam:230
+msgid "For backgrounds, text on dark surfaces, and creating contrast."
+msgstr "Taustoihin, tekstiin tummilla pinnoilla ja kontrastin luomiseen."
+
+#: src/fluxer_marketing/pages/press_page.gleam:111
+#: src/fluxer_marketing/pages/press_page.gleam:165
+msgid "For dark backgrounds"
+msgstr "Tummille taustoille"
+
+#: src/fluxer_marketing/pages/press_page.gleam:118
+#: src/fluxer_marketing/pages/press_page.gleam:172
+msgid "For light backgrounds"
+msgstr "Vaaleille taustoille"
+
+#: src/fluxer_marketing/pages/press_page.gleam:237
+msgid "For text, icons on light surfaces, and creating depth."
+msgstr "Tekstiin, ikoneihin vaaleilla pinnoilla ja syvyyden luomiseen."
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:189
+msgid "Forever"
+msgstr "Ikuisesti"
+
+#: src/fluxer_marketing/components/get_involved_section.gleam:189
+msgid "Found a security issue?"
+msgstr "Löysitkö tietoturvaongelman?"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:175
+#: src/fluxer_marketing/pages/plutonium_page.gleam:265
+msgid "Free"
+msgstr "Ilmainen"
+
+#: src/fluxer_marketing/components/partner_section.gleam:97
+#: src/fluxer_marketing/pages/partners_page.gleam:112
+msgid "Free Plutonium"
+msgstr "Ilmainen Plutonium"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:1024
+msgid "Free Self-Hosting"
+msgstr "Ilmainen itsehostaus"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:152
+msgid "Free vs Plutonium"
+msgstr "Ilmainen vs. Plutonium"
+
+#: src/fluxer_marketing/components/locale_selector.gleam:129
+msgid "French"
+msgstr "ranska"
+
+#: src/fluxer_marketing/pages/donate_page.gleam:346
+msgid "Frequently Asked Questions"
+msgstr "Usein kysytyt kysymykset"
+
+#: src/fluxer_marketing/components/hackernews_banner.gleam:72
+msgid "From HN?"
+msgstr "HN:stä?"
+
+#: src/fluxer_marketing/components/current_features.gleam:72
+msgid "Full Markdown support in messages"
+msgstr "Täysi Markdown-tuki viesteissä"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:1037
+msgid "Full access to all features"
+msgstr "Täysi pääsy kaikkiin ominaisuuksiin"
+
+#: src/fluxer_marketing/pages/press_page.gleam:125
+#: src/fluxer_marketing/pages/press_page.gleam:179
+msgid "Full color version"
+msgstr "Täysvärinen versio"
+
+#: src/fluxer_marketing/components/current_features.gleam:152
+msgid "Fully open source (AGPLv3)"
+msgstr "Täysin avoimen lähdekoodin (AGPLv3)"
+
+#: src/fluxer_marketing/components/communities_section.gleam:57
+msgid "Gaming"
+msgstr "Pelaaminen"
+
+#: src/fluxer_marketing/components/locale_selector.gleam:122
+msgid "German"
+msgstr "saksa"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:430
+msgid "Get Plutonium"
+msgstr "Hanki Plutonium"
+
+#: src/fluxer_marketing/components/plutonium_banner.gleam:79
+msgid "Get Visionary"
+msgstr "Hanki Visionary"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:1135
+msgid "Get Visionary + Operator Pass"
+msgstr "Hanki Visionary + Operator Pass"
+
+#: src/fluxer_marketing/pages/partners_page.gleam:148
+msgid "Get an exclusive custom vanity URL like fluxer.gg/yourcommunity."
+msgstr "Saat käyttöösi oman vanity-URL:n, kuten fluxer.gg/yourcommunity."
+
+#: src/fluxer_marketing/pages/partners_page.gleam:236
+msgid "Get exclusive Fluxer Partner-only merchandise and swag."
+msgstr "Saat eksklusiivisia Fluxer Partner -fanituotteita ja swagia."
+
+#: src/fluxer_marketing/pages/partners_page.gleam:115
+msgid "Get free Plutonium for your account to enjoy all premium features."
+msgstr "Saat tilillesi ilmaisen Plutoniumin, jotta voit käyttää kaikkia premium-ominaisuuksia."
+
+#: src/fluxer_marketing/pages/partners_page.gleam:170
+msgid "Get heightened visibility by being featured in Community Discovery."
+msgstr "Saat lisää näkyvyyttä, kun yhteisösi nostetaan esiin Community Discoveryssä."
+
+#: src/fluxer_marketing/pages/not_found_page.gleam:87
+msgid "Get help"
+msgstr "Hae apua"
+
+#: src/fluxer_marketing/components/get_involved_section.gleam:51
+msgid "Get involved"
+msgstr "Tule mukaan"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:956
+msgid "Get lifetime Plutonium on Fluxer.app plus an Operator Pass for self-hosting. Pay {0} one-time. Available until October 1, 2026 or when {1} slots are claimed."
+msgstr "Hanki elinikäinen Plutonium Fluxer.appiin sekä Operator Pass itsehostaukseen. Maksa {0} kertamaksu. Saatavilla 1. lokakuuta 2026 asti tai kun {1} paikkaa on lunastettu."
+
+#: src/fluxer_marketing/components/plutonium_section.gleam:51
+msgid "Get more with Fluxer Plutonium"
+msgstr "Enemmän Fluxer Plutoniumilla"
+
+#: src/fluxer_marketing/pages/download_page.gleam:316
+msgid "Get perks and help fund development"
+msgstr "Saa etuja ja tue kehitystä"
+
+#: src/fluxer_marketing/pages/download_page.gleam:237
+msgid "Get push notifications when you're away from the app."
+msgstr "Saat push-ilmoitukset, kun olet poissa sovelluksesta."
+
+#: src/fluxer_marketing/components/get_involved_section.gleam:89
+msgid "Get updates, see upcoming features, discuss suggestions, and chat with the team."
+msgstr "Saat päivityksiä, näet tulevat ominaisuudet, voit keskustella ehdotuksista ja jutella tiimin kanssa."
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:385
+#: src/fluxer_marketing/pages/plutonium_page.gleam:601
+msgid "Global emoji & sticker access"
+msgstr "Pääsy emojeihin ja tarroihin kaikkialla"
+
+#: src/fluxer_marketing/components/coming_features.gleam:53
+msgid "Global voice regions"
+msgstr "Globaalit äänialueet"
+
+#: src/fluxer_marketing/pages/not_found_page.gleam:78
+msgid "Go home"
+msgstr "Etusivulle"
+
+#: src/fluxer_marketing/components/current_features.gleam:104
+msgid "Granular roles and permissions"
+msgstr "Tarkat roolit ja käyttöoikeudet"
+
+#: src/fluxer_marketing/components/locale_selector.gleam:123
+msgid "Greek"
+msgstr "kreikka"
+
+#: src/fluxer_marketing/pages/press_page.gleam:285
+msgid "Have a story about Fluxer? Need more information or high-resolution assets?"
+msgstr "Onko sinulla tarina Fluxerista? Tarvitsetko lisätietoa tai korkearesoluutioisia materiaaleja?"
+
+#: src/fluxer_marketing/components/locale_selector.gleam:130
+msgid "Hebrew"
+msgstr "heprea"
+
+#: src/fluxer_marketing/components/navigation.gleam:102
+msgid "Help"
+msgstr "Ohje"
+
+#: src/fluxer_marketing/components/footer.gleam:187
+#: src/fluxer_marketing/components/navigation.gleam:328
+#: src/fluxer_marketing/pages/help_article_page.gleam:56
+#: src/fluxer_marketing/pages/help_article_page.gleam:86
+#: src/fluxer_marketing/pages/help_article_page.gleam:117
+#: src/fluxer_marketing/pages/help_category_page.gleam:64
+#: src/fluxer_marketing/pages/help_center_page.gleam:46
+#: src/fluxer_marketing/pages/help_components.gleam:48
+#: src/fluxer_marketing/pages/help_search_page.gleam:48
+msgid "Help Center"
+msgstr "Ohjekeskus"
+
+#: src/fluxer_marketing/pages/download_page.gleam:291
+msgid "Help make the mobile app a reality"
+msgstr "Auta tekemään mobiilisovelluksesta totta"
+
+#: src/fluxer_marketing/components/footer.gleam:66
+#: src/fluxer_marketing/pages/donate_page.gleam:53
+msgid "Help support an independent communication platform. Your donation funds the platform's infrastructure and development."
+msgstr "Tue riippumatonta viestintäalustaa. Lahjoituksesi rahoittaa alustan infrastruktuuria ja kehitystä."
+
+#: src/fluxer_marketing/pages/donate_page.gleam:134
+msgid "Help support an independent communication platform. Your donation funds the platform's infrastructure and development. It is a voluntary gift and does not constitute payment for any product or service or give you any ownership or special rights."
+msgstr "Tue riippumatonta viestintäalustaa. Lahjoituksesi rahoittaa alustan infrastruktuuria ja kehitystä. Lahjoitus on vapaaehtoinen lahja, eikä se ole maksu mistään tuotteesta tai palvelusta eikä anna sinulle omistusta tai erityisoikeuksia."
+
+#: src/fluxer_marketing/pages/careers_page.gleam:132
+msgid "Help translate Fluxer and its docs so it feels native everywhere."
+msgstr "Auta kääntämään Fluxer ja sen dokumentaatio, jotta se tuntuu omalta kaikkialla."
+
+#: src/fluxer_marketing/pages/careers_page.gleam:69
+msgid "Help us build a different kind of communication platform — open source, community-funded, and built with care."
+msgstr "Auta meitä rakentamaan toisenlainen viestintäalusta – avoimen lähdekoodin, yhteisörahoitteinen ja huolella tehty."
+
+#: src/fluxer_marketing/pages/donate_page.gleam:89
+msgid "Help us build an independent communication platform that puts users first."
+msgstr "Auta meitä rakentamaan riippumaton viestintäalusta, joka asettaa käyttäjät etusijalle."
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:651
+msgid "Higher limits everywhere"
+msgstr "Korkeammat rajat kaikkialla"
+
+#: src/fluxer_marketing/components/plutonium_section.gleam:92
+msgid "Higher limits, exclusive features, and early access to new updates"
+msgstr "Korkeammat rajat, eksklusiiviset ominaisuudet ja varhainen pääsy uusiin päivityksiin"
+
+#: src/fluxer_marketing/components/locale_selector.gleam:131
+msgid "Hindi"
+msgstr "hindi"
+
+#: src/fluxer_marketing/components/communities_section.gleam:72
+msgid "Hobbyists"
+msgstr "Harrastajat"
+
+#: src/fluxer_marketing/components/current_features.gleam:85
+msgid "Hop in a call with friends or share your screen to work together."
+msgstr "Hyppää puheluun kavereiden kanssa tai jaa näyttösi, kun teette yhdessä."
+
+#: src/fluxer_marketing/components/current_features.gleam:153
+msgid "Host your own instance"
+msgstr "Itsehostaa oma instanssi"
+
+#: src/fluxer_marketing/pages/help_center_page.gleam:64
+#: src/fluxer_marketing/pages/help_search_page.gleam:63
+msgid "How can we help?"
+msgstr "Miten voimme auttaa?"
+
+#: src/fluxer_marketing/components/pwa_install_dialog.gleam:39
+msgid "How to install as an app"
+msgstr "Kuinka asentaa sovelluksena"
+
+#: src/fluxer_marketing/pages/partners_page.gleam:434
+msgid "How you plan to use Fluxer with your community"
+msgstr "Miten aiot käyttää Fluxeria yhteisösi kanssa"
+
+#: src/fluxer_marketing/components/locale_selector.gleam:133
+msgid "Hungarian"
+msgstr "unkari"
+
+#: src/fluxer_marketing/components/footer.gleam:329
+msgid "IP geolocation data by "
+msgstr "IP-paikannustiedot tarjoaa "
+
+#: src/fluxer_marketing/pages/help_article_page.gleam:223
+#: src/fluxer_marketing/pages/help_article_page.gleam:365
+msgid "If you couldn't find what you're looking for, our support team is here to help."
+msgstr "Jos et löytänyt etsimääsi, tukitiimimme auttaa mielellään."
+
+#: src/fluxer_marketing/pages/careers_page.gleam:176
+msgid "If you're a creator or community owner, explore the Partner program and its perks."
+msgstr "Jos olet sisällöntuottaja tai yhteisön omistaja, tutustu Partner-ohjelmaan ja sen etuihin."
+
+#: src/fluxer_marketing/pages/partners_page.gleam:189
+msgid "Increased Limits"
+msgstr "Korotetut rajat"
+
+#: src/fluxer_marketing/pages/donate_page.gleam:160
+msgid "Individual"
+msgstr "Yksityishenkilö"
+
+#: src/fluxer_marketing/components/locale_selector.gleam:134
+msgid "Indonesian"
+msgstr "indonesia"
+
+#: src/fluxer_marketing/components/pwa_install_dialog.gleam:59
+msgid "Install Fluxer as an app"
+msgstr "Asenna Fluxer sovelluksena"
+
+#: src/fluxer_marketing/components/platform_download_button.gleam:145
+#: src/fluxer_marketing/components/platform_download_button.gleam:161
+msgid "Intel"
+msgstr "Intel"
+
+#: src/fluxer_marketing/pages/donate_page.gleam:377
+msgid "Is my donation tax-deductible?"
+msgstr "Voinko vähentää lahjoitukseni verotuksessa?"
+
+#: src/fluxer_marketing/pages/donate_page.gleam:359
+msgid "Is this a subscription?"
+msgstr "Onko tämä tilaus?"
+
+#: src/fluxer_marketing/components/locale_selector.gleam:135
+msgid "Italian"
+msgstr "italia"
+
+#: src/fluxer_marketing/components/locale_selector.gleam:136
+msgid "Japanese"
+msgstr "japani"
+
+#: src/fluxer_marketing/components/final_cta.gleam:80
+#: src/fluxer_marketing/pages/plutonium_page.gleam:1202
+msgid "Join Fluxer"
+msgstr "Liity Fluxeriin"
+
+#: src/fluxer_marketing/components/get_involved_section.gleam:86
+#: src/fluxer_marketing/components/get_involved_section.gleam:91
+#: src/fluxer_marketing/pages/careers_page.gleam:145
+msgid "Join Fluxer HQ"
+msgstr "Liity Fluxer HQ:hun"
+
+#: src/fluxer_marketing/pages/careers_page.gleam:442
+msgid "Join Fluxer HQ community"
+msgstr "Liity Fluxer HQ -yhteisöön"
+
+#: src/fluxer_marketing/components/get_involved_section.gleam:75
+msgid "Join and spread the word"
+msgstr "Liity ja levitä sanaa"
+
+#: src/fluxer_marketing/components/current_features.gleam:88
+msgid "Join from multiple devices at once"
+msgstr "Liity samanaikaisesti usealta laitteelta"
+
+#: src/fluxer_marketing/pages/partners_page.gleam:47
+msgid "Join the Fluxer Partner Program and unlock exclusive benefits for you and your community"
+msgstr "Liity Fluxer Partner Programiin ja avaa käyttöösi eksklusiiviset edut sinulle ja yhteisöllesi"
+
+#: src/fluxer_marketing/pages/careers_page.gleam:49
+msgid "Join the Fluxer community and help build the future of communication through open source and community contributions."
+msgstr "Liity Fluxer-yhteisöön ja auta rakentamaan viestinnän tulevaisuutta avoimen lähdekoodin ja yhteisön kontribuutioiden avulla."
+
+#: src/fluxer_marketing/pages/partners_page.gleam:159
+msgid "Join the exclusive Partners community with direct access to the Fluxer team."
+msgstr "Liity eksklusiiviseen Partners-yhteisöön ja saat suoran yhteyden Fluxer-tiimiin."
+
+#: src/fluxer_marketing/pages/careers_page.gleam:66
+msgid "Join the team behind Fluxer"
+msgstr "Liity Fluxerin tekijätiimiin"
+
+#: src/fluxer_marketing/components/current_features.gleam:101
+msgid "Keep your community running smoothly with roles, permissions, and logs."
+msgstr "Pidä yhteisö pyörimässä sujuvasti roolien, oikeuksien ja lokien avulla."
+
+#: src/fluxer_marketing/components/locale_selector.gleam:137
+msgid "Korean"
+msgstr "korea"
+
+#: src/fluxer_marketing/pages/company_page.gleam:42
+msgid "Learn about Fluxer and our mission"
+msgstr "Lue Fluxerista ja missiostamme"
+
+#: src/fluxer_marketing/pages/careers_page.gleam:178
+msgid "Learn about Partners"
+msgstr "Tutustu Partners-ohjelmaan"
+
+#: src/fluxer_marketing/components/plutonium_section.gleam:195
+msgid "Learn more"
+msgstr "Lue lisää"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:848
+msgid "Lifetime Operator Pass"
+msgstr "Elinikäinen Operator Pass"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:842
+msgid "Lifetime Plutonium"
+msgstr "Elinikäinen Plutonium"
+
+#: src/fluxer_marketing/components/plutonium_banner.gleam:38
+msgid "Lifetime Plutonium + Operator Pass with Visionary — limited slots"
+msgstr "Elinikäinen Plutonium + Operator Pass Visionarylla — paikkoja rajoitetusti"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:1103
+msgid "Limited Offer: Visionary includes Operator Pass"
+msgstr "Rajoitettu tarjous: Visionary sisältää Operator Passin"
+
+#: src/fluxer_marketing/pages/partners_page.gleam:408
+msgid "Links to your content or community (YouTube, Twitch, Discord, etc.)"
+msgstr "Linkit sisältöösi tai yhteisöösi (YouTube, Twitch, Discord jne.)"
+
+#: src/fluxer_marketing/components/platform_download_button.gleam:364
+msgid "Linux"
+msgstr "Linux"
+
+#: src/fluxer_marketing/components/locale_selector.gleam:138
+msgid "Lithuanian"
+msgstr "liettua"
+
+#: src/fluxer_marketing/pages/careers_page.gleam:129
+msgid "Localization"
+msgstr "Lokalisointi"
+
+#: src/fluxer_marketing/pages/press_page.gleam:93
+msgid "Logo"
+msgstr "Logo"
+
+#: src/fluxer_marketing/pages/donate_page.gleam:123
+msgid "Make a Donation"
+msgstr "Tee lahjoitus"
+
+#: src/fluxer_marketing/components/current_features.gleam:123
+msgid "Manage friends and block users"
+msgstr "Hallitse ystäviä ja estä käyttäjiä"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:336
+msgid "Message character limit"
+msgstr "Viestin merkkiraja"
+
+#: src/fluxer_marketing/components/coming_features.gleam:34
+msgid "Message components"
+msgstr "Viestikomponentit"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:294
+#: src/fluxer_marketing/pages/plutonium_page.gleam:581
+msgid "Message scheduling"
+msgstr "Viestien ajastus"
+
+#: src/fluxer_marketing/components/current_features.gleam:66
+msgid "Messaging"
+msgstr "Viestit"
+
+#: src/fluxer_marketing/pages/donate_page.gleam:265
+msgid "Minimum donation: $5 / €5"
+msgstr "Minimilahjoitus: 5 $ / 5 €"
+
+#: src/fluxer_marketing/pages/download_page.gleam:203
+msgid "Mobile apps are on the way"
+msgstr "Mobiilisovellukset ovat tulossa"
+
+#: src/fluxer_marketing/components/platform_download_button.gleam:213
+#: src/fluxer_marketing/components/platform_download_button.gleam:218
+#: src/fluxer_marketing/components/platform_download_button.gleam:311
+msgid "Mobile apps are underway"
+msgstr "Mobiilisovellukset ovat tekeillä"
+
+#: src/fluxer_marketing/components/current_features.gleam:105
+msgid "Moderation actions and tools"
+msgstr "Moderointitoimet ja -työkalut"
+
+#: src/fluxer_marketing/components/current_features.gleam:98
+msgid "Moderation tools"
+msgstr "Moderointityökalut"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:206
+msgid "Most popular"
+msgstr "Suosituin"
+
+#: src/fluxer_marketing/components/current_features.gleam:91
+msgid "Mute, deafen, and camera controls"
+msgstr "Mykistys, kuuntelun poisto ja kameran hallinta"
+
+#: src/fluxer_marketing/pages/help_search_page.gleam:135
+msgid "No articles found"
+msgstr "Artikkeleita ei löytynyt"
+
+#: src/fluxer_marketing/pages/help_category_page.gleam:163
+msgid "No articles found."
+msgstr "Artikkeleita ei löytynyt."
+
+#: src/fluxer_marketing/pages/help_search_page.gleam:94
+msgid "No results found for"
+msgstr "Ei tuloksia haulle"
+
+#: src/fluxer_marketing/pages/donate_page.gleam:380
+msgid "No, donations to Fluxer are not tax-deductible as we are not a registered charitable organization."
+msgstr "Ei. Lahjoitukset Fluxerille eivät ole verovähennyskelpoisia, koska emme ole rekisteröity hyväntekeväisyysjärjestö."
+
+#: src/fluxer_marketing/pages/donate_page.gleam:362
+msgid "No, this is a one-time donation. You choose the amount you want to give, and there are no recurring charges."
+msgstr "Ei. Tämä on kertalahjoitus. Valitset itse summan, eikä siitä tule toistuvia veloituksia."
+
+#: src/fluxer_marketing/components/current_features.gleam:90
+msgid "Noise suppression and echo cancellation"
+msgstr "Melunvaimennus ja kaiunpoisto"
+
+#: src/fluxer_marketing/components/locale_selector.gleam:140
+msgid "Norwegian"
+msgstr "norja"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:295
+msgid "Not available"
+msgstr "Ei saatavilla"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:91
+msgid "Note: Plutonium and Visionary benefits only apply to the official Fluxer.app instance, not third-party or self-hosted instances."
+msgstr "Huom: Plutonium- ja Visionary-edut koskevat vain virallista Fluxer.app-instanssia, eivät kolmannen osapuolen tai itsehostattuja instansseja."
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:788
+msgid "Numbered badge (1-{0}) showing your Visionary status"
+msgstr "Numeroitu merkki (1–{0}), joka näyttää Visionary-statuksesi"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:786
+msgid "Numbered badge showing your Visionary status"
+msgstr "Numeroitu merkki, joka näyttää Visionary-statuksesi"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:828
+msgid "One-time purchase, lifetime access"
+msgstr "Kertamaksu, elinikäinen käyttöoikeus"
+
+#: src/fluxer_marketing/components/plutonium_banner.gleam:43
+msgid "Only {0} of {1} Visionary lifetime slots left — lifetime Plutonium + Operator Pass"
+msgstr "Vain {0}/{1} Visionaryn elinikäistä paikkaa jäljellä — elinikäinen Plutonium + Operator Pass"
+
+#: src/fluxer_marketing/components/navigation.gleam:172
+msgid "Open Fluxer"
+msgstr "Avaa Fluxer"
+
+#: src/fluxer_marketing/components/hero.gleam:82
+#: src/fluxer_marketing/components/navigation.gleam:473
+msgid "Open in Browser"
+msgstr "Avaa selaimessa"
+
+#: src/fluxer_marketing/pages/careers_page.gleam:118
+msgid "Open source"
+msgstr "Avoin lähdekoodi"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:1039
+msgid "Open source (AGPL-3.0)"
+msgstr "Avoin lähdekoodi (AGPL-3.0)"
+
+#: src/fluxer_marketing/components/pwa_install_dialog.gleam:188
+#: src/fluxer_marketing/components/pwa_install_dialog.gleam:234
+#: src/fluxer_marketing/components/pwa_install_dialog.gleam:284
+msgid "Open the web app"
+msgstr "Avaa verkkosovellus"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:1059
+msgid "Operator Pass"
+msgstr "Operator Pass"
+
+#: src/fluxer_marketing/components/coming_features.gleam:31
+msgid "Opt-in E2EE messaging"
+msgstr "Opt-in E2EE-viestintä"
+
+#: src/fluxer_marketing/components/current_features.gleam:74
+msgid "Organized channels for communities"
+msgstr "Jäsennellyt kanavat yhteisöille"
+
+#: src/fluxer_marketing/pages/press_page.gleam:209
+msgid "Our carefully selected color palette that represents the Fluxer brand."
+msgstr "Huolella valittu väripalettimme, joka edustaa Fluxer-brändiä."
+
+#: src/fluxer_marketing/pages/press_page.gleam:102
+msgid "Our full logo including the wordmark. Use this as the primary representation of our brand."
+msgstr "Täysi logomme tekstilogon kanssa. Käytä tätä brändimme ensisijaisena esitystapana."
+
+#: src/fluxer_marketing/pages/press_page.gleam:221
+msgid "Our primary brand color. Use this for key brand elements and accents."
+msgstr "Brändimme pääväri. Käytä tätä keskeisissä brändielementeissä ja korostuksissa."
+
+#: src/fluxer_marketing/pages/press_page.gleam:156
+msgid "Our standalone symbol. Use this only when our brand is clearly visible or well-established elsewhere in the context."
+msgstr "Erillinen symbolimme. Käytä tätä vain, kun brändimme on muuten kontekstissa selvästi näkyvissä tai jo vakiintunut."
+
+#: src/fluxer_marketing/components/communities_section.gleam:106
+msgid "Over time, we'd love to explore optional monetization tools that help creators and communities earn, with a small, transparent fee that keeps the app sustainable."
+msgstr "Ajan myötä haluamme tutkia valinnaisia ansaintatyökaluja, jotka auttavat tekijöitä ja yhteisöjä tienaamaan – pienellä, läpinäkyvällä maksulla, joka pitää sovelluksen kestävänä."
+
+#: src/fluxer_marketing/pages/not_found_page.gleam:101
+msgid "Page Not Found"
+msgstr "Sivua ei löydy"
+
+#: src/fluxer_marketing/pages/not_found_page.gleam:55
+msgid "Page not found"
+msgstr "Sivua ei löytynyt"
+
+#: src/fluxer_marketing/pages/partners_page.gleam:123
+msgid "Partner Badge"
+msgstr "Partner-merkki"
+
+#: src/fluxer_marketing/pages/partners_page.gleam:90
+msgid "Partner Perks"
+msgstr "Kumppaniedut"
+
+#: src/fluxer_marketing/components/footer.gleam:121
+#: src/fluxer_marketing/components/navigation.gleam:298
+msgid "Partners"
+msgstr "Kumppanit"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:287
+#: src/fluxer_marketing/pages/plutonium_page.gleam:571
+msgid "Per-community profiles"
+msgstr "Profiilit yhteisöittäin"
+
+#: src/fluxer_marketing/pages/download_page.gleam:315
+#: src/fluxer_marketing/pages/plutonium_page.gleam:215
+#: src/fluxer_marketing/pages/plutonium_page.gleam:273
+msgid "Plutonium"
+msgstr "Plutonium"
+
+#: src/fluxer_marketing/components/footer.gleam:227
+#: src/fluxer_marketing/components/navigation.gleam:387
+msgid "Policies"
+msgstr "Käytännöt"
+
+#: src/fluxer_marketing/components/locale_selector.gleam:141
+msgid "Polish"
+msgstr "puola"
+
+#: src/fluxer_marketing/components/coming_features.gleam:41
+msgid "Polls & events"
+msgstr "Kyselyt ja tapahtumat"
+
+#: src/fluxer_marketing/components/locale_selector.gleam:142
+msgid "Portuguese (Brazil)"
+msgstr "portugali (Brasilia)"
+
+#: src/fluxer_marketing/components/plutonium_section.gleam:154
+msgid "Premium quality"
+msgstr "Premium-laatu"
+
+#: src/fluxer_marketing/components/footer.gleam:198
+#: src/fluxer_marketing/components/navigation.gleam:337
+msgid "Press"
+msgstr "Lehdistö"
+
+#: src/fluxer_marketing/components/pwa_install_dialog.gleam:246
+msgid "Press \"Add to Home Screen\""
+msgstr "Paina \"Lisää aloitusnäytölle"
+
+#: src/fluxer_marketing/components/pwa_install_dialog.gleam:249
+msgid "Press \"Add\" in the upper-right corner"
+msgstr "Paina \"Lisää\" oikeassa yläkulmassa"
+
+#: src/fluxer_marketing/components/pwa_install_dialog.gleam:200
+msgid "Press \"Install app\""
+msgstr "Paina \"Asenna sovellus"
+
+#: src/fluxer_marketing/components/pwa_install_dialog.gleam:301
+msgid "Press \"Install\" in the popup that appears"
+msgstr "Paina \"Asenna\" avautuvassa ikkunassa"
+
+#: src/fluxer_marketing/pages/press_page.gleam:45
+#: src/fluxer_marketing/pages/press_page.gleam:65
+msgid "Press & Brand Assets"
+msgstr "Lehdistö ja brändimateriaalit"
+
+#: src/fluxer_marketing/pages/press_page.gleam:273
+msgid "Press Contact"
+msgstr "Lehdistöyhteys"
+
+#: src/fluxer_marketing/components/pwa_install_dialog.gleam:197
+msgid "Press the \"More\" (\\u{22EE}) button in the top-right corner"
+msgstr "Paina \"Enemmän\" (\\u{22EE}) -painiketta oikeassa yläkulmassa"
+
+#: src/fluxer_marketing/components/pwa_install_dialog.gleam:243
+msgid "Press the Share button (rectangle with upwards-pointing arrow)"
+msgstr "Paina Jaa-painiketta (suorakulmio, jossa ylöspäin osoittava nuoli)"
+
+#: src/fluxer_marketing/components/pwa_install_dialog.gleam:296
+msgid "Press the install button (downwards-pointing arrow on monitor) in the address bar"
+msgstr "Paina asennuspainiketta (alas osoittava nuoli näytöllä) osoiterivillä"
+
+#: src/fluxer_marketing/components/footer.gleam:110
+#: src/fluxer_marketing/components/navigation.gleam:93
+#: src/fluxer_marketing/components/navigation.gleam:289
+msgid "Pricing"
+msgstr "Hinnoittelu"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:851
+msgid "Priority support and Operators community access for self-hosting"
+msgstr "Etusijainen tuki ja pääsy Operators-yhteisöön itsehostausta varten"
+
+#: src/fluxer_marketing/components/footer.gleam:249
+#: src/fluxer_marketing/components/navigation.gleam:406
+#: src/fluxer_marketing/pages/privacy_page.gleam:41
+msgid "Privacy Policy"
+msgstr "Tietosuojakäytäntö"
+
+#: src/fluxer_marketing/components/current_features.gleam:73
+msgid "Private DMs and group chats"
+msgstr "Yksityiset YV:t ja ryhmächatit"
+
+#: src/fluxer_marketing/components/navigation.gleam:270
+msgid "Product"
+msgstr "Tuote"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:301
+#: src/fluxer_marketing/pages/plutonium_page.gleam:661
+msgid "Profile badge"
+msgstr "Profiilimerkki"
+
+#: src/fluxer_marketing/components/coming_features.gleam:47
+msgid "Profile connections"
+msgstr "Profiililinkitykset"
+
+#: src/fluxer_marketing/components/hero.gleam:55
+msgid "Public Beta"
+msgstr "Julkinen beta"
+
+#: src/fluxer_marketing/components/coming_features.gleam:46
+msgid "Public profile URLs"
+msgstr "Julkiset profiililinkit"
+
+#: src/fluxer_marketing/components/coming_features.gleam:39
+msgid "Publish forums to the web"
+msgstr "Julkaise foorumit verkkoon"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:883
+msgid "Purchase Visionary directly in the app after creating your account. Your purchase date and order number will be displayed on your profile (can be hidden in privacy settings)."
+msgstr "Osta Visionary suoraan sovelluksesta tilin luomisen jälkeen. Ostospäivä ja tilausnumero näkyvät profiilissasi (voit piilottaa ne tietosuoja-asetuksista)."
+
+#: src/fluxer_marketing/components/current_features.gleam:122
+msgid "Quick switcher with keyboard shortcuts"
+msgstr "Pikavaihtaja pikanäppäimillä"
+
+#: src/fluxer_marketing/components/coming_features.gleam:40
+msgid "RSS/Atom feeds for forums"
+msgstr "RSS/Atom-syötteet foorumeille"
+
+#: src/fluxer_marketing/pages/help_category_page.gleam:228
+msgid "Read article"
+msgstr "Lue artikkeli"
+
+#: src/fluxer_marketing/pages/guidelines_page.gleam:42
+msgid "Read the Fluxer Community Guidelines"
+msgstr "Lue Fluxerin yhteisöohjeet"
+
+#: src/fluxer_marketing/pages/privacy_page.gleam:42
+msgid "Read the Fluxer Privacy Policy"
+msgstr "Lue Fluxerin tietosuojakäytäntö"
+
+#: src/fluxer_marketing/pages/terms_page.gleam:42
+msgid "Read the Fluxer Terms of Service"
+msgstr "Lue Fluxerin käyttöehdot"
+
+#: src/fluxer_marketing/components/get_involved_section.gleam:172
+msgid "Read the Guide"
+msgstr "Lue opas"
+
+#: src/fluxer_marketing/pages/partners_page.gleam:362
+msgid "Ready to become a Partner?"
+msgstr "Valmiina ryhtymään kumppaniksi?"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:1180
+msgid "Ready to upgrade?"
+msgstr "Valmiina päivittämään?"
+
+#: src/fluxer_marketing/components/get_involved_section.gleam:80
+msgid "Register now"
+msgstr "Rekisteröidy nyt"
+
+#: src/fluxer_marketing/components/footer.gleam:311
+msgid "Report a bug"
+msgstr "Ilmoita bugista"
+
+#: src/fluxer_marketing/components/get_involved_section.gleam:167
+msgid "Report bugs"
+msgstr "Ilmoita bugeista"
+
+#: src/fluxer_marketing/pages/careers_page.gleam:165
+msgid "Report people or communities so we can keep Fluxer safe for everyone."
+msgstr "Ilmoita henkilöistä tai yhteisöistä, jotta voimme pitää Fluxerin turvallisena kaikille."
+
+#: src/fluxer_marketing/pages/careers_page.gleam:154
+msgid "Report vulnerabilities and help us keep the platform secure."
+msgstr "Ilmoita haavoittuvuuksista ja auta pitämään alusta turvallisena."
+
+#: src/fluxer_marketing/components/navigation.gleam:309
+msgid "Resources"
+msgstr "Resurssit"
+
+#: src/fluxer_marketing/pages/partners_page.gleam:99
+msgid "Rewards that recognize your impact, help your community grow, and give you a direct line to the Fluxer team."
+msgstr "Palkinnot, jotka huomioivat vaikutuksesi, auttavat yhteisöäsi kasvamaan ja antavat sinulle suoran yhteyden Fluxer-tiimiin."
+
+#: src/fluxer_marketing/pages/careers_page.gleam:344
+msgid "Right now we're focused on shipping a great product and keeping Fluxer independent and bootstrapped."
+msgstr "Tällä hetkellä keskitymme toimittamaan erinomaisen tuotteen ja pitämään Fluxerin itsenäisenä ja omarahoitteisena."
+
+#: src/fluxer_marketing/components/locale_selector.gleam:143
+msgid "Romanian"
+msgstr "romania"
+
+#: src/fluxer_marketing/components/current_features.gleam:149
+msgid "Run the Fluxer backend on your own hardware and connect with our apps."
+msgstr "Aja Fluxerin backend omalla raudallasi ja yhdistä siihen sovelluksemme."
+
+#: src/fluxer_marketing/components/locale_selector.gleam:144
+msgid "Russian"
+msgstr "venäjä"
+
+#: src/fluxer_marketing/components/plutonium_section.gleam:81
+#: src/fluxer_marketing/pages/plutonium_page.gleam:117
+msgid "Save 17%"
+msgstr "Säästä 17 %"
+
+#: src/fluxer_marketing/components/current_features.gleam:137
+msgid "Save images, videos, GIFs, and audio"
+msgstr "Tallenna kuvia, videoita, GIFejä ja ääntä"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:371
+msgid "Saved media"
+msgstr "Tallennettu media"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:584
+msgid "Schedule messages to be sent at a specific time in the future. No DeLorean required."
+msgstr "Ajasta viestit lähetettäväksi tiettynä ajankohtana tulevaisuudessa. DeLorean ei ole pakollinen."
+
+#: src/fluxer_marketing/components/current_features.gleam:89
+msgid "Screen sharing built in"
+msgstr "Näytönjako sisäänrakennettuna"
+
+#: src/fluxer_marketing/components/pwa_install_dialog.gleam:132
+msgid "Screenshots courtesy of "
+msgstr "Näyttökuvat: "
+
+#: src/fluxer_marketing/pages/help_components.gleam:93
+msgid "Search"
+msgstr "Haku"
+
+#: src/fluxer_marketing/components/current_features.gleam:114
+msgid "Search & quick switcher"
+msgstr "Haku ja pikavaihtaja"
+
+#: src/fluxer_marketing/pages/help_search_page.gleam:46
+msgid "Search Results"
+msgstr "Hakutulokset"
+
+#: src/fluxer_marketing/pages/help_center_page.gleam:67
+#: src/fluxer_marketing/pages/help_search_page.gleam:66
+msgid "Search for help..."
+msgstr "Hae ohjeista..."
+
+#: src/fluxer_marketing/pages/help_category_page.gleam:92
+msgid "Search in "
+msgstr "Hae osiosta "
+
+#: src/fluxer_marketing/pages/help_category_page.gleam:90
+#: src/fluxer_marketing/pages/help_center_page.gleam:65
+#: src/fluxer_marketing/pages/help_search_page.gleam:64
+msgid "Search our help articles or browse by category."
+msgstr "Hae ohjeartikkeleista tai selaa kategorioita."
+
+#: src/fluxer_marketing/pages/help_category_page.gleam:126
+msgid "Search results for"
+msgstr "Hakutulokset haulle"
+
+#: src/fluxer_marketing/pages/help_search_page.gleam:49
+msgid "Search results for: "
+msgstr "Hakutulokset haulle: "
+
+#: src/fluxer_marketing/components/current_features.gleam:120
+msgid "Search through message history"
+msgstr "Hae viestihistoriasta"
+
+#: src/fluxer_marketing/pages/careers_page.gleam:151
+msgid "Security reports"
+msgstr "Tietoturvaraportit"
+
+#: src/fluxer_marketing/pages/download_page.gleam:232
+msgid "See badge counts on the app icon."
+msgstr "Näe ilmoitusmerkkien määrän sovelluskuvakkeessa."
+
+#: src/fluxer_marketing/pages/partners_page.gleam:312
+msgid "See perks"
+msgstr "Katso edut"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:979
+msgid "Self-Hosting"
+msgstr "Itsehostaus"
+
+#: src/fluxer_marketing/components/current_features.gleam:146
+msgid "Self-hosting"
+msgstr "Itsehostaus"
+
+#: src/fluxer_marketing/pages/download_page.gleam:330
+msgid "Send a one-time gift"
+msgstr "Lähetä kertalahja"
+
+#: src/fluxer_marketing/pages/partners_page.gleam:374
+msgid "Send us an email with the following information to get started:"
+msgstr "Lähetä meille sähköpostia seuraavilla tiedoilla, niin pääsemme alkuun:"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:634
+msgid "Set personalized sounds when you join voice channels to make your presence known."
+msgstr "Aseta omat äänet, kun liityt äänikanaville, jotta läsnäolosi huomataan."
+
+#: src/fluxer_marketing/pages/careers_page.gleam:408
+msgid "Share a bit about yourself, what you'd like to work on, and links to any relevant work."
+msgstr "Kerro lyhyesti itsestäsi, mitä haluaisit tehdä, ja liitä linkit mahdollisiin relevantteihin töihin."
+
+#: src/fluxer_marketing/pages/careers_page.gleam:143
+msgid "Share feedback, report bugs, and help make Fluxer welcoming for everyone."
+msgstr "Anna palautetta, ilmoita bugeista ja auta tekemään Fluxerista tervetullut kaikille."
+
+#: src/fluxer_marketing/components/current_features.gleam:75
+msgid "Share files and preview links"
+msgstr "Jaa tiedostoja ja esikatsele linkkejä"
+
+#: src/fluxer_marketing/components/platform_download_button.gleam:490
+msgid "Show download options"
+msgstr "Näytä latausvaihtoehdot"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:664
+msgid "Show off your Plutonium status with an exclusive badge on your profile."
+msgstr "Esittele Plutonium-statustasi profiilin eksklusiivisella merkillä."
+
+#: src/fluxer_marketing/components/coming_features.gleam:33
+msgid "Slash commands"
+msgstr "Slash-komennot"
+
+#: src/fluxer_marketing/pages/careers_page.gleam:236
+msgid "Software development"
+msgstr "Ohjelmistokehitys"
+
+#: src/fluxer_marketing/components/coming_features.gleam:57
+msgid "Soundboard"
+msgstr "Äänipaneeli"
+
+#: src/fluxer_marketing/components/footer.gleam:143
+#: src/fluxer_marketing/components/navigation.gleam:438
+msgid "Source Code"
+msgstr "Lähdekoodi"
+
+#: src/fluxer_marketing/components/locale_selector.gleam:127
+msgid "Spanish (Latin America)"
+msgstr "espanja (Latinalainen Amerikka)"
+
+#: src/fluxer_marketing/components/locale_selector.gleam:126
+msgid "Spanish (Spain)"
+msgstr "espanja (Espanja)"
+
+#: src/fluxer_marketing/pages/download_page.gleam:323
+msgid "Sponsor the roadmap for mobile"
+msgstr "Rahoita mobiilitiekarttaa"
+
+#: src/fluxer_marketing/components/coming_features.gleam:42
+msgid "Stage channels"
+msgstr "Lava-kanavat"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:594
+msgid "Stand out with animated profile pictures and banners to express your personality."
+msgstr "Erotu animoiduilla profiilikuvilla ja bannereilla ja näytä persoonasi."
+
+#: src/fluxer_marketing/components/get_involved_section.gleam:127
+msgid "Stay updated on news, service status, and what's happening. You can also follow "
+msgstr "Pysy ajan tasalla uutisista, palvelun tilasta ja siitä, mitä tapahtuu. Voit myös seurata "
+
+#: src/fluxer_marketing/pages/help_article_page.gleam:218
+#: src/fluxer_marketing/pages/help_article_page.gleam:360
+msgid "Still need help?"
+msgstr "Tarvitsetko vielä apua?"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:624
+msgid "Store up to 15 video backgrounds for calls. No more Downloads folder scavenger hunts!"
+msgstr "Tallenna puheluihin jopa 15 videotaustaa. Ei enää aarteenetsintää Lataukset-kansiosta!"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:614
+msgid "Stream in up to 4K resolution at 60fps so others can see you in stunning clarity."
+msgstr "Striimaa jopa 4K-tarkkuudella 60 fps, jotta muut näkevät sinut häikäisevän selkeästi."
+
+#: src/fluxer_marketing/components/coming_features.gleam:58
+msgid "Streamer mode"
+msgstr "Striimaajatila"
+
+#: src/fluxer_marketing/pages/donate_page.gleam:50
+#: src/fluxer_marketing/pages/donate_page.gleam:86
+msgid "Support Fluxer"
+msgstr "Tue Fluxeria"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:1077
+msgid "Support future development"
+msgstr "Tue tulevaa kehitystä"
+
+#: src/fluxer_marketing/components/locale_selector.gleam:145
+msgid "Swedish"
+msgstr "ruotsi"
+
+#: src/fluxer_marketing/components/current_features.gleam:155
+msgid "Switch between multiple instances"
+msgstr "Vaihda useiden instanssien välillä"
+
+#: src/fluxer_marketing/pages/press_page.gleam:147
+msgid "Symbol"
+msgstr "Symboli"
+
+#: src/fluxer_marketing/components/footer.gleam:238
+#: src/fluxer_marketing/components/navigation.gleam:397
+#: src/fluxer_marketing/pages/terms_page.gleam:41
+msgid "Terms of Service"
+msgstr "Käyttöehdot"
+
+#: src/fluxer_marketing/components/locale_selector.gleam:146
+msgid "Thai"
+msgstr "thai"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:998
+msgid "The Operator Pass is optional: pay for support and community access."
+msgstr "Operator Pass on valinnainen: maksa tuesta ja yhteisöön pääsystä."
+
+#: src/fluxer_marketing/components/coming_features.gleam:89
+msgid "The future is being built right now. These features are coming soon."
+msgstr "Tulevaisuutta rakennetaan juuri nyt. Nämä ominaisuudet ovat tulossa pian."
+
+#: src/fluxer_marketing/pages/careers_page.gleam:313
+msgid "The future of paid roles"
+msgstr "Palkattujen roolien tulevaisuus"
+
+#: src/fluxer_marketing/components/coming_features.gleam:51
+msgid "Theme marketplace"
+msgstr "Teemakauppa"
+
+#: src/fluxer_marketing/pages/download_page.gleam:255
+msgid "This isn't a full replacement for the desktop app yet, and some things you'd expect from a mobile chat app are still missing."
+msgstr "Tämä ei vielä täysin korvaa työpöytäsovellusta, ja osa mobiilichatilta odotettavista asioista puuttuu edelleen."
+
+#: src/fluxer_marketing/pages/not_found_page.gleam:60
+#: src/fluxer_marketing/pages/not_found_page.gleam:104
+msgid "This page doesn't exist. But there's plenty more to explore."
+msgstr "Tätä sivua ei ole olemassa. Mutta tutkittavaa riittää vielä paljon."
+
+#: src/fluxer_marketing/components/coming_features.gleam:37
+msgid "Threads and forums"
+msgstr "Ketjut ja foorumit"
+
+#: src/fluxer_marketing/pages/careers_page.gleam:243
+msgid "Translation & localization"
+msgstr "Kääntäminen ja lokalisointi"
+
+#: src/fluxer_marketing/pages/careers_page.gleam:162
+#: src/fluxer_marketing/pages/careers_page.gleam:257
+msgid "Trust & safety"
+msgstr "Luottamus ja turvallisuus"
+
+#: src/fluxer_marketing/pages/help_search_page.gleam:140
+msgid "Try different keywords or browse our categories."
+msgstr "Kokeile eri hakusanoja tai selaa kategorioitamme."
+
+#: src/fluxer_marketing/components/hackernews_banner.gleam:75
+msgid "Try it without an email at"
+msgstr "Kokeile sitä ilman sähköpostia osoitteessa"
+
+#: src/fluxer_marketing/components/locale_selector.gleam:147
+msgid "Turkish"
+msgstr "turkki"
+
+#: src/fluxer_marketing/components/locale_selector.gleam:148
+msgid "Ukrainian"
+msgstr "ukraina"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:857
+msgid "Unique profile badge"
+msgstr "Ainutlaatuinen profiilimerkki"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:1036
+msgid "Unlimited users"
+msgstr "Rajattomasti käyttäjiä"
+
+#: src/fluxer_marketing/pages/partners_page.gleam:203
+msgid "Unlock and test new features before they're available to everyone."
+msgstr "Avaa ja testaa uusia ominaisuuksia ennen kuin ne ovat saatavilla kaikille."
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:79
+msgid "Unlock higher limits and exclusive features while supporting an independent communication platform."
+msgstr "Avaa korkeammat rajat ja eksklusiiviset ominaisuudet samalla kun tuet riippumatonta viestintäalustaa."
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:611
+msgid "Up to 4K video quality"
+msgstr "Jopa 4K-videolaatu"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:54
+msgid "Upgrade to Plutonium for $4.99/mo: custom username tags, per-community profiles, message scheduling, 4K streaming, 500MB uploads, and more exclusive features."
+msgstr "Päivitä Plutoniumiin hintaan 4,99 $/kk: mukautetut käyttäjänimitunnisteet, profiilit yhteisöittäin, viestien ajastus, 4K-striimaus, 500 MB:n lähetykset ja lisää eksklusiivisia ominaisuuksia."
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:644
+msgid "Upload and use your own notification sounds to personalize your Fluxer experience."
+msgstr "Lähetä ja käytä omia ilmoitusääniäsi ja tee Fluxer-kokemuksesta omannäköisesi."
+
+#: src/fluxer_marketing/pages/partners_page.gleam:181
+msgid "Upload animated GIFs as your community's avatar and banner."
+msgstr "Lähetä animoituja GIFejä yhteisösi profiilikuvaksi ja banneriksi."
+
+#: src/fluxer_marketing/components/current_features.gleam:136
+msgid "Upload custom emojis and stickers"
+msgstr "Lähetä omia emojeja ja tarroja"
+
+#: src/fluxer_marketing/components/platform_download_button.gleam:315
+msgid "Use Fluxer in your mobile browser for now"
+msgstr "Käytä Fluxeria toistaiseksi mobiiliselaimessa"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:378
+msgid "Use animated emojis"
+msgstr "Käytä animoituja emojeja"
+
+#: src/fluxer_marketing/components/current_features.gleam:154
+msgid "Use our desktop client (mobile coming soon)"
+msgstr "Käytä työpöytäsovellustamme (mobiiliversio tulossa pian)"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:604
+msgid "Use your favorite emojis and stickers from any community, anywhere across Fluxer."
+msgstr "Käytä lempiemojeja ja tarroja mistä tahansa yhteisöstä missä tahansa Fluxerissa."
+
+#: src/fluxer_marketing/pages/partners_page.gleam:222
+msgid "VIP Voice Servers"
+msgstr "VIP-äänipalvelimet"
+
+#: src/fluxer_marketing/components/partner_section.gleam:117
+msgid "Verified Community"
+msgstr "Vahvistettu yhteisö"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:621
+msgid "Video backgrounds"
+msgstr "Videotaustat"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:392
+msgid "Video quality"
+msgstr "Videolaatu"
+
+#: src/fluxer_marketing/components/locale_selector.gleam:149
+msgid "Vietnamese"
+msgstr "vietnam"
+
+#: src/fluxer_marketing/pages/help_category_page.gleam:172
+msgid "View all articles"
+msgstr "Näytä kaikki artikkelit"
+
+#: src/fluxer_marketing/components/get_involved_section.gleam:183
+#: src/fluxer_marketing/pages/careers_page.gleam:123
+msgid "View repository"
+msgstr "Avaa repositorio"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:822
+msgid "Visionary"
+msgstr "Visionary"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:864
+msgid "Visionary & Operators communities with team access"
+msgstr "Visionary- ja Operators-yhteisöt sekä yhteys tiimiin"
+
+#: src/fluxer_marketing/components/current_features.gleam:82
+msgid "Voice & video"
+msgstr "Ääni ja video"
+
+#: src/fluxer_marketing/pages/careers_page.gleam:396
+msgid "Want to help build Fluxer?"
+msgstr "Haluatko auttaa rakentamaan Fluxeria?"
+
+#: src/fluxer_marketing/pages/careers_page.gleam:94
+msgid "Ways to contribute"
+msgstr "Tapoja osallistua"
+
+#: src/fluxer_marketing/components/get_involved_section.gleam:192
+msgid "We appreciate responsible disclosure to security@fluxer.app. We offer Plutonium codes and Bug Hunter badges based on severity."
+msgstr "Arvostamme vastuullista ilmoittamista osoitteeseen security@fluxer.app. Tarjoamme Plutonium-koodeja ja Bug Hunter -merkkejä vakavuusasteen mukaan."
+
+#: src/fluxer_marketing/components/final_cta.gleam:56
+msgid "We need your support to make this work."
+msgstr "Tarvitsemme tukeasi, jotta tämä toimii."
+
+#: src/fluxer_marketing/pages/partners_page.gleam:453
+msgid "We review all applications and will get back to you as soon as possible."
+msgstr "Käsittelemme kaikki hakemukset ja palaamme sinulle mahdollisimman pian."
+
+#: src/fluxer_marketing/pages/press_page.gleam:301
+msgid "We typically respond within 24 hours during business days."
+msgstr "Vastaamme yleensä 24 tunnin sisällä arkipäivisin."
+
+#: src/fluxer_marketing/components/get_involved_section.gleam:62
+msgid "We're building a complete platform with all the features you'd expect. But we can't do it without your help!"
+msgstr "Rakennamme täyttä alustaa, jossa on kaikki odottamasi ominaisuudet. Mutta emme pysty siihen ilman apuasi!"
+
+#: src/fluxer_marketing/pages/download_page.gleam:214
+msgid "We're building apps for iOS and Android. Until they're ready, Fluxer works in your mobile browser — and we've put a lot of effort into making it feel as app-like as possible."
+msgstr "Rakennamme sovelluksia iOS:lle ja Androidille. Kunnes ne ovat valmiita, Fluxer toimii mobiiliselaimessasi – ja olemme panostaneet paljon siihen, että se tuntuu mahdollisimman sovellusmaiselta."
+
+#: src/fluxer_marketing/components/get_involved_section.gleam:78
+msgid "We're limiting registrations during beta. Once you're in, you can give friends a code to skip the queue."
+msgstr "Rajoitamme rekisteröitymisiä betan aikana. Kun olet mukana, voit antaa kavereille koodin, jolla he voivat ohittaa jonon."
+
+#: src/fluxer_marketing/pages/careers_page.gleam:324
+msgid "We're still building the business around Fluxer and aren't quite ready for paid roles yet."
+msgstr "Rakennamme vielä Fluxerin ympärille liiketoimintaa emmekä ole aivan valmiita palkattuihin rooleihin."
+
+#: src/fluxer_marketing/components/current_features.gleam:107
+msgid "Webhooks and bot support"
+msgstr "Webhookit ja bottituki"
+
+#: src/fluxer_marketing/pages/donate_page.gleam:351
+msgid "What does my donation support?"
+msgstr "Mitä lahjoitukseni tukee?"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:549
+msgid "What you get with Plutonium"
+msgstr "Mitä saat Plutoniumilla"
+
+#: src/fluxer_marketing/components/current_features.gleam:45
+msgid "What's available today"
+msgstr "Saatavilla tänään"
+
+#: src/fluxer_marketing/components/coming_features.gleam:77
+msgid "What's coming next"
+msgstr "Mitä on tulossa seuraavaksi"
+
+#: src/fluxer_marketing/pages/donate_page.gleam:385
+msgid "What's the difference between Individual and Business?"
+msgstr "Mitä eroa on Yksityishenkilöllä ja Yrityksellä?"
+
+#: src/fluxer_marketing/pages/press_page.gleam:226
+msgid "White"
+msgstr "Valkoinen"
+
+#: src/fluxer_marketing/pages/press_page.gleam:110
+msgid "White Logo"
+msgstr "Valkoinen logo"
+
+#: src/fluxer_marketing/pages/press_page.gleam:164
+msgid "White Symbol"
+msgstr "Valkoinen symboli"
+
+#: src/fluxer_marketing/components/platform_download_button.gleam:346
+msgid "Windows"
+msgstr "Windows"
+
+#: src/fluxer_marketing/components/platform_download_button.gleam:232
+msgid "Windows 10+"
+msgstr "Windows 10+"
+
+#: src/fluxer_marketing/pages/careers_page.gleam:357
+msgid "With your support, we hope to make this independent communication platform sustainable and start offering paid roles in the future."
+msgstr "Tuellasi toivomme voivamme tehdä tästä riippumattomasta viestintäalustasta kestävän ja alkaa tarjota palkattuja rooleja tulevaisuudessa."
+
+#: src/fluxer_marketing/pages/partners_page.gleam:137
+msgid "Your community gets verified status for authenticity and trust."
+msgstr "Yhteisösi saa vahvistetun statuksen aitoutta ja luottamusta varten."
+
+#: src/fluxer_marketing/pages/partners_page.gleam:192
+msgid "Your community receives increased limits when you need them."
+msgstr "Yhteisösi saa korotetut rajat silloin kun niitä tarvitset."
+
+#: src/fluxer_marketing/pages/donate_page.gleam:354
+msgid "Your donation helps fund Fluxer's infrastructure costs, including servers, bandwidth, storage, and ongoing development of new features. It helps us maintain and improve the platform for everyone."
+msgstr "Lahjoituksesi auttaa kattamaan Fluxerin infrastruktuurikustannuksia, kuten palvelimia, kaistanleveyttä, tallennustilaa ja uusien ominaisuuksien jatkuvaa kehitystä. Se auttaa meitä ylläpitämään ja parantamaan alustaa kaikkien hyväksi."
+
+#: src/fluxer_marketing/pages/partners_page.gleam:395
+msgid "Your name and platform username"
+msgstr "Nimesi ja käyttäjänimesi alustalla"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:949
+msgid "all"
+msgstr "kaikki"
+
+#: src/fluxer_marketing/pages/help_center_page.gleam:156
+msgid "article"
+msgstr "artikkeli"
+
+#: src/fluxer_marketing/pages/help_center_page.gleam:157
+msgid "articles"
+msgstr "artikkelit"
+
+#: src/fluxer_marketing/components/platform_download_button.gleam:518
+msgid "iOS"
+msgstr "iOS"
+
+#: src/fluxer_marketing/components/pwa_install_dialog.gleam:98
+msgid "iOS / iPadOS"
+msgstr "iOS / iPadOS"
+
+#: src/fluxer_marketing/components/platform_download_button.gleam:235
+msgid "iOS 15+"
+msgstr "iOS 15+"
+
+#: src/fluxer_marketing/components/platform_download_button.gleam:355
+msgid "macOS"
+msgstr "macOS"
+
+#: src/fluxer_marketing/components/platform_download_button.gleam:233
+msgid "macOS 10.15+"
+msgstr "macOS 10.15+"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:1067
+msgid "one-time purchase"
+msgstr "kertamaksu"
+
+#: src/fluxer_marketing/components/plutonium_section.gleam:68
+#: src/fluxer_marketing/pages/donate_page.gleam:284
+#: src/fluxer_marketing/pages/plutonium_page.gleam:106
+#: src/fluxer_marketing/pages/plutonium_page.gleam:230
+msgid "or"
+msgstr "tai"
+
+#: src/fluxer_marketing/components/get_involved_section.gleam:140
+msgid "our RSS feed"
+msgstr "RSS-syötettämme"
+
+#: src/fluxer_marketing/pages/help_search_page.gleam:96
+msgid "result for"
+msgstr "tulos haulle"
+
+#: src/fluxer_marketing/pages/help_search_page.gleam:100
+msgid "results for"
+msgstr "tulosta haulle"
+
+#: src/fluxer_marketing/pages/plutonium_page.gleam:801
+msgid "{0} of {1} slots left"
+msgstr "{0}/{1} paikkaa jäljellä"
+
+#: src/fluxer_marketing/components/footer.gleam:325
+msgid "© Fluxer Platform AB (Swedish limited liability company: 559537-3993)"
+msgstr "© Fluxer Platform AB (ruotsalainen osakeyhtiö: 559537-3993)"
+

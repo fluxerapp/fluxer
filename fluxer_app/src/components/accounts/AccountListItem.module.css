@@ -1,0 +1,167 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.accountItem {
+	position: relative;
+	display: flex;
+	width: 100%;
+	cursor: pointer;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--spacing-3);
+	border-radius: var(--radius-md);
+	border: none;
+	padding: var(--spacing-3);
+	text-align: left;
+	background-color: var(--background-secondary);
+	color: var(--text-primary);
+	font: inherit;
+	transition: background-color var(--transition-fast);
+}
+
+.accountItem.compact {
+	padding: 0.5rem 0.625rem;
+	background-color: transparent;
+	color: var(--text-primary-muted);
+}
+
+.accountItem:hover:not(:disabled) {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-primary);
+}
+
+.accountItem.compact:hover:not(:disabled) {
+	background-color: var(--surface-interactive-hover-bg);
+}
+
+.accountItem:active:not(:disabled) {
+	background-color: var(--background-modifier-active);
+}
+
+.accountItem.compact:active:not(:disabled) {
+	background-color: var(--surface-interactive-active-bg);
+}
+
+.accountItem:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.accountItem.compact:disabled {
+	opacity: 1;
+	cursor: default;
+}
+
+.accountItem.current {
+	background-color: var(--surface-interactive-selected-bg);
+	color: var(--surface-interactive-selected-color);
+}
+
+.accountItem.current:hover:not(:disabled) {
+	background-color: var(--surface-interactive-selected-bg);
+}
+
+.accountItemContent {
+	position: relative;
+	display: flex;
+	flex: 1;
+	min-width: 0;
+	align-items: center;
+	gap: var(--spacing-3);
+}
+
+.accountItem.compact .accountItemContent {
+	gap: 0.75rem;
+}
+
+.accountInfo {
+	min-width: 0;
+	flex: 1 1 0;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	gap: var(--spacing-1);
+}
+
+.accountItem.compact .accountInfo {
+	gap: 0.125rem;
+}
+
+.accountName {
+	display: block;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-weight: 600;
+	font-size: 0.9375rem;
+	line-height: 1.25rem;
+	color: var(--text-primary);
+}
+
+.accountItem.compact .accountName {
+	font-weight: 500;
+}
+
+.accountItem.current .accountName {
+	color: inherit;
+}
+
+.accountMeta {
+	display: block;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	color: var(--text-tertiary);
+	font-size: 0.75rem;
+	line-height: 1rem;
+}
+
+.accountItem.compact .accountMeta {
+	color: var(--text-primary-muted);
+}
+
+.accountItem.current .accountMeta {
+	color: var(--surface-interactive-selected-color);
+	opacity: 0.8;
+}
+
+.instanceLabel {
+	font-size: 0.6875rem;
+	color: var(--text-muted);
+}
+
+.badge {
+	flex-shrink: 0;
+	font-size: 0.625rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	padding: 2px 6px;
+	border-radius: var(--radius-sm);
+	margin-left: var(--spacing-2);
+}
+
+.badge.active {
+	color: white;
+	background-color: var(--status-online);
+}
+
+.badge.expired {
+	color: var(--text-danger);
+	background-color: color-mix(in srgb, var(--status-danger) 15%, transparent);
+}

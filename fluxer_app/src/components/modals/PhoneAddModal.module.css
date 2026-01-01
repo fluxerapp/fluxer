@@ -1,0 +1,65 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.content {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	padding-bottom: 16px;
+}
+
+.formContent {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+.selectWrapper {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.flagOption {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.flagImage {
+	height: 20px;
+	width: 20px;
+}
+
+.dialCodeText {
+	color: var(--text-tertiary);
+}
+
+.footerText {
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--text-primary-muted);
+}
+
+.selectLabel {
+	font-weight: 500;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--text-primary);
+}

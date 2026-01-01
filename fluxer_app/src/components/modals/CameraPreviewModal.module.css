@@ -1,0 +1,144 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.content {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+}
+
+.backgroundSection {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}
+
+.backgroundLabel {
+	font-weight: 500;
+	color: var(--text-primary);
+	font-size: 0.875rem;
+}
+
+.iconMargin {
+	margin-right: 0.5rem;
+}
+
+.videoContainer {
+	position: relative;
+	aspect-ratio: 16 / 9;
+	max-height: 24rem;
+	overflow: hidden;
+	border-radius: 0.5rem;
+	background-color: black;
+}
+
+.video {
+	height: 100%;
+	width: 100%;
+	object-fit: contain;
+}
+
+.overlay {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	background-color: rgba(0, 0, 0, 0.7);
+}
+
+.overlayText {
+	margin-top: 0.75rem;
+	text-align: center;
+	color: white;
+}
+
+.overlayTextMedium {
+	font-weight: 500;
+	font-size: 0.875rem;
+}
+
+.errorOverlay {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background-color: rgba(0, 0, 0, 0.7);
+}
+
+.errorText {
+	text-align: center;
+	color: rgb(248 113 113);
+}
+
+.errorTitle {
+	font-weight: 500;
+	font-size: 0.875rem;
+}
+
+.errorDetail {
+	font-size: 0.75rem;
+	opacity: 0.75;
+}
+
+.liveLabel {
+	position: absolute;
+	top: 0.5rem;
+	left: 0.5rem;
+	border-radius: 0.25rem;
+	background-color: rgba(0, 0, 0, 0.7);
+	padding-left: 0.5rem;
+	padding-right: 0.5rem;
+	padding-top: 0.25rem;
+	padding-bottom: 0.25rem;
+	font-size: 0.875rem;
+	color: white;
+}
+
+.resolutionInfo {
+	position: absolute;
+	right: 0.5rem;
+	bottom: 0.5rem;
+	border-radius: 0.25rem;
+	background-color: rgba(0, 0, 0, 0.7);
+	padding-left: 0.5rem;
+	padding-right: 0.5rem;
+	padding-top: 0.25rem;
+	padding-bottom: 0.25rem;
+	color: white;
+	font-size: 0.75rem;
+}
+
+.resolutionDetails {
+	display: flex;
+	flex-direction: column;
+	gap: 0.125rem;
+}
+
+.resolutionRow {
+	display: flex;
+	align-items: center;
+	gap: 0.25rem;
+}
+
+.warningIcon {
+	color: rgb(253 224 71);
+}

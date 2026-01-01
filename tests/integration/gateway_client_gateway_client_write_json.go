@@ -1,0 +1,34 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+package integration
+
+import (
+	"fmt"
+	"time"
+)
+
+func (g *gatewayClient) writeJSON(body any) {
+	g.writeMu.Lock()
+	defer g.writeMu.Unlock()
+	_ = g.conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
+	if err := g.conn.WriteJSON(body); err != nil && !g.closed.Load() {
+		g.reportError(fmt.Errorf("failed to send gateway payload: %w", err))
+	}
+}

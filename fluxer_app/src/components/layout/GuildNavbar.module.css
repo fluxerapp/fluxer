@@ -1,0 +1,98 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.guildNavbarContainer {
+	display: grid;
+	grid-template-rows: auto 1fr;
+	height: calc(
+		100% -
+		var(--layout-user-area-reserved-height, 0px) -
+		var(--layout-mobile-bottom-nav-reserved-height, 0px)
+	);
+	min-height: 0;
+	width: var(--layout-sidebar-width);
+	min-width: 0;
+	user-select: none;
+	-webkit-user-select: none;
+	overflow: hidden;
+	background-color: var(--background-secondary);
+	position: relative;
+}
+
+.guildNavbarContainerMobile {
+	width: 100%;
+}
+
+.guildNavbarReserveMobileBottomNav {
+	--layout-mobile-bottom-nav-reserved-height: var(--mobile-bottom-nav-height);
+}
+
+:global(html.platform-native):not(.platform-macos) .guildNavbarContainer {
+	border-top-left-radius: clamp(8px, 1.2vw, 14px);
+	background-clip: padding-box;
+	overflow: hidden;
+}
+
+.hoverRoll {
+	display: inline-block;
+	vertical-align: top;
+	cursor: default;
+	text-align: left;
+	box-sizing: border-box;
+	position: relative;
+	width: 100%;
+	contain: paint;
+}
+
+.default,
+.hovered {
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	overflow: hidden;
+	display: block;
+	transform-style: preserve-3d;
+	pointer-events: none;
+	width: 100%;
+	transition:
+		opacity 0.22s ease,
+		transform 0.22s ease;
+}
+
+.hovered {
+	opacity: 0;
+	transform: translate3d(0, 107%, 0);
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+}
+
+.hoverRoll.forceHover:not(.disabled) .default,
+.hoverRoll:hover:not(.disabled) .default {
+	transform: translate3d(0, -107%, 0);
+	opacity: 0;
+	user-select: none;
+	-webkit-user-select: none;
+}
+
+.hoverRoll.forceHover:not(.disabled) .hovered,
+.hoverRoll:hover:not(.disabled) .hovered {
+	transform: translatez(0);
+	opacity: 1;
+}

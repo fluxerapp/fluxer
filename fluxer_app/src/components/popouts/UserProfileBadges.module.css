@@ -1,0 +1,105 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.containerModal {
+	display: flex;
+	align-items: center;
+}
+
+.containerModalMobile {
+	gap: 8px;
+}
+
+.containerModalDesktop {
+	gap: 4px;
+}
+
+.containerPopout {
+	position: absolute;
+	top: 115px;
+	right: 10px;
+	z-index: 10;
+	display: flex;
+	gap: 8px;
+	border-radius: 6px;
+	padding: 4px;
+	background: color-mix(in srgb, var(--background-secondary) 80%, transparent);
+	backdrop-filter: blur(10px) saturate(1.1);
+}
+
+.badgeMobile {
+	height: 28px;
+	width: 28px;
+}
+
+.badgeDesktop {
+	height: 20px;
+	width: 20px;
+}
+
+.virtualBadge {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding-top: 1px;
+	font-weight: 700;
+	font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+	color: #4641d9;
+	line-height: 1;
+	letter-spacing: 0.05em;
+	text-decoration: none;
+	touch-action: manipulation;
+	user-select: none;
+	-webkit-user-select: none;
+	cursor: pointer;
+}
+
+.virtualBadgeMobile {
+	height: 28px;
+	width: 28px;
+	font-size: 18px;
+	line-height: 24px;
+}
+
+.virtualBadgeDesktop {
+	height: 20px;
+	width: 20px;
+	font-size: 14px;
+	line-height: 20px;
+}
+
+.virtualBadge:hover,
+.virtualBadge:focus,
+.virtualBadge:active {
+	text-decoration: none;
+}
+
+.link {
+	cursor: pointer;
+	touch-action: manipulation;
+	user-select: none;
+	-webkit-user-select: none;
+	text-decoration: none;
+}
+
+.link:hover,
+.link:focus,
+.link:active {
+	text-decoration: none;
+}

@@ -1,0 +1,195 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.row {
+	display: flex;
+	align-items: center;
+	width: 100%;
+	gap: 0.5rem;
+	border-radius: 0.75rem;
+}
+
+.mainButton {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	flex: 1;
+	min-width: 0;
+	padding: 0.5rem 0.75rem;
+	border-radius: 0.75rem;
+	background-color: var(--background-secondary);
+	border: 1px solid var(--background-modifier-accent);
+}
+
+button.clickable {
+	cursor: pointer;
+	transition: background-color 0.15s ease;
+}
+
+button.clickable:hover {
+	background-color: var(--background-modifier-hover);
+}
+
+button.clickable:active {
+	background-color: var(--background-modifier-active);
+}
+
+.avatarWrap {
+	flex-shrink: 0;
+}
+
+.body {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+	flex: 1;
+	min-width: 0;
+}
+
+.titleRow {
+	display: flex;
+	align-items: center;
+	gap: 0.4rem;
+}
+
+.displayName {
+	font-weight: 600;
+	font-size: 1rem;
+}
+
+.tag {
+	font-size: 0.875rem;
+	color: var(--text-tertiary);
+}
+
+.primaryLine {
+	font-weight: 600;
+	font-size: 0.9rem;
+}
+
+.currentName {
+	color: var(--text-success);
+	font-weight: 700;
+}
+
+.discriminator {
+	color: var(--text-tertiary);
+	font-weight: 400;
+}
+
+.currentFlag {
+	font-size: 0.75rem;
+	color: var(--status-online);
+}
+
+.meta {
+	font-size: 0.75rem;
+	color: var(--text-tertiary);
+}
+
+.expired {
+	font-size: 0.75rem;
+	color: var(--status-danger);
+}
+
+.menuButton {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 2.5rem;
+	height: 2.5rem;
+	border: none;
+	background: transparent;
+	color: var(--text-secondary);
+	cursor: pointer;
+	flex-shrink: 0;
+	border-radius: 0.5rem;
+}
+
+.menuButton:hover {
+	color: var(--text-primary);
+	background: var(--background-modifier-hover);
+}
+
+.menuIcon {
+	width: 20px;
+	height: 20px;
+}
+
+.compact .mainButton {
+	padding: 0.4rem 0.6rem;
+	background-color: var(--background-primary);
+}
+
+.manage .mainButton {
+	padding: 0.65rem 0.75rem;
+}
+
+.manage .primaryLine {
+	font-size: 1rem;
+}
+
+.compactRow {
+	display: flex;
+	align-items: center;
+	gap: 0.4rem;
+}
+
+.globeButtonCompact {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	width: 1.2rem;
+	height: 1.2rem;
+	padding: 0;
+	border: none;
+	background: transparent;
+	color: var(--text-secondary);
+	cursor: pointer;
+	border-radius: 0.25rem;
+	transition:
+		background-color 0.2s ease,
+		color 0.2s ease;
+}
+
+.globeButtonCompact:hover {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-primary);
+}
+
+.checkIndicator {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	width: 1.25rem;
+	height: 1.25rem;
+	background-color: var(--brand-primary);
+	border-radius: 50%;
+	color: white;
+}
+
+.caretIndicator {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	color: var(--text-secondary);
+}

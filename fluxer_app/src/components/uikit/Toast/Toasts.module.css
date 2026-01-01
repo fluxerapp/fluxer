@@ -1,0 +1,50 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.container {
+	pointer-events: none;
+	position: fixed;
+	z-index: var(--z-index-toast);
+}
+
+.containerMobile {
+	right: 1rem;
+	left: 1rem;
+	top: calc(1rem + env(safe-area-inset-top, 0px));
+	display: flex;
+	justify-content: center;
+}
+
+.containerDesktop {
+	transform: translateX(-50%);
+	top: calc(1.5rem + env(safe-area-inset-top, 0px));
+	left: 50%;
+}
+
+:global(html.platform-native:not(.platform-macos)) #toast-portal-root .containerDesktop {
+	top: calc(1.5rem + env(safe-area-inset-top, 0px) + var(--native-titlebar-height, 0px));
+}
+
+:global(html.platform-native:not(.platform-macos)) #toast-portal-root .containerMobile {
+	top: calc(1rem + env(safe-area-inset-top, 0px) + var(--native-titlebar-height, 0px));
+}
+
+.toastWrapper {
+	pointer-events: auto;
+}

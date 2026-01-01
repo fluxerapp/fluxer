@@ -1,0 +1,110 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	background-color: var(--background-secondary);
+	border: 1px solid var(--border-color);
+	border-radius: 20px;
+	padding: 8px 14px;
+	font-size: 0.875rem;
+	cursor: pointer;
+	transition: all 150ms ease;
+	white-space: nowrap;
+	touch-action: manipulation;
+	-webkit-tap-highlight-color: transparent;
+	user-select: none;
+}
+
+.chip:active {
+	transform: scale(0.96);
+}
+
+@media (hover: hover) {
+	.chip:hover {
+		background-color: var(--background-secondary-hover);
+	}
+}
+
+.chipActive {
+	background-color: var(--brand-primary);
+	border-color: var(--brand-primary);
+}
+
+@media (hover: hover) {
+	.chipActive:hover {
+		background-color: var(--brand-primary-hover);
+	}
+}
+
+.chipIcon {
+	display: flex;
+	align-items: center;
+	color: var(--text-secondary);
+}
+
+.chipActive .chipIcon {
+	color: var(--text-on-brand-primary);
+}
+
+.chipContent {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.chipLabel {
+	font-weight: 600;
+	color: var(--text-secondary);
+}
+
+.chipLabelActive {
+	color: var(--text-on-brand-primary);
+}
+
+.chipValue {
+	color: var(--text-primary);
+}
+
+.chipValueActive {
+	color: var(--text-on-brand-primary);
+}
+
+.removeButton {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 2px;
+	margin-left: 2px;
+	background: transparent;
+	border: none;
+	color: var(--text-on-brand-primary);
+	opacity: 0.8;
+	cursor: pointer;
+	border-radius: 50%;
+	transition: opacity 150ms ease;
+}
+
+@media (hover: hover) {
+	.removeButton:hover {
+		opacity: 1;
+	}
+}

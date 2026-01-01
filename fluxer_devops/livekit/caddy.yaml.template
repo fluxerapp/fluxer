@@ -1,0 +1,56 @@
+logging:
+  logs:
+    default:
+      level: INFO
+
+storage:
+  module: 'file_system'
+  root: '/data'
+
+apps:
+  tls:
+    automation:
+      policies:
+        - subjects:
+            - '${LIVEKIT_DOMAIN}'
+            - '${LIVEKIT_DOMAIN_TURN}'
+          issuers:
+            - module: acme
+              challenges:
+                dns:
+                  provider:
+                    name: porkbun
+                    api_key: '{env.PORKBUN_API_KEY}'
+                    api_secret_key: '{env.PORKBUN_API_SECRET_KEY}'
+          on_demand: false
+    certificates:
+      automate:
+        - '${LIVEKIT_DOMAIN}'
+        - '${LIVEKIT_DOMAIN_TURN}'
+
+  layer4:
+    servers:
+      main:
+        listen: [':443']
+        routes:
+          - match:
+              - tls:
+                  sni:
+                    - '${LIVEKIT_DOMAIN_TURN}'
+            handle:
+              - handler: tls
+              - handler: proxy
+                upstreams:
+                  - dial: ['livekit:5349']
+
+          - match:
+              - tls:
+                  sni:
+                    - '${LIVEKIT_DOMAIN}'
+            handle:
+              - handler: tls
+                connection_policies:
+                  - alpn: ['http/1.1']
+              - handler: proxy
+                upstreams:
+                  - dial: ['livekit:7880']

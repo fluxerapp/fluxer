@@ -1,0 +1,84 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.container {
+	overflow: hidden;
+	animation: slideDown 300ms ease-out;
+}
+
+.label {
+	color: var(--text-secondary);
+	font-size: 0.75rem;
+	line-height: 1rem;
+	margin-bottom: 0.5rem;
+}
+
+.suggestionsList {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+}
+
+.suggestionButton {
+	border-radius: 0.375rem;
+	background-color: var(--background-secondary-alt);
+	padding: 0.375rem 0.75rem;
+	color: var(--text-primary);
+	font-size: 0.75rem;
+	line-height: 1rem;
+	transition:
+		background-color 150ms ease,
+		transform 150ms ease;
+	animation: fadeInScale 200ms ease-out backwards;
+	border: none;
+	cursor: pointer;
+}
+
+.suggestionButton:hover {
+	background-color: var(--background-modifier-hover);
+	transform: translateY(-1px);
+}
+
+.suggestionButton:active {
+	transform: translateY(0);
+}
+
+@keyframes slideDown {
+	from {
+		opacity: 0;
+		max-height: 0;
+		transform: translateY(-10px);
+	}
+	to {
+		opacity: 1;
+		max-height: 500px;
+		transform: translateY(0);
+	}
+}
+
+@keyframes fadeInScale {
+	from {
+		opacity: 0;
+		transform: scale(0.9);
+	}
+	to {
+		opacity: 1;
+		transform: scale(1);
+	}
+}

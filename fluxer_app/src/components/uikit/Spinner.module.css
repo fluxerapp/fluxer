@@ -1,0 +1,92 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.spinner {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.spinnerInner {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.spinnerItem {
+	display: inline-block;
+	background-color: var(--text-secondary);
+	border-radius: 4px;
+	opacity: 0.3;
+	animation: spinnerPulsingEllipsis 1.4s ease-in-out infinite;
+}
+
+.spinnerItem:not(:first-child) {
+	margin-left: 2px;
+}
+
+.spinnerItem.small {
+	width: 6px;
+	height: 6px;
+}
+
+.spinnerItem.medium {
+	width: 8px;
+	height: 8px;
+}
+
+.spinnerItem.large {
+	width: 10px;
+	height: 10px;
+}
+
+.delay1 {
+	animation-delay: 0.2s;
+}
+
+.delay2 {
+	animation-delay: 0.4s;
+}
+
+.srOnly {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
+}
+
+@keyframes spinnerPulsingEllipsis {
+	0% {
+		opacity: 1;
+		transform: scale(1);
+	}
+	50% {
+		opacity: 0.3;
+		transform: scale(0.8);
+	}
+	100% {
+		opacity: 1;
+		transform: scale(1);
+	}
+}

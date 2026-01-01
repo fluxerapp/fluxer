@@ -1,0 +1,73 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.wrapper {
+	align-items: stretch;
+	background-color: var(--background-secondary);
+	border: 1px solid var(--theme-border);
+	border-radius: 4px;
+	box-sizing: border-box;
+	color: var(--text-tertiary);
+	display: grid;
+	flex: 0 0 auto;
+	flex-shrink: 0;
+	font-size: 12px;
+	font-weight: 500;
+	grid-template-columns: 1fr auto;
+	height: 16px;
+	justify-content: center;
+	line-height: 14px;
+	margin-right: -4px;
+	overflow: hidden;
+}
+
+.users {
+	align-items: center;
+	background-color: var(--background-secondary);
+	box-sizing: border-box;
+	display: block;
+	font-variant-numeric: tabular-nums;
+	padding: 0 6px;
+	text-align: center;
+	width: 28px;
+}
+
+.total {
+	background-color: var(--background-modifier-selected);
+	box-sizing: border-box;
+	display: block;
+	font-variant-numeric: tabular-nums;
+	padding: 0 4px 0 2px;
+	position: relative;
+	text-align: center;
+	width: 20px;
+}
+
+.total::after {
+	border-bottom: 0 solid transparent;
+	border-right: 5px solid transparent;
+	border-right-color: var(--background-modifier-selected);
+	border-top: 16px solid transparent;
+	content: '';
+	height: 0;
+	left: -5px;
+	position: absolute;
+	top: 0;
+	width: 0;
+}

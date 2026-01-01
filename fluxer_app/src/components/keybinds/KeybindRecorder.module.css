@@ -1,0 +1,243 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.recorder {
+	box-sizing: border-box;
+	position: relative;
+	border: 1px solid var(--background-modifier-accent);
+	border-radius: var(--radius-lg);
+	min-height: 44px;
+	min-width: 200px;
+	width: 100%;
+	cursor: pointer;
+	background-color: var(--background-tertiary);
+	font-family: var(--font-sans);
+	text-align: left;
+	transition:
+		border-color 0.15s ease,
+		box-shadow 0.15s ease;
+}
+
+.recorder:not(.disabled):hover,
+.recorder[aria-expanded='true']:not(.disabled) {
+	border-color: var(--background-modifier-accent-focus);
+}
+
+.recorder * {
+	cursor: pointer;
+}
+
+.layout {
+	position: absolute;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	display: flex;
+	align-items: center;
+}
+
+.editIconLeft {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	flex-shrink: 0;
+	color: var(--text-primary-muted);
+	transition: color 0.15s ease;
+}
+
+.recorder:hover:not(.disabled) .editIconLeft,
+.recorder[aria-expanded='true']:not(.disabled) .editIconLeft {
+	color: var(--text-primary);
+}
+
+.inputWrapper {
+	flex: 1 1 auto;
+	min-width: 0;
+	position: relative;
+	z-index: 1;
+	font-family: var(--font-sans);
+	font-weight: 600;
+	font-size: 0.875rem;
+	user-select: none;
+	-webkit-user-select: none;
+}
+
+.input {
+	display: block;
+	width: 100%;
+	box-sizing: border-box;
+	padding: 0.625rem 1rem 0.625rem 0;
+	font-family: inherit;
+	font-weight: inherit;
+	font-size: inherit;
+	line-height: 1.25rem;
+	color: var(--text-primary);
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	overflow: hidden;
+}
+
+.hasValue .input {
+	color: var(--text-primary);
+}
+
+.recorder:not(.hasValue) .input {
+	color: var(--text-primary-muted);
+	font-weight: 400;
+}
+
+.disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.disabled * {
+	cursor: not-allowed;
+}
+
+.disabled .button {
+	opacity: 1;
+}
+
+.popout {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	padding: 0.875rem;
+	border-radius: var(--radius-lg);
+	background-color: var(--background-primary);
+	border: 1px solid var(--background-modifier-accent);
+	box-shadow:
+		0 20px 38px -12px rgb(0 0 0 / 0.3),
+		0 8px 16px -8px rgb(0 0 0 / 0.25);
+	min-width: min(320px, 90vw);
+}
+
+.popoutHeader {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+}
+
+.popoutTitle {
+	font-weight: 700;
+	font-size: 0.95rem;
+	color: var(--text-primary);
+}
+
+.popoutHint {
+	color: var(--text-primary-muted);
+	font-size: 0.8125rem;
+	line-height: 1.4;
+}
+
+.recorderBox {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	min-height: 56px;
+	padding: 0.75rem 1rem;
+	border: 2px dashed var(--background-modifier-accent);
+	border-radius: var(--radius-lg);
+	background-color: var(--background-tertiary);
+	color: var(--text-primary);
+	cursor: pointer;
+	transition:
+		border-color 0.15s ease,
+		background-color 0.15s ease,
+		color 0.15s ease;
+}
+
+.recorderBox:hover {
+	border-color: var(--background-modifier-accent-focus);
+	background-color: var(--background-secondary-alt);
+}
+
+.recorderBox:focus-visible {
+	outline: none;
+}
+
+.recorderBoxRecording {
+	border-style: solid;
+	border-color: var(--status-danger);
+	background-color: var(--control-button-danger-hover-bg);
+	color: var(--status-danger);
+	animation: pulse 1s ease-in-out infinite;
+}
+
+.recorderBoxRecording:hover {
+	border-color: var(--status-danger);
+	background-color: var(--control-button-danger-hover-bg);
+}
+
+.recorderIcon {
+	flex-shrink: 0;
+	opacity: 0.7;
+}
+
+.recorderText {
+	font-weight: 600;
+	font-size: 0.9375rem;
+}
+
+.defaultRow {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.5rem 0.75rem;
+	border-radius: var(--radius-md);
+	background-color: var(--background-secondary);
+	font-size: 0.8125rem;
+}
+
+.defaultLabel {
+	color: var(--text-primary-muted);
+	flex-shrink: 0;
+}
+
+.defaultValue {
+	font-weight: 600;
+	color: var(--text-primary);
+}
+
+.popoutActions {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.5rem;
+}
+
+.popoutActionsLeft {
+	display: flex;
+	align-items: center;
+	gap: 0.25rem;
+}
+
+@keyframes pulse {
+	0%,
+	100% {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0.7;
+	}
+}

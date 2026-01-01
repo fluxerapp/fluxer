@@ -1,0 +1,118 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.voiceChannelContainer {
+	height: 100%;
+	width: 100%;
+}
+
+.channelGrid {
+	display: grid;
+	height: 100%;
+	min-height: 0;
+	width: 100%;
+	min-width: 0;
+	grid-template-rows: 4rem 1fr;
+	background: var(--background-secondary-lighter);
+}
+
+@media (min-width: 768px) {
+	.channelGrid {
+		grid-template-rows: 3.5rem 1fr;
+	}
+}
+
+.channelGridVoiceCallActive {
+	grid-template-rows: auto 1fr;
+}
+
+@media (min-width: 768px) {
+	.channelGridVoiceCallActive {
+		grid-template-rows: auto 1fr;
+	}
+}
+
+.voiceActiveHeaderWrapper {
+	background-color: #000;
+}
+
+.contentGrid {
+	display: grid;
+	height: 100%;
+	min-height: 0;
+	width: 100%;
+	min-width: 0;
+	grid-template-columns: 1fr auto;
+	position: relative;
+	contain: layout style;
+}
+
+.memberListDivider {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	right: var(--member-list-width, 16.5rem);
+	width: 1px;
+	background: var(--user-area-divider-color);
+	pointer-events: none;
+	z-index: 5;
+}
+
+.searchPanel {
+	display: flex;
+	height: 100%;
+	min-height: 0;
+	width: 100%;
+	min-width: 0;
+	border-left: 1px solid var(--user-area-divider-color);
+}
+
+.emptyStateContent {
+	display: flex;
+	height: 100%;
+	width: 100%;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 1rem;
+	padding: 2rem;
+}
+
+.centeredText {
+	text-align: center;
+}
+
+.voiceChannelTitle {
+	margin-bottom: 0.5rem;
+	font-weight: 600;
+	font-size: 1.5rem;
+	line-height: 2rem;
+	color: var(--text-primary);
+}
+
+.voiceChannelDescription {
+	color: var(--text-primary-muted);
+}
+
+.buttonContainer {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.75rem;
+}

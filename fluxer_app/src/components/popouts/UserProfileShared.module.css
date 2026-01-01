@@ -1,0 +1,111 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.bioContainer {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.viewFullButton {
+	text-align: left;
+	color: var(--text-link);
+	font-size: 12px;
+	line-height: 16px;
+	cursor: pointer;
+}
+
+.viewFullButton:hover {
+	text-decoration: underline;
+}
+
+.membershipContainer {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.membershipTitle {
+	font-weight: 600;
+	font-size: 14px;
+	line-height: 20px;
+	color: var(--text-primary);
+}
+
+.membershipDates {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.membershipDate {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.membershipIcon {
+	display: flex;
+	cursor: pointer;
+}
+
+.membershipDateText {
+	font-size: 14px;
+	line-height: 20px;
+	color: var(--text-chat);
+}
+
+.rolesContainer {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.rolesHeader {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.rolesTitle {
+	font-weight: 600;
+	font-size: 14px;
+	line-height: 20px;
+	color: var(--text-primary);
+}
+
+.iconSmall {
+	height: 16px;
+	width: 16px;
+}
+
+.membershipGuildIcon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	--guild-icon-size: 16px;
+}
+
+.textChat {
+	color: var(--text-chat);
+}
+
+.textXs {
+	font-size: 8px;
+}

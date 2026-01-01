@@ -1,0 +1,81 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.description {
+	margin: 0;
+	color: var(--text-secondary);
+	line-height: 1.5;
+	font-size: 0.9rem;
+}
+
+.channelList {
+	margin-top: var(--spacing-4);
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-2);
+}
+
+.channelItem {
+	display: flex;
+	align-items: center;
+	justify-content: flex-start;
+	gap: var(--spacing-2);
+	width: 100%;
+	background: var(--surface-primary);
+	border: 1px solid var(--border-secondary);
+	border-radius: var(--border-radius-4);
+	padding: var(--spacing-2);
+	cursor: pointer;
+	text-align: left;
+}
+
+.channelItem:hover {
+	background: var(--surface-tertiary);
+}
+
+.channelItem:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+}
+
+.avatarWrapper {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 40px;
+	height: 40px;
+}
+
+.channelDetails {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: var(--spacing-0-5);
+	flex: 1;
+}
+
+.channelName {
+	font-weight: 600;
+	color: var(--text-primary);
+}
+
+.lastActive {
+	font-size: 0.75rem;
+	color: var(--text-tertiary);
+}

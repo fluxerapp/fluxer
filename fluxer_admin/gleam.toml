@@ -1,0 +1,21 @@
+name = "fluxer_admin"
+version = "1.0.0"
+
+[dependencies]
+gleam_stdlib = ">= 0.63.2 and < 1.0.0"
+gleam_http = ">= 4.2.0 and < 5.0.0"
+gleam_erlang = ">= 1.0.0 and < 2.0.0"
+gleam_json = ">= 3.0.0 and < 4.0.0"
+gleam_httpc = ">= 5.0.0 and < 6.0.0"
+wisp = ">= 2.0.0 and < 3.0.0"
+mist = ">= 5.0.0 and < 6.0.0"
+lustre = ">= 5.3.0 and < 6.0.0"
+dot_env = ">= 1.2.0 and < 2.0.0"
+birl = ">= 1.8.0 and < 2.0.0"
+logging = ">= 1.3.0 and < 2.0.0"
+gleam_crypto = ">= 1.5.1 and < 2.0.0"
+envoy = ">= 1.0.2 and < 2.0.0"
+
+[dev-dependencies]
+gleeunit = ">= 1.6.1 and < 2.0.0"
+glailglind = ">= 2.2.0 and < 3.0.0"

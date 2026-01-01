@@ -1,0 +1,66 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.searchInputContainer {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-2);
+	flex: 1;
+}
+
+.backButton {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 36px;
+	height: 36px;
+	border-radius: var(--radius-md);
+	color: var(--text-primary);
+	cursor: pointer;
+	transition: background-color 0.1s ease-out;
+	flex-shrink: 0;
+}
+
+.backButton:hover {
+	background-color: var(--background-modifier-hover);
+}
+
+.searchInput {
+	min-height: 36px;
+	padding: 0.5rem 2.5rem 0.5rem 2.25rem;
+	font-size: 1rem;
+	border-radius: var(--radius-md);
+	background-color: color-mix(in srgb, var(--form-surface-background) 85%, black);
+	flex: 1;
+}
+
+.clearButton {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0.25rem;
+	border-radius: var(--radius-sm);
+	color: var(--text-primary-muted);
+	cursor: pointer;
+	transition: color 0.1s ease-out;
+}
+
+.clearButton:hover {
+	color: var(--text-primary);
+}

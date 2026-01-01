@@ -1,0 +1,54 @@
+# Generated artifacts and caches
+**/_build
+**/_checkouts
+**/_vendor
+**/build
+**/coverage
+**/dist
+**/generated
+**/.cache
+**/.pnpm-store
+**/target
+**/certificates
+**/node_modules
+
+# Tooling & editor metadata
+**/.idea
+**/.vscode
+**/.DS_Store
+**/Thumbs.db
+**/.git
+**/.astro/
+**/.env
+**/.env.local
+**/.env.*.local
+**/.dev.vars
+
+# Logs & temporary files
+**/*.dump
+**/*.lock
+**/*.log
+**/*.tmp
+**/*.swo
+**/*.swp
+**/*~
+**/log
+**/logs
+**/npm-debug.log*
+**/pnpm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+**/rebar3.crashdump
+**/erl_crash.dump
+
+# Runtime config
+dev
+**/.rebar
+**/.rebar3
+
+/fluxer_app/src/data/emojis.json
+/fluxer_app/src/locales/*/messages.js
+!fluxer_app/dist
+!fluxer_app/dist/**
+!fluxer_devops/cassandra/migrations
+!scripts/cassandra-migrate/Cargo.lock

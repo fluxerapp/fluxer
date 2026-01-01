@@ -1,0 +1,25 @@
+{
+	"name": "fluxer",
+	"private": true,
+	"prettier": {
+		"bracketSpacing": false,
+		"printWidth": 120,
+		"singleQuote": true,
+		"tabWidth": 2,
+		"useTabs": true,
+		"plugins": [
+			"prettier-plugin-astro"
+		]
+	},
+	"devDependencies": {
+		"@biomejs/biome": "2.3.10",
+		"prettier": "3.7.4",
+		"prettier-plugin-astro": "0.14.1",
+		"typescript": "5.9.3"
+	},
+	"pnpm": {
+		"onlyBuiltDependencies": [
+			"@biomejs/biome"
+		]
+	}
+}

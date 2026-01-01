@@ -1,0 +1,94 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.attachmentWrapper {
+	margin-top: 0.25rem;
+	position: relative;
+}
+
+.attachmentWrapper:first-child {
+	margin-top: 0;
+}
+
+.expired {
+	display: grid;
+	gap: 0.15rem;
+	padding: 0.75rem;
+	border: 1px solid var(--border-color);
+	border-radius: 0.5rem;
+	background: var(--background-secondary-alt);
+	color: var(--text-primary);
+	font-size: 0.9rem;
+}
+
+.statusBadge {
+	position: absolute;
+	top: 6px;
+	right: 6px;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.3rem;
+	padding: 0.2rem 0.45rem;
+	border-radius: 12px;
+	background: color-mix(in srgb, var(--background-secondary) 86%, transparent);
+	color: var(--text-secondary);
+	border: 1px solid color-mix(in srgb, var(--border-color) 80%, transparent);
+	font-size: 0.75rem;
+	z-index: 2;
+	backdrop-filter: blur(6px);
+	opacity: 0;
+	visibility: hidden;
+}
+
+.statusIcon {
+	width: 14px;
+	height: 14px;
+}
+
+.statusBadgeExpired {
+	background: color-mix(in srgb, var(--background-secondary-alt) 85%, transparent);
+	color: var(--text-primary);
+}
+
+.attachmentWrapper:hover .statusBadge,
+.attachmentWrapper:focus-within .statusBadge {
+	opacity: 1;
+	visibility: visible;
+}
+
+.expiredOverlay {
+	position: absolute;
+	inset: 0;
+	background: color-mix(in srgb, var(--background-primary) 70%, transparent);
+	border-radius: inherit;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+	padding: 0.75rem;
+	color: var(--text-secondary);
+	font-size: 0.9rem;
+	z-index: 3;
+}
+
+.expiredContent {
+	filter: grayscale(0.8);
+	opacity: 0.5;
+	pointer-events: none;
+}

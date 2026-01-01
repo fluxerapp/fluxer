@@ -1,0 +1,90 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.thumbnail {
+	position: relative;
+	height: 100%;
+	width: 100%;
+	overflow: hidden;
+	border-radius: var(--radius-sm);
+	background: var(--background-primary);
+	cursor: pointer;
+}
+
+.thumbnailPlaceholder {
+	position: absolute;
+	inset: 0;
+	height: 100%;
+	width: 100%;
+	object-fit: cover;
+}
+
+.overlay {
+	position: absolute;
+	inset: 0;
+	background: rgba(0, 0, 0, 0.4);
+}
+
+.posterImage {
+	position: absolute;
+	inset: 0;
+	height: 100%;
+	width: 100%;
+	object-fit: cover;
+}
+
+.controlsContainer {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.buttonGroup {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+}
+
+.container {
+	display: grid;
+	width: 100%;
+	user-select: none;
+	-webkit-user-select: none;
+	overflow: hidden;
+	border-radius: var(--radius-sm);
+}
+
+.videoContainer {
+	position: relative;
+	height: 100%;
+	width: 100%;
+	overflow: hidden;
+	border-radius: var(--radius-sm);
+	background: var(--background-primary);
+}
+
+.iframe {
+	position: absolute;
+	inset: 0;
+	height: 100%;
+	width: 100%;
+	border: none;
+}

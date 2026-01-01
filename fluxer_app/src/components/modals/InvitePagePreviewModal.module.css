@@ -1,0 +1,123 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.previewModal {
+	position: fixed;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	width: 100% !important;
+	height: 100% !important;
+	max-width: 100% !important;
+	max-height: 100% !important;
+	margin: 0;
+	padding: 0;
+	border: none !important;
+	border-radius: 0 !important;
+	box-shadow: none !important;
+	background: var(--brand-primary);
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	pointer-events: auto;
+}
+
+:global(html.platform-native:not(.platform-macos)) .previewModal {
+	top: var(--native-titlebar-height);
+}
+
+.previewPillContainer {
+	position: absolute;
+	top: calc(16px + env(safe-area-inset-top, 0px));
+	left: 50%;
+	transform: translateX(-50%);
+	z-index: 20;
+	pointer-events: auto;
+}
+
+.previewPill {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 10px 18px;
+	border-radius: 12px;
+	border: 1px solid color-mix(in srgb, var(--background-modifier-accent) 70%, transparent);
+	background: color-mix(in srgb, var(--background-secondary) 85%, transparent);
+	backdrop-filter: blur(12px);
+	box-shadow: 0 12px 36px rgba(0, 0, 0, 0.35);
+	-webkit-app-region: no-drag;
+}
+
+.previewPillText {
+	color: var(--text-primary);
+	font-size: 13px;
+	font-weight: 600;
+	white-space: nowrap;
+}
+
+.exitButton {
+	flex-shrink: 0;
+}
+
+.previewContent {
+	position: relative;
+	flex: 1 1 auto;
+	display: flex;
+	overflow: hidden;
+	background-color: var(--brand-primary);
+	min-height: 0;
+}
+
+.background {
+	position: absolute;
+	inset: 0;
+	z-index: 0;
+	overflow: hidden;
+}
+
+.foreground {
+	position: relative;
+	z-index: 1;
+	flex: 1 1 auto;
+	display: flex;
+	align-items: stretch;
+	justify-content: center;
+	width: 100%;
+	min-height: 100%;
+}
+
+.cardContainer {
+	width: 100%;
+}
+
+.alignmentControlsContainer {
+	position: absolute;
+	bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+	left: 50%;
+	transform: translateX(-50%);
+	z-index: 20;
+	pointer-events: auto;
+}
+
+@media (max-width: 768px) {
+	.foreground {
+		padding: 60px 16px 16px;
+	}
+}

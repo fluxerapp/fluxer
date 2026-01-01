@@ -1,0 +1,138 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.container {
+	display: flex;
+	height: 100%;
+	flex-direction: column;
+	overflow: hidden;
+}
+
+.backButton {
+	display: flex;
+	align-items: center;
+	color: var(--text-primary);
+}
+
+.backIcon {
+	width: 20px;
+	height: 20px;
+}
+
+.scrollContent {
+	padding: 16px;
+	padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+}
+
+.form {
+	display: flex;
+	flex-direction: column;
+	gap: 24px;
+}
+
+.iconSection {
+	display: flex;
+	flex-direction: column;
+}
+
+.iconLabel {
+	margin-bottom: 8px;
+	font-size: 14px;
+	font-weight: 500;
+	color: var(--text-primary);
+}
+
+.iconContainer {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+}
+
+.iconPreview {
+	width: 80px;
+	height: 80px;
+	flex-shrink: 0;
+	border-radius: 50%;
+	background-size: cover;
+	background-position: center;
+}
+
+.iconPlaceholder {
+	display: flex;
+	width: 80px;
+	height: 80px;
+	flex-shrink: 0;
+	align-items: center;
+	justify-content: center;
+	border-radius: 50%;
+	border: 4px dashed var(--text-tertiary);
+}
+
+.iconPlaceholderIcon {
+	width: 32px;
+	height: 32px;
+	color: var(--text-tertiary);
+}
+
+.iconActions {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.iconButtonGroup {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.iconHint {
+	font-size: 14px;
+	color: var(--text-primary-muted);
+}
+
+.iconError {
+	margin-top: 8px;
+	font-size: 14px;
+	color: var(--status-danger);
+}
+
+.footer {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px;
+}
+
+.footer > * {
+	flex: 1;
+	min-width: fit-content;
+}
+
+.fullWidth {
+	width: 100%;
+}
+
+.hiddenInput {
+	display: none;
+}
+
+.scroller {
+	flex: 1;
+}

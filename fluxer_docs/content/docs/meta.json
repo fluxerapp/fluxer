@@ -1,0 +1,14 @@
+{
+	"title": "Documentation",
+	"pages": [
+		"index",
+		"api-reference",
+		"quickstart",
+		"---Events",
+		"events",
+		"---Resources",
+		"resources",
+		"---Topics",
+		"topics"
+	]
+}

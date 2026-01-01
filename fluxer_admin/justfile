@@ -1,0 +1,34 @@
+default:
+    @just --list
+
+build:
+    gleam build
+
+run:
+    just css && gleam run
+
+test:
+    gleam test
+
+css:
+    ./build/bin/tailwindcss -i ./tailwind.css -o ./priv/static/app.css
+
+css-watch:
+    ./build/bin/tailwindcss -i ./tailwind.css -o ./priv/static/app.css --watch
+
+clean:
+    rm -rf build/
+    rm -rf priv/static/app.css
+
+deps:
+    gleam deps download
+
+format:
+    gleam format
+
+check: format build test
+
+install-tailwind:
+    gleam run -m tailwind/install
+
+setup: deps install-tailwind css

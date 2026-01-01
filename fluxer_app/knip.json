@@ -1,0 +1,29 @@
+{
+	"$schema": "https://unpkg.com/knip@5/schema.json",
+	"entry": ["src-electron/main/index.ts", "scripts/*.mjs"],
+	"ignore": [
+		"lingui.config.js",
+		"postcss.config.js",
+		"src/sw/worker.ts",
+		"pkgs/libfluxcore/libfluxcore_bg.wasm.d.ts",
+		"pkgs/libfluxcore/libfluxcore.d.ts",
+		"src/types/browser.d.ts"
+	],
+	"ignoreDependencies": [
+		"@electron-webauthn/native",
+		"electron-webauthn-mac",
+		"fs-extra",
+		"undici",
+		"update-electron-app",
+		"@types/ws",
+		"electron-builder-squirrel-windows",
+		"esbuild"
+	],
+	"ignoreBinaries": ["go"],
+	"ignoreExportsUsedInFile": true,
+	"project": ["src/**/*.{ts,tsx}"],
+	"rules": {
+		"exports": "off",
+		"types": "off"
+	}
+}

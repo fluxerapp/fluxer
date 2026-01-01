@@ -1,0 +1,93 @@
+# Build artifacts
+**/_build
+**/_checkouts
+**/_vendor
+**/.astro/
+**/coverage
+**/dist
+**/generated
+**/target
+**/ebin
+**/certificates
+/fluxer_admin/build
+/fluxer_marketing/build
+
+# Caches & editor metadata
+**/.cache
+**/.*cache
+**/.pnpm-store
+**/.swc
+**/.DS_Store
+**/Thumbs.db
+**/.idea
+**/.vscode
+
+# Environment and credentials
+**/.env
+**/.env.local
+**/.env.*.local
+**/.dev.vars
+**/.erlang.cookie
+**/.eunit
+**/.rebar
+**/.rebar3
+**/fluxer.env
+**/secrets.env
+/dev/fluxer.env
+
+# Logs, temporary files, and binaries
+**/*.beam
+**/*.dump
+**/*.iml
+**/*.log
+**/*.o
+**/*.plt
+**/*.swo
+**/*.swp
+**/*.tmp
+**/*~
+**/log
+**/logs
+**/npm-debug.log*
+**/pnpm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+**/rebar3.crashdump
+**/erl_crash.dump
+
+## Dependencies
+**/node_modules
+
+# Framework & tooling buckets
+**/.next
+**/.next/cache
+**/.vercel
+**/out
+**/.pnp
+**/.pnp.js
+*.tsbuildinfo
+next-env.d.ts
+
+# Source files we never want tracked
+**/.source
+**/*.source
+
+# Project-specific artifacts
+/fluxer_admin/priv/static/app.css
+/fluxer_app/src/assets/emoji-sprites/
+/fluxer_app/src/locales/*/messages.js
+/fluxer_app/src/locales/*/messages.mjs
+/fluxer_gateway/config/sys.config
+/fluxer_gateway/config/vm.args
+/fluxer_marketing/priv/static/app.css
+/fluxer_marketing/priv/locales
+geoip_data
+livekit.yaml
+fluxer.yaml
+
+# Generated CSS type definitions
+**/*.css.d.ts
+
+# Generated UI components
+/fluxer_app/src/components/uikit/AvatarStatusGeometry.ts
+/fluxer_app/src/components/uikit/SVGMasks.tsx

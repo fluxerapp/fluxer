@@ -1,0 +1,104 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.container {
+	display: flex;
+	height: 100%;
+	flex-direction: column;
+	overflow: hidden;
+}
+
+.scroller {
+	flex: 1;
+	min-height: 0;
+	min-width: 0;
+}
+
+.content {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	padding: 16px;
+	padding-bottom: var(--create-dm-scroll-padding-bottom, calc(16px + env(safe-area-inset-bottom, 0px)));
+}
+
+.description {
+	color: var(--text-primary-muted);
+	font-size: 14px;
+	line-height: 20px;
+}
+
+.friendSelector {
+	height: 400px;
+}
+
+.footer {
+	display: flex;
+	flex-shrink: 0;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 8px;
+	padding: 16px;
+	padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+	border-top: 1px solid var(--border-subtle);
+}
+
+.cancelButton {
+	border-radius: 6px;
+	background-color: transparent;
+	padding-left: 16px;
+	padding-right: 16px;
+	padding-top: 8px;
+	padding-bottom: 8px;
+	font-weight: 500;
+	font-size: 14px;
+	line-height: 20px;
+	color: var(--text-primary);
+	cursor: pointer;
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.cancelButton:hover {
+		text-decoration: underline;
+	}
+}
+
+.createButton {
+	border-radius: 6px;
+	background-color: var(--brand-primary);
+	padding-left: 16px;
+	padding-right: 16px;
+	padding-top: 8px;
+	padding-bottom: 8px;
+	font-weight: 500;
+	font-size: 14px;
+	line-height: 20px;
+	color: #ffffff;
+	cursor: pointer;
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.createButton:hover {
+		background-color: var(--brand-secondary);
+	}
+}
+
+.createButton:disabled {
+	opacity: 0.5;
+}

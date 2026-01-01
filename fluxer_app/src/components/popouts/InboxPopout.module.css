@@ -1,0 +1,113 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.container {
+	position: relative;
+	display: flex;
+	height: 600px;
+	max-height: 957px;
+	width: 480px;
+	flex-direction: column;
+	overflow: hidden;
+	border-radius: 6px;
+	border-width: 1px;
+	border-color: var(--background-header-secondary);
+	background-color: var(--background-primary);
+}
+
+.header {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	border-color: var(--background-modifier-hover);
+	padding-left: 16px;
+	padding-right: 16px;
+	padding-top: 16px;
+	padding-bottom: 12px;
+}
+
+.headerContent {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.tabList {
+	display: flex;
+	gap: 8px;
+}
+
+.tab {
+	display: flex;
+	flex: none;
+	align-items: center;
+	gap: 6px;
+	border-radius: 6px;
+	padding-left: 8px;
+	padding-right: 8px;
+	padding-top: 2px;
+	padding-bottom: 2px;
+	font-weight: 600;
+	font-size: 16px;
+	line-height: 20px;
+	transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+	transition-duration: 200ms;
+	transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+	cursor: pointer;
+}
+
+.tabActive {
+	background-color: var(--background-modifier-selected);
+	color: var(--text-primary);
+}
+
+.tabInactive {
+	background-color: var(--background-primary);
+	color: var(--text-primary-muted);
+}
+
+.tabInactive:hover {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-primary);
+}
+
+.headerActions {
+	height: 32px;
+	width: 32px;
+	flex-shrink: 0;
+}
+
+.content {
+	position: relative;
+	display: flex;
+	min-height: 0;
+	flex: 1 1 0%;
+}
+
+.tabContent {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	flex-direction: column;
+}
+
+.iconSmall {
+	height: 16px;
+	width: 16px;
+}

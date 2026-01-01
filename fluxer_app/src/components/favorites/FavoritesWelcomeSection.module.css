@@ -1,0 +1,91 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.welcomeSection {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	padding: 2rem;
+	height: 100%;
+	width: 100%;
+	color: var(--text-primary);
+}
+
+.iconSection {
+	margin-bottom: 2rem;
+}
+
+.iconWrapper {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 5rem;
+	height: 5rem;
+	border-radius: var(--radius-full);
+	background-color: var(--channel-welcome-icon-bg, var(--guild-list-foreground));
+}
+
+:global(.theme-light) .iconWrapper {
+	--channel-welcome-icon-bg: color-mix(in srgb, var(--guild-list-foreground) 55%, var(--background-primary) 45%);
+}
+
+.icon {
+	width: 48px;
+	height: 48px;
+	color: var(--text-brand);
+}
+
+.contentSection {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 1rem;
+	max-width: 540px;
+	text-align: center;
+}
+
+.heading {
+	font-size: 1.5rem;
+	font-weight: 600;
+	line-height: 1.25;
+	color: var(--text-primary);
+	margin: 0;
+}
+
+.description {
+	font-size: 1.125rem;
+	line-height: 1.75rem;
+	color: var(--text-primary);
+	margin: 0;
+}
+
+.tip {
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--text-primary-muted);
+	margin: 0;
+}
+
+.actionSection {
+	margin-top: 1rem;
+	display: flex;
+	gap: 0.75rem;
+	justify-content: center;
+}

@@ -1,0 +1,129 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.content {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	padding: 1rem 1.5rem;
+}
+
+.description {
+	margin: 0;
+	font-size: 0.875rem;
+	color: var(--text-secondary);
+	line-height: 1.4;
+}
+
+.codeContainer {
+	position: relative;
+	border-radius: var(--radius-md);
+	background-color: var(--bg-code-block);
+	border: 1px solid var(--border-color);
+	overflow: hidden;
+	height: 320px;
+	margin-top: 1rem;
+	display: flex;
+	flex-direction: column;
+}
+
+.pre {
+	font-family: var(--font-mono);
+	font-size: 0.75rem;
+	line-height: 1.4;
+	white-space: pre-wrap;
+	word-break: break-word;
+	margin: 0;
+	padding: 0.75rem;
+	flex: 1;
+	overflow-y: auto;
+	color: var(--text-primary);
+}
+
+.hljs {
+	display: block;
+	color: var(--text-code);
+	background: transparent;
+	font-family: inherit;
+	font-size: inherit;
+	line-height: inherit;
+}
+
+.codeActions {
+	position: absolute;
+	top: 0.5rem;
+	right: 0.5rem;
+	opacity: 0;
+	transition: opacity var(--transition-normal);
+	z-index: 10;
+}
+
+.codeContainer:hover .codeActions,
+.codeContainer:focus-within .codeActions {
+	opacity: 1;
+}
+
+.codeActionsVisible {
+	opacity: 1;
+}
+
+.copyButton {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background-color: var(--bg-secondary);
+	color: var(--text-secondary);
+	border: none;
+	border-radius: var(--radius-sm);
+	padding: 0.375rem;
+	cursor: pointer;
+	transition:
+		background-color var(--transition-fast),
+		color var(--transition-fast);
+}
+
+.copyButton:hover {
+	background-color: var(--bg-hover);
+	color: var(--text-primary);
+}
+
+.copyButton:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.copyIcon {
+	width: 1rem;
+	height: 1rem;
+}
+
+.loadingText {
+	color: var(--text-tertiary);
+	font-style: italic;
+}
+
+.errorText {
+	color: var(--status-danger);
+}
+
+.footer {
+	display: flex;
+	justify-content: flex-end;
+	gap: 0.75rem;
+}

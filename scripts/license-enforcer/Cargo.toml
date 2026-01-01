@@ -1,0 +1,15 @@
+[package]
+name = "license-enforcer"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+walkdir = "2.4"
+regex = "1.10"
+chrono = "0.4"
+
+[profile.release]
+lto = true
+panic = "abort"
+codegen-units = 1
+opt-level = "z"

@@ -1,0 +1,113 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.content {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	padding-bottom: 16px;
+}
+
+.footer {
+	align-items: center;
+	display: flex;
+	flex-wrap: wrap;
+	width: 100%;
+	gap: 8px;
+}
+
+.footer > * {
+	flex: 1;
+	min-width: fit-content;
+}
+
+.selectContainer {
+	margin-bottom: 16px;
+}
+
+.checkboxLabel {
+	margin-bottom: 12px;
+	display: flex;
+	cursor: pointer;
+	align-items: center;
+	gap: 8px;
+}
+
+.checkboxRow {
+	margin-bottom: 12px;
+}
+
+.checkboxText {
+	font-size: 14px;
+	color: var(--text-secondary);
+}
+
+.scrollerContainer {
+	flex: 1;
+	min-height: 0;
+}
+
+.channelList {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.emptyState {
+	padding: 16px 0;
+	text-align: center;
+	font-size: 14px;
+	color: var(--text-tertiary);
+}
+
+.categoryHeader {
+	margin-top: 8px;
+	padding: 4px 8px;
+	font-weight: 600;
+	color: var(--text-tertiary);
+	font-size: 12px;
+	text-transform: uppercase;
+}
+
+.channelRow {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	border-radius: 6px;
+	padding: 8px;
+}
+
+.channelIconContainer {
+	flex-shrink: 0;
+}
+
+.channelIcon {
+	height: 20px;
+	width: 20px;
+	color: var(--text-primary-muted);
+}
+
+.channelName {
+	flex: 1;
+	color: var(--text-primary);
+}
+
+.channelActions {
+	flex-shrink: 0;
+}

@@ -1,0 +1,159 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.container {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	gap: var(--sticker-card-gap, 0.75rem);
+	height: 100%;
+	min-height: 0;
+	border-radius: 0.5rem;
+	border: 1px solid var(--background-header-secondary);
+	padding: var(--sticker-card-padding, 0.75rem);
+	transition: box-shadow 0.15s ease-in-out;
+	cursor: pointer;
+}
+
+.container:hover {
+	box-shadow:
+		0 4px 6px -1px rgba(0, 0, 0, 0.1),
+		0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.stickerWrapper {
+	display: flex;
+	flex: 1 1 auto;
+	width: 100%;
+	max-height: 100%;
+	max-width: 100%;
+	min-height: 0;
+	aspect-ratio: 1 / 1;
+	align-items: center;
+	justify-content: center;
+}
+
+.stickerImage {
+	height: 100%;
+	width: 100%;
+	object-fit: contain;
+}
+
+.content {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+	min-height: 0;
+}
+
+.header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.5rem;
+	min-width: 0;
+}
+
+.stickerName {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	min-width: 0;
+	font-weight: 600;
+	font-size: 0.875rem;
+}
+
+.gifBadge {
+	flex-shrink: 0;
+	border-radius: 0.25rem;
+	background-color: var(--brand-primary);
+	padding: 0.125rem 0.375rem;
+	color: white;
+	font-size: 0.75rem;
+}
+
+.authorInfo {
+	margin-top: 0.25rem;
+	display: flex;
+	align-items: center;
+	gap: 0.375rem;
+}
+
+.authorAvatar {
+	height: 1rem;
+	width: 1rem;
+	border-radius: 50%;
+}
+
+.authorName {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	color: var(--text-primary-muted);
+	font-size: 0.75rem;
+	line-height: 1rem;
+	max-height: 1rem;
+}
+
+.actions {
+	position: absolute;
+	top: 0.5rem;
+	right: 0.5rem;
+	display: flex;
+	gap: 0.25rem;
+	opacity: 0;
+	transition: opacity 0.15s ease-in-out;
+}
+
+.container:hover .actions {
+	opacity: 1;
+}
+
+.actionButton {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 50%;
+	border: 1px solid var(--background-header-secondary);
+	background-color: var(--background-primary);
+	padding: 0.5rem;
+	color: var(--text-primary-muted);
+	box-shadow:
+		0 4px 6px -1px rgba(0, 0, 0, 0.1),
+		0 2px 4px -1px rgba(0, 0, 0, 0.06);
+	transition: all 0.15s ease-in-out;
+	cursor: pointer;
+}
+
+.actionButton:hover {
+	border-color: var(--brand-primary);
+	background-color: var(--brand-primary);
+	color: white;
+}
+
+.deleteButton:hover {
+	border-color: var(--status-danger);
+	background-color: var(--status-danger);
+	color: white;
+}
+
+.icon {
+	height: 0.75rem;
+	width: 0.75rem;
+}

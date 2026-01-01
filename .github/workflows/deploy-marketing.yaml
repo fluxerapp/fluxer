@@ -1,0 +1,165 @@
+name: deploy marketing
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - fluxer_marketing/**/*
+      - .github/workflows/deploy-marketing.yaml
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-fluxer-marketing
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Deploy app
+    runs-on: blacksmith-2vcpu-ubuntu-2404
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && 'refs/heads/main' || github.ref }}
+
+      - name: Record deploy commit
+        run: |
+          set -euo pipefail
+          sha=$(git rev-parse HEAD)
+          echo "Deploying commit ${sha}"
+          printf 'DEPLOY_SHA=%s\n' "$sha" >> "$GITHUB_ENV"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+      - name: Build image
+        uses: docker/build-push-action@v6
+        with:
+          context: fluxer_marketing
+          file: fluxer_marketing/Dockerfile
+          tags: fluxer-marketing:${{ env.DEPLOY_SHA }}
+          load: true
+          platforms: linux/amd64
+          cache-from: type=gha,scope=deploy-fluxer-marketing
+          cache-to: type=gha,mode=max,scope=deploy-fluxer-marketing
+          build-args: |
+            BUILD_TIMESTAMP=${{ github.run_id }}
+        env:
+          DOCKER_BUILD_SUMMARY: false
+          DOCKER_BUILD_RECORD_UPLOAD: false
+
+      - name: Install docker-pussh
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.docker/cli-plugins
+          curl -fsSL https://raw.githubusercontent.com/psviderski/unregistry/v0.3.1/docker-pussh \
+            -o ~/.docker/cli-plugins/docker-pussh
+          chmod +x ~/.docker/cli-plugins/docker-pussh
+
+      - name: Set up SSH agent
+        uses: webfactory/ssh-agent@v0.9.1
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY_SERVER }}
+
+      - name: Add server to known hosts
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+
+      - name: Push image and deploy
+        env:
+          IMAGE_TAG: fluxer-marketing:${{ env.DEPLOY_SHA }}
+          SERVER: ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}
+        run: |
+          set -euo pipefail
+          docker pussh ${IMAGE_TAG} ${SERVER}
+
+          ssh ${SERVER} "IMAGE_TAG=${IMAGE_TAG}" bash << 'EOF'
+            set -e
+            sudo mkdir -p /opt/fluxer-marketing
+            sudo chown -R ${USER}:${USER} /opt/fluxer-marketing
+            cd /opt/fluxer-marketing
+
+            cat > compose.yaml << COMPOSEEOF
+          services:
+            app:
+              image: ${IMAGE_TAG}
+              env_file:
+                - /etc/fluxer/fluxer.env
+              environment:
+                - FLUXER_API_PUBLIC_ENDPOINT=https://api.fluxer.app
+                - FLUXER_API_HOST=fluxer-api_app:8080
+                - FLUXER_APP_ENDPOINT=https://web.fluxer.app
+                - FLUXER_CDN_ENDPOINT=https://fluxerstatic.com
+                - FLUXER_MARKETING_ENDPOINT=https://fluxer.app
+                - FLUXER_MARKETING_PORT=8080
+                - FLUXER_PATH_MARKETING=/
+                - GEOIP_HOST=fluxer-geoip_app:8080
+                - RELEASE_CHANNEL=stable
+                - FLUXER_METRICS_HOST=fluxer-metrics_app:8080
+              deploy:
+                replicas: 2
+                restart_policy:
+                  condition: on-failure
+                  delay: 5s
+                  max_attempts: 3
+                update_config:
+                  parallelism: 1
+                  delay: 10s
+                  order: start-first
+                rollback_config:
+                  parallelism: 1
+                  delay: 10s
+                labels:
+                  - 'caddy=fluxer.app'
+                  - 'caddy.reverse_proxy={{upstreams 8080}}'
+                  - 'caddy.header.Strict-Transport-Security="max-age=31536000; includeSubDomains; preload"'
+                  - 'caddy.header.X-Xss-Protection="1; mode=block"'
+                  - 'caddy.header.X-Content-Type-Options=nosniff'
+                  - 'caddy.header.Referrer-Policy=strict-origin-when-cross-origin'
+                  - 'caddy.header.X-Frame-Options=DENY'
+                  - 'caddy.redir_0=/channels/* https://web.fluxer.app{uri}'
+                  - 'caddy.redir_1=/channels https://web.fluxer.app{uri}'
+                  - 'caddy.redir_2=/delete-my-account https://fluxer.app/help/articles/1445724566704881664 302'
+                  - 'caddy.redir_3=/delete-my-data https://fluxer.app/help/articles/1445730947679911936 302'
+                  - 'caddy.redir_4=/export-my-data https://fluxer.app/help/articles/1445731738851475456 302'
+                  - 'caddy.redir_5=/bugs https://fluxer.app/help/articles/1447264362996695040 302'
+                  - 'caddy_1=www.fluxer.app'
+                  - 'caddy_1.redir=https://fluxer.app{uri}'
+                  - 'caddy_3=fluxer.gg'
+                  - 'caddy_3.redir=https://web.fluxer.app/invite{uri}'
+                  - 'caddy_4=fluxer.gift'
+                  - 'caddy_4.redir=https://web.fluxer.app/gift{uri}'
+                  - 'caddy_5=fluxerapp.com'
+                  - 'caddy_5.redir=https://fluxer.app{uri}'
+                  - 'caddy_6=www.fluxerapp.com'
+                  - 'caddy_6.redir=https://fluxer.app{uri}'
+                  - 'caddy_7=fluxer.dev'
+                  - 'caddy_7.redir=https://docs.fluxer.app{uri}'
+                  - 'caddy_8=www.fluxer.dev'
+                  - 'caddy_8.redir=https://docs.fluxer.app{uri}'
+              networks:
+                - fluxer-shared
+              healthcheck:
+                test: ['CMD', 'curl', '-f', 'http://localhost:8080/']
+                interval: 30s
+                timeout: 10s
+                retries: 3
+                start_period: 40s
+
+          networks:
+            fluxer-shared:
+              external: true
+          COMPOSEEOF
+
+            docker stack deploy -c compose.yaml fluxer-marketing
+            docker service update --image ${IMAGE_TAG} fluxer-marketing_app
+          EOF

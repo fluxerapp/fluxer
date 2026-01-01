@@ -1,0 +1,115 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.wrapper {
+	pointer-events: none;
+	user-select: none;
+	-webkit-user-select: none;
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+	padding: 16px 0 12px;
+	gap: 10px;
+	position: relative;
+	overflow: hidden;
+	margin-left: -0.75rem;
+	margin-right: -0.75rem;
+	padding-left: 0.75rem;
+	padding-right: 0.75rem;
+}
+
+@media (min-width: 768px) {
+	.wrapper {
+		margin-left: calc(-1 * var(--chat-horizontal-padding, 16px));
+		margin-right: calc(-1 * var(--chat-horizontal-padding, 16px));
+		padding-left: var(--chat-horizontal-padding, 16px);
+		padding-right: calc(var(--chat-horizontal-padding, 16px) + 3rem);
+	}
+}
+
+.messageGroup {
+	position: relative;
+	z-index: 0;
+}
+
+.group {
+	display: flex;
+	gap: 16px;
+	align-items: flex-start;
+}
+
+.avatar {
+	flex-shrink: 0;
+	width: 40px;
+	height: 40px;
+	border-radius: 50%;
+	background: var(--background-modifier-accent);
+	opacity: 0.45;
+	margin-top: 2px;
+}
+
+.body {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.header {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	margin-bottom: 4px;
+}
+
+.username {
+	height: 12px;
+	border-radius: 999px;
+	background: var(--background-modifier-accent);
+	opacity: 0.55;
+}
+
+.timestamp {
+	height: 10px;
+	border-radius: 999px;
+	background: var(--background-modifier-accent);
+	opacity: 0.35;
+}
+
+.messages {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.messageLine {
+	height: 10px;
+	background: var(--background-modifier-accent);
+	opacity: 0.45;
+	border-radius: 999px;
+}
+
+.attachment {
+	margin-top: 8px;
+	background: var(--background-modifier-accent);
+	opacity: 0.35;
+	border-radius: 8px;
+	max-width: 100%;
+}

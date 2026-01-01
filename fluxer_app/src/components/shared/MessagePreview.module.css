@@ -1,0 +1,239 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.previewCard {
+	position: relative;
+	margin-bottom: 8px;
+	cursor: default;
+	user-select: none;
+	-webkit-user-select: none;
+	overflow: hidden;
+	flex-shrink: 0;
+	border-radius: 6px;
+	border: 1px solid var(--background-header-secondary);
+	background-color: var(--background-secondary);
+	padding-top: 8px;
+	padding-bottom: 8px;
+}
+
+.previewCardMobile {
+	margin-bottom: 12px;
+	cursor: pointer;
+	border-radius: 14px;
+	border: none;
+	background-color: var(--background-modifier-hover);
+}
+
+.actionButtons {
+	display: none;
+	position: absolute;
+	top: 12px;
+	right: 12px;
+	gap: 4px;
+}
+
+.previewCard:hover .actionButtons {
+	display: flex;
+}
+
+.actionButton {
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	user-select: none;
+	-webkit-user-select: none;
+	font-weight: 600;
+	line-height: 20px;
+	padding: 0 8px;
+	font-size: 11px;
+	border-radius: 4px;
+	text-align: center;
+	color: var(--text-primary-muted);
+	background-color: var(--background-primary);
+	transition: color 0.2s;
+}
+
+.actionButton:hover {
+	color: var(--text-primary);
+}
+
+.actionIconButton {
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	user-select: none;
+	-webkit-user-select: none;
+	padding: 2px;
+	border-radius: 4px;
+	color: var(--text-primary-muted);
+	background-color: var(--background-primary);
+	transition: color 0.2s;
+}
+
+.actionIconButton:hover {
+	color: var(--text-primary);
+}
+
+.actionIcon {
+	width: 16px;
+	height: 16px;
+	display: block;
+}
+
+.scroller {
+	flex: 1;
+	min-height: 0;
+	min-width: 0;
+	padding: 8px;
+}
+
+.scrollerMobile {
+	padding: 0 16px 16px;
+}
+
+.topSpacer {
+	height: 8px;
+	flex-shrink: 0;
+}
+
+.emptyState {
+	display: flex;
+	height: 100%;
+	min-height: 400px;
+	align-items: center;
+	justify-content: center;
+}
+
+.emptyStateContent {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 4px;
+}
+
+.emptyStateIcon {
+	height: 80px;
+	width: 80px;
+	color: var(--text-primary-muted);
+}
+
+.emptyStateTextContainer {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 4px;
+	text-align: center;
+}
+
+.emptyStateTitle {
+	font-weight: 600;
+	font-size: 20px;
+	line-height: 28px;
+	color: var(--text-primary);
+}
+
+.emptyStateDescription {
+	font-size: 14px;
+	line-height: 20px;
+	color: var(--text-primary-muted);
+}
+
+.endState {
+	display: flex;
+	height: 100%;
+	min-height: 200px;
+	align-items: center;
+	justify-content: center;
+}
+
+.endStateContent {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 8px;
+}
+
+.endStateIcon {
+	height: 48px;
+	width: 48px;
+	color: var(--text-primary-muted);
+}
+
+.endStateTextContainer {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 4px;
+	text-align: center;
+}
+
+.endStateTitle {
+	font-weight: 600;
+	font-size: 20px;
+	line-height: 28px;
+	color: var(--text-primary);
+}
+
+.endStateDescription {
+	font-size: 14px;
+	line-height: 20px;
+	color: var(--text-primary-muted);
+}
+
+.lostMessageInner {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 12px;
+	color: var(--text-warning);
+}
+
+.lostMessageIcon {
+	width: 20px;
+	height: 20px;
+	color: var(--text-warning);
+}
+
+.lostMessageText {
+	font-size: 14px;
+	line-height: 20px;
+	color: var(--text-warning);
+}
+
+.loadingState {
+	display: flex;
+	height: 80px;
+	align-items: center;
+	justify-content: center;
+}
+
+.loadingText {
+	font-size: 14px;
+	line-height: 20px;
+	color: var(--text-primary-muted);
+}
+
+.menuIcon {
+	height: 20px;
+	width: 20px;
+}

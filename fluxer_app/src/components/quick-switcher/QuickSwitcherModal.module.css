@@ -1,0 +1,356 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.option {
+	display: flex;
+	width: 100%;
+	height: 36px;
+	align-items: center;
+	border: none;
+	background: transparent;
+	text-align: left;
+	border-radius: var(--radius-sm);
+	padding: 0 8px;
+	cursor: pointer;
+	color: var(--text-primary);
+}
+
+.option:hover {
+	background-color: var(--background-modifier-accent);
+}
+
+.optionActive {
+	background-color: var(--background-modifier-accent);
+}
+
+:global(html.theme-light) .option:hover {
+	background-color: var(--background-modifier-hover);
+}
+
+:global(html.theme-light) .optionActive {
+	background-color: var(--background-modifier-hover);
+}
+
+.option + .option {
+	margin-top: 2px;
+}
+
+.optionContent {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex: 1;
+	min-width: 0;
+}
+
+.optionText {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 6px;
+	flex: 1;
+	min-width: 0;
+}
+
+.optionTitle {
+	font-weight: 500;
+	font-size: 0.8125rem;
+	line-height: 1rem;
+	color: var(--text-secondary);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	flex-shrink: 1;
+	min-width: 0;
+}
+
+.optionHighlight .optionTitle {
+	color: var(--text-primary);
+}
+
+.optionDescription {
+	font-size: 0.75rem;
+	line-height: 1rem;
+	color: var(--text-tertiary);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	flex-shrink: 1;
+	min-width: 0;
+}
+
+.optionIcon {
+	width: 20px;
+	height: 20px;
+	flex-shrink: 0;
+	color: var(--text-primary-muted);
+}
+
+.avatar {
+	width: 20px;
+	height: 20px;
+	flex-shrink: 0;
+}
+
+.guildIcon {
+	height: 20px;
+	width: 20px;
+	border-radius: 9999px;
+	flex-shrink: 0;
+}
+
+.list {
+	display: flex;
+	flex-direction: column;
+	gap: 0;
+}
+
+.section {
+	padding: 0 var(--spacing-1);
+	margin-bottom: 4px;
+}
+
+.section:first-child {
+	padding-top: var(--spacing-1);
+}
+
+.section:last-child {
+	margin-bottom: 0;
+	padding-bottom: var(--spacing-1);
+}
+
+.sectionHeader {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 4px 8px;
+	margin-bottom: 2px;
+	font-size: 0.6875rem;
+	font-weight: 600;
+	color: var(--text-tertiary);
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
+}
+
+.modalRoot {
+	background: transparent;
+	border: none;
+	border-radius: 0;
+	box-shadow: none;
+	max-width: 36rem;
+	width: 100%;
+	min-height: unset;
+	box-sizing: border-box;
+}
+
+.container {
+	width: 100%;
+	max-width: 36rem;
+	overflow: hidden;
+	border-radius: 0.75rem;
+	border: 1px solid var(--background-modifier-accent);
+	background-color: var(--background-textarea);
+	box-shadow: var(--shadow-xl);
+}
+
+.header {
+	padding: 0.75rem;
+}
+
+.inputBackground {
+	background-color: var(--background-secondary);
+}
+
+.scrollerContainer {
+	--scrollbar-track-bg: var(--background-textarea);
+	height: 320px;
+	min-height: 320px;
+	max-height: 320px;
+}
+
+.emptyState {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	height: 100%;
+	text-align: center;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--text-tertiary);
+}
+
+.emptyStateTitle {
+	font-weight: 500;
+}
+
+.emptyStateHint {
+	margin-top: 0.25rem;
+	color: var(--text-primary-muted);
+	font-size: 0.75rem;
+	line-height: 1rem;
+}
+
+.footer {
+	background-color: var(--background-textarea);
+	padding: 0.5rem 0.75rem;
+	font-size: 11px;
+	color: var(--text-secondary);
+}
+
+.footerLabel {
+	margin-right: 0.5rem;
+	font-weight: 500;
+	color: var(--text-tertiary);
+}
+
+.filterHintContainer {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.25rem;
+}
+
+.filterHintContainerWithMargin {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.25rem;
+	margin-right: 0.75rem;
+}
+
+.hintPill {
+	display: inline-flex;
+	height: 1.25rem;
+	min-width: 1.25rem;
+	align-items: center;
+	justify-content: center;
+	border-radius: 0.25rem;
+	border: 1px solid var(--background-modifier-accent);
+	background-color: var(--background-secondary);
+	padding-left: 0.25rem;
+	padding-right: 0.25rem;
+	font-size: 11px;
+	line-height: 1.25rem;
+	color: var(--text-primary);
+}
+
+.optionHighlight {
+	color: var(--text-secondary);
+}
+
+.optionIconHighlight {
+	color: var(--text-secondary);
+}
+
+.mobileSheet {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	background-color: var(--background-secondary);
+	padding: 0 16px calc(env(safe-area-inset-bottom, 0px) + 1rem);
+}
+
+.mobileSearchContainer {
+	padding-top: 1.25rem;
+	padding-bottom: 1.25rem;
+}
+
+.mobilePanels {
+	flex: 1;
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
+}
+
+.mobileSearchPanel,
+.mobileFriendsPanel {
+	flex: 1;
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}
+
+.mobilePanelHidden {
+	display: none;
+}
+
+.mobileScroller {
+	flex: 1;
+	min-height: 0;
+}
+
+.mobileSearchInput {
+	width: 100%;
+	min-height: 52px;
+	padding-block: 0.6rem;
+}
+
+.mobileSearchClearButton {
+	background: transparent;
+	border: none;
+	padding: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--text-tertiary);
+	cursor: pointer;
+	border-radius: 999px;
+}
+
+.mobileScrollContent {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	padding-bottom: 0.5rem;
+}
+
+.mobileFriendsContent {
+	height: 100%;
+}
+
+.mobileSection {
+	display: flex;
+	flex-direction: column;
+}
+
+.mobileSectionHeader {
+	font-size: 0.75rem;
+	font-weight: 600;
+	color: var(--text-primary-muted);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	margin-bottom: 0.35rem;
+}
+
+.mobileSectionList {
+	display: flex;
+	flex-direction: column;
+	gap: 0.35rem;
+}
+
+.mobileOption {
+	display: flex;
+	align-items: center;
+	width: 100%;
+	border: none;
+	background: transparent;
+	color: var(--text-primary);
+	border-radius: var(--radius-md);
+	padding: 0.25rem 0.25rem;
+}

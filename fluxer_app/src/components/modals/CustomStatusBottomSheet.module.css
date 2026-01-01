@@ -1,0 +1,134 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.content {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+	padding-bottom: 1rem;
+}
+
+.footer {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem;
+	flex-wrap: wrap;
+}
+
+.expirySelector {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.expirySelectorLabel {
+	font-size: 0.75rem;
+	color: var(--text-tertiary);
+	white-space: nowrap;
+}
+
+.expirySelect {
+	padding: 0.375rem 0.5rem;
+	border-radius: 0.375rem;
+	border: 1px solid var(--background-modifier-accent);
+	background-color: var(--background-textarea);
+	color: var(--text-primary);
+	font-size: 0.8125rem;
+	cursor: pointer;
+}
+
+.expirySelect:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.saveButton {
+	flex-shrink: 0;
+}
+
+.emojiTriggerButton {
+	width: 32px;
+	height: 32px;
+	border-radius: 999px;
+	border: none;
+	background: transparent;
+	color: var(--text-primary-muted);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	transition:
+		background-color var(--transition-normal),
+		color var(--transition-normal);
+}
+
+.emojiTriggerButton:active {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-primary);
+}
+
+.emojiTriggerButtonActive {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-primary);
+}
+
+.emojiTriggerButton:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.emojiPreviewImage {
+	width: 22px;
+	height: 22px;
+	object-fit: contain;
+}
+
+.emojiPreviewNative {
+	font-size: 22px;
+	line-height: 1;
+	font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
+}
+
+.clearButtonIcon {
+	border: none;
+	background: transparent;
+	color: var(--text-primary-muted);
+	padding: 0;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	border-radius: 999px;
+	cursor: pointer;
+	transition:
+		background-color var(--transition-normal),
+		color var(--transition-normal);
+}
+
+.clearButtonIcon:active {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-primary);
+}
+
+.clearButtonIcon:disabled {
+	opacity: 0.4;
+	cursor: not-allowed;
+}

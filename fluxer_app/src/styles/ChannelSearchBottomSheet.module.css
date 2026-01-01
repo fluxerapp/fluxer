@@ -1,0 +1,340 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.container {
+	display: flex;
+	height: 100%;
+	flex-direction: column;
+	overflow: hidden;
+}
+
+.headerButton {
+	display: flex;
+	align-items: center;
+	color: var(--text-primary);
+}
+
+.searchContainer {
+	padding: 12px 16px;
+}
+
+.searchInputWrapper {
+	position: relative;
+	display: flex;
+	height: 2.75rem;
+	align-items: center;
+	padding: 0 14px;
+	background-color: var(--background-tertiary);
+	border-radius: 12px;
+}
+
+.searchIcon {
+	height: 1.25rem;
+	width: 1.25rem;
+	flex-shrink: 0;
+	color: var(--text-primary-muted);
+}
+
+.searchInput {
+	margin-left: 8px;
+	height: 100%;
+	flex: 1;
+	border: none;
+	background-color: transparent;
+	color: var(--text-primary);
+	font-size: 1rem;
+	outline: none;
+}
+
+.searchInput::placeholder {
+	color: var(--text-primary-muted);
+}
+
+.clearButton {
+	margin-left: 8px;
+	display: flex;
+	height: 2rem;
+	width: 2rem;
+	flex-shrink: 0;
+	align-items: center;
+	justify-content: center;
+	border: none;
+	background-color: transparent;
+	padding: 0;
+	color: var(--text-primary-muted);
+	transition: color 150ms ease;
+	touch-action: manipulation;
+	-webkit-tap-highlight-color: transparent;
+}
+
+@media (hover: hover) {
+	.clearButton:hover {
+		color: var(--text-primary);
+	}
+}
+
+.searchResults {
+	margin-top: 8px;
+	text-align: center;
+	font-size: 0.875rem;
+	color: var(--text-secondary);
+}
+
+.filterChipsRow {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-top: 12px;
+}
+
+.searchButton {
+	margin-top: 12px;
+	width: 100%;
+}
+
+.loadingContainer,
+.idleContainer {
+	display: flex;
+	flex: 1;
+	align-items: center;
+	justify-content: center;
+}
+
+.loadingIcon {
+	height: 3rem;
+	width: 3rem;
+	animation: spin 1s linear infinite;
+	color: var(--text-primary-muted);
+}
+
+@keyframes spin {
+	from {
+		transform: rotate(0deg);
+	}
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+.emptyStateContainer {
+	display: flex;
+	flex: 1;
+	align-items: center;
+	justify-content: center;
+	padding: 16px;
+}
+
+.emptyStateContent {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 8px;
+	text-align: center;
+}
+
+.emptyStateIcon {
+	height: 5rem;
+	width: 5rem;
+	color: var(--text-primary-muted);
+}
+
+.emptyStateTitle {
+	font-size: 1.125rem;
+	font-weight: 600;
+	color: var(--text-primary);
+}
+
+.emptyStateDescription {
+	font-size: 0.875rem;
+	color: var(--text-secondary);
+}
+
+.indexingContainer {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 16px;
+	padding: 16px;
+}
+
+.indexingContent {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 8px;
+	text-align: center;
+}
+
+.indexingIcon {
+	height: 4rem;
+	width: 4rem;
+	animation: spin 1s linear infinite;
+	color: var(--text-primary-muted);
+}
+
+.indexingTitle {
+	font-size: 1.25rem;
+	font-weight: 600;
+	color: var(--text-primary);
+}
+
+.indexingDescription {
+	font-size: 0.875rem;
+	color: var(--text-primary-muted);
+}
+
+.errorContainer {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 16px;
+	padding: 16px;
+}
+
+.errorContent {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 8px;
+	text-align: center;
+}
+
+.errorTitle {
+	font-size: 1.25rem;
+	font-weight: 600;
+	color: var(--text-primary);
+}
+
+.errorMessage {
+	max-width: 100%;
+	font-size: 0.875rem;
+	color: var(--text-primary-muted);
+	word-break: break-words;
+}
+
+.retryButton {
+	margin-top: 16px;
+	background-color: var(--background-modifier-accent);
+	border: none;
+	border-radius: 4px;
+	padding: 8px 16px;
+	font-size: 0.875rem;
+	color: var(--text-primary);
+	transition: background-color 150ms ease;
+}
+
+@media (hover: hover) {
+	.retryButton:hover {
+		background-color: var(--background-modifier-hover);
+	}
+}
+
+.resultsScroller {
+	flex: 1;
+	overflow-y: auto;
+	padding: 16px 16px 0;
+}
+
+.channelSection {
+	margin-top: 16px;
+	margin-bottom: 8px;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.channelSection:first-child {
+	margin-top: 0;
+}
+
+.channelIcon {
+	height: 1.25rem;
+	width: 1.25rem;
+	flex-shrink: 0;
+	color: var(--text-primary-muted);
+}
+
+.channelName {
+	font-size: 0.875rem;
+	font-weight: 600;
+	color: var(--text-primary);
+}
+
+.searchResultItem {
+	position: relative;
+	margin-bottom: 12px;
+	cursor: pointer;
+	overflow: hidden;
+	user-select: none;
+	-webkit-user-select: none;
+	background-color: var(--background-modifier-hover);
+	border-radius: 14px;
+	padding: 10px 12px;
+	touch-action: manipulation;
+	-webkit-tap-highlight-color: transparent;
+}
+
+.paginationContainer {
+	display: flex;
+	height: 52px;
+	flex-shrink: 0;
+	align-items: center;
+	justify-content: space-between;
+	padding: 0 16px;
+	border-top: 1px solid var(--background-modifier-hover);
+}
+
+.paginationButton {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	border: none;
+	background-color: var(--background-modifier-accent);
+	border-radius: 8px;
+	padding: 10px 16px;
+	font-size: 0.875rem;
+	color: var(--text-primary);
+	transition: background-color 150ms ease;
+	touch-action: manipulation;
+	-webkit-tap-highlight-color: transparent;
+}
+
+@media (hover: hover) {
+	.paginationButton:hover {
+		background-color: var(--background-modifier-hover);
+	}
+}
+
+.paginationButton:disabled {
+	cursor: not-allowed;
+	opacity: 0.5;
+}
+
+.paginationButton:disabled:hover {
+	background-color: var(--background-modifier-accent);
+}
+
+.paginationText {
+	font-size: 0.875rem;
+	color: var(--text-primary-muted);
+}

@@ -1,0 +1,83 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.row {
+	display: flex;
+	min-height: 0;
+	align-items: center;
+	gap: 1rem;
+	border-bottom: 1px solid var(--background-header-secondary);
+	padding: 0.75rem 1rem;
+}
+
+.feature {
+	min-width: 0;
+	flex: 1 1 0%;
+}
+
+.featureText {
+	font-weight: 500;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--text-primary);
+}
+
+@media (min-width: 768px) {
+	.featureText {
+		font-size: 1rem;
+		line-height: 1.5rem;
+	}
+}
+
+.valuesContainer {
+	display: flex;
+	min-width: 0;
+	flex-shrink: 0;
+	align-items: center;
+	gap: 1rem;
+}
+
+.freeValue {
+	width: 5rem;
+	text-align: center;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--text-primary-muted);
+}
+
+@media (min-width: 768px) {
+	.freeValue {
+		width: 6rem;
+	}
+}
+
+.plutoniumValue {
+	width: 5rem;
+	text-align: center;
+	font-weight: 600;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--status-online);
+}
+
+@media (min-width: 768px) {
+	.plutoniumValue {
+		width: 6rem;
+	}
+}

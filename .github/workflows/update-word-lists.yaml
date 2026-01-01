@@ -1,0 +1,73 @@
+name: update word-lists
+
+on:
+  schedule:
+    - cron: '0 3 1 * *'
+  workflow_dispatch:
+
+jobs:
+  update-word-lists:
+    runs-on: blacksmith-2vcpu-ubuntu-2404
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          ref: canary
+
+      - name: Download latest word lists
+        run: |
+          set -euo pipefail
+          curl -fsSL https://raw.githubusercontent.com/tailscale/tailscale/refs/heads/main/words/scales.txt -o /tmp/scales.txt
+          curl -fsSL https://raw.githubusercontent.com/tailscale/tailscale/refs/heads/main/words/tails.txt -o /tmp/tails.txt
+
+      - name: Check for changes
+        id: check_changes
+        run: |
+          set -euo pipefail
+          # Compare the downloaded files with the existing ones
+          if ! diff -q /tmp/scales.txt fluxer_api/src/words/scales.txt > /dev/null 2>&1 || \
+             ! diff -q /tmp/tails.txt fluxer_api/src/words/tails.txt > /dev/null 2>&1; then
+            printf 'changes_detected=true\n' >> "$GITHUB_OUTPUT"
+            echo "Changes detected in word lists"
+          else
+            printf 'changes_detected=false\n' >> "$GITHUB_OUTPUT"
+            echo "No changes detected in word lists"
+          fi
+
+      - name: Update word lists
+        if: steps.check_changes.outputs.changes_detected == 'true'
+        run: |
+          set -euo pipefail
+          cp /tmp/scales.txt fluxer_api/src/words/scales.txt
+          cp /tmp/tails.txt fluxer_api/src/words/tails.txt
+
+      - name: Create pull request for updated word lists
+        if: steps.check_changes.outputs.changes_detected == 'true'
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: word-lists-update-${{ github.run_id }}
+          base: canary
+          title: "chore: update word lists from Tailscale upstream"
+          body: |
+            Automated update of scales.txt and tails.txt from the Tailscale repository.
+
+            These files are used to generate connection IDs for voice connections.
+
+            Source:
+            - https://github.com/tailscale/tailscale/blob/main/words/scales.txt
+            - https://github.com/tailscale/tailscale/blob/main/words/tails.txt
+          commit-message: "chore: update word lists from Tailscale upstream"
+          files: |
+            fluxer_api/src/words/scales.txt
+            fluxer_api/src/words/tails.txt
+          labels: automation
+
+      - name: No changes detected
+        if: steps.check_changes.outputs.changes_detected == 'false'
+        run: echo "Word lists are already up to date."

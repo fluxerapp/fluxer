@@ -1,0 +1,53 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.container {
+	position: relative;
+	width: 100%;
+}
+
+.inputContainer {
+	position: relative;
+	width: 100%;
+}
+
+.clearButton {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 1.5rem;
+	height: 1.5rem;
+	border-radius: 0.25rem;
+	color: var(--text-tertiary);
+	background-color: transparent;
+	transition-property: color, background-color;
+	transition-duration: 150ms;
+	transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+	cursor: pointer;
+}
+
+.clearButton:hover {
+	color: var(--text-primary);
+	background-color: var(--background-modifier-hover);
+}
+
+.clearButton:focus-visible {
+	outline: 2px solid var(--focus-ring);
+	outline-offset: -2px;
+}

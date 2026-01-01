@@ -1,0 +1,269 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.container {
+	border-radius: var(--radius-xl);
+	border: 1px solid var(--background-modifier-accent);
+	background-color: var(--background-textarea);
+	overflow: hidden;
+}
+
+.headerButton {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	width: 100%;
+	min-height: var(--input-container-min-height);
+	padding: 0 var(--input-container-padding);
+	background: transparent;
+	border: none;
+	text-align: left;
+	cursor: pointer;
+	transition: background-color var(--transition-fast);
+}
+
+.headerButton:hover {
+	background-color: var(--background-modifier-hover);
+}
+
+.headerButton:focus-visible {
+	background-color: var(--background-modifier-hover);
+	outline: 2px solid var(--brand-primary);
+	outline-offset: -2px;
+}
+
+.left {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-2);
+	min-width: 0;
+	flex: 1;
+}
+
+.avatarLarge {
+	height: 32px;
+	width: 32px;
+	flex-shrink: 0;
+	border-radius: 9999px;
+	background-position: center;
+	background-size: cover;
+}
+
+.textBlock {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 0;
+	flex: 1;
+}
+
+.titleRow {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: var(--spacing-1);
+}
+
+.name {
+	font-weight: 500;
+	font-size: 0.875rem;
+	line-height: 1.125rem;
+	color: var(--text-primary);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.channelTag {
+	background-color: var(--background-modifier-hover);
+	border-radius: 9999px;
+	color: var(--text-primary-muted);
+	display: none;
+	font-size: 0.75rem;
+	padding: 2px 10px;
+}
+
+@media (min-width: 768px) {
+	.channelTag {
+		display: inline-block;
+	}
+}
+
+.metaRow {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-2);
+	color: var(--text-primary-muted);
+	font-size: 0.75rem;
+	line-height: 0.8125rem;
+	min-width: 0;
+}
+
+.channelTagMobile {
+	display: inline-block;
+	border-radius: 9999px;
+	background-color: var(--background-modifier-hover);
+	color: var(--text-primary-muted);
+	padding: 2px 10px;
+	font-size: 0.75rem;
+}
+
+@media (min-width: 768px) {
+	.channelTagMobile {
+		display: none;
+	}
+}
+
+.chevron {
+	height: 20px;
+	width: 20px;
+	flex-shrink: 0;
+	color: var(--text-tertiary);
+	transition: transform var(--transition-fast);
+}
+
+@media (min-width: 768px) {
+	.chevron {
+		height: 24px;
+		width: 24px;
+	}
+}
+
+.chevronExpanded {
+	transform: rotate(180deg);
+}
+
+.details {
+	border-top: 1px solid var(--background-modifier-accent);
+	padding: var(--spacing-3) var(--input-container-padding);
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-3);
+}
+
+.detailsRow {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-3);
+}
+
+@media (min-width: 768px) {
+	.detailsRow {
+		flex-direction: row;
+		align-items: flex-start;
+		gap: var(--spacing-4);
+	}
+}
+
+.avatarColumn {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--spacing-2);
+}
+
+@media (min-width: 768px) {
+	.avatarColumn {
+		width: 128px;
+	}
+}
+
+.label {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-1);
+	font-weight: 600;
+	color: var(--text-primary-muted);
+	font-size: 12px;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+}
+
+.avatarPreview {
+	height: 80px;
+	width: 80px;
+	border-radius: 9999px;
+	background-position: center;
+	background-size: cover;
+}
+
+.fields {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	gap: var(--spacing-3);
+}
+
+.fieldsRow {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-3);
+}
+
+@media (min-width: 768px) {
+	.fieldsRow {
+		flex-direction: row;
+		align-items: flex-start;
+		gap: var(--spacing-4);
+	}
+}
+
+.fieldGrow {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-2);
+	flex: 1;
+}
+
+.actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: var(--spacing-2);
+}
+
+.avatarActions {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-2);
+}
+
+.fileInput {
+	display: none;
+}
+
+.urlWrapper {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-2);
+}
+
+.monoInput {
+	font-family: var(--font-mono);
+}
+
+.iconSmall {
+	height: 1rem;
+	width: 1rem;
+}
+
+.truncate {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}

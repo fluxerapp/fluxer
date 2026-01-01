@@ -1,0 +1,116 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.container {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	border-radius: 6px;
+	border-width: 1px;
+	border-color: var(--background-header-secondary);
+	background-color: var(--background-primary);
+	padding-left: 6px;
+	padding-right: 6px;
+	padding-top: 8px;
+	padding-bottom: 8px;
+	width: var(--layout-header-popout-width);
+}
+
+.item {
+	display: flex;
+	width: 100%;
+	cursor: pointer;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	border-radius: 6px;
+	border-width: 0;
+	background-color: transparent;
+	padding: 8px;
+	text-align: left;
+	line-height: 16px;
+}
+
+.item:hover,
+.item:focus-visible {
+	background-color: var(--brand-primary);
+	color: var(--brand-primary-fill);
+}
+
+.item:focus-visible {
+	outline: none;
+}
+
+.itemDanger {
+	color: var(--status-danger);
+}
+
+.itemDanger:hover,
+.itemDanger:focus-visible {
+	background-color: var(--status-danger);
+}
+
+.itemDanger:focus-visible {
+	outline: none;
+}
+
+.itemIcon {
+	height: 20px;
+	width: 20px;
+	flex-shrink: 0;
+}
+
+.checkboxContainer {
+	display: flex;
+	width: 100%;
+	cursor: pointer;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	border-radius: 6px;
+	border-width: 0;
+	background-color: transparent;
+	padding: 8px;
+	text-align: left;
+	line-height: 16px;
+}
+
+.checkboxContainer:hover,
+.checkboxContainer:focus-visible {
+	background-color: var(--brand-primary);
+	color: var(--brand-primary-fill);
+}
+
+.checkboxContainer:focus-visible {
+	outline: none;
+}
+
+.checkboxIcon {
+	display: flex;
+	height: 20px;
+	width: 20px;
+	flex-shrink: 0;
+	align-items: center;
+	justify-content: center;
+}
+
+.iconMedium {
+	height: 20px;
+	width: 20px;
+}

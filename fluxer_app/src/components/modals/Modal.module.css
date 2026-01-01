@@ -1,0 +1,466 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.modalBackdrop {
+	background: hsl(0deg 0% 0%);
+	inset: 0;
+	pointer-events: none;
+	position: fixed;
+}
+
+.layer {
+	position: fixed;
+	inset: 0;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	pointer-events: none;
+}
+
+:global(html.platform-native:not(.platform-macos)) .layer {
+	top: var(--native-titlebar-height);
+}
+
+.backdropSlot {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	overflow: hidden;
+}
+
+.focusLock {
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+}
+
+.surface {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+}
+
+.layer.layerFullscreen {
+	position: absolute;
+	inset: 0;
+	--fullscreen-pad-y: clamp(8px, 1.5vh, 16px);
+	--fullscreen-pad-x: clamp(12px, 2vw, 24px);
+	--fullscreen-view-height: min(100dvh, 100svh, 100vh);
+	--fullscreen-available-height: calc(var(--fullscreen-view-height) - 2 * var(--fullscreen-pad-y));
+	display: flex;
+	align-items: stretch;
+	justify-content: stretch;
+	padding: var(--fullscreen-pad-y) var(--fullscreen-pad-x);
+	margin: 0;
+}
+
+.layer.layerFullscreenMobile {
+	--fullscreen-pad-y: 0px;
+	--fullscreen-pad-x: 0px;
+	padding: 0;
+}
+
+.layer.layerFullscreenMobile .focusLock,
+.layer.layerFullscreenMobile .surface {
+	contain: layout style paint;
+}
+
+:global(html.platform-native:not(.platform-macos)) .layer.layerFullscreen {
+	--fullscreen-pad-y: clamp(12px, 2vh, 20px);
+	--fullscreen-pad-x: clamp(12px, 2vw, 24px);
+	padding: var(--fullscreen-pad-y) var(--fullscreen-pad-x);
+}
+
+.layer.layerFullscreenMobile {
+	--fullscreen-pad-y: 0px;
+	--fullscreen-pad-x: 0px;
+	padding: 0 !important;
+}
+
+:global(html.platform-native:not(.platform-macos)) .layer.layerFullscreenMobile {
+	--fullscreen-pad-y: 0px;
+	--fullscreen-pad-x: 0px;
+	padding: 0 !important;
+}
+
+.layer.layerFullscreen .focusLock {
+	position: relative;
+	padding: 0;
+	margin: 0;
+	width: 100%;
+	flex: 1 1 auto;
+	max-height: var(--fullscreen-available-height);
+	height: 100%;
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+}
+
+.layer.layerFullscreen .surface {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	flex: 1 1 auto;
+	width: 100%;
+	max-height: var(--fullscreen-available-height);
+	height: 100%;
+	min-height: 0;
+	overflow: hidden;
+}
+
+.layer.layerFullscreenMobile .surface {
+	will-change: transform;
+}
+
+.layer.layerCentered {
+	padding: calc(24px + env(safe-area-inset-top, 0px)) calc(16px + env(safe-area-inset-right, 0px))
+		calc(24px + env(safe-area-inset-bottom, 0px)) calc(16px + env(safe-area-inset-left, 0px));
+}
+
+.root.centeredOnMobile {
+	width: 100%;
+	max-width: min(400px, calc(100vw - 32px));
+	max-height: 100%;
+	border-radius: 16px;
+	box-sizing: border-box;
+}
+
+.root {
+	position: relative;
+	margin: 0 auto;
+	max-height: calc(100svh - 48px);
+	display: flex;
+	flex-direction: column;
+	background-color: var(--background-secondary);
+	border: 1px solid var(--background-header-secondary);
+	border-radius: 8px;
+	box-shadow:
+		0 0 0 1px hsla(223, 7%, 20%, 0.08),
+		0 16px 40px hsla(0, 0%, 0%, 0.16);
+	overflow: hidden;
+	pointer-events: all;
+	will-change: transform, opacity;
+	-webkit-backface-visibility: hidden;
+	backface-visibility: hidden;
+}
+
+:global(html.platform-native.platform-macos) .root {
+	max-height: calc(100svh - 48px - var(--native-titlebar-height, 32px));
+}
+
+.root.medium {
+	min-height: 400px;
+	width: 600px;
+}
+
+.root.small {
+	min-height: 200px;
+	width: 440px;
+}
+
+.root.large {
+	min-height: 400px;
+	width: 800px;
+}
+
+.root.xlarge {
+	height: 100%;
+	width: 90%;
+}
+
+.root.fullscreen {
+	flex: 1 1 auto;
+	height: 100%;
+	min-height: 0;
+	max-height: var(--fullscreen-available-height);
+	width: 100%;
+	max-width: clamp(960px, 96vw, 1400px);
+	border: 1px solid var(--background-header-secondary);
+	border-radius: clamp(8px, 1vw, 12px);
+	box-sizing: border-box;
+	padding: 0;
+	background: var(--background-secondary);
+	box-shadow:
+		0 0 0 1px hsla(223, 7%, 20%, 0.08),
+		0 16px 40px hsla(0, 0%, 0%, 0.16);
+	overflow: hidden;
+	display: flex;
+	flex-direction: column;
+}
+
+.layerFullscreenMobile .root.fullscreen {
+	border-radius: 0 !important;
+	border: none !important;
+	box-shadow: none !important;
+	max-height: 100%;
+	isolation: isolate;
+}
+
+@keyframes slideInFromRight {
+	from {
+		transform: translate3d(100%, 0, 0);
+	}
+	to {
+		transform: translate3d(0, 0, 0);
+	}
+}
+
+@keyframes slideOutToRight {
+	from {
+		transform: translate3d(0, 0, 0);
+	}
+	to {
+		transform: translate3d(100%, 0, 0);
+	}
+}
+
+.mobileSlideIn {
+	animation: slideInFromRight 0.25s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+}
+
+.mobileSlideOut {
+	animation: slideOutToRight 0.2s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+}
+
+@media screen and (min-width: 768px) {
+	.layer.layerFullscreen {
+		--fullscreen-pad-y: clamp(12px, 2vh, 24px);
+		--fullscreen-pad-x: clamp(24px, 4vw, 64px);
+		padding: var(--fullscreen-pad-y) var(--fullscreen-pad-x);
+	}
+
+	:global(html.platform-native:not(.platform-macos)) .layer.layerFullscreen {
+		--fullscreen-pad-y: clamp(16px, 2.5vh, 28px);
+		--fullscreen-pad-x: clamp(24px, 4vw, 64px);
+		padding: var(--fullscreen-pad-y) var(--fullscreen-pad-x);
+	}
+}
+
+@media screen and (min-width: 1024px) {
+	.layer.layerFullscreen {
+		--fullscreen-pad-y: clamp(16px, 2.5vh, 32px);
+		--fullscreen-pad-x: clamp(32px, 6vw, 96px);
+		padding: var(--fullscreen-pad-y) var(--fullscreen-pad-x);
+	}
+
+	:global(html.platform-native:not(.platform-macos)) .layer.layerFullscreen {
+		--fullscreen-pad-y: clamp(20px, 3vh, 36px);
+		--fullscreen-pad-x: clamp(32px, 6vw, 96px);
+		padding: var(--fullscreen-pad-y) var(--fullscreen-pad-x);
+	}
+}
+
+@media screen and (min-width: 1440px) {
+	.layer.layerFullscreen {
+		--fullscreen-pad-y: clamp(20px, 3vh, 40px);
+		--fullscreen-pad-x: clamp(48px, 8vw, 128px);
+		padding: var(--fullscreen-pad-y) var(--fullscreen-pad-x);
+	}
+
+	:global(html.platform-native:not(.platform-macos)) .layer.layerFullscreen {
+		--fullscreen-pad-y: clamp(24px, 3.5vh, 44px);
+		--fullscreen-pad-x: clamp(48px, 8vw, 128px);
+		padding: var(--fullscreen-pad-y) var(--fullscreen-pad-x);
+	}
+}
+
+@media screen and (min-width: 1920px) {
+	.layer.layerFullscreen {
+		--fullscreen-pad-y: clamp(24px, 3.5vh, 48px);
+		--fullscreen-pad-x: clamp(64px, 10vw, 200px);
+		padding: var(--fullscreen-pad-y) var(--fullscreen-pad-x);
+	}
+
+	:global(html.platform-native:not(.platform-macos)) .layer.layerFullscreen {
+		--fullscreen-pad-y: clamp(28px, 4vh, 52px);
+		--fullscreen-pad-x: clamp(64px, 10vw, 200px);
+		padding: var(--fullscreen-pad-y) var(--fullscreen-pad-x);
+	}
+}
+
+@media screen and (min-width: 2560px) {
+	.layer.layerFullscreen {
+		--fullscreen-pad-y: clamp(28px, 4vh, 56px);
+		--fullscreen-pad-x: clamp(96px, 12vw, 320px);
+		padding: var(--fullscreen-pad-y) var(--fullscreen-pad-x);
+	}
+
+	:global(html.platform-native:not(.platform-macos)) .layer.layerFullscreen {
+		--fullscreen-pad-y: clamp(32px, 4.5vh, 60px);
+		--fullscreen-pad-x: clamp(96px, 12vw, 320px);
+		padding: var(--fullscreen-pad-y) var(--fullscreen-pad-x);
+	}
+}
+
+.layout {
+	flex: 0 0 auto;
+	position: relative;
+	z-index: 1;
+	overflow-x: hidden;
+	padding: 16px;
+}
+
+.layout.header {
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+	background-color: var(--background-secondary);
+}
+
+.layout.header.light {
+	background-color: var(--background-secondary);
+}
+
+.layout.header.dark {
+	background-color: var(--background-secondary);
+}
+
+.layout.footer {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: stretch;
+	gap: 8px;
+	background-color: var(--background-secondary);
+}
+
+.layout.footer > * {
+	flex: 1;
+	min-width: fit-content;
+}
+
+.centeredOnMobile .layout.footer {
+	flex-direction: column-reverse;
+}
+
+.headerInner {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.headerText {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.headerText h3 {
+	color: var(--text-primary);
+	font-size: 18px;
+	font-weight: 600;
+	line-height: 20px;
+	margin: 0;
+}
+
+.headerInner button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: transparent;
+	color: var(--text-primary-muted);
+	cursor: pointer;
+	opacity: 0.5;
+	transition: opacity 0.2s ease-in-out;
+	border: none;
+	padding: 4px;
+	border-radius: 4px;
+	-webkit-tap-highlight-color: transparent;
+	-webkit-app-region: no-drag;
+}
+
+.headerInner button:hover {
+	color: var(--text-primary);
+	opacity: 1;
+}
+
+.headerInner button:active {
+	transform: scale(0.95);
+}
+
+.content {
+	flex: 1 1 auto;
+	height: 100%;
+	padding: 0 16px 16px;
+	overflow-y: auto;
+	-webkit-overflow-scrolling: touch;
+	overscroll-behavior: contain;
+}
+
+.contentNoPadding {
+	padding: 0;
+}
+
+.screenReaderLabel {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0 0 0 0);
+	white-space: nowrap;
+	border: 0;
+}
+
+.insetCloseButtonContainer {
+	position: absolute;
+	top: calc(12px + env(safe-area-inset-top, 0px));
+	right: calc(12px + env(safe-area-inset-right, 0px));
+	z-index: 10;
+	pointer-events: auto;
+}
+
+.insetCloseButton {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 40px;
+	height: 40px;
+	border-radius: 9999px;
+	border: 1px solid color-mix(in srgb, var(--background-modifier-accent) 70%, transparent);
+	background: color-mix(in srgb, var(--background-secondary) 55%, transparent);
+	backdrop-filter: blur(10px);
+	color: var(--text-primary);
+	cursor: pointer;
+	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
+	transition:
+		transform 0.12s ease,
+		opacity 0.12s ease,
+		background-color 0.12s ease,
+		border-color 0.12s ease;
+	-webkit-tap-highlight-color: transparent;
+	-webkit-app-region: no-drag;
+}
+
+.insetCloseButton:hover {
+	background: color-mix(in srgb, var(--background-secondary) 75%, transparent);
+	border-color: color-mix(in srgb, var(--background-modifier-accent) 95%, transparent);
+}
+
+.insetCloseButton:active {
+	transform: scale(0.96);
+}
+
+.insetCloseButton:disabled {
+	opacity: 0.55;
+	cursor: default;
+}

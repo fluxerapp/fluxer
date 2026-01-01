@@ -1,0 +1,80 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.sectionHeading {
+	padding: 4px 12px;
+	font-weight: 600;
+	color: var(--text-primary-muted);
+	font-size: 12px;
+	text-transform: uppercase;
+	letter-spacing: 0.025em;
+}
+
+.divider {
+	margin: 4px 0;
+	height: 1px;
+	background-color: var(--background-modifier-hover);
+}
+
+.emojiIcon {
+	height: 24px;
+	width: 24px;
+}
+
+.nativeEmojiIcon {
+	font-size: 24px;
+	line-height: 1;
+	font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
+}
+
+.stickerIconWrapper,
+.memeIconWrapper {
+	height: 32px;
+	width: 32px;
+	overflow: hidden;
+	border-radius: 4px;
+}
+
+.stickerIcon,
+.memeIcon {
+	height: 100%;
+	width: 100%;
+	object-fit: cover;
+}
+
+.memeVideo {
+	height: 100%;
+	width: 100%;
+	object-fit: cover;
+}
+
+.audioIconWrapper {
+	display: flex;
+	height: 100%;
+	width: 100%;
+	align-items: center;
+	justify-content: center;
+	background-color: var(--brand-primary);
+}
+
+.audioIcon {
+	height: 16px;
+	width: 16px;
+	color: white;
+}

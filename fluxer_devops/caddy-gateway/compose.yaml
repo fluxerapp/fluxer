@@ -1,0 +1,38 @@
+services:
+  caddy-gateway:
+    image: lucaslorentz/caddy-docker-proxy:ci-alpine
+    environment:
+      - CADDY_INGRESS_NETWORKS=fluxer-shared
+      - CADDY_DOCKER_LABEL_PREFIX=caddy_gw
+      - CADDY_DOCKER_CADDYFILE_PATH=/config/Caddyfile.base
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - caddy_gateway_data:/data
+    configs:
+      - source: caddyfile_config
+        target: /config/Caddyfile.base
+    networks:
+      - fluxer-shared
+    ports:
+      - target: 443
+        published: 9443
+        protocol: tcp
+        mode: host
+    deploy:
+      mode: global
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+
+configs:
+  caddyfile_config:
+    file: ./Caddyfile.global
+
+networks:
+  fluxer-shared:
+    external: true
+
+volumes:
+  caddy_gateway_data:

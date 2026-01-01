@@ -1,0 +1,259 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.topDragRegion {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: var(--layout-header-height);
+	z-index: var(--z-index-titlebar);
+	pointer-events: none;
+}
+
+:global(html.platform-native.platform-macos) .topDragRegion {
+	pointer-events: auto;
+}
+
+.scrollerWrapper {
+	position: fixed;
+	inset: 0;
+	display: flex;
+	background-color: var(--background-secondary);
+}
+
+.container {
+	position: relative;
+	min-height: 100svh;
+	width: 100%;
+	background-color: var(--brand-primary);
+}
+
+:global(.auth-page),
+:global(.auth-page *) {
+	user-select: none;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+}
+
+.characterBackground {
+	min-height: 100svh;
+	overflow: auto;
+	position: relative;
+	width: 100%;
+}
+
+.rightSplit {
+	bottom: 0;
+	inset-inline-end: 0;
+	opacity: 1;
+	pointer-events: none;
+	position: fixed;
+	transition: opacity 0.4s ease;
+	width: auto;
+	z-index: 0;
+}
+
+.leftSplit {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	min-height: 100svh;
+	position: relative;
+	width: 100%;
+}
+
+.leftSplitWrapper {
+	align-items: center;
+	display: flex;
+	justify-content: center;
+	position: relative;
+	width: 100%;
+	flex: 1;
+}
+
+.leftSplitAnimated {
+	width: 100%;
+	display: flex;
+	justify-content: center;
+}
+
+.splashImage {
+	position: fixed;
+	right: 0;
+	bottom: 0;
+	pointer-events: none;
+	overflow: hidden;
+	z-index: 0;
+}
+
+.splashOverlay {
+	pointer-events: none;
+	position: absolute;
+	inset: 0;
+}
+
+.patternHost {
+	position: absolute;
+	inset: 0;
+	opacity: 0.06;
+	pointer-events: none;
+	z-index: 0;
+	background-repeat: repeat;
+	background-size: 260px 260px;
+	filter: invert(1);
+}
+
+.cardContainer {
+	position: relative;
+	z-index: 10;
+	display: flex;
+	flex: 1;
+	min-height: 100svh;
+	width: 100%;
+	align-items: center;
+	justify-content: center;
+	padding: clamp(2rem, 6vw, 4rem);
+	box-sizing: border-box;
+}
+
+.card {
+	margin: 0;
+	display: flex;
+	height: auto;
+	min-height: 500px;
+	width: 100%;
+	max-width: 56rem;
+	overflow: hidden;
+	border-radius: 1rem;
+	background-color: var(--background-secondary);
+	box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+}
+
+.cardSingle {
+	max-width: 42rem;
+}
+
+.logoSide {
+	display: flex;
+	width: 33.333333%;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	padding: 3rem 2rem;
+	border-right: 1px solid var(--background-modifier-accent);
+	background-color: var(--background-secondary);
+}
+
+.logo {
+	margin-bottom: 1.5rem;
+	height: 8rem;
+	width: 8rem;
+}
+
+.wordmark {
+	height: 2rem;
+}
+
+.formSide {
+	display: flex;
+	width: 66.666667%;
+	flex-direction: column;
+	justify-content: center;
+	padding: 3rem;
+	background: var(--background-secondary);
+}
+
+.formSideSingle {
+	width: 100%;
+}
+
+.mobileContainer {
+	min-height: 100dvh;
+	background-color: var(--background-secondary);
+	padding: calc(2rem + env(safe-area-inset-top, 0px)) 1.5rem calc(2.5rem + env(safe-area-inset-bottom, 0px));
+	overflow-y: auto;
+	overflow-x: hidden;
+	-webkit-overflow-scrolling: touch;
+}
+
+.mobileContent {
+	margin-left: auto;
+	margin-right: auto;
+	width: 100%;
+	max-width: 28rem;
+}
+
+.mobileLogoContainer {
+	margin-bottom: 2rem;
+	text-align: center;
+}
+
+.mobileWordmark {
+	margin-left: auto;
+	margin-right: auto;
+	height: 2rem;
+	color: var(--text-primary);
+}
+
+@media (min-width: 1600px) {
+	.leftSplit.alignLeft {
+		align-items: flex-start;
+		padding-left: clamp(10rem, 18vw, 22rem);
+	}
+
+	.alignLeft .leftSplitWrapper,
+	.alignLeft .leftSplitAnimated,
+	.alignLeft .cardContainer {
+		justify-content: flex-start;
+	}
+
+	.leftSplit.alignRight {
+		align-items: flex-end;
+		padding-right: clamp(10rem, 18vw, 22rem);
+	}
+
+	.alignRight .leftSplitWrapper,
+	.alignRight .leftSplitAnimated,
+	.alignRight .cardContainer {
+		justify-content: flex-end;
+	}
+}
+
+:global(html:not(.auth-page) body),
+:global(html.auth-page body) {
+	overflow: hidden;
+}
+
+:global(html.auth-page),
+:global(html.auth-page body) {
+	height: 100%;
+	background-color: var(--background-secondary);
+}
+
+@supports (padding: env(safe-area-inset-top)) {
+	:global(.auth-page body.is-standalone) {
+		padding-top: env(safe-area-inset-top);
+		padding-right: env(safe-area-inset-right);
+		padding-bottom: env(safe-area-inset-bottom);
+		padding-left: env(safe-area-inset-left);
+	}
+}

@@ -1,0 +1,92 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.wrapperSides {
+	margin-left: 0;
+	margin-right: 0;
+	width: 100%;
+}
+
+.box {
+	position: relative;
+	background-color: var(--background-secondary-lighter);
+	border: none;
+	transition: border-color 0.2s ease;
+	margin-bottom: 0;
+}
+
+.stackSection {
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+}
+
+.stackSection + .stackSection {
+	border-top: 1px solid var(--user-area-divider-color);
+}
+
+.box:focus-within {
+	border-top: none;
+}
+
+.roundedAll {
+	border-radius: 0;
+}
+
+.roundedTop {
+	border-top-left-radius: 0;
+	border-top-right-radius: 0;
+}
+
+.roundedBottom {
+	border-bottom-left-radius: 0;
+	border-bottom-right-radius: 0;
+}
+
+.noBottomBorder {
+	border-bottom-width: 0;
+}
+
+.bottomSpacing {
+	margin-bottom: 0;
+}
+
+.disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+}
+
+.topBarContainer {
+	position: relative;
+	z-index: 1;
+	flex-shrink: 0;
+}
+
+.barInner {
+	display: grid;
+	align-items: center;
+	grid-template-columns: 1fr auto;
+	padding-left: 16px;
+	padding-right: 16px;
+}
+
+.separator {
+	height: 1px;
+	background-color: transparent;
+}

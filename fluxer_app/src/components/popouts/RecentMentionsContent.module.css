@@ -1,0 +1,112 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.dmIcon {
+	display: flex;
+	height: 20px;
+	width: 20px;
+	align-items: center;
+	justify-content: center;
+	border-radius: 9999px;
+	background-color: var(--background-modifier-hover);
+	color: var(--text-primary);
+}
+
+.filterButton {
+	display: flex;
+	height: 32px;
+	width: 32px;
+	align-items: center;
+	justify-content: center;
+	border-radius: 6px;
+	color: var(--text-primary);
+	transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+	transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+	transition-duration: 150ms;
+	cursor: pointer;
+}
+
+.filterButton:hover {
+	background-color: var(--background-modifier-hover);
+}
+
+.filterButtonActive {
+	background-color: var(--background-modifier-hover);
+}
+
+.scroller {
+	max-height: 700px;
+	padding-left: 8px;
+	padding-right: 8px;
+	padding-top: 8px;
+}
+
+.groupContainer {
+	margin-bottom: 16px;
+}
+
+.groupHeader {
+	margin-bottom: 8px;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding-left: 8px;
+	padding-right: 8px;
+}
+
+.groupHeaderContent {
+	display: flex;
+	min-width: 0;
+	flex: 1 1 0%;
+	flex-direction: column;
+}
+
+.groupHeaderText {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 12px;
+	line-height: 16px;
+}
+
+.channelName {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-weight: 500;
+	color: var(--text-primary);
+}
+
+.guildName {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	color: var(--text-primary-muted);
+}
+
+.separator {
+	color: var(--text-primary-muted);
+}
+
+.iconMedium {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	--guild-icon-size: 20px;
+}

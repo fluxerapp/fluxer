@@ -1,0 +1,54 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.memberListContainer {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	min-height: 0;
+	width: 100svw;
+	min-width: 0;
+	overflow: hidden;
+	background-color: var(--background-secondary-lighter);
+	--member-list-width: 100svw;
+}
+
+@media (min-width: 768px) {
+	.memberListContainer {
+		--member-list-width: 16.5rem;
+		width: var(--member-list-width);
+	}
+}
+
+.memberListScroller {
+	display: flex;
+	flex: 1;
+	min-height: 0;
+	flex-direction: column;
+	gap: var(--spacing-4);
+	background-color: var(--background-secondary-lighter);
+	padding-left: var(--spacing-2);
+	padding-right: 0;
+	padding-bottom: var(--spacing-4);
+}
+
+.scrollerSpacer {
+	height: 0.625rem;
+	flex-shrink: 0;
+}

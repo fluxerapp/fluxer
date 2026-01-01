@@ -1,0 +1,318 @@
+name: deploy app (canary)
+
+on:
+  push:
+    branches:
+      - canary
+    paths:
+      - fluxer_app/**/*
+      - .github/workflows/deploy-app-canary.yaml
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-fluxer-app-canary
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+env:
+  SERVICE_NAME: fluxer-app-canary
+  IMAGE_NAME: fluxer-app-canary
+  COMPOSE_STACK: fluxer-app-canary
+  DOCKERFILE: fluxer_app/proxy/Dockerfile
+  SENTRY_PROXY_PATH: /error-reporting-proxy
+  DEPLOY_BRANCH: ${{ github.event_name == 'workflow_dispatch' && 'canary' || github.ref_name }}
+
+jobs:
+  deploy:
+    name: Deploy app (canary)
+    runs-on: blacksmith-2vcpu-ubuntu-2404
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && 'refs/heads/canary' || github.ref }}
+          fetch-depth: 0
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.26.0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: fluxer_app/pnpm-lock.yaml
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: '1.25.5'
+
+      - name: Install dependencies
+        working-directory: fluxer_app
+        run: pnpm install --frozen-lockfile
+
+      - name: Run Lingui i18n tasks
+        working-directory: fluxer_app
+        run: pnpm lingui:extract && pnpm lingui:compile --strict
+
+      - name: Record deploy commit
+        run: |
+          set -euo pipefail
+          sha=$(git rev-parse HEAD)
+          echo "Deploying commit ${sha}"
+          printf 'DEPLOY_SHA=%s\n' "$sha" >> "$GITHUB_ENV"
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Cache Rust dependencies
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            fluxer_app/crates/gif_wasm/target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('fluxer_app/crates/gif_wasm/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Install wasm-pack
+        run: |
+          set -euo pipefail
+          if ! command -v wasm-pack >/dev/null 2>&1; then
+            cargo install wasm-pack --version 0.13.1
+          fi
+
+      - name: Generate wasm artifacts
+        working-directory: fluxer_app
+        run: pnpm wasm:codegen
+
+      - name: Build application
+        working-directory: fluxer_app
+        env:
+          NODE_ENV: production
+          PUBLIC_BOOTSTRAP_API_ENDPOINT: https://web.canary.fluxer.app/api
+          PUBLIC_BOOTSTRAP_API_PUBLIC_ENDPOINT: https://api.canary.fluxer.app
+          PUBLIC_API_VERSION: 1
+          PUBLIC_PROJECT_ENV: canary
+          PUBLIC_SENTRY_PROJECT_ID: 4510205815291904
+          PUBLIC_SENTRY_PUBLIC_KEY: 59ced0e2666ab83dd1ddb056cdd22d1b
+          PUBLIC_SENTRY_DSN: https://59ced0e2666ab83dd1ddb056cdd22d1b@sentry.web.canary.fluxer.app/4510205815291904
+          PUBLIC_SENTRY_PROXY_PATH: ${{ env.SENTRY_PROXY_PATH }}
+          PUBLIC_BUILD_NUMBER: ${{ github.run_number }}
+        run: |
+          set -euo pipefail
+          export PUBLIC_BUILD_SHA=$(git rev-parse --short HEAD)
+          export PUBLIC_BUILD_TIMESTAMP=$(date +%s)
+          pnpm build
+          cat > dist/version.json << EOF
+          {
+            "sha": "$PUBLIC_BUILD_SHA",
+            "buildNumber": $PUBLIC_BUILD_NUMBER,
+            "timestamp": $PUBLIC_BUILD_TIMESTAMP,
+            "env": "canary"
+          }
+          EOF
+
+      - name: Install rclone
+        run: |
+          set -euo pipefail
+          if ! command -v rclone >/dev/null 2>&1; then
+            curl -fsSL https://rclone.org/install.sh | sudo bash
+          fi
+
+      - name: Upload assets to S3 static bucket
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.config/rclone
+          cat > ~/.config/rclone/rclone.conf << RCLONEEOF
+          [ovh]
+          type = s3
+          provider = Other
+          env_auth = true
+          endpoint = https://s3.us-east-va.io.cloud.ovh.us
+          acl = public-read
+          RCLONEEOF
+
+          rclone copy fluxer_app/dist/assets ovh:fluxer-static/assets \
+            --transfers 32 \
+            --checkers 16 \
+            --size-only \
+            --fast-list \
+            --s3-upload-concurrency 8 \
+            --s3-chunk-size 16M \
+            -v
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+      - name: Build image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ env.DOCKERFILE }}
+          tags: ${{ env.IMAGE_NAME }}:${{ env.DEPLOY_SHA }}
+          load: true
+          platforms: linux/amd64
+          cache-from: type=gha,scope=${{ env.SERVICE_NAME }}
+          cache-to: type=gha,mode=max,scope=${{ env.SERVICE_NAME }}
+        env:
+          DOCKER_BUILD_SUMMARY: false
+          DOCKER_BUILD_RECORD_UPLOAD: false
+
+      - name: Install docker-pussh
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.docker/cli-plugins
+          curl -fsSL https://raw.githubusercontent.com/psviderski/unregistry/v0.3.1/docker-pussh \
+            -o ~/.docker/cli-plugins/docker-pussh
+          chmod +x ~/.docker/cli-plugins/docker-pussh
+
+      - name: Set up SSH agent
+        uses: webfactory/ssh-agent@v0.9.1
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY_SERVER }}
+
+      - name: Add server to known hosts
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+
+      - name: Push image and deploy
+        env:
+          IMAGE_TAG: ${{ env.IMAGE_NAME }}:${{ env.DEPLOY_SHA }}
+          SERVER: ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}
+          SENTRY_DSN: https://59ced0e2666ab83dd1ddb056cdd22d1b@o4510149383094272.ingest.us.sentry.io/4510205815291904
+          SENTRY_PROXY_PATH: ${{ env.SENTRY_PROXY_PATH }}
+          SENTRY_REPORT_HOST: https://sentry.web.canary.fluxer.app
+        run: |
+          set -euo pipefail
+          docker pussh ${IMAGE_TAG} ${SERVER}
+
+          ssh ${SERVER} \
+            "IMAGE_TAG=${IMAGE_TAG} SERVICE_NAME=${SERVICE_NAME} COMPOSE_STACK=${COMPOSE_STACK} SENTRY_DSN=${SENTRY_DSN} SENTRY_PROXY_PATH=${SENTRY_PROXY_PATH} SENTRY_REPORT_HOST=${SENTRY_REPORT_HOST}" bash << 'EOF'
+            set -euo pipefail
+            sudo mkdir -p /opt/${SERVICE_NAME}
+            sudo chown -R ${USER}:${USER} /opt/${SERVICE_NAME}
+            cd /opt/${SERVICE_NAME}
+
+            cat > compose.yaml << COMPOSEEOF
+          services:
+            app:
+              image: ${IMAGE_TAG}
+              deploy:
+                replicas: 1
+                restart_policy:
+                  condition: on-failure
+                  delay: 5s
+                  max_attempts: 3
+                update_config:
+                  parallelism: 1
+                  delay: 10s
+                  order: start-first
+                rollback_config:
+                  parallelism: 1
+                  delay: 10s
+                labels:
+                  - 'caddy=web.canary.fluxer.app'
+                  - 'caddy.handle_path_0=/api*'
+                  - 'caddy.handle_path_0.reverse_proxy=http://fluxer-api-canary_app:8080'
+                  - 'caddy.reverse_proxy={{upstreams 8080}}'
+                  - 'caddy.header.X-Robots-Tag="noindex, nofollow, nosnippet, noimageindex"'
+                  - 'caddy.header.Strict-Transport-Security="max-age=31536000; includeSubDomains; preload"'
+                  - 'caddy.header.X-Xss-Protection="1; mode=block"'
+                  - 'caddy.header.X-Content-Type-Options=nosniff'
+                  - 'caddy.header.Referrer-Policy=strict-origin-when-cross-origin'
+                  - 'caddy.header.X-Frame-Options=DENY'
+                  - "caddy.header.Expect-Ct=max-age=86400, report-uri=\"${SENTRY_REPORT_HOST}/api/4510205815291904/security/?sentry_key=59ced0e2666ab83dd1ddb056cdd22d1b\""
+                  - 'caddy.header.Cache-Control="no-store, no-cache, must-revalidate"'
+                  - 'caddy.header.Pragma=no-cache'
+                  - 'caddy.header.Expires=0'
+              environment:
+                - PORT=8080
+                - RELEASE_CHANNEL=canary
+                - FLUXER_METRICS_HOST=fluxer-metrics_app:8080
+                - SENTRY_DSN=${SENTRY_DSN}
+                - SENTRY_PROXY_PATH=${SENTRY_PROXY_PATH}
+                - SENTRY_REPORT_HOST=${SENTRY_REPORT_HOST}
+              networks:
+                - fluxer-shared
+              healthcheck:
+                test: ['CMD', 'curl', '-f', 'http://localhost:8080/_health']
+                interval: 30s
+                timeout: 10s
+                retries: 3
+                start_period: 40s
+
+            sentry:
+              image: ${IMAGE_TAG}
+              deploy:
+                replicas: 1
+                restart_policy:
+                  condition: on-failure
+                  delay: 5s
+                  max_attempts: 3
+                update_config:
+                  parallelism: 1
+                  delay: 10s
+                  order: start-first
+                rollback_config:
+                  parallelism: 1
+                  delay: 10s
+                labels:
+                  - 'caddy=sentry.web.canary.fluxer.app'
+                  - 'caddy.reverse_proxy={{upstreams 8080}}'
+                  - 'caddy.header.X-Robots-Tag="noindex, nofollow, nosnippet, noimageindex"'
+                  - 'caddy.header.Strict-Transport-Security="max-age=31536000; includeSubDomains; preload"'
+                  - 'caddy.header.X-Xss-Protection="1; mode=block"'
+                  - 'caddy.header.X-Content-Type-Options=nosniff'
+                  - 'caddy.header.Referrer-Policy=strict-origin-when-cross-origin'
+                  - 'caddy.header.X-Frame-Options=DENY'
+                  - "caddy.header.Expect-Ct=max-age=86400, report-uri=\"${SENTRY_REPORT_HOST}/api/4510205815291904/security/?sentry_key=59ced0e2666ab83dd1ddb056cdd22d1b\""
+                  - 'caddy.header.Cache-Control="no-store, no-cache, must-revalidate"'
+                  - 'caddy.header.Pragma=no-cache'
+                  - 'caddy.header.Expires=0'
+              environment:
+                - PORT=8080
+                - RELEASE_CHANNEL=canary
+                - FLUXER_METRICS_HOST=fluxer-metrics_app:8080
+                - SENTRY_DSN=${SENTRY_DSN}
+                - SENTRY_PROXY_PATH=/
+                - SENTRY_REPORT_HOST=${SENTRY_REPORT_HOST}
+              networks:
+                - fluxer-shared
+              healthcheck:
+                test: ['CMD', 'curl', '-f', 'http://localhost:8080/_health']
+                interval: 30s
+                timeout: 10s
+                retries: 3
+                start_period: 40s
+
+          networks:
+            fluxer-shared:
+              external: true
+          COMPOSEEOF
+
+            docker stack deploy -c compose.yaml ${COMPOSE_STACK}
+            docker service update --image ${IMAGE_TAG} fluxer-app-canary_app
+            docker service update --image ${IMAGE_TAG} fluxer-app-canary_sentry
+          EOF

@@ -1,0 +1,47 @@
+default:
+    @just --list
+
+build:
+    gleam build
+
+run:
+    just css && gleam run
+
+test:
+    gleam test
+
+css:
+    ./build/bin/tailwindcss -i ./tailwind.css -o ./priv/static/app.css
+
+css-watch:
+    ./build/bin/tailwindcss -i ./tailwind.css -o ./priv/static/app.css --watch
+
+clean:
+    rm -rf build/
+    rm -rf priv/static/app.css
+
+deps:
+    gleam deps download
+
+format:
+    gleam format
+
+check: format build test
+
+install-tailwind:
+    gleam run -m tailwind/install
+
+setup: deps install-tailwind css i18n-compile
+
+preprocess-images desktop mobile:
+    cd scripts && go run ./cmd/preprocess-images -desktop {{desktop}} -mobile {{mobile}}
+
+i18n-compile:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    for po in locales/*/messages.po; do
+        locale_dir=$(dirname "$po")
+        locale_name=$(basename "$locale_dir")
+        mkdir -p "priv/locales/$locale_name/LC_MESSAGES"
+        msgfmt -o "priv/locales/$locale_name/LC_MESSAGES/messages.mo" "$po"
+    done

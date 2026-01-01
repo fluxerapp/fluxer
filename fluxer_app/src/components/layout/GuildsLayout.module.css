@@ -1,0 +1,632 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.guildsLayoutContainer {
+	--layout-user-area-reserved-height: 0px;
+	--layout-mobile-bottom-nav-reserved-height: 0px;
+	position: relative;
+	display: grid;
+	grid-template-columns: var(--layout-guild-list-width) minmax(0, 1fr);
+	grid-template-rows: minmax(0, 1fr);
+	grid-auto-rows: minmax(0, 1fr);
+	height: 100%;
+	min-height: 0;
+	max-height: 100%;
+	width: 100%;
+	min-width: 0;
+	max-width: 100%;
+	background-color: var(--background-secondary);
+}
+
+.guildsLayoutReserveSpace {
+	--layout-user-area-reserved-height: calc(var(--layout-user-area-height) + var(--layout-voice-connection-height, 0px));
+}
+
+.guildsLayoutReserveMobileBottomNav {
+	--layout-mobile-bottom-nav-reserved-height: var(--mobile-bottom-nav-height);
+}
+
+.guildsLayoutContainerMobile {
+	composes: guildsLayoutContainer;
+	grid-template-columns: 1fr;
+	background-color: var(--background-secondary);
+}
+
+.guildListScrollContainer {
+	grid-column: 1;
+	grid-row: 1;
+	min-height: 0;
+	height: calc(
+		100% -
+		var(--layout-user-area-reserved-height, 0px) -
+		var(--layout-mobile-bottom-nav-reserved-height, 0px)
+	);
+	width: var(--layout-guild-list-width);
+	min-width: 0;
+	overflow-y: auto;
+	background-color: var(--background-secondary);
+	padding-top: var(--spacing-1);
+	padding-bottom: var(--spacing-2);
+	scrollbar-width: none;
+	position: relative;
+	z-index: var(--z-index-elevated-1);
+}
+
+.guildListScrollContainer::-webkit-scrollbar {
+	display: none;
+}
+
+.guildListContent {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	width: 100%;
+	min-width: 0;
+	padding-bottom: var(--spacing-2);
+}
+
+.guildListTopSection,
+.guildListGuildsSection {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	width: 100%;
+}
+
+.guildListTopSection {
+	gap: var(--spacing-1);
+}
+
+.guildListGuildsSection {
+	gap: var(--spacing-1);
+}
+
+.contentContainer {
+	grid-column: 2;
+	grid-row: 1;
+	display: grid;
+	grid-template-rows: minmax(0, 1fr);
+	min-height: 0;
+	min-width: 0;
+	background-color: var(--background-secondary);
+	position: relative;
+	height: 100%;
+	max-height: 100%;
+	width: 100%;
+	max-width: 100%;
+}
+
+.contentContainerRounded {
+	border-top-left-radius: clamp(12px, 1.6vw, 18px);
+	background-clip: padding-box;
+	overflow: hidden;
+}
+
+.contentContainerMobile {
+	grid-column: 1 / -1;
+}
+
+.contentInner {
+	height: 100%;
+	min-height: 0;
+	max-height: 100%;
+	width: 100%;
+	min-width: 0;
+	background-color: var(--background-secondary);
+}
+
+.nagbarStack {
+	display: flex;
+	flex-direction: column;
+	gap: 0;
+}
+
+.userAreaWrapper {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	width: calc(var(--layout-guild-list-width) + var(--layout-sidebar-width));
+	display: flex;
+	align-items: flex-end;
+	padding: 0;
+	pointer-events: none;
+	z-index: var(--z-index-elevated-1);
+}
+
+.userAreaWrapper > * {
+	pointer-events: auto;
+}
+
+.guildListItem {
+	position: relative;
+	display: flex;
+	width: 100%;
+	justify-content: center;
+	margin-bottom: var(--spacing-1);
+	padding: 2px;
+	z-index: 0;
+}
+
+.guildListItemNoMargin {
+	margin-bottom: 0;
+}
+
+.guildIcon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: var(--guild-icon-size);
+	width: var(--guild-icon-size);
+	flex-shrink: 0;
+	cursor: pointer;
+	border-radius: var(--radius-full);
+	background-color: transparent;
+	background-size: cover;
+	background-position: center;
+	font-weight: 600;
+	font-size: 1.25rem;
+	color: var(--text-primary);
+	transition:
+		border-radius 70ms ease-out,
+		background-color 70ms ease-out,
+		color 70ms ease-out;
+	container-type: size;
+}
+
+.guildIcon:active {
+	transform: translateY(1px);
+}
+
+.guildIconSelected:not(.guildIconNoImage) {
+	border-radius: 30%;
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.guildListItem:hover .guildIcon:not(.guildIconNoImage),
+	.guildIcon:hover:not(.guildIconNoImage) {
+		border-radius: 30%;
+	}
+}
+
+.guildIconNoImage {
+	transition-property: background-color, color, border-radius;
+	transition-duration: 70ms;
+	transition-timing-function: ease-out;
+	background-color: var(--guilds-layout-item-bg, var(--guild-list-foreground));
+	cursor: pointer;
+}
+
+.guildIconSelected.guildIconNoImage {
+	border-radius: 30%;
+	background-color: var(--brand-primary);
+	color: white;
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.guildListItem:hover .guildIconNoImage,
+	.guildIconNoImage:hover {
+		border-radius: 30%;
+		background-color: var(--brand-primary);
+		color: white;
+	}
+}
+
+.guildIconInitials {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	display: block;
+	width: 100%;
+	text-align: center;
+	line-height: 1;
+	color: inherit;
+	font-weight: 600;
+	font-size: clamp(0.85rem, 45cqi, 1.35rem);
+	letter-spacing: 0.06em;
+}
+
+.guildIcon[data-initials-length='medium'] .guildIconInitials {
+	font-size: clamp(0.85rem, 38cqi, 1.11rem);
+	letter-spacing: 0.02em;
+}
+
+.guildIcon[data-initials-length='long'] .guildIconInitials {
+	font-size: clamp(0.85rem, 32cqi, 0.87rem);
+	letter-spacing: -0.02em;
+}
+
+.guildIndicator {
+	position: absolute;
+	left: -0.15rem;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: var(--guild-icon-size);
+	width: 0.5rem;
+	pointer-events: none;
+	container-type: layout size;
+	z-index: 2;
+}
+
+.guildIndicatorBar {
+	display: block;
+	width: 0.35rem;
+	border-radius: 0 var(--radius-full) var(--radius-full) 0;
+	background-color: var(--text-primary);
+}
+
+.guildBadge {
+	position: absolute;
+	right: -0.25rem;
+	bottom: -0.25rem;
+	pointer-events: none;
+	border-radius: var(--radius-md);
+}
+
+.guildBadgeActive {
+	box-shadow: 0 0 0 3px var(--background-secondary);
+}
+
+.dmListSection {
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+	min-height: 0;
+}
+
+.guildVoiceBadge {
+	position: absolute;
+	right: -0.25rem;
+	top: -0.25rem;
+	pointer-events: none;
+}
+
+.guildVoiceBadgeInner {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 1.25rem;
+	width: 1.25rem;
+	flex-shrink: 0;
+	border-radius: var(--radius-full);
+	background-color: var(--status-online);
+	box-shadow: 0 0 0 3px var(--background-secondary);
+	color: white;
+}
+
+.guildErrorBadge {
+	position: absolute;
+	top: 0;
+	right: 0;
+	pointer-events: none;
+}
+
+.guildErrorBadgeInner {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 1rem;
+	width: 1rem;
+	flex-shrink: 0;
+	border-radius: var(--radius-full);
+	background-color: white;
+	color: var(--status-danger);
+	box-shadow: 0 0 0 3px var(--background-secondary);
+}
+
+.dmListItem {
+	composes: guildListItem;
+}
+
+.dmListItemWrapper {
+	width: 100%;
+	display: flex;
+	justify-content: center;
+	align-items: stretch;
+}
+
+.dmIcon {
+	composes: guildIcon;
+}
+
+.fluxerButton {
+	composes: guildListItem;
+}
+
+.fluxerButtonIcon {
+	composes: guildIcon;
+	background-color: var(--guilds-layout-item-bg, var(--guild-list-foreground));
+	color: var(--text-primary);
+}
+
+.fluxerButtonIconSelected {
+	background-color: var(--brand-primary);
+	color: white;
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.fluxerButton:hover .fluxerButtonIcon,
+	.fluxerButtonIcon:hover {
+		background-color: var(--brand-primary);
+		color: white;
+	}
+}
+
+.addGuildButton {
+	position: relative;
+	display: flex;
+	width: 100%;
+	justify-content: center;
+	margin-bottom: var(--spacing-1);
+	padding: 2px;
+}
+
+.addGuildButtonIcon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: var(--guild-icon-size);
+	width: var(--guild-icon-size);
+	flex-shrink: 0;
+	cursor: pointer;
+	border-radius: var(--radius-full);
+	border: 2px dashed var(--background-modifier-accent);
+	background-color: transparent;
+	color: var(--text-primary);
+	transition-property: border-radius, border-color;
+	transition-duration: 70ms;
+	transition-timing-function: ease-out;
+}
+
+.addGuildButtonIcon:active {
+	transform: translateY(1px);
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.addGuildButton:hover .addGuildButtonIcon,
+	.addGuildButtonIcon:hover {
+		border-color: var(--text-primary);
+	}
+}
+
+.guildDivider {
+	height: 0.125rem;
+	width: 2rem;
+	flex-shrink: 0;
+	margin-top: var(--spacing-2);
+	margin-bottom: var(--spacing-2);
+	border-radius: 1px;
+	background-color: var(--background-modifier-hover);
+}
+
+.dmUserAvatars {
+	display: flex;
+	align-items: center;
+}
+
+.dmUserAvatar {
+	height: 2rem;
+	width: 2rem;
+	border: 2px solid var(--background-primary);
+	z-index: 1;
+}
+
+.dmUserAvatarImage {
+	height: 100%;
+	width: 100%;
+}
+
+.fluxerSymbolIcon {
+	height: 3rem;
+	width: 3rem;
+	color: currentColor;
+}
+
+.relative {
+	position: relative;
+}
+
+.favoritesIcon {
+	height: 1.75rem;
+	width: 1.75rem;
+}
+
+.unavailableContainer {
+	position: relative;
+	margin-bottom: 0.25rem;
+	display: flex;
+	width: 100%;
+	justify-content: center;
+}
+
+.unavailableBadge {
+	display: flex;
+	height: 3rem;
+	width: 3rem;
+	flex-shrink: 0;
+	cursor: pointer;
+	align-items: center;
+	justify-content: center;
+	border-radius: var(--radius-full);
+	border: 2px solid var(--status-danger);
+	background-color: transparent;
+	color: var(--text-primary);
+	transition-property: color, background-color;
+	transition-timing-function: ease-out;
+	transition-duration: 150ms;
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.unavailableBadge:hover {
+		background-color: var(--status-danger);
+		color: white;
+	}
+}
+
+.unavailableBadge:active {
+	transform: translateY(1px);
+}
+
+.unavailableIcon {
+	height: 2rem;
+	width: 2rem;
+}
+
+.guildTooltipContainer {
+	display: flex;
+	min-width: 0;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 0.375rem;
+	padding: 0.125rem 0;
+}
+
+.guildTooltipHeader {
+	display: flex;
+	min-width: 0;
+	align-items: center;
+	gap: 0.375rem;
+}
+
+.guildVerifiedIcon {
+	height: 1rem;
+	width: 1rem;
+	flex-shrink: 0;
+	color: var(--text-primary);
+}
+
+.guildTooltipName {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-size: 1rem;
+	font-weight: 600;
+	color: var(--text-primary);
+}
+
+.guildTooltipMessage {
+	font-size: 0.875rem;
+	color: var(--text-primary-muted);
+}
+
+.guildTooltipError {
+	font-size: 0.875rem;
+	color: var(--status-danger);
+}
+
+.outlineFrame {
+	--outline-radius: 0px;
+}
+
+:global(html.platform-native:not(.platform-macos)) .guildsLayoutContainer {
+	padding-top: var(--native-titlebar-height);
+}
+
+:global(html.platform-native.platform-macos) .guildListScrollContainer {
+	padding-top: var(--native-titlebar-height);
+}
+
+:global(html:not(.platform-native)) .outlineFrame,
+:global(html.platform-native.platform-macos) .outlineFrame {
+	border-top: none;
+}
+
+:global(html.platform-native:not(.platform-macos)) .outlineFrame {
+	border-top: 1px solid var(--user-area-divider-color);
+	--outline-radius: clamp(8px, 1.2vw, 14px);
+}
+
+.guildMutedInfo {
+	display: flex;
+	align-items: center;
+	justify-content: flex-start;
+	gap: 0.375rem;
+}
+
+.guildMutedIcon {
+	height: 0.875rem;
+	width: 0.875rem;
+	flex-shrink: 0;
+	color: var(--text-primary-muted);
+}
+
+.guildMutedText {
+	font-size: 0.8125rem;
+	font-weight: 400;
+	color: var(--text-primary-muted);
+}
+
+.guildVoiceInfo {
+	display: flex;
+	align-items: center;
+	gap: 0.375rem;
+}
+
+.guildVoiceIcon {
+	height: 1.75rem;
+	width: 1.75rem;
+	color: var(--text-primary-muted);
+}
+
+.guildVoiceBadgeIcon {
+	height: 0.75rem;
+	width: 0.75rem;
+}
+
+.guildErrorIcon {
+	height: 1rem;
+	width: 1rem;
+}
+
+.guildInvitesPausedBadge {
+	position: absolute;
+	right: calc(-0.25rem - 3px);
+	bottom: calc(-0.25rem - 3px);
+	pointer-events: none;
+	background-color: var(--background-secondary);
+	border-radius: var(--radius-full);
+	padding: 3px;
+}
+
+.guildInvitesPausedBadgeInner {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 1.125rem;
+	width: 1.125rem;
+	flex-shrink: 0;
+	border-radius: var(--radius-full);
+	background-color: var(--text-muted);
+	color: white;
+}
+
+.guildInvitesPausedIcon {
+	height: 0.75rem;
+	width: 0.75rem;
+}
+
+:global(.theme-light) .guildsLayoutContainer {
+	--guilds-layout-item-bg: color-mix(in srgb, var(--guild-list-foreground) 55%, var(--background-primary) 45%);
+}
+
+.roundedFull {
+	border-radius: var(--radius-full);
+}

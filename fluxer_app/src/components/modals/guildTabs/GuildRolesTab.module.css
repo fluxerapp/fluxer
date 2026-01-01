@@ -1,0 +1,414 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.container {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	max-width: 100%;
+	font-size: 14px;
+}
+
+.grid {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: 16px;
+	min-height: 0;
+	align-items: start;
+}
+
+.right {
+	display: flex;
+	flex: 1 1 auto;
+	min-height: 0;
+	min-width: 0;
+	flex-direction: column;
+	overflow: hidden;
+}
+
+.rightScroller {
+	display: flex;
+	flex: 1 1 auto;
+	min-height: 0;
+	flex-direction: column;
+	gap: 16px;
+	padding-top: 16px;
+	padding-bottom: 24px;
+}
+
+@media (min-width: 640px) {
+	.rightScroller {
+		padding-top: 20px;
+	}
+}
+
+.sectionRow {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+@media (min-width: 640px) {
+	.sectionRow {
+		flex-direction: row;
+		align-items: center;
+		justify-content: space-between;
+	}
+
+	.sectionRow > button,
+	.sectionRow > :last-child:not(.sectionHeader) {
+		flex-shrink: 0;
+	}
+}
+
+.sectionTitle {
+	font-weight: 600;
+	font-size: 1.125rem;
+	letter-spacing: -0.01em;
+	margin-bottom: 4px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.subtleText {
+	color: var(--text-primary-muted);
+	font-size: 0.8125rem;
+}
+
+.sectionHeader {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	min-width: 0;
+}
+
+.sectionDescription {
+	color: var(--text-primary-muted);
+	font-size: 0.8125rem;
+	line-height: 1.4;
+}
+
+.sectionHeaderRow {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: space-between;
+	width: 100%;
+	gap: 12px;
+}
+
+.sectionHelp {
+	color: var(--text-primary-muted);
+	font-size: 0.8125rem;
+	flex: 1;
+}
+
+.sectionSubtitle {
+	font-weight: 600;
+	font-size: 0.75rem;
+	text-transform: uppercase;
+	letter-spacing: 0.02em;
+	margin: 16px 0 10px 0;
+	color: var(--text-tertiary);
+}
+
+.displayRow {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+@media (min-width: 640px) {
+	.displayRow {
+		flex-direction: row;
+		align-items: flex-start;
+	}
+}
+
+.nameField {
+	flex: 1;
+	min-width: 0;
+}
+
+.colorField {
+	flex: 0 0 auto;
+	min-width: 200px;
+}
+
+.settingsGroup {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	margin: 12px 0;
+}
+
+.permSearchRow {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.permSearchInput {
+	flex: 1;
+	min-width: 0;
+}
+
+.layoutButtons {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	flex-shrink: 0;
+}
+
+.layoutButton {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 36px;
+	height: 36px;
+	border-radius: 6px;
+	background: var(--background-secondary);
+	color: var(--text-primary-muted);
+	cursor: pointer;
+	transition:
+		background-color 150ms ease,
+		color 150ms ease;
+}
+
+.layoutButton:hover {
+	background: var(--background-modifier-hover);
+	color: var(--text-primary);
+}
+
+.permCategories {
+	display: flex;
+	flex-direction: column;
+	gap: 18px;
+	margin-top: 16px;
+}
+
+.permHeaderRow {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: space-between;
+	width: 100%;
+}
+
+.permHelp {
+	color: var(--text-primary-muted);
+	font-size: 0.8125rem;
+	flex: 1;
+}
+
+.icon {
+	width: 16px;
+	height: 16px;
+	margin-right: 6px;
+	display: inline-flex;
+	align-items: center;
+}
+
+.emptyState {
+	padding: 16px 0;
+	text-align: center;
+	color: var(--text-primary-muted);
+	font-size: 0.875rem;
+}
+
+.itemWrap {
+	position: relative;
+}
+
+.roleButton {
+	min-height: 2rem;
+}
+
+.dragging {
+	opacity: 0.5;
+}
+
+.noDrag {
+	cursor: default;
+}
+
+.lockIcon {
+	width: 16px;
+	height: 16px;
+	flex-shrink: 0;
+	color: var(--text-primary-muted);
+}
+
+.dropZone {
+	position: relative;
+	margin-left: 8px;
+	margin-right: 8px;
+	height: 10px;
+}
+
+.dropZoneTrack {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+}
+
+.dropZoneBar {
+	height: 2px;
+	width: 100%;
+	border-radius: 9999px;
+	transform-origin: center;
+	transform: scaleY(0);
+	transition:
+		transform 150ms ease-in-out,
+		opacity 150ms ease-in-out,
+		background-color var(--transition-fast);
+}
+
+.visible {
+	transform: scaleY(1);
+}
+
+.valid {
+	background: var(--brand-primary);
+	opacity: 1;
+}
+
+.invalid {
+	background: var(--text-primary-muted);
+	opacity: 0.6;
+}
+
+.sectionPad {
+	padding-top: 16px;
+}
+
+.leftTitle {
+	margin-bottom: 4px;
+	font-weight: 600;
+	font-size: 0.75rem;
+	text-transform: uppercase;
+	letter-spacing: 0.02em;
+	color: var(--text-tertiary);
+}
+
+.overwriteItem {
+	position: relative;
+	display: flex;
+	width: 100%;
+	align-items: center;
+	gap: 8px;
+	border-radius: 4px;
+	padding: 6px 8px;
+	text-align: left;
+	cursor: pointer;
+	background: transparent;
+}
+
+.overwriteItem:not(.overwriteItemSelected):hover {
+	background: var(--background-modifier-hover);
+}
+
+.overwriteItemSelected {
+	background: var(--brand-primary);
+	color: var(--brand-primary-fill);
+}
+
+.roleDot {
+	width: 12px;
+	height: 12px;
+	border-radius: 9999px;
+	flex-shrink: 0;
+}
+
+.overwriteName {
+	flex: 0 1 auto;
+	max-width: 180px;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-size: 0.875rem;
+	line-height: 1.2;
+	max-height: 1.2em;
+}
+
+.mobileRoleList {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.mobileListHeader {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+}
+
+.mobileListTitle {
+	font-weight: 600;
+	font-size: 1rem;
+	color: var(--text-primary);
+}
+
+.mobileRoles {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.mobileRoleItem {
+	display: flex;
+	width: 100%;
+	align-items: center;
+	gap: 10px;
+	padding: 10px 12px;
+	border-radius: 6px;
+	background: var(--background-secondary);
+	cursor: pointer;
+	transition: background-color 150ms ease;
+}
+
+.mobileRoleItem:hover {
+	background: var(--background-modifier-hover);
+}
+
+.mobileRoleName {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-size: 0.875rem;
+	text-align: left;
+	line-height: 1.2;
+	max-height: 1.2em;
+}
+
+.mobileRoleChevron {
+	flex-shrink: 0;
+	color: var(--text-primary-muted);
+}
+
+.mobileBackRow {
+	margin-bottom: 8px;
+}

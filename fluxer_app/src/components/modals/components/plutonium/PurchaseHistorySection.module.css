@@ -1,0 +1,84 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.section {
+	display: flex;
+	min-height: 0;
+	width: 100%;
+	flex-direction: column;
+	gap: 1rem;
+}
+
+.card {
+	width: 100%;
+	overflow: hidden;
+	border-radius: 0.75rem;
+	border: 1px solid var(--background-modifier-accent);
+	padding: 1.25rem;
+}
+
+.grid {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: 1rem;
+}
+
+@media (min-width: 1024px) {
+	.grid {
+		grid-template-columns: 1fr auto;
+		align-items: start;
+	}
+}
+
+.content {
+	display: flex;
+	min-width: 0;
+	flex-direction: column;
+	gap: 0.25rem;
+}
+
+.title {
+	font-weight: bold;
+	font-size: 1rem;
+	line-height: 1.5rem;
+	color: var(--text-primary);
+}
+
+.description {
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--text-primary-muted);
+}
+
+.button {
+	width: 100%;
+}
+
+@media (min-width: 768px) {
+	.button {
+		width: 100%;
+	}
+}
+
+@media (min-width: 1024px) {
+	.button {
+		width: auto;
+		justify-self: end;
+	}
+}

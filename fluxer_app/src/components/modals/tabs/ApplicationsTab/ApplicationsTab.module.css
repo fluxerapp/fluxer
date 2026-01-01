@@ -1,0 +1,727 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.buttonContainer {
+	display: flex;
+	align-items: center;
+	justify-content: flex-start;
+	gap: var(--spacing-3);
+	margin-bottom: var(--spacing-3);
+	flex-wrap: wrap;
+}
+
+.devControls {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-2);
+	flex-wrap: wrap;
+	margin-bottom: var(--spacing-3);
+}
+
+.devControlButton {
+	min-width: 200px;
+}
+
+.devControlButton[data-active='true'] {
+	box-shadow: 0 0 0 2px var(--border-muted, var(--background-modifier-accent));
+}
+
+.documentationLink {
+	color: var(--text-link);
+	display: inline-flex;
+	align-items: center;
+	gap: var(--spacing-1);
+	font-weight: 600;
+	text-decoration: none;
+	line-height: 1.25;
+}
+
+.documentationLink:hover {
+	text-decoration: underline;
+}
+
+.documentationIcon {
+	color: var(--text-link);
+	display: block;
+}
+
+.createForm {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-3);
+}
+
+.modalButtons {
+	display: flex;
+	gap: var(--spacing-2);
+	justify-content: flex-end;
+	flex-wrap: wrap;
+}
+
+.errorCard {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-2);
+	padding: 1.5rem;
+	border: 1px solid var(--background-modifier-accent);
+	border-radius: 8px;
+	background-color: var(--background-secondary);
+	align-items: flex-start;
+}
+
+.errorHeader {
+	display: flex;
+	flex-direction: column;
+	gap: 0.35rem;
+}
+
+.errorTitle {
+	margin: 0;
+	font-size: 1.05rem;
+	font-weight: 700;
+	color: var(--text-primary);
+}
+
+.errorSubtitle {
+	margin: 0;
+	color: var(--text-primary-muted);
+}
+
+.errorActions {
+	display: flex;
+	gap: var(--spacing-2);
+	flex-wrap: wrap;
+}
+
+.errorState {
+	padding: var(--spacing-3) 0;
+	border: none;
+	background: transparent;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--spacing-3);
+	text-align: center;
+}
+
+.statusActions {
+	display: flex;
+	gap: var(--spacing-2);
+	justify-content: center;
+}
+
+.listContainer {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-2);
+}
+
+.itemContainer {
+	border-radius: var(--radius-xl);
+	border: 1px solid var(--background-modifier-accent);
+	background-color: var(--background-textarea);
+	overflow: hidden;
+}
+
+.itemButton {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	width: 100%;
+	min-height: var(--input-container-min-height);
+	padding: 0 var(--input-container-padding);
+	background: transparent;
+	border: none;
+	text-align: left;
+	cursor: pointer;
+	transition: background-color var(--transition-fast);
+}
+
+.itemButton:hover {
+	background-color: var(--background-modifier-hover);
+}
+
+.itemButton:focus-visible {
+	background-color: var(--background-modifier-hover);
+	outline: 2px solid var(--brand-primary);
+	outline-offset: -2px;
+}
+
+.itemLeft {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-2);
+	min-width: 0;
+	flex: 1;
+}
+
+.itemAvatar {
+	height: 32px;
+	width: 32px;
+	flex-shrink: 0;
+	border-radius: 9999px;
+	background-position: center;
+	background-size: cover;
+}
+
+.itemAvatarPlaceholder {
+	height: 32px;
+	width: 32px;
+	flex-shrink: 0;
+	border-radius: 9999px;
+	background-color: var(--brand-experiment);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: white;
+	font-weight: 600;
+	font-size: 0.875rem;
+}
+
+.itemTextBlock {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 0;
+	flex: 1;
+}
+
+.itemTitleRow {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: var(--spacing-1);
+}
+
+.itemName {
+	font-weight: 500;
+	font-size: 0.875rem;
+	line-height: 1.125rem;
+	color: var(--text-primary);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.itemMetaRow {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-2);
+	color: var(--text-primary-muted);
+	font-size: 0.75rem;
+	line-height: 0.8125rem;
+	min-width: 0;
+}
+
+.itemId {
+	font-family: var(--font-mono);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.itemChevron {
+	height: 20px;
+	width: 20px;
+	flex-shrink: 0;
+	color: var(--text-tertiary);
+	transition: transform var(--transition-fast);
+}
+
+@media (min-width: 768px) {
+	.itemChevron {
+		height: 24px;
+		width: 24px;
+	}
+}
+
+.emptyState {
+	padding: 3rem 2rem;
+	text-align: center;
+	color: var(--text-muted);
+}
+
+.emptyStateTitle {
+	margin: 0 0 0.5rem 0;
+	font-size: 1.1rem;
+	font-weight: 600;
+}
+
+.emptyStateDescription {
+	margin: 0;
+	font-size: 0.9rem;
+}
+
+.detailContainer {
+	display: flex;
+	flex-direction: column;
+	gap: 1.5rem;
+}
+
+.headerRow {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: var(--spacing-2);
+}
+
+.headerPlaceholder {
+	display: flex;
+	align-items: center;
+}
+
+.headerPlaceholder button {
+	visibility: hidden;
+	pointer-events: none;
+}
+
+.section {
+	padding: 1.5rem;
+	border: 1px solid var(--background-modifier-accent);
+	border-radius: 8px;
+	background-color: var(--background-secondary);
+}
+
+.sectionHeader {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 1rem;
+	padding-bottom: 0.75rem;
+	border-bottom: 1px solid var(--background-modifier-accent);
+}
+
+.sectionTitle {
+	margin: 0;
+	font-size: 1rem;
+	font-weight: 600;
+	color: var(--text-primary);
+}
+
+.sectionDescription {
+	margin: 0.5rem 0 0 0;
+	font-size: 0.875rem;
+	color: var(--text-muted);
+}
+
+.sectionContent {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+}
+
+.field {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.fieldLabel {
+	font-weight: 500;
+	font-size: 0.875rem;
+	color: var(--text-primary);
+}
+
+.fieldValue {
+	padding: 0.75rem;
+	background-color: var(--background-tertiary);
+	border-radius: 4px;
+	font-family: monospace;
+	font-size: 0.875rem;
+	color: var(--text-primary);
+	word-break: break-all;
+}
+
+.fieldRow {
+	display: flex;
+	gap: 0.5rem;
+	align-items: center;
+}
+
+.uriList {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.uriItem {
+	padding: 0.5rem;
+	background-color: var(--background-tertiary);
+	border-radius: 4px;
+	font-size: 0.875rem;
+	color: var(--text-primary);
+	word-break: break-all;
+}
+
+.scopeList {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+}
+
+.scopeBadge {
+	padding: 0.375rem 0.75rem;
+	background-color: var(--background-primary);
+	border-radius: 4px;
+	font-size: 0.875rem;
+	color: var(--text-primary);
+	font-family: monospace;
+}
+
+.checkboxGroup {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}
+
+.tokenBanner {
+	padding: 1rem;
+	background-color: var(--background-modifier-accent);
+	border: 2px solid var(--status-warning);
+	border-radius: 8px;
+	margin-bottom: 1rem;
+}
+
+.tokenBannerHeader {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	margin-bottom: 0.75rem;
+}
+
+.tokenBannerTitle {
+	margin: 0;
+	color: var(--status-warning);
+	font-weight: 600;
+	font-size: 0.95rem;
+}
+
+.tokenBannerClose {
+	background: none;
+	border: none;
+	color: var(--text-muted);
+	cursor: pointer;
+	font-size: 1.25rem;
+	line-height: 1;
+	padding: 0;
+	width: 20px;
+	height: 20px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 4px;
+	transition: background-color 0.2s ease;
+}
+
+.tokenBannerClose:hover {
+	background-color: var(--background-modifier-hover);
+}
+
+.tokenBannerText {
+	margin: 0 0 0.75rem 0;
+	font-size: 0.875rem;
+	color: var(--text-primary);
+}
+
+.tokenDisplay {
+	display: flex;
+	gap: 0.5rem;
+	align-items: center;
+}
+
+.tokenInput {
+	flex: 1;
+	padding: 0.75rem;
+	background-color: var(--background-tertiary);
+	border: 1px solid var(--background-modifier-accent);
+	border-radius: 4px;
+	font-family: monospace;
+	font-size: 0.85rem;
+	color: var(--text-primary);
+	word-break: break-all;
+}
+
+.botProfileSection {
+	display: flex;
+	gap: 1rem;
+	align-items: center;
+	margin-bottom: var(--spacing-3);
+}
+
+.avatarSection {
+	display: flex;
+	gap: var(--spacing-3);
+	align-items: center;
+	margin-bottom: var(--spacing-3);
+}
+
+.avatarDisplay {
+	flex-shrink: 0;
+}
+
+.avatarControls {
+	flex: 1;
+	min-width: 0;
+}
+
+.botAvatar {
+	width: 80px;
+	height: 80px;
+	border-radius: 50%;
+	object-fit: cover;
+	border: 2px solid var(--background-modifier-accent);
+	flex-shrink: 0;
+}
+
+.botAvatarPlaceholder {
+	width: 80px;
+	height: 80px;
+	border-radius: 50%;
+	background-color: var(--brand-experiment);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 2rem;
+	font-weight: 600;
+	color: white;
+	flex-shrink: 0;
+}
+
+.botInfo {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.avatarUploadContainer {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.fileInput {
+	padding: 0.5rem;
+	border: 1px solid var(--background-modifier-accent);
+	border-radius: 4px;
+	background-color: var(--background-tertiary);
+	font-size: 0.875rem;
+	color: var(--text-primary);
+	cursor: pointer;
+}
+
+.fileInput:hover {
+	background-color: var(--background-secondary);
+}
+
+.dangerZone {
+	border-color: var(--status-danger);
+	background-color: rgba(var(--status-danger-rgb), 0.05);
+}
+
+.dangerZone .sectionHeader {
+	border-bottom-color: var(--status-danger);
+}
+
+.dangerZone .sectionTitle {
+	color: var(--status-danger);
+}
+
+.buttonGroup {
+	display: flex;
+	gap: var(--spacing-2);
+	flex-wrap: wrap;
+}
+
+.inputFooter {
+	font-size: 0.75rem;
+	color: var(--text-primary-muted);
+	margin-top: var(--spacing-1);
+}
+
+.fluxerTagContainer {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-2);
+}
+
+.sectionSubtitle {
+	margin: 0;
+	color: var(--text-primary-muted);
+	font-size: 0.9rem;
+}
+
+.secretRow {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-1);
+}
+
+.secretLabel {
+	font-weight: 600;
+	color: var(--text-primary);
+}
+
+.secretInputRow {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-2);
+}
+
+.secretActions {
+	display: flex;
+	gap: var(--spacing-2);
+	align-items: center;
+}
+
+.redirectList {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-2);
+}
+
+.redirectRow {
+	display: flex;
+	gap: var(--spacing-2);
+	align-items: center;
+}
+
+.bannerSection {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-2);
+}
+
+.bannerHeader {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.permissionsGrid {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-1);
+}
+
+.permissionsList {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--spacing-1);
+}
+
+.permissionItem {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-2);
+}
+
+.builderResult {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-1);
+}
+
+.fluxerTagLabel {
+	margin: 0;
+	display: block;
+	padding: 0;
+	font-weight: 500;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--text-primary);
+}
+
+.fluxerTagInputRow {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-2);
+}
+
+.usernameInput {
+	flex: 1;
+}
+
+.separator {
+	display: flex;
+	align-items: center;
+	font-family: var(--font-mono);
+	font-size: 1.25rem;
+	line-height: 1;
+	color: var(--text-primary);
+	padding: 0 var(--spacing-1);
+}
+
+.discriminatorInput {
+	width: 5rem;
+}
+
+.validationBox {
+	margin-top: var(--spacing-1);
+}
+
+.error {
+	color: var(--text-danger);
+	font-size: 0.875rem;
+	padding: 0.75rem;
+	background-color: rgba(var(--status-danger-rgb), 0.1);
+	border-radius: 4px;
+	margin-top: 0.5rem;
+}
+
+.spinnerContainer {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	padding: 2rem;
+}
+
+.srOnly {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	border: 0;
+}
+
+.scopeGrid {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-2);
+}
+
+.scopeList {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+	gap: var(--spacing-2);
+}
+
+.scopeItem {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-2);
+	padding: 0.5rem 0.75rem;
+	border: 1px solid var(--background-modifier-accent);
+	border-radius: var(--radius-lg);
+	background-color: var(--background-secondary);
+}

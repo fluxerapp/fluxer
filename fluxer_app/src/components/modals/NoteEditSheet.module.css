@@ -1,0 +1,78 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.container {
+	display: flex;
+	height: 100%;
+	flex-direction: column;
+	overflow: hidden;
+}
+
+.backButton {
+	display: flex;
+	align-items: center;
+	color: var(--text-primary);
+}
+
+.backIcon {
+	height: 20px;
+	width: 20px;
+}
+
+.saveButton {
+	font-weight: 500;
+	font-size: 16px;
+}
+
+.saveButtonActive {
+	color: var(--brand-primary-light);
+}
+
+.saveButtonDisabled {
+	color: var(--text-tertiary);
+	opacity: 0.5;
+}
+
+.content {
+	flex: 1;
+	padding: 16px;
+	padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+}
+
+.label {
+	margin-bottom: 8px;
+	display: block;
+	font-weight: 500;
+	font-size: 14px;
+	color: var(--text-secondary);
+}
+
+.textarea {
+	width: 100%;
+	resize: none;
+	border-radius: 8px;
+	border: 1px solid var(--background-header-secondary);
+	background-color: var(--background-secondary);
+	padding: 12px;
+	color: var(--text-primary);
+}
+
+.textarea::placeholder {
+	color: var(--text-tertiary);
+}

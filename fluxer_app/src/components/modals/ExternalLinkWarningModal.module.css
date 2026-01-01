@@ -1,0 +1,104 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.content {
+	display: flex;
+	flex-direction: column;
+	gap: 24px;
+	padding-bottom: 24px;
+}
+
+.iconContainer {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 12px;
+}
+
+.iconCircle {
+	display: flex;
+	width: 48px;
+	height: 48px;
+	align-items: center;
+	justify-content: center;
+	border-radius: 50%;
+	background: var(--background-modifier-accent);
+}
+
+.warningIcon {
+	color: #eab308;
+}
+
+.textContainer {
+	text-align: center;
+}
+
+.title {
+	font-size: 16px;
+	font-weight: 600;
+	color: var(--text-primary);
+}
+
+.description {
+	margin-top: 4px;
+	font-size: 14px;
+	color: var(--text-secondary);
+}
+
+.urlSection {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.urlLabel {
+	font-size: 14px;
+	font-weight: 500;
+	color: var(--text-secondary);
+}
+
+.urlBox {
+	overflow: hidden;
+	border-radius: 8px;
+	border: 1px solid var(--background-modifier-accent);
+	background: var(--background-tertiary);
+	padding: 12px 16px;
+}
+
+.urlText {
+	word-break: break-all;
+	font-family: monospace;
+	font-size: 14px;
+	color: var(--text-primary);
+}
+
+.checkboxLabel {
+	font-size: 14px;
+	color: var(--text-primary);
+}
+
+.button {
+	width: 100%;
+}
+
+@media (min-width: 640px) {
+	.button {
+		width: auto;
+	}
+}

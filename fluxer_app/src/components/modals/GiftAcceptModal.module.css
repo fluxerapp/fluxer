@@ -1,0 +1,120 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.content {
+	display: flex;
+	flex-direction: column;
+}
+
+.loadingContent {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 2rem;
+}
+
+.card {
+	padding: 1rem;
+	padding-top: 0;
+}
+
+.cardGrid {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+}
+
+.iconCircle {
+	display: flex;
+	flex-shrink: 0;
+	height: 3rem;
+	width: 3rem;
+	align-items: center;
+	justify-content: center;
+	border-radius: 9999px;
+}
+
+.iconCircleActive {
+	background: linear-gradient(to bottom right, rgb(168 85 247 / 1), rgb(236 72 153 / 1));
+}
+
+.iconCircleInactive {
+	background: linear-gradient(to bottom right, rgb(168 85 247 / 0.5), rgb(236 72 153 / 0.5));
+}
+
+.iconCircleDisabled {
+	background-color: var(--background-tertiary);
+}
+
+.icon {
+	height: 1.5rem;
+	width: 1.5rem;
+	color: white;
+}
+
+.iconError {
+	color: var(--text-tertiary);
+}
+
+.cardContent {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+}
+
+.title {
+	margin: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-weight: 600;
+	font-size: 1rem;
+}
+
+.titlePrimary {
+	color: var(--text-primary);
+}
+
+.titleTertiary {
+	color: var(--text-tertiary);
+}
+
+.titleDanger {
+	color: var(--status-danger);
+}
+
+.subtitle {
+	color: var(--text-secondary);
+	font-size: 0.8rem;
+	line-height: 1.25;
+}
+
+.helpText {
+	color: var(--text-tertiary);
+	font-size: 0.8rem;
+	margin-top: 0.125rem;
+}
+
+.footer {
+	display: flex;
+	justify-content: flex-end;
+	gap: 0.5rem;
+	padding: 0.75rem 1rem;
+	border-top: 1px solid var(--border-color);
+}

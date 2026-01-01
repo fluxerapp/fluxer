@@ -1,0 +1,71 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.container {
+	display: flex;
+	height: 100%;
+	flex-direction: column;
+	overflow: hidden;
+}
+
+.scroller {
+	flex: 1;
+}
+
+.content {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	padding: 16px;
+	padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+}
+
+.description {
+	color: var(--text-primary-muted);
+	font-size: 14px;
+	line-height: 20px;
+}
+
+.requestsSection {
+	margin-top: 16px;
+}
+
+.requestsGroup {
+	margin-bottom: 24px;
+}
+
+.requestsHeader {
+	margin-bottom: 12px;
+	font-weight: 600;
+	font-size: 14px;
+	color: var(--text-primary-muted);
+}
+
+.requestsList {
+	overflow: hidden;
+	border-radius: 12px;
+	background: var(--background-tertiary);
+}
+
+.requestDivider {
+	margin: 0 16px;
+	height: 1px;
+	background: var(--background-header-secondary);
+	opacity: 0.3;
+}

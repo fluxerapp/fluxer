@@ -1,0 +1,125 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.content {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-3);
+}
+
+.searchInput {
+	flex-shrink: 0;
+}
+
+.searchIcon {
+	color: var(--text-secondary);
+}
+
+.listContainer {
+	position: relative;
+	flex: 1;
+	min-height: 0;
+}
+
+.scroller {
+	--scrollbar-track-bg: var(--background-secondary);
+	height: 100%;
+}
+
+.noResults {
+	display: flex;
+	height: 100%;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	color: var(--text-secondary);
+	font-size: 1rem;
+	font-weight: 500;
+}
+
+.friendList {
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+	padding: var(--spacing-2) 0;
+}
+
+.friendItem {
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--spacing-3);
+	padding: var(--spacing-2) 16px;
+}
+
+.friendItem::before {
+	content: '';
+	position: absolute;
+	inset: 0 var(--spacing-2);
+	border-radius: var(--radius-md);
+	transition: background-color 0.15s ease;
+	pointer-events: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.friendItem:hover::before {
+		background-color: var(--background-modifier-hover);
+	}
+}
+
+.friendItemLeft {
+	position: relative;
+	z-index: 1;
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-3);
+	flex: 1;
+	min-width: 0;
+}
+
+.friendInfo {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	flex: 1;
+}
+
+.friendName {
+	font-size: 0.875rem;
+	font-weight: 500;
+	color: var(--text-primary);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.friendSecondary {
+	font-size: 0.75rem;
+	color: var(--text-tertiary);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.actionButton {
+	position: relative;
+	z-index: 1;
+	flex-shrink: 0;
+}

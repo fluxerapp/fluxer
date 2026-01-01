@@ -1,0 +1,97 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.container {
+	text-align: center;
+}
+
+.iconContainer {
+	margin-bottom: 1.5rem;
+}
+
+.iconCircle {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 3rem;
+	width: 3rem;
+	margin: 0 auto;
+	border-radius: 9999px;
+}
+
+.iconCircleSuccess {
+	background-color: var(--status-online);
+}
+
+.iconCircleError {
+	background-color: var(--status-danger);
+}
+
+.icon {
+	height: 1.5rem;
+	width: 1.5rem;
+	color: var(--text-primary);
+}
+
+.title {
+	margin-bottom: 1rem;
+	font-size: 1.25rem;
+	line-height: 1.75rem;
+	font-weight: 600;
+	letter-spacing: 0.025em;
+	color: var(--text-primary);
+}
+
+.description {
+	margin-bottom: 1.5rem;
+	color: var(--text-tertiary);
+}
+
+.footer {
+	padding-top: 1rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}
+
+.link {
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--text-link);
+	text-decoration: none;
+	transition-property: color;
+	transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+	transition-duration: 150ms;
+	cursor: pointer;
+}
+
+.link:hover {
+	color: var(--text-link);
+	text-decoration: underline;
+}
+
+.loadingPlaceholder {
+	margin-bottom: 1rem;
+	height: 1.75rem;
+}
+
+.descriptionPlaceholder {
+	margin-bottom: 1.5rem;
+	height: 1.5rem;
+}

@@ -1,0 +1,196 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.tooltip {
+	position: relative;
+	z-index: var(--z-index-tooltip);
+	pointer-events: none;
+	will-change: opacity, transform;
+	box-sizing: border-box;
+	max-width: 190px;
+	border: 1px solid var(--background-header-secondary);
+	border-radius: 8px;
+	color: var(--text-primary);
+	font-size: 14px;
+	font-weight: 600;
+	line-height: 16px;
+	word-wrap: break-word;
+}
+
+.tooltipPointer {
+	width: 0;
+	height: 0;
+	border: 0 solid transparent;
+	border-width: 5px;
+	pointer-events: none;
+	border-top-color: var(--tooltip-pointer-bg);
+}
+
+.tooltipContent {
+	padding: 8px 12px;
+	overflow: hidden;
+	white-space: normal;
+	word-break: break-word;
+	text-align: center;
+}
+
+.tooltipContentLarge {
+	composes: tooltipContent;
+	padding: 12px 16px;
+	font-size: 1rem;
+}
+
+.tooltipTop {
+	transform-origin: 50% 100%;
+}
+
+.tooltipTop .tooltipPointer {
+	position: absolute;
+	top: 100%;
+	left: 50%;
+	margin-left: -5px;
+}
+
+.tooltipCenter,
+.tooltipBottom {
+	transform-origin: 50% 0%;
+}
+
+.tooltipCenter .tooltipPointer,
+.tooltipBottom .tooltipPointer {
+	position: absolute;
+	bottom: 100%;
+	left: 50%;
+	margin-left: -5px;
+	border-top-width: 5px;
+	transform: rotate(180deg);
+}
+
+.tooltipLeft {
+	transform-origin: 100% 50%;
+}
+
+.tooltipLeft .tooltipPointer {
+	position: absolute;
+	left: 100%;
+	top: 50%;
+	margin-top: -5px;
+	border-right-width: 5px;
+	transform: rotate(270deg);
+}
+
+.tooltipRight {
+	transform-origin: 0% 50%;
+}
+
+.tooltipRight .tooltipPointer {
+	position: absolute;
+	right: 100%;
+	top: 50%;
+	margin-top: -5px;
+	border-left-width: 5px;
+	transform: rotate(90deg);
+}
+
+.tooltipPrimary {
+	--tooltip-pointer-bg: var(--background-primary);
+	background-color: var(--background-primary);
+}
+
+.tooltipPrimary .tooltipPointer {
+	border-top-color: var(--background-primary);
+}
+
+.tooltipPointer:not(.tooltipPointerBg) {
+	z-index: 1;
+}
+
+.tooltipPointer.tooltipPointerBg {
+	--border-width: 5px;
+}
+
+.tooltipPrimary .tooltipPointer.tooltipPointerBg {
+	--tooltip-pointer-bg: var(--background-header-secondary);
+	border-top-color: var(--background-header-secondary);
+}
+
+.tooltipPrimary .tooltipPointer:not(.tooltipPointerBg) {
+	border-top-color: var(--background-primary);
+	z-index: 1;
+}
+
+.tooltipRed {
+	--tooltip-pointer-bg: var(--status-danger);
+	background-color: var(--status-danger);
+}
+
+.tooltipRed .tooltipPointer {
+	border-top-color: var(--status-danger);
+}
+
+.tooltipTop .tooltipPointer:not(.tooltipPointerBg) {
+	margin-top: -1.5px;
+}
+
+.tooltipLeft .tooltipPointer:not(.tooltipPointerBg) {
+	margin-left: -1.5px;
+}
+
+.tooltipRight .tooltipPointer:not(.tooltipPointerBg) {
+	margin-right: -1.5px;
+}
+
+.tooltipBottom .tooltipPointer:not(.tooltipPointerBg),
+.tooltipCenter .tooltipPointer:not(.tooltipPointerBg) {
+	margin-bottom: -1.5px;
+}
+
+.tooltipPointer.tooltipPointerBg:before,
+.tooltipPointer.tooltipPointerBg:after {
+	content: '';
+	position: absolute;
+	border-left: var(--border-width) solid transparent;
+	border-right: var(--border-width) solid transparent;
+	top: 100%;
+	left: 50%;
+	margin-left: calc(-1 * var(--border-width));
+}
+
+.tooltipPointer.tooltipPointerBg:before {
+	border-top: var(--border-width) solid var(--tooltip-pointer-bg);
+	margin-top: -5px;
+}
+
+.tooltipPointer.tooltipPointerBg:after {
+	border-top: var(--border-width) solid var(--background-header-secondary);
+	margin-top: -5px;
+	z-index: 1;
+}
+
+.tooltips {
+	background: none;
+	inset: 0;
+	pointer-events: none;
+	position: fixed;
+	z-index: var(--z-index-tooltip);
+}
+
+.triggerWrapper {
+	display: inline-flex;
+}

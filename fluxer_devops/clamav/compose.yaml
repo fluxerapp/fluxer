@@ -1,0 +1,38 @@
+services:
+  clamav:
+    image: clamav/clamav:1.4
+    hostname: clamav
+    volumes:
+      - clamav_data:/var/lib/clamav
+      - ./conf/clamd.conf:/etc/clamav/clamd.conf:ro
+    networks:
+      - fluxer-shared
+    ports:
+      - '3310:3310'
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 3
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+        reservations:
+          cpus: '1'
+          memory: 2G
+    healthcheck:
+      test: ['CMD-SHELL', 'clamdscan --version || exit 1']
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+networks:
+  fluxer-shared:
+    external: true
+
+volumes:
+  clamav_data:
+    driver: local

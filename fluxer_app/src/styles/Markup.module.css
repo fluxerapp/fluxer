@@ -1,0 +1,942 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.markup {
+	font-size: inherit;
+	line-height: 1.5;
+	color: var(--text-chat);
+	word-wrap: break-word;
+	overflow-wrap: break-word;
+	hyphens: none;
+	white-space: break-spaces;
+	user-select: text;
+	-webkit-user-select: text;
+	text-align: left;
+}
+
+.bio {
+	font-size: 14px;
+	line-height: 1.28571;
+}
+
+.markup *::selection {
+	background-color: var(--text-selection);
+}
+
+.markup p {
+	margin: 0 0 0.75rem;
+}
+
+.markup strong {
+	font-weight: 600;
+}
+
+.markup em {
+	font-style: italic;
+}
+
+.markup s,
+.markup del {
+	text-decoration: line-through;
+	color: var(--text-tertiary);
+}
+
+.markup u {
+	text-decoration: underline;
+	text-decoration-thickness: from-font;
+	text-underline-offset: 0.15em;
+}
+
+.markup h1,
+.markup h2,
+.markup h3,
+.markup h4,
+.markup h5,
+.markup h6 {
+	margin: 1.25rem 0 0.75rem;
+	line-height: 1.2;
+	font-weight: 600;
+	color: var(--text-primary);
+	scroll-margin-top: 1.25rem;
+}
+
+.markup h1:first-child,
+.markup h2:first-child,
+.markup h3:first-child,
+.markup h4:first-child,
+.markup h5:first-child,
+.markup h6:first-child {
+	margin-top: 0.25rem;
+}
+
+.markup h1 {
+	font-size: 1.75rem;
+	letter-spacing: -0.02em;
+	padding-bottom: 0.25rem;
+	border-bottom: 1px solid var(--border-color);
+}
+
+.markup h2 {
+	font-size: 1.5rem;
+	letter-spacing: -0.015em;
+	padding-bottom: 0.25rem;
+	border-bottom: 1px solid var(--border-color);
+}
+
+.markup h3 {
+	font-size: 1.25rem;
+	letter-spacing: -0.01em;
+}
+
+.markup h4 {
+	font-size: 1.125rem;
+}
+
+.markup h5 {
+	font-size: 1rem;
+}
+
+.markup h6 {
+	font-size: 0.875rem;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: var(--text-secondary);
+}
+
+.markup .link {
+	color: var(--text-link);
+	text-decoration: var(--link-decoration, none);
+	transition:
+		color var(--transition-fast),
+		border-color var(--transition-fast);
+	font-weight: inherit;
+	word-break: break-word;
+	cursor: pointer;
+}
+
+.markup .link:hover {
+	color: var(--text-link);
+	text-decoration: underline;
+}
+
+.markup ul,
+.markup ol {
+	margin: 0.25rem 0 0 0;
+	padding: 0;
+	list-style: none;
+}
+
+.markup li {
+	margin-bottom: 0.25rem;
+}
+
+.markup li:last-child {
+	margin-bottom: 0;
+}
+
+.markup ul > li {
+	position: relative;
+	padding-left: 1em;
+}
+
+.markup ul > li::before {
+	content: '•';
+	position: absolute;
+	left: 0;
+	font-weight: 900;
+}
+
+.markup ol {
+	counter-reset: list-counter;
+}
+
+.markup ol > li {
+	position: relative;
+	padding-left: 1.25em;
+	counter-increment: list-counter;
+}
+
+.markup ol > li::before {
+	content: counter(list-counter) '.';
+	position: absolute;
+	left: 0;
+}
+
+.markup li > ul,
+.markup li > ol {
+	margin-top: 0.25rem;
+	margin-bottom: 0;
+}
+
+.markup ul ul > li::before,
+.markup ol ul > li::before {
+	content: '◦';
+}
+
+.markup ul ul ul > li::before {
+	content: '▪';
+}
+
+.markup ol ol {
+	counter-reset: nested-counter;
+}
+
+.markup ol ol > li {
+	counter-increment: nested-counter;
+}
+
+.markup ol ol > li::before {
+	content: counter(nested-counter, lower-alpha) '.';
+}
+
+.markup ol ol ol {
+	counter-reset: deep-counter;
+}
+
+.markup ol ol ol > li {
+	counter-increment: deep-counter;
+}
+
+.markup ol ol ol > li::before {
+	content: counter(deep-counter, lower-roman) '.';
+}
+
+.markup code.inline {
+	font-family: var(--font-mono);
+	font-size: 0.85em;
+	background-color: var(--bg-code);
+	color: var(--text-code);
+	padding: 0.15em 0.3em;
+	margin: -0.15em 0;
+	border-radius: var(--radius-sm);
+	white-space: pre-wrap;
+	box-decoration-break: clone;
+	transition: background-color var(--transition-fast);
+}
+
+.markup .link code.inline {
+	color: inherit;
+}
+
+.markup .codeContainer {
+	position: relative;
+	border-radius: var(--radius-md);
+	background-color: var(--bg-code-block);
+	overflow-x: auto;
+	max-width: 50vw;
+	box-sizing: border-box;
+	border: 1px solid var(--border-color);
+	padding: 0.75rem;
+}
+
+.markup pre {
+	font-family: var(--font-mono);
+	font-size: 0.75rem;
+	line-height: 1rem;
+	white-space: pre-wrap;
+	background-clip: border-box;
+	margin: 0;
+	overflow-x: auto;
+	padding: 0;
+}
+
+.markup pre code {
+	display: block;
+	color: var(--text-primary);
+	background: none;
+	font-family: inherit;
+	font-size: inherit;
+	line-height: inherit;
+	white-space: inherit;
+}
+
+.markup .codeActions {
+	position: absolute;
+	top: 0.25rem;
+	right: 0.25rem;
+	display: flex;
+	gap: 0.125rem;
+	opacity: 0;
+	transition: opacity var(--transition-normal);
+	z-index: 10;
+}
+
+.markup .codeContainer:hover .codeActions,
+.markup .codeContainer:focus-within .codeActions {
+	opacity: 1;
+}
+
+.markup .codeActionsVisible {
+	display: block;
+	opacity: 1;
+}
+
+.markup .codeActions > div,
+.markup .codeActions > button {
+	background-color: var(--bg-secondary);
+	color: var(--text-secondary);
+	border: none;
+	border-radius: var(--radius-sm);
+	padding: 4px;
+	cursor: pointer;
+	transition:
+		background-color var(--transition-fast),
+		color var(--transition-fast);
+}
+
+.markup .codeActions > button:hover {
+	background-color: var(--bg-hover);
+	color: var(--text-primary);
+}
+
+.markup .no-webkit-scrollbar code {
+	scrollbar-width: thin;
+	scrollbar-color: var(--background-tertiary) var(--background-primary);
+}
+
+.markup .blockquoteContainer {
+	display: flex;
+	margin-top: 0.25rem;
+	margin-bottom: 0.25rem;
+	width: 100%;
+}
+
+.markup .blockquoteDivider {
+	width: 4px;
+	border-radius: 4px;
+	background-color: var(--interactive-muted);
+	flex-shrink: 0;
+	margin-right: 0.75rem;
+}
+
+.markup .blockquoteContent {
+	padding: 0.25rem 0;
+	width: 100%;
+	color: var(--text-chat-muted);
+}
+
+.markup blockquote {
+	margin: 0;
+	padding: 0;
+	border: none;
+	background: none;
+}
+
+.markup .blockquoteContent .blockquoteContainer {
+	margin-top: 0.25rem;
+	margin-bottom: 0.25rem;
+}
+
+.markup .blockquoteContent .blockquoteDivider {
+	opacity: 0.7;
+}
+
+.markup .tableContainer {
+	margin: 0 0 0.75rem 0;
+	overflow-x: auto;
+	display: inline-block;
+	max-width: 100%;
+	-webkit-overflow-scrolling: touch;
+}
+
+.markup .tableContainer + h1,
+.markup .tableContainer + h2,
+.markup .tableContainer + h3,
+.markup .tableContainer + h4,
+.markup .tableContainer + h5,
+.markup .tableContainer + h6 {
+	margin-top: 0;
+}
+
+.markup .table {
+	border-collapse: separate;
+	border-spacing: 0;
+	margin: 0;
+	width: auto;
+	font-size: 0.875rem;
+	border: 1px solid var(--border-color);
+	border-radius: var(--radius-md);
+	overflow: hidden;
+}
+
+.markup .tableHeader {
+	background: var(--bg-table-header);
+	font-weight: 600;
+	color: var(--text-primary);
+	border-bottom: 1px solid var(--border-color);
+	padding: 0.5rem 0.75rem;
+	white-space: normal;
+	word-wrap: break-word;
+	overflow-wrap: break-word;
+	text-align: left;
+}
+
+.markup .tableCell {
+	border-bottom: 1px solid var(--border-color);
+	padding: 0.5rem 0.75rem;
+	text-align: left;
+	background: var(--bg-table-row-odd);
+	vertical-align: middle;
+	line-height: 1.4;
+	white-space: normal;
+	word-wrap: break-word;
+	overflow-wrap: break-word;
+	hyphens: none;
+}
+
+.markup .table tbody tr:last-child .tableCell {
+	border-bottom: none;
+}
+
+.markup .table tbody tr:nth-child(odd) .tableCell {
+	background: var(--bg-table-row-odd);
+}
+
+.markup .table tbody tr:nth-child(even) .tableCell {
+	background: var(--bg-table-row-even);
+}
+
+.markup .alignLeft {
+	text-align: left;
+}
+
+.markup .alignCenter {
+	text-align: center;
+}
+
+.markup .alignRight {
+	text-align: right;
+}
+
+.markup .alert {
+	position: relative;
+	padding: 0.375rem 0.75rem 0.375rem 1rem;
+	margin-top: 0.25rem;
+	border-radius: var(--radius-md);
+	background: transparent;
+}
+
+.markup .alert::before {
+	content: '';
+	position: absolute;
+	left: 0;
+	top: 0;
+	bottom: 0;
+	width: 4px;
+	border-radius: 4px;
+	background-color: currentColor;
+}
+
+.markup .alertIcon {
+	display: inline-block;
+	width: 1em;
+	height: 1em;
+	margin-right: 0.25rem;
+	vertical-align: text-bottom;
+}
+
+.markup .alertTitle {
+	display: inline-flex;
+	align-items: center;
+	font-weight: 600;
+	margin-bottom: 0.25rem;
+	font-size: 0.9375rem;
+}
+
+.markup .alertContent {
+	margin-top: 0.25rem;
+	color: var(--text-chat);
+}
+
+.markup .alertContent > :first-child {
+	margin-top: 0;
+}
+
+.markup .alertContent > :last-child {
+	margin-bottom: 0;
+}
+
+.markup .alertNote {
+	color: var(--alert-note-color);
+}
+
+.markup .alertTip {
+	color: var(--alert-tip-color);
+}
+
+.markup .alertImportant {
+	color: var(--alert-important-color);
+}
+
+.markup .alertWarning {
+	color: var(--alert-warning-color);
+}
+
+.markup .alertCaution {
+	color: var(--alert-caution-color);
+}
+
+.markup .mention {
+	border-radius: var(--radius-md);
+	padding: 0 0.25rem;
+	font-weight: 500;
+	unicode-bidi: plaintext;
+	color: var(--markup-mention-text);
+	background-color: var(--markup-mention-fill);
+	border: 1px solid var(--markup-mention-border);
+	transition:
+		background-color var(--transition-fast),
+		color var(--transition-fast),
+		border-color var(--transition-fast);
+	display: inline;
+	align-items: center;
+	white-space: nowrap;
+	vertical-align: baseline;
+	line-height: inherit;
+}
+
+.markup .mention svg {
+	width: 1em;
+	height: 1em;
+	margin-right: 0.1em;
+	margin-top: -0.1em;
+	flex-shrink: 0;
+	display: inline-block;
+	vertical-align: middle;
+}
+
+.markup .mention.interactive {
+	cursor: pointer;
+	display: inline;
+	align-items: center;
+}
+
+.markup .mention.interactive:hover,
+.markup .mention.interactive:focus-visible {
+	background-color: var(--markup-interactive-hover-fill);
+	color: var(--markup-interactive-hover-text);
+}
+
+.markup .timestamp {
+	background-color: var(--background-modifier-hover);
+	border-radius: 3px;
+	padding: 0 2px;
+	white-space: nowrap;
+	font-family: var(--font-mono);
+	font-size: 0.85em;
+	color: var(--text-secondary);
+	cursor: default;
+	transition: background-color var(--transition-fast);
+}
+
+.markup .timestamp:hover {
+	background-color: var(--bg-hover);
+}
+
+.markup .spoilerWrapper {
+	display: inline;
+	margin: 0;
+	max-width: 100%;
+	vertical-align: baseline;
+}
+
+.markup .blockSpoilerWrapper {
+	display: block;
+	margin: 0.25rem 0;
+}
+
+.markup .spoiler,
+.markup .blockSpoiler {
+	position: relative;
+	cursor: pointer;
+	line-height: inherit;
+	white-space: inherit;
+	vertical-align: baseline;
+	box-sizing: border-box;
+	font-family: inherit;
+	color: inherit;
+	background: none;
+	border: none;
+	text-align: inherit;
+	appearance: none;
+}
+
+.markup .spoiler {
+	display: inline;
+	border-radius: var(--spoiler-border-radius);
+	padding: 0 2px;
+	margin: 0;
+	width: auto;
+	max-width: 100%;
+}
+
+.markup .spoiler:focus-visible {
+	outline: 2px solid var(--text-link);
+	outline-offset: 2px;
+}
+
+.markup .blockSpoiler {
+	padding: 0.5rem;
+	display: block;
+	width: 100%;
+	box-sizing: border-box;
+	background-color: var(--bg-tertiary);
+	border-radius: var(--radius-md);
+}
+
+.markup :is(.spoiler, .blockSpoiler):not([data-revealed='true']) {
+	background-color: var(--spoiler-overlay-color);
+	border-radius: inherit;
+	overflow: hidden;
+}
+
+.markup :is(.spoiler, .blockSpoiler):not([data-revealed='true']) .spoilerContent {
+	opacity: 0;
+	pointer-events: none;
+	user-select: none;
+	-webkit-user-select: none;
+	transition: opacity 0.2s ease;
+	color: transparent;
+	filter: blur(5px);
+}
+
+.markup :is(.spoiler, .blockSpoiler):not([data-revealed='true']):hover {
+	background-color: var(--spoiler-overlay-hover-color);
+}
+
+.markup .spoiler[data-revealed='true'] {
+	background-color: var(--background-modifier-accent);
+	border-radius: var(--spoiler-border-radius);
+	cursor: text;
+	user-select: text;
+	-webkit-user-select: text;
+}
+
+.markup .blockSpoiler[data-revealed='true'] {
+	background-color: var(--background-modifier-accent);
+	border-radius: var(--spoiler-border-radius);
+	cursor: text;
+	user-select: text;
+	-webkit-user-select: text;
+}
+
+.markup .spoiler[data-revealed='true'] .spoilerContent,
+.markup .blockSpoiler[data-revealed='true'] .spoilerContent {
+	opacity: 1;
+	filter: none;
+	transition:
+		opacity 0.2s ease,
+		filter 0.2s ease;
+}
+
+.markup .blockSpoiler .spoilerContent > :first-child {
+	margin-top: 0;
+}
+
+.markup .blockSpoiler .spoilerContent > :last-child {
+	margin-bottom: 0;
+}
+
+.markup .latexCodeBlock {
+	width: 100%;
+	max-width: 100%;
+	margin: 0 0 0.75rem 0;
+}
+
+.markup .latexContent {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	width: 100%;
+	padding: 0.75rem;
+	overflow-x: auto;
+	background: var(--bg-code-block);
+	border-radius: var(--radius-md);
+	font-size: 0.75rem;
+	line-height: 1rem;
+}
+
+.markup pre .latexContent {
+	font-family: var(--font-mono);
+	padding: 0.4em;
+	box-sizing: border-box;
+}
+
+.markup .latexCodeBlock .codeContainer {
+	position: relative;
+	width: 100%;
+	background: var(--bg-code-block);
+	border-radius: var(--radius-md);
+}
+
+.markup.inlineFormat,
+.markup .inlineFormat {
+	display: inline;
+	white-space: normal;
+}
+
+.markup.inlineFormat h1,
+.markup.inlineFormat h2,
+.markup.inlineFormat h3,
+.markup.inlineFormat h4,
+.markup.inlineFormat h5,
+.markup.inlineFormat h6,
+.markup .inlineFormat h1,
+.markup .inlineFormat h2,
+.markup .inlineFormat h3,
+.markup .inlineFormat h4,
+.markup .inlineFormat h5,
+.markup .inlineFormat h6 {
+	display: inline;
+	margin: 0;
+	font-weight: 600;
+	font-size: inherit;
+	white-space: normal;
+	padding-right: 0.75rem;
+	line-height: 1.25em;
+	color: inherit;
+	border: none;
+}
+
+.markup.inlineFormat p,
+.markup .inlineFormat p {
+	display: inline;
+	margin: 0;
+}
+
+.markup.inlineFormat ul,
+.markup.inlineFormat ol,
+.markup .inlineFormat ul,
+.markup .inlineFormat ol {
+	display: inline;
+	margin: 0;
+	padding: 0 0.5rem 0 0;
+}
+
+.markup.inlineFormat li,
+.markup .inlineFormat li {
+	display: inline;
+	margin: 0;
+	padding-right: 0.5rem;
+}
+
+.markup.inlineFormat li:before,
+.markup .inlineFormat li:before {
+	content: '•';
+	padding-right: 0.25rem;
+}
+
+.markup.inlineFormat li li:before,
+.markup .inlineFormat li li:before {
+	content: '•';
+	font-size: 0.625rem;
+	padding: 0 0.25rem 0.25rem;
+	line-height: 1rem;
+}
+
+.markup.inlineFormat blockquote,
+.markup .inlineFormat blockquote {
+	display: inline;
+	margin: 0;
+	border: none;
+	padding: 0;
+}
+
+.markup small.inlineFormat:after {
+	content: ' ';
+}
+
+.markup small:not(.inlineFormat) {
+	display: block;
+	color: var(--text-chat-muted);
+	font-size: 0.8125rem;
+	line-height: 1.11719rem;
+}
+
+.markup .interactive {
+	transition:
+		background-color 50ms ease-out,
+		color 50ms ease-out;
+	cursor: pointer;
+}
+
+.markup .interactive:hover {
+	color: var(--markup-interactive-hover-text);
+	background-color: var(--markup-interactive-hover-fill);
+}
+
+.markup .hljs {
+	display: block;
+	text-size-adjust: none;
+	background: transparent;
+	color: var(--text-code);
+	overflow-x: auto;
+	padding: 0;
+}
+
+:global(.theme-light) .markup .hljs {
+	box-shadow: inset 0 1px 0 color-mix(in srgb, #fff 80%, transparent);
+}
+
+.markup .error {
+	color: var(--accent-danger);
+	padding: 0.25rem 0.5rem;
+	background-color: hsla(358, calc(85% * var(--saturation-factor)), 60%, 0.1);
+	border-radius: var(--radius-md);
+	margin: 0.25rem 0;
+	border-left: 3px solid var(--accent-danger);
+	font-family: var(--font-mono);
+	font-size: 0.9em;
+}
+
+.markup .forwardedMessage {
+	display: flex;
+	margin: 0.5rem 0;
+	padding: 0.5rem 0.75rem;
+	background-color: var(--background-modifier-hover);
+	border-left: 4px solid var(--interactive-muted);
+	border-radius: var(--radius-md);
+}
+
+.markup .forwardedContent {
+	flex: 1;
+	color: var(--text-chat);
+}
+
+.markup .forwardedJumpLink {
+	display: inline-block;
+	margin-top: 0.5rem;
+	font-size: 0.875rem;
+	color: var(--text-link);
+	text-decoration: none;
+	cursor: pointer;
+	transition: color var(--transition-fast);
+}
+
+.markup .forwardedJumpLink:hover {
+	color: var(--text-link);
+	text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+	.markup h1 {
+		font-size: 1.5rem;
+	}
+
+	.markup h2 {
+		font-size: 1.35rem;
+	}
+
+	.markup h3 {
+		font-size: 1.2rem;
+	}
+
+	.markup h4 {
+		font-size: 1.05rem;
+	}
+
+	.markup pre {
+		padding: 0.25rem;
+	}
+
+	.markup .tableContainer {
+		max-width: 100%;
+		display: block;
+		width: 100%;
+	}
+
+	.markup .table {
+		width: 100%;
+		min-width: 100%;
+	}
+
+	.markup .alert {
+		padding: 0.375rem 0.5rem 0.375rem calc(0.5rem + 3px);
+	}
+}
+
+@media (max-width: 640px) {
+	.markup .tableContainer {
+		display: block;
+		width: 100%;
+		overflow-x: auto;
+		-webkit-overflow-scrolling: touch;
+	}
+
+	.markup .table {
+		width: 100%;
+		min-width: max-content;
+		table-layout: fixed;
+	}
+
+	.markup .tableCell,
+	.markup .tableHeader {
+		min-width: 80px;
+		white-space: normal;
+	}
+}
+
+@media print {
+	.markup {
+		color: #000;
+	}
+
+	.markup a {
+		color: #0077cc;
+		text-decoration: underline;
+	}
+
+	.markup code {
+		background-color: #f5f5f5;
+		border: 1px solid #ddd;
+	}
+
+	.markup pre {
+		background-color: #f5f5f5;
+		border: 1px solid #ddd;
+	}
+
+	.markup pre code {
+		background-color: #f5f5f5;
+		border: none;
+	}
+
+	.markup .tableContainer {
+		border: 1px solid #ddd;
+	}
+
+	.markup .tableHeader {
+		background-color: #f0f0f0;
+	}
+
+	.markup .alert {
+		border: 1px solid #ddd;
+		padding: 0.5em;
+	}
+
+	.markup .spoiler[data-revealed='true'] .spoilerContent {
+		opacity: 1;
+		filter: none;
+	}
+
+	.markup .spoiler:not([data-revealed='true']) {
+		background-color: #eee;
+		color: #666;
+	}
+}

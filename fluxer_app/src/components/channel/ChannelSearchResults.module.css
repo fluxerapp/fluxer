@@ -1,0 +1,559 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.container {
+	display: flex;
+	height: 100%;
+	min-height: 0;
+	width: 420px;
+	flex-direction: column;
+	border-left: 1px solid var(--background-modifier-hover);
+	background-color: var(--background-secondary);
+}
+
+.header {
+	display: flex;
+	height: 3.5rem;
+	align-items: center;
+	justify-content: space-between;
+	border-bottom: 1px solid var(--background-modifier-hover);
+	padding-left: 1rem;
+	padding-right: 1rem;
+}
+
+.headerActions {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.headerLoading {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+}
+
+.headerTitle {
+	font-weight: 600;
+	color: var(--text-primary);
+}
+
+.headerTitleScreenReaderOnly {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border-width: 0;
+}
+
+.closeButton {
+	display: flex;
+	height: 2rem;
+	width: 2rem;
+	align-items: center;
+	justify-content: center;
+	border-radius: 0.25rem;
+	color: var(--text-primary-muted);
+	transition: color 0.2s;
+	cursor: pointer;
+}
+
+.closeButton:hover {
+	color: var(--text-primary);
+}
+
+.closeIcon {
+	height: 1.25rem;
+	width: 1.25rem;
+}
+
+.loadingState {
+	display: flex;
+	flex: 1 1 0%;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 1rem;
+	padding: 1rem;
+}
+
+.loadingIcon {
+	height: 4rem;
+	width: 4rem;
+	color: var(--text-primary-muted);
+	animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+	from {
+		transform: rotate(0deg);
+	}
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+.loadingContent {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.5rem;
+	text-align: center;
+}
+
+.loadingHeading {
+	font-weight: 600;
+	font-size: 1.25rem;
+	color: var(--text-primary);
+}
+
+.loadingText {
+	font-size: 0.875rem;
+	color: var(--text-primary-muted);
+}
+
+.errorState {
+	display: flex;
+	flex: 1 1 0%;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 1rem;
+	padding: 1rem;
+}
+
+.errorContent {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.5rem;
+	text-align: center;
+}
+
+.errorHeading {
+	font-weight: 600;
+	font-size: 1.25rem;
+	color: var(--text-primary);
+}
+
+.errorText {
+	max-width: 100%;
+	overflow-wrap: break-word;
+	font-size: 0.875rem;
+	color: var(--text-primary-muted);
+}
+
+.errorButton {
+	margin-top: 1rem;
+	border-radius: 0.25rem;
+	background-color: var(--background-modifier-accent);
+	padding: 0.5rem 1rem;
+	font-size: 0.875rem;
+	color: var(--text-primary);
+	transition: background-color 0.2s;
+	cursor: pointer;
+}
+
+.errorButton:hover {
+	background-color: var(--background-modifier-hover);
+}
+
+.emptyState {
+	display: flex;
+	flex: 1 1 0%;
+	align-items: center;
+	justify-content: center;
+}
+
+.emptyStateContent {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.25rem;
+}
+
+.emptyStateIcon {
+	height: 5rem;
+	width: 5rem;
+	color: var(--text-primary-muted);
+}
+
+.emptyStateTextWrapper {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.25rem;
+	text-align: center;
+}
+
+.emptyStateHeading {
+	font-weight: 600;
+	font-size: 1.25rem;
+	color: var(--text-primary);
+}
+
+.emptyStateText {
+	font-size: 0.875rem;
+	color: var(--text-primary-muted);
+}
+
+.resultsScroller {
+	flex: 1 1 0%;
+	padding-left: 0.5rem;
+	padding-right: 0.5rem;
+	padding-top: 0.5rem;
+	padding-bottom: 0.75rem;
+}
+
+.resultsSpacer {
+	height: 8px;
+	width: 100%;
+	flex-shrink: 0;
+}
+
+.channelHeader {
+	margin-top: 1rem;
+	margin-bottom: 0.5rem;
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding-left: 0.5rem;
+	padding-right: 0.5rem;
+}
+
+.channelHeader:first-child {
+	margin-top: 0;
+}
+
+.channelIcon {
+	height: 1.25rem;
+	width: 1.25rem;
+	flex-shrink: 0;
+	color: var(--text-primary-muted);
+}
+
+.channelIconAvatar {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	height: 1.25rem;
+	width: 1.25rem;
+	flex-shrink: 0;
+}
+
+.channelIconAvatarImage {
+	height: 1.25rem;
+	width: 1.25rem;
+	border-radius: 50%;
+}
+
+.channelNameButton {
+	border: none;
+	background: none;
+	color: var(--text-primary);
+	font-weight: 600;
+	font-size: 0.875rem;
+	padding: 0;
+	cursor: pointer;
+	text-align: left;
+	font-family: inherit;
+	display: inline-flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 0.125rem;
+}
+
+.channelNameButton:hover,
+.channelNameButton:focus-visible {
+	text-decoration: underline;
+}
+
+.channelNameButton:focus-visible {
+	outline: none;
+}
+
+.channelNameText {
+	display: inline-flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 0.125rem;
+}
+
+.channelNamePrimary {
+	font-weight: 600;
+	font-size: 0.875rem;
+	line-height: 1.2;
+}
+
+.channelNameSecondary {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.25rem;
+	font-size: 0.75rem;
+	color: var(--text-primary-muted);
+	font-weight: 400;
+}
+
+.channelGuildIcon {
+	height: 0.75rem;
+	width: 0.75rem;
+}
+
+.channelGuildName {
+	line-height: 1;
+}
+
+.channelScopeRow {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.25rem;
+	font-size: 0.75rem;
+	color: var(--text-primary-muted);
+}
+
+.channelScopeGuildIcon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	--guild-icon-size: 0.75rem;
+}
+
+.channelScopeGuildName {
+	font-weight: 600;
+	color: var(--text-primary);
+	line-height: 1;
+}
+
+.channelScopeChevron {
+	height: 0.75rem;
+	width: 0.75rem;
+	color: var(--text-primary-muted);
+}
+
+.channelScopeChannelInfo {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.25rem;
+}
+
+.channelScopeChannelIcon {
+	height: 0.75rem;
+	width: 0.75rem;
+	color: var(--text-primary-muted);
+}
+
+.channelScopeChannelName {
+	font-weight: 600;
+	color: var(--text-primary);
+	line-height: 1;
+}
+
+.sortButton {
+	min-width: 0;
+}
+.scopeButton {
+	min-width: 0;
+}
+
+.messageItem {
+	position: relative;
+	margin-bottom: 0.5rem;
+	cursor: default;
+	user-select: text;
+	-webkit-user-select: text;
+	border-radius: 0.375rem;
+	border: 1px solid var(--background-header-secondary);
+	background-color: var(--background-secondary-lighter);
+	padding-top: 0.5rem;
+	padding-bottom: 0.5rem;
+	text-align: left;
+}
+
+.actionButtons {
+	display: none;
+	position: absolute;
+	top: 12px;
+	right: 12px;
+}
+
+.messageItem:hover .actionButtons {
+	display: flex;
+}
+
+.jumpButton {
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	user-select: none;
+	-webkit-user-select: none;
+	font-weight: 600;
+	line-height: 20px;
+	padding: 0 8px;
+	font-size: 11px;
+	margin-right: 4px;
+	border-radius: 4px;
+	text-align: center;
+	color: var(--text-primary-muted);
+	background-color: var(--background-primary);
+	transition: color 0.2s;
+}
+
+.jumpButton:hover {
+	color: var(--text-primary);
+}
+
+.paginationBar {
+	display: flex;
+	width: 100%;
+	align-items: center;
+	justify-content: center;
+	gap: 0.25rem;
+	padding: 0.75rem 0;
+	border-top: none;
+	background-color: transparent;
+}
+
+.paginationWrapper {
+	display: flex;
+	flex-wrap: nowrap;
+	align-items: center;
+	gap: 0.25rem;
+}
+
+.pageButton {
+	display: flex;
+	height: 2rem;
+	width: 2rem;
+	flex-shrink: 0;
+	align-items: center;
+	justify-content: center;
+	border-radius: 9999px;
+	font-weight: 500;
+	font-size: 0.75rem;
+	transition:
+		background-color 0.2s,
+		color 0.2s;
+	background-color: var(--background-tertiary);
+	color: var(--text-primary);
+	cursor: pointer;
+}
+
+.pageButton:hover {
+	background-color: var(--background-modifier-hover);
+}
+
+@media (min-width: 640px) {
+	.pageButton {
+		font-size: 0.875rem;
+	}
+}
+
+.pageButtonActive {
+	background-color: var(--brand-primary);
+	color: white;
+}
+
+.pageButtonActive:hover {
+	background-color: var(--brand-primary);
+}
+
+.ellipsisButton {
+	display: flex;
+	height: 2rem;
+	width: 2rem;
+	flex-shrink: 0;
+	align-items: center;
+	justify-content: center;
+	border-radius: 9999px;
+	background-color: var(--background-tertiary);
+	font-size: 0.875rem;
+	color: var(--text-primary-muted);
+	transition: background-color 0.2s;
+	cursor: pointer;
+}
+
+.ellipsisButton:hover {
+	background-color: var(--background-modifier-hover);
+}
+
+.pageInputForm {
+	display: flex;
+	height: 2rem;
+	align-items: center;
+}
+
+.pageInputLabel {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border-width: 0;
+}
+
+.pageInput {
+	height: 2rem;
+	width: 3.5rem;
+	flex-shrink: 0;
+	appearance: textfield;
+	border-radius: 9999px;
+	border: 1px solid var(--background-modifier-accent);
+	background-color: var(--background-tertiary);
+	text-align: center;
+	color: var(--text-primary);
+	font-size: 0.75rem;
+	transition: border-color 0.2s;
+}
+
+@media (min-width: 640px) {
+	.pageInput {
+		font-size: 0.875rem;
+	}
+}
+
+.pageInput::placeholder {
+	color: var(--text-primary-muted);
+}
+
+.pageInput:focus {
+	border-color: var(--background-modifier-accent-focus);
+	outline: none;
+}
+
+.pageInput::-webkit-inner-spin-button,
+.pageInput::-webkit-outer-spin-button {
+	appearance: none;
+}
+
+.focusRingTight {
+	border-radius: 0.5rem;
+}
+
+.focusRingCircular {
+	border-radius: 9999px;
+}

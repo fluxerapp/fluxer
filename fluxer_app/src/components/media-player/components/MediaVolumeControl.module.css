@@ -1,0 +1,138 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.container {
+	position: relative;
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.muteButton {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	padding: 0;
+	border: none;
+	background: transparent;
+	color: #fff;
+	cursor: pointer;
+	transition:
+		opacity 150ms ease,
+		background-color 150ms ease;
+	outline: none;
+	border-radius: var(--radius-sm, 4px);
+	flex-shrink: 0;
+}
+
+.muteButton:hover {
+	background-color: rgba(255, 255, 255, 0.1);
+}
+
+.muteButton:focus-visible {
+	outline: 2px solid var(--brand-primary, #5865f2);
+	outline-offset: 2px;
+}
+
+.sliderWrapper {
+	overflow: hidden;
+	display: flex;
+	align-items: center;
+}
+
+.slider {
+	position: relative;
+	width: 60px;
+	height: 20px;
+	display: flex;
+	align-items: center;
+	cursor: pointer;
+	touch-action: none;
+	flex-shrink: 0;
+	padding: 0 6px;
+	box-sizing: content-box;
+}
+
+.sliderTrack {
+	position: absolute;
+	left: 6px;
+	right: 6px;
+	height: 4px;
+	background-color: rgba(255, 255, 255, 0.2);
+	border-radius: var(--radius-full);
+	overflow: hidden;
+}
+
+.sliderFill {
+	position: absolute;
+	left: 0;
+	top: 0;
+	height: 100%;
+	background-color: #fff;
+	border-radius: var(--radius-full);
+}
+
+.sliderThumb {
+	position: absolute;
+	width: 12px;
+	height: 12px;
+	background-color: #fff;
+	border-radius: 50%;
+	transform: translateX(-50%);
+	opacity: 0;
+	transition:
+		opacity 150ms ease,
+		transform 150ms ease;
+	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+	pointer-events: none;
+}
+
+.container:hover .sliderThumb,
+.slider:focus-within .sliderThumb,
+.isDragging .sliderThumb {
+	opacity: 1;
+}
+
+.isDragging .sliderThumb {
+	transform: translateX(-50%) scale(1.1);
+}
+
+.compact {
+	gap: 2px;
+}
+
+.compact .muteButton {
+	width: 28px;
+	height: 28px;
+}
+
+.compact .slider {
+	width: 50px;
+}
+
+.compact .sliderTrack {
+	height: 3px;
+}
+
+.compact .sliderThumb {
+	width: 10px;
+	height: 10px;
+}

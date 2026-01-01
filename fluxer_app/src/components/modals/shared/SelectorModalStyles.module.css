@@ -1,0 +1,207 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.headerSearch {
+	margin-top: var(--spacing-3);
+	width: 100%;
+}
+
+.headerSearchInput {
+	width: 100%;
+	height: 44px;
+	background-color: var(--background-textarea);
+}
+
+.searchIcon {
+	height: 1.25rem;
+	width: 1.25rem;
+	color: var(--text-secondary);
+}
+
+.selectorContent {
+	--selector-modal-content-height: clamp(320px, 48vh, 380px);
+	display: flex;
+	flex-direction: column;
+	height: var(--selector-modal-content-height);
+	min-height: var(--selector-modal-content-height);
+	max-height: var(--selector-modal-content-height);
+	padding: 0;
+}
+
+.listContainer {
+	position: relative;
+	flex: 1;
+	min-height: 0;
+}
+
+.scroller {
+	--scrollbar-track-bg: var(--background-secondary);
+	height: 100%;
+}
+
+.emptyState {
+	display: flex;
+	height: 100%;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	color: var(--text-secondary);
+	font-size: 1rem;
+	font-weight: 500;
+}
+
+.itemList {
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+	padding: var(--spacing-2) 0;
+}
+
+.itemButton {
+	position: relative;
+	display: flex;
+	width: 100%;
+	min-width: 0;
+	min-height: 48px;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--spacing-3);
+
+	padding: var(--spacing-2) 16px;
+	text-align: left;
+	cursor: pointer;
+}
+
+.itemButton::before {
+	content: '';
+	position: absolute;
+	inset: 0 var(--spacing-2);
+	border-radius: var(--radius-md);
+	transition: background-color 0.15s ease;
+	pointer-events: none;
+}
+
+.itemButton:hover:not(:disabled)::before {
+	background-color: var(--background-modifier-hover);
+}
+
+.itemButtonSelected::before {
+	background-color: var(--background-modifier-hover);
+}
+
+.itemButtonDisabled {
+	cursor: not-allowed;
+	opacity: 0.5;
+}
+
+.itemButtonDisabled:hover::before {
+	background-color: transparent;
+}
+
+.itemContent {
+	position: relative;
+	z-index: 1;
+	display: flex;
+	min-width: 0;
+	flex: 1;
+	align-items: center;
+	gap: var(--spacing-3);
+}
+
+.itemInfo {
+	display: flex;
+	min-width: 0;
+	flex: 1;
+	flex-direction: column;
+	justify-content: center;
+}
+
+.itemName {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-weight: 500;
+	font-size: 0.875rem;
+	color: var(--text-primary);
+}
+
+.itemSecondary {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	color: var(--text-tertiary);
+	font-size: 0.75rem;
+}
+
+.itemAction {
+	position: relative;
+	z-index: 1;
+	flex-shrink: 0;
+	pointer-events: none;
+}
+
+.subtitle {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-1-5);
+	margin: -10px 0 0;
+	font-size: 0.75rem;
+	color: var(--text-secondary);
+	line-height: 1.4;
+}
+
+.footer {
+	padding: var(--spacing-4);
+}
+
+.footerContent {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-4);
+	width: 100%;
+}
+
+.actionRow {
+	display: flex;
+	gap: var(--spacing-2);
+	flex-wrap: wrap;
+	flex-direction: row;
+}
+
+.actionButton {
+	flex: 1;
+}
+
+.itemIcon {
+	width: 32px;
+	height: 32px;
+	flex-shrink: 0;
+	color: var(--text-primary-muted);
+}
+
+.avatar {
+	width: 32px;
+	height: 32px;
+	flex-shrink: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	position: relative;
+	overflow: visible;
+}

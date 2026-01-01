@@ -1,0 +1,232 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.input {
+	width: 100%;
+	resize: none;
+	appearance: none;
+	border-radius: 0.5rem;
+	border: 1px solid var(--background-modifier-accent);
+	padding: 0.625rem 1rem;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--text-primary);
+	transition-property: color, background-color, border-color;
+	transition-duration: 150ms;
+	transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+:global(.theme-light) .input {
+	background-color: var(--background-modifier-hover);
+}
+
+.input::placeholder {
+	color: var(--text-primary-muted);
+}
+
+.input:focus {
+	outline: none;
+}
+
+.input.minHeight {
+	min-height: 44px;
+}
+
+.input.hasRightElement {
+	padding-right: 3rem;
+}
+
+.input.hasLeftIcon {
+	padding-left: 2.25rem;
+}
+
+.input.focusable:focus,
+.input.focusable:focus-within {
+	border-color: var(--background-modifier-accent-focus);
+}
+
+.input.error {
+	border-color: var(--status-danger);
+}
+
+.fieldset {
+	margin: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+	border: 0;
+	padding: 0;
+}
+
+.labelContainer {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.label {
+	margin: 0;
+	display: block;
+	padding: 0;
+	font-weight: 500;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--text-primary);
+}
+
+.inputGroup {
+	display: flex;
+	flex-direction: column;
+	gap: 0.375rem;
+}
+
+.errorText {
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--status-danger);
+}
+
+.inputContainer {
+	display: flex;
+	width: 100%;
+	flex-direction: column;
+	gap: 0.375rem;
+}
+
+.inputWrapper {
+	position: relative;
+}
+
+.leftIcon {
+	position: absolute;
+	top: 50%;
+	left: 0.75rem;
+	transform: translateY(-50%);
+	pointer-events: none;
+	color: var(--text-tertiary);
+}
+
+.leftElement {
+	position: absolute;
+	top: 50%;
+	left: 0.25rem;
+	transform: translateY(-50%);
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	z-index: 1;
+}
+
+.input.hasLeftElement {
+	padding-left: 2.5rem;
+}
+
+.rightIcon {
+	position: absolute;
+	top: 50%;
+	right: 0.75rem;
+	transform: translateY(-50%);
+	pointer-events: none;
+	color: var(--text-tertiary);
+}
+
+.passwordToggle {
+	position: absolute;
+	top: 50%;
+	right: 0.75rem;
+	transform: translateY(-50%);
+	border-radius: 0.25rem;
+	padding: 0.375rem;
+	color: var(--text-tertiary);
+	transition-property: color, background-color, border-color;
+	transition-duration: 150ms;
+	transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+	cursor: pointer;
+}
+
+.passwordToggle:hover {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-primary);
+}
+
+.rightElement {
+	position: absolute;
+	top: 50%;
+	right: 0.5rem;
+	transform: translateY(-50%);
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.textareaWrapper {
+	display: flex;
+	border-radius: 0.5rem;
+	border: 1px solid var(--background-modifier-accent);
+	transition-property: color, background-color, border-color;
+	transition-duration: 150ms;
+	transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.textareaWrapper.focusable:focus-within {
+	border-color: var(--background-modifier-accent-focus);
+}
+
+.textareaWrapper.error {
+	border-color: var(--status-danger);
+}
+
+.textarea {
+	width: 100%;
+	flex: 1 1 0%;
+	resize: none;
+	appearance: none;
+	border: 0;
+	background-color: transparent;
+	padding: 0.625rem 1rem;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--text-primary);
+	outline: none;
+}
+
+.textarea::placeholder {
+	color: var(--text-primary-muted);
+}
+
+.textareaActions {
+	display: flex;
+	min-width: 48px;
+	flex-direction: column;
+	align-items: center;
+	justify-content: space-between;
+	padding: 0.625rem 0.75rem;
+}
+
+.characterCountContainer {
+	text-align: center;
+}
+
+.characterCount {
+	font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+	color: var(--text-tertiary);
+	font-size: 0.75rem;
+	line-height: 1rem;
+	font-variant-numeric: tabular-nums;
+}

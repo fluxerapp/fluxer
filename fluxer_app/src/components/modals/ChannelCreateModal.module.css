@@ -1,0 +1,50 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.content {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-5);
+	padding-bottom: var(--spacing-4);
+}
+
+.channelTypeSection {
+	display: block;
+	margin-bottom: var(--spacing-4);
+}
+
+.channelTypeLabel {
+	margin-bottom: 8px;
+	font-weight: 600;
+	font-size: 14px;
+	color: var(--text-primary);
+}
+
+.footer {
+	align-items: center;
+	display: flex;
+	flex-wrap: wrap;
+	width: 100%;
+	gap: 8px;
+}
+
+.footer > * {
+	flex: 1;
+	min-width: fit-content;
+}

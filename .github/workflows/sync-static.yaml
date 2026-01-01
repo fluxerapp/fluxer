@@ -1,0 +1,59 @@
+name: sync static-bucket
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'fluxer_static/**'
+  workflow_dispatch:
+
+concurrency:
+  group: sync-fluxer-static
+  cancel-in-progress: true
+
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    env:
+      RCLONE_REMOTE: ovh
+      RCLONE_BUCKET: fluxer-static
+      RCLONE_SOURCE: fluxer_static
+      RCLONE_ENDPOINT: https://s3.us-east-va.io.cloud.ovh.us
+      RCLONE_REGION: us-east-1
+      RCLONE_SOURCE_DIR: fluxer_static
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          lfs: true
+          fetch-depth: 0
+
+      - name: Install rclone
+        run: |
+          set -euo pipefail
+          if ! command -v rclone >/dev/null 2>&1; then
+            curl -fsSL https://rclone.org/install.sh | sudo bash
+          fi
+
+      - name: Push repo contents to bucket
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.config/rclone
+          cat > ~/.config/rclone/rclone.conf << RCLONEEOF
+          [ovh]
+          type = s3
+          provider = Other
+          env_auth = true
+          endpoint = $RCLONE_ENDPOINT
+          acl = private
+          RCLONEEOF
+
+          mkdir -p "$RCLONE_SOURCE_DIR"
+          rclone sync "$RCLONE_SOURCE" "$RCLONE_REMOTE:$RCLONE_BUCKET" --create-empty-src-dirs --exclude "assets/**"

@@ -1,0 +1,224 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.content {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	padding-bottom: 16px;
+}
+
+.description {
+	color: var(--text-primary-muted);
+	font-size: 14px;
+	margin-bottom: 4px;
+}
+
+.cropperContainer {
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 350px;
+	width: 100%;
+	overflow: hidden;
+	border-radius: var(--radius-sm);
+	background-color: var(--background-primary);
+}
+
+@media screen and (max-height: 800px) {
+	.cropperContainer {
+		height: 200px;
+	}
+}
+
+.image {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate3d(0, 0, 0) rotate(0deg);
+	transform-origin: center center;
+	user-select: none;
+	-webkit-user-select: none;
+	cursor: pointer;
+}
+
+.image:active {
+	cursor: grabbing;
+}
+
+.overlayRect {
+	pointer-events: none;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	border-radius: 4px;
+	border: 5px solid hsl(0, 0%, 100%);
+	box-sizing: border-box;
+	box-shadow: 0 0 0 9999px rgba(47, 49, 54, 0.6);
+}
+
+.roundOverlay {
+	pointer-events: none;
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.roundMask {
+	border-radius: 50%;
+	width: min(100%, 100%);
+	aspect-ratio: 1 / 1;
+	border: 5px solid hsl(0, 0%, 100%);
+	box-sizing: border-box;
+	box-shadow: 0 0 0 9999px rgba(47, 49, 54, 0.6);
+}
+
+.controlsContainer {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-wrap: nowrap;
+	gap: 24px;
+	padding: 16px 24px;
+}
+
+.sliderGroup {
+	display: flex;
+	align-items: flex-start;
+	justify-content: flex-start;
+	gap: 16px;
+	flex: 1;
+	flex-wrap: wrap;
+	min-width: 0;
+}
+
+.sliderContainer {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	min-width: 0;
+	flex: 1;
+}
+
+.sliderLabel {
+	font-size: 12px;
+	font-weight: 500;
+	color: var(--text-secondary);
+}
+
+.sliderWrapper {
+	flex: 1;
+	min-width: 120px;
+}
+
+.zoomSliderContainer,
+.heightSliderContainer {
+	display: flex;
+	align-items: center;
+	flex-direction: row;
+	justify-content: center;
+	gap: 10px;
+	min-width: 0;
+	flex: 1;
+}
+
+.zoomIconSmall,
+.zoomIconLarge,
+.heightIconShort,
+.heightIconTall {
+	color: var(--text-tertiary);
+}
+
+.heightIconShort,
+.heightIconTall {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 12px;
+	border-radius: 2px;
+	background-color: var(--text-tertiary);
+}
+
+.heightIconShort {
+	height: 6px;
+	opacity: 0.6;
+}
+
+.heightIconTall {
+	height: 16px;
+	opacity: 0.9;
+}
+
+.rotateButton {
+	box-sizing: content-box;
+	color: var(--text-tertiary);
+	cursor: pointer;
+	height: 32px;
+	width: 32px;
+	padding: 6px;
+	margin-left: 8px;
+	transition:
+		color 150ms ease,
+		transform 150ms ease;
+}
+
+.rotateButton:hover {
+	color: var(--text-primary);
+	transform: rotate(10deg);
+}
+
+.rotateButton:disabled {
+	color: var(--text-tertiary-muted);
+	cursor: default;
+	transform: none;
+}
+
+.rotateIcon {
+	color: inherit;
+}
+
+.footer {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	width: 100%;
+}
+
+.footerActions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+@media screen and (max-width: 640px) {
+	.controlsContainer {
+		flex-direction: column;
+		align-items: stretch;
+		gap: 16px;
+	}
+
+	.rotateButton {
+		align-self: center;
+		margin-left: 0;
+	}
+}

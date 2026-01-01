@@ -1,0 +1,139 @@
+{
+	"$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+	"formatter": {
+		"enabled": true,
+		"formatWithErrors": false,
+		"indentStyle": "tab",
+		"lineWidth": 120,
+		"lineEnding": "lf",
+		"bracketSpacing": false
+	},
+	"javascript": {
+		"formatter": {
+			"quoteStyle": "single",
+			"jsxQuoteStyle": "double",
+			"quoteProperties": "asNeeded",
+			"trailingCommas": "all",
+			"semicolons": "always",
+			"arrowParentheses": "always",
+			"bracketSpacing": false,
+			"bracketSameLine": false
+		},
+		"globals": ["React"]
+	},
+	"json": {
+		"formatter": {
+			"enabled": true,
+			"indentStyle": "tab",
+			"lineWidth": 120
+		},
+		"parser": {
+			"allowComments": true,
+			"allowTrailingCommas": true
+		}
+	},
+	"css": {
+		"formatter": {
+			"enabled": true,
+			"indentStyle": "tab",
+			"lineWidth": 120,
+			"quoteStyle": "single"
+		},
+		"parser": {
+			"cssModules": true
+		}
+	},
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"recommended": true,
+			"complexity": {
+				"noForEach": "off",
+				"noImportantStyles": "off"
+			},
+			"correctness": {
+				"noUndeclaredVariables": "error",
+				"noUnusedVariables": "error",
+				"noInvalidUseBeforeDeclaration": "off",
+				"useExhaustiveDependencies": "off"
+			},
+			"suspicious": {
+				"noArrayIndexKey": "off",
+				"noAssignInExpressions": "off",
+				"noExplicitAny": "off",
+				"noDoubleEquals": {
+					"level": "error",
+					"options": {
+						"ignoreNull": true
+					}
+				},
+				"noVar": "error",
+				"useAdjacentOverloadSignatures": "off",
+				"useIterableCallbackReturn": "off"
+			},
+			"style": {
+				"useConsistentArrayType": {
+					"level": "error",
+					"options": {
+						"syntax": "generic"
+					}
+				},
+				"useConst": "error",
+				"noNonNullAssertion": "off",
+				"noParameterAssign": "off"
+			},
+			"a11y": {
+				"recommended": true,
+				"useAriaPropsForRole": "error",
+				"useValidAriaRole": "error",
+				"useValidAriaValues": "error",
+				"useValidAriaProps": "error",
+				"useAltText": "error",
+				"useAnchorContent": "error",
+				"useButtonType": "error",
+				"useKeyWithClickEvents": "error",
+				"useKeyWithMouseEvents": "error",
+				"useSemanticElements": "off",
+				"noAriaUnsupportedElements": "error",
+				"noNoninteractiveElementToInteractiveRole": "error",
+				"noNoninteractiveTabindex": "error",
+				"noRedundantAlt": "error",
+				"noRedundantRoles": "error",
+				"noInteractiveElementToNoninteractiveRole": "error",
+				"noAutofocus": "warn",
+				"noAccessKey": "warn",
+				"useAriaActivedescendantWithTabindex": "error",
+				"noSvgWithoutTitle": "warn"
+			},
+			"nursery": {
+				"useSortedClasses": "error"
+			}
+		}
+	},
+	"assist": {"actions": {"source": {"organizeImports": "on"}}},
+	"vcs": {
+		"enabled": true,
+		"clientKind": "git",
+		"useIgnoreFile": true
+	},
+	"files": {
+		"includes": [
+			"**",
+			"!**/.git",
+			"!**/app.css",
+			"!**/build",
+			"fluxer_app/scripts/build",
+			"!**/dist",
+			"!**/fluxer_app/src/data/emojis.json",
+			"!**/fluxer_app/src/locales/*/messages.js",
+			"!**/fluxer_app/src/env.d.ts",
+			"!**/node_modules",
+			"!**/tailwind.css",
+			"!**/*.html",
+			"!**/*.module.css.d.ts",
+			"!**/fluxer_app/src/components/uikit/SVGMasks.tsx",
+			"!fluxer_static"
+		],
+		"ignoreUnknown": true
+	}
+}

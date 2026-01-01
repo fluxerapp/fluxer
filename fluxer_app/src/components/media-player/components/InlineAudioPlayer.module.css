@@ -1,0 +1,205 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.container {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	padding: 12px;
+	background-color: var(--background-secondary);
+	border: 1px solid var(--background-modifier-accent);
+	border-radius: var(--radius-lg, 8px);
+	max-width: 400px;
+	width: 100%;
+}
+
+.header {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.iconContainer {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 40px;
+	height: 40px;
+	flex-shrink: 0;
+	background-color: var(--background-tertiary);
+	border-radius: var(--radius-md, 6px);
+	color: var(--text-secondary);
+}
+
+.fileInfo {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.fileName {
+	display: flex;
+	align-items: baseline;
+	gap: 0;
+	margin: 0;
+	font-size: 14px;
+	font-weight: 500;
+	color: var(--text-primary);
+	line-height: 1.3;
+}
+
+.fileNameTruncate {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.fileExtension {
+	flex-shrink: 0;
+	color: var(--text-tertiary);
+}
+
+.fileMeta {
+	margin: 0;
+	font-size: 12px;
+	color: var(--text-tertiary);
+}
+
+.playButton {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 36px;
+	height: 36px;
+	flex-shrink: 0;
+	padding: 0;
+	border: none;
+	background-color: var(--brand-primary);
+	border-radius: 50%;
+	color: #fff;
+	cursor: pointer;
+	transition:
+		filter 150ms ease,
+		transform 150ms ease;
+}
+
+.playButton:hover {
+	filter: brightness(1.1);
+}
+
+.playButton:active {
+	transform: scale(0.95);
+}
+
+.playButton:focus-visible {
+	outline: 2px solid var(--brand-primary);
+	outline-offset: 2px;
+}
+
+.progressSection {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.progressBar {
+	flex: 1;
+}
+
+.time {
+	font-family: var(--font-mono, monospace);
+	font-size: 11px;
+	color: var(--text-tertiary);
+	white-space: nowrap;
+	min-width: 70px;
+	text-align: right;
+}
+
+.controls {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+}
+
+.controlsLeft {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.controlsRight {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.volumeControl {
+	color: var(--text-secondary);
+}
+
+.volumeControl button {
+	color: var(--text-secondary);
+}
+
+.volumeControl button:hover {
+	color: var(--text-primary);
+}
+
+.actionButton {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	padding: 0;
+	border: none;
+	background: transparent;
+	color: var(--text-secondary);
+	cursor: pointer;
+	border-radius: var(--radius-sm, 4px);
+	transition:
+		color 150ms ease,
+		background-color 150ms ease;
+}
+
+.actionButton:hover {
+	color: var(--text-primary);
+	background-color: var(--background-tertiary);
+}
+
+.actionButton:focus-visible {
+	outline: 2px solid var(--brand-primary);
+	outline-offset: 2px;
+}
+
+.spinner {
+	animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+	from {
+		transform: rotate(0deg);
+	}
+	to {
+		transform: rotate(360deg);
+	}
+}

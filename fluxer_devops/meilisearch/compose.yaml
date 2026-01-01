@@ -1,0 +1,47 @@
+services:
+  meilisearch:
+    image: getmeili/meilisearch:v1.23
+    hostname: meilisearch
+    env_file:
+      - /etc/fluxer/meilisearch.env
+    environment:
+      - MEILI_ENV=production
+      - MEILI_DB_PATH=/meili_data
+      - MEILI_HTTP_ADDR=0.0.0.0:7700
+      - MEILI_MAX_INDEXING_MEMORY=4gb
+      - MEILI_MAX_INDEXING_THREADS=4
+      - MEILI_LOG_LEVEL=INFO
+      - MEILI_NO_ANALYTICS=true
+    volumes:
+      - meilisearch_data:/meili_data
+    networks:
+      - fluxer-shared
+    ports:
+      - '7700:7700'
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 3
+      resources:
+        limits:
+          cpus: '4'
+          memory: 8G
+        reservations:
+          cpus: '2'
+          memory: 4G
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -fsS http://127.0.0.1:7700/health > /dev/null']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+networks:
+  fluxer-shared:
+    external: true
+
+volumes:
+  meilisearch_data:
+    driver: local

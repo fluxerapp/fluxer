@@ -1,0 +1,6 @@
+* * * * * processCloudfarePurgeQueue
+* * * * * processAssetDeletionQueue
+* * * * * processPendingBulkMessageDeletions
+15 * * * * expireAttachments
+0 3 * * * userProcessPendingDeletions
+0 4 * * 0 processInactivityDeletions

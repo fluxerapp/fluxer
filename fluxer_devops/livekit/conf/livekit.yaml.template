@@ -1,0 +1,37 @@
+port: 7880
+bind_addresses:
+  - ''
+
+rtc:
+  tcp_port: 7881
+  udp_port: 7882
+  use_external_ip: false
+  node_ip: ${NODE_IP}
+  enable_loopback_candidate: false
+
+redis:
+  address: valkey:6379
+  username: ''
+  password: ${REDIS_PASSWORD}
+  db: 0
+  use_tls: false
+
+turn:
+  enabled: true
+  domain: ${LIVEKIT_DOMAIN_TURN}
+  tls_port: 5349
+  udp_port: 3478
+  external_tls: true
+
+keys:
+  ${LIVEKIT_API_KEY}: ${LIVEKIT_API_SECRET}
+
+room:
+  auto_create: true
+  empty_timeout: 300
+  departure_timeout: 20
+
+webhook:
+  api_key: ${LIVEKIT_API_KEY}
+  urls:
+    - ${LIVEKIT_WEBHOOK_URL}

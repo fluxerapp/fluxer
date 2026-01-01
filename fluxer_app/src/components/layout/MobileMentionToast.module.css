@@ -1,0 +1,116 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.host {
+	position: sticky;
+	top: 0;
+	z-index: var(--z-index-elevated-3);
+	display: flex;
+	justify-content: center;
+	width: 100%;
+	padding: 8px 16px 0;
+	pointer-events: none;
+}
+
+.toast {
+	width: min(100%, 640px);
+	background-color: var(--background-secondary);
+	border-radius: 16px;
+	border: 1px solid var(--background-modifier-accent);
+	box-shadow:
+		0 10px 20px -4px rgb(0 0 0 / 0.2),
+		0 4px 8px -6px rgb(0 0 0 / 0.25);
+	padding: 0.75rem 1rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.4rem;
+	pointer-events: auto;
+}
+
+.header {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.35rem;
+	font-size: 0.85rem;
+	color: var(--text-primary);
+}
+
+.author {
+	font-weight: 600;
+}
+
+.separator {
+	color: var(--text-primary-muted);
+}
+
+.location {
+	font-size: 0.82rem;
+	color: var(--text-primary-muted);
+	text-transform: capitalize;
+}
+
+.mentionLabel {
+	margin-left: auto;
+	font-size: 0.75rem;
+	color: var(--text-primary-muted);
+}
+
+.messageContent {
+	font-size: 0.9rem;
+	color: var(--text-primary);
+	line-height: 1.3;
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+
+.messageContent :global(*) {
+	margin: 0;
+}
+
+.systemLabel,
+.attachmentLabel {
+	font-size: 0.83rem;
+	color: var(--text-primary-muted);
+	line-height: 1.2;
+}
+
+.progressTrack {
+	height: 3px;
+	border-radius: 999px;
+	background: color-mix(in srgb, var(--brand-primary-light) 40%, var(--background-modifier-accent) 60%);
+	overflow: hidden;
+}
+
+.progressFill {
+	height: 100%;
+	width: 100%;
+	transform-origin: left;
+	background: var(--brand-primary-light);
+}
+
+:global(.theme-light) .progressTrack {
+	background: color-mix(in srgb, var(--brand-primary) 40%, var(--background-modifier-accent) 60%);
+}
+
+:global(.theme-light) .progressFill {
+	background: var(--brand-primary);
+}

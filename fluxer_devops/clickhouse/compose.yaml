@@ -1,0 +1,52 @@
+services:
+  clickhouse:
+    image: clickhouse/clickhouse-server:24.8
+    hostname: clickhouse
+    env_file:
+      - /etc/fluxer/clickhouse.env
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+      - clickhouse_logs:/var/log/clickhouse-server
+      - ./conf/config.xml:/etc/clickhouse-server/config.d/custom.xml:ro
+      - ./conf/users.xml:/etc/clickhouse-server/users.d/custom.xml:ro
+    networks:
+      - fluxer-shared
+    ports:
+      - target: 8123
+        published: 8123
+        protocol: tcp
+        mode: host
+      - target: 9000
+        published: 9000
+        protocol: tcp
+        mode: host
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 3
+      resources:
+        limits:
+          cpus: '4'
+          memory: 16G
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://127.0.0.1:8123/ping || exit 1']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+
+networks:
+  fluxer-shared:
+    external: true
+
+volumes:
+  clickhouse_data:
+    driver: local
+  clickhouse_logs:
+    driver: local

@@ -1,0 +1,64 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.role > :first-child {
+	margin-right: 4px;
+	margin-left: 1px;
+}
+
+.role:hover .roleRemoveIcon {
+	opacity: 1;
+}
+
+.iconSmall {
+	height: 16px;
+	width: 16px;
+}
+
+.iconMedium {
+	height: 20px;
+	width: 20px;
+}
+
+.loadingContainer {
+	display: flex;
+	height: 100px;
+	width: 300px;
+	align-items: center;
+	justify-content: center;
+	border-radius: 0.375rem;
+	border: 2px solid var(--brand-primary);
+	background-color: var(--background-primary);
+}
+
+.profileCustomStatus {
+	display: flex;
+	align-items: center;
+	gap: 0.35rem;
+}
+
+.profileCustomStatusText {
+	font-size: 0.75rem;
+	line-height: 1rem;
+	color: var(--text-primary-muted);
+}
+
+.profileCustomStatus:hover .profileCustomStatusText {
+	--emoji-show-animated: 1;
+}

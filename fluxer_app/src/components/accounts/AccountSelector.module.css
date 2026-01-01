@@ -1,0 +1,75 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.container {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-2);
+}
+
+.title {
+	margin-bottom: 0;
+	text-align: center;
+	font-size: 1.25rem;
+	font-weight: 600;
+	letter-spacing: 0.025em;
+	color: var(--text-primary);
+}
+
+.description {
+	margin: 0;
+	text-align: center;
+	font-size: 0.875rem;
+	color: var(--text-tertiary);
+}
+
+.error {
+	background-color: hsla(0, calc(100% * var(--saturation-factor)), 50%, 0.1);
+	border: 1px solid hsla(0, calc(100% * var(--saturation-factor)), 50%, 0.2);
+	border-radius: 8px;
+	padding: 12px;
+	font-size: 0.875rem;
+	color: var(--status-danger);
+	text-align: center;
+}
+
+.accountListWrapper {
+	min-height: 120px;
+}
+
+.scroller {
+	max-height: 280px;
+}
+
+.accountList {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-1);
+	padding: var(--spacing-1) 0;
+}
+
+.noAccounts {
+	display: flex;
+	height: 120px;
+	align-items: center;
+	justify-content: center;
+	color: var(--text-secondary);
+	font-size: 0.875rem;
+	font-weight: 500;
+}

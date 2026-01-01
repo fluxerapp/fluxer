@@ -1,0 +1,107 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.userProfile {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding-top: 6px;
+	padding-right: 4px;
+	padding-bottom: 6px;
+	padding-left: 10px;
+	border-radius: 8px;
+	margin-bottom: 24px;
+	min-width: 0;
+}
+
+.userProfileInfo {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	min-width: 0;
+	flex: 1;
+}
+
+.userProfileName {
+	font-weight: 500;
+	font-size: 1.067rem;
+	color: var(--text-primary);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	flex: 1 1 0;
+	min-width: 0;
+	margin-right: 0.75rem;
+}
+
+.mobileWrapper {
+	position: relative;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+	background: var(--background-secondary);
+	display: flex;
+	flex-direction: column;
+}
+
+.mobileHeaderContainer {
+	position: relative;
+	flex-shrink: 0;
+	z-index: 10;
+	background: var(--background-primary);
+}
+
+.mobileHeaderContent {
+	width: 100%;
+}
+
+.mobileContentContainer {
+	position: relative;
+	flex: 1 1 auto;
+	overflow: hidden;
+}
+
+.mobileContentPane {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+	background: var(--background-secondary);
+	contain: layout style paint;
+}
+
+.mobileContentScroller {
+	flex: 1;
+	min-height: 0;
+}
+
+.mobileContentInner {
+	width: 100%;
+	max-width: 696px;
+	margin: 0 auto;
+	padding: 1rem;
+	padding-bottom: calc(16px + env(safe-area-inset-bottom, 20px));
+}
+
+.fullWidth {
+	width: 100%;
+}

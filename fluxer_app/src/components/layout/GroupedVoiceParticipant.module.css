@@ -1,0 +1,141 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.container {
+	display: flex;
+	flex-direction: column;
+}
+
+.participantButton {
+	display: flex;
+	width: 100%;
+	align-items: center;
+	gap: 0.375rem;
+	border-radius: 0.375rem;
+	padding: 0.25rem 0.5rem;
+	transition-property: color, background-color;
+	transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+	transition-duration: 150ms;
+	cursor: pointer;
+	text-align: left;
+	color: var(--text-primary-muted);
+}
+
+.participantButtonSpeaking {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-primary);
+}
+
+.participantButton:hover {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-primary);
+}
+
+.avatarAndName {
+	display: flex;
+	flex: 1;
+	align-items: center;
+	gap: 0.375rem;
+}
+
+.nameContainer {
+	display: flex;
+	min-width: 0;
+	flex: 1;
+	align-items: baseline;
+	gap: 0.25rem;
+}
+
+.participantName {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-size: 0.875rem;
+}
+
+.participantNameSpeaking {
+	color: var(--text-primary);
+}
+
+.participantNameCurrent {
+	color: var(--text-primary);
+}
+
+.deviceCount {
+	flex-shrink: 0;
+	font-size: 0.75rem;
+	color: var(--text-secondary);
+}
+
+.iconsAndToggle {
+	margin-left: auto;
+	display: flex;
+	align-items: center;
+	gap: 0.25rem;
+}
+
+.toggleButton {
+	display: inline-flex;
+	height: 1.5rem;
+	width: 1.5rem;
+	align-items: center;
+	justify-content: center;
+	border-radius: var(--radius-full);
+	border: none;
+	background-color: transparent;
+	padding: 0;
+	cursor: pointer;
+}
+
+.toggleButton:hover {
+	background-color: var(--background-modifier-hover);
+}
+
+.toggleButton:focus {
+	outline: none;
+}
+
+.toggleButton:focus-visible {
+	box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand-primary) 50%, transparent);
+}
+
+.toggleIcon {
+	height: 1rem;
+	width: 1rem;
+	color: var(--text-secondary);
+	transition-property: transform;
+	transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+	transition-duration: 200ms;
+}
+
+.toggleIconCollapsed {
+	transform: rotate(-90deg);
+}
+
+.devicesContainer {
+	margin-top: 0.125rem;
+	margin-left: 1rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.125rem;
+}
+
+.flexShrinkZero {
+	flex-shrink: 0;
+}

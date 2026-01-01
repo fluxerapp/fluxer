@@ -1,0 +1,475 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.voiceConnectionContainer {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-3);
+	margin: 0;
+	padding: var(--voice-connection-padding-y) var(--user-area-padding-x);
+	background-color: transparent;
+	border: none;
+	width: 100%;
+	min-width: 0;
+	flex-shrink: 0;
+}
+
+.statusRow {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-2);
+	min-width: 0;
+}
+
+.signalIcon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 24px;
+	width: 24px;
+	color: var(--text-tertiary);
+	flex-shrink: 0;
+}
+
+.statusButton {
+	cursor: pointer;
+	border: none;
+	background: transparent;
+	padding: 0;
+	text-align: left;
+	font-weight: 600;
+	font-size: 0.875rem;
+	line-height: 1.125rem;
+	color: var(--text-primary);
+	user-select: none;
+	-webkit-user-select: none;
+	flex: 1;
+	min-width: 0;
+}
+
+.statusConnected {
+	color: var(--status-online);
+}
+
+.statusConnecting {
+	color: var(--status-idle);
+}
+
+.statusDisconnected {
+	color: var(--status-danger);
+}
+
+.controls {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-2);
+	flex-shrink: 0;
+}
+
+.controlButton {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 32px;
+	width: 32px;
+	background-color: transparent;
+	color: var(--control-button-normal-text);
+	border: none;
+	border-radius: var(--radius-md);
+	cursor: pointer;
+	transition:
+		background-color var(--transition-fast),
+		color var(--transition-fast),
+		transform var(--transition-fast);
+	position: relative;
+	padding: 0;
+	flex-shrink: 0;
+}
+
+.controlButton:hover {
+	background-color: color-mix(in srgb, var(--control-button-normal-text) 10%, transparent);
+	color: var(--control-button-hover-text);
+}
+
+.controlButton:active {
+	transform: scale(0.95);
+}
+
+.controlButton.selected {
+	background-color: var(--background-modifier-selected);
+	color: var(--surface-interactive-selected-color);
+}
+
+.controlButton.selected:hover {
+	background-color: color-mix(in srgb, var(--text-primary) 12%, transparent);
+	color: var(--surface-interactive-selected-color);
+}
+
+.icon {
+	height: 20px;
+	width: 20px;
+}
+
+.connectionInfo {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-2);
+}
+
+.infoRow {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-2);
+	color: var(--text-secondary);
+	font-size: 0.75rem;
+	line-height: 1rem;
+}
+
+.channelInfo {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-2);
+	color: var(--text-secondary);
+	font-size: 0.75rem;
+	line-height: 1rem;
+	text-decoration: none;
+	cursor: pointer;
+}
+
+.channelInfo:hover {
+	text-decoration: underline;
+	color: var(--text-primary);
+}
+
+.channelInfo:focus-visible {
+	outline: 2px solid var(--brand-primary);
+	outline-offset: 1px;
+}
+
+.channelIcon {
+	height: 16px;
+	width: 16px;
+	color: var(--text-tertiary);
+	flex-shrink: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.channelText {
+	display: flex;
+	align-items: center;
+	flex: 1;
+	min-width: 0;
+}
+
+.channelName {
+	font-weight: 500;
+	color: var(--text-primary);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.channelInfo:hover .channelName {
+	color: inherit;
+}
+
+.guildSeparator {
+	color: var(--text-tertiary);
+	margin: 0 2px;
+	flex-shrink: 0;
+}
+
+.guildName {
+	color: var(--text-tertiary);
+	font-weight: 400;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.infoIcon {
+	height: 16px;
+	width: 16px;
+	color: var(--text-tertiary);
+	flex-shrink: 0;
+}
+
+.infoText {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	flex: 1;
+	color: var(--text-secondary);
+}
+
+.mediaSection {
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	gap: var(--spacing-1);
+}
+
+.mediaButton {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 32px;
+	width: 100%;
+	background-color: transparent;
+	color: var(--control-button-normal-text);
+	border: 1px solid var(--background-modifier-hover);
+	border-radius: var(--radius-md);
+	cursor: pointer;
+	transition:
+		background-color var(--transition-fast),
+		color var(--transition-fast),
+		transform var(--transition-fast),
+		border-color var(--transition-fast);
+	position: relative;
+	padding: 0;
+}
+
+.mediaButton:hover:not(:disabled) {
+	background-color: color-mix(in srgb, var(--control-button-normal-text) 5%, transparent);
+	color: var(--control-button-hover-text);
+	border-color: var(--background-modifier-selected);
+}
+
+.mediaButton:active:not(:disabled) {
+	transform: scale(0.95);
+}
+
+.mediaButton:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.mediaButton.cameraActive,
+.mediaButton.screenShareActive {
+	background-color: color-mix(in srgb, var(--status-online) 10%, transparent);
+	color: var(--status-online);
+	border-color: var(--status-online);
+}
+
+.mediaButton.cameraActive:hover:not(:disabled),
+.mediaButton.screenShareActive:hover:not(:disabled) {
+	background-color: color-mix(in srgb, var(--status-online) 15%, transparent);
+	color: var(--status-online);
+}
+
+.mediaIcon {
+	height: 20px;
+	width: 20px;
+}
+
+.popoutContainer {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-3);
+	width: calc(var(--layout-sidebar-width) - 16px);
+	box-sizing: border-box;
+	padding: var(--spacing-3);
+	background-color: var(--background-primary);
+	border: 1px solid var(--background-header-secondary);
+	border-radius: var(--radius-md);
+}
+
+.popoutHeader {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--spacing-1);
+}
+
+.popoutTitle {
+	font-weight: 600;
+	font-size: 0.875rem;
+	color: var(--text-primary);
+}
+
+.popoutCloseButton {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 24px;
+	width: 24px;
+	background-color: transparent;
+	color: var(--text-primary-muted);
+	border: none;
+	border-radius: var(--radius-sm);
+	cursor: pointer;
+	transition:
+		background-color var(--transition-fast),
+		color var(--transition-fast);
+	padding: 0;
+}
+
+.popoutCloseButton:hover {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-primary);
+}
+
+.popoutStats {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-1);
+}
+
+.popoutStatRow {
+	display: flex;
+	align-items: center;
+	justify-content: flex-start;
+	gap: var(--spacing-2);
+}
+
+.popoutStatLabel {
+	font-size: 0.75rem;
+	color: var(--text-secondary);
+}
+
+.popoutStatValue {
+	font-weight: 600;
+	font-size: 0.75rem;
+	color: var(--text-primary);
+	margin-left: auto;
+}
+
+.deviceBadge {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-1);
+	min-width: 0;
+	justify-content: flex-end;
+	flex: 1 1 auto;
+}
+
+.deviceBadgeText {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-weight: 600;
+	font-size: 0.75rem;
+	color: var(--text-primary);
+}
+
+.endpointBadge {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-1);
+	min-width: 0;
+	justify-content: flex-end;
+	flex: 1 1 auto;
+	max-width: 100%;
+	cursor: pointer;
+	padding: 2px 4px;
+	border-radius: var(--radius-sm);
+}
+
+.endpointBadgeText {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-weight: 700;
+	font-size: 0.75rem;
+	color: var(--status-online);
+	min-width: 0;
+	max-width: 100%;
+	text-align: right;
+}
+
+.chartContainer {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.chartSvg {
+	overflow: visible;
+}
+
+.gridLine {
+	stroke: currentColor;
+	stroke-width: 1px;
+}
+
+.gridLineHorizontal {
+	opacity: 0.3;
+}
+
+.gridLineVertical {
+	stroke-width: 1px;
+}
+
+.gridText {
+	fill: var(--text-tertiary);
+	font-size: 10px;
+	text-anchor: end;
+	dominant-baseline: middle;
+}
+
+.chartLine {
+	stroke: currentColor;
+	stroke-width: 2px;
+	fill: none;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+
+.chartPoint {
+	fill: currentColor;
+}
+
+.textGreen {
+	color: rgb(34 197 94);
+}
+
+.textBackgroundModifierHover {
+	color: var(--background-modifier-hover);
+}
+
+.textTextTertiary {
+	fill: var(--text-tertiary);
+}
+
+.flexShrink0 {
+	flex-shrink: 0;
+}
+
+.iconSmall {
+	height: 16px;
+	width: 16px;
+}
+
+.deviceIcon {
+	height: 14px;
+	width: 14px;
+	flex-shrink: 0;
+}
+
+.lockIcon {
+	height: 12px;
+	width: 12px;
+	flex-shrink: 0;
+}
+
+.channelIconSize {
+	height: 16px;
+	width: 16px;
+}

@@ -1,0 +1,213 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.card {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	border-radius: 0.75rem;
+	padding: 1.5rem;
+	text-align: center;
+	box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+	transition:
+		box-shadow 150ms cubic-bezier(0.4, 0, 0.2, 1),
+		opacity 150ms ease,
+		filter 150ms ease;
+}
+
+.cardDefault {
+	composes: card;
+	border: 1px solid var(--background-header-secondary);
+	background-color: var(--background-secondary);
+}
+
+.cardPopular {
+	composes: card;
+	border: 2px solid var(--brand-primary);
+	background-color: var(--brand-primary);
+}
+
+.badgeSpace {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 32px;
+	margin-bottom: 1rem;
+	flex-shrink: 0;
+}
+
+.badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.25rem;
+	border-radius: 9999px;
+	padding: 0.25rem 0.85rem;
+	font-weight: 700;
+	font-size: 0.8rem;
+	letter-spacing: 0.01em;
+	text-transform: uppercase;
+	border: 1px solid rgb(255 255 255 / 0.55);
+	background-color: transparent;
+	color: white;
+}
+
+:global(.theme-light) .badge {
+	border-color: color-mix(in srgb, var(--brand-primary) 40%, transparent);
+	background-color: color-mix(in srgb, var(--brand-primary) 12%, transparent);
+	color: color-mix(in srgb, var(--brand-primary) 90%, white 10%);
+}
+
+.badgeOnBrand {
+	border-color: inherit;
+	color: inherit;
+	background-color: inherit;
+}
+
+:global(.theme-light) .badgeOnBrand {
+	border-color: color-mix(in srgb, var(--text-on-brand-primary) 65%, transparent);
+	background-color: color-mix(in srgb, var(--text-on-brand-primary) 12%, transparent);
+	color: var(--text-on-brand-primary);
+}
+
+.badgePlaceholder {
+	display: inline-block;
+	visibility: hidden;
+}
+
+.popularBadge {
+	position: absolute;
+	top: -0.75rem;
+	left: 0;
+	right: 0;
+	margin-left: auto;
+	margin-right: auto;
+	width: fit-content;
+	white-space: nowrap;
+	border-radius: 9999px;
+	background-color: white;
+	padding: 0.375rem 1rem;
+	font-weight: 700;
+	font-size: 0.75rem;
+	line-height: 1rem;
+	text-transform: uppercase;
+	color: var(--brand-primary);
+	box-shadow:
+		0 10px 15px -3px rgb(0 0 0 / 0.1),
+		0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+.popularBadgeSpace {
+	margin-bottom: 0.75rem;
+	height: 0;
+}
+
+.disabled {
+	opacity: 0.6;
+	filter: grayscale(10%);
+	pointer-events: none;
+}
+
+.selectButton {
+	margin-top: auto;
+	width: 100%;
+	flex-shrink: 0;
+	font-weight: 700;
+}
+
+.soldOutBadge {
+	position: absolute;
+	top: 0.75rem;
+	right: 0.75rem;
+	border-radius: 0.25rem;
+	background-color: var(--status-danger);
+	padding: 0.25rem 0.5rem;
+	font-weight: 700;
+	font-size: 0.625rem;
+	line-height: 1rem;
+	text-transform: uppercase;
+	color: white;
+}
+
+.contentContainer {
+	display: flex;
+	min-height: 0;
+	flex: 1;
+	flex-direction: column;
+}
+
+.cardTitle {
+	margin-bottom: 0.75rem;
+	flex-shrink: 0;
+	font-weight: 700;
+	font-size: 1.25rem;
+	line-height: 1.75rem;
+}
+
+.cardTitleDefault {
+	composes: cardTitle;
+	color: var(--text-primary);
+}
+
+.cardTitlePopular {
+	composes: cardTitle;
+	color: white;
+}
+
+.cardPrice {
+	margin-bottom: 0.25rem;
+	flex-shrink: 0;
+	font-weight: 700;
+	font-size: 1.875rem;
+	line-height: 2.25rem;
+}
+
+@media (min-width: 768px) {
+	.cardPrice {
+		font-size: 2.25rem;
+		line-height: 2.5rem;
+	}
+}
+
+.cardPriceDefault {
+	composes: cardPrice;
+	color: var(--text-primary);
+}
+
+.cardPricePopular {
+	composes: cardPrice;
+	color: white;
+}
+
+.cardPeriod {
+	margin-bottom: 1rem;
+	flex-shrink: 0;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+}
+
+.cardPeriodDefault {
+	composes: cardPeriod;
+	color: var(--text-primary-muted);
+}
+
+.cardPeriodPopular {
+	composes: cardPeriod;
+	color: rgb(255 255 255 / 0.8);
+}

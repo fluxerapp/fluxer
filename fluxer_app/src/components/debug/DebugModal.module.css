@@ -1,0 +1,138 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.content {
+	min-height: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+}
+
+.container {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	min-height: 0;
+}
+
+.tabsSection {
+	padding: 0 1.5rem;
+	border-bottom: 1px solid var(--background-modifier-accent);
+}
+
+.tabs {
+	padding-bottom: 0;
+}
+
+.scrollArea {
+	flex: 1;
+	min-height: 0;
+	overflow: auto;
+	padding: 1.25rem 1.5rem 1.5rem;
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+}
+
+.summary {
+	background: var(--background-secondary);
+	border: 1px solid var(--border-color);
+	border-radius: var(--radius-md);
+	padding: 1rem;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+}
+
+.summaryTitle {
+	margin: 0 0 0.5rem;
+	font-size: 0.875rem;
+	font-weight: 600;
+	color: var(--text-secondary);
+	letter-spacing: 0.02em;
+	text-transform: uppercase;
+}
+
+.summaryBody {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+}
+
+.summaryItem {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	gap: 0.75rem;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+}
+
+.summaryLabel {
+	font-weight: 500;
+	color: var(--text-secondary);
+}
+
+.summaryValue {
+	font-family: var(--font-mono);
+	color: var(--text-primary);
+	text-align: right;
+	word-break: break-word;
+}
+
+.codeSection {
+	flex: 1;
+	min-height: 0;
+	display: flex;
+}
+
+.codeSurface {
+	width: 100%;
+	min-height: 18rem;
+	display: flex;
+	flex: 1;
+}
+.codeSurface :global(pre) {
+	width: 100%;
+	max-width: 100%;
+	min-height: inherit;
+	height: 100%;
+}
+.codeSurface :global(pre > div) {
+	min-height: inherit;
+	height: 100%;
+}
+
+.codeSurface div[class*='codeContainer'] {
+	max-width: unset !important;
+	width: 100% !important;
+}
+
+.codeSurface pre[class*='hljs'] {
+	max-width: unset !important;
+	width: 100% !important;
+}
+
+.codeSurface pre {
+	max-width: unset !important;
+	width: 100% !important;
+}
+
+.codeSurface [class*='codeContainer'] {
+	max-width: unset !important;
+	width: 100% !important;
+}

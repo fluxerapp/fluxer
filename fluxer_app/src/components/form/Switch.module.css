@@ -1,0 +1,123 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.container {
+	display: flex;
+	min-height: 44px;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	padding: 0.25rem 0;
+}
+
+.container.compact {
+	min-height: unset;
+	gap: 0.75rem;
+	padding: 0;
+}
+
+.labelContainer {
+	display: flex;
+	min-width: 0;
+	flex: 1 1 0%;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 0.25rem;
+}
+
+.label {
+	display: flex;
+	min-width: 0;
+	max-width: 100%;
+	align-items: center;
+	gap: 0.5rem;
+	font-weight: 500;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--text-primary);
+}
+
+.label.disabled {
+	cursor: not-allowed;
+}
+
+.labelContainer.clickable {
+	cursor: pointer;
+}
+
+.description {
+	padding-right: 1rem;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--text-primary-muted);
+}
+
+.switchRoot {
+	display: inline-flex;
+	align-items: center;
+	position: relative;
+	height: 1.5rem;
+	width: 2.75rem;
+	border-radius: 9999px;
+	background-color: rgb(107 114 128);
+	transition-property: color, background-color, border-color;
+	transition-duration: 300ms;
+	transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+	cursor: pointer;
+}
+
+.switchRoot.disabled {
+	cursor: not-allowed;
+	opacity: 0.5;
+}
+
+.switchRoot[data-state='checked'] {
+	background-color: var(--brand-primary);
+}
+
+.switchThumb {
+	position: relative;
+	display: flex;
+	height: 1.25rem;
+	width: 1.25rem;
+	align-items: center;
+	justify-content: center;
+	border-radius: 9999px;
+	background-color: white;
+	box-shadow:
+		0 4px 6px -1px rgb(0 0 0 / 0.1),
+		0 2px 4px -2px rgb(0 0 0 / 0.1);
+	transition-property: transform;
+	transition-duration: 300ms;
+	transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+	will-change: transform;
+	transform: translateX(2px);
+}
+
+.switchThumb[data-state='checked'] {
+	transform: translateX(22px);
+}
+
+.iconChecked {
+	color: var(--brand-primary);
+}
+
+.iconUnchecked {
+	color: rgb(107 114 128);
+}

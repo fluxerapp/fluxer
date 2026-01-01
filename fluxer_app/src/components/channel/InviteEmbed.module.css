@@ -1,0 +1,161 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.icon {
+	--guild-icon-size: 2.75rem;
+	height: var(--guild-icon-size);
+	width: var(--guild-icon-size);
+	border-radius: 9999px;
+	flex: 0 0 auto;
+}
+
+@media (min-width: 640px) {
+	.icon {
+		--guild-icon-size: 3rem;
+	}
+}
+
+.iconFallback {
+	--guild-icon-size: 2.75rem;
+	height: var(--guild-icon-size);
+	width: var(--guild-icon-size);
+	border-radius: 9999px;
+	background-color: var(--background-tertiary);
+}
+
+@media (min-width: 640px) {
+	.iconFallback {
+		--guild-icon-size: 3rem;
+	}
+}
+
+.titleRowWithIcon {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.375rem;
+	min-width: 0;
+	max-width: 100%;
+}
+
+.titleContainer {
+	display: grid;
+	align-items: center;
+	width: 100%;
+}
+
+.titleText {
+	font-size: 1rem;
+	line-height: 1.25;
+}
+
+.headerInvite {
+	display: grid;
+	grid-auto-flow: row;
+	justify-content: flex-start;
+	align-items: flex-start;
+	gap: 0.25rem;
+	min-height: unset;
+	width: 100%;
+	text-align: start;
+}
+.verifiedIcon {
+	height: 1.15rem;
+	width: 1.15rem;
+	flex: 0 0 auto;
+	color: var(--text-primary);
+}
+
+.stats {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(0, max-content));
+	gap: 0.5rem 0.6rem;
+	align-items: center;
+	min-height: 1rem;
+}
+
+.stat {
+	display: inline-flex;
+	align-items: center;
+	min-width: 0;
+}
+
+.statDot {
+	margin-right: 0.3rem;
+	height: 0.5rem;
+	width: 0.5rem;
+	border-radius: 9999px;
+	flex: 0 0 auto;
+}
+
+.statDotOnline {
+	background-color: var(--status-online);
+}
+
+.statDotMembers {
+	background-color: var(--text-tertiary-secondary);
+}
+
+.statText {
+	color: var(--text-tertiary);
+	font-size: clamp(0.68rem, 1.6vw, 0.82rem);
+	line-height: 1.2;
+	white-space: nowrap;
+}
+
+.packTitleRow {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.packBadge {
+	background: var(--background-modifier-accent);
+	color: var(--text-primary);
+	font-size: 0.75rem;
+	line-height: 1.25;
+	padding: 0.15rem 0.5rem;
+	border-radius: 0.75rem;
+}
+
+.packBody {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.packDescription {
+	color: var(--text-secondary);
+	font-size: 0.875rem;
+	line-height: 1.4;
+	margin: 0;
+}
+
+.packMeta {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+	font-size: 0.78rem;
+	color: var(--text-tertiary);
+}
+
+.packNote {
+	margin: 0;
+	font-size: 0.75rem;
+	color: var(--text-tertiary-secondary);
+}

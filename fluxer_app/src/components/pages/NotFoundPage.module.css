@@ -1,0 +1,72 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.container {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	min-height: 100vh;
+	padding: 32px;
+	text-align: center;
+	background-color: var(--background-primary);
+}
+
+.icon {
+	width: 96px;
+	height: 96px;
+	margin-bottom: 24px;
+	color: var(--brand-primary);
+}
+
+.content {
+	max-width: 500px;
+	margin-bottom: 32px;
+}
+
+.title {
+	font-size: 32px;
+	font-weight: 700;
+	margin: 0 0 16px 0;
+	color: var(--text-primary);
+}
+
+.description {
+	font-size: 16px;
+	line-height: 1.5;
+	margin: 0;
+	color: var(--text-primary);
+}
+
+.actions {
+	display: flex;
+	gap: 12px;
+}
+
+.actions a {
+	text-decoration: none;
+	color: inherit;
+	display: inline-block;
+	width: auto;
+}
+
+.actions a:hover,
+.actions a:focus {
+	text-decoration: none;
+}

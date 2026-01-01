@@ -1,0 +1,104 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.participantRow {
+	display: flex;
+	align-items: center;
+	gap: 0.375rem;
+	border-radius: 0.375rem;
+	padding: 0.25rem 0.5rem;
+	transition-property: color, background-color;
+	transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+	transition-duration: 150ms;
+	color: var(--text-primary-muted);
+	cursor: pointer;
+}
+
+.participantRowSpeaking {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-primary);
+}
+
+.participantRow:not(.participantRowDragging):hover {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-primary);
+}
+
+.participantRowDragging {
+	opacity: 0.5;
+}
+
+.participantRowCurrentConnection {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-primary);
+}
+
+.participantRowPopoutOpen {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-primary);
+}
+
+.deviceIcon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.deviceIconSpeaking {
+	color: rgb(34 197 94);
+}
+
+.deviceIconCurrent {
+	color: var(--text-primary);
+}
+
+.iconContainer {
+	height: 1.25rem;
+	width: 1.25rem;
+}
+
+.participantName {
+	flex: 1;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-size: 0.875rem;
+	font-weight: 500;
+	line-height: 1.25rem;
+	max-height: 1.25rem;
+}
+
+.participantNameSpeaking {
+	color: var(--text-primary);
+}
+
+.participantNameCurrent {
+	color: var(--text-primary);
+}
+
+.iconsContainer {
+	margin-left: auto;
+	display: flex;
+	align-items: center;
+	gap: 0.25rem;
+}
+
+.flexShrinkZero {
+	flex-shrink: 0;
+}

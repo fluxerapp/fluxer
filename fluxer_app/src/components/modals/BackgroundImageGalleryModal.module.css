@@ -1,0 +1,378 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.selectionSection {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+.dragOverlay {
+	pointer-events: none;
+	position: absolute;
+	inset: 0;
+	z-index: 50;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 8px;
+	border: 2px dashed var(--brand-primary);
+	background: color-mix(in srgb, var(--brand-primary) 10%, transparent);
+}
+
+.dragContent {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 8px;
+}
+
+.dragIcon {
+	color: var(--brand-primary);
+}
+
+.dragText {
+	font-weight: 500;
+	font-size: 18px;
+	color: var(--brand-primary);
+}
+
+.freeUserContainer {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.customBackgroundWrapper {
+	position: relative;
+}
+
+.actionButtons {
+	position: absolute;
+	top: 8px;
+	right: 8px;
+	display: flex;
+	gap: 8px;
+	opacity: 0;
+	transition: opacity 0.2s;
+}
+
+.customBackgroundWrapper:hover .actionButtons {
+	opacity: 1;
+}
+
+.actionButton {
+	border-radius: 50%;
+	background: rgba(0, 0, 0, 0.6);
+	padding: 8px;
+	transition: background-color 0.2s;
+	cursor: pointer;
+}
+
+.actionButton:hover {
+	background: rgba(0, 0, 0, 0.8);
+}
+
+.actionButtonIcon {
+	color: white;
+}
+
+.builtInGrid {
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	gap: 12px;
+}
+
+.uploadPlaceholder {
+	position: relative;
+	aspect-ratio: 16 / 9;
+	cursor: pointer;
+	overflow: hidden;
+	border-radius: 8px;
+	border: 2px dashed;
+	border-color: var(--background-modifier-accent);
+	transition:
+		opacity 0.2s,
+		border-color 0.2s;
+}
+
+.uploadPlaceholder:hover {
+	opacity: 0.75;
+}
+
+.uploadPlaceholderContent {
+	display: flex;
+	height: 100%;
+	width: 100%;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 12px;
+	background: var(--background-secondary);
+}
+
+.uploadIcon {
+	color: var(--text-primary-muted);
+}
+
+.uploadTextContainer {
+	text-align: center;
+}
+
+.uploadTitle {
+	font-weight: 500;
+	font-size: 14px;
+	color: var(--text-primary);
+}
+
+.uploadHint {
+	font-size: 12px;
+	color: var(--text-primary-muted);
+}
+
+.premiumGrid {
+	display: grid;
+	grid-template-columns: repeat(1, 1fr);
+	gap: 12px;
+}
+
+@media (min-width: 640px) {
+	.premiumGrid {
+		grid-template-columns: repeat(2, 1fr);
+	}
+}
+
+@media (min-width: 1024px) {
+	.premiumGrid {
+		grid-template-columns: repeat(3, 1fr);
+	}
+}
+
+.backgroundItem {
+	position: relative;
+	aspect-ratio: 16 / 9;
+	cursor: pointer;
+	overflow: hidden;
+	border-radius: 8px;
+	border: 2px solid;
+	transition:
+		opacity 0.2s,
+		border-color 0.2s;
+}
+
+.backgroundItem:hover {
+	opacity: 0.75;
+}
+
+.backgroundItemContent {
+	display: flex;
+	height: 100%;
+	width: 100%;
+	align-items: center;
+	justify-content: center;
+	background: var(--background-secondary);
+}
+
+.backgroundItemInner {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 8px;
+}
+
+.backgroundItemIcon {
+	color: var(--text-primary-muted);
+}
+
+.backgroundItemText {
+	text-align: center;
+}
+
+.backgroundItemName {
+	font-weight: 500;
+	font-size: 14px;
+	color: var(--text-primary);
+}
+
+.backgroundItemDesc {
+	font-size: 12px;
+	color: var(--text-primary-muted);
+}
+
+.loadingContainer {
+	display: flex;
+	height: 100%;
+	width: 100%;
+	align-items: center;
+	justify-content: center;
+	background: var(--background-secondary);
+}
+
+.spinner {
+	height: 32px;
+	width: 32px;
+	animation: spin 1s linear infinite;
+	border-radius: 50%;
+	border: 2px solid var(--background-modifier-accent);
+	border-top-color: var(--brand-primary);
+}
+
+@keyframes spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+.errorContainer {
+	display: flex;
+	height: 100%;
+	width: 100%;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	background: var(--background-secondary);
+	padding: 16px;
+}
+
+.errorIcon {
+	color: var(--status-danger);
+}
+
+.errorText {
+	text-align: center;
+	font-size: 12px;
+	color: var(--text-primary-muted);
+}
+
+.errorButton {
+	border-radius: 4px;
+	background: var(--background-modifier-accent);
+	padding: 4px 8px;
+	font-size: 12px;
+	color: var(--text-primary);
+	cursor: pointer;
+}
+
+.errorButton:hover {
+	background: var(--background-modifier-hover);
+}
+
+.backgroundImage {
+	height: 100%;
+	width: 100%;
+	object-fit: cover;
+}
+
+.imageOverlay {
+	position: absolute;
+	inset: 0;
+	background: rgba(0, 0, 0, 0);
+	transition: background-color 0.2s;
+}
+
+.backgroundItem:hover .imageOverlay {
+	background: rgba(0, 0, 0, 0.2);
+}
+
+.deleteButton {
+	position: absolute;
+	top: 8px;
+	right: 8px;
+	border-radius: 50%;
+	background: rgba(0, 0, 0, 0.6);
+	padding: 8px;
+	opacity: 0;
+	transition:
+		opacity 0.2s,
+		background-color 0.2s;
+	cursor: pointer;
+}
+
+.backgroundItem:hover .deleteButton {
+	opacity: 1;
+}
+
+.deleteButton:hover {
+	background: rgba(0, 0, 0, 0.8);
+}
+
+.deleteButtonIcon {
+	color: white;
+}
+
+.selectedBadge {
+	position: absolute;
+	top: 8px;
+	left: 8px;
+	border-radius: 50%;
+	background: var(--brand-primary);
+	padding: 6px;
+}
+
+.selectedIcon {
+	color: white;
+}
+
+.fileInput {
+	display: none;
+}
+
+.statsText {
+	text-align: center;
+	font-size: 14px;
+	color: var(--text-primary-muted);
+}
+
+.infoText {
+	text-align: center;
+	font-size: 12px;
+	color: var(--text-primary-muted);
+}
+
+.premiumUpsell {
+	border-radius: 8px;
+	border: 1px solid var(--background-modifier-accent);
+	background: var(--background-secondary);
+	padding: 16px;
+}
+
+.premiumHeader {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-bottom: 8px;
+}
+
+.premiumIcon {
+	flex-shrink: 0;
+}
+
+.premiumTitle {
+	font-weight: 500;
+	font-size: 14px;
+	color: var(--text-primary);
+}
+
+.premiumDesc {
+	margin-bottom: 12px;
+	font-size: 14px;
+	color: var(--text-primary-muted);
+}

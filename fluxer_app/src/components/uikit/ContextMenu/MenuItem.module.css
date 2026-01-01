@@ -1,0 +1,192 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.menuItem {
+	display: grid;
+	grid-template-columns: 18px 1fr auto;
+	align-items: center;
+	gap: 12px;
+	padding: 6px 8px;
+	margin: 0;
+	border-radius: 3px;
+	color: var(--text-primary);
+	font-size: 14px;
+	font-weight: 500;
+	line-height: 18px;
+	cursor: pointer;
+	outline: none;
+	transition: none;
+	box-sizing: border-box;
+	min-height: 32px;
+}
+
+.menuItem:has(.shortcut) {
+	padding-right: 0;
+}
+
+.menuItem[data-highlighted]:not([data-disabled]),
+.menuItem:hover:not([data-disabled]):not(.disabled) {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-primary);
+}
+
+.menuItem.danger {
+	color: var(--status-danger);
+}
+
+.menuItem.danger:is(
+		:hover,
+		:focus-visible,
+		[data-highlighted],
+		[data-hovered],
+		[data-focused],
+		[data-focus-visible],
+		[data-selected],
+		[data-open]
+	):not([data-disabled]):not(.disabled) {
+	background-color: var(--button-danger-fill);
+	color: var(--button-danger-text);
+}
+
+.menuItem[data-disabled],
+.menuItem.disabled {
+	color: var(--interactive-muted);
+	cursor: not-allowed;
+}
+
+.icon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 18px;
+	height: 18px;
+	flex-shrink: 0;
+	grid-column: 1;
+}
+
+.icon > svg {
+	width: 16px;
+	height: 16px;
+	display: block;
+	flex-shrink: 0;
+}
+
+.labelContainer {
+	display: flex;
+	min-width: 0;
+	flex: 1;
+	flex-direction: column;
+}
+
+.label {
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	grid-column: 2;
+	display: flex;
+	align-items: center;
+	min-height: 18px;
+}
+
+.hint {
+	margin-left: 8px;
+	color: var(--text-tertiary-muted);
+	font-size: 12px;
+	font-weight: 400;
+	flex-shrink: 0;
+}
+
+.subtext {
+	color: var(--text-tertiary-muted);
+	font-size: 12px;
+	font-weight: 400;
+	line-height: 16px;
+	margin-top: 2px;
+}
+
+.shortcut {
+	color: var(--text-tertiary-muted);
+	font-size: 12px;
+	font-weight: 500;
+	font-family: var(--font-mono);
+	justify-self: end;
+	white-space: nowrap;
+	margin-left: auto;
+	padding-left: 24px;
+}
+
+.menuItem.danger:is(
+		:hover,
+		:focus-visible,
+		[data-highlighted],
+		[data-hovered],
+		[data-focused],
+		[data-focus-visible],
+		[data-selected],
+		[data-open]
+	):not([data-disabled]):not(.disabled)
+	.shortcut {
+	color: var(--button-danger-text);
+}
+
+.sliderItem {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 6px;
+	padding: 8px 8px;
+	margin: 0;
+	border-radius: 3px;
+	color: var(--text-primary);
+	font-size: 14px;
+	font-weight: 500;
+	line-height: 18px;
+	cursor: default;
+	outline: none;
+	box-sizing: border-box;
+}
+
+.sliderItem.disabled {
+	color: var(--interactive-muted);
+	cursor: not-allowed;
+	opacity: 0.5;
+}
+
+.sliderHeader {
+	display: flex;
+	width: 100%;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.sliderLabel {
+	font-size: 14px;
+	font-weight: 500;
+	color: currentColor;
+}
+
+.sliderValue {
+	font-size: 12px;
+	font-weight: 400;
+	color: var(--text-tertiary-muted);
+}
+
+.sliderContainer {
+	width: 100%;
+}

@@ -1,0 +1,235 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.container {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+}
+
+.header {
+	display: flex;
+	flex-direction: column;
+}
+
+.title {
+	margin-bottom: 0.5rem;
+	font-weight: 600;
+	font-size: 1.25rem;
+	line-height: 1.75rem;
+}
+
+.subtitle {
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--text-primary-muted);
+}
+
+.controls {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.75rem;
+}
+
+.searchInput {
+	flex: 1 1 240px;
+	min-width: 0;
+}
+
+.hiddenInput {
+	display: none;
+}
+
+.spinnerContainer {
+	display: flex;
+	justify-content: center;
+	padding: 2rem 0;
+}
+
+.notice {
+	border-radius: 0.375rem;
+	border: 1px solid var(--background-header-secondary);
+	background-color: var(--background-tertiary);
+	padding: 1.5rem;
+}
+
+.noticeText {
+	text-align: center;
+	color: var(--text-primary-muted);
+}
+
+.emojiSection {
+	display: flex;
+	flex-direction: column;
+}
+
+.emojiSections {
+	display: flex;
+	flex-direction: column;
+	gap: 1.5rem;
+}
+
+.emojiSectionsGrid {
+	gap: 1.25rem;
+}
+
+.emojiSectionTitle {
+	margin-bottom: 0.5rem;
+	font-weight: 600;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+}
+
+.emojiItemsList {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.emojiGrid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+	gap: 0.75rem;
+}
+
+.errorContainer {
+	display: flex;
+	max-height: 24rem;
+	flex-direction: column;
+	gap: 0.5rem;
+	overflow-y: auto;
+}
+
+.errorIntro {
+	margin-bottom: 0.5rem;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+}
+
+.errorItem {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	border-radius: 0.375rem;
+	border: 1px solid var(--background-modifier-accent);
+	background-color: var(--background-modifier-accent);
+	padding: 0.75rem;
+}
+
+.errorImage {
+	height: 3rem;
+	width: 3rem;
+	border-radius: 0.25rem;
+	object-fit: contain;
+}
+
+.errorDetails {
+	flex: 1;
+}
+
+.errorName {
+	font-weight: 600;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+}
+
+.errorMessage {
+	font-size: 0.75rem;
+	line-height: 1rem;
+	color: var(--text-primary-muted);
+}
+
+.modalErrorContainer {
+	display: flex;
+	max-height: 24rem;
+	flex-direction: column;
+	gap: 0.5rem;
+	overflow-y: auto;
+	margin-top: 1rem;
+}
+
+.modalErrorIntro {
+	margin-bottom: 0.5rem;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+}
+
+.modalErrorItem {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	border-radius: 0.375rem;
+	border: 1px solid var(--background-modifier-accent);
+	background-color: var(--background-modifier-accent);
+	padding: 0.75rem;
+}
+
+.modalErrorImage {
+	height: 3rem;
+	width: 3rem;
+	border-radius: 0.25rem;
+	object-fit: contain;
+}
+
+.modalErrorDetails {
+	flex: 1;
+}
+
+.modalErrorName {
+	font-weight: 600;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+}
+
+.modalErrorMessage {
+	font-size: 0.75rem;
+	line-height: 1rem;
+	color: var(--text-primary-muted);
+}
+
+.layoutControls {
+	display: inline-flex;
+	align-items: stretch;
+	border: 1px solid var(--background-header-secondary);
+	background-color: var(--background-secondary);
+	border-radius: 0.5rem;
+	overflow: hidden;
+}
+
+.layoutToggleButton {
+	border: none;
+	background: transparent;
+	padding: 0.45rem 0.75rem;
+	color: var(--text-primary-muted);
+	font-weight: 600;
+	cursor: pointer;
+	transition:
+		background-color 0.12s ease-in-out,
+		color 0.12s ease-in-out;
+}
+
+.layoutToggleButton:not(:last-child) {
+	border-right: 1px solid var(--background-header-secondary);
+}
+
+.layoutToggleButtonActive {
+	background-color: var(--background-tertiary);
+	color: var(--text-primary);
+}

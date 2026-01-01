@@ -1,0 +1,105 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.container,
+.unreadContainer {
+	position: relative;
+	display: flex;
+	align-items: center;
+	width: 100%;
+	contain: layout style;
+}
+
+.container {
+	padding: 0 20px;
+	height: 20px;
+	min-height: 20px;
+	max-height: 20px;
+}
+
+.unreadContainer {
+	--divider-size: var(--message-group-spacing, 16px);
+	padding: 0 var(--divider-size);
+	height: var(--divider-size);
+	min-height: var(--divider-size);
+	max-height: var(--divider-size);
+}
+
+.unreadDate {
+	--divider-size: 20px;
+	padding: 0 20px;
+}
+
+.line {
+	flex: 1;
+	height: 2px;
+	background-color: var(--background-modifier-accent);
+	opacity: 0.3;
+}
+
+.text {
+	padding: 0 12px;
+	font-size: 12px;
+	font-weight: 500;
+	color: var(--text-tertiary);
+	background-color: var(--background-secondary-lighter);
+	position: relative;
+	z-index: 1;
+	white-space: nowrap;
+	flex-shrink: 0;
+}
+
+.unreadLine {
+	flex: 1;
+	height: 2px;
+	background-color: var(--status-danger);
+	opacity: 0.4;
+}
+
+.dateWithUnreadText {
+	position: absolute;
+	left: 50%;
+	transform: translateX(-50%);
+	padding: 0 12px;
+	font-size: 12px;
+	font-weight: 500;
+	color: var(--status-danger);
+	background-color: var(--background-secondary-lighter);
+	z-index: 2;
+	white-space: nowrap;
+}
+
+.unreadBadge {
+	position: relative;
+	background-color: var(--status-danger);
+	color: white;
+	font-size: 10px;
+	font-weight: 700;
+	padding: 8px;
+	border-radius: 3px;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+	white-space: nowrap;
+	opacity: 0.9;
+	flex-shrink: 0;
+	height: var(--divider-size);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}

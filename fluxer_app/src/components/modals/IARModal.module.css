@@ -1,0 +1,87 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.container {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+.description {
+	font-size: 14px;
+	color: var(--text-tertiary);
+}
+
+.preview {
+	pointer-events: none;
+	position: relative;
+	overflow: hidden;
+	border-radius: 6px;
+	border: 1px solid var(--background-header-secondary);
+	background-color: var(--background-secondary);
+	padding: 8px 0;
+	margin-bottom: 16px;
+}
+
+.userPreview {
+	border-radius: 6px;
+	border: 1px solid var(--background-header-secondary);
+	background-color: var(--background-secondary);
+	padding: 12px;
+	margin-bottom: 16px;
+}
+
+.userInfo {
+	display: flex;
+	align-items: baseline;
+	gap: 4px;
+}
+
+.username {
+	font-weight: 600;
+	color: var(--text-primary);
+}
+
+.discriminator {
+	color: var(--text-tertiary);
+}
+
+.guildPreview {
+	border-radius: 6px;
+	border: 1px solid var(--background-header-secondary);
+	background-color: var(--background-secondary);
+	padding: 12px;
+	margin-bottom: 16px;
+}
+
+.guildName {
+	font-weight: 600;
+	color: var(--text-primary);
+}
+
+.categorySection {
+	margin-bottom: 16px;
+}
+
+.categoryLabel {
+	margin-bottom: 8px;
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--text-tertiary);
+}

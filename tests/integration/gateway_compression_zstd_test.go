@@ -1,0 +1,48 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+package integration
+
+import (
+	"encoding/json"
+	"testing"
+	"time"
+)
+
+func TestGatewayCompressionZstd(t *testing.T) {
+	client := newTestClient(t)
+	account := createTestAccount(t, client)
+
+	gc := newZstdGatewayClient(t, client, account.Token)
+	t.Cleanup(gc.Close)
+
+	gc.WaitForEvent(t, "READY", 15*time.Second, nil)
+
+	guild := createGuild(t, client, account.Token, "zstd-compression-test")
+
+	gc.WaitForEvent(t, "GUILD_CREATE", 30*time.Second, func(raw json.RawMessage) bool {
+		var payload struct {
+			ID string `json:"id"`
+		}
+		if err := json.Unmarshal(raw, &payload); err != nil {
+			return false
+		}
+		return payload.ID == guild.ID
+	})
+}

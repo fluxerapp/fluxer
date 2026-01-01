@@ -1,0 +1,70 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.errorFallbackContainer {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: var(--spacing-8);
+	height: 100vh;
+	padding: var(--spacing-4);
+	text-align: center;
+}
+
+.errorFallbackIcon {
+	height: 6rem;
+	width: 6rem;
+}
+
+.errorFallbackContent {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--spacing-3);
+	text-align: center;
+}
+
+.errorFallbackTitle {
+	font-weight: 600;
+	font-size: 1.875rem;
+	line-height: 2.25rem;
+}
+
+.errorFallbackDescription {
+	max-width: 21rem;
+	color: var(--text-primary-muted);
+}
+
+.errorFallbackActions {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-3);
+}
+
+.errorFallbackCopyAction {
+	display: flex;
+	justify-content: center;
+}
+
+@media (min-width: 768px) {
+	.errorFallbackActions {
+		flex-direction: row;
+	}
+}

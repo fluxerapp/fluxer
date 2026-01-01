@@ -1,0 +1,254 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.emptyState {
+	display: flex;
+	height: 100%;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	padding: 2rem;
+	text-align: center;
+}
+
+.emptyStateIcon {
+	margin-bottom: 1rem;
+	height: 4rem;
+	width: 4rem;
+	color: var(--text-tertiary);
+}
+
+.emptyStateTitle {
+	margin-bottom: 0.5rem;
+	font-weight: 600;
+	font-size: 1.25rem;
+	line-height: 1.75rem;
+	color: var(--text-primary);
+}
+
+.emptyStateDescription {
+	max-width: 28rem;
+	color: var(--text-tertiary);
+}
+
+.voiceCallContainer {
+	position: relative;
+	height: 100%;
+	width: 100%;
+}
+
+.minimizeButton {
+	position: absolute;
+	top: 1rem;
+	left: 1rem;
+	z-index: 50;
+	display: flex;
+	height: 2.5rem;
+	width: 2.5rem;
+	align-items: center;
+	justify-content: center;
+	border-radius: var(--radius-full);
+	background-color: rgb(0 0 0 / 0.5);
+	color: white;
+	backdrop-filter: blur(8px);
+	transition-property: color, background-color;
+	transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+	transition-duration: 150ms;
+	cursor: pointer;
+}
+
+.minimizeButton:hover {
+	background-color: rgb(0 0 0 / 0.7);
+}
+
+.minimizeButtonIcon {
+	height: 1.25rem;
+	width: 1.25rem;
+}
+
+.callParticipantsRow {
+	display: flex;
+	align-items: flex-end;
+	justify-content: center;
+	gap: 0.5rem;
+	padding: 1.5rem 1rem 0.75rem;
+	min-height: 140px;
+	background-color: #000;
+}
+
+.callParticipant {
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 4px;
+	border: none;
+	background: transparent;
+	cursor: context-menu;
+}
+
+.callParticipantAvatar {
+	position: relative;
+	z-index: 1;
+	border-radius: 9999px;
+}
+
+.callParticipantRinging .callParticipantAvatar {
+	filter: grayscale(0.5) brightness(0.7);
+}
+
+.callParticipantRipple {
+	position: absolute;
+	inset: 0;
+	border-radius: 50%;
+	opacity: 0;
+	background-color: rgba(255, 255, 255, 0.9);
+	animation: callParticipantPulse 2.429s infinite ease-out;
+}
+
+.callParticipantRipple0 {
+	animation-delay: 20ms;
+}
+
+.callParticipantRipple1 {
+	animation-delay: 145ms;
+}
+
+.callParticipantRipple2 {
+	animation-delay: 270ms;
+}
+
+@keyframes callParticipantPulse {
+	0% {
+		opacity: 0.85;
+		transform: scale3d(0.7, 0.7, 1);
+	}
+	11.28% {
+		opacity: 0;
+		transform: scale3d(1.1, 1.1, 1);
+	}
+	12% {
+		transform: scale3d(0.7, 0.7, 1);
+	}
+	13% {
+		opacity: 0.85;
+	}
+	28.448% {
+		opacity: 0.85;
+		transform: scale3d(0.7, 0.7, 1);
+	}
+	39.728% {
+		opacity: 0;
+		transform: scale3d(1.1, 1.1, 1);
+	}
+	40% {
+		transform: scale3d(0.7, 0.7, 1);
+	}
+	41% {
+		opacity: 0.85;
+	}
+	to {
+		opacity: 0.85;
+		transform: scale3d(0.7, 0.7, 1);
+	}
+}
+
+.callBanner {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	padding: 0 1rem 1rem;
+	background-color: #000;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.callControls {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	gap: 0.75rem;
+	flex-wrap: wrap;
+}
+
+.callBannerMobile {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	padding: 0 1rem 1rem;
+	background-color: #000;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.callBannerMobileLabel {
+	font-weight: 600;
+	color: var(--text-primary);
+	text-align: center;
+}
+
+.callControlsMobile {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.callSheetContent {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+	padding: 0 1rem 1rem;
+}
+
+.callSheetStatus {
+	font-weight: 600;
+	color: var(--text-primary);
+	text-align: center;
+}
+
+.callSheetControls {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.compactVoiceCallView {
+	background-color: #000;
+	width: 100%;
+	border-radius: var(--radius-lg);
+	overflow: hidden;
+	min-height: 0;
+}
+
+.channelContainer {
+	display: grid;
+	grid-template-rows: auto 1fr;
+	height: 100%;
+	min-height: 0;
+	width: 100%;
+	min-width: 0;
+	background-color: var(--background-secondary-lighter);
+}
+
+.channelLayout {
+	display: grid;
+	grid-template-columns: 1fr auto;
+	height: 100%;
+	min-height: 0;
+	width: 100%;
+	min-width: 0;
+}

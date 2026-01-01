@@ -1,0 +1,95 @@
+services:
+  cassandra:
+    image: ${CASSANDRA_IMAGE:-cassandra:5.0}
+    hostname: cassandra
+    env_file:
+      - .env
+    environment:
+      - CASSANDRA_CLUSTER_NAME=fluxer-cluster
+      - CASSANDRA_DC=dc1
+      - CASSANDRA_RACK=rack1
+      - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
+      - CASSANDRA_SEEDS=cassandra
+      - MAX_HEAP_SIZE=32G
+      - CASSANDRA_BROADCAST_ADDRESS=cassandra
+      - CASSANDRA_LISTEN_ADDRESS=auto
+      - CASSANDRA_RPC_ADDRESS=0.0.0.0
+      - CASSANDRA_AUTHENTICATOR=PasswordAuthenticator
+      - CASSANDRA_AUTHORIZER=CassandraAuthorizer
+    volumes:
+      - cassandra_data:/var/lib/cassandra
+      - ./conf/cassandra.yaml:/etc/cassandra/cassandra.yaml
+      - ./conf/jvm-server.options:/etc/cassandra/jvm-server.options
+    networks:
+      - fluxer-shared
+    ports:
+      - target: 9042
+        published: 9042
+        protocol: tcp
+        mode: host
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 30s
+        max_attempts: 3
+      resources:
+        limits:
+          cpus: '6'
+          memory: 64G
+        reservations:
+          cpus: '4'
+          memory: 48G
+    healthcheck:
+      test: ['CMD-SHELL', 'nodetool status']
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 100000
+        hard: 100000
+    cap_add:
+      - IPC_LOCK
+
+  cassandra-backup:
+    image: ${CASSANDRA_BACKUP_IMAGE:-fluxer-cassandra-backup:latest}
+    environment:
+      - AGE_PUBLIC_KEY
+      - B2_KEY_ID
+      - B2_APPLICATION_KEY
+      - B2_BUCKET_NAME
+      - B2_ENDPOINT
+      - B2_REGION
+      - CASSANDRA_PASSWORD
+    volumes:
+      - cassandra_data:/var/lib/cassandra:ro
+    networks:
+      - fluxer-shared
+    depends_on:
+      - cassandra
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 30s
+        max_attempts: 3
+      resources:
+        limits:
+          cpus: '1'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
+
+networks:
+  fluxer-shared:
+    external: true
+
+volumes:
+  cassandra_data:
+    driver: local

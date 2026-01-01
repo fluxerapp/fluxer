@@ -1,0 +1,169 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.container {
+	display: flex;
+	flex-direction: column;
+	background-color: var(--background-secondary);
+	min-width: 0;
+}
+
+.containerNoHeader {
+	padding-top: 0;
+}
+
+.header {
+	display: flex;
+	height: 56px;
+	align-items: center;
+	justify-content: space-between;
+	border-bottom: 1px solid var(--background-modifier-accent);
+	padding-left: 1rem;
+	padding-right: 1rem;
+}
+
+.headerContent {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	min-width: 0;
+}
+
+.statusContainer {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	min-width: 0;
+}
+
+.statusDot {
+	height: 8px;
+	width: 8px;
+	border-radius: 9999px;
+	background-color: rgb(34 197 94);
+	animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+	flex-shrink: 0;
+}
+
+.statusContainer[data-state='Connecting'] .statusDot,
+.statusContainer[data-state='Reconnecting'] .statusDot {
+	background-color: rgb(245 158 11);
+}
+.statusContainer[data-state='Disconnected'] .statusDot {
+	background-color: rgb(239 68 68);
+}
+
+@keyframes pulse {
+	0%,
+	100% {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0.5;
+	}
+}
+
+.statusText {
+	font-weight: 500;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--text-primary);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.controls {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.expandButton {
+	display: flex;
+	height: 32px;
+	width: 32px;
+	align-items: center;
+	justify-content: center;
+	border-radius: 6px;
+	background-color: var(--background-modifier-hover);
+	color: var(--text-primary);
+	transition: background-color 150ms ease;
+	cursor: pointer;
+}
+
+.expandButton:hover {
+	background-color: var(--background-modifier-selected);
+}
+
+.videoSection {
+	padding: 0.5rem;
+	overflow: hidden;
+}
+
+.videoContainer {
+	display: flex;
+	gap: 0.5rem;
+	overflow-x: auto;
+	padding-bottom: 0.25rem;
+	scrollbar-width: thin;
+
+	scroll-snap-type: x mandatory;
+	-webkit-overflow-scrolling: touch;
+}
+
+.videoTile {
+	height: 128px;
+	width: 192px;
+	flex: 0 0 auto;
+	overflow: hidden;
+	border-radius: 10px;
+	background-color: var(--background-tertiary);
+
+	scroll-snap-align: start;
+}
+
+.moreVideos {
+	height: 128px;
+	width: 192px;
+	flex: 0 0 auto;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 10px;
+	background-color: var(--background-tertiary);
+
+	scroll-snap-align: start;
+}
+
+.moreVideosText {
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--text-secondary);
+}
+
+.controlBarSection {
+	padding: 0.5rem;
+	background-color: #000;
+}
+
+.iconSmall {
+	height: 16px;
+	width: 16px;
+}

@@ -1,0 +1,82 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.description {
+	margin-bottom: 1rem;
+	color: var(--text-secondary);
+	font-size: 0.95rem;
+}
+
+.grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+	gap: 0.75rem;
+	margin-bottom: 0.75rem;
+}
+
+.card {
+	width: 100%;
+	border: 1px solid var(--border-color);
+	border-radius: 0.75rem;
+	background: var(--surface-card);
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	text-align: left;
+	cursor: pointer;
+}
+
+.thumbnail {
+	width: 100%;
+	height: 92px;
+	object-fit: cover;
+	border-top-left-radius: 0.75rem;
+	border-top-right-radius: 0.75rem;
+	border-bottom: 1px solid var(--border-color);
+}
+
+.caption {
+	padding: 0.5rem 0.75rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+	min-height: 2.5rem;
+}
+
+.name {
+	display: block;
+	font-weight: 600;
+	font-size: 0.85rem;
+	color: var(--text-primary);
+	line-height: 1.2;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.meta {
+	font-size: 0.75rem;
+	color: var(--text-secondary);
+}
+
+.audioHint {
+	margin-top: 0.5rem;
+	font-size: 0.85rem;
+	color: var(--text-secondary);
+}

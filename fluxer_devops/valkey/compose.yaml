@@ -1,0 +1,42 @@
+services:
+  valkey:
+    image: valkey/valkey:8-alpine
+    hostname: valkey
+    env_file:
+      - /etc/fluxer/valkey.env
+    entrypoint: /entrypoint.sh
+    volumes:
+      - valkey_data:/data
+      - ./conf/valkey.conf.template:/etc/valkey/valkey.conf.template:ro
+      - ./entrypoint.sh:/entrypoint.sh:ro
+    networks:
+      - fluxer-shared
+    ports:
+      - '6379:6379'
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 3
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+        reservations:
+          cpus: '1'
+          memory: 2G
+    healthcheck:
+      test: ['CMD', 'valkey-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+networks:
+  fluxer-shared:
+    external: true
+
+volumes:
+  valkey_data:
+    driver: local

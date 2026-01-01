@@ -1,0 +1,11 @@
+{
+	"$schema": "https://unpkg.com/knip@latest/schema.json",
+	"entry": ["src/worker/tasks/*.ts"],
+	"ignoreDependencies": ["pino-pretty"],
+	"ignoreExportsUsedInFile": true,
+	"ignore": ["src/errors/*.ts", "src/models/PrivateChannel.ts", "src/infrastructure/IAssetDeletionQueue.ts"],
+	"rules": {
+		"exports": "warn",
+		"types": "warn"
+	}
+}

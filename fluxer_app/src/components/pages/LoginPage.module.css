@@ -1,0 +1,356 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.title {
+	margin-bottom: 2rem;
+	text-align: center;
+	font-size: 1.25rem;
+	font-weight: 600;
+	letter-spacing: 0.025em;
+	color: var(--text-primary);
+}
+
+.loginNotice {
+	margin: 0 0 1rem;
+	padding: 0.75rem 1rem;
+	border-radius: 10px;
+	background: var(--background-secondary);
+	border: 1px solid var(--background-modifier-accent);
+	font-size: 0.875rem;
+	color: var(--text-primary);
+	text-align: center;
+}
+
+.form {
+	display: flex;
+	flex-direction: column;
+	gap: 1.5rem;
+}
+
+.formLinks {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+}
+
+.link {
+	font-size: 0.875rem;
+	color: var(--text-tertiary);
+	text-decoration: none;
+	cursor: pointer;
+}
+
+.link:hover {
+	color: var(--text-primary);
+	text-decoration: underline;
+}
+
+.instanceToggle {
+	display: block;
+	width: fit-content;
+	padding: 0;
+	border: none;
+	background: none;
+	font-size: 0.75rem;
+	color: var(--text-secondary);
+	text-align: left;
+	cursor: pointer;
+}
+
+.instanceToggle:hover {
+	color: var(--text-primary);
+	text-decoration: underline;
+}
+
+.instanceToggle:disabled {
+	color: var(--text-tertiary);
+	cursor: not-allowed;
+	text-decoration: none;
+}
+
+.passkeyActions {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.divider {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+	margin-top: 1.5rem;
+	margin-bottom: 1.5rem;
+}
+
+.dividerLine {
+	flex: 1;
+	border-top: 1px solid var(--background-modifier-accent);
+}
+
+.dividerText {
+	font-size: 0.875rem;
+	color: var(--text-tertiary);
+}
+
+.footer {
+	margin-top: 1.25rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}
+
+.footerText {
+	text-align: left;
+}
+
+.footerLabel {
+	font-size: 0.875rem;
+	color: var(--text-tertiary);
+}
+
+.footerLink {
+	font-size: 0.875rem;
+	color: var(--text-link);
+	text-decoration: none;
+	cursor: pointer;
+}
+
+.footerLink:hover {
+	color: var(--text-link);
+	text-decoration: underline;
+}
+
+.mfaDescription {
+	margin-bottom: 2rem;
+	text-align: center;
+	font-size: 0.875rem;
+	color: var(--text-tertiary);
+}
+
+.mfaSmsSection {
+	margin-bottom: 1.5rem;
+}
+
+.mfaWebAuthnSection {
+	margin-bottom: 1rem;
+}
+
+.forgotLink {
+	margin-top: -0.5rem;
+}
+
+.accountSection {
+	margin-top: 2rem;
+	padding-top: 1.5rem;
+	border-top: 1px solid var(--background-modifier-accent);
+}
+
+.accountSectionHeader {
+	margin-bottom: 1rem;
+}
+
+.accountSectionTitle {
+	font-size: 0.875rem;
+	font-weight: 600;
+	color: var(--text-primary);
+	margin: 0 0 0.25rem 0;
+}
+
+.accountSectionSubtitle {
+	font-size: 0.8125rem;
+	color: var(--text-tertiary);
+	margin: 0;
+}
+
+.ipAuthContainer {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 1rem;
+	padding: 2rem 1.5rem;
+	text-align: center;
+}
+
+.ipAuthIcon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 72px;
+	height: 72px;
+	border-radius: 50%;
+	background: var(--background-modifier-accent);
+	color: var(--text-primary);
+}
+
+.ipAuthActions {
+	display: flex;
+	gap: 0.75rem;
+	flex-wrap: wrap;
+	justify-content: center;
+}
+
+.accountList {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}
+
+.accountCard {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem;
+	padding: 0.75rem;
+	background-color: var(--background-secondary);
+	border-radius: 8px;
+}
+
+.accountDetails {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	min-width: 0;
+	flex: 1;
+}
+
+.accountInfo {
+	display: flex;
+	flex-direction: column;
+	gap: 0.125rem;
+	min-width: 0;
+}
+
+.accountName {
+	font-size: 0.875rem;
+	font-weight: 500;
+	color: var(--text-primary);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.accountEmail {
+	font-size: 0.75rem;
+	color: var(--text-secondary);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.accountMeta {
+	font-size: 0.6875rem;
+	color: var(--text-tertiary);
+}
+
+.accountServer {
+	font-size: 0.6875rem;
+	color: var(--text-tertiary);
+}
+
+.accountActions {
+	flex-shrink: 0;
+}
+
+.instanceNotice {
+	margin-top: 1rem;
+}
+
+.handoffSuccess {
+	text-align: center;
+}
+
+.handoffCodeSection {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 12px;
+	margin: 1.5rem 0;
+}
+
+.handoffCodeLabel {
+	font-size: 0.75rem;
+	font-weight: 600;
+	color: var(--text-tertiary);
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	margin: 0;
+}
+
+.handoffCodeDisplay {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 16px 24px;
+	background-color: var(--background-tertiary);
+	border: 2px solid var(--background-modifier-accent);
+	border-radius: 12px;
+}
+
+.handoffCodeChar {
+	font-family: var(--font-mono);
+	font-size: 2rem;
+	font-weight: 700;
+	color: var(--text-primary);
+	letter-spacing: 0.1em;
+}
+
+.handoffCodeSeparator {
+	font-family: var(--font-mono);
+	font-size: 2rem;
+	font-weight: 700;
+	color: var(--text-tertiary);
+	margin: 0 4px;
+}
+
+.handoffSpinner {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 12px;
+	padding: 1.5rem 0;
+}
+
+.handoffSpinnerIcon {
+	width: 24px;
+	height: 24px;
+	border: 3px solid var(--background-modifier-accent);
+	border-top-color: var(--brand-primary);
+	border-radius: 50%;
+	animation: handoffSpin 1s linear infinite;
+}
+
+@keyframes handoffSpin {
+	from {
+		transform: rotate(0deg);
+	}
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+.handoffError {
+	background-color: hsla(0, calc(100% * var(--saturation-factor)), 50%, 0.1);
+	border: 1px solid hsla(0, calc(100% * var(--saturation-factor)), 50%, 0.2);
+	border-radius: 8px;
+	padding: 12px;
+	font-size: 0.875rem;
+	color: var(--status-danger);
+	margin: 1rem 0;
+	text-align: center;
+}

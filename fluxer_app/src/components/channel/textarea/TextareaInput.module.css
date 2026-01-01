@@ -1,0 +1,319 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+:root {
+	--textarea-button-height: var(--user-area-content-height);
+	--textarea-button-icon-size: 26px;
+	--textarea-button-padding-x: 0;
+	--textarea-button-min-width: auto;
+
+	--textarea-button-compact-height: var(--user-area-content-height);
+	--textarea-button-compact-icon-size: 22px;
+
+	--textarea-container-padding-y: 0;
+	--textarea-container-padding-x: 0;
+	--textarea-min-height: var(--input-container-min-height);
+	--textarea-horizontal-padding: var(--spacing-4);
+	--textarea-content-offset: calc((var(--user-area-content-height) - var(--textarea-line-height)) / 2);
+	--textarea-upload-gap: var(--spacing-3);
+	--textarea-side-button-padding: 0.34375rem;
+
+	--textarea-line-height: 1.375rem;
+}
+
+.textareaContainer {
+	position: relative;
+	margin-top: 0.5rem;
+	background-color: var(--background-textarea);
+	border-radius: var(--radius-xl);
+}
+
+.textareaWrapper {
+	display: grid;
+	grid-template-columns: 1fr auto;
+	align-items: start;
+	position: relative;
+	min-height: var(--textarea-min-height);
+}
+
+.textareaContent {
+	grid-column: 1;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	padding: 16px;
+	min-height: var(--textarea-min-height);
+}
+
+.editingButtonContainer {
+	grid-column: 2;
+	display: flex;
+	align-items: stretch;
+	padding-right: 16px;
+	height: var(--textarea-min-height);
+}
+
+.textarea {
+	width: 100%;
+	resize: none;
+	overflow: visible;
+	white-space: pre-wrap;
+	word-break: break-word;
+	background-color: transparent;
+	color: var(--text-chat);
+	line-height: var(--textarea-line-height);
+	caret-color: var(--text-chat);
+	scrollbar-gutter: stable;
+	padding: 0;
+	margin: 0;
+	border: none;
+	outline: none;
+	font-family: inherit;
+	font-size: inherit;
+}
+
+.textarea:disabled {
+	pointer-events: none;
+}
+
+.textarea::placeholder {
+	color: var(--text-primary-muted);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.buttonRow {
+	display: flex;
+	align-items: center;
+	position: relative;
+	border-color: var(--background-modifier-accent);
+	padding: 0.5rem 1rem;
+	min-height: 44px;
+}
+
+.buttonRowTop {
+	composes: buttonRow;
+	border-bottom-width: 1px;
+}
+
+.buttonRowBottom {
+	composes: buttonRow;
+	border-top-width: 1px;
+}
+
+.buttonGroup {
+	display: flex;
+	align-items: center;
+	gap: 0.25rem;
+}
+
+.buttonRowCompact {
+	padding: 0 0.75rem;
+	min-height: 32px;
+	height: 32px;
+}
+
+.buttonRowCompact .buttonGroup {
+	gap: 0.125rem;
+}
+
+.buttonGroupLeft {
+	composes: buttonGroup;
+}
+
+.buttonGroupCenter {
+	composes: buttonGroup;
+	flex: 1;
+	margin: 0 0.5rem;
+	overflow: hidden;
+}
+
+.typingContainer {
+	min-width: 0;
+	flex-shrink: 1;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-size: 0.75rem;
+	font-weight: 600;
+	color: var(--text-chat);
+}
+
+.buttonGroupRight {
+	composes: buttonGroup;
+}
+
+.divider {
+	width: 1px;
+	height: 1.5rem;
+	background-color: var(--background-modifier-hover);
+	margin: 0 0.25rem;
+	align-self: center;
+}
+
+.textareaOuter {
+	padding-left: var(--textarea-horizontal-padding);
+	padding-right: var(--textarea-horizontal-padding);
+	box-sizing: border-box;
+	box-shadow: inset 0 1px 0 var(--user-area-divider-color);
+}
+
+.mainWrapperDense {
+	display: grid;
+	grid-template-columns: auto 1fr auto;
+	align-items: flex-start;
+	position: relative;
+	min-height: var(--textarea-min-height);
+	box-sizing: border-box;
+	padding: var(--user-area-padding-y) 0;
+	column-gap: var(--textarea-upload-gap);
+}
+
+.textareaFocusRing {
+	border-radius: var(--radius-xl);
+}
+
+.mainWrapperEditing {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--spacing-3);
+	padding: var(--spacing-2) var(--spacing-4);
+	background-color: var(--background-textarea);
+	border: 1px solid var(--background-modifier-accent);
+	border-radius: var(--radius-md);
+	transition: colors;
+	--scrollbar-track-bg: var(--background-textarea);
+}
+
+.mainWrapperEditing:focus-within {
+	border-color: var(--background-modifier-accent-focus);
+}
+
+.mainWrapperComfy {
+	display: flex;
+	flex-direction: column;
+	position: relative;
+}
+
+.uploadButtonColumn {
+	grid-column: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-height: var(--user-area-content-height);
+}
+
+.sideButtonPadding {
+	padding-inline: var(--textarea-side-button-padding);
+}
+
+.contentAreaDense {
+	grid-column: 2;
+	display: flex;
+	flex-direction: column;
+	min-height: var(--user-area-content-height);
+	min-width: 0;
+	padding-top: var(--textarea-content-offset);
+}
+
+.contentAreaEditing {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	padding-top: var(--textarea-content-offset);
+}
+
+.contentAreaDense > * {
+	flex: 0 0 auto;
+}
+
+.contentAreaComfy {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	padding: 16px;
+	min-height: var(--textarea-min-height);
+}
+
+.buttonContainerDense {
+	grid-column: 3;
+	display: flex;
+	align-items: flex-start;
+	gap: 10px;
+	min-height: var(--user-area-content-height);
+}
+
+.buttonContainerEditing {
+	display: flex;
+	align-items: flex-start;
+	justify-content: center;
+}
+
+.footerArea {
+	position: absolute;
+	bottom: 1px;
+	left: 1rem;
+	right: 1rem;
+	margin-left: 0.25rem;
+	display: flex;
+	align-items: center;
+	height: 1.5rem;
+	min-width: 0;
+	overflow: visible;
+}
+
+.footerText {
+	font-size: 0.875rem;
+	font-weight: 600;
+	line-height: 1.5rem;
+	color: var(--text-chat);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	min-width: 0;
+	flex-shrink: 1;
+}
+
+.footerAreaComfy {
+	composes: footerArea;
+	justify-content: flex-end;
+}
+
+.slowmodeSpacing {
+	margin: 0 0.5rem;
+}
+
+.layoutComfy .textareaWrapper,
+.layoutCompact .textareaWrapper {
+	padding-left: 1rem;
+	padding-right: 1rem;
+}
+
+.layoutDense .textareaWrapper,
+.layoutDefault .textareaWrapper {
+	padding-left: var(--textarea-container-padding-x);
+	padding-right: var(--textarea-container-padding-x);
+}
+
+.scroller {
+	max-height: 50svh;
+	width: 100%;
+}

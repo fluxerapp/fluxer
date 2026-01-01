@@ -1,0 +1,387 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+@import 'tailwindcss';
+@plugin '@tailwindcss/typography';
+
+@theme {
+	--font-sans: var(--font-bricolage);
+}
+
+:root {
+	--banner-height: 72px;
+}
+
+@media (min-width: 640px) {
+	:root {
+		--banner-height: 52px;
+	}
+}
+
+@media (min-width: 768px) {
+	:root {
+		--banner-height: 48px;
+	}
+}
+
+body {
+	font-weight: 450;
+	letter-spacing: 0.01em;
+}
+
+.hero {
+	font-size: 3rem;
+	line-height: 1.1;
+	font-weight: 800;
+	letter-spacing: -0.03em;
+}
+
+@media (min-width: 768px) {
+	.hero {
+		font-size: 4.5rem;
+		line-height: 1.05;
+	}
+}
+
+@media (min-width: 1024px) {
+	.hero {
+		font-size: 5.5rem;
+		letter-spacing: -0.035em;
+	}
+}
+
+.display {
+	font-size: 2rem;
+	line-height: 1.25;
+	font-weight: 800;
+	letter-spacing: -0.01em;
+}
+
+@media (min-width: 768px) {
+	.display {
+		font-size: 2.75rem;
+		line-height: 1.2;
+	}
+}
+
+.headline {
+	font-size: 1.75rem;
+	line-height: 1.3;
+	font-weight: 800;
+	letter-spacing: -0.01em;
+}
+
+@media (min-width: 768px) {
+	.headline {
+		font-size: 2.25rem;
+		line-height: 1.25;
+	}
+}
+
+.title {
+	font-size: 1.5rem;
+	line-height: 1.35;
+	font-weight: 800;
+	letter-spacing: 0;
+}
+
+@media (min-width: 768px) {
+	.title {
+		font-size: 1.875rem;
+		line-height: 1.3;
+	}
+}
+
+.title-sm {
+	font-size: 1.25rem;
+	line-height: 1.4;
+	font-weight: 800;
+	letter-spacing: 0;
+}
+
+@media (min-width: 768px) {
+	.title-sm {
+		font-size: 1.5rem;
+		line-height: 1.35;
+	}
+}
+
+.subtitle {
+	font-size: 1.125rem;
+	line-height: 1.45;
+	font-weight: 700;
+	letter-spacing: 0;
+}
+
+@media (min-width: 768px) {
+	.subtitle {
+		font-size: 1.25rem;
+		line-height: 1.4;
+	}
+}
+
+.label {
+	font-size: 1.125rem;
+	line-height: 1.4;
+	font-weight: 700;
+	letter-spacing: -0.01em;
+}
+
+@media (min-width: 768px) {
+	.label {
+		font-size: 1.25rem;
+		line-height: 1.4;
+	}
+}
+
+.lead {
+	font-size: 1.375rem;
+	line-height: 1.5;
+	font-weight: 550;
+	letter-spacing: 0;
+}
+
+@media (min-width: 768px) {
+	.lead {
+		font-size: 1.625rem;
+		line-height: 1.45;
+	}
+}
+
+@media (min-width: 1024px) {
+	.lead {
+		font-size: 1.875rem;
+	}
+}
+
+.lead b,
+.lead strong {
+	font-weight: 700;
+}
+
+.lead-soft {
+	font-weight: 500;
+}
+
+.lead-soft b,
+.lead-soft strong {
+	font-weight: 650;
+}
+
+.body-lg {
+	font-size: 1.125rem;
+	line-height: 1.6;
+	font-weight: 450;
+	letter-spacing: 0.01em;
+}
+
+.body-lg b,
+.body-lg strong {
+	font-weight: 650;
+}
+
+.body,
+.body-md {
+	font-size: 1rem;
+	line-height: 1.6;
+	font-weight: 450;
+	letter-spacing: 0.01em;
+}
+
+.body b,
+.body strong,
+.body-md b,
+.body-md strong {
+	font-weight: 650;
+}
+
+.body-sm {
+	font-size: 0.875rem;
+	line-height: 1.55;
+	font-weight: 450;
+	letter-spacing: 0.01em;
+}
+
+.body-sm b,
+.body-sm strong {
+	font-weight: 650;
+}
+
+.caption {
+	font-size: 0.75rem;
+	line-height: 1.5;
+	font-weight: 450;
+	letter-spacing: 0.01em;
+}
+
+.caption b,
+.caption strong {
+	font-weight: 650;
+}
+
+.micro {
+	font-size: 0.625rem;
+	line-height: 1.4;
+	font-weight: 450;
+	letter-spacing: 0.01em;
+}
+
+.locale-modal-backdrop {
+	position: fixed;
+	inset: 0;
+	width: 100vw;
+	height: 100vh;
+	background: rgba(15, 23, 42, 0.65);
+	backdrop-filter: blur(6px);
+	z-index: 9999;
+	display: none;
+	align-items: center;
+	justify-content: center;
+}
+
+.locale-modal-backdrop:target,
+.locale-modal-backdrop.show {
+	display: flex;
+}
+
+.locale-modal {
+	width: min(90vw, 1000px);
+	max-height: 90vh;
+	padding: 0;
+	margin: 0;
+	border: 0;
+	border-radius: 1rem;
+	box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+	background: white;
+	position: relative;
+}
+
+.locale-modal > div {
+	display: flex;
+	flex-direction: column;
+	max-height: 90vh;
+	overflow: hidden;
+}
+
+@media (max-width: 768px) {
+	.locale-modal {
+		width: 100vw;
+		height: 100vh;
+		height: 100dvh;
+		max-width: 100vw;
+		max-height: 100vh;
+		max-height: 100dvh;
+		border-radius: 0;
+		margin: 0;
+	}
+
+	.locale-modal > div {
+		height: 100vh;
+		height: 100dvh;
+		max-height: 100vh;
+		max-height: 100dvh;
+	}
+}
+
+.locale-toggle {
+	color: inherit;
+}
+
+.pwa-modal-backdrop {
+	position: fixed;
+	inset: 0;
+	width: 100vw;
+	height: 100vh;
+	background: rgba(15, 23, 42, 0.65);
+	backdrop-filter: blur(6px);
+	z-index: 9999;
+	display: none;
+	align-items: center;
+	justify-content: center;
+}
+
+.pwa-modal-backdrop.show {
+	display: flex;
+}
+
+.pwa-modal {
+	width: min(90vw, 800px);
+	max-height: 90vh;
+	padding: 0;
+	margin: 0;
+	border: 0;
+	border-radius: 1rem;
+	box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+	background: white;
+	position: relative;
+}
+
+.pwa-modal > div {
+	display: flex;
+	flex-direction: column;
+	max-height: 90vh;
+	overflow: hidden;
+}
+
+@media (max-width: 768px) {
+	.pwa-modal {
+		width: 100vw;
+		height: 100vh;
+		height: 100dvh;
+		max-width: 100vw;
+		max-height: 100vh;
+		max-height: 100dvh;
+		border-radius: 0;
+		margin: 0;
+	}
+
+	.pwa-modal > div {
+		height: 100vh;
+		height: 100dvh;
+		max-height: 100vh;
+		max-height: 100dvh;
+	}
+}
+
+.coming-features-masonry {
+	position: relative;
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 0.625rem;
+	min-height: 200px;
+}
+
+@media (min-width: 640px) {
+	.coming-features-masonry {
+		gap: 1rem;
+	}
+}
+
+@media (min-width: 768px) {
+	.coming-features-masonry {
+		gap: 1.25rem;
+	}
+}
+
+@supports not (container-type: inline-size) {
+	.coming-features-masonry {
+		align-items: center;
+	}
+}

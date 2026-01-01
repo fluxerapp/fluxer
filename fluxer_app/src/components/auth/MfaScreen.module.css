@@ -1,0 +1,88 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.container {
+	display: flex;
+	flex-direction: column;
+}
+
+.title {
+	margin-bottom: 0.5rem;
+	text-align: center;
+	font-size: 1.25rem;
+	font-weight: 600;
+	letter-spacing: 0.025em;
+	color: var(--text-primary);
+}
+
+.description {
+	margin-bottom: 2rem;
+	text-align: center;
+	font-size: 0.875rem;
+	color: var(--text-tertiary);
+}
+
+.buttons {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}
+
+.form {
+	display: flex;
+	flex-direction: column;
+	gap: 1.5rem;
+}
+
+.smsSection {
+	margin-bottom: 1.5rem;
+}
+
+.webauthnSection {
+	margin-bottom: 1rem;
+}
+
+.footer {
+	margin-top: 1.5rem;
+	text-align: center;
+}
+
+.footerButtons {
+	margin-top: 1.5rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	text-align: center;
+}
+
+.footerButton {
+	display: block;
+	width: 100%;
+	background: none;
+	border: none;
+	padding: 0;
+	font-size: 0.875rem;
+	color: var(--text-tertiary);
+	cursor: pointer;
+}
+
+.footerButton:hover,
+.footerButton:focus {
+	color: var(--text-primary);
+}

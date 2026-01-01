@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<clickhouse>
+    <users>
+        <fluxer>
+            <password from_env="CLICKHOUSE_PASSWORD"/>
+            <networks>
+                <ip>::/0</ip>
+            </networks>
+            <profile>default</profile>
+            <quota>default</quota>
+            <access_management>1</access_management>
+        </fluxer>
+    </users>
+</clickhouse>

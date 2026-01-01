@@ -1,0 +1,477 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.container {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-4);
+}
+
+.headerTop {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-1);
+}
+
+.pageTitle {
+	font-size: 1.125rem;
+	font-weight: 650;
+	color: var(--text-primary);
+	margin: 0;
+}
+
+.pageSubtitle {
+	font-size: 0.9rem;
+	color: var(--text-primary-muted);
+	margin: 0;
+}
+
+.filterRow {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+	gap: var(--spacing-3);
+}
+
+.userSelectRow {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-1);
+	min-height: 32px;
+}
+
+.userSelectAvatarWrapper {
+	flex: 0 0 auto;
+	width: 28px;
+	height: 28px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.userSelectRowGlobal {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-1);
+	min-height: 32px;
+}
+
+.userSelectLabel {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	flex: 1;
+	font-size: 0.9rem;
+	line-height: 1.2;
+}
+
+.actionSelectRow {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-2);
+	min-height: 32px;
+}
+
+.actionSelectIcon {
+	width: 26px;
+	height: 26px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 9999px;
+	background: var(--background-modifier-hover);
+	color: var(--text-primary-muted);
+	transition:
+		background-color var(--transition-fast),
+		color var(--transition-fast);
+}
+
+.actionSelectIconNeutral {
+	background: var(--background-modifier-hover);
+	color: var(--text-primary-muted);
+}
+
+.actionSelectIcon_create {
+	background: color-mix(in srgb, var(--status-online) 8%, var(--background-modifier-hover));
+	color: color-mix(in srgb, var(--status-online) 70%, var(--text-primary-muted));
+}
+
+.actionSelectIcon_update {
+	background: color-mix(in srgb, var(--status-warning) 8%, var(--background-modifier-hover));
+	color: color-mix(in srgb, var(--status-warning) 70%, var(--text-primary-muted));
+}
+
+.actionSelectIcon_delete {
+	background: color-mix(in srgb, var(--status-danger) 8%, var(--background-modifier-hover));
+	color: color-mix(in srgb, var(--status-danger) 70%, var(--text-primary-muted));
+}
+
+.actionSelectLabel {
+	flex: 1;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-size: 0.9rem;
+}
+
+.entries {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-2);
+}
+
+.spinnerRow {
+	display: flex;
+	justify-content: center;
+	padding: var(--spacing-4);
+}
+
+.emptyState {
+	padding: var(--spacing-4) 0;
+	border: none;
+	background: transparent;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+.errorState {
+	padding: var(--spacing-3) 0;
+	border: none;
+	background: transparent;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--spacing-3);
+	text-align: center;
+}
+
+.statusActions {
+	display: flex;
+	justify-content: center;
+	width: 100%;
+}
+
+.loadMore {
+	display: flex;
+	justify-content: center;
+	padding-bottom: var(--spacing-2);
+}
+
+.entryList {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-2);
+}
+
+.auditLog {
+	border-radius: var(--radius-xl);
+	border: 1px solid var(--background-modifier-accent);
+	background-color: var(--background-textarea);
+	overflow: hidden;
+}
+
+.auditLog strong {
+	font-weight: 600;
+	color: var(--text-primary);
+}
+
+.header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	width: 100%;
+	min-height: var(--input-container-min-height);
+	padding: 0 var(--input-container-padding);
+	background: transparent;
+	border: none;
+	text-align: left;
+	cursor: pointer;
+	transition: background-color var(--transition-fast);
+	gap: var(--spacing-2);
+}
+
+.header:hover,
+.headerClickable:hover {
+	background-color: var(--background-modifier-hover);
+}
+
+.header:focus-visible {
+	background-color: var(--background-modifier-hover);
+	outline: 2px solid var(--brand-primary);
+	outline-offset: -2px;
+}
+
+.headerExpanded {
+	background-color: var(--background-modifier-hover);
+}
+
+.headerDefault {
+	background: transparent;
+}
+
+.headerStatic {
+	cursor: default;
+}
+
+.headerStatic:hover {
+	background: transparent;
+}
+
+.icon {
+	width: 32px;
+	height: 32px;
+	min-width: 32px;
+	border-radius: 9999px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	background: var(--background-modifier-hover);
+	color: var(--text-primary-muted);
+	transition:
+		background-color var(--transition-fast),
+		color var(--transition-fast);
+}
+
+.iconGlyph {
+	color: inherit;
+}
+
+.type_create .icon {
+	background: color-mix(in srgb, var(--status-online) 8%, var(--background-modifier-hover));
+	color: color-mix(in srgb, var(--status-online) 70%, var(--text-primary-muted));
+}
+
+.type_update .icon {
+	background: color-mix(in srgb, var(--status-warning) 8%, var(--background-modifier-hover));
+	color: color-mix(in srgb, var(--status-warning) 70%, var(--text-primary-muted));
+}
+
+.type_delete .icon {
+	background: color-mix(in srgb, var(--status-danger) 8%, var(--background-modifier-hover));
+	color: color-mix(in srgb, var(--status-danger) 70%, var(--text-primary-muted));
+}
+
+.avatar {
+	flex: 0 0 auto;
+}
+
+.textBlock {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 0;
+	flex: 1;
+}
+
+.titleRow {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: var(--spacing-1);
+}
+
+.summary {
+	font-weight: 500;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--text-primary);
+	overflow-wrap: anywhere;
+}
+
+.metaRow {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-2);
+	color: var(--text-primary-muted);
+	font-size: 0.75rem;
+	line-height: 0.875rem;
+	min-width: 0;
+}
+
+.timestamp {
+	white-space: nowrap;
+}
+
+.channelPlain {
+	color: var(--text-primary);
+	font-weight: 600;
+}
+
+.chevron {
+	height: 20px;
+	width: 20px;
+	flex-shrink: 0;
+	color: var(--text-tertiary);
+	transition: transform var(--transition-fast);
+}
+
+.chevronExpanded {
+	transform: rotate(180deg);
+}
+
+.details {
+	border-top: 1px solid var(--background-modifier-accent);
+	padding: var(--spacing-3) var(--input-container-padding);
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-3);
+}
+
+.reasonRow {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-1);
+}
+
+.reasonLabel {
+	font-weight: 600;
+	color: var(--text-primary-muted);
+	font-size: 0.6875rem;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+}
+
+.reasonValue {
+	color: var(--text-primary);
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+}
+
+.changeList {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-2);
+}
+
+.changeItem {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-2);
+	min-height: 28px;
+	color: var(--text-primary-muted);
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+}
+
+.changeText {
+	display: block;
+	min-width: 0;
+	flex: 1;
+	overflow-wrap: anywhere;
+}
+
+.changeBullet {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 20px;
+	height: 20px;
+	border-radius: 9999px;
+	border: 1px solid var(--background-modifier-accent);
+	background: var(--background-modifier-hover);
+	color: var(--text-primary);
+	flex: 0 0 20px;
+}
+
+.changeBulletIcon {
+	display: block;
+}
+
+.changeBullet_add {
+	background: color-mix(in srgb, var(--status-online) 18%, var(--background-modifier-hover));
+	border-color: color-mix(in srgb, var(--status-online) 55%, var(--background-modifier-accent));
+	color: var(--status-online);
+}
+
+.changeBullet_remove {
+	background: color-mix(in srgb, var(--status-danger) 16%, var(--background-modifier-hover));
+	border-color: color-mix(in srgb, var(--status-danger) 55%, var(--background-modifier-accent));
+	color: var(--status-danger);
+}
+
+.inlineCode {
+	font-family: var(--font-mono);
+}
+
+.userHook {
+	font-weight: 600;
+	color: var(--text-primary);
+}
+
+.userName {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.targetHook {
+	font-weight: 600;
+	color: var(--text-primary);
+}
+
+.discrim {
+	font-size: 0.75rem;
+	line-height: 1rem;
+	opacity: 0.6;
+	margin-left: 2px;
+}
+
+.colorHook {
+	display: inline-block;
+	width: 10px;
+	height: 10px;
+	border-radius: 9999px;
+	position: relative;
+	top: 1px;
+	margin-left: 4px;
+}
+
+.clickableUser {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--spacing-1);
+	cursor: pointer;
+	border-radius: var(--radius-sm);
+	padding: 1px 2px;
+	margin: -1px -2px;
+	transition: opacity var(--transition-fast);
+	vertical-align: baseline;
+	line-height: 1.25rem;
+}
+
+.clickableUser:hover {
+	opacity: 0.8;
+}
+
+.clickableUser:hover .clickableUserName {
+	text-decoration: underline;
+}
+
+.clickableUser:focus-visible {
+	outline: 2px solid var(--brand-primary);
+	outline-offset: 1px;
+}
+
+.clickableUserName {
+	font-weight: 600;
+	color: var(--text-primary);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}

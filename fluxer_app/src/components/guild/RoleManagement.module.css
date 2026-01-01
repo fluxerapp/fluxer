@@ -1,0 +1,174 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.roleIndicator {
+	display: flex;
+	height: 12px;
+	width: 12px;
+	flex-shrink: 0;
+	align-items: center;
+	justify-content: center;
+	border-radius: 9999px;
+	padding: 0;
+}
+
+.roleBadge {
+	display: flex;
+	height: 1.5rem;
+	min-width: 0;
+	max-width: 268px;
+	align-items: center;
+	border-radius: 4px;
+	border: 1px solid var(--background-header-secondary);
+	background-color: var(--background-primary);
+	padding: 0.25rem;
+	font-weight: 600;
+	font-size: 0.75rem;
+	line-height: 1rem;
+}
+
+.roleRemoveButtonContainer {
+	position: relative;
+	flex-shrink: 0;
+}
+
+.roleRemoveButton {
+	position: relative;
+	flex-shrink: 0;
+	cursor: pointer;
+}
+
+.roleRemoveIconContainer {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	height: 10px;
+	width: 10px;
+	opacity: 0;
+}
+
+.roleName {
+	margin-right: 0.125rem;
+	min-width: 0;
+	max-width: 200px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-weight: 600;
+	font-size: 12px;
+	line-height: 1.33;
+	max-height: 1.33em;
+	color: var(--text-primary);
+}
+
+.roleListContainer {
+	position: relative;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.25rem;
+}
+
+.addRoleButton {
+	cursor: pointer;
+	transition: color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.addRoleButtonPill {
+	display: flex;
+	height: 1.5rem;
+	align-items: center;
+	gap: 0.25rem;
+	border-radius: 4px;
+	border: 1px solid var(--background-header-secondary);
+	background-color: var(--background-primary);
+	padding: 0.25rem 0.5rem 0.25rem 0.25rem;
+	color: var(--text-tertiary);
+	cursor: pointer;
+}
+
+.addRoleButtonPill:hover,
+.addRoleButtonPill.addRoleButtonActive {
+	color: var(--text-primary);
+}
+
+.addRoleButtonActive {
+	color: var(--text-primary);
+}
+
+.addRoleLabel {
+	font-size: 0.75rem;
+	font-weight: 600;
+	white-space: nowrap;
+}
+
+.addRoleButtonIcon {
+	display: flex;
+	height: 1rem;
+	width: 1rem;
+	align-items: center;
+	justify-content: center;
+	color: var(--text-tertiary);
+	cursor: pointer;
+}
+
+.addRoleButtonIcon:hover {
+	color: var(--text-primary);
+}
+
+.iconSize {
+	height: 1rem;
+	width: 1rem;
+}
+
+.addRoleButtonMobile {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.625rem 1rem;
+	border-radius: 0.5rem;
+	background-color: var(--background-secondary-alt);
+	color: var(--text-primary);
+	font-weight: 500;
+	font-size: 0.875rem;
+	cursor: pointer;
+	width: 100%;
+	margin-top: 0.5rem;
+}
+
+.addRoleButtonMobile:active {
+	background-color: var(--background-tertiary);
+}
+
+.iconSizeMobile {
+	height: 1.25rem;
+	width: 1.25rem;
+	color: var(--text-secondary);
+}
+
+.addRoleLabelMobile {
+	color: var(--text-primary);
+}
+
+.roleColorIndicator {
+	height: 12px;
+	width: 12px;
+	border-radius: 9999px;
+	flex-shrink: 0;
+}

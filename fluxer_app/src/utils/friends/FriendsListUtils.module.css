@@ -1,0 +1,159 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.container {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+}
+
+.variantEmbedded .friendItem:active {
+	background-color: var(--background-secondary-alt);
+}
+
+.scroller {
+	flex: 1;
+	min-height: 0;
+}
+
+.scrollContent {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	padding-bottom: var(--quick-switcher-scroll-padding-bottom, 0.5rem);
+}
+
+.section {
+	display: flex;
+	flex-direction: column;
+}
+
+.sectionHeader {
+	font-size: 0.75rem;
+	font-weight: 600;
+	color: var(--text-primary-muted);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	margin-bottom: 0.35rem;
+}
+
+.sectionList {
+	display: flex;
+	flex-direction: column;
+	gap: 0.35rem;
+}
+
+.friendItemWrapper {
+	width: 100%;
+}
+
+.friendItem {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem;
+	width: 100%;
+	border: none;
+	background-color: var(--background-secondary-alt);
+	color: var(--text-primary);
+	border-radius: var(--radius-lg);
+	padding: 0.75rem 1rem;
+	cursor: pointer;
+	text-align: left;
+	transition: background-color 0.15s;
+	-webkit-tap-highlight-color: transparent;
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.friendItem:hover {
+		background-color: var(--background-modifier-hover);
+	}
+}
+
+.friendItem:active {
+	background-color: var(--background-modifier-active);
+}
+
+.friendItemContent {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex: 1;
+	min-width: 0;
+}
+
+.avatar {
+	width: 32px;
+	height: 32px;
+	flex-shrink: 0;
+}
+
+.friendItemText {
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+	flex: 1;
+	min-width: 0;
+}
+
+.friendItemName {
+	font-weight: 500;
+	font-size: 0.9375rem;
+	line-height: 1.125rem;
+	color: var(--text-primary);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.friendItemStatus {
+	font-size: 0.8125rem;
+	line-height: 1rem;
+	color: var(--text-primary-muted);
+	opacity: 0.8;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.friendItemCaret {
+	height: 1rem;
+	width: 1rem;
+	flex-shrink: 0;
+	color: var(--text-primary-muted);
+}
+
+.emptyState {
+	padding: 2rem 1rem;
+	text-align: center;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--text-tertiary);
+}
+
+.emptyStateTitle {
+	font-weight: 500;
+}
+
+.emptyStateHint {
+	margin-top: 0.25rem;
+	color: var(--text-primary-muted);
+	font-size: 0.75rem;
+	line-height: 1rem;
+}

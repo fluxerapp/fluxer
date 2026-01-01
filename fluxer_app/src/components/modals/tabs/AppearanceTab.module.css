@@ -1,0 +1,113 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.previewWrapper {
+	background: var(--background-secondary-lighter);
+}
+
+.previewContainer {
+	display: flex;
+	flex-direction: column;
+	height: 176px;
+	overflow: hidden;
+	position: relative;
+	padding: 2px 12px 6px;
+	padding-bottom: 0;
+	border-radius: 8px;
+	border: 1px solid var(--background-modifier-accent);
+}
+
+.previewMessagesContainer {
+	flex: 1;
+	min-height: 0;
+	padding: 0;
+	pointer-events: none;
+	display: flex;
+	flex-direction: column;
+	--chat-horizontal-padding: 16px;
+	box-sizing: border-box;
+	overflow: hidden;
+}
+
+.previewContainerCompact .previewMessagesContainer,
+.previewContainerCozy .previewMessagesContainer {
+	justify-content: flex-start;
+}
+
+.previewMessagesContainer :global(.message),
+.previewMessagesContainer :global(.messageCompact) {
+	margin-left: 0 !important;
+	margin-right: 0 !important;
+	padding-right: var(--chat-horizontal-padding, 16px) !important;
+	pointer-events: none;
+}
+
+.previewMessagesContainer > :first-child {
+	margin-top: 0 !important;
+}
+
+.previewOverlay {
+	position: absolute;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	cursor: default;
+	content: '';
+	pointer-events: none;
+	height: 32px;
+	background: linear-gradient(transparent, var(--background-secondary-lighter));
+}
+
+.buttonRowsContainer {
+	display: flex;
+	flex-direction: column;
+	margin: -1rem 0;
+}
+
+.buttonRow {
+	display: flex;
+	height: 68px;
+	align-items: center;
+	border-bottom: 1px solid var(--background-modifier-accent);
+}
+
+.buttonRowsContainer > .buttonRow:last-child {
+	border-bottom: 0;
+}
+
+.buttonRowContent {
+	display: flex;
+	width: 100%;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+}
+
+.buttonRowLabel {
+	display: flex;
+	flex: 1;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.buttonRowShortcut {
+	display: flex;
+	align-items: center;
+	gap: 0.25rem;
+}

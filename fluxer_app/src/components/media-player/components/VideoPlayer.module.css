@@ -1,0 +1,257 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.container {
+	position: relative;
+	width: 100%;
+	background-color: #000;
+	border-radius: var(--radius-md, 6px);
+	overflow: hidden;
+	outline: none;
+}
+
+.container:focus-visible {
+	outline: 2px solid var(--brand-primary, #5865f2);
+	outline-offset: 2px;
+}
+
+.video {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+}
+
+.videoHidden {
+	visibility: hidden;
+	position: absolute;
+}
+
+.posterOverlay {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background-color: rgba(0, 0, 0, 0.3);
+	cursor: pointer;
+	transition: background-color 150ms ease;
+}
+
+.posterOverlay:hover {
+	background-color: rgba(0, 0, 0, 0.4);
+}
+
+.posterImage {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.thumbHashPlaceholder {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.playOverlayButton {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 48px;
+	height: 48px;
+	background-color: rgba(0, 0, 0, 0.6);
+	border: none;
+	border-radius: 50%;
+	color: #fff;
+	cursor: pointer;
+	transition:
+		background-color 150ms ease,
+		transform 150ms ease;
+	z-index: 1;
+}
+
+.playOverlayButton:hover {
+	background-color: rgba(0, 0, 0, 0.8);
+}
+
+.playOverlayButton:focus-visible {
+	outline: 2px solid var(--brand-primary);
+	outline-offset: 4px;
+}
+
+.controlsOverlay {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	padding: 0 0 4px 0;
+	background-color: var(--background-primary);
+	display: flex;
+	flex-direction: column;
+	gap: 0;
+}
+
+.progressBar {
+	margin: 0;
+}
+
+.controlsRow {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	height: 28px;
+	padding: 0 8px;
+}
+
+.controlsLeft {
+	display: flex;
+	align-items: center;
+	gap: 2px;
+}
+
+.controlsCenter {
+	flex: 1;
+}
+
+.controlsRight {
+	display: flex;
+	align-items: center;
+	gap: 2px;
+}
+
+.controlButton {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	padding: 0;
+	border: none;
+	background: transparent;
+	color: #fff;
+	cursor: pointer;
+	border-radius: var(--radius-sm, 4px);
+	transition:
+		opacity 150ms ease,
+		background-color 150ms ease;
+}
+
+.controlButton:hover {
+	background-color: rgba(255, 255, 255, 0.1);
+}
+
+.controlButton:focus-visible {
+	outline: 2px solid var(--brand-primary);
+	outline-offset: 2px;
+}
+
+.timeDisplay {
+	color: #fff;
+}
+
+.playPauseIndicator {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 48px;
+	height: 48px;
+	background-color: rgba(0, 0, 0, 0.6);
+	border-radius: 50%;
+	color: #fff;
+	pointer-events: none;
+}
+
+.fillContainer {
+	width: 100%;
+	height: 100%;
+	border-radius: 0;
+}
+
+.fillContainer .video {
+	width: 100%;
+	height: 100%;
+}
+
+.fullscreen {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	z-index: var(--z-index-modal);
+	border-radius: 0;
+}
+
+.loadingOverlay {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background-color: rgba(0, 0, 0, 0.3);
+	pointer-events: none;
+}
+
+.spinner {
+	animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+	from {
+		transform: rotate(0deg);
+	}
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+@media (max-width: 320px) {
+	.controlsRow {
+		gap: 2px;
+	}
+
+	.timeDisplay {
+		display: none;
+	}
+}
+
+@media (max-width: 240px) {
+	.controlsLeft > *:not(:first-child) {
+		display: none;
+	}
+
+	.controlsRight > *:not(:last-child) {
+		display: none;
+	}
+}

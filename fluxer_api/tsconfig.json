@@ -1,0 +1,18 @@
+{
+	"compilerOptions": {
+		"exactOptionalPropertyTypes": false,
+		"lib": ["ESNext"],
+		"module": "ESNext",
+		"moduleResolution": "Bundler",
+		"noEmit": true,
+		"noPropertyAccessFromIndexSignature": false,
+		"noUncheckedIndexedAccess": false,
+		"paths": {
+			"~/*": ["./src/*"]
+		},
+		"target": "ESNext",
+		"typeRoots": ["./node_modules/@types"]
+	},
+	"extends": ["@tsconfig/strictest/tsconfig", "@tsconfig/node22/tsconfig"],
+	"include": ["src/**/*"]
+}

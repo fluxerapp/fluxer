@@ -1,0 +1,102 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.roleIcon {
+	height: 12px;
+	width: 12px;
+	flex-shrink: 0;
+	border-radius: 50%;
+}
+
+.roleContainer {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	min-width: 0;
+	overflow: hidden;
+}
+
+.roleName {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	line-height: 1.2;
+	max-height: 1.2em;
+}
+
+.roleDisabled {
+	opacity: 0.5;
+}
+
+.flexContainer {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.flexColumn {
+	display: flex;
+	min-width: 0;
+	flex: 1;
+	flex-direction: column;
+}
+
+.icon {
+	height: 1rem;
+	width: 1rem;
+}
+
+.submenuContainer {
+	position: relative;
+}
+
+.submenuIcon {
+	height: 16px;
+	width: 16px;
+}
+
+.submenuPopup {
+	position: absolute;
+	top: 0;
+	left: 100%;
+	z-index: 50;
+	margin-left: 4px;
+	min-width: max-content;
+	border-radius: 6px;
+	border: 1px solid var(--background-secondary);
+	background-color: var(--background-primary);
+	padding-top: 4px;
+	padding-bottom: 4px;
+	box-shadow:
+		0 10px 15px -3px rgb(0 0 0 / 0.1),
+		0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+.submenuItem {
+	cursor: pointer;
+	padding: 4px 8px;
+	font-size: 14px;
+	color: var(--text-primary);
+}
+
+.submenuItem:hover {
+	background-color: var(--background-modifier-hover);
+}

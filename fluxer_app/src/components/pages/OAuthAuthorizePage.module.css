@@ -1,0 +1,610 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.page {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+}
+
+.loadingContainer {
+	display: flex;
+	min-height: 100%;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+}
+
+.errorContainer {
+	display: flex;
+	min-height: 100%;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+}
+
+.errorContent {
+	text-align: center;
+}
+
+.errorTitle {
+	margin-bottom: 0.5rem;
+	text-align: center;
+	font-weight: 600;
+	color: var(--text-primary);
+	font-size: 1.25rem;
+	letter-spacing: 0.025em;
+}
+
+.errorText {
+	text-align: center;
+	font-size: 0.875rem;
+	color: var(--text-tertiary);
+}
+
+.heroCard {
+	display: flex;
+	gap: 1rem;
+	align-items: center;
+	padding: 0.875rem 1rem;
+	border-radius: 0.75rem;
+	background: none;
+	border: none;
+}
+
+.pageLogo {
+	display: flex;
+	justify-content: center;
+	margin-bottom: 0.35rem;
+}
+
+.pageWordmark {
+	height: 32px;
+	width: auto;
+}
+
+.breadcrumbs {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	margin-bottom: 0.25rem;
+}
+
+.breadcrumbStep {
+	display: flex;
+	align-items: center;
+	gap: 0.35rem;
+	padding: 0.25rem 0.5rem;
+	border-radius: 0.375rem;
+	background: none;
+	border: none;
+	color: var(--text-tertiary);
+	font-size: 0.8rem;
+	cursor: pointer;
+	transition: color 0.1s ease;
+}
+
+.breadcrumbStep:hover {
+	color: var(--text-secondary);
+}
+
+.breadcrumbActive {
+	color: var(--text-primary);
+	cursor: default;
+}
+
+.breadcrumbActive:hover {
+	color: var(--text-primary);
+}
+
+.breadcrumbNumber {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 1.25rem;
+	height: 1.25rem;
+	border-radius: 50%;
+	background: var(--background-modifier-accent);
+	font-weight: 600;
+	font-size: 0.7rem;
+}
+
+.breadcrumbActive .breadcrumbNumber {
+	background: var(--brand-primary);
+	color: white;
+}
+
+.breadcrumbLabel {
+	font-weight: 500;
+}
+
+.breadcrumbSeparator {
+	color: var(--text-tertiary);
+	font-size: 0.9rem;
+}
+
+.permissionsHint {
+	margin: 0;
+	padding: 0.5rem 0;
+	color: var(--text-secondary);
+	font-size: 0.85rem;
+	line-height: 1.4;
+}
+
+.textEmphasis {
+	font-weight: 700;
+	color: var(--text-primary);
+}
+
+.heroAvatarShell {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.appAvatarFallback {
+	border-radius: 12px;
+	background: color-mix(in srgb, #0f1014 80%, var(--background-header-secondary) 20%);
+}
+
+.appAvatarInitial {
+	position: absolute;
+	font-weight: 700;
+	font-size: 1rem;
+	color: var(--text-primary);
+}
+
+.heroCopy {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+}
+
+.eyebrow {
+	margin: 0;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	font-size: 0.75rem;
+	color: var(--text-tertiary);
+}
+
+.heroTitle {
+	margin: 0;
+	font-size: 1.15rem;
+	font-weight: 700;
+	color: var(--text-primary);
+}
+
+.heroDescription {
+	margin: 0.15rem 0 0;
+	color: var(--text-secondary);
+	font-size: 0.9rem;
+	line-height: 1.4;
+}
+
+.chipRow {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	margin-top: 0.4rem;
+}
+
+.chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+	padding: 0.35rem 0.65rem;
+	border-radius: 999px;
+	background: var(--background-secondary);
+	border: 1px solid var(--background-modifier-accent);
+	color: var(--text-secondary);
+	font-size: 0.78rem;
+}
+
+.userCard {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 0.75rem 0.85rem;
+	border-radius: 0.75rem;
+	background: none;
+	border: none;
+}
+
+.userDetails {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+}
+
+.userText {
+	display: flex;
+	flex-direction: column;
+	gap: 0.1rem;
+}
+
+.userLabel {
+	font-size: 0.8rem;
+	color: var(--text-tertiary);
+}
+
+.userNameLine {
+	display: flex;
+	gap: 0.35rem;
+	align-items: baseline;
+	flex-wrap: wrap;
+}
+
+.userName {
+	font-weight: 700;
+	color: var(--text-primary);
+	font-size: 0.95rem;
+}
+
+.userTag {
+	color: var(--text-tertiary);
+	font-size: 0.85rem;
+}
+
+.switchAccountLink {
+	background: none;
+	border: none;
+	color: var(--text-link, var(--brand-primary));
+	font-weight: 500;
+	font-size: 0.85rem;
+	cursor: pointer;
+	text-decoration: none;
+	white-space: nowrap;
+}
+
+.switchAccountLink:hover,
+.switchAccountLink:focus-visible {
+	text-decoration: underline;
+	outline: none;
+}
+
+.cardGrid {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}
+
+.sectionDivider {
+	height: 1px;
+	width: 100%;
+	background: color-mix(in srgb, var(--background-modifier-accent) 70%, transparent);
+	margin: 0.3rem 0;
+	border-radius: 999px;
+}
+
+.panel {
+	background: transparent;
+	border: none;
+	border-radius: 0.85rem;
+	padding: 0.6rem 0;
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}
+
+.sectionHeader {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+}
+
+.sectionTitle {
+	margin: 0;
+	font-weight: 700;
+	font-size: 1rem;
+	color: var(--text-primary);
+}
+
+.sectionDescription {
+	margin: 0;
+	color: var(--text-secondary);
+	font-size: 0.9rem;
+	line-height: 1.4;
+}
+
+.scopeList {
+	display: flex;
+	flex-direction: column;
+	gap: 0.35rem;
+}
+
+.permissionScrollContainer {
+	max-height: 300px;
+	border-radius: 0.5rem;
+	background: var(--background-secondary);
+	border: 1px solid var(--background-modifier-accent);
+}
+
+.permissionScroller {
+	max-height: 300px;
+	padding: 0.5rem 0;
+}
+
+.permissionList {
+	display: flex;
+	flex-direction: column;
+}
+
+.permissionRow {
+	display: flex;
+	align-items: center;
+	padding: 0.65rem 0.75rem;
+	transition: background-color 0.1s ease;
+	cursor: pointer;
+}
+
+.permissionRow:hover {
+	background: var(--background-modifier-hover);
+}
+
+.permissionRow label {
+	flex: 1;
+	cursor: pointer;
+}
+
+.permissionLabel {
+	font-size: 0.9rem;
+	line-height: 1.25rem;
+	font-weight: 500;
+	color: var(--text-primary);
+}
+
+.scopeRow {
+	padding: 0.2rem 0;
+	border-radius: 0.4rem;
+	border: none;
+	background: none;
+	overflow: visible;
+	width: 100%;
+	display: block;
+}
+
+.scopeHeading {
+	display: flex;
+	align-items: center;
+	gap: 0.35rem;
+	flex-wrap: wrap;
+}
+
+.scopeContent,
+.permissionText {
+	display: flex;
+	flex-direction: column;
+	gap: 0.2rem;
+	align-items: flex-start;
+	width: 100%;
+	word-break: break-word;
+}
+
+.scopeName,
+.permissionName {
+	font-weight: 600;
+	color: var(--text-primary);
+	font-size: 0.95rem;
+}
+
+.scopeDescription,
+.permissionHint {
+	margin: 0;
+	color: var(--text-secondary);
+	font-size: 0.85rem;
+	line-height: 1.4;
+}
+
+.scopeChip {
+	display: inline-flex;
+	align-items: center;
+	padding: 0.12rem 0.45rem;
+	border-radius: 999px;
+	background: var(--background-secondary);
+	border: 1px solid var(--background-modifier-accent);
+	color: var(--text-tertiary);
+	font-size: 0.7rem;
+}
+
+.emptyState {
+	padding: 0.75rem;
+	border-radius: 0.6rem;
+	background: var(--background-secondary);
+	border: 1px dashed var(--background-modifier-accent);
+	color: var(--text-secondary);
+	font-size: 0.85rem;
+}
+
+.caution {
+	padding: 0.65rem 0.75rem;
+	border-radius: 0.7rem;
+	border: 1px solid var(--background-modifier-accent);
+	background: var(--background-secondary);
+	color: var(--text-secondary);
+	font-size: 0.82rem;
+	line-height: 1.35;
+}
+
+.dangerNotice {
+	padding: 0.75rem 0.85rem;
+	border-radius: 0.7rem;
+	border: 1px solid var(--status-danger, var(--background-modifier-accent));
+	background: color-mix(in srgb, var(--background-secondary) 70%, var(--status-danger, #f04747) 30%);
+	color: var(--text-primary);
+	font-size: 0.85rem;
+	line-height: 1.35;
+}
+
+.successCard {
+	padding: 0.75rem 0.9rem;
+	border-radius: 0.85rem;
+	background: var(--background-secondary);
+	border: 1px solid var(--background-modifier-accent);
+	color: var(--text-primary);
+	font-size: 0.9rem;
+	line-height: 1.35;
+}
+
+.successScreen {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 0.65rem;
+	padding: 2.5rem 1.5rem;
+	text-align: center;
+}
+
+.successIconCircle {
+	height: 72px;
+	width: 72px;
+	border-radius: 50%;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	background: color-mix(in srgb, var(--status-online, #3ba55c) 15%, transparent);
+}
+
+.successIcon {
+	height: 48px;
+	width: 48px;
+	color: var(--status-online, #3ba55c);
+}
+
+.successTitle {
+	margin: 0;
+	font-size: 1.35rem;
+	font-weight: 700;
+	color: var(--text-primary);
+}
+
+.successSubtitle {
+	margin: 0;
+	color: var(--text-secondary);
+	font-size: 0.95rem;
+	line-height: 1.5;
+}
+
+.appAvatarHasImage {
+	background-size: cover;
+	background-position: center;
+	background-repeat: no-repeat;
+}
+
+.appAvatarInitial {
+	font-weight: 700;
+}
+
+.guildOption,
+.guildValue {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--spacing-1);
+	width: 100%;
+	min-height: 36px;
+	padding: 0 var(--spacing-1);
+}
+
+.guildAvatar,
+.guildAvatarPlaceholder {
+	height: 28px;
+	width: 28px;
+	border-radius: 999px;
+	flex: 0 0 28px;
+}
+
+.guildAvatar {
+	background-size: cover;
+	background-position: center;
+	background-repeat: no-repeat;
+}
+
+.guildAvatarPlaceholder {
+	background: color-mix(in srgb, #0f1014 80%, var(--background-header-secondary) 20%);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	color: white;
+	font-weight: 700;
+	font-size: 0.9rem;
+	line-height: 28px;
+	border: 1px solid var(--background-modifier-accent);
+}
+
+.guildOptionLabel {
+	font-size: 0.9rem;
+	color: var(--text-primary);
+}
+
+.guildOptionDisabled {
+	opacity: 0.5;
+}
+
+.guildOptionNotice {
+	margin-left: auto;
+	color: var(--status-danger, #f04747);
+	font-style: italic;
+	font-size: 0.85rem;
+}
+
+.actionSection {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	align-items: stretch;
+}
+
+.actionCopy {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+	color: var(--text-secondary);
+}
+
+.actionText {
+	margin: 0;
+	font-weight: 700;
+	color: var(--text-primary);
+}
+
+.footerText {
+	margin: 0;
+	font-size: 0.85rem;
+	color: var(--text-secondary);
+	line-height: 1.35;
+	text-align: left;
+	display: block;
+	width: 100%;
+	margin-top: 0.35rem;
+	padding-top: 0.1rem;
+}
+
+.actions {
+	display: flex;
+	flex-direction: row;
+	gap: 0.5rem;
+	width: 100%;
+}
+
+.actionButton {
+	flex: 1;
+	width: 100%;
+}

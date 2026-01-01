@@ -1,0 +1,16 @@
+{
+	servers {
+		listener_wrappers {
+			proxy_protocol {
+				timeout 5s
+				allow 127.0.0.0/8
+				allow 10.0.0.0/8
+				allow 172.16.0.0/12
+				allow ::1/128
+			}
+			tls
+		}
+		trusted_proxies static private_ranges
+		trusted_proxies_strict
+	}
+}

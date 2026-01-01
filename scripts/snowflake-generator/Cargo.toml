@@ -1,0 +1,13 @@
+[package]
+name = "snowflake-generator"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+clap = { version = "4.4", features = ["derive"] }
+
+[profile.release]
+lto = true
+panic = "abort"
+codegen-units = 1
+opt-level = "z"

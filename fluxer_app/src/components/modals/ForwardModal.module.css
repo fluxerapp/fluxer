@@ -1,0 +1,247 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.messageInput {
+	scrollbar-width: none;
+}
+
+.messageInput::-webkit-scrollbar {
+	display: none;
+}
+
+.channelIcon {
+	width: 28px;
+	height: 28px;
+	flex-shrink: 0;
+	color: var(--text-primary-muted);
+}
+
+.avatar {
+	width: 32px;
+	height: 32px;
+	flex-shrink: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	position: relative;
+	overflow: visible;
+}
+
+.modalContent {
+	display: flex;
+	min-height: 0;
+	flex-direction: column;
+	gap: 0;
+	padding: 0;
+}
+
+.headerSearch {
+	margin-top: var(--spacing-3);
+	width: 100%;
+}
+
+.channelListContainer {
+	max-height: 320px;
+	flex-shrink: 0;
+	padding: 0 var(--spacing-4);
+}
+
+.scrollerFullHeight {
+	height: 100%;
+	padding: 0;
+}
+
+.noChannelsContainer {
+	display: flex;
+	height: 100%;
+	align-items: center;
+	justify-content: center;
+	color: var(--text-secondary);
+}
+
+.channelList {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	padding-bottom: 16px;
+}
+
+.channelButton {
+	display: flex;
+	width: 100%;
+	min-width: 0;
+	height: 48px;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	border-radius: var(--radius-md);
+	padding: 6px 10px;
+	text-align: left;
+	cursor: pointer;
+}
+
+.channelButton:hover:not(:disabled) {
+	background-color: var(--background-modifier-accent);
+}
+
+.channelButtonSelected {
+	background-color: var(--background-modifier-accent);
+}
+
+.channelButtonDisabled {
+	cursor: not-allowed;
+	opacity: 0.5;
+}
+
+.channelButtonContent {
+	display: flex;
+	min-width: 0;
+	flex: 1;
+	align-items: center;
+	gap: 12px;
+}
+
+.channelInfo {
+	display: flex;
+	min-width: 0;
+	flex: 1;
+	flex-direction: column;
+	justify-content: center;
+}
+
+.channelName {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-weight: 500;
+	font-size: 14px;
+	color: var(--text-primary);
+	line-height: 1.4;
+	max-height: 1.4em;
+}
+
+.channelDetails {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	color: var(--text-tertiary);
+	font-size: 12px;
+	line-height: 1.4;
+	max-height: 1.4em;
+}
+
+.checkboxContainer {
+	flex-shrink: 0;
+	pointer-events: none;
+}
+
+.channelButton:hover:not(:disabled) .checkboxContainer {
+	filter: brightness(1.3);
+}
+
+.inputAreaContainer {
+	position: relative;
+	width: 100%;
+	flex-shrink: 0;
+	padding: 12px 16px;
+}
+
+.messageInputContainer {
+	position: relative;
+	width: 100%;
+	border-radius: 6px;
+	background-color: var(--background-textarea);
+}
+
+.messageInputBase {
+	position: relative;
+	display: flex;
+	height: 100%;
+	max-height: 80px;
+	min-height: 44px;
+	width: 100%;
+	resize: none;
+	overflow-x: hidden;
+	overflow-y: scroll;
+	white-space: pre-wrap;
+	word-break: break-word;
+	border-radius: 6px;
+	background-color: transparent;
+	padding: 11px 52px 11px 11px;
+	color: var(--text-chat);
+	line-height: 1.375rem;
+	caret-color: var(--text-chat);
+}
+
+.messageInputActions {
+	position: absolute;
+	top: 0;
+	right: 0;
+}
+
+.emojiPickerButton {
+	display: flex;
+	height: 44px;
+	width: auto;
+	align-items: center;
+	justify-content: center;
+	padding: 0 12px;
+	transition: color 0.2s ease;
+	color: var(--text-chat-muted);
+	cursor: pointer;
+}
+
+.emojiPickerButton:hover {
+	color: var(--text-chat);
+}
+
+.emojiPickerButtonActive {
+	color: var(--text-primary);
+}
+
+.modalFooter {
+	display: flex;
+	flex-direction: row;
+	gap: 8px;
+	width: 100%;
+}
+
+.footerButton {
+	flex: 1;
+}
+
+.searchInput {
+	height: 44px;
+	background-color: var(--background-textarea);
+	width: 100%;
+}
+
+.headerSearchInput {
+	width: 100%;
+}
+
+.searchIcon {
+	height: 1.25rem;
+	width: 1.25rem;
+}
+
+.emojiIcon {
+	height: 1.5rem;
+	width: 1.5rem;
+}

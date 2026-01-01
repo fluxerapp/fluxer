@@ -1,0 +1,157 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.splashOverlay {
+	position: fixed;
+	inset: 0;
+	z-index: var(--z-index-overlay);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background-color: var(--background-secondary);
+	padding-left: var(--spacing-6);
+	padding-right: var(--spacing-6);
+}
+
+:global(html.platform-native:not(.platform-macos)) .splashOverlay {
+	top: var(--native-titlebar-height);
+}
+
+.topDragRegion {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: var(--layout-header-height);
+	z-index: 100;
+	pointer-events: none;
+}
+
+:global(html.platform-native.platform-macos) .topDragRegion {
+	pointer-events: auto;
+}
+
+@media (min-width: 640px) {
+	.splashOverlay {
+		padding-left: var(--spacing-8);
+		padding-right: var(--spacing-8);
+	}
+}
+
+@media (min-width: 768px) {
+	.splashOverlay {
+		padding-left: var(--spacing-12);
+		padding-right: var(--spacing-12);
+	}
+}
+
+.splashContent {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--spacing-4);
+	width: 100%;
+	max-width: 28rem;
+}
+
+@media (min-width: 640px) {
+	.splashContent {
+		max-width: 32rem;
+	}
+}
+
+@media (min-width: 768px) {
+	.splashContent {
+		max-width: 36rem;
+	}
+}
+
+@media (min-width: 1024px) {
+	.splashContent {
+		max-width: 42rem;
+	}
+}
+
+.iconWrapper {
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 5rem;
+	height: 5rem;
+}
+
+@media (min-width: 640px) {
+	.iconWrapper {
+		width: 6rem;
+		height: 6rem;
+	}
+}
+
+@media (min-width: 768px) {
+	.iconWrapper {
+		width: 7rem;
+		height: 7rem;
+	}
+}
+
+.iconPulse {
+	position: absolute;
+	inset: 0;
+	border-radius: 50%;
+	background-color: var(--brand-primary);
+	opacity: 0.75;
+	animation: splashPulse 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+.icon {
+	position: relative;
+	z-index: var(--z-index-elevated-1);
+	width: 5rem;
+	height: 5rem;
+}
+
+@media (min-width: 640px) {
+	.icon {
+		width: 6rem;
+		height: 6rem;
+	}
+}
+
+@media (min-width: 768px) {
+	.icon {
+		width: 7rem;
+		height: 7rem;
+	}
+}
+
+@keyframes splashPulse {
+	0% {
+		transform: scale(1);
+		opacity: 0.75;
+	}
+	75% {
+		transform: scale(2);
+		opacity: 0;
+	}
+	100% {
+		transform: scale(2);
+		opacity: 0;
+	}
+}

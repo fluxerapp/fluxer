@@ -1,0 +1,188 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.container {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+}
+
+.label {
+	font-weight: 500;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--text-primary);
+}
+
+.label.disabled {
+	cursor: not-allowed;
+}
+
+.description {
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--text-primary-muted);
+}
+
+.description.disabled {
+	opacity: 0.5;
+}
+
+.errorText {
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--status-danger);
+}
+
+.trigger {
+	display: flex;
+	width: 100%;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.5rem;
+	padding: 0.625rem 0.75rem;
+	background-color: var(--form-surface-background);
+	border: 1px solid var(--form-border-color, transparent);
+	border-radius: 0.375rem;
+	cursor: pointer;
+	transition:
+		border-color 0.15s ease,
+		background-color 0.15s ease;
+}
+
+.triggerDisabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.triggerError {
+	border-color: var(--status-danger);
+}
+
+.triggerValue {
+	flex: 1;
+	text-align: left;
+	font-size: 0.875rem;
+	color: var(--text-primary);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.triggerPlaceholder {
+	color: var(--text-tertiary);
+}
+
+.triggerIcon {
+	flex-shrink: 0;
+	width: 1rem;
+	height: 1rem;
+	color: var(--text-tertiary);
+}
+
+.scrollContainer {
+	display: flex;
+	flex-direction: column;
+	padding-top: 4px;
+}
+
+.bottomSpacer {
+	flex-shrink: 0;
+	height: 40px;
+}
+
+.optionsContainer {
+	overflow: hidden;
+	border-radius: 0.75rem;
+	background-color: var(--background-secondary-alt);
+}
+
+.optionButton {
+	display: flex;
+	width: 100%;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem;
+	padding: 1rem;
+	text-align: left;
+	transition: background-color 0.15s ease;
+	cursor: pointer;
+}
+
+.optionButton:active:not(:disabled) {
+	background-color: var(--background-modifier-hover);
+}
+
+.optionButton:disabled {
+	cursor: not-allowed;
+}
+
+.optionButtonSelected {
+	background-color: color-mix(in srgb, var(--brand-primary-light) 10%, transparent);
+}
+
+:global(.theme-light) .optionButtonSelected {
+	background-color: color-mix(in srgb, var(--brand-primary) 10%, transparent);
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.optionButtonSelected:hover {
+		background-color: color-mix(in srgb, var(--brand-primary-light) 15%, transparent);
+	}
+
+	:global(.theme-light) .optionButtonSelected:hover {
+		background-color: color-mix(in srgb, var(--brand-primary) 15%, transparent);
+	}
+}
+
+.optionLabel {
+	font-weight: 500;
+	font-size: 0.875rem;
+	color: var(--text-primary);
+}
+
+.optionDisabled {
+	opacity: 0.5;
+}
+
+.checkIconContainer {
+	display: flex;
+	height: 1.25rem;
+	width: 1.25rem;
+	align-items: center;
+	justify-content: center;
+}
+
+.checkIcon {
+	height: 1.25rem;
+	width: 1.25rem;
+	color: var(--brand-primary-light);
+}
+
+:global(.theme-light) .checkIcon {
+	color: var(--brand-primary);
+}
+
+.divider {
+	margin-left: 1rem;
+	margin-right: 1rem;
+	height: 1px;
+	background-color: var(--background-header-secondary);
+	opacity: 0.3;
+}

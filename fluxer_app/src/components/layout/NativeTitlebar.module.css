@@ -1,0 +1,101 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.titlebar {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: var(--native-titlebar-height);
+	display: flex;
+	align-items: center;
+	padding: 0 calc(var(--spacing-3) + env(safe-area-inset-right)) 0 calc(var(--spacing-3) + env(safe-area-inset-left));
+	gap: var(--spacing-2);
+	background: var(--background-secondary);
+	-webkit-app-region: drag;
+	z-index: var(--z-index-titlebar);
+}
+
+.left {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-2);
+	color: var(--text-muted);
+	opacity: 0.8;
+}
+
+.wordmark {
+	height: 14px;
+	width: auto;
+	color: var(--text-muted);
+}
+
+.spacer {
+	flex: 1 1 auto;
+}
+
+.controls {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	-webkit-app-region: no-drag;
+}
+
+.controlButton {
+	-webkit-app-region: no-drag;
+	appearance: none;
+	border: 1px solid transparent;
+	background: transparent;
+	color: var(--text-secondary);
+	width: 28px;
+	height: 20px;
+	border-radius: var(--radius-sm);
+	display: grid;
+	place-items: center;
+	transition:
+		background-color 120ms ease,
+		color 120ms ease,
+		border-color 120ms ease;
+	cursor: pointer;
+}
+
+.controlButton svg {
+	width: 17px;
+	height: 17px;
+}
+
+.controlButton:hover {
+	background: var(--background-modifier-hover);
+	color: var(--text-primary);
+	border-color: var(--user-area-divider-color);
+}
+
+.controlButton:active {
+	background: var(--background-modifier-active);
+}
+
+.closeButton:hover {
+	background: #e81123;
+	color: #fff;
+	border-color: transparent;
+}
+
+.closeButton:active {
+	background: #b50d1a;
+}

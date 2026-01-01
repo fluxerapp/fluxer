@@ -1,0 +1,42 @@
+FROM cassandra:5.0
+
+# Install backup tools only
+RUN apt-get update && apt-get install -y \
+	age \
+	awscli \
+	&& rm -rf /var/lib/apt/lists/*
+
+# Copy backup script
+COPY backup.sh /usr/local/bin/backup.sh
+RUN chmod +x /usr/local/bin/backup.sh
+
+# Create entrypoint that runs backups in a loop
+RUN echo '#!/bin/bash\n\
+set -e\n\
+\n\
+# Create age public key file from environment variable\n\
+if [ -n "${AGE_PUBLIC_KEY}" ]; then\n\
+    echo "${AGE_PUBLIC_KEY}" > /tmp/age_public_key.txt\n\
+    chmod 644 /tmp/age_public_key.txt\n\
+    echo "Age encryption enabled for backups"\n\
+else\n\
+    echo "Warning: AGE_PUBLIC_KEY not set - backups will not be encrypted"\n\
+fi\n\
+\n\
+echo "Starting backup service - first backup in 5 minutes, then hourly"\n\
+\n\
+# Wait 5 minutes before first backup\n\
+echo "Waiting 5 minutes for Cassandra to be ready..."\n\
+sleep 300\n\
+\n\
+# Run backups in a loop\n\
+while true; do\n\
+    echo "-----------------------------------"\n\
+    echo "Starting backup at $(date)"\n\
+    /usr/local/bin/backup.sh || echo "Backup failed at $(date)"\n\
+    echo "Next backup in 1 hour"\n\
+    sleep 3600\n\
+done\n\
+' > /usr/local/bin/backup-entrypoint.sh && chmod +x /usr/local/bin/backup-entrypoint.sh
+
+ENTRYPOINT ["/usr/local/bin/backup-entrypoint.sh"]

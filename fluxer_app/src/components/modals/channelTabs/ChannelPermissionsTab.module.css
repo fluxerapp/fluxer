@@ -1,0 +1,341 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.container {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	max-width: 100%;
+	font-size: 14px;
+}
+
+.syncBanner {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 8px;
+	border: 1px solid var(--background-modifier-accent);
+	border-radius: 6px;
+	padding: 10px 12px;
+	margin-top: 12px;
+	font-size: 0.8125rem;
+}
+
+@media (min-width: 640px) {
+	.syncBanner {
+		flex-direction: row;
+		align-items: center;
+		padding: 8px 12px;
+	}
+}
+
+.syncBannerSynced {
+	color: var(--status-online);
+}
+
+.syncBannerUnsynced {
+	color: var(--status-idle);
+}
+
+.grid {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: 16px;
+	min-height: 0;
+	align-items: start;
+}
+
+.left {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	min-height: 0;
+	min-width: 0;
+	width: 100%;
+	padding-top: 12px;
+}
+
+@media (min-width: 640px) {
+	.left {
+		padding-top: 20px;
+		padding-right: 8px;
+	}
+}
+
+.leftSticky {
+	position: sticky;
+	top: 0;
+}
+
+.leftTitle {
+	margin-bottom: 4px;
+	font-weight: 600;
+	font-size: 0.75rem;
+	text-transform: uppercase;
+	letter-spacing: 0.02em;
+	color: var(--text-tertiary);
+}
+
+.leftScroller {
+	display: flex;
+	flex: 1 1 auto;
+	min-height: 0;
+}
+
+.right {
+	display: flex;
+	flex: 1 1 auto;
+	min-height: 0;
+	min-width: 0;
+	flex-direction: column;
+	overflow: hidden;
+}
+
+.rightScroller {
+	display: flex;
+	flex: 1 1 auto;
+	min-height: 0;
+	flex-direction: column;
+	gap: 16px;
+	padding-top: 16px;
+	padding-bottom: 24px;
+}
+
+@media (min-width: 640px) {
+	.rightScroller {
+		padding-top: 20px;
+	}
+}
+
+.sectionRow {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+@media (min-width: 640px) {
+	.sectionRow {
+		flex-direction: row;
+		align-items: center;
+		justify-content: space-between;
+	}
+
+	.sectionRow > button,
+	.sectionRow > :last-child:not(.sectionHeader) {
+		flex-shrink: 0;
+	}
+}
+
+.sectionTitle {
+	font-weight: 600;
+	font-size: 1.125rem;
+	letter-spacing: -0.01em;
+	margin-bottom: 8px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.sectionHeader {
+	min-width: 0;
+}
+
+.subtleText {
+	color: var(--text-primary-muted);
+	font-size: 0.8125rem;
+}
+
+.permHeaderRow {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: space-between;
+	width: 100%;
+}
+
+.permHelp {
+	color: var(--text-primary-muted);
+	font-size: 0.8125rem;
+}
+
+.emptyState {
+	padding: 16px 0;
+	text-align: center;
+	color: var(--text-primary-muted);
+	font-size: 0.875rem;
+}
+
+.overwriteItem {
+	position: relative;
+	display: flex;
+	width: 100%;
+	align-items: center;
+	gap: 8px;
+	border-radius: 4px;
+	padding: 6px 8px;
+	text-align: left;
+	cursor: pointer;
+	background: transparent;
+}
+.overwriteItem:not(.overwriteItemSelected):hover {
+	background: var(--background-modifier-hover);
+}
+.overwriteItemSelected {
+	background: var(--brand-primary);
+	color: var(--brand-primary-fill);
+}
+.overwriteIcon {
+	flex-shrink: 0;
+	width: 12px;
+	height: 12px;
+}
+.roleDot {
+	width: 12px;
+	height: 12px;
+	border-radius: 9999px;
+	flex-shrink: 0;
+}
+.overwriteName {
+	flex: 1 1 auto;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-size: 0.875rem;
+	line-height: 1.2;
+	max-height: 1.2em;
+}
+
+.icon {
+	width: 16px;
+	height: 16px;
+	margin-right: 6px;
+	display: inline-flex;
+	align-items: center;
+}
+
+.permSearchRow {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin: 12px 0;
+}
+
+.permSearchInput {
+	flex: 1;
+	min-width: 0;
+}
+
+.layoutButtons {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	flex-shrink: 0;
+}
+
+.layoutButton {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 36px;
+	height: 36px;
+	border-radius: 6px;
+	background: var(--background-secondary);
+	color: var(--text-primary-muted);
+	cursor: pointer;
+	transition:
+		background-color 150ms ease,
+		color 150ms ease;
+}
+
+.layoutButton:hover {
+	background: var(--background-modifier-hover);
+	color: var(--text-primary);
+}
+
+.permCategories {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+}
+
+.mobileOverrideList {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	padding: 16px 0;
+}
+
+.mobileListHeader {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+}
+
+.mobileListTitle {
+	font-weight: 600;
+	font-size: 1rem;
+	color: var(--text-primary);
+}
+
+.mobileOverrides {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.mobileOverrideItem {
+	display: flex;
+	width: 100%;
+	align-items: center;
+	gap: 12px;
+	padding: 12px 14px;
+	border-radius: 6px;
+	background: var(--background-secondary);
+	cursor: pointer;
+	transition: background-color 150ms ease;
+}
+
+.mobileOverrideItem:hover {
+	background: var(--background-modifier-hover);
+}
+
+.mobileOverrideName {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-size: 0.875rem;
+	text-align: left;
+	line-height: 1.2;
+	max-height: 1.2em;
+}
+
+.mobileOverrideChevron {
+	flex-shrink: 0;
+	color: var(--text-primary-muted);
+}
+
+.mobileBackRow {
+	margin-bottom: 8px;
+}

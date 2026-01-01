@@ -1,0 +1,178 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.iconCircle {
+	display: flex;
+	height: 2.75rem;
+	width: 2.75rem;
+	align-items: center;
+	justify-content: center;
+	border-radius: 9999px;
+}
+
+@media (min-width: 640px) {
+	.iconCircle {
+		height: 3rem;
+		width: 3rem;
+	}
+}
+
+.iconCircleActive {
+	background: linear-gradient(to bottom right, rgb(168 85 247 / 1), rgb(236 72 153 / 1));
+}
+
+.iconCircleInactive {
+	background: linear-gradient(to bottom right, rgb(168 85 247 / 0.5), rgb(236 72 153 / 0.5));
+}
+
+.iconCircleDisabled {
+	background-color: var(--background-tertiary);
+}
+
+.icon {
+	height: 1.25rem;
+	width: 1.25rem;
+	color: white;
+}
+
+@media (min-width: 640px) {
+	.icon {
+		height: 1.5rem;
+		width: 1.5rem;
+	}
+}
+
+.iconError {
+	color: var(--text-tertiary);
+}
+
+.title {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-weight: 600;
+	font-size: 0.95rem;
+}
+
+@media (min-width: 640px) {
+	.title {
+		font-size: 1rem;
+	}
+}
+
+.titlePrimary {
+	color: var(--text-primary);
+}
+
+.titleTertiary {
+	color: var(--text-tertiary);
+}
+
+.titleDanger {
+	color: var(--status-danger);
+}
+
+.subRow {
+	margin-bottom: 0.25rem;
+	color: var(--text-secondary);
+	font-size: 0.7rem;
+	line-height: 1.25;
+	min-height: 0.9rem;
+}
+
+@media (min-width: 640px) {
+	.subRow {
+		font-size: 0.8rem;
+		line-height: 1.25;
+		min-height: 1rem;
+	}
+}
+
+.helpRow {
+	color: var(--text-tertiary);
+	font-size: 0.7rem;
+	min-height: 0.9rem;
+}
+
+@media (min-width: 640px) {
+	.helpRow {
+		font-size: 0.8rem;
+		min-height: 1rem;
+	}
+}
+
+.skeleton {
+	animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+	border-radius: 9999px;
+	background-color: var(--background-tertiary);
+}
+
+.skeletonCircle {
+	height: 2.75rem;
+	width: 2.75rem;
+}
+
+@media (min-width: 640px) {
+	.skeletonCircle {
+		height: 3rem;
+		width: 3rem;
+	}
+}
+
+.skeletonTitle {
+	height: 1.1rem;
+	width: 7rem;
+	border-radius: 0.25rem;
+}
+
+@media (min-width: 640px) {
+	.skeletonTitle {
+		height: 1.25rem;
+		width: 7rem;
+	}
+}
+
+.skeletonHelp {
+	height: 0.9rem;
+	width: 6.5rem;
+	border-radius: 0.25rem;
+}
+
+@media (min-width: 640px) {
+	.skeletonHelp {
+		height: 1rem;
+		width: 7.5rem;
+	}
+}
+
+.skeletonButton {
+	height: 2.25rem;
+	width: 100%;
+	border-radius: 0.375rem;
+}
+
+@keyframes pulse {
+	0%,
+	100% {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0.5;
+	}
+}

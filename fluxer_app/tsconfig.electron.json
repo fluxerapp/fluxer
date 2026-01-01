@@ -1,0 +1,21 @@
+{
+	"$schema": "https://json.schemastore.org/tsconfig",
+	"extends": "./tsconfig.json",
+	"compilerOptions": {
+		"target": "ES2022",
+		"module": "NodeNext",
+		"lib": ["ES2022", "DOM", "DOM.Iterable"],
+		"outDir": "src-electron/dist",
+		"rootDir": "src-electron",
+		"noEmit": false,
+		"sourceMap": true,
+		"declaration": false,
+		"moduleResolution": "NodeNext",
+		"noImplicitReturns": true,
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		"noFallthroughCasesInSwitch": true
+	},
+	"include": ["src-electron/**/*.ts"],
+	"exclude": ["node_modules", "dist"]
+}

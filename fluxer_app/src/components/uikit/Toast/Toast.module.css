@@ -1,0 +1,77 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.toast {
+	display: inline-flex;
+	max-width: 90svw;
+	cursor: pointer;
+	align-items: center;
+	border-radius: 9999px;
+	border: 1px solid var(--background-modifier-accent);
+	background-color: var(--background-primary);
+	box-shadow:
+		0 10px 15px -3px rgb(0 0 0 / 0.1),
+		0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+.toastMobile {
+	gap: 0.5rem;
+	padding: 0.625rem 1rem;
+}
+
+.toastDesktop {
+	gap: 0.75rem;
+	padding: 0.75rem 1.25rem;
+}
+
+.icon {
+	flex-shrink: 0;
+}
+
+.iconSuccess {
+	color: var(--status-online);
+}
+
+.iconError {
+	color: var(--status-danger);
+}
+
+.iconMobile {
+	height: 1rem;
+	width: 1rem;
+}
+
+.iconDesktop {
+	height: 1.25rem;
+	width: 1.25rem;
+}
+
+.text {
+	font-weight: 600;
+	color: var(--text-primary);
+	line-height: 1.375;
+}
+
+.textMobile {
+	font-size: 0.875rem;
+}
+
+.textDesktop {
+	font-size: 1rem;
+}

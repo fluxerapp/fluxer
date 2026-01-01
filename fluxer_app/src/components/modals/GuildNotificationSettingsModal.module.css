@@ -1,0 +1,276 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.container {
+	display: flex;
+	flex-direction: column;
+	gap: 24px;
+}
+
+.section {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+.sectionTitle {
+	font-size: 14px;
+	font-weight: 600;
+	line-height: 1.4;
+	max-height: 2.8em;
+	color: var(--text-primary);
+}
+
+.notificationSection {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.suppressSection {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+.mobilePushSection {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+.overridesSection {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.overridesHeader {
+	margin-top: 8px;
+	display: none;
+	grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+	gap: 8px;
+	padding: 8px 12px;
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--text-tertiary);
+	text-transform: uppercase;
+}
+
+@media (min-width: 1024px) {
+	.overridesHeader {
+		display: grid;
+	}
+}
+
+.overridesHeaderCell {
+	text-align: center;
+}
+
+.overridesHeaderCellLeft {
+	text-align: left;
+}
+
+.overridesHeaderCellMute {
+	padding-left: 8px;
+	text-align: center;
+}
+
+.overrideItem {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	border-radius: 8px;
+	border: 1px solid var(--background-header-secondary);
+	padding: 12px;
+	transition: background-color 0.2s;
+}
+
+.overrideItem:hover {
+	background-color: var(--background-secondary);
+}
+
+@media (min-width: 1024px) {
+	.overrideItem {
+		display: grid;
+		grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+		align-items: center;
+		gap: 8px;
+		min-height: 64px;
+		cursor: pointer;
+	}
+}
+
+.overrideHeader {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+}
+
+@media (min-width: 1024px) {
+	.overrideHeader {
+		display: contents;
+	}
+}
+
+.channelInfo {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	min-width: 0;
+	flex: 1;
+}
+
+.channelIcon {
+	flex-shrink: 0;
+	color: var(--text-tertiary);
+}
+
+.channelDetails {
+	display: flex;
+	min-width: 0;
+	flex-direction: column;
+	justify-content: center;
+}
+
+.channelName {
+	font-size: 14px;
+	font-weight: 500;
+	line-height: 1.4;
+	max-height: 2.8em;
+	color: var(--text-primary);
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.categoryName {
+	font-size: 12px;
+	line-height: 1.4;
+	max-height: 2.8em;
+	color: var(--text-tertiary);
+}
+
+.mobileOverrideOptions {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	padding-top: 8px;
+	border-top: 1px solid var(--background-header-secondary);
+}
+
+@media (min-width: 1024px) {
+	.mobileOverrideOptions {
+		display: none;
+	}
+}
+
+.desktopNotificationOptions {
+	display: none;
+}
+
+@media (min-width: 1024px) {
+	.desktopNotificationOptions {
+		display: contents;
+	}
+}
+
+.checkboxCell {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+.removeButton {
+	display: flex;
+	height: 24px;
+	width: 24px;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	border-radius: 9999px;
+	background-color: var(--background-tertiary);
+	color: var(--text-tertiary);
+	transition:
+		background-color 0.2s,
+		color 0.2s;
+	cursor: pointer;
+}
+
+.removeButton:hover {
+	background-color: var(--status-danger);
+	color: white;
+}
+
+@media (min-width: 1024px) {
+	.removeButton {
+		position: absolute;
+		top: 50%;
+		right: -12px;
+		transform: translateY(-50%);
+		background-color: var(--status-danger);
+		color: white;
+		opacity: 0;
+		transition: opacity 0.2s;
+	}
+
+	.overrideItem:hover .removeButton {
+		opacity: 1;
+	}
+
+	.removeButton:hover {
+		opacity: 0.8;
+	}
+}
+
+.removeIcon {
+	font-size: 14px;
+	font-weight: bold;
+}
+
+.optionContainer {
+	display: flex;
+	width: 100%;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.optionContent {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.optionCategory {
+	font-size: 0.75rem;
+	line-height: 1rem;
+	color: var(--text-tertiary);
+	text-transform: uppercase;
+}
+
+.singleValueContainer {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.iconTertiary {
+	color: var(--text-tertiary);
+}

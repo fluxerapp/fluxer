@@ -1,0 +1,66 @@
+:8088 {
+  encode zstd gzip
+
+  @api path /api/*
+  handle @api {
+    handle_path /api/* {
+      reverse_proxy api:8080
+    }
+  }
+
+  @media path /media/*
+  handle @media {
+    handle_path /media/* {
+      reverse_proxy media:8080
+    }
+  }
+
+  @s3 path /s3/*
+  handle @s3 {
+    handle_path /s3/* {
+      reverse_proxy minio:9000
+    }
+  }
+
+  @admin path /admin /admin/*
+  handle @admin {
+    uri strip_prefix /admin
+    reverse_proxy admin:8080
+  }
+
+  @geoip path /geoip/*
+  handle @geoip {
+    handle_path /geoip/* {
+      reverse_proxy geoip:8080
+    }
+  }
+
+  @marketing path /marketing /marketing/*
+  handle @marketing {
+    uri strip_prefix /marketing
+    reverse_proxy marketing:8080
+  }
+
+  @gateway path /gateway /gateway/*
+  handle @gateway {
+    uri strip_prefix /gateway
+    reverse_proxy gateway:8080
+  }
+
+  @livekit path /livekit /livekit/*
+  handle @livekit {
+    handle_path /livekit/* {
+      reverse_proxy livekit:7880
+    }
+  }
+
+  @metrics path /metrics /metrics/*
+  handle @metrics {
+    uri strip_prefix /metrics
+    reverse_proxy metrics:8080
+  }
+
+  handle {
+    reverse_proxy host.docker.internal:3000
+  }
+}

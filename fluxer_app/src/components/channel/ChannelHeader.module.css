@@ -1,0 +1,546 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.headerContainer {
+	z-index: 3;
+	display: grid;
+	grid-template-columns: 1fr auto;
+	align-items: center;
+	gap: var(--spacing-4);
+	height: var(--layout-header-height);
+	min-height: var(--layout-header-height);
+	border-bottom: 1px solid var(--user-area-divider-color);
+	background-color: var(--background-secondary-lighter);
+	padding: 0 var(--spacing-4);
+	color: var(--text-primary);
+}
+
+.headerWrapper {
+	--channel-header-background: var(--background-secondary-lighter);
+	background-color: var(--channel-header-background);
+	display: flex;
+	flex-direction: column;
+}
+
+.headerWrapperCallActive {
+	--channel-header-background: #000;
+	background-color: var(--channel-header-background);
+}
+
+.headerContainerCallActive {
+	background-color: transparent;
+	border-bottom-color: transparent;
+}
+
+.callBanner {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+	align-items: center;
+	gap: var(--spacing-4);
+	padding: var(--spacing-3) var(--spacing-4);
+	border-top: 1px solid color-mix(in srgb, var(--white) 10%, transparent);
+	background-color: #000;
+	color: var(--text-primary);
+}
+
+.callBannerInfo {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-2);
+	min-width: 0;
+}
+
+.callBannerIcon {
+	color: var(--status-online);
+	height: 1.25rem;
+	width: 1.25rem;
+}
+
+.callBannerTexts {
+	display: flex;
+	flex-direction: column;
+	gap: 0.15rem;
+	min-width: 0;
+}
+
+.callBannerTitle {
+	font-weight: 600;
+	font-size: 0.95rem;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	line-height: 1.25rem;
+	max-height: 1.25rem;
+}
+
+.callBannerSubtitle {
+	font-size: 0.875rem;
+	color: var(--text-primary-muted);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	line-height: 1.25rem;
+	max-height: 1.25rem;
+}
+
+.callBannerConnected {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-wrap: wrap;
+	gap: var(--spacing-3);
+	min-width: 0;
+}
+
+.callBannerPending {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: var(--spacing-2);
+	min-width: 0;
+}
+
+.callBannerAvatarShell {
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	cursor: context-menu;
+}
+
+.callBannerAvatar {
+	border-radius: 9999px;
+	box-shadow: 0 0 0 1px color-mix(in srgb, var(--white) 12%, transparent);
+}
+
+.callBannerAvatarPending {
+	opacity: 0.8;
+}
+
+.callBannerAvatarPending::before {
+	content: '';
+	position: absolute;
+	inset: -6px;
+	border-radius: 50%;
+	border: 1px solid color-mix(in srgb, var(--white) 45%, transparent);
+	animation: callBannerRing 1.6s ease-in-out infinite;
+}
+
+.callBannerAvatarPending .callBannerAvatar {
+	filter: grayscale(0.75);
+	opacity: 0.75;
+}
+
+@keyframes callBannerRing {
+	0% {
+		transform: scale(0.9);
+		opacity: 0.7;
+	}
+	70% {
+		transform: scale(1.15);
+		opacity: 0;
+	}
+	100% {
+		opacity: 0;
+	}
+}
+
+@media (max-width: 767px) {
+	.headerContainer {
+		height: 4rem;
+		min-height: 4rem;
+	}
+}
+
+.headerLeftSection {
+	position: relative;
+	display: flex;
+	align-items: center;
+	min-width: 0;
+	overflow: hidden;
+}
+
+.backButton {
+	margin-right: var(--spacing-3);
+	flex-shrink: 0;
+	cursor: pointer;
+	-webkit-app-region: no-drag;
+}
+
+.backButtonDesktop {
+	composes: backButton;
+}
+
+@media (min-width: 768px) {
+	.backButtonDesktop {
+		display: none;
+	}
+}
+
+.backIcon {
+	height: 1.5rem;
+	width: 1.5rem;
+}
+
+.backIconBold {
+	composes: backIcon;
+	font-weight: bold;
+}
+
+.leftContentContainer {
+	position: relative;
+	min-width: 0;
+	flex: 1;
+	overflow: hidden;
+	display: flex;
+}
+
+.mobileButton {
+	display: flex;
+	align-items: center;
+	border: none;
+	background-color: transparent;
+	padding: 0;
+	text-align: left;
+	cursor: pointer;
+	-webkit-app-region: no-drag;
+}
+
+.desktopButton {
+	composes: mobileButton;
+	cursor: pointer;
+}
+
+.desktopButton:hover {
+	background-color: color-mix(in srgb, var(--white) 6%, transparent);
+}
+
+.avatarWrapper {
+	display: flex;
+	align-items: center;
+	min-width: 0;
+	max-width: 100%;
+	overflow: hidden;
+}
+
+.groupDMHeaderTrigger {
+	display: flex;
+	align-items: center;
+	min-width: 0;
+	max-width: 100%;
+	cursor: pointer;
+	-webkit-app-region: no-drag;
+}
+
+.groupDMHeaderTrigger:hover {
+	background-color: color-mix(in srgb, var(--white) 6%, transparent);
+}
+
+.groupDMHeaderInner {
+	display: flex;
+	align-items: center;
+	flex: 1;
+	min-width: 0;
+	max-width: 100%;
+	gap: var(--spacing-2);
+	position: relative;
+	z-index: 1;
+}
+
+.groupDMEditIcon {
+	opacity: 0;
+	color: var(--text-primary-muted);
+	flex-shrink: 0;
+	position: relative;
+	margin-left: var(--spacing-2);
+}
+
+.groupDMHeaderTrigger:hover .groupDMEditIcon,
+.groupDMHeaderTrigger:focus-visible .groupDMEditIcon {
+	opacity: 1;
+}
+
+.channelName {
+	margin-left: var(--spacing-3);
+	min-width: 0;
+	flex-shrink: 1;
+	font-weight: 500;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	line-height: 1.5rem;
+	max-height: 1.5rem;
+}
+
+.groupDMChannelName {
+	margin-left: 0;
+}
+
+.dmNameWrapper {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+	min-width: 0;
+	max-width: 15rem;
+	flex-shrink: 1;
+}
+
+.userTag {
+	margin-left: 0.25rem;
+}
+
+.channelIcon {
+	height: 1.5rem;
+	width: 1.5rem;
+	flex-shrink: 0;
+	color: var(--text-primary-muted);
+}
+
+.caretRight {
+	margin-left: var(--spacing-1);
+	height: 1rem;
+	width: 1rem;
+	flex-shrink: 0;
+	color: var(--text-primary-muted);
+}
+
+.channelInfoContainer {
+	display: flex;
+	align-items: center;
+	min-width: 0;
+	max-width: 100%;
+	overflow: hidden;
+}
+
+.topicDivider {
+	margin: 0 var(--spacing-2);
+	flex-shrink: 0;
+	color: var(--background-modifier-hover);
+}
+
+.topicContainer {
+	position: relative;
+	min-width: 0;
+	flex: 1 1 0%;
+	overflow: hidden;
+	max-width: 100%;
+	isolation: isolate;
+}
+
+.topicButton {
+	display: inline-flex;
+	align-items: center;
+	width: 100%;
+	min-width: 0;
+	max-width: 100%;
+	padding-right: var(--spacing-5);
+	cursor: pointer;
+	border: none;
+	background: transparent;
+	text-align: left;
+	font-size: 0.8125rem !important;
+	line-height: 1.125rem !important;
+	max-height: 1.125rem;
+	color: var(--text-tertiary) !important;
+	white-space: nowrap !important;
+	word-break: normal !important;
+	overflow-wrap: normal !important;
+	text-overflow: ellipsis;
+	-webkit-app-region: no-drag;
+}
+
+.topicButtonOverflow {
+	mask-image: linear-gradient(90deg, #000 0%, #000 calc(100% - 2.5rem), transparent 100%);
+	-webkit-mask-image: linear-gradient(90deg, #000 0%, #000 calc(100% - 2.5rem), transparent 100%);
+	mask-repeat: no-repeat;
+	-webkit-mask-repeat: no-repeat;
+}
+
+.topicButton * {
+	white-space: inherit !important;
+	word-break: inherit !important;
+	overflow-wrap: inherit !important;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	color: inherit !important;
+	font-size: inherit !important;
+	line-height: inherit !important;
+	margin: 0;
+	padding: 0;
+}
+
+.topicMarkup :global(.markup),
+.topicMarkup :global(.markup.inlineFormat),
+.topicMarkup :global(.markup .inlineFormat) {
+	font-size: inherit !important;
+	line-height: inherit !important;
+	color: inherit !important;
+	margin: 0;
+	padding: 0;
+}
+
+.topicMarkup :global(.markup h1),
+.topicMarkup :global(.markup h2),
+.topicMarkup :global(.markup h3),
+.topicMarkup :global(.markup h4),
+.topicMarkup :global(.markup h5),
+.topicMarkup :global(.markup h6),
+.topicMarkup :global(.markup p),
+.topicMarkup :global(.markup ul),
+.topicMarkup :global(.markup ol),
+.topicMarkup :global(.markup li),
+.topicMarkup :global(.markup blockquote) {
+	font-size: inherit !important;
+	line-height: inherit !important;
+	margin: 0 !important;
+	padding: 0 !important;
+	color: inherit !important;
+}
+
+.headerRightSection {
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: var(--spacing-2);
+	flex-shrink: 0;
+	-webkit-app-region: no-drag;
+}
+
+.messageSearchFocusWrapper {
+	display: flex;
+	flex-shrink: 1;
+	min-width: 0;
+}
+
+.iconButton {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 2rem;
+	width: 2rem;
+	flex-shrink: 0;
+	cursor: pointer;
+	border-radius: var(--radius-full);
+	border: none;
+	background-color: transparent;
+	transition: color var(--transition-fast);
+}
+
+.iconButtonDefault {
+	composes: iconButton;
+	color: var(--text-primary-muted);
+	cursor: pointer;
+}
+
+.iconButtonDefault:hover {
+	color: var(--text-primary);
+}
+
+.iconButtonSelected {
+	composes: iconButton;
+	color: var(--text-primary);
+}
+
+.updateIconButton {
+	composes: iconButton;
+	color: #22c55e;
+	background-color: transparent;
+	position: relative;
+}
+
+.updateIconButtonDisabled {
+	composes: updateIconButton;
+	opacity: 0.4;
+	pointer-events: none;
+}
+
+.updateIcon {
+	height: 1.5rem;
+	width: 1.5rem;
+}
+
+.updateProgress {
+	position: absolute;
+	bottom: -0.4rem;
+	right: -0.6rem;
+	background: var(--background-tertiary);
+	color: var(--text-primary);
+	font-size: 0.65rem;
+	padding: 0 0.25rem;
+	border-radius: 6px;
+	border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.updateIconError {
+	color: var(--status-danger);
+}
+
+.iconButtonMobile {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 2.5rem;
+	width: 2.5rem;
+	flex-shrink: 0;
+	border-radius: var(--radius-full);
+	background-color: var(--background-tertiary);
+	color: var(--text-primary);
+	cursor: pointer;
+}
+
+.buttonIcon {
+	height: 1.5rem;
+	width: 1.5rem;
+}
+
+.buttonIconMobile {
+	height: 1.25rem;
+	width: 1.25rem;
+}
+
+.inlineEditWrapper {
+	margin-left: var(--spacing-3);
+}
+
+.inlineEditButton {
+	font-weight: 500;
+	cursor: pointer;
+}
+
+.inlineEditInput {
+	font-weight: 500;
+}
+
+.iconButtonWrapper {
+	position: relative;
+	display: inline-flex;
+}
+
+.unreadPinIndicator {
+	position: absolute;
+	bottom: 0.3rem;
+	right: 0.35rem;
+	width: 0.5rem;
+	height: 0.5rem;
+	border-radius: 9999px;
+	background-color: var(--status-danger);
+	box-shadow: 0 0 0 0.08rem var(--channel-header-background);
+	pointer-events: none;
+}

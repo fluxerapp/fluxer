@@ -1,0 +1,322 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.channelBadgeSelected {
+	background-color: var(--background-primary);
+}
+
+.channelBadgeSelectedIcon {
+	color: var(--surface-interactive-selected-color);
+}
+
+:global(.theme-light) .channelBadgeSelected {
+	background-color: var(--brand-primary);
+}
+
+:global(.theme-light) .channelBadgeSelectedIcon {
+	color: #fff;
+}
+
+.notFoundItem {
+	margin-left: 0.5rem;
+	margin-right: 0.5rem;
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	border-radius: 0.375rem;
+	padding: 0.375rem 0.5rem;
+	color: var(--text-tertiary);
+	opacity: 0.5;
+}
+
+.notFoundIcon {
+	height: 1.25rem;
+	width: 1.25rem;
+}
+
+.notFoundText {
+	flex: 1;
+	font-size: 0.875rem;
+}
+
+.favoriteItemContainer {
+	position: relative;
+}
+
+.favoriteItem {
+	position: relative;
+	margin-left: 0.5rem;
+	margin-right: 0.5rem;
+	display: flex;
+	min-width: 0;
+	flex: 1;
+	cursor: pointer;
+	align-items: center;
+	gap: 0.5rem;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	border-radius: 0.375rem;
+	padding: 0.375rem 0.5rem;
+}
+
+.favoriteItemDefault {
+	background-color: transparent;
+	color: var(--text-primary-muted);
+	cursor: pointer;
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.favoriteItemDefault:hover {
+		background-color: var(--background-modifier-hover);
+		color: var(--text-chat);
+	}
+}
+
+.favoriteItemPressed {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-chat);
+}
+
+.favoriteItemSelected {
+	background-color: var(--background-modifier-selected);
+}
+
+.favoriteItemOver {
+	background-color: color-mix(in srgb, var(--brand-primary) 20%, transparent);
+}
+
+.favoriteItemMuted {
+	color: var(--text-tertiary-muted);
+	opacity: 0.5;
+}
+
+.avatarContainer {
+	position: relative;
+	height: 1.5rem;
+	width: 1.5rem;
+	flex-shrink: 0;
+}
+
+.avatar {
+	height: 1.5rem;
+	width: 1.5rem;
+	border-radius: 9999px;
+	object-fit: cover;
+}
+
+.avatarPlaceholder {
+	display: flex;
+	height: 1.5rem;
+	width: 1.5rem;
+	align-items: center;
+	justify-content: center;
+	border-radius: 9999px;
+	background-color: white;
+	font-size: 0.75rem;
+	font-weight: 600;
+	color: var(--brand-primary);
+}
+
+.channelBadge {
+	position: absolute;
+	bottom: -0.125rem;
+	right: -0.125rem;
+	display: flex;
+	height: 0.875rem;
+	width: 0.875rem;
+	align-items: center;
+	justify-content: center;
+	border-radius: 9999px;
+	background-color: var(--background-primary);
+	padding: 0.0625rem;
+}
+
+.channelBadgeIcon {
+	height: 0.75rem;
+	width: 0.75rem;
+	color: var(--text-primary-muted);
+}
+
+.displayName {
+	flex: 1;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-size: 1rem;
+	font-weight: 500;
+	line-height: 1.25rem;
+	max-height: 1.25rem;
+}
+
+.actionsContainer {
+	margin-left: auto;
+	display: flex;
+	align-items: center;
+	gap: 0.25rem;
+}
+
+.categoryItem {
+	position: relative;
+	margin-left: 0.5rem;
+	margin-right: 0.5rem;
+	margin-top: 0.25rem;
+	display: flex;
+	min-width: 0;
+	flex: 1;
+	cursor: pointer;
+	align-items: center;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	border-radius: 0.375rem;
+	padding: 0.375rem 0.5rem;
+	color: var(--text-primary-muted);
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.categoryItem:hover {
+		color: var(--text-primary);
+	}
+}
+
+.categoryContent {
+	display: flex;
+	min-width: 0;
+	flex: 1;
+	align-items: center;
+	gap: 0.25rem;
+}
+
+.categoryName {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-size: 0.875rem;
+	font-weight: 600;
+	line-height: 1.25rem;
+	max-height: 1.25rem;
+}
+
+.categoryIcon {
+	height: 0.75rem;
+	width: 0.75rem;
+	flex-shrink: 0;
+	color: var(--text-primary-muted);
+	transition-property: transform;
+	transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+	transition-duration: 150ms;
+}
+
+.categoryActions {
+	margin-left: auto;
+	display: flex;
+	align-items: center;
+	gap: 0.25rem;
+}
+
+.hoverAffordance {
+	display: none;
+}
+
+.addButton {
+	display: flex;
+	height: 1rem;
+	width: 1rem;
+	cursor: pointer;
+	align-items: center;
+	justify-content: center;
+	border-radius: 9999px;
+	border: none;
+	background-color: transparent;
+	padding: 0;
+	color: var(--text-primary-muted);
+	transition-property: color;
+	transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+	transition-duration: 200ms;
+}
+
+.addButton:hover {
+	color: var(--text-primary);
+}
+
+.addButtonIcon {
+	height: 1rem;
+	width: 1rem;
+}
+
+.navigationContainer {
+	width: 100%;
+	min-width: 0;
+	min-height: 100%;
+}
+
+.channelGroupsContainer {
+	display: flex;
+	width: 100%;
+	min-width: 0;
+	flex-direction: column;
+	gap: 0.125rem;
+	padding-top: 0.5rem;
+	padding-bottom: 0.5rem;
+}
+
+.uncategorizedGroup {
+	position: relative;
+	min-height: 0.5rem;
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+}
+
+.emptyStateContainer {
+	display: flex;
+	height: 100%;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 1rem;
+	padding: 2rem;
+	text-align: center;
+}
+
+.emptyStateTitle {
+	font-size: 1.125rem;
+	font-weight: 600;
+	color: var(--text-tertiary);
+}
+
+.emptyStateDescription {
+	max-width: 24rem;
+	font-size: 0.875rem;
+	color: var(--text-tertiary);
+}
+
+.favoriteItemFavoriteItemSelected .hoverAffordance,
+.favoriteItem.keyboardFocus .hoverAffordance,
+.categoryItem.keyboardFocus .categoryActions .hoverAffordance {
+	display: flex;
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.favoriteItem:hover .hoverAffordance,
+	.categoryItem:hover .categoryActions .hoverAffordance {
+		display: flex;
+	}
+}

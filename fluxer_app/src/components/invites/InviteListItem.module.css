@@ -1,0 +1,287 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.header {
+	display: none;
+	grid-template-columns: 170px 130px minmax(140px, 1fr) 90px 140px;
+	gap: 8px;
+	padding: 0 12px 8px 12px;
+}
+
+.headerWithoutChannel {
+	display: none;
+	grid-template-columns: 190px minmax(140px, 1fr) 90px 140px;
+	gap: 12px;
+	padding: 0 12px 8px 12px;
+}
+
+.headerColumn {
+	font-weight: 600;
+	font-size: 12px;
+	text-transform: uppercase;
+	color: var(--text-primary-muted);
+}
+
+.item {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	border-radius: 6px;
+	border: 1px solid var(--background-header-secondary);
+	background-color: var(--background-secondary);
+	padding: 12px;
+	position: relative;
+}
+
+.itemWithChannel {
+	composes: item;
+	display: grid;
+	grid-template-columns: 170px 130px minmax(140px, 1fr) 90px 140px;
+	gap: 8px;
+	align-items: center;
+}
+
+.itemWithoutChannel {
+	composes: item;
+	display: grid;
+	grid-template-columns: 190px minmax(140px, 1fr) 90px 140px;
+	gap: 12px;
+	align-items: center;
+}
+
+.mobileItem {
+	composes: item;
+	cursor: pointer;
+}
+
+.mobileItem:active {
+	opacity: 0.8;
+}
+
+.row {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	overflow: hidden;
+}
+
+.label {
+	font-weight: 600;
+	font-size: 12px;
+	text-transform: uppercase;
+	color: var(--text-primary-muted);
+}
+
+.inviter {
+	composes: row;
+}
+
+.channel {
+	composes: row;
+}
+
+.code {
+	composes: row;
+	position: relative;
+}
+
+.uses {
+	composes: row;
+}
+
+.date {
+	composes: row;
+}
+
+.copyButton {
+	flex-shrink: 0;
+	border-radius: 4px;
+	padding: 4px;
+	color: var(--text-primary-muted);
+	transition:
+		background-color 0.2s,
+		color 0.2s;
+	cursor: pointer;
+}
+
+.copyButton:hover {
+	background-color: var(--background-header-secondary);
+	color: var(--text-primary);
+}
+
+.copyButtonHidden {
+	composes: copyButton;
+	opacity: 0;
+	pointer-events: none;
+}
+
+.revokeButton {
+	position: absolute;
+	top: -8px;
+	right: -8px;
+	border-radius: 50%;
+	border: 1px solid var(--background-header-secondary);
+	background-color: var(--background-primary);
+	padding: 8px;
+	color: var(--text-primary-muted);
+	box-shadow:
+		0 4px 6px -1px rgba(0, 0, 0, 0.1),
+		0 2px 4px -1px rgba(0, 0, 0, 0.06);
+	transition:
+		border-color 0.2s,
+		background-color 0.2s,
+		color 0.2s;
+	cursor: pointer;
+}
+
+.revokeButton:hover {
+	border-color: var(--status-danger);
+	background-color: var(--status-danger);
+	color: white;
+}
+
+.revokeButtonHidden {
+	composes: revokeButton;
+	opacity: 0;
+	pointer-events: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.itemWithChannel:hover .copyButtonHidden,
+	.itemWithoutChannel:hover .copyButtonHidden {
+		opacity: 1;
+		pointer-events: auto;
+	}
+
+	.itemWithChannel:hover .revokeButtonHidden,
+	.itemWithoutChannel:hover .revokeButtonHidden {
+		opacity: 1;
+		pointer-events: auto;
+	}
+}
+
+@media (hover: none) {
+	.revokeButton,
+	.revokeButtonHidden {
+		display: none;
+	}
+}
+
+.avatar {
+	height: 2rem;
+	width: 2rem;
+	flex-shrink: 0;
+	border-radius: 50%;
+}
+
+.username {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-size: 0.875rem;
+}
+
+.usernameUnknown {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-size: 0.875rem;
+	color: var(--text-primary-muted);
+}
+
+.channelIcon {
+	color: var(--text-tertiary);
+	flex-shrink: 0;
+}
+
+.channelInfo {
+	display: flex;
+	min-width: 0;
+	flex: 1;
+	flex-direction: column;
+	justify-content: center;
+	overflow: hidden;
+}
+
+.channelName {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-weight: 500;
+	font-size: 0.875rem;
+	color: var(--text-primary);
+}
+
+.categoryName {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	color: var(--text-tertiary);
+	font-size: 0.75rem;
+}
+
+.inviteCode {
+	user-select: text;
+	-webkit-user-select: text;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-family: ui-monospace, SFMono-Regular, 'SF Mono', Consolas, 'Liberation Mono', Menlo, monospace;
+	font-size: 0.875rem;
+}
+
+.copyIcon {
+	height: 1rem;
+	width: 1rem;
+}
+
+.usesText {
+	font-family: ui-monospace, SFMono-Regular, 'SF Mono', Consolas, 'Liberation Mono', Menlo, monospace;
+	font-size: 0.875rem;
+	font-variant-numeric: tabular-nums;
+}
+
+.dateText {
+	font-size: 0.875rem;
+}
+
+.dateTextMonospace {
+	font-family: ui-monospace, SFMono-Regular, 'SF Mono', Consolas, 'Liberation Mono', Menlo, monospace;
+	font-size: 0.875rem;
+	font-variant-numeric: tabular-nums;
+}
+
+.revokeIcon {
+	height: 0.75rem;
+	width: 0.75rem;
+}
+
+@media (min-width: 768px) {
+	.header {
+		display: grid;
+	}
+
+	.headerWithoutChannel {
+		display: grid;
+	}
+
+	.label {
+		display: none;
+	}
+}

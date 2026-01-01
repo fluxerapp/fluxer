@@ -1,0 +1,90 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.button {
+	cursor: pointer;
+	border: none;
+	background-color: transparent;
+	padding: 0 6px;
+	text-align: left;
+	font-weight: 600;
+	font-size: 14px;
+	line-height: 16px;
+}
+
+.container {
+	cursor: pointer;
+	border-radius: 8px;
+	padding: 8px;
+}
+
+.container:hover {
+	background-color: var(--background-modifier-hover);
+}
+
+.selected {
+	background-color: var(--background-modifier-hover);
+}
+
+.content {
+	display: flex;
+	min-height: 16px;
+	align-items: center;
+	color: var(--text-primary);
+}
+
+.icon {
+	margin-right: 8px;
+	flex-shrink: 0;
+}
+
+.nameWrapper {
+	min-width: 10ch;
+	flex-shrink: 1;
+	flex-grow: 0;
+	overflow: hidden;
+}
+
+.name {
+	max-width: 100%;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-weight: 400;
+	font-size: 16px;
+	color: var(--text-primary);
+	line-height: 1.25;
+	max-height: 1.25em;
+}
+
+.description {
+	margin-left: 16px;
+	min-width: 10ch;
+	flex-shrink: 0;
+	flex-grow: 1;
+	flex-basis: 10ch;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	text-align: right;
+	font-weight: 400;
+	color: var(--text-primary-muted);
+	font-size: 12px;
+	line-height: 1.33;
+}

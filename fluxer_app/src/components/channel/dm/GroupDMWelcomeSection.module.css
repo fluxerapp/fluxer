@@ -1,0 +1,64 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.welcomeSection {
+	margin-left: 2rem;
+	margin-right: 2rem;
+	margin-bottom: 2rem;
+	display: flex;
+	min-width: 0;
+	flex-direction: column;
+	gap: 1.5rem;
+	padding-top: 4rem;
+	margin-top: auto;
+	color: var(--text-primary);
+}
+
+.profileSection {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 1rem;
+}
+
+.groupName {
+	white-space: normal;
+	word-break: break-word;
+	overflow-wrap: break-word;
+	text-align: center;
+	font-weight: 600;
+	font-size: 1.5rem;
+	line-height: 1.25;
+	color: var(--text-primary);
+	overflow: hidden;
+	max-height: 3.75rem;
+}
+
+.welcomeText {
+	text-align: center;
+	font-size: 1.125rem;
+	line-height: 1.75rem;
+}
+
+.actions {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 0.75rem;
+}

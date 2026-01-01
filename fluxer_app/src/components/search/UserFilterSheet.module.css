@@ -1,0 +1,175 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.container {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	overflow: hidden;
+	padding-top: 8px;
+}
+
+.searchContainer {
+	padding: 0 16px 12px;
+}
+
+.searchInputWrapper {
+	display: flex;
+	align-items: center;
+	background-color: var(--background-tertiary);
+	border-radius: 8px;
+	padding: 8px 12px;
+	gap: 8px;
+}
+
+.searchIcon {
+	flex-shrink: 0;
+	color: var(--text-secondary);
+}
+
+.searchInput {
+	flex: 1;
+	border: none;
+	background: transparent;
+	color: var(--text-primary);
+	font-size: 1rem;
+	outline: none;
+	padding: 0;
+}
+
+.searchInput::placeholder {
+	color: var(--text-secondary);
+}
+
+.clearButton {
+	flex-shrink: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 2px;
+	border: none;
+	background: transparent;
+	color: var(--text-secondary);
+	cursor: pointer;
+}
+
+.scroller {
+	flex: 1;
+	overflow-y: auto;
+}
+
+.listContent {
+	padding: 0 16px 40px;
+}
+
+.userItem {
+	display: flex;
+	align-items: center;
+	width: 100%;
+	padding: 12px;
+	border: none;
+	background: transparent;
+	border-radius: 12px;
+	cursor: pointer;
+	transition: background-color 150ms ease;
+	text-align: left;
+	touch-action: manipulation;
+	-webkit-tap-highlight-color: transparent;
+	user-select: none;
+}
+
+.userItem:active {
+	background-color: var(--background-modifier-active);
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.userItem:hover {
+		background-color: var(--background-secondary-hover);
+	}
+}
+
+.userItemSelected {
+	background-color: color-mix(in srgb, var(--brand-primary-light) 10%, transparent);
+}
+
+:global(.theme-light) .userItemSelected {
+	background-color: color-mix(in srgb, var(--brand-primary) 10%, transparent);
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.userItemSelected:hover {
+		background-color: color-mix(in srgb, var(--brand-primary-light) 15%, transparent);
+	}
+
+	:global(.theme-light) .userItemSelected:hover {
+		background-color: color-mix(in srgb, var(--brand-primary) 15%, transparent);
+	}
+}
+
+.avatar {
+	flex-shrink: 0;
+	margin-right: 12px;
+}
+
+.userInfo {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+}
+
+.displayName {
+	font-size: 0.9375rem;
+	font-weight: 600;
+	color: var(--text-primary);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.username {
+	font-size: 0.8125rem;
+	color: var(--text-secondary);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.checkIcon {
+	flex-shrink: 0;
+	color: var(--brand-primary-light);
+}
+
+:global(.theme-light) .checkIcon {
+	color: var(--brand-primary);
+}
+
+.emptyState {
+	padding: 40px 16px;
+	text-align: center;
+	font-size: 1rem;
+	color: var(--text-secondary);
+}
+
+.footer {
+	display: flex;
+	justify-content: flex-end;
+	padding: 12px 16px;
+	border-top: 1px solid var(--border-color);
+}

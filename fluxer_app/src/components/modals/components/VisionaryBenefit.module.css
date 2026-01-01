@@ -1,0 +1,62 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.benefit {
+	display: flex;
+	min-height: 0;
+	flex-direction: column;
+	border-radius: 0.5rem;
+	border: 1px solid var(--background-header-secondary);
+	background-color: var(--background-secondary);
+	padding: 1rem;
+	text-align: center;
+}
+
+.iconContainer {
+	margin-bottom: 0.75rem;
+	display: flex;
+	flex-shrink: 0;
+	justify-content: center;
+}
+
+.iconWrapper {
+	display: flex;
+	height: 2.5rem;
+	width: 2.5rem;
+	align-items: center;
+	justify-content: center;
+	border-radius: 9999px;
+	background-color: var(--brand-primary);
+}
+
+.title {
+	margin-bottom: 0.5rem;
+	flex-shrink: 0;
+	font-weight: 600;
+	font-size: 0.875rem;
+	line-height: 1.25;
+	color: var(--text-primary);
+}
+
+.description {
+	min-height: 0;
+	font-size: 0.75rem;
+	line-height: 1.625;
+	color: var(--text-primary-muted);
+}

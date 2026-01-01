@@ -1,0 +1,371 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.header {
+	display: none;
+	grid-template-columns: 72px minmax(200px, 1fr) minmax(180px, 0.85fr);
+	align-items: center;
+	gap: 0.75rem;
+	padding: 0 0.75rem 0.5rem calc(0.75rem + 1px);
+}
+
+.headerCell:first-child {
+	text-align: center;
+}
+
+.headerCell:nth-child(2) {
+	padding-left: 8px;
+}
+
+.headerCell {
+	font-weight: 600;
+	color: var(--text-primary-muted);
+	font-size: 0.75rem;
+	text-transform: uppercase;
+}
+
+@media (min-width: 640px) {
+	.header {
+		display: grid;
+	}
+}
+
+.card {
+	position: relative;
+	border-radius: 0.375rem;
+	border: 1px solid var(--background-header-secondary);
+	background-color: var(--background-secondary);
+	padding: 0.75rem;
+	transition:
+		border-color 150ms ease,
+		box-shadow 150ms ease;
+}
+
+.card:hover {
+	border-color: var(--background-modifier-accent);
+	box-shadow: 0 10px 25px -18px rgb(0 0 0 / 0.4);
+}
+
+.cardWrapper {
+	position: relative;
+	overflow: visible;
+}
+
+.gridCardWrapper,
+.listCardWrapper {
+	position: relative;
+	overflow: visible;
+}
+
+.deleteButton {
+	position: absolute;
+	top: 0;
+	right: 0;
+	transform: translate(40%, -40%);
+	border-radius: 9999px;
+	border: 1px solid var(--background-header-secondary);
+	background-color: var(--background-primary);
+	padding: 0.5rem;
+	color: var(--text-primary-muted);
+	opacity: 0;
+	z-index: 2;
+	box-shadow:
+		0 4px 6px -1px rgb(0 0 0 / 0.1),
+		0 2px 4px -2px rgb(0 0 0 / 0.1);
+	transition:
+		opacity 150ms,
+		background-color 150ms,
+		border-color 150ms,
+		color 150ms;
+	cursor: pointer;
+}
+
+.card:hover .deleteButton {
+	opacity: 1;
+}
+
+.cardWrapper:hover .deleteButton {
+	opacity: 1;
+}
+
+.deleteButton:focus-visible {
+	opacity: 1;
+}
+
+.deleteButton:hover {
+	border-color: var(--status-danger);
+	background-color: var(--status-danger);
+	color: white;
+}
+
+.deleteIcon {
+	height: 0.75rem;
+	width: 0.75rem;
+}
+
+.deleteButtonFloating {
+	box-shadow: none;
+	border: 1px solid var(--background-modifier-accent);
+	background-color: var(--background-secondary);
+	transform: translate(40%, -40%);
+}
+
+.listCard {
+	display: grid;
+	grid-template-columns: 72px minmax(200px, 1fr) minmax(180px, 0.85fr);
+	align-items: center;
+	gap: 0.75rem;
+	padding: 0.75rem;
+}
+
+@media (max-width: 640px) {
+	.listCard {
+		grid-template-columns: 1fr;
+		align-items: flex-start;
+		gap: 0.5rem;
+	}
+}
+
+.listEmoji {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.listEmojiImage {
+	height: 2.5rem;
+	width: 2.5rem;
+	object-fit: contain;
+	image-rendering: pixelated;
+}
+
+.nameInlineEdit {
+	width: 100%;
+	max-width: 100%;
+	min-width: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+	overflow: hidden;
+}
+
+.nameInlineEditButton {
+	max-width: 100%;
+	justify-content: center;
+	width: 100%;
+}
+
+.nameInlineEditInput {
+	max-width: 100%;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	display: inline-block;
+}
+
+.listName {
+	min-width: 0;
+	display: flex;
+	align-items: center;
+	justify-content: flex-start;
+	text-align: left;
+	overflow: hidden;
+	overflow-wrap: anywhere;
+	word-break: break-word;
+}
+
+.listName .nameInlineEdit {
+	justify-content: flex-start;
+	text-align: left;
+}
+
+.listName .nameInlineEditButton {
+	justify-content: flex-start;
+	text-align: left;
+}
+
+.listName .nameInlineEditInput {
+	text-align: left;
+}
+
+.nameInlineEdit[data-mode='idle'] .nameInlineEditInput {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	max-width: 100%;
+}
+
+.nameInlineEdit[data-mode='editing'] .nameInlineEditInput,
+.nameInlineEdit[data-mode='saving'] .nameInlineEditInput {
+	text-overflow: clip;
+	white-space: normal;
+	overflow: visible;
+	word-break: break-word;
+	max-width: min(22ch, 100%);
+}
+
+.listUploader {
+	min-width: 0;
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	overflow: hidden;
+}
+
+.avatar {
+	height: 1.5rem;
+	width: 1.5rem;
+	flex-shrink: 0;
+	border-radius: 9999px;
+}
+
+.username {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	max-height: 1.25rem;
+}
+
+.unknownUser {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-size: 0.875rem;
+	color: var(--text-primary-muted);
+}
+
+.gridCard {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.75rem;
+	text-align: center;
+	width: 100%;
+}
+
+.gridEmojiWrapper {
+	position: relative;
+	width: 100%;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+.gridEmojiImage {
+	height: 3rem;
+	width: 3rem;
+	object-fit: contain;
+	image-rendering: pixelated;
+}
+
+.gridAvatar {
+	position: absolute;
+	top: -0.35rem;
+	left: -0.35rem;
+	height: 1.75rem;
+	width: 1.75rem;
+	border-radius: 9999px;
+	border: 2px solid var(--background-secondary);
+	box-shadow:
+		0 4px 6px -1px rgb(0 0 0 / 0.15),
+		0 2px 4px -2px rgb(0 0 0 / 0.12);
+	background-color: var(--background-secondary);
+	object-fit: cover;
+}
+
+.gridName {
+	width: 100%;
+	font-weight: 600;
+	display: grid;
+	place-items: center;
+	text-align: center;
+	min-height: 1.5rem;
+	min-width: 0;
+}
+
+.gridNameText {
+	width: 100%;
+	max-width: 16ch;
+	min-width: 0;
+	display: block;
+	text-align: center;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.gridNameButton {
+	width: 100%;
+	min-width: 0;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.25rem;
+	padding: 0.15rem 0.25rem;
+	border: none;
+	background: none;
+	color: inherit;
+	cursor: pointer;
+	text-align: center;
+	overflow: hidden;
+}
+
+.gridNameButton:hover {
+	color: var(--text-primary);
+}
+
+.renamePopout {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	padding: 0.75rem;
+	border-radius: 0.5rem;
+	background-color: var(--background-primary);
+	border: 1px solid var(--background-modifier-accent);
+	box-shadow:
+		0 20px 38px -12px rgb(0 0 0 / 0.3),
+		0 8px 16px -8px rgb(0 0 0 / 0.25);
+	min-width: min(280px, 90vw);
+}
+
+.renamePopoutHeader {
+	display: flex;
+	flex-direction: column;
+	gap: 0.15rem;
+}
+
+.renamePopoutTitle {
+	font-weight: 700;
+	font-size: 0.95rem;
+}
+
+.renamePopoutHint {
+	color: var(--text-primary-muted);
+	font-size: 0.85rem;
+}
+
+.renamePopoutActions {
+	display: flex;
+	justify-content: flex-end;
+	gap: 0.5rem;
+}

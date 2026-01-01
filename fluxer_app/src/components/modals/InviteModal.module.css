@@ -1,0 +1,173 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.content {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-3);
+	padding-top: var(--spacing-4);
+	padding-bottom: var(--spacing-8);
+}
+
+.headerSearch {
+	margin-top: var(--spacing-3);
+	width: 100%;
+}
+
+.headerSearchInput {
+	width: 100%;
+}
+
+.loadingContainer {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: var(--spacing-8) 0;
+}
+
+.subtitle {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-1-5);
+	margin: -10px 0 0;
+	font-size: 0.75rem;
+	color: var(--text-secondary);
+	line-height: 1.4;
+}
+
+.channelSubtitle {
+	min-width: 0;
+	white-space: nowrap;
+}
+
+.channelName {
+	flex: 1 1 0;
+	min-width: 0;
+	display: inline-flex;
+	align-items: center;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.channelIcon {
+	flex-shrink: 0;
+	color: var(--text-secondary);
+}
+
+.inviteButton {
+	flex-shrink: 0;
+}
+
+.warningContainer {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--spacing-2);
+	border-radius: var(--radius-md);
+	background-color: color-mix(in srgb, var(--status-idle) 10%, transparent);
+	border: 1px solid color-mix(in srgb, var(--status-idle) 30%, transparent);
+	padding: var(--spacing-3);
+}
+
+.warningIcon {
+	margin-top: 2px;
+	height: 20px;
+	width: 20px;
+	flex-shrink: 0;
+	color: var(--status-idle);
+}
+
+.warningText {
+	font-size: 0.875rem;
+	color: var(--text-primary);
+	line-height: 1.4;
+	margin: 0;
+}
+
+.linkFooter {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-2);
+	flex-shrink: 0;
+	width: 100%;
+}
+
+.linkSectionLabel {
+	font-size: 0.875rem;
+	font-weight: 500;
+	color: var(--text-primary);
+	margin: 0;
+}
+
+.expirationText {
+	font-size: 0.75rem;
+	color: var(--text-tertiary);
+	margin: 0;
+	line-height: 1.4;
+}
+
+.editLink {
+	color: var(--text-link);
+	background: none;
+	border: none;
+	padding: 0;
+	cursor: pointer;
+	font-size: 0.75rem;
+	text-decoration: none;
+	transition: opacity 0.15s ease;
+}
+
+.editLink:hover {
+	opacity: 0.8;
+	text-decoration: underline;
+}
+
+.editLink:focus-visible {
+	outline: 2px solid var(--brand-primary);
+	outline-offset: 2px;
+	border-radius: 2px;
+}
+
+.advancedView {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-4);
+	padding: var(--spacing-4) var(--spacing-5) var(--spacing-5);
+}
+
+.noChannelContent {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: var(--spacing-3);
+	padding: var(--spacing-8) var(--spacing-4);
+	text-align: center;
+}
+
+.noChannelIcon {
+	color: var(--text-tertiary);
+}
+
+.noChannelText {
+	font-size: 0.875rem;
+	color: var(--text-secondary);
+	margin: 0;
+	line-height: 1.4;
+}

@@ -1,0 +1,117 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.container {
+	display: flex;
+	flex-direction: column;
+	gap: 1.25rem;
+}
+
+.userSection {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	padding: 0.5rem 0 0.25rem;
+}
+
+.avatar {
+	width: 3rem;
+	height: 3rem;
+	border-radius: 9999px;
+	object-fit: cover;
+	flex-shrink: 0;
+}
+
+.avatarPlaceholder {
+	display: flex;
+	width: 3rem;
+	height: 3rem;
+	align-items: center;
+	justify-content: center;
+	border-radius: 9999px;
+	background-color: var(--background-header-secondary);
+	font-weight: 600;
+	font-size: 1rem;
+	color: var(--text-primary);
+	flex-shrink: 0;
+}
+
+.userInfo {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+	min-width: 0;
+}
+
+.username {
+	font-weight: 600;
+	font-size: 1rem;
+	color: var(--text-primary);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.tag {
+	font-size: 0.8125rem;
+	color: var(--text-tertiary);
+	display: block;
+}
+
+.details {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}
+
+.detailRow {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+}
+
+.detailLabel {
+	font-size: 0.6875rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.02em;
+	color: var(--text-tertiary);
+}
+
+.detailValue {
+	font-size: 0.9375rem;
+	color: var(--text-primary);
+	word-break: break-word;
+}
+
+.noReason {
+	font-style: italic;
+	color: var(--text-tertiary);
+}
+
+.moderator {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.unknownModerator {
+	font-style: italic;
+	color: var(--text-tertiary);
+}

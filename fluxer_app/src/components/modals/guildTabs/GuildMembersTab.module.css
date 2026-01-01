@@ -1,0 +1,467 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.container {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+	height: 100%;
+	min-height: 0;
+}
+
+.header {
+	display: flex;
+	flex-direction: column;
+	flex-shrink: 0;
+}
+
+.title {
+	margin: 0 0 0.5rem;
+	font-weight: 600;
+	font-size: 1.25rem;
+	line-height: 1.75rem;
+}
+
+.subtitle {
+	margin: 0;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--text-primary-muted);
+}
+
+.searchContainer {
+	flex-shrink: 0;
+}
+
+.searchInput {
+	width: 100%;
+}
+
+.scrollContainer {
+	display: flex;
+	flex: 1 1 auto;
+	flex-direction: column;
+	overflow: hidden;
+	min-height: 0;
+}
+
+.memberList {
+	display: flex;
+	flex-direction: column;
+	padding-bottom: 1rem;
+}
+
+.memberGroup {
+	overflow: hidden;
+	border-radius: 0.75rem;
+	background-color: var(--background-secondary-alt);
+}
+
+.memberItemWrapper {
+	display: contents;
+}
+
+.memberItem {
+	display: flex;
+	width: 100%;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem;
+	padding: 0.875rem 1rem;
+	text-align: left;
+	transition: background-color 0.15s;
+	cursor: pointer;
+	-webkit-tap-highlight-color: transparent;
+	user-select: none;
+	border: none;
+	background: transparent;
+	font: inherit;
+	color: inherit;
+}
+
+.memberItem[data-non-interactive] {
+	cursor: default;
+}
+
+.memberItemInteractive {
+	cursor: pointer;
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.memberItemInteractive:hover {
+		background-color: var(--background-modifier-hover);
+	}
+
+	.memberItemInteractive:active {
+		background-color: var(--background-modifier-active);
+	}
+
+	.memberItem[data-non-interactive]:hover {
+		background-color: transparent;
+		cursor: default;
+	}
+}
+
+.memberItemPressed {
+	background-color: var(--background-modifier-hover);
+}
+
+.memberMain {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	min-width: 0;
+	flex: 1;
+}
+
+.memberMainButton {
+	display: flex;
+	flex: 1 1 auto;
+	align-items: center;
+	gap: 0.75rem;
+	padding: 0;
+	border: none;
+	background: none;
+	text-align: left;
+	color: inherit;
+	cursor: pointer;
+}
+
+.memberMeta {
+	display: flex;
+	align-items: center;
+	justify-content: flex-start;
+	gap: 0.5rem;
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.memberRolesContainer {
+	display: flex;
+	flex: 1 1 auto;
+	align-items: center;
+	gap: 0.375rem;
+	min-width: 0;
+}
+
+.avatarWrapper {
+	flex-shrink: 0;
+}
+
+.memberInfo {
+	display: flex;
+	flex-direction: column;
+	gap: 0.125rem;
+	min-width: 0;
+	flex: 1;
+}
+
+.nameRow {
+	display: flex;
+	align-items: center;
+	gap: 0.375rem;
+	min-width: 0;
+}
+
+.displayName {
+	font-weight: 600;
+	font-size: 0.9375rem;
+	line-height: 1.3;
+	color: var(--text-primary);
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.ownerIcon {
+	height: 1rem;
+	width: 1rem;
+	flex-shrink: 0;
+	color: var(--status-idle);
+}
+
+.tag {
+	font-size: 0.8125rem;
+	color: var(--text-tertiary);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.memberRoles {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.375rem;
+	min-width: 0;
+}
+
+.memberActions {
+	display: flex;
+	align-items: center;
+	gap: 0.375rem;
+	flex-shrink: 0;
+	margin-left: auto;
+}
+
+.moreRolesButton {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.25rem;
+	padding: 0.25rem 0.5rem;
+	border-radius: 999px;
+	border: 1px solid var(--background-header-secondary);
+	background: var(--background-primary);
+	color: var(--text-primary);
+	cursor: pointer;
+}
+
+.moreRolesIcon {
+	height: 0.875rem;
+	width: 0.875rem;
+}
+
+.moreRolesLabel {
+	font-size: 0.75rem;
+	font-weight: 600;
+}
+
+.memberActions {
+	display: flex;
+	align-items: center;
+	gap: 0.375rem;
+	flex-shrink: 0;
+	margin-left: auto;
+}
+
+.moreButton {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0.375rem;
+	border: none;
+	border-radius: 0.375rem;
+	background: transparent;
+	color: var(--text-tertiary);
+	cursor: pointer;
+	transition:
+		background-color 150ms ease,
+		color 150ms ease;
+}
+
+.moreButton:hover {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-primary);
+}
+
+.moreButton[data-menu-active] {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-primary);
+}
+
+.moreButtonIcon {
+	height: 1.25rem;
+	width: 1.25rem;
+}
+
+.chevron {
+	flex-shrink: 0;
+	color: var(--text-tertiary);
+}
+
+.mobileRolesPreview {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.25rem;
+	margin-top: 0.35rem;
+}
+
+.allRolesTooltip {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.25rem;
+	max-width: 320px;
+}
+
+.sheetHeader {
+	display: flex;
+	flex-direction: column;
+	gap: 0.15rem;
+	padding: 0.25rem 0;
+}
+
+.sheetTitle {
+	font-weight: 700;
+	font-size: 0.95rem;
+	color: var(--text-primary);
+}
+
+.sheetSubtitle {
+	font-size: 0.8rem;
+	color: var(--text-primary-muted);
+}
+
+.sheetRoleDot {
+	height: 0.75rem;
+	width: 0.75rem;
+	border-radius: 999px;
+	flex-shrink: 0;
+}
+
+.divider {
+	margin-left: 1rem;
+	margin-right: 1rem;
+	height: 1px;
+	background-color: var(--background-header-secondary);
+	opacity: 0.3;
+}
+
+.emptyState {
+	border-radius: 0.75rem;
+	background-color: var(--background-secondary-alt);
+	padding: 1.5rem;
+}
+
+.emptyStateText {
+	margin: 0;
+	text-align: center;
+	color: var(--text-primary-muted);
+}
+
+@media (min-width: 768px) {
+	.memberItem {
+		padding: 0.75rem 1rem;
+	}
+
+	.memberMeta {
+		max-width: 60%;
+	}
+}
+
+@media (max-width: 767px) {
+	.memberItem {
+		padding: 1rem;
+	}
+
+	.displayName {
+		font-size: 1rem;
+	}
+
+	.tag {
+		font-size: 0.875rem;
+	}
+}
+
+.skeletonItem {
+	display: flex;
+	width: 100%;
+	align-items: center;
+	gap: 0.75rem;
+	padding: 0.875rem 1rem;
+}
+
+.skeletonAvatar {
+	width: 40px;
+	height: 40px;
+	border-radius: 50%;
+	flex-shrink: 0;
+}
+
+.skeletonInfo {
+	display: flex;
+	flex-direction: column;
+	gap: 0.375rem;
+	flex: 1;
+	min-width: 0;
+}
+
+.skeletonName {
+	height: 0.9375rem;
+	width: 120px;
+	border-radius: 0.25rem;
+}
+
+.skeletonTag {
+	height: 0.8125rem;
+	width: 80px;
+	border-radius: 0.25rem;
+}
+
+.skeleton {
+	background: linear-gradient(
+		90deg,
+		var(--background-secondary) 25%,
+		var(--background-tertiary) 50%,
+		var(--background-secondary) 75%
+	);
+	background-size: 200% 100%;
+	animation: skeletonPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes skeletonPulse {
+	0% {
+		background-position: 200% 0;
+	}
+	100% {
+		background-position: -200% 0;
+	}
+}
+
+.loadingIndicator {
+	display: flex;
+	justify-content: center;
+	padding: 1rem;
+}
+
+.loadingSpinner {
+	width: 1.5rem;
+	height: 1.5rem;
+	color: var(--text-tertiary);
+	animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+	0% {
+		transform: rotate(0deg);
+	}
+	100% {
+		transform: rotate(360deg);
+	}
+}
+
+@media (min-width: 768px) {
+	.skeletonItem {
+		padding: 0.75rem 1rem;
+	}
+}
+
+@media (max-width: 767px) {
+	.skeletonItem {
+		padding: 1rem;
+	}
+
+	.skeletonName {
+		height: 1rem;
+	}
+
+	.skeletonTag {
+		height: 0.875rem;
+	}
+}

@@ -1,0 +1,126 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.container {
+	display: flex;
+	height: 100%;
+	flex-direction: column;
+}
+
+.header {
+	padding: 1rem 2rem;
+}
+
+.title {
+	font-size: 1.25rem;
+	font-weight: 600;
+	color: var(--text-primary);
+}
+
+.description {
+	margin-top: 0.5rem;
+	font-size: 0.875rem;
+	color: var(--text-secondary);
+}
+
+.scrollContainer {
+	flex: 1;
+	overflow: hidden;
+}
+
+.scrollerPadding {
+	padding-left: 2rem;
+	padding-right: 2rem;
+}
+
+.userList {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	padding-bottom: 1rem;
+}
+
+.userCard {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 0.75rem;
+	border-radius: 0.375rem;
+	border: 1px solid var(--background-header-secondary);
+	background-color: var(--background-secondary);
+}
+
+.userInfo {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+}
+
+.avatarButton {
+	padding: 0;
+	border: 0;
+	border-radius: 9999px;
+	background-color: transparent;
+	cursor: pointer;
+}
+
+.usernameButton {
+	padding: 0;
+	border: 0;
+	background-color: transparent;
+	text-align: left;
+	cursor: pointer;
+}
+
+.usernameContainer {
+	display: flex;
+	align-items: center;
+}
+
+.username {
+	display: inline;
+	align-items: baseline;
+	white-space: normal;
+	word-break: break-all;
+	font-weight: 600;
+	color: var(--text-primary);
+	line-height: 1.25;
+}
+
+.discriminator {
+	display: inline;
+	align-items: baseline;
+	white-space: normal;
+	word-break: break-all;
+	font-weight: 600;
+	color: var(--text-primary);
+	line-height: 1.25;
+	opacity: 0.5;
+}
+
+.actions {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.moreIcon {
+	width: 1.25rem;
+	height: 1.25rem;
+}

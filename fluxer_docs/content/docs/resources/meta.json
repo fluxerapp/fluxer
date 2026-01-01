@@ -1,0 +1,5 @@
+{
+	"title": "Resources",
+	"pages": ["audit-log", "channel", "emoji", "guild", "invite", "message", "sticker", "user", "voice", "webhook"],
+	"defaultOpen": true
+}

@@ -1,0 +1,92 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.tooltip {
+	position: relative;
+	z-index: var(--z-index-tooltip);
+	pointer-events: none;
+	will-change: opacity, transform;
+	box-sizing: border-box;
+	max-width: 190px;
+	border: 1px solid var(--background-header-secondary);
+	border-radius: 8px;
+	color: var(--text-primary);
+	font-size: 14px;
+	font-weight: 600;
+	line-height: 16px;
+	word-wrap: break-word;
+	transform-origin: 50% 100%;
+	--tooltip-pointer-bg: var(--background-primary);
+	background-color: var(--background-primary);
+}
+
+.tooltipPointer {
+	width: 0;
+	height: 0;
+	border: 0 solid transparent;
+	border-width: 5px;
+	pointer-events: none;
+	border-top-color: var(--tooltip-pointer-bg);
+	position: absolute;
+	top: 100%;
+	left: 50%;
+	margin-left: -5px;
+}
+
+.tooltipPointer:not(.tooltipPointerBg) {
+	z-index: 1;
+	border-top-color: var(--background-primary);
+	margin-top: -1.5px;
+}
+
+.tooltipPointer.tooltipPointerBg {
+	--border-width: 5px;
+	--tooltip-pointer-bg: var(--background-header-secondary);
+	border-top-color: var(--background-header-secondary);
+}
+
+.tooltipPointer.tooltipPointerBg:before,
+.tooltipPointer.tooltipPointerBg:after {
+	content: '';
+	position: absolute;
+	border-left: var(--border-width) solid transparent;
+	border-right: var(--border-width) solid transparent;
+	top: 100%;
+	left: 50%;
+	margin-left: calc(-1 * var(--border-width));
+}
+
+.tooltipPointer.tooltipPointerBg:before {
+	border-top: var(--border-width) solid var(--tooltip-pointer-bg);
+	margin-top: -5px;
+}
+
+.tooltipPointer.tooltipPointerBg:after {
+	border-top: var(--border-width) solid var(--background-header-secondary);
+	margin-top: -5px;
+	z-index: 1;
+}
+
+.tooltipContent {
+	padding: 8px 12px;
+	overflow: hidden;
+	white-space: normal;
+	word-break: break-word;
+	text-align: center;
+}

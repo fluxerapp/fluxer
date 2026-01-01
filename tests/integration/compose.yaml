@@ -1,0 +1,276 @@
+services:
+  cassandra:
+    image: scylladb/scylla:6.2
+    command: --smp 1 --memory 1G --overprovisioned 1 --developer-mode 1 --api-address 0.0.0.0
+    networks:
+      - fluxer-integration
+    healthcheck:
+      test: ['CMD-SHELL', 'cqlsh -e "describe cluster"']
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    volumes:
+      - cassandra-data:/var/lib/scylla
+
+  cassandra-migrate:
+    build:
+      context: ../..
+      dockerfile: scripts/cassandra-migrate/Dockerfile
+    command: ['--host', 'cassandra', '--username', 'cassandra', '--password', 'cassandra', 'up']
+    environment:
+      CASSANDRA_HOST: cassandra
+      CASSANDRA_USERNAME: cassandra
+      CASSANDRA_PASSWORD: cassandra
+      CASSANDRA_KEYSPACE: fluxer
+    depends_on:
+      cassandra:
+        condition: service_healthy
+    networks:
+      - fluxer-integration
+
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: fluxer
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - fluxer-integration
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  valkey:
+    image: valkey/valkey:8.0
+    command: valkey-server --save 60 1 --loglevel warning
+    networks:
+      - fluxer-integration
+    volumes:
+      - valkey-data:/data
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.25.0
+    environment:
+      MEILI_ENV: development
+      MEILI_MASTER_KEY: masterKey
+    networks:
+      - fluxer-integration
+    volumes:
+      - meilisearch-data:/meili_data
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    networks:
+      - fluxer-integration
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ['CMD', 'mc', 'ready', 'local']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  minio-setup:
+    image: minio/mc
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+        until mc alias set integration http://minio:9000 minioadmin minioadmin; do
+          echo 'Waiting for MinIO...' && sleep 2;
+        done &&
+        mc mb --ignore-existing integration/fluxer-cdn &&
+        mc mb --ignore-existing integration/fluxer-uploads &&
+        mc mb --ignore-existing integration/fluxer-reports &&
+        mc mb --ignore-existing integration/fluxer-harvests &&
+        mc mb --ignore-existing integration/fluxer-downloads
+      "
+    networks:
+      - fluxer-integration
+
+  clamav:
+    image: clamav/clamav:1.2.2
+    networks:
+      - fluxer-integration
+    healthcheck:
+      test: ['CMD', '/usr/local/bin/clamdcheck.sh']
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
+    env_file:
+      - ./env/secrets.env
+    networks:
+      - fluxer-integration
+    restart: on-failure
+
+  livekit:
+    image: livekit/livekit-server:latest
+    command: --config /etc/livekit.yaml --dev
+    volumes:
+      - ./livekit.yaml:/etc/livekit.yaml:ro
+    networks:
+      - fluxer-integration
+    restart: on-failure
+    healthcheck:
+      test: ['CMD', 'wget', '--spider', '-q', 'http://localhost:7880']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  media-proxy:
+    build:
+      context: ../../fluxer_media_proxy
+    environment:
+      NODE_ENV: production
+      FLUXER_MEDIA_PROXY_PORT: 8080
+      AWS_ACCESS_KEY_ID: minioadmin
+      AWS_SECRET_ACCESS_KEY: minioadmin
+      AWS_S3_ENDPOINT: http://minio:9000
+      AWS_S3_BUCKET_CDN: fluxer-cdn
+      AWS_S3_BUCKET_UPLOADS: fluxer-uploads
+      MEDIA_PROXY_SECRET_KEY: integration-media-secret
+    depends_on:
+      minio:
+        condition: service_started
+    networks:
+      - fluxer-integration
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:8080/_health']
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+  api:
+    build:
+      context: ../../fluxer_api
+    command: ['pnpm', 'start']
+    env_file:
+      - ./env/api.env
+      - ./env/secrets.env
+    environment:
+      CASSANDRA_KEYSPACE: fluxer
+      GATEWAY_RPC_SECRET: integration-gateway-secret
+      FLUXER_MEDIA_PROXY_HOST: media-proxy
+      MEDIA_PROXY_SECRET_KEY: integration-media-secret
+    depends_on:
+      cassandra-migrate:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      valkey:
+        condition: service_started
+      meilisearch:
+        condition: service_started
+      minio:
+        condition: service_started
+      minio-setup:
+        condition: service_completed_successfully
+      media-proxy:
+        condition: service_healthy
+      livekit:
+        condition: service_healthy
+      cloudflared:
+        condition: service_started
+    networks:
+      - fluxer-integration
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:8080/_health']
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  gateway:
+    build:
+      context: ../../fluxer_gateway
+    environment:
+      API_HOST: api:8080
+      GATEWAY_RPC_SECRET: integration-gateway-secret
+      FLUXER_GATEWAY_WS_PORT: 8080
+      FLUXER_GATEWAY_RPC_PORT: 8081
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - fluxer-integration
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:8080/_health']
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  worker:
+    build:
+      context: ../../fluxer_api
+    command: ['pnpm', 'start:worker']
+    env_file:
+      - ./env/api.env
+    environment:
+      CASSANDRA_KEYSPACE: fluxer
+      GATEWAY_RPC_SECRET: integration-gateway-secret
+      MEDIA_PROXY_SECRET_KEY: integration-media-secret
+    depends_on:
+      cassandra-migrate:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      valkey:
+        condition: service_started
+      meilisearch:
+        condition: service_started
+      minio:
+        condition: service_started
+      media-proxy:
+        condition: service_healthy
+      gateway:
+        condition: service_healthy
+    networks:
+      - fluxer-integration
+
+  integration-tests:
+    build:
+      context: ../..
+      dockerfile: tests/integration/Dockerfile
+    environment:
+      FLUXER_INTEGRATION_API_URL: http://api:8080
+      FLUXER_INTEGRATION_GATEWAY_URL: ws://gateway:8080
+      FLUXER_TEST_TOKEN: integration-token
+      FLUXER_WEBAPP_ORIGIN: http://localhost:8088
+      GATEWAY_RPC_SECRET: integration-gateway-secret
+      REDIS_URL: redis://valkey:6379
+    depends_on:
+      api:
+        condition: service_healthy
+      gateway:
+        condition: service_healthy
+      media-proxy:
+        condition: service_healthy
+      worker:
+        condition: service_started
+    networks:
+      - fluxer-integration
+
+networks:
+  fluxer-integration:
+    driver: bridge
+
+volumes:
+  cassandra-data:
+  postgres-data:
+  valkey-data:
+  meilisearch-data:
+  minio-data:

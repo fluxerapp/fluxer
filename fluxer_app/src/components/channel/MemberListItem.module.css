@@ -1,0 +1,137 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.button {
+	position: relative;
+	margin-top: 1px;
+	margin-bottom: 1px;
+	cursor: pointer;
+	border-radius: 0.375rem;
+	color: var(--text-chat);
+	display: block;
+	width: 100%;
+	text-align: left;
+}
+
+.button:hover {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-primary);
+	opacity: 1;
+}
+
+.button[aria-expanded='true'] {
+	background-color: var(--background-modifier-selected);
+	color: var(--text-primary);
+	opacity: 1;
+}
+
+.buttonOffline {
+	opacity: 0.3;
+}
+
+.buttonContextMenuOpen {
+	background-color: var(--background-modifier-selected);
+	color: var(--text-primary);
+	opacity: 1;
+}
+
+.memberFocusRing {
+	border-radius: 0.375rem;
+}
+
+.grid {
+	display: grid;
+	height: 42px;
+	min-width: 0;
+	grid-template-columns: 1fr auto;
+	align-items: center;
+	gap: 0.25rem;
+	padding-left: 0.5rem;
+	padding-right: 0.5rem;
+}
+
+.content {
+	display: flex;
+	min-width: 0;
+	align-items: center;
+	gap: 0.625rem;
+	font-weight: 500;
+}
+
+.avatarContainer {
+	flex-shrink: 0;
+}
+
+.userInfoContainer {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	flex-grow: 1;
+}
+
+.nameContainer {
+	display: flex;
+	min-width: 0;
+	align-items: center;
+	overflow: hidden;
+}
+
+.name {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	line-height: 1.25rem;
+	max-height: 1.25rem;
+}
+
+.memberCustomStatus {
+	max-width: 100%;
+	color: var(--text-primary-muted);
+	font-size: 0.6875rem;
+	line-height: 0.875rem;
+	font-weight: 500;
+	opacity: 0.85;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.button:hover .memberCustomStatus {
+	--emoji-show-animated: 1;
+}
+
+.buttonContextMenuOpen .memberCustomStatus {
+	--emoji-show-animated: 1;
+}
+
+.ownerIcon {
+	margin-top: 0.1em;
+	margin-left: 4px;
+	flex-shrink: 0;
+}
+
+.crownIcon {
+	height: 14px;
+	width: 14px;
+	color: hsl(39, 57%, 64%);
+}
+
+.userTag {
+	margin-left: 0.25rem;
+}

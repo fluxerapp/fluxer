@@ -1,0 +1,78 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.channelIcon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 5rem;
+	width: 5rem;
+	flex-shrink: 0;
+	border-radius: var(--radius-full);
+	background-color: var(--channel-welcome-icon-bg, var(--guild-list-foreground));
+	background-size: cover;
+	background-position: center;
+	font-weight: 600;
+	font-size: 1.25rem;
+	color: var(--text-primary);
+	container-type: size;
+}
+
+.channelIconInitials {
+	overflow: hidden;
+	white-space: nowrap;
+	font-size: clamp(0.5rem, 40cqi, 1.25rem);
+	line-height: 1;
+	color: inherit;
+}
+
+:global(.theme-light) .channelIcon {
+	--channel-welcome-icon-bg: color-mix(in srgb, var(--guild-list-foreground) 55%, var(--background-primary) 45%);
+}
+
+.container {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+	margin: 1rem;
+	margin-top: auto;
+	margin-bottom: 2rem;
+	min-width: 0;
+	padding-top: 120px;
+	color: var(--text-primary);
+}
+
+.heading {
+	margin-top: 0.75rem;
+	font-size: 1.875rem;
+	font-weight: 600;
+	word-break: break-word;
+	overflow-wrap: break-word;
+}
+
+.description {
+	min-width: 0;
+	font-size: 1.125rem;
+	color: var(--text-primary-muted);
+}
+
+.iconSize {
+	height: 3rem;
+	width: 3rem;
+}

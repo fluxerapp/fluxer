@@ -1,0 +1,67 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.nagbar {
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding-left: 0.5rem;
+	padding-right: 0.5rem;
+}
+
+.nagbarDismissible {
+	padding-right: 2.5rem;
+}
+
+.nagbarDesktop {
+	min-height: 36px;
+	padding-top: 0.25rem;
+	padding-bottom: 0.25rem;
+	font-weight: 600;
+	font-size: 0.875rem;
+}
+
+.nagbarMobile {
+	min-height: 48px;
+	padding-top: 0.5rem;
+	padding-bottom: 0.5rem;
+	font-size: 0.75rem;
+}
+
+.dismissButton {
+	position: absolute;
+	top: 50%;
+	right: 0.5rem;
+	transform: translateY(-50%);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border: none;
+	background-color: transparent;
+	cursor: pointer;
+	padding: 0.25rem;
+	-webkit-app-region: no-drag;
+}
+
+.dismissIcon {
+	height: 1.25rem;
+	width: 1.25rem;
+	display: block;
+}

@@ -1,0 +1,73 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 4px 8px;
+	border: none;
+	background: transparent;
+	color: #fff;
+	cursor: pointer;
+	transition:
+		opacity 150ms ease,
+		background-color 150ms ease;
+	outline: none;
+	border-radius: var(--radius-sm, 4px);
+	font-size: 12px;
+	font-weight: 600;
+	font-family: var(--font-mono, monospace);
+	min-width: 40px;
+}
+
+.button:hover {
+	background-color: rgba(255, 255, 255, 0.1);
+}
+
+.button:active {
+	background-color: rgba(255, 255, 255, 0.15);
+}
+
+.button:focus-visible {
+	outline: 2px solid var(--brand-primary, #5865f2);
+	outline-offset: 2px;
+}
+
+.small {
+	padding: 2px 6px;
+	font-size: 11px;
+	min-width: 32px;
+}
+
+.medium {
+	padding: 4px 8px;
+	font-size: 12px;
+	min-width: 40px;
+}
+
+.large {
+	padding: 6px 10px;
+	font-size: 14px;
+	min-width: 48px;
+}
+
+.active {
+	color: var(--brand-primary-light, #5865f2);
+}

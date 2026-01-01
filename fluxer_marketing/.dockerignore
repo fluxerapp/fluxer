@@ -1,0 +1,40 @@
+# Build artifacts
+build/
+*.beam
+*.o
+*.a
+
+# Dependencies & tooling
+/node_modules
+/.cache
+/.venv
+/.idea/
+.vscode/
+
+# Git & CI
+.git/
+.github/
+.gitignore
+.env
+.env*
+
+# OS/editor temp files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Documentation
+README.md
+*.md
+!priv/**/*.md
+
+# Test files
+test/
+*_test.gleam
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

@@ -1,0 +1,70 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.container {
+	position: fixed;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	z-index: 100;
+	display: flex;
+	height: var(--mobile-bottom-nav-height);
+	align-items: center;
+	justify-content: space-around;
+	border-top: 1px solid var(--background-header-secondary);
+	background-color: var(--background-secondary);
+}
+
+:global(.theme-light) .container {
+	background-color: var(--background-primary);
+}
+
+.navButton {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 0.25rem;
+	padding-top: 0.5rem;
+	padding-bottom: 0.5rem;
+	cursor: pointer;
+}
+
+.navButtonActive {
+	color: var(--text-primary);
+}
+
+.navButtonInactive {
+	color: var(--text-primary-muted);
+}
+
+.voiceButton {
+	color: var(--status-online);
+}
+
+.icon {
+	height: 1.5rem;
+	width: 1.5rem;
+}
+
+.label {
+	font-weight: 600;
+	font-size: 10px;
+}

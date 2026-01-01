@@ -1,0 +1,103 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.container {
+	position: relative;
+	display: grid;
+	height: 498px;
+	width: 498px;
+	overflow: hidden;
+	border-radius: var(--radius-xl);
+	border: 1px solid var(--background-modifier-accent);
+	background-color: var(--background-tertiary);
+}
+
+.containerWithTabs {
+	grid-template-rows: auto 1fr;
+}
+
+.containerNoTabs {
+	grid-template-rows: auto 1fr;
+}
+
+.header {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-3);
+}
+
+:global(.theme-light) .header {
+	background-color: var(--background-primary);
+}
+
+.header:has(.nav),
+.header:has(.headerPortal:not(:empty)) {
+	padding: var(--spacing-3);
+}
+
+.headerPortal:empty {
+	display: none;
+}
+
+.nav {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-2);
+}
+
+.tabList {
+	display: flex;
+	gap: var(--spacing-2);
+}
+
+.tab {
+	flex: none;
+	border-radius: var(--radius-md);
+	padding: var(--spacing-1) var(--spacing-2);
+	font-weight: 600;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+	transition-duration: 200ms;
+	transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+	cursor: pointer;
+}
+
+.tabActive {
+	background-color: var(--background-modifier-selected);
+	color: var(--text-primary);
+}
+
+.tabInactive {
+	background-color: transparent;
+	color: var(--text-primary-muted);
+}
+
+.tabInactive:hover {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-primary);
+}
+
+.content {
+	position: relative;
+	display: grid;
+	grid-template-rows: 1fr auto;
+	overflow: hidden;
+	background-color: var(--background-primary);
+}

@@ -1,0 +1,162 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.container {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+}
+
+.title {
+	margin-bottom: 0;
+	font-weight: 600;
+	font-size: 1.25rem;
+	line-height: 1.75rem;
+}
+
+.description {
+	color: var(--text-primary-muted);
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+}
+
+.content {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+}
+
+.premiumCard {
+	border-radius: 0.5rem;
+	border: 1px solid var(--background-modifier-accent);
+	background-color: var(--background-secondary);
+	padding: 1rem;
+}
+
+.premiumCardHeader {
+	margin-bottom: 0.5rem;
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.premiumCardIcon {
+	color: var(--text-tertiary);
+}
+
+.premiumCardTitle {
+	font-weight: 500;
+	color: var(--text-primary);
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+}
+
+.premiumCardDescription {
+	margin-bottom: 0.75rem;
+	color: var(--text-primary-muted);
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+}
+
+.hint {
+	color: var(--text-primary-muted);
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+}
+
+.customBadge {
+	border-radius: 0.25rem;
+	background-color: var(--background-modifier-accent);
+	padding: 0.125rem 0.5rem;
+	font-weight: 500;
+	color: var(--text-tertiary);
+	font-size: 0.75rem;
+	line-height: 1rem;
+}
+
+.previewIcon {
+	color: var(--text-chat-muted);
+	opacity: 1;
+	transition-property: opacity;
+	transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+	transition-duration: 200ms;
+}
+
+.iconButton {
+	display: flex;
+	height: 2rem;
+	width: 2rem;
+	align-items: center;
+	justify-content: center;
+	border-radius: 0.25rem;
+	transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+	transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+	transition-duration: 150ms;
+	cursor: pointer;
+}
+
+.iconButton:enabled:hover {
+	background-color: var(--background-modifier-hover);
+}
+
+.iconButton:disabled {
+	cursor: not-allowed;
+	opacity: 0.5;
+}
+
+.uploadIcon {
+	color: var(--text-primary);
+}
+
+.crownIcon {
+	color: var(--text-tertiary);
+}
+
+.deleteIcon {
+	color: var(--status-danger);
+}
+
+.actionsContainer {
+	margin-top: 0.5rem;
+	display: flex;
+	gap: 0.75rem;
+}
+
+.actionButton {
+	font-weight: 500;
+	color: rgb(59 130 246);
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	cursor: pointer;
+}
+
+.actionButton:hover {
+	text-decoration-line: underline;
+}
+
+.actionButton:disabled {
+	cursor: not-allowed;
+	opacity: 0.5;
+}
+
+.actionSeparator {
+	color: var(--background-header-secondary);
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+}

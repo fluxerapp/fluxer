@@ -1,0 +1,107 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.mediaContainer {
+	position: relative;
+	border-radius: var(--media-border-radius, 0);
+	overflow: hidden;
+	clip-path: inset(0 round var(--media-border-radius, 0));
+}
+
+.mediaHoverAction {
+	position: absolute;
+	top: 0.5rem;
+	right: 0.5rem;
+	z-index: 10;
+	display: flex;
+	gap: 0.25rem;
+	opacity: 0;
+	pointer-events: none;
+}
+
+.mediaContainer:hover .mediaHoverAction {
+	opacity: 1;
+	pointer-events: auto;
+}
+
+@media (pointer: coarse) {
+	.mediaContainer:hover .mediaHoverAction {
+		opacity: 0;
+		pointer-events: none;
+	}
+}
+
+:global(.keyboard-focus-active) .mediaHoverAction {
+	opacity: 1;
+	pointer-events: auto;
+}
+
+.actionButton {
+	display: flex;
+	height: 2rem;
+	width: 2rem;
+	align-items: center;
+	justify-content: center;
+	border-radius: var(--radius-sm);
+	border: 1px solid var(--background-modifier-accent);
+	background: var(--background-primary);
+	box-shadow:
+		0 4px 6px -1px rgba(0, 0, 0, 0.1),
+		0 2px 4px -1px rgba(0, 0, 0, 0.06);
+	transition:
+		transform 150ms ease,
+		border-color 150ms ease,
+		background-color 150ms ease;
+	cursor: pointer;
+}
+
+.actionButton:hover {
+	transform: scale(1.05);
+}
+
+.deleteButton:hover {
+	border-color: var(--status-danger);
+	background: var(--status-danger);
+}
+
+.actionIcon {
+	color: var(--text-primary);
+	transition: color 150ms ease;
+}
+
+.deleteButton:hover .actionIcon {
+	color: white;
+}
+
+.deleteButton:active {
+	transform: scale(0.95);
+}
+
+.actionButton:active {
+	transform: scale(0.95);
+}
+
+.favoriteButtonActive {
+	border-color: var(--brand-primary);
+	background: var(--brand-primary);
+}
+
+.favoriteButtonActive .actionIcon {
+	color: white;
+}

@@ -1,0 +1,66 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.container {
+	display: grid;
+	grid-auto-flow: column;
+	grid-auto-columns: calc(var(--avatar-size) + var(--avatar-overlap));
+	align-items: center;
+	width: fit-content;
+	height: var(--avatar-size);
+	flex-shrink: 0;
+	filter: drop-shadow(0 0 0 var(--avatar-outline, 2px) var(--background-tertiary));
+}
+
+.container > *:first-child {
+	grid-column: 1;
+}
+
+.avatar {
+	width: var(--avatar-size);
+	height: var(--avatar-size);
+	border-radius: 50%;
+	position: relative;
+	grid-row: 1;
+}
+
+.avatar.withMask {
+	mask: radial-gradient(
+		50% 50% at calc(150% + var(--avatar-overlap)),
+		transparent calc(100% + var(--avatar-outline, 2px)),
+		black calc(100% + var(--avatar-outline, 2px) + 1px)
+	);
+}
+
+.remainingCount {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 50%;
+	border: var(--avatar-outline, 2px) solid var(--background-tertiary);
+	background: var(--background-modifier-selected);
+	color: var(--text-secondary);
+	font-size: var(--font-size-xs);
+	font-weight: 500;
+	width: var(--avatar-size);
+	height: var(--avatar-size);
+	grid-row: 1;
+	position: relative;
+	z-index: 1;
+}

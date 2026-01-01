@@ -1,0 +1,96 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.addFriendContainer {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	height: 100%;
+	padding: 1.5rem;
+	padding-bottom: calc(1.5rem + 48px);
+	overflow: hidden;
+	background: radial-gradient(
+		ellipse at 50% 0%,
+		color-mix(in srgb, var(--brand-primary) 15%, transparent) 0%,
+		transparent 70%
+	);
+}
+
+.card {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	width: 100%;
+	max-width: 480px;
+	padding: 2rem;
+	text-align: center;
+}
+
+.heroIcon {
+	width: 64px;
+	height: 64px;
+	margin-bottom: 1rem;
+	color: var(--brand-primary-light);
+}
+
+:global(.theme-light) .heroIcon {
+	color: var(--brand-primary);
+}
+
+.title {
+	margin: 0 0 0.5rem 0;
+	font-weight: 700;
+	font-size: 1.5rem;
+	line-height: 2rem;
+	color: var(--text-primary);
+}
+
+.subtitle {
+	margin: 0 0 1.5rem 0;
+	font-size: 0.9375rem;
+	line-height: 1.375rem;
+	color: var(--text-secondary);
+}
+
+.formContainer {
+	width: 100%;
+}
+
+@media (max-width: 480px) {
+	.addFriendContainer {
+		padding: 1rem;
+		padding-bottom: calc(1rem + 48px);
+	}
+
+	.card {
+		padding: 1.5rem;
+	}
+
+	.heroIcon {
+		width: 56px;
+		height: 56px;
+	}
+
+	.title {
+		font-size: 1.25rem;
+		line-height: 1.75rem;
+	}
+}

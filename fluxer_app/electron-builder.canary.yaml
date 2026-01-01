@@ -1,0 +1,114 @@
+appId: app.fluxer.canary
+productName: Fluxer Canary
+copyright: Copyright (C) 2026 Fluxer Contributors
+
+artifactName: fluxer-${version}-${arch}.${ext}
+
+directories:
+  output: dist-electron
+  buildResources: electron-build-resources
+
+files:
+  - src-electron/dist/**/*
+  - "!**/*.map"
+  - "!**/*.md"
+  - "!**/README*"
+  - "!**/readme*"
+  - "!**/CHANGELOG*"
+  - "!**/LICENSE*"
+  - "!**/.github/**"
+  - "!**/docs/**"
+  - "!**/doc/**"
+  - "!**/example/**"
+  - "!**/examples/**"
+  - "!**/test/**"
+  - "!**/tests/**"
+  - "!**/__tests__/**"
+  - "!**/*.ts"
+  - "!**/tsconfig*.json"
+
+extraMetadata:
+  main: src-electron/dist/main/index.js
+  type: module
+
+asar: true
+compression: normal
+
+asarUnpack:
+  - "**/*.node"
+  - "**/node_modules/uiohook-napi/**"
+  - "**/node_modules/input-monitoring-check/**"
+  - "**/src-electron/dist/preload/**"
+
+extraResources:
+  - from: electron-build-resources/icons-canary/512x512.png
+    to: 512x512.png
+  - from: electron-build-resources/icons-canary/badges
+    to: badges
+  - from: electron-build-resources/icons-canary/_compiled/Assets.car
+    to: Assets.car
+
+mac:
+  category: public.app-category.social-networking
+  icon: electron-build-resources/icons-canary/_compiled/AppIcon.icns
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  entitlements: electron-build-resources/entitlements.mac.canary.plist
+  entitlementsInherit: electron-build-resources/entitlements.mac.inherit.plist
+  provisioningProfile: electron-build-resources/profiles/Fluxer_Canary.provisionprofile
+  extendInfo:
+    CFBundleIconName: AppIcon
+    NSMicrophoneUsageDescription: Fluxer needs access to your microphone for voice chat.
+    NSCameraUsageDescription: Fluxer needs access to your camera for video chat.
+    NSInputMonitoringUsageDescription: Fluxer needs Input Monitoring access for global shortcuts and hotkeys.
+  notarize: true
+  target:
+    - target: dmg
+      arch:
+        - x64
+        - arm64
+    - target: zip
+      arch:
+        - x64
+        - arm64
+
+dmg:
+  sign: false
+  icon: electron-build-resources/icons-canary/_compiled/AppIcon.icns
+  format: UDZO
+  contents:
+    - x: 130
+      y: 220
+    - x: 410
+      y: 220
+      type: link
+      path: /Applications
+
+win:
+  icon: electron-build-resources/icons-canary/icon.ico
+  target:
+    - squirrel
+
+squirrelWindows:
+  iconUrl: https://fluxerstatic.com/web/icons/desktop/canary/icon.ico
+
+linux:
+  icon: electron-build-resources/icons-canary
+  category: Network
+  maintainer: Fluxer Contributors
+  synopsis: Chat that puts you first (Canary)
+  description: Canary build of Fluxer. Chat that puts you first. Built for friends, groups, and communities.
+  executableName: fluxercanary
+  target:
+    - dir
+    - AppImage
+    - deb
+    - rpm
+    - tar.gz
+  mimeTypes:
+    - x-scheme-handler/fluxer
+
+protocols:
+  - name: Fluxer
+    schemes:
+      - fluxer

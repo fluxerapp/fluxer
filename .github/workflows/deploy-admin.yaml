@@ -1,0 +1,141 @@
+name: deploy admin
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - fluxer_admin/**/*
+      - .github/workflows/deploy-admin.yaml
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-fluxer-admin
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy app
+    runs-on: blacksmith-2vcpu-ubuntu-2404
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+      - name: Build image
+        uses: docker/build-push-action@v6
+        with:
+          context: fluxer_admin
+          file: fluxer_admin/Dockerfile
+          tags: fluxer-admin:${{ github.sha }}
+          load: true
+          platforms: linux/amd64
+          cache-from: type=gha,scope=deploy-fluxer-admin
+          cache-to: type=gha,mode=max,scope=deploy-fluxer-admin
+          build-args: |
+            BUILD_TIMESTAMP=${{ github.run_id }}
+        env:
+          DOCKER_BUILD_SUMMARY: false
+          DOCKER_BUILD_RECORD_UPLOAD: false
+
+      - name: Install docker-pussh
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.docker/cli-plugins
+          curl -fsSL https://raw.githubusercontent.com/psviderski/unregistry/v0.3.1/docker-pussh \
+            -o ~/.docker/cli-plugins/docker-pussh
+          chmod +x ~/.docker/cli-plugins/docker-pussh
+
+      - name: Set up SSH agent
+        uses: webfactory/ssh-agent@v0.9.1
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY_SERVER }}
+
+      - name: Add server to known hosts
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
+
+      - name: Push image and deploy
+        env:
+          IMAGE_TAG: fluxer-admin:${{ github.sha }}
+          SERVER: ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}
+        run: |
+          set -euo pipefail
+          docker pussh ${IMAGE_TAG} ${SERVER}
+
+          ssh ${SERVER} "IMAGE_TAG=${IMAGE_TAG}" bash << 'EOF'
+            set -e
+            sudo mkdir -p /opt/fluxer-admin
+            sudo chown -R ${USER}:${USER} /opt/fluxer-admin
+            cd /opt/fluxer-admin
+
+            cat > compose.yaml << COMPOSEEOF
+          services:
+            app:
+              image: ${IMAGE_TAG}
+              env_file:
+                - /etc/fluxer/fluxer.env
+              environment:
+                - FLUXER_API_PUBLIC_ENDPOINT=https://api.fluxer.app
+                - FLUXER_APP_ENDPOINT=https://web.fluxer.app
+                - FLUXER_MEDIA_ENDPOINT=https://fluxerusercontent.com
+                - FLUXER_CDN_ENDPOINT=https://fluxerstatic.com
+                - FLUXER_ADMIN_ENDPOINT=https://admin.fluxer.app
+                - FLUXER_PATH_ADMIN=/
+                - APP_MODE=admin
+                - FLUXER_ADMIN_PORT=8080
+                - ADMIN_OAUTH2_REDIRECT_URI=https://admin.fluxer.app/oauth2_callback
+                - ADMIN_OAUTH2_CLIENT_ID=1440355698178071552
+                - FLUXER_METRICS_HOST=fluxer-metrics_app:8080
+              deploy:
+                replicas: 2
+                restart_policy:
+                  condition: on-failure
+                  delay: 5s
+                  max_attempts: 3
+                update_config:
+                  parallelism: 1
+                  delay: 10s
+                  order: start-first
+                rollback_config:
+                  parallelism: 1
+                  delay: 10s
+                labels:
+                  - 'caddy=admin.fluxer.app'
+                  - 'caddy.reverse_proxy={{upstreams 8080}}'
+                  - 'caddy.header.X-Robots-Tag="noindex, nofollow, nosnippet, noimageindex"'
+                  - 'caddy.header.Strict-Transport-Security="max-age=31536000; includeSubDomains; preload"'
+                  - 'caddy.header.X-Xss-Protection="1; mode=block"'
+                  - 'caddy.header.X-Content-Type-Options=nosniff'
+                  - 'caddy.header.Referrer-Policy=strict-origin-when-cross-origin'
+                  - 'caddy.header.X-Frame-Options=DENY'
+              networks:
+                - fluxer-shared
+              healthcheck:
+                test: ['CMD', 'curl', '-f', 'http://localhost:8080/']
+                interval: 30s
+                timeout: 10s
+                retries: 3
+                start_period: 40s
+
+          networks:
+            fluxer-shared:
+              external: true
+          COMPOSEEOF
+
+            docker stack deploy -c compose.yaml fluxer-admin
+            docker service update --image ${IMAGE_TAG} fluxer-admin_app
+          EOF

@@ -1,0 +1,170 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.jumpLinkButton {
+	border: 1px solid var(--markup-mention-border);
+	padding: 0.1rem 0.35rem;
+	margin: 0;
+	font: inherit;
+	display: inline-flex;
+	align-items: center;
+	line-height: 1;
+	vertical-align: middle;
+	background-color: var(--markup-jump-link-fill);
+	transition:
+		background-color var(--transition-fast),
+		border-color var(--transition-fast);
+}
+
+.jumpLinkButton:hover {
+	background-color: var(--markup-jump-link-hover-fill);
+}
+
+.jumpLinkInfo {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.2rem;
+	line-height: 1;
+	vertical-align: middle;
+	min-height: 1rem;
+	padding-bottom: 0.05rem;
+}
+
+.jumpLinkGuild {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.2rem;
+	line-height: 1;
+	flex-shrink: 0;
+	transform: translateY(-0.12rem);
+}
+
+.jumpLinkGuildIcon {
+	width: 1rem;
+	height: 1rem;
+	flex-shrink: 0;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	vertical-align: middle;
+	line-height: 0;
+}
+
+.jumpLinkGuildIcon > svg,
+.jumpLinkGuildIcon > img {
+	display: block;
+}
+
+.jumpLinkGuildName {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	font-weight: 500;
+	line-height: 1;
+	vertical-align: middle;
+}
+
+.jumpLinkCaret {
+	flex-shrink: 0;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	line-height: 0;
+	vertical-align: middle;
+}
+
+.jumpLinkLabel {
+	display: inline-flex;
+	align-items: center;
+	font-weight: 500;
+	white-space: nowrap;
+	line-height: 1;
+	transform: translateY(-0.12rem);
+	color: inherit;
+}
+
+.jumpLinkDM {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.3rem;
+	line-height: 1;
+	color: inherit;
+}
+
+.jumpLinkDMName {
+	font-weight: 500;
+	color: inherit;
+	line-height: 1;
+	transform: translateY(-0.12rem);
+}
+
+.jumpLinkMessage {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.1rem;
+	line-height: 1;
+	vertical-align: middle;
+	flex-shrink: 0;
+}
+
+.jumpLinkMessageIcon {
+	width: 0.9rem;
+	height: 0.9rem;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	vertical-align: middle;
+	line-height: 0;
+	padding-bottom: 0.05rem;
+}
+
+.jumpLinkMessageIcon > svg {
+	display: block;
+}
+
+.jumpLinkChannel {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.2rem;
+	line-height: 1;
+}
+
+.jumpLinkChannelIcon {
+	width: 0.9rem;
+	height: 0.9rem;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	line-height: 0;
+	flex-shrink: 0;
+}
+
+.jumpLinkChannelIcon > svg {
+	display: block;
+	color: inherit;
+}
+
+.jumpLinkChannelName {
+	font-weight: 500;
+	color: inherit;
+	white-space: nowrap;
+	line-height: 1;
+	transform: translateY(-0.12rem);
+}

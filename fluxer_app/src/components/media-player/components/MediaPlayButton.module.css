@@ -1,0 +1,111 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0;
+	border: none;
+	background: transparent;
+	color: #fff;
+	cursor: pointer;
+	transition:
+		transform 150ms ease,
+		opacity 150ms ease;
+	outline: none;
+}
+
+.button:hover {
+	opacity: 0.8;
+}
+
+.button:active {
+	opacity: 0.7;
+}
+
+.button:focus-visible {
+	outline: 2px solid var(--brand-primary, #5865f2);
+	outline-offset: 2px;
+	border-radius: var(--radius-sm, 4px);
+}
+
+.button:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.small {
+	width: 24px;
+	height: 24px;
+}
+
+.medium {
+	width: 32px;
+	height: 32px;
+}
+
+.large {
+	width: 40px;
+	height: 40px;
+}
+
+.xlarge {
+	width: 48px;
+	height: 48px;
+}
+
+.iconContainer {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	height: 100%;
+}
+
+.spinner {
+	animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+	from {
+		transform: rotate(0deg);
+	}
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+.overlay {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	background-color: rgba(0, 0, 0, 0.6);
+	border-radius: 50%;
+	padding: 16px;
+	transition:
+		background-color 150ms ease,
+		transform 150ms ease;
+}
+
+.overlay:hover {
+	background-color: rgba(0, 0, 0, 0.8);
+	transform: translate(-50%, -50%);
+}

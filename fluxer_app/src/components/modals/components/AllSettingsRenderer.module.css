@@ -1,0 +1,204 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.searchResultsContainer {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-4);
+}
+
+.resultsHeader {
+	padding: var(--spacing-2) 0 var(--spacing-4);
+	font-size: 0.875rem;
+	color: var(--text-secondary);
+	border-bottom: 1px solid var(--background-modifier-accent);
+	margin-bottom: var(--spacing-2);
+}
+
+.settingsSection {
+	display: flex;
+	flex-direction: column;
+}
+
+.sectionHeader {
+	display: flex;
+	flex-direction: column;
+	padding: var(--spacing-3) 0;
+	cursor: pointer;
+	width: 100%;
+	text-align: left;
+	background: transparent;
+	border: none;
+	border-bottom: 1px solid var(--border-color);
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.sectionHeader:hover .sectionTitle {
+		color: var(--text-link);
+	}
+}
+
+.sectionTitleRow {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-3);
+}
+
+.sectionIcon {
+	height: 1.25rem;
+	width: 1.25rem;
+	color: var(--text-primary);
+	flex-shrink: 0;
+}
+
+.sectionTitle {
+	font-weight: 600;
+	font-size: 1rem;
+	line-height: 1.5rem;
+	color: var(--text-primary);
+	flex: 1;
+	margin: 0;
+	transition: color var(--transition-fast);
+}
+
+.matchCount {
+	font-size: var(--font-size-xs);
+	color: var(--text-secondary);
+	padding: var(--spacing-1) var(--spacing-2);
+	background: var(--background-modifier-accent);
+	border-radius: var(--radius-full);
+	margin-left: auto;
+	font-weight: 500;
+}
+
+.expandIcon {
+	color: var(--text-tertiary);
+	flex-shrink: 0;
+	transition: transform var(--transition-normal);
+}
+
+.expandIconExpanded {
+	transform: rotate(90deg);
+}
+
+.matchedItemsPreview {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--spacing-1-5);
+	margin-top: var(--spacing-3);
+}
+
+.matchPreviewChip {
+	font-size: var(--font-size-xs);
+	padding: var(--spacing-1) var(--spacing-2);
+	background: var(--brand-primary);
+	color: var(--text-on-brand-primary);
+	border-radius: var(--radius-sm);
+	white-space: nowrap;
+	font-weight: 500;
+}
+
+.matchPreviewMore {
+	font-size: var(--font-size-xs);
+	color: var(--text-tertiary);
+	padding: var(--spacing-1) var(--spacing-1);
+}
+
+.sectionContent {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-2);
+	padding: var(--spacing-4) 0;
+}
+
+.matchedItem {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-1);
+	padding: var(--spacing-3);
+	border-radius: var(--radius-md);
+	cursor: pointer;
+	transition: background-color var(--transition-fast);
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.matchedItem:hover {
+		background: var(--background-modifier-hover);
+	}
+}
+
+.matchedItemBreadcrumb {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-1);
+	font-size: 0.6875rem;
+	color: var(--text-tertiary);
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+}
+
+.breadcrumbSeparator {
+	color: var(--text-tertiary-muted);
+}
+
+.breadcrumbSection {
+	color: var(--text-tertiary);
+}
+
+.matchedItemLabel {
+	font-weight: 500;
+	font-size: 0.875rem;
+	color: var(--text-primary);
+	line-height: 1.4;
+}
+
+.matchedItemDescription {
+	font-size: var(--font-size-xs);
+	color: var(--text-primary-muted);
+	line-height: 1.4;
+}
+
+.emptyState {
+	display: flex;
+	height: 100%;
+	min-height: 200px;
+	align-items: center;
+	justify-content: center;
+	padding: var(--spacing-8);
+}
+
+.emptyStateContent {
+	text-align: center;
+	max-width: 320px;
+}
+
+.emptyStateTitle {
+	margin-bottom: var(--spacing-2);
+	font-weight: 600;
+	font-size: 1.125rem;
+	line-height: 1.75rem;
+	color: var(--text-primary);
+}
+
+.emptyStateDescription {
+	font-size: 0.875rem;
+	color: var(--text-secondary);
+	line-height: 1.5;
+	margin: 0;
+}

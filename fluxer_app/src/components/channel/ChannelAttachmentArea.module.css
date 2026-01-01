@@ -1,0 +1,330 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.scroller {
+	margin: 0 0 2px 6px;
+}
+
+.channelAttachmentArea {
+	display: flex;
+	gap: 24px;
+	padding: 20px 10px 10px;
+	position: relative;
+	z-index: 1;
+}
+
+.upload {
+	display: inline-flex;
+	flex-direction: column;
+	background: var(--background-primary);
+	border-radius: 4px;
+	margin: 0;
+	padding: 8px;
+	position: relative;
+	min-width: 200px;
+	max-width: 200px;
+	min-height: 200px;
+	max-height: 200px;
+}
+
+.uploadContainer {
+	display: flex;
+	position: relative;
+	flex-direction: column;
+	height: 100%;
+	justify-content: space-between;
+}
+
+.mediaContainer {
+	position: relative;
+	flex: 1;
+	min-height: 0;
+	background-color: var(--background-tertiary);
+	border-radius: 4px;
+}
+
+.clickableMedia {
+	cursor: pointer;
+	width: 100%;
+	height: 100%;
+	display: block;
+	border: none;
+	background: none;
+	padding: 0;
+	margin: 0;
+}
+
+.mediaContainer > div:not([aria-expanded='false']),
+.mediaContainer > div:not([aria-expanded='false']) > div {
+	height: 100%;
+}
+
+.spoilerContainer {
+	height: 100%;
+	position: relative;
+	filter: blur(0);
+	border-radius: 4px;
+	background-color: hsla(0, 0%, 100%, 0.1);
+}
+
+.spoilerContainer.hidden {
+	overflow: hidden;
+}
+
+.spoilerContainer.hiddenSpoiler {
+	cursor: pointer;
+}
+
+.spoilerWarning {
+	text-transform: uppercase;
+	font-size: 15px;
+	background-color: hsla(0, 0%, 0%, 0.6);
+	cursor: pointer;
+	font-weight: 600;
+	border-radius: 20px;
+	transition: background-color 0.2s;
+}
+
+.spoilerWarning:hover {
+	background-color: hsla(0, 0%, 0%, 0.8);
+}
+
+.obscureWarning {
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	transform: translate(-50%, -50%);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	z-index: 1;
+	padding: 8px 12px;
+	user-select: none;
+	-webkit-user-select: none;
+	color: hsl(216, 10%, 90%);
+}
+
+.spoilerInnerContainer {
+	width: 100%;
+	height: 100%;
+}
+
+.spoilerWrapper {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	height: 100%;
+	width: 100%;
+	position: relative;
+}
+
+.spoiler {
+	filter: blur(44px);
+	pointer-events: none;
+}
+
+.media {
+	border-radius: 4px;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	object-position: center;
+	color: transparent;
+	font-size: 0;
+}
+
+.tags {
+	position: absolute;
+	left: 3px;
+	bottom: 6px;
+}
+
+.filenameContainer {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	margin-top: 8px;
+	padding: 0 4px;
+	min-height: 40px;
+	flex-shrink: 0;
+	z-index: 1;
+}
+
+.filename {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-size: 13px;
+	font-weight: 500;
+	line-height: 1.2;
+	color: var(--text-primary);
+}
+
+.fileDetails {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	font-size: 11px;
+	color: var(--text-tertiary);
+	font-weight: 400;
+}
+
+.fileSize {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.fileExtension {
+	text-transform: uppercase;
+	font-weight: 600;
+	color: var(--brand-primary-light);
+	flex-shrink: 0;
+	margin-left: 4px;
+}
+
+.actionBarContainer {
+	position: absolute;
+	top: 0;
+	right: 0;
+}
+
+.actionBar {
+	display: grid;
+	position: relative;
+	z-index: 1;
+	transform: translate(25%, -25%);
+	box-sizing: border-box;
+	align-items: center;
+	justify-content: flex-start;
+	grid-auto-flow: column;
+	padding: 2px;
+	background-color: var(--background-primary);
+	border: 1px solid var(--background-header-secondary);
+	border-radius: 8px;
+	user-select: none;
+	-webkit-user-select: none;
+}
+
+.button {
+	display: flex;
+	position: relative;
+	align-items: center;
+	justify-content: center;
+	padding: 4px;
+	height: 30px;
+	min-width: 30px;
+	border-radius: 6px;
+	color: var(--text-tertiary);
+	cursor: pointer;
+}
+
+.button:hover {
+	color: var(--text-primary);
+	background-color: var(--background-modifier-hover);
+}
+
+.button.danger {
+	color: var(--status-danger);
+}
+
+.actionBarIcon {
+	width: 20px;
+	height: 20px;
+	display: block;
+	object-fit: contain;
+}
+
+.altTag {
+	color: black;
+	mix-blend-mode: screen;
+	background: var(--text-primary);
+	margin-right: 4px;
+	text-transform: uppercase;
+	font-size: 10px;
+	font-weight: 600;
+	padding: 4px;
+	border-radius: 4px;
+}
+
+.icon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex: 1;
+	min-height: 0;
+	background-color: var(--background-tertiary);
+	border-radius: 4px;
+}
+
+.iconImage {
+	width: 100px;
+	height: 100px;
+	color: var(--brand-primary-light);
+}
+
+.loadingOverlay {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background: hsla(0, 0%, 0%, 0.5);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 4px;
+}
+
+.spinner {
+	width: 40px;
+	height: 40px;
+	border: 4px solid hsla(0, 0%, 100%, 0.3);
+	border-radius: 50%;
+	border-top-color: hsl(0, 0%, 100%);
+	animation: spin 1s ease infinite;
+}
+
+@keyframes spin {
+	0% {
+		transform: rotate(0deg);
+	}
+	100% {
+		transform: rotate(360deg);
+	}
+}
+
+.videoModal {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 0;
+	background-color: transparent;
+}
+
+.videoContainer {
+	position: relative;
+}
+
+.divider {
+	height: 1px;
+	background-color: var(--user-area-divider-color);
+	margin-left: -16px;
+	margin-right: -16px;
+}

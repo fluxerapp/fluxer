@@ -1,0 +1,85 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.empty {
+	display: flex;
+	height: 128px;
+	align-items: center;
+	justify-content: center;
+	color: var(--text-tertiary);
+}
+
+.container {
+	display: flex;
+	height: 192px;
+	flex-direction: column;
+	gap: 8px;
+	padding: 12px 16px;
+}
+
+.heading {
+	font-weight: 500;
+	font-size: 14px;
+	color: var(--text-primary);
+}
+
+.scroller {
+	display: flex;
+	flex-direction: row;
+	gap: 4px;
+}
+
+.gifButton {
+	position: relative;
+	display: flex;
+	height: 128px;
+	width: 192px;
+	flex-shrink: 0;
+	cursor: pointer;
+	flex-direction: column;
+	overflow: hidden;
+	border-radius: 8px;
+	border: 2px solid transparent;
+	background-color: var(--background-secondary);
+	transition: border-color 0.15s ease;
+}
+
+.gifButton:hover {
+	border-color: var(--brand-primary);
+}
+
+.gifButtonSelected {
+	border-color: var(--brand-primary);
+}
+
+.gifVideoWrapper {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+}
+
+.gifVideo {
+	display: block;
+	height: 100%;
+	width: 100%;
+	object-fit: cover;
+}

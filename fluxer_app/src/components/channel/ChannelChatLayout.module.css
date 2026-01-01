@@ -1,0 +1,92 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.container {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	min-height: 0;
+	min-width: 0;
+	overflow: hidden;
+	background-color: var(--background-secondary-lighter);
+	contain: layout style;
+}
+
+.messagesArea {
+	display: flex;
+	flex: 1 1 0%;
+	min-height: 0;
+	min-width: 0;
+	position: relative;
+	overflow: hidden;
+	contain: strict;
+}
+
+.typingArea {
+	flex-shrink: 0;
+	position: relative;
+	height: 0;
+	overflow: visible;
+	z-index: 1;
+	--typing-floating-offset: calc(max(var(--typing-indicator-gap), 0px) + var(--textarea-content-offset));
+}
+
+.typingContent {
+	position: absolute;
+	left: var(--textarea-horizontal-padding);
+	right: var(--textarea-horizontal-padding);
+	bottom: var(--typing-floating-offset);
+	pointer-events: none;
+	font-size: 12px;
+	line-height: 16px;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 0.35rem;
+}
+
+.typingAreaWithTopBar .typingContent {
+	bottom: calc(var(--typing-floating-offset) + 12px);
+}
+
+.typingLeft {
+	flex: 1;
+	display: flex;
+	align-items: center;
+	justify-content: flex-start;
+	min-width: 0;
+	order: 1;
+}
+
+.typingRight {
+	flex-shrink: 0;
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	pointer-events: auto;
+	order: 2;
+}
+
+.textareaArea {
+	flex-shrink: 0;
+	position: relative;
+	padding: 0;
+	overflow: hidden;
+	background-color: var(--background-secondary-lighter);
+}

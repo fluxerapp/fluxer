@@ -1,0 +1,201 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.content {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	padding-bottom: 16px;
+}
+
+.landingContainer {
+	display: flex;
+	flex-direction: column;
+	gap: 24px;
+}
+
+.actionButtons {
+	display: flex;
+	width: 100%;
+	flex-direction: row;
+	gap: 12px;
+}
+
+.actionButton {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 12px;
+	padding: 24px 16px;
+	border: 1px solid var(--background-modifier-accent);
+	border-radius: 8px;
+	background: var(--background-secondary);
+	color: var(--text-primary);
+	cursor: pointer;
+}
+
+.actionButton:hover {
+	background: var(--background-secondary-alt);
+	border-color: var(--brand-primary-light);
+}
+
+:global(.theme-light) .actionButton:hover {
+	border-color: var(--brand-primary);
+}
+
+.actionIcon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 48px;
+	height: 48px;
+	border-radius: 50%;
+	background: var(--brand-primary);
+	color: var(--brand-primary-fill);
+}
+
+.actionIcon > svg {
+	width: 24px;
+	height: 24px;
+}
+
+.actionLabel {
+	font-weight: 600;
+	font-size: 14px;
+	text-align: center;
+}
+
+.formContainer {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.formContainer > p {
+	margin: 0;
+}
+
+.iconSection {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+.iconSectionInner {
+	display: block;
+}
+
+.iconLabel {
+	margin-bottom: 8px;
+	font-weight: 500;
+	color: var(--text-primary);
+	font-size: 14px;
+}
+
+.iconPreview {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+}
+
+.iconImage {
+	height: 80px;
+	width: 80px;
+	flex-shrink: 0;
+	border-radius: 50%;
+	background-position: center;
+	background-size: cover;
+}
+
+.iconPlaceholder {
+	display: flex;
+	height: 80px;
+	width: 80px;
+	flex-shrink: 0;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+	border-radius: 50%;
+	border: 1px solid var(--background-modifier-accent);
+	background: var(--background-tertiary);
+	container-type: size;
+}
+
+.iconInitials {
+	user-select: none;
+	-webkit-user-select: none;
+	font-weight: 600;
+	color: var(--text-primary);
+	line-height: 1;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	display: block;
+	width: 100%;
+	text-align: center;
+	font-size: clamp(0.85rem, 45cqi, 1.35rem);
+	letter-spacing: 0.06em;
+}
+
+.iconPlaceholder[data-initials-length='medium'] .iconInitials {
+	font-size: clamp(0.85rem, 38cqi, 1.11rem);
+	letter-spacing: 0.02em;
+}
+
+.iconPlaceholder[data-initials-length='long'] .iconInitials {
+	font-size: clamp(0.85rem, 32cqi, 0.87rem);
+	letter-spacing: -0.02em;
+}
+
+.iconActions {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.iconButtons {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+@media (min-width: 640px) {
+	.iconButtons {
+		flex-direction: row;
+	}
+}
+
+.iconHint {
+	color: var(--text-primary-muted);
+	font-size: 14px;
+}
+
+.iconError {
+	margin-top: 8px;
+	color: var(--status-danger);
+	font-size: 14px;
+}
+
+.guidelines {
+	color: var(--text-primary-muted);
+	font-size: 12px;
+}

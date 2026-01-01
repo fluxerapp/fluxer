@@ -1,0 +1,485 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.anchor {
+	position: relative;
+	display: flex;
+	align-items: center;
+	width: 244px;
+}
+
+.inputContainer {
+	position: relative;
+	display: flex;
+	align-items: center;
+	width: 100%;
+	padding-left: var(--input-container-padding);
+	padding-right: var(--input-container-padding);
+	min-height: 36px;
+	border-radius: var(--radius-xl);
+	border: 1px solid var(--background-modifier-accent);
+	background-color: var(--background-textarea);
+}
+
+.inputContainer:focus-within {
+	border-color: var(--background-modifier-accent-focus);
+}
+
+.searchIcon {
+	height: 16px;
+	width: 16px;
+	flex-shrink: 0;
+	color: var(--text-tertiary);
+	transition: color 0.1s ease;
+}
+
+.scopeBadge {
+	position: absolute;
+	bottom: -4px;
+	left: -4px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 12px;
+	height: 12px;
+	border-radius: var(--radius-sm);
+	background-color: var(--background-secondary);
+	color: var(--text-primary-muted);
+	border: 1px solid var(--background-modifier-accent);
+}
+
+.scopeButton {
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	margin-right: 8px;
+	padding: 0;
+	border: none;
+	background: transparent;
+	cursor: pointer;
+	flex-shrink: 0;
+}
+
+.scopeButton:hover .searchIcon {
+	color: var(--text-primary);
+}
+
+.scopeButton:hover .scopeBadge {
+	color: var(--text-primary);
+	background-color: var(--background-secondary-alt);
+}
+
+.input {
+	height: 36px;
+	min-height: 36px;
+	flex: 1;
+	border: none;
+	background: transparent;
+	outline: none;
+	color: var(--text-primary);
+	font-size: 0.875rem;
+}
+
+.input::placeholder {
+	color: var(--text-primary-muted);
+}
+
+.clearButton {
+	margin-left: 8px;
+	height: 24px;
+	width: 24px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	border: none;
+	border-radius: var(--radius-md);
+	background: transparent;
+	color: var(--text-tertiary);
+	cursor: pointer;
+}
+
+.clearButton:hover {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-primary);
+}
+
+.popoutContainer {
+	border-radius: var(--radius-xl);
+	border: 1px solid var(--background-modifier-accent);
+	background-color: var(--background-textarea);
+	box-shadow: var(--shadow-popover, 0 8px 24px rgba(0, 0, 0, 0.28));
+	display: flex;
+	flex-direction: column;
+	z-index: 1000;
+}
+
+.popoutInner {
+	display: flex;
+	flex-direction: column;
+}
+
+.list {
+	display: flex;
+	flex-direction: column;
+	gap: 0;
+	padding: var(--spacing-1);
+}
+
+.option {
+	display: flex;
+	width: 100%;
+	align-items: center;
+	gap: var(--spacing-2);
+	border: none;
+	background: transparent;
+	text-align: left;
+	border-radius: var(--radius-md);
+	padding: 3px var(--spacing-2);
+	cursor: pointer;
+	color: var(--text-primary);
+}
+
+.customDateInput {
+	display: flex;
+	width: 100%;
+	align-items: flex-start;
+	gap: var(--spacing-2);
+	border: none;
+	background: transparent;
+	text-align: left;
+	border-radius: var(--radius-md);
+	padding: 3px var(--spacing-2);
+	color: var(--text-primary);
+}
+
+.option:hover {
+	background-color: var(--surface-interactive-hover-bg);
+}
+
+.optionActive {
+	background-color: var(--surface-interactive-hover-bg);
+}
+
+.optionKeyboardFocus {
+	background-color: var(--surface-interactive-selected-bg);
+	color: var(--surface-interactive-selected-color);
+}
+
+.optionKeyboardFocus:hover {
+	background-color: var(--surface-interactive-selected-bg);
+}
+
+.optionLabel {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	width: 100%;
+	flex: 1;
+	gap: var(--spacing-2);
+}
+
+.optionContent {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-2);
+	flex: 1;
+	min-width: 0;
+}
+
+.valueOptionContent {
+	align-items: flex-start;
+}
+
+.valueOptionText {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-1);
+	width: 100%;
+	min-width: 0;
+}
+
+.valueOptionTitle {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-1);
+	flex-wrap: wrap;
+}
+
+.valueOptionDefault {
+	font-size: 0.6875rem;
+	line-height: 1;
+	color: var(--text-primary-muted);
+	background-color: var(--background-secondary-alt);
+	border: 1px solid var(--background-modifier-accent);
+	border-radius: var(--radius-md);
+	padding: 2px 6px;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	font-weight: 600;
+}
+
+.optionText {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-2);
+	flex: 1;
+	min-width: 0;
+}
+
+.optionTitle {
+	font-weight: 500;
+	font-size: 0.9375rem;
+	line-height: 1.25rem;
+	color: var(--text-primary);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	flex: 1;
+	min-width: 0;
+}
+
+.historyOptionTitle {
+	font-size: 0.8125rem;
+	line-height: 1.125rem;
+	color: var(--text-primary-muted);
+}
+
+.optionDescription {
+	font-size: 0.8125rem;
+	line-height: 1rem;
+	color: var(--text-primary-muted);
+	opacity: 0.7;
+}
+
+.optionMetaIcon {
+	flex-shrink: 0;
+	height: 14px;
+	width: 14px;
+	color: var(--text-primary);
+}
+
+.optionMetaIconInactive {
+	flex-shrink: 0;
+	height: 14px;
+	width: 14px;
+	color: var(--text-tertiary);
+}
+
+.divider {
+	margin: 4px 8px;
+	border-top: 1px solid var(--background-modifier-accent);
+	opacity: 0.5;
+}
+
+.userRow {
+	min-width: 0;
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-2);
+	overflow: hidden;
+}
+
+.channelRow {
+	min-width: 0;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	overflow: hidden;
+}
+
+.userName,
+.channelName {
+	font-size: 0.9375rem;
+	color: var(--text-primary);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.userTag {
+	font-size: 0.8125rem;
+	color: var(--text-primary-muted);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	flex-shrink: 0;
+	margin-left: 2px;
+}
+
+.channelIcon {
+	height: 20px;
+	width: 20px;
+	color: var(--text-primary-muted);
+	flex-shrink: 0;
+}
+
+.kbdKey {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 3px 8px;
+	min-width: 28px;
+	height: 28px;
+	border-radius: 6px;
+	border: 1px solid var(--background-modifier-accent);
+	background-color: var(--background-secondary-alt);
+	color: var(--text-primary);
+	font-size: 0.75rem;
+	font-weight: 600;
+	text-align: center;
+	line-height: 1;
+	box-shadow:
+		0 2px 4px rgba(0, 0, 0, 0.2),
+		0 1px 0 rgba(255, 255, 255, 0.1) inset,
+		inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.searchFilter {
+	display: inline-block;
+	padding: 3px 8px;
+	border-radius: 6px;
+	background-color: var(--background-secondary-alt);
+	color: var(--text-primary);
+	font-size: 0.8125rem;
+	font-weight: 500;
+	line-height: 1.2;
+	border: 1px solid var(--background-modifier-accent);
+}
+
+.popoutSection {
+	margin-bottom: var(--spacing-1);
+}
+
+.popoutSection:last-child {
+	margin-bottom: 0;
+}
+
+.popoutSectionHeader {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 2px var(--spacing-2);
+	margin-bottom: 2px;
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--text-primary-muted);
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+}
+
+.popoutSectionHeader button {
+	padding: 2px 6px;
+	border: none;
+	border-radius: 3px;
+	background-color: transparent;
+	color: var(--text-primary-muted);
+	font-size: 12px;
+	cursor: pointer;
+}
+
+.popoutSectionHeader button:hover {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-primary);
+}
+
+.helpRow {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: var(--spacing-2);
+	border-top: 1px solid var(--background-modifier-accent);
+	background-color: var(--background-secondary);
+	font-size: 0.8125rem;
+	color: var(--text-primary-muted);
+	border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+}
+
+.helpShortcuts {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.helpShortcut {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.helpActionButton {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-1);
+	padding: var(--spacing-1) var(--spacing-2);
+	border: none;
+	border-radius: var(--radius-md);
+	background-color: transparent;
+	color: var(--text-primary-muted);
+	font-size: 0.8125rem;
+	cursor: pointer;
+}
+
+.helpActionButton:hover {
+	background-color: var(--background-modifier-hover);
+	color: var(--text-primary);
+}
+
+.helpActionButton .kbdKey {
+	min-width: 24px;
+	height: 24px;
+	font-size: 0.7rem;
+}
+
+.flex {
+	display: flex;
+}
+
+.flexCol {
+	flex-direction: column;
+}
+
+.itemsCenter {
+	align-items: center;
+}
+
+.justifyBetween {
+	justify-content: space-between;
+}
+
+.gap1 {
+	gap: var(--spacing-1);
+}
+
+.gap2 {
+	gap: var(--spacing-2);
+}
+
+.minW0 {
+	min-width: 0;
+}
+
+.flex1 {
+	flex: 1;
+}
+
+.overflowHidden {
+	overflow: hidden;
+}

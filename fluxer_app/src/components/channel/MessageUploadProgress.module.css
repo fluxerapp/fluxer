@@ -1,0 +1,126 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.container {
+	display: flex;
+	width: 100%;
+	min-width: 0;
+	align-items: center;
+	gap: 0.75rem;
+	overflow: hidden;
+	border-radius: 0.5rem;
+	border: 1px solid var(--background-modifier-accent);
+	background-color: var(--background-secondary);
+	padding: 0.75rem;
+	box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+}
+
+.iconContainer {
+	display: flex;
+	height: 3rem;
+	width: 3rem;
+	flex-shrink: 0;
+	align-items: center;
+	justify-content: center;
+	border-radius: 0.5rem;
+	background-color: var(--background-tertiary);
+	color: var(--text-tertiary);
+}
+
+.content {
+	min-width: 0;
+	flex: 1;
+	overflow: hidden;
+}
+
+.fileName {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-weight: 600;
+	font-size: 0.875rem;
+	color: var(--text-primary);
+}
+
+.fileSize {
+	color: var(--text-tertiary);
+	font-size: 0.75rem;
+}
+
+.progressContainer {
+	margin-top: 0.375rem;
+	height: 0.25rem;
+	width: 100%;
+	overflow: hidden;
+	border-radius: 9999px;
+	background-color: var(--background-tertiary);
+}
+
+.progressBarIndeterminate {
+	height: 100%;
+	width: 100%;
+	border-radius: 9999px;
+	background-color: var(--brand-primary);
+	opacity: 0.5;
+	animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.progressBar {
+	height: 100%;
+	border-radius: 9999px;
+	transition:
+		width 150ms,
+		background-color 150ms;
+}
+
+.progressBarNormal {
+	background-color: var(--brand-primary);
+}
+
+.progressBarFailed {
+	background-color: rgb(239 68 68);
+}
+
+.cancelButton {
+	display: flex;
+	height: 2.5rem;
+	width: 2.5rem;
+	flex-shrink: 0;
+	align-items: center;
+	justify-content: center;
+	border-radius: 0.5rem;
+	background-color: var(--background-tertiary);
+	color: var(--text-tertiary);
+	cursor: pointer;
+}
+
+.cancelButton:hover {
+	background-color: rgb(239 68 68);
+	color: white;
+}
+
+@keyframes pulse {
+	0%,
+	100% {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0.5;
+	}
+}

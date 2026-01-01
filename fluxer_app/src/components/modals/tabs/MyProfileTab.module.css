@@ -1,0 +1,79 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.loadingContainer {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding-top: 3rem;
+	padding-bottom: 3rem;
+}
+
+.contentLayout {
+	display: flex;
+	flex-direction: column;
+	gap: 1.5rem;
+}
+
+@media (min-width: 1024px) {
+	.contentLayout {
+		flex-direction: row;
+		gap: clamp(2rem, 3vw, 3.5rem);
+	}
+}
+
+.formColumn {
+	display: flex;
+	flex: 2;
+	flex-direction: column;
+	gap: 1.5rem;
+}
+
+.inputFooter {
+	color: var(--text-primary-muted);
+	font-size: 0.875rem;
+}
+
+.opacityHalf {
+	opacity: 0.5;
+}
+
+.previewColumn {
+	display: flex;
+	flex: 1;
+	justify-content: center;
+}
+
+@media (min-width: 1024px) {
+	.previewColumn {
+		justify-content: flex-end;
+	}
+}
+
+.srOnly {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
+}

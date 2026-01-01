@@ -1,0 +1,113 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.deviceNotice {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-3);
+	padding: var(--spacing-3);
+	border-radius: var(--radius-lg);
+	border: 1px solid var(--panel-control-border);
+	background-color: var(--panel-control-bg);
+}
+
+@media (min-width: 768px) {
+	.deviceNotice {
+		flex-direction: row;
+		align-items: center;
+		justify-content: space-between;
+	}
+}
+
+.deviceNoticeText {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-1);
+}
+
+.deviceNoticeTitle {
+	font-weight: 600;
+	color: var(--text-primary);
+}
+
+.deviceNoticeDescription {
+	margin: 0;
+	font-size: 0.8125rem;
+	color: var(--text-primary-muted);
+}
+
+.sectionTitle {
+	margin-bottom: 0.5rem;
+	font-size: 0.875rem;
+	font-weight: 500;
+	color: var(--text-primary);
+}
+
+.sectionDescription {
+	margin-bottom: 0.75rem;
+	font-size: 0.875rem;
+	color: var(--text-primary-muted);
+}
+
+.premiumCard {
+	padding: 1rem;
+	border-radius: 0.5rem;
+	border: 1px solid var(--background-modifier-accent);
+	background-color: var(--background-secondary);
+}
+
+.premiumHeader {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	margin-bottom: 0.5rem;
+}
+
+.premiumIcon {
+	flex-shrink: 0;
+}
+
+.premiumTitle {
+	font-size: 0.875rem;
+	font-weight: 500;
+	color: var(--text-primary);
+}
+
+.premiumDescription {
+	margin-bottom: 0.75rem;
+	font-size: 0.875rem;
+	color: var(--text-primary-muted);
+}
+
+.frameRateNote {
+	display: flex;
+	align-items: center;
+	gap: 0.25rem;
+	margin-top: 0.5rem;
+	font-size: 0.875rem;
+	color: var(--text-primary-muted);
+}
+
+.frameRateIcon {
+	color: var(--text-tertiary);
+}
+
+.actionButton {
+	align-self: flex-start;
+}

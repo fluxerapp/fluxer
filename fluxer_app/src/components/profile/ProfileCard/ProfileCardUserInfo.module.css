@@ -1,0 +1,103 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.userInfoContainer {
+	user-select: text;
+	-webkit-user-select: text;
+}
+
+.nameRow {
+	display: flex;
+	align-items: center;
+	gap: 0.125rem;
+}
+
+.nameButton {
+	display: inline;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	border: none;
+	background: transparent;
+	padding: 0;
+	text-align: left;
+	vertical-align: middle;
+	font-weight: 500;
+	color: var(--text-primary);
+	font-size: 1.25rem;
+	line-height: 1.5rem;
+	max-height: 1.5rem;
+}
+
+.nameButtonClickable {
+	cursor: pointer;
+}
+
+.nameButtonClickable:hover {
+	text-decoration: underline;
+}
+
+.badgeContainer {
+	display: inline;
+}
+
+.userTagWrapper {
+	margin-left: 0.25rem;
+}
+
+.actionsContainer {
+	margin-top: 0.25rem;
+	display: flex;
+}
+
+.usernameRow {
+	display: flex;
+	align-items: center;
+	gap: 0.25rem;
+	overflow: hidden;
+	font-size: 14px;
+	color: var(--text-tertiary);
+	line-height: 18px;
+}
+
+.usernameButton {
+	display: inline;
+	cursor: pointer;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	border: none;
+	background: transparent;
+	padding: 0;
+	text-align: left;
+	font: inherit;
+	color: inherit;
+	line-height: 18px;
+	max-height: 18px;
+}
+
+.usernameButton:hover {
+	text-decoration: underline;
+}
+
+.pronouns {
+	margin-top: 0.25rem;
+	font-size: 13px;
+	color: var(--text-tertiary);
+}

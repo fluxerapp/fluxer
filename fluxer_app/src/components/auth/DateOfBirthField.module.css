@@ -1,0 +1,138 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.fieldset {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.labelContainer {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.legend {
+	font-weight: 500;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--text-primary);
+}
+
+.inputsContainer {
+	display: flex;
+	flex-direction: column;
+	gap: 0.375rem;
+}
+
+.fieldsRow {
+	display: flex;
+	gap: 0.5rem;
+}
+
+.monthField {
+	flex: 2 1 0%;
+}
+
+.dayField {
+	flex: 1.5 1 0%;
+}
+
+.yearField {
+	flex: 1.5 1 0%;
+}
+
+.errorText {
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--status-danger);
+}
+
+@media (max-width: 720px) {
+	.fieldsRow {
+		flex-wrap: wrap;
+	}
+
+	.monthField,
+	.dayField,
+	.yearField {
+		flex: 1 1 calc(50% - 0.5rem);
+		min-width: 10rem;
+	}
+
+	.yearField {
+		flex-basis: 100%;
+	}
+}
+
+@media (max-width: 520px) {
+	.monthField,
+	.dayField,
+	.yearField {
+		flex: 1 1 100%;
+		min-width: 0;
+	}
+}
+
+.nativeDateInput {
+	width: 100%;
+	appearance: none;
+	-webkit-appearance: none;
+	border-radius: 0.5rem;
+	border: 1px solid var(--background-modifier-accent);
+	padding: 0.625rem 1rem;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--text-primary);
+	background-color: var(--form-surface-background);
+	min-height: 44px;
+	transition-property: color, background-color, border-color;
+	transition-duration: 150ms;
+	transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+:global(.theme-light) .nativeDateInput {
+	background-color: var(--background-modifier-hover);
+}
+
+.nativeDateInput:focus {
+	outline: none;
+	border-color: var(--background-modifier-accent-focus);
+}
+
+.nativeDateInput[aria-invalid='true'] {
+	border-color: var(--status-danger);
+}
+
+.nativeDateInput::-webkit-date-and-time-value {
+	text-align: left;
+}
+
+.nativeDateInput::-webkit-calendar-picker-indicator {
+	opacity: 0.6;
+	cursor: pointer;
+	filter: var(--calendar-picker-filter, none);
+}
+
+@media (prefers-color-scheme: dark) {
+	.nativeDateInput::-webkit-calendar-picker-indicator {
+		filter: invert(1);
+	}
+}

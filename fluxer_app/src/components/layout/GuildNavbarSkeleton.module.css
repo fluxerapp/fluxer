@@ -1,0 +1,176 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.skeletonContainer {
+	display: grid;
+	grid-template-rows: auto 1fr;
+	height: calc(100% - var(--layout-user-area-reserved-height, 0px));
+	min-height: 0;
+	width: var(--layout-sidebar-width);
+	min-width: 0;
+	user-select: none;
+	-webkit-user-select: none;
+	overflow: hidden;
+	background-color: var(--background-secondary);
+	padding-bottom: var(--spacing-2);
+	position: relative;
+}
+
+.skeletonContainerMobile {
+	width: 100%;
+}
+
+:global(html.platform-native):not(.platform-macos) .skeletonContainer {
+	border-top-left-radius: clamp(8px, 1.2vw, 14px);
+	background-clip: padding-box;
+	overflow: hidden;
+}
+
+.skeletonHeader {
+	position: relative;
+	display: flex;
+	align-items: start;
+	overflow: hidden;
+	height: var(--layout-header-height);
+	min-height: var(--layout-header-height);
+	border-bottom: 1px solid var(--user-area-divider-color);
+	background-color: var(--background-secondary);
+}
+
+.skeletonHeaderPill {
+	position: relative;
+	z-index: 30;
+	display: flex;
+	align-items: center;
+	height: var(--layout-header-height);
+	width: 100%;
+	min-width: 0;
+	padding: 0 var(--spacing-4);
+	cursor: pointer;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.skeletonHeaderPill::after {
+	content: '';
+	display: block;
+	width: 80%;
+	height: 1.25rem;
+	background-color: var(--background-modifier-hover);
+	border-radius: var(--radius-md);
+	opacity: 0.4;
+}
+
+.skeletonContent {
+	padding: var(--spacing-3);
+	overflow-y: auto;
+}
+
+.skeletonCategory {
+	padding: var(--spacing-2) var(--spacing-2);
+	margin-top: var(--spacing-4);
+	margin-bottom: var(--spacing-2);
+}
+
+.skeletonCategoryPill {
+	width: 60%;
+	height: 1rem;
+	background-color: var(--background-modifier-hover);
+	border-radius: var(--radius-md);
+	opacity: 0.3;
+}
+
+.skeletonChannel {
+	padding: var(--spacing-2) var(--spacing-2);
+	margin-bottom: var(--spacing-1-5);
+}
+
+.skeletonChannelPill {
+	width: 75%;
+	height: 1.25rem;
+	background-color: var(--background-modifier-hover);
+	border-radius: var(--radius-md);
+	opacity: 0.35;
+}
+
+.skeletonChannel:nth-child(2) .skeletonChannelPill {
+	width: 62%;
+	opacity: 0.42;
+}
+
+.skeletonChannel:nth-child(3) .skeletonChannelPill {
+	width: 84%;
+	opacity: 0.28;
+}
+
+.skeletonChannel:nth-child(4) .skeletonChannelPill {
+	width: 58%;
+	opacity: 0.38;
+}
+
+.skeletonChannel:nth-child(6) .skeletonChannelPill {
+	width: 78%;
+	opacity: 0.31;
+}
+
+.skeletonChannel:nth-child(7) .skeletonChannelPill {
+	width: 55%;
+	opacity: 0.36;
+}
+
+.skeletonChannel:nth-child(10) .skeletonChannelPill {
+	width: 68%;
+	opacity: 0.33;
+}
+
+.skeletonChannel:nth-child(11) .skeletonChannelPill {
+	width: 82%;
+	opacity: 0.29;
+}
+
+.skeletonChannel:nth-child(12) .skeletonChannelPill {
+	width: 71%;
+	opacity: 0.37;
+}
+
+.skeletonChannel:nth-child(13) .skeletonChannelPill {
+	width: 64%;
+	opacity: 0.34;
+}
+
+.skeletonCategory:nth-child(1) .skeletonCategoryPill {
+	width: 48%;
+	opacity: 0.25;
+}
+
+.skeletonCategory:nth-child(5) .skeletonCategoryPill {
+	width: 68%;
+	opacity: 0.32;
+}
+
+.skeletonCategory:nth-child(9) .skeletonCategoryPill {
+	width: 53%;
+	opacity: 0.28;
+}
+
+.skeletonHeaderPill {
+	width: 78%;
+	opacity: 0.36;
+}

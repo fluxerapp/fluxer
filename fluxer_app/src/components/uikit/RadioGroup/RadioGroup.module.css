@@ -1,0 +1,193 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.group {
+	box-sizing: border-box;
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-1-5);
+	--radio-indicator-size: 18px;
+	--radio-indicator-border: color-mix(in srgb, var(--border-color) 70%, #fff 30%);
+	--radio-indicator-border-selected: var(--brand-primary);
+	--radio-dot-bg: var(--brand-primary);
+	--radio-dot-fill: #fff;
+	--radio-transition: var(--transition-normal, 150ms ease);
+}
+
+:global(.theme-light) .group {
+	--radio-indicator-border: color-mix(in srgb, var(--text-secondary) 70%, #000 30%);
+	--radio-indicator-border-selected: color-mix(in srgb, var(--brand-primary) 85%, var(--text-primary) 15%);
+	--radio-dot-bg: var(--brand-primary);
+	--radio-dot-fill: #fff;
+}
+
+.radioGroupOption {
+	align-items: flex-start;
+	color: var(--text-secondary);
+	cursor: pointer;
+	display: flex;
+	gap: var(--spacing-2);
+	line-height: 1.3;
+	padding: var(--spacing-1) 0;
+	width: 100%;
+}
+
+.label {
+	align-items: flex-start;
+	display: flex;
+	gap: var(--spacing-1);
+	width: 100%;
+}
+
+.labelText {
+	color: var(--text-primary);
+	font-size: 0.9375rem;
+	font-weight: 500;
+	line-height: 1.4;
+}
+
+.description {
+	color: var(--text-secondary);
+	font-size: 0.875rem;
+	line-height: 1.4;
+}
+
+.stack {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-1);
+	width: 100%;
+	align-items: flex-start;
+	text-align: left;
+}
+
+.customContent {
+	color: var(--text-secondary);
+	width: 100%;
+}
+
+.radioGroupOption[data-state='checked'] .labelText,
+.radioGroupOption[data-state='checked'] .customContent {
+	color: var(--text-primary);
+}
+
+.radioGroupOption[data-state='checked'] .description {
+	color: var(--text-secondary);
+}
+
+.radioGroupOption[data-disabled] {
+	cursor: not-allowed;
+	opacity: 0.55;
+}
+
+.radioGroupOption[data-disabled] .labelText,
+.radioGroupOption[data-disabled] .description,
+.radioGroupOption[data-disabled] .customContent {
+	color: var(--text-secondary);
+}
+
+.radioGroupOption:not([data-disabled]):hover .labelText,
+.radioGroupOption:not([data-disabled]):hover .description,
+.radioGroupOption:not([data-disabled]):hover .customContent {
+	color: var(--text-primary);
+}
+
+.radioIndicator {
+	border-radius: 50%;
+	box-sizing: border-box;
+	display: block;
+	flex-shrink: 0;
+	height: var(--radio-indicator-size);
+	image-rendering: crisp-edges;
+	margin-top: 2px;
+	overflow: visible;
+	width: var(--radio-indicator-size);
+}
+
+.innerDotRadio,
+.outerRadioBase,
+.outerRadioFill,
+.radioIndicator {
+	transform-box: fill-box;
+	transform-origin: center;
+	fill: none;
+	overflow: visible;
+}
+
+.outerRadioBase {
+	fill: color-mix(in srgb, var(--background-primary) 55%, var(--radio-indicator-border) 45%);
+	stroke: var(--radio-indicator-border);
+	stroke-width: 2;
+	transition:
+		stroke var(--radio-transition),
+		fill var(--radio-transition);
+}
+
+.outerRadioFill {
+	fill: none;
+	stroke: none;
+}
+
+.innerDotRadio {
+	fill: var(--radio-dot-fill);
+	opacity: 0;
+	transition: opacity var(--radio-transition);
+}
+
+.radioGroupOption[data-state='checked'] .outerRadioBase {
+	fill: var(--radio-dot-bg);
+	stroke: var(--radio-indicator-border-selected);
+}
+
+.radioGroupOption[data-state='checked'] .innerDotRadio {
+	opacity: 1;
+}
+
+.focusRing {
+	border-radius: var(--radius-sm);
+}
+
+.enable-forced-colors .outerRadioBase {
+	fill: Canvas;
+}
+
+.enable-forced-colors .innerDotRadio {
+	fill: HighlightText;
+}
+
+.enable-forced-colors .radioGroupOption[data-disabled] {
+	opacity: 1;
+}
+
+.enable-forced-colors .radioGroupOption[data-disabled],
+.enable-forced-colors .radioGroupOption[data-disabled]:hover {
+	color: GrayText;
+}
+
+.enable-forced-colors .radioGroupOption[data-state='checked'] .outerRadioBase {
+	fill: Highlight;
+}
+
+.enable-forced-colors .radioGroupOption[data-disabled] .outerRadioBase {
+	fill: Canvas;
+}
+
+.enable-forced-colors .radioGroupOption[data-disabled] .innerDotRadio {
+	fill: GrayText;
+}

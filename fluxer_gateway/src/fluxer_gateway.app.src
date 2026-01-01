@@ -1,0 +1,24 @@
+{application, fluxer_gateway, [
+    {description, "Fluxer Gateway"},
+    {vsn, "0.0.0"},
+    {registered, []},
+    {mod, {fluxer_gateway_app, []}},
+    {applications, [
+        kernel,
+        stdlib,
+        crypto,
+        public_key,
+        ssl,
+        inets,
+        jsx,
+        jose,
+        cowboy,
+        hackney,
+        base64url,
+        ezstd
+    ]},
+    {env, []},
+    {modules, []},
+    {licenses, ["AGPL-3.0-or-later"]},
+    {links, []}
+]}.

@@ -1,0 +1,49 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.counter {
+	font-family: ui-monospace, monospace;
+	font-size: 0.75rem;
+	line-height: 1rem;
+}
+
+.counterButton {
+	composes: counter;
+	cursor: pointer;
+	transition-property: opacity;
+	transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+	transition-duration: 150ms;
+}
+
+.counterButton:hover {
+	opacity: 0.8;
+}
+
+.counterSpan {
+	composes: counter;
+	cursor: default;
+}
+
+.textDanger {
+	color: var(--status-danger);
+}
+
+.textTertiary {
+	color: var(--text-tertiary);
+}

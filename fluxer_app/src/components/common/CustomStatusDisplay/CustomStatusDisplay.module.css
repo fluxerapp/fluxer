@@ -1,0 +1,254 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.content {
+	word-break: break-word;
+	overflow-wrap: anywhere;
+	user-select: text;
+	-webkit-user-select: text;
+}
+
+.content.singleLine {
+	word-break: normal;
+	overflow-wrap: normal;
+}
+
+.constrained {
+	display: block;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	min-width: 0;
+	width: 100%;
+	word-break: normal;
+	overflow-wrap: normal;
+}
+
+.truncatedText {
+	vertical-align: middle;
+	user-select: text;
+	-webkit-user-select: text;
+}
+
+.clamped {
+	display: block;
+	overflow: hidden;
+	white-space: normal;
+	max-height: calc(var(--max-lines, 2) * 1lh);
+	max-block-size: calc(var(--max-lines, 2) * 1lh);
+}
+
+@supports not (max-height: 1lh) {
+	.clamped {
+		max-height: calc(var(--max-lines, 2) * 1.25em);
+		max-block-size: calc(var(--max-lines, 2) * 1.25em);
+	}
+}
+
+.statusEmoji {
+	display: inline;
+	height: 1.125em;
+	width: 1.125em;
+	object-fit: contain;
+	margin-inline-end: 0.25em;
+	vertical-align: -0.25em;
+}
+
+.statusEmojiWrapper {
+	display: inline-block;
+	position: relative;
+	height: 1.125em;
+	width: 1.125em;
+	margin-inline-end: 0.25em;
+	vertical-align: -0.25em;
+}
+
+.statusEmojiWrapper .statusEmoji {
+	margin: 0;
+	position: absolute;
+	inset: 0;
+	vertical-align: baseline;
+}
+
+.statusEmojiWrapper .staticEmoji {
+	opacity: calc(1 - var(--emoji-show-animated, 0));
+}
+
+.statusEmojiWrapper .animatedEmoji {
+	opacity: var(--emoji-show-animated, 0);
+}
+
+img.statusEmoji {
+	text-indent: -9999px;
+}
+
+.nativeEmoji {
+	display: inline;
+	font-size: 1.125em;
+	line-height: 1;
+	font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
+	margin-inline-end: 0.25em;
+	vertical-align: -0.15em;
+}
+
+.hiddenVisually {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
+}
+
+.jumbo .statusEmoji {
+	height: 1.75rem;
+	width: 1.75rem;
+	margin-inline-end: 0;
+	vertical-align: baseline;
+}
+
+.jumbo .statusEmojiWrapper {
+	height: 1.75rem;
+	width: 1.75rem;
+	margin-inline-end: 0;
+	vertical-align: baseline;
+}
+
+.jumbo .nativeEmoji {
+	font-size: 1.75rem;
+	margin-inline-end: 0;
+	vertical-align: baseline;
+}
+
+.editableWrapper {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.25em;
+	padding: 0;
+	padding-bottom: 2px;
+	border: none;
+	background: transparent;
+	cursor: pointer;
+	text-align: left;
+}
+
+.editableWrapper .content {
+	display: block;
+}
+
+.editableWrapper,
+.editableWrapper * {
+	cursor: pointer;
+}
+
+.editableTextHover .truncatedText {
+	text-decoration: none;
+	text-decoration-thickness: 1px;
+	text-underline-offset: 2px;
+}
+
+.editableTextHover:hover .truncatedText {
+	text-decoration: underline;
+}
+
+.editPencilIcon {
+	color: var(--text-tertiary);
+	opacity: 0;
+	flex-shrink: 0;
+	transition: opacity 0.15s ease;
+}
+
+.editableEmojiOnly:hover .editPencilIcon {
+	opacity: 1;
+}
+
+.placeholder {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.25em;
+	padding: 0;
+	border: none;
+	background: transparent;
+	cursor: pointer;
+	font-size: 0.75rem;
+	line-height: 1rem;
+}
+
+.placeholderIcon {
+	color: var(--text-tertiary);
+	flex-shrink: 0;
+}
+
+.placeholderText {
+	color: var(--text-tertiary);
+}
+
+.emojiPressable {
+	display: inline;
+	padding: 0;
+	margin: 0;
+	border: none;
+	background: transparent;
+	cursor: pointer;
+}
+
+.emojiTooltipTrigger {
+	display: inline;
+}
+
+.emojiTooltipSubtext {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.emojiTooltipGuildRow {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.emojiTooltipGuildIcon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	--guild-icon-size: 1.25rem;
+}
+
+.emojiTooltipGuildName {
+	color: var(--text-primary);
+	font-size: 0.875rem;
+	font-weight: 500;
+	line-height: 1.25;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.emojiTooltipVerifiedIcon {
+	width: 1rem;
+	height: 1rem;
+	flex-shrink: 0;
+	color: var(--text-primary);
+}

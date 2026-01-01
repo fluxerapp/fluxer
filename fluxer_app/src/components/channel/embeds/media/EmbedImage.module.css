@@ -1,0 +1,146 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.imagePreviewHandler {
+	height: 100%;
+	width: 100%;
+	appearance: none;
+	border: 0;
+	background: transparent;
+	padding: 0;
+	text-align: left;
+	cursor: pointer;
+	border-radius: var(--media-border-radius, 0);
+	overflow: hidden;
+}
+
+.container {
+	display: flex;
+	width: 100%;
+	flex-direction: column;
+}
+
+.rowContainer {
+	display: flex;
+	height: 100%;
+	width: 100%;
+	flex-direction: row;
+}
+
+.justifyEnd {
+	justify-content: flex-end;
+}
+
+.innerContainer {
+	display: flex;
+	width: 100%;
+	flex-direction: column;
+}
+
+.imageWrapper {
+	position: relative;
+	display: block;
+	cursor: pointer;
+	user-select: text;
+	-webkit-user-select: text;
+	overflow: hidden;
+	border-radius: var(--media-border-radius);
+}
+
+.imageContainer {
+	position: relative;
+	height: 100%;
+	width: 100%;
+	overflow: hidden;
+	border-radius: var(--media-border-radius);
+}
+
+.imageInnerContainer {
+	position: relative;
+	height: 100%;
+	width: 100%;
+	overflow: hidden;
+	border-radius: var(--media-border-radius);
+}
+
+.blurContainer {
+	display: flex;
+	width: 100%;
+	flex-direction: column;
+}
+
+.blurContent {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	cursor: default;
+	overflow: hidden;
+	border-radius: var(--media-border-radius);
+	border: none;
+	background: var(--background-primary);
+	padding: 0;
+}
+
+.blurInnerContainer {
+	position: relative;
+	height: 100%;
+	width: 100%;
+	overflow: hidden;
+	border-radius: var(--media-border-radius);
+}
+
+.thumbHashContainer {
+	position: absolute;
+	inset: 0;
+}
+
+.thumbHashImage {
+	height: 100%;
+	width: 100%;
+	object-fit: cover;
+}
+
+.mediaContainer {
+	display: grid;
+	cursor: pointer;
+	user-select: text;
+	-webkit-user-select: text;
+	overflow: hidden;
+	border-radius: var(--media-border-radius);
+}
+
+.cursorPointer {
+	cursor: pointer;
+}
+
+.imageElement {
+	display: block;
+	height: 100%;
+	width: 100%;
+	object-fit: cover;
+	border-radius: var(--media-border-radius);
+}
+
+.opacityHidden {
+	opacity: 0;
+}
+
+.opacityVisible {
+	opacity: 1;
+}

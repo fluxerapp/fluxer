@@ -1,0 +1,65 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.container {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.text {
+	color: var(--text-secondary);
+	font-size: 0.875rem;
+	line-height: 1.4;
+}
+
+.guildRow {
+	display: flex;
+	align-items: center;
+	gap: 0;
+}
+
+.guildIcon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	margin-right: 0.25rem;
+	--guild-icon-size: 1.25rem;
+}
+
+.guildName {
+	color: var(--text-primary);
+	font-size: 0.875rem;
+	font-weight: 500;
+	line-height: 1.25;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	margin-right: 0.125rem;
+}
+
+.verifiedIcon {
+	width: 1rem;
+	height: 1rem;
+	flex-shrink: 0;
+	color: var(--text-primary);
+	margin-left: 0.125rem;
+}

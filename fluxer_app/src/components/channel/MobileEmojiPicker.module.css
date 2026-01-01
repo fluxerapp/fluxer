@@ -1,0 +1,97 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.container {
+	position: relative;
+	height: 100%;
+}
+
+.mobileEmojiPicker {
+	position: relative;
+	display: grid;
+	grid-template-rows: auto 1fr auto;
+	width: auto;
+	height: 100%;
+	overflow: hidden;
+	padding: 0 16px 0 8px;
+}
+
+.bodyWrapper {
+	display: grid;
+	position: relative;
+	grid-row: 2 / 3;
+	grid-template-rows: 1fr;
+}
+
+.emojiPickerListWrapper {
+	position: relative;
+	overflow: hidden;
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+}
+
+.listWrapper {
+	position: absolute;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+}
+
+.list {
+	padding: 0 4px;
+}
+
+@media (max-width: 768px) {
+	.list {
+		scrollbar-width: none;
+	}
+
+	.list::-webkit-scrollbar {
+		display: none;
+	}
+}
+
+.categoryListBottom {
+	position: relative;
+	grid-row: 3 / 4;
+	width: 100%;
+	background: var(--background-secondary);
+	border-top: 1px solid var(--background-header-secondary);
+	overflow-x: auto;
+	overflow-y: hidden;
+	padding: 8px 0 calc(8px + env(safe-area-inset-bottom, 0px));
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.categoryListBottom::-webkit-scrollbar {
+	height: 0;
+}
+
+.categoryListBottom::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+.container {
+	position: relative;
+	height: 100%;
+}

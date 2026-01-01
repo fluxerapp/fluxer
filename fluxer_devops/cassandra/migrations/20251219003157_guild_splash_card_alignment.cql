@@ -1,0 +1,1 @@
+ALTER TABLE fluxer.guilds ADD splash_card_alignment int;

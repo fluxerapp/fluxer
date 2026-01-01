@@ -1,0 +1,102 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.content {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	padding: 16px;
+}
+
+.description {
+	margin: 0;
+	color: var(--text-primary);
+	line-height: 1.5;
+}
+
+.helper {
+	margin: 0;
+	color: var(--text-primary-muted);
+	line-height: 1.45;
+}
+
+.tips {
+	list-style: none;
+	margin: 0;
+	margin-top: 8px;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.tip {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 12px;
+	padding: 16px;
+	border-radius: var(--radius-lg);
+	border: 1px solid var(--background-modifier-accent);
+	background-color: var(--background-secondary-alt);
+	text-align: center;
+}
+
+.keys {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+}
+
+.kbd {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 34px;
+	padding: 6px 10px;
+	border-radius: 8px;
+	border: 1px solid var(--background-modifier-accent);
+	background-color: var(--background-secondary);
+	color: var(--text-primary);
+	font-size: 0.85rem;
+	font-weight: 700;
+	line-height: 1;
+	box-shadow:
+		0 2px 4px rgba(0, 0, 0, 0.2),
+		inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.separator {
+	color: var(--text-primary-muted);
+	font-weight: 600;
+}
+
+.tipText {
+	margin: 0;
+	color: var(--text-primary);
+	line-height: 1.4;
+}
+
+.footer {
+	display: flex;
+	gap: 8px;
+	padding: 8px 16px;
+}

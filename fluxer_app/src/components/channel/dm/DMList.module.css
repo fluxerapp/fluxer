@@ -1,0 +1,733 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.dmListContainer {
+	display: grid;
+	grid-template-rows: auto 1fr auto;
+	height: calc(100% - var(--layout-user-area-reserved-height, 0px));
+	min-height: 0;
+	width: var(--layout-sidebar-width);
+	min-width: 0;
+	user-select: none;
+	-webkit-user-select: none;
+	overflow: hidden;
+	background-color: var(--background-secondary);
+	padding-bottom: 0;
+}
+
+.dmListHeader {
+	display: flex;
+	align-items: center;
+	height: var(--layout-header-height);
+	min-height: var(--layout-header-height);
+	background-color: var(--background-secondary);
+	padding: 0 var(--spacing-2);
+	width: 100%;
+	border: none;
+	border-bottom: 1px solid var(--user-area-divider-color);
+	cursor: pointer;
+	text-align: left;
+	transition: background-color var(--transition-fast);
+}
+
+.dmListHeaderButton {
+	position: relative;
+	display: flex;
+	align-items: center;
+	width: 100%;
+	height: 1.75rem;
+	padding: 0 var(--spacing-3);
+	border: none;
+	border-radius: var(--radius-md);
+	background-color: transparent;
+	color: var(--text-primary-muted);
+	font-size: 0.8125rem;
+	font-weight: 500;
+	transition: color var(--transition-fast);
+}
+
+.dmListHeader:hover {
+	background-color: var(--background-modifier-hover);
+}
+
+.dmListHeader:hover .dmListHeaderButton {
+	color: var(--text-primary);
+}
+
+.dmListHeaderText {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.dmListHeaderShortcut {
+	position: absolute;
+	right: var(--spacing-2);
+	display: flex;
+	align-items: center;
+	gap: 0.125rem;
+	flex-shrink: 0;
+}
+
+.dmListHeaderShortcut kbd {
+	display: inline-flex;
+	height: 1.125rem;
+	min-width: 1.125rem;
+	align-items: center;
+	justify-content: center;
+	padding: 0 0.25rem;
+	border-radius: var(--radius-sm);
+	background-color: var(--background-modifier-accent);
+	color: var(--surface-interactive-selected-color);
+	font-size: 0.625rem;
+	font-weight: 500;
+	font-family: inherit;
+}
+
+.theme-light .dmListHeaderShortcut kbd {
+	border-color: hsla(0, 0%, 100%, 0.15);
+	background-color: hsl(220, calc(13% * var(--saturation-factor)), 18.44%);
+	color: var(--text-on-brand-primary);
+	box-shadow: 0 1px 0 rgba(0, 0, 0, 0.4);
+}
+
+.mobileContainer {
+	position: relative;
+	display: grid;
+	grid-template-rows: auto 1fr;
+	height: 100%;
+	min-height: 0;
+	width: 100%;
+	min-width: 0;
+	background-color: var(--background-secondary);
+}
+
+.mobileHeader {
+	display: flex;
+	height: 3.5rem;
+	flex-shrink: 0;
+	align-items: center;
+	justify-content: space-between;
+	border-bottom: var(--theme-border-width) solid var(--background-header-secondary);
+	padding-left: 1rem;
+	padding-right: 0.5rem;
+}
+
+.mobileHeaderTitle {
+	font-weight: 600;
+	font-size: 1.125rem;
+	line-height: 1.75rem;
+	color: var(--text-primary);
+}
+
+.mobileHeaderActions {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.mobileHeaderButton {
+	display: flex;
+	height: 2rem;
+	width: 2rem;
+	align-items: center;
+	justify-content: center;
+	border-radius: var(--radius-full);
+	background-color: var(--guild-list-foreground);
+	color: var(--text-primary);
+	border: none;
+	cursor: pointer;
+	transition: background-color var(--transition-fast);
+}
+
+.mobileHeaderButton:hover {
+	background-color: color-mix(in srgb, var(--guild-list-foreground) 90%, white);
+}
+
+.mobileAddFriendButton {
+	position: relative;
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	border-radius: var(--radius-full);
+	background-color: var(--guild-list-foreground);
+	padding-left: 1rem;
+	padding-right: 1rem;
+	padding-top: 0.5rem;
+	padding-bottom: 0.5rem;
+	font-weight: 500;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	color: var(--text-primary);
+	border: none;
+	cursor: pointer;
+	transition: background-color var(--transition-fast);
+}
+
+.mobileAddFriendButton:hover {
+	background-color: color-mix(in srgb, var(--guild-list-foreground) 90%, white);
+}
+
+.mobileAddFriendBadge {
+	position: absolute;
+	top: -0.25rem;
+	right: -0.25rem;
+	display: flex;
+	height: 1.25rem;
+	min-width: 1.25rem;
+	align-items: center;
+	justify-content: center;
+	border-radius: var(--radius-full);
+	background-color: var(--status-danger);
+	padding-left: 0.25rem;
+	padding-right: 0.25rem;
+	color: white;
+	font-size: 0.75rem;
+	line-height: 1rem;
+}
+
+.mobileScrollerContent {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+	padding: 0;
+	padding-left: var(--spacing-2);
+	padding-right: var(--spacing-2);
+	padding-bottom: var(--mobile-bottom-nav-height);
+}
+
+.desktopScroller {
+	background-color: var(--background-secondary);
+}
+
+.mobileScroller {
+	background-color: var(--background-secondary);
+}
+
+.mobileFAB {
+	position: fixed;
+	right: 1rem;
+	bottom: calc(60px + env(safe-area-inset-bottom, 0px) + 1rem);
+	z-index: 50;
+	display: flex;
+	height: 3.5rem;
+	width: 3.5rem;
+	align-items: center;
+	justify-content: center;
+	border-radius: var(--radius-full);
+	background-color: var(--brand-primary);
+	box-shadow:
+		0 10px 15px -3px rgb(0 0 0 / 0.1),
+		0 4px 6px -4px rgb(0 0 0 / 0.1);
+	border: none;
+	cursor: pointer;
+}
+
+.scrollerContent {
+	display: flex;
+	flex-direction: column;
+	padding-top: 0;
+	padding-bottom: 0;
+	padding-left: var(--spacing-2);
+	padding-right: max(0px, calc(var(--spacing-2) - var(--scroller-track-size, 8px)));
+}
+
+.clickableItem {
+	display: flex;
+	height: 2.625rem;
+	width: 100%;
+	cursor: pointer;
+	align-items: center;
+	border-radius: var(--radius-md);
+	border: none;
+	padding-left: 0.5rem;
+	padding-right: 0.5rem;
+	text-align: left;
+	background-color: transparent;
+	color: var(--text-primary-muted);
+}
+
+.clickableItemIcon {
+	display: flex;
+	height: 2rem;
+	width: 2rem;
+	align-items: center;
+	justify-content: center;
+	border-radius: var(--radius-full);
+	background-color: var(--guild-list-foreground);
+	color: var(--text-primary);
+	transition:
+		background-color var(--transition-fast),
+		color var(--transition-fast);
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.clickableItem:hover:not(.clickableItemSelected) .clickableItemIcon {
+		background-color: color-mix(in srgb, var(--guild-list-foreground) 90%, white);
+	}
+}
+
+.clickableItemSelected .clickableItemIcon {
+	background-color: var(--brand-primary);
+	color: white;
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.clickableItem:hover:not(.clickableItemSelected) {
+		background-color: var(--surface-interactive-hover-bg);
+		color: var(--text-primary);
+	}
+}
+
+.clickableItemPressed:not(.clickableItemSelected) {
+	background-color: var(--surface-interactive-hover-bg);
+	color: var(--text-primary);
+}
+
+.clickableItemSelected {
+	composes: clickableItem;
+	background-color: color-mix(in srgb, var(--surface-interactive-selected-bg) 35%, transparent);
+	color: var(--surface-interactive-selected-color);
+}
+
+.clickableItemInner {
+	display: flex;
+	width: 100%;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.clickableItemContent {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+}
+
+.callIcon {
+	height: 1rem;
+	width: 1rem;
+	color: white;
+}
+
+.sendIcon {
+	height: 1.5rem;
+	width: 1.5rem;
+	color: white;
+}
+
+.clickableItemText {
+	font-weight: 500;
+}
+
+.dmSectionSeparator {
+	height: 1px;
+	margin: var(--spacing-2) calc(-1 * var(--spacing-2));
+	background-color: var(--user-area-divider-color);
+}
+
+.dmSectionHeader {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-top: 0.5rem;
+	margin-bottom: 0.5rem;
+	padding-left: 0.5rem;
+	padding-right: 0.5rem;
+}
+
+.dmSectionHeaderText {
+	display: flex;
+	align-items: center;
+	gap: 0.25rem;
+	color: var(--text-primary-muted);
+}
+
+.dmSectionHeaderLabel {
+	font-size: 0.8125rem;
+	line-height: 1rem;
+	font-weight: 500;
+}
+
+.dmCreateButton {
+	display: flex;
+	height: 1rem;
+	width: 1rem;
+	cursor: pointer;
+	align-items: center;
+	justify-content: center;
+	border: none;
+	background-color: transparent;
+	color: var(--text-primary-muted);
+}
+
+.dmCreateButton:hover {
+	color: var(--text-primary);
+}
+
+.dmCreateButtonActive {
+	composes: dmCreateButton;
+	color: var(--text-primary);
+}
+
+.dmChannelList {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+}
+
+.dmItemMobile {
+	position: relative;
+	display: flex;
+	width: 100%;
+	cursor: pointer;
+	align-items: center;
+	justify-content: space-between;
+	border-radius: var(--radius-md);
+	padding-left: 0.5rem;
+	padding-right: 0.5rem;
+	text-align: left;
+	height: 3.25rem;
+	background-color: transparent;
+	color: var(--text-primary-muted);
+}
+
+.dmItemMobileSelected {
+	composes: dmItemMobile;
+	background-color: color-mix(in srgb, var(--surface-interactive-selected-bg) 35%, transparent);
+	color: var(--surface-interactive-selected-color);
+}
+
+.dmItemMobileUnread {
+	composes: dmItemMobile;
+	background-color: transparent;
+	color: var(--text-primary);
+}
+
+.dmItemMobileMuted {
+	opacity: 0.5;
+	color: var(--text-tertiary-muted);
+}
+
+.dmItem {
+	position: relative;
+	display: flex;
+	width: 100%;
+	cursor: pointer;
+	align-items: center;
+	justify-content: space-between;
+	border-radius: var(--radius-md);
+	border: none;
+	padding-left: 0.5rem;
+	padding-right: 0.5rem;
+	text-align: left;
+	height: 2.625rem;
+	background-color: transparent;
+	color: var(--text-primary-muted);
+}
+
+.dmItemUnread {
+	composes: dmItem;
+	background-color: transparent;
+	color: var(--text-primary);
+}
+
+.dmItemMuted {
+	opacity: 0.5;
+	color: var(--text-tertiary-muted);
+}
+
+.dmItemUnreadIndicatorContainer {
+	contain: layout size;
+	pointer-events: none;
+	position: absolute;
+	top: 0;
+	left: 0;
+	display: flex;
+	width: 0.5rem;
+	align-items: center;
+	justify-content: flex-start;
+}
+
+.dmItemUnreadIndicatorContainerMobile {
+	composes: dmItemUnreadIndicatorContainer;
+	height: 3.25rem;
+}
+
+.dmItemUnreadIndicatorContainerDesktop {
+	composes: dmItemUnreadIndicatorContainer;
+	height: 2.625rem;
+}
+
+.dmItemUnreadIndicator {
+	position: absolute;
+	margin-left: -0.75rem;
+	width: 0.5rem;
+	border-radius: 0 var(--radius-full) var(--radius-full) 0;
+	background-color: var(--text-primary);
+}
+
+.dmItemContent {
+	position: relative;
+	display: flex;
+	width: 100%;
+	align-items: center;
+	gap: 0.75rem;
+}
+
+.dmItemAvatarWrapper {
+	position: relative;
+}
+
+.dmItemInfo {
+	min-width: 0;
+	flex: 1 1 0;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	gap: 0.0625rem;
+}
+
+.dmItemName {
+	display: flex;
+	align-items: center;
+	gap: 0.15rem;
+	min-width: 0;
+	font-weight: 500;
+	font-size: 16px;
+	line-height: 20px;
+}
+
+.dmItemNameText {
+	display: block;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	flex: 0 1 auto;
+	min-width: 0;
+	font-size: inherit;
+	line-height: inherit;
+}
+
+.dmItemUserTag {
+	margin-left: 0.25rem;
+}
+
+.dmItemPinIcon {
+	height: 0.875rem;
+	width: 0.875rem;
+	flex-shrink: 0;
+}
+
+.dmItemSubtext {
+	display: block;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	color: var(--text-primary-muted);
+	font-size: 0.6875rem;
+	line-height: 1rem;
+	font-weight: 500;
+	margin-top: -0.0625rem;
+	opacity: 0.85;
+}
+
+.dmItemCustomStatus {
+	composes: dmItemSubtext;
+	width: fit-content;
+}
+
+.dmItem:hover .dmItemCustomStatus,
+.dmItemMobile:hover .dmItemCustomStatus,
+.dmItemSelected .dmItemCustomStatus,
+.dmItemMobileSelected .dmItemCustomStatus {
+	--emoji-show-animated: 1;
+}
+
+.dmItemMembersSubtext {
+	composes: dmItemSubtext;
+	line-height: 0.875rem;
+	margin-top: -0.125rem;
+}
+
+.dmItemSubtextItalic {
+	font-style: italic;
+	opacity: 0.7;
+}
+
+.dmItemPreviewMarkdown {
+	display: inline;
+}
+
+.dmItemPreviewMarkdown * {
+	display: inline !important;
+	white-space: nowrap !important;
+}
+
+.dmItemPreviewMarkdown a {
+	pointer-events: none;
+}
+
+.dmItemTimestamp {
+	color: var(--text-primary-muted);
+	font-size: 0.75rem;
+	line-height: 1rem;
+}
+
+.dmItemSelected {
+	composes: dmItem;
+	background-color: color-mix(in srgb, var(--surface-interactive-selected-bg) 35%, transparent);
+	color: var(--surface-interactive-selected-color);
+}
+
+.dmItemSelected .dmItemSubtext,
+.dmItemSelected .dmItemMembersSubtext,
+.dmItemSelected .dmItemTimestamp,
+.dmItemMobileSelected .dmItemSubtext,
+.dmItemMobileSelected .dmItemMembersSubtext,
+.dmItemMobileSelected .dmItemTimestamp {
+	color: var(--surface-interactive-selected-color);
+}
+
+.dmItemCallBadge {
+	display: flex;
+	height: 1.5rem;
+	width: 1.5rem;
+	flex-shrink: 0;
+	align-items: center;
+	justify-content: center;
+	border-radius: var(--radius-full);
+	background-color: var(--status-online);
+}
+
+.dmItemCloseButton {
+	display: flex;
+	height: 1.5rem;
+	width: 1.5rem;
+	flex-shrink: 0;
+	cursor: pointer;
+	align-items: center;
+	justify-content: center;
+	border-radius: var(--radius-full);
+	opacity: 0;
+}
+
+.dmItem:hover .dmItemCloseButton {
+	opacity: 1;
+}
+
+.mobileSpecialButton {
+	composes: dmItemMobile;
+	background-color: transparent;
+	box-shadow: none;
+}
+
+.mobileSpecialButtonSelected {
+	composes: dmItemMobileSelected;
+}
+
+.mobilePersonalNotesButton {
+	composes: mobileSpecialButton;
+}
+
+.mobilePersonalNotesButtonSelected {
+	composes: mobileSpecialButtonSelected;
+}
+
+.mobilePlutoniumButton {
+	composes: mobileSpecialButton;
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.dmItemMobile:hover:not(.dmItemMobileSelected) {
+		background-color: var(--surface-interactive-hover-bg);
+		color: var(--text-primary);
+	}
+
+	.dmItem:hover:not(.dmItemSelected) {
+		background-color: var(--surface-interactive-hover-bg);
+		color: var(--text-primary);
+	}
+}
+
+.dmItemMobilePressed:not(.dmItemMobileSelected) {
+	background-color: var(--surface-interactive-hover-bg);
+	color: var(--text-primary);
+}
+
+.dmItemPressed:not(.dmItemSelected) {
+	background-color: var(--surface-interactive-hover-bg);
+	color: var(--text-primary);
+}
+
+.mobileSpecialButtonContent {
+	position: relative;
+	display: flex;
+	width: 100%;
+	align-items: center;
+	gap: 0.75rem;
+}
+
+.mobileSpecialButtonIcon {
+	display: flex;
+	height: 2.5rem;
+	width: 2.5rem;
+	flex-shrink: 0;
+	align-items: center;
+	justify-content: center;
+	border-radius: var(--radius-full);
+	background-color: var(--guild-list-foreground);
+	color: var(--text-primary);
+	transition:
+		background-color var(--transition-fast),
+		color var(--transition-fast);
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.mobileSpecialButton:hover:not(.mobileSpecialButtonSelected) .mobileSpecialButtonIcon {
+		background-color: color-mix(in srgb, var(--guild-list-foreground) 90%, white);
+	}
+}
+
+.mobileSpecialButtonSelected .mobileSpecialButtonIcon {
+	background-color: var(--brand-primary);
+	color: white;
+}
+
+.mobileSpecialButtonText {
+	min-width: 0;
+	flex: 1 1 0;
+}
+
+.mobileSpecialButtonLabel {
+	display: block;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-weight: 500;
+}
+
+.iconSize5 {
+	height: 1.25rem;
+	width: 1.25rem;
+}
+
+.iconSize4 {
+	height: 1rem;
+	width: 1rem;
+}

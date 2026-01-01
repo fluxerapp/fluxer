@@ -1,0 +1,251 @@
+/*
+ * Copyright (C) 2026 Fluxer Contributors
+ *
+ * This file is part of Fluxer.
+ *
+ * Fluxer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Fluxer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
+ */
+
+.statusDot {
+	display: inline-block;
+	height: 0.25rem;
+	width: 0.25rem;
+	margin-left: 0.25rem;
+	margin-right: 0.25rem;
+	border-radius: 9999px;
+	background-color: var(--text-primary-muted);
+	vertical-align: middle;
+}
+
+.checkbox {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 1.25rem;
+	width: 1.25rem;
+	border-radius: 0.25rem;
+	border: 2px solid;
+}
+
+.checkboxUnchecked {
+	border-color: var(--text-tertiary-muted);
+}
+
+.checkboxChecked {
+	border-color: var(--text-primary);
+	background-color: var(--text-primary);
+}
+
+.checkIcon {
+	height: 0.875rem;
+	width: 0.875rem;
+	color: var(--background-primary);
+}
+
+.authSession {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	gap: 0.75rem;
+	padding: 1rem;
+	border-radius: 0.5rem;
+	border: 1px solid var(--background-header-secondary);
+	background-color: var(--background-secondary);
+}
+
+@media (min-width: 640px) {
+	.authSession {
+		flex-direction: row;
+		align-items: center;
+		gap: 1rem;
+	}
+}
+
+@media (min-width: 1024px) {
+	.authSession {
+		padding: 1.25rem;
+	}
+}
+
+.authSessionSelectable {
+	cursor: pointer;
+}
+
+.authSessionContent {
+	display: flex;
+	flex: 1;
+	align-items: center;
+	gap: 1rem;
+}
+
+.iconContainer {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 2.75rem;
+	width: 2.75rem;
+	border-radius: 9999px;
+	background-color: var(--background-tertiary);
+	color: var(--text-tertiary);
+}
+
+.icon {
+	height: 1.5rem;
+	width: 1.5rem;
+}
+
+.authSessionInfo {
+	display: flex;
+	min-width: 0;
+	flex: 1;
+	flex-direction: column;
+	gap: 0.25rem;
+}
+
+.authSessionTitle {
+	font-size: 0.875rem;
+	font-weight: 600;
+	color: var(--text-primary);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+@media (min-width: 640px) {
+	.authSessionTitle {
+		font-size: 1rem;
+	}
+}
+
+.authSessionLocation {
+	font-size: 0.875rem;
+	color: var(--text-primary-muted);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.lastUsed {
+	font-size: 0.75rem;
+}
+
+.authSessionActions {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem;
+}
+
+@media (min-width: 640px) {
+	.authSessionActions {
+		justify-content: flex-end;
+	}
+}
+
+.revokeButton {
+	padding: 0.5rem;
+	border-radius: 0.375rem;
+	color: var(--text-tertiary);
+	cursor: pointer;
+}
+
+.revokeButton:hover {
+	background-color: var(--background-modifier-hover);
+}
+
+.revokeIcon {
+	height: 1rem;
+	width: 1rem;
+}
+
+.loadingContainer {
+	display: flex;
+	justify-content: center;
+	padding-top: 4rem;
+	padding-bottom: 4rem;
+}
+
+.devicesSection {
+	display: flex;
+	flex-direction: column;
+	gap: 1.5rem;
+}
+
+.deviceGroup {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}
+
+.deviceGroupHeader {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.deviceGroupTitle {
+	font-size: 0.875rem;
+	font-weight: 600;
+	color: var(--text-primary);
+}
+
+@media (min-width: 640px) {
+	.deviceGroupTitle {
+		font-size: 1rem;
+	}
+}
+
+.actionsContainer {
+	display: flex;
+	gap: 0.5rem;
+}
+
+.actionButton {
+	padding: 0.5rem;
+	border-radius: 0.375rem;
+	color: var(--text-tertiary);
+	cursor: pointer;
+}
+
+.actionButton:hover {
+	background-color: var(--background-modifier-hover);
+}
+
+.actionIcon {
+	height: 1.25rem;
+	width: 1.25rem;
+}
+
+.devicesGrid {
+	display: grid;
+	grid-template-columns: repeat(1, minmax(0, 1fr));
+	gap: 1rem;
+}
+
+@media (min-width: 1024px) {
+	.devicesGrid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
+.logoutSection {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+.logoutDescription {
+	font-size: 0.875rem;
+	color: var(--text-primary-muted);
+}
