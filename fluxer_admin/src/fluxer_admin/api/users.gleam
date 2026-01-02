@@ -486,7 +486,44 @@ pub fn get_current_admin(
   ctx: web.Context,
   session: web.Session,
 ) -> Result(Option(UserLookupResult), ApiError) {
-  lookup_user(ctx, session, session.user_id)
+  let url = ctx.api_endpoint <> "/admin/users/me"
+
+  let assert Ok(req) = request.to(url)
+  let req =
+    req
+    |> request.set_method(http.Get)
+    |> request.set_header("authorization", "Bearer " <> session.access_token)
+  case httpc.send(req) {
+    Ok(resp) if resp.status == 200 -> {
+      let decoder = {
+        use user <- decode.field("user", decode.optional(user_lookup_decoder()))
+        decode.success(user)
+      }
+
+      case json.parse(resp.body, decoder) {
+        Ok(result) -> Ok(result)
+        Error(_) -> Error(ServerError)
+      }
+    }
+    Ok(resp) if resp.status == 401 -> Error(Unauthorized)
+    Ok(resp) if resp.status == 403 -> {
+      let message_decoder = {
+        use message <- decode.field("message", decode.string)
+        decode.success(message)
+      }
+
+      let message = case json.parse(resp.body, message_decoder) {
+        Ok(msg) -> msg
+        Error(_) ->
+          "Missing required permissions. Contact an administrator to request access."
+      }
+
+      Error(Forbidden(message))
+    }
+    Ok(resp) if resp.status == 404 -> Error(NotFound)
+    Ok(_resp) -> Error(ServerError)
+    Error(_) -> Error(NetworkError)
+  }
 }
 
 pub fn set_user_acls(

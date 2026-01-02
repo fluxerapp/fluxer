@@ -36,6 +36,7 @@ import {
 	ListUserGuildsRequest,
 	ListUserSessionsRequest,
 	LookupUserRequest,
+	mapUserToAdminResponse,
 	ScheduleAccountDeletionRequest,
 	SendPasswordResetRequest,
 	SetUserAclsRequest,
@@ -50,6 +51,14 @@ import {
 } from '../AdminModel';
 
 export const UserAdminController = (app: HonoApp) => {
+	app.get('/admin/users/me', requireAdminACL(AdminACLs.AUTHENTICATE), async (ctx) => {
+		const adminUser = ctx.get('user');
+		const cacheService = ctx.get('cacheService');
+		return ctx.json({
+			user: await mapUserToAdminResponse(adminUser, cacheService),
+		});
+	});
+
 	app.post(
 		'/admin/users/lookup',
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_LOOKUP),
