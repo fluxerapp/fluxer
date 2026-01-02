@@ -44,6 +44,9 @@
     get_vanity_url_channel/1,
     get_first_viewable_text_channel/1
 ]).
+-import(guild_member_list, [
+    get_online_count/1
+]).
 -import(guild_members, [
     get_users_to_mention_by_roles/2,
     get_users_to_mention_by_user_ids/2,
@@ -83,9 +86,10 @@ init(GuildState) ->
     Data = maps:get(data, StateWithMemberSubs, #{}),
     Members = maps:get(<<"members">>, Data, []),
     MemberCount = length(Members),
-    OnlineCount = count_online_members(Members),
     StateWithCounts = maps:put(member_count, MemberCount, StateWithMemberSubs),
-    StateWithPresences = maps:put(presences, #{}, maps:put(online_count, OnlineCount, StateWithCounts)),
+    StateWithPresenceMap = maps:put(presences, #{}, StateWithCounts),
+    OnlineCount = get_online_count(StateWithPresenceMap),
+    StateWithPresences = maps:put(online_count, OnlineCount, StateWithPresenceMap),
     guild_passive_sync:schedule_passive_sync(StateWithPresences),
     {ok, StateWithPresences}.
 
@@ -94,7 +98,7 @@ handle_call({session_connect, Request}, {CallerPid, _}, State) ->
     guild_sessions:handle_session_connect(Request, SessionPid, State);
 handle_call({get_counts}, _From, State) ->
     MemberCount = maps:get(member_count, State, 0),
-    OnlineCount = maps:get(online_count, State, 0),
+    OnlineCount = get_online_count(State),
     {reply, #{member_count => MemberCount, presence_count => OnlineCount}, State};
 handle_call({get_large_guild_metadata}, _From, State) ->
     MemberCount = maps:get(member_count, State, 0),
@@ -551,22 +555,9 @@ resolve_data_map(State) when is_map(State) ->
 resolve_data_map(_) ->
     undefined.
 
-count_online_members(Members) ->
-    lists:foldl(
-        fun(Member, Count) ->
-            Presence = maps:get(<<"presence">>, Member, <<"offline">>),
-            case Presence of
-                <<"offline">> -> Count;
-                _ -> Count + 1
-            end
-        end,
-        0,
-        Members
-    ).
-
 update_counts(State) ->
     Data = maps:get(data, State, #{}),
     Members = maps:get(<<"members">>, Data, []),
     MemberCount = length(Members),
-    OnlineCount = count_online_members(Members),
+    OnlineCount = get_online_count(State),
     maps:put(member_count, MemberCount, maps:put(online_count, OnlineCount, State)).
