@@ -42,7 +42,7 @@ import MediaViewerStore from '~/stores/MediaViewerStore';
 import UserSettingsStore from '~/stores/UserSettingsStore';
 import {createCalculator} from '~/utils/DimensionUtils';
 import {createSaveHandler} from '~/utils/FileDownloadUtils';
-import {buildMediaProxyURL} from '~/utils/MediaProxyUtils';
+import {buildMediaProxyURL, stripMediaProxyParams} from '~/utils/MediaProxyUtils';
 import styles from './EmbedGifv.module.css';
 
 const MEDIA_CONFIG = {
@@ -535,12 +535,15 @@ export const EmbedGif: FC<GifvEmbedProps & {proxyURL: string; includeButton?: bo
 		const {dimensions} = mediaCalculator.calculate({width: naturalWidth, height: naturalHeight}, {forceScale: true});
 		const {width: displayWidth, height: displayHeight} = dimensions;
 
-		const optimizedAnimatedURL = buildMediaProxyURL(proxyURL, {
+		const baseProxyURL = stripMediaProxyParams(proxyURL);
+
+		const optimizedAnimatedURL = buildMediaProxyURL(baseProxyURL, {
 			width: Math.round(displayWidth * 2),
 			height: Math.round(displayHeight * 2),
+			animated: true,
 		});
 
-		const optimizedStaticURL = buildMediaProxyURL(proxyURL, {
+		const optimizedStaticURL = buildMediaProxyURL(baseProxyURL, {
 			format: 'webp',
 			width: Math.round(displayWidth * 2),
 			height: Math.round(displayHeight * 2),
