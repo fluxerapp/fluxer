@@ -147,6 +147,13 @@ export const ManageRolesMenuItem: React.FC<ManageRolesMenuItemProps> = observer(
 			}));
 	}, [guild, canManageRole]);
 
+	const visibleRoles = React.useMemo(() => {
+		if (canManageRoles) return allRoles;
+		const memberRoles = currentMember?.roles;
+		if (!memberRoles) return [];
+		return allRoles.filter(({role}) => memberRoles.has(role.id));
+	}, [allRoles, canManageRoles, currentMember]);
+
 	const handleToggleRole = React.useCallback(
 		async (roleId: string, hasRole: boolean, canToggle: boolean) => {
 			if (!canToggle) return;
@@ -159,33 +166,42 @@ export const ManageRolesMenuItem: React.FC<ManageRolesMenuItemProps> = observer(
 		[guildId, member.user.id],
 	);
 
-	if (allRoles.length === 0) return null;
+	if (visibleRoles.length === 0) return null;
 
 	return (
 		<MenuItemSubmenu
 			label={t`Roles`}
 			icon={<UserListIcon className={itemStyles.icon} />}
-			selectionMode="multiple"
+			selectionMode={canManageRoles ? 'multiple' : 'none'}
 			render={() => (
 				<MenuGroup>
-					{allRoles.map(({role, canManage}) => {
-						const hasRole = currentMember?.roles.has(role.id) ?? false;
-						const canToggle = canManageRoles && canManage;
-						return (
-							<MenuItemCheckbox
-								key={role.id}
-								checked={hasRole}
-								disabled={!canToggle}
-								onChange={() => handleToggleRole(role.id, hasRole, canToggle)}
-								closeOnChange={false}
-							>
-								<div className={itemStyles.roleContainer}>
-									<div className={itemStyles.roleIcon} style={{backgroundColor: ColorUtils.int2rgb(role.color)}} />
-									<span className={!canToggle ? itemStyles.roleDisabled : undefined}>{role.name}</span>
-								</div>
-							</MenuItemCheckbox>
-						);
-					})}
+					{canManageRoles
+						? visibleRoles.map(({role, canManage}) => {
+								const hasRole = currentMember?.roles.has(role.id) ?? false;
+								const canToggle = canManageRoles && canManage;
+								return (
+									<MenuItemCheckbox
+										key={role.id}
+										checked={hasRole}
+										disabled={!canToggle}
+										onChange={() => handleToggleRole(role.id, hasRole, canToggle)}
+										closeOnChange={false}
+									>
+										<div className={itemStyles.roleContainer}>
+											<div className={itemStyles.roleIcon} style={{backgroundColor: ColorUtils.int2rgb(role.color)}} />
+											<span className={!canToggle ? itemStyles.roleDisabled : undefined}>{role.name}</span>
+										</div>
+									</MenuItemCheckbox>
+								);
+							})
+						: visibleRoles.map(({role}) => (
+								<MenuItem key={role.id} closeOnSelect={false}>
+									<div className={itemStyles.roleContainer}>
+										<div className={itemStyles.roleIcon} style={{backgroundColor: ColorUtils.int2rgb(role.color)}} />
+										<span className={itemStyles.roleName}>{role.name}</span>
+									</div>
+								</MenuItem>
+							))}
 				</MenuGroup>
 			)}
 		/>
