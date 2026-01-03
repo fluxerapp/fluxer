@@ -74,7 +74,7 @@ msgstr "(max 15 getoond)"
 msgid "(No content)"
 msgstr "(Geen inhoud)"
 
-#: src/components/modals/UserProfileMobileSheet.tsx:556
+#: src/components/modals/UserProfileMobileSheet.tsx:558
 #: src/components/pages/YouPage.tsx:147
 msgid "(only visible to you)"
 msgstr "(alleen zichtbaar voor jou)"
@@ -1322,7 +1322,7 @@ msgid "A symphony of clacking keys is underway..."
 msgstr "Een symfonie van tikkende toetsen is aan de gang..."
 
 #: src/components/modals/tabs/MyProfileTab/BioEditor.tsx:127
-#: src/components/modals/UserProfileMobileSheet.tsx:532
+#: src/components/modals/UserProfileMobileSheet.tsx:534
 #: src/components/pages/YouPage.tsx:132
 msgid "About Me"
 msgstr "Over mij"
@@ -1346,7 +1346,7 @@ msgstr "Accepteren"
 
 #: src/components/bottomsheets/DMBottomSheet.tsx:517
 #: src/components/modals/guildTabs/GuildMemberActionsSheet.tsx:262
-#: src/components/modals/UserProfileModal.tsx:1259
+#: src/components/modals/UserProfileModal.tsx:1261
 #: src/components/uikit/ContextMenu/items/RelationshipMenuItems.tsx:109
 msgid "Accept Friend Request"
 msgstr "Vriendschapsverzoek accepteren"
@@ -1382,8 +1382,8 @@ msgstr "Toegang tot ontwikkelaarstools"
 msgid "Access granted"
 msgstr "Toegang verleend"
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:721
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:862
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:723
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:864
 msgid "Access Overrides"
 msgstr "Toegangsoverrides"
 
@@ -1498,7 +1498,7 @@ msgstr "Actieve jaarlijkse abonnee (opzegging gepland)"
 msgid "Activities"
 msgstr "Activiteiten"
 
-#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:354
+#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:356
 #: src/components/modals/utils/guildSettingsConstants.tsx:131
 msgid "Activity Log"
 msgstr "Activiteitenlog"
@@ -1594,7 +1594,7 @@ msgstr "Favoriete kanalen toevoegen"
 #: src/components/channel/dm/AddFriendView.tsx:32
 #: src/components/channel/dm/DMFriendsView.tsx:199
 #: src/components/modals/AddFriendSheet.tsx:50
-#: src/components/modals/UserProfileModal.tsx:1179
+#: src/components/modals/UserProfileModal.tsx:1181
 #: src/components/uikit/ContextMenu/items/RelationshipMenuItems.tsx:75
 #: src/components/uikit/ContextMenu/items/RelationshipMenuItems.tsx:89
 msgid "Add Friend"
@@ -1629,8 +1629,8 @@ msgstr "Notitie toevoegen"
 msgid "Add or change your phone number"
 msgstr "Je telefoonnummer toevoegen of wijzigen"
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:731
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:871
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:733
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:873
 msgid "Add Override"
 msgstr "Override toevoegen"
 
@@ -1868,7 +1868,7 @@ msgid "All @mentions of you will appear here for 7 days."
 msgstr "Alle @vermeldingen van jou verschijnen hier 7 dagen."
 
 #: src/components/modals/guildTabs/GuildAuditLogTab.tsx:207
-#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:371
+#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:373
 msgid "All Actions"
 msgstr "Alle acties"
 
@@ -1943,7 +1943,7 @@ msgid "All translations are currently LLM-generated with minimal human revision.
 msgstr "Alle vertalingen zijn momenteel door een LLM gegenereerd met minimale menselijke revisie. We zouden het geweldig vinden als echte mensen ons helpen Fluxer naar jouw taal te lokaliseren! Stuur daarvoor een e-mail naar <0>i18n@fluxer.app</0> en we zijn blij je bijdragen te accepteren."
 
 #: src/components/modals/guildTabs/GuildAuditLogTab.tsx:201
-#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:363
+#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:365
 msgid "All Users"
 msgstr "Alle gebruikers"
 
@@ -2524,7 +2524,7 @@ msgstr "Weet je zeker dat je {0} de groepeigenaar wilt maken? Je verliest eigena
 #. placeholder {0}: user.username
 #: src/components/modals/guildTabs/GuildMemberActionsSheet.tsx:147
 #: src/components/modals/UserProfileActionsSheet.tsx:116
-#: src/components/modals/UserProfileMobileSheet.tsx:304
+#: src/components/modals/UserProfileMobileSheet.tsx:306
 #: src/utils/RelationshipActionUtils.tsx:114
 msgid "Are you sure you want to remove {0} as a friend?"
 msgstr "Weet je zeker dat je {0} als vriend wilt verwijderen?"
@@ -2567,7 +2567,7 @@ msgstr "Weet je zeker dat je het eigendom van de groep aan {0} wilt overdragen?"
 #: src/components/modals/guildTabs/GuildMemberActionsSheet.tsx:181
 #: src/components/modals/tabs/BlockedUsersTab.tsx:57
 #: src/components/modals/UserProfileActionsSheet.tsx:150
-#: src/components/modals/UserProfileMobileSheet.tsx:320
+#: src/components/modals/UserProfileMobileSheet.tsx:322
 #: src/utils/RelationshipActionUtils.tsx:168
 msgid "Are you sure you want to unblock {0}?"
 msgstr "Weet je zeker dat je {0} wilt deblokkeren?"
@@ -2770,7 +2770,7 @@ msgstr "Auto"
 
 #: src/components/bottomsheets/VoiceSettingsBottomSheets.tsx:140
 #: src/components/modals/tabs/VoiceTab.tsx:422
-#: src/components/voice/VoiceSettingsMenus.tsx:177
+#: src/components/voice/VoiceSettingsMenus.tsx:175
 msgid "Auto Gain Control"
 msgstr "Automatische versterkingsregeling"
 
@@ -2871,7 +2871,7 @@ msgstr "Terug naar lijst"
 msgid "Back to login"
 msgstr "Terug naar inloggen"
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:963
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:965
 #: src/components/modals/components/DesktopChannelSettingsView.tsx:144
 #: src/components/modals/components/DesktopGuildSettingsView.tsx:159
 #: src/components/modals/components/DesktopSettingsView.tsx:295
@@ -3096,7 +3096,7 @@ msgstr "Bio-tekenlimiet"
 #: src/components/modals/guildTabs/GuildMemberActionsSheet.tsx:348
 #: src/components/modals/UserProfileActionsSheet.tsx:134
 #: src/components/modals/UserProfileActionsSheet.tsx:298
-#: src/components/modals/UserProfileModal.tsx:1062
+#: src/components/modals/UserProfileModal.tsx:1064
 #: src/components/uikit/ContextMenu/items/RelationshipMenuItems.tsx:211
 #: src/utils/RelationshipActionUtils.tsx:143
 msgid "Block"
@@ -3374,11 +3374,13 @@ msgstr "Oproepen"
 #: src/components/modals/CameraPreviewModal.tsx:477
 #: src/components/modals/tabs/VideoTab.tsx:145
 #: src/components/modals/utils/settingsSearchIndex.ts:458
+#: src/components/voice/VoiceSettingsMenus.tsx:326
 msgid "Camera"
 msgstr "Camera"
 
 #. placeholder {0}: device.deviceId.slice(0, 8)
 #: src/components/modals/CameraPreviewModal.tsx:455
+#: src/components/voice/VoiceSettingsMenus.tsx:339
 msgid "Camera {0}"
 msgstr "Camera {0}"
 
@@ -3509,7 +3511,7 @@ msgstr "Annuleren"
 #: src/components/channel/dm/DMWelcomeSection.tsx:138
 #: src/components/channel/friends/FriendListItem.tsx:164
 #: src/components/channel/friends/FriendListItem.tsx:166
-#: src/components/modals/UserProfileModal.tsx:1274
+#: src/components/modals/UserProfileModal.tsx:1276
 #: src/components/uikit/ContextMenu/items/RelationshipMenuItems.tsx:192
 msgid "Cancel Friend Request"
 msgstr "Vriendschapsverzoek annuleren"
@@ -3785,7 +3787,7 @@ msgstr "Kanaaltoegang"
 msgid "Channel Access Denied"
 msgstr "Kanaaltoegang geweigerd"
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:396
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:398
 msgid "Channel access updated"
 msgstr "Kanaaltoegang bijgewerkt"
 
@@ -3893,7 +3895,7 @@ msgstr "Kanaal verwijderd uit favorieten"
 msgid "Channel Settings"
 msgstr "Kanaalinstellingen"
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:622
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:624
 msgid "Channel synced with parent category"
 msgstr "Kanaal gesynchroniseerd met hoofdcategorie"
 
@@ -4179,7 +4181,7 @@ msgstr "Claim je account om dit cadeau in te wisselen."
 
 #: src/components/channel/dm/AddFriendForm.tsx:54
 #: src/components/channel/dm/DMWelcomeSection.tsx:109
-#: src/components/modals/UserProfileModal.tsx:1289
+#: src/components/modals/UserProfileModal.tsx:1291
 #: src/components/uikit/ContextMenu/items/RelationshipMenuItems.tsx:65
 msgid "Claim your account to send friend requests."
 msgstr "Claim je account om vriendschapsverzoeken te sturen."
@@ -4507,7 +4509,7 @@ msgstr "Comfortabel (550x400)"
 msgid "Comfy"
 msgstr "Comfy"
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1018
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1020
 #: src/components/modals/guildTabs/GuildRolesTab.tsx:1088
 msgid "Comfy layout"
 msgstr "Comfy lay-out"
@@ -4708,7 +4710,7 @@ msgstr "Configureer AFK-kanaal en timeout"
 msgid "Configure autocomplete"
 msgstr "Automatisch aanvullen configureren"
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:974
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:976
 msgid "Configure base access for this channel"
 msgstr "Configureer basistoegang voor dit kanaal"
 
@@ -4780,11 +4782,11 @@ msgstr "Berichtgeluiden configureren"
 msgid "Configure notification sounds"
 msgstr "Meldingsgeluiden configureren"
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:978
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:980
 msgid "Configure overrides for this member"
 msgstr "Configureer overschrijvingen voor dit lid"
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:976
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:978
 msgid "Configure overrides for this role"
 msgstr "Configureer overschrijvingen voor deze rol"
 
@@ -5147,7 +5149,7 @@ msgstr "Kopieer bestandslink"
 
 #: src/components/modals/tabs/BlockedUsersTab.tsx:98
 #: src/components/modals/UserProfileActionsSheet.tsx:208
-#: src/components/modals/UserProfileModal.tsx:1121
+#: src/components/modals/UserProfileModal.tsx:1123
 msgid "Copy FluxerTag"
 msgstr "Kopieer FluxerTag"
 
@@ -5220,7 +5222,7 @@ msgstr "Kopieer tekst"
 #: src/components/modals/guildTabs/GuildMemberActionsSheet.tsx:361
 #: src/components/modals/tabs/BlockedUsersTab.tsx:107
 #: src/components/modals/UserProfileActionsSheet.tsx:213
-#: src/components/modals/UserProfileModal.tsx:1130
+#: src/components/modals/UserProfileModal.tsx:1132
 #: src/components/popouts/UserAreaPopout.tsx:509
 #: src/components/profile/ProfileCard/ProfileCardActions.tsx:60
 #: src/components/uikit/ContextMenu/items/CopyMenuItems.tsx:42
@@ -5856,7 +5858,7 @@ msgstr "Dagen"
 #: src/components/layout/UserArea.tsx:254
 #: src/components/uikit/ContextMenu/items/VoiceParticipantMenuItems.tsx:117
 #: src/components/voice/VoiceControlBar.tsx:291
-#: src/components/voice/VoiceSettingsMenus.tsx:187
+#: src/components/voice/VoiceSettingsMenus.tsx:185
 msgid "Deafen"
 msgstr "Dempen"
 
@@ -5952,6 +5954,10 @@ msgstr "App-zoomniveau verlagen"
 #: src/components/modals/tabs/VideoTab.tsx:72
 #: src/components/modals/tabs/VoiceTab.tsx:106
 #: src/components/modals/tabs/VoiceTab.tsx:117
+#: src/components/voice/VoiceSettingsMenus.tsx:100
+#: src/components/voice/VoiceSettingsMenus.tsx:126
+#: src/components/voice/VoiceSettingsMenus.tsx:257
+#: src/components/voice/VoiceSettingsMenus.tsx:344
 msgid "Default"
 msgstr "Standaard"
 
@@ -6204,7 +6210,7 @@ msgstr "Denemarken"
 msgid "Dense"
 msgstr "Compact"
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1018
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1020
 #: src/components/modals/guildTabs/GuildRolesTab.tsx:1088
 msgid "Dense layout"
 msgstr "Compacte lay-out"
@@ -6903,7 +6909,7 @@ msgstr "Vroege toegang tot nieuwe functies"
 #: src/components/bottomsheets/VoiceSettingsBottomSheets.tsx:126
 #: src/components/modals/tabs/VoiceTab.tsx:410
 #: src/components/modals/utils/settingsSearchIndex.ts:450
-#: src/components/voice/VoiceSettingsMenus.tsx:161
+#: src/components/voice/VoiceSettingsMenus.tsx:159
 msgid "Echo Cancellation"
 msgstr "Echo-onderdrukking"
 
@@ -6918,7 +6924,7 @@ msgid "Edit \"{0}\""
 msgstr "\"{0}\" bewerken"
 
 #. placeholder {0}: getOverwriteName(selectedOverwrite)
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:970
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:972
 msgid "Edit Access for {0}"
 msgstr "Toegang voor {0} bewerken"
 
@@ -6997,11 +7003,11 @@ msgstr "Notitie bewerken"
 msgid "Edit overwrites for roles and members in this channel."
 msgstr "Overschrijvingen voor rollen en leden in dit kanaal bewerken."
 
-#: src/components/modals/UserProfileMobileSheet.tsx:490
-#: src/components/modals/UserProfileModal.tsx:1206
+#: src/components/modals/UserProfileMobileSheet.tsx:492
+#: src/components/modals/UserProfileModal.tsx:1208
 #: src/components/pages/YouPage.tsx:123
 #: src/components/popouts/UserAreaPopout.tsx:521
-#: src/components/popouts/UserProfilePopout.tsx:299
+#: src/components/popouts/UserProfilePopout.tsx:301
 msgid "Edit Profile"
 msgstr "Profiel bewerken"
 
@@ -8325,7 +8331,7 @@ msgstr "bestandsnaam:"
 msgid "Files will be sent immediately without preview."
 msgstr "Bestanden worden direct verzonden zonder voorbeeld."
 
-#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:372
+#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:374
 msgid "Filter by action"
 msgstr "Filteren op actie"
 
@@ -8333,7 +8339,7 @@ msgstr "Filteren op actie"
 msgid "Filter by content"
 msgstr "Filteren op inhoud"
 
-#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:365
+#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:367
 #: src/components/search/UserFilterSheet.tsx:90
 msgid "Filter by user"
 msgstr "Filteren op gebruiker"
@@ -9338,7 +9344,7 @@ msgid "Grid"
 msgstr "Raster"
 
 #: src/components/bottomsheets/VoiceSettingsBottomSheets.tsx:258
-#: src/components/voice/VoiceSettingsMenus.tsx:404
+#: src/components/voice/VoiceSettingsMenus.tsx:400
 msgid "Grid View"
 msgstr "Rasterweergave"
 
@@ -10074,6 +10080,8 @@ msgstr "Invoer"
 #: src/components/bottomsheets/VoiceSettingsBottomSheets.tsx:74
 #: src/components/modals/tabs/VoiceTab.tsx:338
 #: src/components/modals/utils/settingsSearchIndex.ts:410
+#: src/components/voice/VoiceSettingsMenus.tsx:82
+#: src/components/voice/VoiceSettingsMenus.tsx:227
 msgid "Input Device"
 msgstr "Invoerapparaat"
 
@@ -10100,6 +10108,8 @@ msgstr "Invoertoestanden"
 
 #: src/components/bottomsheets/VoiceSettingsBottomSheets.tsx:96
 #: src/components/modals/tabs/VoiceTab.tsx:363
+#: src/components/voice/VoiceSettingsMenus.tsx:136
+#: src/components/voice/VoiceSettingsMenus.tsx:228
 msgid "Input Volume"
 msgstr "Invoervolume"
 
@@ -11001,7 +11011,7 @@ msgstr "Live"
 msgid "Live Preview"
 msgstr "Livevoorbeeld"
 
-#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:633
+#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:635
 msgid "Load more"
 msgstr "Meer laden"
 
@@ -11694,11 +11704,11 @@ msgstr "vermeldt:"
 #: src/components/bottomsheets/VoiceParticipantBottomSheet.tsx:234
 #: src/components/modals/guildTabs/GuildMemberActionsSheet.tsx:220
 #: src/components/modals/tabs/ComponentGalleryTab/InputsTab.tsx:164
-#: src/components/modals/UserProfileMobileSheet.tsx:501
-#: src/components/modals/UserProfileModal.tsx:1190
-#: src/components/modals/UserProfileModal.tsx:1316
-#: src/components/popouts/UserProfilePopout.tsx:289
-#: src/components/popouts/UserProfilePopout.tsx:308
+#: src/components/modals/UserProfileMobileSheet.tsx:503
+#: src/components/modals/UserProfileModal.tsx:1192
+#: src/components/modals/UserProfileModal.tsx:1318
+#: src/components/popouts/UserProfilePopout.tsx:291
+#: src/components/popouts/UserProfilePopout.tsx:310
 #: src/components/profile/ProfilePreview.tsx:292
 #: src/components/uikit/ContextMenu/items/MessageUserMenuItem.tsx:47
 msgid "Message"
@@ -11843,6 +11853,13 @@ msgstr "Berichten is tijdelijk uitgeschakeld in deze community door platformpers
 #: src/components/modals/tabs/components/MicTestSection.tsx:86
 msgid "Mic Test"
 msgstr "Microfoontest"
+
+#. placeholder {0}: device.deviceId.slice(0, 8)
+#. placeholder {0}: deviceId.slice(0, 8)
+#: src/components/voice/VoiceSettingsMenus.tsx:95
+#: src/components/voice/VoiceSettingsMenus.tsx:232
+msgid "Microphone {0}"
+msgstr "Microfoon {0}"
 
 #: src/components/modals/tabs/VoiceTab.tsx:103
 msgid "Microphone {shortDeviceId}"
@@ -12642,7 +12659,7 @@ msgstr "Geen toetsenbordcombinatie ingesteld"
 msgid "No limit"
 msgstr "Geen limiet"
 
-#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:609
+#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:611
 msgid "No logs yet"
 msgstr "Nog geen logs"
 
@@ -12695,7 +12712,7 @@ msgstr "Geen openstaande verzoeken"
 msgid "No pending requests match your search"
 msgstr "Geen openstaande verzoeken komen overeen met je zoekopdracht"
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1065
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1067
 #: src/components/modals/guildTabs/GuildRolesTab.tsx:1130
 msgid "No permissions found"
 msgstr "Geen rechten gevonden"
@@ -12724,7 +12741,7 @@ msgstr "Geen reacties"
 msgid "No reason provided"
 msgstr "Geen reden opgegeven"
 
-#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:462
+#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:464
 msgid "No reason was provided."
 msgstr "Er is geen reden opgegeven."
 
@@ -12840,7 +12857,7 @@ msgstr "Niemand"
 #: src/components/bottomsheets/VoiceSettingsBottomSheets.tsx:133
 #: src/components/modals/tabs/VoiceTab.tsx:416
 #: src/components/modals/utils/settingsSearchIndex.ts:442
-#: src/components/voice/VoiceSettingsMenus.tsx:169
+#: src/components/voice/VoiceSettingsMenus.tsx:167
 msgid "Noise Suppression"
 msgstr "Ruisonderdrukking"
 
@@ -12887,7 +12904,7 @@ msgstr "Niet nu"
 msgid "Not your cup of tea? You can disable this feature anytime."
 msgstr "Niet jouw ding? Je kunt deze functie altijd uitschakelen."
 
-#: src/components/modals/UserProfileMobileSheet.tsx:553
+#: src/components/modals/UserProfileMobileSheet.tsx:555
 #: src/components/modals/UserProfileModal.tsx:244
 #: src/components/modals/UserProfileModal.tsx:248
 #: src/components/pages/YouPage.tsx:144
@@ -13445,11 +13462,15 @@ msgstr "Uitgaande vriendschapsverzoeken"
 #: src/components/bottomsheets/VoiceSettingsBottomSheets.tsx:82
 #: src/components/modals/tabs/VoiceTab.tsx:347
 #: src/components/modals/utils/settingsSearchIndex.ts:418
+#: src/components/voice/VoiceSettingsMenus.tsx:108
+#: src/components/voice/VoiceSettingsMenus.tsx:227
 msgid "Output Device"
 msgstr "Uitvoerapparaat"
 
 #: src/components/bottomsheets/VoiceSettingsBottomSheets.tsx:107
 #: src/components/modals/tabs/VoiceTab.tsx:381
+#: src/components/voice/VoiceSettingsMenus.tsx:144
+#: src/components/voice/VoiceSettingsMenus.tsx:228
 msgid "Output Volume"
 msgstr "Uitvoervolume"
 
@@ -14069,7 +14090,7 @@ msgid "Preview Button"
 msgstr "Voorbeeldknop"
 
 #: src/components/bottomsheets/VoiceSettingsBottomSheets.tsx:214
-#: src/components/voice/VoiceSettingsMenus.tsx:364
+#: src/components/voice/VoiceSettingsMenus.tsx:360
 msgid "Preview Camera"
 msgstr "Voorbeeldcamera"
 
@@ -14422,7 +14443,7 @@ msgid "Ready to Upgrade?"
 msgstr "Klaar om te upgraden?"
 
 #: src/components/modals/BanDetailsModal.tsx:76
-#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:563
+#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:565
 msgid "Reason"
 msgstr "Reden"
 
@@ -14718,10 +14739,10 @@ msgstr "Filter verwijderen"
 #: src/components/modals/UserProfileActionsSheet.tsx:115
 #: src/components/modals/UserProfileActionsSheet.tsx:117
 #: src/components/modals/UserProfileActionsSheet.tsx:278
-#: src/components/modals/UserProfileMobileSheet.tsx:303
 #: src/components/modals/UserProfileMobileSheet.tsx:305
-#: src/components/modals/UserProfileModal.tsx:1143
-#: src/components/modals/UserProfileModal.tsx:1229
+#: src/components/modals/UserProfileMobileSheet.tsx:307
+#: src/components/modals/UserProfileModal.tsx:1145
+#: src/components/modals/UserProfileModal.tsx:1231
 #: src/components/uikit/ContextMenu/items/RelationshipMenuItems.tsx:129
 #: src/utils/RelationshipActionUtils.tsx:113
 #: src/utils/RelationshipActionUtils.tsx:115
@@ -14773,7 +14794,7 @@ msgstr "Vermelding verwijderen"
 msgid "Remove override"
 msgstr "Overschrijving verwijderen"
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:990
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:992
 msgid "Remove Override"
 msgstr "Overschrijving verwijderen"
 
@@ -15059,7 +15080,7 @@ msgstr "Rapport succesvol ingediend. Ons veiligheidsteam zal het spoedig beoorde
 
 #: src/components/modals/IARModal.tsx:84
 #: src/components/modals/UserProfileActionsSheet.tsx:289
-#: src/components/modals/UserProfileModal.tsx:1157
+#: src/components/modals/UserProfileModal.tsx:1159
 msgid "Report User"
 msgstr "Gebruiker rapporteren"
 
@@ -15264,7 +15285,7 @@ msgstr "Opnieuw abonneren"
 #: src/components/channel/MessageActionBar.tsx:798
 #: src/components/channel/messageActionMenu.tsx:189
 #: src/components/modals/BackgroundImageGalleryModal.tsx:232
-#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:624
+#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:626
 #: src/components/modals/guildTabs/GuildEmojiTab.tsx:539
 #: src/components/modals/guildTabs/GuildInvitesTab.tsx:124
 #: src/components/modals/guildTabs/GuildStickersTab.tsx:211
@@ -15794,7 +15815,7 @@ msgstr "Alleen zoeken in het huidige privébericht"
 msgid "Search pending requests"
 msgstr "Openstaande verzoeken zoeken"
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1011
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1013
 #: src/components/modals/guildTabs/GuildRolesTab.tsx:1081
 msgid "Search Permissions..."
 msgstr "Machtigingen zoeken..."
@@ -16132,7 +16153,7 @@ msgstr "Code verzenden"
 
 #: src/components/channel/dm/DMWelcomeSection.tsx:112
 #: src/components/modals/guildTabs/GuildMemberActionsSheet.tsx:272
-#: src/components/modals/UserProfileModal.tsx:1290
+#: src/components/modals/UserProfileModal.tsx:1292
 msgid "Send Friend Request"
 msgstr "Vriendschapsverzoek verzenden"
 
@@ -16666,7 +16687,7 @@ msgstr "Meest relevante berichten eerst tonen"
 
 #: src/components/bottomsheets/VoiceSettingsBottomSheets.tsx:266
 #: src/components/uikit/ContextMenu/VoiceParticipantContextMenu.tsx:181
-#: src/components/voice/VoiceSettingsMenus.tsx:422
+#: src/components/voice/VoiceSettingsMenus.tsx:418
 msgid "Show My Own Camera"
 msgstr "Mijn eigen camera tonen"
 
@@ -16684,7 +16705,7 @@ msgstr "Nieuw apparaatvenster tonen"
 
 #: src/components/bottomsheets/VoiceSettingsBottomSheets.tsx:273
 #: src/components/uikit/ContextMenu/VoiceParticipantContextMenu.tsx:188
-#: src/components/voice/VoiceSettingsMenus.tsx:430
+#: src/components/voice/VoiceSettingsMenus.tsx:426
 msgid "Show Non-Video Participants"
 msgstr "Niet-videodeelnemers tonen"
 
@@ -16845,7 +16866,7 @@ msgstr "Stille oproepen van iedereen"
 msgid "Simulates having a Stripe customer ID (for testing purchase history access)"
 msgstr "Simuleert het hebben van een Stripe-klant-ID (voor het testen van toegang tot aankoopgeschiedenis)"
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1034
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1036
 #: src/components/modals/guildTabs/GuildRolesTab.tsx:1102
 msgid "Single column"
 msgstr "Enkele kolom"
@@ -17037,7 +17058,7 @@ msgid "Something went wrong and the app crashed. Try reloading or resetting the 
 msgstr "Er is iets misgegaan en de app is gecrasht. Probeer de app opnieuw te laden of te resetten."
 
 #: src/components/modals/guildTabs/GuildAuditLogTab.tsx:308
-#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:340
+#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:342
 msgid "Something went wrong while loading the audit log."
 msgstr "Er is iets misgegaan tijdens het laden van het auditlog."
 
@@ -17137,6 +17158,13 @@ msgstr "Bericht uitspreken"
 #: src/components/modals/tabs/components/MicTestSection.tsx:137
 msgid "Speak normally into your microphone. You should hear yourself through your speakers. The level should stay in the green \"Good\" or yellow \"Optimal\" range."
 msgstr "Spreek normaal in je microfoon. Je zou jezelf door je luidsprekers moeten horen. Het niveau moet in het groene \"Goed\" of gele \"Optimaal\" bereik blijven."
+
+#. placeholder {0}: device.deviceId.slice(0, 8)
+#. placeholder {0}: deviceId.slice(0, 8)
+#: src/components/voice/VoiceSettingsMenus.tsx:121
+#: src/components/voice/VoiceSettingsMenus.tsx:233
+msgid "Speaker {0}"
+msgstr "Luidspreker {0}"
 
 #: src/components/modals/tabs/VoiceTab.tsx:114
 msgid "Speaker {shortDeviceId}"
@@ -17242,13 +17270,13 @@ msgid "Start Sharing"
 msgstr "Delen starten"
 
 #: src/components/channel/ChannelHeader/CallButtons.tsx:160
-#: src/components/modals/UserProfileModal.tsx:1109
+#: src/components/modals/UserProfileModal.tsx:1111
 #: src/components/uikit/ContextMenu/items/CallMenuItems.tsx:91
 msgid "Start Video Call"
 msgstr "Videogesprek starten"
 
 #: src/components/channel/ChannelHeader/CallButtons.tsx:90
-#: src/components/modals/UserProfileModal.tsx:1100
+#: src/components/modals/UserProfileModal.tsx:1102
 #: src/components/uikit/ContextMenu/items/CallMenuItems.tsx:60
 msgid "Start Voice Call"
 msgstr "Spraakgesprek starten"
@@ -17594,17 +17622,17 @@ msgstr "Schakel tussen de laatste community en directe berichten"
 msgid "Switch Device"
 msgstr "Apparaat wisselen"
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1024
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1026
 #: src/components/modals/guildTabs/GuildRolesTab.tsx:1093
 msgid "Switch to comfy layout"
 msgstr "Schakel naar comfortabele indeling"
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1024
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1026
 #: src/components/modals/guildTabs/GuildRolesTab.tsx:1093
 msgid "Switch to dense layout"
 msgstr "Schakel naar compacte indeling"
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1040
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1042
 #: src/components/modals/guildTabs/GuildRolesTab.tsx:1107
 msgid "Switch to single column"
 msgstr "Schakel naar enkele kolom"
@@ -17617,7 +17645,7 @@ msgstr "Schakel naar dit account"
 msgid "Switch to This Device"
 msgstr "Schakel naar dit apparaat"
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1040
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1042
 #: src/components/modals/guildTabs/GuildRolesTab.tsx:1107
 msgid "Switch to two columns"
 msgstr "Schakel naar twee kolommen"
@@ -17643,8 +17671,8 @@ msgstr "Thema synchroniseren"
 msgid "Sync theme across devices"
 msgstr "Synchroniseer thema over apparaten"
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:854
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:950
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:856
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:952
 msgid "Sync with Category"
 msgstr "Synchroniseren met categorie"
 
@@ -18037,14 +18065,14 @@ msgid "This channel is not marked as NSFW. Explicit content can only be sent in 
 msgstr "Dit kanaal is niet gemarkeerd als NSFW. Expliciete inhoud kan alleen worden verzonden in NSFW-kanalen. Vraag een moderator om dit kanaal als NSFW te markeren indien passend."
 
 #. placeholder {0}: parentChannel?.name
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:847
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:943
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:849
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:945
 msgid "This channel is not synced with the parent category <0>{0}</0>."
 msgstr "Dit kanaal is niet gesynchroniseerd met de bovenliggende categorie <0>{0}</0>."
 
 #. placeholder {0}: parentChannel?.name
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:843
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:939
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:845
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:941
 msgid "This channel is synced with the parent category <0>{0}</0>."
 msgstr "Dit kanaal is gesynchroniseerd met de bovenliggende categorie <0>{0}</0>."
 
@@ -18612,7 +18640,7 @@ msgstr "Onderwerp"
 msgid "Total Parsing Time:"
 msgstr "Totale parsertijd:"
 
-#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:355
+#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:357
 msgid "Track moderator actions across the community."
 msgstr "Volg moderatoracties in de community."
 
@@ -18789,7 +18817,7 @@ msgstr "Pas de basisinstellingen van deze categorie aan."
 msgid "Tweak this channel's basics."
 msgstr "Pas de basisinstellingen van dit kanaal aan."
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1034
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1036
 #: src/components/modals/guildTabs/GuildRolesTab.tsx:1102
 msgid "Two columns"
 msgstr "Twee kolommen"
@@ -18895,7 +18923,7 @@ msgstr "Kan emojipakket niet installeren"
 msgid "Unable to install sticker pack"
 msgstr "Kan stickerpakket niet installeren"
 
-#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:619
+#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:621
 msgid "Unable to load activity logs"
 msgstr "Kan activiteitenlogboeken niet laden"
 
@@ -18949,8 +18977,8 @@ msgstr "Onbeschikbaar voor iedereen behalve personeel"
 #: src/components/modals/tabs/BlockedUsersTab.tsx:171
 #: src/components/modals/UserProfileActionsSheet.tsx:151
 #: src/components/modals/UserProfileActionsSheet.tsx:305
-#: src/components/modals/UserProfileMobileSheet.tsx:321
-#: src/components/modals/UserProfileModal.tsx:1049
+#: src/components/modals/UserProfileMobileSheet.tsx:323
+#: src/components/modals/UserProfileModal.tsx:1051
 #: src/components/uikit/ContextMenu/items/RelationshipMenuItems.tsx:230
 #: src/utils/RelationshipActionUtils.tsx:169
 msgid "Unblock"
@@ -18963,8 +18991,8 @@ msgstr "Deblokkeer deze gebruiker voordat je een vriendschapsverzoek stuurt."
 #: src/components/modals/guildTabs/GuildMemberActionsSheet.tsx:180
 #: src/components/modals/tabs/BlockedUsersTab.tsx:56
 #: src/components/modals/UserProfileActionsSheet.tsx:149
-#: src/components/modals/UserProfileMobileSheet.tsx:319
-#: src/components/modals/UserProfileModal.tsx:1244
+#: src/components/modals/UserProfileMobileSheet.tsx:321
+#: src/components/modals/UserProfileModal.tsx:1246
 #: src/utils/RelationshipActionUtils.tsx:167
 msgid "Unblock User"
 msgstr "Gebruiker deblokkeren"
@@ -19760,7 +19788,7 @@ msgstr "Gebruik beveiligingssleutel"
 msgid "Use system locale for time format"
 msgstr "Gebruik systeemlocatie voor tijdnotatie"
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:998
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1000
 msgid "Use these buttons to quickly set all permissions."
 msgstr "Gebruik deze knoppen om snel alle rechten in te stellen."
 
@@ -19840,11 +19868,11 @@ msgid "User Moved Channel"
 msgstr "Gebruiker verplaatst kanaal"
 
 #: src/components/modals/tabs/ComponentGalleryTab/InputsTab.tsx:133
-#: src/components/modals/UserProfileModal.tsx:945
+#: src/components/modals/UserProfileModal.tsx:947
 msgid "User Profile"
 msgstr "Gebruikersprofiel"
 
-#: src/components/modals/UserProfileModal.tsx:947
+#: src/components/modals/UserProfileModal.tsx:949
 msgid "User Profile: {tag}"
 msgstr "Gebruikersprofiel: {tag}"
 
@@ -20109,7 +20137,7 @@ msgid "Video"
 msgstr "Video"
 
 #: src/components/channel/ChannelHeader.tsx:572
-#: src/components/modals/UserProfileMobileSheet.tsx:519
+#: src/components/modals/UserProfileMobileSheet.tsx:521
 msgid "Video Call"
 msgstr "Videogesprek"
 
@@ -20135,7 +20163,7 @@ msgid "Video Quality"
 msgstr "Videokwaliteit"
 
 #: src/components/bottomsheets/VoiceSettingsBottomSheets.tsx:227
-#: src/components/voice/VoiceSettingsMenus.tsx:376
+#: src/components/voice/VoiceSettingsMenus.tsx:372
 msgid "Video Settings"
 msgstr "Video-instellingen"
 
@@ -20212,7 +20240,7 @@ msgid "View Codes"
 msgstr "Codes bekijken"
 
 #: src/components/modals/UserProfileActionsSheet.tsx:194
-#: src/components/modals/UserProfileModal.tsx:1087
+#: src/components/modals/UserProfileModal.tsx:1089
 msgid "View Community Profile"
 msgstr "Communityprofiel bekijken"
 
@@ -20231,7 +20259,7 @@ msgid "View Gift Inventory"
 msgstr "Cadeau-inventaris bekijken"
 
 #: src/components/modals/UserProfileActionsSheet.tsx:194
-#: src/components/modals/UserProfileModal.tsx:1087
+#: src/components/modals/UserProfileModal.tsx:1089
 msgid "View Global Profile"
 msgstr "Globaal profiel bekijken"
 
@@ -20370,7 +20398,7 @@ msgstr "Spraak"
 
 #: src/components/bottomsheets/VoiceSettingsBottomSheets.tsx:288
 #: src/components/uikit/ContextMenu/items/VoiceParticipantMenuItems.tsx:135
-#: src/components/voice/VoiceSettingsMenus.tsx:442
+#: src/components/voice/VoiceSettingsMenus.tsx:438
 msgid "Voice & Video Settings"
 msgstr "Spraak- en video-instellingen"
 
@@ -20386,7 +20414,7 @@ msgstr "Spraakoproep"
 #: src/components/bottomsheets/DMBottomSheet.tsx:421
 #: src/components/channel/ChannelHeader.tsx:562
 #: src/components/modals/guildTabs/GuildMemberActionsSheet.tsx:227
-#: src/components/modals/UserProfileMobileSheet.tsx:511
+#: src/components/modals/UserProfileMobileSheet.tsx:513
 msgid "Voice Call"
 msgstr "Spraakoproep"
 
@@ -20460,8 +20488,8 @@ msgid "Voice Region"
 msgstr "Spraakregio"
 
 #: src/components/bottomsheets/VoiceSettingsBottomSheets.tsx:165
-#: src/components/voice/VoiceSettingsMenus.tsx:199
-#: src/components/voice/VoiceSettingsMenus.tsx:287
+#: src/components/voice/VoiceSettingsMenus.tsx:197
+#: src/components/voice/VoiceSettingsMenus.tsx:284
 msgid "Voice Settings"
 msgstr "Spraakinstellingen"
 
@@ -20844,7 +20872,7 @@ msgstr "Wanneer ingeschakeld, kun je kanalen favoriet maken en ze verschijnen in
 msgid "When enabled, you'll need to double-click on voice channels to join them. When disabled (default), single-clicking will join the channel immediately."
 msgstr "Wanneer ingeschakeld, moet je dubbelklikken op spraakkanalen om ze te betreden. Wanneer uitgeschakeld (standaard), betreedt enkelklikken het kanaal direct."
 
-#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:610
+#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:612
 msgid "When moderators begin moderating, you can moderate the moderation here."
 msgstr "Wanneer moderatoren beginnen te modereren, kun je de moderatie hier modereren."
 
@@ -21085,7 +21113,7 @@ msgstr "Je kunt links en Markdown gebruiken om je tekst op te maken. Met <0/> ku
 msgid "You can't add new reactions while you're on timeout."
 msgstr "Je kunt geen nieuwe reacties toevoegen terwijl je een timeout hebt."
 
-#: src/components/modals/UserProfileModal.tsx:1171
+#: src/components/modals/UserProfileModal.tsx:1173
 msgid "You can't befriend yourself"
 msgstr "Je kunt jezelf niet bevrienden"
 
@@ -21100,8 +21128,8 @@ msgstr "Je kunt niet met reacties in zoekresultaten interacteren omdat dit het r
 msgid "You can't join while you're on timeout."
 msgstr "Je kunt niet deelnemen terwijl je een timeout hebt."
 
-#: src/components/modals/UserProfileModal.tsx:1183
-#: src/components/popouts/UserProfilePopout.tsx:282
+#: src/components/modals/UserProfileModal.tsx:1185
+#: src/components/popouts/UserProfilePopout.tsx:284
 #: src/components/profile/ProfilePreview.tsx:284
 msgid "You can't message yourself"
 msgstr "Je kunt jezelf geen berichten sturen"

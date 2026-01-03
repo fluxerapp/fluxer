@@ -74,7 +74,7 @@ msgstr "(μέγ. 15 εμφανίζονται)"
 msgid "(No content)"
 msgstr "(Χωρίς περιεχόμενο)"
 
-#: src/components/modals/UserProfileMobileSheet.tsx:556
+#: src/components/modals/UserProfileMobileSheet.tsx:558
 #: src/components/pages/YouPage.tsx:147
 msgid "(only visible to you)"
 msgstr "(ορατό μόνο σε εσένα)"
@@ -1322,7 +1322,7 @@ msgid "A symphony of clacking keys is underway..."
 msgstr "Μια συμφωνία από κλικ στα πλήκτρα είναι σε εξέλιξη..."
 
 #: src/components/modals/tabs/MyProfileTab/BioEditor.tsx:127
-#: src/components/modals/UserProfileMobileSheet.tsx:532
+#: src/components/modals/UserProfileMobileSheet.tsx:534
 #: src/components/pages/YouPage.tsx:132
 msgid "About Me"
 msgstr "Σχετικά με εμένα"
@@ -1346,7 +1346,7 @@ msgstr "Αποδοχή"
 
 #: src/components/bottomsheets/DMBottomSheet.tsx:517
 #: src/components/modals/guildTabs/GuildMemberActionsSheet.tsx:262
-#: src/components/modals/UserProfileModal.tsx:1259
+#: src/components/modals/UserProfileModal.tsx:1261
 #: src/components/uikit/ContextMenu/items/RelationshipMenuItems.tsx:109
 msgid "Accept Friend Request"
 msgstr "Αποδοχή αιτήματος φιλίας"
@@ -1382,8 +1382,8 @@ msgstr "Πρόσβαση στα εργαλεία προγραμματιστή"
 msgid "Access granted"
 msgstr "Πρόσβαση παραχωρήθηκε"
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:721
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:862
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:723
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:864
 msgid "Access Overrides"
 msgstr "Παράκαμψη πρόσβασης"
 
@@ -1498,7 +1498,7 @@ msgstr "Ενεργός ετήσιος συνδρομητής (Ακύρωση π�
 msgid "Activities"
 msgstr "Δραστηριότητες"
 
-#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:354
+#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:356
 #: src/components/modals/utils/guildSettingsConstants.tsx:131
 msgid "Activity Log"
 msgstr "Ημερολόγιο δραστηριοτήτων"
@@ -1594,7 +1594,7 @@ msgstr "Προσθήκη Αγαπημένων Καναλιών"
 #: src/components/channel/dm/AddFriendView.tsx:32
 #: src/components/channel/dm/DMFriendsView.tsx:199
 #: src/components/modals/AddFriendSheet.tsx:50
-#: src/components/modals/UserProfileModal.tsx:1179
+#: src/components/modals/UserProfileModal.tsx:1181
 #: src/components/uikit/ContextMenu/items/RelationshipMenuItems.tsx:75
 #: src/components/uikit/ContextMenu/items/RelationshipMenuItems.tsx:89
 msgid "Add Friend"
@@ -1629,8 +1629,8 @@ msgstr "Προσθήκη Σημείωσης"
 msgid "Add or change your phone number"
 msgstr "Προσθέστε ή αλλάξτε τον αριθμό τηλεφώνου σας"
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:731
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:871
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:733
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:873
 msgid "Add Override"
 msgstr "Προσθήκη Παράκαμψης"
 
@@ -1868,7 +1868,7 @@ msgid "All @mentions of you will appear here for 7 days."
 msgstr "Όλες οι @αναφορές σε εσάς θα εμφανίζονται εδώ για 7 ημέρες."
 
 #: src/components/modals/guildTabs/GuildAuditLogTab.tsx:207
-#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:371
+#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:373
 msgid "All Actions"
 msgstr "Όλες οι ενέργειες"
 
@@ -1943,7 +1943,7 @@ msgid "All translations are currently LLM-generated with minimal human revision.
 msgstr "Όλες οι μεταφράσεις είναι αυτή τη στιγμή παραγόμενες από LLM με ελάχιστη ανθρώπινη αναθεώρηση. Θα θέλαμε πραγματικούς ανθρώπους να μας βοηθήσουν να τοπικοποιήσουμε το Fluxer στη γλώσσα σας! Για να το κάνετε αυτό, στείλτε ένα email στο <0>i18n@fluxer.app</0> και θα είμαστε χαρούμενοι να δεχτούμε τις συνεισφορές σας."
 
 #: src/components/modals/guildTabs/GuildAuditLogTab.tsx:201
-#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:363
+#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:365
 msgid "All Users"
 msgstr "Όλοι οι χρήστες"
 
@@ -2524,7 +2524,7 @@ msgstr "Είστε σίγουροι ότι θέλετε να κάνετε τον
 #. placeholder {0}: user.username
 #: src/components/modals/guildTabs/GuildMemberActionsSheet.tsx:147
 #: src/components/modals/UserProfileActionsSheet.tsx:116
-#: src/components/modals/UserProfileMobileSheet.tsx:304
+#: src/components/modals/UserProfileMobileSheet.tsx:306
 #: src/utils/RelationshipActionUtils.tsx:114
 msgid "Are you sure you want to remove {0} as a friend?"
 msgstr "Είστε σίγουροι ότι θέλετε να αφαιρέσετε τον/την {0} από φίλους;"
@@ -2567,7 +2567,7 @@ msgstr "Είστε σίγουροι ότι θέλετε να μεταβιβάσ�
 #: src/components/modals/guildTabs/GuildMemberActionsSheet.tsx:181
 #: src/components/modals/tabs/BlockedUsersTab.tsx:57
 #: src/components/modals/UserProfileActionsSheet.tsx:150
-#: src/components/modals/UserProfileMobileSheet.tsx:320
+#: src/components/modals/UserProfileMobileSheet.tsx:322
 #: src/utils/RelationshipActionUtils.tsx:168
 msgid "Are you sure you want to unblock {0}?"
 msgstr "Είστε σίγουροι ότι θέλετε να ξεμπλοκάρετε τον/την {0};"
@@ -2770,7 +2770,7 @@ msgstr "Αυτόματο"
 
 #: src/components/bottomsheets/VoiceSettingsBottomSheets.tsx:140
 #: src/components/modals/tabs/VoiceTab.tsx:422
-#: src/components/voice/VoiceSettingsMenus.tsx:177
+#: src/components/voice/VoiceSettingsMenus.tsx:175
 msgid "Auto Gain Control"
 msgstr "Αυτόματος έλεγχος ενίσχυσης"
 
@@ -2871,7 +2871,7 @@ msgstr "Επιστροφή στη λίστα"
 msgid "Back to login"
 msgstr "Επιστροφή στη σύνδεση"
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:963
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:965
 #: src/components/modals/components/DesktopChannelSettingsView.tsx:144
 #: src/components/modals/components/DesktopGuildSettingsView.tsx:159
 #: src/components/modals/components/DesktopSettingsView.tsx:295
@@ -3096,7 +3096,7 @@ msgstr "Όριο χαρακτήρων για βιογραφικό"
 #: src/components/modals/guildTabs/GuildMemberActionsSheet.tsx:348
 #: src/components/modals/UserProfileActionsSheet.tsx:134
 #: src/components/modals/UserProfileActionsSheet.tsx:298
-#: src/components/modals/UserProfileModal.tsx:1062
+#: src/components/modals/UserProfileModal.tsx:1064
 #: src/components/uikit/ContextMenu/items/RelationshipMenuItems.tsx:211
 #: src/utils/RelationshipActionUtils.tsx:143
 msgid "Block"
@@ -3374,11 +3374,13 @@ msgstr "Κλήσεις"
 #: src/components/modals/CameraPreviewModal.tsx:477
 #: src/components/modals/tabs/VideoTab.tsx:145
 #: src/components/modals/utils/settingsSearchIndex.ts:458
+#: src/components/voice/VoiceSettingsMenus.tsx:326
 msgid "Camera"
 msgstr "Κάμερα"
 
 #. placeholder {0}: device.deviceId.slice(0, 8)
 #: src/components/modals/CameraPreviewModal.tsx:455
+#: src/components/voice/VoiceSettingsMenus.tsx:339
 msgid "Camera {0}"
 msgstr "Κάμερα {0}"
 
@@ -3509,7 +3511,7 @@ msgstr "Ακύρωση"
 #: src/components/channel/dm/DMWelcomeSection.tsx:138
 #: src/components/channel/friends/FriendListItem.tsx:164
 #: src/components/channel/friends/FriendListItem.tsx:166
-#: src/components/modals/UserProfileModal.tsx:1274
+#: src/components/modals/UserProfileModal.tsx:1276
 #: src/components/uikit/ContextMenu/items/RelationshipMenuItems.tsx:192
 msgid "Cancel Friend Request"
 msgstr "Ακύρωση αιτήματος φιλίας"
@@ -3785,7 +3787,7 @@ msgstr "Πρόσβαση καναλιού"
 msgid "Channel Access Denied"
 msgstr "Η πρόσβαση στο κανάλι απορρίφθηκε"
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:396
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:398
 msgid "Channel access updated"
 msgstr "Η πρόσβαση στο κανάλι ενημερώθηκε"
 
@@ -3893,7 +3895,7 @@ msgstr "Το κανάλι αφαιρέθηκε από τα αγαπημένα"
 msgid "Channel Settings"
 msgstr "Ρυθμίσεις καναλιού"
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:622
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:624
 msgid "Channel synced with parent category"
 msgstr "Το κανάλι συγχρονίστηκε με την κύρια κατηγορία"
 
@@ -4179,7 +4181,7 @@ msgstr "ΔClaim το λογαριασμό σου για να εξαργυρώσ�
 
 #: src/components/channel/dm/AddFriendForm.tsx:54
 #: src/components/channel/dm/DMWelcomeSection.tsx:109
-#: src/components/modals/UserProfileModal.tsx:1289
+#: src/components/modals/UserProfileModal.tsx:1291
 #: src/components/uikit/ContextMenu/items/RelationshipMenuItems.tsx:65
 msgid "Claim your account to send friend requests."
 msgstr "ΔClaim το λογαριασμό σου για να στείλεις αιτήματα φιλίας."
@@ -4507,7 +4509,7 @@ msgstr "Άνετο (550x400)"
 msgid "Comfy"
 msgstr "Άνετο"
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1018
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1020
 #: src/components/modals/guildTabs/GuildRolesTab.tsx:1088
 msgid "Comfy layout"
 msgstr "Άνετη διάταξη"
@@ -4708,7 +4710,7 @@ msgstr "Ρύθμιση καναλιού AFK και χρονικού ορίου"
 msgid "Configure autocomplete"
 msgstr "Ρύθμιση αυτόματης συμπλήρωσης"
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:974
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:976
 msgid "Configure base access for this channel"
 msgstr "Ρύθμιση βασικής πρόσβασης για αυτό το κανάλι"
 
@@ -4780,11 +4782,11 @@ msgstr "Ρύθμιση ήχων μηνυμάτων"
 msgid "Configure notification sounds"
 msgstr "Ρύθμιση ήχων ειδοποιήσεων"
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:978
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:980
 msgid "Configure overrides for this member"
 msgstr "Ρύθμιση υπερισχύσεων για αυτό το μέλος"
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:976
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:978
 msgid "Configure overrides for this role"
 msgstr "Ρύθμιση υπερισχύσεων για αυτόν τον ρόλο"
 
@@ -5147,7 +5149,7 @@ msgstr "Αντιγραφή συνδέσμου αρχείου"
 
 #: src/components/modals/tabs/BlockedUsersTab.tsx:98
 #: src/components/modals/UserProfileActionsSheet.tsx:208
-#: src/components/modals/UserProfileModal.tsx:1121
+#: src/components/modals/UserProfileModal.tsx:1123
 msgid "Copy FluxerTag"
 msgstr "Αντιγραφή FluxerTag"
 
@@ -5220,7 +5222,7 @@ msgstr "Αντιγραφή κειμένου"
 #: src/components/modals/guildTabs/GuildMemberActionsSheet.tsx:361
 #: src/components/modals/tabs/BlockedUsersTab.tsx:107
 #: src/components/modals/UserProfileActionsSheet.tsx:213
-#: src/components/modals/UserProfileModal.tsx:1130
+#: src/components/modals/UserProfileModal.tsx:1132
 #: src/components/popouts/UserAreaPopout.tsx:509
 #: src/components/profile/ProfileCard/ProfileCardActions.tsx:60
 #: src/components/uikit/ContextMenu/items/CopyMenuItems.tsx:42
@@ -5856,7 +5858,7 @@ msgstr "Ημέρες"
 #: src/components/layout/UserArea.tsx:254
 #: src/components/uikit/ContextMenu/items/VoiceParticipantMenuItems.tsx:117
 #: src/components/voice/VoiceControlBar.tsx:291
-#: src/components/voice/VoiceSettingsMenus.tsx:187
+#: src/components/voice/VoiceSettingsMenus.tsx:185
 msgid "Deafen"
 msgstr "Σίγαση ήχου"
 
@@ -5952,6 +5954,10 @@ msgstr "Μειώστε το επίπεδο ζουμ της εφαρμογής"
 #: src/components/modals/tabs/VideoTab.tsx:72
 #: src/components/modals/tabs/VoiceTab.tsx:106
 #: src/components/modals/tabs/VoiceTab.tsx:117
+#: src/components/voice/VoiceSettingsMenus.tsx:100
+#: src/components/voice/VoiceSettingsMenus.tsx:126
+#: src/components/voice/VoiceSettingsMenus.tsx:257
+#: src/components/voice/VoiceSettingsMenus.tsx:344
 msgid "Default"
 msgstr "Προεπιλεγμένο"
 
@@ -6204,7 +6210,7 @@ msgstr "Δανία"
 msgid "Dense"
 msgstr "Συμπαγές"
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1018
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1020
 #: src/components/modals/guildTabs/GuildRolesTab.tsx:1088
 msgid "Dense layout"
 msgstr "Συμπαγής διάταξη"
@@ -6903,7 +6909,7 @@ msgstr "Πρόωρη πρόσβαση σε νέες δυνατότητες"
 #: src/components/bottomsheets/VoiceSettingsBottomSheets.tsx:126
 #: src/components/modals/tabs/VoiceTab.tsx:410
 #: src/components/modals/utils/settingsSearchIndex.ts:450
-#: src/components/voice/VoiceSettingsMenus.tsx:161
+#: src/components/voice/VoiceSettingsMenus.tsx:159
 msgid "Echo Cancellation"
 msgstr "Ακύρωση ηχούς"
 
@@ -6918,7 +6924,7 @@ msgid "Edit \"{0}\""
 msgstr "Επεξεργασία \"{0}\""
 
 #. placeholder {0}: getOverwriteName(selectedOverwrite)
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:970
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:972
 msgid "Edit Access for {0}"
 msgstr "Επεξεργασία πρόσβασης για {0}"
 
@@ -6997,11 +7003,11 @@ msgstr "Επεξεργασία σημείωσης"
 msgid "Edit overwrites for roles and members in this channel."
 msgstr "Επεξεργασία υπερκαλύψεων για ρόλους και μέλη σε αυτό το κανάλι."
 
-#: src/components/modals/UserProfileMobileSheet.tsx:490
-#: src/components/modals/UserProfileModal.tsx:1206
+#: src/components/modals/UserProfileMobileSheet.tsx:492
+#: src/components/modals/UserProfileModal.tsx:1208
 #: src/components/pages/YouPage.tsx:123
 #: src/components/popouts/UserAreaPopout.tsx:521
-#: src/components/popouts/UserProfilePopout.tsx:299
+#: src/components/popouts/UserProfilePopout.tsx:301
 msgid "Edit Profile"
 msgstr "Επεξεργασία προφίλ"
 
@@ -8325,7 +8331,7 @@ msgstr "όνομα αρχείου:"
 msgid "Files will be sent immediately without preview."
 msgstr "Τα αρχεία θα αποσταλούν άμεσα χωρίς προεπισκόπηση."
 
-#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:372
+#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:374
 msgid "Filter by action"
 msgstr "Φιλτράρισμα κατά ενέργεια"
 
@@ -8333,7 +8339,7 @@ msgstr "Φιλτράρισμα κατά ενέργεια"
 msgid "Filter by content"
 msgstr "Φιλτράρισμα κατά περιεχόμενο"
 
-#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:365
+#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:367
 #: src/components/search/UserFilterSheet.tsx:90
 msgid "Filter by user"
 msgstr "Φιλτράρισμα κατά χρήστη"
@@ -9338,7 +9344,7 @@ msgid "Grid"
 msgstr "Πλέγμα"
 
 #: src/components/bottomsheets/VoiceSettingsBottomSheets.tsx:258
-#: src/components/voice/VoiceSettingsMenus.tsx:404
+#: src/components/voice/VoiceSettingsMenus.tsx:400
 msgid "Grid View"
 msgstr "Προβολή πλέγματος"
 
@@ -10074,6 +10080,8 @@ msgstr "Είσοδος"
 #: src/components/bottomsheets/VoiceSettingsBottomSheets.tsx:74
 #: src/components/modals/tabs/VoiceTab.tsx:338
 #: src/components/modals/utils/settingsSearchIndex.ts:410
+#: src/components/voice/VoiceSettingsMenus.tsx:82
+#: src/components/voice/VoiceSettingsMenus.tsx:227
 msgid "Input Device"
 msgstr "Συσκευή εισόδου"
 
@@ -10100,6 +10108,8 @@ msgstr "Καταστάσεις εισόδου"
 
 #: src/components/bottomsheets/VoiceSettingsBottomSheets.tsx:96
 #: src/components/modals/tabs/VoiceTab.tsx:363
+#: src/components/voice/VoiceSettingsMenus.tsx:136
+#: src/components/voice/VoiceSettingsMenus.tsx:228
 msgid "Input Volume"
 msgstr "Ένταση εισόδου"
 
@@ -11001,7 +11011,7 @@ msgstr "Ζωντανά"
 msgid "Live Preview"
 msgstr "Ζωντανή Προεπισκόπηση"
 
-#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:633
+#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:635
 msgid "Load more"
 msgstr "Φόρτωση περισσότερων"
 
@@ -11694,11 +11704,11 @@ msgstr "αναφορές:"
 #: src/components/bottomsheets/VoiceParticipantBottomSheet.tsx:234
 #: src/components/modals/guildTabs/GuildMemberActionsSheet.tsx:220
 #: src/components/modals/tabs/ComponentGalleryTab/InputsTab.tsx:164
-#: src/components/modals/UserProfileMobileSheet.tsx:501
-#: src/components/modals/UserProfileModal.tsx:1190
-#: src/components/modals/UserProfileModal.tsx:1316
-#: src/components/popouts/UserProfilePopout.tsx:289
-#: src/components/popouts/UserProfilePopout.tsx:308
+#: src/components/modals/UserProfileMobileSheet.tsx:503
+#: src/components/modals/UserProfileModal.tsx:1192
+#: src/components/modals/UserProfileModal.tsx:1318
+#: src/components/popouts/UserProfilePopout.tsx:291
+#: src/components/popouts/UserProfilePopout.tsx:310
 #: src/components/profile/ProfilePreview.tsx:292
 #: src/components/uikit/ContextMenu/items/MessageUserMenuItem.tsx:47
 msgid "Message"
@@ -11843,6 +11853,13 @@ msgstr "Η αποστολή μηνυμάτων έχει προσωρινά απ�
 #: src/components/modals/tabs/components/MicTestSection.tsx:86
 msgid "Mic Test"
 msgstr "Δοκιμή Μικροφώνου"
+
+#. placeholder {0}: device.deviceId.slice(0, 8)
+#. placeholder {0}: deviceId.slice(0, 8)
+#: src/components/voice/VoiceSettingsMenus.tsx:95
+#: src/components/voice/VoiceSettingsMenus.tsx:232
+msgid "Microphone {0}"
+msgstr "Μικρόφωνο {0}"
 
 #: src/components/modals/tabs/VoiceTab.tsx:103
 msgid "Microphone {shortDeviceId}"
@@ -12642,7 +12659,7 @@ msgstr "Δεν έχει οριστεί συντόμευση πληκτρολογ
 msgid "No limit"
 msgstr "Χωρίς όριο"
 
-#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:609
+#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:611
 msgid "No logs yet"
 msgstr "Δεν υπάρχουν ακόμα αρχεία καταγραφής"
 
@@ -12695,7 +12712,7 @@ msgstr "Δεν υπάρχουν εκκρεμείς αιτήματα"
 msgid "No pending requests match your search"
 msgstr "Κανένα εκκρεμές αίτημα δεν ταιριάζει στην αναζήτησή σας"
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1065
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1067
 #: src/components/modals/guildTabs/GuildRolesTab.tsx:1130
 msgid "No permissions found"
 msgstr "Δεν βρέθηκαν δικαιώματα"
@@ -12724,7 +12741,7 @@ msgstr "Χωρίς αντιδράσεις"
 msgid "No reason provided"
 msgstr "Δεν παρέχεται λόγος"
 
-#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:462
+#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:464
 msgid "No reason was provided."
 msgstr "Δεν δόθηκε λόγος."
 
@@ -12840,7 +12857,7 @@ msgstr "Κανείς"
 #: src/components/bottomsheets/VoiceSettingsBottomSheets.tsx:133
 #: src/components/modals/tabs/VoiceTab.tsx:416
 #: src/components/modals/utils/settingsSearchIndex.ts:442
-#: src/components/voice/VoiceSettingsMenus.tsx:169
+#: src/components/voice/VoiceSettingsMenus.tsx:167
 msgid "Noise Suppression"
 msgstr "Καταστολή θορύβου"
 
@@ -12887,7 +12904,7 @@ msgstr "Όχι τώρα"
 msgid "Not your cup of tea? You can disable this feature anytime."
 msgstr "Δεν είναι του γούστου σου; Μπορείς να απενεργοποιήσεις αυτή τη λειτουργία όποτε θέλεις."
 
-#: src/components/modals/UserProfileMobileSheet.tsx:553
+#: src/components/modals/UserProfileMobileSheet.tsx:555
 #: src/components/modals/UserProfileModal.tsx:244
 #: src/components/modals/UserProfileModal.tsx:248
 #: src/components/pages/YouPage.tsx:144
@@ -13445,11 +13462,15 @@ msgstr "Εξερχόμενα αιτήματα φιλίας"
 #: src/components/bottomsheets/VoiceSettingsBottomSheets.tsx:82
 #: src/components/modals/tabs/VoiceTab.tsx:347
 #: src/components/modals/utils/settingsSearchIndex.ts:418
+#: src/components/voice/VoiceSettingsMenus.tsx:108
+#: src/components/voice/VoiceSettingsMenus.tsx:227
 msgid "Output Device"
 msgstr "Συσκευή εξόδου"
 
 #: src/components/bottomsheets/VoiceSettingsBottomSheets.tsx:107
 #: src/components/modals/tabs/VoiceTab.tsx:381
+#: src/components/voice/VoiceSettingsMenus.tsx:144
+#: src/components/voice/VoiceSettingsMenus.tsx:228
 msgid "Output Volume"
 msgstr "Ένταση εξόδου"
 
@@ -14069,7 +14090,7 @@ msgid "Preview Button"
 msgstr "Κουμπί προεπισκόπησης"
 
 #: src/components/bottomsheets/VoiceSettingsBottomSheets.tsx:214
-#: src/components/voice/VoiceSettingsMenus.tsx:364
+#: src/components/voice/VoiceSettingsMenus.tsx:360
 msgid "Preview Camera"
 msgstr "Κάμερα προεπισκόπησης"
 
@@ -14422,7 +14443,7 @@ msgid "Ready to Upgrade?"
 msgstr "Έτοιμος για αναβάθμιση;"
 
 #: src/components/modals/BanDetailsModal.tsx:76
-#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:563
+#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:565
 msgid "Reason"
 msgstr "Λόγος"
 
@@ -14718,10 +14739,10 @@ msgstr "Αφαίρεση φίλτρου"
 #: src/components/modals/UserProfileActionsSheet.tsx:115
 #: src/components/modals/UserProfileActionsSheet.tsx:117
 #: src/components/modals/UserProfileActionsSheet.tsx:278
-#: src/components/modals/UserProfileMobileSheet.tsx:303
 #: src/components/modals/UserProfileMobileSheet.tsx:305
-#: src/components/modals/UserProfileModal.tsx:1143
-#: src/components/modals/UserProfileModal.tsx:1229
+#: src/components/modals/UserProfileMobileSheet.tsx:307
+#: src/components/modals/UserProfileModal.tsx:1145
+#: src/components/modals/UserProfileModal.tsx:1231
 #: src/components/uikit/ContextMenu/items/RelationshipMenuItems.tsx:129
 #: src/utils/RelationshipActionUtils.tsx:113
 #: src/utils/RelationshipActionUtils.tsx:115
@@ -14773,7 +14794,7 @@ msgstr "Αφαίρεση αναφοράς"
 msgid "Remove override"
 msgstr "Αφαίρεση παράκαμψης"
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:990
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:992
 msgid "Remove Override"
 msgstr "Αφαίρεση Παράκαμψης"
 
@@ -15059,7 +15080,7 @@ msgstr "Η αναφορά υποβλήθηκε με επιτυχία. Η Ομά�
 
 #: src/components/modals/IARModal.tsx:84
 #: src/components/modals/UserProfileActionsSheet.tsx:289
-#: src/components/modals/UserProfileModal.tsx:1157
+#: src/components/modals/UserProfileModal.tsx:1159
 msgid "Report User"
 msgstr "Αναφορά χρήστη"
 
@@ -15264,7 +15285,7 @@ msgstr "Επανασυνδρομή"
 #: src/components/channel/MessageActionBar.tsx:798
 #: src/components/channel/messageActionMenu.tsx:189
 #: src/components/modals/BackgroundImageGalleryModal.tsx:232
-#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:624
+#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:626
 #: src/components/modals/guildTabs/GuildEmojiTab.tsx:539
 #: src/components/modals/guildTabs/GuildInvitesTab.tsx:124
 #: src/components/modals/guildTabs/GuildStickersTab.tsx:211
@@ -15794,7 +15815,7 @@ msgstr "Αναζήτηση μόνο στο τρέχον DM"
 msgid "Search pending requests"
 msgstr "Αναζήτηση εκκρεμών αιτημάτων"
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1011
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1013
 #: src/components/modals/guildTabs/GuildRolesTab.tsx:1081
 msgid "Search Permissions..."
 msgstr "Αναζήτηση δικαιωμάτων..."
@@ -16132,7 +16153,7 @@ msgstr "Αποστολή κώδικα"
 
 #: src/components/channel/dm/DMWelcomeSection.tsx:112
 #: src/components/modals/guildTabs/GuildMemberActionsSheet.tsx:272
-#: src/components/modals/UserProfileModal.tsx:1290
+#: src/components/modals/UserProfileModal.tsx:1292
 msgid "Send Friend Request"
 msgstr "Αποστολή αιτήματος φιλίας"
 
@@ -16666,7 +16687,7 @@ msgstr "Εμφάνιση πρώτα των πιο σχετικών μηνυμά�
 
 #: src/components/bottomsheets/VoiceSettingsBottomSheets.tsx:266
 #: src/components/uikit/ContextMenu/VoiceParticipantContextMenu.tsx:181
-#: src/components/voice/VoiceSettingsMenus.tsx:422
+#: src/components/voice/VoiceSettingsMenus.tsx:418
 msgid "Show My Own Camera"
 msgstr "Εμφάνιση της κάμεράς μου"
 
@@ -16684,7 +16705,7 @@ msgstr "Εμφάνιση αναδυόμενου παραθύρου νέας συ
 
 #: src/components/bottomsheets/VoiceSettingsBottomSheets.tsx:273
 #: src/components/uikit/ContextMenu/VoiceParticipantContextMenu.tsx:188
-#: src/components/voice/VoiceSettingsMenus.tsx:430
+#: src/components/voice/VoiceSettingsMenus.tsx:426
 msgid "Show Non-Video Participants"
 msgstr "Εμφάνιση συμμετεχόντων χωρίς βίντεο"
 
@@ -16845,7 +16866,7 @@ msgstr "Σιγανές κλήσεις από όλους"
 msgid "Simulates having a Stripe customer ID (for testing purchase history access)"
 msgstr "Προσομοιώνει ότι έχεις ID πελάτη Stripe (για δοκιμές πρόσβασης ιστορικού αγορών)"
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1034
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1036
 #: src/components/modals/guildTabs/GuildRolesTab.tsx:1102
 msgid "Single column"
 msgstr "Μία στήλη"
@@ -17037,7 +17058,7 @@ msgid "Something went wrong and the app crashed. Try reloading or resetting the 
 msgstr "Κάτι πήγε στραβά και η εφαρμογή κατέρρευσε. Δοκίμασε να ξαναφορτώσεις ή να επαναφέρεις την εφαρμογή."
 
 #: src/components/modals/guildTabs/GuildAuditLogTab.tsx:308
-#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:340
+#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:342
 msgid "Something went wrong while loading the audit log."
 msgstr "Κάτι πήγε στραβά κατά τη φόρτωση του αρχείου ελέγχου."
 
@@ -17137,6 +17158,13 @@ msgstr "Μίλησε μήνυμα"
 #: src/components/modals/tabs/components/MicTestSection.tsx:137
 msgid "Speak normally into your microphone. You should hear yourself through your speakers. The level should stay in the green \"Good\" or yellow \"Optimal\" range."
 msgstr "Μίλησε κανονικά στο μικρόφωνό σου. Θα πρέπει να ακούς τον εαυτό σου από τα ηχεία σου. Το επίπεδο πρέπει να παραμένει στο πράσινο «Καλό» ή στο κίτρινο «Άριστο»."
+
+#. placeholder {0}: device.deviceId.slice(0, 8)
+#. placeholder {0}: deviceId.slice(0, 8)
+#: src/components/voice/VoiceSettingsMenus.tsx:121
+#: src/components/voice/VoiceSettingsMenus.tsx:233
+msgid "Speaker {0}"
+msgstr "Ηχείο {0}"
 
 #: src/components/modals/tabs/VoiceTab.tsx:114
 msgid "Speaker {shortDeviceId}"
@@ -17242,13 +17270,13 @@ msgid "Start Sharing"
 msgstr "Ξεκίνα κοινή χρήση"
 
 #: src/components/channel/ChannelHeader/CallButtons.tsx:160
-#: src/components/modals/UserProfileModal.tsx:1109
+#: src/components/modals/UserProfileModal.tsx:1111
 #: src/components/uikit/ContextMenu/items/CallMenuItems.tsx:91
 msgid "Start Video Call"
 msgstr "Ξεκίνα βιντεοκλήση"
 
 #: src/components/channel/ChannelHeader/CallButtons.tsx:90
-#: src/components/modals/UserProfileModal.tsx:1100
+#: src/components/modals/UserProfileModal.tsx:1102
 #: src/components/uikit/ContextMenu/items/CallMenuItems.tsx:60
 msgid "Start Voice Call"
 msgstr "Ξεκίνα φωνητική κλήση"
@@ -17594,17 +17622,17 @@ msgstr "Εναλλαγή μεταξύ της τελευταίας κοινότη
 msgid "Switch Device"
 msgstr "Αλλαγή συσκευής"
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1024
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1026
 #: src/components/modals/guildTabs/GuildRolesTab.tsx:1093
 msgid "Switch to comfy layout"
 msgstr "Μετάβαση στην άνετη διάταξη"
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1024
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1026
 #: src/components/modals/guildTabs/GuildRolesTab.tsx:1093
 msgid "Switch to dense layout"
 msgstr "Μετάβαση στην πυκνή διάταξη"
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1040
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1042
 #: src/components/modals/guildTabs/GuildRolesTab.tsx:1107
 msgid "Switch to single column"
 msgstr "Μετάβαση σε μονή στήλη"
@@ -17617,7 +17645,7 @@ msgstr "Αλλαγή σε αυτόν τον λογαριασμό"
 msgid "Switch to This Device"
 msgstr "Εναλλαγή σε αυτή τη συσκευή"
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1040
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1042
 #: src/components/modals/guildTabs/GuildRolesTab.tsx:1107
 msgid "Switch to two columns"
 msgstr "Μετάβαση σε δύο στήλες"
@@ -17643,8 +17671,8 @@ msgstr "Συγχρονισμός θέματος"
 msgid "Sync theme across devices"
 msgstr "Συγχρονισμός θέματος σε όλες τις συσκευές"
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:854
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:950
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:856
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:952
 msgid "Sync with Category"
 msgstr "Συγχρονισμός με κατηγορία"
 
@@ -18037,14 +18065,14 @@ msgid "This channel is not marked as NSFW. Explicit content can only be sent in 
 msgstr "Αυτό το κανάλι δεν έχει χαρακτηριστεί ως NSFW. Περιεχόμενο για ενηλίκους μπορεί να σταλεί μόνο σε κανάλια NSFW. Ζητήστε από έναν συντονιστή να το χαρακτηρίσει NSFW αν είναι κατάλληλο."
 
 #. placeholder {0}: parentChannel?.name
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:847
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:943
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:849
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:945
 msgid "This channel is not synced with the parent category <0>{0}</0>."
 msgstr "Αυτό το κανάλι δεν είναι συγχρονισμένο με την κύρια κατηγορία <0>{0}</0>."
 
 #. placeholder {0}: parentChannel?.name
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:843
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:939
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:845
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:941
 msgid "This channel is synced with the parent category <0>{0}</0>."
 msgstr "Αυτό το κανάλι είναι συγχρονισμένο με την κύρια κατηγορία <0>{0}</0>."
 
@@ -18612,7 +18640,7 @@ msgstr "Θέμα"
 msgid "Total Parsing Time:"
 msgstr "Συνολικός χρόνος ανάλυσης:"
 
-#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:355
+#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:357
 msgid "Track moderator actions across the community."
 msgstr "Παρακολουθήστε τις ενέργειες των διαχειριστών στην κοινότητα."
 
@@ -18789,7 +18817,7 @@ msgstr "Ρυθμίστε τα βασικά αυτής της κατηγορία�
 msgid "Tweak this channel's basics."
 msgstr "Ρυθμίστε τα βασικά αυτού του καναλιού."
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1034
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1036
 #: src/components/modals/guildTabs/GuildRolesTab.tsx:1102
 msgid "Two columns"
 msgstr "Δύο στήλες"
@@ -18895,7 +18923,7 @@ msgstr "Δεν είναι δυνατή η εγκατάσταση πακέτου 
 msgid "Unable to install sticker pack"
 msgstr "Δεν είναι δυνατή η εγκατάσταση πακέτου αυτοκόλλητων"
 
-#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:619
+#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:621
 msgid "Unable to load activity logs"
 msgstr "Δεν είναι δυνατή η φόρτωση αρχείων δραστηριότητας"
 
@@ -18949,8 +18977,8 @@ msgstr "Μη διαθέσιμο για όλους εκτός προσωπικο�
 #: src/components/modals/tabs/BlockedUsersTab.tsx:171
 #: src/components/modals/UserProfileActionsSheet.tsx:151
 #: src/components/modals/UserProfileActionsSheet.tsx:305
-#: src/components/modals/UserProfileMobileSheet.tsx:321
-#: src/components/modals/UserProfileModal.tsx:1049
+#: src/components/modals/UserProfileMobileSheet.tsx:323
+#: src/components/modals/UserProfileModal.tsx:1051
 #: src/components/uikit/ContextMenu/items/RelationshipMenuItems.tsx:230
 #: src/utils/RelationshipActionUtils.tsx:169
 msgid "Unblock"
@@ -18963,8 +18991,8 @@ msgstr "Καταργήστε πρώτα τον αποκλεισμό αυτού �
 #: src/components/modals/guildTabs/GuildMemberActionsSheet.tsx:180
 #: src/components/modals/tabs/BlockedUsersTab.tsx:56
 #: src/components/modals/UserProfileActionsSheet.tsx:149
-#: src/components/modals/UserProfileMobileSheet.tsx:319
-#: src/components/modals/UserProfileModal.tsx:1244
+#: src/components/modals/UserProfileMobileSheet.tsx:321
+#: src/components/modals/UserProfileModal.tsx:1246
 #: src/utils/RelationshipActionUtils.tsx:167
 msgid "Unblock User"
 msgstr "Κατάργηση αποκλεισμού χρήστη"
@@ -19760,7 +19788,7 @@ msgstr "Χρήση κλειδιού ασφαλείας"
 msgid "Use system locale for time format"
 msgstr "Χρήση τοπικών ρυθμίσεων συστήματος για τη μορφή ώρας"
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:998
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1000
 msgid "Use these buttons to quickly set all permissions."
 msgstr "Χρησιμοποιήστε αυτά τα κουμπιά για γρήγορο καθορισμό όλων των αδειών."
 
@@ -19840,11 +19868,11 @@ msgid "User Moved Channel"
 msgstr "Ο χρήστης μεταφέρθηκε σε κανάλι"
 
 #: src/components/modals/tabs/ComponentGalleryTab/InputsTab.tsx:133
-#: src/components/modals/UserProfileModal.tsx:945
+#: src/components/modals/UserProfileModal.tsx:947
 msgid "User Profile"
 msgstr "Προφίλ χρήστη"
 
-#: src/components/modals/UserProfileModal.tsx:947
+#: src/components/modals/UserProfileModal.tsx:949
 msgid "User Profile: {tag}"
 msgstr "Προφίλ χρήστη: {tag}"
 
@@ -20109,7 +20137,7 @@ msgid "Video"
 msgstr "Βίντεο"
 
 #: src/components/channel/ChannelHeader.tsx:572
-#: src/components/modals/UserProfileMobileSheet.tsx:519
+#: src/components/modals/UserProfileMobileSheet.tsx:521
 msgid "Video Call"
 msgstr "Βιντεοκλήση"
 
@@ -20135,7 +20163,7 @@ msgid "Video Quality"
 msgstr "Ποιότητα Βίντεο"
 
 #: src/components/bottomsheets/VoiceSettingsBottomSheets.tsx:227
-#: src/components/voice/VoiceSettingsMenus.tsx:376
+#: src/components/voice/VoiceSettingsMenus.tsx:372
 msgid "Video Settings"
 msgstr "Ρυθμίσεις βίντεο"
 
@@ -20212,7 +20240,7 @@ msgid "View Codes"
 msgstr "Προβολή κωδικών"
 
 #: src/components/modals/UserProfileActionsSheet.tsx:194
-#: src/components/modals/UserProfileModal.tsx:1087
+#: src/components/modals/UserProfileModal.tsx:1089
 msgid "View Community Profile"
 msgstr "Προβολή προφίλ κοινότητας"
 
@@ -20231,7 +20259,7 @@ msgid "View Gift Inventory"
 msgstr "Προβολή αποθέματος δώρων"
 
 #: src/components/modals/UserProfileActionsSheet.tsx:194
-#: src/components/modals/UserProfileModal.tsx:1087
+#: src/components/modals/UserProfileModal.tsx:1089
 msgid "View Global Profile"
 msgstr "Προβολή παγκόσμιου προφίλ"
 
@@ -20370,7 +20398,7 @@ msgstr "Φωνή"
 
 #: src/components/bottomsheets/VoiceSettingsBottomSheets.tsx:288
 #: src/components/uikit/ContextMenu/items/VoiceParticipantMenuItems.tsx:135
-#: src/components/voice/VoiceSettingsMenus.tsx:442
+#: src/components/voice/VoiceSettingsMenus.tsx:438
 msgid "Voice & Video Settings"
 msgstr "Ρυθμίσεις Φωνής & Βίντεο"
 
@@ -20386,7 +20414,7 @@ msgstr "Κλήση φωνής"
 #: src/components/bottomsheets/DMBottomSheet.tsx:421
 #: src/components/channel/ChannelHeader.tsx:562
 #: src/components/modals/guildTabs/GuildMemberActionsSheet.tsx:227
-#: src/components/modals/UserProfileMobileSheet.tsx:511
+#: src/components/modals/UserProfileMobileSheet.tsx:513
 msgid "Voice Call"
 msgstr "Κλήση Φωνής"
 
@@ -20460,8 +20488,8 @@ msgid "Voice Region"
 msgstr "Περιοχή φωνής"
 
 #: src/components/bottomsheets/VoiceSettingsBottomSheets.tsx:165
-#: src/components/voice/VoiceSettingsMenus.tsx:199
-#: src/components/voice/VoiceSettingsMenus.tsx:287
+#: src/components/voice/VoiceSettingsMenus.tsx:197
+#: src/components/voice/VoiceSettingsMenus.tsx:284
 msgid "Voice Settings"
 msgstr "Ρυθμίσεις φωνής"
 
@@ -20844,7 +20872,7 @@ msgstr "Όταν είναι ενεργοποιημένο, μπορείτε να 
 msgid "When enabled, you'll need to double-click on voice channels to join them. When disabled (default), single-clicking will join the channel immediately."
 msgstr "Όταν είναι ενεργοποιημένο, θα χρειάζεται διπλό κλικ στα φωνητικά κανάλια για να τα εντάξεις. Όταν είναι απενεργοποιημένο (προεπιλογή), ένα μόνο κλικ σε εντάσσει αμέσως."
 
-#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:610
+#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:612
 msgid "When moderators begin moderating, you can moderate the moderation here."
 msgstr "Όταν οι διαχειριστές ξεκινήσουν τη διαχείριση, μπορείτε να διαχειριστείτε τη διαχείριση εδώ."
 
@@ -21085,7 +21113,7 @@ msgstr "Μπορείς να χρησιμοποιήσεις συνδέσμους 
 msgid "You can't add new reactions while you're on timeout."
 msgstr "Δεν μπορείς να προσθέσεις νέες αντιδράσεις όσο βρίσκεσαι σε χρονικό όριο."
 
-#: src/components/modals/UserProfileModal.tsx:1171
+#: src/components/modals/UserProfileModal.tsx:1173
 msgid "You can't befriend yourself"
 msgstr "Δεν μπορείς να γίνεις φίλος με τον εαυτό σου"
 
@@ -21100,8 +21128,8 @@ msgstr "Δεν μπορείς να αλληλεπιδράσεις με αντι�
 msgid "You can't join while you're on timeout."
 msgstr "Δεν μπορείς να συμμετάσχεις όσο βρίσκεσαι σε χρονικό όριο."
 
-#: src/components/modals/UserProfileModal.tsx:1183
-#: src/components/popouts/UserProfilePopout.tsx:282
+#: src/components/modals/UserProfileModal.tsx:1185
+#: src/components/popouts/UserProfilePopout.tsx:284
 #: src/components/profile/ProfilePreview.tsx:284
 msgid "You can't message yourself"
 msgstr "Δεν μπορείς να στείλεις μήνυμα στον εαυτό σου"
