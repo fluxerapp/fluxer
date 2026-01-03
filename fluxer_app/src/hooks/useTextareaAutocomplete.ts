@@ -634,25 +634,43 @@ export function useTextareaAutocomplete({
 						memberSearchResults.length > 0 ? memberSearchResults : GuildMemberStore.getMembers(channel.guildId ?? '');
 
 					const parsedQuery = parseMentionQuery(matchedText ?? '');
+					const queryForMatching = parsedQuery.usernameQuery.trim();
 
 					const members = filterGuildMembers(membersToUse, parsedQuery, true, canViewChannel);
 
-					const roles = GuildStore.getGuildRoles(channel.guildId ?? '')
-						.filter((role) => canMentionEveryone || role.mentionable)
+					const mentionableRoles = GuildStore.getGuildRoles(channel.guildId ?? '').filter(
+						(role) => canMentionEveryone || role.mentionable,
+					);
+
+					const matchedRoles = queryForMatching
+						? matchSorter(mentionableRoles, queryForMatching, {
+								keys: ['name'],
+								threshold: matchSorter.rankings.CONTAINS,
+							})
+						: mentionableRoles;
+
+					const roles = matchedRoles
+						.sort((a, b) => b.position - a.position)
+						.slice(0, 10)
 						.map((role) => ({
 							type: 'mention' as const,
 							kind: 'role' as const,
 							role,
-						}))
-						.sort((a, b) => b.role.position - a.role.position)
-						.slice(0, 10);
+						}));
 
-					const specialMentions: Array<{type: 'mention'; kind: '@everyone' | '@here'}> = [
+					const baseSpecialMentions: Array<{type: 'mention'; kind: '@everyone' | '@here'}> = [
 						{type: 'mention' as const, kind: '@everyone' as const},
 						{type: 'mention' as const, kind: '@here' as const},
 					];
 
-					options = [...members, ...(canMentionEveryone ? specialMentions : []), ...roles];
+					const specialMentions = canMentionEveryone
+						? baseSpecialMentions.filter((mention) => {
+								if (!queryForMatching) return true;
+								return mention.kind.toLowerCase().includes(queryForMatching.toLowerCase());
+							})
+						: [];
+
+					options = [...members, ...specialMentions, ...roles];
 				}
 				break;
 			}
