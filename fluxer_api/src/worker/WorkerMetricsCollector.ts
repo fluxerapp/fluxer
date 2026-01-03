@@ -318,7 +318,7 @@ export class WorkerMetricsCollector {
 				last_execution: Date | null;
 			}>(`
 				SELECT identifier, known_since, last_execution
-				FROM graphile_worker.known_crontabs
+				FROM graphile_worker._private_known_crontabs
 			`);
 
 			const now = new Date();

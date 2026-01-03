@@ -108,28 +108,28 @@ pub struct CrashEventData {
 
 #[derive(Row, Serialize, Deserialize)]
 struct CounterQueryRow {
-    timestamp_bucket: i64,
+    timestamp_bucket_ms: i64,
     group_key: String,
     total: i64,
 }
 
 #[derive(Row, Serialize, Deserialize)]
 struct AggregatedCounterQueryRow {
-    period_start: i64,
+    period_start_ms: i64,
     group_key: String,
     total: i64,
 }
 
 #[derive(Row, Serialize, Deserialize)]
 struct GaugeQueryRow {
-    timestamp: i64,
+    timestamp_ms: i64,
     value: f64,
     dimensions: Vec<(String, String)>,
 }
 
 #[derive(Row, Serialize, Deserialize)]
 struct HistogramQueryRow {
-    timestamp_bucket: i64,
+    timestamp_bucket_ms: i64,
     avg_value: f64,
 }
 
@@ -420,13 +420,13 @@ impl ClickHouseStorage {
         let query = format!(
             r#"
             SELECT
-                toUnixTimestamp64Milli(timestamp_bucket) AS timestamp_bucket,
+                toUnixTimestamp64Milli(timestamp_bucket) AS timestamp_bucket_ms,
                 {group_expr} AS group_key,
                 sum(value) AS total
             FROM {}.counters
             WHERE metric_name = ?
-              AND timestamp_bucket >= fromUnixTimestamp64Milli(?)
-              AND timestamp_bucket <= fromUnixTimestamp64Milli(?)
+              AND timestamp_bucket >= fromUnixTimestamp64Milli(?, 'UTC')
+              AND timestamp_bucket <= fromUnixTimestamp64Milli(?, 'UTC')
             GROUP BY timestamp_bucket, group_key
             ORDER BY timestamp_bucket
             "#,
@@ -456,7 +456,7 @@ impl ClickHouseStorage {
                     Some(map)
                 };
                 DataPoint {
-                    timestamp: r.timestamp_bucket,
+                    timestamp: r.timestamp_bucket_ms,
                     value: r.total as f64,
                     dimensions: dims,
                 }
@@ -481,13 +481,13 @@ impl ClickHouseStorage {
         let query = format!(
             r#"
             SELECT
-                toUnixTimestamp64Milli(period_start) AS period_start,
+                toUnixTimestamp64Milli(period_start) AS period_start_ms,
                 {group_expr} AS group_key,
                 sum(total_value) AS total
             FROM {}.{table_name}
             WHERE metric_name = ?
-              AND period_start >= fromUnixTimestamp64Milli(?)
-              AND period_start <= fromUnixTimestamp64Milli(?)
+              AND period_start >= fromUnixTimestamp64Milli(?, 'UTC')
+              AND period_start <= fromUnixTimestamp64Milli(?, 'UTC')
             GROUP BY period_start, group_key
             ORDER BY period_start
             "#,
@@ -517,7 +517,7 @@ impl ClickHouseStorage {
                     Some(map)
                 };
                 DataPoint {
-                    timestamp: r.period_start,
+                    timestamp: r.period_start_ms,
                     value: r.total as f64,
                     dimensions: dims,
                 }
@@ -536,13 +536,13 @@ impl ClickHouseStorage {
         let query = format!(
             r#"
             SELECT
-                toUnixTimestamp64Milli(timestamp) AS timestamp,
+                toUnixTimestamp64Milli(timestamp) AS timestamp_ms,
                 value,
                 dimensions
             FROM {}.gauges
             WHERE metric_name = ?
-              AND timestamp >= fromUnixTimestamp64Milli(?)
-              AND timestamp <= fromUnixTimestamp64Milli(?)
+              AND timestamp >= fromUnixTimestamp64Milli(?, 'UTC')
+              AND timestamp <= fromUnixTimestamp64Milli(?, 'UTC')
             ORDER BY timestamp
             "#,
             self.database
@@ -566,7 +566,7 @@ impl ClickHouseStorage {
                     Some(dimensions_to_json(&r.dimensions))
                 };
                 DataPoint {
-                    timestamp: r.timestamp,
+                    timestamp: r.timestamp_ms,
                     value: r.value,
                     dimensions: dims,
                 }
@@ -585,12 +585,12 @@ impl ClickHouseStorage {
         let query = format!(
             r#"
             SELECT
-                toUnixTimestamp64Milli(timestamp_bucket) AS timestamp_bucket,
+                toUnixTimestamp64Milli(timestamp_bucket) AS timestamp_bucket_ms,
                 avg(value_ms) AS avg_value
             FROM {}.histogram_raw
             WHERE metric_name = ?
-              AND timestamp_bucket >= fromUnixTimestamp64Milli(?)
-              AND timestamp_bucket <= fromUnixTimestamp64Milli(?)
+              AND timestamp_bucket >= fromUnixTimestamp64Milli(?, 'UTC')
+              AND timestamp_bucket <= fromUnixTimestamp64Milli(?, 'UTC')
             GROUP BY timestamp_bucket
             ORDER BY timestamp_bucket
             "#,
@@ -609,7 +609,7 @@ impl ClickHouseStorage {
         let data: Vec<DataPoint> = rows
             .into_iter()
             .map(|r| DataPoint {
-                timestamp: r.timestamp_bucket,
+                timestamp: r.timestamp_bucket_ms,
                 value: r.avg_value,
                 dimensions: None,
             })
@@ -636,8 +636,8 @@ impl ClickHouseStorage {
                 quantile(0.99)(value_ms) AS p99
             FROM {}.histogram_raw
             WHERE metric_name = ?
-              AND timestamp_bucket >= fromUnixTimestamp64Milli(?)
-              AND timestamp_bucket <= fromUnixTimestamp64Milli(?)
+              AND timestamp_bucket >= fromUnixTimestamp64Milli(?, 'UTC')
+              AND timestamp_bucket <= fromUnixTimestamp64Milli(?, 'UTC')
             "#,
             self.database
         );
