@@ -129,7 +129,10 @@ const EmojiRendererInner = observer(function EmojiRendererInner({
 	const tooltipQualitySuffix = `?size=${tooltipEmojiSize}&quality=lossless`;
 
 	const isCustomEmoji = node.kind.kind === EmojiKind.Custom;
-	const emojiRecord = isCustomEmoji && emojiData.id ? EmojiStore.getEmojiById(emojiData.id) : null;
+	const emojiRecord: Emoji | null =
+		isCustomEmoji && emojiData.id ? (EmojiStore.getEmojiById(emojiData.id) ?? null) : null;
+	const fallbackGuildId = emojiRecord?.guildId;
+	const fallbackAnimated = emojiRecord?.animated ?? emojiData.isAnimated;
 
 	const handleOpenBottomSheet = React.useCallback(() => {
 		if (!isMobile) return;
@@ -160,12 +163,16 @@ const EmojiRendererInner = observer(function EmojiRendererInner({
 		if (emojiRecord) {
 			return emojiRecord;
 		}
+
 		return {
+			id: emojiData.id,
+			guildId: fallbackGuildId,
+			animated: fallbackAnimated,
 			name: node.kind.name,
 			allNamesString: node.kind.name,
 			uniqueName: node.kind.name,
 		};
-	}, [emojiRecord, node.kind.name]);
+	}, [emojiData.id, emojiData.isAnimated, emojiRecord, node.kind.name]);
 
 	const getTooltipData = React.useCallback(() => {
 		const emojiUrl =
