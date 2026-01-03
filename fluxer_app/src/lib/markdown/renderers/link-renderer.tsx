@@ -62,11 +62,21 @@ interface JumpLinkMentionProps {
 	guild: GuildRecord | null;
 	messageId?: string;
 	i18n: I18n;
+	interactive?: boolean;
 }
 
-const JumpLinkMention = observer(function JumpLinkMention({channel, guild, messageId, i18n}: JumpLinkMentionProps) {
+const INLINE_REPLY_CONTEXT = 1;
+
+const JumpLinkMention = observer(function JumpLinkMention({
+	channel,
+	guild,
+	messageId,
+	i18n,
+	interactive = true,
+}: JumpLinkMentionProps) {
 	const handleClick = React.useCallback(
-		(event: React.MouseEvent<HTMLButtonElement>) => {
+		(event: React.MouseEvent<HTMLButtonElement | HTMLSpanElement>) => {
+			if (!interactive) return;
 			event.preventDefault();
 			event.stopPropagation();
 
@@ -98,17 +108,26 @@ const JumpLinkMention = observer(function JumpLinkMention({channel, guild, messa
 			? i18n._(msg`Jump to ${labelText}`)
 			: i18n._(msg`Jump to the linked channel`);
 
+	const Component = interactive ? 'button' : 'span';
+
 	return (
-		<button
-			type="button"
-			className={clsx(markupStyles.mention, markupStyles.interactive, jumpLinkStyles.jumpLinkButton)}
+		<Component
+			{...(interactive ? {type: 'button'} : {})}
+			className={clsx(markupStyles.mention, interactive && markupStyles.interactive, jumpLinkStyles.jumpLinkButton)}
 			onClick={handleClick}
 			aria-label={ariaLabel}
+			tabIndex={interactive ? 0 : -1}
 		>
 			<span className={jumpLinkStyles.jumpLinkInfo}>
 				{guild ? (
 					<span className={jumpLinkStyles.jumpLinkGuild}>
-						<GuildIcon id={guild.id} name={guild.name} icon={guild.icon} className={jumpLinkStyles.jumpLinkGuildIcon} />
+						<GuildIcon
+							id={guild.id}
+							name={guild.name}
+							icon={guild.icon}
+							className={jumpLinkStyles.jumpLinkGuildIcon}
+							containerProps={{'data-jump-link-guild-icon': ''}}
+						/>
 						<span className={jumpLinkStyles.jumpLinkGuildName}>{guild.name}</span>
 					</span>
 				) : shouldShowDMIconLabel ? (
@@ -137,7 +156,7 @@ const JumpLinkMention = observer(function JumpLinkMention({channel, guild, messa
 					</span>
 				)}
 			</span>
-		</button>
+		</Component>
 	);
 });
 
@@ -156,13 +175,20 @@ export const LinkRenderer = observer(function LinkRenderer({
 	const jumpTarget = messageJumpTarget ?? parseChannelJumpLink(url);
 	const jumpChannel = jumpTarget ? (ChannelStore.getChannel(jumpTarget.channelId) ?? null) : null;
 	const jumpGuild = jumpChannel?.guildId ? (GuildStore.getGuild(jumpChannel.guildId) ?? null) : null;
+	const isInlineReplyContext = options.context === INLINE_REPLY_CONTEXT;
 
 	if (jumpTarget && jumpChannel) {
-		return (
-			<FocusRing key={id}>
-				<JumpLinkMention channel={jumpChannel} guild={jumpGuild} messageId={messageJumpTarget?.messageId} i18n={i18n} />
-			</FocusRing>
+		const mention = (
+			<JumpLinkMention
+				channel={jumpChannel}
+				guild={jumpGuild}
+				messageId={messageJumpTarget?.messageId}
+				i18n={i18n}
+				interactive={!isInlineReplyContext}
+			/>
 		);
+
+		return isInlineReplyContext ? mention : <FocusRing key={id}>{mention}</FocusRing>;
 	}
 
 	const shouldShowAccessDeniedModal = Boolean(jumpTarget && !jumpChannel);
