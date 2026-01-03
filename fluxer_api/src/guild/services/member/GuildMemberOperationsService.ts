@@ -336,6 +336,7 @@ export class GuildMemberOperationsService {
 			bio: updateData.bio !== undefined ? updateData.bio : targetMember.bio,
 			pronouns: updateData.pronouns !== undefined ? updateData.pronouns : targetMember.pronouns,
 			accent_color: updateData.accent_color !== undefined ? updateData.accent_color : targetMember.accentColor,
+			profile_flags: updateData.profile_flags !== undefined ? updateData.profile_flags : targetMember.profileFlags,
 			mute: updateData.mute !== undefined ? updateData.mute : targetMember.isMute,
 			deaf: updateData.deaf !== undefined ? updateData.deaf : targetMember.isDeaf,
 			communication_disabled_until:
