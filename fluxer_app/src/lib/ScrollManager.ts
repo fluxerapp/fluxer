@@ -1023,6 +1023,27 @@ export class ScrollManager {
 		}
 	}
 
+	applyLayoutShift(heightDelta: number): boolean {
+		if (this.isDisposed || !this.isInitialized()) return false;
+		if (heightDelta === 0) return false;
+
+		const scrollerNode = this.ref.current?.getScrollerNode();
+		if (!scrollerNode) return false;
+
+		const state = this.getScrollerState();
+		const distanceFromBottom = Math.max(state.scrollHeight - state.offsetHeight - state.scrollTop, 0);
+		const stickThreshold = Math.max(Math.abs(heightDelta) + BOTTOM_LOCK_TOLERANCE, 32);
+		const shouldStick = this.isPinned() || distanceFromBottom <= stickThreshold;
+
+		if (!shouldStick) return false;
+
+		const maxScrollTop = Math.max(0, scrollerNode.scrollHeight - scrollerNode.offsetHeight);
+		const targetScrollTop = Math.max(0, Math.min(state.scrollTop + heightDelta, maxScrollTop));
+
+		this.mergeTo(targetScrollTop, this.handleScroll);
+		return true;
+	}
+
 	private updateStoreDimensions(callback?: () => void): void {
 		if (this.isDisposed) return;
 		if (this.isJumping() || !this.isInitialized()) return;
