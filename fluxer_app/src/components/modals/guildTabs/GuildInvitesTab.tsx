@@ -73,9 +73,7 @@ const GuildInvitesTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 				</p>
 			</div>
 
-			{canManageGuild && !(fetchStatus === 'success' && invites && invites.length === 0) && (
-				<DisableInvitesButton guildId={guildId} />
-			)}
+			{canManageGuild && <DisableInvitesButton guildId={guildId} />}
 
 			{fetchStatus === 'pending' && (
 				<div className={styles.spinnerContainer}>

@@ -112,7 +112,7 @@ const GuildWebhooksTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 				</div>
 			)}
 
-			{canManageWebhooks && !(fetchStatus === 'success' && sortedWebhooks.length === 0) && (
+			{canManageWebhooks && (
 				<div className={styles.infoBox}>
 					<Trans>
 						To create a webhook, open the channel's settings and use the <strong>Webhooks</strong> tab. You can still

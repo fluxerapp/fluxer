@@ -82,14 +82,12 @@ const ChannelInvitesTab: React.FC<{channelId: string}> = observer(({channelId}) 
 				</p>
 			</div>
 
-			{!(fetchStatus === 'success' && invites && invites.length === 0) && (
-				<div className={styles.buttonGroup}>
-					<Button small={true} disabled={!canInvite} onClick={handleCreateInvite}>
-						<Trans>Create Invite</Trans>
-					</Button>
-					{canManageGuild && channel?.guildId && <DisableInvitesButton guildId={channel.guildId} />}
-				</div>
-			)}
+			<div className={styles.buttonGroup}>
+				<Button small={true} disabled={!canInvite || fetchStatus === 'pending'} onClick={handleCreateInvite}>
+					<Trans>Create Invite</Trans>
+				</Button>
+				{canManageGuild && channel?.guildId && <DisableInvitesButton guildId={channel.guildId} />}
+			</div>
 
 			{fetchStatus === 'pending' && (
 				<div className={styles.spinnerContainer}>

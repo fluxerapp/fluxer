@@ -135,7 +135,7 @@ const ChannelWebhooksTab: React.FC<{channelId: string}> = observer(({channelId})
 				</div>
 			)}
 
-			{canManageWebhooks && !(fetchStatus === 'success' && (!webhooks || webhooks.length === 0)) && (
+			{canManageWebhooks && (
 				<div className={styles.buttonContainer}>
 					<Button onClick={handleCreateQuick} variant="primary" disabled={fetchStatus === 'pending'} small>
 						<Trans>Create Webhook</Trans>
