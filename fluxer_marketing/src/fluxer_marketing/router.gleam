@@ -15,6 +15,7 @@
 //// You should have received a copy of the GNU Affero General Public License
 //// along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
 
+import fluxer_marketing/badge_proxy
 import fluxer_marketing/geoip
 import fluxer_marketing/help_center
 import fluxer_marketing/locale
@@ -48,6 +49,10 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
     [] -> home_page.render(req, ctx)
     ["_locale"] -> handle_locale_change(req, ctx)
     ["_debug", "geoip"] -> handle_geoip_debug(req, ctx)
+
+    ["api", "badges", "product-hunt"] ->
+      badge_proxy.product_hunt(ctx.badge_cache)
+
     ["robots.txt"] -> handle_robots_txt()
     ["sitemap.xml"] -> handle_sitemap(ctx)
     ["terms"] -> terms_page.render(req, ctx)

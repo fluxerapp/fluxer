@@ -22,16 +22,21 @@ import gleam/string
 import wisp
 
 pub fn add_cache_headers(res: Response(wisp.Body)) -> Response(wisp.Body) {
-  let content_type =
-    list.key_find(res.headers, "content-type")
-    |> result.unwrap("")
+  case list.key_find(res.headers, "cache-control") {
+    Ok(_) -> res
+    Error(_) -> {
+      let content_type =
+        list.key_find(res.headers, "content-type")
+        |> result.unwrap("")
 
-  let cache_header = case should_cache(content_type) {
-    True -> "public, max-age=31536000, immutable"
-    False -> "no-cache"
+      let cache_header = case should_cache(content_type) {
+        True -> "public, max-age=31536000, immutable"
+        False -> "no-cache"
+      }
+
+      response.set_header(res, "cache-control", cache_header)
+    }
   }
-
-  response.set_header(res, "cache-control", cache_header)
 }
 
 fn should_cache(content_type: String) -> Bool {

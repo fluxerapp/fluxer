@@ -15,6 +15,7 @@
 //// You should have received a copy of the GNU Affero General Public License
 //// along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
 
+import fluxer_marketing/badge_proxy
 import fluxer_marketing/config
 import fluxer_marketing/geoip
 import fluxer_marketing/i18n
@@ -24,7 +25,6 @@ import fluxer_marketing/middleware/cache_middleware
 import fluxer_marketing/router
 import fluxer_marketing/visionary_slots
 import fluxer_marketing/web
-import gleam/erlang/atom.{type Atom}
 import gleam/erlang/process
 import gleam/http/request
 import gleam/list
@@ -40,15 +40,18 @@ pub fn main() {
   let assert Ok(cfg) = config.load_config()
 
   let i18n_db = i18n.setup_database()
+
   let slots_cache =
     visionary_slots.start(visionary_slots.Settings(
       api_host: cfg.api_host,
       rpc_secret: cfg.gateway_rpc_secret,
     ))
 
+  let badge_cache = badge_proxy.start_cache()
+
   let assert Ok(_) =
     wisp_mist.handler(
-      handle_request(_, i18n_db, cfg, slots_cache),
+      handle_request(_, i18n_db, cfg, slots_cache, badge_cache),
       cfg.secret_key_base,
     )
     |> mist.new
@@ -64,11 +67,11 @@ fn handle_request(
   i18n_db,
   cfg: config.Config,
   slots_cache: visionary_slots.Cache,
+  badge_cache: badge_proxy.Cache,
 ) -> wisp.Response {
   let locale = get_request_locale(req)
 
   let base_url = cfg.marketing_endpoint <> cfg.base_path
-
   let country_code = geoip.country_code(req, cfg.geoip_host)
 
   let user_agent = case request.get_header(req, "user-agent") {
@@ -97,6 +100,7 @@ fn handle_request(
       release_channel: cfg.release_channel,
       visionary_slots: visionary_slots.current(slots_cache),
       metrics_endpoint: cfg.metrics_endpoint,
+      badge_cache: badge_cache,
     )
 
   use <- wisp.log_request(req)
@@ -116,18 +120,21 @@ fn handle_request(
   }
 
   let duration = monotonic_milliseconds() - start
-
   metrics.track_request(ctx, req, response.status, duration)
 
   response |> cache_middleware.add_cache_headers
 }
 
-fn monotonic_milliseconds() -> Int {
-  do_monotonic_time(atom.create("millisecond"))
+type TimeUnit {
+  Millisecond
 }
 
 @external(erlang, "erlang", "monotonic_time")
-fn do_monotonic_time(unit: Atom) -> Int
+fn erlang_monotonic_time(unit: TimeUnit) -> Int
+
+fn monotonic_milliseconds() -> Int {
+  erlang_monotonic_time(Millisecond)
+}
 
 fn get_request_locale(req: wisp.Request) -> Locale {
   case wisp.get_cookie(req, "locale", wisp.PlainText) {

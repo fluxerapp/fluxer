@@ -15,6 +15,7 @@
 //// You should have received a copy of the GNU Affero General Public License
 //// along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
 
+import fluxer_marketing/badge_proxy
 import fluxer_marketing/locale.{type Locale}
 import fluxer_marketing/visionary_slots.{type VisionarySlots}
 import gleam/option.{type Option}
@@ -55,6 +56,7 @@ pub type Context {
     release_channel: String,
     visionary_slots: VisionarySlots,
     metrics_endpoint: Option(String),
+    badge_cache: badge_proxy.Cache,
   )
 }
 

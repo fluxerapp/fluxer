@@ -19,7 +19,7 @@ import fluxer_marketing/components/hackernews_banner
 import fluxer_marketing/components/platform_download_button
 import fluxer_marketing/i18n
 import fluxer_marketing/locale
-import fluxer_marketing/web.{type Context}
+import fluxer_marketing/web.{type Context, prepend_base_path}
 import kielet.{gettext as g_}
 import lustre/attribute
 import lustre/element.{type Element}
@@ -84,6 +84,27 @@ pub fn render(ctx: Context) -> Element(a) {
           ],
         ),
         hackernews_banner.render(ctx),
+        html.div([attribute.class("mt-6 flex justify-center")], [
+          html.a(
+            [
+              attribute.href(
+                "https://www.producthunt.com/products/fluxer?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-fluxer",
+              ),
+              attribute.target("_blank"),
+              attribute.attribute("rel", "noopener noreferrer"),
+            ],
+            [
+              html.img([
+                attribute.alt(
+                  "Fluxer - Open-source Discord-like instant messaging & VoIP platform | Product Hunt",
+                ),
+                attribute.attribute("width", "250"),
+                attribute.attribute("height", "54"),
+                attribute.src(prepend_base_path(ctx, "/api/badges/product-hunt")),
+              ]),
+            ],
+          ),
+        ]),
       ]),
       html.div(
         [

@@ -22,40 +22,6 @@ import lustre/attribute
 import lustre/element.{type Element}
 import lustre/element/html
 
-fn hn_logo() -> Element(a) {
-  element.element(
-    "svg",
-    [
-      attribute.attribute("xmlns", "http://www.w3.org/2000/svg"),
-      attribute.attribute("viewBox", "4 4 188 188"),
-      attribute.attribute("width", "20"),
-      attribute.attribute("height", "20"),
-      attribute.class("block flex-shrink-0 rounded-[3px]"),
-    ],
-    [
-      element.element(
-        "path",
-        [
-          attribute.attribute("d", "m4 4h188v188h-188z"),
-          attribute.attribute("fill", "#f60"),
-        ],
-        [],
-      ),
-      element.element(
-        "path",
-        [
-          attribute.attribute(
-            "d",
-            "m73.2521756 45.01 22.7478244 47.39130083 22.7478244-47.39130083h19.56569631l-34.32352071 64.48661468v41.49338532h-15.98v-41.49338532l-34.32352071-64.48661468z",
-          ),
-          attribute.attribute("fill", "#fff"),
-        ],
-        [],
-      ),
-    ],
-  )
-}
-
 pub fn render(ctx: Context) -> Element(a) {
   let i18n_ctx = i18n.get_context(ctx.i18n_db, ctx.locale)
 
@@ -66,12 +32,7 @@ pub fn render(ctx: Context) -> Element(a) {
       ),
     ],
     [
-      hn_logo(),
       html.p([attribute.class("text-sm md:text-base text-white/90")], [
-        html.span([attribute.class("font-medium")], [
-          html.text(g_(i18n_ctx, "From HN?")),
-          html.text(" "),
-        ]),
         html.text(g_(i18n_ctx, "Try it without an email at")),
         html.text(" "),
         html.a(
