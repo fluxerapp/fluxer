@@ -21,7 +21,7 @@ import fluxer_admin/components/date_time
 import fluxer_admin/components/flash
 import fluxer_admin/components/layout
 import fluxer_admin/components/ui
-import fluxer_admin/web.{type Context, type Session, href}
+import fluxer_admin/web.{type Context, type Session, action, href}
 import gleam/int
 import gleam/list
 import gleam/option
@@ -756,7 +756,7 @@ fn render_actions_cell(ctx: Context, report: reports.SearchReportResult) {
       h.form(
         [
           a.method("post"),
-          a.attribute("action", "/reports/" <> report.report_id <> "/resolve"),
+          action(ctx, "/reports/" <> report.report_id <> "/resolve"),
           a.attribute("data-report-action", "resolve"),
           a.attribute("data-report-id", report.report_id),
           a.attribute("data-confirm", "Resolve this report?"),
@@ -1073,7 +1073,14 @@ fn reports_script() -> element.Element(a) {
 
   function markResolved(reportId) {
     const pill = table.querySelector('[data-status-pill=\"' + reportId + '\"]');
-    if (pill) pill.textContent = 'Resolved';
+    if (pill) {
+      const inner = pill.querySelector('span');
+      if (inner) {
+        inner.textContent = 'Resolved';
+        inner.classList.remove('bg-yellow-100', 'text-yellow-700');
+        inner.classList.add('bg-green-100', 'text-green-700');
+      }
+    }
     const form = table.querySelector('form[data-report-id=\"' + reportId + '\"]');
     if (form) {
       form.remove();

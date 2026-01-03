@@ -37,22 +37,16 @@ pub fn view(
       ui.heading_page("You find yourself in a strange place..."),
       ui.card(ui.PaddingMedium, [
         ui.stack("4", [
-          h.p(
-            [a.class("text-neutral-700 leading-relaxed")],
-            [
-              element.text(
-                "Your account is authenticated, but no admin tabs are available for your current permissions.",
-              ),
-            ],
-          ),
-          h.p(
-            [a.class("text-neutral-600 leading-relaxed")],
-            [
-              element.text(
-                "If you believe this is a mistake, reach out to an administrator to request the necessary access.",
-              ),
-            ],
-          ),
+          h.p([a.class("text-neutral-700 leading-relaxed")], [
+            element.text(
+              "Your account is authenticated, but no admin tabs are available for your current permissions.",
+            ),
+          ]),
+          h.p([a.class("text-neutral-600 leading-relaxed")], [
+            element.text(
+              "If you believe this is a mistake, reach out to an administrator to request the necessary access.",
+            ),
+          ]),
         ]),
       ]),
     ])

@@ -34,6 +34,8 @@ export const AuditLogMiddleware = createMiddleware<HonoEnv>(async (ctx, next) =>
 			);
 		}
 		ctx.set('auditLogReason', result.data);
+	} else {
+		ctx.set('auditLogReason', null);
 	}
 
 	await next();

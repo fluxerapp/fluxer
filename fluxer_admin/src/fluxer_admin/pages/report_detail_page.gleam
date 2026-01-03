@@ -21,7 +21,7 @@ import fluxer_admin/components/flash
 import fluxer_admin/components/layout
 import fluxer_admin/components/message_list
 import fluxer_admin/components/ui
-import fluxer_admin/web.{type Context, type Session, href}
+import fluxer_admin/web.{type Context, type Session, action, href}
 import gleam/list
 import gleam/option
 import gleam/string
@@ -378,19 +378,27 @@ fn render_actions_card(ctx: Context, report: reports.Report) {
     h.div([a.class("space-y-3")], [
       case report.status {
         0 ->
-          h.button(
+          h.form(
             [
-              a.class(
-                "w-full px-4 py-2 bg-neutral-900 text-white rounded-lg label hover:bg-neutral-800 transition-colors",
-              ),
+              a.method("post"),
+              action(ctx, "/reports/" <> report.report_id <> "/resolve"),
               a.attribute(
-                "onclick",
-                "if(confirm('Resolve this report?')) { fetch('/reports/"
-                  <> report.report_id
-                  <> "/resolve', { method: 'POST', headers: { 'Content-Type': 'application/json' } }).then(() => location.reload()) }",
+                "onsubmit",
+                "if(!confirm('Resolve this report?')) return false;",
               ),
             ],
-            [element.text("Resolve Report")],
+            [
+              h.input([a.type_("hidden"), a.name("public_comment"), a.value("")]),
+              h.button(
+                [
+                  a.type_("submit"),
+                  a.class(
+                    "w-full px-4 py-2 bg-neutral-900 text-white rounded-lg label hover:bg-neutral-800 transition-colors",
+                  ),
+                ],
+                [element.text("Resolve Report")],
+              ),
+            ],
           )
         _ -> element.none()
       },

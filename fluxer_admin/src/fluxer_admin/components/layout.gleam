@@ -434,9 +434,7 @@ fn sidebar_interaction_script() {
   )
 }
 
-fn admin_acls_from(
-  current_admin: Option(UserLookupResult),
-) -> List(String) {
+fn admin_acls_from(current_admin: Option(UserLookupResult)) -> List(String) {
   case current_admin {
     option.Some(admin) -> admin.acls
     option.None -> []

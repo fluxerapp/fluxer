@@ -23,6 +23,7 @@ import fluxer_admin/api/users
 import fluxer_admin/components/errors
 import fluxer_admin/components/flash
 import fluxer_admin/constants
+import fluxer_admin/navigation
 import fluxer_admin/oauth2
 import fluxer_admin/pages/archives_page
 import fluxer_admin/pages/asset_purge_page
@@ -55,7 +56,6 @@ import fluxer_admin/pages/users_page
 import fluxer_admin/pages/voice_regions_page
 import fluxer_admin/pages/voice_servers_page
 import fluxer_admin/session
-import fluxer_admin/navigation
 import fluxer_admin/web.{type Context, prepend_base_path}
 import gleam/http.{Get, Post}
 import gleam/http/request
@@ -238,7 +238,8 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
           case wisp.get_cookie(req, "session", wisp.Signed) {
             Ok(cookie) ->
               case session.get(ctx, cookie) {
-                Ok(_session) -> wisp.redirect(prepend_base_path(ctx, "/dashboard"))
+                Ok(_session) ->
+                  wisp.redirect(prepend_base_path(ctx, "/dashboard"))
                 Error(_) -> login_page.view(ctx, error_msg)
               }
             Error(_) -> login_page.view(ctx, error_msg)
