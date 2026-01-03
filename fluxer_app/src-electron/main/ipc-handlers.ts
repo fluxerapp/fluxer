@@ -582,6 +582,7 @@ export function registerIpcHandlers(): void {
 		const notificationOpts: Electron.NotificationConstructorOptions = {
 			title: options.title,
 			body: options.body,
+			silent: true,
 		};
 
 		if (options.icon) {
