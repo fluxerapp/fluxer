@@ -274,7 +274,7 @@ export const fetchMessages = async (
 };
 
 export const send = async (channelId: string, params: SendMessageParams): Promise<Message> => {
-	return new Promise((resolve, reject) => {
+	const promise = new Promise<Message>((resolve, reject) => {
 		logger.debug(`Enqueueing message for channel ${channelId}`);
 
 		MessageQueue.enqueue(
@@ -291,18 +291,24 @@ export const send = async (channelId: string, params: SendMessageParams): Promis
 				stickers: params.stickers,
 				tts: params.tts,
 			},
-			(result) => {
+			(result, error) => {
 				if (result?.body) {
 					logger.debug(`Message sent successfully in channel ${channelId}`);
 					resolve(result.body);
 				} else {
-					const error = new Error('Message send failed');
-					logger.error(`Message send failed in channel ${channelId}`);
-					reject(error);
+					const reason = error ?? new Error('Message send failed');
+					logger.error(`Message send failed in channel ${channelId}`, reason);
+					reject(reason);
 				}
 			},
 		);
 	});
+
+	promise.catch((error) => {
+		logger.error(`Unhandled message send rejection in channel ${channelId}`, error);
+	});
+
+	return promise;
 };
 
 export const edit = async (
@@ -311,7 +317,7 @@ export const edit = async (
 	content?: string,
 	flags?: number,
 ): Promise<Message> => {
-	return new Promise((resolve, reject) => {
+	const promise = new Promise<Message>((resolve, reject) => {
 		logger.debug(`Enqueueing edit for message ${messageId} in channel ${channelId}`);
 
 		MessageQueue.enqueue(
@@ -322,18 +328,24 @@ export const edit = async (
 				content,
 				flags,
 			},
-			(result) => {
+			(result, error) => {
 				if (result?.body) {
 					logger.debug(`Message edited successfully: ${messageId} in channel ${channelId}`);
 					resolve(result.body);
 				} else {
-					const error = new Error('Message edit failed');
-					logger.error(`Message edit failed: ${messageId} in channel ${channelId}`);
-					reject(error);
+					const reason = error ?? new Error('Message edit failed');
+					logger.error(`Message edit failed: ${messageId} in channel ${channelId}`, reason);
+					reject(reason);
 				}
 			},
 		);
 	});
+
+	promise.catch((error) => {
+		logger.error(`Unhandled message edit rejection for ${messageId} in channel ${channelId}`, error);
+	});
+
+	return promise;
 };
 
 export const remove = async (channelId: string, messageId: string): Promise<void> => {

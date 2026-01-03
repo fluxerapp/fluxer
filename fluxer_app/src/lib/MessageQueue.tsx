@@ -147,7 +147,7 @@ class MessageQueue extends Queue<MessageQueuePayload, HttpResponse<Message> | un
 
 	drain(
 		message: MessageQueuePayload,
-		completed: (err: RetryError | null, result?: HttpResponse<Message>) => void,
+		completed: (err: RetryError | null, result?: HttpResponse<Message>, error?: unknown) => void,
 	): void {
 		if (isSendPayload(message)) {
 			this.handleSend(message, completed);
@@ -155,7 +155,7 @@ class MessageQueue extends Queue<MessageQueuePayload, HttpResponse<Message> | un
 			this.handleEdit(message, completed);
 		} else {
 			logger.error('Unknown message type, completing with null');
-			completed(null);
+			completed(null, undefined, new Error('Unknown message queue payload'));
 		}
 	}
 
@@ -188,7 +188,7 @@ class MessageQueue extends Queue<MessageQueuePayload, HttpResponse<Message> | un
 
 	private async handleSend(
 		payload: SendMessagePayload,
-		completed: (err: RetryError | null, result?: HttpResponse<Message>) => void,
+		completed: (err: RetryError | null, result?: HttpResponse<Message>, error?: unknown) => void,
 	): Promise<void> {
 		const {channelId, nonce, hasAttachments} = payload;
 
@@ -239,7 +239,7 @@ class MessageQueue extends Queue<MessageQueuePayload, HttpResponse<Message> | un
 				this.handleSendRateLimit(httpError, completed);
 			} else {
 				this.handleSendError(channelId, nonce, httpError, i18n, payload.hasAttachments);
-				completed(null);
+				completed(null, undefined, httpError);
 			}
 		}
 	}
@@ -309,12 +309,12 @@ class MessageQueue extends Queue<MessageQueuePayload, HttpResponse<Message> | un
 
 	private handleSendRateLimit(
 		error: HttpError,
-		completed: (err: RetryError | null, result?: HttpResponse<Message>) => void,
+		completed: (err: RetryError | null, result?: HttpResponse<Message>, error?: unknown) => void,
 	): void {
 		const retryAfterSeconds = getApiErrorBody(error)?.retry_after ?? 0;
 		const retryAfterMs = retryAfterSeconds > 0 ? retryAfterSeconds * 1000 : undefined;
 
-		completed({retryAfter: retryAfterMs});
+		completed({retryAfter: retryAfterMs}, undefined, error);
 
 		this.handleRateLimitError(retryAfterSeconds);
 	}
@@ -399,7 +399,7 @@ class MessageQueue extends Queue<MessageQueuePayload, HttpResponse<Message> | un
 
 	private async handleEdit(
 		payload: EditMessagePayload,
-		completed: (err: RetryError | null, result?: HttpResponse<Message>) => void,
+		completed: (err: RetryError | null, result?: HttpResponse<Message>, error?: unknown) => void,
 	): Promise<void> {
 		const {channelId, messageId, content, flags} = payload;
 
@@ -428,7 +428,7 @@ class MessageQueue extends Queue<MessageQueuePayload, HttpResponse<Message> | un
 				this.handleEditRateLimit(httpError, completed);
 			} else {
 				this.showEditErrorModal(httpError);
-				completed(null);
+				completed(null, undefined, httpError);
 			}
 		} finally {
 			this.abortControllers.delete(messageId);
@@ -451,12 +451,12 @@ class MessageQueue extends Queue<MessageQueuePayload, HttpResponse<Message> | un
 
 	private handleEditRateLimit(
 		error: HttpError,
-		completed: (err: RetryError | null, result?: HttpResponse<Message>) => void,
+		completed: (err: RetryError | null, result?: HttpResponse<Message>, error?: unknown) => void,
 	): void {
 		const retryAfterSeconds = getApiErrorBody(error)?.retry_after ?? 0;
 		const retryAfterMs = retryAfterSeconds > 0 ? retryAfterSeconds * 1000 : undefined;
 
-		completed({retryAfter: retryAfterMs});
+		completed({retryAfter: retryAfterMs}, undefined, error);
 
 		this.handleEditRateLimitError(retryAfterSeconds);
 	}

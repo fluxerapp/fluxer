@@ -21,7 +21,7 @@ import {Logger} from '~/lib/Logger';
 
 export interface QueueEntry<TMessage, TResult = void> {
 	message: TMessage;
-	success: (result?: TResult) => void;
+	success: (result?: TResult, error?: unknown) => void;
 }
 
 interface RetryInfo {
@@ -49,9 +49,12 @@ export abstract class Queue<TMessage, TResult = void> {
 		this.isDraining = false;
 	}
 
-	protected abstract drain(message: TMessage, complete: (retry: RetryInfo | null, result?: TResult) => void): void;
+	protected abstract drain(
+		message: TMessage,
+		complete: (retry: RetryInfo | null, result?: TResult, error?: unknown) => void,
+	): void;
 
-	enqueue(message: TMessage, success: (result?: TResult) => void): void {
+	enqueue(message: TMessage, success: (result?: TResult, error?: unknown) => void): void {
 		this.queue.push({message, success});
 		this.maybeProcessNext();
 	}
@@ -90,7 +93,7 @@ export abstract class Queue<TMessage, TResult = void> {
 
 		let hasCompleted = false;
 
-		const complete = (retry: RetryInfo | null, result?: TResult): void => {
+		const complete = (retry: RetryInfo | null, result?: TResult, error?: unknown): void => {
 			if (hasCompleted) {
 				this.logger.warn('Queue completion callback invoked more than once; ignoring extra call');
 				return;
@@ -105,9 +108,9 @@ export abstract class Queue<TMessage, TResult = void> {
 				setTimeout(() => this.maybeProcessNext(), 0);
 
 				try {
-					success(result);
-				} catch (error) {
-					this.logger.error('Error in queue success callback', error);
+					success(result, error);
+				} catch (callbackError) {
+					this.logger.error('Error in queue success callback', callbackError);
 				}
 				return;
 			}
@@ -132,7 +135,7 @@ export abstract class Queue<TMessage, TResult = void> {
 		} catch (error) {
 			this.logger.error('Unhandled error while draining queue item', error);
 			if (!hasCompleted) {
-				complete(null);
+				complete(null, undefined, error);
 			}
 		}
 	}
