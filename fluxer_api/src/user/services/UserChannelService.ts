@@ -173,6 +173,46 @@ export class UserChannelService {
 		return await this.userChannelRepository.findExistingDmState(userId, recipientId);
 	}
 
+	async ensureDmOpenForBothUsers({
+		userId,
+		recipientId,
+		userCacheService,
+		requestCache,
+	}: {
+		userId: UserID;
+		recipientId: UserID;
+		userCacheService: UserCacheService;
+		requestCache: RequestCache;
+	}): Promise<Channel> {
+		const existingChannel = await this.userChannelRepository.findExistingDmState(userId, recipientId);
+
+		if (existingChannel) {
+			const [isUserOpen, isRecipientOpen] = await Promise.all([
+				this.userChannelRepository.isDmChannelOpen(userId, existingChannel.id),
+				this.userChannelRepository.isDmChannelOpen(recipientId, existingChannel.id),
+			]);
+
+			if (!isUserOpen) {
+				await this.userChannelRepository.openDmForUser(userId, existingChannel.id);
+				await this.dispatchChannelCreate({userId, channel: existingChannel, userCacheService, requestCache});
+			}
+
+			if (!isRecipientOpen) {
+				await this.userChannelRepository.openDmForUser(recipientId, existingChannel.id);
+				await this.dispatchChannelCreate({
+					userId: recipientId,
+					channel: existingChannel,
+					userCacheService,
+					requestCache,
+				});
+			}
+
+			return existingChannel;
+		}
+
+		return await this.createNewDmForBothUsers({userId, recipientId, userCacheService, requestCache});
+	}
+
 	async reopenDmForBothUsers({
 		userId,
 		recipientId,

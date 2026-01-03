@@ -361,7 +361,21 @@ export class UserService {
 		userCacheService: UserCacheService;
 		requestCache: RequestCache;
 	}): Promise<Relationship> {
-		return await this.relationshipService.acceptFriendRequest({userId, targetId, userCacheService, requestCache});
+		const relationship = await this.relationshipService.acceptFriendRequest({
+			userId,
+			targetId,
+			userCacheService,
+			requestCache,
+		});
+
+		await this.channelService.ensureDmOpenForBothUsers({
+			userId,
+			recipientId: targetId,
+			userCacheService,
+			requestCache,
+		});
+
+		return relationship;
 	}
 
 	async blockUser({
