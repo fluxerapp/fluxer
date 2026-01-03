@@ -155,7 +155,9 @@ export const UserProfileMobileSheet: React.FC = observer(function UserProfileMob
 		const hasMember = GuildMemberStore.getMember(guildId, userId);
 		if (!hasMember) {
 			MemberPresenceSubscriptionStore.touchMember(guildId, userId);
-			GuildMemberStore.fetchMembers(guildId, {userIds: [userId]});
+			GuildMemberStore.fetchMembers(guildId, {userIds: [userId]}).catch((error) => {
+				console.error('[UserProfileMobileSheet] Failed to fetch guild member:', error);
+			});
 		} else {
 			MemberPresenceSubscriptionStore.touchMember(guildId, userId);
 		}

@@ -129,7 +129,9 @@ export const UserProfilePopout: React.FC<UserProfilePopoutProps> = observer(
 			const hasMember = GuildMemberStore.getMember(guildId, user.id);
 			if (!hasMember) {
 				MemberPresenceSubscriptionStore.touchMember(guildId, user.id);
-				GuildMemberStore.fetchMembers(guildId, {userIds: [user.id]});
+				GuildMemberStore.fetchMembers(guildId, {userIds: [user.id]}).catch((error) => {
+					console.error('[UserProfilePopout] Failed to fetch guild member:', error);
+				});
 			} else {
 				MemberPresenceSubscriptionStore.touchMember(guildId, user.id);
 			}

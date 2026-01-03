@@ -920,7 +920,9 @@ export const UserProfileModal: UserProfileModalComponent = observer(
 			const hasMember = GuildMemberStore.getMember(guildId, userId);
 			if (!hasMember) {
 				MemberPresenceSubscriptionStore.touchMember(guildId, userId);
-				GuildMemberStore.fetchMembers(guildId, {userIds: [userId]});
+				GuildMemberStore.fetchMembers(guildId, {userIds: [userId]}).catch((error) => {
+					console.error('[UserProfileModal] Failed to fetch guild member:', error);
+				});
 			} else {
 				MemberPresenceSubscriptionStore.touchMember(guildId, userId);
 			}

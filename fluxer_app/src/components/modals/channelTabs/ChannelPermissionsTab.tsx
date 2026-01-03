@@ -354,7 +354,9 @@ const ChannelPermissionsTab: React.FC<{channelId: string}> = observer(({channelI
 		}
 		const userOverwriteIds = overwrites.filter((ow) => ow.type === 1).map((ow) => ow.id);
 		if (userOverwriteIds.length > 0) {
-			GuildMemberStore.ensureMembersLoaded(guild.id, userOverwriteIds);
+			GuildMemberStore.ensureMembersLoaded(guild.id, userOverwriteIds).catch((error) => {
+				console.error('[ChannelPermissionsTab] Failed to ensure members:', error);
+			});
 		}
 	}, [guild, overwrites]);
 

@@ -332,7 +332,9 @@ const GuildAuditLogTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 			}
 		}
 		if (userIds.size > 0) {
-			GuildMemberStore.ensureMembersLoaded(guildId, Array.from(userIds));
+			GuildMemberStore.ensureMembersLoaded(guildId, Array.from(userIds)).catch((error) => {
+				console.error('[GuildAuditLogTab] Failed to ensure members:', error);
+			});
 		}
 	}, [guildId, entries]);
 
