@@ -55,6 +55,9 @@ export const StickersPicker = observer(
 		const [searchTerm, setSearchTerm] = React.useState('');
 		const [hoveredSticker, setHoveredSticker] = React.useState<GuildStickerRecord | null>(null);
 		const [renderedStickers, setRenderedStickers] = React.useState<ReadonlyArray<GuildStickerRecord>>([]);
+		const [allStickersForCategories, setAllStickersForCategories] = React.useState<ReadonlyArray<GuildStickerRecord>>(
+			[],
+		);
 		const [selectedRow, setSelectedRow] = React.useState(-1);
 		const [selectedColumn, setSelectedColumn] = React.useState(-1);
 		const [shouldScrollOnSelection, setShouldScrollOnSelection] = React.useState(false);
@@ -80,12 +83,19 @@ export const StickersPicker = observer(
 		}, [channel, searchTerm]);
 
 		React.useEffect(() => {
+			setAllStickersForCategories(StickerStore.getAllStickers());
+		}, []);
+
+		React.useEffect(() => {
 			return ComponentDispatch.subscribe('STICKER_PICKER_RERENDER', forceUpdate);
 		});
 
 		useSearchInputAutofocus(searchInputRef);
 
-		const {favoriteStickers, frequentlyUsedStickers, stickersByGuildId} = useStickerCategories(renderedStickers);
+		const {favoriteStickers, frequentlyUsedStickers, stickersByGuildId} = useStickerCategories(
+			allStickersForCategories,
+			renderedStickers,
+		);
 		const virtualRows = useVirtualRows(
 			searchTerm,
 			renderedStickers,
@@ -98,7 +108,8 @@ export const StickersPicker = observer(
 		const allStickers = React.useMemo(() => StickerStore.getAllStickers(), []);
 		const hasNoStickersAtAll = allStickers.length === 0;
 
-		const showPremiumUpsell = shouldShowPremiumFeatures() && shouldShowStickerPremiumUpsell(channel);
+		const isSearching = searchTerm.trim().length > 0;
+		const showPremiumUpsell = shouldShowPremiumFeatures() && shouldShowStickerPremiumUpsell(channel) && !isSearching;
 
 		const sections = React.useMemo(() => {
 			const result: Array<number> = [];
@@ -216,21 +227,6 @@ export const StickersPicker = observer(
 			/>
 		);
 
-		if (renderedStickers.length === 0 && searchTerm) {
-			return (
-				<div className={gifStyles.gifPickerContainer}>
-					<ExpressionPickerHeaderPortal>{renderSearchBar()}</ExpressionPickerHeaderPortal>
-					<div className={gifStyles.gifPickerMain}>
-						<PickerEmptyState
-							icon={SmileySadIcon}
-							title={t`No Stickers Found`}
-							description={t`Try a different search term`}
-						/>
-					</div>
-				</div>
-			);
-		}
-
 		return (
 			<div className={styles.container}>
 				<ExpressionPickerHeaderPortal>{renderSearchBar()}</ExpressionPickerHeaderPortal>
@@ -242,11 +238,12 @@ export const StickersPicker = observer(
 								className={`${styles.list} ${styles.listWrapper}`}
 								fade={false}
 								key="stickers-picker-scroller"
-								reserveScrollbarTrack={false}
+								reserveScrollbarTrack={true}
 							>
 								{showPremiumUpsell && <PremiumUpsellBanner />}
 								{virtualRows.map((row, index) => {
 									const stickerRowIndex = virtualRows.slice(0, index).filter((r) => r.type === 'sticker-row').length;
+									const needsSpacingAfter = row.type === 'sticker-row' && virtualRows[index + 1]?.type === 'header';
 
 									return (
 										<div
@@ -260,6 +257,7 @@ export const StickersPicker = observer(
 														}
 													: undefined
 											}
+											style={row.type === 'sticker-row' && needsSpacingAfter ? {marginBottom: '12px'} : undefined}
 										>
 											<VirtualRowWrapper
 												row={row}
@@ -278,6 +276,16 @@ export const StickersPicker = observer(
 									);
 								})}
 							</Scroller>
+							{renderedStickers.length === 0 && (
+								<div className={styles.emptyState}>
+									<div className={styles.emptyStateInner}>
+										<div className={styles.emptyIcon}>
+											<SmileySadIcon weight="duotone" />
+										</div>
+										<div className={styles.emptyLabel}>{t`No stickers match your search`}</div>
+									</div>
+								</div>
+							)}
 						</div>
 					</div>
 					<StickerPickerInspector hoveredSticker={hoveredSticker} />

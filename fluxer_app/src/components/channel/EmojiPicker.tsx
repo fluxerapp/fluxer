@@ -18,6 +18,7 @@
  */
 
 import {useLingui} from '@lingui/react/macro';
+import {SmileySadIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import React from 'react';
 import * as EmojiPickerActionCreators from '~/actions/EmojiPickerActionCreators';
@@ -37,7 +38,7 @@ import {useSearchInputAutofocus} from '~/hooks/useSearchInputAutofocus';
 import {ComponentDispatch} from '~/lib/ComponentDispatch';
 import UnicodeEmojis, {EMOJI_SPRITES} from '~/lib/UnicodeEmojis';
 import ChannelStore from '~/stores/ChannelStore';
-import EmojiStore, {type Emoji} from '~/stores/EmojiStore';
+import EmojiStore, {type Emoji, normalizeEmojiSearchQuery} from '~/stores/EmojiStore';
 import {checkEmojiAvailability, shouldShowEmojiPremiumUpsell} from '~/utils/ExpressionPermissionUtils';
 import {shouldShowPremiumFeatures} from '~/utils/PremiumUtils';
 
@@ -53,14 +54,16 @@ export const EmojiPicker = observer(
 		const [searchTerm, setSearchTerm] = React.useState('');
 		const [hoveredEmoji, setHoveredEmoji] = React.useState<Emoji | null>(null);
 		const [renderedEmojis, setRenderedEmojis] = React.useState<Array<Emoji>>([]);
+		const [allEmojis, setAllEmojis] = React.useState<Array<Emoji>>([]);
 		const [selectedRow, setSelectedRow] = React.useState(-1);
 		const [selectedColumn, setSelectedColumn] = React.useState(-1);
 		const [shouldScrollOnSelection, setShouldScrollOnSelection] = React.useState(false);
 		const scrollerRef = React.useRef<ScrollerHandle>(null);
 		const searchInputRef = React.useRef<HTMLInputElement>(null);
 		const emojiRefs = React.useRef<Map<string, HTMLButtonElement>>(new Map());
+		const normalizedSearchTerm = React.useMemo(() => normalizeEmojiSearchQuery(searchTerm), [searchTerm]);
 
-		const {i18n} = useLingui();
+		const {i18n, t} = useLingui();
 		const channel = channelId ? (ChannelStore.getChannel(channelId) ?? null) : null;
 		const categoryRefs = React.useRef<Map<string, HTMLDivElement>>(new Map());
 		const forceUpdate = useForceUpdate();
@@ -81,7 +84,7 @@ export const EmojiPicker = observer(
 		}, []);
 
 		React.useEffect(() => {
-			const emojis = EmojiStore.search(channel, searchTerm).slice();
+			const emojis = EmojiStore.search(channel, normalizedSearchTerm).slice();
 			setRenderedEmojis(emojis);
 			if (emojis.length > 0) {
 				setSelectedRow(0);
@@ -91,7 +94,12 @@ export const EmojiPicker = observer(
 				setSelectedColumn(-1);
 				setHoveredEmoji(null);
 			}
-		}, [channel, searchTerm]);
+		}, [channel, normalizedSearchTerm]);
+
+		React.useEffect(() => {
+			const emojis = EmojiStore.search(channel, '').slice();
+			setAllEmojis(emojis);
+		}, [channel]);
 
 		React.useEffect(() => {
 			return ComponentDispatch.subscribe('EMOJI_PICKER_RERENDER', forceUpdate);
@@ -99,10 +107,13 @@ export const EmojiPicker = observer(
 
 		useSearchInputAutofocus(searchInputRef);
 
-		const {favoriteEmojis, frequentlyUsedEmojis, customEmojisByGuildId, unicodeEmojisByCategory} =
-			useEmojiCategories(renderedEmojis);
+		const {favoriteEmojis, frequentlyUsedEmojis, customEmojisByGuildId, unicodeEmojisByCategory} = useEmojiCategories(
+			allEmojis,
+			renderedEmojis,
+		);
+		const showFrequentlyUsedButton = frequentlyUsedEmojis.length > 0 && !normalizedSearchTerm;
 		const virtualRows = useVirtualRows(
-			searchTerm,
+			normalizedSearchTerm,
 			renderedEmojis,
 			favoriteEmojis,
 			frequentlyUsedEmojis,
@@ -110,7 +121,8 @@ export const EmojiPicker = observer(
 			unicodeEmojisByCategory,
 		);
 
-		const showPremiumUpsell = shouldShowPremiumFeatures() && shouldShowEmojiPremiumUpsell(channel);
+		const showPremiumUpsell =
+			shouldShowPremiumFeatures() && shouldShowEmojiPremiumUpsell(channel) && !normalizedSearchTerm;
 
 		const sections = React.useMemo(() => {
 			const result: Array<number> = [];
@@ -223,11 +235,12 @@ export const EmojiPicker = observer(
 								className={`${styles.list} ${styles.listWrapper}`}
 								fade={false}
 								key="emoji-picker-scroller"
-								reserveScrollbarTrack={false}
+								reserveScrollbarTrack={true}
 							>
 								{showPremiumUpsell && <PremiumUpsellBanner />}
 								{virtualRows.map((row, index) => {
 									const emojiRowIndex = virtualRows.slice(0, index).filter((r) => r.type === 'emoji-row').length;
+									const needsSpacingAfter = row.type === 'emoji-row' && virtualRows[index + 1]?.type === 'header';
 
 									return (
 										<div
@@ -241,6 +254,7 @@ export const EmojiPicker = observer(
 														}
 													: undefined
 											}
+											style={row.type === 'emoji-row' && needsSpacingAfter ? {marginBottom: '12px'} : undefined}
 										>
 											<VirtualizedRow
 												row={row}
@@ -260,6 +274,16 @@ export const EmojiPicker = observer(
 									);
 								})}
 							</Scroller>
+							{renderedEmojis.length === 0 && (
+								<div className={styles.emptyState}>
+									<div className={styles.emptyStateInner}>
+										<div className={styles.emptyIcon}>
+											<SmileySadIcon weight="duotone" />
+										</div>
+										<div className={styles.emptyLabel}>{t`No emojis match your search`}</div>
+									</div>
+								</div>
+							)}
 						</div>
 					</div>
 					<EmojiPickerInspector hoveredEmoji={hoveredEmoji} />
@@ -268,6 +292,7 @@ export const EmojiPicker = observer(
 					customEmojisByGuildId={customEmojisByGuildId}
 					unicodeEmojisByCategory={unicodeEmojisByCategory}
 					handleCategoryClick={handleCategoryClick}
+					showFrequentlyUsedButton={showFrequentlyUsedButton}
 				/>
 			</div>
 		);

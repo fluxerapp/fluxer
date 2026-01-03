@@ -61,6 +61,9 @@ export const MobileStickersPicker = observer(
 		const [searchTerm, setSearchTerm] = React.useState('');
 		const [hoveredSticker, setHoveredSticker] = React.useState<GuildStickerRecord | null>(null);
 		const [renderedStickers, setRenderedStickers] = React.useState<ReadonlyArray<GuildStickerRecord>>([]);
+		const [allStickersForCategories, setAllStickersForCategories] = React.useState<ReadonlyArray<GuildStickerRecord>>(
+			[],
+		);
 		const scrollerRef = React.useRef<ScrollerHandle>(null);
 		const searchInputRef = React.useRef<HTMLInputElement>(null);
 		const stickerRefs = React.useRef<Map<string, HTMLButtonElement>>(new Map());
@@ -75,12 +78,19 @@ export const MobileStickersPicker = observer(
 		}, [channel, searchTerm]);
 
 		React.useEffect(() => {
+			setAllStickersForCategories(StickerStore.getAllStickers());
+		}, []);
+
+		React.useEffect(() => {
 			return ComponentDispatch.subscribe('STICKER_PICKER_RERENDER', forceUpdate);
 		});
 
 		useSearchInputAutofocus(searchInputRef);
 
-		const {favoriteStickers, frequentlyUsedStickers, stickersByGuildId} = useStickerCategories(renderedStickers);
+		const {favoriteStickers, frequentlyUsedStickers, stickersByGuildId} = useStickerCategories(
+			allStickersForCategories,
+			renderedStickers,
+		);
 		const virtualRows = useVirtualRows(
 			searchTerm,
 			renderedStickers,

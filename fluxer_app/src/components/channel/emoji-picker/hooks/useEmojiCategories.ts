@@ -23,15 +23,15 @@ import EmojiPickerStore from '~/stores/EmojiPickerStore';
 import type {Emoji} from '~/stores/EmojiStore';
 import GuildListStore from '~/stores/GuildListStore';
 
-export const useEmojiCategories = (renderedEmojis: Array<Emoji>) => {
+export const useEmojiCategories = (allEmojis: Array<Emoji>, _renderedEmojis: Array<Emoji>) => {
 	const guilds = GuildListStore.guilds;
 
-	const favoriteEmojis = EmojiPickerStore.getFavoriteEmojis(renderedEmojis);
+	const favoriteEmojis = EmojiPickerStore.getFavoriteEmojis(allEmojis);
 
-	const frequentlyUsedEmojis = EmojiPickerStore.getFrecentEmojis(renderedEmojis, 42);
+	const frequentlyUsedEmojis = EmojiPickerStore.getFrecentEmojis(allEmojis, 42);
 
 	const customEmojisByGuildId = React.useMemo(() => {
-		const guildEmojis = renderedEmojis.filter((emoji) => emoji.guildId != null);
+		const guildEmojis = allEmojis.filter((emoji) => emoji.guildId != null);
 		const guildEmojisByGuildId = new Map<string, Array<Emoji>>();
 
 		for (const guildEmoji of guildEmojis) {
@@ -50,10 +50,10 @@ export const useEmojiCategories = (renderedEmojis: Array<Emoji>) => {
 		}
 
 		return sortedGuildEmojisByGuildId;
-	}, [renderedEmojis, guilds]);
+	}, [allEmojis, guilds]);
 
 	const unicodeEmojisByCategory = React.useMemo(() => {
-		const unicodeEmojis = renderedEmojis.filter((emoji) => emoji.guildId == null);
+		const unicodeEmojis = allEmojis.filter((emoji) => emoji.guildId == null);
 		const unicodeEmojisByCategory = new Map<string, Array<Emoji>>();
 
 		for (const emoji of unicodeEmojis) {
@@ -76,7 +76,7 @@ export const useEmojiCategories = (renderedEmojis: Array<Emoji>) => {
 		}
 
 		return sortedUnicodeEmojisByCategory;
-	}, [renderedEmojis]);
+	}, [allEmojis]);
 
 	return {
 		favoriteEmojis,

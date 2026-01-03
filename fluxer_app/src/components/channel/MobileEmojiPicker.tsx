@@ -35,7 +35,7 @@ import {useForceUpdate} from '~/hooks/useForceUpdate';
 import {ComponentDispatch} from '~/lib/ComponentDispatch';
 import UnicodeEmojis, {EMOJI_SPRITES} from '~/lib/UnicodeEmojis';
 import ChannelStore from '~/stores/ChannelStore';
-import EmojiStore, {type Emoji} from '~/stores/EmojiStore';
+import EmojiStore, {type Emoji, normalizeEmojiSearchQuery} from '~/stores/EmojiStore';
 
 export const MobileEmojiPicker = observer(
 	({
@@ -57,6 +57,7 @@ export const MobileEmojiPicker = observer(
 		const [internalSearchTerm, setInternalSearchTerm] = React.useState('');
 		const [hoveredEmoji, setHoveredEmoji] = React.useState<Emoji | null>(null);
 		const [renderedEmojis, setRenderedEmojis] = React.useState<Array<Emoji>>([]);
+		const [allEmojis, setAllEmojis] = React.useState<Array<Emoji>>([]);
 		const scrollerRef = React.useRef<ScrollerHandle>(null);
 		const emojiRefs = React.useRef<Map<string, HTMLButtonElement>>(new Map());
 
@@ -67,6 +68,7 @@ export const MobileEmojiPicker = observer(
 
 		const searchTerm = externalSearchTerm ?? internalSearchTerm;
 		const setSearchTerm = externalSetSearchTerm ?? setInternalSearchTerm;
+		const normalizedSearchTerm = React.useMemo(() => normalizeEmojiSearchQuery(searchTerm), [searchTerm]);
 
 		const spriteSheetSizes = React.useMemo(() => {
 			const nonDiversitySize = [
@@ -83,18 +85,26 @@ export const MobileEmojiPicker = observer(
 		}, []);
 
 		React.useEffect(() => {
-			const emojis = EmojiStore.search(null, searchTerm).slice();
+			const emojis = EmojiStore.search(channel, normalizedSearchTerm).slice();
 			setRenderedEmojis(emojis);
-		}, [searchTerm]);
+		}, [channel, normalizedSearchTerm]);
+
+		React.useEffect(() => {
+			const emojis = EmojiStore.search(channel, '').slice();
+			setAllEmojis(emojis);
+		}, [channel]);
 
 		React.useEffect(() => {
 			return ComponentDispatch.subscribe('EMOJI_PICKER_RERENDER', forceUpdate);
 		});
 
-		const {customEmojisByGuildId, unicodeEmojisByCategory, favoriteEmojis, frequentlyUsedEmojis} =
-			useEmojiCategories(renderedEmojis);
+		const {customEmojisByGuildId, unicodeEmojisByCategory, favoriteEmojis, frequentlyUsedEmojis} = useEmojiCategories(
+			allEmojis,
+			renderedEmojis,
+		);
+		const showFrequentlyUsedButton = frequentlyUsedEmojis.length > 0 && !normalizedSearchTerm;
 		const virtualRows = useVirtualRows(
-			searchTerm,
+			normalizedSearchTerm,
 			renderedEmojis,
 			favoriteEmojis,
 			frequentlyUsedEmojis,
@@ -168,6 +178,7 @@ export const MobileEmojiPicker = observer(
 							unicodeEmojisByCategory={unicodeEmojisByCategory}
 							handleCategoryClick={handleCategoryClick}
 							horizontal={true}
+							showFrequentlyUsedButton={showFrequentlyUsedButton}
 						/>
 					</div>
 				</div>

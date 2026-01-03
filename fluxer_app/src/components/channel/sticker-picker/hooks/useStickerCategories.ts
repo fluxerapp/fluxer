@@ -22,22 +22,25 @@ import type {GuildStickerRecord} from '~/records/GuildStickerRecord';
 import GuildListStore from '~/stores/GuildListStore';
 import StickerPickerStore from '~/stores/StickerPickerStore';
 
-export const useStickerCategories = (renderedStickers: ReadonlyArray<GuildStickerRecord>) => {
+export const useStickerCategories = (
+	allStickers: ReadonlyArray<GuildStickerRecord>,
+	_renderedStickers: ReadonlyArray<GuildStickerRecord>,
+) => {
 	const guilds = GuildListStore.guilds;
 	const stickerPickerState = StickerPickerStore;
 
 	const favoriteStickers = React.useMemo(() => {
-		return StickerPickerStore.getFavoriteStickers(renderedStickers);
-	}, [renderedStickers, stickerPickerState.favoriteStickers]);
+		return StickerPickerStore.getFavoriteStickers(allStickers);
+	}, [allStickers, stickerPickerState.favoriteStickers]);
 
 	const frequentlyUsedStickers = React.useMemo(() => {
-		return StickerPickerStore.getFrecentStickers(renderedStickers, 42);
-	}, [renderedStickers, stickerPickerState.stickerUsage]);
+		return StickerPickerStore.getFrecentStickers(allStickers, 42);
+	}, [allStickers, stickerPickerState.stickerUsage]);
 
 	const stickersByGuildId = React.useMemo(() => {
 		const guildStickersMap = new Map<string, Array<GuildStickerRecord>>();
 
-		for (const sticker of renderedStickers) {
+		for (const sticker of allStickers) {
 			if (!guildStickersMap.has(sticker.guildId)) {
 				guildStickersMap.set(sticker.guildId, []);
 			}
@@ -53,7 +56,7 @@ export const useStickerCategories = (renderedStickers: ReadonlyArray<GuildSticke
 		}
 
 		return sortedGuildStickersMap;
-	}, [renderedStickers, guilds]);
+	}, [allStickers, guilds]);
 
 	return {
 		favoriteStickers,

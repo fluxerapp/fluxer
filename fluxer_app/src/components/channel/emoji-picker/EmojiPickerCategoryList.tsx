@@ -18,6 +18,7 @@
  */
 
 import {useLingui} from '@lingui/react/macro';
+import {ClockIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import styles from '~/components/channel/EmojiPicker.module.css';
@@ -31,6 +32,7 @@ interface EmojiPickerCategoryListProps {
 	customEmojisByGuildId: Map<string, Array<Emoji>>;
 	unicodeEmojisByCategory: Map<string, Array<Emoji>>;
 	handleCategoryClick: (category: string) => void;
+	showFrequentlyUsedButton: boolean;
 	horizontal?: boolean;
 }
 
@@ -39,12 +41,23 @@ export const EmojiPickerCategoryList = observer(
 		customEmojisByGuildId,
 		unicodeEmojisByCategory,
 		handleCategoryClick,
+		showFrequentlyUsedButton = false,
 		horizontal = false,
 	}: EmojiPickerCategoryListProps) => {
 		const {i18n} = useLingui();
 		if (horizontal) {
 			return (
 				<div className={styles.horizontalCategories}>
+					{showFrequentlyUsedButton && (
+						<button
+							type="button"
+							onClick={() => handleCategoryClick('frequently-used')}
+							className={clsx(styles.categoryListIcon, styles.textPrimaryMuted)}
+							aria-label={i18n._('Frequently Used')}
+						>
+							<ClockIcon className={styles.iconSize} />
+						</button>
+					)}
 					{Array.from(customEmojisByGuildId.keys()).map((guildId) => {
 						const guild = GuildStore.getGuild(guildId)!;
 						return (
@@ -81,6 +94,17 @@ export const EmojiPickerCategoryList = observer(
 			<div className={styles.categoryList}>
 				<div className={styles.categoryListScroll}>
 					<div className={styles.listItems}>
+						{showFrequentlyUsedButton && (
+							<Tooltip text={i18n._('Frequently Used')} position="left">
+								<button
+									type="button"
+									onClick={() => handleCategoryClick('frequently-used')}
+									className={clsx(styles.categoryListIcon, styles.textPrimaryMuted)}
+								>
+									<ClockIcon className={styles.iconSize} />
+								</button>
+							</Tooltip>
+						)}
 						{Array.from(customEmojisByGuildId.keys()).map((guildId) => {
 							const guild = GuildStore.getGuild(guildId)!;
 							return (
