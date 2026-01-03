@@ -42,6 +42,7 @@ import {
 } from '~/components/uikit/ContextMenu/ContextMenuIcons';
 import type {MenuGroupType, MenuItemType} from '~/components/uikit/MenuBottomSheet/MenuBottomSheet';
 import type {MessageRecord} from '~/records/MessageRecord';
+import ChannelStore from '~/stores/ChannelStore';
 import EmojiPickerStore from '~/stores/EmojiPickerStore';
 import type {Emoji} from '~/stores/EmojiStore';
 import EmojiStore from '~/stores/EmojiStore';
@@ -73,7 +74,8 @@ export const useMessageActionMenuData = (
 	const permissions = useMessagePermissions(message);
 	const handlers = React.useMemo(() => createMessageActionHandlers(message, {onClose}), [message, onClose]);
 	const isSaved = React.useMemo(() => SavedMessagesStore.isSaved(message.id), [message.id]);
-	const allEmojis = React.useMemo(() => EmojiStore.search(null, ''), []);
+	const channel = React.useMemo(() => ChannelStore.getChannel(message.channelId) ?? null, [message.channelId]);
+	const allEmojis = React.useMemo(() => EmojiStore.search(channel, ''), [channel]);
 	const quickReactionEmojis = React.useMemo(
 		() => EmojiPickerStore.getQuickReactionEmojis(allEmojis, quickReactionCount),
 		[allEmojis, quickReactionCount],
