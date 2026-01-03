@@ -117,6 +117,19 @@ function storePlaybackRate(rate: number): void {
 	} catch {}
 }
 
+const isAbortError = (error: unknown): boolean => {
+	if (!error || typeof error !== 'object') return false;
+	const name = (error as {name?: unknown}).name;
+	if (name === 'AbortError') return true;
+	const message = (error as {message?: unknown}).message;
+	return typeof message === 'string' && message.toLowerCase().includes('interrupted');
+};
+
+const normalizeError = (error: unknown): Error => {
+	if (error instanceof Error) return error;
+	return new Error(typeof error === 'string' ? error : 'Unknown media error');
+};
+
 export function useMediaPlayer(options: UseMediaPlayerOptions = {}): UseMediaPlayerReturn {
 	const {
 		autoPlay = false,
@@ -324,9 +337,16 @@ export function useMediaPlayer(options: UseMediaPlayerOptions = {}): UseMediaPla
 
 		try {
 			await media.play();
+			setState((prev) => ({...prev, error: null}));
 		} catch (error) {
-			console.error('Play failed:', error);
-			throw error;
+			if (isAbortError(error)) {
+				console.debug('Play interrupted before it could start:', error);
+				return;
+			}
+
+			const normalizedError = normalizeError(error);
+			console.error('Play failed:', normalizedError);
+			setState((prev) => ({...prev, error: normalizedError}));
 		}
 	}, []);
 
