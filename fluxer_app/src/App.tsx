@@ -30,7 +30,7 @@ import React, {type ReactNode} from 'react';
 
 import * as ModalActionCreators from '~/actions/ModalActionCreators';
 import * as WindowActionCreators from '~/actions/WindowActionCreators';
-
+import {DndContext} from '~/components/layout/DndContext';
 import GlobalOverlays from '~/components/layout/GlobalOverlays';
 import {NativeTitlebar} from '~/components/layout/NativeTitlebar';
 import {NativeTrafficLightsBackdrop} from '~/components/layout/NativeTrafficLightsBackdrop';
@@ -505,11 +505,13 @@ export const App = observer((): React.ReactElement => {
 	return (
 		<I18nProvider i18n={i18n}>
 			<IconContext.Provider value={{color: 'currentColor', weight: 'fill'}}>
-				<RouterProvider router={router}>
-					<AppWrapper>
-						<Outlet />
-					</AppWrapper>
-				</RouterProvider>
+				<DndContext>
+					<RouterProvider router={router}>
+						<AppWrapper>
+							<Outlet />
+						</AppWrapper>
+					</RouterProvider>
+				</DndContext>
 			</IconContext.Provider>
 		</I18nProvider>
 	);

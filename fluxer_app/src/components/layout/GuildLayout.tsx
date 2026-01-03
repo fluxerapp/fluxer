@@ -27,7 +27,6 @@ import {modal} from '~/actions/ModalActionCreators';
 import * as NagbarActionCreators from '~/actions/NagbarActionCreators';
 import * as NavigationActionCreators from '~/actions/NavigationActionCreators';
 import {ChannelTypes, GuildFeatures, Permissions} from '~/Constants';
-import {DndContext} from '~/components/layout/DndContext';
 import {GuildNavbar} from '~/components/layout/GuildNavbar';
 import {GuildNavbarSkeleton} from '~/components/layout/GuildNavbarSkeleton';
 import {Nagbar} from '~/components/layout/Nagbar';
@@ -296,45 +295,39 @@ export const GuildLayout = observer(({children}: {children: React.ReactNode}) =>
 			if (guildUnavailable || guildNotFound) {
 				return (
 					<TopNagbarContext.Provider value={nagbarContextValue}>
-						<DndContext>
-							<div className={styles.guildLayoutContent}>
-								<GuildNavbarSkeleton />
-								<div className={styles.guildMainContent}>
-									{guildUnavailable ? (
-										<GuildUnavailable
-											icon={NetworkSlashIcon}
-											title={t`Community temporarily unavailable`}
-											description={t`We fluxed up! Hang tight, we're working on it.`}
-										/>
-									) : (
-										<GuildUnavailable
-											icon={SmileySadIcon}
-											title={t`This is not the community you're looking for.`}
-											description={t`The community you're looking for may have been deleted or you may not have access to it.`}
-										/>
-									)}
-								</div>
+						<div className={styles.guildLayoutContent}>
+							<GuildNavbarSkeleton />
+							<div className={styles.guildMainContent}>
+								{guildUnavailable ? (
+									<GuildUnavailable
+										icon={NetworkSlashIcon}
+										title={t`Community temporarily unavailable`}
+										description={t`We fluxed up! Hang tight, we're working on it.`}
+									/>
+								) : (
+									<GuildUnavailable
+										icon={SmileySadIcon}
+										title={t`This is not the community you're looking for.`}
+										description={t`The community you're looking for may have been deleted or you may not have access to it.`}
+									/>
+								)}
 							</div>
-						</DndContext>
+						</div>
 					</TopNagbarContext.Provider>
 				);
 			}
 			return (
 				<TopNagbarContext.Provider value={nagbarContextValue}>
-					<DndContext>
-						<GuildNavbar guild={guild!} />
-					</DndContext>
+					<GuildNavbar guild={guild!} />
 				</TopNagbarContext.Provider>
 			);
 		}
 		return (
 			<TopNagbarContext.Provider value={nagbarContextValue}>
-				<DndContext>
-					<div className={hasGuildNagbars ? styles.guildLayoutContainerWithNagbar : styles.guildLayoutContainer}>
-						{guildNagbars}
-						<div className={styles.guildMainContent}>{children}</div>
-					</div>
-				</DndContext>
+				<div className={hasGuildNagbars ? styles.guildLayoutContainerWithNagbar : styles.guildLayoutContainer}>
+					{guildNagbars}
+					<div className={styles.guildMainContent}>{children}</div>
+				</div>
 			</TopNagbarContext.Provider>
 		);
 	}
@@ -342,21 +335,19 @@ export const GuildLayout = observer(({children}: {children: React.ReactNode}) =>
 	if (guildUnavailable) {
 		return (
 			<TopNagbarContext.Provider value={nagbarContextValue}>
-				<DndContext>
-					<div className={hasGuildNagbars ? styles.guildLayoutContainerWithNagbar : styles.guildLayoutContainer}>
-						{guildNagbars}
-						<div className={styles.guildLayoutContent}>
-							<GuildNavbarSkeleton />
-							<div className={styles.guildMainContent}>
-								<GuildUnavailable
-									icon={NetworkSlashIcon}
-									title={t`Community temporarily unavailable`}
-									description={t`We fluxed up! Hang tight, we're working on it.`}
-								/>
-							</div>
+				<div className={hasGuildNagbars ? styles.guildLayoutContainerWithNagbar : styles.guildLayoutContainer}>
+					{guildNagbars}
+					<div className={styles.guildLayoutContent}>
+						<GuildNavbarSkeleton />
+						<div className={styles.guildMainContent}>
+							<GuildUnavailable
+								icon={NetworkSlashIcon}
+								title={t`Community temporarily unavailable`}
+								description={t`We fluxed up! Hang tight, we're working on it.`}
+							/>
 						</div>
 					</div>
-				</DndContext>
+				</div>
 			</TopNagbarContext.Provider>
 		);
 	}
@@ -364,21 +355,19 @@ export const GuildLayout = observer(({children}: {children: React.ReactNode}) =>
 	if (guildNotFound) {
 		return (
 			<TopNagbarContext.Provider value={nagbarContextValue}>
-				<DndContext>
-					<div className={hasGuildNagbars ? styles.guildLayoutContainerWithNagbar : styles.guildLayoutContainer}>
-						{guildNagbars}
-						<div className={styles.guildLayoutContent}>
-							<GuildNavbarSkeleton />
-							<div className={styles.guildMainContent}>
-								<GuildUnavailable
-									icon={SmileySadIcon}
-									title={t`This is not the community you're looking for.`}
-									description={t`The community you're looking for may have been deleted or you may not have access to it.`}
-								/>
-							</div>
+				<div className={hasGuildNagbars ? styles.guildLayoutContainerWithNagbar : styles.guildLayoutContainer}>
+					{guildNagbars}
+					<div className={styles.guildLayoutContent}>
+						<GuildNavbarSkeleton />
+						<div className={styles.guildMainContent}>
+							<GuildUnavailable
+								icon={SmileySadIcon}
+								title={t`This is not the community you're looking for.`}
+								description={t`The community you're looking for may have been deleted or you may not have access to it.`}
+							/>
 						</div>
 					</div>
-				</DndContext>
+				</div>
 			</TopNagbarContext.Provider>
 		);
 	}
@@ -386,36 +375,32 @@ export const GuildLayout = observer(({children}: {children: React.ReactNode}) =>
 	if (channelId && !ChannelStore.getChannel(channelId) && !firstAccessibleTextChannel) {
 		return (
 			<TopNagbarContext.Provider value={nagbarContextValue}>
-				<DndContext>
-					<div className={hasGuildNagbars ? styles.guildLayoutContainerWithNagbar : styles.guildLayoutContainer}>
-						{guildNagbars}
-						<div className={styles.guildLayoutContent}>
-							<GuildNavbar guild={guild!} />
-							<div className={styles.guildMainContent}>
-								<GuildUnavailable
-									icon={SmileySadIcon}
-									title={t`No accessible channels`}
-									description={t`You don't have access to any channels in this community.`}
-								/>
-							</div>
+				<div className={hasGuildNagbars ? styles.guildLayoutContainerWithNagbar : styles.guildLayoutContainer}>
+					{guildNagbars}
+					<div className={styles.guildLayoutContent}>
+						<GuildNavbar guild={guild!} />
+						<div className={styles.guildMainContent}>
+							<GuildUnavailable
+								icon={SmileySadIcon}
+								title={t`No accessible channels`}
+								description={t`You don't have access to any channels in this community.`}
+							/>
 						</div>
 					</div>
-				</DndContext>
+				</div>
 			</TopNagbarContext.Provider>
 		);
 	}
 
 	return (
 		<TopNagbarContext.Provider value={nagbarContextValue}>
-			<DndContext>
-				<div className={hasGuildNagbars ? styles.guildLayoutContainerWithNagbar : styles.guildLayoutContainer}>
-					{guildNagbars}
-					<div className={styles.guildLayoutContent}>
-						<GuildNavbar guild={guild!} />
-						<div className={styles.guildMainContent}>{children}</div>
-					</div>
+			<div className={hasGuildNagbars ? styles.guildLayoutContainerWithNagbar : styles.guildLayoutContainer}>
+				{guildNagbars}
+				<div className={styles.guildLayoutContent}>
+					<GuildNavbar guild={guild!} />
+					<div className={styles.guildMainContent}>{children}</div>
 				</div>
-			</DndContext>
+			</div>
 		</TopNagbarContext.Provider>
 	);
 });

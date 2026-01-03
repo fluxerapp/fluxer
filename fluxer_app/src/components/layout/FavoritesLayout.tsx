@@ -22,7 +22,6 @@ import React from 'react';
 import * as NavigationActionCreators from '~/actions/NavigationActionCreators';
 import {FAVORITES_GUILD_ID} from '~/Constants';
 import {FavoritesWelcomeSection} from '~/components/favorites/FavoritesWelcomeSection';
-import {DndContext} from '~/components/layout/DndContext';
 import {FavoritesChannelListContent} from '~/components/layout/FavoritesChannelListContent';
 import {FavoritesGuildHeader} from '~/components/layout/FavoritesGuildHeader';
 import {GuildSidebar} from '~/components/layout/GuildSidebar';
@@ -66,45 +65,35 @@ export const FavoritesLayout = observer(({children}: {children?: React.ReactNode
 
 	if (shouldRenderWelcomeScreen) {
 		return (
-			<DndContext>
-				<div className={styles.guildLayoutContainer}>
-					<div className={styles.guildLayoutContent}>
-						<GuildSidebar header={<FavoritesGuildHeader />} content={<FavoritesChannelListContent />} />
-						<div className={styles.guildMainContent}>
-							<FavoritesWelcomeSection />
-						</div>
+			<div className={styles.guildLayoutContainer}>
+				<div className={styles.guildLayoutContent}>
+					<GuildSidebar header={<FavoritesGuildHeader />} content={<FavoritesChannelListContent />} />
+					<div className={styles.guildMainContent}>
+						<FavoritesWelcomeSection />
 					</div>
 				</div>
-			</DndContext>
+			</div>
 		);
 	}
 
 	if (mobileLayout.enabled) {
 		if (!channelId) {
-			return (
-				<DndContext>
-					<GuildSidebar header={<FavoritesGuildHeader />} content={<FavoritesChannelListContent />} />
-				</DndContext>
-			);
+			return <GuildSidebar header={<FavoritesGuildHeader />} content={<FavoritesChannelListContent />} />;
 		}
 
 		return (
-			<DndContext>
-				<div className={styles.guildLayoutContainer}>
-					<div className={styles.guildMainContent}>{children}</div>
-				</div>
-			</DndContext>
+			<div className={styles.guildLayoutContainer}>
+				<div className={styles.guildMainContent}>{children}</div>
+			</div>
 		);
 	}
 
 	return (
-		<DndContext>
-			<div className={styles.guildLayoutContainer}>
-				<div className={styles.guildLayoutContent}>
-					<GuildSidebar header={<FavoritesGuildHeader />} content={<FavoritesChannelListContent />} />
-					<div className={styles.guildMainContent}>{children}</div>
-				</div>
+		<div className={styles.guildLayoutContainer}>
+			<div className={styles.guildLayoutContent}>
+				<GuildSidebar header={<FavoritesGuildHeader />} content={<FavoritesChannelListContent />} />
+				<div className={styles.guildMainContent}>{children}</div>
 			</div>
-		</DndContext>
+		</div>
 	);
 });
