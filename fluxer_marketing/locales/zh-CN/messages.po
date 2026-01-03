@@ -39,6 +39,10 @@ msgstr "/年"
 msgid "500MB uploads, 4000 character messages, 300 bookmarks, 50 emoji packs, and much more."
 msgstr "上传上限 500 MB、单条消息最多 4000 字符、最多 300 条书签、50 个表情包，还有更多。"
 
+#: src/fluxer_marketing/components/hero.gleam:59
+msgid "A chat app that puts you first"
+msgstr "以你为先的聊天应用"
+
 #: src/fluxer_marketing/components/communities_section.gleam:86
 msgid "A chat platform that answers to you, not investors. It's ad-free, open source, community-funded, and never sells your data or nags you with upgrade pop-ups."
 msgstr "一个只对你负责、而不是对投资人负责的聊天平台。无广告、开源、由社区资助，从不出售你的数据，也不会用升级弹窗打扰你。"
@@ -82,10 +86,6 @@ msgstr "你期待的基础功能一应俱全，外加一些意想不到的惊喜
 #: src/fluxer_marketing/components/locale_selector.gleam:102
 msgid "All translations are currently LLM-generated with minimal human revision. We'd love to get real people to help us out localizing Fluxer into your language! To do so, shoot an email to i18n@fluxer.app and we'll be happy to accept your contributions."
 msgstr "目前所有翻译均由 LLM 生成，仅做了少量人工校对。我们非常希望有母语者来帮助我们把 Fluxer 本地化到你的语言！如果愿意，请发邮件至 i18n@fluxer.app，我们很乐意接收你的贡献。"
-
-#: src/fluxer_marketing/components/hero.gleam:64
-msgid "An open-source, independent instant messaging and VoIP platform. Built for friends, groups, and communities."
-msgstr "一个开源、独立的即时消息与 VoIP 平台。为朋友、群组与社区而生。"
 
 #: src/fluxer_marketing/components/platform_download_button.gleam:524
 #: src/fluxer_marketing/components/pwa_install_dialog.gleam:97
@@ -270,10 +270,6 @@ msgstr "Fluxer 招聘"
 #: src/fluxer_marketing/components/navigation.gleam:257
 msgid "Change language"
 msgstr "切换语言"
-
-#: src/fluxer_marketing/components/hero.gleam:59
-msgid "Chat that puts you first"
-msgstr "以你为先的聊天"
 
 #: src/fluxer_marketing/components/locale_selector.gleam:150
 msgid "Chinese (Simplified)"
@@ -737,6 +733,10 @@ msgstr "Fluxer 隐私政策"
 #: src/fluxer_marketing/pages/terms_page.gleam:44
 msgid "Fluxer Terms of Service"
 msgstr "Fluxer 服务条款"
+
+#: src/fluxer_marketing/components/hero.gleam:64
+msgid "Fluxer is an open-source, independent instant messaging and VoIP platform. Built for friends, groups, and communities."
+msgstr "Fluxer 是一个独立的开源即时通讯和 VoIP 平台，为朋友、群组和社区而打造。"
 
 #: src/fluxer_marketing/pages/careers_page.gleam:105
 msgid "Fluxer is built in the open. Pick the path that fits how you like to help."
@@ -2059,3 +2059,4 @@ msgstr "还剩 {0}/{1} 个名额"
 #: src/fluxer_marketing/components/footer.gleam:325
 msgid "© Fluxer Platform AB (Swedish limited liability company: 559537-3993)"
 msgstr "© Fluxer Platform AB（瑞典有限责任公司：559537-3993）"
+

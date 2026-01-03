@@ -26,8 +26,8 @@ pub type PageMeta {
 
 pub fn default_page_meta() -> PageMeta {
   PageMeta(
-    title: "Fluxer: Chat that puts you first",
-    description: "An open-source, independent instant messaging and VoIP platform. Built for friends, groups, and communities.",
+    title: "Fluxer: A chat app that puts you first",
+    description: "Fluxer is an open-source, independent instant messaging and VoIP platform. Built for friends, groups, and communities.",
     og_type: "website",
   )
 }

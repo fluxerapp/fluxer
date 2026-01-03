@@ -56,12 +56,12 @@ pub fn render(ctx: Context) -> Element(a) {
           ),
         ]),
         html.h1([attribute.class("hero")], [
-          html.text(g_(i18n_ctx, "Chat that puts you first")),
+          html.text(g_(i18n_ctx, "A chat app that puts you first")),
         ]),
         html.p([attribute.class("lead text-white/90")], [
           html.text(g_(
             i18n_ctx,
-            "An open-source, independent instant messaging and VoIP platform. Built for friends, groups, and communities.",
+            "Fluxer is an open-source, independent instant messaging and VoIP platform. Built for friends, groups, and communities.",
           )),
         ]),
         html.div(

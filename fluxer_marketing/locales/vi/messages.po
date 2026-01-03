@@ -39,6 +39,10 @@ msgstr "/năm"
 msgid "500MB uploads, 4000 character messages, 300 bookmarks, 50 emoji packs, and much more."
 msgstr "Tải lên 500MB, tin nhắn tối đa 4000 ký tự, 300 dấu trang, 50 bộ emoji, và còn nhiều hơn nữa."
 
+#: src/fluxer_marketing/components/hero.gleam:59
+msgid "A chat app that puts you first"
+msgstr "Ứng dụng chat đặt bạn lên hàng đầu"
+
 #: src/fluxer_marketing/components/communities_section.gleam:86
 msgid "A chat platform that answers to you, not investors. It's ad-free, open source, community-funded, and never sells your data or nags you with upgrade pop-ups."
 msgstr "Một nền tảng trò chuyện phục vụ bạn, không phải nhà đầu tư. Không quảng cáo, mã nguồn mở, được cộng đồng tài trợ, và không bao giờ bán dữ liệu của bạn hay làm phiền bạn bằng pop-up nâng cấp."
@@ -82,10 +86,6 @@ msgstr "Đủ mọi thứ cơ bản bạn mong đợi, cộng thêm vài điều
 #: src/fluxer_marketing/components/locale_selector.gleam:102
 msgid "All translations are currently LLM-generated with minimal human revision. We'd love to get real people to help us out localizing Fluxer into your language! To do so, shoot an email to i18n@fluxer.app and we'll be happy to accept your contributions."
 msgstr "Hiện mọi bản dịch đều do LLM tạo ra và chỉ được chỉnh sửa tối thiểu. Chúng tôi rất muốn có người thật cùng hỗ trợ bản địa hóa Fluxer sang ngôn ngữ của bạn! Nếu muốn tham gia, hãy gửi email tới i18n@fluxer.app — chúng tôi rất sẵn lòng nhận đóng góp của bạn."
-
-#: src/fluxer_marketing/components/hero.gleam:64
-msgid "An open-source, independent instant messaging and VoIP platform. Built for friends, groups, and communities."
-msgstr "Nền tảng nhắn tin tức thời và VoIP mã nguồn mở, độc lập. Được xây dựng cho bạn bè, nhóm và cộng đồng."
 
 #: src/fluxer_marketing/components/platform_download_button.gleam:524
 #: src/fluxer_marketing/components/pwa_install_dialog.gleam:97
@@ -270,10 +270,6 @@ msgstr "Cơ hội tại Fluxer"
 #: src/fluxer_marketing/components/navigation.gleam:257
 msgid "Change language"
 msgstr "Đổi ngôn ngữ"
-
-#: src/fluxer_marketing/components/hero.gleam:59
-msgid "Chat that puts you first"
-msgstr "Trò chuyện đặt bạn lên hàng đầu"
 
 #: src/fluxer_marketing/components/locale_selector.gleam:150
 msgid "Chinese (Simplified)"
@@ -737,6 +733,10 @@ msgstr "Chính sách quyền riêng tư của Fluxer"
 #: src/fluxer_marketing/pages/terms_page.gleam:44
 msgid "Fluxer Terms of Service"
 msgstr "Điều khoản dịch vụ của Fluxer"
+
+#: src/fluxer_marketing/components/hero.gleam:64
+msgid "Fluxer is an open-source, independent instant messaging and VoIP platform. Built for friends, groups, and communities."
+msgstr "Fluxer là nền tảng nhắn tin tức thì và VoIP độc lập, mã nguồn mở. Được xây dựng cho bạn bè, nhóm và cộng đồng."
 
 #: src/fluxer_marketing/pages/careers_page.gleam:105
 msgid "Fluxer is built in the open. Pick the path that fits how you like to help."
@@ -2059,3 +2059,4 @@ msgstr "Còn {0}/{1} suất"
 #: src/fluxer_marketing/components/footer.gleam:325
 msgid "© Fluxer Platform AB (Swedish limited liability company: 559537-3993)"
 msgstr "© Fluxer Platform AB (công ty TNHH tại Thụy Điển: 559537-3993)"
+

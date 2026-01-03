@@ -39,6 +39,10 @@ msgstr "/rok"
 msgid "500MB uploads, 4000 character messages, 300 bookmarks, 50 emoji packs, and much more."
 msgstr "Przesyłanie plików do 500 MB, wiadomości do 4000 znaków, 300 zakładek, 50 paczek emoji i wiele więcej."
 
+#: src/fluxer_marketing/components/hero.gleam:59
+msgid "A chat app that puts you first"
+msgstr "Aplikacja czatu, która stawia Cię na pierwszym miejscu"
+
 #: src/fluxer_marketing/components/communities_section.gleam:86
 msgid "A chat platform that answers to you, not investors. It's ad-free, open source, community-funded, and never sells your data or nags you with upgrade pop-ups."
 msgstr "Platforma czatu, która odpowiada przed Tobą, a nie przed inwestorami. Bez reklam, open source, finansowana przez społeczność — nigdy nie sprzedaje Twoich danych ani nie męczy wyskakującymi okienkami z „ulepszeniem”."
@@ -82,10 +86,6 @@ msgstr "Wszystko, czego się spodziewasz — i kilka rzeczy, których nie."
 #: src/fluxer_marketing/components/locale_selector.gleam:102
 msgid "All translations are currently LLM-generated with minimal human revision. We'd love to get real people to help us out localizing Fluxer into your language! To do so, shoot an email to i18n@fluxer.app and we'll be happy to accept your contributions."
 msgstr "Wszystkie tłumaczenia są obecnie generowane przez modele językowe (LLM) i tylko minimalnie poprawiane przez człowieka. Chętnie zaprosimy prawdziwe osoby do pomocy w lokalizacji Fluxer na Twój język! Napisz na i18n@fluxer.app — z radością przyjmiemy Twoje poprawki."
-
-#: src/fluxer_marketing/components/hero.gleam:64
-msgid "An open-source, independent instant messaging and VoIP platform. Built for friends, groups, and communities."
-msgstr "Otwarta, niezależna platforma do wiadomości błyskawicznych i VoIP. Stworzona dla przyjaciół, grup i społeczności."
 
 #: src/fluxer_marketing/components/platform_download_button.gleam:524
 #: src/fluxer_marketing/components/pwa_install_dialog.gleam:97
@@ -270,10 +270,6 @@ msgstr "Praca w Fluxer"
 #: src/fluxer_marketing/components/navigation.gleam:257
 msgid "Change language"
 msgstr "Zmień język"
-
-#: src/fluxer_marketing/components/hero.gleam:59
-msgid "Chat that puts you first"
-msgstr "Czat, który stawia Cię na pierwszym miejscu"
 
 #: src/fluxer_marketing/components/locale_selector.gleam:150
 msgid "Chinese (Simplified)"
@@ -737,6 +733,10 @@ msgstr "Polityka prywatności Fluxer"
 #: src/fluxer_marketing/pages/terms_page.gleam:44
 msgid "Fluxer Terms of Service"
 msgstr "Warunki korzystania z usług Fluxer"
+
+#: src/fluxer_marketing/components/hero.gleam:64
+msgid "Fluxer is an open-source, independent instant messaging and VoIP platform. Built for friends, groups, and communities."
+msgstr "Fluxer to niezależna platforma open source do komunikacji natychmiastowej i VoIP. Stworzona dla znajomych, grup i społeczności."
 
 #: src/fluxer_marketing/pages/careers_page.gleam:105
 msgid "Fluxer is built in the open. Pick the path that fits how you like to help."
@@ -2059,3 +2059,4 @@ msgstr "Zostało {0} z {1} miejsc"
 #: src/fluxer_marketing/components/footer.gleam:325
 msgid "© Fluxer Platform AB (Swedish limited liability company: 559537-3993)"
 msgstr "© Fluxer Platform AB (szwedzka spółka z o.o.: 559537-3993)"
+

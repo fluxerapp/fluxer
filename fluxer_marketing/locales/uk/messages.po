@@ -39,6 +39,10 @@ msgstr "/р"
 msgid "500MB uploads, 4000 character messages, 300 bookmarks, 50 emoji packs, and much more."
 msgstr "Завантаження файлів до 500 МБ, повідомлення до 4000 символів, 300 закладок, 50 наборів емодзі — і багато іншого."
 
+#: src/fluxer_marketing/components/hero.gleam:59
+msgid "A chat app that puts you first"
+msgstr "Чат-застосунок, де ви на першому місці"
+
 #: src/fluxer_marketing/components/communities_section.gleam:86
 msgid "A chat platform that answers to you, not investors. It's ad-free, open source, community-funded, and never sells your data or nags you with upgrade pop-ups."
 msgstr "Платформа для спілкування, що працює для вас, а не для інвесторів. Без реклами, з відкритим кодом, фінансується спільнотою — і ніколи не продає ваші дані та не надокучає спливаючими пропозиціями оновитися."
@@ -82,10 +86,6 @@ msgstr "Усе базове, що ви очікуєте, плюс кілька �
 #: src/fluxer_marketing/components/locale_selector.gleam:102
 msgid "All translations are currently LLM-generated with minimal human revision. We'd love to get real people to help us out localizing Fluxer into your language! To do so, shoot an email to i18n@fluxer.app and we'll be happy to accept your contributions."
 msgstr "Наразі всі переклади згенеровані LLM і лише мінімально відредаговані людиною. Ми дуже хочемо, щоб реальні люди допомогли локалізувати Fluxer вашою мовою! Напишіть на i18n@fluxer.app — із радістю приймемо ваш внесок."
-
-#: src/fluxer_marketing/components/hero.gleam:64
-msgid "An open-source, independent instant messaging and VoIP platform. Built for friends, groups, and communities."
-msgstr "Незалежна платформа з відкритим кодом для миттєвих повідомлень і VoIP. Створена для друзів, груп і спільнот."
 
 #: src/fluxer_marketing/components/platform_download_button.gleam:524
 #: src/fluxer_marketing/components/pwa_install_dialog.gleam:97
@@ -270,10 +270,6 @@ msgstr "Кар’єра в Fluxer"
 #: src/fluxer_marketing/components/navigation.gleam:257
 msgid "Change language"
 msgstr "Змінити мову"
-
-#: src/fluxer_marketing/components/hero.gleam:59
-msgid "Chat that puts you first"
-msgstr "Чат, де ви — на першому місці"
 
 #: src/fluxer_marketing/components/locale_selector.gleam:150
 msgid "Chinese (Simplified)"
@@ -737,6 +733,10 @@ msgstr "Політика конфіденційності Fluxer"
 #: src/fluxer_marketing/pages/terms_page.gleam:44
 msgid "Fluxer Terms of Service"
 msgstr "Умови користування Fluxer"
+
+#: src/fluxer_marketing/components/hero.gleam:64
+msgid "Fluxer is an open-source, independent instant messaging and VoIP platform. Built for friends, groups, and communities."
+msgstr "Fluxer — незалежна платформа з відкритим кодом для миттєвих повідомлень і VoIP. Створена для друзів, груп і спільнот."
 
 #: src/fluxer_marketing/pages/careers_page.gleam:105
 msgid "Fluxer is built in the open. Pick the path that fits how you like to help."
@@ -1325,11 +1325,6 @@ msgstr "Сторінку не знайдено"
 msgid "Page not found"
 msgstr "Сторінку не знайдено"
 
-#: src/fluxer_marketing/pages/not_found_page.gleam:60
-#: src/fluxer_marketing/pages/not_found_page.gleam:104
-msgid "This page doesn't exist. But there's plenty more to explore."
-msgstr "Цієї сторінки не існує. Але попереду ще багато цікавого."
-
 #: src/fluxer_marketing/pages/partners_page.gleam:123
 msgid "Partner Badge"
 msgstr "Значок Partner"
@@ -1771,6 +1766,11 @@ msgstr "Маркетплейс тем"
 msgid "This isn't a full replacement for the desktop app yet, and some things you'd expect from a mobile chat app are still missing."
 msgstr "Це ще не повна заміна десктопного застосунку, і деяких речей, яких ви очікуєте від мобільного чату, поки що бракує."
 
+#: src/fluxer_marketing/pages/not_found_page.gleam:60
+#: src/fluxer_marketing/pages/not_found_page.gleam:104
+msgid "This page doesn't exist. But there's plenty more to explore."
+msgstr "Цієї сторінки не існує. Але попереду ще багато цікавого."
+
 #: src/fluxer_marketing/components/coming_features.gleam:37
 msgid "Threads and forums"
 msgstr "Гілки та форуми"
@@ -2059,3 +2059,4 @@ msgstr "Залишилося {0} із {1} місць"
 #: src/fluxer_marketing/components/footer.gleam:325
 msgid "© Fluxer Platform AB (Swedish limited liability company: 559537-3993)"
 msgstr "© Fluxer Platform AB (шведська компанія з обмеженою відповідальністю: 559537-3993)"
+
