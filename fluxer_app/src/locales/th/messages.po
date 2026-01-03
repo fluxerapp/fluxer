@@ -74,7 +74,7 @@ msgstr "(แสดงได้สูงสุด 15 รายการ)"
 msgid "(No content)"
 msgstr "(ไม่มีเนื้อหา)"
 
-#: src/components/modals/UserProfileMobileSheet.tsx:556
+#: src/components/modals/UserProfileMobileSheet.tsx:558
 #: src/components/pages/YouPage.tsx:147
 msgid "(only visible to you)"
 msgstr "(เห็นได้เฉพาะคุณ)"
@@ -1322,7 +1322,7 @@ msgid "A symphony of clacking keys is underway..."
 msgstr "เสียงแป้นพิมพ์ดังระเบงกำลังเกิดขึ้น..."
 
 #: src/components/modals/tabs/MyProfileTab/BioEditor.tsx:127
-#: src/components/modals/UserProfileMobileSheet.tsx:532
+#: src/components/modals/UserProfileMobileSheet.tsx:534
 #: src/components/pages/YouPage.tsx:132
 msgid "About Me"
 msgstr "เกี่ยวกับฉัน"
@@ -1346,7 +1346,7 @@ msgstr "ยอมรับ"
 
 #: src/components/bottomsheets/DMBottomSheet.tsx:517
 #: src/components/modals/guildTabs/GuildMemberActionsSheet.tsx:262
-#: src/components/modals/UserProfileModal.tsx:1259
+#: src/components/modals/UserProfileModal.tsx:1261
 #: src/components/uikit/ContextMenu/items/RelationshipMenuItems.tsx:109
 msgid "Accept Friend Request"
 msgstr "ตอบรับคำขอเป็นเพื่อน"
@@ -1382,8 +1382,8 @@ msgstr "เข้าถึงเครื่องมือสำหรับน
 msgid "Access granted"
 msgstr "ได้รับสิทธิ์แล้ว"
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:721
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:862
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:723
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:864
 msgid "Access Overrides"
 msgstr "การยกเว้นการเข้าถึง"
 
@@ -1498,7 +1498,7 @@ msgstr "ผู้สมัครรายปีกำลังใช้งาน
 msgid "Activities"
 msgstr "กิจกรรม"
 
-#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:354
+#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:356
 #: src/components/modals/utils/guildSettingsConstants.tsx:131
 msgid "Activity Log"
 msgstr "บันทึกกิจกรรม"
@@ -1594,7 +1594,7 @@ msgstr "เพิ่มแชนแนลที่ชอบ"
 #: src/components/channel/dm/AddFriendView.tsx:32
 #: src/components/channel/dm/DMFriendsView.tsx:199
 #: src/components/modals/AddFriendSheet.tsx:50
-#: src/components/modals/UserProfileModal.tsx:1179
+#: src/components/modals/UserProfileModal.tsx:1181
 #: src/components/uikit/ContextMenu/items/RelationshipMenuItems.tsx:75
 #: src/components/uikit/ContextMenu/items/RelationshipMenuItems.tsx:89
 msgid "Add Friend"
@@ -1629,8 +1629,8 @@ msgstr "เพิ่มบันทึก"
 msgid "Add or change your phone number"
 msgstr "เพิ่มหรือเปลี่ยนหมายเลขโทรศัพท์ของคุณ"
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:731
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:871
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:733
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:873
 msgid "Add Override"
 msgstr "เพิ่มการยกเว้น"
 
@@ -1868,7 +1868,7 @@ msgid "All @mentions of you will appear here for 7 days."
 msgstr "การกล่าวถึงคุณทั้งหมดจะแสดงที่นี่เป็นเวลา 7 วัน"
 
 #: src/components/modals/guildTabs/GuildAuditLogTab.tsx:207
-#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:371
+#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:373
 msgid "All Actions"
 msgstr "การดำเนินการทั้งหมด"
 
@@ -1943,7 +1943,7 @@ msgid "All translations are currently LLM-generated with minimal human revision.
 msgstr "การแปลทั้งหมดตอนนี้ถูกสร้างขึ้นโดย LLM โดยมีการแก้ไขจากมนุษย์น้อยที่สุด เราต้องการให้ผู้คนจริงๆ มาช่วยเราแปล Fluxer เป็นภาษาของคุณ! หากต้องการทำเช่นนั้น กรุณาส่งอีเมลไปที่ <0>i18n@fluxer.app</0> และเรายินดีรับการมีส่วนร่วมของคุณ"
 
 #: src/components/modals/guildTabs/GuildAuditLogTab.tsx:201
-#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:363
+#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:365
 msgid "All Users"
 msgstr "ผู้ใช้ทั้งหมด"
 
@@ -2524,7 +2524,7 @@ msgstr "แน่ใจไหมว่าต้องการมอบควา
 #. placeholder {0}: user.username
 #: src/components/modals/guildTabs/GuildMemberActionsSheet.tsx:147
 #: src/components/modals/UserProfileActionsSheet.tsx:116
-#: src/components/modals/UserProfileMobileSheet.tsx:304
+#: src/components/modals/UserProfileMobileSheet.tsx:306
 #: src/utils/RelationshipActionUtils.tsx:114
 msgid "Are you sure you want to remove {0} as a friend?"
 msgstr "แน่ใจไหมว่าต้องการลบ {0} ออกจากเพื่อน?"
@@ -2567,7 +2567,7 @@ msgstr "แน่ใจไหมว่าต้องการโอนควา
 #: src/components/modals/guildTabs/GuildMemberActionsSheet.tsx:181
 #: src/components/modals/tabs/BlockedUsersTab.tsx:57
 #: src/components/modals/UserProfileActionsSheet.tsx:150
-#: src/components/modals/UserProfileMobileSheet.tsx:320
+#: src/components/modals/UserProfileMobileSheet.tsx:322
 #: src/utils/RelationshipActionUtils.tsx:168
 msgid "Are you sure you want to unblock {0}?"
 msgstr "แน่ใจไหมว่าต้องการปลดบล็อก {0}?"
@@ -2770,7 +2770,7 @@ msgstr "อัตโนมัติ"
 
 #: src/components/bottomsheets/VoiceSettingsBottomSheets.tsx:140
 #: src/components/modals/tabs/VoiceTab.tsx:422
-#: src/components/voice/VoiceSettingsMenus.tsx:177
+#: src/components/voice/VoiceSettingsMenus.tsx:175
 msgid "Auto Gain Control"
 msgstr "ควบคุมความดังอัตโนมัติ"
 
@@ -2871,7 +2871,7 @@ msgstr "กลับไปยังรายการ"
 msgid "Back to login"
 msgstr "กลับไปยังหน้าลงชื่อเข้าใช้"
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:963
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:965
 #: src/components/modals/components/DesktopChannelSettingsView.tsx:144
 #: src/components/modals/components/DesktopGuildSettingsView.tsx:159
 #: src/components/modals/components/DesktopSettingsView.tsx:295
@@ -3096,7 +3096,7 @@ msgstr "ขีดจำกัดตัวอักษรประวัติ"
 #: src/components/modals/guildTabs/GuildMemberActionsSheet.tsx:348
 #: src/components/modals/UserProfileActionsSheet.tsx:134
 #: src/components/modals/UserProfileActionsSheet.tsx:298
-#: src/components/modals/UserProfileModal.tsx:1062
+#: src/components/modals/UserProfileModal.tsx:1064
 #: src/components/uikit/ContextMenu/items/RelationshipMenuItems.tsx:211
 #: src/utils/RelationshipActionUtils.tsx:143
 msgid "Block"
@@ -3374,11 +3374,13 @@ msgstr "การโทร"
 #: src/components/modals/CameraPreviewModal.tsx:477
 #: src/components/modals/tabs/VideoTab.tsx:145
 #: src/components/modals/utils/settingsSearchIndex.ts:458
+#: src/components/voice/VoiceSettingsMenus.tsx:326
 msgid "Camera"
 msgstr "กล้อง"
 
 #. placeholder {0}: device.deviceId.slice(0, 8)
 #: src/components/modals/CameraPreviewModal.tsx:455
+#: src/components/voice/VoiceSettingsMenus.tsx:339
 msgid "Camera {0}"
 msgstr "กล้อง {0}"
 
@@ -3509,7 +3511,7 @@ msgstr "ยกเลิก"
 #: src/components/channel/dm/DMWelcomeSection.tsx:138
 #: src/components/channel/friends/FriendListItem.tsx:164
 #: src/components/channel/friends/FriendListItem.tsx:166
-#: src/components/modals/UserProfileModal.tsx:1274
+#: src/components/modals/UserProfileModal.tsx:1276
 #: src/components/uikit/ContextMenu/items/RelationshipMenuItems.tsx:192
 msgid "Cancel Friend Request"
 msgstr "ยกเลิกคำขอเป็นเพื่อน"
@@ -3785,7 +3787,7 @@ msgstr "การเข้าถึงแชนแนล"
 msgid "Channel Access Denied"
 msgstr "ไม่อนุญาตให้เข้าถึงแชนแนล"
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:396
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:398
 msgid "Channel access updated"
 msgstr "ปรับปรุงการเข้าถึงแชนแนลแล้ว"
 
@@ -3893,7 +3895,7 @@ msgstr "นำแชนแนลออกจากรายการโปรด
 msgid "Channel Settings"
 msgstr "การตั้งค่าแชนแนล"
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:622
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:624
 msgid "Channel synced with parent category"
 msgstr "แชนแนลซิงค์กับหมวดหมู่หลักแล้ว"
 
@@ -4179,7 +4181,7 @@ msgstr "ยืนยันบัญชีของคุณเพื่อแล
 
 #: src/components/channel/dm/AddFriendForm.tsx:54
 #: src/components/channel/dm/DMWelcomeSection.tsx:109
-#: src/components/modals/UserProfileModal.tsx:1289
+#: src/components/modals/UserProfileModal.tsx:1291
 #: src/components/uikit/ContextMenu/items/RelationshipMenuItems.tsx:65
 msgid "Claim your account to send friend requests."
 msgstr "ยืนยันบัญชีของคุณเพื่อส่งคำขอเป็นเพื่อน"
@@ -4507,7 +4509,7 @@ msgstr "สบายตา (550x400)"
 msgid "Comfy"
 msgstr "สบาย"
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1018
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1020
 #: src/components/modals/guildTabs/GuildRolesTab.tsx:1088
 msgid "Comfy layout"
 msgstr "เลย์เอาต์สบายๆ"
@@ -4708,7 +4710,7 @@ msgstr "ตั้งค่าแชนแนลและเวลาหมดเ
 msgid "Configure autocomplete"
 msgstr "ตั้งค่าการเติมข้อความอัตโนมัติ"
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:974
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:976
 msgid "Configure base access for this channel"
 msgstr "ตั้งค่าการเข้าถึงพื้นฐานของแชนแนลนี้"
 
@@ -4780,11 +4782,11 @@ msgstr "ตั้งค่าเสียงข้อความ"
 msgid "Configure notification sounds"
 msgstr "ตั้งค่าเสียงการแจ้งเตือน"
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:978
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:980
 msgid "Configure overrides for this member"
 msgstr "ตั้งค่าการแทนที่สำหรับสมาชิกนี้"
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:976
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:978
 msgid "Configure overrides for this role"
 msgstr "ตั้งค่าการแทนที่สำหรับบทบาทนี้"
 
@@ -5147,7 +5149,7 @@ msgstr "คัดลอกลิงก์ไฟล์"
 
 #: src/components/modals/tabs/BlockedUsersTab.tsx:98
 #: src/components/modals/UserProfileActionsSheet.tsx:208
-#: src/components/modals/UserProfileModal.tsx:1121
+#: src/components/modals/UserProfileModal.tsx:1123
 msgid "Copy FluxerTag"
 msgstr "คัดลอก FluxerTag"
 
@@ -5220,7 +5222,7 @@ msgstr "คัดลอกข้อความ"
 #: src/components/modals/guildTabs/GuildMemberActionsSheet.tsx:361
 #: src/components/modals/tabs/BlockedUsersTab.tsx:107
 #: src/components/modals/UserProfileActionsSheet.tsx:213
-#: src/components/modals/UserProfileModal.tsx:1130
+#: src/components/modals/UserProfileModal.tsx:1132
 #: src/components/popouts/UserAreaPopout.tsx:509
 #: src/components/profile/ProfileCard/ProfileCardActions.tsx:60
 #: src/components/uikit/ContextMenu/items/CopyMenuItems.tsx:42
@@ -5856,7 +5858,7 @@ msgstr "วัน"
 #: src/components/layout/UserArea.tsx:254
 #: src/components/uikit/ContextMenu/items/VoiceParticipantMenuItems.tsx:117
 #: src/components/voice/VoiceControlBar.tsx:291
-#: src/components/voice/VoiceSettingsMenus.tsx:187
+#: src/components/voice/VoiceSettingsMenus.tsx:185
 msgid "Deafen"
 msgstr "ปิดเสียง"
 
@@ -5952,6 +5954,10 @@ msgstr "ลดระดับซูมของแอป"
 #: src/components/modals/tabs/VideoTab.tsx:72
 #: src/components/modals/tabs/VoiceTab.tsx:106
 #: src/components/modals/tabs/VoiceTab.tsx:117
+#: src/components/voice/VoiceSettingsMenus.tsx:100
+#: src/components/voice/VoiceSettingsMenus.tsx:126
+#: src/components/voice/VoiceSettingsMenus.tsx:257
+#: src/components/voice/VoiceSettingsMenus.tsx:344
 msgid "Default"
 msgstr "ค่าเริ่มต้น"
 
@@ -6204,7 +6210,7 @@ msgstr "เดนมาร์ก"
 msgid "Dense"
 msgstr "แน่น"
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1018
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1020
 #: src/components/modals/guildTabs/GuildRolesTab.tsx:1088
 msgid "Dense layout"
 msgstr "เค้าโครงแน่น"
@@ -6903,7 +6909,7 @@ msgstr "เข้าถึงฟีเจอร์ใหม่ก่อนใค
 #: src/components/bottomsheets/VoiceSettingsBottomSheets.tsx:126
 #: src/components/modals/tabs/VoiceTab.tsx:410
 #: src/components/modals/utils/settingsSearchIndex.ts:450
-#: src/components/voice/VoiceSettingsMenus.tsx:161
+#: src/components/voice/VoiceSettingsMenus.tsx:159
 msgid "Echo Cancellation"
 msgstr "ยกเลิกเสียงสะท้อน"
 
@@ -6918,7 +6924,7 @@ msgid "Edit \"{0}\""
 msgstr "แก้ไข \"{0}\""
 
 #. placeholder {0}: getOverwriteName(selectedOverwrite)
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:970
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:972
 msgid "Edit Access for {0}"
 msgstr "แก้ไขการเข้าถึงสำหรับ {0}"
 
@@ -6997,11 +7003,11 @@ msgstr "แก้ไขโน้ต"
 msgid "Edit overwrites for roles and members in this channel."
 msgstr "แก้ไขการเขียนทับสำหรับบทบาทและสมาชิกในแชนแนลนี้"
 
-#: src/components/modals/UserProfileMobileSheet.tsx:490
-#: src/components/modals/UserProfileModal.tsx:1206
+#: src/components/modals/UserProfileMobileSheet.tsx:492
+#: src/components/modals/UserProfileModal.tsx:1208
 #: src/components/pages/YouPage.tsx:123
 #: src/components/popouts/UserAreaPopout.tsx:521
-#: src/components/popouts/UserProfilePopout.tsx:299
+#: src/components/popouts/UserProfilePopout.tsx:301
 msgid "Edit Profile"
 msgstr "แก้ไขโปรไฟล์"
 
@@ -8325,7 +8331,7 @@ msgstr "ชื่อไฟล์:"
 msgid "Files will be sent immediately without preview."
 msgstr "ไฟล์จะถูกส่งทันทีโดยไม่มีตัวอย่าง"
 
-#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:372
+#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:374
 msgid "Filter by action"
 msgstr "กรองตามการกระทำ"
 
@@ -8333,7 +8339,7 @@ msgstr "กรองตามการกระทำ"
 msgid "Filter by content"
 msgstr "กรองตามเนื้อหา"
 
-#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:365
+#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:367
 #: src/components/search/UserFilterSheet.tsx:90
 msgid "Filter by user"
 msgstr "กรองตามผู้ใช้"
@@ -9338,7 +9344,7 @@ msgid "Grid"
 msgstr "ตาราง"
 
 #: src/components/bottomsheets/VoiceSettingsBottomSheets.tsx:258
-#: src/components/voice/VoiceSettingsMenus.tsx:404
+#: src/components/voice/VoiceSettingsMenus.tsx:400
 msgid "Grid View"
 msgstr "มุมมองตาราง"
 
@@ -10074,6 +10080,8 @@ msgstr "อินพุต"
 #: src/components/bottomsheets/VoiceSettingsBottomSheets.tsx:74
 #: src/components/modals/tabs/VoiceTab.tsx:338
 #: src/components/modals/utils/settingsSearchIndex.ts:410
+#: src/components/voice/VoiceSettingsMenus.tsx:82
+#: src/components/voice/VoiceSettingsMenus.tsx:227
 msgid "Input Device"
 msgstr "อุปกรณ์อินพุต"
 
@@ -10100,6 +10108,8 @@ msgstr "สถานะอินพุต"
 
 #: src/components/bottomsheets/VoiceSettingsBottomSheets.tsx:96
 #: src/components/modals/tabs/VoiceTab.tsx:363
+#: src/components/voice/VoiceSettingsMenus.tsx:136
+#: src/components/voice/VoiceSettingsMenus.tsx:228
 msgid "Input Volume"
 msgstr "ระดับเสียงอินพุต"
 
@@ -11001,7 +11011,7 @@ msgstr "ถ่ายทอดสด"
 msgid "Live Preview"
 msgstr "แสดงตัวอย่างแบบสด"
 
-#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:633
+#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:635
 msgid "Load more"
 msgstr "โหลดเพิ่ม"
 
@@ -11694,11 +11704,11 @@ msgstr "การกล่าวถึง:"
 #: src/components/bottomsheets/VoiceParticipantBottomSheet.tsx:234
 #: src/components/modals/guildTabs/GuildMemberActionsSheet.tsx:220
 #: src/components/modals/tabs/ComponentGalleryTab/InputsTab.tsx:164
-#: src/components/modals/UserProfileMobileSheet.tsx:501
-#: src/components/modals/UserProfileModal.tsx:1190
-#: src/components/modals/UserProfileModal.tsx:1316
-#: src/components/popouts/UserProfilePopout.tsx:289
-#: src/components/popouts/UserProfilePopout.tsx:308
+#: src/components/modals/UserProfileMobileSheet.tsx:503
+#: src/components/modals/UserProfileModal.tsx:1192
+#: src/components/modals/UserProfileModal.tsx:1318
+#: src/components/popouts/UserProfilePopout.tsx:291
+#: src/components/popouts/UserProfilePopout.tsx:310
 #: src/components/profile/ProfilePreview.tsx:292
 #: src/components/uikit/ContextMenu/items/MessageUserMenuItem.tsx:47
 msgid "Message"
@@ -11843,6 +11853,13 @@ msgstr "การส่งข้อความถูกปิดชั่วค
 #: src/components/modals/tabs/components/MicTestSection.tsx:86
 msgid "Mic Test"
 msgstr "ทดสอบไมโครโฟน"
+
+#. placeholder {0}: device.deviceId.slice(0, 8)
+#. placeholder {0}: deviceId.slice(0, 8)
+#: src/components/voice/VoiceSettingsMenus.tsx:95
+#: src/components/voice/VoiceSettingsMenus.tsx:232
+msgid "Microphone {0}"
+msgstr "ไมโครโฟน {0}"
 
 #: src/components/modals/tabs/VoiceTab.tsx:103
 msgid "Microphone {shortDeviceId}"
@@ -12642,7 +12659,7 @@ msgstr "ยังไม่ได้ตั้งค่าแป้นพิมพ
 msgid "No limit"
 msgstr "ไม่มีขีดจำกัด"
 
-#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:609
+#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:611
 msgid "No logs yet"
 msgstr "ยังไม่มีบันทึก"
 
@@ -12695,7 +12712,7 @@ msgstr "ไม่มีคำขอที่รอดำเนินการ"
 msgid "No pending requests match your search"
 msgstr "ไม่มีคำขอที่รอดำเนินการตรงกับการค้นหาของคุณ"
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1065
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1067
 #: src/components/modals/guildTabs/GuildRolesTab.tsx:1130
 msgid "No permissions found"
 msgstr "ไม่พบสิทธิ์"
@@ -12724,7 +12741,7 @@ msgstr "ไม่มีปฏิกิริยา"
 msgid "No reason provided"
 msgstr "ไม่ได้ระบุเหตุผล"
 
-#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:462
+#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:464
 msgid "No reason was provided."
 msgstr "ไม่ได้ระบุเหตุผล"
 
@@ -12840,7 +12857,7 @@ msgstr "ไม่มีใคร"
 #: src/components/bottomsheets/VoiceSettingsBottomSheets.tsx:133
 #: src/components/modals/tabs/VoiceTab.tsx:416
 #: src/components/modals/utils/settingsSearchIndex.ts:442
-#: src/components/voice/VoiceSettingsMenus.tsx:169
+#: src/components/voice/VoiceSettingsMenus.tsx:167
 msgid "Noise Suppression"
 msgstr "ลดเสียงรบกวน"
 
@@ -12887,7 +12904,7 @@ msgstr "ตอนนี้ยังไม่"
 msgid "Not your cup of tea? You can disable this feature anytime."
 msgstr "ไม่ใช่ความชอบของคุณหรือเปล่า? คุณปิดฟีเจอร์นี้ได้ทุกเมื่อ"
 
-#: src/components/modals/UserProfileMobileSheet.tsx:553
+#: src/components/modals/UserProfileMobileSheet.tsx:555
 #: src/components/modals/UserProfileModal.tsx:244
 #: src/components/modals/UserProfileModal.tsx:248
 #: src/components/pages/YouPage.tsx:144
@@ -13445,11 +13462,15 @@ msgstr "คำขอเป็นเพื่อนที่ส่งออก"
 #: src/components/bottomsheets/VoiceSettingsBottomSheets.tsx:82
 #: src/components/modals/tabs/VoiceTab.tsx:347
 #: src/components/modals/utils/settingsSearchIndex.ts:418
+#: src/components/voice/VoiceSettingsMenus.tsx:108
+#: src/components/voice/VoiceSettingsMenus.tsx:227
 msgid "Output Device"
 msgstr "อุปกรณ์เอาต์พุต"
 
 #: src/components/bottomsheets/VoiceSettingsBottomSheets.tsx:107
 #: src/components/modals/tabs/VoiceTab.tsx:381
+#: src/components/voice/VoiceSettingsMenus.tsx:144
+#: src/components/voice/VoiceSettingsMenus.tsx:228
 msgid "Output Volume"
 msgstr "ระดับเสียงเอาต์พุต"
 
@@ -14069,7 +14090,7 @@ msgid "Preview Button"
 msgstr "ปุ่มตัวอย่าง"
 
 #: src/components/bottomsheets/VoiceSettingsBottomSheets.tsx:214
-#: src/components/voice/VoiceSettingsMenus.tsx:364
+#: src/components/voice/VoiceSettingsMenus.tsx:360
 msgid "Preview Camera"
 msgstr "ตัวอย่างกล้อง"
 
@@ -14422,7 +14443,7 @@ msgid "Ready to Upgrade?"
 msgstr "พร้อมอัปเกรดหรือยัง?"
 
 #: src/components/modals/BanDetailsModal.tsx:76
-#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:563
+#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:565
 msgid "Reason"
 msgstr "เหตุผล"
 
@@ -14718,10 +14739,10 @@ msgstr "ลบตัวกรอง"
 #: src/components/modals/UserProfileActionsSheet.tsx:115
 #: src/components/modals/UserProfileActionsSheet.tsx:117
 #: src/components/modals/UserProfileActionsSheet.tsx:278
-#: src/components/modals/UserProfileMobileSheet.tsx:303
 #: src/components/modals/UserProfileMobileSheet.tsx:305
-#: src/components/modals/UserProfileModal.tsx:1143
-#: src/components/modals/UserProfileModal.tsx:1229
+#: src/components/modals/UserProfileMobileSheet.tsx:307
+#: src/components/modals/UserProfileModal.tsx:1145
+#: src/components/modals/UserProfileModal.tsx:1231
 #: src/components/uikit/ContextMenu/items/RelationshipMenuItems.tsx:129
 #: src/utils/RelationshipActionUtils.tsx:113
 #: src/utils/RelationshipActionUtils.tsx:115
@@ -14773,7 +14794,7 @@ msgstr "ลบการกล่าวถึง"
 msgid "Remove override"
 msgstr "ลบการแทนที่"
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:990
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:992
 msgid "Remove Override"
 msgstr "ลบการแทนที่"
 
@@ -15059,7 +15080,7 @@ msgstr "ส่งรายงานเรียบร้อย ทีมคว�
 
 #: src/components/modals/IARModal.tsx:84
 #: src/components/modals/UserProfileActionsSheet.tsx:289
-#: src/components/modals/UserProfileModal.tsx:1157
+#: src/components/modals/UserProfileModal.tsx:1159
 msgid "Report User"
 msgstr "รายงานผู้ใช้"
 
@@ -15264,7 +15285,7 @@ msgstr "สมัครรับใหม่"
 #: src/components/channel/MessageActionBar.tsx:798
 #: src/components/channel/messageActionMenu.tsx:189
 #: src/components/modals/BackgroundImageGalleryModal.tsx:232
-#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:624
+#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:626
 #: src/components/modals/guildTabs/GuildEmojiTab.tsx:539
 #: src/components/modals/guildTabs/GuildInvitesTab.tsx:124
 #: src/components/modals/guildTabs/GuildStickersTab.tsx:211
@@ -15794,7 +15815,7 @@ msgstr "ค้นหาเฉพาะในข้อความตรงปั
 msgid "Search pending requests"
 msgstr "ค้นหารายการร้องขอที่ค้างอยู่"
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1011
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1013
 #: src/components/modals/guildTabs/GuildRolesTab.tsx:1081
 msgid "Search Permissions..."
 msgstr "ค้นหาการอนุญาต..."
@@ -16132,7 +16153,7 @@ msgstr "ส่งรหัส"
 
 #: src/components/channel/dm/DMWelcomeSection.tsx:112
 #: src/components/modals/guildTabs/GuildMemberActionsSheet.tsx:272
-#: src/components/modals/UserProfileModal.tsx:1290
+#: src/components/modals/UserProfileModal.tsx:1292
 msgid "Send Friend Request"
 msgstr "ส่งคำขอเป็นเพื่อน"
 
@@ -16666,7 +16687,7 @@ msgstr "แสดงข้อความที่เกี่ยวข้อง
 
 #: src/components/bottomsheets/VoiceSettingsBottomSheets.tsx:266
 #: src/components/uikit/ContextMenu/VoiceParticipantContextMenu.tsx:181
-#: src/components/voice/VoiceSettingsMenus.tsx:422
+#: src/components/voice/VoiceSettingsMenus.tsx:418
 msgid "Show My Own Camera"
 msgstr "แสดงกล้องของฉันเอง"
 
@@ -16684,7 +16705,7 @@ msgstr "แสดงหน้าต่างอุปกรณ์ใหม่"
 
 #: src/components/bottomsheets/VoiceSettingsBottomSheets.tsx:273
 #: src/components/uikit/ContextMenu/VoiceParticipantContextMenu.tsx:188
-#: src/components/voice/VoiceSettingsMenus.tsx:430
+#: src/components/voice/VoiceSettingsMenus.tsx:426
 msgid "Show Non-Video Participants"
 msgstr "แสดงผู้เข้าร่วมที่ไม่มีวิดีโอ"
 
@@ -16845,7 +16866,7 @@ msgstr "ปิดเสียงการโทรจากทุกคน"
 msgid "Simulates having a Stripe customer ID (for testing purchase history access)"
 msgstr "จำลองการมีรหัสลูกค้า Stripe (เพื่อทดสอบการเข้าถึงประวัติการซื้อ)"
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1034
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1036
 #: src/components/modals/guildTabs/GuildRolesTab.tsx:1102
 msgid "Single column"
 msgstr "คอลัมน์เดียว"
@@ -17037,7 +17058,7 @@ msgid "Something went wrong and the app crashed. Try reloading or resetting the 
 msgstr "เกิดข้อผิดพลาดและแอปขัดข้อง ลองรีโหลดหรือตั้งค่าแอปใหม่"
 
 #: src/components/modals/guildTabs/GuildAuditLogTab.tsx:308
-#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:340
+#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:342
 msgid "Something went wrong while loading the audit log."
 msgstr "เกิดข้อผิดพลาดขณะโหลดบันทึกการตรวจสอบ"
 
@@ -17137,6 +17158,13 @@ msgstr "พูดข้อความ"
 #: src/components/modals/tabs/components/MicTestSection.tsx:137
 msgid "Speak normally into your microphone. You should hear yourself through your speakers. The level should stay in the green \"Good\" or yellow \"Optimal\" range."
 msgstr "พูดปกติผ่านไมโครโฟน คุณควรได้ยินเสียงตัวเองผ่านลำโพง ระดับเสียงควรอยู่ในช่วงสีเขียว \"ดี\" หรือสีเหลือง \"เหมาะสม\""
+
+#. placeholder {0}: device.deviceId.slice(0, 8)
+#. placeholder {0}: deviceId.slice(0, 8)
+#: src/components/voice/VoiceSettingsMenus.tsx:121
+#: src/components/voice/VoiceSettingsMenus.tsx:233
+msgid "Speaker {0}"
+msgstr "ลำโพง {0}"
 
 #: src/components/modals/tabs/VoiceTab.tsx:114
 msgid "Speaker {shortDeviceId}"
@@ -17242,13 +17270,13 @@ msgid "Start Sharing"
 msgstr "เริ่มแชร์"
 
 #: src/components/channel/ChannelHeader/CallButtons.tsx:160
-#: src/components/modals/UserProfileModal.tsx:1109
+#: src/components/modals/UserProfileModal.tsx:1111
 #: src/components/uikit/ContextMenu/items/CallMenuItems.tsx:91
 msgid "Start Video Call"
 msgstr "เริ่มวิดีโอคอล"
 
 #: src/components/channel/ChannelHeader/CallButtons.tsx:90
-#: src/components/modals/UserProfileModal.tsx:1100
+#: src/components/modals/UserProfileModal.tsx:1102
 #: src/components/uikit/ContextMenu/items/CallMenuItems.tsx:60
 msgid "Start Voice Call"
 msgstr "เริ่มโทรด้วยเสียง"
@@ -17594,17 +17622,17 @@ msgstr "สลับระหว่างชุมชนล่าสุดกั
 msgid "Switch Device"
 msgstr "เปลี่ยนอุปกรณ์"
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1024
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1026
 #: src/components/modals/guildTabs/GuildRolesTab.tsx:1093
 msgid "Switch to comfy layout"
 msgstr "เปลี่ยนเป็นเลย์เอาต์สบายตา"
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1024
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1026
 #: src/components/modals/guildTabs/GuildRolesTab.tsx:1093
 msgid "Switch to dense layout"
 msgstr "เปลี่ยนเป็นเลย์เอาต์แน่น"
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1040
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1042
 #: src/components/modals/guildTabs/GuildRolesTab.tsx:1107
 msgid "Switch to single column"
 msgstr "เปลี่ยนเป็นคอลัมน์เดียว"
@@ -17617,7 +17645,7 @@ msgstr "เปลี่ยนไปใช้บัญชีนี้"
 msgid "Switch to This Device"
 msgstr "เปลี่ยนไปใช้อุปกรณ์นี้"
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1040
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1042
 #: src/components/modals/guildTabs/GuildRolesTab.tsx:1107
 msgid "Switch to two columns"
 msgstr "เปลี่ยนเป็นสองคอลัมน์"
@@ -17643,8 +17671,8 @@ msgstr "ซิงก์ธีม"
 msgid "Sync theme across devices"
 msgstr "ซิงก์ธีมข้ามอุปกรณ์"
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:854
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:950
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:856
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:952
 msgid "Sync with Category"
 msgstr "ซิงก์กับหมวดหมู่"
 
@@ -18037,14 +18065,14 @@ msgid "This channel is not marked as NSFW. Explicit content can only be sent in 
 msgstr "ช่องนี้ยังไม่ได้ตั้งค่าเป็น NSFW เนื้อหาที่ไม่เหมาะสมสามารถส่งได้ในช่อง NSFW เท่านั้น ขอให้ผู้ดูแลตั้งค่าช่องนี้เป็น NSFW หากเหมาะสม"
 
 #. placeholder {0}: parentChannel?.name
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:847
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:943
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:849
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:945
 msgid "This channel is not synced with the parent category <0>{0}</0>."
 msgstr "ช่องนี้ไม่ได้ซิงก์กับหมวดหมู่หลัก <0>{0}</0>"
 
 #. placeholder {0}: parentChannel?.name
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:843
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:939
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:845
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:941
 msgid "This channel is synced with the parent category <0>{0}</0>."
 msgstr "ช่องนี้ซิงก์กับหมวดหมู่หลัก <0>{0}</0>"
 
@@ -18612,7 +18640,7 @@ msgstr "หัวข้อ"
 msgid "Total Parsing Time:"
 msgstr "เวลาการแยกวิเคราะห์รวม:"
 
-#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:355
+#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:357
 msgid "Track moderator actions across the community."
 msgstr "ติดตามการทำงานของผู้ดูแลทั่วทั้งชุมชน"
 
@@ -18789,7 +18817,7 @@ msgstr "ปรับแต่งพื้นฐานของหมวดนี
 msgid "Tweak this channel's basics."
 msgstr "ปรับแต่งพื้นฐานของแชนแนลนี้"
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1034
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1036
 #: src/components/modals/guildTabs/GuildRolesTab.tsx:1102
 msgid "Two columns"
 msgstr "สองคอลัมน์"
@@ -18895,7 +18923,7 @@ msgstr "ไม่สามารถติดตั้งชุดอิโมจ
 msgid "Unable to install sticker pack"
 msgstr "ไม่สามารถติดตั้งชุดสติกเกอร์ได้"
 
-#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:619
+#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:621
 msgid "Unable to load activity logs"
 msgstr "ไม่สามารถโหลดบันทึกกิจกรรมได้"
 
@@ -18949,8 +18977,8 @@ msgstr "ไม่พร้อมใช้งานสำหรับทุกค
 #: src/components/modals/tabs/BlockedUsersTab.tsx:171
 #: src/components/modals/UserProfileActionsSheet.tsx:151
 #: src/components/modals/UserProfileActionsSheet.tsx:305
-#: src/components/modals/UserProfileMobileSheet.tsx:321
-#: src/components/modals/UserProfileModal.tsx:1049
+#: src/components/modals/UserProfileMobileSheet.tsx:323
+#: src/components/modals/UserProfileModal.tsx:1051
 #: src/components/uikit/ContextMenu/items/RelationshipMenuItems.tsx:230
 #: src/utils/RelationshipActionUtils.tsx:169
 msgid "Unblock"
@@ -18963,8 +18991,8 @@ msgstr "ปลดบล็อกผู้ใช้รายนี้ก่อน
 #: src/components/modals/guildTabs/GuildMemberActionsSheet.tsx:180
 #: src/components/modals/tabs/BlockedUsersTab.tsx:56
 #: src/components/modals/UserProfileActionsSheet.tsx:149
-#: src/components/modals/UserProfileMobileSheet.tsx:319
-#: src/components/modals/UserProfileModal.tsx:1244
+#: src/components/modals/UserProfileMobileSheet.tsx:321
+#: src/components/modals/UserProfileModal.tsx:1246
 #: src/utils/RelationshipActionUtils.tsx:167
 msgid "Unblock User"
 msgstr "ปลดบล็อกผู้ใช้"
@@ -19760,7 +19788,7 @@ msgstr "ใช้คีย์ความปลอดภัย"
 msgid "Use system locale for time format"
 msgstr "ใช้โลแคลของระบบสำหรับรูปแบบเวลา"
 
-#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:998
+#: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:1000
 msgid "Use these buttons to quickly set all permissions."
 msgstr "ใช้ปุ่มเหล่านี้เพื่อตั้งค่าสิทธิ์ทั้งหมดอย่างรวดเร็ว"
 
@@ -19840,11 +19868,11 @@ msgid "User Moved Channel"
 msgstr "ผู้ใช้ย้ายช่องแล้ว"
 
 #: src/components/modals/tabs/ComponentGalleryTab/InputsTab.tsx:133
-#: src/components/modals/UserProfileModal.tsx:945
+#: src/components/modals/UserProfileModal.tsx:947
 msgid "User Profile"
 msgstr "โปรไฟล์ผู้ใช้"
 
-#: src/components/modals/UserProfileModal.tsx:947
+#: src/components/modals/UserProfileModal.tsx:949
 msgid "User Profile: {tag}"
 msgstr "โปรไฟล์ผู้ใช้: {tag}"
 
@@ -20109,7 +20137,7 @@ msgid "Video"
 msgstr "วิดีโอ"
 
 #: src/components/channel/ChannelHeader.tsx:572
-#: src/components/modals/UserProfileMobileSheet.tsx:519
+#: src/components/modals/UserProfileMobileSheet.tsx:521
 msgid "Video Call"
 msgstr "วิดีโอคอล"
 
@@ -20135,7 +20163,7 @@ msgid "Video Quality"
 msgstr "คุณภาพวิดีโอ"
 
 #: src/components/bottomsheets/VoiceSettingsBottomSheets.tsx:227
-#: src/components/voice/VoiceSettingsMenus.tsx:376
+#: src/components/voice/VoiceSettingsMenus.tsx:372
 msgid "Video Settings"
 msgstr "การตั้งค่าวิดีโอ"
 
@@ -20212,7 +20240,7 @@ msgid "View Codes"
 msgstr "ดูรหัส"
 
 #: src/components/modals/UserProfileActionsSheet.tsx:194
-#: src/components/modals/UserProfileModal.tsx:1087
+#: src/components/modals/UserProfileModal.tsx:1089
 msgid "View Community Profile"
 msgstr "ดูโปรไฟล์ชุมชน"
 
@@ -20231,7 +20259,7 @@ msgid "View Gift Inventory"
 msgstr "ดูคลังของขวัญ"
 
 #: src/components/modals/UserProfileActionsSheet.tsx:194
-#: src/components/modals/UserProfileModal.tsx:1087
+#: src/components/modals/UserProfileModal.tsx:1089
 msgid "View Global Profile"
 msgstr "ดูโปรไฟล์ระดับโลก"
 
@@ -20370,7 +20398,7 @@ msgstr "เสียง"
 
 #: src/components/bottomsheets/VoiceSettingsBottomSheets.tsx:288
 #: src/components/uikit/ContextMenu/items/VoiceParticipantMenuItems.tsx:135
-#: src/components/voice/VoiceSettingsMenus.tsx:442
+#: src/components/voice/VoiceSettingsMenus.tsx:438
 msgid "Voice & Video Settings"
 msgstr "การตั้งค่าเสียงและวิดีโอ"
 
@@ -20386,7 +20414,7 @@ msgstr "โทรเสียง"
 #: src/components/bottomsheets/DMBottomSheet.tsx:421
 #: src/components/channel/ChannelHeader.tsx:562
 #: src/components/modals/guildTabs/GuildMemberActionsSheet.tsx:227
-#: src/components/modals/UserProfileMobileSheet.tsx:511
+#: src/components/modals/UserProfileMobileSheet.tsx:513
 msgid "Voice Call"
 msgstr "โทรเสียง"
 
@@ -20460,8 +20488,8 @@ msgid "Voice Region"
 msgstr "ภูมิภาคเสียง"
 
 #: src/components/bottomsheets/VoiceSettingsBottomSheets.tsx:165
-#: src/components/voice/VoiceSettingsMenus.tsx:199
-#: src/components/voice/VoiceSettingsMenus.tsx:287
+#: src/components/voice/VoiceSettingsMenus.tsx:197
+#: src/components/voice/VoiceSettingsMenus.tsx:284
 msgid "Voice Settings"
 msgstr "การตั้งค่าเสียง"
 
@@ -20844,7 +20872,7 @@ msgstr "เมื่อเปิดใช้งาน คุณสามาร�
 msgid "When enabled, you'll need to double-click on voice channels to join them. When disabled (default), single-clicking will join the channel immediately."
 msgstr "เมื่อเปิดใช้งาน คุณต้องดับเบิลคลิกแชนแนลเสียงเพื่อเข้าร่วม เมื่อปิดใช้งาน (ค่าเริ่มต้น) การคลิกครั้งเดียวจะเข้าร่วมทันที"
 
-#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:610
+#: src/components/modals/guildTabs/GuildAuditLogTab.tsx:612
 msgid "When moderators begin moderating, you can moderate the moderation here."
 msgstr "เมื่อผู้ดูแลเริ่มจัดการ คุณสามารถควบคุมการจัดการนั้นได้ที่นี่"
 
@@ -21085,7 +21113,7 @@ msgstr "คุณสามารถใช้ลิงก์และ Markdown �
 msgid "You can't add new reactions while you're on timeout."
 msgstr "คุณไม่สามารถเพิ่มรีแอคชันใหม่ขณะที่อยู่ในช่วงพักเวลา"
 
-#: src/components/modals/UserProfileModal.tsx:1171
+#: src/components/modals/UserProfileModal.tsx:1173
 msgid "You can't befriend yourself"
 msgstr "คุณไม่สามารถเพิ่มตัวเองเป็นเพื่อนได้"
 
@@ -21100,8 +21128,8 @@ msgstr "คุณไม่สามารถโต้ตอบกับรีแ
 msgid "You can't join while you're on timeout."
 msgstr "คุณไม่สามารถเข้าร่วมขณะที่อยู่ในช่วงพักเวลา"
 
-#: src/components/modals/UserProfileModal.tsx:1183
-#: src/components/popouts/UserProfilePopout.tsx:282
+#: src/components/modals/UserProfileModal.tsx:1185
+#: src/components/popouts/UserProfilePopout.tsx:284
 #: src/components/profile/ProfilePreview.tsx:284
 msgid "You can't message yourself"
 msgstr "คุณไม่สามารถส่งข้อความถึงตัวเองได้"
