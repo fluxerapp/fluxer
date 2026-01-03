@@ -146,13 +146,17 @@ export const startDeepLinkHandling = async (): Promise<void> => {
 			}
 		});
 
-		electronApi.onRpcNavigate((path) => {
-			try {
-				handleRpcNavigation(path);
-			} catch (error) {
-				console.error('[DeepLink] Failed to handle RPC navigation', path, error);
-			}
-		});
+		if (typeof electronApi.onRpcNavigate === 'function') {
+			electronApi.onRpcNavigate((path) => {
+				try {
+					handleRpcNavigation(path);
+				} catch (error) {
+					console.error('[DeepLink] Failed to handle RPC navigation', path, error);
+				}
+			});
+		} else {
+			console.warn('[DeepLink] onRpcNavigate not available on this host version');
+		}
 
 		return;
 	}
