@@ -17,6 +17,12 @@ msgstr ""
 msgid "Control when message previews are shown in the DM list"
 msgstr "DM 목록에서 메시지 미리보기를 표시할 시기를 제어하세요"
 
+#. js-lingui-explicit-id
+#: src/components/channel/emoji-picker/EmojiPickerCategoryList.tsx:56
+#: src/components/channel/emoji-picker/EmojiPickerCategoryList.tsx:98
+msgid "Frequently Used"
+msgstr "자주 사용함"
+
 #: src/utils/SearchUtils.ts:341
 msgid "-ext:"
 msgstr "-확장자:"
@@ -56,7 +62,7 @@ msgstr "... 조밀 모드가 켜졌어요. 좋네요!"
 msgid "(edited)"
 msgstr "(수정됨)"
 
-#: src/lib/markdown/renderers/emoji-renderer.tsx:189
+#: src/lib/markdown/renderers/emoji-renderer.tsx:196
 msgid "(failed to load)"
 msgstr "(불러오기 실패)"
 
@@ -887,7 +893,7 @@ msgid "<0/> started a call."
 msgstr "<0/>님이 통화를 시작했습니다."
 
 #. placeholder {0}: guild.name
-#: src/components/layout/GuildLayout.tsx:132
+#: src/components/layout/GuildLayout.tsx:131
 msgid "<0>{0}</0> is currently only accessible to Fluxer staff members"
 msgstr "<0>{0}</0>는 현재 Fluxer 직원만 접근 가능합니다"
 
@@ -1647,7 +1653,7 @@ msgstr "전화번호 입력란 추가"
 
 #: src/components/channel/MessageActionBar.tsx:450
 #: src/components/channel/MessageActionBar.tsx:741
-#: src/components/channel/messageActionMenu.tsx:92
+#: src/components/channel/messageActionMenu.tsx:94
 #: src/components/channel/MessageReactions.tsx:263
 #: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:65
 msgid "Add Reaction"
@@ -2199,7 +2205,7 @@ msgid "Animated Emoji ({0})"
 msgstr "애니메이션 이모지 ({0})"
 
 #: src/components/channel/embeds/media/EmbedGifv.tsx:237
-#: src/components/channel/embeds/media/EmbedGifv.tsx:749
+#: src/components/channel/embeds/media/EmbedGifv.tsx:752
 #: src/components/modals/MediaViewerModal.tsx:294
 #: src/components/modals/MediaViewerModal.tsx:362
 msgid "Animated GIF"
@@ -2481,7 +2487,7 @@ msgid "Are you sure you want to disable SMS two-factor authentication? This will
 msgstr "SMS 이중 인증을 비활성화하시겠어요? 계정 보안이 낮아집니다."
 
 #: src/components/invites/DisableInvitesButton.tsx:49
-#: src/components/layout/GuildLayout.tsx:69
+#: src/components/layout/GuildLayout.tsx:68
 msgid "Are you sure you want to enable invites? This will allow users to join this community through invite links again."
 msgstr "초대를 활성화하시겠어요? 초대 링크로 이 커뮤니티에 다시 가입할 수 있습니다."
 
@@ -2548,7 +2554,7 @@ msgstr "<0>{0}</0>님의 밴을 해제하시겠어요? 커뮤니티에 다시 �
 msgid "Are you sure you want to revoke this invite? This action cannot be undone."
 msgstr "이 초대를 취소하시겠어요? 이 작업은 되돌릴 수 없습니다."
 
-#: src/components/channel/embeds/Embed.tsx:707
+#: src/components/channel/embeds/Embed.tsx:143
 msgid "Are you sure you want to suppress all link embeds on this message? This action will hide all embeds from this message."
 msgstr "이 메시지의 모든 링크 임베드를 숨기시겠어요? 이 작업은 메시지의 모든 임베드를 숨깁니다."
 
@@ -3159,7 +3165,7 @@ msgstr "북마크 한도 도달"
 
 #: src/components/channel/MessageActionBar.tsx:518
 #: src/components/channel/MessageActionBar.tsx:708
-#: src/components/channel/messageActionMenu.tsx:140
+#: src/components/channel/messageActionMenu.tsx:142
 #: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:140
 msgid "Bookmark Message"
 msgstr "메시지 북마크"
@@ -3432,7 +3438,7 @@ msgstr "카메라 설정"
 #: src/components/channel/MentionEveryonePopout.tsx:125
 #: src/components/emojis/EmojiListItem.tsx:120
 #: src/components/invites/DisableInvitesButton.tsx:62
-#: src/components/layout/GuildLayout.tsx:76
+#: src/components/layout/GuildLayout.tsx:75
 #: src/components/modals/AccountDeleteModal.tsx:89
 #: src/components/modals/AccountDisableModal.tsx:63
 #: src/components/modals/AddFavoriteMemeModal.tsx:99
@@ -3680,8 +3686,8 @@ msgstr "내 그룹 닉네임 변경"
 #: src/components/modals/UserProfileActionsSheet.tsx:225
 #: src/components/modals/UserProfileActionsSheet.tsx:225
 #: src/components/uikit/ContextMenu/FavoritesChannelContextMenu.tsx:119
-#: src/components/uikit/ContextMenu/items/GuildMemberMenuItems.tsx:229
-#: src/components/uikit/ContextMenu/items/GuildMemberMenuItems.tsx:229
+#: src/components/uikit/ContextMenu/items/GuildMemberMenuItems.tsx:245
+#: src/components/uikit/ContextMenu/items/GuildMemberMenuItems.tsx:245
 msgid "Change Nickname"
 msgstr "닉네임 변경"
 
@@ -3775,7 +3781,7 @@ msgstr "채널"
 msgid "Channel Access"
 msgstr "채널 접근"
 
-#: src/lib/markdown/renderers/link-renderer.tsx:180
+#: src/lib/markdown/renderers/link-renderer.tsx:206
 msgid "Channel Access Denied"
 msgstr "채널 접근 거부됨"
 
@@ -4142,7 +4148,7 @@ msgstr "베타 코드를 생성하기 위해 계정을 요청하세요."
 
 #: src/components/layout/ChannelItem.tsx:208
 #: src/components/layout/ChannelItem.tsx:382
-#: src/stores/voice/MediaEngineFacade.ts:537
+#: src/stores/voice/MediaEngineFacade.ts:541
 msgid "Claim your account to join this voice channel."
 msgstr "이 음성 채널에 참여하기 위해 계정을 확인하세요."
 
@@ -4649,8 +4655,8 @@ msgstr "커뮤니티가 불법 활동을 조장하거나 지원함"
 msgid "Community Settings"
 msgstr "커뮤니티 설정"
 
-#: src/components/layout/GuildLayout.tsx:306
-#: src/components/layout/GuildLayout.tsx:353
+#: src/components/layout/GuildLayout.tsx:304
+#: src/components/layout/GuildLayout.tsx:345
 msgid "Community temporarily unavailable"
 msgstr "커뮤니티가 일시적으로 사용 불가"
 
@@ -5179,20 +5185,20 @@ msgstr "링크 복사"
 msgid "Copy Media"
 msgstr "미디어 복사"
 
-#: src/components/channel/messageActionMenu.tsx:174
+#: src/components/channel/messageActionMenu.tsx:176
 msgid "Copy Message"
 msgstr "메시지 복사"
 
 #: src/components/channel/MessageActionBar.tsx:580
 #: src/components/channel/MessageActionBar.tsx:673
-#: src/components/channel/messageActionMenu.tsx:181
+#: src/components/channel/messageActionMenu.tsx:183
 #: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:235
 msgid "Copy Message ID"
 msgstr "메시지 ID 복사"
 
 #: src/components/channel/MessageActionBar.tsx:570
 #: src/components/channel/MessageActionBar.tsx:679
-#: src/components/channel/messageActionMenu.tsx:167
+#: src/components/channel/messageActionMenu.tsx:169
 #: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:216
 msgid "Copy Message Link"
 msgstr "메시지 링크 복사"
@@ -5388,8 +5394,8 @@ msgstr "즐겨찾기 카테고리 생성 양식"
 msgid "Create Group DM"
 msgstr "그룹 DM 만들기"
 
-#: src/components/modals/channelTabs/ChannelInvitesTab.tsx:88
-#: src/components/modals/channelTabs/ChannelInvitesTab.tsx:130
+#: src/components/modals/channelTabs/ChannelInvitesTab.tsx:87
+#: src/components/modals/channelTabs/ChannelInvitesTab.tsx:128
 msgid "Create Invite"
 msgstr "초대 만들기"
 
@@ -5978,11 +5984,11 @@ msgstr "배터리 수명을 위해 모바일에서는 상호작용 시 애니메
 msgid "Defaults to off on mobile to preserve battery life and data usage."
 msgstr "배터리 및 데이터 사용량을 위해 모바일에서는 기본적으로 꺼집니다."
 
-#: src/actions/MessageActionCreators.tsx:394
+#: src/actions/MessageActionCreators.tsx:406
 #: src/components/channel/embeds/media/EmbedAudio.tsx:227
 #: src/components/channel/embeds/media/MediaContainer.tsx:115
-#: src/components/channel/Messages.tsx:442
-#: src/components/channel/Messages.tsx:522
+#: src/components/channel/Messages.tsx:447
+#: src/components/channel/Messages.tsx:527
 #: src/components/channel/MobileMemesPicker.tsx:546
 #: src/components/channel/pickers/memes/MemeGridItem.tsx:120
 #: src/components/emojis/EmojiListItem.tsx:189
@@ -6091,14 +6097,14 @@ msgstr "이모지 삭제"
 msgid "Delete media"
 msgstr "미디어 삭제"
 
-#: src/actions/MessageActionCreators.tsx:391
+#: src/actions/MessageActionCreators.tsx:403
 #: src/components/channel/MessageActionBar.tsx:608
 #: src/components/channel/MessageActionBar.tsx:787
 #: src/components/channel/MessageActionBar.tsx:804
-#: src/components/channel/messageActionMenu.tsx:156
-#: src/components/channel/messageActionMenu.tsx:193
-#: src/components/channel/Messages.tsx:439
-#: src/components/channel/Messages.tsx:519
+#: src/components/channel/messageActionMenu.tsx:158
+#: src/components/channel/messageActionMenu.tsx:195
+#: src/components/channel/Messages.tsx:444
+#: src/components/channel/Messages.tsx:524
 #: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:273
 msgid "Delete Message"
 msgstr "메시지 삭제"
@@ -6595,7 +6601,7 @@ msgstr "불법 활동의 토론 또는 홍보"
 #: src/components/layout/app-layout/nagbars/PremiumExpiredNagbar.tsx:73
 #: src/components/layout/app-layout/nagbars/PremiumGracePeriodNagbar.tsx:79
 #: src/components/layout/app-layout/nagbars/PremiumOnboardingNagbar.tsx:57
-#: src/components/layout/GuildLayout.tsx:106
+#: src/components/layout/GuildLayout.tsx:105
 #: src/components/modals/GiftAcceptModal.tsx:105
 #: src/components/modals/GiftAcceptModal.tsx:131
 #: src/components/modals/RequiredActionModal.tsx:475
@@ -6978,7 +6984,7 @@ msgstr "미디어 편집"
 
 #: src/components/channel/MessageActionBar.tsx:463
 #: src/components/channel/MessageActionBar.tsx:751
-#: src/components/channel/messageActionMenu.tsx:124
+#: src/components/channel/messageActionMenu.tsx:126
 #: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:83
 msgid "Edit Message"
 msgstr "메시지 편집"
@@ -7224,7 +7230,7 @@ msgid "Emojis"
 msgstr "이모지"
 
 #: src/components/invites/DisableInvitesButton.tsx:60
-#: src/components/layout/GuildLayout.tsx:74
+#: src/components/layout/GuildLayout.tsx:73
 #: src/components/modals/tabs/AccountSecurityTab/SecurityTab.tsx:241
 #: src/components/modals/tabs/AccountSecurityTab/SecurityTab.tsx:430
 #: src/components/modals/tabs/AccountSecurityTab/SecurityTab.tsx:436
@@ -7299,12 +7305,12 @@ msgstr "입력 모니터링 권한 활성화"
 msgid "Enable Invites"
 msgstr "초대 활성화"
 
-#: src/components/layout/GuildLayout.tsx:111
+#: src/components/layout/GuildLayout.tsx:110
 msgid "Enable Invites Again"
 msgstr "다시 초대 활성화"
 
 #: src/components/invites/DisableInvitesButton.tsx:46
-#: src/components/layout/GuildLayout.tsx:67
+#: src/components/layout/GuildLayout.tsx:66
 msgid "Enable invites for this community"
 msgstr "이 커뮤니티의 초대를 활성화합니다"
 
@@ -7947,8 +7953,8 @@ msgid "Failed to load gift inventory"
 msgstr "선물 목록을 불러오지 못했습니다"
 
 #: src/components/alerts/InvitesLoadFailedModal.tsx:28
-#: src/components/modals/channelTabs/ChannelInvitesTab.tsx:144
-#: src/components/modals/guildTabs/GuildInvitesTab.tsx:122
+#: src/components/modals/channelTabs/ChannelInvitesTab.tsx:142
+#: src/components/modals/guildTabs/GuildInvitesTab.tsx:120
 msgid "Failed to load invites"
 msgstr "초대를 불러오지 못했습니다"
 
@@ -8769,7 +8775,7 @@ msgstr "비밀번호를 잊으셨나요?"
 
 #: src/components/channel/MessageActionBar.tsx:489
 #: src/components/channel/MessageActionBar.tsx:767
-#: src/components/channel/messageActionMenu.tsx:115
+#: src/components/channel/messageActionMenu.tsx:117
 #: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:119
 msgid "Forward"
 msgstr "앞으로"
@@ -10416,7 +10422,7 @@ msgid "Invites Paused"
 msgstr "초대 일시중지"
 
 #. placeholder {0}: guild.name
-#: src/components/layout/GuildLayout.tsx:99
+#: src/components/layout/GuildLayout.tsx:98
 msgid "Invites to <0>{0}</0> are currently disabled"
 msgstr "<0>{0}</0>에 대한 초대는 현재 비활성화돼 있어요"
 
@@ -10457,8 +10463,8 @@ msgstr "지터"
 msgid "Join a Community"
 msgstr "커뮤니티 참여"
 
-#: src/components/channel/MobileStickersPicker.tsx:122
-#: src/components/channel/StickersPicker.tsx:198
+#: src/components/channel/MobileStickersPicker.tsx:132
+#: src/components/channel/StickersPicker.tsx:209
 msgid "Join a community with stickers to get started!"
 msgstr "스티커가 있는 커뮤니티에 참여해 시작해 보세요!"
 
@@ -10588,7 +10594,7 @@ msgstr "이동"
 msgid "Jump straight to the app to continue."
 msgstr "계속하려면 바로 앱으로 이동하세요."
 
-#: src/lib/markdown/renderers/link-renderer.tsx:98
+#: src/lib/markdown/renderers/link-renderer.tsx:108
 msgid "Jump to {labelText}"
 msgstr "{labelText}로 이동"
 
@@ -10604,7 +10610,7 @@ msgstr "가장 오래된 읽지 않은 메시지로 이동"
 msgid "Jump to page"
 msgstr "페이지로 이동"
 
-#: src/components/channel/Messages.tsx:915
+#: src/components/channel/Messages.tsx:920
 msgid "Jump to Present"
 msgstr "현재로 이동"
 
@@ -10612,15 +10618,15 @@ msgstr "현재로 이동"
 msgid "Jump to the channel of the active call"
 msgstr "현재 통화 채널로 이동"
 
-#: src/lib/markdown/renderers/link-renderer.tsx:99
+#: src/lib/markdown/renderers/link-renderer.tsx:109
 msgid "Jump to the linked channel"
 msgstr "연결된 채널로 이동"
 
-#: src/lib/markdown/renderers/link-renderer.tsx:96
+#: src/lib/markdown/renderers/link-renderer.tsx:106
 msgid "Jump to the linked message"
 msgstr "연결된 메시지로 이동"
 
-#: src/lib/markdown/renderers/link-renderer.tsx:95
+#: src/lib/markdown/renderers/link-renderer.tsx:105
 msgid "Jump to the message in {labelText}"
 msgstr "{labelText}의 메시지로 이동"
 
@@ -11024,7 +11030,7 @@ msgid "Loading more..."
 msgstr "더 로딩 중..."
 
 #: src/components/channel/embeds/media/EmbedGifv.tsx:493
-#: src/components/channel/embeds/media/EmbedGifv.tsx:745
+#: src/components/channel/embeds/media/EmbedGifv.tsx:748
 msgid "Loading placeholder"
 msgstr "플레이스홀더 로딩 중"
 
@@ -11256,7 +11262,7 @@ msgstr "표현 팩 관리"
 msgid "Manage feature flags"
 msgstr "기능 플래그 관리"
 
-#: src/components/layout/GuildLayout.tsx:138
+#: src/components/layout/GuildLayout.tsx:137
 msgid "Manage Guild Features"
 msgstr "길드 기능 관리"
 
@@ -11353,7 +11359,7 @@ msgstr "스포일러로 표시"
 
 #: src/components/channel/MessageActionBar.tsx:530
 #: src/components/channel/MessageActionBar.tsx:701
-#: src/components/channel/messageActionMenu.tsx:99
+#: src/components/channel/messageActionMenu.tsx:101
 #: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:311
 msgid "Mark as Unread"
 msgstr "안 읽음으로 표시"
@@ -11822,7 +11828,7 @@ msgstr "메시지 및 미디어"
 msgid "Messages Deleted"
 msgstr "메시지가 삭제되었습니다"
 
-#: src/components/channel/Messages.tsx:936
+#: src/components/channel/Messages.tsx:941
 msgid "Messages failed to load"
 msgstr "메시지 로딩에 실패했습니다"
 
@@ -12471,7 +12477,7 @@ msgstr "별명은 32자를 넘을 수 없습니다"
 msgid "Nickname updated"
 msgstr "별명이 업데이트되었습니다"
 
-#: src/components/layout/GuildLayout.tsx:397
+#: src/components/layout/GuildLayout.tsx:385
 msgid "No accessible channels"
 msgstr "접근 가능한 채널이 없습니다"
 
@@ -12575,6 +12581,10 @@ msgstr "설정된 이메일 주소가 없습니다"
 msgid "No emojis found matching your search."
 msgstr "검색과 일치하는 이모지를 찾을 수 없습니다."
 
+#: src/components/channel/EmojiPicker.tsx:283
+msgid "No emojis match your search"
+msgstr "검색한 이모티콘이 없습니다"
+
 #: src/components/common/FriendSelector.tsx:211
 #: src/components/modals/shared/RecipientList.tsx:191
 msgid "No friends found"
@@ -12613,8 +12623,8 @@ msgstr "설치된 팩이 아직 없습니다."
 msgid "No invite background"
 msgstr "초대 배경 없음"
 
-#: src/components/modals/channelTabs/ChannelInvitesTab.tsx:122
-#: src/components/modals/guildTabs/GuildInvitesTab.tsx:109
+#: src/components/modals/channelTabs/ChannelInvitesTab.tsx:120
+#: src/components/modals/guildTabs/GuildInvitesTab.tsx:107
 msgid "No invite links"
 msgstr "초대 링크 없음"
 
@@ -12768,8 +12778,8 @@ msgstr "설정을 찾을 수 없음"
 msgid "No specific scopes requested."
 msgstr "특정 범위가 요청되지 않았습니다."
 
-#: src/components/channel/MobileStickersPicker.tsx:121
-#: src/components/channel/StickersPicker.tsx:197
+#: src/components/channel/MobileStickersPicker.tsx:131
+#: src/components/channel/StickersPicker.tsx:208
 msgid "No Stickers Available"
 msgstr "사용할 수 있는 스티커가 없습니다"
 
@@ -12777,14 +12787,17 @@ msgstr "사용할 수 있는 스티커가 없습니다"
 msgid "No stickers found"
 msgstr "스티커를 찾을 수 없음"
 
-#: src/components/channel/MobileStickersPicker.tsx:147
-#: src/components/channel/StickersPicker.tsx:226
+#: src/components/channel/MobileStickersPicker.tsx:157
 msgid "No Stickers Found"
 msgstr "스티커를 찾을 수 없음"
 
 #: src/components/modals/guildTabs/GuildStickersTab.tsx:191
 msgid "No stickers found matching your search."
 msgstr "검색에 맞는 스티커를 찾을 수 없음"
+
+#: src/components/channel/StickersPicker.tsx:285
+msgid "No stickers match your search"
+msgstr "검색한 스티커가 없습니다"
 
 #: src/components/modals/guildTabs/GuildOverviewTab/sections/SystemWelcomeSection.tsx:40
 msgid "No System Channel"
@@ -13034,7 +13047,7 @@ msgstr "확인"
 #: src/components/alerts/SlowmodeRateLimitedModal.tsx:65
 #: src/lib/KeybindManager.ts:495
 #: src/lib/KeybindManager.ts:520
-#: src/lib/markdown/renderers/link-renderer.tsx:182
+#: src/lib/markdown/renderers/link-renderer.tsx:208
 msgid "Okay"
 msgstr "알겠어요"
 
@@ -13764,7 +13777,7 @@ msgstr "고정하세요. 잘 고정하세요."
 
 #: src/components/channel/MessageActionBar.tsx:505
 #: src/components/channel/MessageActionBar.tsx:716
-#: src/components/channel/messageActionMenu.tsx:132
+#: src/components/channel/messageActionMenu.tsx:134
 #: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:159
 msgid "Pin Message"
 msgstr "메시지 고정"
@@ -14678,7 +14691,7 @@ msgstr "배너 제거"
 
 #: src/components/channel/MessageActionBar.tsx:518
 #: src/components/channel/MessageActionBar.tsx:708
-#: src/components/channel/messageActionMenu.tsx:140
+#: src/components/channel/messageActionMenu.tsx:142
 #: src/components/modals/BookmarksBottomSheet.tsx:93
 #: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:140
 msgid "Remove Bookmark"
@@ -14797,7 +14810,7 @@ msgstr "스티커 제거"
 #: src/components/modals/RemoveTimeoutModal.tsx:61
 #: src/components/modals/RemoveTimeoutModal.tsx:75
 #: src/components/modals/TimeoutMemberSheet.tsx:101
-#: src/components/uikit/ContextMenu/items/GuildMemberMenuItems.tsx:272
+#: src/components/uikit/ContextMenu/items/GuildMemberMenuItems.tsx:288
 msgid "Remove Timeout"
 msgstr "타임아웃 해제"
 
@@ -14996,7 +15009,7 @@ msgstr "사용자 지정 배경 교체"
 
 #: src/components/channel/MessageActionBar.tsx:476
 #: src/components/channel/MessageActionBar.tsx:759
-#: src/components/channel/messageActionMenu.tsx:107
+#: src/components/channel/messageActionMenu.tsx:109
 #: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:101
 msgid "Reply"
 msgstr "답장"
@@ -15249,11 +15262,11 @@ msgstr "다시 가입"
 #: src/components/alerts/RateLimitedConfirmModal.tsx:73
 #: src/components/auth/IpAuthorizationScreen.tsx:161
 #: src/components/channel/MessageActionBar.tsx:798
-#: src/components/channel/messageActionMenu.tsx:187
+#: src/components/channel/messageActionMenu.tsx:189
 #: src/components/modals/BackgroundImageGalleryModal.tsx:232
 #: src/components/modals/guildTabs/GuildAuditLogTab.tsx:624
 #: src/components/modals/guildTabs/GuildEmojiTab.tsx:539
-#: src/components/modals/guildTabs/GuildInvitesTab.tsx:126
+#: src/components/modals/guildTabs/GuildInvitesTab.tsx:124
 #: src/components/modals/guildTabs/GuildStickersTab.tsx:211
 #: src/components/modals/guildTabs/GuildWebhooksTab.tsx:137
 #: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:559
@@ -15425,7 +15438,7 @@ msgstr "역할: {0}."
 #: src/components/modals/guildTabs/GuildRolesTab.tsx:928
 #: src/components/modals/shared/AddOverridePopout.tsx:144
 #: src/components/popouts/UserProfileShared.tsx:147
-#: src/components/uikit/ContextMenu/items/GuildMemberMenuItems.tsx:166
+#: src/components/uikit/ContextMenu/items/GuildMemberMenuItems.tsx:173
 msgid "Roles"
 msgstr "역할"
 
@@ -17529,22 +17542,22 @@ msgstr "모든 역할 @멘션 알림 끄기"
 msgid "Suppress All Role @mentions"
 msgstr "모든 역할 @멘션 알림 끄기"
 
-#: src/components/channel/embeds/Embed.tsx:799
-#: src/components/channel/embeds/Embed.tsx:835
-#: src/components/channel/embeds/Embed.tsx:859
-#: src/components/channel/embeds/Embed.tsx:904
-#: src/components/channel/embeds/Embed.tsx:940
-#: src/components/channel/embeds/Embed.tsx:981
-#: src/components/channel/embeds/Embed.tsx:1017
-#: src/components/channel/embeds/Embed.tsx:1059
+#: src/components/channel/embeds/Embed.tsx:800
+#: src/components/channel/embeds/Embed.tsx:836
+#: src/components/channel/embeds/Embed.tsx:860
+#: src/components/channel/embeds/Embed.tsx:905
+#: src/components/channel/embeds/Embed.tsx:941
+#: src/components/channel/embeds/Embed.tsx:982
+#: src/components/channel/embeds/Embed.tsx:1018
+#: src/components/channel/embeds/Embed.tsx:1060
 msgid "Suppress embeds"
 msgstr "임베드 숨기기"
 
-#: src/components/channel/embeds/Embed.tsx:705
-#: src/components/channel/embeds/Embed.tsx:712
+#: src/components/channel/embeds/Embed.tsx:141
+#: src/components/channel/embeds/Embed.tsx:148
 #: src/components/channel/MessageActionBar.tsx:542
 #: src/components/channel/MessageActionBar.tsx:694
-#: src/components/channel/messageActionMenu.tsx:148
+#: src/components/channel/messageActionMenu.tsx:150
 #: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:178
 msgid "Suppress Embeds"
 msgstr "임베드 숨기기"
@@ -17822,8 +17835,8 @@ msgstr "봇이 추가되었습니다."
 msgid "The channel you're looking for may have been deleted or you may not have access to it."
 msgstr "찾고 있는 채널이 삭제되었거나 접근 권한이 없을 수 있습니다."
 
-#: src/components/layout/GuildLayout.tsx:313
-#: src/components/layout/GuildLayout.tsx:376
+#: src/components/layout/GuildLayout.tsx:311
+#: src/components/layout/GuildLayout.tsx:366
 msgid "The community you're looking for may have been deleted or you may not have access to it."
 msgstr "찾고 있는 커뮤니티가 삭제되었거나 접근 권한이 없을 수 있습니다."
 
@@ -17921,11 +17934,11 @@ msgstr "이 채널에는 웹훅이 설정되어 있지 않습니다. 외부 애�
 msgid "There was an error loading the emojis. Please try again."
 msgstr "이모지를 불러오는 중 오류가 발생했습니다. 다시 시도해 주세요."
 
-#: src/components/modals/channelTabs/ChannelInvitesTab.tsx:145
+#: src/components/modals/channelTabs/ChannelInvitesTab.tsx:143
 msgid "There was an error loading the invite links for this channel. Please try again."
 msgstr "이 채널의 초대 링크를 불러오는 중 오류가 발생했습니다. 다시 시도해 주세요."
 
-#: src/components/modals/guildTabs/GuildInvitesTab.tsx:123
+#: src/components/modals/guildTabs/GuildInvitesTab.tsx:121
 msgid "There was an error loading the invites. Please try again."
 msgstr "초대를 불러오는 중 오류가 발생했습니다. 다시 시도해 주세요."
 
@@ -18010,7 +18023,7 @@ msgstr "이 카테고리는 이미 최대 {MAX_CHANNELS_PER_CATEGORY}개의 채�
 msgid "This channel does not support webhooks."
 msgstr "이 채널은 웹훅을 지원하지 않습니다."
 
-#: src/components/modals/channelTabs/ChannelInvitesTab.tsx:124
+#: src/components/modals/channelTabs/ChannelInvitesTab.tsx:122
 msgid "This channel doesn't have any invite links yet. Create one to invite people to this channel."
 msgstr "이 채널에는 아직 초대 링크가 없습니다. 초대 링크를 만들어 사람들을 초대하세요."
 
@@ -18043,7 +18056,7 @@ msgstr "이 채널에는 업무에 적합하지 않거나 일부 사용자에게
 msgid "This code hasn't been used yet. Please complete login in your browser first."
 msgstr "이 코드는 아직 사용되지 않았습니다. 먼저 브라우저에서 로그인 절차를 완료해 주세요."
 
-#: src/components/modals/guildTabs/GuildInvitesTab.tsx:111
+#: src/components/modals/guildTabs/GuildInvitesTab.tsx:109
 msgid "This community doesn't have any invite links yet. Go to a channel and create an invite to invite people."
 msgstr "이 커뮤니티에는 아직 초대 링크가 없습니다. 채널로 이동해 초대 링크를 만들어 사람들을 초대하세요."
 
@@ -18180,8 +18193,8 @@ msgstr "메시지는 이렇게 표시됩니다"
 msgid "This is not the channel you're looking for."
 msgstr "찾고 있는 채널이 아닙니다."
 
-#: src/components/layout/GuildLayout.tsx:312
-#: src/components/layout/GuildLayout.tsx:375
+#: src/components/layout/GuildLayout.tsx:310
+#: src/components/layout/GuildLayout.tsx:365
 msgid "This is not the community you're looking for."
 msgstr "찾고 있는 커뮤니티가 아닙니다."
 
@@ -18300,9 +18313,9 @@ msgstr "이 음성 채널은 사용자 수 제한에 도달했습니다. 나중�
 msgid "This was a @silent message."
 msgstr "이 메시지는 @silent 메시지였습니다."
 
-#: src/actions/MessageActionCreators.tsx:392
-#: src/components/channel/Messages.tsx:440
-#: src/components/channel/Messages.tsx:520
+#: src/actions/MessageActionCreators.tsx:404
+#: src/components/channel/Messages.tsx:445
+#: src/components/channel/Messages.tsx:525
 msgid "This will create a rift in the space-time continuum and cannot be undone."
 msgstr "이 작업은 시공간 연속성에 균열을 만들며 되돌릴 수 없습니다."
 
@@ -18371,7 +18384,7 @@ msgstr "{0}까지 타임아웃입니다."
 #: src/components/modals/guildTabs/GuildMemberActionsSheet.tsx:288
 #: src/components/modals/TimeoutMemberModal.tsx:207
 #: src/components/modals/TimeoutMemberSheet.tsx:90
-#: src/components/uikit/ContextMenu/items/GuildMemberMenuItems.tsx:272
+#: src/components/uikit/ContextMenu/items/GuildMemberMenuItems.tsx:288
 msgid "Timeout"
 msgstr "타임아웃"
 
@@ -18659,8 +18672,7 @@ msgstr "다른 이름을 시도하거나 @ / # / ! / * 접두사를 사용해 �
 msgid "Try a different search query"
 msgstr "다른 검색어를 시도하세요"
 
-#: src/components/channel/MobileStickersPicker.tsx:148
-#: src/components/channel/StickersPicker.tsx:227
+#: src/components/channel/MobileStickersPicker.tsx:158
 msgid "Try a different search term"
 msgstr "다른 검색어를 시도하세요"
 
@@ -18670,14 +18682,14 @@ msgid "Try a different search term or filter"
 msgstr "다른 검색어나 필터를 시도하세요"
 
 #: src/components/auth/HandoffCodeDisplay.tsx:67
-#: src/components/channel/Messages.tsx:937
+#: src/components/channel/Messages.tsx:942
 msgid "Try again"
 msgstr "다시 시도"
 
 #: src/components/BootstrapErrorScreen.tsx:68
 #: src/components/bottomsheets/ChannelSearchBottomSheet.tsx:301
 #: src/components/channel/ChannelSearchResults.tsx:663
-#: src/components/modals/channelTabs/ChannelInvitesTab.tsx:148
+#: src/components/modals/channelTabs/ChannelInvitesTab.tsx:146
 #: src/components/modals/channelTabs/ChannelWebhooksTab.tsx:159
 #: src/components/NetworkErrorScreen.tsx:56
 msgid "Try Again"
@@ -19307,7 +19319,7 @@ msgstr "고정 해제"
 
 #: src/components/channel/MessageActionBar.tsx:505
 #: src/components/channel/MessageActionBar.tsx:716
-#: src/components/channel/messageActionMenu.tsx:132
+#: src/components/channel/messageActionMenu.tsx:134
 #: src/components/channel/messageActionUtils.tsx:234
 #: src/components/shared/ChannelPinsContent.tsx:92
 #: src/components/shared/ChannelPinsContent.tsx:245
@@ -19355,7 +19367,7 @@ msgstr "지원되지 않는 파일 형식입니다. JPG, PNG, GIF, WebP 또는 M
 
 #: src/components/channel/MessageActionBar.tsx:542
 #: src/components/channel/MessageActionBar.tsx:694
-#: src/components/channel/messageActionMenu.tsx:148
+#: src/components/channel/messageActionMenu.tsx:150
 #: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:178
 msgid "Unsuppress Embeds"
 msgstr "임베드 숨김 해제"
@@ -20573,8 +20585,8 @@ msgstr "이 로그인 승인 링크를 이메일로 보냈습니다. {0}의 받�
 msgid "We failed to retrieve the full information about this user at this time."
 msgstr "현재 이 사용자에 대한 전체 정보를 가져오지 못했습니다."
 
-#: src/components/layout/GuildLayout.tsx:307
-#: src/components/layout/GuildLayout.tsx:354
+#: src/components/layout/GuildLayout.tsx:305
+#: src/components/layout/GuildLayout.tsx:346
 msgid "We fluxed up! Hang tight, we're working on it."
 msgstr "문제가 발생했어요! 잠시만 기다려 주세요, 해결 중입니다."
 
@@ -21084,7 +21096,7 @@ msgstr "검색 결과에서 반응과 상호작용할 수 없습니다. 시공�
 #: src/components/layout/ChannelItem.tsx:206
 #: src/components/layout/ChannelItem.tsx:375
 #: src/stores/voice/MediaEngineFacade.ts:154
-#: src/stores/voice/MediaEngineFacade.ts:529
+#: src/stores/voice/MediaEngineFacade.ts:533
 msgid "You can't join while you're on timeout."
 msgstr "타임아웃 중에는 참여할 수 없습니다."
 
@@ -21169,7 +21181,7 @@ msgstr "관리자에게 청각 차단되어 청각 차단을 해제할 수 없�
 msgid "You cannot unmute yourself because you have been muted by a moderator."
 msgstr "관리자에게 음소거되어 음소거를 해제할 수 없습니다."
 
-#: src/lib/markdown/renderers/link-renderer.tsx:181
+#: src/lib/markdown/renderers/link-renderer.tsx:207
 msgid "You do not have access to the channel where this message was sent."
 msgstr "이 메시지가 보내진 채널에 접근 권한이 없습니다."
 
@@ -21177,7 +21189,7 @@ msgstr "이 메시지가 보내진 채널에 접근 권한이 없습니다."
 msgid "You do not have permission to send messages in this channel."
 msgstr "이 채널에서 메시지를 보낼 권한이 없습니다."
 
-#: src/components/layout/GuildLayout.tsx:398
+#: src/components/layout/GuildLayout.tsx:386
 msgid "You don't have access to any channels in this community."
 msgstr "이 커뮤니티에서 접근할 수 있는 채널이 없습니다."
 
@@ -21468,7 +21480,7 @@ msgstr "음성 채널에 참여 중입니다"
 msgid "You're sending messages too quickly"
 msgstr "메시지를 너무 빠르게 보내고 있습니다"
 
-#: src/components/channel/Messages.tsx:907
+#: src/components/channel/Messages.tsx:912
 msgid "You're viewing older messages"
 msgstr "이전 메시지를 보고 있습니다"
 

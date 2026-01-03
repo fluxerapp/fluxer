@@ -17,6 +17,12 @@ msgstr ""
 msgid "Control when message previews are shown in the DM list"
 msgstr "Управляй показом предпросмотров сообщений в списке ЛС"
 
+#. js-lingui-explicit-id
+#: src/components/channel/emoji-picker/EmojiPickerCategoryList.tsx:56
+#: src/components/channel/emoji-picker/EmojiPickerCategoryList.tsx:98
+msgid "Frequently Used"
+msgstr "Часто используемые"
+
 #: src/utils/SearchUtils.ts:341
 msgid "-ext:"
 msgstr "-расш:"
@@ -56,7 +62,7 @@ msgstr "...включи плотный режим. Отлично!"
 msgid "(edited)"
 msgstr "(отредактировано)"
 
-#: src/lib/markdown/renderers/emoji-renderer.tsx:189
+#: src/lib/markdown/renderers/emoji-renderer.tsx:196
 msgid "(failed to load)"
 msgstr "(не удалось загрузить)"
 
@@ -887,7 +893,7 @@ msgid "<0/> started a call."
 msgstr "<0/> начал звонок."
 
 #. placeholder {0}: guild.name
-#: src/components/layout/GuildLayout.tsx:132
+#: src/components/layout/GuildLayout.tsx:131
 msgid "<0>{0}</0> is currently only accessible to Fluxer staff members"
 msgstr "<0>{0}</0> сейчас доступно только персоналу Fluxer"
 
@@ -1647,7 +1653,7 @@ msgstr "Форма добавления номера телефона"
 
 #: src/components/channel/MessageActionBar.tsx:450
 #: src/components/channel/MessageActionBar.tsx:741
-#: src/components/channel/messageActionMenu.tsx:92
+#: src/components/channel/messageActionMenu.tsx:94
 #: src/components/channel/MessageReactions.tsx:263
 #: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:65
 msgid "Add Reaction"
@@ -2199,7 +2205,7 @@ msgid "Animated Emoji ({0})"
 msgstr "Анимированные эмодзи ({0})"
 
 #: src/components/channel/embeds/media/EmbedGifv.tsx:237
-#: src/components/channel/embeds/media/EmbedGifv.tsx:749
+#: src/components/channel/embeds/media/EmbedGifv.tsx:752
 #: src/components/modals/MediaViewerModal.tsx:294
 #: src/components/modals/MediaViewerModal.tsx:362
 msgid "Animated GIF"
@@ -2481,7 +2487,7 @@ msgid "Are you sure you want to disable SMS two-factor authentication? This will
 msgstr "Ты уверен, что хочешь отключить SMS-двухфакторную аутентификацию? Это снизит безопасность твоего аккаунта."
 
 #: src/components/invites/DisableInvitesButton.tsx:49
-#: src/components/layout/GuildLayout.tsx:69
+#: src/components/layout/GuildLayout.tsx:68
 msgid "Are you sure you want to enable invites? This will allow users to join this community through invite links again."
 msgstr "Ты уверен, что хочешь включить приглашения? Это снова позволит пользователям входить в сообщество по ссылкам."
 
@@ -2548,7 +2554,7 @@ msgstr "Ты уверен, что хочешь отменить бан для <0
 msgid "Are you sure you want to revoke this invite? This action cannot be undone."
 msgstr "Ты уверен, что хочешь отозвать это приглашение? Это действие нельзя отменить."
 
-#: src/components/channel/embeds/Embed.tsx:707
+#: src/components/channel/embeds/Embed.tsx:143
 msgid "Are you sure you want to suppress all link embeds on this message? This action will hide all embeds from this message."
 msgstr "Ты уверен, что хочешь скрыть все вставки ссылок в этом сообщении? Это действие скроет все вложения."
 
@@ -3159,7 +3165,7 @@ msgstr "Достигнут лимит закладок"
 
 #: src/components/channel/MessageActionBar.tsx:518
 #: src/components/channel/MessageActionBar.tsx:708
-#: src/components/channel/messageActionMenu.tsx:140
+#: src/components/channel/messageActionMenu.tsx:142
 #: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:140
 msgid "Bookmark Message"
 msgstr "Добавить сообщение в закладки"
@@ -3432,7 +3438,7 @@ msgstr "Настройки камеры"
 #: src/components/channel/MentionEveryonePopout.tsx:125
 #: src/components/emojis/EmojiListItem.tsx:120
 #: src/components/invites/DisableInvitesButton.tsx:62
-#: src/components/layout/GuildLayout.tsx:76
+#: src/components/layout/GuildLayout.tsx:75
 #: src/components/modals/AccountDeleteModal.tsx:89
 #: src/components/modals/AccountDisableModal.tsx:63
 #: src/components/modals/AddFavoriteMemeModal.tsx:99
@@ -3680,8 +3686,8 @@ msgstr "Сменить свой ник в группе"
 #: src/components/modals/UserProfileActionsSheet.tsx:225
 #: src/components/modals/UserProfileActionsSheet.tsx:225
 #: src/components/uikit/ContextMenu/FavoritesChannelContextMenu.tsx:119
-#: src/components/uikit/ContextMenu/items/GuildMemberMenuItems.tsx:229
-#: src/components/uikit/ContextMenu/items/GuildMemberMenuItems.tsx:229
+#: src/components/uikit/ContextMenu/items/GuildMemberMenuItems.tsx:245
+#: src/components/uikit/ContextMenu/items/GuildMemberMenuItems.tsx:245
 msgid "Change Nickname"
 msgstr "Сменить ник"
 
@@ -3775,7 +3781,7 @@ msgstr "Канал"
 msgid "Channel Access"
 msgstr "Доступ к каналу"
 
-#: src/lib/markdown/renderers/link-renderer.tsx:180
+#: src/lib/markdown/renderers/link-renderer.tsx:206
 msgid "Channel Access Denied"
 msgstr "Доступ к каналу запрещён"
 
@@ -4142,7 +4148,7 @@ msgstr "Заявите о своем аккаунте, чтобы генерир
 
 #: src/components/layout/ChannelItem.tsx:208
 #: src/components/layout/ChannelItem.tsx:382
-#: src/stores/voice/MediaEngineFacade.ts:537
+#: src/stores/voice/MediaEngineFacade.ts:541
 msgid "Claim your account to join this voice channel."
 msgstr "Заберите свою учетную запись, чтобы присоединиться к этому голосовому каналу."
 
@@ -4649,8 +4655,8 @@ msgstr "Сообщество пропагандирует или облегча�
 msgid "Community Settings"
 msgstr "Настройки сообщества"
 
-#: src/components/layout/GuildLayout.tsx:306
-#: src/components/layout/GuildLayout.tsx:353
+#: src/components/layout/GuildLayout.tsx:304
+#: src/components/layout/GuildLayout.tsx:345
 msgid "Community temporarily unavailable"
 msgstr "Сообщество временно недоступно"
 
@@ -5179,20 +5185,20 @@ msgstr "Скопировать ссылку"
 msgid "Copy Media"
 msgstr "Скопировать медиа"
 
-#: src/components/channel/messageActionMenu.tsx:174
+#: src/components/channel/messageActionMenu.tsx:176
 msgid "Copy Message"
 msgstr "Скопировать сообщение"
 
 #: src/components/channel/MessageActionBar.tsx:580
 #: src/components/channel/MessageActionBar.tsx:673
-#: src/components/channel/messageActionMenu.tsx:181
+#: src/components/channel/messageActionMenu.tsx:183
 #: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:235
 msgid "Copy Message ID"
 msgstr "Скопировать ID сообщения"
 
 #: src/components/channel/MessageActionBar.tsx:570
 #: src/components/channel/MessageActionBar.tsx:679
-#: src/components/channel/messageActionMenu.tsx:167
+#: src/components/channel/messageActionMenu.tsx:169
 #: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:216
 msgid "Copy Message Link"
 msgstr "Скопировать ссылку на сообщение"
@@ -5388,8 +5394,8 @@ msgstr "Форма создания избранной категории"
 msgid "Create Group DM"
 msgstr "Создать групповой ЛС"
 
-#: src/components/modals/channelTabs/ChannelInvitesTab.tsx:88
-#: src/components/modals/channelTabs/ChannelInvitesTab.tsx:130
+#: src/components/modals/channelTabs/ChannelInvitesTab.tsx:87
+#: src/components/modals/channelTabs/ChannelInvitesTab.tsx:128
 msgid "Create Invite"
 msgstr "Создать приглашение"
 
@@ -5978,11 +5984,11 @@ msgstr "По умолчанию анимация включается при в�
 msgid "Defaults to off on mobile to preserve battery life and data usage."
 msgstr "По умолчанию отключено на мобильных, чтобы сохранить заряд и трафик."
 
-#: src/actions/MessageActionCreators.tsx:394
+#: src/actions/MessageActionCreators.tsx:406
 #: src/components/channel/embeds/media/EmbedAudio.tsx:227
 #: src/components/channel/embeds/media/MediaContainer.tsx:115
-#: src/components/channel/Messages.tsx:442
-#: src/components/channel/Messages.tsx:522
+#: src/components/channel/Messages.tsx:447
+#: src/components/channel/Messages.tsx:527
 #: src/components/channel/MobileMemesPicker.tsx:546
 #: src/components/channel/pickers/memes/MemeGridItem.tsx:120
 #: src/components/emojis/EmojiListItem.tsx:189
@@ -6091,14 +6097,14 @@ msgstr "Удалить эмодзи"
 msgid "Delete media"
 msgstr "Удалить медиа"
 
-#: src/actions/MessageActionCreators.tsx:391
+#: src/actions/MessageActionCreators.tsx:403
 #: src/components/channel/MessageActionBar.tsx:608
 #: src/components/channel/MessageActionBar.tsx:787
 #: src/components/channel/MessageActionBar.tsx:804
-#: src/components/channel/messageActionMenu.tsx:156
-#: src/components/channel/messageActionMenu.tsx:193
-#: src/components/channel/Messages.tsx:439
-#: src/components/channel/Messages.tsx:519
+#: src/components/channel/messageActionMenu.tsx:158
+#: src/components/channel/messageActionMenu.tsx:195
+#: src/components/channel/Messages.tsx:444
+#: src/components/channel/Messages.tsx:524
 #: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:273
 msgid "Delete Message"
 msgstr "Удалить сообщение"
@@ -6595,7 +6601,7 @@ msgstr "Обсуждение или пропаганда незаконных д
 #: src/components/layout/app-layout/nagbars/PremiumExpiredNagbar.tsx:73
 #: src/components/layout/app-layout/nagbars/PremiumGracePeriodNagbar.tsx:79
 #: src/components/layout/app-layout/nagbars/PremiumOnboardingNagbar.tsx:57
-#: src/components/layout/GuildLayout.tsx:106
+#: src/components/layout/GuildLayout.tsx:105
 #: src/components/modals/GiftAcceptModal.tsx:105
 #: src/components/modals/GiftAcceptModal.tsx:131
 #: src/components/modals/RequiredActionModal.tsx:475
@@ -6978,7 +6984,7 @@ msgstr "Редактировать медиа"
 
 #: src/components/channel/MessageActionBar.tsx:463
 #: src/components/channel/MessageActionBar.tsx:751
-#: src/components/channel/messageActionMenu.tsx:124
+#: src/components/channel/messageActionMenu.tsx:126
 #: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:83
 msgid "Edit Message"
 msgstr "Редактировать сообщение"
@@ -7224,7 +7230,7 @@ msgid "Emojis"
 msgstr "Эмодзи"
 
 #: src/components/invites/DisableInvitesButton.tsx:60
-#: src/components/layout/GuildLayout.tsx:74
+#: src/components/layout/GuildLayout.tsx:73
 #: src/components/modals/tabs/AccountSecurityTab/SecurityTab.tsx:241
 #: src/components/modals/tabs/AccountSecurityTab/SecurityTab.tsx:430
 #: src/components/modals/tabs/AccountSecurityTab/SecurityTab.tsx:436
@@ -7299,12 +7305,12 @@ msgstr "Разрешить мониторинг ввода"
 msgid "Enable Invites"
 msgstr "Включить приглашения"
 
-#: src/components/layout/GuildLayout.tsx:111
+#: src/components/layout/GuildLayout.tsx:110
 msgid "Enable Invites Again"
 msgstr "Вновь включить приглашения"
 
 #: src/components/invites/DisableInvitesButton.tsx:46
-#: src/components/layout/GuildLayout.tsx:67
+#: src/components/layout/GuildLayout.tsx:66
 msgid "Enable invites for this community"
 msgstr "Включить приглашения для этого сообщества"
 
@@ -7947,8 +7953,8 @@ msgid "Failed to load gift inventory"
 msgstr "Не удалось загрузить инвентарь подарков"
 
 #: src/components/alerts/InvitesLoadFailedModal.tsx:28
-#: src/components/modals/channelTabs/ChannelInvitesTab.tsx:144
-#: src/components/modals/guildTabs/GuildInvitesTab.tsx:122
+#: src/components/modals/channelTabs/ChannelInvitesTab.tsx:142
+#: src/components/modals/guildTabs/GuildInvitesTab.tsx:120
 msgid "Failed to load invites"
 msgstr "Не удалось загрузить приглашения"
 
@@ -8769,7 +8775,7 @@ msgstr "Забыли пароль?"
 
 #: src/components/channel/MessageActionBar.tsx:489
 #: src/components/channel/MessageActionBar.tsx:767
-#: src/components/channel/messageActionMenu.tsx:115
+#: src/components/channel/messageActionMenu.tsx:117
 #: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:119
 msgid "Forward"
 msgstr "Вперёд"
@@ -10416,7 +10422,7 @@ msgid "Invites Paused"
 msgstr "Приглашения приостановлены"
 
 #. placeholder {0}: guild.name
-#: src/components/layout/GuildLayout.tsx:99
+#: src/components/layout/GuildLayout.tsx:98
 msgid "Invites to <0>{0}</0> are currently disabled"
 msgstr "Приглашения в <0>{0}</0> временно отключены"
 
@@ -10457,8 +10463,8 @@ msgstr "Дрожание"
 msgid "Join a Community"
 msgstr "Присоединиться к сообществу"
 
-#: src/components/channel/MobileStickersPicker.tsx:122
-#: src/components/channel/StickersPicker.tsx:198
+#: src/components/channel/MobileStickersPicker.tsx:132
+#: src/components/channel/StickersPicker.tsx:209
 msgid "Join a community with stickers to get started!"
 msgstr "Присоединяйся к сообществу со стикерами, чтобы начать!"
 
@@ -10588,7 +10594,7 @@ msgstr "Перейти"
 msgid "Jump straight to the app to continue."
 msgstr "Перейди прямо в приложение, чтобы продолжить."
 
-#: src/lib/markdown/renderers/link-renderer.tsx:98
+#: src/lib/markdown/renderers/link-renderer.tsx:108
 msgid "Jump to {labelText}"
 msgstr "Перейти к {labelText}"
 
@@ -10604,7 +10610,7 @@ msgstr "Перейти к самому старому непрочитанном
 msgid "Jump to page"
 msgstr "Перейти на страницу"
 
-#: src/components/channel/Messages.tsx:915
+#: src/components/channel/Messages.tsx:920
 msgid "Jump to Present"
 msgstr "Перейти к текущему"
 
@@ -10612,15 +10618,15 @@ msgstr "Перейти к текущему"
 msgid "Jump to the channel of the active call"
 msgstr "Перейти в канал активного звонка"
 
-#: src/lib/markdown/renderers/link-renderer.tsx:99
+#: src/lib/markdown/renderers/link-renderer.tsx:109
 msgid "Jump to the linked channel"
 msgstr "Перейти в связанный канал"
 
-#: src/lib/markdown/renderers/link-renderer.tsx:96
+#: src/lib/markdown/renderers/link-renderer.tsx:106
 msgid "Jump to the linked message"
 msgstr "Перейти к связанному сообщению"
 
-#: src/lib/markdown/renderers/link-renderer.tsx:95
+#: src/lib/markdown/renderers/link-renderer.tsx:105
 msgid "Jump to the message in {labelText}"
 msgstr "Перейти к сообщению в {labelText}"
 
@@ -11024,7 +11030,7 @@ msgid "Loading more..."
 msgstr "Загрузка ещё..."
 
 #: src/components/channel/embeds/media/EmbedGifv.tsx:493
-#: src/components/channel/embeds/media/EmbedGifv.tsx:745
+#: src/components/channel/embeds/media/EmbedGifv.tsx:748
 msgid "Loading placeholder"
 msgstr "Заглушка загрузки"
 
@@ -11256,7 +11262,7 @@ msgstr "Управление наборами выражений"
 msgid "Manage feature flags"
 msgstr "Управление флагами функций"
 
-#: src/components/layout/GuildLayout.tsx:138
+#: src/components/layout/GuildLayout.tsx:137
 msgid "Manage Guild Features"
 msgstr "Управление функциями гильдии"
 
@@ -11353,7 +11359,7 @@ msgstr "Отметить как спойлер"
 
 #: src/components/channel/MessageActionBar.tsx:530
 #: src/components/channel/MessageActionBar.tsx:701
-#: src/components/channel/messageActionMenu.tsx:99
+#: src/components/channel/messageActionMenu.tsx:101
 #: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:311
 msgid "Mark as Unread"
 msgstr "Отметить как непрочитанное"
@@ -11822,7 +11828,7 @@ msgstr "Сообщения и медиа"
 msgid "Messages Deleted"
 msgstr "Сообщения удалены"
 
-#: src/components/channel/Messages.tsx:936
+#: src/components/channel/Messages.tsx:941
 msgid "Messages failed to load"
 msgstr "Не удалось загрузить сообщения"
 
@@ -12471,7 +12477,7 @@ msgstr "Псевдоним не должен превышать 32 символ�
 msgid "Nickname updated"
 msgstr "Псевдоним обновлён"
 
-#: src/components/layout/GuildLayout.tsx:397
+#: src/components/layout/GuildLayout.tsx:385
 msgid "No accessible channels"
 msgstr "Нет доступных каналов"
 
@@ -12575,6 +12581,10 @@ msgstr "Email не задан"
 msgid "No emojis found matching your search."
 msgstr "По вашему запросу эмодзи не найдены."
 
+#: src/components/channel/EmojiPicker.tsx:283
+msgid "No emojis match your search"
+msgstr "Нет эмодзи, соответствующих вашему запросу"
+
 #: src/components/common/FriendSelector.tsx:211
 #: src/components/modals/shared/RecipientList.tsx:191
 msgid "No friends found"
@@ -12613,8 +12623,8 @@ msgstr "Пока нет установленных паков."
 msgid "No invite background"
 msgstr "Нет фона приглашения"
 
-#: src/components/modals/channelTabs/ChannelInvitesTab.tsx:122
-#: src/components/modals/guildTabs/GuildInvitesTab.tsx:109
+#: src/components/modals/channelTabs/ChannelInvitesTab.tsx:120
+#: src/components/modals/guildTabs/GuildInvitesTab.tsx:107
 msgid "No invite links"
 msgstr "Ссылок приглашений нет"
 
@@ -12768,8 +12778,8 @@ msgstr "Настройки не найдены"
 msgid "No specific scopes requested."
 msgstr "Особые области не запрашивались."
 
-#: src/components/channel/MobileStickersPicker.tsx:121
-#: src/components/channel/StickersPicker.tsx:197
+#: src/components/channel/MobileStickersPicker.tsx:131
+#: src/components/channel/StickersPicker.tsx:208
 msgid "No Stickers Available"
 msgstr "Стикеры недоступны"
 
@@ -12777,14 +12787,17 @@ msgstr "Стикеры недоступны"
 msgid "No stickers found"
 msgstr "Стикеры не найдены"
 
-#: src/components/channel/MobileStickersPicker.tsx:147
-#: src/components/channel/StickersPicker.tsx:226
+#: src/components/channel/MobileStickersPicker.tsx:157
 msgid "No Stickers Found"
 msgstr "Стикеры не найдены"
 
 #: src/components/modals/guildTabs/GuildStickersTab.tsx:191
 msgid "No stickers found matching your search."
 msgstr "По вашему запросу стикеры не найдены."
+
+#: src/components/channel/StickersPicker.tsx:285
+msgid "No stickers match your search"
+msgstr "Нет стикеров, соответствующих вашему запросу"
 
 #: src/components/modals/guildTabs/GuildOverviewTab/sections/SystemWelcomeSection.tsx:40
 msgid "No System Channel"
@@ -13034,7 +13047,7 @@ msgstr "ОК"
 #: src/components/alerts/SlowmodeRateLimitedModal.tsx:65
 #: src/lib/KeybindManager.ts:495
 #: src/lib/KeybindManager.ts:520
-#: src/lib/markdown/renderers/link-renderer.tsx:182
+#: src/lib/markdown/renderers/link-renderer.tsx:208
 msgid "Okay"
 msgstr "Хорошо"
 
@@ -13764,7 +13777,7 @@ msgstr "Закрепи. Закрепи как следует."
 
 #: src/components/channel/MessageActionBar.tsx:505
 #: src/components/channel/MessageActionBar.tsx:716
-#: src/components/channel/messageActionMenu.tsx:132
+#: src/components/channel/messageActionMenu.tsx:134
 #: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:159
 msgid "Pin Message"
 msgstr "Закрепить сообщение"
@@ -14678,7 +14691,7 @@ msgstr "Удалить баннер"
 
 #: src/components/channel/MessageActionBar.tsx:518
 #: src/components/channel/MessageActionBar.tsx:708
-#: src/components/channel/messageActionMenu.tsx:140
+#: src/components/channel/messageActionMenu.tsx:142
 #: src/components/modals/BookmarksBottomSheet.tsx:93
 #: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:140
 msgid "Remove Bookmark"
@@ -14797,7 +14810,7 @@ msgstr "Удалить наклейку"
 #: src/components/modals/RemoveTimeoutModal.tsx:61
 #: src/components/modals/RemoveTimeoutModal.tsx:75
 #: src/components/modals/TimeoutMemberSheet.tsx:101
-#: src/components/uikit/ContextMenu/items/GuildMemberMenuItems.tsx:272
+#: src/components/uikit/ContextMenu/items/GuildMemberMenuItems.tsx:288
 msgid "Remove Timeout"
 msgstr "Снять тайм-аут"
 
@@ -14996,7 +15009,7 @@ msgstr "Заменить пользовательский фон"
 
 #: src/components/channel/MessageActionBar.tsx:476
 #: src/components/channel/MessageActionBar.tsx:759
-#: src/components/channel/messageActionMenu.tsx:107
+#: src/components/channel/messageActionMenu.tsx:109
 #: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:101
 msgid "Reply"
 msgstr "Ответить"
@@ -15249,11 +15262,11 @@ msgstr "Подписаться снова"
 #: src/components/alerts/RateLimitedConfirmModal.tsx:73
 #: src/components/auth/IpAuthorizationScreen.tsx:161
 #: src/components/channel/MessageActionBar.tsx:798
-#: src/components/channel/messageActionMenu.tsx:187
+#: src/components/channel/messageActionMenu.tsx:189
 #: src/components/modals/BackgroundImageGalleryModal.tsx:232
 #: src/components/modals/guildTabs/GuildAuditLogTab.tsx:624
 #: src/components/modals/guildTabs/GuildEmojiTab.tsx:539
-#: src/components/modals/guildTabs/GuildInvitesTab.tsx:126
+#: src/components/modals/guildTabs/GuildInvitesTab.tsx:124
 #: src/components/modals/guildTabs/GuildStickersTab.tsx:211
 #: src/components/modals/guildTabs/GuildWebhooksTab.tsx:137
 #: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:559
@@ -15425,7 +15438,7 @@ msgstr "Роль: {0}."
 #: src/components/modals/guildTabs/GuildRolesTab.tsx:928
 #: src/components/modals/shared/AddOverridePopout.tsx:144
 #: src/components/popouts/UserProfileShared.tsx:147
-#: src/components/uikit/ContextMenu/items/GuildMemberMenuItems.tsx:166
+#: src/components/uikit/ContextMenu/items/GuildMemberMenuItems.tsx:173
 msgid "Roles"
 msgstr "Роли"
 
@@ -17529,22 +17542,22 @@ msgstr "Отключить все упоминания ролей"
 msgid "Suppress All Role @mentions"
 msgstr "Отключить все упоминания ролей"
 
-#: src/components/channel/embeds/Embed.tsx:799
-#: src/components/channel/embeds/Embed.tsx:835
-#: src/components/channel/embeds/Embed.tsx:859
-#: src/components/channel/embeds/Embed.tsx:904
-#: src/components/channel/embeds/Embed.tsx:940
-#: src/components/channel/embeds/Embed.tsx:981
-#: src/components/channel/embeds/Embed.tsx:1017
-#: src/components/channel/embeds/Embed.tsx:1059
+#: src/components/channel/embeds/Embed.tsx:800
+#: src/components/channel/embeds/Embed.tsx:836
+#: src/components/channel/embeds/Embed.tsx:860
+#: src/components/channel/embeds/Embed.tsx:905
+#: src/components/channel/embeds/Embed.tsx:941
+#: src/components/channel/embeds/Embed.tsx:982
+#: src/components/channel/embeds/Embed.tsx:1018
+#: src/components/channel/embeds/Embed.tsx:1060
 msgid "Suppress embeds"
 msgstr "Отключить встраивание"
 
-#: src/components/channel/embeds/Embed.tsx:705
-#: src/components/channel/embeds/Embed.tsx:712
+#: src/components/channel/embeds/Embed.tsx:141
+#: src/components/channel/embeds/Embed.tsx:148
 #: src/components/channel/MessageActionBar.tsx:542
 #: src/components/channel/MessageActionBar.tsx:694
-#: src/components/channel/messageActionMenu.tsx:148
+#: src/components/channel/messageActionMenu.tsx:150
 #: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:178
 msgid "Suppress Embeds"
 msgstr "Отключить встраивание"
@@ -17822,8 +17835,8 @@ msgstr "Бот добавлен."
 msgid "The channel you're looking for may have been deleted or you may not have access to it."
 msgstr "Искомый канал мог быть удалён или у тебя нет к нему доступа."
 
-#: src/components/layout/GuildLayout.tsx:313
-#: src/components/layout/GuildLayout.tsx:376
+#: src/components/layout/GuildLayout.tsx:311
+#: src/components/layout/GuildLayout.tsx:366
 msgid "The community you're looking for may have been deleted or you may not have access to it."
 msgstr "Искомое сообщество могло быть удалено или у тебя нет доступа к нему."
 
@@ -17921,11 +17934,11 @@ msgstr "Для этого канала не настроены вебхуки. �
 msgid "There was an error loading the emojis. Please try again."
 msgstr "Ошибка при загрузке эмодзи. Попробуй ещё раз."
 
-#: src/components/modals/channelTabs/ChannelInvitesTab.tsx:145
+#: src/components/modals/channelTabs/ChannelInvitesTab.tsx:143
 msgid "There was an error loading the invite links for this channel. Please try again."
 msgstr "Ошибка при загрузке приглашений для этого канала. Попробуй ещё раз."
 
-#: src/components/modals/guildTabs/GuildInvitesTab.tsx:123
+#: src/components/modals/guildTabs/GuildInvitesTab.tsx:121
 msgid "There was an error loading the invites. Please try again."
 msgstr "Ошибка при загрузке приглашений. Попробуй ещё раз."
 
@@ -18010,7 +18023,7 @@ msgstr "В этой категории уже максимальное коли�
 msgid "This channel does not support webhooks."
 msgstr "Этот канал не поддерживает вебхуки."
 
-#: src/components/modals/channelTabs/ChannelInvitesTab.tsx:124
+#: src/components/modals/channelTabs/ChannelInvitesTab.tsx:122
 msgid "This channel doesn't have any invite links yet. Create one to invite people to this channel."
 msgstr "У этого канала ещё нет приглашений. Создай приглашение, чтобы пригласить людей."
 
@@ -18043,7 +18056,7 @@ msgstr "В этом канале может быть контент, непри�
 msgid "This code hasn't been used yet. Please complete login in your browser first."
 msgstr "Этот код ещё не использовался. Сначала заверши вход в браузере."
 
-#: src/components/modals/guildTabs/GuildInvitesTab.tsx:111
+#: src/components/modals/guildTabs/GuildInvitesTab.tsx:109
 msgid "This community doesn't have any invite links yet. Go to a channel and create an invite to invite people."
 msgstr "В этом сообществе ещё нет приглашений. Перейди в канал и создай приглашение."
 
@@ -18180,8 +18193,8 @@ msgstr "Так выглядят сообщения"
 msgid "This is not the channel you're looking for."
 msgstr "Это не тот канал, который ты ищешь."
 
-#: src/components/layout/GuildLayout.tsx:312
-#: src/components/layout/GuildLayout.tsx:375
+#: src/components/layout/GuildLayout.tsx:310
+#: src/components/layout/GuildLayout.tsx:365
 msgid "This is not the community you're looking for."
 msgstr "Это не то сообщество, которое ты ищешь."
 
@@ -18300,9 +18313,9 @@ msgstr "В этом голосовом канале достигнут лими�
 msgid "This was a @silent message."
 msgstr "Это было @silent сообщение."
 
-#: src/actions/MessageActionCreators.tsx:392
-#: src/components/channel/Messages.tsx:440
-#: src/components/channel/Messages.tsx:520
+#: src/actions/MessageActionCreators.tsx:404
+#: src/components/channel/Messages.tsx:445
+#: src/components/channel/Messages.tsx:525
 msgid "This will create a rift in the space-time continuum and cannot be undone."
 msgstr "Это создаст разрыв в пространственно-временном континууме — и назад пути нет."
 
@@ -18371,7 +18384,7 @@ msgstr "Таймаут до {0}."
 #: src/components/modals/guildTabs/GuildMemberActionsSheet.tsx:288
 #: src/components/modals/TimeoutMemberModal.tsx:207
 #: src/components/modals/TimeoutMemberSheet.tsx:90
-#: src/components/uikit/ContextMenu/items/GuildMemberMenuItems.tsx:272
+#: src/components/uikit/ContextMenu/items/GuildMemberMenuItems.tsx:288
 msgid "Timeout"
 msgstr "Таймаут"
 
@@ -18659,8 +18672,7 @@ msgstr "Попробуй другое имя или используй преф�
 msgid "Try a different search query"
 msgstr "Попробуй другой поисковый запрос"
 
-#: src/components/channel/MobileStickersPicker.tsx:148
-#: src/components/channel/StickersPicker.tsx:227
+#: src/components/channel/MobileStickersPicker.tsx:158
 msgid "Try a different search term"
 msgstr "Попробуй другой поисковый термин"
 
@@ -18670,14 +18682,14 @@ msgid "Try a different search term or filter"
 msgstr "Попробуй другой термин поиска или фильтр"
 
 #: src/components/auth/HandoffCodeDisplay.tsx:67
-#: src/components/channel/Messages.tsx:937
+#: src/components/channel/Messages.tsx:942
 msgid "Try again"
 msgstr "Попробуй снова"
 
 #: src/components/BootstrapErrorScreen.tsx:68
 #: src/components/bottomsheets/ChannelSearchBottomSheet.tsx:301
 #: src/components/channel/ChannelSearchResults.tsx:663
-#: src/components/modals/channelTabs/ChannelInvitesTab.tsx:148
+#: src/components/modals/channelTabs/ChannelInvitesTab.tsx:146
 #: src/components/modals/channelTabs/ChannelWebhooksTab.tsx:159
 #: src/components/NetworkErrorScreen.tsx:56
 msgid "Try Again"
@@ -19307,7 +19319,7 @@ msgstr "Открепить"
 
 #: src/components/channel/MessageActionBar.tsx:505
 #: src/components/channel/MessageActionBar.tsx:716
-#: src/components/channel/messageActionMenu.tsx:132
+#: src/components/channel/messageActionMenu.tsx:134
 #: src/components/channel/messageActionUtils.tsx:234
 #: src/components/shared/ChannelPinsContent.tsx:92
 #: src/components/shared/ChannelPinsContent.tsx:245
@@ -19355,7 +19367,7 @@ msgstr "Формат файла не поддерживается. Исполь�
 
 #: src/components/channel/MessageActionBar.tsx:542
 #: src/components/channel/MessageActionBar.tsx:694
-#: src/components/channel/messageActionMenu.tsx:148
+#: src/components/channel/messageActionMenu.tsx:150
 #: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:178
 msgid "Unsuppress Embeds"
 msgstr "Показать встроенные элементы"
@@ -20573,8 +20585,8 @@ msgstr "Мы отправили ссылку для подтверждения �
 msgid "We failed to retrieve the full information about this user at this time."
 msgstr "Не удалось сейчас получить полную информацию об этом пользователе."
 
-#: src/components/layout/GuildLayout.tsx:307
-#: src/components/layout/GuildLayout.tsx:354
+#: src/components/layout/GuildLayout.tsx:305
+#: src/components/layout/GuildLayout.tsx:346
 msgid "We fluxed up! Hang tight, we're working on it."
 msgstr "Мы всё запороли! Подожди, мы уже работаем над этим."
 
@@ -21084,7 +21096,7 @@ msgstr "Ты не можешь взаимодействовать с реакц�
 #: src/components/layout/ChannelItem.tsx:206
 #: src/components/layout/ChannelItem.tsx:375
 #: src/stores/voice/MediaEngineFacade.ts:154
-#: src/stores/voice/MediaEngineFacade.ts:529
+#: src/stores/voice/MediaEngineFacade.ts:533
 msgid "You can't join while you're on timeout."
 msgstr "Ты не можешь присоединиться, пока на тайм-ауте."
 
@@ -21169,7 +21181,7 @@ msgstr "Ты не можешь восстановить звук, потому �
 msgid "You cannot unmute yourself because you have been muted by a moderator."
 msgstr "Ты не можешь включить микрофон, потому что модератор тебя заглушил."
 
-#: src/lib/markdown/renderers/link-renderer.tsx:181
+#: src/lib/markdown/renderers/link-renderer.tsx:207
 msgid "You do not have access to the channel where this message was sent."
 msgstr "У тебя нет доступа к каналу, где отправлено это сообщение."
 
@@ -21177,7 +21189,7 @@ msgstr "У тебя нет доступа к каналу, где отправл
 msgid "You do not have permission to send messages in this channel."
 msgstr "У тебя нет разрешения отправлять сообщения в этом канале."
 
-#: src/components/layout/GuildLayout.tsx:398
+#: src/components/layout/GuildLayout.tsx:386
 msgid "You don't have access to any channels in this community."
 msgstr "У тебя нет доступа ни к одному каналу в этом сообществе."
 
@@ -21468,7 +21480,7 @@ msgstr "Ты в голосовом канале"
 msgid "You're sending messages too quickly"
 msgstr "Ты отправляешь сообщения слишком быстро"
 
-#: src/components/channel/Messages.tsx:907
+#: src/components/channel/Messages.tsx:912
 msgid "You're viewing older messages"
 msgstr "Ты просматриваешь более старые сообщения"
 

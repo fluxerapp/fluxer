@@ -17,6 +17,12 @@ msgstr ""
 msgid "Control when message previews are shown in the DM list"
 msgstr "控制私信列表中何时显示消息预览"
 
+#. js-lingui-explicit-id
+#: src/components/channel/emoji-picker/EmojiPickerCategoryList.tsx:56
+#: src/components/channel/emoji-picker/EmojiPickerCategoryList.tsx:98
+msgid "Frequently Used"
+msgstr "常用"
+
 #: src/utils/SearchUtils.ts:341
 msgid "-ext:"
 msgstr "-扩展名："
@@ -56,7 +62,7 @@ msgstr "...开启密集模式。不错！"
 msgid "(edited)"
 msgstr "(已编辑)"
 
-#: src/lib/markdown/renderers/emoji-renderer.tsx:189
+#: src/lib/markdown/renderers/emoji-renderer.tsx:196
 msgid "(failed to load)"
 msgstr "(加载失败)"
 
@@ -887,7 +893,7 @@ msgid "<0/> started a call."
 msgstr "<0/> 发起了一次通话。"
 
 #. placeholder {0}: guild.name
-#: src/components/layout/GuildLayout.tsx:132
+#: src/components/layout/GuildLayout.tsx:131
 msgid "<0>{0}</0> is currently only accessible to Fluxer staff members"
 msgstr "<0>{0}</0> 目前仅 Fluxer 工作人员可访问"
 
@@ -1647,7 +1653,7 @@ msgstr "添加电话号码表单"
 
 #: src/components/channel/MessageActionBar.tsx:450
 #: src/components/channel/MessageActionBar.tsx:741
-#: src/components/channel/messageActionMenu.tsx:92
+#: src/components/channel/messageActionMenu.tsx:94
 #: src/components/channel/MessageReactions.tsx:263
 #: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:65
 msgid "Add Reaction"
@@ -2199,7 +2205,7 @@ msgid "Animated Emoji ({0})"
 msgstr "动画表情 ({0})"
 
 #: src/components/channel/embeds/media/EmbedGifv.tsx:237
-#: src/components/channel/embeds/media/EmbedGifv.tsx:749
+#: src/components/channel/embeds/media/EmbedGifv.tsx:752
 #: src/components/modals/MediaViewerModal.tsx:294
 #: src/components/modals/MediaViewerModal.tsx:362
 msgid "Animated GIF"
@@ -2481,7 +2487,7 @@ msgid "Are you sure you want to disable SMS two-factor authentication? This will
 msgstr "确定要禁用短信双重认证吗？这将降低您账户的安全性。"
 
 #: src/components/invites/DisableInvitesButton.tsx:49
-#: src/components/layout/GuildLayout.tsx:69
+#: src/components/layout/GuildLayout.tsx:68
 msgid "Are you sure you want to enable invites? This will allow users to join this community through invite links again."
 msgstr "确定要启用邀请吗？这将允许用户再次通过邀请链接加入此社区。"
 
@@ -2548,7 +2554,7 @@ msgstr "确定要解除对 <0>{0}</0> 的封禁吗？他们将能够重新加入
 msgid "Are you sure you want to revoke this invite? This action cannot be undone."
 msgstr "确定要撤销此邀请吗？此操作无法撤销。"
 
-#: src/components/channel/embeds/Embed.tsx:707
+#: src/components/channel/embeds/Embed.tsx:143
 msgid "Are you sure you want to suppress all link embeds on this message? This action will hide all embeds from this message."
 msgstr "确定要屏蔽此消息中的所有链接嵌入内容吗？此操作将隐藏此消息中的所有嵌入内容。"
 
@@ -3159,7 +3165,7 @@ msgstr "书签数量已达上限"
 
 #: src/components/channel/MessageActionBar.tsx:518
 #: src/components/channel/MessageActionBar.tsx:708
-#: src/components/channel/messageActionMenu.tsx:140
+#: src/components/channel/messageActionMenu.tsx:142
 #: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:140
 msgid "Bookmark Message"
 msgstr "书签消息"
@@ -3432,7 +3438,7 @@ msgstr "摄像头设置"
 #: src/components/channel/MentionEveryonePopout.tsx:125
 #: src/components/emojis/EmojiListItem.tsx:120
 #: src/components/invites/DisableInvitesButton.tsx:62
-#: src/components/layout/GuildLayout.tsx:76
+#: src/components/layout/GuildLayout.tsx:75
 #: src/components/modals/AccountDeleteModal.tsx:89
 #: src/components/modals/AccountDisableModal.tsx:63
 #: src/components/modals/AddFavoriteMemeModal.tsx:99
@@ -3680,8 +3686,8 @@ msgstr "更改我的群组昵称"
 #: src/components/modals/UserProfileActionsSheet.tsx:225
 #: src/components/modals/UserProfileActionsSheet.tsx:225
 #: src/components/uikit/ContextMenu/FavoritesChannelContextMenu.tsx:119
-#: src/components/uikit/ContextMenu/items/GuildMemberMenuItems.tsx:229
-#: src/components/uikit/ContextMenu/items/GuildMemberMenuItems.tsx:229
+#: src/components/uikit/ContextMenu/items/GuildMemberMenuItems.tsx:245
+#: src/components/uikit/ContextMenu/items/GuildMemberMenuItems.tsx:245
 msgid "Change Nickname"
 msgstr "更改昵称"
 
@@ -3775,7 +3781,7 @@ msgstr "频道"
 msgid "Channel Access"
 msgstr "频道访问"
 
-#: src/lib/markdown/renderers/link-renderer.tsx:180
+#: src/lib/markdown/renderers/link-renderer.tsx:206
 msgid "Channel Access Denied"
 msgstr "频道访问被拒绝"
 
@@ -4142,7 +4148,7 @@ msgstr "索取您的账户以生成测试版代码。"
 
 #: src/components/layout/ChannelItem.tsx:208
 #: src/components/layout/ChannelItem.tsx:382
-#: src/stores/voice/MediaEngineFacade.ts:537
+#: src/stores/voice/MediaEngineFacade.ts:541
 msgid "Claim your account to join this voice channel."
 msgstr "请验证您的帐户以加入此语音频道。"
 
@@ -4649,8 +4655,8 @@ msgstr "社区宣扬或协助非法活动"
 msgid "Community Settings"
 msgstr "社区设置"
 
-#: src/components/layout/GuildLayout.tsx:306
-#: src/components/layout/GuildLayout.tsx:353
+#: src/components/layout/GuildLayout.tsx:304
+#: src/components/layout/GuildLayout.tsx:345
 msgid "Community temporarily unavailable"
 msgstr "社区暂时不可用"
 
@@ -5179,20 +5185,20 @@ msgstr "复制链接"
 msgid "Copy Media"
 msgstr "复制媒体"
 
-#: src/components/channel/messageActionMenu.tsx:174
+#: src/components/channel/messageActionMenu.tsx:176
 msgid "Copy Message"
 msgstr "复制消息"
 
 #: src/components/channel/MessageActionBar.tsx:580
 #: src/components/channel/MessageActionBar.tsx:673
-#: src/components/channel/messageActionMenu.tsx:181
+#: src/components/channel/messageActionMenu.tsx:183
 #: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:235
 msgid "Copy Message ID"
 msgstr "复制消息ID"
 
 #: src/components/channel/MessageActionBar.tsx:570
 #: src/components/channel/MessageActionBar.tsx:679
-#: src/components/channel/messageActionMenu.tsx:167
+#: src/components/channel/messageActionMenu.tsx:169
 #: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:216
 msgid "Copy Message Link"
 msgstr "复制消息链接"
@@ -5388,8 +5394,8 @@ msgstr "创建收藏分类表单"
 msgid "Create Group DM"
 msgstr "创建群组私信"
 
-#: src/components/modals/channelTabs/ChannelInvitesTab.tsx:88
-#: src/components/modals/channelTabs/ChannelInvitesTab.tsx:130
+#: src/components/modals/channelTabs/ChannelInvitesTab.tsx:87
+#: src/components/modals/channelTabs/ChannelInvitesTab.tsx:128
 msgid "Create Invite"
 msgstr "创建邀请"
 
@@ -5978,11 +5984,11 @@ msgstr "默认为移动设备交互时启用动画以节省电量。"
 msgid "Defaults to off on mobile to preserve battery life and data usage."
 msgstr "默认为移动设备关闭以节省电量和数据使用。"
 
-#: src/actions/MessageActionCreators.tsx:394
+#: src/actions/MessageActionCreators.tsx:406
 #: src/components/channel/embeds/media/EmbedAudio.tsx:227
 #: src/components/channel/embeds/media/MediaContainer.tsx:115
-#: src/components/channel/Messages.tsx:442
-#: src/components/channel/Messages.tsx:522
+#: src/components/channel/Messages.tsx:447
+#: src/components/channel/Messages.tsx:527
 #: src/components/channel/MobileMemesPicker.tsx:546
 #: src/components/channel/pickers/memes/MemeGridItem.tsx:120
 #: src/components/emojis/EmojiListItem.tsx:189
@@ -6091,14 +6097,14 @@ msgstr "删除表情"
 msgid "Delete media"
 msgstr "删除媒体"
 
-#: src/actions/MessageActionCreators.tsx:391
+#: src/actions/MessageActionCreators.tsx:403
 #: src/components/channel/MessageActionBar.tsx:608
 #: src/components/channel/MessageActionBar.tsx:787
 #: src/components/channel/MessageActionBar.tsx:804
-#: src/components/channel/messageActionMenu.tsx:156
-#: src/components/channel/messageActionMenu.tsx:193
-#: src/components/channel/Messages.tsx:439
-#: src/components/channel/Messages.tsx:519
+#: src/components/channel/messageActionMenu.tsx:158
+#: src/components/channel/messageActionMenu.tsx:195
+#: src/components/channel/Messages.tsx:444
+#: src/components/channel/Messages.tsx:524
 #: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:273
 msgid "Delete Message"
 msgstr "删除消息"
@@ -6595,7 +6601,7 @@ msgstr "讨论或宣传非法活动"
 #: src/components/layout/app-layout/nagbars/PremiumExpiredNagbar.tsx:73
 #: src/components/layout/app-layout/nagbars/PremiumGracePeriodNagbar.tsx:79
 #: src/components/layout/app-layout/nagbars/PremiumOnboardingNagbar.tsx:57
-#: src/components/layout/GuildLayout.tsx:106
+#: src/components/layout/GuildLayout.tsx:105
 #: src/components/modals/GiftAcceptModal.tsx:105
 #: src/components/modals/GiftAcceptModal.tsx:131
 #: src/components/modals/RequiredActionModal.tsx:475
@@ -6978,7 +6984,7 @@ msgstr "编辑媒体"
 
 #: src/components/channel/MessageActionBar.tsx:463
 #: src/components/channel/MessageActionBar.tsx:751
-#: src/components/channel/messageActionMenu.tsx:124
+#: src/components/channel/messageActionMenu.tsx:126
 #: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:83
 msgid "Edit Message"
 msgstr "编辑消息"
@@ -7224,7 +7230,7 @@ msgid "Emojis"
 msgstr "表情符号"
 
 #: src/components/invites/DisableInvitesButton.tsx:60
-#: src/components/layout/GuildLayout.tsx:74
+#: src/components/layout/GuildLayout.tsx:73
 #: src/components/modals/tabs/AccountSecurityTab/SecurityTab.tsx:241
 #: src/components/modals/tabs/AccountSecurityTab/SecurityTab.tsx:430
 #: src/components/modals/tabs/AccountSecurityTab/SecurityTab.tsx:436
@@ -7299,12 +7305,12 @@ msgstr "启用输入监控权限"
 msgid "Enable Invites"
 msgstr "启用邀请"
 
-#: src/components/layout/GuildLayout.tsx:111
+#: src/components/layout/GuildLayout.tsx:110
 msgid "Enable Invites Again"
 msgstr "再次启用邀请"
 
 #: src/components/invites/DisableInvitesButton.tsx:46
-#: src/components/layout/GuildLayout.tsx:67
+#: src/components/layout/GuildLayout.tsx:66
 msgid "Enable invites for this community"
 msgstr "为此社区启用邀请"
 
@@ -7947,8 +7953,8 @@ msgid "Failed to load gift inventory"
 msgstr "加载礼物库存失败"
 
 #: src/components/alerts/InvitesLoadFailedModal.tsx:28
-#: src/components/modals/channelTabs/ChannelInvitesTab.tsx:144
-#: src/components/modals/guildTabs/GuildInvitesTab.tsx:122
+#: src/components/modals/channelTabs/ChannelInvitesTab.tsx:142
+#: src/components/modals/guildTabs/GuildInvitesTab.tsx:120
 msgid "Failed to load invites"
 msgstr "加载邀请失败"
 
@@ -8769,7 +8775,7 @@ msgstr "忘记密码了？"
 
 #: src/components/channel/MessageActionBar.tsx:489
 #: src/components/channel/MessageActionBar.tsx:767
-#: src/components/channel/messageActionMenu.tsx:115
+#: src/components/channel/messageActionMenu.tsx:117
 #: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:119
 msgid "Forward"
 msgstr "转发"
@@ -10416,7 +10422,7 @@ msgid "Invites Paused"
 msgstr "邀请已暂停"
 
 #. placeholder {0}: guild.name
-#: src/components/layout/GuildLayout.tsx:99
+#: src/components/layout/GuildLayout.tsx:98
 msgid "Invites to <0>{0}</0> are currently disabled"
 msgstr "向<0>{0}</0>的邀请当前已禁用"
 
@@ -10457,8 +10463,8 @@ msgstr "抖动"
 msgid "Join a Community"
 msgstr "加入社区"
 
-#: src/components/channel/MobileStickersPicker.tsx:122
-#: src/components/channel/StickersPicker.tsx:198
+#: src/components/channel/MobileStickersPicker.tsx:132
+#: src/components/channel/StickersPicker.tsx:209
 msgid "Join a community with stickers to get started!"
 msgstr "加入一个有贴纸的社区来开始吧！"
 
@@ -10588,7 +10594,7 @@ msgstr "跳转"
 msgid "Jump straight to the app to continue."
 msgstr "直接跳转到应用以继续。"
 
-#: src/lib/markdown/renderers/link-renderer.tsx:98
+#: src/lib/markdown/renderers/link-renderer.tsx:108
 msgid "Jump to {labelText}"
 msgstr "跳转到 {labelText}"
 
@@ -10604,7 +10610,7 @@ msgstr "跳转到最早未读消息"
 msgid "Jump to page"
 msgstr "跳转到页面"
 
-#: src/components/channel/Messages.tsx:915
+#: src/components/channel/Messages.tsx:920
 msgid "Jump to Present"
 msgstr "跳转到当前"
 
@@ -10612,15 +10618,15 @@ msgstr "跳转到当前"
 msgid "Jump to the channel of the active call"
 msgstr "跳转到活跃通话的频道"
 
-#: src/lib/markdown/renderers/link-renderer.tsx:99
+#: src/lib/markdown/renderers/link-renderer.tsx:109
 msgid "Jump to the linked channel"
 msgstr "跳转到链接的频道"
 
-#: src/lib/markdown/renderers/link-renderer.tsx:96
+#: src/lib/markdown/renderers/link-renderer.tsx:106
 msgid "Jump to the linked message"
 msgstr "跳转到链接的消息"
 
-#: src/lib/markdown/renderers/link-renderer.tsx:95
+#: src/lib/markdown/renderers/link-renderer.tsx:105
 msgid "Jump to the message in {labelText}"
 msgstr "跳转到 {labelText} 中的消息"
 
@@ -11024,7 +11030,7 @@ msgid "Loading more..."
 msgstr "正在加载更多..."
 
 #: src/components/channel/embeds/media/EmbedGifv.tsx:493
-#: src/components/channel/embeds/media/EmbedGifv.tsx:745
+#: src/components/channel/embeds/media/EmbedGifv.tsx:748
 msgid "Loading placeholder"
 msgstr "加载占位符"
 
@@ -11256,7 +11262,7 @@ msgstr "管理表情包"
 msgid "Manage feature flags"
 msgstr "管理功能开关"
 
-#: src/components/layout/GuildLayout.tsx:138
+#: src/components/layout/GuildLayout.tsx:137
 msgid "Manage Guild Features"
 msgstr "管理公会功能"
 
@@ -11353,7 +11359,7 @@ msgstr "标记为剧透"
 
 #: src/components/channel/MessageActionBar.tsx:530
 #: src/components/channel/MessageActionBar.tsx:701
-#: src/components/channel/messageActionMenu.tsx:99
+#: src/components/channel/messageActionMenu.tsx:101
 #: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:311
 msgid "Mark as Unread"
 msgstr "标记为未读"
@@ -11822,7 +11828,7 @@ msgstr "消息和媒体"
 msgid "Messages Deleted"
 msgstr "消息已删除"
 
-#: src/components/channel/Messages.tsx:936
+#: src/components/channel/Messages.tsx:941
 msgid "Messages failed to load"
 msgstr "消息加载失败"
 
@@ -12471,7 +12477,7 @@ msgstr "昵称不得超过32个字符"
 msgid "Nickname updated"
 msgstr "昵称已更新"
 
-#: src/components/layout/GuildLayout.tsx:397
+#: src/components/layout/GuildLayout.tsx:385
 msgid "No accessible channels"
 msgstr "无可访问的频道"
 
@@ -12575,6 +12581,10 @@ msgstr "未设置电子邮件地址"
 msgid "No emojis found matching your search."
 msgstr "未找到匹配搜索的表情符号。"
 
+#: src/components/channel/EmojiPicker.tsx:283
+msgid "No emojis match your search"
+msgstr "没有表情符号匹配您的搜索"
+
 #: src/components/common/FriendSelector.tsx:211
 #: src/components/modals/shared/RecipientList.tsx:191
 msgid "No friends found"
@@ -12613,8 +12623,8 @@ msgstr "尚未安装任何包。"
 msgid "No invite background"
 msgstr "没有邀请背景"
 
-#: src/components/modals/channelTabs/ChannelInvitesTab.tsx:122
-#: src/components/modals/guildTabs/GuildInvitesTab.tsx:109
+#: src/components/modals/channelTabs/ChannelInvitesTab.tsx:120
+#: src/components/modals/guildTabs/GuildInvitesTab.tsx:107
 msgid "No invite links"
 msgstr "没有邀请链接"
 
@@ -12768,8 +12778,8 @@ msgstr "未找到设置"
 msgid "No specific scopes requested."
 msgstr "未请求特定范围。"
 
-#: src/components/channel/MobileStickersPicker.tsx:121
-#: src/components/channel/StickersPicker.tsx:197
+#: src/components/channel/MobileStickersPicker.tsx:131
+#: src/components/channel/StickersPicker.tsx:208
 msgid "No Stickers Available"
 msgstr "无可用贴纸"
 
@@ -12777,14 +12787,17 @@ msgstr "无可用贴纸"
 msgid "No stickers found"
 msgstr "未找到贴纸"
 
-#: src/components/channel/MobileStickersPicker.tsx:147
-#: src/components/channel/StickersPicker.tsx:226
+#: src/components/channel/MobileStickersPicker.tsx:157
 msgid "No Stickers Found"
 msgstr "未找到贴纸"
 
 #: src/components/modals/guildTabs/GuildStickersTab.tsx:191
 msgid "No stickers found matching your search."
 msgstr "未找到匹配您搜索的贴纸。"
+
+#: src/components/channel/StickersPicker.tsx:285
+msgid "No stickers match your search"
+msgstr "没有贴纸匹配您的搜索"
 
 #: src/components/modals/guildTabs/GuildOverviewTab/sections/SystemWelcomeSection.tsx:40
 msgid "No System Channel"
@@ -13034,7 +13047,7 @@ msgstr "确定"
 #: src/components/alerts/SlowmodeRateLimitedModal.tsx:65
 #: src/lib/KeybindManager.ts:495
 #: src/lib/KeybindManager.ts:520
-#: src/lib/markdown/renderers/link-renderer.tsx:182
+#: src/lib/markdown/renderers/link-renderer.tsx:208
 msgid "Okay"
 msgstr "好的"
 
@@ -13764,7 +13777,7 @@ msgstr "钉住它，好好钉住。"
 
 #: src/components/channel/MessageActionBar.tsx:505
 #: src/components/channel/MessageActionBar.tsx:716
-#: src/components/channel/messageActionMenu.tsx:132
+#: src/components/channel/messageActionMenu.tsx:134
 #: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:159
 msgid "Pin Message"
 msgstr "置顶消息"
@@ -14678,7 +14691,7 @@ msgstr "移除横幅"
 
 #: src/components/channel/MessageActionBar.tsx:518
 #: src/components/channel/MessageActionBar.tsx:708
-#: src/components/channel/messageActionMenu.tsx:140
+#: src/components/channel/messageActionMenu.tsx:142
 #: src/components/modals/BookmarksBottomSheet.tsx:93
 #: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:140
 msgid "Remove Bookmark"
@@ -14797,7 +14810,7 @@ msgstr "移除贴纸"
 #: src/components/modals/RemoveTimeoutModal.tsx:61
 #: src/components/modals/RemoveTimeoutModal.tsx:75
 #: src/components/modals/TimeoutMemberSheet.tsx:101
-#: src/components/uikit/ContextMenu/items/GuildMemberMenuItems.tsx:272
+#: src/components/uikit/ContextMenu/items/GuildMemberMenuItems.tsx:288
 msgid "Remove Timeout"
 msgstr "移除超时"
 
@@ -14996,7 +15009,7 @@ msgstr "替换您的自定义背景"
 
 #: src/components/channel/MessageActionBar.tsx:476
 #: src/components/channel/MessageActionBar.tsx:759
-#: src/components/channel/messageActionMenu.tsx:107
+#: src/components/channel/messageActionMenu.tsx:109
 #: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:101
 msgid "Reply"
 msgstr "回复"
@@ -15249,11 +15262,11 @@ msgstr "重新订阅"
 #: src/components/alerts/RateLimitedConfirmModal.tsx:73
 #: src/components/auth/IpAuthorizationScreen.tsx:161
 #: src/components/channel/MessageActionBar.tsx:798
-#: src/components/channel/messageActionMenu.tsx:187
+#: src/components/channel/messageActionMenu.tsx:189
 #: src/components/modals/BackgroundImageGalleryModal.tsx:232
 #: src/components/modals/guildTabs/GuildAuditLogTab.tsx:624
 #: src/components/modals/guildTabs/GuildEmojiTab.tsx:539
-#: src/components/modals/guildTabs/GuildInvitesTab.tsx:126
+#: src/components/modals/guildTabs/GuildInvitesTab.tsx:124
 #: src/components/modals/guildTabs/GuildStickersTab.tsx:211
 #: src/components/modals/guildTabs/GuildWebhooksTab.tsx:137
 #: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:559
@@ -15425,7 +15438,7 @@ msgstr "角色：{0}。"
 #: src/components/modals/guildTabs/GuildRolesTab.tsx:928
 #: src/components/modals/shared/AddOverridePopout.tsx:144
 #: src/components/popouts/UserProfileShared.tsx:147
-#: src/components/uikit/ContextMenu/items/GuildMemberMenuItems.tsx:166
+#: src/components/uikit/ContextMenu/items/GuildMemberMenuItems.tsx:173
 msgid "Roles"
 msgstr "角色"
 
@@ -17529,22 +17542,22 @@ msgstr "屏蔽所有角色@提及"
 msgid "Suppress All Role @mentions"
 msgstr "屏蔽所有角色@提及"
 
-#: src/components/channel/embeds/Embed.tsx:799
-#: src/components/channel/embeds/Embed.tsx:835
-#: src/components/channel/embeds/Embed.tsx:859
-#: src/components/channel/embeds/Embed.tsx:904
-#: src/components/channel/embeds/Embed.tsx:940
-#: src/components/channel/embeds/Embed.tsx:981
-#: src/components/channel/embeds/Embed.tsx:1017
-#: src/components/channel/embeds/Embed.tsx:1059
+#: src/components/channel/embeds/Embed.tsx:800
+#: src/components/channel/embeds/Embed.tsx:836
+#: src/components/channel/embeds/Embed.tsx:860
+#: src/components/channel/embeds/Embed.tsx:905
+#: src/components/channel/embeds/Embed.tsx:941
+#: src/components/channel/embeds/Embed.tsx:982
+#: src/components/channel/embeds/Embed.tsx:1018
+#: src/components/channel/embeds/Embed.tsx:1060
 msgid "Suppress embeds"
 msgstr "屏蔽嵌入内容"
 
-#: src/components/channel/embeds/Embed.tsx:705
-#: src/components/channel/embeds/Embed.tsx:712
+#: src/components/channel/embeds/Embed.tsx:141
+#: src/components/channel/embeds/Embed.tsx:148
 #: src/components/channel/MessageActionBar.tsx:542
 #: src/components/channel/MessageActionBar.tsx:694
-#: src/components/channel/messageActionMenu.tsx:148
+#: src/components/channel/messageActionMenu.tsx:150
 #: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:178
 msgid "Suppress Embeds"
 msgstr "屏蔽嵌入内容"
@@ -17822,8 +17835,8 @@ msgstr "机器人已添加。"
 msgid "The channel you're looking for may have been deleted or you may not have access to it."
 msgstr "你寻找的频道可能已被删除，或者你可能没有访问权限。"
 
-#: src/components/layout/GuildLayout.tsx:313
-#: src/components/layout/GuildLayout.tsx:376
+#: src/components/layout/GuildLayout.tsx:311
+#: src/components/layout/GuildLayout.tsx:366
 msgid "The community you're looking for may have been deleted or you may not have access to it."
 msgstr "你寻找的社区可能已被删除，或者你可能没有访问权限。"
 
@@ -17921,11 +17934,11 @@ msgstr "此频道未配置 Webhook。创建一个 Webhook 以允许外部应用�
 msgid "There was an error loading the emojis. Please try again."
 msgstr "加载表情时出错，请重试。"
 
-#: src/components/modals/channelTabs/ChannelInvitesTab.tsx:145
+#: src/components/modals/channelTabs/ChannelInvitesTab.tsx:143
 msgid "There was an error loading the invite links for this channel. Please try again."
 msgstr "加载此频道的邀请链接时出错，请重试。"
 
-#: src/components/modals/guildTabs/GuildInvitesTab.tsx:123
+#: src/components/modals/guildTabs/GuildInvitesTab.tsx:121
 msgid "There was an error loading the invites. Please try again."
 msgstr "加载邀请时出错，请重试。"
 
@@ -18010,7 +18023,7 @@ msgstr "此分类已达到最大频道数 {MAX_CHANNELS_PER_CATEGORY}。"
 msgid "This channel does not support webhooks."
 msgstr "此频道不支持 Webhook。"
 
-#: src/components/modals/channelTabs/ChannelInvitesTab.tsx:124
+#: src/components/modals/channelTabs/ChannelInvitesTab.tsx:122
 msgid "This channel doesn't have any invite links yet. Create one to invite people to this channel."
 msgstr "此频道还没有邀请链接。创建一个来邀请他人加入此频道。"
 
@@ -18043,7 +18056,7 @@ msgstr "此频道可能包含不适宜工作或对某些用户不合适的内容
 msgid "This code hasn't been used yet. Please complete login in your browser first."
 msgstr "此代码尚未使用。请先在浏览器中完成登录。"
 
-#: src/components/modals/guildTabs/GuildInvitesTab.tsx:111
+#: src/components/modals/guildTabs/GuildInvitesTab.tsx:109
 msgid "This community doesn't have any invite links yet. Go to a channel and create an invite to invite people."
 msgstr "此社区还没有任何邀请链接。前往一个频道并创建邀请来邀请他人。"
 
@@ -18180,8 +18193,8 @@ msgstr "消息显示效果如下"
 msgid "This is not the channel you're looking for."
 msgstr "这不是您要找的频道。"
 
-#: src/components/layout/GuildLayout.tsx:312
-#: src/components/layout/GuildLayout.tsx:375
+#: src/components/layout/GuildLayout.tsx:310
+#: src/components/layout/GuildLayout.tsx:365
 msgid "This is not the community you're looking for."
 msgstr "这不是您要找的社区。"
 
@@ -18300,9 +18313,9 @@ msgstr "此语音频道已达到用户上限。请稍后再试或加入其他频
 msgid "This was a @silent message."
 msgstr "这是一条@静默消息。"
 
-#: src/actions/MessageActionCreators.tsx:392
-#: src/components/channel/Messages.tsx:440
-#: src/components/channel/Messages.tsx:520
+#: src/actions/MessageActionCreators.tsx:404
+#: src/components/channel/Messages.tsx:445
+#: src/components/channel/Messages.tsx:525
 msgid "This will create a rift in the space-time continuum and cannot be undone."
 msgstr "这将在时空连续体中造成裂痕且无法撤销。"
 
@@ -18371,7 +18384,7 @@ msgstr "超时直至{0}。"
 #: src/components/modals/guildTabs/GuildMemberActionsSheet.tsx:288
 #: src/components/modals/TimeoutMemberModal.tsx:207
 #: src/components/modals/TimeoutMemberSheet.tsx:90
-#: src/components/uikit/ContextMenu/items/GuildMemberMenuItems.tsx:272
+#: src/components/uikit/ContextMenu/items/GuildMemberMenuItems.tsx:288
 msgid "Timeout"
 msgstr "超时"
 
@@ -18659,8 +18672,7 @@ msgstr "尝试不同的名称或使用@ / # / ! / *前缀来筛选结果。"
 msgid "Try a different search query"
 msgstr "尝试不同的搜索查询"
 
-#: src/components/channel/MobileStickersPicker.tsx:148
-#: src/components/channel/StickersPicker.tsx:227
+#: src/components/channel/MobileStickersPicker.tsx:158
 msgid "Try a different search term"
 msgstr "尝试不同的搜索词"
 
@@ -18670,14 +18682,14 @@ msgid "Try a different search term or filter"
 msgstr "尝试不同的搜索词或筛选器"
 
 #: src/components/auth/HandoffCodeDisplay.tsx:67
-#: src/components/channel/Messages.tsx:937
+#: src/components/channel/Messages.tsx:942
 msgid "Try again"
 msgstr "重试"
 
 #: src/components/BootstrapErrorScreen.tsx:68
 #: src/components/bottomsheets/ChannelSearchBottomSheet.tsx:301
 #: src/components/channel/ChannelSearchResults.tsx:663
-#: src/components/modals/channelTabs/ChannelInvitesTab.tsx:148
+#: src/components/modals/channelTabs/ChannelInvitesTab.tsx:146
 #: src/components/modals/channelTabs/ChannelWebhooksTab.tsx:159
 #: src/components/NetworkErrorScreen.tsx:56
 msgid "Try Again"
@@ -19307,7 +19319,7 @@ msgstr "取消置顶"
 
 #: src/components/channel/MessageActionBar.tsx:505
 #: src/components/channel/MessageActionBar.tsx:716
-#: src/components/channel/messageActionMenu.tsx:132
+#: src/components/channel/messageActionMenu.tsx:134
 #: src/components/channel/messageActionUtils.tsx:234
 #: src/components/shared/ChannelPinsContent.tsx:92
 #: src/components/shared/ChannelPinsContent.tsx:245
@@ -19355,7 +19367,7 @@ msgstr "不支持的文件格式。请使用JPG、PNG、GIF、WebP或MP4。"
 
 #: src/components/channel/MessageActionBar.tsx:542
 #: src/components/channel/MessageActionBar.tsx:694
-#: src/components/channel/messageActionMenu.tsx:148
+#: src/components/channel/messageActionMenu.tsx:150
 #: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:178
 msgid "Unsuppress Embeds"
 msgstr "取消隐藏嵌入内容"
@@ -20573,8 +20585,8 @@ msgstr "我们已发送授权此登录的链接邮件。请打开您的收件箱
 msgid "We failed to retrieve the full information about this user at this time."
 msgstr "我们目前未能获取此用户的完整信息。"
 
-#: src/components/layout/GuildLayout.tsx:307
-#: src/components/layout/GuildLayout.tsx:354
+#: src/components/layout/GuildLayout.tsx:305
+#: src/components/layout/GuildLayout.tsx:346
 msgid "We fluxed up! Hang tight, we're working on it."
 msgstr "我们搞砸了！稍等一下，我们正在处理。"
 
@@ -21084,7 +21096,7 @@ msgstr "你不能与搜索结果中的反应互动，因为这可能会扰乱时
 #: src/components/layout/ChannelItem.tsx:206
 #: src/components/layout/ChannelItem.tsx:375
 #: src/stores/voice/MediaEngineFacade.ts:154
-#: src/stores/voice/MediaEngineFacade.ts:529
+#: src/stores/voice/MediaEngineFacade.ts:533
 msgid "You can't join while you're on timeout."
 msgstr "你在禁言期间无法加入。"
 
@@ -21169,7 +21181,7 @@ msgstr "你无法取消自己的静音，因为你已被管理员设为静音。
 msgid "You cannot unmute yourself because you have been muted by a moderator."
 msgstr "你无法取消自己的禁言，因为你已被管理员禁言。"
 
-#: src/lib/markdown/renderers/link-renderer.tsx:181
+#: src/lib/markdown/renderers/link-renderer.tsx:207
 msgid "You do not have access to the channel where this message was sent."
 msgstr "你无权访问发送此消息的频道。"
 
@@ -21177,7 +21189,7 @@ msgstr "你无权访问发送此消息的频道。"
 msgid "You do not have permission to send messages in this channel."
 msgstr "你无权在此频道中发送消息。"
 
-#: src/components/layout/GuildLayout.tsx:398
+#: src/components/layout/GuildLayout.tsx:386
 msgid "You don't have access to any channels in this community."
 msgstr "你无法访问此社区中的任何频道。"
 
@@ -21468,7 +21480,7 @@ msgstr "您在语音频道中"
 msgid "You're sending messages too quickly"
 msgstr "您发送消息的速度太快了"
 
-#: src/components/channel/Messages.tsx:907
+#: src/components/channel/Messages.tsx:912
 msgid "You're viewing older messages"
 msgstr "您正在查看较早的消息"
 

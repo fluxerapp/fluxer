@@ -17,6 +17,12 @@ msgstr ""
 msgid "Control when message previews are shown in the DM list"
 msgstr "ควบคุมการแสดงตัวอย่างข้อความในรายการ DM"
 
+#. js-lingui-explicit-id
+#: src/components/channel/emoji-picker/EmojiPickerCategoryList.tsx:56
+#: src/components/channel/emoji-picker/EmojiPickerCategoryList.tsx:98
+msgid "Frequently Used"
+msgstr "ใช้บ่อย"
+
 #: src/utils/SearchUtils.ts:341
 msgid "-ext:"
 msgstr "-ext:"
@@ -56,7 +62,7 @@ msgstr "... เปิดโหมดแน่นแล้ว เยี่ยม!
 msgid "(edited)"
 msgstr "(แก้ไขแล้ว)"
 
-#: src/lib/markdown/renderers/emoji-renderer.tsx:189
+#: src/lib/markdown/renderers/emoji-renderer.tsx:196
 msgid "(failed to load)"
 msgstr "(โหลดไม่สำเร็จ)"
 
@@ -887,7 +893,7 @@ msgid "<0/> started a call."
 msgstr "<0/> เริ่มการโทร"
 
 #. placeholder {0}: guild.name
-#: src/components/layout/GuildLayout.tsx:132
+#: src/components/layout/GuildLayout.tsx:131
 msgid "<0>{0}</0> is currently only accessible to Fluxer staff members"
 msgstr "<0>{0}</0> ขณะนี้เข้าถึงได้เฉพาะพนักงาน Fluxer"
 
@@ -1647,7 +1653,7 @@ msgstr "แบบฟอร์มเพิ่มหมายเลขโทรศ
 
 #: src/components/channel/MessageActionBar.tsx:450
 #: src/components/channel/MessageActionBar.tsx:741
-#: src/components/channel/messageActionMenu.tsx:92
+#: src/components/channel/messageActionMenu.tsx:94
 #: src/components/channel/MessageReactions.tsx:263
 #: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:65
 msgid "Add Reaction"
@@ -2199,7 +2205,7 @@ msgid "Animated Emoji ({0})"
 msgstr "อีโมจิเคลื่อนไหว ({0})"
 
 #: src/components/channel/embeds/media/EmbedGifv.tsx:237
-#: src/components/channel/embeds/media/EmbedGifv.tsx:749
+#: src/components/channel/embeds/media/EmbedGifv.tsx:752
 #: src/components/modals/MediaViewerModal.tsx:294
 #: src/components/modals/MediaViewerModal.tsx:362
 msgid "Animated GIF"
@@ -2481,7 +2487,7 @@ msgid "Are you sure you want to disable SMS two-factor authentication? This will
 msgstr "แน่ใจไหมว่าต้องการปิดการยืนยันตัวตนสองชั้นผ่าน SMS? จะทำให้บัญชีคุณมีความปลอดภัยน้อยลง"
 
 #: src/components/invites/DisableInvitesButton.tsx:49
-#: src/components/layout/GuildLayout.tsx:69
+#: src/components/layout/GuildLayout.tsx:68
 msgid "Are you sure you want to enable invites? This will allow users to join this community through invite links again."
 msgstr "แน่ใจไหมว่าต้องการเปิดใช้งานการเชิญ? จะให้ผู้ใช้สามารถเข้าร่วมชุมชนนี้ผ่านลิงก์เชิญได้อีกครั้ง"
 
@@ -2548,7 +2554,7 @@ msgstr "แน่ใจไหมว่าต้องการยกเลิก
 msgid "Are you sure you want to revoke this invite? This action cannot be undone."
 msgstr "แน่ใจไหมว่าต้องการเพิกถอนคำเชิญนี้? การกระทำนี้ไม่สามารถย้อนกลับได้"
 
-#: src/components/channel/embeds/Embed.tsx:707
+#: src/components/channel/embeds/Embed.tsx:143
 msgid "Are you sure you want to suppress all link embeds on this message? This action will hide all embeds from this message."
 msgstr "แน่ใจไหมว่าต้องการปิดการฝังลิงก์ทั้งหมดในข้อความนี้? การกระทำนี้จะซ่อนการฝังทั้งหมดออกจากข้อความนี้"
 
@@ -3159,7 +3165,7 @@ msgstr "ถึงขีดจำกัดบุ๊กมาร์กแล้ว
 
 #: src/components/channel/MessageActionBar.tsx:518
 #: src/components/channel/MessageActionBar.tsx:708
-#: src/components/channel/messageActionMenu.tsx:140
+#: src/components/channel/messageActionMenu.tsx:142
 #: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:140
 msgid "Bookmark Message"
 msgstr "บุ๊กมาร์กข้อความ"
@@ -3432,7 +3438,7 @@ msgstr "การตั้งค่ากล้อง"
 #: src/components/channel/MentionEveryonePopout.tsx:125
 #: src/components/emojis/EmojiListItem.tsx:120
 #: src/components/invites/DisableInvitesButton.tsx:62
-#: src/components/layout/GuildLayout.tsx:76
+#: src/components/layout/GuildLayout.tsx:75
 #: src/components/modals/AccountDeleteModal.tsx:89
 #: src/components/modals/AccountDisableModal.tsx:63
 #: src/components/modals/AddFavoriteMemeModal.tsx:99
@@ -3680,8 +3686,8 @@ msgstr "เปลี่ยนนามแฝงกลุ่มของฉัน
 #: src/components/modals/UserProfileActionsSheet.tsx:225
 #: src/components/modals/UserProfileActionsSheet.tsx:225
 #: src/components/uikit/ContextMenu/FavoritesChannelContextMenu.tsx:119
-#: src/components/uikit/ContextMenu/items/GuildMemberMenuItems.tsx:229
-#: src/components/uikit/ContextMenu/items/GuildMemberMenuItems.tsx:229
+#: src/components/uikit/ContextMenu/items/GuildMemberMenuItems.tsx:245
+#: src/components/uikit/ContextMenu/items/GuildMemberMenuItems.tsx:245
 msgid "Change Nickname"
 msgstr "เปลี่ยนนามแฝง"
 
@@ -3775,7 +3781,7 @@ msgstr "แชนแนล"
 msgid "Channel Access"
 msgstr "การเข้าถึงแชนแนล"
 
-#: src/lib/markdown/renderers/link-renderer.tsx:180
+#: src/lib/markdown/renderers/link-renderer.tsx:206
 msgid "Channel Access Denied"
 msgstr "ไม่อนุญาตให้เข้าถึงแชนแนล"
 
@@ -4142,7 +4148,7 @@ msgstr "ยืนยันบัญชีของคุณเพื่อสร
 
 #: src/components/layout/ChannelItem.tsx:208
 #: src/components/layout/ChannelItem.tsx:382
-#: src/stores/voice/MediaEngineFacade.ts:537
+#: src/stores/voice/MediaEngineFacade.ts:541
 msgid "Claim your account to join this voice channel."
 msgstr "ยืนยันบัญชีของคุณเพื่อเข้าร่วมแชนแนลเสียงนี้"
 
@@ -4649,8 +4655,8 @@ msgstr "ชุมชนส่งเสริมหรืออำนวยคว
 msgid "Community Settings"
 msgstr "การตั้งค่าชุมชน"
 
-#: src/components/layout/GuildLayout.tsx:306
-#: src/components/layout/GuildLayout.tsx:353
+#: src/components/layout/GuildLayout.tsx:304
+#: src/components/layout/GuildLayout.tsx:345
 msgid "Community temporarily unavailable"
 msgstr "ชุมชนชั่วคราวไม่พร้อมใช้งาน"
 
@@ -5179,20 +5185,20 @@ msgstr "คัดลอกลิงก์"
 msgid "Copy Media"
 msgstr "คัดลอกสื่อ"
 
-#: src/components/channel/messageActionMenu.tsx:174
+#: src/components/channel/messageActionMenu.tsx:176
 msgid "Copy Message"
 msgstr "คัดลอกข้อความ"
 
 #: src/components/channel/MessageActionBar.tsx:580
 #: src/components/channel/MessageActionBar.tsx:673
-#: src/components/channel/messageActionMenu.tsx:181
+#: src/components/channel/messageActionMenu.tsx:183
 #: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:235
 msgid "Copy Message ID"
 msgstr "คัดลอก ID ข้อความ"
 
 #: src/components/channel/MessageActionBar.tsx:570
 #: src/components/channel/MessageActionBar.tsx:679
-#: src/components/channel/messageActionMenu.tsx:167
+#: src/components/channel/messageActionMenu.tsx:169
 #: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:216
 msgid "Copy Message Link"
 msgstr "คัดลอกลิงก์ข้อความ"
@@ -5388,8 +5394,8 @@ msgstr "ฟอร์มสร้างหมวดหมู่ที่ชื่
 msgid "Create Group DM"
 msgstr "สร้างกลุ่มข้อความส่วนตัว"
 
-#: src/components/modals/channelTabs/ChannelInvitesTab.tsx:88
-#: src/components/modals/channelTabs/ChannelInvitesTab.tsx:130
+#: src/components/modals/channelTabs/ChannelInvitesTab.tsx:87
+#: src/components/modals/channelTabs/ChannelInvitesTab.tsx:128
 msgid "Create Invite"
 msgstr "สร้างคำเชิญ"
 
@@ -5978,11 +5984,11 @@ msgstr "ค่าเริ่มต้นจะเล่นแอนิเมช
 msgid "Defaults to off on mobile to preserve battery life and data usage."
 msgstr "ค่าเริ่มต้นปิดใช้งานบนมือถือเพื่อประหยัดแบตเตอรี่และการใช้ข้อมูล"
 
-#: src/actions/MessageActionCreators.tsx:394
+#: src/actions/MessageActionCreators.tsx:406
 #: src/components/channel/embeds/media/EmbedAudio.tsx:227
 #: src/components/channel/embeds/media/MediaContainer.tsx:115
-#: src/components/channel/Messages.tsx:442
-#: src/components/channel/Messages.tsx:522
+#: src/components/channel/Messages.tsx:447
+#: src/components/channel/Messages.tsx:527
 #: src/components/channel/MobileMemesPicker.tsx:546
 #: src/components/channel/pickers/memes/MemeGridItem.tsx:120
 #: src/components/emojis/EmojiListItem.tsx:189
@@ -6091,14 +6097,14 @@ msgstr "ลบอิโมจิ"
 msgid "Delete media"
 msgstr "ลบสื่อ"
 
-#: src/actions/MessageActionCreators.tsx:391
+#: src/actions/MessageActionCreators.tsx:403
 #: src/components/channel/MessageActionBar.tsx:608
 #: src/components/channel/MessageActionBar.tsx:787
 #: src/components/channel/MessageActionBar.tsx:804
-#: src/components/channel/messageActionMenu.tsx:156
-#: src/components/channel/messageActionMenu.tsx:193
-#: src/components/channel/Messages.tsx:439
-#: src/components/channel/Messages.tsx:519
+#: src/components/channel/messageActionMenu.tsx:158
+#: src/components/channel/messageActionMenu.tsx:195
+#: src/components/channel/Messages.tsx:444
+#: src/components/channel/Messages.tsx:524
 #: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:273
 msgid "Delete Message"
 msgstr "ลบข้อความ"
@@ -6595,7 +6601,7 @@ msgstr "การพูดคุยหรือส่งเสริมกิจ
 #: src/components/layout/app-layout/nagbars/PremiumExpiredNagbar.tsx:73
 #: src/components/layout/app-layout/nagbars/PremiumGracePeriodNagbar.tsx:79
 #: src/components/layout/app-layout/nagbars/PremiumOnboardingNagbar.tsx:57
-#: src/components/layout/GuildLayout.tsx:106
+#: src/components/layout/GuildLayout.tsx:105
 #: src/components/modals/GiftAcceptModal.tsx:105
 #: src/components/modals/GiftAcceptModal.tsx:131
 #: src/components/modals/RequiredActionModal.tsx:475
@@ -6978,7 +6984,7 @@ msgstr "แก้ไขสื่อ"
 
 #: src/components/channel/MessageActionBar.tsx:463
 #: src/components/channel/MessageActionBar.tsx:751
-#: src/components/channel/messageActionMenu.tsx:124
+#: src/components/channel/messageActionMenu.tsx:126
 #: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:83
 msgid "Edit Message"
 msgstr "แก้ไขข้อความ"
@@ -7224,7 +7230,7 @@ msgid "Emojis"
 msgstr "อีโมจิ"
 
 #: src/components/invites/DisableInvitesButton.tsx:60
-#: src/components/layout/GuildLayout.tsx:74
+#: src/components/layout/GuildLayout.tsx:73
 #: src/components/modals/tabs/AccountSecurityTab/SecurityTab.tsx:241
 #: src/components/modals/tabs/AccountSecurityTab/SecurityTab.tsx:430
 #: src/components/modals/tabs/AccountSecurityTab/SecurityTab.tsx:436
@@ -7299,12 +7305,12 @@ msgstr "อนุญาตการตรวจสอบอินพุต"
 msgid "Enable Invites"
 msgstr "เปิดการเชิญ"
 
-#: src/components/layout/GuildLayout.tsx:111
+#: src/components/layout/GuildLayout.tsx:110
 msgid "Enable Invites Again"
 msgstr "เปิดการเชิญอีกครั้ง"
 
 #: src/components/invites/DisableInvitesButton.tsx:46
-#: src/components/layout/GuildLayout.tsx:67
+#: src/components/layout/GuildLayout.tsx:66
 msgid "Enable invites for this community"
 msgstr "เปิดการเชิญสำหรับชุมชนนี้"
 
@@ -7947,8 +7953,8 @@ msgid "Failed to load gift inventory"
 msgstr "โหลดคลังของขวัญไม่สำเร็จ"
 
 #: src/components/alerts/InvitesLoadFailedModal.tsx:28
-#: src/components/modals/channelTabs/ChannelInvitesTab.tsx:144
-#: src/components/modals/guildTabs/GuildInvitesTab.tsx:122
+#: src/components/modals/channelTabs/ChannelInvitesTab.tsx:142
+#: src/components/modals/guildTabs/GuildInvitesTab.tsx:120
 msgid "Failed to load invites"
 msgstr "โหลดคำเชิญไม่สำเร็จ"
 
@@ -8769,7 +8775,7 @@ msgstr "ลืมรหัสผ่านของคุณ?"
 
 #: src/components/channel/MessageActionBar.tsx:489
 #: src/components/channel/MessageActionBar.tsx:767
-#: src/components/channel/messageActionMenu.tsx:115
+#: src/components/channel/messageActionMenu.tsx:117
 #: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:119
 msgid "Forward"
 msgstr "ส่งต่อ"
@@ -10416,7 +10422,7 @@ msgid "Invites Paused"
 msgstr "คำเชิญถูกระงับ"
 
 #. placeholder {0}: guild.name
-#: src/components/layout/GuildLayout.tsx:99
+#: src/components/layout/GuildLayout.tsx:98
 msgid "Invites to <0>{0}</0> are currently disabled"
 msgstr "คำเชิญไปที่ <0>{0}</0> ถูกปิดใช้งานอยู่ในขณะนี้"
 
@@ -10457,8 +10463,8 @@ msgstr "การสั่น"
 msgid "Join a Community"
 msgstr "เข้าร่วมชุมชน"
 
-#: src/components/channel/MobileStickersPicker.tsx:122
-#: src/components/channel/StickersPicker.tsx:198
+#: src/components/channel/MobileStickersPicker.tsx:132
+#: src/components/channel/StickersPicker.tsx:209
 msgid "Join a community with stickers to get started!"
 msgstr "เข้าร่วมชุมชนที่มีสติกเกอร์เพื่อเริ่มต้น!"
 
@@ -10588,7 +10594,7 @@ msgstr "กระโดด"
 msgid "Jump straight to the app to continue."
 msgstr "กระโดดตรงไปยังแอปเพื่อดำเนินการต่อ"
 
-#: src/lib/markdown/renderers/link-renderer.tsx:98
+#: src/lib/markdown/renderers/link-renderer.tsx:108
 msgid "Jump to {labelText}"
 msgstr "กระโดดไปที่ {labelText}"
 
@@ -10604,7 +10610,7 @@ msgstr "กระโดดไปยังข้อความที่ยัง
 msgid "Jump to page"
 msgstr "กระโดดไปยังหน้า"
 
-#: src/components/channel/Messages.tsx:915
+#: src/components/channel/Messages.tsx:920
 msgid "Jump to Present"
 msgstr "กระโดดไปยังปัจจุบัน"
 
@@ -10612,15 +10618,15 @@ msgstr "กระโดดไปยังปัจจุบัน"
 msgid "Jump to the channel of the active call"
 msgstr "กระโดดไปที่แชนแนลของการโทรที่กำลังใช้งาน"
 
-#: src/lib/markdown/renderers/link-renderer.tsx:99
+#: src/lib/markdown/renderers/link-renderer.tsx:109
 msgid "Jump to the linked channel"
 msgstr "กระโดดไปที่แชนแนลที่ลิงก์"
 
-#: src/lib/markdown/renderers/link-renderer.tsx:96
+#: src/lib/markdown/renderers/link-renderer.tsx:106
 msgid "Jump to the linked message"
 msgstr "กระโดดไปที่ข้อความที่ลิงก์"
 
-#: src/lib/markdown/renderers/link-renderer.tsx:95
+#: src/lib/markdown/renderers/link-renderer.tsx:105
 msgid "Jump to the message in {labelText}"
 msgstr "กระโดดไปที่ข้อความใน {labelText}"
 
@@ -11024,7 +11030,7 @@ msgid "Loading more..."
 msgstr "กำลังโหลดเพิ่มเติม..."
 
 #: src/components/channel/embeds/media/EmbedGifv.tsx:493
-#: src/components/channel/embeds/media/EmbedGifv.tsx:745
+#: src/components/channel/embeds/media/EmbedGifv.tsx:748
 msgid "Loading placeholder"
 msgstr "กำลังโหลดที่ว่าง"
 
@@ -11256,7 +11262,7 @@ msgstr "จัดการแพ็กการแสดงออก"
 msgid "Manage feature flags"
 msgstr "จัดการฟีเจอร์แฟล็ก"
 
-#: src/components/layout/GuildLayout.tsx:138
+#: src/components/layout/GuildLayout.tsx:137
 msgid "Manage Guild Features"
 msgstr "จัดการคุณสมบัติกิลด์"
 
@@ -11353,7 +11359,7 @@ msgstr "ทำเครื่องหมายว่าเป็นสปอย
 
 #: src/components/channel/MessageActionBar.tsx:530
 #: src/components/channel/MessageActionBar.tsx:701
-#: src/components/channel/messageActionMenu.tsx:99
+#: src/components/channel/messageActionMenu.tsx:101
 #: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:311
 msgid "Mark as Unread"
 msgstr "ทำเครื่องหมายว่ายังไม่อ่าน"
@@ -11822,7 +11828,7 @@ msgstr "ข้อความและสื่อ"
 msgid "Messages Deleted"
 msgstr "ข้อความถูกลบ"
 
-#: src/components/channel/Messages.tsx:936
+#: src/components/channel/Messages.tsx:941
 msgid "Messages failed to load"
 msgstr "โหลดข้อความไม่สำเร็จ"
 
@@ -12471,7 +12477,7 @@ msgstr "ชื่อเล่นต้องไม่เกิน 32 ตัว�
 msgid "Nickname updated"
 msgstr "อัปเดตชื่อเล่นแล้ว"
 
-#: src/components/layout/GuildLayout.tsx:397
+#: src/components/layout/GuildLayout.tsx:385
 msgid "No accessible channels"
 msgstr "ไม่มีแชนแนลที่เข้าถึงได้"
 
@@ -12575,6 +12581,10 @@ msgstr "ยังไม่ได้ตั้งที่อยู่อีเม
 msgid "No emojis found matching your search."
 msgstr "ไม่พบอิโมจิที่ตรงกับการค้นหาของคุณ"
 
+#: src/components/channel/EmojiPicker.tsx:283
+msgid "No emojis match your search"
+msgstr "ไม่มีอิโมจิที่ตรงกับการค้นหาของคุณ"
+
 #: src/components/common/FriendSelector.tsx:211
 #: src/components/modals/shared/RecipientList.tsx:191
 msgid "No friends found"
@@ -12613,8 +12623,8 @@ msgstr "ยังไม่มีแพ็คที่ติดตั้ง"
 msgid "No invite background"
 msgstr "ไม่มีพื้นหลังคำเชิญ"
 
-#: src/components/modals/channelTabs/ChannelInvitesTab.tsx:122
-#: src/components/modals/guildTabs/GuildInvitesTab.tsx:109
+#: src/components/modals/channelTabs/ChannelInvitesTab.tsx:120
+#: src/components/modals/guildTabs/GuildInvitesTab.tsx:107
 msgid "No invite links"
 msgstr "ไม่มีลิงก์เชิญ"
 
@@ -12768,8 +12778,8 @@ msgstr "ไม่พบการตั้งค่า"
 msgid "No specific scopes requested."
 msgstr "ไม่ได้ระบุขอบเขตเฉพาะ"
 
-#: src/components/channel/MobileStickersPicker.tsx:121
-#: src/components/channel/StickersPicker.tsx:197
+#: src/components/channel/MobileStickersPicker.tsx:131
+#: src/components/channel/StickersPicker.tsx:208
 msgid "No Stickers Available"
 msgstr "ไม่มีสติกเกอร์"
 
@@ -12777,14 +12787,17 @@ msgstr "ไม่มีสติกเกอร์"
 msgid "No stickers found"
 msgstr "ไม่พบสติกเกอร์"
 
-#: src/components/channel/MobileStickersPicker.tsx:147
-#: src/components/channel/StickersPicker.tsx:226
+#: src/components/channel/MobileStickersPicker.tsx:157
 msgid "No Stickers Found"
 msgstr "ไม่พบสติกเกอร์"
 
 #: src/components/modals/guildTabs/GuildStickersTab.tsx:191
 msgid "No stickers found matching your search."
 msgstr "ไม่พบสติกเกอร์ที่ตรงกับการค้นหาของคุณ"
+
+#: src/components/channel/StickersPicker.tsx:285
+msgid "No stickers match your search"
+msgstr "ไม่มีสติกเกอร์ที่ตรงกับการค้นหาของคุณ"
 
 #: src/components/modals/guildTabs/GuildOverviewTab/sections/SystemWelcomeSection.tsx:40
 msgid "No System Channel"
@@ -13034,7 +13047,7 @@ msgstr "ตกลง"
 #: src/components/alerts/SlowmodeRateLimitedModal.tsx:65
 #: src/lib/KeybindManager.ts:495
 #: src/lib/KeybindManager.ts:520
-#: src/lib/markdown/renderers/link-renderer.tsx:182
+#: src/lib/markdown/renderers/link-renderer.tsx:208
 msgid "Okay"
 msgstr "โอเค"
 
@@ -13764,7 +13777,7 @@ msgstr "ปักหมุดเลย ปักให้แน่น"
 
 #: src/components/channel/MessageActionBar.tsx:505
 #: src/components/channel/MessageActionBar.tsx:716
-#: src/components/channel/messageActionMenu.tsx:132
+#: src/components/channel/messageActionMenu.tsx:134
 #: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:159
 msgid "Pin Message"
 msgstr "ปักหมุดข้อความ"
@@ -14678,7 +14691,7 @@ msgstr "ลบแบนเนอร์"
 
 #: src/components/channel/MessageActionBar.tsx:518
 #: src/components/channel/MessageActionBar.tsx:708
-#: src/components/channel/messageActionMenu.tsx:140
+#: src/components/channel/messageActionMenu.tsx:142
 #: src/components/modals/BookmarksBottomSheet.tsx:93
 #: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:140
 msgid "Remove Bookmark"
@@ -14797,7 +14810,7 @@ msgstr "ลบสติกเกอร์"
 #: src/components/modals/RemoveTimeoutModal.tsx:61
 #: src/components/modals/RemoveTimeoutModal.tsx:75
 #: src/components/modals/TimeoutMemberSheet.tsx:101
-#: src/components/uikit/ContextMenu/items/GuildMemberMenuItems.tsx:272
+#: src/components/uikit/ContextMenu/items/GuildMemberMenuItems.tsx:288
 msgid "Remove Timeout"
 msgstr "ลบการจำกัดเวลา"
 
@@ -14996,7 +15009,7 @@ msgstr "แทนที่พื้นหลังที่คุณกำหน
 
 #: src/components/channel/MessageActionBar.tsx:476
 #: src/components/channel/MessageActionBar.tsx:759
-#: src/components/channel/messageActionMenu.tsx:107
+#: src/components/channel/messageActionMenu.tsx:109
 #: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:101
 msgid "Reply"
 msgstr "ตอบกลับ"
@@ -15249,11 +15262,11 @@ msgstr "สมัครรับใหม่"
 #: src/components/alerts/RateLimitedConfirmModal.tsx:73
 #: src/components/auth/IpAuthorizationScreen.tsx:161
 #: src/components/channel/MessageActionBar.tsx:798
-#: src/components/channel/messageActionMenu.tsx:187
+#: src/components/channel/messageActionMenu.tsx:189
 #: src/components/modals/BackgroundImageGalleryModal.tsx:232
 #: src/components/modals/guildTabs/GuildAuditLogTab.tsx:624
 #: src/components/modals/guildTabs/GuildEmojiTab.tsx:539
-#: src/components/modals/guildTabs/GuildInvitesTab.tsx:126
+#: src/components/modals/guildTabs/GuildInvitesTab.tsx:124
 #: src/components/modals/guildTabs/GuildStickersTab.tsx:211
 #: src/components/modals/guildTabs/GuildWebhooksTab.tsx:137
 #: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:559
@@ -15425,7 +15438,7 @@ msgstr "บทบาท: {0}."
 #: src/components/modals/guildTabs/GuildRolesTab.tsx:928
 #: src/components/modals/shared/AddOverridePopout.tsx:144
 #: src/components/popouts/UserProfileShared.tsx:147
-#: src/components/uikit/ContextMenu/items/GuildMemberMenuItems.tsx:166
+#: src/components/uikit/ContextMenu/items/GuildMemberMenuItems.tsx:173
 msgid "Roles"
 msgstr "บทบาท"
 
@@ -17529,22 +17542,22 @@ msgstr "ปิดเสียงการกล่าวถึงทุกบท
 msgid "Suppress All Role @mentions"
 msgstr "ปิดเสียงการกล่าวถึงทุกบทบาท"
 
-#: src/components/channel/embeds/Embed.tsx:799
-#: src/components/channel/embeds/Embed.tsx:835
-#: src/components/channel/embeds/Embed.tsx:859
-#: src/components/channel/embeds/Embed.tsx:904
-#: src/components/channel/embeds/Embed.tsx:940
-#: src/components/channel/embeds/Embed.tsx:981
-#: src/components/channel/embeds/Embed.tsx:1017
-#: src/components/channel/embeds/Embed.tsx:1059
+#: src/components/channel/embeds/Embed.tsx:800
+#: src/components/channel/embeds/Embed.tsx:836
+#: src/components/channel/embeds/Embed.tsx:860
+#: src/components/channel/embeds/Embed.tsx:905
+#: src/components/channel/embeds/Embed.tsx:941
+#: src/components/channel/embeds/Embed.tsx:982
+#: src/components/channel/embeds/Embed.tsx:1018
+#: src/components/channel/embeds/Embed.tsx:1060
 msgid "Suppress embeds"
 msgstr "ปิดการฝัง"
 
-#: src/components/channel/embeds/Embed.tsx:705
-#: src/components/channel/embeds/Embed.tsx:712
+#: src/components/channel/embeds/Embed.tsx:141
+#: src/components/channel/embeds/Embed.tsx:148
 #: src/components/channel/MessageActionBar.tsx:542
 #: src/components/channel/MessageActionBar.tsx:694
-#: src/components/channel/messageActionMenu.tsx:148
+#: src/components/channel/messageActionMenu.tsx:150
 #: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:178
 msgid "Suppress Embeds"
 msgstr "ปิดการฝัง"
@@ -17822,8 +17835,8 @@ msgstr "บอทถูกเพิ่มแล้ว"
 msgid "The channel you're looking for may have been deleted or you may not have access to it."
 msgstr "ช่องที่คุณค้นหาอาจถูกลบหรือคุณอาจไม่มีสิทธิ์เข้าถึง"
 
-#: src/components/layout/GuildLayout.tsx:313
-#: src/components/layout/GuildLayout.tsx:376
+#: src/components/layout/GuildLayout.tsx:311
+#: src/components/layout/GuildLayout.tsx:366
 msgid "The community you're looking for may have been deleted or you may not have access to it."
 msgstr "ชุมชนที่คุณค้นหาอาจถูกลบหรือคุณอาจไม่มีสิทธิ์เข้าถึง"
 
@@ -17921,11 +17934,11 @@ msgstr "ยังไม่มีการตั้งค่าเว็บฮุ
 msgid "There was an error loading the emojis. Please try again."
 msgstr "เกิดข้อผิดพลาดในการโหลดอีโมจิ กรุณาลองใหม่อีกครั้ง"
 
-#: src/components/modals/channelTabs/ChannelInvitesTab.tsx:145
+#: src/components/modals/channelTabs/ChannelInvitesTab.tsx:143
 msgid "There was an error loading the invite links for this channel. Please try again."
 msgstr "เกิดข้อผิดพลาดในการโหลดลิงก์เชิญสำหรับช่องนี้ กรุณาลองใหม่อีกครั้ง"
 
-#: src/components/modals/guildTabs/GuildInvitesTab.tsx:123
+#: src/components/modals/guildTabs/GuildInvitesTab.tsx:121
 msgid "There was an error loading the invites. Please try again."
 msgstr "เกิดข้อผิดพลาดในการโหลดคำเชิญ กรุณาลองใหม่อีกครั้ง"
 
@@ -18010,7 +18023,7 @@ msgstr "หมวดหมู่นี้มีจำนวนช่องสู
 msgid "This channel does not support webhooks."
 msgstr "ช่องนี้ไม่รองรับเว็บฮุก"
 
-#: src/components/modals/channelTabs/ChannelInvitesTab.tsx:124
+#: src/components/modals/channelTabs/ChannelInvitesTab.tsx:122
 msgid "This channel doesn't have any invite links yet. Create one to invite people to this channel."
 msgstr "ช่องนี้ยังไม่มีลิงก์เชิญ สร้างลิงก์เพื่อเชิญคนเข้าช่องนี้"
 
@@ -18043,7 +18056,7 @@ msgstr "ช่องนี้อาจมีเนื้อหาที่ไม
 msgid "This code hasn't been used yet. Please complete login in your browser first."
 msgstr "โค้ดนี้ยังไม่ได้ใช้งาน กรุณาล็อกอินผ่านเบราว์เซอร์ก่อน"
 
-#: src/components/modals/guildTabs/GuildInvitesTab.tsx:111
+#: src/components/modals/guildTabs/GuildInvitesTab.tsx:109
 msgid "This community doesn't have any invite links yet. Go to a channel and create an invite to invite people."
 msgstr "ชุมชนนี้ยังไม่มีลิงก์เชิญ ไปที่ช่องแล้วสร้างลิงก์เพื่อเชิญคน"
 
@@ -18180,8 +18193,8 @@ msgstr "นี่คือวิธีการแสดงข้อความ
 msgid "This is not the channel you're looking for."
 msgstr "นี่ไม่ใช่ช่องที่คุณกำลังหา"
 
-#: src/components/layout/GuildLayout.tsx:312
-#: src/components/layout/GuildLayout.tsx:375
+#: src/components/layout/GuildLayout.tsx:310
+#: src/components/layout/GuildLayout.tsx:365
 msgid "This is not the community you're looking for."
 msgstr "นี่ไม่ใช่ชุมชนที่คุณกำลังหา"
 
@@ -18300,9 +18313,9 @@ msgstr "ช่องเสียงนี้ถึงจำนวนผู้ใ
 msgid "This was a @silent message."
 msgstr "ข้อความนี้เป็น @silent"
 
-#: src/actions/MessageActionCreators.tsx:392
-#: src/components/channel/Messages.tsx:440
-#: src/components/channel/Messages.tsx:520
+#: src/actions/MessageActionCreators.tsx:404
+#: src/components/channel/Messages.tsx:445
+#: src/components/channel/Messages.tsx:525
 msgid "This will create a rift in the space-time continuum and cannot be undone."
 msgstr "สิ่งนี้จะสร้างรอยแยกในมิติเวลาและไม่สามารถย้อนกลับได้"
 
@@ -18371,7 +18384,7 @@ msgstr "หมดเวลาไปจนถึง {0}"
 #: src/components/modals/guildTabs/GuildMemberActionsSheet.tsx:288
 #: src/components/modals/TimeoutMemberModal.tsx:207
 #: src/components/modals/TimeoutMemberSheet.tsx:90
-#: src/components/uikit/ContextMenu/items/GuildMemberMenuItems.tsx:272
+#: src/components/uikit/ContextMenu/items/GuildMemberMenuItems.tsx:288
 msgid "Timeout"
 msgstr "หมดเวลา"
 
@@ -18659,8 +18672,7 @@ msgstr "ลองใช้ชื่ออื่นหรือลองใส่
 msgid "Try a different search query"
 msgstr "ลองค้นหาใหม่"
 
-#: src/components/channel/MobileStickersPicker.tsx:148
-#: src/components/channel/StickersPicker.tsx:227
+#: src/components/channel/MobileStickersPicker.tsx:158
 msgid "Try a different search term"
 msgstr "ลองใช้คำค้นหาอื่น"
 
@@ -18670,14 +18682,14 @@ msgid "Try a different search term or filter"
 msgstr "ลองคำค้นหา/ตัวกรองอื่น"
 
 #: src/components/auth/HandoffCodeDisplay.tsx:67
-#: src/components/channel/Messages.tsx:937
+#: src/components/channel/Messages.tsx:942
 msgid "Try again"
 msgstr "ลองอีกครั้ง"
 
 #: src/components/BootstrapErrorScreen.tsx:68
 #: src/components/bottomsheets/ChannelSearchBottomSheet.tsx:301
 #: src/components/channel/ChannelSearchResults.tsx:663
-#: src/components/modals/channelTabs/ChannelInvitesTab.tsx:148
+#: src/components/modals/channelTabs/ChannelInvitesTab.tsx:146
 #: src/components/modals/channelTabs/ChannelWebhooksTab.tsx:159
 #: src/components/NetworkErrorScreen.tsx:56
 msgid "Try Again"
@@ -19307,7 +19319,7 @@ msgstr "ปลดปักหมุด"
 
 #: src/components/channel/MessageActionBar.tsx:505
 #: src/components/channel/MessageActionBar.tsx:716
-#: src/components/channel/messageActionMenu.tsx:132
+#: src/components/channel/messageActionMenu.tsx:134
 #: src/components/channel/messageActionUtils.tsx:234
 #: src/components/shared/ChannelPinsContent.tsx:92
 #: src/components/shared/ChannelPinsContent.tsx:245
@@ -19355,7 +19367,7 @@ msgstr "รูปแบบไฟล์ไม่รองรับ กรุณ�
 
 #: src/components/channel/MessageActionBar.tsx:542
 #: src/components/channel/MessageActionBar.tsx:694
-#: src/components/channel/messageActionMenu.tsx:148
+#: src/components/channel/messageActionMenu.tsx:150
 #: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:178
 msgid "Unsuppress Embeds"
 msgstr "แสดงเนื้อหาแบบฝัง"
@@ -20573,8 +20585,8 @@ msgstr "เราได้ส่งลิงก์เพื่ออนุญา
 msgid "We failed to retrieve the full information about this user at this time."
 msgstr "เราไม่สามารถดึงข้อมูลทั้งหมดของผู้ใช้นี้ได้ในตอนนี้"
 
-#: src/components/layout/GuildLayout.tsx:307
-#: src/components/layout/GuildLayout.tsx:354
+#: src/components/layout/GuildLayout.tsx:305
+#: src/components/layout/GuildLayout.tsx:346
 msgid "We fluxed up! Hang tight, we're working on it."
 msgstr "เราเกิดข้อผิดพลาดขึ้น! รอสักครู่ เรากำลังแก้ไขอยู่"
 
@@ -21084,7 +21096,7 @@ msgstr "คุณไม่สามารถโต้ตอบกับรีแ
 #: src/components/layout/ChannelItem.tsx:206
 #: src/components/layout/ChannelItem.tsx:375
 #: src/stores/voice/MediaEngineFacade.ts:154
-#: src/stores/voice/MediaEngineFacade.ts:529
+#: src/stores/voice/MediaEngineFacade.ts:533
 msgid "You can't join while you're on timeout."
 msgstr "คุณไม่สามารถเข้าร่วมขณะที่อยู่ในช่วงพักเวลา"
 
@@ -21169,7 +21181,7 @@ msgstr "คุณไม่สามารถเปิดเสียงขาเ
 msgid "You cannot unmute yourself because you have been muted by a moderator."
 msgstr "คุณไม่สามารถเปิดเสียงไมโครโฟนได้เพราะถูกปิดโดยผู้ดูแล"
 
-#: src/lib/markdown/renderers/link-renderer.tsx:181
+#: src/lib/markdown/renderers/link-renderer.tsx:207
 msgid "You do not have access to the channel where this message was sent."
 msgstr "คุณไม่มีสิทธิ์เข้าถึงแชนแนลที่ส่งข้อความนี้"
 
@@ -21177,7 +21189,7 @@ msgstr "คุณไม่มีสิทธิ์เข้าถึงแชน
 msgid "You do not have permission to send messages in this channel."
 msgstr "คุณไม่มีสิทธิ์ส่งข้อความในแชนแนลนี้"
 
-#: src/components/layout/GuildLayout.tsx:398
+#: src/components/layout/GuildLayout.tsx:386
 msgid "You don't have access to any channels in this community."
 msgstr "คุณไม่มีสิทธิ์เข้าถึงแชนแนลใด ๆ ในชุมชนนี้"
 
@@ -21468,7 +21480,7 @@ msgstr "คุณอยู่ในแชนแนลเสียง"
 msgid "You're sending messages too quickly"
 msgstr "คุณส่งข้อความเร็วเกินไป"
 
-#: src/components/channel/Messages.tsx:907
+#: src/components/channel/Messages.tsx:912
 msgid "You're viewing older messages"
 msgstr "คุณกำลังดูข้อความเก่า"
 
