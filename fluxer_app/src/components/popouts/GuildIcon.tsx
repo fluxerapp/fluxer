@@ -33,6 +33,7 @@ type GuildIconProps = {
 	icon: string | null;
 	className?: string;
 	sizePx?: number;
+	containerProps?: React.HTMLAttributes<HTMLElement> & {'data-jump-link-guild-icon'?: string};
 };
 
 type GuildIconStyleVars = React.CSSProperties & {
@@ -40,7 +41,14 @@ type GuildIconStyleVars = React.CSSProperties & {
 	'--guild-icon-image'?: string;
 };
 
-export const GuildIcon = observer(function GuildIcon({id, name, icon, className, sizePx}: GuildIconProps) {
+export const GuildIcon = observer(function GuildIcon({
+	id,
+	name,
+	icon,
+	className,
+	sizePx,
+	containerProps,
+}: GuildIconProps) {
 	const initials = React.useMemo(() => StringUtils.getInitialsFromName(name), [name]);
 	const initialsLength = React.useMemo(() => getInitialsLength(initials), [initials]);
 	const [hoverRef, isHovering] = useHover();
@@ -104,6 +112,7 @@ export const GuildIcon = observer(function GuildIcon({id, name, icon, className,
 		<div
 			ref={hoverRef}
 			className={clsx(styles.container, className, !icon && styles.containerNoIcon)}
+			{...containerProps}
 			data-initials-length={initialsLength}
 			style={styleVars}
 		>
