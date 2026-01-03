@@ -53,6 +53,10 @@ type GuildEmojiContext = Readonly<{
 	usableEmojis: ReadonlyArray<GuildEmojiRecord>;
 }>;
 
+export function normalizeEmojiSearchQuery(query: string): string {
+	return query.trim().replace(/^:+/, '').replace(/:+$/, '');
+}
+
 class EmojiDisambiguations {
 	private static _lastInstance: EmojiDisambiguations | null = null;
 	private readonly guildId: string | null;
@@ -299,7 +303,8 @@ class EmojiStore {
 	}
 
 	search(channel: ChannelRecord | null, query: string, count = 0): ReadonlyArray<Emoji> {
-		const lowerCasedQuery = query.toLowerCase();
+		const normalizedQuery = normalizeEmojiSearchQuery(query);
+		const lowerCasedQuery = normalizedQuery.toLowerCase();
 		if (!lowerCasedQuery) {
 			const allEmojis = this.getAllEmojis(channel);
 			const sorted = [...allEmojis].sort(
