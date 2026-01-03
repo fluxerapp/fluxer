@@ -17,7 +17,7 @@
  * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import {makeAutoObservable} from 'mobx';
+import {makeAutoObservable, reaction} from 'mobx';
 import type {StatusType} from '~/Constants';
 import {StatusTypes} from '~/Constants';
 import {
@@ -44,15 +44,26 @@ class LocalPresenceStore {
 
 	since: number = 0;
 
+	afk: boolean = false;
+
+	mobile: boolean = false;
+
 	customStatus: CustomStatus | null = null;
 
 	constructor() {
 		makeAutoObservable(this, {}, {autoBind: true});
+
+		reaction(
+			() => MobileLayoutStore.isMobileLayout(),
+			() => this.updatePresence(),
+		);
 	}
 
 	updatePresence(): void {
 		const userStatus = UserSettingsStore.status;
 		const idleSince = IdleStore.getIdleSince();
+		const isMobile = MobileLayoutStore.isMobileLayout();
+		const afk = this.computeAfk(idleSince, isMobile);
 
 		const effectiveStatus = userStatus === StatusTypes.ONLINE && idleSince > 0 ? StatusTypes.IDLE : userStatus;
 
@@ -60,6 +71,8 @@ class LocalPresenceStore {
 		this.customStatus = normalizedCustomStatus ? {...normalizedCustomStatus} : null;
 		this.status = effectiveStatus;
 		this.since = idleSince;
+		this.afk = afk;
+		this.mobile = isMobile;
 	}
 
 	getStatus(): StatusType {
@@ -67,24 +80,23 @@ class LocalPresenceStore {
 	}
 
 	getPresence(): Presence {
-		const isMobile = MobileLayoutStore.isMobileLayout();
-		const idleSince = IdleStore.getIdleSince();
-		const afkTimeout = UserSettingsStore.getAfkTimeout();
-
-		const timeSinceLastActivity = idleSince > 0 ? Date.now() - idleSince : 0;
-		const afk = !isMobile && timeSinceLastActivity > afkTimeout * 1000;
-
 		return {
 			status: this.status,
 			since: this.since,
-			afk,
-			mobile: isMobile,
+			afk: this.afk,
+			mobile: this.mobile,
 			custom_status: toGatewayCustomStatus(this.customStatus),
 		};
 	}
 
 	get presenceFingerprint(): string {
-		return `${this.status}|${customStatusToKey(this.customStatus)}`;
+		return `${this.status}|${customStatusToKey(this.customStatus)}|afk:${this.afk ? '1' : '0'}`;
+	}
+
+	private computeAfk(idleSince: number, isMobile: boolean): boolean {
+		if (isMobile || idleSince <= 0) return false;
+		const afkTimeout = UserSettingsStore.getAfkTimeout();
+		return Date.now() - idleSince > afkTimeout * 1000;
 	}
 }
 
