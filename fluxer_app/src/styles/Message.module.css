@@ -682,7 +682,7 @@
 
 .repliedUsername {
 	position: relative;
-	margin-right: var(--message-compact-username-gap);
+	margin-right: calc(var(--message-compact-username-gap) - 2px);
 	display: inline;
 	flex-shrink: 0;
 	cursor: pointer;
@@ -747,7 +747,7 @@
 .repliedTextContent h5,
 .repliedTextContent h6,
 .repliedTextContent p,
-.repliedTextContent div,
+.repliedTextContent div:not([data-jump-link-guild-icon]),
 .repliedTextContent ul,
 .repliedTextContent ol,
 .repliedTextContent li,
