@@ -278,7 +278,27 @@ jobs:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-        run: pnpm exec electron-builder --config electron-builder.yaml --mac --${{ matrix.electron_arch }}
+        run: pnpm exec electron-builder --config electron-builder.config.cjs --mac --${{ matrix.electron_arch }}
+
+      - name: Verify macOS bundle ID (fail fast if wrong channel)
+        if: matrix.platform == 'macos'
+        working-directory: ${{ env.APP_WORKDIR }}
+        shell: bash
+        env:
+          BUILD_CHANNEL: ${{ env.BUILD_CHANNEL }}
+        run: |
+          set -euo pipefail
+          DIST="dist-electron"
+          ZIP="$(ls -1 "$DIST"/*"${{ matrix.electron_arch }}"*.zip | head -n1)"
+          tmp="$(mktemp -d)"
+          ditto -xk "$ZIP" "$tmp"
+          APP="$(find "$tmp" -maxdepth 2 -name "*.app" -print -quit)"
+          BID=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Contents/Info.plist")
+
+          expected="app.fluxer"
+          if [[ "${BUILD_CHANNEL:-stable}" == "canary" ]]; then expected="app.fluxer.canary"; fi
+          echo "Bundle id in zip: $BID (expected: $expected)"
+          test "$BID" = "$expected"
 
       - name: Build Electron app (Windows)
         if: matrix.platform == 'windows'
@@ -289,7 +309,7 @@ jobs:
           TMP: C:\t
           SQUIRREL_TEMP: C:\sq
           ELECTRON_BUILDER_CACHE: C:\ebcache
-        run: pnpm exec electron-builder --config electron-builder.yaml --win --${{ matrix.electron_arch }}
+        run: pnpm exec electron-builder --config electron-builder.config.cjs --win --${{ matrix.electron_arch }}
 
       - name: Analyze Squirrel nupkg for long paths
         if: matrix.platform == 'windows'
@@ -362,7 +382,7 @@ jobs:
         env:
           BUILD_CHANNEL: ${{ env.BUILD_CHANNEL }}
           USE_SYSTEM_FPM: true
-        run: pnpm exec electron-builder --config electron-builder.yaml --linux --${{ matrix.electron_arch }}
+        run: pnpm exec electron-builder --config electron-builder.config.cjs --linux --${{ matrix.electron_arch }}
 
       - name: Prepare artifacts (Windows)
         if: runner.os == 'Windows'
