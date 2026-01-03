@@ -19,6 +19,7 @@ import fluxer_admin/api/common.{type UserLookupResult}
 import fluxer_admin/avatar
 import fluxer_admin/components/flash
 import fluxer_admin/components/icons_meta
+import fluxer_admin/navigation
 import fluxer_admin/user
 import fluxer_admin/web.{type Context, type Session, cache_busted_asset, href}
 import gleam/list
@@ -96,13 +97,15 @@ pub fn page_with_refresh(
   content: element.Element(a),
   auto_refresh: Bool,
 ) {
+  let admin_acls = admin_acls_from(current_admin)
+
   h.html(
     [a.attribute("lang", "en"), a.attribute("data-base-path", ctx.base_path)],
     [
       build_head_with_refresh(title, ctx, auto_refresh),
       h.body([a.class("min-h-screen bg-neutral-50 overflow-hidden")], [
         h.div([a.class("flex h-screen")], [
-          sidebar(ctx, active_page),
+          sidebar(ctx, active_page, admin_acls),
           h.div(
             [
               a.attribute("data-sidebar-overlay", ""),
@@ -135,7 +138,7 @@ pub fn page_with_refresh(
   )
 }
 
-fn sidebar(ctx: Context, active_page: String) {
+fn sidebar(ctx: Context, active_page: String, admin_acls: List(String)) {
   h.div(
     [
       a.attribute("data-sidebar", ""),
@@ -173,7 +176,7 @@ fn sidebar(ctx: Context, active_page: String) {
         [
           a.class("flex-1 overflow-y-auto p-4 space-y-1 sidebar-scrollbar"),
         ],
-        admin_sidebar(ctx, active_page),
+        admin_sidebar(ctx, active_page, admin_acls),
       ),
       h.script(
         [a.attribute("defer", "defer")],
@@ -183,126 +186,20 @@ fn sidebar(ctx: Context, active_page: String) {
   )
 }
 
-fn admin_sidebar(ctx: Context, active_page: String) -> List(element.Element(a)) {
-  [
-    sidebar_section("Lookup", [
-      sidebar_item(ctx, "Users", "/users", active_page == "users"),
-      sidebar_item(ctx, "Guilds", "/guilds", active_page == "guilds"),
-    ]),
-    sidebar_section("Moderation", [
-      sidebar_item(ctx, "Reports", "/reports", active_page == "reports"),
-      sidebar_item(
-        ctx,
-        "Pending Verifications",
-        "/pending-verifications",
-        active_page == "pending-verifications",
-      ),
-      sidebar_item(
-        ctx,
-        "Bulk Actions",
-        "/bulk-actions",
-        active_page == "bulk-actions",
-      ),
-    ]),
-    sidebar_section("Bans", [
-      sidebar_item(ctx, "IP Bans", "/ip-bans", active_page == "ip-bans"),
-      sidebar_item(
-        ctx,
-        "Email Bans",
-        "/email-bans",
-        active_page == "email-bans",
-      ),
-      sidebar_item(
-        ctx,
-        "Phone Bans",
-        "/phone-bans",
-        active_page == "phone-bans",
-      ),
-    ]),
-    sidebar_section("Content", [
-      sidebar_item(
-        ctx,
-        "Message Tools",
-        "/messages",
-        active_page == "message-tools",
-      ),
-      sidebar_item(ctx, "Archives", "/archives", active_page == "archives"),
-      sidebar_item(
-        ctx,
-        "Asset Purge",
-        "/asset-purge",
-        active_page == "asset-purge",
-      ),
-    ]),
-    sidebar_section("Metrics", [
-      sidebar_item(ctx, "Overview", "/metrics", active_page == "metrics"),
-      sidebar_item(
-        ctx,
-        "Messaging & API",
-        "/messages-metrics",
-        active_page == "messages-metrics",
-      ),
-    ]),
-    sidebar_section("Observability", [
-      sidebar_item(ctx, "Gateway", "/gateway", active_page == "gateway"),
-      sidebar_item(ctx, "Jobs", "/jobs", active_page == "jobs"),
-      sidebar_item(ctx, "Storage", "/storage", active_page == "storage"),
-      sidebar_item(
-        ctx,
-        "Audit Logs",
-        "/audit-logs",
-        active_page == "audit-logs",
-      ),
-    ]),
-    sidebar_section("Platform", [
-      sidebar_item(
-        ctx,
-        "Search Index",
-        "/search-index",
-        active_page == "search-index",
-      ),
-      sidebar_item(
-        ctx,
-        "Voice Regions",
-        "/voice-regions",
-        active_page == "voice-regions",
-      ),
-      sidebar_item(
-        ctx,
-        "Voice Servers",
-        "/voice-servers",
-        active_page == "voice-servers",
-      ),
-    ]),
-    sidebar_section("Configuration", [
-      sidebar_item(
-        ctx,
-        "Instance Config",
-        "/instance-config",
-        active_page == "instance-config",
-      ),
-      sidebar_item(
-        ctx,
-        "Feature Flags",
-        "/feature-flags",
-        active_page == "feature-flags",
-      ),
-    ]),
-    sidebar_section("Codes", [
-      sidebar_item(
-        ctx,
-        "Beta Codes",
-        "/beta-codes",
-        active_page == "beta-codes",
-      ),
-      sidebar_item(
-        ctx,
-        "Gift Codes",
-        "/gift-codes",
-        active_page == "gift-codes",
-      ),
-    ]),
-  ]
+fn admin_sidebar(
+  ctx: Context,
+  active_page: String,
+  admin_acls: List(String),
+) -> List(element.Element(a)) {
+  navigation.accessible_sections(admin_acls)
+  |> list.map(fn(section) {
+    let items =
+      list.map(section.items, fn(item) {
+        sidebar_item(ctx, item.title, item.path, active_page == item.active_key)
+      })
+
+    sidebar_section(section.title, items)
+  })
 }
 
 fn sidebar_section(title: String, items: List(element.Element(a))) {
@@ -535,4 +432,13 @@ fn sidebar_interaction_script() {
 })();
     ",
   )
+}
+
+fn admin_acls_from(
+  current_admin: Option(UserLookupResult),
+) -> List(String) {
+  case current_admin {
+    option.Some(admin) -> admin.acls
+    option.None -> []
+  }
 }

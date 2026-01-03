@@ -49,11 +49,13 @@ import fluxer_admin/pages/report_detail_page
 import fluxer_admin/pages/reports_page
 import fluxer_admin/pages/search_index_page
 import fluxer_admin/pages/storage_page
+import fluxer_admin/pages/strange_place_page
 import fluxer_admin/pages/user_detail_page
 import fluxer_admin/pages/users_page
 import fluxer_admin/pages/voice_regions_page
 import fluxer_admin/pages/voice_servers_page
 import fluxer_admin/session
+import fluxer_admin/navigation
 import fluxer_admin/web.{type Context, prepend_base_path}
 import gleam/http.{Get, Post}
 import gleam/http/request
@@ -184,6 +186,26 @@ fn api_error_message(err: common.ApiError) -> String {
   }
 }
 
+fn admin_acls_from(
+  current_admin: option.Option(common.UserLookupResult),
+) -> List(String) {
+  case current_admin {
+    option.Some(admin) -> admin.acls
+    option.None -> []
+  }
+}
+
+fn home_path(admin_acls: List(String)) -> String {
+  case navigation.first_accessible_path(admin_acls) {
+    option.Some(path) -> path
+    option.None -> "/strange-place"
+  }
+}
+
+fn redirect_to_home(ctx: Context, admin_acls: List(String)) -> Response {
+  wisp.redirect(prepend_base_path(ctx, home_path(admin_acls)))
+}
+
 pub fn handle_request(req: Request, ctx: Context) -> Response {
   use req <- web_middleware(req)
 
@@ -216,7 +238,7 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
           case wisp.get_cookie(req, "session", wisp.Signed) {
             Ok(cookie) ->
               case session.get(ctx, cookie) {
-                Ok(_session) -> wisp.redirect(prepend_base_path(ctx, "/users"))
+                Ok(_session) -> wisp.redirect(prepend_base_path(ctx, "/dashboard"))
                 Error(_) -> login_page.view(ctx, error_msg)
               }
             Error(_) -> login_page.view(ctx, error_msg)
@@ -284,7 +306,11 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
 
 fn handle_authenticated_request(req: Request, ctx: Context) -> Response {
   case wisp.path_segments(req) {
-    ["dashboard"] -> wisp.redirect(prepend_base_path(ctx, "/users"))
+    ["dashboard"] -> {
+      use _session, current_admin <- with_session_and_admin(req, ctx)
+      let admin_acls = admin_acls_from(current_admin)
+      redirect_to_home(ctx, admin_acls)
+    }
     ["users"] ->
       case req.method {
         Get -> {
@@ -1396,7 +1422,20 @@ fn handle_authenticated_request(req: Request, ctx: Context) -> Response {
         }
         _ -> wisp.method_not_allowed([Get, Post])
       }
-    [] -> wisp.redirect(prepend_base_path(ctx, "/users"))
+    ["strange-place"] ->
+      case req.method {
+        Get -> {
+          use user_session, current_admin <- with_session_and_admin(req, ctx)
+          let flash_data = flash.from_request(req)
+          strange_place_page.view(ctx, user_session, current_admin, flash_data)
+        }
+        _ -> wisp.method_not_allowed([Get])
+      }
+    [] -> {
+      use _session, current_admin <- with_session_and_admin(req, ctx)
+      let admin_acls = admin_acls_from(current_admin)
+      redirect_to_home(ctx, admin_acls)
+    }
     _ -> wisp.not_found()
   }
 }

@@ -219,7 +219,11 @@ pub const acl_wildcard = "*"
 
 pub const acl_authenticate = "admin:authenticate"
 
-pub const acl_process_memory_stats = "process:memory_stats"
+pub const acl_gateway_memory_stats = "gateway:memory_stats"
+
+pub const acl_process_memory_stats = acl_gateway_memory_stats
+
+pub const acl_gateway_reload_all = "gateway:reload_all"
 
 pub const acl_user_lookup = "user:lookup"
 
@@ -367,6 +371,10 @@ pub const acl_feature_flag_view = "feature_flag:view"
 
 pub const acl_feature_flag_manage = "feature_flag:manage"
 
+pub const acl_instance_config_view = "instance:config:view"
+
+pub const acl_instance_config_update = "instance:config:update"
+
 pub type FeatureFlag {
   FeatureFlag(id: String, name: String, description: String)
 }
@@ -490,7 +498,8 @@ pub fn get_all_acls() -> List(String) {
   [
     acl_wildcard,
     acl_authenticate,
-    acl_process_memory_stats,
+    acl_gateway_memory_stats,
+    acl_gateway_reload_all,
     acl_user_lookup,
     acl_user_list_sessions,
     acl_user_list_guilds,
@@ -564,5 +573,7 @@ pub fn get_all_acls() -> List(String) {
     acl_metrics_view,
     acl_feature_flag_view,
     acl_feature_flag_manage,
+    acl_instance_config_view,
+    acl_instance_config_update,
   ]
 }
