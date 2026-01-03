@@ -95,7 +95,22 @@ class VoiceStateManager {
 		this.gatewayHandler.handleGuildDelete(deletedGuildId);
 	}
 
-	getCurrentUserVoiceState(guildId?: string | null, currentUserId?: string): VoiceState | null {
+	getCurrentUserVoiceState(
+		guildId?: string | null,
+		currentUserId?: string,
+		connectionId?: string | null,
+	): VoiceState | null {
+		const requestedGuildKey = guildId ?? ME;
+
+		if (connectionId) {
+			const byConnection = this.connectionVoiceStates[connectionId];
+			if (byConnection) {
+				if (!guildId || byConnection.guild_id === requestedGuildKey) {
+					return byConnection;
+				}
+			}
+		}
+
 		if (!currentUserId) {
 			logger.debug('[VoiceStateManager] Cannot get current user voice state: no user ID provided');
 			return null;
