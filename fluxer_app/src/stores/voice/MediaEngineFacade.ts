@@ -305,7 +305,11 @@ class MediaEngineFacade {
 		VoiceStateManager.handleGatewayVoiceStateDelete(guildId, userId);
 	}
 	getCurrentUserVoiceState(guildId?: string | null): VoiceState | null {
-		return VoiceStateManager.getCurrentUserVoiceState(guildId, UserStore.getCurrentUser()?.id);
+		return VoiceStateManager.getCurrentUserVoiceState(
+			guildId,
+			UserStore.getCurrentUser()?.id,
+			VoiceConnectionManager.connectionId,
+		);
 	}
 	getVoiceState(guildId: string | null, userId?: string): VoiceState | null {
 		return VoiceStateManager.getVoiceState(guildId, userId, UserStore.getCurrentUser()?.id);
