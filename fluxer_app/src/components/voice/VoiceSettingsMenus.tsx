@@ -17,7 +17,6 @@
  * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import {t} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {
 	CameraIcon,
@@ -61,8 +60,7 @@ interface VoiceAudioSettingsMenuProps {
 
 export const VoiceAudioSettingsMenu: React.FC<VoiceAudioSettingsMenuProps> = observer(
 	({inputDevices, outputDevices, onClose}) => {
-		const {i18n} = useLingui();
-		const tt = t(i18n);
+		const {t} = useLingui();
 
 		const voiceSettings = VoiceSettingsStore;
 		const voiceState = MediaEngineStore.getCurrentUserVoiceState();
@@ -81,7 +79,7 @@ export const VoiceAudioSettingsMenu: React.FC<VoiceAudioSettingsMenuProps> = obs
 			<>
 				<MenuGroup>
 					<MenuItemSubmenu
-						label={tt`Input Device`}
+						label={t`Input Device`}
 						icon={<MicrophoneIcon weight="fill" className={styles.icon} />}
 						render={() => (
 							<>
@@ -94,12 +92,12 @@ export const VoiceAudioSettingsMenu: React.FC<VoiceAudioSettingsMenuProps> = obs
 												VoiceSettingsActionCreators.update({inputDeviceId: device.deviceId});
 											}}
 										>
-											{device.label || tt`Microphone ${device.deviceId.slice(0, 8)}`}
+											{device.label || t`Microphone ${device.deviceId.slice(0, 8)}`}
 										</MenuItemRadio>
 									))
 								) : (
 									<MenuItemRadio key="default" selected={true} onSelect={() => {}}>
-										{tt`Default`}
+										{t`Default`}
 									</MenuItemRadio>
 								)}
 							</>
@@ -107,7 +105,7 @@ export const VoiceAudioSettingsMenu: React.FC<VoiceAudioSettingsMenuProps> = obs
 					/>
 
 					<MenuItemSubmenu
-						label={tt`Output Device`}
+						label={t`Output Device`}
 						icon={<SpeakerHighIcon weight="fill" className={styles.icon} />}
 						render={() => (
 							<>
@@ -120,12 +118,12 @@ export const VoiceAudioSettingsMenu: React.FC<VoiceAudioSettingsMenuProps> = obs
 												VoiceSettingsActionCreators.update({outputDeviceId: device.deviceId});
 											}}
 										>
-											{device.label || tt`Speaker ${device.deviceId.slice(0, 8)}`}
+											{device.label || t`Speaker ${device.deviceId.slice(0, 8)}`}
 										</MenuItemRadio>
 									))
 								) : (
 									<MenuItemRadio key="default" selected={true} onSelect={() => {}}>
-										{tt`Default`}
+										{t`Default`}
 									</MenuItemRadio>
 								)}
 							</>
@@ -135,7 +133,7 @@ export const VoiceAudioSettingsMenu: React.FC<VoiceAudioSettingsMenuProps> = obs
 
 				<MenuGroup>
 					<MenuItemSlider
-						label={tt`Input Volume`}
+						label={t`Input Volume`}
 						value={voiceSettings.inputVolume}
 						minValue={0}
 						maxValue={100}
@@ -143,7 +141,7 @@ export const VoiceAudioSettingsMenu: React.FC<VoiceAudioSettingsMenuProps> = obs
 						onFormat={(value) => `${Math.round(value)}%`}
 					/>
 					<MenuItemSlider
-						label={tt`Output Volume`}
+						label={t`Output Volume`}
 						value={voiceSettings.outputVolume}
 						minValue={0}
 						maxValue={100}
@@ -212,8 +210,7 @@ interface VoiceDeviceSettingsMenuProps {
 
 export const VoiceDeviceSettingsMenu: React.FC<VoiceDeviceSettingsMenuProps> = observer(
 	({devices, deviceType, onClose}) => {
-		const {i18n} = useLingui();
-		const tt = t(i18n);
+		const {t} = useLingui();
 
 		const voiceSettings = VoiceSettingsStore;
 
@@ -227,13 +224,13 @@ export const VoiceDeviceSettingsMenu: React.FC<VoiceDeviceSettingsMenuProps> = o
 		const effectiveDeviceId = resolveEffectiveDeviceId(storedDeviceId, devices);
 		const devicesHaveLabels = hasDeviceLabels(devices);
 
-		const menuLabel = isInput ? tt`Input Device` : tt`Output Device`;
-		const volumeLabel = isInput ? tt`Input Volume` : tt`Output Volume`;
+		const menuLabel = isInput ? t`Input Device` : t`Output Device`;
+		const volumeLabel = isInput ? t`Input Volume` : t`Output Volume`;
 		const Icon = isInput ? MicrophoneIcon : SpeakerHighIcon;
 
 		const defaultDeviceName = isInput
-			? (deviceId: string) => tt`Microphone ${deviceId.slice(0, 8)}`
-			: (deviceId: string) => tt`Speaker ${deviceId.slice(0, 8)}`;
+			? (deviceId: string) => t`Microphone ${deviceId.slice(0, 8)}`
+			: (deviceId: string) => t`Speaker ${deviceId.slice(0, 8)}`;
 
 		return (
 			<>
@@ -257,7 +254,7 @@ export const VoiceDeviceSettingsMenu: React.FC<VoiceDeviceSettingsMenuProps> = o
 									))
 								) : (
 									<MenuItemRadio key="default" selected={true} onSelect={() => {}}>
-										{tt`Default`}
+										{t`Default`}
 									</MenuItemRadio>
 								)}
 							</>
@@ -316,8 +313,7 @@ interface VoiceCameraSettingsMenuProps {
 }
 
 export const VoiceCameraSettingsMenu: React.FC<VoiceCameraSettingsMenuProps> = observer(({videoDevices, onClose}) => {
-	const {i18n} = useLingui();
-	const tt = t(i18n);
+	const {t} = useLingui();
 
 	const voiceSettings = VoiceSettingsStore;
 	const effectiveVideoDeviceId = resolveEffectiveDeviceId(voiceSettings.videoDeviceId, videoDevices);
@@ -327,7 +323,7 @@ export const VoiceCameraSettingsMenu: React.FC<VoiceCameraSettingsMenuProps> = o
 		<>
 			<MenuGroup>
 				<MenuItemSubmenu
-					label={tt`Camera`}
+					label={t`Camera`}
 					icon={<CameraIcon weight="fill" className={styles.icon} />}
 					render={() => (
 						<>
@@ -340,12 +336,12 @@ export const VoiceCameraSettingsMenu: React.FC<VoiceCameraSettingsMenuProps> = o
 											VoiceSettingsActionCreators.update({videoDeviceId: device.deviceId});
 										}}
 									>
-										{device.label || tt`Camera ${device.deviceId.slice(0, 8)}`}
+										{device.label || t`Camera ${device.deviceId.slice(0, 8)}`}
 									</MenuItemRadio>
 								))
 							) : (
 								<MenuItemRadio key="default" selected={true} onSelect={() => {}}>
-									{tt`Default`}
+									{t`Default`}
 								</MenuItemRadio>
 							)}
 						</>
