@@ -48,6 +48,7 @@ const RootComponent: React.FC<{children?: React.ReactNode}> = observer(({childre
 	const [hasHandledNotificationNav, setHasHandledNotificationNav] = React.useState(false);
 	const [previousMobileLayoutState, setPreviousMobileLayoutState] = React.useState(mobileLayoutState.enabled);
 	const lastMobileHistoryBuildRef = React.useRef<{ts: number; path: string} | null>(null);
+	const lastNotificationNavRef = React.useRef<{ts: number; key: string} | null>(null);
 	const isLocationStoreHydrated = LocationStore.isHydrated;
 	const canNavigateToProtectedRoutes = InitializationStore.canNavigateToProtectedRoutes;
 	const pendingRedirectRef = React.useRef<string | null>(null);
@@ -77,6 +78,18 @@ const RootComponent: React.FC<{children?: React.ReactNode}> = observer(({childre
 
 	const shouldBypassGateway = isAuthRoute && pathname !== Routes.PENDING_VERIFICATION;
 	const authToken = AuthenticationStore.authToken;
+
+	const normalizeInternalUrl = React.useCallback((rawUrl: string): string => {
+		try {
+			const u = new URL(rawUrl, window.location.origin);
+			if (u.origin === window.location.origin) {
+				return u.pathname + u.search + u.hash;
+			}
+			return rawUrl;
+		} catch {
+			return rawUrl;
+		}
+	}, []);
 
 	React.useEffect(() => {
 		if (!SessionManager.isInitialized) return;
@@ -242,16 +255,24 @@ const RootComponent: React.FC<{children?: React.ReactNode}> = observer(({childre
 	);
 
 	React.useEffect(() => {
-		if (!isAuthenticated || !mobileLayoutState.enabled) return;
+		if (!isAuthenticated) return;
 
 		const handleNotificationNavigate = (event: MessageEvent) => {
 			if (event.data?.type === 'NOTIFICATION_CLICK_NAVIGATE') {
-				if (hasHandledNotificationNav) {
+				const rawUrl = typeof event.data.url === 'string' ? event.data.url : null;
+				if (!rawUrl) return;
+
+				const targetUserId =
+					typeof event.data.targetUserId === 'string' ? (event.data.targetUserId as string) : undefined;
+
+				const normalizedUrl = normalizeInternalUrl(rawUrl);
+				const key = `${targetUserId ?? ''}:${normalizedUrl}`;
+				const now = Date.now();
+				const last = lastNotificationNavRef.current;
+				if (last && last.key === key && now - last.ts < 1500) {
 					return;
 				}
-
-				const url = event.data.url;
-				const targetUserId = event.data.targetUserId as string | undefined;
+				lastNotificationNavRef.current = {ts: now, key};
 
 				void (async () => {
 					if (targetUserId && targetUserId !== AccountManager.currentUserId && AccountManager.canSwitchAccounts) {
@@ -262,7 +283,12 @@ const RootComponent: React.FC<{children?: React.ReactNode}> = observer(({childre
 						}
 					}
 
-					navigateWithHistoryStack(url);
+					if (mobileLayoutState.enabled) {
+						navigateWithHistoryStack(normalizedUrl);
+					} else {
+						RouterUtils.transitionTo(normalizedUrl);
+					}
+
 					setHasHandledNotificationNav(true);
 				})();
 
@@ -283,7 +309,12 @@ const RootComponent: React.FC<{children?: React.ReactNode}> = observer(({childre
 				newParams.delete('fromNotification');
 				const cleanPath = location.pathname + (newParams.toString() ? `?${newParams.toString()}` : '');
 
-				navigateWithHistoryStack(cleanPath);
+				if (mobileLayoutState.enabled) {
+					navigateWithHistoryStack(cleanPath);
+				} else {
+					RouterUtils.transitionTo(cleanPath);
+				}
+
 				setHasHandledNotificationNav(true);
 			}
 		}
@@ -293,7 +324,14 @@ const RootComponent: React.FC<{children?: React.ReactNode}> = observer(({childre
 		return () => {
 			navigator.serviceWorker?.removeEventListener('message', handleNotificationNavigate);
 		};
-	}, [isAuthenticated, mobileLayoutState.enabled, hasHandledNotificationNav, location, navigateWithHistoryStack]);
+	}, [
+		isAuthenticated,
+		mobileLayoutState.enabled,
+		hasHandledNotificationNav,
+		location,
+		navigateWithHistoryStack,
+		normalizeInternalUrl,
+	]);
 
 	React.useEffect(() => {
 		if (currentUser?.pendingManualVerification) {

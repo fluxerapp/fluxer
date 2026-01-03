@@ -130,12 +130,25 @@ const focusOrOpenClient = async (targetUrl: string, targetUserId?: string): Prom
 	if (targetUserId) {
 		message.targetUserId = targetUserId;
 	}
+
 	const clientList = await postMessageToClients(message);
-	for (const client of clientList) {
-		if (client.url === targetUrl) {
-			await client.focus();
-			return;
+
+	const exact = clientList.find((c) => c.url === targetUrl);
+	if (exact) {
+		await exact.focus();
+		return;
+	}
+
+	const sameOrigin = clientList.find((c) => {
+		try {
+			return new URL(c.url).origin === self.location.origin;
+		} catch {
+			return false;
 		}
+	});
+	if (sameOrigin) {
+		await sameOrigin.focus();
+		return;
 	}
 
 	if (self.clients.openWindow) {

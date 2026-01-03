@@ -123,6 +123,81 @@ export interface NotificationResult {
 	nativeNotificationId: string | null;
 }
 
+const getServiceWorkerRegistration = async (): Promise<ServiceWorkerRegistration | null> => {
+	if (typeof navigator === 'undefined' || typeof navigator.serviceWorker === 'undefined') {
+		return null;
+	}
+
+	try {
+		return (await navigator.serviceWorker.getRegistration()) ?? null;
+	} catch {
+		return null;
+	}
+};
+
+const tryShowNotificationViaServiceWorker = async ({
+	title,
+	body,
+	url,
+	icon,
+	targetUserId,
+}: {
+	title: string;
+	body: string;
+	url?: string;
+	icon?: string;
+	targetUserId?: string;
+}): Promise<{shown: boolean; result: NotificationResult}> => {
+	const registration = await getServiceWorkerRegistration();
+	if (!registration) {
+		return {shown: false, result: {browserNotification: null, nativeNotificationId: null}};
+	}
+
+	const options: NotificationOptions = {body};
+
+	if (icon) {
+		options.icon = icon;
+	}
+
+	if (url || targetUserId) {
+		const data: Record<string, unknown> = {};
+		if (url) data.url = url;
+		if (targetUserId) data.target_user_id = targetUserId;
+		options.data = data;
+	}
+
+	try {
+		await registration.showNotification(title, options);
+		return {shown: true, result: {browserNotification: null, nativeNotificationId: null}};
+	} catch {
+		return {shown: false, result: {browserNotification: null, nativeNotificationId: null}};
+	}
+};
+
+const tryShowNotificationViaWindowNotification = ({
+	title,
+	body,
+	url,
+	icon,
+}: {
+	title: string;
+	body: string;
+	url?: string;
+	icon?: string;
+}): NotificationResult => {
+	const notificationOptions: NotificationOptions = icon ? {body, icon} : {body};
+	const notification = new Notification(title, notificationOptions);
+	notification.addEventListener('click', (event) => {
+		event.preventDefault();
+		window.focus();
+		if (url) {
+			RouterUtils.transitionTo(url);
+		}
+		notification.close();
+	});
+	return {browserNotification: notification, nativeNotificationId: null};
+};
+
 export const showNotification = async ({
 	title,
 	body,
@@ -136,40 +211,46 @@ export const showNotification = async ({
 	icon?: string;
 	playSound?: boolean;
 }): Promise<NotificationResult> => {
-	if (playSound) {
-		playNotificationSoundIfEnabled();
-	}
-
-	const electronApi = getElectronAPI();
-	if (electronApi) {
-		try {
-			const result = await electronApi.showNotification({
-				title,
-				body,
-				icon: icon ?? '',
-				url,
-			});
-			return {browserNotification: null, nativeNotificationId: result.id};
-		} catch {
-			return {browserNotification: null, nativeNotificationId: null};
+	try {
+		if (playSound) {
+			playNotificationSoundIfEnabled();
 		}
-	}
 
-	if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-		const notificationOptions: NotificationOptions = icon ? {body, icon} : {body};
-		const notification = new Notification(title, notificationOptions);
-		notification.addEventListener('click', (event) => {
-			event.preventDefault();
-			window.focus();
-			if (url) {
-				RouterUtils.transitionTo(url);
+		const electronApi = getElectronAPI();
+		if (electronApi) {
+			try {
+				const result = await electronApi.showNotification({
+					title,
+					body,
+					icon: icon ?? '',
+					url,
+				});
+				return {browserNotification: null, nativeNotificationId: result.id};
+			} catch {
+				return {browserNotification: null, nativeNotificationId: null};
 			}
-			notification.close();
-		});
-		return {browserNotification: notification, nativeNotificationId: null};
-	}
+		}
 
-	return {browserNotification: null, nativeNotificationId: null};
+		const targetUserId = AuthenticationStore.currentUserId ?? undefined;
+
+		const swAttempt = await tryShowNotificationViaServiceWorker({title, body, url, icon, targetUserId});
+		if (swAttempt.shown) {
+			return swAttempt.result;
+		}
+
+		if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+			try {
+				return tryShowNotificationViaWindowNotification({title, body, url, icon});
+			} catch {
+				const swFallback = await tryShowNotificationViaServiceWorker({title, body, url, icon, targetUserId});
+				return swFallback.result;
+			}
+		}
+
+		return swAttempt.result;
+	} catch {
+		return {browserNotification: null, nativeNotificationId: null};
+	}
 };
 
 export const closeNativeNotification = (id: string): void => {
