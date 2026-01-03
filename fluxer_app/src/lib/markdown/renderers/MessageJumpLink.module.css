@@ -58,6 +58,7 @@
 .jumpLinkGuildIcon {
 	width: 1rem;
 	height: 1rem;
+	--guild-icon-size: 1rem;
 	flex-shrink: 0;
 	display: inline-flex;
 	align-items: center;
