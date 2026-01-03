@@ -462,6 +462,14 @@ export class MessageSendService {
 		return {attachmentsToProcess, favoriteMemeAttachment};
 	}
 
+	private getMessageTypeForRequest(data: MessageRequest): number {
+		if (!data.message_reference) {
+			return MessageTypes.DEFAULT;
+		}
+		const referenceType = data.message_reference.type ?? MessageReferenceTypes.DEFAULT;
+		return referenceType === MessageReferenceTypes.FORWARD ? MessageTypes.DEFAULT : MessageTypes.REPLY;
+	}
+
 	private buildMessageReferencePayload({
 		data,
 		referencedMessage,
@@ -672,7 +680,7 @@ export class MessageSendService {
 				messageId,
 				channelId,
 				user,
-				type: referencedMessage ? MessageTypes.REPLY : MessageTypes.DEFAULT,
+				type: this.getMessageTypeForRequest(data),
 				content: data.content,
 				flags: this.deps.validationService.calculateMessageFlags(data),
 				embeds: data.embeds,
