@@ -325,6 +325,15 @@ class AccountStorage {
 		return name === 'DataCloneError';
 	}
 
+	private isInvalidStateError(error: unknown): boolean {
+		if (!error || typeof error !== 'object') {
+			return false;
+		}
+
+		const name = (error as {name?: unknown}).name;
+		return name === 'InvalidStateError';
+	}
+
 	async stashAccountData(
 		userId: string,
 		token: string | null,
@@ -385,6 +394,13 @@ class AccountStorage {
 				logger.warn(`DataCloneError while stashing account ${userId}; using memory store`, err);
 				this.memoryStore.set(userId, safeRecord);
 				logger.debug(`Stashed account data for ${userId} (memory fallback after DataCloneError)`);
+				return;
+			}
+
+			if (this.isInvalidStateError(err)) {
+				logger.warn(`InvalidStateError (database closing) while stashing account ${userId}; using memory store`, err);
+				this.memoryStore.set(userId, safeRecord);
+				logger.debug(`Stashed account data for ${userId} (memory fallback after InvalidStateError)`);
 				return;
 			}
 
@@ -523,17 +539,26 @@ class AccountStorage {
 			return this.memoryStore.get(userId) ?? null;
 		}
 
-		return await withTimeout(
-			new Promise<StoredAccount | null>((resolve, reject) => {
-				const tx = this.db!.transaction([STORE_NAME], 'readonly');
-				const store = tx.objectStore(STORE_NAME);
-				const req = store.get(userId);
-				req.onsuccess = () => resolve((req.result as StoredAccount | undefined) ?? null);
-				req.onerror = () => reject(req.error ?? new Error('IndexedDB get failed'));
-			}),
-			5000,
-			'IndexedDB get account',
-		);
+		try {
+			return await withTimeout(
+				new Promise<StoredAccount | null>((resolve, reject) => {
+					const tx = this.db!.transaction([STORE_NAME], 'readonly');
+					const store = tx.objectStore(STORE_NAME);
+					const req = store.get(userId);
+					req.onsuccess = () => resolve((req.result as StoredAccount | undefined) ?? null);
+					req.onerror = () => reject(req.error ?? new Error('IndexedDB get failed'));
+				}),
+				5000,
+				'IndexedDB get account',
+			);
+		} catch (err) {
+			if (this.isInvalidStateError(err)) {
+				logger.warn(`InvalidStateError (database closing) in getRecord for ${userId}; using memory store`, err);
+				return this.memoryStore.get(userId) ?? null;
+			}
+
+			throw err;
+		}
 	}
 
 	private async putRecord(record: StoredAccount): Promise<void> {
@@ -544,19 +569,29 @@ class AccountStorage {
 			return;
 		}
 
-		await withTimeout(
-			new Promise<void>((resolve, reject) => {
-				const tx = this.db!.transaction([STORE_NAME], 'readwrite');
-				const store = tx.objectStore(STORE_NAME);
-				const req = store.put(normalized);
-				req.onsuccess = () => resolve();
-				req.onerror = () => reject(req.error ?? new Error('IndexedDB put failed'));
-			}),
-			5000,
-			'IndexedDB put account record',
-		);
+		try {
+			await withTimeout(
+				new Promise<void>((resolve, reject) => {
+					const tx = this.db!.transaction([STORE_NAME], 'readwrite');
+					const store = tx.objectStore(STORE_NAME);
+					const req = store.put(normalized);
+					req.onsuccess = () => resolve();
+					req.onerror = () => reject(req.error ?? new Error('IndexedDB put failed'));
+				}),
+				5000,
+				'IndexedDB put account record',
+			);
 
-		this.memoryStore.set(record.userId, normalized);
+			this.memoryStore.set(record.userId, normalized);
+		} catch (err) {
+			if (this.isInvalidStateError(err)) {
+				logger.warn(`InvalidStateError (database closing) in putRecord for ${record.userId}; using memory store`, err);
+				this.memoryStore.set(record.userId, normalized);
+				return;
+			}
+
+			throw err;
+		}
 	}
 
 	private async updateLastActive(userId: string): Promise<void> {
