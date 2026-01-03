@@ -133,6 +133,27 @@ const getOptimizedMediaURL = (
 	});
 };
 
+const SuppressEmbedsConfirmModal: FC<{message: MessageRecord}> = ({message}) => {
+	const {t} = useLingui();
+
+	return (
+		<ConfirmModal
+			title={t`Suppress Embeds`}
+			description={
+				<Trans>
+					Are you sure you want to suppress all link embeds on this message? This action will hide all embeds from this
+					message.
+				</Trans>
+			}
+			primaryText={t`Suppress Embeds`}
+			primaryVariant="danger-primary"
+			onPrimary={async () => {
+				await MessageActionCreators.toggleSuppressEmbeds(message.channelId, message.id, message.flags);
+			}}
+		/>
+	);
+};
+
 const shouldRenderAsInlineThumbnail = (media?: EmbedMedia): boolean => {
 	if (!isValidMedia(media)) return false;
 
@@ -697,27 +718,7 @@ export const Embed: FC<EmbedProps> = observer(({embed, message, embedIndex, onDe
 	}, [message, channel]);
 
 	const handleSuppressEmbeds = useCallback(() => {
-		ModalActionCreators.push(
-			modal(() => {
-				const {t} = useLingui();
-				return (
-					<ConfirmModal
-						title={t`Suppress Embeds`}
-						description={
-							<Trans>
-								Are you sure you want to suppress all link embeds on this message? This action will hide all embeds from
-								this message.
-							</Trans>
-						}
-						primaryText={t`Suppress Embeds`}
-						primaryVariant="danger-primary"
-						onPrimary={async () => {
-							await MessageActionCreators.toggleSuppressEmbeds(message.channelId, message.id, message.flags);
-						}}
-					/>
-				);
-			}),
-		);
+		ModalActionCreators.push(modal(() => <SuppressEmbedsConfirmModal message={message} />));
 	}, [message]);
 
 	const showSuppressButton = !isMobile && canSuppressEmbeds() && AccessibilityStore.showSuppressEmbedsButton;
