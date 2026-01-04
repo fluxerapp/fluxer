@@ -22,10 +22,23 @@ apps:
         - '${LIVEKIT_DOMAIN}'
         - '${LIVEKIT_DOMAIN_TURN}'
 
-  layer4:
+  http:
     servers:
       main:
-        listen: [':443']
+        listen: [':80', ':443']
+        routes:
+          - match:
+              - host:
+                  - '${LIVEKIT_DOMAIN}'
+            handle:
+              - handler: reverse_proxy
+                upstreams:
+                  - dial: 'livekit:7880'
+
+  layer4:
+    servers:
+      turn:
+        listen: [':5349']
         routes:
           - match:
               - tls:
@@ -36,15 +49,3 @@ apps:
               - handler: proxy
                 upstreams:
                   - dial: ['livekit:5349']
-
-          - match:
-              - tls:
-                  sni:
-                    - '${LIVEKIT_DOMAIN}'
-            handle:
-              - handler: tls
-                connection_policies:
-                  - alpn: ['acme-tls/1', 'http/1.1']
-              - handler: proxy
-                upstreams:
-                  - dial: ['livekit:7880']
