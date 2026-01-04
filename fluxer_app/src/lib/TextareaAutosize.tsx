@@ -51,16 +51,96 @@ function computeRowConstraints(el: HTMLTextAreaElement, minRows?: number, maxRow
 	};
 }
 
+function supportsFieldSizingContent(): boolean {
+	try {
+		return typeof CSS !== 'undefined' && typeof CSS.supports === 'function' && CSS.supports('field-sizing: content');
+	} catch {
+		return false;
+	}
+}
+
+function normalizeValueForMeasurement(value: string): string {
+	if (!value.includes('\n')) return value;
+	const parts = value.split('\n');
+	for (let i = 0; i < parts.length; i++) {
+		if (parts[i] === '') parts[i] = '\u200b';
+	}
+	return parts.join('\n');
+}
+
+function ensureMeasureEl(): HTMLTextAreaElement | null {
+	if (typeof document === 'undefined') return null;
+	const el = document.createElement('textarea');
+	el.setAttribute('aria-hidden', 'true');
+	el.tabIndex = -1;
+	el.style.position = 'absolute';
+	el.style.top = '0';
+	el.style.left = '-9999px';
+	el.style.height = '0px';
+	el.style.overflow = 'hidden';
+	el.style.visibility = 'hidden';
+	el.style.pointerEvents = 'none';
+	el.style.zIndex = '-1';
+	document.body.appendChild(el);
+	return el;
+}
+
+function syncMeasureStyles(target: HTMLTextAreaElement, measure: HTMLTextAreaElement) {
+	const cs = window.getComputedStyle(target);
+
+	measure.style.boxSizing = cs.boxSizing;
+	measure.style.width = `${target.getBoundingClientRect().width}px`;
+
+	measure.style.font = cs.font;
+	measure.style.fontFamily = cs.fontFamily;
+	measure.style.fontSize = cs.fontSize;
+	measure.style.fontWeight = cs.fontWeight;
+	measure.style.fontStyle = cs.fontStyle;
+	measure.style.letterSpacing = cs.letterSpacing;
+	measure.style.textTransform = cs.textTransform;
+	measure.style.textRendering = cs.textRendering as any;
+
+	measure.style.lineHeight = cs.lineHeight;
+	measure.style.whiteSpace = cs.whiteSpace;
+	measure.style.wordBreak = cs.wordBreak;
+	measure.style.overflowWrap = (cs as any).overflowWrap ?? 'normal';
+	measure.style.tabSize = (cs as any).tabSize ?? '8';
+
+	measure.style.paddingTop = cs.paddingTop;
+	measure.style.paddingBottom = cs.paddingBottom;
+	measure.style.paddingLeft = cs.paddingLeft;
+	measure.style.paddingRight = cs.paddingRight;
+
+	measure.style.borderTopWidth = cs.borderTopWidth;
+	measure.style.borderBottomWidth = cs.borderBottomWidth;
+	measure.style.borderLeftWidth = cs.borderLeftWidth;
+	measure.style.borderRightWidth = cs.borderRightWidth;
+	measure.style.borderTopStyle = cs.borderTopStyle;
+	measure.style.borderBottomStyle = cs.borderBottomStyle;
+	measure.style.borderLeftStyle = cs.borderLeftStyle;
+	measure.style.borderRightStyle = cs.borderRightStyle;
+	measure.style.borderTopColor = cs.borderTopColor;
+	measure.style.borderBottomColor = cs.borderBottomColor;
+	measure.style.borderLeftColor = cs.borderLeftColor;
+	measure.style.borderRightColor = cs.borderRightColor;
+
+	measure.style.borderRadius = cs.borderRadius;
+}
+
 export const TextareaAutosize = React.forwardRef<HTMLTextAreaElement, TextareaAutosizeProps>((props, forwardedRef) => {
 	const {minRows: minRowsProp, maxRows, style, onHeightChange, rows, onInput, ...rest} = props;
 
 	const resolvedRows = rows ?? 1;
 	const minRows = minRowsProp ?? (typeof resolvedRows === 'number' ? resolvedRows : undefined);
 
+	const nativeFieldSizing = supportsFieldSizingContent();
+
 	const elRef = React.useRef<HTMLTextAreaElement | null>(null);
+	const measureRef = React.useRef<HTMLTextAreaElement | null>(null);
+
 	const onHeightChangeRef = React.useRef(onHeightChange);
 	const lastWidthRef = React.useRef<number | null>(null);
-	const lastHeightRef = React.useRef<number | null>(null);
+	const lastEmittedHeightRef = React.useRef<number | null>(null);
 	const resizeScheduledRef = React.useRef(false);
 
 	const setRef = React.useCallback(
@@ -76,49 +156,84 @@ export const TextareaAutosize = React.forwardRef<HTMLTextAreaElement, TextareaAu
 		onHeightChangeRef.current = onHeightChange;
 	}, [onHeightChange]);
 
+	React.useEffect(() => {
+		if (nativeFieldSizing) return;
+		const measure = ensureMeasureEl();
+		measureRef.current = measure;
+		return () => {
+			measureRef.current?.remove();
+			measureRef.current = null;
+		};
+	}, [nativeFieldSizing]);
+
+	const emitHeightIfChanged = React.useCallback(() => {
+		const el = elRef.current;
+		if (!el) return;
+
+		const cs = window.getComputedStyle(el);
+		const lineHeight = getLineHeight(cs);
+		const height = Math.round(el.getBoundingClientRect().height);
+
+		if (lastEmittedHeightRef.current !== height) {
+			lastEmittedHeightRef.current = height;
+			onHeightChangeRef.current?.(height, {rowHeight: lineHeight});
+		}
+	}, []);
+
 	React.useLayoutEffect(() => {
 		const el = elRef.current;
 		if (!el || (minRows == null && maxRows == null)) return;
 
 		const {minHeight, maxHeight} = computeRowConstraints(el, minRows, maxRows);
 
-		if (minHeight != null) {
-			el.style.minHeight = `${minHeight}px`;
-		}
-		if (maxHeight != null) {
-			el.style.maxHeight = `${maxHeight}px`;
-		}
+		if (minHeight != null) el.style.minHeight = `${minHeight}px`;
+		if (maxHeight != null) el.style.maxHeight = `${maxHeight}px`;
 	}, [minRows, maxRows]);
 
 	const resize = React.useCallback(() => {
 		const el = elRef.current;
 		if (!el) return;
 
+		if (nativeFieldSizing) {
+			emitHeightIfChanged();
+			return;
+		}
+
+		const measure = measureRef.current;
+		if (!measure) return;
+
 		const cs = window.getComputedStyle(el);
 		const {minHeight, maxHeight, lineHeight} = computeRowConstraints(el, minRows, maxRows);
 		const borderBlock = getNumber(cs.borderTopWidth) + getNumber(cs.borderBottomWidth);
 		const isBorderBox = cs.boxSizing === 'border-box';
 
-		el.style.height = 'auto';
+		syncMeasureStyles(el, measure);
 
-		let nextHeight = el.scrollHeight + (isBorderBox ? borderBlock : 0);
+		const measuredValue = normalizeValueForMeasurement(el.value);
+		if (measure.value !== measuredValue) {
+			measure.value = measuredValue;
+		}
+
+		let nextHeight = measure.scrollHeight + (isBorderBox ? borderBlock : 0);
 		if (minHeight != null) nextHeight = Math.max(nextHeight, minHeight);
 		if (maxHeight != null) nextHeight = Math.min(nextHeight, maxHeight);
 
-		const heightPx = `${nextHeight}px`;
+		const heightPx = `${Math.round(nextHeight)}px`;
 		if (el.style.height !== heightPx) {
 			el.style.height = heightPx;
 		}
 
-		if (lastHeightRef.current !== nextHeight) {
-			lastHeightRef.current = nextHeight;
-			onHeightChangeRef.current?.(nextHeight, {rowHeight: lineHeight});
+		const emittedHeight = Math.round(nextHeight);
+		if (lastEmittedHeightRef.current !== emittedHeight) {
+			lastEmittedHeightRef.current = emittedHeight;
+			onHeightChangeRef.current?.(emittedHeight, {rowHeight: lineHeight});
 		}
-	}, [maxRows, minRows]);
+	}, [emitHeightIfChanged, maxRows, minRows, nativeFieldSizing]);
 
 	const scheduleResize = React.useCallback(() => {
 		if (resizeScheduledRef.current) return;
 		resizeScheduledRef.current = true;
+
 		requestAnimationFrame(() => {
 			resizeScheduledRef.current = false;
 			resize();
@@ -133,16 +248,22 @@ export const TextareaAutosize = React.forwardRef<HTMLTextAreaElement, TextareaAu
 			const entry = entries[0];
 			if (!entry) return;
 
-			const width = entry.borderBoxSize?.[0]?.inlineSize ?? el.getBoundingClientRect().width;
+			const width = (entry as any).borderBoxSize?.[0]?.inlineSize ?? el.getBoundingClientRect().width;
+
 			if (width !== lastWidthRef.current) {
 				lastWidthRef.current = width;
 				scheduleResize();
+				return;
+			}
+
+			if (nativeFieldSizing) {
+				emitHeightIfChanged();
 			}
 		});
 
 		ro.observe(el);
 		return () => ro.disconnect();
-	}, [scheduleResize]);
+	}, [emitHeightIfChanged, nativeFieldSizing, scheduleResize]);
 
 	const computedStyle = React.useMemo(
 		(): React.CSSProperties => ({
@@ -154,15 +275,15 @@ export const TextareaAutosize = React.forwardRef<HTMLTextAreaElement, TextareaAu
 
 	const handleInput = React.useCallback(
 		(event: React.FormEvent<HTMLTextAreaElement>) => {
-			resize();
+			scheduleResize();
 			onInput?.(event);
 		},
-		[onInput, resize],
+		[onInput, scheduleResize],
 	);
 
 	React.useLayoutEffect(() => {
-		resize();
-	}, [resize, props.value, props.defaultValue, rows]);
+		scheduleResize();
+	}, [scheduleResize, props.value, props.defaultValue, rows, minRows, maxRows, nativeFieldSizing]);
 
 	return <textarea {...rest} ref={setRef} rows={resolvedRows} style={computedStyle} onInput={handleInput} />;
 });

@@ -21,19 +21,18 @@ import {clsx} from 'clsx';
 import React from 'react';
 import * as HighlightActionCreators from '~/actions/HighlightActionCreators';
 import {type AutocompleteOption, isChannel} from '~/components/channel/Autocomplete';
-import type {ScrollerHandle} from '~/components/uikit/Scroller';
 import {useTextareaAutofocus} from '~/hooks/useTextareaAutofocus';
-import {ComponentDispatch} from '~/lib/ComponentDispatch';
 import {TextareaAutosize} from '~/lib/TextareaAutosize';
 import styles from './TextareaInput.module.css';
 
 interface TextareaInputFieldProps {
+	channelId: string;
+
 	disabled: boolean;
 	isMobile: boolean;
 	value: string;
 	placeholder: string;
 	textareaRef: React.RefObject<HTMLTextAreaElement | null>;
-	scrollerRef?: React.RefObject<ScrollerHandle | null> | null;
 	shouldStickToBottomRef?: React.MutableRefObject<boolean>;
 	isFocused?: boolean;
 	isAutocompleteAttached: boolean;
@@ -60,7 +59,6 @@ export const TextareaInputField = React.forwardRef<HTMLTextAreaElement, Textarea
 			value,
 			placeholder,
 			textareaRef,
-			scrollerRef,
 			isAutocompleteAttached,
 			autocompleteOptions,
 			selectedIndex,
@@ -75,12 +73,9 @@ export const TextareaInputField = React.forwardRef<HTMLTextAreaElement, Textarea
 			setSelectedIndex,
 			className,
 			onKeyDown,
-			shouldStickToBottomRef,
 		},
 		_ref,
 	) => {
-		const lastHeightRef = React.useRef<number>(0);
-
 		useTextareaAutofocus(textareaRef, isMobile, !disabled);
 
 		const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -124,49 +119,6 @@ export const TextareaInputField = React.forwardRef<HTMLTextAreaElement, Textarea
 			}
 		};
 
-		const handleHeightChange = (height: number, meta?: {rowHeight: number}) => {
-			const clampToSingleRow = () => {
-				if (value.length > 0 || !textareaRef.current || !meta?.rowHeight) {
-					return height;
-				}
-
-				const style = window.getComputedStyle(textareaRef.current);
-				const padding = (parseFloat(style.paddingTop || '0') || 0) + (parseFloat(style.paddingBottom || '0') || 0);
-				const border =
-					(parseFloat(style.borderTopWidth || '0') || 0) + (parseFloat(style.borderBottomWidth || '0') || 0);
-				const singleRowHeight = meta.rowHeight + padding + border;
-
-				if (!Number.isFinite(singleRowHeight) || singleRowHeight <= 0 || singleRowHeight >= height) {
-					return height;
-				}
-
-				textareaRef.current.style.setProperty('height', `${singleRowHeight}px`, 'important');
-				return singleRowHeight;
-			};
-
-			const adjustedHeight = clampToSingleRow();
-
-			if (adjustedHeight === lastHeightRef.current) {
-				return;
-			}
-
-			const heightDelta = adjustedHeight - lastHeightRef.current;
-			lastHeightRef.current = adjustedHeight;
-
-			const distanceFromBottom = scrollerRef?.current?.getDistanceFromBottom?.() ?? 0;
-			const shouldStickToBottom = shouldStickToBottomRef?.current ?? distanceFromBottom <= 8;
-
-			onHeightChange(adjustedHeight);
-
-			if (shouldStickToBottom) {
-				scrollerRef?.current?.scrollToBottom({animate: false});
-			}
-
-			queueMicrotask(() => {
-				ComponentDispatch.dispatch('LAYOUT_RESIZED', {heightDelta});
-			});
-		};
-
 		return (
 			<TextareaAutosize
 				data-channel-textarea
@@ -176,7 +128,7 @@ export const TextareaInputField = React.forwardRef<HTMLTextAreaElement, Textarea
 				onBlur={onBlur}
 				onChange={(event) => onChange(event.target.value)}
 				onFocus={onFocus}
-				onHeightChange={handleHeightChange}
+				onHeightChange={(h) => onHeightChange(h)}
 				onKeyDown={handleKeyDown}
 				placeholder={placeholder}
 				ref={textareaRef}

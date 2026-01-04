@@ -72,7 +72,7 @@
 .textarea {
 	width: 100%;
 	resize: none;
-	overflow: visible;
+	overflow: hidden;
 	white-space: pre-wrap;
 	word-break: break-word;
 	background-color: transparent;
@@ -86,6 +86,12 @@
 	outline: none;
 	font-family: inherit;
 	font-size: inherit;
+}
+
+@supports (field-sizing: content) {
+	.textarea {
+		field-sizing: content;
+	}
 }
 
 .textarea:disabled {

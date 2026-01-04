@@ -221,6 +221,7 @@ export const EditingMessageInput = observer(
 											style={{position: 'absolute', visibility: 'hidden', pointerEvents: 'none'}}
 										/>
 										<TextareaInputField
+											channelId={channel.id}
 											disabled={false}
 											isMobile={mobileLayout.enabled}
 											value={value}

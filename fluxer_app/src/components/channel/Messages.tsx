@@ -718,6 +718,7 @@ export const Messages = observer(function Messages({channel}: {channel: ChannelR
 			{topBar}
 			<div className={styles.scrollerContainer}>
 				<Scroller
+					className={state.isAtBottom ? styles.nativeAnchor : undefined}
 					fade={false}
 					scrollbar="regular"
 					hideThumbWhenWindowBlurred

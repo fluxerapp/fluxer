@@ -106,6 +106,13 @@ import * as PlaceholderUtils from '~/utils/PlaceholderUtils';
 import wrapperStyles from './textarea/InputWrapper.module.css';
 import styles from './textarea/TextareaInput.module.css';
 
+function readBorderBoxBlockSize(entry: ResizeObserverEntry): number {
+	const bbs: any = (entry as any).borderBoxSize;
+	if (Array.isArray(bbs) && bbs[0] && typeof bbs[0].blockSize === 'number') return bbs[0].blockSize;
+	if (bbs && typeof bbs.blockSize === 'number') return bbs.blockSize;
+	return (entry.target as HTMLElement).getBoundingClientRect().height;
+}
+
 const ChannelTextareaContent = observer(
 	({
 		channel,
@@ -123,7 +130,6 @@ const ChannelTextareaContent = observer(
 		const [isInputAreaFocused, setIsInputAreaFocused] = React.useState(false);
 		const [value, setValue] = React.useState('');
 		const [showAllButtons, setShowAllButtons] = React.useState(true);
-		const [_textareaHeight, setTextareaHeight] = React.useState(0);
 		const [containerWidth, setContainerWidth] = React.useState(0);
 		const [pendingMentionConfirmation, setPendingMentionConfirmation] = React.useState<MentionConfirmationInfo | null>(
 			null,
@@ -138,6 +144,64 @@ const ChannelTextareaContent = observer(
 		const containerRef = React.useRef<HTMLDivElement>(null);
 		const scrollerRef = React.useRef<ScrollerHandle>(null);
 		useMarkdownKeybinds(isFocused);
+
+		const textareaHeightRef = React.useRef<number>(0);
+		const handleTextareaHeightChange = React.useCallback((height: number) => {
+			textareaHeightRef.current = height;
+		}, []);
+
+		const inputBoxHeightRef = React.useRef<number | null>(null);
+		const pendingLayoutDeltaRef = React.useRef(0);
+		const flushScheduledRef = React.useRef(false);
+
+		React.useLayoutEffect(() => {
+			const el = containerRef.current;
+			if (!el || typeof ResizeObserver === 'undefined') return;
+
+			inputBoxHeightRef.current = null;
+			pendingLayoutDeltaRef.current = 0;
+			flushScheduledRef.current = false;
+
+			const flush = () => {
+				flushScheduledRef.current = false;
+				const delta = pendingLayoutDeltaRef.current;
+				pendingLayoutDeltaRef.current = 0;
+				if (!delta) return;
+				if (delta <= 0) return;
+
+				ComponentDispatch.dispatch('LAYOUT_RESIZED', {
+					channelId: channel.id,
+					heightDelta: delta,
+				});
+			};
+
+			const ro = new ResizeObserver((entries) => {
+				const entry = entries[0];
+				if (!entry) return;
+
+				const nextHeight = Math.round(readBorderBoxBlockSize(entry));
+				const prevHeight = inputBoxHeightRef.current;
+
+				if (prevHeight == null) {
+					inputBoxHeightRef.current = nextHeight;
+					return;
+				}
+
+				const delta = nextHeight - prevHeight;
+				if (!delta) return;
+
+				inputBoxHeightRef.current = nextHeight;
+				pendingLayoutDeltaRef.current += delta;
+
+				if (!flushScheduledRef.current) {
+					flushScheduledRef.current = true;
+					queueMicrotask(flush);
+				}
+			});
+
+			ro.observe(el);
+			return () => ro.disconnect();
+		}, [channel.id]);
 
 		const showGiftButton = AccessibilityStore.showGiftButton;
 		const showGifButton = AccessibilityStore.showGifButton;
@@ -653,9 +717,15 @@ const ChannelTextareaContent = observer(
 		React.useLayoutEffect(() => {
 			if (!containerRef.current) return;
 
+			let lastWidth = -1;
+
 			const checkButtonVisibility = () => {
 				if (!containerRef.current) return;
 				const containerWidthLocal = containerRef.current.offsetWidth;
+
+				if (containerWidthLocal === lastWidth) return;
+				lastWidth = containerWidthLocal;
+
 				const shouldShowAll = containerWidthLocal > 500;
 				setShowAllButtons(shouldShowAll);
 				setContainerWidth(containerWidthLocal);
@@ -765,12 +835,12 @@ const ChannelTextareaContent = observer(
 									<Scroller ref={scrollerRef} fade={true} className={styles.scroller} key="channel-textarea-scroller">
 										<div style={{display: 'flex', flexDirection: 'column'}}>
 											<TextareaInputField
+												channelId={channel.id}
 												disabled={disabled}
 												isMobile={mobileLayout.enabled}
 												value={value}
 												placeholder={placeholderText}
 												textareaRef={textareaRef}
-												scrollerRef={scrollerRef}
 												isFocused={isFocused}
 												isAutocompleteAttached={isAutocompleteAttached}
 												autocompleteOptions={autocompleteOptions}
@@ -787,7 +857,7 @@ const ChannelTextareaContent = observer(
 													handleTextChange(newValue, previousValueRef.current);
 													setValue(newValue);
 												}}
-												onHeightChange={setTextareaHeight}
+												onHeightChange={handleTextareaHeightChange}
 												onCursorMove={onCursorMove}
 												onArrowUp={handleArrowUp}
 												onEnter={handleSubmit}

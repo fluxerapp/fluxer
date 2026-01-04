@@ -30,6 +30,10 @@
 	--message-group-spacing: 16px;
 }
 
+.nativeAnchor {
+	overflow-anchor: auto !important;
+}
+
 .scrollerContainer {
 	position: absolute;
 	inset: 0;
