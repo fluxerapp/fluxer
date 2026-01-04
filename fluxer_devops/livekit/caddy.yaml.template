@@ -16,12 +16,6 @@ apps:
             - '${LIVEKIT_DOMAIN_TURN}'
           issuers:
             - module: acme
-              challenges:
-                dns:
-                  provider:
-                    name: porkbun
-                    api_key: '{env.PORKBUN_API_KEY}'
-                    api_secret_key: '{env.PORKBUN_API_SECRET_KEY}'
           on_demand: false
     certificates:
       automate:
@@ -50,7 +44,7 @@ apps:
             handle:
               - handler: tls
                 connection_policies:
-                  - alpn: ['http/1.1']
+                  - alpn: ['acme-tls/1', 'http/1.1']
               - handler: proxy
                 upstreams:
                   - dial: ['livekit:7880']

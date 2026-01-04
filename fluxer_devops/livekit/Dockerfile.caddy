@@ -2,8 +2,7 @@ FROM caddy:2-builder AS builder
 
 RUN xcaddy build \
     --with github.com/abiosoft/caddy-yaml \
-    --with github.com/mholt/caddy-l4 \
-    --with github.com/caddy-dns/porkbun
+    --with github.com/mholt/caddy-l4
 
 FROM caddy:2
 
