@@ -84,27 +84,59 @@ pub fn render(ctx: Context) -> Element(a) {
           ],
         ),
         hackernews_banner.render(ctx),
-        html.div([attribute.class("mt-6 flex justify-center")], [
-          html.a(
-            [
-              attribute.href(
-                "https://www.producthunt.com/products/fluxer?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-fluxer",
-              ),
-              attribute.target("_blank"),
-              attribute.attribute("rel", "noopener noreferrer"),
-            ],
-            [
-              html.img([
-                attribute.alt(
-                  "Fluxer - Open-source Discord-like instant messaging & VoIP platform | Product Hunt",
+        html.div(
+          [
+            attribute.class(
+              "mt-6 flex flex-wrap items-center justify-center gap-4",
+            ),
+          ],
+          [
+            html.a(
+              [
+                attribute.href(
+                  "https://www.producthunt.com/products/fluxer?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-fluxer",
                 ),
-                attribute.attribute("width", "250"),
-                attribute.attribute("height", "54"),
-                attribute.src(prepend_base_path(ctx, "/api/badges/product-hunt")),
-              ]),
-            ],
-          ),
-        ]),
+                attribute.target("_blank"),
+                attribute.attribute("rel", "noopener noreferrer"),
+              ],
+              [
+                html.img([
+                  attribute.alt(
+                    "Fluxer - Open-source Discord-like instant messaging & VoIP platform | Product Hunt",
+                  ),
+                  attribute.attribute("width", "250"),
+                  attribute.attribute("height", "54"),
+                  attribute.src(prepend_base_path(
+                    ctx,
+                    "/api/badges/product-hunt",
+                  )),
+                ]),
+              ],
+            ),
+            html.a(
+              [
+                attribute.href(
+                  "https://www.producthunt.com/products/fluxer?embed=true&utm_source=badge-top-post-badge&utm_medium=badge&utm_campaign=badge-fluxer",
+                ),
+                attribute.target("_blank"),
+                attribute.attribute("rel", "noopener noreferrer"),
+              ],
+              [
+                html.img([
+                  attribute.alt(
+                    "Fluxer - Open-source Discord-like instant messaging & VoIP platform | Product Hunt Top Post",
+                  ),
+                  attribute.attribute("width", "250"),
+                  attribute.attribute("height", "54"),
+                  attribute.src(prepend_base_path(
+                    ctx,
+                    "/api/badges/product-hunt-top-post",
+                  )),
+                ]),
+              ],
+            ),
+          ],
+        ),
       ]),
       html.div(
         [

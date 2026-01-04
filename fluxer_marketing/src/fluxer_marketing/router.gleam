@@ -51,7 +51,10 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
     ["_debug", "geoip"] -> handle_geoip_debug(req, ctx)
 
     ["api", "badges", "product-hunt"] ->
-      badge_proxy.product_hunt(ctx.badge_cache)
+      badge_proxy.product_hunt(ctx.badge_featured_cache)
+
+    ["api", "badges", "product-hunt-top-post"] ->
+      badge_proxy.product_hunt(ctx.badge_top_post_cache)
 
     ["robots.txt"] -> handle_robots_txt()
     ["sitemap.xml"] -> handle_sitemap(ctx)

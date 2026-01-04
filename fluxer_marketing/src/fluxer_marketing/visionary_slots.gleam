@@ -22,6 +22,7 @@ import gleam/http/request
 import gleam/httpc
 import gleam/int
 import gleam/json
+import gleam/option
 import gleam/result
 import gleam/string
 import wisp
@@ -40,9 +41,10 @@ pub opaque type Cache {
 
 type ServerMessage {
   Get(process.Subject(VisionarySlots))
+  RefreshDone(fetched_at: Int, slots: option.Option(VisionarySlots))
 }
 
-const refresh_interval_ms = 300_000
+const stale_after_ms = 300_000
 
 const receive_timeout_ms = 200
 
@@ -60,28 +62,122 @@ pub fn start(settings: Settings) -> Cache {
   Cache(name: name)
 }
 
+type CacheEntry {
+  CacheEntry(slots: VisionarySlots, fetched_at: Int)
+}
+
+type State {
+  State(cache: option.Option(CacheEntry), is_refreshing: Bool)
+}
+
 fn run(name: process.Name(ServerMessage), settings: Settings) {
   let _ = process.register(process.self(), name)
   let subject = process.named_subject(name)
-  let initial = fetch_slots(settings) |> result.unwrap(default_slots())
-  loop(subject, settings, initial)
+  let initial_slots = fetch_slots(settings) |> result.unwrap(default_slots())
+  let now = monotonic_time_ms()
+  let initial_state =
+    State(
+      cache: option.Some(CacheEntry(slots: initial_slots, fetched_at: now)),
+      is_refreshing: False,
+    )
+
+  loop(subject, settings, initial_state)
 }
 
 fn loop(
   subject: process.Subject(ServerMessage),
   settings: Settings,
-  state: VisionarySlots,
+  state: State,
 ) {
-  case process.receive(subject, within: refresh_interval_ms) {
-    Ok(Get(reply_to)) -> {
-      process.send(reply_to, state)
-      loop(subject, settings, state)
+  let new_state = case process.receive(subject, within: stale_after_ms) {
+    Ok(Get(reply_to)) -> handle_get(subject, reply_to, settings, state)
+
+    Ok(RefreshDone(fetched_at, slots)) ->
+      handle_refresh_done(fetched_at, slots, state)
+
+    Error(_) -> maybe_refresh_in_background(subject, settings, state)
+  }
+
+  loop(subject, settings, new_state)
+}
+
+fn handle_get(
+  subject: process.Subject(ServerMessage),
+  reply_to: process.Subject(VisionarySlots),
+  settings: Settings,
+  state: State,
+) -> State {
+  let now = monotonic_time_ms()
+
+  case state.cache {
+    option.None -> {
+      let slots = fetch_slots(settings) |> result.unwrap(default_slots())
+      process.send(reply_to, slots)
+
+      let entry = CacheEntry(slots: slots, fetched_at: now)
+
+      State(cache: option.Some(entry), is_refreshing: False)
     }
-    Error(_) -> {
-      let updated = fetch_slots(settings) |> result.unwrap(state)
-      loop(subject, settings, updated)
+
+    option.Some(entry) -> {
+      let is_stale = now - entry.fetched_at > stale_after_ms
+      process.send(reply_to, entry.slots)
+
+      case is_stale && !state.is_refreshing {
+        True -> {
+          spawn_refresh(subject, settings)
+          State(..state, is_refreshing: True)
+        }
+        False -> state
+      }
     }
   }
+}
+
+fn handle_refresh_done(
+  fetched_at: Int,
+  slots: option.Option(VisionarySlots),
+  state: State,
+) -> State {
+  let new_cache = case slots {
+    option.Some(data) ->
+      option.Some(CacheEntry(slots: data, fetched_at: fetched_at))
+    option.None -> state.cache
+  }
+
+  State(cache: new_cache, is_refreshing: False)
+}
+
+fn maybe_refresh_in_background(
+  subject: process.Subject(ServerMessage),
+  settings: Settings,
+  state: State,
+) -> State {
+  let now = monotonic_time_ms()
+
+  case state.cache, state.is_refreshing {
+    option.Some(entry), False if now - entry.fetched_at > stale_after_ms -> {
+      spawn_refresh(subject, settings)
+      State(..state, is_refreshing: True)
+    }
+
+    _, _ -> state
+  }
+}
+
+fn spawn_refresh(subject: process.Subject(ServerMessage), settings: Settings) {
+  let _ =
+    process.spawn_unlinked(fn() {
+      let fetched_at = monotonic_time_ms()
+      let result = fetch_slots(settings)
+      let payload = case result {
+        Ok(slots) -> option.Some(slots)
+        Error(_) -> option.None
+      }
+      process.send(subject, RefreshDone(fetched_at, payload))
+    })
+
+  Nil
 }
 
 pub fn current(cache: Cache) -> VisionarySlots {
@@ -367,4 +463,15 @@ fn rpc_url(api_host: String) -> String {
 
 fn default_slots() -> VisionarySlots {
   VisionarySlots(total: 0, bought: 0, remaining: 0)
+}
+
+type TimeUnit {
+  Millisecond
+}
+
+@external(erlang, "erlang", "monotonic_time")
+fn erlang_monotonic_time(unit: TimeUnit) -> Int
+
+fn monotonic_time_ms() -> Int {
+  erlang_monotonic_time(Millisecond)
 }

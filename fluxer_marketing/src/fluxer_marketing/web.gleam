@@ -56,7 +56,8 @@ pub type Context {
     release_channel: String,
     visionary_slots: VisionarySlots,
     metrics_endpoint: Option(String),
-    badge_cache: badge_proxy.Cache,
+    badge_featured_cache: badge_proxy.Cache,
+    badge_top_post_cache: badge_proxy.Cache,
   )
 }
 
