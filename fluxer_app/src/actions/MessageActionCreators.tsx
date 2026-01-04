@@ -264,7 +264,7 @@ export const fetchMessages = async (
 		} catch (error) {
 			logger.error(`Failed to fetch messages for channel ${channelId}:`, error);
 			MessageStore.handleLoadMessagesFailure({channelId});
-			throw error;
+			return [];
 		}
 	})();
 
