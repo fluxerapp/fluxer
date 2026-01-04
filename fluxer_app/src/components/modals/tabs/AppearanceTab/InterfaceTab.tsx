@@ -36,8 +36,6 @@ import AccessibilityStore, {ChannelTypingIndicatorMode} from '~/stores/Accessibi
 import {cdnUrl} from '~/utils/UrlUtils';
 import styles from './InterfaceTab.module.css';
 
-const TYPING_PREVIEW_AVATAR_URLS = [1, 2, 3].map((index) => cdnUrl(`avatars/${index}.png`));
-
 const ChannelListPreview = observer(({mode}: {mode: ChannelTypingIndicatorMode}) => {
 	const typingIndicator =
 		mode !== ChannelTypingIndicatorMode.HIDDEN ? (
@@ -52,8 +50,13 @@ const ChannelListPreview = observer(({mode}: {mode: ChannelTypingIndicatorMode})
 					<Typing className={styles.typingAnimationWrapper} color="var(--surface-interactive-selected-color)" />
 					{mode === ChannelTypingIndicatorMode.AVATARS && (
 						<AvatarStack size={12} maxVisible={5} className={styles.typingAvatars}>
-							{TYPING_PREVIEW_AVATAR_URLS.map((avatarUrl, index) => (
-								<MockAvatar key={avatarUrl} size={12} userTag={`User ${index + 1}`} avatarUrl={avatarUrl} />
+							{[1, 2, 3].map((index) => (
+								<MockAvatar
+									key={index}
+									size={12}
+									userTag={`User ${index}`}
+									avatarUrl={cdnUrl(`avatars/${index}.png`)}
+								/>
 							))}
 						</AvatarStack>
 					)}
