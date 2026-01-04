@@ -21,7 +21,9 @@ import gleam/httpc
 import gleam/option.{type Option}
 import wisp.{type Response}
 
-const product_hunt_url = "https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1057558&theme=light"
+pub const product_hunt_featured_url = "https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1057558&theme=light"
+
+pub const product_hunt_top_post_url = "https://api.producthunt.com/widgets/embed-image/v1/top-post-badge.svg?post_id=1057558&theme=light&period=daily&t=1767529639613"
 
 const stale_after_ms = 300_000
 
@@ -46,45 +48,46 @@ type State {
   State(cache: Option(CacheEntry), is_refreshing: Bool)
 }
 
-pub fn start_cache() -> Cache {
+pub fn start_cache(url: String) -> Cache {
   let started = process.new_subject()
-  let _ = process.spawn_unlinked(fn() { run(started) })
+  let _ = process.spawn_unlinked(fn() { run(started, url) })
 
   let assert Ok(subject) = process.receive(started, within: 1000)
   Cache(subject: subject)
 }
 
-fn run(started: process.Subject(process.Subject(ServerMessage))) {
+fn run(started: process.Subject(process.Subject(ServerMessage)), url: String) {
   let subject = process.new_subject()
   process.send(started, subject)
 
   let initial = State(cache: option.None, is_refreshing: False)
-  loop(subject, initial)
+  loop(subject, url, initial)
 }
 
-fn loop(subject: process.Subject(ServerMessage), state: State) {
+fn loop(subject: process.Subject(ServerMessage), url: String, state: State) {
   let new_state = case process.receive(subject, within: stale_after_ms) {
-    Ok(Get(reply_to)) -> handle_get(subject, reply_to, state)
+    Ok(Get(reply_to)) -> handle_get(subject, reply_to, url, state)
 
     Ok(RefreshDone(fetched_at, svg)) ->
       handle_refresh_done(fetched_at, svg, state)
 
-    Error(_) -> maybe_refresh_in_background(subject, state)
+    Error(_) -> maybe_refresh_in_background(subject, url, state)
   }
 
-  loop(subject, new_state)
+  loop(subject, url, new_state)
 }
 
 fn handle_get(
   subject: process.Subject(ServerMessage),
   reply_to: process.Subject(Option(String)),
+  url: String,
   state: State,
 ) -> State {
   let now = monotonic_time_ms()
 
   case state.cache {
     option.None -> {
-      let svg = fetch_badge_svg()
+      let svg = fetch_badge_svg(url)
       process.send(reply_to, svg)
 
       let new_cache = case svg {
@@ -103,7 +106,7 @@ fn handle_get(
 
       case is_stale && !state.is_refreshing {
         True -> {
-          spawn_refresh(subject)
+          spawn_refresh(subject, url)
           State(..state, is_refreshing: True)
         }
         False -> state
@@ -128,13 +131,14 @@ fn handle_refresh_done(
 
 fn maybe_refresh_in_background(
   subject: process.Subject(ServerMessage),
+  url: String,
   state: State,
 ) -> State {
   let now = monotonic_time_ms()
 
   case state.cache, state.is_refreshing {
     option.Some(entry), False if now - entry.fetched_at > stale_after_ms -> {
-      spawn_refresh(subject)
+      spawn_refresh(subject, url)
       State(..state, is_refreshing: True)
     }
 
@@ -142,11 +146,11 @@ fn maybe_refresh_in_background(
   }
 }
 
-fn spawn_refresh(subject: process.Subject(ServerMessage)) {
+fn spawn_refresh(subject: process.Subject(ServerMessage), url: String) {
   let _ =
     process.spawn_unlinked(fn() {
       let fetched_at = monotonic_time_ms()
-      let svg = fetch_badge_svg()
+      let svg = fetch_badge_svg(url)
       process.send(subject, RefreshDone(fetched_at, svg))
     })
 
@@ -185,8 +189,8 @@ pub fn product_hunt(cache: Cache) -> Response {
   }
 }
 
-fn fetch_badge_svg() -> Option(String) {
-  let assert Ok(req0) = request.to(product_hunt_url)
+fn fetch_badge_svg(url: String) -> Option(String) {
+  let assert Ok(req0) = request.to(url)
   let req =
     req0
     |> request.prepend_header("accept", "image/svg+xml")

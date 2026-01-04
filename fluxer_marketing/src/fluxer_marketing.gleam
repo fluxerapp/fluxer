@@ -47,11 +47,21 @@ pub fn main() {
       rpc_secret: cfg.gateway_rpc_secret,
     ))
 
-  let badge_cache = badge_proxy.start_cache()
+  let badge_featured_cache =
+    badge_proxy.start_cache(badge_proxy.product_hunt_featured_url)
+  let badge_top_post_cache =
+    badge_proxy.start_cache(badge_proxy.product_hunt_top_post_url)
 
   let assert Ok(_) =
     wisp_mist.handler(
-      handle_request(_, i18n_db, cfg, slots_cache, badge_cache),
+      handle_request(
+        _,
+        i18n_db,
+        cfg,
+        slots_cache,
+        badge_featured_cache,
+        badge_top_post_cache,
+      ),
       cfg.secret_key_base,
     )
     |> mist.new
@@ -67,7 +77,8 @@ fn handle_request(
   i18n_db,
   cfg: config.Config,
   slots_cache: visionary_slots.Cache,
-  badge_cache: badge_proxy.Cache,
+  badge_featured_cache: badge_proxy.Cache,
+  badge_top_post_cache: badge_proxy.Cache,
 ) -> wisp.Response {
   let locale = get_request_locale(req)
 
@@ -100,7 +111,8 @@ fn handle_request(
       release_channel: cfg.release_channel,
       visionary_slots: visionary_slots.current(slots_cache),
       metrics_endpoint: cfg.metrics_endpoint,
-      badge_cache: badge_cache,
+      badge_featured_cache: badge_featured_cache,
+      badge_top_post_cache: badge_top_post_cache,
     )
 
   use <- wisp.log_request(req)
