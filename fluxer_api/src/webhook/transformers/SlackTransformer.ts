@@ -17,18 +17,18 @@
  * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import {createStringType, createUnboundedStringType, z} from '~/Schema';
+import {ColorType, coerceNumberFromString, createUnboundedStringType, URLType, WebhookNameType, z} from '~/Schema';
 import type {WebhookMessageRequest} from '~/webhook/WebhookModel';
 
-const SlackAttachmentField = z.object({
+const SlackAttachmentFieldSchema = z.object({
 	title: createUnboundedStringType().optional(),
 	value: createUnboundedStringType().optional(),
 	short: z.boolean().optional(),
 });
 
-const SlackAttachmentTs = z.union([z.number().int(), z.string().regex(/^\d+$/)]).optional();
+const SlackUnixSecondsSchema = coerceNumberFromString(z.number().int().nonnegative());
 
-const SlackAttachment = z.object({
+const SlackAttachmentSchema = z.object({
 	fallback: createUnboundedStringType().optional(),
 	pretext: createUnboundedStringType().optional(),
 	text: createUnboundedStringType().optional(),
@@ -36,10 +36,10 @@ const SlackAttachment = z.object({
 	color: createUnboundedStringType().optional(),
 	title: createUnboundedStringType().optional(),
 	title_link: createUnboundedStringType().optional(),
-	fields: z.array(SlackAttachmentField).optional(),
+	fields: z.array(SlackAttachmentFieldSchema).optional(),
 
 	footer: createUnboundedStringType().optional(),
-	ts: SlackAttachmentTs,
+	ts: SlackUnixSecondsSchema.optional(),
 
 	author_name: createUnboundedStringType().optional(),
 	author_link: createUnboundedStringType().optional(),
@@ -51,166 +51,118 @@ const SlackAttachment = z.object({
 
 export const SlackWebhookRequest = z.object({
 	text: createUnboundedStringType().optional(),
-	username: createStringType(1, 80).optional(),
+	username: WebhookNameType.optional(),
 	icon_url: createUnboundedStringType().optional(),
-	attachments: z.array(SlackAttachment).optional(),
+	attachments: z.array(SlackAttachmentSchema).optional(),
 });
 
 export type SlackWebhookRequest = z.infer<typeof SlackWebhookRequest>;
 
-type SlackAttachmentType = z.infer<typeof SlackAttachment>;
-type SlackAttachmentFieldType = z.infer<typeof SlackAttachmentField>;
+type SlackAttachment = z.infer<typeof SlackAttachmentSchema>;
+type SlackAttachmentField = z.infer<typeof SlackAttachmentFieldSchema>;
+
 type WebhookEmbed = NonNullable<WebhookMessageRequest['embeds']>[number];
+type WebhookEmbedField = NonNullable<NonNullable<WebhookEmbed['fields']>[number]>;
 
 export function transformSlackWebhookRequest(payload: SlackWebhookRequest): WebhookMessageRequest {
-	const attachments: ReadonlyArray<SlackAttachmentType> = payload.attachments ?? [];
-	const embeds = attachments
-		.map((attachment) => transformSlackAttachmentToEmbed(attachment))
-		.filter((embed): embed is WebhookEmbed => embed != null);
+	const embeds: Array<WebhookEmbed> = [];
+	for (const att of payload.attachments ?? []) {
+		const embed = transformSlackAttachmentToEmbed(att);
+		if (embed) embeds.push(embed);
+	}
 
-	const content = payload.text !== undefined ? payload.text : embeds.length > 0 ? '' : undefined;
+	const content = payload.text ?? (embeds.length > 0 ? '' : undefined);
 
 	return {
 		content,
 		username: payload.username,
-		avatar_url: parseUrl(payload.icon_url) ?? undefined,
+		avatar_url: safeUrl(payload.icon_url),
 		embeds: embeds.length > 0 ? embeds : undefined,
 	};
 }
 
-function transformSlackAttachmentToEmbed(att: SlackAttachmentType): WebhookEmbed | undefined {
-	const description = buildAttachmentDescription(att);
-
+function transformSlackAttachmentToEmbed(att: SlackAttachment): WebhookEmbed | undefined {
 	const embed: Partial<WebhookEmbed> = {};
 
-	if (att.title && att.title.length > 0) {
-		embed.title = att.title;
-	}
+	if (att.title) embed.title = att.title;
 
-	const titleLink = parseUrl(att.title_link);
-	if (titleLink) {
-		embed.url = titleLink;
-	}
+	const titleUrl = safeUrl(att.title_link);
+	if (titleUrl) embed.url = titleUrl;
 
-	if (description && description.length > 0) {
-		embed.description = description;
-	}
+	const description = buildAttachmentDescription(att);
+	if (description) embed.description = description;
 
-	const authorName = att.author_name?.trim();
-	if (authorName) {
+	if (att.author_name) {
 		embed.author = {
-			name: authorName,
-			url: parseUrl(att.author_link) ?? undefined,
-			icon_url: parseUrl(att.author_icon) ?? undefined,
+			name: att.author_name,
+			url: safeUrl(att.author_link),
+			icon_url: safeUrl(att.author_icon),
 		};
 	}
 
-	const fieldsSource: ReadonlyArray<SlackAttachmentFieldType> = att.fields ?? [];
-	const fields = fieldsSource
-		.map<{
-			name: string;
-			value: string;
-			inline: boolean;
-		} | null>((field) => {
-			const name = (field.title ?? '').trim();
-			const value = (field.value ?? '').trim();
-			if (!name || !value) return null;
-			return {
-				name,
-				value,
-				inline: field.short ?? false,
-			};
-		})
-		.filter(
-			(
-				field,
-			): field is {
-				name: string;
-				value: string;
-				inline: boolean;
-			} => field != null,
-		);
+	const fields: Array<WebhookEmbedField> = [];
+	for (const field of att.fields ?? []) {
+		const embedField = toEmbedField(field);
+		if (embedField) fields.push(embedField);
+	}
+	if (fields.length > 0) embed.fields = fields;
 
-	if (fields.length > 0) {
-		embed.fields = fields;
+	if (att.footer) embed.footer = {text: att.footer};
+
+	if (typeof att.ts === 'number') {
+		embed.timestamp = new Date(att.ts * 1000);
 	}
 
-	const footerText = att.footer?.trim();
-	if (footerText) {
-		embed.footer = {text: footerText};
-	}
+	const imageUrl = safeUrl(att.image_url);
+	if (imageUrl) embed.image = {url: imageUrl};
 
-	const tsSeconds = parseUnixSeconds(att.ts);
-	if (tsSeconds != null) {
-		embed.timestamp = new Date(tsSeconds * 1000);
-	}
+	const thumbUrl = safeUrl(att.thumb_url);
+	if (thumbUrl) embed.thumbnail = {url: thumbUrl};
 
-	const imageUrl = parseUrl(att.image_url);
-	if (imageUrl) {
-		embed.image = {url: imageUrl};
-	}
+	const color = safeHexColor(att.color);
+	if (color != null) embed.color = color;
 
-	const thumbUrl = parseUrl(att.thumb_url);
-	if (thumbUrl) {
-		embed.thumbnail = {url: thumbUrl};
-	}
-
-	const explicitColor = parseHexColor(att.color);
-	if (explicitColor != null) {
-		embed.color = explicitColor;
-	}
-
-	const hasAnyRenderable =
-		!!embed.title ||
-		!!embed.description ||
-		!!embed.url ||
-		!!embed.author ||
-		!!embed.fields ||
-		!!embed.footer ||
-		!!embed.timestamp ||
-		!!embed.image ||
-		!!embed.thumbnail;
-
-	if (!hasAnyRenderable) return undefined;
-
-	return embed as WebhookEmbed;
+	return Object.keys(embed).length > 0 ? (embed as WebhookEmbed) : undefined;
 }
 
-function buildAttachmentDescription(att: SlackAttachmentType): string | undefined {
+function toEmbedField(field: SlackAttachmentField): WebhookEmbedField | undefined {
+	if (!field.title || !field.value) return undefined;
+
+	return {
+		name: field.title,
+		value: field.value,
+		inline: field.short ?? false,
+	};
+}
+
+function buildAttachmentDescription(att: SlackAttachment): string | undefined {
 	const parts: Array<string> = [];
-	if (att.pretext && att.pretext.length > 0) parts.push(att.pretext);
-	if (att.text && att.text.length > 0) parts.push(att.text);
+	if (att.pretext) parts.push(att.pretext);
+	if (att.text) parts.push(att.text);
 
-	if (parts.length === 0 && att.fallback && att.fallback.length > 0) {
-		parts.push(att.fallback);
-	}
+	if (parts.length === 0 && att.fallback) parts.push(att.fallback);
 
-	const combined = parts.join('\n').trim();
+	if (parts.length === 0) return undefined;
+
+	const combined = parts.join('\n');
 	return combined.length > 0 ? combined : undefined;
 }
 
-function parseUnixSeconds(value: unknown): number | undefined {
-	if (typeof value === 'number' && Number.isFinite(value)) return Math.trunc(value);
-	if (typeof value === 'string' && /^\d+$/.test(value)) return Number.parseInt(value, 10);
-	return undefined;
+function safeUrl(value: unknown): string | undefined {
+	if (typeof value !== 'string' || value.length === 0) return undefined;
+	if (!value.startsWith('http://') && !value.startsWith('https://')) return undefined;
+
+	const parsed = URLType.safeParse(value);
+	return parsed.success ? parsed.data : undefined;
 }
 
-function parseHexColor(value: unknown): number | undefined {
-	if (typeof value !== 'string') return undefined;
-	const raw = value.trim();
-	const match = raw.match(/^#?([0-9a-fA-F]{6})$/);
+function safeHexColor(value: unknown): number | undefined {
+	if (typeof value !== 'string' || value.length === 0) return undefined;
+
+	const match = value.match(/^#?([0-9a-fA-F]{6})$/);
 	if (!match) return undefined;
-	const num = Number.parseInt(match[1], 16);
-	return Number.isFinite(num) ? num : undefined;
-}
 
-function parseUrl(value: unknown): string | undefined {
-	if (typeof value !== 'string') return undefined;
-	const trimmed = value.trim();
-	if (!trimmed) return undefined;
-	try {
-		return new URL(trimmed).toString();
-	} catch {
-		return undefined;
-	}
+	const num = Number.parseInt(match[1], 16);
+	const validated = ColorType.safeParse(num);
+	return validated.success ? validated.data : undefined;
 }
