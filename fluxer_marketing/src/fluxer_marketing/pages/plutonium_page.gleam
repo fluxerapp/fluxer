@@ -307,8 +307,8 @@ fn comparison_section(ctx: Context) -> Element(a) {
                   ctx,
                   g_(i18n_ctx, "Custom video backgrounds"),
                   "1",
-                  g_(i18n_ctx, "Coming soon"),
-                  Some(g_(i18n_ctx, "Coming soon")),
+                  g_(i18n_ctx, "Beta"),
+                  Some(g_(i18n_ctx, "Beta")),
                 ),
                 comparison_check_row(
                   ctx,
