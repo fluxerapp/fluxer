@@ -1,0 +1,74 @@
+{
+	"passwordReset": {
+		"subject": "Fluxerのパスワードをリセットしてください",
+		"body": "こんにちは {username} さん。\n\nFluxerのパスワードのリセットがリクエストされました。以下のリンクから新しいパスワードを設定してください。\n\n{resetUrl}\n\nこのパスワードリセットをリクエストしていない場合は、このメールを無視しても問題ありません。\n\nこのリンクの有効期限は1時間です。\n\n- Fluxerチーム"
+	},
+	"emailVerification": {
+		"subject": "Fluxerのメールアドレスを確認してください",
+		"body": "こんにちは {username} さん。\n\n以下のリンクをクリックして、Fluxerアカウントのメールアドレスを確認してください。\n\n{verifyUrl}\n\nFluxerアカウントを作成していない場合は、このメールを無視しても問題ありません。\n\nこのリンクの有効期限は24時間です。\n\n- Fluxerチーム"
+	},
+	"emailChangeOriginal": {
+		"subject": "Fluxerのメールアドレス変更を確認してください",
+		"body": "こんにちは {username} さん。\n\nFluxerアカウントに登録されているメールアドレスを変更するリクエストを受け取りました。\n\nこの変更を確認するには、次のコードをアプリに入力してください。\n\n{code}\n\nこのコードの有効期限は {expiresAt, date, full} {expiresAt, time, short} です。\n\n心当たりがない場合は、ただちにアカウントの安全を確保してください。\n\n- Fluxerチーム"
+	},
+	"emailChangeNew": {
+		"subject": "新しいFluxerメールアドレスを確認してください",
+		"body": "こんにちは {username} さん。\n\n新しいFluxerメールアドレスを確認するため、次のコードをアプリに入力してください。\n\n{code}\n\nこのコードの有効期限は {expiresAt, date, full} {expiresAt, time, short} です。\n\n心当たりがない場合は、このメールを無視してください。"
+	},
+	"ipAuthorization": {
+		"subject": "新しいIPアドレスからのログインを承認してください",
+		"body": "こんにちは {username} さん。\n\nFluxerアカウントへのログイン試行が、新しいIPアドレスから検出されました。\n\nIPアドレス: {ipAddress}\n場所: {location}\n\nご自身の操作である場合は、以下のリンクをクリックしてこのIPアドレスを承認してください。\n\n{authUrl}\n\nログインを試みていない場合は、ただちにパスワードを変更してください。\n\nこの承認リンクの有効期限は30分です。\n\n- Fluxerチーム"
+	},
+	"accountDisabledSuspicious": {
+		"subject": "Fluxerアカウントは一時的に無効化されました",
+		"body": "こんにちは {username} さん。\n\n不審なアクティビティが検出されたため、Fluxerアカウントは一時的に無効化されました。\n\n{reason, select,\n\tnull {}\n\tother {理由: {reason}\n\n}}アカウントへのアクセスを回復するには、パスワードをリセットする必要があります。\n\n{forgotUrl}\n\nパスワードをリセットすると、再度ログインできるようになります。\n\nこの対応が誤りだと思われる場合は、サポートチームまでお問い合わせください。\n\n- Fluxerセーフティチーム"
+	},
+	"accountTempBanned": {
+		"subject": "Fluxerアカウントは一時的に停止されました",
+		"body": "こんにちは {username} さん。\n\n利用規約またはコミュニティガイドラインに違反したため、Fluxerアカウントは一時的に停止されました。\n\n停止期間: {durationHours, plural,\n\t=1 {1時間}\n\tother {#時間}\n}\n停止解除予定: {bannedUntil, date, full} {bannedUntil, time, short}\n{reason, select,\n\tnull {}\n\tother {\n理由: {reason}}\n}\n\nこの期間中は、アカウントにアクセスできません。\n\n以下をご確認ください。\n- 利用規約: {termsUrl}\n- コミュニティガイドライン: {guidelinesUrl}\n\nこの措置が誤り、または正当化できないものだと思われる場合は、このメールアドレスから appeals@fluxer.app 宛に異議申し立て（アピール）を提出できます。判断が誤りだと考える理由を明確に記載してください。内容を確認し、判断結果をご連絡します。\n\n- Fluxerセーフティチーム"
+	},
+	"accountScheduledDeletion": {
+		"subject": "Fluxerアカウントの削除が予定されています",
+		"body": "こんにちは {username} さん。\n\n利用規約またはコミュニティガイドラインへの違反により、Fluxerアカウントは永久削除の予定となりました。\n\n削除予定日時: {deletionDate, date, full} {deletionDate, time, short}\n{reason, select,\n\tnull {}\n\tother {\n理由: {reason}}\n}\n\nこれは重大な措置です。アカウントデータは予定日時に永久に削除されます。\n\n以下をご確認ください。\n- 利用規約: {termsUrl}\n- コミュニティガイドライン: {guidelinesUrl}\n\n異議申し立て（アピール）手続き:\nこの措置が誤り、または正当化できないものだと思われる場合は、このメールアドレスから appeals@fluxer.app 宛に30日以内に異議申し立てを提出できます。\n\n異議申し立てには、以下を含めてください。\n- 措置が誤り、または正当化できないと考える理由を明確に説明すること\n- 関連する証拠や状況の説明（該当する場合）\n\nFluxerセーフティチームの担当者が審査し、最終判断が下るまで削除予定を取り消す場合があります。\n\n- Fluxerセーフティチーム"
+	},
+	"selfDeletionScheduled": {
+		"subject": "Fluxerアカウント削除が予定されました",
+		"body": "こんにちは {username} さん。\n\nお別れするのは残念です！Fluxerアカウントの削除が予定されました。\n\n削除予定日時: {deletionDate, date, full} {deletionDate, time, short}\n\n重要: {deletionDate, date, full} {deletionDate, time, short} までにアカウントへ再ログインするだけで、いつでもこの削除をキャンセルできます。\n\n削除前に:\nユーザー設定のプライバシーダッシュボードでは、以下ができます。\n- プラットフォーム上のメッセージを削除する\n- 退会前に必要なデータを抽出する\n\n注意: アカウントが削除されると、メッセージを削除する方法はありません。メッセージを削除したい場合は、アカウント削除が確定する前にプライバシーダッシュボードから行ってください。\n\n気が変わった場合は、ログインするだけで削除をキャンセルできます。\n\n- Fluxerチーム"
+	},
+	"inactivityWarning": {
+		"subject": "非アクティブのためFluxerアカウントが削除されます",
+		"body": "こんにちは {username} さん。\n\nFluxerアカウントへのログインが2年以上確認できませんでした。\n\n最終ログイン: {lastActiveDate, date, full} {lastActiveDate, time, short}\n\nデータ保持ポリシーの一環として、非アクティブなアカウントは自動的に削除予定となります。あなたのアカウントは以下の日時に永久に削除されます。\n\n削除予定日時: {deletionDate, date, full} {deletionDate, time, short}\n\nアカウントを保持する方法:\n削除予定日時までに {loginUrl} からアカウントへログインするだけで、この自動削除をキャンセルできます。その他の操作は不要です。\n\nログインしない場合:\n- アカウントおよび関連するすべてのデータが永久に削除されます\n- あなたのメッセージは匿名化され（「Deleted User」として表示されます）\n- この操作は元に戻せません\n\nメッセージを削除したい場合:\nアカウントが削除される前にメッセージを削除したい場合は、ログインしてユーザー設定のプライバシーダッシュボードをご利用ください。\n\nまたFluxerでお会いできることを願っています！\n\n- Fluxerチーム"
+	},
+	"harvestCompleted": {
+		"subject": "Fluxerのデータエクスポートの準備ができました",
+		"body": "こんにちは {username} さん。\n\nデータエクスポートが完了し、ダウンロード可能になりました！\n\nエクスポート概要:\n- メッセージ総数: {totalMessages, number}\n- ファイルサイズ: {fileSizeMB} MB\n- 形式: JSONファイルを含むZIPアーカイブ\n\nデータをダウンロード: {downloadUrl}\n\n重要: このダウンロードリンクの有効期限は {expiresAt, date, full} {expiresAt, time, short} です。\n\nエクスポートに含まれる内容:\n- チャンネル別に整理されたすべてのメッセージ\n- チャンネルのメタデータ\n- ユーザープロフィールとアカウント情報\n- ギルドの所属情報と設定\n- 認証セッションおよびセキュリティ情報\n\nデータは解析と分析がしやすいよう、JSON形式で整理されています。\n\nデータエクスポートについてご不明点がある場合は support@fluxer.app までご連絡ください。\n\n- Fluxerチーム"
+	},
+	"unbanNotification": {
+		"subject": "Fluxerアカウントの停止が解除されました",
+		"body": "こんにちは {username} さん。\n\n朗報です！Fluxerアカウントの停止が解除されました。\n\n理由: {reason}\n\nこれより、アカウントに再ログインしてFluxerを引き続きご利用いただけます。\n\n- Fluxerセーフティチーム"
+	},
+	"scheduledDeletionNotification": {
+		"subject": "Fluxerアカウントの削除が予定されています",
+		"body": "こんにちは {username} さん。\n\nFluxerアカウントは永久削除の予定となりました。\n\n削除予定日時: {deletionDate, date, full} {deletionDate, time, short}\n理由: {reason}\n\nこれは重大な措置です。アカウントデータは予定日時に永久に削除されます。\n\nこの措置が誤りだと思われる場合は、このメールアドレスから appeals@fluxer.app 宛に異議申し立てを提出できます。\n\n- Fluxerセーフティチーム"
+	},
+	"giftChargebackNotification": {
+		"subject": "Fluxer Premiumのギフトは取り消されました",
+		"body": "こんにちは {username} さん。\n\nご利用になったFluxer Premiumのギフトは、購入者による支払い紛争（チャージバック）により取り消されたことをお知らせします。\n\nプレミアム特典はアカウントから削除されました。これは、ギフトの支払いが異議申し立てにより取り消され、返金処理が行われたためです。\n\nご不明点がある場合は support@fluxer.app までお問い合わせください。\n\n- Fluxerチーム"
+	},
+	"reportResolved": {
+		"subject": "Fluxerへの報告が審査されました",
+		"body": "こんにちは {username} さん。\n\nあなたの報告（ID: {reportId}）はセーフティチームにより審査されました。\n\nセーフティチームからの回答:\n{publicComment}\n\nFluxerを安全な場所に保つためのご協力ありがとうございます。私たちはすべての報告を真摯に受け止め、コミュニティへの貢献に感謝します。\n\nこの対応についてご質問やご不安がある場合は safety@fluxer.app までご連絡ください。\n\n- Fluxerセーフティチーム"
+	},
+	"dsaReportVerification": {
+		"subject": "DSA報告のためのメール認証",
+		"body": "こんにちは。\n\nFluxerでデジタルサービス法（DSA）に基づく報告を提出するため、次の認証コードを使用してください。\n\n{code}\n\nこのコードの有効期限は {expiresAt, date, full} {expiresAt, time, short} です。\n\n心当たりがない場合は、このメールを無視してください。\n\n- Fluxerセーフティチーム"
+	},
+	"registrationApproved": {
+		"subject": "Fluxerの登録が承認されました",
+		"body": "こんにちは {username} さん。\n\n朗報です！Fluxerの登録が承認されました。\n\n以下からFluxerアプリにログインできます。\n{channelsUrl}\n\nFluxerコミュニティへようこそ！\n\n- Fluxerチーム"
+	},
+	"emailChangeRevert": {
+		"subject": "Fluxerのメールアドレスが変更されました",
+		"body": "こんにちは {username} さん。\n\nFluxerアカウントのメールアドレスが {newEmail} に変更されました。\n\nこの変更をご自身で行った場合、対応は不要です。心当たりがない場合は、以下のリンクから元に戻し、アカウントの安全を確保できます。\n\n{revertUrl}\n\nこれにより、以前のメールアドレスへの復元、全端末からのサインアウト、連携済み電話番号の削除、MFAの無効化、新しいパスワードの設定が必要になります。\n\n- Fluxerセーフティチーム"
+	}
+}

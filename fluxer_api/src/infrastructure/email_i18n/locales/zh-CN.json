@@ -1,0 +1,74 @@
+{
+	"passwordReset": {
+		"subject": "重置你的 Fluxer 密码",
+		"body": "你好 {username}，\n\n你已请求重置 Fluxer 密码。请使用下方链接设置新密码：\n\n{resetUrl}\n\n如果你没有请求重置密码，可以放心忽略此邮件。\n\n此链接将在 1 小时后过期。\n\n- Fluxer 团队"
+	},
+	"emailVerification": {
+		"subject": "验证你的 Fluxer 邮箱地址",
+		"body": "你好 {username}，\n\n请点击下方链接验证你的 Fluxer 账号邮箱地址：\n\n{verifyUrl}\n\n如果你没有创建 Fluxer 账号，可以放心忽略此邮件。\n\n此链接将在 24 小时后过期。\n\n- Fluxer 团队"
+	},
+	"emailChangeOriginal": {
+		"subject": "确认更改你的 Fluxer 邮箱",
+		"body": "你好 {username}，\n\n我们收到了更改你 Fluxer 账号邮箱的请求。\n\n为确认此更改，请在应用中输入以下验证码：\n\n{code}\n\n此验证码将于 {expiresAt, date, full} {expiresAt, time, short} 过期。\n\n如果你没有发起此请求，请立即加强账号安全。\n\n- Fluxer 团队"
+	},
+	"emailChangeNew": {
+		"subject": "验证你的新 Fluxer 邮箱",
+		"body": "你好 {username}，\n\n请在应用中输入以下验证码以验证你的新 Fluxer 邮箱：\n\n{code}\n\n此验证码将于 {expiresAt, date, full} {expiresAt, time, short} 过期。\n\n如果你没有发起此请求，可以忽略此邮件。"
+	},
+	"ipAuthorization": {
+		"subject": "授权来自新 IP 地址的登录",
+		"body": "你好 {username}，\n\n我们检测到你的 Fluxer 账号有来自新 IP 地址的登录尝试：\n\nIP 地址：{ipAddress}\n位置：{location}\n\n如果是你本人操作，请点击下方链接授权该 IP 地址：\n\n{authUrl}\n\n如果你未尝试登录，请立即更改密码。\n\n此授权链接将在 30 分钟后过期。\n\n- Fluxer 团队"
+	},
+	"accountDisabledSuspicious": {
+		"subject": "你的 Fluxer 账号已被暂时停用",
+		"body": "你好 {username}，\n\n由于可疑活动，你的 Fluxer 账号已被暂时停用。\n\n{reason, select,\n\tnull {}\n\tother {原因：{reason}\n\n}}要重新获得账号访问权限，你必须重置密码：\n\n{forgotUrl}\n\n重置密码后，你将可以再次登录。\n\n如果你认为此操作存在误判，请联系我们的支持团队。\n\n- Fluxer 安全团队"
+	},
+	"accountTempBanned": {
+		"subject": "你的 Fluxer 账号已被暂时封禁",
+		"body": "你好 {username}，\n\n由于违反我们的服务条款或社区指南，你的 Fluxer 账号已被暂时封禁。\n\n时长：{durationHours, plural,\n\t=1 {1 小时}\n\tother {# 小时}\n}\n封禁至：{bannedUntil, date, full} {bannedUntil, time, short}\n{reason, select,\n\tnull {}\n\tother {\n原因：{reason}}\n}\n\n在此期间，你将无法访问你的账号。\n\n我们建议你查阅：\n- 服务条款：{termsUrl}\n- 社区指南：{guidelinesUrl}\n\n如果你认为此次处置决定不正确或缺乏依据，你可以使用此邮箱地址发送申诉至 appeals@fluxer.app。请清晰说明你认为该决定错误的原因。我们将审核你的申诉并回复我们的最终决定。\n\n- Fluxer 安全团队"
+	},
+	"accountScheduledDeletion": {
+		"subject": "你的 Fluxer 账号已被安排删除",
+		"body": "你好 {username}，\n\n由于违反我们的服务条款或社区指南，你的 Fluxer 账号已被安排永久删除。\n\n计划删除时间：{deletionDate, date, full} {deletionDate, time, short}\n{reason, select,\n\tnull {}\n\tother {\n原因：{reason}}\n}\n\n这是一项严肃的处置措施。你的账号数据将在计划日期永久删除。\n\n我们建议你查阅：\n- 服务条款：{termsUrl}\n- 社区指南：{guidelinesUrl}\n\n申诉流程：\n如果你认为此次处置决定不正确或缺乏依据，你有 30 天时间使用此邮箱地址发送申诉至 appeals@fluxer.app。\n\n在申诉中，请：\n- 清晰说明你认为处置决定不正确或缺乏依据的原因\n- 提供任何相关证据或背景信息\n\nFluxer 安全团队成员将审核你的申诉，并可能在最终结论作出前取消待执行的删除。\n\n- Fluxer 安全团队"
+	},
+	"selfDeletionScheduled": {
+		"subject": "你的 Fluxer 账号删除已安排",
+		"body": "你好 {username}，\n\n很遗憾看到你离开！你的 Fluxer 账号已被安排删除。\n\n计划删除时间：{deletionDate, date, full} {deletionDate, time, short}\n\n重要提示：你可以在 {deletionDate, date, full} {deletionDate, time, short} 之前随时通过重新登录账号来取消删除。\n\n离开前：\n你可以在用户设置中的隐私控制面板里：\n- 删除你在平台上的消息\n- 在离开前导出任何重要数据\n\n请注意：一旦账号被删除，将无法再删除你的消息。如果你想删除消息，请在账号删除最终执行前通过隐私控制面板完成。\n\n如果你改变主意，只需重新登录即可取消删除。\n\n- Fluxer 团队"
+	},
+	"inactivityWarning": {
+		"subject": "由于长期未登录，你的 Fluxer 账号将被删除",
+		"body": "你好 {username}，\n\n我们注意到你已经超过 2 年未登录 Fluxer 账号。\n\n上次登录：{lastActiveDate, date, full} {lastActiveDate, time, short}\n\n根据我们的数据保留政策，长期不活跃的账号会被自动安排删除。你的账号将于以下时间永久删除：\n\n计划删除时间：{deletionDate, date, full} {deletionDate, time, short}\n\n如何保留你的账号：\n只需在删除日期前登录 {loginUrl} 即可取消此次自动删除，无需进行其他操作。\n\n如果你未登录，将会发生什么：\n- 你的账号及所有相关数据将被永久删除\n- 你的消息将被匿名化（显示为“\\\"已删除用户\\\"”）\n- 此操作无法撤销\n\n想要删除你的消息？\n如果你希望在账号删除前删除消息，请登录并在用户设置中使用隐私控制面板。\n\n希望很快能在 Fluxer 再见到你！\n\n- Fluxer 团队"
+	},
+	"harvestCompleted": {
+		"subject": "你的 Fluxer 数据导出已准备就绪",
+		"body": "你好 {username}，\n\n你的数据导出已完成，可以下载了！\n\n导出摘要：\n- 消息总数：{totalMessages, number}\n- 文件大小：{fileSizeMB} MB\n- 格式：包含 JSON 文件的 ZIP 压缩包\n\n下载你的数据：{downloadUrl}\n\n重要提示：此下载链接将于 {expiresAt, date, full} {expiresAt, time, short} 过期\n\n导出内容包括：\n- 按频道整理的所有消息\n- 频道元数据\n- 你的用户资料与账号信息\n- 公会成员身份与设置\n- 认证会话与安全信息\n\n数据以 JSON 格式组织，便于解析与分析。\n\n如果你对数据导出有任何疑问，请联系 support@fluxer.app\n\n- Fluxer 团队"
+	},
+	"unbanNotification": {
+		"subject": "你的 Fluxer 账号封禁已解除",
+		"body": "你好 {username}，\n\n好消息！你的 Fluxer 账号封禁已解除。\n\n原因：{reason}\n\n你现在可以重新登录账号并继续使用 Fluxer。\n\n- Fluxer 安全团队"
+	},
+	"scheduledDeletionNotification": {
+		"subject": "你的 Fluxer 账号已被安排删除",
+		"body": "你好 {username}，\n\n你的 Fluxer 账号已被安排永久删除。\n\n计划删除时间：{deletionDate, date, full} {deletionDate, time, short}\n原因：{reason}\n\n这是一项严肃的处置措施。你的账号数据将在计划日期永久删除。\n\n如果你认为此次处置决定不正确，你可以使用此邮箱地址发送申诉至 appeals@fluxer.app。\n\n- Fluxer 安全团队"
+	},
+	"giftChargebackNotification": {
+		"subject": "你的 Fluxer Premium 礼品已被撤销",
+		"body": "你好 {username}，\n\n我们联系你是为了告知：你兑换的 Fluxer Premium 礼品已被撤销，原因是原购买者发起了付款争议（拒付/chargeback）。\n\n你的账号已移除 Premium 权益。之所以采取此操作，是因为该礼品的付款被提出争议并被撤回。\n\n如有疑问，请联系 support@fluxer.app。\n\n- Fluxer 团队"
+	},
+	"reportResolved": {
+		"subject": "你的 Fluxer 举报已完成审核",
+		"body": "你好 {username}，\n\n你的举报（ID：{reportId}）已由我们的安全团队审核。\n\n安全团队回复：\n{publicComment}\n\n感谢你帮助让 Fluxer 对所有人更安全。我们会认真对待每一条举报，并感谢你对社区的贡献。\n\n如果你对本次处理结果有任何问题或疑虑，请联系 safety@fluxer.app。\n\n- Fluxer 安全团队"
+	},
+	"dsaReportVerification": {
+		"subject": "验证你的邮箱以提交 DSA 举报",
+		"body": "你好，\n\n请使用以下验证码提交你在 Fluxer 上的《数字服务法案》(DSA) 举报：\n\n{code}\n\n此验证码将于 {expiresAt, date, full} {expiresAt, time, short} 过期。\n\n如果你没有发起此请求，请忽略此邮件。\n\n- Fluxer 安全团队"
+	},
+	"registrationApproved": {
+		"subject": "你的 Fluxer 注册已获批准",
+		"body": "你好 {username}，\n\n好消息！你的 Fluxer 注册已获批准。\n\n你现在可以在以下地址登录 Fluxer 应用：\n{channelsUrl}\n\n欢迎加入 Fluxer 社区！\n\n- Fluxer 团队"
+	},
+	"emailChangeRevert": {
+		"subject": "你的 Fluxer 邮箱已更改",
+		"body": "你好 {username}，\n\n你的 Fluxer 账号邮箱已更改为 {newEmail}。\n\n如果这是你本人操作，则无需采取任何行动。如果不是，你可以使用以下链接撤销更改并保护你的账号：\n\n{revertUrl}\n\n此操作将恢复你之前的邮箱、让你在所有设备上退出登录、移除已绑定的手机号、禁用多因素认证，并要求设置新密码。\n\n- Fluxer 安全团队"
+	}
+}

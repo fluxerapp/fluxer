@@ -1,0 +1,74 @@
+{
+	"passwordReset": {
+		"subject": "Zresetuj swoje hasło Fluxer",
+		"body": "Cześć {username},\n\nOtrzymaliśmy prośbę o zresetowanie hasła do Twojego konta Fluxer. Skorzystaj z poniższego linku, aby ustawić nowe hasło:\n\n{resetUrl}\n\nJeśli to nie Ty prosiłeś(-aś) o reset hasła, możesz bezpiecznie zignorować tę wiadomość.\n\nTen link wygaśnie za 1 godzinę.\n\n- Zespół Fluxer"
+	},
+	"emailVerification": {
+		"subject": "Zweryfikuj swój adres e-mail w Fluxer",
+		"body": "Cześć {username},\n\nZweryfikuj adres e-mail powiązany z Twoim kontem Fluxer, klikając poniższy link:\n\n{verifyUrl}\n\nJeśli nie zakładałeś(-aś) konta Fluxer, możesz bezpiecznie zignorować tę wiadomość.\n\nTen link wygaśnie za 24 godziny.\n\n- Zespół Fluxer"
+	},
+	"emailChangeOriginal": {
+		"subject": "Potwierdź zmianę adresu e-mail w Fluxer",
+		"body": "Cześć {username},\n\nOtrzymaliśmy prośbę o zmianę adresu e-mail na Twoim koncie Fluxer.\n\nAby potwierdzić tę zmianę, wpisz w aplikacji poniższy kod:\n\n{code}\n\nTen kod wygasa: {expiresAt, date, full} {expiresAt, time, short}.\n\nJeśli to nie Ty wysłałeś(-aś) tę prośbę, natychmiast zabezpiecz swoje konto.\n\n- Zespół Fluxer"
+	},
+	"emailChangeNew": {
+		"subject": "Zweryfikuj nowy adres e-mail w Fluxer",
+		"body": "Cześć {username},\n\nWpisz w aplikacji poniższy kod, aby zweryfikować nowy adres e-mail w Fluxer:\n\n{code}\n\nTen kod wygasa: {expiresAt, date, full} {expiresAt, time, short}.\n\nJeśli to nie Ty wysłałeś(-aś) tę prośbę, możesz zignorować tę wiadomość."
+	},
+	"ipAuthorization": {
+		"subject": "Autoryzuj logowanie z nowego adresu IP",
+		"body": "Cześć {username},\n\nWykryliśmy próbę logowania do Twojego konta Fluxer z nowego adresu IP:\n\nAdres IP: {ipAddress}\nLokalizacja: {location}\n\nJeśli to Ty, autoryzuj ten adres IP, klikając poniższy link:\n\n{authUrl}\n\nJeśli nie próbowałeś(-aś) się zalogować, natychmiast zmień hasło.\n\nTen link autoryzacyjny wygaśnie za 30 minut.\n\n- Zespół ds. Bezpieczeństwa Fluxer"
+	},
+	"accountDisabledSuspicious": {
+		"subject": "Twoje konto Fluxer zostało tymczasowo wyłączone",
+		"body": "Cześć {username},\n\nTwoje konto Fluxer zostało tymczasowo wyłączone z powodu podejrzanej aktywności.\n\n{reason, select,\n\tnull {}\n\tother {Powód: {reason}\n\n}}Aby odzyskać dostęp do konta, musisz zresetować hasło:\n\n{forgotUrl}\n\nPo zresetowaniu hasła będziesz mógł/mogła ponownie się zalogować.\n\nJeśli uważasz, że ta decyzja została podjęta omyłkowo, skontaktuj się z naszym zespołem wsparcia.\n\n- Zespół ds. Bezpieczeństwa Fluxer"
+	},
+	"accountTempBanned": {
+		"subject": "Twoje konto Fluxer zostało tymczasowo zawieszone",
+		"body": "Cześć {username},\n\nTwoje konto Fluxer zostało tymczasowo zawieszone za naruszenie Regulaminu lub Zasad Społeczności.\n\nCzas trwania: {durationHours, plural,\n\t=1 {1 godzina}\n\tother {# godzin}\n}\nZawieszone do: {bannedUntil, date, full} {bannedUntil, time, short}\n{reason, select,\n\tnull {}\n\tother {\nPowód: {reason}}\n}\n\nW tym czasie nie będziesz mieć dostępu do swojego konta.\n\nZachęcamy do zapoznania się z:\n- Regulaminem: {termsUrl}\n- Zasadami Społeczności: {guidelinesUrl}\n\nJeśli uważasz, że ta decyzja egzekucyjna była błędna lub nieuzasadniona, możesz złożyć odwołanie na adres appeals@fluxer.app, wysyłając je z tego adresu e-mail. Wyraźnie wyjaśnij, dlaczego uważasz, że decyzja była błędna. Rozpatrzymy odwołanie i odpowiemy z naszą decyzją.\n\n- Zespół ds. Bezpieczeństwa Fluxer"
+	},
+	"accountScheduledDeletion": {
+		"subject": "Twoje konto Fluxer zostało zaplanowane do usunięcia",
+		"body": "Cześć {username},\n\nTwoje konto Fluxer zostało zaplanowane do trwałego usunięcia z powodu naruszeń Regulaminu lub Zasad Społeczności.\n\nPlanowana data usunięcia: {deletionDate, date, full} {deletionDate, time, short}\n{reason, select,\n\tnull {}\n\tother {\nPowód: {reason}}\n}\n\nTo poważne działanie egzekucyjne. Dane Twojego konta zostaną trwale usunięte w zaplanowanym terminie.\n\nZachęcamy do zapoznania się z:\n- Regulaminem: {termsUrl}\n- Zasadami Społeczności: {guidelinesUrl}\n\nPROCEDURA ODWOŁAWCZA:\nJeśli uważasz, że ta decyzja egzekucyjna była błędna lub nieuzasadniona, masz 30 dni na złożenie odwołania na adres appeals@fluxer.app, wysyłając je z tego adresu e-mail.\n\nW odwołaniu prosimy:\n- Wyraźnie wyjaśnić, dlaczego uważasz, że decyzja była błędna lub nieuzasadniona\n- Przedstawić wszelkie istotne dowody lub kontekst\n\nCzłonek Zespołu ds. Bezpieczeństwa Fluxer rozpatrzy odwołanie i może anulować planowane usunięcie do czasu wydania ostatecznej decyzji.\n\n- Zespół ds. Bezpieczeństwa Fluxer"
+	},
+	"selfDeletionScheduled": {
+		"subject": "Zaplanowano usunięcie Twojego konta Fluxer",
+		"body": "Cześć {username},\n\nSzkoda, że odchodzisz! Zaplanowano usunięcie Twojego konta Fluxer.\n\nPlanowana data usunięcia: {deletionDate, date, full} {deletionDate, time, short}\n\nWAŻNE: Możesz anulować usunięcie w dowolnym momencie przed {deletionDate, date, full} {deletionDate, time, short}, po prostu logując się ponownie na swoje konto.\n\nZANIM ODEJDZIESZ:\nPanel prywatności w Ustawieniach użytkownika pozwala Ci:\n- Usunąć swoje wiadomości na platformie\n- Wyeksportować cenne dane przed odejściem\n\nUwaga: Po usunięciu konta nie będzie już możliwości usunięcia Twoich wiadomości. Jeśli chcesz usunąć wiadomości, zrób to w Panelu prywatności przed finalizacją usunięcia konta.\n\nJeśli zmienisz zdanie, po prostu zaloguj się ponownie, aby anulować usunięcie.\n\n- Zespół Fluxer"
+	},
+	"inactivityWarning": {
+		"subject": "Twoje konto Fluxer zostanie usunięte z powodu braku aktywności",
+		"body": "Cześć {username},\n\nZauważyliśmy, że nie logowałeś(-aś) się do swojego konta Fluxer od ponad 2 lat.\n\nOstatnie logowanie: {lastActiveDate, date, full} {lastActiveDate, time, short}\n\nZgodnie z naszą polityką retencji danych nieaktywne konta są automatycznie planowane do usunięcia. Twoje konto zostanie trwale usunięte:\n\nPlanowana data usunięcia: {deletionDate, date, full} {deletionDate, time, short}\n\nJAK ZACHOWAĆ KONTO:\nWystarczy zalogować się na swoje konto pod adresem {loginUrl} przed datą usunięcia, aby anulować to automatyczne usunięcie. Nie jest wymagane żadne inne działanie.\n\nCO SIĘ STANIE, JEŚLI SIĘ NIE ZALOGUJESZ:\n- Twoje konto i wszystkie powiązane dane zostaną trwale usunięte\n- Twoje wiadomości zostaną zanonimizowane (przypisane do „Usunięty użytkownik”)\n- Tego działania nie da się cofnąć\n\nCHCESZ USUNĄĆ SWOJE WIADOMOŚCI?\nJeśli chcesz usunąć swoje wiadomości przed usunięciem konta, zaloguj się i skorzystaj z Panelu prywatności w Ustawieniach użytkownika.\n\nMamy nadzieję, że jeszcze wrócisz do Fluxer!\n\n- Zespół Fluxer"
+	},
+	"harvestCompleted": {
+		"subject": "Twój eksport danych Fluxer jest gotowy",
+		"body": "Cześć {username},\n\nEksport Twoich danych został zakończony i jest gotowy do pobrania!\n\nPodsumowanie eksportu:\n- Łączna liczba wiadomości: {totalMessages, number}\n- Rozmiar pliku: {fileSizeMB} MB\n- Format: archiwum ZIP z plikami JSON\n\nPobierz swoje dane: {downloadUrl}\n\nWAŻNE: Ten link do pobrania wygaśnie: {expiresAt, date, full} {expiresAt, time, short}\n\nCo zawiera eksport:\n- Wszystkie Twoje wiadomości uporządkowane według kanałów\n- Metadane kanałów\n- Twój profil użytkownika oraz informacje o koncie\n- Członkostwa w gildiach i ustawienia\n- Sesje uwierzytelniania oraz informacje o bezpieczeństwie\n\nDane są uporządkowane w formacie JSON, co ułatwia ich przetwarzanie i analizę.\n\nJeśli masz pytania dotyczące eksportu danych, skontaktuj się z support@fluxer.app\n\n- Zespół Fluxer"
+	},
+	"unbanNotification": {
+		"subject": "Zawieszenie Twojego konta Fluxer zostało cofnięte",
+		"body": "Cześć {username},\n\nDobra wiadomość! Zawieszenie Twojego konta Fluxer zostało cofnięte.\n\nPowód: {reason}\n\nMożesz ponownie zalogować się na swoje konto i dalej korzystać z Fluxer.\n\n- Zespół ds. Bezpieczeństwa Fluxer"
+	},
+	"scheduledDeletionNotification": {
+		"subject": "Twoje konto Fluxer jest zaplanowane do usunięcia",
+		"body": "Cześć {username},\n\nTwoje konto Fluxer zostało zaplanowane do trwałego usunięcia.\n\nPlanowana data usunięcia: {deletionDate, date, full} {deletionDate, time, short}\nPowód: {reason}\n\nTo poważne działanie egzekucyjne. Dane Twojego konta zostaną trwale usunięte w zaplanowanym terminie.\n\nJeśli uważasz, że ta decyzja egzekucyjna była błędna, możesz złożyć odwołanie na adres appeals@fluxer.app, wysyłając je z tego adresu e-mail.\n\n- Zespół ds. Bezpieczeństwa Fluxer"
+	},
+	"giftChargebackNotification": {
+		"subject": "Twój prezent Fluxer Premium został cofnięty",
+		"body": "Cześć {username},\n\nPiszemy, aby poinformować, że prezent Fluxer Premium, który wykorzystałeś(-aś), został cofnięty z powodu sporu płatniczego (chargeback) zgłoszonego przez pierwotnego nabywcę.\n\nKorzyści premium zostały usunięte z Twojego konta. Ta czynność została wykonana, ponieważ płatność za prezent została zakwestionowana i cofnięta.\n\nJeśli masz pytania w tej sprawie, skontaktuj się z support@fluxer.app.\n\n- Zespół Fluxer"
+	},
+	"reportResolved": {
+		"subject": "Twoje zgłoszenie w Fluxer zostało rozpatrzone",
+		"body": "Cześć {username},\n\nTwoje zgłoszenie (ID: {reportId}) zostało rozpatrzone przez nasz Zespół ds. Bezpieczeństwa.\n\nOdpowiedź Zespołu ds. Bezpieczeństwa:\n{publicComment}\n\nDziękujemy za pomoc w utrzymaniu bezpieczeństwa Fluxer dla wszystkich. Traktujemy wszystkie zgłoszenia poważnie i doceniamy Twój wkład w naszą społeczność.\n\nJeśli masz pytania lub wątpliwości dotyczące tej decyzji, skontaktuj się z safety@fluxer.app.\n\n- Zespół ds. Bezpieczeństwa Fluxer"
+	},
+	"dsaReportVerification": {
+		"subject": "Zweryfikuj swój adres e-mail dla zgłoszenia DSA",
+		"body": "Cześć,\n\nUżyj poniższego kodu weryfikacyjnego, aby przesłać zgłoszenie w ramach Aktu o usługach cyfrowych (DSA) w Fluxer:\n\n{code}\n\nTen kod wygasa: {expiresAt, date, full} {expiresAt, time, short}.\n\nJeśli to nie Ty wysłałeś(-aś) tę prośbę, zignoruj tę wiadomość.\n\n- Zespół ds. Bezpieczeństwa Fluxer"
+	},
+	"registrationApproved": {
+		"subject": "Twoja rejestracja w Fluxer została zatwierdzona",
+		"body": "Cześć {username},\n\nŚwietne wieści! Twoja rejestracja w Fluxer została zatwierdzona.\n\nMożesz teraz zalogować się do aplikacji Fluxer pod adresem:\n{channelsUrl}\n\nWitamy w społeczności Fluxer!\n\n- Zespół Fluxer"
+	},
+	"emailChangeRevert": {
+		"subject": "Zmieniono adres e-mail na Twoim koncie Fluxer",
+		"body": "Cześć {username},\n\nAdres e-mail na Twoim koncie Fluxer został zmieniony na {newEmail}.\n\nJeśli to Ty dokonałeś(-aś) tej zmiany, nie musisz nic robić. Jeśli nie, możesz cofnąć zmianę i zabezpieczyć konto, korzystając z tego linku:\n\n{revertUrl}\n\nSpowoduje to przywrócenie poprzedniego adresu e-mail, wylogowanie ze wszystkich urządzeń, usunięcie powiązanych numerów telefonu, wyłączenie MFA oraz wymuszenie ustawienia nowego hasła.\n\n- Zespół ds. Bezpieczeństwa Fluxer"
+	}
+}

@@ -1,0 +1,74 @@
+{
+	"passwordReset": {
+		"subject": "Reimposta la tua password Fluxer",
+		"body": "Ciao {username},\n\nHai richiesto di reimpostare la tua password Fluxer. Segui il link qui sotto per impostarne una nuova:\n\n{resetUrl}\n\nSe non hai richiesto questa reimpostazione della password, puoi ignorare tranquillamente questa email.\n\nQuesto link scadrà tra 1 ora.\n\n- Il team Fluxer"
+	},
+	"emailVerification": {
+		"subject": "Verifica il tuo indirizzo email Fluxer",
+		"body": "Ciao {username},\n\nVerifica l'indirizzo email del tuo account Fluxer facendo clic sul link qui sotto:\n\n{verifyUrl}\n\nSe non hai creato un account Fluxer, puoi ignorare tranquillamente questa email.\n\nQuesto link scadrà tra 24 ore.\n\n- Il team Fluxer"
+	},
+	"emailChangeOriginal": {
+		"subject": "Conferma la modifica dell'email Fluxer",
+		"body": "Ciao {username},\n\nAbbiamo ricevuto una richiesta di modifica dell'email sul tuo account Fluxer.\n\nPer confermare questa modifica, inserisci questo codice nell'app:\n\n{code}\n\nQuesto codice scade il {expiresAt, date, full} alle {expiresAt, time, short}.\n\nSe non hai richiesto questa operazione, metti subito in sicurezza il tuo account.\n\n- Team Sicurezza Fluxer"
+	},
+	"emailChangeNew": {
+		"subject": "Verifica la tua nuova email Fluxer",
+		"body": "Ciao {username},\n\nInserisci questo codice nell'app per verificare la tua nuova email Fluxer:\n\n{code}\n\nQuesto codice scade il {expiresAt, date, full} alle {expiresAt, time, short}.\n\nSe non hai richiesto questa operazione, puoi ignorare questa email."
+	},
+	"ipAuthorization": {
+		"subject": "Autorizza l'accesso da un nuovo indirizzo IP",
+		"body": "Ciao {username},\n\nAbbiamo rilevato un tentativo di accesso al tuo account Fluxer da un nuovo indirizzo IP:\n\nIndirizzo IP: {ipAddress}\nPosizione: {location}\n\nSe eri tu, autorizza questo indirizzo IP facendo clic sul link qui sotto:\n\n{authUrl}\n\nSe non hai tentato di accedere, cambia immediatamente la tua password.\n\nQuesto link di autorizzazione scadrà tra 30 minuti.\n\n- Il team Fluxer"
+	},
+	"accountDisabledSuspicious": {
+		"subject": "Il tuo account Fluxer è stato temporaneamente disabilitato",
+		"body": "Ciao {username},\n\nIl tuo account Fluxer è stato temporaneamente disabilitato a causa di attività sospette.\n\n{reason, select,\n\tnull {}\n\tother {Motivo: {reason}\n\n}}Per riottenere l'accesso al tuo account, devi reimpostare la password:\n\n{forgotUrl}\n\nDopo aver reimpostato la password, potrai accedere di nuovo.\n\nSe ritieni che questa azione sia stata eseguita per errore, contatta il nostro team di supporto.\n\n- Team Sicurezza Fluxer"
+	},
+	"accountTempBanned": {
+		"subject": "Il tuo account Fluxer è stato temporaneamente sospeso",
+		"body": "Ciao {username},\n\nIl tuo account Fluxer è stato temporaneamente sospeso per violazione dei nostri Termini di Servizio o delle Linee guida della community.\n\nDurata: {durationHours, plural,\n\t=1 {1 ora}\n\tother {# ore}\n}\nSospeso fino al: {bannedUntil, date, full} {bannedUntil, time, short}\n{reason, select,\n\tnull {}\n\tother {\nMotivo: {reason}}\n}\n\nDurante questo periodo non potrai accedere al tuo account.\n\nTi invitiamo a consultare:\n- Termini di Servizio: {termsUrl}\n- Linee guida della community: {guidelinesUrl}\n\nSe ritieni che questa decisione di applicazione sia errata o ingiustificata, puoi presentare ricorso a appeals@fluxer.app da questo indirizzo email. Spiega chiaramente perché ritieni che la decisione sia sbagliata. Esamineremo il ricorso e risponderemo con la nostra determinazione.\n\n- Team Sicurezza Fluxer"
+	},
+	"accountScheduledDeletion": {
+		"subject": "Il tuo account Fluxer è programmato per l'eliminazione",
+		"body": "Ciao {username},\n\nIl tuo account Fluxer è stato programmato per l'eliminazione permanente a causa di violazioni dei nostri Termini di Servizio o delle Linee guida della community.\n\nData di eliminazione programmata: {deletionDate, date, full} {deletionDate, time, short}\n{reason, select,\n\tnull {}\n\tother {\nMotivo: {reason}}\n}\n\nSi tratta di un'azione di applicazione grave. I dati del tuo account verranno eliminati definitivamente alla data programmata.\n\nTi invitiamo a consultare:\n- Termini di Servizio: {termsUrl}\n- Linee guida della community: {guidelinesUrl}\n\nPROCESSO DI RICORSO:\nSe ritieni che questa decisione di applicazione sia errata o ingiustificata, hai 30 giorni per presentare ricorso a appeals@fluxer.app da questo indirizzo email.\n\nNel ricorso, ti chiediamo di:\n- Spiegare chiaramente perché ritieni che la decisione di applicazione sia errata o ingiustificata\n- Fornire eventuali prove o contesto rilevanti\n\nUn membro del Team Sicurezza Fluxer esaminerà il ricorso e potrebbe annullare l'eliminazione in sospeso fino al raggiungimento di un verdetto finale.\n\n- Team Sicurezza Fluxer"
+	},
+	"selfDeletionScheduled": {
+		"subject": "L'eliminazione del tuo account Fluxer è stata programmata",
+		"body": "Ciao {username},\n\nCi dispiace vederti andare via! Il tuo account Fluxer è stato programmato per l'eliminazione.\n\nData di eliminazione programmata: {deletionDate, date, full} {deletionDate, time, short}\n\nIMPORTANTE: Puoi annullare questa eliminazione in qualsiasi momento prima del {deletionDate, date, full} {deletionDate, time, short} semplicemente effettuando nuovamente l'accesso al tuo account.\n\nPRIMA DI ANDARE:\nLa tua Dashboard Privacy nelle Impostazioni utente ti consente di:\n- Eliminare i tuoi messaggi sulla piattaforma\n- Estrarre eventuali dati di valore prima di partire\n\nNota: Una volta eliminato l'account, non c'è modo di eliminare i tuoi messaggi. Se vuoi eliminare i tuoi messaggi, fallo tramite la Dashboard Privacy prima che l'eliminazione del tuo account venga finalizzata.\n\nSe cambi idea, ti basta effettuare di nuovo l'accesso per annullare l'eliminazione.\n\n- Il team Fluxer"
+	},
+	"inactivityWarning": {
+		"subject": "Il tuo account Fluxer verrà eliminato per inattività",
+		"body": "Ciao {username},\n\nAbbiamo notato che non accedi al tuo account Fluxer da oltre 2 anni.\n\nUltimo accesso: {lastActiveDate, date, full} {lastActiveDate, time, short}\n\nCome parte della nostra policy di conservazione dei dati, gli account inattivi vengono automaticamente programmati per l'eliminazione. Il tuo account verrà eliminato definitivamente il:\n\nData di eliminazione programmata: {deletionDate, date, full} {deletionDate, time, short}\n\nCOME MANTENERE IL TUO ACCOUNT:\nTi basta accedere al tuo account su {loginUrl} prima della data di eliminazione per annullare questa eliminazione automatica. Non è richiesta alcuna altra azione.\n\nCOSA SUCCEDE SE NON ACCEDI:\n- Il tuo account e tutti i dati associati verranno eliminati definitivamente\n- I tuoi messaggi verranno anonimizzati (attribuiti a \"Deleted User\")\n- Questa azione non può essere annullata\n\nVUOI ELIMINARE I TUOI MESSAGGI?\nSe vuoi eliminare i tuoi messaggi prima che l'account venga eliminato, accedi e usa la Dashboard Privacy nelle Impostazioni utente.\n\nSperiamo di rivederti su Fluxer!\n\n- Il team Fluxer"
+	},
+	"harvestCompleted": {
+		"subject": "La tua esportazione dati Fluxer è pronta",
+		"body": "Ciao {username},\n\nLa tua esportazione dati è stata completata ed è pronta per il download!\n\nRiepilogo esportazione:\n- Messaggi totali: {totalMessages, number}\n- Dimensione file: {fileSizeMB} MB\n- Formato: archivio ZIP con file JSON\n\nScarica i tuoi dati: {downloadUrl}\n\nIMPORTANTE: Questo link di download scadrà il {expiresAt, date, full} alle {expiresAt, time, short}\n\nCosa include la tua esportazione:\n- Tutti i tuoi messaggi organizzati per canale\n- Metadati dei canali\n- Il tuo profilo utente e le informazioni dell'account\n- Appartenenze e impostazioni delle guild\n- Sessioni di autenticazione e informazioni di sicurezza\n\nI dati sono organizzati in formato JSON per un'analisi e una consultazione semplici.\n\nSe hai domande sulla tua esportazione dati, contatta support@fluxer.app\n\n- Il team Fluxer"
+	},
+	"unbanNotification": {
+		"subject": "La sospensione del tuo account Fluxer è stata revocata",
+		"body": "Ciao {username},\n\nOttime notizie! La sospensione del tuo account Fluxer è stata revocata.\n\nMotivo: {reason}\n\nOra puoi accedere di nuovo al tuo account e continuare a usare Fluxer.\n\n- Team Sicurezza Fluxer"
+	},
+	"scheduledDeletionNotification": {
+		"subject": "Il tuo account Fluxer è programmato per l'eliminazione",
+		"body": "Ciao {username},\n\nIl tuo account Fluxer è stato programmato per l'eliminazione permanente.\n\nData di eliminazione programmata: {deletionDate, date, full} {deletionDate, time, short}\nMotivo: {reason}\n\nSi tratta di un'azione di applicazione grave. I dati del tuo account verranno eliminati definitivamente alla data programmata.\n\nSe ritieni che questa decisione di applicazione sia errata, puoi presentare ricorso a appeals@fluxer.app da questo indirizzo email.\n\n- Team Sicurezza Fluxer"
+	},
+	"giftChargebackNotification": {
+		"subject": "Il tuo regalo Fluxer Premium è stato revocato",
+		"body": "Ciao {username},\n\nTi scriviamo per informarti che il regalo Fluxer Premium che hai riscattato è stato revocato a causa di una contestazione di pagamento (chargeback) avviata dall'acquirente originale.\n\nI tuoi vantaggi premium sono stati rimossi dal tuo account. Questa azione è stata intrapresa perché il pagamento del regalo è stato contestato e stornato.\n\nSe hai domande, contatta support@fluxer.app.\n\n- Il team Fluxer"
+	},
+	"reportResolved": {
+		"subject": "La tua segnalazione su Fluxer è stata esaminata",
+		"body": "Ciao {username},\n\nLa tua segnalazione (ID: {reportId}) è stata esaminata dal nostro Team Sicurezza.\n\nRisposta dal Team Sicurezza:\n{publicComment}\n\nGrazie per aiutarci a mantenere Fluxer sicuro per tutti. Prendiamo tutte le segnalazioni sul serio e apprezziamo il tuo contributo alla nostra community.\n\nSe hai domande o dubbi su questa risoluzione, contatta safety@fluxer.app.\n\n- Team Sicurezza Fluxer"
+	},
+	"dsaReportVerification": {
+		"subject": "Verifica la tua email per una segnalazione DSA",
+		"body": "Ciao,\n\nUsa il seguente codice di verifica per inviare la tua segnalazione ai sensi del Digital Services Act su Fluxer:\n\n{code}\n\nQuesto codice scade il {expiresAt, date, full} alle {expiresAt, time, short}.\n\nSe non hai richiesto questo, ignora questa email.\n\n- Team Sicurezza Fluxer"
+	},
+	"registrationApproved": {
+		"subject": "La tua registrazione a Fluxer è stata approvata",
+		"body": "Ciao {username},\n\nOttime notizie! La tua registrazione a Fluxer è stata approvata.\n\nOra puoi accedere all'app Fluxer su:\n{channelsUrl}\n\nBenvenuto nella community di Fluxer!\n\n- Il team Fluxer"
+	},
+	"emailChangeRevert": {
+		"subject": "La tua email Fluxer è stata modificata",
+		"body": "Ciao {username},\n\nL'email del tuo account Fluxer è stata modificata in {newEmail}.\n\nSe hai effettuato tu questa modifica, non è richiesta alcuna azione. In caso contrario, puoi ripristinare e mettere in sicurezza il tuo account usando questo link:\n\n{revertUrl}\n\nQuesto ripristinerà la tua email precedente, ti disconnetterà ovunque, rimuoverà i numeri di telefono collegati, disabiliterà l'MFA e richiederà una nuova password.\n\n- Team Sicurezza Fluxer"
+	}
+}

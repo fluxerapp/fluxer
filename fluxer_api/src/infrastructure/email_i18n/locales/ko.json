@@ -1,0 +1,74 @@
+{
+	"passwordReset": {
+		"subject": "Fluxer 비밀번호를 재설정하세요",
+		"body": "안녕하세요 {username}님,\n\nFluxer 비밀번호 재설정을 요청하셨습니다. 아래 링크를 통해 새 비밀번호를 설정해 주세요:\n\n{resetUrl}\n\n비밀번호 재설정을 요청하지 않으셨다면 이 이메일은 무시하셔도 됩니다.\n\n이 링크는 1시간 후 만료됩니다.\n\n- Fluxer 팀"
+	},
+	"emailVerification": {
+		"subject": "Fluxer 이메일 주소를 인증하세요",
+		"body": "안녕하세요 {username}님,\n\n아래 링크를 클릭하여 Fluxer 계정의 이메일 주소를 인증해 주세요:\n\n{verifyUrl}\n\nFluxer 계정을 만든 적이 없다면 이 이메일은 무시하셔도 됩니다.\n\n이 링크는 24시간 후 만료됩니다.\n\n- Fluxer 팀"
+	},
+	"emailChangeOriginal": {
+		"subject": "Fluxer 이메일 변경을 확인하세요",
+		"body": "안녕하세요 {username}님,\n\nFluxer 계정의 이메일을 변경해 달라는 요청을 받았습니다.\n\n이 변경을 확인하려면 앱에 아래 코드를 입력해 주세요:\n\n{code}\n\n이 코드는 {expiresAt, date, full} {expiresAt, time, short}에 만료됩니다.\n\n요청하지 않으셨다면 즉시 계정을 보호해 주세요.\n\n- Fluxer 팀"
+	},
+	"emailChangeNew": {
+		"subject": "새 Fluxer 이메일을 인증하세요",
+		"body": "안녕하세요 {username}님,\n\n새 Fluxer 이메일을 인증하려면 앱에 아래 코드를 입력해 주세요:\n\n{code}\n\n이 코드는 {expiresAt, date, full} {expiresAt, time, short}에 만료됩니다.\n\n요청하지 않으셨다면 이 이메일은 무시하셔도 됩니다."
+	},
+	"ipAuthorization": {
+		"subject": "새 IP 주소에서의 로그인을 승인하세요",
+		"body": "안녕하세요 {username}님,\n\n새 IP 주소에서 Fluxer 계정으로 로그인을 시도한 것을 감지했습니다:\n\nIP 주소: {ipAddress}\n위치: {location}\n\n본인이 맞다면 아래 링크를 클릭하여 이 IP 주소를 승인해 주세요:\n\n{authUrl}\n\n로그인을 시도하지 않으셨다면 즉시 비밀번호를 변경해 주세요.\n\n이 승인 링크는 30분 후 만료됩니다.\n\n- Fluxer 팀"
+	},
+	"accountDisabledSuspicious": {
+		"subject": "Fluxer 계정이 일시적으로 비활성화되었습니다",
+		"body": "안녕하세요 {username}님,\n\n의심스러운 활동으로 인해 Fluxer 계정이 일시적으로 비활성화되었습니다.\n\n{reason, select,\n\tnull {}\n\tother {사유: {reason}\n\n}}계정에 다시 액세스하려면 비밀번호를 재설정해야 합니다:\n\n{forgotUrl}\n\n비밀번호를 재설정한 후 다시 로그인할 수 있습니다.\n\n이 조치가 오류로 인해 이루어졌다고 생각하시면 지원팀에 문의해 주세요.\n\n- Fluxer 안전팀"
+	},
+	"accountTempBanned": {
+		"subject": "Fluxer 계정이 일시적으로 정지되었습니다",
+		"body": "안녕하세요 {username}님,\n\nFluxer 이용약관 또는 커뮤니티 가이드라인 위반으로 인해 계정이 일시적으로 정지되었습니다.\n\n기간: {durationHours, plural,\n\t=1 {1시간}\n\tother {#시간}\n}\n정지 해제 예정: {bannedUntil, date, full} {bannedUntil, time, short}\n{reason, select,\n\tnull {}\n\tother {\n사유: {reason}}\n}\n\n이 기간 동안 계정에 접근할 수 없습니다.\n\n아래 내용을 확인해 주세요:\n- 이용약관: {termsUrl}\n- 커뮤니티 가이드라인: {guidelinesUrl}\n\n이 제재 결정이 잘못되었거나 정당하지 않다고 생각하시면, 이 이메일 주소에서 appeals@fluxer.app로 이의제기를 제출할 수 있습니다. 결정이 잘못되었다고 생각하는 이유를 명확히 설명해 주세요. 이의제기를 검토한 후 결과를 안내해 드립니다.\n\n- Fluxer 안전팀"
+	},
+	"accountScheduledDeletion": {
+		"subject": "Fluxer 계정이 삭제 예정입니다",
+		"body": "안녕하세요 {username}님,\n\nFluxer 이용약관 또는 커뮤니티 가이드라인 위반으로 인해 계정이 영구 삭제되도록 예약되었습니다.\n\n예약된 삭제 날짜: {deletionDate, date, full} {deletionDate, time, short}\n{reason, select,\n\tnull {}\n\tother {\n사유: {reason}}\n}\n\n이는 중대한 제재 조치입니다. 예약된 날짜에 계정 데이터가 영구적으로 삭제됩니다.\n\n아래 내용을 확인해 주세요:\n- 이용약관: {termsUrl}\n- 커뮤니티 가이드라인: {guidelinesUrl}\n\n이의제기 절차:\n이 제재 결정이 잘못되었거나 정당하지 않다고 생각하시면, 이 이메일 주소에서 appeals@fluxer.app로 30일 이내에 이의제기를 제출할 수 있습니다.\n\n이의제기에는 다음을 포함해 주세요:\n- 제재 결정이 잘못되었거나 정당하지 않다고 생각하는 이유를 명확히 설명\n- 관련 증거 또는 맥락(해당 시)\n\nFluxer 안전팀 담당자가 이의제기를 검토하며, 최종 결론이 날 때까지 예정된 삭제를 취소할 수 있습니다.\n\n- Fluxer 안전팀"
+	},
+	"selfDeletionScheduled": {
+		"subject": "Fluxer 계정 삭제가 예약되었습니다",
+		"body": "안녕하세요 {username}님,\n\n떠나신다니 아쉽습니다! Fluxer 계정 삭제가 예약되었습니다.\n\n예약된 삭제 날짜: {deletionDate, date, full} {deletionDate, time, short}\n\n중요: {deletionDate, date, full} {deletionDate, time, short} 이전에 계정에 다시 로그인하기만 하면 언제든지 이 삭제를 취소할 수 있습니다.\n\n삭제 전에 확인하세요:\n사용자 설정의 개인정보 대시보드에서 다음을 할 수 있습니다:\n- 플랫폼의 메시지 삭제\n- 떠나기 전에 필요한 데이터 내보내기\n\n참고: 계정이 삭제된 후에는 메시지를 삭제할 방법이 없습니다. 메시지를 삭제하려면 계정 삭제가 완료되기 전에 개인정보 대시보드에서 진행해 주세요.\n\n마음이 바뀌시면 다시 로그인하여 삭제를 취소하실 수 있습니다.\n\n- Fluxer 팀"
+	},
+	"inactivityWarning": {
+		"subject": "비활성으로 인해 Fluxer 계정이 삭제될 예정입니다",
+		"body": "안녕하세요 {username}님,\n\nFluxer 계정에 2년 이상 로그인하지 않으신 것으로 확인되었습니다.\n\n마지막 로그인: {lastActiveDate, date, full} {lastActiveDate, time, short}\n\n데이터 보관 정책에 따라 비활성 계정은 자동으로 삭제가 예약됩니다. 계정은 다음 일시에 영구 삭제됩니다:\n\n예약된 삭제 날짜: {deletionDate, date, full} {deletionDate, time, short}\n\n계정을 유지하는 방법:\n삭제 날짜 이전에 {loginUrl}에서 계정에 로그인하기만 하면 이 자동 삭제가 취소됩니다. 다른 조치는 필요 없습니다.\n\n로그인하지 않으면 어떻게 되나요:\n- 계정 및 관련 데이터가 영구적으로 삭제됩니다\n- 메시지는 익명 처리되어 \"Deleted User\"로 표시됩니다\n- 이 조치는 되돌릴 수 없습니다\n\n메시지를 삭제하고 싶으신가요?\n계정이 삭제되기 전에 메시지를 삭제하려면 로그인 후 사용자 설정의 개인정보 대시보드를 이용해 주세요.\n\nFluxer에서 다시 뵙길 바랍니다!\n\n- Fluxer 팀"
+	},
+	"harvestCompleted": {
+		"subject": "Fluxer 데이터 내보내기가 준비되었습니다",
+		"body": "안녕하세요 {username}님,\n\n데이터 내보내기가 완료되었으며 다운로드할 준비가 되었습니다!\n\n내보내기 요약:\n- 총 메시지 수: {totalMessages, number}\n- 파일 크기: {fileSizeMB} MB\n- 형식: JSON 파일이 포함된 ZIP 아카이브\n\n데이터 다운로드: {downloadUrl}\n\n중요: 이 다운로드 링크는 {expiresAt, date, full} {expiresAt, time, short}에 만료됩니다.\n\n내보내기에 포함되는 항목:\n- 채널별로 정리된 모든 메시지\n- 채널 메타데이터\n- 사용자 프로필 및 계정 정보\n- 길드 멤버십 및 설정\n- 인증 세션 및 보안 정보\n\n데이터는 JSON 형식으로 구성되어 손쉽게 파싱하고 분석할 수 있습니다.\n\n데이터 내보내기에 대해 문의가 있으시면 support@fluxer.app로 연락해 주세요.\n\n- Fluxer 팀"
+	},
+	"unbanNotification": {
+		"subject": "Fluxer 계정 정지가 해제되었습니다",
+		"body": "안녕하세요 {username}님,\n\n좋은 소식입니다! Fluxer 계정 정지가 해제되었습니다.\n\n사유: {reason}\n\n이제 다시 계정에 로그인하여 Fluxer를 계속 이용하실 수 있습니다.\n\n- Fluxer 안전팀"
+	},
+	"scheduledDeletionNotification": {
+		"subject": "Fluxer 계정이 삭제 예정입니다",
+		"body": "안녕하세요 {username}님,\n\nFluxer 계정이 영구 삭제되도록 예약되었습니다.\n\n예약된 삭제 날짜: {deletionDate, date, full} {deletionDate, time, short}\n사유: {reason}\n\n이는 중대한 제재 조치입니다. 예약된 날짜에 계정 데이터가 영구적으로 삭제됩니다.\n\n이 제재 결정이 잘못되었다고 생각하시면, 이 이메일 주소에서 appeals@fluxer.app로 이의제기를 제출할 수 있습니다.\n\n- Fluxer 안전팀"
+	},
+	"giftChargebackNotification": {
+		"subject": "Fluxer Premium 선물이 취소되었습니다",
+		"body": "안녕하세요 {username}님,\n\n기존 구매자가 결제 분쟁(차지백)을 제기하여, 사용(리딤)하신 Fluxer Premium 선물이 취소되었음을 안내드립니다.\n\n계정에서 프리미엄 혜택이 제거되었습니다. 이는 선물 결제가 분쟁 처리로 인해 취소(환불)되었기 때문에 이루어진 조치입니다.\n\n문의 사항이 있으시면 support@fluxer.app로 연락해 주세요.\n\n- Fluxer 팀"
+	},
+	"reportResolved": {
+		"subject": "Fluxer 신고가 검토되었습니다",
+		"body": "안녕하세요 {username}님,\n\n신고(ID: {reportId})가 안전팀에 의해 검토되었습니다.\n\n안전팀 답변:\n{publicComment}\n\nFluxer를 모두에게 더 안전한 공간으로 만드는 데 도움을 주셔서 감사합니다. 모든 신고는 진지하게 검토되며, 커뮤니티에 대한 기여에 감사드립니다.\n\n이 처리 결과에 대해 문의나 우려가 있으시면 safety@fluxer.app로 연락해 주세요.\n\n- Fluxer 안전팀"
+	},
+	"dsaReportVerification": {
+		"subject": "DSA 신고를 위한 이메일 인증",
+		"body": "안녕하세요,\n\n아래 인증 코드를 사용하여 Fluxer에서 디지털 서비스법(DSA) 신고를 제출하세요:\n\n{code}\n\n이 코드는 {expiresAt, date, full} {expiresAt, time, short}에 만료됩니다.\n\n요청하지 않으셨다면 이 이메일은 무시해 주세요.\n\n- Fluxer 안전팀"
+	},
+	"registrationApproved": {
+		"subject": "Fluxer 등록이 승인되었습니다",
+		"body": "안녕하세요 {username}님,\n\n좋은 소식입니다! Fluxer 등록이 승인되었습니다.\n\n이제 아래에서 Fluxer 앱에 로그인할 수 있습니다:\n{channelsUrl}\n\nFluxer 커뮤니티에 오신 것을 환영합니다!\n\n- Fluxer 팀"
+	},
+	"emailChangeRevert": {
+		"subject": "Fluxer 이메일이 변경되었습니다",
+		"body": "안녕하세요 {username}님,\n\nFluxer 계정 이메일이 {newEmail}(으)로 변경되었습니다.\n\n본인이 변경하신 경우에는 추가 조치가 필요 없습니다. 변경한 적이 없다면 아래 링크를 통해 되돌리고 계정을 보호할 수 있습니다:\n\n{revertUrl}\n\n이 작업을 수행하면 이전 이메일로 복원하고, 모든 기기에서 로그아웃되며, 연결된 전화번호가 제거되고, MFA가 비활성화되며, 새 비밀번호 설정이 필요합니다.\n\n- Fluxer 안전팀"
+	}
+}

@@ -1,0 +1,74 @@
+{
+	"passwordReset": {
+		"subject": "重設您的 Fluxer 密碼",
+		"body": "您好 {username}，\n\n我們收到您重設 Fluxer 密碼的請求。請點擊下方連結以設定新密碼：\n\n{resetUrl}\n\n如果您並未提出此密碼重設請求，請放心忽略此封郵件。\n\n此連結將於 1 小時後失效。\n\n- Fluxer 團隊"
+	},
+	"emailVerification": {
+		"subject": "驗證您的 Fluxer 電子郵件地址",
+		"body": "您好 {username}，\n\n請點擊下方連結以驗證您的 Fluxer 帳號電子郵件地址：\n\n{verifyUrl}\n\n如果您並未建立 Fluxer 帳號，請放心忽略此封郵件。\n\n此連結將於 24 小時後失效。\n\n- Fluxer 團隊"
+	},
+	"emailChangeOriginal": {
+		"subject": "確認您的 Fluxer 電子郵件變更",
+		"body": "您好 {username}，\n\n我們收到變更您 Fluxer 帳號電子郵件的請求。\n\n為確認此變更，請在 App 中輸入以下代碼：\n\n{code}\n\n此代碼將於 {expiresAt, date, full} {expiresAt, time, short} 到期。\n\n如果您並未提出此請求，請立即採取措施以保護您的帳號。\n\n- Fluxer 團隊"
+	},
+	"emailChangeNew": {
+		"subject": "驗證您的新 Fluxer 電子郵件",
+		"body": "您好 {username}，\n\n請在 App 中輸入以下代碼以驗證您的新 Fluxer 電子郵件：\n\n{code}\n\n此代碼將於 {expiresAt, date, full} {expiresAt, time, short} 到期。\n\n如果您並未提出此請求，請忽略此封郵件。"
+	},
+	"ipAuthorization": {
+		"subject": "授權來自新 IP 位址的登入",
+		"body": "您好 {username}，\n\n我們偵測到您的 Fluxer 帳號有來自新 IP 位址的登入嘗試：\n\nIP 位址：{ipAddress}\n位置：{location}\n\n如果這是您本人操作，請點擊下方連結以授權此 IP 位址：\n\n{authUrl}\n\n如果您並未嘗試登入，請立即變更您的密碼。\n\n此授權連結將於 30 分鐘後失效。\n\n- Fluxer 團隊"
+	},
+	"accountDisabledSuspicious": {
+		"subject": "您的 Fluxer 帳號已暫時停用",
+		"body": "您好 {username}，\n\n由於可疑活動，您的 Fluxer 帳號已暫時停用。\n\n{reason, select,\n\tnull {}\n\tother {原因：{reason}\n\n}}若要重新取得帳號存取權，您必須重設密碼：\n\n{forgotUrl}\n\n重設密碼後，您將可以再次登入。\n\n如果您認為此處置為誤判，請聯絡我們的客服團隊。\n\n- Fluxer 安全團隊"
+	},
+	"accountTempBanned": {
+		"subject": "您的 Fluxer 帳號已暫時停權",
+		"body": "您好 {username}，\n\n由於違反我們的服務條款或社群規範，您的 Fluxer 帳號已暫時停權。\n\n期間：{durationHours, plural,\n\t=1 {1 小時}\n\tother {# 小時}\n}\n停權至：{bannedUntil, date, full} {bannedUntil, time, short}\n{reason, select,\n\tnull {}\n\tother {\n原因：{reason}}\n}\n\n在此期間，您將無法存取您的帳號。\n\n我們建議您檢視：\n- 服務條款：{termsUrl}\n- 社群規範：{guidelinesUrl}\n\n如果您認為此處置決定不正確或不合理，您可以使用此電子郵件地址寄信至 appeals@fluxer.app 提交申訴。請清楚說明您認為決定有誤的原因。我們將審核您的申訴並回覆審查結果。\n\n- Fluxer 安全團隊"
+	},
+	"accountScheduledDeletion": {
+		"subject": "您的 Fluxer 帳號已排程刪除",
+		"body": "您好 {username}，\n\n由於違反我們的服務條款或社群規範，您的 Fluxer 帳號已排程進行永久刪除。\n\n排程刪除日期：{deletionDate, date, full} {deletionDate, time, short}\n{reason, select,\n\tnull {}\n\tother {\n原因：{reason}}\n}\n\n這是一項嚴重的處置行動。您的帳號資料將於排程日期永久刪除。\n\n我們建議您檢視：\n- 服務條款：{termsUrl}\n- 社群規範：{guidelinesUrl}\n\n申訴流程：\n如果您認為此處置決定不正確或不合理，您可在 30 天內使用此電子郵件地址寄信至 appeals@fluxer.app 提交申訴。\n\n在申訴中，請：\n- 清楚說明您認為處置決定不正確或不合理的原因\n- 提供任何相關證據或背景資訊\n\nFluxer 安全團隊成員將審核您的申訴，並可能在最終裁決出爐前取消待處理的刪除。\n\n- Fluxer 安全團隊"
+	},
+	"selfDeletionScheduled": {
+		"subject": "您的 Fluxer 帳號刪除已排程",
+		"body": "您好 {username}，\n\n很遺憾看到您離開！您的 Fluxer 帳號已排程刪除。\n\n排程刪除日期：{deletionDate, date, full} {deletionDate, time, short}\n\n重要：您可以在 {deletionDate, date, full} {deletionDate, time, short} 之前的任何時間，僅需重新登入帳號即可取消此次刪除。\n\n在您離開之前：\n使用者設定中的隱私儀表板可讓您：\n- 刪除您在平台上的訊息\n- 在離開前匯出任何重要資料\n\n請注意：一旦帳號刪除，將無法再刪除您的訊息。如果您想刪除訊息，請務必在帳號刪除完成前，透過隱私儀表板進行。\n\n如果您改變心意，只要重新登入即可取消刪除。\n\n- Fluxer 團隊"
+	},
+	"inactivityWarning": {
+		"subject": "您的 Fluxer 帳號將因長期未使用而被刪除",
+		"body": "您好 {username}，\n\n我們注意到您已超過 2 年未登入 Fluxer 帳號。\n\n上次登入：{lastActiveDate, date, full} {lastActiveDate, time, short}\n\n依據我們的資料保留政策，未使用的帳號將自動排程刪除。您的帳號將於下列時間永久刪除：\n\n排程刪除日期：{deletionDate, date, full} {deletionDate, time, short}\n\n如何保留您的帳號：\n只要在刪除日期前於 {loginUrl} 登入您的帳號，即可取消此次自動刪除。無需進行其他操作。\n\n如果您未登入，將會發生什麼事：\n- 您的帳號及所有相關資料將永久刪除\n- 您的訊息將被匿名化（顯示為「已刪除使用者」）\n- 此操作無法復原\n\n想要刪除您的訊息？\n如果您想在帳號刪除前刪除訊息，請先登入，並在使用者設定中的隱私儀表板進行操作。\n\n希望很快能再見到您回到 Fluxer！\n\n- Fluxer 團隊"
+	},
+	"harvestCompleted": {
+		"subject": "您的 Fluxer 資料匯出已準備完成",
+		"body": "您好 {username}，\n\n您的資料匯出已完成，可供下載！\n\n匯出摘要：\n- 訊息總數：{totalMessages, number}\n- 檔案大小：{fileSizeMB} MB\n- 格式：包含 JSON 檔案的 ZIP 壓縮檔\n\n下載您的資料：{downloadUrl}\n\n重要：此下載連結將於 {expiresAt, date, full} {expiresAt, time, short} 到期\n\n匯出內容包含：\n- 您所有依頻道整理的訊息\n- 頻道中繼資料\n- 您的使用者個人檔案與帳號資訊\n- 公會成員資格與設定\n- 驗證工作階段與安全資訊\n\n資料以 JSON 格式整理，方便解析與分析。\n\n如果您對資料匯出有任何疑問，請聯絡 support@fluxer.app\n\n- Fluxer 團隊"
+	},
+	"unbanNotification": {
+		"subject": "您的 Fluxer 帳號停權已解除",
+		"body": "您好 {username}，\n\n好消息！您的 Fluxer 帳號停權已解除。\n\n原因：{reason}\n\n您現在可以重新登入帳號並繼續使用 Fluxer。\n\n- Fluxer 安全團隊"
+	},
+	"scheduledDeletionNotification": {
+		"subject": "您的 Fluxer 帳號已排程刪除",
+		"body": "您好 {username}，\n\n您的 Fluxer 帳號已排程進行永久刪除。\n\n排程刪除日期：{deletionDate, date, full} {deletionDate, time, short}\n原因：{reason}\n\n這是一項嚴重的處置行動。您的帳號資料將於排程日期永久刪除。\n\n如果您認為此處置決定不正確，您可以使用此電子郵件地址寄信至 appeals@fluxer.app 提交申訴。\n\n- Fluxer 安全團隊"
+	},
+	"giftChargebackNotification": {
+		"subject": "您的 Fluxer Premium 贈禮已被撤銷",
+		"body": "您好 {username}，\n\n我們寫信通知您：您兌換的 Fluxer Premium 贈禮因原購買者提出付款爭議（退單/chargeback）而已被撤銷。\n\n您的帳號已移除 Premium 權益。此處置是因該贈禮款項遭提出爭議並被撤回。\n\n如果您對此有任何疑問，請聯絡 support@fluxer.app。\n\n- Fluxer 團隊"
+	},
+	"reportResolved": {
+		"subject": "您的 Fluxer 檢舉已完成審查",
+		"body": "您好 {username}，\n\n您的檢舉（ID：{reportId}）已由我們的安全團隊審查。\n\n安全團隊回覆：\n{publicComment}\n\n感謝您協助讓 Fluxer 對所有人都更安全。我們會嚴肅對待每一則檢舉，也感謝您對社群的貢獻。\n\n如果您對此處理結果有任何疑問或疑慮，請聯絡 safety@fluxer.app。\n\n- Fluxer 安全團隊"
+	},
+	"dsaReportVerification": {
+		"subject": "驗證您的電子郵件以提交 DSA 檢舉",
+		"body": "您好，\n\n請使用以下驗證碼提交您在 Fluxer 的《數位服務法》（DSA）檢舉：\n\n{code}\n\n此代碼將於 {expiresAt, date, full} {expiresAt, time, short} 到期。\n\n如果您並未提出此請求，請忽略此封郵件。\n\n- Fluxer 安全團隊"
+	},
+	"registrationApproved": {
+		"subject": "您的 Fluxer 註冊已通過審核",
+		"body": "您好 {username}，\n\n好消息！您的 Fluxer 註冊已通過審核。\n\n您現在可以在以下位置登入 Fluxer App：\n{channelsUrl}\n\n歡迎加入 Fluxer 社群！\n\n- Fluxer 團隊"
+	},
+	"emailChangeRevert": {
+		"subject": "您的 Fluxer 電子郵件已變更",
+		"body": "您好 {username}，\n\n您的 Fluxer 帳號電子郵件已變更為 {newEmail}。\n\n如果這是您本人操作，無需任何處理。若不是，您可以使用此連結復原並保護您的帳號：\n\n{revertUrl}\n\n此操作將復原您先前的電子郵件、讓您在所有裝置登出、移除已綁定的電話號碼、停用 MFA，並要求設定新密碼。\n\n- Fluxer 安全團隊"
+	}
+}

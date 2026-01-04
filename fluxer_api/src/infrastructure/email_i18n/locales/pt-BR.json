@@ -1,0 +1,74 @@
+{
+	"passwordReset": {
+		"subject": "Redefina sua senha do Fluxer",
+		"body": "Olá {username},\n\nVocê solicitou a redefinição da sua senha do Fluxer. Siga o link abaixo para definir uma nova senha:\n\n{resetUrl}\n\nSe você não solicitou essa redefinição de senha, pode ignorar este e-mail com segurança.\n\nEste link expirará em 1 hora.\n\n- Equipe Fluxer"
+	},
+	"emailVerification": {
+		"subject": "Verifique seu endereço de e-mail do Fluxer",
+		"body": "Olá {username},\n\nVerifique o endereço de e-mail da sua conta do Fluxer clicando no link abaixo:\n\n{verifyUrl}\n\nSe você não criou uma conta no Fluxer, pode ignorar este e-mail com segurança.\n\nEste link expirará em 24 horas.\n\n- Equipe Fluxer"
+	},
+	"emailChangeOriginal": {
+		"subject": "Confirme a alteração de e-mail do Fluxer",
+		"body": "Olá {username},\n\nRecebemos uma solicitação para alterar o e-mail da sua conta do Fluxer.\n\nPara confirmar essa alteração, insira este código no aplicativo:\n\n{code}\n\nEste código expira em {expiresAt, date, full} {expiresAt, time, short}.\n\nSe você não solicitou isso, proteja sua conta imediatamente.\n\n- Equipe de Segurança do Fluxer"
+	},
+	"emailChangeNew": {
+		"subject": "Verifique seu novo e-mail do Fluxer",
+		"body": "Olá {username},\n\nInsira este código no aplicativo para verificar seu novo e-mail do Fluxer:\n\n{code}\n\nEste código expira em {expiresAt, date, full} {expiresAt, time, short}.\n\nSe você não solicitou isso, pode ignorar este e-mail."
+	},
+	"ipAuthorization": {
+		"subject": "Autorize o login a partir de um novo endereço IP",
+		"body": "Olá {username},\n\nDetectamos uma tentativa de login na sua conta do Fluxer a partir de um novo endereço IP:\n\nEndereço IP: {ipAddress}\nLocalização: {location}\n\nSe foi você, autorize este endereço IP clicando no link abaixo:\n\n{authUrl}\n\nSe você não tentou fazer login, altere sua senha imediatamente.\n\nEste link de autorização expirará em 30 minutos.\n\n- Equipe Fluxer"
+	},
+	"accountDisabledSuspicious": {
+		"subject": "Sua conta do Fluxer foi desativada temporariamente",
+		"body": "Olá {username},\n\nSua conta do Fluxer foi desativada temporariamente devido a atividade suspeita.\n\n{reason, select,\n\tnull {}\n\tother {Motivo: {reason}\n\n}}Para recuperar o acesso à sua conta, você deve redefinir sua senha:\n\n{forgotUrl}\n\nApós redefinir sua senha, você poderá fazer login novamente.\n\nSe você acredita que essa ação foi tomada por engano, entre em contato com nossa equipe de suporte.\n\n- Equipe de Segurança do Fluxer"
+	},
+	"accountTempBanned": {
+		"subject": "Sua conta do Fluxer foi suspensa temporariamente",
+		"body": "Olá {username},\n\nSua conta do Fluxer foi suspensa temporariamente por violar nossos Termos de Serviço ou Diretrizes da Comunidade.\n\nDuração: {durationHours, plural,\n\t=1 {1 hora}\n\tother {# horas}\n}\nSuspensa até: {bannedUntil, date, full} {bannedUntil, time, short}\n{reason, select,\n\tnull {}\n\tother {\nMotivo: {reason}}\n}\n\nDurante esse período, você não poderá acessar sua conta.\n\nRecomendamos que você revise nossos:\n- Termos de Serviço: {termsUrl}\n- Diretrizes da Comunidade: {guidelinesUrl}\n\nSe você acredita que essa decisão de aplicação foi incorreta ou injustificada, pode enviar um recurso para appeals@fluxer.app a partir deste endereço de e-mail. Explique claramente por que você acredita que a decisão estava errada. Analisaremos seu recurso e responderemos com nossa determinação.\n\n- Equipe de Segurança do Fluxer"
+	},
+	"accountScheduledDeletion": {
+		"subject": "Sua conta do Fluxer está programada para exclusão",
+		"body": "Olá {username},\n\nSua conta do Fluxer foi programada para exclusão permanente devido a violações dos nossos Termos de Serviço ou Diretrizes da Comunidade.\n\nData programada para exclusão: {deletionDate, date, full} {deletionDate, time, short}\n{reason, select,\n\tnull {}\n\tother {\nMotivo: {reason}}\n}\n\nEsta é uma ação de aplicação séria. Os dados da sua conta serão excluídos permanentemente na data programada.\n\nRecomendamos que você revise nossos:\n- Termos de Serviço: {termsUrl}\n- Diretrizes da Comunidade: {guidelinesUrl}\n\nPROCESSO DE RECURSO:\nSe você acredita que essa decisão de aplicação foi incorreta ou injustificada, você tem 30 dias para enviar um recurso para appeals@fluxer.app a partir deste endereço de e-mail.\n\nNo seu recurso, por favor:\n- Explique claramente por que você acredita que a decisão de aplicação foi incorreta ou injustificada\n- Forneça qualquer evidência ou contexto relevante\n\nUm membro da Equipe de Segurança do Fluxer analisará seu recurso e poderá cancelar a exclusão pendente até que um veredito final seja alcançado.\n\n- Equipe de Segurança do Fluxer"
+	},
+	"selfDeletionScheduled": {
+		"subject": "A exclusão da sua conta do Fluxer foi programada",
+		"body": "Olá {username},\n\nFicamos tristes em ver você partir! Sua conta do Fluxer foi programada para exclusão.\n\nData programada para exclusão: {deletionDate, date, full} {deletionDate, time, short}\n\nIMPORTANTE: Você pode cancelar essa exclusão a qualquer momento antes de {deletionDate, date, full} {deletionDate, time, short} simplesmente fazendo login novamente na sua conta.\n\nANTES DE IR:\nSeu Painel de Privacidade nas Configurações do Usuário permite que você:\n- Exclua suas mensagens na plataforma\n- Exporte quaisquer dados valiosos antes de sair\n\nObservação: Depois que sua conta for excluída, não há como excluir suas mensagens. Se você quiser excluir suas mensagens, faça isso pelo Painel de Privacidade antes que a exclusão da sua conta seja finalizada.\n\nSe você mudar de ideia, basta fazer login novamente para cancelar a exclusão.\n\n- Equipe Fluxer"
+	},
+	"inactivityWarning": {
+		"subject": "Sua conta do Fluxer será excluída por inatividade",
+		"body": "Olá {username},\n\nPercebemos que você não faz login na sua conta do Fluxer há mais de 2 anos.\n\nÚltimo login: {lastActiveDate, date, full} {lastActiveDate, time, short}\n\nComo parte da nossa política de retenção de dados, contas inativas são automaticamente programadas para exclusão. Sua conta será excluída permanentemente em:\n\nData programada para exclusão: {deletionDate, date, full} {deletionDate, time, short}\n\nCOMO MANTER SUA CONTA:\nBasta fazer login na sua conta em {loginUrl} antes da data de exclusão para cancelar essa exclusão automática. Nenhuma outra ação é necessária.\n\nO QUE ACONTECE SE VOCÊ NÃO FIZER LOGIN:\n- Sua conta e todos os dados associados serão excluídos permanentemente\n- Suas mensagens serão anonimizadas (atribuídas a \"Usuário Excluído\")\n- Esta ação não pode ser desfeita\n\nQUER EXCLUIR SUAS MENSAGENS?\nSe você quiser excluir suas mensagens antes que sua conta seja excluída, faça login e use o Painel de Privacidade nas Configurações do Usuário.\n\nEsperamos ver você de volta no Fluxer!\n\n- Equipe Fluxer"
+	},
+	"harvestCompleted": {
+		"subject": "Sua exportação de dados do Fluxer está pronta",
+		"body": "Olá {username},\n\nSua exportação de dados foi concluída e está pronta para download!\n\nResumo da exportação:\n- Total de mensagens: {totalMessages, number}\n- Tamanho do arquivo: {fileSizeMB} MB\n- Formato: arquivo ZIP com arquivos JSON\n\nBaixe seus dados: {downloadUrl}\n\nIMPORTANTE: Este link de download expirará em {expiresAt, date, full} {expiresAt, time, short}\n\nO que está incluído na sua exportação:\n- Todas as suas mensagens organizadas por canal\n- Metadados dos canais\n- Seu perfil de usuário e informações da conta\n- Participações em guildas e configurações\n- Sessões de autenticação e informações de segurança\n\nOs dados estão organizados em formato JSON para facilitar a análise e o processamento.\n\nSe você tiver alguma dúvida sobre sua exportação de dados, entre em contato com support@fluxer.app\n\n- Equipe Fluxer"
+	},
+	"unbanNotification": {
+		"subject": "A suspensão da sua conta do Fluxer foi removida",
+		"body": "Olá {username},\n\nBoas notícias! A suspensão da sua conta do Fluxer foi removida.\n\nMotivo: {reason}\n\nAgora você pode fazer login novamente na sua conta e continuar usando o Fluxer.\n\n- Equipe de Segurança do Fluxer"
+	},
+	"scheduledDeletionNotification": {
+		"subject": "Sua conta do Fluxer está programada para exclusão",
+		"body": "Olá {username},\n\nSua conta do Fluxer foi programada para exclusão permanente.\n\nData programada para exclusão: {deletionDate, date, full} {deletionDate, time, short}\nMotivo: {reason}\n\nEsta é uma ação de aplicação séria. Os dados da sua conta serão excluídos permanentemente na data programada.\n\nSe você acredita que essa decisão de aplicação foi incorreta, pode enviar um recurso para appeals@fluxer.app a partir deste endereço de e-mail.\n\n- Equipe de Segurança do Fluxer"
+	},
+	"giftChargebackNotification": {
+		"subject": "Seu presente Fluxer Premium foi revogado",
+		"body": "Olá {username},\n\nEstamos escrevendo para informar que o presente Fluxer Premium que você resgatou foi revogado devido a uma contestação de pagamento (chargeback) feita pelo comprador original.\n\nSeus benefícios premium foram removidos da sua conta. Essa ação foi tomada porque o pagamento do presente foi contestado e estornado.\n\nSe você tiver dúvidas sobre isso, entre em contato com support@fluxer.app.\n\n- Equipe Fluxer"
+	},
+	"reportResolved": {
+		"subject": "Sua denúncia no Fluxer foi analisada",
+		"body": "Olá {username},\n\nSua denúncia (ID: {reportId}) foi analisada pela nossa Equipe de Segurança.\n\nResposta da Equipe de Segurança:\n{publicComment}\n\nObrigado por ajudar a manter o Fluxer seguro para todos. Levamos todas as denúncias a sério e agradecemos sua contribuição para nossa comunidade.\n\nSe você tiver qualquer dúvida ou preocupação sobre essa resolução, entre em contato com safety@fluxer.app.\n\n- Equipe de Segurança do Fluxer"
+	},
+	"dsaReportVerification": {
+		"subject": "Verifique seu e-mail para uma denúncia DSA",
+		"body": "Olá,\n\nUse o seguinte código de verificação para enviar sua denúncia da Lei de Serviços Digitais (DSA) no Fluxer:\n\n{code}\n\nEste código expira em {expiresAt, date, full} {expiresAt, time, short}.\n\nSe você não solicitou isso, ignore este e-mail.\n\n- Equipe de Segurança do Fluxer"
+	},
+	"registrationApproved": {
+		"subject": "Seu cadastro no Fluxer foi aprovado",
+		"body": "Olá {username},\n\nBoas notícias! Seu cadastro no Fluxer foi aprovado.\n\nAgora você pode fazer login no aplicativo Fluxer em:\n{channelsUrl}\n\nBem-vindo à comunidade Fluxer!\n\n- Equipe Fluxer"
+	},
+	"emailChangeRevert": {
+		"subject": "Seu e-mail do Fluxer foi alterado",
+		"body": "Olá {username},\n\nO e-mail da sua conta do Fluxer foi alterado para {newEmail}.\n\nSe você fez essa alteração, nenhuma ação é necessária. Caso contrário, você pode reverter e proteger sua conta usando este link:\n\n{revertUrl}\n\nIsso restaurará seu e-mail anterior, encerrará sua sessão em todos os lugares, removerá números de telefone vinculados, desativará a autenticação multifator (MFA) e exigirá uma nova senha.\n\n- Equipe de Segurança do Fluxer"
+	}
+}

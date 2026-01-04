@@ -1,0 +1,74 @@
+{
+	"passwordReset": {
+		"subject": "Atur ulang kata sandi Fluxer Anda",
+		"body": "Halo {username},\n\nAnda meminta untuk mengatur ulang kata sandi Fluxer Anda. Silakan ikuti tautan di bawah ini untuk menetapkan kata sandi baru:\n\n{resetUrl}\n\nJika Anda tidak meminta pengaturan ulang kata sandi ini, Anda dapat mengabaikan email ini.\n\nTautan ini akan kedaluwarsa dalam 1 jam.\n\n- Tim Fluxer"
+	},
+	"emailVerification": {
+		"subject": "Verifikasi alamat email Fluxer Anda",
+		"body": "Halo {username},\n\nSilakan verifikasi alamat email untuk akun Fluxer Anda dengan mengeklik tautan di bawah ini:\n\n{verifyUrl}\n\nJika Anda tidak membuat akun Fluxer, Anda dapat mengabaikan email ini.\n\nTautan ini akan kedaluwarsa dalam 24 jam.\n\n- Tim Fluxer"
+	},
+	"emailChangeOriginal": {
+		"subject": "Konfirmasi perubahan email Fluxer Anda",
+		"body": "Halo {username},\n\nKami menerima permintaan untuk mengubah email pada akun Fluxer Anda.\n\nUntuk mengonfirmasi perubahan ini, masukkan kode ini di aplikasi:\n\n{code}\n\nKode ini kedaluwarsa pada {expiresAt, date, full} {expiresAt, time, short}.\n\nJika Anda tidak meminta ini, segera amankan akun Anda.\n\n- Tim Keamanan Fluxer"
+	},
+	"emailChangeNew": {
+		"subject": "Verifikasi email Fluxer baru Anda",
+		"body": "Halo {username},\n\nMasukkan kode ini di aplikasi untuk memverifikasi email Fluxer baru Anda:\n\n{code}\n\nKode ini kedaluwarsa pada {expiresAt, date, full} {expiresAt, time, short}.\n\nJika Anda tidak meminta ini, Anda dapat mengabaikan email ini."
+	},
+	"ipAuthorization": {
+		"subject": "Otorisasi login dari alamat IP baru",
+		"body": "Halo {username},\n\nKami mendeteksi percobaan login ke akun Fluxer Anda dari alamat IP baru:\n\nAlamat IP: {ipAddress}\nLokasi: {location}\n\nJika ini Anda, silakan otorisasi alamat IP ini dengan mengeklik tautan di bawah ini:\n\n{authUrl}\n\nJika Anda tidak mencoba login, segera ubah kata sandi Anda.\n\nTautan otorisasi ini akan kedaluwarsa dalam 30 menit.\n\n- Tim Keamanan Fluxer"
+	},
+	"accountDisabledSuspicious": {
+		"subject": "Akun Fluxer Anda telah dinonaktifkan sementara",
+		"body": "Halo {username},\n\nAkun Fluxer Anda telah dinonaktifkan sementara karena aktivitas mencurigakan.\n\n{reason, select,\n\tnull {}\n\tother {Alasan: {reason}\n\n}}Untuk mendapatkan kembali akses ke akun Anda, Anda harus mengatur ulang kata sandi Anda:\n\n{forgotUrl}\n\nSetelah mengatur ulang kata sandi, Anda akan dapat login kembali.\n\nJika Anda yakin tindakan ini dilakukan karena kesalahan, silakan hubungi tim dukungan kami.\n\n- Tim Keamanan Fluxer"
+	},
+	"accountTempBanned": {
+		"subject": "Akun Fluxer Anda telah ditangguhkan sementara",
+		"body": "Halo {username},\n\nAkun Fluxer Anda telah ditangguhkan sementara karena melanggar Ketentuan Layanan atau Pedoman Komunitas kami.\n\nDurasi: {durationHours, plural,\n\t=1 {1 jam}\n\tother {# jam}\n}\nDitangguhkan sampai: {bannedUntil, date, full} {bannedUntil, time, short}\n{reason, select,\n\tnull {}\n\tother {\nAlasan: {reason}}\n}\n\nSelama periode ini, Anda tidak akan dapat mengakses akun Anda.\n\nKami menyarankan Anda untuk meninjau:\n- Ketentuan Layanan: {termsUrl}\n- Pedoman Komunitas: {guidelinesUrl}\n\nJika Anda yakin keputusan penegakan ini tidak benar atau tidak berdasar, Anda dapat mengajukan banding ke appeals@fluxer.app dari alamat email ini. Harap jelaskan dengan jelas mengapa Anda percaya keputusan tersebut salah. Kami akan meninjau banding Anda dan merespons dengan keputusan kami.\n\n- Tim Keamanan Fluxer"
+	},
+	"accountScheduledDeletion": {
+		"subject": "Akun Fluxer Anda dijadwalkan untuk dihapus",
+		"body": "Halo {username},\n\nAkun Fluxer Anda telah dijadwalkan untuk dihapus secara permanen karena pelanggaran Ketentuan Layanan atau Pedoman Komunitas kami.\n\nTanggal penghapusan terjadwal: {deletionDate, date, full} {deletionDate, time, short}\n{reason, select,\n\tnull {}\n\tother {\nAlasan: {reason}}\n}\n\nIni adalah tindakan penegakan yang serius. Data akun Anda akan dihapus secara permanen pada tanggal yang dijadwalkan.\n\nKami menyarankan Anda untuk meninjau:\n- Ketentuan Layanan: {termsUrl}\n- Pedoman Komunitas: {guidelinesUrl}\n\nPROSES BANDING:\nJika Anda yakin keputusan penegakan ini tidak benar atau tidak berdasar, Anda memiliki 30 hari untuk mengajukan banding ke appeals@fluxer.app dari alamat email ini.\n\nDalam banding Anda, harap:\n- Jelaskan dengan jelas mengapa Anda percaya keputusan penegakan tersebut tidak benar atau tidak berdasar\n- Sertakan bukti atau konteks yang relevan\n\nAnggota Tim Keamanan Fluxer akan meninjau banding Anda dan dapat membatalkan penghapusan yang tertunda sampai putusan akhir dicapai.\n\n- Tim Keamanan Fluxer"
+	},
+	"selfDeletionScheduled": {
+		"subject": "Penghapusan akun Fluxer Anda telah dijadwalkan",
+		"body": "Halo {username},\n\nKami sedih melihat Anda pergi! Akun Fluxer Anda telah dijadwalkan untuk dihapus.\n\nTanggal penghapusan terjadwal: {deletionDate, date, full} {deletionDate, time, short}\n\nPENTING: Anda dapat membatalkan penghapusan ini kapan saja sebelum {deletionDate, date, full} {deletionDate, time, short} dengan cukup login kembali ke akun Anda.\n\nSEBELUM ANDA PERGI:\nDasbor Privasi Anda di Pengaturan Pengguna memungkinkan Anda untuk:\n- Menghapus pesan Anda di platform\n- Mengekstrak data berharga sebelum pergi\n\nHarap diperhatikan: Setelah akun Anda dihapus, tidak ada cara untuk menghapus pesan Anda. Jika Anda ingin menghapus pesan Anda, silakan lakukan melalui Dasbor Privasi sebelum penghapusan akun Anda difinalisasi.\n\nJika Anda berubah pikiran, cukup login kembali untuk membatalkan penghapusan.\n\n- Tim Fluxer"
+	},
+	"inactivityWarning": {
+		"subject": "Akun Fluxer Anda akan dihapus karena tidak aktif",
+		"body": "Halo {username},\n\nKami melihat Anda tidak login ke akun Fluxer Anda selama lebih dari 2 tahun.\n\nLogin terakhir: {lastActiveDate, date, full} {lastActiveDate, time, short}\n\nSebagai bagian dari kebijakan retensi data kami, akun tidak aktif secara otomatis dijadwalkan untuk dihapus. Akun Anda akan dihapus secara permanen pada:\n\nTanggal penghapusan terjadwal: {deletionDate, date, full} {deletionDate, time, short}\n\nCARA MEMPERTAHANKAN AKUN ANDA:\nCukup login ke akun Anda di {loginUrl} sebelum tanggal penghapusan untuk membatalkan penghapusan otomatis ini. Tidak diperlukan tindakan lain.\n\nAPA YANG TERJADI JIKA ANDA TIDAK LOGIN:\n- Akun Anda dan semua data terkait akan dihapus secara permanen\n- Pesan Anda akan dianonimkan (diatribusikan kepada \"Pengguna Dihapus\")\n- Tindakan ini tidak dapat dibatalkan\n\nINGIN MENGHAPUS PESAN ANDA?\nJika Anda ingin menghapus pesan Anda sebelum akun Anda dihapus, silakan login dan gunakan Dasbor Privasi di Pengaturan Pengguna.\n\nKami berharap dapat melihat Anda kembali di Fluxer!\n\n- Tim Fluxer"
+	},
+	"harvestCompleted": {
+		"subject": "Ekspor Data Fluxer Anda Siap",
+		"body": "Halo {username},\n\nEkspor data Anda telah selesai dan siap untuk diunduh!\n\nRingkasan Ekspor:\n- Total pesan: {totalMessages, number}\n- Ukuran file: {fileSizeMB} MB\n- Format: Arsip ZIP berisi file JSON\n\nUnduh data Anda: {downloadUrl}\n\nPENTING: Tautan unduhan ini akan kedaluwarsa pada {expiresAt, date, full} {expiresAt, time, short}\n\nYang termasuk dalam ekspor Anda:\n- Semua pesan Anda yang diatur berdasarkan channel\n- Metadata channel\n- Profil pengguna dan informasi akun Anda\n- Keanggotaan guild dan pengaturan\n- Sesi autentikasi dan informasi keamanan\n\nData diatur dalam format JSON untuk memudahkan parsing dan analisis.\n\nJika Anda memiliki pertanyaan tentang ekspor data Anda, silakan hubungi support@fluxer.app\n\n- Tim Fluxer"
+	},
+	"unbanNotification": {
+		"subject": "Penangguhan akun Fluxer Anda telah dicabut",
+		"body": "Halo {username},\n\nKabar baik! Penangguhan akun Fluxer Anda telah dicabut.\n\nAlasan: {reason}\n\nAnda sekarang dapat login kembali ke akun Anda dan melanjutkan menggunakan Fluxer.\n\n- Tim Keamanan Fluxer"
+	},
+	"scheduledDeletionNotification": {
+		"subject": "Akun Fluxer Anda dijadwalkan untuk dihapus",
+		"body": "Halo {username},\n\nAkun Fluxer Anda telah dijadwalkan untuk dihapus secara permanen.\n\nTanggal penghapusan terjadwal: {deletionDate, date, full} {deletionDate, time, short}\nAlasan: {reason}\n\nIni adalah tindakan penegakan yang serius. Data akun Anda akan dihapus secara permanen pada tanggal yang dijadwalkan.\n\nJika Anda yakin keputusan penegakan ini tidak benar, Anda dapat mengajukan banding ke appeals@fluxer.app dari alamat email ini.\n\n- Tim Keamanan Fluxer"
+	},
+	"giftChargebackNotification": {
+		"subject": "Hadiah Fluxer Premium Anda telah dibatalkan",
+		"body": "Halo {username},\n\nKami menulis untuk memberi tahu Anda bahwa hadiah Fluxer Premium yang Anda redeem telah dibatalkan karena sengketa pembayaran (chargeback) yang diajukan oleh pembeli asli.\n\nManfaat premium Anda telah dihapus dari akun Anda. Tindakan ini diambil karena pembayaran untuk hadiah tersebut disengketakan dan dibatalkan.\n\nJika Anda memiliki pertanyaan tentang hal ini, silakan hubungi support@fluxer.app.\n\n- Tim Fluxer"
+	},
+	"reportResolved": {
+		"subject": "Laporan Fluxer Anda telah ditinjau",
+		"body": "Halo {username},\n\nLaporan Anda (ID: {reportId}) telah ditinjau oleh Tim Keamanan kami.\n\nTanggapan dari Tim Keamanan:\n{publicComment}\n\nTerima kasih telah membantu menjaga Fluxer tetap aman untuk semua orang. Kami menangani semua laporan dengan serius dan menghargai kontribusi Anda untuk komunitas kami.\n\nJika Anda memiliki pertanyaan atau kekhawatiran tentang penyelesaian ini, silakan hubungi safety@fluxer.app.\n\n- Tim Keamanan Fluxer"
+	},
+	"dsaReportVerification": {
+		"subject": "Verifikasi email Anda untuk laporan DSA",
+		"body": "Halo,\n\nGunakan kode verifikasi berikut untuk mengirim laporan Digital Services Act Anda di Fluxer:\n\n{code}\n\nKode ini kedaluwarsa pada {expiresAt, date, full} {expiresAt, time, short}.\n\nJika Anda tidak meminta ini, silakan abaikan email ini.\n\n- Tim Keamanan Fluxer"
+	},
+	"registrationApproved": {
+		"subject": "Pendaftaran Fluxer Anda telah disetujui",
+		"body": "Halo {username},\n\nKabar baik! Pendaftaran Fluxer Anda telah disetujui.\n\nAnda sekarang dapat login ke aplikasi Fluxer di:\n{channelsUrl}\n\nSelamat datang di komunitas Fluxer!\n\n- Tim Fluxer"
+	},
+	"emailChangeRevert": {
+		"subject": "Email Fluxer Anda telah diubah",
+		"body": "Halo {username},\n\nEmail akun Fluxer Anda telah diubah menjadi {newEmail}.\n\nJika Anda melakukan perubahan ini, tidak perlu tindakan apa pun. Jika tidak, Anda dapat membatalkan perubahan dan mengamankan akun Anda menggunakan tautan ini:\n\n{revertUrl}\n\nIni akan memulihkan email Anda sebelumnya, mengeluarkan Anda dari semua sesi, menghapus nomor telepon yang tertaut, menonaktifkan MFA, dan mengharuskan kata sandi baru.\n\n- Tim Keamanan Fluxer"
+	}
+}

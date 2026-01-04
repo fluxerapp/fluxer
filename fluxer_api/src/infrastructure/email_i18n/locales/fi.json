@@ -1,0 +1,74 @@
+{
+	"passwordReset": {
+		"subject": "Palauta Fluxer-salasanasi",
+		"body": "Hei {username},\n\nPyysit Fluxer-salasanasi palauttamista. Seuraa alla olevaa linkkiä asettaaksesi uuden salasanan:\n\n{resetUrl}\n\nJos et pyytänyt salasanan palauttamista, voit jättää tämän sähköpostin huomiotta.\n\nTämä linkki vanhenee 1 tunnin kuluttua.\n\n- Fluxer-tiimi"
+	},
+	"emailVerification": {
+		"subject": "Vahvista Fluxer-sähköpostiosoitteesi",
+		"body": "Hei {username},\n\nVahvista Fluxer-tilisi sähköpostiosoite klikkaamalla alla olevaa linkkiä:\n\n{verifyUrl}\n\nJos et luonut Fluxer-tiliä, voit jättää tämän sähköpostin huomiotta.\n\nTämä linkki vanhenee 24 tunnin kuluttua.\n\n- Fluxer-tiimi"
+	},
+	"emailChangeOriginal": {
+		"subject": "Vahvista Fluxer-sähköpostin vaihto",
+		"body": "Hei {username},\n\nSaimme pyynnön vaihtaa Fluxer-tilisi sähköpostiosoite.\n\nVahvista muutos syöttämällä tämä koodi sovelluksessa:\n\n{code}\n\nTämä koodi vanhenee {expiresAt, date, full} {expiresAt, time, short}.\n\nJos et pyytänyt tätä, suojaa tilisi välittömästi.\n\n- Fluxer Safety Team"
+	},
+	"emailChangeNew": {
+		"subject": "Vahvista uusi Fluxer-sähköpostiosoitteesi",
+		"body": "Hei {username},\n\nSyötä tämä koodi sovelluksessa vahvistaaksesi uuden Fluxer-sähköpostiosoitteesi:\n\n{code}\n\nTämä koodi vanhenee {expiresAt, date, full} {expiresAt, time, short}.\n\nJos et pyytänyt tätä, voit jättää tämän sähköpostin huomiotta."
+	},
+	"ipAuthorization": {
+		"subject": "Valtuuta kirjautuminen uudesta IP-osoitteesta",
+		"body": "Hei {username},\n\nHavaitsimme kirjautumisyrityksen Fluxer-tilillesi uudesta IP-osoitteesta:\n\nIP-osoite: {ipAddress}\nSijainti: {location}\n\nJos tämä olit sinä, valtuuta tämä IP-osoite klikkaamalla alla olevaa linkkiä:\n\n{authUrl}\n\nJos et yrittänyt kirjautua, vaihda salasanasi välittömästi.\n\nTämä valtuutuslinkki vanhenee 30 minuutin kuluttua.\n\n- Fluxer-tiimi"
+	},
+	"accountDisabledSuspicious": {
+		"subject": "Fluxer-tilisi on tilapäisesti poistettu käytöstä",
+		"body": "Hei {username},\n\nFluxer-tilisi on tilapäisesti poistettu käytöstä epäilyttävän toiminnan vuoksi.\n\n{reason, select,\n\tnull {}\n\tother {Syy: {reason}\n\n}}Saadaksesi pääsyn tiliisi takaisin sinun täytyy palauttaa salasanasi:\n\n{forgotUrl}\n\nSalasanan palauttamisen jälkeen voit kirjautua sisään uudelleen.\n\nJos uskot, että tämä toimenpide tehtiin virheellisesti, ota yhteyttä tukitiimiimme.\n\n- Fluxer Safety Team"
+	},
+	"accountTempBanned": {
+		"subject": "Fluxer-tilisi on tilapäisesti jäädytetty",
+		"body": "Hei {username},\n\nFluxer-tilisi on tilapäisesti jäädytetty, koska olet rikkonut käyttöehtojamme tai yhteisön ohjeita.\n\nKesto: {durationHours, plural,\n\t=1 {1 tunti}\n\tother {# tuntia}\n}\nJäädytetty asti: {bannedUntil, date, full} {bannedUntil, time, short}\n{reason, select,\n\tnull {}\n\tother {\nSyy: {reason}}\n}\n\nTänä aikana et voi käyttää tiliäsi.\n\nSuosittelemme tutustumaan:\n- Käyttöehdot: {termsUrl}\n- Yhteisön ohjeet: {guidelinesUrl}\n\nJos uskot, että tämä valvontapäätös oli virheellinen tai perusteeton, voit lähettää valituksen osoitteeseen appeals@fluxer.app tästä sähköpostiosoitteesta. Kerro selkeästi, miksi uskot päätöksen olleen väärä. Käsittelemme valituksesi ja vastaamme päätöksellämme.\n\n- Fluxer Safety Team"
+	},
+	"accountScheduledDeletion": {
+		"subject": "Fluxer-tilisi on ajastettu poistettavaksi",
+		"body": "Hei {username},\n\nFluxer-tilisi on ajastettu pysyvästi poistettavaksi, koska olet rikkonut käyttöehtojamme tai yhteisön ohjeita.\n\nAjastettu poistopäivä: {deletionDate, date, full} {deletionDate, time, short}\n{reason, select,\n\tnull {}\n\tother {\nSyy: {reason}}\n}\n\nTämä on vakava valvontatoimenpide. Tilisi tiedot poistetaan pysyvästi ajastettuna päivänä.\n\nSuosittelemme tutustumaan:\n- Käyttöehdot: {termsUrl}\n- Yhteisön ohjeet: {guidelinesUrl}\n\nVALITUSPROSESSI:\nJos uskot, että tämä valvontapäätös oli virheellinen tai perusteeton, sinulla on 30 päivää aikaa lähettää valitus osoitteeseen appeals@fluxer.app tästä sähköpostiosoitteesta.\n\nValituksessasi:\n- Kerro selkeästi, miksi uskot valvontapäätöksen olleen virheellinen tai perusteeton\n- Toimita mahdolliset asiaankuuluvat todisteet tai lisäkonteksti\n\nFluxer Safety Team -tiimin jäsen käsittelee valituksesi ja voi perua poiston odottamaan lopullista päätöstä.\n\n- Fluxer Safety Team"
+	},
+	"selfDeletionScheduled": {
+		"subject": "Fluxer-tilisi poisto on ajastettu",
+		"body": "Hei {username},\n\nHarmi nähdä sinun lähtevän! Fluxer-tilisi poisto on ajastettu.\n\nAjastettu poistopäivä: {deletionDate, date, full} {deletionDate, time, short}\n\nTÄRKEÄÄ: Voit perua poiston milloin tahansa ennen {deletionDate, date, full} {deletionDate, time, short} kirjautumalla takaisin tilillesi.\n\nENNEN KUIN LÄHDET:\nTietosuojan hallintapaneeli (Käyttäjäasetuksissa) mahdollistaa:\n- Viestiesi poistamisen alustalta\n- Arvokkaan datan talteenoton ennen lähtöä\n\nHuom: Kun tilisi on poistettu, viestejä ei voi enää poistaa. Jos haluat poistaa viestisi, tee se Tietosuojan hallintapaneelin kautta ennen kuin tilin poisto viimeistellään.\n\nJos muutat mieltäsi, kirjaudu vain takaisin sisään peruuttaaksesi poiston.\n\n- Fluxer-tiimi"
+	},
+	"inactivityWarning": {
+		"subject": "Fluxer-tilisi poistetaan käyttämättömyyden vuoksi",
+		"body": "Hei {username},\n\nHuomasimme, ettet ole kirjautunut Fluxer-tilillesi yli 2 vuoteen.\n\nViimeisin kirjautuminen: {lastActiveDate, date, full} {lastActiveDate, time, short}\n\nTietojen säilytyskäytäntömme mukaisesti käyttämättömät tilit ajastetaan automaattisesti poistettaviksi. Tilisi poistetaan pysyvästi:\n\nAjastettu poistopäivä: {deletionDate, date, full} {deletionDate, time, short}\n\nMITEN PIDÄT TILISI:\nKirjaudu tilillesi osoitteessa {loginUrl} ennen poistopäivää peruuttaaksesi tämän automaattisen poiston. Muita toimenpiteitä ei tarvita.\n\nMITÄ TAPAHTUU, JOS ET KIRJAUDU SISÄÄN:\n- Tilisi ja kaikki siihen liittyvät tiedot poistetaan pysyvästi\n- Viestisi anonymisoidaan (merkitään \"Poistettu käyttäjä\")\n- Tätä toimenpidettä ei voi perua\n\nHALUATKO POISTAA VIESTISI?\nJos haluat poistaa viestisi ennen tilisi poistamista, kirjaudu sisään ja käytä Tietosuojan hallintapaneelia käyttäjäasetuksissa.\n\nToivomme näkevämme sinut taas Fluxerissa!\n\n- Fluxer-tiimi"
+	},
+	"harvestCompleted": {
+		"subject": "Fluxer-datavientisi on valmis",
+		"body": "Hei {username},\n\nDatavientisi on valmistunut ja on nyt ladattavissa!\n\nViennin yhteenveto:\n- Viestejä yhteensä: {totalMessages, number}\n- Tiedostokoko: {fileSizeMB} MB\n- Muoto: ZIP-arkisto, jossa JSON-tiedostoja\n\nLataa datasi: {downloadUrl}\n\nTÄRKEÄÄ: Tämä latauslinkki vanhenee {expiresAt, date, full} {expiresAt, time, short}\n\nMitä vienti sisältää:\n- Kaikki viestisi kanavittain järjestettynä\n- Kanavien metatiedot\n- Käyttäjäprofiilisi sekä tiliin liittyvät tiedot\n- Kiltojen jäsenyydet ja asetukset\n- Kirjautumisistunnot ja turvallisuustiedot\n\nData on JSON-muodossa helppoa jäsentämistä ja analysointia varten.\n\nJos sinulla on kysyttävää dataviennistäsi, ota yhteyttä: support@fluxer.app\n\n- Fluxer-tiimi"
+	},
+	"unbanNotification": {
+		"subject": "Fluxer-tilisi jäädytys on poistettu",
+		"body": "Hei {username},\n\nHyviä uutisia! Fluxer-tilisi jäädytys on poistettu.\n\nSyy: {reason}\n\nVoit nyt kirjautua takaisin tilillesi ja jatkaa Fluxerin käyttöä.\n\n- Fluxer Safety Team"
+	},
+	"scheduledDeletionNotification": {
+		"subject": "Fluxer-tilisi on ajastettu poistettavaksi",
+		"body": "Hei {username},\n\nFluxer-tilisi on ajastettu pysyvästi poistettavaksi.\n\nAjastettu poistopäivä: {deletionDate, date, full} {deletionDate, time, short}\nSyy: {reason}\n\nTämä on vakava valvontatoimenpide. Tilisi tiedot poistetaan pysyvästi ajastettuna päivänä.\n\nJos uskot, että tämä valvontapäätös oli virheellinen, voit lähettää valituksen osoitteeseen appeals@fluxer.app tästä sähköpostiosoitteesta.\n\n- Fluxer Safety Team"
+	},
+	"giftChargebackNotification": {
+		"subject": "Fluxer Premium -lahjasi on peruttu",
+		"body": "Hei {username},\n\nKirjoitamme ilmoittaaksemme, että lunastamasi Fluxer Premium -lahja on peruttu alkuperäisen ostajan tekemän maksukiistan (chargeback) vuoksi.\n\nPremium-edut on poistettu tililtäsi. Tämä toimenpide tehtiin, koska lahjan maksu riitautettiin ja peruutettiin.\n\nJos sinulla on kysyttävää, ota yhteyttä: support@fluxer.app.\n\n- Fluxer-tiimi"
+	},
+	"reportResolved": {
+		"subject": "Fluxer-ilmoituksesi on käsitelty",
+		"body": "Hei {username},\n\nIlmoituksesi (ID: {reportId}) on käsitelty Safety Team -tiimimme toimesta.\n\nVastaus Safety Teamiltä:\n{publicComment}\n\nKiitos, että autat pitämään Fluxerin turvallisena kaikille. Suhtaudumme kaikkiin ilmoituksiin vakavasti ja arvostamme panostasi yhteisöömme.\n\nJos sinulla on kysyttävää tai huolia tästä ratkaisusta, ota yhteyttä: safety@fluxer.app.\n\n- Fluxer Safety Team"
+	},
+	"dsaReportVerification": {
+		"subject": "Vahvista sähköpostiosoitteesi DSA-ilmoitusta varten",
+		"body": "Hei,\n\nKäytä seuraavaa vahvistuskoodia lähettääksesi Digital Services Act -ilmoituksesi Fluxerissa:\n\n{code}\n\nTämä koodi vanhenee {expiresAt, date, full} {expiresAt, time, short}.\n\nJos et pyytänyt tätä, jätä tämä sähköposti huomiotta.\n\n- Fluxer Safety Team"
+	},
+	"registrationApproved": {
+		"subject": "Fluxer-rekisteröitymisesi on hyväksytty",
+		"body": "Hei {username},\n\nHyviä uutisia! Fluxer-rekisteröitymisesi on hyväksytty.\n\nVoit nyt kirjautua Fluxer-sovellukseen osoitteessa:\n{channelsUrl}\n\nTervetuloa Fluxer-yhteisöön!\n\n- Fluxer-tiimi"
+	},
+	"emailChangeRevert": {
+		"subject": "Fluxer-sähköpostiosoitteesi vaihdettiin",
+		"body": "Hei {username},\n\nFluxer-tilisi sähköpostiosoite vaihdettiin muotoon {newEmail}.\n\nJos teit tämän muutoksen, mitään ei tarvitse tehdä. Jos et, voit perua muutoksen ja suojata tilisi tämän linkin kautta:\n\n{revertUrl}\n\nTämä palauttaa aiemman sähköpostiosoitteesi, kirjaa sinut ulos kaikkialta, poistaa liitetyt puhelinnumerot, poistaa MFA:n käytöstä ja vaatii uuden salasanan.\n\n- Fluxer Safety Team"
+	}
+}

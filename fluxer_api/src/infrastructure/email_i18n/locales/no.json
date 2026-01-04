@@ -1,0 +1,74 @@
+{
+	"passwordReset": {
+		"subject": "Tilbakestill Fluxer-passordet ditt",
+		"body": "Hei {username},\n\nDu ba om å tilbakestille Fluxer-passordet ditt. Følg lenken nedenfor for å sette et nytt passord:\n\n{resetUrl}\n\nHvis du ikke ba om denne passordtilbakestillingen, kan du trygt ignorere denne e-posten.\n\nDenne lenken utløper om 1 time.\n\n- Fluxer-teamet"
+	},
+	"emailVerification": {
+		"subject": "Bekreft Fluxer-e-postadressen din",
+		"body": "Hei {username},\n\nBekreft e-postadressen for Fluxer-kontoen din ved å klikke på lenken nedenfor:\n\n{verifyUrl}\n\nHvis du ikke opprettet en Fluxer-konto, kan du trygt ignorere denne e-posten.\n\nDenne lenken utløper om 24 timer.\n\n- Fluxer-teamet"
+	},
+	"emailChangeOriginal": {
+		"subject": "Bekreft endring av Fluxer-e-post",
+		"body": "Hei {username},\n\nVi har mottatt en forespørsel om å endre e-posten på Fluxer-kontoen din.\n\nFor å bekrefte denne endringen, skriv inn denne koden i appen:\n\n{code}\n\nDenne koden utløper {expiresAt, date, full} {expiresAt, time, short}.\n\nHvis du ikke ba om dette, bør du sikre kontoen din umiddelbart.\n\n- Fluxer-sikkerhetsteamet"
+	},
+	"emailChangeNew": {
+		"subject": "Bekreft den nye Fluxer-e-posten din",
+		"body": "Hei {username},\n\nSkriv inn denne koden i appen for å bekrefte den nye Fluxer-e-posten din:\n\n{code}\n\nDenne koden utløper {expiresAt, date, full} {expiresAt, time, short}.\n\nHvis du ikke ba om dette, kan du ignorere denne e-posten."
+	},
+	"ipAuthorization": {
+		"subject": "Godkjenn innlogging fra ny IP-adresse",
+		"body": "Hei {username},\n\nVi oppdaget et innloggingsforsøk på Fluxer-kontoen din fra en ny IP-adresse:\n\nIP-adresse: {ipAddress}\nSted: {location}\n\nHvis dette var deg, kan du godkjenne denne IP-adressen ved å klikke på lenken nedenfor:\n\n{authUrl}\n\nHvis du ikke forsøkte å logge inn, bør du endre passordet ditt umiddelbart.\n\nDenne godkjenningslenken utløper om 30 minutter.\n\n- Fluxer-sikkerhetsteamet"
+	},
+	"accountDisabledSuspicious": {
+		"subject": "Fluxer-kontoen din er midlertidig deaktivert",
+		"body": "Hei {username},\n\nFluxer-kontoen din er midlertidig deaktivert på grunn av mistenkelig aktivitet.\n\n{reason, select,\n\tnull {}\n\tother {Årsak: {reason}\n\n}}For å få tilgang til kontoen din igjen må du tilbakestille passordet ditt:\n\n{forgotUrl}\n\nEtter at du har tilbakestilt passordet, kan du logge inn igjen.\n\nHvis du mener at dette ble gjort ved en feil, kan du kontakte supportteamet vårt.\n\n- Fluxer-sikkerhetsteamet"
+	},
+	"accountTempBanned": {
+		"subject": "Fluxer-kontoen din er midlertidig suspendert",
+		"body": "Hei {username},\n\nFluxer-kontoen din er midlertidig suspendert for brudd på våre Bruksvilkår eller Retningslinjer for fellesskapet.\n\nVarighet: {durationHours, plural,\n\t=1 {1 time}\n\tother {# timer}\n}\nSuspendert til: {bannedUntil, date, full} {bannedUntil, time, short}\n{reason, select,\n\tnull {}\n\tother {\nÅrsak: {reason}}\n}\n\nI denne perioden vil du ikke kunne få tilgang til kontoen din.\n\nVi oppfordrer deg til å lese gjennom våre:\n- Bruksvilkår: {termsUrl}\n- Retningslinjer for fellesskapet: {guidelinesUrl}\n\nHvis du mener at denne håndhevelsesavgjørelsen var feil eller urettferdig, kan du sende inn en klage til appeals@fluxer.app fra denne e-postadressen. Forklar tydelig hvorfor du mener avgjørelsen var feil. Vi vil gjennomgå klagen din og svare med vår vurdering.\n\n- Fluxer-sikkerhetsteamet"
+	},
+	"accountScheduledDeletion": {
+		"subject": "Fluxer-kontoen din er planlagt slettet",
+		"body": "Hei {username},\n\nFluxer-kontoen din er planlagt for permanent sletting på grunn av brudd på våre Bruksvilkår eller Retningslinjer for fellesskapet.\n\nPlanlagt slettedato: {deletionDate, date, full} {deletionDate, time, short}\n{reason, select,\n\tnull {}\n\tother {\nÅrsak: {reason}}\n}\n\nDette er et alvorlig håndhevelsestiltak. Kontodataene dine vil bli permanent slettet på den planlagte datoen.\n\nVi oppfordrer deg til å lese gjennom våre:\n- Bruksvilkår: {termsUrl}\n- Retningslinjer for fellesskapet: {guidelinesUrl}\n\nKLAGEPROSESS:\nHvis du mener at denne håndhevelsesavgjørelsen var feil eller urettferdig, har du 30 dager på å sende inn en klage til appeals@fluxer.app fra denne e-postadressen.\n\nI klagen din, vennligst:\n- Forklar tydelig hvorfor du mener håndhevelsesavgjørelsen var feil eller urettferdig\n- Legg ved relevant dokumentasjon eller kontekst\n\nEt medlem av Fluxer-sikkerhetsteamet vil gjennomgå klagen din og kan avbryte den forestående slettingen inntil en endelig avgjørelse er fattet.\n\n- Fluxer-sikkerhetsteamet"
+	},
+	"selfDeletionScheduled": {
+		"subject": "Sletting av Fluxer-kontoen din er planlagt",
+		"body": "Hei {username},\n\nDet er trist å se deg gå! Fluxer-kontoen din er planlagt slettet.\n\nPlanlagt slettedato: {deletionDate, date, full} {deletionDate, time, short}\n\nVIKTIG: Du kan avbryte denne slettingen når som helst før {deletionDate, date, full} {deletionDate, time, short} ved å bare logge inn på kontoen din igjen.\n\nFØR DU GÅR:\nPersonvernpanelet ditt i Brukerinnstillinger lar deg:\n- Slette meldingene dine på plattformen\n- Eksportere verdifulle data før du drar\n\nMerk: Når kontoen din er slettet, finnes det ingen måte å slette meldingene dine på. Hvis du vil slette meldingene dine, må du gjøre det via Personvernpanelet før slettingen av kontoen din fullføres.\n\nHvis du ombestemmer deg, er det bare å logge inn igjen for å avbryte slettingen.\n\n- Fluxer-teamet"
+	},
+	"inactivityWarning": {
+		"subject": "Fluxer-kontoen din vil bli slettet på grunn av inaktivitet",
+		"body": "Hei {username},\n\nVi la merke til at du ikke har logget inn på Fluxer-kontoen din på over 2 år.\n\nSist innlogget: {lastActiveDate, date, full} {lastActiveDate, time, short}\n\nSom en del av vår policy for datalagring blir inaktive kontoer automatisk planlagt slettet. Kontoen din vil bli permanent slettet den:\n\nPlanlagt slettedato: {deletionDate, date, full} {deletionDate, time, short}\n\nSLIK BEHOLDER DU KONTOEN:\nBare logg inn på kontoen din på {loginUrl} før slettedatoen for å avbryte denne automatiske slettingen. Ingen annen handling er nødvendig.\n\nHVA SKJER HVIS DU IKKE LOGGER INN:\n- Kontoen din og alle tilknyttede data vil bli permanent slettet\n- Meldingene dine vil bli anonymisert (tilskrevet \"Slettet bruker\")\n- Denne handlingen kan ikke reverseres\n\nVIL DU SLETTE MELDINGENE DINE?\nHvis du vil slette meldingene dine før kontoen din blir slettet, logg inn og bruk Personvernpanelet i Brukerinnstillinger.\n\nVi håper å se deg tilbake på Fluxer!\n\n- Fluxer-teamet"
+	},
+	"harvestCompleted": {
+		"subject": "Fluxer-dataeksporten din er klar",
+		"body": "Hei {username},\n\nDataeksporten din er fullført og klar for nedlasting!\n\nEksportsammendrag:\n- Totalt antall meldinger: {totalMessages, number}\n- Filstørrelse: {fileSizeMB} MB\n- Format: ZIP-arkiv med JSON-filer\n\nLast ned dataene dine: {downloadUrl}\n\nVIKTIG: Denne nedlastingslenken utløper {expiresAt, date, full} {expiresAt, time, short}\n\nDette er inkludert i eksporten:\n- Alle meldingene dine organisert etter kanal\n- Kanalmetadata\n- Brukerprofilen din og kontoinformasjon\n- Guild-medlemskap og innstillinger\n- Autentiseringsøkter og sikkerhetsinformasjon\n\nDataene er organisert i JSON-format for enkel parsing og analyse.\n\nHvis du har spørsmål om dataeksporten din, kan du kontakte support@fluxer.app\n\n- Fluxer-teamet"
+	},
+	"unbanNotification": {
+		"subject": "Suspensjonen av Fluxer-kontoen din er opphevet",
+		"body": "Hei {username},\n\nGode nyheter! Suspensjonen av Fluxer-kontoen din er opphevet.\n\nÅrsak: {reason}\n\nDu kan nå logge inn på kontoen din igjen og fortsette å bruke Fluxer.\n\n- Fluxer-sikkerhetsteamet"
+	},
+	"scheduledDeletionNotification": {
+		"subject": "Fluxer-kontoen din er planlagt slettet",
+		"body": "Hei {username},\n\nFluxer-kontoen din er planlagt for permanent sletting.\n\nPlanlagt slettedato: {deletionDate, date, full} {deletionDate, time, short}\nÅrsak: {reason}\n\nDette er et alvorlig håndhevelsestiltak. Kontodataene dine vil bli permanent slettet på den planlagte datoen.\n\nHvis du mener at denne håndhevelsesavgjørelsen var feil, kan du sende inn en klage til appeals@fluxer.app fra denne e-postadressen.\n\n- Fluxer-sikkerhetsteamet"
+	},
+	"giftChargebackNotification": {
+		"subject": "Fluxer Premium-gaven din er trukket tilbake",
+		"body": "Hei {username},\n\nVi skriver for å informere deg om at Fluxer Premium-gaven du løste inn, er trukket tilbake på grunn av en betalingstvist (chargeback/tilbakeføring) meldt av den opprinnelige kjøperen.\n\nPremium-fordelene dine er fjernet fra kontoen din. Dette ble gjort fordi betalingen for gaven ble bestridt og tilbakeført.\n\nHvis du har spørsmål om dette, kan du kontakte support@fluxer.app.\n\n- Fluxer-teamet"
+	},
+	"reportResolved": {
+		"subject": "Fluxer-rapporten din er gjennomgått",
+		"body": "Hei {username},\n\nRapporten din (ID: {reportId}) er gjennomgått av sikkerhetsteamet vårt.\n\nSvar fra sikkerhetsteamet:\n{publicComment}\n\nTakk for at du bidrar til å holde Fluxer trygt for alle. Vi tar alle rapporter på alvor og setter pris på bidraget ditt til fellesskapet.\n\nHvis du har spørsmål eller bekymringer rundt denne avgjørelsen, kan du kontakte safety@fluxer.app.\n\n- Fluxer-sikkerhetsteamet"
+	},
+	"dsaReportVerification": {
+		"subject": "Bekreft e-posten din for en DSA-rapport",
+		"body": "Hei,\n\nBruk følgende bekreftelseskode for å sende inn Digital Services Act-rapporten din på Fluxer:\n\n{code}\n\nDenne koden utløper {expiresAt, date, full} {expiresAt, time, short}.\n\nHvis du ikke ba om dette, kan du ignorere denne e-posten.\n\n- Fluxer-sikkerhetsteamet"
+	},
+	"registrationApproved": {
+		"subject": "Fluxer-registreringen din er godkjent",
+		"body": "Hei {username},\n\nGode nyheter! Fluxer-registreringen din er godkjent.\n\nDu kan nå logge inn i Fluxer-appen på:\n{channelsUrl}\n\nVelkommen til Fluxer-fellesskapet!\n\n- Fluxer-teamet"
+	},
+	"emailChangeRevert": {
+		"subject": "Fluxer-e-posten din ble endret",
+		"body": "Hei {username},\n\nE-postadressen på Fluxer-kontoen din ble endret til {newEmail}.\n\nHvis du gjorde denne endringen, trenger du ikke å gjøre noe. Hvis ikke, kan du tilbakeføre og sikre kontoen din ved å bruke denne lenken:\n\n{revertUrl}\n\nDette vil gjenopprette den forrige e-postadressen din, logge deg ut overalt, fjerne tilknyttede telefonnumre, deaktivere MFA og kreve et nytt passord.\n\n- Fluxer-sikkerhetsteamet"
+	}
+}

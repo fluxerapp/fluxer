@@ -1,0 +1,74 @@
+{
+	"passwordReset": {
+		"subject": "Reset your Fluxer password",
+		"body": "Hello {username},\n\nYou requested to reset your Fluxer password. Please follow the link below to set a new password:\n\n{resetUrl}\n\nIf you did not request this password reset, you can safely ignore this email.\n\nThis link will expire in 1 hour.\n\n- Fluxer Team"
+	},
+	"emailVerification": {
+		"subject": "Verify your Fluxer email address",
+		"body": "Hello {username},\n\nPlease verify your email address for your Fluxer account by clicking the link below:\n\n{verifyUrl}\n\nIf you did not create a Fluxer account, you can safely ignore this email.\n\nThis link will expire in 24 hours.\n\n- Fluxer Team"
+	},
+	"emailChangeOriginal": {
+		"subject": "Confirm your Fluxer email change",
+		"body": "Hello {username},\n\nWe received a request to change the email on your Fluxer account.\n\nTo confirm this change, enter this code in the app:\n\n{code}\n\nThis code expires at {expiresAt, date, full} {expiresAt, time, short}.\n\nIf you did not request this, please secure your account immediately.\n\n- Fluxer Team"
+	},
+	"emailChangeNew": {
+		"subject": "Verify your new Fluxer email",
+		"body": "Hello {username},\n\nEnter this code in the app to verify your new Fluxer email:\n\n{code}\n\nThis code expires at {expiresAt, date, full} {expiresAt, time, short}.\n\nIf you did not request this, you can ignore this email."
+	},
+	"ipAuthorization": {
+		"subject": "Authorise log-in from new IP address",
+		"body": "Hello {username},\n\nWe detected a log-in attempt to your Fluxer account from a new IP address:\n\nIP Address: {ipAddress}\nLocation: {location}\n\nIf this was you, please authorise this IP address by clicking the link below:\n\n{authUrl}\n\nIf you did not attempt to log in, please change your password immediately.\n\nThis authorisation link will expire in 30 minutes.\n\n- Fluxer Team"
+	},
+	"accountDisabledSuspicious": {
+		"subject": "Your Fluxer account has been temporarily disabled",
+		"body": "Hello {username},\n\nYour Fluxer account has been temporarily disabled due to suspicious activity.\n\n{reason, select,\n\tnull {}\n\tother {Reason: {reason}\n\n}}To regain access to your account, you must reset your password:\n\n{forgotUrl}\n\nAfter resetting your password, you will be able to log in again.\n\nIf you believe this action was taken in error, please contact our support team.\n\n- Fluxer Safety Team"
+	},
+	"accountTempBanned": {
+		"subject": "Your Fluxer account has been temporarily suspended",
+		"body": "Hello {username},\n\nYour Fluxer account has been temporarily suspended for violating our Terms of Service or Community Guidelines.\n\nDuration: {durationHours, plural,\n\t=1 {1 hour}\n\tother {# hours}\n}\nSuspended until: {bannedUntil, date, full} {bannedUntil, time, short}\n{reason, select,\n\tnull {}\n\tother {\nReason: {reason}}\n}\n\nDuring this time, you will not be able to access your account.\n\nWe urge you to review our:\n- Terms of Service: {termsUrl}\n- Community Guidelines: {guidelinesUrl}\n\nIf you believe this enforcement decision was incorrect or unjustified, you may submit an appeal to appeals@fluxer.app from this email address. Please clearly explain why you believe the decision was wrong. We will review your appeal and respond with our determination.\n\n- Fluxer Safety Team"
+	},
+	"accountScheduledDeletion": {
+		"subject": "Your Fluxer account is scheduled for deletion",
+		"body": "Hello {username},\n\nYour Fluxer account has been scheduled for permanent deletion due to violations of our Terms of Service or Community Guidelines.\n\nScheduled deletion date: {deletionDate, date, full} {deletionDate, time, short}\n{reason, select,\n\tnull {}\n\tother {\nReason: {reason}}\n}\n\nThis is a serious enforcement action. Your account data will be permanently deleted on the scheduled date.\n\nWe urge you to review our:\n- Terms of Service: {termsUrl}\n- Community Guidelines: {guidelinesUrl}\n\nAPPEALS PROCESS:\nIf you believe this enforcement decision was incorrect or unjustified, you have 30 days to submit an appeal to appeals@fluxer.app from this email address.\n\nIn your appeal, please:\n- Clearly explain why you believe the enforcement decision was incorrect or unjustified\n- Provide any relevant evidence or context\n\nA Fluxer Safety Team member will review your appeal and may cancel the pending deletion until a final verdict has been reached.\n\n- Fluxer Safety Team"
+	},
+	"selfDeletionScheduled": {
+		"subject": "Your Fluxer account deletion has been scheduled",
+		"body": "Hello {username},\n\nWe're sad to see you go! Your Fluxer account has been scheduled for deletion.\n\nScheduled deletion date: {deletionDate, date, full} {deletionDate, time, short}\n\nIMPORTANT: You can cancel this deletion at any time before {deletionDate, date, full} {deletionDate, time, short} by simply logging back in to your account.\n\nBEFORE YOU GO:\nYour Privacy Dashboard in User Settings allows you to:\n- Delete your messages on the platform\n- Extract any valuable data before departing\n\nPlease note: Once your account is deleted, there is no way to delete your messages. If you want to delete your messages, please do so through the Privacy Dashboard before your account deletion is finalised.\n\nIf you change your mind, just log back in to cancel the deletion.\n\n- Fluxer Team"
+	},
+	"inactivityWarning": {
+		"subject": "Your Fluxer account will be deleted due to inactivity",
+		"body": "Hello {username},\n\nWe noticed you haven't logged in to your Fluxer account in over 2 years.\n\nLast login: {lastActiveDate, date, full} {lastActiveDate, time, short}\n\nAs part of our data retention policy, inactive accounts are automatically scheduled for deletion. Your account will be permanently deleted on:\n\nScheduled deletion date: {deletionDate, date, full} {deletionDate, time, short}\n\nHOW TO KEEP YOUR ACCOUNT:\nSimply log in to your account at {loginUrl} before the deletion date to cancel this automatic deletion. No other action is required.\n\nWHAT HAPPENS IF YOU DON'T LOG IN:\n- Your account and all associated data will be permanently deleted\n- Your messages will be anonymised (attributed to \"Deleted User\")\n- This action cannot be reversed\n\nWANT TO DELETE YOUR MESSAGES?\nIf you want to delete your messages before your account is deleted, please log in and use the Privacy Dashboard in User Settings.\n\nWe hope to see you back on Fluxer!\n\n- Fluxer Team"
+	},
+	"harvestCompleted": {
+		"subject": "Your Fluxer Data Export is Ready",
+		"body": "Hello {username},\n\nYour data export has been completed and is ready for download!\n\nExport Summary:\n- Total messages: {totalMessages, number}\n- File size: {fileSizeMB} MB\n- Format: ZIP archive with JSON files\n\nDownload your data: {downloadUrl}\n\nIMPORTANT: This download link will expire on {expiresAt, date, full} {expiresAt, time, short}\n\nWhat's included in your export:\n- All your messages organised by channel\n- Channel metadata\n- Your user profile and account information\n- Guild memberships and settings\n- Authentication sessions and security information\n\nThe data is organised in JSON format for easy parsing and analysis.\n\nIf you have any questions about your data export, please contact support@fluxer.app\n\n- Fluxer Team"
+	},
+	"unbanNotification": {
+		"subject": "Your Fluxer account suspension has been lifted",
+		"body": "Hello {username},\n\nGood news! Your Fluxer account suspension has been lifted.\n\nReason: {reason}\n\nYou can now log back into your account and continue using Fluxer.\n\n- Fluxer Safety Team"
+	},
+	"scheduledDeletionNotification": {
+		"subject": "Your Fluxer account is scheduled for deletion",
+		"body": "Hello {username},\n\nYour Fluxer account has been scheduled for permanent deletion.\n\nScheduled deletion date: {deletionDate, date, full} {deletionDate, time, short}\nReason: {reason}\n\nThis is a serious enforcement action. Your account data will be permanently deleted on the scheduled date.\n\nIf you believe this enforcement decision was incorrect, you may submit an appeal to appeals@fluxer.app from this email address.\n\n- Fluxer Safety Team"
+	},
+	"giftChargebackNotification": {
+		"subject": "Your Fluxer Premium gift has been revoked",
+		"body": "Hello {username},\n\nWe're writing to inform you that the Fluxer Premium gift you redeemed has been revoked due to a payment dispute (chargeback) filed by the original purchaser.\n\nYour premium benefits have been removed from your account. This action was taken because the payment for the gift was disputed and reversed.\n\nIf you have questions about this, please contact support@fluxer.app.\n\n- Fluxer Team"
+	},
+	"reportResolved": {
+		"subject": "Your Fluxer report has been reviewed",
+		"body": "Hello {username},\n\nYour report (ID: {reportId}) has been reviewed by our Safety Team.\n\nResponse from Safety Team:\n{publicComment}\n\nThank you for helping keep Fluxer safe for everyone. We take all reports seriously and appreciate your contribution to our community.\n\nIf you have any questions or concerns about this resolution, please contact safety@fluxer.app.\n\n- Fluxer Safety Team"
+	},
+	"dsaReportVerification": {
+		"subject": "Verify your email for a DSA report",
+		"body": "Hello,\n\nUse the following verification code to submit your Digital Services Act report on Fluxer:\n\n{code}\n\nThis code expires at {expiresAt, date, full} {expiresAt, time, short}.\n\nIf you did not request this, please ignore this email.\n\n- Fluxer Safety Team"
+	},
+	"registrationApproved": {
+		"subject": "Your Fluxer registration has been approved",
+		"body": "Hello {username},\n\nGreat news! Your Fluxer registration has been approved.\n\nYou can now log in to the Fluxer app at:\n{channelsUrl}\n\nWelcome to the Fluxer community!\n\n- Fluxer Team"
+	},
+	"emailChangeRevert": {
+		"subject": "Your Fluxer email was changed",
+		"body": "Hello {username},\n\nYour Fluxer account email was changed to {newEmail}.\n\nIf you made this change, no action is needed. If not, you can revert and secure your account using this link:\n\n{revertUrl}\n\nThis will restore your previous email, sign you out everywhere, remove linked phone numbers, disable MFA, and require a new password.\n\n- Fluxer Safety Team"
+	}
+}

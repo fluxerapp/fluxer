@@ -4,6 +4,7 @@
 		"lib": ["ESNext"],
 		"module": "ESNext",
 		"moduleResolution": "Bundler",
+		"resolveJsonModule": true,
 		"noEmit": true,
 		"noPropertyAccessFromIndexSignature": false,
 		"noUncheckedIndexedAccess": false,

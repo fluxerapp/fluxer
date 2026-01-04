@@ -1,0 +1,74 @@
+{
+	"passwordReset": {
+		"subject": "Iš naujo nustatykite Fluxer slaptažodį",
+		"body": "Sveiki, {username},\n\nJūs pateikėte užklausą iš naujo nustatyti Fluxer slaptažodį. Norėdami nustatyti naują slaptažodį, paspauskite žemiau esančią nuorodą:\n\n{resetUrl}\n\nJei šio slaptažodžio atkūrimo neprašėte, galite saugiai ignoruoti šį el. laišką.\n\nŠi nuoroda nustos galioti po 1 valandos.\n\n- Fluxer komanda"
+	},
+	"emailVerification": {
+		"subject": "Patvirtinkite Fluxer el. pašto adresą",
+		"body": "Sveiki, {username},\n\nPatvirtinkite savo Fluxer paskyros el. pašto adresą paspausdami žemiau esančią nuorodą:\n\n{verifyUrl}\n\nJei Fluxer paskyros nekūrėte, galite saugiai ignoruoti šį el. laišką.\n\nŠi nuoroda nustos galioti po 24 valandų.\n\n- Fluxer komanda"
+	},
+	"emailChangeOriginal": {
+		"subject": "Patvirtinkite Fluxer el. pašto adreso pakeitimą",
+		"body": "Sveiki, {username},\n\nGavome užklausą pakeisti Fluxer paskyros el. pašto adresą.\n\nNorėdami patvirtinti šį pakeitimą, įveskite šį kodą programėlėje:\n\n{code}\n\nŠis kodas nustos galioti {expiresAt, date, full} {expiresAt, time, short}.\n\nJei to neprašėte, nedelsdami apsaugokite savo paskyrą.\n\n- Fluxer komanda"
+	},
+	"emailChangeNew": {
+		"subject": "Patvirtinkite naują Fluxer el. pašto adresą",
+		"body": "Sveiki, {username},\n\nĮveskite šį kodą programėlėje, kad patvirtintumėte naują Fluxer el. pašto adresą:\n\n{code}\n\nŠis kodas nustos galioti {expiresAt, date, full} {expiresAt, time, short}.\n\nJei to neprašėte, galite ignoruoti šį el. laišką."
+	},
+	"ipAuthorization": {
+		"subject": "Patvirtinkite prisijungimą iš naujo IP adreso",
+		"body": "Sveiki, {username},\n\nAptikome bandymą prisijungti prie jūsų Fluxer paskyros iš naujo IP adreso:\n\nIP adresas: {ipAddress}\nVieta: {location}\n\nJei tai buvote jūs, patvirtinkite šį IP adresą paspausdami žemiau esančią nuorodą:\n\n{authUrl}\n\nJei nebandėte prisijungti, nedelsdami pakeiskite slaptažodį.\n\nŠi patvirtinimo nuoroda nustos galioti po 30 minučių.\n\n- Fluxer komanda"
+	},
+	"accountDisabledSuspicious": {
+		"subject": "Jūsų Fluxer paskyra laikinai išjungta",
+		"body": "Sveiki, {username},\n\nJūsų Fluxer paskyra buvo laikinai išjungta dėl įtartinos veiklos.\n\n{reason, select,\n\tnull {}\n\tother {Priežastis: {reason}\n\n}}Norėdami vėl gauti prieigą prie savo paskyros, turite iš naujo nustatyti slaptažodį:\n\n{forgotUrl}\n\nIš naujo nustatę slaptažodį galėsite vėl prisijungti.\n\nJei manote, kad šis veiksmas atliktas per klaidą, susisiekite su mūsų pagalbos komanda.\n\n- Fluxer saugumo komanda"
+	},
+	"accountTempBanned": {
+		"subject": "Jūsų Fluxer paskyra laikinai sustabdyta",
+		"body": "Sveiki, {username},\n\nJūsų Fluxer paskyra buvo laikinai sustabdyta dėl mūsų Naudojimo sąlygų arba Bendruomenės gairių pažeidimo.\n\nTrukmė: {durationHours, plural,\n\tone {# valanda}\n\tfew {# valandos}\n\tother {# valandų}\n}\nSustabdyta iki: {bannedUntil, date, full} {bannedUntil, time, short}\n{reason, select,\n\tnull {}\n\tother {\nPriežastis: {reason}}\n}\n\nPer šį laiką negalėsite naudotis savo paskyra.\n\nRaginame peržiūrėti mūsų:\n- Naudojimo sąlygas: {termsUrl}\n- Bendruomenės gaires: {guidelinesUrl}\n\nJei manote, kad šis sprendimas buvo neteisingas ar nepagrįstas, galite pateikti apeliaciją el. paštu appeals@fluxer.app iš šio el. pašto adreso. Aiškiai paaiškinkite, kodėl manote, kad sprendimas buvo klaidingas. Mes peržiūrėsime apeliaciją ir atsakysime su galutiniu sprendimu.\n\n- Fluxer saugumo komanda"
+	},
+	"accountScheduledDeletion": {
+		"subject": "Jūsų Fluxer paskyra numatyta ištrinti",
+		"body": "Sveiki, {username},\n\nJūsų Fluxer paskyra buvo numatyta visam laikui ištrinti dėl mūsų Naudojimo sąlygų arba Bendruomenės gairių pažeidimų.\n\nNumatyta ištrynimo data: {deletionDate, date, full} {deletionDate, time, short}\n{reason, select,\n\tnull {}\n\tother {\nPriežastis: {reason}}\n}\n\nTai rimtas vykdymo užtikrinimo veiksmas. Jūsų paskyros duomenys bus visam laikui ištrinti nurodytą datą.\n\nRaginame peržiūrėti mūsų:\n- Naudojimo sąlygas: {termsUrl}\n- Bendruomenės gaires: {guidelinesUrl}\n\nAPELIACIJŲ TVARKA:\nJei manote, kad šis sprendimas buvo neteisingas ar nepagrįstas, turite 30 dienų pateikti apeliaciją el. paštu appeals@fluxer.app iš šio el. pašto adreso.\n\nApeliacijoje prašome:\n- Aiškiai paaiškinti, kodėl manote, kad sprendimas buvo neteisingas ar nepagrįstas\n- Pateikti bet kokius svarbius įrodymus ar kontekstą\n\nFluxer saugumo komandos narys peržiūrės jūsų apeliaciją ir gali atšaukti planuojamą ištrynimą, kol bus priimtas galutinis sprendimas.\n\n- Fluxer saugumo komanda"
+	},
+	"selfDeletionScheduled": {
+		"subject": "Jūsų Fluxer paskyros ištrynimas suplanuotas",
+		"body": "Sveiki, {username},\n\nLiūdna matyti, kad išeinate! Jūsų Fluxer paskyros ištrynimas buvo suplanuotas.\n\nNumatyta ištrynimo data: {deletionDate, date, full} {deletionDate, time, short}\n\nSVARBU: Galite bet kada atšaukti šį ištrynimą iki {deletionDate, date, full} {deletionDate, time, short}, tiesiog vėl prisijungdami prie savo paskyros.\n\nPRIEŠ IŠEIDAMI:\nJūsų Privatumo skydelis Naudotojo nustatymuose leidžia:\n- Ištrinti savo žinutes platformoje\n- Išsaugoti (eksportuoti) vertingus duomenis prieš išvykstant\n\nAtkreipkite dėmesį: Kai paskyra bus ištrinta, nebus jokio būdo ištrinti savo žinučių. Jei norite ištrinti žinutes, padarykite tai Privatumo skydelyje prieš galutinai įsigaliojant paskyros ištrynimui.\n\nJei persigalvosite, tiesiog vėl prisijunkite, kad atšauktumėte ištrynimą.\n\n- Fluxer komanda"
+	},
+	"inactivityWarning": {
+		"subject": "Jūsų Fluxer paskyra bus ištrinta dėl neaktyvumo",
+		"body": "Sveiki, {username},\n\nPastebėjome, kad prie savo Fluxer paskyros neprisijungėte daugiau nei 2 metus.\n\nPaskutinis prisijungimas: {lastActiveDate, date, full} {lastActiveDate, time, short}\n\nPagal mūsų duomenų saugojimo politiką neaktyvios paskyros automatiškai planuojamos ištrinti. Jūsų paskyra bus visam laikui ištrinta:\n\nNumatyta ištrynimo data: {deletionDate, date, full} {deletionDate, time, short}\n\nKAIP IŠSAUGOTI PASKYRĄ:\nTiesiog prisijunkite prie savo paskyros adresu {loginUrl} iki ištrynimo datos, kad atšauktumėte automatinį ištrynimą. Jokių kitų veiksmų nereikia.\n\nKAS NUTIKS, JEI NEPRISIJUNGSITE:\n- Jūsų paskyra ir visi susiję duomenys bus visam laikui ištrinti\n- Jūsų žinutės bus anonimizuotos (priskirtos „Ištrintas naudotojas“)\n- Šio veiksmo atšaukti neįmanoma\n\nNORITE IŠTRINTI SAVO ŽINUTES?\nJei norite ištrinti žinutes prieš ištrinant paskyrą, prisijunkite ir naudokite Privatumo skydelį Naudotojo nustatymuose.\n\nTikimės vėl jus pamatyti Fluxer!\n\n- Fluxer komanda"
+	},
+	"harvestCompleted": {
+		"subject": "Jūsų Fluxer duomenų eksportas paruoštas",
+		"body": "Sveiki, {username},\n\nJūsų duomenų eksportas baigtas ir paruoštas atsisiųsti!\n\nEksporto suvestinė:\n- Iš viso žinučių: {totalMessages, number}\n- Failo dydis: {fileSizeMB} MB\n- Formatas: ZIP archyvas su JSON failais\n\nAtsisiųskite duomenis: {downloadUrl}\n\nSVARBU: Ši atsisiuntimo nuoroda nustos galioti {expiresAt, date, full} {expiresAt, time, short}\n\nKas įtraukta į eksportą:\n- Visos jūsų žinutės, suskirstytos pagal kanalus\n- Kanalų metaduomenys\n- Jūsų naudotojo profilis ir paskyros informacija\n- Gildijų narystės ir nustatymai\n- Autentifikavimo sesijos ir saugumo informacija\n\nDuomenys pateikiami JSON formatu, kad būtų lengva juos apdoroti ir analizuoti.\n\nJei turite klausimų apie duomenų eksportą, susisiekite su support@fluxer.app\n\n- Fluxer komanda"
+	},
+	"unbanNotification": {
+		"subject": "Jūsų Fluxer paskyros sustabdymas panaikintas",
+		"body": "Sveiki, {username},\n\nGeros naujienos! Jūsų Fluxer paskyros sustabdymas buvo panaikintas.\n\nPriežastis: {reason}\n\nDabar galite vėl prisijungti prie savo paskyros ir toliau naudotis Fluxer.\n\n- Fluxer saugumo komanda"
+	},
+	"scheduledDeletionNotification": {
+		"subject": "Jūsų Fluxer paskyra numatyta ištrinti",
+		"body": "Sveiki, {username},\n\nJūsų Fluxer paskyra buvo numatyta visam laikui ištrinti.\n\nNumatyta ištrynimo data: {deletionDate, date, full} {deletionDate, time, short}\nPriežastis: {reason}\n\nTai rimtas vykdymo užtikrinimo veiksmas. Jūsų paskyros duomenys bus visam laikui ištrinti nurodytą datą.\n\nJei manote, kad šis sprendimas buvo neteisingas, galite pateikti apeliaciją el. paštu appeals@fluxer.app iš šio el. pašto adreso.\n\n- Fluxer saugumo komanda"
+	},
+	"giftChargebackNotification": {
+		"subject": "Jūsų Fluxer Premium dovana atšaukta",
+		"body": "Sveiki, {username},\n\nRašome informuoti, kad jūsų panaudota Fluxer Premium dovana buvo atšaukta dėl mokėjimo ginčo (chargeback), kurį pateikė pirminis pirkėjas.\n\nPremium privilegijos buvo pašalintos iš jūsų paskyros. Šis veiksmas atliktas, nes dovanos apmokėjimas buvo užginčytas ir atšauktas.\n\nJei turite klausimų, susisiekite su support@fluxer.app.\n\n- Fluxer komanda"
+	},
+	"reportResolved": {
+		"subject": "Jūsų Fluxer pranešimas peržiūrėtas",
+		"body": "Sveiki, {username},\n\nJūsų pranešimą (ID: {reportId}) peržiūrėjo mūsų saugumo komanda.\n\nSaugumo komandos atsakymas:\n{publicComment}\n\nAčiū, kad padedate išlaikyti Fluxer saugią visiems. Į visus pranešimus žiūrime rimtai ir vertiname jūsų indėlį į bendruomenę.\n\nJei turite klausimų ar abejonių dėl šio sprendimo, susisiekite su safety@fluxer.app.\n\n- Fluxer saugumo komanda"
+	},
+	"dsaReportVerification": {
+		"subject": "Patvirtinkite el. paštą dėl DSA pranešimo",
+		"body": "Sveiki,\n\nNaudokite toliau pateiktą patvirtinimo kodą, kad pateiktumėte Skaitmeninių paslaugų akto (DSA) pranešimą Fluxer platformoje:\n\n{code}\n\nŠis kodas nustos galioti {expiresAt, date, full} {expiresAt, time, short}.\n\nJei to neprašėte, ignoruokite šį el. laišką.\n\n- Fluxer saugumo komanda"
+	},
+	"registrationApproved": {
+		"subject": "Jūsų Fluxer registracija patvirtinta",
+		"body": "Sveiki, {username},\n\nGeros naujienos! Jūsų Fluxer registracija buvo patvirtinta.\n\nDabar galite prisijungti prie Fluxer programėlės čia:\n{channelsUrl}\n\nSveiki prisijungę prie Fluxer bendruomenės!\n\n- Fluxer komanda"
+	},
+	"emailChangeRevert": {
+		"subject": "Jūsų Fluxer el. pašto adresas pakeistas",
+		"body": "Sveiki, {username},\n\nJūsų Fluxer paskyros el. pašto adresas buvo pakeistas į {newEmail}.\n\nJei šį pakeitimą atlikote jūs, jokių veiksmų nereikia. Jei ne, galite atšaukti pakeitimą ir apsaugoti savo paskyrą naudodami šią nuorodą:\n\n{revertUrl}\n\nTai atkurs ankstesnį el. pašto adresą, atjungs jus visur, pašalins susietus telefono numerius, išjungs daugiaveiksnį autentifikavimą (MFA) ir pareikalaus nustatyti naują slaptažodį.\n\n- Fluxer saugumo komanda"
+	}
+}
