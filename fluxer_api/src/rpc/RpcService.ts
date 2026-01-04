@@ -43,6 +43,7 @@ import {
 } from '~/Constants';
 import {mapChannelToResponse, mapMessageToResponse} from '~/channel/ChannelModel';
 import type {IChannelRepository} from '~/channel/IChannelRepository';
+import type {UserRow} from '~/database/types/UserTypes';
 import {RateLimitError, UnauthorizedError, UnknownGuildError} from '~/Errors';
 import {mapFavoriteMemeToResponse} from '~/favorite_meme/FavoriteMemeModel';
 import type {IFavoriteMemeRepository} from '~/favorite_meme/IFavoriteMemeRepository';
@@ -87,6 +88,7 @@ import type {RpcRequest, RpcResponse, RpcResponseGuildData, RpcResponseSessionDa
 import type {IUserRepository} from '~/user/IUserRepository';
 import {CustomStatusValidator} from '~/user/services/CustomStatusValidator';
 import {getCachedUserPartialResponse} from '~/user/UserCacheHelpers';
+import {mapExpiredPremiumFields, shouldStripExpiredPremium} from '~/user/UserHelpers';
 import {
 	mapRelationshipToResponse,
 	mapUserGuildSettingsToResponse,
@@ -567,7 +569,23 @@ export class RpcService {
 
 		const hadPremium = user.premiumType != null && user.premiumType > 0;
 		const isPremium = user.isPremium();
+		const needsPremiumStrip = shouldStripExpiredPremium(user);
 		const hasBeenSanitized = !!(user.flags & UserFlags.PREMIUM_PERKS_SANITIZED);
+
+		if (needsPremiumStrip) {
+			try {
+				const strippedUser = await this.userRepository.patchUpsert(
+					user.id,
+					mapExpiredPremiumFields(() => null) as Partial<UserRow>,
+				);
+				if (strippedUser) {
+					user = strippedUser;
+					userData.user = strippedUser;
+				}
+			} catch (error) {
+				Logger.warn({userId: user.id.toString(), error}, 'Failed to strip expired premium on RPC session start');
+			}
+		}
 
 		if (hadPremium && !isPremium && !hasBeenSanitized) {
 			if (user.flags & UserFlags.PREMIUM_DISCRIMINATOR) {

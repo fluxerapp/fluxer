@@ -55,3 +55,29 @@ export function checkIsPremium(user: PremiumCheckable): boolean {
 
 	return nowMs <= untilMs + GRACE_MS;
 }
+
+export const PREMIUM_CLEAR_FIELDS = [
+	'premium_type',
+	'premium_since',
+	'premium_until',
+	'premium_will_cancel',
+	'premium_billing_cycle',
+] as const;
+
+export type PremiumClearField = (typeof PREMIUM_CLEAR_FIELDS)[number];
+
+export function shouldStripExpiredPremium(user: PremiumCheckable): boolean {
+	if ((user.premiumType ?? 0) <= 0) {
+		return false;
+	}
+
+	return !checkIsPremium(user);
+}
+
+export function mapExpiredPremiumFields<T>(mapper: (field: PremiumClearField) => T): Record<PremiumClearField, T> {
+	const result = {} as Record<PremiumClearField, T>;
+	for (const field of PREMIUM_CLEAR_FIELDS) {
+		result[field] = mapper(field);
+	}
+	return result;
+}
