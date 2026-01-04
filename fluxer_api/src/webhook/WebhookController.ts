@@ -31,6 +31,7 @@ import {RateLimitConfigs} from '~/RateLimitConfig';
 import {createStringType, Int64Type, z} from '~/Schema';
 import {Validator} from '~/Validator';
 import {GitHubWebhook} from '~/webhook/transformers/GitHubTransformer';
+import {SlackWebhookRequest, transformSlackWebhookRequest} from '~/webhook/transformers/SlackTransformer';
 import {
 	mapWebhooksToResponse,
 	mapWebhookToResponseWithCache,
@@ -276,6 +277,25 @@ export const WebhookController = (app: HonoApp) => {
 				requestCache: ctx.get('requestCache'),
 			});
 			return ctx.body(null, 204);
+		},
+	);
+
+	app.post(
+		'/webhooks/:webhook_id/:token/slack',
+		RateLimitMiddleware(RateLimitConfigs.WEBHOOK_EXECUTE),
+		Validator('param', z.object({webhook_id: Int64Type, token: createStringType()})),
+		Validator('json', SlackWebhookRequest),
+		async (ctx) => {
+			const {webhook_id: webhookId, token} = ctx.req.valid('param');
+			const messageRequest = transformSlackWebhookRequest(ctx.req.valid('json'));
+			await ctx.get('webhookService').executeWebhook({
+				webhookId: createWebhookID(webhookId),
+				token: createWebhookToken(token),
+				data: messageRequest,
+				requestCache: ctx.get('requestCache'),
+			});
+			ctx.header('Content-Type', 'text/html; charset=utf-8');
+			return ctx.body('ok', 200);
 		},
 	);
 
