@@ -20,10 +20,8 @@
 import {createUserID, type UserID} from '~/BrandedTypes';
 import {buildPatchFromData, Db, executeVersionedUpdate, fetchMany, fetchOne} from '~/database/Cassandra';
 import {EMPTY_USER_ROW, USER_COLUMNS, type UserRow} from '~/database/CassandraTypes';
-import {Logger} from '~/Logger';
 import {User} from '~/Models';
 import {Users} from '~/Tables';
-import {shouldStripExpiredPremium} from '~/user/UserHelpers';
 
 const FETCH_USERS_BY_IDS_CQL = Users.selectCql({
 	where: Users.where.in('user_id', 'user_ids'),
@@ -75,21 +73,7 @@ export class UserDataRepository {
 			return null;
 		}
 
-		const user = new User(userRow);
-
-		if (shouldStripExpiredPremium(user)) {
-			try {
-				await this.readRepairExpiredPremium(user);
-				const repairedRow = await fetchOne<UserRow>(FETCH_USER_BY_ID_CQL, {
-					user_id: userId,
-				});
-				return repairedRow ? new User(repairedRow) : null;
-			} catch (error) {
-				Logger.warn({userId: user.id.toString(), error}, 'Failed to repair expired premium fields while reading user');
-			}
-		}
-
-		return user;
+		return new User(userRow);
 	}
 
 	async findUniqueAssert(userId: UserID): Promise<User> {
@@ -168,18 +152,4 @@ export class UserDataRepository {
 
 		await this.patchUser(userId, patch);
 	}
-
-	private async readRepairExpiredPremium(user: User): Promise<void> {
-		await this.patchUser(user.id, createPremiumClearPatch());
-	}
-}
-
-function createPremiumClearPatch(): UserPatch {
-	return {
-		premium_type: Db.clear<number | null>(),
-		premium_since: Db.clear<Date | null>(),
-		premium_until: Db.clear<Date | null>(),
-		premium_will_cancel: Db.clear<boolean | null>(),
-		premium_billing_cycle: Db.clear<string | null>(),
-	};
 }

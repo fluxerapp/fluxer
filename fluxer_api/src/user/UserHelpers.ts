@@ -19,6 +19,7 @@
 
 import {Config} from '~/Config';
 import {UserFlags} from '~/Constants';
+import type {UserRow} from '~/database/types/UserTypes';
 
 interface PremiumCheckable {
 	premiumType: number | null;
@@ -80,4 +81,8 @@ export function mapExpiredPremiumFields<T>(mapper: (field: PremiumClearField) =>
 		result[field] = mapper(field);
 	}
 	return result;
+}
+
+export function createPremiumClearPatch(): Partial<UserRow> {
+	return mapExpiredPremiumFields(() => null) as Partial<UserRow>;
 }
