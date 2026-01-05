@@ -289,7 +289,7 @@ export class RpcService {
 				return {
 					type: 'geoip_lookup',
 					data: {
-						country_code: geoip.countryCode,
+						country_code: geoip.countryCode ?? 'US',
 					},
 				};
 			}
@@ -689,7 +689,7 @@ export class RpcService {
 		let countryCode = 'US';
 		if (ip) {
 			const geoip = await lookupGeoip(ip);
-			countryCode = geoip.countryCode;
+			countryCode = geoip.countryCode ?? countryCode;
 		} else {
 			Logger.warn({context: 'rpc_geoip', reason: 'ip_missing'}, 'RPC session request missing IP for GeoIP');
 		}
