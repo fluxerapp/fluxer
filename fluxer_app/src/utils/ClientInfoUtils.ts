@@ -17,7 +17,7 @@
  * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import {UAParser} from 'ua-parser-js';
+import Bowser from 'bowser';
 import Config from '~/Config';
 import {getElectronAPI, isDesktop} from '~/utils/NativeUtils';
 
@@ -39,14 +39,16 @@ let cachedClientInfo: ClientInfo | null = null;
 let preloadPromise: Promise<ClientInfo> | null = null;
 
 const parseUserAgent = (): ClientInfo => {
-	const parser = new UAParser();
+	const hasNavigator = typeof navigator !== 'undefined';
+	const userAgent = hasNavigator ? navigator.userAgent : '';
+	const parser = Bowser.getParser(userAgent);
 	const result = parser.getResult();
 	return {
 		browserName: normalize(result.browser.name),
 		browserVersion: normalize(result.browser.version),
 		osName: normalize(result.os.name),
 		osVersion: normalize(result.os.version),
-		arch: normalize(result.cpu.architecture),
+		arch: normalize(hasNavigator ? navigator.platform : undefined),
 	};
 };
 

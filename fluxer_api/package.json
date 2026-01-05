@@ -54,7 +54,7 @@
 		"transliteration": "2.6.0",
 		"tsx": "4.21.0",
 		"twilio": "5.11.1",
-		"ua-parser-js": "2.0.7",
+		"bowser": "2.13.1",
 		"uint8array-extras": "1.5.0",
 		"undici": "7.16.0",
 		"unique-names-generator": "4.7.1",

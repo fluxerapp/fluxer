@@ -17,11 +17,12 @@
  * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import {UAParser} from 'ua-parser-js';
+import Bowser from 'bowser';
 import {type AuthSessionResponse, mapAuthSessionsToResponse} from '~/auth/AuthModel';
 import type {UserID} from '~/BrandedTypes';
 import {AccessDeniedError} from '~/Errors';
 import type {IGatewayService} from '~/infrastructure/IGatewayService';
+import {Logger} from '~/Logger';
 import type {AuthSession, User} from '~/Models';
 import type {IUserRepository} from '~/user/IUserRepository';
 import * as IpUtils from '~/utils/IpUtils';
@@ -41,6 +42,44 @@ interface UpdateUserActivityParams {
 	clientIp: string;
 }
 
+function formatNameVersion(name?: string | null, version?: string | null): string {
+	if (!name) return 'Unknown';
+	if (!version) return name;
+	return `${name} ${version}`;
+}
+
+function nullIfUnknown(value: string | null | undefined): string | null {
+	if (!value) return null;
+	return value === IpUtils.UNKNOWN_LOCATION ? null : value;
+}
+
+function parseUserAgent(userAgentRaw: string): {clientOs: string; detectedPlatform: string} {
+	const ua = userAgentRaw.trim();
+	if (!ua) return {clientOs: 'Unknown', detectedPlatform: 'Unknown'};
+
+	try {
+		const parser = Bowser.getParser(ua);
+		const osName = parser.getOSName() || 'Unknown';
+		const osVersion = parser.getOSVersion() || null;
+		const browserName = parser.getBrowserName() || 'Unknown';
+		const browserVersion = parser.getBrowserVersion() || null;
+
+		return {
+			clientOs: formatNameVersion(osName, osVersion),
+			detectedPlatform: formatNameVersion(browserName, browserVersion),
+		};
+	} catch (error) {
+		Logger.warn({error}, 'Failed to parse user agent');
+		return {clientOs: 'Unknown', detectedPlatform: 'Unknown'};
+	}
+}
+
+function resolveClientPlatform(platformHeader: string | null, detectedPlatform: string): string {
+	if (!platformHeader) return detectedPlatform;
+	if (platformHeader === 'desktop') return 'Fluxer Desktop';
+	return detectedPlatform;
+}
+
 export class AuthSessionService {
 	constructor(
 		private repository: IUserRepository,
@@ -50,33 +89,30 @@ export class AuthSessionService {
 	) {}
 
 	async createAuthSession({user, request}: CreateAuthSessionParams): Promise<[token: string, AuthSession]> {
-		if (user.isBot) {
-			throw new AccessDeniedError('Bot users cannot create auth sessions');
-		}
+		if (user.isBot) throw new AccessDeniedError('Bot users cannot create auth sessions');
 
+		const now = new Date();
 		const token = await this.generateAuthToken();
 		const ip = IpUtils.requireClientIp(request);
-		const userAgent = request.headers.get('user-agent') || '';
-		const platformHeader = request.headers.get('x-fluxer-platform')?.toLowerCase() ?? null;
-		const parsedUserAgent = new UAParser(userAgent).getResult();
-		const geoipResult = await IpUtils.getCountryCodeDetailed(ip);
-		const clientLocationLabel = IpUtils.formatGeoipLocation(geoipResult);
-		const detectedPlatform = parsedUserAgent.browser.name ?? 'Unknown';
-		const clientPlatform = platformHeader === 'desktop' ? 'Fluxer Desktop' : detectedPlatform;
+
+		const platformHeader = request.headers.get('x-fluxer-platform')?.trim().toLowerCase() ?? null;
+		const uaRaw = request.headers.get('user-agent') ?? '';
+		const uaInfo = parseUserAgent(uaRaw);
+
+		const geoip = await IpUtils.getCountryCodeDetailed(ip);
+		const locationLabel = nullIfUnknown(IpUtils.formatGeoipLocation(geoip));
+		const countryLabel = nullIfUnknown(geoip.countryName ?? geoip.countryCode ?? null);
 
 		const authSession = await this.repository.createAuthSession({
 			user_id: user.id,
 			session_id_hash: Buffer.from(this.getTokenIdHash(token)),
-			created_at: new Date(),
-			approx_last_used_at: new Date(),
+			created_at: now,
+			approx_last_used_at: now,
 			client_ip: ip,
-			client_os: parsedUserAgent.os.name ?? 'Unknown',
-			client_platform: clientPlatform,
-			client_country:
-				(geoipResult.countryName ?? geoipResult.countryCode) === IpUtils.UNKNOWN_LOCATION
-					? null
-					: (geoipResult.countryName ?? geoipResult.countryCode),
-			client_location: clientLocationLabel === IpUtils.UNKNOWN_LOCATION ? null : clientLocationLabel,
+			client_os: uaInfo.clientOs,
+			client_platform: resolveClientPlatform(platformHeader, uaInfo.detectedPlatform),
+			client_country: countryLabel,
+			client_location: locationLabel,
 			version: 1,
 		});
 
@@ -101,50 +137,49 @@ export class AuthSessionService {
 	}
 
 	async revokeToken(token: string): Promise<void> {
-		const tokenHash = this.getTokenIdHash(token);
-		const authSession = await this.repository.getAuthSessionByToken(Buffer.from(tokenHash));
+		const tokenHash = Buffer.from(this.getTokenIdHash(token));
+		const authSession = await this.repository.getAuthSessionByToken(tokenHash);
+		if (!authSession) return;
 
-		if (authSession) {
-			await this.repository.revokeAuthSession(Buffer.from(tokenHash));
-			await this.gatewayService.terminateSession({
-				userId: authSession.userId,
-				sessionIdHashes: [Buffer.from(authSession.sessionIdHash).toString('base64url')],
-			});
-		}
+		await this.repository.revokeAuthSession(tokenHash);
+
+		await this.gatewayService.terminateSession({
+			userId: authSession.userId,
+			sessionIdHashes: [Buffer.from(authSession.sessionIdHash).toString('base64url')],
+		});
 	}
 
 	async logoutAuthSessions({user, sessionIdHashes}: LogoutAuthSessionsParams): Promise<void> {
 		const hashes = sessionIdHashes.map((hash) => Buffer.from(hash, 'base64url'));
 		await this.repository.deleteAuthSessions(user.id, hashes);
+
 		await this.gatewayService.terminateSession({
 			userId: user.id,
-			sessionIdHashes: sessionIdHashes,
+			sessionIdHashes,
 		});
 	}
 
 	async terminateAllUserSessions(userId: UserID): Promise<void> {
 		const authSessions = await this.repository.listAuthSessions(userId);
-		await this.repository.deleteAuthSessions(
-			userId,
-			authSessions.map((session) => session.sessionIdHash),
-		);
+		if (authSessions.length === 0) return;
+
+		const hashes = authSessions.map((s) => s.sessionIdHash);
+		await this.repository.deleteAuthSessions(userId, hashes);
+
 		await this.gatewayService.terminateSession({
 			userId,
-			sessionIdHashes: authSessions.map((session) => Buffer.from(session.sessionIdHash).toString('base64url')),
+			sessionIdHashes: authSessions.map((s) => Buffer.from(s.sessionIdHash).toString('base64url')),
 		});
 	}
 
-	async dispatchAuthSessionChange({
-		userId,
-		oldAuthSessionIdHash,
-		newAuthSessionIdHash,
-		newToken,
-	}: {
+	async dispatchAuthSessionChange(params: {
 		userId: UserID;
 		oldAuthSessionIdHash: string;
 		newAuthSessionIdHash: string;
 		newToken: string;
 	}): Promise<void> {
+		const {userId, oldAuthSessionIdHash, newAuthSessionIdHash, newToken} = params;
+
 		await this.gatewayService.dispatchPresence({
 			userId,
 			event: 'AUTH_SESSION_CHANGE',

@@ -344,7 +344,7 @@ export default () => {
 								reuseExistingChunk: true,
 							},
 							utils: {
-								test: /[\\/]node_modules[\\/](lodash|clsx|qrcode|thumbhash|ua-parser-js|match-sorter)[\\/]/,
+								test: /[\\/]node_modules[\\/](lodash|clsx|qrcode|thumbhash|bowser|match-sorter)[\\/]/,
 								name: 'utils',
 								priority: 28,
 								reuseExistingChunk: true,

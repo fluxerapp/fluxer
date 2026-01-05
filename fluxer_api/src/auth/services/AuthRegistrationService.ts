@@ -18,8 +18,8 @@
  */
 
 import crypto from 'node:crypto';
+import Bowser from 'bowser';
 import {types} from 'cassandra-driver';
-import {UAParser} from 'ua-parser-js';
 import type {RegisterRequest} from '~/auth/AuthModel';
 import {createEmailVerificationToken, createInviteCode, createUserID, type UserID} from '~/BrandedTypes';
 import {Config} from '~/Config';
@@ -81,8 +81,9 @@ const MINIMUM_AGE_BY_COUNTRY: Record<string, number> = {
 };
 
 const DEFAULT_MINIMUM_AGE = 13;
-
 const USER_AGENT_TRUNCATE_LENGTH = 512;
+
+type CountryResultDetailed = Awaited<ReturnType<typeof IpUtils.getCountryCodeDetailed>>;
 
 interface RegistrationMetadataContext {
 	metadata: Map<string, string>;
@@ -112,17 +113,41 @@ const AGE_BUCKETS: Array<{label: string; min: number; max: number}> = [
 ];
 
 function determineAgeGroup(age: number | null): string {
-	if (age === null || age < 0) {
-		return 'unknown';
-	}
-
+	if (age === null || age < 0) return 'unknown';
 	for (const bucket of AGE_BUCKETS) {
-		if (age >= bucket.min && age <= bucket.max) {
-			return bucket.label;
-		}
+		if (age >= bucket.min && age <= bucket.max) return bucket.label;
 	}
-
 	return '65+';
+}
+
+function sanitizeEmail(email: string | null | undefined): {raw: string | null; key: string | null} {
+	const key = email ? email.toLowerCase() : null;
+	return {raw: email ?? null, key};
+}
+
+function isIpv6(ip: string): boolean {
+	return ip.includes(':');
+}
+
+function rateLimitError(message: string): FluxerAPIError {
+	return new FluxerAPIError({code: APIErrorCodes.RATE_LIMITED, message, status: 429});
+}
+
+function parseDobLocalDate(dateOfBirth: string): types.LocalDate {
+	try {
+		return types.LocalDate.fromString(dateOfBirth);
+	} catch {
+		throw InputValidationError.create('date_of_birth', 'Invalid date of birth format');
+	}
+}
+
+function safeJsonParse<T>(value: string): T | null {
+	try {
+		return JSON.parse(value) as T;
+	} catch (error) {
+		Logger.warn({error}, 'Failed to parse JSON from environment variable');
+		return null;
+	}
 }
 
 interface RegisterParams {
@@ -132,9 +157,11 @@ interface RegisterParams {
 }
 
 export class AuthRegistrationService {
+	private instanceConfigRepository = new InstanceConfigRepository();
+
 	constructor(
 		private repository: IUserRepository,
-		private inviteService: InviteService,
+		private inviteService: InviteService | null,
 		private rateLimitService: IRateLimitService,
 		private emailService: IEmailService,
 		private snowflakeService: SnowflakeService,
@@ -158,9 +185,13 @@ export class AuthRegistrationService {
 			throw InputValidationError.create('consent', 'You must agree to the Terms of Service and Privacy Policy');
 		}
 
-		const countryCode = await IpUtils.getCountryCodeFromReq(request);
+		const now = new Date();
+		const metrics = getMetricsService();
+
 		const clientIp = IpUtils.requireClientIp(request);
+		const countryCode = await IpUtils.getCountryCodeFromReq(request);
 		const countryResultDetailed = await IpUtils.getCountryCodeDetailed(clientIp);
+
 		const minAge = (countryCode && MINIMUM_AGE_BY_COUNTRY[countryCode]) || DEFAULT_MINIMUM_AGE;
 		if (!this.validateAge({dateOfBirth: data.date_of_birth, minAge})) {
 			throw InputValidationError.create(
@@ -173,109 +204,43 @@ export class AuthRegistrationService {
 			throw InputValidationError.create('password', 'Password is too common');
 		}
 
+		const {raw: rawEmail, key: emailKey} = sanitizeEmail(data.email);
+
 		const enforceRateLimits = !Config.dev.relaxRegistrationRateLimits;
+		await this.enforceRegistrationRateLimits({enforceRateLimits, clientIp, emailKey});
 
-		if (enforceRateLimits && data.email) {
-			const emailRateLimit = await this.rateLimitService.checkLimit({
-				identifier: `registration:email:${data.email}`,
-				maxAttempts: 3,
-				windowMs: 15 * 60 * 1000,
-			});
+		const {betaCode, hasValidBetaCode} = await this.resolveBetaCode(data.beta_code ?? null);
 
-			if (!emailRateLimit.allowed) {
-				throw new FluxerAPIError({
-					code: APIErrorCodes.RATE_LIMITED,
-					message: 'Too many registration attempts. Please try again later.',
-					status: 429,
-				});
-			}
-		}
-
-		if (enforceRateLimits) {
-			const ipRateLimit = await this.rateLimitService.checkLimit({
-				identifier: `registration:ip:${clientIp}`,
-				maxAttempts: 5,
-				windowMs: 30 * 60 * 1000,
-			});
-
-			if (!ipRateLimit.allowed) {
-				throw new FluxerAPIError({
-					code: APIErrorCodes.RATE_LIMITED,
-					message: 'Too many registration attempts from this IP. Please try again later.',
-					status: 429,
-				});
-			}
-		}
-
-		let betaCode = null;
-		let hasValidBetaCode = false;
-		if (data.beta_code) {
-			if (Config.nodeEnv === 'development' && data.beta_code === 'NOVERIFY') {
-				hasValidBetaCode = false;
-			} else {
-				betaCode = await this.repository.getBetaCode(data.beta_code);
-				if (betaCode && !betaCode.redeemerId) {
-					hasValidBetaCode = true;
-				}
-			}
-		}
-
-		const rawEmail = data.email?.trim() || null;
-		const normalizedEmail = rawEmail?.toLowerCase() || null;
-
-		if (normalizedEmail) {
-			const emailTaken = await this.repository.findByEmail(normalizedEmail);
-			if (emailTaken) {
-				throw InputValidationError.create('email', 'Email already in use');
-			}
+		if (rawEmail) {
+			const emailTaken = await this.repository.findByEmail(rawEmail);
+			if (emailTaken) throw InputValidationError.create('email', 'Email already in use');
 		}
 
 		const username = data.username || generateRandomUsername();
-
-		const discriminatorResult = await this.discriminatorService.generateDiscriminator({
-			username,
-			isPremium: false,
-		});
-
-		if (!discriminatorResult.available || discriminatorResult.discriminator === -1) {
-			throw InputValidationError.create('username', 'Too many users with this username');
-		}
-
-		const discriminator = discriminatorResult.discriminator;
-
-		let userId: UserID;
-		if (normalizedEmail && process.env.EARLY_TESTER_EMAIL_HASH_TO_SNOWFLAKE) {
-			const mapping = JSON.parse(process.env.EARLY_TESTER_EMAIL_HASH_TO_SNOWFLAKE) as Record<string, string>;
-			const emailHash = crypto.createHash('sha256').update(normalizedEmail).digest('hex');
-			const mappedUserId = mapping[emailHash];
-			userId = mappedUserId ? createUserID(BigInt(mappedUserId)) : createUserID(this.snowflakeService.generate());
-		} else {
-			userId = createUserID(this.snowflakeService.generate());
-		}
+		const discriminator = await this.allocateDiscriminator(username);
+		const userId = this.generateUserId(emailKey);
 
 		const acceptLanguage = request.headers.get('accept-language');
 		const userLocale = parseAcceptLanguage(acceptLanguage);
+
 		const passwordHash = data.password ? await this.hashPassword(data.password) : null;
 
-		const instanceConfigRepository = new InstanceConfigRepository();
-		const instanceConfig = await instanceConfigRepository.getInstanceConfig();
-		const isManualReviewActive = instanceConfigRepository.isManualReviewActiveNow(instanceConfig);
+		const instanceConfig = await this.instanceConfigRepository.getInstanceConfig();
+		const isManualReviewActive = this.instanceConfigRepository.isManualReviewActiveNow(instanceConfig);
 
 		const shouldRequireVerification =
 			(isManualReviewActive && Config.nodeEnv === 'production') ||
 			(Config.nodeEnv === 'development' && data.beta_code === 'NOVERIFY');
+
 		const isPendingVerification = shouldRequireVerification && !hasValidBetaCode;
 
-		let baseFlags = Config.nodeEnv === 'development' ? UserFlags.STAFF : 0n;
-		if (isPendingVerification) {
-			baseFlags |= UserFlags.PENDING_MANUAL_VERIFICATION;
-		}
+		let flags = Config.nodeEnv === 'development' ? UserFlags.STAFF : 0n;
+		if (isPendingVerification) flags |= UserFlags.PENDING_MANUAL_VERIFICATION;
 
-		const now = new Date();
 		const user = await this.repository.create({
 			user_id: userId,
 			username,
-			discriminator: discriminator,
+			discriminator,
 			global_name: data.global_name || null,
 			bot: false,
 			system: false,
@@ -284,7 +249,7 @@ export class AuthRegistrationService {
 			email_bounced: false,
 			phone: null,
 			password_hash: passwordHash,
-			password_last_changed_at: passwordHash ? new Date() : null,
+			password_last_changed_at: passwordHash ? now : null,
 			totp_secret: null,
 			authenticator_types: new Set(),
 			avatar_hash: null,
@@ -294,9 +259,9 @@ export class AuthRegistrationService {
 			bio: null,
 			pronouns: null,
 			accent_color: null,
-			date_of_birth: types.LocalDate.fromString(data.date_of_birth),
+			date_of_birth: parseDobLocalDate(data.date_of_birth),
 			locale: userLocale,
-			flags: baseFlags,
+			flags,
 			premium_type: null,
 			premium_since: null,
 			premium_until: null,
@@ -307,8 +272,8 @@ export class AuthRegistrationService {
 			stripe_customer_id: null,
 			has_ever_purchased: null,
 			suspicious_activity_flags: null,
-			terms_agreed_at: new Date(),
-			privacy_agreed_at: new Date(),
+			terms_agreed_at: now,
+			privacy_agreed_at: now,
 			last_active_at: now,
 			last_active_ip: clientIp,
 			temp_banned_until: null,
@@ -331,17 +296,17 @@ export class AuthRegistrationService {
 
 		await this.redisActivityTracker.updateActivity(user.id, now);
 
-		getMetricsService().counter({
+		metrics.counter({
 			name: 'user.registration',
 			dimensions: {
 				country: countryCode ?? 'unknown',
 				state: countryResultDetailed.region ?? 'unknown',
-				ip_version: clientIp.includes(':') ? 'v6' : 'v4',
+				ip_version: isIpv6(clientIp) ? 'v6' : 'v4',
 			},
 		});
 
 		const age = data.date_of_birth ? AgeUtils.calculateAge(data.date_of_birth) : null;
-		getMetricsService().counter({
+		metrics.counter({
 			name: 'user.age',
 			dimensions: {
 				country: countryCode ?? 'unknown',
@@ -359,52 +324,29 @@ export class AuthRegistrationService {
 			}),
 		);
 
-		const userSearchService = getUserSearchService();
-		if (userSearchService) {
-			await userSearchService.indexUser(user).catch((error) => {
-				Logger.error({userId: user.id, error}, 'Failed to index user in search');
-			});
-		}
+		await this.maybeIndexUser(user);
 
-		if (rawEmail) {
-			const emailVerifyToken = createEmailVerificationToken(await this.generateSecureToken());
-			await this.repository.createEmailVerificationToken({
-				token_: emailVerifyToken,
-				user_id: userId,
-				email: rawEmail,
-			});
+		if (rawEmail) await this.maybeSendVerificationEmail({user, email: rawEmail});
+		if (betaCode) await this.repository.updateBetaCodeRedeemed(betaCode.code, userId, now);
 
-			await this.emailService.sendEmailVerification(rawEmail, user.username, emailVerifyToken, user.locale);
-		}
+		const registrationMetadata = await this.buildRegistrationMetadataContext({
+			user,
+			clientIp,
+			request,
+			countryResultDetailed,
+		});
 
-		if (betaCode) {
-			await this.repository.updateBetaCodeRedeemed(betaCode.code, userId, new Date());
-		}
-
-		const registrationMetadata = await this.buildRegistrationMetadataContext(user, clientIp, request);
-
-		if (isPendingVerification) {
-			await this.repository.createPendingVerification(userId, new Date(), registrationMetadata.metadata);
-		}
+		if (isPendingVerification)
+			await this.repository.createPendingVerification(userId, now, registrationMetadata.metadata);
 
 		await this.repository.createAuthorizedIp(userId, clientIp);
 
-		const inviteCodeToJoin = data.invite_code || Config.instance.autoJoinInviteCode;
-		if (inviteCodeToJoin != null) {
-			if (isPendingVerification) {
-				await this.pendingJoinInviteStore.setPendingInvite(userId, inviteCodeToJoin);
-			} else if (this.inviteService) {
-				try {
-					await this.inviteService.acceptInvite({
-						userId,
-						inviteCode: createInviteCode(inviteCodeToJoin),
-						requestCache,
-					});
-				} catch (error) {
-					Logger.warn({inviteCode: inviteCodeToJoin, error}, 'Failed to auto-join invite on registration');
-				}
-			}
-		}
+		await this.maybeAutoJoinInvite({
+			userId,
+			inviteCode: data.invite_code || Config.instance.autoJoinInviteCode,
+			isPendingVerification,
+			requestCache,
+		});
 
 		const [token] = await this.createAuthSession({user, request});
 
@@ -421,36 +363,206 @@ export class AuthRegistrationService {
 		};
 	}
 
-	private async buildRegistrationMetadataContext(
-		user: User,
-		clientIp: string,
-		request: Request,
-	): Promise<RegistrationMetadataContext> {
-		const countryResult = await IpUtils.getCountryCodeDetailed(clientIp);
-		const userAgentHeader = request.headers.get('user-agent') ?? '';
-		const trimmedUserAgent = userAgentHeader.trim();
-		const parsedUserAgent = new UAParser(trimmedUserAgent).getResult();
+	private async maybeIndexUser(user: User): Promise<void> {
+		const userSearchService = getUserSearchService();
+		if (!userSearchService) return;
 
+		try {
+			await userSearchService.indexUser(user);
+		} catch (error) {
+			Logger.error({userId: user.id, error}, 'Failed to index user in search');
+		}
+	}
+
+	private async maybeSendVerificationEmail(params: {user: User; email: string}): Promise<void> {
+		const {user, email} = params;
+		const token = createEmailVerificationToken(await this.generateSecureToken());
+
+		await this.repository.createEmailVerificationToken({
+			token_: token,
+			user_id: user.id,
+			email,
+		});
+
+		await this.emailService.sendEmailVerification(email, user.username, token, user.locale);
+	}
+
+	private async maybeAutoJoinInvite(params: {
+		userId: UserID;
+		inviteCode: string | null | undefined;
+		isPendingVerification: boolean;
+		requestCache: RequestCache;
+	}): Promise<void> {
+		const {userId, inviteCode, isPendingVerification, requestCache} = params;
+		if (inviteCode == null) return;
+
+		if (isPendingVerification) {
+			await this.pendingJoinInviteStore.setPendingInvite(userId, inviteCode);
+			return;
+		}
+
+		if (!this.inviteService) return;
+
+		try {
+			await this.inviteService.acceptInvite({
+				userId,
+				inviteCode: createInviteCode(inviteCode),
+				requestCache,
+			});
+		} catch (error) {
+			Logger.warn({inviteCode, error}, 'Failed to auto-join invite on registration');
+		}
+	}
+
+	private async enforceRegistrationRateLimits(params: {
+		enforceRateLimits: boolean;
+		clientIp: string;
+		emailKey: string | null;
+	}): Promise<void> {
+		const {enforceRateLimits, clientIp, emailKey} = params;
+		if (!enforceRateLimits) return;
+
+		if (emailKey) {
+			const emailRateLimit = await this.rateLimitService.checkLimit({
+				identifier: `registration:email:${emailKey}`,
+				maxAttempts: 3,
+				windowMs: 15 * 60 * 1000,
+			});
+
+			if (!emailRateLimit.allowed) throw rateLimitError('Too many registration attempts. Please try again later.');
+		}
+
+		const ipRateLimit = await this.rateLimitService.checkLimit({
+			identifier: `registration:ip:${clientIp}`,
+			maxAttempts: 5,
+			windowMs: 30 * 60 * 1000,
+		});
+
+		if (!ipRateLimit.allowed)
+			throw rateLimitError('Too many registration attempts from this IP. Please try again later.');
+	}
+
+	private async resolveBetaCode(betaCodeInput: string | null): Promise<{
+		betaCode: Awaited<ReturnType<IUserRepository['getBetaCode']>> | null;
+		hasValidBetaCode: boolean;
+	}> {
+		if (!betaCodeInput) return {betaCode: null, hasValidBetaCode: false};
+		if (Config.nodeEnv === 'development' && betaCodeInput === 'NOVERIFY')
+			return {betaCode: null, hasValidBetaCode: false};
+
+		const betaCode = await this.repository.getBetaCode(betaCodeInput);
+		return {betaCode, hasValidBetaCode: Boolean(betaCode && !betaCode.redeemerId)};
+	}
+
+	private async allocateDiscriminator(username: string): Promise<number> {
+		const result = await this.discriminatorService.generateDiscriminator({username, isPremium: false});
+		if (!result.available || result.discriminator === -1) {
+			throw InputValidationError.create('username', 'Too many users with this username');
+		}
+		return result.discriminator;
+	}
+
+	private generateUserId(emailKey: string | null): UserID {
+		const mappingJson = process.env.EARLY_TESTER_EMAIL_HASH_TO_SNOWFLAKE;
+
+		if (emailKey && mappingJson) {
+			const mapping = safeJsonParse<Record<string, string>>(mappingJson);
+			if (mapping) {
+				const emailHash = crypto.createHash('sha256').update(emailKey).digest('hex');
+				const mapped = mapping[emailHash];
+				if (mapped) {
+					try {
+						return createUserID(BigInt(mapped));
+					} catch (error) {
+						Logger.warn({error}, 'Invalid snowflake mapping value; falling back to generated ID');
+					}
+				}
+			}
+		}
+
+		return createUserID(this.snowflakeService.generate());
+	}
+
+	private truncateUserAgent(userAgent: string): string {
+		if (userAgent.length <= USER_AGENT_TRUNCATE_LENGTH) return userAgent;
+		return `${userAgent.slice(0, USER_AGENT_TRUNCATE_LENGTH)}...`;
+	}
+
+	private parseUserAgentSafe(userAgent: string): {osInfo: string; browserInfo: string; deviceInfo: string} {
+		try {
+			const result = Bowser.parse(userAgent);
+			return {
+				osInfo: this.formatOsInfo(result.os) ?? 'Unknown',
+				browserInfo: this.formatNameVersion(result.browser?.name, result.browser?.version) ?? 'Unknown',
+				deviceInfo: this.formatDeviceInfo(result.platform),
+			};
+		} catch (error) {
+			Logger.warn({error}, 'Failed to parse user agent with Bowser');
+			return {osInfo: 'Unknown', browserInfo: 'Unknown', deviceInfo: 'Desktop/Unknown'};
+		}
+	}
+
+	private formatNameVersion(name?: string, version?: string): string | null {
+		if (!name) return null;
+		return version ? `${name} ${version}` : name;
+	}
+
+	private formatOsInfo(os?: {name?: string; version?: string; versionName?: string}): string | null {
+		if (!os?.name) return null;
+		if (os.versionName && os.version) return `${os.name} ${os.versionName} (${os.version})`;
+		if (os.versionName) return `${os.name} ${os.versionName}`;
+		if (os.version) return `${os.name} ${os.version}`;
+		return os.name;
+	}
+
+	private formatDeviceInfo(platform?: {type?: string; vendor?: string; model?: string}): string {
+		const type = this.formatPlatformType(platform?.type);
+		const vendorModel = [platform?.vendor, platform?.model].filter(Boolean).join(' ').trim();
+
+		if (vendorModel && type) return `${vendorModel} (${type})`;
+		if (vendorModel) return vendorModel;
+		if (type) return type;
+		return 'Desktop/Unknown';
+	}
+
+	private formatPlatformType(type?: string): string | null {
+		switch ((type ?? '').toLowerCase()) {
+			case 'mobile':
+				return 'Mobile';
+			case 'tablet':
+				return 'Tablet';
+			case 'desktop':
+				return 'Desktop';
+			default:
+				return null;
+		}
+	}
+
+	private async buildRegistrationMetadataContext(params: {
+		user: User;
+		clientIp: string;
+		request: Request;
+		countryResultDetailed: CountryResultDetailed;
+	}): Promise<RegistrationMetadataContext> {
+		const {user, clientIp, request, countryResultDetailed} = params;
+
+		const userAgentHeader = (request.headers.get('user-agent') ?? '').trim();
 		const fluxerTag = `${user.username}#${user.discriminator.toString().padStart(4, '0')}`;
 		const displayName = user.globalName || user.username;
 		const emailDisplay = user.email || 'Not provided';
-		const normalizedUserAgent = trimmedUserAgent.length > 0 ? trimmedUserAgent : 'Not provided';
-		const truncatedUserAgent = this.truncateUserAgent(normalizedUserAgent);
-		const normalizedIp = countryResult.normalizedIp ?? clientIp;
-		const geoipReason = countryResult.reason ?? 'none';
 
-		const osInfo = parsedUserAgent.os.name
-			? `${parsedUserAgent.os.name}${parsedUserAgent.os.version ? ` ${parsedUserAgent.os.version}` : ''}`
-			: 'Unknown';
-		const browserInfo = parsedUserAgent.browser.name
-			? `${parsedUserAgent.browser.name}${parsedUserAgent.browser.version ? ` ${parsedUserAgent.browser.version}` : ''}`
-			: 'Unknown';
-		const deviceInfo = parsedUserAgent.device.vendor
-			? `${parsedUserAgent.device.vendor} ${parsedUserAgent.device.model || ''}`.trim()
-			: 'Desktop/Unknown';
+		const hasUserAgent = userAgentHeader.length > 0;
+		const userAgentForDisplay = hasUserAgent ? userAgentHeader : 'Not provided';
+		const truncatedUserAgent = this.truncateUserAgent(userAgentForDisplay);
 
+		const uaInfo = hasUserAgent
+			? this.parseUserAgentSafe(userAgentHeader)
+			: {osInfo: 'Unknown', browserInfo: 'Unknown', deviceInfo: 'Desktop/Unknown'};
+
+		const normalizedIp = countryResultDetailed.normalizedIp ?? clientIp;
+		const geoipReason = countryResultDetailed.reason ?? 'none';
+		const locationLabel = IpUtils.formatGeoipLocation(countryResultDetailed);
 		const ipAddressReverse = await IpUtils.getIpAddressReverse(normalizedIp, this.cacheService);
-		const locationLabel = IpUtils.formatGeoipLocation(countryResult);
 
 		const metadataEntries: Array<[string, string]> = [
 			['fluxer_tag', fluxerTag],
@@ -458,52 +570,36 @@ export class AuthRegistrationService {
 			['email', emailDisplay],
 			['ip_address', clientIp],
 			['normalized_ip', normalizedIp],
-			['country_code', countryResult.countryCode],
+			['country_code', countryResultDetailed.countryCode],
 			['location', locationLabel],
 			['geoip_reason', geoipReason],
-			['os', osInfo],
-			['browser', browserInfo],
-			['device', deviceInfo],
+			['os', uaInfo.osInfo],
+			['browser', uaInfo.browserInfo],
+			['device', uaInfo.deviceInfo],
 			['user_agent', truncatedUserAgent],
 		];
 
-		if (countryResult.city) {
-			metadataEntries.push(['city', countryResult.city]);
-		}
-		if (countryResult.region) {
-			metadataEntries.push(['region', countryResult.region]);
-		}
-		if (countryResult.countryName) {
-			metadataEntries.push(['country_name', countryResult.countryName]);
-		}
-		if (ipAddressReverse) {
-			metadataEntries.push(['ip_address_reverse', ipAddressReverse]);
-		}
+		if (countryResultDetailed.city) metadataEntries.push(['city', countryResultDetailed.city]);
+		if (countryResultDetailed.region) metadataEntries.push(['region', countryResultDetailed.region]);
+		if (countryResultDetailed.countryName) metadataEntries.push(['country_name', countryResultDetailed.countryName]);
+		if (ipAddressReverse) metadataEntries.push(['ip_address_reverse', ipAddressReverse]);
 
 		return {
 			metadata: new Map(metadataEntries),
 			clientIp,
-			countryCode: countryResult.countryCode,
+			countryCode: countryResultDetailed.countryCode,
 			location: locationLabel,
-			city: countryResult.city,
-			region: countryResult.region,
-			osInfo,
-			browserInfo,
-			deviceInfo,
+			city: countryResultDetailed.city,
+			region: countryResultDetailed.region,
+			osInfo: uaInfo.osInfo,
+			browserInfo: uaInfo.browserInfo,
+			deviceInfo: uaInfo.deviceInfo,
 			truncatedUserAgent,
 			fluxerTag,
 			displayName,
 			email: emailDisplay,
 			ipAddressReverse,
 		};
-	}
-
-	private truncateUserAgent(userAgent: string): string {
-		if (userAgent.length <= USER_AGENT_TRUNCATE_LENGTH) {
-			return userAgent;
-		}
-
-		return `${userAgent.slice(0, USER_AGENT_TRUNCATE_LENGTH)}...`;
 	}
 
 	private async sendRegistrationWebhook(
@@ -513,39 +609,21 @@ export class AuthRegistrationService {
 	): Promise<void> {
 		if (!webhookUrl) return;
 
-		const {
-			clientIp,
-			countryCode,
-			location,
-			city,
-			osInfo,
-			browserInfo,
-			deviceInfo,
-			truncatedUserAgent,
-			fluxerTag,
-			displayName,
-			email,
-			ipAddressReverse,
-		} = context;
-
-		const locationDisplay = city ? location : countryCode;
+		const locationDisplay = context.city ? context.location : context.countryCode;
 
 		const embedFields = [
 			{name: 'User ID', value: user.id.toString(), inline: true},
-			{name: 'FluxerTag', value: fluxerTag, inline: true},
-			{name: 'Display Name', value: displayName, inline: true},
-			{name: 'Email', value: email, inline: true},
-			{name: 'IP Address', value: clientIp, inline: true},
+			{name: 'FluxerTag', value: context.fluxerTag, inline: true},
+			{name: 'Display Name', value: context.displayName, inline: true},
+			{name: 'Email', value: context.email, inline: true},
+			{name: 'IP Address', value: context.clientIp, inline: true},
+			...(context.ipAddressReverse ? [{name: 'Reverse DNS', value: context.ipAddressReverse, inline: true}] : []),
 			{name: 'Location', value: locationDisplay, inline: true},
-			{name: 'OS', value: osInfo, inline: true},
-			{name: 'Browser', value: browserInfo, inline: true},
-			{name: 'Device', value: deviceInfo, inline: true},
-			{name: 'User Agent', value: truncatedUserAgent, inline: false},
+			{name: 'OS', value: context.osInfo, inline: true},
+			{name: 'Browser', value: context.browserInfo, inline: true},
+			{name: 'Device', value: context.deviceInfo, inline: true},
+			{name: 'User Agent', value: context.truncatedUserAgent, inline: false},
 		];
-
-		if (ipAddressReverse) {
-			embedFields.splice(6, 0, {name: 'Reverse DNS', value: ipAddressReverse, inline: true});
-		}
 
 		const payload = {
 			username: 'Registration Monitor',

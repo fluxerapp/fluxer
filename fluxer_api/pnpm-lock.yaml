@@ -44,6 +44,9 @@ importers:
       argon2:
         specifier: 0.44.0
         version: 0.44.0
+      bowser:
+        specifier: 2.13.1
+        version: 2.13.1
       cassandra-driver:
         specifier: 4.8.0
         version: 4.8.0
@@ -131,9 +134,6 @@ importers:
       twilio:
         specifier: 5.11.1
         version: 5.11.1
-      ua-parser-js:
-        specifier: 2.0.7
-        version: 2.0.7
       uint8array-extras:
         specifier: 1.5.0
         version: 1.5.0
@@ -1948,9 +1948,6 @@ packages:
     resolution: {integrity: sha512-HVQE3AAb/pxF8fQAoiqpvg9i3evqug3hoiwakOyZAwJm+6vZehbkYXZ0l4JxS+I3QxM97v5aaRNhj8v5oBhekw==}
     engines: {node: '>=0.10'}
 
-  detect-europe-js@0.1.2:
-    resolution: {integrity: sha512-lgdERlL3u0aUdHocoouzT10d9I89VVhk0qNRmll7mXdGfJT1/wqZ2ZLA4oJAjeACPY5fT1wsbq2AT+GkuInsow==}
-
   detect-libc@2.1.2:
     resolution: {integrity: sha512-Btj2BOOO83o3WyH59e8MgXsxEQVcarkUOpEYrubB0urwnN10yQ364rsiByU11nZlqWYZm05i/of7io4mzihBtQ==}
     engines: {node: '>=8'}
@@ -2259,9 +2256,6 @@ packages:
 
   is-potential-custom-element-name@1.0.1:
     resolution: {integrity: sha512-bCYeRA2rVibKZd+s2625gGnGF/t7DSqDs4dP7CrLA1m7jKWz6pps0LpYLJN8Q64HtmPKJ1hrN3nzPNKFEKOUiQ==}
-
-  is-standalone-pwa@0.1.1:
-    resolution: {integrity: sha512-9Cbovsa52vNQCjdXOzeQq5CnCbAcRk05aU62K20WO372NrTv0NxibLFCK6lQ4/iZEFdEA3p3t2VNOn8AJ53F5g==}
 
   is-stream@2.0.1:
     resolution: {integrity: sha512-hFoiJiTl63nn+kstHGBtewWSKnQLpyb155KHheA1l39uvtO9nWIop1p3udqPcUd/xbF1VLMO4n7OI6p7RbngDg==}
@@ -2999,13 +2993,6 @@ packages:
   typescript@5.9.3:
     resolution: {integrity: sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==}
     engines: {node: '>=14.17'}
-    hasBin: true
-
-  ua-is-frozen@0.1.2:
-    resolution: {integrity: sha512-RwKDW2p3iyWn4UbaxpP2+VxwqXh0jpvdxsYpZ5j/MLLiQOfbsV5shpgQiw93+KMYQPcteeMQ289MaAFzs3G9pw==}
-
-  ua-parser-js@2.0.7:
-    resolution: {integrity: sha512-CFdHVHr+6YfbktNZegH3qbYvYgC7nRNEUm2tk7nSFXSODUu4tDBpaFpP1jdXBUOKKwapVlWRfTtS8bCPzsQ47w==}
     hasBin: true
 
   uint8array-extras@1.5.0:
@@ -5439,8 +5426,6 @@ snapshots:
 
   denque@2.1.0: {}
 
-  detect-europe-js@0.1.2: {}
-
   detect-libc@2.1.2: {}
 
   dom-serializer@2.0.0:
@@ -5795,8 +5780,6 @@ snapshots:
   is-number@7.0.0: {}
 
   is-potential-custom-element-name@1.0.1: {}
-
-  is-standalone-pwa@0.1.1: {}
 
   is-stream@2.0.1: {}
 
@@ -6586,14 +6569,6 @@ snapshots:
   type-fest@4.41.0: {}
 
   typescript@5.9.3: {}
-
-  ua-is-frozen@0.1.2: {}
-
-  ua-parser-js@2.0.7:
-    dependencies:
-      detect-europe-js: 0.1.2
-      is-standalone-pwa: 0.1.1
-      ua-is-frozen: 0.1.2
 
   uint8array-extras@1.5.0: {}
 

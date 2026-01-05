@@ -73,6 +73,9 @@ importers:
       '@simplewebauthn/browser':
         specifier: 13.2.2
         version: 13.2.2
+      bowser:
+        specifier: 2.13.1
+        version: 2.13.1
       clsx:
         specifier: 2.1.1
         version: 2.1.1
@@ -187,9 +190,6 @@ importers:
       thumbhash:
         specifier: 0.1.1
         version: 0.1.1
-      ua-parser-js:
-        specifier: 2.0.7
-        version: 2.0.7
       undici:
         specifier: 7.16.0
         version: 7.16.0
@@ -3737,6 +3737,9 @@ packages:
     resolution: {integrity: sha512-d0II/GO9uf9lfUHH2BQsjxzRJZBdsjgsBiW4BvhWk/3qoKwQFjIDVN19PfX8F2D/r9PCMTtLWjYVCFrpeYUzsw==}
     deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
 
+  bowser@2.13.1:
+    resolution: {integrity: sha512-OHawaAbjwx6rqICCKgSG0SAnT05bzd7ppyKLVUITZpANBaaMFBAsaNkto3LoQ31tyFP5kNujE8Cdx85G9VzOkw==}
+
   brace-expansion@1.1.12:
     resolution: {integrity: sha512-9T9UjW3r0UW5c1Q7GTwllptXwhvYmEzFhzMfZ9H7FQWt+uZePjZPjBP/W1ZEyZ1twGWom5/56TF4lPcqjnDHcg==}
 
@@ -4158,9 +4161,6 @@ packages:
   destroy@1.2.0:
     resolution: {integrity: sha512-2sJGJTaXIIaR1w4iJSNoN0hnMY7Gpc/n8D4qSCJw8QqFWXf7cuAgnEHxBpweaVcPevC2l3KpjYCx3NypQQgaJg==}
     engines: {node: '>= 0.8', npm: 1.2.8000 || >= 1.4.16}
-
-  detect-europe-js@0.1.2:
-    resolution: {integrity: sha512-lgdERlL3u0aUdHocoouzT10d9I89VVhk0qNRmll7mXdGfJT1/wqZ2ZLA4oJAjeACPY5fT1wsbq2AT+GkuInsow==}
 
   detect-libc@2.1.2:
     resolution: {integrity: sha512-Btj2BOOO83o3WyH59e8MgXsxEQVcarkUOpEYrubB0urwnN10yQ364rsiByU11nZlqWYZm05i/of7io4mzihBtQ==}
@@ -4891,9 +4891,6 @@ packages:
 
   is-potential-custom-element-name@1.0.1:
     resolution: {integrity: sha512-bCYeRA2rVibKZd+s2625gGnGF/t7DSqDs4dP7CrLA1m7jKWz6pps0LpYLJN8Q64HtmPKJ1hrN3nzPNKFEKOUiQ==}
-
-  is-standalone-pwa@0.1.1:
-    resolution: {integrity: sha512-9Cbovsa52vNQCjdXOzeQq5CnCbAcRk05aU62K20WO372NrTv0NxibLFCK6lQ4/iZEFdEA3p3t2VNOn8AJ53F5g==}
 
   is-there@4.5.2:
     resolution: {integrity: sha512-ixMkfz3rtS1vEsLf0TjgjqUn96Q0ukpUVDMnPYVocJyTzu2G/QgEtqYddcHZawHO+R31cKVPggJmBLrm1vJCOg==}
@@ -6607,13 +6604,6 @@ packages:
   typescript@5.9.3:
     resolution: {integrity: sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==}
     engines: {node: '>=14.17'}
-    hasBin: true
-
-  ua-is-frozen@0.1.2:
-    resolution: {integrity: sha512-RwKDW2p3iyWn4UbaxpP2+VxwqXh0jpvdxsYpZ5j/MLLiQOfbsV5shpgQiw93+KMYQPcteeMQ289MaAFzs3G9pw==}
-
-  ua-parser-js@2.0.7:
-    resolution: {integrity: sha512-CFdHVHr+6YfbktNZegH3qbYvYgC7nRNEUm2tk7nSFXSODUu4tDBpaFpP1jdXBUOKKwapVlWRfTtS8bCPzsQ47w==}
     hasBin: true
 
   uiohook-napi@1.5.4:
@@ -11098,6 +11088,8 @@ snapshots:
   boolean@3.2.0:
     optional: true
 
+  bowser@2.13.1: {}
+
   brace-expansion@1.1.12:
     dependencies:
       balanced-match: 1.0.2
@@ -11542,8 +11534,6 @@ snapshots:
   depd@2.0.0: {}
 
   destroy@1.2.0: {}
-
-  detect-europe-js@0.1.2: {}
 
   detect-libc@2.1.2: {}
 
@@ -12431,8 +12421,6 @@ snapshots:
   is-plain-obj@3.0.0: {}
 
   is-potential-custom-element-name@1.0.1: {}
-
-  is-standalone-pwa@0.1.1: {}
 
   is-there@4.5.2: {}
 
@@ -14338,14 +14326,6 @@ snapshots:
       rxjs: 7.8.2
 
   typescript@5.9.3: {}
-
-  ua-is-frozen@0.1.2: {}
-
-  ua-parser-js@2.0.7:
-    dependencies:
-      detect-europe-js: 0.1.2
-      is-standalone-pwa: 0.1.1
-      ua-is-frozen: 0.1.2
 
   uiohook-napi@1.5.4:
     dependencies:
