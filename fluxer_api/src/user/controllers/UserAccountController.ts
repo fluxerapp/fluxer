@@ -47,6 +47,7 @@ import {
 	z,
 } from '~/Schema';
 import {getCachedUserPartialResponse, mapUserToPartialResponseWithCache} from '~/user/UserCacheHelpers';
+import {createPremiumClearPatch, shouldStripExpiredPremium} from '~/user/UserHelpers';
 import {
 	mapGuildMemberToProfileResponse,
 	mapUserGuildSettingsToResponse,
@@ -406,7 +407,32 @@ export const UserAccountController = (app: HonoApp) => {
 				requestCache: ctx.get('requestCache'),
 			});
 
-			const userProfile = mapUserToProfileResponse(profile.user);
+			let profileUser = profile.user;
+			let premiumType = profile.premiumType;
+			let premiumSince = profile.premiumSince;
+			let premiumLifetimeSequence = profile.premiumLifetimeSequence;
+
+			if (shouldStripExpiredPremium(profileUser)) {
+				try {
+					const sanitizedUser = await ctx
+						.get('userRepository')
+						.patchUpsert(profileUser.id, createPremiumClearPatch(), profileUser.toRow());
+					if (sanitizedUser) {
+						profileUser = sanitizedUser;
+						profile.user = sanitizedUser;
+						premiumType = undefined;
+						premiumSince = undefined;
+						premiumLifetimeSequence = undefined;
+					}
+				} catch (error) {
+					Logger.warn(
+						{userId: profileUser.id.toString(), error},
+						'Failed to sanitize expired premium fields before returning profile',
+					);
+				}
+			}
+
+			const userProfile = mapUserToProfileResponse(profileUser);
 			const guildMemberProfile = mapGuildMemberToProfileResponse(profile.guildMemberDomain ?? null);
 
 			const mutualFriends = profile.mutualFriends
@@ -423,16 +449,16 @@ export const UserAccountController = (app: HonoApp) => {
 
 			return ctx.json({
 				user: await mapUserToPartialResponseWithCache({
-					user: profile.user,
+					user: profileUser,
 					userCacheService: ctx.get('userCacheService'),
 					requestCache: ctx.get('requestCache'),
 				}),
 				user_profile: userProfile,
 				guild_member: profile.guildMember ?? undefined,
 				guild_member_profile: guildMemberProfile ?? undefined,
-				premium_type: profile.premiumType,
-				premium_since: profile.premiumSince?.toISOString(),
-				premium_lifetime_sequence: profile.premiumLifetimeSequence,
+				premium_type: premiumType,
+				premium_since: premiumSince?.toISOString(),
+				premium_lifetime_sequence: premiumLifetimeSequence,
 				mutual_friends: mutualFriends,
 				mutual_guilds: profile.mutualGuilds,
 			});
