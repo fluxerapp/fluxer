@@ -39,7 +39,6 @@ import ScrollFillerSkeleton from '~/components/channel/ScrollFillerSkeleton';
 import {UploadManager} from '~/components/channel/UploadManager';
 import {ConfirmModal} from '~/components/modals/ConfirmModal';
 import {ForwardModal} from '~/components/modals/ForwardModal';
-import {Button} from '~/components/uikit/Button/Button';
 import {Scroller} from '~/components/uikit/Scroller';
 import {Spinner} from '~/components/uikit/Spinner';
 import type {ChannelMessages} from '~/lib/ChannelMessages';
@@ -907,20 +906,23 @@ const JumpToPresentBar = observer(function JumpToPresentBar({
 	onJumpToPresent: () => void;
 }) {
 	const {t} = useLingui();
+	const isJumping = loadingMore && jumpedToPresent;
 
 	return (
-		<div className={styles.newMessagesBar} style={getBottomBarStyle('var(--background-secondary-alt)')}>
+		<button
+			type="button"
+			className={styles.newMessagesBar}
+			style={{
+				...getBottomBarStyle('var(--background-secondary-alt)'),
+				cursor: isJumping ? 'wait' : 'pointer',
+			}}
+			onClick={onJumpToPresent}
+			disabled={isJumping}
+			aria-busy={isJumping}
+		>
 			<span className={styles.newMessagesBarText}>{t`You're viewing older messages`}</span>
-			<Button
-				variant="primary"
-				superCompact
-				fitContent
-				onClick={onJumpToPresent}
-				submitting={loadingMore && jumpedToPresent}
-			>
-				{t`Jump to Present`}
-			</Button>
-		</div>
+			<span className={styles.newMessagesBarAction}>{isJumping ? <Spinner size="small" /> : t`Jump to Present`}</span>
+		</button>
 	);
 });
 
