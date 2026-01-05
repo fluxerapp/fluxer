@@ -170,6 +170,8 @@ msgstr "파트너가 되세요"
 msgid "Become a Visionary"
 msgstr "비저너리 되기"
 
+#: src/fluxer_marketing/pages/plutonium_page.gleam:310
+#: src/fluxer_marketing/pages/plutonium_page.gleam:311
 #: src/fluxer_marketing/pages/plutonium_page.gleam:318
 #: src/fluxer_marketing/pages/plutonium_page.gleam:325
 #: src/fluxer_marketing/pages/plutonium_page.gleam:374
@@ -321,8 +323,6 @@ msgstr "출시 예정"
 
 #: src/fluxer_marketing/pages/plutonium_page.gleam:296
 #: src/fluxer_marketing/pages/plutonium_page.gleam:297
-#: src/fluxer_marketing/pages/plutonium_page.gleam:310
-#: src/fluxer_marketing/pages/plutonium_page.gleam:311
 #: src/fluxer_marketing/pages/plutonium_page.gleam:366
 #: src/fluxer_marketing/pages/plutonium_page.gleam:367
 #: src/fluxer_marketing/pages/plutonium_page.gleam:586
@@ -730,6 +730,10 @@ msgstr "Fluxer 플루토늄"
 msgid "Fluxer Privacy Policy"
 msgstr "Fluxer 개인정보 처리방침"
 
+#: src/fluxer_marketing/pages/security_page.gleam:44
+msgid "Fluxer Security Bug Bounty"
+msgstr "플럭서 보안 버그 바운티"
+
 #: src/fluxer_marketing/pages/terms_page.gleam:44
 msgid "Fluxer Terms of Service"
 msgstr "Fluxer 서비스 이용약관"
@@ -813,10 +817,6 @@ msgstr "프랑스어"
 #: src/fluxer_marketing/pages/donate_page.gleam:345
 msgid "Frequently Asked Questions"
 msgstr "자주 묻는 질문"
-
-#: src/fluxer_marketing/components/hackernews_banner.gleam:72
-msgid "From HN?"
-msgstr "HN에서 오셨나요?"
 
 #: src/fluxer_marketing/components/current_features.gleam:72
 msgid "Full Markdown support in messages"
@@ -1513,6 +1513,10 @@ msgstr "버그 신고하기"
 msgid "Report people or communities so we can keep Fluxer safe for everyone."
 msgstr "사람이나 커뮤니티를 신고해 Fluxer를 모두에게 안전한 공간으로 유지할 수 있도록 도와주세요."
 
+#: src/fluxer_marketing/pages/security_page.gleam:42
+msgid "Report security issues responsibly"
+msgstr "보안 문제를 책임감 있게 신고하세요"
+
 #: src/fluxer_marketing/pages/careers_page.gleam:154
 msgid "Report vulnerabilities and help us keep the platform secure."
 msgstr "취약점을 제보해 플랫폼의 보안을 지키는 데 도움을 주세요."
@@ -1604,6 +1608,12 @@ msgstr "검색 결과: "
 #: src/fluxer_marketing/components/current_features.gleam:120
 msgid "Search through message history"
 msgstr "메시지 기록 검색"
+
+#: src/fluxer_marketing/components/get_involved_section.gleam:194
+#: src/fluxer_marketing/pages/careers_page.gleam:156
+#: src/fluxer_marketing/pages/security_page.gleam:41
+msgid "Security Bug Bounty"
+msgstr "보안 버그 바운티"
 
 #: src/fluxer_marketing/pages/careers_page.gleam:151
 msgid "Security reports"
@@ -1788,7 +1798,7 @@ msgstr "신뢰 및 안전"
 msgid "Try different keywords or browse our categories."
 msgstr "다른 키워드로 검색하거나 카테고리를 둘러보세요."
 
-#: src/fluxer_marketing/components/hackernews_banner.gleam:75
+#: src/fluxer_marketing/components/hackernews_banner.gleam:36
 msgid "Try it without an email at"
 msgstr "다음에서 이메일 없이 바로 사용해 보세요:"
 
@@ -1902,8 +1912,8 @@ msgid "Ways to contribute"
 msgstr "기여 방법"
 
 #: src/fluxer_marketing/components/get_involved_section.gleam:192
-msgid "We appreciate responsible disclosure to security@fluxer.app. We offer Plutonium codes and Bug Hunter badges based on severity."
-msgstr "security@fluxer.app으로 책임감 있는 제보를 부탁드립니다. 심각도에 따라 플루토늄 코드와 버그 헌터 배지를 제공합니다."
+msgid "We appreciate responsible disclosure via our Security Bug Bounty page. We offer Plutonium codes and Bug Hunter badges based on severity."
+msgstr "저희는 보안 버그 바운티 페이지를 통해 책임감 있는 공개를 환영합니다. 심각도에 따라 플루토늄 코드와 버그 헌터 배지를 제공합니다."
 
 #: src/fluxer_marketing/components/final_cta.gleam:56
 msgid "We need your support to make this work."

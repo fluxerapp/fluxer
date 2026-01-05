@@ -34,10 +34,12 @@ import fluxer_marketing/pages/partners_page
 import fluxer_marketing/pages/plutonium_page
 import fluxer_marketing/pages/press_page
 import fluxer_marketing/pages/privacy_page
+import fluxer_marketing/pages/security_page
 import fluxer_marketing/pages/terms_page
 import fluxer_marketing/sitemap
 import fluxer_marketing/web.{type Context, prepend_base_path}
 import gleam/http
+import gleam/int
 import gleam/list
 import gleam/option
 import gleam/string
@@ -60,6 +62,8 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
     ["sitemap.xml"] -> handle_sitemap(ctx)
     ["terms"] -> terms_page.render(req, ctx)
     ["privacy"] -> privacy_page.render(req, ctx)
+    ["security"] -> security_page.render(req, ctx)
+    ["security.txt"] -> handle_security_txt(ctx)
     ["guidelines"] -> guidelines_page.render(req, ctx)
     ["company-information"] -> company_page.render(req, ctx)
     ["careers"] -> careers_page.render(req, ctx)
@@ -255,6 +259,36 @@ fn handle_sitemap(ctx: Context) -> Response {
   |> wisp.set_header("content-type", "application/xml; charset=utf-8")
   |> wisp.string_body(xml)
 }
+
+fn handle_security_txt(ctx: Context) -> Response {
+  let security_url = ctx.base_url <> "/security"
+  let expires = int.to_string(current_year() + 1) <> "-01-05T13:37:00.000Z"
+
+  let body_lines =
+    [
+      "Contact: " <> security_url,
+      "Contact: mailto:security@fluxer.app",
+      "Expires: " <> expires,
+      "Preferred-Languages: en",
+      "Policy: " <> security_url,
+    ]
+    |> string.join("\n")
+
+  let body = body_lines <> "\n"
+
+  wisp.response(200)
+  |> wisp.set_header("content-type", "text/plain; charset=utf-8")
+  |> wisp.string_body(body)
+}
+
+fn current_year() -> Int {
+  case calendar_universal_time() {
+    #(#(year, _, _), _) -> year
+  }
+}
+
+@external(erlang, "calendar", "universal_time")
+fn calendar_universal_time() -> #(#(Int, Int, Int), #(Int, Int, Int))
 
 fn handle_locale_change(req: Request, ctx: Context) -> Response {
   case req.method {

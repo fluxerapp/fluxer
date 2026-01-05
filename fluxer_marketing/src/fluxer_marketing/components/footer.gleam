@@ -263,6 +263,17 @@ pub fn render(ctx: Context) -> Element(a) {
                     html.li([], [
                       html.a(
                         [
+                          href(ctx, "/security"),
+                          attribute.class(
+                            "body-lg text-white/90 hover:text-white hover:underline transition-colors",
+                          ),
+                        ],
+                        [html.text(g_(i18n_ctx, "Security Bug Bounty"))],
+                      ),
+                    ]),
+                    html.li([], [
+                      html.a(
+                        [
                           href(ctx, "/company-information"),
                           attribute.class(
                             "body-lg text-white/90 hover:text-white hover:underline transition-colors",

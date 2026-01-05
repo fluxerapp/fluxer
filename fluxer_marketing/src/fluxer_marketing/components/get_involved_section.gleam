@@ -189,10 +189,10 @@ pub fn render(ctx: Context) -> Element(a) {
               g_(i18n_ctx, "Found a security issue?"),
               g_(
                 i18n_ctx,
-                "We appreciate responsible disclosure to security@fluxer.app. We offer Plutonium codes and Bug Hunter badges based on severity.",
+                "We appreciate responsible disclosure via our Security Bug Bounty page. We offer Plutonium codes and Bug Hunter badges based on severity.",
               ),
-              "security@fluxer.app",
-              "mailto:security@fluxer.app",
+              g_(i18n_ctx, "Security Bug Bounty"),
+              "/security",
             ),
           ],
         ),

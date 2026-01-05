@@ -47,6 +47,7 @@ fn generate_urls(base_url: String) -> List(UrlEntry) {
     UrlEntry(base_url, "weekly", "1.0"),
     UrlEntry(base_url <> "/terms", "monthly", "0.5"),
     UrlEntry(base_url <> "/privacy", "monthly", "0.5"),
+    UrlEntry(base_url <> "/security", "monthly", "0.5"),
     UrlEntry(base_url <> "/guidelines", "monthly", "0.7"),
     UrlEntry(base_url <> "/company-information", "monthly", "0.4"),
     UrlEntry(base_url <> "/careers", "weekly", "0.6"),

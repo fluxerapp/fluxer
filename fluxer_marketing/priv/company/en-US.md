@@ -26,7 +26,7 @@ Hampus Kraft, Founder & CEO
 - **General Inquiries:** support@fluxer.app
 - **Press & Media:** press@fluxer.app
 - **Privacy & Data Protection:** privacy@fluxer.app (primary contact for privacy and data protection questions; we have not formally appointed a Data Protection Officer under GDPR)
-- **Security Vulnerabilities:** security@fluxer.app
+- **Security Vulnerabilities:** See our [Security Bug Bounty page](/security) for disclosure guidance and contact information.
 - **Copyright (DMCA):** dmca@fluxer.app
 - **Trust & Safety:** safety@fluxer.app
 - **Legal Requests:** legal@fluxer.app

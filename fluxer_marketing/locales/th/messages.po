@@ -170,6 +170,8 @@ msgstr "สมัครเป็นพาร์ทเนอร์"
 msgid "Become a Visionary"
 msgstr "เป็น Visionary"
 
+#: src/fluxer_marketing/pages/plutonium_page.gleam:310
+#: src/fluxer_marketing/pages/plutonium_page.gleam:311
 #: src/fluxer_marketing/pages/plutonium_page.gleam:318
 #: src/fluxer_marketing/pages/plutonium_page.gleam:325
 #: src/fluxer_marketing/pages/plutonium_page.gleam:374
@@ -321,8 +323,6 @@ msgstr "เร็ว ๆ นี้"
 
 #: src/fluxer_marketing/pages/plutonium_page.gleam:296
 #: src/fluxer_marketing/pages/plutonium_page.gleam:297
-#: src/fluxer_marketing/pages/plutonium_page.gleam:310
-#: src/fluxer_marketing/pages/plutonium_page.gleam:311
 #: src/fluxer_marketing/pages/plutonium_page.gleam:366
 #: src/fluxer_marketing/pages/plutonium_page.gleam:367
 #: src/fluxer_marketing/pages/plutonium_page.gleam:586
@@ -730,6 +730,10 @@ msgstr "Fluxer Plutonium"
 msgid "Fluxer Privacy Policy"
 msgstr "นโยบายความเป็นส่วนตัวของ Fluxer"
 
+#: src/fluxer_marketing/pages/security_page.gleam:44
+msgid "Fluxer Security Bug Bounty"
+msgstr "รางวัลบั๊กความปลอดภัยของ Fluxer"
+
 #: src/fluxer_marketing/pages/terms_page.gleam:44
 msgid "Fluxer Terms of Service"
 msgstr "ข้อกำหนดการให้บริการของ Fluxer"
@@ -813,10 +817,6 @@ msgstr "ฝรั่งเศส"
 #: src/fluxer_marketing/pages/donate_page.gleam:345
 msgid "Frequently Asked Questions"
 msgstr "คำถามที่พบบ่อย"
-
-#: src/fluxer_marketing/components/hackernews_banner.gleam:72
-msgid "From HN?"
-msgstr "มาจาก HN?"
 
 #: src/fluxer_marketing/components/current_features.gleam:72
 msgid "Full Markdown support in messages"
@@ -1513,6 +1513,10 @@ msgstr "รายงานบั๊ก"
 msgid "Report people or communities so we can keep Fluxer safe for everyone."
 msgstr "รายงานคนหรือชุมชนเพื่อให้เราช่วยทำให้ Fluxer ปลอดภัยสำหรับทุกคน"
 
+#: src/fluxer_marketing/pages/security_page.gleam:42
+msgid "Report security issues responsibly"
+msgstr "รายงานปัญหาความปลอดภัยอย่างมีความรับผิดชอบ"
+
 #: src/fluxer_marketing/pages/careers_page.gleam:154
 msgid "Report vulnerabilities and help us keep the platform secure."
 msgstr "รายงานช่องโหว่และช่วยเราดูแลแพลตฟอร์มให้ปลอดภัย"
@@ -1604,6 +1608,12 @@ msgstr "ผลการค้นหาสำหรับ: "
 #: src/fluxer_marketing/components/current_features.gleam:120
 msgid "Search through message history"
 msgstr "ค้นหาในประวัติข้อความ"
+
+#: src/fluxer_marketing/components/get_involved_section.gleam:194
+#: src/fluxer_marketing/pages/careers_page.gleam:156
+#: src/fluxer_marketing/pages/security_page.gleam:41
+msgid "Security Bug Bounty"
+msgstr "รางวัลบั๊กความปลอดภัย"
 
 #: src/fluxer_marketing/pages/careers_page.gleam:151
 msgid "Security reports"
@@ -1788,7 +1798,7 @@ msgstr "ความไว้วางใจและความปลอดภ
 msgid "Try different keywords or browse our categories."
 msgstr "ลองใช้คีย์เวิร์ดอื่น หรือเรียกดูหมวดหมู่ของเรา"
 
-#: src/fluxer_marketing/components/hackernews_banner.gleam:75
+#: src/fluxer_marketing/components/hackernews_banner.gleam:36
 msgid "Try it without an email at"
 msgstr "ลองใช้ได้โดยไม่ต้องใช้อีเมลที่"
 
@@ -1902,8 +1912,8 @@ msgid "Ways to contribute"
 msgstr "วิธีมีส่วนร่วม"
 
 #: src/fluxer_marketing/components/get_involved_section.gleam:192
-msgid "We appreciate responsible disclosure to security@fluxer.app. We offer Plutonium codes and Bug Hunter badges based on severity."
-msgstr "เราขอขอบคุณสำหรับการรายงานอย่างรับผิดชอบที่ security@fluxer.app เรามอบโค้ด Plutonium และป้าย Bug Hunter ตามระดับความรุนแรง"
+msgid "We appreciate responsible disclosure via our Security Bug Bounty page. We offer Plutonium codes and Bug Hunter badges based on severity."
+msgstr "เราขอบคุณการเปิดเผยอย่างมีความรับผิดชอบผ่านหน้ารางวัลบั๊กความปลอดภัยของเรา เรามีรหัส Plutonium และเหรียญนักล่าบั๊กตามความรุนแรงของปัญหา"
 
 #: src/fluxer_marketing/components/final_cta.gleam:56
 msgid "We need your support to make this work."

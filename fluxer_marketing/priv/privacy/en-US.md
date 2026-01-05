@@ -383,7 +383,7 @@ No online service can guarantee perfect security. We work continuously to improv
 
 If you discover a potential security vulnerability or issue:
 
-- Please report it to security@fluxer.app with enough detail for us to reproduce and understand the issue.
+- Visit our [Security Bug Bounty page](/security) and follow the reporting instructions there so we have enough detail to reproduce the issue.
 - Do not publicly disclose the vulnerability before we have had a reasonable opportunity to investigate and address it.
 - We appreciate responsible disclosure and may acknowledge your contribution if you wish (subject to your consent).
 

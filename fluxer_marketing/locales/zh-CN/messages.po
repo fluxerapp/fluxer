@@ -170,6 +170,8 @@ msgstr "申请成为合作伙伴"
 msgid "Become a Visionary"
 msgstr "成为 Visionary"
 
+#: src/fluxer_marketing/pages/plutonium_page.gleam:310
+#: src/fluxer_marketing/pages/plutonium_page.gleam:311
 #: src/fluxer_marketing/pages/plutonium_page.gleam:318
 #: src/fluxer_marketing/pages/plutonium_page.gleam:325
 #: src/fluxer_marketing/pages/plutonium_page.gleam:374
@@ -321,8 +323,6 @@ msgstr "敬请期待"
 
 #: src/fluxer_marketing/pages/plutonium_page.gleam:296
 #: src/fluxer_marketing/pages/plutonium_page.gleam:297
-#: src/fluxer_marketing/pages/plutonium_page.gleam:310
-#: src/fluxer_marketing/pages/plutonium_page.gleam:311
 #: src/fluxer_marketing/pages/plutonium_page.gleam:366
 #: src/fluxer_marketing/pages/plutonium_page.gleam:367
 #: src/fluxer_marketing/pages/plutonium_page.gleam:586
@@ -730,6 +730,10 @@ msgstr "Fluxer Plutonium"
 msgid "Fluxer Privacy Policy"
 msgstr "Fluxer 隐私政策"
 
+#: src/fluxer_marketing/pages/security_page.gleam:44
+msgid "Fluxer Security Bug Bounty"
+msgstr "Fluxer安全漏洞奖励计划"
+
 #: src/fluxer_marketing/pages/terms_page.gleam:44
 msgid "Fluxer Terms of Service"
 msgstr "Fluxer 服务条款"
@@ -813,10 +817,6 @@ msgstr "法语"
 #: src/fluxer_marketing/pages/donate_page.gleam:345
 msgid "Frequently Asked Questions"
 msgstr "常见问题"
-
-#: src/fluxer_marketing/components/hackernews_banner.gleam:72
-msgid "From HN?"
-msgstr "来自 HN？"
 
 #: src/fluxer_marketing/components/current_features.gleam:72
 msgid "Full Markdown support in messages"
@@ -1513,6 +1513,10 @@ msgstr "报告 Bug"
 msgid "Report people or communities so we can keep Fluxer safe for everyone."
 msgstr "举报用户或社区，帮助我们让 Fluxer 对所有人都更安全。"
 
+#: src/fluxer_marketing/pages/security_page.gleam:42
+msgid "Report security issues responsibly"
+msgstr "负责地报告安全问题"
+
 #: src/fluxer_marketing/pages/careers_page.gleam:154
 msgid "Report vulnerabilities and help us keep the platform secure."
 msgstr "报告漏洞，帮助我们保障平台安全。"
@@ -1604,6 +1608,12 @@ msgstr "搜索结果： "
 #: src/fluxer_marketing/components/current_features.gleam:120
 msgid "Search through message history"
 msgstr "搜索消息记录"
+
+#: src/fluxer_marketing/components/get_involved_section.gleam:194
+#: src/fluxer_marketing/pages/careers_page.gleam:156
+#: src/fluxer_marketing/pages/security_page.gleam:41
+msgid "Security Bug Bounty"
+msgstr "安全漏洞奖励计划"
 
 #: src/fluxer_marketing/pages/careers_page.gleam:151
 msgid "Security reports"
@@ -1788,7 +1798,7 @@ msgstr "信任与安全"
 msgid "Try different keywords or browse our categories."
 msgstr "试试其他关键词，或浏览我们的分类。"
 
-#: src/fluxer_marketing/components/hackernews_banner.gleam:75
+#: src/fluxer_marketing/components/hackernews_banner.gleam:36
 msgid "Try it without an email at"
 msgstr "无需邮箱即可在此体验："
 
@@ -1902,8 +1912,8 @@ msgid "Ways to contribute"
 msgstr "参与方式"
 
 #: src/fluxer_marketing/components/get_involved_section.gleam:192
-msgid "We appreciate responsible disclosure to security@fluxer.app. We offer Plutonium codes and Bug Hunter badges based on severity."
-msgstr "感谢你通过 security@fluxer.app 进行负责任披露。我们会根据严重程度发放 Plutonium 兑换码与 Bug Hunter 徽章。"
+msgid "We appreciate responsible disclosure via our Security Bug Bounty page. We offer Plutonium codes and Bug Hunter badges based on severity."
+msgstr "我们感谢通过我们的安全漏洞奖励页面进行的负责任披露。我们根据严重性提供铂金代码和漏洞猎手徽章。"
 
 #: src/fluxer_marketing/components/final_cta.gleam:56
 msgid "We need your support to make this work."

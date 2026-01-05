@@ -835,6 +835,21 @@ pub fn render_table_without_outer_pipes_test() {
   |> should.equal(expected)
 }
 
+pub fn render_single_column_table_test() {
+  let markdown =
+    "| In-scope domains |\n|------------------|\n| fluxer.gg |\n| fluxer.gift |\n| fluxerapp.com |"
+  let expected =
+    "<table class=\"border-collapse border border-gray-300 w-full my-4\">\n<thead>\n<tr>\n<th class=\"border border-gray-300 px-4 py-2 bg-gray-50 font-semibold\">In-scope domains</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td class=\"border border-gray-300 px-4 py-2\">fluxer.gg</td>\n</tr>\n<tr>\n<td class=\"border border-gray-300 px-4 py-2\">fluxer.gift</td>\n</tr>\n<tr>\n<td class=\"border border-gray-300 px-4 py-2\">fluxerapp.com</td>\n</tr>\n</tbody>\n</table>"
+
+  render_md.render(
+    markdown,
+    "https://example.com",
+    locale.EnUS,
+    empty_help_data(),
+  )
+  |> should.equal(expected)
+}
+
 pub fn render_email_link_test() {
   render_md.render(
     "Contact us at privacy@fluxer.app",

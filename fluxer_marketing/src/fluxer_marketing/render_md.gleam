@@ -291,7 +291,7 @@ fn is_table(text: String) -> Bool {
     [_header, separator, ..] -> {
       case
         regexp.compile(
-          "^\\|?\\s*:?-+:?\\s*(?:\\|\\s*:?-+:?\\s*)+\\|?$",
+          "^\\|?\\s*:?-+:?\\s*(?:\\|\\s*:?-+:?\\s*)*\\|?$",
           regex_options,
         )
       {

@@ -183,6 +183,8 @@ msgstr ""
 msgid "Become a Visionary"
 msgstr ""
 
+#: src/fluxer_marketing/pages/plutonium_page.gleam:310
+#: src/fluxer_marketing/pages/plutonium_page.gleam:311
 #: src/fluxer_marketing/pages/plutonium_page.gleam:318
 #: src/fluxer_marketing/pages/plutonium_page.gleam:325
 #: src/fluxer_marketing/pages/plutonium_page.gleam:374
@@ -217,7 +219,7 @@ msgid "Blue (Da Ba Dee)"
 msgstr ""
 
 #: src/fluxer_marketing/components/footer.gleam:157
-#: src/fluxer_marketing/components/navigation.gleam:449
+#: src/fluxer_marketing/components/navigation.gleam:458
 msgid "Bluesky"
 msgstr ""
 
@@ -334,8 +336,6 @@ msgstr ""
 
 #: src/fluxer_marketing/pages/plutonium_page.gleam:296
 #: src/fluxer_marketing/pages/plutonium_page.gleam:297
-#: src/fluxer_marketing/pages/plutonium_page.gleam:310
-#: src/fluxer_marketing/pages/plutonium_page.gleam:311
 #: src/fluxer_marketing/pages/plutonium_page.gleam:366
 #: src/fluxer_marketing/pages/plutonium_page.gleam:367
 #: src/fluxer_marketing/pages/plutonium_page.gleam:586
@@ -376,15 +376,15 @@ msgstr ""
 msgid "Company"
 msgstr ""
 
-#: src/fluxer_marketing/components/footer.gleam:271
+#: src/fluxer_marketing/components/footer.gleam:282
 #: src/fluxer_marketing/components/navigation.gleam:376
 #: src/fluxer_marketing/pages/company_page.gleam:41
 #: src/fluxer_marketing/pages/company_page.gleam:44
 msgid "Company Information"
 msgstr ""
 
-#: src/fluxer_marketing/components/footer.gleam:278
-#: src/fluxer_marketing/components/navigation.gleam:426
+#: src/fluxer_marketing/components/footer.gleam:289
+#: src/fluxer_marketing/components/navigation.gleam:435
 msgid "Connect"
 msgstr ""
 
@@ -743,6 +743,10 @@ msgstr ""
 msgid "Fluxer Privacy Policy"
 msgstr ""
 
+#: src/fluxer_marketing/pages/security_page.gleam:44
+msgid "Fluxer Security Bug Bounty"
+msgstr ""
+
 #: src/fluxer_marketing/pages/terms_page.gleam:44
 msgid "Fluxer Terms of Service"
 msgstr ""
@@ -825,10 +829,6 @@ msgstr ""
 
 #: src/fluxer_marketing/pages/donate_page.gleam:345
 msgid "Frequently Asked Questions"
-msgstr ""
-
-#: src/fluxer_marketing/components/hackernews_banner.gleam:72
-msgid "From HN?"
 msgstr ""
 
 #: src/fluxer_marketing/components/current_features.gleam:72
@@ -1023,7 +1023,7 @@ msgstr ""
 msgid "Hungarian"
 msgstr ""
 
-#: src/fluxer_marketing/components/footer.gleam:329
+#: src/fluxer_marketing/components/footer.gleam:340
 msgid "IP geolocation data by "
 msgstr ""
 
@@ -1280,7 +1280,7 @@ msgid "Open Fluxer"
 msgstr ""
 
 #: src/fluxer_marketing/components/hero.gleam:82
-#: src/fluxer_marketing/components/navigation.gleam:473
+#: src/fluxer_marketing/components/navigation.gleam:482
 msgid "Open in Browser"
 msgstr ""
 
@@ -1514,7 +1514,7 @@ msgstr ""
 msgid "Register now"
 msgstr ""
 
-#: src/fluxer_marketing/components/footer.gleam:311
+#: src/fluxer_marketing/components/footer.gleam:322
 msgid "Report a bug"
 msgstr ""
 
@@ -1524,6 +1524,10 @@ msgstr ""
 
 #: src/fluxer_marketing/pages/careers_page.gleam:165
 msgid "Report people or communities so we can keep Fluxer safe for everyone."
+msgstr ""
+
+#: src/fluxer_marketing/pages/security_page.gleam:42
+msgid "Report security issues responsibly"
 msgstr ""
 
 #: src/fluxer_marketing/pages/careers_page.gleam:154
@@ -1618,6 +1622,14 @@ msgstr ""
 msgid "Search through message history"
 msgstr ""
 
+#: src/fluxer_marketing/components/footer.gleam:271
+#: src/fluxer_marketing/components/get_involved_section.gleam:194
+#: src/fluxer_marketing/components/navigation.gleam:424
+#: src/fluxer_marketing/pages/careers_page.gleam:156
+#: src/fluxer_marketing/pages/security_page.gleam:41
+msgid "Security Bug Bounty"
+msgstr ""
+
 #: src/fluxer_marketing/pages/careers_page.gleam:151
 msgid "Security reports"
 msgstr ""
@@ -1683,7 +1695,7 @@ msgid "Soundboard"
 msgstr ""
 
 #: src/fluxer_marketing/components/footer.gleam:143
-#: src/fluxer_marketing/components/navigation.gleam:438
+#: src/fluxer_marketing/components/navigation.gleam:447
 msgid "Source Code"
 msgstr ""
 
@@ -1801,7 +1813,7 @@ msgstr ""
 msgid "Try different keywords or browse our categories."
 msgstr ""
 
-#: src/fluxer_marketing/components/hackernews_banner.gleam:75
+#: src/fluxer_marketing/components/hackernews_banner.gleam:36
 msgid "Try it without an email at"
 msgstr ""
 
@@ -1915,7 +1927,7 @@ msgid "Ways to contribute"
 msgstr ""
 
 #: src/fluxer_marketing/components/get_involved_section.gleam:192
-msgid "We appreciate responsible disclosure to security@fluxer.app. We offer Plutonium codes and Bug Hunter badges based on severity."
+msgid "We appreciate responsible disclosure via our Security Bug Bounty page. We offer Plutonium codes and Bug Hunter badges based on severity."
 msgstr ""
 
 #: src/fluxer_marketing/components/final_cta.gleam:56
@@ -2069,7 +2081,7 @@ msgstr ""
 msgid "{0} of {1} slots left"
 msgstr ""
 
-#: src/fluxer_marketing/components/footer.gleam:325
+#: src/fluxer_marketing/components/footer.gleam:336
 msgid "© Fluxer Platform AB (Swedish limited liability company: 559537-3993)"
 msgstr ""
 

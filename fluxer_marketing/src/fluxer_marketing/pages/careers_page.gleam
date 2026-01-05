@@ -153,8 +153,8 @@ fn contribute_section(ctx: Context) -> Element(a) {
                 i18n_ctx,
                 "Report vulnerabilities and help us keep the platform secure.",
               ),
-              "security@fluxer.app",
-              "mailto:security@fluxer.app",
+              g_(i18n_ctx, "Security Bug Bounty"),
+              "/security",
             ),
             support_card.render(
               ctx,

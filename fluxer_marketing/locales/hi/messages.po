@@ -170,6 +170,8 @@ msgstr "Partner बनें"
 msgid "Become a Visionary"
 msgstr "Visionary बनें"
 
+#: src/fluxer_marketing/pages/plutonium_page.gleam:310
+#: src/fluxer_marketing/pages/plutonium_page.gleam:311
 #: src/fluxer_marketing/pages/plutonium_page.gleam:318
 #: src/fluxer_marketing/pages/plutonium_page.gleam:325
 #: src/fluxer_marketing/pages/plutonium_page.gleam:374
@@ -321,8 +323,6 @@ msgstr "जल्द आ रहा है"
 
 #: src/fluxer_marketing/pages/plutonium_page.gleam:296
 #: src/fluxer_marketing/pages/plutonium_page.gleam:297
-#: src/fluxer_marketing/pages/plutonium_page.gleam:310
-#: src/fluxer_marketing/pages/plutonium_page.gleam:311
 #: src/fluxer_marketing/pages/plutonium_page.gleam:366
 #: src/fluxer_marketing/pages/plutonium_page.gleam:367
 #: src/fluxer_marketing/pages/plutonium_page.gleam:586
@@ -730,6 +730,10 @@ msgstr "Fluxer Plutonium"
 msgid "Fluxer Privacy Policy"
 msgstr "Fluxer गोपनीयता नीति"
 
+#: src/fluxer_marketing/pages/security_page.gleam:44
+msgid "Fluxer Security Bug Bounty"
+msgstr "फ्लक्सर सुरक्षा बग बाउंटी"
+
 #: src/fluxer_marketing/pages/terms_page.gleam:44
 msgid "Fluxer Terms of Service"
 msgstr "Fluxer सेवा की शर्तें"
@@ -813,10 +817,6 @@ msgstr "फ़्रेंच"
 #: src/fluxer_marketing/pages/donate_page.gleam:345
 msgid "Frequently Asked Questions"
 msgstr "अक्सर पूछे जाने वाले सवाल"
-
-#: src/fluxer_marketing/components/hackernews_banner.gleam:72
-msgid "From HN?"
-msgstr "HN से?"
 
 #: src/fluxer_marketing/components/current_features.gleam:72
 msgid "Full Markdown support in messages"
@@ -1513,6 +1513,10 @@ msgstr "बग रिपोर्ट करें"
 msgid "Report people or communities so we can keep Fluxer safe for everyone."
 msgstr "लोगों या समुदायों की रिपोर्ट करें ताकि हम Fluxer को सबके लिए सुरक्षित रख सकें।"
 
+#: src/fluxer_marketing/pages/security_page.gleam:42
+msgid "Report security issues responsibly"
+msgstr "सुरक्षा मुद्दों को जिम्मेदारी से रिपोर्ट करें"
+
 #: src/fluxer_marketing/pages/careers_page.gleam:154
 msgid "Report vulnerabilities and help us keep the platform secure."
 msgstr "कमज़ोरियों की रिपोर्ट करें और प्लेटफ़ॉर्म को सुरक्षित रखने में मदद करें।"
@@ -1604,6 +1608,12 @@ msgstr "इसके लिए खोज परिणाम: "
 #: src/fluxer_marketing/components/current_features.gleam:120
 msgid "Search through message history"
 msgstr "संदेश इतिहास में खोजें"
+
+#: src/fluxer_marketing/components/get_involved_section.gleam:194
+#: src/fluxer_marketing/pages/careers_page.gleam:156
+#: src/fluxer_marketing/pages/security_page.gleam:41
+msgid "Security Bug Bounty"
+msgstr "सुरक्षा बग बाउंटी"
 
 #: src/fluxer_marketing/pages/careers_page.gleam:151
 msgid "Security reports"
@@ -1788,7 +1798,7 @@ msgstr "Trust और Safety"
 msgid "Try different keywords or browse our categories."
 msgstr "अलग कीवर्ड आज़माएँ या हमारी श्रेणियाँ देखें।"
 
-#: src/fluxer_marketing/components/hackernews_banner.gleam:75
+#: src/fluxer_marketing/components/hackernews_banner.gleam:36
 msgid "Try it without an email at"
 msgstr "इसे बिना ईमेल के यहाँ आज़माएँ"
 
@@ -1902,8 +1912,8 @@ msgid "Ways to contribute"
 msgstr "योगदान देने के तरीके"
 
 #: src/fluxer_marketing/components/get_involved_section.gleam:192
-msgid "We appreciate responsible disclosure to security@fluxer.app. We offer Plutonium codes and Bug Hunter badges based on severity."
-msgstr "security@fluxer.app पर जिम्मेदार डिस्क्लोज़र की हम सराहना करते हैं। गंभीरता के आधार पर हम Plutonium कोड्स और Bug Hunter बैज देते हैं।"
+msgid "We appreciate responsible disclosure via our Security Bug Bounty page. We offer Plutonium codes and Bug Hunter badges based on severity."
+msgstr "हम अपनी सुरक्षा बग बाउंटी पृष्ठ के माध्यम से जिम्मेदार प्रकटीकरण को सराहते हैं। हम गंभीरता के आधार पर प्लूटोनियम कोड और बग हंटर बैज प्रदान करते हैं।"
 
 #: src/fluxer_marketing/components/final_cta.gleam:56
 msgid "We need your support to make this work."

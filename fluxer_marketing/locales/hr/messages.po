@@ -170,6 +170,8 @@ msgstr "Postanite partner"
 msgid "Become a Visionary"
 msgstr "Postanite Visionary"
 
+#: src/fluxer_marketing/pages/plutonium_page.gleam:310
+#: src/fluxer_marketing/pages/plutonium_page.gleam:311
 #: src/fluxer_marketing/pages/plutonium_page.gleam:318
 #: src/fluxer_marketing/pages/plutonium_page.gleam:325
 #: src/fluxer_marketing/pages/plutonium_page.gleam:374
@@ -321,8 +323,6 @@ msgstr "Uskoro"
 
 #: src/fluxer_marketing/pages/plutonium_page.gleam:296
 #: src/fluxer_marketing/pages/plutonium_page.gleam:297
-#: src/fluxer_marketing/pages/plutonium_page.gleam:310
-#: src/fluxer_marketing/pages/plutonium_page.gleam:311
 #: src/fluxer_marketing/pages/plutonium_page.gleam:366
 #: src/fluxer_marketing/pages/plutonium_page.gleam:367
 #: src/fluxer_marketing/pages/plutonium_page.gleam:586
@@ -730,6 +730,10 @@ msgstr "Fluxer Plutonium"
 msgid "Fluxer Privacy Policy"
 msgstr "Fluxer politika privatnosti"
 
+#: src/fluxer_marketing/pages/security_page.gleam:44
+msgid "Fluxer Security Bug Bounty"
+msgstr "Fluxer sigurnosna nagrada za greške"
+
 #: src/fluxer_marketing/pages/terms_page.gleam:44
 msgid "Fluxer Terms of Service"
 msgstr "Fluxer uvjeti korištenja"
@@ -813,10 +817,6 @@ msgstr "Francuski"
 #: src/fluxer_marketing/pages/donate_page.gleam:345
 msgid "Frequently Asked Questions"
 msgstr "Često postavljana pitanja"
-
-#: src/fluxer_marketing/components/hackernews_banner.gleam:72
-msgid "From HN?"
-msgstr "S HN-a?"
 
 #: src/fluxer_marketing/components/current_features.gleam:72
 msgid "Full Markdown support in messages"
@@ -1513,6 +1513,10 @@ msgstr "Prijavite greške"
 msgid "Report people or communities so we can keep Fluxer safe for everyone."
 msgstr "Prijavite osobe ili zajednice kako bismo Fluxer održali sigurnim za sve."
 
+#: src/fluxer_marketing/pages/security_page.gleam:42
+msgid "Report security issues responsibly"
+msgstr "Odgovorno prijavite sigurnosne probleme"
+
 #: src/fluxer_marketing/pages/careers_page.gleam:154
 msgid "Report vulnerabilities and help us keep the platform secure."
 msgstr "Prijavite ranjivosti i pomozite nam održati platformu sigurnom."
@@ -1604,6 +1608,12 @@ msgstr "Rezultati pretrage za: "
 #: src/fluxer_marketing/components/current_features.gleam:120
 msgid "Search through message history"
 msgstr "Pretražujte povijest poruka"
+
+#: src/fluxer_marketing/components/get_involved_section.gleam:194
+#: src/fluxer_marketing/pages/careers_page.gleam:156
+#: src/fluxer_marketing/pages/security_page.gleam:41
+msgid "Security Bug Bounty"
+msgstr "Nagrada za sigurnosne greške"
 
 #: src/fluxer_marketing/pages/careers_page.gleam:151
 msgid "Security reports"
@@ -1788,7 +1798,7 @@ msgstr "Povjerenje i sigurnost"
 msgid "Try different keywords or browse our categories."
 msgstr "Pokušajte s drugim ključnim riječima ili pregledajte naše kategorije."
 
-#: src/fluxer_marketing/components/hackernews_banner.gleam:75
+#: src/fluxer_marketing/components/hackernews_banner.gleam:36
 msgid "Try it without an email at"
 msgstr "Isprobajte bez e-pošte na"
 
@@ -1902,8 +1912,8 @@ msgid "Ways to contribute"
 msgstr "Načini doprinosa"
 
 #: src/fluxer_marketing/components/get_involved_section.gleam:192
-msgid "We appreciate responsible disclosure to security@fluxer.app. We offer Plutonium codes and Bug Hunter badges based on severity."
-msgstr "Cijenimo odgovorno prijavljivanje na security@fluxer.app. Nudimo Plutonium kodove i značke Bug Hunter ovisno o ozbiljnosti."
+msgid "We appreciate responsible disclosure via our Security Bug Bounty page. We offer Plutonium codes and Bug Hunter badges based on severity."
+msgstr "Cijenimo odgovorno otkrivanje putem naše stranice za nagrade za sigurnosne greške. Nudimo Plutonij kôdove i oznake lovca na greške na temelju ozbiljnosti."
 
 #: src/fluxer_marketing/components/final_cta.gleam:56
 msgid "We need your support to make this work."

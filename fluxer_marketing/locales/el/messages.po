@@ -170,6 +170,8 @@ msgstr "Γίνε Συνεργάτης"
 msgid "Become a Visionary"
 msgstr "Γίνε Visionary"
 
+#: src/fluxer_marketing/pages/plutonium_page.gleam:310
+#: src/fluxer_marketing/pages/plutonium_page.gleam:311
 #: src/fluxer_marketing/pages/plutonium_page.gleam:318
 #: src/fluxer_marketing/pages/plutonium_page.gleam:325
 #: src/fluxer_marketing/pages/plutonium_page.gleam:374
@@ -321,8 +323,6 @@ msgstr "Σύντομα"
 
 #: src/fluxer_marketing/pages/plutonium_page.gleam:296
 #: src/fluxer_marketing/pages/plutonium_page.gleam:297
-#: src/fluxer_marketing/pages/plutonium_page.gleam:310
-#: src/fluxer_marketing/pages/plutonium_page.gleam:311
 #: src/fluxer_marketing/pages/plutonium_page.gleam:366
 #: src/fluxer_marketing/pages/plutonium_page.gleam:367
 #: src/fluxer_marketing/pages/plutonium_page.gleam:586
@@ -730,6 +730,10 @@ msgstr "Fluxer Plutonium"
 msgid "Fluxer Privacy Policy"
 msgstr "Πολιτική Απορρήτου Fluxer"
 
+#: src/fluxer_marketing/pages/security_page.gleam:44
+msgid "Fluxer Security Bug Bounty"
+msgstr "Fluxer Ασφαλείας Bug Bounty"
+
 #: src/fluxer_marketing/pages/terms_page.gleam:44
 msgid "Fluxer Terms of Service"
 msgstr "Όροι Χρήσης Fluxer"
@@ -813,10 +817,6 @@ msgstr "Γαλλικά"
 #: src/fluxer_marketing/pages/donate_page.gleam:345
 msgid "Frequently Asked Questions"
 msgstr "Συχνές ερωτήσεις"
-
-#: src/fluxer_marketing/components/hackernews_banner.gleam:72
-msgid "From HN?"
-msgstr "Από HN;"
 
 #: src/fluxer_marketing/components/current_features.gleam:72
 msgid "Full Markdown support in messages"
@@ -1513,6 +1513,10 @@ msgstr "Ανάφερε bugs"
 msgid "Report people or communities so we can keep Fluxer safe for everyone."
 msgstr "Ανάφερε άτομα ή κοινότητες ώστε να κρατήσουμε το Fluxer ασφαλές για όλους."
 
+#: src/fluxer_marketing/pages/security_page.gleam:42
+msgid "Report security issues responsibly"
+msgstr "Αναφέρετε ζητήματα ασφαλείας υπεύθυνα"
+
 #: src/fluxer_marketing/pages/careers_page.gleam:154
 msgid "Report vulnerabilities and help us keep the platform secure."
 msgstr "Ανάφερε ευπάθειες και βοήθησέ μας να κρατήσουμε την πλατφόρμα ασφαλή."
@@ -1604,6 +1608,12 @@ msgstr "Αποτελέσματα αναζήτησης για: "
 #: src/fluxer_marketing/components/current_features.gleam:120
 msgid "Search through message history"
 msgstr "Αναζήτηση στο ιστορικό μηνυμάτων"
+
+#: src/fluxer_marketing/components/get_involved_section.gleam:194
+#: src/fluxer_marketing/pages/careers_page.gleam:156
+#: src/fluxer_marketing/pages/security_page.gleam:41
+msgid "Security Bug Bounty"
+msgstr "Bug Bounty Ασφαλείας"
 
 #: src/fluxer_marketing/pages/careers_page.gleam:151
 msgid "Security reports"
@@ -1788,7 +1798,7 @@ msgstr "Εμπιστοσύνη & ασφάλεια"
 msgid "Try different keywords or browse our categories."
 msgstr "Δοκίμασε διαφορετικές λέξεις-κλειδιά ή περιηγήσου στις κατηγορίες."
 
-#: src/fluxer_marketing/components/hackernews_banner.gleam:75
+#: src/fluxer_marketing/components/hackernews_banner.gleam:36
 msgid "Try it without an email at"
 msgstr "Δοκίμασέ το χωρίς email στο"
 
@@ -1902,8 +1912,8 @@ msgid "Ways to contribute"
 msgstr "Τρόποι να συνεισφέρεις"
 
 #: src/fluxer_marketing/components/get_involved_section.gleam:192
-msgid "We appreciate responsible disclosure to security@fluxer.app. We offer Plutonium codes and Bug Hunter badges based on severity."
-msgstr "Εκτιμούμε την υπεύθυνη γνωστοποίηση στο security@fluxer.app. Προσφέρουμε κωδικούς Plutonium και σήματα Bug Hunter ανάλογα με τη σοβαρότητα."
+msgid "We appreciate responsible disclosure via our Security Bug Bounty page. We offer Plutonium codes and Bug Hunter badges based on severity."
+msgstr "Εκτιμούμε την υπεύθυνη αποκάλυψη μέσω της σελίδας Bug Bounty Ασφαλείας μας. Προσφέρουμε κωδικούς Πλουτωνίου και badges κυνηγών σφαλμάτων με βάση τη σοβαρότητα."
 
 #: src/fluxer_marketing/components/final_cta.gleam:56
 msgid "We need your support to make this work."

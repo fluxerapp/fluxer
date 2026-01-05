@@ -35,4 +35,4 @@ Email support@fluxer.app with the filled template. A concise subject, such as `B
 
 ## Security issues
 
-If you believe the issue is security-related, email security@fluxer.app instead of Support. Include clear steps, why you think it is a security risk, and any impact you see. We respond quickly to assess, coordinate a fix, and discuss disclosure expectations.
+If you believe the issue is security-related, visit our [Security Bug Bounty page](/security) instead of emailing Support. Follow the guidance there, include clear steps, why you think it is a security risk, and any impact you see. We respond quickly to assess, coordinate a fix, and discuss disclosure expectations.

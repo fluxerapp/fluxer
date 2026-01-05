@@ -414,6 +414,15 @@ pub fn render(ctx: Context, _req: Request) -> Element(a) {
                       ],
                       [html.text(g_(i18n_ctx, "Community Guidelines"))],
                     ),
+                    html.a(
+                      [
+                        href(ctx, "/security"),
+                        attribute.class(
+                          "px-2 py-2 text-base font-semibold text-gray-900 hover:bg-gray-100 rounded-lg transition-colors",
+                        ),
+                      ],
+                      [html.text(g_(i18n_ctx, "Security Bug Bounty"))],
+                    ),
                   ]),
                 ]),
                 html.div([], [
