@@ -1,16 +1,17 @@
 <div align="left" style="margin:12px 0 8px;">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://fluxerstatic.com/marketing/branding/logo-white.svg">
-    <img src="https://fluxerstatic.com/marketing/branding/logo-black.svg" alt="Fluxer logo" width="360">
-  </picture>
+  <img src="./media/logo-graphic.png" alt="Fluxer graphic logo" width="360">
 </div>
 
 ---
 
 Fluxer is an open-source, independent instant messaging and VoIP platform. Built for friends, groups, and communities.
 
-<div align="left" style="margin-top:12px;">
-  <img src="https://fluxerstatic.com/marketing/screenshots/desktop-2560w.avif?v=4" alt="Fluxer desktop screenshot" width="720">
+<div align="left" style="margin:16px 0 0; width:100%;">
+  <img
+    src="./media/app-showcase.png"
+    alt="Fluxer app showcase"
+    style="display:block; width:100%; max-width:1200px; box-sizing:border-box;"
+  >
 </div>
 
 ---
