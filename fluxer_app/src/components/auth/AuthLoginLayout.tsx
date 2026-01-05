@@ -201,6 +201,7 @@ const AuthLoginLayout = observer(function AuthLoginLayout({
 				error={switchError}
 				disabled={isSwitching}
 				showInstance
+				clickableRows
 				onSelectAccount={handleSelectExistingAccount}
 				onAddAccount={handleAddAnotherAccount}
 			/>
