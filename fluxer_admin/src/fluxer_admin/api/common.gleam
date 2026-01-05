@@ -104,6 +104,7 @@ pub fn admin_post_with_audit(
 
   case httpc.send(req) {
     Ok(resp) if resp.status == 200 -> Ok(Nil)
+    Ok(resp) if resp.status == 204 -> Ok(Nil)
     Ok(resp) if resp.status == 401 -> Error(Unauthorized)
     Ok(resp) if resp.status == 403 -> {
       let message_decoder = {
