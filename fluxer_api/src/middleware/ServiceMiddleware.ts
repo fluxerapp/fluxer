@@ -77,6 +77,8 @@ import {UnfurlerService as ProdUnfurlerService} from '~/infrastructure/UnfurlerS
 import {UserCacheService} from '~/infrastructure/UserCacheService';
 import {VirusScanService as ProdVirusScanService} from '~/infrastructure/VirusScanService';
 import {VoiceRoomStore} from '~/infrastructure/VoiceRoomStore';
+import {SnowflakeReservationRepository} from '~/instance/SnowflakeReservationRepository';
+import {SnowflakeReservationService} from '~/instance/SnowflakeReservationService';
 import {InviteRepository as ProdInviteRepository} from '~/invite/InviteRepository';
 import {InviteService} from '~/invite/InviteService';
 import {getReportSearchService} from '~/Meilisearch';
@@ -145,6 +147,13 @@ const assetDeletionQueue: IAssetDeletionQueue = new AssetDeletionQueue(redis);
 const featureFlagRepository = new FeatureFlagRepository();
 const featureFlagService = new FeatureFlagService(featureFlagRepository, cacheService);
 let featureFlagServiceInitialized = false;
+const snowflakeReservationRepository = new SnowflakeReservationRepository();
+const snowflakeReservationSubscriber = new Redis(Config.redis.url);
+const snowflakeReservationService = new SnowflakeReservationService(
+	snowflakeReservationRepository,
+	snowflakeReservationSubscriber,
+);
+let snowflakeReservationServiceInitialized = false;
 
 let voiceTopology: VoiceTopology | null = null;
 let voiceAvailabilityService: VoiceAvailabilityService | null = null;
@@ -196,6 +205,11 @@ export const ServiceMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => 
 	if (!featureFlagServiceInitialized) {
 		await featureFlagService.initialize();
 		featureFlagServiceInitialized = true;
+	}
+
+	if (!snowflakeReservationServiceInitialized) {
+		await snowflakeReservationService.initialize();
+		snowflakeReservationServiceInitialized = true;
 	}
 
 	const userRepository = new UserRepository();
@@ -377,6 +391,7 @@ export const ServiceMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => 
 		emailService,
 		smsService,
 		snowflakeService,
+		snowflakeReservationService,
 		discriminatorService,
 		redisAccountDeletionQueue,
 		redisActivityTracker,

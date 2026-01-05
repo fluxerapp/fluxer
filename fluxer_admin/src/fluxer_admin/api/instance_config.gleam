@@ -81,6 +81,25 @@ fn instance_config_decoder() {
   ))
 }
 
+pub type SnowflakeReservation {
+  SnowflakeReservation(
+    email: String,
+    snowflake: String,
+    updated_at: option.Option(String),
+  )
+}
+
+fn snowflake_reservation_decoder() {
+  use email <- decode.field("email", decode.string)
+  use snowflake <- decode.field("snowflake", decode.string)
+  use updated_at <- decode.field("updated_at", decode.optional(decode.string))
+  decode.success(SnowflakeReservation(
+    email:,
+    snowflake:,
+    updated_at: updated_at,
+  ))
+}
+
 pub fn get_instance_config(
   ctx: Context,
   session: Session,
@@ -169,4 +188,72 @@ pub fn update_instance_config(
     Ok(_resp) -> Error(ServerError)
     Error(_) -> Error(NetworkError)
   }
+}
+
+pub fn list_snowflake_reservations(
+  ctx: Context,
+  session: Session,
+) -> Result(List(SnowflakeReservation), ApiError) {
+  let url = ctx.api_endpoint <> "/admin/snowflake-reservations/list"
+  let body = json.object([]) |> json.to_string
+
+  let assert Ok(req) = request.to(url)
+  let req =
+    req
+    |> request.set_method(http.Post)
+    |> request.set_header("authorization", "Bearer " <> session.access_token)
+    |> request.set_header("content-type", "application/json")
+    |> request.set_body(body)
+
+  case httpc.send(req) {
+    Ok(resp) if resp.status == 200 -> {
+      let decoder = {
+        use reservations <- decode.field(
+          "reservations",
+          decode.list(snowflake_reservation_decoder()),
+        )
+        decode.success(reservations)
+      }
+      case json.parse(resp.body, decoder) {
+        Ok(reservations) -> Ok(reservations)
+        Error(_) -> Error(ServerError)
+      }
+    }
+    Ok(resp) if resp.status == 401 -> Error(Unauthorized)
+    Ok(resp) if resp.status == 403 -> Error(Forbidden("Access denied"))
+    Ok(_resp) -> Error(ServerError)
+    Error(_) -> Error(NetworkError)
+  }
+}
+
+pub fn add_snowflake_reservation(
+  ctx: Context,
+  session: Session,
+  email: String,
+  snowflake: String,
+) -> Result(Nil, ApiError) {
+  let fields = [
+    #("email", json.string(email)),
+    #("snowflake", json.string(snowflake)),
+  ]
+  common.admin_post_simple(
+    ctx,
+    session,
+    "/admin/snowflake-reservations/add",
+    fields,
+  )
+}
+
+pub fn delete_snowflake_reservation(
+  ctx: Context,
+  session: Session,
+  email: String,
+) -> Result(Nil, ApiError) {
+  let fields = [#("email", json.string(email))]
+  common.admin_post_simple(
+    ctx,
+    session,
+    "/admin/snowflake-reservations/delete",
+    fields,
+  )
 }

@@ -49,6 +49,7 @@ import type {PendingJoinInviteStore} from '~/infrastructure/PendingJoinInviteSto
 import type {RedisAccountDeletionQueueService} from '~/infrastructure/RedisAccountDeletionQueueService';
 import type {RedisActivityTracker} from '~/infrastructure/RedisActivityTracker';
 import type {SnowflakeService} from '~/infrastructure/SnowflakeService';
+import type {SnowflakeReservationService} from '~/instance/SnowflakeReservationService';
 import type {InviteService} from '~/invite/InviteService';
 import type {AuthSession, User} from '~/Models';
 import type {RequestCache} from '~/middleware/RequestCacheMiddleware';
@@ -157,6 +158,7 @@ export class AuthService implements IAuthService {
 		emailServiceDep: IEmailService,
 		smsService: ISMSService,
 		snowflakeService: SnowflakeService,
+		snowflakeReservationService: SnowflakeReservationService,
 		discriminatorService: IDiscriminatorService,
 		redisAccountDeletionQueue: RedisAccountDeletionQueueService,
 		redisActivityTracker: RedisActivityTracker,
@@ -200,6 +202,7 @@ export class AuthService implements IAuthService {
 			rateLimitService,
 			emailServiceDep,
 			snowflakeService,
+			snowflakeReservationService,
 			discriminatorService,
 			redisActivityTracker,
 			pendingJoinInviteStore,

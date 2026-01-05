@@ -375,6 +375,10 @@ pub const acl_instance_config_view = "instance:config:view"
 
 pub const acl_instance_config_update = "instance:config:update"
 
+pub const acl_instance_snowflake_reservation_view = "instance:snowflake_reservation:view"
+
+pub const acl_instance_snowflake_reservation_manage = "instance:snowflake_reservation:manage"
+
 pub type FeatureFlag {
   FeatureFlag(id: String, name: String, description: String)
 }

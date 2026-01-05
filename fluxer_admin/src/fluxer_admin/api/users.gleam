@@ -635,7 +635,10 @@ pub fn list_user_sessions(
         use client_ip <- decode.field("client_ip", decode.string)
         use client_os <- decode.field("client_os", decode.string)
         use client_platform <- decode.field("client_platform", decode.string)
-        use client_location <- decode.field("client_location", decode.optional(decode.string))
+        use client_location <- decode.field(
+          "client_location",
+          decode.optional(decode.string),
+        )
         decode.success(UserSession(
           session_id_hash: session_id_hash,
           created_at: created_at,

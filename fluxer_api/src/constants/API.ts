@@ -279,6 +279,8 @@ export const AdminACLs = {
 
 	INSTANCE_CONFIG_VIEW: 'instance:config:view',
 	INSTANCE_CONFIG_UPDATE: 'instance:config:update',
+	INSTANCE_SNOWFLAKE_RESERVATION_VIEW: 'instance:snowflake_reservation:view',
+	INSTANCE_SNOWFLAKE_RESERVATION_MANAGE: 'instance:snowflake_reservation:manage',
 
 	METRICS_VIEW: 'metrics:view',
 

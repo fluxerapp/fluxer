@@ -23,4 +23,5 @@ export * from './constants/Channel';
 export * from './constants/Core';
 export * from './constants/Gateway';
 export * from './constants/Guild';
+export * from './constants/InstanceConfig';
 export * from './constants/User';

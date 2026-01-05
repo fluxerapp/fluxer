@@ -17,15 +17,5 @@
  * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
  */
 
-export * from './AdminArchiveModel';
-export * from './AdminTypes';
-export * from './ArchiveTypes';
-export * from './BanTypes';
-export * from './CodeRequestTypes';
-export * from './GuildRequestTypes';
-export * from './GuildTypes';
-export * from './MessageTypes';
-export * from './SnowflakeReservationTypes';
-export * from './UserRequestTypes';
-export * from './UserTypes';
-export * from './VoiceTypes';
+export const SNOWFLAKE_RESERVATION_KEY_PREFIX = 'snowflake_reservation:';
+export const SNOWFLAKE_RESERVATION_REFRESH_CHANNEL = 'snowflake_reservation:refresh';

@@ -17,15 +17,21 @@
  * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
  */
 
-export * from './AdminArchiveModel';
-export * from './AdminTypes';
-export * from './ArchiveTypes';
-export * from './BanTypes';
-export * from './CodeRequestTypes';
-export * from './GuildRequestTypes';
-export * from './GuildTypes';
-export * from './MessageTypes';
-export * from './SnowflakeReservationTypes';
-export * from './UserRequestTypes';
-export * from './UserTypes';
-export * from './VoiceTypes';
+export interface SnowflakeReservationEntry {
+	email: string;
+	snowflake: string;
+	updated_at: string | null;
+}
+
+export interface ListSnowflakeReservationsResponse {
+	reservations: Array<SnowflakeReservationEntry>;
+}
+
+export interface AddSnowflakeReservationRequest {
+	email: string;
+	snowflake: string;
+}
+
+export interface DeleteSnowflakeReservationRequest {
+	email: string;
+}

@@ -17,7 +17,6 @@
  * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import crypto from 'node:crypto';
 import Bowser from 'bowser';
 import {types} from 'cassandra-driver';
 import type {RegisterRequest} from '~/auth/AuthModel';
@@ -34,6 +33,7 @@ import type {PendingJoinInviteStore} from '~/infrastructure/PendingJoinInviteSto
 import type {RedisActivityTracker} from '~/infrastructure/RedisActivityTracker';
 import type {SnowflakeService} from '~/infrastructure/SnowflakeService';
 import {InstanceConfigRepository} from '~/instance/InstanceConfigRepository';
+import type {SnowflakeReservationService} from '~/instance/SnowflakeReservationService';
 import type {InviteService} from '~/invite/InviteService';
 import {Logger} from '~/Logger';
 import {getUserSearchService} from '~/Meilisearch';
@@ -134,15 +134,6 @@ function parseDobLocalDate(dateOfBirth: string): types.LocalDate {
 	}
 }
 
-function safeJsonParse<T>(value: string): T | null {
-	try {
-		return JSON.parse(value) as T;
-	} catch (error) {
-		Logger.warn({error}, 'Failed to parse JSON from environment variable');
-		return null;
-	}
-}
-
 interface RegisterParams {
 	data: RegisterRequest;
 	request: Request;
@@ -158,6 +149,7 @@ export class AuthRegistrationService {
 		private rateLimitService: IRateLimitService,
 		private emailService: IEmailService,
 		private snowflakeService: SnowflakeService,
+		private snowflakeReservationService: SnowflakeReservationService,
 		private discriminatorService: IDiscriminatorService,
 		private redisActivityTracker: RedisActivityTracker,
 		private pendingJoinInviteStore: PendingJoinInviteStore,
@@ -457,23 +449,12 @@ export class AuthRegistrationService {
 	}
 
 	private generateUserId(emailKey: string | null): UserID {
-		const mappingJson = process.env.EARLY_TESTER_EMAIL_HASH_TO_SNOWFLAKE;
-
-		if (emailKey && mappingJson) {
-			const mapping = safeJsonParse<Record<string, string>>(mappingJson);
-			if (mapping) {
-				const emailHash = crypto.createHash('sha256').update(emailKey).digest('hex');
-				const mapped = mapping[emailHash];
-				if (mapped) {
-					try {
-						return createUserID(BigInt(mapped));
-					} catch (error) {
-						Logger.warn({error}, 'Invalid snowflake mapping value; falling back to generated ID');
-					}
-				}
+		if (emailKey) {
+			const reserved = this.snowflakeReservationService.getReservedSnowflake(emailKey);
+			if (reserved) {
+				return createUserID(reserved);
 			}
 		}
-
 		return createUserID(this.snowflakeService.generate());
 	}
 

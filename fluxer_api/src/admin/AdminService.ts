@@ -34,6 +34,7 @@ import type {PendingJoinInviteStore} from '~/infrastructure/PendingJoinInviteSto
 import type {RedisBulkMessageDeletionQueueService} from '~/infrastructure/RedisBulkMessageDeletionQueueService';
 import type {SnowflakeService} from '~/infrastructure/SnowflakeService';
 import type {UserCacheService} from '~/infrastructure/UserCacheService';
+import {SnowflakeReservationRepository} from '~/instance/SnowflakeReservationRepository';
 import type {InviteRepository} from '~/invite/InviteRepository';
 import type {InviteService} from '~/invite/InviteService';
 import type {RequestCache} from '~/middleware/RequestCacheMiddleware';
@@ -107,6 +108,7 @@ import {AdminMessageService} from './services/AdminMessageService';
 import {AdminMessageShredService} from './services/AdminMessageShredService';
 import {AdminReportService} from './services/AdminReportService';
 import {AdminSearchService} from './services/AdminSearchService';
+import {AdminSnowflakeReservationService} from './services/AdminSnowflakeReservationService';
 import {AdminUserService} from './services/AdminUserService';
 import {AdminVoiceService} from './services/AdminVoiceService';
 
@@ -133,6 +135,7 @@ export class AdminService {
 	private readonly searchService: AdminSearchService;
 	private readonly codeGenerationService: AdminCodeGenerationService;
 	private readonly assetPurgeService: AdminAssetPurgeService;
+	private readonly snowflakeReservationService: AdminSnowflakeReservationService;
 
 	constructor(
 		private readonly userRepository: IUserRepository,
@@ -235,11 +238,33 @@ export class AdminService {
 			snowflakeService: this.snowflakeService,
 			auditService: this.auditService,
 		});
+
+		this.snowflakeReservationService = new AdminSnowflakeReservationService({
+			repository: new SnowflakeReservationRepository(),
+			cacheService: this.cacheService,
+			auditService: this.auditService,
+		});
 		this.codeGenerationService = new AdminCodeGenerationService(this.userRepository);
 	}
 
 	async lookupUser(data: LookupUserRequest) {
 		return this.userService.lookupUser(data);
+	}
+
+	async listSnowflakeReservations() {
+		return this.snowflakeReservationService.listReservations();
+	}
+
+	async setSnowflakeReservation(
+		data: {email: string; snowflake: string},
+		adminUserId: UserID,
+		auditLogReason: string | null,
+	) {
+		return this.snowflakeReservationService.setReservation(data, adminUserId, auditLogReason);
+	}
+
+	async deleteSnowflakeReservation(data: {email: string}, adminUserId: UserID, auditLogReason: string | null) {
+		return this.snowflakeReservationService.deleteReservation(data, adminUserId, auditLogReason);
 	}
 
 	async updateUserFlags(args: {
