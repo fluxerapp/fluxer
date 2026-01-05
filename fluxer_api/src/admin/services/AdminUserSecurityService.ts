@@ -24,7 +24,6 @@ import {UserFlags} from '~/Constants';
 import {InputValidationError, UnknownUserError} from '~/Errors';
 import type {ICacheService} from '~/infrastructure/ICacheService';
 import type {IEmailService} from '~/infrastructure/IEmailService';
-import type {SnowflakeService} from '~/infrastructure/SnowflakeService';
 import type {BotMfaMirrorService} from '~/oauth/BotMfaMirrorService';
 import type {IUserRepository} from '~/user/IUserRepository';
 import type {UserContactChangeLogService} from '~/user/services/UserContactChangeLogService';
@@ -45,7 +44,6 @@ interface AdminUserSecurityServiceDeps {
 	userRepository: IUserRepository;
 	authService: AuthService;
 	emailService: IEmailService;
-	snowflakeService: SnowflakeService;
 	auditService: AdminAuditService;
 	updatePropagator: AdminUserUpdatePropagator;
 	botMfaMirrorService?: BotMfaMirrorService;
@@ -136,7 +134,7 @@ export class AdminUserSecurityService {
 	}
 
 	async sendPasswordReset(data: SendPasswordResetRequest, adminUserId: UserID, auditLogReason: string | null) {
-		const {userRepository, emailService, snowflakeService, auditService} = this.deps;
+		const {userRepository, emailService, authService, auditService} = this.deps;
 		const userId = createUserID(data.user_id);
 		const user = await userRepository.findUnique(userId);
 		if (!user) {
@@ -147,7 +145,7 @@ export class AdminUserSecurityService {
 			throw InputValidationError.create('email', 'User does not have an email address');
 		}
 
-		const token = createPasswordResetToken(snowflakeService.generate().toString());
+		const token = createPasswordResetToken(await authService.generateSecureToken());
 		await userRepository.createPasswordResetToken({
 			token_: token,
 			user_id: userId,

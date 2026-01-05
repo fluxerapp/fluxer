@@ -29,7 +29,6 @@ import type {IEmailService} from '~/infrastructure/IEmailService';
 import type {IGatewayService} from '~/infrastructure/IGatewayService';
 import type {PendingJoinInviteStore} from '~/infrastructure/PendingJoinInviteStore';
 import type {RedisBulkMessageDeletionQueueService} from '~/infrastructure/RedisBulkMessageDeletionQueueService';
-import type {SnowflakeService} from '~/infrastructure/SnowflakeService';
 import type {UserCacheService} from '~/infrastructure/UserCacheService';
 import type {InviteService} from '~/invite/InviteService';
 import type {BotMfaMirrorService} from '~/oauth/BotMfaMirrorService';
@@ -75,7 +74,6 @@ interface AdminUserServiceDeps {
 	userRepository: IUserRepository;
 	guildRepository: IGuildRepository;
 	discriminatorService: IDiscriminatorService;
-	snowflakeService: SnowflakeService;
 	authService: AuthService;
 	emailService: IEmailService;
 	entityAssetService: EntityAssetService;
@@ -135,7 +133,6 @@ export class AdminUserService {
 			userRepository: deps.userRepository,
 			authService: deps.authService,
 			emailService: deps.emailService,
-			snowflakeService: deps.snowflakeService,
 			auditService: deps.auditService,
 			updatePropagator: this.updatePropagator,
 			botMfaMirrorService: deps.botMfaMirrorService,
