@@ -18,8 +18,10 @@
  */
 
 import {createMiddleware} from 'hono/factory';
+import type {Redis} from 'ioredis';
 import type {HonoEnv} from '~/App';
 import {AdminRepository} from '~/admin/AdminRepository';
+import {IP_BAN_REFRESH_CHANNEL} from '~/constants/IpBan';
 import {IpBannedError} from '~/Errors';
 import {Logger} from '~/Logger';
 import {type IpFamily, parseIpBanEntry, tryParseSingleIp} from '~/utils/IpRangeUtils';
@@ -42,14 +44,19 @@ class IpBanCache {
 	private singleIpBans: FamilyMap<SingleCacheEntry>;
 	private rangeIpBans: FamilyMap<RangeCacheEntry>;
 	private isInitialized = false;
-	private refreshIntervalMs = 30 * 1000;
 	private adminRepository = new AdminRepository();
 	private consecutiveFailures = 0;
 	private maxConsecutiveFailures = 5;
+	private redisSubscriber: Redis | null = null;
+	private subscriberInitialized = false;
 
 	constructor() {
 		this.singleIpBans = this.createFamilyMaps();
 		this.rangeIpBans = this.createFamilyMaps();
+	}
+
+	setRefreshSubscriber(subscriber: Redis | null): void {
+		this.redisSubscriber = subscriber;
 	}
 
 	async initialize(): Promise<void> {
@@ -57,23 +64,37 @@ class IpBanCache {
 
 		await this.refresh();
 		this.isInitialized = true;
+		this.setupSubscriber();
+	}
 
-		setInterval(() => {
-			this.refresh().catch((err) => {
-				this.consecutiveFailures++;
+	private setupSubscriber(): void {
+		if (this.subscriberInitialized || !this.redisSubscriber) {
+			return;
+		}
 
-				if (this.consecutiveFailures >= this.maxConsecutiveFailures) {
-					console.error(
-						`Failed to refresh IP ban cache ${this.consecutiveFailures} times in a row. ` +
-							`Last error: ${err.message}. Cache may be stale.`,
-					);
-				} else {
-					console.warn(
-						`Failed to refresh IP ban cache (${this.consecutiveFailures}/${this.maxConsecutiveFailures}): ${err.message}`,
-					);
-				}
+		const subscriber = this.redisSubscriber;
+		subscriber
+			.subscribe(IP_BAN_REFRESH_CHANNEL)
+			.then(() => {
+				subscriber.on('message', (channel) => {
+					if (channel === IP_BAN_REFRESH_CHANNEL) {
+						this.refresh().catch((err) => {
+							this.consecutiveFailures++;
+							const message = err instanceof Error ? err.message : String(err);
+							if (this.consecutiveFailures >= this.maxConsecutiveFailures) {
+								Logger.error({error: message}, 'Failed to refresh IP ban cache after notification');
+							} else {
+								Logger.warn({error: message}, 'Failed to refresh IP ban cache after notification');
+							}
+						});
+					}
+				});
+			})
+			.catch((error) => {
+				Logger.error({error}, 'Failed to subscribe to IP ban refresh channel');
 			});
-		}, this.refreshIntervalMs);
+
+		this.subscriberInitialized = true;
 	}
 
 	async refresh(): Promise<void> {

@@ -159,6 +159,7 @@ export class AdminUserService {
 		this.banManagementService = new AdminBanManagementService({
 			adminRepository: deps.adminRepository,
 			auditService: deps.auditService,
+			cacheService: deps.cacheService,
 		});
 
 		this.registrationService = new AdminUserRegistrationService({

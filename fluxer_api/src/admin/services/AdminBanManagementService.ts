@@ -19,21 +19,25 @@
 
 import type {IAdminRepository} from '~/admin/IAdminRepository';
 import type {UserID} from '~/BrandedTypes';
+import {IP_BAN_REFRESH_CHANNEL} from '~/constants/IpBan';
+import type {ICacheService} from '~/infrastructure/ICacheService';
 import {ipBanCache} from '~/middleware/IpBanMiddleware';
 import type {AdminAuditService} from './AdminAuditService';
 
 interface AdminBanManagementServiceDeps {
 	adminRepository: IAdminRepository;
 	auditService: AdminAuditService;
+	cacheService: ICacheService;
 }
 
 export class AdminBanManagementService {
 	constructor(private readonly deps: AdminBanManagementServiceDeps) {}
 
 	async banIp(data: {ip: string}, adminUserId: UserID, auditLogReason: string | null) {
-		const {adminRepository, auditService} = this.deps;
+		const {adminRepository, auditService, cacheService} = this.deps;
 		await adminRepository.banIp(data.ip);
 		ipBanCache.ban(data.ip);
+		await cacheService.publish(IP_BAN_REFRESH_CHANNEL, 'refresh');
 
 		await auditService.createAuditLog({
 			adminUserId,
@@ -46,9 +50,10 @@ export class AdminBanManagementService {
 	}
 
 	async unbanIp(data: {ip: string}, adminUserId: UserID, auditLogReason: string | null) {
-		const {adminRepository, auditService} = this.deps;
+		const {adminRepository, auditService, cacheService} = this.deps;
 		await adminRepository.unbanIp(data.ip);
 		ipBanCache.unban(data.ip);
+		await cacheService.publish(IP_BAN_REFRESH_CHANNEL, 'refresh');
 
 		await auditService.createAuditLog({
 			adminUserId,

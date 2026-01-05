@@ -17,13 +17,13 @@
  * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
  */
 
+import type {Redis} from 'ioredis';
 import type {GuildID, UserID} from '~/BrandedTypes';
 import {Config} from '~/Config';
 import {
 	ALL_FEATURE_FLAGS,
-	FEATURE_FLAG_POLL_INTERVAL_MS,
-	FEATURE_FLAG_POLL_JITTER_MS,
 	FEATURE_FLAG_REDIS_KEY,
+	FEATURE_FLAG_REFRESH_CHANNEL,
 	FEATURE_FLAG_USER_CACHE_PREFIX,
 	FEATURE_FLAG_USER_CACHE_TTL_SECONDS,
 	type FeatureFlag,
@@ -38,13 +38,15 @@ interface SerializedFeatureFlagConfig {
 
 export class FeatureFlagService {
 	private inMemoryCache: Map<FeatureFlag, Set<string>> = new Map();
-	private pollInterval: ReturnType<typeof setInterval> | null = null;
 	private repository: FeatureFlagRepository;
 	private cacheService: ICacheService;
+	private redisSubscriber: Redis | null;
+	private subscriberInitialized = false;
 
-	constructor(repository: FeatureFlagRepository, cacheService: ICacheService) {
+	constructor(repository: FeatureFlagRepository, cacheService: ICacheService, redisSubscriber: Redis | null = null) {
 		this.repository = repository;
 		this.cacheService = cacheService;
+		this.redisSubscriber = redisSubscriber;
 
 		for (const flag of ALL_FEATURE_FLAGS) {
 			this.inMemoryCache.set(flag, new Set());
@@ -53,26 +55,36 @@ export class FeatureFlagService {
 
 	async initialize(): Promise<void> {
 		await this.refreshCache();
-		this.startPolling();
+		this.initializeSubscriber();
 		Logger.info('FeatureFlagService initialized');
 	}
 
 	shutdown(): void {
-		if (this.pollInterval) {
-			clearInterval(this.pollInterval);
-			this.pollInterval = null;
-		}
+		// Subscriber connections are managed externally.
 	}
 
-	private startPolling(): void {
-		const jitter = Math.random() * FEATURE_FLAG_POLL_JITTER_MS;
-		const interval = FEATURE_FLAG_POLL_INTERVAL_MS + jitter;
+	private initializeSubscriber(): void {
+		if (this.subscriberInitialized || !this.redisSubscriber) {
+			return;
+		}
 
-		this.pollInterval = setInterval(() => {
-			this.refreshCache().catch((err) => {
-				Logger.error({err}, 'Failed to refresh feature flag cache');
+		const subscriber = this.redisSubscriber;
+		subscriber
+			.subscribe(FEATURE_FLAG_REFRESH_CHANNEL)
+			.then(() => {
+				subscriber.on('message', (channel) => {
+					if (channel === FEATURE_FLAG_REFRESH_CHANNEL) {
+						this.refreshCache().catch((err) => {
+							Logger.error({err}, 'Failed to refresh feature flag cache from pubsub');
+						});
+					}
+				});
+			})
+			.catch((error) => {
+				Logger.error({error}, 'Failed to subscribe to feature flag refresh channel');
 			});
-		}, interval);
+
+		this.subscriberInitialized = true;
 	}
 
 	private async refreshCache(): Promise<void> {
@@ -139,8 +151,10 @@ export class FeatureFlagService {
 
 	async setFeatureGuildIds(flag: FeatureFlag, guildIds: Set<string>): Promise<void> {
 		await this.repository.setFeatureFlag(flag, guildIds);
+		await this.invalidateUserFeatureCache(flag);
 		await this.cacheService.delete(FEATURE_FLAG_REDIS_KEY);
 		await this.refreshCache();
+		await this.cacheService.publish(FEATURE_FLAG_REFRESH_CHANNEL, 'refresh');
 		Logger.info({flag, guildCount: guildIds.size}, 'Feature flag guild IDs updated');
 	}
 
@@ -154,5 +168,10 @@ export class FeatureFlagService {
 
 	getGuildIdsForFlag(flag: FeatureFlag): Set<string> {
 		return new Set(this.inMemoryCache.get(flag) ?? []);
+	}
+
+	private async invalidateUserFeatureCache(flag: FeatureFlag): Promise<void> {
+		const pattern = `${FEATURE_FLAG_USER_CACHE_PREFIX}:${flag}:*`;
+		await this.cacheService.deletePattern(pattern);
 	}
 }

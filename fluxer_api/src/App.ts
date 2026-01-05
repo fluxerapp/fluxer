@@ -263,6 +263,8 @@ app.route('/', routes);
 app.onError(AppErrorHandler);
 app.notFound(AppNotFoundHandler);
 
+const ipBanSubscriber = new Redis(Config.redis.url);
+ipBanCache.setRefreshSubscriber(ipBanSubscriber);
 await ipBanCache.initialize();
 
 initializeMetricsService(Config.metrics.host ?? null);

@@ -145,7 +145,8 @@ const cloudflarePurgeQueue: ICloudflarePurgeQueue = Config.cloudflare.purgeEnabl
 const assetDeletionQueue: IAssetDeletionQueue = new AssetDeletionQueue(redis);
 
 const featureFlagRepository = new FeatureFlagRepository();
-const featureFlagService = new FeatureFlagService(featureFlagRepository, cacheService);
+const featureFlagSubscriber = new Redis(Config.redis.url);
+const featureFlagService = new FeatureFlagService(featureFlagRepository, cacheService, featureFlagSubscriber);
 let featureFlagServiceInitialized = false;
 const snowflakeReservationRepository = new SnowflakeReservationRepository();
 const snowflakeReservationSubscriber = new Redis(Config.redis.url);
