@@ -318,7 +318,12 @@ type SpeakMessageMenuItemProps = MessageMenuItemProps;
 export const SpeakMessageMenuItem: React.FC<SpeakMessageMenuItemProps> = observer(({message, onClose}) => {
 	const {t} = useLingui();
 	const handleSpeak = React.useCallback(() => {
-		TtsUtils.speakMessage(message.content);
+		if (TtsUtils.isSpeaking()) {
+			TtsUtils.stop();
+		} else {
+			TtsUtils.speakMessage(message.content);
+		}
+
 		onClose();
 	}, [message.content, onClose]);
 
