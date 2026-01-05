@@ -206,7 +206,7 @@ msgid "Blue (Da Ba Dee)"
 msgstr "Bleu (Da Ba Dee)"
 
 #: src/fluxer_marketing/components/footer.gleam:157
-#: src/fluxer_marketing/components/navigation.gleam:449
+#: src/fluxer_marketing/components/navigation.gleam:458
 msgid "Bluesky"
 msgstr "Bluesky"
 
@@ -363,15 +363,15 @@ msgstr "Mode compact et options d’affichage"
 msgid "Company"
 msgstr "Entreprise"
 
-#: src/fluxer_marketing/components/footer.gleam:271
+#: src/fluxer_marketing/components/footer.gleam:282
 #: src/fluxer_marketing/components/navigation.gleam:376
 #: src/fluxer_marketing/pages/company_page.gleam:41
 #: src/fluxer_marketing/pages/company_page.gleam:44
 msgid "Company Information"
 msgstr "Informations sur l’entreprise"
 
-#: src/fluxer_marketing/components/footer.gleam:278
-#: src/fluxer_marketing/components/navigation.gleam:426
+#: src/fluxer_marketing/components/footer.gleam:289
+#: src/fluxer_marketing/components/navigation.gleam:435
 msgid "Connect"
 msgstr "Contact"
 
@@ -1010,10 +1010,6 @@ msgstr "Comment vous comptez utiliser Fluxer avec votre communauté"
 msgid "Hungarian"
 msgstr "Hongrois"
 
-#: src/fluxer_marketing/components/footer.gleam:329
-msgid "IP geolocation data by "
-msgstr "Données de géolocalisation IP fournies par "
-
 #: src/fluxer_marketing/pages/help_article_page.gleam:223
 #: src/fluxer_marketing/pages/help_article_page.gleam:365
 msgid "If you couldn't find what you're looking for, our support team is here to help."
@@ -1267,7 +1263,7 @@ msgid "Open Fluxer"
 msgstr "Ouvrir Fluxer"
 
 #: src/fluxer_marketing/components/hero.gleam:82
-#: src/fluxer_marketing/components/navigation.gleam:473
+#: src/fluxer_marketing/components/navigation.gleam:482
 msgid "Open in Browser"
 msgstr "Ouvrir dans le navigateur"
 
@@ -1501,7 +1497,7 @@ msgstr "Prêt à passer à la version supérieure ?"
 msgid "Register now"
 msgstr "S’inscrire maintenant"
 
-#: src/fluxer_marketing/components/footer.gleam:311
+#: src/fluxer_marketing/components/footer.gleam:322
 msgid "Report a bug"
 msgstr "Signaler un bug"
 
@@ -1609,7 +1605,9 @@ msgstr "Résultats de recherche pour : "
 msgid "Search through message history"
 msgstr "Rechercher dans l’historique des messages"
 
+#: src/fluxer_marketing/components/footer.gleam:271
 #: src/fluxer_marketing/components/get_involved_section.gleam:194
+#: src/fluxer_marketing/components/navigation.gleam:424
 #: src/fluxer_marketing/pages/careers_page.gleam:156
 #: src/fluxer_marketing/pages/security_page.gleam:41
 msgid "Security Bug Bounty"
@@ -1680,7 +1678,7 @@ msgid "Soundboard"
 msgstr "Table de sons"
 
 #: src/fluxer_marketing/components/footer.gleam:143
-#: src/fluxer_marketing/components/navigation.gleam:438
+#: src/fluxer_marketing/components/navigation.gleam:447
 msgid "Source Code"
 msgstr "Code source"
 
@@ -1780,6 +1778,10 @@ msgstr "Ce n’est pas encore un remplacement complet de l’app de bureau, et c
 #: src/fluxer_marketing/pages/not_found_page.gleam:104
 msgid "This page doesn't exist. But there's plenty more to explore."
 msgstr "Cette page n’existe pas. Mais il y a encore plein de choses à découvrir."
+
+#: src/fluxer_marketing/components/footer.gleam:342
+msgid "This product includes GeoLite2 Data created by MaxMind, available from "
+msgstr "Ce produit inclut les données GeoLite2 créées par MaxMind, disponibles à partir de "
 
 #: src/fluxer_marketing/components/coming_features.gleam:37
 msgid "Threads and forums"
@@ -2066,7 +2068,7 @@ msgstr "résultats pour"
 msgid "{0} of {1} slots left"
 msgstr "Plus que {0} places sur {1}"
 
-#: src/fluxer_marketing/components/footer.gleam:325
+#: src/fluxer_marketing/components/footer.gleam:336
 msgid "© Fluxer Platform AB (Swedish limited liability company: 559537-3993)"
 msgstr "© Fluxer Platform AB (société à responsabilité limitée suédoise : 559537-3993)"
 

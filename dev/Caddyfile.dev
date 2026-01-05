@@ -28,13 +28,6 @@
     reverse_proxy admin:8080
   }
 
-  @geoip path /geoip/*
-  handle @geoip {
-    handle_path /geoip/* {
-      reverse_proxy geoip:8080
-    }
-  }
-
   @marketing path /marketing /marketing/*
   handle @marketing {
     uri strip_prefix /marketing

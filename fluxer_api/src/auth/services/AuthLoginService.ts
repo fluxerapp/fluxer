@@ -331,8 +331,8 @@ export class AuthLoginService {
 			if (!isIpAuthorized) {
 				const ticket = createIpAuthorizationTicket(await this.generateSecureToken());
 				const authToken = createIpAuthorizationToken(await this.generateSecureToken());
-				const geoipResult = await IpUtils.getCountryCodeDetailed(clientIp);
-				const clientLocation = IpUtils.formatGeoipLocation(geoipResult);
+				const geoipResult = await IpUtils.lookupGeoip(clientIp);
+				const clientLocation = IpUtils.formatGeoipLocation(geoipResult) ?? IpUtils.UNKNOWN_LOCATION;
 				const userAgent = request.headers.get('user-agent') || '';
 				const platform = request.headers.get('x-fluxer-platform');
 

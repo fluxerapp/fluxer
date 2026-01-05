@@ -209,7 +209,10 @@ pub fn account_tab(
                               ],
                             ),
                             h.div([a.class("text-neutral-900")], [
-                              element.text(session_item.client_location),
+                              case session_item.client_location {
+                                option.Some(location) -> element.text(location)
+                                option.None -> element.text("Unknown")
+                              },
                             ]),
                           ]),
                           h.div([], [

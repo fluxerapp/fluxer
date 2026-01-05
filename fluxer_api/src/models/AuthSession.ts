@@ -26,10 +26,8 @@ export class AuthSession {
 	readonly createdAt: Date;
 	readonly approximateLastUsedAt: Date;
 	readonly clientIp: string;
-	readonly clientOs: string;
-	readonly clientPlatform: string;
-	readonly clientCountry: string | null;
-	readonly clientLocation: string | null;
+	readonly clientUserAgent: string | null;
+	readonly clientIsDesktop: boolean | null;
 	readonly version: number;
 
 	constructor(row: AuthSessionRow) {
@@ -38,10 +36,8 @@ export class AuthSession {
 		this.createdAt = row.created_at;
 		this.approximateLastUsedAt = row.approx_last_used_at;
 		this.clientIp = row.client_ip;
-		this.clientOs = row.client_os;
-		this.clientPlatform = row.client_platform;
-		this.clientCountry = row.client_country ?? null;
-		this.clientLocation = row.client_location ?? null;
+		this.clientUserAgent = row.client_user_agent ?? null;
+		this.clientIsDesktop = row.client_is_desktop ?? null;
 		this.version = row.version;
 	}
 
@@ -52,10 +48,8 @@ export class AuthSession {
 			created_at: this.createdAt,
 			approx_last_used_at: this.approximateLastUsedAt,
 			client_ip: this.clientIp,
-			client_os: this.clientOs,
-			client_platform: this.clientPlatform,
-			client_country: this.clientCountry,
-			client_location: this.clientLocation,
+			client_user_agent: this.clientUserAgent,
+			client_is_desktop: this.clientIsDesktop,
 			version: this.version,
 		};
 	}

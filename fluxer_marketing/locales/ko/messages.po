@@ -206,7 +206,7 @@ msgid "Blue (Da Ba Dee)"
 msgstr "파랑 (Da Ba Dee)"
 
 #: src/fluxer_marketing/components/footer.gleam:157
-#: src/fluxer_marketing/components/navigation.gleam:449
+#: src/fluxer_marketing/components/navigation.gleam:458
 msgid "Bluesky"
 msgstr "Bluesky"
 
@@ -363,15 +363,15 @@ msgstr "컴팩트 모드 및 표시 설정"
 msgid "Company"
 msgstr "회사"
 
-#: src/fluxer_marketing/components/footer.gleam:271
+#: src/fluxer_marketing/components/footer.gleam:282
 #: src/fluxer_marketing/components/navigation.gleam:376
 #: src/fluxer_marketing/pages/company_page.gleam:41
 #: src/fluxer_marketing/pages/company_page.gleam:44
 msgid "Company Information"
 msgstr "회사 정보"
 
-#: src/fluxer_marketing/components/footer.gleam:278
-#: src/fluxer_marketing/components/navigation.gleam:426
+#: src/fluxer_marketing/components/footer.gleam:289
+#: src/fluxer_marketing/components/navigation.gleam:435
 msgid "Connect"
 msgstr "연락하기"
 
@@ -1010,10 +1010,6 @@ msgstr "커뮤니티와 함께 Fluxer를 어떻게 활용할 계획인지"
 msgid "Hungarian"
 msgstr "헝가리어"
 
-#: src/fluxer_marketing/components/footer.gleam:329
-msgid "IP geolocation data by "
-msgstr "IP 위치 데이터 제공: "
-
 #: src/fluxer_marketing/pages/help_article_page.gleam:223
 #: src/fluxer_marketing/pages/help_article_page.gleam:365
 msgid "If you couldn't find what you're looking for, our support team is here to help."
@@ -1267,7 +1263,7 @@ msgid "Open Fluxer"
 msgstr "Fluxer 열기"
 
 #: src/fluxer_marketing/components/hero.gleam:82
-#: src/fluxer_marketing/components/navigation.gleam:473
+#: src/fluxer_marketing/components/navigation.gleam:482
 msgid "Open in Browser"
 msgstr "브라우저에서 열기"
 
@@ -1501,7 +1497,7 @@ msgstr "업그레이드할 준비가 되셨나요?"
 msgid "Register now"
 msgstr "지금 등록하기"
 
-#: src/fluxer_marketing/components/footer.gleam:311
+#: src/fluxer_marketing/components/footer.gleam:322
 msgid "Report a bug"
 msgstr "버그 신고"
 
@@ -1609,7 +1605,9 @@ msgstr "검색 결과: "
 msgid "Search through message history"
 msgstr "메시지 기록 검색"
 
+#: src/fluxer_marketing/components/footer.gleam:271
 #: src/fluxer_marketing/components/get_involved_section.gleam:194
+#: src/fluxer_marketing/components/navigation.gleam:424
 #: src/fluxer_marketing/pages/careers_page.gleam:156
 #: src/fluxer_marketing/pages/security_page.gleam:41
 msgid "Security Bug Bounty"
@@ -1680,7 +1678,7 @@ msgid "Soundboard"
 msgstr "사운드보드"
 
 #: src/fluxer_marketing/components/footer.gleam:143
-#: src/fluxer_marketing/components/navigation.gleam:438
+#: src/fluxer_marketing/components/navigation.gleam:447
 msgid "Source Code"
 msgstr "소스 코드"
 
@@ -1780,6 +1778,10 @@ msgstr "아직 데스크톱 앱을 완전히 대체하진 못하며, 모바일 �
 #: src/fluxer_marketing/pages/not_found_page.gleam:104
 msgid "This page doesn't exist. But there's plenty more to explore."
 msgstr "이 페이지는 존재하지 않아요. 그래도 둘러볼 곳은 아직 많이 있습니다."
+
+#: src/fluxer_marketing/components/footer.gleam:342
+msgid "This product includes GeoLite2 Data created by MaxMind, available from "
+msgstr "이 제품에는 MaxMind에 의해 생성된 GeoLite2 데이터가 포함되어 있으며, 다음에서 이용 가능합니다."
 
 #: src/fluxer_marketing/components/coming_features.gleam:37
 msgid "Threads and forums"
@@ -2066,7 +2068,7 @@ msgstr "개의 결과"
 msgid "{0} of {1} slots left"
 msgstr "남은 슬롯: {0}/{1}"
 
-#: src/fluxer_marketing/components/footer.gleam:325
+#: src/fluxer_marketing/components/footer.gleam:336
 msgid "© Fluxer Platform AB (Swedish limited liability company: 559537-3993)"
 msgstr "© Fluxer Platform AB (스웨덴 유한회사: 559537-3993)"
 

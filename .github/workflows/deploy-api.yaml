@@ -231,8 +231,6 @@ jobs:
           CLAMAV_HOST=clamav
           CLAMAV_PORT=3310
 
-          GEOIP_HOST=fluxer-geoip_app:8080
-          GEOIP_PROVIDER=maxmind
           MAXMIND_DB_PATH=/data/GeoLite2-City.mmdb
 
           VAPID_PUBLIC_KEY=BEIwQxIwfj6m90tLYAR0AU_GJWU4kw8J_zJcHQG55NCUWSyRy-dzMOgvxk8yEDwdVyJZa6xUL4fmwngijq8T2pY

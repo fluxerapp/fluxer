@@ -83,7 +83,11 @@ fn handle_request(
   let locale = get_request_locale(req)
 
   let base_url = cfg.marketing_endpoint <> cfg.base_path
-  let country_code = geoip.country_code(req, cfg.geoip_host)
+  let country_code =
+    geoip.country_code(
+      req,
+      geoip.Settings(api_host: cfg.api_host, rpc_secret: cfg.gateway_rpc_secret),
+    )
 
   let user_agent = case request.get_header(req, "user-agent") {
     Ok(ua) -> ua
@@ -107,7 +111,6 @@ fn handle_request(
       base_path: cfg.base_path,
       platform: platform,
       architecture: architecture,
-      geoip_host: cfg.geoip_host,
       release_channel: cfg.release_channel,
       visionary_slots: visionary_slots.current(slots_cache),
       metrics_endpoint: cfg.metrics_endpoint,

@@ -1,108 +1,64 @@
-# Fluxer Development Justfile
-# Uses the dev CLI (Go) as a compose wrapper
+env_file := "dev/.env"
+compose_file := "dev/compose.yaml"
+data_compose := "dev/compose.data.yaml"
+network_name := "fluxer-shared"
+compose_base := "docker compose --env-file " + env_file + " -f " + compose_file
+livekit_template := "dev/templates/livekit.yaml"
 
-# Dev CLI command
-devctl := "go run ./dev"
-
-# ---------------------------------------------------------------------------
-# Docker Compose: Service Management
-# ---------------------------------------------------------------------------
-
-# Start all or selected services in the background
-# Usage:
-#   just up              # all services
-#   just up api gateway  # specific services
 up *SERVICES:
-  {{devctl}} ensure-network
-  {{devctl}} up {{SERVICES}}
+  just ensure-network
+  {{compose_base}} up -d {{SERVICES}}
 
-# Start all or selected services and watch for changes
-# Usage:
-#   just watch
-#   just watch api gateway
 watch *SERVICES:
-  {{devctl}} ensure-network
-  docker compose --env-file dev/.env -f dev/compose.yaml watch {{SERVICES}}
+  just ensure-network
+  {{compose_base}} watch {{SERVICES}}
 
-# Stop and remove containers (preserves volumes)
-# Usage:
-#   just down
 down:
-  {{devctl}} down
+  {{compose_base}} down
 
-# Stop and remove containers including volumes
-# Usage:
-#   just nuke
 nuke:
-  {{devctl}} down --volumes
+  {{compose_base}} down -v
 
-# Restart all or selected services
-# Usage:
-#   just restart
-#   just restart api gateway
 restart *SERVICES:
-  {{devctl}} restart {{SERVICES}}
+  {{compose_base}} restart {{SERVICES}}
 
-# Show logs for all or selected services
-# Usage:
-#   just logs
-#   just logs api
-#   just logs api gateway
 logs *SERVICES:
-  {{devctl}} logs {{SERVICES}}
+  {{compose_base}} logs -f --tail 100 {{SERVICES}}
 
-# List running containers
-# Usage:
-#   just ps
 ps:
-  {{devctl}} ps
+  {{compose_base}} ps
 
-# Open a shell in a service container
-# Usage:
-#   just sh api
-sh SERVICE:
-  {{devctl}} sh {{SERVICE}}
+sh SERVICE shell="sh":
+  {{compose_base}} exec {{SERVICE}} {{shell}}
 
-# Execute a command in a service container
-# Usage:
-#   just exec api "env | sort"
 exec SERVICE CMD:
-  {{devctl}} exec {{SERVICE}} sh -c "{{CMD}}"
+  {{compose_base}} exec {{SERVICE}} sh -c "{{CMD}}"
 
-# ---------------------------------------------------------------------------
-# Configuration & Setup
-# ---------------------------------------------------------------------------
-
-# Sync LiveKit configuration from environment variables
-# Usage:
-#   just livekit-sync
 livekit-sync:
-  {{devctl}} livekit-sync
+  set -euo pipefail
+  if [ ! -f {{env_file}} ]; then
+  echo "{{env_file}} missing"
+  exit 1
+  fi
+  node --env-file {{env_file}} scripts/just/livekit-sync.js --output dev/livekit.yaml
 
-# Download GeoIP database
-# Usage:
-#   just geoip-download
-#   just geoip-download TOKEN=xxx
-geoip-download TOKEN='':
-  if [ "{{TOKEN}}" = "" ]; then {{devctl}} geoip-download; else {{devctl}} geoip-download --token {{TOKEN}}; fi
-
-# Ensure Docker network exists
-# Usage:
-#   just ensure-network
 ensure-network:
-  {{devctl}} ensure-network
+  set -euo pipefail
+  docker network inspect {{network_name}} >/dev/null 2>&1 || docker network create {{network_name}}
 
-# Bootstrap development environment
-# Usage:
-#   just bootstrap
 bootstrap:
   just ensure-network
   just livekit-sync
-  just geoip-download
 
-# ---------------------------------------------------------------------------
-# Cassandra Migrations
-# ---------------------------------------------------------------------------
+setup:
+  set -euo pipefail
+  just ensure-network
+  if [ ! -f dev/.env ]; then
+  cp dev/.env.example dev/.env
+  fi
+  if [ ! -f dev/livekit.yaml ]; then
+  cp {{livekit_template}} dev/livekit.yaml
+  fi
 
 mig name:
   @cargo run --release --quiet --manifest-path scripts/cassandra-migrate/Cargo.toml -- create "{{name}}"
@@ -116,38 +72,21 @@ mig-up host="localhost" user="cassandra" pass="cassandra":
 mig-status host="localhost" user="cassandra" pass="cassandra":
   @cargo run --release --quiet --manifest-path scripts/cassandra-migrate/Cargo.toml -- --host "{{host}}" --username "{{user}}" --password "{{pass}}" status
 
-# ---------------------------------------------------------------------------
-# Utilities
-# ---------------------------------------------------------------------------
-
-# Run license enforcer
 lic:
   @cargo run --release --quiet --manifest-path scripts/license-enforcer/Cargo.toml
 
-# Generate snowflake IDs
 snow count="1":
   @cargo run --release --quiet --manifest-path scripts/snowflake-generator/Cargo.toml -- --count {{count}}
 
-# ---------------------------------------------------------------------------
-# Integration Tests
-# ---------------------------------------------------------------------------
-
-# Spin up the full integration stack, run the Go tests, then tear everything down
 integration-tests:
   set -euo pipefail
   trap 'docker compose -f tests/integration/compose.yaml down' EXIT
   docker compose -f tests/integration/compose.yaml up --build --abort-on-container-exit integration-tests
 
-# ---------------------------------------------------------------------------
-# Go Tooling & QA
-# ---------------------------------------------------------------------------
-
-# Install pinned Go tooling (staticcheck, golangci-lint) with Go 1.25.5
 go-tools-install:
   GOTOOLCHAIN=go1.25.5 go install honnef.co/go/tools/cmd/staticcheck@2025.1.1
   GOTOOLCHAIN=go1.25.5 go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.61.0
 
-# Run formatting, tests, and linters for integration tests
 go-integration-check:
   gofmt -w tests/integration
   go test ./tests/integration/...

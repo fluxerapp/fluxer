@@ -97,7 +97,7 @@ import {
 import {isUserAdult} from '~/utils/AgeUtils';
 import {deriveDominantAvatarColor} from '~/utils/AvatarColorUtils';
 import {calculateDistance, parseCoordinate} from '~/utils/GeoUtils';
-import {formatGeoipLocation, getCountryCodeDetailed} from '~/utils/IpUtils';
+import {lookupGeoip} from '~/utils/IpUtils';
 import type {VoiceAccessContext, VoiceAvailabilityService} from '~/voice/VoiceAvailabilityService';
 import type {VoiceService} from '~/voice/VoiceService';
 import type {IWebhookRepository} from '~/webhook/IWebhookRepository';
@@ -281,6 +281,15 @@ export class RpcService {
 					type: 'get_badge_counts',
 					data: {
 						badge_counts: badgeCounts,
+					},
+				};
+			}
+			case 'geoip_lookup': {
+				const geoip = await lookupGeoip(request.ip);
+				return {
+					type: 'geoip_lookup',
+					data: {
+						country_code: geoip.countryCode,
 					},
 				};
 			}
@@ -678,24 +687,9 @@ export class RpcService {
 		});
 
 		let countryCode = 'US';
-		let geoipReason: string | null = null;
 		if (ip) {
-			const geoip = await getCountryCodeDetailed(ip);
+			const geoip = await lookupGeoip(ip);
 			countryCode = geoip.countryCode;
-			geoipReason = geoip.reason;
-			if (geoipReason) {
-				Logger.warn(
-					{
-						ip,
-						normalized_ip: geoip.normalizedIp,
-						reason: geoipReason,
-						geoip_host: Config.geoip.host,
-						geoip_provider: Config.geoip.provider,
-						geoip_location: formatGeoipLocation(geoip),
-					},
-					'GeoIP lookup fell back to default country code',
-				);
-			}
 		} else {
 			Logger.warn({context: 'rpc_geoip', reason: 'ip_missing'}, 'RPC session request missing IP for GeoIP');
 		}

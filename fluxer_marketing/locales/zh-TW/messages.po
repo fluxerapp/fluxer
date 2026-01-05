@@ -206,7 +206,7 @@ msgid "Blue (Da Ba Dee)"
 msgstr "藍色（Da Ba Dee）"
 
 #: src/fluxer_marketing/components/footer.gleam:157
-#: src/fluxer_marketing/components/navigation.gleam:449
+#: src/fluxer_marketing/components/navigation.gleam:458
 msgid "Bluesky"
 msgstr "Bluesky"
 
@@ -363,15 +363,15 @@ msgstr "精簡模式與顯示選項"
 msgid "Company"
 msgstr "公司"
 
-#: src/fluxer_marketing/components/footer.gleam:271
+#: src/fluxer_marketing/components/footer.gleam:282
 #: src/fluxer_marketing/components/navigation.gleam:376
 #: src/fluxer_marketing/pages/company_page.gleam:41
 #: src/fluxer_marketing/pages/company_page.gleam:44
 msgid "Company Information"
 msgstr "公司資訊"
 
-#: src/fluxer_marketing/components/footer.gleam:278
-#: src/fluxer_marketing/components/navigation.gleam:426
+#: src/fluxer_marketing/components/footer.gleam:289
+#: src/fluxer_marketing/components/navigation.gleam:435
 msgid "Connect"
 msgstr "連結"
 
@@ -1010,10 +1010,6 @@ msgstr "你打算如何在社群中使用 Fluxer"
 msgid "Hungarian"
 msgstr "匈牙利語"
 
-#: src/fluxer_marketing/components/footer.gleam:329
-msgid "IP geolocation data by "
-msgstr "IP 地理定位資料提供： "
-
 #: src/fluxer_marketing/pages/help_article_page.gleam:223
 #: src/fluxer_marketing/pages/help_article_page.gleam:365
 msgid "If you couldn't find what you're looking for, our support team is here to help."
@@ -1267,7 +1263,7 @@ msgid "Open Fluxer"
 msgstr "開啟 Fluxer"
 
 #: src/fluxer_marketing/components/hero.gleam:82
-#: src/fluxer_marketing/components/navigation.gleam:473
+#: src/fluxer_marketing/components/navigation.gleam:482
 msgid "Open in Browser"
 msgstr "在瀏覽器中開啟"
 
@@ -1501,7 +1497,7 @@ msgstr "準備升級了嗎？"
 msgid "Register now"
 msgstr "立即註冊"
 
-#: src/fluxer_marketing/components/footer.gleam:311
+#: src/fluxer_marketing/components/footer.gleam:322
 msgid "Report a bug"
 msgstr "回報錯誤"
 
@@ -1609,7 +1605,9 @@ msgstr "搜尋結果： "
 msgid "Search through message history"
 msgstr "搜尋訊息歷史紀錄"
 
+#: src/fluxer_marketing/components/footer.gleam:271
 #: src/fluxer_marketing/components/get_involved_section.gleam:194
+#: src/fluxer_marketing/components/navigation.gleam:424
 #: src/fluxer_marketing/pages/careers_page.gleam:156
 #: src/fluxer_marketing/pages/security_page.gleam:41
 msgid "Security Bug Bounty"
@@ -1680,7 +1678,7 @@ msgid "Soundboard"
 msgstr "音效板"
 
 #: src/fluxer_marketing/components/footer.gleam:143
-#: src/fluxer_marketing/components/navigation.gleam:438
+#: src/fluxer_marketing/components/navigation.gleam:447
 msgid "Source Code"
 msgstr "原始碼"
 
@@ -1780,6 +1778,10 @@ msgstr "目前還無法完全取代桌面版，行動聊天 App 常見的一些�
 #: src/fluxer_marketing/pages/not_found_page.gleam:104
 msgid "This page doesn't exist. But there's plenty more to explore."
 msgstr "這個頁面不存在，不過還有很多內容等你探索。"
+
+#: src/fluxer_marketing/components/footer.gleam:342
+msgid "This product includes GeoLite2 Data created by MaxMind, available from "
+msgstr "此產品包含由 MaxMind 創建的 GeoLite2 數據，可從 "
 
 #: src/fluxer_marketing/components/coming_features.gleam:37
 msgid "Threads and forums"
@@ -2066,7 +2068,7 @@ msgstr "筆結果，關於"
 msgid "{0} of {1} slots left"
 msgstr "剩下 {0}/{1} 個名額"
 
-#: src/fluxer_marketing/components/footer.gleam:325
+#: src/fluxer_marketing/components/footer.gleam:336
 msgid "© Fluxer Platform AB (Swedish limited liability company: 559537-3993)"
 msgstr "© Fluxer Platform AB（瑞典有限公司：559537-3993）"
 

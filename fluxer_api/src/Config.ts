@@ -114,8 +114,6 @@ const ConfigSchema = z.object({
 	}),
 
 	geoip: z.object({
-		provider: z.enum(['ipinfo', 'maxmind']),
-		host: z.string().optional(),
 		maxmindDbPath: z.string().optional(),
 	}),
 
@@ -313,12 +311,7 @@ function loadConfig() {
 		: Array.from(new Set([apiPublicEndpoint, webAppEndpoint, apiClientEndpoint]));
 
 	const testModeEnabled = optionalBool('FLUXER_TEST_MODE');
-	const geoipProviderRaw = optional('GEOIP_PROVIDER')?.trim().toLowerCase();
-	const geoipProvider = geoipProviderRaw === 'maxmind' ? 'maxmind' : 'ipinfo';
 	const maxmindDbPath = optional('MAXMIND_DB_PATH');
-	if (geoipProvider === 'maxmind' && !maxmindDbPath) {
-		throw new Error('Missing required environment variable: MAXMIND_DB_PATH');
-	}
 
 	return ConfigSchema.parse({
 		nodeEnv: optional('NODE_ENV') || 'development',
@@ -353,8 +346,6 @@ function loadConfig() {
 		},
 
 		geoip: {
-			provider: geoipProvider,
-			host: optional('GEOIP_HOST') || 'geoip',
 			maxmindDbPath,
 		},
 

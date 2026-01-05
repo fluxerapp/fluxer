@@ -27,6 +27,8 @@ import type {IEmailService} from '~/infrastructure/IEmailService';
 import type {BotMfaMirrorService} from '~/oauth/BotMfaMirrorService';
 import type {IUserRepository} from '~/user/IUserRepository';
 import type {UserContactChangeLogService} from '~/user/services/UserContactChangeLogService';
+import * as IpUtils from '~/utils/IpUtils';
+import {resolveSessionClientInfo} from '~/utils/UserAgentUtils';
 import type {
 	BulkUpdateUserFlagsRequest,
 	DisableForSuspiciousActivityRequest,
@@ -350,6 +352,9 @@ export class AdminUserSecurityService {
 		}
 
 		const sessions = await userRepository.listAuthSessions(userIdTyped);
+		const locationResults = await Promise.allSettled(
+			sessions.map((session) => IpUtils.getLocationLabelFromIp(session.clientIp)),
+		);
 
 		await auditService.createAuditLog({
 			adminUserId,
@@ -361,15 +366,23 @@ export class AdminUserSecurityService {
 		});
 
 		return {
-			sessions: sessions.map((session) => ({
-				session_id_hash: session.sessionIdHash.toString('base64url'),
-				created_at: session.createdAt.toISOString(),
-				approx_last_used_at: session.approximateLastUsedAt.toISOString(),
-				client_ip: session.clientIp,
-				client_os: session.clientOs,
-				client_platform: session.clientPlatform,
-				client_location: session.clientLocation ?? 'Unknown Location',
-			})),
+			sessions: sessions.map((session, index) => {
+				const locationResult = locationResults[index];
+				const clientLocation = locationResult?.status === 'fulfilled' ? locationResult.value : null;
+				const {clientOs, clientPlatform} = resolveSessionClientInfo({
+					userAgent: session.clientUserAgent,
+					isDesktopClient: session.clientIsDesktop,
+				});
+				return {
+					session_id_hash: session.sessionIdHash.toString('base64url'),
+					created_at: session.createdAt.toISOString(),
+					approx_last_used_at: session.approximateLastUsedAt.toISOString(),
+					client_ip: session.clientIp,
+					client_os: clientOs,
+					client_platform: clientPlatform,
+					client_location: clientLocation,
+				};
+			}),
 		};
 	}
 }

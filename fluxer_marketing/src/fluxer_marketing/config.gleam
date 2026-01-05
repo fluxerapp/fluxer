@@ -32,7 +32,6 @@ pub type Config {
     marketing_endpoint: String,
     port: Int,
     base_path: String,
-    geoip_host: String,
     build_timestamp: String,
     release_channel: String,
     gateway_rpc_secret: String,
@@ -101,7 +100,6 @@ pub fn load_config() -> Result(Config, String) {
     "FLUXER_MARKETING_ENDPOINT",
   ))
   use base_path_raw <- result.try(required_env("FLUXER_PATH_MARKETING"))
-  use geoip_host <- result.try(required_env("GEOIP_HOST"))
   use port <- result.try(required_int_env("FLUXER_MARKETING_PORT"))
   use release_channel <- result.try(required_env("RELEASE_CHANNEL"))
   use gateway_rpc_secret <- result.try(required_env("GATEWAY_RPC_SECRET"))
@@ -125,7 +123,6 @@ pub fn load_config() -> Result(Config, String) {
     marketing_endpoint: marketing_endpoint,
     port: port,
     base_path: base_path,
-    geoip_host: geoip_host,
     build_timestamp: optional_env("BUILD_TIMESTAMP") |> option.unwrap(""),
     release_channel: release_channel,
     gateway_rpc_secret: gateway_rpc_secret,

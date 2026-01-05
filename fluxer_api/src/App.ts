@@ -29,7 +29,6 @@ import {AuthController} from '~/auth/AuthController';
 import {Config} from '~/Config';
 import {ChannelController} from '~/channel/ChannelController';
 import type {StreamPreviewService} from '~/channel/services/StreamPreviewService';
-import {DebugController} from '~/debug/DebugController';
 import {DownloadController} from '~/download/DownloadController';
 import {AppErrorHandler, AppNotFoundHandler} from '~/Errors';
 import {InvalidApiOriginError} from '~/errors/InvalidApiOriginError';
@@ -230,7 +229,6 @@ routes.get('/_health', async (ctx) => ctx.text('OK'));
 
 GatewayController(routes);
 
-DebugController(routes);
 registerAdminControllers(routes);
 AuthController(routes);
 ChannelController(routes);

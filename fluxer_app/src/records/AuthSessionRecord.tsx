@@ -22,7 +22,7 @@ export type AuthSession = Readonly<{
 	approx_last_used_at: string | null;
 	client_os: string;
 	client_platform: string;
-	client_location: string;
+	client_location: string | null;
 }>;
 
 export class AuthSessionRecord {
@@ -30,7 +30,7 @@ export class AuthSessionRecord {
 	readonly approxLastUsedAt: Date | null;
 	readonly clientOs: string;
 	readonly clientPlatform: string;
-	readonly clientLocation: string;
+	readonly clientLocation: string | null;
 
 	constructor(data: AuthSession) {
 		this.id = data.id;

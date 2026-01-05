@@ -97,6 +97,9 @@ const AuthSession: React.FC<AuthSessionProps> = observer(
 		const platformLabel =
 			authSession.clientPlatform === 'Fluxer Desktop' ? t`Fluxer Desktop` : authSession.clientPlatform;
 
+		const hasLocation = Boolean(authSession.clientLocation);
+		const locationRowVisible = hasLocation || !isCurrent;
+
 		return (
 			<div
 				className={clsx(styles.authSession, selectionMode && !isCurrent && styles.authSessionSelectable)}
@@ -114,17 +117,17 @@ const AuthSession: React.FC<AuthSessionProps> = observer(
 							{platformLabel}
 						</span>
 
-						<div className={styles.authSessionLocation}>
-							<span className={styles.locationText}>{authSession.clientLocation}</span>
-							{!isCurrent && (
-								<>
-									<span aria-hidden className={styles.locationSeparator} />
+						{locationRowVisible && (
+							<div className={styles.authSessionLocation}>
+								{hasLocation && <span className={styles.locationText}>{authSession.clientLocation}</span>}
+								{!isCurrent && hasLocation && <span aria-hidden className={styles.locationSeparator} />}
+								{!isCurrent && (
 									<span className={styles.lastUsed}>
 										{DateUtils.getShortRelativeDateString(authSession.approxLastUsedAt ?? new Date(0))}
 									</span>
-								</>
-							)}
-						</div>
+								)}
+							</div>
+						)}
 					</div>
 				</div>
 

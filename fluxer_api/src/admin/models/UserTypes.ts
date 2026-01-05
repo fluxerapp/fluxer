@@ -55,9 +55,9 @@ export const mapUserToAdminResponse = async (user: User, cacheService?: ICacheSe
 	let lastActiveLocation: string | null = null;
 	if (user.lastActiveIp) {
 		try {
-			const geoip = await IpUtils.getCountryCodeDetailed(user.lastActiveIp);
+			const geoip = await IpUtils.lookupGeoip(user.lastActiveIp);
 			const formattedLocation = IpUtils.formatGeoipLocation(geoip);
-			lastActiveLocation = formattedLocation === IpUtils.UNKNOWN_LOCATION ? null : formattedLocation;
+			lastActiveLocation = formattedLocation;
 		} catch {
 			lastActiveLocation = null;
 		}

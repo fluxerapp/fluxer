@@ -1023,10 +1023,6 @@ msgstr ""
 msgid "Hungarian"
 msgstr ""
 
-#: src/fluxer_marketing/components/footer.gleam:340
-msgid "IP geolocation data by "
-msgstr ""
-
 #: src/fluxer_marketing/pages/help_article_page.gleam:223
 #: src/fluxer_marketing/pages/help_article_page.gleam:365
 msgid "If you couldn't find what you're looking for, our support team is here to help."
@@ -1794,6 +1790,10 @@ msgstr ""
 #: src/fluxer_marketing/pages/not_found_page.gleam:60
 #: src/fluxer_marketing/pages/not_found_page.gleam:104
 msgid "This page doesn't exist. But there's plenty more to explore."
+msgstr ""
+
+#: src/fluxer_marketing/components/footer.gleam:342
+msgid "This product includes GeoLite2 Data created by MaxMind, available from "
 msgstr ""
 
 #: src/fluxer_marketing/components/coming_features.gleam:37

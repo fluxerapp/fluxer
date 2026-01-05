@@ -429,7 +429,6 @@ fn render_pending_verification_card(
   can_review: Bool,
 ) -> element.Element(a) {
   let metadata_warning = user_agent_warning(pv.metadata)
-  let geoip_hint = geoip_reason_value(pv.metadata)
 
   h.div(
     [
@@ -491,10 +490,6 @@ fn render_pending_verification_card(
         h.div([a.class("flex flex-col items-end gap-2 ml-auto")], [
           case metadata_warning {
             option.Some(msg) -> ui.pill(msg, ui.PillWarning)
-            option.None -> element.none()
-          },
-          case geoip_hint {
-            option.Some(hint) -> ui.pill("GeoIP: " <> hint, ui.PillInfo)
             option.None -> element.none()
           },
         ]),
@@ -606,9 +601,6 @@ fn render_registration_metadata(
     False -> ip <> " (Normalized: " <> normalized_ip <> ")"
   }
 
-  let geoip_reason =
-    option_or_default("none", metadata_value(metadata, "geoip_reason"))
-
   let os = option_or_default("Unknown", metadata_value(metadata, "os"))
 
   let browser =
@@ -627,14 +619,6 @@ fn render_registration_metadata(
 
   let ip_reverse = metadata_value(metadata, "ip_address_reverse")
 
-  let geoip_note = case geoip_reason {
-    "none" -> element.none()
-    reason ->
-      h.div([a.class("text-xs text-neutral-500")], [
-        element.text("GeoIP hint: " <> reason),
-      ])
-  }
-
   h.div([a.class("flex flex-col gap-0.5 text-xs text-neutral-600")], [
     h.div([], [element.text("Display Name: " <> display_name)]),
     h.div([], [element.text("IP: " <> ip_display)]),
@@ -644,7 +628,6 @@ fn render_registration_metadata(
         h.div([], [element.text("Reverse DNS: " <> reverse)])
       option.None -> element.none()
     },
-    geoip_note,
     h.div([], [element.text("OS: " <> os)]),
     h.div([], [element.text("Browser: " <> browser)]),
     h.div([], [element.text("Device: " <> device)]),
@@ -703,19 +686,6 @@ fn metadata_value(
         }
     }
   })
-}
-
-fn geoip_reason_value(
-  metadata: List(verifications.PendingVerificationMetadata),
-) -> option.Option(String) {
-  case metadata_value(metadata, "geoip_reason") {
-    option.Some(reason) ->
-      case reason {
-        "none" -> option.None
-        r -> option.Some(r)
-      }
-    option.None -> option.None
-  }
 }
 
 fn option_or_default(default: String, value: option.Option(String)) -> String {

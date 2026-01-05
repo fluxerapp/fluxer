@@ -52,7 +52,6 @@ pub type Context {
     base_path: String,
     platform: Platform,
     architecture: Architecture,
-    geoip_host: String,
     release_channel: String,
     visionary_slots: VisionarySlots,
     metrics_endpoint: Option(String),

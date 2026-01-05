@@ -25,42 +25,43 @@ import type {ICacheService} from '~/infrastructure/ICacheService';
 import {Logger} from '~/Logger';
 
 const CACHE_TTL_MS = 10 * 60 * 1000;
-
-export const DEFAULT_CC = 'US';
-export const FETCH_TIMEOUT_MS = 1500;
-export const UNKNOWN_LOCATION = 'Unknown Location';
 const REVERSE_DNS_CACHE_TTL_SECONDS = 24 * 60 * 60;
 const REVERSE_DNS_CACHE_PREFIX = 'reverse-dns:';
 
+export const UNKNOWN_LOCATION = 'Unknown Location';
+
 export interface GeoipResult {
-	countryCode: string;
+	countryCode: string | null;
 	normalizedIp: string | null;
-	reason: string | null;
 	city: string | null;
 	region: string | null;
 	countryName: string | null;
 }
 
-interface CacheVal {
+type CacheEntry = {
 	result: GeoipResult;
-	exp: number;
-}
+	expiresAt: number;
+};
 
-const cache = new Map<string, CacheVal>();
+const geoipCache = new Map<string, CacheEntry>();
 
 let maxmindReader: Reader<CityResponse> | null = null;
 let maxmindReaderPromise: Promise<Reader<CityResponse>> | null = null;
 
 export function __clearIpCache(): void {
-	cache.clear();
+	geoipCache.clear();
+}
+
+export function __resetMaxmindReader(): void {
+	maxmindReader = null;
+	maxmindReaderPromise = null;
 }
 
 export function extractClientIp(req: Request): string | null {
 	const xff = (req.headers.get('X-Forwarded-For') ?? '').trim();
-	if (!xff) {
-		return null;
-	}
-	const first = xff.split(',')[0]?.trim() ?? '';
+	if (!xff) return null;
+	const [first] = xff.split(',');
+	if (!first) return null;
 	return normalizeIpString(first);
 }
 
@@ -72,24 +73,33 @@ export function requireClientIp(req: Request): string {
 	return ip;
 }
 
-function buildFallbackResult(clean: string, reason: string | null): GeoipResult {
+export async function lookupGeoip(req: Request): Promise<GeoipResult>;
+export async function lookupGeoip(ip: string): Promise<GeoipResult>;
+export async function lookupGeoip(input: string | Request): Promise<GeoipResult> {
+	const ip = typeof input === 'string' ? input : extractClientIp(input);
+	if (!ip) {
+		return buildFallbackResult('');
+	}
+	return lookupGeoipFromString(ip);
+}
+
+function buildFallbackResult(clean: string): GeoipResult {
 	return {
-		countryCode: DEFAULT_CC,
-		normalizedIp: clean,
-		reason,
+		countryCode: null,
+		normalizedIp: clean || null,
 		city: null,
 		region: null,
 		countryName: null,
 	};
 }
 
-async function getMaxmindReader(): Promise<Reader<CityResponse>> {
+async function ensureMaxmindReader(): Promise<Reader<CityResponse>> {
 	if (maxmindReader) return maxmindReader;
 
 	if (!maxmindReaderPromise) {
 		const dbPath = Config.geoip.maxmindDbPath;
 		if (!dbPath) {
-			return Promise.reject(new Error('Missing MaxMind DB path'));
+			throw new Error('Missing MaxMind DB path');
 		}
 
 		maxmindReaderPromise = maxmind
@@ -107,127 +117,79 @@ async function getMaxmindReader(): Promise<Reader<CityResponse>> {
 	return maxmindReaderPromise;
 }
 
-function getSubdivisionLabel(record?: CityResponse): string | null {
+function stateLabel(record?: CityResponse): string | null {
 	const subdivision = record?.subdivisions?.[0];
 	if (!subdivision) return null;
-	return subdivision.iso_code || subdivision.names?.en || null;
+	return subdivision.names?.en || subdivision.iso_code || null;
 }
 
 async function lookupMaxmind(clean: string): Promise<GeoipResult> {
 	const dbPath = Config.geoip.maxmindDbPath;
 	if (!dbPath) {
-		return buildFallbackResult(clean, 'maxmind_db_missing');
+		return buildFallbackResult(clean);
 	}
 
 	try {
-		const reader = await getMaxmindReader();
+		const reader = await ensureMaxmindReader();
 		const record = reader.get(clean);
-		if (!record) {
-			return buildFallbackResult(clean, 'maxmind_not_found');
-		}
+		if (!record) return buildFallbackResult(clean);
 
-		const countryCode = (record.country?.iso_code ?? DEFAULT_CC).toUpperCase();
+		const isoCode = record.country?.iso_code;
+		const countryCode = isoCode ? isoCode.toUpperCase() : null;
+
 		return {
 			countryCode,
 			normalizedIp: clean,
-			reason: null,
 			city: record.city?.names?.en ?? null,
-			region: getSubdivisionLabel(record),
-			countryName: record.country?.names?.en ?? countryDisplayName(countryCode) ?? null,
+			region: stateLabel(record),
+			countryName: record.country?.names?.en ?? (countryCode ? countryDisplayName(countryCode) : null) ?? null,
 		};
 	} catch (error) {
-		const message = (error as Error)?.message ?? 'unknown';
-		Logger.warn({error, maxmind_db_path: dbPath}, 'MaxMind lookup failed');
-		return buildFallbackResult(clean, `maxmind_error:${message}`);
+		const message = (error as Error).message ?? 'unknown';
+		Logger.warn({error, maxmind_db_path: dbPath, message}, 'MaxMind lookup failed');
+		return buildFallbackResult(clean);
 	}
 }
 
-async function lookupIpinfo(clean: string): Promise<GeoipResult> {
-	const host = Config.geoip.host;
-	if (!host) {
-		return buildFallbackResult(clean, 'geoip_host_missing');
-	}
-
-	const url = `http://${host}/lookup?ip=${encodeURIComponent(clean)}`;
-	const controller = new AbortController();
-	const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-
-	try {
-		const res = await globalThis.fetch!(url, {
-			signal: controller.signal,
-			headers: {Accept: 'text/plain'},
-		});
-		if (!res.ok) {
-			return buildFallbackResult(clean, `non_ok:${res.status}`);
-		}
-
-		const text = (await res.text()).trim().toUpperCase();
-		const countryCode = isAsciiUpperAlpha2(text) ? text : DEFAULT_CC;
-		const reason = isAsciiUpperAlpha2(text) ? null : 'invalid_response';
-		return {
-			countryCode,
-			normalizedIp: clean,
-			reason,
-			city: null,
-			region: null,
-			countryName: countryDisplayName(countryCode),
-		};
-	} catch (error) {
-		const message = (error as Error)?.message ?? 'unknown';
-		return buildFallbackResult(clean, `error:${message}`);
-	} finally {
-		clearTimeout(timer);
-	}
-}
-
-export async function getCountryCodeDetailed(ip: string): Promise<GeoipResult> {
-	const clean = normalizeIpString(ip);
-	if (!isIPv4(clean) && !isIPv6(clean)) {
-		return buildFallbackResult(clean, 'invalid_ip');
-	}
-
-	const cached = cache.get(clean);
+async function resolveGeoip(clean: string): Promise<GeoipResult> {
 	const now = Date.now();
-	if (cached && now < cached.exp) {
+	const cached = geoipCache.get(clean);
+	if (cached && now < cached.expiresAt) {
 		return cached.result;
 	}
 
-	const provider = Config.geoip.provider;
-	const result = provider === 'maxmind' ? await lookupMaxmind(clean) : await lookupIpinfo(clean);
-
-	cache.set(clean, {result, exp: now + CACHE_TTL_MS});
+	const result = await lookupMaxmind(clean);
+	geoipCache.set(clean, {result, expiresAt: now + CACHE_TTL_MS});
 	return result;
 }
 
-export async function getCountryCode(ip: string): Promise<string> {
-	const result = await getCountryCodeDetailed(ip);
-	return result.countryCode;
-}
+async function lookupGeoipFromString(value: string): Promise<GeoipResult> {
+	const clean = normalizeIpString(value);
+	if (!isIPv4(clean) && !isIPv6(clean)) {
+		return buildFallbackResult(clean);
+	}
 
-export async function getCountryCodeFromReq(req: Request): Promise<string> {
-	const ip = extractClientIp(req);
-	if (!ip) return DEFAULT_CC;
-	return await getCountryCode(ip);
+	return resolveGeoip(clean);
 }
 
 function countryDisplayName(code: string, locale = 'en'): string | null {
-	const c = code.toUpperCase();
-	if (!isAsciiUpperAlpha2(c)) return null;
+	const upper = code.toUpperCase();
+	if (!isAsciiUpperAlpha2(upper)) return null;
 	const dn = new Intl.DisplayNames([locale], {type: 'region', fallback: 'none'});
-	return dn.of(c) ?? null;
+	return dn.of(upper) ?? null;
 }
 
-export function formatGeoipLocation(result: GeoipResult): string {
+export function formatGeoipLocation(result: GeoipResult): string | null {
 	const parts: Array<string> = [];
 	if (result.city) parts.push(result.city);
 	if (result.region) parts.push(result.region);
 	const countryLabel = result.countryName ?? result.countryCode;
 	if (countryLabel) parts.push(countryLabel);
-	return parts.length > 0 ? parts.join(', ') : UNKNOWN_LOCATION;
+	return parts.length > 0 ? parts.join(', ') : null;
 }
 
-function stripBrackets(s: string): string {
-	return s.startsWith('[') && s.endsWith(']') ? s.slice(1, -1) : s;
+function stripBrackets(value: string): string {
+	return value.startsWith('[') && value.endsWith(']') ? value.slice(1, -1) : value;
 }
 
 export function normalizeIpString(value: string): string {
@@ -239,12 +201,9 @@ export function normalizeIpString(value: string): string {
 
 export async function getIpAddressReverse(ip: string, cacheService?: ICacheService): Promise<string | null> {
 	const cacheKey = `${REVERSE_DNS_CACHE_PREFIX}${ip}`;
-
 	if (cacheService) {
 		const cached = await cacheService.get<string | null>(cacheKey);
-		if (cached !== null) {
-			return cached === '' ? null : cached;
-		}
+		if (cached !== null) return cached === '' ? null : cached;
 	}
 
 	let result: string | null = null;
@@ -262,9 +221,17 @@ export async function getIpAddressReverse(ip: string, cacheService?: ICacheServi
 	return result;
 }
 
-function isAsciiUpperAlpha2(s: string): boolean {
-	if (s.length !== 2) return false;
-	const a = s.charCodeAt(0);
-	const b = s.charCodeAt(1);
-	return a >= 65 && a <= 90 && b >= 65 && b <= 90;
+export async function getLocationLabelFromIp(ip: string): Promise<string | null> {
+	const result = await lookupGeoip(ip);
+	return formatGeoipLocation(result);
+}
+
+function isAsciiUpperAlpha2(value: string): boolean {
+	return (
+		value.length === 2 &&
+		value.charCodeAt(0) >= 65 &&
+		value.charCodeAt(0) <= 90 &&
+		value.charCodeAt(1) >= 65 &&
+		value.charCodeAt(1) <= 90
+	);
 }

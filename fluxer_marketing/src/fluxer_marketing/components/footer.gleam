@@ -337,16 +337,20 @@ pub fn render(ctx: Context) -> Element(a) {
               )),
             ]),
             html.p([attribute.class("body-sm text-white/80")], [
-              html.text(g_(i18n_ctx, "IP geolocation data by ")),
+              html.text(g_(
+                i18n_ctx,
+                "This product includes GeoLite2 Data created by MaxMind, available from ",
+              )),
               html.a(
                 [
-                  attribute.href("https://ipinfo.io"),
+                  attribute.href("https://www.maxmind.com"),
                   attribute.target("_blank"),
                   attribute.rel("noopener noreferrer"),
                   attribute.class("hover:underline"),
                 ],
-                [html.text("IPinfo")],
+                [html.text("MaxMind")],
               ),
+              html.text("."),
             ]),
           ]),
         ]),

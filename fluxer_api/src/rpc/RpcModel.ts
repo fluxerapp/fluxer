@@ -69,6 +69,10 @@ export const RpcRequest = z.discriminatedUnion('type', [
 		user_ids: z.array(Int64Type),
 	}),
 	z.object({
+		type: z.literal('geoip_lookup'),
+		ip: createStringType(1, 45),
+	}),
+	z.object({
 		type: z.literal('delete_push_subscriptions'),
 		subscriptions: z.array(
 			z.object({
@@ -289,6 +293,10 @@ export const RpcResponse = z.discriminatedUnion('type', [
 	z.object({
 		type: z.literal('validate_custom_status'),
 		data: RpcResponseValidateCustomStatus,
+	}),
+	z.object({
+		type: z.literal('geoip_lookup'),
+		data: z.object({country_code: z.string()}),
 	}),
 	z.object({
 		type: z.literal('get_dm_channel'),

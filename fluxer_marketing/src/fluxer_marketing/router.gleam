@@ -16,7 +16,6 @@
 //// along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
 
 import fluxer_marketing/badge_proxy
-import fluxer_marketing/geoip
 import fluxer_marketing/help_center
 import fluxer_marketing/locale
 import fluxer_marketing/pages/careers_page
@@ -50,8 +49,6 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
   case wisp.path_segments(req) {
     [] -> home_page.render(req, ctx)
     ["_locale"] -> handle_locale_change(req, ctx)
-    ["_debug", "geoip"] -> handle_geoip_debug(req, ctx)
-
     ["api", "badges", "product-hunt"] ->
       badge_proxy.product_hunt(ctx.badge_featured_cache)
 
@@ -377,11 +374,4 @@ pub fn update_locale_in_path(path: String, new_locale: locale.Locale) -> String 
     }
     _ -> path
   }
-}
-
-fn handle_geoip_debug(req: Request, ctx: Context) -> Response {
-  let json_body = geoip.debug_info(req, ctx.geoip_host)
-  wisp.response(200)
-  |> wisp.set_header("content-type", "application/json; charset=utf-8")
-  |> wisp.string_body(json_body)
 }

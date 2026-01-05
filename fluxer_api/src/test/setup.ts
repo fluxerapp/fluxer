@@ -74,8 +74,6 @@ process.env.CLAMAV_ENABLED = 'false';
 process.env.FLUXER_APP_HOST = 'localhost:3000';
 process.env.FLUXER_APP_PROTOCOL = 'http';
 
-process.env.GEOIP_HOST = 'geoip.test';
-process.env.GEOIP_PROVIDER = 'ipinfo';
 process.env.SUDO_MODE_SECRET = 'test-sudo-secret';
 
 import {vi} from 'vitest';

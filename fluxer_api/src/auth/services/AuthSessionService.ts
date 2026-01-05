@@ -17,12 +17,10 @@
  * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import Bowser from 'bowser';
 import {type AuthSessionResponse, mapAuthSessionsToResponse} from '~/auth/AuthModel';
 import type {UserID} from '~/BrandedTypes';
 import {AccessDeniedError} from '~/Errors';
 import type {IGatewayService} from '~/infrastructure/IGatewayService';
-import {Logger} from '~/Logger';
 import type {AuthSession, User} from '~/Models';
 import type {IUserRepository} from '~/user/IUserRepository';
 import * as IpUtils from '~/utils/IpUtils';
@@ -41,45 +39,6 @@ interface UpdateUserActivityParams {
 	userId: UserID;
 	clientIp: string;
 }
-
-function formatNameVersion(name?: string | null, version?: string | null): string {
-	if (!name) return 'Unknown';
-	if (!version) return name;
-	return `${name} ${version}`;
-}
-
-function nullIfUnknown(value: string | null | undefined): string | null {
-	if (!value) return null;
-	return value === IpUtils.UNKNOWN_LOCATION ? null : value;
-}
-
-function parseUserAgent(userAgentRaw: string): {clientOs: string; detectedPlatform: string} {
-	const ua = userAgentRaw.trim();
-	if (!ua) return {clientOs: 'Unknown', detectedPlatform: 'Unknown'};
-
-	try {
-		const parser = Bowser.getParser(ua);
-		const osName = parser.getOSName() || 'Unknown';
-		const osVersion = parser.getOSVersion() || null;
-		const browserName = parser.getBrowserName() || 'Unknown';
-		const browserVersion = parser.getBrowserVersion() || null;
-
-		return {
-			clientOs: formatNameVersion(osName, osVersion),
-			detectedPlatform: formatNameVersion(browserName, browserVersion),
-		};
-	} catch (error) {
-		Logger.warn({error}, 'Failed to parse user agent');
-		return {clientOs: 'Unknown', detectedPlatform: 'Unknown'};
-	}
-}
-
-function resolveClientPlatform(platformHeader: string | null, detectedPlatform: string): string {
-	if (!platformHeader) return detectedPlatform;
-	if (platformHeader === 'desktop') return 'Fluxer Desktop';
-	return detectedPlatform;
-}
-
 export class AuthSessionService {
 	constructor(
 		private repository: IUserRepository,
@@ -97,11 +56,7 @@ export class AuthSessionService {
 
 		const platformHeader = request.headers.get('x-fluxer-platform')?.trim().toLowerCase() ?? null;
 		const uaRaw = request.headers.get('user-agent') ?? '';
-		const uaInfo = parseUserAgent(uaRaw);
-
-		const geoip = await IpUtils.getCountryCodeDetailed(ip);
-		const locationLabel = nullIfUnknown(IpUtils.formatGeoipLocation(geoip));
-		const countryLabel = nullIfUnknown(geoip.countryName ?? geoip.countryCode ?? null);
+		const isDesktopClient = platformHeader === 'desktop';
 
 		const authSession = await this.repository.createAuthSession({
 			user_id: user.id,
@@ -109,10 +64,8 @@ export class AuthSessionService {
 			created_at: now,
 			approx_last_used_at: now,
 			client_ip: ip,
-			client_os: uaInfo.clientOs,
-			client_platform: resolveClientPlatform(platformHeader, uaInfo.detectedPlatform),
-			client_country: countryLabel,
-			client_location: locationLabel,
+			client_user_agent: uaRaw || null,
+			client_is_desktop: isDesktopClient,
 			version: 1,
 		});
 
@@ -125,7 +78,7 @@ export class AuthSessionService {
 
 	async getAuthSessions(userId: UserID): Promise<Array<AuthSessionResponse>> {
 		const authSessions = await this.repository.listAuthSessions(userId);
-		return mapAuthSessionsToResponse({authSessions});
+		return await mapAuthSessionsToResponse({authSessions});
 	}
 
 	async updateAuthSessionLastUsed(tokenHash: Uint8Array): Promise<void> {

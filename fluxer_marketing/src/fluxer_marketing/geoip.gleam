@@ -15,180 +15,180 @@
 //// You should have received a copy of the GNU Affero General Public License
 //// along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
 
-import gleam/bit_array
+import gleam/dynamic/decode
+import gleam/http
 import gleam/http/request
 import gleam/httpc
+import gleam/int
 import gleam/json
 import gleam/list
 import gleam/result
 import gleam/string
 import wisp
 
-const default_cc = "US"
-
-pub fn country_code(req: wisp.Request, geoip_host: String) -> String {
-  let get_header = fn(name) { request.get_header(req, name) }
-  country_code_core(get_header, geoip_host, fetch_country_code_http)
+pub type Settings {
+  Settings(api_host: String, rpc_secret: String)
 }
 
-pub fn country_code_core(
-  get_header: fn(String) -> Result(String, Nil),
-  geoip_host: String,
-  fetch_country: fn(String) -> Result(String, Nil),
-) -> String {
-  case geoip_host {
+const default_cc = "US"
+
+const log_prefix = "[geoip]"
+
+pub fn country_code(req: wisp.Request, settings: Settings) -> String {
+  case extract_client_ip(req) {
     "" -> default_cc
-    _ -> {
-      case extract_client_ip_from(get_header) {
-        "" -> default_cc
-        ip -> {
-          let url =
-            "http://" <> geoip_host <> "/lookup?ip=" <> percent_encode_ip(ip)
-          case fetch_country(url) {
-            Ok(body) -> {
-              let cc = string.uppercase(string.trim(body))
-              case is_valid_country_code(cc) {
-                True -> cc
-                False -> default_cc
-              }
-            }
-            Error(_) -> default_cc
-          }
+    ip ->
+      case fetch_country_code(settings, ip) {
+        Ok(code) -> code
+        Error(_) -> default_cc
+      }
+  }
+}
+
+fn fetch_country_code(settings: Settings, ip: String) -> Result(String, Nil) {
+  case rpc_url(settings.api_host) {
+    "" -> {
+      log_missing_api_host(settings.api_host)
+      Error(Nil)
+    }
+    url -> {
+      let body =
+        json.object([
+          #("type", json.string("geoip_lookup")),
+          #("ip", json.string(ip)),
+        ])
+        |> json.to_string
+
+      let assert Ok(req) = request.to(url)
+      let req =
+        req
+        |> request.set_method(http.Post)
+        |> request.prepend_header("content-type", "application/json")
+        |> request.prepend_header(
+          "Authorization",
+          "Bearer " <> settings.rpc_secret,
+        )
+        |> request.set_body(body)
+
+      case httpc.send(req) {
+        Ok(resp) if resp.status >= 200 && resp.status < 300 ->
+          decode_country_code(resp.body)
+        Ok(resp) -> {
+          log_rpc_status(settings.api_host, resp.status, resp.body)
+          Error(Nil)
+        }
+        Error(error) -> {
+          log_rpc_error(settings.api_host, string.inspect(error))
+          Error(Nil)
         }
       }
     }
   }
 }
 
-fn fetch_country_code_http(url: String) -> Result(String, Nil) {
-  let assert Ok(req) = request.to(url)
-  let req = request.prepend_header(req, "accept", "text/plain")
-  case httpc.send(req) {
-    Ok(resp) if resp.status >= 200 && resp.status < 300 -> Ok(resp.body)
-    _ -> Error(Nil)
+fn decode_country_code(body: String) -> Result(String, Nil) {
+  let response_decoder = {
+    use data <- decode.field("data", {
+      use code <- decode.field("country_code", decode.string)
+      decode.success(code)
+    })
+    decode.success(data)
+  }
+
+  case json.parse(from: body, using: response_decoder) {
+    Ok(code) -> Ok(string.uppercase(string.trim(code)))
+    Error(_) -> Error(Nil)
   }
 }
 
 fn extract_client_ip(req: wisp.Request) -> String {
-  extract_client_ip_from(fn(name) { request.get_header(req, name) })
-}
-
-pub fn extract_client_ip_from(
-  get_header: fn(String) -> Result(String, Nil),
-) -> String {
-  case get_header("x-forwarded-for") {
-    Ok(xff) -> {
+  case request.get_header(req, "x-forwarded-for") {
+    Ok(xff) ->
       xff
       |> string.split(",")
       |> list.first
       |> result.unwrap("")
       |> string.trim
       |> strip_brackets
-      |> validate_ip
-    }
     Error(_) -> ""
-  }
-}
-
-fn validate_ip(s: String) -> String {
-  case string.contains(s, ".") || string.contains(s, ":") {
-    True -> s
-    False -> ""
   }
 }
 
 pub fn strip_brackets(ip: String) -> String {
   let len = string.length(ip)
-  let has_brackets =
+  case
     len >= 2
     && string.first(ip) == Ok("[")
     && string.slice(ip, len - 1, 1) == "]"
-
-  case has_brackets {
+  {
     True -> string.slice(ip, 1, len - 2)
     False -> ip
   }
 }
 
-pub fn percent_encode_ip(s: String) -> String {
-  s
-  |> string.replace("%", "%25")
-  |> string.replace(":", "%3A")
-  |> string.replace(" ", "%20")
+fn log_missing_api_host(host: String) -> Nil {
+  wisp.log_warning(
+    string.concat([log_prefix, " missing api_host (", host, ")"]),
+  )
 }
 
-pub fn is_ascii_upper_alpha2(s: String) -> Bool {
-  case string.byte_size(s) == 2 {
-    False -> False
-    True ->
-      case string.to_graphemes(s) {
-        [a, b] -> is_uppercase_letter(a) && is_uppercase_letter(b)
-        _ -> False
+fn log_rpc_status(api_host: String, status: Int, body: String) -> Nil {
+  wisp.log_warning(
+    string.concat([
+      log_prefix,
+      " rpc returned status ",
+      int.to_string(status),
+      " from ",
+      host_display(api_host),
+      ": ",
+      response_snippet(body),
+    ]),
+  )
+}
+
+fn log_rpc_error(api_host: String, message: String) -> Nil {
+  wisp.log_warning(
+    string.concat([
+      log_prefix,
+      " rpc request to ",
+      host_display(api_host),
+      " failed: ",
+      message,
+    ]),
+  )
+}
+
+fn host_display(api_host: String) -> String {
+  case string.contains(api_host, "://") {
+    True -> api_host
+    False -> "http://" <> api_host
+  }
+}
+
+fn rpc_url(api_host: String) -> String {
+  let host = string.trim(api_host)
+  case host {
+    "" -> ""
+    _ -> {
+      let base = case string.contains(host, "://") {
+        True -> host
+        False -> "http://" <> host
       }
+
+      let normalized = case string.ends_with(base, "/") {
+        True -> string.slice(base, 0, string.length(base) - 1)
+        False -> base
+      }
+
+      normalized <> "/_rpc"
+    }
   }
 }
 
-fn is_valid_country_code(s: String) -> Bool {
-  is_ascii_upper_alpha2(s)
-}
-
-fn is_uppercase_letter(g: String) -> Bool {
-  case bit_array.from_string(g) {
-    <<c:8>> -> c >= 65 && c <= 90
-    _ -> False
-  }
-}
-
-pub fn debug_info(req: wisp.Request, geoip_host: String) -> String {
-  let xff =
-    request.get_header(req, "x-forwarded-for") |> result.unwrap("(not set)")
-  let ip = extract_client_ip(req)
-  let host_display = case geoip_host {
-    "" -> "(not set)"
-    h -> h
-  }
-
-  let url = case ip {
-    "" -> "(empty IP - no URL)"
-    _ -> "http://" <> host_display <> "/lookup?ip=" <> percent_encode_ip(ip)
-  }
-
-  let response = case ip {
-    "" -> "(empty IP - no request)"
-    _ -> fetch_geoip_debug(url)
-  }
-
-  json.object([
-    #("x_forwarded_for_header", json.string(xff)),
-    #("extracted_ip", json.string(ip)),
-    #(
-      "stripped_brackets",
-      json.string(case ip {
-        "" -> "(empty)"
-        i -> strip_brackets(i)
-      }),
-    ),
-    #(
-      "percent_encoded",
-      json.string(case ip {
-        "" -> "(empty)"
-        i -> percent_encode_ip(i)
-      }),
-    ),
-    #("geoip_host", json.string(host_display)),
-    #("geoip_url", json.string(url)),
-    #("geoip_response", json.string(response)),
-    #("final_country_code", json.string(country_code(req, geoip_host))),
-  ])
-  |> json.to_string
-}
-
-fn fetch_geoip_debug(url: String) -> String {
-  let assert Ok(req) = request.to(url)
-  let req = request.prepend_header(req, "accept", "text/plain")
-  case httpc.send(req) {
-    Ok(resp) ->
-      "Status: " <> string.inspect(resp.status) <> ", Body: " <> resp.body
-    Error(_) -> "(request failed)"
+fn response_snippet(body: String) -> String {
+  let len = string.length(body)
+  case len <= 256 {
+    True -> body
+    False -> string.slice(body, 0, 256) <> "..."
   }
 }

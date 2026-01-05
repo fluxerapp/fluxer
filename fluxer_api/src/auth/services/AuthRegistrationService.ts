@@ -83,8 +83,6 @@ const MINIMUM_AGE_BY_COUNTRY: Record<string, number> = {
 const DEFAULT_MINIMUM_AGE = 13;
 const USER_AGENT_TRUNCATE_LENGTH = 512;
 
-type CountryResultDetailed = Awaited<ReturnType<typeof IpUtils.getCountryCodeDetailed>>;
-
 interface RegistrationMetadataContext {
 	metadata: Map<string, string>;
 	clientIp: string;
@@ -118,11 +116,6 @@ function determineAgeGroup(age: number | null): string {
 		if (age >= bucket.min && age <= bucket.max) return bucket.label;
 	}
 	return '65+';
-}
-
-function sanitizeEmail(email: string | null | undefined): {raw: string | null; key: string | null} {
-	const key = email ? email.toLowerCase() : null;
-	return {raw: email ?? null, key};
 }
 
 function isIpv6(ip: string): boolean {
@@ -189,8 +182,8 @@ export class AuthRegistrationService {
 		const metrics = getMetricsService();
 
 		const clientIp = IpUtils.requireClientIp(request);
-		const countryCode = await IpUtils.getCountryCodeFromReq(request);
-		const countryResultDetailed = await IpUtils.getCountryCodeDetailed(clientIp);
+		const geoipResult = await IpUtils.lookupGeoip(clientIp);
+		const countryCode = geoipResult.countryCode;
 
 		const minAge = (countryCode && MINIMUM_AGE_BY_COUNTRY[countryCode]) || DEFAULT_MINIMUM_AGE;
 		if (!this.validateAge({dateOfBirth: data.date_of_birth, minAge})) {
@@ -204,7 +197,8 @@ export class AuthRegistrationService {
 			throw InputValidationError.create('password', 'Password is too common');
 		}
 
-		const {raw: rawEmail, key: emailKey} = sanitizeEmail(data.email);
+		const rawEmail = data.email ?? null;
+		const emailKey = rawEmail ? rawEmail.toLowerCase() : null;
 
 		const enforceRateLimits = !Config.dev.relaxRegistrationRateLimits;
 		await this.enforceRegistrationRateLimits({enforceRateLimits, clientIp, emailKey});
@@ -300,7 +294,7 @@ export class AuthRegistrationService {
 			name: 'user.registration',
 			dimensions: {
 				country: countryCode ?? 'unknown',
-				state: countryResultDetailed.region ?? 'unknown',
+				state: geoipResult.region ?? 'unknown',
 				ip_version: isIpv6(clientIp) ? 'v6' : 'v4',
 			},
 		});
@@ -310,7 +304,7 @@ export class AuthRegistrationService {
 			name: 'user.age',
 			dimensions: {
 				country: countryCode ?? 'unknown',
-				state: countryResultDetailed.region ?? 'unknown',
+				state: geoipResult.region ?? 'unknown',
 				age: age !== null ? age.toString() : 'unknown',
 				age_group: determineAgeGroup(age),
 			},
@@ -333,7 +327,7 @@ export class AuthRegistrationService {
 			user,
 			clientIp,
 			request,
-			countryResultDetailed,
+			geoipResult,
 		});
 
 		if (isPendingVerification)
@@ -542,9 +536,9 @@ export class AuthRegistrationService {
 		user: User;
 		clientIp: string;
 		request: Request;
-		countryResultDetailed: CountryResultDetailed;
+		geoipResult: IpUtils.GeoipResult;
 	}): Promise<RegistrationMetadataContext> {
-		const {user, clientIp, request, countryResultDetailed} = params;
+		const {user, clientIp, request, geoipResult} = params;
 
 		const userAgentHeader = (request.headers.get('user-agent') ?? '').trim();
 		const fluxerTag = `${user.username}#${user.discriminator.toString().padStart(4, '0')}`;
@@ -559,9 +553,9 @@ export class AuthRegistrationService {
 			? this.parseUserAgentSafe(userAgentHeader)
 			: {osInfo: 'Unknown', browserInfo: 'Unknown', deviceInfo: 'Desktop/Unknown'};
 
-		const normalizedIp = countryResultDetailed.normalizedIp ?? clientIp;
-		const geoipReason = countryResultDetailed.reason ?? 'none';
-		const locationLabel = IpUtils.formatGeoipLocation(countryResultDetailed);
+		const normalizedIp = geoipResult.normalizedIp ?? clientIp;
+		const locationLabel = IpUtils.formatGeoipLocation(geoipResult) ?? IpUtils.UNKNOWN_LOCATION;
+		const safeCountryCode = geoipResult.countryCode ?? 'unknown';
 		const ipAddressReverse = await IpUtils.getIpAddressReverse(normalizedIp, this.cacheService);
 
 		const metadataEntries: Array<[string, string]> = [
@@ -570,27 +564,26 @@ export class AuthRegistrationService {
 			['email', emailDisplay],
 			['ip_address', clientIp],
 			['normalized_ip', normalizedIp],
-			['country_code', countryResultDetailed.countryCode],
+			['country_code', safeCountryCode],
 			['location', locationLabel],
-			['geoip_reason', geoipReason],
 			['os', uaInfo.osInfo],
 			['browser', uaInfo.browserInfo],
 			['device', uaInfo.deviceInfo],
 			['user_agent', truncatedUserAgent],
 		];
 
-		if (countryResultDetailed.city) metadataEntries.push(['city', countryResultDetailed.city]);
-		if (countryResultDetailed.region) metadataEntries.push(['region', countryResultDetailed.region]);
-		if (countryResultDetailed.countryName) metadataEntries.push(['country_name', countryResultDetailed.countryName]);
+		if (geoipResult.city) metadataEntries.push(['city', geoipResult.city]);
+		if (geoipResult.region) metadataEntries.push(['region', geoipResult.region]);
+		if (geoipResult.countryName) metadataEntries.push(['country_name', geoipResult.countryName]);
 		if (ipAddressReverse) metadataEntries.push(['ip_address_reverse', ipAddressReverse]);
 
 		return {
 			metadata: new Map(metadataEntries),
 			clientIp,
-			countryCode: countryResultDetailed.countryCode,
+			countryCode: safeCountryCode,
 			location: locationLabel,
-			city: countryResultDetailed.city,
-			region: countryResultDetailed.region,
+			city: geoipResult.city,
+			region: geoipResult.region,
 			osInfo: uaInfo.osInfo,
 			browserInfo: uaInfo.browserInfo,
 			deviceInfo: uaInfo.deviceInfo,

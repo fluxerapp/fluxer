@@ -27,6 +27,7 @@ import {Config} from '~/Config';
 import {makeAttachmentCdnUrl} from '~/channel/services/message/MessageHelpers';
 import {Logger} from '~/Logger';
 import * as SnowflakeUtils from '~/utils/SnowflakeUtils';
+import {resolveSessionClientInfo} from '~/utils/UserAgentUtils';
 import {appendAssetToArchive, buildHashedAssetKey, getAnimatedAssetExtension} from '../utils/AssetArchiveHelpers';
 import {getWorkerDependencies} from '../WorkerContext';
 
@@ -324,15 +325,20 @@ const harvestUserData: Task = async (payload, helpers) => {
 				mfa_enabled: user.authenticatorTypes.size > 0,
 				authenticator_types: Array.from(user.authenticatorTypes),
 			},
-			auth_sessions: authSessions.map((session) => ({
-				created_at: session.createdAt.toISOString(),
-				approx_last_used_at: session.approximateLastUsedAt?.toISOString() ?? null,
-				client_ip: session.clientIp,
-				client_os: session.clientOs,
-				client_platform: session.clientPlatform,
-				client_country: session.clientCountry,
-				client_location: session.clientLocation,
-			})),
+			auth_sessions: authSessions.map((session) => {
+				const {clientOs, clientPlatform} = resolveSessionClientInfo({
+					userAgent: session.clientUserAgent,
+					isDesktopClient: session.clientIsDesktop,
+				});
+				return {
+					created_at: session.createdAt.toISOString(),
+					approx_last_used_at: session.approximateLastUsedAt?.toISOString() ?? null,
+					client_ip: session.clientIp,
+					client_os: clientOs,
+					client_user_agent: session.clientUserAgent,
+					client_platform: clientPlatform,
+				};
+			}),
 			relationships: relationships.map((rel) => ({
 				target_user_id: rel.targetUserId.toString(),
 				type: rel.type,

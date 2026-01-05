@@ -145,19 +145,6 @@ services:
       - fluxer-shared
     restart: on-failure
 
-  geoip:
-    image: golang:1.25.5
-    working_dir: /workspace
-    command: bash -c "mkdir -p /data && if [ ! -f /data/ipinfo_lite.mmdb ] && [ -n \"$$IPINFO_TOKEN\" ]; then echo 'Downloading GeoIP database...'; curl -fsSL -o /data/ipinfo_lite.mmdb \"https://ipinfo.io/data/ipinfo_lite.mmdb?token=$$IPINFO_TOKEN\" && echo 'GeoIP database downloaded'; fi && go run ."
-    env_file:
-      - ./.env
-    volumes:
-      - ../fluxer_geoip:/workspace
-      - ./geoip_data:/data
-    networks:
-      - fluxer-shared
-    restart: on-failure
-
   gateway:
     image: erlang:28-slim
     working_dir: /workspace

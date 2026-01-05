@@ -160,7 +160,6 @@ jobs:
                 - FLUXER_MARKETING_ENDPOINT=${MARKETING_ENDPOINT}
                 - FLUXER_MARKETING_PORT=8080
                 - FLUXER_PATH_MARKETING=/
-                - GEOIP_HOST=fluxer-geoip_app:8080
                 - RELEASE_CHANNEL=${RELEASE_CHANNEL}
                 - FLUXER_METRICS_HOST=fluxer-metrics_app:8080
               deploy:

@@ -35,10 +35,8 @@ export interface AuthSessionRow {
 	created_at: Date;
 	approx_last_used_at: Date;
 	client_ip: string;
-	client_os: string;
-	client_platform: string;
-	client_country: Nullish<string>;
-	client_location: Nullish<string>;
+	client_user_agent: Nullish<string>;
+	client_is_desktop: Nullish<boolean>;
 	version: number;
 }
 
@@ -142,10 +140,8 @@ export const AUTH_SESSION_COLUMNS = [
 	'created_at',
 	'approx_last_used_at',
 	'client_ip',
-	'client_os',
-	'client_platform',
-	'client_country',
-	'client_location',
+	'client_user_agent',
+	'client_is_desktop',
 	'version',
 ] as const satisfies ReadonlyArray<keyof AuthSessionRow>;
 

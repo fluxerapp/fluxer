@@ -20,7 +20,8 @@
 import {uint8ArrayToBase64} from 'uint8array-extras';
 import type {AuthSession} from '~/Models';
 import {createStringType, EmailType, GlobalNameType, PasswordType, UsernameType, z} from '~/Schema';
-import {UNKNOWN_LOCATION} from '~/utils/IpUtils';
+import {getLocationLabelFromIp} from '~/utils/IpUtils';
+import {resolveSessionClientInfo} from '~/utils/UserAgentUtils';
 
 export const RegisterRequest = z.object({
 	email: EmailType.optional(),
@@ -80,26 +81,45 @@ export const VerifyEmailRequest = z.object({
 
 export type VerifyEmailRequest = z.infer<typeof VerifyEmailRequest>;
 
-export const mapAuthSessionsToResponse = ({
+async function resolveAuthSessionLocation(session: AuthSession): Promise<string | null> {
+	try {
+		return await getLocationLabelFromIp(session.clientIp);
+	} catch {
+		return null;
+	}
+}
+
+export const mapAuthSessionsToResponse = async ({
 	authSessions,
 }: {
 	authSessions: Array<AuthSession>;
-}): Array<AuthSessionResponse> => {
-	return authSessions
-		.sort((a, b) => {
-			const aTime = a.approximateLastUsedAt?.getTime() || 0;
-			const bTime = b.approximateLastUsedAt?.getTime() || 0;
-			return bTime - aTime;
-		})
-		.map((authSession): AuthSessionResponse => {
-			return {
-				id: uint8ArrayToBase64(authSession.sessionIdHash, {urlSafe: true}),
-				approx_last_used_at: authSession.approximateLastUsedAt?.toISOString() || null,
-				client_os: authSession.clientOs,
-				client_platform: authSession.clientPlatform,
-				client_location: authSession.clientLocation ?? UNKNOWN_LOCATION,
-			};
+}): Promise<Array<AuthSessionResponse>> => {
+	const sortedSessions = [...authSessions].sort((a, b) => {
+		const aTime = a.approximateLastUsedAt?.getTime() || 0;
+		const bTime = b.approximateLastUsedAt?.getTime() || 0;
+		return bTime - aTime;
+	});
+
+	const locationResults = await Promise.allSettled(
+		sortedSessions.map((session) => resolveAuthSessionLocation(session)),
+	);
+
+	return sortedSessions.map((authSession, index): AuthSessionResponse => {
+		const locationResult = locationResults[index];
+		const clientLocation = locationResult?.status === 'fulfilled' ? locationResult.value : null;
+		const {clientOs, clientPlatform} = resolveSessionClientInfo({
+			userAgent: authSession.clientUserAgent,
+			isDesktopClient: authSession.clientIsDesktop,
 		});
+
+		return {
+			id: uint8ArrayToBase64(authSession.sessionIdHash, {urlSafe: true}),
+			approx_last_used_at: authSession.approximateLastUsedAt?.toISOString() || null,
+			client_os: clientOs,
+			client_platform: clientPlatform,
+			client_location: clientLocation,
+		};
+	});
 };
 
 export const AuthSessionResponse = z.object({
@@ -107,7 +127,7 @@ export const AuthSessionResponse = z.object({
 	approx_last_used_at: z.iso.datetime().nullish(),
 	client_os: z.string(),
 	client_platform: z.string(),
-	client_location: z.string(),
+	client_location: z.string().nullable(),
 });
 
 export type AuthSessionResponse = z.infer<typeof AuthSessionResponse>;
