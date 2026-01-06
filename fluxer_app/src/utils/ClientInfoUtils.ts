@@ -290,9 +290,11 @@ async function getOsContext(): Promise<Partial<ClientInfo>> {
 				default:
 					osName = desktopInfo.os;
 			}
+
+			const osVersion = normalize(desktopInfo.systemVersion ?? desktopInfo.osVersion);
 			return {
 				osName,
-				osVersion: normalize(desktopInfo.osVersion),
+				osVersion,
 				arch: normalizeArchitectureValue(desktopInfo.arch),
 			};
 		} catch (error) {

@@ -32,6 +32,7 @@ export interface DesktopInfo {
 	runningUnderRosetta: boolean;
 	os: NodeJS.Platform;
 	osVersion: string;
+	systemVersion?: string;
 }
 
 export type UpdaterContext = 'user' | 'background' | 'focus';
