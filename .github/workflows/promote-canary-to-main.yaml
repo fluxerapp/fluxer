@@ -21,7 +21,7 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   promote:
@@ -29,59 +29,53 @@ jobs:
     timeout-minutes: 10
 
     steps:
-      - name: Checkout source branch
+      - name: Create GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.PROMOTE_APP_ID }}
+          private-key: ${{ secrets.PROMOTE_APP_PRIVATE_KEY }}
+
+      - name: Checkout source
         uses: actions/checkout@v6
         with:
           ref: ${{ inputs.src }}
           fetch-depth: 0
-          persist-credentials: true
+          token: ${{ steps.app-token.outputs.token }}
 
-      - name: Configure git identity
-        run: |
-          git config user.name  "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-      - name: Fetch destination branch
-        run: |
-          set -euo pipefail
-          git fetch origin "${{ inputs.dst }}" --prune --tags
-
-      - name: Verify FF-only + write summary
+      - name: Verify ff-only + summarize
         id: verify
         run: |
           set -euo pipefail
           src="${{ inputs.src }}"
           dst="${{ inputs.dst }}"
 
-          SRC_SHA="$(git rev-parse HEAD)"
-          DST_SHA="$(git rev-parse "origin/${dst}")"
+          git fetch origin "${dst}" "${src}" --prune
 
-          echo "src=$src" >> "$GITHUB_OUTPUT"
-          echo "dst=$dst" >> "$GITHUB_OUTPUT"
-          echo "src_sha=$SRC_SHA" >> "$GITHUB_OUTPUT"
-          echo "dst_sha=$DST_SHA" >> "$GITHUB_OUTPUT"
+          # Ensure HEAD is exactly origin/src
+          git reset --hard "origin/${src}"
 
-          # Ensure main is an ancestor of canary => fast-forward is possible
-          if ! git merge-base --is-ancestor "origin/${dst}" HEAD; then
-            echo "::error::Cannot fast-forward: origin/${dst} is not an ancestor of ${src}. Branches have diverged."
+          # FF-only requirement: dst must be an ancestor of src
+          if ! git merge-base --is-ancestor "origin/${dst}" "origin/${src}"; then
+            echo "::error::Cannot fast-forward: origin/${dst} is not an ancestor of origin/${src} (branches diverged)."
             exit 1
           fi
 
-          ahead="$(git rev-list --count "origin/${dst}..HEAD")"
+          ahead="$(git rev-list --count "origin/${dst}..origin/${src}")"
           echo "ahead=$ahead" >> "$GITHUB_OUTPUT"
 
           {
             echo "## Promote \`${src}\` → \`${dst}\` (ff-only)"
             echo ""
-            echo "- ${dst}: \`${DST_SHA}\`"
-            echo "- ${src}: \`${SRC_SHA}\`"
+            echo "- \`${dst}\`: \`$(git rev-parse "origin/${dst}")\`"
+            echo "- \`${src}\`: \`$(git rev-parse "origin/${src}")\`"
             echo "- Commits to promote: **${ahead}**"
             echo ""
             echo "### Commits"
             if [ "$ahead" -eq 0 ]; then
               echo "_Nothing to promote._"
             else
-              git log --oneline --decorate "origin/${dst}..HEAD"
+              git log --oneline --decorate "origin/${dst}..origin/${src}"
             fi
           } >> "$GITHUB_STEP_SUMMARY"
 
@@ -89,7 +83,8 @@ jobs:
         if: ${{ steps.verify.outputs.ahead != '0' && inputs.dry_run != true }}
         run: |
           set -euo pipefail
-          dst="${{ steps.verify.outputs.dst }}"
+          dst="${{ inputs.dst }}"
+          # Push src HEAD to dst (no merge commit, same SHAs)
           git push origin "HEAD:refs/heads/${dst}"
 
       - name: Dry run / no-op
