@@ -29,5 +29,9 @@ export const useSudo = () => {
 		return await SudoPromptStore.requestVerification();
 	}, []);
 
-	return {require};
+	const finalize = useCallback(() => {
+		SudoPromptStore.handleTokenReceived(null);
+	}, []);
+
+	return {require, finalize};
 };

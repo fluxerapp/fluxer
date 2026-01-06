@@ -417,6 +417,7 @@ export const ApplicationDetail: React.FC<ApplicationDetailProps> = observer(
 				} else {
 					setBotToken(res.body.token ?? null);
 				}
+				sudo.finalize();
 				ToastActionCreators.createToast({
 					type: 'success',
 					children:

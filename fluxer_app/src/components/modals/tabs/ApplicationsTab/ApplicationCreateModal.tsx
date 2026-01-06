@@ -23,12 +23,14 @@ import React from 'react';
 import {useForm} from 'react-hook-form';
 import * as ModalActionCreators from '~/actions/ModalActionCreators';
 import {Input} from '~/components/form/Input';
+import {Form} from '~/components/form/Form';
 import * as Modal from '~/components/modals/Modal';
 import styles from '~/components/modals/tabs/ApplicationsTab/ApplicationsTab.module.css';
 import {Button} from '~/components/uikit/Button/Button';
 import {Endpoints} from '~/Endpoints';
 import HttpClient from '~/lib/HttpClient';
 import type {DeveloperApplication} from '~/records/DeveloperApplicationRecord';
+import {useFormSubmit} from '~/hooks/useFormSubmit';
 
 interface ApplicationCreateModalProps {
 	onCreated: (application: DeveloperApplication) => void;
@@ -40,50 +42,41 @@ interface CreateFormValues {
 
 export const ApplicationCreateModal: React.FC<ApplicationCreateModalProps> = observer(({onCreated}) => {
 	const {t} = useLingui();
-	const {
-		register,
-		handleSubmit,
-		formState: {errors},
-		reset,
-	} = useForm<CreateFormValues>({
+	const form = useForm<CreateFormValues>({
 		defaultValues: {
 			name: '',
 		},
 	});
-
-	const nameField = register('name', {required: true, maxLength: 100});
+	const nameField = form.register('name', {required: true, maxLength: 100});
 	const nameInputRef = React.useRef<HTMLInputElement | null>(null);
-	const [creating, setCreating] = React.useState(false);
-	const [createError, setCreateError] = React.useState<string | null>(null);
-
-	const handleCancel = () => {
-		reset();
-		setCreateError(null);
+	const handleCancel = React.useCallback(() => {
+		form.reset();
+		form.clearErrors();
 		ModalActionCreators.pop();
-	};
+	}, [form]);
 
-	const onSubmit = handleSubmit(async (data) => {
-		setCreateError(null);
-		setCreating(true);
-		try {
+	const onSubmit = React.useCallback(
+		async (data: CreateFormValues) => {
 			const response = await HttpClient.post<DeveloperApplication>(Endpoints.OAUTH_APPLICATIONS, {
 				name: data.name.trim(),
 				redirect_uris: [],
 			});
 			onCreated(response.body);
-			reset();
+			form.reset();
 			ModalActionCreators.pop();
-		} catch (err) {
-			console.error('[ApplicationCreateModal] Failed to create application:', err);
-			setCreateError(t`Failed to create application. Please check your inputs and try again.`);
-		} finally {
-			setCreating(false);
-		}
+		},
+		[form, onCreated],
+	);
+
+	const {handleSubmit, isSubmitting} = useFormSubmit({
+		form,
+		onSubmit,
+		defaultErrorField: 'name',
 	});
 
 	return (
 		<Modal.Root size="small" centered initialFocusRef={nameInputRef}>
-			<form onSubmit={onSubmit}>
+			<Form form={form} onSubmit={handleSubmit}>
 				<Modal.Header title={t`Create Application`} />
 				<Modal.Content className={styles.createForm}>
 					<Input
@@ -97,22 +90,20 @@ export const ApplicationCreateModal: React.FC<ApplicationCreateModalProps> = obs
 						placeholder={t`My Application`}
 						maxLength={100}
 						required
-						disabled={creating}
+						disabled={isSubmitting}
 						autoFocus
+						error={form.formState.errors.name?.message}
 					/>
-
-					{errors.name && <div className={styles.error}>{t`Application name is required`}</div>}
-					{createError && <div className={styles.error}>{createError}</div>}
 				</Modal.Content>
 				<Modal.Footer>
-					<Button type="button" variant="secondary" onClick={handleCancel} disabled={creating}>
+					<Button type="button" variant="secondary" onClick={handleCancel} disabled={isSubmitting}>
 						{t`Cancel`}
 					</Button>
-					<Button type="submit" variant="primary" submitting={creating}>
+					<Button type="submit" variant="primary" submitting={isSubmitting}>
 						{t`Create`}
 					</Button>
 				</Modal.Footer>
-			</form>
+			</Form>
 		</Modal.Root>
 	);
 });
