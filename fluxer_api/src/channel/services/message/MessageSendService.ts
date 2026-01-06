@@ -907,7 +907,7 @@ export class MessageSendService {
 			messageId,
 			channelId,
 			user,
-			type: MessageTypes.DEFAULT,
+			type: this.getMessageTypeForRequest(data),
 			content: data.content,
 			flags: data.flags ? data.flags & SENDABLE_MESSAGE_FLAGS : 0,
 			embeds: data.embeds,
