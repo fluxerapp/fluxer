@@ -28,6 +28,7 @@ import {
 	createMessageID,
 	createUserID,
 	type GuildID,
+	type MessageID,
 	type UserID,
 	userIdToChannelId,
 	vanityCodeToInviteCode,
@@ -152,6 +153,8 @@ interface UserData {
 	pinnedDMs: Array<ChannelID>;
 }
 
+const DM_HISTORY_BATCH_SIZE = 1000;
+
 export class RpcService {
 	private readonly customStatusValidator: CustomStatusValidator;
 
@@ -217,6 +220,47 @@ export class RpcService {
 			indexed_at: null,
 			version: 1,
 		});
+	}
+
+	private async backfillHistoricalDmChannels(userId: UserID): Promise<void> {
+		const processedChannels = new Set<string>();
+		let lastChannelId: ChannelID | undefined;
+		let lastMessageId: MessageID | undefined;
+
+		while (true) {
+			const messageRefs = await this.channelRepository.listMessagesByAuthor(
+				userId,
+				DM_HISTORY_BATCH_SIZE,
+				lastChannelId,
+				lastMessageId,
+			);
+			if (messageRefs.length === 0) {
+				break;
+			}
+
+			for (const {channelId} of messageRefs) {
+				const channelKey = channelId.toString();
+				if (processedChannels.has(channelKey)) {
+					continue;
+				}
+				processedChannels.add(channelKey);
+
+				const channel = await this.channelRepository.channelData.findUnique(channelId);
+				if (!channel || channel.guildId || channel.type !== ChannelTypes.DM) {
+					continue;
+				}
+
+				await this.userRepository.recordHistoricalDmChannel(userId, channelId, false);
+			}
+
+			const lastRef = messageRefs[messageRefs.length - 1];
+			lastChannelId = lastRef.channelId;
+			lastMessageId = lastRef.messageId;
+
+			if (messageRefs.length < DM_HISTORY_BATCH_SIZE) {
+				break;
+			}
+		}
 	}
 
 	private async updateGuildMemberCount(guild: Guild, actualMemberCount: number): Promise<Guild> {
@@ -649,6 +693,15 @@ export class RpcService {
 				event: 'USER_UPDATE',
 				data: {user: mapUserToPrivateResponse(user)},
 			});
+		}
+
+		if (!(user.flags & UserFlags.HAS_DM_HISTORY_BACKFILLED)) {
+			try {
+				await this.backfillHistoricalDmChannels(user.id);
+				flagsToUpdate = (flagsToUpdate ?? user.flags) | UserFlags.HAS_DM_HISTORY_BACKFILLED;
+			} catch (error) {
+				Logger.warn({userId: user.id, error}, 'Failed to backfill DM history');
+			}
 		}
 
 		if (flagsToUpdate !== null && flagsToUpdate !== user.flags) {

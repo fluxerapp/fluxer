@@ -435,6 +435,14 @@ export class UserRepository implements IUserRepositoryAggregate {
 		return this.channelRepo.listPrivateChannels(userId);
 	}
 
+	async listHistoricalDmChannelIds(userId: UserID): Promise<Array<ChannelID>> {
+		return this.channelRepo.listHistoricalDmChannelIds(userId);
+	}
+
+	async recordHistoricalDmChannel(userId: UserID, channelId: ChannelID, isGroupDm: boolean): Promise<void> {
+		return this.channelRepo.recordHistoricalDmChannel(userId, channelId, isGroupDm);
+	}
+
 	async listPrivateChannelSummaries(userId: UserID): Promise<Array<PrivateChannelSummary>> {
 		return this.channelRepo.listPrivateChannelSummaries(userId);
 	}

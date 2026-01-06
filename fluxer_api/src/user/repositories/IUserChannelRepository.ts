@@ -32,6 +32,8 @@ export interface IUserChannelRepository {
 	listPrivateChannels(userId: UserID): Promise<Array<Channel>>;
 	deleteAllPrivateChannels(userId: UserID): Promise<void>;
 	listPrivateChannelSummaries(userId: UserID): Promise<Array<PrivateChannelSummary>>;
+	listHistoricalDmChannelIds(userId: UserID): Promise<Array<ChannelID>>;
+	recordHistoricalDmChannel(userId: UserID, channelId: ChannelID, isGroupDm: boolean): Promise<void>;
 
 	findExistingDmState(user1Id: UserID, user2Id: UserID): Promise<Channel | null>;
 	createDmChannelAndState(user1Id: UserID, user2Id: UserID, channelId: ChannelID): Promise<Channel>;

@@ -161,6 +161,7 @@ import {
 	USER_BY_USERNAME_COLUMNS,
 	USER_COLUMNS,
 	USER_CONTACT_CHANGE_LOG_COLUMNS,
+	USER_DM_HISTORY_COLUMNS,
 	USER_GUILD_SETTINGS_COLUMNS,
 	USER_HARVEST_COLUMNS,
 	USER_SETTINGS_COLUMNS,
@@ -171,6 +172,7 @@ import {
 	type UserByStripeSubscriptionIdRow,
 	type UserByUsernameRow,
 	type UserContactChangeLogRow,
+	type UserDmHistoryRow,
 	type UserGuildSettingsRow,
 	type UserHarvestRow,
 	type UserRow,
@@ -198,6 +200,12 @@ export const UsersPendingDeletion = defineTable<
 	name: 'users_pending_deletion',
 	columns: USERS_PENDING_DELETION_COLUMNS,
 	primaryKey: ['deletion_date', 'pending_deletion_at', 'user_id'],
+});
+
+export const UserDmHistory = defineTable<UserDmHistoryRow, 'user_id' | 'channel_id'>({
+	name: 'user_dm_history',
+	columns: USER_DM_HISTORY_COLUMNS,
+	primaryKey: ['user_id', 'channel_id'],
 });
 
 export const UserByUsername = defineTable<UserByUsernameRow, 'username' | 'discriminator' | 'user_id'>({

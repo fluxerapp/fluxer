@@ -592,3 +592,12 @@ export const USERS_PENDING_DELETION_COLUMNS = [
 	'user_id',
 	'deletion_reason_code',
 ] as const satisfies ReadonlyArray<keyof UsersPendingDeletionRow>;
+
+export interface UserDmHistoryRow {
+	user_id: UserID;
+	channel_id: ChannelID;
+}
+
+export const USER_DM_HISTORY_COLUMNS = ['user_id', 'channel_id'] as const satisfies ReadonlyArray<
+	keyof UserDmHistoryRow
+>;

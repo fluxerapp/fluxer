@@ -54,6 +54,13 @@ export const getDmChannelIdsForScope = async ({
 		channelIdStrings.add(summary.channelId.toString());
 	}
 
+	if (scope === 'all_dms') {
+		const historicalIds = await userRepository.listHistoricalDmChannelIds(userId);
+		for (const channelId of historicalIds) {
+			channelIdStrings.add(channelId.toString());
+		}
+	}
+
 	if (includeChannelId) {
 		channelIdStrings.add(includeChannelId.toString());
 	}

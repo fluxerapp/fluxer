@@ -55,6 +55,7 @@ export const UserFlags = {
 	HAS_DISMISSED_PREMIUM_ONBOARDING: 1n << 51n,
 	USED_MOBILE_CLIENT: 1n << 52n,
 	APP_STORE_REVIEWER: 1n << 53n,
+	HAS_DM_HISTORY_BACKFILLED: 1n << 54n,
 } as const;
 
 export const PUBLIC_USER_FLAGS = UserFlags.STAFF | UserFlags.CTP_MEMBER | UserFlags.PARTNER | UserFlags.BUG_HUNTER;

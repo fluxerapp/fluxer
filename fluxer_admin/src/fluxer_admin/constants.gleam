@@ -69,6 +69,11 @@ pub const flag_app_store_reviewer = Flag(
   9_007_199_254_740_992,
 )
 
+pub const flag_dm_history_backfilled = Flag(
+  "DM_HISTORY_BACKFILLED",
+  18_014_398_509_481_984,
+)
+
 pub fn get_patchable_flags() -> List(Flag) {
   [
     flag_staff,
@@ -84,6 +89,7 @@ pub fn get_patchable_flags() -> List(Flag) {
     flag_pending_manual_verification,
     flag_used_mobile_client,
     flag_app_store_reviewer,
+    flag_dm_history_backfilled,
   ]
 }
 

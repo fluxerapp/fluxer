@@ -22,7 +22,7 @@ import {ChannelTypes} from '~/Constants';
 import {BatchBuilder, deleteOneOrMany, fetchMany, fetchManyInChunks, fetchOne, upsertOne} from '~/database/Cassandra';
 import type {ChannelRow, DmStateRow, PrivateChannelRow} from '~/database/CassandraTypes';
 import {Channel} from '~/Models';
-import {Channels, DmStates, PinnedDms, PrivateChannels, ReadStates} from '~/Tables';
+import {Channels, DmStates, PinnedDms, PrivateChannels, ReadStates, UserDmHistory} from '~/Tables';
 import type {IUserChannelRepository, PrivateChannelSummary} from './IUserChannelRepository';
 
 interface PinnedDmRow {
@@ -75,6 +75,11 @@ const FETCH_PINNED_DMS_CQL = PinnedDms.selectCql({
 
 const FETCH_PRIVATE_CHANNELS_CQL = PrivateChannels.selectCql({
 	where: PrivateChannels.where.eq('user_id'),
+});
+
+const HISTORICAL_DM_CHANNELS_CQL = UserDmHistory.selectCql({
+	columns: ['channel_id'],
+	where: UserDmHistory.where.eq('user_id'),
 });
 
 const FETCH_CHANNEL_METADATA_CQL = Channels.selectCql({
@@ -325,6 +330,13 @@ export class UserChannelRepository implements IUserChannelRepository {
 		});
 	}
 
+	async listHistoricalDmChannelIds(userId: UserID): Promise<Array<ChannelID>> {
+		const rows = await fetchMany<{channel_id: ChannelID}>(HISTORICAL_DM_CHANNELS_CQL, {
+			user_id: userId,
+		});
+		return rows.map((row) => row.channel_id);
+	}
+
 	async openDmForUser(userId: UserID, channelId: ChannelID, isGroupDm?: boolean): Promise<void> {
 		let resolvedIsGroupDm: boolean;
 		if (isGroupDm !== undefined) {
@@ -337,11 +349,26 @@ export class UserChannelRepository implements IUserChannelRepository {
 			resolvedIsGroupDm = channelRow?.type === ChannelTypes.GROUP_DM;
 		}
 
+		await this.recordHistoricalDmChannel(userId, channelId, resolvedIsGroupDm);
+
 		await upsertOne(
 			PrivateChannels.upsertAll({
 				user_id: userId,
 				channel_id: channelId,
 				is_gdm: resolvedIsGroupDm,
+			}),
+		);
+	}
+
+	async recordHistoricalDmChannel(userId: UserID, channelId: ChannelID, isGroupDm: boolean): Promise<void> {
+		if (isGroupDm) {
+			return;
+		}
+
+		await upsertOne(
+			UserDmHistory.upsertAll({
+				user_id: userId,
+				channel_id: channelId,
 			}),
 		);
 	}
