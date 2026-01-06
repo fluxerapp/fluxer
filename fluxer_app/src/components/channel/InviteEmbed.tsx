@@ -42,7 +42,6 @@ import {Tooltip} from '~/components/uikit/Tooltip/Tooltip';
 import {ComponentDispatch} from '~/lib/ComponentDispatch';
 import {Routes} from '~/Routes';
 import {UserRecord} from '~/records/UserRecord';
-import ChannelStore from '~/stores/ChannelStore';
 import GuildMemberStore from '~/stores/GuildMemberStore';
 import GuildStore from '~/stores/GuildStore';
 import InviteStore from '~/stores/InviteStore';
@@ -51,6 +50,7 @@ import UserStore from '~/stores/UserStore';
 
 import {isGroupDmInvite, isGuildInvite, isPackInvite as isPackInviteGuard} from '~/types/InviteTypes';
 import * as AvatarUtils from '~/utils/AvatarUtils';
+import {getGroupDmInviteCounts} from '~/utils/invite/GroupDmInviteCounts';
 import {
 	GuildInvitePrimaryAction,
 	getGuildInviteActionState,
@@ -58,7 +58,6 @@ import {
 	isGuildInviteActionDisabled,
 } from '~/utils/invite/GuildInviteActionState';
 import * as RouterUtils from '~/utils/RouterUtils';
-
 import {getGroupDMTitle, getGuildEmbedSplashAspectRatio, getImageAspectRatioFromBase64} from './InviteEmbed/utils';
 import styles from './InviteEmbed.module.css';
 
@@ -146,8 +145,12 @@ export const InviteEmbed = observer(function InviteEmbed({code}: InviteEmbedProp
 		const groupDMPath = Routes.dmChannel(invite.channel.id);
 		const handleAcceptInvite = () => InviteActionCreators.acceptAndTransitionToChannel(invite.code, i18n);
 		const handleNavigateToGroup = () => RouterUtils.transitionTo(groupDMPath);
-		const isAlreadyInGroupDM = !!ChannelStore.getChannel(invite.channel.id);
-		const memberCount = invite.member_count ?? 0;
+		const groupDMCounts = getGroupDmInviteCounts({
+			channelId: invite.channel.id,
+			inviteMemberCount: invite.member_count,
+		});
+		const isAlreadyInGroupDM = groupDMCounts.hasLocalChannel;
+		const memberCount = groupDMCounts.memberCount;
 
 		return (
 			<EmbedCard

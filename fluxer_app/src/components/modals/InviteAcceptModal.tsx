@@ -32,6 +32,7 @@ import foodPatternUrl from '~/images/i-like-food.svg';
 import InviteStore from '~/stores/InviteStore';
 import {isGroupDmInvite, isGuildInvite, isPackInvite as isPackInviteGuard} from '~/types/InviteTypes';
 import * as AvatarUtils from '~/utils/AvatarUtils';
+import {getGroupDmInviteCounts} from '~/utils/invite/GroupDmInviteCounts';
 import {
 	GuildInvitePrimaryAction,
 	getGuildInviteActionState,
@@ -57,6 +58,13 @@ export const InviteAcceptModal = observer(function InviteAcceptModal({code}: Inv
 	}, [code, inviteState]);
 
 	const isGroupDM = invite != null && isGroupDmInvite(invite);
+	const groupDMCounts =
+		invite && isGroupDM
+			? getGroupDmInviteCounts({
+					channelId: invite.channel.id,
+					inviteMemberCount: invite.member_count,
+				})
+			: null;
 	const isPackInvite = invite != null && isPackInviteGuard(invite);
 
 	const guildActionState = getGuildInviteActionState({invite});
@@ -64,12 +72,18 @@ export const InviteAcceptModal = observer(function InviteAcceptModal({code}: Inv
 
 	const inviteForHeader = React.useMemo(() => {
 		if (!invite) return null;
+		if (isGroupDM && groupDMCounts) {
+			return {
+				...invite,
+				member_count: groupDMCounts.memberCount,
+			};
+		}
 		return {
 			...invite,
 			presence_count: presenceCount,
 			member_count: memberCount,
 		};
-	}, [invite, presenceCount, memberCount]);
+	}, [invite, isGroupDM, presenceCount, memberCount, groupDMCounts?.memberCount]);
 
 	const splashUrl = React.useMemo(() => {
 		if (!invite || !isGuildInvite(invite)) {

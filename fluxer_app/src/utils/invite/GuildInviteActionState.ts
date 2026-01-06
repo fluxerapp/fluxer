@@ -22,7 +22,6 @@ import type {Guild, GuildRecord} from '~/records/GuildRecord';
 import type {Invite} from '~/records/MessageRecord';
 import AuthenticationStore from '~/stores/AuthenticationStore';
 import GuildMemberStore from '~/stores/GuildMemberStore';
-import PresenceStore from '~/stores/PresenceStore';
 import {isGuildInvite} from '~/types/InviteTypes';
 
 const normalizeFeatures = (features?: Iterable<string> | null): Array<string> => {
@@ -55,18 +54,8 @@ export const getGuildInviteActionState = (params: {
 	const guildId = guildRecord?.id ?? null;
 	const currentUserId = AuthenticationStore.currentUserId;
 	const isMember = Boolean(guildId && currentUserId && GuildMemberStore.getMember(guildId, currentUserId));
-	const presenceCount =
-		guildId && isMember
-			? PresenceStore.getPresenceCount(guildId)
-			: params.invite && isGuildInvite(params.invite)
-				? params.invite.presence_count
-				: 0;
-	const memberCount =
-		guildId && isMember
-			? GuildMemberStore.getMemberCount(guildId)
-			: params.invite && isGuildInvite(params.invite)
-				? params.invite.member_count
-				: 0;
+	const presenceCount = params.invite && isGuildInvite(params.invite) ? (params.invite.presence_count ?? 0) : 0;
+	const memberCount = params.invite && isGuildInvite(params.invite) ? (params.invite.member_count ?? 0) : 0;
 	const features = normalizeFeatures(guildRecord?.features ?? inviteGuild?.features);
 
 	return {
