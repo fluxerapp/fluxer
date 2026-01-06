@@ -38,6 +38,8 @@ class LocalVoiceStateStore {
 	hasUserSetMute = false;
 	hasUserSetDeaf = false;
 
+	private shouldUnmuteOnUndeafen = false;
+
 	private microphonePermissionGranted: boolean | null = MediaPermissionStore.isMicrophoneGranted();
 	private mutedByPermission = !MediaPermissionStore.isMicrophoneGranted();
 	private persistenceHydrationPromise: Promise<void>;
@@ -49,7 +51,11 @@ class LocalVoiceStateStore {
 	constructor() {
 		makeAutoObservable<
 			this,
-			'microphonePermissionGranted' | 'mutedByPermission' | '_disposers' | 'isNotifyingServerOfPermissionMute'
+			| 'microphonePermissionGranted'
+			| 'mutedByPermission'
+			| '_disposers'
+			| 'isNotifyingServerOfPermissionMute'
+			| 'shouldUnmuteOnUndeafen'
 		>(
 			this,
 			{
@@ -57,6 +63,7 @@ class LocalVoiceStateStore {
 				mutedByPermission: false,
 				_disposers: false,
 				isNotifyingServerOfPermissionMute: false,
+				shouldUnmuteOnUndeafen: false,
 			},
 			{autoBind: true},
 		);
@@ -276,6 +283,24 @@ class LocalVoiceStateStore {
 			const newSelfMute = !this.selfMute;
 			const micDenied = this.microphonePermissionGranted === false;
 
+			if (this.selfDeaf && !newSelfMute) {
+				this.hasUserSetMute = true;
+				this.hasUserSetDeaf = true;
+				this.shouldUnmuteOnUndeafen = false;
+
+				if (micDenied) {
+					this.mutedByPermission = true;
+					this.selfDeaf = false;
+					logger.debug('Mic denied: user attempted unmute while deaf; undeafening only');
+					return;
+				}
+
+				this.selfMute = false;
+				this.selfDeaf = false;
+				logger.debug('User unmuted while deafened; also undeafened');
+				return;
+			}
+
 			if (micDenied && !newSelfMute) {
 				this.hasUserSetMute = true;
 				this.mutedByPermission = true;
@@ -284,13 +309,10 @@ class LocalVoiceStateStore {
 			}
 
 			this.hasUserSetMute = true;
+			this.selfMute = newSelfMute;
 
-			if (this.selfDeaf && !newSelfMute) {
-				this.selfMute = false;
-				this.selfDeaf = false;
-				this.hasUserSetDeaf = true;
-			} else {
-				this.selfMute = newSelfMute;
+			if (!this.selfDeaf) {
+				this.shouldUnmuteOnUndeafen = false;
 			}
 
 			logger.debug('User toggled self mute', {newSelfMute, hasUserSetMute: true});
@@ -301,12 +323,21 @@ class LocalVoiceStateStore {
 		runInAction(() => {
 			const newSelfDeaf = !this.selfDeaf;
 			this.hasUserSetDeaf = true;
+			const micDenied = this.microphonePermissionGranted === false;
 
 			if (newSelfDeaf) {
-				this.selfMute = true;
+				const wasMutedBefore = this.selfMute || micDenied;
+
 				this.selfDeaf = true;
+				this.selfMute = true;
+				this.shouldUnmuteOnUndeafen = !wasMutedBefore;
 			} else {
 				this.selfDeaf = false;
+
+				if (this.shouldUnmuteOnUndeafen && !micDenied) {
+					this.selfMute = false;
+				}
+				this.shouldUnmuteOnUndeafen = false;
 			}
 
 			logger.debug('User toggled self deaf', {newSelfDeaf, hasUserSetDeaf: true});
@@ -367,6 +398,9 @@ class LocalVoiceStateStore {
 	updateSelfDeaf(deafened: boolean): void {
 		runInAction(() => {
 			this.selfDeaf = deafened;
+			if (!deafened) {
+				this.shouldUnmuteOnUndeafen = false;
+			}
 			logger.debug('Self deaf updated', {deafened});
 		});
 	}
@@ -411,6 +445,7 @@ class LocalVoiceStateStore {
 			this.selfStreamAudioMute = false;
 			this.noiseSuppressionEnabled = true;
 			this.mutedByPermission = false;
+			this.shouldUnmuteOnUndeafen = false;
 		});
 		if (this.microphonePermissionGranted === false) {
 			logger.debug('Resetting preferences while microphone permission denied, keeping user muted');
