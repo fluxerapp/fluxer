@@ -255,6 +255,7 @@ export const EmbedGifv: FC<
 		videoProxyURL: string;
 		videoURL: string;
 		videoConfig?: VideoConfig;
+		isPreview?: boolean;
 	}
 > = observer(
 	({
@@ -272,6 +273,7 @@ export const EmbedGifv: FC<
 		message,
 		contentHash,
 		onDelete,
+		isPreview,
 	}) => {
 		const {t} = useLingui();
 		const {loaded, error, thumbHashURL} = useMediaLoading(
@@ -329,7 +331,7 @@ export const EmbedGifv: FC<
 
 		const handleContextMenu = useCallback(
 			(e: React.MouseEvent) => {
-				if (!message) return;
+				if (!message || isPreview) return;
 
 				e.preventDefault();
 				e.stopPropagation();
@@ -348,7 +350,7 @@ export const EmbedGifv: FC<
 					/>
 				));
 			},
-			[message, embedURL, videoProxyURL, contentHash, attachmentId, defaultName, onDelete],
+			[message, embedURL, videoProxyURL, contentHash, attachmentId, defaultName, onDelete, isPreview],
 		);
 
 		useEffect(() => {
@@ -449,7 +451,9 @@ export const EmbedGifv: FC<
 			showFavoriteButton,
 			showDownloadButton: _showDownloadButton,
 			showDeleteButton,
-		} = getMediaButtonVisibility(canFavorite, message, attachmentId);
+		} = getMediaButtonVisibility(canFavorite, isPreview ? undefined : message, attachmentId, {
+			disableDelete: !!isPreview,
+		});
 		const showDownloadButton = false;
 		const showGifIndicator =
 			AccessibilityStore.showGifIndicator && shouldShowOverlays(dimensions.width, dimensions.height);
@@ -515,7 +519,7 @@ export const EmbedGifv: FC<
 	},
 );
 
-export const EmbedGif: FC<GifvEmbedProps & {proxyURL: string; includeButton?: boolean}> = observer(
+export const EmbedGif: FC<GifvEmbedProps & {proxyURL: string; includeButton?: boolean; isPreview?: boolean}> = observer(
 	({
 		embedURL,
 		proxyURL,
@@ -530,6 +534,7 @@ export const EmbedGif: FC<GifvEmbedProps & {proxyURL: string; includeButton?: bo
 		message,
 		contentHash,
 		onDelete,
+		isPreview,
 	}) => {
 		const {t} = useLingui();
 		const {dimensions} = mediaCalculator.calculate({width: naturalWidth, height: naturalHeight}, {forceScale: true});
@@ -601,7 +606,7 @@ export const EmbedGif: FC<GifvEmbedProps & {proxyURL: string; includeButton?: bo
 
 		const handleContextMenu = useCallback(
 			(e: React.MouseEvent) => {
-				if (!message) return;
+				if (!message || isPreview) return;
 
 				e.preventDefault();
 				e.stopPropagation();
@@ -620,7 +625,7 @@ export const EmbedGif: FC<GifvEmbedProps & {proxyURL: string; includeButton?: bo
 					/>
 				));
 			},
-			[message, embedURL, proxyURL, contentHash, attachmentId, defaultName, onDelete],
+			[message, embedURL, proxyURL, contentHash, attachmentId, defaultName, onDelete, isPreview],
 		);
 
 		useEffect(() => {
@@ -697,8 +702,9 @@ export const EmbedGif: FC<GifvEmbedProps & {proxyURL: string; includeButton?: bo
 		);
 		const {showFavoriteButton, showDownloadButton, showDeleteButton} = getMediaButtonVisibility(
 			canFavorite,
-			message,
+			isPreview ? undefined : message,
 			attachmentId,
+			{disableDelete: !!isPreview},
 		);
 		const showGifIndicator =
 			AccessibilityStore.showGifIndicator && shouldShowOverlays(renderedDimensions.width, renderedDimensions.height);

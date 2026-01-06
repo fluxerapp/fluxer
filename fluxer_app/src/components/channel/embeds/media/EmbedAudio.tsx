@@ -25,8 +25,8 @@ import {type FC, useCallback, useEffect, useRef, useState} from 'react';
 import * as ContextMenuActionCreators from '~/actions/ContextMenuActionCreators';
 import * as MediaViewerActionCreators from '~/actions/MediaViewerActionCreators';
 import {deriveDefaultNameFromMessage, splitFilename} from '~/components/channel/embeds/EmbedUtils';
+import {getMediaButtonVisibility} from '~/components/channel/embeds/media/MediaButtonUtils';
 import type {BaseMediaProps} from '~/components/channel/embeds/media/MediaTypes';
-import {canDeleteAttachmentUtil} from '~/components/channel/messageActionUtils';
 import {InlineAudioPlayer} from '~/components/media-player/components/InlineAudioPlayer';
 import {MediaContextMenu} from '~/components/uikit/ContextMenu/MediaContextMenu';
 import {Tooltip} from '~/components/uikit/Tooltip/Tooltip';
@@ -47,6 +47,7 @@ type EmbedAudioProps = BaseMediaProps & {
 	embedUrl?: string;
 	fileSize?: number;
 	mediaAttachments?: ReadonlyArray<MessageAttachment>;
+	isPreview?: boolean;
 };
 
 const EmbedAudio: FC<EmbedAudioProps> = observer(
@@ -63,6 +64,7 @@ const EmbedAudio: FC<EmbedAudioProps> = observer(
 		contentHash,
 		onDelete,
 		fileSize,
+		isPreview,
 	}) => {
 		const {t} = useLingui();
 		const effectiveSrc = buildMediaProxyURL(src);
@@ -88,7 +90,7 @@ const EmbedAudio: FC<EmbedAudioProps> = observer(
 
 		const handleContextMenu = useCallback(
 			(e: React.MouseEvent) => {
-				if (!message) return;
+				if (!message || isPreview) return;
 
 				e.preventDefault();
 				e.stopPropagation();
@@ -106,7 +108,7 @@ const EmbedAudio: FC<EmbedAudioProps> = observer(
 					/>
 				));
 			},
-			[message, src, contentHash, attachmentId, defaultName, onDelete],
+			[message, src, contentHash, attachmentId, defaultName, onDelete, isPreview],
 		);
 
 		useEffect(() => {
@@ -189,7 +191,12 @@ const EmbedAudio: FC<EmbedAudioProps> = observer(
 					maxWidth: '400px',
 				};
 
-		const canDelete = canDeleteAttachmentUtil(message) && !isMobile;
+		const {showDeleteButton, showDownloadButton} = getMediaButtonVisibility(
+			canFavorite,
+			isPreview ? undefined : message,
+			attachmentId,
+			{disableDelete: !!isPreview},
+		);
 
 		if (isMobile) {
 			return (
@@ -223,7 +230,7 @@ const EmbedAudio: FC<EmbedAudioProps> = observer(
 
 		return (
 			<div style={containerStyles} className={styles.container}>
-				{canDelete && (
+				{showDeleteButton && (
 					<Tooltip text={t`Delete`} position="top">
 						<button
 							type="button"
@@ -243,7 +250,7 @@ const EmbedAudio: FC<EmbedAudioProps> = observer(
 					isFavorited={isFavorited}
 					canFavorite={canFavorite}
 					onFavoriteClick={handleFavoriteClick}
-					onDownloadClick={handleDownload}
+					onDownloadClick={showDownloadButton ? handleDownload : undefined}
 					onContextMenu={handleContextMenu}
 				/>
 			</div>

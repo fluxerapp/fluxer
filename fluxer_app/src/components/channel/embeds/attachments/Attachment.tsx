@@ -67,35 +67,38 @@ const isUploading = (flags: number): boolean => (flags & 0x1000) !== 0;
 const hasValidDimensions = (attachment: MessageAttachment): boolean =>
 	typeof attachment.width === 'number' && typeof attachment.height === 'number';
 
-const AnimatedAttachment: FC<AttachmentMediaProps & {message?: MessageRecord}> = observer(({attachment, message}) => {
-	const embedUrl = attachment.url ?? '';
-	const proxyUrl = attachment.proxy_url ?? embedUrl;
-	const animatedProxyURL = buildMediaProxyURL(proxyUrl, {
-		animated: true,
-	});
-	const nsfw = attachment.nsfw || (attachment.flags & MessageAttachmentFlags.CONTAINS_EXPLICIT_MEDIA) !== 0;
+const AnimatedAttachment: FC<AttachmentMediaProps & {message?: MessageRecord; isPreview?: boolean}> = observer(
+	({attachment, message, isPreview}) => {
+		const embedUrl = attachment.url ?? '';
+		const proxyUrl = attachment.proxy_url ?? embedUrl;
+		const animatedProxyURL = buildMediaProxyURL(proxyUrl, {
+			animated: true,
+		});
+		const nsfw = attachment.nsfw || (attachment.flags & MessageAttachmentFlags.CONTAINS_EXPLICIT_MEDIA) !== 0;
 
-	return (
-		<FocusRing within ringClassName={messageStyles.mediaFocusRing}>
-			<EmbedGif
-				embedURL={embedUrl}
-				proxyURL={animatedProxyURL}
-				naturalWidth={attachment.width!}
-				naturalHeight={attachment.height!}
-				placeholder={attachment.placeholder}
-				nsfw={nsfw}
-				channelId={message?.channelId}
-				messageId={message?.id}
-				attachmentId={attachment.id}
-				message={message}
-				contentHash={attachment.content_hash}
-			/>
-		</FocusRing>
-	);
-});
+		return (
+			<FocusRing within ringClassName={messageStyles.mediaFocusRing}>
+				<EmbedGif
+					embedURL={embedUrl}
+					proxyURL={animatedProxyURL}
+					naturalWidth={attachment.width!}
+					naturalHeight={attachment.height!}
+					placeholder={attachment.placeholder}
+					nsfw={nsfw}
+					channelId={message?.channelId}
+					messageId={message?.id}
+					attachmentId={attachment.id}
+					message={message}
+					contentHash={attachment.content_hash}
+					isPreview={isPreview}
+				/>
+			</FocusRing>
+		);
+	},
+);
 
-const VideoAttachment: FC<AttachmentMediaProps & {message?: MessageRecord}> = observer(
-	({attachment, message, mediaAttachments = []}) => {
+const VideoAttachment: FC<AttachmentMediaProps & {message?: MessageRecord; isPreview?: boolean}> = observer(
+	({attachment, message, mediaAttachments = [], isPreview}) => {
 		const embedUrl = attachment.url ?? '';
 		const proxyUrl = attachment.proxy_url ?? embedUrl;
 		const nsfw = attachment.nsfw || (attachment.flags & MessageAttachmentFlags.CONTAINS_EXPLICIT_MEDIA) !== 0;
@@ -132,6 +135,7 @@ const VideoAttachment: FC<AttachmentMediaProps & {message?: MessageRecord}> = ob
 						message={message}
 						contentHash={attachment.content_hash}
 						mediaAttachments={mediaAttachments}
+						isPreview={isPreview}
 					/>
 				</div>
 			</FocusRing>
@@ -139,29 +143,32 @@ const VideoAttachment: FC<AttachmentMediaProps & {message?: MessageRecord}> = ob
 	},
 );
 
-const AudioAttachment: FC<AttachmentMediaProps & {message?: MessageRecord}> = observer(({attachment, message}) => (
-	<FocusRing within ringClassName={messageStyles.mediaFocusRing}>
-		<div className={styles.attachmentWrapper}>
-			<EmbedAudio
-				src={attachment.proxy_url ?? attachment.url ?? ''}
-				title={attachment.title || attachment.filename}
-				duration={attachment.duration}
-				embedUrl={attachment.url ?? ''}
-				channelId={message?.channelId}
-				messageId={message?.id}
-				attachmentId={attachment.id}
-				message={message}
-				contentHash={attachment.content_hash}
-			/>
-		</div>
-	</FocusRing>
-));
+const AudioAttachment: FC<AttachmentMediaProps & {message?: MessageRecord; isPreview?: boolean}> = observer(
+	({attachment, message, isPreview}) => (
+		<FocusRing within ringClassName={messageStyles.mediaFocusRing}>
+			<div className={styles.attachmentWrapper}>
+				<EmbedAudio
+					src={attachment.proxy_url ?? attachment.url ?? ''}
+					title={attachment.title || attachment.filename}
+					duration={attachment.duration}
+					embedUrl={attachment.url ?? ''}
+					channelId={message?.channelId}
+					messageId={message?.id}
+					attachmentId={attachment.id}
+					message={message}
+					contentHash={attachment.content_hash}
+					isPreview={isPreview}
+				/>
+			</div>
+		</FocusRing>
+	),
+);
 
-const AttachmentMedia: FC<AttachmentMediaProps & {message?: MessageRecord}> = observer(
-	({attachment, message, mediaAttachments = []}) => {
+const AttachmentMedia: FC<AttachmentMediaProps & {message?: MessageRecord; isPreview?: boolean}> = observer(
+	({attachment, message, mediaAttachments = [], isPreview}) => {
 		const nsfw = attachment.nsfw || (attachment.flags & MessageAttachmentFlags.CONTAINS_EXPLICIT_MEDIA) !== 0;
 		if (isAnimated(attachment.flags) || isGifType(attachment.content_type)) {
-			return <AnimatedAttachment attachment={attachment} message={message} />;
+			return <AnimatedAttachment attachment={attachment} message={message} isPreview={isPreview} />;
 		}
 
 		const attachmentDimensions = getAttachmentMediaDimensions(message);
@@ -208,6 +215,7 @@ const AttachmentMedia: FC<AttachmentMediaProps & {message?: MessageRecord}> = ob
 						message={message}
 						contentHash={attachment.content_hash}
 						mediaAttachments={mediaAttachments}
+						isPreview={isPreview}
 					/>
 				</div>
 			</FocusRing>
@@ -283,7 +291,7 @@ export const Attachment: FC<AttachmentProps> = observer(({attachment, isPreview,
 			wrapSpoiler(
 				<div className={effectiveExpired ? styles.expiredContent : undefined}>
 					{effectiveExpired && <div className={styles.expiredOverlay}>{t`This attachment has expired`}</div>}
-					<AudioAttachment attachment={enrichedAttachment} message={message} />
+					<AudioAttachment attachment={enrichedAttachment} message={message} isPreview={isPreview} />
 				</div>,
 			),
 		);
@@ -304,7 +312,7 @@ export const Attachment: FC<AttachmentProps> = observer(({attachment, isPreview,
 			wrapSpoiler(
 				<div className={effectiveExpired ? styles.expiredContent : undefined}>
 					{effectiveExpired && <div className={styles.expiredOverlay}>{t`This attachment has expired`}</div>}
-					<AttachmentMedia attachment={enrichedAttachment} message={message} />
+					<AttachmentMedia attachment={enrichedAttachment} message={message} isPreview={isPreview} />
 				</div>,
 			),
 		);
@@ -315,7 +323,7 @@ export const Attachment: FC<AttachmentProps> = observer(({attachment, isPreview,
 			wrapSpoiler(
 				<div className={effectiveExpired ? styles.expiredContent : undefined}>
 					{effectiveExpired && <div className={styles.expiredOverlay}>{t`This attachment has expired`}</div>}
-					<VideoAttachment attachment={enrichedAttachment} message={message} />
+					<VideoAttachment attachment={enrichedAttachment} message={message} isPreview={isPreview} />
 				</div>,
 			),
 		);

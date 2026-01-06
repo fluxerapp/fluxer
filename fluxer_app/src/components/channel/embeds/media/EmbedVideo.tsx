@@ -65,6 +65,7 @@ type EmbedVideoProps = BaseMediaProps & {
 	embedUrl?: string;
 	fillContainer?: boolean;
 	mediaAttachments?: ReadonlyArray<MessageAttachment>;
+	isPreview?: boolean;
 };
 
 const MobileVideoOverlay: FC<{
@@ -125,6 +126,7 @@ const EmbedVideo: FC<EmbedVideoProps> = observer(
 		onDelete,
 		fillContainer = false,
 		mediaAttachments = [],
+		isPreview,
 	}) => {
 		const {enabled: isMobile} = MobileLayoutStore;
 		const effectiveSrc = buildMediaProxyURL(src);
@@ -162,7 +164,7 @@ const EmbedVideo: FC<EmbedVideoProps> = observer(
 
 		const handleContextMenu = useCallback(
 			(e: React.MouseEvent) => {
-				if (!message) return;
+				if (!message || isPreview) return;
 
 				e.preventDefault();
 				e.stopPropagation();
@@ -180,7 +182,7 @@ const EmbedVideo: FC<EmbedVideoProps> = observer(
 					/>
 				));
 			},
-			[message, src, contentHash, attachmentId, defaultName, onDelete],
+			[message, src, contentHash, attachmentId, defaultName, onDelete, isPreview],
 		);
 
 		const thumbHashUrl = placeholder
@@ -268,8 +270,9 @@ const EmbedVideo: FC<EmbedVideoProps> = observer(
 
 		const {showFavoriteButton, showDownloadButton, showDeleteButton} = getMediaButtonVisibility(
 			canFavorite,
-			message,
+			isPreview ? undefined : message,
 			attachmentId,
+			{disableDelete: !!isPreview},
 		);
 
 		if (isMobile) {

@@ -77,6 +77,7 @@ type EmbedImageProps = React.ImgHTMLAttributes<HTMLImageElement> &
 		handlePress?: (event: React.MouseEvent | React.KeyboardEvent) => void;
 		alt?: string;
 		mediaAttachments?: ReadonlyArray<MessageAttachment>;
+		isPreview?: boolean;
 	};
 
 const ImagePreviewHandler: FC<ImagePreviewHandlerProps> = observer(
@@ -216,6 +217,7 @@ export const EmbedImage: FC<EmbedImageProps> = observer(
 		contentHash,
 		onDelete,
 		mediaAttachments = [],
+		isPreview,
 	}) => {
 		const {t} = useLingui();
 		const {loaded, error, thumbHashURL} = useMediaLoading(src, placeholder);
@@ -271,7 +273,7 @@ export const EmbedImage: FC<EmbedImageProps> = observer(
 
 		const handleContextMenu = useCallback(
 			(e: React.MouseEvent) => {
-				if (!message) return;
+				if (!message || isPreview) return;
 
 				e.preventDefault();
 				e.stopPropagation();
@@ -292,7 +294,7 @@ export const EmbedImage: FC<EmbedImageProps> = observer(
 					/>
 				));
 			},
-			[message, src, originalSrc, contentHash, attachmentId, embedIndex, alt, defaultName, onDelete],
+			[message, src, originalSrc, contentHash, attachmentId, embedIndex, alt, defaultName, onDelete, isPreview],
 		);
 
 		if (shouldBlur) {
@@ -324,8 +326,9 @@ export const EmbedImage: FC<EmbedImageProps> = observer(
 
 		const {showFavoriteButton, showDownloadButton, showDeleteButton} = getMediaButtonVisibility(
 			canFavorite,
-			message,
+			isPreview ? undefined : message,
 			attachmentId,
+			{disableDelete: !!isPreview},
 		);
 
 		return (

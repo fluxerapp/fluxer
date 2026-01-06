@@ -37,6 +37,7 @@ import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import * as ContextMenuActionCreators from '~/actions/ContextMenuActionCreators';
 import {splitFilename} from '~/components/channel/embeds/EmbedUtils';
+import {useMaybeMessageViewContext} from '~/components/channel/MessageViewContext';
 import {canDeleteAttachmentUtil} from '~/components/channel/messageActionUtils';
 import {MediaContextMenu} from '~/components/uikit/ContextMenu/MediaContextMenu';
 import {Tooltip} from '~/components/uikit/Tooltip/Tooltip';
@@ -54,7 +55,7 @@ interface AttachmentFileProps {
 	message?: MessageRecord;
 }
 
-export const AttachmentFile = observer(({attachment, message}: AttachmentFileProps) => {
+export const AttachmentFile = observer(({attachment, message, isPreview}: AttachmentFileProps) => {
 	const {t} = useLingui();
 	const {enabled: isMobile} = MobileLayoutStore;
 	const isExpired = Boolean(attachment.expired);
@@ -131,9 +132,11 @@ export const AttachmentFile = observer(({attachment, message}: AttachmentFilePro
 
 	const handleDelete = useDeleteAttachment(message, attachment.id);
 	const canDelete = canDeleteAttachmentUtil(message) && !isMobile;
+	const showDeleteButton = canDelete && !isPreview;
+	const messageViewContext = useMaybeMessageViewContext();
 
 	const handleContextMenu = (e: React.MouseEvent) => {
-		if (!message) return;
+		if (!message || isPreview) return;
 		e.preventDefault();
 		e.stopPropagation();
 
@@ -148,7 +151,7 @@ export const AttachmentFile = observer(({attachment, message}: AttachmentFilePro
 				defaultName={attachment.filename}
 				defaultAltText={attachment.filename}
 				onClose={onClose}
-				onDelete={() => {}}
+				onDelete={isPreview ? () => {} : (messageViewContext?.handleDelete ?? (() => {}))}
 			/>
 		));
 	};
@@ -156,7 +159,7 @@ export const AttachmentFile = observer(({attachment, message}: AttachmentFilePro
 	return (
 		// biome-ignore lint/a11y/noStaticElementInteractions: context menu on container is intentional
 		<div style={containerStyles} className={attachmentFileStyles.container} onContextMenu={handleContextMenu}>
-			{canDelete && (
+			{showDeleteButton && (
 				<button
 					type="button"
 					onClick={handleDelete}

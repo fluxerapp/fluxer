@@ -21,6 +21,10 @@ import {canDeleteAttachmentUtil} from '~/components/channel/messageActionUtils';
 import type {MessageRecord} from '~/records/MessageRecord';
 import AccessibilityStore from '~/stores/AccessibilityStore';
 
+export interface MediaButtonVisibilityOptions {
+	disableDelete?: boolean;
+}
+
 export interface MediaButtonVisibility {
 	showFavoriteButton: boolean;
 	showDownloadButton: boolean;
@@ -31,14 +35,17 @@ export function getMediaButtonVisibility(
 	canFavorite: boolean,
 	message?: MessageRecord,
 	attachmentId?: string,
+	options?: MediaButtonVisibilityOptions,
 ): MediaButtonVisibility {
 	const showMediaFavoriteButton = AccessibilityStore.showMediaFavoriteButton;
 	const showMediaDownloadButton = AccessibilityStore.showMediaDownloadButton;
 	const showMediaDeleteButton = AccessibilityStore.showMediaDeleteButton;
+	const disableDelete = options?.disableDelete ?? false;
 
 	return {
 		showFavoriteButton: showMediaFavoriteButton && canFavorite,
 		showDownloadButton: showMediaDownloadButton,
-		showDeleteButton: showMediaDeleteButton && !!(message && attachmentId && canDeleteAttachmentUtil(message)),
+		showDeleteButton:
+			showMediaDeleteButton && !disableDelete && !!(message && attachmentId && canDeleteAttachmentUtil(message)),
 	};
 }

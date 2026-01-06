@@ -145,6 +145,7 @@ const ForwardedFromSource = observer(({message}: {message: MessageRecord}) => {
 });
 
 const ForwardedMessageContent = observer(({message, snapshot}: {message: MessageRecord; snapshot: MessageSnapshot}) => {
+	const snapshotIsPreview = true;
 	return (
 		<div className={styles.forwardedContainer}>
 			<div className={styles.forwardedBar} />
@@ -177,12 +178,14 @@ const ForwardedMessageContent = observer(({message, snapshot}: {message: Message
 							);
 							return (
 								<>
-									{shouldUseMosaic && <AttachmentMosaic attachments={mediaAttachments} message={message} />}
+									{shouldUseMosaic && (
+										<AttachmentMosaic attachments={mediaAttachments} message={message} isPreview={snapshotIsPreview} />
+									)}
 									{enrichedAttachments.map((attachment: MessageAttachment) => (
 										<Attachment
 											key={attachment.id}
 											attachment={attachment}
-											isPreview={false}
+											isPreview={snapshotIsPreview}
 											message={message}
 											renderInMosaic={shouldUseMosaic}
 										/>
@@ -193,23 +196,24 @@ const ForwardedMessageContent = observer(({message, snapshot}: {message: Message
 					</div>
 				)}
 
-					{snapshot.embeds && snapshot.embeds.length > 0 && UserSettingsStore.getRenderEmbeds() && (
-						<div className={styles.attachmentsContainer}>
-							{snapshot.embeds.map((embed: MessageEmbed, index: number) => {
-								const embedKey = `${embed.id}-${index}`;
-								return (
-									<Embed
-										embed={embed}
-										key={embedKey}
-										message={message}
-										embedIndex={index}
-										contextualEmbeds={snapshot.embeds}
-										onDelete={() => {}}
-									/>
-								);
-							})}
-						</div>
-					)}
+				{snapshot.embeds && snapshot.embeds.length > 0 && UserSettingsStore.getRenderEmbeds() && (
+					<div className={styles.attachmentsContainer}>
+						{snapshot.embeds.map((embed: MessageEmbed, index: number) => {
+							const embedKey = `${embed.id}-${index}`;
+							return (
+								<Embed
+									embed={embed}
+									key={embedKey}
+									message={message}
+									embedIndex={index}
+									contextualEmbeds={snapshot.embeds}
+									onDelete={() => {}}
+									isPreview={snapshotIsPreview}
+								/>
+							);
+						})}
+					</div>
+				)}
 
 				<ForwardedFromSource message={message} />
 			</div>
@@ -315,7 +319,9 @@ export const MessageAttachments = observer(() => {
 				const shouldWrapInMosaic = inlineMedia && mediaAttachments.length > 0;
 				return (
 					<>
-						{shouldWrapInMosaic && <AttachmentMosaic attachments={mediaAttachments} message={message} />}
+						{shouldWrapInMosaic && (
+							<AttachmentMosaic attachments={mediaAttachments} message={message} isPreview={isPreview} />
+						)}
 						{enrichedAttachments.map((attachment) => (
 							<Attachment
 								key={attachment.id}
@@ -334,7 +340,14 @@ export const MessageAttachments = observer(() => {
 				message.embeds.map((embed, index) => {
 					const embedKey = `${embed.id}-${index}`;
 					return (
-						<Embed embed={embed} key={embedKey} message={message} embedIndex={index} onDelete={handleDelete} />
+						<Embed
+							embed={embed}
+							key={embedKey}
+							message={message}
+							embedIndex={index}
+							onDelete={handleDelete}
+							isPreview={isPreview}
+						/>
 					);
 				})}
 

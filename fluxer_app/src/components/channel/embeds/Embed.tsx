@@ -74,6 +74,7 @@ interface EmbedProps {
 	embedIndex?: number;
 	onDelete?: (bypassConfirm?: boolean) => void;
 	contextualEmbeds?: ReadonlyArray<MessageEmbed>;
+	isPreview?: boolean;
 }
 
 interface LinkComponentProps {
@@ -432,7 +433,8 @@ const EmbedMediaRenderer: FC<{
 	message: MessageRecord;
 	embedIndex?: number;
 	onDelete?: (bypassConfirm?: boolean) => void;
-}> = observer(({embed, message, embedIndex, onDelete}) => {
+	isPreview?: boolean;
+}> = observer(({embed, message, embedIndex, onDelete, isPreview}) => {
 	const {video, image, thumbnail} = embed;
 
 	if (!isValidMedia(video) && !isValidMedia(image) && !isValidMedia(thumbnail)) {
@@ -466,6 +468,7 @@ const EmbedMediaRenderer: FC<{
 					contentHash={video.content_hash}
 					embedIndex={embedIndex}
 					onDelete={onDelete}
+					isPreview={isPreview}
 				/>
 			</FocusRing>
 		);
@@ -491,6 +494,7 @@ const EmbedMediaRenderer: FC<{
 						contentHash={image.content_hash}
 						embedIndex={embedIndex}
 						onDelete={onDelete}
+						isPreview={isPreview}
 					/>
 				</FocusRing>
 			);
@@ -514,6 +518,7 @@ const EmbedMediaRenderer: FC<{
 					contentHash={image.content_hash}
 					embedIndex={embedIndex}
 					onDelete={onDelete}
+					isPreview={isPreview}
 				/>
 			</FocusRing>
 		);
@@ -570,7 +575,7 @@ const EmbedMediaRenderer: FC<{
 	return null;
 });
 
-const RichEmbed: FC<EmbedProps> = observer(({embed, message, embedIndex, contextualEmbeds, onDelete}) => {
+const RichEmbed: FC<EmbedProps> = observer(({embed, message, embedIndex, contextualEmbeds, onDelete, isPreview}) => {
 	const embedList = contextualEmbeds ?? message.embeds;
 	const hasVideo = isValidMedia(embed.video);
 	const hasImage = isValidMedia(embed.image);
@@ -640,9 +645,20 @@ const RichEmbed: FC<EmbedProps> = observer(({embed, message, embedIndex, context
 						{!shouldRenderInlineThumbnail && hasAnyMedia && (
 							<div className={clsx(styles.embedMedia)}>
 								{showGallery && galleryAttachments ? (
-									<AttachmentMosaic attachments={galleryAttachments} message={message} hideExpiryFootnote={true} />
+									<AttachmentMosaic
+										attachments={galleryAttachments}
+										message={message}
+										hideExpiryFootnote={true}
+										isPreview={isPreview}
+									/>
 								) : (
-									<EmbedMediaRenderer embed={embed} message={message} embedIndex={embedIndex} onDelete={onDelete} />
+									<EmbedMediaRenderer
+										embed={embed}
+										message={message}
+										embedIndex={embedIndex}
+										onDelete={onDelete}
+										isPreview={isPreview}
+									/>
 								)}
 							</div>
 						)}
@@ -683,6 +699,7 @@ const RichEmbed: FC<EmbedProps> = observer(({embed, message, embedIndex, context
 									contentHash={embed.thumbnail.content_hash}
 									embedIndex={embedIndex}
 									onDelete={onDelete}
+									isPreview={isPreview}
 								/>
 							</FocusRing>
 						</div>
@@ -693,7 +710,7 @@ const RichEmbed: FC<EmbedProps> = observer(({embed, message, embedIndex, context
 	);
 });
 
-export const Embed: FC<EmbedProps> = observer(({embed, message, embedIndex, contextualEmbeds, onDelete}) => {
+export const Embed: FC<EmbedProps> = observer(({embed, message, embedIndex, contextualEmbeds, onDelete, isPreview}) => {
 	const {t} = useLingui();
 	const {enabled: isMobile} = MobileLayoutStore;
 	const channel = ChannelStore.getChannel(message.channelId);
@@ -725,7 +742,8 @@ export const Embed: FC<EmbedProps> = observer(({embed, message, embedIndex, cont
 		ModalActionCreators.push(modal(() => <SuppressEmbedsConfirmModal message={message} />));
 	}, [message]);
 
-	const showSuppressButton = !isMobile && canSuppressEmbeds() && AccessibilityStore.showSuppressEmbedsButton;
+	const showSuppressButton =
+		!isMobile && canSuppressEmbeds() && AccessibilityStore.showSuppressEmbedsButton && !isPreview;
 
 	const spoileredUrls = useMemo(() => extractSpoileredUrls(message.content), [message.content]);
 	const {isSpoilerEmbed, matchingSpoilerUrls} = useMemo(() => {
@@ -820,6 +838,7 @@ export const Embed: FC<EmbedProps> = observer(({embed, message, embedIndex, cont
 									contentHash={embed.audio.content_hash}
 									embedIndex={embedIndex}
 									onDelete={onDelete}
+									isPreview={isPreview}
 								/>
 							</FocusRing>
 						</div>
@@ -1072,6 +1091,7 @@ export const Embed: FC<EmbedProps> = observer(({embed, message, embedIndex, cont
 				embedIndex={embedIndex}
 				contextualEmbeds={contextualEmbeds}
 				onDelete={onDelete}
+				isPreview={isPreview}
 			/>
 		</div>,
 	);
