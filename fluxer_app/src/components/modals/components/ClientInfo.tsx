@@ -19,19 +19,32 @@
 
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
+import {useEffect, useState} from 'react';
 import * as TextCopyActionCreators from '~/actions/TextCopyActionCreators';
 import * as ToastActionCreators from '~/actions/ToastActionCreators';
 import Config from '~/Config';
 import FocusRing from '~/components/uikit/FocusRing/FocusRing';
 import {Tooltip} from '~/components/uikit/Tooltip/Tooltip';
 import DeveloperModeStore from '~/stores/DeveloperModeStore';
-import {getClientInfoSync} from '~/utils/ClientInfoUtils';
+import {getClientInfo, getClientInfoSync} from '~/utils/ClientInfoUtils';
 import * as DateUtils from '~/utils/DateUtils';
+import {isDesktop} from '~/utils/NativeUtils';
 import styles from './ClientInfo.module.css';
 
 export const ClientInfo = observer(() => {
 	const {t, i18n} = useLingui();
-	const clientInfo = getClientInfoSync();
+	const [clientInfo, setClientInfo] = useState(getClientInfoSync());
+
+	useEffect(() => {
+		let mounted = true;
+		void getClientInfo().then((info) => {
+			if (!mounted) return;
+			setClientInfo(info);
+		});
+		return () => {
+			mounted = false;
+		};
+	}, []);
 
 	const buildShaShort = (Config.PUBLIC_BUILD_SHA ?? '').slice(0, 7);
 	const buildNumber = Config.PUBLIC_BUILD_NUMBER;
@@ -41,10 +54,21 @@ export const ClientInfo = observer(() => {
 	const browserName = clientInfo.browserName || 'Unknown';
 	const browserVersion = clientInfo.browserVersion || '';
 	const osName = clientInfo.osName || 'Unknown';
-	const osVersion =
-		clientInfo.osVersion && clientInfo.arch
-			? `${clientInfo.osVersion} (${clientInfo.arch})`
-			: clientInfo.osVersion || clientInfo.arch || '';
+	const rawOsVersion = clientInfo.osVersion ?? '';
+	const isDesktopApp = isDesktop();
+	const osArchitecture = clientInfo.desktopArch ?? clientInfo.arch;
+	const shouldShowOsVersion = Boolean(rawOsVersion) && (isDesktopApp || osName !== 'macOS');
+	const osVersionForDisplay = shouldShowOsVersion ? rawOsVersion : undefined;
+
+	const buildOsDescription = () => {
+		const parts = [osName];
+		if (osVersionForDisplay) {
+			parts.push(osVersionForDisplay);
+		}
+		const archSuffix = osArchitecture ? ` (${osArchitecture})` : '';
+		return `${parts.join(' ')}${archSuffix}`.trim();
+	};
+	const osDescription = buildOsDescription();
 
 	const onClick = () => {
 		let timestamp = '';
@@ -68,7 +92,7 @@ export const ClientInfo = observer(() => {
 
 		TextCopyActionCreators.copy(
 			i18n,
-			`${Config.PUBLIC_PROJECT_ENV} ${buildInfo}${timestamp}, ${browserName} ${browserVersion}, ${osName} ${osVersion}${desktopInfo}`,
+			`${Config.PUBLIC_PROJECT_ENV} ${buildInfo}${timestamp}, ${browserName} ${browserVersion}, ${osDescription}${desktopInfo}`,
 		);
 	};
 
@@ -92,9 +116,7 @@ export const ClientInfo = observer(() => {
 					<span>
 						{browserName} {browserVersion}
 					</span>
-					<span>
-						{osName} {osVersion}
-					</span>
+					<span>{osDescription}</span>
 				</button>
 			</FocusRing>
 		</Tooltip>

@@ -31,9 +31,112 @@ interface ClientInfo {
 	desktopChannel?: string;
 	desktopArch?: string;
 	desktopOS?: string;
+	desktopRunningUnderRosetta?: boolean;
 }
 
 const normalize = <T>(value: T | null | undefined): T | undefined => value ?? undefined;
+
+const ARCHITECTURE_PATTERNS: ReadonlyArray<{pattern: RegExp; label: string}> = [
+	{pattern: /\barm64\b|\baarch64\b|\barmv8\b|\barm64e\b/i, label: 'arm64'},
+	{pattern: /\barm\b|\barmv7\b|\barmv6\b/i, label: 'arm'},
+	{pattern: /MacIntel/i, label: 'x64'},
+	{pattern: /\bx86_64\b|\bx64\b|\bamd64\b|\bwin64\b|\bwow64\b/i, label: 'x64'},
+	{pattern: /\bx86\b|\bi[3-6]86\b/i, label: 'x86'},
+];
+
+export const normalizeArchitectureValue = (value: string | null | undefined): string | undefined => {
+	if (!value) {
+		return undefined;
+	}
+	const trimmed = value.trim();
+	for (const entry of ARCHITECTURE_PATTERNS) {
+		if (entry.pattern.test(trimmed)) {
+			return entry.label;
+		}
+	}
+	return trimmed || undefined;
+};
+
+const getNavigatorObject = (): Navigator | undefined => {
+	if (typeof navigator === 'undefined') {
+		return undefined;
+	}
+	return navigator;
+};
+
+const detectAppleSiliconViaWebGL = (): string | undefined => {
+	if (typeof document === 'undefined') {
+		return undefined;
+	}
+	const canvas = document.createElement('canvas');
+	const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+	if (!gl) {
+		return undefined;
+	}
+	const ext = gl.getExtension('WEBGL_debug_renderer_info');
+	if (!ext) {
+		return undefined;
+	}
+	const renderer = gl.getParameter(ext.UNMASKED_RENDERER_WEBGL);
+	if (typeof renderer !== 'string') {
+		return undefined;
+	}
+	if (/apple m|apple gpu/i.test(renderer)) {
+		return 'arm64';
+	}
+	if (/intel/i.test(renderer)) {
+		return 'x64';
+	}
+	return undefined;
+};
+
+const isNavigatorPlatformMac = (nav: Navigator): boolean => {
+	const platform = nav.platform ?? '';
+	return /^(mac|darwin)/i.test(platform) || /Macintosh|Mac OS X/i.test(nav.userAgent ?? '');
+};
+
+const detectArchitectureFromNavigator = (): string | undefined => {
+	const nav = getNavigatorObject();
+	if (!nav) {
+		return undefined;
+	}
+
+	const userAgentData = (nav as Navigator & {userAgentData?: NavigatorUAData}).userAgentData;
+	if (userAgentData?.architecture) {
+		return normalizeArchitectureValue(userAgentData.architecture);
+	}
+
+	const userAgent = nav.userAgent ?? '';
+	const platform = nav.platform ?? '';
+	const isMac = isNavigatorPlatformMac(nav);
+
+	if (isMac) {
+		const detected = detectAppleSiliconViaWebGL();
+		if (detected) {
+			return detected;
+		}
+	}
+
+	for (const entry of ARCHITECTURE_PATTERNS) {
+		if (entry.pattern.test(userAgent)) {
+			if (isMac && entry.label === 'x64') {
+				continue;
+			}
+			return entry.label;
+		}
+	}
+
+	for (const entry of ARCHITECTURE_PATTERNS) {
+		if (entry.pattern.test(platform)) {
+			if (isMac && entry.label === 'x64') {
+				continue;
+			}
+			return entry.label;
+		}
+	}
+
+	return undefined;
+};
 
 let cachedClientInfo: ClientInfo | null = null;
 let preloadPromise: Promise<ClientInfo> | null = null;
@@ -43,12 +146,15 @@ const parseUserAgent = (): ClientInfo => {
 	const userAgent = hasNavigator ? navigator.userAgent : '';
 	const parser = Bowser.getParser(userAgent);
 	const result = parser.getResult();
+	const isMac = hasNavigator && isNavigatorPlatformMac(navigator);
+	const fallbackArch = hasNavigator && !isMac ? normalizeArchitectureValue(navigator.platform) : undefined;
+	const arch = detectArchitectureFromNavigator() ?? fallbackArch;
 	return {
 		browserName: normalize(result.browser.name),
 		browserVersion: normalize(result.browser.version),
 		osName: normalize(result.os.name),
 		osVersion: normalize(result.os.version),
-		arch: normalize(hasNavigator ? navigator.platform : undefined),
+		arch: arch,
 	};
 };
 
@@ -85,8 +191,9 @@ async function getDesktopContext(): Promise<Partial<ClientInfo>> {
 			return {
 				desktopVersion: normalize(desktopInfo.version),
 				desktopChannel: normalize(desktopInfo.channel),
-				desktopArch: normalize(desktopInfo.arch),
+				desktopArch: normalizeArchitectureValue(desktopInfo.hardwareArch ?? desktopInfo.arch),
 				desktopOS: normalize(desktopInfo.os),
+				desktopRunningUnderRosetta: desktopInfo.runningUnderRosetta,
 			};
 		} catch (error) {
 			console.warn('[ClientInfo] Failed to load desktop context', error);
@@ -112,13 +219,51 @@ function getWindowsVersionName(osVersion: string): string {
 	return 'Windows';
 }
 
+const detectArchitectureFromClientHints = async (): Promise<string | undefined> => {
+	const nav = getNavigatorObject();
+	if (!nav) {
+		return undefined;
+	}
+	const userAgentData = (nav as Navigator & {userAgentData?: NavigatorUAData}).userAgentData;
+	if (!userAgentData?.getHighEntropyValues) {
+		return undefined;
+	}
+
+	try {
+		const hints = await userAgentData.getHighEntropyValues(['architecture', 'bitness']);
+		const archHint = hints.architecture?.toLowerCase() ?? '';
+		const bitness = hints.bitness?.toLowerCase() ?? '';
+		const platform = (userAgentData.platform ?? '').toLowerCase();
+
+		if (platform === 'windows') {
+			if (archHint === 'arm') {
+				return 'arm64';
+			}
+			if (archHint === 'x86' && bitness === '64') {
+				return 'x64';
+			}
+		}
+
+		if (archHint.includes('arm')) {
+			return 'arm64';
+		}
+		if (archHint.includes('intel') || archHint.includes('x64')) {
+			return 'x64';
+		}
+
+		return normalizeArchitectureValue(archHint);
+	} catch (error) {
+		console.warn('[ClientInfo] Failed to load architecture hints', error);
+		return undefined;
+	}
+};
+
 async function getOsContext(): Promise<Partial<ClientInfo>> {
 	const electronApi = getElectronAPI();
 	if (electronApi) {
 		try {
 			const desktopInfo = await electronApi.getDesktopInfo();
 			let osName: string | undefined;
-			let osVersion: string | undefined;
 
 			switch (desktopInfo.os) {
 				case 'darwin':
@@ -126,7 +271,6 @@ async function getOsContext(): Promise<Partial<ClientInfo>> {
 					break;
 				case 'win32':
 					osName = getWindowsVersionName(desktopInfo.osVersion);
-					osVersion = desktopInfo.osVersion;
 					break;
 				case 'linux':
 					osName = 'Linux';
@@ -136,8 +280,8 @@ async function getOsContext(): Promise<Partial<ClientInfo>> {
 			}
 			return {
 				osName,
-				osVersion,
-				arch: normalize(desktopInfo.arch),
+				osVersion: normalize(desktopInfo.osVersion),
+				arch: normalizeArchitectureValue(desktopInfo.arch),
 			};
 		} catch (error) {
 			console.warn('[ClientInfo] Failed to load OS context', error);
@@ -150,7 +294,10 @@ async function getOsContext(): Promise<Partial<ClientInfo>> {
 
 export const getClientInfo = async (): Promise<ClientInfo> => {
 	const base = getClientInfoSync();
-	if (!isDesktop()) return base;
+	if (!isDesktop()) {
+		const hintsArch = await detectArchitectureFromClientHints();
+		return {...base, arch: hintsArch ?? base.arch};
+	}
 
 	const [osContext, desktop] = await Promise.all([getOsContext(), getDesktopContext()]);
 	return {...base, ...osContext, ...desktop};

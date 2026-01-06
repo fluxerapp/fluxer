@@ -28,6 +28,8 @@ export interface DesktopInfo {
 	version: string;
 	channel: 'stable' | 'canary';
 	arch: string;
+	hardwareArch: string;
+	runningUnderRosetta: boolean;
 	os: NodeJS.Platform;
 	osVersion: string;
 }

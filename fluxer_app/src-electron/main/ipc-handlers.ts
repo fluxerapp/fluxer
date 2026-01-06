@@ -17,6 +17,7 @@
  * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
  */
 
+import child_process from 'node:child_process';
 import fs from 'node:fs';
 import http from 'node:http';
 import https from 'node:https';
@@ -191,6 +192,39 @@ const ensureRpId = (value: string | undefined, context: string): string => {
 		throw new Error(`Passkey ${context} operation requires rpId`);
 	}
 	return value;
+};
+
+const runSysctl = (query: string): string | null => {
+	try {
+		return child_process
+			.execSync(query, {
+				encoding: 'utf8',
+				stdio: ['ignore', 'pipe', 'ignore'],
+			})
+			.trim();
+	} catch {
+		return null;
+	}
+};
+
+const detectRosettaMode = (): boolean => {
+	if (process.platform !== 'darwin') {
+		return false;
+	}
+
+	const translated = runSysctl('sysctl -n sysctl.proc_translated');
+	return translated === '1';
+};
+
+const detectHardwareArch = (): string => {
+	if (process.platform !== 'darwin') {
+		return os.arch();
+	}
+	const optionalArm64 = runSysctl('sysctl -n hw.optional.arm64');
+	if (optionalArm64 === '1') {
+		return 'arm64';
+	}
+	return os.arch();
 };
 
 const convertMacCreationOptions = (options: PublicKeyCredentialCreationOptionsJSON): CreateCredentialOptions => ({
@@ -374,6 +408,8 @@ export function registerIpcHandlers(): void {
 			version: app.getVersion(),
 			channel: BUILD_CHANNEL,
 			arch: process.arch,
+			hardwareArch: detectHardwareArch(),
+			runningUnderRosetta: detectRosettaMode(),
 			os: process.platform,
 			osVersion: os.release(),
 		}),
