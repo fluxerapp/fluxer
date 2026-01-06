@@ -62,12 +62,8 @@ class LocalVoiceStateStore {
 		);
 		this._disposers = [];
 		this.persistenceHydrationPromise = this.initPersistence();
-		this.persistenceHydrationPromise.then(() => {
-			this.enforcePermissionMuteIfNeeded();
-		});
 		this.initializePermissionSync();
 		this.initializeDevicePermissionSync();
-		this.enforcePermissionMuteIfNeeded();
 	}
 
 	private async initPersistence(): Promise<void> {
