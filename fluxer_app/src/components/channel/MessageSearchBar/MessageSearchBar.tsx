@@ -53,6 +53,7 @@ import KeyboardModeStore from '~/stores/KeyboardModeStore';
 import MemberSearchStore, {type SearchContext} from '~/stores/MemberSearchStore';
 import type {SearchHistoryEntry} from '~/stores/SearchHistoryStore';
 import SearchHistoryStore from '~/stores/SearchHistoryStore';
+import SelectedChannelStore from '~/stores/SelectedChannelStore';
 import SelectedGuildStore from '~/stores/SelectedGuildStore';
 import UserStore from '~/stores/UserStore';
 import * as NicknameUtils from '~/utils/NicknameUtils';
@@ -678,7 +679,34 @@ export const MessageSearchBar = observer(
 						(c) => c.type === ChannelTypes.GUILD_TEXT,
 					);
 
-					return matchSorter(channels, searchTerm, {keys: ['name']}).slice(0, 12);
+					const recentVisitsForGuild = SelectedChannelStore.recentlyVisitedChannels
+						.filter((visit) => visit.guildId === guildIdForChannels)
+						.sort((a, b) => b.timestamp - a.timestamp);
+
+					const recencyRank = new Map<string, number>();
+					recentVisitsForGuild.forEach((visit, index) => {
+						if (!recencyRank.has(visit.channelId)) {
+							recencyRank.set(visit.channelId, index);
+						}
+					});
+
+					const currentChannelId = channel?.id;
+					const matches = matchSorter(channels, searchTerm, {keys: ['name']});
+					const orderedMatches = [...matches].sort((a, b) => {
+						const resolveRank = (ch: ChannelRecord) => {
+							if (ch.id === currentChannelId) return -1;
+							return recencyRank.get(ch.id) ?? Number.MAX_SAFE_INTEGER;
+						};
+
+						const rankDifference = resolveRank(a) - resolveRank(b);
+						if (rankDifference !== 0) {
+							return rankDifference;
+						}
+
+						return (a.name ?? '').localeCompare(b.name ?? '');
+					});
+
+					return orderedMatches.slice(0, 12);
 				}
 
 				case 'values': {
