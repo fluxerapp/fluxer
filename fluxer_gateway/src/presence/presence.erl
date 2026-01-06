@@ -110,6 +110,10 @@ handle_call({dispatch, EventAtom, Data}, _From, State) ->
                 false ->
                     {reply, ok, State}
             end;
+        user_settings_update ->
+            NewState = handle_user_settings_update(Data, State),
+            FinalState = force_publish_global_presence(NewState),
+            {reply, ok, FinalState};
         message_create ->
             HasMobile = lists:any(
                 fun(Session) ->
@@ -194,6 +198,10 @@ handle_cast({dispatch, Event, Data}, State) ->
                 false ->
                     {noreply, State}
             end;
+        user_settings_update ->
+            NewState = handle_user_settings_update(Data, State),
+            FinalState = force_publish_global_presence(NewState),
+            {noreply, FinalState};
         message_create ->
             HasMobile = lists:any(
                 fun(Session) ->
@@ -399,11 +407,25 @@ publish_global_if_needed({noreply, NewState}) ->
     {noreply, FinalState}.
 
 publish_global_presence(_Sessions, State) ->
-    UserId = maps:get(user_id, State),
+    {Payload, CurrentExternal, ExternalStatus} = build_presence_external(State),
+    LastPublished = maps:get(last_published_presence, State, undefined),
+
+    case presence_changed(LastPublished, CurrentExternal) of
+        true ->
+            publish_presence_payload(State, Payload, CurrentExternal, ExternalStatus);
+        false ->
+            State
+    end.
+
+force_publish_global_presence(State) ->
+    {Payload, CurrentExternal, ExternalStatus} = build_presence_external(State),
+    publish_presence_payload(State, Payload, CurrentExternal, ExternalStatus).
+
+build_presence_external(State) ->
     Payload = build_presence_payload(State),
-    ExternalStatus = maps:get(<<"status">>, Payload),
-    Mobile = maps:get(<<"mobile">>, Payload),
-    Afk = maps:get(<<"afk">>, Payload),
+    ExternalStatus = maps:get(<<"status">>, Payload, <<"offline">>),
+    Mobile = maps:get(<<"mobile">>, Payload, false),
+    Afk = maps:get(<<"afk">>, Payload, false),
     CustomStatus = maps:get(<<"custom_status">>, Payload, null),
     CurrentExternal = #{
         status => ExternalStatus,
@@ -411,21 +433,18 @@ publish_global_presence(_Sessions, State) ->
         afk => Afk,
         custom_status => CustomStatus
     },
-    LastPublished = maps:get(last_published_presence, State, undefined),
+    {Payload, CurrentExternal, ExternalStatus}.
 
-    case presence_changed(LastPublished, CurrentExternal) of
-        true ->
-            case ExternalStatus of
-                <<"offline">> ->
-                    presence_cache:delete(UserId);
-                _ ->
-                    presence_cache:put(UserId, Payload)
-            end,
-            presence_bus:publish(UserId, Payload),
-            maps:put(last_published_presence, CurrentExternal, State);
-        false ->
-            State
-    end.
+publish_presence_payload(State, Payload, CurrentExternal, ExternalStatus) ->
+    UserId = maps:get(user_id, State),
+    case ExternalStatus of
+        <<"offline">> ->
+            presence_cache:delete(UserId);
+        _ ->
+            presence_cache:put(UserId, Payload)
+    end,
+    presence_bus:publish(UserId, Payload),
+    maps:put(last_published_presence, CurrentExternal, State).
 
 presence_changed(undefined, _Current) ->
     true;
@@ -723,6 +742,22 @@ custom_status_comparator(Map) when is_map(Map) ->
         <<"emoji_id">> => field_or_null(Map, <<"emoji_id">>),
         <<"emoji_name">> => field_or_null(Map, <<"emoji_name">>)
     }.
+
+handle_user_settings_update(Data, State) ->
+    case maps:find(<<"custom_status">>, Data) of
+        error ->
+            State;
+        {ok, CustomStatus} ->
+            Normalized = normalize_state_custom_status(CustomStatus),
+            maps:put(custom_status, Normalized, State)
+    end.
+
+normalize_state_custom_status(null) ->
+    null;
+normalize_state_custom_status(Map) when is_map(Map) ->
+    Map;
+normalize_state_custom_status(_) ->
+    null.
 
 field_or_null(Map, Key) ->
     case maps:get(Key, Map, undefined) of
