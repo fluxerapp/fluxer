@@ -51,7 +51,7 @@ import type {
 	PackInviteMetadataResponse,
 } from '~/invite/InviteModel';
 import {Logger} from '~/Logger';
-import type {Channel, Invite} from '~/Models';
+import {Channel, Invite} from '~/Models';
 import type {RequestCache} from '~/middleware/RequestCacheMiddleware';
 import type {PackRepository, PackType} from '~/pack/PackRepository';
 import type {PackService} from '~/pack/PackService';
@@ -352,7 +352,7 @@ export class InviteService {
 			if (!invite.channelId) throw new UnknownInviteError();
 
 			const user = await this.userRepository.findUnique(userId);
-			if (user && !user.passwordHash) {
+			if (user && user.isUnclaimedAccount()) {
 				throw new UnclaimedAccountRestrictedError('join group DMs');
 			}
 
@@ -376,7 +376,7 @@ export class InviteService {
 				await this.inviteRepository.delete(inviteCode);
 			}
 
-			return invite;
+			return this.cloneInviteWithUses(invite, newUses);
 		}
 
 		if (invite.type === InviteTypes.EMOJI_PACK || invite.type === InviteTypes.STICKER_PACK) {
@@ -389,7 +389,7 @@ export class InviteService {
 				await this.inviteRepository.delete(inviteCode);
 			}
 
-			return invite;
+			return this.cloneInviteWithUses(invite, newUses);
 		}
 
 		if (!invite.guildId) throw new UnknownInviteError();
@@ -406,7 +406,7 @@ export class InviteService {
 
 		if (guild.features.has(GuildFeatures.DISALLOW_UNCLAIMED_ACCOUNTS)) {
 			const user = await this.userRepository.findUnique(userId);
-			if (user && !user.passwordHash) {
+			if (user && user.isUnclaimedAccount()) {
 				throw new GuildDisallowsUnclaimedAccountsError();
 			}
 		}
@@ -455,7 +455,15 @@ export class InviteService {
 			await this.inviteRepository.delete(inviteCode);
 		}
 
-		return invite;
+		return this.cloneInviteWithUses(invite, newUses);
+	}
+
+	private cloneInviteWithUses(invite: Invite, uses: number): Invite {
+		const row = invite.toRow();
+		return new Invite({
+			...row,
+			uses,
+		});
 	}
 
 	async deleteInvite({userId, inviteCode}: DeleteInviteParams, auditLogReason?: string | null): Promise<void> {

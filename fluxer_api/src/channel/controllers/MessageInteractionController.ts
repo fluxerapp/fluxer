@@ -166,7 +166,7 @@ export const MessageInteractionController = (app: HonoApp) => {
 			const sessionId = ctx.req.valid('query').session_id;
 			const requestCache = ctx.get('requestCache');
 
-			if (!user.passwordHash && !isPersonalNotesChannel({userId: user.id, channelId})) {
+			if (user.isUnclaimedAccount() && !isPersonalNotesChannel({userId: user.id, channelId})) {
 				throw new UnclaimedAccountRestrictedError('add reactions');
 			}
 

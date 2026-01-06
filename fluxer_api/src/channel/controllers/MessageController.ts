@@ -306,7 +306,7 @@ export const MessageController = (app: HonoApp) => {
 			const channelId = createChannelID(ctx.req.valid('param').channel_id);
 			const requestCache = ctx.get('requestCache');
 
-			if (!user.passwordHash && !isPersonalNotesChannel({userId: user.id, channelId})) {
+			if (user.isUnclaimedAccount() && !isPersonalNotesChannel({userId: user.id, channelId})) {
 				throw new UnclaimedAccountRestrictedError('send messages');
 			}
 

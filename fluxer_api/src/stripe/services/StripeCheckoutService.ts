@@ -218,7 +218,7 @@ export class StripeCheckoutService {
 	}
 
 	validateUserCanPurchase(user: User): void {
-		if (!user.passwordHash && !user.isBot) {
+		if (user.isUnclaimedAccount()) {
 			throw new UnclaimedAccountRestrictedError('make purchases');
 		}
 

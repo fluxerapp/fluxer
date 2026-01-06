@@ -135,7 +135,7 @@ export class ApplicationService {
 		const owner = await this.deps.userRepository.findUniqueAssert(args.ownerUserId);
 		const botIsPublic = args.botPublic ?? true;
 
-		if (!owner.passwordHash && !owner.isBot) {
+		if (owner.isUnclaimedAccount()) {
 			throw new UnclaimedAccountRestrictedError('create applications');
 		}
 

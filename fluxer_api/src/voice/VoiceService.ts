@@ -116,7 +116,7 @@ export class VoiceService {
 			throw new UnknownChannelError();
 		}
 
-		const isUnclaimed = !user.passwordHash && !user.isBot;
+		const isUnclaimed = user.isUnclaimedAccount();
 		if (isUnclaimed) {
 			if (channel.type === ChannelTypes.DM) {
 				throw new UnclaimedAccountRestrictedError('join 1:1 voice calls');

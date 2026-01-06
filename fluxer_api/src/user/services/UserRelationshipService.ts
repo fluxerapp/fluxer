@@ -137,7 +137,7 @@ export class UserRelationshipService {
 		requestCache: RequestCache;
 	}): Promise<Relationship> {
 		const user = await this.userAccountRepository.findUnique(userId);
-		if (user && !user.passwordHash) {
+		if (user && user.isUnclaimedAccount()) {
 			throw new UnclaimedAccountRestrictedError('accept friend requests');
 		}
 
@@ -341,7 +341,7 @@ export class UserRelationshipService {
 		}
 
 		const requesterUser = await this.userAccountRepository.findUnique(userId);
-		if (requesterUser && !requesterUser.passwordHash) {
+		if (requesterUser && requesterUser.isUnclaimedAccount()) {
 			throw new UnclaimedAccountRestrictedError('send friend requests');
 		}
 

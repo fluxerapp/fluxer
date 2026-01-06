@@ -20,14 +20,13 @@
 package integration
 
 import (
-	"encoding/json"
 	"net/http"
 	"testing"
 )
 
-// TestUnclaimedAccountCannotReceiveDM verifies that claimed accounts
-// cannot send DMs to unclaimed accounts.
-func TestUnclaimedAccountCannotReceiveDM(t *testing.T) {
+// TestUnclaimedAccountCanReceiveDM verifies that claimed accounts can send DMs
+// to unclaimed accounts.
+func TestUnclaimedAccountCanReceiveDM(t *testing.T) {
 	client := newTestClient(t)
 
 	claimedAccount := createTestAccount(t, client)
@@ -47,21 +46,13 @@ func TestUnclaimedAccountCannotReceiveDM(t *testing.T) {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusBadRequest {
-		t.Fatalf("expected 400 for DM to unclaimed account, got %d: %s", resp.StatusCode, readResponseBody(resp))
+	assertStatus(t, resp, http.StatusOK)
+
+	var channel minimalChannelResponse
+	decodeJSONResponse(t, resp, &channel)
+	if channel.ID == "" {
+		t.Fatalf("expected channel ID in response")
 	}
 
-	// Verify the error code is UNCLAIMED_ACCOUNT_RESTRICTED
-	var errorResp struct {
-		Code string `json:"code"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&errorResp); err != nil {
-		t.Fatalf("failed to decode error response: %v", err)
-	}
-
-	if errorResp.Code != "UNCLAIMED_ACCOUNT_RESTRICTED" {
-		t.Fatalf("expected error code UNCLAIMED_ACCOUNT_RESTRICTED, got %s", errorResp.Code)
-	}
-
-	t.Log("Unclaimed account cannot receive DM test passed")
+	t.Log("Unclaimed account can receive DM test passed")
 }

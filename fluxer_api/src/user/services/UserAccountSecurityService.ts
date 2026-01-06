@@ -60,7 +60,7 @@ export class UserAccountSecurityService {
 			invalidateAuthSessions: false,
 		};
 
-		const isUnclaimedAccount = !user.passwordHash;
+		const isUnclaimedAccount = user.isUnclaimedAccount();
 		const identityVerifiedViaSudo = sudoContext?.method === 'mfa' || sudoContext?.method === 'sudo_token';
 		const identityVerifiedViaPassword = sudoContext?.method === 'password';
 		const hasMfa = userHasMfa(user);
