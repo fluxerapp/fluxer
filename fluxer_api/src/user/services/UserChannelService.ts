@@ -480,15 +480,10 @@ export class UserChannelService {
 		}
 	}
 
-	private async validateDmPermission(userId: UserID, recipientId: UserID, recipientUser?: User | null): Promise<void> {
+	private async validateDmPermission(userId: UserID, recipientId: UserID, _recipientUser?: User | null): Promise<void> {
 		const senderUser = await this.userAccountRepository.findUnique(userId);
-		if (senderUser && !senderUser.passwordHash && !senderUser.isBot) {
+		if (senderUser && senderUser.isUnclaimedAccount()) {
 			throw new UnclaimedAccountRestrictedError('send direct messages');
-		}
-
-		const resolvedRecipient = recipientUser ?? (await this.userAccountRepository.findUnique(recipientId));
-		if (resolvedRecipient && !resolvedRecipient.passwordHash && !resolvedRecipient.isBot) {
-			throw new UnclaimedAccountRestrictedError('receive direct messages');
 		}
 
 		const userBlockedRecipient = await this.userRelationshipRepository.getRelationship(

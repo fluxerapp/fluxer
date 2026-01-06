@@ -139,6 +139,10 @@ export class User {
 		return checkIsPremium(this);
 	}
 
+	isUnclaimedAccount(): boolean {
+		return this.passwordHash === null && !this.isBot;
+	}
+
 	canUseGlobalExpressions(): boolean {
 		return this.isPremium() || this.isBot;
 	}

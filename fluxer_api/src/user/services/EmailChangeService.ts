@@ -60,7 +60,7 @@ export class EmailChangeService {
 	) {}
 
 	async start(user: User): Promise<StartEmailChangeResult> {
-		const isUnclaimed = !user.passwordHash;
+		const isUnclaimed = user.isUnclaimedAccount();
 		const hasEmail = !!user.email;
 		if (!hasEmail && !isUnclaimed) {
 			throw InputValidationError.create('email', 'You must have an email to change it.');

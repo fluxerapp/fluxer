@@ -73,7 +73,7 @@ export class CallService {
 		}
 
 		const caller = await this.userRepository.findUnique(userId);
-		const isUnclaimedCaller = caller != null && !caller.passwordHash && !caller.isBot;
+		const isUnclaimedCaller = caller?.isUnclaimedAccount() ?? false;
 		if (isUnclaimedCaller && channel.type === ChannelTypes.DM) {
 			return {ringable: false};
 		}

@@ -90,7 +90,7 @@ const requiresSensitiveUserVerification = (
 	data: UserUpdateRequest,
 	emailTokenProvided: boolean,
 ): boolean => {
-	const isUnclaimed = !user.passwordHash;
+	const isUnclaimed = user.isUnclaimedAccount();
 	const usernameChanged = data.username !== undefined && data.username !== user.username;
 	const discriminatorChanged = data.discriminator !== undefined && data.discriminator !== user.discriminator;
 	const emailChanged = data.email !== undefined && data.email !== user.email;
@@ -204,7 +204,7 @@ export const UserAccountController = (app: HonoApp) => {
 				throw InputValidationError.create('email', 'Email must be changed via email_token');
 			}
 			const emailTokenProvided = emailToken !== undefined;
-			const isUnclaimed = !user.passwordHash;
+			const isUnclaimed = user.isUnclaimedAccount();
 			if (isUnclaimed) {
 				const {username: _ignoredUsername, discriminator: _ignoredDiscriminator, ...rest} = userUpdateData;
 				userUpdateData = rest;

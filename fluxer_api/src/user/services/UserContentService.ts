@@ -121,7 +121,7 @@ export class UserContentService {
 			throw new UnknownUserError();
 		}
 
-		if (!user.passwordHash && !user.isBot) {
+		if (user.isUnclaimedAccount()) {
 			throw new UnclaimedAccountRestrictedError('create beta codes');
 		}
 
