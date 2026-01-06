@@ -18,6 +18,7 @@
  */
 
 import RuntimeConfigStore from '~/stores/RuntimeConfigStore';
+import {isLinkWrappedInAngleBrackets} from '~/utils/linkSuppressionUtils';
 import * as RegexUtils from '~/utils/RegexUtils';
 
 const THEME_ID_REGEX = '[a-zA-Z0-9-]{2,32}';
@@ -63,6 +64,10 @@ const matchThemes = (content: string | null, maxMatches = 1): Array<string> => {
 	let match: RegExpExecArray | null;
 	while ((match = regex.exec(content)) !== null && codes.length < maxMatches) {
 		const code = match[1];
+		const matchedText = match[0];
+		if (isLinkWrappedInAngleBrackets(content, match.index ?? 0, matchedText.length)) {
+			continue;
+		}
 		if (code && !seen.has(code)) {
 			seen.add(code);
 			codes.push(code);

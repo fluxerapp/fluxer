@@ -17,11 +17,7 @@
  * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
  */
 
-export function isLinkWrappedInAngleBrackets(
-	content: string,
-	matchStart: number,
-	matchLength: number,
-): boolean {
+export function isLinkWrappedInAngleBrackets(content: string, matchStart: number, matchLength: number): boolean {
 	if (matchLength <= 0) return false;
 
 	const beforeIndex = matchStart - 1;

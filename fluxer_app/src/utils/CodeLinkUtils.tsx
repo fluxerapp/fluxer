@@ -17,8 +17,8 @@
  * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import * as RegexUtils from '~/utils/RegexUtils';
 import {isLinkWrappedInAngleBrackets} from '~/utils/linkSuppressionUtils';
+import * as RegexUtils from '~/utils/RegexUtils';
 
 export interface CodeLinkConfig {
 	shortHost: string;
