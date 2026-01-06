@@ -21,6 +21,7 @@ import {Trans, useLingui} from '@lingui/react/macro';
 import {
 	BellIcon,
 	BellSlashIcon,
+	BookOpenIcon,
 	CheckIcon,
 	CopyIcon,
 	FolderPlusIcon,
@@ -36,6 +37,7 @@ import React from 'react';
 import * as ModalActionCreators from '~/actions/ModalActionCreators';
 import {modal} from '~/actions/ModalActionCreators';
 import * as TextCopyActionCreators from '~/actions/TextCopyActionCreators';
+import * as ReadStateActionCreators from '~/actions/ReadStateActionCreators';
 import * as UserGuildSettingsActionCreators from '~/actions/UserGuildSettingsActionCreators';
 import {Permissions} from '~/Constants';
 import {CategoryCreateModal} from '~/components/modals/CategoryCreateModal';
@@ -57,6 +59,8 @@ import PermissionStore from '~/stores/PermissionStore';
 import PresenceStore from '~/stores/PresenceStore';
 import UserGuildSettingsStore from '~/stores/UserGuildSettingsStore';
 import UserSettingsStore from '~/stores/UserSettingsStore';
+import ChannelStore from '~/stores/ChannelStore';
+import ReadStateStore from '~/stores/ReadStateStore';
 import {getMutedText} from '~/utils/ContextMenuUtils';
 import * as InviteUtils from '~/utils/InviteUtils';
 import styles from './ChannelDetailsBottomSheet.module.css';
@@ -154,9 +158,32 @@ export const GuildHeaderBottomSheet: React.FC<GuildHeaderBottomSheetProps> = obs
 		onClose();
 	};
 
+	const channels = ChannelStore.getGuildChannels(guild.id);
+	const hasGuildUnread = React.useMemo(() => channels.some((channel) => ReadStateStore.hasUnread(channel.id)), [channels]);
+
+	const handleMarkAsRead = React.useCallback(() => {
+		const channelIds = channels
+			.filter((channel) => ReadStateStore.getUnreadCount(channel.id) > 0)
+			.map((channel) => channel.id);
+
+		if (channelIds.length > 0) {
+			void ReadStateActionCreators.bulkAckChannels(channelIds);
+		}
+
+		onClose();
+	}, [channels, onClose]);
+
 	const menuGroups: Array<MenuGroupType> = [];
 
 	const quickActions = [];
+
+	if (hasGuildUnread) {
+		quickActions.push({
+			icon: <BookOpenIcon weight="fill" className={sharedStyles.icon} />,
+			label: t`Mark as Read`,
+			onClick: handleMarkAsRead,
+		});
+	}
 
 	if (canInvite) {
 		quickActions.push({
