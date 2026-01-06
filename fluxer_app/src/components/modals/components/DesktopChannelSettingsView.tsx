@@ -66,12 +66,24 @@ export const DesktopChannelSettingsView: React.FC<DesktopChannelSettingsViewProp
 			contentRef.current?.focus();
 		}, []);
 
+		const channelPermissionsOverrideOwnerId = React.useMemo(
+			() => `channel-permissions-${channel.id}`,
+			[channel.id],
+		);
+
 		const handleTabSelect = React.useCallback(
 			(tabType: ChannelSettingsTabType) => {
 				if (checkUnsavedChanges()) return;
+				if (
+					tabType === 'permissions' &&
+					SettingsSidebarStore.ownerId === channelPermissionsOverrideOwnerId &&
+					SettingsSidebarStore.isDismissed(channelPermissionsOverrideOwnerId)
+				) {
+					SettingsSidebarStore.activateOverride(channelPermissionsOverrideOwnerId);
+				}
 				onTabSelect(tabType);
 			},
-			[checkUnsavedChanges, onTabSelect],
+			[checkUnsavedChanges, onTabSelect, channelPermissionsOverrideOwnerId],
 		);
 
 		const handleDeleteChannel = React.useCallback(() => {
@@ -119,7 +131,7 @@ export const DesktopChannelSettingsView: React.FC<DesktopChannelSettingsViewProp
 										<Button
 											variant="secondary"
 											leftIcon={<ArrowLeftIcon className={styles.sidebarButtonIcon} />}
-											onClick={() => SettingsSidebarStore.setUseOverride(false)}
+											onClick={() => SettingsSidebarStore.dismissOverride()}
 										>
 											{t`Back to Settings`}
 										</Button>
@@ -134,12 +146,14 @@ export const DesktopChannelSettingsView: React.FC<DesktopChannelSettingsViewProp
 									exit={prefersReducedMotion ? {opacity: 1} : {opacity: 0}}
 									transition={prefersReducedMotion ? {duration: 0} : {duration: 0.2, ease: 'easeOut'}}
 								>
-									{SettingsSidebarStore.hasOverride && (
+									{SettingsSidebarStore.hasOverride &&
+										SettingsSidebarStore.ownerId === channelPermissionsOverrideOwnerId &&
+										!SettingsSidebarStore.isDismissed(channelPermissionsOverrideOwnerId) && (
 										<div className={styles.sidebarButtonWrapper}>
 											<Button
 												variant="secondary"
 												rightIcon={<ArrowRightIcon className={styles.sidebarButtonIcon} />}
-												onClick={() => SettingsSidebarStore.setUseOverride(true)}
+												onClick={() => SettingsSidebarStore.activateOverride(channelPermissionsOverrideOwnerId)}
 											>
 												{t`Back to Overrides`}
 											</Button>
