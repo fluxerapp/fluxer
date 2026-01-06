@@ -60,6 +60,7 @@ import {
 import * as RouterUtils from '~/utils/RouterUtils';
 import {getGroupDMTitle, getGuildEmbedSplashAspectRatio, getImageAspectRatioFromBase64} from './InviteEmbed/utils';
 import styles from './InviteEmbed.module.css';
+import {useMaybeMessageViewContext} from './MessageViewContext';
 
 const createTitleKeyDownHandler = (callback: () => void) => (event: React.KeyboardEvent<HTMLButtonElement>) => {
 	if (event.key === 'Enter' || event.key === ' ') {
@@ -78,7 +79,6 @@ export const InviteEmbed = observer(function InviteEmbed({code}: InviteEmbedProp
 	const inviteState = InviteStore.invites.get(code) ?? null;
 	const shouldForceSkeleton = useEmbedSkeletonOverride();
 	const invite = inviteState?.data ?? null;
-	const isGroupDM = invite != null && isGroupDmInvite(invite);
 	const isPackInvite = invite != null && isPackInviteGuard(invite);
 	const isGuildInviteType = invite != null && isGuildInvite(invite);
 	const packCreatorRecord = React.useMemo(() => {
@@ -90,23 +90,34 @@ export const InviteEmbed = observer(function InviteEmbed({code}: InviteEmbedProp
 	const embedSplash = guild != null ? ('embedSplash' in guild ? guild.embedSplash : guild.embed_splash) : undefined;
 	const splashURL =
 		guild != null ? AvatarUtils.getGuildEmbedSplashURL({id: guild.id, embedSplash: embedSplash || null}) : null;
-	const channelFromInvite = (isGuildInviteType || isGroupDM) && invite ? invite.channel : null;
-	const channelId = channelFromInvite?.id ?? undefined;
-	const splashLayoutRef = React.useRef(false);
-	const splashChannelRef = React.useRef<string | null>(null);
-	React.useLayoutEffect(() => {
-		if (isGroupDM || !channelId) return;
-		if (splashChannelRef.current !== channelId) {
-			splashChannelRef.current = channelId;
-			splashLayoutRef.current = false;
-		}
+	const messageViewContext = useMaybeMessageViewContext();
+	const currentChannelId = messageViewContext?.channel.id;
+	const inviteWrapperRef = React.useRef<HTMLDivElement | null>(null);
+	const previousHeightRef = React.useRef<number | null>(null);
 
-		const hasSplash = Boolean(splashURL);
-		if (hasSplash && !splashLayoutRef.current) {
-			ComponentDispatch.dispatch('LAYOUT_RESIZED', {channelId});
-		}
-		splashLayoutRef.current = hasSplash;
-	}, [channelId, isGroupDM, splashURL]);
+	React.useLayoutEffect(() => {
+		if (!currentChannelId) return;
+		const node = inviteWrapperRef.current;
+		if (!node || typeof ResizeObserver === 'undefined') return;
+
+		previousHeightRef.current = node.offsetHeight;
+
+		const resizeObserver = new ResizeObserver(() => {
+			const nextHeight = node.offsetHeight;
+			const prevHeight = previousHeightRef.current ?? nextHeight;
+			const heightDelta = nextHeight - prevHeight;
+			if (heightDelta !== 0) {
+				ComponentDispatch.dispatch('LAYOUT_RESIZED', {
+					channelId: currentChannelId,
+					heightDelta,
+				});
+			}
+			previousHeightRef.current = nextHeight;
+		});
+
+		resizeObserver.observe(node);
+		return () => resizeObserver.disconnect();
+	}, [currentChannelId]);
 
 	const isLoading = shouldForceSkeleton || !inviteState || inviteState.loading;
 
@@ -119,11 +130,11 @@ export const InviteEmbed = observer(function InviteEmbed({code}: InviteEmbedProp
 		}
 	}, [code]);
 	React.useLayoutEffect(() => {
-		if (prevLoadingRef.current && !isLoading && channelId) {
-			ComponentDispatch.dispatch('LAYOUT_RESIZED', {channelId});
+		if (prevLoadingRef.current && !isLoading && currentChannelId) {
+			ComponentDispatch.dispatch('LAYOUT_RESIZED', {channelId: currentChannelId});
 		}
 		prevLoadingRef.current = isLoading;
-	}, [isLoading, channelId]);
+	}, [isLoading, currentChannelId]);
 
 	React.useEffect(() => {
 		if (!inviteState) {
@@ -131,15 +142,13 @@ export const InviteEmbed = observer(function InviteEmbed({code}: InviteEmbedProp
 		}
 	}, [code, inviteState]);
 
+	let content: React.ReactNode;
+
 	if (shouldForceSkeleton || !inviteState || inviteState.loading) {
-		return <InviteLoadingState />;
-	}
-
-	if (inviteState.error || !invite) {
-		return <InviteNotFoundError />;
-	}
-
-	if (isGroupDmInvite(invite)) {
+		content = <InviteLoadingState />;
+	} else if (inviteState.error || !invite) {
+		content = <InviteNotFoundError />;
+	} else if (isGroupDmInvite(invite)) {
 		const inviter = UserStore.getUser(invite.inviter?.id ?? '');
 		const groupDMTitle = getGroupDMTitle(invite.channel);
 		const groupDMPath = Routes.dmChannel(invite.channel.id);
@@ -152,7 +161,7 @@ export const InviteEmbed = observer(function InviteEmbed({code}: InviteEmbedProp
 		const isAlreadyInGroupDM = groupDMCounts.hasLocalChannel;
 		const memberCount = groupDMCounts.memberCount;
 
-		return (
+		content = (
 			<EmbedCard
 				splashURL={null}
 				headerClassName={styles.headerInvite}
@@ -194,9 +203,7 @@ export const InviteEmbed = observer(function InviteEmbed({code}: InviteEmbedProp
 				}
 			/>
 		);
-	}
-
-	if (isPackInviteGuard(invite)) {
+	} else if (isPackInviteGuard(invite)) {
 		const pack = invite.pack;
 		const packCreator = packCreatorRecord ?? new UserRecord(pack.creator);
 		const packKindLabel = pack.type === 'emoji' ? t`Emoji pack` : t`Sticker pack`;
@@ -204,7 +211,7 @@ export const InviteEmbed = observer(function InviteEmbed({code}: InviteEmbedProp
 		const inviterTag = invite.inviter ? `${invite.inviter.username}#${invite.inviter.discriminator}` : null;
 		const handleAcceptInvite = () => InviteActionCreators.acceptAndTransitionToChannel(invite.code, i18n);
 
-		return (
+		content = (
 			<EmbedCard
 				splashURL={null}
 				headerClassName={styles.headerInvite}
@@ -238,82 +245,88 @@ export const InviteEmbed = observer(function InviteEmbed({code}: InviteEmbedProp
 				}
 			/>
 		);
+	} else if (!guild || !isGuildInvite(invite)) {
+		content = <InviteNotFoundError />;
+	} else {
+		const guildActionState = getGuildInviteActionState({invite, guild});
+		const {features, presenceCount, memberCount} = guildActionState;
+		const isVerified = features.includes(GuildFeatures.VERIFIED);
+		const splashAspectRatio = getGuildEmbedSplashAspectRatio(guild);
+
+		const renderedPresenceCount = presenceCount;
+		const renderedMemberCount = memberCount;
+
+		const handleAcceptInvite = () => InviteActionCreators.acceptAndTransitionToChannel(invite.code, i18n);
+		const guildPath = Routes.guildChannel(guild.id, invite.channel.id);
+		const handleNavigateToGuild = () => RouterUtils.transitionTo(guildPath);
+
+		const actionType = getGuildInvitePrimaryAction(guildActionState);
+		const isButtonDisabled = isGuildInviteActionDisabled(guildActionState);
+		const getButtonLabel = () => {
+			switch (actionType) {
+				case GuildInvitePrimaryAction.InvitesDisabled:
+					return t`Invites Disabled`;
+				case GuildInvitePrimaryAction.GoToCommunity:
+					return t`Go to Community`;
+				default:
+					return t`Join Community`;
+			}
+		};
+
+		content = (
+			<EmbedCard
+				splashURL={splashURL}
+				splashAspectRatio={splashAspectRatio}
+				headerClassName={styles.headerInvite}
+				icon={<GuildIcon id={guild.id} name={guild.name} icon={guild.icon} className={styles.icon} />}
+				title={
+					<div className={styles.titleContainer}>
+						<div className={styles.titleRowWithIcon}>
+							<h3 className={`${cardStyles.title} ${cardStyles.titlePrimary} ${styles.titleText}`}>
+								<button
+									type="button"
+									className={cardStyles.titleButton}
+									onClick={handleNavigateToGuild}
+									onKeyDown={createTitleKeyDownHandler(handleNavigateToGuild)}
+								>
+									{guild.name}
+								</button>
+							</h3>
+							{isVerified ? (
+								<Tooltip text={t`Verified Community`} position="top">
+									<SealCheckIcon className={styles.verifiedIcon} />
+								</Tooltip>
+							) : null}
+						</div>
+					</div>
+				}
+				body={
+					<div className={styles.stats}>
+						<div className={styles.stat}>
+							<div className={`${styles.statDot} ${styles.statDotOnline}`} />
+							<span className={styles.statText}>{t`${renderedPresenceCount} Online`}</span>
+						</div>
+						<div className={styles.stat}>
+							<div className={`${styles.statDot} ${styles.statDotMembers}`} />
+							<span className={styles.statText}>
+								{renderedMemberCount === 1 ? t`${renderedMemberCount} Member` : t`${renderedMemberCount} Members`}
+							</span>
+						</div>
+					</div>
+				}
+				footer={
+					<Button variant="primary" matchSkeletonHeight onClick={handleAcceptInvite} disabled={isButtonDisabled}>
+						{getButtonLabel()}
+					</Button>
+				}
+			/>
+		);
 	}
 
-	if (!guild || !isGuildInvite(invite)) return <InviteNotFoundError />;
-
-	const guildActionState = getGuildInviteActionState({invite, guild});
-	const {features, presenceCount, memberCount} = guildActionState;
-	const isVerified = features.includes(GuildFeatures.VERIFIED);
-	const splashAspectRatio = getGuildEmbedSplashAspectRatio(guild);
-
-	const renderedPresenceCount = presenceCount;
-	const renderedMemberCount = memberCount;
-
-	const handleAcceptInvite = () => InviteActionCreators.acceptAndTransitionToChannel(invite.code, i18n);
-	const guildPath = Routes.guildChannel(guild.id, invite.channel.id);
-	const handleNavigateToGuild = () => RouterUtils.transitionTo(guildPath);
-
-	const actionType = getGuildInvitePrimaryAction(guildActionState);
-	const isButtonDisabled = isGuildInviteActionDisabled(guildActionState);
-	const getButtonLabel = () => {
-		switch (actionType) {
-			case GuildInvitePrimaryAction.InvitesDisabled:
-				return t`Invites Disabled`;
-			case GuildInvitePrimaryAction.GoToCommunity:
-				return t`Go to Community`;
-			default:
-				return t`Join Community`;
-		}
-	};
-
 	return (
-		<EmbedCard
-			splashURL={splashURL}
-			splashAspectRatio={splashAspectRatio}
-			headerClassName={styles.headerInvite}
-			icon={<GuildIcon id={guild.id} name={guild.name} icon={guild.icon} className={styles.icon} />}
-			title={
-				<div className={styles.titleContainer}>
-					<div className={styles.titleRowWithIcon}>
-						<h3 className={`${cardStyles.title} ${cardStyles.titlePrimary} ${styles.titleText}`}>
-							<button
-								type="button"
-								className={cardStyles.titleButton}
-								onClick={handleNavigateToGuild}
-								onKeyDown={createTitleKeyDownHandler(handleNavigateToGuild)}
-							>
-								{guild.name}
-							</button>
-						</h3>
-						{isVerified ? (
-							<Tooltip text={t`Verified Community`} position="top">
-								<SealCheckIcon className={styles.verifiedIcon} />
-							</Tooltip>
-						) : null}
-					</div>
-				</div>
-			}
-			body={
-				<div className={styles.stats}>
-					<div className={styles.stat}>
-						<div className={`${styles.statDot} ${styles.statDotOnline}`} />
-						<span className={styles.statText}>{t`${renderedPresenceCount} Online`}</span>
-					</div>
-					<div className={styles.stat}>
-						<div className={`${styles.statDot} ${styles.statDotMembers}`} />
-						<span className={styles.statText}>
-							{renderedMemberCount === 1 ? t`${renderedMemberCount} Member` : t`${renderedMemberCount} Members`}
-						</span>
-					</div>
-				</div>
-			}
-			footer={
-				<Button variant="primary" matchSkeletonHeight onClick={handleAcceptInvite} disabled={isButtonDisabled}>
-					{getButtonLabel()}
-				</Button>
-			}
-		/>
+		<div ref={inviteWrapperRef} className={styles.inviteWrapper}>
+			{content}
+		</div>
 	);
 });
 
