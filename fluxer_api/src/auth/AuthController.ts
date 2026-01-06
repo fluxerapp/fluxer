@@ -412,7 +412,7 @@ export const AuthController = (app: HonoApp) => {
 		Validator('json', UsernameSuggestionsRequest),
 		async (ctx) => {
 			const {global_name} = ctx.req.valid('json');
-			const suggestions = generateUsernameSuggestions(global_name, 5);
+			const suggestions = generateUsernameSuggestions(global_name);
 			return ctx.json({suggestions});
 		},
 	);

@@ -45,6 +45,7 @@ import * as AgeUtils from '~/utils/AgeUtils';
 import * as IpUtils from '~/utils/IpUtils';
 import {parseAcceptLanguage} from '~/utils/LocaleUtils';
 import {generateRandomUsername} from '~/utils/UsernameGenerator';
+import {deriveUsernameFromDisplayName} from '~/utils/UsernameSuggestionUtils';
 
 const MINIMUM_AGE_BY_COUNTRY: Record<string, number> = {
 	KR: 14,
@@ -202,8 +203,32 @@ export class AuthRegistrationService {
 			if (emailTaken) throw InputValidationError.create('email', 'Email already in use');
 		}
 
-		const username = data.username || generateRandomUsername();
-		const discriminator = await this.allocateDiscriminator(username);
+		let usernameCandidate: string | undefined = data.username ?? undefined;
+		let discriminator: number | null = null;
+
+		if (!usernameCandidate) {
+			const derivedUsername = deriveUsernameFromDisplayName(data.global_name ?? '');
+			if (derivedUsername) {
+				try {
+					discriminator = await this.allocateDiscriminator(derivedUsername);
+					usernameCandidate = derivedUsername;
+				} catch (error) {
+					if (!(error instanceof InputValidationError)) {
+						throw error;
+					}
+				}
+			}
+		}
+
+		if (!usernameCandidate) {
+			usernameCandidate = generateRandomUsername();
+			discriminator = await this.allocateDiscriminator(usernameCandidate);
+		} else if (discriminator === null) {
+			discriminator = await this.allocateDiscriminator(usernameCandidate);
+		}
+
+		const username = usernameCandidate!;
+
 		const userId = this.generateUserId(emailKey);
 
 		const acceptLanguage = request.headers.get('accept-language');
