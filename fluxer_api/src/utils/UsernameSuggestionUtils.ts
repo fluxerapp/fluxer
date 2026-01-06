@@ -17,64 +17,36 @@
  * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
  */
 
+import {UsernameType} from '~/Schema';
 import {transliterate as tr} from 'transliteration';
-import {generateRandomUsername} from '~/utils/UsernameGenerator';
 
-function sanitizeForFluxerTag(input: string): string {
-	let result = tr(input.trim());
+const MAX_USERNAME_LENGTH = 32;
 
-	result = result.replace(/[\s\-.]+/g, '_');
+function sanitizeDisplayName(globalName: string): string | null {
+	const trimmed = globalName.trim();
+	if (!trimmed) return null;
 
-	result = result.replace(/[^a-zA-Z0-9_]/g, '');
-
-	if (!result) {
-		result = 'user';
+	let sanitized = tr(trimmed);
+	sanitized = sanitized.replace(/[\s\-.]+/g, '_');
+	sanitized = sanitized.replace(/[^a-zA-Z0-9_]/g, '');
+	if (!sanitized) return null;
+	if (sanitized.length > MAX_USERNAME_LENGTH) {
+		sanitized = sanitized.substring(0, MAX_USERNAME_LENGTH);
 	}
 
-	if (result.length > 32) {
-		result = result.substring(0, 32);
+	const validation = UsernameType.safeParse(sanitized);
+	if (!validation.success) {
+		return null;
 	}
 
-	return result.toLowerCase();
+	return sanitized;
 }
 
-export function generateUsernameSuggestions(globalName: string, count: number = 5): Array<string> {
-	const suggestions: Array<string> = [];
+export function deriveUsernameFromDisplayName(globalName: string): string | null {
+	return sanitizeDisplayName(globalName);
+}
 
-	const transliterated = tr(globalName.trim());
-	const hasMeaningfulContent = /[a-zA-Z]/.test(transliterated);
-
-	if (!hasMeaningfulContent) {
-		for (let i = 0; i < count; i++) {
-			const randomUsername = generateRandomUsername();
-			const sanitizedRandom = sanitizeForFluxerTag(randomUsername);
-			if (sanitizedRandom && sanitizedRandom.length <= 32) {
-				suggestions.push(sanitizedRandom.toLowerCase());
-			}
-		}
-		return Array.from(new Set(suggestions)).slice(0, count);
-	}
-
-	const baseUsername = sanitizeForFluxerTag(globalName);
-	suggestions.push(baseUsername);
-
-	const suffixes = ['_', '__', '___', '123', '_1', '_official', '_real'];
-	for (const suffix of suffixes) {
-		if (suggestions.length >= count) break;
-		const suggestion = baseUsername + suffix;
-		if (suggestion.length <= 32) {
-			suggestions.push(suggestion);
-		}
-	}
-
-	let counter = 2;
-	while (suggestions.length < count) {
-		const suggestion = `${baseUsername}${counter}`;
-		if (suggestion.length <= 32) {
-			suggestions.push(suggestion);
-		}
-		counter++;
-	}
-
-	return Array.from(new Set(suggestions)).slice(0, count);
+export function generateUsernameSuggestions(globalName: string): Array<string> {
+	const candidate = deriveUsernameFromDisplayName(globalName);
+	return candidate ? [candidate] : [];
 }
