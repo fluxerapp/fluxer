@@ -24,6 +24,11 @@ import GuildMemberStore from '~/stores/GuildMemberStore';
 import GuildStore from '~/stores/GuildStore';
 import UserStore from '~/stores/UserStore';
 
+export type ProfileMutualGuild = Readonly<{
+	id: string;
+	nick: string | null;
+}>;
+
 export type Profile = Readonly<{
 	user: UserPartial;
 	user_profile: UserProfile;
@@ -34,6 +39,7 @@ export type Profile = Readonly<{
 	premium_since?: string;
 	premium_lifetime_sequence?: number;
 	mutual_friends?: Array<UserPartial>;
+	mutual_guilds?: Array<ProfileMutualGuild>;
 }>;
 
 export class ProfileRecord {
@@ -46,6 +52,7 @@ export class ProfileRecord {
 	readonly premiumSince: Date | null;
 	readonly premiumLifetimeSequence: number | null;
 	readonly mutualFriends: ReadonlyArray<UserPartial> | null;
+	readonly mutualGuilds: ReadonlyArray<ProfileMutualGuild> | null;
 
 	constructor(profile: Profile, guildId?: string) {
 		this.userId = profile.user.id;
@@ -57,6 +64,7 @@ export class ProfileRecord {
 		this.premiumSince = profile.premium_since ? new Date(profile.premium_since) : null;
 		this.premiumLifetimeSequence = profile.premium_lifetime_sequence ?? null;
 		this.mutualFriends = profile.mutual_friends ? Object.freeze([...profile.mutual_friends]) : null;
+		this.mutualGuilds = profile.mutual_guilds ? Object.freeze([...profile.mutual_guilds]) : null;
 	}
 
 	withUpdates(updates: Partial<Profile>): ProfileRecord {
@@ -76,6 +84,7 @@ export class ProfileRecord {
 						? updates.premium_lifetime_sequence
 						: (this.premiumLifetimeSequence ?? undefined),
 				mutual_friends: updates.mutual_friends ?? (this.mutualFriends ? [...this.mutualFriends] : undefined),
+				mutual_guilds: updates.mutual_guilds ?? (this.mutualGuilds ? [...this.mutualGuilds] : undefined),
 			},
 			this.guildId ?? undefined,
 		);
@@ -129,7 +138,8 @@ export class ProfileRecord {
 			this.premiumType === other.premiumType &&
 			this.premiumSince === other.premiumSince &&
 			this.premiumLifetimeSequence === other.premiumLifetimeSequence &&
-			JSON.stringify(this.mutualFriends) === JSON.stringify(other.mutualFriends)
+			JSON.stringify(this.mutualFriends) === JSON.stringify(other.mutualFriends) &&
+			JSON.stringify(this.mutualGuilds) === JSON.stringify(other.mutualGuilds)
 		);
 	}
 
@@ -143,6 +153,7 @@ export class ProfileRecord {
 			premium_since: this.premiumSince?.toISOString() ?? undefined,
 			premium_lifetime_sequence: this.premiumLifetimeSequence ?? undefined,
 			mutual_friends: this.mutualFriends ? [...this.mutualFriends] : undefined,
+			mutual_guilds: this.mutualGuilds ? [...this.mutualGuilds] : undefined,
 		};
 	}
 }

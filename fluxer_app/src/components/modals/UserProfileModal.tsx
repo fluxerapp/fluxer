@@ -94,6 +94,7 @@ import type {ContextMenuTargetElement} from '~/stores/ContextMenuStore';
 import ContextMenuStore, {isContextMenuNodeTarget} from '~/stores/ContextMenuStore';
 import DeveloperOptionsStore from '~/stores/DeveloperOptionsStore';
 import GuildMemberStore from '~/stores/GuildMemberStore';
+import GuildStore from '~/stores/GuildStore';
 import MemberPresenceSubscriptionStore from '~/stores/MemberPresenceSubscriptionStore';
 import ModalStore from '~/stores/ModalStore';
 import PermissionStore from '~/stores/PermissionStore';
@@ -332,7 +333,22 @@ const ProfileModalContent: React.FC<ProfileModalContentProps> = observer(
 			ModalActionCreators.push(modal(() => <CustomStatusModal />));
 		}, []);
 
-		const mutualGuilds = React.useMemo(() => GuildMemberStore.getMutualGuilds(user.id), [user.id]);
+		const profileMutualGuilds = profile?.mutualGuilds ?? [];
+		type MutualGuildDisplay = {
+			guild: GuildRecord;
+			nick: string | null;
+		};
+		const mutualGuildDisplayItems = React.useMemo(() => {
+			return profileMutualGuilds
+				.map((mutualGuild) => {
+					const guild = GuildStore.getGuild(mutualGuild.id);
+					if (!guild) {
+						return null;
+					}
+					return {guild, nick: mutualGuild.nick};
+				})
+				.filter((item): item is MutualGuildDisplay => item !== null);
+		}, [profileMutualGuilds]);
 		const mutualGroups = ChannelStore.dmChannels.filter(
 			(channel) => channel.isGroupDM() && channel.recipientIds.includes(user.id),
 		);
@@ -355,14 +371,14 @@ const ProfileModalContent: React.FC<ProfileModalContentProps> = observer(
 						const count = mutualGroups.length;
 						return t`Mutual Groups (${count})`;
 					}
-					default: {
-						const count = mutualGuilds.length;
-						return t`Mutual Communities (${count})`;
-					}
+				default: {
+					const count = profileMutualGuilds.length;
+					return t`Mutual Communities (${count})`;
 				}
-			},
-			[t, mutualFriendsCount, mutualGroups.length, mutualGuilds.length],
-		);
+			}
+		},
+		[t, mutualFriendsCount, mutualGroups.length, profileMutualGuilds.length],
+	);
 
 		const openMutualMenu = React.useCallback(
 			(event: React.MouseEvent<HTMLButtonElement>) => {
@@ -571,16 +587,17 @@ const ProfileModalContent: React.FC<ProfileModalContentProps> = observer(
 		const renderMutualGuildsList = React.useCallback(() => {
 			return (
 				<div className={userProfileModalStyles.mutualFriendsList}>
-					{mutualGuilds.map((guild) => (
+					{mutualGuildDisplayItems.map(({guild, nick}) => (
 						<MutualGuildItem
 							key={guild.id}
 							guild={guild}
+							nick={nick}
 							onClick={() => handleGuildClick(guild)}
 							onContextMenu={(e) => handleGuildContextMenu(e, guild)}
 							isContextMenuOpen={isContextMenuOpenFor}
 						/>
 					))}
-					{mutualGuilds.length === 0 && (
+					{profileMutualGuilds.length === 0 && (
 						<div className={userProfileModalStyles.emptyState}>
 							<UsersThreeIcon className={userProfileModalStyles.emptyStateIcon} />
 							<Trans>No mutual communities found.</Trans>
@@ -588,7 +605,13 @@ const ProfileModalContent: React.FC<ProfileModalContentProps> = observer(
 					)}
 				</div>
 			);
-		}, [handleGuildClick, handleGuildContextMenu, isContextMenuOpenFor, mutualGuilds]);
+		}, [
+			handleGuildClick,
+			handleGuildContextMenu,
+			isContextMenuOpenFor,
+			mutualGuildDisplayItems,
+			profileMutualGuilds.length,
+		]);
 
 		const renderMutualTabContent = React.useCallback(() => {
 			switch (mutualView) {
@@ -751,11 +774,13 @@ const MutualFriendItem = ({
 
 const MutualGuildItem = ({
 	guild,
+	nick,
 	onClick,
 	onContextMenu,
 	isContextMenuOpen,
 }: {
 	guild: GuildRecord;
+	nick: string | null;
 	onClick: () => void;
 	onContextMenu: (e: React.MouseEvent) => void;
 	isContextMenuOpen: (target: EventTarget | null) => boolean;
@@ -782,6 +807,7 @@ const MutualGuildItem = ({
 			/>
 			<div className={userProfileModalStyles.mutualFriendInfo}>
 				<span className={userProfileModalStyles.mutualFriendName}>{guild.name}</span>
+				{nick && <span className={userProfileModalStyles.mutualFriendUsername}>{nick}</span>}
 			</div>
 		</div>
 	);
