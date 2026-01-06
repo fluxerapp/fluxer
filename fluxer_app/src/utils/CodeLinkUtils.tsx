@@ -18,6 +18,7 @@
  */
 
 import * as RegexUtils from '~/utils/RegexUtils';
+import {isLinkWrappedInAngleBrackets} from '~/utils/linkSuppressionUtils';
 
 export interface CodeLinkConfig {
 	shortHost: string;
@@ -61,6 +62,10 @@ export function findCodes(content: string | null, config: CodeLinkConfig): Array
 
 	let match: RegExpExecArray | null;
 	while ((match = pattern.exec(content)) !== null && codes.length < 10) {
+		const matchedText = match[0];
+		if (isLinkWrappedInAngleBrackets(content, match.index ?? 0, matchedText.length)) {
+			continue;
+		}
 		const code = match[1] || match[2];
 		if (code && !seenCodes.has(code)) {
 			seenCodes.add(code);
@@ -76,10 +81,17 @@ export function findCode(content: string | null, config: CodeLinkConfig): string
 
 	const pattern = createPattern(config);
 	pattern.lastIndex = 0;
-	const match = pattern.exec(content);
+	let match: RegExpExecArray | null;
+	while ((match = pattern.exec(content)) !== null) {
+		const matchedText = match[0];
+		if (isLinkWrappedInAngleBrackets(content, match.index ?? 0, matchedText.length)) {
+			continue;
+		}
 
-	if (match) {
-		return match[1] || match[2];
+		const code = match[1] || match[2];
+		if (code) {
+			return code;
+		}
 	}
 
 	return null;
