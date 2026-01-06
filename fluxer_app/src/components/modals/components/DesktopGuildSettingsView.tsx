@@ -69,12 +69,21 @@ export const DesktopGuildSettingsView: React.FC<DesktopGuildSettingsViewProps> =
 			contentRef.current?.focus();
 		}, []);
 
+		const guildOverrideOwnerId = React.useMemo(() => `guild-roles-${guild.id}`, [guild.id]);
+
 		const handleTabSelect = React.useCallback(
 			(tabType: GuildSettingsTabType) => {
 				if (checkUnsavedChanges()) return;
+				if (
+					tabType === 'roles' &&
+					SettingsSidebarStore.ownerId === guildOverrideOwnerId &&
+					SettingsSidebarStore.isDismissed(guildOverrideOwnerId)
+				) {
+					SettingsSidebarStore.activateOverride(guildOverrideOwnerId);
+				}
 				onTabSelect(tabType);
 			},
-			[checkUnsavedChanges, onTabSelect],
+			[checkUnsavedChanges, onTabSelect, guildOverrideOwnerId],
 		);
 
 		const handleDeleteGuild = React.useCallback(() => {
@@ -134,7 +143,7 @@ export const DesktopGuildSettingsView: React.FC<DesktopGuildSettingsViewProps> =
 										<Button
 											variant="secondary"
 											leftIcon={<ArrowLeftIcon className={styles.sidebarButtonIcon} />}
-											onClick={() => SettingsSidebarStore.setUseOverride(false)}
+											onClick={() => SettingsSidebarStore.dismissOverride()}
 										>
 											{t`Back to Settings`}
 										</Button>
@@ -149,17 +158,19 @@ export const DesktopGuildSettingsView: React.FC<DesktopGuildSettingsViewProps> =
 									exit={prefersReducedMotion ? {opacity: 1} : {opacity: 0}}
 									transition={prefersReducedMotion ? {duration: 0} : {duration: 0.2, ease: 'easeOut'}}
 								>
-									{SettingsSidebarStore.hasOverride && (
-										<div className={styles.sidebarButtonWrapper}>
-											<Button
-												variant="secondary"
-												rightIcon={<ArrowRightIcon className={styles.sidebarButtonIcon} />}
-												onClick={() => SettingsSidebarStore.setUseOverride(true)}
-											>
-												{selectedTab === 'roles' ? t`Back to Roles` : t`Back to Overrides`}
-											</Button>
-										</div>
-									)}
+									{SettingsSidebarStore.hasOverride &&
+										SettingsSidebarStore.ownerId === guildOverrideOwnerId &&
+										!SettingsSidebarStore.isDismissed(guildOverrideOwnerId) && (
+											<div className={styles.sidebarButtonWrapper}>
+												<Button
+													variant="secondary"
+													rightIcon={<ArrowRightIcon className={styles.sidebarButtonIcon} />}
+													onClick={() => SettingsSidebarStore.activateOverride(guildOverrideOwnerId)}
+												>
+													{selectedTab === 'roles' ? t`Back to Roles` : t`Back to Overrides`}
+												</Button>
+											</div>
+										)}
 									{Object.entries(groupedSettingsTabs).map(([category, tabs]) => (
 										<SettingsModalSidebarCategory key={category}>
 											{category !== 'guild_settings' && (
