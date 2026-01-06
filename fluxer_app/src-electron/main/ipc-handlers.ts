@@ -412,6 +412,7 @@ export function registerIpcHandlers(): void {
 			runningUnderRosetta: detectRosettaMode(),
 			os: process.platform,
 			osVersion: os.release(),
+			systemVersion: process.getSystemVersion(),
 		}),
 	);
 
