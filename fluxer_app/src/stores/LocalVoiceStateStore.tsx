@@ -40,6 +40,7 @@ class LocalVoiceStateStore {
 
 	private microphonePermissionGranted: boolean | null = MediaPermissionStore.isMicrophoneGranted();
 	private mutedByPermission = !MediaPermissionStore.isMicrophoneGranted();
+	private persistenceHydrationPromise: Promise<void>;
 	private _disposers: Array<() => void> = [];
 	private lastDevicePermissionStatus: VoiceDeviceState['permissionStatus'] | null =
 		VoiceDevicePermissionStore.getState().permissionStatus;
@@ -60,7 +61,8 @@ class LocalVoiceStateStore {
 			{autoBind: true},
 		);
 		this._disposers = [];
-		void this.initPersistence().then(() => {
+		this.persistenceHydrationPromise = this.initPersistence();
+		this.persistenceHydrationPromise.then(() => {
 			this.enforcePermissionMuteIfNeeded();
 		});
 		this.initializePermissionSync();
@@ -87,6 +89,7 @@ class LocalVoiceStateStore {
 	private async initializePermissionSync(): Promise<void> {
 		try {
 			let defaultMuteInitialized = false;
+			await this.persistenceHydrationPromise;
 
 			const syncWithPermission = (source: 'init' | 'change') => {
 				if (!MediaPermissionStore.isInitialized()) {
@@ -111,7 +114,7 @@ class LocalVoiceStateStore {
 					return;
 				}
 
-				const shouldAutoUnmute = this.mutedByPermission && this.selfMute;
+				const shouldAutoUnmute = this.mutedByPermission && this.selfMute && !this.hasUserSetMute;
 				const shouldApplyDefaultUnmute = !defaultMuteInitialized && !this.hasUserSetMute && this.selfMute;
 
 				if (shouldAutoUnmute || shouldApplyDefaultUnmute) {
@@ -156,7 +159,7 @@ class LocalVoiceStateStore {
 
 		this.lastDevicePermissionStatus = status;
 		if (status === 'granted') {
-			this.applyPermissionGrant();
+			void this.applyPermissionGrant();
 		} else if (status === 'denied') {
 			this.applyPermissionMute();
 		}
@@ -190,7 +193,8 @@ class LocalVoiceStateStore {
 		}
 	}
 
-	private applyPermissionGrant(): void {
+	private async applyPermissionGrant(): Promise<void> {
+		await this.persistenceHydrationPromise;
 		runInAction(() => {
 			this.microphonePermissionGranted = true;
 			if (this.mutedByPermission && this.selfMute && !this.hasUserSetMute) {
