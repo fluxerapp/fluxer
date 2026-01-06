@@ -193,20 +193,23 @@ const ForwardedMessageContent = observer(({message, snapshot}: {message: Message
 					</div>
 				)}
 
-				{snapshot.embeds && snapshot.embeds.length > 0 && UserSettingsStore.getRenderEmbeds() && (
-					<div className={styles.attachmentsContainer}>
-						{snapshot.embeds.map((embed: MessageEmbed, index: number) => (
-							<Embed
-								embed={embed}
-								key={embed.id}
-								message={message}
-								embedIndex={index}
-								contextualEmbeds={snapshot.embeds}
-								onDelete={() => {}}
-							/>
-						))}
-					</div>
-				)}
+					{snapshot.embeds && snapshot.embeds.length > 0 && UserSettingsStore.getRenderEmbeds() && (
+						<div className={styles.attachmentsContainer}>
+							{snapshot.embeds.map((embed: MessageEmbed, index: number) => {
+								const embedKey = `${embed.id}-${index}`;
+								return (
+									<Embed
+										embed={embed}
+										key={embedKey}
+										message={message}
+										embedIndex={index}
+										contextualEmbeds={snapshot.embeds}
+										onDelete={() => {}}
+									/>
+								);
+							})}
+						</div>
+					)}
 
 				<ForwardedFromSource message={message} />
 			</div>
@@ -328,9 +331,12 @@ export const MessageAttachments = observer(() => {
 
 			{UserSettingsStore.getRenderEmbeds() &&
 				!message.suppressEmbeds &&
-				message.embeds.map((embed, index) => (
-					<Embed embed={embed} key={embed.id} message={message} embedIndex={index} onDelete={handleDelete} />
-				))}
+				message.embeds.map((embed, index) => {
+					const embedKey = `${embed.id}-${index}`;
+					return (
+						<Embed embed={embed} key={embedKey} message={message} embedIndex={index} onDelete={handleDelete} />
+					);
+				})}
 
 			{UserSettingsStore.getRenderReactions() && message.reactions.length > 0 && (
 				<MessageReactions message={message} isPreview={isPreview} onPopoutToggle={onPopoutToggle} />
