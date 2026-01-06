@@ -97,6 +97,9 @@ export const getScopeOptionsForChannel = (i18n: I18n, channel?: ChannelRecord | 
 		return GUILD_SCOPE_OPTIONS;
 	}
 
-	const isDmChannel = channel.type === ChannelTypes.DM || channel.type === ChannelTypes.GROUP_DM;
+	const isDmChannel =
+		channel.type === ChannelTypes.DM ||
+		channel.type === ChannelTypes.GROUP_DM ||
+		channel.type === ChannelTypes.DM_PERSONAL_NOTES;
 	return isDmChannel ? DM_SCOPE_OPTIONS : GUILD_SCOPE_OPTIONS;
 };
