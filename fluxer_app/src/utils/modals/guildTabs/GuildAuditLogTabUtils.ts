@@ -139,6 +139,7 @@ const suppressedDetailActions = new Set<AuditLogActionType>([
 	AuditLogActionType.MESSAGE_BULK_DELETE,
 	AuditLogActionType.MESSAGE_PIN,
 	AuditLogActionType.MESSAGE_UNPIN,
+	AuditLogActionType.CHANNEL_DELETE,
 ]);
 
 const NotRenderedChangeKeys: Partial<Record<AuditLogTargetType, Record<string, true>>> = {
