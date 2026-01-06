@@ -193,7 +193,7 @@ export const RecentMentionsContent = observer(
 				className={styles.scroller}
 				onScroll={handleScroll}
 				key="recent-mentions-scroller"
-				reserveScrollbarTrack={false}
+				reserveScrollbarTrack
 			>
 				{accessibleMentions.map((message) => {
 					const channel = ChannelStore.getChannel(message.channelId);

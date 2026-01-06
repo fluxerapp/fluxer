@@ -69,7 +69,7 @@ export const SavedMessagesContent = observer(() => {
 	}
 
 	return (
-		<Scroller className={previewStyles.scroller} key="saved-messages-scroller" reserveScrollbarTrack={false}>
+		<Scroller className={previewStyles.scroller} key="saved-messages-scroller" reserveScrollbarTrack>
 			{missingSavedMessages.map((entry) => renderMissingSavedMessage(entry.id))}
 			{savedMessages.map((message) => {
 				const channel = ChannelStore.getChannel(message.channelId);

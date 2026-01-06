@@ -104,7 +104,9 @@
 	flex: 1;
 	min-height: 0;
 	min-width: 0;
-	padding: 8px;
+	padding-block: 8px;
+	padding-inline-start: 12px;
+	padding-inline-end: 0;
 }
 
 .scrollerMobile {

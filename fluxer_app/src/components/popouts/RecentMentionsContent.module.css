@@ -51,10 +51,13 @@
 }
 
 .scroller {
+	flex: 1;
+	min-height: 0;
+	min-width: 0;
 	max-height: 700px;
-	padding-left: 8px;
-	padding-right: 8px;
-	padding-top: 8px;
+	padding-block: 8px;
+	padding-inline-start: 12px;
+	padding-inline-end: 0;
 }
 
 .groupContainer {
