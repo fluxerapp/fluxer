@@ -56,7 +56,11 @@
 }
 
 .attachmentsContainer {
-	margin-top: 0.5rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	align-items: flex-start;
+	margin-top: var(--message-container-gap, 0.25rem);
 }
 
 .forwardedSourceButton {

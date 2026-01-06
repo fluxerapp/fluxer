@@ -196,7 +196,14 @@ const ForwardedMessageContent = observer(({message, snapshot}: {message: Message
 				{snapshot.embeds && snapshot.embeds.length > 0 && UserSettingsStore.getRenderEmbeds() && (
 					<div className={styles.attachmentsContainer}>
 						{snapshot.embeds.map((embed: MessageEmbed, index: number) => (
-							<Embed embed={embed} key={embed.id} message={message} embedIndex={index} onDelete={() => {}} />
+							<Embed
+								embed={embed}
+								key={embed.id}
+								message={message}
+								embedIndex={index}
+								contextualEmbeds={snapshot.embeds}
+								onDelete={() => {}}
+							/>
 						))}
 					</div>
 				)}

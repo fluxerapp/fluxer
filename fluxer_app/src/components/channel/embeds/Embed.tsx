@@ -73,6 +73,7 @@ interface EmbedProps {
 	message: MessageRecord;
 	embedIndex?: number;
 	onDelete?: (bypassConfirm?: boolean) => void;
+	contextualEmbeds?: ReadonlyArray<MessageEmbed>;
 }
 
 interface LinkComponentProps {
@@ -569,7 +570,8 @@ const EmbedMediaRenderer: FC<{
 	return null;
 });
 
-const RichEmbed: FC<EmbedProps> = observer(({embed, message, embedIndex, onDelete}) => {
+const RichEmbed: FC<EmbedProps> = observer(({embed, message, embedIndex, contextualEmbeds, onDelete}) => {
+	const embedList = contextualEmbeds ?? message.embeds;
 	const hasVideo = isValidMedia(embed.video);
 	const hasImage = isValidMedia(embed.image);
 	const hasThumbnail = isValidMedia(embed.thumbnail);
@@ -597,15 +599,15 @@ const RichEmbed: FC<EmbedProps> = observer(({embed, message, embedIndex, onDelet
 
 		collectMedia(embed);
 
-		for (let i = embedIndex + 1; i < message.embeds.length && images.length < MAX_GALLERY_MEDIA; i++) {
-			const candidate = message.embeds[i];
+		for (let i = embedIndex + 1; i < embedList.length && images.length < MAX_GALLERY_MEDIA; i++) {
+			const candidate = embedList[i];
 			if (!candidate) continue;
 			if (normalizeUrl(candidate.url) !== normalizedUrl) break;
 			collectMedia(candidate);
 		}
 
 		return images;
-	}, [embed, embedIndex, message.embeds, normalizedUrl]);
+	}, [embed, embedIndex, contextualEmbeds, message.embeds, normalizedUrl]);
 	const showGallery = galleryImages.length > 1 || (!hasAnyMedia && galleryImages.length > 0);
 	const galleryAttachments = useMemo(
 		() => (showGallery ? buildGalleryAttachments(galleryImages, embed, embedIndex) : undefined),
@@ -691,21 +693,23 @@ const RichEmbed: FC<EmbedProps> = observer(({embed, message, embedIndex, onDelet
 	);
 });
 
-export const Embed: FC<EmbedProps> = observer(({embed, message, embedIndex, onDelete}) => {
+export const Embed: FC<EmbedProps> = observer(({embed, message, embedIndex, contextualEmbeds, onDelete}) => {
 	const {t} = useLingui();
 	const {enabled: isMobile} = MobileLayoutStore;
 	const channel = ChannelStore.getChannel(message.channelId);
+
+	const embedList = contextualEmbeds ?? message.embeds;
 
 	const normalizedEmbedUrl = useMemo(() => normalizeUrl(embed.url), [embed.url]);
 	const isDuplicateEmbed = useMemo(() => {
 		if (embedIndex === undefined || !normalizedEmbedUrl) return false;
 		for (let i = 0; i < embedIndex; i++) {
-			if (normalizeUrl(message.embeds[i]?.url) === normalizedEmbedUrl) {
+			if (normalizeUrl(embedList[i]?.url) === normalizedEmbedUrl) {
 				return true;
 			}
 		}
 		return false;
-	}, [embedIndex, message.embeds, normalizedEmbedUrl]);
+	}, [embedIndex, contextualEmbeds, message.embeds, normalizedEmbedUrl]);
 
 	const canSuppressEmbeds = useCallback(() => {
 		const guild = channel?.guildId ? GuildStore.getGuild(channel.guildId) : null;
@@ -1062,7 +1066,13 @@ export const Embed: FC<EmbedProps> = observer(({embed, message, embedIndex, onDe
 					<XIcon size={16} weight="bold" />
 				</button>
 			)}
-			<RichEmbed embed={embed} message={message} embedIndex={embedIndex} onDelete={onDelete} />
+			<RichEmbed
+				embed={embed}
+				message={message}
+				embedIndex={embedIndex}
+				contextualEmbeds={contextualEmbeds}
+				onDelete={onDelete}
+			/>
 		</div>,
 	);
 });
