@@ -32,7 +32,9 @@ export const ChannelPinsPopout = observer(({channel}: {channel: ChannelRecord}) 
 				<PushPinIcon className={styles.iconLarge} />
 				<h1 className={styles.title}>{t`Pinned Messages`}</h1>
 			</div>
-			<ChannelPinsContent channel={channel} />
+			<div className={styles.body}>
+				<ChannelPinsContent channel={channel} />
+			</div>
 		</div>
 	);
 });

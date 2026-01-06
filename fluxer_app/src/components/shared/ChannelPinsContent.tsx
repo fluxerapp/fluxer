@@ -153,7 +153,7 @@ export const ChannelPinsContent = observer(({channel, onJump}: ChannelPinsConten
 				className={clsx(previewStyles.scroller, mobileLayout.enabled && previewStyles.scrollerMobile)}
 				key="channel-pins-scroller"
 				onScroll={handleScroll}
-				reserveScrollbarTrack={false}
+				reserveScrollbarTrack
 			>
 				{mobileLayout.enabled && <div className={previewStyles.topSpacer} />}
 				{pinnedPins.slice().map(({message}) => {

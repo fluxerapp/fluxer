@@ -24,6 +24,7 @@
 	min-height: 0;
 	min-width: 0;
 	height: 100%;
+	max-height: inherit;
 	flex: 1 1 0%;
 	padding-inline-end: var(--scroller-track-size);
 }
@@ -34,6 +35,7 @@
 	min-height: 0;
 	min-width: 0;
 	height: 100%;
+	max-height: inherit;
 	flex: 1 1 0%;
 	overscroll-behavior: contain;
 	overflow-anchor: none;
@@ -115,9 +117,7 @@
 
 .scrollerChildren {
 	display: flex;
-	flex: 1 1 0%;
 	flex-direction: column;
-	min-height: 0;
 	min-width: 0;
 }
 

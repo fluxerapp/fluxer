@@ -84,7 +84,7 @@ export const ScheduledMessagesContent = observer(() => {
 	};
 
 	return (
-		<Scroller className={previewStyles.scroller} key="scheduled-messages-scroller" reserveScrollbarTrack={false}>
+		<Scroller className={previewStyles.scroller} key="scheduled-messages-scroller" reserveScrollbarTrack>
 			{scheduledMessages.map((message) => (
 				<div key={message.id} className={previewStyles.previewCard}>
 					<div className={styles.cardHeader}>
