@@ -322,7 +322,7 @@ export const UserAreaPopout = observer(() => {
 		if (!currentUser) {
 			return;
 		}
-		TextCopyActionCreators.copy(i18n, currentUser.tag, true);
+		TextCopyActionCreators.copy(i18n, currentUser.tag);
 	}, [currentUser, i18n]);
 
 	const openManageAccounts = React.useCallback(() => {
