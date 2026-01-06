@@ -74,6 +74,11 @@
 	width: 100%;
 	text-align: start;
 }
+
+.inviteWrapper {
+	width: 100%;
+}
+
 .verifiedIcon {
 	height: 1.15rem;
 	width: 1.15rem;
