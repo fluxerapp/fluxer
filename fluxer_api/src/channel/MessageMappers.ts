@@ -18,6 +18,7 @@
  */
 
 import type {ChannelID, MessageID, UserID} from '~/BrandedTypes';
+import {MessageReferenceTypes} from '~/Constants';
 import {makeAttachmentCdnUrl} from '~/channel/services/message/MessageHelpers';
 import type {IMediaService} from '~/infrastructure/IMediaService';
 import type {UserCacheService} from '~/infrastructure/UserCacheService';
@@ -338,7 +339,7 @@ export async function mapMessageToResponse({
 
 	if (message.reference) {
 		response.message_reference = mapMessageReference({reference: message.reference});
-		if (withMessageReference && getReferencedMessage) {
+		if (withMessageReference && getReferencedMessage && message.reference.type === MessageReferenceTypes.DEFAULT) {
 			const referencedMessage = await getReferencedMessage(message.reference.channelId, message.reference.messageId);
 			if (referencedMessage) {
 				response.referenced_message = await mapMessageToResponse({
