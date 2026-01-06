@@ -672,6 +672,24 @@ describe('Fluxer Markdown Parser', () => {
 			]);
 		});
 
+		test('urls with balanced parentheses inside autolinks', () => {
+			const input = 'Visit https://en.wikipedia.org/wiki/Chris_Messina_(inventor) for documentation.';
+			const flags = ParserFlags.ALLOW_AUTOLINKS;
+			const parser = new Parser(input, flags);
+			const {nodes: ast} = parser.parse();
+
+			expect(ast).toEqual([
+				{type: NodeType.Text, content: 'Visit '},
+				{
+					type: NodeType.Link,
+					text: undefined,
+					url: 'https://en.wikipedia.org/wiki/Chris_Messina_(inventor)',
+					escaped: false,
+				},
+				{type: NodeType.Text, content: ' for documentation.'},
+			]);
+		});
+
 		test('standard URLs with autolinks disabled', () => {
 			const input = 'Visit https://example.com and http://test.org';
 			const flags = 0;

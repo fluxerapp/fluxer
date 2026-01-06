@@ -314,10 +314,31 @@ export function extractUrlSegment(text: string, parserFlags: number): ParserResu
 
 	let end = prefixLength;
 	const textLength = text.length;
+	let parenthesesDepth = 0;
 
-	while (end < textLength && !StringUtils.isUrlTerminationChar(text[end])) {
-		end++;
-		if (end - prefixLength > MAX_LINK_URL_LENGTH) break;
+	while (end < textLength) {
+		const currentChar = text[end];
+
+		if (currentChar === '(') {
+			parenthesesDepth++;
+			end++;
+		} else if (currentChar === ')') {
+			if (parenthesesDepth > 0) {
+				parenthesesDepth--;
+				end++;
+			} else {
+				break;
+			}
+		} else if (StringUtils.isUrlTerminationChar(currentChar)) {
+			break;
+		} else {
+			end++;
+		}
+
+		if (end - prefixLength > MAX_LINK_URL_LENGTH) {
+			end = prefixLength + MAX_LINK_URL_LENGTH;
+			break;
+		}
 	}
 
 	let urlString = text.slice(0, end);
