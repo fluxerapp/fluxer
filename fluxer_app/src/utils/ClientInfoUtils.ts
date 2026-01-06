@@ -34,6 +34,16 @@ interface ClientInfo {
 	desktopRunningUnderRosetta?: boolean;
 }
 
+type NavigatorHighEntropyHints = {
+	architecture?: string;
+	bitness?: string;
+	platform?: string;
+};
+
+type NavigatorUADataLike = NavigatorHighEntropyHints & {
+	getHighEntropyValues?: (hints: ReadonlyArray<keyof NavigatorHighEntropyHints>) => Promise<NavigatorHighEntropyHints>;
+};
+
 const normalize = <T>(value: T | null | undefined): T | undefined => value ?? undefined;
 
 const ARCHITECTURE_PATTERNS: ReadonlyArray<{pattern: RegExp; label: string}> = [
@@ -69,7 +79,9 @@ const detectAppleSiliconViaWebGL = (): string | undefined => {
 		return undefined;
 	}
 	const canvas = document.createElement('canvas');
-	const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+	const gl =
+		(canvas.getContext('webgl') as WebGLRenderingContext | null) ??
+		(canvas.getContext('experimental-webgl') as WebGLRenderingContext | null);
 	if (!gl) {
 		return undefined;
 	}
@@ -101,7 +113,7 @@ const detectArchitectureFromNavigator = (): string | undefined => {
 		return undefined;
 	}
 
-	const userAgentData = (nav as Navigator & {userAgentData?: NavigatorUAData}).userAgentData;
+	const userAgentData = (nav as Navigator & {userAgentData?: NavigatorUADataLike}).userAgentData;
 	if (userAgentData?.architecture) {
 		return normalizeArchitectureValue(userAgentData.architecture);
 	}
@@ -224,7 +236,7 @@ const detectArchitectureFromClientHints = async (): Promise<string | undefined> 
 	if (!nav) {
 		return undefined;
 	}
-	const userAgentData = (nav as Navigator & {userAgentData?: NavigatorUAData}).userAgentData;
+	const userAgentData = (nav as Navigator & {userAgentData?: NavigatorUADataLike}).userAgentData;
 	if (!userAgentData?.getHighEntropyValues) {
 		return undefined;
 	}
