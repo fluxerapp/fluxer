@@ -157,10 +157,29 @@ export class WikipediaResolver extends BaseResolver {
 		if (!url) return null;
 
 		try {
-			return new URL(url).href.replace(/\/$/, '');
+			const normalizedUrl = new URL(url);
+			this.normalizeWikipediaImagePath(normalizedUrl);
+			return normalizedUrl.href.replace(/\/$/, '');
 		} catch (error) {
 			Logger.debug({error, url}, 'Failed to normalize Wikipedia image URL');
 			return null;
 		}
+	}
+
+	private normalizeWikipediaImagePath(imageUrl: URL): void {
+		if (imageUrl.hostname !== 'upload.wikimedia.org' || !imageUrl.pathname.includes('/wikipedia/commons/thumb/')) {
+			return;
+		}
+
+		const segments = imageUrl.pathname.split('/');
+		const thumbIndex = segments.indexOf('thumb');
+		if (thumbIndex === -1 || segments.length <= thumbIndex + 2) {
+			return;
+		}
+
+		const normalizedSegments = [...segments.slice(0, thumbIndex), ...segments.slice(thumbIndex + 1, -1)];
+
+		const normalizedPath = normalizedSegments.join('/') || '/';
+		imageUrl.pathname = normalizedPath.startsWith('/') ? normalizedPath : `/${normalizedPath}`;
 	}
 }
