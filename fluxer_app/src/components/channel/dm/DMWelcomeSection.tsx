@@ -30,8 +30,9 @@ import {Button} from '~/components/uikit/Button/Button';
 import FocusRing from '~/components/uikit/FocusRing/FocusRing';
 import {StatusAwareAvatar} from '~/components/uikit/StatusAwareAvatar';
 import {Tooltip} from '~/components/uikit/Tooltip/Tooltip';
+import type {GuildRecord} from '~/records/GuildRecord';
 import type {ProfileRecord} from '~/records/ProfileRecord';
-import GuildMemberStore from '~/stores/GuildMemberStore';
+import GuildStore from '~/stores/GuildStore';
 import MobileLayoutStore from '~/stores/MobileLayoutStore';
 import RelationshipStore from '~/stores/RelationshipStore';
 import UserStore from '~/stores/UserStore';
@@ -45,11 +46,16 @@ export const DMWelcomeSection: React.FC<DMWelcomeSectionProps> = observer(functi
 	const {t} = useLingui();
 
 	const user = UserStore.getUser(userId);
-	const mutualGuilds = GuildMemberStore.getMutualGuilds(user?.id ?? '');
 	const relationship = RelationshipStore.getRelationship(user?.id ?? '');
 	const relationshipType = relationship?.type;
 	const [profile, setProfile] = React.useState<ProfileRecord | null>(null);
 	const mobileLayout = MobileLayoutStore;
+	const profileMutualGuilds = React.useMemo(() => profile?.mutualGuilds ?? [], [profile?.mutualGuilds]);
+	const mutualGuildRecords = React.useMemo(() => {
+		return profileMutualGuilds
+			.map((mutualGuild) => GuildStore.getGuild(mutualGuild.id))
+			.filter((guild): guild is GuildRecord => guild !== undefined);
+	}, [profileMutualGuilds]);
 
 	React.useEffect(() => {
 		if (!user) return;
@@ -92,7 +98,7 @@ export const DMWelcomeSection: React.FC<DMWelcomeSectionProps> = observer(functi
 		RelationshipActionCreators.removeRelationship(user.id);
 	};
 
-	const hasMutualGuilds = mutualGuilds.length > 0;
+	const hasMutualGuilds = profileMutualGuilds.length > 0;
 	const currentUserUnclaimed = !(UserStore.currentUser?.isClaimed() ?? true);
 	const shouldShowActionButton =
 		!user.bot &&
@@ -100,7 +106,7 @@ export const DMWelcomeSection: React.FC<DMWelcomeSectionProps> = observer(functi
 			relationshipType === RelationshipTypes.INCOMING_REQUEST ||
 			relationshipType === RelationshipTypes.OUTGOING_REQUEST ||
 			relationshipType === RelationshipTypes.FRIEND);
-	const mutualGuildCount = mutualGuilds.length;
+	const mutualGuildCount = profileMutualGuilds.length;
 
 	const renderActionButton = () => {
 		if (user.bot) return null;
@@ -154,13 +160,15 @@ export const DMWelcomeSection: React.FC<DMWelcomeSectionProps> = observer(functi
 
 		return (
 			<div className={styles.mutualGuildsContainer}>
-				<AvatarStack size={32} maxVisible={3}>
-					{mutualGuilds.map((guild) => (
-						<div key={guild.id} className={styles.guildIconWrapper}>
-							<GuildIcon id={guild.id} name={guild.name} icon={guild.icon} className={styles.guildIcon} sizePx={32} />
-						</div>
-					))}
-				</AvatarStack>
+				{mutualGuildRecords.length > 0 && (
+					<AvatarStack size={32} maxVisible={3}>
+						{mutualGuildRecords.map((guild) => (
+							<div key={guild.id} className={styles.guildIconWrapper}>
+								<GuildIcon id={guild.id} name={guild.name} icon={guild.icon} className={styles.guildIcon} sizePx={32} />
+							</div>
+						))}
+					</AvatarStack>
+				)}
 
 				<span className={styles.mutualGuildsText}>
 					{mutualGuildCount === 1

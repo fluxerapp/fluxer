@@ -19,10 +19,9 @@
 
 import {makeAutoObservable} from 'mobx';
 import {type GuildMember, GuildMemberRecord} from '~/records/GuildMemberRecord';
-import type {GuildReadyData, GuildRecord} from '~/records/GuildRecord';
+import type {GuildReadyData} from '~/records/GuildRecord';
 import AuthenticationStore from '~/stores/AuthenticationStore';
 import ConnectionStore from '~/stores/ConnectionStore';
-import GuildStore from '~/stores/GuildStore';
 
 type Members = Record<string, GuildMemberRecord>;
 
@@ -78,21 +77,6 @@ class GuildMemberStore {
 
 	getMemberCount(guildId: string): number {
 		return Object.keys(this.members[guildId] ?? {}).length;
-	}
-
-	getMutualGuilds(userId: string): Array<GuildRecord> {
-		const currentUserId = AuthenticationStore.currentUserId;
-		if (!currentUserId || !userId || currentUserId === userId) {
-			return [];
-		}
-
-		const guilds = GuildStore.getGuilds();
-
-		return guilds.filter((guild) => {
-			const userIsMember = this.getMember(guild.id, userId) != null;
-			const currentUserIsMember = this.getMember(guild.id, currentUserId) != null;
-			return userIsMember && currentUserIsMember;
-		});
 	}
 
 	handleConnectionOpen(guilds: Array<GuildReadyData>): void {
