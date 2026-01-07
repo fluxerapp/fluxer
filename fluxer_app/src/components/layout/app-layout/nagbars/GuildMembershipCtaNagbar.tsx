@@ -20,6 +20,7 @@
 import {Trans} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import React from 'react';
+import * as InviteActionCreators from '~/actions/InviteActionCreators';
 import * as ModalActionCreators from '~/actions/ModalActionCreators';
 import {modal} from '~/actions/ModalActionCreators';
 import {Nagbar} from '~/components/layout/Nagbar';
@@ -28,6 +29,7 @@ import {NagbarContent} from '~/components/layout/NagbarContent';
 import {InviteAcceptModal} from '~/components/modals/InviteAcceptModal';
 import AuthenticationStore from '~/stores/AuthenticationStore';
 import GuildMemberStore from '~/stores/GuildMemberStore';
+import GuildStore from '~/stores/GuildStore';
 import InviteStore from '~/stores/InviteStore';
 import NagbarStore from '~/stores/NagbarStore';
 import {isGuildInvite} from '~/types/InviteTypes';
@@ -40,6 +42,13 @@ export const GuildMembershipCtaNagbar = observer(({isMobile}: {isMobile: boolean
 	const invite = inviteState?.data ?? null;
 
 	const [isSubmitting, setIsSubmitting] = React.useState(false);
+
+	React.useEffect(() => {
+		const fluxerHqGuild = GuildStore.getGuilds().find((guild) => guild.vanityURLCode === FLUXER_HQ_INVITE_CODE);
+		if (fluxerHqGuild && GuildMemberStore.getMember(fluxerHqGuild.id, currentUserId ?? '')) {
+			NagbarStore.guildMembershipCtaDismissed = true;
+		}
+	}, [currentUserId]);
 
 	if (!currentUserId) {
 		return null;
@@ -58,19 +67,7 @@ export const GuildMembershipCtaNagbar = observer(({isMobile}: {isMobile: boolean
 
 		setIsSubmitting(true);
 		try {
-			const module = await import('~/actions/InviteActionCreators');
-			await module.fetchWithCoalescing(FLUXER_HQ_INVITE_CODE);
-
-			const loadedInvite = InviteStore.invites.get(FLUXER_HQ_INVITE_CODE)?.data ?? null;
-			if (loadedInvite && isGuildInvite(loadedInvite)) {
-				const guildId = loadedInvite.guild.id;
-				const isMember = Boolean(GuildMemberStore.getMember(guildId, currentUserId));
-				if (isMember) {
-					NagbarStore.guildMembershipCtaDismissed = true;
-					return;
-				}
-			}
-		} catch {
+			await InviteActionCreators.fetchWithCoalescing(FLUXER_HQ_INVITE_CODE);
 		} finally {
 			setIsSubmitting(false);
 			ModalActionCreators.push(modal(() => <InviteAcceptModal code={FLUXER_HQ_INVITE_CODE} />));
