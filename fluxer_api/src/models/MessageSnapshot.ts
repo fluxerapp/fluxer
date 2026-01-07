@@ -38,8 +38,8 @@ export class MessageSnapshot {
 
 	constructor(snapshot: CassandraMessageSnapshot) {
 		this.content = snapshot.content ?? null;
-		this.timestamp = snapshot.timestamp;
-		this.editedTimestamp = snapshot.edited_timestamp ?? null;
+		this.timestamp = new Date(snapshot.timestamp);
+		this.editedTimestamp = snapshot.edited_timestamp ? new Date(snapshot.edited_timestamp) : null;
 		this.mentionedUserIds = snapshot.mention_users ?? new Set();
 		this.mentionedRoleIds = snapshot.mention_roles ?? new Set();
 		this.mentionedChannelIds = snapshot.mention_channels ?? new Set();

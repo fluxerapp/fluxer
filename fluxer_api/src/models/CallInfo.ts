@@ -26,7 +26,7 @@ export class CallInfo {
 
 	constructor(call: MessageCall) {
 		this.participantIds = call.participant_ids ?? new Set();
-		this.endedTimestamp = call.ended_timestamp ?? null;
+		this.endedTimestamp = call.ended_timestamp ? new Date(call.ended_timestamp) : null;
 	}
 
 	toMessageCall(): MessageCall {

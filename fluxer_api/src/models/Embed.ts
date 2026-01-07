@@ -45,7 +45,7 @@ export class Embed {
 		this.title = embed.title ?? null;
 		this.description = embed.description ?? null;
 		this.url = embed.url ?? null;
-		this.timestamp = embed.timestamp ?? null;
+		this.timestamp = embed.timestamp ? new Date(embed.timestamp) : null;
 		this.color = embed.color ?? null;
 		this.author = embed.author ? new EmbedAuthor(embed.author) : null;
 		this.provider = embed.provider ? new EmbedProvider(embed.provider) : null;
