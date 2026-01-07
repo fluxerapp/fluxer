@@ -33,6 +33,7 @@ export interface NagbarSettings {
 	mobileDownloadDismissed: boolean;
 	pendingBulkDeletionDismissed: Record<string, boolean>;
 	invitesDisabledDismissed: Record<string, boolean>;
+	guildMembershipCtaDismissed: boolean;
 	claimAccountModalShownThisSession: boolean;
 	forceOffline: boolean;
 	forceEmailVerification: boolean;
@@ -49,6 +50,7 @@ export interface NagbarSettings {
 	forceUpdateAvailable: boolean;
 	forceDesktopDownload: boolean;
 	forceMobileDownload: boolean;
+	forceGuildMembershipCta: boolean;
 	forceHideOffline: boolean;
 	forceHideEmailVerification: boolean;
 	forceHideIOSInstall: boolean;
@@ -64,6 +66,7 @@ export interface NagbarSettings {
 	forceHideUpdateAvailable: boolean;
 	forceHideDesktopDownload: boolean;
 	forceHideMobileDownload: boolean;
+	forceHideGuildMembershipCta: boolean;
 }
 
 export type NagbarToggleKey = Exclude<
@@ -84,6 +87,7 @@ export class NagbarStore implements NagbarSettings {
 	mobileDownloadDismissed = false;
 	pendingBulkDeletionDismissed: Record<string, boolean> = {};
 	invitesDisabledDismissed: Record<string, boolean> = {};
+	guildMembershipCtaDismissed = false;
 	claimAccountModalShownThisSession = false;
 	forceOffline = false;
 	forceEmailVerification = false;
@@ -100,6 +104,7 @@ export class NagbarStore implements NagbarSettings {
 	forceUpdateAvailable = false;
 	forceDesktopDownload = false;
 	forceMobileDownload = false;
+	forceGuildMembershipCta = false;
 
 	forceHideOffline = false;
 	forceHideEmailVerification = false;
@@ -116,6 +121,7 @@ export class NagbarStore implements NagbarSettings {
 	forceHideUpdateAvailable = false;
 	forceHideDesktopDownload = false;
 	forceHideMobileDownload = false;
+	forceHideGuildMembershipCta = false;
 
 	constructor() {
 		makeAutoObservable(this, {}, {autoBind: true});
@@ -136,6 +142,7 @@ export class NagbarStore implements NagbarSettings {
 			'mobileDownloadDismissed',
 			'pendingBulkDeletionDismissed',
 			'invitesDisabledDismissed',
+			'guildMembershipCtaDismissed',
 		]);
 	}
 
@@ -235,6 +242,14 @@ export class NagbarStore implements NagbarSettings {
 		return this.forceHideUpdateAvailable;
 	}
 
+	getForceGuildMembershipCta(): boolean {
+		return this.forceGuildMembershipCta;
+	}
+
+	getForceHideGuildMembershipCta(): boolean {
+		return this.forceHideGuildMembershipCta;
+	}
+
 	hasPendingBulkDeletionDismissed(scheduleKey: string | null): boolean {
 		if (!scheduleKey) {
 			return false;
@@ -300,6 +315,7 @@ export class NagbarStore implements NagbarSettings {
 		this.mobileDownloadDismissed = false;
 		this.pendingBulkDeletionDismissed = {};
 		this.invitesDisabledDismissed = {};
+		this.guildMembershipCtaDismissed = false;
 		this.claimAccountModalShownThisSession = false;
 
 		this.forceOffline = false;
@@ -317,6 +333,7 @@ export class NagbarStore implements NagbarSettings {
 		this.forceUpdateAvailable = false;
 		this.forceDesktopDownload = false;
 		this.forceMobileDownload = false;
+		this.forceGuildMembershipCta = false;
 
 		this.forceHideOffline = false;
 		this.forceHideEmailVerification = false;
@@ -333,6 +350,7 @@ export class NagbarStore implements NagbarSettings {
 		this.forceHideUpdateAvailable = false;
 		this.forceHideDesktopDownload = false;
 		this.forceHideMobileDownload = false;
+		this.forceHideGuildMembershipCta = false;
 	}
 
 	handleGuildUpdate(action: {

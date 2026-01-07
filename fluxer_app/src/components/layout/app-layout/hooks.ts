@@ -162,6 +162,13 @@ export const useNagbarConditions = (): NagbarConditions => {
 		pendingBulkDeletion && !nagbarState.hasPendingBulkDeletionDismissed(pendingBulkDeletionKey),
 	);
 
+	const canShowGuildMembershipCta = (() => {
+		if (nagbarState.forceHideGuildMembershipCta) return false;
+		if (nagbarState.forceGuildMembershipCta) return true;
+		if (!user) return false;
+		return !nagbarState.guildMembershipCtaDismissed;
+	})();
+
 	return {
 		userIsUnclaimed: nagbarState.forceHideUnclaimedAccount
 			? false
@@ -185,6 +192,7 @@ export const useNagbarConditions = (): NagbarConditions => {
 		canShowDesktopDownload,
 		canShowMobileDownload,
 		hasPendingBulkMessageDeletion,
+		canShowGuildMembershipCta,
 	};
 };
 
@@ -208,23 +216,28 @@ export const useActiveNagbars = (conditions: NagbarConditions): Array<NagbarStat
 				visible: conditions.userIsUnclaimed,
 			},
 			{
-				type: NagbarType.EMAIL_VERIFICATION,
+				type: NagbarType.GUILD_MEMBERSHIP_CTA,
 				priority: 2,
+				visible: conditions.canShowGuildMembershipCta,
+			},
+			{
+				type: NagbarType.EMAIL_VERIFICATION,
+				priority: 3,
 				visible: conditions.userNeedsVerification,
 			},
 			{
 				type: NagbarType.PREMIUM_GRACE_PERIOD,
-				priority: 3,
+				priority: 4,
 				visible: conditions.canShowPremiumGracePeriod,
 			},
 			{
 				type: NagbarType.PREMIUM_EXPIRED,
-				priority: 4,
+				priority: 5,
 				visible: conditions.canShowPremiumExpired,
 			},
 			{
 				type: NagbarType.PREMIUM_ONBOARDING,
-				priority: 5,
+				priority: 6,
 				visible: conditions.canShowPremiumOnboarding,
 			},
 			{
