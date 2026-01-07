@@ -97,7 +97,7 @@ msgstr "{0, plural, one {# елемент} other {# елементів}}"
 #. placeholder {0}: group.recipientIds.length + 1
 #: src/components/channel/dm/DMList.tsx:446
 #: src/components/channel/dm/DMList.tsx:526
-#: src/components/modals/UserProfileModal.tsx:818
+#: src/components/modals/UserProfileModal.tsx:844
 msgid "{0, plural, one {# Member} other {# Members}}"
 msgstr "{0, plural, one {# учасник} other {# учасників}}"
 
@@ -566,18 +566,18 @@ msgstr "Зображення {label} не можуть бути анімован
 #: src/components/auth/InviteHeader.tsx:96
 #: src/components/auth/InviteHeader.tsx:127
 #: src/components/auth/InviteHeader.tsx:241
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:281
-#: src/components/channel/InviteEmbed.tsx:182
-#: src/components/channel/InviteEmbed.tsx:446
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:308
+#: src/components/channel/InviteEmbed.tsx:194
+#: src/components/channel/InviteEmbed.tsx:462
 msgid "{memberCount} Member"
 msgstr "{memberCount} учасник"
 
 #: src/components/auth/InviteHeader.tsx:96
 #: src/components/auth/InviteHeader.tsx:127
 #: src/components/auth/InviteHeader.tsx:241
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:281
-#: src/components/channel/InviteEmbed.tsx:182
-#: src/components/channel/InviteEmbed.tsx:446
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:308
+#: src/components/channel/InviteEmbed.tsx:194
+#: src/components/channel/InviteEmbed.tsx:462
 msgid "{memberCount} Members"
 msgstr "{memberCount} учасників"
 
@@ -612,11 +612,11 @@ msgstr "{minutes} хвилин і {seconds} секунд"
 msgid "{minutes} minutes and 1 second"
 msgstr "{minutes} хвилин та 1 секунда"
 
-#: src/components/channel/dm/DMWelcomeSection.tsx:167
+#: src/components/channel/dm/DMWelcomeSection.tsx:175
 msgid "{mutualGuildCount} mutual commmunity"
 msgstr "{mutualGuildCount} спільна спільнота"
 
-#: src/components/channel/dm/DMWelcomeSection.tsx:168
+#: src/components/channel/dm/DMWelcomeSection.tsx:176
 msgid "{mutualGuildCount} mutual communities"
 msgstr "{mutualGuildCount} спільних спільнот"
 
@@ -637,8 +637,8 @@ msgid "{participantCount} participants in call"
 msgstr "{participantCount} учасників в дзвінку"
 
 #: src/components/auth/InviteHeader.tsx:235
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:276
-#: src/components/channel/InviteEmbed.tsx:441
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:303
+#: src/components/channel/InviteEmbed.tsx:457
 msgid "{presenceCount} Online"
 msgstr "{presenceCount} онлайн"
 
@@ -650,15 +650,15 @@ msgstr "Залишилося {remaining} символів"
 msgid "{remaining} characters left. Get Plutonium to write up to {premiumMaxLength} characters."
 msgstr "Залишилося {remaining} символів. Оформи Plutonium, щоб писати до {premiumMaxLength} символів."
 
-#: src/components/channel/InviteEmbed.tsx:303
+#: src/components/channel/InviteEmbed.tsx:312
 msgid "{renderedMemberCount} Member"
 msgstr "{renderedMemberCount} учасник"
 
-#: src/components/channel/InviteEmbed.tsx:303
+#: src/components/channel/InviteEmbed.tsx:312
 msgid "{renderedMemberCount} Members"
 msgstr "{renderedMemberCount} учасників"
 
-#: src/components/channel/InviteEmbed.tsx:298
+#: src/components/channel/InviteEmbed.tsx:307
 msgid "{renderedPresenceCount} Online"
 msgstr "{renderedPresenceCount} онлайн"
 
@@ -812,7 +812,7 @@ msgstr "{value}%"
 msgid "{value}ms"
 msgstr "{value} мс"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:302
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:303
 msgid "@everyone mentions"
 msgstr "згадки @everyone"
 
@@ -1337,7 +1337,7 @@ msgid "Accent Color"
 msgstr "Колір акценту"
 
 #: src/components/channel/channel-view/DMChannelView.tsx:292
-#: src/components/channel/dm/DMWelcomeSection.tsx:128
+#: src/components/channel/dm/DMWelcomeSection.tsx:134
 #: src/components/channel/friends/FriendListItem.tsx:238
 #: src/components/channel/friends/MobileFriendRequestItem.tsx:99
 #: src/components/voice/IncomingCallUI.tsx:302
@@ -1346,12 +1346,12 @@ msgstr "Прийняти"
 
 #: src/components/bottomsheets/DMBottomSheet.tsx:517
 #: src/components/modals/guildTabs/GuildMemberActionsSheet.tsx:262
-#: src/components/modals/UserProfileModal.tsx:1261
+#: src/components/modals/UserProfileModal.tsx:1287
 #: src/components/uikit/ContextMenu/items/RelationshipMenuItems.tsx:109
 msgid "Accept Friend Request"
 msgstr "Прийняти запит у друзі"
 
-#: src/components/modals/InviteAcceptModal.tsx:195
+#: src/components/modals/InviteAcceptModal.tsx:209
 msgid "Accept invite"
 msgstr "Прийняти запрошення"
 
@@ -1364,8 +1364,8 @@ msgstr "Прийняти запрошення"
 msgid "Accept the incoming call"
 msgstr "Прийняти вхідний дзвінок"
 
-#: src/components/channel/InviteEmbed.tsx:228
-#: src/components/modals/InviteAcceptModal.tsx:163
+#: src/components/channel/InviteEmbed.tsx:238
+#: src/components/modals/InviteAcceptModal.tsx:177
 msgid "Accepting this invite installs the pack automatically."
 msgstr "Прийняття цього запрошення автоматично встановить пакет."
 
@@ -1594,7 +1594,7 @@ msgstr "Додати улюблені канали"
 #: src/components/channel/dm/AddFriendView.tsx:32
 #: src/components/channel/dm/DMFriendsView.tsx:199
 #: src/components/modals/AddFriendSheet.tsx:50
-#: src/components/modals/UserProfileModal.tsx:1181
+#: src/components/modals/UserProfileModal.tsx:1207
 #: src/components/uikit/ContextMenu/items/RelationshipMenuItems.tsx:75
 #: src/components/uikit/ContextMenu/items/RelationshipMenuItems.tsx:89
 msgid "Add Friend"
@@ -2078,7 +2078,7 @@ msgstr "Дозволив {0}."
 msgid "Already have an account?"
 msgstr "Вже є обліковий запис?"
 
-#: src/components/channel/InviteEmbed.tsx:189
+#: src/components/channel/InviteEmbed.tsx:201
 msgid "Already joined"
 msgstr "Вже приєднався"
 
@@ -2191,7 +2191,7 @@ msgstr "Анімовані аватари й банери"
 msgid "Animated Avatars Require Plutonium"
 msgstr "Анімовані аватари вимагають Plutonium"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:258
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:259
 msgid "Animated banner"
 msgstr "Анімований банер"
 
@@ -2205,13 +2205,13 @@ msgid "Animated Emoji ({0})"
 msgstr "Анімовані емодзі ({0})"
 
 #: src/components/channel/embeds/media/EmbedGifv.tsx:237
-#: src/components/channel/embeds/media/EmbedGifv.tsx:752
+#: src/components/channel/embeds/media/EmbedGifv.tsx:758
 #: src/components/modals/MediaViewerModal.tsx:294
 #: src/components/modals/MediaViewerModal.tsx:362
 msgid "Animated GIF"
 msgstr "Анімований GIF"
 
-#: src/components/channel/embeds/media/EmbedGifv.tsx:508
+#: src/components/channel/embeds/media/EmbedGifv.tsx:512
 msgid "Animated GIF video"
 msgstr "Анімоване відео GIF"
 
@@ -2219,7 +2219,7 @@ msgstr "Анімоване відео GIF"
 msgid "Animated GIF Video"
 msgstr "Анімоване відео GIF"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:257
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:258
 msgid "Animated icon"
 msgstr "Анімована іконка"
 
@@ -2277,7 +2277,7 @@ msgstr "Кожен може згадати цю роль. Учасники з п
 msgid "API Endpoint"
 msgstr "API-кінцева точка"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:349
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:350
 msgid "APNG"
 msgstr "APNG"
 
@@ -2310,12 +2310,11 @@ msgid "Application information"
 msgstr "Інформація про застосунок"
 
 #: src/components/modals/tabs/ApplicationsTab/application-detail/ApplicationInfoSection.tsx:53
-#: src/components/modals/tabs/ApplicationsTab/ApplicationCreateModal.tsx:91
+#: src/components/modals/tabs/ApplicationsTab/ApplicationCreateModal.tsx:84
 msgid "Application Name"
 msgstr "Назва застосунку"
 
 #: src/components/modals/tabs/ApplicationsTab/application-detail/ApplicationInfoSection.tsx:52
-#: src/components/modals/tabs/ApplicationsTab/ApplicationCreateModal.tsx:104
 msgid "Application name is required"
 msgstr "Потрібна назва застосунку"
 
@@ -2554,7 +2553,7 @@ msgstr "Ти впевнений, що хочеш скасувати бан дл�
 msgid "Are you sure you want to revoke this invite? This action cannot be undone."
 msgstr "Ти впевнений, що хочеш відкликати це запрошення? Цю дію не можна скасувати."
 
-#: src/components/channel/embeds/Embed.tsx:143
+#: src/components/channel/embeds/Embed.tsx:145
 msgid "Are you sure you want to suppress all link embeds on this message? This action will hide all embeds from this message."
 msgstr "Ти впевнений, що хочеш приховати всі вставки посилань у цьому повідомленні? Ця дія сховає всі вставки."
 
@@ -2603,7 +2602,7 @@ msgstr "Вкладення {0}"
 msgid "Attachment Actions"
 msgstr "Дії з вкладенням"
 
-#: src/components/channel/embeds/attachments/AttachmentFile.tsx:179
+#: src/components/channel/embeds/attachments/AttachmentFile.tsx:182
 msgid "Attachment expired"
 msgstr "Термін дії вкладення закінчився"
 
@@ -2779,8 +2778,8 @@ msgid "Autocomplete"
 msgstr "Автодоповнення"
 
 #: src/components/modals/channelTabs/ChannelOverviewTab.tsx:161
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:235
 #: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:236
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:237
 msgid "Automatic"
 msgstr "Автоматично"
 
@@ -2859,7 +2858,7 @@ msgstr "Назад"
 msgid "Back to Applications"
 msgstr "Назад до застосунків"
 
-#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:563
+#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:564
 msgid "Back to list"
 msgstr "Назад до списку"
 
@@ -2872,20 +2871,20 @@ msgid "Back to login"
 msgstr "Назад до входу"
 
 #: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:965
-#: src/components/modals/components/DesktopChannelSettingsView.tsx:144
-#: src/components/modals/components/DesktopGuildSettingsView.tsx:159
+#: src/components/modals/components/DesktopChannelSettingsView.tsx:158
+#: src/components/modals/components/DesktopGuildSettingsView.tsx:170
 #: src/components/modals/components/DesktopSettingsView.tsx:295
 msgid "Back to Overrides"
 msgstr "Назад до переважень"
 
-#: src/components/modals/components/DesktopGuildSettingsView.tsx:159
+#: src/components/modals/components/DesktopGuildSettingsView.tsx:170
 #: src/components/modals/guildTabs/GuildRolesTab.tsx:756
 #: src/components/modals/guildTabs/GuildRolesTab.tsx:979
 msgid "Back to Roles"
 msgstr "Назад до ролей"
 
-#: src/components/modals/components/DesktopChannelSettingsView.tsx:124
-#: src/components/modals/components/DesktopGuildSettingsView.tsx:139
+#: src/components/modals/components/DesktopChannelSettingsView.tsx:136
+#: src/components/modals/components/DesktopGuildSettingsView.tsx:148
 #: src/components/modals/components/DesktopSettingsView.tsx:275
 msgid "Back to Settings"
 msgstr "Назад до налаштувань"
@@ -3003,7 +3002,7 @@ msgstr "Забанені користувачі"
 #: src/components/modals/tabs/MyProfileTab/BannerUploader.tsx:152
 #: src/components/modals/tabs/MyProfileTab/BannerUploader.tsx:192
 #: src/components/modals/utils/settingsSearchIndex.ts:50
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:259
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:260
 msgid "Banner"
 msgstr "Банер"
 
@@ -3096,7 +3095,7 @@ msgstr "Ліміт символів у біографії"
 #: src/components/modals/guildTabs/GuildMemberActionsSheet.tsx:348
 #: src/components/modals/UserProfileActionsSheet.tsx:134
 #: src/components/modals/UserProfileActionsSheet.tsx:298
-#: src/components/modals/UserProfileModal.tsx:1064
+#: src/components/modals/UserProfileModal.tsx:1090
 #: src/components/uikit/ContextMenu/items/RelationshipMenuItems.tsx:211
 #: src/utils/RelationshipActionUtils.tsx:143
 msgid "Block"
@@ -3242,7 +3241,7 @@ msgstr "Запитана область дій бота"
 msgid "Bot token"
 msgstr "Токен бота"
 
-#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:425
+#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:426
 msgid "Bot token regenerated. Update any code that uses the old token."
 msgstr "Токен бота перегенеровано. Оновіть код, що використовує старий токен."
 
@@ -3435,7 +3434,7 @@ msgstr "Налаштування камери"
 #: src/components/alerts/FileSizeTooLargeModal.tsx:49
 #: src/components/auth/BrowserLoginHandoffModal.tsx:322
 #: src/components/bottomsheets/CreateDMBottomSheet.tsx:133
-#: src/components/channel/ChannelTextarea.tsx:236
+#: src/components/channel/ChannelTextarea.tsx:300
 #: src/components/channel/friends/FriendListItem.tsx:253
 #: src/components/channel/MentionEveryonePopout.tsx:125
 #: src/components/emojis/EmojiListItem.tsx:120
@@ -3496,7 +3495,7 @@ msgstr "Налаштування камери"
 #: src/components/modals/ScreenShareSettingsModal.tsx:160
 #: src/components/modals/ScreenShareSourceModal.tsx:75
 #: src/components/modals/SudoVerificationModal.tsx:403
-#: src/components/modals/tabs/ApplicationsTab/ApplicationCreateModal.tsx:109
+#: src/components/modals/tabs/ApplicationsTab/ApplicationCreateModal.tsx:100
 #: src/components/modals/tabs/MyProfileTab/AvatarUploader.tsx:124
 #: src/components/modals/tabs/PrivacySafetyTab/DataDeletionTab.tsx:85
 #: src/components/modals/tabs/PrivacySafetyTab/DataExportTab.tsx:85
@@ -3508,10 +3507,10 @@ msgstr "Налаштування камери"
 msgid "Cancel"
 msgstr "Скасувати"
 
-#: src/components/channel/dm/DMWelcomeSection.tsx:138
+#: src/components/channel/dm/DMWelcomeSection.tsx:144
 #: src/components/channel/friends/FriendListItem.tsx:164
 #: src/components/channel/friends/FriendListItem.tsx:166
-#: src/components/modals/UserProfileModal.tsx:1276
+#: src/components/modals/UserProfileModal.tsx:1302
 #: src/components/uikit/ContextMenu/items/RelationshipMenuItems.tsx:192
 msgid "Cancel Friend Request"
 msgstr "Скасувати запит у друзі"
@@ -3582,7 +3581,7 @@ msgid "Careful! You have unsaved changes."
 msgstr "Обережно! У вас є незбережені зміни."
 
 #: src/utils/ChannelUtils.tsx:66
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:220
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:221
 msgid "Category"
 msgstr "Категорія"
 
@@ -3605,7 +3604,7 @@ msgid "Category Name"
 msgstr "Назва категорії"
 
 #: src/components/modals/ChannelSettingsModal.tsx:113
-#: src/components/modals/components/DesktopChannelSettingsView.tsx:188
+#: src/components/modals/components/DesktopChannelSettingsView.tsx:202
 msgid "Category Settings"
 msgstr "Налаштування категорії"
 
@@ -3617,7 +3616,7 @@ msgstr "Увага"
 msgid "Center"
 msgstr "Центр"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:246
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:247
 msgid "Centered"
 msgstr "Центровано"
 
@@ -3765,7 +3764,7 @@ msgstr "Бітрейт змінено на {0}."
 msgid "Changed the voice region to {0}."
 msgstr "Регіон голосу змінено на {0}."
 
-#: src/components/channel/ChannelTextarea.tsx:618
+#: src/components/channel/ChannelTextarea.tsx:682
 #: src/utils/SearchUtils.ts:270
 msgid "channel"
 msgstr "канал"
@@ -3828,11 +3827,11 @@ msgstr "ID каналу скопійовано в буфер обміну"
 msgid "Channel link copied"
 msgstr "Посилання на канал скопійовано"
 
-#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:113
+#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:116
 msgid "Channel list typing indicator mode"
 msgstr "Режим індикатора набору в списку каналів"
 
-#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:105
+#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:108
 #: src/components/modals/utils/settingsSearchIndex.ts:223
 msgid "Channel List Typing Indicators"
 msgstr "Індикатори набору в списку каналів"
@@ -3891,7 +3890,7 @@ msgstr "Канал видалено з обраних"
 #: src/components/bottomsheets/ChannelDetailsBottomSheet.tsx:1116
 #: src/components/layout/ChannelItem.tsx:647
 #: src/components/modals/ChannelSettingsModal.tsx:113
-#: src/components/modals/components/DesktopChannelSettingsView.tsx:188
+#: src/components/modals/components/DesktopChannelSettingsView.tsx:202
 msgid "Channel Settings"
 msgstr "Налаштування каналу"
 
@@ -4052,7 +4051,7 @@ msgstr "Оберіть формат відображення часу в усь�
 msgid "Choose how typing indicators appear in the channel list"
 msgstr "Оберіть, як індикатори набору з’являються в списку каналів"
 
-#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:106
+#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:109
 msgid "Choose how typing indicators appear in the channel list when someone is typing in a channel."
 msgstr "Оберіть, як індикатори набору з’являються в списку каналів, коли хтось щось пише."
 
@@ -4180,8 +4179,8 @@ msgid "Claim your account to redeem this gift."
 msgstr "Претендуйте на свій обліковий запис, щоб викупити цей подарунок."
 
 #: src/components/channel/dm/AddFriendForm.tsx:54
-#: src/components/channel/dm/DMWelcomeSection.tsx:109
-#: src/components/modals/UserProfileModal.tsx:1291
+#: src/components/channel/dm/DMWelcomeSection.tsx:115
+#: src/components/modals/UserProfileModal.tsx:1317
 #: src/components/uikit/ContextMenu/items/RelationshipMenuItems.tsx:65
 msgid "Claim your account to send friend requests."
 msgstr "Претендуйте на свій обліковий запис, щоб надсилати запити на дружбу."
@@ -4245,7 +4244,7 @@ msgid "Clear Permissions"
 msgstr "Скинути дозволи"
 
 #: src/components/bottomsheets/ChannelSearchBottomSheet.tsx:420
-#: src/components/channel/MessageSearchBar/MessageSearchBar.tsx:1424
+#: src/components/channel/MessageSearchBar/MessageSearchBar.tsx:1452
 #: src/components/channel/shared/PickerSearchInput.tsx:194
 #: src/components/channel/shared/PickerSearchInput.tsx:211
 #: src/components/modals/components/SettingsSearch.tsx:108
@@ -4256,7 +4255,7 @@ msgstr "Очистити пошук"
 msgid "Clear search input"
 msgstr "Очистити поле пошуку"
 
-#: src/components/modals/tabs/DevicesTab.tsx:281
+#: src/components/modals/tabs/DevicesTab.tsx:284
 msgid "Clear Selection"
 msgstr "Зняти виділення"
 
@@ -4314,7 +4313,7 @@ msgstr "Натисніть значок завантаження поруч із
 msgid "Click the verification link in the email."
 msgstr "Перейдіть за посиланням підтвердження в електронному листі."
 
-#: src/components/modals/UserProfileModal.tsx:259
+#: src/components/modals/UserProfileModal.tsx:260
 msgid "Click to add a note"
 msgstr "Натисніть, щоб додати нотатку"
 
@@ -4327,7 +4326,7 @@ msgid "Click to claim your gift!"
 msgstr "Натисніть, щоб забрати подарунок!"
 
 #: src/components/invites/InviteListItem.tsx:184
-#: src/components/modals/components/ClientInfo.tsx:76
+#: src/components/modals/components/ClientInfo.tsx:100
 #: src/components/modals/tabs/BetaCodesTab.tsx:174
 msgid "Click to copy"
 msgstr "Натисніть, щоб скопіювати"
@@ -4388,7 +4387,7 @@ msgstr "Натисніть, щоб переглянути всі реакції"
 msgid "Client secret"
 msgstr "Секрет клієнта"
 
-#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:424
+#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:425
 msgid "Client secret regenerated. Update any code that uses the old secret."
 msgstr "Секрет клієнта перегенеровано. Оновіть код, що використовує старий секрет."
 
@@ -4649,8 +4648,8 @@ msgstr "Спільнота пропагує ненависть на основі
 msgid "Community promotes or facilitates illegal activities"
 msgstr "Спільнота пропагує або сприяє незаконним діям"
 
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:172
-#: src/components/modals/components/DesktopGuildSettingsView.tsx:204
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:199
+#: src/components/modals/components/DesktopGuildSettingsView.tsx:215
 #: src/components/modals/GuildSettingsModal.tsx:173
 #: src/components/popouts/GuildHeaderPopout.tsx:187
 #: src/components/uikit/ContextMenu/items/GuildMenuItems.tsx:360
@@ -4935,7 +4934,7 @@ msgstr "Контекстні меню"
 msgid "Context menus can be opened with left-click (on buttons) or right-click (on other elements). This demonstrates various menu items including checkboxes, radio buttons, sliders, and submenus."
 msgstr "Контекстні меню можна відкривати лівим кліком (на кнопках) або правим (на інших елементах). Це демонструє різні елементи меню, включно з чекбоксами, радіокнопками, слайдерами та підменю."
 
-#: src/components/channel/ChannelTextarea.tsx:235
+#: src/components/channel/ChannelTextarea.tsx:299
 #: src/components/modals/BackupCodesRegenerateModal.tsx:63
 #: src/components/modals/BackupCodesViewModal.tsx:66
 #: src/components/modals/DeviceRevokeModal.tsx:68
@@ -4992,7 +4991,7 @@ msgstr "Контролюйте, як попередньо переглядают
 msgid "Control how you join voice channels"
 msgstr "Керувати тим, як ти приєднуєшся до голосових каналів"
 
-#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:141
+#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:144
 msgid "Control how you join voice channels in communities."
 msgstr "Керувати тим, як ви приєднуєтеся до голосових каналів у спільнотах."
 
@@ -5012,7 +5011,7 @@ msgstr "Керувати анімаціями стікерів"
 msgid "Control the visibility of favorites throughout the app."
 msgstr "Керувати видимістю обраного у всьому додатку."
 
-#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:127
+#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:130
 msgid "Control whether keyboard shortcut hints appear inside tooltips."
 msgstr "Керувати тим, чи з'являються підказки гарячих клавіш у спливаючих підказках."
 
@@ -5071,7 +5070,7 @@ msgstr "Скопійовано"
 msgid "Copied to clipboard"
 msgstr "Скопійовано в буфер"
 
-#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:541
+#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:542
 msgid "Copied URL to clipboard"
 msgstr "URL скопійовано в буфер"
 
@@ -5149,7 +5148,7 @@ msgstr "Скопіювати посилання на файл"
 
 #: src/components/modals/tabs/BlockedUsersTab.tsx:98
 #: src/components/modals/UserProfileActionsSheet.tsx:208
-#: src/components/modals/UserProfileModal.tsx:1123
+#: src/components/modals/UserProfileModal.tsx:1149
 msgid "Copy FluxerTag"
 msgstr "Скопіювати FluxerTag"
 
@@ -5157,7 +5156,7 @@ msgstr "Скопіювати FluxerTag"
 msgid "Copy GIF"
 msgstr "Скопіювати GIF"
 
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:254
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:281
 #: src/components/uikit/ContextMenu/items/GuildMenuItems.tsx:475
 msgid "Copy Guild ID"
 msgstr "Скопіювати ID гільдії"
@@ -5222,7 +5221,7 @@ msgstr "Скопіювати текст"
 #: src/components/modals/guildTabs/GuildMemberActionsSheet.tsx:361
 #: src/components/modals/tabs/BlockedUsersTab.tsx:107
 #: src/components/modals/UserProfileActionsSheet.tsx:213
-#: src/components/modals/UserProfileModal.tsx:1132
+#: src/components/modals/UserProfileModal.tsx:1158
 #: src/components/popouts/UserAreaPopout.tsx:509
 #: src/components/profile/ProfileCard/ProfileCardActions.tsx:60
 #: src/components/uikit/ContextMenu/items/CopyMenuItems.tsx:42
@@ -5270,7 +5269,7 @@ msgstr "Затишно"
 #: src/components/modals/AddFriendsToGroupModal.tsx:99
 #: src/components/modals/AddGuildStickerModal.tsx:119
 #: src/components/modals/CreatePackModal.tsx:109
-#: src/components/modals/tabs/ApplicationsTab/ApplicationCreateModal.tsx:112
+#: src/components/modals/tabs/ApplicationsTab/ApplicationCreateModal.tsx:103
 msgid "Create"
 msgstr "Створити"
 
@@ -5331,14 +5330,14 @@ msgstr "Створюйте й керуйте додатками та ботам�
 msgid "Create and share custom emoji and sticker packs with Fluxer Plutonium."
 msgstr "Створюйте й діліться власними наборами емодзі й стікерів за допомогою Fluxer Plutonium."
 
-#: src/components/modals/tabs/ApplicationsTab/ApplicationCreateModal.tsx:87
+#: src/components/modals/tabs/ApplicationsTab/ApplicationCreateModal.tsx:80
 #: src/components/modals/tabs/ApplicationsTab/index.tsx:149
 #: src/components/modals/tabs/ApplicationsTab/index.tsx:155
 msgid "Create Application"
 msgstr "Створити додаток"
 
 #: src/components/bottomsheets/FavoritesGuildHeaderBottomSheet.tsx:83
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:185
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:212
 #: src/components/modals/CategoryCreateModal.tsx:63
 #: src/components/modals/CategoryCreateModal.tsx:82
 #: src/components/modals/CreateFavoriteCategoryModal.tsx:58
@@ -5351,7 +5350,7 @@ msgstr "Створити додаток"
 msgid "Create Category"
 msgstr "Створити категорію"
 
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:180
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:207
 #: src/components/layout/ChannelItem.tsx:624
 #: src/components/modals/ChannelCreateModal.tsx:58
 #: src/components/modals/ChannelCreateModal.tsx:103
@@ -5475,8 +5474,8 @@ msgstr "Створено {createdAt}"
 #. placeholder {0}: invite.pack.creator.username
 #. placeholder {0}: pack.creator.username
 #: src/components/auth/InviteHeader.tsx:158
-#: src/components/channel/InviteEmbed.tsx:220
-#: src/components/modals/InviteAcceptModal.tsx:152
+#: src/components/channel/InviteEmbed.tsx:230
+#: src/components/modals/InviteAcceptModal.tsx:166
 msgid "Created by {0}"
 msgstr "Створено {0}"
 
@@ -5569,7 +5568,7 @@ msgstr "Обрізане зображення занадто велике. Об�
 msgid "Current Community"
 msgstr "Поточна спільнота"
 
-#: src/components/modals/tabs/DevicesTab.tsx:252
+#: src/components/modals/tabs/DevicesTab.tsx:255
 msgid "Current Device"
 msgstr "Поточний пристрій"
 
@@ -5606,7 +5605,7 @@ msgstr "Зараз застряг у 1885 році, виглядаю офлай�
 #: src/components/bottomsheets/ChannelBottomSheet.tsx:461
 #: src/components/bottomsheets/ChannelDetailsBottomSheet.tsx:1047
 #: src/components/bottomsheets/DMBottomSheet.tsx:608
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:305
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:332
 msgid "Currently: {mutedText}"
 msgstr "Наразі: {mutedText}"
 
@@ -5782,7 +5781,7 @@ msgstr "Додаткова небезпека"
 msgid "Danger secondary clicked!"
 msgstr "Додаткову небезпеку натиснуто!"
 
-#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:667
+#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:668
 msgid "Danger zone"
 msgstr "Зона небезпеки"
 
@@ -5991,10 +5990,10 @@ msgid "Defaults to off on mobile to preserve battery life and data usage."
 msgstr "За замовчуванням вимкнено на мобільних пристроях, щоб зберігати заряд і трафік."
 
 #: src/actions/MessageActionCreators.tsx:406
-#: src/components/channel/embeds/media/EmbedAudio.tsx:227
+#: src/components/channel/embeds/media/EmbedAudio.tsx:234
 #: src/components/channel/embeds/media/MediaContainer.tsx:115
-#: src/components/channel/Messages.tsx:447
-#: src/components/channel/Messages.tsx:527
+#: src/components/channel/Messages.tsx:446
+#: src/components/channel/Messages.tsx:526
 #: src/components/channel/MobileMemesPicker.tsx:546
 #: src/components/channel/pickers/memes/MemeGridItem.tsx:120
 #: src/components/emojis/EmojiListItem.tsx:189
@@ -6048,12 +6047,12 @@ msgstr "Видалити всі мої повідомлення"
 
 #: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:370
 #: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:384
-#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:682
+#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:683
 msgid "Delete Application"
 msgstr "Видалити додаток"
 
-#: src/components/channel/embeds/attachments/AttachmentFile.tsx:164
-#: src/components/channel/embeds/media/EmbedAudio.tsx:232
+#: src/components/channel/embeds/attachments/AttachmentFile.tsx:167
+#: src/components/channel/embeds/media/EmbedAudio.tsx:239
 #: src/components/channel/embeds/media/MediaContainer.tsx:120
 msgid "Delete attachment"
 msgstr "Видалити вкладення"
@@ -6063,7 +6062,7 @@ msgstr "Видалити вкладення"
 msgid "Delete Attachment"
 msgstr "Видалити вкладення"
 
-#: src/components/modals/components/DesktopChannelSettingsView.tsx:176
+#: src/components/modals/components/DesktopChannelSettingsView.tsx:190
 #: src/components/modals/components/MobileChannelSettingsView.tsx:85
 #: src/components/uikit/ContextMenu/FavoritesCategoryContextMenu.tsx:90
 #: src/components/uikit/ContextMenu/items/CategoryMenuItems.tsx:335
@@ -6077,14 +6076,14 @@ msgstr "Видалити категорію"
 #: src/components/bottomsheets/ChannelBottomSheet.tsx:421
 #: src/components/bottomsheets/ChannelDetailsBottomSheet.tsx:682
 #: src/components/bottomsheets/ChannelDetailsBottomSheet.tsx:1248
-#: src/components/modals/components/DesktopChannelSettingsView.tsx:176
+#: src/components/modals/components/DesktopChannelSettingsView.tsx:190
 #: src/components/modals/components/MobileChannelSettingsView.tsx:85
 #: src/components/uikit/ContextMenu/items/ChannelMenuItems.tsx:322
 #: src/components/uikit/ContextMenu/items/ChannelMenuItems.tsx:348
 msgid "Delete Channel"
 msgstr "Видалити канал"
 
-#: src/components/modals/components/DesktopGuildSettingsView.tsx:192
+#: src/components/modals/components/DesktopGuildSettingsView.tsx:203
 #: src/components/modals/components/MobileGuildSettingsView.tsx:85
 #: src/components/modals/GuildDeleteModal.tsx:50
 #: src/components/modals/GuildDeleteModal.tsx:62
@@ -6109,8 +6108,8 @@ msgstr "Видалити медіа"
 #: src/components/channel/MessageActionBar.tsx:804
 #: src/components/channel/messageActionMenu.tsx:158
 #: src/components/channel/messageActionMenu.tsx:195
-#: src/components/channel/Messages.tsx:444
-#: src/components/channel/Messages.tsx:524
+#: src/components/channel/Messages.tsx:443
+#: src/components/channel/Messages.tsx:523
 #: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:273
 msgid "Delete Message"
 msgstr "Видалити повідомлення"
@@ -6215,7 +6214,7 @@ msgstr "Щільний"
 msgid "Dense layout"
 msgstr "Щільне розташування"
 
-#: src/components/modals/components/ClientInfo.tsx:89
+#: src/components/modals/components/ClientInfo.tsx:113
 msgid "Deployed"
 msgstr "Розгорнуто"
 
@@ -6281,7 +6280,7 @@ msgstr "Канал призначення"
 msgid "Destination URL:"
 msgstr "URL-адреса призначення:"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:260
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:261
 msgid "Detached banner"
 msgstr "Відокремлений банер"
 
@@ -6362,7 +6361,7 @@ msgstr "Різні розміри (статус підтримується)"
 msgid "Different Sizes & Member Counts"
 msgstr "Різні розміри й кількість учасників"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:224
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:225
 msgid "Direct message"
 msgstr "Пряме повідомлення"
 
@@ -6541,7 +6540,7 @@ msgstr "Вимкнення акаунта вийде з усіх сесій. Т�
 msgid "Disallow @mention."
 msgstr "Заборонити згадку (@)."
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:276
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:277
 msgid "Disallow unclaimed accounts"
 msgstr "Заборонити непідтверджені акаунти"
 
@@ -6747,7 +6746,7 @@ msgstr "Не показувати попередній перегляд пові
 msgid "Don't show this again"
 msgstr "Не показувати це знову"
 
-#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:98
+#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:101
 msgid "Don't show typing indicators in the channel list"
 msgstr "Не показувати індикатори набору в списку каналів"
 
@@ -6760,7 +6759,7 @@ msgstr "Не показувати індикатори набору в спис�
 msgid "Done"
 msgstr "Готово"
 
-#: src/components/channel/embeds/attachments/AttachmentFile.tsx:189
+#: src/components/channel/embeds/attachments/AttachmentFile.tsx:192
 #: src/components/channel/embeds/media/MediaContainer.tsx:127
 #: src/components/layout/app-layout/nagbars/DesktopDownloadNagbar.tsx:63
 #: src/components/layout/app-layout/nagbars/MobileDownloadNagbar.tsx:66
@@ -6947,7 +6946,7 @@ msgstr "Редагувати категорію"
 msgid "Edit Channel"
 msgstr "Редагувати канал"
 
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:209
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:236
 #: src/components/popouts/GuildHeaderPopout.tsx:217
 #: src/components/uikit/ContextMenu/items/GuildMenuItems.tsx:406
 msgid "Edit Community Profile"
@@ -7004,7 +7003,7 @@ msgid "Edit overwrites for roles and members in this channel."
 msgstr "Редагуй перезаписи прав доступу для ролей і учасників у цьому каналі."
 
 #: src/components/modals/UserProfileMobileSheet.tsx:492
-#: src/components/modals/UserProfileModal.tsx:1208
+#: src/components/modals/UserProfileModal.tsx:1234
 #: src/components/pages/YouPage.tsx:123
 #: src/components/popouts/UserAreaPopout.tsx:521
 #: src/components/popouts/UserProfilePopout.tsx:301
@@ -7143,7 +7142,7 @@ msgstr "Вбудована заставка"
 msgid "Embed splash images cannot be animated. Please use JPEG, PNG, or WebP."
 msgstr "Зображення заставки не можуть бути анімованими. Використовуй JPEG, PNG або WebP."
 
-#: src/components/channel/embeds/media/EmbedAudio.tsx:198
+#: src/components/channel/embeds/media/EmbedAudio.tsx:205
 msgid "Embedded audio"
 msgstr "Вбудоване аудіо"
 
@@ -7198,8 +7197,8 @@ msgid "Emoji names must be at least 2 characters long and can only contain alpha
 msgstr "Назви емодзі мають містити щонайменше 2 символи та можуть містити лише буквено-цифрові символи й нижнє підкреслення. Дозволені формати: JPEG, PNG, WebP, GIF. Ми стискаємо зображення до 128x128 пікселів. Максимальний розмір: {0} КБ на емодзі."
 
 #: src/components/auth/InviteHeader.tsx:140
-#: src/components/channel/InviteEmbed.tsx:199
-#: src/components/modals/InviteAcceptModal.tsx:142
+#: src/components/channel/InviteEmbed.tsx:209
+#: src/components/modals/InviteAcceptModal.tsx:156
 #: src/components/modals/tabs/ExpressionPacksTab.tsx:70
 msgid "Emoji pack"
 msgstr "Пакет емодзі"
@@ -7473,7 +7472,7 @@ msgstr "Введи номер телефону"
 msgid "Enter picture-in-picture"
 msgstr "Увімкнути картинку в картинці"
 
-#: src/components/modals/tabs/DevicesTab.tsx:266
+#: src/components/modals/tabs/DevicesTab.tsx:269
 msgid "Enter Selection Mode"
 msgstr "Увімкнути режим вибору"
 
@@ -7536,7 +7535,7 @@ msgstr "Введи нову електронну адресу, яку хочеш
 msgid "Enter the SMS code you received."
 msgstr "Введи отриманий SMS-код."
 
-#: src/components/channel/EditingMessageInput.tsx:286
+#: src/components/channel/EditingMessageInput.tsx:287
 msgid "enter to <0><1>save</1></0>"
 msgstr "натисни Enter, щоб <0><1>зберегти</1></0>"
 
@@ -7604,7 +7603,7 @@ msgstr "Помилка рендерингу LaTeX: {0}"
 msgid "Escape key exits keyboard mode"
 msgstr "Клавіша Esc виходить з режиму клавіатури"
 
-#: src/components/channel/EditingMessageInput.tsx:277
+#: src/components/channel/EditingMessageInput.tsx:278
 msgid "escape to <0><1>cancel</1></0>"
 msgstr "натисни Esc, щоб <0><1>скасувати</1></0>"
 
@@ -7667,7 +7666,7 @@ msgstr "Вийти з режиму картинка в картинці"
 msgid "Exit Preview"
 msgstr "Вийти з попереднього перегляду"
 
-#: src/components/modals/tabs/DevicesTab.tsx:266
+#: src/components/modals/tabs/DevicesTab.tsx:269
 msgid "Exit Selection Mode"
 msgstr "Вийти з режиму вибору"
 
@@ -7701,7 +7700,7 @@ msgstr "Термін дії минув (протягом 30 днів)"
 msgid "Expired {absolute}"
 msgstr "Термін дії минув {absolute}"
 
-#: src/components/channel/embeds/attachments/AttachmentMosaic.tsx:526
+#: src/components/channel/embeds/attachments/AttachmentMosaic.tsx:540
 msgid "Expired between {earliest} and {latest}"
 msgstr "Термін дії минув між {earliest} і {latest}"
 
@@ -7709,7 +7708,7 @@ msgstr "Термін дії минув між {earliest} і {latest}"
 msgid "Expired on {date}"
 msgstr "Термін дії минув {date}"
 
-#: src/components/channel/embeds/attachments/AttachmentMosaic.tsx:529
+#: src/components/channel/embeds/attachments/AttachmentMosaic.tsx:543
 msgid "Expired on {earliest}"
 msgstr "Термін дії минув {earliest}"
 
@@ -7722,7 +7721,7 @@ msgstr "Закінчується"
 msgid "Expires {absolute} ({relativeText})"
 msgstr "Закінчується {absolute} ({relativeText})"
 
-#: src/components/channel/embeds/attachments/AttachmentMosaic.tsx:527
+#: src/components/channel/embeds/attachments/AttachmentMosaic.tsx:541
 msgid "Expires between {earliest} and {latest}"
 msgstr "Закінчується між {earliest} і {latest}"
 
@@ -7730,7 +7729,7 @@ msgstr "Закінчується між {earliest} і {latest}"
 msgid "Expires on {date}"
 msgstr "Закінчується {date}"
 
-#: src/components/channel/embeds/attachments/AttachmentMosaic.tsx:529
+#: src/components/channel/embeds/attachments/AttachmentMosaic.tsx:543
 msgid "Expires on {earliest}"
 msgstr "Закінчується {earliest}"
 
@@ -7766,7 +7765,7 @@ msgstr "Пакети експресій — це функція Plutonium"
 msgid "Expression picker categories"
 msgstr "Категорії вибору експресій"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:268
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:269
 msgid "Expression purge"
 msgstr "Очищення експресій"
 
@@ -7838,10 +7837,6 @@ msgstr "Не вдалося скопіювати в буфер обміну"
 #: src/components/modals/tabs/GiftInventoryTab.tsx:80
 msgid "Failed to copy URL"
 msgstr "Не вдалося скопіювати URL"
-
-#: src/components/modals/tabs/ApplicationsTab/ApplicationCreateModal.tsx:78
-msgid "Failed to create application. Please check your inputs and try again."
-msgstr "Не вдалося створити застосунок. Перевір введені дані та спробуй ще раз."
 
 #: src/components/alerts/RoleCreateFailedModal.tsx:27
 msgid "Failed to create role"
@@ -8100,7 +8095,7 @@ msgstr "Не вдалося скасувати бан. Спробуй ще ра�
 msgid "Failed to revoke invite"
 msgstr "Не вдалося відкликати запрошення"
 
-#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:431
+#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:432
 msgid "Failed to rotate. Please try again."
 msgstr "Не вдалося повернути. Спробуй ще раз."
 
@@ -8413,7 +8408,7 @@ msgstr "Фітнес-друзі"
 msgid "Flags"
 msgstr "Прапори"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:263
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:264
 msgid "Flexible text channel names"
 msgstr "Гнучкі назви текстових каналів"
 
@@ -8577,7 +8572,7 @@ msgstr "Гурмани-друзі"
 msgid "For 1 hour"
 msgstr "На 1 годину"
 
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:330
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:357
 #: src/components/channel/ChannelHeader/ChannelNotificationSettingsDropdown.tsx:53
 #: src/components/channel/muteOptions.ts:35
 #: src/components/popouts/UserAreaPopout.tsx:78
@@ -8592,7 +8587,7 @@ msgstr "На 1 годину"
 msgid "For 15 minutes"
 msgstr "На 15 хвилин"
 
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:329
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:356
 #: src/components/channel/ChannelHeader/ChannelNotificationSettingsDropdown.tsx:52
 #: src/components/channel/muteOptions.ts:34
 #: src/components/uikit/ContextMenu/items/CategoryMenuItems.tsx:142
@@ -8605,7 +8600,7 @@ msgstr "На 15 хвилин"
 msgid "For 24 hours"
 msgstr "На 24 години"
 
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:333
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:360
 #: src/components/channel/ChannelHeader/ChannelNotificationSettingsDropdown.tsx:56
 #: src/components/channel/muteOptions.ts:38
 #: src/components/popouts/UserAreaPopout.tsx:80
@@ -8623,7 +8618,7 @@ msgstr "На 3 дні"
 msgid "For 3 hours"
 msgstr "На 3 години"
 
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:331
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:358
 #: src/components/channel/ChannelHeader/ChannelNotificationSettingsDropdown.tsx:54
 #: src/components/channel/muteOptions.ts:36
 #: src/components/uikit/ContextMenu/items/CategoryMenuItems.tsx:144
@@ -8636,7 +8631,7 @@ msgstr "На 3 години"
 msgid "For 8 hours"
 msgstr "На 8 годин"
 
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:332
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:359
 #: src/components/channel/ChannelHeader/ChannelNotificationSettingsDropdown.tsx:55
 #: src/components/channel/muteOptions.ts:37
 #: src/components/popouts/UserAreaPopout.tsx:79
@@ -8774,7 +8769,7 @@ msgstr "Забути підписки"
 msgid "Forgot Password"
 msgstr "Забули пароль"
 
-#: src/components/auth/AuthLoginLayout.tsx:248
+#: src/components/auth/AuthLoginLayout.tsx:249
 #: src/components/pages/ForgotPasswordPage.tsx:83
 msgid "Forgot your password?"
 msgstr "Забули пароль?"
@@ -8795,7 +8790,7 @@ msgstr "Перемістити вперед на {DEFAULT_SEEK_AMOUNT} секу�
 msgid "Forward Message"
 msgstr "Переслати повідомлення"
 
-#: src/components/channel/MessageAttachments.tsx:155
+#: src/components/channel/MessageAttachments.tsx:156
 msgid "Forwarded"
 msgstr "Переслано"
 
@@ -9065,7 +9060,7 @@ msgstr "Завантажте Fluxer для десктопа, щоб корист
 #: src/components/stickers/StickerGridItem.tsx:100
 #: src/utils/FavoriteMemeUtils.ts:70
 #: src/utils/FavoriteMemeUtils.ts:97
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:351
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:352
 msgid "GIF"
 msgstr "GIF"
 
@@ -9236,8 +9231,8 @@ msgstr "Повернутися до попереднього текстовог�
 msgid "Go forward in navigation history"
 msgstr "Перейти вперед в історії навігації"
 
-#: src/components/channel/InviteEmbed.tsx:261
-#: src/components/modals/InviteAcceptModal.tsx:100
+#: src/components/channel/InviteEmbed.tsx:270
+#: src/components/modals/InviteAcceptModal.tsx:114
 msgid "Go to Community"
 msgstr "Перейти до спільноти"
 
@@ -9389,7 +9384,7 @@ msgid "Group Invites"
 msgstr "Запрошення в групу"
 
 #: src/stores/QuickSwitcherStore.tsx:657
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:226
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:227
 msgid "Group message"
 msgstr "Групове повідомлення"
 
@@ -9548,7 +9543,7 @@ msgstr "Гей, {username}, ласкаво просимо! Ти можеш ус�
 msgid "Hey, {username}! When it hits 88mph, you'll see some serious stuff!"
 msgstr "Гей, {username}! Коли досягне 88 миль/год, побачиш справжні речі!"
 
-#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:97
+#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:100
 msgid "Hidden"
 msgstr "Приховано"
 
@@ -9569,7 +9564,7 @@ msgstr "Сховати улюблені"
 msgid "Hide Join Messages"
 msgstr "Приховати повідомлення про приєднання"
 
-#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:131
+#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:134
 msgid "Hide keyboard hints in tooltips"
 msgstr "Приховати підказки клавіатури в спливаючих підказках"
 
@@ -9582,7 +9577,7 @@ msgid "Hide muted channels"
 msgstr "Приховати заглушені канали"
 
 #: src/components/bottomsheets/FavoritesGuildHeaderBottomSheet.tsx:100
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:229
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:256
 #: src/components/popouts/FavoritesGuildHeaderPopout.tsx:145
 #: src/components/popouts/GuildHeaderPopout.tsx:225
 #: src/components/uikit/ContextMenu/ChannelListContextMenu.tsx:78
@@ -9822,7 +9817,7 @@ msgid "If you want to export your data or delete your messages first, please vis
 msgstr "Якщо хочете спочатку експортувати дані або видалити повідомлення, зайдіть у Розділ конфіденційності в Користувацьких налаштуваннях перед продовженням."
 
 #: src/components/channel/channel-view/DMChannelView.tsx:302
-#: src/components/channel/dm/DMWelcomeSection.tsx:131
+#: src/components/channel/dm/DMWelcomeSection.tsx:137
 #: src/components/channel/friends/FriendListItem.tsx:145
 #: src/components/channel/friends/FriendListItem.tsx:244
 #: src/components/channel/friends/MobileFriendRequestItem.tsx:69
@@ -9855,7 +9850,7 @@ msgid "image"
 msgstr "зображення"
 
 #: src/components/channel/embeds/media/EmbedGifv.tsx:237
-#: src/components/channel/embeds/media/EmbedImage.tsx:374
+#: src/components/channel/embeds/media/EmbedImage.tsx:377
 #: src/components/modals/MediaViewerModal.tsx:362
 #: src/components/search/HasFilterSheet.tsx:50
 #: src/utils/FavoriteMemeUtils.ts:71
@@ -10129,13 +10124,13 @@ msgstr "Введення з іконками"
 msgid "Insert emoji"
 msgstr "Вставити емодзі"
 
-#: src/components/channel/InviteEmbed.tsx:200
-#: src/components/modals/InviteAcceptModal.tsx:143
+#: src/components/channel/InviteEmbed.tsx:210
+#: src/components/modals/InviteAcceptModal.tsx:157
 msgid "Install Emoji Pack"
 msgstr "Встановити пакет емодзі"
 
-#: src/components/channel/InviteEmbed.tsx:200
-#: src/components/modals/InviteAcceptModal.tsx:143
+#: src/components/channel/InviteEmbed.tsx:210
+#: src/components/modals/InviteAcceptModal.tsx:157
 msgid "Install Sticker Pack"
 msgstr "Встановити пакет стікерів"
 
@@ -10153,7 +10148,7 @@ msgstr "Встановлено {installedAt}"
 msgid "Installing emoji and sticker packs requires a premium subscription."
 msgstr "Для встановлення пакетів емодзі та стікерів потрібна преміум-підписка."
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:304
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:305
 msgid "Instant invites"
 msgstr "Миттєві запрошення"
 
@@ -10286,7 +10281,7 @@ msgstr "Налаштування посилань-запрошень"
 msgid "Invite Links"
 msgstr "Посилання-запрошення"
 
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:164
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:191
 #: src/components/layout/ChannelItem.tsx:616
 #: src/components/popouts/GuildHeaderPopout.tsx:178
 msgid "Invite Members"
@@ -10300,7 +10295,7 @@ msgstr "Модальне вікно запрошення"
 msgid "Invite modal preview"
 msgstr "Попередній перегляд модального вікна запрошення"
 
-#: src/components/modals/InviteAcceptModal.tsx:134
+#: src/components/modals/InviteAcceptModal.tsx:148
 #: src/components/pages/InviteLoginPage.tsx:196
 #: src/components/pages/InviteRegisterPage.tsx:92
 msgid "Invite not found"
@@ -10337,7 +10332,7 @@ msgstr "Відправлено запрошення для {0}"
 msgid "Invite sent to {guildName}"
 msgstr "Запрошення надіслано до {guildName}"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:261
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:262
 msgid "Invite splash"
 msgstr "Сплеш запрошення"
 
@@ -10354,7 +10349,7 @@ msgstr "Запросити до {0}"
 msgid "Invite to Community"
 msgstr "Запросити до спільноти"
 
-#: src/components/channel/InviteEmbed.tsx:364
+#: src/components/channel/InviteEmbed.tsx:380
 msgid "Invite Unavailable"
 msgstr "Запрошення недоступне"
 
@@ -10369,12 +10364,12 @@ msgstr "Запросив {0}."
 
 #. placeholder {0}: invite.inviter.username
 #. placeholder {1}: invite.inviter.discriminator
-#: src/components/modals/InviteAcceptModal.tsx:156
+#: src/components/modals/InviteAcceptModal.tsx:170
 msgid "Invited by {0}#{1}"
 msgstr "Запросив {0}#{1}"
 
 #: src/components/auth/InviteHeader.tsx:159
-#: src/components/channel/InviteEmbed.tsx:224
+#: src/components/channel/InviteEmbed.tsx:234
 msgid "Invited by {inviterTag}"
 msgstr "Запросив {inviterTag}"
 
@@ -10410,12 +10405,12 @@ msgstr "Запрошення наразі призупинено в цій сп�
 msgid "Invites are locked for preview communities. Claim your account by setting an email and password to enable invites."
 msgstr "Запрошення заблоковано для спільнот попереднього перегляду. Підтвердіть акаунт, встановивши електронну пошту й пароль, щоб увімкнути запрошення."
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:262
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:263
 msgid "Invites disabled"
 msgstr "Запрошення вимкнено"
 
-#: src/components/channel/InviteEmbed.tsx:259
-#: src/components/modals/InviteAcceptModal.tsx:98
+#: src/components/channel/InviteEmbed.tsx:268
+#: src/components/modals/InviteAcceptModal.tsx:112
 msgid "Invites Disabled"
 msgstr "Запрошення вимкнено"
 
@@ -10482,13 +10477,13 @@ msgstr "Приєднайся до спільноти зі стікерами, щ
 msgid "Join call"
 msgstr "Приєднатися до виклику"
 
-#: src/components/channel/InviteEmbed.tsx:263
-#: src/components/channel/InviteEmbed.tsx:453
+#: src/components/channel/InviteEmbed.tsx:272
+#: src/components/channel/InviteEmbed.tsx:469
 #: src/components/layout/guild-list/AddGuildButton.tsx:71
 #: src/components/modals/AddGuildModal.tsx:129
 #: src/components/modals/AddGuildModal.tsx:410
 #: src/components/modals/components/plutonium/SubscriptionCard.tsx:342
-#: src/components/modals/InviteAcceptModal.tsx:102
+#: src/components/modals/InviteAcceptModal.tsx:116
 #: src/components/modals/InviteAcceptModalPreview.tsx:114
 msgid "Join Community"
 msgstr "Приєднатися до спільноти"
@@ -10497,15 +10492,23 @@ msgstr "Приєднатися до спільноти"
 msgid "Join community form"
 msgstr "Форма приєднання до спільноти"
 
-#: src/components/channel/InviteEmbed.tsx:189
+#: src/components/layout/app-layout/nagbars/GuildMembershipCtaNagbar.tsx:97
+msgid "Join Fluxer HQ"
+msgstr "Приєднуйся до Fluxer HQ"
+
+#: src/components/layout/app-layout/nagbars/GuildMembershipCtaNagbar.tsx:94
+msgid "Join Fluxer HQ to chat with the team and stay up to date on the latest!"
+msgstr "Приєднуйся до Fluxer HQ, щоб спілкуватися з командою та бути в курсі новин!"
+
+#: src/components/channel/InviteEmbed.tsx:201
 msgid "Join Group"
 msgstr "Приєднатися до групи"
 
-#: src/components/modals/InviteAcceptModal.tsx:95
+#: src/components/modals/InviteAcceptModal.tsx:109
 msgid "Join Group DM"
 msgstr "Приєднатися до групового DM"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:310
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:311
 msgid "Join notifications"
 msgstr "Сповіщення про приєднання"
 
@@ -10620,7 +10623,7 @@ msgstr "Перейти до найстарішого непрочитаного 
 msgid "Jump to page"
 msgstr "Перейти до сторінки"
 
-#: src/components/channel/Messages.tsx:920
+#: src/components/channel/Messages.tsx:924
 msgid "Jump to Present"
 msgstr "Перейти до теперішнього"
 
@@ -10690,7 +10693,7 @@ msgstr "Комбінації клавіш"
 msgid "Keyboard"
 msgstr "Клавіатура"
 
-#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:126
+#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:129
 #: src/components/modals/utils/settingsSearchIndex.ts:231
 msgid "Keyboard Hints"
 msgstr "Підказки клавіатури"
@@ -10815,7 +10818,7 @@ msgstr "Дізнатися про Plutonium"
 msgid "Leave blank for a random username"
 msgstr "Залиш порожнім для випадкового імені користувача"
 
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:243
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:270
 #: src/components/popouts/GuildHeaderPopout.tsx:234
 #: src/components/uikit/ContextMenu/items/GuildMenuItems.tsx:461
 #: src/hooks/useLeaveGuild.tsx:39
@@ -10874,7 +10877,7 @@ msgstr "Так швидко йдеш?"
 msgid "Left"
 msgstr "Покинув"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:248
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:249
 msgid "Left aligned"
 msgstr "Вирівняно вліво"
 
@@ -10945,7 +10948,7 @@ msgstr "посилання"
 msgid "Link"
 msgstr "Посилання"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:222
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:223
 msgid "Link channel"
 msgstr "Пов’язати канал"
 
@@ -11027,7 +11030,7 @@ msgstr "Завантаження банів..."
 msgid "Loading communities..."
 msgstr "Завантаження спільнот..."
 
-#: src/components/channel/embeds/media/EmbedImage.tsx:368
+#: src/components/channel/embeds/media/EmbedImage.tsx:371
 msgid "Loading image"
 msgstr "Завантаження зображення"
 
@@ -11039,8 +11042,8 @@ msgstr "Завантаження запрошень..."
 msgid "Loading more..."
 msgstr "Завантаження ще..."
 
-#: src/components/channel/embeds/media/EmbedGifv.tsx:493
-#: src/components/channel/embeds/media/EmbedGifv.tsx:748
+#: src/components/channel/embeds/media/EmbedGifv.tsx:497
+#: src/components/channel/embeds/media/EmbedGifv.tsx:754
 msgid "Loading placeholder"
 msgstr "Завантаження заповнювача"
 
@@ -11064,7 +11067,7 @@ msgstr "Завантаження теми..."
 msgid "Loading verification methods..."
 msgstr "Завантаження способів верифікації..."
 
-#: src/components/channel/embeds/media/EmbedImage.tsx:368
+#: src/components/channel/embeds/media/EmbedImage.tsx:371
 msgid "Loading: {alt}"
 msgstr "Завантаження: {alt}"
 
@@ -11082,7 +11085,7 @@ msgid "Local Mute"
 msgstr "Локальне вимкнення звуку"
 
 #: src/components/auth/AuthBottomLink.tsx:36
-#: src/components/auth/AuthLoginLayout.tsx:243
+#: src/components/auth/AuthLoginLayout.tsx:244
 #: src/components/auth/MfaScreen.tsx:136
 #: src/components/pages/LoginPage.tsx:129
 msgid "Log in"
@@ -11105,7 +11108,7 @@ msgstr "Увійди через браузер, а потім введи код,
 msgid "Log in via browser"
 msgstr "Увійти через браузер"
 
-#: src/components/auth/AuthLoginLayout.tsx:270
+#: src/components/auth/AuthLoginLayout.tsx:271
 msgid "Log in via browser or custom instance"
 msgstr "Увійти через браузер або власний екземпляр"
 
@@ -11120,7 +11123,7 @@ msgid "Log Out"
 msgstr "Вийти"
 
 #. placeholder {0}: selectedDevices.size
-#: src/components/modals/tabs/DevicesTab.tsx:330
+#: src/components/modals/tabs/DevicesTab.tsx:333
 msgid "Log out {0} devices"
 msgstr "Вийти з {0} пристроїв"
 
@@ -11129,7 +11132,7 @@ msgid "Log out {sessionCount} devices"
 msgstr "Вийти з {sessionCount} пристроїв"
 
 #: src/components/modals/DeviceRevokeModal.tsx:40
-#: src/components/modals/tabs/DevicesTab.tsx:328
+#: src/components/modals/tabs/DevicesTab.tsx:331
 msgid "Log out 1 device"
 msgstr "Вийти з 1 пристрою"
 
@@ -11141,7 +11144,7 @@ msgstr "Вийти з усіх пристроїв"
 msgid "Log out all other devices"
 msgstr "Вийти з усіх інших пристроїв"
 
-#: src/components/modals/tabs/DevicesTab.tsx:333
+#: src/components/modals/tabs/DevicesTab.tsx:336
 msgid "Log Out All Other Devices"
 msgstr "Вийти з усіх інших пристроїв"
 
@@ -11181,7 +11184,7 @@ msgstr "Lorem ipsum dolor sit amet"
 msgid "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
 msgstr "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:350
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:351
 msgid "Lottie"
 msgstr "Lottie"
 
@@ -11351,6 +11354,7 @@ msgstr "Позначити як 18+ (NSFW)"
 #: src/components/bottomsheets/ChannelBottomSheet.tsx:358
 #: src/components/bottomsheets/ChannelDetailsBottomSheet.tsx:1139
 #: src/components/bottomsheets/DMBottomSheet.tsx:390
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:183
 #: src/components/channel/NewMessagesBar.tsx:60
 #: src/components/uikit/ContextMenu/items/CategoryMenuItems.tsx:81
 #: src/components/uikit/ContextMenu/items/ChannelMenuItems.tsx:79
@@ -11705,8 +11709,8 @@ msgstr "згадки:"
 #: src/components/modals/guildTabs/GuildMemberActionsSheet.tsx:220
 #: src/components/modals/tabs/ComponentGalleryTab/InputsTab.tsx:164
 #: src/components/modals/UserProfileMobileSheet.tsx:503
-#: src/components/modals/UserProfileModal.tsx:1192
-#: src/components/modals/UserProfileModal.tsx:1318
+#: src/components/modals/UserProfileModal.tsx:1218
+#: src/components/modals/UserProfileModal.tsx:1344
 #: src/components/popouts/UserProfilePopout.tsx:291
 #: src/components/popouts/UserProfilePopout.tsx:310
 #: src/components/profile/ProfilePreview.tsx:292
@@ -11714,15 +11718,15 @@ msgstr "згадки:"
 msgid "Message"
 msgstr "Повідомлення"
 
-#: src/components/channel/ChannelTextarea.tsx:621
+#: src/components/channel/ChannelTextarea.tsx:685
 msgid "Message "
 msgstr "Повідомлення "
 
-#: src/components/channel/ChannelTextarea.tsx:621
+#: src/components/channel/ChannelTextarea.tsx:685
 msgid "Message @"
 msgstr "Повідомлення @"
 
-#: src/components/channel/ChannelTextarea.tsx:618
+#: src/components/channel/ChannelTextarea.tsx:682
 msgid "Message #"
 msgstr "Повідомлення #"
 
@@ -11838,7 +11842,7 @@ msgstr "Повідомлення та медіа"
 msgid "Messages Deleted"
 msgstr "Повідомлення видалено"
 
-#: src/components/channel/Messages.tsx:941
+#: src/components/channel/Messages.tsx:944
 msgid "Messages failed to load"
 msgstr "Не вдалося завантажити повідомлення"
 
@@ -12016,7 +12020,7 @@ msgstr "Ще"
 msgid "More Actions"
 msgstr "Більше дій"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:264
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:265
 msgid "More emoji slots"
 msgstr "Більше слотів для емодзі"
 
@@ -12028,7 +12032,7 @@ msgstr "Більше опцій"
 msgid "More Options"
 msgstr "Більше опцій"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:265
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:266
 msgid "More sticker slots"
 msgstr "Більше слотів для стікерів"
 
@@ -12162,8 +12166,8 @@ msgstr "Вимкнути канал"
 msgid "Mute Channel"
 msgstr "Вимкнути канал"
 
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:224
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:296
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:251
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:323
 #: src/components/uikit/ContextMenu/FavoritesGuildContextMenu.tsx:55
 #: src/components/uikit/ContextMenu/items/GuildMenuItems.tsx:186
 msgid "Mute Community"
@@ -12214,20 +12218,20 @@ msgstr "Без звуку до {0}"
 msgid "Muting a community prevents unread indicators and notifications from appearing unless you are mentioned"
 msgstr "Вимкнення спільноти приховує індикатори непрочитаних та сповіщення, якщо вас не згадали"
 
-#: src/components/modals/UserProfileModal.tsx:360
+#: src/components/modals/UserProfileModal.tsx:376
 msgid "Mutual Communities ({count})"
 msgstr "Взаємні спільноти ({count})"
 
-#: src/components/modals/UserProfileModal.tsx:352
+#: src/components/modals/UserProfileModal.tsx:368
 msgid "Mutual Friends ({count})"
 msgstr "Взаємні друзі ({count})"
 
-#: src/components/modals/UserProfileModal.tsx:356
+#: src/components/modals/UserProfileModal.tsx:372
 msgid "Mutual Groups ({count})"
 msgstr "Взаємні групи ({count})"
 
 #: src/components/modals/tabs/ApplicationsTab/application-detail/ApplicationInfoSection.tsx:55
-#: src/components/modals/tabs/ApplicationsTab/ApplicationCreateModal.tsx:97
+#: src/components/modals/tabs/ApplicationsTab/ApplicationCreateModal.tsx:90
 msgid "My Application"
 msgstr "Мій додаток"
 
@@ -12247,7 +12251,7 @@ msgstr "Мій крутий стікер"
 msgid "My Category"
 msgstr "Моя категорія"
 
-#: src/components/modals/tabs/DevicesTab.tsx:240
+#: src/components/modals/tabs/DevicesTab.tsx:243
 msgid "My Devices"
 msgstr "Мої пристрої"
 
@@ -12345,7 +12349,7 @@ msgid "Navigation"
 msgstr "Навігація"
 
 #: src/components/auth/AuthBottomLink.tsx:33
-#: src/components/auth/AuthLoginLayout.tsx:276
+#: src/components/auth/AuthLoginLayout.tsx:277
 msgid "Need an account?"
 msgstr "Потрібен акаунт?"
 
@@ -12364,7 +12368,7 @@ msgstr "Мережа"
 #: src/components/modals/components/PlutoniumContent.tsx:156
 #: src/components/modals/components/PlutoniumContent.tsx:288
 #: src/components/modals/tabs/BetaCodesTab.tsx:320
-#: src/components/modals/tabs/DevicesTab.tsx:229
+#: src/components/modals/tabs/DevicesTab.tsx:232
 msgid "Network error"
 msgstr "Помилка мережі"
 
@@ -12584,8 +12588,8 @@ msgid "No community banner"
 msgstr "Банера спільноти немає"
 
 #: src/components/auth/InviteHeader.tsx:156
-#: src/components/channel/InviteEmbed.tsx:217
-#: src/components/modals/InviteAcceptModal.tsx:148
+#: src/components/channel/InviteEmbed.tsx:227
+#: src/components/modals/InviteAcceptModal.tsx:162
 #: src/components/modals/tabs/ExpressionPacksTab.tsx:73
 msgid "No description provided."
 msgstr "Опис не надано."
@@ -12684,15 +12688,15 @@ msgstr "Мікрофони не виявлено"
 msgid "No more scheduled messages."
 msgstr "Більше запланованих повідомлень немає."
 
-#: src/components/modals/UserProfileModal.tsx:586
+#: src/components/modals/UserProfileModal.tsx:603
 msgid "No mutual communities found."
 msgstr "Спільних спільнот не знайдено."
 
-#: src/components/modals/UserProfileModal.tsx:542
+#: src/components/modals/UserProfileModal.tsx:558
 msgid "No mutual friends found."
 msgstr "Спільних друзів не знайдено."
 
-#: src/components/modals/UserProfileModal.tsx:564
+#: src/components/modals/UserProfileModal.tsx:580
 msgid "No mutual groups found."
 msgstr "Спільних груп не знайдено."
 
@@ -12905,8 +12909,8 @@ msgid "Not your cup of tea? You can disable this feature anytime."
 msgstr "Не твоє? Можеш вимкнути цю функцію будь-коли."
 
 #: src/components/modals/UserProfileMobileSheet.tsx:555
-#: src/components/modals/UserProfileModal.tsx:244
-#: src/components/modals/UserProfileModal.tsx:248
+#: src/components/modals/UserProfileModal.tsx:245
+#: src/components/modals/UserProfileModal.tsx:249
 #: src/components/pages/YouPage.tsx:144
 #: src/lib/markdown/renderers/common/block-elements.tsx:213
 msgid "Note"
@@ -12944,7 +12948,7 @@ msgstr "Перевизначення сповіщень"
 #: src/components/bottomsheets/ChannelBottomSheet.tsx:405
 #: src/components/bottomsheets/ChannelDetailsBottomSheet.tsx:1184
 #: src/components/bottomsheets/ChannelDetailsBottomSheet.tsx:1365
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:199
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:226
 #: src/components/channel/ChannelHeader/ChannelNotificationSettingsButton.tsx:59
 #: src/components/modals/GuildNotificationSettingsModal.tsx:162
 #: src/components/modals/tabs/NotificationsTab/Notifications.tsx:82
@@ -12995,7 +12999,7 @@ msgstr "Повідомити користувачів цієї ролі, які 
 msgid "now"
 msgstr "зараз"
 
-#: src/components/channel/MessageSearchBar/MessageSearchBar.tsx:704
+#: src/components/channel/MessageSearchBar/MessageSearchBar.tsx:732
 msgid "Now"
 msgstr "Зараз"
 
@@ -13090,7 +13094,7 @@ msgstr "При натисканні"
 msgid "on:"
 msgstr "увімкнено:"
 
-#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:672
+#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:673
 msgid "Once deleted, the application and its credentials are permanently removed."
 msgstr "Після видалення застосунок і його облікові дані зникають назавжди."
 
@@ -13252,7 +13256,7 @@ msgstr "Лише особисті повідомлення"
 msgid "Open Fluxer"
 msgstr "Відкрити Fluxer"
 
-#: src/components/channel/embeds/media/EmbedImage.tsx:186
+#: src/components/channel/embeds/media/EmbedImage.tsx:187
 msgid "Open image in full view"
 msgstr "Відкрити зображення у повному перегляді"
 
@@ -13368,7 +13372,7 @@ msgstr "Відкрити спільноту Visionary"
 msgid "Opening..."
 msgstr "Відкривається..."
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:275
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:276
 msgid "Operator"
 msgstr "Оператор"
 
@@ -13441,7 +13445,7 @@ msgstr "Оригінальне повідомлення видалено"
 msgid "Other"
 msgstr "Інше"
 
-#: src/components/modals/tabs/DevicesTab.tsx:261
+#: src/components/modals/tabs/DevicesTab.tsx:264
 msgid "Other Devices"
 msgstr "Інші пристрої"
 
@@ -13501,7 +13505,7 @@ msgstr "Перевизначити статус невизначеного об�
 msgid "Override unread gift inventory status"
 msgstr "Перевизначити статус невитрачених подарунків"
 
-#: src/components/modals/UserProfileModal.tsx:414
+#: src/components/modals/UserProfileModal.tsx:430
 msgid "Overview"
 msgstr "Огляд"
 
@@ -13695,7 +13699,7 @@ msgstr "Дозволи"
 msgid "Permissions granted"
 msgstr "Дозволи надано"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:228
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:229
 msgid "Personal notes"
 msgstr "Особисті нотатки"
 
@@ -13868,12 +13872,12 @@ msgstr "Відтворити"
 msgid "Play animated emojis"
 msgstr "Відтворити анімовані емодзі"
 
-#: src/components/channel/embeds/media/EmbedAudio.tsx:204
+#: src/components/channel/embeds/media/EmbedAudio.tsx:211
 msgid "Play audio"
 msgstr "Відтворити аудіо"
 
-#: src/components/channel/embeds/media/EmbedVideo.tsx:79
-#: src/components/channel/embeds/media/EmbedVideo.tsx:103
+#: src/components/channel/embeds/media/EmbedVideo.tsx:80
+#: src/components/channel/embeds/media/EmbedVideo.tsx:104
 #: src/components/channel/embeds/media/EmbedYouTube.tsx:112
 #: src/components/media-player/components/VideoPlayer.tsx:299
 msgid "Play video"
@@ -13936,7 +13940,7 @@ msgstr "Встав посилання на повідомлення, яке ти
 msgid "Please provide an email address."
 msgstr "Вкажи електронну адресу."
 
-#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:555
+#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:556
 msgid "Please retry or go back to the applications list."
 msgstr "Спробуй ще раз або повернись до списку програм."
 
@@ -13989,7 +13993,7 @@ msgstr "Переваги Plutonium"
 msgid "Plutonium Subscription"
 msgstr "Підписка Plutonium"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:348
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:349
 msgid "PNG"
 msgstr "PNG"
 
@@ -14177,7 +14181,7 @@ msgstr "Панель конфіденційності"
 msgid "Privacy Policy"
 msgstr "Політика конфіденційності"
 
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:204
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:231
 #: src/components/modals/GuildPrivacySettingsModal.tsx:56
 #: src/components/popouts/GuildHeaderPopout.tsx:212
 #: src/components/uikit/ContextMenu/items/GuildMenuItems.tsx:392
@@ -14299,7 +14303,7 @@ msgstr "Вилучити цей стікер зі сховища та CDN"
 msgid "Push Notification Inactive Timeout"
 msgstr "Таймаут неактивних пуш-сповіщень"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:301
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:302
 msgid "Push notifications"
 msgstr "Пуш-сповіщення"
 
@@ -14412,7 +14416,7 @@ msgstr "Взаємодія з реакціями вимкнена"
 #: src/components/modals/MessageReactionsModal.tsx:169
 #: src/components/modals/tabs/ChatSettingsTab/DisplayTab.tsx:94
 #: src/components/modals/utils/settingsSearchIndex.ts:353
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:306
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:307
 msgid "Reactions"
 msgstr "Реакції"
 
@@ -14583,7 +14587,7 @@ msgstr "Оновити підписку на пуші"
 #: src/components/modals/BackupCodesModal.tsx:90
 #: src/components/modals/tabs/ApplicationsTab/application-detail/SecretsSection.tsx:68
 #: src/components/modals/tabs/ApplicationsTab/application-detail/SecretsSection.tsx:85
-#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:528
+#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:529
 msgid "Regenerate"
 msgstr "Створити заново"
 
@@ -14591,19 +14595,19 @@ msgstr "Створити заново"
 msgid "Regenerate backup codes"
 msgstr "Перегенерувати резервні коди"
 
-#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:526
+#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:527
 msgid "Regenerate bot token?"
 msgstr "Перегенерувати токен бота?"
 
-#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:526
+#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:527
 msgid "Regenerate client secret?"
 msgstr "Перегенерувати секрет клієнта?"
 
-#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:519
+#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:520
 msgid "Regenerating will invalidate the current secret. Update any code that uses the old value."
 msgstr "Перегенерація анулює поточний секрет. Онови код, що використовує старе значення."
 
-#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:521
+#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:522
 msgid "Regenerating will invalidate the current token. Update any code that uses the old value."
 msgstr "Перегенерація анулює поточний токен. Онови код, що використовує старе значення."
 
@@ -14732,7 +14736,7 @@ msgid "Remove filter"
 msgstr "Видалити фільтр"
 
 #: src/components/bottomsheets/DMBottomSheet.tsx:510
-#: src/components/channel/dm/DMWelcomeSection.tsx:144
+#: src/components/channel/dm/DMWelcomeSection.tsx:150
 #: src/components/modals/guildTabs/GuildMemberActionsSheet.tsx:146
 #: src/components/modals/guildTabs/GuildMemberActionsSheet.tsx:148
 #: src/components/modals/guildTabs/GuildMemberActionsSheet.tsx:255
@@ -14741,8 +14745,8 @@ msgstr "Видалити фільтр"
 #: src/components/modals/UserProfileActionsSheet.tsx:278
 #: src/components/modals/UserProfileMobileSheet.tsx:305
 #: src/components/modals/UserProfileMobileSheet.tsx:307
-#: src/components/modals/UserProfileModal.tsx:1145
-#: src/components/modals/UserProfileModal.tsx:1231
+#: src/components/modals/UserProfileModal.tsx:1171
+#: src/components/modals/UserProfileModal.tsx:1257
 #: src/components/uikit/ContextMenu/items/RelationshipMenuItems.tsx:129
 #: src/utils/RelationshipActionUtils.tsx:113
 #: src/utils/RelationshipActionUtils.tsx:115
@@ -15080,7 +15084,7 @@ msgstr "Скаргу успішно надіслано. Наша команда 
 
 #: src/components/modals/IARModal.tsx:84
 #: src/components/modals/UserProfileActionsSheet.tsx:289
-#: src/components/modals/UserProfileModal.tsx:1159
+#: src/components/modals/UserProfileModal.tsx:1185
 msgid "Report User"
 msgstr "Поскаржитися на користувача"
 
@@ -15105,7 +15109,7 @@ msgstr "Запитувані області доступу"
 msgid "Require 2FA for moderation actions"
 msgstr "Вимагати 2FA для модерації"
 
-#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:144
+#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:147
 msgid "Require double-click to join voice channels"
 msgstr "Вимагати подвійне натискання для входу в голосові канали"
 
@@ -15144,7 +15148,7 @@ msgstr "Потребує всього з «Середнього» рівня т�
 msgid "Requires Plutonium"
 msgstr "Потребує Plutonium"
 
-#: src/components/channel/ChannelTextarea.tsx:834
+#: src/components/channel/ChannelTextarea.tsx:904
 msgid "Reschedule Message"
 msgstr "Перепланувати повідомлення"
 
@@ -15290,11 +15294,11 @@ msgstr "Підписатися знову"
 #: src/components/modals/guildTabs/GuildInvitesTab.tsx:124
 #: src/components/modals/guildTabs/GuildStickersTab.tsx:211
 #: src/components/modals/guildTabs/GuildWebhooksTab.tsx:137
-#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:559
+#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:560
 #: src/components/modals/tabs/ApplicationsTab/index.tsx:112
 #: src/components/modals/tabs/AuthorizedAppsTab.tsx:121
 #: src/components/modals/tabs/BetaCodesTab.tsx:326
-#: src/components/modals/tabs/DevicesTab.tsx:231
+#: src/components/modals/tabs/DevicesTab.tsx:234
 #: src/components/modals/tabs/GiftInventoryTab.tsx:323
 msgid "Retry"
 msgstr "Спробувати ще"
@@ -15359,7 +15363,7 @@ msgstr "Відкликати"
 msgid "Revoke Ban"
 msgstr "Скасувати бан"
 
-#: src/components/modals/tabs/DevicesTab.tsx:133
+#: src/components/modals/tabs/DevicesTab.tsx:136
 msgid "Revoke device"
 msgstr "Відкликати пристрій"
 
@@ -15386,7 +15390,7 @@ msgstr "Перемотати назад на {DEFAULT_SEEK_AMOUNT} секунд"
 msgid "Right"
 msgstr "Праворуч"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:250
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:251
 msgid "Right aligned"
 msgstr "Вирівняно по правому краю"
 
@@ -15791,7 +15795,7 @@ msgid "Search members..."
 msgstr "Шукати учасників..."
 
 #: src/components/bottomsheets/ChannelSearchBottomSheet.tsx:412
-#: src/components/channel/MessageSearchBar/MessageSearchBar.tsx:1410
+#: src/components/channel/MessageSearchBar/MessageSearchBar.tsx:1438
 msgid "Search messages"
 msgstr "Шукати повідомлення"
 
@@ -15834,13 +15838,13 @@ msgstr "Шукати ролі чи учасників..."
 msgid "Search saved media"
 msgstr "Шукати збережені медіа"
 
-#: src/components/channel/MessageSearchBar/MessageSearchBar.tsx:380
+#: src/components/channel/MessageSearchBar/MessageSearchBar.tsx:381
 msgid "Search scope"
 msgstr "Область пошуку"
 
 #. placeholder {0}: activeScopeOption.label
 #: src/components/channel/ChannelSearchResults.tsx:1031
-#: src/components/channel/MessageSearchBar/MessageSearchBar.tsx:378
+#: src/components/channel/MessageSearchBar/MessageSearchBar.tsx:379
 msgid "Search scope: {0}"
 msgstr "Область пошуку: {0}"
 
@@ -15857,7 +15861,7 @@ msgstr "Шукати налаштування..."
 msgid "Search stickers..."
 msgstr "Шукати стікери..."
 
-#: src/components/channel/MessageSearchBar/MessageSearchBar.tsx:1448
+#: src/components/channel/MessageSearchBar/MessageSearchBar.tsx:1476
 msgid "Search suggestions"
 msgstr "Підказки пошуку"
 
@@ -15938,7 +15942,7 @@ msgstr "Ключ безпеки / Passkey"
 msgid "Security key verification failed. Please try again."
 msgstr "Перевірка ключа безпеки не вдалася. Спробуйте ще раз."
 
-#: src/components/modals/tabs/DevicesTab.tsx:242
+#: src/components/modals/tabs/DevicesTab.tsx:245
 msgid "See all devices that are currently logged into your account. Revoke any sessions that you don't recognize."
 msgstr "Перегляньте всі пристрої, які наразі ввійшли в акаунт. Скасуйте сеанси, які ви не впізнаєте."
 
@@ -16002,7 +16006,7 @@ msgid "Select account"
 msgstr "Вибрати акаунт"
 
 #: src/components/channel/textarea/TextareaContextMenu.tsx:134
-#: src/components/modals/tabs/DevicesTab.tsx:281
+#: src/components/modals/tabs/DevicesTab.tsx:284
 msgid "Select All"
 msgstr "Вибрати все"
 
@@ -16040,7 +16044,7 @@ msgstr "Виберіть розмір медіа для вбудованого �
 msgid "Select media size for uploaded attachments"
 msgstr "Виберіть розмір медіа для завантажених вкладень"
 
-#: src/components/modals/UserProfileModal.tsx:686
+#: src/components/modals/UserProfileModal.tsx:709
 msgid "Select mutual view"
 msgstr "Виберіть взаємне відображення"
 
@@ -16151,9 +16155,9 @@ msgstr "Надіслати код"
 msgid "Send Code"
 msgstr "Надіслати код"
 
-#: src/components/channel/dm/DMWelcomeSection.tsx:112
+#: src/components/channel/dm/DMWelcomeSection.tsx:118
 #: src/components/modals/guildTabs/GuildMemberActionsSheet.tsx:272
-#: src/components/modals/UserProfileModal.tsx:1292
+#: src/components/modals/UserProfileModal.tsx:1318
 msgid "Send Friend Request"
 msgstr "Надіслати запит у друзі"
 
@@ -16170,7 +16174,7 @@ msgstr "Надіслати повідомлення · клацніть прав
 msgid "Send Message Disabled"
 msgstr "Надсилання повідомлень вимкнено"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:305
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:306
 msgid "Send messages"
 msgstr "Надсилати повідомлення"
 
@@ -16624,7 +16628,7 @@ msgstr "Показати кнопку подарунка"
 msgid "Show inline images and videos"
 msgstr "Показувати вбудовані зображення та відео"
 
-#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:93
+#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:96
 msgid "Show just the typing indicator without avatars"
 msgstr "Показати лише індикатор набору тексту без аватарок"
 
@@ -16788,11 +16792,11 @@ msgstr "Показати подарунок як уже використаний
 msgid "Show this role separately"
 msgstr "Показати цю роль окремо"
 
-#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:88
+#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:91
 msgid "Show typing indicator with user avatars in the channel list"
 msgstr "Показувати індикатор набору з аватарками користувачів у списку каналів"
 
-#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:117
+#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:120
 msgid "Show typing on selected channel"
 msgstr "Показувати набір на вибраному каналі"
 
@@ -17151,7 +17155,7 @@ msgstr "Іспанська (Іспанія)"
 msgid "Speak"
 msgstr "Говорити"
 
-#: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:335
+#: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:340
 msgid "Speak Message"
 msgstr "Проголосити повідомлення"
 
@@ -17270,13 +17274,13 @@ msgid "Start Sharing"
 msgstr "Почати трансляцію"
 
 #: src/components/channel/ChannelHeader/CallButtons.tsx:160
-#: src/components/modals/UserProfileModal.tsx:1111
+#: src/components/modals/UserProfileModal.tsx:1137
 #: src/components/uikit/ContextMenu/items/CallMenuItems.tsx:91
 msgid "Start Video Call"
 msgstr "Розпочати відеодзвінок"
 
 #: src/components/channel/ChannelHeader/CallButtons.tsx:90
-#: src/components/modals/UserProfileModal.tsx:1102
+#: src/components/modals/UserProfileModal.tsx:1128
 #: src/components/uikit/ContextMenu/items/CallMenuItems.tsx:60
 msgid "Start Voice Call"
 msgstr "Розпочати голосовий дзвінок"
@@ -17359,8 +17363,8 @@ msgid "Sticker density"
 msgstr "Щільність стікерів"
 
 #: src/components/auth/InviteHeader.tsx:140
-#: src/components/channel/InviteEmbed.tsx:199
-#: src/components/modals/InviteAcceptModal.tsx:142
+#: src/components/channel/InviteEmbed.tsx:209
+#: src/components/modals/InviteAcceptModal.tsx:156
 #: src/components/modals/tabs/ExpressionPacksTab.tsx:70
 msgid "Sticker pack"
 msgstr "Набір стікерів"
@@ -17427,7 +17431,7 @@ msgstr "Припинити дзвінок"
 msgid "Stop Sharing"
 msgstr "Припинити трансляцію"
 
-#: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:335
+#: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:340
 msgid "Stop Speaking"
 msgstr "Припинити говорити"
 
@@ -17570,19 +17574,19 @@ msgstr "Приховати всі згадки ролей"
 msgid "Suppress All Role @mentions"
 msgstr "Приховати всі згадки ролей"
 
-#: src/components/channel/embeds/Embed.tsx:800
-#: src/components/channel/embeds/Embed.tsx:836
-#: src/components/channel/embeds/Embed.tsx:860
-#: src/components/channel/embeds/Embed.tsx:905
-#: src/components/channel/embeds/Embed.tsx:941
-#: src/components/channel/embeds/Embed.tsx:982
-#: src/components/channel/embeds/Embed.tsx:1018
-#: src/components/channel/embeds/Embed.tsx:1060
+#: src/components/channel/embeds/Embed.tsx:822
+#: src/components/channel/embeds/Embed.tsx:859
+#: src/components/channel/embeds/Embed.tsx:883
+#: src/components/channel/embeds/Embed.tsx:928
+#: src/components/channel/embeds/Embed.tsx:964
+#: src/components/channel/embeds/Embed.tsx:1005
+#: src/components/channel/embeds/Embed.tsx:1041
+#: src/components/channel/embeds/Embed.tsx:1083
 msgid "Suppress embeds"
 msgstr "Приховати вставки"
 
-#: src/components/channel/embeds/Embed.tsx:141
-#: src/components/channel/embeds/Embed.tsx:148
+#: src/components/channel/embeds/Embed.tsx:143
+#: src/components/channel/embeds/Embed.tsx:150
 #: src/components/channel/MessageActionBar.tsx:542
 #: src/components/channel/MessageActionBar.tsx:694
 #: src/components/channel/messageActionMenu.tsx:150
@@ -17775,7 +17779,7 @@ msgstr "Текст"
 msgid "Text (NSFW)"
 msgstr "Текст (18+)"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:216
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:217
 msgid "Text channel"
 msgstr "Текстовий канал"
 
@@ -18028,10 +18032,10 @@ msgstr "Ця дія вимагає підтвердження для продо�
 msgid "This application"
 msgstr "Цей додаток"
 
-#: src/components/channel/embeds/attachments/Attachment.tsx:285
-#: src/components/channel/embeds/attachments/Attachment.tsx:306
-#: src/components/channel/embeds/attachments/Attachment.tsx:317
-#: src/components/channel/embeds/attachments/Attachment.tsx:327
+#: src/components/channel/embeds/attachments/Attachment.tsx:293
+#: src/components/channel/embeds/attachments/Attachment.tsx:314
+#: src/components/channel/embeds/attachments/Attachment.tsx:325
+#: src/components/channel/embeds/attachments/Attachment.tsx:335
 msgid "This attachment has expired"
 msgstr "Це вкладення більше не дійсне"
 
@@ -18039,7 +18043,7 @@ msgstr "Це вкладення більше не дійсне"
 msgid "This bot is requesting the Administrator permission. We do not recommend granting this to production apps unless you fully trust the developer. Consider asking them to request a reduced set of permissions. Close this page if you are unsure."
 msgstr "Цей бот запитує дозвіл Адміністратора. Не рекомендуємо надавати його продуктивним додаткам, якщо ви повністю не довіряєте розробнику. Попросіть запросити обмеженіший набір дозволів. Якщо не впевнені, закрийте цю сторінку."
 
-#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:668
+#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:669
 msgid "This cannot be undone. Removing the application also deletes its bot."
 msgstr "Цього не можна скасувати. Видалення додатка також видаляє його бота."
 
@@ -18101,7 +18105,7 @@ msgstr "Спільнота досягла граничної кількості 
 msgid "This community has temporarily disabled invites."
 msgstr "Ця спільнота тимчасово вимкнула запрошення."
 
-#: src/components/modals/InviteAcceptModal.tsx:180
+#: src/components/modals/InviteAcceptModal.tsx:194
 msgid "This community has temporarily disabled invites. You can try again later."
 msgstr "Ця спільнота тимчасово вимкнула запрошення. Спробуйте пізніше."
 
@@ -18178,7 +18182,7 @@ msgstr "Це запрошення має необмежену кількість
 msgid "This invite link never expires."
 msgstr "Це запрошення ніколи не закінчується."
 
-#: src/components/modals/InviteAcceptModal.tsx:135
+#: src/components/modals/InviteAcceptModal.tsx:149
 #: src/components/pages/InviteLoginPage.tsx:197
 #: src/components/pages/InviteRegisterPage.tsx:93
 msgid "This invite may have expired or been deleted."
@@ -18239,7 +18243,7 @@ msgid "This is the beginning of <0>{displayName}</0>. Add friends to start a con
 msgstr "Це початок історії <0>{displayName}</0>. Додайте друзів, щоб почати розмову!"
 
 #. placeholder {0}: user.username
-#: src/components/channel/dm/DMWelcomeSection.tsx:194
+#: src/components/channel/dm/DMWelcomeSection.tsx:202
 msgid "This is the beginning of your direct message history with <0>{0}</0>."
 msgstr "Це початок історії ваших приватних повідомлень із <0>{0}</0>."
 
@@ -18342,8 +18346,8 @@ msgid "This was a @silent message."
 msgstr "Це було @silent повідомлення."
 
 #: src/actions/MessageActionCreators.tsx:404
-#: src/components/channel/Messages.tsx:445
-#: src/components/channel/Messages.tsx:525
+#: src/components/channel/Messages.tsx:444
+#: src/components/channel/Messages.tsx:524
 msgid "This will create a rift in the space-time continuum and cannot be undone."
 msgstr "Це створить розрив у просторово-часовому континуумі, і його не можна буде скасувати."
 
@@ -18351,7 +18355,7 @@ msgstr "Це створить розрив у просторово-часово�
 msgid "This will hide all favorites-related UI elements including buttons and menu items. Your existing favorites will be preserved and can be re-enabled anytime from <0>User Settings → Look & Feel → Favorites</0>."
 msgstr "Це приховає всі елементи інтерфейсу, пов’язані з улюбленим. Ваші існуючі вподобання збережуться й їх можна буде знову ввімкнути в будь-який момент у <0>Налаштуваннях користувача → Вигляд → Улюблене</0>."
 
-#: src/components/channel/ChannelTextarea.tsx:838
+#: src/components/channel/ChannelTextarea.tsx:908
 msgid "This will modify the existing scheduled message rather than sending immediately."
 msgstr "Це змінить існуюче відкладене повідомлення замість негайної відправки."
 
@@ -18387,8 +18391,8 @@ msgstr "Це видалить збережену сесію цього облі�
 msgid "This will replace your current custom theme. You can edit it later in your User Settings."
 msgstr "Це замінить вашу поточну кастомну тему. Ви зможете редагувати її пізніше в налаштуваннях користувача."
 
-#: src/components/channel/embeds/media/EmbedVideo.tsx:88
-#: src/components/channel/embeds/media/EmbedVideo.tsx:97
+#: src/components/channel/embeds/media/EmbedVideo.tsx:89
+#: src/components/channel/embeds/media/EmbedVideo.tsx:98
 msgid "Thumbnail for {title}"
 msgstr "Мініатюра для {title}"
 
@@ -18485,7 +18489,7 @@ msgstr "Сповіщення з’являються в центрі верхн�
 msgid "today"
 msgstr "сьогодні"
 
-#: src/components/channel/MessageSearchBar/MessageSearchBar.tsx:702
+#: src/components/channel/MessageSearchBar/MessageSearchBar.tsx:730
 msgid "Today"
 msgstr "Сьогодні"
 
@@ -18710,7 +18714,7 @@ msgid "Try a different search term or filter"
 msgstr "Спробуй інший пошуковий термін або фільтр"
 
 #: src/components/auth/HandoffCodeDisplay.tsx:67
-#: src/components/channel/Messages.tsx:942
+#: src/components/channel/Messages.tsx:945
 msgid "Try again"
 msgstr "Спробуй ще раз"
 
@@ -18737,7 +18741,7 @@ msgstr "Спробуй інше ім’я або перевір написанн
 msgid "Try another search term"
 msgstr "Спробуй інший пошуковий термін"
 
-#: src/components/channel/InviteEmbed.tsx:361
+#: src/components/channel/InviteEmbed.tsx:377
 msgid "Try asking for a new invite."
 msgstr "Спробуй попросити нове запрошення."
 
@@ -18864,7 +18868,7 @@ msgstr "Масштаб шрифту"
 msgid "Type your message here..."
 msgstr "Напиши тут своє повідомлення..."
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:303
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:304
 msgid "Typing events"
 msgstr "Події набору"
 
@@ -18877,11 +18881,11 @@ msgstr "Індикатор набору"
 msgid "Typing Indicator"
 msgstr "Індикатор набору"
 
-#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:87
+#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:90
 msgid "Typing indicator + avatars"
 msgstr "Індикатор набору + аватари"
 
-#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:92
+#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:95
 msgid "Typing indicator only"
 msgstr "Тільки індикатор набору"
 
@@ -18961,11 +18965,11 @@ msgstr "Не вдалося розпочати дзвінок"
 msgid "Unable to start email change"
 msgstr "Не вдалося розпочати зміну e-mail"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:272
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:273
 msgid "Unavailable for everyone"
 msgstr "Недоступно для всіх"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:273
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:274
 msgid "Unavailable for everyone but staff"
 msgstr "Недоступно для всіх, окрім персоналу"
 
@@ -18978,7 +18982,7 @@ msgstr "Недоступно для всіх, окрім персоналу"
 #: src/components/modals/UserProfileActionsSheet.tsx:151
 #: src/components/modals/UserProfileActionsSheet.tsx:305
 #: src/components/modals/UserProfileMobileSheet.tsx:323
-#: src/components/modals/UserProfileModal.tsx:1051
+#: src/components/modals/UserProfileModal.tsx:1077
 #: src/components/uikit/ContextMenu/items/RelationshipMenuItems.tsx:230
 #: src/utils/RelationshipActionUtils.tsx:169
 msgid "Unblock"
@@ -18992,7 +18996,7 @@ msgstr "Розблокуй цього користувача перед тим, 
 #: src/components/modals/tabs/BlockedUsersTab.tsx:56
 #: src/components/modals/UserProfileActionsSheet.tsx:149
 #: src/components/modals/UserProfileMobileSheet.tsx:321
-#: src/components/modals/UserProfileModal.tsx:1246
+#: src/components/modals/UserProfileModal.tsx:1272
 #: src/utils/RelationshipActionUtils.tsx:167
 msgid "Unblock User"
 msgstr "Розблокувати користувача"
@@ -19165,7 +19169,7 @@ msgstr "Невідома помилка"
 msgid "Unknown Gift"
 msgstr "Невідомий подарунок"
 
-#: src/components/channel/InviteEmbed.tsx:359
+#: src/components/channel/InviteEmbed.tsx:375
 msgid "Unknown Invite"
 msgstr "Невідоме запрошення"
 
@@ -19205,11 +19209,11 @@ msgstr "невідома-роль"
 msgid "Unlimited"
 msgstr "Необмежено"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:266
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:267
 msgid "Unlimited emoji"
 msgstr "Необмежено емодзі"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:267
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:268
 msgid "Unlimited stickers"
 msgstr "Необмежено стікерів"
 
@@ -19254,7 +19258,7 @@ msgstr "Розблокуйте стікери в особистих повідо
 #: src/components/bottomsheets/ChannelDetailsBottomSheet.tsx:882
 #: src/components/bottomsheets/ChannelDetailsBottomSheet.tsx:1068
 #: src/components/bottomsheets/DMBottomSheet.tsx:648
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:321
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:348
 #: src/components/bottomsheets/VoiceLobbyBottomSheet.tsx:179
 #: src/components/bottomsheets/VoiceParticipantBottomSheet.tsx:253
 #: src/components/bottomsheets/VoiceParticipantBottomSheet.tsx:279
@@ -19285,8 +19289,8 @@ msgstr "Увімкнути звук для категорії"
 msgid "Unmute Channel"
 msgstr "Увімкнути звук для каналу"
 
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:224
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:296
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:251
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:323
 #: src/components/uikit/ContextMenu/FavoritesGuildContextMenu.tsx:55
 #: src/components/uikit/ContextMenu/items/GuildMenuItems.tsx:179
 msgid "Unmute Community"
@@ -19306,7 +19310,7 @@ msgstr "Увімкнути звук для обраного"
 msgid "Unmute User"
 msgstr "Увімкнути звук для користувача"
 
-#: src/components/channel/MessageSearchBar/MessageSearchBar.tsx:934
+#: src/components/channel/MessageSearchBar/MessageSearchBar.tsx:962
 msgid "Unnamed"
 msgstr "Без імені"
 
@@ -19405,7 +19409,7 @@ msgid "Until I change it"
 msgstr "Поки я не зміню"
 
 #: src/components/bottomsheets/DMBottomSheet.tsx:667
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:334
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:361
 #: src/components/channel/ChannelHeader/ChannelNotificationSettingsDropdown.tsx:57
 #: src/components/channel/muteOptions.ts:39
 #: src/components/uikit/ContextMenu/items/CategoryMenuItems.tsx:147
@@ -19422,7 +19426,7 @@ msgstr "Неверифікований e-mail"
 msgid "Up to 4K/60fps"
 msgstr "До 4K/60fps"
 
-#: src/components/channel/ChannelTextarea.tsx:835
+#: src/components/channel/ChannelTextarea.tsx:905
 msgid "Update"
 msgstr "Оновити"
 
@@ -19629,7 +19633,7 @@ msgstr "Завантажити звук входу"
 msgid "Upload Failed"
 msgstr "Не вдалося завантажити"
 
-#: src/components/channel/ChannelTextarea.tsx:756
+#: src/components/channel/ChannelTextarea.tsx:826
 msgid "Upload file"
 msgstr "Завантажити файл"
 
@@ -19868,11 +19872,11 @@ msgid "User Moved Channel"
 msgstr "Користувача перемістили до каналу"
 
 #: src/components/modals/tabs/ComponentGalleryTab/InputsTab.tsx:133
-#: src/components/modals/UserProfileModal.tsx:947
+#: src/components/modals/UserProfileModal.tsx:973
 msgid "User Profile"
 msgstr "Профіль користувача"
 
-#: src/components/modals/UserProfileModal.tsx:949
+#: src/components/modals/UserProfileModal.tsx:975
 msgid "User Profile: {tag}"
 msgstr "Профіль користувача: {tag}"
 
@@ -19993,7 +19997,7 @@ msgid "Values"
 msgstr "Значення"
 
 #: src/components/modals/guildTabs/GuildVanityURLTab.tsx:177
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:269
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:270
 msgid "Vanity URL"
 msgstr "Унікальна URL-адреса"
 
@@ -20059,14 +20063,14 @@ msgstr "Перед переглядом резервних кодів може �
 #: src/components/auth/AuthPageHeader.tsx:49
 #: src/components/auth/InviteHeader.tsx:81
 #: src/components/auth/InviteHeader.tsx:226
-#: src/components/channel/InviteEmbed.tsx:287
-#: src/components/channel/InviteEmbed.tsx:430
+#: src/components/channel/InviteEmbed.tsx:296
+#: src/components/channel/InviteEmbed.tsx:446
 #: src/components/emojis/EmojiAttributionSubtext.tsx:143
 #: src/components/layout/GuildHeader.tsx:132
 msgid "Verified Community"
 msgstr "Підтверджена спільнота"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:270
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:271
 msgid "Verified guild"
 msgstr "Підтверджена гільдія"
 
@@ -20167,8 +20171,8 @@ msgstr "Якість відео"
 msgid "Video Settings"
 msgstr "Налаштування відео"
 
-#: src/components/channel/embeds/media/EmbedVideo.tsx:88
-#: src/components/channel/embeds/media/EmbedVideo.tsx:97
+#: src/components/channel/embeds/media/EmbedVideo.tsx:89
+#: src/components/channel/embeds/media/EmbedVideo.tsx:98
 #: src/components/channel/embeds/media/EmbedYouTube.tsx:84
 msgid "Video thumbnail"
 msgstr "Зображення відео"
@@ -20240,7 +20244,7 @@ msgid "View Codes"
 msgstr "Переглянути коди"
 
 #: src/components/modals/UserProfileActionsSheet.tsx:194
-#: src/components/modals/UserProfileModal.tsx:1089
+#: src/components/modals/UserProfileModal.tsx:1115
 msgid "View Community Profile"
 msgstr "Переглянути профіль спільноти"
 
@@ -20259,7 +20263,7 @@ msgid "View Gift Inventory"
 msgstr "Переглянути інвентар подарунків"
 
 #: src/components/modals/UserProfileActionsSheet.tsx:194
-#: src/components/modals/UserProfileModal.tsx:1089
+#: src/components/modals/UserProfileModal.tsx:1115
 msgid "View Global Profile"
 msgstr "Переглянути глобальний профіль"
 
@@ -20329,7 +20333,7 @@ msgstr "Вибір категорії порушення"
 msgid "Violent or Graphic Content"
 msgstr "Жорстокий або графічний контент"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:271
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:272
 msgid "VIP voice"
 msgstr "VIP-голос"
 
@@ -20341,7 +20345,7 @@ msgstr "Видимі кнопки"
 #: src/components/modals/components/plutonium/SubscriptionCard.tsx:129
 #: src/components/modals/components/plutonium/VisionarySection.tsx:67
 #: src/components/modals/tabs/DeveloperOptionsTab/MockingTab.tsx:154
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:274
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:275
 msgid "Visionary"
 msgstr "Visionary"
 
@@ -20427,7 +20431,7 @@ msgid "Voice Calls"
 msgstr "Голосові дзвінки"
 
 #: src/stores/QuickSwitcherStore.tsx:710
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:218
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:219
 msgid "Voice channel"
 msgstr "Голосовий канал"
 
@@ -20442,7 +20446,7 @@ msgstr "Голосовий канал"
 msgid "Voice Channel Full"
 msgstr "Голосовий канал заповнений"
 
-#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:140
+#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:143
 #: src/components/modals/utils/settingsSearchIndex.ts:239
 msgid "Voice Channel Join Behavior"
 msgstr "Поведінка при приєднанні до голосового каналу"
@@ -20559,7 +20563,7 @@ msgstr "Не вдалося приєднатися до цієї спільно�
 msgid "We couldn't load the invites at this time."
 msgstr "Наразі ми не можемо завантажити запрошення."
 
-#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:554
+#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:555
 msgid "We couldn't load this application"
 msgstr "Не вдалося завантажити цей застосунок"
 
@@ -20671,7 +20675,7 @@ msgid "We're having trouble connecting to Fluxer's servers. This could be a temp
 msgstr "Ми маємо проблеми з підключенням до серверів Fluxer. Це може бути тимчасова мережева проблема або планове обслуговування."
 
 #: src/components/modals/tabs/BetaCodesTab.tsx:322
-#: src/components/modals/tabs/DevicesTab.tsx:230
+#: src/components/modals/tabs/DevicesTab.tsx:233
 msgid "We're having trouble connecting to the space-time continuum. Please check your connection and try again."
 msgstr "Маємо проблеми з підключенням до просторово-часового континууму. Перевір своє з'єднання та спробуй знову."
 
@@ -20759,7 +20763,7 @@ msgstr "Воїни вихідних"
 msgid "Welcome and system messages will appear here."
 msgstr "Привітальні та системні повідомлення з'являтимуться тут."
 
-#: src/components/auth/AuthLoginLayout.tsx:235
+#: src/components/auth/AuthLoginLayout.tsx:236
 msgid "Welcome back"
 msgstr "Радий бачити знову"
 
@@ -20820,7 +20824,7 @@ msgstr "Що відбувається?"
 msgid "What's included in your export:"
 msgstr "Що входить до експорту:"
 
-#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:118
+#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:121
 msgid "When disabled (default), typing indicators won't appear on the channel you're currently viewing."
 msgstr "Якщо вимкнено (за замовчуванням), індикатори набору не з'являтимуться в каналі, який ти зараз переглядаєш."
 
@@ -20836,7 +20840,7 @@ msgstr "Якщо увімкнено, коротке натискання кла�
 msgid "When enabled, reveals debugging menus throughout the app to inspect and copy raw JSON objects of internal data structures like messages, channels, users, and communities. Also includes tools to debug the Fluxer Markdown parser performance and AST for any given message."
 msgstr "Якщо увімкнено, відкриває меню налагодження по всьому застосунку, щоб переглядати та копіювати сирі JSON-об’єкти внутрішніх структур, таких як повідомлення, канали, користувачі та спільноти. Також включає інструменти для налагодження продуктивності парсера Fluxer Markdown та AST для будь-якого повідомлення."
 
-#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:132
+#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:135
 msgid "When enabled, shortcut badges are hidden in tooltip popups."
 msgstr "Якщо увімкнено, бейджі скорочень приховано у підказках."
 
@@ -20868,7 +20872,7 @@ msgstr "Якщо увімкнено, використовується локал
 msgid "When enabled, you can favorite channels and they'll appear in the Favorites section. When disabled, all favorite-related UI elements (buttons, menu items) will be hidden. Your existing favorites will be preserved."
 msgstr "Якщо увімкнено, ти можеш додавати канали до вибраного, і вони з'являться в розділі «Вибране». Якщо вимкнено, усі елементи інтерфейсу, пов’язані з вибраним (кнопки, пункти меню), будуть приховані. Твої поточні вибрані канали збережуться."
 
-#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:145
+#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:148
 msgid "When enabled, you'll need to double-click on voice channels to join them. When disabled (default), single-clicking will join the channel immediately."
 msgstr "Якщо увімкнено, потрібно двічі клацнути голосовий канал, щоб приєднатися. Якщо вимкнено (за замовчуванням), один клік приєднає одразу."
 
@@ -20970,7 +20974,7 @@ msgstr "Щорічно {yearlyPrice}"
 msgid "yesterday"
 msgstr "вчора"
 
-#: src/components/channel/MessageSearchBar/MessageSearchBar.tsx:703
+#: src/components/channel/MessageSearchBar/MessageSearchBar.tsx:731
 msgid "Yesterday"
 msgstr "Вчора"
 
@@ -21013,7 +21017,7 @@ msgstr "Ти редагуєш профіль для цієї спільноти.
 msgid "You are in slowmode. Please wait before sending another message."
 msgstr "Ти в режимі уповільнення. Зачекай перед наступним повідомленням."
 
-#: src/components/modals/components/ClientInfo.tsx:63
+#: src/components/modals/components/ClientInfo.tsx:87
 msgid "You are now a developer!"
 msgstr "Ти тепер розробник!"
 
@@ -21113,7 +21117,7 @@ msgstr "Ти можеш використовувати посилання та M
 msgid "You can't add new reactions while you're on timeout."
 msgstr "Ти не можеш додавати нові реакції, коли на тайм-ауті."
 
-#: src/components/modals/UserProfileModal.tsx:1173
+#: src/components/modals/UserProfileModal.tsx:1199
 msgid "You can't befriend yourself"
 msgstr "Ти не можеш додати себе в друзі"
 
@@ -21128,7 +21132,7 @@ msgstr "Ти не можеш взаємодіяти з реакціями в р�
 msgid "You can't join while you're on timeout."
 msgstr "Ти не можеш приєднатися, коли на тайм-ауті."
 
-#: src/components/modals/UserProfileModal.tsx:1185
+#: src/components/modals/UserProfileModal.tsx:1211
 #: src/components/popouts/UserProfilePopout.tsx:284
 #: src/components/profile/ProfilePreview.tsx:284
 msgid "You can't message yourself"
@@ -21213,7 +21217,7 @@ msgstr "Ти не можеш увімкнути мікрофон, бо моде�
 msgid "You do not have access to the channel where this message was sent."
 msgstr "У тебе немає доступу до каналу, де було надіслано це повідомлення."
 
-#: src/components/channel/ChannelTextarea.tsx:616
+#: src/components/channel/ChannelTextarea.tsx:680
 msgid "You do not have permission to send messages in this channel."
 msgstr "Ти не маєш дозволу надсилати повідомлення в цьому каналі."
 
@@ -21439,7 +21443,7 @@ msgstr "Ти будеш в режимі офлайн"
 msgid "You'll configure which permissions the bot receives on the next screen."
 msgstr "На наступному екрані ти налаштуєш дозволи, які отримає бот."
 
-#: src/components/modals/tabs/DevicesTab.tsx:337
+#: src/components/modals/tabs/DevicesTab.tsx:340
 msgid "You'll have to log back in on all logged out devices"
 msgstr "Тобі доведеться повторно ввійти на всіх вихідних пристроях"
 
@@ -21508,7 +21512,7 @@ msgstr "Ти в голосовому каналі"
 msgid "You're sending messages too quickly"
 msgstr "Ти надсилаєш повідомлення занадто швидко"
 
-#: src/components/channel/Messages.tsx:912
+#: src/components/channel/Messages.tsx:923
 msgid "You're viewing older messages"
 msgstr "Ти переглядаєш старіші повідомлення"
 

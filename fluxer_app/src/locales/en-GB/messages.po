@@ -97,7 +97,7 @@ msgstr "{0, plural, one {# item} other {# items}}"
 #. placeholder {0}: group.recipientIds.length + 1
 #: src/components/channel/dm/DMList.tsx:446
 #: src/components/channel/dm/DMList.tsx:526
-#: src/components/modals/UserProfileModal.tsx:818
+#: src/components/modals/UserProfileModal.tsx:844
 msgid "{0, plural, one {# Member} other {# Members}}"
 msgstr "{0, plural, one {# Member} other {# Members}}"
 
@@ -566,18 +566,18 @@ msgstr "{label} images cannot be animated. Please use JPEG, PNG, or WebP."
 #: src/components/auth/InviteHeader.tsx:96
 #: src/components/auth/InviteHeader.tsx:127
 #: src/components/auth/InviteHeader.tsx:241
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:281
-#: src/components/channel/InviteEmbed.tsx:182
-#: src/components/channel/InviteEmbed.tsx:446
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:308
+#: src/components/channel/InviteEmbed.tsx:194
+#: src/components/channel/InviteEmbed.tsx:462
 msgid "{memberCount} Member"
 msgstr "{memberCount} Member"
 
 #: src/components/auth/InviteHeader.tsx:96
 #: src/components/auth/InviteHeader.tsx:127
 #: src/components/auth/InviteHeader.tsx:241
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:281
-#: src/components/channel/InviteEmbed.tsx:182
-#: src/components/channel/InviteEmbed.tsx:446
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:308
+#: src/components/channel/InviteEmbed.tsx:194
+#: src/components/channel/InviteEmbed.tsx:462
 msgid "{memberCount} Members"
 msgstr "{memberCount} Members"
 
@@ -612,11 +612,11 @@ msgstr "{minutes} minutes and {seconds} seconds"
 msgid "{minutes} minutes and 1 second"
 msgstr "{minutes} minutes and 1 second"
 
-#: src/components/channel/dm/DMWelcomeSection.tsx:167
+#: src/components/channel/dm/DMWelcomeSection.tsx:175
 msgid "{mutualGuildCount} mutual commmunity"
 msgstr "{mutualGuildCount} mutual community"
 
-#: src/components/channel/dm/DMWelcomeSection.tsx:168
+#: src/components/channel/dm/DMWelcomeSection.tsx:176
 msgid "{mutualGuildCount} mutual communities"
 msgstr "{mutualGuildCount} mutual communities"
 
@@ -637,8 +637,8 @@ msgid "{participantCount} participants in call"
 msgstr "{participantCount} participants in call"
 
 #: src/components/auth/InviteHeader.tsx:235
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:276
-#: src/components/channel/InviteEmbed.tsx:441
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:303
+#: src/components/channel/InviteEmbed.tsx:457
 msgid "{presenceCount} Online"
 msgstr "{presenceCount} Online"
 
@@ -650,15 +650,15 @@ msgstr "{remaining} characters left"
 msgid "{remaining} characters left. Get Plutonium to write up to {premiumMaxLength} characters."
 msgstr "{remaining} characters left. Get Plutonium to write up to {premiumMaxLength} characters."
 
-#: src/components/channel/InviteEmbed.tsx:303
+#: src/components/channel/InviteEmbed.tsx:312
 msgid "{renderedMemberCount} Member"
 msgstr "{renderedMemberCount} Member"
 
-#: src/components/channel/InviteEmbed.tsx:303
+#: src/components/channel/InviteEmbed.tsx:312
 msgid "{renderedMemberCount} Members"
 msgstr "{renderedMemberCount} Members"
 
-#: src/components/channel/InviteEmbed.tsx:298
+#: src/components/channel/InviteEmbed.tsx:307
 msgid "{renderedPresenceCount} Online"
 msgstr "{renderedPresenceCount} Online"
 
@@ -812,7 +812,7 @@ msgstr "{value}%"
 msgid "{value}ms"
 msgstr "{value}ms"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:302
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:303
 msgid "@everyone mentions"
 msgstr "@everyone mentions"
 
@@ -1337,7 +1337,7 @@ msgid "Accent Color"
 msgstr "Accent Colour"
 
 #: src/components/channel/channel-view/DMChannelView.tsx:292
-#: src/components/channel/dm/DMWelcomeSection.tsx:128
+#: src/components/channel/dm/DMWelcomeSection.tsx:134
 #: src/components/channel/friends/FriendListItem.tsx:238
 #: src/components/channel/friends/MobileFriendRequestItem.tsx:99
 #: src/components/voice/IncomingCallUI.tsx:302
@@ -1346,12 +1346,12 @@ msgstr "Accept"
 
 #: src/components/bottomsheets/DMBottomSheet.tsx:517
 #: src/components/modals/guildTabs/GuildMemberActionsSheet.tsx:262
-#: src/components/modals/UserProfileModal.tsx:1261
+#: src/components/modals/UserProfileModal.tsx:1287
 #: src/components/uikit/ContextMenu/items/RelationshipMenuItems.tsx:109
 msgid "Accept Friend Request"
 msgstr "Accept Friend Request"
 
-#: src/components/modals/InviteAcceptModal.tsx:195
+#: src/components/modals/InviteAcceptModal.tsx:209
 msgid "Accept invite"
 msgstr "Accept invite"
 
@@ -1364,8 +1364,8 @@ msgstr "Accept Invite"
 msgid "Accept the incoming call"
 msgstr "Accept the incoming call"
 
-#: src/components/channel/InviteEmbed.tsx:228
-#: src/components/modals/InviteAcceptModal.tsx:163
+#: src/components/channel/InviteEmbed.tsx:238
+#: src/components/modals/InviteAcceptModal.tsx:177
 msgid "Accepting this invite installs the pack automatically."
 msgstr "Accepting this invite installs the pack automatically."
 
@@ -1594,7 +1594,7 @@ msgstr "Add Favourite Channels"
 #: src/components/channel/dm/AddFriendView.tsx:32
 #: src/components/channel/dm/DMFriendsView.tsx:199
 #: src/components/modals/AddFriendSheet.tsx:50
-#: src/components/modals/UserProfileModal.tsx:1181
+#: src/components/modals/UserProfileModal.tsx:1207
 #: src/components/uikit/ContextMenu/items/RelationshipMenuItems.tsx:75
 #: src/components/uikit/ContextMenu/items/RelationshipMenuItems.tsx:89
 msgid "Add Friend"
@@ -2078,7 +2078,7 @@ msgstr "Allowed {0}."
 msgid "Already have an account?"
 msgstr "Already have an account?"
 
-#: src/components/channel/InviteEmbed.tsx:189
+#: src/components/channel/InviteEmbed.tsx:201
 msgid "Already joined"
 msgstr "Already joined"
 
@@ -2191,7 +2191,7 @@ msgstr "Animated avatars & banners"
 msgid "Animated Avatars Require Plutonium"
 msgstr "Animated Avatars Require Plutonium"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:258
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:259
 msgid "Animated banner"
 msgstr "Animated banner"
 
@@ -2205,13 +2205,13 @@ msgid "Animated Emoji ({0})"
 msgstr "Animated Emoji ({0})"
 
 #: src/components/channel/embeds/media/EmbedGifv.tsx:237
-#: src/components/channel/embeds/media/EmbedGifv.tsx:752
+#: src/components/channel/embeds/media/EmbedGifv.tsx:758
 #: src/components/modals/MediaViewerModal.tsx:294
 #: src/components/modals/MediaViewerModal.tsx:362
 msgid "Animated GIF"
 msgstr "Animated GIF"
 
-#: src/components/channel/embeds/media/EmbedGifv.tsx:508
+#: src/components/channel/embeds/media/EmbedGifv.tsx:512
 msgid "Animated GIF video"
 msgstr "Animated GIF video"
 
@@ -2219,7 +2219,7 @@ msgstr "Animated GIF video"
 msgid "Animated GIF Video"
 msgstr "Animated GIF Video"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:257
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:258
 msgid "Animated icon"
 msgstr "Animated icon"
 
@@ -2277,7 +2277,7 @@ msgstr "Anyone can @mention this role. Members with \"Use @everyone/@here and @r
 msgid "API Endpoint"
 msgstr "API Endpoint"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:349
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:350
 msgid "APNG"
 msgstr "APNG"
 
@@ -2310,12 +2310,11 @@ msgid "Application information"
 msgstr "Application information"
 
 #: src/components/modals/tabs/ApplicationsTab/application-detail/ApplicationInfoSection.tsx:53
-#: src/components/modals/tabs/ApplicationsTab/ApplicationCreateModal.tsx:91
+#: src/components/modals/tabs/ApplicationsTab/ApplicationCreateModal.tsx:84
 msgid "Application Name"
 msgstr "Application Name"
 
 #: src/components/modals/tabs/ApplicationsTab/application-detail/ApplicationInfoSection.tsx:52
-#: src/components/modals/tabs/ApplicationsTab/ApplicationCreateModal.tsx:104
 msgid "Application name is required"
 msgstr "Application name is required"
 
@@ -2554,7 +2553,7 @@ msgstr "Are you sure you want to revoke the ban for <0>{0}</0>? They will be abl
 msgid "Are you sure you want to revoke this invite? This action cannot be undone."
 msgstr "Are you sure you want to revoke this invite? This action cannot be undone."
 
-#: src/components/channel/embeds/Embed.tsx:143
+#: src/components/channel/embeds/Embed.tsx:145
 msgid "Are you sure you want to suppress all link embeds on this message? This action will hide all embeds from this message."
 msgstr "Are you sure you want to suppress all link embeds on this message? This action will hide all embeds from this message."
 
@@ -2603,7 +2602,7 @@ msgstr "Attachment {0}"
 msgid "Attachment Actions"
 msgstr "Attachment Actions"
 
-#: src/components/channel/embeds/attachments/AttachmentFile.tsx:179
+#: src/components/channel/embeds/attachments/AttachmentFile.tsx:182
 msgid "Attachment expired"
 msgstr "Attachment expired"
 
@@ -2779,8 +2778,8 @@ msgid "Autocomplete"
 msgstr "Autocomplete"
 
 #: src/components/modals/channelTabs/ChannelOverviewTab.tsx:161
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:235
 #: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:236
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:237
 msgid "Automatic"
 msgstr "Automatic"
 
@@ -2859,7 +2858,7 @@ msgstr "Back"
 msgid "Back to Applications"
 msgstr "Back to Applications"
 
-#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:563
+#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:564
 msgid "Back to list"
 msgstr "Back to list"
 
@@ -2872,20 +2871,20 @@ msgid "Back to login"
 msgstr "Back to login"
 
 #: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:965
-#: src/components/modals/components/DesktopChannelSettingsView.tsx:144
-#: src/components/modals/components/DesktopGuildSettingsView.tsx:159
+#: src/components/modals/components/DesktopChannelSettingsView.tsx:158
+#: src/components/modals/components/DesktopGuildSettingsView.tsx:170
 #: src/components/modals/components/DesktopSettingsView.tsx:295
 msgid "Back to Overrides"
 msgstr "Back to Overrides"
 
-#: src/components/modals/components/DesktopGuildSettingsView.tsx:159
+#: src/components/modals/components/DesktopGuildSettingsView.tsx:170
 #: src/components/modals/guildTabs/GuildRolesTab.tsx:756
 #: src/components/modals/guildTabs/GuildRolesTab.tsx:979
 msgid "Back to Roles"
 msgstr "Back to Roles"
 
-#: src/components/modals/components/DesktopChannelSettingsView.tsx:124
-#: src/components/modals/components/DesktopGuildSettingsView.tsx:139
+#: src/components/modals/components/DesktopChannelSettingsView.tsx:136
+#: src/components/modals/components/DesktopGuildSettingsView.tsx:148
 #: src/components/modals/components/DesktopSettingsView.tsx:275
 msgid "Back to Settings"
 msgstr "Back to Settings"
@@ -3003,7 +3002,7 @@ msgstr "Banned Users"
 #: src/components/modals/tabs/MyProfileTab/BannerUploader.tsx:152
 #: src/components/modals/tabs/MyProfileTab/BannerUploader.tsx:192
 #: src/components/modals/utils/settingsSearchIndex.ts:50
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:259
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:260
 msgid "Banner"
 msgstr "Banner"
 
@@ -3096,7 +3095,7 @@ msgstr "Bio character limit"
 #: src/components/modals/guildTabs/GuildMemberActionsSheet.tsx:348
 #: src/components/modals/UserProfileActionsSheet.tsx:134
 #: src/components/modals/UserProfileActionsSheet.tsx:298
-#: src/components/modals/UserProfileModal.tsx:1064
+#: src/components/modals/UserProfileModal.tsx:1090
 #: src/components/uikit/ContextMenu/items/RelationshipMenuItems.tsx:211
 #: src/utils/RelationshipActionUtils.tsx:143
 msgid "Block"
@@ -3242,7 +3241,7 @@ msgstr "Bot scope requested"
 msgid "Bot token"
 msgstr "Bot token"
 
-#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:425
+#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:426
 msgid "Bot token regenerated. Update any code that uses the old token."
 msgstr "Bot token regenerated. Update any code that uses the old token."
 
@@ -3435,7 +3434,7 @@ msgstr "Camera Settings"
 #: src/components/alerts/FileSizeTooLargeModal.tsx:49
 #: src/components/auth/BrowserLoginHandoffModal.tsx:322
 #: src/components/bottomsheets/CreateDMBottomSheet.tsx:133
-#: src/components/channel/ChannelTextarea.tsx:236
+#: src/components/channel/ChannelTextarea.tsx:300
 #: src/components/channel/friends/FriendListItem.tsx:253
 #: src/components/channel/MentionEveryonePopout.tsx:125
 #: src/components/emojis/EmojiListItem.tsx:120
@@ -3496,7 +3495,7 @@ msgstr "Camera Settings"
 #: src/components/modals/ScreenShareSettingsModal.tsx:160
 #: src/components/modals/ScreenShareSourceModal.tsx:75
 #: src/components/modals/SudoVerificationModal.tsx:403
-#: src/components/modals/tabs/ApplicationsTab/ApplicationCreateModal.tsx:109
+#: src/components/modals/tabs/ApplicationsTab/ApplicationCreateModal.tsx:100
 #: src/components/modals/tabs/MyProfileTab/AvatarUploader.tsx:124
 #: src/components/modals/tabs/PrivacySafetyTab/DataDeletionTab.tsx:85
 #: src/components/modals/tabs/PrivacySafetyTab/DataExportTab.tsx:85
@@ -3508,10 +3507,10 @@ msgstr "Camera Settings"
 msgid "Cancel"
 msgstr "Cancel"
 
-#: src/components/channel/dm/DMWelcomeSection.tsx:138
+#: src/components/channel/dm/DMWelcomeSection.tsx:144
 #: src/components/channel/friends/FriendListItem.tsx:164
 #: src/components/channel/friends/FriendListItem.tsx:166
-#: src/components/modals/UserProfileModal.tsx:1276
+#: src/components/modals/UserProfileModal.tsx:1302
 #: src/components/uikit/ContextMenu/items/RelationshipMenuItems.tsx:192
 msgid "Cancel Friend Request"
 msgstr "Cancel Friend Request"
@@ -3582,7 +3581,7 @@ msgid "Careful! You have unsaved changes."
 msgstr "Careful! You have unsaved changes."
 
 #: src/utils/ChannelUtils.tsx:66
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:220
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:221
 msgid "Category"
 msgstr "Category"
 
@@ -3605,7 +3604,7 @@ msgid "Category Name"
 msgstr "Category Name"
 
 #: src/components/modals/ChannelSettingsModal.tsx:113
-#: src/components/modals/components/DesktopChannelSettingsView.tsx:188
+#: src/components/modals/components/DesktopChannelSettingsView.tsx:202
 msgid "Category Settings"
 msgstr "Category Settings"
 
@@ -3617,7 +3616,7 @@ msgstr "Caution"
 msgid "Center"
 msgstr "Centre"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:246
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:247
 msgid "Centered"
 msgstr "Centred"
 
@@ -3765,7 +3764,7 @@ msgstr "Changed the bitrate to {0}."
 msgid "Changed the voice region to {0}."
 msgstr "Changed the voice region to {0}."
 
-#: src/components/channel/ChannelTextarea.tsx:618
+#: src/components/channel/ChannelTextarea.tsx:682
 #: src/utils/SearchUtils.ts:270
 msgid "channel"
 msgstr "channel"
@@ -3828,11 +3827,11 @@ msgstr "Channel ID copied to clipboard"
 msgid "Channel link copied"
 msgstr "Channel link copied"
 
-#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:113
+#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:116
 msgid "Channel list typing indicator mode"
 msgstr "Channel list typing indicator mode"
 
-#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:105
+#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:108
 #: src/components/modals/utils/settingsSearchIndex.ts:223
 msgid "Channel List Typing Indicators"
 msgstr "Channel List Typing Indicators"
@@ -3891,7 +3890,7 @@ msgstr "Channel removed from favourites"
 #: src/components/bottomsheets/ChannelDetailsBottomSheet.tsx:1116
 #: src/components/layout/ChannelItem.tsx:647
 #: src/components/modals/ChannelSettingsModal.tsx:113
-#: src/components/modals/components/DesktopChannelSettingsView.tsx:188
+#: src/components/modals/components/DesktopChannelSettingsView.tsx:202
 msgid "Channel Settings"
 msgstr "Channel Settings"
 
@@ -4052,7 +4051,7 @@ msgstr "Choose how times are displayed throughout the app."
 msgid "Choose how typing indicators appear in the channel list"
 msgstr "Choose how typing indicators appear in the channel list"
 
-#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:106
+#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:109
 msgid "Choose how typing indicators appear in the channel list when someone is typing in a channel."
 msgstr "Choose how typing indicators appear in the channel list when someone is typing in a channel."
 
@@ -4180,8 +4179,8 @@ msgid "Claim your account to redeem this gift."
 msgstr "Claim your account to redeem this gift."
 
 #: src/components/channel/dm/AddFriendForm.tsx:54
-#: src/components/channel/dm/DMWelcomeSection.tsx:109
-#: src/components/modals/UserProfileModal.tsx:1291
+#: src/components/channel/dm/DMWelcomeSection.tsx:115
+#: src/components/modals/UserProfileModal.tsx:1317
 #: src/components/uikit/ContextMenu/items/RelationshipMenuItems.tsx:65
 msgid "Claim your account to send friend requests."
 msgstr "Claim your account to send friend requests."
@@ -4245,7 +4244,7 @@ msgid "Clear Permissions"
 msgstr "Clear Permissions"
 
 #: src/components/bottomsheets/ChannelSearchBottomSheet.tsx:420
-#: src/components/channel/MessageSearchBar/MessageSearchBar.tsx:1424
+#: src/components/channel/MessageSearchBar/MessageSearchBar.tsx:1452
 #: src/components/channel/shared/PickerSearchInput.tsx:194
 #: src/components/channel/shared/PickerSearchInput.tsx:211
 #: src/components/modals/components/SettingsSearch.tsx:108
@@ -4256,7 +4255,7 @@ msgstr "Clear search"
 msgid "Clear search input"
 msgstr "Clear search input"
 
-#: src/components/modals/tabs/DevicesTab.tsx:281
+#: src/components/modals/tabs/DevicesTab.tsx:284
 msgid "Clear Selection"
 msgstr "Clear Selection"
 
@@ -4314,7 +4313,7 @@ msgstr "Click the upload icon next to any sound to customise it with your own au
 msgid "Click the verification link in the email."
 msgstr "Click the verification link in the email."
 
-#: src/components/modals/UserProfileModal.tsx:259
+#: src/components/modals/UserProfileModal.tsx:260
 msgid "Click to add a note"
 msgstr "Click to add a note"
 
@@ -4327,7 +4326,7 @@ msgid "Click to claim your gift!"
 msgstr "Click to claim your gift!"
 
 #: src/components/invites/InviteListItem.tsx:184
-#: src/components/modals/components/ClientInfo.tsx:76
+#: src/components/modals/components/ClientInfo.tsx:100
 #: src/components/modals/tabs/BetaCodesTab.tsx:174
 msgid "Click to copy"
 msgstr "Click to copy"
@@ -4388,7 +4387,7 @@ msgstr "Click to view all reactions"
 msgid "Client secret"
 msgstr "Client secret"
 
-#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:424
+#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:425
 msgid "Client secret regenerated. Update any code that uses the old secret."
 msgstr "Client secret regenerated. Update any code that uses the old secret."
 
@@ -4649,8 +4648,8 @@ msgstr "Community promotes hatred based on protected characteristics"
 msgid "Community promotes or facilitates illegal activities"
 msgstr "Community promotes or facilitates illegal activities"
 
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:172
-#: src/components/modals/components/DesktopGuildSettingsView.tsx:204
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:199
+#: src/components/modals/components/DesktopGuildSettingsView.tsx:215
 #: src/components/modals/GuildSettingsModal.tsx:173
 #: src/components/popouts/GuildHeaderPopout.tsx:187
 #: src/components/uikit/ContextMenu/items/GuildMenuItems.tsx:360
@@ -4935,7 +4934,7 @@ msgstr "Context Menus"
 msgid "Context menus can be opened with left-click (on buttons) or right-click (on other elements). This demonstrates various menu items including checkboxes, radio buttons, sliders, and submenus."
 msgstr "Context menus can be opened with left-click (on buttons) or right-click (on other elements). This demonstrates various menu items including checkboxes, radio buttons, sliders, and submenus."
 
-#: src/components/channel/ChannelTextarea.tsx:235
+#: src/components/channel/ChannelTextarea.tsx:299
 #: src/components/modals/BackupCodesRegenerateModal.tsx:63
 #: src/components/modals/BackupCodesViewModal.tsx:66
 #: src/components/modals/DeviceRevokeModal.tsx:68
@@ -4992,7 +4991,7 @@ msgstr "Control how website links are previewed in chat"
 msgid "Control how you join voice channels"
 msgstr "Control how you join voice channels"
 
-#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:141
+#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:144
 msgid "Control how you join voice channels in communities."
 msgstr "Control how you join voice channels in communities."
 
@@ -5012,7 +5011,7 @@ msgstr "Control sticker animations"
 msgid "Control the visibility of favorites throughout the app."
 msgstr "Control the visibility of favourites throughout the app."
 
-#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:127
+#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:130
 msgid "Control whether keyboard shortcut hints appear inside tooltips."
 msgstr "Control whether keyboard shortcut hints appear inside tooltips."
 
@@ -5071,7 +5070,7 @@ msgstr "Copied"
 msgid "Copied to clipboard"
 msgstr "Copied to clipboard"
 
-#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:541
+#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:542
 msgid "Copied URL to clipboard"
 msgstr "Copied URL to clipboard"
 
@@ -5149,7 +5148,7 @@ msgstr "Copy File Link"
 
 #: src/components/modals/tabs/BlockedUsersTab.tsx:98
 #: src/components/modals/UserProfileActionsSheet.tsx:208
-#: src/components/modals/UserProfileModal.tsx:1123
+#: src/components/modals/UserProfileModal.tsx:1149
 msgid "Copy FluxerTag"
 msgstr "Copy FluxerTag"
 
@@ -5157,7 +5156,7 @@ msgstr "Copy FluxerTag"
 msgid "Copy GIF"
 msgstr "Copy GIF"
 
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:254
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:281
 #: src/components/uikit/ContextMenu/items/GuildMenuItems.tsx:475
 msgid "Copy Guild ID"
 msgstr "Copy Guild ID"
@@ -5222,7 +5221,7 @@ msgstr "Copy Text"
 #: src/components/modals/guildTabs/GuildMemberActionsSheet.tsx:361
 #: src/components/modals/tabs/BlockedUsersTab.tsx:107
 #: src/components/modals/UserProfileActionsSheet.tsx:213
-#: src/components/modals/UserProfileModal.tsx:1132
+#: src/components/modals/UserProfileModal.tsx:1158
 #: src/components/popouts/UserAreaPopout.tsx:509
 #: src/components/profile/ProfileCard/ProfileCardActions.tsx:60
 #: src/components/uikit/ContextMenu/items/CopyMenuItems.tsx:42
@@ -5270,7 +5269,7 @@ msgstr "Cozy"
 #: src/components/modals/AddFriendsToGroupModal.tsx:99
 #: src/components/modals/AddGuildStickerModal.tsx:119
 #: src/components/modals/CreatePackModal.tsx:109
-#: src/components/modals/tabs/ApplicationsTab/ApplicationCreateModal.tsx:112
+#: src/components/modals/tabs/ApplicationsTab/ApplicationCreateModal.tsx:103
 msgid "Create"
 msgstr "Create"
 
@@ -5331,14 +5330,14 @@ msgstr "Create and manage applications and bots for your account."
 msgid "Create and share custom emoji and sticker packs with Fluxer Plutonium."
 msgstr "Create and share custom emoji and sticker packs with Fluxer Plutonium."
 
-#: src/components/modals/tabs/ApplicationsTab/ApplicationCreateModal.tsx:87
+#: src/components/modals/tabs/ApplicationsTab/ApplicationCreateModal.tsx:80
 #: src/components/modals/tabs/ApplicationsTab/index.tsx:149
 #: src/components/modals/tabs/ApplicationsTab/index.tsx:155
 msgid "Create Application"
 msgstr "Create Application"
 
 #: src/components/bottomsheets/FavoritesGuildHeaderBottomSheet.tsx:83
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:185
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:212
 #: src/components/modals/CategoryCreateModal.tsx:63
 #: src/components/modals/CategoryCreateModal.tsx:82
 #: src/components/modals/CreateFavoriteCategoryModal.tsx:58
@@ -5351,7 +5350,7 @@ msgstr "Create Application"
 msgid "Create Category"
 msgstr "Create Category"
 
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:180
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:207
 #: src/components/layout/ChannelItem.tsx:624
 #: src/components/modals/ChannelCreateModal.tsx:58
 #: src/components/modals/ChannelCreateModal.tsx:103
@@ -5475,8 +5474,8 @@ msgstr "Created {createdAt}"
 #. placeholder {0}: invite.pack.creator.username
 #. placeholder {0}: pack.creator.username
 #: src/components/auth/InviteHeader.tsx:158
-#: src/components/channel/InviteEmbed.tsx:220
-#: src/components/modals/InviteAcceptModal.tsx:152
+#: src/components/channel/InviteEmbed.tsx:230
+#: src/components/modals/InviteAcceptModal.tsx:166
 msgid "Created by {0}"
 msgstr "Created by {0}"
 
@@ -5569,7 +5568,7 @@ msgstr "Cropped image is too large. Please choose a smaller area or a smaller fi
 msgid "Current Community"
 msgstr "Current Community"
 
-#: src/components/modals/tabs/DevicesTab.tsx:252
+#: src/components/modals/tabs/DevicesTab.tsx:255
 msgid "Current Device"
 msgstr "Current Device"
 
@@ -5606,7 +5605,7 @@ msgstr "Currently stuck in 1885, appearing offline"
 #: src/components/bottomsheets/ChannelBottomSheet.tsx:461
 #: src/components/bottomsheets/ChannelDetailsBottomSheet.tsx:1047
 #: src/components/bottomsheets/DMBottomSheet.tsx:608
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:305
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:332
 msgid "Currently: {mutedText}"
 msgstr "Currently: {mutedText}"
 
@@ -5782,7 +5781,7 @@ msgstr "Danger Secondary"
 msgid "Danger secondary clicked!"
 msgstr "Danger secondary clicked!"
 
-#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:667
+#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:668
 msgid "Danger zone"
 msgstr "Danger zone"
 
@@ -5991,10 +5990,10 @@ msgid "Defaults to off on mobile to preserve battery life and data usage."
 msgstr "Defaults to off on mobile to preserve battery life and data usage."
 
 #: src/actions/MessageActionCreators.tsx:406
-#: src/components/channel/embeds/media/EmbedAudio.tsx:227
+#: src/components/channel/embeds/media/EmbedAudio.tsx:234
 #: src/components/channel/embeds/media/MediaContainer.tsx:115
-#: src/components/channel/Messages.tsx:447
-#: src/components/channel/Messages.tsx:527
+#: src/components/channel/Messages.tsx:446
+#: src/components/channel/Messages.tsx:526
 #: src/components/channel/MobileMemesPicker.tsx:546
 #: src/components/channel/pickers/memes/MemeGridItem.tsx:120
 #: src/components/emojis/EmojiListItem.tsx:189
@@ -6048,12 +6047,12 @@ msgstr "Delete all my messages"
 
 #: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:370
 #: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:384
-#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:682
+#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:683
 msgid "Delete Application"
 msgstr "Delete Application"
 
-#: src/components/channel/embeds/attachments/AttachmentFile.tsx:164
-#: src/components/channel/embeds/media/EmbedAudio.tsx:232
+#: src/components/channel/embeds/attachments/AttachmentFile.tsx:167
+#: src/components/channel/embeds/media/EmbedAudio.tsx:239
 #: src/components/channel/embeds/media/MediaContainer.tsx:120
 msgid "Delete attachment"
 msgstr "Delete attachment"
@@ -6063,7 +6062,7 @@ msgstr "Delete attachment"
 msgid "Delete Attachment"
 msgstr "Delete Attachment"
 
-#: src/components/modals/components/DesktopChannelSettingsView.tsx:176
+#: src/components/modals/components/DesktopChannelSettingsView.tsx:190
 #: src/components/modals/components/MobileChannelSettingsView.tsx:85
 #: src/components/uikit/ContextMenu/FavoritesCategoryContextMenu.tsx:90
 #: src/components/uikit/ContextMenu/items/CategoryMenuItems.tsx:335
@@ -6077,14 +6076,14 @@ msgstr "Delete Category"
 #: src/components/bottomsheets/ChannelBottomSheet.tsx:421
 #: src/components/bottomsheets/ChannelDetailsBottomSheet.tsx:682
 #: src/components/bottomsheets/ChannelDetailsBottomSheet.tsx:1248
-#: src/components/modals/components/DesktopChannelSettingsView.tsx:176
+#: src/components/modals/components/DesktopChannelSettingsView.tsx:190
 #: src/components/modals/components/MobileChannelSettingsView.tsx:85
 #: src/components/uikit/ContextMenu/items/ChannelMenuItems.tsx:322
 #: src/components/uikit/ContextMenu/items/ChannelMenuItems.tsx:348
 msgid "Delete Channel"
 msgstr "Delete Channel"
 
-#: src/components/modals/components/DesktopGuildSettingsView.tsx:192
+#: src/components/modals/components/DesktopGuildSettingsView.tsx:203
 #: src/components/modals/components/MobileGuildSettingsView.tsx:85
 #: src/components/modals/GuildDeleteModal.tsx:50
 #: src/components/modals/GuildDeleteModal.tsx:62
@@ -6109,8 +6108,8 @@ msgstr "Delete media"
 #: src/components/channel/MessageActionBar.tsx:804
 #: src/components/channel/messageActionMenu.tsx:158
 #: src/components/channel/messageActionMenu.tsx:195
-#: src/components/channel/Messages.tsx:444
-#: src/components/channel/Messages.tsx:524
+#: src/components/channel/Messages.tsx:443
+#: src/components/channel/Messages.tsx:523
 #: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:273
 msgid "Delete Message"
 msgstr "Delete Message"
@@ -6215,7 +6214,7 @@ msgstr "Dense"
 msgid "Dense layout"
 msgstr "Dense layout"
 
-#: src/components/modals/components/ClientInfo.tsx:89
+#: src/components/modals/components/ClientInfo.tsx:113
 msgid "Deployed"
 msgstr "Deployed"
 
@@ -6281,7 +6280,7 @@ msgstr "Destination Channel"
 msgid "Destination URL:"
 msgstr "Destination URL:"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:260
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:261
 msgid "Detached banner"
 msgstr "Detached banner"
 
@@ -6362,7 +6361,7 @@ msgstr "Different Sizes (Status Supported)"
 msgid "Different Sizes & Member Counts"
 msgstr "Different Sizes & Member Counts"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:224
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:225
 msgid "Direct message"
 msgstr "Direct message"
 
@@ -6541,7 +6540,7 @@ msgstr "Disabling your account will log you out of all sessions. You can re-enab
 msgid "Disallow @mention."
 msgstr "Disallow @mention."
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:276
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:277
 msgid "Disallow unclaimed accounts"
 msgstr "Disallow unclaimed accounts"
 
@@ -6747,7 +6746,7 @@ msgstr "Don't show message previews in the DM list"
 msgid "Don't show this again"
 msgstr "Don't show this again"
 
-#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:98
+#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:101
 msgid "Don't show typing indicators in the channel list"
 msgstr "Don't show typing indicators in the channel list"
 
@@ -6760,7 +6759,7 @@ msgstr "Don't show typing indicators in the channel list"
 msgid "Done"
 msgstr "Done"
 
-#: src/components/channel/embeds/attachments/AttachmentFile.tsx:189
+#: src/components/channel/embeds/attachments/AttachmentFile.tsx:192
 #: src/components/channel/embeds/media/MediaContainer.tsx:127
 #: src/components/layout/app-layout/nagbars/DesktopDownloadNagbar.tsx:63
 #: src/components/layout/app-layout/nagbars/MobileDownloadNagbar.tsx:66
@@ -6947,7 +6946,7 @@ msgstr "Edit Category"
 msgid "Edit Channel"
 msgstr "Edit Channel"
 
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:209
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:236
 #: src/components/popouts/GuildHeaderPopout.tsx:217
 #: src/components/uikit/ContextMenu/items/GuildMenuItems.tsx:406
 msgid "Edit Community Profile"
@@ -7004,7 +7003,7 @@ msgid "Edit overwrites for roles and members in this channel."
 msgstr "Edit overwrites for roles and members in this channel."
 
 #: src/components/modals/UserProfileMobileSheet.tsx:492
-#: src/components/modals/UserProfileModal.tsx:1208
+#: src/components/modals/UserProfileModal.tsx:1234
 #: src/components/pages/YouPage.tsx:123
 #: src/components/popouts/UserAreaPopout.tsx:521
 #: src/components/popouts/UserProfilePopout.tsx:301
@@ -7143,7 +7142,7 @@ msgstr "Embed splash"
 msgid "Embed splash images cannot be animated. Please use JPEG, PNG, or WebP."
 msgstr "Embed splash images cannot be animated. Please use JPEG, PNG, or WebP."
 
-#: src/components/channel/embeds/media/EmbedAudio.tsx:198
+#: src/components/channel/embeds/media/EmbedAudio.tsx:205
 msgid "Embedded audio"
 msgstr "Embedded audio"
 
@@ -7198,8 +7197,8 @@ msgid "Emoji names must be at least 2 characters long and can only contain alpha
 msgstr "Emoji names must be at least 2 characters long and can only contain alphanumeric characters and underscores. Allowed file types: JPEG, PNG, WebP, GIF. We compress images to 128x128 pixels. Maximum size: {0} KB per emoji."
 
 #: src/components/auth/InviteHeader.tsx:140
-#: src/components/channel/InviteEmbed.tsx:199
-#: src/components/modals/InviteAcceptModal.tsx:142
+#: src/components/channel/InviteEmbed.tsx:209
+#: src/components/modals/InviteAcceptModal.tsx:156
 #: src/components/modals/tabs/ExpressionPacksTab.tsx:70
 msgid "Emoji pack"
 msgstr "Emoji pack"
@@ -7473,7 +7472,7 @@ msgstr "Enter Phone"
 msgid "Enter picture-in-picture"
 msgstr "Enter picture-in-picture"
 
-#: src/components/modals/tabs/DevicesTab.tsx:266
+#: src/components/modals/tabs/DevicesTab.tsx:269
 msgid "Enter Selection Mode"
 msgstr "Enter Selection Mode"
 
@@ -7536,7 +7535,7 @@ msgstr "Enter the new email you want to use. We'll send a code there next."
 msgid "Enter the SMS code you received."
 msgstr "Enter the SMS code you received."
 
-#: src/components/channel/EditingMessageInput.tsx:286
+#: src/components/channel/EditingMessageInput.tsx:287
 msgid "enter to <0><1>save</1></0>"
 msgstr "enter to <0><1>save</1></0>"
 
@@ -7604,7 +7603,7 @@ msgstr "Error rendering LaTeX: {0}"
 msgid "Escape key exits keyboard mode"
 msgstr "Escape key exits keyboard mode"
 
-#: src/components/channel/EditingMessageInput.tsx:277
+#: src/components/channel/EditingMessageInput.tsx:278
 msgid "escape to <0><1>cancel</1></0>"
 msgstr "escape to <0><1>cancel</1></0>"
 
@@ -7667,7 +7666,7 @@ msgstr "Exit picture-in-picture"
 msgid "Exit Preview"
 msgstr "Exit Preview"
 
-#: src/components/modals/tabs/DevicesTab.tsx:266
+#: src/components/modals/tabs/DevicesTab.tsx:269
 msgid "Exit Selection Mode"
 msgstr "Exit Selection Mode"
 
@@ -7701,7 +7700,7 @@ msgstr "Expired (Within 30 Days)"
 msgid "Expired {absolute}"
 msgstr "Expired {absolute}"
 
-#: src/components/channel/embeds/attachments/AttachmentMosaic.tsx:526
+#: src/components/channel/embeds/attachments/AttachmentMosaic.tsx:540
 msgid "Expired between {earliest} and {latest}"
 msgstr "Expired between {earliest} and {latest}"
 
@@ -7709,7 +7708,7 @@ msgstr "Expired between {earliest} and {latest}"
 msgid "Expired on {date}"
 msgstr "Expired on {date}"
 
-#: src/components/channel/embeds/attachments/AttachmentMosaic.tsx:529
+#: src/components/channel/embeds/attachments/AttachmentMosaic.tsx:543
 msgid "Expired on {earliest}"
 msgstr "Expired on {earliest}"
 
@@ -7722,7 +7721,7 @@ msgstr "Expires"
 msgid "Expires {absolute} ({relativeText})"
 msgstr "Expires {absolute} ({relativeText})"
 
-#: src/components/channel/embeds/attachments/AttachmentMosaic.tsx:527
+#: src/components/channel/embeds/attachments/AttachmentMosaic.tsx:541
 msgid "Expires between {earliest} and {latest}"
 msgstr "Expires between {earliest} and {latest}"
 
@@ -7730,7 +7729,7 @@ msgstr "Expires between {earliest} and {latest}"
 msgid "Expires on {date}"
 msgstr "Expires on {date}"
 
-#: src/components/channel/embeds/attachments/AttachmentMosaic.tsx:529
+#: src/components/channel/embeds/attachments/AttachmentMosaic.tsx:543
 msgid "Expires on {earliest}"
 msgstr "Expires on {earliest}"
 
@@ -7766,7 +7765,7 @@ msgstr "Expression Packs are a Plutonium feature"
 msgid "Expression picker categories"
 msgstr "Expression picker categories"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:268
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:269
 msgid "Expression purge"
 msgstr "Expression purge"
 
@@ -7838,10 +7837,6 @@ msgstr "Failed to copy to clipboard"
 #: src/components/modals/tabs/GiftInventoryTab.tsx:80
 msgid "Failed to copy URL"
 msgstr "Failed to copy URL"
-
-#: src/components/modals/tabs/ApplicationsTab/ApplicationCreateModal.tsx:78
-msgid "Failed to create application. Please check your inputs and try again."
-msgstr "Failed to create application. Please check your inputs and try again."
 
 #: src/components/alerts/RoleCreateFailedModal.tsx:27
 msgid "Failed to create role"
@@ -8100,7 +8095,7 @@ msgstr "Failed to revoke ban. Please try again."
 msgid "Failed to revoke invite"
 msgstr "Failed to revoke invite"
 
-#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:431
+#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:432
 msgid "Failed to rotate. Please try again."
 msgstr "Failed to rotate. Please try again."
 
@@ -8413,7 +8408,7 @@ msgstr "Fitness Friends"
 msgid "Flags"
 msgstr "Flags"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:263
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:264
 msgid "Flexible text channel names"
 msgstr "Flexible text channel names"
 
@@ -8577,7 +8572,7 @@ msgstr "Foodie Friends"
 msgid "For 1 hour"
 msgstr "For 1 hour"
 
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:330
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:357
 #: src/components/channel/ChannelHeader/ChannelNotificationSettingsDropdown.tsx:53
 #: src/components/channel/muteOptions.ts:35
 #: src/components/popouts/UserAreaPopout.tsx:78
@@ -8592,7 +8587,7 @@ msgstr "For 1 Hour"
 msgid "For 15 minutes"
 msgstr "For 15 minutes"
 
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:329
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:356
 #: src/components/channel/ChannelHeader/ChannelNotificationSettingsDropdown.tsx:52
 #: src/components/channel/muteOptions.ts:34
 #: src/components/uikit/ContextMenu/items/CategoryMenuItems.tsx:142
@@ -8605,7 +8600,7 @@ msgstr "For 15 Minutes"
 msgid "For 24 hours"
 msgstr "For 24 hours"
 
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:333
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:360
 #: src/components/channel/ChannelHeader/ChannelNotificationSettingsDropdown.tsx:56
 #: src/components/channel/muteOptions.ts:38
 #: src/components/popouts/UserAreaPopout.tsx:80
@@ -8623,7 +8618,7 @@ msgstr "For 3 days"
 msgid "For 3 hours"
 msgstr "For 3 hours"
 
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:331
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:358
 #: src/components/channel/ChannelHeader/ChannelNotificationSettingsDropdown.tsx:54
 #: src/components/channel/muteOptions.ts:36
 #: src/components/uikit/ContextMenu/items/CategoryMenuItems.tsx:144
@@ -8636,7 +8631,7 @@ msgstr "For 3 Hours"
 msgid "For 8 hours"
 msgstr "For 8 hours"
 
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:332
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:359
 #: src/components/channel/ChannelHeader/ChannelNotificationSettingsDropdown.tsx:55
 #: src/components/channel/muteOptions.ts:37
 #: src/components/popouts/UserAreaPopout.tsx:79
@@ -8774,7 +8769,7 @@ msgstr "Forget subscriptions"
 msgid "Forgot Password"
 msgstr "Forgot Password"
 
-#: src/components/auth/AuthLoginLayout.tsx:248
+#: src/components/auth/AuthLoginLayout.tsx:249
 #: src/components/pages/ForgotPasswordPage.tsx:83
 msgid "Forgot your password?"
 msgstr "Forgot your password?"
@@ -8795,7 +8790,7 @@ msgstr "Forward {DEFAULT_SEEK_AMOUNT} seconds"
 msgid "Forward Message"
 msgstr "Forward Message"
 
-#: src/components/channel/MessageAttachments.tsx:155
+#: src/components/channel/MessageAttachments.tsx:156
 msgid "Forwarded"
 msgstr "Forwarded"
 
@@ -9065,7 +9060,7 @@ msgstr "Get the Fluxer desktop app for system-wide push-to-talk and a few other 
 #: src/components/stickers/StickerGridItem.tsx:100
 #: src/utils/FavoriteMemeUtils.ts:70
 #: src/utils/FavoriteMemeUtils.ts:97
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:351
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:352
 msgid "GIF"
 msgstr "GIF"
 
@@ -9236,8 +9231,8 @@ msgstr "Go back to the previously focused text channel"
 msgid "Go forward in navigation history"
 msgstr "Go forward in navigation history"
 
-#: src/components/channel/InviteEmbed.tsx:261
-#: src/components/modals/InviteAcceptModal.tsx:100
+#: src/components/channel/InviteEmbed.tsx:270
+#: src/components/modals/InviteAcceptModal.tsx:114
 msgid "Go to Community"
 msgstr "Go to Community"
 
@@ -9389,7 +9384,7 @@ msgid "Group Invites"
 msgstr "Group Invites"
 
 #: src/stores/QuickSwitcherStore.tsx:657
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:226
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:227
 msgid "Group message"
 msgstr "Group message"
 
@@ -9548,7 +9543,7 @@ msgstr "Hey, {username}, welcome! You can accomplish anything."
 msgid "Hey, {username}! When it hits 88mph, you'll see some serious stuff!"
 msgstr "Hey, {username}! When it hits 88mph, you'll see some serious stuff!"
 
-#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:97
+#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:100
 msgid "Hidden"
 msgstr "Hidden"
 
@@ -9569,7 +9564,7 @@ msgstr "Hide Favourites"
 msgid "Hide Join Messages"
 msgstr "Hide Join Messages"
 
-#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:131
+#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:134
 msgid "Hide keyboard hints in tooltips"
 msgstr "Hide keyboard hints in tooltips"
 
@@ -9582,7 +9577,7 @@ msgid "Hide muted channels"
 msgstr "Hide muted channels"
 
 #: src/components/bottomsheets/FavoritesGuildHeaderBottomSheet.tsx:100
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:229
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:256
 #: src/components/popouts/FavoritesGuildHeaderPopout.tsx:145
 #: src/components/popouts/GuildHeaderPopout.tsx:225
 #: src/components/uikit/ContextMenu/ChannelListContextMenu.tsx:78
@@ -9822,7 +9817,7 @@ msgid "If you want to export your data or delete your messages first, please vis
 msgstr "If you want to export your data or delete your messages first, please visit the Privacy Dashboard section in User Settings before proceeding."
 
 #: src/components/channel/channel-view/DMChannelView.tsx:302
-#: src/components/channel/dm/DMWelcomeSection.tsx:131
+#: src/components/channel/dm/DMWelcomeSection.tsx:137
 #: src/components/channel/friends/FriendListItem.tsx:145
 #: src/components/channel/friends/FriendListItem.tsx:244
 #: src/components/channel/friends/MobileFriendRequestItem.tsx:69
@@ -9855,7 +9850,7 @@ msgid "image"
 msgstr "image"
 
 #: src/components/channel/embeds/media/EmbedGifv.tsx:237
-#: src/components/channel/embeds/media/EmbedImage.tsx:374
+#: src/components/channel/embeds/media/EmbedImage.tsx:377
 #: src/components/modals/MediaViewerModal.tsx:362
 #: src/components/search/HasFilterSheet.tsx:50
 #: src/utils/FavoriteMemeUtils.ts:71
@@ -10129,13 +10124,13 @@ msgstr "Inputs with Icons"
 msgid "Insert emoji"
 msgstr "Insert emoji"
 
-#: src/components/channel/InviteEmbed.tsx:200
-#: src/components/modals/InviteAcceptModal.tsx:143
+#: src/components/channel/InviteEmbed.tsx:210
+#: src/components/modals/InviteAcceptModal.tsx:157
 msgid "Install Emoji Pack"
 msgstr "Install Emoji Pack"
 
-#: src/components/channel/InviteEmbed.tsx:200
-#: src/components/modals/InviteAcceptModal.tsx:143
+#: src/components/channel/InviteEmbed.tsx:210
+#: src/components/modals/InviteAcceptModal.tsx:157
 msgid "Install Sticker Pack"
 msgstr "Install Sticker Pack"
 
@@ -10153,7 +10148,7 @@ msgstr "Installed on {installedAt}"
 msgid "Installing emoji and sticker packs requires a premium subscription."
 msgstr "Installing emoji and sticker packs requires a premium subscription."
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:304
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:305
 msgid "Instant invites"
 msgstr "Instant invites"
 
@@ -10286,7 +10281,7 @@ msgstr "Invite link settings"
 msgid "Invite Links"
 msgstr "Invite Links"
 
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:164
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:191
 #: src/components/layout/ChannelItem.tsx:616
 #: src/components/popouts/GuildHeaderPopout.tsx:178
 msgid "Invite Members"
@@ -10300,7 +10295,7 @@ msgstr "Invite Modal"
 msgid "Invite modal preview"
 msgstr "Invite modal preview"
 
-#: src/components/modals/InviteAcceptModal.tsx:134
+#: src/components/modals/InviteAcceptModal.tsx:148
 #: src/components/pages/InviteLoginPage.tsx:196
 #: src/components/pages/InviteRegisterPage.tsx:92
 msgid "Invite not found"
@@ -10337,7 +10332,7 @@ msgstr "Invite sent for {0}"
 msgid "Invite sent to {guildName}"
 msgstr "Invite sent to {guildName}"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:261
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:262
 msgid "Invite splash"
 msgstr "Invite splash"
 
@@ -10354,7 +10349,7 @@ msgstr "Invite to {0}"
 msgid "Invite to Community"
 msgstr "Invite to Community"
 
-#: src/components/channel/InviteEmbed.tsx:364
+#: src/components/channel/InviteEmbed.tsx:380
 msgid "Invite Unavailable"
 msgstr "Invite Unavailable"
 
@@ -10369,12 +10364,12 @@ msgstr "Invited by {0}."
 
 #. placeholder {0}: invite.inviter.username
 #. placeholder {1}: invite.inviter.discriminator
-#: src/components/modals/InviteAcceptModal.tsx:156
+#: src/components/modals/InviteAcceptModal.tsx:170
 msgid "Invited by {0}#{1}"
 msgstr "Invited by {0}#{1}"
 
 #: src/components/auth/InviteHeader.tsx:159
-#: src/components/channel/InviteEmbed.tsx:224
+#: src/components/channel/InviteEmbed.tsx:234
 msgid "Invited by {inviterTag}"
 msgstr "Invited by {inviterTag}"
 
@@ -10410,12 +10405,12 @@ msgstr "Invites are currently paused in this community"
 msgid "Invites are locked for preview communities. Claim your account by setting an email and password to enable invites."
 msgstr "Invites are locked for preview communities. Claim your account by setting an email and password to enable invites."
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:262
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:263
 msgid "Invites disabled"
 msgstr "Invites disabled"
 
-#: src/components/channel/InviteEmbed.tsx:259
-#: src/components/modals/InviteAcceptModal.tsx:98
+#: src/components/channel/InviteEmbed.tsx:268
+#: src/components/modals/InviteAcceptModal.tsx:112
 msgid "Invites Disabled"
 msgstr "Invites Disabled"
 
@@ -10482,13 +10477,13 @@ msgstr "Join a community with stickers to get started!"
 msgid "Join call"
 msgstr "Join call"
 
-#: src/components/channel/InviteEmbed.tsx:263
-#: src/components/channel/InviteEmbed.tsx:453
+#: src/components/channel/InviteEmbed.tsx:272
+#: src/components/channel/InviteEmbed.tsx:469
 #: src/components/layout/guild-list/AddGuildButton.tsx:71
 #: src/components/modals/AddGuildModal.tsx:129
 #: src/components/modals/AddGuildModal.tsx:410
 #: src/components/modals/components/plutonium/SubscriptionCard.tsx:342
-#: src/components/modals/InviteAcceptModal.tsx:102
+#: src/components/modals/InviteAcceptModal.tsx:116
 #: src/components/modals/InviteAcceptModalPreview.tsx:114
 msgid "Join Community"
 msgstr "Join Community"
@@ -10497,15 +10492,23 @@ msgstr "Join Community"
 msgid "Join community form"
 msgstr "Join community form"
 
-#: src/components/channel/InviteEmbed.tsx:189
+#: src/components/layout/app-layout/nagbars/GuildMembershipCtaNagbar.tsx:97
+msgid "Join Fluxer HQ"
+msgstr "Join Fluxer HQ"
+
+#: src/components/layout/app-layout/nagbars/GuildMembershipCtaNagbar.tsx:94
+msgid "Join Fluxer HQ to chat with the team and stay up to date on the latest!"
+msgstr "Join Fluxer HQ to chat with the team and stay up to date on the latest!"
+
+#: src/components/channel/InviteEmbed.tsx:201
 msgid "Join Group"
 msgstr "Join Group"
 
-#: src/components/modals/InviteAcceptModal.tsx:95
+#: src/components/modals/InviteAcceptModal.tsx:109
 msgid "Join Group DM"
 msgstr "Join Group DM"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:310
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:311
 msgid "Join notifications"
 msgstr "Join notifications"
 
@@ -10620,7 +10623,7 @@ msgstr "Jump to Oldest Unread Message"
 msgid "Jump to page"
 msgstr "Jump to page"
 
-#: src/components/channel/Messages.tsx:920
+#: src/components/channel/Messages.tsx:924
 msgid "Jump to Present"
 msgstr "Jump to Present"
 
@@ -10690,7 +10693,7 @@ msgstr "Keybinds"
 msgid "Keyboard"
 msgstr "Keyboard"
 
-#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:126
+#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:129
 #: src/components/modals/utils/settingsSearchIndex.ts:231
 msgid "Keyboard Hints"
 msgstr "Keyboard Hints"
@@ -10815,7 +10818,7 @@ msgstr "Learn about Plutonium"
 msgid "Leave blank for a random username"
 msgstr "Leave blank for a random username"
 
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:243
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:270
 #: src/components/popouts/GuildHeaderPopout.tsx:234
 #: src/components/uikit/ContextMenu/items/GuildMenuItems.tsx:461
 #: src/hooks/useLeaveGuild.tsx:39
@@ -10874,7 +10877,7 @@ msgstr "Leaving so soon?"
 msgid "Left"
 msgstr "Left"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:248
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:249
 msgid "Left aligned"
 msgstr "Left aligned"
 
@@ -10945,7 +10948,7 @@ msgstr "link"
 msgid "Link"
 msgstr "Link"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:222
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:223
 msgid "Link channel"
 msgstr "Link channel"
 
@@ -11027,7 +11030,7 @@ msgstr "Loading bans..."
 msgid "Loading communities..."
 msgstr "Loading communities..."
 
-#: src/components/channel/embeds/media/EmbedImage.tsx:368
+#: src/components/channel/embeds/media/EmbedImage.tsx:371
 msgid "Loading image"
 msgstr "Loading image"
 
@@ -11039,8 +11042,8 @@ msgstr "Loading invites..."
 msgid "Loading more..."
 msgstr "Loading more..."
 
-#: src/components/channel/embeds/media/EmbedGifv.tsx:493
-#: src/components/channel/embeds/media/EmbedGifv.tsx:748
+#: src/components/channel/embeds/media/EmbedGifv.tsx:497
+#: src/components/channel/embeds/media/EmbedGifv.tsx:754
 msgid "Loading placeholder"
 msgstr "Loading placeholder"
 
@@ -11064,7 +11067,7 @@ msgstr "Loading theme..."
 msgid "Loading verification methods..."
 msgstr "Loading verification methods..."
 
-#: src/components/channel/embeds/media/EmbedImage.tsx:368
+#: src/components/channel/embeds/media/EmbedImage.tsx:371
 msgid "Loading: {alt}"
 msgstr "Loading: {alt}"
 
@@ -11082,7 +11085,7 @@ msgid "Local Mute"
 msgstr "Local Mute"
 
 #: src/components/auth/AuthBottomLink.tsx:36
-#: src/components/auth/AuthLoginLayout.tsx:243
+#: src/components/auth/AuthLoginLayout.tsx:244
 #: src/components/auth/MfaScreen.tsx:136
 #: src/components/pages/LoginPage.tsx:129
 msgid "Log in"
@@ -11105,7 +11108,7 @@ msgstr "Log in using your browser, then enter the code shown to add the account.
 msgid "Log in via browser"
 msgstr "Log in via browser"
 
-#: src/components/auth/AuthLoginLayout.tsx:270
+#: src/components/auth/AuthLoginLayout.tsx:271
 msgid "Log in via browser or custom instance"
 msgstr "Log in via browser or custom instance"
 
@@ -11120,7 +11123,7 @@ msgid "Log Out"
 msgstr "Log Out"
 
 #. placeholder {0}: selectedDevices.size
-#: src/components/modals/tabs/DevicesTab.tsx:330
+#: src/components/modals/tabs/DevicesTab.tsx:333
 msgid "Log out {0} devices"
 msgstr "Log out {0} devices"
 
@@ -11129,7 +11132,7 @@ msgid "Log out {sessionCount} devices"
 msgstr "Log out {sessionCount} devices"
 
 #: src/components/modals/DeviceRevokeModal.tsx:40
-#: src/components/modals/tabs/DevicesTab.tsx:328
+#: src/components/modals/tabs/DevicesTab.tsx:331
 msgid "Log out 1 device"
 msgstr "Log out 1 device"
 
@@ -11141,7 +11144,7 @@ msgstr "Log Out All Devices"
 msgid "Log out all other devices"
 msgstr "Log out all other devices"
 
-#: src/components/modals/tabs/DevicesTab.tsx:333
+#: src/components/modals/tabs/DevicesTab.tsx:336
 msgid "Log Out All Other Devices"
 msgstr "Log Out All Other Devices"
 
@@ -11181,7 +11184,7 @@ msgstr "Lorem ipsum dolor sit amet"
 msgid "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
 msgstr "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:350
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:351
 msgid "Lottie"
 msgstr "Lottie"
 
@@ -11351,6 +11354,7 @@ msgstr "Mark as 18+ (NSFW)"
 #: src/components/bottomsheets/ChannelBottomSheet.tsx:358
 #: src/components/bottomsheets/ChannelDetailsBottomSheet.tsx:1139
 #: src/components/bottomsheets/DMBottomSheet.tsx:390
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:183
 #: src/components/channel/NewMessagesBar.tsx:60
 #: src/components/uikit/ContextMenu/items/CategoryMenuItems.tsx:81
 #: src/components/uikit/ContextMenu/items/ChannelMenuItems.tsx:79
@@ -11705,8 +11709,8 @@ msgstr "mentions:"
 #: src/components/modals/guildTabs/GuildMemberActionsSheet.tsx:220
 #: src/components/modals/tabs/ComponentGalleryTab/InputsTab.tsx:164
 #: src/components/modals/UserProfileMobileSheet.tsx:503
-#: src/components/modals/UserProfileModal.tsx:1192
-#: src/components/modals/UserProfileModal.tsx:1318
+#: src/components/modals/UserProfileModal.tsx:1218
+#: src/components/modals/UserProfileModal.tsx:1344
 #: src/components/popouts/UserProfilePopout.tsx:291
 #: src/components/popouts/UserProfilePopout.tsx:310
 #: src/components/profile/ProfilePreview.tsx:292
@@ -11714,15 +11718,15 @@ msgstr "mentions:"
 msgid "Message"
 msgstr "Message"
 
-#: src/components/channel/ChannelTextarea.tsx:621
+#: src/components/channel/ChannelTextarea.tsx:685
 msgid "Message "
 msgstr "Message "
 
-#: src/components/channel/ChannelTextarea.tsx:621
+#: src/components/channel/ChannelTextarea.tsx:685
 msgid "Message @"
 msgstr "Message @"
 
-#: src/components/channel/ChannelTextarea.tsx:618
+#: src/components/channel/ChannelTextarea.tsx:682
 msgid "Message #"
 msgstr "Message #"
 
@@ -11838,7 +11842,7 @@ msgstr "Messages & Media"
 msgid "Messages Deleted"
 msgstr "Messages Deleted"
 
-#: src/components/channel/Messages.tsx:941
+#: src/components/channel/Messages.tsx:944
 msgid "Messages failed to load"
 msgstr "Messages failed to load"
 
@@ -12016,7 +12020,7 @@ msgstr "More"
 msgid "More Actions"
 msgstr "More Actions"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:264
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:265
 msgid "More emoji slots"
 msgstr "More emoji slots"
 
@@ -12028,7 +12032,7 @@ msgstr "More options"
 msgid "More Options"
 msgstr "More Options"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:265
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:266
 msgid "More sticker slots"
 msgstr "More sticker slots"
 
@@ -12162,8 +12166,8 @@ msgstr "Mute channel"
 msgid "Mute Channel"
 msgstr "Mute Channel"
 
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:224
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:296
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:251
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:323
 #: src/components/uikit/ContextMenu/FavoritesGuildContextMenu.tsx:55
 #: src/components/uikit/ContextMenu/items/GuildMenuItems.tsx:186
 msgid "Mute Community"
@@ -12214,20 +12218,20 @@ msgstr "Muted until {0}"
 msgid "Muting a community prevents unread indicators and notifications from appearing unless you are mentioned"
 msgstr "Muting a community prevents unread indicators and notifications from appearing unless you are mentioned"
 
-#: src/components/modals/UserProfileModal.tsx:360
+#: src/components/modals/UserProfileModal.tsx:376
 msgid "Mutual Communities ({count})"
 msgstr "Mutual Communities ({count})"
 
-#: src/components/modals/UserProfileModal.tsx:352
+#: src/components/modals/UserProfileModal.tsx:368
 msgid "Mutual Friends ({count})"
 msgstr "Mutual Friends ({count})"
 
-#: src/components/modals/UserProfileModal.tsx:356
+#: src/components/modals/UserProfileModal.tsx:372
 msgid "Mutual Groups ({count})"
 msgstr "Mutual Groups ({count})"
 
 #: src/components/modals/tabs/ApplicationsTab/application-detail/ApplicationInfoSection.tsx:55
-#: src/components/modals/tabs/ApplicationsTab/ApplicationCreateModal.tsx:97
+#: src/components/modals/tabs/ApplicationsTab/ApplicationCreateModal.tsx:90
 msgid "My Application"
 msgstr "My Application"
 
@@ -12247,7 +12251,7 @@ msgstr "My awesome sticker"
 msgid "My Category"
 msgstr "My Category"
 
-#: src/components/modals/tabs/DevicesTab.tsx:240
+#: src/components/modals/tabs/DevicesTab.tsx:243
 msgid "My Devices"
 msgstr "My Devices"
 
@@ -12345,7 +12349,7 @@ msgid "Navigation"
 msgstr "Navigation"
 
 #: src/components/auth/AuthBottomLink.tsx:33
-#: src/components/auth/AuthLoginLayout.tsx:276
+#: src/components/auth/AuthLoginLayout.tsx:277
 msgid "Need an account?"
 msgstr "Need an account?"
 
@@ -12364,7 +12368,7 @@ msgstr "Network"
 #: src/components/modals/components/PlutoniumContent.tsx:156
 #: src/components/modals/components/PlutoniumContent.tsx:288
 #: src/components/modals/tabs/BetaCodesTab.tsx:320
-#: src/components/modals/tabs/DevicesTab.tsx:229
+#: src/components/modals/tabs/DevicesTab.tsx:232
 msgid "Network error"
 msgstr "Network error"
 
@@ -12584,8 +12588,8 @@ msgid "No community banner"
 msgstr "No community banner"
 
 #: src/components/auth/InviteHeader.tsx:156
-#: src/components/channel/InviteEmbed.tsx:217
-#: src/components/modals/InviteAcceptModal.tsx:148
+#: src/components/channel/InviteEmbed.tsx:227
+#: src/components/modals/InviteAcceptModal.tsx:162
 #: src/components/modals/tabs/ExpressionPacksTab.tsx:73
 msgid "No description provided."
 msgstr "No description provided."
@@ -12684,15 +12688,15 @@ msgstr "No microphones detected"
 msgid "No more scheduled messages."
 msgstr "No more scheduled messages."
 
-#: src/components/modals/UserProfileModal.tsx:586
+#: src/components/modals/UserProfileModal.tsx:603
 msgid "No mutual communities found."
 msgstr "No mutual communities found."
 
-#: src/components/modals/UserProfileModal.tsx:542
+#: src/components/modals/UserProfileModal.tsx:558
 msgid "No mutual friends found."
 msgstr "No mutual friends found."
 
-#: src/components/modals/UserProfileModal.tsx:564
+#: src/components/modals/UserProfileModal.tsx:580
 msgid "No mutual groups found."
 msgstr "No mutual groups found."
 
@@ -12905,8 +12909,8 @@ msgid "Not your cup of tea? You can disable this feature anytime."
 msgstr "Not your cup of tea? You can disable this feature anytime."
 
 #: src/components/modals/UserProfileMobileSheet.tsx:555
-#: src/components/modals/UserProfileModal.tsx:244
-#: src/components/modals/UserProfileModal.tsx:248
+#: src/components/modals/UserProfileModal.tsx:245
+#: src/components/modals/UserProfileModal.tsx:249
 #: src/components/pages/YouPage.tsx:144
 #: src/lib/markdown/renderers/common/block-elements.tsx:213
 msgid "Note"
@@ -12944,7 +12948,7 @@ msgstr "Notification Overrides"
 #: src/components/bottomsheets/ChannelBottomSheet.tsx:405
 #: src/components/bottomsheets/ChannelDetailsBottomSheet.tsx:1184
 #: src/components/bottomsheets/ChannelDetailsBottomSheet.tsx:1365
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:199
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:226
 #: src/components/channel/ChannelHeader/ChannelNotificationSettingsButton.tsx:59
 #: src/components/modals/GuildNotificationSettingsModal.tsx:162
 #: src/components/modals/tabs/NotificationsTab/Notifications.tsx:82
@@ -12995,7 +12999,7 @@ msgstr "Notify users with this role who have permission to view this channel."
 msgid "now"
 msgstr "now"
 
-#: src/components/channel/MessageSearchBar/MessageSearchBar.tsx:704
+#: src/components/channel/MessageSearchBar/MessageSearchBar.tsx:732
 msgid "Now"
 msgstr "Now"
 
@@ -13090,7 +13094,7 @@ msgstr "On click"
 msgid "on:"
 msgstr "on:"
 
-#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:672
+#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:673
 msgid "Once deleted, the application and its credentials are permanently removed."
 msgstr "Once deleted, the application and its credentials are permanently removed."
 
@@ -13252,7 +13256,7 @@ msgstr "Open DMs Only"
 msgid "Open Fluxer"
 msgstr "Open Fluxer"
 
-#: src/components/channel/embeds/media/EmbedImage.tsx:186
+#: src/components/channel/embeds/media/EmbedImage.tsx:187
 msgid "Open image in full view"
 msgstr "Open image in full view"
 
@@ -13368,7 +13372,7 @@ msgstr "Open Visionary Community"
 msgid "Opening..."
 msgstr "Opening..."
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:275
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:276
 msgid "Operator"
 msgstr "Operator"
 
@@ -13441,7 +13445,7 @@ msgstr "Original message was deleted"
 msgid "Other"
 msgstr "Other"
 
-#: src/components/modals/tabs/DevicesTab.tsx:261
+#: src/components/modals/tabs/DevicesTab.tsx:264
 msgid "Other Devices"
 msgstr "Other Devices"
 
@@ -13501,7 +13505,7 @@ msgstr "Override unclaimed account status"
 msgid "Override unread gift inventory status"
 msgstr "Override unread gift inventory status"
 
-#: src/components/modals/UserProfileModal.tsx:414
+#: src/components/modals/UserProfileModal.tsx:430
 msgid "Overview"
 msgstr "Overview"
 
@@ -13695,7 +13699,7 @@ msgstr "Permissions"
 msgid "Permissions granted"
 msgstr "Permissions granted"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:228
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:229
 msgid "Personal notes"
 msgstr "Personal notes"
 
@@ -13868,12 +13872,12 @@ msgstr "Play"
 msgid "Play animated emojis"
 msgstr "Play animated emojis"
 
-#: src/components/channel/embeds/media/EmbedAudio.tsx:204
+#: src/components/channel/embeds/media/EmbedAudio.tsx:211
 msgid "Play audio"
 msgstr "Play audio"
 
-#: src/components/channel/embeds/media/EmbedVideo.tsx:79
-#: src/components/channel/embeds/media/EmbedVideo.tsx:103
+#: src/components/channel/embeds/media/EmbedVideo.tsx:80
+#: src/components/channel/embeds/media/EmbedVideo.tsx:104
 #: src/components/channel/embeds/media/EmbedYouTube.tsx:112
 #: src/components/media-player/components/VideoPlayer.tsx:299
 msgid "Play video"
@@ -13936,7 +13940,7 @@ msgstr "Please paste the message link you are reporting."
 msgid "Please provide an email address."
 msgstr "Please provide an email address."
 
-#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:555
+#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:556
 msgid "Please retry or go back to the applications list."
 msgstr "Please retry or go back to the applications list."
 
@@ -13989,7 +13993,7 @@ msgstr "Plutonium perks"
 msgid "Plutonium Subscription"
 msgstr "Plutonium Subscription"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:348
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:349
 msgid "PNG"
 msgstr "PNG"
 
@@ -14177,7 +14181,7 @@ msgstr "Privacy Dashboard"
 msgid "Privacy Policy"
 msgstr "Privacy Policy"
 
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:204
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:231
 #: src/components/modals/GuildPrivacySettingsModal.tsx:56
 #: src/components/popouts/GuildHeaderPopout.tsx:212
 #: src/components/uikit/ContextMenu/items/GuildMenuItems.tsx:392
@@ -14299,7 +14303,7 @@ msgstr "Purge this sticker from storage and CDN"
 msgid "Push Notification Inactive Timeout"
 msgstr "Push Notification Inactive Timeout"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:301
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:302
 msgid "Push notifications"
 msgstr "Push notifications"
 
@@ -14412,7 +14416,7 @@ msgstr "Reaction Interaction Disabled"
 #: src/components/modals/MessageReactionsModal.tsx:169
 #: src/components/modals/tabs/ChatSettingsTab/DisplayTab.tsx:94
 #: src/components/modals/utils/settingsSearchIndex.ts:353
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:306
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:307
 msgid "Reactions"
 msgstr "Reactions"
 
@@ -14583,7 +14587,7 @@ msgstr "Refresh push subscription"
 #: src/components/modals/BackupCodesModal.tsx:90
 #: src/components/modals/tabs/ApplicationsTab/application-detail/SecretsSection.tsx:68
 #: src/components/modals/tabs/ApplicationsTab/application-detail/SecretsSection.tsx:85
-#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:528
+#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:529
 msgid "Regenerate"
 msgstr "Regenerate"
 
@@ -14591,19 +14595,19 @@ msgstr "Regenerate"
 msgid "Regenerate backup codes"
 msgstr "Regenerate backup codes"
 
-#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:526
+#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:527
 msgid "Regenerate bot token?"
 msgstr "Regenerate bot token?"
 
-#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:526
+#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:527
 msgid "Regenerate client secret?"
 msgstr "Regenerate client secret?"
 
-#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:519
+#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:520
 msgid "Regenerating will invalidate the current secret. Update any code that uses the old value."
 msgstr "Regenerating will invalidate the current secret. Update any code that uses the old value."
 
-#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:521
+#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:522
 msgid "Regenerating will invalidate the current token. Update any code that uses the old value."
 msgstr "Regenerating will invalidate the current token. Update any code that uses the old value."
 
@@ -14732,7 +14736,7 @@ msgid "Remove filter"
 msgstr "Remove filter"
 
 #: src/components/bottomsheets/DMBottomSheet.tsx:510
-#: src/components/channel/dm/DMWelcomeSection.tsx:144
+#: src/components/channel/dm/DMWelcomeSection.tsx:150
 #: src/components/modals/guildTabs/GuildMemberActionsSheet.tsx:146
 #: src/components/modals/guildTabs/GuildMemberActionsSheet.tsx:148
 #: src/components/modals/guildTabs/GuildMemberActionsSheet.tsx:255
@@ -14741,8 +14745,8 @@ msgstr "Remove filter"
 #: src/components/modals/UserProfileActionsSheet.tsx:278
 #: src/components/modals/UserProfileMobileSheet.tsx:305
 #: src/components/modals/UserProfileMobileSheet.tsx:307
-#: src/components/modals/UserProfileModal.tsx:1145
-#: src/components/modals/UserProfileModal.tsx:1231
+#: src/components/modals/UserProfileModal.tsx:1171
+#: src/components/modals/UserProfileModal.tsx:1257
 #: src/components/uikit/ContextMenu/items/RelationshipMenuItems.tsx:129
 #: src/utils/RelationshipActionUtils.tsx:113
 #: src/utils/RelationshipActionUtils.tsx:115
@@ -15080,7 +15084,7 @@ msgstr "Report submitted successfully. Our Safety Team will review it shortly."
 
 #: src/components/modals/IARModal.tsx:84
 #: src/components/modals/UserProfileActionsSheet.tsx:289
-#: src/components/modals/UserProfileModal.tsx:1159
+#: src/components/modals/UserProfileModal.tsx:1185
 msgid "Report User"
 msgstr "Report User"
 
@@ -15105,7 +15109,7 @@ msgstr "Requested scopes"
 msgid "Require 2FA for moderation actions"
 msgstr "Require 2FA for moderation actions"
 
-#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:144
+#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:147
 msgid "Require double-click to join voice channels"
 msgstr "Require double-click to join voice channels"
 
@@ -15144,7 +15148,7 @@ msgstr "Requires everything in Medium, plus being a member of the server for at 
 msgid "Requires Plutonium"
 msgstr "Requires Plutonium"
 
-#: src/components/channel/ChannelTextarea.tsx:834
+#: src/components/channel/ChannelTextarea.tsx:904
 msgid "Reschedule Message"
 msgstr "Reschedule Message"
 
@@ -15290,11 +15294,11 @@ msgstr "Resubscribe"
 #: src/components/modals/guildTabs/GuildInvitesTab.tsx:124
 #: src/components/modals/guildTabs/GuildStickersTab.tsx:211
 #: src/components/modals/guildTabs/GuildWebhooksTab.tsx:137
-#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:559
+#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:560
 #: src/components/modals/tabs/ApplicationsTab/index.tsx:112
 #: src/components/modals/tabs/AuthorizedAppsTab.tsx:121
 #: src/components/modals/tabs/BetaCodesTab.tsx:326
-#: src/components/modals/tabs/DevicesTab.tsx:231
+#: src/components/modals/tabs/DevicesTab.tsx:234
 #: src/components/modals/tabs/GiftInventoryTab.tsx:323
 msgid "Retry"
 msgstr "Retry"
@@ -15359,7 +15363,7 @@ msgstr "Revoke"
 msgid "Revoke Ban"
 msgstr "Revoke Ban"
 
-#: src/components/modals/tabs/DevicesTab.tsx:133
+#: src/components/modals/tabs/DevicesTab.tsx:136
 msgid "Revoke device"
 msgstr "Revoke device"
 
@@ -15386,7 +15390,7 @@ msgstr "Rewind {DEFAULT_SEEK_AMOUNT} seconds"
 msgid "Right"
 msgstr "Right"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:250
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:251
 msgid "Right aligned"
 msgstr "Right aligned"
 
@@ -15791,7 +15795,7 @@ msgid "Search members..."
 msgstr "Search members..."
 
 #: src/components/bottomsheets/ChannelSearchBottomSheet.tsx:412
-#: src/components/channel/MessageSearchBar/MessageSearchBar.tsx:1410
+#: src/components/channel/MessageSearchBar/MessageSearchBar.tsx:1438
 msgid "Search messages"
 msgstr "Search messages"
 
@@ -15834,13 +15838,13 @@ msgstr "Search roles or members..."
 msgid "Search saved media"
 msgstr "Search saved media"
 
-#: src/components/channel/MessageSearchBar/MessageSearchBar.tsx:380
+#: src/components/channel/MessageSearchBar/MessageSearchBar.tsx:381
 msgid "Search scope"
 msgstr "Search scope"
 
 #. placeholder {0}: activeScopeOption.label
 #: src/components/channel/ChannelSearchResults.tsx:1031
-#: src/components/channel/MessageSearchBar/MessageSearchBar.tsx:378
+#: src/components/channel/MessageSearchBar/MessageSearchBar.tsx:379
 msgid "Search scope: {0}"
 msgstr "Search scope: {0}"
 
@@ -15857,7 +15861,7 @@ msgstr "Search settings..."
 msgid "Search stickers..."
 msgstr "Search stickers..."
 
-#: src/components/channel/MessageSearchBar/MessageSearchBar.tsx:1448
+#: src/components/channel/MessageSearchBar/MessageSearchBar.tsx:1476
 msgid "Search suggestions"
 msgstr "Search suggestions"
 
@@ -15938,7 +15942,7 @@ msgstr "Security Key / Passkey"
 msgid "Security key verification failed. Please try again."
 msgstr "Security key verification failed. Please try again."
 
-#: src/components/modals/tabs/DevicesTab.tsx:242
+#: src/components/modals/tabs/DevicesTab.tsx:245
 msgid "See all devices that are currently logged into your account. Revoke any sessions that you don't recognize."
 msgstr "See all devices that are currently logged into your account. Revoke any sessions that you don't recognise."
 
@@ -16002,7 +16006,7 @@ msgid "Select account"
 msgstr "Select account"
 
 #: src/components/channel/textarea/TextareaContextMenu.tsx:134
-#: src/components/modals/tabs/DevicesTab.tsx:281
+#: src/components/modals/tabs/DevicesTab.tsx:284
 msgid "Select All"
 msgstr "Select All"
 
@@ -16040,7 +16044,7 @@ msgstr "Select media size for embedded content from links"
 msgid "Select media size for uploaded attachments"
 msgstr "Select media size for uploaded attachments"
 
-#: src/components/modals/UserProfileModal.tsx:686
+#: src/components/modals/UserProfileModal.tsx:709
 msgid "Select mutual view"
 msgstr "Select mutual view"
 
@@ -16151,9 +16155,9 @@ msgstr "Send code"
 msgid "Send Code"
 msgstr "Send Code"
 
-#: src/components/channel/dm/DMWelcomeSection.tsx:112
+#: src/components/channel/dm/DMWelcomeSection.tsx:118
 #: src/components/modals/guildTabs/GuildMemberActionsSheet.tsx:272
-#: src/components/modals/UserProfileModal.tsx:1292
+#: src/components/modals/UserProfileModal.tsx:1318
 msgid "Send Friend Request"
 msgstr "Send Friend Request"
 
@@ -16170,7 +16174,7 @@ msgstr "Send Message · Right-click to schedule"
 msgid "Send Message Disabled"
 msgstr "Send Message Disabled"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:305
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:306
 msgid "Send messages"
 msgstr "Send messages"
 
@@ -16624,7 +16628,7 @@ msgstr "Show Gift Button"
 msgid "Show inline images and videos"
 msgstr "Show inline images and videos"
 
-#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:93
+#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:96
 msgid "Show just the typing indicator without avatars"
 msgstr "Show just the typing indicator without avatars"
 
@@ -16788,11 +16792,11 @@ msgstr "Show the gift as already redeemed"
 msgid "Show this role separately"
 msgstr "Show this role separately"
 
-#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:88
+#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:91
 msgid "Show typing indicator with user avatars in the channel list"
 msgstr "Show typing indicator with user avatars in the channel list"
 
-#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:117
+#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:120
 msgid "Show typing on selected channel"
 msgstr "Show typing on selected channel"
 
@@ -17151,7 +17155,7 @@ msgstr "Spanish (Spain)"
 msgid "Speak"
 msgstr "Speak"
 
-#: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:335
+#: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:340
 msgid "Speak Message"
 msgstr "Speak Message"
 
@@ -17270,13 +17274,13 @@ msgid "Start Sharing"
 msgstr "Start Sharing"
 
 #: src/components/channel/ChannelHeader/CallButtons.tsx:160
-#: src/components/modals/UserProfileModal.tsx:1111
+#: src/components/modals/UserProfileModal.tsx:1137
 #: src/components/uikit/ContextMenu/items/CallMenuItems.tsx:91
 msgid "Start Video Call"
 msgstr "Start Video Call"
 
 #: src/components/channel/ChannelHeader/CallButtons.tsx:90
-#: src/components/modals/UserProfileModal.tsx:1102
+#: src/components/modals/UserProfileModal.tsx:1128
 #: src/components/uikit/ContextMenu/items/CallMenuItems.tsx:60
 msgid "Start Voice Call"
 msgstr "Start Voice Call"
@@ -17359,8 +17363,8 @@ msgid "Sticker density"
 msgstr "Sticker density"
 
 #: src/components/auth/InviteHeader.tsx:140
-#: src/components/channel/InviteEmbed.tsx:199
-#: src/components/modals/InviteAcceptModal.tsx:142
+#: src/components/channel/InviteEmbed.tsx:209
+#: src/components/modals/InviteAcceptModal.tsx:156
 #: src/components/modals/tabs/ExpressionPacksTab.tsx:70
 msgid "Sticker pack"
 msgstr "Sticker pack"
@@ -17427,7 +17431,7 @@ msgstr "Stop Ringing"
 msgid "Stop Sharing"
 msgstr "Stop Sharing"
 
-#: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:335
+#: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:340
 msgid "Stop Speaking"
 msgstr "Stop Speaking"
 
@@ -17570,19 +17574,19 @@ msgstr "Suppress all role @mentions"
 msgid "Suppress All Role @mentions"
 msgstr "Suppress All Role @mentions"
 
-#: src/components/channel/embeds/Embed.tsx:800
-#: src/components/channel/embeds/Embed.tsx:836
-#: src/components/channel/embeds/Embed.tsx:860
-#: src/components/channel/embeds/Embed.tsx:905
-#: src/components/channel/embeds/Embed.tsx:941
-#: src/components/channel/embeds/Embed.tsx:982
-#: src/components/channel/embeds/Embed.tsx:1018
-#: src/components/channel/embeds/Embed.tsx:1060
+#: src/components/channel/embeds/Embed.tsx:822
+#: src/components/channel/embeds/Embed.tsx:859
+#: src/components/channel/embeds/Embed.tsx:883
+#: src/components/channel/embeds/Embed.tsx:928
+#: src/components/channel/embeds/Embed.tsx:964
+#: src/components/channel/embeds/Embed.tsx:1005
+#: src/components/channel/embeds/Embed.tsx:1041
+#: src/components/channel/embeds/Embed.tsx:1083
 msgid "Suppress embeds"
 msgstr "Suppress embeds"
 
-#: src/components/channel/embeds/Embed.tsx:141
-#: src/components/channel/embeds/Embed.tsx:148
+#: src/components/channel/embeds/Embed.tsx:143
+#: src/components/channel/embeds/Embed.tsx:150
 #: src/components/channel/MessageActionBar.tsx:542
 #: src/components/channel/MessageActionBar.tsx:694
 #: src/components/channel/messageActionMenu.tsx:150
@@ -17775,7 +17779,7 @@ msgstr "Text"
 msgid "Text (NSFW)"
 msgstr "Text (NSFW)"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:216
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:217
 msgid "Text channel"
 msgstr "Text channel"
 
@@ -18028,10 +18032,10 @@ msgstr "This action requires verification to continue."
 msgid "This application"
 msgstr "This application"
 
-#: src/components/channel/embeds/attachments/Attachment.tsx:285
-#: src/components/channel/embeds/attachments/Attachment.tsx:306
-#: src/components/channel/embeds/attachments/Attachment.tsx:317
-#: src/components/channel/embeds/attachments/Attachment.tsx:327
+#: src/components/channel/embeds/attachments/Attachment.tsx:293
+#: src/components/channel/embeds/attachments/Attachment.tsx:314
+#: src/components/channel/embeds/attachments/Attachment.tsx:325
+#: src/components/channel/embeds/attachments/Attachment.tsx:335
 msgid "This attachment has expired"
 msgstr "This attachment has expired"
 
@@ -18039,7 +18043,7 @@ msgstr "This attachment has expired"
 msgid "This bot is requesting the Administrator permission. We do not recommend granting this to production apps unless you fully trust the developer. Consider asking them to request a reduced set of permissions. Close this page if you are unsure."
 msgstr "This bot is requesting the Administrator permission. We do not recommend granting this to production apps unless you fully trust the developer. Consider asking them to request a reduced set of permissions. Close this page if you are unsure."
 
-#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:668
+#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:669
 msgid "This cannot be undone. Removing the application also deletes its bot."
 msgstr "This cannot be undone. Removing the application also deletes its bot."
 
@@ -18101,7 +18105,7 @@ msgstr "This community has reached its maximum member limit and is not accepting
 msgid "This community has temporarily disabled invites."
 msgstr "This community has temporarily disabled invites."
 
-#: src/components/modals/InviteAcceptModal.tsx:180
+#: src/components/modals/InviteAcceptModal.tsx:194
 msgid "This community has temporarily disabled invites. You can try again later."
 msgstr "This community has temporarily disabled invites. You can try again later."
 
@@ -18178,7 +18182,7 @@ msgstr "This invite has unlimited uses."
 msgid "This invite link never expires."
 msgstr "This invite link never expires."
 
-#: src/components/modals/InviteAcceptModal.tsx:135
+#: src/components/modals/InviteAcceptModal.tsx:149
 #: src/components/pages/InviteLoginPage.tsx:197
 #: src/components/pages/InviteRegisterPage.tsx:93
 msgid "This invite may have expired or been deleted."
@@ -18239,7 +18243,7 @@ msgid "This is the beginning of <0>{displayName}</0>. Add friends to start a con
 msgstr "This is the beginning of <0>{displayName}</0>. Add friends to start a conversation!"
 
 #. placeholder {0}: user.username
-#: src/components/channel/dm/DMWelcomeSection.tsx:194
+#: src/components/channel/dm/DMWelcomeSection.tsx:202
 msgid "This is the beginning of your direct message history with <0>{0}</0>."
 msgstr "This is the beginning of your direct message history with <0>{0}</0>."
 
@@ -18342,8 +18346,8 @@ msgid "This was a @silent message."
 msgstr "This was a @silent message."
 
 #: src/actions/MessageActionCreators.tsx:404
-#: src/components/channel/Messages.tsx:445
-#: src/components/channel/Messages.tsx:525
+#: src/components/channel/Messages.tsx:444
+#: src/components/channel/Messages.tsx:524
 msgid "This will create a rift in the space-time continuum and cannot be undone."
 msgstr "This will create a rift in the space-time continuum and cannot be undone."
 
@@ -18351,7 +18355,7 @@ msgstr "This will create a rift in the space-time continuum and cannot be undone
 msgid "This will hide all favorites-related UI elements including buttons and menu items. Your existing favorites will be preserved and can be re-enabled anytime from <0>User Settings → Look & Feel → Favorites</0>."
 msgstr "This will hide all favourites-related UI elements including buttons and menu items. Your existing favourites will be preserved and can be re-enabled anytime from <0>User Settings → Look & Feel → Favourites</0>."
 
-#: src/components/channel/ChannelTextarea.tsx:838
+#: src/components/channel/ChannelTextarea.tsx:908
 msgid "This will modify the existing scheduled message rather than sending immediately."
 msgstr "This will modify the existing scheduled message rather than sending immediately."
 
@@ -18387,8 +18391,8 @@ msgstr "This will remove the saved session for this account."
 msgid "This will replace your current custom theme. You can edit it later in your User Settings."
 msgstr "This will replace your current custom theme. You can edit it later in your User Settings."
 
-#: src/components/channel/embeds/media/EmbedVideo.tsx:88
-#: src/components/channel/embeds/media/EmbedVideo.tsx:97
+#: src/components/channel/embeds/media/EmbedVideo.tsx:89
+#: src/components/channel/embeds/media/EmbedVideo.tsx:98
 msgid "Thumbnail for {title}"
 msgstr "Thumbnail for {title}"
 
@@ -18485,7 +18489,7 @@ msgstr "Toasts appear in the top-centre of the screen."
 msgid "today"
 msgstr "today"
 
-#: src/components/channel/MessageSearchBar/MessageSearchBar.tsx:702
+#: src/components/channel/MessageSearchBar/MessageSearchBar.tsx:730
 msgid "Today"
 msgstr "Today"
 
@@ -18710,7 +18714,7 @@ msgid "Try a different search term or filter"
 msgstr "Try a different search term or filter"
 
 #: src/components/auth/HandoffCodeDisplay.tsx:67
-#: src/components/channel/Messages.tsx:942
+#: src/components/channel/Messages.tsx:945
 msgid "Try again"
 msgstr "Try again"
 
@@ -18737,7 +18741,7 @@ msgstr "Try another name or check your spelling."
 msgid "Try another search term"
 msgstr "Try another search term"
 
-#: src/components/channel/InviteEmbed.tsx:361
+#: src/components/channel/InviteEmbed.tsx:377
 msgid "Try asking for a new invite."
 msgstr "Try asking for a new invite."
 
@@ -18864,7 +18868,7 @@ msgstr "Type Scale"
 msgid "Type your message here..."
 msgstr "Type your message here..."
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:303
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:304
 msgid "Typing events"
 msgstr "Typing events"
 
@@ -18877,11 +18881,11 @@ msgstr "Typing indicator"
 msgid "Typing Indicator"
 msgstr "Typing Indicator"
 
-#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:87
+#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:90
 msgid "Typing indicator + avatars"
 msgstr "Typing indicator + avatars"
 
-#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:92
+#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:95
 msgid "Typing indicator only"
 msgstr "Typing indicator only"
 
@@ -18961,11 +18965,11 @@ msgstr "Unable to Start Call"
 msgid "Unable to start email change"
 msgstr "Unable to start email change"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:272
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:273
 msgid "Unavailable for everyone"
 msgstr "Unavailable for everyone"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:273
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:274
 msgid "Unavailable for everyone but staff"
 msgstr "Unavailable for everyone but staff"
 
@@ -18978,7 +18982,7 @@ msgstr "Unavailable for everyone but staff"
 #: src/components/modals/UserProfileActionsSheet.tsx:151
 #: src/components/modals/UserProfileActionsSheet.tsx:305
 #: src/components/modals/UserProfileMobileSheet.tsx:323
-#: src/components/modals/UserProfileModal.tsx:1051
+#: src/components/modals/UserProfileModal.tsx:1077
 #: src/components/uikit/ContextMenu/items/RelationshipMenuItems.tsx:230
 #: src/utils/RelationshipActionUtils.tsx:169
 msgid "Unblock"
@@ -18992,7 +18996,7 @@ msgstr "Unblock this user before sending a friend request."
 #: src/components/modals/tabs/BlockedUsersTab.tsx:56
 #: src/components/modals/UserProfileActionsSheet.tsx:149
 #: src/components/modals/UserProfileMobileSheet.tsx:321
-#: src/components/modals/UserProfileModal.tsx:1246
+#: src/components/modals/UserProfileModal.tsx:1272
 #: src/utils/RelationshipActionUtils.tsx:167
 msgid "Unblock User"
 msgstr "Unblock User"
@@ -19165,7 +19169,7 @@ msgstr "Unknown error"
 msgid "Unknown Gift"
 msgstr "Unknown Gift"
 
-#: src/components/channel/InviteEmbed.tsx:359
+#: src/components/channel/InviteEmbed.tsx:375
 msgid "Unknown Invite"
 msgstr "Unknown Invite"
 
@@ -19205,11 +19209,11 @@ msgstr "unknown-role"
 msgid "Unlimited"
 msgstr "Unlimited"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:266
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:267
 msgid "Unlimited emoji"
 msgstr "Unlimited emoji"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:267
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:268
 msgid "Unlimited stickers"
 msgstr "Unlimited stickers"
 
@@ -19254,7 +19258,7 @@ msgstr "Unlock stickers in DMs with Plutonium"
 #: src/components/bottomsheets/ChannelDetailsBottomSheet.tsx:882
 #: src/components/bottomsheets/ChannelDetailsBottomSheet.tsx:1068
 #: src/components/bottomsheets/DMBottomSheet.tsx:648
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:321
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:348
 #: src/components/bottomsheets/VoiceLobbyBottomSheet.tsx:179
 #: src/components/bottomsheets/VoiceParticipantBottomSheet.tsx:253
 #: src/components/bottomsheets/VoiceParticipantBottomSheet.tsx:279
@@ -19285,8 +19289,8 @@ msgstr "Unmute Category"
 msgid "Unmute Channel"
 msgstr "Unmute Channel"
 
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:224
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:296
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:251
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:323
 #: src/components/uikit/ContextMenu/FavoritesGuildContextMenu.tsx:55
 #: src/components/uikit/ContextMenu/items/GuildMenuItems.tsx:179
 msgid "Unmute Community"
@@ -19306,7 +19310,7 @@ msgstr "Unmute Favourites"
 msgid "Unmute User"
 msgstr "Unmute User"
 
-#: src/components/channel/MessageSearchBar/MessageSearchBar.tsx:934
+#: src/components/channel/MessageSearchBar/MessageSearchBar.tsx:962
 msgid "Unnamed"
 msgstr "Unnamed"
 
@@ -19405,7 +19409,7 @@ msgid "Until I change it"
 msgstr "Until I change it"
 
 #: src/components/bottomsheets/DMBottomSheet.tsx:667
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:334
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:361
 #: src/components/channel/ChannelHeader/ChannelNotificationSettingsDropdown.tsx:57
 #: src/components/channel/muteOptions.ts:39
 #: src/components/uikit/ContextMenu/items/CategoryMenuItems.tsx:147
@@ -19422,7 +19426,7 @@ msgstr "Unverified Email"
 msgid "Up to 4K/60fps"
 msgstr "Up to 4K/60fps"
 
-#: src/components/channel/ChannelTextarea.tsx:835
+#: src/components/channel/ChannelTextarea.tsx:905
 msgid "Update"
 msgstr "Update"
 
@@ -19629,7 +19633,7 @@ msgstr "Upload Entrance Sound"
 msgid "Upload Failed"
 msgstr "Upload Failed"
 
-#: src/components/channel/ChannelTextarea.tsx:756
+#: src/components/channel/ChannelTextarea.tsx:826
 msgid "Upload file"
 msgstr "Upload file"
 
@@ -19868,11 +19872,11 @@ msgid "User Moved Channel"
 msgstr "User Moved Channel"
 
 #: src/components/modals/tabs/ComponentGalleryTab/InputsTab.tsx:133
-#: src/components/modals/UserProfileModal.tsx:947
+#: src/components/modals/UserProfileModal.tsx:973
 msgid "User Profile"
 msgstr "User Profile"
 
-#: src/components/modals/UserProfileModal.tsx:949
+#: src/components/modals/UserProfileModal.tsx:975
 msgid "User Profile: {tag}"
 msgstr "User Profile: {tag}"
 
@@ -19993,7 +19997,7 @@ msgid "Values"
 msgstr "Values"
 
 #: src/components/modals/guildTabs/GuildVanityURLTab.tsx:177
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:269
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:270
 msgid "Vanity URL"
 msgstr "Vanity URL"
 
@@ -20059,14 +20063,14 @@ msgstr "Verification may be required before viewing your backup codes."
 #: src/components/auth/AuthPageHeader.tsx:49
 #: src/components/auth/InviteHeader.tsx:81
 #: src/components/auth/InviteHeader.tsx:226
-#: src/components/channel/InviteEmbed.tsx:287
-#: src/components/channel/InviteEmbed.tsx:430
+#: src/components/channel/InviteEmbed.tsx:296
+#: src/components/channel/InviteEmbed.tsx:446
 #: src/components/emojis/EmojiAttributionSubtext.tsx:143
 #: src/components/layout/GuildHeader.tsx:132
 msgid "Verified Community"
 msgstr "Verified Community"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:270
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:271
 msgid "Verified guild"
 msgstr "Verified guild"
 
@@ -20167,8 +20171,8 @@ msgstr "Video Quality"
 msgid "Video Settings"
 msgstr "Video Settings"
 
-#: src/components/channel/embeds/media/EmbedVideo.tsx:88
-#: src/components/channel/embeds/media/EmbedVideo.tsx:97
+#: src/components/channel/embeds/media/EmbedVideo.tsx:89
+#: src/components/channel/embeds/media/EmbedVideo.tsx:98
 #: src/components/channel/embeds/media/EmbedYouTube.tsx:84
 msgid "Video thumbnail"
 msgstr "Video thumbnail"
@@ -20240,7 +20244,7 @@ msgid "View Codes"
 msgstr "View Codes"
 
 #: src/components/modals/UserProfileActionsSheet.tsx:194
-#: src/components/modals/UserProfileModal.tsx:1089
+#: src/components/modals/UserProfileModal.tsx:1115
 msgid "View Community Profile"
 msgstr "View Community Profile"
 
@@ -20259,7 +20263,7 @@ msgid "View Gift Inventory"
 msgstr "View Gift Inventory"
 
 #: src/components/modals/UserProfileActionsSheet.tsx:194
-#: src/components/modals/UserProfileModal.tsx:1089
+#: src/components/modals/UserProfileModal.tsx:1115
 msgid "View Global Profile"
 msgstr "View Global Profile"
 
@@ -20329,7 +20333,7 @@ msgstr "Violation category selection"
 msgid "Violent or Graphic Content"
 msgstr "Violent or Graphic Content"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:271
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:272
 msgid "VIP voice"
 msgstr "VIP voice"
 
@@ -20341,7 +20345,7 @@ msgstr "Visible Buttons"
 #: src/components/modals/components/plutonium/SubscriptionCard.tsx:129
 #: src/components/modals/components/plutonium/VisionarySection.tsx:67
 #: src/components/modals/tabs/DeveloperOptionsTab/MockingTab.tsx:154
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:274
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:275
 msgid "Visionary"
 msgstr "Visionary"
 
@@ -20427,7 +20431,7 @@ msgid "Voice Calls"
 msgstr "Voice Calls"
 
 #: src/stores/QuickSwitcherStore.tsx:710
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:218
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:219
 msgid "Voice channel"
 msgstr "Voice channel"
 
@@ -20442,7 +20446,7 @@ msgstr "Voice Channel"
 msgid "Voice Channel Full"
 msgstr "Voice Channel Full"
 
-#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:140
+#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:143
 #: src/components/modals/utils/settingsSearchIndex.ts:239
 msgid "Voice Channel Join Behavior"
 msgstr "Voice Channel Join Behaviour"
@@ -20559,7 +20563,7 @@ msgstr "We couldn't join this community at this time."
 msgid "We couldn't load the invites at this time."
 msgstr "We couldn't load the invites at this time."
 
-#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:554
+#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:555
 msgid "We couldn't load this application"
 msgstr "We couldn't load this application"
 
@@ -20671,7 +20675,7 @@ msgid "We're having trouble connecting to Fluxer's servers. This could be a temp
 msgstr "We're having trouble connecting to Fluxer's servers. This could be a temporary network issue or scheduled maintenance."
 
 #: src/components/modals/tabs/BetaCodesTab.tsx:322
-#: src/components/modals/tabs/DevicesTab.tsx:230
+#: src/components/modals/tabs/DevicesTab.tsx:233
 msgid "We're having trouble connecting to the space-time continuum. Please check your connection and try again."
 msgstr "We're having trouble connecting to the space-time continuum. Please check your connection and try again."
 
@@ -20759,7 +20763,7 @@ msgstr "Weekend Warriors"
 msgid "Welcome and system messages will appear here."
 msgstr "Welcome and system messages will appear here."
 
-#: src/components/auth/AuthLoginLayout.tsx:235
+#: src/components/auth/AuthLoginLayout.tsx:236
 msgid "Welcome back"
 msgstr "Welcome back"
 
@@ -20820,7 +20824,7 @@ msgstr "What's happening?"
 msgid "What's included in your export:"
 msgstr "What's included in your export:"
 
-#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:118
+#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:121
 msgid "When disabled (default), typing indicators won't appear on the channel you're currently viewing."
 msgstr "When disabled (default), typing indicators won't appear on the channel you're currently viewing."
 
@@ -20836,7 +20840,7 @@ msgstr "When enabled, quickly tapping your push-to-talk shortcut will keep your 
 msgid "When enabled, reveals debugging menus throughout the app to inspect and copy raw JSON objects of internal data structures like messages, channels, users, and communities. Also includes tools to debug the Fluxer Markdown parser performance and AST for any given message."
 msgstr "When enabled, reveals debugging menus throughout the app to inspect and copy raw JSON objects of internal data structures like messages, channels, users, and communities. Also includes tools to debug the Fluxer Markdown parser performance and AST for any given message."
 
-#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:132
+#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:135
 msgid "When enabled, shortcut badges are hidden in tooltip popups."
 msgstr "When enabled, shortcut badges are hidden in tooltip popups."
 
@@ -20868,7 +20872,7 @@ msgstr "When enabled, uses your computer's locale to determine 12/24-hour format
 msgid "When enabled, you can favorite channels and they'll appear in the Favorites section. When disabled, all favorite-related UI elements (buttons, menu items) will be hidden. Your existing favorites will be preserved."
 msgstr "When enabled, you can favourite channels and they'll appear in the Favourites section. When disabled, all favourite-related UI elements (buttons, menu items) will be hidden. Your existing favourites will be preserved."
 
-#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:145
+#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:148
 msgid "When enabled, you'll need to double-click on voice channels to join them. When disabled (default), single-clicking will join the channel immediately."
 msgstr "When enabled, you'll need to double-click on voice channels to join them. When disabled (default), single-clicking will join the channel immediately."
 
@@ -20970,7 +20974,7 @@ msgstr "Yearly {yearlyPrice}"
 msgid "yesterday"
 msgstr "yesterday"
 
-#: src/components/channel/MessageSearchBar/MessageSearchBar.tsx:703
+#: src/components/channel/MessageSearchBar/MessageSearchBar.tsx:731
 msgid "Yesterday"
 msgstr "Yesterday"
 
@@ -21013,7 +21017,7 @@ msgstr "You are editing your per-community profile. This profile will only be vi
 msgid "You are in slowmode. Please wait before sending another message."
 msgstr "You are in slowmode. Please wait before sending another message."
 
-#: src/components/modals/components/ClientInfo.tsx:63
+#: src/components/modals/components/ClientInfo.tsx:87
 msgid "You are now a developer!"
 msgstr "You are now a developer!"
 
@@ -21113,7 +21117,7 @@ msgstr "You can use links and Markdown to format your text. With <0/>, you can w
 msgid "You can't add new reactions while you're on timeout."
 msgstr "You can't add new reactions while you're on timeout."
 
-#: src/components/modals/UserProfileModal.tsx:1173
+#: src/components/modals/UserProfileModal.tsx:1199
 msgid "You can't befriend yourself"
 msgstr "You can't befriend yourself"
 
@@ -21128,7 +21132,7 @@ msgstr "You can't interact with reactions in search results as it might disrupt 
 msgid "You can't join while you're on timeout."
 msgstr "You can't join while you're on timeout."
 
-#: src/components/modals/UserProfileModal.tsx:1185
+#: src/components/modals/UserProfileModal.tsx:1211
 #: src/components/popouts/UserProfilePopout.tsx:284
 #: src/components/profile/ProfilePreview.tsx:284
 msgid "You can't message yourself"
@@ -21213,7 +21217,7 @@ msgstr "You cannot unmute yourself because you have been muted by a moderator."
 msgid "You do not have access to the channel where this message was sent."
 msgstr "You do not have access to the channel where this message was sent."
 
-#: src/components/channel/ChannelTextarea.tsx:616
+#: src/components/channel/ChannelTextarea.tsx:680
 msgid "You do not have permission to send messages in this channel."
 msgstr "You do not have permission to send messages in this channel."
 
@@ -21439,7 +21443,7 @@ msgstr "You'll appear offline"
 msgid "You'll configure which permissions the bot receives on the next screen."
 msgstr "You'll configure which permissions the bot receives on the next screen."
 
-#: src/components/modals/tabs/DevicesTab.tsx:337
+#: src/components/modals/tabs/DevicesTab.tsx:340
 msgid "You'll have to log back in on all logged out devices"
 msgstr "You'll have to log back in on all logged out devices"
 
@@ -21508,7 +21512,7 @@ msgstr "You're in the voice channel"
 msgid "You're sending messages too quickly"
 msgstr "You're sending messages too quickly"
 
-#: src/components/channel/Messages.tsx:912
+#: src/components/channel/Messages.tsx:923
 msgid "You're viewing older messages"
 msgstr "You're viewing older messages"
 

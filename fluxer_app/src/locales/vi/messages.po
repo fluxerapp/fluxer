@@ -97,7 +97,7 @@ msgstr "{0, plural, one {# mục} other {# mục}}"
 #. placeholder {0}: group.recipientIds.length + 1
 #: src/components/channel/dm/DMList.tsx:446
 #: src/components/channel/dm/DMList.tsx:526
-#: src/components/modals/UserProfileModal.tsx:818
+#: src/components/modals/UserProfileModal.tsx:844
 msgid "{0, plural, one {# Member} other {# Members}}"
 msgstr "{0, plural, one {# Thành viên} other {# Thành viên}}"
 
@@ -566,18 +566,18 @@ msgstr "Hình ảnh {label} không thể được hoạt hình. Vui lòng sử d
 #: src/components/auth/InviteHeader.tsx:96
 #: src/components/auth/InviteHeader.tsx:127
 #: src/components/auth/InviteHeader.tsx:241
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:281
-#: src/components/channel/InviteEmbed.tsx:182
-#: src/components/channel/InviteEmbed.tsx:446
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:308
+#: src/components/channel/InviteEmbed.tsx:194
+#: src/components/channel/InviteEmbed.tsx:462
 msgid "{memberCount} Member"
 msgstr "{memberCount} Thành viên"
 
 #: src/components/auth/InviteHeader.tsx:96
 #: src/components/auth/InviteHeader.tsx:127
 #: src/components/auth/InviteHeader.tsx:241
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:281
-#: src/components/channel/InviteEmbed.tsx:182
-#: src/components/channel/InviteEmbed.tsx:446
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:308
+#: src/components/channel/InviteEmbed.tsx:194
+#: src/components/channel/InviteEmbed.tsx:462
 msgid "{memberCount} Members"
 msgstr "{memberCount} Thành viên"
 
@@ -612,11 +612,11 @@ msgstr "{minutes} phút và {seconds} giây"
 msgid "{minutes} minutes and 1 second"
 msgstr "{minutes} phút và 1 giây"
 
-#: src/components/channel/dm/DMWelcomeSection.tsx:167
+#: src/components/channel/dm/DMWelcomeSection.tsx:175
 msgid "{mutualGuildCount} mutual commmunity"
 msgstr "{mutualGuildCount} cộng đồng tương hỗ"
 
-#: src/components/channel/dm/DMWelcomeSection.tsx:168
+#: src/components/channel/dm/DMWelcomeSection.tsx:176
 msgid "{mutualGuildCount} mutual communities"
 msgstr "{mutualGuildCount} cộng đồng tương hỗ"
 
@@ -637,8 +637,8 @@ msgid "{participantCount} participants in call"
 msgstr "{participantCount} người tham gia trong cuộc gọi"
 
 #: src/components/auth/InviteHeader.tsx:235
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:276
-#: src/components/channel/InviteEmbed.tsx:441
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:303
+#: src/components/channel/InviteEmbed.tsx:457
 msgid "{presenceCount} Online"
 msgstr "{presenceCount} đang trực tuyến"
 
@@ -650,15 +650,15 @@ msgstr "Còn {remaining} ký tự"
 msgid "{remaining} characters left. Get Plutonium to write up to {premiumMaxLength} characters."
 msgstr "Còn {remaining} ký tự. Nâng cấp Plutonium để viết tối đa {premiumMaxLength} ký tự."
 
-#: src/components/channel/InviteEmbed.tsx:303
+#: src/components/channel/InviteEmbed.tsx:312
 msgid "{renderedMemberCount} Member"
 msgstr "{renderedMemberCount} Thành viên"
 
-#: src/components/channel/InviteEmbed.tsx:303
+#: src/components/channel/InviteEmbed.tsx:312
 msgid "{renderedMemberCount} Members"
 msgstr "{renderedMemberCount} Thành viên"
 
-#: src/components/channel/InviteEmbed.tsx:298
+#: src/components/channel/InviteEmbed.tsx:307
 msgid "{renderedPresenceCount} Online"
 msgstr "{renderedPresenceCount} đang trực tuyến"
 
@@ -812,7 +812,7 @@ msgstr "{value}%"
 msgid "{value}ms"
 msgstr "{value}ms"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:302
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:303
 msgid "@everyone mentions"
 msgstr "@everyone đề cập"
 
@@ -1337,7 +1337,7 @@ msgid "Accent Color"
 msgstr "Màu nhấn"
 
 #: src/components/channel/channel-view/DMChannelView.tsx:292
-#: src/components/channel/dm/DMWelcomeSection.tsx:128
+#: src/components/channel/dm/DMWelcomeSection.tsx:134
 #: src/components/channel/friends/FriendListItem.tsx:238
 #: src/components/channel/friends/MobileFriendRequestItem.tsx:99
 #: src/components/voice/IncomingCallUI.tsx:302
@@ -1346,12 +1346,12 @@ msgstr "Chấp nhận"
 
 #: src/components/bottomsheets/DMBottomSheet.tsx:517
 #: src/components/modals/guildTabs/GuildMemberActionsSheet.tsx:262
-#: src/components/modals/UserProfileModal.tsx:1261
+#: src/components/modals/UserProfileModal.tsx:1287
 #: src/components/uikit/ContextMenu/items/RelationshipMenuItems.tsx:109
 msgid "Accept Friend Request"
 msgstr "Chấp nhận lời mời kết bạn"
 
-#: src/components/modals/InviteAcceptModal.tsx:195
+#: src/components/modals/InviteAcceptModal.tsx:209
 msgid "Accept invite"
 msgstr "Chấp nhận lời mời"
 
@@ -1364,8 +1364,8 @@ msgstr "Chấp nhận lời mời"
 msgid "Accept the incoming call"
 msgstr "Nhận cuộc gọi đến"
 
-#: src/components/channel/InviteEmbed.tsx:228
-#: src/components/modals/InviteAcceptModal.tsx:163
+#: src/components/channel/InviteEmbed.tsx:238
+#: src/components/modals/InviteAcceptModal.tsx:177
 msgid "Accepting this invite installs the pack automatically."
 msgstr "Chấp nhận lời mời này sẽ tự động cài gói."
 
@@ -1594,7 +1594,7 @@ msgstr "Thêm kênh yêu thích"
 #: src/components/channel/dm/AddFriendView.tsx:32
 #: src/components/channel/dm/DMFriendsView.tsx:199
 #: src/components/modals/AddFriendSheet.tsx:50
-#: src/components/modals/UserProfileModal.tsx:1181
+#: src/components/modals/UserProfileModal.tsx:1207
 #: src/components/uikit/ContextMenu/items/RelationshipMenuItems.tsx:75
 #: src/components/uikit/ContextMenu/items/RelationshipMenuItems.tsx:89
 msgid "Add Friend"
@@ -2078,7 +2078,7 @@ msgstr "Cho phép {0}."
 msgid "Already have an account?"
 msgstr "Đã có tài khoản?"
 
-#: src/components/channel/InviteEmbed.tsx:189
+#: src/components/channel/InviteEmbed.tsx:201
 msgid "Already joined"
 msgstr "Đã gia nhập"
 
@@ -2191,7 +2191,7 @@ msgstr "Ảnh đại diện & biểu ngữ hoạt hình"
 msgid "Animated Avatars Require Plutonium"
 msgstr "Ảnh đại diện hoạt hình cần Plutonium"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:258
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:259
 msgid "Animated banner"
 msgstr "Biểu ngữ hoạt hình"
 
@@ -2205,13 +2205,13 @@ msgid "Animated Emoji ({0})"
 msgstr "Biểu tượng cảm xúc hoạt hình ({0})"
 
 #: src/components/channel/embeds/media/EmbedGifv.tsx:237
-#: src/components/channel/embeds/media/EmbedGifv.tsx:752
+#: src/components/channel/embeds/media/EmbedGifv.tsx:758
 #: src/components/modals/MediaViewerModal.tsx:294
 #: src/components/modals/MediaViewerModal.tsx:362
 msgid "Animated GIF"
 msgstr "GIF hoạt hình"
 
-#: src/components/channel/embeds/media/EmbedGifv.tsx:508
+#: src/components/channel/embeds/media/EmbedGifv.tsx:512
 msgid "Animated GIF video"
 msgstr "Video GIF hoạt hình"
 
@@ -2219,7 +2219,7 @@ msgstr "Video GIF hoạt hình"
 msgid "Animated GIF Video"
 msgstr "Video GIF hoạt hình"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:257
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:258
 msgid "Animated icon"
 msgstr "Biểu tượng hoạt hình"
 
@@ -2277,7 +2277,7 @@ msgstr "Bất kỳ ai cũng có thể @nhắc đến vai trò này. Thành viên
 msgid "API Endpoint"
 msgstr "Điểm cuối API"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:349
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:350
 msgid "APNG"
 msgstr "APNG"
 
@@ -2310,12 +2310,11 @@ msgid "Application information"
 msgstr "Thông tin ứng dụng"
 
 #: src/components/modals/tabs/ApplicationsTab/application-detail/ApplicationInfoSection.tsx:53
-#: src/components/modals/tabs/ApplicationsTab/ApplicationCreateModal.tsx:91
+#: src/components/modals/tabs/ApplicationsTab/ApplicationCreateModal.tsx:84
 msgid "Application Name"
 msgstr "Tên ứng dụng"
 
 #: src/components/modals/tabs/ApplicationsTab/application-detail/ApplicationInfoSection.tsx:52
-#: src/components/modals/tabs/ApplicationsTab/ApplicationCreateModal.tsx:104
 msgid "Application name is required"
 msgstr "Yêu cầu tên ứng dụng"
 
@@ -2554,7 +2553,7 @@ msgstr "Bạn có chắc muốn thu hồi lệnh cấm cho <0>{0}</0> không? H�
 msgid "Are you sure you want to revoke this invite? This action cannot be undone."
 msgstr "Bạn có chắc muốn thu hồi lời mời này không? Hành động này không thể hoàn tác."
 
-#: src/components/channel/embeds/Embed.tsx:143
+#: src/components/channel/embeds/Embed.tsx:145
 msgid "Are you sure you want to suppress all link embeds on this message? This action will hide all embeds from this message."
 msgstr "Bạn có chắc muốn ẩn mọi nhúng liên kết trong tin nhắn này không? Hành động này sẽ ẩn tất cả nhúng."
 
@@ -2603,7 +2602,7 @@ msgstr "Tệp đính kèm {0}"
 msgid "Attachment Actions"
 msgstr "Hành động tệp đính kèm"
 
-#: src/components/channel/embeds/attachments/AttachmentFile.tsx:179
+#: src/components/channel/embeds/attachments/AttachmentFile.tsx:182
 msgid "Attachment expired"
 msgstr "Tệp đính kèm hết hạn"
 
@@ -2779,8 +2778,8 @@ msgid "Autocomplete"
 msgstr "Tự động hoàn thành"
 
 #: src/components/modals/channelTabs/ChannelOverviewTab.tsx:161
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:235
 #: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:236
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:237
 msgid "Automatic"
 msgstr "Tự động"
 
@@ -2859,7 +2858,7 @@ msgstr "Quay lại"
 msgid "Back to Applications"
 msgstr "Quay lại Ứng dụng"
 
-#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:563
+#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:564
 msgid "Back to list"
 msgstr "Quay lại danh sách"
 
@@ -2872,20 +2871,20 @@ msgid "Back to login"
 msgstr "Quay lại đăng nhập"
 
 #: src/components/modals/channelTabs/ChannelPermissionsTab.tsx:965
-#: src/components/modals/components/DesktopChannelSettingsView.tsx:144
-#: src/components/modals/components/DesktopGuildSettingsView.tsx:159
+#: src/components/modals/components/DesktopChannelSettingsView.tsx:158
+#: src/components/modals/components/DesktopGuildSettingsView.tsx:170
 #: src/components/modals/components/DesktopSettingsView.tsx:295
 msgid "Back to Overrides"
 msgstr "Quay lại Ghi đè"
 
-#: src/components/modals/components/DesktopGuildSettingsView.tsx:159
+#: src/components/modals/components/DesktopGuildSettingsView.tsx:170
 #: src/components/modals/guildTabs/GuildRolesTab.tsx:756
 #: src/components/modals/guildTabs/GuildRolesTab.tsx:979
 msgid "Back to Roles"
 msgstr "Quay lại Vai trò"
 
-#: src/components/modals/components/DesktopChannelSettingsView.tsx:124
-#: src/components/modals/components/DesktopGuildSettingsView.tsx:139
+#: src/components/modals/components/DesktopChannelSettingsView.tsx:136
+#: src/components/modals/components/DesktopGuildSettingsView.tsx:148
 #: src/components/modals/components/DesktopSettingsView.tsx:275
 msgid "Back to Settings"
 msgstr "Quay lại Cài đặt"
@@ -3003,7 +3002,7 @@ msgstr "Người dùng bị cấm"
 #: src/components/modals/tabs/MyProfileTab/BannerUploader.tsx:152
 #: src/components/modals/tabs/MyProfileTab/BannerUploader.tsx:192
 #: src/components/modals/utils/settingsSearchIndex.ts:50
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:259
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:260
 msgid "Banner"
 msgstr "Biểu ngữ"
 
@@ -3096,7 +3095,7 @@ msgstr "Giới hạn ký tự tiểu sử"
 #: src/components/modals/guildTabs/GuildMemberActionsSheet.tsx:348
 #: src/components/modals/UserProfileActionsSheet.tsx:134
 #: src/components/modals/UserProfileActionsSheet.tsx:298
-#: src/components/modals/UserProfileModal.tsx:1064
+#: src/components/modals/UserProfileModal.tsx:1090
 #: src/components/uikit/ContextMenu/items/RelationshipMenuItems.tsx:211
 #: src/utils/RelationshipActionUtils.tsx:143
 msgid "Block"
@@ -3242,7 +3241,7 @@ msgstr "Phạm vi bot được yêu cầu"
 msgid "Bot token"
 msgstr "Mã thông báo bot"
 
-#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:425
+#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:426
 msgid "Bot token regenerated. Update any code that uses the old token."
 msgstr "Đã tạo lại mã thông báo bot. Cập nhật mã dùng mã cũ."
 
@@ -3435,7 +3434,7 @@ msgstr "Cài đặt camera"
 #: src/components/alerts/FileSizeTooLargeModal.tsx:49
 #: src/components/auth/BrowserLoginHandoffModal.tsx:322
 #: src/components/bottomsheets/CreateDMBottomSheet.tsx:133
-#: src/components/channel/ChannelTextarea.tsx:236
+#: src/components/channel/ChannelTextarea.tsx:300
 #: src/components/channel/friends/FriendListItem.tsx:253
 #: src/components/channel/MentionEveryonePopout.tsx:125
 #: src/components/emojis/EmojiListItem.tsx:120
@@ -3496,7 +3495,7 @@ msgstr "Cài đặt camera"
 #: src/components/modals/ScreenShareSettingsModal.tsx:160
 #: src/components/modals/ScreenShareSourceModal.tsx:75
 #: src/components/modals/SudoVerificationModal.tsx:403
-#: src/components/modals/tabs/ApplicationsTab/ApplicationCreateModal.tsx:109
+#: src/components/modals/tabs/ApplicationsTab/ApplicationCreateModal.tsx:100
 #: src/components/modals/tabs/MyProfileTab/AvatarUploader.tsx:124
 #: src/components/modals/tabs/PrivacySafetyTab/DataDeletionTab.tsx:85
 #: src/components/modals/tabs/PrivacySafetyTab/DataExportTab.tsx:85
@@ -3508,10 +3507,10 @@ msgstr "Cài đặt camera"
 msgid "Cancel"
 msgstr "Hủy"
 
-#: src/components/channel/dm/DMWelcomeSection.tsx:138
+#: src/components/channel/dm/DMWelcomeSection.tsx:144
 #: src/components/channel/friends/FriendListItem.tsx:164
 #: src/components/channel/friends/FriendListItem.tsx:166
-#: src/components/modals/UserProfileModal.tsx:1276
+#: src/components/modals/UserProfileModal.tsx:1302
 #: src/components/uikit/ContextMenu/items/RelationshipMenuItems.tsx:192
 msgid "Cancel Friend Request"
 msgstr "Hủy lời mời kết bạn"
@@ -3582,7 +3581,7 @@ msgid "Careful! You have unsaved changes."
 msgstr "Cẩn thận! Bạn có thay đổi chưa lưu."
 
 #: src/utils/ChannelUtils.tsx:66
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:220
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:221
 msgid "Category"
 msgstr "Danh mục"
 
@@ -3605,7 +3604,7 @@ msgid "Category Name"
 msgstr "Tên danh mục"
 
 #: src/components/modals/ChannelSettingsModal.tsx:113
-#: src/components/modals/components/DesktopChannelSettingsView.tsx:188
+#: src/components/modals/components/DesktopChannelSettingsView.tsx:202
 msgid "Category Settings"
 msgstr "Cài đặt danh mục"
 
@@ -3617,7 +3616,7 @@ msgstr "Chú ý"
 msgid "Center"
 msgstr "Giữa"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:246
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:247
 msgid "Centered"
 msgstr "Đã căn giữa"
 
@@ -3765,7 +3764,7 @@ msgstr "Đã đổi bitrate thành {0}."
 msgid "Changed the voice region to {0}."
 msgstr "Đã đổi vùng âm thanh thành {0}."
 
-#: src/components/channel/ChannelTextarea.tsx:618
+#: src/components/channel/ChannelTextarea.tsx:682
 #: src/utils/SearchUtils.ts:270
 msgid "channel"
 msgstr "kênh"
@@ -3828,11 +3827,11 @@ msgstr "Đã sao chép ID kênh vào bảng nhớ tạm"
 msgid "Channel link copied"
 msgstr "Đã sao chép liên kết kênh"
 
-#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:113
+#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:116
 msgid "Channel list typing indicator mode"
 msgstr "Chế độ hiển thị đang gõ của danh sách kênh"
 
-#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:105
+#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:108
 #: src/components/modals/utils/settingsSearchIndex.ts:223
 msgid "Channel List Typing Indicators"
 msgstr "Chỉ báo đang gõ danh sách kênh"
@@ -3891,7 +3890,7 @@ msgstr "Đã bỏ kênh khỏi yêu thích"
 #: src/components/bottomsheets/ChannelDetailsBottomSheet.tsx:1116
 #: src/components/layout/ChannelItem.tsx:647
 #: src/components/modals/ChannelSettingsModal.tsx:113
-#: src/components/modals/components/DesktopChannelSettingsView.tsx:188
+#: src/components/modals/components/DesktopChannelSettingsView.tsx:202
 msgid "Channel Settings"
 msgstr "Cài đặt kênh"
 
@@ -4052,7 +4051,7 @@ msgstr "Chọn cách hiển thị thời gian trong toàn app."
 msgid "Choose how typing indicators appear in the channel list"
 msgstr "Chọn cách chỉ báo đang nhập xuất hiện trong danh sách kênh"
 
-#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:106
+#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:109
 msgid "Choose how typing indicators appear in the channel list when someone is typing in a channel."
 msgstr "Chọn cách hiển thị chỉ báo đang nhập trong danh sách kênh khi ai đó đang gõ trong kênh."
 
@@ -4180,8 +4179,8 @@ msgid "Claim your account to redeem this gift."
 msgstr "Đăng ký tài khoản của bạn để đổi thưởng món quà này."
 
 #: src/components/channel/dm/AddFriendForm.tsx:54
-#: src/components/channel/dm/DMWelcomeSection.tsx:109
-#: src/components/modals/UserProfileModal.tsx:1291
+#: src/components/channel/dm/DMWelcomeSection.tsx:115
+#: src/components/modals/UserProfileModal.tsx:1317
 #: src/components/uikit/ContextMenu/items/RelationshipMenuItems.tsx:65
 msgid "Claim your account to send friend requests."
 msgstr "Đăng ký tài khoản của bạn để gửi yêu cầu kết bạn."
@@ -4245,7 +4244,7 @@ msgid "Clear Permissions"
 msgstr "Xoá quyền"
 
 #: src/components/bottomsheets/ChannelSearchBottomSheet.tsx:420
-#: src/components/channel/MessageSearchBar/MessageSearchBar.tsx:1424
+#: src/components/channel/MessageSearchBar/MessageSearchBar.tsx:1452
 #: src/components/channel/shared/PickerSearchInput.tsx:194
 #: src/components/channel/shared/PickerSearchInput.tsx:211
 #: src/components/modals/components/SettingsSearch.tsx:108
@@ -4256,7 +4255,7 @@ msgstr "Xoá tìm kiếm"
 msgid "Clear search input"
 msgstr "Xoá ô nhập tìm kiếm"
 
-#: src/components/modals/tabs/DevicesTab.tsx:281
+#: src/components/modals/tabs/DevicesTab.tsx:284
 msgid "Clear Selection"
 msgstr "Xoá lựa chọn"
 
@@ -4314,7 +4313,7 @@ msgstr "Nhấn biểu tượng tải lên cạnh bất kỳ âm thanh nào để
 msgid "Click the verification link in the email."
 msgstr "Nhấn liên kết xác minh trong email."
 
-#: src/components/modals/UserProfileModal.tsx:259
+#: src/components/modals/UserProfileModal.tsx:260
 msgid "Click to add a note"
 msgstr "Nhấn để thêm ghi chú"
 
@@ -4327,7 +4326,7 @@ msgid "Click to claim your gift!"
 msgstr "Nhấn để nhận quà!"
 
 #: src/components/invites/InviteListItem.tsx:184
-#: src/components/modals/components/ClientInfo.tsx:76
+#: src/components/modals/components/ClientInfo.tsx:100
 #: src/components/modals/tabs/BetaCodesTab.tsx:174
 msgid "Click to copy"
 msgstr "Nhấn để sao chép"
@@ -4388,7 +4387,7 @@ msgstr "Nhấn để xem tất cả phản ứng"
 msgid "Client secret"
 msgstr "Bí mật client"
 
-#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:424
+#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:425
 msgid "Client secret regenerated. Update any code that uses the old secret."
 msgstr "Bí mật client đã được tạo lại. Cập nhật mọi mã sử dụng bí mật cũ."
 
@@ -4649,8 +4648,8 @@ msgstr "Cộng đồng kích động hận thù dựa trên đặc điểm đư�
 msgid "Community promotes or facilitates illegal activities"
 msgstr "Cộng đồng khuyến khích hoặc tạo điều kiện cho hoạt động bất hợp pháp"
 
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:172
-#: src/components/modals/components/DesktopGuildSettingsView.tsx:204
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:199
+#: src/components/modals/components/DesktopGuildSettingsView.tsx:215
 #: src/components/modals/GuildSettingsModal.tsx:173
 #: src/components/popouts/GuildHeaderPopout.tsx:187
 #: src/components/uikit/ContextMenu/items/GuildMenuItems.tsx:360
@@ -4935,7 +4934,7 @@ msgstr "Menu ngữ cảnh"
 msgid "Context menus can be opened with left-click (on buttons) or right-click (on other elements). This demonstrates various menu items including checkboxes, radio buttons, sliders, and submenus."
 msgstr "Menu ngữ cảnh có thể mở bằng cách nhấp trái (trên nút) hoặc nhấp phải (trên các phần tử khác). Đây minh họa nhiều mục menu bao gồm hộp chọn, nút radio, thanh trượt và menu con."
 
-#: src/components/channel/ChannelTextarea.tsx:235
+#: src/components/channel/ChannelTextarea.tsx:299
 #: src/components/modals/BackupCodesRegenerateModal.tsx:63
 #: src/components/modals/BackupCodesViewModal.tsx:66
 #: src/components/modals/DeviceRevokeModal.tsx:68
@@ -4992,7 +4991,7 @@ msgstr "Kiểm soát cách liên kết trang web được xem trước trong tr�
 msgid "Control how you join voice channels"
 msgstr "Kiểm soát cách bạn tham gia kênh thoại"
 
-#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:141
+#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:144
 msgid "Control how you join voice channels in communities."
 msgstr "Kiểm soát cách bạn tham gia các kênh thoại trong cộng đồng."
 
@@ -5012,7 +5011,7 @@ msgstr "Kiểm soát hiệu ứng nhãn dán"
 msgid "Control the visibility of favorites throughout the app."
 msgstr "Kiểm soát độ hiển thị của mục yêu thích trong toàn app."
 
-#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:127
+#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:130
 msgid "Control whether keyboard shortcut hints appear inside tooltips."
 msgstr "Kiểm soát việc hiển thị gợi ý phím tắt trong mẹo công cụ."
 
@@ -5071,7 +5070,7 @@ msgstr "Đã sao chép"
 msgid "Copied to clipboard"
 msgstr "Đã sao chép vào khay nhớ tạm"
 
-#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:541
+#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:542
 msgid "Copied URL to clipboard"
 msgstr "Đã sao chép URL vào khay nhớ tạm"
 
@@ -5149,7 +5148,7 @@ msgstr "Sao chép liên kết tệp"
 
 #: src/components/modals/tabs/BlockedUsersTab.tsx:98
 #: src/components/modals/UserProfileActionsSheet.tsx:208
-#: src/components/modals/UserProfileModal.tsx:1123
+#: src/components/modals/UserProfileModal.tsx:1149
 msgid "Copy FluxerTag"
 msgstr "Sao chép FluxerTag"
 
@@ -5157,7 +5156,7 @@ msgstr "Sao chép FluxerTag"
 msgid "Copy GIF"
 msgstr "Sao chép GIF"
 
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:254
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:281
 #: src/components/uikit/ContextMenu/items/GuildMenuItems.tsx:475
 msgid "Copy Guild ID"
 msgstr "Sao chép ID máy chủ"
@@ -5222,7 +5221,7 @@ msgstr "Sao chép văn bản"
 #: src/components/modals/guildTabs/GuildMemberActionsSheet.tsx:361
 #: src/components/modals/tabs/BlockedUsersTab.tsx:107
 #: src/components/modals/UserProfileActionsSheet.tsx:213
-#: src/components/modals/UserProfileModal.tsx:1132
+#: src/components/modals/UserProfileModal.tsx:1158
 #: src/components/popouts/UserAreaPopout.tsx:509
 #: src/components/profile/ProfileCard/ProfileCardActions.tsx:60
 #: src/components/uikit/ContextMenu/items/CopyMenuItems.tsx:42
@@ -5270,7 +5269,7 @@ msgstr "Ấm cúng"
 #: src/components/modals/AddFriendsToGroupModal.tsx:99
 #: src/components/modals/AddGuildStickerModal.tsx:119
 #: src/components/modals/CreatePackModal.tsx:109
-#: src/components/modals/tabs/ApplicationsTab/ApplicationCreateModal.tsx:112
+#: src/components/modals/tabs/ApplicationsTab/ApplicationCreateModal.tsx:103
 msgid "Create"
 msgstr "Tạo"
 
@@ -5331,14 +5330,14 @@ msgstr "Tạo và quản lý ứng dụng cùng bot cho tài khoản của bạn
 msgid "Create and share custom emoji and sticker packs with Fluxer Plutonium."
 msgstr "Tạo và chia sẻ gói biểu tượng cảm xúc và nhãn dán tùy chỉnh với Fluxer Plutonium."
 
-#: src/components/modals/tabs/ApplicationsTab/ApplicationCreateModal.tsx:87
+#: src/components/modals/tabs/ApplicationsTab/ApplicationCreateModal.tsx:80
 #: src/components/modals/tabs/ApplicationsTab/index.tsx:149
 #: src/components/modals/tabs/ApplicationsTab/index.tsx:155
 msgid "Create Application"
 msgstr "Tạo ứng dụng"
 
 #: src/components/bottomsheets/FavoritesGuildHeaderBottomSheet.tsx:83
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:185
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:212
 #: src/components/modals/CategoryCreateModal.tsx:63
 #: src/components/modals/CategoryCreateModal.tsx:82
 #: src/components/modals/CreateFavoriteCategoryModal.tsx:58
@@ -5351,7 +5350,7 @@ msgstr "Tạo ứng dụng"
 msgid "Create Category"
 msgstr "Tạo danh mục"
 
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:180
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:207
 #: src/components/layout/ChannelItem.tsx:624
 #: src/components/modals/ChannelCreateModal.tsx:58
 #: src/components/modals/ChannelCreateModal.tsx:103
@@ -5475,8 +5474,8 @@ msgstr "Được tạo vào {createdAt}"
 #. placeholder {0}: invite.pack.creator.username
 #. placeholder {0}: pack.creator.username
 #: src/components/auth/InviteHeader.tsx:158
-#: src/components/channel/InviteEmbed.tsx:220
-#: src/components/modals/InviteAcceptModal.tsx:152
+#: src/components/channel/InviteEmbed.tsx:230
+#: src/components/modals/InviteAcceptModal.tsx:166
 msgid "Created by {0}"
 msgstr "Được tạo bởi {0}"
 
@@ -5569,7 +5568,7 @@ msgstr "Hình ảnh sau khi cắt quá lớn. Vui lòng chọn vùng nhỏ hơn 
 msgid "Current Community"
 msgstr "Cộng đồng hiện tại"
 
-#: src/components/modals/tabs/DevicesTab.tsx:252
+#: src/components/modals/tabs/DevicesTab.tsx:255
 msgid "Current Device"
 msgstr "Thiết bị hiện tại"
 
@@ -5606,7 +5605,7 @@ msgstr "Đang mắc kẹt ở năm 1885, hiển thị ngoại tuyến"
 #: src/components/bottomsheets/ChannelBottomSheet.tsx:461
 #: src/components/bottomsheets/ChannelDetailsBottomSheet.tsx:1047
 #: src/components/bottomsheets/DMBottomSheet.tsx:608
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:305
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:332
 msgid "Currently: {mutedText}"
 msgstr "Hiện tại: {mutedText}"
 
@@ -5782,7 +5781,7 @@ msgstr "Nguy hiểm phụ"
 msgid "Danger secondary clicked!"
 msgstr "Đã nhấn nút nguy hiểm phụ!"
 
-#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:667
+#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:668
 msgid "Danger zone"
 msgstr "Vùng nguy hiểm"
 
@@ -5991,10 +5990,10 @@ msgid "Defaults to off on mobile to preserve battery life and data usage."
 msgstr "Mặc định tắt trên di động để tiết kiệm pin và dữ liệu."
 
 #: src/actions/MessageActionCreators.tsx:406
-#: src/components/channel/embeds/media/EmbedAudio.tsx:227
+#: src/components/channel/embeds/media/EmbedAudio.tsx:234
 #: src/components/channel/embeds/media/MediaContainer.tsx:115
-#: src/components/channel/Messages.tsx:447
-#: src/components/channel/Messages.tsx:527
+#: src/components/channel/Messages.tsx:446
+#: src/components/channel/Messages.tsx:526
 #: src/components/channel/MobileMemesPicker.tsx:546
 #: src/components/channel/pickers/memes/MemeGridItem.tsx:120
 #: src/components/emojis/EmojiListItem.tsx:189
@@ -6048,12 +6047,12 @@ msgstr "Xóa tất cả tin nhắn của tôi"
 
 #: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:370
 #: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:384
-#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:682
+#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:683
 msgid "Delete Application"
 msgstr "Xóa ứng dụng"
 
-#: src/components/channel/embeds/attachments/AttachmentFile.tsx:164
-#: src/components/channel/embeds/media/EmbedAudio.tsx:232
+#: src/components/channel/embeds/attachments/AttachmentFile.tsx:167
+#: src/components/channel/embeds/media/EmbedAudio.tsx:239
 #: src/components/channel/embeds/media/MediaContainer.tsx:120
 msgid "Delete attachment"
 msgstr "Xóa tệp đính kèm"
@@ -6063,7 +6062,7 @@ msgstr "Xóa tệp đính kèm"
 msgid "Delete Attachment"
 msgstr "Xóa tệp đính kèm"
 
-#: src/components/modals/components/DesktopChannelSettingsView.tsx:176
+#: src/components/modals/components/DesktopChannelSettingsView.tsx:190
 #: src/components/modals/components/MobileChannelSettingsView.tsx:85
 #: src/components/uikit/ContextMenu/FavoritesCategoryContextMenu.tsx:90
 #: src/components/uikit/ContextMenu/items/CategoryMenuItems.tsx:335
@@ -6077,14 +6076,14 @@ msgstr "Xóa danh mục"
 #: src/components/bottomsheets/ChannelBottomSheet.tsx:421
 #: src/components/bottomsheets/ChannelDetailsBottomSheet.tsx:682
 #: src/components/bottomsheets/ChannelDetailsBottomSheet.tsx:1248
-#: src/components/modals/components/DesktopChannelSettingsView.tsx:176
+#: src/components/modals/components/DesktopChannelSettingsView.tsx:190
 #: src/components/modals/components/MobileChannelSettingsView.tsx:85
 #: src/components/uikit/ContextMenu/items/ChannelMenuItems.tsx:322
 #: src/components/uikit/ContextMenu/items/ChannelMenuItems.tsx:348
 msgid "Delete Channel"
 msgstr "Xóa kênh"
 
-#: src/components/modals/components/DesktopGuildSettingsView.tsx:192
+#: src/components/modals/components/DesktopGuildSettingsView.tsx:203
 #: src/components/modals/components/MobileGuildSettingsView.tsx:85
 #: src/components/modals/GuildDeleteModal.tsx:50
 #: src/components/modals/GuildDeleteModal.tsx:62
@@ -6109,8 +6108,8 @@ msgstr "Xóa nội dung phương tiện"
 #: src/components/channel/MessageActionBar.tsx:804
 #: src/components/channel/messageActionMenu.tsx:158
 #: src/components/channel/messageActionMenu.tsx:195
-#: src/components/channel/Messages.tsx:444
-#: src/components/channel/Messages.tsx:524
+#: src/components/channel/Messages.tsx:443
+#: src/components/channel/Messages.tsx:523
 #: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:273
 msgid "Delete Message"
 msgstr "Xóa tin nhắn"
@@ -6215,7 +6214,7 @@ msgstr "Mật"
 msgid "Dense layout"
 msgstr "Giao diện mật"
 
-#: src/components/modals/components/ClientInfo.tsx:89
+#: src/components/modals/components/ClientInfo.tsx:113
 msgid "Deployed"
 msgstr "Đã triển khai"
 
@@ -6281,7 +6280,7 @@ msgstr "Kênh đích"
 msgid "Destination URL:"
 msgstr "URL đích:"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:260
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:261
 msgid "Detached banner"
 msgstr "Biểu ngữ tách rời"
 
@@ -6362,7 +6361,7 @@ msgstr "Kích thước khác nhau (Hỗ trợ trạng thái)"
 msgid "Different Sizes & Member Counts"
 msgstr "Kích thước và số lượng thành viên khác nhau"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:224
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:225
 msgid "Direct message"
 msgstr "tin nhắn trực tiếp"
 
@@ -6541,7 +6540,7 @@ msgstr "Vô hiệu hóa tài khoản sẽ đăng xuất bạn khỏi mọi phiê
 msgid "Disallow @mention."
 msgstr "Không cho phép đề cập @."
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:276
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:277
 msgid "Disallow unclaimed accounts"
 msgstr "Không cho phép tài khoản chưa xác thực"
 
@@ -6747,7 +6746,7 @@ msgstr "Đừng hiển thị xem trước tin nhắn trong danh sách DM"
 msgid "Don't show this again"
 msgstr "Đừng hiển thị lại"
 
-#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:98
+#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:101
 msgid "Don't show typing indicators in the channel list"
 msgstr "Đừng hiển thị chỉ báo gõ trong danh sách kênh"
 
@@ -6760,7 +6759,7 @@ msgstr "Đừng hiển thị chỉ báo gõ trong danh sách kênh"
 msgid "Done"
 msgstr "Hoàn tất"
 
-#: src/components/channel/embeds/attachments/AttachmentFile.tsx:189
+#: src/components/channel/embeds/attachments/AttachmentFile.tsx:192
 #: src/components/channel/embeds/media/MediaContainer.tsx:127
 #: src/components/layout/app-layout/nagbars/DesktopDownloadNagbar.tsx:63
 #: src/components/layout/app-layout/nagbars/MobileDownloadNagbar.tsx:66
@@ -6947,7 +6946,7 @@ msgstr "Chỉnh sửa hạng mục"
 msgid "Edit Channel"
 msgstr "Chỉnh sửa kênh"
 
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:209
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:236
 #: src/components/popouts/GuildHeaderPopout.tsx:217
 #: src/components/uikit/ContextMenu/items/GuildMenuItems.tsx:406
 msgid "Edit Community Profile"
@@ -7004,7 +7003,7 @@ msgid "Edit overwrites for roles and members in this channel."
 msgstr "Chỉnh sửa ghi đè cho vai trò và thành viên trong kênh này."
 
 #: src/components/modals/UserProfileMobileSheet.tsx:492
-#: src/components/modals/UserProfileModal.tsx:1208
+#: src/components/modals/UserProfileModal.tsx:1234
 #: src/components/pages/YouPage.tsx:123
 #: src/components/popouts/UserAreaPopout.tsx:521
 #: src/components/popouts/UserProfilePopout.tsx:301
@@ -7143,7 +7142,7 @@ msgstr "Ảnh nền nhúng"
 msgid "Embed splash images cannot be animated. Please use JPEG, PNG, or WebP."
 msgstr "Ảnh nền nhúng không thể là ảnh động. Vui lòng dùng JPEG, PNG hoặc WebP."
 
-#: src/components/channel/embeds/media/EmbedAudio.tsx:198
+#: src/components/channel/embeds/media/EmbedAudio.tsx:205
 msgid "Embedded audio"
 msgstr "Âm thanh nhúng"
 
@@ -7198,8 +7197,8 @@ msgid "Emoji names must be at least 2 characters long and can only contain alpha
 msgstr "Tên biểu tượng phải có ít nhất 2 ký tự và chỉ chứa chữ số, chữ cái và dấu gạch dưới. Các loại tệp được phép: JPEG, PNG, WebP, GIF. Chúng tôi nén ảnh về kích thước 128x128 pixel. Kích thước tối đa: {0} KB cho mỗi biểu tượng."
 
 #: src/components/auth/InviteHeader.tsx:140
-#: src/components/channel/InviteEmbed.tsx:199
-#: src/components/modals/InviteAcceptModal.tsx:142
+#: src/components/channel/InviteEmbed.tsx:209
+#: src/components/modals/InviteAcceptModal.tsx:156
 #: src/components/modals/tabs/ExpressionPacksTab.tsx:70
 msgid "Emoji pack"
 msgstr "Gói biểu tượng cảm xúc"
@@ -7473,7 +7472,7 @@ msgstr "Nhập số điện thoại"
 msgid "Enter picture-in-picture"
 msgstr "Vào chế độ hình trong hình"
 
-#: src/components/modals/tabs/DevicesTab.tsx:266
+#: src/components/modals/tabs/DevicesTab.tsx:269
 msgid "Enter Selection Mode"
 msgstr "Bật chế độ chọn lựa"
 
@@ -7536,7 +7535,7 @@ msgstr "Nhập email mới mà bạn muốn dùng. Chúng tôi sẽ gửi mã đ
 msgid "Enter the SMS code you received."
 msgstr "Nhập mã SMS bạn nhận được."
 
-#: src/components/channel/EditingMessageInput.tsx:286
+#: src/components/channel/EditingMessageInput.tsx:287
 msgid "enter to <0><1>save</1></0>"
 msgstr "nhấn Enter để <0><1>lưu</1></0>"
 
@@ -7604,7 +7603,7 @@ msgstr "Lỗi khi hiển thị LaTeX: {0}"
 msgid "Escape key exits keyboard mode"
 msgstr "Phím Escape thoát chế độ bàn phím"
 
-#: src/components/channel/EditingMessageInput.tsx:277
+#: src/components/channel/EditingMessageInput.tsx:278
 msgid "escape to <0><1>cancel</1></0>"
 msgstr "nhấn Escape để <0><1>hủy</1></0>"
 
@@ -7667,7 +7666,7 @@ msgstr "Thoát chế độ hình trong hình"
 msgid "Exit Preview"
 msgstr "Thoát xem trước"
 
-#: src/components/modals/tabs/DevicesTab.tsx:266
+#: src/components/modals/tabs/DevicesTab.tsx:269
 msgid "Exit Selection Mode"
 msgstr "Thoát chế độ chọn"
 
@@ -7701,7 +7700,7 @@ msgstr "Đã hết hạn (trong vòng 30 ngày)"
 msgid "Expired {absolute}"
 msgstr "Hết hạn {absolute}"
 
-#: src/components/channel/embeds/attachments/AttachmentMosaic.tsx:526
+#: src/components/channel/embeds/attachments/AttachmentMosaic.tsx:540
 msgid "Expired between {earliest} and {latest}"
 msgstr "Hết hạn từ {earliest} đến {latest}"
 
@@ -7709,7 +7708,7 @@ msgstr "Hết hạn từ {earliest} đến {latest}"
 msgid "Expired on {date}"
 msgstr "Hết hạn vào {date}"
 
-#: src/components/channel/embeds/attachments/AttachmentMosaic.tsx:529
+#: src/components/channel/embeds/attachments/AttachmentMosaic.tsx:543
 msgid "Expired on {earliest}"
 msgstr "Hết hạn vào {earliest}"
 
@@ -7722,7 +7721,7 @@ msgstr "Hết hạn"
 msgid "Expires {absolute} ({relativeText})"
 msgstr "Hết hạn {absolute} ({relativeText})"
 
-#: src/components/channel/embeds/attachments/AttachmentMosaic.tsx:527
+#: src/components/channel/embeds/attachments/AttachmentMosaic.tsx:541
 msgid "Expires between {earliest} and {latest}"
 msgstr "Hết hạn từ {earliest} đến {latest}"
 
@@ -7730,7 +7729,7 @@ msgstr "Hết hạn từ {earliest} đến {latest}"
 msgid "Expires on {date}"
 msgstr "Hết hạn vào {date}"
 
-#: src/components/channel/embeds/attachments/AttachmentMosaic.tsx:529
+#: src/components/channel/embeds/attachments/AttachmentMosaic.tsx:543
 msgid "Expires on {earliest}"
 msgstr "Hết hạn vào {earliest}"
 
@@ -7766,7 +7765,7 @@ msgstr "Gói biểu cảm là tính năng của Plutonium"
 msgid "Expression picker categories"
 msgstr "Danh mục chọn biểu cảm"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:268
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:269
 msgid "Expression purge"
 msgstr "Xóa biểu cảm"
 
@@ -7838,10 +7837,6 @@ msgstr "Không thể sao chép vào khay nhớ tạm"
 #: src/components/modals/tabs/GiftInventoryTab.tsx:80
 msgid "Failed to copy URL"
 msgstr "Không thể sao chép URL"
-
-#: src/components/modals/tabs/ApplicationsTab/ApplicationCreateModal.tsx:78
-msgid "Failed to create application. Please check your inputs and try again."
-msgstr "Không thể tạo ứng dụng. Vui lòng kiểm tra thông tin và thử lại."
 
 #: src/components/alerts/RoleCreateFailedModal.tsx:27
 msgid "Failed to create role"
@@ -8100,7 +8095,7 @@ msgstr "Không thể thu hồi lệnh cấm. Vui lòng thử lại."
 msgid "Failed to revoke invite"
 msgstr "Không thể thu hồi lời mời"
 
-#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:431
+#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:432
 msgid "Failed to rotate. Please try again."
 msgstr "Không thể xoay. Vui lòng thử lại."
 
@@ -8413,7 +8408,7 @@ msgstr "Bạn bè thể thao"
 msgid "Flags"
 msgstr "Cờ"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:263
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:264
 msgid "Flexible text channel names"
 msgstr "Tên kênh văn bản linh hoạt"
 
@@ -8577,7 +8572,7 @@ msgstr "Bạn bè mê ẩm thực"
 msgid "For 1 hour"
 msgstr "Trong 1 giờ"
 
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:330
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:357
 #: src/components/channel/ChannelHeader/ChannelNotificationSettingsDropdown.tsx:53
 #: src/components/channel/muteOptions.ts:35
 #: src/components/popouts/UserAreaPopout.tsx:78
@@ -8592,7 +8587,7 @@ msgstr "Trong 1 giờ"
 msgid "For 15 minutes"
 msgstr "Trong 15 phút"
 
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:329
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:356
 #: src/components/channel/ChannelHeader/ChannelNotificationSettingsDropdown.tsx:52
 #: src/components/channel/muteOptions.ts:34
 #: src/components/uikit/ContextMenu/items/CategoryMenuItems.tsx:142
@@ -8605,7 +8600,7 @@ msgstr "Trong 15 phút"
 msgid "For 24 hours"
 msgstr "Trong 24 giờ"
 
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:333
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:360
 #: src/components/channel/ChannelHeader/ChannelNotificationSettingsDropdown.tsx:56
 #: src/components/channel/muteOptions.ts:38
 #: src/components/popouts/UserAreaPopout.tsx:80
@@ -8623,7 +8618,7 @@ msgstr "Trong 3 ngày"
 msgid "For 3 hours"
 msgstr "Trong 3 giờ"
 
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:331
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:358
 #: src/components/channel/ChannelHeader/ChannelNotificationSettingsDropdown.tsx:54
 #: src/components/channel/muteOptions.ts:36
 #: src/components/uikit/ContextMenu/items/CategoryMenuItems.tsx:144
@@ -8636,7 +8631,7 @@ msgstr "Trong 3 giờ"
 msgid "For 8 hours"
 msgstr "Trong 8 giờ"
 
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:332
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:359
 #: src/components/channel/ChannelHeader/ChannelNotificationSettingsDropdown.tsx:55
 #: src/components/channel/muteOptions.ts:37
 #: src/components/popouts/UserAreaPopout.tsx:79
@@ -8774,7 +8769,7 @@ msgstr "Quên đăng ký"
 msgid "Forgot Password"
 msgstr "Quên mật khẩu"
 
-#: src/components/auth/AuthLoginLayout.tsx:248
+#: src/components/auth/AuthLoginLayout.tsx:249
 #: src/components/pages/ForgotPasswordPage.tsx:83
 msgid "Forgot your password?"
 msgstr "Quên mật khẩu của bạn?"
@@ -8795,7 +8790,7 @@ msgstr "Tiến {DEFAULT_SEEK_AMOUNT} giây"
 msgid "Forward Message"
 msgstr "Chuyển tiếp tin nhắn"
 
-#: src/components/channel/MessageAttachments.tsx:155
+#: src/components/channel/MessageAttachments.tsx:156
 msgid "Forwarded"
 msgstr "Đã chuyển tiếp"
 
@@ -9065,7 +9060,7 @@ msgstr "Tải ứng dụng Fluxer máy tính để dùng tính năng nhấn đ�
 #: src/components/stickers/StickerGridItem.tsx:100
 #: src/utils/FavoriteMemeUtils.ts:70
 #: src/utils/FavoriteMemeUtils.ts:97
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:351
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:352
 msgid "GIF"
 msgstr "GIF"
 
@@ -9236,8 +9231,8 @@ msgstr "Quay lại kênh văn bản đã có tiêu điểm trước đó"
 msgid "Go forward in navigation history"
 msgstr "Tiến tới trong lịch sử điều hướng"
 
-#: src/components/channel/InviteEmbed.tsx:261
-#: src/components/modals/InviteAcceptModal.tsx:100
+#: src/components/channel/InviteEmbed.tsx:270
+#: src/components/modals/InviteAcceptModal.tsx:114
 msgid "Go to Community"
 msgstr "Đến Cộng đồng"
 
@@ -9389,7 +9384,7 @@ msgid "Group Invites"
 msgstr "Lời mời nhóm"
 
 #: src/stores/QuickSwitcherStore.tsx:657
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:226
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:227
 msgid "Group message"
 msgstr "Tin nhắn nhóm"
 
@@ -9548,7 +9543,7 @@ msgstr "Này {username}, chào mừng! Bạn có thể đạt được mọi đi
 msgid "Hey, {username}! When it hits 88mph, you'll see some serious stuff!"
 msgstr "Này {username}! Khi đạt 88mph, bạn sẽ thấy chuyện cực kỳ hoành tráng!"
 
-#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:97
+#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:100
 msgid "Hidden"
 msgstr "Ẩn"
 
@@ -9569,7 +9564,7 @@ msgstr "Ẩn mục yêu thích"
 msgid "Hide Join Messages"
 msgstr "Ẩn tin nhắn tham gia"
 
-#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:131
+#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:134
 msgid "Hide keyboard hints in tooltips"
 msgstr "Ẩn gợi ý bàn phím trong chú giải công cụ"
 
@@ -9582,7 +9577,7 @@ msgid "Hide muted channels"
 msgstr "Ẩn các kênh tắt tiếng"
 
 #: src/components/bottomsheets/FavoritesGuildHeaderBottomSheet.tsx:100
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:229
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:256
 #: src/components/popouts/FavoritesGuildHeaderPopout.tsx:145
 #: src/components/popouts/GuildHeaderPopout.tsx:225
 #: src/components/uikit/ContextMenu/ChannelListContextMenu.tsx:78
@@ -9822,7 +9817,7 @@ msgid "If you want to export your data or delete your messages first, please vis
 msgstr "Nếu bạn muốn xuất dữ liệu hoặc xóa tin nhắn trước, hãy vào phần Bảng điều khiển quyền riêng tư trong Cài đặt người dùng trước khi tiếp tục."
 
 #: src/components/channel/channel-view/DMChannelView.tsx:302
-#: src/components/channel/dm/DMWelcomeSection.tsx:131
+#: src/components/channel/dm/DMWelcomeSection.tsx:137
 #: src/components/channel/friends/FriendListItem.tsx:145
 #: src/components/channel/friends/FriendListItem.tsx:244
 #: src/components/channel/friends/MobileFriendRequestItem.tsx:69
@@ -9855,7 +9850,7 @@ msgid "image"
 msgstr "hình ảnh"
 
 #: src/components/channel/embeds/media/EmbedGifv.tsx:237
-#: src/components/channel/embeds/media/EmbedImage.tsx:374
+#: src/components/channel/embeds/media/EmbedImage.tsx:377
 #: src/components/modals/MediaViewerModal.tsx:362
 #: src/components/search/HasFilterSheet.tsx:50
 #: src/utils/FavoriteMemeUtils.ts:71
@@ -10129,13 +10124,13 @@ msgstr "Đầu vào có biểu tượng"
 msgid "Insert emoji"
 msgstr "Chèn biểu tượng"
 
-#: src/components/channel/InviteEmbed.tsx:200
-#: src/components/modals/InviteAcceptModal.tsx:143
+#: src/components/channel/InviteEmbed.tsx:210
+#: src/components/modals/InviteAcceptModal.tsx:157
 msgid "Install Emoji Pack"
 msgstr "Cài gói biểu tượng"
 
-#: src/components/channel/InviteEmbed.tsx:200
-#: src/components/modals/InviteAcceptModal.tsx:143
+#: src/components/channel/InviteEmbed.tsx:210
+#: src/components/modals/InviteAcceptModal.tsx:157
 msgid "Install Sticker Pack"
 msgstr "Cài gói nhãn dán"
 
@@ -10153,7 +10148,7 @@ msgstr "Đã cài vào {installedAt}"
 msgid "Installing emoji and sticker packs requires a premium subscription."
 msgstr "Cài gói biểu tượng và nhãn dán cần đăng ký cao cấp."
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:304
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:305
 msgid "Instant invites"
 msgstr "Lời mời ngay lập tức"
 
@@ -10286,7 +10281,7 @@ msgstr "Cài đặt liên kết mời"
 msgid "Invite Links"
 msgstr "Liên kết mời"
 
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:164
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:191
 #: src/components/layout/ChannelItem.tsx:616
 #: src/components/popouts/GuildHeaderPopout.tsx:178
 msgid "Invite Members"
@@ -10300,7 +10295,7 @@ msgstr "Cửa sổ lời mời"
 msgid "Invite modal preview"
 msgstr "Xem trước cửa sổ lời mời"
 
-#: src/components/modals/InviteAcceptModal.tsx:134
+#: src/components/modals/InviteAcceptModal.tsx:148
 #: src/components/pages/InviteLoginPage.tsx:196
 #: src/components/pages/InviteRegisterPage.tsx:92
 msgid "Invite not found"
@@ -10337,7 +10332,7 @@ msgstr "Đã gửi lời mời cho {0}"
 msgid "Invite sent to {guildName}"
 msgstr "Lời mời đã được gửi đến {guildName}"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:261
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:262
 msgid "Invite splash"
 msgstr "Trang chào mời"
 
@@ -10354,7 +10349,7 @@ msgstr "Mời đến {0}"
 msgid "Invite to Community"
 msgstr "Mời vào cộng đồng"
 
-#: src/components/channel/InviteEmbed.tsx:364
+#: src/components/channel/InviteEmbed.tsx:380
 msgid "Invite Unavailable"
 msgstr "Lời mời không khả dụng"
 
@@ -10369,12 +10364,12 @@ msgstr "Được mời bởi {0}."
 
 #. placeholder {0}: invite.inviter.username
 #. placeholder {1}: invite.inviter.discriminator
-#: src/components/modals/InviteAcceptModal.tsx:156
+#: src/components/modals/InviteAcceptModal.tsx:170
 msgid "Invited by {0}#{1}"
 msgstr "Được mời bởi {0}#{1}"
 
 #: src/components/auth/InviteHeader.tsx:159
-#: src/components/channel/InviteEmbed.tsx:224
+#: src/components/channel/InviteEmbed.tsx:234
 msgid "Invited by {inviterTag}"
 msgstr "Được mời bởi {inviterTag}"
 
@@ -10410,12 +10405,12 @@ msgstr "Hiện lời mời đang bị tạm dừng trong cộng đồng này"
 msgid "Invites are locked for preview communities. Claim your account by setting an email and password to enable invites."
 msgstr "Lời mời bị khóa cho cộng đồng xem trước. Xác nhận tài khoản bằng cách đặt email và mật khẩu để bật lời mời."
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:262
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:263
 msgid "Invites disabled"
 msgstr "Lời mời bị vô hiệu"
 
-#: src/components/channel/InviteEmbed.tsx:259
-#: src/components/modals/InviteAcceptModal.tsx:98
+#: src/components/channel/InviteEmbed.tsx:268
+#: src/components/modals/InviteAcceptModal.tsx:112
 msgid "Invites Disabled"
 msgstr "Lời mời bị vô hiệu"
 
@@ -10482,13 +10477,13 @@ msgstr "Tham gia một cộng đồng có nhãn dán để bắt đầu!"
 msgid "Join call"
 msgstr "Tham gia cuộc gọi"
 
-#: src/components/channel/InviteEmbed.tsx:263
-#: src/components/channel/InviteEmbed.tsx:453
+#: src/components/channel/InviteEmbed.tsx:272
+#: src/components/channel/InviteEmbed.tsx:469
 #: src/components/layout/guild-list/AddGuildButton.tsx:71
 #: src/components/modals/AddGuildModal.tsx:129
 #: src/components/modals/AddGuildModal.tsx:410
 #: src/components/modals/components/plutonium/SubscriptionCard.tsx:342
-#: src/components/modals/InviteAcceptModal.tsx:102
+#: src/components/modals/InviteAcceptModal.tsx:116
 #: src/components/modals/InviteAcceptModalPreview.tsx:114
 msgid "Join Community"
 msgstr "Tham gia cộng đồng"
@@ -10497,15 +10492,23 @@ msgstr "Tham gia cộng đồng"
 msgid "Join community form"
 msgstr "Biểu mẫu tham gia cộng đồng"
 
-#: src/components/channel/InviteEmbed.tsx:189
+#: src/components/layout/app-layout/nagbars/GuildMembershipCtaNagbar.tsx:97
+msgid "Join Fluxer HQ"
+msgstr "Tham gia Fluxer HQ"
+
+#: src/components/layout/app-layout/nagbars/GuildMembershipCtaNagbar.tsx:94
+msgid "Join Fluxer HQ to chat with the team and stay up to date on the latest!"
+msgstr "Tham gia Fluxer HQ để trò chuyện với đội ngũ và cập nhật thông tin mới nhất!"
+
+#: src/components/channel/InviteEmbed.tsx:201
 msgid "Join Group"
 msgstr "Tham gia nhóm"
 
-#: src/components/modals/InviteAcceptModal.tsx:95
+#: src/components/modals/InviteAcceptModal.tsx:109
 msgid "Join Group DM"
 msgstr "Tham gia DM nhóm"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:310
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:311
 msgid "Join notifications"
 msgstr "Nhận thông báo tham gia"
 
@@ -10620,7 +10623,7 @@ msgstr "Nhảy đến tin nhắn chưa đọc cũ nhất"
 msgid "Jump to page"
 msgstr "Nhảy đến trang"
 
-#: src/components/channel/Messages.tsx:920
+#: src/components/channel/Messages.tsx:924
 msgid "Jump to Present"
 msgstr "Nhảy đến hiện tại"
 
@@ -10690,7 +10693,7 @@ msgstr "Phím tắt"
 msgid "Keyboard"
 msgstr "Bàn phím"
 
-#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:126
+#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:129
 #: src/components/modals/utils/settingsSearchIndex.ts:231
 msgid "Keyboard Hints"
 msgstr "Gợi ý bàn phím"
@@ -10815,7 +10818,7 @@ msgstr "Tìm hiểu về Plutonium"
 msgid "Leave blank for a random username"
 msgstr "Để trống để lấy tên người dùng ngẫu nhiên"
 
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:243
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:270
 #: src/components/popouts/GuildHeaderPopout.tsx:234
 #: src/components/uikit/ContextMenu/items/GuildMenuItems.tsx:461
 #: src/hooks/useLeaveGuild.tsx:39
@@ -10874,7 +10877,7 @@ msgstr "Rời nhanh vậy?"
 msgid "Left"
 msgstr "Đã rời"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:248
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:249
 msgid "Left aligned"
 msgstr "Căn trái"
 
@@ -10945,7 +10948,7 @@ msgstr "liên kết"
 msgid "Link"
 msgstr "Liên kết"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:222
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:223
 msgid "Link channel"
 msgstr "Liên kết kênh"
 
@@ -11027,7 +11030,7 @@ msgstr "Đang tải danh sách cấm..."
 msgid "Loading communities..."
 msgstr "Đang tải các cộng đồng..."
 
-#: src/components/channel/embeds/media/EmbedImage.tsx:368
+#: src/components/channel/embeds/media/EmbedImage.tsx:371
 msgid "Loading image"
 msgstr "Đang tải hình ảnh"
 
@@ -11039,8 +11042,8 @@ msgstr "Đang tải lời mời..."
 msgid "Loading more..."
 msgstr "Đang tải thêm..."
 
-#: src/components/channel/embeds/media/EmbedGifv.tsx:493
-#: src/components/channel/embeds/media/EmbedGifv.tsx:748
+#: src/components/channel/embeds/media/EmbedGifv.tsx:497
+#: src/components/channel/embeds/media/EmbedGifv.tsx:754
 msgid "Loading placeholder"
 msgstr "Chỗ giữ chỗ đang tải"
 
@@ -11064,7 +11067,7 @@ msgstr "Đang tải chủ đề..."
 msgid "Loading verification methods..."
 msgstr "Đang tải phương thức xác minh..."
 
-#: src/components/channel/embeds/media/EmbedImage.tsx:368
+#: src/components/channel/embeds/media/EmbedImage.tsx:371
 msgid "Loading: {alt}"
 msgstr "Đang tải: {alt}"
 
@@ -11082,7 +11085,7 @@ msgid "Local Mute"
 msgstr "Tắt tiếng cục bộ"
 
 #: src/components/auth/AuthBottomLink.tsx:36
-#: src/components/auth/AuthLoginLayout.tsx:243
+#: src/components/auth/AuthLoginLayout.tsx:244
 #: src/components/auth/MfaScreen.tsx:136
 #: src/components/pages/LoginPage.tsx:129
 msgid "Log in"
@@ -11105,7 +11108,7 @@ msgstr "Đăng nhập bằng trình duyệt, sau đó nhập mã hiển thị đ
 msgid "Log in via browser"
 msgstr "Đăng nhập qua trình duyệt"
 
-#: src/components/auth/AuthLoginLayout.tsx:270
+#: src/components/auth/AuthLoginLayout.tsx:271
 msgid "Log in via browser or custom instance"
 msgstr "Đăng nhập qua trình duyệt hoặc phiên bản tùy chỉnh"
 
@@ -11120,7 +11123,7 @@ msgid "Log Out"
 msgstr "Đăng xuất"
 
 #. placeholder {0}: selectedDevices.size
-#: src/components/modals/tabs/DevicesTab.tsx:330
+#: src/components/modals/tabs/DevicesTab.tsx:333
 msgid "Log out {0} devices"
 msgstr "Đăng xuất {0} thiết bị"
 
@@ -11129,7 +11132,7 @@ msgid "Log out {sessionCount} devices"
 msgstr "Đăng xuất {sessionCount} thiết bị"
 
 #: src/components/modals/DeviceRevokeModal.tsx:40
-#: src/components/modals/tabs/DevicesTab.tsx:328
+#: src/components/modals/tabs/DevicesTab.tsx:331
 msgid "Log out 1 device"
 msgstr "Đăng xuất 1 thiết bị"
 
@@ -11141,7 +11144,7 @@ msgstr "Đăng xuất khỏi tất cả thiết bị"
 msgid "Log out all other devices"
 msgstr "Đăng xuất tất cả thiết bị khác"
 
-#: src/components/modals/tabs/DevicesTab.tsx:333
+#: src/components/modals/tabs/DevicesTab.tsx:336
 msgid "Log Out All Other Devices"
 msgstr "Đăng xuất tất cả thiết bị khác"
 
@@ -11181,7 +11184,7 @@ msgstr "Lorem ipsum dolor sit amet"
 msgid "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
 msgstr "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:350
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:351
 msgid "Lottie"
 msgstr "Lottie"
 
@@ -11351,6 +11354,7 @@ msgstr "Đánh dấu 18+ (NSFW)"
 #: src/components/bottomsheets/ChannelBottomSheet.tsx:358
 #: src/components/bottomsheets/ChannelDetailsBottomSheet.tsx:1139
 #: src/components/bottomsheets/DMBottomSheet.tsx:390
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:183
 #: src/components/channel/NewMessagesBar.tsx:60
 #: src/components/uikit/ContextMenu/items/CategoryMenuItems.tsx:81
 #: src/components/uikit/ContextMenu/items/ChannelMenuItems.tsx:79
@@ -11705,8 +11709,8 @@ msgstr "đề cập:"
 #: src/components/modals/guildTabs/GuildMemberActionsSheet.tsx:220
 #: src/components/modals/tabs/ComponentGalleryTab/InputsTab.tsx:164
 #: src/components/modals/UserProfileMobileSheet.tsx:503
-#: src/components/modals/UserProfileModal.tsx:1192
-#: src/components/modals/UserProfileModal.tsx:1318
+#: src/components/modals/UserProfileModal.tsx:1218
+#: src/components/modals/UserProfileModal.tsx:1344
 #: src/components/popouts/UserProfilePopout.tsx:291
 #: src/components/popouts/UserProfilePopout.tsx:310
 #: src/components/profile/ProfilePreview.tsx:292
@@ -11714,15 +11718,15 @@ msgstr "đề cập:"
 msgid "Message"
 msgstr "Tin nhắn"
 
-#: src/components/channel/ChannelTextarea.tsx:621
+#: src/components/channel/ChannelTextarea.tsx:685
 msgid "Message "
 msgstr "Tin nhắn "
 
-#: src/components/channel/ChannelTextarea.tsx:621
+#: src/components/channel/ChannelTextarea.tsx:685
 msgid "Message @"
 msgstr "Tin nhắn @"
 
-#: src/components/channel/ChannelTextarea.tsx:618
+#: src/components/channel/ChannelTextarea.tsx:682
 msgid "Message #"
 msgstr "Tin nhắn #"
 
@@ -11838,7 +11842,7 @@ msgstr "Tin nhắn & Phương tiện"
 msgid "Messages Deleted"
 msgstr "Tin nhắn đã xóa"
 
-#: src/components/channel/Messages.tsx:941
+#: src/components/channel/Messages.tsx:944
 msgid "Messages failed to load"
 msgstr "Không tải được tin nhắn"
 
@@ -12016,7 +12020,7 @@ msgstr "Thêm"
 msgid "More Actions"
 msgstr "Thêm thao tác"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:264
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:265
 msgid "More emoji slots"
 msgstr "Thêm vị trí emoji"
 
@@ -12028,7 +12032,7 @@ msgstr "Thêm tùy chọn"
 msgid "More Options"
 msgstr "Thêm tùy chọn"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:265
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:266
 msgid "More sticker slots"
 msgstr "Thêm vị trí nhãn dán"
 
@@ -12162,8 +12166,8 @@ msgstr "Tắt âm kênh"
 msgid "Mute Channel"
 msgstr "Tắt âm kênh"
 
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:224
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:296
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:251
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:323
 #: src/components/uikit/ContextMenu/FavoritesGuildContextMenu.tsx:55
 #: src/components/uikit/ContextMenu/items/GuildMenuItems.tsx:186
 msgid "Mute Community"
@@ -12214,20 +12218,20 @@ msgstr "Đã tắt âm đến {0}"
 msgid "Muting a community prevents unread indicators and notifications from appearing unless you are mentioned"
 msgstr "Tắt âm một cộng đồng sẽ ngăn chỉ số chưa đọc và thông báo xuất hiện trừ khi bạn được đề cập"
 
-#: src/components/modals/UserProfileModal.tsx:360
+#: src/components/modals/UserProfileModal.tsx:376
 msgid "Mutual Communities ({count})"
 msgstr "Cộng đồng tương hỗ ({count})"
 
-#: src/components/modals/UserProfileModal.tsx:352
+#: src/components/modals/UserProfileModal.tsx:368
 msgid "Mutual Friends ({count})"
 msgstr "Bạn bè tương hỗ ({count})"
 
-#: src/components/modals/UserProfileModal.tsx:356
+#: src/components/modals/UserProfileModal.tsx:372
 msgid "Mutual Groups ({count})"
 msgstr "Nhóm tương hỗ ({count})"
 
 #: src/components/modals/tabs/ApplicationsTab/application-detail/ApplicationInfoSection.tsx:55
-#: src/components/modals/tabs/ApplicationsTab/ApplicationCreateModal.tsx:97
+#: src/components/modals/tabs/ApplicationsTab/ApplicationCreateModal.tsx:90
 msgid "My Application"
 msgstr "Ứng dụng của tôi"
 
@@ -12247,7 +12251,7 @@ msgstr "Nhãn dán tuyệt vời của tôi"
 msgid "My Category"
 msgstr "Hạng mục của tôi"
 
-#: src/components/modals/tabs/DevicesTab.tsx:240
+#: src/components/modals/tabs/DevicesTab.tsx:243
 msgid "My Devices"
 msgstr "Thiết bị của tôi"
 
@@ -12345,7 +12349,7 @@ msgid "Navigation"
 msgstr "Điều hướng"
 
 #: src/components/auth/AuthBottomLink.tsx:33
-#: src/components/auth/AuthLoginLayout.tsx:276
+#: src/components/auth/AuthLoginLayout.tsx:277
 msgid "Need an account?"
 msgstr "Cần tài khoản?"
 
@@ -12364,7 +12368,7 @@ msgstr "Mạng"
 #: src/components/modals/components/PlutoniumContent.tsx:156
 #: src/components/modals/components/PlutoniumContent.tsx:288
 #: src/components/modals/tabs/BetaCodesTab.tsx:320
-#: src/components/modals/tabs/DevicesTab.tsx:229
+#: src/components/modals/tabs/DevicesTab.tsx:232
 msgid "Network error"
 msgstr "Lỗi mạng"
 
@@ -12584,8 +12588,8 @@ msgid "No community banner"
 msgstr "Không có banner cộng đồng"
 
 #: src/components/auth/InviteHeader.tsx:156
-#: src/components/channel/InviteEmbed.tsx:217
-#: src/components/modals/InviteAcceptModal.tsx:148
+#: src/components/channel/InviteEmbed.tsx:227
+#: src/components/modals/InviteAcceptModal.tsx:162
 #: src/components/modals/tabs/ExpressionPacksTab.tsx:73
 msgid "No description provided."
 msgstr "Không có mô tả nào."
@@ -12684,15 +12688,15 @@ msgstr "Không phát hiện mic"
 msgid "No more scheduled messages."
 msgstr "Không còn tin nhắn đã lên lịch."
 
-#: src/components/modals/UserProfileModal.tsx:586
+#: src/components/modals/UserProfileModal.tsx:603
 msgid "No mutual communities found."
 msgstr "Không tìm thấy cộng đồng chung nào."
 
-#: src/components/modals/UserProfileModal.tsx:542
+#: src/components/modals/UserProfileModal.tsx:558
 msgid "No mutual friends found."
 msgstr "Không tìm thấy bạn chung nào."
 
-#: src/components/modals/UserProfileModal.tsx:564
+#: src/components/modals/UserProfileModal.tsx:580
 msgid "No mutual groups found."
 msgstr "Không tìm thấy nhóm chung nào."
 
@@ -12905,8 +12909,8 @@ msgid "Not your cup of tea? You can disable this feature anytime."
 msgstr "Không phải thứ bạn thích? Bạn có thể tắt tính năng này bất cứ lúc nào."
 
 #: src/components/modals/UserProfileMobileSheet.tsx:555
-#: src/components/modals/UserProfileModal.tsx:244
-#: src/components/modals/UserProfileModal.tsx:248
+#: src/components/modals/UserProfileModal.tsx:245
+#: src/components/modals/UserProfileModal.tsx:249
 #: src/components/pages/YouPage.tsx:144
 #: src/lib/markdown/renderers/common/block-elements.tsx:213
 msgid "Note"
@@ -12944,7 +12948,7 @@ msgstr "Ghi đè thông báo"
 #: src/components/bottomsheets/ChannelBottomSheet.tsx:405
 #: src/components/bottomsheets/ChannelDetailsBottomSheet.tsx:1184
 #: src/components/bottomsheets/ChannelDetailsBottomSheet.tsx:1365
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:199
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:226
 #: src/components/channel/ChannelHeader/ChannelNotificationSettingsButton.tsx:59
 #: src/components/modals/GuildNotificationSettingsModal.tsx:162
 #: src/components/modals/tabs/NotificationsTab/Notifications.tsx:82
@@ -12995,7 +12999,7 @@ msgstr "Thông báo người dùng với vai trò này có quyền xem kênh nà
 msgid "now"
 msgstr "ngay bây giờ"
 
-#: src/components/channel/MessageSearchBar/MessageSearchBar.tsx:704
+#: src/components/channel/MessageSearchBar/MessageSearchBar.tsx:732
 msgid "Now"
 msgstr "Bây giờ"
 
@@ -13090,7 +13094,7 @@ msgstr "Khi nhấn"
 msgid "on:"
 msgstr "bật:"
 
-#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:672
+#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:673
 msgid "Once deleted, the application and its credentials are permanently removed."
 msgstr "Sau khi xóa, ứng dụng và thông tin đăng nhập của nó sẽ bị gỡ bỏ vĩnh viễn."
 
@@ -13252,7 +13256,7 @@ msgstr "Chỉ mở DM"
 msgid "Open Fluxer"
 msgstr "Mở Fluxer"
 
-#: src/components/channel/embeds/media/EmbedImage.tsx:186
+#: src/components/channel/embeds/media/EmbedImage.tsx:187
 msgid "Open image in full view"
 msgstr "Mở ảnh ở chế độ toàn màn hình"
 
@@ -13368,7 +13372,7 @@ msgstr "Mở cộng đồng Visionary"
 msgid "Opening..."
 msgstr "Đang mở..."
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:275
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:276
 msgid "Operator"
 msgstr "Điều hành viên"
 
@@ -13441,7 +13445,7 @@ msgstr "Tin nhắn gốc đã bị xóa"
 msgid "Other"
 msgstr "Khác"
 
-#: src/components/modals/tabs/DevicesTab.tsx:261
+#: src/components/modals/tabs/DevicesTab.tsx:264
 msgid "Other Devices"
 msgstr "Thiết bị khác"
 
@@ -13501,7 +13505,7 @@ msgstr "Ghi đè trạng thái tài khoản chưa nhận"
 msgid "Override unread gift inventory status"
 msgstr "Ghi đè trạng thái tồn kho quà chưa đọc"
 
-#: src/components/modals/UserProfileModal.tsx:414
+#: src/components/modals/UserProfileModal.tsx:430
 msgid "Overview"
 msgstr "Tổng quan"
 
@@ -13695,7 +13699,7 @@ msgstr "Quyền"
 msgid "Permissions granted"
 msgstr "Đã cấp quyền"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:228
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:229
 msgid "Personal notes"
 msgstr "Ghi chú cá nhân"
 
@@ -13868,12 +13872,12 @@ msgstr "Phát"
 msgid "Play animated emojis"
 msgstr "Phát biểu tượng cảm xúc động"
 
-#: src/components/channel/embeds/media/EmbedAudio.tsx:204
+#: src/components/channel/embeds/media/EmbedAudio.tsx:211
 msgid "Play audio"
 msgstr "Phát âm thanh"
 
-#: src/components/channel/embeds/media/EmbedVideo.tsx:79
-#: src/components/channel/embeds/media/EmbedVideo.tsx:103
+#: src/components/channel/embeds/media/EmbedVideo.tsx:80
+#: src/components/channel/embeds/media/EmbedVideo.tsx:104
 #: src/components/channel/embeds/media/EmbedYouTube.tsx:112
 #: src/components/media-player/components/VideoPlayer.tsx:299
 msgid "Play video"
@@ -13936,7 +13940,7 @@ msgstr "Vui lòng dán liên kết tin nhắn bạn đang báo cáo."
 msgid "Please provide an email address."
 msgstr "Vui lòng cung cấp địa chỉ email."
 
-#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:555
+#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:556
 msgid "Please retry or go back to the applications list."
 msgstr "Vui lòng thử lại hoặc quay lại danh sách ứng dụng."
 
@@ -13989,7 +13993,7 @@ msgstr "Ưu đãi Plutonium"
 msgid "Plutonium Subscription"
 msgstr "Đăng ký Plutonium"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:348
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:349
 msgid "PNG"
 msgstr "PNG"
 
@@ -14177,7 +14181,7 @@ msgstr "Bảng điều khiển quyền riêng tư"
 msgid "Privacy Policy"
 msgstr "Chính sách quyền riêng tư"
 
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:204
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:231
 #: src/components/modals/GuildPrivacySettingsModal.tsx:56
 #: src/components/popouts/GuildHeaderPopout.tsx:212
 #: src/components/uikit/ContextMenu/items/GuildMenuItems.tsx:392
@@ -14299,7 +14303,7 @@ msgstr "Xóa nhãn dán này khỏi bộ nhớ và CDN"
 msgid "Push Notification Inactive Timeout"
 msgstr "Thời gian chờ thông báo đẩy không hoạt động"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:301
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:302
 msgid "Push notifications"
 msgstr "Thông báo đẩy"
 
@@ -14412,7 +14416,7 @@ msgstr "Tương tác phản ứng bị tắt"
 #: src/components/modals/MessageReactionsModal.tsx:169
 #: src/components/modals/tabs/ChatSettingsTab/DisplayTab.tsx:94
 #: src/components/modals/utils/settingsSearchIndex.ts:353
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:306
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:307
 msgid "Reactions"
 msgstr "Phản ứng"
 
@@ -14583,7 +14587,7 @@ msgstr "Làm mới đăng ký đẩy"
 #: src/components/modals/BackupCodesModal.tsx:90
 #: src/components/modals/tabs/ApplicationsTab/application-detail/SecretsSection.tsx:68
 #: src/components/modals/tabs/ApplicationsTab/application-detail/SecretsSection.tsx:85
-#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:528
+#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:529
 msgid "Regenerate"
 msgstr "Tạo lại"
 
@@ -14591,19 +14595,19 @@ msgstr "Tạo lại"
 msgid "Regenerate backup codes"
 msgstr "Tạo lại mã dự phòng"
 
-#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:526
+#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:527
 msgid "Regenerate bot token?"
 msgstr "Tạo lại token bot?"
 
-#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:526
+#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:527
 msgid "Regenerate client secret?"
 msgstr "Tạo lại mật khẩu bí mật của khách hàng?"
 
-#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:519
+#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:520
 msgid "Regenerating will invalidate the current secret. Update any code that uses the old value."
 msgstr "Việc tạo lại sẽ làm vô hiệu mật khẩu hiện tại. Cập nhật mọi mã sử dụng giá trị cũ."
 
-#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:521
+#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:522
 msgid "Regenerating will invalidate the current token. Update any code that uses the old value."
 msgstr "Việc tạo lại sẽ làm vô hiệu token hiện tại. Cập nhật mọi mã sử dụng giá trị cũ."
 
@@ -14732,7 +14736,7 @@ msgid "Remove filter"
 msgstr "Xóa bộ lọc"
 
 #: src/components/bottomsheets/DMBottomSheet.tsx:510
-#: src/components/channel/dm/DMWelcomeSection.tsx:144
+#: src/components/channel/dm/DMWelcomeSection.tsx:150
 #: src/components/modals/guildTabs/GuildMemberActionsSheet.tsx:146
 #: src/components/modals/guildTabs/GuildMemberActionsSheet.tsx:148
 #: src/components/modals/guildTabs/GuildMemberActionsSheet.tsx:255
@@ -14741,8 +14745,8 @@ msgstr "Xóa bộ lọc"
 #: src/components/modals/UserProfileActionsSheet.tsx:278
 #: src/components/modals/UserProfileMobileSheet.tsx:305
 #: src/components/modals/UserProfileMobileSheet.tsx:307
-#: src/components/modals/UserProfileModal.tsx:1145
-#: src/components/modals/UserProfileModal.tsx:1231
+#: src/components/modals/UserProfileModal.tsx:1171
+#: src/components/modals/UserProfileModal.tsx:1257
 #: src/components/uikit/ContextMenu/items/RelationshipMenuItems.tsx:129
 #: src/utils/RelationshipActionUtils.tsx:113
 #: src/utils/RelationshipActionUtils.tsx:115
@@ -15080,7 +15084,7 @@ msgstr "Báo cáo đã gửi thành công. Đội An toàn sẽ xem xét sớm."
 
 #: src/components/modals/IARModal.tsx:84
 #: src/components/modals/UserProfileActionsSheet.tsx:289
-#: src/components/modals/UserProfileModal.tsx:1159
+#: src/components/modals/UserProfileModal.tsx:1185
 msgid "Report User"
 msgstr "Báo cáo người dùng"
 
@@ -15105,7 +15109,7 @@ msgstr "Phạm vi được yêu cầu"
 msgid "Require 2FA for moderation actions"
 msgstr "Yêu cầu 2FA cho hành động điều tiết"
 
-#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:144
+#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:147
 msgid "Require double-click to join voice channels"
 msgstr "Yêu cầu nhấp đôi để tham gia kênh thoại"
 
@@ -15144,7 +15148,7 @@ msgstr "Yêu cầu mọi điều kiện trong cấp Trung bình, cộng thêm l�
 msgid "Requires Plutonium"
 msgstr "Yêu cầu Plutonium"
 
-#: src/components/channel/ChannelTextarea.tsx:834
+#: src/components/channel/ChannelTextarea.tsx:904
 msgid "Reschedule Message"
 msgstr "Đặt lại lịch tin nhắn"
 
@@ -15290,11 +15294,11 @@ msgstr "Đăng ký lại"
 #: src/components/modals/guildTabs/GuildInvitesTab.tsx:124
 #: src/components/modals/guildTabs/GuildStickersTab.tsx:211
 #: src/components/modals/guildTabs/GuildWebhooksTab.tsx:137
-#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:559
+#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:560
 #: src/components/modals/tabs/ApplicationsTab/index.tsx:112
 #: src/components/modals/tabs/AuthorizedAppsTab.tsx:121
 #: src/components/modals/tabs/BetaCodesTab.tsx:326
-#: src/components/modals/tabs/DevicesTab.tsx:231
+#: src/components/modals/tabs/DevicesTab.tsx:234
 #: src/components/modals/tabs/GiftInventoryTab.tsx:323
 msgid "Retry"
 msgstr "Thử lại"
@@ -15359,7 +15363,7 @@ msgstr "Thu hồi"
 msgid "Revoke Ban"
 msgstr "Thu hồi cấm"
 
-#: src/components/modals/tabs/DevicesTab.tsx:133
+#: src/components/modals/tabs/DevicesTab.tsx:136
 msgid "Revoke device"
 msgstr "Thu hồi thiết bị"
 
@@ -15386,7 +15390,7 @@ msgstr "Tua lại {DEFAULT_SEEK_AMOUNT} giây"
 msgid "Right"
 msgstr "Phải"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:250
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:251
 msgid "Right aligned"
 msgstr "Canh phải"
 
@@ -15791,7 +15795,7 @@ msgid "Search members..."
 msgstr "Tìm thành viên..."
 
 #: src/components/bottomsheets/ChannelSearchBottomSheet.tsx:412
-#: src/components/channel/MessageSearchBar/MessageSearchBar.tsx:1410
+#: src/components/channel/MessageSearchBar/MessageSearchBar.tsx:1438
 msgid "Search messages"
 msgstr "Tìm tin nhắn"
 
@@ -15834,13 +15838,13 @@ msgstr "Tìm vai trò hoặc thành viên..."
 msgid "Search saved media"
 msgstr "Tìm phương tiện đã lưu"
 
-#: src/components/channel/MessageSearchBar/MessageSearchBar.tsx:380
+#: src/components/channel/MessageSearchBar/MessageSearchBar.tsx:381
 msgid "Search scope"
 msgstr "Phạm vi tìm kiếm"
 
 #. placeholder {0}: activeScopeOption.label
 #: src/components/channel/ChannelSearchResults.tsx:1031
-#: src/components/channel/MessageSearchBar/MessageSearchBar.tsx:378
+#: src/components/channel/MessageSearchBar/MessageSearchBar.tsx:379
 msgid "Search scope: {0}"
 msgstr "Phạm vi tìm kiếm: {0}"
 
@@ -15857,7 +15861,7 @@ msgstr "Tìm cài đặt..."
 msgid "Search stickers..."
 msgstr "Tìm nhãn dán..."
 
-#: src/components/channel/MessageSearchBar/MessageSearchBar.tsx:1448
+#: src/components/channel/MessageSearchBar/MessageSearchBar.tsx:1476
 msgid "Search suggestions"
 msgstr "Gợi ý tìm kiếm"
 
@@ -15938,7 +15942,7 @@ msgstr "Khóa Bảo mật / Passkey"
 msgid "Security key verification failed. Please try again."
 msgstr "Xác minh khóa bảo mật thất bại. Vui lòng thử lại."
 
-#: src/components/modals/tabs/DevicesTab.tsx:242
+#: src/components/modals/tabs/DevicesTab.tsx:245
 msgid "See all devices that are currently logged into your account. Revoke any sessions that you don't recognize."
 msgstr "Xem tất cả thiết bị đang đăng nhập tài khoản của bạn. Thu hồi bất kỳ phiên nào bạn không nhận ra."
 
@@ -16002,7 +16006,7 @@ msgid "Select account"
 msgstr "Chọn tài khoản"
 
 #: src/components/channel/textarea/TextareaContextMenu.tsx:134
-#: src/components/modals/tabs/DevicesTab.tsx:281
+#: src/components/modals/tabs/DevicesTab.tsx:284
 msgid "Select All"
 msgstr "Chọn tất cả"
 
@@ -16040,7 +16044,7 @@ msgstr "Chọn kích thước phương tiện cho nội dung nhúng từ liên k
 msgid "Select media size for uploaded attachments"
 msgstr "Chọn kích thước phương tiện cho tệp đính kèm đã tải lên"
 
-#: src/components/modals/UserProfileModal.tsx:686
+#: src/components/modals/UserProfileModal.tsx:709
 msgid "Select mutual view"
 msgstr "Chọn chế độ xem chung"
 
@@ -16151,9 +16155,9 @@ msgstr "Gửi mã"
 msgid "Send Code"
 msgstr "Gửi mã"
 
-#: src/components/channel/dm/DMWelcomeSection.tsx:112
+#: src/components/channel/dm/DMWelcomeSection.tsx:118
 #: src/components/modals/guildTabs/GuildMemberActionsSheet.tsx:272
-#: src/components/modals/UserProfileModal.tsx:1292
+#: src/components/modals/UserProfileModal.tsx:1318
 msgid "Send Friend Request"
 msgstr "Gửi lời mời kết bạn"
 
@@ -16170,7 +16174,7 @@ msgstr "Gửi tin nhắn · Nhấp phải để lên lịch"
 msgid "Send Message Disabled"
 msgstr "Gửi tin nhắn bị vô hiệu hóa"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:305
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:306
 msgid "Send messages"
 msgstr "Gửi tin nhắn"
 
@@ -16624,7 +16628,7 @@ msgstr "Hiển thị nút Quà"
 msgid "Show inline images and videos"
 msgstr "Hiển thị hình ảnh và video nội tuyến"
 
-#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:93
+#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:96
 msgid "Show just the typing indicator without avatars"
 msgstr "Chỉ hiển thị chỉ báo đang gõ mà không có ảnh đại diện"
 
@@ -16788,11 +16792,11 @@ msgstr "Hiển thị quà đã được đổi"
 msgid "Show this role separately"
 msgstr "Hiển thị vai trò này riêng biệt"
 
-#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:88
+#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:91
 msgid "Show typing indicator with user avatars in the channel list"
 msgstr "Hiển thị chỉ báo gõ kèm ảnh đại diện người dùng trong danh sách kênh"
 
-#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:117
+#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:120
 msgid "Show typing on selected channel"
 msgstr "Hiển thị đang gõ trên kênh đã chọn"
 
@@ -17151,7 +17155,7 @@ msgstr "Tiếng Tây Ban Nha (Tây Ban Nha)"
 msgid "Speak"
 msgstr "Nói"
 
-#: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:335
+#: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:340
 msgid "Speak Message"
 msgstr "Đọc tin nhắn"
 
@@ -17270,13 +17274,13 @@ msgid "Start Sharing"
 msgstr "Bắt đầu chia sẻ"
 
 #: src/components/channel/ChannelHeader/CallButtons.tsx:160
-#: src/components/modals/UserProfileModal.tsx:1111
+#: src/components/modals/UserProfileModal.tsx:1137
 #: src/components/uikit/ContextMenu/items/CallMenuItems.tsx:91
 msgid "Start Video Call"
 msgstr "Bắt đầu cuộc gọi video"
 
 #: src/components/channel/ChannelHeader/CallButtons.tsx:90
-#: src/components/modals/UserProfileModal.tsx:1102
+#: src/components/modals/UserProfileModal.tsx:1128
 #: src/components/uikit/ContextMenu/items/CallMenuItems.tsx:60
 msgid "Start Voice Call"
 msgstr "Bắt đầu cuộc gọi thoại"
@@ -17359,8 +17363,8 @@ msgid "Sticker density"
 msgstr "Mật độ nhãn dán"
 
 #: src/components/auth/InviteHeader.tsx:140
-#: src/components/channel/InviteEmbed.tsx:199
-#: src/components/modals/InviteAcceptModal.tsx:142
+#: src/components/channel/InviteEmbed.tsx:209
+#: src/components/modals/InviteAcceptModal.tsx:156
 #: src/components/modals/tabs/ExpressionPacksTab.tsx:70
 msgid "Sticker pack"
 msgstr "Bộ nhãn dán"
@@ -17427,7 +17431,7 @@ msgstr "Ngừng reo"
 msgid "Stop Sharing"
 msgstr "Ngừng chia sẻ"
 
-#: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:335
+#: src/components/uikit/ContextMenu/items/MessageMenuItems.tsx:340
 msgid "Stop Speaking"
 msgstr "Ngừng nói"
 
@@ -17570,19 +17574,19 @@ msgstr "Chặn tất cả @mention vai trò"
 msgid "Suppress All Role @mentions"
 msgstr "Chặn tất cả @mention vai trò"
 
-#: src/components/channel/embeds/Embed.tsx:800
-#: src/components/channel/embeds/Embed.tsx:836
-#: src/components/channel/embeds/Embed.tsx:860
-#: src/components/channel/embeds/Embed.tsx:905
-#: src/components/channel/embeds/Embed.tsx:941
-#: src/components/channel/embeds/Embed.tsx:982
-#: src/components/channel/embeds/Embed.tsx:1018
-#: src/components/channel/embeds/Embed.tsx:1060
+#: src/components/channel/embeds/Embed.tsx:822
+#: src/components/channel/embeds/Embed.tsx:859
+#: src/components/channel/embeds/Embed.tsx:883
+#: src/components/channel/embeds/Embed.tsx:928
+#: src/components/channel/embeds/Embed.tsx:964
+#: src/components/channel/embeds/Embed.tsx:1005
+#: src/components/channel/embeds/Embed.tsx:1041
+#: src/components/channel/embeds/Embed.tsx:1083
 msgid "Suppress embeds"
 msgstr "Chặn nhúng"
 
-#: src/components/channel/embeds/Embed.tsx:141
-#: src/components/channel/embeds/Embed.tsx:148
+#: src/components/channel/embeds/Embed.tsx:143
+#: src/components/channel/embeds/Embed.tsx:150
 #: src/components/channel/MessageActionBar.tsx:542
 #: src/components/channel/MessageActionBar.tsx:694
 #: src/components/channel/messageActionMenu.tsx:150
@@ -17775,7 +17779,7 @@ msgstr "Văn bản"
 msgid "Text (NSFW)"
 msgstr "Văn bản (NSFW)"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:216
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:217
 msgid "Text channel"
 msgstr "Kênh văn bản"
 
@@ -18028,10 +18032,10 @@ msgstr "Hành động này yêu cầu xác minh để tiếp tục."
 msgid "This application"
 msgstr "Ứng dụng này"
 
-#: src/components/channel/embeds/attachments/Attachment.tsx:285
-#: src/components/channel/embeds/attachments/Attachment.tsx:306
-#: src/components/channel/embeds/attachments/Attachment.tsx:317
-#: src/components/channel/embeds/attachments/Attachment.tsx:327
+#: src/components/channel/embeds/attachments/Attachment.tsx:293
+#: src/components/channel/embeds/attachments/Attachment.tsx:314
+#: src/components/channel/embeds/attachments/Attachment.tsx:325
+#: src/components/channel/embeds/attachments/Attachment.tsx:335
 msgid "This attachment has expired"
 msgstr "Tệp đính kèm này đã hết hạn"
 
@@ -18039,7 +18043,7 @@ msgstr "Tệp đính kèm này đã hết hạn"
 msgid "This bot is requesting the Administrator permission. We do not recommend granting this to production apps unless you fully trust the developer. Consider asking them to request a reduced set of permissions. Close this page if you are unsure."
 msgstr "Bot này đang yêu cầu quyền Administrator. Chúng tôi không khuyên cấp quyền này cho ứng dụng trên môi trường sản xuất trừ khi bạn hoàn toàn tin tưởng nhà phát triển. Hãy yêu cầu họ xin tập quyền hạn chế hơn. Đóng trang nếu bạn không chắc chắn."
 
-#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:668
+#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:669
 msgid "This cannot be undone. Removing the application also deletes its bot."
 msgstr "Điều này không thể hoàn tác. Xóa ứng dụng cũng xóa bot của nó."
 
@@ -18101,7 +18105,7 @@ msgstr "Cộng đồng này đã đạt giới hạn thành viên tối đa và 
 msgid "This community has temporarily disabled invites."
 msgstr "Cộng đồng này đã tạm thời tắt lời mời."
 
-#: src/components/modals/InviteAcceptModal.tsx:180
+#: src/components/modals/InviteAcceptModal.tsx:194
 msgid "This community has temporarily disabled invites. You can try again later."
 msgstr "Cộng đồng này đã tạm thời tắt lời mời. Bạn có thể thử lại sau."
 
@@ -18178,7 +18182,7 @@ msgstr "Lời mời này có lượt dùng không giới hạn."
 msgid "This invite link never expires."
 msgstr "Liên kết mời này không bao giờ hết hạn."
 
-#: src/components/modals/InviteAcceptModal.tsx:135
+#: src/components/modals/InviteAcceptModal.tsx:149
 #: src/components/pages/InviteLoginPage.tsx:197
 #: src/components/pages/InviteRegisterPage.tsx:93
 msgid "This invite may have expired or been deleted."
@@ -18239,7 +18243,7 @@ msgid "This is the beginning of <0>{displayName}</0>. Add friends to start a con
 msgstr "Đây là khởi đầu của <0>{displayName}</0>. Thêm bạn bè để bắt đầu trò chuyện!"
 
 #. placeholder {0}: user.username
-#: src/components/channel/dm/DMWelcomeSection.tsx:194
+#: src/components/channel/dm/DMWelcomeSection.tsx:202
 msgid "This is the beginning of your direct message history with <0>{0}</0>."
 msgstr "Đây là phần bắt đầu lịch sử tin nhắn trực tiếp với <0>{0}</0>."
 
@@ -18342,8 +18346,8 @@ msgid "This was a @silent message."
 msgstr "Đây là tin nhắn @silent."
 
 #: src/actions/MessageActionCreators.tsx:404
-#: src/components/channel/Messages.tsx:445
-#: src/components/channel/Messages.tsx:525
+#: src/components/channel/Messages.tsx:444
+#: src/components/channel/Messages.tsx:524
 msgid "This will create a rift in the space-time continuum and cannot be undone."
 msgstr "Điều này sẽ tạo ra một vết nứt trong không-thời gian và không thể hoàn tác."
 
@@ -18351,7 +18355,7 @@ msgstr "Điều này sẽ tạo ra một vết nứt trong không-thời gian v�
 msgid "This will hide all favorites-related UI elements including buttons and menu items. Your existing favorites will be preserved and can be re-enabled anytime from <0>User Settings → Look & Feel → Favorites</0>."
 msgstr "Điều này sẽ ẩn tất cả thành phần giao diện liên quan đến Ưa thích bao gồm nút và mục menu. Các mục ưa thích hiện có sẽ được giữ và có thể bật lại bất cứ lúc nào từ <0>Cài đặt người dùng → Giao diện → Ưa thích</0>."
 
-#: src/components/channel/ChannelTextarea.tsx:838
+#: src/components/channel/ChannelTextarea.tsx:908
 msgid "This will modify the existing scheduled message rather than sending immediately."
 msgstr "Điều này sẽ sửa tin nhắn đã lên lịch thay vì gửi ngay."
 
@@ -18387,8 +18391,8 @@ msgstr "Điều này sẽ xóa phiên đã lưu cho tài khoản này."
 msgid "This will replace your current custom theme. You can edit it later in your User Settings."
 msgstr "Điều này sẽ thay thế giao diện tùy chỉnh hiện tại của bạn. Bạn có thể chỉnh sửa sau trong Cài đặt người dùng."
 
-#: src/components/channel/embeds/media/EmbedVideo.tsx:88
-#: src/components/channel/embeds/media/EmbedVideo.tsx:97
+#: src/components/channel/embeds/media/EmbedVideo.tsx:89
+#: src/components/channel/embeds/media/EmbedVideo.tsx:98
 msgid "Thumbnail for {title}"
 msgstr "Ảnh thu nhỏ cho {title}"
 
@@ -18485,7 +18489,7 @@ msgstr "Thông báo xuất hiện ở giữa phía trên màn hình."
 msgid "today"
 msgstr "hôm nay"
 
-#: src/components/channel/MessageSearchBar/MessageSearchBar.tsx:702
+#: src/components/channel/MessageSearchBar/MessageSearchBar.tsx:730
 msgid "Today"
 msgstr "Hôm nay"
 
@@ -18710,7 +18714,7 @@ msgid "Try a different search term or filter"
 msgstr "Thử thuật ngữ hoặc bộ lọc tìm kiếm khác"
 
 #: src/components/auth/HandoffCodeDisplay.tsx:67
-#: src/components/channel/Messages.tsx:942
+#: src/components/channel/Messages.tsx:945
 msgid "Try again"
 msgstr "Thử lại"
 
@@ -18737,7 +18741,7 @@ msgstr "Thử tên khác hoặc kiểm tra chính tả."
 msgid "Try another search term"
 msgstr "Thử thuật ngữ tìm kiếm khác"
 
-#: src/components/channel/InviteEmbed.tsx:361
+#: src/components/channel/InviteEmbed.tsx:377
 msgid "Try asking for a new invite."
 msgstr "Hãy thử yêu cầu lời mời mới."
 
@@ -18864,7 +18868,7 @@ msgstr "Chọn tỷ lệ"
 msgid "Type your message here..."
 msgstr "Nhập tin nhắn vào đây..."
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:303
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:304
 msgid "Typing events"
 msgstr "Sự kiện gõ"
 
@@ -18877,11 +18881,11 @@ msgstr "Hiển thị đang gõ"
 msgid "Typing Indicator"
 msgstr "Chỉ báo đang nhập"
 
-#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:87
+#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:90
 msgid "Typing indicator + avatars"
 msgstr "Hiển thị đang gõ + ảnh đại diện"
 
-#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:92
+#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:95
 msgid "Typing indicator only"
 msgstr "Chỉ hiển thị đang gõ"
 
@@ -18961,11 +18965,11 @@ msgstr "Không thể bắt đầu cuộc gọi"
 msgid "Unable to start email change"
 msgstr "Không thể bắt đầu thay đổi email"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:272
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:273
 msgid "Unavailable for everyone"
 msgstr "Không khả dụng cho tất cả mọi người"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:273
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:274
 msgid "Unavailable for everyone but staff"
 msgstr "Chỉ nhân viên mới thấy"
 
@@ -18978,7 +18982,7 @@ msgstr "Chỉ nhân viên mới thấy"
 #: src/components/modals/UserProfileActionsSheet.tsx:151
 #: src/components/modals/UserProfileActionsSheet.tsx:305
 #: src/components/modals/UserProfileMobileSheet.tsx:323
-#: src/components/modals/UserProfileModal.tsx:1051
+#: src/components/modals/UserProfileModal.tsx:1077
 #: src/components/uikit/ContextMenu/items/RelationshipMenuItems.tsx:230
 #: src/utils/RelationshipActionUtils.tsx:169
 msgid "Unblock"
@@ -18992,7 +18996,7 @@ msgstr "Bỏ chặn người dùng này trước khi gửi lời mời kết b�
 #: src/components/modals/tabs/BlockedUsersTab.tsx:56
 #: src/components/modals/UserProfileActionsSheet.tsx:149
 #: src/components/modals/UserProfileMobileSheet.tsx:321
-#: src/components/modals/UserProfileModal.tsx:1246
+#: src/components/modals/UserProfileModal.tsx:1272
 #: src/utils/RelationshipActionUtils.tsx:167
 msgid "Unblock User"
 msgstr "Bỏ chặn người dùng"
@@ -19165,7 +19169,7 @@ msgstr "Lỗi không xác định"
 msgid "Unknown Gift"
 msgstr "Quà không xác định"
 
-#: src/components/channel/InviteEmbed.tsx:359
+#: src/components/channel/InviteEmbed.tsx:375
 msgid "Unknown Invite"
 msgstr "Lời mời không xác định"
 
@@ -19205,11 +19209,11 @@ msgstr "vai-trò-không-xác-định"
 msgid "Unlimited"
 msgstr "Không giới hạn"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:266
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:267
 msgid "Unlimited emoji"
 msgstr "Biểu cảm không giới hạn"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:267
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:268
 msgid "Unlimited stickers"
 msgstr "Nhãn dán không giới hạn"
 
@@ -19254,7 +19258,7 @@ msgstr "Mở khóa nhãn dán trong DM với Plutonium"
 #: src/components/bottomsheets/ChannelDetailsBottomSheet.tsx:882
 #: src/components/bottomsheets/ChannelDetailsBottomSheet.tsx:1068
 #: src/components/bottomsheets/DMBottomSheet.tsx:648
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:321
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:348
 #: src/components/bottomsheets/VoiceLobbyBottomSheet.tsx:179
 #: src/components/bottomsheets/VoiceParticipantBottomSheet.tsx:253
 #: src/components/bottomsheets/VoiceParticipantBottomSheet.tsx:279
@@ -19285,8 +19289,8 @@ msgstr "Bỏ tắt tiếng hạng mục"
 msgid "Unmute Channel"
 msgstr "Bỏ tắt tiếng kênh"
 
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:224
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:296
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:251
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:323
 #: src/components/uikit/ContextMenu/FavoritesGuildContextMenu.tsx:55
 #: src/components/uikit/ContextMenu/items/GuildMenuItems.tsx:179
 msgid "Unmute Community"
@@ -19306,7 +19310,7 @@ msgstr "Bỏ tắt tiếng yêu thích"
 msgid "Unmute User"
 msgstr "Bỏ tắt tiếng người dùng"
 
-#: src/components/channel/MessageSearchBar/MessageSearchBar.tsx:934
+#: src/components/channel/MessageSearchBar/MessageSearchBar.tsx:962
 msgid "Unnamed"
 msgstr "Không tên"
 
@@ -19405,7 +19409,7 @@ msgid "Until I change it"
 msgstr "Cho đến khi tôi thay đổi"
 
 #: src/components/bottomsheets/DMBottomSheet.tsx:667
-#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:334
+#: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:361
 #: src/components/channel/ChannelHeader/ChannelNotificationSettingsDropdown.tsx:57
 #: src/components/channel/muteOptions.ts:39
 #: src/components/uikit/ContextMenu/items/CategoryMenuItems.tsx:147
@@ -19422,7 +19426,7 @@ msgstr "Email chưa xác minh"
 msgid "Up to 4K/60fps"
 msgstr "Lên đến 4K/60fps"
 
-#: src/components/channel/ChannelTextarea.tsx:835
+#: src/components/channel/ChannelTextarea.tsx:905
 msgid "Update"
 msgstr "Cập nhật"
 
@@ -19629,7 +19633,7 @@ msgstr "Tải lên âm thanh vào cửa"
 msgid "Upload Failed"
 msgstr "Tải lên thất bại"
 
-#: src/components/channel/ChannelTextarea.tsx:756
+#: src/components/channel/ChannelTextarea.tsx:826
 msgid "Upload file"
 msgstr "Tải lên tệp"
 
@@ -19868,11 +19872,11 @@ msgid "User Moved Channel"
 msgstr "Người dùng đã chuyển kênh"
 
 #: src/components/modals/tabs/ComponentGalleryTab/InputsTab.tsx:133
-#: src/components/modals/UserProfileModal.tsx:947
+#: src/components/modals/UserProfileModal.tsx:973
 msgid "User Profile"
 msgstr "Hồ sơ người dùng"
 
-#: src/components/modals/UserProfileModal.tsx:949
+#: src/components/modals/UserProfileModal.tsx:975
 msgid "User Profile: {tag}"
 msgstr "Hồ sơ người dùng: {tag}"
 
@@ -19993,7 +19997,7 @@ msgid "Values"
 msgstr "Các giá trị"
 
 #: src/components/modals/guildTabs/GuildVanityURLTab.tsx:177
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:269
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:270
 msgid "Vanity URL"
 msgstr "URL tùy chỉnh"
 
@@ -20059,14 +20063,14 @@ msgstr "Có thể cần xác minh trước khi xem mã dự phòng của bạn."
 #: src/components/auth/AuthPageHeader.tsx:49
 #: src/components/auth/InviteHeader.tsx:81
 #: src/components/auth/InviteHeader.tsx:226
-#: src/components/channel/InviteEmbed.tsx:287
-#: src/components/channel/InviteEmbed.tsx:430
+#: src/components/channel/InviteEmbed.tsx:296
+#: src/components/channel/InviteEmbed.tsx:446
 #: src/components/emojis/EmojiAttributionSubtext.tsx:143
 #: src/components/layout/GuildHeader.tsx:132
 msgid "Verified Community"
 msgstr "Cộng đồng đã xác minh"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:270
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:271
 msgid "Verified guild"
 msgstr "Guild đã xác minh"
 
@@ -20167,8 +20171,8 @@ msgstr "Chất lượng video"
 msgid "Video Settings"
 msgstr "Cài đặt video"
 
-#: src/components/channel/embeds/media/EmbedVideo.tsx:88
-#: src/components/channel/embeds/media/EmbedVideo.tsx:97
+#: src/components/channel/embeds/media/EmbedVideo.tsx:89
+#: src/components/channel/embeds/media/EmbedVideo.tsx:98
 #: src/components/channel/embeds/media/EmbedYouTube.tsx:84
 msgid "Video thumbnail"
 msgstr "Ảnh thu nhỏ video"
@@ -20240,7 +20244,7 @@ msgid "View Codes"
 msgstr "Xem mã"
 
 #: src/components/modals/UserProfileActionsSheet.tsx:194
-#: src/components/modals/UserProfileModal.tsx:1089
+#: src/components/modals/UserProfileModal.tsx:1115
 msgid "View Community Profile"
 msgstr "Xem hồ sơ cộng đồng"
 
@@ -20259,7 +20263,7 @@ msgid "View Gift Inventory"
 msgstr "Xem kho quà"
 
 #: src/components/modals/UserProfileActionsSheet.tsx:194
-#: src/components/modals/UserProfileModal.tsx:1089
+#: src/components/modals/UserProfileModal.tsx:1115
 msgid "View Global Profile"
 msgstr "Xem hồ sơ toàn cầu"
 
@@ -20329,7 +20333,7 @@ msgstr "Chọn loại vi phạm"
 msgid "Violent or Graphic Content"
 msgstr "Nội dung bạo lực hoặc gây sốc"
 
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:271
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:272
 msgid "VIP voice"
 msgstr "Giọng VIP"
 
@@ -20341,7 +20345,7 @@ msgstr "Nút hiển thị"
 #: src/components/modals/components/plutonium/SubscriptionCard.tsx:129
 #: src/components/modals/components/plutonium/VisionarySection.tsx:67
 #: src/components/modals/tabs/DeveloperOptionsTab/MockingTab.tsx:154
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:274
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:275
 msgid "Visionary"
 msgstr "Visionary"
 
@@ -20427,7 +20431,7 @@ msgid "Voice Calls"
 msgstr "Các cuộc gọi thoại"
 
 #: src/stores/QuickSwitcherStore.tsx:710
-#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:218
+#: src/utils/modals/guildTabs/GuildAuditLogTabUtils.ts:219
 msgid "Voice channel"
 msgstr "Kênh thoại"
 
@@ -20442,7 +20446,7 @@ msgstr "Kênh thoại"
 msgid "Voice Channel Full"
 msgstr "Kênh thoại đầy"
 
-#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:140
+#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:143
 #: src/components/modals/utils/settingsSearchIndex.ts:239
 msgid "Voice Channel Join Behavior"
 msgstr "Hành vi tham gia kênh thoại"
@@ -20559,7 +20563,7 @@ msgstr "Chúng tôi không thể tham gia cộng đồng này vào lúc này."
 msgid "We couldn't load the invites at this time."
 msgstr "Chúng tôi không thể tải lời mời vào lúc này."
 
-#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:554
+#: src/components/modals/tabs/ApplicationsTab/ApplicationDetail.tsx:555
 msgid "We couldn't load this application"
 msgstr "Chúng tôi không thể tải ứng dụng này"
 
@@ -20671,7 +20675,7 @@ msgid "We're having trouble connecting to Fluxer's servers. This could be a temp
 msgstr "Chúng tôi gặp khó khăn khi kết nối đến máy chủ của Fluxer. Có thể là do mạng tạm thời hoặc bảo trì theo lịch."
 
 #: src/components/modals/tabs/BetaCodesTab.tsx:322
-#: src/components/modals/tabs/DevicesTab.tsx:230
+#: src/components/modals/tabs/DevicesTab.tsx:233
 msgid "We're having trouble connecting to the space-time continuum. Please check your connection and try again."
 msgstr "Chúng tôi gặp khó khăn khi kết nối đến không-thời gian. Vui lòng kiểm tra kết nối và thử lại."
 
@@ -20759,7 +20763,7 @@ msgstr "Những chiến binh cuối tuần"
 msgid "Welcome and system messages will appear here."
 msgstr "Tin nhắn chào mừng và hệ thống sẽ xuất hiện ở đây."
 
-#: src/components/auth/AuthLoginLayout.tsx:235
+#: src/components/auth/AuthLoginLayout.tsx:236
 msgid "Welcome back"
 msgstr "Chào mừng bạn trở lại"
 
@@ -20820,7 +20824,7 @@ msgstr "Có gì mới?"
 msgid "What's included in your export:"
 msgstr "Những gì bao gồm trong bản xuất của bạn:"
 
-#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:118
+#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:121
 msgid "When disabled (default), typing indicators won't appear on the channel you're currently viewing."
 msgstr "Khi tắt (mặc định), chỉ báo đang nhập sẽ không xuất hiện trên kênh bạn đang xem."
 
@@ -20836,7 +20840,7 @@ msgstr "Khi bật, chạm nhanh vào phím tắt nhấn để nói sẽ giữ mi
 msgid "When enabled, reveals debugging menus throughout the app to inspect and copy raw JSON objects of internal data structures like messages, channels, users, and communities. Also includes tools to debug the Fluxer Markdown parser performance and AST for any given message."
 msgstr "Khi bật, sẽ hiển thị các menu gỡ lỗi trong toàn ứng dụng để kiểm tra và sao chép đối tượng JSON thô của cấu trúc dữ liệu nội bộ như tin nhắn, kênh, người dùng và cộng đồng. Cũng bao gồm công cụ gỡ lỗi hiệu năng trình phân tích cú pháp Fluxer Markdown và AST cho bất kỳ tin nhắn nào."
 
-#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:132
+#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:135
 msgid "When enabled, shortcut badges are hidden in tooltip popups."
 msgstr "Khi bật, huy hiệu phím tắt sẽ bị ẩn trong tooltip."
 
@@ -20868,7 +20872,7 @@ msgstr "Khi bật, sử dụng vùng ngôn ngữ máy tính của bạn để x�
 msgid "When enabled, you can favorite channels and they'll appear in the Favorites section. When disabled, all favorite-related UI elements (buttons, menu items) will be hidden. Your existing favorites will be preserved."
 msgstr "Khi bật, bạn có thể đánh dấu kênh yêu thích và chúng sẽ xuất hiện trong mục Yêu thích. Khi tắt, tất cả yếu tố giao diện liên quan đến yêu thích (nút, mục menu) sẽ bị ẩn. Các yêu thích hiện có của bạn vẫn được giữ."
 
-#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:145
+#: src/components/modals/tabs/AppearanceTab/InterfaceTab.tsx:148
 msgid "When enabled, you'll need to double-click on voice channels to join them. When disabled (default), single-clicking will join the channel immediately."
 msgstr "Khi bật, bạn cần nhấp đôi vào kênh thoại để tham gia. Khi tắt (mặc định), nhấp một lần sẽ tham gia ngay."
 
@@ -20970,7 +20974,7 @@ msgstr "Hàng năm {yearlyPrice}"
 msgid "yesterday"
 msgstr "hôm qua"
 
-#: src/components/channel/MessageSearchBar/MessageSearchBar.tsx:703
+#: src/components/channel/MessageSearchBar/MessageSearchBar.tsx:731
 msgid "Yesterday"
 msgstr "Hôm qua"
 
@@ -21013,7 +21017,7 @@ msgstr "Bạn đang chỉnh sửa hồ sơ theo cộng đồng. Hồ sơ này s�
 msgid "You are in slowmode. Please wait before sending another message."
 msgstr "Bạn đang ở chế độ chậm. Vui lòng đợi trước khi gửi tin nhắn tiếp theo."
 
-#: src/components/modals/components/ClientInfo.tsx:63
+#: src/components/modals/components/ClientInfo.tsx:87
 msgid "You are now a developer!"
 msgstr "Bạn giờ là nhà phát triển!"
 
@@ -21113,7 +21117,7 @@ msgstr "Bạn có thể dùng liên kết và Markdown để định dạng văn
 msgid "You can't add new reactions while you're on timeout."
 msgstr "Bạn không thể thêm phản ứng mới khi đang bị timeout."
 
-#: src/components/modals/UserProfileModal.tsx:1173
+#: src/components/modals/UserProfileModal.tsx:1199
 msgid "You can't befriend yourself"
 msgstr "Bạn không thể kết bạn với chính mình"
 
@@ -21128,7 +21132,7 @@ msgstr "Bạn không thể tương tác với phản ứng trong kết quả tì
 msgid "You can't join while you're on timeout."
 msgstr "Bạn không thể tham gia khi đang bị timeout."
 
-#: src/components/modals/UserProfileModal.tsx:1185
+#: src/components/modals/UserProfileModal.tsx:1211
 #: src/components/popouts/UserProfilePopout.tsx:284
 #: src/components/profile/ProfilePreview.tsx:284
 msgid "You can't message yourself"
@@ -21213,7 +21217,7 @@ msgstr "Bạn không thể bật lại tiếng vì bạn đã bị người đi�
 msgid "You do not have access to the channel where this message was sent."
 msgstr "Bạn không có quyền truy cập vào kênh nơi tin nhắn này được gửi."
 
-#: src/components/channel/ChannelTextarea.tsx:616
+#: src/components/channel/ChannelTextarea.tsx:680
 msgid "You do not have permission to send messages in this channel."
 msgstr "Bạn không có quyền gửi tin nhắn trong kênh này."
 
@@ -21439,7 +21443,7 @@ msgstr "Bạn sẽ hiện là ngoại tuyến"
 msgid "You'll configure which permissions the bot receives on the next screen."
 msgstr "Bạn sẽ chọn các quyền bot nhận ở màn hình tiếp theo."
 
-#: src/components/modals/tabs/DevicesTab.tsx:337
+#: src/components/modals/tabs/DevicesTab.tsx:340
 msgid "You'll have to log back in on all logged out devices"
 msgstr "Bạn sẽ phải đăng nhập lại trên tất cả thiết bị đã đăng xuất"
 
@@ -21508,7 +21512,7 @@ msgstr "Bạn đang ở trong kênh thoại"
 msgid "You're sending messages too quickly"
 msgstr "Bạn đang gửi tin nhắn quá nhanh"
 
-#: src/components/channel/Messages.tsx:912
+#: src/components/channel/Messages.tsx:923
 msgid "You're viewing older messages"
 msgstr "Bạn đang xem tin nhắn cũ hơn"
 

@@ -28,9 +28,17 @@ interface NagbarButtonProps {
 	isMobile: boolean;
 	className?: string;
 	disabled?: boolean;
+	submitting?: boolean;
 }
 
-export const NagbarButton = ({children, onClick, isMobile, className, disabled = false}: NagbarButtonProps) => {
+export const NagbarButton = ({
+	children,
+	onClick,
+	isMobile,
+	className,
+	disabled = false,
+	submitting,
+}: NagbarButtonProps) => {
 	return (
 		<Button
 			variant="inverted-outline"
@@ -40,6 +48,7 @@ export const NagbarButton = ({children, onClick, isMobile, className, disabled =
 			className={clsx(styles.button, className)}
 			onClick={onClick}
 			disabled={disabled}
+			submitting={submitting}
 		>
 			{children}
 		</Button>

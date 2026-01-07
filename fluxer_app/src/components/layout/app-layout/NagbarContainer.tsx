@@ -25,6 +25,7 @@ import {DesktopDownloadNagbar} from './nagbars/DesktopDownloadNagbar';
 import {DesktopNotificationNagbar} from './nagbars/DesktopNotificationNagbar';
 import {EmailVerificationNagbar} from './nagbars/EmailVerificationNagbar';
 import {GiftInventoryNagbar} from './nagbars/GiftInventoryNagbar';
+import {GuildMembershipCtaNagbar} from './nagbars/GuildMembershipCtaNagbar';
 import {MobileDownloadNagbar} from './nagbars/MobileDownloadNagbar';
 import {PendingBulkDeletionNagbar} from './nagbars/PendingBulkDeletionNagbar';
 import {PremiumExpiredNagbar} from './nagbars/PremiumExpiredNagbar';
@@ -66,6 +67,8 @@ export const NagbarContainer: React.FC<NagbarContainerProps> = observer(({nagbar
 						return <DesktopDownloadNagbar key={nagbar.type} isMobile={mobileLayout.enabled} />;
 					case NagbarType.MOBILE_DOWNLOAD:
 						return <MobileDownloadNagbar key={nagbar.type} isMobile={mobileLayout.enabled} />;
+					case NagbarType.GUILD_MEMBERSHIP_CTA:
+						return <GuildMembershipCtaNagbar key={nagbar.type} isMobile={mobileLayout.enabled} />;
 					default:
 						return null;
 				}
