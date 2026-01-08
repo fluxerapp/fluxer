@@ -215,29 +215,35 @@ export const GlobalNameType = z
 		return !lowerValue.includes('system message');
 	}, 'Global name cannot contain "system message"');
 
-export const URLType = z
-	.string()
-	.transform(normalizeString)
-	.refine((value) => value.length >= 1 && value.length <= 2048, 'URL length must be between 1 and 2048 characters')
-	.refine((value) => {
-		if (!value.startsWith('http://') && !value.startsWith('https://')) {
-			return false;
-		}
-		try {
-			const url = new URL(value);
-			return PROTOCOLS.includes(url.protocol.slice(0, -1));
-		} catch {
-			return false;
-		}
-	}, 'Invalid URL format')
-	.refine(
-		(value) =>
-			validator.isURL(value, {
-				...URL_VALIDATOR_OPTIONS,
-				require_tld: Config.nodeEnv !== 'development',
-			}),
-		'Invalid URL format',
-	);
+const createUrlSchema = (allowFragments: boolean) => {
+	return z
+		.string()
+		.transform(normalizeString)
+		.refine((value) => value.length >= 1 && value.length <= 2048, 'URL length must be between 1 and 2048 characters')
+		.refine((value) => {
+			if (!value.startsWith('http://') && !value.startsWith('https://')) {
+				return false;
+			}
+			try {
+				const url = new URL(value);
+				return PROTOCOLS.includes(url.protocol.slice(0, -1));
+			} catch {
+				return false;
+			}
+		}, 'Invalid URL format')
+		.refine(
+			(value) =>
+				validator.isURL(value, {
+					...URL_VALIDATOR_OPTIONS,
+					allow_fragments: allowFragments,
+					require_tld: Config.nodeEnv !== 'development',
+				}),
+			'Invalid URL format',
+		);
+};
+
+export const URLType = createUrlSchema(false);
+export const URLWithFragmentType = createUrlSchema(true);
 
 export const AttachmentURLType = z
 	.string()

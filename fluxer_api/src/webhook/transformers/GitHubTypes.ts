@@ -17,7 +17,7 @@
  * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import {createStringType, Int32Type, URLType, z} from '~/Schema';
+import {createStringType, Int32Type, Int64Type, URLType, URLWithFragmentType, z} from '~/Schema';
 
 const GitHubUser = z.object({
 	id: Int32Type,
@@ -63,8 +63,8 @@ const GitHubCheckRun = z.object({
 });
 
 const GitHubComment = z.object({
-	id: Int32Type,
-	html_url: URLType,
+	id: Int64Type,
+	html_url: URLWithFragmentType,
 	user: GitHubUser,
 	commit_id: createStringType(0, 152133).nullish(),
 	body: createStringType(0, 152133),
@@ -81,13 +81,13 @@ const GitHubDiscussion = z.object({
 	title: createStringType(0, 152133),
 	number: Int32Type,
 	html_url: URLType,
-	answer_html_url: URLType.nullish(),
+	answer_html_url: URLWithFragmentType.nullish(),
 	body: createStringType(0, 152133).nullish(),
 	user: GitHubUser,
 });
 
 const GitHubIssue = z.object({
-	id: Int32Type,
+	id: Int64Type,
 	number: Int32Type,
 	html_url: URLType,
 	user: GitHubUser,
