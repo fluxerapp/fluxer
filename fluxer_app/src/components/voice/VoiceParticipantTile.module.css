@@ -29,7 +29,7 @@
 	justify-content: center;
 	background-color: rgb(0 0 0 / 0.7);
 	z-index: 10;
-	pointer-events: none;
+	pointer-events: auto;
 	border-radius: var(--radius-lg);
 }
 
