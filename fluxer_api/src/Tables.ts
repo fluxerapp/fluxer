@@ -560,10 +560,15 @@ export const GiftCodesByCreator = defineTable<GiftCodeByCreatorRow, 'created_by_
 	primaryKey: ['created_by_user_id', 'code'],
 });
 
-export const GiftCodesByPaymentIntent = defineTable<GiftCodeByPaymentIntentRow, 'stripe_payment_intent_id'>({
+export const GiftCodesByPaymentIntent = defineTable<
+	GiftCodeByPaymentIntentRow,
+	'stripe_payment_intent_id' | 'code',
+	'stripe_payment_intent_id'
+>({
 	name: 'gift_codes_by_payment_intent',
 	columns: GIFT_CODE_BY_PAYMENT_INTENT_COLUMNS,
-	primaryKey: ['stripe_payment_intent_id'],
+	primaryKey: ['stripe_payment_intent_id', 'code'],
+	partitionKey: ['stripe_payment_intent_id'],
 });
 
 export const GiftCodesByRedeemer = defineTable<GiftCodeByRedeemerRow, 'redeemed_by_user_id' | 'code'>({

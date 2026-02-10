@@ -114,9 +114,13 @@ export class StripeWebhookService {
 			return;
 		}
 
-		if (payment.status !== 'pending') {
+		const recoverGiftWithoutCode = payment.isGift && payment.status === 'completed' && !payment.giftCode;
+		if (payment.status !== 'pending' && !recoverGiftWithoutCode) {
 			Logger.debug({sessionId: session.id, status: payment.status}, 'Payment already processed');
 			return;
+		}
+		if (recoverGiftWithoutCode) {
+			Logger.warn({sessionId: session.id}, 'Recovering gift checkout with missing gift code');
 		}
 
 		const productInfo = this.productRegistry.getProduct(payment.priceId!);
@@ -140,7 +144,7 @@ export class StripeWebhookService {
 			amount_cents: session.amount_total || 0,
 			currency: session.currency || 'usd',
 			status: 'completed',
-			completed_at: new Date(),
+			completed_at: payment.completedAt ?? new Date(),
 		});
 
 		const customerId = extractId(session.customer);

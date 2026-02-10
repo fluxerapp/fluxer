@@ -154,6 +154,21 @@ export class StripeGiftService {
 			Logger.debug({checkoutSessionId, code: payment.giftCode}, 'Gift code already exists for checkout session');
 			return;
 		}
+		if (paymentIntentId) {
+			const existingGift = await this.userRepository.findGiftCodeByPaymentIntent(paymentIntentId);
+			if (existingGift) {
+				await this.userRepository.linkGiftCodeToCheckoutSession(existingGift.code, checkoutSessionId);
+				await this.userRepository.updatePayment({
+					...payment.toRow(),
+					gift_code: existingGift.code,
+				});
+				Logger.warn(
+					{checkoutSessionId, paymentIntentId, code: existingGift.code},
+					'Recovered existing gift code for checkout session',
+				);
+				return;
+			}
+		}
 
 		const code = await this.generateUniqueGiftCode();
 		let visionarySequenceNumber: number | null = null;
