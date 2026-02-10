@@ -10752,8 +10752,8 @@ msgid "Languages…"
 msgstr "Languages…"
 
 #: src/components/modals/utils/settingsConstants.tsx:225
-msgid "Languge & Time"
-msgstr "Languge & Time"
+msgid "Language & Time"
+msgstr "Language & Time"
 
 #: src/components/modals/tabs/ComponentGalleryTab/SelectionsTab.tsx:122
 msgid "Large"
