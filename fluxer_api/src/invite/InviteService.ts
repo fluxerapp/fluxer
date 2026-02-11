@@ -25,7 +25,16 @@ import {
 	type UserID,
 	vanityCodeToInviteCode,
 } from '~/BrandedTypes';
-import {ChannelTypes, GuildFeatures, GuildOperations, InviteTypes, MAX_GUILD_INVITES, Permissions} from '~/Constants';
+import {
+	ChannelTypes,
+	GuildFeatures,
+	GuildOperations,
+	InviteTypes,
+	MAX_GUILD_INVITES,
+	MAX_GUILD_MEMBERS,
+	MAX_GUILD_MEMBERS_VERY_LARGE,
+	Permissions,
+} from '~/Constants';
 import type {ChannelService} from '~/channel/services/ChannelService';
 import {AuditLogActionType} from '~/constants/AuditLogActionType';
 import {
@@ -422,8 +431,11 @@ export class InviteService {
 		await this.guildService.checkUserBanStatus({userId, guildId: invite.guildId});
 
 		const {memberCount} = await this.gatewayService.getGuildCounts(invite.guildId);
-		if (memberCount >= 1000) {
-			throw new MaxGuildMembersError(1000);
+		const maxGuildMembers = guild.features.has(GuildFeatures.VERY_LARGE_GUILD)
+			? MAX_GUILD_MEMBERS_VERY_LARGE
+			: MAX_GUILD_MEMBERS;
+		if (memberCount >= maxGuildMembers) {
+			throw new MaxGuildMembersError(maxGuildMembers);
 		}
 
 		if (invite.temporary) {

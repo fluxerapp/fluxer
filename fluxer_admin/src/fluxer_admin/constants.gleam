@@ -457,6 +457,8 @@ pub const feature_disallow_unclaimed_accounts = GuildFeature(
 
 pub const feature_large_guild_override = GuildFeature("LARGE_GUILD_OVERRIDE")
 
+pub const feature_very_large_guild = GuildFeature("VERY_LARGE_GUILD")
+
 pub fn get_guild_features() -> List(GuildFeature) {
   [
     feature_animated_icon,
@@ -478,6 +480,7 @@ pub fn get_guild_features() -> List(GuildFeature) {
     feature_expression_purge_allowed,
     feature_disallow_unclaimed_accounts,
     feature_large_guild_override,
+    feature_very_large_guild,
   ]
 }
 

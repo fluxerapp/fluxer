@@ -71,6 +71,7 @@ export const GuildFeatures = {
 	VISIONARY: 'VISIONARY',
 	OPERATOR: 'OPERATOR',
 	LARGE_GUILD_OVERRIDE: 'LARGE_GUILD_OVERRIDE',
+	VERY_LARGE_GUILD: 'VERY_LARGE_GUILD',
 } as const;
 
 export const GuildSplashCardAlignment = {

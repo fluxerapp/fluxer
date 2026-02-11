@@ -34,6 +34,8 @@ export const MAX_GUILD_STICKERS = 50;
 export const MAX_GUILD_STICKERS_MORE_STICKERS = 250;
 export const MAX_GUILD_INVITES = 1000;
 export const MAX_GUILD_ROLES = 250;
+export const MAX_GUILD_MEMBERS = 1000;
+export const MAX_GUILD_MEMBERS_VERY_LARGE = 10000;
 
 export const MAX_WEBHOOKS_PER_CHANNEL = 15;
 export const MAX_WEBHOOKS_PER_GUILD = 1000;

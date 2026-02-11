@@ -19,12 +19,21 @@
 
 import type {GuildID, RoleID, UserID} from '~/BrandedTypes';
 import {createChannelID, createRoleID} from '~/BrandedTypes';
-import {MAX_GUILDS_NON_PREMIUM, MAX_GUILDS_PREMIUM, Permissions, SystemChannelFlags} from '~/Constants';
+import {
+	GuildFeatures,
+	MAX_GUILD_MEMBERS,
+	MAX_GUILD_MEMBERS_VERY_LARGE,
+	MAX_GUILDS_NON_PREMIUM,
+	MAX_GUILDS_PREMIUM,
+	Permissions,
+	SystemChannelFlags,
+} from '~/Constants';
 import type {ChannelService} from '~/channel/services/ChannelService';
 import {AuditLogActionType} from '~/constants/AuditLogActionType';
 import {JoinSourceTypes} from '~/constants/Guild';
 import {
 	InputValidationError,
+	MaxGuildMembersError,
 	MaxGuildsError,
 	MissingPermissionsError,
 	UnknownGuildError,
@@ -436,6 +445,13 @@ export class GuildMemberOperationsService {
 
 			const user = await this.userRepository.findUnique(userId);
 			if (!user) throw new UnknownGuildError();
+
+			const maxGuildMembers = guild.features.has(GuildFeatures.VERY_LARGE_GUILD)
+				? MAX_GUILD_MEMBERS_VERY_LARGE
+				: MAX_GUILD_MEMBERS;
+			if (guild.memberCount >= maxGuildMembers) {
+				throw new MaxGuildMembersError(maxGuildMembers);
+			}
 
 			if (!skipBanCheck) {
 				await this.validationService.checkUserBanStatus({userId, guildId});
