@@ -35,6 +35,7 @@ exec SERVICE CMD:
   {{compose_base}} exec {{SERVICE}} sh -c "{{CMD}}"
 
 livekit-sync:
+  #!/usr/bin/env bash
   set -euo pipefail
   if [ ! -f {{env_file}} ]; then
   echo "{{env_file}} missing"
@@ -43,6 +44,7 @@ livekit-sync:
   node --env-file {{env_file}} scripts/just/livekit-sync.js --output dev/livekit.yaml
 
 ensure-network:
+  #!/usr/bin/env bash
   set -euo pipefail
   docker network inspect {{network_name}} >/dev/null 2>&1 || docker network create {{network_name}}
 
@@ -51,6 +53,7 @@ bootstrap:
   just livekit-sync
 
 setup:
+  #!/usr/bin/env bash
   set -euo pipefail
   just ensure-network
   if [ ! -f dev/.env ]; then
@@ -79,6 +82,7 @@ snow count="1":
   @cargo run --release --quiet --manifest-path scripts/snowflake-generator/Cargo.toml -- --count {{count}}
 
 integration-tests:
+  #!/usr/bin/env bash
   set -euo pipefail
   trap 'docker compose -f tests/integration/compose.yaml down' EXIT
   docker compose -f tests/integration/compose.yaml up --build --abort-on-container-exit integration-tests
