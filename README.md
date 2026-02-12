@@ -1,6 +1,8 @@
-<div align="left" style="margin:12px 0 8px;">
-  <img src="./media/logo-graphic.png" alt="Fluxer graphic logo" width="360">
-</div>
+<a href="https://fluxer.app/" target="_blank">
+  <div align="left" style="margin:12px 0 8px;">
+    <img src="./media/logo-graphic.png" alt="Fluxer graphic logo" width="360">
+  </div>
+</a>
 
 ---
 
