@@ -55,7 +55,7 @@ const getGuildJoinMessagesPlaintext = (i18n: I18n): Array<(username: string) => 
 	(username) => i18n._(msg`You've arrived, ${username}! Enjoy the Jigowatt Joyride!`),
 	(username) => i18n._(msg`${username} Was Turned To Steel, In The Great Magnetic Field!`),
 	(username) => i18n._(msg`Get comfy ${username}, enjoy a can of Slurm!`),
-	(username) => i18n._(msg`${username}, HATE. LET ME TELL YOU HOW MUCH I\'VE COME TO HATE YOU SINCE I BEGAN TO LIVE.`),
+	(username) => i18n._(msg`${username}, HATE. LET ME TELL YOU HOW MUCH I'VE COME TO HATE YOU SINCE I BEGAN TO LIVE.`),
 	(username) => il8n._(msg`${username}? ${username}!? SNAAAAAAAAAAAAKEEE!!!!`),
 	(username) => il8n._(msg`That ${username} is a Spy!`),
 	(username) => il8n._(msg`${username}, Try to remember some of the basics of CQC.`),
