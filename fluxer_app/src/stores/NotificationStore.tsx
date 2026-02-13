@@ -430,7 +430,9 @@ class NotificationStore {
 		try {
 			const granted = await NotificationUtils.isGranted();
 			runInAction(() => {
-				this.browserNotificationsEnabled = granted;
+				if (!granted) {
+					this.browserNotificationsEnabled = false;
+				}
 			});
 			if (granted) {
 				if (shouldManagePushSubscriptions()) {
