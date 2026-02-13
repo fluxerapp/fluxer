@@ -69,15 +69,15 @@ export const SystemMessageUtils = {
 		const messageGenerator = messageList[messageIndex];
 		return (
 			<>
-			{messageGenerator('__USERNAME__')
-				.split('__USERNAME__')
-				.map((part, i, arr) => (
-					<React.Fragment key={i}>
-					{part}
-					{i < arr.length - 1 && username}
-					</React.Fragment>
-				))}
-				</>
+				{messageGenerator('__USERNAME__')
+					.split('__USERNAME__')
+					.map((part, i, arr) => (
+						<React.Fragment key={i}>
+							{part}
+							{i < arr.length - 1 && username}
+						</React.Fragment>
+					))}
+			</>
 		);
 	},
 
@@ -91,7 +91,7 @@ export const SystemMessageUtils = {
 			case MessageTypes.USER_JOIN: {
 				const messageList = getGuildJoinMessagesPlaintext(i18n);
 				const messageIndex = SnowflakeUtils.extractTimestamp(message.id) % messageList.length;
-				const messageGenerator = messageList[messageIndex];
+					const messageGenerator = messageList[messageIndex];
 				return messageGenerator(username);
 			}
 			case MessageTypes.CHANNEL_PINNED_MESSAGE:
