@@ -53,6 +53,13 @@ const getGuildJoinMessagesPlaintext = (i18n: I18n): Array<(username: string) => 
 	(username) => i18n._(msg`You made it, ${username}! We're about to hit 88mph!`),
 	(username) => i18n._(msg`You're here, ${username}! Just in time to rock 'n' roll!`),
 	(username) => i18n._(msg`You've arrived, ${username}! Enjoy the Jigowatt Joyride!`),
+	(username) => i18n._(msg`${username} Was Turned To Steel, In The Great Magnetic Field!`),
+	(username) => i18n._(msg`Get comfy ${username}, enjoy a can of Slurm!`),
+	(username) => i18n._(msg`${username}, HATE. LET ME TELL YOU HOW MUCH I\'VE COME TO HATE YOU SINCE I BEGAN TO LIVE.`),
+	(username) => il8n._(msg`${username}? ${username}!? SNAAAAAAAAAAAAKEEE!!!!`),
+	(username) => il8n._(msg`That ${username} is a Spy!`),
+	(username) => il8n._(msg`${username}, Try to remember some of the basics of CQC.`),
+	(username) => il8n._(msg`Well, ${username}! And about time, too!`),
 ];
 
 export const SystemMessageUtils = {
@@ -62,15 +69,15 @@ export const SystemMessageUtils = {
 		const messageGenerator = messageList[messageIndex];
 		return (
 			<>
-				{messageGenerator('__USERNAME__')
-					.split('__USERNAME__')
-					.map((part, i, arr) => (
-						<React.Fragment key={i}>
-							{part}
-							{i < arr.length - 1 && username}
-						</React.Fragment>
-					))}
-			</>
+			{messageGenerator('__USERNAME__')
+				.split('__USERNAME__')
+				.map((part, i, arr) => (
+					<React.Fragment key={i}>
+					{part}
+					{i < arr.length - 1 && username}
+					</React.Fragment>
+				))}
+				</>
 		);
 	},
 
@@ -91,7 +98,7 @@ export const SystemMessageUtils = {
 				return i18n._(msg`${username} pinned a message to this channel.`);
 			case MessageTypes.RECIPIENT_ADD: {
 				const mentionedUser =
-					message.mentions && message.mentions.length > 0 ? UserStore.getUser(message.mentions[0].id) : null;
+				message.mentions && message.mentions.length > 0 ? UserStore.getUser(message.mentions[0].id) : null;
 				if (mentionedUser) {
 					return i18n._(msg`${username} added ${mentionedUser.username} to the group.`);
 				}
