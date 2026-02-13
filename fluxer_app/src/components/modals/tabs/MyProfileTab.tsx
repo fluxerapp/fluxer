@@ -657,7 +657,7 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 											<Input
 												{...form.register('nick')}
 												label={t`Community Nickname`}
-												placeholder={user.username}
+												placeholder={user.displayName}
 												maxLength={32}
 												value={form.watch('nick') || ''}
 												footer={
