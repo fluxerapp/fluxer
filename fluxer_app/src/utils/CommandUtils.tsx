@@ -201,8 +201,8 @@ export async function executeCommand(command: ParsedCommand, channelId: string, 
 			}
 
 			const currentMember = GuildMemberStore.getMember(guildId, currentUserId);
-			const prevNickname = currentMember?.nick || UserStore.getCurrentUser()?.username || 'Unknown';
-			const newNickname = command.nickname || UserStore.getCurrentUser()?.username || 'Unknown';
+			const prevNickname = currentMember?.nick || UserStore.getCurrentUser()?.globalName || 'Unknown';
+			const newNickname = command.nickname || UserStore.getCurrentUser()?.globalName || 'Unknown';
 
 			await GuildMemberActionCreators.updateProfile(guildId, {
 				nick: command.nickname || null,
@@ -255,7 +255,7 @@ export async function executeCommand(command: ParsedCommand, channelId: string, 
 				await PrivateChannelActionCreators.openDMChannel(command.userId);
 			} catch (_error) {
 				const user = UserStore.getUser(command.userId);
-				const username = user?.username || 'user';
+				const username = user?.globalName || user?.username || 'user';
 
 				const systemMessage = createSystemMessage(
 					channelId,
