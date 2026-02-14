@@ -34,7 +34,7 @@ export const GuildDeleteModal = observer(({guildId}: {guildId: string}) => {
 
 	const onSubmit = async () => {
 		await GuildActionCreators.remove(guildId);
-		ModalActionCreators.pop();
+		ModalActionCreators.popAll();
 		ToastActionCreators.createToast({type: 'success', children: t`Community deleted`});
 	};
 
