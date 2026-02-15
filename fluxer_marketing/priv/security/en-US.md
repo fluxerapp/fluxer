@@ -63,7 +63,7 @@ In addition, we generally do not prioritize low-impact reports (for example miss
 
 ## How to report
 
-Email your report to security@fluxer.ap.
+Email your report to security@fluxer.app.
 
 Please include:
 
