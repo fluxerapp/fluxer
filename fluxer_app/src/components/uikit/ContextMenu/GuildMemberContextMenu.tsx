@@ -85,7 +85,7 @@ export const GuildMemberContextMenu: React.FC<GuildMemberContextMenuProps> = obs
 		const targetHasModerateMembersPermission =
 			guildSnapshot !== undefined && PermissionUtils.can(Permissions.MODERATE_MEMBERS, user.id, guildSnapshot);
 		const canTimeout = !isCurrentUser && canModerateMembers && !targetHasModerateMembersPermission;
-		const canTransfer = !isCurrentUser && isOwner;
+		const canTransfer = !isCurrentUser && isOwner && !isBot;
 		const developerMode = UserSettingsStore.developerMode;
 
 		const hasManageNicknamesPermission = PermissionStore.can(Permissions.MANAGE_NICKNAMES, {guildId});
@@ -117,7 +117,7 @@ export const GuildMemberContextMenu: React.FC<GuildMemberContextMenuProps> = obs
 						))}
 				</MenuGroup>
 
-				{canTransfer && member && !isBot && (
+				{canTransfer && member && (
 					<MenuGroup>
 						<TransferOwnershipMenuItem guildId={guildId} user={user} member={member} onClose={onClose} />
 					</MenuGroup>
