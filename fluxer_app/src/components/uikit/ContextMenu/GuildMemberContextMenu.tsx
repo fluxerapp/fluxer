@@ -117,7 +117,7 @@ export const GuildMemberContextMenu: React.FC<GuildMemberContextMenuProps> = obs
 						))}
 				</MenuGroup>
 
-				{canTransfer && member && (
+				{canTransfer && member && !isBot && (
 					<MenuGroup>
 						<TransferOwnershipMenuItem guildId={guildId} user={user} member={member} onClose={onClose} />
 					</MenuGroup>
