@@ -106,6 +106,14 @@ const ReindexControls: FC<{config: Config; csrfToken: string}> = ({config, csrfT
 			<ReindexButton config={config} title="Reports" indexType="reports" csrfToken={csrfToken} />
 			<ReindexButton config={config} title="Audit Logs" indexType="audit_logs" csrfToken={csrfToken} />
 			<Heading level={3} class="subtitle mt-6 text-neutral-900">
+				Discovery Index
+			</Heading>
+			<Text color="muted" size="sm" class="mb-3">
+				Rebuilds the discovery search index for all approved discoverable communities. This syncs guild metadata,
+				descriptions, categories, and online counts.
+			</Text>
+			<ReindexButton config={config} title="Discovery Index" indexType="discovery" csrfToken={csrfToken} />
+			<Heading level={3} class="subtitle mt-6 text-neutral-900">
 				Guild-specific Search Indexes
 			</Heading>
 			<Text color="muted" size="sm" class="mb-3">

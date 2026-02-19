@@ -114,10 +114,6 @@ vi.mock('@app/lib/HttpClient', () => {
 		limits: {version: 1, traitDefinitions: [], rules: []},
 		app_public: {
 			sentry_dsn: '',
-			sentry_proxy_path: '',
-			sentry_report_host: '',
-			sentry_project_id: '',
-			sentry_public_key: '',
 		},
 	};
 

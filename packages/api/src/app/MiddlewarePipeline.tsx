@@ -38,6 +38,7 @@ import type {Context as HonoContext} from 'hono';
 export interface MiddlewarePipelineOptions {
 	logger: ILogger;
 	nodeEnv: string;
+	corsOrigins: Array<string>;
 	setSentryUser?: (user: {id?: string; username?: string; email?: string; ip_address?: string}) => void;
 	isTelemetryActive?: () => boolean;
 }
@@ -56,7 +57,7 @@ function attachTraceparentHeader(ctx: HonoContext<HonoEnv>): void {
 }
 
 export function configureMiddleware(routes: HonoApp, options: MiddlewarePipelineOptions): void {
-	const {logger, nodeEnv, setSentryUser, isTelemetryActive} = options;
+	const {logger, nodeEnv, corsOrigins, setSentryUser, isTelemetryActive} = options;
 
 	const requestTelemetry = createServiceTelemetry({
 		serviceName: 'fluxer-api',
@@ -65,6 +66,7 @@ export function configureMiddleware(routes: HonoApp, options: MiddlewarePipeline
 
 	applyMiddlewareStack(routes, {
 		requestId: {},
+		cors: {origins: corsOrigins},
 		tracing: requestTelemetry.tracing,
 		metrics: {
 			enabled: true,

@@ -30,15 +30,10 @@ export interface AppProxyResult {
 export async function createAppProxyApp(options: CreateAppProxyAppOptions): Promise<AppProxyResult> {
 	const {
 		assetsPath = '/assets',
-		config,
 		cspDirectives,
 		customMiddleware = [],
 		logger,
 		metricsCollector,
-		rateLimitService = null,
-		sentryProxyEnabled = true,
-		sentryProxyPath = '/sentry',
-		sentryProxyRouteEnabled = true,
 		staticCDNEndpoint,
 		staticDir,
 		tracing,
@@ -48,13 +43,9 @@ export async function createAppProxyApp(options: CreateAppProxyAppOptions): Prom
 
 	applyAppProxyMiddleware({
 		app,
-		config,
 		customMiddleware,
 		logger,
 		metricsCollector,
-		rateLimitService,
-		sentryProxyEnabled,
-		sentryProxyPath,
 		tracing,
 	});
 
@@ -63,9 +54,6 @@ export async function createAppProxyApp(options: CreateAppProxyAppOptions): Prom
 		assetsPath,
 		cspDirectives,
 		logger,
-		sentryProxy: config.sentry_proxy,
-		sentryProxyPath,
-		sentryProxyRouteEnabled,
 		staticCDNEndpoint,
 		staticDir,
 	});

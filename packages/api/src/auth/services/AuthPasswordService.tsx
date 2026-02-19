@@ -20,6 +20,7 @@
 import crypto from 'node:crypto';
 import {createPasswordResetToken} from '@fluxer/api/src/BrandedTypes';
 import {Config} from '@fluxer/api/src/Config';
+import type {IEmailDnsValidationService} from '@fluxer/api/src/infrastructure/IEmailDnsValidationService';
 import {Logger} from '@fluxer/api/src/Logger';
 import type {AuthSession} from '@fluxer/api/src/models/AuthSession';
 import type {User} from '@fluxer/api/src/models/User';
@@ -111,6 +112,7 @@ export class AuthPasswordService {
 	constructor(
 		private repository: IUserRepository,
 		private emailService: IEmailService,
+		private emailDnsValidationService: IEmailDnsValidationService,
 		private rateLimitService: IRateLimitService,
 		private generateSecureToken: () => Promise<string>,
 		private handleBanStatus: (user: User) => Promise<User>,
@@ -234,6 +236,11 @@ export class AuthPasswordService {
 				limit: exceeded.result.limit,
 				resetTime: exceeded.result.resetTime,
 			});
+		}
+
+		const hasValidDns = await this.emailDnsValidationService.hasValidDnsRecords(data.email);
+		if (!hasValidDns) {
+			throw InputValidationError.fromCode('email', ValidationErrorCodes.INVALID_EMAIL_ADDRESS);
 		}
 
 		const user = await this.repository.findByEmail(data.email);

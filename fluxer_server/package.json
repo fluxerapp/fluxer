@@ -24,10 +24,9 @@
 		"@fluxer/kv_client": "workspace:*",
 		"@fluxer/logger": "workspace:*",
 		"@fluxer/media_proxy": "workspace:*",
-		"@fluxer/queue": "workspace:*",
+		"@fluxer/nats": "workspace:*",
 		"@fluxer/s3": "workspace:*",
 		"@fluxer/sentry": "workspace:*",
-		"@fluxer/worker": "workspace:*",
 		"hono": "catalog:",
 		"tsx": "catalog:"
 	},

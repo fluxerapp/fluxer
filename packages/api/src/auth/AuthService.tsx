@@ -28,6 +28,7 @@ import {AuthSessionService} from '@fluxer/api/src/auth/services/AuthSessionServi
 import {AuthUtilityService} from '@fluxer/api/src/auth/services/AuthUtilityService';
 import {createMfaTicket, type UserID} from '@fluxer/api/src/BrandedTypes';
 import type {IDiscriminatorService} from '@fluxer/api/src/infrastructure/DiscriminatorService';
+import type {IEmailDnsValidationService} from '@fluxer/api/src/infrastructure/IEmailDnsValidationService';
 import type {IGatewayService} from '@fluxer/api/src/infrastructure/IGatewayService';
 import type {KVAccountDeletionQueueService} from '@fluxer/api/src/infrastructure/KVAccountDeletionQueueService';
 import type {KVActivityTracker} from '@fluxer/api/src/infrastructure/KVActivityTracker';
@@ -160,6 +161,7 @@ export class AuthService implements IAuthService {
 		gatewayService: IGatewayService,
 		rateLimitService: IRateLimitService,
 		emailServiceDep: IEmailService,
+		emailDnsValidationService: IEmailDnsValidationService,
 		smsService: ISmsService,
 		snowflakeService: SnowflakeService,
 		snowflakeReservationService: SnowflakeReservationService,
@@ -182,6 +184,7 @@ export class AuthService implements IAuthService {
 		this.passwordService = new AuthPasswordService(
 			repository,
 			emailServiceDep,
+			emailDnsValidationService,
 			rateLimitService,
 			this.utilityService.generateSecureToken.bind(this.utilityService),
 			this.utilityService.handleBanStatus.bind(this.utilityService),
@@ -198,6 +201,7 @@ export class AuthService implements IAuthService {
 			inviteService,
 			rateLimitService,
 			emailServiceDep,
+			emailDnsValidationService,
 			snowflakeService,
 			snowflakeReservationService,
 			discriminatorService,

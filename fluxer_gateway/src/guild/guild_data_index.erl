@@ -477,4 +477,296 @@ put_member_and_remove_member_keep_member_role_index_in_sync_test() ->
     Index2 = member_role_index(Data2),
     ?assertEqual(undefined, maps:get(30, Index2, undefined)).
 
+normalize_data_empty_lists_test() ->
+    Data = #{
+        <<"members">> => [],
+        <<"roles">> => [],
+        <<"channels">> => []
+    },
+    Normalized = normalize_data(Data),
+    ?assertEqual(#{}, maps:get(<<"members">>, Normalized)),
+    ?assertEqual([], maps:get(<<"roles">>, Normalized)),
+    ?assertEqual([], maps:get(<<"channels">>, Normalized)),
+    ?assertEqual(#{}, maps:get(<<"role_index">>, Normalized)),
+    ?assertEqual(#{}, maps:get(<<"channel_index">>, Normalized)),
+    ?assertEqual(#{}, maps:get(<<"member_role_index">>, Normalized)).
+
+normalize_data_non_map_input_test() ->
+    ?assertEqual(not_a_map, normalize_data(not_a_map)),
+    ?assertEqual(42, normalize_data(42)).
+
+normalize_data_missing_keys_defaults_test() ->
+    Data = #{},
+    Normalized = normalize_data(Data),
+    ?assertEqual(#{}, maps:get(<<"members">>, Normalized)),
+    ?assertEqual([], maps:get(<<"roles">>, Normalized)),
+    ?assertEqual([], maps:get(<<"channels">>, Normalized)).
+
+normalize_data_already_map_members_test() ->
+    Data = #{
+        <<"members">> => #{
+            1 => #{<<"user">> => #{<<"id">> => <<"1">>}, <<"nick">> => <<"a">>}
+        },
+        <<"roles">> => [],
+        <<"channels">> => []
+    },
+    Normalized = normalize_data(Data),
+    Members = maps:get(<<"members">>, Normalized),
+    ?assertEqual(1, map_size(Members)),
+    ?assertMatch(#{1 := _}, Members).
+
+member_map_non_map_input_test() ->
+    ?assertEqual(#{}, member_map(not_a_map)),
+    ?assertEqual(#{}, member_map(42)).
+
+member_map_invalid_members_value_test() ->
+    Data = #{<<"members">> => <<"invalid">>},
+    ?assertEqual(#{}, member_map(Data)).
+
+member_map_members_without_user_test() ->
+    Data = #{<<"members">> => [#{<<"nick">> => <<"orphan">>}]},
+    ?assertEqual(#{}, member_map(Data)).
+
+member_map_duplicate_user_ids_last_wins_test() ->
+    Data = #{
+        <<"members">> => [
+            #{<<"user">> => #{<<"id">> => <<"1">>}, <<"nick">> => <<"first">>},
+            #{<<"user">> => #{<<"id">> => <<"1">>}, <<"nick">> => <<"second">>}
+        ]
+    },
+    MemberMap = member_map(Data),
+    ?assertEqual(1, map_size(MemberMap)),
+    ?assertEqual(<<"second">>, maps:get(<<"nick">>, maps:get(1, MemberMap))).
+
+member_list_empty_test() ->
+    Data = #{<<"members">> => #{}},
+    ?assertEqual([], member_list(Data)).
+
+member_ids_returns_all_user_ids_test() ->
+    Data = #{
+        <<"members">> => #{
+            5 => #{<<"user">> => #{<<"id">> => <<"5">>}},
+            3 => #{<<"user">> => #{<<"id">> => <<"3">>}},
+            8 => #{<<"user">> => #{<<"id">> => <<"8">>}}
+        }
+    },
+    Ids = lists:sort(member_ids(Data)),
+    ?assertEqual([3, 5, 8], Ids).
+
+get_member_non_integer_key_test() ->
+    Data = #{<<"members">> => #{1 => #{<<"user">> => #{<<"id">> => <<"1">>}}}},
+    ?assertEqual(undefined, get_member(not_an_integer, Data)).
+
+get_member_missing_user_test() ->
+    Data = #{<<"members">> => #{}},
+    ?assertEqual(undefined, get_member(999, Data)).
+
+put_member_no_user_id_returns_unchanged_test() ->
+    Data = #{<<"members">> => #{}},
+    ?assertEqual(Data, put_member(#{<<"nick">> => <<"orphan">>}, Data)).
+
+put_member_non_map_member_returns_unchanged_test() ->
+    Data = #{<<"members">> => #{}},
+    ?assertEqual(Data, put_member(not_a_map, Data)).
+
+put_member_non_map_data_returns_unchanged_test() ->
+    ?assertEqual(not_a_map, put_member(#{<<"user">> => #{<<"id">> => <<"1">>}}, not_a_map)).
+
+put_member_adds_new_member_test() ->
+    Data = #{<<"members">> => #{}},
+    UpdatedData = put_member(
+        #{<<"user">> => #{<<"id">> => <<"42">>}, <<"nick">> => <<"new">>},
+        Data
+    ),
+    ?assertMatch(#{42 := _}, maps:get(<<"members">>, UpdatedData)),
+    ?assertEqual(<<"new">>, maps:get(<<"nick">>, get_member(42, UpdatedData))).
+
+put_member_map_replaces_all_members_test() ->
+    Data = #{
+        <<"members">> => #{1 => #{<<"user">> => #{<<"id">> => <<"1">>}}}
+    },
+    NewMap = #{2 => #{<<"user">> => #{<<"id">> => <<"2">>}, <<"roles">> => [<<"10">>]}},
+    Updated = put_member_map(NewMap, Data),
+    ?assertEqual(undefined, get_member(1, Updated)),
+    ?assertMatch(#{2 := _}, maps:get(<<"members">>, Updated)).
+
+put_member_map_non_map_returns_unchanged_test() ->
+    Data = #{<<"members">> => #{}},
+    ?assertEqual(Data, put_member_map(not_a_map, Data)).
+
+put_member_list_converts_and_stores_test() ->
+    Data = #{<<"members">> => #{}},
+    Members = [
+        #{<<"user">> => #{<<"id">> => <<"1">>}},
+        #{<<"user">> => #{<<"id">> => <<"2">>}}
+    ],
+    Updated = put_member_list(Members, Data),
+    ?assertEqual(2, map_size(maps:get(<<"members">>, Updated))).
+
+put_member_list_non_list_returns_unchanged_test() ->
+    Data = #{<<"members">> => #{}},
+    ?assertEqual(Data, put_member_list(not_a_list, Data)).
+
+remove_member_non_integer_returns_unchanged_test() ->
+    Data = #{<<"members">> => #{1 => #{<<"user">> => #{<<"id">> => <<"1">>}}}},
+    ?assertEqual(Data, remove_member(not_an_int, Data)).
+
+remove_member_non_existent_test() ->
+    Data = #{<<"members">> => #{1 => #{<<"user">> => #{<<"id">> => <<"1">>}}}},
+    Updated = remove_member(999, Data),
+    ?assertEqual(1, map_size(maps:get(<<"members">>, Updated))).
+
+role_list_non_map_input_test() ->
+    ?assertEqual([], role_list(not_a_map)).
+
+role_list_non_list_roles_value_test() ->
+    Data = #{<<"roles">> => <<"invalid">>},
+    ?assertEqual([], role_list(Data)).
+
+role_index_non_map_input_test() ->
+    ?assertEqual(#{}, role_index(not_a_map)).
+
+role_index_from_list_test() ->
+    Data = #{
+        <<"roles">> => [
+            #{<<"id">> => <<"100">>, <<"name">> => <<"Admin">>},
+            #{<<"id">> => <<"200">>, <<"name">> => <<"Member">>}
+        ]
+    },
+    Index = role_index(Data),
+    ?assertEqual(2, map_size(Index)),
+    ?assertEqual(<<"Admin">>, maps:get(<<"name">>, maps:get(100, Index))).
+
+put_roles_updates_list_and_index_test() ->
+    Data = #{
+        <<"roles">> => [#{<<"id">> => <<"1">>, <<"name">> => <<"old">>}]
+    },
+    NewRoles = [
+        #{<<"id">> => <<"10">>, <<"name">> => <<"new1">>},
+        #{<<"id">> => <<"20">>, <<"name">> => <<"new2">>}
+    ],
+    Updated = put_roles(NewRoles, Data),
+    ?assertEqual(NewRoles, role_list(Updated)),
+    ?assertEqual(2, map_size(role_index(Updated))).
+
+put_roles_non_map_data_returns_unchanged_test() ->
+    ?assertEqual(not_a_map, put_roles([], not_a_map)).
+
+channel_list_non_map_input_test() ->
+    ?assertEqual([], channel_list(not_a_map)).
+
+channel_list_non_list_channels_value_test() ->
+    Data = #{<<"channels">> => <<"invalid">>},
+    ?assertEqual([], channel_list(Data)).
+
+channel_index_non_map_input_test() ->
+    ?assertEqual(#{}, channel_index(not_a_map)).
+
+channel_index_from_list_test() ->
+    Data = #{
+        <<"channels">> => [
+            #{<<"id">> => <<"300">>, <<"name">> => <<"general">>},
+            #{<<"id">> => <<"301">>, <<"name">> => <<"random">>}
+        ]
+    },
+    Index = channel_index(Data),
+    ?assertEqual(2, map_size(Index)),
+    ?assertEqual(<<"general">>, maps:get(<<"name">>, maps:get(300, Index))).
+
+put_channels_updates_list_and_index_test() ->
+    Data = #{<<"channels">> => []},
+    NewChannels = [
+        #{<<"id">> => <<"50">>, <<"name">> => <<"ch1">>},
+        #{<<"id">> => <<"51">>, <<"name">> => <<"ch2">>}
+    ],
+    Updated = put_channels(NewChannels, Data),
+    ?assertEqual(NewChannels, channel_list(Updated)),
+    ?assertEqual(2, map_size(channel_index(Updated))).
+
+put_channels_non_map_data_returns_unchanged_test() ->
+    ?assertEqual(not_a_map, put_channels([], not_a_map)).
+
+member_role_index_non_map_input_test() ->
+    ?assertEqual(#{}, member_role_index(not_a_map)).
+
+member_role_index_members_without_roles_test() ->
+    Data = #{
+        <<"members">> => #{
+            1 => #{<<"user">> => #{<<"id">> => <<"1">>}}
+        }
+    },
+    Index = member_role_index(Data),
+    ?assertEqual(#{}, Index).
+
+member_role_index_shared_roles_test() ->
+    Data = #{
+        <<"members">> => #{
+            1 => #{<<"user">> => #{<<"id">> => <<"1">>}, <<"roles">> => [<<"10">>]},
+            2 => #{<<"user">> => #{<<"id">> => <<"2">>}, <<"roles">> => [<<"10">>]},
+            3 => #{<<"user">> => #{<<"id">> => <<"3">>}, <<"roles">> => [<<"10">>, <<"20">>]}
+        }
+    },
+    Index = member_role_index(Data),
+    ?assertEqual(#{1 => true, 2 => true, 3 => true}, maps:get(10, Index)),
+    ?assertEqual(#{3 => true}, maps:get(20, Index)).
+
+build_id_index_skips_items_without_id_test() ->
+    Items = [
+        #{<<"id">> => <<"1">>, <<"name">> => <<"first">>},
+        #{<<"name">> => <<"no_id">>},
+        #{<<"id">> => <<"2">>, <<"name">> => <<"second">>}
+    ],
+    Index = build_id_index(Items),
+    ?assertEqual(2, map_size(Index)),
+    ?assertEqual(<<"first">>, maps:get(<<"name">>, maps:get(1, Index))).
+
+build_id_index_empty_list_test() ->
+    ?assertEqual(#{}, build_id_index([])).
+
+extract_integer_list_mixed_types_test() ->
+    ?assertEqual([1, 2, 3], extract_integer_list([<<"1">>, 2, <<"3">>])),
+    ?assertEqual([1, 3], extract_integer_list([<<"1">>, <<"invalid">>, <<"3">>])),
+    ?assertEqual([], extract_integer_list(not_a_list)).
+
+ensure_list_test() ->
+    ?assertEqual([1, 2], ensure_list([1, 2])),
+    ?assertEqual([], ensure_list(not_a_list)),
+    ?assertEqual([], ensure_list(#{})).
+
+normalize_member_map_with_binary_keys_test() ->
+    MemberMap = #{
+        <<"42">> => #{<<"user">> => #{<<"id">> => <<"42">>}, <<"nick">> => <<"test">>}
+    },
+    Normalized = normalize_member_map(MemberMap),
+    ?assertMatch(#{42 := _}, Normalized),
+    ?assertEqual(<<"test">>, maps:get(<<"nick">>, maps:get(42, Normalized))).
+
+put_member_multiple_roles_index_test() ->
+    Data = #{<<"members">> => #{}},
+    Member = #{<<"user">> => #{<<"id">> => <<"7">>}, <<"roles">> => [<<"10">>, <<"20">>, <<"30">>]},
+    Updated = put_member(Member, Data),
+    Index = member_role_index(Updated),
+    ?assertEqual(#{7 => true}, maps:get(10, Index)),
+    ?assertEqual(#{7 => true}, maps:get(20, Index)),
+    ?assertEqual(#{7 => true}, maps:get(30, Index)).
+
+remove_member_cleans_empty_role_entries_test() ->
+    Data0 = #{<<"members">> => #{}},
+    Data1 = put_member(
+        #{<<"user">> => #{<<"id">> => <<"1">>}, <<"roles">> => [<<"10">>]},
+        Data0
+    ),
+    Data2 = put_member(
+        #{<<"user">> => #{<<"id">> => <<"2">>}, <<"roles">> => [<<"10">>, <<"20">>]},
+        Data1
+    ),
+    Data3 = remove_member(1, Data2),
+    Index = member_role_index(Data3),
+    ?assertEqual(#{2 => true}, maps:get(10, Index)),
+    ?assertEqual(#{2 => true}, maps:get(20, Index)),
+    Data4 = remove_member(2, Data3),
+    Index2 = member_role_index(Data4),
+    ?assertEqual(undefined, maps:get(10, Index2, undefined)),
+    ?assertEqual(undefined, maps:get(20, Index2, undefined)).
+
 -endif.

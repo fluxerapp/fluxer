@@ -31,7 +31,8 @@
     id := guild_id(),
     data := map(),
     sessions := map(),
-    voice_states := map(),
+    voice_server_pid => pid(),
+    voice_states => map(),
     presence_subscriptions := map(),
     member_list_subscriptions := map(),
     member_subscriptions := map(),
@@ -51,12 +52,7 @@ init(GuildState) ->
     Data0 = maps:get(data, GuildState, #{}),
     NormalizedData = guild_data_index:normalize_data(Data0),
     GuildState1 = maps:put(data, NormalizedData, GuildState),
-    StateWithVoice =
-        case maps:is_key(voice_states, GuildState1) of
-            true -> GuildState1;
-            false -> maps:put(voice_states, #{}, GuildState1)
-        end,
-    StateWithPresenceSubs = maps:put(presence_subscriptions, #{}, StateWithVoice),
+    StateWithPresenceSubs = maps:put(presence_subscriptions, #{}, GuildState1),
     StateWithMemberListSubs = maps:put(member_list_subscriptions, #{}, StateWithPresenceSubs),
     StateWithMemberSubs = maps:put(
         member_subscriptions, guild_subscriptions:init_state(), StateWithMemberListSubs
@@ -73,9 +69,13 @@ init(GuildState) ->
     StateWithCountsAndOnline = maps:put(online_count, OnlineCount, StateWithCounts),
     ok = maybe_put_permission_cache(StateWithCountsAndOnline),
     _ = guild_availability:update_unavailability_cache_for_state(StateWithCountsAndOnline),
+    GuildIdForCache = maps:get(id, StateWithCountsAndOnline),
+    guild_counts_cache:update(GuildIdForCache, MemberCount, OnlineCount),
     guild_passive_sync:schedule_passive_sync(StateWithCountsAndOnline),
-    erlang:send_after(10000, self(), sweep_pending_joins),
-    {ok, StateWithCountsAndOnline}.
+    GuildId = maps:get(id, StateWithCountsAndOnline),
+    {ok, VoicePid} = guild_voice_server:start_link(GuildId, self()),
+    StateWithVoiceServer = maps:put(voice_server_pid, VoicePid, StateWithCountsAndOnline),
+    {ok, StateWithVoiceServer}.
 
 -spec handle_call(term(), gen_server:from(), guild_state()) ->
     {reply, term(), guild_state()}
@@ -84,216 +84,66 @@ init(GuildState) ->
 handle_call({session_connect, Request}, {CallerPid, _}, State) ->
     SessionPid = maps:get(session_pid, Request, CallerPid),
     guild_sessions:handle_session_connect(Request, SessionPid, State);
-handle_call({very_large_guild_prime_member, Member}, _From, State) when is_map(Member) ->
-    Data0 = maps:get(data, State, #{}),
-    Data = guild_data_index:put_member(Member, Data0),
-    {reply, ok, maps:put(data, Data, State)};
-handle_call({very_large_guild_prime_member, _}, _From, State) ->
-    {reply, ok, State};
-handle_call({very_large_guild_get_members, UserIds}, _From, State) when is_list(UserIds) ->
-    Data = maps:get(data, State, #{}),
-    MemberMap = guild_data_index:member_map(Data),
-    Reply = lists:foldl(
-        fun(UserId, Acc) ->
-            case maps:get(UserId, MemberMap, undefined) of
-                Member when is_map(Member) -> maps:put(UserId, Member, Acc);
-                _ -> Acc
-            end
-        end,
-        #{},
-        UserIds
-    ),
-    {reply, Reply, State};
-handle_call({get_counts}, _From, State) ->
-    MemberCount = maps:get(member_count, State, 0),
-    OnlineCount = guild_member_list:get_online_count(State),
-    {reply, #{member_count => MemberCount, presence_count => OnlineCount}, State};
-handle_call({get_large_guild_metadata}, _From, State) ->
-    MemberCount = maps:get(member_count, State, 0),
-    Data = maps:get(data, State, #{}),
-    Guild = maps:get(<<"guild">>, Data, #{}),
-    Features = maps:get(<<"features">>, Guild, []),
-    {reply, #{member_count => MemberCount, features => Features}, State};
-handle_call({get_users_to_mention_by_roles, Request}, _From, State) ->
-    spawn_async_reply(
-        _From,
-        fun() ->
-            {reply, Reply, _} = guild_members:get_users_to_mention_by_roles(Request, State),
-            Reply
-        end
-    ),
-    {noreply, State};
-handle_call({get_users_to_mention_by_user_ids, Request}, _From, State) ->
-    spawn_async_reply(
-        _From,
-        fun() ->
-            {reply, Reply, _} = guild_members:get_users_to_mention_by_user_ids(Request, State),
-            Reply
-        end
-    ),
-    {noreply, State};
-handle_call({get_all_users_to_mention, Request}, _From, State) ->
-    spawn_async_reply(
-        _From,
-        fun() ->
-            {reply, Reply, _} = guild_members:get_all_users_to_mention(Request, State),
-            Reply
-        end
-    ),
-    {noreply, State};
-handle_call({resolve_all_mentions, Request}, _From, State) ->
-    spawn_async_reply(
-        _From,
-        fun() ->
-            {reply, Reply, _} = guild_members:resolve_all_mentions(Request, State),
-            Reply
-        end
-    ),
-    {noreply, State};
-handle_call({get_members_with_role, Request}, _From, State) ->
-    spawn_async_reply(
-        _From,
-        fun() ->
-            {reply, Reply, _} = guild_members:get_members_with_role(Request, State),
-            Reply
-        end
-    ),
-    {noreply, State};
-handle_call({check_permission, Request}, _From, State) ->
-    #{user_id := UserId, permission := Permission, channel_id := ChannelId} = Request,
-    true = is_integer(Permission),
-    HasPermission =
-        case owner_id(State) =:= UserId of
-            true ->
-                true;
-            false ->
-                Permissions = guild_permissions:get_member_permissions(UserId, ChannelId, State),
-                (Permissions band Permission) =:= Permission
-        end,
-    {reply, #{has_permission => HasPermission}, State};
-handle_call({get_user_permissions, Request}, _From, State) ->
-    #{user_id := UserId, channel_id := ChannelId} = Request,
-    Permissions = guild_permissions:get_member_permissions(UserId, ChannelId, State),
-    {reply, #{permissions => Permissions}, State};
-handle_call({can_manage_roles, Request}, _From, State) ->
-    guild_members:can_manage_roles(Request, State);
-handle_call({can_manage_role, Request}, _From, State) ->
-    guild_members:can_manage_role(Request, State);
-handle_call({get_guild_data, Request}, _From, State) ->
-    guild_data:get_guild_data(Request, State);
-handle_call({get_assignable_roles, Request}, _From, State) ->
-    guild_members:get_assignable_roles(Request, State);
-handle_call({get_user_max_role_position, Request}, _From, State) ->
-    #{user_id := UserId} = Request,
-    Position = guild_permissions:get_max_role_position(UserId, State),
-    {reply, #{position => Position}, State};
-handle_call({check_target_member, Request}, _From, State) ->
-    guild_members:check_target_member(Request, State);
-handle_call({get_viewable_channels, Request}, _From, State) ->
-    spawn_async_reply(
-        _From,
-        fun() ->
-            {reply, Reply, _} = guild_members:get_viewable_channels(Request, State),
-            Reply
-        end
-    ),
-    {noreply, State};
-handle_call({get_guild_member, Request}, _From, State) ->
-    guild_data:get_guild_member(Request, State);
-handle_call({has_member, Request}, _From, State) ->
-    guild_data:has_member(Request, State);
-handle_call({list_guild_members, Request}, _From, State) ->
-    guild_data:list_guild_members(Request, State);
-handle_call({list_guild_members_cursor, Request}, _From, State) ->
-    guild_member_list:get_members_cursor(Request, State);
-handle_call({get_vanity_url_channel}, _From, State) ->
-    guild_data:get_vanity_url_channel(State);
-handle_call({get_first_viewable_text_channel}, _From, State) ->
-    guild_data:get_first_viewable_text_channel(State);
-handle_call({voice_state_update, Request}, _From, State) ->
-    guild_voice:voice_state_update(Request, State);
-handle_call({get_voice_state, Request}, _From, State) ->
-    guild_voice:get_voice_state(Request, State);
-handle_call({update_member_voice, Request}, _From, State) ->
-    guild_voice:update_member_voice(Request, State);
-handle_call({disconnect_voice_user, Request}, _From, State) ->
-    guild_voice:disconnect_voice_user(Request, State);
-handle_call({disconnect_voice_user_if_in_channel, Request}, _From, State) ->
-    guild_voice:disconnect_voice_user_if_in_channel(Request, State);
-handle_call({disconnect_all_voice_users_in_channel, Request}, _From, State) ->
-    guild_voice:disconnect_all_voice_users_in_channel(Request, State);
-handle_call({confirm_voice_connection_from_livekit, Request}, _From, State) ->
-    guild_voice:confirm_voice_connection_from_livekit(Request, State);
-handle_call({move_member, Request}, _From, State) ->
-    guild_voice:move_member(Request, State);
-handle_call({switch_voice_region, Request}, _From, State) ->
-    guild_voice:switch_voice_region_handler(Request, State);
-handle_call({add_virtual_channel_access, UserId, ChannelId}, _From, State) ->
-    NewState = guild_virtual_channel_access:add_virtual_access(UserId, ChannelId, State),
-    guild_virtual_channel_access:dispatch_channel_visibility_change(
-        UserId, ChannelId, add, NewState
-    ),
-    {reply, ok, NewState};
-handle_call({get_sessions}, _From, State) ->
-    {reply, State, State};
-handle_call({get_push_base_state}, _From, State) ->
-    {reply,
-        #{
-            id => maps:get(id, State, 0),
-            data => maps:get(data, State, #{}),
-            virtual_channel_access => maps:get(virtual_channel_access, State, #{})
-        },
-        State};
-handle_call({get_cluster_merge_state}, _From, State) ->
-    {reply,
-        #{
-            sessions => maps:get(sessions, State, #{}),
-            voice_states => maps:get(voice_states, State, #{}),
-            virtual_channel_access => maps:get(virtual_channel_access, State, #{}),
-            virtual_channel_access_pending => maps:get(virtual_channel_access_pending, State, #{}),
-            virtual_channel_access_preserve => maps:get(virtual_channel_access_preserve, State, #{}),
-            virtual_channel_access_move_pending =>
-                maps:get(virtual_channel_access_move_pending, State, #{})
-        },
-        State};
-handle_call({get_category_channel_count, Request}, _From, State) ->
-    #{category_id := CategoryId} = Request,
-    Data = maps:get(data, State),
-    Channels = maps:get(<<"channels">>, Data, []),
-    Count = length([
-        Ch
-     || Ch <- Channels,
-        map_utils:get_integer(Ch, <<"parent_id">>, undefined) =:= CategoryId
-    ]),
-    {reply, #{count => Count}, State};
-handle_call({get_channel_count}, _From, State) ->
-    Data = maps:get(data, State),
-    Channels = maps:get(<<"channels">>, Data, []),
-    Count = length(Channels),
-    {reply, #{count => Count}, State};
-handle_call({reload, NewData}, _From, State) ->
-    OldData = maps:get(data, State),
-    NormalizedNewData0 = guild_data_index:normalize_data(NewData),
-    NormalizedNewData = maybe_merge_very_large_guild_member_cache_on_reload(
-        OldData, NormalizedNewData0, State
-    ),
-    NewState0 = maps:put(data, NormalizedNewData, State),
-    NewState1 = guild_availability:handle_unavailability_transition(State, NewState0),
-    NewState2 = guild_sessions:refresh_all_viewable_channels(NewState1),
-    GuildId = maps:get(id, State),
-    NewGuild = maps:get(<<"guild">>, NormalizedNewData, #{}),
-    Sessions = maps:get(sessions, NewState2, #{}),
-    Pids = [
-        maps:get(pid, S)
-     || {_Sid, S} <- maps:to_list(Sessions),
-        maps:get(pending_connect, S, false) =/= true
-    ],
-    EventData = maps:put(<<"guild_id">>, integer_to_binary(GuildId), NewGuild),
-    dispatch_to_pids(Pids, guild_update, EventData),
-    NewState = cleanup_removed_member_subscriptions(OldData, NormalizedNewData, NewState2),
-    NewStateAfterMemberPrune = maybe_prune_very_large_guild_members(NewState),
-    ok = maybe_put_permission_cache(NewStateAfterMemberPrune),
-    {reply, ok, NewStateAfterMemberPrune};
+handle_call({very_large_guild_prime_member, _} = Msg, From, State) ->
+    guild_query_handler:handle_call(Msg, From, State);
+handle_call({very_large_guild_get_members, _} = Msg, From, State) ->
+    guild_query_handler:handle_call(Msg, From, State);
+handle_call({get_counts} = Msg, From, State) ->
+    guild_query_handler:handle_call(Msg, From, State);
+handle_call({get_large_guild_metadata} = Msg, From, State) ->
+    guild_query_handler:handle_call(Msg, From, State);
+handle_call({get_users_to_mention_by_roles, _} = Msg, From, State) ->
+    guild_query_handler:handle_call(Msg, From, State);
+handle_call({get_users_to_mention_by_user_ids, _} = Msg, From, State) ->
+    guild_query_handler:handle_call(Msg, From, State);
+handle_call({get_all_users_to_mention, _} = Msg, From, State) ->
+    guild_query_handler:handle_call(Msg, From, State);
+handle_call({resolve_all_mentions, _} = Msg, From, State) ->
+    guild_query_handler:handle_call(Msg, From, State);
+handle_call({get_members_with_role, _} = Msg, From, State) ->
+    guild_query_handler:handle_call(Msg, From, State);
+handle_call({check_permission, _} = Msg, From, State) ->
+    guild_query_handler:handle_call(Msg, From, State);
+handle_call({get_user_permissions, _} = Msg, From, State) ->
+    guild_query_handler:handle_call(Msg, From, State);
+handle_call({can_manage_roles, _} = Msg, From, State) ->
+    guild_query_handler:handle_call(Msg, From, State);
+handle_call({can_manage_role, _} = Msg, From, State) ->
+    guild_query_handler:handle_call(Msg, From, State);
+handle_call({get_guild_data, _} = Msg, From, State) ->
+    guild_query_handler:handle_call(Msg, From, State);
+handle_call({get_assignable_roles, _} = Msg, From, State) ->
+    guild_query_handler:handle_call(Msg, From, State);
+handle_call({get_user_max_role_position, _} = Msg, From, State) ->
+    guild_query_handler:handle_call(Msg, From, State);
+handle_call({check_target_member, _} = Msg, From, State) ->
+    guild_query_handler:handle_call(Msg, From, State);
+handle_call({get_viewable_channels, _} = Msg, From, State) ->
+    guild_query_handler:handle_call(Msg, From, State);
+handle_call({get_guild_member, _} = Msg, From, State) ->
+    guild_query_handler:handle_call(Msg, From, State);
+handle_call({has_member, _} = Msg, From, State) ->
+    guild_query_handler:handle_call(Msg, From, State);
+handle_call({list_guild_members, _} = Msg, From, State) ->
+    guild_query_handler:handle_call(Msg, From, State);
+handle_call({list_guild_members_cursor, _} = Msg, From, State) ->
+    guild_query_handler:handle_call(Msg, From, State);
+handle_call({get_vanity_url_channel} = Msg, From, State) ->
+    guild_query_handler:handle_call(Msg, From, State);
+handle_call({get_first_viewable_text_channel} = Msg, From, State) ->
+    guild_query_handler:handle_call(Msg, From, State);
+handle_call({get_category_channel_count, _} = Msg, From, State) ->
+    guild_query_handler:handle_call(Msg, From, State);
+handle_call({get_channel_count} = Msg, From, State) ->
+    guild_query_handler:handle_call(Msg, From, State);
+handle_call({get_sessions} = Msg, From, State) ->
+    guild_query_handler:handle_call(Msg, From, State);
+handle_call({get_push_base_state} = Msg, From, State) ->
+    guild_query_handler:handle_call(Msg, From, State);
+handle_call({get_cluster_merge_state} = Msg, From, State) ->
+    guild_query_handler:handle_call(Msg, From, State);
+handle_call({add_virtual_channel_access, _, _} = Msg, From, State) ->
+    guild_voice_handler:handle_call(Msg, From, State);
 handle_call({dispatch, Request}, _From, State) ->
     #{event := Event, data := EventData} = Request,
     ParsedEventData = parse_event_data(EventData),
@@ -302,61 +152,25 @@ handle_call({dispatch, Request}, _From, State) ->
     StateAfterMemberPrune = maybe_prune_very_large_guild_members(StateAfterPrune),
     ok = maybe_put_permission_cache(StateAfterMemberPrune),
     {reply, ok, StateAfterMemberPrune};
+handle_call({reload, NewData}, _From, State) ->
+    handle_reload(NewData, State);
+handle_call({lazy_subscribe, _} = Msg, From, State) ->
+    guild_subscription_handler:handle_call(Msg, From, State);
 handle_call({terminate}, _From, State) ->
     {stop, normal, ok, State};
-handle_call({lazy_subscribe, Request}, _From, State) ->
-    handle_lazy_subscribe(Request, State);
-handle_call({store_pending_connection, ConnectionId, Metadata}, _From, State) ->
-    PendingConnections = maps:get(pending_voice_connections, State, #{}),
-    NewPendingConnections = maps:put(ConnectionId, Metadata, PendingConnections),
-    NewState = maps:put(pending_voice_connections, NewPendingConnections, State),
-    {reply, ok, NewState};
-handle_call({get_voice_states_for_channel, ChannelIdBin}, _From, State) ->
-    VoiceStates = maps:get(voice_states, State, #{}),
-    Filtered = maps:fold(
-        fun(ConnId, VS, Acc) ->
-            case maps:get(<<"channel_id">>, VS, null) of
-                ChannelIdBin ->
-                    [#{
-                        connection_id => ConnId,
-                        user_id => maps:get(<<"user_id">>, VS, null),
-                        channel_id => ChannelIdBin
-                    } | Acc];
-                _ ->
-                    Acc
-            end
-        end,
-        [],
-        VoiceStates
-    ),
-    {reply, #{voice_states => Filtered}, State};
-handle_call({get_pending_joins_for_channel, ChannelIdBin}, _From, State) ->
-    PendingConnections = maps:get(pending_voice_connections, State, #{}),
-    ChannelIdInt = binary_to_integer(ChannelIdBin),
-    Filtered = maps:fold(
-        fun(ConnId, Metadata, Acc) ->
-            case maps:get(channel_id, Metadata, undefined) of
-                ChannelIdInt ->
-                    [#{
-                        connection_id => ConnId,
-                        user_id => integer_to_binary(maps:get(user_id, Metadata, 0)),
-                        token_nonce => maps:get(token_nonce, Metadata, null),
-                        expires_at => maps:get(expires_at, Metadata, 0)
-                    } | Acc];
-                _ ->
-                    Acc
-            end
-        end,
-        [],
-        PendingConnections
-    ),
-    {reply, #{pending_joins => Filtered}, State};
 handle_call(_, _From, State) ->
     {reply, ok, State}.
 
 -spec handle_cast(term(), guild_state()) -> {noreply, guild_state()}.
 handle_cast({dispatch, Request}, State) ->
     #{event := Event, data := EventData} = Request,
+    Sessions = maps:get(sessions, State, #{}),
+    SessionCount = map_size(Sessions),
+    PendingCount = maps:fold(fun(_, S, Acc) ->
+        case maps:get(pending_connect, S, false) of true -> Acc + 1; _ -> Acc end
+    end, 0, Sessions),
+    logger:debug("guild dispatch: event=~p guild_id=~p sessions=~p pending=~p",
+        [Event, maps:get(id, State, unknown), SessionCount, PendingCount]),
     ParsedEventData = parse_event_data(EventData),
     {noreply, NewState} = guild_dispatch:handle_dispatch(Event, ParsedEventData, State),
     StateAfterPrune = maybe_prune_invalid_member_subscriptions(Event, NewState),
@@ -367,57 +181,6 @@ handle_cast({session_connect_async, #{guild_id := GuildId, attempt := Attempt, r
     {noreply, enqueue_session_connect_async(GuildId, Attempt, Request, Msg, State)};
 handle_cast({session_connect_worker_done, SessionId, Attempt, Result0, Computed}, State) ->
     {noreply, finalize_session_connect_async(SessionId, Attempt, Result0, Computed, State)};
-handle_cast({very_large_guild_drop_member, UserId}, State) when is_integer(UserId) ->
-    Data0 = maps:get(data, State, #{}),
-    Data = guild_data_index:remove_member(UserId, Data0),
-    {noreply, maps:put(data, Data, State)};
-handle_cast({very_large_guild_drop_member, _}, State) ->
-    {noreply, State};
-handle_cast({very_large_guild_prune_members}, State) ->
-    {noreply, maybe_prune_very_large_guild_members(State)};
-handle_cast({relay_voice_state_update, VoiceState, OldChannelIdBin}, State) ->
-    State1 = relay_upsert_voice_state(VoiceState, State),
-    StateNoRelay = maps:remove(very_large_guild_coordinator_pid, State1),
-    _ = guild_voice_broadcast:broadcast_voice_state_update(VoiceState, StateNoRelay, OldChannelIdBin),
-    {noreply, State1};
-handle_cast(
-    {relay_voice_server_update, GuildId, ChannelId, SessionId, Token, Endpoint, ConnectionId},
-    State
-) ->
-    StateNoRelay = maps:remove(very_large_guild_coordinator_pid, State),
-    _ = guild_voice_broadcast:broadcast_voice_server_update_to_session(
-        GuildId,
-        ChannelId,
-        SessionId,
-        Token,
-        Endpoint,
-        ConnectionId,
-        StateNoRelay
-    ),
-    {noreply, State};
-handle_cast({store_pending_connection, ConnectionId, Metadata}, State) ->
-    PendingConnections = maps:get(pending_voice_connections, State, #{}),
-    NewPendingConnections = maps:put(ConnectionId, Metadata, PendingConnections),
-    NewState = maps:put(pending_voice_connections, NewPendingConnections, State),
-    {noreply, NewState};
-handle_cast({very_large_guild_member_list_deliver, Deliveries}, State) when is_list(Deliveries) ->
-    _ = deliver_member_list_updates(Deliveries, State),
-    {noreply, State};
-handle_cast({add_virtual_channel_access, UserId, ChannelId}, State) ->
-    NewState = guild_virtual_channel_access:add_virtual_access(UserId, ChannelId, State),
-    guild_virtual_channel_access:dispatch_channel_visibility_change(
-        UserId, ChannelId, add, NewState
-    ),
-    {noreply, NewState};
-handle_cast({remove_virtual_channel_access, UserId, ChannelId}, State) ->
-    guild_virtual_channel_access:dispatch_channel_visibility_change(
-        UserId, ChannelId, remove, State
-    ),
-    NewState = guild_virtual_channel_access:remove_virtual_access(UserId, ChannelId, State),
-    {noreply, NewState};
-handle_cast({cleanup_virtual_access_for_user, UserId}, State) ->
-    NewState = guild_voice_disconnect:cleanup_virtual_channel_access_for_user(UserId, State),
-    {noreply, NewState};
 handle_cast({set_session_active, SessionId}, State) ->
     GuildId = maps:get(id, State),
     NewState = guild_sessions:set_session_active_guild(SessionId, GuildId, State),
@@ -425,10 +188,6 @@ handle_cast({set_session_active, SessionId}, State) ->
 handle_cast({set_session_passive, SessionId}, State) ->
     GuildId = maps:get(id, State),
     NewState = guild_sessions:set_session_passive_guild(SessionId, GuildId, State),
-    {noreply, NewState};
-handle_cast({update_member_subscriptions, SessionId, MemberIds}, State) ->
-    NewState0 = handle_update_member_subscriptions(SessionId, MemberIds, State),
-    NewState = maybe_prune_very_large_guild_members(NewState0),
     {noreply, NewState};
 handle_cast({set_session_typing_override, SessionId, TypingFlag}, State) ->
     NewState = handle_set_typing_override(SessionId, TypingFlag, State),
@@ -439,6 +198,22 @@ handle_cast({send_guild_sync, SessionId}, State) ->
 handle_cast({send_members_chunk, SessionId, ChunkData}, State) ->
     handle_send_members_chunk(SessionId, ChunkData, State),
     {noreply, State};
+handle_cast({very_large_guild_drop_member, UserId}, State) when is_integer(UserId) ->
+    Data0 = maps:get(data, State, #{}),
+    Data = guild_data_index:remove_member(UserId, Data0),
+    {noreply, maps:put(data, Data, State)};
+handle_cast({very_large_guild_drop_member, _}, State) ->
+    {noreply, State};
+handle_cast({very_large_guild_prune_members}, State) ->
+    {noreply, maybe_prune_very_large_guild_members(State)};
+handle_cast({add_virtual_channel_access, _, _} = Msg, State) ->
+    guild_voice_handler:handle_cast(Msg, State);
+handle_cast({remove_virtual_channel_access, _, _} = Msg, State) ->
+    guild_voice_handler:handle_cast(Msg, State);
+handle_cast({update_member_subscriptions, _, _} = Msg, State) ->
+    guild_subscription_handler:handle_cast(Msg, State);
+handle_cast({very_large_guild_member_list_deliver, _} = Msg, State) ->
+    guild_subscription_handler:handle_cast(Msg, State);
 handle_cast(_, State) ->
     {noreply, State}.
 
@@ -463,10 +238,6 @@ handle_info({'DOWN', Ref, process, _Pid, Reason}, State) ->
     end;
 handle_info(passive_sync, State) ->
     guild_passive_sync:handle_passive_sync(State);
-handle_info(sweep_pending_joins, State) ->
-    NewState = guild_voice_connection:sweep_expired_pending_joins(State),
-    erlang:send_after(10000, self(), sweep_pending_joins),
-    {noreply, NewState};
 handle_info(_, State) ->
     {noreply, State}.
 
@@ -475,6 +246,10 @@ terminate(Reason, State) when is_map(State) ->
     PresenceSubs = maps:get(presence_subscriptions, State, #{}),
     lists:foreach(fun(UserId) -> presence_bus:unsubscribe(UserId) end, maps:keys(PresenceSubs)),
     GuildId = maps:get(id, State, undefined),
+    case is_integer(GuildId) of
+        true -> guild_counts_cache:delete(GuildId);
+        false -> ok
+    end,
     ok = maybe_delete_permission_cache(GuildId, State),
     maybe_report_crash(Reason, State),
     ok;
@@ -485,6 +260,43 @@ terminate(Reason, State) ->
 -spec code_change(term(), guild_state(), term()) -> {ok, guild_state()}.
 code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
+
+-spec update_counts(guild_state()) -> guild_state().
+update_counts(State) ->
+    Data = maps:get(data, State, #{}),
+    MemberCount = guild_data_index:member_count(Data),
+    OnlineCount = guild_member_list:get_online_count(State),
+    GuildId = maps:get(id, State, undefined),
+    case is_integer(GuildId) of
+        true -> guild_counts_cache:update(GuildId, MemberCount, OnlineCount);
+        false -> ok
+    end,
+    maps:put(member_count, MemberCount, maps:put(online_count, OnlineCount, State)).
+
+-spec handle_reload(map(), guild_state()) -> {reply, ok, guild_state()}.
+handle_reload(NewData, State) ->
+    OldData = maps:get(data, State),
+    NormalizedNewData0 = guild_data_index:normalize_data(NewData),
+    NormalizedNewData = maybe_merge_very_large_guild_member_cache_on_reload(
+        OldData, NormalizedNewData0, State
+    ),
+    NewState0 = maps:put(data, NormalizedNewData, State),
+    NewState1 = guild_availability:handle_unavailability_transition(State, NewState0),
+    NewState2 = guild_sessions:refresh_all_viewable_channels(NewState1),
+    GuildId = maps:get(id, State),
+    NewGuild = maps:get(<<"guild">>, NormalizedNewData, #{}),
+    Sessions = maps:get(sessions, NewState2, #{}),
+    Pids = [
+        maps:get(pid, S)
+     || {_Sid, S} <- maps:to_list(Sessions),
+        maps:get(pending_connect, S, false) =/= true
+    ],
+    EventData = maps:put(<<"guild_id">>, integer_to_binary(GuildId), NewGuild),
+    dispatch_to_pids(Pids, guild_update, EventData),
+    NewState = cleanup_removed_member_subscriptions(OldData, NormalizedNewData, NewState2),
+    NewStateAfterMemberPrune = maybe_prune_very_large_guild_members(NewState),
+    ok = maybe_put_permission_cache(NewStateAfterMemberPrune),
+    {reply, ok, NewStateAfterMemberPrune}.
 
 -spec maybe_put_permission_cache(guild_state()) -> ok.
 maybe_put_permission_cache(State) ->
@@ -504,32 +316,6 @@ maybe_delete_permission_cache(GuildId, State) ->
             guild_permission_cache:delete(GuildId)
     end.
 
--spec relay_upsert_voice_state(map(), guild_state()) -> guild_state().
-relay_upsert_voice_state(VoiceState, State) when is_map(VoiceState) ->
-    ConnectionId = maps:get(<<"connection_id">>, VoiceState, undefined),
-    case ConnectionId of
-        undefined ->
-            State;
-        _ ->
-            VoiceStates0 = maps:get(voice_states, State, #{}),
-            ChannelId = maps:get(<<"channel_id">>, VoiceState, null),
-            VoiceStates =
-                case ChannelId of
-                    null -> maps:remove(ConnectionId, VoiceStates0);
-                    _ -> maps:put(ConnectionId, VoiceState, VoiceStates0)
-                end,
-            maps:put(voice_states, VoiceStates, State)
-    end;
-relay_upsert_voice_state(_, State) ->
-    State.
-
--spec update_counts(guild_state()) -> guild_state().
-update_counts(State) ->
-    Data = maps:get(data, State, #{}),
-    MemberCount = guild_data_index:member_count(Data),
-    OnlineCount = guild_member_list:get_online_count(State),
-    maps:put(member_count, MemberCount, maps:put(online_count, OnlineCount, State)).
-
 -spec parse_event_data(binary() | map()) -> map().
 parse_event_data(EventData) when is_binary(EventData) ->
     json:decode(EventData);
@@ -541,116 +327,6 @@ dispatch_to_pids(Pids, Event, EventData) ->
     lists:foreach(
         fun(Pid) -> gen_server:cast(Pid, {dispatch, Event, EventData}) end,
         Pids
-    ).
-
--spec spawn_async_reply(gen_server:from(), fun(() -> term())) -> ok.
-spawn_async_reply(From, ReplyFun) ->
-    spawn(fun() ->
-        Reply =
-            try
-                ReplyFun()
-            catch
-                _:_ ->
-                    #{error => async_handler_failed}
-            end,
-        gen_server:reply(From, Reply)
-    end),
-    ok.
-
--spec handle_lazy_subscribe(map(), guild_state()) -> {reply, ok, guild_state()}.
-handle_lazy_subscribe(Request, State) ->
-    case maps:get(disable_member_list_updates, State, false) of
-        true ->
-            {reply, ok, State};
-        false ->
-    #{session_id := SessionId, channel_id := ChannelId, ranges := Ranges} = Request,
-    Sessions0 = maps:get(sessions, State, #{}),
-    SessionUserId = get_session_user_id(SessionId, Sessions0),
-    case
-        is_integer(SessionUserId) andalso
-            guild_permissions:can_view_channel(SessionUserId, ChannelId, undefined, State)
-    of
-        true ->
-            GuildId = maps:get(id, State),
-            ListId = guild_member_list:calculate_list_id(ChannelId, State),
-            {NewState, ShouldSendSync, NormalizedRanges} =
-                guild_member_list:subscribe_ranges(SessionId, ListId, Ranges, State),
-            handle_lazy_subscribe_sync(
-                ShouldSendSync, NormalizedRanges, GuildId, ListId, ChannelId, SessionId, NewState
-            );
-        false ->
-            {reply, ok, State}
-    end
-    end.
-
--spec handle_lazy_subscribe_sync(
-    boolean(), list(), guild_id(), term(), channel_id(), session_id(), guild_state()
-) ->
-    {reply, ok, guild_state()}.
-handle_lazy_subscribe_sync(true, [], _GuildId, _ListId, _ChannelId, _SessionId, State) ->
-    {reply, ok, State};
-handle_lazy_subscribe_sync(true, RangesToSend, GuildId, ListId, ChannelId, SessionId, State) ->
-    SyncResponse = guild_member_list:build_sync_response(GuildId, ListId, RangesToSend, State),
-    SyncResponseWithChannel = maps:put(
-        <<"channel_id">>, integer_to_binary(ChannelId), SyncResponse
-    ),
-    Sessions = maps:get(sessions, State, #{}),
-    case maps:get(SessionId, Sessions, undefined) of
-        #{pid := SessionPid} when is_pid(SessionPid) ->
-            gen_server:cast(
-                SessionPid, {dispatch, guild_member_list_update, SyncResponseWithChannel}
-            );
-        _ ->
-            ok
-    end,
-    {reply, ok, State};
-handle_lazy_subscribe_sync(_, _, _GuildId, _ListId, _ChannelId, _SessionId, State) ->
-    {reply, ok, State}.
-
--spec get_session_user_id(session_id(), map()) -> user_id() | undefined.
-get_session_user_id(SessionId, Sessions) ->
-    case maps:get(SessionId, Sessions, undefined) of
-        #{user_id := Uid} -> Uid;
-        _ -> undefined
-    end.
-
--spec handle_update_member_subscriptions(session_id(), [user_id()], guild_state()) -> guild_state().
-handle_update_member_subscriptions(SessionId, MemberIds, State) ->
-    MemberSubs = maps:get(member_subscriptions, State, guild_subscriptions:init_state()),
-    Sessions = maps:get(sessions, State, #{}),
-    SessionUserId = get_session_user_id(SessionId, Sessions),
-    StateWithPrimedMembers = maybe_prime_very_large_guild_members(MemberIds, State),
-    FilteredMemberIds = filter_member_ids_with_mutual_channels(
-        SessionUserId, MemberIds, StateWithPrimedMembers
-    ),
-    OldSubscriptions = guild_subscriptions:get_user_ids_for_session(SessionId, MemberSubs),
-    NewMemberSubs = guild_subscriptions:update_subscriptions(
-        SessionId, FilteredMemberIds, MemberSubs
-    ),
-    NewSubscriptions = guild_subscriptions:get_user_ids_for_session(SessionId, NewMemberSubs),
-    Added = sets:to_list(sets:subtract(NewSubscriptions, OldSubscriptions)),
-    Removed = sets:to_list(sets:subtract(OldSubscriptions, NewSubscriptions)),
-    State1 = maps:put(member_subscriptions, NewMemberSubs, StateWithPrimedMembers),
-    State2 = handle_added_subscriptions(Added, SessionId, State1),
-    handle_removed_subscriptions(Removed, State2).
-
--spec handle_added_subscriptions([user_id()], session_id(), guild_state()) -> guild_state().
-handle_added_subscriptions(Added, SessionId, State) ->
-    lists:foldl(
-        fun(UserId, Acc) ->
-            StateWithPresence = guild_sessions:subscribe_to_user_presence(UserId, Acc),
-            guild_presence:send_cached_presence_to_session(UserId, SessionId, StateWithPresence)
-        end,
-        State,
-        Added
-    ).
-
--spec handle_removed_subscriptions([user_id()], guild_state()) -> guild_state().
-handle_removed_subscriptions(Removed, State) ->
-    lists:foldl(
-        fun(UserId, Acc) -> guild_sessions:unsubscribe_from_user_presence(UserId, Acc) end,
-        State,
-        Removed
     ).
 
 -spec handle_set_typing_override(session_id(), boolean(), guild_state()) -> guild_state().
@@ -701,25 +377,67 @@ handle_send_members_chunk(SessionId, ChunkData, State) ->
             gen_server:cast(SessionPid, {dispatch, guild_members_chunk, ChunkWithGuildId})
     end.
 
--spec filter_member_ids_with_mutual_channels(user_id() | undefined, [user_id()], guild_state()) ->
-    [user_id()].
-filter_member_ids_with_mutual_channels(undefined, _, _) ->
-    [];
-filter_member_ids_with_mutual_channels(SessionUserId, MemberIds, State) ->
-    SessionChannels = guild_visibility:viewable_channel_set(SessionUserId, State),
-    lists:filtermap(
-        fun(MemberId) ->
-            case MemberId =:= SessionUserId of
-                true ->
-                    false;
-                false ->
-                    case has_shared_channels(SessionChannels, MemberId, State) of
-                        true -> {true, MemberId};
-                        false -> false
-                    end
+-spec maybe_prune_invalid_member_subscriptions(atom(), guild_state()) -> guild_state().
+maybe_prune_invalid_member_subscriptions(Event, State) ->
+    case event_requires_member_subscription_prune(Event) of
+        true ->
+            prune_invalid_member_subscriptions(State);
+        false ->
+            State
+    end.
+
+-spec event_requires_member_subscription_prune(atom()) -> boolean().
+event_requires_member_subscription_prune(guild_member_remove) -> true;
+event_requires_member_subscription_prune(guild_member_update) -> true;
+event_requires_member_subscription_prune(guild_role_update) -> true;
+event_requires_member_subscription_prune(guild_role_update_bulk) -> true;
+event_requires_member_subscription_prune(guild_role_delete) -> true;
+event_requires_member_subscription_prune(channel_update) -> true;
+event_requires_member_subscription_prune(channel_update_bulk) -> true;
+event_requires_member_subscription_prune(channel_delete) -> true;
+event_requires_member_subscription_prune(_) -> false.
+
+-spec prune_invalid_member_subscriptions(guild_state()) -> guild_state().
+prune_invalid_member_subscriptions(State) ->
+    MemberSubs = maps:get(member_subscriptions, State, guild_subscriptions:init_state()),
+    Sessions = maps:get(sessions, State, #{}),
+    InvalidPairs = build_invalid_subscription_pairs(MemberSubs, Sessions, State),
+    lists:foldl(
+        fun({SessionId, UserId}, AccState) ->
+            remove_member_subscription(SessionId, UserId, AccState)
+        end,
+        State,
+        InvalidPairs
+    ).
+
+-spec build_invalid_subscription_pairs(term(), map(), guild_state()) -> [{session_id(), user_id()}].
+build_invalid_subscription_pairs(MemberSubs, Sessions, State) ->
+    lists:foldl(
+        fun({SessionId, SessionData}, Acc) ->
+            SessionUserId = maps:get(user_id, SessionData, undefined),
+            case SessionUserId of
+                undefined ->
+                    Acc;
+                _ ->
+                    SessionChannels = guild_visibility:viewable_channel_set(SessionUserId, State),
+                    SubscriptionIds = guild_subscriptions:get_user_ids_for_session(
+                        SessionId, MemberSubs
+                    ),
+                    InvalidIds =
+                        [
+                            MemberId
+                         || MemberId <- sets:to_list(SubscriptionIds),
+                            not has_shared_channels(SessionChannels, MemberId, State)
+                        ],
+                    lists:foldl(
+                        fun(MemberId, Pairs) -> [{SessionId, MemberId} | Pairs] end,
+                        Acc,
+                        InvalidIds
+                    )
             end
         end,
-        MemberIds
+        [],
+        maps:to_list(Sessions)
     ).
 
 -spec has_shared_channels(sets:set(), user_id(), guild_state()) -> boolean().
@@ -729,14 +447,33 @@ has_shared_channels(SessionChannels, MemberId, State) ->
     CandidateChannels = guild_visibility:viewable_channel_set(MemberId, State),
     not sets:is_empty(sets:intersection(SessionChannels, CandidateChannels)).
 
--spec maybe_prune_invalid_member_subscriptions(atom(), guild_state()) -> guild_state().
-maybe_prune_invalid_member_subscriptions(Event, State) ->
-    case event_requires_member_subscription_prune(Event) of
-        true ->
-            prune_invalid_member_subscriptions(State);
-        false ->
-            State
-    end.
+-spec remove_member_subscription(session_id(), user_id(), guild_state()) -> guild_state().
+remove_member_subscription(SessionId, UserId, State) ->
+    MemberSubs = maps:get(member_subscriptions, State, guild_subscriptions:init_state()),
+    NewMemberSubs = guild_subscriptions:unsubscribe(SessionId, UserId, MemberSubs),
+    State1 = maps:put(member_subscriptions, NewMemberSubs, State),
+    guild_sessions:unsubscribe_from_user_presence(UserId, State1).
+
+-spec cleanup_removed_member_subscriptions(map(), map(), guild_state()) -> guild_state().
+cleanup_removed_member_subscriptions(OldData, NewData, State) ->
+    OldMemberIds = sets:from_list(guild_data_index:member_ids(OldData)),
+    NewMemberIds = sets:from_list(guild_data_index:member_ids(NewData)),
+    RemovedIds = sets:subtract(OldMemberIds, NewMemberIds),
+    PresenceSubs = maps:get(presence_subscriptions, State, #{}),
+    NewPresenceSubs = lists:foldl(
+        fun(UserId, Subs) ->
+            case maps:is_key(UserId, Subs) of
+                true ->
+                    presence_bus:unsubscribe(UserId),
+                    maps:remove(UserId, Subs);
+                false ->
+                    Subs
+            end
+        end,
+        PresenceSubs,
+        sets:to_list(RemovedIds)
+    ),
+    maps:put(presence_subscriptions, NewPresenceSubs, State).
 
 -spec maybe_prune_very_large_guild_members(guild_state()) -> guild_state().
 maybe_prune_very_large_guild_members(State) ->
@@ -815,113 +552,6 @@ needed_member_cache_user_ids(State) ->
     MemberSubs = maps:get(member_subscriptions, State, guild_subscriptions:init_state()),
     SubscribedUserIds = maps:keys(MemberSubs),
     lists:usort(SessionUserIds ++ SubscribedUserIds).
-
--spec maybe_prime_very_large_guild_members([user_id()], guild_state()) -> guild_state().
-maybe_prime_very_large_guild_members(UserIds, State) when is_list(UserIds) ->
-    case
-        {
-            maps:get(very_large_guild_coordinator_pid, State, undefined),
-            maps:get(very_large_guild_shard_index, State, undefined)
-        }
-    of
-        {CoordPid, ShardIndex} when is_pid(CoordPid), is_integer(ShardIndex), ShardIndex =/= 0 ->
-            UniqueUserIds = lists:usort([U || U <- UserIds, is_integer(U), U > 0]),
-            case UniqueUserIds of
-                [] ->
-                    State;
-                _ ->
-                    MembersReply =
-                        try gen_server:call(
-                            CoordPid, {very_large_guild_get_members, UniqueUserIds}, 10000
-                        ) of
-                            Reply -> Reply
-                        catch
-                            _:_ -> #{}
-                        end,
-                    prime_members_from_reply(MembersReply, State)
-            end;
-        _ ->
-            State
-    end;
-maybe_prime_very_large_guild_members(_, State) ->
-    State.
-
--spec prime_members_from_reply(term(), guild_state()) -> guild_state().
-prime_members_from_reply(MembersReply, State) when is_map(MembersReply) ->
-    Data0 = maps:get(data, State, #{}),
-    Data = maps:fold(
-        fun(_UserId, Member, AccData) ->
-            case is_map(Member) of
-                true -> guild_data_index:put_member(Member, AccData);
-                false -> AccData
-            end
-        end,
-        Data0,
-        MembersReply
-    ),
-    maps:put(data, Data, State);
-prime_members_from_reply(_, State) ->
-    State.
-
--spec deliver_member_list_updates([{session_id(), map()}], guild_state()) -> ok.
-deliver_member_list_updates(Deliveries, State) ->
-    Sessions = maps:get(sessions, State, #{}),
-    lists:foreach(
-        fun({SessionId, Payload}) ->
-            case maps:get(SessionId, Sessions, undefined) of
-                #{pid := SessionPid} = SessionData when is_pid(SessionPid), is_map(Payload) ->
-                    case maps:get(pending_connect, SessionData, false) of
-                        true ->
-                            ok;
-                        false ->
-                            ChannelId = member_list_payload_channel_id(Payload),
-                            case can_session_view_channel(SessionData, ChannelId, State) of
-                                true ->
-                                    gen_server:cast(
-                                        SessionPid, {dispatch, guild_member_list_update, Payload}
-                                    );
-                                false ->
-                                    ok
-                            end
-                    end;
-                _ ->
-                    ok
-            end
-        end,
-        Deliveries
-    ),
-    ok.
-
--spec member_list_payload_channel_id(map()) -> channel_id().
-member_list_payload_channel_id(Payload) ->
-    ChannelIdBin = maps:get(<<"channel_id">>, Payload, undefined),
-    ListIdBin = maps:get(<<"id">>, Payload, <<"0">>),
-    case ChannelIdBin of
-        Bin when is_binary(Bin) ->
-            case type_conv:to_integer(Bin) of
-                undefined -> 0;
-                Id -> Id
-            end;
-        _ ->
-            case type_conv:to_integer(ListIdBin) of
-                undefined -> 0;
-                Id -> Id
-            end
-    end.
-
--spec can_session_view_channel(map(), channel_id(), guild_state()) -> boolean().
-can_session_view_channel(_SessionData, ChannelId, _State) when not is_integer(ChannelId); ChannelId =< 0 ->
-    false;
-can_session_view_channel(SessionData, ChannelId, State) ->
-    case {maps:get(user_id, SessionData, undefined), maps:get(viewable_channels, SessionData, undefined)} of
-        {UserId, ViewableChannels} when is_integer(UserId), is_map(ViewableChannels) ->
-            maps:is_key(ChannelId, ViewableChannels) orelse
-                guild_permissions:can_view_channel(UserId, ChannelId, undefined, State);
-        {UserId, _} when is_integer(UserId) ->
-            guild_permissions:can_view_channel(UserId, ChannelId, undefined, State);
-        _ ->
-            false
-    end.
 
 -spec ensure_session_connect_queue(term()) -> queue:queue().
 ensure_session_connect_queue(Value) ->
@@ -1185,11 +815,14 @@ upsert_connected_session_from_computed(SessionId, SessionPid, Request, Computed,
                 bot => Bot,
                 is_staff => IsStaff,
                 pending_connect => false,
-                previous_passive_updates => InitialLastMessageIds,
-                previous_passive_channel_versions => InitialChannelVersions,
-                previous_passive_voice_states => #{},
                 viewable_channels => ViewableChannels
             },
+            InitialPassiveState = #{
+                previous_passive_updates => InitialLastMessageIds,
+                previous_passive_channel_versions => InitialChannelVersions,
+                previous_passive_voice_states => #{}
+            },
+            passive_sync_registry:store(SessionId, GuildId, InitialPassiveState),
             SessionData =
                 case maps:get(should_mark_guild_synced, Computed, false) of
                     true -> session_passive:mark_guild_synced(GuildId, BaseSessionData);
@@ -1286,116 +919,6 @@ send_session_connect_result(GuildId, Attempt, Result0, SessionPid, ReplyViaPid) 
             ok
     end.
 
--spec event_requires_member_subscription_prune(atom()) -> boolean().
-event_requires_member_subscription_prune(guild_member_remove) -> true;
-event_requires_member_subscription_prune(guild_member_update) -> true;
-event_requires_member_subscription_prune(guild_role_update) -> true;
-event_requires_member_subscription_prune(guild_role_update_bulk) -> true;
-event_requires_member_subscription_prune(guild_role_delete) -> true;
-event_requires_member_subscription_prune(channel_update) -> true;
-event_requires_member_subscription_prune(channel_update_bulk) -> true;
-event_requires_member_subscription_prune(channel_delete) -> true;
-event_requires_member_subscription_prune(_) -> false.
-
--spec prune_invalid_member_subscriptions(guild_state()) -> guild_state().
-prune_invalid_member_subscriptions(State) ->
-    MemberSubs = maps:get(member_subscriptions, State, guild_subscriptions:init_state()),
-    Sessions = maps:get(sessions, State, #{}),
-    InvalidPairs = build_invalid_subscription_pairs(MemberSubs, Sessions, State),
-    lists:foldl(
-        fun({SessionId, UserId}, AccState) ->
-            remove_member_subscription(SessionId, UserId, AccState)
-        end,
-        State,
-        InvalidPairs
-    ).
-
--spec build_invalid_subscription_pairs(term(), map(), guild_state()) -> [{session_id(), user_id()}].
-build_invalid_subscription_pairs(MemberSubs, Sessions, State) ->
-    lists:foldl(
-        fun({SessionId, SessionData}, Acc) ->
-            SessionUserId = maps:get(user_id, SessionData, undefined),
-            case SessionUserId of
-                undefined ->
-                    Acc;
-                _ ->
-                    SessionChannels = guild_visibility:viewable_channel_set(SessionUserId, State),
-                    SubscriptionIds = guild_subscriptions:get_user_ids_for_session(
-                        SessionId, MemberSubs
-                    ),
-                    InvalidIds =
-                        [
-                            MemberId
-                         || MemberId <- sets:to_list(SubscriptionIds),
-                            not has_shared_channels(SessionChannels, MemberId, State)
-                        ],
-                    lists:foldl(
-                        fun(MemberId, Pairs) -> [{SessionId, MemberId} | Pairs] end,
-                        Acc,
-                        InvalidIds
-                    )
-            end
-        end,
-        [],
-        maps:to_list(Sessions)
-    ).
-
--spec remove_member_subscription(session_id(), user_id(), guild_state()) -> guild_state().
-remove_member_subscription(SessionId, UserId, State) ->
-    MemberSubs = maps:get(member_subscriptions, State, guild_subscriptions:init_state()),
-    NewMemberSubs = guild_subscriptions:unsubscribe(SessionId, UserId, MemberSubs),
-    State1 = maps:put(member_subscriptions, NewMemberSubs, State),
-    guild_sessions:unsubscribe_from_user_presence(UserId, State1).
-
--spec cleanup_removed_member_subscriptions(map(), map(), guild_state()) -> guild_state().
-cleanup_removed_member_subscriptions(OldData, NewData, State) ->
-    OldMemberIds = sets:from_list(guild_data_index:member_ids(OldData)),
-    NewMemberIds = sets:from_list(guild_data_index:member_ids(NewData)),
-    RemovedIds = sets:subtract(OldMemberIds, NewMemberIds),
-    PresenceSubs = maps:get(presence_subscriptions, State, #{}),
-    NewPresenceSubs = lists:foldl(
-        fun(UserId, Subs) ->
-            case maps:is_key(UserId, Subs) of
-                true ->
-                    presence_bus:unsubscribe(UserId),
-                    maps:remove(UserId, Subs);
-                false ->
-                    Subs
-            end
-        end,
-        PresenceSubs,
-        sets:to_list(RemovedIds)
-    ),
-    maps:put(presence_subscriptions, NewPresenceSubs, State).
-
--spec owner_id(guild_state()) -> user_id().
-owner_id(State) ->
-    case resolve_data_map(State) of
-        undefined ->
-            0;
-        Data ->
-            Guild = maps:get(<<"guild">>, Data, #{}),
-            type_conv:to_integer(maps:get(<<"owner_id">>, Guild, <<"0">>))
-    end.
-
--spec resolve_data_map(guild_state() | map()) -> map() | undefined.
-resolve_data_map(State) when is_map(State) ->
-    case maps:find(data, State) of
-        {ok, Data} when is_map(Data) ->
-            Data;
-        {ok, Data} when is_map(Data) =:= false ->
-            undefined;
-        error ->
-            case State of
-                #{<<"members">> := _} ->
-                    State;
-                _ ->
-                    undefined
-            end
-    end;
-resolve_data_map(_) ->
-    undefined.
-
 -spec maybe_report_crash(term(), term()) -> ok.
 maybe_report_crash(normal, _State) ->
     ok;
@@ -1434,6 +957,55 @@ extract_guild_id_for_crash(_) ->
 member_user_id(Member) ->
     User = maps:get(<<"user">>, Member, #{}),
     map_utils:get_integer(User, <<"id">>, undefined).
+
+-spec owner_id(guild_state()) -> user_id().
+owner_id(State) ->
+    case resolve_data_map(State) of
+        undefined ->
+            0;
+        Data ->
+            Guild = maps:get(<<"guild">>, Data, #{}),
+            type_conv:to_integer(maps:get(<<"owner_id">>, Guild, <<"0">>))
+    end.
+
+-spec resolve_data_map(guild_state() | map()) -> map() | undefined.
+resolve_data_map(State) when is_map(State) ->
+    case maps:find(data, State) of
+        {ok, Data} when is_map(Data) ->
+            Data;
+        {ok, Data} when is_map(Data) =:= false ->
+            undefined;
+        error ->
+            case State of
+                #{<<"members">> := _} ->
+                    State;
+                _ ->
+                    undefined
+            end
+    end;
+resolve_data_map(_) ->
+    undefined.
+
+-spec filter_member_ids_with_mutual_channels(user_id() | undefined, [user_id()], guild_state()) ->
+    [user_id()].
+filter_member_ids_with_mutual_channels(undefined, _, _) ->
+    [];
+filter_member_ids_with_mutual_channels(SessionUserId, MemberIds, State) ->
+    SessionChannels = guild_visibility:viewable_channel_set(SessionUserId, State),
+    lists:filtermap(
+        fun(MemberId) ->
+            case MemberId =:= SessionUserId of
+                true ->
+                    false;
+                false ->
+                    case has_shared_channels(SessionChannels, MemberId, State) of
+                        true -> {true, MemberId};
+                        false -> false
+                    end
+            end
+        end,
+        MemberIds
+    ).
 
 update_counts_test() ->
     State = #{

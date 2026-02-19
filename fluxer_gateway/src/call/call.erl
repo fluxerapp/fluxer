@@ -384,8 +384,6 @@ disconnect_user_after_pending_timeout(ConnectionId, UserId, SessionId, State) ->
     VoiceStates = maps:get(voice_states, State),
     case maps:is_key(UserId, VoiceStates) of
         true ->
-            %% Keep the active participant state when LiveKit confirm arrives late.
-            %% Reconciliation and explicit leave/disconnect paths handle true ghosts.
             {noreply, State#{pending_connections => NewPending}};
         false ->
             NewSessions = remove_session_entry(SessionId, maps:get(sessions, State)),

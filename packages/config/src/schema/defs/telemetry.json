@@ -111,26 +111,6 @@
 				"type": "string",
 				"default": "",
 				"description": "Frontend Sentry DSN."
-			},
-			"sentry_proxy_path": {
-				"type": "string",
-				"default": "/error-reporting-proxy",
-				"description": "Path to proxy Sentry requests."
-			},
-			"sentry_report_host": {
-				"type": "string",
-				"default": "",
-				"description": "Host for Sentry reporting."
-			},
-			"sentry_project_id": {
-				"type": "string",
-				"default": "",
-				"description": "Sentry Project ID."
-			},
-			"sentry_public_key": {
-				"type": "string",
-				"default": "",
-				"description": "Sentry Public Key."
 			}
 		}
 	}

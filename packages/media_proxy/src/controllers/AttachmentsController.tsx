@@ -23,6 +23,7 @@ import {HeadObjectCommand, type S3Client} from '@aws-sdk/client-s3';
 import type {LoggerInterface} from '@fluxer/logger/src/LoggerInterface';
 import {toBodyData, toWebReadableStream} from '@fluxer/media_proxy/src/lib/BinaryUtils';
 import {parseRange, setHeaders} from '@fluxer/media_proxy/src/lib/HttpUtils';
+import {ImageProcessingError} from '@fluxer/media_proxy/src/lib/ImageProcessing';
 import type {InMemoryCoalescer} from '@fluxer/media_proxy/src/lib/InMemoryCoalescer';
 import type {MediaTransformService} from '@fluxer/media_proxy/src/lib/MediaTransformService';
 import {SUPPORTED_MIME_TYPES} from '@fluxer/media_proxy/src/lib/MediaTypes';
@@ -124,14 +125,22 @@ export function createAttachmentsHandler(deps: AttachmentsControllerDeps) {
 				if (!mediaType) throw new HTTPException(400, {message: 'Invalid media type'});
 
 				if (mediaType === 'image') {
-					return transformImage(data, {
-						width,
-						height,
-						format: normalizedFormat || undefined,
-						quality,
-						animated,
-						fallbackContentType: contentType,
-					});
+					try {
+						return await transformImage(data, {
+							width,
+							height,
+							format: normalizedFormat || undefined,
+							quality,
+							animated,
+							fallbackContentType: contentType,
+						});
+					} catch (error) {
+						if (error instanceof ImageProcessingError) {
+							logger.warn({error}, 'Image transformation failed, serving original');
+							return {data, contentType};
+						}
+						throw error;
+					}
 				}
 
 				if (mediaType === 'video' && format && mimeType) {
@@ -145,7 +154,12 @@ export function createAttachmentsHandler(deps: AttachmentsControllerDeps) {
 
 				throw new HTTPException(400, {message: 'Only images can be transformed via this endpoint'});
 			} catch (error) {
-				logger.error({error}, 'Failed to process attachment media');
+				if (error instanceof HTTPException) throw error;
+				if (error instanceof Error && 'isExpected' in error) {
+					logger.warn({error}, 'Failed to process attachment media');
+				} else {
+					logger.error({error}, 'Failed to process attachment media');
+				}
 				throw new HTTPException(400);
 			}
 		});

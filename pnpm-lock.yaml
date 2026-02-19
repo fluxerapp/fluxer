@@ -342,6 +342,9 @@ catalogs:
     msw:
       specifier: 2.12.9
       version: 2.12.9
+    nats:
+      specifier: 2.29.3
+      version: 2.29.3
     node-addon-api:
       specifier: 8.5.0
       version: 8.5.0
@@ -1016,40 +1019,6 @@ importers:
         specifier: 'catalog:'
         version: 7.0.0-dev.20260209.1
 
-  fluxer_queue:
-    dependencies:
-      '@fluxer/config':
-        specifier: workspace:*
-        version: link:../packages/config
-      '@fluxer/hono':
-        specifier: workspace:*
-        version: link:../packages/hono
-      '@fluxer/initialization':
-        specifier: workspace:*
-        version: link:../packages/initialization
-      '@fluxer/logger':
-        specifier: workspace:*
-        version: link:../packages/logger
-      '@fluxer/queue':
-        specifier: workspace:*
-        version: link:../packages/queue
-      '@fluxer/rate_limit':
-        specifier: workspace:*
-        version: link:../packages/rate_limit
-      '@fluxer/sentry':
-        specifier: workspace:*
-        version: link:../packages/sentry
-      tsx:
-        specifier: 'catalog:'
-        version: 4.21.0
-    devDependencies:
-      '@types/node':
-        specifier: 'catalog:'
-        version: 25.2.2
-      '@typescript/native-preview':
-        specifier: 'catalog:'
-        version: 7.0.0-dev.20260209.1
-
   fluxer_relay_directory:
     dependencies:
       '@fluxer/config':
@@ -1128,18 +1097,15 @@ importers:
       '@fluxer/media_proxy':
         specifier: workspace:*
         version: link:../packages/media_proxy
-      '@fluxer/queue':
+      '@fluxer/nats':
         specifier: workspace:*
-        version: link:../packages/queue
+        version: link:../packages/nats
       '@fluxer/s3':
         specifier: workspace:*
         version: link:../packages/s3
       '@fluxer/sentry':
         specifier: workspace:*
         version: link:../packages/sentry
-      '@fluxer/worker':
-        specifier: workspace:*
-        version: link:../packages/worker
       hono:
         specifier: 'catalog:'
         version: 4.11.9
@@ -1265,9 +1231,9 @@ importers:
       '@fluxer/errors':
         specifier: workspace:*
         version: link:../errors
-      '@fluxer/geo_utils':
+      '@fluxer/geoip':
         specifier: workspace:*
-        version: link:../geo_utils
+        version: link:../geoip
       '@fluxer/hono':
         specifier: workspace:*
         version: link:../hono
@@ -1301,9 +1267,9 @@ importers:
       '@fluxer/mime_utils':
         specifier: workspace:*
         version: link:../mime_utils
-      '@fluxer/queue':
+      '@fluxer/nats':
         specifier: workspace:*
-        version: link:../queue
+        version: link:../nats
       '@fluxer/rate_limit':
         specifier: workspace:*
         version: link:../rate_limit
@@ -1391,12 +1357,12 @@ importers:
       magic-bytes.js:
         specifier: 'catalog:'
         version: 1.13.0
-      maxmind:
-        specifier: 'catalog:'
-        version: 5.0.5
       mime:
         specifier: 'catalog:'
         version: 4.1.0
+      nats:
+        specifier: 'catalog:'
+        version: 2.29.3
       sharp:
         specifier: 'catalog:'
         version: 0.34.5
@@ -1669,6 +1635,25 @@ importers:
         specifier: 'catalog:'
         version: 4.0.18(@opentelemetry/api@1.9.0)(@types/node@25.2.2)(happy-dom@20.5.3)(jiti@2.6.1)(jsdom@28.0.0)(lightningcss@1.31.1)(msw@2.12.9(@types/node@25.2.2)(typescript@5.9.3))(tsx@4.21.0)(yaml@2.8.2)
 
+  packages/geoip:
+    dependencies:
+      '@fluxer/geo_utils':
+        specifier: workspace:*
+        version: link:../geo_utils
+      '@fluxer/ip_utils':
+        specifier: workspace:*
+        version: link:../ip_utils
+      maxmind:
+        specifier: 'catalog:'
+        version: 5.0.5
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 25.2.2
+      '@typescript/native-preview':
+        specifier: 'catalog:'
+        version: 7.0.0-dev.20260209.1
+
   packages/hono:
     dependencies:
       '@fluxer/constants':
@@ -1896,6 +1881,12 @@ importers:
       '@fluxer/date_utils':
         specifier: workspace:*
         version: link:../date_utils
+      '@fluxer/errors':
+        specifier: workspace:*
+        version: link:../errors
+      '@fluxer/geoip':
+        specifier: workspace:*
+        version: link:../geoip
       '@fluxer/hono':
         specifier: workspace:*
         version: link:../hono
@@ -1923,6 +1914,9 @@ importers:
       '@fluxer/rate_limit':
         specifier: workspace:*
         version: link:../rate_limit
+      '@fluxer/sentry':
+        specifier: workspace:*
+        version: link:../sentry
       '@fluxer/telemetry':
         specifier: workspace:*
         version: link:../telemetry
@@ -1935,9 +1929,6 @@ importers:
       hono:
         specifier: 'catalog:'
         version: 4.11.9
-      itty-time:
-        specifier: 'catalog:'
-        version: 2.0.2
     devDependencies:
       '@tailwindcss/cli':
         specifier: 'catalog:'
@@ -2065,6 +2056,19 @@ importers:
       mime:
         specifier: 'catalog:'
         version: 4.1.0
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 25.2.2
+      '@typescript/native-preview':
+        specifier: 'catalog:'
+        version: 7.0.0-dev.20260209.1
+
+  packages/nats:
+    dependencies:
+      nats:
+        specifier: 'catalog:'
+        version: 2.29.3
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
@@ -9002,6 +9006,10 @@ packages:
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
     hasBin: true
 
+  nats@2.29.3:
+    resolution: {integrity: sha512-tOQCRCwC74DgBTk4pWZ9V45sk4d7peoE2njVprMRCBXrhJ5q5cYM7i6W+Uvw2qUrcfOSnuisrX7bEx3b3Wx4QA==}
+    engines: {node: '>= 14.0.0'}
+
   negotiator@0.6.3:
     resolution: {integrity: sha512-+EUsqGPLsM+j/zdChZjsnX51g4XrHFOIXwfnCVPGlQk/k5giakcKsuxCObBRu6DSm9opw/O6slWbJdghQM4bBg==}
     engines: {node: '>= 0.6'}
@@ -9009,6 +9017,10 @@ packages:
   negotiator@0.6.4:
     resolution: {integrity: sha512-myRT3DiWPHqho5PrJaIRyaMv2kgYf0mUVgBNOYMuCH5Ki1yEiQaf/ZJuQ62nvpc44wL5WDbTX7yGJi1Neevw8w==}
     engines: {node: '>= 0.6'}
+
+  nkeys.js@1.1.0:
+    resolution: {integrity: sha512-tB/a0shZL5UZWSwsoeyqfTszONTt4k2YS0tuQioMOD180+MbombYVgzDUYHlx+gejYK6rgf08n/2Df99WY0Sxg==}
+    engines: {node: '>=10.0.0'}
 
   no-case@3.0.4:
     resolution: {integrity: sha512-fgAN3jGAh+RoxUGZHTSOLJIqUc2wmoBwGR4tbpNAKmmovFoWq0OdRkb0VkldReO2a2iBT/OEulG9XSUc10r3zg==}
@@ -10261,6 +10273,9 @@ packages:
 
   tweetnacl@0.14.5:
     resolution: {integrity: sha512-KXXFFdAbFXY4geFIwoyNK+f5Z1b7swfXABfL7HXCmoIWMKU3dmS26672A4EeQtDzLKy7SXmfBu51JolvEKwtGA==}
+
+  tweetnacl@1.0.3:
+    resolution: {integrity: sha512-6rt+RN7aOi1nGMyC4Xa5DdYiukl2UWCbcJft7YhxReBGQD7OAM8Pbxw6YMo4r2diNEA8FEmu32YOn9rhaiE5yw==}
 
   type-fest@0.13.1:
     resolution: {integrity: sha512-34R7HTnG0XIJcBSn5XhDd7nNFPRcXYRZrBB2O2jdKqYODldSzBAqzsWoZYYvduky73toYS/ESqxPvkDf/F0XMg==}
@@ -18360,9 +18375,17 @@ snapshots:
 
   nanoid@3.3.11: {}
 
+  nats@2.29.3:
+    dependencies:
+      nkeys.js: 1.1.0
+
   negotiator@0.6.3: {}
 
   negotiator@0.6.4: {}
+
+  nkeys.js@1.1.0:
+    dependencies:
+      tweetnacl: 1.0.3
 
   no-case@3.0.4:
     dependencies:
@@ -19913,6 +19936,8 @@ snapshots:
       turbo-windows-arm64: 2.8.3
 
   tweetnacl@0.14.5: {}
+
+  tweetnacl@1.0.3: {}
 
   type-fest@0.13.1: {}
 

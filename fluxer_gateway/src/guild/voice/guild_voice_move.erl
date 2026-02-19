@@ -419,10 +419,9 @@ send_single_voice_server_update(GuildId, ChannelId, SessionInfo, GuildPid) ->
                                 <<"server_deaf">> => ServerDeaf,
                                 <<"member">> => Member
                             },
-                            _ = gen_server:call(
-                                GuildPid,
-                                {store_pending_connection, NewConnectionId, PendingMetadata},
-                                10000
+                            _ = store_pending_connection(
+                                GuildId, GuildPid,
+                                NewConnectionId, PendingMetadata
                             ),
                             guild_voice_broadcast:broadcast_voice_server_update_to_session(
                                 GuildId,
@@ -439,6 +438,22 @@ send_single_voice_server_update(GuildId, ChannelId, SessionInfo, GuildPid) ->
                 _ ->
                     ok
             end
+    end.
+
+-spec store_pending_connection(integer(), pid(), binary(), map()) -> ok.
+store_pending_connection(GuildId, GuildPid, ConnectionId, Metadata) ->
+    TargetPid = resolve_voice_server(GuildId, GuildPid),
+    gen_server:call(
+        TargetPid,
+        {store_pending_connection, ConnectionId, Metadata},
+        10000
+    ).
+
+-spec resolve_voice_server(integer(), pid()) -> pid().
+resolve_voice_server(GuildId, FallbackPid) ->
+    case guild_voice_server:lookup(GuildId) of
+        {ok, VoicePid} -> VoicePid;
+        {error, not_found} -> FallbackPid
     end.
 
 -ifdef(TEST).

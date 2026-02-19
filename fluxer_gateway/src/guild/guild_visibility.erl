@@ -700,4 +700,348 @@ filter_connected_session_entries_excludes_pending_test() ->
     ResultIds = lists:sort([Sid || {Sid, _} <- Result]),
     ?assertEqual([<<"s1">>, <<"s3">>], ResultIds).
 
+administrator_sees_all_channels_test() ->
+    GuildId = 50,
+    UserId = 10,
+    ChannelId = 100,
+    Admin = constants:administrator_permission(),
+    State = #{
+        id => GuildId,
+        data => #{
+            <<"guild">> => #{<<"owner_id">> => <<"999">>},
+            <<"roles">> => [
+                #{<<"id">> => integer_to_binary(GuildId), <<"permissions">> => integer_to_binary(Admin)}
+            ],
+            <<"members">> => [
+                #{<<"user">> => #{<<"id">> => integer_to_binary(UserId)}, <<"roles">> => []}
+            ],
+            <<"channels">> => [
+                #{
+                    <<"id">> => integer_to_binary(ChannelId),
+                    <<"permission_overwrites">> => [
+                        #{
+                            <<"id">> => integer_to_binary(GuildId),
+                            <<"type">> => 0,
+                            <<"allow">> => <<"0">>,
+                            <<"deny">> => integer_to_binary(constants:view_channel_permission())
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+    Channels = get_user_viewable_channels(UserId, State),
+    ?assertEqual([ChannelId], Channels).
+
+owner_sees_all_channels_test() ->
+    GuildId = 60,
+    OwnerId = 10,
+    ChannelId = 200,
+    State = #{
+        id => GuildId,
+        data => #{
+            <<"guild">> => #{<<"owner_id">> => integer_to_binary(OwnerId)},
+            <<"roles">> => [
+                #{<<"id">> => integer_to_binary(GuildId), <<"permissions">> => <<"0">>}
+            ],
+            <<"members">> => [
+                #{<<"user">> => #{<<"id">> => integer_to_binary(OwnerId)}, <<"roles">> => []}
+            ],
+            <<"channels">> => [
+                #{<<"id">> => integer_to_binary(ChannelId), <<"permission_overwrites">> => []}
+            ]
+        }
+    },
+    Channels = get_user_viewable_channels(OwnerId, State),
+    ?assertEqual([ChannelId], Channels).
+
+everyone_role_grants_view_test() ->
+    GuildId = 70,
+    UserId = 10,
+    ChannelId = 300,
+    ViewPerm = constants:view_channel_permission(),
+    State = #{
+        id => GuildId,
+        data => #{
+            <<"guild">> => #{<<"owner_id">> => <<"999">>},
+            <<"roles">> => [
+                #{<<"id">> => integer_to_binary(GuildId), <<"permissions">> => integer_to_binary(ViewPerm)}
+            ],
+            <<"members">> => [
+                #{<<"user">> => #{<<"id">> => integer_to_binary(UserId)}, <<"roles">> => []}
+            ],
+            <<"channels">> => [
+                #{<<"id">> => integer_to_binary(ChannelId), <<"permission_overwrites">> => []}
+            ]
+        }
+    },
+    Channels = get_user_viewable_channels(UserId, State),
+    ?assertEqual([ChannelId], Channels).
+
+channel_overwrite_denies_view_test() ->
+    GuildId = 80,
+    UserId = 10,
+    RoleId = 200,
+    ChannelId = 400,
+    ViewPerm = constants:view_channel_permission(),
+    State = #{
+        id => GuildId,
+        data => #{
+            <<"guild">> => #{<<"owner_id">> => <<"999">>},
+            <<"roles">> => [
+                #{<<"id">> => integer_to_binary(GuildId), <<"permissions">> => integer_to_binary(ViewPerm)},
+                #{<<"id">> => integer_to_binary(RoleId), <<"permissions">> => <<"0">>}
+            ],
+            <<"members">> => [
+                #{
+                    <<"user">> => #{<<"id">> => integer_to_binary(UserId)},
+                    <<"roles">> => [integer_to_binary(RoleId)]
+                }
+            ],
+            <<"channels">> => [
+                #{
+                    <<"id">> => integer_to_binary(ChannelId),
+                    <<"permission_overwrites">> => [
+                        #{
+                            <<"id">> => integer_to_binary(RoleId),
+                            <<"type">> => 0,
+                            <<"allow">> => <<"0">>,
+                            <<"deny">> => integer_to_binary(ViewPerm)
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+    Channels = get_user_viewable_channels(UserId, State),
+    ?assertEqual([], Channels).
+
+role_overwrite_allows_view_test() ->
+    GuildId = 90,
+    UserId = 10,
+    RoleId = 300,
+    ChannelId = 500,
+    ViewPerm = constants:view_channel_permission(),
+    State = #{
+        id => GuildId,
+        data => #{
+            <<"guild">> => #{<<"owner_id">> => <<"999">>},
+            <<"roles">> => [
+                #{<<"id">> => integer_to_binary(GuildId), <<"permissions">> => integer_to_binary(ViewPerm)},
+                #{<<"id">> => integer_to_binary(RoleId), <<"permissions">> => <<"0">>}
+            ],
+            <<"members">> => [
+                #{
+                    <<"user">> => #{<<"id">> => integer_to_binary(UserId)},
+                    <<"roles">> => [integer_to_binary(RoleId)]
+                }
+            ],
+            <<"channels">> => [
+                #{
+                    <<"id">> => integer_to_binary(ChannelId),
+                    <<"permission_overwrites">> => [
+                        #{
+                            <<"id">> => integer_to_binary(GuildId),
+                            <<"type">> => 0,
+                            <<"allow">> => <<"0">>,
+                            <<"deny">> => integer_to_binary(ViewPerm)
+                        },
+                        #{
+                            <<"id">> => integer_to_binary(RoleId),
+                            <<"type">> => 0,
+                            <<"allow">> => integer_to_binary(ViewPerm),
+                            <<"deny">> => <<"0">>
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+    Channels = get_user_viewable_channels(UserId, State),
+    ?assertEqual([ChannelId], Channels).
+
+user_overwrite_denies_view_test() ->
+    GuildId = 91,
+    UserId = 10,
+    RoleId = 301,
+    ChannelId = 501,
+    ViewPerm = constants:view_channel_permission(),
+    State = #{
+        id => GuildId,
+        data => #{
+            <<"guild">> => #{<<"owner_id">> => <<"999">>},
+            <<"roles">> => [
+                #{<<"id">> => integer_to_binary(GuildId), <<"permissions">> => integer_to_binary(ViewPerm)},
+                #{<<"id">> => integer_to_binary(RoleId), <<"permissions">> => <<"0">>}
+            ],
+            <<"members">> => [
+                #{
+                    <<"user">> => #{<<"id">> => integer_to_binary(UserId)},
+                    <<"roles">> => [integer_to_binary(RoleId)]
+                }
+            ],
+            <<"channels">> => [
+                #{
+                    <<"id">> => integer_to_binary(ChannelId),
+                    <<"permission_overwrites">> => [
+                        #{
+                            <<"id">> => integer_to_binary(RoleId),
+                            <<"type">> => 0,
+                            <<"allow">> => integer_to_binary(ViewPerm),
+                            <<"deny">> => <<"0">>
+                        },
+                        #{
+                            <<"id">> => integer_to_binary(UserId),
+                            <<"type">> => 1,
+                            <<"allow">> => <<"0">>,
+                            <<"deny">> => integer_to_binary(ViewPerm)
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+    Channels = get_user_viewable_channels(UserId, State),
+    ?assertEqual([], Channels).
+
+viewable_channel_set_uses_cached_session_data_test() ->
+    UserId = 10,
+    State = #{
+        sessions => #{
+            <<"s1">> => #{
+                user_id => UserId,
+                viewable_channels => #{100 => true, 200 => true}
+            }
+        },
+        data => #{
+            <<"guild">> => #{<<"owner_id">> => <<"999">>},
+            <<"members">> => [],
+            <<"channels">> => [],
+            <<"roles">> => []
+        }
+    },
+    ChannelSet = viewable_channel_set(UserId, State),
+    ?assertEqual(true, sets:is_element(100, ChannelSet)),
+    ?assertEqual(true, sets:is_element(200, ChannelSet)),
+    ?assertEqual(false, sets:is_element(999, ChannelSet)).
+
+have_shared_viewable_channel_shared_test() ->
+    GuildId = 100,
+    ViewPerm = constants:view_channel_permission(),
+    State = #{
+        id => GuildId,
+        sessions => #{},
+        data => #{
+            <<"guild">> => #{<<"owner_id">> => <<"999">>},
+            <<"roles">> => [
+                #{<<"id">> => integer_to_binary(GuildId), <<"permissions">> => integer_to_binary(ViewPerm)}
+            ],
+            <<"members">> => [
+                #{<<"user">> => #{<<"id">> => <<"10">>}, <<"roles">> => []},
+                #{<<"user">> => #{<<"id">> => <<"20">>}, <<"roles">> => []}
+            ],
+            <<"channels">> => [
+                #{<<"id">> => <<"500">>, <<"permission_overwrites">> => []}
+            ]
+        }
+    },
+    ?assertEqual(true, have_shared_viewable_channel(10, 20, State)).
+
+have_shared_viewable_channel_no_shared_test() ->
+    GuildId = 101,
+    ViewPerm = constants:view_channel_permission(),
+    RoleId = 200,
+    State = #{
+        id => GuildId,
+        sessions => #{},
+        data => #{
+            <<"guild">> => #{<<"owner_id">> => <<"999">>},
+            <<"roles">> => [
+                #{<<"id">> => integer_to_binary(GuildId), <<"permissions">> => <<"0">>},
+                #{<<"id">> => integer_to_binary(RoleId), <<"permissions">> => integer_to_binary(ViewPerm)}
+            ],
+            <<"members">> => [
+                #{<<"user">> => #{<<"id">> => <<"10">>}, <<"roles">> => [integer_to_binary(RoleId)]},
+                #{<<"user">> => #{<<"id">> => <<"20">>}, <<"roles">> => []}
+            ],
+            <<"channels">> => [
+                #{
+                    <<"id">> => <<"500">>,
+                    <<"permission_overwrites">> => [
+                        #{
+                            <<"id">> => integer_to_binary(GuildId),
+                            <<"type">> => 0,
+                            <<"allow">> => <<"0">>,
+                            <<"deny">> => integer_to_binary(ViewPerm)
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+    ?assertEqual(false, have_shared_viewable_channel(10, 20, State)).
+
+update_viewable_map_for_channel_add_test() ->
+    Map = #{100 => true},
+    Result = update_viewable_map_for_channel(Map, 200, true),
+    ?assertEqual(true, maps:is_key(200, Result)),
+    ?assertEqual(true, maps:is_key(100, Result)).
+
+update_viewable_map_for_channel_remove_test() ->
+    Map = #{100 => true, 200 => true},
+    Result = update_viewable_map_for_channel(Map, 100, false),
+    ?assertEqual(false, maps:is_key(100, Result)),
+    ?assertEqual(true, maps:is_key(200, Result)).
+
+multiple_channels_partial_visibility_test() ->
+    GuildId = 110,
+    UserId = 10,
+    ViewPerm = constants:view_channel_permission(),
+    RoleId = 300,
+    State = #{
+        id => GuildId,
+        data => #{
+            <<"guild">> => #{<<"owner_id">> => <<"999">>},
+            <<"roles">> => [
+                #{<<"id">> => integer_to_binary(GuildId), <<"permissions">> => integer_to_binary(ViewPerm)},
+                #{<<"id">> => integer_to_binary(RoleId), <<"permissions">> => <<"0">>}
+            ],
+            <<"members">> => [
+                #{
+                    <<"user">> => #{<<"id">> => integer_to_binary(UserId)},
+                    <<"roles">> => []
+                }
+            ],
+            <<"channels">> => [
+                #{<<"id">> => <<"100">>, <<"permission_overwrites">> => []},
+                #{
+                    <<"id">> => <<"101">>,
+                    <<"permission_overwrites">> => [
+                        #{
+                            <<"id">> => integer_to_binary(GuildId),
+                            <<"type">> => 0,
+                            <<"allow">> => <<"0">>,
+                            <<"deny">> => integer_to_binary(ViewPerm)
+                        }
+                    ]
+                },
+                #{<<"id">> => <<"102">>, <<"permission_overwrites">> => []}
+            ]
+        }
+    },
+    Channels = lists:sort(get_user_viewable_channels(UserId, State)),
+    ?assertEqual([100, 102], Channels).
+
+viewable_channel_map_test() ->
+    Set = sets:from_list([10, 20, 30]),
+    Map = viewable_channel_map(Set),
+    ?assertEqual(3, map_size(Map)),
+    ?assertEqual(true, maps:get(10, Map)),
+    ?assertEqual(true, maps:get(20, Map)),
+    ?assertEqual(true, maps:get(30, Map)).
+
+viewable_channel_map_empty_test() ->
+    Map = viewable_channel_map(sets:new()),
+    ?assertEqual(#{}, Map).
+
 -endif.

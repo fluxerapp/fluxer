@@ -263,6 +263,11 @@ export class MockGatewayService implements IGatewayService {
 	async getDiscoveryOnlineCounts(_guildIds: Array<GuildID>): Promise<Map<GuildID, number>> {
 		return new Map();
 	}
+	async getDiscoveryGuildCounts(
+		_guildIds: Array<GuildID>,
+	): Promise<Map<GuildID, {memberCount: number; onlineCount: number}>> {
+		return new Map();
+	}
 	async getNodeStats(): Promise<{
 		status: string;
 		sessions: number;

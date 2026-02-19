@@ -45,10 +45,6 @@ export type LimitConfigResponse = z.infer<typeof LimitConfigResponse>;
 
 export const AppPublicConfigResponse = z.object({
 	sentry_dsn: z.string().describe('Sentry DSN for client-side error reporting'),
-	sentry_proxy_path: z.string().describe('Proxy path for Sentry requests'),
-	sentry_report_host: z.string().describe('Host for Sentry error reports'),
-	sentry_project_id: z.string().describe('Sentry project ID'),
-	sentry_public_key: z.string().describe('Sentry public key'),
 });
 export type AppPublicConfigResponse = z.infer<typeof AppPublicConfigResponse>;
 

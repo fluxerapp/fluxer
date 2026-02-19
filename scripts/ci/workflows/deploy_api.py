@@ -27,6 +27,11 @@ else
   CONFIG_PATH="/etc/fluxer/config.stable.json"
 fi
 CANARY_WORKER_REPLICAS="${CANARY_WORKER_REPLICAS:-3}"
+if [[ "${IS_CANARY}" == "true" ]]; then
+  API_REPLICAS=6
+else
+  API_REPLICAS=20
+fi
 BLUESKY_KEYS_DIR="/etc/fluxer/keys"
 sudo mkdir -p "${BLUESKY_KEYS_DIR}"
 sudo chown root:65534 "${BLUESKY_KEYS_DIR}"
@@ -77,7 +82,7 @@ services:
       - /opt/geoip/GeoLite2-City.mmdb:/data/GeoLite2-City.mmdb:ro
     deploy:
       <<: *deploy_base
-      replicas: 6
+      replicas: ${API_REPLICAS}
       labels:
         - "caddy=${CADDY_DOMAIN}"
         - 'caddy.reverse_proxy={{upstreams 8080}}'

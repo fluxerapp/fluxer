@@ -26,6 +26,7 @@ export const APIErrorCodesDescriptions: Record<keyof typeof APIErrorCodes, strin
 	APPLICATION_NOT_OWNED: 'You do not own this application',
 	BAD_GATEWAY: 'Bad gateway',
 	BAD_REQUEST: 'Bad request',
+	BLUESKY_OAUTH_AUTHORIZATION_FAILED: 'The Bluesky handle could not be resolved for authorisation',
 	BLUESKY_OAUTH_CALLBACK_FAILED: 'The Bluesky OAuth callback could not be processed',
 	BLUESKY_OAUTH_NOT_ENABLED: 'Bluesky OAuth connections are not enabled on this instance',
 	BLUESKY_OAUTH_SESSION_EXPIRED: 'The Bluesky OAuth session has expired or been revoked',

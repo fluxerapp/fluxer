@@ -152,7 +152,11 @@ export async function parseMultipartMessageData(
 				ValidationErrorCodes.ATTACHMENTS_METADATA_REQUIRED_WHEN_UPLOADING,
 			);
 		}
+	}
 
+	const hasAttachmentMetadata = data.attachments && Array.isArray(data.attachments) && data.attachments.length > 0;
+
+	if (hasAttachmentMetadata) {
 		type AttachmentMetadata = ClientAttachmentRequest | ClientAttachmentReferenceRequest;
 		const attachmentMetadata = data.attachments as Array<AttachmentMetadata>;
 
@@ -163,66 +167,67 @@ export async function parseMultipartMessageData(
 			(a): a is ClientAttachmentReferenceRequest => !('filename' in a) || a.filename === undefined,
 		);
 
-		const metadataIds = new Set(
-			newAttachments.map((a) => {
-				const id = a.id;
-				return typeof id === 'string' ? parseInt(id, 10) : id;
-			}),
-		);
 		const fileIds = new Set(filesWithIndices.map((f) => f.index));
 
-		for (const fileId of fileIds) {
-			if (!metadataIds.has(fileId)) {
-				throw InputValidationError.fromCode('attachments', ValidationErrorCodes.NO_METADATA_FOR_FILE, {fileId});
-			}
-		}
+		const inlineNewAttachments: Array<ClientAttachmentRequest> = [];
 
 		for (const att of newAttachments) {
 			const id = typeof att.id === 'string' ? parseInt(att.id, 10) : att.id;
-			if (!fileIds.has(id)) {
+			if (fileIds.has(id)) {
+				inlineNewAttachments.push(att);
+			} else {
 				throw InputValidationError.fromCode('attachments', ValidationErrorCodes.NO_FILE_FOR_ATTACHMENT_METADATA, {
 					attachmentId: att.id,
 				});
 			}
 		}
 
-		const uploadedAttachments: Array<UploadedAttachment> = await ctx.get('channelService').uploadFormDataAttachments({
-			userId: user.id,
-			channelId,
-			files: filesWithIndices,
-			attachmentMetadata: newAttachments,
-			expiresAt: options?.uploadExpiresAt,
-		});
+		const inlineMetadataIds = new Set(
+			inlineNewAttachments.map((a) => {
+				const id = a.id;
+				return typeof id === 'string' ? parseInt(id, 10) : id;
+			}),
+		);
 
-		const uploadedMap = new Map(uploadedAttachments.map((u) => [u.id, u]));
-
-		const processedNewAttachments = newAttachments.map((clientData) => {
-			const id = typeof clientData.id === 'string' ? parseInt(clientData.id, 10) : clientData.id;
-			const uploaded = uploadedMap.get(id);
-			if (!uploaded) {
-				throw InputValidationError.fromCode('attachments', ValidationErrorCodes.NO_FILE_FOR_ATTACHMENT, {
-					attachmentId: clientData.id,
-				});
+		for (const fileId of fileIds) {
+			if (!inlineMetadataIds.has(fileId)) {
+				throw InputValidationError.fromCode('attachments', ValidationErrorCodes.NO_METADATA_FOR_FILE, {fileId});
 			}
+		}
 
-			if (clientData.filename !== uploaded.filename) {
-				throw InputValidationError.fromCode('attachments', ValidationErrorCodes.FILENAME_MISMATCH_FOR_ATTACHMENT, {
-					attachmentId: clientData.id,
-					expectedFilename: clientData.filename,
-				});
-			}
+		let processedInlineAttachments: Array<AttachmentRequestData> = [];
+		if (inlineNewAttachments.length > 0) {
+			const uploadedAttachments: Array<UploadedAttachment> = await ctx.get('channelService').uploadFormDataAttachments({
+				userId: user.id,
+				channelId,
+				files: filesWithIndices,
+				attachmentMetadata: inlineNewAttachments,
+				expiresAt: options?.uploadExpiresAt,
+			});
 
-			return mergeUploadWithClientData(uploaded, clientData);
-		});
+			const uploadedMap = new Map(uploadedAttachments.map((u) => [u.id, u]));
 
-		data.attachments = [...existingAttachments, ...processedNewAttachments];
-	} else if (
-		data.attachments?.some((a: unknown) => {
-			const attachment = a as ClientAttachmentRequest | ClientAttachmentReferenceRequest;
-			return 'filename' in attachment && attachment.filename;
-		})
-	) {
-		throw InputValidationError.fromCode('attachments', ValidationErrorCodes.ATTACHMENT_METADATA_WITHOUT_FILES);
+			processedInlineAttachments = inlineNewAttachments.map((clientData) => {
+				const id = typeof clientData.id === 'string' ? parseInt(clientData.id, 10) : clientData.id;
+				const uploaded = uploadedMap.get(id);
+				if (!uploaded) {
+					throw InputValidationError.fromCode('attachments', ValidationErrorCodes.NO_FILE_FOR_ATTACHMENT, {
+						attachmentId: clientData.id,
+					});
+				}
+
+				if (clientData.filename !== uploaded.filename) {
+					throw InputValidationError.fromCode('attachments', ValidationErrorCodes.FILENAME_MISMATCH_FOR_ATTACHMENT, {
+						attachmentId: clientData.id,
+						expectedFilename: clientData.filename,
+					});
+				}
+
+				return mergeUploadWithClientData(uploaded, clientData);
+			});
+		}
+
+		data.attachments = [...existingAttachments, ...processedInlineAttachments];
 	}
 
 	return data as MessageRequest | MessageUpdateRequest;

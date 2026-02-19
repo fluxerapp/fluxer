@@ -22,17 +22,16 @@
 		},
 		"gateway": {
 			"port": 8080,
-			"api_host": "http://127.0.0.1:8088/api",
 			"admin_reload_secret": "deadbeef0123456789abcdef0123456789abcdef0123456789abcdef01234567",
 			"media_proxy_endpoint": "http://localhost:8088/media"
+		},
+		"nats": {
+			"core_url": "nats://127.0.0.1:4222",
+			"jetstream_url": "nats://127.0.0.1:4223"
 		},
 		"server": {
 			"port": 8088
 		}
-	},
-	"gateway": {
-		"rpc_endpoint": "http://127.0.0.1:8081",
-		"rpc_secret": "cafebabe0123456789abcdef0123456789abcdef0123456789abcdef01234567"
 	},
 	"auth": {
 		"sudo_mode_secret": "c0ffee000123456789abcdef0123456789abcdef0123456789abcdef01234567",

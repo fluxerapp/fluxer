@@ -8,7 +8,7 @@ packages:
   - fluxer_integration
   - fluxer_marketing
   - fluxer_media_proxy
-  - fluxer_queue
+
   - fluxer_relay_directory
   - fluxer_server
   - '!fluxer_docs'
@@ -153,6 +153,7 @@ catalog:
   motion: 12.34.0
   msgpackr: 1.11.8
   msw: 2.12.9
+  nats: 2.29.3
   node-addon-api: 8.5.0
   nodemailer: 8.0.1
   onnxruntime-node: 1.24.1

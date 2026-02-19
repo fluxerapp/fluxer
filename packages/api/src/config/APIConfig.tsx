@@ -38,10 +38,10 @@ export interface APIConfig {
 		url: string;
 	};
 
-	gateway: {
-		rpcEndpoint: string;
-		rpcSecret: string;
-		rpcTcpPort: number;
+	nats: {
+		coreUrl: string;
+		jetStreamUrl: string;
+		authToken: string;
 	};
 
 	mediaProxy: {
@@ -96,10 +96,6 @@ export interface APIConfig {
 
 	appPublic: {
 		sentryDsn: string;
-		sentryProxyPath: string;
-		sentryReportHost: string;
-		sentryProjectId: string;
-		sentryPublicKey: string;
 	};
 
 	email: {

@@ -115,14 +115,6 @@ export const PLUTONIUM_PERKS: ReadonlyArray<PlutoniumPerk> = [
 		plutoniumValue: true,
 	},
 	{
-		id: 'notification_sounds',
-		type: 'boolean',
-		status: 'beta',
-		i18nKey: 'notification_sounds',
-		freeValue: false,
-		plutoniumValue: true,
-	},
-	{
 		id: 'max_guilds',
 		type: 'numeric',
 		status: 'available',

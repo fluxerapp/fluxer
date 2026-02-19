@@ -148,6 +148,7 @@ calls_and_voice.voice_message_duration_required: 음성 메시지 첨부 파일�
 calls_and_voice.voice_message_waveform_required: 음성 메시지 첨부 파일에는 파형 데이터가 포함돼야 해요.
 calls_and_voice.voice_messages_require_single_attachment: 음성 메시지는 첨부 파일이 정확히 1개여야 해요.
 connections.already_exists: 이 유형의 이 식별자로는 이미 연결이 존재해요.
+connections.bluesky_oauth_authorization_failed: 해당 Bluesky 핸들을 확인할 수 없었어요. 확인 후 다시 시도해 주세요.
 connections.bluesky_oauth_callback_failed: Bluesky 연결을 완료하지 못했어요. 다시 시도해 주세요.
 connections.bluesky_oauth_not_enabled: 이 서버에서는 Bluesky 연결을 지원하지 않아요.
 connections.bluesky_oauth_session_expired: Bluesky 세션이 만료됐어요. 계정을 다시 연결해 주세요.

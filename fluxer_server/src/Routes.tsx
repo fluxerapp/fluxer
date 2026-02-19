@@ -110,13 +110,6 @@ export async function mountRoutes(options: MountRoutesOptions): Promise<MountedR
 			logger.info(config.isMonolith ? 'S3 service mounted at /s3 (restricted mode)' : 'S3 service mounted at /s3');
 		}
 
-		if (services.queue !== undefined && !config.isMonolith) {
-			app.route('/queue', services.queue.app);
-			logger.info('Queue service mounted at /queue');
-		} else if (services.queue !== undefined) {
-			logger.info('Queue service available internally only (monolith mode)');
-		}
-
 		if (services.mediaProxy !== undefined) {
 			app.route('/media', services.mediaProxy.app);
 			logger.info(

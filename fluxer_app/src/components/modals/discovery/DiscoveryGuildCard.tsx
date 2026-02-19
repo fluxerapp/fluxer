@@ -19,11 +19,14 @@
 
 import type {DiscoveryGuild} from '@app/actions/DiscoveryActionCreators';
 import * as DiscoveryActionCreators from '@app/actions/DiscoveryActionCreators';
+import * as ModalActionCreators from '@app/actions/ModalActionCreators';
+import * as NavigationActionCreators from '@app/actions/NavigationActionCreators';
 import * as ToastActionCreators from '@app/actions/ToastActionCreators';
 import {GuildBadge} from '@app/components/guild/GuildBadge';
 import styles from '@app/components/modals/discovery/DiscoveryGuildCard.module.css';
 import {GuildIcon} from '@app/components/popouts/GuildIcon';
 import {Button} from '@app/components/uikit/button/Button';
+import DiscoveryStore from '@app/stores/DiscoveryStore';
 import GuildStore from '@app/stores/GuildStore';
 import {getApiErrorMessage} from '@app/utils/ApiErrorUtils';
 import {getCurrentLocale} from '@app/utils/LocaleUtils';
@@ -51,6 +54,9 @@ export const DiscoveryGuildCard = observer(function DiscoveryGuildCard({guild}: 
 		setJoining(true);
 		try {
 			await DiscoveryActionCreators.joinGuild(guild.id);
+			DiscoveryStore.reset();
+			ModalActionCreators.pop();
+			NavigationActionCreators.selectGuild(guild.id);
 		} catch (error) {
 			setJoining(false);
 			const message = getApiErrorMessage(error) ?? t`Failed to join this community. Please try again.`;

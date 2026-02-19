@@ -646,17 +646,39 @@ dispatch_global_presence(TargetId, Payload, State) ->
         true ->
             {noreply, State};
         false ->
-            cache_if_visible(TargetId, Payload),
-            Sessions = maps:get(sessions, State),
-            SessionPids = [maps:get(pid, S) || S <- maps:values(Sessions)],
-            lists:foreach(
-                fun(Pid) when is_pid(Pid) ->
-                    gen_server:cast(Pid, {dispatch, presence_update, Payload})
-                end,
-                SessionPids
-            ),
+            case maps:get(<<"user_update">>, Payload, false) of
+                true ->
+                    dispatch_global_user_update(TargetId, Payload, State);
+                false ->
+                    cache_if_visible(TargetId, Payload),
+                    dispatch_to_sessions(Payload, State),
+                    {noreply, State}
+            end
+    end.
+
+-spec dispatch_global_user_update(user_id(), map(), state()) -> {noreply, state()}.
+dispatch_global_user_update(TargetId, Payload, State) ->
+    NewUserData = maps:get(<<"user">>, Payload, #{}),
+    case presence_cache:get(TargetId) of
+        {ok, CachedPresence} ->
+            MergedPresence = maps:put(<<"user">>, NewUserData, CachedPresence),
+            presence_cache:put(TargetId, MergedPresence),
+            dispatch_to_sessions(MergedPresence, State),
+            {noreply, State};
+        _ ->
             {noreply, State}
     end.
+
+-spec dispatch_to_sessions(map(), state()) -> ok.
+dispatch_to_sessions(Payload, State) ->
+    Sessions = maps:get(sessions, State),
+    SessionPids = [maps:get(pid, S) || S <- maps:values(Sessions)],
+    lists:foreach(
+        fun(Pid) when is_pid(Pid) ->
+            gen_server:cast(Pid, {dispatch, presence_update, Payload})
+        end,
+        SessionPids
+    ).
 
 -spec sync_friend_subscriptions([user_id()], state()) -> state().
 sync_friend_subscriptions(FriendIds, State) ->

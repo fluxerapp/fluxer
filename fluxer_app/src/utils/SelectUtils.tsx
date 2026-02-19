@@ -42,7 +42,7 @@ export function getSelectStyles<
 	const controlFocusBorderColor = isCompactOverlay ? 'transparent' : controlFocusBorder;
 	const controlBackgroundColor = isCompactOverlay ? 'transparent' : 'var(--form-surface-background)';
 	const valueColor = isCompactOverlay ? 'var(--white)' : 'var(--text-primary)';
-	const placeholderColor = isCompactOverlay ? 'rgb(255 255 255 / 0.92)' : 'var(--text-primary-muted)';
+	const placeholderColor = isCompactOverlay ? 'rgb(255 255 255 / 0.92)' : 'var(--text-tertiary)';
 	const indicatorColor = isCompactOverlay ? 'rgb(255 255 255 / 0.85)' : 'var(--text-tertiary)';
 	const indicatorHoverColor = isCompactOverlay ? 'var(--white)' : 'var(--text-primary)';
 

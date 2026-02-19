@@ -63,7 +63,7 @@
 }
 
 .searchInput::placeholder {
-	color: var(--text-primary-muted);
+	color: var(--text-tertiary);
 }
 
 .clearButton {

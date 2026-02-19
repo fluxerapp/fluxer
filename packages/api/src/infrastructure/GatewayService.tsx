@@ -22,7 +22,6 @@ import {createChannelID, createRoleID, createUserID} from '@fluxer/api/src/Brand
 import type {GatewayDispatchEvent} from '@fluxer/api/src/constants/Gateway';
 import {GatewayRpcClient} from '@fluxer/api/src/infrastructure/GatewayRpcClient';
 import {GatewayRpcMethodError, GatewayRpcMethodErrorCodes} from '@fluxer/api/src/infrastructure/GatewayRpcError';
-import {GatewayTcpTransportError} from '@fluxer/api/src/infrastructure/GatewayTcpRpcTransport';
 import type {CallData} from '@fluxer/api/src/infrastructure/IGatewayService';
 import {Logger} from '@fluxer/api/src/Logger';
 import {CallAlreadyExistsError} from '@fluxer/errors/src/domains/channel/CallAlreadyExistsError';
@@ -322,14 +321,13 @@ export class GatewayService {
 			if (error.code === GatewayRpcMethodErrorCodes.OVERLOADED) {
 				return new ServiceUnavailableError();
 			}
+			if (error.code === GatewayRpcMethodErrorCodes.NO_RESPONDERS) {
+				return new ServiceUnavailableError();
+			}
 			if (error.code === GatewayRpcMethodErrorCodes.INTERNAL_ERROR) {
 				return new BadGatewayError();
 			}
 			return new BadGatewayError();
-		}
-
-		if (error instanceof GatewayTcpTransportError) {
-			return new ServiceUnavailableError();
 		}
 
 		if (error instanceof Error && error.name === 'TimeoutError') {
@@ -1253,6 +1251,24 @@ export class GatewayService {
 		const counts = new Map<GuildID, number>();
 		for (const entry of result.online_counts) {
 			counts.set(BigInt(entry.guild_id) as GuildID, entry.online_count);
+		}
+		return counts;
+	}
+
+	async getDiscoveryGuildCounts(
+		guildIds: Array<GuildID>,
+	): Promise<Map<GuildID, {memberCount: number; onlineCount: number}>> {
+		const result = await this.call<{
+			online_counts: Array<{guild_id: string; member_count: number; online_count: number}>;
+		}>('guild.get_online_counts_batch', {
+			guild_ids: guildIds.map(String),
+		});
+		const counts = new Map<GuildID, {memberCount: number; onlineCount: number}>();
+		for (const entry of result.online_counts) {
+			counts.set(BigInt(entry.guild_id) as GuildID, {
+				memberCount: entry.member_count,
+				onlineCount: entry.online_count,
+			});
 		}
 		return counts;
 	}

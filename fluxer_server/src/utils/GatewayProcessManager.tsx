@@ -130,7 +130,6 @@ export function createGatewayProcessManager(): GatewayProcessManager {
 			...process.env,
 			FLUXER_GATEWAY_HOST: Config.services.gateway.port ? '0.0.0.0' : '127.0.0.1',
 			FLUXER_GATEWAY_PORT: Config.services.gateway.port.toString(),
-			FLUXER_GATEWAY_API_HOST: Config.services.gateway.api_host,
 			FLUXER_GATEWAY_NODE_FLAG: '-name',
 			FLUXER_GATEWAY_NODE_NAME: currentNodeName,
 			ERL_DIST_PORT: GATEWAY_DIST_PORT.toString(),

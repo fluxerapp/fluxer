@@ -248,7 +248,13 @@ const SpectatorRow = observer(function SpectatorRow({
 	return (
 		<Popout
 			render={({popoutKey}) => (
-				<UserProfilePopout popoutKey={popoutKey} user={user} isWebhook={false} guildId={guildId} />
+				<UserProfilePopout
+					key={`${user.id}:${guildId ?? 'global'}:user`}
+					popoutKey={popoutKey}
+					user={user}
+					isWebhook={false}
+					guildId={guildId}
+				/>
 			)}
 			position="left-start"
 			onOpen={onPopoutOpen}

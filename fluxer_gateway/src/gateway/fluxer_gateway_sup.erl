@@ -32,7 +32,7 @@ init([]) ->
     },
     Children = [
         child_spec(gateway_http_client, gateway_http_client),
-        child_spec(gateway_rpc_tcp_server, gateway_rpc_tcp_server),
+        child_spec(gateway_nats_rpc, gateway_nats_rpc),
         child_spec(session_manager, session_manager),
         child_spec(presence_cache, presence_cache),
         child_spec(presence_bus, presence_bus),

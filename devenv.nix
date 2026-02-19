@@ -96,6 +96,20 @@
 							restart = "always";
 						};
 				};
+				nats_core = {
+					command = lib.mkForce "exec ${config.git.root}/scripts/dev_process_entry.sh nats_core nats-server -p 4222 -a 127.0.0.1";
+					log_location = "${config.git.root}/dev/logs/nats_core.log";
+						availability = {
+							restart = "always";
+						};
+				};
+				nats_jetstream = {
+					command = lib.mkForce "exec ${config.git.root}/scripts/dev_process_entry.sh nats_jetstream nats-server -p 4223 -js -sd ${config.git.root}/dev/data/nats_jetstream -a 127.0.0.1";
+					log_location = "${config.git.root}/dev/logs/nats_jetstream.log";
+						availability = {
+							restart = "always";
+						};
+				};
 			};
 		};
 	};
@@ -107,6 +121,7 @@
 		rebar3
 		valkey
 		meilisearch
+		nats-server
 		ffmpeg
 		exiftool
 		caddy
@@ -143,6 +158,8 @@
 			"devenv:processes:mailpit"
 			"devenv:processes:valkey"
 			"devenv:processes:caddy"
+			"devenv:processes:nats_core"
+			"devenv:processes:nats_jetstream"
 		];
 	};
 
@@ -228,6 +245,10 @@
 		valkey.exec = "exec valkey-server --bind 127.0.0.1 --port 6379";
 		caddy.exec = ''
 			exec caddy run --config ${config.git.root}/dev/Caddyfile.dev --adapter caddyfile
+		'';
+		nats_core.exec = "exec nats-server -p 4222 -a 127.0.0.1";
+		nats_jetstream.exec = ''
+			exec nats-server -p 4223 -js -sd ${config.git.root}/dev/data/nats_jetstream -a 127.0.0.1
 		'';
 	};
 }

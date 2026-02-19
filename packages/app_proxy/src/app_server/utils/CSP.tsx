@@ -18,7 +18,7 @@
  */
 
 import {randomBytes} from 'node:crypto';
-import type {SentryDSN} from '@fluxer/app_proxy/src/app_server/utils/SentryDSN';
+import {parseSentryDSN} from '@fluxer/app_proxy/src/app_server/utils/SentryDSN';
 
 export const CSP_HOSTS = {
 	FRAME: [
@@ -71,8 +71,6 @@ export const CSP_HOSTS = {
 		'https://*.fluxer.workers.dev',
 		'https://fluxerusercontent.com',
 		'https://fluxerstatic.com',
-		'https://sentry.web.fluxer.app',
-		'https://sentry.web.canary.fluxer.app',
 		'https://fluxer.media',
 		'http://127.0.0.1:21863',
 		'http://127.0.0.1:21864',
@@ -95,31 +93,24 @@ export interface CSPOptions {
 	reportUri?: string;
 }
 
-export interface SentryProxyConfig {
-	sentryProxy: SentryDSN | null;
-	sentryProxyPath: string;
-	sentryReportHost: string;
+export interface SentryCSPConfig {
+	sentryDsn: string;
 }
 
 export function generateNonce(): string {
 	return randomBytes(16).toString('hex');
 }
 
-export function buildSentryReportURI(config: SentryProxyConfig): string {
-	const sentry = config.sentryProxy;
+export function buildSentryReportURI(config: SentryCSPConfig): string {
+	const sentry = parseSentryDSN(config.sentryDsn);
 	if (!sentry) {
 		return '';
 	}
 
-	const pathPrefix = config.sentryProxyPath.replace(/\/+$/, '');
-	let uri = `${pathPrefix}/api/${sentry.projectId}/security/?sentry_version=7`;
+	let uri = `${sentry.targetUrl}${sentry.pathPrefix}/api/${sentry.projectId}/security/?sentry_version=7`;
 
 	if (sentry.publicKey) {
 		uri += `&sentry_key=${sentry.publicKey}`;
-	}
-
-	if (config.sentryReportHost) {
-		return config.sentryReportHost + uri;
 	}
 
 	return uri;
@@ -160,8 +151,13 @@ export function buildCSP(nonce: string, options?: CSPOptions): string {
 	return directives.join('; ');
 }
 
-export function buildFluxerCSPOptions(config: SentryProxyConfig): CSPOptions {
+export function buildFluxerCSPOptions(config: SentryCSPConfig): CSPOptions {
 	const reportURI = buildSentryReportURI(config);
+	const sentry = parseSentryDSN(config.sentryDsn);
+	const connectSrc: Array<string> = [...CSP_HOSTS.CONNECT];
+	if (sentry) {
+		connectSrc.push(sentry.targetUrl);
+	}
 
 	return {
 		scriptSrc: [...CSP_HOSTS.SCRIPT],
@@ -169,7 +165,7 @@ export function buildFluxerCSPOptions(config: SentryProxyConfig): CSPOptions {
 		imgSrc: [...CSP_HOSTS.IMAGE],
 		mediaSrc: [...CSP_HOSTS.MEDIA],
 		fontSrc: [...CSP_HOSTS.FONT],
-		connectSrc: [...CSP_HOSTS.CONNECT],
+		connectSrc: Array.from(new Set(connectSrc)),
 		frameSrc: [...CSP_HOSTS.FRAME],
 		workerSrc: [...CSP_HOSTS.WORKER],
 		manifestSrc: [...CSP_HOSTS.MANIFEST],
@@ -177,6 +173,6 @@ export function buildFluxerCSPOptions(config: SentryProxyConfig): CSPOptions {
 	};
 }
 
-export function buildFluxerCSP(nonce: string, config: SentryProxyConfig): string {
+export function buildFluxerCSP(nonce: string, config: SentryCSPConfig): string {
 	return buildCSP(nonce, buildFluxerCSPOptions(config));
 }

@@ -389,7 +389,7 @@ get_voice_token(ChannelId, UserId, _SessionId, SessionPid, Latitude, Longitude) 
                     connection_id => ConnectionId
                 }},
             ok;
-        {error, {http_error, _Status, Body}} ->
+        {error, {rpc_error, _Status, Body}} ->
             case parse_unclaimed_error(Body) of
                 true -> SessionPid ! {voice_error, voice_unclaimed_account};
                 false -> SessionPid ! {voice_error, voice_token_failed}
@@ -448,7 +448,7 @@ get_dm_voice_token_and_create_state(
                 IsMobile,
                 State
             );
-        {error, {http_error, _Status, Body}} ->
+        {error, {rpc_error, _Status, Body}} ->
             case parse_unclaimed_error(Body) of
                 true -> {reply, gateway_errors:error(voice_unclaimed_account), State};
                 false -> {reply, gateway_errors:error(voice_token_failed), State}

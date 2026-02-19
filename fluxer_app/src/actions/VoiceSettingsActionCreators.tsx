@@ -44,6 +44,7 @@ export function update(
 		showVoiceConnectionId: boolean;
 		pauseOwnScreenSharePreviewOnUnfocus: boolean;
 		disablePictureInPicturePopout: boolean;
+		screenShareHardwareAcceleration: boolean;
 	}>,
 ): void {
 	VoiceSettingsStore.updateSettings(settings);

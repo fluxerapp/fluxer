@@ -397,4 +397,45 @@ export class DirectS3StorageService implements IStorageService {
 			this.expirationManager.clearExpiration(params.bucket, key);
 		}
 	}
+
+	async createMultipartUpload(params: {
+		bucket: string;
+		key: string;
+		contentType?: string;
+	}): Promise<{uploadId: string}> {
+		const result = await this.s3Service.createMultipartUpload(params.bucket, params.key, {
+			contentType: params.contentType,
+		});
+		return {uploadId: result.uploadId};
+	}
+
+	async uploadPart(params: {
+		bucket: string;
+		key: string;
+		uploadId: string;
+		partNumber: number;
+		body: Uint8Array;
+	}): Promise<{etag: string}> {
+		const result = await this.s3Service.uploadPart(
+			params.bucket,
+			params.key,
+			params.uploadId,
+			params.partNumber,
+			Buffer.from(params.body),
+		);
+		return {etag: result.etag};
+	}
+
+	async completeMultipartUpload(params: {
+		bucket: string;
+		key: string;
+		uploadId: string;
+		parts: Array<{partNumber: number; etag: string}>;
+	}): Promise<void> {
+		await this.s3Service.completeMultipartUpload(params.bucket, params.key, params.uploadId, params.parts);
+	}
+
+	async abortMultipartUpload(params: {bucket: string; key: string; uploadId: string}): Promise<void> {
+		await this.s3Service.abortMultipartUpload(params.bucket, params.key, params.uploadId);
+	}
 }

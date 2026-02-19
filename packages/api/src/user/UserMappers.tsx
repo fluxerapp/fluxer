@@ -155,7 +155,7 @@ export function mapUserToPrivateResponse(user: User): UserPrivateResponse {
 
 	return {
 		...partialResponse,
-		flags: Number((user.flags ?? 0n) & PUBLIC_USER_FLAGS_WITHOUT_STAFF),
+		flags: mapUserFlagsToPublicBitfield(user),
 		is_staff: isStaff,
 		acls: Array.from(user.acls),
 		traits,

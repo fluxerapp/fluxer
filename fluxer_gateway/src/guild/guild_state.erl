@@ -703,4 +703,292 @@ guild_update_syncs_unavailability_cache_test() ->
         _ = guild_availability:update_unavailability_cache_for_state(CleanupState)
     end.
 
+handle_guild_update_merges_fields_test() ->
+    Data = #{
+        <<"guild">> => #{<<"name">> => <<"Old">>, <<"icon">> => <<"abc">>},
+        <<"roles">> => [],
+        <<"members">> => [],
+        <<"channels">> => []
+    },
+    EventData = #{<<"name">> => <<"New">>, <<"description">> => <<"desc">>},
+    Result = handle_guild_update(EventData, Data),
+    Guild = maps:get(<<"guild">>, Result),
+    ?assertEqual(<<"New">>, maps:get(<<"name">>, Guild)),
+    ?assertEqual(<<"abc">>, maps:get(<<"icon">>, Guild)),
+    ?assertEqual(<<"desc">>, maps:get(<<"description">>, Guild)).
+
+handle_member_update_ignores_non_member_test() ->
+    Data = #{
+        <<"members">> => #{
+            1 => #{<<"user">> => #{<<"id">> => <<"1">>}, <<"nick">> => <<"nick">>}
+        }
+    },
+    EventData = #{<<"user">> => #{<<"id">> => <<"999">>}, <<"nick">> => <<"new">>},
+    Result = handle_member_update(EventData, Data),
+    ?assertEqual(1, map_size(maps:get(<<"members">>, Result))),
+    ?assertEqual(undefined, guild_data_index:get_member(999, Result)).
+
+handle_role_create_test() ->
+    Data = #{
+        <<"roles">> => [#{<<"id">> => <<"1">>, <<"name">> => <<"Everyone">>}],
+        <<"members">> => [],
+        <<"channels">> => []
+    },
+    EventData = #{<<"role">> => #{<<"id">> => <<"2">>, <<"name">> => <<"New">>}},
+    Result = handle_role_create(EventData, Data),
+    Roles = guild_data_index:role_list(Result),
+    ?assertEqual(2, length(Roles)),
+    RoleIndex = guild_data_index:role_index(Result),
+    ?assertMatch(#{2 := _}, RoleIndex).
+
+handle_role_update_replaces_role_test() ->
+    Data = #{
+        <<"roles">> => [
+            #{<<"id">> => <<"1">>, <<"name">> => <<"Old">>},
+            #{<<"id">> => <<"2">>, <<"name">> => <<"Keep">>}
+        ],
+        <<"members">> => [],
+        <<"channels">> => []
+    },
+    EventData = #{<<"role">> => #{<<"id">> => <<"1">>, <<"name">> => <<"Updated">>}},
+    Result = handle_role_update(EventData, Data),
+    Roles = guild_data_index:role_list(Result),
+    [R1, R2] = Roles,
+    ?assertEqual(<<"Updated">>, maps:get(<<"name">>, R1)),
+    ?assertEqual(<<"Keep">>, maps:get(<<"name">>, R2)).
+
+handle_role_update_bulk_test() ->
+    Data = #{
+        <<"roles">> => [
+            #{<<"id">> => <<"1">>, <<"name">> => <<"A">>},
+            #{<<"id">> => <<"2">>, <<"name">> => <<"B">>},
+            #{<<"id">> => <<"3">>, <<"name">> => <<"C">>}
+        ],
+        <<"members">> => [],
+        <<"channels">> => []
+    },
+    EventData = #{
+        <<"roles">> => [
+            #{<<"id">> => <<"1">>, <<"name">> => <<"A2">>},
+            #{<<"id">> => <<"3">>, <<"name">> => <<"C2">>}
+        ]
+    },
+    Result = handle_role_update_bulk(EventData, Data),
+    Roles = guild_data_index:role_list(Result),
+    [R1, R2, R3] = Roles,
+    ?assertEqual(<<"A2">>, maps:get(<<"name">>, R1)),
+    ?assertEqual(<<"B">>, maps:get(<<"name">>, R2)),
+    ?assertEqual(<<"C2">>, maps:get(<<"name">>, R3)).
+
+handle_role_delete_removes_role_from_list_test() ->
+    Data = #{
+        <<"roles">> => [
+            #{<<"id">> => <<"1">>, <<"name">> => <<"Keep">>},
+            #{<<"id">> => <<"2">>, <<"name">> => <<"Delete">>}
+        ],
+        <<"members">> => [],
+        <<"channels">> => []
+    },
+    EventData = #{<<"role_id">> => <<"2">>},
+    Result = handle_role_delete(EventData, Data),
+    Roles = guild_data_index:role_list(Result),
+    ?assertEqual(1, length(Roles)),
+    ?assertEqual(<<"Keep">>, maps:get(<<"name">>, hd(Roles))).
+
+handle_channel_update_test() ->
+    Data = #{
+        <<"channels">> => [
+            #{<<"id">> => <<"100">>, <<"name">> => <<"old">>},
+            #{<<"id">> => <<"101">>, <<"name">> => <<"keep">>}
+        ]
+    },
+    EventData = #{<<"id">> => <<"100">>, <<"name">> => <<"updated">>},
+    Result = handle_channel_update(EventData, Data),
+    Channels = guild_data_index:channel_list(Result),
+    [C1, C2] = Channels,
+    ?assertEqual(<<"updated">>, maps:get(<<"name">>, C1)),
+    ?assertEqual(<<"keep">>, maps:get(<<"name">>, C2)).
+
+handle_channel_update_bulk_test() ->
+    Data = #{
+        <<"channels">> => [
+            #{<<"id">> => <<"1">>, <<"name">> => <<"A">>},
+            #{<<"id">> => <<"2">>, <<"name">> => <<"B">>}
+        ]
+    },
+    EventData = #{
+        <<"channels">> => [
+            #{<<"id">> => <<"2">>, <<"name">> => <<"B2">>}
+        ]
+    },
+    Result = handle_channel_update_bulk(EventData, Data),
+    Channels = guild_data_index:channel_list(Result),
+    [C1, C2] = Channels,
+    ?assertEqual(<<"A">>, maps:get(<<"name">>, C1)),
+    ?assertEqual(<<"B2">>, maps:get(<<"name">>, C2)).
+
+handle_channel_delete_test() ->
+    Data = #{
+        <<"channels">> => [
+            #{<<"id">> => <<"100">>, <<"name">> => <<"general">>},
+            #{<<"id">> => <<"101">>, <<"name">> => <<"random">>}
+        ]
+    },
+    EventData = #{<<"id">> => <<"100">>},
+    Result = handle_channel_delete(EventData, Data),
+    Channels = guild_data_index:channel_list(Result),
+    ?assertEqual(1, length(Channels)),
+    ?assertEqual(<<"random">>, maps:get(<<"name">>, hd(Channels))).
+
+handle_message_create_updates_last_message_id_test() ->
+    Data = #{
+        <<"channels">> => [
+            #{<<"id">> => <<"100">>, <<"last_message_id">> => <<"500">>},
+            #{<<"id">> => <<"101">>, <<"last_message_id">> => <<"600">>}
+        ]
+    },
+    EventData = #{<<"channel_id">> => <<"100">>, <<"id">> => <<"700">>},
+    Result = handle_message_create(EventData, Data),
+    Channels = guild_data_index:channel_list(Result),
+    [C1, C2] = Channels,
+    ?assertEqual(<<"700">>, maps:get(<<"last_message_id">>, C1)),
+    ?assertEqual(<<"600">>, maps:get(<<"last_message_id">>, C2)).
+
+handle_channel_pins_update_test() ->
+    Data = #{
+        <<"channels">> => [
+            #{<<"id">> => <<"100">>}
+        ]
+    },
+    EventData = #{<<"channel_id">> => <<"100">>, <<"last_pin_timestamp">> => <<"2024-01-01T00:00:00Z">>},
+    Result = handle_channel_pins_update(EventData, Data),
+    [Ch] = guild_data_index:channel_list(Result),
+    ?assertEqual(<<"2024-01-01T00:00:00Z">>, maps:get(<<"last_pin_timestamp">>, Ch)).
+
+handle_emojis_update_test() ->
+    Data = #{<<"emojis">> => []},
+    EventData = #{<<"emojis">> => [#{<<"id">> => <<"1">>}]},
+    Result = handle_emojis_update(EventData, Data),
+    ?assertEqual([#{<<"id">> => <<"1">>}], maps:get(<<"emojis">>, Result)).
+
+handle_stickers_update_test() ->
+    Data = #{<<"stickers">> => []},
+    EventData = #{<<"stickers">> => [#{<<"id">> => <<"1">>}]},
+    Result = handle_stickers_update(EventData, Data),
+    ?assertEqual([#{<<"id">> => <<"1">>}], maps:get(<<"stickers">>, Result)).
+
+replace_item_by_id_test() ->
+    Items = [
+        #{<<"id">> => <<"1">>, <<"v">> => <<"a">>},
+        #{<<"id">> => <<"2">>, <<"v">> => <<"b">>}
+    ],
+    Result = replace_item_by_id(Items, <<"1">>, #{<<"id">> => <<"1">>, <<"v">> => <<"c">>}),
+    [R1, R2] = Result,
+    ?assertEqual(<<"c">>, maps:get(<<"v">>, R1)),
+    ?assertEqual(<<"b">>, maps:get(<<"v">>, R2)).
+
+replace_item_by_id_no_match_test() ->
+    Items = [#{<<"id">> => <<"1">>, <<"v">> => <<"a">>}],
+    Result = replace_item_by_id(Items, <<"999">>, #{<<"id">> => <<"999">>}),
+    ?assertEqual(Items, Result).
+
+remove_item_by_id_test() ->
+    Items = [
+        #{<<"id">> => <<"1">>},
+        #{<<"id">> => <<"2">>},
+        #{<<"id">> => <<"3">>}
+    ],
+    Result = remove_item_by_id(Items, <<"2">>),
+    ?assertEqual(2, length(Result)),
+    Ids = [maps:get(<<"id">>, I) || I <- Result],
+    ?assertEqual([<<"1">>, <<"3">>], Ids).
+
+remove_item_by_id_no_match_test() ->
+    Items = [#{<<"id">> => <<"1">>}],
+    ?assertEqual(Items, remove_item_by_id(Items, <<"999">>)).
+
+bulk_update_items_no_updates_test() ->
+    Items = [#{<<"id">> => <<"1">>, <<"v">> => <<"a">>}],
+    ?assertEqual(Items, bulk_update_items(Items, [])).
+
+bulk_update_items_missing_id_in_bulk_ignored_test() ->
+    Items = [#{<<"id">> => <<"1">>, <<"v">> => <<"a">>}],
+    BulkItems = [#{<<"v">> => <<"b">>}],
+    ?assertEqual(Items, bulk_update_items(Items, BulkItems)).
+
+extract_role_ids_from_role_update_test() ->
+    EventData = #{<<"role">> => #{<<"id">> => <<"42">>}},
+    ?assertEqual([42], extract_role_ids_from_role_update(EventData)).
+
+extract_role_ids_from_role_update_missing_id_test() ->
+    EventData = #{<<"role">> => #{}},
+    ?assertEqual([], extract_role_ids_from_role_update(EventData)).
+
+extract_role_ids_from_role_update_missing_role_test() ->
+    ?assertEqual([], extract_role_ids_from_role_update(#{})).
+
+extract_role_ids_from_role_update_bulk_test() ->
+    EventData = #{<<"roles">> => [#{<<"id">> => <<"1">>}, #{<<"id">> => <<"2">>}]},
+    ?assertEqual([1, 2], extract_role_ids_from_role_update_bulk(EventData)).
+
+extract_role_ids_from_role_update_bulk_empty_test() ->
+    ?assertEqual([], extract_role_ids_from_role_update_bulk(#{})).
+
+extract_role_ids_from_role_delete_test() ->
+    EventData = #{<<"role_id">> => <<"55">>},
+    ?assertEqual([55], extract_role_ids_from_role_delete(EventData)).
+
+extract_role_ids_from_role_delete_missing_test() ->
+    ?assertEqual([], extract_role_ids_from_role_delete(#{})).
+
+update_data_for_event_unknown_returns_data_unchanged_test() ->
+    Data = #{<<"test">> => true},
+    ?assertEqual(Data, update_data_for_event(unknown_event, #{}, Data, #{})).
+
+strip_role_from_members_no_affected_users_test() ->
+    Data = #{
+        <<"roles">> => [],
+        <<"members">> => #{
+            1 => #{<<"user">> => #{<<"id">> => <<"1">>}, <<"roles">> => [<<"100">>]}
+        },
+        <<"channels">> => []
+    },
+    Result = strip_role_from_members(<<"999">>, Data),
+    M1 = guild_data_index:get_member(1, Result),
+    ?assertEqual([<<"100">>], maps:get(<<"roles">>, M1)).
+
+strip_role_from_channel_overwrites_preserves_user_overwrites_test() ->
+    Data = #{
+        <<"channels">> => [
+            #{
+                <<"id">> => <<"500">>,
+                <<"permission_overwrites">> => [
+                    #{<<"id">> => <<"100">>, <<"type">> => 0, <<"allow">> => <<"0">>, <<"deny">> => <<"0">>},
+                    #{<<"id">> => <<"1">>, <<"type">> => 1, <<"allow">> => <<"1024">>, <<"deny">> => <<"0">>}
+                ]
+            }
+        ]
+    },
+    Result = strip_role_from_channel_overwrites(<<"100">>, Data),
+    [Ch] = guild_data_index:channel_list(Result),
+    Overwrites = maps:get(<<"permission_overwrites">>, Ch),
+    ?assertEqual(1, length(Overwrites)),
+    ?assertEqual(1, maps:get(<<"type">>, hd(Overwrites))).
+
+cleanup_removed_member_sessions_removes_non_members_test() ->
+    Data = #{
+        <<"members">> => #{
+            1 => #{<<"user">> => #{<<"id">> => <<"1">>}}
+        }
+    },
+    Sessions = #{
+        <<"s1">> => #{user_id => 1},
+        <<"s2">> => #{user_id => 999}
+    },
+    State = #{data => Data, sessions => Sessions},
+    Result = cleanup_removed_member_sessions(State),
+    NewSessions = maps:get(sessions, Result),
+    ?assertEqual(1, map_size(NewSessions)),
+    ?assert(maps:is_key(<<"s1">>, NewSessions)).
+
 -endif.

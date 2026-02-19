@@ -71,7 +71,6 @@ export function renderDonationForm(
 	type: 'individual' | 'business',
 	isHidden: boolean,
 ): JSX.Element {
-	const apiEndpoint = ctx.apiEndpoint;
 	const i18n = getDonationI18n(ctx);
 
 	return (
@@ -203,29 +202,33 @@ export function renderDonationForm(
 
 				<p id={`donation-error-${type}`} class="hidden text-center text-red-500 text-sm" />
 			</div>
-
-			{renderDonationScript(type, apiEndpoint, i18n)}
 		</div>
 	);
 }
 
-function renderDonationScript(type: 'individual' | 'business', apiEndpoint: string, i18n: DonationI18n): JSX.Element {
+export function renderDonationScript(ctx: MarketingContext): JSX.Element {
+	const apiEndpoint = ctx.apiEndpoint;
+	const i18n = getDonationI18n(ctx);
+
 	return (
 		<script
 			dangerouslySetInnerHTML={{
-				__html: `var donationState_${type} = {amount: 25, donationType: 'once', currency: 'usd', customAmount: false};
+				__html: `var donationState = {
+  individual: {amount: 25, donationType: 'once', currency: 'usd', customAmount: false},
+  business: {amount: 25, donationType: 'once', currency: 'usd', customAmount: false}
+};
 
 function selectDonationAmount(type, amount) {
-  donationState_${type}.amount = amount;
-  donationState_${type}.customAmount = false;
+  donationState[type].amount = amount;
+  donationState[type].customAmount = false;
   var customInput = document.getElementById('custom-amount-' + type);
   customInput.classList.add('hidden');
-  var buttons = document.querySelectorAll('[id^="amount-btn-${type}-"]');
+  var buttons = document.querySelectorAll('[id^="amount-btn-' + type + '-"]');
   buttons.forEach(function(btn) {
     btn.classList.remove('border-[#4641D9]', 'text-[#4641D9]');
     btn.classList.add('border-gray-200', 'text-gray-700');
   });
-  var selected = document.getElementById('amount-btn-${type}-' + amount);
+  var selected = document.getElementById('amount-btn-' + type + '-' + amount);
   if (selected) {
     selected.classList.add('border-[#4641D9]', 'text-[#4641D9]');
     selected.classList.remove('border-gray-200', 'text-gray-700');
@@ -233,39 +236,39 @@ function selectDonationAmount(type, amount) {
 }
 
 function showCustomDonationAmount(type) {
-  donationState_${type}.customAmount = true;
+  donationState[type].customAmount = true;
   var customInput = document.getElementById('custom-amount-' + type);
   customInput.classList.remove('hidden');
-  var buttons = document.querySelectorAll('[id^="amount-btn-${type}-"]');
+  var buttons = document.querySelectorAll('[id^="amount-btn-' + type + '-"]');
   buttons.forEach(function(btn) {
     btn.classList.remove('border-[#4641D9]', 'text-[#4641D9]');
     btn.classList.add('border-gray-200', 'text-gray-700');
   });
-  var customBtn = document.getElementById('amount-btn-${type}-custom');
+  var customBtn = document.getElementById('amount-btn-' + type + '-custom');
   customBtn.classList.add('border-[#4641D9]', 'text-[#4641D9]');
   customBtn.classList.remove('border-gray-200', 'text-gray-700');
 }
 
 function selectDonationType(type, donationType) {
-  donationState_${type}.donationType = donationType;
-  var buttons = document.querySelectorAll('[id^="donation-type-${type}-"]');
+  donationState[type].donationType = donationType;
+  var buttons = document.querySelectorAll('[id^="donation-type-' + type + '-"]');
   buttons.forEach(function(btn) {
     btn.classList.remove('border-[#4641D9]', 'bg-[#4641D9]', 'text-white');
     btn.classList.add('border-gray-200', 'text-gray-700');
   });
-  var selected = document.getElementById('donation-type-${type}-' + donationType);
+  var selected = document.getElementById('donation-type-' + type + '-' + donationType);
   selected.classList.add('border-[#4641D9]', 'bg-[#4641D9]', 'text-white');
   selected.classList.remove('border-gray-200', 'text-gray-700');
 }
 
 function selectDonationCurrency(type, currency) {
-  donationState_${type}.currency = currency;
-  var buttons = document.querySelectorAll('[id^="currency-${type}-"]');
+  donationState[type].currency = currency;
+  var buttons = document.querySelectorAll('[id^="currency-' + type + '-"]');
   buttons.forEach(function(btn) {
     btn.classList.remove('border-[#4641D9]', 'bg-[#4641D9]', 'text-white');
     btn.classList.add('border-gray-200', 'text-gray-700');
   });
-  var selected = document.getElementById('currency-${type}-' + currency);
+  var selected = document.getElementById('currency-' + type + '-' + currency);
   selected.classList.add('border-[#4641D9]', 'bg-[#4641D9]', 'text-white');
   selected.classList.remove('border-gray-200', 'text-gray-700');
 }
@@ -281,9 +284,9 @@ async function submitDonation(type) {
     return;
   }
 
-  var amount = donationState_${type}.customAmount
+  var amount = donationState[type].customAmount
     ? parseInt(document.getElementById('custom-amount-' + type).value, 10)
-    : donationState_${type}.amount;
+    : donationState[type].amount;
 
   if (!amount || amount < 5 || amount > 1000) {
     errorEl.textContent = '${escapeInlineScriptValue(i18n.errorInvalidAmount)}';
@@ -296,14 +299,14 @@ async function submitDonation(type) {
   btn.textContent = '${escapeInlineScriptValue(i18n.processing)}';
 
   try {
-    var interval = donationState_${type}.donationType === 'once' ? null : donationState_${type}.donationType;
+    var interval = donationState[type].donationType === 'once' ? null : donationState[type].donationType;
     var response = await fetch('${apiEndpoint}/donations/checkout', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
         email: email,
         amount_cents: amount * 100,
-        currency: donationState_${type}.currency,
+        currency: donationState[type].currency,
         interval: interval
       })
     });

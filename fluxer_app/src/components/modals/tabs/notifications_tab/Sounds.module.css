@@ -42,38 +42,6 @@
 	gap: 1rem;
 }
 
-.premiumCard {
-	border-radius: 0.5rem;
-	border: 1px solid var(--background-modifier-accent);
-	background-color: var(--background-secondary);
-	padding: 1rem;
-}
-
-.premiumCardHeader {
-	margin-bottom: 0.5rem;
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
-}
-
-.premiumCardIcon {
-	color: var(--text-tertiary);
-}
-
-.premiumCardTitle {
-	font-weight: 500;
-	color: var(--text-primary);
-	font-size: 0.875rem;
-	line-height: 1.25rem;
-}
-
-.premiumCardDescription {
-	margin-bottom: 0.75rem;
-	color: var(--text-primary-muted);
-	font-size: 0.875rem;
-	line-height: 1.25rem;
-}
-
 .hint {
 	color: var(--text-primary-muted);
 	font-size: 0.875rem;
@@ -122,10 +90,6 @@
 
 .uploadIcon {
 	color: var(--text-primary);
-}
-
-.crownIcon {
-	color: var(--text-tertiary);
 }
 
 .deleteIcon {

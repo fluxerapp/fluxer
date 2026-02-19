@@ -1,55 +1,8 @@
 {
-	"app_proxy_kv": {
-		"type": "object",
-		"description": "Valkey/Redis settings for the App Proxy.",
-		"additionalProperties": false,
-		"required": ["url"],
-		"properties": {
-			"url": {
-				"type": "string",
-				"description": "Full URL to Valkey/Redis."
-			},
-			"timeout_ms": {
-				"type": "number",
-				"description": "Request timeout for Valkey/Redis in milliseconds.",
-				"default": 5000
-			}
-		}
-	},
-	"app_proxy_sentry_rate_limit": {
-		"type": "object",
-		"description": "Rate limiting for Sentry error reporting requests.",
-		"additionalProperties": false,
-		"properties": {
-			"limit": {
-				"type": "number",
-				"description": "Number of Sentry requests allowed per window.",
-				"default": 100
-			},
-			"window_ms": {
-				"type": "number",
-				"description": "Time window for Sentry rate limiting in milliseconds.",
-				"default": 1000
-			}
-		}
-	},
-	"app_proxy_rate_limit": {
-		"type": "object",
-		"description": "Rate limit settings for the App Proxy.",
-		"additionalProperties": false,
-		"properties": {
-			"sentry": {
-				"description": "Sentry reporting rate limit configuration.",
-				"$ref": "#/$defs/app_proxy_sentry_rate_limit",
-				"default": {}
-			}
-		}
-	},
 	"app_proxy_service": {
 		"type": "object",
 		"description": "Configuration for the App Proxy service (frontend server).",
 		"additionalProperties": false,
-		"required": ["sentry_report_host", "sentry_dsn"],
 		"properties": {
 			"port": {
 				"type": "number",
@@ -61,32 +14,10 @@
 				"description": "URL endpoint for serving static assets via CDN.",
 				"default": ""
 			},
-			"sentry_proxy_path": {
-				"type": "string",
-				"description": "URL path for proxying Sentry requests.",
-				"default": "/error-reporting-proxy"
-			},
-			"sentry_report_host": {
-				"type": "string",
-				"description": "Hostname to which Sentry reports should be sent."
-			},
-			"sentry_dsn": {
-				"type": "string",
-				"description": "Sentry DSN (Data Source Name) for frontend error tracking."
-			},
 			"assets_dir": {
 				"type": "string",
 				"description": "Filesystem directory containing static assets.",
 				"default": "./assets"
-			},
-			"kv": {
-				"description": "Valkey/Redis configuration for the proxy.",
-				"$ref": "#/$defs/app_proxy_kv"
-			},
-			"rate_limit": {
-				"description": "Rate limiting configuration for the App Proxy.",
-				"$ref": "#/$defs/app_proxy_rate_limit",
-				"default": {}
 			}
 		}
 	}

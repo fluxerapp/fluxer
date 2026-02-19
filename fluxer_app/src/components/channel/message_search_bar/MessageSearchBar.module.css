@@ -36,7 +36,7 @@
 	--search-scope-badge-hover-color: var(--text-primary);
 	--search-scope-badge-border-color: var(--background-modifier-accent);
 	--search-input-text-color: var(--text-primary);
-	--search-input-placeholder-color: var(--text-primary-muted);
+	--search-input-placeholder-color: var(--text-tertiary);
 	--search-clear-button-color: var(--text-tertiary);
 	--search-clear-button-hover-color: var(--text-primary);
 	--search-clear-button-hover-background: var(--background-modifier-hover);

@@ -7,7 +7,6 @@
 		"domain",
 		"database",
 		"services",
-		"gateway",
 		"auth"
 	],
 	"if": {
@@ -124,10 +123,6 @@
 		"services": {
 			"description": "Configuration for individual Fluxer services.",
 			"$ref": "#/$defs/services"
-		},
-		"gateway": {
-			"description": "Configuration for the real-time Gateway service connection.",
-			"$ref": "#/$defs/gateway_connection"
 		},
 		"auth": {
 			"description": "Authentication and security settings.",
@@ -406,24 +401,6 @@
 				}
 			}
 		},
-		"gateway_connection": {
-			"type": "object",
-			"description": "Configuration for backend services to call the Gateway via RPC.",
-			"required": [
-				"rpc_secret"
-			],
-			"properties": {
-				"rpc_endpoint": {
-					"type": "string",
-					"description": "Gateway RPC endpoint URL (e.g. http://gateway:8080).",
-					"default": "http://127.0.0.1:8088"
-				},
-				"rpc_secret": {
-					"type": "string",
-					"description": "Shared secret for authenticating RPC calls to the Gateway."
-				}
-			}
-		},
 		"rate_limit": {
 			"type": "object",
 			"description": "Rate limiting parameters.",
@@ -587,7 +564,7 @@
 				"min_member_count": {
 					"type": "number",
 					"description": "Minimum number of members a guild needs before it can apply for discovery listing.",
-					"default": 50
+					"default": 1
 				}
 			}
 		},
@@ -1095,7 +1072,7 @@
 				},
 				"webhook_secret": {
 					"type": "string",
-					"description": "SendGrid signed event webhook public key (PEM or base64-encoded DER)."
+					"description": "Sweego webhook signing secret (base64-encoded)."
 				},
 				"from_email": {
 					"type": "string",
@@ -1610,58 +1587,9 @@
 				}
 			}
 		},
-		"app_proxy_kv": {
-			"type": "object",
-			"description": "Valkey/Redis settings for the App Proxy.",
-			"required": [
-				"url"
-			],
-			"properties": {
-				"url": {
-					"type": "string",
-					"description": "Full URL to Valkey/Redis."
-				},
-				"timeout_ms": {
-					"type": "number",
-					"description": "Request timeout for Valkey/Redis in milliseconds.",
-					"default": 5000
-				}
-			}
-		},
-		"app_proxy_sentry_rate_limit": {
-			"type": "object",
-			"description": "Rate limiting for Sentry error reporting requests.",
-			"properties": {
-				"limit": {
-					"type": "number",
-					"description": "Number of Sentry requests allowed per window.",
-					"default": 100
-				},
-				"window_ms": {
-					"type": "number",
-					"description": "Time window for Sentry rate limiting in milliseconds.",
-					"default": 1000
-				}
-			}
-		},
-		"app_proxy_rate_limit": {
-			"type": "object",
-			"description": "Rate limit settings for the App Proxy.",
-			"properties": {
-				"sentry": {
-					"description": "Sentry reporting rate limit configuration.",
-					"$ref": "#/$defs/app_proxy_sentry_rate_limit",
-					"default": {}
-				}
-			}
-		},
 		"app_proxy_service": {
 			"type": "object",
 			"description": "Configuration for the App Proxy service (frontend server).",
-			"required": [
-				"sentry_report_host",
-				"sentry_dsn"
-			],
 			"properties": {
 				"port": {
 					"type": "number",
@@ -1673,32 +1601,10 @@
 					"description": "URL endpoint for serving static assets via CDN.",
 					"default": ""
 				},
-				"sentry_proxy_path": {
-					"type": "string",
-					"description": "URL path for proxying Sentry requests.",
-					"default": "/error-reporting-proxy"
-				},
-				"sentry_report_host": {
-					"type": "string",
-					"description": "Hostname to which Sentry reports should be sent."
-				},
-				"sentry_dsn": {
-					"type": "string",
-					"description": "Sentry DSN (Data Source Name) for frontend error tracking."
-				},
 				"assets_dir": {
 					"type": "string",
 					"description": "Filesystem directory containing static assets.",
 					"default": "./assets"
-				},
-				"kv": {
-					"description": "Valkey/Redis configuration for the proxy.",
-					"$ref": "#/$defs/app_proxy_kv"
-				},
-				"rate_limit": {
-					"description": "Rate limiting configuration for the App Proxy.",
-					"$ref": "#/$defs/app_proxy_rate_limit",
-					"default": {}
 				}
 			}
 		},
@@ -1706,7 +1612,6 @@
 			"type": "object",
 			"description": "Configuration for the Gateway service (WebSocket).",
 			"required": [
-				"api_host",
 				"admin_reload_secret",
 				"media_proxy_endpoint"
 			],
@@ -1715,20 +1620,6 @@
 					"type": "number",
 					"description": "Port to listen on.",
 					"default": 8771
-				},
-				"rpc_tcp_port": {
-					"type": "number",
-					"description": "Port for API-to-Gateway internal RPC over TCP.",
-					"default": 8772
-				},
-				"api_host": {
-					"type": "string",
-					"description": "Host/Port of the API service to communicate with."
-				},
-				"api_canary_host": {
-					"type": "string",
-					"description": "Host/Port of the Canary API service (optional).",
-					"default": ""
 				},
 				"admin_reload_secret": {
 					"type": "string",
@@ -1885,6 +1776,27 @@
 				}
 			}
 		},
+		"nats_services": {
+			"type": "object",
+			"description": "Configuration for NATS messaging.",
+			"properties": {
+				"core_url": {
+					"type": "string",
+					"description": "NATS Core server URL for RPC.",
+					"default": "nats://127.0.0.1:4222"
+				},
+				"jetstream_url": {
+					"type": "string",
+					"description": "NATS JetStream server URL for job queues.",
+					"default": "nats://127.0.0.1:4223"
+				},
+				"auth_token": {
+					"type": "string",
+					"description": "Authentication token for NATS connections.",
+					"default": ""
+				}
+			}
+		},
 		"queue_service": {
 			"type": "object",
 			"description": "Configuration for the Job Queue service.",
@@ -1892,12 +1804,12 @@
 				"port": {
 					"type": "number",
 					"description": "Port to listen on.",
-					"default": 8080
+					"default": 8088
 				},
-				"host": {
-					"type": "string",
-					"description": "Network interface to bind to.",
-					"default": "0.0.0.0"
+				"concurrency": {
+					"type": "number",
+					"description": "Number of concurrent worker threads.",
+					"default": 1
 				},
 				"data_dir": {
 					"type": "string",
@@ -1922,42 +1834,12 @@
 				"snapshot_zstd_level": {
 					"type": "number",
 					"description": "Zstd compression level for snapshots (1-22).",
-					"minimum": 1,
-					"maximum": 22,
 					"default": 3
-				},
-				"visibility_timeout_backoff_ms": {
-					"type": "number",
-					"description": "Backoff duration in milliseconds for visibility timeouts.",
-					"default": 1000
-				},
-				"max_receive_batch": {
-					"type": "number",
-					"description": "Maximum number of messages to retrieve in a single batch.",
-					"default": 10
-				},
-				"command_buffer": {
-					"type": "number",
-					"description": "Size of the internal command buffer.",
-					"default": 1000
-				},
-				"export_timeout": {
-					"type": "number",
-					"description": "Timeout in milliseconds for data export operations.",
-					"default": 30000
-				},
-				"concurrency": {
-					"type": "number",
-					"description": "Number of concurrent worker threads.",
-					"default": 2
-				},
-				"rate_limit": {
-					"description": "Rate limiting configuration for the Queue service.",
-					"$ref": "#/$defs/rate_limit"
 				},
 				"secret": {
 					"type": "string",
-					"description": "Authentication secret for the Queue service."
+					"description": "Secret for queue API authentication.",
+					"default": ""
 				}
 			}
 		},
@@ -2022,6 +1904,10 @@
 			"properties": {
 				"s3": {
 					"$ref": "#/$defs/s3_service",
+					"default": {}
+				},
+				"nats": {
+					"$ref": "#/$defs/nats_services",
 					"default": {}
 				},
 				"queue": {
@@ -2163,26 +2049,6 @@
 					"type": "string",
 					"default": "",
 					"description": "Frontend Sentry DSN."
-				},
-				"sentry_proxy_path": {
-					"type": "string",
-					"default": "/error-reporting-proxy",
-					"description": "Path to proxy Sentry requests."
-				},
-				"sentry_report_host": {
-					"type": "string",
-					"default": "",
-					"description": "Host for Sentry reporting."
-				},
-				"sentry_project_id": {
-					"type": "string",
-					"default": "",
-					"description": "Sentry Project ID."
-				},
-				"sentry_public_key": {
-					"type": "string",
-					"default": "",
-					"description": "Sentry Public Key."
 				}
 			}
 		}

@@ -35,7 +35,6 @@
 -spec parse_compression(binary() | undefined) -> compression().
 parse_compression(<<"none">>) ->
     none;
-%% TODO: temporarily disabled – re-enable zstd-stream once compression issues are resolved
 parse_compression(<<"zstd-stream">>) ->
     none;
 parse_compression(_) ->
@@ -123,7 +122,6 @@ parse_compression_test_() ->
         ?_assertEqual(none, parse_compression(<<>>)),
         ?_assertEqual(none, parse_compression(<<"none">>)),
         ?_assertEqual(none, parse_compression(<<"invalid">>)),
-        %% zstd-stream temporarily disabled – always returns none
         ?_assertEqual(none, parse_compression(<<"zstd-stream">>))
     ].
 

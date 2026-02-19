@@ -195,6 +195,7 @@ channels_and_guilds.voice_channels_cannot_be_above_text_channels: Kênh thoại 
 colors.color_value_too_high: Giá trị màu không được vượt quá 0xffffff.
 colors.color_value_too_low: Giá trị màu phải ít nhất là 0x000000.
 connections.already_exists: Một kết nối loại này với định danh này đã tồn tại.
+connections.bluesky_oauth_authorization_failed: Chúng tôi không thể xác định tên người dùng Bluesky đó. Vui lòng kiểm tra và thử lại.
 connections.bluesky_oauth_callback_failed: Chúng tôi không thể hoàn thành kết nối Bluesky. Vui lòng thử lại.
 connections.bluesky_oauth_not_enabled: Các kết nối Bluesky không được bật trên máy chủ này.
 connections.bluesky_oauth_session_expired: Phiên Bluesky của bạn đã hết hạn. Vui lòng kết nối lại tài khoản của bạn.

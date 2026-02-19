@@ -281,7 +281,13 @@ function generateGuildGeneralPermissionSpec(i18n: I18n): PermissionSpec {
 				flag: Permissions.MANAGE_NICKNAMES,
 			},
 			{
+				title: i18n._(msg`Create Emoji & Stickers`),
+				description: i18n._(msg`Upload new emoji and stickers, and manage your own creations.`),
+				flag: Permissions.CREATE_EXPRESSIONS,
+			},
+			{
 				title: i18n._(msg`Manage Emoji & Stickers`),
+				description: i18n._(msg`Edit or delete emoji and stickers created by other members.`),
 				flag: Permissions.MANAGE_EXPRESSIONS,
 			},
 			{

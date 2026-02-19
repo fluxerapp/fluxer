@@ -18,19 +18,42 @@
  */
 
 import {createTestAccount} from '@fluxer/api/src/auth/tests/AuthTestUtils';
+import {createChannelID, createGuildID, createInviteCode, createUserID} from '@fluxer/api/src/BrandedTypes';
 import {
 	acceptInvite,
 	createChannelInvite,
 	createGuild,
 	getChannel,
 } from '@fluxer/api/src/channel/tests/ChannelTestUtils';
+import {InviteRepository} from '@fluxer/api/src/invite/InviteRepository';
 import {deleteInvite} from '@fluxer/api/src/invite/tests/InviteTestUtils';
 import {banUser} from '@fluxer/api/src/moderation/tests/ModerationTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@fluxer/api/src/test/ApiTestHarness';
 import {HTTP_STATUS} from '@fluxer/api/src/test/TestConstants';
 import {createBuilder, createBuilderWithoutAuth} from '@fluxer/api/src/test/TestRequestBuilder';
+import {InviteTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {GuildInviteMetadataResponse} from '@fluxer/schema/src/domains/invite/InviteSchemas';
 import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
+
+async function createGuildInviteWithCodeForTesting(
+	code: string,
+	guildId: string,
+	channelId: string,
+	inviterId: string,
+): Promise<void> {
+	const inviteRepository = new InviteRepository();
+	await inviteRepository.create({
+		code: createInviteCode(code),
+		type: InviteTypes.GUILD,
+		guild_id: createGuildID(BigInt(guildId)),
+		channel_id: createChannelID(BigInt(channelId)),
+		inviter_id: createUserID(BigInt(inviterId)),
+		uses: 0,
+		max_uses: 0,
+		max_age: 0,
+		temporary: false,
+	});
+}
 
 describe('Invite Security Checks', () => {
 	let harness: ApiTestHarness;
@@ -108,6 +131,46 @@ describe('Invite Security Checks', () => {
 			.body(null)
 			.expect(HTTP_STATUS.NOT_FOUND)
 			.execute();
+	});
+
+	test('invite lookup falls back to lowercase when casing differs', async () => {
+		const owner = await createTestAccount(harness);
+		const guild = await createGuild(harness, owner.token, 'Vanity Lookup Guild');
+		const systemChannel = await getChannel(harness, owner.token, guild.system_channel_id!);
+		const inviteCode = 'vanitycase';
+
+		await createGuildInviteWithCodeForTesting(inviteCode, guild.id, systemChannel.id, owner.userId);
+
+		const inviteResponse = await createBuilder<{code: string}>(harness, owner.token)
+			.get(`/invites/${inviteCode.toUpperCase()}`)
+			.expect(HTTP_STATUS.OK)
+			.execute();
+
+		expect(inviteResponse.code).toBe(inviteCode);
+
+		await deleteInvite(harness, owner.token, inviteCode);
+	});
+
+	test('invite accept falls back to lowercase and updates uses', async () => {
+		const owner = await createTestAccount(harness);
+		const joiner = await createTestAccount(harness);
+		const guild = await createGuild(harness, owner.token, 'Invite Accept Case Guild');
+		const systemChannel = await getChannel(harness, owner.token, guild.system_channel_id!);
+		const inviteCode = 'acceptcase';
+
+		await createGuildInviteWithCodeForTesting(inviteCode, guild.id, systemChannel.id, owner.userId);
+
+		const accepted = await acceptInvite(harness, joiner.token, inviteCode.toUpperCase());
+		expect(accepted.guild.id).toBe(guild.id);
+
+		const invitesList = await createBuilder<Array<GuildInviteMetadataResponse>>(harness, owner.token)
+			.get(`/guilds/${guild.id}/invites`)
+			.execute();
+		const updatedInvite = invitesList.find((invite) => invite.code === inviteCode);
+		expect(updatedInvite).toBeDefined();
+		expect(updatedInvite!.uses).toBe(1);
+
+		await deleteInvite(harness, owner.token, inviteCode);
 	});
 
 	test('invite with max_uses limit becomes invalid after exhaustion', async () => {

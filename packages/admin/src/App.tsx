@@ -166,7 +166,7 @@ export function createAdminApp(options: CreateAdminAppOptions): AdminAppResult {
 		}
 	});
 
-	app.onError(createAdminErrorHandler(logger, config.env === 'development'));
+	app.onError(createAdminErrorHandler(logger, config.env === 'development', config.basePath));
 
 	app.get('/_health', (c) => c.json({status: 'ok'}));
 

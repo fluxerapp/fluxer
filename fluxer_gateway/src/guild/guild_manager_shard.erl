@@ -20,9 +20,18 @@
 
 -include_lib("fluxer_gateway/include/timeout_config.hrl").
 
--define(GUILD_API_CANARY_PERCENTAGE, 5).
 -define(BATCH_SIZE, 10).
 -define(BATCH_DELAY_MS, 100).
+-define(GUILD_COLLECTION_FETCH_TIMEOUT_MS, 120000).
+-define(GUILD_MEMBER_COLLECTION_LIMIT, 250).
+-define(GUILD_COLLECTIONS, [
+    <<"guild">>,
+    <<"roles">>,
+    <<"channels">>,
+    <<"emojis">>,
+    <<"stickers">>,
+    <<"members">>
+]).
 
 -export([start_link/1]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
@@ -33,8 +42,6 @@
 -type fetch_result() :: {ok, guild_data()} | {error, term()}.
 -type state() :: #{
     guilds := #{guild_id() => guild_ref() | loading},
-    api_host := string(),
-    api_canary_host := undefined | string(),
     pending_requests := #{guild_id() => [gen_server:from()]},
     shard_index := non_neg_integer()
 }.
@@ -47,13 +54,9 @@ start_link(ShardIndex) ->
 init(Args) ->
     process_flag(trap_exit, true),
     fluxer_gateway_env:load(),
-    ApiHost = fluxer_gateway_env:get(api_host),
-    ApiCanaryHost = fluxer_gateway_env:get(api_canary_host),
     ShardIndex = maps:get(shard_index, Args, 0),
     {ok, #{
         guilds => #{},
-        api_host => ApiHost,
-        api_canary_host => ApiCanaryHost,
         pending_requests => #{},
         shard_index => ShardIndex
     }}.
@@ -62,6 +65,10 @@ init(Args) ->
     {reply, term(), state()} | {noreply, state()}.
 handle_call({start_or_lookup, GuildId}, From, State) ->
     do_start_or_lookup(GuildId, From, State);
+handle_call({lookup, GuildId}, _From, State) ->
+    do_lookup(GuildId, State);
+handle_call({ensure_started, GuildId}, _From, State) ->
+    do_ensure_started(GuildId, State);
 handle_call({stop_guild, GuildId}, _From, State) ->
     do_stop_guild(GuildId, State);
 handle_call({reload_guild, GuildId}, From, State) ->
@@ -121,6 +128,48 @@ do_start_or_lookup(GuildId, From, State) ->
             lookup_or_fetch(GuildId, From, State)
     end.
 
+-spec do_lookup(guild_id(), state()) -> {reply, {ok, pid()} | {error, not_found}, state()}.
+do_lookup(GuildId, State) ->
+    Guilds = maps:get(guilds, State),
+    case maps:get(GuildId, Guilds, undefined) of
+        {Pid, _Ref} ->
+            {reply, {ok, Pid}, State};
+        loading ->
+            {reply, {error, not_found}, State};
+        undefined ->
+            GuildName = process_registry:build_process_name(guild, GuildId),
+            case process_registry:lookup_or_monitor(GuildName, GuildId, Guilds) of
+                {ok, Pid, _Ref, NewGuilds} ->
+                    {reply, {ok, Pid}, State#{guilds => NewGuilds}};
+                {error, not_found} ->
+                    {reply, {error, not_found}, State}
+            end
+    end.
+
+-spec do_ensure_started(guild_id(), state()) ->
+    {reply, ok | {ok, pid()} | {error, term()}, state()}.
+do_ensure_started(GuildId, State) ->
+    Guilds = maps:get(guilds, State),
+    case maps:get(GuildId, Guilds, undefined) of
+        {Pid, _Ref} ->
+            {reply, {ok, Pid}, State};
+        loading ->
+            {reply, ok, State};
+        undefined ->
+            GuildName = process_registry:build_process_name(guild, GuildId),
+            case whereis(GuildName) of
+                undefined ->
+                    {reply, ok, start_fetch_without_pending(GuildId, State)};
+                _ExistingPid ->
+                    case process_registry:lookup_or_monitor(GuildName, GuildId, Guilds) of
+                        {ok, Pid, _Ref, NewGuilds} ->
+                            {reply, {ok, Pid}, State#{guilds => NewGuilds}};
+                        {error, not_found} ->
+                            {reply, {error, process_died}, State}
+                    end
+            end
+    end.
+
 -spec lookup_or_fetch(guild_id(), gen_server:from(), state()) ->
     {reply, {ok, pid()}, state()} | {noreply, state()}.
 lookup_or_fetch(GuildId, From, State) ->
@@ -148,13 +197,20 @@ start_fetch(GuildId, From, State) ->
     spawn_fetch(GuildId, State),
     {noreply, NewState}.
 
+-spec start_fetch_without_pending(guild_id(), state()) -> state().
+start_fetch_without_pending(GuildId, State) ->
+    Guilds = maps:get(guilds, State),
+    NewGuilds = maps:put(GuildId, loading, Guilds),
+    NewState = State#{guilds => NewGuilds},
+    spawn_fetch(GuildId, State),
+    NewState.
+
 -spec spawn_fetch(guild_id(), state()) -> pid().
-spawn_fetch(GuildId, State) ->
+spawn_fetch(GuildId, _State) ->
     Manager = self(),
-    ApiHostInfo = select_api_host(State),
     spawn(fun() ->
         try
-            Result = fetch_guild_data_with_fallback(GuildId, ApiHostInfo, State),
+            Result = fetch_guild_data(GuildId),
             gen_server:cast(Manager, {guild_data_fetched, GuildId, Result})
         catch
             _:_:_ ->
@@ -258,12 +314,11 @@ do_reload_guild(GuildId, From, State) ->
     end.
 
 -spec spawn_reload(guild_id(), pid(), gen_server:from(), state()) -> pid().
-spawn_reload(GuildId, Pid, From, State) ->
+spawn_reload(GuildId, Pid, From, _State) ->
     Manager = self(),
-    ApiHostInfo = select_api_host(State),
     spawn(fun() ->
         try
-            Result = fetch_guild_data_with_fallback(GuildId, ApiHostInfo, State),
+            Result = fetch_guild_data(GuildId),
             gen_server:cast(Manager, {guild_data_reloaded, GuildId, Pid, From, Result})
         catch
             _:_:_ ->
@@ -319,13 +374,12 @@ reload_guilds_in_batches(Guilds, State) ->
     end.
 
 -spec reload_batch([{guild_id(), pid()}], state()) -> ok.
-reload_batch(Batch, State) ->
-    ApiHostInfo = select_api_host(State),
+reload_batch(Batch, _State) ->
     lists:foreach(
         fun({GuildId, Pid}) ->
             spawn(fun() ->
                 try
-                    case fetch_guild_data_with_fallback(GuildId, ApiHostInfo, State) of
+                    case fetch_guild_data(GuildId) of
                         {ok, Data} ->
                             catch gen_server:call(Pid, {reload, Data}, ?GUILD_CALL_TIMEOUT);
                         {error, _Reason} ->
@@ -385,18 +439,23 @@ start_new_guild(GuildId, Data, GuildName, State) ->
             true -> very_large_guild;
             false -> guild
         end,
-    case GuildModule:start_link(GuildState) of
-        {ok, Pid} ->
-            case process_registry:register_and_monitor(GuildName, Pid, Guilds) of
-                {ok, RegisteredPid, Ref, NewGuilds0} ->
-                    CleanGuilds = maps:remove(GuildName, NewGuilds0),
-                    NewGuilds = maps:put(GuildId, {RegisteredPid, Ref}, CleanGuilds),
-                    {ok, RegisteredPid, State#{guilds => NewGuilds}};
-                {error, Reason} ->
-                    {error, Reason}
+    case whereis(GuildName) of
+        undefined ->
+            case GuildModule:start_link(GuildState) of
+                {ok, Pid} ->
+                    case process_registry:register_and_monitor(GuildName, Pid, Guilds) of
+                        {ok, RegisteredPid, Ref, NewGuilds0} ->
+                            CleanGuilds = maps:remove(GuildName, NewGuilds0),
+                            NewGuilds = maps:put(GuildId, {RegisteredPid, Ref}, CleanGuilds),
+                            {ok, RegisteredPid, State#{guilds => NewGuilds}};
+                        {error, Reason} ->
+                            {error, Reason}
+                    end;
+                Error ->
+                    Error
             end;
-        Error ->
-            Error
+        _AlreadyRegistered ->
+            lookup_existing_guild(GuildId, GuildName, State)
     end.
 
 -spec is_very_large_guild(guild_data()) -> boolean().
@@ -417,80 +476,196 @@ lookup_existing_guild(GuildId, GuildName, State) ->
             {error, process_died}
     end.
 
--spec fetch_guild_data(guild_id(), string()) -> fetch_result().
-fetch_guild_data(GuildId, ApiHost) ->
+-spec fetch_guild_data(guild_id()) -> fetch_result().
+fetch_guild_data(GuildId) ->
+    Parent = self(),
+    Ref = make_ref(),
+    _ = [
+        spawn_monitor(fun() ->
+            Parent ! {Ref, Collection, fetch_guild_collection(GuildId, Collection)}
+        end)
+     || Collection <- ?GUILD_COLLECTIONS
+    ],
+    DeadlineMs = erlang:monotonic_time(millisecond) + ?GUILD_COLLECTION_FETCH_TIMEOUT_MS,
+    collect_guild_collection_results(Ref, ?GUILD_COLLECTIONS, #{}, DeadlineMs).
+
+-spec collect_guild_collection_results(reference(), [binary()], guild_data(), integer()) ->
+    fetch_result().
+collect_guild_collection_results(_Ref, [], Acc, _DeadlineMs) ->
+    {ok, Acc};
+collect_guild_collection_results(Ref, PendingCollections, Acc, DeadlineMs) ->
+    NowMs = erlang:monotonic_time(millisecond),
+    RemainingMs = DeadlineMs - NowMs,
+    case RemainingMs > 0 of
+        false ->
+            {error, {guild_collection_fetch_timeout, PendingCollections}};
+        true ->
+            receive
+                {Ref, Collection, {ok, Data}} ->
+                    Key = guild_collection_result_key(Collection),
+                    NewPending = lists:delete(Collection, PendingCollections),
+                    NewAcc = maps:put(Key, Data, Acc),
+                    collect_guild_collection_results(Ref, NewPending, NewAcc, DeadlineMs);
+                {Ref, Collection, {error, Reason}} ->
+                    {error, {guild_collection_fetch_failed, Collection, Reason}};
+                {'DOWN', _, process, _, _} ->
+                    collect_guild_collection_results(Ref, PendingCollections, Acc, DeadlineMs)
+            after RemainingMs ->
+                {error, {guild_collection_fetch_timeout, PendingCollections}}
+            end
+    end.
+
+-spec guild_collection_result_key(binary()) -> binary().
+guild_collection_result_key(<<"guild">>) -> <<"guild">>;
+guild_collection_result_key(<<"roles">>) -> <<"roles">>;
+guild_collection_result_key(<<"channels">>) -> <<"channels">>;
+guild_collection_result_key(<<"emojis">>) -> <<"emojis">>;
+guild_collection_result_key(<<"stickers">>) -> <<"stickers">>;
+guild_collection_result_key(<<"members">>) -> <<"members">>;
+guild_collection_result_key(Collection) -> Collection.
+
+-spec fetch_guild_collection(guild_id(), binary()) -> {ok, term()} | {error, term()}.
+fetch_guild_collection(GuildId, <<"members">>) ->
+    fetch_guild_members_collection_stream(GuildId, undefined, []);
+fetch_guild_collection(GuildId, Collection) ->
     RpcRequest = #{
-        <<"type">> => <<"guild">>,
+        <<"type">> => <<"guild_collection">>,
         <<"guild_id">> => type_conv:to_binary(GuildId),
-        <<"version">> => 1
+        <<"collection">> => Collection
     },
-    Url = rpc_client:get_rpc_url(ApiHost),
-    Headers = rpc_client:get_rpc_headers() ++ [{<<"content-type">>, <<"application/json">>}],
-    Body = json:encode(RpcRequest),
-    case gateway_http_client:request(rpc, post, Url, Headers, Body) of
-        {ok, 200, _RespHeaders, RespBody} ->
-            handle_fetch_response(RespBody);
-        {ok, StatusCode, _RespHeaders, _RespBody} ->
-            handle_fetch_error(StatusCode);
-        {error, Reason} ->
-            {error, {request_failed, Reason}}
-    end.
-
--spec handle_fetch_response(binary()) -> fetch_result().
-handle_fetch_response(RespBody) ->
-    Response = json:decode(RespBody),
-    Data = maps:get(<<"data">>, Response, #{}),
-    {ok, Data}.
-
--spec handle_fetch_error(integer()) -> {error, {http_status, integer()}}.
-handle_fetch_error(StatusCode) ->
-    {error, {http_status, StatusCode}}.
-
--spec select_api_host(state()) -> {string(), boolean()}.
-select_api_host(State) ->
-    case maps:get(api_canary_host, State) of
-        undefined ->
-            {maps:get(api_host, State), false};
-        _ ->
-            case should_use_canary_api() of
-                true -> {maps:get(api_canary_host, State), true};
-                false -> {maps:get(api_host, State), false}
-            end
-    end.
-
--spec should_use_canary_api() -> boolean().
-should_use_canary_api() ->
-    erlang:unique_integer([positive]) rem 100 < ?GUILD_API_CANARY_PERCENTAGE.
-
--spec fetch_guild_data_with_fallback(guild_id(), {string(), boolean()}, state()) -> fetch_result().
-fetch_guild_data_with_fallback(GuildId, {ApiHost, false}, _State) ->
-    fetch_guild_data(GuildId, ApiHost);
-fetch_guild_data_with_fallback(GuildId, {ApiHost, true}, State) ->
-    case fetch_guild_data(GuildId, ApiHost) of
+    case rpc_client:call(RpcRequest) of
         {ok, Data} ->
-            {ok, Data};
-        Error ->
-            StableHost = maps:get(api_host, State),
-            case StableHost == ApiHost of
-                true ->
-                    Error;
-                false ->
-                    fetch_guild_data(GuildId, StableHost)
-            end
+            case maps:get(Collection, Data, undefined) of
+                undefined -> {error, {invalid_collection_response, Collection}};
+                Value -> {ok, Value}
+            end;
+        {error, Reason} ->
+            {error, Reason}
     end.
+
+-spec fetch_guild_members_collection_stream(guild_id(), binary() | undefined, [[map()]]) ->
+    {ok, [map()]} | {error, term()}.
+fetch_guild_members_collection_stream(GuildId, AfterUserId, ChunksAcc) ->
+    RpcRequest0 = #{
+        <<"type">> => <<"guild_collection">>,
+        <<"guild_id">> => type_conv:to_binary(GuildId),
+        <<"collection">> => <<"members">>,
+        <<"limit">> => ?GUILD_MEMBER_COLLECTION_LIMIT
+    },
+    RpcRequest = maybe_put_after_user_id(AfterUserId, RpcRequest0),
+    case rpc_client:call(RpcRequest) of
+        {ok, Data} ->
+            parse_members_collection_page(GuildId, Data, ChunksAcc);
+        {error, Reason} ->
+            {error, Reason}
+    end.
+
+-spec parse_members_collection_page(guild_id(), map(), [[map()]]) -> {ok, [map()]} | {error, term()}.
+parse_members_collection_page(GuildId, Data, ChunksAcc) ->
+    Members = maps:get(<<"members">>, Data, undefined),
+    HasMore = maps:get(<<"has_more">>, Data, false),
+    NextAfterUserId = maps:get(<<"next_after_user_id">>, Data, null),
+    case Members of
+        MemberList when is_list(MemberList) ->
+            parse_members_collection_page_result(
+                GuildId,
+                MemberList,
+                HasMore,
+                NextAfterUserId,
+                ChunksAcc
+            );
+        _ ->
+            {error, invalid_members_collection_payload}
+    end.
+
+-spec parse_members_collection_page_result(
+    guild_id(),
+    [map()],
+    term(),
+    term(),
+    [[map()]]
+) ->
+    {ok, [map()]} | {error, term()}.
+parse_members_collection_page_result(
+    GuildId,
+    MemberList,
+    true,
+    NextAfterUserId,
+    ChunksAcc
+) when is_binary(NextAfterUserId), MemberList =/= [] ->
+    fetch_guild_members_collection_stream(
+        GuildId,
+        NextAfterUserId,
+        [MemberList | ChunksAcc]
+    );
+parse_members_collection_page_result(
+    _GuildId,
+    [],
+    true,
+    _NextAfterUserId,
+    _ChunksAcc
+) ->
+    {error, invalid_members_collection_empty_page};
+parse_members_collection_page_result(
+    _GuildId,
+    _MemberList,
+    true,
+    _NextAfterUserId,
+    _ChunksAcc
+) ->
+    {error, invalid_members_collection_cursor};
+parse_members_collection_page_result(
+    _GuildId,
+    MemberList,
+    false,
+    _NextAfterUserId,
+    ChunksAcc
+) ->
+    {ok, lists:append(lists:reverse([MemberList | ChunksAcc]))};
+parse_members_collection_page_result(
+    _GuildId,
+    _MemberList,
+    _HasMore,
+    _NextAfterUserId,
+    _ChunksAcc
+) ->
+    {error, invalid_members_collection_has_more}.
+
+-spec maybe_put_after_user_id(binary() | undefined, map()) -> map().
+maybe_put_after_user_id(undefined, RpcRequest) ->
+    RpcRequest;
+maybe_put_after_user_id(AfterUserId, RpcRequest) when is_binary(AfterUserId) ->
+    maps:put(<<"after_user_id">>, AfterUserId, RpcRequest).
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
-select_api_host_no_canary_test() ->
-    State = #{api_host => "http://api.local", api_canary_host => undefined},
-    {Host, IsCanary} = select_api_host(State),
-    ?assertEqual("http://api.local", Host),
-    ?assertEqual(false, IsCanary).
+parse_members_collection_page_result_final_page_test() ->
+    Members = [
+        #{<<"user">> => #{<<"id">> => <<"1">>}}
+    ],
+    ?assertEqual(
+        {ok, Members},
+        parse_members_collection_page_result(42, Members, false, null, [])
+    ).
 
-should_use_canary_api_returns_boolean_test() ->
-    Result = should_use_canary_api(),
-    ?assert(is_boolean(Result)).
+parse_members_collection_page_result_invalid_cursor_test() ->
+    Members = [
+        #{<<"user">> => #{<<"id">> => <<"1">>}}
+    ],
+    ?assertEqual(
+        {error, invalid_members_collection_cursor},
+        parse_members_collection_page_result(42, Members, true, null, [])
+    ).
+
+maybe_put_after_user_id_test() ->
+    BaseRequest = #{
+        <<"type">> => <<"guild_collection">>,
+        <<"collection">> => <<"members">>
+    },
+    ?assertEqual(BaseRequest, maybe_put_after_user_id(undefined, BaseRequest)),
+    WithCursor = maybe_put_after_user_id(<<"100">>, BaseRequest),
+    ?assertEqual(<<"100">>, maps:get(<<"after_user_id">>, WithCursor)).
 
 select_guilds_to_reload_empty_ids_test() ->
     Guilds = #{1 => {self(), make_ref()}, 2 => {self(), make_ref()}},
@@ -513,8 +688,6 @@ do_start_or_lookup_loading_deduplicates_requests_test() ->
     From2 = {self(), make_ref()},
     State0 = #{
         guilds => #{GuildId => loading},
-        api_host => "http://api.local",
-        api_canary_host => undefined,
         pending_requests => #{},
         shard_index => 0
     },
@@ -527,5 +700,97 @@ do_start_or_lookup_loading_deduplicates_requests_test() ->
     ?assertEqual(2, length(Requests)),
     ?assert(lists:member(From1, Requests)),
     ?assert(lists:member(From2, Requests)).
+
+do_lookup_returns_existing_pid_from_state_test() ->
+    GuildId = 5151,
+    GuildPid = self(),
+    State0 = #{
+        guilds => #{GuildId => {GuildPid, make_ref()}},
+        pending_requests => #{},
+        shard_index => 0
+    },
+    {reply, {ok, GuildPid}, State1} = do_lookup(GuildId, State0),
+    ?assertEqual(State0, State1).
+
+do_lookup_returns_not_found_when_loading_test() ->
+    GuildId = 6161,
+    State0 = #{
+        guilds => #{GuildId => loading},
+        pending_requests => #{},
+        shard_index => 0
+    },
+    ?assertEqual({reply, {error, not_found}, State0}, do_lookup(GuildId, State0)).
+
+start_new_guild_skips_start_when_already_registered_test() ->
+    GuildId = 77777,
+    GuildName = process_registry:build_process_name(guild, GuildId),
+    ExistingPid = spawn(fun() -> mock_guild_loop() end),
+    register(GuildName, ExistingPid),
+    try
+        State0 = #{
+            guilds => #{},
+            pending_requests => #{},
+            shard_index => 0
+        },
+        Data = #{<<"guild">> => #{<<"id">> => <<"77777">>, <<"features">> => []}},
+        Result = start_new_guild(GuildId, Data, GuildName, State0),
+        ?assertMatch({ok, ExistingPid, _}, Result),
+        {ok, RetPid, _NewState} = Result,
+        ?assertEqual(ExistingPid, RetPid)
+    after
+        catch unregister(GuildName),
+        ExistingPid ! stop
+    end.
+
+start_guild_returns_existing_when_registered_test() ->
+    GuildId = 88888,
+    GuildName = process_registry:build_process_name(guild, GuildId),
+    ExistingPid = spawn(fun() -> mock_guild_loop() end),
+    register(GuildName, ExistingPid),
+    try
+        State0 = #{
+            guilds => #{},
+            pending_requests => #{},
+            shard_index => 0
+        },
+        Data = #{<<"guild">> => #{<<"id">> => <<"88888">>, <<"features">> => []}},
+        Result = start_guild(GuildId, Data, State0),
+        ?assertMatch({ok, ExistingPid, _}, Result)
+    after
+        catch unregister(GuildName),
+        ExistingPid ! stop
+    end.
+
+register_and_monitor_race_kills_duplicate_test_() ->
+    {timeout, 15, fun() ->
+        GuildId = 66666,
+        GuildName = process_registry:build_process_name(guild, GuildId),
+        WinnerPid = spawn(fun() -> mock_guild_loop() end),
+        register(GuildName, WinnerPid),
+        LoserPid = spawn(fun() -> mock_guild_loop() end),
+        try
+            Guilds = #{},
+            Result = process_registry:register_and_monitor(GuildName, LoserPid, Guilds),
+            ?assertMatch({ok, WinnerPid, _, _}, Result),
+            timer:sleep(200),
+            ?assertEqual(false, is_process_alive(LoserPid)),
+            ?assert(is_process_alive(WinnerPid))
+        after
+            catch unregister(GuildName),
+            catch (WinnerPid ! stop),
+            catch (LoserPid ! stop)
+        end
+    end}.
+
+mock_guild_loop() ->
+    receive
+        {'$gen_call', From, _Msg} ->
+            gen_server:reply(From, ok),
+            mock_guild_loop();
+        stop ->
+            ok;
+        _ ->
+            mock_guild_loop()
+    end.
 
 -endif.

@@ -23,7 +23,10 @@ import path from 'node:path';
 import {PassThrough, pipeline, Readable} from 'node:stream';
 import {promisify} from 'node:util';
 import {
+	AbortMultipartUploadCommand,
+	CompleteMultipartUploadCommand,
 	CopyObjectCommand,
+	CreateMultipartUploadCommand,
 	DeleteObjectCommand,
 	DeleteObjectsCommand,
 	GetObjectCommand,
@@ -34,6 +37,7 @@ import {
 	PutObjectCommand,
 	S3Client,
 	S3ServiceException,
+	UploadPartCommand,
 } from '@aws-sdk/client-s3';
 import {getSignedUrl} from '@aws-sdk/s3-request-presigner';
 import {Config} from '@fluxer/api/src/Config';
@@ -203,7 +207,7 @@ export class StorageService implements IStorageService {
 		const command = new CopyObjectCommand({
 			Bucket: destinationBucket,
 			Key: destinationKey,
-			CopySource: `${sourceBucket}/${sourceKey}`,
+			CopySource: `${encodeURIComponent(sourceBucket)}/${sourceKey.split('/').map(encodeURIComponent).join('/')}`,
 			ContentType: newContentType,
 			MetadataDirective: newContentType ? 'REPLACE' : undefined,
 		});
@@ -362,6 +366,69 @@ export class StorageService implements IStorageService {
 			Delete: {
 				Objects: params.objects as Array<{Key: string}>,
 			},
+		});
+		await this.getClient(params.bucket).send(command);
+	}
+
+	async createMultipartUpload(params: {
+		bucket: string;
+		key: string;
+		contentType?: string;
+	}): Promise<{uploadId: string}> {
+		const command = new CreateMultipartUploadCommand({
+			Bucket: params.bucket,
+			Key: params.key,
+			ContentType: params.contentType,
+		});
+		const response = await this.getClient(params.bucket).send(command);
+		assert(response.UploadId != null, 'Missing UploadId in CreateMultipartUpload response');
+		return {uploadId: response.UploadId};
+	}
+
+	async uploadPart(params: {
+		bucket: string;
+		key: string;
+		uploadId: string;
+		partNumber: number;
+		body: Uint8Array;
+	}): Promise<{etag: string}> {
+		const command = new UploadPartCommand({
+			Bucket: params.bucket,
+			Key: params.key,
+			UploadId: params.uploadId,
+			PartNumber: params.partNumber,
+			Body: params.body,
+		});
+		const response = await this.getClient(params.bucket).send(command);
+		assert(response.ETag != null, 'Missing ETag in UploadPart response');
+		return {etag: response.ETag};
+	}
+
+	async completeMultipartUpload(params: {
+		bucket: string;
+		key: string;
+		uploadId: string;
+		parts: Array<{partNumber: number; etag: string}>;
+	}): Promise<void> {
+		const command = new CompleteMultipartUploadCommand({
+			Bucket: params.bucket,
+			Key: params.key,
+			UploadId: params.uploadId,
+			MultipartUpload: {
+				Parts: params.parts.map((part) => ({
+					PartNumber: part.partNumber,
+					ETag: part.etag,
+				})),
+			},
+		});
+		await this.getClient(params.bucket).send(command);
+	}
+
+	async abortMultipartUpload(params: {bucket: string; key: string; uploadId: string}): Promise<void> {
+		const command = new AbortMultipartUploadCommand({
+			Bucket: params.bucket,
+			Key: params.key,
+			UploadId: params.uploadId,
 		});
 		await this.getClient(params.bucket).send(command);
 	}

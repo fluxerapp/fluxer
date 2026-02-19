@@ -195,6 +195,7 @@ channels_and_guilds.voice_channels_cannot_be_above_text_channels: Talekanaler ka
 colors.color_value_too_high: Fargeverdien kan ikke være høyere enn 0xffffff.
 colors.color_value_too_low: Fargeverdien må være minst 0x000000.
 connections.already_exists: En tilkobling av denne typen med denne identifikatoren finnes allerede.
+connections.bluesky_oauth_authorization_failed: Vi klarte ikke å løse det Bluesky-brukernavnet. Sjekk det og prøv igjen.
 connections.bluesky_oauth_callback_failed: Vi klarte ikke å fullføre Bluesky-tilkoblingen. Prøv igjen.
 connections.bluesky_oauth_not_enabled: Bluesky-tilkoblinger er ikke aktivert på denne serveren.
 connections.bluesky_oauth_session_expired: Bluesky-økten din har utløpt. Koble til kontoen din på nytt.

@@ -17,6 +17,7 @@
  * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
  */
 
+import {S3ServiceException} from '@aws-sdk/client-s3';
 import type {ChannelID, UserID} from '@fluxer/api/src/BrandedTypes';
 import {createAttachmentID, createChannelID, createMemeID, createMessageID} from '@fluxer/api/src/BrandedTypes';
 import {Config} from '@fluxer/api/src/Config';
@@ -94,13 +95,20 @@ export class MessageOperationsHelpers {
 		const sourceKey = favoriteMeme.storageKey;
 		const destKey = makeAttachmentCdnKey(channelId, memeAttachmentId, favoriteMeme.filename);
 
-		await this.deps.storageService.copyObject({
-			sourceBucket: Config.s3.buckets.cdn,
-			sourceKey,
-			destinationBucket: Config.s3.buckets.cdn,
-			destinationKey: destKey,
-			newContentType: favoriteMeme.contentType,
-		});
+		try {
+			await this.deps.storageService.copyObject({
+				sourceBucket: Config.s3.buckets.cdn,
+				sourceKey,
+				destinationBucket: Config.s3.buckets.cdn,
+				destinationKey: destKey,
+				newContentType: favoriteMeme.contentType,
+			});
+		} catch (error) {
+			if (error instanceof S3ServiceException && (error.name === 'NoSuchKey' || error.name === 'NotFound')) {
+				throw InputValidationError.fromCode('favorite_meme_id', ValidationErrorCodes.FAVORITE_MEME_NOT_FOUND);
+			}
+			throw error;
+		}
 
 		let flags = 0;
 		if (favoriteMeme.isGifv) {

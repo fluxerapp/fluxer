@@ -99,18 +99,17 @@ export class GuildContentRepository extends IGuildContentRepository {
 		const emojiId = data.emoji_id;
 
 		const result = await executeVersionedUpdate<GuildEmojiRow, 'guild_id' | 'emoji_id'>(
-			async () => {
-				if (oldData !== undefined) return oldData;
-				return await fetchOne<GuildEmojiRow>(FETCH_GUILD_EMOJI_BY_ID_QUERY, {
+			async () =>
+				fetchOne<GuildEmojiRow>(FETCH_GUILD_EMOJI_BY_ID_QUERY, {
 					guild_id: guildId,
 					emoji_id: emojiId,
-				});
-			},
+				}),
 			(current) => ({
 				pk: {guild_id: guildId, emoji_id: emojiId},
 				patch: buildPatchFromData(data, current, GUILD_EMOJI_COLUMNS, ['guild_id', 'emoji_id']),
 			}),
 			GuildEmojis,
+			{initialData: oldData},
 		);
 
 		await fetchOne(GuildEmojisByEmojiId.insert(data));
@@ -164,18 +163,17 @@ export class GuildContentRepository extends IGuildContentRepository {
 		const stickerId = data.sticker_id;
 
 		const result = await executeVersionedUpdate<GuildStickerRow, 'guild_id' | 'sticker_id'>(
-			async () => {
-				if (oldData !== undefined) return oldData;
-				return await fetchOne<GuildStickerRow>(FETCH_GUILD_STICKER_BY_ID_QUERY, {
+			async () =>
+				fetchOne<GuildStickerRow>(FETCH_GUILD_STICKER_BY_ID_QUERY, {
 					guild_id: guildId,
 					sticker_id: stickerId,
-				});
-			},
+				}),
 			(current) => ({
 				pk: {guild_id: guildId, sticker_id: stickerId},
 				patch: buildPatchFromData(data, current, GUILD_STICKER_COLUMNS, ['guild_id', 'sticker_id']),
 			}),
 			GuildStickers,
+			{initialData: oldData},
 		);
 
 		await fetchOne(GuildStickersByStickerId.insert(data));

@@ -17,7 +17,6 @@
  * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import Config from '@app/Config';
 import {getPreferredCompression} from '@app/lib/GatewayCompression';
 import {type GatewayErrorData, GatewaySocket, type GatewaySocketProperties, GatewayState} from '@app/lib/GatewaySocket';
 import {Logger} from '@app/lib/Logger';
@@ -200,7 +199,7 @@ class GatewayConnectionStore {
 
 		logger.info(`Using gateway compression: ${compression}`);
 
-		let identifyFlags = Config.PUBLIC_RELEASE_CHANNEL === 'canary' ? GatewayIdentifyFlags.USE_CANARY_API : 0;
+		let identifyFlags = 0;
 		identifyFlags |= GatewayIdentifyFlags.DEBOUNCE_MESSAGE_REACTIONS;
 		const initialGuildId = SelectedGuildStore.selectedGuildId ?? null;
 		this.initialGuildIdAtIdentify = initialGuildId;

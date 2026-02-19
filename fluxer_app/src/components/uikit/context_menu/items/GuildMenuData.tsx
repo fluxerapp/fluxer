@@ -228,8 +228,11 @@ export function useGuildMenuData(guild: GuildRecord, options: UseGuildMenuDataOp
 	const availableSettingsTabs = useMemo(() => {
 		const allTabs = getGuildSettingsTabs(i18n);
 		return allTabs.filter((tab) => {
-			if (tab.permission && !PermissionStore.can(tab.permission, {guildId: guild.id})) {
-				return false;
+			if (tab.permission) {
+				const perms = Array.isArray(tab.permission) ? tab.permission : [tab.permission];
+				if (!perms.some((p) => PermissionStore.can(p, {guildId: guild.id}))) {
+					return false;
+				}
 			}
 			if (tab.requireFeature && !guild.features.has(tab.requireFeature)) {
 				return false;

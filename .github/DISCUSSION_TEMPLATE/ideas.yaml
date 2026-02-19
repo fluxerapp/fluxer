@@ -1,0 +1,39 @@
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the suggestion.
+
+        For larger changes, please align with maintainers before investing time.
+        Security issues should go to https://fluxer.app/security.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What problem are you trying to solve, and for whom?
+      placeholder: "Right now, users can't ..., which causes ..."
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: What would you like to see happen?
+      placeholder: "Add ..., so that ..."
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes (optional)
+      description: Constraints, rough plan, or links to relevant code.
+      placeholder: "Notes: ...\nPotential files/areas: ..."
+    validations:
+      required: false
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I searched for existing discussions and didn't find a duplicate.
+          required: true

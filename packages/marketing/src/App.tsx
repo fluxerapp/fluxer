@@ -105,25 +105,10 @@ function normalizeMarketingSecurityConfig(rawConfig: MarketingConfig): Marketing
 		allowLocalhost: !isProduction,
 		allowPrivateIpLiterals: !isProduction,
 	});
-	const apiRpcHost = validateOutboundEndpointUrl(resolveApiRpcHost(rawConfig.apiRpcHost), {
-		name: 'marketing.apiRpcHost',
-		allowHttp: true,
-		allowLocalhost: !isProduction,
-		allowPrivateIpLiterals: !isProduction,
-	});
 
 	return {
 		...rawConfig,
 		basePath,
 		apiEndpoint: normalizeEndpointOrigin(apiEndpoint),
-		apiRpcHost: normalizeEndpointOrigin(apiRpcHost),
 	};
-}
-
-function resolveApiRpcHost(apiRpcHost: string): string {
-	const trimmed = apiRpcHost.trim();
-	if (!trimmed) {
-		return trimmed;
-	}
-	return trimmed.includes('://') ? trimmed : `http://${trimmed}`;
 }

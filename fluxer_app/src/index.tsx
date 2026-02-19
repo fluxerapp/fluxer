@@ -70,8 +70,6 @@ const logger = new Logger('index');
 
 preloadClientInfo();
 
-const normalizePathSegment = (value: string): string => value.replace(/^\/+|\/+$/g, '');
-
 async function resumePendingDesktopHandoffLogin(): Promise<void> {
 	const electronApi = getElectronAPI();
 	if (!electronApi || typeof electronApi.consumeDesktopHandoffCode !== 'function') {
@@ -103,7 +101,7 @@ async function resumePendingDesktopHandoffLogin(): Promise<void> {
 }
 
 function initSentry(): void {
-	const resolvedSentryDsn = buildRuntimeSentryDsn() || RuntimeConfigStore.sentryDsn;
+	const resolvedSentryDsn = RuntimeConfigStore.sentryDsn;
 	const normalizedBuildSha =
 		Config.PUBLIC_BUILD_SHA && Config.PUBLIC_BUILD_SHA !== 'dev' ? Config.PUBLIC_BUILD_SHA : undefined;
 	const buildNumberString =
@@ -165,24 +163,6 @@ function initSentry(): void {
 			return scope;
 		},
 	});
-}
-
-function buildRuntimeSentryDsn(): string | null {
-	if (!RuntimeConfigStore.sentryProjectId || !RuntimeConfigStore.sentryPublicKey) {
-		return null;
-	}
-
-	const origin = window.location.origin;
-	if (!origin) {
-		return null;
-	}
-
-	const proxyPath = normalizePathSegment(RuntimeConfigStore.sentryProxyPath ?? '/error-reporting-proxy');
-	const projectSegment = normalizePathSegment(RuntimeConfigStore.sentryProjectId);
-
-	const url = new URL(`/${proxyPath}/${projectSegment}`, origin);
-	url.username = RuntimeConfigStore.sentryPublicKey;
-	return url.toString();
 }
 
 async function bootstrap(): Promise<void> {

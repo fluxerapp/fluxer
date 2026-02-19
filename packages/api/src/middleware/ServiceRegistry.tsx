@@ -35,7 +35,6 @@ import type {ISearchProvider} from '@fluxer/api/src/search/ISearchProvider';
 import {VoiceAvailabilityService} from '@fluxer/api/src/voice/VoiceAvailabilityService';
 import {VoiceRepository} from '@fluxer/api/src/voice/VoiceRepository';
 import {VoiceTopology} from '@fluxer/api/src/voice/VoiceTopology';
-import {WorkerService as ProdWorkerService} from '@fluxer/api/src/worker/WorkerService';
 import type {IKVProvider} from '@fluxer/kv_client/src/IKVProvider';
 import {KVClient} from '@fluxer/kv_client/src/KVClient';
 import type {S3Service} from '@fluxer/s3/src/s3/S3Service';
@@ -70,7 +69,7 @@ export function getWorkerService(): IWorkerService {
 	if (_injectedWorkerService) {
 		return _injectedWorkerService;
 	}
-	return new ProdWorkerService();
+	throw new Error('WorkerService has not been initialized. Call setInjectedWorkerService() during startup.');
 }
 
 let _injectedGatewayService: IGatewayService | undefined;

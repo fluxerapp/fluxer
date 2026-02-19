@@ -517,11 +517,16 @@ handle_resume(Data, State) ->
     Token = maps:get(<<"token">>, Data),
     SessionId = maps:get(<<"session_id">>, Data),
     Seq = maps:get(<<"seq">>, Data),
-    case session_manager:lookup(SessionId) of
-        {ok, Pid} when is_pid(Pid) ->
-            handle_resume_with_session(Pid, Token, SessionId, Seq, State);
-        {error, not_found} ->
-            handle_resume_session_not_found(State)
+    case is_binary(SessionId) of
+        false ->
+            handle_resume_session_not_found(State);
+        true ->
+            case session_manager:lookup(SessionId) of
+                {ok, Pid} when is_pid(Pid) ->
+                    handle_resume_with_session(Pid, Token, SessionId, Seq, State);
+                {error, _} ->
+                    handle_resume_session_not_found(State)
+            end
     end.
 
 -spec handle_voice_state_update(pid(), map(), state()) -> ws_result().

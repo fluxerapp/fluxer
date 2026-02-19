@@ -65,7 +65,7 @@ export class BlueskyOAuthService implements IBlueskyOAuthService {
 			clientMetadata: {
 				client_id: `${baseUrl}/connections/bluesky/client-metadata.json`,
 				client_name: config.client_name,
-				client_uri: config.client_uri || baseUrl,
+				client_uri: baseUrl,
 				logo_uri: config.logo_uri || undefined,
 				tos_uri: config.tos_uri || undefined,
 				policy_uri: config.policy_uri || undefined,

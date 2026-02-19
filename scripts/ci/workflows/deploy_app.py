@@ -91,7 +91,7 @@ if [[ "${RELEASE_CHANNEL}" == "canary" ]]; then
 else
   CONFIG_PATH="/etc/fluxer/config.stable.json"
 fi
-read -r CADDY_APP_DOMAIN SENTRY_CADDY_DOMAIN <<EOF
+read -r CADDY_APP_DOMAIN <<EOF
 $(python3 - <<'PY' "${CONFIG_PATH}"
 import sys, json
 from urllib.parse import urlparse
@@ -122,12 +122,7 @@ derived_app = build_url(public_scheme, derive_domain('app'), public_port)
 app_url = (overrides.get('app') or derived_app).strip()
 parsed_app = urlparse(app_url)
 app_host = parsed_app.netloc or parsed_app.path
-sentry_host_raw = (cfg.get('services', {}).get('app_proxy', {}).get('sentry_report_host') or '').strip()
-if sentry_host_raw and not sentry_host_raw.startswith('http'):
-    sentry_host_raw = f"https://{sentry_host_raw}"
-
-sentry_host = urlparse(sentry_host_raw).netloc if sentry_host_raw else ''
-print(f"{app_host} {sentry_host}")
+print(app_host)
 PY
 )
 EOF
@@ -136,17 +131,6 @@ if [[ "${RELEASE_CHANNEL}" == "canary" ]]; then
 else
   API_TARGET="fluxer-api_app"
 fi
-SENTRY_REPORT_HOST="$(
-  python3 - <<'PY' "${CONFIG_PATH}"
-import sys, json
-path = sys.argv[1]
-with open(path, 'r') as f:
-    cfg = json.load(f)
-app_proxy = cfg.get('services', {}).get('app_proxy', {})
-host = (app_proxy.get('sentry_report_host') or '').rstrip('/')
-print(host)
-PY
-)"
 sudo mkdir -p "/opt/${SERVICE_NAME}"
 sudo chown -R "${USER}:${USER}" "/opt/${SERVICE_NAME}"
 cd "/opt/${SERVICE_NAME}"
@@ -171,7 +155,6 @@ x-common-caddy-headers: &common_caddy_headers
   caddy.header.X-Content-Type-Options: "nosniff"
   caddy.header.Referrer-Policy: "strict-origin-when-cross-origin"
   caddy.header.X-Frame-Options: "DENY"
-  caddy.header.Expect-Ct: "max-age=86400, report-uri=\\"${SENTRY_REPORT_HOST}/api/4510205815291904/security/?sentry_key=59ced0e2666ab83dd1ddb056cdd22d1b\\""
   caddy.header.Cache-Control: "no-store, no-cache, must-revalidate"
   caddy.header.Pragma: "no-cache"
   caddy.header.Expires: "0"
@@ -200,22 +183,6 @@ services:
         caddy.redir: "/.well-known/fluxer /api/.well-known/fluxer 301"
         caddy.handle_path_0: /api*
         caddy.handle_path_0.reverse_proxy: "http://${API_TARGET}:8080"
-        caddy.reverse_proxy: "{{upstreams 8080}}"
-    environment:
-      <<: *env_base
-    networks: [fluxer-shared]
-    healthcheck: *healthcheck
-
-  sentry:
-    image: ${IMAGE_TAG}
-    volumes:
-      - ${CONFIG_PATH}:/etc/fluxer/config.json:ro
-    deploy:
-      <<: *deploy_base
-      replicas: 1
-      labels:
-        <<: *common_caddy_headers
-        caddy: ${SENTRY_CADDY_DOMAIN}
         caddy.reverse_proxy: "{{upstreams 8080}}"
     environment:
       <<: *env_base

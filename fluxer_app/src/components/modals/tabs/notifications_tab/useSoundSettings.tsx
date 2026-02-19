@@ -17,14 +17,10 @@
  * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import * as PremiumModalActionCreators from '@app/actions/PremiumModalActionCreators';
 import * as SoundActionCreators from '@app/actions/SoundActionCreators';
 import * as ToastActionCreators from '@app/actions/ToastActionCreators';
-import UserStore from '@app/stores/UserStore';
 import * as CustomSoundDB from '@app/utils/CustomSoundDB';
 import {openFilePicker} from '@app/utils/FilePickerUtils';
-import {LimitResolver} from '@app/utils/limits/LimitResolverAdapter';
-import {isLimitToggleEnabled} from '@app/utils/limits/LimitUtils';
 import {getSoundLabels} from '@app/utils/SoundLabels';
 import {clearCustomSoundCache, type SoundType} from '@app/utils/SoundUtils';
 import {useLingui} from '@lingui/react/macro';
@@ -32,22 +28,6 @@ import {useCallback, useEffect, useMemo, useState} from 'react';
 
 export function useSoundSettings() {
 	const {t, i18n} = useLingui();
-	const user = UserStore.currentUser;
-	const hasPremium = useMemo(() => user?.isPremium() ?? false, [user]);
-	const hasCustomNotificationSounds = useMemo(
-		() =>
-			isLimitToggleEnabled(
-				{
-					feature_custom_notification_sounds: LimitResolver.resolve({
-						key: 'feature_custom_notification_sounds',
-						fallback: 0,
-					}),
-				},
-				'feature_custom_notification_sounds',
-			),
-		[],
-	);
-
 	const soundTypeLabels = useMemo(() => getSoundLabels(i18n), [i18n]);
 
 	const [customSounds, setCustomSounds] = useState<Record<SoundType, CustomSoundDB.CustomSound | null>>(
@@ -113,7 +93,7 @@ export function useSoundSettings() {
 
 	const handleCustomSoundUpload = useCallback(
 		async (soundType: SoundType, file: File | null) => {
-			if (!hasCustomNotificationSounds || !file) {
+			if (!file) {
 				return;
 			}
 			const validation = CustomSoundDB.isValidAudioFile(file);
@@ -143,7 +123,7 @@ export function useSoundSettings() {
 				});
 			}
 		},
-		[hasCustomNotificationSounds],
+		[t],
 	);
 
 	const handleCustomSoundDelete = useCallback(async (soundType: SoundType) => {
@@ -168,19 +148,13 @@ export function useSoundSettings() {
 
 	const handleUploadClick = useCallback(
 		async (soundType: SoundType) => {
-			if (!hasCustomNotificationSounds) {
-				PremiumModalActionCreators.open();
-				return;
-			}
 			const [file] = await openFilePicker({accept: CustomSoundDB.SUPPORTED_MIME_TYPES.join(',')});
 			await handleCustomSoundUpload(soundType, file ?? null);
 		},
-		[hasCustomNotificationSounds, handleCustomSoundUpload],
+		[handleCustomSoundUpload],
 	);
 
 	return {
-		hasPremium,
-		hasCustomNotificationSounds,
 		soundTypeLabels,
 		customSounds,
 		handleToggleAllSounds,

@@ -46,7 +46,6 @@ export const FeatureComparisonTable = observer(() => {
 			profile_badge: t`Profile badge`,
 			custom_video_backgrounds: t`Custom video backgrounds`,
 			entrance_sounds: t`Entrance sounds`,
-			notification_sounds: t`Notification sounds`,
 			communities: t`Communities`,
 			message_character_limit: t`Message character limit`,
 			bookmarked_messages: t`Bookmarked messages`,

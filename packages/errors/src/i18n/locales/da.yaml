@@ -149,6 +149,7 @@ calls_and_voice.voice_message_waveform_required: Vedhæftninger til voice-besked
 calls_and_voice.voice_messages_require_single_attachment: Voice-beskeder skal indeholde præcis én vedhæftning.
 captcha.invalid: Ugyldig captcha.
 captcha.required: Captcha er påkrævet.
+connections.bluesky_oauth_authorization_failed: Vi kunne ikke finde det Bluesky-håndtag. Tjek det og prøv igen.
 connections.bluesky_oauth_callback_failed: Vi kunne ikke fuldføre Bluesky-forbindelsen. Prøv igen.
 connections.bluesky_oauth_not_enabled: Bluesky-forbindelser er ikke aktiveret på denne server.
 connections.bluesky_oauth_session_expired: Din Bluesky-session er udløbet. Forbind din konto igen.

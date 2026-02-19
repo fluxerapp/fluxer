@@ -18,7 +18,6 @@
  */
 
 import {createTestAccount} from '@fluxer/api/src/auth/tests/AuthTestUtils';
-import {Config} from '@fluxer/api/src/Config';
 import {createGuild} from '@fluxer/api/src/guild/tests/GuildTestUtils';
 import {ensureSessionStarted, markChannelAsIndexed, sendMessage} from '@fluxer/api/src/message/tests/MessageTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@fluxer/api/src/test/ApiTestHarness';
@@ -592,11 +591,8 @@ describe('Message Search Endpoint', () => {
 			const account = await createTestAccount(harness);
 			await ensureSessionStarted(harness, account.token);
 
-			await createBuilder<{type: 'session'; data: {private_channels: Array<{id: string}>}}>(
-				harness,
-				`Bearer ${Config.gateway.rpcSecret}`,
-			)
-				.post('/_rpc')
+			await createBuilder<{type: 'session'; data: {private_channels: Array<{id: string}>}}>(harness, '')
+				.post('/test/rpc-session-init')
 				.body({
 					type: 'session',
 					token: account.token,

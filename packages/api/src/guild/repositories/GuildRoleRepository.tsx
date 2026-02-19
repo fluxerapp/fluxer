@@ -82,18 +82,17 @@ export class GuildRoleRepository extends IGuildRoleRepository {
 		const roleId = data.role_id;
 
 		const result = await executeVersionedUpdate<GuildRoleRow, 'guild_id' | 'role_id'>(
-			async () => {
-				if (oldData !== undefined) return oldData;
-				return await fetchOne<GuildRoleRow>(FETCH_GUILD_ROLE_BY_ID_QUERY, {
+			async () =>
+				fetchOne<GuildRoleRow>(FETCH_GUILD_ROLE_BY_ID_QUERY, {
 					guild_id: guildId,
 					role_id: roleId,
-				});
-			},
+				}),
 			(current) => ({
 				pk: {guild_id: guildId, role_id: roleId},
 				patch: buildPatchFromData(data, current, GUILD_ROLE_COLUMNS, ['guild_id', 'role_id']),
 			}),
 			GuildRoles,
+			{initialData: oldData},
 		);
 
 		return new GuildRole({...data, version: result.finalVersion ?? 1});

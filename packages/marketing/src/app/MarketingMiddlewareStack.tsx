@@ -20,6 +20,11 @@
 /** @jsxRuntime automatic */
 /** @jsxImportSource hono/jsx */
 
+import {CdnEndpoints} from '@fluxer/constants/src/CdnEndpoints';
+import type {HttpStatusCode} from '@fluxer/constants/src/HttpConstants';
+import {HttpStatus} from '@fluxer/constants/src/HttpConstants';
+import {createErrorHandler} from '@fluxer/errors/src/ErrorHandler';
+import {FluxerError} from '@fluxer/errors/src/FluxerError';
 import {applyMiddlewareStack} from '@fluxer/hono/src/middleware/MiddlewareStack';
 import type {MetricsCollector} from '@fluxer/hono_types/src/MetricsTypes';
 import type {TracingOptions} from '@fluxer/hono_types/src/TracingTypes';
@@ -29,7 +34,9 @@ import type {MarketingConfig} from '@fluxer/marketing/src/MarketingConfig';
 import {cacheHeadersMiddleware} from '@fluxer/marketing/src/middleware/CacheHeadersMiddleware';
 import {marketingCsrfMiddleware} from '@fluxer/marketing/src/middleware/Csrf';
 import type {IRateLimitService} from '@fluxer/rate_limit/src/IRateLimitService';
-import type {Hono} from 'hono';
+import {captureException} from '@fluxer/sentry/src/Sentry';
+import {ErrorPage} from '@fluxer/ui/src/pages/ErrorPage';
+import type {Context, Hono, ErrorHandler as HonoErrorHandler} from 'hono';
 
 export interface ApplyMarketingMiddlewareStackOptions {
 	app: Hono;
@@ -76,19 +83,66 @@ export function applyMarketingMiddlewareStack(options: ApplyMarketingMiddlewareS
 				}
 			: undefined,
 		customMiddleware: [cacheHeadersMiddleware(), marketingCsrfMiddleware],
-		errorHandler: {
-			includeStack: options.config.env === 'development',
-			logger: (err, ctx) => {
-				options.logger.error(
-					{
-						error: err.message,
-						stack: err.stack,
-						path: ctx.req.path,
-						method: ctx.req.method,
-					},
-					'Request error',
-				);
-			},
+		skipErrorHandler: true,
+	});
+
+	options.app.onError(createMarketingErrorHandler(options.logger, options.config));
+}
+
+const KNOWN_HTTP_STATUS_CODES: Array<HttpStatusCode> = Object.values(HttpStatus);
+
+function createMarketingErrorHandler(logger: LoggerInterface, config: MarketingConfig): HonoErrorHandler {
+	const homeUrl = config.basePath || '/';
+
+	return createErrorHandler({
+		includeStack: config.env === 'development',
+		logError: (error, c) => {
+			if (!(error instanceof FluxerError)) {
+				captureException(error);
+			}
+
+			logger.error(
+				{
+					error: error.message,
+					stack: error.stack,
+					path: c.req.path,
+					method: c.req.method,
+				},
+				'Request error',
+			);
+		},
+		customHandler: (error, c) => {
+			const status = getStatus(error) ?? 500;
+			return renderMarketingError(c, status, homeUrl);
 		},
 	});
+}
+
+function getStatus(error: Error): number | null {
+	const statusValue = Reflect.get(error, 'status');
+	return typeof statusValue === 'number' ? statusValue : null;
+}
+
+function renderMarketingError(c: Context, status: number, homeUrl: string): Response | Promise<Response> {
+	const statusCode = isHttpStatusCode(status) ? status : HttpStatus.INTERNAL_SERVER_ERROR;
+	c.status(statusCode);
+	return c.html(
+		<ErrorPage
+			statusCode={statusCode}
+			title="Something went wrong"
+			description="An unexpected error occurred. Please try again later."
+			staticCdnEndpoint={CdnEndpoints.STATIC}
+			homeUrl={homeUrl}
+			homeLabel="Go home"
+		/>,
+	);
+}
+
+function isHttpStatusCode(value: number): value is HttpStatusCode {
+	for (const statusCode of KNOWN_HTTP_STATUS_CODES) {
+		if (statusCode === value) {
+			return true;
+		}
+	}
+	return false;
 }

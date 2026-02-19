@@ -366,6 +366,7 @@ export class MessageSendService {
 				userId: user.id,
 				channelId: createChannelID(data.message_reference.channel_id!),
 			});
+			await this.ensureForwardSourceAccess(forwardReferenceAuthChannel);
 			referenceChannelId = forwardReferenceAuthChannel.channel.id;
 			referencedChannelGuildId = forwardReferenceAuthChannel.channel.guildId ?? null;
 		}
@@ -469,6 +470,7 @@ export class MessageSendService {
 				userId: user.id,
 				channelId: createChannelID(data.message_reference!.channel_id!),
 			});
+			await this.ensureForwardSourceAccess(forwardReferenceAuthChannel);
 			referenceChannelId = forwardReferenceAuthChannel.channel.id;
 			referencedChannelGuildId = forwardReferenceAuthChannel.channel.guildId ?? null;
 		}
@@ -504,6 +506,13 @@ export class MessageSendService {
 		}
 
 		return {referencedMessage, referencedChannelGuildId, messageSnapshots};
+	}
+
+	private async ensureForwardSourceAccess(authChannel: AuthenticatedChannel): Promise<void> {
+		if (authChannel.guild) {
+			await authChannel.checkPermission(Permissions.VIEW_CHANNEL);
+			await authChannel.checkPermission(Permissions.READ_MESSAGE_HISTORY);
+		}
 	}
 
 	private async ensureReferencedMessageIsVisible({

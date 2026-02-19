@@ -174,5 +174,71 @@ describe('Stripe Webhook Refund', () => {
 			expect(updatedPayment).not.toBeNull();
 			expect(updatedPayment!.status).toBe('refunded');
 		});
+
+		test('falls back to customer ID when payment intent is not indexed (subscription mode)', async () => {
+			const account = await createTestAccount(harness);
+			const userId = createUserID(BigInt(account.userId));
+
+			const {UserRepository} = await import('@fluxer/api/src/user/repositories/UserRepository');
+			const userRepository = new UserRepository();
+
+			const stripeCustomerId = 'cus_test_subscription_fallback';
+			await userRepository.patchUpsert(
+				userId,
+				{stripe_customer_id: stripeCustomerId},
+				(await userRepository.findUnique(userId))!.toRow(),
+			);
+
+			await sendWebhook({
+				type: 'charge.refunded',
+				data: {
+					object: {
+						id: 'ch_test_refund_sub_789',
+						payment_intent: 'pi_test_not_indexed_789',
+						customer: stripeCustomerId,
+						amount_refunded: 4999,
+					},
+				},
+			});
+
+			const updatedUser = await userRepository.findUnique(userId);
+			expect(updatedUser).not.toBeNull();
+			expect(updatedUser!.firstRefundAt).not.toBeNull();
+		});
+
+		test('skips premium action for donation customer refund', async () => {
+			const donationCustomerId = 'cus_test_donation_refund';
+
+			const {DonationRepository} = await import('@fluxer/api/src/donation/DonationRepository');
+			const donationRepository = new DonationRepository();
+
+			await donationRepository.createDonor({
+				email: 'donor-refund-test@example.com',
+				stripeCustomerId: donationCustomerId,
+				businessName: null,
+				taxId: null,
+				taxIdType: null,
+				stripeSubscriptionId: null,
+				subscriptionAmountCents: null,
+				subscriptionCurrency: null,
+				subscriptionInterval: null,
+				subscriptionCurrentPeriodEnd: null,
+				subscriptionCancelAt: null,
+			});
+
+			const result = await sendWebhook({
+				type: 'charge.refunded',
+				data: {
+					object: {
+						id: 'ch_test_refund_donation_101',
+						payment_intent: 'pi_test_donation_not_indexed_101',
+						customer: donationCustomerId,
+						amount_refunded: 2500,
+					},
+				},
+			});
+
+			expect(result.received).toBe(true);
+		});
 	});
 });

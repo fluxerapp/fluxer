@@ -21,7 +21,7 @@
 /** @jsxImportSource hono/jsx */
 
 import type {MarketingContext} from '@fluxer/marketing/src/MarketingContext';
-import {renderDonationForm} from '@fluxer/marketing/src/pages/donations/DonationForm';
+import {renderDonationForm, renderDonationScript} from '@fluxer/marketing/src/pages/donations/DonationForm';
 import {renderDonationManageForm} from '@fluxer/marketing/src/pages/donations/DonationManageForm';
 import {renderContentLayout} from '@fluxer/marketing/src/pages/Layout';
 import {pageMeta} from '@fluxer/marketing/src/pages/layout/Meta';
@@ -76,6 +76,7 @@ function renderDonateContent(ctx: MarketingContext, donationType: 'individual' |
 				{renderDonationForm(ctx, 'individual', !isIndividual)}
 				{renderDonationForm(ctx, 'business', !isBusiness)}
 				{renderDonateTabScript(ctx)}
+				{renderDonationScript(ctx)}
 			</div>
 
 			<div id="donation-notes" class="mb-12">

@@ -527,12 +527,6 @@ get_voice_token_and_create_state(Context, Member, ParsedViewerStreamKey, State) 
                     ),
                     VoiceState1 = maybe_attach_session_id(VoiceState0, SessionIdBin),
                     VoiceState = maybe_attach_member(VoiceState1, Member),
-                    %% NOTE: We intentionally do NOT add the voice state to voice_states
-                    %% or broadcast it yet. The voice state will only be added and
-                    %% broadcast when LiveKit confirms the user has actually connected
-                    %% via confirm_voice_connection_from_livekit/2.
-                    %% This prevents users from appearing in voice channels before
-                    %% they're actually connected and ready to communicate.
                     Now = erlang:system_time(millisecond),
                     PendingMetadata = #{
                         user_id => UserId,
@@ -1059,7 +1053,7 @@ request_voice_token(GuildId, ChannelId, UserId, ConnectionId, VoicePermissions, 
                 endpoint => maps:get(<<"endpoint">>, Data),
                 connection_id => maps:get(<<"connectionId">>, Data)
             }};
-        {error, {http_error, _Status, Body}} ->
+        {error, {rpc_error, _Status, Body}} ->
             case parse_unclaimed_error(Body) of
                 true ->
                     {error, voice_unclaimed_account};

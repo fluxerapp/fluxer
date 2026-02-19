@@ -9,6 +9,10 @@
 				"$ref": "#/$defs/s3_service",
 				"default": {}
 			},
+			"nats": {
+				"$ref": "#/$defs/nats_services",
+				"default": {}
+			},
 			"queue": {
 				"$ref": "#/$defs/queue_service",
 				"default": {}

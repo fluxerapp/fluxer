@@ -31,7 +31,15 @@ import type {IWorkerService} from '@fluxer/worker/src/contracts/IWorkerService';
 import type {WorkerJobPayload} from '@fluxer/worker/src/contracts/WorkerTypes';
 
 interface RefreshSearchIndexJobPayload extends WorkerJobPayload {
-	index_type: 'guilds' | 'users' | 'reports' | 'audit_logs' | 'channel_messages' | 'favorite_memes' | 'guild_members';
+	index_type:
+		| 'guilds'
+		| 'users'
+		| 'reports'
+		| 'audit_logs'
+		| 'channel_messages'
+		| 'favorite_memes'
+		| 'guild_members'
+		| 'discovery';
 	admin_user_id: string;
 	audit_log_reason: string | null;
 	job_id: string;
@@ -147,7 +155,8 @@ export class AdminSearchService {
 				| 'audit_logs'
 				| 'channel_messages'
 				| 'guild_members'
-				| 'favorite_memes';
+				| 'favorite_memes'
+				| 'discovery';
 			guild_id?: bigint;
 			user_id?: bigint;
 		},

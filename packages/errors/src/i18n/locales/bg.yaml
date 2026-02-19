@@ -203,6 +203,7 @@ content_and_safety.explicit_content_cannot_be_sent: Не можеш да изп�
 content_and_safety.ncmec_already_submitted: Това съдържание вече е изпратено към NCMEC.
 content_and_safety.ncmec_submission_failed: Не успяхме да изпратим сигнала към NCMEC. Опитай пак по-късно.
 content_and_safety.nsfw_age_restricted: NSFW съдържанието е ограничено по възраст.
+connections.bluesky_oauth_authorization_failed: Не успяхме да разпознаем този Bluesky псевдоним. Провери го и опитай пак.
 connections.bluesky_oauth_callback_failed: Не успяхме да завършим свързването с Bluesky. Моля, опитай пак.
 connections.bluesky_oauth_not_enabled: Свързванията с Bluesky не са включени на този сървър.
 connections.bluesky_oauth_session_expired: Твоята сесия на Bluesky е изтекла. Моля, преконектирай си акаунта.

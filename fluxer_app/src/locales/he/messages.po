@@ -82,7 +82,7 @@ msgstr "(מוצגים מקסימום 15)"
 msgid "(No content)"
 msgstr "(אין תוכן)"
 
-#: src/components/modals/UserProfileMobileSheet.tsx:602
+#: src/components/modals/UserProfileMobileSheet.tsx:608
 #: src/components/pages/YouPage.tsx:147
 msgid "(only visible to you)"
 msgstr "(נראה רק לך)"
@@ -651,14 +651,14 @@ msgstr "{maxFavoriteMemes} פריטי מדיה שמורים"
 
 #: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:77
 #: src/components/channel/ChannelSourcePreview.tsx:206
-#: src/components/modals/discovery/DiscoveryGuildCard.tsx:83
+#: src/components/modals/discovery/DiscoveryGuildCard.tsx:89
 #: src/components/modals/UserProfileModal.tsx:839
 msgid "{memberCount} Member"
 msgstr "{memberCount} חבר"
 
 #: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:77
 #: src/components/channel/ChannelSourcePreview.tsx:206
-#: src/components/modals/discovery/DiscoveryGuildCard.tsx:83
+#: src/components/modals/discovery/DiscoveryGuildCard.tsx:89
 #: src/components/modals/UserProfileModal.tsx:839
 msgid "{memberCount} Members"
 msgstr "{memberCount} חברים"
@@ -698,7 +698,7 @@ msgstr "{mutualGuildCount} קהילות משותפות"
 msgid "{mutualGuildCount} mutual community"
 msgstr "{mutualGuildCount} קהילות משותפות"
 
-#: src/components/modals/discovery/DiscoveryGuildCard.tsx:78
+#: src/components/modals/discovery/DiscoveryGuildCard.tsx:84
 msgid "{onlineCount} Online"
 msgstr "{onlineCount} באינטרנט"
 
@@ -1095,7 +1095,7 @@ msgstr "<0>אזהרה:</0> זה גם יפסיק אימות דו-שלבי באמ�
 #: src/components/channel/CallMessage.tsx:69
 #: src/components/modals/BanMemberModal.tsx:58
 #: src/components/modals/InviteModal.tsx:80
-#: src/components/modals/InviteModal.tsx:210
+#: src/components/modals/InviteModal.tsx:207
 #: src/components/modals/PackInviteModal.tsx:51
 #: src/components/modals/TimeoutMemberOptions.tsx:38
 msgid "1 day"
@@ -1105,7 +1105,7 @@ msgstr "יום אחד"
 #: src/components/modals/BanMemberModal.tsx:56
 #: src/components/modals/channel_tabs/ChannelOverviewTab.tsx:171
 #: src/components/modals/InviteModal.tsx:77
-#: src/components/modals/InviteModal.tsx:204
+#: src/components/modals/InviteModal.tsx:201
 #: src/components/modals/PackInviteModal.tsx:48
 #: src/components/modals/TimeoutMemberOptions.tsx:37
 #: src/constants/TimeWindowPresets.tsx:58
@@ -1223,7 +1223,7 @@ msgstr "1080p"
 
 #: src/components/modals/BanMemberModal.tsx:57
 #: src/components/modals/InviteModal.tsx:79
-#: src/components/modals/InviteModal.tsx:208
+#: src/components/modals/InviteModal.tsx:205
 #: src/components/modals/PackInviteModal.tsx:50
 msgid "12 hours"
 msgstr "12 שעות"
@@ -1346,7 +1346,7 @@ msgstr "30 FPS"
 
 #: src/components/modals/channel_tabs/ChannelOverviewTab.tsx:170
 #: src/components/modals/InviteModal.tsx:76
-#: src/components/modals/InviteModal.tsx:202
+#: src/components/modals/InviteModal.tsx:199
 #: src/components/modals/PackInviteModal.tsx:47
 #: src/constants/TimeWindowPresets.tsx:57
 #: src/utils/modals/guild_tabs/GuildOverviewTabUtils.tsx:64
@@ -1417,7 +1417,7 @@ msgstr "50 שימושים"
 
 #: src/components/modals/channel_tabs/ChannelOverviewTab.tsx:173
 #: src/components/modals/InviteModal.tsx:78
-#: src/components/modals/InviteModal.tsx:206
+#: src/components/modals/InviteModal.tsx:203
 #: src/components/modals/PackInviteModal.tsx:49
 msgid "6 hours"
 msgstr "6 שעות"
@@ -1437,7 +1437,7 @@ msgid "60 seconds"
 msgstr "60 שניות"
 
 #: src/components/modals/InviteModal.tsx:81
-#: src/components/modals/InviteModal.tsx:212
+#: src/components/modals/InviteModal.tsx:209
 #: src/components/modals/PackInviteModal.tsx:52
 msgid "7 days"
 msgstr "7 ימים"
@@ -1450,7 +1450,7 @@ msgstr "7 ימים"
 msgid "720p"
 msgstr "720p"
 
-#: src/components/modals/components/FeatureComparisonTable.tsx:62
+#: src/components/modals/components/FeatureComparisonTable.tsx:61
 msgid "720p/30fps"
 msgstr "720p/30fps"
 
@@ -1462,7 +1462,7 @@ msgstr "8 שעות"
 msgid "A 4-digit tag will be added automatically to ensure uniqueness"
 msgstr "תג בן 4 ספרות יתווסף אוטומטית כדי להבטיח ייחודיות"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:293
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:298
 msgid "A description is required."
 msgstr "נדרשת תיאור."
 
@@ -1512,7 +1512,7 @@ msgid "about me"
 msgstr "עליי"
 
 #: src/components/modals/tabs/my_profile_tab/BioEditor.tsx:130
-#: src/components/modals/UserProfileMobileSheet.tsx:578
+#: src/components/modals/UserProfileMobileSheet.tsx:584
 #: src/components/pages/YouPage.tsx:132
 msgid "About Me"
 msgstr "אודותיי"
@@ -1832,11 +1832,11 @@ msgstr "הוסף בוט לקהילה"
 msgid "Add Channel"
 msgstr "הוסף ערוץ"
 
-#: src/components/modals/AddConnectionModal.tsx:194
+#: src/components/modals/AddConnectionModal.tsx:197
 msgid "Add Connection"
 msgstr "הוסף חיבור"
 
-#: src/components/modals/AddConnectionModal.tsx:193
+#: src/components/modals/AddConnectionModal.tsx:196
 msgid "Add connection form"
 msgstr "טופס הוספת חיבור"
 
@@ -1879,8 +1879,8 @@ msgstr "הוסף חברים לקבוצה"
 msgid "Add Item"
 msgstr "הוסף פריט"
 
-#: src/utils/PermissionUtils.tsx:346
-#: src/utils/PermissionUtils.tsx:481
+#: src/utils/PermissionUtils.tsx:352
+#: src/utils/PermissionUtils.tsx:487
 msgid "Add new reactions to messages."
 msgstr "הוסף תגובות חדשות להודעות."
 
@@ -1929,8 +1929,8 @@ msgstr "טופס הוספת מספר טלפון"
 msgid "Add Reaction"
 msgstr "הוסף תגובה"
 
-#: src/utils/PermissionUtils.tsx:345
-#: src/utils/PermissionUtils.tsx:480
+#: src/utils/PermissionUtils.tsx:351
+#: src/utils/PermissionUtils.tsx:486
 msgid "Add Reactions"
 msgstr "הוסף תגובות"
 
@@ -2522,7 +2522,7 @@ msgstr "אבטרים מונפשים (GIF, APNG, WebP מונפש, AVIF) הם תכ
 msgid "Animated avatars (GIF, APNG, animated WebP, AVIF) are not available on this instance. Please upload a static image instead."
 msgstr "אוואטרים מונפשים (GIF, APNG, WebP מונפש, AVIF) אינם זמינים במופע הזה. אנא העלה תמונה סטטית במקום."
 
-#: src/components/modals/components/FeatureComparisonTable.tsx:59
+#: src/components/modals/components/FeatureComparisonTable.tsx:58
 msgid "Animated avatars & banners"
 msgstr "אווטארים ודגלים מונפשים"
 
@@ -2551,7 +2551,7 @@ msgid "animated emoji"
 msgstr "אימוג'י מונפש"
 
 #. placeholder {0}: animatedEmojis.length
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:404
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:426
 msgid "Animated Emoji ({0})"
 msgstr "אמוג'י מונפש ({0})"
 
@@ -2604,7 +2604,7 @@ msgstr "וידאו מונפש"
 
 #. placeholder {0}: animatedEmojis.length
 #. placeholder {1}: maxAnimatedEmojis === Number.POSITIVE_INFINITY ? '∞' : maxAnimatedEmojis
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:354
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:373
 msgid "Animated: {0} / {1}"
 msgstr "מונפש: {0} / {1}"
 
@@ -2624,7 +2624,7 @@ msgstr "אנימציה"
 msgid "animations"
 msgstr "אנימציות"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:83
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:86
 msgid "Anime & Manga"
 msgstr "אנימה ומנגה"
 
@@ -2714,7 +2714,7 @@ msgstr "אפליקציות"
 msgid "Applications & Bots"
 msgstr "אפליקציות ובוטים"
 
-#: src/components/modals/tabs/AdvancedTab.tsx:90
+#: src/components/modals/tabs/AdvancedTab.tsx:93
 msgid "Applies only to the desktop app on this device."
 msgstr "חל רק על אפליקציית שולחן העבודה במכשיר זה."
 
@@ -2722,7 +2722,7 @@ msgstr "חל רק על אפליקציית שולחן העבודה במכשיר �
 msgid "Applies to both camera and screen sharing"
 msgstr "חל על שיתוף מצלמה ושיתוף מסך"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:343
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:357
 #: src/components/modals/guild_tabs/GuildMembersDateRangeModal.tsx:75
 #: src/components/modals/ThemeAcceptModal.tsx:180
 msgid "Apply"
@@ -2737,7 +2737,7 @@ msgstr "החל ערכת נושא"
 msgid "Apply to all communities"
 msgstr "החל על כל הקהילות"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:56
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:59
 msgid "Approved"
 msgstr "מאושר"
 
@@ -2781,7 +2781,7 @@ msgid "Are you sure you want to deauthorize {appName}? This application will no 
 msgstr "האם אתה בטוח שברצונך לבטל את ההסמכה של {appName}? אפליקציה זו לא תהיה יותר עם גישה לחשבון שלך."
 
 #. placeholder {0}: emoji.name
-#: src/components/emojis/EmojiListItem.tsx:193
+#: src/components/emojis/EmojiListItem.tsx:194
 msgid "Are you sure you want to delete :{0}:? This action cannot be undone."
 msgstr "האם אתה בטוח שברצונך למחוק :{0}:? פעולה זו לא ניתנת לביטול."
 
@@ -2791,7 +2791,7 @@ msgstr "האם אתה בטוח שברצונך למחוק :{0}:? פעולה זו 
 msgid "Are you sure you want to delete \"{0}\"? This action cannot be undone."
 msgstr "האם אתה בטוח שברצונך למחוק את \"{0}\"? פעולה זו לא ניתנת לביטול."
 
-#: src/components/stickers/StickerGridItem.tsx:65
+#: src/components/stickers/StickerGridItem.tsx:71
 msgid "Are you sure you want to delete \"{stickerName}\"? This action cannot be undone."
 msgstr "האם אתה בטוח שברצונך למחוק את \"{stickerName}\"? פעולה זו לא ניתנת לביטול."
 
@@ -2914,7 +2914,7 @@ msgstr "האם אתה בטוח שברצונך להעניק ל-{0} בעלות ע�
 #. placeholder {0}: user.username
 #: src/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:184
 #: src/components/modals/UserProfileActionsSheet.tsx:117
-#: src/components/modals/UserProfileMobileSheet.tsx:345
+#: src/components/modals/UserProfileMobileSheet.tsx:351
 #: src/utils/RelationshipActionUtils.tsx:120
 msgid "Are you sure you want to remove {0} as a friend?"
 msgstr "האם אתה בטוח שברצונך להסיר את {0} כחבר?"
@@ -2961,7 +2961,7 @@ msgstr "האם אתה בטוח שברצונך להעביר את הבעלות ע�
 #: src/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:218
 #: src/components/modals/tabs/BlockedUsersTab.tsx:64
 #: src/components/modals/UserProfileActionsSheet.tsx:151
-#: src/components/modals/UserProfileMobileSheet.tsx:361
+#: src/components/modals/UserProfileMobileSheet.tsx:367
 #: src/utils/RelationshipActionUtils.tsx:174
 msgid "Are you sure you want to unblock {0}?"
 msgstr "האם אתה בטוח שברצונך לבטל את החסימה של {0}?"
@@ -2986,8 +2986,8 @@ msgstr "מתנה"
 msgid "At least one channel must have \"View Channel\" permission enabled for @everyone in order for the vanity URL to work. Currently, no channels are viewable to @everyone."
 msgstr "לפחות ערוץ אחד חייב להיות עם הרשאת \"צפייה בערוץ\" מופעלת ל-@everyone כדי שכתובת ה-vanity תעבוד. כרגע אין ערוצים שניתנים לצפייה ל-@everyone."
 
-#: src/utils/PermissionUtils.tsx:323
-#: src/utils/PermissionUtils.tsx:470
+#: src/utils/PermissionUtils.tsx:329
+#: src/utils/PermissionUtils.tsx:476
 msgid "Attach Files"
 msgstr "צרף קבצים"
 
@@ -3077,8 +3077,8 @@ msgid "Audio"
 msgstr "אודיו"
 
 #: src/components/modals/utils/SettingsConstants.tsx:190
-#: src/utils/PermissionUtils.tsx:380
-#: src/utils/PermissionUtils.tsx:495
+#: src/utils/PermissionUtils.tsx:386
+#: src/utils/PermissionUtils.tsx:501
 msgid "Audio & Video"
 msgstr "אודיו ווידאו"
 
@@ -3301,7 +3301,7 @@ msgstr "השתמש אוטומטית בהעדפת המערכת להקטנת תנ�
 msgid "autoplay"
 msgstr "ניגון אוטומטי"
 
-#: src/components/modals/tabs/AdvancedTab.tsx:97
+#: src/components/modals/tabs/AdvancedTab.tsx:100
 msgid "Autostart is coming soon for Windows and Linux. For now, it is only available on macOS."
 msgstr "הפעלה אוטומטית תגיע בקרוב ל-Windows ול-Linux. בינתיים, היא זמינה רק על macOS."
 
@@ -3344,7 +3344,7 @@ msgid "Average ping:"
 msgstr "פינג ממוצע:"
 
 #: src/components/auth/IpAuthorizationScreen.tsx:154
-#: src/components/modals/AddConnectionModal.tsx:309
+#: src/components/modals/AddConnectionModal.tsx:312
 #: src/components/modals/PhoneAddModal.tsx:237
 #: src/components/modals/RequiredActionModal.tsx:655
 #: src/components/pages/OAuthAuthorizePage.tsx:671
@@ -3740,7 +3740,7 @@ msgstr "שמור הודעה"
 msgid "Bookmark messages to save them for later."
 msgstr "שמור הודעות כדי לשמור אותן למועד מאוחר יותר."
 
-#: src/components/modals/components/FeatureComparisonTable.tsx:52
+#: src/components/modals/components/FeatureComparisonTable.tsx:51
 msgid "Bookmarked messages"
 msgstr "הודעות מסומנות"
 
@@ -3932,8 +3932,8 @@ msgstr "ברכישה אתה מסכים ל־<0>תנאי השירות</0> ול־<1
 msgid "By purchasing, you agreed to our <0>Terms of Service</0> and <1>Privacy Policy</1>. All purchases are refundable within 14 days by emailing <2>support@fluxer.app</2>. Chargebacks result in permanent account bans — if you want a refund, we're more than happy to give you one if you contact us first! Payment information is securely handled by Stripe — we never have access to your full card number."
 msgstr "ברכישה אישרת את <0>תנאי השירות</0> ואת <1>מדיניות הפרטיות</1>. כל הרכישות ניתנות להחזר תוך 14 יום על ידי שליחת אימייל ל־<2>support@fluxer.app</2>. חסימות חיוב מובילות לחסימה קבועה של החשבון — אם אתה רוצה החזר נשמח לספק אחד אם תפנה אלינו קודם! מידע תשלום מטופל בצורה מאובטחת על ידי Stripe — אין לנו גישה למספר הכרטיס המלא שלך."
 
-#: src/utils/PermissionUtils.tsx:350
-#: src/utils/PermissionUtils.tsx:485
+#: src/utils/PermissionUtils.tsx:356
+#: src/utils/PermissionUtils.tsx:491
 msgid "Bypass Slowmode"
 msgstr "עקוף מצב איטי"
 
@@ -4063,7 +4063,7 @@ msgstr "מצלמות מושבתות כאשר יש יותר מ-{VOICE_CHANNEL_CAM
 #: src/components/layout/GuildLayout.tsx:76
 #: src/components/modals/AccountDeleteModal.tsx:95
 #: src/components/modals/AccountDisableModal.tsx:69
-#: src/components/modals/AddConnectionModal.tsx:215
+#: src/components/modals/AddConnectionModal.tsx:218
 #: src/components/modals/AddFavoriteMemeModal.tsx:98
 #: src/components/modals/AddGuildModal.tsx:290
 #: src/components/modals/AddGuildModal.tsx:413
@@ -4109,7 +4109,7 @@ msgstr "מצלמות מושבתות כאשר יש יותר מ-{VOICE_CHANNEL_CAM
 #: src/components/modals/HideOwnScreenShareConfirmModal.tsx:65
 #: src/components/modals/IARModal.tsx:255
 #: src/components/modals/ImageCropModal.tsx:943
-#: src/components/modals/InviteModal.tsx:332
+#: src/components/modals/InviteModal.tsx:336
 #: src/components/modals/KickMemberModal.tsx:63
 #: src/components/modals/MessageHistoryThresholdModal.tsx:103
 #: src/components/modals/MfaTotpDisableModal.tsx:75
@@ -4211,7 +4211,7 @@ msgstr "בקרות יישור כרטיס"
 msgid "Careful! You have unsaved changes."
 msgstr "זהירות! יש שינויים שלא נשמרו."
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:316
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:330
 #: src/utils/ChannelUtils.tsx:69
 #: src/utils/modals/guild_tabs/GuildAuditLogTabUtils.tsx:229
 msgid "Category"
@@ -4437,8 +4437,8 @@ msgstr "ערוץ"
 msgid "Channel"
 msgstr "ערוץ"
 
-#: src/utils/PermissionUtils.tsx:373
-#: src/utils/PermissionUtils.tsx:453
+#: src/utils/PermissionUtils.tsx:379
+#: src/utils/PermissionUtils.tsx:459
 msgid "Channel Access"
 msgstr "גישה לערוץ"
 
@@ -4516,7 +4516,7 @@ msgstr "מצב מדדי ההקלדה ברשימת הערוצים"
 msgid "Channel list typing indicators"
 msgstr "אינדיקטורים להקלדה ברשימת ערוצים"
 
-#: src/utils/PermissionUtils.tsx:426
+#: src/utils/PermissionUtils.tsx:432
 msgid "Channel Management"
 msgstr "ניהול ערוץ"
 
@@ -4740,6 +4740,10 @@ msgstr "בחר בין מראה כהה, פחם או בהיר. עדיין תוכל
 msgid "Choose destination for system and welcome messages"
 msgstr "בחר יעד להודעות מערכת וברוכים הבאים"
 
+#: src/components/modals/tabs/AdvancedTab.tsx:134
+msgid "Choose how Fluxer selects the video codec for screen sharing."
+msgstr "בחר כיצד Fluxer בוחר את קודק הווידאו לשיתוף מסך."
+
 #: src/components/modals/guild_tabs/GuildModerationTab.tsx:268
 msgid "Choose how Fluxer treats this community for age-gating. Age Restricted blocks access for users under 18 and shows a content warning for adults, subject to local laws."
 msgstr "בחר כיצד Fluxer מתייחס לקהילה זו במגבלת גיל. מוגבל לפי גיל חוסם גישה למשתמשים מתחת לגיל 18 ומציג אזהרת תוכן למבוגרים, בהתאם לחוקי המקום."
@@ -4757,7 +4761,7 @@ msgstr "בחר איך זמנים מוצגים בכל האפליקציה."
 msgid "Choose how typing indicators appear in the channel list when someone is typing in a channel."
 msgstr "בחר איך מופיעים מחווני הקלדה ברשימת הערוצים כשמישהו מקליד בערוץ."
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:332
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:346
 msgid "Choose the category that best describes your community."
 msgstr "בחר את הקטגוריה שמתארת הכי טוב את הקהילה שלך."
 
@@ -4765,7 +4769,7 @@ msgstr "בחר את הקטגוריה שמתארת הכי טוב את הקהיל�
 msgid "Choose what {clientLabel} can do in your community. Uncheck any permissions you don't want to grant."
 msgstr "בחר מה {clientLabel} יכול לעשות בקהילה שלך. הסר את הסימון מהרשאות שאינך רוצה להעניק."
 
-#: src/components/modals/tabs/AdvancedTab.tsx:106
+#: src/components/modals/tabs/AdvancedTab.tsx:109
 msgid "Choose what Fluxer remembers about your window between restarts and reloads on this device."
 msgstr "בחר מה Fluxer יזכור על החלון שלך בין הפעלות מחדש וטעינות מחדש במכשיר זה."
 
@@ -5041,7 +5045,7 @@ msgstr "לחץ או גרור ושחרר"
 msgid "Click the text below to edit it inline. Press Enter to save or Escape to cancel."
 msgstr "לחץ על הטקסט למטה כדי לערוך אותו במקום. הקש Enter לשמירה או Escape לביטול."
 
-#: src/components/modals/tabs/notifications_tab/Sounds.tsx:97
+#: src/components/modals/tabs/notifications_tab/Sounds.tsx:70
 msgid "Click the upload icon next to any sound to customize it with your own audio file. Supported formats: MP3, WAV, OGG, M4A, AAC, FLAC, Opus, WebM (max 2MB)."
 msgstr "לחץ על סמל ההעלאה ליד כל צליל כדי להתאים אותו עם קובץ שמע משלך. הפורמטים הנתמכים: MP3, WAV, OGG, M4A, AAC, FLAC, Opus, WebM (עד 2MB)."
 
@@ -5328,7 +5332,7 @@ msgstr "פריסת נוחות"
 msgid "Communication"
 msgstr "תקשורת"
 
-#: src/components/modals/components/FeatureComparisonTable.tsx:50
+#: src/components/modals/components/FeatureComparisonTable.tsx:49
 #: src/stores/QuickSwitcherStore.tsx:1354
 #: src/utils/quick_switcher/QuickSwitcherModalUtils.tsx:99
 msgid "Communities"
@@ -5360,7 +5364,7 @@ msgstr "יוצר קהילה"
 msgid "Community Deafen"
 msgstr "הקהילה מושתקת"
 
-#: src/components/layout/UserArea.tsx:159
+#: src/components/layout/UserArea.tsx:173
 #: src/components/layout/VoiceStateIcons.tsx:57
 #: src/components/voice/VoiceControlBar.tsx:607
 #: src/components/voice/VoiceParticipantTile.tsx:1466
@@ -5432,8 +5436,8 @@ msgstr "חברי קהילה"
 msgid "Community Mute"
 msgstr "השקטת קהילה"
 
-#: src/components/layout/UserArea.tsx:146
-#: src/components/layout/UserArea.tsx:153
+#: src/components/layout/UserArea.tsx:160
+#: src/components/layout/UserArea.tsx:167
 #: src/components/layout/VoiceStateIcons.tsx:49
 #: src/components/voice/VoiceControlBar.tsx:596
 #: src/components/voice/VoiceParticipantTile.tsx:1457
@@ -5492,10 +5496,10 @@ msgid "Community Record"
 msgstr "רשומת קהילה"
 
 #: src/components/modals/components/DesktopGuildSettingsView.tsx:233
-#: src/components/modals/GuildSettingsModal.tsx:194
+#: src/components/modals/GuildSettingsModal.tsx:197
 #: src/components/popouts/GuildHeaderPopout.tsx:190
-#: src/components/uikit/context_menu/items/GuildMenuData.tsx:278
-#: src/components/uikit/context_menu/items/GuildMenuItems.tsx:346
+#: src/components/uikit/context_menu/items/GuildMenuData.tsx:281
+#: src/components/uikit/context_menu/items/GuildMenuItems.tsx:349
 msgid "Community Settings"
 msgstr "הגדרות קהילה"
 
@@ -5524,7 +5528,7 @@ msgstr "בכל הקהילה"
 msgid "compact"
 msgstr "קומפקטי"
 
-#: src/components/modals/guild_tabs/GuildStickersTab.tsx:152
+#: src/components/modals/guild_tabs/GuildStickersTab.tsx:169
 msgid "Compact"
 msgstr "קומפקטי"
 
@@ -5630,7 +5634,7 @@ msgstr "הגדר ערכים מעוקפים לתפקיד זה"
 msgid "Configure role settings and permissions"
 msgstr "הגדר את הגדרות והרשאות התפקיד"
 
-#: src/components/modals/tabs/notifications_tab/Sounds.tsx:65
+#: src/components/modals/tabs/notifications_tab/Sounds.tsx:60
 msgid "Configure which sounds to play and when."
 msgstr "הגדר אילו צלילים להשמיע ומתי."
 
@@ -5670,8 +5674,8 @@ msgstr "אשר סיסמה"
 msgid "Connect"
 msgstr "חבר"
 
-#: src/utils/PermissionUtils.tsx:383
-#: src/utils/PermissionUtils.tsx:497
+#: src/utils/PermissionUtils.tsx:389
+#: src/utils/PermissionUtils.tsx:503
 msgid "Connect (Join Voice)"
 msgstr "התחבר (הצטרף לשיחה קולית)"
 
@@ -5679,7 +5683,7 @@ msgstr "התחבר (הצטרף לשיחה קולית)"
 msgid "Connect to Voice"
 msgstr "התחבר לשיחה קולית"
 
-#: src/components/modals/AddConnectionModal.tsx:218
+#: src/components/modals/AddConnectionModal.tsx:221
 msgid "Connect with Bluesky"
 msgstr "התחבר עם בלוסקיי"
 
@@ -5730,7 +5734,7 @@ msgstr "חיבור הוסר"
 msgid "Connection Stats"
 msgstr "סטטיסטיקת חיבור"
 
-#: src/components/modals/AddConnectionModal.tsx:198
+#: src/components/modals/AddConnectionModal.tsx:201
 msgid "Connection Type"
 msgstr "סוג חיבור"
 
@@ -5783,7 +5787,7 @@ msgstr "בנה כתובת URL לאישור עם טווחים והרשאות."
 msgid "contact"
 msgstr "צור קשר"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:82
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:85
 msgid "Content Creator"
 msgstr "יוצר תוכן"
 
@@ -5822,7 +5826,7 @@ msgid "Context menus can be opened with left-click (on buttons) or right-click (
 msgstr "ניתן לפתוח תפריטי הקשר עם לחיצה שמאלית (על כפתורים) או לחיצה ימנית (על אלמנטים אחרים). זה מציג פריטים שונים בתפריט כולל תיבות סימון, כפתורי רדיו, מחוונים ותפריטי משנה."
 
 #: src/components/channel/ChannelTextarea.tsx:311
-#: src/components/modals/AddConnectionModal.tsx:218
+#: src/components/modals/AddConnectionModal.tsx:221
 #: src/components/modals/BackupCodesRegenerateModal.tsx:75
 #: src/components/modals/BackupCodesViewModal.tsx:73
 #: src/components/modals/DeviceRevokeModal.tsx:82
@@ -5893,8 +5897,8 @@ msgstr "שלוט איך אתה מצטרף לערוצי קול בקהילות."
 msgid "Control how your Plutonium badge is displayed to others"
 msgstr "שלוט איך תג Plutonium שלך מוצג לאחרים"
 
-#: src/components/modals/tabs/notifications_tab/Inline.tsx:87
-#: src/components/modals/tabs/NotificationsTab.tsx:90
+#: src/components/modals/tabs/notifications_tab/Inline.tsx:85
+#: src/components/modals/tabs/NotificationsTab.tsx:88
 msgid "Control speech commands and narration for incoming content."
 msgstr "Control speech commands and narration for incoming content."
 
@@ -5958,8 +5962,8 @@ msgid "Copied URL to clipboard"
 msgstr "כתובת URL הועתקה ללוח"
 
 #: src/components/auth/HandoffCodeDisplay.tsx:106
-#: src/components/modals/AddConnectionModal.tsx:187
-#: src/components/modals/AddConnectionModal.tsx:188
+#: src/components/modals/AddConnectionModal.tsx:190
+#: src/components/modals/AddConnectionModal.tsx:191
 #: src/components/modals/shared/CopyLinkSection.tsx:52
 #: src/components/modals/ThemeAcceptModal.tsx:162
 #: src/lib/markdown/renderers/common/CodeElements.tsx:57
@@ -6017,7 +6021,7 @@ msgstr "העתק קישור לערוץ"
 msgid "Copy code"
 msgstr "העתק קוד"
 
-#: src/components/uikit/context_menu/items/GuildMenuData.tsx:372
+#: src/components/uikit/context_menu/items/GuildMenuData.tsx:375
 msgid "Copy Community ID"
 msgstr "העתק מזהה קהילה"
 
@@ -6045,11 +6049,11 @@ msgstr "העתק FluxerTag"
 msgid "Copy GIF"
 msgstr "העתק GIF"
 
-#: src/components/uikit/context_menu/items/GuildMenuItems.tsx:461
+#: src/components/uikit/context_menu/items/GuildMenuItems.tsx:464
 msgid "Copy Guild ID"
 msgstr "העתק מזהה קהילה"
 
-#: src/components/modals/AddConnectionModal.tsx:187
+#: src/components/modals/AddConnectionModal.tsx:190
 msgid "Copy host"
 msgstr "העתק מארח"
 
@@ -6154,7 +6158,7 @@ msgstr "העתק מזהה משתמש"
 msgid "Copy Username"
 msgstr "העתק שם משתמש"
 
-#: src/components/modals/AddConnectionModal.tsx:188
+#: src/components/modals/AddConnectionModal.tsx:191
 msgid "Copy value"
 msgstr "העתק ערך"
 
@@ -6199,7 +6203,7 @@ msgstr "כיסוי"
 msgid "cozy"
 msgstr "נעים"
 
-#: src/components/modals/guild_tabs/GuildStickersTab.tsx:144
+#: src/components/modals/guild_tabs/GuildStickersTab.tsx:161
 msgid "Cozy"
 msgstr "נעים"
 
@@ -6295,8 +6299,8 @@ msgstr "צור אפליקציה"
 #: src/components/popouts/GuildHeaderPopout.tsx:204
 #: src/components/uikit/context_menu/ChannelListContextMenu.tsx:89
 #: src/components/uikit/context_menu/FavoritesChannelListContextMenu.tsx:69
-#: src/components/uikit/context_menu/items/GuildMenuData.tsx:292
-#: src/components/uikit/context_menu/items/GuildMenuItems.tsx:428
+#: src/components/uikit/context_menu/items/GuildMenuData.tsx:295
+#: src/components/uikit/context_menu/items/GuildMenuItems.tsx:431
 msgid "Create Category"
 msgstr "צור קטגוריה"
 
@@ -6305,8 +6309,8 @@ msgstr "צור קטגוריה"
 #: src/components/modals/ChannelCreateModal.tsx:103
 #: src/components/popouts/GuildHeaderPopout.tsx:197
 #: src/components/uikit/context_menu/ChannelListContextMenu.tsx:86
-#: src/components/uikit/context_menu/items/GuildMenuData.tsx:287
-#: src/components/uikit/context_menu/items/GuildMenuItems.tsx:410
+#: src/components/uikit/context_menu/items/GuildMenuData.tsx:290
+#: src/components/uikit/context_menu/items/GuildMenuItems.tsx:413
 msgid "Create Channel"
 msgstr "צור ערוץ"
 
@@ -6324,6 +6328,10 @@ msgstr "טופס יצירת קהילה"
 #: src/utils/modals/CreateDMModalUtils.tsx:154
 msgid "Create DM"
 msgstr "צור הודעה פרטית"
+
+#: src/utils/PermissionUtils.tsx:284
+msgid "Create Emoji & Stickers"
+msgstr "צור אמוג'י ודבקויות"
 
 #: src/components/modals/CreatePackModal.tsx:52
 #: src/components/modals/tabs/ExpressionPacksTab.tsx:256
@@ -6346,7 +6354,7 @@ msgid "Create Invite"
 msgstr "צור הזמנה"
 
 #: src/utils/PermissionUtils.tsx:270
-#: src/utils/PermissionUtils.tsx:429
+#: src/utils/PermissionUtils.tsx:435
 msgid "Create Invite Links"
 msgstr "צור קישורי הזמנה"
 
@@ -6358,7 +6366,7 @@ msgstr "צור חשבון חדש"
 msgid "Create new group"
 msgstr "צור קבוצה חדשה"
 
-#: src/components/modals/InviteModal.tsx:335
+#: src/components/modals/InviteModal.tsx:339
 msgid "Create New Link"
 msgstr "צור קישור חדש"
 
@@ -6393,11 +6401,11 @@ msgstr "צור, ערוך או מחק ערוצים וקטגוריות."
 msgid "Create, edit, or delete roles below your highest role. Also allows editing channel permission overwrites."
 msgstr "צור, ערוך או מחק תפקידים מתחת לתפקיד הגבוה ביותר שלך. מאפשר גם עריכת חריגות הרשאות ערוצים."
 
-#: src/utils/PermissionUtils.tsx:444
+#: src/utils/PermissionUtils.tsx:450
 msgid "Create, edit, or delete webhooks for this channel."
 msgstr "צור, ערוך או מחק Webhook-ים עבור ערוץ זה."
 
-#: src/utils/PermissionUtils.tsx:289
+#: src/utils/PermissionUtils.tsx:295
 msgid "Create, edit, or delete webhooks."
 msgstr "צור, ערוך או מחק Webhook-ים."
 
@@ -6638,11 +6646,11 @@ msgstr "טווח מותאם אישית..."
 msgid "custom ringtone"
 msgstr "צליל התראה מותאם אישית"
 
-#: src/components/modals/tabs/notifications_tab/useSoundSettings.tsx:159
+#: src/components/modals/tabs/notifications_tab/useSoundSettings.tsx:139
 msgid "Custom sound removed"
 msgstr "הצליל המותאם הוסר"
 
-#: src/components/modals/tabs/notifications_tab/useSoundSettings.tsx:137
+#: src/components/modals/tabs/notifications_tab/useSoundSettings.tsx:117
 msgid "Custom sound uploaded successfully"
 msgstr "הצליל המותאם הועלה בהצלחה"
 
@@ -6662,7 +6670,7 @@ msgstr "מדבקות מותאמות אישית"
 msgid "Custom Theme Tokens"
 msgstr "אסימוני נושא מותאמים אישית"
 
-#: src/components/modals/components/FeatureComparisonTable.tsx:61
+#: src/components/modals/components/FeatureComparisonTable.tsx:60
 msgid "Custom themes"
 msgstr "נושאים מותאמים אישית"
 
@@ -6726,10 +6734,6 @@ msgstr "התאם אישית את התג בן 4 הספרות שלך (#{discrimina
 #: src/components/modals/FluxerTagChangeModal.tsx:272
 msgid "Customize your 4-digit tag or keep it when changing your username"
 msgstr "התאם אישית את התג בן 4 הספרות או שמור אותו כשאתה משנה את שם המשתמש"
-
-#: src/components/modals/tabs/notifications_tab/Sounds.tsx:71
-msgid "Customize your notification sounds with Plutonium"
-msgstr "התאם את צלילי ההודעות שלך עם פלוטוניום"
 
 #: src/components/modals/utils/SettingsSearchIndex.tsx:58
 msgid "Customize your profile banner"
@@ -6897,7 +6901,7 @@ msgstr "השתיק"
 #: src/components/bottomsheets/DirectCallLobbyBottomSheet.tsx:286
 #: src/components/bottomsheets/VoiceLobbyBottomSheet.tsx:211
 #: src/components/bottomsheets/VoiceSettingsBottomSheets.tsx:155
-#: src/components/layout/UserArea.tsx:161
+#: src/components/layout/UserArea.tsx:175
 #: src/components/uikit/context_menu/items/VoiceParticipantMenuData.tsx:515
 #: src/components/uikit/context_menu/items/VoiceParticipantMenuItems.tsx:125
 #: src/components/voice/VoiceControlBar.tsx:613
@@ -6922,8 +6926,8 @@ msgstr "השתק מכשיר"
 msgid "Deafen Keybind"
 msgstr "קיצור מקלדת להשתקת קול"
 
-#: src/utils/PermissionUtils.tsx:408
-#: src/utils/PermissionUtils.tsx:507
+#: src/utils/PermissionUtils.tsx:414
+#: src/utils/PermissionUtils.tsx:513
 msgid "Deafen Members"
 msgstr "השתק חברים"
 
@@ -6962,7 +6966,7 @@ msgid "Debug Channel"
 msgstr "ערוץ ניפוי באגים"
 
 #: src/components/uikit/context_menu/items/DebugMenuItems.tsx:90
-#: src/components/uikit/context_menu/items/GuildMenuData.tsx:362
+#: src/components/uikit/context_menu/items/GuildMenuData.tsx:365
 msgid "Debug Community"
 msgstr "ניפוי שגיאות קהילה"
 
@@ -7062,17 +7066,17 @@ msgstr "מחק"
 #: src/components/channel/embeds/media/MediaContainer.tsx:116
 #: src/components/channel/MobileMemesPicker.tsx:546
 #: src/components/channel/pickers/memes/MemeGridItem.tsx:121
-#: src/components/emojis/EmojiListItem.tsx:194
-#: src/components/emojis/EmojiListItem.tsx:246
-#: src/components/emojis/EmojiListItem.tsx:296
+#: src/components/emojis/EmojiListItem.tsx:195
+#: src/components/emojis/EmojiListItem.tsx:252
+#: src/components/emojis/EmojiListItem.tsx:308
 #: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:322
 #: src/components/modals/tabs/component_gallery_tab/ButtonsTab.tsx:157
 #: src/components/modals/tabs/component_gallery_tab/ButtonsTab.tsx:242
 #: src/components/modals/tabs/component_gallery_tab/index.tsx:165
 #: src/components/modals/tabs/component_gallery_tab/Inline.tsx:160
 #: src/components/modals/tabs/ExpressionPacksTab.tsx:210
-#: src/components/stickers/StickerGridItem.tsx:66
-#: src/components/stickers/StickerGridItem.tsx:119
+#: src/components/stickers/StickerGridItem.tsx:72
+#: src/components/stickers/StickerGridItem.tsx:126
 msgid "Delete"
 msgstr "מחק"
 
@@ -7162,11 +7166,11 @@ msgstr "מחק קהילה"
 msgid "Delete community form"
 msgstr "טופס מחיקת קהילה"
 
-#: src/components/emojis/EmojiListItem.tsx:192
+#: src/components/emojis/EmojiListItem.tsx:193
 msgid "Delete Emoji"
 msgstr "מחק אימוג'י"
 
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:147
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:163
 msgid "Delete Emoji Failed"
 msgstr "מחיקת אימוג'י נכשלה"
 
@@ -7205,8 +7209,8 @@ msgstr "מחק הודעות מהיום האחרון"
 msgid "Delete messages from the last week"
 msgstr "מחק הודעות מהשבוע האחרון"
 
-#: src/utils/PermissionUtils.tsx:311
-#: src/utils/PermissionUtils.tsx:465
+#: src/utils/PermissionUtils.tsx:317
+#: src/utils/PermissionUtils.tsx:471
 msgid "Delete others' messages. (Pinning is separate below.)"
 msgstr "מחק הודעות של אחרים. (עיגון מטופל בנפרד למטה.)"
 
@@ -7235,7 +7239,7 @@ msgstr "מחק מדיה שמורה"
 msgid "Delete Saved Media"
 msgstr "מחק מדיה שמורה"
 
-#: src/components/stickers/StickerGridItem.tsx:64
+#: src/components/stickers/StickerGridItem.tsx:70
 msgid "Delete Sticker"
 msgstr "מחק מדבקה"
 
@@ -7326,7 +7330,7 @@ msgstr "תאר אילו הבעות יש בערכה הזו."
 msgid "Describe what makes the content illegal"
 msgstr "תאר מה עושה את התוכן לא חוקי"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:305
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:317
 msgid "Describe what your community is about..."
 msgstr "תאר על מה הקהילה שלך..."
 
@@ -7336,7 +7340,7 @@ msgstr "תיאור"
 
 #: src/components/modals/CreatePackModal.tsx:95
 #: src/components/modals/EditPackModal.tsx:91
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:289
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:292
 #: src/components/modals/sticker_form/StickerFormFields.tsx:111
 msgid "Description"
 msgstr "תיאור"
@@ -7345,11 +7349,11 @@ msgstr "תיאור"
 msgid "Description must be 500 characters or less"
 msgstr "התיאור חייב להיות 500 תווים או פחות"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:296
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:301
 msgid "Description must be at least {DISCOVERY_DESCRIPTION_MIN_LENGTH} characters."
 msgstr "התיאור חייב להיות לפחות {DISCOVERY_DESCRIPTION_MIN_LENGTH} תווים."
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:300
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:305
 msgid "Description must be no more than {DISCOVERY_DESCRIPTION_MAX_LENGTH} characters."
 msgstr "התיאור לא יכול להיות יותר מ-{DISCOVERY_DESCRIPTION_MAX_LENGTH} תווים."
 
@@ -7373,11 +7377,11 @@ msgstr "סרגל התראות שולחן עבודה"
 msgid "Desktop notifications have been blocked. You can enable them later in your browser settings or in User Settings > Notifications."
 msgstr "התראות שולחן העבודה נחסמו. אפשר להפעיל אותן מאוחר יותר בהגדרות הדפדפן או בהגדרות משתמש > התראות."
 
-#: src/components/modals/tabs/AdvancedTab.tsx:85
+#: src/components/modals/tabs/AdvancedTab.tsx:88
 msgid "Desktop Startup"
 msgstr "הפעלה שולחנית"
 
-#: src/components/modals/tabs/AdvancedTab.tsx:104
+#: src/components/modals/tabs/AdvancedTab.tsx:107
 msgid "Desktop Window"
 msgstr "חלון שולחני"
 
@@ -7435,12 +7439,12 @@ msgstr "יישומי מפתחים"
 msgid "developer mode"
 msgstr "מצב מפתח"
 
-#: src/components/modals/tabs/AdvancedTab.tsx:139
+#: src/components/modals/tabs/AdvancedTab.tsx:158
 #: src/components/modals/utils/SettingsSearchIndex.tsx:215
 msgid "Developer Mode"
 msgstr "מצב מפתח"
 
-#: src/components/modals/tabs/AdvancedTab.tsx:130
+#: src/components/modals/tabs/AdvancedTab.tsx:149
 msgid "Developer Options"
 msgstr "אפשרויות מפתח"
 
@@ -7538,11 +7542,11 @@ msgstr "השבת"
 msgid "Disable Account"
 msgstr "השבת חשבון"
 
-#: src/components/modals/tabs/notifications_tab/Sounds.tsx:172
+#: src/components/modals/tabs/notifications_tab/Sounds.tsx:132
 msgid "Disable All"
 msgstr "השבת הכל"
 
-#: src/components/modals/tabs/notifications_tab/Sounds.tsx:89
+#: src/components/modals/tabs/notifications_tab/Sounds.tsx:63
 msgid "Disable all notification sounds"
 msgstr "כבוי את כל צלילי ההודעות"
 
@@ -7725,20 +7729,20 @@ msgstr "נתק סוקט"
 msgid "Disconnected"
 msgstr "מנותק"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:209
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:212
 #: src/components/modals/utils/GuildSettingsConstants.tsx:160
 msgid "Discovery"
 msgstr "גילוי"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:163
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:166
 msgid "Discovery application submitted"
 msgstr "בקשת גילוי הוגשה"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:184
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:187
 msgid "Discovery application withdrawn"
 msgstr "בקשת גילוי נמשכה"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:152
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:155
 msgid "Discovery listing updated"
 msgstr "רשימת גילוי עודכנה"
 
@@ -7854,7 +7858,7 @@ msgstr "הגדרות הודעות ישירות"
 msgid "dm sidebar"
 msgstr "סרגל צד של הודעות ישירות"
 
-#: src/components/modals/AddConnectionModal.tsx:239
+#: src/components/modals/AddConnectionModal.tsx:242
 msgid "DNS TXT record"
 msgstr "רשומת DNS TXT"
 
@@ -7904,7 +7908,7 @@ msgid "domain"
 msgstr "דומיין"
 
 #: src/components/modals/AddConnectionModal.tsx:87
-#: src/components/modals/AddConnectionModal.tsx:207
+#: src/components/modals/AddConnectionModal.tsx:210
 #: src/components/modals/tabs/LinkedAccountsTab.tsx:168
 #: src/components/modals/tabs/LinkedAccountsTab.tsx:303
 #: src/components/popouts/UserProfileShared.tsx:283
@@ -7995,7 +7999,7 @@ msgstr "הורדה"
 msgid "Download"
 msgstr "הורד"
 
-#: src/components/modals/AddConnectionModal.tsx:280
+#: src/components/modals/AddConnectionModal.tsx:283
 msgid "Download <0>fluxer-verification</0> and place it in your <1>.well-known</1> folder so we can validate the domain."
 msgstr "הורד <0>fluxer-verification</0> והנח אותו בתיקיית <1>.well-known</1> שלך כדי שנוכל לאמת את הדומיין."
 
@@ -8012,7 +8016,7 @@ msgstr "הורד את אפליקציית שולחן העבודה"
 msgid "Download Fluxer"
 msgstr "הורד את Fluxer"
 
-#: src/components/modals/AddConnectionModal.tsx:294
+#: src/components/modals/AddConnectionModal.tsx:297
 msgid "Download fluxer-verification"
 msgstr "הורד fluxer-verification"
 
@@ -8024,7 +8028,7 @@ msgstr "הורד מדיה"
 msgid "Download the desktop app for system-wide Push-to-Talk"
 msgstr "הורד את אפליקציית השולחן כדי לקבל לחצן דחיפה-לדבר בכל המערכת"
 
-#: src/components/modals/guild_tabs/GuildStickersTab.tsx:173
+#: src/components/modals/guild_tabs/GuildStickersTab.tsx:192
 msgid "Drag and drop a sticker file here (one at a time)"
 msgstr "גרור ושחרר קובץ מדבקה כאן (פעם אחת בכל פעם)"
 
@@ -8032,12 +8036,12 @@ msgstr "גרור ושחרר קובץ מדבקה כאן (פעם אחת בכל פ�
 msgid "Drag and drop area for file upload"
 msgstr "אזור גרירה ושחרור להעלאת קבצים"
 
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:363
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:382
 msgid "Drag and drop emoji files here"
 msgstr "גרור ושחרר קבצי אימוג'י כאן"
 
-#: src/utils/PermissionUtils.tsx:413
-#: src/utils/PermissionUtils.tsx:510
+#: src/utils/PermissionUtils.tsx:419
+#: src/utils/PermissionUtils.tsx:516
 msgid "Drag members between channels they can access."
 msgstr "גרור חברים בין ערוצים שהם יכולים לגשת אליהם."
 
@@ -8142,7 +8146,7 @@ msgstr "כל הודעה מטה מציגה תכונת Markdown אחת עם תצו
 msgid "Each unique invite can only be used once."
 msgstr "כל הזמנה ייחודית ניתנת לשימוש פעם אחת בלבד."
 
-#: src/components/modals/components/FeatureComparisonTable.tsx:60
+#: src/components/modals/components/FeatureComparisonTable.tsx:59
 msgid "Early access to new features"
 msgstr "גישה מוקדמת לתכונות חדשות"
 
@@ -8159,7 +8163,7 @@ msgstr "ביטול הדים"
 #: src/components/modals/tabs/ExpressionPacksTab.tsx:90
 #: src/components/modals/tabs/LinkedAccountsTab.tsx:186
 #: src/components/modals/tabs/LinkedAccountsTab.tsx:187
-#: src/components/stickers/StickerGridItem.tsx:111
+#: src/components/stickers/StickerGridItem.tsx:118
 msgid "Edit"
 msgstr "ערוך"
 
@@ -8200,8 +8204,8 @@ msgid "Edit Channel"
 msgstr "ערוך ערוץ"
 
 #: src/components/popouts/GuildHeaderPopout.tsx:220
-#: src/components/uikit/context_menu/items/GuildMenuData.tsx:314
-#: src/components/uikit/context_menu/items/GuildMenuItems.tsx:392
+#: src/components/uikit/context_menu/items/GuildMenuData.tsx:317
+#: src/components/uikit/context_menu/items/GuildMenuItems.tsx:395
 msgid "Edit Community Profile"
 msgstr "ערוך פרופיל קהילה"
 
@@ -8231,7 +8235,8 @@ msgstr "ערוך קבוצה"
 msgid "Edit group form"
 msgstr "טופס עריכת קבוצה"
 
-#: src/components/modals/InviteModal.tsx:322
+#: src/components/modals/InviteModal.tsx:316
+#: src/components/modals/InviteModal.tsx:326
 msgid "Edit invite link"
 msgstr "ערוך קישור הזמנה"
 
@@ -8255,15 +8260,19 @@ msgstr "ערוך הודעה"
 msgid "Edit Note"
 msgstr "ערוך הערה"
 
-#: src/utils/PermissionUtils.tsx:439
+#: src/utils/PermissionUtils.tsx:290
+msgid "Edit or delete emoji and stickers created by other members."
+msgstr "ערוך או מחק אמוג'י ודבקויות שנוצרו על ידי חברים אחרים."
+
+#: src/utils/PermissionUtils.tsx:445
 msgid "Edit overwrites for roles and members in this channel."
 msgstr "ערוך הרשאות נפרדות לתפקידים וחברים בערוץ הזה."
 
-#: src/components/modals/UserProfileMobileSheet.tsx:532
+#: src/components/modals/UserProfileMobileSheet.tsx:538
 #: src/components/modals/UserProfileModal.tsx:1262
 #: src/components/pages/YouPage.tsx:123
 #: src/components/popouts/UserAreaPopout.tsx:540
-#: src/components/popouts/UserProfilePopout.tsx:323
+#: src/components/popouts/UserProfilePopout.tsx:344
 msgid "Edit Profile"
 msgstr "ערוך פרופיל"
 
@@ -8312,7 +8321,7 @@ msgstr "עורך הודעה"
 msgid "Editing scheduled message"
 msgstr "עורך הודעה מתוזמנת"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:80
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:83
 msgid "Education"
 msgstr "חינוך"
 
@@ -8396,8 +8405,8 @@ msgstr "הטמעה"
 msgid "Embed"
 msgstr "הטמע"
 
-#: src/utils/PermissionUtils.tsx:319
-#: src/utils/PermissionUtils.tsx:469
+#: src/utils/PermissionUtils.tsx:325
+#: src/utils/PermissionUtils.tsx:475
 msgid "Embed Links"
 msgstr "הטמע קישורים"
 
@@ -8440,7 +8449,7 @@ msgstr "אימוג'י"
 msgid "emoji {emojiName}"
 msgstr "אימוג'י {emojiName}"
 
-#: src/components/modals/components/FeatureComparisonTable.tsx:54
+#: src/components/modals/components/FeatureComparisonTable.tsx:53
 msgid "Emoji & sticker packs"
 msgstr "חבילות אמוג'י וסטיקרים"
 
@@ -8456,16 +8465,16 @@ msgstr "אימוג'י נמחק"
 msgid "Emoji name"
 msgstr "שם האימוג'י"
 
-#: src/components/emojis/EmojiListItem.tsx:163
+#: src/components/emojis/EmojiListItem.tsx:164
 msgid "Emoji name must be at least 2 characters long"
 msgstr "שם האימוג'י חייב להיות באורך של לפחות 2 תווים"
 
-#: src/components/emojis/EmojiListItem.tsx:167
+#: src/components/emojis/EmojiListItem.tsx:168
 msgid "Emoji name must be at most 32 characters long"
 msgstr "שם האימוג'י חייב להיות באורך של עד 32 תווים"
 
 #. placeholder {0}: Math.round(GlobalLimits.getEmojiMaxSize() / 1024)
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:340
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:358
 msgid "Emoji names must be at least 2 characters long and can only contain alphanumeric characters and underscores. Allowed file types: JPEG, PNG, WebP, GIF. We compress images to 128x128 pixels. Maximum size: {0} KB per emoji."
 msgstr "שמות האימוג'י חייבים להיות באורך של לפחות 2 תווים ויכולים להכיל רק תווים אלפאנומריים וקו תחתון. סוגי הקבצים המותרים: JPEG, PNG, WebP, GIF. אנו מכווצים את התמונות לגודל של 128x128 פיקסלים. גודל מרבי: {0} KB לאימוג'י."
 
@@ -8492,7 +8501,7 @@ msgstr "הגעת למגבלת חבילות האימוג'י"
 msgid "emoji picker"
 msgstr "בוחר אימוג'י"
 
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:326
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:344
 msgid "Emoji Slots"
 msgstr "חריצי אימוג'י"
 
@@ -8536,11 +8545,11 @@ msgstr "אפשר השמעת דיבור /tts"
 msgid "Enable 2FA on your account to change this setting"
 msgstr "אפשר 2FA בחשבון שלך כדי לשנות את ההגדרה הזו"
 
-#: src/components/modals/tabs/AdvancedTab.tsx:132
+#: src/components/modals/tabs/AdvancedTab.tsx:151
 msgid "Enable advanced features for debugging and development. Note that copying snowflake IDs for entities is always available to all users without needing developer mode."
 msgstr "הפעל תכונות מתקדמות לניפוי שגיאות ופיתוח. שים לב שהעתקת מזהי snowflake ליישויות זמינה תמיד לכל המשתמשים ללא צורך במצב מפתח."
 
-#: src/components/modals/tabs/notifications_tab/Sounds.tsx:163
+#: src/components/modals/tabs/notifications_tab/Sounds.tsx:123
 msgid "Enable All"
 msgstr "הפעל הכול"
 
@@ -8861,7 +8870,7 @@ msgstr "הכנס את הסיסמה שלך."
 msgid "Enter your phone number. We'll send you a verification code via SMS."
 msgstr "הכנס את מספר הטלפון שלך. נשלח לך קוד אימות ב-SMS."
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:79
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:82
 msgid "Entertainment"
 msgstr "בידור"
 
@@ -8993,7 +9002,7 @@ msgstr "הרחב קטגוריה"
 msgid "Expiration"
 msgstr "פג תוקף"
 
-#: src/components/modals/InviteModal.tsx:276
+#: src/components/modals/InviteModal.tsx:273
 msgid "Expire After"
 msgstr "פג לאחר"
 
@@ -9260,7 +9269,7 @@ msgstr "מחיקת הקטגוריה נכשלה"
 msgid "Failed to delete channel"
 msgstr "מחיקת הערוץ נכשלה"
 
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:149
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:165
 msgid "Failed to delete emoji. Please try again."
 msgstr "מחיקת האימוג'י נכשלה. אנא נסה שוב."
 
@@ -9312,7 +9321,7 @@ msgstr "התקנת חבילת האימוג'י הזו נכשלה. נסה שוב �
 msgid "Failed to install this sticker pack. Please try again later."
 msgstr "התקנת חבילת הסטיקרים הזו נכשלה. נסה שוב מאוחר יותר."
 
-#: src/components/modals/discovery/DiscoveryGuildCard.tsx:56
+#: src/components/modals/discovery/DiscoveryGuildCard.tsx:62
 msgid "Failed to join this community. Please try again."
 msgstr "נכשל בהצטרפות לקהילה הזו. אנא נסה שוב."
 
@@ -9341,7 +9350,7 @@ msgstr "נכשל בטעינת אפליקציות מורשות"
 msgid "Failed to load bans. Please try again."
 msgstr "טעינת החסימות נכשלה. נסה שוב."
 
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:320
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:336
 msgid "Failed to load emojis. Please try again later."
 msgstr "טעינת האימוג'ים נכשלה. אנא נסה שוב מאוחר יותר."
 
@@ -9363,7 +9372,7 @@ msgstr "טעינת ההזמנות נכשלה. נסה שוב."
 msgid "Failed to load premium information. Please try again later."
 msgstr "טעינת פרטי הפרימיום נכשלה. נסה שוב מאוחר יותר."
 
-#: src/components/modals/guild_tabs/GuildStickersTab.tsx:203
+#: src/components/modals/guild_tabs/GuildStickersTab.tsx:230
 msgid "Failed to Load Stickers"
 msgstr "נכשל בטעינת מדבקות"
 
@@ -9406,7 +9415,7 @@ msgstr "נכשל בהצמדת DM קבוצתי"
 msgid "Failed to pin message"
 msgstr "נעיצת ההודעה נכשלה"
 
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:225
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:241
 msgid "Failed to Prepare Emojis"
 msgstr "הכנת האימוג'ים נכשלה"
 
@@ -9444,7 +9453,7 @@ msgstr "הצטרפות מחדש לקהילת Visionary נכשלה. נסה שוב
 msgid "Failed to remove background image. Please try again."
 msgstr "הסרת תמונת הרקע נכשלה. נסה שוב."
 
-#: src/components/modals/tabs/notifications_tab/useSoundSettings.tsx:164
+#: src/components/modals/tabs/notifications_tab/useSoundSettings.tsx:144
 msgid "Failed to remove custom sound"
 msgstr "הסרת צליל מותאם אישית נכשלה"
 
@@ -9597,7 +9606,7 @@ msgstr "עדכון הטקסט החלופי נכשל"
 msgid "Failed to Update Channel Permissions"
 msgstr "נכשל בעדכון הרשאות ערוץ"
 
-#: src/components/emojis/EmojiListItem.tsx:180
+#: src/components/emojis/EmojiListItem.tsx:181
 msgid "Failed to update emoji name. Reverted to the previous name."
 msgstr "נכשל בעדכון שם האימוג'י. חזרנו לשם הקודם."
 
@@ -9617,16 +9626,16 @@ msgstr "נכשל בעדכון ה-webhooks"
 msgid "Failed to upload background image. Please try again."
 msgstr "נכשל בהעלאת תמונת הרקע. נסה שוב."
 
-#: src/components/modals/tabs/notifications_tab/useSoundSettings.tsx:142
+#: src/components/modals/tabs/notifications_tab/useSoundSettings.tsx:122
 msgid "Failed to upload custom sound"
 msgstr "נכשל בהעלאת צליל מותאם אישית"
 
 #. placeholder {0}: startIndex + 1
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:277
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:293
 msgid "Failed to upload emojis starting at #{0}: {errorMsg}"
 msgstr "העלאת האימוג'ים נכשלה מתחיל ב#{0}: {errorMsg}"
 
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:273
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:289
 msgid "Failed to upload emojis. Please try again."
 msgstr "נכשל בהעלאת אימוג'ים. נסה שוב."
 
@@ -9638,7 +9647,7 @@ msgstr "נכשל בהעלאת צליל כניסה"
 msgid "Failed to verify connection"
 msgstr "נכשל באימות החיבור"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:190
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:193
 msgid "Failed to withdraw application. Please try again."
 msgstr "נכשל במשיכת הבקשה. אנא נסה שוב."
 
@@ -9712,7 +9721,7 @@ msgstr "מועדפים"
 msgid "Favorites"
 msgstr "מועדפים"
 
-#: src/components/modals/components/FeatureComparisonTable.tsx:120
+#: src/components/modals/components/FeatureComparisonTable.tsx:119
 msgid "Feature"
 msgstr "תכונה"
 
@@ -9753,7 +9762,7 @@ msgstr "הגבלת גודל הקובץ חורגת"
 msgid "File size too large"
 msgstr "גודל הקובץ גדול מדי"
 
-#: src/components/modals/components/FeatureComparisonTable.tsx:53
+#: src/components/modals/components/FeatureComparisonTable.tsx:52
 msgid "File upload size"
 msgstr "גודל העלאת הקובץ"
 
@@ -10238,7 +10247,7 @@ msgstr "קצב פריימים מעל 30 FPS דורש פלוטוניום"
 msgid "France"
 msgstr "צרפת"
 
-#: src/components/modals/components/FeatureComparisonTable.tsx:125
+#: src/components/modals/components/FeatureComparisonTable.tsx:124
 msgid "Free"
 msgstr "חינמי"
 
@@ -10399,7 +10408,7 @@ msgstr "שלט משחק"
 msgid "Game Night"
 msgstr "ליל משחקים"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:77
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:80
 msgid "Gaming"
 msgstr "משחקים"
 
@@ -10484,7 +10493,6 @@ msgstr "קבל התראה כשאתה מקבל הודעות. ייתכן שתצט�
 #: src/components/modals/FluxerTagChangeModal.tsx:221
 #: src/components/modals/tabs/components/EntranceSoundSection.tsx:67
 #: src/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:138
-#: src/components/modals/tabs/notifications_tab/Sounds.tsx:83
 #: src/components/modals/tabs/VideoTab.tsx:281
 #: src/components/uikit/plutonium_upsell/PlutoniumUpsell.tsx:72
 #: src/components/uikit/plutonium_upsell/PlutoniumUpsell.tsx:74
@@ -10657,7 +10665,7 @@ msgstr "מתנות וקודים"
 msgid "Glad you're here, {username}! Watch out for Biff!"
 msgstr "שמח שאתה כאן, {username}! שים לב לביף!"
 
-#: src/components/modals/components/FeatureComparisonTable.tsx:57
+#: src/components/modals/components/FeatureComparisonTable.tsx:56
 msgid "Global emoji & sticker access"
 msgstr "גישה עולמית לאימוג'ים ומדבקות"
 
@@ -10758,7 +10766,7 @@ msgstr "תקופת חסד"
 msgid "Grace Period (Still Have Access)"
 msgstr "תקופת חסד (עדיין יש לך גישה)"
 
-#: src/components/modals/InviteModal.tsx:296
+#: src/components/modals/InviteModal.tsx:293
 msgid "Grant Temporary Membership"
 msgstr "הענק חברוּת זמנית"
 
@@ -10922,7 +10930,7 @@ msgstr "סרגל צד של גילדה"
 msgid "handle"
 msgstr "כינוי"
 
-#: src/components/modals/AddConnectionModal.tsx:207
+#: src/components/modals/AddConnectionModal.tsx:210
 msgid "Handle"
 msgstr "ידית"
 
@@ -10946,6 +10954,7 @@ msgstr "הטרדה או בריונות"
 msgid "hardware"
 msgstr "חומרה"
 
+#: src/components/modals/tabs/AdvancedTab.tsx:137
 #: src/components/modals/utils/SettingsSearchIndex.tsx:222
 msgid "Hardware Acceleration"
 msgstr "תאוצה חומרתית"
@@ -11116,7 +11125,7 @@ msgstr "הסתר ערוצים מושתקים"
 #: src/components/popouts/GuildHeaderPopout.tsx:228
 #: src/components/uikit/context_menu/ChannelListContextMenu.tsx:79
 #: src/components/uikit/context_menu/FavoritesChannelListContextMenu.tsx:60
-#: src/components/uikit/context_menu/items/GuildMenuData.tsx:332
+#: src/components/uikit/context_menu/items/GuildMenuData.tsx:335
 #: src/components/uikit/context_menu/items/GuildMenuItems.tsx:304
 msgid "Hide Muted Channels"
 msgstr "הסתר ערוצים מושתקים"
@@ -11284,7 +11293,7 @@ msgstr "הצטרף, {username}! מר פיוז'ן מוכן!"
 msgid "Hope to see you back in the future"
 msgstr "מקווים לראותך שוב בעתיד"
 
-#: src/components/modals/AddConnectionModal.tsx:244
+#: src/components/modals/AddConnectionModal.tsx:247
 msgid "Host"
 msgstr "מארח"
 
@@ -11439,8 +11448,8 @@ msgstr "התעלם"
 msgid "Ignore Friend Request"
 msgstr "התעלם מבקשת חברות"
 
-#: src/utils/PermissionUtils.tsx:351
-#: src/utils/PermissionUtils.tsx:486
+#: src/utils/PermissionUtils.tsx:357
+#: src/utils/PermissionUtils.tsx:492
 msgid "Ignore per-channel message rate limits."
 msgstr "התעלם ממגבלות קצב הודעות לכל ערוץ."
 
@@ -11857,7 +11866,7 @@ msgid "Invalid"
 msgstr "לא חוקי"
 
 #: src/components/modals/tabs/hooks/useEntranceSound.tsx:68
-#: src/components/modals/tabs/notifications_tab/useSoundSettings.tsx:123
+#: src/components/modals/tabs/notifications_tab/useSoundSettings.tsx:103
 msgid "Invalid audio file"
 msgstr "קובץ שמע לא חוקי"
 
@@ -11915,7 +11924,7 @@ msgstr "בלתי נראה"
 
 #: src/components/channel/GuildMembersPage.tsx:246
 #: src/components/channel/GuildMembersPage.tsx:254
-#: src/components/modals/InviteModal.tsx:265
+#: src/components/modals/InviteModal.tsx:262
 #: src/components/modals/tabs/ExpressionPacksTab.tsx:87
 #: src/constants/AuditLogConstants.tsx:245
 msgid "Invite"
@@ -11955,7 +11964,7 @@ msgstr "הזמן חברים"
 msgid "Invite friends to {0}"
 msgstr "הזמן חברים ל-{0}"
 
-#: src/components/modals/InviteModal.tsx:311
+#: src/components/modals/InviteModal.tsx:308
 msgid "Invite link"
 msgstr "קישור הזמנה"
 
@@ -11963,7 +11972,7 @@ msgstr "קישור הזמנה"
 msgid "Invite Link"
 msgstr "קישור הזמנה"
 
-#: src/components/modals/InviteModal.tsx:222
+#: src/components/modals/InviteModal.tsx:219
 msgid "Invite link settings"
 msgstr "הגדרות קישור הזמנה"
 
@@ -11976,7 +11985,7 @@ msgstr "קישורי הזמנה"
 
 #: src/components/layout/ChannelItem.tsx:702
 #: src/components/popouts/GuildHeaderPopout.tsx:181
-#: src/components/uikit/context_menu/items/GuildMenuData.tsx:257
+#: src/components/uikit/context_menu/items/GuildMenuData.tsx:260
 msgid "Invite Members"
 msgstr "הזמן חברים"
 
@@ -12087,7 +12096,7 @@ msgstr "הזמנות"
 msgid "Invites are currently disabled for this community."
 msgstr "ההזמנות מנוטרלות כעת עבור קהילה זו."
 
-#: src/components/modals/InviteModal.tsx:235
+#: src/components/modals/InviteModal.tsx:232
 msgid "Invites are currently disabled in this community by an admin. While this invite can be created, it cannot be accepted until invites are re-enabled."
 msgstr "ההזמנות מנוטרלות כרגע בקהילה זו על ידי מנהל. ניתן ליצור הזמנה זו אך לא ניתן לקבלה עד שההזמנות יופעלו מחדש."
 
@@ -12198,7 +12207,7 @@ msgstr "הצטרף לשיחה"
 #: src/components/modals/AddGuildModal.tsx:132
 #: src/components/modals/AddGuildModal.tsx:416
 #: src/components/modals/components/plutonium/SubscriptionCard.tsx:289
-#: src/components/modals/discovery/DiscoveryGuildCard.tsx:93
+#: src/components/modals/discovery/DiscoveryGuildCard.tsx:99
 #: src/components/modals/InviteAcceptModal.tsx:119
 #: src/components/modals/InviteAcceptModalPreview.tsx:111
 msgid "Join Community"
@@ -12273,7 +12282,7 @@ msgstr "הצטרף לשיחה"
 msgid "Join Voice Call"
 msgstr "הצטרף לשיחת קול"
 
-#: src/components/modals/discovery/DiscoveryGuildCard.tsx:93
+#: src/components/modals/discovery/DiscoveryGuildCard.tsx:99
 msgid "Joined"
 msgstr "הצטרפת"
 
@@ -12437,7 +12446,7 @@ msgstr "המשך לצפות ב-{viewerStreamCount} שידורים והוסף א�
 msgid "Keep watching 1 stream and add this one"
 msgstr "המשך לצפות בשידור אחד והוסף את זה"
 
-#: src/components/modals/tabs/AdvancedTab.tsx:111
+#: src/components/modals/tabs/AdvancedTab.tsx:114
 msgid "Keep your window dimensions and placement even when you reload the app."
 msgstr "שמור על מידות ומיקום החלון גם כשאתה מרענן את האפליקציה."
 
@@ -12597,7 +12606,7 @@ msgstr "גרף שהייה"
 msgid "Latvia"
 msgstr "לטביה"
 
-#: src/components/modals/tabs/AdvancedTab.tsx:89
+#: src/components/modals/tabs/AdvancedTab.tsx:92
 msgid "Launch Fluxer at Login"
 msgstr "השק את Fluxer בעת הכניסה"
 
@@ -12618,8 +12627,8 @@ msgid "Leave call"
 msgstr "עזוב את השיחה"
 
 #: src/components/popouts/GuildHeaderPopout.tsx:237
-#: src/components/uikit/context_menu/items/GuildMenuData.tsx:344
-#: src/components/uikit/context_menu/items/GuildMenuItems.tsx:447
+#: src/components/uikit/context_menu/items/GuildMenuData.tsx:347
+#: src/components/uikit/context_menu/items/GuildMenuItems.tsx:450
 #: src/hooks/useLeaveGuild.tsx:42
 #: src/hooks/useLeaveGuild.tsx:44
 msgid "Leave Community"
@@ -12840,7 +12849,7 @@ msgstr "קישורים"
 msgid "Links"
 msgstr "קישורים"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:212
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:215
 msgid "List your community in Discovery so others can find and join it."
 msgstr "רשום את הקהילה שלך בגילוי כדי שאחרים יוכלו למצוא ולהצטרף אליה."
 
@@ -13121,13 +13130,13 @@ msgstr "ניהול יישומים מורשים"
 msgid "Manage blocked users"
 msgstr "ניהול משתמשים חסומים"
 
-#: src/utils/PermissionUtils.tsx:433
-#: src/utils/PermissionUtils.tsx:562
+#: src/utils/PermissionUtils.tsx:439
+#: src/utils/PermissionUtils.tsx:568
 msgid "Manage Channel"
 msgstr "ניהול ערוץ"
 
 #: src/utils/PermissionUtils.tsx:257
-#: src/utils/PermissionUtils.tsx:562
+#: src/utils/PermissionUtils.tsx:568
 msgid "Manage Channels"
 msgstr "ניהול ערוצים"
 
@@ -13143,7 +13152,7 @@ msgstr "נהל תכונות קהילה"
 msgid "Manage developer applications"
 msgstr "ניהול יישומי מפתחים"
 
-#: src/utils/PermissionUtils.tsx:284
+#: src/utils/PermissionUtils.tsx:289
 msgid "Manage Emoji & Stickers"
 msgstr "ניהול אימוג'ים וסטיקרים"
 
@@ -13163,8 +13172,8 @@ msgstr "ניהול הווב־הוקים הנכנסים שיכולים לפרסם
 msgid "Manage invites for this channel."
 msgstr "ניהול הזמנות לערוץ זה."
 
-#: src/utils/PermissionUtils.tsx:310
-#: src/utils/PermissionUtils.tsx:464
+#: src/utils/PermissionUtils.tsx:316
+#: src/utils/PermissionUtils.tsx:470
 msgid "Manage Messages"
 msgstr "ניהול הודעות"
 
@@ -13172,7 +13181,7 @@ msgstr "ניהול הודעות"
 msgid "Manage Nicknames"
 msgstr "ניהול כינויים"
 
-#: src/utils/PermissionUtils.tsx:438
+#: src/utils/PermissionUtils.tsx:444
 msgid "Manage Permissions"
 msgstr "ניהול הרשאות"
 
@@ -13191,8 +13200,8 @@ msgstr "ניהול מנוי"
 msgid "Manage the email address you use to sign in to Fluxer"
 msgstr "ניהול כתובת הדוא\"ל שבה אתה משתמש להתחברות ל-Fluxer"
 
-#: src/utils/PermissionUtils.tsx:288
-#: src/utils/PermissionUtils.tsx:443
+#: src/utils/PermissionUtils.tsx:294
+#: src/utils/PermissionUtils.tsx:449
 msgid "Manage Webhooks"
 msgstr "ניהול ווב־הוקים"
 
@@ -13231,7 +13240,7 @@ msgstr "ניהול המנוי שלך"
 #: src/components/uikit/context_menu/items/ChannelMenuItems.tsx:85
 #: src/components/uikit/context_menu/items/DMMenuData.tsx:522
 #: src/components/uikit/context_menu/items/DMMenuItems.tsx:53
-#: src/components/uikit/context_menu/items/GuildMenuData.tsx:249
+#: src/components/uikit/context_menu/items/GuildMenuData.tsx:252
 #: src/components/uikit/context_menu/items/GuildMenuItems.tsx:95
 msgid "Mark as Read"
 msgstr "סמן כנקרא"
@@ -13346,7 +13355,7 @@ msgstr "marty@example.com"
 msgid "Mask Visionary as subscription"
 msgstr "הסתר את Visionary כמנוי"
 
-#: src/components/modals/InviteModal.tsx:286
+#: src/components/modals/InviteModal.tsx:283
 msgid "Max Number of Uses"
 msgstr "מספר השימושים המקסימלי"
 
@@ -13581,7 +13590,7 @@ msgstr "החברים הוסרו"
 msgid "Members receive notifications for every message"
 msgstr "החברים מקבלים התראות על כל הודעה"
 
-#: src/components/modals/InviteModal.tsx:297
+#: src/components/modals/InviteModal.tsx:294
 msgid "Members will be removed when they go offline unless a role is assigned"
 msgstr "החברים יוסרו כשהם יתנתקו אלא אם מוקצה להם תפקיד"
 
@@ -13627,8 +13636,8 @@ msgstr "להזכיר את @here?"
 msgid "Mention Badges"
 msgstr "תגי הזכרות"
 
-#: src/utils/PermissionUtils.tsx:332
-#: src/utils/PermissionUtils.tsx:474
+#: src/utils/PermissionUtils.tsx:338
+#: src/utils/PermissionUtils.tsx:480
 msgid "Mention everyone or any role (even if the role isn't set to be mentionable)."
 msgstr "הזכר את כולם או כל תפקיד (גם אם התפקיד לא מוגדר להזכרות)."
 
@@ -13665,11 +13674,11 @@ msgstr "תפריטים"
 
 #: src/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:268
 #: src/components/modals/tabs/component_gallery_tab/InputsTab.tsx:164
-#: src/components/modals/UserProfileMobileSheet.tsx:547
+#: src/components/modals/UserProfileMobileSheet.tsx:553
 #: src/components/modals/UserProfileModal.tsx:1246
 #: src/components/modals/UserProfileModal.tsx:1372
-#: src/components/popouts/UserProfilePopout.tsx:313
-#: src/components/popouts/UserProfilePopout.tsx:332
+#: src/components/popouts/UserProfilePopout.tsx:334
+#: src/components/popouts/UserProfilePopout.tsx:353
 #: src/components/profile/ProfilePreview.tsx:276
 #: src/components/uikit/context_menu/items/ActionsSubmenu.tsx:109
 #: src/components/uikit/context_menu/items/MessageUserMenuItem.tsx:77
@@ -13703,7 +13712,7 @@ msgstr "הגדרות סרגל פעולות הודעה זמינות רק במחש
 msgid "Message AST"
 msgstr "מסר AST"
 
-#: src/components/modals/components/FeatureComparisonTable.tsx:51
+#: src/components/modals/components/FeatureComparisonTable.tsx:50
 msgid "Message character limit"
 msgstr "מגבלת תווים בהודעה"
 
@@ -13837,8 +13846,8 @@ msgid "Messages"
 msgstr "הודעות"
 
 #: src/components/modals/utils/SettingsConstants.tsx:184
-#: src/utils/PermissionUtils.tsx:298
-#: src/utils/PermissionUtils.tsx:460
+#: src/utils/PermissionUtils.tsx:304
+#: src/utils/PermissionUtils.tsx:466
 msgid "Messages & Media"
 msgstr "הודעות ומדיה"
 
@@ -14021,7 +14030,7 @@ msgid "Mode C"
 msgstr "מצב C"
 
 #: src/components/uikit/context_menu/items/ModerationSubmenu.tsx:152
-#: src/utils/PermissionUtils.tsx:360
+#: src/utils/PermissionUtils.tsx:366
 msgid "Moderation"
 msgstr "פיקוח"
 
@@ -14117,8 +14126,8 @@ msgstr "הזז את המוקד בין כפתורים, שדות וטקסטים מ
 msgid "Move focus to the message composer"
 msgstr "העבר את המוקד לרכב ההודעה"
 
-#: src/utils/PermissionUtils.tsx:412
-#: src/utils/PermissionUtils.tsx:509
+#: src/utils/PermissionUtils.tsx:418
+#: src/utils/PermissionUtils.tsx:515
 msgid "Move Members"
 msgstr "העבר חברים"
 
@@ -14158,7 +14167,7 @@ msgstr "מועדון סרטים"
 msgid "Movie Night Crew"
 msgstr "צוות ערב סרטים"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:84
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:87
 msgid "Movies & TV"
 msgstr "סרטים וטלוויזיה"
 
@@ -14170,7 +14179,7 @@ msgstr "mp3"
 msgid "Multilingual Content"
 msgstr "תוכן רב-לשוני"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:78
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:81
 msgid "Music"
 msgstr "מוזיקה"
 
@@ -14191,8 +14200,8 @@ msgstr "השתק"
 #: src/components/bottomsheets/DirectCallLobbyBottomSheet.tsx:270
 #: src/components/bottomsheets/VoiceLobbyBottomSheet.tsx:195
 #: src/components/channel/embeds/media/EmbedVideo.tsx:436
-#: src/components/layout/UserArea.tsx:149
-#: src/components/layout/UserArea.tsx:155
+#: src/components/layout/UserArea.tsx:163
+#: src/components/layout/UserArea.tsx:169
 #: src/components/media_player/components/MediaVerticalVolumeControl.tsx:249
 #: src/components/media_player/components/MediaVolumeControl.tsx:208
 #: src/components/modals/GuildNotificationSettingsModal.tsx:229
@@ -14255,7 +14264,7 @@ msgstr "השתק ערוץ"
 #: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:95
 #: src/components/uikit/context_menu/FavoritesGuildContextMenu.tsx:54
 #: src/components/uikit/context_menu/GuildContextMenu.tsx:40
-#: src/components/uikit/context_menu/items/GuildMenuData.tsx:326
+#: src/components/uikit/context_menu/items/GuildMenuData.tsx:329
 #: src/components/uikit/context_menu/items/GuildMenuItems.tsx:172
 msgid "Mute Community"
 msgstr "השתק קהילה"
@@ -14285,8 +14294,8 @@ msgstr "השתק מועדפים"
 msgid "Mute Keybind"
 msgstr "צירוף מקשים להשתקה"
 
-#: src/utils/PermissionUtils.tsx:404
-#: src/utils/PermissionUtils.tsx:506
+#: src/utils/PermissionUtils.tsx:410
+#: src/utils/PermissionUtils.tsx:512
 msgid "Mute Members"
 msgstr "השתק חברים"
 
@@ -14534,10 +14543,6 @@ msgstr "אל ת animate"
 msgid "Never Automatically"
 msgstr "אל תעשה אוטומטית"
 
-#: src/components/modals/InviteModal.tsx:196
-msgid "never expires"
-msgstr "לא פג תוקף"
-
 #: src/components/channel/Divider.tsx:51
 #: src/components/channel/Divider.tsx:60
 #: src/components/channel/UnreadDividerSlot.tsx:47
@@ -14758,7 +14763,7 @@ msgstr "אין חיבורים עדיין"
 
 #: src/components/auth/InviteHeader.tsx:159
 #: src/components/channel/InviteEmbed.tsx:240
-#: src/components/modals/discovery/DiscoveryGuildCard.tsx:72
+#: src/components/modals/discovery/DiscoveryGuildCard.tsx:78
 #: src/components/modals/InviteAcceptModal.tsx:165
 #: src/components/modals/tabs/ExpressionPacksTab.tsx:77
 msgid "No description provided."
@@ -14768,11 +14773,11 @@ msgstr "לא סופקה תיאור."
 msgid "No email address set"
 msgstr "לא נקבעה כתובת דואר אלקטרוני"
 
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:185
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:201
 msgid "No emoji slots available"
 msgstr "אין מקומות לאימוג'ים זמינים"
 
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:368
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:389
 msgid "No emojis found matching your search."
 msgstr "לא נמצאו אימוג'ים התואמים את החיפוש שלך."
 
@@ -14986,11 +14991,11 @@ msgid "No Stickers Available"
 msgstr "אין מדבקות זמינות"
 
 #: src/components/channel/MobileStickersPicker.tsx:206
-#: src/components/modals/guild_tabs/GuildStickersTab.tsx:186
+#: src/components/modals/guild_tabs/GuildStickersTab.tsx:207
 msgid "No Stickers Found"
 msgstr "לא נמצאו מדבקות"
 
-#: src/components/modals/guild_tabs/GuildStickersTab.tsx:187
+#: src/components/modals/guild_tabs/GuildStickersTab.tsx:208
 msgid "No stickers found matching your search."
 msgstr "לא נמצאו מדבקות התואמות לחיפוש שלך."
 
@@ -15055,7 +15060,7 @@ msgid "Noise Suppression"
 msgstr "הדחקת רעש"
 
 #. placeholder {0}: staticEmojis.length
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:384
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:405
 msgid "Non-Animated Emoji ({0})"
 msgstr "אימוג'י סטטי ({0})"
 
@@ -15081,7 +15086,7 @@ msgstr "נורבגית"
 msgid "Not available"
 msgstr "לא זמין"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:224
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:227
 msgid "Not enough members"
 msgstr "אין מספיק חברים"
 
@@ -15103,7 +15108,7 @@ msgstr "לא עכשיו"
 msgid "Not your cup of tea? You can disable this feature anytime."
 msgstr "לא לטעמך? תוכל לבטל את התכונה הזו בכל עת."
 
-#: src/components/modals/UserProfileMobileSheet.tsx:599
+#: src/components/modals/UserProfileMobileSheet.tsx:605
 #: src/components/modals/UserProfileModal.tsx:243
 #: src/components/modals/UserProfileModal.tsx:247
 #: src/components/pages/YouPage.tsx:144
@@ -15154,7 +15159,7 @@ msgstr "הגדרות התראות מותאמות"
 #: src/components/uikit/context_menu/items/CategoryMenuItems.tsx:230
 #: src/components/uikit/context_menu/items/ChannelMenuData.tsx:492
 #: src/components/uikit/context_menu/items/ChannelMenuItems.tsx:253
-#: src/components/uikit/context_menu/items/GuildMenuData.tsx:304
+#: src/components/uikit/context_menu/items/GuildMenuData.tsx:307
 #: src/components/uikit/context_menu/items/GuildMenuItems.tsx:243
 msgid "Notification Settings"
 msgstr "הגדרות התראות"
@@ -15167,17 +15172,13 @@ msgstr "הגדרות התראות (מושתק)"
 msgid "notification sound"
 msgstr "צליל התראה"
 
-#: src/components/modals/components/FeatureComparisonTable.tsx:49
-msgid "Notification sounds"
-msgstr "צלילי התראות"
-
 #: src/components/modals/utils/SettingsSectionRegistry.tsx:539
 msgid "notifications"
 msgstr "התראות"
 
 #: src/components/layout/MobileBottomNav.tsx:117
-#: src/components/modals/tabs/notifications_tab/Inline.tsx:63
-#: src/components/modals/tabs/NotificationsTab.tsx:64
+#: src/components/modals/tabs/notifications_tab/Inline.tsx:62
+#: src/components/modals/tabs/NotificationsTab.tsx:63
 #: src/components/modals/utils/SettingsSectionRegistry.tsx:537
 #: src/components/pages/NotificationsPage.tsx:51
 msgid "Notifications"
@@ -15263,7 +15264,7 @@ msgstr "כבוי"
 
 #: src/AppConstants.tsx:43
 #: src/components/bottomsheets/ChannelDetailsBottomSheet.tsx:310
-#: src/components/channel/ChannelMembers.tsx:112
+#: src/components/channel/ChannelMembers.tsx:114
 #: src/utils/MemberListUtils.tsx:151
 #: src/utils/MemberListUtils.tsx:189
 msgid "Offline"
@@ -15273,8 +15274,8 @@ msgstr "לא מחובר"
 #: src/components/guild/RoleManagement.tsx:306
 #: src/components/layout/app_layout/nagbars/DesktopNotificationNagbar.tsx:56
 #: src/components/modals/components/plutonium/hooks/useCheckoutActions.tsx:108
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:151
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:241
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:167
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:257
 #: src/components/modals/GuildOwnershipWarningModal.tsx:73
 msgid "OK"
 msgstr "אישור"
@@ -15363,7 +15364,7 @@ msgstr "מחובר"
 
 #: src/AppConstants.tsx:39
 #: src/components/bottomsheets/ChannelDetailsBottomSheet.tsx:308
-#: src/components/channel/ChannelMembers.tsx:109
+#: src/components/channel/ChannelMembers.tsx:111
 #: src/components/channel/direct_message/DMFriendsView.tsx:176
 #: src/components/channel/friends/views/FriendsList.tsx:102
 #: src/utils/MemberListUtils.tsx:144
@@ -15504,15 +15505,15 @@ msgstr "פתח בורר תאריכים"
 #: src/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:143
 #: src/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:145
 #: src/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:268
-#: src/components/modals/UserProfileMobileSheet.tsx:318
-#: src/components/modals/UserProfileMobileSheet.tsx:320
-#: src/components/modals/UserProfileMobileSheet.tsx:547
+#: src/components/modals/UserProfileMobileSheet.tsx:324
+#: src/components/modals/UserProfileMobileSheet.tsx:326
+#: src/components/modals/UserProfileMobileSheet.tsx:553
 #: src/components/modals/UserProfileModal.tsx:1014
 #: src/components/modals/UserProfileModal.tsx:1016
 #: src/components/modals/UserProfileModal.tsx:1372
-#: src/components/popouts/UserProfilePopout.tsx:193
-#: src/components/popouts/UserProfilePopout.tsx:195
-#: src/components/popouts/UserProfilePopout.tsx:332
+#: src/components/popouts/UserProfilePopout.tsx:214
+#: src/components/popouts/UserProfilePopout.tsx:216
+#: src/components/popouts/UserProfilePopout.tsx:353
 #: src/components/uikit/context_menu/items/ActionsSubmenu.tsx:73
 #: src/components/uikit/context_menu/items/ActionsSubmenu.tsx:75
 #: src/components/uikit/context_menu/items/ActionsSubmenu.tsx:109
@@ -15733,7 +15734,7 @@ msgstr "או"
 msgid "Or copy the link:"
 msgstr "או העתק את הקישור:"
 
-#: src/components/modals/InviteModal.tsx:307
+#: src/components/modals/InviteModal.tsx:304
 msgid "or send an invite link to a friend:"
 msgstr "או שלח קישור הזמנה לחבר:"
 
@@ -15749,7 +15750,7 @@ msgstr "ההודעה המקורית לא נטענה"
 msgid "Original message was deleted"
 msgstr "ההודעה המקורית נמחקה"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:85
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:88
 #: src/components/pages/report/OptionDescriptors.tsx:54
 #: src/components/pages/report/OptionDescriptors.tsx:65
 #: src/components/pages/report/OptionDescriptors.tsx:78
@@ -15763,8 +15764,8 @@ msgstr "אחר"
 msgid "Other Devices"
 msgstr "מכשירים אחרים"
 
-#: src/utils/PermissionUtils.tsx:396
-#: src/utils/PermissionUtils.tsx:502
+#: src/utils/PermissionUtils.tsx:402
+#: src/utils/PermissionUtils.tsx:508
 msgid "Otherwise Push-to-talk is required."
 msgstr "אחרת נדרש לחיצה לדבר."
 
@@ -16026,7 +16027,7 @@ msgid "Payment Successful"
 msgstr "התשלום הצליח"
 
 #: src/components/channel/direct_message/DMFriendsView.tsx:196
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:55
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:58
 msgid "Pending"
 msgstr "ממתין"
 
@@ -16236,8 +16237,8 @@ msgstr "הצמד. הצמד כמו שצריך."
 msgid "Pin Message"
 msgstr "הצמד הודעה"
 
-#: src/utils/PermissionUtils.tsx:315
-#: src/utils/PermissionUtils.tsx:468
+#: src/utils/PermissionUtils.tsx:321
+#: src/utils/PermissionUtils.tsx:474
 msgid "Pin Messages"
 msgstr "הצמד הודעות"
 
@@ -16441,7 +16442,7 @@ msgstr "פלוטוניום"
 
 #: src/components/channel/direct_message/DMList.tsx:1326
 #: src/components/channel/direct_message/DMList.tsx:1405
-#: src/components/modals/components/FeatureComparisonTable.tsx:128
+#: src/components/modals/components/FeatureComparisonTable.tsx:127
 msgid "Plutonium"
 msgstr "Plutonium"
 
@@ -16564,7 +16565,7 @@ msgstr "מנע מ־<0>{0}</0> לשלוח הודעות, להגיב ולחבר ל�
 msgid "Prevent <0>{0}</0> from sending messages, reacting, and joining voice channels for the specified duration."
 msgstr "מנע מ־<0>{0}</0> לשלוח הודעות, להגיב ולהצטרף לערוצי קול במשך הזמן שצוין."
 
-#: src/utils/PermissionUtils.tsx:364
+#: src/utils/PermissionUtils.tsx:370
 msgid "Prevent members from sending messages, reacting, and joining voice for a duration."
 msgstr "מנע מחברים לשלוח הודעות, להגיב ולהצטרף לקול למשך זמן מוגדר."
 
@@ -16668,8 +16669,8 @@ msgstr "פעולה ראשית"
 msgid "Primary button clicked!"
 msgstr "לחצת על הכפתור הראשי!"
 
-#: src/utils/PermissionUtils.tsx:400
-#: src/utils/PermissionUtils.tsx:505
+#: src/utils/PermissionUtils.tsx:406
+#: src/utils/PermissionUtils.tsx:511
 msgid "Priority Speaker"
 msgstr "דובר עדיפות"
 
@@ -16691,8 +16692,8 @@ msgstr "מדיניות פרטיות"
 
 #: src/components/modals/GuildPrivacySettingsModal.tsx:72
 #: src/components/popouts/GuildHeaderPopout.tsx:215
-#: src/components/uikit/context_menu/items/GuildMenuData.tsx:309
-#: src/components/uikit/context_menu/items/GuildMenuItems.tsx:378
+#: src/components/uikit/context_menu/items/GuildMenuData.tsx:312
+#: src/components/uikit/context_menu/items/GuildMenuItems.tsx:381
 msgid "Privacy Settings"
 msgstr "הגדרות פרטיות"
 
@@ -16841,11 +16842,11 @@ msgstr "מצב רכישה"
 msgid "Purchased {0}"
 msgstr "נרכש {0}"
 
-#: src/components/emojis/EmojiListItem.tsx:197
+#: src/components/emojis/EmojiListItem.tsx:198
 msgid "Purge this emoji from storage and CDN"
 msgstr "נקה את האימוג'י הזה מהאחסון וה-CDN"
 
-#: src/components/stickers/StickerGridItem.tsx:69
+#: src/components/stickers/StickerGridItem.tsx:75
 msgid "Purge this sticker from storage and CDN"
 msgstr "נקה את המדבקה הזו מהאחסון וה-CDN"
 
@@ -16865,8 +16866,8 @@ msgstr "התראות דחיפה"
 msgid "Push notifications"
 msgstr "הודעות דחיפה"
 
-#: src/components/modals/tabs/notifications_tab/Inline.tsx:91
-#: src/components/modals/tabs/NotificationsTab.tsx:95
+#: src/components/modals/tabs/notifications_tab/Inline.tsx:89
+#: src/components/modals/tabs/NotificationsTab.tsx:93
 #: src/components/modals/utils/SettingsSectionRegistry.tsx:612
 msgid "Push Settings"
 msgstr "הגדרות דחיפה"
@@ -16897,7 +16898,7 @@ msgstr "דחיפה לשיחה (החזק)"
 msgid "Push-to-Talk (Limited)"
 msgstr "דחיפה לשיחה (מוגבל)"
 
-#: src/components/layout/UserArea.tsx:147
+#: src/components/layout/UserArea.tsx:161
 #: src/components/voice/VoiceControlBar.tsx:600
 msgid "Push-to-talk enabled — hold {pushToTalkHint} to speak"
 msgstr "דחיפה לשיחה פעילה — החזק את {pushToTalkHint} כדי לדבר"
@@ -17017,8 +17018,8 @@ msgstr "הפעל מחדש"
 msgid "read aloud"
 msgstr "קרא בקול"
 
-#: src/utils/PermissionUtils.tsx:327
-#: src/utils/PermissionUtils.tsx:471
+#: src/utils/PermissionUtils.tsx:333
+#: src/utils/PermissionUtils.tsx:477
 msgid "Read Message History"
 msgstr "קרא היסטוריית הודעות"
 
@@ -17057,7 +17058,7 @@ msgid "Reason (Optional)"
 msgstr "סיבה (אופציונלי)"
 
 #. placeholder {0}: application.review_reason
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:246
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:249
 msgid "Reason: {0}"
 msgstr "סיבה: {0}"
 
@@ -17092,7 +17093,7 @@ msgstr "חיפושים אחרונים"
 
 #. placeholder {0}: ChannelUtils.getIcon(channel, {size: 16, className: styles.channelIcon})
 #. placeholder {1}: channel.name
-#: src/components/modals/InviteModal.tsx:226
+#: src/components/modals/InviteModal.tsx:223
 msgid "Recipients will be taken to {0} <0>{1}</0>"
 msgstr "הנמענים יועברו ל־{0} <0>{1}</0>"
 
@@ -17250,7 +17251,7 @@ msgstr "משתמשים רגילים, בוטים, מערכת, ומשתמשים ש
 msgid "Reject"
 msgstr "דחה"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:57
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:60
 msgid "Rejected"
 msgstr "נדחה"
 
@@ -17270,7 +17271,7 @@ msgstr "טען מחדש את האפליקציה"
 msgid "Remain silent unless someone runs /tts manually."
 msgstr "שמור על שקט אלא אם מישהו מפעיל את /tts ידנית."
 
-#: src/components/modals/tabs/AdvancedTab.tsx:110
+#: src/components/modals/tabs/AdvancedTab.tsx:113
 msgid "Remember Size & Position"
 msgstr "זכור גודל ומיקום"
 
@@ -17383,7 +17384,7 @@ msgstr "הסר סימנייה"
 msgid "Remove Connection"
 msgstr "הסר חיבור"
 
-#: src/components/modals/tabs/notifications_tab/Sounds.tsx:146
+#: src/components/modals/tabs/notifications_tab/Sounds.tsx:106
 msgid "Remove Custom Sound"
 msgstr "הסר צליל מותאם"
 
@@ -17405,8 +17406,8 @@ msgstr "הסר מסנן"
 #: src/components/modals/UserProfileActionsSheet.tsx:116
 #: src/components/modals/UserProfileActionsSheet.tsx:118
 #: src/components/modals/UserProfileActionsSheet.tsx:279
-#: src/components/modals/UserProfileMobileSheet.tsx:344
-#: src/components/modals/UserProfileMobileSheet.tsx:346
+#: src/components/modals/UserProfileMobileSheet.tsx:350
+#: src/components/modals/UserProfileMobileSheet.tsx:352
 #: src/components/modals/UserProfileModal.tsx:1199
 #: src/components/modals/UserProfileModal.tsx:1285
 #: src/components/uikit/context_menu/items/DMMenuData.tsx:643
@@ -17525,7 +17526,7 @@ msgstr "הסר מאז שקנית פלטוניום בפעם הראשונה מהת
 msgid "Remove your Visionary ID badge"
 msgstr "הסר את תג הזיהוי Visionary שלך"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:58
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:61
 msgid "Removed"
 msgstr "הוסר"
 
@@ -17635,11 +17636,11 @@ msgid "Rename"
 msgstr "שנה שם"
 
 #. placeholder {0}: emoji.name
-#: src/components/emojis/EmojiListItem.tsx:238
+#: src/components/emojis/EmojiListItem.tsx:240
 msgid "Rename :{0}:"
 msgstr "שנה שם :{0}:"
 
-#: src/utils/PermissionUtils.tsx:434
+#: src/utils/PermissionUtils.tsx:440
 msgid "Rename and edit this channel's settings."
 msgstr "שנה שם וערוך את הגדרות הערוץ הזה."
 
@@ -17693,7 +17694,7 @@ msgstr "הצג את כל ההודעות שלך כסוג הודעה לא ידוע
 msgid "Renews on <0>{renewalDate}</0>."
 msgstr "מתחדש ב־<0>{renewalDate}</0>."
 
-#: src/components/modals/tabs/AdvancedTab.tsx:117
+#: src/components/modals/tabs/AdvancedTab.tsx:120
 msgid "Reopen in maximized mode if that’s how you last used Fluxer."
 msgstr "פתח שוב במצב מקסימלי אם זה איך שעשית זאת לאחרונה ב-Fluxer."
 
@@ -17748,7 +17749,7 @@ msgid "Report a User Profile"
 msgstr "דווח על פרופיל משתמש"
 
 #: src/components/modals/IARModal.tsx:119
-#: src/components/uikit/context_menu/items/GuildMenuData.tsx:350
+#: src/components/uikit/context_menu/items/GuildMenuData.tsx:353
 #: src/components/uikit/context_menu/items/ReportGuildMenuItem.tsx:57
 msgid "Report Community"
 msgstr "דווח על קהילה"
@@ -17859,7 +17860,6 @@ msgstr "דורש את כל הדרישות ברמת High, בנוסף למספר �
 msgid "Requires everything in Medium, plus being a member of the server for at least 10 minutes."
 msgstr "דורש את כל הדרישות ברמת Medium, בנוסף להיות חבר בשרת לפחות 10 דקות."
 
-#: src/components/modals/tabs/notifications_tab/Sounds.tsx:135
 #: src/components/modals/tabs/VideoTab.tsx:120
 #: src/components/modals/tabs/VideoTab.tsx:130
 #: src/components/modals/tabs/VideoTab.tsx:140
@@ -18021,11 +18021,11 @@ msgstr "רזולוציה"
 msgid "Restore account"
 msgstr "שחזר חשבון"
 
-#: src/components/modals/tabs/AdvancedTab.tsx:122
+#: src/components/modals/tabs/AdvancedTab.tsx:125
 msgid "Restore Fullscreen"
 msgstr "שחזר מסך מלא"
 
-#: src/components/modals/tabs/AdvancedTab.tsx:116
+#: src/components/modals/tabs/AdvancedTab.tsx:119
 msgid "Restore Maximized"
 msgstr "שחזר מקסימלי"
 
@@ -18045,7 +18045,7 @@ msgstr "הירשם מחדש"
 #: src/components/modals/BackgroundImageGalleryModal.tsx:210
 #: src/components/modals/guild_tabs/GuildAuditLogTab.tsx:649
 #: src/components/modals/guild_tabs/GuildInvitesTab.tsx:125
-#: src/components/modals/guild_tabs/GuildStickersTab.tsx:207
+#: src/components/modals/guild_tabs/GuildStickersTab.tsx:234
 #: src/components/modals/guild_tabs/GuildWebhooksTab.tsx:138
 #: src/components/modals/tabs/applications_tab/ApplicationDetail.tsx:586
 #: src/components/modals/tabs/applications_tab/index.tsx:113
@@ -18055,7 +18055,7 @@ msgstr "הירשם מחדש"
 msgid "Retry"
 msgstr "נסה שוב"
 
-#: src/components/modals/tabs/AdvancedTab.tsx:123
+#: src/components/modals/tabs/AdvancedTab.tsx:126
 msgid "Return to fullscreen automatically when you had it enabled last time."
 msgstr "חזור אוטומטית למסך מלא אם זה היה מופעל בפעם האחרונה."
 
@@ -18269,7 +18269,7 @@ msgstr "תיבת סגנון עגולה"
 msgid "Ruby"
 msgstr "Ruby"
 
-#: src/components/modals/tabs/AdvancedTab.tsx:86
+#: src/components/modals/tabs/AdvancedTab.tsx:89
 msgid "Run Fluxer automatically when your computer starts. Or don't. Your choice!"
 msgstr "הפעל את Fluxer אוטומטית כשהמחשב שלך מתחיל. או שלא. הבחירה שלך!"
 
@@ -18319,7 +18319,7 @@ msgstr "שמור"
 #: src/components/modals/EditGroupModal.tsx:230
 #: src/components/modals/EditGuildStickerModal.tsx:116
 #: src/components/modals/EditPackModal.tsx:106
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:343
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:357
 #: src/components/modals/guild_tabs/GuildVanityURLTab.tsx:220
 #: src/components/modals/GuildFolderSettingsModal.tsx:202
 #: src/components/modals/MessageHistoryThresholdModal.tsx:106
@@ -18402,7 +18402,7 @@ msgstr "שמור וידאו"
 msgid "saved"
 msgstr "שמור"
 
-#: src/components/modals/components/FeatureComparisonTable.tsx:55
+#: src/components/modals/components/FeatureComparisonTable.tsx:54
 msgid "Saved media"
 msgstr "מדיה שמורה"
 
@@ -18451,7 +18451,7 @@ msgstr "הודעה מתוזמנת ל־{0}"
 msgid "Scheduled messages can be at most 30 days in the future."
 msgstr "הודעות מתוזמנות יכולות להיות עד 30 יום קדימה."
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:81
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:84
 msgid "Science & Technology"
 msgstr "מדע וטכנולוגיה"
 
@@ -18493,6 +18493,7 @@ msgstr "עצירת שיתוף מסך"
 msgid "screen sharing"
 msgstr "שיתוף מסך"
 
+#: src/components/modals/tabs/AdvancedTab.tsx:133
 #: src/components/uikit/LiveBadge.tsx:36
 msgid "Screen Sharing"
 msgstr "שיתוף מסך"
@@ -18574,7 +18575,7 @@ msgstr "חפש קהילות..."
 msgid "Search countries..."
 msgstr "חפש מדינות..."
 
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:308
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:324
 msgid "Search emojis..."
 msgstr "חפש אימוג׳ים..."
 
@@ -18603,7 +18604,7 @@ msgstr "חפש ערוצים, אנשים או קהילות"
 #: src/components/common/FriendSelector.tsx:197
 #: src/components/modals/AddFriendsToGroupModal.tsx:53
 #: src/components/modals/CreateDMModal.tsx:68
-#: src/components/modals/InviteModal.tsx:246
+#: src/components/modals/InviteModal.tsx:243
 #: src/components/modals/shared/RecipientList.tsx:179
 #: src/components/modals/ShareThemeModal.tsx:141
 msgid "Search friends"
@@ -18692,7 +18693,7 @@ msgstr "הגדרות חיפוש"
 msgid "Search settings..."
 msgstr "חפש בהגדרות..."
 
-#: src/components/modals/guild_tabs/GuildStickersTab.tsx:130
+#: src/components/modals/guild_tabs/GuildStickersTab.tsx:147
 msgid "Search stickers..."
 msgstr "חפש מדבקות..."
 
@@ -19035,8 +19036,8 @@ msgstr "שליחת הודעה מושבתת"
 msgid "Send messages"
 msgstr "שלח הודעות"
 
-#: src/utils/PermissionUtils.tsx:301
-#: src/utils/PermissionUtils.tsx:462
+#: src/utils/PermissionUtils.tsx:307
+#: src/utils/PermissionUtils.tsx:468
 msgid "Send Messages"
 msgstr "שלח הודעות"
 
@@ -19056,11 +19057,11 @@ msgstr "שלח קוד SMS"
 msgid "Send SMS Code"
 msgstr "שלח קוד SMS"
 
-#: src/utils/PermissionUtils.tsx:306
+#: src/utils/PermissionUtils.tsx:312
 msgid "Send text-to-speech messages."
 msgstr "שלח הודעות טקסט לדיבור."
 
-#: src/utils/PermissionUtils.tsx:305
+#: src/utils/PermissionUtils.tsx:311
 msgid "Send TTS Messages"
 msgstr "שלח הודעות TTS"
 
@@ -19072,7 +19073,7 @@ msgstr "שלח קוד אימות"
 msgid "Send voice message"
 msgstr "שלח הודעת קול"
 
-#: src/components/modals/InviteModal.tsx:266
+#: src/components/modals/InviteModal.tsx:263
 #: src/components/modals/shared/RecipientList.tsx:223
 #: src/components/modals/ShareThemeModal.tsx:159
 msgid "Sent"
@@ -19098,7 +19099,7 @@ msgstr "שלח קובץ מצורף"
 msgid "sent an embed"
 msgstr "שלח הטמעה"
 
-#: src/components/modals/AddConnectionModal.tsx:277
+#: src/components/modals/AddConnectionModal.tsx:280
 msgid "Serve the token file"
 msgstr "שירות קובץ הטוקן"
 
@@ -19310,8 +19311,8 @@ msgstr "הגדר את רמת האימות ל-<0>בינונית</0>."
 msgid "Set verification level to <0>None</0>."
 msgstr "הגדר את רמת האימות ל-<0>ללא</0>."
 
-#: src/utils/PermissionUtils.tsx:417
-#: src/utils/PermissionUtils.tsx:513
+#: src/utils/PermissionUtils.tsx:423
+#: src/utils/PermissionUtils.tsx:519
 msgid "Set Voice Region"
 msgstr "הגדר אזור קול"
 
@@ -20121,8 +20122,8 @@ msgstr "אפקט קול"
 msgid "sounds"
 msgstr "צלילים"
 
-#: src/components/modals/tabs/notifications_tab/Inline.tsx:69
-#: src/components/modals/tabs/NotificationsTab.tsx:71
+#: src/components/modals/tabs/notifications_tab/Inline.tsx:68
+#: src/components/modals/tabs/NotificationsTab.tsx:70
 #: src/components/modals/utils/SettingsSectionRegistry.tsx:557
 msgid "Sounds"
 msgstr "קולות"
@@ -20174,8 +20175,8 @@ msgstr "ספרדית (אמריקה הלטינית)"
 msgid "Spanish (Spain)"
 msgstr "ספרדית (ספרד)"
 
-#: src/utils/PermissionUtils.tsx:387
-#: src/utils/PermissionUtils.tsx:498
+#: src/utils/PermissionUtils.tsx:393
+#: src/utils/PermissionUtils.tsx:504
 msgid "Speak"
 msgstr "דבר"
 
@@ -20397,7 +20398,7 @@ msgstr "התחל שיחת קול"
 
 #. placeholder {0}: staticEmojis.length
 #. placeholder {1}: maxStaticEmojis === Number.POSITIVE_INFINITY ? '∞' : maxStaticEmojis
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:349
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:367
 msgid "Static: {0} / {1}"
 msgstr "סטטי: {0} / {1}"
 
@@ -20423,7 +20424,7 @@ msgstr "לוח מצב"
 msgid "Status Slate"
 msgstr "לוח סטטוס"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:240
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:243
 msgid "Status:"
 msgstr "סטטוס:"
 
@@ -20478,7 +20479,7 @@ msgstr "המדבקה נוצרה"
 msgid "Sticker Deleted"
 msgstr "המדבקה נמחקה"
 
-#: src/components/modals/guild_tabs/GuildStickersTab.tsx:137
+#: src/components/modals/guild_tabs/GuildStickersTab.tsx:154
 msgid "Sticker density"
 msgstr "צפיפות מדבקות"
 
@@ -20505,7 +20506,7 @@ msgstr "הגענו למגבלת חבילות מדבקות"
 msgid "sticker packs"
 msgstr "חבילות מדבקות"
 
-#: src/components/modals/guild_tabs/GuildStickersTab.tsx:158
+#: src/components/modals/guild_tabs/GuildStickersTab.tsx:177
 msgid "Sticker Slots"
 msgstr "חריצי מדבקות"
 
@@ -20529,7 +20530,7 @@ msgid "Stickers"
 msgstr "מדבקות"
 
 #. placeholder {0}: Math.round(GlobalLimits.getStickerMaxSize() / 1024)
-#: src/components/modals/guild_tabs/GuildStickersTab.tsx:164
+#: src/components/modals/guild_tabs/GuildStickersTab.tsx:183
 msgid "Stickers must be exactly 320x320 pixels and no larger than {0} KB, but we automatically resize and compress images for you. Allowed file types: JPEG, PNG, WebP, GIF."
 msgstr "המדבקות חייבות להיות בדיוק 320x320 פיקסלים ולא לעלות על {0} ק\"ב, אך אנחנו משנים גודל ודוחסים תמונות בשבילך. סוגי קבצים מותרים: JPEG, PNG, WebP, GIF."
 
@@ -20611,8 +20612,8 @@ msgstr "תצוגה מקדימה של סטרימינג"
 msgid "Stream Quality"
 msgstr "איכות הזרמה"
 
-#: src/utils/PermissionUtils.tsx:391
-#: src/utils/PermissionUtils.tsx:499
+#: src/utils/PermissionUtils.tsx:397
+#: src/utils/PermissionUtils.tsx:505
 msgid "Stream Video"
 msgstr "שדר וידאו"
 
@@ -21051,8 +21052,8 @@ msgid "text to speech"
 msgstr "טקסט לדיבור"
 
 #: src/components/modals/tabs/AccessibilityTab.tsx:209
-#: src/components/modals/tabs/notifications_tab/Inline.tsx:86
-#: src/components/modals/tabs/NotificationsTab.tsx:89
+#: src/components/modals/tabs/notifications_tab/Inline.tsx:84
+#: src/components/modals/tabs/NotificationsTab.tsx:87
 #: src/components/modals/utils/SettingsSectionRegistry.tsx:261
 #: src/components/modals/utils/SettingsSectionRegistry.tsx:589
 msgid "Text-to-speech"
@@ -21139,7 +21140,7 @@ msgstr "הקהילה שחיפשת ייתכן שנמחקה או שאין לך ג�
 msgid "The download link will be valid for 7 days"
 msgstr "קישור ההורדה יהיה בתוקף 7 ימים"
 
-#: src/components/modals/AddConnectionModal.tsx:298
+#: src/components/modals/AddConnectionModal.tsx:301
 msgid "The file contains the verification token we will fetch from <0>{dnsUrl}</0>."
 msgstr "הקובץ מכיל את טוקן האימות שנשיג מ-<0>{dnsUrl}</0>."
 
@@ -21265,7 +21266,7 @@ msgstr "אירעה שגיאה בטעינת קישורי ההזמנה לערוץ 
 msgid "There was an error loading the invites. Please try again."
 msgstr "אירעה שגיאה בטעינת ההזמנות. יש לנסות שוב."
 
-#: src/components/modals/guild_tabs/GuildStickersTab.tsx:204
+#: src/components/modals/guild_tabs/GuildStickersTab.tsx:231
 msgid "There was an error loading the stickers. Please try again."
 msgstr "אירעה שגיאה בטעינת המדבקות. יש לנסות שוב."
 
@@ -21528,7 +21529,7 @@ msgstr "ההזמנה הזו פגה בעוד {seconds} שניות."
 msgid "This invite has unlimited uses."
 msgstr "להזמנה הזו יש שימושים בלתי מוגבלים."
 
-#: src/components/modals/InviteModal.tsx:315
+#: src/components/modals/InviteModal.tsx:312
 msgid "This invite link never expires."
 msgstr "קישור ההזמנה הזה לעולם לא יפוג."
 
@@ -21836,7 +21837,7 @@ msgstr "משך ההשעיה"
 msgid "Timeout ends {0} ({1})"
 msgstr "ההשעיה מסתיימת ב-{0} ({1})"
 
-#: src/utils/PermissionUtils.tsx:363
+#: src/utils/PermissionUtils.tsx:369
 msgid "Timeout Members"
 msgstr "חברים מושעים"
 
@@ -22431,7 +22432,7 @@ msgstr "לא ניתן לטעון תצוגה מקדימה."
 msgid "Unable to load profile banner, badges, and bio."
 msgstr "לא ניתן לטעון באנר פרופיל, תגים וביוגרפיה."
 
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:229
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:245
 msgid "Unable to prepare any emojis for upload. The following errors occurred:"
 msgstr "לא ניתן להכין אימוג'ים להעלאה. התרחשו השגיאות הבאות:"
 
@@ -22487,7 +22488,7 @@ msgstr "שחרר חסימה"
 #: src/components/modals/tabs/BlockedUsersTab.tsx:178
 #: src/components/modals/UserProfileActionsSheet.tsx:152
 #: src/components/modals/UserProfileActionsSheet.tsx:306
-#: src/components/modals/UserProfileMobileSheet.tsx:362
+#: src/components/modals/UserProfileMobileSheet.tsx:368
 #: src/components/modals/UserProfileModal.tsx:1105
 #: src/components/uikit/context_menu/items/DMMenuData.tsx:668
 #: src/components/uikit/context_menu/items/RelationshipMenuItems.tsx:231
@@ -22503,7 +22504,7 @@ msgstr "בטל חסימה של המשתמש הזה לפני שליחת בקשת 
 #: src/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:217
 #: src/components/modals/tabs/BlockedUsersTab.tsx:63
 #: src/components/modals/UserProfileActionsSheet.tsx:150
-#: src/components/modals/UserProfileMobileSheet.tsx:360
+#: src/components/modals/UserProfileMobileSheet.tsx:366
 #: src/components/modals/UserProfileModal.tsx:1300
 #: src/utils/RelationshipActionUtils.tsx:173
 msgid "Unblock User"
@@ -22532,7 +22533,7 @@ msgstr "עקיפת חשבון לא תפוס"
 #: src/components/bottomsheets/DirectCallLobbyBottomSheet.tsx:286
 #: src/components/bottomsheets/VoiceLobbyBottomSheet.tsx:211
 #: src/components/bottomsheets/VoiceSettingsBottomSheets.tsx:155
-#: src/components/layout/UserArea.tsx:160
+#: src/components/layout/UserArea.tsx:174
 #: src/components/voice/VoiceControlBar.tsx:611
 msgid "Undeafen"
 msgstr "בטל השתקה"
@@ -22569,7 +22570,7 @@ msgstr "משתמש קטין"
 #: src/components/alerts/UserBannedFromGuildModal.tsx:30
 #: src/components/alerts/UserIpBannedFromGuildModal.tsx:31
 #: src/components/layout/ChannelListContent.tsx:149
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:192
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:208
 #: src/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:160
 msgid "Understood"
 msgstr "הבנתי"
@@ -22614,7 +22615,7 @@ msgstr "הזמנה ייחודית"
 msgid "Unit"
 msgstr "יחידה"
 
-#: src/components/emojis/EmojiListItem.tsx:290
+#: src/components/emojis/EmojiListItem.tsx:301
 #: src/components/modals/BanDetailsModal.tsx:116
 msgid "Unknown"
 msgstr "לא ידוע"
@@ -22776,8 +22777,8 @@ msgstr "פתח מדבקות בהודעות פרטיות עם Plutonium"
 #: src/components/bottomsheets/MuteDurationSheet.tsx:75
 #: src/components/bottomsheets/VoiceLobbyBottomSheet.tsx:195
 #: src/components/channel/embeds/media/EmbedVideo.tsx:436
-#: src/components/layout/UserArea.tsx:148
-#: src/components/layout/UserArea.tsx:154
+#: src/components/layout/UserArea.tsx:162
+#: src/components/layout/UserArea.tsx:168
 #: src/components/media_player/components/MediaVerticalVolumeControl.tsx:249
 #: src/components/media_player/components/MediaVolumeControl.tsx:208
 #: src/components/modals/MobileVideoViewer.tsx:272
@@ -22813,7 +22814,7 @@ msgstr "בטל השתקת ערוץ"
 #: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:96
 #: src/components/uikit/context_menu/FavoritesGuildContextMenu.tsx:54
 #: src/components/uikit/context_menu/GuildContextMenu.tsx:40
-#: src/components/uikit/context_menu/items/GuildMenuData.tsx:326
+#: src/components/uikit/context_menu/items/GuildMenuData.tsx:329
 #: src/components/uikit/context_menu/items/GuildMenuItems.tsx:165
 msgid "Unmute Community"
 msgstr "בטל השתקת קהילה"
@@ -22957,7 +22958,7 @@ msgstr "עד שאפעיל אותו שוב"
 msgid "Unverified Email"
 msgstr "אימייל לא מאומת"
 
-#: src/components/modals/components/FeatureComparisonTable.tsx:63
+#: src/components/modals/components/FeatureComparisonTable.tsx:62
 msgid "Up to 4K/60fps"
 msgstr "עד 4K/60fps"
 
@@ -23138,7 +23139,7 @@ msgstr "העלה רקע מותאם אישית"
 msgid "Upload Custom Background"
 msgstr "העלה רקע מותאם אישית"
 
-#: src/components/modals/tabs/notifications_tab/Sounds.tsx:125
+#: src/components/modals/tabs/notifications_tab/Sounds.tsx:96
 msgid "Upload Custom Sound"
 msgstr "העלה צליל מותאם אישית"
 
@@ -23146,7 +23147,7 @@ msgstr "העלה צליל מותאם אישית"
 msgid "Upload directly to {displayName}"
 msgstr "העלה ישירות ל־{displayName}"
 
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:329
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:347
 msgid "Upload Emoji"
 msgstr "העלה אימוג'י"
 
@@ -23170,11 +23171,15 @@ msgstr "העלה סמל"
 msgid "Upload Image"
 msgstr "העלה תמונה"
 
+#: src/utils/PermissionUtils.tsx:285
+msgid "Upload new emoji and stickers, and manage your own creations."
+msgstr "העלה אמוג'י ודבקויות חדשים, ונהל את היצירות שלך."
+
 #: src/components/modals/utils/SettingsSectionRegistry.tsx:577
 msgid "upload sound"
 msgstr "העלה צליל"
 
-#: src/components/modals/guild_tabs/GuildStickersTab.tsx:161
+#: src/components/modals/guild_tabs/GuildStickersTab.tsx:180
 msgid "Upload Sticker"
 msgstr "העלה מדבקה"
 
@@ -23186,10 +23191,6 @@ msgstr "העלה אל {displayName}"
 #: src/components/channel/textarea/TextareaPlusMenu.tsx:81
 msgid "Upload your message as a file"
 msgstr "העלה את ההודעה שלך כקובץ"
-
-#: src/components/modals/tabs/notifications_tab/Sounds.tsx:74
-msgid "Upload your own custom notification sounds and ringtones. Supported formats: MP3, WAV, OGG, M4A, AAC, FLAC, Opus, WebM. Maximum file size: 2MB per sound."
-msgstr "העלה צלילי התראה וצלצול מותאמים אישית משלך. פורמטים נתמכים: MP3, WAV, OGG, M4A, AAC, FLAC, Opus, WebM. גודל מקסימלי לקובץ: 2MB לכל צליל."
 
 #: src/components/modals/tabs/chat_settings_tab/MediaTab.tsx:148
 msgid "Uploaded attachments"
@@ -23235,8 +23236,8 @@ msgstr "כתובות URL להורדת כל הקבצים המצורפים מהו�
 msgid "US East"
 msgstr "מזרח ארה\"ב"
 
-#: src/utils/PermissionUtils.tsx:331
-#: src/utils/PermissionUtils.tsx:473
+#: src/utils/PermissionUtils.tsx:337
+#: src/utils/PermissionUtils.tsx:479
 msgid "Use @everyone/@here and @roles"
 msgstr "השתמש ב־@everyone/@here וב־@roles"
 
@@ -23256,7 +23257,7 @@ msgstr "השתמש בסוג פרימיום אמיתי"
 msgid "Use an authenticator app to generate codes for two-factor authentication"
 msgstr "השתמש באפליקציית אימות כדי ליצור קודים לאימות דו־שלבי"
 
-#: src/components/modals/components/FeatureComparisonTable.tsx:56
+#: src/components/modals/components/FeatureComparisonTable.tsx:55
 msgid "Use animated emojis"
 msgstr "השתמש באימוג'ים מונפשים"
 
@@ -23294,17 +23295,17 @@ msgstr "השתמש בערכת נושא כהה בכל האפליקציה"
 msgid "Use Different Email"
 msgstr "השתמש באימייל שונה"
 
-#: src/utils/PermissionUtils.tsx:337
+#: src/utils/PermissionUtils.tsx:343
 msgid "Use emoji from other communities."
 msgstr "השתמש באימוג'ים מקהילות אחרות."
 
-#: src/utils/PermissionUtils.tsx:336
-#: src/utils/PermissionUtils.tsx:477
+#: src/utils/PermissionUtils.tsx:342
+#: src/utils/PermissionUtils.tsx:483
 msgid "Use External Emoji"
 msgstr "השתמש באימוג'י חיצוני"
 
-#: src/utils/PermissionUtils.tsx:341
-#: src/utils/PermissionUtils.tsx:478
+#: src/utils/PermissionUtils.tsx:347
+#: src/utils/PermissionUtils.tsx:484
 msgid "Use External Stickers"
 msgstr "השתמש במדבקות חיצוניות"
 
@@ -23337,7 +23338,7 @@ msgstr "השתמש במפתח אבטחה"
 msgid "Use system locale for time format"
 msgstr "השתמש בהגדרות האזור של המערכת לתבנית זמן"
 
-#: src/components/modals/AddConnectionModal.tsx:233
+#: src/components/modals/AddConnectionModal.tsx:236
 msgid "Use the record below to prove domain ownership."
 msgstr "השתמש ברשומה למטה כדי להוכיח בעלות על הדומיין."
 
@@ -23357,8 +23358,8 @@ msgstr "השתמש בכפתור הזה כדי לנקות במהירות את כ�
 msgid "Use this shortcut system-wide"
 msgstr "השתמש בקיצור דרך זה בכל המערכת"
 
-#: src/utils/PermissionUtils.tsx:395
-#: src/utils/PermissionUtils.tsx:501
+#: src/utils/PermissionUtils.tsx:401
+#: src/utils/PermissionUtils.tsx:507
 msgid "Use Voice Activity"
 msgstr "השתמש בגילוי קול"
 
@@ -23450,8 +23451,8 @@ msgstr "פרופיל משתמש: {tag}"
 msgid "User Record"
 msgstr "רשומת משתמש"
 
-#: src/components/layout/UserArea.tsx:272
-#: src/components/layout/UserArea.tsx:277
+#: src/components/layout/UserArea.tsx:286
+#: src/components/layout/UserArea.tsx:291
 #: src/components/modals/components/DesktopSettingsView.tsx:357
 #: src/components/modals/UserSettingsModal.tsx:154
 msgid "User Settings"
@@ -23530,6 +23531,10 @@ msgstr "משתמשים"
 msgid "Uses"
 msgstr "שימושים"
 
+#: src/components/modals/tabs/AdvancedTab.tsx:139
+msgid "Uses H.265 for screen sharing when enabled. Turn this off to prefer VP9. Changes apply the next time you start sharing your screen."
+msgstr "משתמש ב-H.265 לשיתוף מסך כאשר זה מופעל. כבה את זה כדי להעדיף VP9. השינויים יחולו בפעם הבאה שתתחיל לשתף את המסך שלך."
+
 #: src/components/modals/tabs/notifications_tab/Notifications.tsx:93
 msgid "Uses the OS notification center. For per-channel/per-community controls, right-click a community icon and open Notification Settings."
 msgstr "משתמש במרכז ההתראות של מערכת ההפעלה. לשליטה לפי ערוץ/קהילה, לחץ קליק ימני על סמל קהילה ופתח הגדרות התראות."
@@ -23570,7 +23575,7 @@ msgstr "כלים"
 msgid "value"
 msgstr "ערך"
 
-#: src/components/modals/AddConnectionModal.tsx:258
+#: src/components/modals/AddConnectionModal.tsx:261
 msgid "Value"
 msgstr "ערך"
 
@@ -23678,7 +23683,7 @@ msgstr "גילדה מאומתת"
 msgid "verify"
 msgstr "אמת"
 
-#: src/components/modals/AddConnectionModal.tsx:312
+#: src/components/modals/AddConnectionModal.tsx:315
 #: src/components/modals/EmailChangeModal.tsx:236
 #: src/components/modals/PasswordChangeModal.tsx:182
 #: src/components/modals/PhoneAddModal.tsx:240
@@ -23690,11 +23695,11 @@ msgstr "אמת"
 msgid "Verify Code"
 msgstr "אמת קוד"
 
-#: src/components/modals/AddConnectionModal.tsx:229
+#: src/components/modals/AddConnectionModal.tsx:232
 msgid "Verify Connection"
 msgstr "אמת חיבור"
 
-#: src/components/modals/AddConnectionModal.tsx:228
+#: src/components/modals/AddConnectionModal.tsx:231
 msgid "Verify connection form"
 msgstr "אמת טופס חיבור"
 
@@ -23759,7 +23764,7 @@ msgid "Video"
 msgstr "וידאו"
 
 #: src/components/channel/ChannelHeader.tsx:652
-#: src/components/modals/UserProfileMobileSheet.tsx:565
+#: src/components/modals/UserProfileMobileSheet.tsx:571
 msgid "Video Call"
 msgstr "שיחת וידאו"
 
@@ -23784,7 +23789,7 @@ msgstr "תצוגה מקדימה של וידאו"
 msgid "Video progress"
 msgstr "התקדמות וידאו"
 
-#: src/components/modals/components/FeatureComparisonTable.tsx:58
+#: src/components/modals/components/FeatureComparisonTable.tsx:57
 msgid "Video quality"
 msgstr "איכות וידאו"
 
@@ -23874,8 +23879,8 @@ msgstr "הצג שיחה"
 msgid "View call controls"
 msgstr "הצג פקדי שיחה"
 
-#: src/utils/PermissionUtils.tsx:374
-#: src/utils/PermissionUtils.tsx:454
+#: src/utils/PermissionUtils.tsx:380
+#: src/utils/PermissionUtils.tsx:460
 msgid "View Channel"
 msgstr "הצג ערוץ"
 
@@ -24064,7 +24069,7 @@ msgstr "שיחת קול"
 
 #: src/components/channel/ChannelHeader.tsx:642
 #: src/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:275
-#: src/components/modals/UserProfileMobileSheet.tsx:557
+#: src/components/modals/UserProfileMobileSheet.tsx:563
 #: src/components/uikit/context_menu/items/DMMenuData.tsx:553
 msgid "Voice Call"
 msgstr "שיחת קול"
@@ -24566,7 +24571,7 @@ msgstr "כאשר זה מופעל, אנשים אחרים לא יראו תצוגה
 msgid "When enabled, quickly tapping your push-to-talk shortcut will keep your microphone on until pressed again."
 msgstr "כאשר מופעל, הקשה מהירה על קיצור לדחיפה לדבר תשאיר את המיקרופון פתוח עד ללחיצה שוב."
 
-#: src/components/modals/tabs/AdvancedTab.tsx:141
+#: src/components/modals/tabs/AdvancedTab.tsx:160
 msgid "When enabled, reveals debugging menus throughout the app to inspect and copy raw JSON objects of internal data structures like messages, channels, users, and communities. Also includes tools to debug the Fluxer Markdown parser performance and AST for any given message."
 msgstr "כאשר מופעל, חושף תפריטי איתור באגים בכל האפליקציה כדי לבדוק ולהעתיק אובייקטים גולמיים של JSON ממבני נתונים פנימיים כגון הודעות, ערוצים, משתמשים וקהילות. כולל גם כלי איתור לביצועי מפרש Fluxer Markdown ו-AST עבור כל הודעה נתונה."
 
@@ -24691,7 +24696,7 @@ msgstr "עם שגיאה"
 msgid "With Plutonium, you can use animated avatars and banners (in GIF, APNG, animated WebP, or AVIF), customize your 4-digit tag, and unlock many other premium features."
 msgstr "עם פלוטוניום, אתה יכול להשתמש באוואטרים ובאנרים מונפשים (ב-GIF, APNG, WebP מונפש או AVIF), להתאים אישית את התג בן 4 הספרות שלך, ולפתוח הרבה תכונות פרימיום נוספות."
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:339
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:353
 msgid "Withdraw"
 msgstr "משוך"
 
@@ -24759,7 +24764,7 @@ msgstr "אתה"
 msgid "You already have a group with these users. Do you really want to create a new one? That's fine too!"
 msgstr "כבר יש לך קבוצה עם המשתמשים האלה. האם באמת אתה רוצה ליצור קבוצה חדשה? זה גם בסדר!"
 
-#: src/components/modals/AddConnectionModal.tsx:98
+#: src/components/modals/AddConnectionModal.tsx:101
 msgid "You already have this connection."
 msgstr "כבר יש לך חיבור זה."
 
@@ -24795,9 +24800,9 @@ msgstr "עכשיו אתה עובר ל-Stripe כדי להשלים את התשלו
 #. placeholder {0}: displayUser.username
 #. placeholder {0}: user.username
 #: src/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:144
-#: src/components/modals/UserProfileMobileSheet.tsx:319
+#: src/components/modals/UserProfileMobileSheet.tsx:325
 #: src/components/modals/UserProfileModal.tsx:1015
-#: src/components/popouts/UserProfilePopout.tsx:194
+#: src/components/popouts/UserProfilePopout.tsx:215
 #: src/components/uikit/context_menu/items/ActionsSubmenu.tsx:74
 #: src/components/uikit/context_menu/items/MessageUserMenuItem.tsx:66
 #: src/components/uikit/context_menu/items/VoiceParticipantMenuData.tsx:208
@@ -24915,7 +24920,7 @@ msgid "You can't join while you're on timeout."
 msgstr "אתה לא יכול להצטרף בזמן שאתה בהשהיה."
 
 #: src/components/modals/UserProfileModal.tsx:1239
-#: src/components/popouts/UserProfilePopout.tsx:306
+#: src/components/popouts/UserProfilePopout.tsx:327
 #: src/components/profile/ProfilePreview.tsx:268
 msgid "You can't message yourself"
 msgstr "אתה לא יכול לשלוח הודעה לעצמך"
@@ -25392,7 +25397,7 @@ msgstr "הגעת למספר המקסימלי של קהילות שאתה יכול
 msgid "You've reached the maximum number of communities you can join ({maxGuilds} community). Please leave a community before joining another one."
 msgstr "הגעת למספר המקסימלי של קהילות שאתה יכול להצטרף אליהן ({maxGuilds} קהילה). אנא עזוב קהילה אחת לפני שתצטרף לאחרת."
 
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:187
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:203
 msgid "You've reached the maximum number of static emojis. Delete some existing emojis or upgrade your server to increase the limit."
 msgstr "הגעת למספר המרבי של אימוג'ים סטטיים. מחק כמה אימוג'ים קיימים או שדרג את השרת שלך כדי להגדיל את המגבלה."
 
@@ -25425,7 +25430,7 @@ msgstr "החשבון שלך עדיין לא הוגדר. ללא דוא\"ל וסי
 msgid "Your account is too new to send messages in this community."
 msgstr "החשבון שלך חדש מדי כדי לשלוח הודעות בקהילה זו."
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:275
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:278
 msgid "Your application is pending review. You can still update your listing details or withdraw the application."
 msgstr "הבקשה שלך ממתינה לסקירה. אתה עדיין יכול לעדכן את פרטי הרשימה שלך או למשוך את הבקשה."
 
@@ -25445,11 +25450,11 @@ msgstr "הקוד שלך"
 msgid "Your code is ready!"
 msgstr "הקוד שלך מוכן!"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:259
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:262
 msgid "Your community is listed in Discovery. You can update your listing details below or withdraw to remove it."
 msgstr "הקהילה שלך רשומה ב-Discovery. אתה יכול לעדכן את פרטי הרשימה שלך למטה או למשוך כדי להסיר אותה."
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:227
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:230
 msgid "Your community needs at least {minMemberCount} members before it can be listed in Discovery."
 msgstr "הקהילה שלך זקוקה לפחות ל-{minMemberCount} חברים לפני שניתן יהיה לרשום אותה ב-Discovery."
 
@@ -25478,7 +25483,7 @@ msgstr "כתובת האימייל שלך עודכנה."
 msgid "Your email has been verified. You can now log in to your account."
 msgstr "הדוא\"ל שלך אומת. כעת תוכל להיכנס לחשבונך."
 
-#: src/components/modals/tabs/notifications_tab/Sounds.tsx:90
+#: src/components/modals/tabs/notifications_tab/Sounds.tsx:64
 msgid "Your existing notification sound settings will be preserved."
 msgstr "הגדרות צליל ההתראות הקיימות שלך יישמרו."
 
@@ -25499,7 +25504,7 @@ msgid "Your invite expires in 24 hours"
 msgstr "ההזמנה שלך תפוג בעוד 24 שעות"
 
 #. placeholder {0}: getExpirationText()
-#: src/components/modals/InviteModal.tsx:319
+#: src/components/modals/InviteModal.tsx:323
 msgid "Your invite link expires in {0}."
 msgstr "קישור ההזמנה שלך יפוג בעוד {0}."
 

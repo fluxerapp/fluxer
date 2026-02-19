@@ -25,7 +25,6 @@ import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 export interface GuildDiscoveryContext {
 	description: string | null;
 	categoryId: number | null;
-	onlineCount?: number;
 }
 
 export function convertToSearchableGuild(guild: Guild, discovery?: GuildDiscoveryContext): SearchableGuild {
@@ -43,11 +42,9 @@ export function convertToSearchableGuild(guild: Guild, discovery?: GuildDiscover
 		verificationLevel: guild.verificationLevel,
 		mfaLevel: guild.mfaLevel,
 		nsfwLevel: guild.nsfwLevel,
-		memberCount: guild.memberCount,
 		createdAt,
 		discoveryDescription: discovery?.description ?? null,
 		discoveryCategory: discovery?.categoryId ?? null,
 		isDiscoverable: guild.features.has(GuildFeatures.DISCOVERABLE),
-		onlineCount: discovery?.onlineCount ?? 0,
 	};
 }

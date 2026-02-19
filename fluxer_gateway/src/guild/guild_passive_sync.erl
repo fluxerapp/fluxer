@@ -70,35 +70,35 @@ send_passive_updates_to_sessions(State) ->
         0 ->
             State;
         _ ->
-            UpdatedSessions = process_passive_sessions(
-                maps:to_list(PassiveSessions), GuildId, Sessions, Channels, State
+            process_passive_sessions(
+                maps:to_list(PassiveSessions), GuildId, Channels, State
             ),
-            maps:put(sessions, UpdatedSessions, State)
+            State
     end.
 
--spec process_passive_sessions([{binary(), map()}], integer(), map(), [map()], guild_state()) ->
-    map().
-process_passive_sessions(PassiveSessionList, GuildId, Sessions, Channels, State) ->
-    lists:foldl(
-        fun({SessionId, SessionData}, AccSessions) ->
+-spec process_passive_sessions([{binary(), map()}], integer(), [map()], guild_state()) ->
+    ok.
+process_passive_sessions(PassiveSessionList, GuildId, Channels, State) ->
+    lists:foreach(
+        fun({SessionId, SessionData}) ->
             process_single_passive_session(
-                SessionId, SessionData, GuildId, Channels, State, AccSessions
+                SessionId, SessionData, GuildId, Channels, State
             )
         end,
-        Sessions,
         PassiveSessionList
     ).
 
--spec process_single_passive_session(binary(), map(), integer(), [map()], guild_state(), map()) ->
-    map().
-process_single_passive_session(SessionId, SessionData, GuildId, Channels, State, AccSessions) ->
+-spec process_single_passive_session(binary(), map(), integer(), [map()], guild_state()) ->
+    ok.
+process_single_passive_session(SessionId, SessionData, GuildId, Channels, State) ->
     Pid = maps:get(pid, SessionData),
     UserId = maps:get(user_id, SessionData),
     Member = guild_permissions:find_member_by_user_id(UserId, State),
     CurrentLastMessageIds = build_last_message_ids(Channels, UserId, Member, State),
-    PreviousLastMessageIds = maps:get(previous_passive_updates, SessionData, #{}),
+    RegState = passive_sync_registry:lookup(SessionId, GuildId),
+    PreviousLastMessageIds = maps:get(previous_passive_updates, RegState, #{}),
     Delta = compute_delta(CurrentLastMessageIds, PreviousLastMessageIds),
-    PreviousChannelVersions = maps:get(previous_passive_channel_versions, SessionData, #{}),
+    PreviousChannelVersions = maps:get(previous_passive_channel_versions, RegState, #{}),
     {CurrentChannelVersions, CurrentChannelsById} =
         build_viewable_channel_snapshots(Channels, UserId, Member, State),
     {CreatedChannelIds, UpdatedChannelIds, DeletedChannelIds} =
@@ -107,12 +107,10 @@ process_single_passive_session(SessionId, SessionData, GuildId, Channels, State,
     UpdatedChannels = [maps:get(Id, CurrentChannelsById) || Id <- UpdatedChannelIds],
     ViewableChannels = guild_visibility:viewable_channel_set(UserId, State),
     CurrentVoiceStates = build_current_voice_state_map(ViewableChannels, State),
-    PreviousVoiceStates = maps:get(previous_passive_voice_states, SessionData, #{}),
+    PreviousVoiceStates = maps:get(previous_passive_voice_states, RegState, #{}),
     VoiceStateUpdates = compute_voice_state_updates(
         CurrentVoiceStates, PreviousVoiceStates, GuildId
     ),
-    UpdatedSessionDataBase =
-        maps:put(previous_passive_voice_states, CurrentVoiceStates, SessionData),
     HasChannelDelta = map_size(Delta) > 0,
     HasVoiceUpdates = VoiceStateUpdates =/= [],
     HasCreatedChannels = CreatedChannels =/= [],
@@ -134,21 +132,21 @@ process_single_passive_session(SessionId, SessionData, GuildId, Channels, State,
             gen_server:cast(Pid, {dispatch, passive_updates, EventData}),
             PreviousLastMessageIds1 = maps:without(DeletedChannelIds, PreviousLastMessageIds),
             MergedLastMessageIds = maps:merge(PreviousLastMessageIds1, Delta),
-            UpdatedSessionData0 =
-                maps:put(previous_passive_updates, MergedLastMessageIds, UpdatedSessionDataBase),
-            UpdatedSessionData =
-                maps:put(
-                    previous_passive_channel_versions, CurrentChannelVersions, UpdatedSessionData0
-                ),
-            maps:put(SessionId, UpdatedSessionData, AccSessions);
+            NewRegState = #{
+                previous_passive_updates => MergedLastMessageIds,
+                previous_passive_channel_versions => CurrentChannelVersions,
+                previous_passive_voice_states => CurrentVoiceStates
+            },
+            passive_sync_registry:store(SessionId, GuildId, NewRegState),
+            ok;
         _ ->
-            UpdatedSessionData =
-                maps:put(
-                    previous_passive_channel_versions,
-                    CurrentChannelVersions,
-                    UpdatedSessionDataBase
-                ),
-            maps:put(SessionId, UpdatedSessionData, AccSessions)
+            NewRegState = #{
+                previous_passive_updates => PreviousLastMessageIds,
+                previous_passive_channel_versions => CurrentChannelVersions,
+                previous_passive_voice_states => CurrentVoiceStates
+            },
+            passive_sync_registry:store(SessionId, GuildId, NewRegState),
+            ok
     end.
 
 -spec build_passive_event_data(integer(), map(), [map()], [map()], [binary()], [map()]) -> map().

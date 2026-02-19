@@ -32,8 +32,11 @@ import {Logger} from '@app/lib/Logger';
 import EmojiStickerLayoutStore from '@app/stores/EmojiStickerLayoutStore';
 import {seedGuildStickerCache, subscribeToGuildStickerUpdates} from '@app/stores/GuildExpressionTabCache';
 import GuildStore from '@app/stores/GuildStore';
+import PermissionStore from '@app/stores/PermissionStore';
+import UserStore from '@app/stores/UserStore';
 import {openFilePicker} from '@app/utils/FilePickerUtils';
 import {GlobalLimits} from '@app/utils/limits/GlobalLimits';
+import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import type {GuildStickerWithUser} from '@fluxer/schema/src/domains/guild/GuildEmojiSchemas';
 import {sortBySnowflakeDesc} from '@fluxer/snowflake/src/SnowflakeUtils';
 import {Trans, useLingui} from '@lingui/react/macro';
@@ -54,6 +57,11 @@ const GuildStickersTab: React.FC<{guildId: string}> = observer(function GuildSti
 	const layoutStore = EmojiStickerLayoutStore;
 	const viewMode = layoutStore.getStickerViewMode();
 	const guild = GuildStore.getGuild(guildId);
+
+	const canCreateExpressions = PermissionStore.can(Permissions.CREATE_EXPRESSIONS, {guildId});
+	const canManageExpressions = PermissionStore.can(Permissions.MANAGE_EXPRESSIONS, {guildId});
+	const currentUserId = UserStore.currentUserId;
+
 	const setStickersWithCache = useCallback(
 		(updater: React.SetStateAction<ReadonlyArray<GuildStickerWithUser>>) => {
 			setStickers((prev) => {
@@ -120,6 +128,15 @@ const GuildStickersTab: React.FC<{guildId: string}> = observer(function GuildSti
 		});
 	}, [stickers, searchQuery]);
 
+	const canModifySticker = useCallback(
+		(sticker: GuildStickerWithUser): boolean => {
+			if (canManageExpressions) return true;
+			if (canCreateExpressions && sticker.user?.id === currentUserId) return true;
+			return false;
+		},
+		[canManageExpressions, canCreateExpressions, currentUserId],
+	);
+
 	const maxStickers = guild?.maxStickers ?? 50;
 
 	return (
@@ -154,25 +171,29 @@ const GuildStickersTab: React.FC<{guildId: string}> = observer(function GuildSti
 				</div>
 			</div>
 
-			<UploadSlotInfo
-				title={<Trans>Sticker Slots</Trans>}
-				currentCount={stickers.length}
-				maxCount={maxStickers}
-				uploadButtonText={<Trans>Upload Sticker</Trans>}
-				onUploadClick={handleAddSticker}
-				description={
-					<Trans>
-						Stickers must be exactly 320x320 pixels and no larger than{' '}
-						{Math.round(GlobalLimits.getStickerMaxSize() / 1024)} KB, but we automatically resize and compress images
-						for you. Allowed file types: JPEG, PNG, WebP, GIF.
-					</Trans>
-				}
-			/>
-			<UploadDropZone
-				onDrop={handleDrop}
-				description={<Trans>Drag and drop a sticker file here (one at a time)</Trans>}
-				acceptMultiple={false}
-			/>
+			{canCreateExpressions && (
+				<>
+					<UploadSlotInfo
+						title={<Trans>Sticker Slots</Trans>}
+						currentCount={stickers.length}
+						maxCount={maxStickers}
+						uploadButtonText={<Trans>Upload Sticker</Trans>}
+						onUploadClick={handleAddSticker}
+						description={
+							<Trans>
+								Stickers must be exactly 320x320 pixels and no larger than{' '}
+								{Math.round(GlobalLimits.getStickerMaxSize() / 1024)} KB, but we automatically resize and compress
+								images for you. Allowed file types: JPEG, PNG, WebP, GIF.
+							</Trans>
+						}
+					/>
+					<UploadDropZone
+						onDrop={handleDrop}
+						description={<Trans>Drag and drop a sticker file here (one at a time)</Trans>}
+						acceptMultiple={false}
+					/>
+				</>
+			)}
 
 			{fetchStatus === 'pending' && (
 				<div className={styles.spinnerContainer}>
@@ -192,7 +213,13 @@ const GuildStickersTab: React.FC<{guildId: string}> = observer(function GuildSti
 			{fetchStatus === 'success' && filteredStickers.length > 0 && (
 				<div className={clsx(styles.stickerGrid, viewMode === 'compact' ? styles.compactGrid : styles.cozyGrid)}>
 					{filteredStickers.map((sticker) => (
-						<StickerGridItem key={sticker.id} guildId={guildId} sticker={sticker} onUpdate={fetchStickers} />
+						<StickerGridItem
+							key={sticker.id}
+							guildId={guildId}
+							sticker={sticker}
+							canModify={canModifySticker(sticker)}
+							onUpdate={fetchStickers}
+						/>
 					))}
 				</div>
 			)}

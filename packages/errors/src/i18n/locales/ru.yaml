@@ -204,6 +204,7 @@ content_and_safety.ncmec_already_submitted: Этот контент уже от�
 content_and_safety.ncmec_submission_failed: Не удалось отправить отчет в NCMEC. Попробуй позже.
 content_and_safety.nsfw_age_restricted: NSFW-контент доступен только по возрасту.
 connections.already_exists: Соединение этого типа с таким идентификатором уже существует.
+connections.bluesky_oauth_authorization_failed: Не удалось найти этот аккаунт Bluesky. Проверь его и попробуй ещё раз.
 connections.bluesky_oauth_callback_failed: Не удалось завершить подключение Bluesky. Попробуй еще раз.
 connections.bluesky_oauth_not_enabled: Подключения Bluesky не включены на этом сервере.
 connections.bluesky_oauth_session_expired: Твоя сессия Bluesky истекла. Переподключи свой аккаунт.

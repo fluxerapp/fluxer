@@ -215,6 +215,7 @@ export type ErrorI18nKey =
 	| 'colors.color_value_too_high'
 	| 'colors.color_value_too_low'
 	| 'connections.already_exists'
+	| 'connections.bluesky_oauth_authorization_failed'
 	| 'connections.bluesky_oauth_callback_failed'
 	| 'connections.bluesky_oauth_not_enabled'
 	| 'connections.bluesky_oauth_session_expired'

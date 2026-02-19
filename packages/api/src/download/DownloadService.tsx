@@ -415,7 +415,7 @@ export class DownloadService {
 		return null;
 	}
 
-	async streamDownload(params: {path: string; rangeHeader?: string | null}): Promise<Response | null> {
+	async resolveDownloadRedirect(params: {path: string}): Promise<string | null> {
 		const key = this.buildKeyFromPath(params.path);
 		if (!key) {
 			return null;
@@ -429,20 +429,13 @@ export class DownloadService {
 
 		for (const candidateKey of keysToTry) {
 			try {
-				const streamResult = await this.storageService.streamObject({
-					bucket: Config.s3.buckets.downloads,
-					key: candidateKey,
-					range: params.rangeHeader ?? undefined,
-				});
-
-				if (!streamResult) {
-					continue;
+				const metadata = await this.storageService.getObjectMetadata(Config.s3.buckets.downloads, candidateKey);
+				if (metadata) {
+					return this.storageService.getPresignedDownloadURL({
+						bucket: Config.s3.buckets.downloads,
+						key: candidateKey,
+					});
 				}
-
-				const headers = this.buildDownloadHeaders(streamResult);
-				const status = streamResult.contentRange ? 206 : 200;
-				const body = Readable.toWeb(streamResult.body);
-				return new Response(body as ReadableStream, {headers, status});
 			} catch (error) {
 				if (error instanceof S3ServiceException && (error.name === 'NoSuchKey' || error.name === 'NotFound')) {
 					continue;
@@ -680,27 +673,5 @@ export class DownloadService {
 
 		const [, prefix, , , arch, suffix] = match;
 		return `${prefix}/${arch}${suffix}`;
-	}
-
-	private buildDownloadHeaders(metadata: {
-		contentLength: number;
-		contentType?: string | null;
-		contentRange?: string | null;
-	}): Headers {
-		const headers = new Headers();
-		if (metadata.contentType) {
-			headers.set('Content-Type', metadata.contentType);
-		} else {
-			headers.set('Content-Type', 'application/octet-stream');
-		}
-		headers.set('Content-Length', metadata.contentLength.toString());
-		if (metadata.contentRange) {
-			headers.set('Content-Range', metadata.contentRange);
-			headers.set('Accept-Ranges', 'bytes');
-		} else {
-			headers.set('Accept-Ranges', 'bytes');
-		}
-		headers.set('Cache-Control', 'public, max-age=86400');
-		return headers;
 	}
 }

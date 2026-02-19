@@ -42,6 +42,7 @@ export const ErrorCodeToI18nKey = {
 	[APIErrorCodes.BOTS_CANNOT_SEND_FRIEND_REQUESTS]: 'friends_and_dms.bots_cannot_send_friend_requests',
 	[APIErrorCodes.BAD_GATEWAY]: 'http.bad_gateway',
 	[APIErrorCodes.BAD_REQUEST]: 'http.bad_request',
+	[APIErrorCodes.BLUESKY_OAUTH_AUTHORIZATION_FAILED]: 'connections.bluesky_oauth_authorization_failed',
 	[APIErrorCodes.BLUESKY_OAUTH_CALLBACK_FAILED]: 'connections.bluesky_oauth_callback_failed',
 	[APIErrorCodes.BLUESKY_OAUTH_NOT_ENABLED]: 'connections.bluesky_oauth_not_enabled',
 	[APIErrorCodes.BLUESKY_OAUTH_SESSION_EXPIRED]: 'connections.bluesky_oauth_session_expired',

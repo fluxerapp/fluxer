@@ -22,34 +22,13 @@ import type {SentryConfig, TelemetryConfig} from '@fluxer/config/src/MasterZodSc
 import type {MetricsCollector} from '@fluxer/hono_types/src/MetricsTypes';
 import type {TracingOptions} from '@fluxer/hono_types/src/TracingTypes';
 import type {Logger} from '@fluxer/logger/src/Logger';
-import type {IRateLimitService} from '@fluxer/rate_limit/src/IRateLimitService';
 import type {MiddlewareHandler} from 'hono';
-
-export interface AppProxySentryProxyConfig {
-	project_id: string;
-	public_key: string;
-	target_url: string;
-	path_prefix: string;
-}
 
 export interface AppProxyConfig {
 	env: string;
 	port: number;
 	static_cdn_endpoint: string;
-	sentry_proxy_path: string;
-	sentry_report_host: string;
-	sentry_proxy: AppProxySentryProxyConfig | null;
 	assets_dir: string;
-	kv: {
-		url: string;
-		timeout_ms: number;
-	};
-	rate_limit: {
-		sentry: {
-			limit: number;
-			window_ms: number;
-		};
-	};
 	telemetry: TelemetryConfig;
 	sentry: SentryConfig;
 }
@@ -57,7 +36,6 @@ export interface AppProxyConfig {
 export interface AppProxyContext {
 	config: AppProxyConfig;
 	logger: Logger;
-	rateLimitService: IRateLimitService | null;
 }
 
 export interface AppProxyHonoEnv {
@@ -69,15 +47,11 @@ export type AppProxyMiddleware = MiddlewareHandler<AppProxyHonoEnv>;
 export interface CreateAppProxyAppOptions {
 	config: AppProxyConfig;
 	logger: Logger;
-	rateLimitService?: IRateLimitService | null;
 	metricsCollector?: MetricsCollector;
 	tracing?: TracingOptions;
 	customMiddleware?: Array<AppProxyMiddleware>;
-	sentryProxyPath?: string;
 	assetsPath?: string;
 	staticCDNEndpoint?: string;
 	staticDir?: string;
 	cspDirectives?: CSPOptions;
-	sentryProxyEnabled?: boolean;
-	sentryProxyRouteEnabled?: boolean;
 }

@@ -193,6 +193,7 @@ channels_and_guilds.vanity_url_requires_feature: Vanity URL vyžaduje funkci VAN
 channels_and_guilds.voice_channel_full: Hlasový kanál je plný.
 channels_and_guilds.voice_channels_cannot_be_above_text_channels: Hlasové kanály nemůžou být v rámci stejné kategorie nad textovými kanály.
 connections.already_exists: Připojení tohoto typu s tímto identifikátorem už existuje.
+connections.bluesky_oauth_authorization_failed: Nepodařilo se nám ověřit tento Bluesky identifikátor. Zkontroluj ho a zkus to znovu.
 connections.bluesky_oauth_callback_failed: Nepodařilo se nám dokončit připojení Bluesky. Zkus to znovu.
 connections.bluesky_oauth_not_enabled: Připojení přes Bluesky na tomhle serveru není povolené.
 connections.bluesky_oauth_session_expired: Tvá Bluesky relace vypršela. Prosím, připoj si znovu svůj účet.

@@ -121,14 +121,28 @@ const UserAreaInner = observer(
 				return;
 			}
 
-			const height = voiceConnectionRef.current?.getBoundingClientRect().height ?? 0;
-			if (height > 0) {
-				root.style.setProperty(VOICE_CONNECTION_HEIGHT_VARIABLE, `${Math.round(height)}px`);
-			} else {
+			const element = voiceConnectionRef.current;
+			if (!element) {
 				root.style.removeProperty(VOICE_CONNECTION_HEIGHT_VARIABLE);
+				return;
 			}
 
+			const updateHeight = () => {
+				const height = element.getBoundingClientRect().height;
+				if (height > 0) {
+					root.style.setProperty(VOICE_CONNECTION_HEIGHT_VARIABLE, `${Math.round(height)}px`);
+				} else {
+					root.style.removeProperty(VOICE_CONNECTION_HEIGHT_VARIABLE);
+				}
+			};
+
+			updateHeight();
+
+			const observer = new ResizeObserver(updateHeight);
+			observer.observe(element);
+
 			return () => {
+				observer.disconnect();
 				root.style.removeProperty(VOICE_CONNECTION_HEIGHT_VARIABLE);
 			};
 		}, [hasVoiceConnection]);
@@ -164,13 +178,13 @@ const UserAreaInner = observer(
 		return (
 			<div className={wrapperClassName}>
 				{hasVoiceConnection && (
-					<>
+					<div ref={voiceConnectionRef}>
 						<div className={styles.separator} aria-hidden />
-						<div ref={voiceConnectionRef} className={styles.voiceConnectionWrapper}>
+						<div className={styles.voiceConnectionWrapper}>
 							<VoiceConnectionStatus />
 						</div>
 						<div className={styles.separator} aria-hidden />
-					</>
+					</div>
 				)}
 				{!hasVoiceConnection && <div className={styles.separator} aria-hidden />}
 				<div className={styles.userAreaContainer}>

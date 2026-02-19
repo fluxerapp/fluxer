@@ -21,35 +21,32 @@ import {randomUUID} from 'node:crypto';
 import {Logger} from '@fluxer/api/src/Logger';
 import {getWorkerService} from '@fluxer/api/src/middleware/ServiceRegistry';
 import {addSpanEvent, setSpanAttributes, withSpan} from '@fluxer/api/src/telemetry/Tracing';
-import type {HttpWorkerQueue} from '@fluxer/api/src/worker/HttpWorkerQueue';
-import {HttpWorkerQueue as HttpWorkerQueueClass} from '@fluxer/api/src/worker/HttpWorkerQueue';
+import type {JetStreamWorkerQueue} from '@fluxer/api/src/worker/JetStreamWorkerQueue';
 import type {IWorkerService} from '@fluxer/worker/src/contracts/IWorkerService';
 import type {WorkerTaskHandler} from '@fluxer/worker/src/contracts/WorkerTask';
-import {ms} from 'itty-time';
+import type {ConsumerMessages, JsMsg} from 'nats';
 
 interface WorkerRunnerOptions {
 	tasks: Record<string, WorkerTaskHandler>;
+	queue: JetStreamWorkerQueue;
 	workerId?: string;
-	taskTypes?: Array<string>;
 	concurrency?: number;
 }
 
 export class WorkerRunner {
 	private readonly tasks: Record<string, WorkerTaskHandler>;
+	private readonly queue: JetStreamWorkerQueue;
 	private readonly workerId: string;
-	private readonly taskTypes: Array<string>;
 	private readonly concurrency: number;
-	private readonly queue: HttpWorkerQueue;
 	private readonly workerService: IWorkerService;
 	private running = false;
-	private abortController: AbortController | null = null;
+	private consumerMessages: ConsumerMessages | null = null;
 
 	constructor(options: WorkerRunnerOptions) {
 		this.tasks = options.tasks;
+		this.queue = options.queue;
 		this.workerId = options.workerId ?? `worker-${randomUUID()}`;
-		this.taskTypes = options.taskTypes ?? Object.keys(options.tasks);
 		this.concurrency = options.concurrency ?? 1;
-		this.queue = new HttpWorkerQueueClass();
 		this.workerService = getWorkerService();
 	}
 
@@ -60,14 +57,19 @@ export class WorkerRunner {
 		}
 
 		this.running = true;
-		this.abortController = new AbortController();
 
-		Logger.info({workerId: this.workerId, taskTypes: this.taskTypes, concurrency: this.concurrency}, 'Worker starting');
+		Logger.info({workerId: this.workerId, concurrency: this.concurrency}, 'Worker starting');
 
-		const workers = Array.from({length: this.concurrency}, (_, i) => this.workerLoop(i, this.abortController!.signal));
+		const js = this.queue.getConnectionManager().getJetStreamClient();
+		const consumer = await js.consumers.get(this.queue.getStreamName(), this.queue.getConsumerName());
 
-		Promise.all(workers).catch((error) => {
-			Logger.error({workerId: this.workerId, error}, 'Worker loop failed unexpectedly');
+		this.consumerMessages = await consumer.consume({
+			max_messages: this.concurrency,
+			idle_heartbeat: 5000,
+		});
+
+		this.processMessages().catch((error) => {
+			Logger.error({workerId: this.workerId, err: error}, 'Worker message processing failed unexpectedly');
 		});
 	}
 
@@ -77,88 +79,90 @@ export class WorkerRunner {
 		}
 
 		this.running = false;
-		this.abortController?.abort();
 
-		await new Promise((resolve) => setTimeout(resolve, ms('5 seconds')));
+		if (this.consumerMessages !== null) {
+			await this.consumerMessages.close();
+			this.consumerMessages = null;
+		}
 
 		Logger.info({workerId: this.workerId}, 'Worker stopped');
 	}
 
-	private async workerLoop(workerIndex: number, signal: AbortSignal): Promise<void> {
-		Logger.info({workerId: this.workerId, workerIndex}, 'Worker loop started');
+	private async processMessages(): Promise<void> {
+		if (this.consumerMessages === null) {
+			return;
+		}
 
-		while (!signal.aborted) {
-			try {
-				const leasedJobs = await this.queue.dequeue(this.taskTypes, 1);
+		for await (const msg of this.consumerMessages) {
+			if (!this.running) {
+				break;
+			}
 
-				if (!leasedJobs || leasedJobs.length === 0) {
-					continue;
-				}
+			const taskType = msg.subject.startsWith('jobs.') ? msg.subject.slice(5) : msg.subject;
 
-				const leasedJob = leasedJobs[0]!;
-				const job = leasedJob.job;
+			Logger.info(
+				{
+					workerId: this.workerId,
+					taskType,
+					seq: msg.seq,
+					redelivered: msg.redelivered,
+				},
+				'Processing job',
+			);
 
-				Logger.info(
-					{
-						workerId: this.workerId,
-						workerIndex,
-						jobId: job.id,
-						taskType: job.task_type,
-						attempts: job.attempts,
-						receipt: leasedJob.receipt,
-					},
-					'Processing job',
-				);
-
-				const succeeded = await this.processJob(leasedJob);
-				if (succeeded) {
-					Logger.info({workerId: this.workerId, workerIndex, jobId: job.id}, 'Job completed successfully');
-				}
-			} catch (error) {
-				Logger.error({workerId: this.workerId, workerIndex, error}, 'Worker loop error');
-
-				await this.sleep(ms('1 second'));
+			const succeeded = await this.processJob(taskType, msg);
+			if (succeeded) {
+				Logger.info({workerId: this.workerId, taskType, seq: msg.seq}, 'Job completed successfully');
 			}
 		}
 
-		Logger.info({workerId: this.workerId, workerIndex}, 'Worker loop stopped');
+		Logger.info({workerId: this.workerId}, 'Worker message iterator ended');
 	}
 
-	private async processJob(leasedJob: {
-		receipt: string;
-		job: {id: string; task_type: string; payload: unknown; attempts: number};
-	}): Promise<boolean> {
+	private async processJob(taskType: string, msg: JsMsg): Promise<boolean> {
 		return await withSpan(
 			{
 				name: 'worker.process_job',
 				attributes: {
 					'worker.id': this.workerId,
-					'job.id': leasedJob.job.id,
-					'job.task_type': leasedJob.job.task_type,
-					'job.attempts': leasedJob.job.attempts,
+					'job.seq': msg.seq,
+					'job.task_type': taskType,
+					'job.redelivered': msg.redelivered,
 				},
 			},
 			async () => {
-				const task = this.tasks[leasedJob.job.task_type];
+				const task = this.tasks[taskType];
 				if (!task) {
-					throw new Error(`Unknown task: ${leasedJob.job.task_type}`);
+					Logger.error({taskType, seq: msg.seq}, 'Unknown task type, terminating message');
+					msg.term(`unknown task type: ${taskType}`);
+					return false;
+				}
+
+				let jobPayload: Record<string, unknown> = {};
+				try {
+					const decoded = JSON.parse(new TextDecoder().decode(msg.data)) as {payload?: Record<string, unknown>};
+					jobPayload = decoded.payload ?? {};
+				} catch {
+					Logger.error({taskType, seq: msg.seq}, 'Failed to decode job payload, terminating message');
+					msg.term('invalid payload');
+					return false;
 				}
 
 				addSpanEvent('job.execution.start');
 
 				try {
-					await task(leasedJob.job.payload as never, {
-						logger: Logger.child({jobId: leasedJob.job.id}),
+					await task(jobPayload as never, {
+						logger: Logger.child({taskType, seq: msg.seq}),
 						addJob: this.workerService.addJob.bind(this.workerService),
 					});
 
 					addSpanEvent('job.execution.success');
 					setSpanAttributes({'job.status': 'success'});
 
-					await this.queue.complete(leasedJob.receipt);
+					msg.ack();
 					return true;
 				} catch (error) {
-					Logger.error({jobId: leasedJob.job.id, error}, 'Job failed');
+					Logger.error({taskType, seq: msg.seq, err: error}, 'Job failed');
 
 					setSpanAttributes({
 						'job.status': 'failed',
@@ -168,14 +172,10 @@ export class WorkerRunner {
 						error: error instanceof Error ? error.message : String(error),
 					});
 
-					await this.queue.fail(leasedJob.receipt, String(error));
+					msg.nak(5000);
 					return false;
 				}
 			},
 		);
-	}
-
-	private async sleep(ms: number): Promise<void> {
-		return new Promise((resolve) => setTimeout(resolve, ms));
 	}
 }

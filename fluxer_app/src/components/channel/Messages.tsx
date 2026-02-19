@@ -191,7 +191,7 @@ export const Messages = observer(function Messages({channel, onBottomBarVisibili
 		canAutoAck,
 	});
 
-	useEffect(() => {
+	useLayoutEffect(() => {
 		const node = messagesWrapperRef.current;
 		if (node) {
 			node.style.setProperty('--message-group-spacing', `${state.messageGroupSpacing}px`);

@@ -115,6 +115,7 @@ const SearchIndexTypeEnum = createNamedStringLiteralUnion(
 		['channel_messages', 'channel_messages', 'Channel message search index'],
 		['guild_members', 'guild_members', 'Guild member search index'],
 		['favorite_memes', 'favorite_memes', 'Favourite meme search index'],
+		['discovery', 'discovery', 'Discovery guild search index'],
 	],
 	'Type of search index to refresh',
 );

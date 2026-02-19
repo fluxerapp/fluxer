@@ -17,10 +17,14 @@
  * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
  */
 
+import {GuildRecord} from '@app/records/GuildRecord';
 import GuildMemberStore from '@app/stores/GuildMemberStore';
+import GuildStore from '@app/stores/GuildStore';
 import MemberSidebarStore from '@app/stores/MemberSidebarStore';
 import {buildMemberListLayout} from '@app/utils/MemberListLayout';
+import {GuildOperations} from '@fluxer/constants/src/GuildConstants';
 import type {GuildMemberData} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
+import type {Guild} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import type {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {beforeEach, describe, expect, test} from 'vitest';
 
@@ -60,10 +64,25 @@ function seedMembers(guildId: string, members: Array<{id: string; name: string}>
 	}
 }
 
+function createGuild(guildId: string, disabledOperations = 0): GuildRecord {
+	const guild: Guild = {
+		id: guildId,
+		name: `Guild ${guildId}`,
+		icon: null,
+		vanity_url_code: null,
+		owner_id: 'owner-1',
+		system_channel_id: null,
+		features: [],
+		disabled_operations: disabledOperations,
+	};
+	return new GuildRecord(guild);
+}
+
 describe('MemberSidebarStore', () => {
 	beforeEach(() => {
 		MemberSidebarStore.handleSessionInvalidated();
 		GuildMemberStore.handleConnectionOpen([]);
+		GuildStore.guilds = {};
 	});
 
 	test('stores members by member index when sync includes group entries', () => {
@@ -356,5 +375,40 @@ describe('MemberSidebarStore', () => {
 		const listState = MemberSidebarStore.getList(guildId, listId);
 		expect(Array.from(listState?.rows.keys() ?? [])).toEqual([0, 1, 2]);
 		expect(Array.from(listState?.items.values() ?? []).map((item) => item.data.user.id)).toEqual(['u-1', 'u-2']);
+	});
+
+	test('ignores list updates when member list updates are disabled for the guild', () => {
+		const guildId = 'guild-disabled-updates';
+		const listId = 'list-disabled-updates';
+		GuildStore.guilds[guildId] = createGuild(guildId, GuildOperations.MEMBER_LIST_UPDATES);
+		seedMembers(guildId, [{id: 'u-1', name: 'Alpha'}]);
+
+		MemberSidebarStore.handleListUpdate({
+			guildId,
+			listId,
+			memberCount: 1,
+			onlineCount: 1,
+			groups: [{id: 'online', count: 1}],
+			ops: [
+				{
+					op: 'SYNC',
+					range: [0, 1],
+					items: [{group: {id: 'online', count: 1}}, {member: {user: {id: 'u-1'}}}],
+				},
+			],
+		});
+
+		expect(MemberSidebarStore.getList(guildId, listId)).toBeUndefined();
+	});
+
+	test('treats subscribe attempts as no-op when member list updates are disabled for the guild', () => {
+		const guildId = 'guild-disabled-subscribe';
+		const channelId = 'channel-disabled-subscribe';
+		GuildStore.guilds[guildId] = createGuild(guildId, GuildOperations.MEMBER_LIST_UPDATES);
+
+		MemberSidebarStore.subscribeToChannel(guildId, channelId, [[0, 99]]);
+
+		expect(MemberSidebarStore.getList(guildId, channelId)).toBeUndefined();
+		expect(MemberSidebarStore.getSubscribedRanges(guildId, channelId)).toEqual([]);
 	});
 });

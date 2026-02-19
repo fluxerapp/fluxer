@@ -71,9 +71,6 @@ handle_presence_down(State) ->
 handle_guild_down(GuildId, killed, State, _Guilds) ->
     gen_server:cast(self(), {guild_leave, GuildId}),
     {noreply, State};
-handle_guild_down(GuildId, normal, State, _Guilds) ->
-    gen_server:cast(self(), {guild_leave, GuildId}),
-    {noreply, State};
 handle_guild_down(GuildId, _Reason, State, Guilds) ->
     GuildDeleteData = #{
         <<"id">> => integer_to_binary(GuildId),
@@ -153,5 +150,162 @@ find_call_by_ref_test() ->
     ?assertEqual({ok, 300}, find_call_by_ref(Ref, Calls)),
     ?assertEqual(not_found, find_call_by_ref(make_ref(), Calls)),
     ok.
+
+-spec build_test_session_state(guild_id(), #{guild_id() => guild_ref()}) -> session_state().
+build_test_session_state(GuildId, Guilds) ->
+    #{
+        id => <<"session-monitor-test">>,
+        user_id => 1,
+        user_data => #{},
+        custom_status => null,
+        version => 1,
+        token_hash => <<>>,
+        auth_session_id_hash => <<>>,
+        buffer => [],
+        seq => 0,
+        ack_seq => 0,
+        properties => #{},
+        status => online,
+        afk => false,
+        mobile => false,
+        presence_pid => undefined,
+        presence_mref => undefined,
+        socket_pid => undefined,
+        socket_mref => undefined,
+        guilds => Guilds,
+        calls => #{},
+        channels => #{},
+        ready => undefined,
+        bot => false,
+        ignored_events => #{},
+        initial_guild_id => GuildId,
+        collected_guild_states => [],
+        collected_sessions => [],
+        collected_presences => [],
+        relationships => #{},
+        suppress_presence_updates => false,
+        pending_presences => [],
+        guild_connect_inflight => #{},
+        voice_queue => queue:new(),
+        voice_queue_timer => undefined,
+        debounce_reactions => false,
+        reaction_buffer => [],
+        reaction_buffer_timer => undefined
+    }.
+
+handle_guild_down_normal_marks_unavailable_and_schedules_reconnect_test() ->
+    GuildId = 50001,
+    GuildRef = make_ref(),
+    GuildPid = spawn(fun() -> receive stop -> ok end end),
+    Guilds = #{GuildId => {GuildPid, GuildRef}},
+    State0 = build_test_session_state(GuildId, Guilds),
+    {noreply, State1} = handle_guild_down(GuildId, normal, State0, Guilds),
+    UpdatedGuilds = maps:get(guilds, State1),
+    ?assertEqual(undefined, maps:get(GuildId, UpdatedGuilds)),
+    Buffer = maps:get(buffer, State1),
+    ?assertEqual(1, length(Buffer)),
+    [Event] = Buffer,
+    ?assertEqual(guild_delete, maps:get(event, Event)),
+    EventData = maps:get(data, Event),
+    ?assertEqual(integer_to_binary(GuildId), maps:get(<<"id">>, EventData)),
+    ?assertEqual(true, maps:get(<<"unavailable">>, EventData)),
+    receive
+        {guild_connect, GuildId, 0} -> ok
+    after 2000 ->
+        ?assert(false)
+    end,
+    GuildPid ! stop.
+
+handle_guild_down_shutdown_marks_unavailable_and_schedules_reconnect_test() ->
+    GuildId = 50002,
+    GuildRef = make_ref(),
+    GuildPid = spawn(fun() -> receive stop -> ok end end),
+    Guilds = #{GuildId => {GuildPid, GuildRef}},
+    State0 = build_test_session_state(GuildId, Guilds),
+    {noreply, State1} = handle_guild_down(GuildId, shutdown, State0, Guilds),
+    UpdatedGuilds = maps:get(guilds, State1),
+    ?assertEqual(undefined, maps:get(GuildId, UpdatedGuilds)),
+    Buffer = maps:get(buffer, State1),
+    ?assertEqual(1, length(Buffer)),
+    [Event] = Buffer,
+    ?assertEqual(guild_delete, maps:get(event, Event)),
+    EventData = maps:get(data, Event),
+    ?assertEqual(true, maps:get(<<"unavailable">>, EventData)),
+    receive
+        {guild_connect, GuildId, 0} -> ok
+    after 2000 ->
+        ?assert(false)
+    end,
+    GuildPid ! stop.
+
+handle_guild_down_crash_marks_unavailable_and_schedules_reconnect_test() ->
+    GuildId = 50003,
+    GuildRef = make_ref(),
+    GuildPid = spawn(fun() -> receive stop -> ok end end),
+    Guilds = #{GuildId => {GuildPid, GuildRef}},
+    State0 = build_test_session_state(GuildId, Guilds),
+    {noreply, State1} = handle_guild_down(GuildId, {error, something_went_wrong}, State0, Guilds),
+    UpdatedGuilds = maps:get(guilds, State1),
+    ?assertEqual(undefined, maps:get(GuildId, UpdatedGuilds)),
+    Buffer = maps:get(buffer, State1),
+    ?assertEqual(1, length(Buffer)),
+    [Event] = Buffer,
+    ?assertEqual(guild_delete, maps:get(event, Event)),
+    EventData = maps:get(data, Event),
+    ?assertEqual(true, maps:get(<<"unavailable">>, EventData)),
+    receive
+        {guild_connect, GuildId, 0} -> ok
+    after 2000 ->
+        ?assert(false)
+    end,
+    GuildPid ! stop.
+
+handle_guild_down_killed_sends_permanent_guild_leave_test() ->
+    GuildId = 50004,
+    GuildRef = make_ref(),
+    GuildPid = spawn(fun() -> receive stop -> ok end end),
+    Guilds = #{GuildId => {GuildPid, GuildRef}},
+    State0 = build_test_session_state(GuildId, Guilds),
+    {noreply, State1} = handle_guild_down(GuildId, killed, State0, Guilds),
+    ?assertEqual([], maps:get(buffer, State1, [])),
+    UpdatedGuilds = maps:get(guilds, State1),
+    ?assertEqual({GuildPid, GuildRef}, maps:get(GuildId, UpdatedGuilds)),
+    receive
+        {guild_connect, GuildId, 0} ->
+            ?assert(false)
+    after 200 ->
+        ok
+    end,
+    receive
+        {'$gen_cast', {guild_leave, GuildId}} -> ok
+    after 200 ->
+        ?assert(false)
+    end,
+    GuildPid ! stop.
+
+handle_process_down_guild_normal_exit_dispatches_unavailable_test() ->
+    GuildId = 50005,
+    GuildPid = spawn(fun() -> receive stop -> ok end end),
+    GuildRef = monitor(process, GuildPid),
+    Guilds = #{GuildId => {GuildPid, GuildRef}},
+    State0 = build_test_session_state(GuildId, Guilds),
+    GuildPid ! stop,
+    receive
+        {'DOWN', GuildRef, process, GuildPid, Reason} ->
+            {noreply, State1} = handle_process_down(GuildRef, Reason, State0),
+            Buffer = maps:get(buffer, State1),
+            ?assertEqual(1, length(Buffer)),
+            [Event] = Buffer,
+            ?assertEqual(guild_delete, maps:get(event, Event)),
+            EventData = maps:get(data, Event),
+            ?assertEqual(true, maps:get(<<"unavailable">>, EventData)),
+            receive
+                {guild_connect, GuildId, 0} -> ok
+            after 2000 ->
+                ?assert(false)
+            end
+    after 2000 ->
+        ?assert(false)
+    end.
 
 -endif.

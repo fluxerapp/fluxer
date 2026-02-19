@@ -17,61 +17,71 @@
  * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
  */
 
+import {Config} from '@fluxer/api/src/Config';
 import {getMetricsService, initializeMetricsService} from '@fluxer/api/src/infrastructure/MetricsService';
 import {SnowflakeService} from '@fluxer/api/src/infrastructure/SnowflakeService';
 import {Logger} from '@fluxer/api/src/Logger';
-import {getKVClient} from '@fluxer/api/src/middleware/ServiceRegistry';
+import {getKVClient, setInjectedWorkerService} from '@fluxer/api/src/middleware/ServiceRegistry';
 import {initializeSearch} from '@fluxer/api/src/SearchFactory';
-import {HttpWorkerQueue} from '@fluxer/api/src/worker/HttpWorkerQueue';
+import {CronScheduler} from '@fluxer/api/src/worker/CronScheduler';
+import {JetStreamWorkerQueue} from '@fluxer/api/src/worker/JetStreamWorkerQueue';
 import {setWorkerDependencies} from '@fluxer/api/src/worker/WorkerContext';
 import {initializeWorkerDependencies, shutdownWorkerDependencies} from '@fluxer/api/src/worker/WorkerDependencies';
 import {WorkerMetricsCollector} from '@fluxer/api/src/worker/WorkerMetricsCollector';
 import {WorkerRunner} from '@fluxer/api/src/worker/WorkerRunner';
+import {WorkerService} from '@fluxer/api/src/worker/WorkerService';
 import {workerTasks} from '@fluxer/api/src/worker/WorkerTaskRegistry';
 import {setupGracefulShutdown} from '@fluxer/hono/src/Server';
+import {JetStreamConnectionManager} from '@fluxer/nats/src/JetStreamConnectionManager';
 import {captureException, flushSentry as flush} from '@fluxer/sentry/src/Sentry';
 import {ms} from 'itty-time';
 
 const WORKER_CONCURRENCY = 20;
 
-async function registerCronJobs(queue: HttpWorkerQueue): Promise<void> {
-	try {
-		await queue.upsertCron('processAssetDeletionQueue', 'processAssetDeletionQueue', {}, '0 */5 * * * *');
-		await queue.upsertCron('processCloudflarePurgeQueue', 'processCloudflarePurgeQueue', {}, '0 */2 * * * *');
-		await queue.upsertCron(
-			'processPendingBulkMessageDeletions',
-			'processPendingBulkMessageDeletions',
-			{},
-			'0 */10 * * * *',
-		);
-		await queue.upsertCron('processInactivityDeletions', 'processInactivityDeletions', {}, '0 0 */6 * * *');
-		await queue.upsertCron('expireAttachments', 'expireAttachments', {}, '0 0 */12 * * *');
-		await queue.upsertCron('cleanupCsamEvidence', 'cleanupCsamEvidence', {}, '0 0 3 * * *');
-		await queue.upsertCron('csamScanConsumer', 'csamScanConsumer', {}, '* * * * * *');
-		await queue.upsertCron('syncDiscoveryIndex', 'syncDiscoveryIndex', {}, '0 */15 * * * *');
+function registerCronJobs(cron: CronScheduler): void {
+	cron.upsert('processAssetDeletionQueue', 'processAssetDeletionQueue', {}, '0 */5 * * * *');
+	cron.upsert('processCloudflarePurgeQueue', 'processCloudflarePurgeQueue', {}, '0 */2 * * * *');
+	cron.upsert('processPendingBulkMessageDeletions', 'processPendingBulkMessageDeletions', {}, '0 */10 * * * *');
+	cron.upsert('processInactivityDeletions', 'processInactivityDeletions', {}, '0 0 */6 * * *');
+	cron.upsert('expireAttachments', 'expireAttachments', {}, '0 0 */12 * * *');
+	// cron.upsert('cleanupCsamEvidence', 'cleanupCsamEvidence', {}, '0 0 3 * * *');
+	// cron.upsert('csamScanConsumer', 'csamScanConsumer', {}, '* * * * * *');
+	cron.upsert('syncDiscoveryIndex', 'syncDiscoveryIndex', {}, '0 */15 * * * *');
 
-		Logger.info('Cron jobs registered successfully');
-	} catch (error) {
-		Logger.error({error}, 'Failed to register cron jobs');
-	}
+	Logger.info('Cron jobs registered successfully');
 }
 
 export async function startWorkerMain(): Promise<void> {
 	Logger.info('Starting worker backend...');
 
 	initializeMetricsService();
-	Logger.info('MetricsService initialized');
+	Logger.info('MetricsService initialised');
 
 	const kvClient = getKVClient();
 	const snowflakeService = new SnowflakeService(kvClient);
 	await snowflakeService.initialize();
-	Logger.info('Shared SnowflakeService initialized');
+	Logger.info('Shared SnowflakeService initialised');
+
+	const jsConnectionManager = new JetStreamConnectionManager({
+		url: Config.nats.jetStreamUrl,
+		token: Config.nats.authToken || undefined,
+		name: 'fluxer-worker',
+	});
+	await jsConnectionManager.connect();
+	Logger.info('JetStream connection established');
+
+	const queue = new JetStreamWorkerQueue(jsConnectionManager);
+	await queue.ensureInfrastructure();
+	Logger.info('JetStream stream and consumer verified');
+
+	const workerService = new WorkerService(queue);
+	setInjectedWorkerService(workerService);
 
 	const dependencies = await initializeWorkerDependencies(snowflakeService);
 	setWorkerDependencies(dependencies);
 
-	const queue = new HttpWorkerQueue();
-	await registerCronJobs(queue);
+	const cron = new CronScheduler(queue, Logger);
+	registerCronJobs(cron);
 
 	const metricsCollector = new WorkerMetricsCollector({
 		kvClient: dependencies.kvClient,
@@ -84,6 +94,7 @@ export async function startWorkerMain(): Promise<void> {
 
 	const runner = new WorkerRunner({
 		tasks: workerTasks,
+		queue,
 		concurrency: WORKER_CONCURRENCY,
 	});
 
@@ -98,13 +109,18 @@ export async function startWorkerMain(): Promise<void> {
 		metricsCollector.start();
 		Logger.info('WorkerMetricsCollector started');
 
+		cron.start();
+		Logger.info('Cron scheduler started');
+
 		await runner.start();
 		Logger.info(`Worker runner started with ${WORKER_CONCURRENCY} workers`);
 
 		const shutdown = async (): Promise<void> => {
 			Logger.info('Shutting down worker backend...');
+			cron.stop();
 			metricsCollector.stop();
 			await runner.stop();
+			await jsConnectionManager.drain();
 			await shutdownWorkerDependencies(dependencies);
 			await snowflakeService.shutdown();
 		};

@@ -17,8 +17,9 @@
  * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import type {BlueskyCallbackResult} from '@fluxer/api/src/bluesky/IBlueskyOAuthService';
+import type {BlueskyAuthorizeResult, BlueskyCallbackResult} from '@fluxer/api/src/bluesky/IBlueskyOAuthService';
 import {Config} from '@fluxer/api/src/Config';
+import {BlueskyOAuthAuthorizationFailedError} from '@fluxer/api/src/connection/errors/BlueskyOAuthAuthorizationFailedError';
 import {BlueskyOAuthCallbackFailedError} from '@fluxer/api/src/connection/errors/BlueskyOAuthCallbackFailedError';
 import {BlueskyOAuthNotEnabledError} from '@fluxer/api/src/connection/errors/BlueskyOAuthNotEnabledError';
 import {BlueskyOAuthStateInvalidError} from '@fluxer/api/src/connection/errors/BlueskyOAuthStateInvalidError';
@@ -35,6 +36,15 @@ import {
 	BlueskyAuthorizeRequest,
 	BlueskyAuthorizeResponse,
 } from '@fluxer/schema/src/domains/connection/BlueskyOAuthSchemas';
+
+const BLUESKY_PROFILE_URL_RE = /^https?:\/\/bsky\.app\/profile\//i;
+
+function normalizeBlueskyHandle(input: string): string {
+	let handle = input.trim();
+	handle = handle.replace(BLUESKY_PROFILE_URL_RE, '');
+	handle = handle.replace(/^@/, '');
+	return handle;
+}
 
 export function BlueskyOAuthController(app: HonoApp) {
 	app.get('/connections/bluesky/client-metadata.json', async (ctx) => {
@@ -73,8 +83,9 @@ export function BlueskyOAuthController(app: HonoApp) {
 			if (!service) {
 				throw new BlueskyOAuthNotEnabledError();
 			}
-			const {handle} = ctx.req.valid('json');
+			const {handle: rawHandle} = ctx.req.valid('json');
 			const userId = ctx.get('user').id;
+			const handle = normalizeBlueskyHandle(rawHandle);
 
 			const connectionService = ctx.get('connectionService');
 			const connections = await connectionService.getConnectionsForUser(userId);
@@ -86,7 +97,13 @@ export function BlueskyOAuthController(app: HonoApp) {
 				throw new ConnectionAlreadyExistsError();
 			}
 
-			const result = await service.authorize(handle, userId);
+			let result: BlueskyAuthorizeResult;
+			try {
+				result = await service.authorize(handle, userId);
+			} catch (error) {
+				Logger.error({error, handle}, 'Bluesky OAuth authorize failed');
+				throw new BlueskyOAuthAuthorizationFailedError();
+			}
 			return ctx.json({authorize_url: result.authorizeUrl});
 		},
 	);

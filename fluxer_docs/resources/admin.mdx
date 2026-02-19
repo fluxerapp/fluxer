@@ -578,6 +578,19 @@ description: 'Admin object schemas from the Fluxer API.'
 | region_id | [SnowflakeType](#snowflaketype) | ID of the region the server belongs to |
 | server_id | [SnowflakeType](#snowflaketype) | ID of the voice server to delete |
 
+<a id="deletewebauthncredentialrequest"></a>
+
+## DeleteWebAuthnCredentialRequest
+
+**Related endpoints**
+
+- [`POST /admin/users/delete-webauthn-credential`](/api-reference/admin/delete-user-webauthn-credential)
+
+| Field | Type | Description |
+|-------|------|-------------|
+| credential_id | [SnowflakeType](#snowflaketype) | ID of the WebAuthn credential to delete |
+| user_id | [SnowflakeType](#snowflaketype) |  |
+
 <a id="disableforsuspiciousactivityrequest"></a>
 
 ## DisableForSuspiciousActivityRequest
@@ -851,12 +864,15 @@ description: 'Admin object schemas from the Fluxer API.'
 - [`POST /admin/users/change-log`](/api-reference/admin/get-user-change-log)
 - [`POST /admin/users/change-username`](/api-reference/admin/change-user-username)
 - [`POST /admin/users/clear-fields`](/api-reference/admin/clear-user-fields)
+- [`POST /admin/users/delete-webauthn-credential`](/api-reference/admin/delete-user-webauthn-credential)
 - [`POST /admin/users/disable-mfa`](/api-reference/admin/disable-user-mfa)
 - [`POST /admin/users/disable-suspicious`](/api-reference/admin/disable-user-for-suspicious-activity)
 - [`POST /admin/users/list-dm-channels`](/api-reference/admin/list-user-dm-channels)
 - [`POST /admin/users/list-guilds`](/api-reference/admin/list-user-guilds)
 - [`POST /admin/users/list-sessions`](/api-reference/admin/list-user-sessions)
+- [`POST /admin/users/list-webauthn-credentials`](/api-reference/admin/list-user-webauthn-credentials)
 - [`POST /admin/users/lookup`](/api-reference/admin/lookup-user)
+- [`POST /admin/users/resend-verification-email`](/api-reference/admin/resend-verification-email)
 - [`POST /admin/users/schedule-deletion`](/api-reference/admin/schedule-account-deletion)
 - [`POST /admin/users/search`](/api-reference/admin/search-users)
 - [`POST /admin/users/send-password-reset`](/api-reference/admin/send-password-reset)
@@ -1788,6 +1804,18 @@ Type: [MessageShredStatusNotFoundResponse](#messageshredstatusnotfoundresponse) 
 |-------|------|-------------|
 | servers | [VoiceServerAdminResponse](#voiceserveradminresponse)[] | List of voice servers |
 
+<a id="listwebauthncredentialsrequest"></a>
+
+## ListWebAuthnCredentialsRequest
+
+**Related endpoints**
+
+- [`POST /admin/users/list-webauthn-credentials`](/api-reference/admin/list-user-webauthn-credentials)
+
+| Field | Type | Description |
+|-------|------|-------------|
+| user_id | [SnowflakeType](#snowflaketype) |  |
+
 <a id="lookupguildrequest"></a>
 
 ## LookupGuildRequest
@@ -2139,6 +2167,18 @@ Type: [MessageShredStatusNotFoundResponse](#messageshredstatusnotfoundresponse) 
 | resolved_at | ?string |  |
 | resolved_by_admin_id | ?[SnowflakeType](#snowflaketype) |  |
 | status | [ReportStatus](#reportstatus) |  |
+
+<a id="resendverificationemailrequest"></a>
+
+## ResendVerificationEmailRequest
+
+**Related endpoints**
+
+- [`POST /admin/users/resend-verification-email`](/api-reference/admin/resend-verification-email)
+
+| Field | Type | Description |
+|-------|------|-------------|
+| user_id | [SnowflakeType](#snowflaketype) |  |
 
 <a id="reservevisionaryslotrequest"></a>
 
@@ -2775,6 +2815,17 @@ Type: Bitflags32
 |-------|------|-------------|
 | success | enum&lt;`true`&gt; |  |
 
+<a id="webauthncredentiallistresponse"></a>
+
+## WebAuthnCredentialListResponse
+
+**Related endpoints**
+
+- [`GET /users/@me/mfa/webauthn/credentials`](/api-reference/users/list-webauthn-credentials)
+- [`POST /admin/users/list-webauthn-credentials`](/api-reference/admin/list-user-webauthn-credentials)
+
+Type: [WebAuthnCredentialResponse](#webauthncredentialresponse)[]
+
 <a id="adminarchiveresponseschemasubjecttype"></a>
 
 ## AdminArchiveResponseSchemaSubjectType
@@ -2871,6 +2922,7 @@ Type of search index to refresh
 | `channel_messages` | Channel message search index |
 | `guild_members` | Guild member search index |
 | `favorite_memes` | Favourite meme search index |
+| `discovery` | Discovery guild search index |
 
 <a id="systemdmjobresponsestatus"></a>
 

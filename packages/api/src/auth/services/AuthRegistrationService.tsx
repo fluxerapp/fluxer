@@ -22,6 +22,7 @@ import {Config} from '@fluxer/api/src/Config';
 import {FIRST_ADMIN_ACL_CONFIG_KEY} from '@fluxer/api/src/constants/InstanceConfig';
 import {deleteOneOrMany, executeConditional} from '@fluxer/api/src/database/Cassandra';
 import type {IDiscriminatorService} from '@fluxer/api/src/infrastructure/DiscriminatorService';
+import type {IEmailDnsValidationService} from '@fluxer/api/src/infrastructure/IEmailDnsValidationService';
 import type {KVActivityTracker} from '@fluxer/api/src/infrastructure/KVActivityTracker';
 import type {SnowflakeService} from '@fluxer/api/src/infrastructure/SnowflakeService';
 import {InstanceConfigRepository} from '@fluxer/api/src/instance/InstanceConfigRepository';
@@ -38,21 +39,17 @@ import {withBusinessSpan} from '@fluxer/api/src/telemetry/BusinessSpans';
 import type {IUserRepository} from '@fluxer/api/src/user/IUserRepository';
 import * as AgeUtils from '@fluxer/api/src/utils/AgeUtils';
 import * as FetchUtils from '@fluxer/api/src/utils/FetchUtils';
-import {
-	formatGeoipLocation,
-	type GeoipResult,
-	getIpAddressReverse,
-	lookupGeoip,
-	UNKNOWN_LOCATION,
-} from '@fluxer/api/src/utils/IpUtils';
+import {getIpAddressReverse, lookupGeoip} from '@fluxer/api/src/utils/IpUtils';
 import {generateRandomUsername} from '@fluxer/api/src/utils/UsernameGenerator';
 import {deriveUsernameFromDisplayName} from '@fluxer/api/src/utils/UsernameSuggestionUtils';
 import type {ICacheService} from '@fluxer/cache/src/ICacheService';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
+import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import type {IEmailService} from '@fluxer/email/src/IEmailService';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {RateLimitError} from '@fluxer/errors/src/domains/core/RateLimitError';
+import {formatGeoipLocation, type GeoipResult, UNKNOWN_LOCATION} from '@fluxer/geoip/src/GeoipLookup';
 import {requireClientIp} from '@fluxer/ip_utils/src/ClientIp';
 import {parseAcceptLanguage} from '@fluxer/locale/src/LocaleService';
 import type {IRateLimitService, RateLimitResult} from '@fluxer/rate_limit/src/IRateLimitService';
@@ -173,6 +170,7 @@ export class AuthRegistrationService {
 		private inviteService: InviteService | null,
 		private rateLimitService: IRateLimitService,
 		private emailService: IEmailService,
+		private emailDnsValidationService: IEmailDnsValidationService,
 		private snowflakeService: SnowflakeService,
 		private snowflakeReservationService: SnowflakeReservationService,
 		private discriminatorService: IDiscriminatorService,
@@ -227,6 +225,11 @@ export class AuthRegistrationService {
 		await this.enforceRegistrationRateLimits({enforceRateLimits, clientIp, emailKey});
 
 		if (rawEmail) {
+			const hasValidDns = await this.emailDnsValidationService.hasValidDnsRecords(rawEmail);
+			if (!hasValidDns) {
+				throw InputValidationError.fromCode('email', ValidationErrorCodes.INVALID_EMAIL_ADDRESS);
+			}
+
 			const emailTaken = await this.repository.findByEmail(rawEmail);
 			if (emailTaken) throw InputValidationError.create('email', 'Email already in use');
 		}

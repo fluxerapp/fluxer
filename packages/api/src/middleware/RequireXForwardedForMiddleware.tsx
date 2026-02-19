@@ -30,7 +30,6 @@ interface RequireXForwardedForOptions {
 
 const defaultExemptPaths: Array<string> = [
 	'/_health',
-	'/_rpc',
 	'/webhooks/livekit',
 	'/test',
 	'/connections/bluesky/client-metadata.json',

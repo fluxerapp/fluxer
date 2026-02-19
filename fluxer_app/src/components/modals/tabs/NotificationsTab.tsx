@@ -40,7 +40,6 @@ const NotificationsTab: React.FC = observer(() => {
 	const {afkTimeout} = UserSettingsStore;
 
 	const {
-		hasCustomNotificationSounds,
 		soundTypeLabels,
 		customSounds,
 		handleToggleAllSounds,
@@ -71,7 +70,6 @@ const NotificationsTab: React.FC = observer(() => {
 				<SettingsSection id="sounds" title={t`Sounds`}>
 					<Sounds
 						soundSettings={soundSettings}
-						hasCustomNotificationSounds={hasCustomNotificationSounds}
 						soundTypeLabels={soundTypeLabels}
 						customSounds={customSounds}
 						onToggleAllSounds={handleToggleAllSounds}

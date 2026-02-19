@@ -17,96 +17,72 @@
 
 -module(rpc_client).
 
--export([
-    call/1,
-    call/2,
-    get_rpc_url/0,
-    get_rpc_url/1,
-    get_rpc_headers/0
-]).
+-export([call/1]).
+
+-define(NATS_RPC_SUBJECT, <<"rpc.api">>).
+-define(NATS_RPC_TIMEOUT_MS, 10000).
 
 -type rpc_request() :: map().
 -type rpc_response() :: {ok, map()} | {error, term()}.
--type rpc_options() :: map().
 
 -spec call(rpc_request()) -> rpc_response().
 call(Request) ->
-    call(Request, #{}).
+    case gateway_nats_rpc:get_connection() of
+        {ok, undefined} ->
+            {error, not_connected};
+        {ok, Conn} ->
+            do_request(Conn, Request);
+        {error, Reason} ->
+            {error, {not_connected, Reason}}
+    end.
 
--spec call(rpc_request(), rpc_options()) -> rpc_response().
-call(Request, _Options) ->
-    Url = get_rpc_url(),
-    Headers = get_rpc_headers(),
-    Body = json:encode(Request),
-    case gateway_http_client:request(rpc, post, Url, Headers, Body) of
-        {ok, 200, _RespHeaders, RespBody} ->
-            handle_success_response(RespBody);
-        {ok, StatusCode, _RespHeaders, RespBody} ->
-            handle_error_response(StatusCode, RespBody);
+-spec do_request(nats:conn(), rpc_request()) -> rpc_response().
+do_request(Conn, Request) ->
+    Payload = iolist_to_binary(json:encode(Request)),
+    case nats:request(Conn, ?NATS_RPC_SUBJECT, Payload, #{timeout => ?NATS_RPC_TIMEOUT_MS}) of
+        {ok, {ResponseBin, _MsgOpts}} ->
+            handle_nats_response(ResponseBin);
+        {error, timeout} ->
+            {error, timeout};
+        {error, no_responders} ->
+            {error, no_responders};
         {error, Reason} ->
             {error, Reason}
     end.
 
--spec handle_success_response(binary()) -> rpc_response().
-handle_success_response(RespBody) ->
-    Response = json:decode(RespBody),
-    Data = maps:get(<<"data">>, Response, #{}),
-    {ok, Data}.
-
--spec handle_error_response(pos_integer(), binary()) -> {error, term()}.
-handle_error_response(StatusCode, RespBody) ->
-    {error, {http_error, StatusCode, RespBody}}.
-
--spec get_rpc_url() -> string().
-get_rpc_url() ->
-    ApiHost = fluxer_gateway_env:get(api_host),
-    get_rpc_url(ApiHost).
-
--spec get_rpc_url(string() | binary()) -> string().
-get_rpc_url(ApiHost) ->
-    BaseUrl = api_host_base_url(ApiHost),
-    BaseUrl ++ "/_rpc".
-
--spec api_host_base_url(string() | binary()) -> string().
-api_host_base_url(ApiHost) ->
-    HostString = ensure_string(ApiHost),
-    Normalized = normalize_api_host(HostString),
-    strip_trailing_slash(Normalized).
-
--spec ensure_string(binary() | string()) -> string().
-ensure_string(Value) when is_binary(Value) ->
-    binary_to_list(Value);
-ensure_string(Value) when is_list(Value) ->
-    Value.
-
--spec normalize_api_host(string()) -> string().
-normalize_api_host(Host) ->
-    Lower = string:lowercase(Host),
-    case {has_protocol_prefix(Lower, "http://"), has_protocol_prefix(Lower, "https://")} of
-        {true, _} -> Host;
-        {_, true} -> Host;
-        _ -> "http://" ++ Host
+-spec handle_nats_response(iodata()) -> rpc_response().
+handle_nats_response(ResponseBin) ->
+    Response = json:decode(iolist_to_binary(ResponseBin)),
+    case maps:get(<<"_error">>, Response, undefined) of
+        undefined ->
+            Data = maps:get(<<"data">>, Response, #{}),
+            {ok, Data};
+        _ ->
+            Status = maps:get(<<"status">>, Response, 500),
+            Message = maps:get(<<"message">>, Response, <<"unknown error">>),
+            {error, {rpc_error, Status, Message}}
     end.
 
--spec has_protocol_prefix(string(), string()) -> boolean().
-has_protocol_prefix(Str, Prefix) ->
-    case string:prefix(Str, Prefix) of
-        nomatch -> false;
-        _ -> true
-    end.
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
 
--spec strip_trailing_slash(string()) -> string().
-strip_trailing_slash([]) ->
-    "";
-strip_trailing_slash(Url) ->
-    case lists:last(Url) of
-        $/ -> strip_trailing_slash(lists:droplast(Url));
-        _ -> Url
-    end.
+handle_nats_response_ok_test() ->
+    Response = json:encode(#{
+        <<"type">> => <<"session">>,
+        <<"data">> => #{<<"user">> => <<"test">>}
+    }),
+    ?assertEqual({ok, #{<<"user">> => <<"test">>}}, handle_nats_response(Response)).
 
--spec get_rpc_headers() -> [{binary() | string(), binary() | string()}].
-get_rpc_headers() ->
-    RpcSecretKey = fluxer_gateway_env:get(rpc_secret_key),
-    AuthHeader = {<<"Authorization">>, <<"Bearer ", RpcSecretKey/binary>>},
-    InitialHeaders = [AuthHeader],
-    gateway_tracing:inject_rpc_headers(InitialHeaders).
+handle_nats_response_error_401_test() ->
+    Response = json:encode(#{<<"_error">> => true, <<"status">> => 401, <<"message">> => <<"Unauthorized">>}),
+    ?assertEqual({error, {rpc_error, 401, <<"Unauthorized">>}}, handle_nats_response(Response)).
+
+handle_nats_response_error_429_test() ->
+    Response = json:encode(#{<<"_error">> => true, <<"status">> => 429, <<"message">> => <<"Rate limited">>}),
+    ?assertEqual({error, {rpc_error, 429, <<"Rate limited">>}}, handle_nats_response(Response)).
+
+handle_nats_response_error_500_test() ->
+    Response = json:encode(#{<<"_error">> => true, <<"status">> => 500, <<"message">> => <<"Internal error">>}),
+    ?assertEqual({error, {rpc_error, 500, <<"Internal error">>}}, handle_nats_response(Response)).
+
+-endif.

@@ -17,11 +17,11 @@
  * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import {createChannelID, createGuildID, createUserID} from '@fluxer/api/src/BrandedTypes';
+import {createChannelID, createGuildID, createUserID, type GuildID} from '@fluxer/api/src/BrandedTypes';
+import {GatewayRpcClient} from '@fluxer/api/src/infrastructure/GatewayRpcClient';
 import {GatewayRpcMethodErrorCodes} from '@fluxer/api/src/infrastructure/GatewayRpcError';
 import {GatewayService} from '@fluxer/api/src/infrastructure/GatewayService';
-import {createGatewayRpcMethodErrorHandler} from '@fluxer/api/src/test/msw/handlers/GatewayRpcHandlers';
-import {server} from '@fluxer/api/src/test/msw/server';
+import {MockGatewayRpcTransport} from '@fluxer/api/src/test/mocks/MockGatewayRpcTransport';
 import {CallAlreadyExistsError} from '@fluxer/errors/src/domains/channel/CallAlreadyExistsError';
 import {InvalidChannelTypeForCallError} from '@fluxer/errors/src/domains/channel/InvalidChannelTypeForCallError';
 import {NoActiveCallError} from '@fluxer/errors/src/domains/channel/NoActiveCallError';
@@ -32,34 +32,30 @@ import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPe
 import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
 import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
 import {UserNotInVoiceError} from '@fluxer/errors/src/domains/user/UserNotInVoiceError';
-import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, it} from 'vitest';
+import {afterEach, beforeEach, describe, expect, it} from 'vitest';
 
 describe('GatewayRpcService Error Handling', () => {
 	const TEST_GUILD_ID = createGuildID(123456789n);
 	const TEST_USER_ID = createUserID(987654321n);
 	const TEST_CHANNEL_ID = createChannelID(111222333n);
 
+	let mockTransport: MockGatewayRpcTransport;
 	let gatewayService: GatewayService;
 
-	beforeAll(() => {
-		server.listen({onUnhandledRequest: 'error'});
-	});
-
-	afterAll(() => {
-		server.close();
-	});
-
 	beforeEach(() => {
+		mockTransport = new MockGatewayRpcTransport();
+		GatewayRpcClient.createForTests(mockTransport);
 		gatewayService = new GatewayService();
 	});
 
-	afterEach(() => {
-		server.resetHandlers();
+	afterEach(async () => {
 		gatewayService.destroy();
+		await GatewayRpcClient.resetForTests();
+		mockTransport.reset();
 	});
 
 	it('transforms guild_not_found RPC error to UnknownGuildError', async () => {
-		server.use(createGatewayRpcMethodErrorHandler('guild.get_data', GatewayRpcMethodErrorCodes.GUILD_NOT_FOUND));
+		mockTransport.setMethodError('guild.get_data', GatewayRpcMethodErrorCodes.GUILD_NOT_FOUND);
 
 		await expect(
 			gatewayService.getGuildData({
@@ -70,7 +66,7 @@ describe('GatewayRpcService Error Handling', () => {
 	});
 
 	it('transforms forbidden RPC error to MissingPermissionsError', async () => {
-		server.use(createGatewayRpcMethodErrorHandler('guild.get_data', GatewayRpcMethodErrorCodes.FORBIDDEN));
+		mockTransport.setMethodError('guild.get_data', GatewayRpcMethodErrorCodes.FORBIDDEN);
 
 		await expect(
 			gatewayService.getGuildData({
@@ -81,13 +77,13 @@ describe('GatewayRpcService Error Handling', () => {
 	});
 
 	it('transforms guild_not_found RPC error to UnknownGuildError for non-batched calls', async () => {
-		server.use(createGatewayRpcMethodErrorHandler('guild.get_counts', GatewayRpcMethodErrorCodes.GUILD_NOT_FOUND));
+		mockTransport.setMethodError('guild.get_counts', GatewayRpcMethodErrorCodes.GUILD_NOT_FOUND);
 
 		await expect(gatewayService.getGuildCounts(TEST_GUILD_ID)).rejects.toThrow(UnknownGuildError);
 	});
 
 	it('transforms call_already_exists RPC error to CallAlreadyExistsError', async () => {
-		server.use(createGatewayRpcMethodErrorHandler('call.create', GatewayRpcMethodErrorCodes.CALL_ALREADY_EXISTS));
+		mockTransport.setMethodError('call.create', GatewayRpcMethodErrorCodes.CALL_ALREADY_EXISTS);
 
 		await expect(gatewayService.createCall(TEST_CHANNEL_ID, '123', 'us-east', [], [])).rejects.toThrow(
 			CallAlreadyExistsError,
@@ -95,27 +91,25 @@ describe('GatewayRpcService Error Handling', () => {
 	});
 
 	it('transforms call_not_found RPC error to NoActiveCallError', async () => {
-		server.use(createGatewayRpcMethodErrorHandler('call.delete', GatewayRpcMethodErrorCodes.CALL_NOT_FOUND));
+		mockTransport.setMethodError('call.delete', GatewayRpcMethodErrorCodes.CALL_NOT_FOUND);
 
 		await expect(gatewayService.deleteCall(TEST_CHANNEL_ID)).rejects.toThrow(NoActiveCallError);
 	});
 
 	it('transforms channel_not_found RPC error to UnknownChannelError', async () => {
-		server.use(createGatewayRpcMethodErrorHandler('call.get', GatewayRpcMethodErrorCodes.CHANNEL_NOT_FOUND));
+		mockTransport.setMethodError('call.get', GatewayRpcMethodErrorCodes.CHANNEL_NOT_FOUND);
 
 		await expect(gatewayService.getCall(TEST_CHANNEL_ID)).rejects.toThrow(UnknownChannelError);
 	});
 
 	it('transforms channel_not_voice RPC error to InvalidChannelTypeForCallError', async () => {
-		server.use(createGatewayRpcMethodErrorHandler('call.get', GatewayRpcMethodErrorCodes.CHANNEL_NOT_VOICE));
+		mockTransport.setMethodError('call.get', GatewayRpcMethodErrorCodes.CHANNEL_NOT_VOICE);
 
 		await expect(gatewayService.getCall(TEST_CHANNEL_ID)).rejects.toThrow(InvalidChannelTypeForCallError);
 	});
 
 	it('transforms user_not_in_voice RPC error to UserNotInVoiceError', async () => {
-		server.use(
-			createGatewayRpcMethodErrorHandler('guild.update_member_voice', GatewayRpcMethodErrorCodes.USER_NOT_IN_VOICE),
-		);
+		mockTransport.setMethodError('guild.update_member_voice', GatewayRpcMethodErrorCodes.USER_NOT_IN_VOICE);
 
 		await expect(
 			gatewayService.updateMemberVoice({
@@ -128,7 +122,7 @@ describe('GatewayRpcService Error Handling', () => {
 	});
 
 	it('transforms timeout RPC error to GatewayTimeoutError', async () => {
-		server.use(createGatewayRpcMethodErrorHandler('guild.get_data', GatewayRpcMethodErrorCodes.TIMEOUT));
+		mockTransport.setMethodError('guild.get_data', GatewayRpcMethodErrorCodes.TIMEOUT);
 
 		await expect(
 			gatewayService.getGuildData({
@@ -139,7 +133,7 @@ describe('GatewayRpcService Error Handling', () => {
 	});
 
 	it('does not open circuit breaker for mapped gateway business errors', async () => {
-		server.use(createGatewayRpcMethodErrorHandler('guild.get_data', GatewayRpcMethodErrorCodes.GUILD_NOT_FOUND));
+		mockTransport.setMethodError('guild.get_data', GatewayRpcMethodErrorCodes.GUILD_NOT_FOUND);
 
 		for (let attempt = 0; attempt < 6; attempt += 1) {
 			await expect(
@@ -152,7 +146,7 @@ describe('GatewayRpcService Error Handling', () => {
 	});
 
 	it('opens circuit breaker for repeated gateway internal errors', async () => {
-		server.use(createGatewayRpcMethodErrorHandler('guild.get_data', GatewayRpcMethodErrorCodes.INTERNAL_ERROR));
+		mockTransport.setMethodError('guild.get_data', GatewayRpcMethodErrorCodes.INTERNAL_ERROR);
 
 		for (let attempt = 0; attempt < 5; attempt += 1) {
 			await expect(
@@ -169,5 +163,48 @@ describe('GatewayRpcService Error Handling', () => {
 				userId: TEST_USER_ID,
 			}),
 		).rejects.toThrow(ServiceUnavailableError);
+	});
+
+	it('parses both member_count and online_count from getDiscoveryGuildCounts', async () => {
+		const guildIdA = createGuildID(100n);
+		const guildIdB = createGuildID(200n);
+
+		mockTransport.setMethodResult('guild.get_online_counts_batch', {
+			online_counts: [
+				{guild_id: '100', member_count: 500, online_count: 42},
+				{guild_id: '200', member_count: 1200, online_count: 300},
+			],
+		});
+
+		const counts = await gatewayService.getDiscoveryGuildCounts([guildIdA, guildIdB]);
+
+		expect(counts.size).toBe(2);
+		expect(counts.get(guildIdA)).toEqual({memberCount: 500, onlineCount: 42});
+		expect(counts.get(guildIdB)).toEqual({memberCount: 1200, onlineCount: 300});
+
+		expect(mockTransport.call).toHaveBeenCalledWith('guild.get_online_counts_batch', {
+			guild_ids: ['100', '200'],
+		});
+	});
+
+	it('returns empty map from getDiscoveryGuildCounts when response has no entries', async () => {
+		mockTransport.setMethodResult('guild.get_online_counts_batch', {
+			online_counts: [],
+		});
+
+		const counts = await gatewayService.getDiscoveryGuildCounts([createGuildID(999n)]);
+
+		expect(counts.size).toBe(0);
+	});
+
+	it('getDiscoveryOnlineCounts still works with member_count present in response', async () => {
+		mockTransport.setMethodResult('guild.get_online_counts_batch', {
+			online_counts: [{guild_id: '100', member_count: 500, online_count: 42}],
+		});
+
+		const counts = await gatewayService.getDiscoveryOnlineCounts([createGuildID(100n)]);
+
+		expect(counts.size).toBe(1);
+		expect(counts.get(100n as GuildID)).toBe(42);
 	});
 });

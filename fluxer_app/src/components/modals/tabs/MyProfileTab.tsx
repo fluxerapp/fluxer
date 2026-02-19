@@ -708,7 +708,6 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 										<Input
 											{...form.register('pronouns')}
 											label={t`Pronouns`}
-											placeholder={isPerGuildProfile && user?.pronouns ? user.pronouns : t`they/them`}
 											maxLength={40}
 											value={form.watch('pronouns') || ''}
 											error={form.formState.errors.pronouns?.message}

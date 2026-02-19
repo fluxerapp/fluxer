@@ -26,13 +26,25 @@ import {initializeMetricsService} from '@fluxer/api/src/infrastructure/MetricsSe
 import {InstanceConfigRepository} from '@fluxer/api/src/instance/InstanceConfigRepository';
 import {ipBanCache} from '@fluxer/api/src/middleware/IpBanMiddleware';
 import {initializeServiceSingletons} from '@fluxer/api/src/middleware/ServiceMiddleware';
-import {ensureVoiceResourcesInitialized, getKVClient} from '@fluxer/api/src/middleware/ServiceRegistry';
+import {
+	ensureVoiceResourcesInitialized,
+	getKVClient,
+	setInjectedWorkerService,
+} from '@fluxer/api/src/middleware/ServiceRegistry';
 import {ReportRepository} from '@fluxer/api/src/report/ReportRepository';
+import {NatsApiRpcListener} from '@fluxer/api/src/rpc/NatsApiRpcListener';
 import {initializeSearch, shutdownSearch} from '@fluxer/api/src/SearchFactory';
 import {warmupAdminSearchIndexes} from '@fluxer/api/src/search/SearchWarmup';
 import {VisionarySlotInitializer} from '@fluxer/api/src/stripe/VisionarySlotInitializer';
 import {UserRepository} from '@fluxer/api/src/user/repositories/UserRepository';
 import {VoiceDataInitializer} from '@fluxer/api/src/voice/VoiceDataInitializer';
+import {JetStreamWorkerQueue} from '@fluxer/api/src/worker/JetStreamWorkerQueue';
+import {WorkerService} from '@fluxer/api/src/worker/WorkerService';
+import {JetStreamConnectionManager} from '@fluxer/nats/src/JetStreamConnectionManager';
+import {NatsConnectionManager} from '@fluxer/nats/src/NatsConnectionManager';
+
+let natsRpcListener: NatsApiRpcListener | null = null;
+let jsConnectionManager: JetStreamConnectionManager | null = null;
 
 export function createInitializer(config: APIConfig, logger: ILogger): () => Promise<void> {
 	return async (): Promise<void> => {
@@ -48,6 +60,19 @@ export function createInitializer(config: APIConfig, logger: ILogger): () => Pro
 
 		await initializeServiceSingletons();
 		logger.info('Service singletons initialized');
+
+		if (!config.dev.testModeEnabled) {
+			jsConnectionManager = new JetStreamConnectionManager({
+				url: config.nats.jetStreamUrl,
+				token: config.nats.authToken || undefined,
+				name: 'api-worker',
+			});
+			await jsConnectionManager.connect();
+			const workerQueue = new JetStreamWorkerQueue(jsConnectionManager);
+			await workerQueue.ensureInfrastructure();
+			setInjectedWorkerService(new WorkerService(workerQueue));
+			logger.info('JetStream worker service initialized');
+		}
 
 		try {
 			const userRepository = new UserRepository();
@@ -65,31 +90,39 @@ export function createInitializer(config: APIConfig, logger: ILogger): () => Pro
 		}
 
 		logger.info({search_url: config.search.url}, 'Initializing search...');
-		await initializeSearch();
-		logger.info('Search initialized');
+		let searchInitialized = false;
+		try {
+			await initializeSearch();
+			searchInitialized = true;
+			logger.info('Search initialized');
+		} catch (error) {
+			logger.warn({error}, 'Search initialisation failed; continuing startup without search');
+		}
 
 		// All API replicas share the same Meilisearch cluster, so only one should warm it.
-		const warmupLockKey = 'fluxer:search:warmup:admin';
-		const warmupLockToken = randomUUID();
-		const warmupLockTtlSeconds = 60 * 60;
-		const acquiredWarmupLock = await kvClient.setnx(warmupLockKey, warmupLockToken, warmupLockTtlSeconds);
-		if (!acquiredWarmupLock) {
-			logger.info('Another API instance is warming search indexes, skipping warmup');
-		} else {
-			try {
-				await warmupAdminSearchIndexes({
-					userRepository: new UserRepository(),
-					guildRepository: new GuildDataRepository(),
-					reportRepository: new ReportRepository(),
-					logger,
-				});
-			} catch (error) {
-				logger.error({error}, 'Admin search warmup failed (continuing startup)');
-			} finally {
+		if (searchInitialized) {
+			const warmupLockKey = 'fluxer:search:warmup:admin';
+			const warmupLockToken = randomUUID();
+			const warmupLockTtlSeconds = 60 * 60;
+			const acquiredWarmupLock = await kvClient.setnx(warmupLockKey, warmupLockToken, warmupLockTtlSeconds);
+			if (!acquiredWarmupLock) {
+				logger.info('Another API instance is warming search indexes, skipping warmup');
+			} else {
 				try {
-					await kvClient.releaseLock(warmupLockKey, warmupLockToken);
+					await warmupAdminSearchIndexes({
+						userRepository: new UserRepository(),
+						guildRepository: new GuildDataRepository(),
+						reportRepository: new ReportRepository(),
+						logger,
+					});
 				} catch (error) {
-					logger.warn({error}, 'Failed to release admin search warmup lock');
+					logger.error({error}, 'Admin search warmup failed (continuing startup)');
+				} finally {
+					try {
+						await kvClient.releaseLock(warmupLockKey, warmupLockToken);
+					} catch (error) {
+						logger.warn({error}, 'Failed to release admin search warmup lock');
+					}
 				}
 			}
 		}
@@ -122,6 +155,16 @@ export function createInitializer(config: APIConfig, logger: ILogger): () => Pro
 			}
 		}
 
+		if (!config.dev.testModeEnabled) {
+			const connectionManager = new NatsConnectionManager({
+				url: config.nats.coreUrl,
+				token: config.nats.authToken,
+				name: 'api-rpc-listener',
+			});
+			natsRpcListener = new NatsApiRpcListener(connectionManager, logger);
+			await natsRpcListener.start();
+		}
+
 		logger.info('API service initialization complete');
 	};
 }
@@ -129,6 +172,26 @@ export function createInitializer(config: APIConfig, logger: ILogger): () => Pro
 export function createShutdown(logger: ILogger): () => Promise<void> {
 	return async (): Promise<void> => {
 		logger.info('Shutting down API service...');
+
+		if (natsRpcListener) {
+			try {
+				await natsRpcListener.stop();
+				natsRpcListener = null;
+			} catch (error) {
+				logger.error({error}, 'Error shutting down NATS API RPC listener');
+			}
+		}
+
+		if (jsConnectionManager) {
+			try {
+				await jsConnectionManager.drain();
+				jsConnectionManager = null;
+			} catch (error) {
+				logger.error({error}, 'Error draining JetStream worker connection');
+			}
+		}
+
+		setInjectedWorkerService(undefined);
 
 		try {
 			await shutdownSearch();

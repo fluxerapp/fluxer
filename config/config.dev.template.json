@@ -37,19 +37,14 @@
 		},
 		"gateway": {
 			"port": 49107,
-			"rpc_tcp_port": 49108,
-			"api_host": "http://localhost:49319/api",
 			"admin_reload_secret": "",
 			"media_proxy_endpoint": "http://localhost:49319/media",
 			"logger_level": "debug"
 		},
-		"queue": {
-			"secret": ""
+		"nats": {
+			"core_url": "nats://127.0.0.1:4222",
+			"jetstream_url": "nats://127.0.0.1:4223"
 		}
-	},
-	"gateway": {
-		"rpc_endpoint": "http://localhost:49107",
-		"rpc_secret": ""
 	},
 	"auth": {
 		"sudo_mode_secret": "",

@@ -113,8 +113,8 @@ send_voice_server_update_for_region_switch(
                     PendingMetadata = build_pending_metadata(
                         UserId, GuildId, ChannelId, SessionId, ExistingVoiceState, TokenNonce
                     ),
-                    _ = gen_server:call(
-                        GuildPid, {store_pending_connection, ConnectionId, PendingMetadata}, 10000
+                    _ = store_pending_connection(
+                        GuildId, GuildPid, ConnectionId, PendingMetadata
                     ),
                     guild_voice_broadcast:broadcast_voice_server_update_to_session(
                         GuildId,
@@ -153,6 +153,22 @@ build_pending_metadata(UserId, GuildId, ChannelId, SessionId, ExistingVoiceState
         created_at => Now,
         expires_at => Now + 30000
     }.
+
+-spec store_pending_connection(integer(), pid(), binary(), map()) -> ok.
+store_pending_connection(GuildId, GuildPid, ConnectionId, Metadata) ->
+    TargetPid = resolve_voice_server(GuildId, GuildPid),
+    gen_server:call(
+        TargetPid,
+        {store_pending_connection, ConnectionId, Metadata},
+        10000
+    ).
+
+-spec resolve_voice_server(integer(), pid()) -> pid().
+resolve_voice_server(GuildId, FallbackPid) ->
+    case guild_voice_server:lookup(GuildId) of
+        {ok, VoicePid} -> VoicePid;
+        {error, not_found} -> FallbackPid
+    end.
 
 -ifdef(TEST).
 

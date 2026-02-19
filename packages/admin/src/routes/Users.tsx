@@ -462,6 +462,23 @@ export function createUsersRoutes({config, assetVersion, requireAuth}: RouteFact
 					});
 				}
 
+				case 'delete_webauthn_credential': {
+					const credentialId = getRequiredString(formData, 'credential_id');
+
+					if (!credentialId) {
+						return redirectWithFlash(c, redirectUrl, {
+							message: 'Credential ID is required',
+							type: 'error',
+						});
+					}
+
+					const result = await usersApi.deleteWebAuthnCredential(config, session, userId, credentialId);
+					return redirectWithFlash(c, redirectUrl, {
+						message: result.ok ? 'WebAuthn credential deleted successfully' : 'Failed to delete WebAuthn credential',
+						type: result.ok ? 'success' : 'error',
+					});
+				}
+
 				case 'send_password_reset': {
 					const result = await usersApi.sendPasswordReset(config, session, userId);
 					return redirectWithFlash(c, redirectUrl, {

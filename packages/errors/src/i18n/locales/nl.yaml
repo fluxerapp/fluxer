@@ -149,6 +149,7 @@ calls_and_voice.voice_message_waveform_required: Bijlagen bij voice-berichten mo
 calls_and_voice.voice_messages_require_single_attachment: Voice-berichten moeten precies 1 bijlage bevatten.
 captcha.invalid: Ongeldige captcha.
 captcha.required: Captcha is verplicht.
+connections.bluesky_oauth_authorization_failed: We konden dat Bluesky-handle niet vinden. Controleer het en probeer het opnieuw.
 connections.bluesky_oauth_callback_failed: We konden de Bluesky-verbinding niet voltooien. Probeer het opnieuw.
 connections.bluesky_oauth_not_enabled: Bluesky-verbindingen zijn niet ingeschakeld op deze server.
 connections.bluesky_oauth_session_expired: Je Bluesky-sessie is verlopen. Verbind je account opnieuw.

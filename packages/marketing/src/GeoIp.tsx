@@ -17,64 +17,26 @@
  * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
  */
 
-/** @jsxRuntime automatic */
-/** @jsxImportSource hono/jsx */
-
+import {lookupGeoipByIp} from '@fluxer/geoip/src/GeoipLookup';
 import {extractClientIp} from '@fluxer/ip_utils/src/ClientIp';
-import {readMarketingResponseAsText, sendMarketingRequest} from '@fluxer/marketing/src/MarketingHttpClient';
-import {ms} from 'itty-time';
 
-export interface GeoIpSettings {
-	apiHost: string;
-	rpcSecret: string;
+export interface GeoIpConfig {
+	geoipDbPath: string;
+	trustCfConnectingIp: boolean;
 }
 
-const defaultCountryCode = 'US';
+const DEFAULT_COUNTRY_CODE = 'US';
 
-export async function getCountryCode(req: Request, settings: GeoIpSettings): Promise<string> {
-	const ip = extractClientIp(req);
-	if (!ip) return defaultCountryCode;
-
-	const url = rpcUrl(settings.apiHost);
-	if (!url) return defaultCountryCode;
-
-	try {
-		const response = await sendMarketingRequest({
-			url,
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				Authorization: `Bearer ${settings.rpcSecret}`,
-			},
-			body: JSON.stringify({type: 'geoip_lookup', ip}),
-			timeout: ms('5 seconds'),
-			serviceName: 'marketing_geoip',
-		});
-
-		if (response.status < 200 || response.status >= 300) return defaultCountryCode;
-		const body = await readMarketingResponseAsText(response.stream);
-		const code = decodeCountryCode(body);
-		return code ?? defaultCountryCode;
-	} catch {
-		return defaultCountryCode;
+export async function getCountryCode(req: Request, config: GeoIpConfig): Promise<string> {
+	if (!config.geoipDbPath) {
+		return DEFAULT_COUNTRY_CODE;
 	}
-}
 
-function decodeCountryCode(body: string): string | null {
-	try {
-		const parsed = JSON.parse(body) as {data?: {country_code?: string}};
-		const code = parsed.data?.country_code;
-		if (!code) return null;
-		return code.trim().toUpperCase();
-	} catch {
-		return null;
+	const ip = extractClientIp(req, {trustCfConnectingIp: config.trustCfConnectingIp});
+	if (!ip) {
+		return DEFAULT_COUNTRY_CODE;
 	}
-}
 
-function rpcUrl(apiHost: string): string {
-	const host = apiHost.trim();
-	if (!host) return '';
-	const base = host.includes('://') ? host : `http://${host}`;
-	const normalized = base.endsWith('/') ? base.slice(0, -1) : base;
-	return `${normalized}/_rpc`;
+	const result = await lookupGeoipByIp(ip, config.geoipDbPath);
+	return result.countryCode ?? DEFAULT_COUNTRY_CODE;
 }

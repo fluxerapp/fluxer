@@ -169,20 +169,21 @@ export function DownloadController(routes: Hono<HonoEnv>): void {
 			operationId: 'download_file',
 			summary: 'Download file',
 			responseSchema: null,
-			statusCode: 200,
+			statusCode: 302,
 			security: [],
 			tags: ['Downloads'],
-			description: 'Downloads files from the download service with support for range requests and caching.',
+			description: 'Redirects to a presigned URL for the requested file.',
 		}),
 		async (ctx) => {
-			const response = await ctx.get('downloadService').streamDownload({
+			const url = await ctx.get('downloadService').resolveDownloadRedirect({
 				path: ctx.req.path,
-				rangeHeader: ctx.req.header('range'),
 			});
-			if (!response) {
+			if (!url) {
 				return ctx.text('Not Found', 404);
 			}
-			return response;
+			const res = ctx.redirect(url, 302);
+			res.headers.set('Cache-Control', 'public, max-age=300');
+			return res;
 		},
 	);
 }

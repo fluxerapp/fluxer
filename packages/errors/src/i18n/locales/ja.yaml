@@ -204,6 +204,7 @@ content_and_safety.ncmec_already_submitted: この内容はすでにNCMECに提�
 content_and_safety.ncmec_submission_failed: NCMECに報告を送れなかったよ。あとでもう一度試してね。
 content_and_safety.nsfw_age_restricted: NSFWコンテンツは年齢制限があるよ。
 connections.already_exists: このタイプの接続はこの識別子で既に存在しているよ。
+connections.bluesky_oauth_authorization_failed: そのBlueskyハンドルを確認できなかったよ。確認してもう一度試してね。
 connections.bluesky_oauth_callback_failed: Blueskyへの接続が完了できなかったよ。もう一度試してね。
 connections.bluesky_oauth_not_enabled: このサーバーではBlueskyへの接続が有効になってないよ。
 connections.bluesky_oauth_session_expired: Blueskyのセッションの期限が切れたよ。アカウントを再接続してね。

@@ -150,6 +150,7 @@ calls_and_voice.voice_messages_require_single_attachment: ข้อความ�
 captcha.invalid: captcha ไม่ถูกต้อง
 captcha.required: ต้องทำ captcha
 connections.already_exists: มีการเชื่อมต่อประเภทนี้ที่มีตัวระบุนี้อยู่แล้ว
+connections.bluesky_oauth_authorization_failed: เราไม่สามารถค้นหา Bluesky handle นั้นได้ กรุณาตรวจสอบและลองใหม่อีกครั้ง
 connections.bluesky_oauth_callback_failed: ไม่สามารถเสร็จสิ้นการเชื่อมต่อ Bluesky ได้ ลองใหม่อีกครั้ง
 connections.bluesky_oauth_not_enabled: ไม่ได้เปิดใช้การเชื่อมต่อ Bluesky บนเซิร์ฟเวอร์นี้
 connections.bluesky_oauth_session_expired: เซสชัน Bluesky ของคุณหมดอายุแล้ว โปรดเชื่อมต่อบัญชีของคุณอีกครั้ง

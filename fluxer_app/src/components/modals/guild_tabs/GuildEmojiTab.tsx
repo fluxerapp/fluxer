@@ -33,11 +33,14 @@ import {Logger} from '@app/lib/Logger';
 import EmojiStickerLayoutStore from '@app/stores/EmojiStickerLayoutStore';
 import {seedGuildEmojiCache, subscribeToGuildEmojiUpdates} from '@app/stores/GuildExpressionTabCache';
 import GuildStore from '@app/stores/GuildStore';
+import PermissionStore from '@app/stores/PermissionStore';
+import UserStore from '@app/stores/UserStore';
 import {getApiErrorCode, getApiErrorErrors} from '@app/utils/ApiErrorUtils';
 import {openFilePicker} from '@app/utils/FilePickerUtils';
 import * as ImageCropUtils from '@app/utils/ImageCropUtils';
 import {GlobalLimits} from '@app/utils/limits/GlobalLimits';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
+import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import type {GuildEmojiWithUser} from '@fluxer/schema/src/domains/guild/GuildEmojiSchemas';
 import {sortBySnowflakeDesc} from '@fluxer/snowflake/src/SnowflakeUtils';
 import {Trans, useLingui} from '@lingui/react/macro';
@@ -61,6 +64,10 @@ const GuildEmojiTab: React.FC<{guildId: string}> = observer(function GuildEmojiT
 	const layoutStore = EmojiStickerLayoutStore;
 	const layout = layoutStore.getEmojiLayout();
 	const guild = GuildStore.getGuild(guildId);
+
+	const canCreateExpressions = PermissionStore.can(Permissions.CREATE_EXPRESSIONS, {guildId});
+	const canManageExpressions = PermissionStore.can(Permissions.MANAGE_EXPRESSIONS, {guildId});
+	const currentUserId = UserStore.currentUserId;
 
 	const setEmojisWithCache = useCallback(
 		(updater: React.SetStateAction<ReadonlyArray<GuildEmojiWithUser>>) => {
@@ -131,6 +138,15 @@ const GuildEmojiTab: React.FC<{guildId: string}> = observer(function GuildEmojiT
 		if (guild.features.has('MORE_EMOJI')) return 250;
 		return 50;
 	}, [guild]);
+
+	const canModifyEmoji = useCallback(
+		(emoji: GuildEmojiWithUser): boolean => {
+			if (canManageExpressions) return true;
+			if (canCreateExpressions && emoji.user?.id === currentUserId) return true;
+			return false;
+		},
+		[canManageExpressions, canCreateExpressions, currentUserId],
+	);
 
 	const handleEmojiDelete = useCallback(
 		async (emojiId: string) => {
@@ -322,45 +338,50 @@ const GuildEmojiTab: React.FC<{guildId: string}> = observer(function GuildEmojiT
 				</div>
 			)}
 
-			<UploadSlotInfo
-				title={<Trans>Emoji Slots</Trans>}
-				currentCount={staticEmojis.length}
-				maxCount={maxStaticEmojis}
-				uploadButtonText={<Trans>Upload Emoji</Trans>}
-				onUploadClick={async () => {
-					const files = await openFilePicker({
-						multiple: true,
-						accept: '.jpg,.jpeg,.png,.apng,.gif,.webp,.avif,image/*',
-					});
-					if (files.length > 0) {
-						void handleFileSelect(files);
-					}
-				}}
-				description={
-					<Trans>
-						Emoji names must be at least 2 characters long and can only contain alphanumeric characters and underscores.
-						Allowed file types: JPEG, PNG, WebP, GIF. We compress images to 128x128 pixels. Maximum size:{' '}
-						{Math.round(GlobalLimits.getEmojiMaxSize() / 1024)} KB per emoji.
-					</Trans>
-				}
-				additionalSlots={
-					<>
-						<span>
+			{canCreateExpressions && (
+				<>
+					<UploadSlotInfo
+						title={<Trans>Emoji Slots</Trans>}
+						currentCount={staticEmojis.length}
+						maxCount={maxStaticEmojis}
+						uploadButtonText={<Trans>Upload Emoji</Trans>}
+						onUploadClick={async () => {
+							const files = await openFilePicker({
+								multiple: true,
+								accept: '.jpg,.jpeg,.png,.apng,.gif,.webp,.avif,image/*',
+							});
+							if (files.length > 0) {
+								void handleFileSelect(files);
+							}
+						}}
+						description={
 							<Trans>
-								Static: {staticEmojis.length} / {maxStaticEmojis === Number.POSITIVE_INFINITY ? '∞' : maxStaticEmojis}
+								Emoji names must be at least 2 characters long and can only contain alphanumeric characters and
+								underscores. Allowed file types: JPEG, PNG, WebP, GIF. We compress images to 128x128 pixels. Maximum
+								size: {Math.round(GlobalLimits.getEmojiMaxSize() / 1024)} KB per emoji.
 							</Trans>
-						</span>
-						<span>
-							<Trans>
-								Animated: {animatedEmojis.length} /{' '}
-								{maxAnimatedEmojis === Number.POSITIVE_INFINITY ? '∞' : maxAnimatedEmojis}
-							</Trans>
-						</span>
-					</>
-				}
-			/>
+						}
+						additionalSlots={
+							<>
+								<span>
+									<Trans>
+										Static: {staticEmojis.length} /{' '}
+										{maxStaticEmojis === Number.POSITIVE_INFINITY ? '∞' : maxStaticEmojis}
+									</Trans>
+								</span>
+								<span>
+									<Trans>
+										Animated: {animatedEmojis.length} /{' '}
+										{maxAnimatedEmojis === Number.POSITIVE_INFINITY ? '∞' : maxAnimatedEmojis}
+									</Trans>
+								</span>
+							</>
+						}
+					/>
 
-			<UploadDropZone onDrop={handleDrop} description={<Trans>Drag and drop emoji files here</Trans>} />
+					<UploadDropZone onDrop={handleDrop} description={<Trans>Drag and drop emoji files here</Trans>} />
+				</>
+			)}
 
 			{searchQuery && filteredEmojis.length === 0 && (
 				<div className={styles.notice}>
@@ -391,6 +412,7 @@ const GuildEmojiTab: React.FC<{guildId: string}> = observer(function GuildEmojiT
 										guildId={guildId}
 										emoji={emoji}
 										layout={layout}
+										canModify={canModifyEmoji(emoji)}
 										onRename={handleEmojiRename}
 										onRemove={handleEmojiDelete}
 									/>
@@ -411,6 +433,7 @@ const GuildEmojiTab: React.FC<{guildId: string}> = observer(function GuildEmojiT
 										guildId={guildId}
 										emoji={emoji}
 										layout={layout}
+										canModify={canModifyEmoji(emoji)}
 										onRename={handleEmojiRename}
 										onRemove={handleEmojiDelete}
 									/>

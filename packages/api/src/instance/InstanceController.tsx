@@ -95,10 +95,6 @@ export function InstanceController(app: Hono<HonoEnv>) {
 				},
 				app_public: {
 					sentry_dsn: Config.appPublic.sentryDsn,
-					sentry_proxy_path: Config.appPublic.sentryProxyPath,
-					sentry_report_host: Config.appPublic.sentryReportHost,
-					sentry_project_id: Config.appPublic.sentryProjectId,
-					sentry_public_key: Config.appPublic.sentryPublicKey,
 				},
 			};
 

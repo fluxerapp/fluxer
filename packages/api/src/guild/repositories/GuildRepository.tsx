@@ -126,6 +126,10 @@ export class GuildRepository implements IGuildRepositoryAggregate {
 		return await this.memberRepo.listMembers(guildId);
 	}
 
+	async countMembers(guildId: GuildID): Promise<number> {
+		return await this.memberRepo.countMembers(guildId);
+	}
+
 	async upsertMember(data: GuildMemberRow): Promise<GuildMember> {
 		return await this.memberRepo.upsertMember(data);
 	}

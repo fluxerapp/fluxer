@@ -22,53 +22,22 @@ import {shutdownInstrumentation} from '@app/Instrument';
 import {Logger} from '@app/Logger';
 import {createAppProxyApp} from '@fluxer/app_proxy/src/App';
 import {buildFluxerCSPOptions} from '@fluxer/app_proxy/src/app_server/utils/CSP';
-import {KVCacheProvider} from '@fluxer/cache/src/providers/KVCacheProvider';
 import {createServiceTelemetry} from '@fluxer/hono/src/middleware/TelemetryAdapters';
 import {createServer, setupGracefulShutdown} from '@fluxer/hono/src/Server';
-import {KVClient} from '@fluxer/kv_client/src/KVClient';
-import {throwKVRequiredError} from '@fluxer/rate_limit/src/KVRequiredError';
-import {RateLimitService} from '@fluxer/rate_limit/src/RateLimitService';
 
 const telemetry = createServiceTelemetry({
 	serviceName: 'fluxer-app-proxy',
 	skipPaths: ['/_health'],
 });
 
-let rateLimitService: RateLimitService | null = null;
-
 async function main(): Promise<void> {
-	if (Config.kv.url) {
-		const kvClient = new KVClient({url: Config.kv.url, timeoutMs: Config.kv.timeout_ms});
-		const cacheService = new KVCacheProvider({client: kvClient});
-		rateLimitService = new RateLimitService(cacheService);
-		Logger.info({kvUrl: Config.kv.url}, 'KV-backed rate limiting enabled');
-	} else {
-		throwKVRequiredError({
-			serviceName: 'fluxer_app_proxy',
-			configPath: 'Config.kv.url',
-		});
-	}
-
-	const cspDirectives = buildFluxerCSPOptions({
-		sentryProxy: Config.sentry_proxy
-			? {
-					projectId: Config.sentry_proxy.project_id,
-					publicKey: Config.sentry_proxy.public_key,
-					targetUrl: Config.sentry_proxy.target_url,
-					pathPrefix: Config.sentry_proxy.path_prefix,
-				}
-			: null,
-		sentryProxyPath: Config.sentry_proxy_path,
-		sentryReportHost: Config.sentry_report_host,
-	});
+	const cspDirectives = buildFluxerCSPOptions({sentryDsn: Config.sentry_dsn});
 
 	const {app, shutdown} = await createAppProxyApp({
 		config: Config,
 		cspDirectives,
 		logger: Logger,
-		rateLimitService,
 		metricsCollector: telemetry.metricsCollector,
-		sentryProxyPath: Config.sentry_proxy_path,
 		staticCDNEndpoint: Config.static_cdn_endpoint,
 		staticDir: Config.assets_dir,
 		tracing: telemetry.tracing,

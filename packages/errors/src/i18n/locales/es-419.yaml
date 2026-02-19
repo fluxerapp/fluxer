@@ -150,6 +150,7 @@ calls_and_voice.voice_messages_require_single_attachment: Los mensajes de voz de
 captcha.invalid: Captcha inválido.
 captcha.required: Se requiere captcha.
 connections.already_exists: Ya existe una conexión de este tipo con este identificador.
+connections.bluesky_oauth_authorization_failed: No pudimos resolver ese identificador de Bluesky. Por favor, verificalo e intentá de nuevo.
 connections.bluesky_oauth_callback_failed: No pudimos completar la conexión a Bluesky. Por favor, intenta de nuevo.
 connections.bluesky_oauth_not_enabled: Las conexiones a Bluesky no están habilitadas en este servidor.
 connections.bluesky_oauth_session_expired: Tu sesión de Bluesky ha expirado. Por favor, reconecta tu cuenta.

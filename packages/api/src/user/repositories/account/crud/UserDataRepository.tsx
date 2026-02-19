@@ -127,9 +127,6 @@ export class UserDataRepository {
 
 		const result = await executeVersionedUpdate<UserRow, 'user_id'>(
 			async () => {
-				if (oldData !== undefined) {
-					return oldData;
-				}
 				const user = await this.findUnique(userId);
 				return user?.toRow() ?? null;
 			},
@@ -138,6 +135,7 @@ export class UserDataRepository {
 				patch: buildPatchFromData(data, current, USER_COLUMNS, ['user_id']),
 			}),
 			Users,
+			{initialData: oldData},
 		);
 
 		return {finalVersion: result.finalVersion};
@@ -146,9 +144,6 @@ export class UserDataRepository {
 	async patchUser(userId: UserID, patch: UserPatch, oldData?: UserRow | null): Promise<{finalVersion: number | null}> {
 		const result = await executeVersionedUpdate<UserRow, 'user_id'>(
 			async () => {
-				if (oldData !== undefined) {
-					return oldData;
-				}
 				const user = await this.findUnique(userId);
 				return user?.toRow() ?? null;
 			},
@@ -157,6 +152,7 @@ export class UserDataRepository {
 				patch,
 			}),
 			Users,
+			{initialData: oldData},
 		);
 
 		return {finalVersion: result.finalVersion};

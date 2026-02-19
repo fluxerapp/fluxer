@@ -27,7 +27,7 @@ import type {IMediaService} from '@fluxer/api/src/infrastructure/IMediaService';
 import type {LiveKitWebhookService} from '@fluxer/api/src/infrastructure/LiveKitWebhookService';
 import type {UserCacheService} from '@fluxer/api/src/infrastructure/UserCacheService';
 import type {RequestCache} from '@fluxer/api/src/middleware/RequestCacheMiddleware';
-import type {SendGridWebhookService} from '@fluxer/api/src/webhook/SendGridWebhookService';
+import type {SweegoWebhookService} from '@fluxer/api/src/webhook/SweegoWebhookService';
 import {transformSlackWebhookRequest} from '@fluxer/api/src/webhook/transformers/SlackTransformer';
 import {
 	mapWebhooksToResponse,
@@ -149,10 +149,11 @@ interface LiveKitWebhookParams {
 	authHeader?: string;
 }
 
-interface SendGridWebhookParams {
+interface SweegoWebhookParams {
 	body: string;
-	signature?: string;
+	webhookId?: string;
 	timestamp?: string;
+	signature?: string;
 }
 
 export class WebhookRequestService {
@@ -164,7 +165,7 @@ export class WebhookRequestService {
 		private readonly userCacheService: UserCacheService,
 		private readonly mediaService: IMediaService,
 		private readonly liveKitWebhookService: LiveKitWebhookService | null,
-		private readonly sendGridWebhookService: SendGridWebhookService,
+		private readonly sweegoWebhookService: SweegoWebhookService,
 	) {}
 
 	async listGuildWebhooks(params: WebhookListGuildParams): Promise<Array<WebhookResponse>> {
@@ -339,15 +340,16 @@ export class WebhookRequestService {
 		return new Response(response.body, {status: response.status});
 	}
 
-	async handleSendGridWebhook(params: SendGridWebhookParams): Promise<Response> {
+	async handleSweegoWebhook(params: SweegoWebhookParams): Promise<Response> {
 		if (!Config.email.enabled) {
 			return new Response('Email not enabled', {status: 404});
 		}
 
-		const response = await this.sendGridWebhookService.handleWebhook({
+		const response = await this.sweegoWebhookService.handleWebhook({
 			body: params.body,
-			signature: params.signature,
+			webhookId: params.webhookId,
 			timestamp: params.timestamp,
+			signature: params.signature,
 			secret: Config.email.webhookSecret,
 		});
 		return new Response(response.body, {status: response.status});

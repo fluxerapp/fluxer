@@ -107,8 +107,14 @@ async function requestManageLink() {
       body: JSON.stringify({email: email})
     });
 
-    msgEl.textContent = manageI18n.success;
-    msgEl.className = 'mt-2 text-center text-sm text-green-600';
+    if (response.ok) {
+      msgEl.textContent = manageI18n.success;
+      msgEl.className = 'mt-2 text-center text-sm text-green-600';
+    } else {
+      var error = await response.json().catch(function() { return {}; });
+      msgEl.textContent = error.message || manageI18n.errorGeneric;
+      msgEl.className = 'mt-2 text-center text-sm text-red-500';
+    }
   } catch (err) {
     msgEl.textContent = manageI18n.errorNetwork;
     msgEl.className = 'mt-2 text-center text-sm text-red-500';

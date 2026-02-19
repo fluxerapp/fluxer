@@ -45,6 +45,7 @@ import type {
 	ListUserSessionsResponse,
 	UserAdminResponse,
 } from '@fluxer/schema/src/domains/admin/AdminUserSchemas';
+import type {WebAuthnCredentialListResponse} from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import {BackButton, NotFoundView} from '@fluxer/ui/src/components/Navigation';
 import {formatDiscriminator, getUserAvatarUrl, getUserBannerUrl} from '@fluxer/ui/src/utils/FormatUser';
 import type {FC} from 'hono/jsx';
@@ -170,6 +171,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = async ({
 	let sessionsResult: {ok: true; data: ListUserSessionsResponse} | {ok: false; error: ApiError} | null = null;
 	let guildsResult: {ok: true; data: ListUserGuildsResponse} | {ok: false; error: ApiError} | null = null;
 	let dmChannelsResult: {ok: true; data: ListUserDmChannelsResponse} | {ok: false; error: ApiError} | null = null;
+	let webAuthnCredentials: WebAuthnCredentialListResponse | null = null;
 	let messageShredStatusResult:
 		| {ok: true; data: messagesApi.MessageShredStatusResponse}
 		| {ok: false; error: ApiError}
@@ -182,6 +184,13 @@ export const UserDetailPage: FC<UserDetailPageProps> = async ({
 
 	if (activeTab === 'account') {
 		sessionsResult = await usersApi.listUserSessions(config, session, userId);
+		const hasWebAuthn = user.authenticator_types.includes(2);
+		if (hasWebAuthn) {
+			const credResult = await usersApi.listWebAuthnCredentials(config, session, userId);
+			if (credResult.ok) {
+				webAuthnCredentials = credResult.data;
+			}
+		}
 	}
 
 	if (activeTab === 'guilds') {
@@ -304,6 +313,7 @@ export const UserDetailPage: FC<UserDetailPageProps> = async ({
 						user={user}
 						userId={userId}
 						sessionsResult={sessionsResult}
+						webAuthnCredentials={webAuthnCredentials}
 						csrfToken={csrfToken}
 					/>
 				)}

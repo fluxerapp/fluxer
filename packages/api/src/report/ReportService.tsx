@@ -33,6 +33,7 @@ import * as MessageHelpers from '@fluxer/api/src/channel/services/message/Messag
 import type {MessageAttachment} from '@fluxer/api/src/database/types/MessageTypes';
 import type {DSAReportTicketRow} from '@fluxer/api/src/database/types/ReportTypes';
 import type {IGuildRepositoryAggregate} from '@fluxer/api/src/guild/repositories/IGuildRepositoryAggregate';
+import type {IEmailDnsValidationService} from '@fluxer/api/src/infrastructure/IEmailDnsValidationService';
 import type {IStorageService} from '@fluxer/api/src/infrastructure/IStorageService';
 import type {SnowflakeService} from '@fluxer/api/src/infrastructure/SnowflakeService';
 import type {IInviteRepository} from '@fluxer/api/src/invite/IInviteRepository';
@@ -50,10 +51,12 @@ import type {IReportSearchService} from '@fluxer/api/src/search/IReportSearchSer
 import type {IUserRepository} from '@fluxer/api/src/user/IUserRepository';
 import {InviteTypes} from '@fluxer/constants/src/ChannelConstants';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
+import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import type {IEmailService} from '@fluxer/email/src/IEmailService';
 import {CannotReportOwnMessageError} from '@fluxer/errors/src/domains/channel/CannotReportOwnMessageError';
 import {UnknownChannelError} from '@fluxer/errors/src/domains/channel/UnknownChannelError';
 import {UnknownMessageError} from '@fluxer/errors/src/domains/channel/UnknownMessageError';
+import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {RateLimitError} from '@fluxer/errors/src/domains/core/RateLimitError';
 import {CannotReportOwnGuildError} from '@fluxer/errors/src/domains/guild/CannotReportOwnGuildError';
 import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
@@ -97,6 +100,7 @@ export class ReportService {
 		private userRepository: IUserRepository,
 		private inviteRepository: IInviteRepository,
 		private emailService: IEmailService,
+		private emailDnsValidationService: IEmailDnsValidationService,
 		private snowflakeService: SnowflakeService,
 		private storageService: IStorageService,
 		private reportSearchService: IReportSearchService | null = null,
@@ -327,6 +331,11 @@ export class ReportService {
 
 	async sendDsaReportVerificationCode(email: string): Promise<void> {
 		const normalizedEmail = this.normalizeEmail(email);
+		const hasValidDns = await this.emailDnsValidationService.hasValidDnsRecords(normalizedEmail);
+		if (!hasValidDns) {
+			throw InputValidationError.fromCode('email', ValidationErrorCodes.INVALID_EMAIL_ADDRESS);
+		}
+
 		const verificationCode = this.generateDsaVerificationCode();
 		const expiresAt = new Date(Date.now() + ms('10 minutes'));
 

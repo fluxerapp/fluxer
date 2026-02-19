@@ -23,7 +23,8 @@
     decorate_member_data/3,
     extract_member_for_event/3,
     collect_and_send_push_notifications/3,
-    normalize_event/1
+    normalize_event/1,
+    is_member_list_updates_enabled/1
 ]).
 
 -type guild_state() :: map().
@@ -74,6 +75,8 @@ process_dispatch(Event, EventData, State) ->
     FilteredSessions = filter_sessions_for_event(
         Event, FinalData, SessionIdOpt, Sessions, FilterState
     ),
+    logger:debug("process_dispatch: event=~p guild_id=~p total_sessions=~p filtered_sessions=~p",
+        [Event, GuildId, map_size(Sessions), length(FilteredSessions)]),
     DispatchSuccess = dispatch_to_sessions(FilteredSessions, Event, FinalData, UpdatedState),
     track_dispatch_metrics(Event, DispatchSuccess),
     maybe_send_push_notifications(Event, FinalData, GuildId, UpdatedState),
@@ -260,8 +263,10 @@ dispatch_bulk_to_session(_, _, _, _, Acc) ->
 -spec dispatch_standard([session_pair()], event(), event_data(), guild_id(), guild_state()) ->
     non_neg_integer().
 dispatch_standard(FilteredSessions, Event, FinalData, GuildId, State) ->
+    logger:debug("dispatch_standard: event=~p guild_id=~p filtered_sessions=~p member_count=~p",
+        [Event, GuildId, length(FilteredSessions), maps:get(member_count, State, undefined)]),
     SuccessCount = lists:foldl(
-        fun({_Sid, SessionData}, Acc) ->
+        fun({Sid, SessionData}, Acc) ->
             Pid = maps:get(pid, SessionData),
             case
                 is_pid(Pid) andalso
@@ -277,6 +282,11 @@ dispatch_standard(FilteredSessions, Event, FinalData, GuildId, State) ->
                         _:_ -> Acc
                     end;
                 false ->
+                    logger:debug("dispatch_standard skip: sid=~p is_pid=~p passive=~p small=~p",
+                        [Sid,
+                         is_pid(Pid),
+                         session_passive:is_passive(GuildId, SessionData),
+                         session_passive:is_small_guild(State)]),
                     Acc
             end
         end,
@@ -1097,5 +1107,189 @@ build_channel_delete_dispatch_state(VisiblePid, HiddenPid) ->
             ]
         }
     }.
+
+should_skip_dispatch_guild_update_never_skipped_test() ->
+    State = #{
+        data => #{
+            <<"guild">> => #{<<"features">> => [<<"UNAVAILABLE_FOR_EVERYONE">>]}
+        }
+    },
+    ?assertEqual(false, should_skip_dispatch(guild_update, State)).
+
+should_skip_dispatch_unavailable_for_everyone_test() ->
+    State = #{
+        data => #{
+            <<"guild">> => #{<<"features">> => [<<"UNAVAILABLE_FOR_EVERYONE">>]}
+        }
+    },
+    ?assertEqual(true, should_skip_dispatch(message_create, State)).
+
+should_skip_dispatch_unavailable_for_everyone_but_staff_test() ->
+    State = #{
+        data => #{
+            <<"guild">> => #{<<"features">> => [<<"UNAVAILABLE_FOR_EVERYONE_BUT_STAFF">>]}
+        }
+    },
+    ?assertEqual(true, should_skip_dispatch(message_create, State)).
+
+should_skip_dispatch_normal_guild_test() ->
+    State = #{
+        data => #{
+            <<"guild">> => #{<<"features">> => []}
+        }
+    },
+    ?assertEqual(false, should_skip_dispatch(message_create, State)).
+
+should_skip_dispatch_no_features_test() ->
+    State = #{data => #{<<"guild">> => #{}}},
+    ?assertEqual(false, should_skip_dispatch(message_create, State)).
+
+filter_sessions_for_event_guild_wide_goes_to_all_sessions_test() ->
+    S1 = #{session_id => <<"s1">>, user_id => 10, pid => self()},
+    S2 = #{session_id => <<"s2">>, user_id => 11, pid => self()},
+    Sessions = #{<<"s1">> => S1, <<"s2">> => S2},
+    State = #{sessions => Sessions, data => #{<<"members">> => #{}}},
+    Result = filter_sessions_for_event(guild_member_add, #{}, undefined, Sessions, State),
+    ?assertEqual(2, length(Result)).
+
+extract_channel_id_message_create_uses_channel_id_field_test() ->
+    Data = #{<<"channel_id">> => <<"42">>},
+    ?assertEqual(42, extract_channel_id(message_create, Data)).
+
+extract_channel_id_channel_create_uses_id_field_test() ->
+    Data = #{<<"id">> => <<"42">>},
+    ?assertEqual(42, extract_channel_id(channel_create, Data)).
+
+extract_channel_id_channel_update_uses_id_field_test() ->
+    Data = #{<<"id">> => <<"42">>},
+    ?assertEqual(42, extract_channel_id(channel_update, Data)).
+
+parse_integer_undefined_returns_default_test() ->
+    ?assertEqual(42, parse_integer(undefined, 42)).
+
+parse_integer_integer_test() ->
+    ?assertEqual(7, parse_integer(7, 0)).
+
+parse_integer_valid_binary_test() ->
+    ?assertEqual(123, parse_integer(<<"123">>, 0)).
+
+parse_integer_invalid_binary_test() ->
+    ?assertEqual(0, parse_integer(<<"abc">>, 0)).
+
+parse_integer_other_type_test() ->
+    ?assertEqual(5, parse_integer(3.14, 5)).
+
+is_guild_operation_disabled_test() ->
+    State = disabled_operations_state(3),
+    ?assertEqual(true, is_guild_operation_disabled(State, 1)),
+    ?assertEqual(true, is_guild_operation_disabled(State, 2)),
+    ?assertEqual(true, is_guild_operation_disabled(State, 3)),
+    ?assertEqual(false, is_guild_operation_disabled(State, 4)).
+
+is_guild_operation_disabled_binary_test() ->
+    State = disabled_operations_state(<<"5">>),
+    ?assertEqual(true, is_guild_operation_disabled(State, 1)),
+    ?assertEqual(true, is_guild_operation_disabled(State, 4)),
+    ?assertEqual(false, is_guild_operation_disabled(State, 2)).
+
+extract_session_id_if_needed_reaction_remove_test() ->
+    Data = #{<<"session_id">> => <<"sid">>, <<"emoji">> => #{}},
+    {SessionId, CleanData} = extract_session_id_if_needed(message_reaction_remove, Data),
+    ?assertEqual(<<"sid">>, SessionId),
+    ?assertNot(maps:is_key(<<"session_id">>, CleanData)).
+
+decorate_member_data_typing_start_test() ->
+    Member = #{<<"user">> => #{<<"id">> => <<"456">>}, <<"roles">> => []},
+    State = #{data => #{<<"members">> => [Member]}},
+    Data = #{<<"user_id">> => <<"456">>},
+    Decorated = decorate_member_data(typing_start, Data, State),
+    ?assert(maps:is_key(<<"member">>, Decorated)),
+    ?assert(maps:is_key(<<"user">>, maps:get(<<"member">>, Decorated))).
+
+decorate_member_data_guild_event_no_decoration_test() ->
+    State = #{data => #{<<"members">> => []}},
+    Data = #{<<"name">> => <<"test">>},
+    Decorated = decorate_member_data(guild_update, Data, State),
+    ?assertEqual(false, maps:is_key(<<"member">>, Decorated)).
+
+filter_visible_channels_test() ->
+    GuildId = 42,
+    UserId = 10,
+    ViewPerm = constants:view_channel_permission(),
+    Member = #{<<"user">> => #{<<"id">> => integer_to_binary(UserId)}, <<"roles">> => []},
+    State = #{
+        id => GuildId,
+        data => #{
+            <<"guild">> => #{<<"owner_id">> => <<"999">>},
+            <<"roles">> => [
+                #{<<"id">> => integer_to_binary(GuildId), <<"permissions">> => integer_to_binary(ViewPerm)}
+            ],
+            <<"members">> => [Member],
+            <<"channels">> => [
+                #{<<"id">> => <<"100">>, <<"permission_overwrites">> => []},
+                #{
+                    <<"id">> => <<"101">>,
+                    <<"permission_overwrites">> => [
+                        #{
+                            <<"id">> => integer_to_binary(GuildId),
+                            <<"type">> => 0,
+                            <<"allow">> => <<"0">>,
+                            <<"deny">> => integer_to_binary(ViewPerm)
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+    Channels = [
+        #{<<"id">> => <<"100">>},
+        #{<<"id">> => <<"101">>}
+    ],
+    Result = filter_visible_channels(Channels, UserId, Member, State),
+    ?assertEqual(1, length(Result)),
+    ?assertEqual(<<"100">>, maps:get(<<"id">>, hd(Result))).
+
+filter_visible_channels_undefined_member_test() ->
+    State = #{data => #{<<"members">> => []}},
+    Channels = [#{<<"id">> => <<"100">>}],
+    Result = filter_visible_channels(Channels, 10, undefined, State),
+    ?assertEqual([], Result).
+
+extract_user_id_from_event_test() ->
+    EventData = #{<<"user">> => #{<<"id">> => <<"42">>}},
+    ?assertEqual(42, extract_user_id_from_event(EventData)).
+
+extract_user_id_from_event_missing_test() ->
+    ?assertEqual(undefined, extract_user_id_from_event(#{})).
+
+extract_user_id_from_event_invalid_test() ->
+    EventData = #{<<"user">> => #{<<"id">> => <<"invalid">>}},
+    ?assertEqual(undefined, extract_user_id_from_event(EventData)).
+
+find_channel_name_uses_index_test() ->
+    Data = #{
+        <<"channels">> => [
+            #{<<"id">> => <<"100">>, <<"name">> => <<"general">>}
+        ],
+        <<"channel_index">> => #{100 => #{<<"id">> => <<"100">>, <<"name">> => <<"general">>}}
+    },
+    ?assertEqual(<<"general">>, find_channel_name(<<"100">>, Data)).
+
+find_channel_name_invalid_id_test() ->
+    Data = #{<<"channels">> => []},
+    ?assertEqual(<<"unknown">>, find_channel_name(<<"invalid">>, Data)).
+
+extract_role_ids_test() ->
+    Member = #{<<"roles">> => [<<"10">>, <<"20">>, <<"invalid">>]},
+    Result = lists:sort(extract_role_ids(Member)),
+    ?assertEqual([10, 20], Result).
+
+extract_role_ids_empty_test() ->
+    Member = #{<<"roles">> => []},
+    ?assertEqual([], extract_role_ids(Member)).
+
+extract_role_ids_missing_key_test() ->
+    Member = #{},
+    ?assertEqual([], extract_role_ids(Member)).
 
 -endif.

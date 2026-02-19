@@ -35,7 +35,7 @@ import type {AuthSession} from '@fluxer/api/src/models/AuthSession';
 import type {User} from '@fluxer/api/src/models/User';
 import {withBusinessSpan} from '@fluxer/api/src/telemetry/BusinessSpans';
 import type {IUserRepository} from '@fluxer/api/src/user/IUserRepository';
-import {formatGeoipLocation, lookupGeoip, UNKNOWN_LOCATION} from '@fluxer/api/src/utils/IpUtils';
+import {lookupGeoip} from '@fluxer/api/src/utils/IpUtils';
 import * as RandomUtils from '@fluxer/api/src/utils/RandomUtils';
 import type {ICacheService} from '@fluxer/cache/src/ICacheService';
 import {UserAuthenticatorTypes, UserFlags} from '@fluxer/constants/src/UserConstants';
@@ -47,6 +47,7 @@ import {IpAuthorizationResendLimitExceededError} from '@fluxer/errors/src/domain
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {RateLimitError} from '@fluxer/errors/src/domains/core/RateLimitError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
+import {formatGeoipLocation, UNKNOWN_LOCATION} from '@fluxer/geoip/src/GeoipLookup';
 import {requireClientIp} from '@fluxer/ip_utils/src/ClientIp';
 import type {IRateLimitService, RateLimitResult} from '@fluxer/rate_limit/src/IRateLimitService';
 import type {LoginRequest} from '@fluxer/schema/src/domains/auth/AuthSchemas';

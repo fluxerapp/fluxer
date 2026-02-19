@@ -18,9 +18,8 @@
  */
 
 import {resolve} from 'node:path';
-import type {AppProxyHonoEnv, AppProxySentryProxyConfig} from '@fluxer/app_proxy/src/AppProxyTypes';
+import type {AppProxyHonoEnv} from '@fluxer/app_proxy/src/AppProxyTypes';
 import {proxyAssets} from '@fluxer/app_proxy/src/app_proxy/proxy/AssetsProxy';
-import {proxySentry} from '@fluxer/app_proxy/src/app_proxy/proxy/SentryProxy';
 import {createSpaIndexRoute} from '@fluxer/app_proxy/src/app_server/routes/SpaIndexRoute';
 import type {CSPOptions} from '@fluxer/app_proxy/src/app_server/utils/CSP';
 import type {Logger} from '@fluxer/logger/src/Logger';
@@ -31,45 +30,14 @@ interface RegisterAppProxyRoutesOptions {
 	assetsPath: string;
 	cspDirectives?: CSPOptions;
 	logger: Logger;
-	sentryProxy: AppProxySentryProxyConfig | null;
-	sentryProxyPath: string;
-	sentryProxyRouteEnabled: boolean;
 	staticCDNEndpoint: string | undefined;
 	staticDir?: string;
 }
 
 export function registerAppProxyRoutes(options: RegisterAppProxyRoutesOptions): void {
-	const {
-		app,
-		assetsPath,
-		cspDirectives,
-		logger,
-		sentryProxy,
-		sentryProxyPath,
-		sentryProxyRouteEnabled,
-		staticCDNEndpoint,
-		staticDir,
-	} = options;
+	const {app, assetsPath, cspDirectives, logger, staticCDNEndpoint, staticDir} = options;
 
 	app.get('/_health', (c) => c.text('OK'));
-
-	app.all(sentryProxyPath, (c) =>
-		proxySentry(c, {
-			enabled: sentryProxyRouteEnabled,
-			logger,
-			sentryProxy,
-			sentryProxyPath,
-		}),
-	);
-
-	app.all(`${sentryProxyPath}/*`, (c) =>
-		proxySentry(c, {
-			enabled: sentryProxyRouteEnabled,
-			logger,
-			sentryProxy,
-			sentryProxyPath,
-		}),
-	);
 
 	if (staticCDNEndpoint) {
 		app.get(`${assetsPath}/*`, (c) =>

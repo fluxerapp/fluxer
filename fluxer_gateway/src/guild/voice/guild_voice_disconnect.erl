@@ -48,8 +48,6 @@ handle_voice_disconnect(ConnectionId, _SessionId, UserId, VoiceStates0, State) -
     VoiceStates = voice_state_utils:ensure_voice_states(VoiceStates0),
     case maps:get(ConnectionId, VoiceStates, undefined) of
         undefined ->
-            %% Voice state not in voice_states - check if it's still pending
-            %% (user disconnected before LiveKit confirmation)
             State1 = clear_pending_voice_connection(ConnectionId, State),
             {reply, #{success => true}, State1};
         OldVoiceState ->
@@ -118,7 +116,6 @@ disconnect_voice_user(#{user_id := UserId} = Request, State) ->
             end),
             case maps:size(UserVoiceStates) of
                 0 ->
-                    %% No active voice states - also clean up any pending connections
                     State1 = clear_pending_voice_connections_for_user(UserId, State),
                     {reply, #{success => true}, State1};
                 _ ->
@@ -141,7 +138,6 @@ disconnect_voice_user(#{user_id := UserId} = Request, State) ->
         SpecificConnection ->
             case maps:get(SpecificConnection, VoiceStates, undefined) of
                 undefined ->
-                    %% Not found in voice_states - also clean up pending connection
                     State1 = clear_pending_voice_connection(SpecificConnection, State),
                     {reply, #{success => true}, State1};
                 VoiceState ->
@@ -191,8 +187,6 @@ disconnect_voice_user_if_in_channel(
             end),
             case maps:size(UserVoiceStates) of
                 0 ->
-                    %% Not found in voice_states - also clean up any pending connections
-                    %% for this user/channel (user disconnected before LiveKit confirmation)
                     State1 = clear_pending_voice_connections_for_user_channel(
                         UserId, ExpectedChannelId, State
                     ),
@@ -215,8 +209,6 @@ disconnect_voice_user_if_in_channel(
         ConnId ->
             case maps:get(ConnId, VoiceStates, undefined) of
                 undefined ->
-                    %% Not found in voice_states - also clean up pending connection
-                    %% (user disconnected before LiveKit confirmation)
                     State1 = clear_pending_voice_connection(ConnId, State),
                     {reply,
                         #{success => true, ignored => true, reason => <<"connection_not_found">>},
@@ -282,8 +274,6 @@ disconnect_all_voice_users_in_channel(#{channel_id := ChannelId}, State) ->
     ChannelVoiceStates = voice_state_utils:filter_voice_states(VoiceStates, fun(_, V) ->
         voice_state_utils:voice_state_channel_id(V) =:= ChannelId
     end),
-    %% Also clean up any pending connections for this channel
-    %% (users that requested tokens but haven't confirmed via LiveKit yet)
     State1 = clear_pending_voice_connections_for_channel(ChannelId, State),
     case maps:size(ChannelVoiceStates) of
         0 ->
@@ -646,8 +636,6 @@ disconnect_voice_user_if_in_channel_skips_force_disconnect_test() ->
         ok
     end.
 
-%% Tests for clear_pending_voice_connection/2
-
 clear_pending_voice_connection_removes_connection_test() ->
     PendingConnections = #{
         <<"conn1">> => #{user_id => 1, channel_id => 100},
@@ -670,8 +658,6 @@ clear_pending_voice_connection_handles_empty_pending_test() ->
     NewState = clear_pending_voice_connection(<<"conn">>, State),
     ?assertEqual(#{}, maps:get(pending_voice_connections, NewState, #{})).
 
-%% Tests for clear_pending_voice_connections_for_user/2
-
 clear_pending_voice_connections_for_user_removes_all_user_connections_test() ->
     PendingConnections = #{
         <<"conn1">> => #{user_id => 5, channel_id => 100},
@@ -684,8 +670,6 @@ clear_pending_voice_connections_for_user_removes_all_user_connections_test() ->
     ?assertNot(maps:is_key(<<"conn1">>, NewPending)),
     ?assertNot(maps:is_key(<<"conn2">>, NewPending)),
     ?assert(maps:is_key(<<"conn3">>, NewPending)).
-
-%% Tests for clear_pending_voice_connections_for_user_channel/3
 
 clear_pending_voice_connections_for_user_channel_removes_matching_test() ->
     PendingConnections = #{
@@ -700,8 +684,6 @@ clear_pending_voice_connections_for_user_channel_removes_matching_test() ->
     ?assert(maps:is_key(<<"conn2">>, NewPending)),
     ?assert(maps:is_key(<<"conn3">>, NewPending)).
 
-%% Tests for clear_pending_voice_connections_for_channel/2
-
 clear_pending_voice_connections_for_channel_removes_all_channel_connections_test() ->
     PendingConnections = #{
         <<"conn1">> => #{user_id => 5, channel_id => 100},
@@ -714,8 +696,6 @@ clear_pending_voice_connections_for_channel_removes_all_channel_connections_test
     ?assertNot(maps:is_key(<<"conn1">>, NewPending)),
     ?assertNot(maps:is_key(<<"conn2">>, NewPending)),
     ?assert(maps:is_key(<<"conn3">>, NewPending)).
-
-%% Tests for disconnect handlers cleaning up pending connections
 
 handle_voice_disconnect_cleans_pending_when_not_in_voice_states_test() ->
     PendingConnections = #{<<"conn1">> => #{user_id => 5, channel_id => 100}},

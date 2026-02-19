@@ -203,6 +203,7 @@ content_and_safety.explicit_content_cannot_be_sent: Atviro seksualinio turinio s
 content_and_safety.ncmec_already_submitted: Apie si turini jau pranesta NCMEC.
 content_and_safety.ncmec_submission_failed: Nepavyko issiusti praneshimo i NCMEC. Pabandyk veliau.
 content_and_safety.nsfw_age_restricted: NSFW turinys yra ribojamas pagal amziu.
+connections.bluesky_oauth_authorization_failed: Nepavyko rasti to „Bluesky“ vartotojo vardo. Patikrinkite jį ir bandykite dar kartą.
 connections.bluesky_oauth_callback_failed: Nepavyko užbaigti „Bluesky" ryšį. Prašau bandyti dar kartą.
 connections.bluesky_oauth_not_enabled: „Bluesky" ryšiai nėra įjungti šiame serveryje.
 connections.bluesky_oauth_session_expired: Jūsų „Bluesky" sesija baigėsi. Prašau iš naujo prijungti savo paskyrą.

@@ -24,6 +24,7 @@ import {mapGuildToGuildResponse} from '@fluxer/api/src/guild/GuildModel';
 import type {IGuildDiscoveryRepository} from '@fluxer/api/src/guild/repositories/GuildDiscoveryRepository';
 import type {IGuildRepositoryAggregate} from '@fluxer/api/src/guild/repositories/IGuildRepositoryAggregate';
 import type {IGatewayService} from '@fluxer/api/src/infrastructure/IGatewayService';
+import {Logger} from '@fluxer/api/src/Logger';
 import type {IGuildSearchService} from '@fluxer/api/src/search/IGuildSearchService';
 import {
 	DiscoveryApplicationStatus,
@@ -37,7 +38,7 @@ import {DiscoveryApplicationNotFoundError} from '@fluxer/errors/src/domains/disc
 import {DiscoveryInsufficientMembersError} from '@fluxer/errors/src/domains/discovery/DiscoveryInsufficientMembersError';
 import {DiscoveryInvalidCategoryError} from '@fluxer/errors/src/domains/discovery/DiscoveryInvalidCategoryError';
 import {DiscoveryNotDiscoverableError} from '@fluxer/errors/src/domains/discovery/DiscoveryNotDiscoverableError';
-import type {GuildSearchFilters} from '@fluxer/schema/src/contracts/search/SearchDocumentTypes';
+import type {GuildSearchFilters} from '@fluxer/schema/src/contracts/search/SearchDocumentTypes.jsx';
 import type {DiscoveryApplicationPatchRequest} from '@fluxer/schema/src/domains/guild/GuildDiscoverySchemas';
 
 const VALID_CATEGORY_TYPES = new Set<number>(Object.values(DiscoveryCategories));
@@ -148,9 +149,6 @@ export class GuildDiscoveryService extends IGuildDiscoveryService {
 			removal_reason: null,
 		};
 
-		if (existing) {
-			await this.discoveryRepository.deleteByGuildId(guildId, existing.status, existing.applied_at);
-		}
 		await this.discoveryRepository.upsert(row);
 
 		return row;
@@ -337,16 +335,14 @@ export class GuildDiscoveryService extends IGuildDiscoveryService {
 		limit: number;
 		offset: number;
 	}): Promise<{guilds: Array<DiscoveryGuildResult>; total: number}> {
-		if (this.guildSearchService) {
-			const sortByMap: Record<string, GuildSearchFilters['sortBy']> = {
-				member_count: 'memberCount',
-				online_count: 'onlineCount',
-			};
+		let guilds: Array<DiscoveryGuildResult>;
+		let total: number;
 
+		if (this.guildSearchService) {
 			const filters: GuildSearchFilters = {
 				isDiscoverable: true,
 				discoveryCategory: params.categoryId,
-				sortBy: sortByMap[params.sortBy ?? ''] ?? 'relevance',
+				sortBy: 'relevance',
 				sortOrder: 'desc',
 			};
 
@@ -355,54 +351,75 @@ export class GuildDiscoveryService extends IGuildDiscoveryService {
 				offset: params.offset,
 			});
 
-			const guilds: Array<DiscoveryGuildResult> = results.hits.map((hit) => ({
+			guilds = results.hits.map((hit) => ({
 				id: hit.id,
 				name: hit.name,
 				icon: hit.iconHash,
 				description: hit.discoveryDescription,
 				category_type: hit.discoveryCategory ?? 0,
-				member_count: hit.memberCount,
-				online_count: hit.onlineCount,
+				member_count: 0,
+				online_count: 0,
 				features: hit.features,
 				verification_level: hit.verificationLevel,
 			}));
 
-			return {guilds, total: results.total};
-		}
+			total = results.total;
+		} else {
+			const statusRows = await this.discoveryRepository.listByStatus(
+				DiscoveryApplicationStatus.APPROVED,
+				params.limit + params.offset,
+			);
 
-		const statusRows = await this.discoveryRepository.listByStatus(
-			DiscoveryApplicationStatus.APPROVED,
-			params.limit + params.offset,
-		);
+			const paginatedRows = statusRows.slice(params.offset, params.offset + params.limit);
+			guilds = [];
 
-		const paginatedRows = statusRows.slice(params.offset, params.offset + params.limit);
-		const guilds: Array<DiscoveryGuildResult> = [];
+			for (const statusRow of paginatedRows) {
+				const discoveryRow = await this.discoveryRepository.findByGuildId(statusRow.guild_id);
+				if (!discoveryRow) continue;
 
-		for (const statusRow of paginatedRows) {
-			const discoveryRow = await this.discoveryRepository.findByGuildId(statusRow.guild_id);
-			if (!discoveryRow) continue;
+				if (params.categoryId !== undefined && discoveryRow.category_type !== params.categoryId) {
+					continue;
+				}
 
-			if (params.categoryId !== undefined && discoveryRow.category_type !== params.categoryId) {
-				continue;
+				const guild = await this.guildRepository.findUnique(statusRow.guild_id);
+				if (!guild) continue;
+
+				guilds.push({
+					id: statusRow.guild_id.toString(),
+					name: guild.name,
+					icon: guild.iconHash,
+					description: discoveryRow.description,
+					category_type: discoveryRow.category_type,
+					member_count: guild.memberCount,
+					online_count: 0,
+					features: Array.from(guild.features),
+					verification_level: guild.verificationLevel,
+				});
 			}
 
-			const guild = await this.guildRepository.findUnique(statusRow.guild_id);
-			if (!guild) continue;
-
-			guilds.push({
-				id: statusRow.guild_id.toString(),
-				name: guild.name,
-				icon: guild.iconHash,
-				description: discoveryRow.description,
-				category_type: discoveryRow.category_type,
-				member_count: guild.memberCount,
-				online_count: 0,
-				features: Array.from(guild.features),
-				verification_level: guild.verificationLevel,
-			});
+			total = statusRows.length;
 		}
 
-		return {guilds, total: statusRows.length};
+		if (guilds.length > 0) {
+			try {
+				const guildIds = guilds.map((g) => BigInt(g.id) as GuildID);
+				const freshCounts = await this.gatewayService.getDiscoveryGuildCounts(guildIds);
+				for (const guild of guilds) {
+					const counts = freshCounts.get(BigInt(guild.id) as GuildID);
+					if (counts) {
+						guild.member_count = counts.memberCount;
+						guild.online_count = counts.onlineCount;
+					}
+				}
+			} catch (error) {
+				Logger.warn(
+					{error: error instanceof Error ? error.message : String(error)},
+					'[discovery] Failed to fetch fresh guild counts from gateway, using stale values',
+				);
+			}
+		}
+
+		return {guilds, total};
 	}
 
 	private async addDiscoverableFeature(guildId: GuildID): Promise<void> {

@@ -17,6 +17,7 @@
  * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
  */
 
+import {getDateFromUnixTimestampSeconds} from '@app/lib/markdown/utils/TimestampValidation';
 import {shouldUse12HourFormat} from '@app/utils/DateUtils';
 import {getCurrentLocale} from '@app/utils/LocaleUtils';
 import {
@@ -33,9 +34,8 @@ import {TimestampStyle} from '@fluxer/markdown_parser/src/types/Enums';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 
-function formatRelativeTime(timestamp: number, i18n: I18n): string {
+function formatRelativeTime(date: Date, i18n: I18n): string {
 	const locale = getCurrentLocale();
-	const date = new Date(timestamp * 1000);
 	const now = new Date();
 
 	if (isSameDay(date, now)) {
@@ -142,9 +142,14 @@ function formatRelativeTime(timestamp: number, i18n: I18n): string {
 export function formatTimestamp(timestamp: number, style: TimestampStyle, i18n: I18n): string {
 	const locale = getCurrentLocale();
 	const hour12 = shouldUse12HourFormat(locale);
+	const date = getDateFromUnixTimestampSeconds(timestamp);
+
+	if (date == null) {
+		return String(timestamp);
+	}
 
 	if (style === TimestampStyle.RelativeTime) {
-		return formatRelativeTime(timestamp, i18n);
+		return formatRelativeTime(date, i18n);
 	}
 
 	return formatTimestampWithStyle(timestamp, style, locale, hour12);

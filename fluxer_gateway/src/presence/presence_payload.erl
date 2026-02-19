@@ -38,7 +38,8 @@ ensure_status_binary(online) -> <<"online">>;
 ensure_status_binary(offline) -> <<"offline">>;
 ensure_status_binary(idle) -> <<"idle">>;
 ensure_status_binary(dnd) -> <<"dnd">>;
-ensure_status_binary(invisible) -> <<"invisible">>;
+ensure_status_binary(invisible) -> <<"offline">>;
+ensure_status_binary(<<"invisible">>) -> <<"offline">>;
 ensure_status_binary(Status) when is_binary(Status) -> Status;
 ensure_status_binary(_) -> <<"offline">>.
 
@@ -69,10 +70,11 @@ ensure_status_binary_atom_test() ->
     ?assertEqual(<<"offline">>, ensure_status_binary(offline)),
     ?assertEqual(<<"idle">>, ensure_status_binary(idle)),
     ?assertEqual(<<"dnd">>, ensure_status_binary(dnd)),
-    ?assertEqual(<<"invisible">>, ensure_status_binary(invisible)).
+    ?assertEqual(<<"offline">>, ensure_status_binary(invisible)).
 
 ensure_status_binary_binary_test() ->
     ?assertEqual(<<"online">>, ensure_status_binary(<<"online">>)),
+    ?assertEqual(<<"offline">>, ensure_status_binary(<<"invisible">>)),
     ?assertEqual(<<"custom">>, ensure_status_binary(<<"custom">>)).
 
 ensure_status_binary_unknown_test() ->
@@ -98,4 +100,18 @@ normalize_custom_status_test() ->
     ?assertEqual(#{<<"text">> => <<"hi">>}, normalize_custom_status(#{<<"text">> => <<"hi">>})),
     ?assertEqual(null, normalize_custom_status(<<"invalid">>)),
     ?assertEqual(null, normalize_custom_status(123)).
+
+build_invisible_atom_normalized_to_offline_test() ->
+    User = #{<<"id">> => <<"1">>, <<"username">> => <<"Test">>},
+    CustomStatus = #{<<"text">> => <<"hello">>},
+    Result = build(User, invisible, false, false, CustomStatus),
+    ?assertEqual(<<"offline">>, maps:get(<<"status">>, Result)),
+    ?assertEqual(null, maps:get(<<"custom_status">>, Result)).
+
+build_invisible_binary_normalized_to_offline_test() ->
+    User = #{<<"id">> => <<"1">>, <<"username">> => <<"Test">>},
+    CustomStatus = #{<<"text">> => <<"hello">>},
+    Result = build(User, <<"invisible">>, false, false, CustomStatus),
+    ?assertEqual(<<"offline">>, maps:get(<<"status">>, Result)),
+    ?assertEqual(null, maps:get(<<"custom_status">>, Result)).
 -endif.

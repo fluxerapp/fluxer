@@ -95,7 +95,7 @@ import type {UserContactChangeLogService} from '@fluxer/api/src/user/services/Us
 import type {UserContentRequestService} from '@fluxer/api/src/user/services/UserContentRequestService';
 import type {UserRelationshipRequestService} from '@fluxer/api/src/user/services/UserRelationshipRequestService';
 import type {UserService} from '@fluxer/api/src/user/services/UserService';
-import type {SendGridWebhookService} from '@fluxer/api/src/webhook/SendGridWebhookService';
+import type {SweegoWebhookService} from '@fluxer/api/src/webhook/SweegoWebhookService';
 import type {WebhookRequestService} from '@fluxer/api/src/webhook/WebhookRequestService';
 import type {WebhookService} from '@fluxer/api/src/webhook/WebhookService';
 import type {ICacheService} from '@fluxer/cache/src/ICacheService';
@@ -188,7 +188,7 @@ export interface HonoEnv {
 		userChannelRequestService: UserChannelRequestService;
 		userContentRequestService: UserContentRequestService;
 		userRelationshipRequestService: UserRelationshipRequestService;
-		sendGridWebhookService: SendGridWebhookService;
+		sweegoWebhookService: SweegoWebhookService;
 		webhookService: WebhookService;
 		webhookRequestService: WebhookRequestService;
 		workerService: IWorkerService;

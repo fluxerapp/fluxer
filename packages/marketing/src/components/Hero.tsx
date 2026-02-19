@@ -35,7 +35,7 @@ export function Hero(props: HeroProps): JSX.Element {
 	const {ctx} = props;
 
 	return (
-		<main class="flex flex-col items-center justify-center px-6 pt-44 pb-16 sm:px-8 md:px-12 md:pt-52 md:pb-20 lg:px-16 lg:pb-24 xl:px-20">
+		<main class="flex flex-col items-center justify-center px-6 pt-36 pb-16 sm:px-8 md:px-12 md:pt-44 md:pb-20 lg:px-16 lg:pb-24 xl:px-20">
 			<div class="max-w-4xl space-y-8 text-center">
 				{ctx.locale === 'ja' ? (
 					<div class="flex justify-center">
@@ -64,8 +64,6 @@ export function Hero(props: HeroProps): JSX.Element {
 				</div>
 				<h1 class="hero">{ctx.i18n.getMessage('general.tagline', ctx.locale)}</h1>
 				<div class="-mt-4 flex items-center justify-center gap-2 font-medium text-sm text-white/80">
-					<span>{ctx.i18n.getMessage('beta_and_access.public_beta', ctx.locale)}</span>
-					<span class="text-white/40">·</span>
 					<span class="inline-flex items-center gap-1.5">
 						<FlagSvg locale={Locales.SV_SE} ctx={ctx} class="h-3.5 w-3.5 rounded-sm" />
 						{ctx.i18n.getMessage('general.made_in_sweden', ctx.locale)}

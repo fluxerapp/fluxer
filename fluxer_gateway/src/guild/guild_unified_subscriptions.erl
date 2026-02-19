@@ -89,7 +89,7 @@ process_sync_flag(GuildSubData, _GuildId, GuildPid, SessionId, ActiveChanged) ->
     ShouldSync = maps:get(<<"sync">>, GuildSubData, false) =:= true orelse ActiveChanged,
     case ShouldSync of
         true ->
-            guild_sync:send_guild_sync(GuildPid, SessionId);
+            gen_server:cast(GuildPid, {send_guild_sync, SessionId});
         false ->
             ok
     end.

@@ -1,0 +1,29 @@
+services:
+  nats_core:
+    image: nats:2-alpine
+    hostname: nats_core
+    command: ['-c', '/etc/nats/nats.conf']
+    env_file:
+      - /etc/fluxer/nats_core.env
+    volumes:
+      - ./nats.conf:/etc/nats/nats.conf:ro
+    networks:
+      - fluxer-shared
+    ports:
+      - '4222:4222'
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 3
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -q --spider http://localhost:8222/healthz || exit 1']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+networks:
+  fluxer-shared:
+    external: true

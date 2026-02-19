@@ -35,6 +35,10 @@ import {
 import {createStringType, SnowflakeStringType, SnowflakeType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {z} from 'zod';
 
+export const RpcGuildCollectionType = z.enum(['guild', 'roles', 'channels', 'emojis', 'stickers', 'members']);
+
+export type RpcGuildCollectionType = z.infer<typeof RpcGuildCollectionType>;
+
 export const ReadStateResponse = z.object({
 	id: SnowflakeStringType.describe('The channel ID for this read state'),
 	mention_count: z.number().describe('Number of unread mentions in the channel'),
@@ -54,8 +58,11 @@ export const RpcRequest = z.discriminatedUnion('type', [
 		longitude: createStringType(1, 32).optional().describe('Client longitude for region selection'),
 	}),
 	z.object({
-		type: z.literal('guild').describe('Request type for fetching guild data'),
+		type: z.literal('guild_collection').describe('Request type for fetching a single guild collection chunk'),
 		guild_id: SnowflakeType.describe('ID of the guild to fetch'),
+		collection: RpcGuildCollectionType.describe('Guild collection to fetch'),
+		limit: z.number().int().min(1).max(1000).optional().describe('Maximum number of items to return'),
+		after_user_id: SnowflakeType.optional().describe('Cursor for member collection pagination'),
 	}),
 	z.object({
 		type: z.literal('log_guild_crash').describe('Request type for logging guild crashes'),
@@ -193,16 +200,19 @@ export const RpcResponseSessionData = z.object({
 
 export type RpcResponseSessionData = z.infer<typeof RpcResponseSessionData>;
 
-export const RpcResponseGuildData = z.object({
-	guild: GuildResponse.describe('Guild information'),
-	roles: z.array(GuildRoleResponse).describe('List of roles in the guild'),
-	channels: z.array(ChannelResponse).describe('List of channels in the guild'),
-	emojis: z.array(GuildEmojiResponse).describe('List of custom emojis in the guild'),
-	stickers: z.array(GuildStickerResponse).describe('List of custom stickers in the guild'),
-	members: z.array(GuildMemberResponse).describe('List of guild members'),
+export const RpcResponseGuildCollectionData = z.object({
+	collection: RpcGuildCollectionType.describe('Guild collection returned in this response'),
+	guild: GuildResponse.nullish().describe('Guild information'),
+	roles: z.array(GuildRoleResponse).nullish().describe('List of roles in the guild'),
+	channels: z.array(ChannelResponse).nullish().describe('List of channels in the guild'),
+	emojis: z.array(GuildEmojiResponse).nullish().describe('List of custom emojis in the guild'),
+	stickers: z.array(GuildStickerResponse).nullish().describe('List of custom stickers in the guild'),
+	members: z.array(GuildMemberResponse).nullish().describe('List of guild members in this chunk'),
+	has_more: z.boolean().describe('Whether more data is available for this collection'),
+	next_after_user_id: SnowflakeStringType.nullish().describe('Cursor for the next member chunk'),
 });
 
-export type RpcResponseGuildData = z.infer<typeof RpcResponseGuildData>;
+export type RpcResponseGuildCollectionData = z.infer<typeof RpcResponseGuildCollectionData>;
 
 export const RpcResponseValidateCustomStatus = z.object({
 	custom_status: CustomStatusResponse.nullish().describe('Validated custom status or null if invalid'),
@@ -224,8 +234,8 @@ export const RpcResponse = z.discriminatedUnion('type', [
 			.describe('Crash logging result'),
 	}),
 	z.object({
-		type: z.literal('guild').describe('Response type for guild data'),
-		data: RpcResponseGuildData.describe('Guild data'),
+		type: z.literal('guild_collection').describe('Response type for guild collection chunks'),
+		data: RpcResponseGuildCollectionData.describe('Guild collection chunk data'),
 	}),
 	z.object({
 		type: z.literal('get_user_guild_settings').describe('Response type for user guild settings'),

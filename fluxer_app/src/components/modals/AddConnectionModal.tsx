@@ -93,7 +93,10 @@ export const AddConnectionModal = observer(({defaultType}: AddConnectionModalPro
 
 	const onSubmitInitiate = useCallback(
 		async (data: InitiateFormInputs) => {
-			const identifier = data.identifier.trim();
+			let identifier = data.identifier.trim();
+			if (type === ConnectionTypes.BLUESKY) {
+				identifier = identifier.replace(/^https?:\/\/bsky\.app\/profile\//i, '').replace(/^@/, '');
+			}
 			if (UserConnectionStore.hasConnectionByTypeAndName(type, identifier)) {
 				initiateForm.setError('identifier', {type: 'validate', message: t`You already have this connection.`});
 				return;

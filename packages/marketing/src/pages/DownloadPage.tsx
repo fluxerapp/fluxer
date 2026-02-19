@@ -139,7 +139,7 @@ function renderSupportSection(ctx: MarketingContext): JSX.Element {
 				title={ctx.i18n.getMessage('donations.mobile_roadmap_sponsorship', ctx.locale)}
 				description={ctx.i18n.getMessage('donations.why_support', ctx.locale)}
 			>
-				<div class="flex flex-col gap-6 sm:flex-row sm:flex-wrap sm:justify-center">
+				<div class="flex flex-col gap-6 sm:flex-row sm:justify-center">
 					{renderSupportCard(
 						href(ctx, '/plutonium'),
 						<CoinsIcon class="h-8 w-8 text-white" />,
@@ -180,7 +180,7 @@ function renderSupportCard(
 	return (
 		<a
 			href={link}
-			class="flex items-center gap-4 rounded-2xl border border-white/20 bg-white/10 p-6 backdrop-blur-sm transition hover:bg-white/20 sm:w-[calc(50%-0.75rem)] md:p-8"
+			class="flex items-center gap-4 rounded-2xl border border-white/20 bg-white/10 p-6 backdrop-blur-sm transition hover:bg-white/20 md:p-8"
 			target={target}
 			rel={rel}
 		>

@@ -1192,7 +1192,7 @@ export class ScrollManager {
 
 		this.props = {...nextProps};
 
-		const {offsetHeight, scrollHeight} = this.getScrollerState();
+		const {scrollTop, offsetHeight, scrollHeight} = this.getScrollerState();
 		const heightChanged = this.isHeightChange(offsetHeight, scrollHeight);
 		const shouldForceBottom = preUpdatePinState?.isPinned ?? false;
 
@@ -1276,6 +1276,9 @@ export class ScrollManager {
 		}
 
 		if (heightChanged) {
+			if (!shouldForceBottom && this.automaticAnchor) {
+				this.updateAutomaticAnchor(scrollTop);
+			}
 			this.fixScrollPosition(offsetHeight, scrollHeight, shouldForceBottom);
 		}
 	}

@@ -195,6 +195,7 @@ channels_and_guilds.voice_channels_cannot_be_above_text_channels: Los canales de
 colors.color_value_too_high: El valor del color no puede superar 0xffffff.
 colors.color_value_too_low: El valor del color debe ser como minimo 0x000000.
 connections.already_exists: Una conexión de este tipo con este identificador ya existe.
+connections.bluesky_oauth_authorization_failed: No hemos podido resolver ese identificador de Bluesky. Por favor, compruébalo e inténtalo de nuevo.
 connections.bluesky_oauth_callback_failed: No hemos podido completar la conexión con Bluesky. Por favor, inténtalo de nuevo.
 connections.bluesky_oauth_not_enabled: Las conexiones con Bluesky no están activadas en este servidor.
 connections.bluesky_oauth_session_expired: Tu sesión de Bluesky ha caducado. Por favor, reconecta tu cuenta.

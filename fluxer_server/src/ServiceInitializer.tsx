@@ -32,7 +32,8 @@ import {
 	setInjectedWorkerService,
 } from '@fluxer/api/src/middleware/ServiceRegistry';
 import {createTestHarnessResetHandler, registerTestHarnessReset} from '@fluxer/api/src/test/TestHarnessReset';
-import {DirectWorkerService} from '@fluxer/api/src/worker/DirectWorkerService';
+import {JetStreamWorkerQueue} from '@fluxer/api/src/worker/JetStreamWorkerQueue';
+import {WorkerService} from '@fluxer/api/src/worker/WorkerService';
 import {createAppServer} from '@fluxer/app_proxy/src/AppServer';
 import type {AppServerResult} from '@fluxer/app_proxy/src/AppServerTypes';
 import {getBuildMetadata} from '@fluxer/config/src/BuildMetadata';
@@ -43,14 +44,10 @@ import {KVClient} from '@fluxer/kv_client/src/KVClient';
 import type {Logger} from '@fluxer/logger/src/Logger';
 import type {MediaProxyAppResult} from '@fluxer/media_proxy/src/App';
 import {createMediaProxyApp} from '@fluxer/media_proxy/src/App';
-import {createQueueApp, type QueueAppResult} from '@fluxer/queue/src/App';
-import {defaultQueueConfig} from '@fluxer/queue/src/types/QueueConfig';
+import {JetStreamConnectionManager} from '@fluxer/nats/src/JetStreamConnectionManager';
 import type {S3AppResult} from '@fluxer/s3/src/App';
 import {createS3App} from '@fluxer/s3/src/App';
 import {setUser} from '@fluxer/sentry/src/Sentry';
-import {DirectQueueProvider} from '@fluxer/worker/src/providers/DirectQueueProvider';
-
-type LoggerFactory = (name: string) => Logger;
 
 export interface ServiceInitializationContext {
 	config: Config;
@@ -61,7 +58,7 @@ export interface ServiceInitializationContext {
 export interface InitializedServices {
 	kv?: IKVProvider;
 	s3?: S3AppResult;
-	queue?: QueueAppResult;
+	jsConnectionManager?: JetStreamConnectionManager;
 	mediaProxy?: MediaProxyAppResult;
 	admin?: AdminAppResult;
 	api?: APIAppResult;
@@ -119,41 +116,36 @@ function createS3Initializer(context: ServiceInitializationContext): ServiceInit
 	};
 }
 
-function createQueueInitializer(context: ServiceInitializationContext): ServiceInitializer {
+function createJetStreamInitializer(context: ServiceInitializationContext): ServiceInitializer {
 	const {config, logger} = context;
-	const baseLogger = logger.child({component: 'queue'});
-	const telemetry = createServiceTelemetry({serviceName: 'fluxer-queue', skipPaths: ['/_health']});
+	const baseLogger = logger.child({component: 'jetstream'});
 
-	const loggerFactory: LoggerFactory = (name: string) => baseLogger.child({module: name});
-
-	const queueApp = createQueueApp({
-		loggerFactory,
-		config: {
-			...defaultQueueConfig,
-			dataDir: requireValue(config.services.queue?.data_dir, 'services.queue.data_dir'),
-			defaultVisibilityTimeoutMs: requireValue(
-				config.services.queue?.default_visibility_timeout_ms,
-				'services.queue.default_visibility_timeout_ms',
-			),
-		},
-		metricsCollector: telemetry.metricsCollector,
-		tracing: telemetry.tracing,
+	const natsConfig = config.services.nats;
+	const connectionManager = new JetStreamConnectionManager({
+		url: natsConfig?.jetstream_url ?? 'nats://127.0.0.1:4223',
+		token: natsConfig?.auth_token || undefined,
+		name: 'fluxer-server-worker',
 	});
 
 	return {
-		name: 'Queue',
-		initialize: () => {
-			baseLogger.info('Queue service initialized');
-		},
-		start: async () => {
-			baseLogger.info('Starting Queue engine and cron scheduler');
-			await queueApp.start();
+		name: 'JetStream',
+		initialize: async () => {
+			await connectionManager.connect();
+			baseLogger.info('JetStream connection established');
+
+			const workerQueue = new JetStreamWorkerQueue(connectionManager);
+			await workerQueue.ensureInfrastructure();
+			baseLogger.info('JetStream stream and consumer verified');
+
+			const workerService = new WorkerService(workerQueue);
+			setInjectedWorkerService(workerService);
+			baseLogger.info('JetStream worker service injected');
 		},
 		shutdown: async () => {
-			baseLogger.info('Shutting down Queue service');
-			await queueApp.shutdown();
+			baseLogger.info('Draining JetStream connection');
+			await connectionManager.drain();
 		},
-		service: queueApp,
+		service: connectionManager,
 	};
 }
 
@@ -378,23 +370,10 @@ export async function initializeAllServices(context: ServiceInitializationContex
 			setInjectedS3Service(services.s3.getS3Service());
 		}
 
-		rootLogger.info('Initializing Queue service');
-		const queueInit = createQueueInitializer(context);
-		initializers.push(queueInit);
-		services.queue = queueInit.service as QueueAppResult;
-
-		if (services.queue) {
-			rootLogger.info('Wiring DirectWorkerService for in-process communication');
-			const directQueueProvider = new DirectQueueProvider({
-				engine: services.queue.engine,
-				cronScheduler: services.queue.cronScheduler,
-			});
-			const directWorkerService = new DirectWorkerService({
-				queueProvider: directQueueProvider,
-				logger: context.logger.child({component: 'direct-worker-service'}),
-			});
-			setInjectedWorkerService(directWorkerService);
-		}
+		rootLogger.info('Initializing JetStream worker queue');
+		const jetStreamInit = createJetStreamInitializer(context);
+		initializers.push(jetStreamInit);
+		services.jsConnectionManager = jetStreamInit.service as JetStreamConnectionManager;
 
 		rootLogger.info('Initializing Media Proxy service');
 		const mediaProxyInit = await createMediaProxyInitializer(context, {publicOnly: context.config.isMonolith});
@@ -441,7 +420,6 @@ export async function initializeAllServices(context: ServiceInitializationContex
 			registerTestHarnessReset(
 				createTestHarnessResetHandler({
 					kvProvider: services.kv,
-					queueEngine: services.queue?.engine,
 					s3Service: services.s3?.getS3Service(),
 				}),
 			);

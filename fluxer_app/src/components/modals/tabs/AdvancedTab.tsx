@@ -18,11 +18,13 @@
  */
 
 import * as UserSettingsActionCreators from '@app/actions/UserSettingsActionCreators';
+import * as VoiceSettingsActionCreators from '@app/actions/VoiceSettingsActionCreators';
 import {Switch} from '@app/components/form/Switch';
 import {SettingsTabContainer, SettingsTabSection} from '@app/components/modals/shared/SettingsTabLayout';
 import {WarningAlert} from '@app/components/uikit/warning_alert/WarningAlert';
 import NativeWindowStateStore from '@app/stores/NativeWindowStateStore';
 import UserSettingsStore from '@app/stores/UserSettingsStore';
+import VoiceSettingsStore from '@app/stores/VoiceSettingsStore';
 import {getAutostartStatus, setAutostartEnabled} from '@app/utils/AutostartUtils';
 import {getNativePlatform, isDesktop, type NativePlatform} from '@app/utils/NativeUtils';
 import {Trans} from '@lingui/react/macro';
@@ -32,6 +34,7 @@ import {useLayoutEffect, useState} from 'react';
 
 const AdvancedTab: React.FC = observer(() => {
 	const {developerMode} = UserSettingsStore;
+	const screenShareHardwareAcceleration = VoiceSettingsStore.getScreenShareHardwareAcceleration();
 	const [autostartEnabled, setAutostartEnabledState] = useState(false);
 	const [autostartBusy, setAutostartBusy] = useState(false);
 	const [platform, setPlatform] = useState<NativePlatform>('unknown');
@@ -126,6 +129,22 @@ const AdvancedTab: React.FC = observer(() => {
 					/>
 				</SettingsTabSection>
 			)}
+			<SettingsTabSection
+				title={<Trans>Screen Sharing</Trans>}
+				description={<Trans>Choose how Fluxer selects the video codec for screen sharing.</Trans>}
+			>
+				<Switch
+					label={<Trans>Hardware Acceleration</Trans>}
+					description={
+						<Trans>
+							Uses H.265 for screen sharing when enabled. Turn this off to prefer VP9. Changes apply the next time you
+							start sharing your screen.
+						</Trans>
+					}
+					value={screenShareHardwareAcceleration}
+					onChange={(value) => VoiceSettingsActionCreators.update({screenShareHardwareAcceleration: value})}
+				/>
+			</SettingsTabSection>
 			<SettingsTabSection
 				title={<Trans>Developer Options</Trans>}
 				description={

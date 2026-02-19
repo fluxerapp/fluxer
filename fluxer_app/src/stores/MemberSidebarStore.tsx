@@ -23,6 +23,7 @@ import {CustomStatusEmitter} from '@app/lib/CustomStatusEmitter';
 import {Logger} from '@app/lib/Logger';
 import type {GuildMemberRecord} from '@app/records/GuildMemberRecord';
 import GuildMemberStore from '@app/stores/GuildMemberStore';
+import GuildStore from '@app/stores/GuildStore';
 import GatewayConnectionStore from '@app/stores/gateway/GatewayConnectionStore';
 import WindowStore from '@app/stores/WindowStore';
 import {
@@ -31,6 +32,7 @@ import {
 	getTotalMemberCount,
 	getTotalRowsFromLayout,
 } from '@app/utils/MemberListLayout';
+import {GuildOperations} from '@fluxer/constants/src/GuildConstants';
 import type {StatusType} from '@fluxer/constants/src/StatusConstants';
 import {StatusTypes} from '@fluxer/constants/src/StatusConstants';
 import {makeAutoObservable} from 'mobx';
@@ -165,6 +167,10 @@ class MemberSidebarStore {
 		ops: Array<MemberListOperation>;
 	}): void {
 		const {guildId, listId, channelId, memberCount, onlineCount, groups, ops} = params;
+		if (this.isMemberListUpdatesDisabled(guildId)) {
+			return;
+		}
+
 		const storageKey = listId;
 		const existingGuildLists = this.lists[guildId] ?? {};
 		const guildLists: Record<string, MemberListState> = {...existingGuildLists};
@@ -445,6 +451,10 @@ class MemberSidebarStore {
 	}
 
 	subscribeToChannel(guildId: string, channelId: string, ranges: Array<[number, number]>): void {
+		if (this.isMemberListUpdatesDisabled(guildId)) {
+			return;
+		}
+
 		const storageKey = this.resolveListKey(guildId, channelId);
 		const socket = GatewayConnectionStore.socket;
 
@@ -562,6 +572,14 @@ class MemberSidebarStore {
 			return undefined;
 		}
 		return listState.customStatuses.get(userId) ?? null;
+	}
+
+	private isMemberListUpdatesDisabled(guildId: string): boolean {
+		const guild = GuildStore.getGuild(guildId);
+		if (!guild) {
+			return false;
+		}
+		return (guild.disabledOperations & GuildOperations.MEMBER_LIST_UPDATES) !== 0;
 	}
 
 	private touchList(guildId: string, listId: string): void {

@@ -80,7 +80,7 @@ function isValidBase64(value: string): boolean {
 	}
 }
 
-function normalizeFilename(value: string): string {
+export function normalizeFilename(value: string): string {
 	let normalized = normalizeString(value);
 
 	// biome-ignore lint/suspicious/noControlCharactersInRegex: null byte filtering is intentional for security

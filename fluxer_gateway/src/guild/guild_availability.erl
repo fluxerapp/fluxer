@@ -227,16 +227,7 @@ maybe_disconnect_voice_for_user(UserId, ProcessedUsers, State) ->
 
 -spec ensure_unavailability_cache_table() -> ok.
 ensure_unavailability_cache_table() ->
-    case ets:whereis(?GUILD_UNAVAILABILITY_CACHE) of
-        undefined ->
-            try ets:new(?GUILD_UNAVAILABILITY_CACHE, [named_table, public, set, {read_concurrency, true}]) of
-                _ -> ok
-            catch
-                error:badarg -> ok
-            end;
-        _ ->
-            ok
-    end.
+    guild_ets_utils:ensure_table(?GUILD_UNAVAILABILITY_CACHE, [named_table, public, set, {read_concurrency, true}]).
 
 -spec set_cached_unavailability_mode(guild_id(), unavailability_mode()) -> ok.
 set_cached_unavailability_mode(GuildId, available) ->
@@ -449,10 +440,7 @@ state_for_unavailability_transition_test(GuildId, NonStaffPid, StaffPid) ->
                 active_guilds => sets:new(),
                 user_roles => [],
                 bot => false,
-                is_staff => false,
-                previous_passive_updates => #{},
-                previous_passive_channel_versions => #{},
-                previous_passive_voice_states => #{}
+                is_staff => false
             },
             <<"staff">> => #{
                 session_id => <<"staff">>,
@@ -462,10 +450,7 @@ state_for_unavailability_transition_test(GuildId, NonStaffPid, StaffPid) ->
                 active_guilds => sets:new(),
                 user_roles => [],
                 bot => false,
-                is_staff => true,
-                previous_passive_updates => #{},
-                previous_passive_channel_versions => #{},
-                previous_passive_voice_states => #{}
+                is_staff => true
             }
         },
         presence_subscriptions => #{},

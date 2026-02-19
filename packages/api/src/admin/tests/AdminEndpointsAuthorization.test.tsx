@@ -53,6 +53,8 @@ const adminEndpoints = [
 	{method: 'POST', path: '/admin/users/list-guilds', requiredACL: 'user:lookup'},
 	{method: 'POST', path: '/admin/users/list-dm-channels', requiredACL: 'user:list:dm_channels'},
 	{method: 'POST', path: '/admin/users/disable-mfa', requiredACL: 'user:update'},
+	{method: 'POST', path: '/admin/users/list-webauthn-credentials', requiredACL: 'user:update:mfa'},
+	{method: 'POST', path: '/admin/users/delete-webauthn-credential', requiredACL: 'user:update:mfa'},
 	{method: 'POST', path: '/admin/users/clear-fields', requiredACL: 'user:update'},
 	{method: 'POST', path: '/admin/users/set-bot-status', requiredACL: 'user:update'},
 	{method: 'POST', path: '/admin/users/set-acls', requiredACL: 'acl:set:user'},

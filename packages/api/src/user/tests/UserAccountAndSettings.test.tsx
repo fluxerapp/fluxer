@@ -83,13 +83,24 @@ describe('User Account And Settings', () => {
 		expect(Object.keys(preloadData).length).toBe(0);
 	});
 
-	test('reject getting nonexistent user', async () => {
+	test('nonexistent user returns deleted user fallback', async () => {
 		const account = await createTestAccount(harness);
 
-		await createBuilder(harness, account.token)
+		const user = await createBuilder<{
+			id: string;
+			username: string;
+			discriminator: string;
+			global_name: string | null;
+			avatar: string | null;
+		}>(harness, account.token)
 			.get(`/users/${TEST_IDS.NONEXISTENT_USER}`)
-			.expect(HTTP_STATUS.NOT_FOUND)
+			.expect(HTTP_STATUS.OK)
 			.execute();
+
+		expect(user.id).toBe(TEST_IDS.NONEXISTENT_USER);
+		expect(user.username).toBe('DeletedUser');
+		expect(user.discriminator).toBe('0000');
+		expect(user.avatar).toBeNull();
 	});
 
 	test('reject getting nonexistent user profile', async () => {

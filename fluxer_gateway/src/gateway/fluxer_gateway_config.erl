@@ -43,17 +43,15 @@ load_from(Path) when is_list(Path) ->
 -spec build_config(map()) -> config().
 build_config(Json) ->
     Service = get_map(Json, [<<"services">>, <<"gateway">>]),
-    Gateway = get_map(Json, [<<"gateway">>]),
+    Nats = get_map(Json, [<<"services">>, <<"nats">>]),
     Telemetry = get_map(Json, [<<"telemetry">>]),
     Sentry = get_map(Json, [<<"sentry">>]),
     Vapid = get_map(Json, [<<"auth">>, <<"vapid">>]),
     #{
         port => get_int(Service, <<"port">>, 8080),
-        rpc_tcp_port => get_int(Service, <<"rpc_tcp_port">>, 8772),
-        api_host => get_env_or_string("FLUXER_GATEWAY_API_HOST", Service, <<"api_host">>, "api"),
-        api_canary_host => get_optional_string(Service, <<"api_canary_host">>),
         admin_reload_secret => get_optional_binary(Service, <<"admin_reload_secret">>),
-        rpc_secret_key => get_binary(Gateway, <<"rpc_secret">>, undefined),
+        nats_core_url => get_string(Nats, <<"core_url">>, "nats://127.0.0.1:4222"),
+        nats_auth_token => get_string(Nats, <<"auth_token">>, ""),
         identify_rate_limit_enabled => get_bool(Service, <<"identify_rate_limit_enabled">>, false),
         push_enabled => get_bool(Service, <<"push_enabled">>, true),
         push_user_guild_settings_cache_mb => get_int(
@@ -73,18 +71,12 @@ build_config(Json) ->
             get_int(Service, <<"push_badge_counts_cache_ttl_seconds">>, 60),
         push_dispatcher_max_inflight => get_int(Service, <<"push_dispatcher_max_inflight">>, 16),
         push_dispatcher_max_queue => get_int(Service, <<"push_dispatcher_max_queue">>, 2048),
-        gateway_http_rpc_connect_timeout_ms =>
-            get_int(Service, <<"gateway_http_rpc_connect_timeout_ms">>, 5000),
-        gateway_http_rpc_recv_timeout_ms =>
-            get_int(Service, <<"gateway_http_rpc_recv_timeout_ms">>, 30000),
         gateway_http_push_connect_timeout_ms =>
             get_int(Service, <<"gateway_http_push_connect_timeout_ms">>, 3000),
         gateway_http_push_recv_timeout_ms =>
             get_int(Service, <<"gateway_http_push_recv_timeout_ms">>, 5000),
         gateway_http_rpc_max_concurrency =>
             get_int(Service, <<"gateway_http_rpc_max_concurrency">>, 512),
-        gateway_rpc_tcp_max_input_buffer_bytes =>
-            get_int(Service, <<"gateway_rpc_tcp_max_input_buffer_bytes">>, 2097152),
         gateway_http_push_max_concurrency =>
             get_int(Service, <<"gateway_http_push_max_concurrency">>, 256),
         gateway_http_failure_threshold =>
@@ -147,27 +139,6 @@ get_optional_bool(Map, Key) ->
 -spec get_string(map(), binary(), string()) -> string().
 get_string(Map, Key, Default) when is_list(Default) ->
     to_string(get_value(Map, Key), Default).
-
--spec get_env_or_string(string(), map(), binary(), string()) -> string().
-get_env_or_string(EnvVar, Map, Key, Default) when is_list(EnvVar), is_list(Default) ->
-    case os:getenv(EnvVar) of
-        false -> get_string(Map, Key, Default);
-        "" -> get_string(Map, Key, Default);
-        Value -> Value
-    end.
-
--spec get_optional_string(map(), binary()) -> string() | undefined.
-get_optional_string(Map, Key) ->
-    case get_value(Map, Key) of
-        undefined ->
-            undefined;
-        Value ->
-            Clean = string:trim(to_string(Value, "")),
-            case Clean of
-                "" -> undefined;
-                _ -> Clean
-            end
-    end.
 
 -spec get_binary(map(), binary(), binary() | undefined) -> binary() | undefined.
 get_binary(Map, Key, Default) ->

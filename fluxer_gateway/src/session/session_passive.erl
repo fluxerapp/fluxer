@@ -19,6 +19,7 @@
 
 -export([
     is_passive/2,
+    is_small_guild/1,
     set_active/2,
     set_passive/2,
     should_receive_event/5,

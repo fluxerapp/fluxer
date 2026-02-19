@@ -24,7 +24,6 @@
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 -export_type([session_data/0, user_id/0]).
 
--define(IDENTIFY_FLAG_USE_CANARY_API, 16#1).
 -define(IDENTIFY_FLAG_DEBOUNCE_MESSAGE_REACTIONS, 16#2).
 
 -type session_id() :: binary().
@@ -60,8 +59,6 @@
 
 -type state() :: #{
     sessions := #{session_id() => session_ref()},
-    api_host := string(),
-    api_canary_host := undefined | string(),
     identify_attempts := [identify_timestamp()],
     pending_identifies := #{session_id() => pending_identify()},
     identify_workers := #{reference() => session_id()},
@@ -80,7 +77,7 @@
     | {error, rate_limited}
     | {error, identify_rate_limited}
     | {error, {server_error, non_neg_integer()}}
-    | {error, {http_error, non_neg_integer()}}
+    | {error, {rpc_error, non_neg_integer(), binary()}}
     | {error, {network_error, term()}}
     | {error, registration_failed}
     | {error, term()}.
@@ -95,13 +92,9 @@ start_link(ShardIndex) ->
 init(Args) ->
     fluxer_gateway_env:load(),
     process_flag(trap_exit, true),
-    ApiHost = fluxer_gateway_env:get(api_host),
-    ApiCanaryHost = fluxer_gateway_env:get(api_canary_host),
     ShardIndex = maps:get(shard_index, Args, 0),
     {ok, #{
         sessions => #{},
-        api_host => ApiHost,
-        api_canary_host => ApiCanaryHost,
         identify_attempts => [],
         pending_identifies => #{},
         identify_workers => #{},
@@ -153,7 +146,7 @@ handle_call({start, Request, SocketPid}, From, State) ->
                     {reply, {success, Pid}, maps:put(sessions, NewSessions, State)}
             end
     end;
-handle_call({lookup, SessionId}, _From, State) ->
+handle_call({lookup, SessionId}, _From, State) when is_binary(SessionId) ->
     Sessions = maps:get(sessions, State),
     case maps:get(SessionId, Sessions, undefined) of
         {Pid, _Ref} ->
@@ -169,6 +162,8 @@ handle_call({lookup, SessionId}, _From, State) ->
                     {reply, {ok, Pid}, maps:put(sessions, NewSessions, State)}
             end
     end;
+handle_call({lookup, _InvalidSessionId}, _From, State) ->
+    {reply, {error, not_found}, State};
 handle_call(get_local_count, _From, State) ->
     Sessions = maps:get(sessions, State),
     {reply, {ok, maps:size(Sessions)}, State};
@@ -299,14 +294,11 @@ handle_cast(_, State) ->
 -spec start_identify_fetch(identify_request(), pid(), session_id(), gen_server:from(), state()) ->
     {noreply, state()}.
 start_identify_fetch(Request, SocketPid, SessionId, From, State) ->
-    IdentifyData = maps:get(identify_data, Request),
-    UseCanary = should_use_canary_api(IdentifyData),
-    {_UsedCanary, RpcClient} = select_rpc_client(State, UseCanary),
     ManagerPid = self(),
     {_WorkerPid, WorkerRef} =
         spawn_monitor(fun() ->
             PeerIP = maps:get(peer_ip, Request),
-            FetchResult = fetch_rpc_data(Request, PeerIP, RpcClient),
+            FetchResult = fetch_rpc_data(Request, PeerIP),
             ManagerPid ! {identify_fetch_result, SessionId, FetchResult}
         end),
     PendingIdentifies = maps:get(pending_identifies, State),
@@ -321,26 +313,6 @@ start_identify_fetch(Request, SocketPid, SessionId, From, State) ->
         pending_identifies := NewPending,
         identify_workers := NewWorkers
     }}.
-
--spec select_rpc_client(state(), boolean()) -> {boolean(), string()}.
-select_rpc_client(State, true) ->
-    case maps:get(api_canary_host, State) of
-        undefined ->
-            {false, maps:get(api_host, State)};
-        CanaryHost ->
-            {true, CanaryHost}
-    end;
-select_rpc_client(State, false) ->
-    {false, maps:get(api_host, State)}.
-
--spec should_use_canary_api(map()) -> boolean().
-should_use_canary_api(IdentifyData) ->
-    case map_utils:get_safe(IdentifyData, flags, 0) of
-        Flags when is_integer(Flags), Flags >= 0 ->
-            (Flags band ?IDENTIFY_FLAG_USE_CANARY_API) =/= 0;
-        _ ->
-            false
-    end.
 
 -spec should_debounce_reactions(map()) -> boolean().
 should_debounce_reactions(IdentifyData) ->
@@ -460,13 +432,9 @@ code_change(_OldVsn, State, _Extra) when is_map(State) ->
     }};
 code_change(_OldVsn, State, _Extra) when is_tuple(State), element(1, State) =:= state ->
     Sessions = element(2, State),
-    ApiHost = element(3, State),
-    ApiCanaryHost = element(4, State),
     IdentifyAttempts = element(5, State),
     {ok, #{
         sessions => Sessions,
-        api_host => ApiHost,
-        api_canary_host => ApiCanaryHost,
         identify_attempts => IdentifyAttempts,
         pending_identifies => #{},
         identify_workers => #{},
@@ -475,31 +443,27 @@ code_change(_OldVsn, State, _Extra) when is_tuple(State), element(1, State) =:= 
 code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
 
--spec fetch_rpc_data(map(), term(), string()) ->
+-spec fetch_rpc_data(map(), term()) ->
     {ok, map()}
     | {error, invalid_token}
     | {error, rate_limited}
     | {error, {server_error, non_neg_integer()}}
-    | {error, {http_error, non_neg_integer()}}
     | {error, {network_error, term()}}.
-fetch_rpc_data(Request, PeerIP, ApiHost) ->
+fetch_rpc_data(Request, PeerIP) ->
     StartTime = erlang:system_time(millisecond),
-    Result = do_fetch_rpc_data(Request, PeerIP, ApiHost),
+    Result = do_fetch_rpc_data(Request, PeerIP),
     EndTime = erlang:system_time(millisecond),
     LatencyMs = EndTime - StartTime,
     gateway_metrics_collector:record_rpc_latency(LatencyMs),
     Result.
 
--spec do_fetch_rpc_data(map(), term(), string()) ->
+-spec do_fetch_rpc_data(map(), term()) ->
     {ok, map()}
     | {error, invalid_token}
     | {error, rate_limited}
     | {error, {server_error, non_neg_integer()}}
-    | {error, {http_error, non_neg_integer()}}
     | {error, {network_error, term()}}.
-do_fetch_rpc_data(Request, PeerIP, ApiHost) ->
-    Url = rpc_client:get_rpc_url(ApiHost),
-    Headers = rpc_client:get_rpc_headers() ++ [{<<"content-type">>, <<"application/json">>}],
+do_fetch_rpc_data(Request, PeerIP) ->
     IdentifyData = maps:get(identify_data, Request),
     Properties = map_utils:get_safe(IdentifyData, properties, #{}),
     LatitudeRaw = map_utils:get_safe(Properties, <<"latitude">>, undefined),
@@ -513,8 +477,18 @@ do_fetch_rpc_data(Request, PeerIP, ApiHost) ->
         <<"ip">> => PeerIP
     },
     RpcRequestWithCoords = add_coordinates(RpcRequest, Latitude, Longitude),
-    Body = json:encode(RpcRequestWithCoords),
-    execute_rpc_request(Url, Headers, Body).
+    case rpc_client:call(RpcRequestWithCoords) of
+        {ok, Data} ->
+            {ok, Data};
+        {error, {rpc_error, 401, _}} ->
+            {error, invalid_token};
+        {error, {rpc_error, 429, _}} ->
+            {error, rate_limited};
+        {error, {rpc_error, StatusCode, _}} when StatusCode >= 500 ->
+            {error, {server_error, StatusCode}};
+        {error, Reason} ->
+            {error, {network_error, Reason}}
+    end.
 
 -spec normalize_coordinate(term()) -> term() | undefined.
 normalize_coordinate(undefined) -> undefined;
@@ -531,31 +505,6 @@ add_coordinates(Request, undefined, Lon) ->
 add_coordinates(Request, Lat, Lon) ->
     maps:merge(Request, #{<<"latitude">> => Lat, <<"longitude">> => Lon}).
 
--spec execute_rpc_request(iodata(), list(), binary()) ->
-    {ok, map()}
-    | {error, invalid_token}
-    | {error, rate_limited}
-    | {error, {server_error, non_neg_integer()}}
-    | {error, {http_error, non_neg_integer()}}
-    | {error, {network_error, term()}}.
-execute_rpc_request(Url, Headers, Body) ->
-    case gateway_http_client:request(rpc, post, Url, Headers, Body) of
-        {ok, 200, _RespHeaders, ResponseBody} ->
-            ResponseData = json:decode(ResponseBody),
-            {ok, maps:get(<<"data">>, ResponseData)};
-        {ok, 401, _RespHeaders, _ResponseBody} ->
-            {error, invalid_token};
-        {ok, 429, _RespHeaders, _ResponseBody} ->
-            {error, rate_limited};
-        {ok, StatusCode, _RespHeaders, _ResponseBody} when StatusCode >= 500 ->
-            {error, {server_error, StatusCode}};
-        {ok, StatusCode, _RespHeaders, _ResponseBody} when StatusCode >= 400 ->
-            {error, {http_error, StatusCode}};
-        {ok, StatusCode, _RespHeaders, _ResponseBody} ->
-            {error, {http_error, StatusCode}};
-        {error, Reason} ->
-            {error, {network_error, Reason}}
-    end.
 
 -spec parse_presence(map(), map()) -> status().
 parse_presence(Data, IdentifyData) ->
@@ -687,15 +636,6 @@ add_coordinates_test() ->
         #{<<"type">> => <<"session">>, <<"latitude">> => 1.0, <<"longitude">> => 2.0},
         add_coordinates(Base, 1.0, 2.0)
     ),
-    ok.
-
-should_use_canary_api_test() ->
-    ?assertEqual(false, should_use_canary_api(#{})),
-    ?assertEqual(false, should_use_canary_api(#{flags => 0})),
-    ?assertEqual(true, should_use_canary_api(#{flags => 1})),
-    ?assertEqual(true, should_use_canary_api(#{flags => 17})),
-    ?assertEqual(false, should_use_canary_api(#{flags => 2})),
-    ?assertEqual(false, should_use_canary_api(#{flags => -1})),
     ok.
 
 should_debounce_reactions_test() ->

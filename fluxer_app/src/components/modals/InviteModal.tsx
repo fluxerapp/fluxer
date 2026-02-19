@@ -192,9 +192,6 @@ export const InviteModal = observer(({channelId}: {channelId: string}) => {
 	};
 
 	const getExpirationText = () => {
-		if (maxAge === '0') {
-			return <Trans>never expires</Trans>;
-		}
 		const option = maxAgeOptions.find((opt) => opt.value === maxAge);
 		if (option) {
 			switch (option.value) {
@@ -310,9 +307,16 @@ export const InviteModal = observer(({channelId}: {channelId: string}) => {
 						onInputClick={(e) => e.currentTarget.select()}
 						inputProps={{placeholder: t`Invite link`}}
 					>
-						{isUsingVanityUrl ? (
+						{isUsingVanityUrl || maxAge === '0' ? (
 							<p className={styles.expirationText}>
-								<Trans>This invite link never expires.</Trans>
+								<Trans>This invite link never expires.</Trans>{' '}
+								{!isUsingVanityUrl && (
+									<FocusRing offset={-2}>
+										<button type="button" onClick={() => setShowAdvanced(true)} className={styles.editLink}>
+											<Trans>Edit invite link</Trans>
+										</button>
+									</FocusRing>
+								)}
 							</p>
 						) : (
 							<p className={styles.expirationText}>

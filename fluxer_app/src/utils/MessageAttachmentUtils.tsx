@@ -39,7 +39,8 @@ export async function prepareAttachmentsForNonce(
 		throw new Error('No message upload found');
 	}
 
-	const files = messageUpload.attachments.map((att) => att.file);
+	const inlineAttachments = messageUpload.attachments;
+	const files = inlineAttachments.map((att) => att.file);
 	const attachments = favoriteMemeId ? undefined : mapMessageUploadAttachments(messageUpload.attachments);
 
 	return {attachments, files};

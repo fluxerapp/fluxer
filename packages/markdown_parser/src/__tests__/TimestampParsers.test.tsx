@@ -219,6 +219,37 @@ describe('Fluxer Markdown Parser', () => {
 		]);
 	});
 
+	test('timestamp at max js date boundary parses', () => {
+		const input = '<t:8640000000000>';
+		const parser = new Parser(input, 0);
+		const {nodes: ast} = parser.parse();
+
+		expect(ast).toEqual([
+			{
+				type: NodeType.Timestamp,
+				timestamp: 8640000000000,
+				style: TimestampStyle.ShortDateTime,
+			},
+		]);
+	});
+
+	test('timestamp above max js date boundary does not parse', () => {
+		const input = '<t:8640000000001>';
+		const parser = new Parser(input, 0);
+		const {nodes: ast} = parser.parse();
+
+		expect(ast).toEqual([{type: NodeType.Text, content: input}]);
+	});
+
+	test('timestamp that overflows to infinity does not parse', () => {
+		const largeDigits = '9'.repeat(400);
+		const input = `<t:${largeDigits}>`;
+		const parser = new Parser(input, 0);
+		const {nodes: ast} = parser.parse();
+
+		expect(ast).toEqual([{type: NodeType.Text, content: input}]);
+	});
+
 	test('timestamp with leading zeros', () => {
 		const input = '<t:0001618953630>';
 		const flags = 0;

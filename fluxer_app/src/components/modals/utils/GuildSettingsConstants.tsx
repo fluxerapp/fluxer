@@ -72,7 +72,7 @@ export interface GuildSettingsTab {
 	icon: Icon;
 	iconWeight?: IconWeight;
 	component: React.ComponentType<{guildId: string}>;
-	permission?: bigint;
+	permission?: bigint | ReadonlyArray<bigint>;
 	requireFeature?: string;
 }
 
@@ -83,7 +83,7 @@ interface GuildSettingsTabDescriptor {
 	icon: Icon;
 	iconWeight?: IconWeight;
 	component: React.ComponentType<{guildId: string}>;
-	permission?: bigint;
+	permission?: bigint | ReadonlyArray<bigint>;
 	requireFeature?: string;
 }
 
@@ -110,7 +110,7 @@ const GUILD_SETTINGS_TABS_DESCRIPTORS: Array<GuildSettingsTabDescriptor> = [
 		label: msg`Custom Emoji`,
 		icon: SmileyIcon,
 		component: GuildEmojiTab,
-		permission: Permissions.MANAGE_EXPRESSIONS,
+		permission: [Permissions.CREATE_EXPRESSIONS, Permissions.MANAGE_EXPRESSIONS],
 	},
 	{
 		type: 'stickers',
@@ -118,7 +118,7 @@ const GUILD_SETTINGS_TABS_DESCRIPTORS: Array<GuildSettingsTabDescriptor> = [
 		label: msg`Custom Stickers`,
 		icon: StickerIcon,
 		component: GuildStickersTab,
-		permission: Permissions.MANAGE_EXPRESSIONS,
+		permission: [Permissions.CREATE_EXPRESSIONS, Permissions.MANAGE_EXPRESSIONS],
 	},
 	{
 		type: 'moderation',

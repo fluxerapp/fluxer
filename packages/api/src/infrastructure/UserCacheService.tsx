@@ -25,8 +25,11 @@ import type {IUserRepository} from '@fluxer/api/src/user/IUserRepository';
 import {mapUserToPartialResponse} from '@fluxer/api/src/user/UserMappers';
 import type {ICacheService} from '@fluxer/cache/src/ICacheService';
 import {Coalescer} from '@fluxer/cache/src/utils/Coalescer';
-import {UserFlags} from '@fluxer/constants/src/UserConstants';
-import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
+import {
+	DELETED_USER_DISCRIMINATOR,
+	DELETED_USER_GLOBAL_NAME,
+	DELETED_USER_USERNAME,
+} from '@fluxer/constants/src/UserConstants';
 import type {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {seconds} from 'itty-time';
 
@@ -66,10 +69,16 @@ export class UserCacheService {
 		const userPartialResponse = await this.coalescer.coalesce(cacheKey, async () => {
 			const user = await this.userRepository.findUnique(userId);
 			if (!user) {
-				throw new UnknownUserError();
-			}
-			if ((user.flags & UserFlags.DELETED) !== 0n && !user.isSystem) {
-				throw new UnknownUserError();
+				Logger.warn({userId}, 'User not found during partial resolution, returning deleted user fallback');
+				return {
+					id: userId.toString(),
+					username: DELETED_USER_USERNAME,
+					discriminator: DELETED_USER_DISCRIMINATOR.toString().padStart(4, '0'),
+					global_name: DELETED_USER_GLOBAL_NAME,
+					avatar: null,
+					avatar_color: null,
+					flags: 0,
+				};
 			}
 			return mapUserToPartialResponse(user);
 		});

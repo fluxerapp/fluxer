@@ -184,7 +184,7 @@ export const DiscoveryPage: FC<DiscoveryPageProps> = ({
 													<TableRow key={app.guild_id}>
 														<TableCell>
 															<a
-																href={`${config.basePath}/guilds?query=${app.guild_id}`}
+																href={`${config.basePath}/guilds/${app.guild_id}`}
 																class="font-mono text-blue-600 text-sm hover:underline"
 															>
 																{app.guild_id}

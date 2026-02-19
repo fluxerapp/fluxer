@@ -476,11 +476,12 @@ export function WebhookController(app: HonoApp) {
 		return response;
 	});
 
-	app.post('/webhooks/sendgrid', async (ctx) => {
-		const response = await ctx.get('webhookRequestService').handleSendGridWebhook({
+	app.post('/webhooks/sweego', async (ctx) => {
+		const response = await ctx.get('webhookRequestService').handleSweegoWebhook({
 			body: await ctx.req.text(),
-			signature: ctx.req.header('X-Twilio-Email-Event-Webhook-Signature') ?? undefined,
-			timestamp: ctx.req.header('X-Twilio-Email-Event-Webhook-Timestamp') ?? undefined,
+			webhookId: ctx.req.header('webhook-id') ?? undefined,
+			timestamp: ctx.req.header('webhook-timestamp') ?? undefined,
+			signature: ctx.req.header('webhook-signature') ?? undefined,
 		});
 		return response;
 	});

@@ -183,8 +183,23 @@ describe('Favorite Meme Extended Tests', () => {
 	});
 
 	describe('Personal Notes (DM to self with meme)', () => {
-		test('should send favorite meme as attachment in personal notes', async () => {
+		async function createAccountWithPersonalNotes(harness: ApiTestHarness) {
 			const account = await createTestAccountForAttachmentTests(harness);
+			await createBuilderWithoutAuth(harness)
+				.post('/test/rpc-session-init')
+				.body({
+					type: 'session',
+					token: account.token,
+					version: 1,
+					ip: '127.0.0.1',
+				})
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			return account;
+		}
+
+		test('should send favorite meme as attachment in personal notes', async () => {
+			const account = await createAccountWithPersonalNotes(harness);
 
 			const meme = await createFavoriteMemeFromUrl(harness, account.token, {
 				url: TEST_IMAGE_URL,
@@ -207,7 +222,7 @@ describe('Favorite Meme Extended Tests', () => {
 		});
 
 		test('should fetch personal note message with meme attachment', async () => {
-			const account = await createTestAccountForAttachmentTests(harness);
+			const account = await createAccountWithPersonalNotes(harness);
 
 			const meme = await createFavoriteMemeFromUrl(harness, account.token, {
 				url: TEST_IMAGE_URL,

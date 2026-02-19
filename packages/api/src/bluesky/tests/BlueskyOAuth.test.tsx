@@ -20,6 +20,7 @@
 import {createTestAccount} from '@fluxer/api/src/auth/tests/AuthTestUtils';
 import {createUserID} from '@fluxer/api/src/BrandedTypes';
 import {
+	createBlueskyConnectionViaOAuth,
 	createBlueskyDid,
 	createBlueskyHandle,
 	listConnections,
@@ -121,6 +122,69 @@ describe('Bluesky OAuth', () => {
 			expect(harness.mockBlueskyOAuthService.authorizeSpy).toHaveBeenCalledTimes(1);
 			const callArgs = harness.mockBlueskyOAuthService.authorizeSpy.mock.calls[0];
 			expect(callArgs[0]).toBe(handle);
+		});
+
+		it('normalises a bsky.app profile URL to a handle', async () => {
+			const account = await createTestAccount(harness);
+
+			await createBuilder(harness, account.token)
+				.post('/users/@me/connections/bluesky/authorize')
+				.body({handle: 'https://bsky.app/profile/alice.bsky.social'})
+				.expect(200)
+				.execute();
+
+			expect(harness.mockBlueskyOAuthService.authorizeSpy).toHaveBeenCalledTimes(1);
+			expect(harness.mockBlueskyOAuthService.authorizeSpy.mock.calls[0][0]).toBe('alice.bsky.social');
+		});
+
+		it('normalises an http bsky.app profile URL to a handle', async () => {
+			const account = await createTestAccount(harness);
+
+			await createBuilder(harness, account.token)
+				.post('/users/@me/connections/bluesky/authorize')
+				.body({handle: 'http://bsky.app/profile/someone.bsky.social'})
+				.expect(200)
+				.execute();
+
+			expect(harness.mockBlueskyOAuthService.authorizeSpy.mock.calls[0][0]).toBe('someone.bsky.social');
+		});
+
+		it('strips leading @ from handle', async () => {
+			const account = await createTestAccount(harness);
+
+			await createBuilder(harness, account.token)
+				.post('/users/@me/connections/bluesky/authorize')
+				.body({handle: '@alice.bsky.social'})
+				.expect(200)
+				.execute();
+
+			expect(harness.mockBlueskyOAuthService.authorizeSpy.mock.calls[0][0]).toBe('alice.bsky.social');
+		});
+
+		it('detects duplicate after normalising profile URL', async () => {
+			const account = await createTestAccount(harness);
+			const handle = createBlueskyHandle('testuser');
+			const did = createBlueskyDid('testuser');
+			const userId = createUserID(BigInt(account.userId));
+
+			await createBlueskyConnectionViaOAuth(harness, account.token, handle, did, userId);
+
+			await createBuilder(harness, account.token)
+				.post('/users/@me/connections/bluesky/authorize')
+				.body({handle: `https://bsky.app/profile/${handle}`})
+				.expect(HTTP_STATUS.CONFLICT, APIErrorCodes.CONNECTION_ALREADY_EXISTS)
+				.execute();
+		});
+
+		it('returns BLUESKY_OAUTH_AUTHORIZATION_FAILED when authorize throws', async () => {
+			const account = await createTestAccount(harness);
+			harness.mockBlueskyOAuthService.configure({shouldFailAuthorize: true});
+
+			await createBuilder(harness, account.token)
+				.post('/users/@me/connections/bluesky/authorize')
+				.body({handle: 'invalid-handle'})
+				.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.BLUESKY_OAUTH_AUTHORIZATION_FAILED)
+				.execute();
 		});
 	});
 

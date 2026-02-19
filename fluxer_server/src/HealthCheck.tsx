@@ -36,7 +36,7 @@ export interface HealthCheckResponse {
 	services: {
 		kv: ServiceHealth;
 		s3: ServiceHealth;
-		queue: ServiceHealth;
+		jetstream: ServiceHealth;
 		mediaProxy: ServiceHealth;
 		admin: ServiceHealth;
 		api: ServiceHealth;
@@ -123,38 +123,19 @@ async function checkS3Health(services: InitializedServices, latencyThresholdMs: 
 	}
 }
 
-async function checkQueueHealth(services: InitializedServices, latencyThresholdMs: number): Promise<ServiceHealth> {
-	if (services.queue === undefined) {
+function checkJetStreamHealth(services: InitializedServices): ServiceHealth {
+	if (services.jsConnectionManager === undefined) {
 		return {status: 'disabled'};
 	}
 
-	try {
-		const start = Date.now();
-		const engine = services.queue.engine;
-		const stats = engine.getStats();
-		const details: Record<string, unknown> = {...stats};
-		const latencyMs = Date.now() - start;
-
-		if (latencyMs > latencyThresholdMs) {
-			return {
-				status: 'degraded',
-				latencyMs,
-				message: 'High latency detected',
-				details,
-			};
-		}
-
-		return {
-			status: 'healthy',
-			latencyMs,
-			details,
-		};
-	} catch (error) {
+	if (services.jsConnectionManager.isClosed()) {
 		return {
 			status: 'unhealthy',
-			message: error instanceof Error ? error.message : 'Unknown error',
+			message: 'JetStream connection is closed',
 		};
 	}
+
+	return {status: 'healthy'};
 }
 
 async function checkMediaProxyHealth(services: InitializedServices): Promise<ServiceHealth> {
@@ -224,7 +205,7 @@ export function createHealthCheckHandler(config: HealthCheckConfig) {
 		const healthChecks: HealthCheckResponse['services'] = {
 			kv: await checkKVHealth(services, latencyThresholdMs),
 			s3: await checkS3Health(services, latencyThresholdMs),
-			queue: await checkQueueHealth(services, latencyThresholdMs),
+			jetstream: checkJetStreamHealth(services),
 			mediaProxy: await checkMediaProxyHealth(services),
 			admin: await checkAdminHealth(services),
 			api: await checkAPIHealth(services),
@@ -253,7 +234,7 @@ export interface ReadinessCheckResponse {
 		database?: {ready: boolean; message?: string};
 		kv?: {ready: boolean; message?: string};
 		s3?: {ready: boolean; message?: string};
-		queue?: {ready: boolean; message?: string};
+		jetstream?: {ready: boolean; message?: string};
 	};
 }
 
@@ -294,16 +275,12 @@ export function createReadinessCheckHandler(config: HealthCheckConfig) {
 			}
 		}
 
-		if (services.queue !== undefined) {
-			try {
-				services.queue.engine.getStats();
-				checks.queue = {ready: true};
-			} catch (error) {
-				checks.queue = {
-					ready: false,
-					message: error instanceof Error ? error.message : 'Unknown error',
-				};
+		if (services.jsConnectionManager !== undefined) {
+			if (services.jsConnectionManager.isClosed()) {
+				checks.jetstream = {ready: false, message: 'JetStream connection is closed'};
 				allReady = false;
+			} else {
+				checks.jetstream = {ready: true};
 			}
 		}
 

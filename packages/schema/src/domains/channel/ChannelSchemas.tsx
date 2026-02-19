@@ -17,6 +17,7 @@
  * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
  */
 
+import {MAX_GROUP_DM_RECIPIENTS} from '@fluxer/constants/src/LimitConstants';
 import {type UserPartial, UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {ChannelOverwriteTypeSchema, ChannelTypeSchema} from '@fluxer/schema/src/primitives/ChannelValidators';
 import {PermissionStringType} from '@fluxer/schema/src/primitives/PermissionValidators';
@@ -73,7 +74,7 @@ export const ChannelResponse = z.object({
 		.describe('The permission overwrites for this channel'),
 	recipients: z
 		.array(z.lazy(() => UserPartialResponse))
-		.max(10)
+		.max(MAX_GROUP_DM_RECIPIENTS)
 		.optional()
 		.describe('The recipients of the DM channel'),
 	nsfw: z.boolean().optional().describe('Whether the channel is marked as NSFW'),
@@ -103,7 +104,11 @@ export const ChannelPartialResponse = z.object({
 	id: SnowflakeStringType.describe('The unique identifier (snowflake) for this channel'),
 	name: z.string().nullish().describe('The name of the channel'),
 	type: ChannelTypeSchema.describe('The type of the channel'),
-	recipients: z.array(ChannelPartialRecipientResponse).max(10).optional().describe('The recipients of the DM channel'),
+	recipients: z
+		.array(ChannelPartialRecipientResponse)
+		.max(MAX_GROUP_DM_RECIPIENTS)
+		.optional()
+		.describe('The recipients of the DM channel'),
 });
 
 export type ChannelPartialResponse = z.infer<typeof ChannelPartialResponse>;

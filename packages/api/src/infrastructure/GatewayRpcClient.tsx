@@ -19,40 +19,27 @@
 
 import {Config} from '@fluxer/api/src/Config';
 import {GatewayRpcMethodError, GatewayRpcMethodErrorCodes} from '@fluxer/api/src/infrastructure/GatewayRpcError';
-import {GatewayTcpRpcTransport, GatewayTcpTransportError} from '@fluxer/api/src/infrastructure/GatewayTcpRpcTransport';
 import type {IGatewayRpcTransport} from '@fluxer/api/src/infrastructure/IGatewayRpcTransport';
 import type {CallData} from '@fluxer/api/src/infrastructure/IGatewayService';
+import {NatsGatewayRpcTransport} from '@fluxer/api/src/infrastructure/NatsGatewayRpcTransport';
 import {Logger} from '@fluxer/api/src/Logger';
+import {NatsConnectionManager} from '@fluxer/nats/src/NatsConnectionManager';
 import {recordCounter, recordHistogram} from '@fluxer/telemetry/src/Metrics';
 import {ms} from 'itty-time';
 
-interface GatewayRpcResponse {
-	result?: unknown;
-	error?: unknown;
-}
-
 const MAX_RETRY_ATTEMPTS = 3;
-const TCP_FALLBACK_COOLDOWN_MS = ms('5 seconds');
-const TCP_CONNECT_TIMEOUT_MS = 150;
-const TCP_REQUEST_TIMEOUT_MS = ms('10 seconds');
-const TCP_DEFAULT_PING_INTERVAL_MS = ms('15 seconds');
-const TCP_MAX_PENDING_REQUESTS = 1024;
-const TCP_MAX_BUFFER_BYTES = 2 * 1024 * 1024;
 
 interface GatewayRpcClientOptions {
-	tcpTransport?: IGatewayRpcTransport;
+	transport?: IGatewayRpcTransport;
 }
 
 export class GatewayRpcClient {
 	private static instance: GatewayRpcClient | null = null;
 
-	private readonly httpEndpoint: string;
-	private readonly tcpTransport: IGatewayRpcTransport;
-	private tcpFallbackUntilMs = 0;
+	private readonly transport: IGatewayRpcTransport;
 
 	private constructor(options?: GatewayRpcClientOptions) {
-		this.httpEndpoint = `${Config.gateway.rpcEndpoint}/_rpc`;
-		this.tcpTransport = options?.tcpTransport ?? this.createGatewayTcpTransport();
+		this.transport = options?.transport ?? createNatsTransportSync();
 	}
 
 	static getInstance(): GatewayRpcClient {
@@ -62,27 +49,18 @@ export class GatewayRpcClient {
 		return GatewayRpcClient.instance;
 	}
 
+	static createForTests(transport: IGatewayRpcTransport): GatewayRpcClient {
+		const client = new GatewayRpcClient({transport});
+		GatewayRpcClient.instance = client;
+		return client;
+	}
+
 	static async resetForTests(): Promise<void> {
 		if (!GatewayRpcClient.instance) {
 			return;
 		}
-		await GatewayRpcClient.instance.tcpTransport.destroy();
+		await GatewayRpcClient.instance.transport.destroy();
 		GatewayRpcClient.instance = null;
-	}
-
-	private createGatewayTcpTransport(): GatewayTcpRpcTransport {
-		const endpointUrl = new URL(Config.gateway.rpcEndpoint);
-		return new GatewayTcpRpcTransport({
-			host: endpointUrl.hostname,
-			port: Config.gateway.rpcTcpPort,
-			authorization: `Bearer ${Config.gateway.rpcSecret}`,
-			connectTimeoutMs: TCP_CONNECT_TIMEOUT_MS,
-			requestTimeoutMs: TCP_REQUEST_TIMEOUT_MS,
-			defaultPingIntervalMs: TCP_DEFAULT_PING_INTERVAL_MS,
-			maxPendingRequests: TCP_MAX_PENDING_REQUESTS,
-			maxBufferBytes: TCP_MAX_BUFFER_BYTES,
-			logger: Logger,
-		});
 	}
 
 	async call<T>(method: string, params: Record<string, unknown>): Promise<T> {
@@ -127,71 +105,8 @@ export class GatewayRpcClient {
 	}
 
 	private async executeCall<T>(method: string, params: Record<string, unknown>): Promise<T> {
-		if (Date.now() >= this.tcpFallbackUntilMs) {
-			try {
-				const result = await this.tcpTransport.call(method, params);
-				return result as T;
-			} catch (error) {
-				if (!(error instanceof GatewayTcpTransportError)) {
-					throw error;
-				}
-				this.tcpFallbackUntilMs = Date.now() + TCP_FALLBACK_COOLDOWN_MS;
-				Logger.warn({error}, '[gateway-rpc] TCP transport unavailable, falling back to HTTP');
-			}
-		}
-		return this.executeHttpCall(method, params);
-	}
-
-	private async executeHttpCall<T>(method: string, params: Record<string, unknown>): Promise<T> {
-		let response: Response;
-		try {
-			response = await fetch(this.httpEndpoint, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					Authorization: `Bearer ${Config.gateway.rpcSecret}`,
-				},
-				body: JSON.stringify({
-					method,
-					params,
-				}),
-				signal: AbortSignal.timeout(ms('10 seconds')),
-			});
-		} catch (error) {
-			if (error instanceof Error && error.name === 'TimeoutError') {
-				Logger.error({method}, '[gateway-rpc] request timed out after 10s');
-			} else {
-				Logger.error({error}, '[gateway-rpc] request failed to reach gateway');
-			}
-			throw error;
-		}
-
-		const text = await response.text();
-
-		let payload: GatewayRpcResponse = {};
-		if (text.length > 0) {
-			try {
-				payload = JSON.parse(text) as GatewayRpcResponse;
-			} catch (error) {
-				Logger.error({error, body: text, status: response.status}, '[gateway-rpc] failed to parse response body');
-				throw new Error('Malformed gateway RPC response');
-			}
-		}
-
-		if (!response.ok) {
-			if (typeof payload.error === 'string' && payload.error.length > 0) {
-				throw new GatewayRpcMethodError(payload.error);
-			}
-
-			throw new Error(`Gateway RPC request failed with status ${response.status}`);
-		}
-
-		if (!Object.hasOwn(payload, 'result')) {
-			Logger.error({status: response.status, body: payload}, '[gateway-rpc] response missing result value');
-			throw new Error('Malformed gateway RPC response');
-		}
-
-		return payload.result as T;
+		const result = await this.transport.call(method, params);
+		return result as T;
 	}
 
 	private calculateBackoff(attempt: number): number {
@@ -200,19 +115,29 @@ export class GatewayRpcClient {
 	}
 
 	private shouldRetry(error: unknown, method: string): boolean {
-		if (error instanceof GatewayTcpTransportError) {
+		if (this.isNatsConnectionError(error)) {
 			return true;
 		}
 		if (!(error instanceof Error)) {
 			return false;
 		}
-		if (error.name === 'TimeoutError') {
-			return true;
+		return this.isRetryableOverloadError(error, method);
+	}
+
+	private isNatsConnectionError(error: unknown): boolean {
+		if (!(error instanceof Error)) {
+			return false;
 		}
-		if (this.isRetryableOverloadError(error, method)) {
-			return true;
+		if (error instanceof GatewayRpcMethodError) {
+			return error.code === GatewayRpcMethodErrorCodes.NO_RESPONDERS;
 		}
-		return error.name === 'TypeError';
+		const message = error.message.toLowerCase();
+		return (
+			message.includes('connection closed') ||
+			message.includes('connection lost') ||
+			message.includes('reconnect') ||
+			message.includes('disconnect')
+		);
 	}
 
 	private isRetryableOverloadError(error: Error, method: string): boolean {
@@ -274,4 +199,16 @@ export class GatewayRpcClient {
 	async getNodeStats(): Promise<unknown> {
 		return this.call('process.node_stats', {});
 	}
+}
+
+function createNatsTransportSync(): NatsGatewayRpcTransport {
+	const manager = new NatsConnectionManager({
+		url: Config.nats.coreUrl,
+		token: Config.nats.authToken || undefined,
+		name: 'fluxer-api-rpc',
+	});
+	void manager.connect().catch((error) => {
+		Logger.error({error}, '[gateway-rpc] Failed to establish NATS connection');
+	});
+	return new NatsGatewayRpcTransport(manager);
 }

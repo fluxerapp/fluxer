@@ -204,6 +204,7 @@ content_and_safety.ncmec_already_submitted: Konten ini sudah pernah dikirim ke N
 content_and_safety.ncmec_submission_failed: Kami tidak bisa mengirim laporan ke NCMEC. Coba lagi nanti.
 content_and_safety.nsfw_age_restricted: Konten NSFW dibatasi usia.
 connections.already_exists: Koneksi jenis ini dengan pengenal ini sudah ada.
+connections.bluesky_oauth_authorization_failed: Kami tidak dapat menemukan nama pengguna Bluesky tersebut. Periksa dan coba lagi.
 connections.bluesky_oauth_callback_failed: Kami tidak berhasil menyelesaikan koneksi Bluesky. Coba lagi.
 connections.bluesky_oauth_not_enabled: Koneksi Bluesky tidak diaktifkan di server ini.
 connections.bluesky_oauth_session_expired: Sesi Bluesky Anda telah berakhir. Hubungkan ulang akun Anda.

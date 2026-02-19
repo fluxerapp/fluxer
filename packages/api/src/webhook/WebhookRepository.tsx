@@ -154,15 +154,13 @@ export class WebhookRepository extends IWebhookRepository {
 		};
 
 		const result = await executeVersionedUpdate<WebhookRow, 'webhook_id' | 'webhook_token'>(
-			async () => {
-				if (oldData !== undefined) return oldData;
-				return await fetchOne<WebhookRow>(FETCH_WEBHOOK_BY_ID_CQL, {webhook_id: webhookId});
-			},
+			async () => fetchOne<WebhookRow>(FETCH_WEBHOOK_BY_ID_CQL, {webhook_id: webhookId}),
 			(current) => ({
 				pk: {webhook_id: webhookId, webhook_token: updatedData.webhook_token},
 				patch: buildPatchFromData(updatedData, current, WEBHOOK_COLUMNS, ['webhook_id', 'webhook_token']),
 			}),
 			Webhooks,
+			{initialData: oldData},
 		);
 
 		const batch = new BatchBuilder();

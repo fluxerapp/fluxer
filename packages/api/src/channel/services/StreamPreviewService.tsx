@@ -17,9 +17,11 @@
  * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
  */
 
+import {S3ServiceException} from '@aws-sdk/client-s3';
 import type {ChannelID, UserID} from '@fluxer/api/src/BrandedTypes';
 import {Config} from '@fluxer/api/src/Config';
 import type {IStorageService} from '@fluxer/api/src/infrastructure/IStorageService';
+import {Logger} from '@fluxer/api/src/Logger';
 import type {ICacheService} from '@fluxer/cache/src/ICacheService';
 import {STREAM_PREVIEW_CONTENT_TYPE_JPEG, STREAM_PREVIEW_MAX_BYTES} from '@fluxer/constants/src/StreamConstants';
 import {FileSizeTooLargeError} from '@fluxer/errors/src/domains/core/FileSizeTooLargeError';
@@ -85,13 +87,21 @@ export class StreamPreviewService {
 		const key = this.getObjectKey(params.streamKey);
 		const expiresAt = new Date(Date.now() + ms('1 day'));
 
-		await this.storageService.uploadObject({
-			bucket,
-			key,
-			body: params.body,
-			contentType: params.contentType ?? STREAM_PREVIEW_CONTENT_TYPE_JPEG,
-			expiresAt,
-		});
+		try {
+			await this.storageService.uploadObject({
+				bucket,
+				key,
+				body: params.body,
+				contentType: params.contentType ?? STREAM_PREVIEW_CONTENT_TYPE_JPEG,
+				expiresAt,
+			});
+		} catch (error) {
+			if (error instanceof S3ServiceException && error.name === 'OperationAborted') {
+				Logger.warn({streamKey: params.streamKey}, 'Stream preview upload aborted due to S3 conflict, skipping');
+				return;
+			}
+			throw error;
+		}
 
 		const meta: StreamPreviewMeta = {
 			bucket,

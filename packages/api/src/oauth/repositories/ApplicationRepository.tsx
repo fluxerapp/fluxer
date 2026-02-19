@@ -122,15 +122,13 @@ export class ApplicationRepository implements IApplicationRepository {
 		}
 
 		const result = await executeVersionedUpdate<ApplicationRow, 'application_id'>(
-			async () => {
-				if (oldData !== undefined) return oldData;
-				return await fetchOne<ApplicationRow>(SELECT_APPLICATION_CQL, {application_id: applicationId});
-			},
+			async () => fetchOne<ApplicationRow>(SELECT_APPLICATION_CQL, {application_id: applicationId}),
 			(current) => ({
 				pk: {application_id: applicationId},
 				patch: buildPatchFromData(data, current, APPLICATION_COLUMNS, ['application_id']),
 			}),
 			Applications,
+			{initialData: oldData},
 		);
 
 		const batch = new BatchBuilder();

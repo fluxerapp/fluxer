@@ -82,7 +82,7 @@ msgstr "(แสดงได้สูงสุด 15 รายการ)"
 msgid "(No content)"
 msgstr "(ไม่มีเนื้อหา)"
 
-#: src/components/modals/UserProfileMobileSheet.tsx:602
+#: src/components/modals/UserProfileMobileSheet.tsx:608
 #: src/components/pages/YouPage.tsx:147
 msgid "(only visible to you)"
 msgstr "(เห็นได้เฉพาะคุณ)"
@@ -651,14 +651,14 @@ msgstr "{maxFavoriteMemes} สื่อที่บันทึกไว้"
 
 #: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:77
 #: src/components/channel/ChannelSourcePreview.tsx:206
-#: src/components/modals/discovery/DiscoveryGuildCard.tsx:83
+#: src/components/modals/discovery/DiscoveryGuildCard.tsx:89
 #: src/components/modals/UserProfileModal.tsx:839
 msgid "{memberCount} Member"
 msgstr "{memberCount} สมาชิก"
 
 #: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:77
 #: src/components/channel/ChannelSourcePreview.tsx:206
-#: src/components/modals/discovery/DiscoveryGuildCard.tsx:83
+#: src/components/modals/discovery/DiscoveryGuildCard.tsx:89
 #: src/components/modals/UserProfileModal.tsx:839
 msgid "{memberCount} Members"
 msgstr "{memberCount} สมาชิก"
@@ -698,7 +698,7 @@ msgstr "{mutualGuildCount} ชุมชนที่มีร่วมกัน"
 msgid "{mutualGuildCount} mutual community"
 msgstr "{mutualGuildCount} ชุมชนร่วม"
 
-#: src/components/modals/discovery/DiscoveryGuildCard.tsx:78
+#: src/components/modals/discovery/DiscoveryGuildCard.tsx:84
 msgid "{onlineCount} Online"
 msgstr "{onlineCount} ออนไลน์"
 
@@ -1095,7 +1095,7 @@ msgstr "<0>คำเตือน:</0> การกระทำนี้จะป
 #: src/components/channel/CallMessage.tsx:69
 #: src/components/modals/BanMemberModal.tsx:58
 #: src/components/modals/InviteModal.tsx:80
-#: src/components/modals/InviteModal.tsx:210
+#: src/components/modals/InviteModal.tsx:207
 #: src/components/modals/PackInviteModal.tsx:51
 #: src/components/modals/TimeoutMemberOptions.tsx:38
 msgid "1 day"
@@ -1105,7 +1105,7 @@ msgstr "1 วัน"
 #: src/components/modals/BanMemberModal.tsx:56
 #: src/components/modals/channel_tabs/ChannelOverviewTab.tsx:171
 #: src/components/modals/InviteModal.tsx:77
-#: src/components/modals/InviteModal.tsx:204
+#: src/components/modals/InviteModal.tsx:201
 #: src/components/modals/PackInviteModal.tsx:48
 #: src/components/modals/TimeoutMemberOptions.tsx:37
 #: src/constants/TimeWindowPresets.tsx:58
@@ -1223,7 +1223,7 @@ msgstr "1080p"
 
 #: src/components/modals/BanMemberModal.tsx:57
 #: src/components/modals/InviteModal.tsx:79
-#: src/components/modals/InviteModal.tsx:208
+#: src/components/modals/InviteModal.tsx:205
 #: src/components/modals/PackInviteModal.tsx:50
 msgid "12 hours"
 msgstr "12 ชั่วโมง"
@@ -1346,7 +1346,7 @@ msgstr "30 FPS"
 
 #: src/components/modals/channel_tabs/ChannelOverviewTab.tsx:170
 #: src/components/modals/InviteModal.tsx:76
-#: src/components/modals/InviteModal.tsx:202
+#: src/components/modals/InviteModal.tsx:199
 #: src/components/modals/PackInviteModal.tsx:47
 #: src/constants/TimeWindowPresets.tsx:57
 #: src/utils/modals/guild_tabs/GuildOverviewTabUtils.tsx:64
@@ -1417,7 +1417,7 @@ msgstr "ใช้ 50 ครั้ง"
 
 #: src/components/modals/channel_tabs/ChannelOverviewTab.tsx:173
 #: src/components/modals/InviteModal.tsx:78
-#: src/components/modals/InviteModal.tsx:206
+#: src/components/modals/InviteModal.tsx:203
 #: src/components/modals/PackInviteModal.tsx:49
 msgid "6 hours"
 msgstr "6 ชั่วโมง"
@@ -1437,7 +1437,7 @@ msgid "60 seconds"
 msgstr "60 วินาที"
 
 #: src/components/modals/InviteModal.tsx:81
-#: src/components/modals/InviteModal.tsx:212
+#: src/components/modals/InviteModal.tsx:209
 #: src/components/modals/PackInviteModal.tsx:52
 msgid "7 days"
 msgstr "7 วัน"
@@ -1450,7 +1450,7 @@ msgstr "7 วัน"
 msgid "720p"
 msgstr "720p"
 
-#: src/components/modals/components/FeatureComparisonTable.tsx:62
+#: src/components/modals/components/FeatureComparisonTable.tsx:61
 msgid "720p/30fps"
 msgstr "720p/30fps"
 
@@ -1462,7 +1462,7 @@ msgstr "8 ชั่วโมง"
 msgid "A 4-digit tag will be added automatically to ensure uniqueness"
 msgstr "แท็ก 4 หลักจะเพิ่มให้อัตโนมัติเพื่อให้แน่ใจว่าไม่ซ้ำกัน"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:293
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:298
 msgid "A description is required."
 msgstr "ต้องระบุคำอธิบาย"
 
@@ -1512,7 +1512,7 @@ msgid "about me"
 msgstr "เกี่ยวกับฉัน"
 
 #: src/components/modals/tabs/my_profile_tab/BioEditor.tsx:130
-#: src/components/modals/UserProfileMobileSheet.tsx:578
+#: src/components/modals/UserProfileMobileSheet.tsx:584
 #: src/components/pages/YouPage.tsx:132
 msgid "About Me"
 msgstr "เกี่ยวกับฉัน"
@@ -1832,11 +1832,11 @@ msgstr "เพิ่มบอทในคอมมูนิตี้"
 msgid "Add Channel"
 msgstr "เพิ่มแชนแนล"
 
-#: src/components/modals/AddConnectionModal.tsx:194
+#: src/components/modals/AddConnectionModal.tsx:197
 msgid "Add Connection"
 msgstr "เพิ่มการเชื่อมต่อ"
 
-#: src/components/modals/AddConnectionModal.tsx:193
+#: src/components/modals/AddConnectionModal.tsx:196
 msgid "Add connection form"
 msgstr "แบบฟอร์มเพิ่มการเชื่อมต่อ"
 
@@ -1879,8 +1879,8 @@ msgstr "เพิ่มเพื่อนเข้ากลุ่ม"
 msgid "Add Item"
 msgstr "เพิ่มรายการ"
 
-#: src/utils/PermissionUtils.tsx:346
-#: src/utils/PermissionUtils.tsx:481
+#: src/utils/PermissionUtils.tsx:352
+#: src/utils/PermissionUtils.tsx:487
 msgid "Add new reactions to messages."
 msgstr "เพิ่มรีแอคชั่นใหม่ให้กับข้อความ"
 
@@ -1929,8 +1929,8 @@ msgstr "แบบฟอร์มเพิ่มหมายเลขโทรศ
 msgid "Add Reaction"
 msgstr "เพิ่มรีแอคชั่น"
 
-#: src/utils/PermissionUtils.tsx:345
-#: src/utils/PermissionUtils.tsx:480
+#: src/utils/PermissionUtils.tsx:351
+#: src/utils/PermissionUtils.tsx:486
 msgid "Add Reactions"
 msgstr "เพิ่มรีแอคชั่น"
 
@@ -2522,7 +2522,7 @@ msgstr "อวาตาร์อนิเมต (GIF, APNG, animated WebP, AVIF)
 msgid "Animated avatars (GIF, APNG, animated WebP, AVIF) are not available on this instance. Please upload a static image instead."
 msgstr "อวาตาร์เคลื่อนไหว (GIF, APNG, animated WebP, AVIF) ไม่สามารถใช้งานได้ในกรณีนี้ กรุณาอัปโหลดภาพนิ่งแทน"
 
-#: src/components/modals/components/FeatureComparisonTable.tsx:59
+#: src/components/modals/components/FeatureComparisonTable.tsx:58
 msgid "Animated avatars & banners"
 msgstr "อวาตาร์และแบนเนอร์เคลื่อนไหว"
 
@@ -2551,7 +2551,7 @@ msgid "animated emoji"
 msgstr "อีโมจิอนิเมชัน"
 
 #. placeholder {0}: animatedEmojis.length
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:404
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:426
 msgid "Animated Emoji ({0})"
 msgstr "อีโมจิเคลื่อนไหว ({0})"
 
@@ -2604,7 +2604,7 @@ msgstr "วิดีโอเคลื่อนไหว"
 
 #. placeholder {0}: animatedEmojis.length
 #. placeholder {1}: maxAnimatedEmojis === Number.POSITIVE_INFINITY ? '∞' : maxAnimatedEmojis
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:354
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:373
 msgid "Animated: {0} / {1}"
 msgstr "เคลื่อนไหว: {0} / {1}"
 
@@ -2624,7 +2624,7 @@ msgstr "ภาพเคลื่อนไหว"
 msgid "animations"
 msgstr "อนิเมชัน"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:83
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:86
 msgid "Anime & Manga"
 msgstr "อนิเมะ & มังงะ"
 
@@ -2714,7 +2714,7 @@ msgstr "แอปพลิเคชัน"
 msgid "Applications & Bots"
 msgstr "แอปพลิเคชันและบอท"
 
-#: src/components/modals/tabs/AdvancedTab.tsx:90
+#: src/components/modals/tabs/AdvancedTab.tsx:93
 msgid "Applies only to the desktop app on this device."
 msgstr "ใช้กับแอปเดสก์ท็อปบนอุปกรณ์นี้เท่านั้น"
 
@@ -2722,7 +2722,7 @@ msgstr "ใช้กับแอปเดสก์ท็อปบนอุปก
 msgid "Applies to both camera and screen sharing"
 msgstr "ใช้ได้ทั้งการแชร์กล้องและหน้าจอ"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:343
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:357
 #: src/components/modals/guild_tabs/GuildMembersDateRangeModal.tsx:75
 #: src/components/modals/ThemeAcceptModal.tsx:180
 msgid "Apply"
@@ -2737,7 +2737,7 @@ msgstr "ใช้ธีม"
 msgid "Apply to all communities"
 msgstr "ใช้กับชุมชนทั้งหมด"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:56
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:59
 msgid "Approved"
 msgstr "ได้รับการอนุมัติ"
 
@@ -2781,7 +2781,7 @@ msgid "Are you sure you want to deauthorize {appName}? This application will no 
 msgstr "คุณแน่ใจหรือว่าต้องการเพิกถอนสิทธิ์ {appName}? แอปพลิเคชันนี้จะไม่สามารถเข้าถึงบัญชีของคุณได้อีกต่อไป."
 
 #. placeholder {0}: emoji.name
-#: src/components/emojis/EmojiListItem.tsx:193
+#: src/components/emojis/EmojiListItem.tsx:194
 msgid "Are you sure you want to delete :{0}:? This action cannot be undone."
 msgstr "แน่ใจไหมว่าคุณต้องการลบ :{0}:? การกระทำนี้ไม่สามารถย้อนกลับได้"
 
@@ -2791,7 +2791,7 @@ msgstr "แน่ใจไหมว่าคุณต้องการลบ :{
 msgid "Are you sure you want to delete \"{0}\"? This action cannot be undone."
 msgstr "แน่ใจไหมว่าคุณต้องการลบ \"{0}\"? การกระทำนี้ไม่สามารถย้อนกลับได้"
 
-#: src/components/stickers/StickerGridItem.tsx:65
+#: src/components/stickers/StickerGridItem.tsx:71
 msgid "Are you sure you want to delete \"{stickerName}\"? This action cannot be undone."
 msgstr "คุณแน่ใจหรือว่าต้องการลบ \"{stickerName}\"? การดำเนินการนี้ไม่สามารถย้อนกลับได้."
 
@@ -2914,7 +2914,7 @@ msgstr "แน่ใจไหมว่าต้องการมอบควา
 #. placeholder {0}: user.username
 #: src/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:184
 #: src/components/modals/UserProfileActionsSheet.tsx:117
-#: src/components/modals/UserProfileMobileSheet.tsx:345
+#: src/components/modals/UserProfileMobileSheet.tsx:351
 #: src/utils/RelationshipActionUtils.tsx:120
 msgid "Are you sure you want to remove {0} as a friend?"
 msgstr "แน่ใจไหมว่าต้องการลบ {0} ออกจากเพื่อน?"
@@ -2961,7 +2961,7 @@ msgstr "แน่ใจไหมว่าต้องการโอนควา
 #: src/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:218
 #: src/components/modals/tabs/BlockedUsersTab.tsx:64
 #: src/components/modals/UserProfileActionsSheet.tsx:151
-#: src/components/modals/UserProfileMobileSheet.tsx:361
+#: src/components/modals/UserProfileMobileSheet.tsx:367
 #: src/utils/RelationshipActionUtils.tsx:174
 msgid "Are you sure you want to unblock {0}?"
 msgstr "แน่ใจไหมว่าต้องการปลดบล็อก {0}?"
@@ -2986,8 +2986,8 @@ msgstr "ในฐานะของขวัญ"
 msgid "At least one channel must have \"View Channel\" permission enabled for @everyone in order for the vanity URL to work. Currently, no channels are viewable to @everyone."
 msgstr "ต้องมีอย่างน้อยหนึ่งแชนแนลที่เปิดสิทธิ์ \"ดูแชนแนล\" ให้ @everyone เพื่อให้ URL สวยงามทำงานได้ ขณะนี้ไม่มีแชนแนลใดที่ @everyone สามารถดูได้"
 
-#: src/utils/PermissionUtils.tsx:323
-#: src/utils/PermissionUtils.tsx:470
+#: src/utils/PermissionUtils.tsx:329
+#: src/utils/PermissionUtils.tsx:476
 msgid "Attach Files"
 msgstr "แนบไฟล์"
 
@@ -3077,8 +3077,8 @@ msgid "Audio"
 msgstr "เสียง"
 
 #: src/components/modals/utils/SettingsConstants.tsx:190
-#: src/utils/PermissionUtils.tsx:380
-#: src/utils/PermissionUtils.tsx:495
+#: src/utils/PermissionUtils.tsx:386
+#: src/utils/PermissionUtils.tsx:501
 msgid "Audio & Video"
 msgstr "เสียงและวิดีโอ"
 
@@ -3301,7 +3301,7 @@ msgstr "ใช้การตั้งค่าลดการเคลื่อ
 msgid "autoplay"
 msgstr "เล่นอัตโนมัติ"
 
-#: src/components/modals/tabs/AdvancedTab.tsx:97
+#: src/components/modals/tabs/AdvancedTab.tsx:100
 msgid "Autostart is coming soon for Windows and Linux. For now, it is only available on macOS."
 msgstr "การเริ่มต้นอัตโนมัติมาเร็ว ๆ นี้สำหรับ Windows และ Linux ตอนนี้มีให้บริการเฉพาะบน macOS เท่านั้น."
 
@@ -3344,7 +3344,7 @@ msgid "Average ping:"
 msgstr "ค่าเฉลี่ยพิงค์:"
 
 #: src/components/auth/IpAuthorizationScreen.tsx:154
-#: src/components/modals/AddConnectionModal.tsx:309
+#: src/components/modals/AddConnectionModal.tsx:312
 #: src/components/modals/PhoneAddModal.tsx:237
 #: src/components/modals/RequiredActionModal.tsx:655
 #: src/components/pages/OAuthAuthorizePage.tsx:671
@@ -3740,7 +3740,7 @@ msgstr "บุ๊กมาร์กข้อความ"
 msgid "Bookmark messages to save them for later."
 msgstr "บุ๊กมาร์กข้อความเพื่อเก็บไว้ภายหลัง"
 
-#: src/components/modals/components/FeatureComparisonTable.tsx:52
+#: src/components/modals/components/FeatureComparisonTable.tsx:51
 msgid "Bookmarked messages"
 msgstr "ข้อความที่บุ๊กมาร์กไว้"
 
@@ -3932,8 +3932,8 @@ msgstr "โดยการซื้อ คุณตกลงกับ <0>ข้�
 msgid "By purchasing, you agreed to our <0>Terms of Service</0> and <1>Privacy Policy</1>. All purchases are refundable within 14 days by emailing <2>support@fluxer.app</2>. Chargebacks result in permanent account bans — if you want a refund, we're more than happy to give you one if you contact us first! Payment information is securely handled by Stripe — we never have access to your full card number."
 msgstr "โดยการซื้อ คุณได้ตกลงกับ <0>ข้อกำหนดการให้บริการ</0> และ <1>นโยบายความเป็นส่วนตัว</1> การซื้อทั้งหมดสามารถขอคืนเงินได้ภายใน 14 วันโดยส่งอีเมลถึง <2>support@fluxer.app</2> การเรียกเก็บเงินคืนจะส่งผลให้ถูกแบนบัญชีถาวร — หากคุณต้องการคืนเงิน เรายินดีช่วยหากคุณติดต่อเราก่อน! ข้อมูลการชำระเงินได้รับการจัดการอย่างปลอดภัยโดย Stripe — เราไม่เคยเข้าถึงหมายเลขบัตรเต็ม"
 
-#: src/utils/PermissionUtils.tsx:350
-#: src/utils/PermissionUtils.tsx:485
+#: src/utils/PermissionUtils.tsx:356
+#: src/utils/PermissionUtils.tsx:491
 msgid "Bypass Slowmode"
 msgstr "ข้ามโหมดช้า"
 
@@ -4063,7 +4063,7 @@ msgstr "กล้องจะถูกปิดเมื่อมีผู้เ
 #: src/components/layout/GuildLayout.tsx:76
 #: src/components/modals/AccountDeleteModal.tsx:95
 #: src/components/modals/AccountDisableModal.tsx:69
-#: src/components/modals/AddConnectionModal.tsx:215
+#: src/components/modals/AddConnectionModal.tsx:218
 #: src/components/modals/AddFavoriteMemeModal.tsx:98
 #: src/components/modals/AddGuildModal.tsx:290
 #: src/components/modals/AddGuildModal.tsx:413
@@ -4109,7 +4109,7 @@ msgstr "กล้องจะถูกปิดเมื่อมีผู้เ
 #: src/components/modals/HideOwnScreenShareConfirmModal.tsx:65
 #: src/components/modals/IARModal.tsx:255
 #: src/components/modals/ImageCropModal.tsx:943
-#: src/components/modals/InviteModal.tsx:332
+#: src/components/modals/InviteModal.tsx:336
 #: src/components/modals/KickMemberModal.tsx:63
 #: src/components/modals/MessageHistoryThresholdModal.tsx:103
 #: src/components/modals/MfaTotpDisableModal.tsx:75
@@ -4211,7 +4211,7 @@ msgstr "การควบคุมการจัดแนวการ์ด"
 msgid "Careful! You have unsaved changes."
 msgstr "ระวัง! คุณมีการเปลี่ยนแปลงที่ยังไม่ได้บันทึก"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:316
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:330
 #: src/utils/ChannelUtils.tsx:69
 #: src/utils/modals/guild_tabs/GuildAuditLogTabUtils.tsx:229
 msgid "Category"
@@ -4437,8 +4437,8 @@ msgstr "แชนแนล"
 msgid "Channel"
 msgstr "แชนแนล"
 
-#: src/utils/PermissionUtils.tsx:373
-#: src/utils/PermissionUtils.tsx:453
+#: src/utils/PermissionUtils.tsx:379
+#: src/utils/PermissionUtils.tsx:459
 msgid "Channel Access"
 msgstr "การเข้าถึงแชนแนล"
 
@@ -4516,7 +4516,7 @@ msgstr "โหมดแสดงสถานะพิมพ์ในรายก
 msgid "Channel list typing indicators"
 msgstr "ตัวชี้บ่งชี้การพิมพ์ในรายการช่อง"
 
-#: src/utils/PermissionUtils.tsx:426
+#: src/utils/PermissionUtils.tsx:432
 msgid "Channel Management"
 msgstr "การจัดการแชนแนล"
 
@@ -4740,6 +4740,10 @@ msgstr "เลือกโหมดสีระหว่างมืด ถ่�
 msgid "Choose destination for system and welcome messages"
 msgstr "เลือกจุดหมายปลายทางสำหรับข้อความระบบและข้อความต้อนรับ"
 
+#: src/components/modals/tabs/AdvancedTab.tsx:134
+msgid "Choose how Fluxer selects the video codec for screen sharing."
+msgstr "เลือกวิธีที่ Fluxer ใช้ในการเลือกวิดีโอ codec สำหรับการแชร์หน้าจอ"
+
 #: src/components/modals/guild_tabs/GuildModerationTab.tsx:268
 msgid "Choose how Fluxer treats this community for age-gating. Age Restricted blocks access for users under 18 and shows a content warning for adults, subject to local laws."
 msgstr "เลือกวิธีที่ Fluxer จะจัดการกับชุมชนนี้สำหรับการจำกัดอายุ การจำกัดอายุจะบล็อกการเข้าถึงสำหรับผู้ใช้ที่อายุต่ำกว่า 18 ปีและแสดงคำเตือนเนื้อหาสำหรับผู้ใหญ่ โดยขึ้นอยู่กับกฎหมายท้องถิ่น."
@@ -4757,7 +4761,7 @@ msgstr "เลือกวิธีการแสดงเวลาทั่ว
 msgid "Choose how typing indicators appear in the channel list when someone is typing in a channel."
 msgstr "เลือกวิธีแสดงตัวบ่งชี้กำลังพิมพ์ในรายการแชนแนลเมื่อมีคนพิมพ์อยู่ในแชนแนล"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:332
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:346
 msgid "Choose the category that best describes your community."
 msgstr "เลือกหมวดหมู่ที่อธิบายชุมชนของคุณได้ดีที่สุด"
 
@@ -4765,7 +4769,7 @@ msgstr "เลือกหมวดหมู่ที่อธิบายชุ
 msgid "Choose what {clientLabel} can do in your community. Uncheck any permissions you don't want to grant."
 msgstr "เลือกสิ่งที่ {clientLabel} สามารถทำได้ในชุมชนของคุณ ยกเลิกเครื่องหมายถูกในสิทธิ์ที่คุณไม่ต้องการให้"
 
-#: src/components/modals/tabs/AdvancedTab.tsx:106
+#: src/components/modals/tabs/AdvancedTab.tsx:109
 msgid "Choose what Fluxer remembers about your window between restarts and reloads on this device."
 msgstr "เลือกสิ่งที่ Fluxer จะจำเกี่ยวกับหน้าต่างของคุณระหว่างการรีสตาร์ทและโหลดใหม่บนอุปกรณ์นี้"
 
@@ -5041,7 +5045,7 @@ msgstr "คลิกหรือลากแล้วปล่อย"
 msgid "Click the text below to edit it inline. Press Enter to save or Escape to cancel."
 msgstr "คลิกข้อความด้านล่างเพื่อแก้ไขแบบอินไลน์ กด Enter เพื่อบันทึกหรือ Escape เพื่อยกเลิก"
 
-#: src/components/modals/tabs/notifications_tab/Sounds.tsx:97
+#: src/components/modals/tabs/notifications_tab/Sounds.tsx:70
 msgid "Click the upload icon next to any sound to customize it with your own audio file. Supported formats: MP3, WAV, OGG, M4A, AAC, FLAC, Opus, WebM (max 2MB)."
 msgstr "คลิกไอคอนอัปโหลดข้างเสียงใดก็ได้เพื่อปรับแต่งด้วยไฟล์เสียงของคุณเอง รองรับรูปแบบ: MP3, WAV, OGG, M4A, AAC, FLAC, Opus, WebM (สูงสุด 2MB)"
 
@@ -5328,7 +5332,7 @@ msgstr "เลย์เอาต์สบายๆ"
 msgid "Communication"
 msgstr "การสื่อสาร"
 
-#: src/components/modals/components/FeatureComparisonTable.tsx:50
+#: src/components/modals/components/FeatureComparisonTable.tsx:49
 #: src/stores/QuickSwitcherStore.tsx:1354
 #: src/utils/quick_switcher/QuickSwitcherModalUtils.tsx:99
 msgid "Communities"
@@ -5360,7 +5364,7 @@ msgstr "ผู้สร้างชุมชน"
 msgid "Community Deafen"
 msgstr "ปิดเสียงชุมชน"
 
-#: src/components/layout/UserArea.tsx:159
+#: src/components/layout/UserArea.tsx:173
 #: src/components/layout/VoiceStateIcons.tsx:57
 #: src/components/voice/VoiceControlBar.tsx:607
 #: src/components/voice/VoiceParticipantTile.tsx:1466
@@ -5432,8 +5436,8 @@ msgstr "สมาชิกชุมชน"
 msgid "Community Mute"
 msgstr "ปิดเสียงชุมชน"
 
-#: src/components/layout/UserArea.tsx:146
-#: src/components/layout/UserArea.tsx:153
+#: src/components/layout/UserArea.tsx:160
+#: src/components/layout/UserArea.tsx:167
 #: src/components/layout/VoiceStateIcons.tsx:49
 #: src/components/voice/VoiceControlBar.tsx:596
 #: src/components/voice/VoiceParticipantTile.tsx:1457
@@ -5492,10 +5496,10 @@ msgid "Community Record"
 msgstr "บันทึกชุมชน"
 
 #: src/components/modals/components/DesktopGuildSettingsView.tsx:233
-#: src/components/modals/GuildSettingsModal.tsx:194
+#: src/components/modals/GuildSettingsModal.tsx:197
 #: src/components/popouts/GuildHeaderPopout.tsx:190
-#: src/components/uikit/context_menu/items/GuildMenuData.tsx:278
-#: src/components/uikit/context_menu/items/GuildMenuItems.tsx:346
+#: src/components/uikit/context_menu/items/GuildMenuData.tsx:281
+#: src/components/uikit/context_menu/items/GuildMenuItems.tsx:349
 msgid "Community Settings"
 msgstr "การตั้งค่าชุมชน"
 
@@ -5524,7 +5528,7 @@ msgstr "ทั้งชุมชน"
 msgid "compact"
 msgstr "กะทัดรัด"
 
-#: src/components/modals/guild_tabs/GuildStickersTab.tsx:152
+#: src/components/modals/guild_tabs/GuildStickersTab.tsx:169
 msgid "Compact"
 msgstr "กะทัดรัด"
 
@@ -5630,7 +5634,7 @@ msgstr "ตั้งค่าการแทนที่สำหรับบท
 msgid "Configure role settings and permissions"
 msgstr "ตั้งค่าการตั้งค่าและสิทธิ์ของบทบาท"
 
-#: src/components/modals/tabs/notifications_tab/Sounds.tsx:65
+#: src/components/modals/tabs/notifications_tab/Sounds.tsx:60
 msgid "Configure which sounds to play and when."
 msgstr "ตั้งค่าว่าจะเล่นเสียงไหนและเมื่อไหร่"
 
@@ -5670,8 +5674,8 @@ msgstr "ยืนยันรหัสผ่าน"
 msgid "Connect"
 msgstr "เชื่อมต่อ"
 
-#: src/utils/PermissionUtils.tsx:383
-#: src/utils/PermissionUtils.tsx:497
+#: src/utils/PermissionUtils.tsx:389
+#: src/utils/PermissionUtils.tsx:503
 msgid "Connect (Join Voice)"
 msgstr "เชื่อมต่อ (เข้าร่วมเสียง)"
 
@@ -5679,7 +5683,7 @@ msgstr "เชื่อมต่อ (เข้าร่วมเสียง)"
 msgid "Connect to Voice"
 msgstr "เชื่อมต่อเสียง"
 
-#: src/components/modals/AddConnectionModal.tsx:218
+#: src/components/modals/AddConnectionModal.tsx:221
 msgid "Connect with Bluesky"
 msgstr "เชื่อมต่อกับ Bluesky"
 
@@ -5730,7 +5734,7 @@ msgstr "ลบการเชื่อมต่อ"
 msgid "Connection Stats"
 msgstr "สถิติการเชื่อมต่อ"
 
-#: src/components/modals/AddConnectionModal.tsx:198
+#: src/components/modals/AddConnectionModal.tsx:201
 msgid "Connection Type"
 msgstr "ประเภทการเชื่อมต่อ"
 
@@ -5783,7 +5787,7 @@ msgstr "สร้าง URL อนุญาตด้วยขอบเขตแ�
 msgid "contact"
 msgstr "ติดต่อ"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:82
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:85
 msgid "Content Creator"
 msgstr "ผู้สร้างเนื้อหา"
 
@@ -5822,7 +5826,7 @@ msgid "Context menus can be opened with left-click (on buttons) or right-click (
 msgstr "เมนูบริบทสามารถเปิดได้ด้วยการคลิกซ้าย (บนปุ่ม) หรือคลิกขวา (บนองค์ประกอบอื่น) ตัวอย่างนี้แสดงรายการเมนูต่างๆ รวมทั้งช่องทำเครื่องหมาย ปุ่มตัวเลือก แถบเลื่อน และเมนูย่อย"
 
 #: src/components/channel/ChannelTextarea.tsx:311
-#: src/components/modals/AddConnectionModal.tsx:218
+#: src/components/modals/AddConnectionModal.tsx:221
 #: src/components/modals/BackupCodesRegenerateModal.tsx:75
 #: src/components/modals/BackupCodesViewModal.tsx:73
 #: src/components/modals/DeviceRevokeModal.tsx:82
@@ -5893,8 +5897,8 @@ msgstr "ควบคุมวิธีที่คุณเข้าร่วม
 msgid "Control how your Plutonium badge is displayed to others"
 msgstr "ควบคุมการแสดงตรา Plutonium ของคุณให้ผู้อื่นเห็น"
 
-#: src/components/modals/tabs/notifications_tab/Inline.tsx:87
-#: src/components/modals/tabs/NotificationsTab.tsx:90
+#: src/components/modals/tabs/notifications_tab/Inline.tsx:85
+#: src/components/modals/tabs/NotificationsTab.tsx:88
 msgid "Control speech commands and narration for incoming content."
 msgstr "Control speech commands and narration for incoming content."
 
@@ -5958,8 +5962,8 @@ msgid "Copied URL to clipboard"
 msgstr "คัดลอก URL ไปยังคลิปบอร์ดแล้ว"
 
 #: src/components/auth/HandoffCodeDisplay.tsx:106
-#: src/components/modals/AddConnectionModal.tsx:187
-#: src/components/modals/AddConnectionModal.tsx:188
+#: src/components/modals/AddConnectionModal.tsx:190
+#: src/components/modals/AddConnectionModal.tsx:191
 #: src/components/modals/shared/CopyLinkSection.tsx:52
 #: src/components/modals/ThemeAcceptModal.tsx:162
 #: src/lib/markdown/renderers/common/CodeElements.tsx:57
@@ -6017,7 +6021,7 @@ msgstr "คัดลอกลิงก์ช่อง"
 msgid "Copy code"
 msgstr "คัดลอกโค้ด"
 
-#: src/components/uikit/context_menu/items/GuildMenuData.tsx:372
+#: src/components/uikit/context_menu/items/GuildMenuData.tsx:375
 msgid "Copy Community ID"
 msgstr "คัดลอกรหัสชุมชน"
 
@@ -6045,11 +6049,11 @@ msgstr "คัดลอก FluxerTag"
 msgid "Copy GIF"
 msgstr "คัดลอก GIF"
 
-#: src/components/uikit/context_menu/items/GuildMenuItems.tsx:461
+#: src/components/uikit/context_menu/items/GuildMenuItems.tsx:464
 msgid "Copy Guild ID"
 msgstr "คัดลอก ID กิลด์"
 
-#: src/components/modals/AddConnectionModal.tsx:187
+#: src/components/modals/AddConnectionModal.tsx:190
 msgid "Copy host"
 msgstr "คัดลอกโฮสต์"
 
@@ -6154,7 +6158,7 @@ msgstr "คัดลอก ID ผู้ใช้"
 msgid "Copy Username"
 msgstr "คัดลอกชื่อผู้ใช้"
 
-#: src/components/modals/AddConnectionModal.tsx:188
+#: src/components/modals/AddConnectionModal.tsx:191
 msgid "Copy value"
 msgstr "คัดลอกค่า"
 
@@ -6199,7 +6203,7 @@ msgstr "ปก"
 msgid "cozy"
 msgstr "อบอุ่น"
 
-#: src/components/modals/guild_tabs/GuildStickersTab.tsx:144
+#: src/components/modals/guild_tabs/GuildStickersTab.tsx:161
 msgid "Cozy"
 msgstr "อบอุ่น"
 
@@ -6295,8 +6299,8 @@ msgstr "สร้างแอปพลิเคชัน"
 #: src/components/popouts/GuildHeaderPopout.tsx:204
 #: src/components/uikit/context_menu/ChannelListContextMenu.tsx:89
 #: src/components/uikit/context_menu/FavoritesChannelListContextMenu.tsx:69
-#: src/components/uikit/context_menu/items/GuildMenuData.tsx:292
-#: src/components/uikit/context_menu/items/GuildMenuItems.tsx:428
+#: src/components/uikit/context_menu/items/GuildMenuData.tsx:295
+#: src/components/uikit/context_menu/items/GuildMenuItems.tsx:431
 msgid "Create Category"
 msgstr "สร้างหมวดหมู่"
 
@@ -6305,8 +6309,8 @@ msgstr "สร้างหมวดหมู่"
 #: src/components/modals/ChannelCreateModal.tsx:103
 #: src/components/popouts/GuildHeaderPopout.tsx:197
 #: src/components/uikit/context_menu/ChannelListContextMenu.tsx:86
-#: src/components/uikit/context_menu/items/GuildMenuData.tsx:287
-#: src/components/uikit/context_menu/items/GuildMenuItems.tsx:410
+#: src/components/uikit/context_menu/items/GuildMenuData.tsx:290
+#: src/components/uikit/context_menu/items/GuildMenuItems.tsx:413
 msgid "Create Channel"
 msgstr "สร้างแชนแนล"
 
@@ -6324,6 +6328,10 @@ msgstr "ฟอร์มสร้างชุมชน"
 #: src/utils/modals/CreateDMModalUtils.tsx:154
 msgid "Create DM"
 msgstr "สร้างข้อความส่วนตัว"
+
+#: src/utils/PermissionUtils.tsx:284
+msgid "Create Emoji & Stickers"
+msgstr "สร้างอีโมจิและสติกเกอร์"
 
 #: src/components/modals/CreatePackModal.tsx:52
 #: src/components/modals/tabs/ExpressionPacksTab.tsx:256
@@ -6346,7 +6354,7 @@ msgid "Create Invite"
 msgstr "สร้างคำเชิญ"
 
 #: src/utils/PermissionUtils.tsx:270
-#: src/utils/PermissionUtils.tsx:429
+#: src/utils/PermissionUtils.tsx:435
 msgid "Create Invite Links"
 msgstr "สร้างลิงก์เชิญ"
 
@@ -6358,7 +6366,7 @@ msgstr "สร้างบัญชีใหม่"
 msgid "Create new group"
 msgstr "สร้างกลุ่มใหม่"
 
-#: src/components/modals/InviteModal.tsx:335
+#: src/components/modals/InviteModal.tsx:339
 msgid "Create New Link"
 msgstr "สร้างลิงก์ใหม่"
 
@@ -6393,11 +6401,11 @@ msgstr "สร้าง แก้ไข หรือลบแชนแนลแ�
 msgid "Create, edit, or delete roles below your highest role. Also allows editing channel permission overwrites."
 msgstr "สร้าง แก้ไข หรือลบบทบาทที่ต่ำกว่าบทบาทสูงสุดของคุณ รวมถึงแก้ไขการเขียนทับสิทธิ์แชนแนล"
 
-#: src/utils/PermissionUtils.tsx:444
+#: src/utils/PermissionUtils.tsx:450
 msgid "Create, edit, or delete webhooks for this channel."
 msgstr "สร้าง แก้ไข หรือลบเว็บฮุกสำหรับแชนแนลนี้"
 
-#: src/utils/PermissionUtils.tsx:289
+#: src/utils/PermissionUtils.tsx:295
 msgid "Create, edit, or delete webhooks."
 msgstr "สร้าง แก้ไข หรือลบเว็บฮุก"
 
@@ -6638,11 +6646,11 @@ msgstr "ช่วงกำหนดเอง..."
 msgid "custom ringtone"
 msgstr "เสียงเรียกเข้าที่กำหนดเอง"
 
-#: src/components/modals/tabs/notifications_tab/useSoundSettings.tsx:159
+#: src/components/modals/tabs/notifications_tab/useSoundSettings.tsx:139
 msgid "Custom sound removed"
 msgstr "ลบเสียงแบบกำหนดเองแล้ว"
 
-#: src/components/modals/tabs/notifications_tab/useSoundSettings.tsx:137
+#: src/components/modals/tabs/notifications_tab/useSoundSettings.tsx:117
 msgid "Custom sound uploaded successfully"
 msgstr "อัปโหลดเสียงแบบกำหนดเองเรียบร้อยแล้ว"
 
@@ -6662,7 +6670,7 @@ msgstr "สติ๊กเกอร์แบบกำหนดเอง"
 msgid "Custom Theme Tokens"
 msgstr "โทเค็นธีมที่กำหนดเอง"
 
-#: src/components/modals/components/FeatureComparisonTable.tsx:61
+#: src/components/modals/components/FeatureComparisonTable.tsx:60
 msgid "Custom themes"
 msgstr "ธีมที่กำหนดเอง"
 
@@ -6726,10 +6734,6 @@ msgstr "ปรับแท็กสี่หลัก (#{discriminator}) ตา�
 #: src/components/modals/FluxerTagChangeModal.tsx:272
 msgid "Customize your 4-digit tag or keep it when changing your username"
 msgstr "ปรับแท็กสี่หลักหรือเก็บไว้เมื่อเปลี่ยนชื่อผู้ใช้"
-
-#: src/components/modals/tabs/notifications_tab/Sounds.tsx:71
-msgid "Customize your notification sounds with Plutonium"
-msgstr "ปรับแต่งเสียงการแจ้งเตือนของคุณด้วย Plutonium"
 
 #: src/components/modals/utils/SettingsSearchIndex.tsx:58
 msgid "Customize your profile banner"
@@ -6897,7 +6901,7 @@ msgstr "ทำให้หูหนวก"
 #: src/components/bottomsheets/DirectCallLobbyBottomSheet.tsx:286
 #: src/components/bottomsheets/VoiceLobbyBottomSheet.tsx:211
 #: src/components/bottomsheets/VoiceSettingsBottomSheets.tsx:155
-#: src/components/layout/UserArea.tsx:161
+#: src/components/layout/UserArea.tsx:175
 #: src/components/uikit/context_menu/items/VoiceParticipantMenuData.tsx:515
 #: src/components/uikit/context_menu/items/VoiceParticipantMenuItems.tsx:125
 #: src/components/voice/VoiceControlBar.tsx:613
@@ -6922,8 +6926,8 @@ msgstr "ปิดเสียงอุปกรณ์"
 msgid "Deafen Keybind"
 msgstr "ปุ่มลัดปิดเสียง"
 
-#: src/utils/PermissionUtils.tsx:408
-#: src/utils/PermissionUtils.tsx:507
+#: src/utils/PermissionUtils.tsx:414
+#: src/utils/PermissionUtils.tsx:513
 msgid "Deafen Members"
 msgstr "ปิดเสียงสมาชิก"
 
@@ -6962,7 +6966,7 @@ msgid "Debug Channel"
 msgstr "ดีบักแชนแนล"
 
 #: src/components/uikit/context_menu/items/DebugMenuItems.tsx:90
-#: src/components/uikit/context_menu/items/GuildMenuData.tsx:362
+#: src/components/uikit/context_menu/items/GuildMenuData.tsx:365
 msgid "Debug Community"
 msgstr "ดีบักชุมชน"
 
@@ -7062,17 +7066,17 @@ msgstr "ลบ"
 #: src/components/channel/embeds/media/MediaContainer.tsx:116
 #: src/components/channel/MobileMemesPicker.tsx:546
 #: src/components/channel/pickers/memes/MemeGridItem.tsx:121
-#: src/components/emojis/EmojiListItem.tsx:194
-#: src/components/emojis/EmojiListItem.tsx:246
-#: src/components/emojis/EmojiListItem.tsx:296
+#: src/components/emojis/EmojiListItem.tsx:195
+#: src/components/emojis/EmojiListItem.tsx:252
+#: src/components/emojis/EmojiListItem.tsx:308
 #: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:322
 #: src/components/modals/tabs/component_gallery_tab/ButtonsTab.tsx:157
 #: src/components/modals/tabs/component_gallery_tab/ButtonsTab.tsx:242
 #: src/components/modals/tabs/component_gallery_tab/index.tsx:165
 #: src/components/modals/tabs/component_gallery_tab/Inline.tsx:160
 #: src/components/modals/tabs/ExpressionPacksTab.tsx:210
-#: src/components/stickers/StickerGridItem.tsx:66
-#: src/components/stickers/StickerGridItem.tsx:119
+#: src/components/stickers/StickerGridItem.tsx:72
+#: src/components/stickers/StickerGridItem.tsx:126
 msgid "Delete"
 msgstr "ลบ"
 
@@ -7162,11 +7166,11 @@ msgstr "ลบชุมชน"
 msgid "Delete community form"
 msgstr "ฟอร์มลบชุมชน"
 
-#: src/components/emojis/EmojiListItem.tsx:192
+#: src/components/emojis/EmojiListItem.tsx:193
 msgid "Delete Emoji"
 msgstr "ลบอิโมจิ"
 
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:147
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:163
 msgid "Delete Emoji Failed"
 msgstr "ลบอีโมจิล้มเหลว"
 
@@ -7205,8 +7209,8 @@ msgstr "ลบข้อความจาก 24 ชั่วโมงที่�
 msgid "Delete messages from the last week"
 msgstr "ลบข้อความจากสัปดาห์ที่ผ่านมา"
 
-#: src/utils/PermissionUtils.tsx:311
-#: src/utils/PermissionUtils.tsx:465
+#: src/utils/PermissionUtils.tsx:317
+#: src/utils/PermissionUtils.tsx:471
 msgid "Delete others' messages. (Pinning is separate below.)"
 msgstr "ลบข้อความของคนอื่น (การปักหมุดแยกไว้ด้านล่าง)"
 
@@ -7235,7 +7239,7 @@ msgstr "ลบสื่อที่บันทึกไว้"
 msgid "Delete Saved Media"
 msgstr "ลบสื่อที่บันทึกไว้"
 
-#: src/components/stickers/StickerGridItem.tsx:64
+#: src/components/stickers/StickerGridItem.tsx:70
 msgid "Delete Sticker"
 msgstr "ลบสติกเกอร์"
 
@@ -7326,7 +7330,7 @@ msgstr "อธิบายว่ามีอารมณ์แบบไหนใ
 msgid "Describe what makes the content illegal"
 msgstr "อธิบายว่าอะไรทำให้เนื้อหาไม่ถูกกฎหมาย"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:305
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:317
 msgid "Describe what your community is about..."
 msgstr "อธิบายเกี่ยวกับชุมชนของคุณ..."
 
@@ -7336,7 +7340,7 @@ msgstr "คำอธิบาย"
 
 #: src/components/modals/CreatePackModal.tsx:95
 #: src/components/modals/EditPackModal.tsx:91
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:289
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:292
 #: src/components/modals/sticker_form/StickerFormFields.tsx:111
 msgid "Description"
 msgstr "คำอธิบาย"
@@ -7345,11 +7349,11 @@ msgstr "คำอธิบาย"
 msgid "Description must be 500 characters or less"
 msgstr "คำอธิบายต้องมีความยาวไม่เกิน 500 ตัวอักษร"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:296
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:301
 msgid "Description must be at least {DISCOVERY_DESCRIPTION_MIN_LENGTH} characters."
 msgstr "คำอธิบายต้องมีความยาวอย่างน้อย {DISCOVERY_DESCRIPTION_MIN_LENGTH} ตัวอักษร"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:300
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:305
 msgid "Description must be no more than {DISCOVERY_DESCRIPTION_MAX_LENGTH} characters."
 msgstr "คำอธิบายต้องมีความยาวไม่เกิน {DISCOVERY_DESCRIPTION_MAX_LENGTH} ตัวอักษร"
 
@@ -7373,11 +7377,11 @@ msgstr "แถบแจ้งเตือนเดสก์ท็อป"
 msgid "Desktop notifications have been blocked. You can enable them later in your browser settings or in User Settings > Notifications."
 msgstr "การแจ้งเตือนเดสก์ท็อปถูกบล็อกไว้ เปิดใช้งานได้ในตั้งค่าบราวเซอร์หรือ ตั้งค่าผู้ใช้ > การแจ้งเตือน"
 
-#: src/components/modals/tabs/AdvancedTab.tsx:85
+#: src/components/modals/tabs/AdvancedTab.tsx:88
 msgid "Desktop Startup"
 msgstr "เริ่มเดสก์ท็อป"
 
-#: src/components/modals/tabs/AdvancedTab.tsx:104
+#: src/components/modals/tabs/AdvancedTab.tsx:107
 msgid "Desktop Window"
 msgstr "หน้าต่างเดสก์ท็อป"
 
@@ -7435,12 +7439,12 @@ msgstr "แอปพลิเคชันสำหรับนักพัฒน
 msgid "developer mode"
 msgstr "โหมดนักพัฒนา"
 
-#: src/components/modals/tabs/AdvancedTab.tsx:139
+#: src/components/modals/tabs/AdvancedTab.tsx:158
 #: src/components/modals/utils/SettingsSearchIndex.tsx:215
 msgid "Developer Mode"
 msgstr "โหมดนักพัฒนา"
 
-#: src/components/modals/tabs/AdvancedTab.tsx:130
+#: src/components/modals/tabs/AdvancedTab.tsx:149
 msgid "Developer Options"
 msgstr "ตัวเลือกนักพัฒนา"
 
@@ -7538,11 +7542,11 @@ msgstr "ปิดใช้งาน"
 msgid "Disable Account"
 msgstr "ปิดใช้งานบัญชี"
 
-#: src/components/modals/tabs/notifications_tab/Sounds.tsx:172
+#: src/components/modals/tabs/notifications_tab/Sounds.tsx:132
 msgid "Disable All"
 msgstr "ปิดใช้งานทั้งหมด"
 
-#: src/components/modals/tabs/notifications_tab/Sounds.tsx:89
+#: src/components/modals/tabs/notifications_tab/Sounds.tsx:63
 msgid "Disable all notification sounds"
 msgstr "ปิดเสียงการแจ้งเตือนทั้งหมด"
 
@@ -7725,20 +7729,20 @@ msgstr "ตัดการเชื่อมต่อซ็อกเก็ต"
 msgid "Disconnected"
 msgstr "ตัดการเชื่อมต่อแล้ว"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:209
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:212
 #: src/components/modals/utils/GuildSettingsConstants.tsx:160
 msgid "Discovery"
 msgstr "การค้นพบ"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:163
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:166
 msgid "Discovery application submitted"
 msgstr "ส่งใบสมัครการค้นพบแล้ว"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:184
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:187
 msgid "Discovery application withdrawn"
 msgstr "ถอนใบสมัครการค้นพบแล้ว"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:152
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:155
 msgid "Discovery listing updated"
 msgstr "อัปเดตการลงทะเบียนการค้นพบ"
 
@@ -7854,7 +7858,7 @@ msgstr "ตั้งค่า DM"
 msgid "dm sidebar"
 msgstr "แถบด้านข้าง DM"
 
-#: src/components/modals/AddConnectionModal.tsx:239
+#: src/components/modals/AddConnectionModal.tsx:242
 msgid "DNS TXT record"
 msgstr "ระเบียน TXT ของ DNS"
 
@@ -7904,7 +7908,7 @@ msgid "domain"
 msgstr "โดเมน"
 
 #: src/components/modals/AddConnectionModal.tsx:87
-#: src/components/modals/AddConnectionModal.tsx:207
+#: src/components/modals/AddConnectionModal.tsx:210
 #: src/components/modals/tabs/LinkedAccountsTab.tsx:168
 #: src/components/modals/tabs/LinkedAccountsTab.tsx:303
 #: src/components/popouts/UserProfileShared.tsx:283
@@ -7995,7 +7999,7 @@ msgstr "ดาวน์โหลด"
 msgid "Download"
 msgstr "ดาวน์โหลด"
 
-#: src/components/modals/AddConnectionModal.tsx:280
+#: src/components/modals/AddConnectionModal.tsx:283
 msgid "Download <0>fluxer-verification</0> and place it in your <1>.well-known</1> folder so we can validate the domain."
 msgstr "ดาวน์โหลด <0>fluxer-verification</0> และวางไว้ในโฟลเดอร์ <1>.well-known</1> ของคุณเพื่อให้เราสามารถตรวจสอบโดเมนได้"
 
@@ -8012,7 +8016,7 @@ msgstr "ดาวน์โหลดแอปเดสก์ท็อป"
 msgid "Download Fluxer"
 msgstr "ดาวน์โหลด Fluxer"
 
-#: src/components/modals/AddConnectionModal.tsx:294
+#: src/components/modals/AddConnectionModal.tsx:297
 msgid "Download fluxer-verification"
 msgstr "ดาวน์โหลด fluxer-verification"
 
@@ -8024,7 +8028,7 @@ msgstr "ดาวน์โหลดสื่อ"
 msgid "Download the desktop app for system-wide Push-to-Talk"
 msgstr "ดาวน์โหลดแอปเดสก์ท็อปเพื่อระบบ Push-to-Talk ทั้งระบบ"
 
-#: src/components/modals/guild_tabs/GuildStickersTab.tsx:173
+#: src/components/modals/guild_tabs/GuildStickersTab.tsx:192
 msgid "Drag and drop a sticker file here (one at a time)"
 msgstr "ลากและวางไฟล์สติกเกอร์ที่นี่ (ทีละหนึ่ง)"
 
@@ -8032,12 +8036,12 @@ msgstr "ลากและวางไฟล์สติกเกอร์ที
 msgid "Drag and drop area for file upload"
 msgstr "พื้นที่ลากวางเพื่ออัปโหลดไฟล์"
 
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:363
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:382
 msgid "Drag and drop emoji files here"
 msgstr "ลากและวางไฟล์อิโมจิที่นี่"
 
-#: src/utils/PermissionUtils.tsx:413
-#: src/utils/PermissionUtils.tsx:510
+#: src/utils/PermissionUtils.tsx:419
+#: src/utils/PermissionUtils.tsx:516
 msgid "Drag members between channels they can access."
 msgstr "ลากสมาชิกระหว่างแชนแนลที่พวกเขาเข้าถึงได้"
 
@@ -8142,7 +8146,7 @@ msgstr "ข้อความแต่ละอันด้านล่างแ
 msgid "Each unique invite can only be used once."
 msgstr "คำเชิญแต่ละอันใช้ได้ครั้งเดียวเท่านั้น"
 
-#: src/components/modals/components/FeatureComparisonTable.tsx:60
+#: src/components/modals/components/FeatureComparisonTable.tsx:59
 msgid "Early access to new features"
 msgstr "เข้าถึงฟีเจอร์ใหม่ก่อนใคร"
 
@@ -8159,7 +8163,7 @@ msgstr "ยกเลิกเสียงสะท้อน"
 #: src/components/modals/tabs/ExpressionPacksTab.tsx:90
 #: src/components/modals/tabs/LinkedAccountsTab.tsx:186
 #: src/components/modals/tabs/LinkedAccountsTab.tsx:187
-#: src/components/stickers/StickerGridItem.tsx:111
+#: src/components/stickers/StickerGridItem.tsx:118
 msgid "Edit"
 msgstr "แก้ไข"
 
@@ -8200,8 +8204,8 @@ msgid "Edit Channel"
 msgstr "แก้ไขแชนแนล"
 
 #: src/components/popouts/GuildHeaderPopout.tsx:220
-#: src/components/uikit/context_menu/items/GuildMenuData.tsx:314
-#: src/components/uikit/context_menu/items/GuildMenuItems.tsx:392
+#: src/components/uikit/context_menu/items/GuildMenuData.tsx:317
+#: src/components/uikit/context_menu/items/GuildMenuItems.tsx:395
 msgid "Edit Community Profile"
 msgstr "แก้ไขโปรไฟล์ชุมชน"
 
@@ -8231,7 +8235,8 @@ msgstr "แก้ไขกลุ่ม"
 msgid "Edit group form"
 msgstr "แบบฟอร์มแก้ไขกลุ่ม"
 
-#: src/components/modals/InviteModal.tsx:322
+#: src/components/modals/InviteModal.tsx:316
+#: src/components/modals/InviteModal.tsx:326
 msgid "Edit invite link"
 msgstr "แก้ไขลิงก์คำเชิญ"
 
@@ -8255,15 +8260,19 @@ msgstr "แก้ไขข้อความ"
 msgid "Edit Note"
 msgstr "แก้ไขโน้ต"
 
-#: src/utils/PermissionUtils.tsx:439
+#: src/utils/PermissionUtils.tsx:290
+msgid "Edit or delete emoji and stickers created by other members."
+msgstr "แก้ไขหรือลบอีโมจิและสติกเกอร์ที่สร้างโดยสมาชิกคนอื่น"
+
+#: src/utils/PermissionUtils.tsx:445
 msgid "Edit overwrites for roles and members in this channel."
 msgstr "แก้ไขการเขียนทับสำหรับบทบาทและสมาชิกในแชนแนลนี้"
 
-#: src/components/modals/UserProfileMobileSheet.tsx:532
+#: src/components/modals/UserProfileMobileSheet.tsx:538
 #: src/components/modals/UserProfileModal.tsx:1262
 #: src/components/pages/YouPage.tsx:123
 #: src/components/popouts/UserAreaPopout.tsx:540
-#: src/components/popouts/UserProfilePopout.tsx:323
+#: src/components/popouts/UserProfilePopout.tsx:344
 msgid "Edit Profile"
 msgstr "แก้ไขโปรไฟล์"
 
@@ -8312,7 +8321,7 @@ msgstr "กำลังแก้ไขข้อความ"
 msgid "Editing scheduled message"
 msgstr "กำลังแก้ไขข้อความที่ตั้งเวลาไว้"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:80
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:83
 msgid "Education"
 msgstr "การศึกษา"
 
@@ -8396,8 +8405,8 @@ msgstr "ฝัง"
 msgid "Embed"
 msgstr "ฝัง"
 
-#: src/utils/PermissionUtils.tsx:319
-#: src/utils/PermissionUtils.tsx:469
+#: src/utils/PermissionUtils.tsx:325
+#: src/utils/PermissionUtils.tsx:475
 msgid "Embed Links"
 msgstr "ฝังลิงก์"
 
@@ -8440,7 +8449,7 @@ msgstr "อีโมจิ"
 msgid "emoji {emojiName}"
 msgstr "อีโมจิ {emojiName}"
 
-#: src/components/modals/components/FeatureComparisonTable.tsx:54
+#: src/components/modals/components/FeatureComparisonTable.tsx:53
 msgid "Emoji & sticker packs"
 msgstr "แพ็คอิโมจิ & สติกเกอร์"
 
@@ -8456,16 +8465,16 @@ msgstr "ลบอีโมจิแล้ว"
 msgid "Emoji name"
 msgstr "ชื่ออีโมจิ"
 
-#: src/components/emojis/EmojiListItem.tsx:163
+#: src/components/emojis/EmojiListItem.tsx:164
 msgid "Emoji name must be at least 2 characters long"
 msgstr "ชื่ออีโมจิต้องมีอย่างน้อย 2 ตัวอักษร"
 
-#: src/components/emojis/EmojiListItem.tsx:167
+#: src/components/emojis/EmojiListItem.tsx:168
 msgid "Emoji name must be at most 32 characters long"
 msgstr "ชื่ออีโมจิต้องไม่เกิน 32 ตัวอักษร"
 
 #. placeholder {0}: Math.round(GlobalLimits.getEmojiMaxSize() / 1024)
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:340
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:358
 msgid "Emoji names must be at least 2 characters long and can only contain alphanumeric characters and underscores. Allowed file types: JPEG, PNG, WebP, GIF. We compress images to 128x128 pixels. Maximum size: {0} KB per emoji."
 msgstr "ชื่ออีโมจิต้องมีความยาวอย่างน้อย 2 ตัวอักษรและอนุญาตให้ใช้เพียงตัวอักษรหรือตัวเลขและขีดล่างเท่านั้น ประเภทไฟล์ที่รองรับ: JPEG, PNG, WebP, GIF เราบีบอัดภาพเป็น 128x128 พิกเซล ขนาดสูงสุด: {0} KB ต่ออีโมจิ"
 
@@ -8492,7 +8501,7 @@ msgstr "ถึงขีดจำกัดชุดอีโมจิแล้ว
 msgid "emoji picker"
 msgstr "ตัวเลือกอีโมจิ"
 
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:326
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:344
 msgid "Emoji Slots"
 msgstr "ช่องอีโมจิ"
 
@@ -8536,11 +8545,11 @@ msgstr "เปิดใช้งานการเล่นเสียง /tts"
 msgid "Enable 2FA on your account to change this setting"
 msgstr "เปิดใช้งาน 2FA บนบัญชีของคุณเพื่อเปลี่ยนการตั้งค่านี้"
 
-#: src/components/modals/tabs/AdvancedTab.tsx:132
+#: src/components/modals/tabs/AdvancedTab.tsx:151
 msgid "Enable advanced features for debugging and development. Note that copying snowflake IDs for entities is always available to all users without needing developer mode."
 msgstr "เปิดใช้งานฟีเจอร์ขั้นสูงสำหรับดีบักและพัฒนา โปรดทราบว่าการคัดลอก ID แบบ snowflake ของเอนทิตีสามารถทำได้ทุกคนโดยไม่ต้องเปิดโหมดนักพัฒนา"
 
-#: src/components/modals/tabs/notifications_tab/Sounds.tsx:163
+#: src/components/modals/tabs/notifications_tab/Sounds.tsx:123
 msgid "Enable All"
 msgstr "เปิดทั้งหมด"
 
@@ -8861,7 +8870,7 @@ msgstr "ใส่รหัสผ่านของคุณ"
 msgid "Enter your phone number. We'll send you a verification code via SMS."
 msgstr "ใส่หมายเลขโทรศัพท์ของคุณ เราจะส่งรหัสยืนยันทาง SMS"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:79
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:82
 msgid "Entertainment"
 msgstr "ความบันเทิง"
 
@@ -8993,7 +9002,7 @@ msgstr "ขยายหมวดหมู่"
 msgid "Expiration"
 msgstr "วันหมดอายุ"
 
-#: src/components/modals/InviteModal.tsx:276
+#: src/components/modals/InviteModal.tsx:273
 msgid "Expire After"
 msgstr "หมดอายุหลังจาก"
 
@@ -9260,7 +9269,7 @@ msgstr "ลบหมวดหมู่ไม่สำเร็จ"
 msgid "Failed to delete channel"
 msgstr "ลบช่องไม่สำเร็จ"
 
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:149
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:165
 msgid "Failed to delete emoji. Please try again."
 msgstr "ลบอีโมจิล้มเหลว กรุณาลองใหม่อีกครั้ง"
 
@@ -9312,7 +9321,7 @@ msgstr "ติดตั้งชุดอีโมจิไม่สำเร็
 msgid "Failed to install this sticker pack. Please try again later."
 msgstr "ติดตั้งชุดสติกเกอร์ไม่สำเร็จ โปรดลองอีกครั้งภายหลัง"
 
-#: src/components/modals/discovery/DiscoveryGuildCard.tsx:56
+#: src/components/modals/discovery/DiscoveryGuildCard.tsx:62
 msgid "Failed to join this community. Please try again."
 msgstr "ไม่สามารถเข้าร่วมชุมชนนี้ได้ กรุณาลองอีกครั้ง"
 
@@ -9341,7 +9350,7 @@ msgstr "โหลดแอปพลิเคชันที่ได้รับ
 msgid "Failed to load bans. Please try again."
 msgstr "โหลดรายการแบนไม่สำเร็จ โปรดลองอีกครั้ง"
 
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:320
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:336
 msgid "Failed to load emojis. Please try again later."
 msgstr "โหลดอีโมจิล้มเหลว กรุณาลองใหม่ภายหลัง"
 
@@ -9363,7 +9372,7 @@ msgstr "โหลดคำเชิญไม่สำเร็จ โปรด�
 msgid "Failed to load premium information. Please try again later."
 msgstr "โหลดข้อมูลพรีเมียมไม่สำเร็จ โปรดลองอีกครั้งภายหลัง"
 
-#: src/components/modals/guild_tabs/GuildStickersTab.tsx:203
+#: src/components/modals/guild_tabs/GuildStickersTab.tsx:230
 msgid "Failed to Load Stickers"
 msgstr "โหลดสติ๊กเกอร์ไม่สำเร็จ"
 
@@ -9406,7 +9415,7 @@ msgstr "ไม่สามารถปักหมุด DM กลุ่มไ�
 msgid "Failed to pin message"
 msgstr "ปักหมุดข้อความไม่สำเร็จ"
 
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:225
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:241
 msgid "Failed to Prepare Emojis"
 msgstr "เตรียมอีโมจิไม่สำเร็จ"
 
@@ -9444,7 +9453,7 @@ msgstr "เข้าร่วมชุมชน Visionary อีกครั้�
 msgid "Failed to remove background image. Please try again."
 msgstr "ลบภาพพื้นหลังไม่สำเร็จ โปรดลองอีกครั้ง"
 
-#: src/components/modals/tabs/notifications_tab/useSoundSettings.tsx:164
+#: src/components/modals/tabs/notifications_tab/useSoundSettings.tsx:144
 msgid "Failed to remove custom sound"
 msgstr "ลบเสียงที่กำหนดเองไม่สำเร็จ"
 
@@ -9597,7 +9606,7 @@ msgstr "ไม่สามารถอัปเดตข้อความทา
 msgid "Failed to Update Channel Permissions"
 msgstr "อัปเดตสิทธิ์ช่องไม่สำเร็จ"
 
-#: src/components/emojis/EmojiListItem.tsx:180
+#: src/components/emojis/EmojiListItem.tsx:181
 msgid "Failed to update emoji name. Reverted to the previous name."
 msgstr "อัปเดตชื่ออิโมจิไม่สำเร็จ กลับไปใช้ชื่อเดิมแล้ว"
 
@@ -9617,16 +9626,16 @@ msgstr "อัปเดตเว็บฮุกไม่สำเร็จ"
 msgid "Failed to upload background image. Please try again."
 msgstr "อัปโหลดภาพพื้นหลังไม่สำเร็จ กรุณาลองใหม่"
 
-#: src/components/modals/tabs/notifications_tab/useSoundSettings.tsx:142
+#: src/components/modals/tabs/notifications_tab/useSoundSettings.tsx:122
 msgid "Failed to upload custom sound"
 msgstr "อัปโหลดเสียงที่กำหนดเองไม่สำเร็จ"
 
 #. placeholder {0}: startIndex + 1
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:277
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:293
 msgid "Failed to upload emojis starting at #{0}: {errorMsg}"
 msgstr "อัปโหลดอีโมจิล้มเหลวเริ่มที่ #{0}: {errorMsg}"
 
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:273
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:289
 msgid "Failed to upload emojis. Please try again."
 msgstr "อัปโหลดอิโมจิไม่สำเร็จ กรุณาลองใหม่"
 
@@ -9638,7 +9647,7 @@ msgstr "อัปโหลดเสียงเข้าไม่สำเร็
 msgid "Failed to verify connection"
 msgstr "ไม่สามารถตรวจสอบการเชื่อมต่อได้"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:190
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:193
 msgid "Failed to withdraw application. Please try again."
 msgstr "ไม่สามารถถอนใบสมัครได้ กรุณาลองอีกครั้ง"
 
@@ -9712,7 +9721,7 @@ msgstr "รายการโปรด"
 msgid "Favorites"
 msgstr "รายการโปรด"
 
-#: src/components/modals/components/FeatureComparisonTable.tsx:120
+#: src/components/modals/components/FeatureComparisonTable.tsx:119
 msgid "Feature"
 msgstr "คุณสมบัติ"
 
@@ -9753,7 +9762,7 @@ msgstr "ขนาดไฟล์เกินขีดจำกัด"
 msgid "File size too large"
 msgstr "ขนาดไฟล์ใหญ่เกินไป"
 
-#: src/components/modals/components/FeatureComparisonTable.tsx:53
+#: src/components/modals/components/FeatureComparisonTable.tsx:52
 msgid "File upload size"
 msgstr "ขนาดการอัปโหลดไฟล์"
 
@@ -10238,7 +10247,7 @@ msgstr "อัตราเฟรมที่สูงกว่า 30 FPS ต้�
 msgid "France"
 msgstr "ฝรั่งเศส"
 
-#: src/components/modals/components/FeatureComparisonTable.tsx:125
+#: src/components/modals/components/FeatureComparisonTable.tsx:124
 msgid "Free"
 msgstr "ฟรี"
 
@@ -10399,7 +10408,7 @@ msgstr "จอยสติ๊ก"
 msgid "Game Night"
 msgstr "คืนเกม"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:77
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:80
 msgid "Gaming"
 msgstr "เกม"
 
@@ -10484,7 +10493,6 @@ msgstr "รับการแจ้งเตือนเมื่อได้ร
 #: src/components/modals/FluxerTagChangeModal.tsx:221
 #: src/components/modals/tabs/components/EntranceSoundSection.tsx:67
 #: src/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:138
-#: src/components/modals/tabs/notifications_tab/Sounds.tsx:83
 #: src/components/modals/tabs/VideoTab.tsx:281
 #: src/components/uikit/plutonium_upsell/PlutoniumUpsell.tsx:72
 #: src/components/uikit/plutonium_upsell/PlutoniumUpsell.tsx:74
@@ -10657,7 +10665,7 @@ msgstr "ของขวัญ & รหัส"
 msgid "Glad you're here, {username}! Watch out for Biff!"
 msgstr "ดีใจที่คุณมาแล้ว {username}! ระวังบิฟเอาไว้!"
 
-#: src/components/modals/components/FeatureComparisonTable.tsx:57
+#: src/components/modals/components/FeatureComparisonTable.tsx:56
 msgid "Global emoji & sticker access"
 msgstr "เข้าถึงอีโมจิและสติกเกอร์ทั่วโลก"
 
@@ -10758,7 +10766,7 @@ msgstr "ระยะเวลาพัก"
 msgid "Grace Period (Still Have Access)"
 msgstr "ระยะเวลาพัก (ยังเข้าถึงได้)"
 
-#: src/components/modals/InviteModal.tsx:296
+#: src/components/modals/InviteModal.tsx:293
 msgid "Grant Temporary Membership"
 msgstr "มอบสมาชิกชั่วคราว"
 
@@ -10922,7 +10930,7 @@ msgstr "แถบด้านข้างของกิลด์"
 msgid "handle"
 msgstr "ชื่อผู้ใช้"
 
-#: src/components/modals/AddConnectionModal.tsx:207
+#: src/components/modals/AddConnectionModal.tsx:210
 msgid "Handle"
 msgstr "จัดการ"
 
@@ -10946,6 +10954,7 @@ msgstr "การล่วงละเมิดหรือกลั่นแก
 msgid "hardware"
 msgstr "ฮาร์ดแวร์"
 
+#: src/components/modals/tabs/AdvancedTab.tsx:137
 #: src/components/modals/utils/SettingsSearchIndex.tsx:222
 msgid "Hardware Acceleration"
 msgstr "การเร่งความเร็วด้วยฮาร์ดแวร์"
@@ -11116,7 +11125,7 @@ msgstr "ซ่อนแชนแนลที่ปิดเสียง"
 #: src/components/popouts/GuildHeaderPopout.tsx:228
 #: src/components/uikit/context_menu/ChannelListContextMenu.tsx:79
 #: src/components/uikit/context_menu/FavoritesChannelListContextMenu.tsx:60
-#: src/components/uikit/context_menu/items/GuildMenuData.tsx:332
+#: src/components/uikit/context_menu/items/GuildMenuData.tsx:335
 #: src/components/uikit/context_menu/items/GuildMenuItems.tsx:304
 msgid "Hide Muted Channels"
 msgstr "ซ่อนแชนแนลที่ปิดเสียง"
@@ -11284,7 +11293,7 @@ msgstr "ขึ้นรถเลย {username}! Mr Fusion พร้อมแล�
 msgid "Hope to see you back in the future"
 msgstr "หวังว่าจะได้เจอคุณอีกในอนาคต"
 
-#: src/components/modals/AddConnectionModal.tsx:244
+#: src/components/modals/AddConnectionModal.tsx:247
 msgid "Host"
 msgstr "โฮสต์"
 
@@ -11439,8 +11448,8 @@ msgstr "เพิกเฉย"
 msgid "Ignore Friend Request"
 msgstr "เพิกเฉยคำขอเป็นเพื่อน"
 
-#: src/utils/PermissionUtils.tsx:351
-#: src/utils/PermissionUtils.tsx:486
+#: src/utils/PermissionUtils.tsx:357
+#: src/utils/PermissionUtils.tsx:492
 msgid "Ignore per-channel message rate limits."
 msgstr "ไม่สนใจข้อจำกัดอัตราข้อความต่อแชนแนล"
 
@@ -11857,7 +11866,7 @@ msgid "Invalid"
 msgstr "ไม่ถูกต้อง"
 
 #: src/components/modals/tabs/hooks/useEntranceSound.tsx:68
-#: src/components/modals/tabs/notifications_tab/useSoundSettings.tsx:123
+#: src/components/modals/tabs/notifications_tab/useSoundSettings.tsx:103
 msgid "Invalid audio file"
 msgstr "ไฟล์เสียงไม่ถูกต้อง"
 
@@ -11915,7 +11924,7 @@ msgstr "มองไม่เห็น"
 
 #: src/components/channel/GuildMembersPage.tsx:246
 #: src/components/channel/GuildMembersPage.tsx:254
-#: src/components/modals/InviteModal.tsx:265
+#: src/components/modals/InviteModal.tsx:262
 #: src/components/modals/tabs/ExpressionPacksTab.tsx:87
 #: src/constants/AuditLogConstants.tsx:245
 msgid "Invite"
@@ -11955,7 +11964,7 @@ msgstr "เชิญเพื่อน"
 msgid "Invite friends to {0}"
 msgstr "เชิญเพื่อนไปที่ {0}"
 
-#: src/components/modals/InviteModal.tsx:311
+#: src/components/modals/InviteModal.tsx:308
 msgid "Invite link"
 msgstr "ลิงก์เชิญ"
 
@@ -11963,7 +11972,7 @@ msgstr "ลิงก์เชิญ"
 msgid "Invite Link"
 msgstr "ลิงก์เชิญ"
 
-#: src/components/modals/InviteModal.tsx:222
+#: src/components/modals/InviteModal.tsx:219
 msgid "Invite link settings"
 msgstr "การตั้งค่าลิงก์เชิญ"
 
@@ -11976,7 +11985,7 @@ msgstr "ลิงก์เชิญ"
 
 #: src/components/layout/ChannelItem.tsx:702
 #: src/components/popouts/GuildHeaderPopout.tsx:181
-#: src/components/uikit/context_menu/items/GuildMenuData.tsx:257
+#: src/components/uikit/context_menu/items/GuildMenuData.tsx:260
 msgid "Invite Members"
 msgstr "เชิญสมาชิก"
 
@@ -12087,7 +12096,7 @@ msgstr "คำเชิญ"
 msgid "Invites are currently disabled for this community."
 msgstr "คำเชิญถูกปิดใช้งานสำหรับชุมชนนี้ในขณะนี้"
 
-#: src/components/modals/InviteModal.tsx:235
+#: src/components/modals/InviteModal.tsx:232
 msgid "Invites are currently disabled in this community by an admin. While this invite can be created, it cannot be accepted until invites are re-enabled."
 msgstr "คำเชิญถูกปิดใช้งานในชุมชนนี้โดยผู้ดูแล ในขณะที่สามารถสร้างคำเชิญนี้ได้ แต่จะรับไม่ได้จนกว่าจะเปิดใช้งานคำเชิญอีกครั้ง"
 
@@ -12198,7 +12207,7 @@ msgstr "เข้าร่วมสาย"
 #: src/components/modals/AddGuildModal.tsx:132
 #: src/components/modals/AddGuildModal.tsx:416
 #: src/components/modals/components/plutonium/SubscriptionCard.tsx:289
-#: src/components/modals/discovery/DiscoveryGuildCard.tsx:93
+#: src/components/modals/discovery/DiscoveryGuildCard.tsx:99
 #: src/components/modals/InviteAcceptModal.tsx:119
 #: src/components/modals/InviteAcceptModalPreview.tsx:111
 msgid "Join Community"
@@ -12273,7 +12282,7 @@ msgstr "เข้าร่วมเสียง"
 msgid "Join Voice Call"
 msgstr "เข้าร่วมเสียง"
 
-#: src/components/modals/discovery/DiscoveryGuildCard.tsx:93
+#: src/components/modals/discovery/DiscoveryGuildCard.tsx:99
 msgid "Joined"
 msgstr "เข้าร่วมแล้ว"
 
@@ -12437,7 +12446,7 @@ msgstr "ดู {viewerStreamCount} สตรีมต่อไปและเพ
 msgid "Keep watching 1 stream and add this one"
 msgstr "ดู 1 สตรีมต่อไปและเพิ่มอันนี้"
 
-#: src/components/modals/tabs/AdvancedTab.tsx:111
+#: src/components/modals/tabs/AdvancedTab.tsx:114
 msgid "Keep your window dimensions and placement even when you reload the app."
 msgstr "เก็บขนาดหน้าต่างและตำแหน่งไว้แม้จะรีโหลดแอป"
 
@@ -12597,7 +12606,7 @@ msgstr "กราฟความหน่วง"
 msgid "Latvia"
 msgstr "ลัตเวีย"
 
-#: src/components/modals/tabs/AdvancedTab.tsx:89
+#: src/components/modals/tabs/AdvancedTab.tsx:92
 msgid "Launch Fluxer at Login"
 msgstr "เปิด Fluxer เมื่อเข้าสู่ระบบ"
 
@@ -12618,8 +12627,8 @@ msgid "Leave call"
 msgstr "ออกจากการโทร"
 
 #: src/components/popouts/GuildHeaderPopout.tsx:237
-#: src/components/uikit/context_menu/items/GuildMenuData.tsx:344
-#: src/components/uikit/context_menu/items/GuildMenuItems.tsx:447
+#: src/components/uikit/context_menu/items/GuildMenuData.tsx:347
+#: src/components/uikit/context_menu/items/GuildMenuItems.tsx:450
 #: src/hooks/useLeaveGuild.tsx:42
 #: src/hooks/useLeaveGuild.tsx:44
 msgid "Leave Community"
@@ -12840,7 +12849,7 @@ msgstr "ลิงก์"
 msgid "Links"
 msgstr "ลิงก์"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:212
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:215
 msgid "List your community in Discovery so others can find and join it."
 msgstr "ลงทะเบียนชุมชนของคุณใน Discovery เพื่อให้คนอื่นสามารถค้นหาและเข้าร่วมได้"
 
@@ -13121,13 +13130,13 @@ msgstr "จัดการแอปพลิเคชันที่ได้ร
 msgid "Manage blocked users"
 msgstr "จัดการผู้ใช้ที่ถูกบล็อก"
 
-#: src/utils/PermissionUtils.tsx:433
-#: src/utils/PermissionUtils.tsx:562
+#: src/utils/PermissionUtils.tsx:439
+#: src/utils/PermissionUtils.tsx:568
 msgid "Manage Channel"
 msgstr "จัดการแชนแนล"
 
 #: src/utils/PermissionUtils.tsx:257
-#: src/utils/PermissionUtils.tsx:562
+#: src/utils/PermissionUtils.tsx:568
 msgid "Manage Channels"
 msgstr "จัดการแชนแนล"
 
@@ -13143,7 +13152,7 @@ msgstr "จัดการฟีเจอร์ของชุมชน"
 msgid "Manage developer applications"
 msgstr "จัดการแอปพลิเคชันนักพัฒนา"
 
-#: src/utils/PermissionUtils.tsx:284
+#: src/utils/PermissionUtils.tsx:289
 msgid "Manage Emoji & Stickers"
 msgstr "จัดการอีโมจิและสติกเกอร์"
 
@@ -13163,8 +13172,8 @@ msgstr "จัดการเว็บฮุคที่สามารถส่
 msgid "Manage invites for this channel."
 msgstr "จัดการคำเชิญสำหรับแชนแนลนี้"
 
-#: src/utils/PermissionUtils.tsx:310
-#: src/utils/PermissionUtils.tsx:464
+#: src/utils/PermissionUtils.tsx:316
+#: src/utils/PermissionUtils.tsx:470
 msgid "Manage Messages"
 msgstr "จัดการข้อความ"
 
@@ -13172,7 +13181,7 @@ msgstr "จัดการข้อความ"
 msgid "Manage Nicknames"
 msgstr "จัดการชื่อเล่น"
 
-#: src/utils/PermissionUtils.tsx:438
+#: src/utils/PermissionUtils.tsx:444
 msgid "Manage Permissions"
 msgstr "จัดการสิทธิ์"
 
@@ -13191,8 +13200,8 @@ msgstr "จัดการการสมัครสมาชิก"
 msgid "Manage the email address you use to sign in to Fluxer"
 msgstr "จัดการที่อยู่อีเมลที่คุณใช้เข้าสู่ Fluxer"
 
-#: src/utils/PermissionUtils.tsx:288
-#: src/utils/PermissionUtils.tsx:443
+#: src/utils/PermissionUtils.tsx:294
+#: src/utils/PermissionUtils.tsx:449
 msgid "Manage Webhooks"
 msgstr "จัดการเว็บฮุค"
 
@@ -13231,7 +13240,7 @@ msgstr "จัดการการสมัครสมาชิกของค
 #: src/components/uikit/context_menu/items/ChannelMenuItems.tsx:85
 #: src/components/uikit/context_menu/items/DMMenuData.tsx:522
 #: src/components/uikit/context_menu/items/DMMenuItems.tsx:53
-#: src/components/uikit/context_menu/items/GuildMenuData.tsx:249
+#: src/components/uikit/context_menu/items/GuildMenuData.tsx:252
 #: src/components/uikit/context_menu/items/GuildMenuItems.tsx:95
 msgid "Mark as Read"
 msgstr "ทำเครื่องหมายว่าอ่านแล้ว"
@@ -13346,7 +13355,7 @@ msgstr "marty@example.com"
 msgid "Mask Visionary as subscription"
 msgstr "แสดง Visionary เป็นการสมัคร"
 
-#: src/components/modals/InviteModal.tsx:286
+#: src/components/modals/InviteModal.tsx:283
 msgid "Max Number of Uses"
 msgstr "จำนวนการใช้งานสูงสุด"
 
@@ -13581,7 +13590,7 @@ msgstr "สมาชิกถูกลบออก"
 msgid "Members receive notifications for every message"
 msgstr "สมาชิกได้รับแจ้งเตือนทุกข้อความ"
 
-#: src/components/modals/InviteModal.tsx:297
+#: src/components/modals/InviteModal.tsx:294
 msgid "Members will be removed when they go offline unless a role is assigned"
 msgstr "สมาชิกจะถูกลบเมื่อออฟไลน์ เว้นแต่จะมีบทบาทกำหนดไว้"
 
@@ -13627,8 +13636,8 @@ msgstr "กล่าวถึง @here?"
 msgid "Mention Badges"
 msgstr "ตรากล่าวถึง"
 
-#: src/utils/PermissionUtils.tsx:332
-#: src/utils/PermissionUtils.tsx:474
+#: src/utils/PermissionUtils.tsx:338
+#: src/utils/PermissionUtils.tsx:480
 msgid "Mention everyone or any role (even if the role isn't set to be mentionable)."
 msgstr "กล่าวถึงทุกคนหรือบทบาทใดก็ได้ (แม้บทบาทจะไม่ถูกตั้งให้กล่าวถึงได้)"
 
@@ -13665,11 +13674,11 @@ msgstr "เมนู"
 
 #: src/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:268
 #: src/components/modals/tabs/component_gallery_tab/InputsTab.tsx:164
-#: src/components/modals/UserProfileMobileSheet.tsx:547
+#: src/components/modals/UserProfileMobileSheet.tsx:553
 #: src/components/modals/UserProfileModal.tsx:1246
 #: src/components/modals/UserProfileModal.tsx:1372
-#: src/components/popouts/UserProfilePopout.tsx:313
-#: src/components/popouts/UserProfilePopout.tsx:332
+#: src/components/popouts/UserProfilePopout.tsx:334
+#: src/components/popouts/UserProfilePopout.tsx:353
 #: src/components/profile/ProfilePreview.tsx:276
 #: src/components/uikit/context_menu/items/ActionsSubmenu.tsx:109
 #: src/components/uikit/context_menu/items/MessageUserMenuItem.tsx:77
@@ -13703,7 +13712,7 @@ msgstr "การตั้งค่าแถบการกระทำข้อ
 msgid "Message AST"
 msgstr "ข้อความ AST"
 
-#: src/components/modals/components/FeatureComparisonTable.tsx:51
+#: src/components/modals/components/FeatureComparisonTable.tsx:50
 msgid "Message character limit"
 msgstr "ขีดจำกัดตัวอักษรข้อความ"
 
@@ -13837,8 +13846,8 @@ msgid "Messages"
 msgstr "ข้อความ"
 
 #: src/components/modals/utils/SettingsConstants.tsx:184
-#: src/utils/PermissionUtils.tsx:298
-#: src/utils/PermissionUtils.tsx:460
+#: src/utils/PermissionUtils.tsx:304
+#: src/utils/PermissionUtils.tsx:466
 msgid "Messages & Media"
 msgstr "ข้อความและสื่อ"
 
@@ -14021,7 +14030,7 @@ msgid "Mode C"
 msgstr "โหมด C"
 
 #: src/components/uikit/context_menu/items/ModerationSubmenu.tsx:152
-#: src/utils/PermissionUtils.tsx:360
+#: src/utils/PermissionUtils.tsx:366
 msgid "Moderation"
 msgstr "การควบคุม"
 
@@ -14117,8 +14126,8 @@ msgstr "ย้ายโฟกัสผ่านปุ่ม ช่องกร�
 msgid "Move focus to the message composer"
 msgstr "ย้ายโฟกัสไปที่ช่องเขียนข้อความ"
 
-#: src/utils/PermissionUtils.tsx:412
-#: src/utils/PermissionUtils.tsx:509
+#: src/utils/PermissionUtils.tsx:418
+#: src/utils/PermissionUtils.tsx:515
 msgid "Move Members"
 msgstr "ย้ายสมาชิก"
 
@@ -14158,7 +14167,7 @@ msgstr "ชมรมคนรักหนัง"
 msgid "Movie Night Crew"
 msgstr "ทีมค่ำคืนดูหนัง"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:84
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:87
 msgid "Movies & TV"
 msgstr "ภาพยนตร์ & ทีวี"
 
@@ -14170,7 +14179,7 @@ msgstr "mp3"
 msgid "Multilingual Content"
 msgstr "เนื้อหาหลายภาษา"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:78
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:81
 msgid "Music"
 msgstr "เพลง"
 
@@ -14191,8 +14200,8 @@ msgstr "ปิดเสียง"
 #: src/components/bottomsheets/DirectCallLobbyBottomSheet.tsx:270
 #: src/components/bottomsheets/VoiceLobbyBottomSheet.tsx:195
 #: src/components/channel/embeds/media/EmbedVideo.tsx:436
-#: src/components/layout/UserArea.tsx:149
-#: src/components/layout/UserArea.tsx:155
+#: src/components/layout/UserArea.tsx:163
+#: src/components/layout/UserArea.tsx:169
 #: src/components/media_player/components/MediaVerticalVolumeControl.tsx:249
 #: src/components/media_player/components/MediaVolumeControl.tsx:208
 #: src/components/modals/GuildNotificationSettingsModal.tsx:229
@@ -14255,7 +14264,7 @@ msgstr "ปิดเสียงแชนแนล"
 #: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:95
 #: src/components/uikit/context_menu/FavoritesGuildContextMenu.tsx:54
 #: src/components/uikit/context_menu/GuildContextMenu.tsx:40
-#: src/components/uikit/context_menu/items/GuildMenuData.tsx:326
+#: src/components/uikit/context_menu/items/GuildMenuData.tsx:329
 #: src/components/uikit/context_menu/items/GuildMenuItems.tsx:172
 msgid "Mute Community"
 msgstr "ปิดเสียงชุมชน"
@@ -14285,8 +14294,8 @@ msgstr "ปิดเสียงรายการโปรด"
 msgid "Mute Keybind"
 msgstr "ปุ่มลัดปิดเสียง"
 
-#: src/utils/PermissionUtils.tsx:404
-#: src/utils/PermissionUtils.tsx:506
+#: src/utils/PermissionUtils.tsx:410
+#: src/utils/PermissionUtils.tsx:512
 msgid "Mute Members"
 msgstr "ปิดเสียงสมาชิก"
 
@@ -14534,10 +14543,6 @@ msgstr "ไม่เคลื่อนไหว"
 msgid "Never Automatically"
 msgstr "ไม่อัตโนมัติ"
 
-#: src/components/modals/InviteModal.tsx:196
-msgid "never expires"
-msgstr "ไม่หมดอายุ"
-
 #: src/components/channel/Divider.tsx:51
 #: src/components/channel/Divider.tsx:60
 #: src/components/channel/UnreadDividerSlot.tsx:47
@@ -14758,7 +14763,7 @@ msgstr "ยังไม่มีการเชื่อมต่อ"
 
 #: src/components/auth/InviteHeader.tsx:159
 #: src/components/channel/InviteEmbed.tsx:240
-#: src/components/modals/discovery/DiscoveryGuildCard.tsx:72
+#: src/components/modals/discovery/DiscoveryGuildCard.tsx:78
 #: src/components/modals/InviteAcceptModal.tsx:165
 #: src/components/modals/tabs/ExpressionPacksTab.tsx:77
 msgid "No description provided."
@@ -14768,11 +14773,11 @@ msgstr "ไม่มีคำอธิบาย"
 msgid "No email address set"
 msgstr "ยังไม่ได้ตั้งที่อยู่อีเมล"
 
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:185
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:201
 msgid "No emoji slots available"
 msgstr "ไม่มีช่องอีโมจิให้ใช้งาน"
 
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:368
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:389
 msgid "No emojis found matching your search."
 msgstr "ไม่พบอิโมจิที่ตรงกับการค้นหาของคุณ"
 
@@ -14986,11 +14991,11 @@ msgid "No Stickers Available"
 msgstr "ไม่มีสติกเกอร์"
 
 #: src/components/channel/MobileStickersPicker.tsx:206
-#: src/components/modals/guild_tabs/GuildStickersTab.tsx:186
+#: src/components/modals/guild_tabs/GuildStickersTab.tsx:207
 msgid "No Stickers Found"
 msgstr "ไม่พบสติกเกอร์"
 
-#: src/components/modals/guild_tabs/GuildStickersTab.tsx:187
+#: src/components/modals/guild_tabs/GuildStickersTab.tsx:208
 msgid "No stickers found matching your search."
 msgstr "ไม่พบสติกเกอร์ที่ตรงกับการค้นหาของคุณ"
 
@@ -15055,7 +15060,7 @@ msgid "Noise Suppression"
 msgstr "ลดเสียงรบกวน"
 
 #. placeholder {0}: staticEmojis.length
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:384
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:405
 msgid "Non-Animated Emoji ({0})"
 msgstr "อิโมจิไม่เคลื่อนไหว ({0})"
 
@@ -15081,7 +15086,7 @@ msgstr "นอร์เวย์"
 msgid "Not available"
 msgstr "ไม่สามารถใช้ได้"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:224
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:227
 msgid "Not enough members"
 msgstr "สมาชิกไม่เพียงพอ"
 
@@ -15103,7 +15108,7 @@ msgstr "ตอนนี้ยังไม่"
 msgid "Not your cup of tea? You can disable this feature anytime."
 msgstr "ไม่ใช่ความชอบของคุณหรือเปล่า? คุณปิดฟีเจอร์นี้ได้ทุกเมื่อ"
 
-#: src/components/modals/UserProfileMobileSheet.tsx:599
+#: src/components/modals/UserProfileMobileSheet.tsx:605
 #: src/components/modals/UserProfileModal.tsx:243
 #: src/components/modals/UserProfileModal.tsx:247
 #: src/components/pages/YouPage.tsx:144
@@ -15154,7 +15159,7 @@ msgstr "แทนที่การแจ้งเตือน"
 #: src/components/uikit/context_menu/items/CategoryMenuItems.tsx:230
 #: src/components/uikit/context_menu/items/ChannelMenuData.tsx:492
 #: src/components/uikit/context_menu/items/ChannelMenuItems.tsx:253
-#: src/components/uikit/context_menu/items/GuildMenuData.tsx:304
+#: src/components/uikit/context_menu/items/GuildMenuData.tsx:307
 #: src/components/uikit/context_menu/items/GuildMenuItems.tsx:243
 msgid "Notification Settings"
 msgstr "การตั้งค่าการแจ้งเตือน"
@@ -15167,17 +15172,13 @@ msgstr "การตั้งค่าการแจ้งเตือน (ป�
 msgid "notification sound"
 msgstr "เสียงการแจ้งเตือน"
 
-#: src/components/modals/components/FeatureComparisonTable.tsx:49
-msgid "Notification sounds"
-msgstr "เสียงการแจ้งเตือน"
-
 #: src/components/modals/utils/SettingsSectionRegistry.tsx:539
 msgid "notifications"
 msgstr "การแจ้งเตือน"
 
 #: src/components/layout/MobileBottomNav.tsx:117
-#: src/components/modals/tabs/notifications_tab/Inline.tsx:63
-#: src/components/modals/tabs/NotificationsTab.tsx:64
+#: src/components/modals/tabs/notifications_tab/Inline.tsx:62
+#: src/components/modals/tabs/NotificationsTab.tsx:63
 #: src/components/modals/utils/SettingsSectionRegistry.tsx:537
 #: src/components/pages/NotificationsPage.tsx:51
 msgid "Notifications"
@@ -15263,7 +15264,7 @@ msgstr "ปิด"
 
 #: src/AppConstants.tsx:43
 #: src/components/bottomsheets/ChannelDetailsBottomSheet.tsx:310
-#: src/components/channel/ChannelMembers.tsx:112
+#: src/components/channel/ChannelMembers.tsx:114
 #: src/utils/MemberListUtils.tsx:151
 #: src/utils/MemberListUtils.tsx:189
 msgid "Offline"
@@ -15273,8 +15274,8 @@ msgstr "ออฟไลน์"
 #: src/components/guild/RoleManagement.tsx:306
 #: src/components/layout/app_layout/nagbars/DesktopNotificationNagbar.tsx:56
 #: src/components/modals/components/plutonium/hooks/useCheckoutActions.tsx:108
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:151
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:241
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:167
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:257
 #: src/components/modals/GuildOwnershipWarningModal.tsx:73
 msgid "OK"
 msgstr "ตกลง"
@@ -15363,7 +15364,7 @@ msgstr "ออนไลน์"
 
 #: src/AppConstants.tsx:39
 #: src/components/bottomsheets/ChannelDetailsBottomSheet.tsx:308
-#: src/components/channel/ChannelMembers.tsx:109
+#: src/components/channel/ChannelMembers.tsx:111
 #: src/components/channel/direct_message/DMFriendsView.tsx:176
 #: src/components/channel/friends/views/FriendsList.tsx:102
 #: src/utils/MemberListUtils.tsx:144
@@ -15504,15 +15505,15 @@ msgstr "เปิดตัวเลือกวันที่"
 #: src/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:143
 #: src/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:145
 #: src/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:268
-#: src/components/modals/UserProfileMobileSheet.tsx:318
-#: src/components/modals/UserProfileMobileSheet.tsx:320
-#: src/components/modals/UserProfileMobileSheet.tsx:547
+#: src/components/modals/UserProfileMobileSheet.tsx:324
+#: src/components/modals/UserProfileMobileSheet.tsx:326
+#: src/components/modals/UserProfileMobileSheet.tsx:553
 #: src/components/modals/UserProfileModal.tsx:1014
 #: src/components/modals/UserProfileModal.tsx:1016
 #: src/components/modals/UserProfileModal.tsx:1372
-#: src/components/popouts/UserProfilePopout.tsx:193
-#: src/components/popouts/UserProfilePopout.tsx:195
-#: src/components/popouts/UserProfilePopout.tsx:332
+#: src/components/popouts/UserProfilePopout.tsx:214
+#: src/components/popouts/UserProfilePopout.tsx:216
+#: src/components/popouts/UserProfilePopout.tsx:353
 #: src/components/uikit/context_menu/items/ActionsSubmenu.tsx:73
 #: src/components/uikit/context_menu/items/ActionsSubmenu.tsx:75
 #: src/components/uikit/context_menu/items/ActionsSubmenu.tsx:109
@@ -15733,7 +15734,7 @@ msgstr "หรือ"
 msgid "Or copy the link:"
 msgstr "หรือคัดลอกลิงก์:"
 
-#: src/components/modals/InviteModal.tsx:307
+#: src/components/modals/InviteModal.tsx:304
 msgid "or send an invite link to a friend:"
 msgstr "หรือส่งลิงก์เชิญให้เพื่อน:"
 
@@ -15749,7 +15750,7 @@ msgstr "ไม่สามารถโหลดข้อความต้นฉ
 msgid "Original message was deleted"
 msgstr "ข้อความต้นฉบับถูกลบ"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:85
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:88
 #: src/components/pages/report/OptionDescriptors.tsx:54
 #: src/components/pages/report/OptionDescriptors.tsx:65
 #: src/components/pages/report/OptionDescriptors.tsx:78
@@ -15763,8 +15764,8 @@ msgstr "อื่นๆ"
 msgid "Other Devices"
 msgstr "อุปกรณ์อื่น"
 
-#: src/utils/PermissionUtils.tsx:396
-#: src/utils/PermissionUtils.tsx:502
+#: src/utils/PermissionUtils.tsx:402
+#: src/utils/PermissionUtils.tsx:508
 msgid "Otherwise Push-to-talk is required."
 msgstr "หากไม่เช่นนั้นต้องใช้ Push-to-talk"
 
@@ -16026,7 +16027,7 @@ msgid "Payment Successful"
 msgstr "ชำระเงินสำเร็จ"
 
 #: src/components/channel/direct_message/DMFriendsView.tsx:196
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:55
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:58
 msgid "Pending"
 msgstr "รอดำเนินการ"
 
@@ -16236,8 +16237,8 @@ msgstr "ปักหมุดเลย ปักให้แน่น"
 msgid "Pin Message"
 msgstr "ปักหมุดข้อความ"
 
-#: src/utils/PermissionUtils.tsx:315
-#: src/utils/PermissionUtils.tsx:468
+#: src/utils/PermissionUtils.tsx:321
+#: src/utils/PermissionUtils.tsx:474
 msgid "Pin Messages"
 msgstr "ปักหมุดข้อความทั้งหมด"
 
@@ -16441,7 +16442,7 @@ msgstr "พลูโตเนียม"
 
 #: src/components/channel/direct_message/DMList.tsx:1326
 #: src/components/channel/direct_message/DMList.tsx:1405
-#: src/components/modals/components/FeatureComparisonTable.tsx:128
+#: src/components/modals/components/FeatureComparisonTable.tsx:127
 msgid "Plutonium"
 msgstr "Plutonium"
 
@@ -16564,7 +16565,7 @@ msgstr "ป้องกัน <0>{0}</0> ไม่ให้ส่งข้อค
 msgid "Prevent <0>{0}</0> from sending messages, reacting, and joining voice channels for the specified duration."
 msgstr "ป้องกัน <0>{0}</0> ไม่ให้ส่งข้อความ ตอบสนอง หรือเข้าร่วมแชนแนลเสียงในระยะเวลาที่กำหนด"
 
-#: src/utils/PermissionUtils.tsx:364
+#: src/utils/PermissionUtils.tsx:370
 msgid "Prevent members from sending messages, reacting, and joining voice for a duration."
 msgstr "ป้องกันสมาชิกไม่ให้ส่งข้อความ ตอบสนอง หรือเข้าร่วมเสียงในช่วงเวลาหนึ่ง"
 
@@ -16668,8 +16669,8 @@ msgstr "การดำเนินการหลัก"
 msgid "Primary button clicked!"
 msgstr "ปุ่มหลักถูกคลิก!"
 
-#: src/utils/PermissionUtils.tsx:400
-#: src/utils/PermissionUtils.tsx:505
+#: src/utils/PermissionUtils.tsx:406
+#: src/utils/PermissionUtils.tsx:511
 msgid "Priority Speaker"
 msgstr "ผู้พูดสำคัญ"
 
@@ -16691,8 +16692,8 @@ msgstr "นโยบายความเป็นส่วนตัว"
 
 #: src/components/modals/GuildPrivacySettingsModal.tsx:72
 #: src/components/popouts/GuildHeaderPopout.tsx:215
-#: src/components/uikit/context_menu/items/GuildMenuData.tsx:309
-#: src/components/uikit/context_menu/items/GuildMenuItems.tsx:378
+#: src/components/uikit/context_menu/items/GuildMenuData.tsx:312
+#: src/components/uikit/context_menu/items/GuildMenuItems.tsx:381
 msgid "Privacy Settings"
 msgstr "การตั้งค่าความเป็นส่วนตัว"
 
@@ -16841,11 +16842,11 @@ msgstr "โหมดการซื้อ"
 msgid "Purchased {0}"
 msgstr "ซื้อแล้ว {0}"
 
-#: src/components/emojis/EmojiListItem.tsx:197
+#: src/components/emojis/EmojiListItem.tsx:198
 msgid "Purge this emoji from storage and CDN"
 msgstr "ลบอิโมจินี้จากที่จัดเก็บและ CDN"
 
-#: src/components/stickers/StickerGridItem.tsx:69
+#: src/components/stickers/StickerGridItem.tsx:75
 msgid "Purge this sticker from storage and CDN"
 msgstr "ลบสติกเกอร์นี้จากที่จัดเก็บและ CDN"
 
@@ -16865,8 +16866,8 @@ msgstr "การแจ้งเตือนผลัก"
 msgid "Push notifications"
 msgstr "การแจ้งเตือนแบบพุช"
 
-#: src/components/modals/tabs/notifications_tab/Inline.tsx:91
-#: src/components/modals/tabs/NotificationsTab.tsx:95
+#: src/components/modals/tabs/notifications_tab/Inline.tsx:89
+#: src/components/modals/tabs/NotificationsTab.tsx:93
 #: src/components/modals/utils/SettingsSectionRegistry.tsx:612
 msgid "Push Settings"
 msgstr "การตั้งค่าแจ้งเตือนแบบพุช"
@@ -16897,7 +16898,7 @@ msgstr "กดค้างเพื่อพูด"
 msgid "Push-to-Talk (Limited)"
 msgstr "กดเพื่อพูด (จำกัด)"
 
-#: src/components/layout/UserArea.tsx:147
+#: src/components/layout/UserArea.tsx:161
 #: src/components/voice/VoiceControlBar.tsx:600
 msgid "Push-to-talk enabled — hold {pushToTalkHint} to speak"
 msgstr "เปิดใช้งานกดเพื่อพูด — กดค้าง {pushToTalkHint} เพื่อพูด"
@@ -17017,8 +17018,8 @@ msgstr "เปิดใช้งานอีกครั้ง"
 msgid "read aloud"
 msgstr "อ่านออกเสียง"
 
-#: src/utils/PermissionUtils.tsx:327
-#: src/utils/PermissionUtils.tsx:471
+#: src/utils/PermissionUtils.tsx:333
+#: src/utils/PermissionUtils.tsx:477
 msgid "Read Message History"
 msgstr "อ่านข้อความย้อนหลัง"
 
@@ -17057,7 +17058,7 @@ msgid "Reason (Optional)"
 msgstr "เหตุผล (ไม่บังคับ)"
 
 #. placeholder {0}: application.review_reason
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:246
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:249
 msgid "Reason: {0}"
 msgstr "เหตุผล: {0}"
 
@@ -17092,7 +17093,7 @@ msgstr "การค้นหาเมื่อเร็วๆ นี้"
 
 #. placeholder {0}: ChannelUtils.getIcon(channel, {size: 16, className: styles.channelIcon})
 #. placeholder {1}: channel.name
-#: src/components/modals/InviteModal.tsx:226
+#: src/components/modals/InviteModal.tsx:223
 msgid "Recipients will be taken to {0} <0>{1}</0>"
 msgstr "ผู้รับจะถูกพาไปที่ {0} <0>{1}</0>"
 
@@ -17250,7 +17251,7 @@ msgstr "ผู้ใช้ทั่วไป, บอท, ระบบ, และ
 msgid "Reject"
 msgstr "ปฏิเสธ"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:57
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:60
 msgid "Rejected"
 msgstr "ถูกปฏิเสธ"
 
@@ -17270,7 +17271,7 @@ msgstr "โหลดแอปใหม่"
 msgid "Remain silent unless someone runs /tts manually."
 msgstr "รักษาความเงียบจนกว่าจะมีคนเรียกใช้งาน /tts ด้วยตนเอง。"
 
-#: src/components/modals/tabs/AdvancedTab.tsx:110
+#: src/components/modals/tabs/AdvancedTab.tsx:113
 msgid "Remember Size & Position"
 msgstr "จดจำขนาดและตำแหน่ง"
 
@@ -17383,7 +17384,7 @@ msgstr "ลบที่คั่นหน้า"
 msgid "Remove Connection"
 msgstr "ลบการเชื่อมต่อ"
 
-#: src/components/modals/tabs/notifications_tab/Sounds.tsx:146
+#: src/components/modals/tabs/notifications_tab/Sounds.tsx:106
 msgid "Remove Custom Sound"
 msgstr "ลบเสียงที่กำหนดเอง"
 
@@ -17405,8 +17406,8 @@ msgstr "ลบตัวกรอง"
 #: src/components/modals/UserProfileActionsSheet.tsx:116
 #: src/components/modals/UserProfileActionsSheet.tsx:118
 #: src/components/modals/UserProfileActionsSheet.tsx:279
-#: src/components/modals/UserProfileMobileSheet.tsx:344
-#: src/components/modals/UserProfileMobileSheet.tsx:346
+#: src/components/modals/UserProfileMobileSheet.tsx:350
+#: src/components/modals/UserProfileMobileSheet.tsx:352
 #: src/components/modals/UserProfileModal.tsx:1199
 #: src/components/modals/UserProfileModal.tsx:1285
 #: src/components/uikit/context_menu/items/DMMenuData.tsx:643
@@ -17525,7 +17526,7 @@ msgstr "ลบเมื่อคุณซื้อ Plutonium ครั้งแ�
 msgid "Remove your Visionary ID badge"
 msgstr "ลบป้าย Visionary ID ของคุณ"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:58
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:61
 msgid "Removed"
 msgstr "ถูกลบ"
 
@@ -17635,11 +17636,11 @@ msgid "Rename"
 msgstr "เปลี่ยนชื่อ"
 
 #. placeholder {0}: emoji.name
-#: src/components/emojis/EmojiListItem.tsx:238
+#: src/components/emojis/EmojiListItem.tsx:240
 msgid "Rename :{0}:"
 msgstr "เปลี่ยนชื่อ :{0}:"
 
-#: src/utils/PermissionUtils.tsx:434
+#: src/utils/PermissionUtils.tsx:440
 msgid "Rename and edit this channel's settings."
 msgstr "เปลี่ยนชื่อและแก้ไขการตั้งค่าแชนแนลนี้"
 
@@ -17693,7 +17694,7 @@ msgstr "เรนเดอร์ข้อความทั้งหมดขอ
 msgid "Renews on <0>{renewalDate}</0>."
 msgstr "ต่ออายุในวันที่ <0>{renewalDate}</0>."
 
-#: src/components/modals/tabs/AdvancedTab.tsx:117
+#: src/components/modals/tabs/AdvancedTab.tsx:120
 msgid "Reopen in maximized mode if that’s how you last used Fluxer."
 msgstr "เปิดใหม่ในโหมดขยายถ้านั่นคือวิธีที่คุณใช้ Fluxer ล่าสุด."
 
@@ -17748,7 +17749,7 @@ msgid "Report a User Profile"
 msgstr "รายงานโปรไฟล์ผู้ใช้"
 
 #: src/components/modals/IARModal.tsx:119
-#: src/components/uikit/context_menu/items/GuildMenuData.tsx:350
+#: src/components/uikit/context_menu/items/GuildMenuData.tsx:353
 #: src/components/uikit/context_menu/items/ReportGuildMenuItem.tsx:57
 msgid "Report Community"
 msgstr "รายงานชุมชน"
@@ -17859,7 +17860,6 @@ msgstr "ต้องมีทุกอย่างในระดับสูง
 msgid "Requires everything in Medium, plus being a member of the server for at least 10 minutes."
 msgstr "ต้องมีทุกอย่างในระดับกลาง รวมถึงเป็นสมาชิกเซิร์ฟเวอร์อย่างน้อย 10 นาที"
 
-#: src/components/modals/tabs/notifications_tab/Sounds.tsx:135
 #: src/components/modals/tabs/VideoTab.tsx:120
 #: src/components/modals/tabs/VideoTab.tsx:130
 #: src/components/modals/tabs/VideoTab.tsx:140
@@ -18021,11 +18021,11 @@ msgstr "ความละเอียด"
 msgid "Restore account"
 msgstr "กู้คืนบัญชี"
 
-#: src/components/modals/tabs/AdvancedTab.tsx:122
+#: src/components/modals/tabs/AdvancedTab.tsx:125
 msgid "Restore Fullscreen"
 msgstr "คืนค่าหน้าจอเต็ม"
 
-#: src/components/modals/tabs/AdvancedTab.tsx:116
+#: src/components/modals/tabs/AdvancedTab.tsx:119
 msgid "Restore Maximized"
 msgstr "คืนค่าขยายเต็มที่"
 
@@ -18045,7 +18045,7 @@ msgstr "สมัครรับใหม่"
 #: src/components/modals/BackgroundImageGalleryModal.tsx:210
 #: src/components/modals/guild_tabs/GuildAuditLogTab.tsx:649
 #: src/components/modals/guild_tabs/GuildInvitesTab.tsx:125
-#: src/components/modals/guild_tabs/GuildStickersTab.tsx:207
+#: src/components/modals/guild_tabs/GuildStickersTab.tsx:234
 #: src/components/modals/guild_tabs/GuildWebhooksTab.tsx:138
 #: src/components/modals/tabs/applications_tab/ApplicationDetail.tsx:586
 #: src/components/modals/tabs/applications_tab/index.tsx:113
@@ -18055,7 +18055,7 @@ msgstr "สมัครรับใหม่"
 msgid "Retry"
 msgstr "ลองอีกครั้ง"
 
-#: src/components/modals/tabs/AdvancedTab.tsx:123
+#: src/components/modals/tabs/AdvancedTab.tsx:126
 msgid "Return to fullscreen automatically when you had it enabled last time."
 msgstr "กลับไปเต็มหน้าจอโดยอัตโนมัติหากคุณเปิดไว้ครั้งก่อน"
 
@@ -18269,7 +18269,7 @@ msgstr "กล่องเลือกสไตล์กลม"
 msgid "Ruby"
 msgstr "Ruby"
 
-#: src/components/modals/tabs/AdvancedTab.tsx:86
+#: src/components/modals/tabs/AdvancedTab.tsx:89
 msgid "Run Fluxer automatically when your computer starts. Or don't. Your choice!"
 msgstr "ให้ Fluxer ทำงานอัตโนมัติเมื่อเริ่มเครื่อง หรือไม่ก็ได้ เลือกเลย!"
 
@@ -18319,7 +18319,7 @@ msgstr "บันทึก"
 #: src/components/modals/EditGroupModal.tsx:230
 #: src/components/modals/EditGuildStickerModal.tsx:116
 #: src/components/modals/EditPackModal.tsx:106
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:343
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:357
 #: src/components/modals/guild_tabs/GuildVanityURLTab.tsx:220
 #: src/components/modals/GuildFolderSettingsModal.tsx:202
 #: src/components/modals/MessageHistoryThresholdModal.tsx:106
@@ -18402,7 +18402,7 @@ msgstr "บันทึกวิดีโอ"
 msgid "saved"
 msgstr "บันทึก"
 
-#: src/components/modals/components/FeatureComparisonTable.tsx:55
+#: src/components/modals/components/FeatureComparisonTable.tsx:54
 msgid "Saved media"
 msgstr "สื่อที่บันทึกไว้"
 
@@ -18451,7 +18451,7 @@ msgstr "ข้อความที่ตั้งเวลาไว้สำห
 msgid "Scheduled messages can be at most 30 days in the future."
 msgstr "ข้อความที่ตั้งเวลาไว้ล่วงหน้าได้สูงสุด 30 วัน"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:81
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:84
 msgid "Science & Technology"
 msgstr "วิทยาศาสตร์และเทคโนโลยี"
 
@@ -18493,6 +18493,7 @@ msgstr "หยุดแชร์หน้าจอ"
 msgid "screen sharing"
 msgstr "การแชร์หน้าจอ"
 
+#: src/components/modals/tabs/AdvancedTab.tsx:133
 #: src/components/uikit/LiveBadge.tsx:36
 msgid "Screen Sharing"
 msgstr "การแชร์หน้าจอ"
@@ -18574,7 +18575,7 @@ msgstr "ค้นหาชุมชน..."
 msgid "Search countries..."
 msgstr "ค้นหาประเทศ..."
 
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:308
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:324
 msgid "Search emojis..."
 msgstr "ค้นหาอีโมจิ..."
 
@@ -18603,7 +18604,7 @@ msgstr "ค้นหาแชนแนล คน หรือชุมชน"
 #: src/components/common/FriendSelector.tsx:197
 #: src/components/modals/AddFriendsToGroupModal.tsx:53
 #: src/components/modals/CreateDMModal.tsx:68
-#: src/components/modals/InviteModal.tsx:246
+#: src/components/modals/InviteModal.tsx:243
 #: src/components/modals/shared/RecipientList.tsx:179
 #: src/components/modals/ShareThemeModal.tsx:141
 msgid "Search friends"
@@ -18692,7 +18693,7 @@ msgstr "การตั้งค่าการค้นหา"
 msgid "Search settings..."
 msgstr "ค้นหาการตั้งค่า..."
 
-#: src/components/modals/guild_tabs/GuildStickersTab.tsx:130
+#: src/components/modals/guild_tabs/GuildStickersTab.tsx:147
 msgid "Search stickers..."
 msgstr "ค้นหาสติกเกอร์..."
 
@@ -19035,8 +19036,8 @@ msgstr "ปิดการส่งข้อความ"
 msgid "Send messages"
 msgstr "ส่งข้อความ"
 
-#: src/utils/PermissionUtils.tsx:301
-#: src/utils/PermissionUtils.tsx:462
+#: src/utils/PermissionUtils.tsx:307
+#: src/utils/PermissionUtils.tsx:468
 msgid "Send Messages"
 msgstr "ส่งข้อความ"
 
@@ -19056,11 +19057,11 @@ msgstr "ส่งรหัส SMS"
 msgid "Send SMS Code"
 msgstr "ส่งรหัส SMS"
 
-#: src/utils/PermissionUtils.tsx:306
+#: src/utils/PermissionUtils.tsx:312
 msgid "Send text-to-speech messages."
 msgstr "ส่งข้อความแปลงเป็นเสียง"
 
-#: src/utils/PermissionUtils.tsx:305
+#: src/utils/PermissionUtils.tsx:311
 msgid "Send TTS Messages"
 msgstr "ส่งข้อความ TTS"
 
@@ -19072,7 +19073,7 @@ msgstr "ส่งรหัสยืนยัน"
 msgid "Send voice message"
 msgstr "ส่งข้อความเสียง"
 
-#: src/components/modals/InviteModal.tsx:266
+#: src/components/modals/InviteModal.tsx:263
 #: src/components/modals/shared/RecipientList.tsx:223
 #: src/components/modals/ShareThemeModal.tsx:159
 msgid "Sent"
@@ -19098,7 +19099,7 @@ msgstr "ส่งไฟล์แนบแล้ว"
 msgid "sent an embed"
 msgstr "ส่งการฝัง"
 
-#: src/components/modals/AddConnectionModal.tsx:277
+#: src/components/modals/AddConnectionModal.tsx:280
 msgid "Serve the token file"
 msgstr "ให้บริการไฟล์โทเคน"
 
@@ -19310,8 +19311,8 @@ msgstr "ตั้งค่าระดับการตรวจสอบเป
 msgid "Set verification level to <0>None</0>."
 msgstr "ตั้งค่าระดับการตรวจสอบเป็น <0>ไม่มี</0>"
 
-#: src/utils/PermissionUtils.tsx:417
-#: src/utils/PermissionUtils.tsx:513
+#: src/utils/PermissionUtils.tsx:423
+#: src/utils/PermissionUtils.tsx:519
 msgid "Set Voice Region"
 msgstr "ตั้งค่าภูมิภาคเสียง"
 
@@ -20121,8 +20122,8 @@ msgstr "เอฟเฟกต์เสียง"
 msgid "sounds"
 msgstr "เสียง"
 
-#: src/components/modals/tabs/notifications_tab/Inline.tsx:69
-#: src/components/modals/tabs/NotificationsTab.tsx:71
+#: src/components/modals/tabs/notifications_tab/Inline.tsx:68
+#: src/components/modals/tabs/NotificationsTab.tsx:70
 #: src/components/modals/utils/SettingsSectionRegistry.tsx:557
 msgid "Sounds"
 msgstr "เสียง"
@@ -20174,8 +20175,8 @@ msgstr "สเปน (ละตินอเมริกา)"
 msgid "Spanish (Spain)"
 msgstr "สเปน (สเปน)"
 
-#: src/utils/PermissionUtils.tsx:387
-#: src/utils/PermissionUtils.tsx:498
+#: src/utils/PermissionUtils.tsx:393
+#: src/utils/PermissionUtils.tsx:504
 msgid "Speak"
 msgstr "พูด"
 
@@ -20397,7 +20398,7 @@ msgstr "เริ่มโทรด้วยเสียง"
 
 #. placeholder {0}: staticEmojis.length
 #. placeholder {1}: maxStaticEmojis === Number.POSITIVE_INFINITY ? '∞' : maxStaticEmojis
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:349
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:367
 msgid "Static: {0} / {1}"
 msgstr "สแตติก: {0} / {1}"
 
@@ -20423,7 +20424,7 @@ msgstr "สถานะกระดาน"
 msgid "Status Slate"
 msgstr "แผ่นสถานะ"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:240
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:243
 msgid "Status:"
 msgstr "สถานะ:"
 
@@ -20478,7 +20479,7 @@ msgstr "สร้างสติกเกอร์แล้ว"
 msgid "Sticker Deleted"
 msgstr "ลบสติกเกอร์แล้ว"
 
-#: src/components/modals/guild_tabs/GuildStickersTab.tsx:137
+#: src/components/modals/guild_tabs/GuildStickersTab.tsx:154
 msgid "Sticker density"
 msgstr "ความหนาแน่นของสติกเกอร์"
 
@@ -20505,7 +20506,7 @@ msgstr "ถึงขีดจำกัดชุดสติกเกอร์แ
 msgid "sticker packs"
 msgstr "ชุดสติกเกอร์"
 
-#: src/components/modals/guild_tabs/GuildStickersTab.tsx:158
+#: src/components/modals/guild_tabs/GuildStickersTab.tsx:177
 msgid "Sticker Slots"
 msgstr "ช่องใส่สติกเกอร์"
 
@@ -20529,7 +20530,7 @@ msgid "Stickers"
 msgstr "สติกเกอร์"
 
 #. placeholder {0}: Math.round(GlobalLimits.getStickerMaxSize() / 1024)
-#: src/components/modals/guild_tabs/GuildStickersTab.tsx:164
+#: src/components/modals/guild_tabs/GuildStickersTab.tsx:183
 msgid "Stickers must be exactly 320x320 pixels and no larger than {0} KB, but we automatically resize and compress images for you. Allowed file types: JPEG, PNG, WebP, GIF."
 msgstr "สติกเกอร์ต้องมีขนาด 320x320 พิกเซลพอดีและไม่เกิน {0} KB แต่เราจะปรับขนาดและบีบอัดภาพให้โดยอัตโนมัติ ประเภทไฟล์ที่รองรับ: JPEG, PNG, WebP, GIF"
 
@@ -20611,8 +20612,8 @@ msgstr "ดูตัวอย่างสตรีม"
 msgid "Stream Quality"
 msgstr "คุณภาพสตรีม"
 
-#: src/utils/PermissionUtils.tsx:391
-#: src/utils/PermissionUtils.tsx:499
+#: src/utils/PermissionUtils.tsx:397
+#: src/utils/PermissionUtils.tsx:505
 msgid "Stream Video"
 msgstr "สตรีมวิดีโอ"
 
@@ -21051,8 +21052,8 @@ msgid "text to speech"
 msgstr "ข้อความเป็นเสียง"
 
 #: src/components/modals/tabs/AccessibilityTab.tsx:209
-#: src/components/modals/tabs/notifications_tab/Inline.tsx:86
-#: src/components/modals/tabs/NotificationsTab.tsx:89
+#: src/components/modals/tabs/notifications_tab/Inline.tsx:84
+#: src/components/modals/tabs/NotificationsTab.tsx:87
 #: src/components/modals/utils/SettingsSectionRegistry.tsx:261
 #: src/components/modals/utils/SettingsSectionRegistry.tsx:589
 msgid "Text-to-speech"
@@ -21139,7 +21140,7 @@ msgstr "ชุมชนที่คุณค้นหาอาจถูกลบ
 msgid "The download link will be valid for 7 days"
 msgstr "ลิงก์ดาวน์โหลดจะใช้งานได้ 7 วัน"
 
-#: src/components/modals/AddConnectionModal.tsx:298
+#: src/components/modals/AddConnectionModal.tsx:301
 msgid "The file contains the verification token we will fetch from <0>{dnsUrl}</0>."
 msgstr "ไฟล์นี้มีโทเคนการตรวจสอบที่เราจะดึงมาจาก <0>{dnsUrl}</0>."
 
@@ -21265,7 +21266,7 @@ msgstr "เกิดข้อผิดพลาดในการโหลดล
 msgid "There was an error loading the invites. Please try again."
 msgstr "เกิดข้อผิดพลาดในการโหลดคำเชิญ กรุณาลองใหม่อีกครั้ง"
 
-#: src/components/modals/guild_tabs/GuildStickersTab.tsx:204
+#: src/components/modals/guild_tabs/GuildStickersTab.tsx:231
 msgid "There was an error loading the stickers. Please try again."
 msgstr "เกิดข้อผิดพลาดในการโหลดสติกเกอร์ กรุณาลองใหม่อีกครั้ง"
 
@@ -21528,7 +21529,7 @@ msgstr "คำเชิญนี้จะหมดอายุใน {seconds} �
 msgid "This invite has unlimited uses."
 msgstr "คำเชิญนี้ใช้ได้ไม่จำกัด"
 
-#: src/components/modals/InviteModal.tsx:315
+#: src/components/modals/InviteModal.tsx:312
 msgid "This invite link never expires."
 msgstr "ลิงก์เชิญนี้ไม่มีวันหมดอายุ"
 
@@ -21836,7 +21837,7 @@ msgstr "ระยะเวลา timeout"
 msgid "Timeout ends {0} ({1})"
 msgstr "หมดเวลา {0} ({1})"
 
-#: src/utils/PermissionUtils.tsx:363
+#: src/utils/PermissionUtils.tsx:369
 msgid "Timeout Members"
 msgstr "สมาชิกที่ถูกปิดการใช้งาน"
 
@@ -22431,7 +22432,7 @@ msgstr "ไม่สามารถโหลดตัวอย่างได้
 msgid "Unable to load profile banner, badges, and bio."
 msgstr "ไม่สามารถโหลดแบนเนอร์โปรไฟล์ รางวัล และข้อมูลส่วนตัวได้"
 
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:229
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:245
 msgid "Unable to prepare any emojis for upload. The following errors occurred:"
 msgstr "ไม่สามารถเตรียมอิโมจิสำหรับอัปโหลดได้ เกิดข้อผิดพลาดดังต่อไปนี้:"
 
@@ -22487,7 +22488,7 @@ msgstr "ปลดบล็อก"
 #: src/components/modals/tabs/BlockedUsersTab.tsx:178
 #: src/components/modals/UserProfileActionsSheet.tsx:152
 #: src/components/modals/UserProfileActionsSheet.tsx:306
-#: src/components/modals/UserProfileMobileSheet.tsx:362
+#: src/components/modals/UserProfileMobileSheet.tsx:368
 #: src/components/modals/UserProfileModal.tsx:1105
 #: src/components/uikit/context_menu/items/DMMenuData.tsx:668
 #: src/components/uikit/context_menu/items/RelationshipMenuItems.tsx:231
@@ -22503,7 +22504,7 @@ msgstr "ปลดบล็อกผู้ใช้รายนี้ก่อน
 #: src/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:217
 #: src/components/modals/tabs/BlockedUsersTab.tsx:63
 #: src/components/modals/UserProfileActionsSheet.tsx:150
-#: src/components/modals/UserProfileMobileSheet.tsx:360
+#: src/components/modals/UserProfileMobileSheet.tsx:366
 #: src/components/modals/UserProfileModal.tsx:1300
 #: src/utils/RelationshipActionUtils.tsx:173
 msgid "Unblock User"
@@ -22532,7 +22533,7 @@ msgstr "เปลี่ยนแปลงบัญชีที่ยังไม
 #: src/components/bottomsheets/DirectCallLobbyBottomSheet.tsx:286
 #: src/components/bottomsheets/VoiceLobbyBottomSheet.tsx:211
 #: src/components/bottomsheets/VoiceSettingsBottomSheets.tsx:155
-#: src/components/layout/UserArea.tsx:160
+#: src/components/layout/UserArea.tsx:174
 #: src/components/voice/VoiceControlBar.tsx:611
 msgid "Undeafen"
 msgstr "เปิดเสียงหู"
@@ -22569,7 +22570,7 @@ msgstr "ผู้ใช้ยังไม่บรรลุนิติภาว
 #: src/components/alerts/UserBannedFromGuildModal.tsx:30
 #: src/components/alerts/UserIpBannedFromGuildModal.tsx:31
 #: src/components/layout/ChannelListContent.tsx:149
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:192
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:208
 #: src/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:160
 msgid "Understood"
 msgstr "เข้าใจแล้ว"
@@ -22614,7 +22615,7 @@ msgstr "คำเชิญเฉพาะตัว"
 msgid "Unit"
 msgstr "หน่วย"
 
-#: src/components/emojis/EmojiListItem.tsx:290
+#: src/components/emojis/EmojiListItem.tsx:301
 #: src/components/modals/BanDetailsModal.tsx:116
 msgid "Unknown"
 msgstr "ไม่ทราบ"
@@ -22776,8 +22777,8 @@ msgstr "ปลดล็อกสติกเกอร์ใน DM ด้วย P
 #: src/components/bottomsheets/MuteDurationSheet.tsx:75
 #: src/components/bottomsheets/VoiceLobbyBottomSheet.tsx:195
 #: src/components/channel/embeds/media/EmbedVideo.tsx:436
-#: src/components/layout/UserArea.tsx:148
-#: src/components/layout/UserArea.tsx:154
+#: src/components/layout/UserArea.tsx:162
+#: src/components/layout/UserArea.tsx:168
 #: src/components/media_player/components/MediaVerticalVolumeControl.tsx:249
 #: src/components/media_player/components/MediaVolumeControl.tsx:208
 #: src/components/modals/MobileVideoViewer.tsx:272
@@ -22813,7 +22814,7 @@ msgstr "เปิดเสียงแชนแนล"
 #: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:96
 #: src/components/uikit/context_menu/FavoritesGuildContextMenu.tsx:54
 #: src/components/uikit/context_menu/GuildContextMenu.tsx:40
-#: src/components/uikit/context_menu/items/GuildMenuData.tsx:326
+#: src/components/uikit/context_menu/items/GuildMenuData.tsx:329
 #: src/components/uikit/context_menu/items/GuildMenuItems.tsx:165
 msgid "Unmute Community"
 msgstr "เปิดเสียงชุมชน"
@@ -22957,7 +22958,7 @@ msgstr "จนกว่าฉันจะเปิดอีกครั้ง"
 msgid "Unverified Email"
 msgstr "อีเมลยังไม่ยืนยัน"
 
-#: src/components/modals/components/FeatureComparisonTable.tsx:63
+#: src/components/modals/components/FeatureComparisonTable.tsx:62
 msgid "Up to 4K/60fps"
 msgstr "สูงสุด 4K/60fps"
 
@@ -23138,7 +23139,7 @@ msgstr "อัปโหลดพื้นหลังแบบกำหนดเ
 msgid "Upload Custom Background"
 msgstr "อัปโหลดพื้นหลังแบบกำหนดเอง"
 
-#: src/components/modals/tabs/notifications_tab/Sounds.tsx:125
+#: src/components/modals/tabs/notifications_tab/Sounds.tsx:96
 msgid "Upload Custom Sound"
 msgstr "อัปโหลดเสียงที่กำหนดเอง"
 
@@ -23146,7 +23147,7 @@ msgstr "อัปโหลดเสียงที่กำหนดเอง"
 msgid "Upload directly to {displayName}"
 msgstr "อัปโหลดโดยตรงไปยัง {displayName}"
 
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:329
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:347
 msgid "Upload Emoji"
 msgstr "อัปโหลดอีโมจิ"
 
@@ -23170,11 +23171,15 @@ msgstr "อัปโหลดไอคอน"
 msgid "Upload Image"
 msgstr "อัปโหลดรูปภาพ"
 
+#: src/utils/PermissionUtils.tsx:285
+msgid "Upload new emoji and stickers, and manage your own creations."
+msgstr "อัปโหลดอีโมจิและสติกเกอร์ใหม่ และจัดการการสร้างของคุณเอง"
+
 #: src/components/modals/utils/SettingsSectionRegistry.tsx:577
 msgid "upload sound"
 msgstr "อัปโหลดเสียง"
 
-#: src/components/modals/guild_tabs/GuildStickersTab.tsx:161
+#: src/components/modals/guild_tabs/GuildStickersTab.tsx:180
 msgid "Upload Sticker"
 msgstr "อัปโหลดสติกเกอร์"
 
@@ -23186,10 +23191,6 @@ msgstr "อัปโหลดไปยัง {displayName}"
 #: src/components/channel/textarea/TextareaPlusMenu.tsx:81
 msgid "Upload your message as a file"
 msgstr "อัปโหลดข้อความของคุณเป็นไฟล์"
-
-#: src/components/modals/tabs/notifications_tab/Sounds.tsx:74
-msgid "Upload your own custom notification sounds and ringtones. Supported formats: MP3, WAV, OGG, M4A, AAC, FLAC, Opus, WebM. Maximum file size: 2MB per sound."
-msgstr "อัปโหลดเสียงแจ้งเตือนและริงโทนแบบกำหนดเองของคุณ รองรับ MP3, WAV, OGG, M4A, AAC, FLAC, Opus, WebM ขนาดไฟล์สูงสุด 2MB ต่อเสียง"
 
 #: src/components/modals/tabs/chat_settings_tab/MediaTab.tsx:148
 msgid "Uploaded attachments"
@@ -23235,8 +23236,8 @@ msgstr "URL สำหรับดาวน์โหลดไฟล์แนบ�
 msgid "US East"
 msgstr "อเมริกาตะวันออก"
 
-#: src/utils/PermissionUtils.tsx:331
-#: src/utils/PermissionUtils.tsx:473
+#: src/utils/PermissionUtils.tsx:337
+#: src/utils/PermissionUtils.tsx:479
 msgid "Use @everyone/@here and @roles"
 msgstr "ใช้ @everyone/@here และ @roles"
 
@@ -23256,7 +23257,7 @@ msgstr "ใช้ประเภทพรีเมียมจริง"
 msgid "Use an authenticator app to generate codes for two-factor authentication"
 msgstr "ใช้แอปตัวสร้างรหัสเพื่อสร้างรหัสสำหรับการยืนยันตัวตนสองขั้นตอน"
 
-#: src/components/modals/components/FeatureComparisonTable.tsx:56
+#: src/components/modals/components/FeatureComparisonTable.tsx:55
 msgid "Use animated emojis"
 msgstr "ใช้แอนิเมชันอีโมจิ"
 
@@ -23294,17 +23295,17 @@ msgstr "ใช้ธีมมืดทั้งแอป"
 msgid "Use Different Email"
 msgstr "ใช้ที่อยู่อีเมลอื่น"
 
-#: src/utils/PermissionUtils.tsx:337
+#: src/utils/PermissionUtils.tsx:343
 msgid "Use emoji from other communities."
 msgstr "ใช้อีโมจิจากคอมมูนิตี้อื่น"
 
-#: src/utils/PermissionUtils.tsx:336
-#: src/utils/PermissionUtils.tsx:477
+#: src/utils/PermissionUtils.tsx:342
+#: src/utils/PermissionUtils.tsx:483
 msgid "Use External Emoji"
 msgstr "ใช้อีโมจิภายนอก"
 
-#: src/utils/PermissionUtils.tsx:341
-#: src/utils/PermissionUtils.tsx:478
+#: src/utils/PermissionUtils.tsx:347
+#: src/utils/PermissionUtils.tsx:484
 msgid "Use External Stickers"
 msgstr "ใช้สติกเกอร์ภายนอก"
 
@@ -23337,7 +23338,7 @@ msgstr "ใช้คีย์ความปลอดภัย"
 msgid "Use system locale for time format"
 msgstr "ใช้โลแคลของระบบสำหรับรูปแบบเวลา"
 
-#: src/components/modals/AddConnectionModal.tsx:233
+#: src/components/modals/AddConnectionModal.tsx:236
 msgid "Use the record below to prove domain ownership."
 msgstr "ใช้บันทึกด้านล่างเพื่อพิสูจน์ความเป็นเจ้าของโดเมน."
 
@@ -23357,8 +23358,8 @@ msgstr "ใช้ปุ่มนี้เพื่อล้างสิทธิ
 msgid "Use this shortcut system-wide"
 msgstr "ใช้ทางลัดนี้ทั่วทั้งระบบ"
 
-#: src/utils/PermissionUtils.tsx:395
-#: src/utils/PermissionUtils.tsx:501
+#: src/utils/PermissionUtils.tsx:401
+#: src/utils/PermissionUtils.tsx:507
 msgid "Use Voice Activity"
 msgstr "ใช้การตรวจจับเสียง"
 
@@ -23450,8 +23451,8 @@ msgstr "โปรไฟล์ผู้ใช้: {tag}"
 msgid "User Record"
 msgstr "บันทึกผู้ใช้"
 
-#: src/components/layout/UserArea.tsx:272
-#: src/components/layout/UserArea.tsx:277
+#: src/components/layout/UserArea.tsx:286
+#: src/components/layout/UserArea.tsx:291
 #: src/components/modals/components/DesktopSettingsView.tsx:357
 #: src/components/modals/UserSettingsModal.tsx:154
 msgid "User Settings"
@@ -23530,6 +23531,10 @@ msgstr "ผู้ใช้"
 msgid "Uses"
 msgstr "การใช้งาน"
 
+#: src/components/modals/tabs/AdvancedTab.tsx:139
+msgid "Uses H.265 for screen sharing when enabled. Turn this off to prefer VP9. Changes apply the next time you start sharing your screen."
+msgstr "ใช้ H.265 สำหรับการแชร์หน้าจอเมื่อเปิดใช้งาน ปิดการใช้งานนี้เพื่อให้เลือก VP9 แก้ไขจะมีผลเมื่อคุณเริ่มแชร์หน้าจอครั้งถัดไป"
+
 #: src/components/modals/tabs/notifications_tab/Notifications.tsx:93
 msgid "Uses the OS notification center. For per-channel/per-community controls, right-click a community icon and open Notification Settings."
 msgstr "ใช้ศูนย์การแจ้งเตือนของระบบปฏิบัติการ สำหรับการควบคุมแยกช่อง/ชุมชน คลิกขวาที่ไอคอนชุมชนแล้วเปิดการตั้งค่าการแจ้งเตือน"
@@ -23570,7 +23575,7 @@ msgstr "ยูทิลิตี้"
 msgid "value"
 msgstr "ค่า"
 
-#: src/components/modals/AddConnectionModal.tsx:258
+#: src/components/modals/AddConnectionModal.tsx:261
 msgid "Value"
 msgstr "ค่า"
 
@@ -23678,7 +23683,7 @@ msgstr "กิลด์ที่ได้รับการยืนยัน"
 msgid "verify"
 msgstr "ตรวจสอบ"
 
-#: src/components/modals/AddConnectionModal.tsx:312
+#: src/components/modals/AddConnectionModal.tsx:315
 #: src/components/modals/EmailChangeModal.tsx:236
 #: src/components/modals/PasswordChangeModal.tsx:182
 #: src/components/modals/PhoneAddModal.tsx:240
@@ -23690,11 +23695,11 @@ msgstr "ยืนยัน"
 msgid "Verify Code"
 msgstr "ยืนยันรหัส"
 
-#: src/components/modals/AddConnectionModal.tsx:229
+#: src/components/modals/AddConnectionModal.tsx:232
 msgid "Verify Connection"
 msgstr "ตรวจสอบการเชื่อมต่อ"
 
-#: src/components/modals/AddConnectionModal.tsx:228
+#: src/components/modals/AddConnectionModal.tsx:231
 msgid "Verify connection form"
 msgstr "แบบฟอร์มตรวจสอบการเชื่อมต่อ"
 
@@ -23759,7 +23764,7 @@ msgid "Video"
 msgstr "วิดีโอ"
 
 #: src/components/channel/ChannelHeader.tsx:652
-#: src/components/modals/UserProfileMobileSheet.tsx:565
+#: src/components/modals/UserProfileMobileSheet.tsx:571
 msgid "Video Call"
 msgstr "วิดีโอคอล"
 
@@ -23784,7 +23789,7 @@ msgstr "ตัวอย่างวิดีโอ"
 msgid "Video progress"
 msgstr "ความก้าวหน้าของวิดีโอ"
 
-#: src/components/modals/components/FeatureComparisonTable.tsx:58
+#: src/components/modals/components/FeatureComparisonTable.tsx:57
 msgid "Video quality"
 msgstr "คุณภาพวิดีโอ"
 
@@ -23874,8 +23879,8 @@ msgstr "ดูการโทร"
 msgid "View call controls"
 msgstr "ดูการควบคุมการโทร"
 
-#: src/utils/PermissionUtils.tsx:374
-#: src/utils/PermissionUtils.tsx:454
+#: src/utils/PermissionUtils.tsx:380
+#: src/utils/PermissionUtils.tsx:460
 msgid "View Channel"
 msgstr "ดูช่อง"
 
@@ -24064,7 +24069,7 @@ msgstr "โทรเสียง"
 
 #: src/components/channel/ChannelHeader.tsx:642
 #: src/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:275
-#: src/components/modals/UserProfileMobileSheet.tsx:557
+#: src/components/modals/UserProfileMobileSheet.tsx:563
 #: src/components/uikit/context_menu/items/DMMenuData.tsx:553
 msgid "Voice Call"
 msgstr "โทรเสียง"
@@ -24566,7 +24571,7 @@ msgstr "เมื่อเปิดใช้งาน คนอื่นจะ�
 msgid "When enabled, quickly tapping your push-to-talk shortcut will keep your microphone on until pressed again."
 msgstr "เมื่อเปิดใช้งาน แตะทางลัดปุ่มพูดของคุณอย่างรวดเร็วจะทำให้ไมโครโฟนเปิดต่อเนื่องจนกว่าจะกดอีกครั้ง"
 
-#: src/components/modals/tabs/AdvancedTab.tsx:141
+#: src/components/modals/tabs/AdvancedTab.tsx:160
 msgid "When enabled, reveals debugging menus throughout the app to inspect and copy raw JSON objects of internal data structures like messages, channels, users, and communities. Also includes tools to debug the Fluxer Markdown parser performance and AST for any given message."
 msgstr "เมื่อเปิดใช้งาน จะเผยเมนูดีบักทั่วแอปเพื่อดูและคัดลอกวัตถุ JSON ดิบของโครงสร้างข้อมูลภายใน เช่น ข้อความ แชนแนล ผู้ใช้ และชุมชน รวมถึงเครื่องมือดีบักประสิทธิภาพและ AST ของ Fluxer Markdown สำหรับข้อความใดก็ได้"
 
@@ -24691,7 +24696,7 @@ msgstr "พร้อมข้อผิดพลาด"
 msgid "With Plutonium, you can use animated avatars and banners (in GIF, APNG, animated WebP, or AVIF), customize your 4-digit tag, and unlock many other premium features."
 msgstr "ด้วย Plutonium คุณสามารถใช้ภาพอวตารและแบนเนอร์แบบเคลื่อนไหว (ในรูปแบบ GIF, APNG, WebP แบบเคลื่อนไหว หรือ AVIF) ปรับแต่งแท็ก 4 หลักของคุณ และปลดล็อกฟีเจอร์พรีเมียมอื่นๆ อีกมากมาย."
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:339
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:353
 msgid "Withdraw"
 msgstr "ถอน"
 
@@ -24759,7 +24764,7 @@ msgstr "คุณ"
 msgid "You already have a group with these users. Do you really want to create a new one? That's fine too!"
 msgstr "คุณมีกลุ่มอยู่แล้วกับผู้ใช้เหล่านี้ คุณยังต้องการสร้างใหม่จริง ๆ ใช่ไหม? ถ้าใช่ก็ไม่เป็นไร!"
 
-#: src/components/modals/AddConnectionModal.tsx:98
+#: src/components/modals/AddConnectionModal.tsx:101
 msgid "You already have this connection."
 msgstr "คุณมีการเชื่อมต่อนี้อยู่แล้ว."
 
@@ -24795,9 +24800,9 @@ msgstr "คุณกำลังไปยัง Stripe เพื่อดำเ�
 #. placeholder {0}: displayUser.username
 #. placeholder {0}: user.username
 #: src/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:144
-#: src/components/modals/UserProfileMobileSheet.tsx:319
+#: src/components/modals/UserProfileMobileSheet.tsx:325
 #: src/components/modals/UserProfileModal.tsx:1015
-#: src/components/popouts/UserProfilePopout.tsx:194
+#: src/components/popouts/UserProfilePopout.tsx:215
 #: src/components/uikit/context_menu/items/ActionsSubmenu.tsx:74
 #: src/components/uikit/context_menu/items/MessageUserMenuItem.tsx:66
 #: src/components/uikit/context_menu/items/VoiceParticipantMenuData.tsx:208
@@ -24915,7 +24920,7 @@ msgid "You can't join while you're on timeout."
 msgstr "คุณไม่สามารถเข้าร่วมขณะที่อยู่ในช่วงพักเวลา"
 
 #: src/components/modals/UserProfileModal.tsx:1239
-#: src/components/popouts/UserProfilePopout.tsx:306
+#: src/components/popouts/UserProfilePopout.tsx:327
 #: src/components/profile/ProfilePreview.tsx:268
 msgid "You can't message yourself"
 msgstr "คุณไม่สามารถส่งข้อความถึงตัวเองได้"
@@ -25392,7 +25397,7 @@ msgstr "คุณถึงจำนวนชุมชนสูงสุดที
 msgid "You've reached the maximum number of communities you can join ({maxGuilds} community). Please leave a community before joining another one."
 msgstr "คุณถึงจำนวนชุมชนสูงสุดที่คุณสามารถเข้าร่วมได้ ({maxGuilds} ชุมชน) กรุณาออกจากชุมชนก่อนที่จะเข้าร่วมชุมชนใหม่."
 
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:187
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:203
 msgid "You've reached the maximum number of static emojis. Delete some existing emojis or upgrade your server to increase the limit."
 msgstr "คุณถึงจำนวนอีโมจิสแตติกสูงสุดแล้ว ลบอีโมจิที่มีอยู่บางรายการหรืออัปเกรดเซิร์ฟเวอร์ของคุณเพื่อเพิ่มขีดจำกัด"
 
@@ -25425,7 +25430,7 @@ msgstr "บัญชีของคุณยังไม่ได้ยืนย
 msgid "Your account is too new to send messages in this community."
 msgstr "บัญชีของคุณใหม่เกินไปที่จะส่งข้อความในชุมชนนี้"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:275
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:278
 msgid "Your application is pending review. You can still update your listing details or withdraw the application."
 msgstr "การสมัครของคุณกำลังรอการตรวจสอบ คุณยังสามารถอัปเดตรายละเอียดรายการของคุณหรือถอนการสมัครได้"
 
@@ -25445,11 +25450,11 @@ msgstr "รหัสของคุณ"
 msgid "Your code is ready!"
 msgstr "รหัสของคุณพร้อมแล้ว!"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:259
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:262
 msgid "Your community is listed in Discovery. You can update your listing details below or withdraw to remove it."
 msgstr "ชุมชนของคุณถูกระบุใน Discovery คุณสามารถอัปเดตรายละเอียดรายการด้านล่างหรือถอนเพื่อเอาออก"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:227
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:230
 msgid "Your community needs at least {minMemberCount} members before it can be listed in Discovery."
 msgstr "ชุมชนของคุณต้องมีสมาชิกอย่างน้อย {minMemberCount} คนก่อนที่จะสามารถระบุใน Discovery ได้"
 
@@ -25478,7 +25483,7 @@ msgstr "ที่อยู่อีเมลของคุณได้รับ
 msgid "Your email has been verified. You can now log in to your account."
 msgstr "อีเมลของคุณได้รับการยืนยันแล้ว ตอนนี้คุณสามารถเข้าสู่บัญชีได้"
 
-#: src/components/modals/tabs/notifications_tab/Sounds.tsx:90
+#: src/components/modals/tabs/notifications_tab/Sounds.tsx:64
 msgid "Your existing notification sound settings will be preserved."
 msgstr "การตั้งค่าเสียงแจ้งเตือนที่มีอยู่จะยังคงอยู่"
 
@@ -25499,7 +25504,7 @@ msgid "Your invite expires in 24 hours"
 msgstr "คำเชิญของคุณหมดอายุใน 24 ชั่วโมง"
 
 #. placeholder {0}: getExpirationText()
-#: src/components/modals/InviteModal.tsx:319
+#: src/components/modals/InviteModal.tsx:323
 msgid "Your invite link expires in {0}."
 msgstr "ลิงก์เชิญของคุณจะหมดอายุใน {0}"
 

@@ -750,6 +750,12 @@ export class NoopGatewayService extends IGatewayService {
 		return new Map();
 	}
 
+	async getDiscoveryGuildCounts(
+		_guildIds: Array<GuildID>,
+	): Promise<Map<GuildID, {memberCount: number; onlineCount: number}>> {
+		return new Map();
+	}
+
 	async getNodeStats(): Promise<{
 		status: string;
 		sessions: number;

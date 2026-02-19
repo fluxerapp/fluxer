@@ -189,7 +189,13 @@ export const PreloadableUserPopout = React.forwardRef<
 			<Popout
 				ref={ref}
 				render={({popoutKey}) => (
-					<UserProfilePopout popoutKey={popoutKey} user={user} isWebhook={isWebhook} guildId={guildId} />
+					<UserProfilePopout
+						key={`${user.id}:${guildId ?? 'global'}:${isWebhook ? 'webhook' : 'user'}`}
+						popoutKey={popoutKey}
+						user={user}
+						isWebhook={isWebhook}
+						guildId={guildId}
+					/>
 				)}
 				position={position}
 				tooltip={tooltip}

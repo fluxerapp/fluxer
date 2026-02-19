@@ -310,10 +310,6 @@ class AccountStorage {
 			sso: instance.sso,
 			publicPushVapidKey: instance.publicPushVapidKey,
 			sentryDsn: instance.sentryDsn ?? '',
-			sentryProxyPath: instance.sentryProxyPath ?? '',
-			sentryReportHost: instance.sentryReportHost ?? '',
-			sentryProjectId: instance.sentryProjectId ?? '',
-			sentryPublicKey: instance.sentryPublicKey ?? '',
 			limits:
 				instance.limits !== undefined && instance.limits !== null
 					? JSON.parse(JSON.stringify(instance.limits))

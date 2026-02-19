@@ -36,6 +36,43 @@ export class TenorResolver extends BaseResolver {
 
 	async resolve(url: URL, content: Uint8Array, isNSFWAllowed: boolean = false): Promise<Array<MessageEmbedResponse>> {
 		const document = parseDocument(Buffer.from(content).toString('utf-8'));
+
+		const gifEmbed = await this.resolveFromOgImage(url, document, isNSFWAllowed);
+		if (gifEmbed) {
+			return [gifEmbed];
+		}
+
+		return this.resolveFromJsonLd(url, document, isNSFWAllowed);
+	}
+
+	private async resolveFromOgImage(
+		url: URL,
+		document: Document,
+		isNSFWAllowed: boolean,
+	): Promise<MessageEmbedResponse | null> {
+		const ogImageUrl = this.extractMetaContent(document, 'og:image');
+		if (!ogImageUrl || !this.isGifUrl(ogImageUrl)) {
+			return null;
+		}
+
+		const thumbnail = await this.resolveMediaURL(url, ogImageUrl, isNSFWAllowed);
+		if (!thumbnail) {
+			return null;
+		}
+
+		return {
+			type: 'gifv',
+			url: url.href,
+			provider: {name: 'Tenor', url: 'https://tenor.com'},
+			thumbnail,
+		};
+	}
+
+	private async resolveFromJsonLd(
+		url: URL,
+		document: Document,
+		isNSFWAllowed: boolean,
+	): Promise<Array<MessageEmbedResponse>> {
 		const jsonLdContent = this.extractJsonLdContent(document);
 		if (!jsonLdContent) {
 			return [];
@@ -51,6 +88,20 @@ export class TenorResolver extends BaseResolver {
 			video: video ?? undefined,
 		};
 		return [embed];
+	}
+
+	private extractMetaContent(document: Document, property: string): string | null {
+		const element = selectOne(`meta[property="${property}"]`, document) as Element | null;
+		return element?.attribs['content'] ?? null;
+	}
+
+	private isGifUrl(url: string): boolean {
+		try {
+			const pathname = new URL(url).pathname;
+			return pathname.toLowerCase().endsWith('.gif');
+		} catch {
+			return url.toLowerCase().endsWith('.gif');
+		}
 	}
 
 	private extractJsonLdContent(document: Document): TenorJsonLd | null {

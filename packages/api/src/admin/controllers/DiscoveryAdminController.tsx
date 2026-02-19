@@ -43,8 +43,8 @@ function mapDiscoveryRowToResponse(row: GuildDiscoveryRow) {
 		description: row.description,
 		category_type: row.category_type,
 		applied_at: row.applied_at.toISOString(),
-		reviewed_at: row.reviewed_at?.toISOString() ?? null,
-		review_reason: row.review_reason ?? null,
+		reviewed_at: row.removed_at?.toISOString() ?? row.reviewed_at?.toISOString() ?? null,
+		review_reason: row.removal_reason ?? row.review_reason ?? null,
 	};
 }
 

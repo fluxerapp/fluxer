@@ -18,15 +18,15 @@
  */
 
 import {Logger} from '@fluxer/api/src/Logger';
-import {HttpWorkerQueue} from '@fluxer/api/src/worker/HttpWorkerQueue';
+import type {JetStreamWorkerQueue} from '@fluxer/api/src/worker/JetStreamWorkerQueue';
 import type {IWorkerService} from '@fluxer/worker/src/contracts/IWorkerService';
 import type {WorkerJobOptions, WorkerJobPayload} from '@fluxer/worker/src/contracts/WorkerTypes';
 
 export class WorkerService implements IWorkerService {
-	private readonly queue: HttpWorkerQueue;
+	private readonly queue: JetStreamWorkerQueue;
 
-	constructor() {
-		this.queue = new HttpWorkerQueue();
+	constructor(queue: JetStreamWorkerQueue) {
+		this.queue = queue;
 	}
 
 	async addJob<TPayload extends WorkerJobPayload = WorkerJobPayload>(
@@ -47,33 +47,11 @@ export class WorkerService implements IWorkerService {
 		}
 	}
 
-	async cancelJob(jobId: string): Promise<boolean> {
-		try {
-			const cancelled = await this.queue.cancelJob(jobId);
-			if (cancelled) {
-				Logger.info({jobId}, 'Job cancelled successfully');
-			} else {
-				Logger.debug({jobId}, 'Job not found (may have already been processed)');
-			}
-			return cancelled;
-		} catch (error) {
-			Logger.error({error, jobId}, 'Failed to cancel job');
-			throw error;
-		}
+	async cancelJob(_jobId: string): Promise<boolean> {
+		return false;
 	}
 
-	async retryDeadLetterJob(jobId: string): Promise<boolean> {
-		try {
-			const retried = await this.queue.retryDeadLetterJob(jobId);
-			if (retried) {
-				Logger.info({jobId}, 'Dead letter job retried successfully');
-			} else {
-				Logger.debug({jobId}, 'Job not found in dead letter queue');
-			}
-			return retried;
-		} catch (error) {
-			Logger.error({error, jobId}, 'Failed to retry dead letter job');
-			throw error;
-		}
+	async retryDeadLetterJob(_jobId: string): Promise<boolean> {
+		return false;
 	}
 }

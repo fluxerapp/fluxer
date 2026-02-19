@@ -58,6 +58,15 @@ export function parseTimestamp(text: string): ParserResult | null {
 		return null;
 	}
 
+	const timestampMillis = timestamp * 1000;
+	if (!Number.isFinite(timestampMillis)) {
+		return null;
+	}
+
+	if (Number.isNaN(new Date(timestampMillis).getTime())) {
+		return null;
+	}
+
 	let style: TimestampStyle;
 	if (stylePart !== undefined) {
 		if (stylePart === '') {

@@ -137,9 +137,11 @@ export class InviteService {
 	) {}
 
 	async getInvite(inviteCode: InviteCode): Promise<Invite> {
-		const invite = await this.inviteRepository.findUnique(inviteCode);
-		if (!invite) throw new UnknownInviteError();
-		return invite;
+		const invite = await this.findInviteWithLowercaseFallback(inviteCode);
+		if (invite) {
+			return invite;
+		}
+		throw new UnknownInviteError();
 	}
 
 	async getChannelInvites({userId, channelId}: GetChannelInvitesParams): Promise<Array<Invite>> {
@@ -350,7 +352,7 @@ export class InviteService {
 	}
 
 	private async performAcceptInvite({userId, inviteCode, requestCache}: AcceptInviteParams): Promise<Invite> {
-		const invite = await this.inviteRepository.findUnique(inviteCode);
+		const invite = await this.findInviteWithLowercaseFallback(inviteCode);
 		if (!invite) throw new UnknownInviteError();
 
 		if (invite.maxUses > 0 && invite.uses >= invite.maxUses) {
@@ -358,10 +360,10 @@ export class InviteService {
 				const guild = await this.guildService.getGuildSystem(invite.guildId);
 				const vanityCode = guild.vanityUrlCode ? vanityCodeToInviteCode(guild.vanityUrlCode) : null;
 				if (invite.code !== vanityCode) {
-					await this.inviteRepository.delete(inviteCode);
+					await this.inviteRepository.delete(invite.code);
 				}
 			} else if (invite.type === InviteTypes.GROUP_DM) {
-				await this.inviteRepository.delete(inviteCode);
+				await this.inviteRepository.delete(invite.code);
 			}
 
 			throw new UnknownInviteError();
@@ -390,9 +392,9 @@ export class InviteService {
 			});
 
 			const newUses = invite.uses + 1;
-			await this.inviteRepository.updateInviteUses(inviteCode, newUses);
+			await this.inviteRepository.updateInviteUses(invite.code, newUses);
 			if (invite.maxUses > 0 && newUses >= invite.maxUses) {
-				await this.inviteRepository.delete(inviteCode);
+				await this.inviteRepository.delete(invite.code);
 			}
 
 			return this.cloneInviteWithUses(invite, newUses);
@@ -403,9 +405,9 @@ export class InviteService {
 			await this.packService.installPack(userId, invite.guildId);
 
 			const newUses = invite.uses + 1;
-			await this.inviteRepository.updateInviteUses(inviteCode, newUses);
+			await this.inviteRepository.updateInviteUses(invite.code, newUses);
 			if (invite.maxUses > 0 && newUses >= invite.maxUses) {
-				await this.inviteRepository.delete(inviteCode);
+				await this.inviteRepository.delete(invite.code);
 			}
 
 			return this.cloneInviteWithUses(invite, newUses);
@@ -459,13 +461,27 @@ export class InviteService {
 		}
 
 		const newUses = invite.uses + 1;
-		await this.inviteRepository.updateInviteUses(inviteCode, newUses);
+		await this.inviteRepository.updateInviteUses(invite.code, newUses);
 
 		if (!isVanityInvite && invite.maxUses > 0 && newUses >= invite.maxUses) {
-			await this.inviteRepository.delete(inviteCode);
+			await this.inviteRepository.delete(invite.code);
 		}
 
 		return this.cloneInviteWithUses(invite, newUses);
+	}
+
+	private async findInviteWithLowercaseFallback(inviteCode: InviteCode): Promise<Invite | null> {
+		const invite = await this.inviteRepository.findUnique(inviteCode);
+		if (invite) {
+			return invite;
+		}
+
+		const lowercaseInviteCode = createInviteCode(inviteCode.toLowerCase());
+		if (lowercaseInviteCode === inviteCode) {
+			return null;
+		}
+
+		return this.inviteRepository.findUnique(lowercaseInviteCode);
 	}
 
 	private cloneInviteWithUses(invite: Invite, uses: number): Invite {
@@ -483,7 +499,7 @@ export class InviteService {
 	}
 
 	async deleteInvite({userId, inviteCode}: DeleteInviteParams, auditLogReason?: string | null): Promise<void> {
-		const invite = await this.inviteRepository.findUnique(inviteCode);
+		const invite = await this.findInviteWithLowercaseFallback(inviteCode);
 		if (!invite) throw new UnknownInviteError();
 
 		if (invite.type === InviteTypes.EMOJI_PACK || invite.type === InviteTypes.STICKER_PACK) {
@@ -497,7 +513,7 @@ export class InviteService {
 				throw new PackAccessDeniedError();
 			}
 
-			await this.inviteRepository.delete(inviteCode);
+			await this.inviteRepository.delete(invite.code);
 			return;
 		}
 
@@ -517,7 +533,7 @@ export class InviteService {
 				throw new MissingPermissionsError();
 			}
 
-			await this.inviteRepository.delete(inviteCode);
+			await this.inviteRepository.delete(invite.code);
 			return;
 		}
 
@@ -537,7 +553,7 @@ export class InviteService {
 			await checkPermission(Permissions.MANAGE_GUILD);
 		}
 
-		await this.inviteRepository.delete(inviteCode);
+		await this.inviteRepository.delete(invite.code);
 		await this.logGuildInviteAction({
 			invite,
 			userId,

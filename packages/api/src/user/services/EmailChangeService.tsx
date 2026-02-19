@@ -19,6 +19,7 @@
 
 import crypto from 'node:crypto';
 import {EMAIL_CLEARABLE_SUSPICIOUS_ACTIVITY_FLAGS} from '@fluxer/api/src/auth/services/AuthEmailService';
+import type {IEmailDnsValidationService} from '@fluxer/api/src/infrastructure/IEmailDnsValidationService';
 import type {User} from '@fluxer/api/src/models/User';
 import type {EmailChangeRepository} from '@fluxer/api/src/user/repositories/auth/EmailChangeRepository';
 import type {IUserAccountRepository} from '@fluxer/api/src/user/repositories/IUserAccountRepository';
@@ -61,6 +62,7 @@ export class EmailChangeService {
 		private readonly emailService: IEmailService,
 		private readonly userAccountRepository: IUserAccountRepository,
 		private readonly rateLimitService: IRateLimitService,
+		private readonly emailDnsValidationService: IEmailDnsValidationService,
 	) {}
 
 	async start(user: User): Promise<StartEmailChangeResult> {
@@ -190,6 +192,10 @@ export class EmailChangeService {
 		}
 		if (row.original_email && trimmedEmail.toLowerCase() === row.original_email.toLowerCase()) {
 			throw InputValidationError.fromCode('new_email', ValidationErrorCodes.NEW_EMAIL_MUST_BE_DIFFERENT);
+		}
+		const hasValidDns = await this.emailDnsValidationService.hasValidDnsRecords(trimmedEmail);
+		if (!hasValidDns) {
+			throw InputValidationError.fromCode('new_email', ValidationErrorCodes.INVALID_EMAIL_ADDRESS);
 		}
 		const existing = await this.userAccountRepository.findByEmail(trimmedEmail.toLowerCase());
 		if (existing && existing.id !== user.id) {

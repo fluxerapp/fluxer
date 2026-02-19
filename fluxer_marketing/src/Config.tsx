@@ -43,8 +43,8 @@ export const Config = {
 	appEndpoint: master.endpoints.app,
 	staticCdnEndpoint: master.endpoints.static_cdn,
 	marketingEndpoint: stripPath(master.endpoints.marketing),
-	apiRpcHost: master.gateway.rpc_endpoint,
-	gatewayRpcSecret: master.gateway.rpc_secret,
+	geoipDbPath: master.geoip.maxmind_db_path,
+	trustCfConnectingIp: master.proxy.trust_cf_connecting_ip,
 	rateLimit: null,
 };
 

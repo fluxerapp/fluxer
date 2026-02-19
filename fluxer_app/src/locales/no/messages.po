@@ -82,7 +82,7 @@ msgstr "(maks 15 vist)"
 msgid "(No content)"
 msgstr "(Ingen innhold)"
 
-#: src/components/modals/UserProfileMobileSheet.tsx:602
+#: src/components/modals/UserProfileMobileSheet.tsx:608
 #: src/components/pages/YouPage.tsx:147
 msgid "(only visible to you)"
 msgstr "(kun synlig for deg)"
@@ -651,14 +651,14 @@ msgstr "{maxFavoriteMemes} lagrede medieelementer"
 
 #: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:77
 #: src/components/channel/ChannelSourcePreview.tsx:206
-#: src/components/modals/discovery/DiscoveryGuildCard.tsx:83
+#: src/components/modals/discovery/DiscoveryGuildCard.tsx:89
 #: src/components/modals/UserProfileModal.tsx:839
 msgid "{memberCount} Member"
 msgstr "{memberCount} Medlem"
 
 #: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:77
 #: src/components/channel/ChannelSourcePreview.tsx:206
-#: src/components/modals/discovery/DiscoveryGuildCard.tsx:83
+#: src/components/modals/discovery/DiscoveryGuildCard.tsx:89
 #: src/components/modals/UserProfileModal.tsx:839
 msgid "{memberCount} Members"
 msgstr "{memberCount} Medlemmer"
@@ -698,7 +698,7 @@ msgstr "{mutualGuildCount} gjensidige fellesskap"
 msgid "{mutualGuildCount} mutual community"
 msgstr "{mutualGuildCount} gjensidig fellesskap"
 
-#: src/components/modals/discovery/DiscoveryGuildCard.tsx:78
+#: src/components/modals/discovery/DiscoveryGuildCard.tsx:84
 msgid "{onlineCount} Online"
 msgstr "{onlineCount} På nett"
 
@@ -1095,7 +1095,7 @@ msgstr "<0>Advarsel:</0> Dette vil også deaktivere tofaktor via SMS."
 #: src/components/channel/CallMessage.tsx:69
 #: src/components/modals/BanMemberModal.tsx:58
 #: src/components/modals/InviteModal.tsx:80
-#: src/components/modals/InviteModal.tsx:210
+#: src/components/modals/InviteModal.tsx:207
 #: src/components/modals/PackInviteModal.tsx:51
 #: src/components/modals/TimeoutMemberOptions.tsx:38
 msgid "1 day"
@@ -1105,7 +1105,7 @@ msgstr "1 dag"
 #: src/components/modals/BanMemberModal.tsx:56
 #: src/components/modals/channel_tabs/ChannelOverviewTab.tsx:171
 #: src/components/modals/InviteModal.tsx:77
-#: src/components/modals/InviteModal.tsx:204
+#: src/components/modals/InviteModal.tsx:201
 #: src/components/modals/PackInviteModal.tsx:48
 #: src/components/modals/TimeoutMemberOptions.tsx:37
 #: src/constants/TimeWindowPresets.tsx:58
@@ -1223,7 +1223,7 @@ msgstr "1080p"
 
 #: src/components/modals/BanMemberModal.tsx:57
 #: src/components/modals/InviteModal.tsx:79
-#: src/components/modals/InviteModal.tsx:208
+#: src/components/modals/InviteModal.tsx:205
 #: src/components/modals/PackInviteModal.tsx:50
 msgid "12 hours"
 msgstr "12 timer"
@@ -1346,7 +1346,7 @@ msgstr "30 FPS"
 
 #: src/components/modals/channel_tabs/ChannelOverviewTab.tsx:170
 #: src/components/modals/InviteModal.tsx:76
-#: src/components/modals/InviteModal.tsx:202
+#: src/components/modals/InviteModal.tsx:199
 #: src/components/modals/PackInviteModal.tsx:47
 #: src/constants/TimeWindowPresets.tsx:57
 #: src/utils/modals/guild_tabs/GuildOverviewTabUtils.tsx:64
@@ -1417,7 +1417,7 @@ msgstr "50 bruk"
 
 #: src/components/modals/channel_tabs/ChannelOverviewTab.tsx:173
 #: src/components/modals/InviteModal.tsx:78
-#: src/components/modals/InviteModal.tsx:206
+#: src/components/modals/InviteModal.tsx:203
 #: src/components/modals/PackInviteModal.tsx:49
 msgid "6 hours"
 msgstr "6 timer"
@@ -1437,7 +1437,7 @@ msgid "60 seconds"
 msgstr "60 sekunder"
 
 #: src/components/modals/InviteModal.tsx:81
-#: src/components/modals/InviteModal.tsx:212
+#: src/components/modals/InviteModal.tsx:209
 #: src/components/modals/PackInviteModal.tsx:52
 msgid "7 days"
 msgstr "7 dager"
@@ -1450,7 +1450,7 @@ msgstr "7 dager"
 msgid "720p"
 msgstr "720p"
 
-#: src/components/modals/components/FeatureComparisonTable.tsx:62
+#: src/components/modals/components/FeatureComparisonTable.tsx:61
 msgid "720p/30fps"
 msgstr "720p/30fps"
 
@@ -1462,7 +1462,7 @@ msgstr "8 timer"
 msgid "A 4-digit tag will be added automatically to ensure uniqueness"
 msgstr "En firesifret tag legges automatisk til for å sikre unikhet"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:293
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:298
 msgid "A description is required."
 msgstr "En beskrivelse er påkrevd."
 
@@ -1512,7 +1512,7 @@ msgid "about me"
 msgstr "om meg"
 
 #: src/components/modals/tabs/my_profile_tab/BioEditor.tsx:130
-#: src/components/modals/UserProfileMobileSheet.tsx:578
+#: src/components/modals/UserProfileMobileSheet.tsx:584
 #: src/components/pages/YouPage.tsx:132
 msgid "About Me"
 msgstr "Om meg"
@@ -1832,11 +1832,11 @@ msgstr "Legg til bot i et fellesskap"
 msgid "Add Channel"
 msgstr "Legg til kanal"
 
-#: src/components/modals/AddConnectionModal.tsx:194
+#: src/components/modals/AddConnectionModal.tsx:197
 msgid "Add Connection"
 msgstr "Legg til tilkobling"
 
-#: src/components/modals/AddConnectionModal.tsx:193
+#: src/components/modals/AddConnectionModal.tsx:196
 msgid "Add connection form"
 msgstr "Legg til tilkoblingsskjema"
 
@@ -1879,8 +1879,8 @@ msgstr "Legg til venner i gruppe"
 msgid "Add Item"
 msgstr "Legg til element"
 
-#: src/utils/PermissionUtils.tsx:346
-#: src/utils/PermissionUtils.tsx:481
+#: src/utils/PermissionUtils.tsx:352
+#: src/utils/PermissionUtils.tsx:487
 msgid "Add new reactions to messages."
 msgstr "Legg til nye reaksjoner på meldinger."
 
@@ -1929,8 +1929,8 @@ msgstr "Legg til skjema for telefonnummer"
 msgid "Add Reaction"
 msgstr "Legg til reaksjon"
 
-#: src/utils/PermissionUtils.tsx:345
-#: src/utils/PermissionUtils.tsx:480
+#: src/utils/PermissionUtils.tsx:351
+#: src/utils/PermissionUtils.tsx:486
 msgid "Add Reactions"
 msgstr "Legg til reaksjoner"
 
@@ -2522,7 +2522,7 @@ msgstr "Animerte avatarer (GIF, APNG, animert WebP, AVIF) er en premiumfunksjon 
 msgid "Animated avatars (GIF, APNG, animated WebP, AVIF) are not available on this instance. Please upload a static image instead."
 msgstr "Animerte avatarer (GIF, APNG, animert WebP, AVIF) er ikke tilgjengelige på denne instansen. Vennligst last opp et statisk bilde i stedet."
 
-#: src/components/modals/components/FeatureComparisonTable.tsx:59
+#: src/components/modals/components/FeatureComparisonTable.tsx:58
 msgid "Animated avatars & banners"
 msgstr "Animerte avatarer og bannere"
 
@@ -2551,7 +2551,7 @@ msgid "animated emoji"
 msgstr "animerte emoji"
 
 #. placeholder {0}: animatedEmojis.length
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:404
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:426
 msgid "Animated Emoji ({0})"
 msgstr "Animerte emoji ({0})"
 
@@ -2604,7 +2604,7 @@ msgstr "Animerte video"
 
 #. placeholder {0}: animatedEmojis.length
 #. placeholder {1}: maxAnimatedEmojis === Number.POSITIVE_INFINITY ? '∞' : maxAnimatedEmojis
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:354
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:373
 msgid "Animated: {0} / {1}"
 msgstr "Animerte: {0} / {1}"
 
@@ -2624,7 +2624,7 @@ msgstr "Animasjon"
 msgid "animations"
 msgstr "animasjoner"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:83
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:86
 msgid "Anime & Manga"
 msgstr "Anime & Manga"
 
@@ -2714,7 +2714,7 @@ msgstr "Applikasjoner"
 msgid "Applications & Bots"
 msgstr "Applikasjoner og roboter"
 
-#: src/components/modals/tabs/AdvancedTab.tsx:90
+#: src/components/modals/tabs/AdvancedTab.tsx:93
 msgid "Applies only to the desktop app on this device."
 msgstr "Gjelder bare skrivebordsappen på denne enheten."
 
@@ -2722,7 +2722,7 @@ msgstr "Gjelder bare skrivebordsappen på denne enheten."
 msgid "Applies to both camera and screen sharing"
 msgstr "Gjelder både kamera- og skjermdeling"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:343
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:357
 #: src/components/modals/guild_tabs/GuildMembersDateRangeModal.tsx:75
 #: src/components/modals/ThemeAcceptModal.tsx:180
 msgid "Apply"
@@ -2737,7 +2737,7 @@ msgstr "Bruk tema"
 msgid "Apply to all communities"
 msgstr "Bruk for alle fellesskap"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:56
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:59
 msgid "Approved"
 msgstr "Godkjent"
 
@@ -2781,7 +2781,7 @@ msgid "Are you sure you want to deauthorize {appName}? This application will no 
 msgstr "Er du sikker på at du vil tilbakekalle autorisasjonen for {appName}? Denne applikasjonen vil ikke lenger ha tilgang til kontoen din."
 
 #. placeholder {0}: emoji.name
-#: src/components/emojis/EmojiListItem.tsx:193
+#: src/components/emojis/EmojiListItem.tsx:194
 msgid "Are you sure you want to delete :{0}:? This action cannot be undone."
 msgstr "Er du sikker på at du vil slette :{0}:? Dette kan ikke angres."
 
@@ -2791,7 +2791,7 @@ msgstr "Er du sikker på at du vil slette :{0}:? Dette kan ikke angres."
 msgid "Are you sure you want to delete \"{0}\"? This action cannot be undone."
 msgstr "Er du sikker på at du vil slette «{0}»? Dette kan ikke angres."
 
-#: src/components/stickers/StickerGridItem.tsx:65
+#: src/components/stickers/StickerGridItem.tsx:71
 msgid "Are you sure you want to delete \"{stickerName}\"? This action cannot be undone."
 msgstr "Er du sikker på at du vil slette \"{stickerName}\"? Denne handlingen kan ikke angres."
 
@@ -2914,7 +2914,7 @@ msgstr "Er du sikker på at du vil gjøre {0} til gruppeeier? Du mister eierrett
 #. placeholder {0}: user.username
 #: src/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:184
 #: src/components/modals/UserProfileActionsSheet.tsx:117
-#: src/components/modals/UserProfileMobileSheet.tsx:345
+#: src/components/modals/UserProfileMobileSheet.tsx:351
 #: src/utils/RelationshipActionUtils.tsx:120
 msgid "Are you sure you want to remove {0} as a friend?"
 msgstr "Er du sikker på at du vil fjerne {0} som venn?"
@@ -2961,7 +2961,7 @@ msgstr "Er du sikker på at du vil overføre gruppeeierskapet til {0}?"
 #: src/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:218
 #: src/components/modals/tabs/BlockedUsersTab.tsx:64
 #: src/components/modals/UserProfileActionsSheet.tsx:151
-#: src/components/modals/UserProfileMobileSheet.tsx:361
+#: src/components/modals/UserProfileMobileSheet.tsx:367
 #: src/utils/RelationshipActionUtils.tsx:174
 msgid "Are you sure you want to unblock {0}?"
 msgstr "Er du sikker på at du vil oppheve blokkeringen av {0}?"
@@ -2986,8 +2986,8 @@ msgstr "Som gave"
 msgid "At least one channel must have \"View Channel\" permission enabled for @everyone in order for the vanity URL to work. Currently, no channels are viewable to @everyone."
 msgstr "Minst én kanal må ha tillatelsen \"Vis kanal\" aktivert for @everyone for at vanity URL skal fungere. For øyeblikket er ingen kanaler synlige for @everyone."
 
-#: src/utils/PermissionUtils.tsx:323
-#: src/utils/PermissionUtils.tsx:470
+#: src/utils/PermissionUtils.tsx:329
+#: src/utils/PermissionUtils.tsx:476
 msgid "Attach Files"
 msgstr "Legg ved filer"
 
@@ -3077,8 +3077,8 @@ msgid "Audio"
 msgstr "Lyd"
 
 #: src/components/modals/utils/SettingsConstants.tsx:190
-#: src/utils/PermissionUtils.tsx:380
-#: src/utils/PermissionUtils.tsx:495
+#: src/utils/PermissionUtils.tsx:386
+#: src/utils/PermissionUtils.tsx:501
 msgid "Audio & Video"
 msgstr "Lyd og video"
 
@@ -3301,7 +3301,7 @@ msgstr "Bruk automatisk systemets preferanse for redusert bevegelse, eller tilpa
 msgid "autoplay"
 msgstr "autoplay"
 
-#: src/components/modals/tabs/AdvancedTab.tsx:97
+#: src/components/modals/tabs/AdvancedTab.tsx:100
 msgid "Autostart is coming soon for Windows and Linux. For now, it is only available on macOS."
 msgstr "Autostart kommer snart for Windows og Linux. For nå er det kun tilgjengelig på macOS."
 
@@ -3344,7 +3344,7 @@ msgid "Average ping:"
 msgstr "Gjennomsnittlig ping:"
 
 #: src/components/auth/IpAuthorizationScreen.tsx:154
-#: src/components/modals/AddConnectionModal.tsx:309
+#: src/components/modals/AddConnectionModal.tsx:312
 #: src/components/modals/PhoneAddModal.tsx:237
 #: src/components/modals/RequiredActionModal.tsx:655
 #: src/components/pages/OAuthAuthorizePage.tsx:671
@@ -3740,7 +3740,7 @@ msgstr "Bokmerk melding"
 msgid "Bookmark messages to save them for later."
 msgstr "Bokmerk meldinger for å lagre dem til senere."
 
-#: src/components/modals/components/FeatureComparisonTable.tsx:52
+#: src/components/modals/components/FeatureComparisonTable.tsx:51
 msgid "Bookmarked messages"
 msgstr "Bokmerkede meldinger"
 
@@ -3932,8 +3932,8 @@ msgstr "Ved kjøp godtar du våre <0>bruksvilkår</0> og <1>personvernregler</1>
 msgid "By purchasing, you agreed to our <0>Terms of Service</0> and <1>Privacy Policy</1>. All purchases are refundable within 14 days by emailing <2>support@fluxer.app</2>. Chargebacks result in permanent account bans — if you want a refund, we're more than happy to give you one if you contact us first! Payment information is securely handled by Stripe — we never have access to your full card number."
 msgstr "Ved kjøp godkjente du våre <0>bruksvilkår</0> og <1>personvernregler</1>. Alle kjøp kan refunderes innen 14 dager ved å sende e-post til <2>support@fluxer.app</2>. Tilbakeføringer fører til permanent utestengelse — hvis du ønsker refusjon, hjelper vi gjerne så lenge du kontakter oss først! Betalingsinformasjon håndteres sikkert av Stripe — vi har aldri tilgang til hele kortnummeret ditt."
 
-#: src/utils/PermissionUtils.tsx:350
-#: src/utils/PermissionUtils.tsx:485
+#: src/utils/PermissionUtils.tsx:356
+#: src/utils/PermissionUtils.tsx:491
 msgid "Bypass Slowmode"
 msgstr "Omgå tregmodus"
 
@@ -4063,7 +4063,7 @@ msgstr "Kameraer er deaktivert når det er mer enn {VOICE_CHANNEL_CAMERA_USER_LI
 #: src/components/layout/GuildLayout.tsx:76
 #: src/components/modals/AccountDeleteModal.tsx:95
 #: src/components/modals/AccountDisableModal.tsx:69
-#: src/components/modals/AddConnectionModal.tsx:215
+#: src/components/modals/AddConnectionModal.tsx:218
 #: src/components/modals/AddFavoriteMemeModal.tsx:98
 #: src/components/modals/AddGuildModal.tsx:290
 #: src/components/modals/AddGuildModal.tsx:413
@@ -4109,7 +4109,7 @@ msgstr "Kameraer er deaktivert når det er mer enn {VOICE_CHANNEL_CAMERA_USER_LI
 #: src/components/modals/HideOwnScreenShareConfirmModal.tsx:65
 #: src/components/modals/IARModal.tsx:255
 #: src/components/modals/ImageCropModal.tsx:943
-#: src/components/modals/InviteModal.tsx:332
+#: src/components/modals/InviteModal.tsx:336
 #: src/components/modals/KickMemberModal.tsx:63
 #: src/components/modals/MessageHistoryThresholdModal.tsx:103
 #: src/components/modals/MfaTotpDisableModal.tsx:75
@@ -4211,7 +4211,7 @@ msgstr "Kortjusteringskontroller"
 msgid "Careful! You have unsaved changes."
 msgstr "Forsiktig! Du har ulagrede endringer."
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:316
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:330
 #: src/utils/ChannelUtils.tsx:69
 #: src/utils/modals/guild_tabs/GuildAuditLogTabUtils.tsx:229
 msgid "Category"
@@ -4437,8 +4437,8 @@ msgstr "kanal"
 msgid "Channel"
 msgstr "Kanal"
 
-#: src/utils/PermissionUtils.tsx:373
-#: src/utils/PermissionUtils.tsx:453
+#: src/utils/PermissionUtils.tsx:379
+#: src/utils/PermissionUtils.tsx:459
 msgid "Channel Access"
 msgstr "Kanaltilgang"
 
@@ -4516,7 +4516,7 @@ msgstr "Skrivemarkørmodus for kanalliste"
 msgid "Channel list typing indicators"
 msgstr "Skriveindikatorer for kanalliste"
 
-#: src/utils/PermissionUtils.tsx:426
+#: src/utils/PermissionUtils.tsx:432
 msgid "Channel Management"
 msgstr "Kanaladministrasjon"
 
@@ -4740,6 +4740,10 @@ msgstr "Velg mellom mørk, kull eller lys stil. Du kan fortsatt legge til egende
 msgid "Choose destination for system and welcome messages"
 msgstr "Velg destinasjon for system- og velkomstmeldinger"
 
+#: src/components/modals/tabs/AdvancedTab.tsx:134
+msgid "Choose how Fluxer selects the video codec for screen sharing."
+msgstr "Velg hvordan Fluxer velger videokodeken for skjermdeling."
+
 #: src/components/modals/guild_tabs/GuildModerationTab.tsx:268
 msgid "Choose how Fluxer treats this community for age-gating. Age Restricted blocks access for users under 18 and shows a content warning for adults, subject to local laws."
 msgstr "Velg hvordan Fluxer behandler dette fellesskapet for aldersgrense. Aldersbegrenset blokkerer tilgang for brukere under 18 og viser en innholdsadvarsel for voksne, i henhold til lokale lover."
@@ -4757,7 +4761,7 @@ msgstr "Velg hvordan tider vises i hele appen."
 msgid "Choose how typing indicators appear in the channel list when someone is typing in a channel."
 msgstr "Velg hvordan skriveindikatorer vises i kanallisten når noen skriver i en kanal."
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:332
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:346
 msgid "Choose the category that best describes your community."
 msgstr "Velg kategorien som best beskriver fellesskapet ditt."
 
@@ -4765,7 +4769,7 @@ msgstr "Velg kategorien som best beskriver fellesskapet ditt."
 msgid "Choose what {clientLabel} can do in your community. Uncheck any permissions you don't want to grant."
 msgstr "Velg hva {clientLabel} kan gjøre i fellesskapet ditt. Fjern avhukingen for tillatelser du ikke vil gi."
 
-#: src/components/modals/tabs/AdvancedTab.tsx:106
+#: src/components/modals/tabs/AdvancedTab.tsx:109
 msgid "Choose what Fluxer remembers about your window between restarts and reloads on this device."
 msgstr "Velg hva Fluxer husker om vinduet ditt mellom omstarter og oppdateringer på denne enheten."
 
@@ -5041,7 +5045,7 @@ msgstr "Klikk eller dra og slipp"
 msgid "Click the text below to edit it inline. Press Enter to save or Escape to cancel."
 msgstr "Klikk teksten nedenfor for å redigere den direkte. Trykk Enter for å lagre eller Escape for å avbryte."
 
-#: src/components/modals/tabs/notifications_tab/Sounds.tsx:97
+#: src/components/modals/tabs/notifications_tab/Sounds.tsx:70
 msgid "Click the upload icon next to any sound to customize it with your own audio file. Supported formats: MP3, WAV, OGG, M4A, AAC, FLAC, Opus, WebM (max 2MB)."
 msgstr "Klikk opplastingsikonet ved siden av en lyd for å tilpasse den med din egen lydfil. Støttede formater: MP3, WAV, OGG, M4A, AAC, FLAC, Opus, WebM (maks 2 MB)."
 
@@ -5328,7 +5332,7 @@ msgstr "Komfortabelt oppsett"
 msgid "Communication"
 msgstr "Kommunikasjon"
 
-#: src/components/modals/components/FeatureComparisonTable.tsx:50
+#: src/components/modals/components/FeatureComparisonTable.tsx:49
 #: src/stores/QuickSwitcherStore.tsx:1354
 #: src/utils/quick_switcher/QuickSwitcherModalUtils.tsx:99
 msgid "Communities"
@@ -5360,7 +5364,7 @@ msgstr "Fellesskapsoppretter"
 msgid "Community Deafen"
 msgstr "Slå av lyd for fellesskap"
 
-#: src/components/layout/UserArea.tsx:159
+#: src/components/layout/UserArea.tsx:173
 #: src/components/layout/VoiceStateIcons.tsx:57
 #: src/components/voice/VoiceControlBar.tsx:607
 #: src/components/voice/VoiceParticipantTile.tsx:1466
@@ -5432,8 +5436,8 @@ msgstr "Fellesskapsmedlemmer"
 msgid "Community Mute"
 msgstr "Dempe fellesskap"
 
-#: src/components/layout/UserArea.tsx:146
-#: src/components/layout/UserArea.tsx:153
+#: src/components/layout/UserArea.tsx:160
+#: src/components/layout/UserArea.tsx:167
 #: src/components/layout/VoiceStateIcons.tsx:49
 #: src/components/voice/VoiceControlBar.tsx:596
 #: src/components/voice/VoiceParticipantTile.tsx:1457
@@ -5492,10 +5496,10 @@ msgid "Community Record"
 msgstr "Fellesskapsoppføring"
 
 #: src/components/modals/components/DesktopGuildSettingsView.tsx:233
-#: src/components/modals/GuildSettingsModal.tsx:194
+#: src/components/modals/GuildSettingsModal.tsx:197
 #: src/components/popouts/GuildHeaderPopout.tsx:190
-#: src/components/uikit/context_menu/items/GuildMenuData.tsx:278
-#: src/components/uikit/context_menu/items/GuildMenuItems.tsx:346
+#: src/components/uikit/context_menu/items/GuildMenuData.tsx:281
+#: src/components/uikit/context_menu/items/GuildMenuItems.tsx:349
 msgid "Community Settings"
 msgstr "Fellesskapsinnstillinger"
 
@@ -5524,7 +5528,7 @@ msgstr "På tvers av fellesskapet"
 msgid "compact"
 msgstr "kompakt"
 
-#: src/components/modals/guild_tabs/GuildStickersTab.tsx:152
+#: src/components/modals/guild_tabs/GuildStickersTab.tsx:169
 msgid "Compact"
 msgstr "Kompakt"
 
@@ -5630,7 +5634,7 @@ msgstr "Konfigurer overstyringer for denne rollen"
 msgid "Configure role settings and permissions"
 msgstr "Konfigurer rolleinstillinger og tillatelser"
 
-#: src/components/modals/tabs/notifications_tab/Sounds.tsx:65
+#: src/components/modals/tabs/notifications_tab/Sounds.tsx:60
 msgid "Configure which sounds to play and when."
 msgstr "Konfigurer hvilke lyder som skal spilles og når."
 
@@ -5670,8 +5674,8 @@ msgstr "Bekreft passord"
 msgid "Connect"
 msgstr "Koble til"
 
-#: src/utils/PermissionUtils.tsx:383
-#: src/utils/PermissionUtils.tsx:497
+#: src/utils/PermissionUtils.tsx:389
+#: src/utils/PermissionUtils.tsx:503
 msgid "Connect (Join Voice)"
 msgstr "Koble til (bli med i tale)"
 
@@ -5679,7 +5683,7 @@ msgstr "Koble til (bli med i tale)"
 msgid "Connect to Voice"
 msgstr "Koble til tale"
 
-#: src/components/modals/AddConnectionModal.tsx:218
+#: src/components/modals/AddConnectionModal.tsx:221
 msgid "Connect with Bluesky"
 msgstr "Koble til Bluesky"
 
@@ -5730,7 +5734,7 @@ msgstr "Tilkobling fjernet"
 msgid "Connection Stats"
 msgstr "Tilkoblingsstatistikk"
 
-#: src/components/modals/AddConnectionModal.tsx:198
+#: src/components/modals/AddConnectionModal.tsx:201
 msgid "Connection Type"
 msgstr "Tilkoblingstype"
 
@@ -5783,7 +5787,7 @@ msgstr "Lag en autoriserings-URL med områder og tillatelser."
 msgid "contact"
 msgstr "kontakt"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:82
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:85
 msgid "Content Creator"
 msgstr "Innholdsprodusent"
 
@@ -5822,7 +5826,7 @@ msgid "Context menus can be opened with left-click (on buttons) or right-click (
 msgstr "Kontekstmenyer kan åpnes med venstreklikk (på knapper) eller høyreklikk (på andre elementer). Dette viser ulike menypunkter som avkrysningsbokser, radioknapper, glidere og undermenyer."
 
 #: src/components/channel/ChannelTextarea.tsx:311
-#: src/components/modals/AddConnectionModal.tsx:218
+#: src/components/modals/AddConnectionModal.tsx:221
 #: src/components/modals/BackupCodesRegenerateModal.tsx:75
 #: src/components/modals/BackupCodesViewModal.tsx:73
 #: src/components/modals/DeviceRevokeModal.tsx:82
@@ -5893,8 +5897,8 @@ msgstr "Kontroller hvordan du kobler deg til stemmekanaler i fellesskap."
 msgid "Control how your Plutonium badge is displayed to others"
 msgstr "Kontroller hvordan Plutonium-merket ditt vises for andre"
 
-#: src/components/modals/tabs/notifications_tab/Inline.tsx:87
-#: src/components/modals/tabs/NotificationsTab.tsx:90
+#: src/components/modals/tabs/notifications_tab/Inline.tsx:85
+#: src/components/modals/tabs/NotificationsTab.tsx:88
 msgid "Control speech commands and narration for incoming content."
 msgstr "Control speech commands and narration for incoming content."
 
@@ -5958,8 +5962,8 @@ msgid "Copied URL to clipboard"
 msgstr "URL kopiert til utklippstavlen"
 
 #: src/components/auth/HandoffCodeDisplay.tsx:106
-#: src/components/modals/AddConnectionModal.tsx:187
-#: src/components/modals/AddConnectionModal.tsx:188
+#: src/components/modals/AddConnectionModal.tsx:190
+#: src/components/modals/AddConnectionModal.tsx:191
 #: src/components/modals/shared/CopyLinkSection.tsx:52
 #: src/components/modals/ThemeAcceptModal.tsx:162
 #: src/lib/markdown/renderers/common/CodeElements.tsx:57
@@ -6017,7 +6021,7 @@ msgstr "Kopier kanalens lenke"
 msgid "Copy code"
 msgstr "Kopier kode"
 
-#: src/components/uikit/context_menu/items/GuildMenuData.tsx:372
+#: src/components/uikit/context_menu/items/GuildMenuData.tsx:375
 msgid "Copy Community ID"
 msgstr "Kopier fellesskaps-ID"
 
@@ -6045,11 +6049,11 @@ msgstr "Kopier FluxerTag"
 msgid "Copy GIF"
 msgstr "Kopier GIF"
 
-#: src/components/uikit/context_menu/items/GuildMenuItems.tsx:461
+#: src/components/uikit/context_menu/items/GuildMenuItems.tsx:464
 msgid "Copy Guild ID"
 msgstr "Kopier guild-ID"
 
-#: src/components/modals/AddConnectionModal.tsx:187
+#: src/components/modals/AddConnectionModal.tsx:190
 msgid "Copy host"
 msgstr "Kopier vert"
 
@@ -6154,7 +6158,7 @@ msgstr "Kopier bruker-ID"
 msgid "Copy Username"
 msgstr "Kopier brukernavn"
 
-#: src/components/modals/AddConnectionModal.tsx:188
+#: src/components/modals/AddConnectionModal.tsx:191
 msgid "Copy value"
 msgstr "Kopier verdi"
 
@@ -6199,7 +6203,7 @@ msgstr "deksel"
 msgid "cozy"
 msgstr "koselig"
 
-#: src/components/modals/guild_tabs/GuildStickersTab.tsx:144
+#: src/components/modals/guild_tabs/GuildStickersTab.tsx:161
 msgid "Cozy"
 msgstr "Koselig"
 
@@ -6295,8 +6299,8 @@ msgstr "Opprett applikasjon"
 #: src/components/popouts/GuildHeaderPopout.tsx:204
 #: src/components/uikit/context_menu/ChannelListContextMenu.tsx:89
 #: src/components/uikit/context_menu/FavoritesChannelListContextMenu.tsx:69
-#: src/components/uikit/context_menu/items/GuildMenuData.tsx:292
-#: src/components/uikit/context_menu/items/GuildMenuItems.tsx:428
+#: src/components/uikit/context_menu/items/GuildMenuData.tsx:295
+#: src/components/uikit/context_menu/items/GuildMenuItems.tsx:431
 msgid "Create Category"
 msgstr "Opprett kategori"
 
@@ -6305,8 +6309,8 @@ msgstr "Opprett kategori"
 #: src/components/modals/ChannelCreateModal.tsx:103
 #: src/components/popouts/GuildHeaderPopout.tsx:197
 #: src/components/uikit/context_menu/ChannelListContextMenu.tsx:86
-#: src/components/uikit/context_menu/items/GuildMenuData.tsx:287
-#: src/components/uikit/context_menu/items/GuildMenuItems.tsx:410
+#: src/components/uikit/context_menu/items/GuildMenuData.tsx:290
+#: src/components/uikit/context_menu/items/GuildMenuItems.tsx:413
 msgid "Create Channel"
 msgstr "Opprett kanal"
 
@@ -6324,6 +6328,10 @@ msgstr "Opprett fellesskapsskjema"
 #: src/utils/modals/CreateDMModalUtils.tsx:154
 msgid "Create DM"
 msgstr "Opprett DM"
+
+#: src/utils/PermissionUtils.tsx:284
+msgid "Create Emoji & Stickers"
+msgstr "Lag Emoji & Klistermerker"
 
 #: src/components/modals/CreatePackModal.tsx:52
 #: src/components/modals/tabs/ExpressionPacksTab.tsx:256
@@ -6346,7 +6354,7 @@ msgid "Create Invite"
 msgstr "Lag invitasjon"
 
 #: src/utils/PermissionUtils.tsx:270
-#: src/utils/PermissionUtils.tsx:429
+#: src/utils/PermissionUtils.tsx:435
 msgid "Create Invite Links"
 msgstr "Lag invitasjonslenker"
 
@@ -6358,7 +6366,7 @@ msgstr "Opprett ny konto"
 msgid "Create new group"
 msgstr "Opprett ny gruppe"
 
-#: src/components/modals/InviteModal.tsx:335
+#: src/components/modals/InviteModal.tsx:339
 msgid "Create New Link"
 msgstr "Opprett ny lenke"
 
@@ -6393,11 +6401,11 @@ msgstr "Opprett, rediger eller slett kanaler og kategorier."
 msgid "Create, edit, or delete roles below your highest role. Also allows editing channel permission overwrites."
 msgstr "Opprett, rediger eller slett roller under din høyeste rolle. Lar deg også redigere kanalens tillatelsesoverstyringer."
 
-#: src/utils/PermissionUtils.tsx:444
+#: src/utils/PermissionUtils.tsx:450
 msgid "Create, edit, or delete webhooks for this channel."
 msgstr "Opprett, rediger eller slett webhooks for denne kanalen."
 
-#: src/utils/PermissionUtils.tsx:289
+#: src/utils/PermissionUtils.tsx:295
 msgid "Create, edit, or delete webhooks."
 msgstr "Opprett, rediger eller slett webhooks."
 
@@ -6638,11 +6646,11 @@ msgstr "Egendefinert intervall..."
 msgid "custom ringtone"
 msgstr "tilpasset ringetone"
 
-#: src/components/modals/tabs/notifications_tab/useSoundSettings.tsx:159
+#: src/components/modals/tabs/notifications_tab/useSoundSettings.tsx:139
 msgid "Custom sound removed"
 msgstr "Egendefinert lyd fjernet"
 
-#: src/components/modals/tabs/notifications_tab/useSoundSettings.tsx:137
+#: src/components/modals/tabs/notifications_tab/useSoundSettings.tsx:117
 msgid "Custom sound uploaded successfully"
 msgstr "Egendefinert lyd lastet opp"
 
@@ -6662,7 +6670,7 @@ msgstr "Egendefinerte klistremerker"
 msgid "Custom Theme Tokens"
 msgstr "Egendefinerte tema-tokens"
 
-#: src/components/modals/components/FeatureComparisonTable.tsx:61
+#: src/components/modals/components/FeatureComparisonTable.tsx:60
 msgid "Custom themes"
 msgstr "Egendefinerte temaer"
 
@@ -6726,10 +6734,6 @@ msgstr "Tilpass din 4-sifrede tagg (#{discriminator}) med Plutonium"
 #: src/components/modals/FluxerTagChangeModal.tsx:272
 msgid "Customize your 4-digit tag or keep it when changing your username"
 msgstr "Tilpass din 4-sifrede tagg eller behold den når du endrer brukernavn"
-
-#: src/components/modals/tabs/notifications_tab/Sounds.tsx:71
-msgid "Customize your notification sounds with Plutonium"
-msgstr "Tilpass varslingslydene dine med Plutonium"
 
 #: src/components/modals/utils/SettingsSearchIndex.tsx:58
 msgid "Customize your profile banner"
@@ -6897,7 +6901,7 @@ msgstr "dempe"
 #: src/components/bottomsheets/DirectCallLobbyBottomSheet.tsx:286
 #: src/components/bottomsheets/VoiceLobbyBottomSheet.tsx:211
 #: src/components/bottomsheets/VoiceSettingsBottomSheets.tsx:155
-#: src/components/layout/UserArea.tsx:161
+#: src/components/layout/UserArea.tsx:175
 #: src/components/uikit/context_menu/items/VoiceParticipantMenuData.tsx:515
 #: src/components/uikit/context_menu/items/VoiceParticipantMenuItems.tsx:125
 #: src/components/voice/VoiceControlBar.tsx:613
@@ -6922,8 +6926,8 @@ msgstr "Demp enhet"
 msgid "Deafen Keybind"
 msgstr "Tastatursnarvei for døv"
 
-#: src/utils/PermissionUtils.tsx:408
-#: src/utils/PermissionUtils.tsx:507
+#: src/utils/PermissionUtils.tsx:414
+#: src/utils/PermissionUtils.tsx:513
 msgid "Deafen Members"
 msgstr "Døv medlemmer"
 
@@ -6962,7 +6966,7 @@ msgid "Debug Channel"
 msgstr "Feilsøk kanal"
 
 #: src/components/uikit/context_menu/items/DebugMenuItems.tsx:90
-#: src/components/uikit/context_menu/items/GuildMenuData.tsx:362
+#: src/components/uikit/context_menu/items/GuildMenuData.tsx:365
 msgid "Debug Community"
 msgstr "Feilsøk fellesskap"
 
@@ -7062,17 +7066,17 @@ msgstr "slett"
 #: src/components/channel/embeds/media/MediaContainer.tsx:116
 #: src/components/channel/MobileMemesPicker.tsx:546
 #: src/components/channel/pickers/memes/MemeGridItem.tsx:121
-#: src/components/emojis/EmojiListItem.tsx:194
-#: src/components/emojis/EmojiListItem.tsx:246
-#: src/components/emojis/EmojiListItem.tsx:296
+#: src/components/emojis/EmojiListItem.tsx:195
+#: src/components/emojis/EmojiListItem.tsx:252
+#: src/components/emojis/EmojiListItem.tsx:308
 #: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:322
 #: src/components/modals/tabs/component_gallery_tab/ButtonsTab.tsx:157
 #: src/components/modals/tabs/component_gallery_tab/ButtonsTab.tsx:242
 #: src/components/modals/tabs/component_gallery_tab/index.tsx:165
 #: src/components/modals/tabs/component_gallery_tab/Inline.tsx:160
 #: src/components/modals/tabs/ExpressionPacksTab.tsx:210
-#: src/components/stickers/StickerGridItem.tsx:66
-#: src/components/stickers/StickerGridItem.tsx:119
+#: src/components/stickers/StickerGridItem.tsx:72
+#: src/components/stickers/StickerGridItem.tsx:126
 msgid "Delete"
 msgstr "Slett"
 
@@ -7162,11 +7166,11 @@ msgstr "Slett fellesskap"
 msgid "Delete community form"
 msgstr "Skjema for å slette fellesskap"
 
-#: src/components/emojis/EmojiListItem.tsx:192
+#: src/components/emojis/EmojiListItem.tsx:193
 msgid "Delete Emoji"
 msgstr "Slett emoji"
 
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:147
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:163
 msgid "Delete Emoji Failed"
 msgstr "Fjerning av emoji feilet"
 
@@ -7205,8 +7209,8 @@ msgstr "Slett meldinger fra siste døgn"
 msgid "Delete messages from the last week"
 msgstr "Slett meldinger fra siste uke"
 
-#: src/utils/PermissionUtils.tsx:311
-#: src/utils/PermissionUtils.tsx:465
+#: src/utils/PermissionUtils.tsx:317
+#: src/utils/PermissionUtils.tsx:471
 msgid "Delete others' messages. (Pinning is separate below.)"
 msgstr "Slett andres meldinger. (Feste er separat nedenfor.)"
 
@@ -7235,7 +7239,7 @@ msgstr "Slett lagret media"
 msgid "Delete Saved Media"
 msgstr "Slett lagret media"
 
-#: src/components/stickers/StickerGridItem.tsx:64
+#: src/components/stickers/StickerGridItem.tsx:70
 msgid "Delete Sticker"
 msgstr "Slett klistremerke"
 
@@ -7326,7 +7330,7 @@ msgstr "Beskriv hvilke uttrykk som er i dette settet."
 msgid "Describe what makes the content illegal"
 msgstr "Beskriv hva som gjør innholdet ulovlig"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:305
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:317
 msgid "Describe what your community is about..."
 msgstr "Beskriv hva fellesskapet ditt handler om..."
 
@@ -7336,7 +7340,7 @@ msgstr "beskrivelse"
 
 #: src/components/modals/CreatePackModal.tsx:95
 #: src/components/modals/EditPackModal.tsx:91
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:289
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:292
 #: src/components/modals/sticker_form/StickerFormFields.tsx:111
 msgid "Description"
 msgstr "Beskrivelse"
@@ -7345,11 +7349,11 @@ msgstr "Beskrivelse"
 msgid "Description must be 500 characters or less"
 msgstr "Beskrivelsen må være 500 tegn eller færre"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:296
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:301
 msgid "Description must be at least {DISCOVERY_DESCRIPTION_MIN_LENGTH} characters."
 msgstr "Beskrivelsen må være minst {DISCOVERY_DESCRIPTION_MIN_LENGTH} tegn."
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:300
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:305
 msgid "Description must be no more than {DISCOVERY_DESCRIPTION_MAX_LENGTH} characters."
 msgstr "Beskrivelsen må være maks {DISCOVERY_DESCRIPTION_MAX_LENGTH} tegn."
 
@@ -7373,11 +7377,11 @@ msgstr "Varsel for skrivebordsvarsler"
 msgid "Desktop notifications have been blocked. You can enable them later in your browser settings or in User Settings > Notifications."
 msgstr "Skrivebordsvarsler er blokkert. Du kan aktivere dem senere i nettleserinnstillingene eller i Brukerinnstillinger > Varsler."
 
-#: src/components/modals/tabs/AdvancedTab.tsx:85
+#: src/components/modals/tabs/AdvancedTab.tsx:88
 msgid "Desktop Startup"
 msgstr "Oppstart på skrivebordet"
 
-#: src/components/modals/tabs/AdvancedTab.tsx:104
+#: src/components/modals/tabs/AdvancedTab.tsx:107
 msgid "Desktop Window"
 msgstr "Skrivebordsvindu"
 
@@ -7435,12 +7439,12 @@ msgstr "Utviklerapplikasjoner"
 msgid "developer mode"
 msgstr "utviklermodus"
 
-#: src/components/modals/tabs/AdvancedTab.tsx:139
+#: src/components/modals/tabs/AdvancedTab.tsx:158
 #: src/components/modals/utils/SettingsSearchIndex.tsx:215
 msgid "Developer Mode"
 msgstr "Utviklermodus"
 
-#: src/components/modals/tabs/AdvancedTab.tsx:130
+#: src/components/modals/tabs/AdvancedTab.tsx:149
 msgid "Developer Options"
 msgstr "Utvikleralternativer"
 
@@ -7538,11 +7542,11 @@ msgstr "Deaktiver"
 msgid "Disable Account"
 msgstr "Deaktiver konto"
 
-#: src/components/modals/tabs/notifications_tab/Sounds.tsx:172
+#: src/components/modals/tabs/notifications_tab/Sounds.tsx:132
 msgid "Disable All"
 msgstr "Deaktiver alt"
 
-#: src/components/modals/tabs/notifications_tab/Sounds.tsx:89
+#: src/components/modals/tabs/notifications_tab/Sounds.tsx:63
 msgid "Disable all notification sounds"
 msgstr "Deaktiver alle varslingslyder"
 
@@ -7725,20 +7729,20 @@ msgstr "Koble fra socket"
 msgid "Disconnected"
 msgstr "Frakoblet"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:209
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:212
 #: src/components/modals/utils/GuildSettingsConstants.tsx:160
 msgid "Discovery"
 msgstr "Oppdagelse"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:163
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:166
 msgid "Discovery application submitted"
 msgstr "Søknad om oppdagelse sendt"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:184
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:187
 msgid "Discovery application withdrawn"
 msgstr "Søknad om oppdagelse trukket tilbake"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:152
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:155
 msgid "Discovery listing updated"
 msgstr "Oppdagelsesoppføring oppdatert"
 
@@ -7854,7 +7858,7 @@ msgstr "DM-innstillinger"
 msgid "dm sidebar"
 msgstr "dm-sidepanel"
 
-#: src/components/modals/AddConnectionModal.tsx:239
+#: src/components/modals/AddConnectionModal.tsx:242
 msgid "DNS TXT record"
 msgstr "DNS TXT-post"
 
@@ -7904,7 +7908,7 @@ msgid "domain"
 msgstr "domene"
 
 #: src/components/modals/AddConnectionModal.tsx:87
-#: src/components/modals/AddConnectionModal.tsx:207
+#: src/components/modals/AddConnectionModal.tsx:210
 #: src/components/modals/tabs/LinkedAccountsTab.tsx:168
 #: src/components/modals/tabs/LinkedAccountsTab.tsx:303
 #: src/components/popouts/UserProfileShared.tsx:283
@@ -7995,7 +7999,7 @@ msgstr "last ned"
 msgid "Download"
 msgstr "Last ned"
 
-#: src/components/modals/AddConnectionModal.tsx:280
+#: src/components/modals/AddConnectionModal.tsx:283
 msgid "Download <0>fluxer-verification</0> and place it in your <1>.well-known</1> folder so we can validate the domain."
 msgstr "Last ned <0>fluxer-verification</0> og plasser det i din <1>.well-known</1> mappe slik at vi kan validere domenet."
 
@@ -8012,7 +8016,7 @@ msgstr "Last ned skrivebordsappen"
 msgid "Download Fluxer"
 msgstr "Last ned Fluxer"
 
-#: src/components/modals/AddConnectionModal.tsx:294
+#: src/components/modals/AddConnectionModal.tsx:297
 msgid "Download fluxer-verification"
 msgstr "Last ned fluxer-verification"
 
@@ -8024,7 +8028,7 @@ msgstr "Last ned media"
 msgid "Download the desktop app for system-wide Push-to-Talk"
 msgstr "Last ned skrivebordsappen for systemomfattende Trykk-for-å-snakk"
 
-#: src/components/modals/guild_tabs/GuildStickersTab.tsx:173
+#: src/components/modals/guild_tabs/GuildStickersTab.tsx:192
 msgid "Drag and drop a sticker file here (one at a time)"
 msgstr "Dra og slipp en klistremerkefil her (én om gangen)"
 
@@ -8032,12 +8036,12 @@ msgstr "Dra og slipp en klistremerkefil her (én om gangen)"
 msgid "Drag and drop area for file upload"
 msgstr "Dra-og-slipp-område for filopplasting"
 
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:363
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:382
 msgid "Drag and drop emoji files here"
 msgstr "Dra og slipp emoji-filer her"
 
-#: src/utils/PermissionUtils.tsx:413
-#: src/utils/PermissionUtils.tsx:510
+#: src/utils/PermissionUtils.tsx:419
+#: src/utils/PermissionUtils.tsx:516
 msgid "Drag members between channels they can access."
 msgstr "Dra medlemmer mellom kanaler de har tilgang til."
 
@@ -8142,7 +8146,7 @@ msgstr "Hver melding nedenfor viser én markdown-funksjon med live forhåndsvisn
 msgid "Each unique invite can only be used once."
 msgstr "Hver unike invitasjon kan bare brukes én gang."
 
-#: src/components/modals/components/FeatureComparisonTable.tsx:60
+#: src/components/modals/components/FeatureComparisonTable.tsx:59
 msgid "Early access to new features"
 msgstr "Tidlig tilgang til nye funksjoner"
 
@@ -8159,7 +8163,7 @@ msgstr "Ekkoannullering"
 #: src/components/modals/tabs/ExpressionPacksTab.tsx:90
 #: src/components/modals/tabs/LinkedAccountsTab.tsx:186
 #: src/components/modals/tabs/LinkedAccountsTab.tsx:187
-#: src/components/stickers/StickerGridItem.tsx:111
+#: src/components/stickers/StickerGridItem.tsx:118
 msgid "Edit"
 msgstr "Rediger"
 
@@ -8200,8 +8204,8 @@ msgid "Edit Channel"
 msgstr "Rediger kanal"
 
 #: src/components/popouts/GuildHeaderPopout.tsx:220
-#: src/components/uikit/context_menu/items/GuildMenuData.tsx:314
-#: src/components/uikit/context_menu/items/GuildMenuItems.tsx:392
+#: src/components/uikit/context_menu/items/GuildMenuData.tsx:317
+#: src/components/uikit/context_menu/items/GuildMenuItems.tsx:395
 msgid "Edit Community Profile"
 msgstr "Rediger fellesskapsprofil"
 
@@ -8231,7 +8235,8 @@ msgstr "Rediger gruppe"
 msgid "Edit group form"
 msgstr "Rediger gruppeskjema"
 
-#: src/components/modals/InviteModal.tsx:322
+#: src/components/modals/InviteModal.tsx:316
+#: src/components/modals/InviteModal.tsx:326
 msgid "Edit invite link"
 msgstr "Rediger invitasjonslenke"
 
@@ -8255,15 +8260,19 @@ msgstr "Rediger melding"
 msgid "Edit Note"
 msgstr "Rediger notat"
 
-#: src/utils/PermissionUtils.tsx:439
+#: src/utils/PermissionUtils.tsx:290
+msgid "Edit or delete emoji and stickers created by other members."
+msgstr "Rediger eller slett emoji og klistermerker laget av andre medlemmer."
+
+#: src/utils/PermissionUtils.tsx:445
 msgid "Edit overwrites for roles and members in this channel."
 msgstr "Rediger overskrivinger for roller og medlemmer i denne kanalen."
 
-#: src/components/modals/UserProfileMobileSheet.tsx:532
+#: src/components/modals/UserProfileMobileSheet.tsx:538
 #: src/components/modals/UserProfileModal.tsx:1262
 #: src/components/pages/YouPage.tsx:123
 #: src/components/popouts/UserAreaPopout.tsx:540
-#: src/components/popouts/UserProfilePopout.tsx:323
+#: src/components/popouts/UserProfilePopout.tsx:344
 msgid "Edit Profile"
 msgstr "Rediger profil"
 
@@ -8312,7 +8321,7 @@ msgstr "Redigerer melding"
 msgid "Editing scheduled message"
 msgstr "Redigerer planlagt melding"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:80
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:83
 msgid "Education"
 msgstr "Utdanning"
 
@@ -8396,8 +8405,8 @@ msgstr "innebygd"
 msgid "Embed"
 msgstr "Innebygd"
 
-#: src/utils/PermissionUtils.tsx:319
-#: src/utils/PermissionUtils.tsx:469
+#: src/utils/PermissionUtils.tsx:325
+#: src/utils/PermissionUtils.tsx:475
 msgid "Embed Links"
 msgstr "Innebygde lenker"
 
@@ -8440,7 +8449,7 @@ msgstr "Emoji"
 msgid "emoji {emojiName}"
 msgstr "emoji {emojiName}"
 
-#: src/components/modals/components/FeatureComparisonTable.tsx:54
+#: src/components/modals/components/FeatureComparisonTable.tsx:53
 msgid "Emoji & sticker packs"
 msgstr "Emoji- og klistremerke-pakker"
 
@@ -8456,16 +8465,16 @@ msgstr "Emoji slettet"
 msgid "Emoji name"
 msgstr "Emojinavn"
 
-#: src/components/emojis/EmojiListItem.tsx:163
+#: src/components/emojis/EmojiListItem.tsx:164
 msgid "Emoji name must be at least 2 characters long"
 msgstr "Emojinavnet må være minst 2 tegn langt"
 
-#: src/components/emojis/EmojiListItem.tsx:167
+#: src/components/emojis/EmojiListItem.tsx:168
 msgid "Emoji name must be at most 32 characters long"
 msgstr "Emojinavnet kan være maks 32 tegn langt"
 
 #. placeholder {0}: Math.round(GlobalLimits.getEmojiMaxSize() / 1024)
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:340
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:358
 msgid "Emoji names must be at least 2 characters long and can only contain alphanumeric characters and underscores. Allowed file types: JPEG, PNG, WebP, GIF. We compress images to 128x128 pixels. Maximum size: {0} KB per emoji."
 msgstr "Emojinavn må være minst 2 tegn og kan kun inneholde bokstaver, tall og understreker. Tillatte filtyper: JPEG, PNG, WebP, GIF. Vi komprimerer bildene til 128x128 piksler. Maks størrelse: {0} KB per emoji."
 
@@ -8492,7 +8501,7 @@ msgstr "Grense for emojipakker nådd"
 msgid "emoji picker"
 msgstr "emoji velger"
 
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:326
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:344
 msgid "Emoji Slots"
 msgstr "Emoji-plasser"
 
@@ -8536,11 +8545,11 @@ msgstr "Aktiver /tts taleavspilling"
 msgid "Enable 2FA on your account to change this setting"
 msgstr "Aktiver 2FA på kontoen din for å endre denne innstillingen"
 
-#: src/components/modals/tabs/AdvancedTab.tsx:132
+#: src/components/modals/tabs/AdvancedTab.tsx:151
 msgid "Enable advanced features for debugging and development. Note that copying snowflake IDs for entities is always available to all users without needing developer mode."
 msgstr "Aktiver avanserte funksjoner for feilsøking og utvikling. Kopiering av snøfnugg-ID-er for enheter er alltid tilgjengelig for alle brukere uten utviklermodus."
 
-#: src/components/modals/tabs/notifications_tab/Sounds.tsx:163
+#: src/components/modals/tabs/notifications_tab/Sounds.tsx:123
 msgid "Enable All"
 msgstr "Aktiver alle"
 
@@ -8861,7 +8870,7 @@ msgstr "Skriv inn passordet ditt."
 msgid "Enter your phone number. We'll send you a verification code via SMS."
 msgstr "Skriv inn telefonnummeret ditt. Vi sender en verifiseringskode via SMS."
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:79
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:82
 msgid "Entertainment"
 msgstr "Underholdning"
 
@@ -8993,7 +9002,7 @@ msgstr "Utvid kategori"
 msgid "Expiration"
 msgstr "Utløp"
 
-#: src/components/modals/InviteModal.tsx:276
+#: src/components/modals/InviteModal.tsx:273
 msgid "Expire After"
 msgstr "Utløp etter"
 
@@ -9260,7 +9269,7 @@ msgstr "Kunne ikke slette kategori"
 msgid "Failed to delete channel"
 msgstr "Kunne ikke slette kanal"
 
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:149
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:165
 msgid "Failed to delete emoji. Please try again."
 msgstr "Fjerning av emoji feilet. Vennligst prøv igjen."
 
@@ -9312,7 +9321,7 @@ msgstr "Kunne ikke installere denne emojipakken. Prøv igjen senere."
 msgid "Failed to install this sticker pack. Please try again later."
 msgstr "Kunne ikke installere denne klistremerkepakken. Prøv igjen senere."
 
-#: src/components/modals/discovery/DiscoveryGuildCard.tsx:56
+#: src/components/modals/discovery/DiscoveryGuildCard.tsx:62
 msgid "Failed to join this community. Please try again."
 msgstr "Kunne ikke bli med i dette fellesskapet. Vennligst prøv igjen."
 
@@ -9341,7 +9350,7 @@ msgstr "Kunne ikke laste inn autoriserte applikasjoner"
 msgid "Failed to load bans. Please try again."
 msgstr "Kunne ikke laste utestengelser. Prøv igjen."
 
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:320
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:336
 msgid "Failed to load emojis. Please try again later."
 msgstr "Kunne ikke laste emoji. Vennligst prøv igjen senere."
 
@@ -9363,7 +9372,7 @@ msgstr "Kunne ikke laste invitasjoner. Prøv igjen."
 msgid "Failed to load premium information. Please try again later."
 msgstr "Kunne ikke laste premiuminformasjon. Prøv igjen senere."
 
-#: src/components/modals/guild_tabs/GuildStickersTab.tsx:203
+#: src/components/modals/guild_tabs/GuildStickersTab.tsx:230
 msgid "Failed to Load Stickers"
 msgstr "Kunne ikke laste inn klistremerker"
 
@@ -9406,7 +9415,7 @@ msgstr "Kunne ikke feste gruppe-DM"
 msgid "Failed to pin message"
 msgstr "Kunne ikke feste melding"
 
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:225
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:241
 msgid "Failed to Prepare Emojis"
 msgstr "Kunne ikke forberede emojier"
 
@@ -9444,7 +9453,7 @@ msgstr "Kunne ikke bli med i Visionary-fellesskapet igjen. Prøv igjen."
 msgid "Failed to remove background image. Please try again."
 msgstr "Kunne ikke fjerne bakgrunnsbilde. Prøv igjen."
 
-#: src/components/modals/tabs/notifications_tab/useSoundSettings.tsx:164
+#: src/components/modals/tabs/notifications_tab/useSoundSettings.tsx:144
 msgid "Failed to remove custom sound"
 msgstr "Kunne ikke fjerne egendefinert lyd"
 
@@ -9597,7 +9606,7 @@ msgstr "Kunne ikke oppdatere alternativ tekst"
 msgid "Failed to Update Channel Permissions"
 msgstr "Kunne ikke oppdatere kanalrettigheter"
 
-#: src/components/emojis/EmojiListItem.tsx:180
+#: src/components/emojis/EmojiListItem.tsx:181
 msgid "Failed to update emoji name. Reverted to the previous name."
 msgstr "Kunne ikke oppdatere emojinavn. Gjenopprettet forrige navn."
 
@@ -9617,16 +9626,16 @@ msgstr "Kunne ikke oppdatere webhooks"
 msgid "Failed to upload background image. Please try again."
 msgstr "Kunne ikke laste opp bakgrunnsbilde. Prøv på nytt."
 
-#: src/components/modals/tabs/notifications_tab/useSoundSettings.tsx:142
+#: src/components/modals/tabs/notifications_tab/useSoundSettings.tsx:122
 msgid "Failed to upload custom sound"
 msgstr "Kunne ikke laste opp egendefinert lyd"
 
 #. placeholder {0}: startIndex + 1
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:277
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:293
 msgid "Failed to upload emojis starting at #{0}: {errorMsg}"
 msgstr "Kunne ikke laste opp emojis som begynner med #{0}: {errorMsg}"
 
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:273
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:289
 msgid "Failed to upload emojis. Please try again."
 msgstr "Kunne ikke laste opp emojier. Prøv på nytt."
 
@@ -9638,7 +9647,7 @@ msgstr "Kunne ikke laste opp inngangssignal"
 msgid "Failed to verify connection"
 msgstr "Mislyktes med å verifisere tilkobling"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:190
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:193
 msgid "Failed to withdraw application. Please try again."
 msgstr "Kunne ikke trekke tilbake søknaden. Vennligst prøv igjen."
 
@@ -9712,7 +9721,7 @@ msgstr "favoritter"
 msgid "Favorites"
 msgstr "Favoritter"
 
-#: src/components/modals/components/FeatureComparisonTable.tsx:120
+#: src/components/modals/components/FeatureComparisonTable.tsx:119
 msgid "Feature"
 msgstr "Funksjon"
 
@@ -9753,7 +9762,7 @@ msgstr "Filstørrelsesgrensen er overskredet"
 msgid "File size too large"
 msgstr "Filstørrelse for stor"
 
-#: src/components/modals/components/FeatureComparisonTable.tsx:53
+#: src/components/modals/components/FeatureComparisonTable.tsx:52
 msgid "File upload size"
 msgstr "Filopplastingsstørrelse"
 
@@ -10238,7 +10247,7 @@ msgstr "Bildehastigheter over 30 FPS krever Plutonium"
 msgid "France"
 msgstr "Frankrike"
 
-#: src/components/modals/components/FeatureComparisonTable.tsx:125
+#: src/components/modals/components/FeatureComparisonTable.tsx:124
 msgid "Free"
 msgstr "Gratis"
 
@@ -10399,7 +10408,7 @@ msgstr "Spillkontroller"
 msgid "Game Night"
 msgstr "Spillkveld"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:77
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:80
 msgid "Gaming"
 msgstr "Gaming"
 
@@ -10484,7 +10493,6 @@ msgstr "Få beskjed når du mottar meldinger. Du må kanskje tillate varsler i n
 #: src/components/modals/FluxerTagChangeModal.tsx:221
 #: src/components/modals/tabs/components/EntranceSoundSection.tsx:67
 #: src/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:138
-#: src/components/modals/tabs/notifications_tab/Sounds.tsx:83
 #: src/components/modals/tabs/VideoTab.tsx:281
 #: src/components/uikit/plutonium_upsell/PlutoniumUpsell.tsx:72
 #: src/components/uikit/plutonium_upsell/PlutoniumUpsell.tsx:74
@@ -10657,7 +10665,7 @@ msgstr "Gaver og koder"
 msgid "Glad you're here, {username}! Watch out for Biff!"
 msgstr "Glad du er her, {username}! Pass på Biff!"
 
-#: src/components/modals/components/FeatureComparisonTable.tsx:57
+#: src/components/modals/components/FeatureComparisonTable.tsx:56
 msgid "Global emoji & sticker access"
 msgstr "Global tilgang til emoji og klistremerker"
 
@@ -10758,7 +10766,7 @@ msgstr "Fristperiode"
 msgid "Grace Period (Still Have Access)"
 msgstr "Fristperiode (har fortsatt tilgang)"
 
-#: src/components/modals/InviteModal.tsx:296
+#: src/components/modals/InviteModal.tsx:293
 msgid "Grant Temporary Membership"
 msgstr "Gi midlertidig medlemskap"
 
@@ -10922,7 +10930,7 @@ msgstr "gildemeny"
 msgid "handle"
 msgstr "håndtak"
 
-#: src/components/modals/AddConnectionModal.tsx:207
+#: src/components/modals/AddConnectionModal.tsx:210
 msgid "Handle"
 msgstr "Håndtak"
 
@@ -10946,6 +10954,7 @@ msgstr "Trakassering eller mobbing"
 msgid "hardware"
 msgstr "maskinvare"
 
+#: src/components/modals/tabs/AdvancedTab.tsx:137
 #: src/components/modals/utils/SettingsSearchIndex.tsx:222
 msgid "Hardware Acceleration"
 msgstr "Maskinvareakselerasjon"
@@ -11116,7 +11125,7 @@ msgstr "Skjul dempede kanaler"
 #: src/components/popouts/GuildHeaderPopout.tsx:228
 #: src/components/uikit/context_menu/ChannelListContextMenu.tsx:79
 #: src/components/uikit/context_menu/FavoritesChannelListContextMenu.tsx:60
-#: src/components/uikit/context_menu/items/GuildMenuData.tsx:332
+#: src/components/uikit/context_menu/items/GuildMenuData.tsx:335
 #: src/components/uikit/context_menu/items/GuildMenuItems.tsx:304
 msgid "Hide Muted Channels"
 msgstr "Skjul dempede kanaler"
@@ -11284,7 +11293,7 @@ msgstr "Bli med, {username}! Mr Fusion er klar!"
 msgid "Hope to see you back in the future"
 msgstr "Håper å se deg tilbake i fremtiden"
 
-#: src/components/modals/AddConnectionModal.tsx:244
+#: src/components/modals/AddConnectionModal.tsx:247
 msgid "Host"
 msgstr "Vert"
 
@@ -11439,8 +11448,8 @@ msgstr "Ignorer"
 msgid "Ignore Friend Request"
 msgstr "Ignorer venneforespørsel"
 
-#: src/utils/PermissionUtils.tsx:351
-#: src/utils/PermissionUtils.tsx:486
+#: src/utils/PermissionUtils.tsx:357
+#: src/utils/PermissionUtils.tsx:492
 msgid "Ignore per-channel message rate limits."
 msgstr "Ignorer grense for meldingshastighet per kanal."
 
@@ -11857,7 +11866,7 @@ msgid "Invalid"
 msgstr "Ugyldig"
 
 #: src/components/modals/tabs/hooks/useEntranceSound.tsx:68
-#: src/components/modals/tabs/notifications_tab/useSoundSettings.tsx:123
+#: src/components/modals/tabs/notifications_tab/useSoundSettings.tsx:103
 msgid "Invalid audio file"
 msgstr "Ugyldig lydfil"
 
@@ -11915,7 +11924,7 @@ msgstr "Usynlig"
 
 #: src/components/channel/GuildMembersPage.tsx:246
 #: src/components/channel/GuildMembersPage.tsx:254
-#: src/components/modals/InviteModal.tsx:265
+#: src/components/modals/InviteModal.tsx:262
 #: src/components/modals/tabs/ExpressionPacksTab.tsx:87
 #: src/constants/AuditLogConstants.tsx:245
 msgid "Invite"
@@ -11955,7 +11964,7 @@ msgstr "Inviter venner"
 msgid "Invite friends to {0}"
 msgstr "Inviter venner til {0}"
 
-#: src/components/modals/InviteModal.tsx:311
+#: src/components/modals/InviteModal.tsx:308
 msgid "Invite link"
 msgstr "Invitasjonslenke"
 
@@ -11963,7 +11972,7 @@ msgstr "Invitasjonslenke"
 msgid "Invite Link"
 msgstr "Invitasjonslenke"
 
-#: src/components/modals/InviteModal.tsx:222
+#: src/components/modals/InviteModal.tsx:219
 msgid "Invite link settings"
 msgstr "Innstillinger for invitasjonslenke"
 
@@ -11976,7 +11985,7 @@ msgstr "Invitasjonslenker"
 
 #: src/components/layout/ChannelItem.tsx:702
 #: src/components/popouts/GuildHeaderPopout.tsx:181
-#: src/components/uikit/context_menu/items/GuildMenuData.tsx:257
+#: src/components/uikit/context_menu/items/GuildMenuData.tsx:260
 msgid "Invite Members"
 msgstr "Inviter medlemmer"
 
@@ -12087,7 +12096,7 @@ msgstr "Invitasjoner"
 msgid "Invites are currently disabled for this community."
 msgstr "Invitasjoner er for øyeblikket deaktivert for dette fellesskapet."
 
-#: src/components/modals/InviteModal.tsx:235
+#: src/components/modals/InviteModal.tsx:232
 msgid "Invites are currently disabled in this community by an admin. While this invite can be created, it cannot be accepted until invites are re-enabled."
 msgstr "Invitasjoner er for øyeblikket deaktivert i dette fellesskapet av en administrator. Selv om invitasjonen kan opprettes, kan den ikke aksepteres før invitasjoner er aktivert igjen."
 
@@ -12198,7 +12207,7 @@ msgstr "Bli med i samtale"
 #: src/components/modals/AddGuildModal.tsx:132
 #: src/components/modals/AddGuildModal.tsx:416
 #: src/components/modals/components/plutonium/SubscriptionCard.tsx:289
-#: src/components/modals/discovery/DiscoveryGuildCard.tsx:93
+#: src/components/modals/discovery/DiscoveryGuildCard.tsx:99
 #: src/components/modals/InviteAcceptModal.tsx:119
 #: src/components/modals/InviteAcceptModalPreview.tsx:111
 msgid "Join Community"
@@ -12273,7 +12282,7 @@ msgstr "Bli med i tale"
 msgid "Join Voice Call"
 msgstr "Bli med i talesamtale"
 
-#: src/components/modals/discovery/DiscoveryGuildCard.tsx:93
+#: src/components/modals/discovery/DiscoveryGuildCard.tsx:99
 msgid "Joined"
 msgstr "Blandet seg inn"
 
@@ -12437,7 +12446,7 @@ msgstr "Fortsett å se {viewerStreamCount} strømmer og legg til denne"
 msgid "Keep watching 1 stream and add this one"
 msgstr "Fortsett å se 1 strøm og legg til denne"
 
-#: src/components/modals/tabs/AdvancedTab.tsx:111
+#: src/components/modals/tabs/AdvancedTab.tsx:114
 msgid "Keep your window dimensions and placement even when you reload the app."
 msgstr "Behold vindusdimensjonene og plasseringen selv når du laster inn appen på nytt."
 
@@ -12597,7 +12606,7 @@ msgstr "Forsinkelsesdiagram"
 msgid "Latvia"
 msgstr "Latvia"
 
-#: src/components/modals/tabs/AdvancedTab.tsx:89
+#: src/components/modals/tabs/AdvancedTab.tsx:92
 msgid "Launch Fluxer at Login"
 msgstr "Start Fluxer ved innlogging"
 
@@ -12618,8 +12627,8 @@ msgid "Leave call"
 msgstr "Forlat samtale"
 
 #: src/components/popouts/GuildHeaderPopout.tsx:237
-#: src/components/uikit/context_menu/items/GuildMenuData.tsx:344
-#: src/components/uikit/context_menu/items/GuildMenuItems.tsx:447
+#: src/components/uikit/context_menu/items/GuildMenuData.tsx:347
+#: src/components/uikit/context_menu/items/GuildMenuItems.tsx:450
 #: src/hooks/useLeaveGuild.tsx:42
 #: src/hooks/useLeaveGuild.tsx:44
 msgid "Leave Community"
@@ -12840,7 +12849,7 @@ msgstr "lenker"
 msgid "Links"
 msgstr "Lenker"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:212
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:215
 msgid "List your community in Discovery so others can find and join it."
 msgstr "List fellesskapet ditt i Oppdagelse slik at andre kan finne og bli med."
 
@@ -13121,13 +13130,13 @@ msgstr "Administrer autoriserte applikasjoner"
 msgid "Manage blocked users"
 msgstr "Administrer blokkerte brukere"
 
-#: src/utils/PermissionUtils.tsx:433
-#: src/utils/PermissionUtils.tsx:562
+#: src/utils/PermissionUtils.tsx:439
+#: src/utils/PermissionUtils.tsx:568
 msgid "Manage Channel"
 msgstr "Administrer kanal"
 
 #: src/utils/PermissionUtils.tsx:257
-#: src/utils/PermissionUtils.tsx:562
+#: src/utils/PermissionUtils.tsx:568
 msgid "Manage Channels"
 msgstr "Administrer kanaler"
 
@@ -13143,7 +13152,7 @@ msgstr "Administrer fellesskapsfunksjoner"
 msgid "Manage developer applications"
 msgstr "Administrer utviklerapplikasjoner"
 
-#: src/utils/PermissionUtils.tsx:284
+#: src/utils/PermissionUtils.tsx:289
 msgid "Manage Emoji & Stickers"
 msgstr "Administrer emoji og klistremerker"
 
@@ -13163,8 +13172,8 @@ msgstr "Administrer innkommende webhooks som kan sende meldinger i denne kanalen
 msgid "Manage invites for this channel."
 msgstr "Administrer invitasjoner til denne kanalen."
 
-#: src/utils/PermissionUtils.tsx:310
-#: src/utils/PermissionUtils.tsx:464
+#: src/utils/PermissionUtils.tsx:316
+#: src/utils/PermissionUtils.tsx:470
 msgid "Manage Messages"
 msgstr "Administrer meldinger"
 
@@ -13172,7 +13181,7 @@ msgstr "Administrer meldinger"
 msgid "Manage Nicknames"
 msgstr "Administrer kallenavn"
 
-#: src/utils/PermissionUtils.tsx:438
+#: src/utils/PermissionUtils.tsx:444
 msgid "Manage Permissions"
 msgstr "Administrer tillatelser"
 
@@ -13191,8 +13200,8 @@ msgstr "Administrer abonnement"
 msgid "Manage the email address you use to sign in to Fluxer"
 msgstr "Administrer e-postadressen du bruker for å logge inn på Fluxer"
 
-#: src/utils/PermissionUtils.tsx:288
-#: src/utils/PermissionUtils.tsx:443
+#: src/utils/PermissionUtils.tsx:294
+#: src/utils/PermissionUtils.tsx:449
 msgid "Manage Webhooks"
 msgstr "Administrer webhooks"
 
@@ -13231,7 +13240,7 @@ msgstr "Administrer abonnementet ditt"
 #: src/components/uikit/context_menu/items/ChannelMenuItems.tsx:85
 #: src/components/uikit/context_menu/items/DMMenuData.tsx:522
 #: src/components/uikit/context_menu/items/DMMenuItems.tsx:53
-#: src/components/uikit/context_menu/items/GuildMenuData.tsx:249
+#: src/components/uikit/context_menu/items/GuildMenuData.tsx:252
 #: src/components/uikit/context_menu/items/GuildMenuItems.tsx:95
 msgid "Mark as Read"
 msgstr "Merk som lest"
@@ -13346,7 +13355,7 @@ msgstr "marty@example.com"
 msgid "Mask Visionary as subscription"
 msgstr "Masker Visionary som abonnement"
 
-#: src/components/modals/InviteModal.tsx:286
+#: src/components/modals/InviteModal.tsx:283
 msgid "Max Number of Uses"
 msgstr "Maks antall bruk"
 
@@ -13581,7 +13590,7 @@ msgstr "Medlemmer fjernet"
 msgid "Members receive notifications for every message"
 msgstr "Medlemmer mottar varsler for hver melding"
 
-#: src/components/modals/InviteModal.tsx:297
+#: src/components/modals/InviteModal.tsx:294
 msgid "Members will be removed when they go offline unless a role is assigned"
 msgstr "Medlemmer fjernes når de går offline med mindre en rolle er tildelt"
 
@@ -13627,8 +13636,8 @@ msgstr "Nevn @here?"
 msgid "Mention Badges"
 msgstr "Nevningsmerker"
 
-#: src/utils/PermissionUtils.tsx:332
-#: src/utils/PermissionUtils.tsx:474
+#: src/utils/PermissionUtils.tsx:338
+#: src/utils/PermissionUtils.tsx:480
 msgid "Mention everyone or any role (even if the role isn't set to be mentionable)."
 msgstr "Nevn alle eller en hvilken som helst rolle (selv om rollen ikke er satt som nevningsbar)."
 
@@ -13665,11 +13674,11 @@ msgstr "menyer"
 
 #: src/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:268
 #: src/components/modals/tabs/component_gallery_tab/InputsTab.tsx:164
-#: src/components/modals/UserProfileMobileSheet.tsx:547
+#: src/components/modals/UserProfileMobileSheet.tsx:553
 #: src/components/modals/UserProfileModal.tsx:1246
 #: src/components/modals/UserProfileModal.tsx:1372
-#: src/components/popouts/UserProfilePopout.tsx:313
-#: src/components/popouts/UserProfilePopout.tsx:332
+#: src/components/popouts/UserProfilePopout.tsx:334
+#: src/components/popouts/UserProfilePopout.tsx:353
 #: src/components/profile/ProfilePreview.tsx:276
 #: src/components/uikit/context_menu/items/ActionsSubmenu.tsx:109
 #: src/components/uikit/context_menu/items/MessageUserMenuItem.tsx:77
@@ -13703,7 +13712,7 @@ msgstr "Innstillinger for handlingslinjen for meldinger er kun tilgjengelige på
 msgid "Message AST"
 msgstr "Melding AST"
 
-#: src/components/modals/components/FeatureComparisonTable.tsx:51
+#: src/components/modals/components/FeatureComparisonTable.tsx:50
 msgid "Message character limit"
 msgstr "Tegnbegrensning for melding"
 
@@ -13837,8 +13846,8 @@ msgid "Messages"
 msgstr "Meldinger"
 
 #: src/components/modals/utils/SettingsConstants.tsx:184
-#: src/utils/PermissionUtils.tsx:298
-#: src/utils/PermissionUtils.tsx:460
+#: src/utils/PermissionUtils.tsx:304
+#: src/utils/PermissionUtils.tsx:466
 msgid "Messages & Media"
 msgstr "Meldinger og media"
 
@@ -14021,7 +14030,7 @@ msgid "Mode C"
 msgstr "Modus C"
 
 #: src/components/uikit/context_menu/items/ModerationSubmenu.tsx:152
-#: src/utils/PermissionUtils.tsx:360
+#: src/utils/PermissionUtils.tsx:366
 msgid "Moderation"
 msgstr "Moderering"
 
@@ -14117,8 +14126,8 @@ msgstr "Flytt fokus mellom knapper, felt og lenker."
 msgid "Move focus to the message composer"
 msgstr "Flytt fokus til meldingsfeltet"
 
-#: src/utils/PermissionUtils.tsx:412
-#: src/utils/PermissionUtils.tsx:509
+#: src/utils/PermissionUtils.tsx:418
+#: src/utils/PermissionUtils.tsx:515
 msgid "Move Members"
 msgstr "Flytt medlemmer"
 
@@ -14158,7 +14167,7 @@ msgstr "Filmklubb"
 msgid "Movie Night Crew"
 msgstr "Filmkveldsgjengen"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:84
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:87
 msgid "Movies & TV"
 msgstr "Filmer & TV"
 
@@ -14170,7 +14179,7 @@ msgstr "mp3"
 msgid "Multilingual Content"
 msgstr "Flerspråklig innhold"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:78
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:81
 msgid "Music"
 msgstr "Musikk"
 
@@ -14191,8 +14200,8 @@ msgstr "dempe"
 #: src/components/bottomsheets/DirectCallLobbyBottomSheet.tsx:270
 #: src/components/bottomsheets/VoiceLobbyBottomSheet.tsx:195
 #: src/components/channel/embeds/media/EmbedVideo.tsx:436
-#: src/components/layout/UserArea.tsx:149
-#: src/components/layout/UserArea.tsx:155
+#: src/components/layout/UserArea.tsx:163
+#: src/components/layout/UserArea.tsx:169
 #: src/components/media_player/components/MediaVerticalVolumeControl.tsx:249
 #: src/components/media_player/components/MediaVolumeControl.tsx:208
 #: src/components/modals/GuildNotificationSettingsModal.tsx:229
@@ -14255,7 +14264,7 @@ msgstr "Demp kanal"
 #: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:95
 #: src/components/uikit/context_menu/FavoritesGuildContextMenu.tsx:54
 #: src/components/uikit/context_menu/GuildContextMenu.tsx:40
-#: src/components/uikit/context_menu/items/GuildMenuData.tsx:326
+#: src/components/uikit/context_menu/items/GuildMenuData.tsx:329
 #: src/components/uikit/context_menu/items/GuildMenuItems.tsx:172
 msgid "Mute Community"
 msgstr "Demp fellesskap"
@@ -14285,8 +14294,8 @@ msgstr "Demp favoritter"
 msgid "Mute Keybind"
 msgstr "Tastatursnarvei for demping"
 
-#: src/utils/PermissionUtils.tsx:404
-#: src/utils/PermissionUtils.tsx:506
+#: src/utils/PermissionUtils.tsx:410
+#: src/utils/PermissionUtils.tsx:512
 msgid "Mute Members"
 msgstr "Demp medlemmer"
 
@@ -14534,10 +14543,6 @@ msgstr "Aldri animer"
 msgid "Never Automatically"
 msgstr "Aldri automatisk"
 
-#: src/components/modals/InviteModal.tsx:196
-msgid "never expires"
-msgstr "utløper aldri"
-
 #: src/components/channel/Divider.tsx:51
 #: src/components/channel/Divider.tsx:60
 #: src/components/channel/UnreadDividerSlot.tsx:47
@@ -14758,7 +14763,7 @@ msgstr "Ingen forbindelser ennå"
 
 #: src/components/auth/InviteHeader.tsx:159
 #: src/components/channel/InviteEmbed.tsx:240
-#: src/components/modals/discovery/DiscoveryGuildCard.tsx:72
+#: src/components/modals/discovery/DiscoveryGuildCard.tsx:78
 #: src/components/modals/InviteAcceptModal.tsx:165
 #: src/components/modals/tabs/ExpressionPacksTab.tsx:77
 msgid "No description provided."
@@ -14768,11 +14773,11 @@ msgstr "Ingen beskrivelse oppgitt."
 msgid "No email address set"
 msgstr "Ingen e-postadresse angitt"
 
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:185
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:201
 msgid "No emoji slots available"
 msgstr "Ingen emoji-plasser tilgjengelig"
 
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:368
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:389
 msgid "No emojis found matching your search."
 msgstr "Ingen emojier samsvarer med søket."
 
@@ -14986,11 +14991,11 @@ msgid "No Stickers Available"
 msgstr "Ingen klistremerker tilgjengelig"
 
 #: src/components/channel/MobileStickersPicker.tsx:206
-#: src/components/modals/guild_tabs/GuildStickersTab.tsx:186
+#: src/components/modals/guild_tabs/GuildStickersTab.tsx:207
 msgid "No Stickers Found"
 msgstr "Ingen klistremerker funnet"
 
-#: src/components/modals/guild_tabs/GuildStickersTab.tsx:187
+#: src/components/modals/guild_tabs/GuildStickersTab.tsx:208
 msgid "No stickers found matching your search."
 msgstr "Ingen klistremerker samsvarer med søket ditt."
 
@@ -15055,7 +15060,7 @@ msgid "Noise Suppression"
 msgstr "Støydemping"
 
 #. placeholder {0}: staticEmojis.length
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:384
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:405
 msgid "Non-Animated Emoji ({0})"
 msgstr "Ikke-animerte emojier ({0})"
 
@@ -15081,7 +15086,7 @@ msgstr "Norsk"
 msgid "Not available"
 msgstr "Ikke tilgjengelig"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:224
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:227
 msgid "Not enough members"
 msgstr "Ikke nok medlemmer"
 
@@ -15103,7 +15108,7 @@ msgstr "Ikke nå"
 msgid "Not your cup of tea? You can disable this feature anytime."
 msgstr "Ikke din greie? Du kan slå av denne funksjonen når som helst."
 
-#: src/components/modals/UserProfileMobileSheet.tsx:599
+#: src/components/modals/UserProfileMobileSheet.tsx:605
 #: src/components/modals/UserProfileModal.tsx:243
 #: src/components/modals/UserProfileModal.tsx:247
 #: src/components/pages/YouPage.tsx:144
@@ -15154,7 +15159,7 @@ msgstr "Varslingsoverskrivelser"
 #: src/components/uikit/context_menu/items/CategoryMenuItems.tsx:230
 #: src/components/uikit/context_menu/items/ChannelMenuData.tsx:492
 #: src/components/uikit/context_menu/items/ChannelMenuItems.tsx:253
-#: src/components/uikit/context_menu/items/GuildMenuData.tsx:304
+#: src/components/uikit/context_menu/items/GuildMenuData.tsx:307
 #: src/components/uikit/context_menu/items/GuildMenuItems.tsx:243
 msgid "Notification Settings"
 msgstr "Varslingsinnstillinger"
@@ -15167,17 +15172,13 @@ msgstr "Varslingsinnstillinger (dempet)"
 msgid "notification sound"
 msgstr "varsellyd"
 
-#: src/components/modals/components/FeatureComparisonTable.tsx:49
-msgid "Notification sounds"
-msgstr "Varslingslyder"
-
 #: src/components/modals/utils/SettingsSectionRegistry.tsx:539
 msgid "notifications"
 msgstr "varsler"
 
 #: src/components/layout/MobileBottomNav.tsx:117
-#: src/components/modals/tabs/notifications_tab/Inline.tsx:63
-#: src/components/modals/tabs/NotificationsTab.tsx:64
+#: src/components/modals/tabs/notifications_tab/Inline.tsx:62
+#: src/components/modals/tabs/NotificationsTab.tsx:63
 #: src/components/modals/utils/SettingsSectionRegistry.tsx:537
 #: src/components/pages/NotificationsPage.tsx:51
 msgid "Notifications"
@@ -15263,7 +15264,7 @@ msgstr "Av"
 
 #: src/AppConstants.tsx:43
 #: src/components/bottomsheets/ChannelDetailsBottomSheet.tsx:310
-#: src/components/channel/ChannelMembers.tsx:112
+#: src/components/channel/ChannelMembers.tsx:114
 #: src/utils/MemberListUtils.tsx:151
 #: src/utils/MemberListUtils.tsx:189
 msgid "Offline"
@@ -15273,8 +15274,8 @@ msgstr "Frakoblet"
 #: src/components/guild/RoleManagement.tsx:306
 #: src/components/layout/app_layout/nagbars/DesktopNotificationNagbar.tsx:56
 #: src/components/modals/components/plutonium/hooks/useCheckoutActions.tsx:108
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:151
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:241
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:167
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:257
 #: src/components/modals/GuildOwnershipWarningModal.tsx:73
 msgid "OK"
 msgstr "OK"
@@ -15363,7 +15364,7 @@ msgstr "online"
 
 #: src/AppConstants.tsx:39
 #: src/components/bottomsheets/ChannelDetailsBottomSheet.tsx:308
-#: src/components/channel/ChannelMembers.tsx:109
+#: src/components/channel/ChannelMembers.tsx:111
 #: src/components/channel/direct_message/DMFriendsView.tsx:176
 #: src/components/channel/friends/views/FriendsList.tsx:102
 #: src/utils/MemberListUtils.tsx:144
@@ -15504,15 +15505,15 @@ msgstr "Åpne datovelger"
 #: src/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:143
 #: src/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:145
 #: src/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:268
-#: src/components/modals/UserProfileMobileSheet.tsx:318
-#: src/components/modals/UserProfileMobileSheet.tsx:320
-#: src/components/modals/UserProfileMobileSheet.tsx:547
+#: src/components/modals/UserProfileMobileSheet.tsx:324
+#: src/components/modals/UserProfileMobileSheet.tsx:326
+#: src/components/modals/UserProfileMobileSheet.tsx:553
 #: src/components/modals/UserProfileModal.tsx:1014
 #: src/components/modals/UserProfileModal.tsx:1016
 #: src/components/modals/UserProfileModal.tsx:1372
-#: src/components/popouts/UserProfilePopout.tsx:193
-#: src/components/popouts/UserProfilePopout.tsx:195
-#: src/components/popouts/UserProfilePopout.tsx:332
+#: src/components/popouts/UserProfilePopout.tsx:214
+#: src/components/popouts/UserProfilePopout.tsx:216
+#: src/components/popouts/UserProfilePopout.tsx:353
 #: src/components/uikit/context_menu/items/ActionsSubmenu.tsx:73
 #: src/components/uikit/context_menu/items/ActionsSubmenu.tsx:75
 #: src/components/uikit/context_menu/items/ActionsSubmenu.tsx:109
@@ -15733,7 +15734,7 @@ msgstr "ELLER"
 msgid "Or copy the link:"
 msgstr "Eller kopier lenken:"
 
-#: src/components/modals/InviteModal.tsx:307
+#: src/components/modals/InviteModal.tsx:304
 msgid "or send an invite link to a friend:"
 msgstr "eller send en invitasjonslenke til en venn:"
 
@@ -15749,7 +15750,7 @@ msgstr "Originalmelding kunne ikke lastes"
 msgid "Original message was deleted"
 msgstr "Originalmeldingen ble slettet"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:85
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:88
 #: src/components/pages/report/OptionDescriptors.tsx:54
 #: src/components/pages/report/OptionDescriptors.tsx:65
 #: src/components/pages/report/OptionDescriptors.tsx:78
@@ -15763,8 +15764,8 @@ msgstr "Annet"
 msgid "Other Devices"
 msgstr "Andre enheter"
 
-#: src/utils/PermissionUtils.tsx:396
-#: src/utils/PermissionUtils.tsx:502
+#: src/utils/PermissionUtils.tsx:402
+#: src/utils/PermissionUtils.tsx:508
 msgid "Otherwise Push-to-talk is required."
 msgstr "Ellers kreves trykk-for-å-snakk."
 
@@ -16026,7 +16027,7 @@ msgid "Payment Successful"
 msgstr "Betaling vellykket"
 
 #: src/components/channel/direct_message/DMFriendsView.tsx:196
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:55
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:58
 msgid "Pending"
 msgstr "Avventer"
 
@@ -16236,8 +16237,8 @@ msgstr "Fest det. Fest det godt."
 msgid "Pin Message"
 msgstr "Fest melding"
 
-#: src/utils/PermissionUtils.tsx:315
-#: src/utils/PermissionUtils.tsx:468
+#: src/utils/PermissionUtils.tsx:321
+#: src/utils/PermissionUtils.tsx:474
 msgid "Pin Messages"
 msgstr "Fest meldinger"
 
@@ -16441,7 +16442,7 @@ msgstr "plutonium"
 
 #: src/components/channel/direct_message/DMList.tsx:1326
 #: src/components/channel/direct_message/DMList.tsx:1405
-#: src/components/modals/components/FeatureComparisonTable.tsx:128
+#: src/components/modals/components/FeatureComparisonTable.tsx:127
 msgid "Plutonium"
 msgstr "Plutonium"
 
@@ -16564,7 +16565,7 @@ msgstr "Forhindre <0>{0}</0> fra å sende meldinger, reagere og koble til taleka
 msgid "Prevent <0>{0}</0> from sending messages, reacting, and joining voice channels for the specified duration."
 msgstr "Forhindre <0>{0}</0> fra å sende meldinger, reagere og bli med i talekanaler i den angitte perioden."
 
-#: src/utils/PermissionUtils.tsx:364
+#: src/utils/PermissionUtils.tsx:370
 msgid "Prevent members from sending messages, reacting, and joining voice for a duration."
 msgstr "Forhindre medlemmer fra å sende meldinger, reagere og bli med i lyd i en periode."
 
@@ -16668,8 +16669,8 @@ msgstr "Primær handling"
 msgid "Primary button clicked!"
 msgstr "Primærknappen ble klikket!"
 
-#: src/utils/PermissionUtils.tsx:400
-#: src/utils/PermissionUtils.tsx:505
+#: src/utils/PermissionUtils.tsx:406
+#: src/utils/PermissionUtils.tsx:511
 msgid "Priority Speaker"
 msgstr "Prioritert høyttaler"
 
@@ -16691,8 +16692,8 @@ msgstr "Personvernerklæring"
 
 #: src/components/modals/GuildPrivacySettingsModal.tsx:72
 #: src/components/popouts/GuildHeaderPopout.tsx:215
-#: src/components/uikit/context_menu/items/GuildMenuData.tsx:309
-#: src/components/uikit/context_menu/items/GuildMenuItems.tsx:378
+#: src/components/uikit/context_menu/items/GuildMenuData.tsx:312
+#: src/components/uikit/context_menu/items/GuildMenuItems.tsx:381
 msgid "Privacy Settings"
 msgstr "Personverninnstillinger"
 
@@ -16841,11 +16842,11 @@ msgstr "Kjøpsmodus"
 msgid "Purchased {0}"
 msgstr "Kjøpt {0}"
 
-#: src/components/emojis/EmojiListItem.tsx:197
+#: src/components/emojis/EmojiListItem.tsx:198
 msgid "Purge this emoji from storage and CDN"
 msgstr "Rens denne emojien fra lagring og CDN"
 
-#: src/components/stickers/StickerGridItem.tsx:69
+#: src/components/stickers/StickerGridItem.tsx:75
 msgid "Purge this sticker from storage and CDN"
 msgstr "Rens dette klistremerket fra lagring og CDN"
 
@@ -16865,8 +16866,8 @@ msgstr "push-varsler"
 msgid "Push notifications"
 msgstr "Push-varslinger"
 
-#: src/components/modals/tabs/notifications_tab/Inline.tsx:91
-#: src/components/modals/tabs/NotificationsTab.tsx:95
+#: src/components/modals/tabs/notifications_tab/Inline.tsx:89
+#: src/components/modals/tabs/NotificationsTab.tsx:93
 #: src/components/modals/utils/SettingsSectionRegistry.tsx:612
 msgid "Push Settings"
 msgstr "Push-innstillinger"
@@ -16897,7 +16898,7 @@ msgstr "Trykk for å snakke (hold)"
 msgid "Push-to-Talk (Limited)"
 msgstr "Trykk for å snakke (begrenset)"
 
-#: src/components/layout/UserArea.tsx:147
+#: src/components/layout/UserArea.tsx:161
 #: src/components/voice/VoiceControlBar.tsx:600
 msgid "Push-to-talk enabled — hold {pushToTalkHint} to speak"
 msgstr "Trykk for å snakke aktivert — hold {pushToTalkHint} for å snakke"
@@ -17017,8 +17018,8 @@ msgstr "Reaktiver"
 msgid "read aloud"
 msgstr "les høyt"
 
-#: src/utils/PermissionUtils.tsx:327
-#: src/utils/PermissionUtils.tsx:471
+#: src/utils/PermissionUtils.tsx:333
+#: src/utils/PermissionUtils.tsx:477
 msgid "Read Message History"
 msgstr "Les meldinghistorikk"
 
@@ -17057,7 +17058,7 @@ msgid "Reason (Optional)"
 msgstr "Årsak (Valgfritt)"
 
 #. placeholder {0}: application.review_reason
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:246
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:249
 msgid "Reason: {0}"
 msgstr "Årsak: {0}"
 
@@ -17092,7 +17093,7 @@ msgstr "Nylige søk"
 
 #. placeholder {0}: ChannelUtils.getIcon(channel, {size: 16, className: styles.channelIcon})
 #. placeholder {1}: channel.name
-#: src/components/modals/InviteModal.tsx:226
+#: src/components/modals/InviteModal.tsx:223
 msgid "Recipients will be taken to {0} <0>{1}</0>"
 msgstr "Mottakerne blir tatt til {0} <0>{1}</0>"
 
@@ -17250,7 +17251,7 @@ msgstr "Vanlige, bot, system- og tidsavbrutte brukere vist i koselige og kompakt
 msgid "Reject"
 msgstr "Avvis"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:57
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:60
 msgid "Rejected"
 msgstr "Avvist"
 
@@ -17270,7 +17271,7 @@ msgstr "Last app på nytt"
 msgid "Remain silent unless someone runs /tts manually."
 msgstr "Forbli stille med mindre noen kjører /tts manuelt."
 
-#: src/components/modals/tabs/AdvancedTab.tsx:110
+#: src/components/modals/tabs/AdvancedTab.tsx:113
 msgid "Remember Size & Position"
 msgstr "Husk størrelse og posisjon"
 
@@ -17383,7 +17384,7 @@ msgstr "Fjern bokmerke"
 msgid "Remove Connection"
 msgstr "Fjern tilkobling"
 
-#: src/components/modals/tabs/notifications_tab/Sounds.tsx:146
+#: src/components/modals/tabs/notifications_tab/Sounds.tsx:106
 msgid "Remove Custom Sound"
 msgstr "Fjern tilpasset lyd"
 
@@ -17405,8 +17406,8 @@ msgstr "Fjern filter"
 #: src/components/modals/UserProfileActionsSheet.tsx:116
 #: src/components/modals/UserProfileActionsSheet.tsx:118
 #: src/components/modals/UserProfileActionsSheet.tsx:279
-#: src/components/modals/UserProfileMobileSheet.tsx:344
-#: src/components/modals/UserProfileMobileSheet.tsx:346
+#: src/components/modals/UserProfileMobileSheet.tsx:350
+#: src/components/modals/UserProfileMobileSheet.tsx:352
 #: src/components/modals/UserProfileModal.tsx:1199
 #: src/components/modals/UserProfileModal.tsx:1285
 #: src/components/uikit/context_menu/items/DMMenuData.tsx:643
@@ -17525,7 +17526,7 @@ msgstr "Fjern da du først kjøpte Plutonium fra merket ditt"
 msgid "Remove your Visionary ID badge"
 msgstr "Fjern Visionary ID-merket ditt"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:58
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:61
 msgid "Removed"
 msgstr "Fjernet"
 
@@ -17635,11 +17636,11 @@ msgid "Rename"
 msgstr "Gi nytt navn"
 
 #. placeholder {0}: emoji.name
-#: src/components/emojis/EmojiListItem.tsx:238
+#: src/components/emojis/EmojiListItem.tsx:240
 msgid "Rename :{0}:"
 msgstr "Gi nytt navn :{0}:"
 
-#: src/utils/PermissionUtils.tsx:434
+#: src/utils/PermissionUtils.tsx:440
 msgid "Rename and edit this channel's settings."
 msgstr "Gi nytt navn og rediger innstillingene for denne kanalen."
 
@@ -17693,7 +17694,7 @@ msgstr "Vis alle meldingene dine som ukjent meldingstype"
 msgid "Renews on <0>{renewalDate}</0>."
 msgstr "Fornyes <0>{renewalDate}</0>."
 
-#: src/components/modals/tabs/AdvancedTab.tsx:117
+#: src/components/modals/tabs/AdvancedTab.tsx:120
 msgid "Reopen in maximized mode if that’s how you last used Fluxer."
 msgstr "Åpne på nytt i maksimerte modus hvis det er slik du sist brukte Fluxer."
 
@@ -17748,7 +17749,7 @@ msgid "Report a User Profile"
 msgstr "Rapporter en brukerprofil"
 
 #: src/components/modals/IARModal.tsx:119
-#: src/components/uikit/context_menu/items/GuildMenuData.tsx:350
+#: src/components/uikit/context_menu/items/GuildMenuData.tsx:353
 #: src/components/uikit/context_menu/items/ReportGuildMenuItem.tsx:57
 msgid "Report Community"
 msgstr "Rapporter fellesskap"
@@ -17859,7 +17860,6 @@ msgstr "Krever alt fra Høy, pluss et bekreftet telefonnummer."
 msgid "Requires everything in Medium, plus being a member of the server for at least 10 minutes."
 msgstr "Krever alt fra Medium, pluss å ha vært medlem av serveren i minst 10 minutter."
 
-#: src/components/modals/tabs/notifications_tab/Sounds.tsx:135
 #: src/components/modals/tabs/VideoTab.tsx:120
 #: src/components/modals/tabs/VideoTab.tsx:130
 #: src/components/modals/tabs/VideoTab.tsx:140
@@ -18021,11 +18021,11 @@ msgstr "Oppløsning"
 msgid "Restore account"
 msgstr "Gjenopprett konto"
 
-#: src/components/modals/tabs/AdvancedTab.tsx:122
+#: src/components/modals/tabs/AdvancedTab.tsx:125
 msgid "Restore Fullscreen"
 msgstr "Gjenopprett fullskjerm"
 
-#: src/components/modals/tabs/AdvancedTab.tsx:116
+#: src/components/modals/tabs/AdvancedTab.tsx:119
 msgid "Restore Maximized"
 msgstr "Gjenopprett maksimerte"
 
@@ -18045,7 +18045,7 @@ msgstr "Abonner igjen"
 #: src/components/modals/BackgroundImageGalleryModal.tsx:210
 #: src/components/modals/guild_tabs/GuildAuditLogTab.tsx:649
 #: src/components/modals/guild_tabs/GuildInvitesTab.tsx:125
-#: src/components/modals/guild_tabs/GuildStickersTab.tsx:207
+#: src/components/modals/guild_tabs/GuildStickersTab.tsx:234
 #: src/components/modals/guild_tabs/GuildWebhooksTab.tsx:138
 #: src/components/modals/tabs/applications_tab/ApplicationDetail.tsx:586
 #: src/components/modals/tabs/applications_tab/index.tsx:113
@@ -18055,7 +18055,7 @@ msgstr "Abonner igjen"
 msgid "Retry"
 msgstr "Prøv igjen"
 
-#: src/components/modals/tabs/AdvancedTab.tsx:123
+#: src/components/modals/tabs/AdvancedTab.tsx:126
 msgid "Return to fullscreen automatically when you had it enabled last time."
 msgstr "Gå automatisk tilbake til fullskjerm hvis du hadde det aktivert sist."
 
@@ -18269,7 +18269,7 @@ msgstr "Avmerkingsboks med rund stil"
 msgid "Ruby"
 msgstr "Ruby"
 
-#: src/components/modals/tabs/AdvancedTab.tsx:86
+#: src/components/modals/tabs/AdvancedTab.tsx:89
 msgid "Run Fluxer automatically when your computer starts. Or don't. Your choice!"
 msgstr "Start Fluxer automatisk når datamaskinen starter. Eller ikke. Valget er ditt!"
 
@@ -18319,7 +18319,7 @@ msgstr "lagre"
 #: src/components/modals/EditGroupModal.tsx:230
 #: src/components/modals/EditGuildStickerModal.tsx:116
 #: src/components/modals/EditPackModal.tsx:106
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:343
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:357
 #: src/components/modals/guild_tabs/GuildVanityURLTab.tsx:220
 #: src/components/modals/GuildFolderSettingsModal.tsx:202
 #: src/components/modals/MessageHistoryThresholdModal.tsx:106
@@ -18402,7 +18402,7 @@ msgstr "Lagre video"
 msgid "saved"
 msgstr "lagret"
 
-#: src/components/modals/components/FeatureComparisonTable.tsx:55
+#: src/components/modals/components/FeatureComparisonTable.tsx:54
 msgid "Saved media"
 msgstr "Lagret media"
 
@@ -18451,7 +18451,7 @@ msgstr "Planlagt melding for {0}"
 msgid "Scheduled messages can be at most 30 days in the future."
 msgstr "Planlagte meldinger kan være maksimalt 30 dager frem i tid."
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:81
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:84
 msgid "Science & Technology"
 msgstr "Vitenskap & Teknologi"
 
@@ -18493,6 +18493,7 @@ msgstr "Stopp skjermdeling"
 msgid "screen sharing"
 msgstr "skjermdeling"
 
+#: src/components/modals/tabs/AdvancedTab.tsx:133
 #: src/components/uikit/LiveBadge.tsx:36
 msgid "Screen Sharing"
 msgstr "Skjermdeling"
@@ -18574,7 +18575,7 @@ msgstr "Søk etter fellesskap..."
 msgid "Search countries..."
 msgstr "Søk i land..."
 
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:308
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:324
 msgid "Search emojis..."
 msgstr "Søk i emojier..."
 
@@ -18603,7 +18604,7 @@ msgstr "Søk etter kanaler, personer eller fellesskap"
 #: src/components/common/FriendSelector.tsx:197
 #: src/components/modals/AddFriendsToGroupModal.tsx:53
 #: src/components/modals/CreateDMModal.tsx:68
-#: src/components/modals/InviteModal.tsx:246
+#: src/components/modals/InviteModal.tsx:243
 #: src/components/modals/shared/RecipientList.tsx:179
 #: src/components/modals/ShareThemeModal.tsx:141
 msgid "Search friends"
@@ -18692,7 +18693,7 @@ msgstr "Søk i innstillinger"
 msgid "Search settings..."
 msgstr "Søk i innstillinger..."
 
-#: src/components/modals/guild_tabs/GuildStickersTab.tsx:130
+#: src/components/modals/guild_tabs/GuildStickersTab.tsx:147
 msgid "Search stickers..."
 msgstr "Søk etter klistremerker..."
 
@@ -19035,8 +19036,8 @@ msgstr "Sending av melding deaktivert"
 msgid "Send messages"
 msgstr "Send meldinger"
 
-#: src/utils/PermissionUtils.tsx:301
-#: src/utils/PermissionUtils.tsx:462
+#: src/utils/PermissionUtils.tsx:307
+#: src/utils/PermissionUtils.tsx:468
 msgid "Send Messages"
 msgstr "Send meldinger"
 
@@ -19056,11 +19057,11 @@ msgstr "Send SMS-kode"
 msgid "Send SMS Code"
 msgstr "Send SMS-kode"
 
-#: src/utils/PermissionUtils.tsx:306
+#: src/utils/PermissionUtils.tsx:312
 msgid "Send text-to-speech messages."
 msgstr "Send tekst-til-tale-meldinger."
 
-#: src/utils/PermissionUtils.tsx:305
+#: src/utils/PermissionUtils.tsx:311
 msgid "Send TTS Messages"
 msgstr "Send TTS-meldinger"
 
@@ -19072,7 +19073,7 @@ msgstr "Send verifiseringskode"
 msgid "Send voice message"
 msgstr "Send talemelding"
 
-#: src/components/modals/InviteModal.tsx:266
+#: src/components/modals/InviteModal.tsx:263
 #: src/components/modals/shared/RecipientList.tsx:223
 #: src/components/modals/ShareThemeModal.tsx:159
 msgid "Sent"
@@ -19098,7 +19099,7 @@ msgstr "Sendte et vedlegg"
 msgid "sent an embed"
 msgstr "sendte en innebygd"
 
-#: src/components/modals/AddConnectionModal.tsx:277
+#: src/components/modals/AddConnectionModal.tsx:280
 msgid "Serve the token file"
 msgstr "Server tokenfilen"
 
@@ -19310,8 +19311,8 @@ msgstr "Sett verifiseringsnivået til <0>Medium</0>."
 msgid "Set verification level to <0>None</0>."
 msgstr "Sett verifiseringsnivået til <0>Ingen</0>."
 
-#: src/utils/PermissionUtils.tsx:417
-#: src/utils/PermissionUtils.tsx:513
+#: src/utils/PermissionUtils.tsx:423
+#: src/utils/PermissionUtils.tsx:519
 msgid "Set Voice Region"
 msgstr "Sett taleområde"
 
@@ -20121,8 +20122,8 @@ msgstr "lyd effekt"
 msgid "sounds"
 msgstr "lyder"
 
-#: src/components/modals/tabs/notifications_tab/Inline.tsx:69
-#: src/components/modals/tabs/NotificationsTab.tsx:71
+#: src/components/modals/tabs/notifications_tab/Inline.tsx:68
+#: src/components/modals/tabs/NotificationsTab.tsx:70
 #: src/components/modals/utils/SettingsSectionRegistry.tsx:557
 msgid "Sounds"
 msgstr "Lyder"
@@ -20174,8 +20175,8 @@ msgstr "Spansk (Latin-Amerika)"
 msgid "Spanish (Spain)"
 msgstr "Spansk (Spania)"
 
-#: src/utils/PermissionUtils.tsx:387
-#: src/utils/PermissionUtils.tsx:498
+#: src/utils/PermissionUtils.tsx:393
+#: src/utils/PermissionUtils.tsx:504
 msgid "Speak"
 msgstr "Snakk"
 
@@ -20397,7 +20398,7 @@ msgstr "Start taleoppringning"
 
 #. placeholder {0}: staticEmojis.length
 #. placeholder {1}: maxStaticEmojis === Number.POSITIVE_INFINITY ? '∞' : maxStaticEmojis
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:349
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:367
 msgid "Static: {0} / {1}"
 msgstr "Statisk: {0} / {1}"
 
@@ -20423,7 +20424,7 @@ msgstr "status tavle"
 msgid "Status Slate"
 msgstr "Status-skjerm"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:240
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:243
 msgid "Status:"
 msgstr "Status:"
 
@@ -20478,7 +20479,7 @@ msgstr "Klistremerke opprettet"
 msgid "Sticker Deleted"
 msgstr "Klistremerke slettet"
 
-#: src/components/modals/guild_tabs/GuildStickersTab.tsx:137
+#: src/components/modals/guild_tabs/GuildStickersTab.tsx:154
 msgid "Sticker density"
 msgstr "Klistremerketetthet"
 
@@ -20505,7 +20506,7 @@ msgstr "Grense for klistremerkepakker nådd"
 msgid "sticker packs"
 msgstr "klistremerker"
 
-#: src/components/modals/guild_tabs/GuildStickersTab.tsx:158
+#: src/components/modals/guild_tabs/GuildStickersTab.tsx:177
 msgid "Sticker Slots"
 msgstr "Klistremerkeplasser"
 
@@ -20529,7 +20530,7 @@ msgid "Stickers"
 msgstr "Klistremerker"
 
 #. placeholder {0}: Math.round(GlobalLimits.getStickerMaxSize() / 1024)
-#: src/components/modals/guild_tabs/GuildStickersTab.tsx:164
+#: src/components/modals/guild_tabs/GuildStickersTab.tsx:183
 msgid "Stickers must be exactly 320x320 pixels and no larger than {0} KB, but we automatically resize and compress images for you. Allowed file types: JPEG, PNG, WebP, GIF."
 msgstr "Klistremerker må være nøyaktig 320x320 piksler og ikke større enn {0} KB, men vi endrer størrelse og komprimerer bildene automatisk for deg. Tillatte filtyper: JPEG, PNG, WebP, GIF."
 
@@ -20611,8 +20612,8 @@ msgstr "Strømforhåndsvisning"
 msgid "Stream Quality"
 msgstr "Strøm kvalitet"
 
-#: src/utils/PermissionUtils.tsx:391
-#: src/utils/PermissionUtils.tsx:499
+#: src/utils/PermissionUtils.tsx:397
+#: src/utils/PermissionUtils.tsx:505
 msgid "Stream Video"
 msgstr "Strøm video"
 
@@ -21051,8 +21052,8 @@ msgid "text to speech"
 msgstr "tekst til tale"
 
 #: src/components/modals/tabs/AccessibilityTab.tsx:209
-#: src/components/modals/tabs/notifications_tab/Inline.tsx:86
-#: src/components/modals/tabs/NotificationsTab.tsx:89
+#: src/components/modals/tabs/notifications_tab/Inline.tsx:84
+#: src/components/modals/tabs/NotificationsTab.tsx:87
 #: src/components/modals/utils/SettingsSectionRegistry.tsx:261
 #: src/components/modals/utils/SettingsSectionRegistry.tsx:589
 msgid "Text-to-speech"
@@ -21139,7 +21140,7 @@ msgstr "Fellesskapet du leter etter kan være slettet eller du har ikke tilgang.
 msgid "The download link will be valid for 7 days"
 msgstr "Nedlastingslenken vil være gyldig i 7 dager"
 
-#: src/components/modals/AddConnectionModal.tsx:298
+#: src/components/modals/AddConnectionModal.tsx:301
 msgid "The file contains the verification token we will fetch from <0>{dnsUrl}</0>."
 msgstr "Filen inneholder verifiseringstokenet vi vil hente fra <0>{dnsUrl}</0>."
 
@@ -21265,7 +21266,7 @@ msgstr "Det oppsto en feil ved lasting av invitasjonslenker for denne kanalen. P
 msgid "There was an error loading the invites. Please try again."
 msgstr "Det oppsto en feil ved lasting av invitasjoner. Prøv igjen."
 
-#: src/components/modals/guild_tabs/GuildStickersTab.tsx:204
+#: src/components/modals/guild_tabs/GuildStickersTab.tsx:231
 msgid "There was an error loading the stickers. Please try again."
 msgstr "Det oppsto en feil ved lasting av klistremerker. Prøv igjen."
 
@@ -21528,7 +21529,7 @@ msgstr "Denne invitasjonen utløper om {seconds} sekunder."
 msgid "This invite has unlimited uses."
 msgstr "Denne invitasjonen kan brukes ubegrenset."
 
-#: src/components/modals/InviteModal.tsx:315
+#: src/components/modals/InviteModal.tsx:312
 msgid "This invite link never expires."
 msgstr "Denne invitasjonslenken utløper aldri."
 
@@ -21836,7 +21837,7 @@ msgstr "Tidsavbruddslengde"
 msgid "Timeout ends {0} ({1})"
 msgstr "Tidsavbrudd slutter {0} ({1})"
 
-#: src/utils/PermissionUtils.tsx:363
+#: src/utils/PermissionUtils.tsx:369
 msgid "Timeout Members"
 msgstr "Medlemmer i tidsavbrudd"
 
@@ -22431,7 +22432,7 @@ msgstr "Kunne ikke laste forhåndsvisning."
 msgid "Unable to load profile banner, badges, and bio."
 msgstr "Kunne ikke laste profilbanner, merker og biografi."
 
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:229
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:245
 msgid "Unable to prepare any emojis for upload. The following errors occurred:"
 msgstr "Kunne ikke forberede emojier for opplasting. Følgende feil oppstod:"
 
@@ -22487,7 +22488,7 @@ msgstr "fjerne blokkering"
 #: src/components/modals/tabs/BlockedUsersTab.tsx:178
 #: src/components/modals/UserProfileActionsSheet.tsx:152
 #: src/components/modals/UserProfileActionsSheet.tsx:306
-#: src/components/modals/UserProfileMobileSheet.tsx:362
+#: src/components/modals/UserProfileMobileSheet.tsx:368
 #: src/components/modals/UserProfileModal.tsx:1105
 #: src/components/uikit/context_menu/items/DMMenuData.tsx:668
 #: src/components/uikit/context_menu/items/RelationshipMenuItems.tsx:231
@@ -22503,7 +22504,7 @@ msgstr "Opphev blokkering av brukeren før du sender venneforespørsel."
 #: src/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:217
 #: src/components/modals/tabs/BlockedUsersTab.tsx:63
 #: src/components/modals/UserProfileActionsSheet.tsx:150
-#: src/components/modals/UserProfileMobileSheet.tsx:360
+#: src/components/modals/UserProfileMobileSheet.tsx:366
 #: src/components/modals/UserProfileModal.tsx:1300
 #: src/utils/RelationshipActionUtils.tsx:173
 msgid "Unblock User"
@@ -22532,7 +22533,7 @@ msgstr "Overstyring av uavhentet konto"
 #: src/components/bottomsheets/DirectCallLobbyBottomSheet.tsx:286
 #: src/components/bottomsheets/VoiceLobbyBottomSheet.tsx:211
 #: src/components/bottomsheets/VoiceSettingsBottomSheets.tsx:155
-#: src/components/layout/UserArea.tsx:160
+#: src/components/layout/UserArea.tsx:174
 #: src/components/voice/VoiceControlBar.tsx:611
 msgid "Undeafen"
 msgstr "Slå på lyd"
@@ -22569,7 +22570,7 @@ msgstr "Under aldersgrensen"
 #: src/components/alerts/UserBannedFromGuildModal.tsx:30
 #: src/components/alerts/UserIpBannedFromGuildModal.tsx:31
 #: src/components/layout/ChannelListContent.tsx:149
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:192
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:208
 #: src/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:160
 msgid "Understood"
 msgstr "Forstått"
@@ -22614,7 +22615,7 @@ msgstr "Unik invitasjon"
 msgid "Unit"
 msgstr "Enhet"
 
-#: src/components/emojis/EmojiListItem.tsx:290
+#: src/components/emojis/EmojiListItem.tsx:301
 #: src/components/modals/BanDetailsModal.tsx:116
 msgid "Unknown"
 msgstr "Ukjent"
@@ -22776,8 +22777,8 @@ msgstr "Lås opp klistremerker i DM-er med Plutonium"
 #: src/components/bottomsheets/MuteDurationSheet.tsx:75
 #: src/components/bottomsheets/VoiceLobbyBottomSheet.tsx:195
 #: src/components/channel/embeds/media/EmbedVideo.tsx:436
-#: src/components/layout/UserArea.tsx:148
-#: src/components/layout/UserArea.tsx:154
+#: src/components/layout/UserArea.tsx:162
+#: src/components/layout/UserArea.tsx:168
 #: src/components/media_player/components/MediaVerticalVolumeControl.tsx:249
 #: src/components/media_player/components/MediaVolumeControl.tsx:208
 #: src/components/modals/MobileVideoViewer.tsx:272
@@ -22813,7 +22814,7 @@ msgstr "Aktiver lyd for kanal"
 #: src/components/bottomsheets/GuildHeaderBottomSheet.tsx:96
 #: src/components/uikit/context_menu/FavoritesGuildContextMenu.tsx:54
 #: src/components/uikit/context_menu/GuildContextMenu.tsx:40
-#: src/components/uikit/context_menu/items/GuildMenuData.tsx:326
+#: src/components/uikit/context_menu/items/GuildMenuData.tsx:329
 #: src/components/uikit/context_menu/items/GuildMenuItems.tsx:165
 msgid "Unmute Community"
 msgstr "Aktiver lyd for fellesskap"
@@ -22957,7 +22958,7 @@ msgstr "Til jeg slår det på igjen"
 msgid "Unverified Email"
 msgstr "Uverifisert e-post"
 
-#: src/components/modals/components/FeatureComparisonTable.tsx:63
+#: src/components/modals/components/FeatureComparisonTable.tsx:62
 msgid "Up to 4K/60fps"
 msgstr "Opptil 4K/60fps"
 
@@ -23138,7 +23139,7 @@ msgstr "Last opp tilpasset bakgrunn"
 msgid "Upload Custom Background"
 msgstr "Last opp tilpasset bakgrunn"
 
-#: src/components/modals/tabs/notifications_tab/Sounds.tsx:125
+#: src/components/modals/tabs/notifications_tab/Sounds.tsx:96
 msgid "Upload Custom Sound"
 msgstr "Last opp egendefinert lyd"
 
@@ -23146,7 +23147,7 @@ msgstr "Last opp egendefinert lyd"
 msgid "Upload directly to {displayName}"
 msgstr "Last opp direkte til {displayName}"
 
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:329
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:347
 msgid "Upload Emoji"
 msgstr "Last opp emoji"
 
@@ -23170,11 +23171,15 @@ msgstr "Last opp ikon"
 msgid "Upload Image"
 msgstr "Last opp bilde"
 
+#: src/utils/PermissionUtils.tsx:285
+msgid "Upload new emoji and stickers, and manage your own creations."
+msgstr "Last opp nye emoji og klistermerker, og administrer dine egne kreasjoner."
+
 #: src/components/modals/utils/SettingsSectionRegistry.tsx:577
 msgid "upload sound"
 msgstr "last opp lyd"
 
-#: src/components/modals/guild_tabs/GuildStickersTab.tsx:161
+#: src/components/modals/guild_tabs/GuildStickersTab.tsx:180
 msgid "Upload Sticker"
 msgstr "Last opp klistremerke"
 
@@ -23186,10 +23191,6 @@ msgstr "Last opp til {displayName}"
 #: src/components/channel/textarea/TextareaPlusMenu.tsx:81
 msgid "Upload your message as a file"
 msgstr "Last opp meldingen din som en fil"
-
-#: src/components/modals/tabs/notifications_tab/Sounds.tsx:74
-msgid "Upload your own custom notification sounds and ringtones. Supported formats: MP3, WAV, OGG, M4A, AAC, FLAC, Opus, WebM. Maximum file size: 2MB per sound."
-msgstr "Last opp dine egne tilpassede varslingslyder og ringetoner. Støttede formater: MP3, WAV, OGG, M4A, AAC, FLAC, Opus, WebM. Maks filstørrelse: 2 MB per lyd."
 
 #: src/components/modals/tabs/chat_settings_tab/MediaTab.tsx:148
 msgid "Uploaded attachments"
@@ -23235,8 +23236,8 @@ msgstr "URL-er for å laste ned vedlegg fra meldingene dine"
 msgid "US East"
 msgstr "US East"
 
-#: src/utils/PermissionUtils.tsx:331
-#: src/utils/PermissionUtils.tsx:473
+#: src/utils/PermissionUtils.tsx:337
+#: src/utils/PermissionUtils.tsx:479
 msgid "Use @everyone/@here and @roles"
 msgstr "Bruk @everyone/@here og @roles"
 
@@ -23256,7 +23257,7 @@ msgstr "Bruk faktisk premiumtype"
 msgid "Use an authenticator app to generate codes for two-factor authentication"
 msgstr "Bruk en autentiseringsapp for å generere koder til tofaktorautentisering"
 
-#: src/components/modals/components/FeatureComparisonTable.tsx:56
+#: src/components/modals/components/FeatureComparisonTable.tsx:55
 msgid "Use animated emojis"
 msgstr "Bruk animerte emojier"
 
@@ -23294,17 +23295,17 @@ msgstr "Bruk mørkt tema i hele appen"
 msgid "Use Different Email"
 msgstr "Bruk en annen e-post"
 
-#: src/utils/PermissionUtils.tsx:337
+#: src/utils/PermissionUtils.tsx:343
 msgid "Use emoji from other communities."
 msgstr "Bruk emojier fra andre fellesskap."
 
-#: src/utils/PermissionUtils.tsx:336
-#: src/utils/PermissionUtils.tsx:477
+#: src/utils/PermissionUtils.tsx:342
+#: src/utils/PermissionUtils.tsx:483
 msgid "Use External Emoji"
 msgstr "Bruk ekstern emoji"
 
-#: src/utils/PermissionUtils.tsx:341
-#: src/utils/PermissionUtils.tsx:478
+#: src/utils/PermissionUtils.tsx:347
+#: src/utils/PermissionUtils.tsx:484
 msgid "Use External Stickers"
 msgstr "Bruk eksterne klistremerker"
 
@@ -23337,7 +23338,7 @@ msgstr "Bruk sikkerhetsnøkkel"
 msgid "Use system locale for time format"
 msgstr "Bruk systemets lokalinnstillinger for tidsformat"
 
-#: src/components/modals/AddConnectionModal.tsx:233
+#: src/components/modals/AddConnectionModal.tsx:236
 msgid "Use the record below to prove domain ownership."
 msgstr "Bruk posten nedenfor for å bevise domeneeierskap."
 
@@ -23357,8 +23358,8 @@ msgstr "Bruk denne knappen for raskt å fjerne alle tillatelser."
 msgid "Use this shortcut system-wide"
 msgstr "Bruk denne snarveien systemomfattende"
 
-#: src/utils/PermissionUtils.tsx:395
-#: src/utils/PermissionUtils.tsx:501
+#: src/utils/PermissionUtils.tsx:401
+#: src/utils/PermissionUtils.tsx:507
 msgid "Use Voice Activity"
 msgstr "Bruk stemmeaktivitet"
 
@@ -23450,8 +23451,8 @@ msgstr "Brukerprofil: {tag}"
 msgid "User Record"
 msgstr "Brukerregister"
 
-#: src/components/layout/UserArea.tsx:272
-#: src/components/layout/UserArea.tsx:277
+#: src/components/layout/UserArea.tsx:286
+#: src/components/layout/UserArea.tsx:291
 #: src/components/modals/components/DesktopSettingsView.tsx:357
 #: src/components/modals/UserSettingsModal.tsx:154
 msgid "User Settings"
@@ -23530,6 +23531,10 @@ msgstr "Brukere"
 msgid "Uses"
 msgstr "Bruker"
 
+#: src/components/modals/tabs/AdvancedTab.tsx:139
+msgid "Uses H.265 for screen sharing when enabled. Turn this off to prefer VP9. Changes apply the next time you start sharing your screen."
+msgstr "Bruker H.265 for skjermdeling når det er aktivert. Slå dette av for å foretrekke VP9. Endringer trer i kraft neste gang du begynner å dele skjermen."
+
 #: src/components/modals/tabs/notifications_tab/Notifications.tsx:93
 msgid "Uses the OS notification center. For per-channel/per-community controls, right-click a community icon and open Notification Settings."
 msgstr "Bruker operativsystemets varslingssenter. For kanal-/fellesskapskontroller høyreklikker du et fellesskapsikon og åpner Varslingsinnstillinger."
@@ -23570,7 +23575,7 @@ msgstr "verktøy"
 msgid "value"
 msgstr "verdi"
 
-#: src/components/modals/AddConnectionModal.tsx:258
+#: src/components/modals/AddConnectionModal.tsx:261
 msgid "Value"
 msgstr "Verdi"
 
@@ -23678,7 +23683,7 @@ msgstr "Verifisert gruppe"
 msgid "verify"
 msgstr "verifiser"
 
-#: src/components/modals/AddConnectionModal.tsx:312
+#: src/components/modals/AddConnectionModal.tsx:315
 #: src/components/modals/EmailChangeModal.tsx:236
 #: src/components/modals/PasswordChangeModal.tsx:182
 #: src/components/modals/PhoneAddModal.tsx:240
@@ -23690,11 +23695,11 @@ msgstr "Verifiser"
 msgid "Verify Code"
 msgstr "Verifiser kode"
 
-#: src/components/modals/AddConnectionModal.tsx:229
+#: src/components/modals/AddConnectionModal.tsx:232
 msgid "Verify Connection"
 msgstr "Bekreft tilkobling"
 
-#: src/components/modals/AddConnectionModal.tsx:228
+#: src/components/modals/AddConnectionModal.tsx:231
 msgid "Verify connection form"
 msgstr "Bekreft tilkoblingsskjema"
 
@@ -23759,7 +23764,7 @@ msgid "Video"
 msgstr "Video"
 
 #: src/components/channel/ChannelHeader.tsx:652
-#: src/components/modals/UserProfileMobileSheet.tsx:565
+#: src/components/modals/UserProfileMobileSheet.tsx:571
 msgid "Video Call"
 msgstr "Videosamtale"
 
@@ -23784,7 +23789,7 @@ msgstr "Videoforhåndsvisning"
 msgid "Video progress"
 msgstr "Videofremdrift"
 
-#: src/components/modals/components/FeatureComparisonTable.tsx:58
+#: src/components/modals/components/FeatureComparisonTable.tsx:57
 msgid "Video quality"
 msgstr "Videokvalitet"
 
@@ -23874,8 +23879,8 @@ msgstr "Vis samtale"
 msgid "View call controls"
 msgstr "Vis samtalekontroller"
 
-#: src/utils/PermissionUtils.tsx:374
-#: src/utils/PermissionUtils.tsx:454
+#: src/utils/PermissionUtils.tsx:380
+#: src/utils/PermissionUtils.tsx:460
 msgid "View Channel"
 msgstr "Vis kanal"
 
@@ -24064,7 +24069,7 @@ msgstr "Lydanrop"
 
 #: src/components/channel/ChannelHeader.tsx:642
 #: src/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:275
-#: src/components/modals/UserProfileMobileSheet.tsx:557
+#: src/components/modals/UserProfileMobileSheet.tsx:563
 #: src/components/uikit/context_menu/items/DMMenuData.tsx:553
 msgid "Voice Call"
 msgstr "Lydanrop"
@@ -24566,7 +24571,7 @@ msgstr "Når det er aktivert, vil ikke andre se en miniaturer forhåndsvisning a
 msgid "When enabled, quickly tapping your push-to-talk shortcut will keep your microphone on until pressed again."
 msgstr "Når aktivert, holder et raskt trykk på snarveien for push-to-talk mikrofonen aktivert til du trykker igjen."
 
-#: src/components/modals/tabs/AdvancedTab.tsx:141
+#: src/components/modals/tabs/AdvancedTab.tsx:160
 msgid "When enabled, reveals debugging menus throughout the app to inspect and copy raw JSON objects of internal data structures like messages, channels, users, and communities. Also includes tools to debug the Fluxer Markdown parser performance and AST for any given message."
 msgstr "Når aktivert, viser feilsøkingsmenyer i hele appen for å inspisere og kopiere rå JSON-objekter for interne datastrukturer som meldinger, kanaler, brukere og fellesskap. Inkluderer også verktøy for å feilsøke Fluxer Markdown-parserens ytelse og AST for enhver melding."
 
@@ -24691,7 +24696,7 @@ msgstr "Med feil"
 msgid "With Plutonium, you can use animated avatars and banners (in GIF, APNG, animated WebP, or AVIF), customize your 4-digit tag, and unlock many other premium features."
 msgstr "Med Plutonium kan du bruke animerte avatarer og bannere (i GIF, APNG, animert WebP eller AVIF), tilpasse din 4-sifrede tag, og låse opp mange andre premiumfunksjoner."
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:339
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:353
 msgid "Withdraw"
 msgstr "Trekk tilbake"
 
@@ -24759,7 +24764,7 @@ msgstr "Deg"
 msgid "You already have a group with these users. Do you really want to create a new one? That's fine too!"
 msgstr "Du har allerede en gruppe med disse brukerne. Vil du virkelig opprette en ny? Det går greit det også!"
 
-#: src/components/modals/AddConnectionModal.tsx:98
+#: src/components/modals/AddConnectionModal.tsx:101
 msgid "You already have this connection."
 msgstr "Du har allerede denne tilkoblingen."
 
@@ -24795,9 +24800,9 @@ msgstr "Du blir nå sendt til Stripe for å fullføre betalingen. Kom tilbake ti
 #. placeholder {0}: displayUser.username
 #. placeholder {0}: user.username
 #: src/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:144
-#: src/components/modals/UserProfileMobileSheet.tsx:319
+#: src/components/modals/UserProfileMobileSheet.tsx:325
 #: src/components/modals/UserProfileModal.tsx:1015
-#: src/components/popouts/UserProfilePopout.tsx:194
+#: src/components/popouts/UserProfilePopout.tsx:215
 #: src/components/uikit/context_menu/items/ActionsSubmenu.tsx:74
 #: src/components/uikit/context_menu/items/MessageUserMenuItem.tsx:66
 #: src/components/uikit/context_menu/items/VoiceParticipantMenuData.tsx:208
@@ -24915,7 +24920,7 @@ msgid "You can't join while you're on timeout."
 msgstr "Du kan ikke bli med mens du er i timeout."
 
 #: src/components/modals/UserProfileModal.tsx:1239
-#: src/components/popouts/UserProfilePopout.tsx:306
+#: src/components/popouts/UserProfilePopout.tsx:327
 #: src/components/profile/ProfilePreview.tsx:268
 msgid "You can't message yourself"
 msgstr "Du kan ikke sende melding til deg selv"
@@ -25392,7 +25397,7 @@ msgstr "Du har nådd maksimumsantallet for fellesskap du kan bli med i ({maxGuil
 msgid "You've reached the maximum number of communities you can join ({maxGuilds} community). Please leave a community before joining another one."
 msgstr "Du har nådd maksimumsantallet for fellesskap du kan bli med i ({maxGuilds} fellesskap). Vennligst forlat et fellesskap før du blir med i et annet."
 
-#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:187
+#: src/components/modals/guild_tabs/GuildEmojiTab.tsx:203
 msgid "You've reached the maximum number of static emojis. Delete some existing emojis or upgrade your server to increase the limit."
 msgstr "Du har nådd maksimalt antall statiske emojier. Slett noen eksisterende emojier eller oppgrader serveren din for å øke grensen."
 
@@ -25425,7 +25430,7 @@ msgstr "Kontoen din er ikke gjort krav på ennå. Uten e-post og passord kan du 
 msgid "Your account is too new to send messages in this community."
 msgstr "Kontoen din er for ny til å sende meldinger i dette fellesskapet."
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:275
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:278
 msgid "Your application is pending review. You can still update your listing details or withdraw the application."
 msgstr "Søknaden din er under vurdering. Du kan fortsatt oppdatere detaljene i oppføringen din eller trekke tilbake søknaden."
 
@@ -25445,11 +25450,11 @@ msgstr "Koden din"
 msgid "Your code is ready!"
 msgstr "Koden din er klar!"
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:259
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:262
 msgid "Your community is listed in Discovery. You can update your listing details below or withdraw to remove it."
 msgstr "Samfunnet ditt er oppført i Discovery. Du kan oppdatere detaljene i oppføringen din nedenfor eller trekke tilbake for å fjerne det."
 
-#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:227
+#: src/components/modals/guild_tabs/GuildDiscoveryTab.tsx:230
 msgid "Your community needs at least {minMemberCount} members before it can be listed in Discovery."
 msgstr "Samfunnet ditt trenger minst {minMemberCount} medlemmer før det kan bli oppført i Discovery."
 
@@ -25478,7 +25483,7 @@ msgstr "Din e-postadresse har blitt oppdatert."
 msgid "Your email has been verified. You can now log in to your account."
 msgstr "E-posten din er bekreftet. Du kan nå logge inn på kontoen din."
 
-#: src/components/modals/tabs/notifications_tab/Sounds.tsx:90
+#: src/components/modals/tabs/notifications_tab/Sounds.tsx:64
 msgid "Your existing notification sound settings will be preserved."
 msgstr "Dine eksisterende varslingslydinnstillinger beholdes."
 
@@ -25499,7 +25504,7 @@ msgid "Your invite expires in 24 hours"
 msgstr "Invitasjonen din utløper om 24 timer"
 
 #. placeholder {0}: getExpirationText()
-#: src/components/modals/InviteModal.tsx:319
+#: src/components/modals/InviteModal.tsx:323
 msgid "Your invite link expires in {0}."
 msgstr "Invitasjonslenken din utløper om {0}."
 

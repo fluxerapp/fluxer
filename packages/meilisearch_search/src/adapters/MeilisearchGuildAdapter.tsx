@@ -23,8 +23,6 @@ import {
 	type MeilisearchFilter,
 	meiliAndEquals,
 	meiliEquals,
-	meiliGte,
-	meiliLte,
 } from '@fluxer/meilisearch_search/src/MeilisearchFilterUtils';
 import {MEILISEARCH_INDEX_DEFINITIONS} from '@fluxer/meilisearch_search/src/MeilisearchIndexDefinitions';
 import type {GuildSearchFilters, SearchableGuild} from '@fluxer/schema/src/contracts/search/SearchDocumentTypes';
@@ -38,8 +36,6 @@ function buildGuildFilters(filters: GuildSearchFilters): Array<MeilisearchFilter
 		clauses.push(meiliEquals('verificationLevel', filters.verificationLevel));
 	if (filters.mfaLevel !== undefined) clauses.push(meiliEquals('mfaLevel', filters.mfaLevel));
 	if (filters.nsfwLevel !== undefined) clauses.push(meiliEquals('nsfwLevel', filters.nsfwLevel));
-	if (filters.minMembers !== undefined) clauses.push(meiliGte('memberCount', filters.minMembers));
-	if (filters.maxMembers !== undefined) clauses.push(meiliLte('memberCount', filters.maxMembers));
 
 	if (filters.hasFeature && filters.hasFeature.length > 0) {
 		clauses.push(...meiliAndEquals('features', filters.hasFeature));
@@ -55,7 +51,6 @@ function buildGuildFilters(filters: GuildSearchFilters): Array<MeilisearchFilter
 function buildGuildSort(filters: GuildSearchFilters): Array<string> | undefined {
 	const sortBy = filters.sortBy ?? 'createdAt';
 	if (sortBy === 'relevance') return undefined;
-	if (sortBy === 'onlineCount') return [`onlineCount:${filters.sortOrder ?? 'desc'}`];
 	const sortOrder = filters.sortOrder ?? 'desc';
 	return [`${sortBy}:${sortOrder}`];
 }

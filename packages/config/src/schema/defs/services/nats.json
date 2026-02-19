@@ -1,0 +1,24 @@
+{
+	"nats_services": {
+		"type": "object",
+		"description": "Configuration for NATS messaging.",
+		"additionalProperties": false,
+		"properties": {
+			"core_url": {
+				"type": "string",
+				"description": "NATS Core server URL for RPC.",
+				"default": "nats://127.0.0.1:4222"
+			},
+			"jetstream_url": {
+				"type": "string",
+				"description": "NATS JetStream server URL for job queues.",
+				"default": "nats://127.0.0.1:4223"
+			},
+			"auth_token": {
+				"type": "string",
+				"description": "Authentication token for NATS connections.",
+				"default": ""
+			}
+		}
+	}
+}

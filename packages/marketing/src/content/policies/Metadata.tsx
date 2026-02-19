@@ -42,7 +42,7 @@ export const POLICY_METADATA: ReadonlyArray<PolicyMetadata> = [
 		description:
 			'How we collect, use, and protect your personal information when you use Fluxer. Your privacy matters to us.',
 		category: 'Legal',
-		lastUpdated: '2026-02-13',
+		lastUpdated: '2026-02-18',
 	},
 	{
 		slug: 'guidelines',

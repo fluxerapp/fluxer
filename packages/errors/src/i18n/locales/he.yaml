@@ -50,7 +50,7 @@ admin_and_system.test_harness_forbidden: ניסיון בדיקה אסור.
 admin_and_system.unknown_suspicious_flag: דגל חשוד לא מוכר.
 admin_and_system.update_failed: לא הצלחנו לעדכן את המשאב. נא לנסות שוב.
 admin_and_system.user_must_be_bot_for_system_user: משתמש חייב להיות בוט כדי לסמן אותו כמשתמש מערכת.
-attachments_and_uploads.attachment_fields_required: '`attachment_id`, `channel_id`, `message_id`, and `expires_at` are required.'
+attachments_and_uploads.attachment_fields_required: '`attachment_id`, `channel_id`, `message_id` ו-`expires_at` הם שדות חובה.'
 attachments_and_uploads.attachment_ids_must_be_valid_integers: '`attachment_id`, `channel_id`, and `message_id` must be valid integers.'
 attachments_and_uploads.cannot_edit_attachment_metadata: משתמשים עם MANAGE_MESSAGES יכולים לערוך רק תיאורי קבצים מצורפים, לא מטא-דאטה אחרת.
 attachments_and_uploads.attachment_metadata_without_files: מטא-דאטה של קובץ מצורף כללה שם קובץ, אבל לא הועלו קבצים.
@@ -204,6 +204,7 @@ content_and_safety.ncmec_already_submitted: התוכן הזה כבר נשלח ל
 content_and_safety.ncmec_submission_failed: לא הצלחנו לשלוח את הדיווח ל-NCMEC. נסו שוב מאוחר יותר.
 content_and_safety.nsfw_age_restricted: תוכן NSFW מוגבל לגיל.
 connections.already_exists: כבר קיימת חיבור מסוג זה עם מזהה זה.
+connections.bluesky_oauth_authorization_failed: לא הצלחנו לאמת את שם המשתמש הזה ב-Bluesky. בדוק אותו ונסה שוב.
 connections.bluesky_oauth_callback_failed: לא הצלחנו להשלים את חיבור Bluesky. נא לנסות שוב.
 connections.bluesky_oauth_not_enabled: חיבורי Bluesky לא מופעלים בשרת הזה.
 connections.bluesky_oauth_session_expired: הסשן של Bluesky שלך פג תוקף. נא לחבר מחדש את החשבון שלך.

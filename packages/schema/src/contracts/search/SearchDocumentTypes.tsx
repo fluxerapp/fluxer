@@ -93,25 +93,21 @@ export interface SearchableGuild {
 	verificationLevel: number;
 	mfaLevel: number;
 	nsfwLevel: number;
-	memberCount: number;
 	createdAt: number;
 	discoveryDescription: string | null;
 	discoveryCategory: number | null;
 	isDiscoverable: boolean;
-	onlineCount: number;
 }
 
 export interface GuildSearchFilters {
 	ownerId?: string;
-	minMembers?: number;
-	maxMembers?: number;
 	verificationLevel?: number;
 	mfaLevel?: number;
 	nsfwLevel?: number;
 	hasFeature?: Array<string>;
 	isDiscoverable?: boolean;
 	discoveryCategory?: number;
-	sortBy?: 'createdAt' | 'memberCount' | 'onlineCount' | 'relevance';
+	sortBy?: 'createdAt' | 'relevance';
 	sortOrder?: 'asc' | 'desc';
 }
 

@@ -359,7 +359,7 @@ handle_guild_voice_state_update(
     _Longitude,
     SessionPid
 ) ->
-    case guild_client:voice_state_update(GuildPid, Request, 12000) of
+    case guild_client:voice_state_update(GuildPid, GuildId, Request, 12000) of
         {ok, Reply} when is_map(Reply) ->
             maybe_dispatch_voice_server_update_from_reply(Reply, GuildId, ChannelId, SessionPid),
             ok;
@@ -427,9 +427,9 @@ handle_voice_disconnect(State) ->
 dispatch_guild_voice_disconnects(Guilds, Request) ->
     lists:foreach(
         fun
-            ({_GuildId, {GuildPid, _Ref}}) when is_pid(GuildPid) ->
+            ({GuildId, {GuildPid, _Ref}}) when is_pid(GuildPid) ->
                 spawn(fun() ->
-                    _ = guild_client:voice_state_update(GuildPid, Request, 10000),
+                    _ = guild_client:voice_state_update(GuildPid, GuildId, Request, 10000),
                     ok
                 end),
                 ok;

@@ -103,7 +103,6 @@ function getPerkLabel(ctx: MarketingContext, perk: PlutoniumPerk): string {
 			ctx.locale,
 		),
 		entrance_sounds: ctx.i18n.getMessage('app.customization.custom_sounds.entrance_sounds', ctx.locale),
-		notification_sounds: ctx.i18n.getMessage('app.customization.custom_sounds.notification_sounds', ctx.locale),
 		communities: ctx.i18n.getMessage('app.communities.title', ctx.locale),
 		message_character_limit: ctx.i18n.getMessage(
 			'pricing_and_tiers.plutonium.features.message_character_limit',
@@ -390,13 +389,6 @@ function renderFeaturesSection(ctx: MarketingContext): JSX.Element {
 					)}
 					{renderFeatureCard(
 						ctx,
-						'speaker_high',
-						ctx.i18n.getMessage('app.customization.custom_sounds.notification_sounds', ctx.locale),
-						ctx.i18n.getMessage('app.customization.custom_sounds.upload_custom_notification_sounds', ctx.locale),
-						ctx.i18n.getMessage('beta_and_access.beta_label', ctx.locale),
-					)}
-					{renderFeatureCard(
-						ctx,
 						'arrow_up',
 						ctx.i18n.getMessage('pricing_and_tiers.plutonium.higher_limits_everywhere', ctx.locale),
 						ctx.i18n.getMessage('pricing_and_tiers.plutonium.feature_highlights', ctx.locale),
@@ -428,7 +420,6 @@ type FeatureIconName =
 	| 'video_camera'
 	| 'user_circle'
 	| 'user_plus'
-	| 'speaker_high'
 	| 'fluxer_premium'
 	| 'calendar_check'
 	| 'rocket'

@@ -65,10 +65,19 @@ describe('OAuth2 Application Delete', () => {
 			.expect(HTTP_STATUS.UNAUTHORIZED)
 			.execute();
 
-		await createBuilder(harness, account.token)
+		const botUser = await createBuilder<{
+			id: string;
+			username: string;
+			discriminator: string;
+			avatar: string | null;
+		}>(harness, account.token)
 			.get(`/users/${createResult.botUserId}`)
-			.expect(HTTP_STATUS.NOT_FOUND)
+			.expect(HTTP_STATUS.OK)
 			.execute();
+
+		expect(botUser.username).toBe('DeletedUser');
+		expect(botUser.discriminator).toBe('0000');
+		expect(botUser.avatar).toBeNull();
 	});
 
 	test('keeps bot-authored messages readable after deleting the application', async () => {

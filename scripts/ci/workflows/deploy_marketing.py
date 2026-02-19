@@ -35,6 +35,7 @@ services:
       - FLUXER_CONFIG=/etc/fluxer/config.json
     volumes:
       - ${CONFIG_PATH}:/etc/fluxer/config.json:ro
+      - /opt/geoip/GeoLite2-City.mmdb:/data/GeoLite2-City.mmdb:ro
     deploy:
       replicas: ${APP_REPLICAS}
       restart_policy:

@@ -170,22 +170,6 @@ function stripApiSuffix(url) {
 	return url.endsWith('/api') ? url.slice(0, -4) : url;
 }
 
-function parseSentryDsn(dsn) {
-	if (!dsn) {
-		return {};
-	}
-	try {
-		const parsed = new URL(dsn);
-		const path = parsed.pathname.replace(/^\/+|\/+$/g, '');
-		const segments = path ? path.split('/') : [];
-		const projectId = segments.length > 0 ? segments[segments.length - 1] : undefined;
-		const publicKey = parsed.username || undefined;
-		return {projectId, publicKey};
-	} catch {
-		return {};
-	}
-}
-
 function resolveAppPublic(config) {
 	const appPublic = getValue(config, ['app_public'], {});
 	const domain = getValue(config, ['domain'], {});
@@ -193,25 +177,13 @@ function resolveAppPublic(config) {
 	const endpoints = deriveEndpointsFromDomain(domain, overrides);
 	const defaultBootstrapEndpoint = endpoints.api;
 	const defaultPublicEndpoint = stripApiSuffix(endpoints.api);
-	const sentryDsn =
-		asString(appPublic.sentry_dsn) ?? asString(getValue(config, ['services', 'app_proxy', 'sentry_dsn']));
-	const sentryParsed = parseSentryDsn(sentryDsn);
+	const sentryDsn = asString(appPublic.sentry_dsn);
 	return {
 		apiVersion: asString(appPublic.api_version, '1'),
 		bootstrapApiEndpoint: asString(appPublic.bootstrap_api_endpoint, defaultBootstrapEndpoint),
 		bootstrapApiPublicEndpoint: asString(appPublic.bootstrap_api_public_endpoint, defaultPublicEndpoint),
 		relayDirectoryUrl: asString(appPublic.relay_directory_url),
 		sentryDsn,
-		sentryProxyPath: asString(
-			appPublic.sentry_proxy_path,
-			asString(getValue(config, ['services', 'app_proxy', 'sentry_proxy_path']), '/error-reporting-proxy'),
-		),
-		sentryReportHost: asString(
-			appPublic.sentry_report_host,
-			asString(getValue(config, ['services', 'app_proxy', 'sentry_report_host']), ''),
-		),
-		sentryProjectId: asString(appPublic.sentry_project_id, sentryParsed.projectId),
-		sentryPublicKey: asString(appPublic.sentry_public_key, sentryParsed.publicKey),
 	};
 }
 
@@ -262,9 +234,6 @@ export default () => {
 		PUBLIC_BUILD_TIMESTAMP: buildMetadata.buildTimestamp,
 		PUBLIC_RELEASE_CHANNEL: buildMetadata.releaseChannel,
 		PUBLIC_SENTRY_DSN: appPublic.sentryDsn ?? null,
-		PUBLIC_SENTRY_PROJECT_ID: appPublic.sentryProjectId ?? null,
-		PUBLIC_SENTRY_PUBLIC_KEY: appPublic.sentryPublicKey ?? null,
-		PUBLIC_SENTRY_PROXY_PATH: appPublic.sentryProxyPath,
 		PUBLIC_API_VERSION: appPublic.apiVersion,
 		PUBLIC_BOOTSTRAP_API_ENDPOINT: appPublic.bootstrapApiEndpoint,
 		PUBLIC_BOOTSTRAP_API_PUBLIC_ENDPOINT: appPublic.bootstrapApiPublicEndpoint ?? appPublic.bootstrapApiEndpoint,
@@ -482,9 +451,6 @@ export default () => {
 				'import.meta.env.PUBLIC_BUILD_TIMESTAMP': getPublicEnvVar(publicValues, 'PUBLIC_BUILD_TIMESTAMP'),
 				'import.meta.env.PUBLIC_RELEASE_CHANNEL': getPublicEnvVar(publicValues, 'PUBLIC_RELEASE_CHANNEL'),
 				'import.meta.env.PUBLIC_SENTRY_DSN': getPublicEnvVar(publicValues, 'PUBLIC_SENTRY_DSN'),
-				'import.meta.env.PUBLIC_SENTRY_PROJECT_ID': getPublicEnvVar(publicValues, 'PUBLIC_SENTRY_PROJECT_ID'),
-				'import.meta.env.PUBLIC_SENTRY_PUBLIC_KEY': getPublicEnvVar(publicValues, 'PUBLIC_SENTRY_PUBLIC_KEY'),
-				'import.meta.env.PUBLIC_SENTRY_PROXY_PATH': getPublicEnvVar(publicValues, 'PUBLIC_SENTRY_PROXY_PATH'),
 				'import.meta.env.PUBLIC_API_VERSION': getPublicEnvVar(publicValues, 'PUBLIC_API_VERSION'),
 				'import.meta.env.PUBLIC_BOOTSTRAP_API_ENDPOINT': getPublicEnvVar(publicValues, 'PUBLIC_BOOTSTRAP_API_ENDPOINT'),
 				'import.meta.env.PUBLIC_BOOTSTRAP_API_PUBLIC_ENDPOINT': getPublicEnvVar(

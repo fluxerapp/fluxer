@@ -66,7 +66,6 @@ export const MEILISEARCH_INDEX_DEFINITIONS: Record<FluxerSearchIndexName, Meilis
 		filterableAttributes: [
 			'id',
 			'ownerId',
-			'memberCount',
 			'verificationLevel',
 			'mfaLevel',
 			'nsfwLevel',
@@ -74,9 +73,8 @@ export const MEILISEARCH_INDEX_DEFINITIONS: Record<FluxerSearchIndexName, Meilis
 			'createdAt',
 			'isDiscoverable',
 			'discoveryCategory',
-			'onlineCount',
 		],
-		sortableAttributes: ['createdAt', 'memberCount', 'onlineCount'],
+		sortableAttributes: ['createdAt'],
 		searchableAttributes: ['name', 'vanityUrlCode', 'discoveryDescription'],
 	},
 	users: {

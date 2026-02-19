@@ -203,6 +203,7 @@ content_and_safety.explicit_content_cannot_be_sent: Explicit innehåll kan inte 
 content_and_safety.ncmec_already_submitted: Det här innehållet har redan skickats in till NCMEC.
 content_and_safety.ncmec_submission_failed: Vi kunde inte skicka rapporten till NCMEC. Försök igen senare.
 content_and_safety.nsfw_age_restricted: NSFW-innehåll är åldersbegränsat.
+connections.bluesky_oauth_authorization_failed: Vi kunde inte hitta det Bluesky-handtaget. Kontrollera det och försök igen.
 connections.bluesky_oauth_callback_failed: Vi kunde inte slutföra Bluesky-anslutningen. Försök igen.
 connections.bluesky_oauth_not_enabled: Bluesky-anslutningar är inte aktiverade på den här servern.
 connections.bluesky_oauth_session_expired: Din Bluesky-session har gått ut. Anslut ditt konto på nytt.

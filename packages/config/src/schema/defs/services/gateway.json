@@ -3,26 +3,12 @@
 		"type": "object",
 		"description": "Configuration for the Gateway service (WebSocket).",
 		"additionalProperties": false,
-		"required": ["api_host", "admin_reload_secret", "media_proxy_endpoint"],
+		"required": ["admin_reload_secret", "media_proxy_endpoint"],
 		"properties": {
 			"port": {
 				"type": "number",
 				"description": "Port to listen on.",
 				"default": 8771
-			},
-			"rpc_tcp_port": {
-				"type": "number",
-				"description": "Port for API-to-Gateway internal RPC over TCP.",
-				"default": 8772
-			},
-			"api_host": {
-				"type": "string",
-				"description": "Host/Port of the API service to communicate with."
-			},
-			"api_canary_host": {
-				"type": "string",
-				"description": "Host/Port of the Canary API service (optional).",
-				"default": ""
 			},
 			"admin_reload_secret": {
 				"type": "string",

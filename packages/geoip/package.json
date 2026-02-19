@@ -1,0 +1,21 @@
+{
+	"name": "@fluxer/geoip",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"exports": {
+		"./*": "./*"
+	},
+	"scripts": {
+		"typecheck": "tsgo --noEmit"
+	},
+	"dependencies": {
+		"@fluxer/geo_utils": "workspace:*",
+		"@fluxer/ip_utils": "workspace:*",
+		"maxmind": "catalog:"
+	},
+	"devDependencies": {
+		"@types/node": "catalog:",
+		"@typescript/native-preview": "catalog:"
+	}
+}

@@ -149,6 +149,7 @@ calls_and_voice.voice_message_waveform_required: A hangüzenet mellékletének w
 calls_and_voice.voice_messages_require_single_attachment: A hangüzeneteknek pontosan egy mellekletet kell tartalmazniuk.
 captcha.invalid: Érvénytelen CAPTCHA.
 captcha.required: A CAPTCHA kötelező.
+connections.bluesky_oauth_authorization_failed: Nem sikerült feloldani azt a Bluesky-azonosítót. Ellenőrizd és próbáld újra.
 connections.bluesky_oauth_callback_failed: Nem sikerült befejezni a Bluesky-kapcsolatot. Próbáld újra.
 connections.bluesky_oauth_not_enabled: A Bluesky-kapcsolatok nincsenek engedélyezve ezen a szerveren.
 connections.bluesky_oauth_session_expired: A Bluesky-munkameneted lejárt. Kérlek csatlakoztasd újra a fiókodat.

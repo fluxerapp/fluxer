@@ -193,6 +193,7 @@ channels_and_guilds.vanity_url_requires_feature: 个性化链接需要 VANITY_UR
 channels_and_guilds.voice_channel_full: 语音频道已满。
 channels_and_guilds.voice_channels_cannot_be_above_text_channels: 同一分类下,语音频道不能排在文字频道上方。
 connections.already_exists: 已存在该类型且标识符相同的连接。
+connections.bluesky_oauth_authorization_failed: 我们无法解析该 Bluesky 用户名。请检查后重试。
 connections.bluesky_oauth_callback_failed: 我们无法完成 Bluesky 连接。请重试。
 connections.bluesky_oauth_not_enabled: 这个服务器未启用 Bluesky 连接。
 connections.bluesky_oauth_session_expired: 你的 Bluesky 会话已过期。请重新连接你的账号。

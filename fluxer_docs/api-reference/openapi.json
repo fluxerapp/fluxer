@@ -12355,6 +12355,141 @@
         }
       }
     },
+    "/admin/users/delete-webauthn-credential": {
+      "post": {
+        "operationId": "delete_user_webauthn_credential",
+        "summary": "Delete user WebAuthn credential",
+        "tags": [
+          "Admin"
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request - The request was malformed or contained invalid data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Authentication is required or the token is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - You do not have permission to perform this action",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests - You are being rate limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "RATE_LIMITED"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retry_after": {
+                      "type": "number",
+                      "description": "Seconds to wait before retrying"
+                    },
+                    "global": {
+                      "type": "boolean",
+                      "description": "Whether this is a global rate limit"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "retry_after"
+                  ]
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Number of seconds to wait before retrying (only on 429)",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "The number of requests that can be made in the current window",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "The number of remaining requests that can be made",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Unix timestamp when the rate limit resets",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error - An unexpected error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-mint": {
+          "metadata": {
+            "title": "Delete user WebAuthn credential"
+          }
+        },
+        "description": "Delete a specific WebAuthn credential (passkey/security key) from a user account. Creates audit log entry. Requires USER_UPDATE_MFA permission.",
+        "security": [
+          {
+            "adminApiKey": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteWebAuthnCredentialRequest"
+              }
+            }
+          }
+        }
+      }
+    },
     "/admin/users/disable-mfa": {
       "post": {
         "operationId": "disable_user_mfa",
@@ -13058,6 +13193,148 @@
         }
       }
     },
+    "/admin/users/list-webauthn-credentials": {
+      "post": {
+        "operationId": "list_user_webauthn_credentials",
+        "summary": "List user WebAuthn credentials",
+        "tags": [
+          "Admin"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebAuthnCredentialListResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request - The request was malformed or contained invalid data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Authentication is required or the token is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - You do not have permission to perform this action",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests - You are being rate limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "RATE_LIMITED"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retry_after": {
+                      "type": "number",
+                      "description": "Seconds to wait before retrying"
+                    },
+                    "global": {
+                      "type": "boolean",
+                      "description": "Whether this is a global rate limit"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "retry_after"
+                  ]
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Number of seconds to wait before retrying (only on 429)",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "The number of requests that can be made in the current window",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "The number of remaining requests that can be made",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Unix timestamp when the rate limit resets",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error - An unexpected error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-mint": {
+          "metadata": {
+            "title": "List user WebAuthn credentials"
+          }
+        },
+        "description": "List all WebAuthn credentials (passkeys/security keys) registered for a user. Returns credential names, creation dates, and last usage. Creates audit log entry. Requires USER_UPDATE_MFA permission.",
+        "security": [
+          {
+            "adminApiKey": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ListWebAuthnCredentialsRequest"
+              }
+            }
+          }
+        }
+      }
+    },
     "/admin/users/lookup": {
       "post": {
         "operationId": "lookup_user",
@@ -13330,6 +13607,141 @@
             "adminApiKey": []
           }
         ]
+      }
+    },
+    "/admin/users/resend-verification-email": {
+      "post": {
+        "operationId": "admin_resend_verification_email",
+        "summary": "Resend verification email",
+        "tags": [
+          "Admin"
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request - The request was malformed or contained invalid data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Authentication is required or the token is invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - You do not have permission to perform this action",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests - You are being rate limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "RATE_LIMITED"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "retry_after": {
+                      "type": "number",
+                      "description": "Seconds to wait before retrying"
+                    },
+                    "global": {
+                      "type": "boolean",
+                      "description": "Whether this is a global rate limit"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message",
+                    "retry_after"
+                  ]
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Number of seconds to wait before retrying (only on 429)",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "The number of requests that can be made in the current window",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "The number of remaining requests that can be made",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Unix timestamp when the rate limit resets",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error - An unexpected error occurred",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-mint": {
+          "metadata": {
+            "title": "Resend verification email"
+          }
+        },
+        "description": "Resend the account verification email for a user. Creates audit log entry and honours email verification resend limits. Requires USER_UPDATE_EMAIL permission.",
+        "security": [
+          {
+            "adminApiKey": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResendVerificationEmailRequest"
+              }
+            }
+          }
+        }
       }
     },
     "/admin/users/schedule-deletion": {
@@ -60011,30 +60423,10 @@
               "sentry_dsn": {
                 "type": "string",
                 "description": "Sentry DSN for client-side error reporting"
-              },
-              "sentry_proxy_path": {
-                "type": "string",
-                "description": "Proxy path for Sentry requests"
-              },
-              "sentry_report_host": {
-                "type": "string",
-                "description": "Host for Sentry error reports"
-              },
-              "sentry_project_id": {
-                "type": "string",
-                "description": "Sentry project ID"
-              },
-              "sentry_public_key": {
-                "type": "string",
-                "description": "Sentry public key"
               }
             },
             "required": [
-              "sentry_dsn",
-              "sentry_proxy_path",
-              "sentry_report_host",
-              "sentry_project_id",
-              "sentry_public_key"
+              "sentry_dsn"
             ],
             "description": "Public application configuration for client-side features"
           },
@@ -60199,6 +60591,7 @@
           "ACCOUNT_DISABLED",
           "BAD_GATEWAY",
           "BAD_REQUEST",
+          "BLUESKY_OAUTH_AUTHORIZATION_FAILED",
           "BLUESKY_OAUTH_CALLBACK_FAILED",
           "BLUESKY_OAUTH_NOT_ENABLED",
           "BLUESKY_OAUTH_SESSION_EXPIRED",
@@ -60482,6 +60875,7 @@
           "This account has been disabled",
           "Bad gateway",
           "Bad request",
+          "The Bluesky handle could not be resolved for authorisation",
           "The Bluesky OAuth callback could not be processed",
           "Bluesky OAuth connections are not enabled on this instance",
           "The Bluesky OAuth session has expired or been revoked",
@@ -65643,7 +66037,8 @@
               "audit_logs",
               "channel_messages",
               "guild_members",
-              "favorite_memes"
+              "favorite_memes",
+              "discovery"
             ],
             "x-enumNames": [
               "guilds",
@@ -65652,7 +66047,8 @@
               "audit_logs",
               "channel_messages",
               "guild_members",
-              "favorite_memes"
+              "favorite_memes",
+              "discovery"
             ],
             "x-enumDescriptions": [
               "Guild search index",
@@ -65661,7 +66057,8 @@
               "Audit log search index",
               "Channel message search index",
               "Guild member search index",
-              "Favourite meme search index"
+              "Favourite meme search index",
+              "Discovery guild search index"
             ],
             "description": "Type of search index to refresh"
           },
@@ -66632,6 +67029,22 @@
           "fields"
         ]
       },
+      "DeleteWebAuthnCredentialRequest": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "$ref": "#/components/schemas/SnowflakeType"
+          },
+          "credential_id": {
+            "type": "string",
+            "description": "ID of the WebAuthn credential to delete"
+          }
+        },
+        "required": [
+          "user_id",
+          "credential_id"
+        ]
+      },
       "DisableForSuspiciousActivityRequest": {
         "type": "object",
         "properties": {
@@ -66873,6 +67286,57 @@
           "user_id"
         ]
       },
+      "WebAuthnCredentialListResponse": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/WebAuthnCredentialResponse"
+        }
+      },
+      "WebAuthnCredentialResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The credential ID"
+          },
+          "name": {
+            "type": "string",
+            "description": "User-assigned name for the credential"
+          },
+          "created_at": {
+            "type": "string",
+            "description": "When the credential was registered"
+          },
+          "last_used_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "When the credential was last used"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "created_at",
+          "last_used_at"
+        ]
+      },
+      "ListWebAuthnCredentialsRequest": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "$ref": "#/components/schemas/SnowflakeType"
+          }
+        },
+        "required": [
+          "user_id"
+        ]
+      },
       "LookupUserResponse": {
         "type": "object",
         "properties": {
@@ -66933,6 +67397,17 @@
         },
         "required": [
           "user"
+        ]
+      },
+      "ResendVerificationEmailRequest": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "$ref": "#/components/schemas/SnowflakeType"
+          }
+        },
+        "required": [
+          "user_id"
         ]
       },
       "ScheduleAccountDeletionRequest": {
@@ -69485,7 +69960,7 @@
             "items": {
               "$ref": "#/components/schemas/UserPartialResponse"
             },
-            "maxItems": 10,
+            "maxItems": 25,
             "description": "The recipients of the DM channel"
           },
           "nsfw": {
@@ -70662,7 +71137,7 @@
             "items": {
               "$ref": "#/components/schemas/ChannelPartialRecipientResponse"
             },
-            "maxItems": 10,
+            "maxItems": 25,
             "description": "The recipients of the DM channel"
           }
         },
@@ -81750,46 +82225,6 @@
         "required": [
           "secret",
           "code"
-        ]
-      },
-      "WebAuthnCredentialListResponse": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/WebAuthnCredentialResponse"
-        }
-      },
-      "WebAuthnCredentialResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "The credential ID"
-          },
-          "name": {
-            "type": "string",
-            "description": "User-assigned name for the credential"
-          },
-          "created_at": {
-            "type": "string",
-            "description": "When the credential was registered"
-          },
-          "last_used_at": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "When the credential was last used"
-          }
-        },
-        "required": [
-          "id",
-          "name",
-          "created_at",
-          "last_used_at"
         ]
       },
       "WebAuthnRegisterRequest": {

@@ -19,6 +19,7 @@
 
 import type {GuildID, ReportID, UserID} from '@fluxer/api/src/BrandedTypes';
 import {createGuildID} from '@fluxer/api/src/BrandedTypes';
+import {GuildDiscoveryRepository} from '@fluxer/api/src/guild/repositories/GuildDiscoveryRepository';
 import {Logger} from '@fluxer/api/src/Logger';
 import type {User} from '@fluxer/api/src/models/User';
 import {
@@ -30,12 +31,21 @@ import {
 	getUserSearchService,
 } from '@fluxer/api/src/SearchFactory';
 import {getWorkerDependencies} from '@fluxer/api/src/worker/WorkerContext';
+import {DiscoveryApplicationStatus} from '@fluxer/constants/src/DiscoveryConstants';
 import type {IKVProvider} from '@fluxer/kv_client/src/IKVProvider';
 import type {WorkerTaskHandler, WorkerTaskHelpers} from '@fluxer/worker/src/contracts/WorkerTask';
 import {seconds} from 'itty-time';
 import {z} from 'zod';
 
-const INDEX_TYPES = ['guilds', 'users', 'reports', 'audit_logs', 'channel_messages', 'guild_members'] as const;
+const INDEX_TYPES = [
+	'guilds',
+	'users',
+	'reports',
+	'audit_logs',
+	'channel_messages',
+	'guild_members',
+	'discovery',
+] as const;
 type IndexType = (typeof INDEX_TYPES)[number];
 
 const PayloadSchema = z
@@ -259,6 +269,49 @@ const refreshGuildMembers: IndexHandler = async (payload, _helpers, kvClient, pr
 	return indexedCount;
 };
 
+const DISCOVERY_BATCH_SIZE = 50;
+
+const refreshDiscovery: IndexHandler = async (_payload, _helpers, kvClient, progressKey) => {
+	const {guildRepository} = getWorkerDependencies();
+	const searchService = requireSearchService(getGuildSearchService());
+	const discoveryRepository = new GuildDiscoveryRepository();
+
+	const approvedRows = await discoveryRepository.listByStatus(DiscoveryApplicationStatus.APPROVED, 1000);
+	if (approvedRows.length === 0) {
+		return 0;
+	}
+
+	const guildIds = approvedRows.map((row) => row.guild_id);
+
+	let synced = 0;
+	for (let i = 0; i < guildIds.length; i += DISCOVERY_BATCH_SIZE) {
+		const batch = guildIds.slice(i, i + DISCOVERY_BATCH_SIZE);
+		for (const guildId of batch) {
+			const guild = await guildRepository.findUnique(guildId);
+			if (!guild) continue;
+
+			const discoveryRow = await discoveryRepository.findByGuildId(guildId);
+			if (!discoveryRow) continue;
+
+			await searchService.updateGuild(guild, {
+				description: discoveryRow.description,
+				categoryId: discoveryRow.category_type,
+			});
+			synced++;
+		}
+
+		await setProgress(kvClient, progressKey, {
+			status: 'in_progress',
+			index_type: 'discovery',
+			total: guildIds.length,
+			indexed: synced,
+			started_at: new Date().toISOString(),
+		});
+	}
+
+	return synced;
+};
+
 const INDEX_HANDLERS: Record<IndexType, IndexHandler> = {
 	guilds: refreshGuilds,
 	users: refreshUsers,
@@ -266,6 +319,7 @@ const INDEX_HANDLERS: Record<IndexType, IndexHandler> = {
 	audit_logs: refreshAuditLogs,
 	channel_messages: refreshChannelMessages,
 	guild_members: refreshGuildMembers,
+	discovery: refreshDiscovery,
 };
 
 const refreshSearchIndex: WorkerTaskHandler = async (payload, helpers) => {

@@ -67,7 +67,7 @@ export const DEFAULT_FREE_LIMITS: Record<LimitKey, number> = {
 	feature_animated_avatar: 0,
 	feature_animated_banner: 0,
 	feature_custom_discriminator: 0,
-	feature_custom_notification_sounds: 0,
+	feature_custom_notification_sounds: 1,
 	feature_early_access: 0,
 	feature_global_expressions: 0,
 	feature_higher_video_quality: 0,

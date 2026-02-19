@@ -40,7 +40,6 @@ export const LARGE_GUILD_THRESHOLD = 250;
 export const MEMBER_CHUNK_SIZE = 1000;
 
 export const GatewayIdentifyFlags = {
-	USE_CANARY_API: 1 << 0,
 	DEBOUNCE_MESSAGE_REACTIONS: 1 << 1,
 } as const;
 

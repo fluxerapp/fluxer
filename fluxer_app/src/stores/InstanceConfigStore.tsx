@@ -243,10 +243,6 @@ class InstanceConfigStore {
 			push: {public_vapid_key: RuntimeConfigStore.publicPushVapidKey},
 			appPublic: {
 				sentry_dsn: RuntimeConfigStore.sentryDsn,
-				sentry_proxy_path: RuntimeConfigStore.sentryProxyPath,
-				sentry_report_host: RuntimeConfigStore.sentryReportHost,
-				sentry_project_id: RuntimeConfigStore.sentryProjectId,
-				sentry_public_key: RuntimeConfigStore.sentryPublicKey,
 			},
 			federation: null,
 			publicKey: null,

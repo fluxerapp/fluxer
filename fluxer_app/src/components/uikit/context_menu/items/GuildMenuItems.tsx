@@ -311,8 +311,11 @@ export const CommunitySettingsMenuItem: React.FC<GuildMenuItemProps> = observer(
 	const accessibleTabs = useMemo(() => {
 		const guildTabs = getGuildSettingsTabs(i18n);
 		return guildTabs.filter((tab) => {
-			if (tab.permission && !PermissionStore.can(tab.permission, {guildId: guild.id})) {
-				return false;
+			if (tab.permission) {
+				const perms = Array.isArray(tab.permission) ? tab.permission : [tab.permission];
+				if (!perms.some((p) => PermissionStore.can(p, {guildId: guild.id}))) {
+					return false;
+				}
 			}
 			if (tab.requireFeature && !guild.features.has(tab.requireFeature)) {
 				return false;

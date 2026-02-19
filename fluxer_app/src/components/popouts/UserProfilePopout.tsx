@@ -112,32 +112,53 @@ export const UserProfilePopout: React.FC<UserProfilePopoutProps> = observer(
 			[isWebhook, user.id, guildId, popoutKey],
 		);
 
-		const fetchProfile = useCallback(async () => {
-			if (isWebhook) return;
-
-			const isGuildMember = guildId ? GuildMemberStore.getMember(guildId, user.id) : false;
-
-			if (DeveloperOptionsStore.slowProfileLoad) {
-				await new Promise((resolve) => setTimeout(resolve, 3000));
-			}
-
+		useEffect(() => {
+			let cancelled = false;
+			const cachedProfile = UserProfileStore.getProfile(user.id, guildId);
+			setProfile(cachedProfile ?? createMockProfile(user));
 			setProfileLoadError(false);
 
-			try {
-				const fetchedProfile = await UserProfileActionCreators.fetch(user.id, isGuildMember ? guildId : undefined);
-				setProfile(fetchedProfile);
-				setProfileLoadError(false);
-			} catch (error) {
-				logger.error('Failed to fetch profile for user popout', error);
-				const cachedProfile = UserProfileStore.getProfile(user.id, guildId);
-				setProfile(cachedProfile ?? createMockProfile(user));
-				setProfileLoadError(true);
+			if (isWebhook) {
+				return () => {
+					cancelled = true;
+				};
 			}
-		}, [guildId, user.id, isWebhook]);
 
-		useEffect(() => {
+			const fetchProfile = async () => {
+				const isGuildMember = guildId ? GuildMemberStore.getMember(guildId, user.id) : false;
+
+				if (DeveloperOptionsStore.slowProfileLoad) {
+					await new Promise((resolve) => setTimeout(resolve, 3000));
+				}
+
+				if (cancelled) {
+					return;
+				}
+
+				try {
+					const fetchedProfile = await UserProfileActionCreators.fetch(user.id, isGuildMember ? guildId : undefined);
+					if (cancelled) {
+						return;
+					}
+					setProfile(fetchedProfile);
+					setProfileLoadError(false);
+				} catch (error) {
+					if (cancelled) {
+						return;
+					}
+					logger.error('Failed to fetch profile for user popout', error);
+					const nextCachedProfile = UserProfileStore.getProfile(user.id, guildId);
+					setProfile(nextCachedProfile ?? createMockProfile(user));
+					setProfileLoadError(true);
+				}
+			};
+
 			fetchProfile();
-		}, [fetchProfile]);
+
+			return () => {
+				cancelled = true;
+			};
+		}, [guildId, isWebhook, user]);
 
 		useEffect(() => {
 			if (profileLoadError && profile) {

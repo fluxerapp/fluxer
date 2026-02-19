@@ -150,9 +150,10 @@ export const EmojiListItem: React.FC<{
 	guildId: string;
 	emoji: GuildEmojiWithUser;
 	layout: 'list' | 'grid';
+	canModify: boolean;
 	onRename: (emojiId: string, newName: string) => void;
 	onRemove: (emojiId: string) => void;
-}> = observer(({guildId, emoji, layout, onRename, onRemove}) => {
+}> = observer(({guildId, emoji, layout, canModify, onRename, onRemove}) => {
 	const {t} = useLingui();
 	const avatarUrl = emoji.user ? AvatarUtils.getUserAvatarURL(emoji.user, false) : null;
 	const gridNameButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -222,38 +223,44 @@ export const EmojiListItem: React.FC<{
 					</div>
 
 					<div className={styles.gridName}>
-						<Popout
-							position="bottom"
-							offsetMainAxis={8}
-							offsetCrossAxis={0}
-							returnFocusRef={gridNameButtonRef}
-							render={({onClose}) => (
-								<EmojiRenamePopoutContent initialName={emoji.name} onSave={handleSave} onClose={onClose} />
-							)}
-						>
-							<button
-								type="button"
-								ref={gridNameButtonRef}
-								className={styles.gridNameButton}
-								aria-label={t`Rename :${emoji.name}:`}
+						{canModify ? (
+							<Popout
+								position="bottom"
+								offsetMainAxis={8}
+								offsetCrossAxis={0}
+								returnFocusRef={gridNameButtonRef}
+								render={({onClose}) => (
+									<EmojiRenamePopoutContent initialName={emoji.name} onSave={handleSave} onClose={onClose} />
+								)}
 							>
-								<span className={styles.gridNameText}>:{emoji.name}:</span>
-							</button>
-						</Popout>
+								<button
+									type="button"
+									ref={gridNameButtonRef}
+									className={styles.gridNameButton}
+									aria-label={t`Rename :${emoji.name}:`}
+								>
+									<span className={styles.gridNameText}>:{emoji.name}:</span>
+								</button>
+							</Popout>
+						) : (
+							<span className={styles.gridNameText}>:{emoji.name}:</span>
+						)}
 					</div>
 				</div>
 
-				<Tooltip text={t`Delete`}>
-					<FocusRing offset={-2}>
-						<button
-							type="button"
-							onClick={handleDelete}
-							className={clsx(styles.deleteButton, styles.deleteButtonFloating)}
-						>
-							<XIcon className={styles.deleteIcon} weight="bold" />
-						</button>
-					</FocusRing>
-				</Tooltip>
+				{canModify && (
+					<Tooltip text={t`Delete`}>
+						<FocusRing offset={-2}>
+							<button
+								type="button"
+								onClick={handleDelete}
+								className={clsx(styles.deleteButton, styles.deleteButtonFloating)}
+							>
+								<XIcon className={styles.deleteIcon} weight="bold" />
+							</button>
+						</FocusRing>
+					</Tooltip>
+				)}
 			</div>
 		);
 	}
@@ -266,17 +273,21 @@ export const EmojiListItem: React.FC<{
 				</div>
 
 				<div className={styles.listName}>
-					<InlineEdit
-						value={emoji.name}
-						onSave={handleSave}
-						prefix=":"
-						suffix=":"
-						maxLength={32}
-						width="100%"
-						className={styles.nameInlineEdit}
-						inputClassName={styles.nameInlineEditInput}
-						buttonClassName={styles.nameInlineEditButton}
-					/>
+					{canModify ? (
+						<InlineEdit
+							value={emoji.name}
+							onSave={handleSave}
+							prefix=":"
+							suffix=":"
+							maxLength={32}
+							width="100%"
+							className={styles.nameInlineEdit}
+							inputClassName={styles.nameInlineEditInput}
+							buttonClassName={styles.nameInlineEditButton}
+						/>
+					) : (
+						<span className={styles.nameInlineEdit}>:{emoji.name}:</span>
+					)}
 				</div>
 
 				<div className={styles.listUploader}>
@@ -293,13 +304,15 @@ export const EmojiListItem: React.FC<{
 				</div>
 			</div>
 
-			<Tooltip text={t`Delete`}>
-				<FocusRing offset={-2}>
-					<button type="button" onClick={handleDelete} className={styles.deleteButton}>
-						<XIcon className={styles.deleteIcon} weight="bold" />
-					</button>
-				</FocusRing>
-			</Tooltip>
+			{canModify && (
+				<Tooltip text={t`Delete`}>
+					<FocusRing offset={-2}>
+						<button type="button" onClick={handleDelete} className={styles.deleteButton}>
+							<XIcon className={styles.deleteIcon} weight="bold" />
+						</button>
+					</FocusRing>
+				</Tooltip>
+			)}
 		</div>
 	);
 });

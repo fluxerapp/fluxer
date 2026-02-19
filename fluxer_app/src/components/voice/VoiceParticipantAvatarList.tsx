@@ -157,7 +157,13 @@ function VoiceParticipantPopoutRow({entry, guildId, channelId}: VoiceParticipant
 	return (
 		<Popout
 			render={({popoutKey}) => (
-				<UserProfilePopout popoutKey={popoutKey} user={entry.user} isWebhook={false} guildId={guildId ?? undefined} />
+				<UserProfilePopout
+					key={`${entry.user.id}:${guildId ?? 'global'}:user`}
+					popoutKey={popoutKey}
+					user={entry.user}
+					isWebhook={false}
+					guildId={guildId ?? undefined}
+				/>
 			)}
 			position="left-start"
 		>

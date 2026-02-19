@@ -681,21 +681,48 @@ export class StripeWebhookService {
 		}
 
 		const payment = await this.userRepository.getPaymentByPaymentIntent(paymentIntentId);
-		if (!payment) {
-			Logger.error({paymentIntentId, chargeId: charge.id}, 'No payment found for refund');
-			throw new StripeError('No payment found for refund');
-		}
 
-		const user = await this.userRepository.findUnique(payment.userId);
-		if (!user) {
-			Logger.error({userId: payment.userId, chargeId: charge.id}, 'User not found for refund');
-			throw new StripeError('User not found for refund');
-		}
+		let user: User;
+		if (payment) {
+			const foundUser = await this.userRepository.findUnique(payment.userId);
+			if (!foundUser) {
+				Logger.error({userId: payment.userId, chargeId: charge.id}, 'User not found for refund');
+				throw new StripeError('User not found for refund');
+			}
+			await this.userRepository.updatePayment({
+				...payment.toRow(),
+				status: 'refunded',
+			});
+			user = foundUser;
+		} else {
+			// Subscription-mode checkout sessions do not set payment_intent on the session object,
+			// so the PaymentsByPaymentIntent index is never populated. Fall back to customer ID lookup.
+			const customerId = extractId(charge.customer);
+			if (!customerId) {
+				Logger.error(
+					{paymentIntentId, chargeId: charge.id},
+					'No payment found for refund and charge has no customer ID',
+				);
+				throw new StripeError('No payment found for refund');
+			}
 
-		await this.userRepository.updatePayment({
-			...payment.toRow(),
-			status: 'refunded',
-		});
+			const donor = await this.donationRepository.findDonorByStripeCustomerId(customerId);
+			if (donor) {
+				Logger.info({customerId, chargeId: charge.id}, 'Refund for donation customer - no premium action required');
+				return;
+			}
+
+			const foundUser = await this.userRepository.findByStripeCustomerId(customerId);
+			if (!foundUser) {
+				Logger.error({customerId, paymentIntentId, chargeId: charge.id}, 'No user found for refund by customer ID');
+				throw new StripeError('No user found for refund');
+			}
+			Logger.debug(
+				{userId: foundUser.id, paymentIntentId, chargeId: charge.id},
+				'Processing refund via customer ID (payment intent not indexed)',
+			);
+			user = foundUser;
+		}
 
 		const updates: Partial<UserRow> = {
 			premium_type: UserPremiumTypes.NONE,
@@ -704,18 +731,18 @@ export class StripeWebhookService {
 
 		if (!user.firstRefundAt) {
 			updates.first_refund_at = new Date();
-			const updatedUser = await this.userRepository.patchUpsert(payment.userId, updates, user.toRow());
+			const updatedUser = await this.userRepository.patchUpsert(user.id, updates, user.toRow());
 			await this.dispatchUser(updatedUser);
 			Logger.debug(
-				{userId: payment.userId, chargeId: charge.id, paymentIntentId},
+				{userId: user.id, chargeId: charge.id, paymentIntentId},
 				'First refund recorded - 30 day purchase block applied',
 			);
 		} else {
 			updates.flags = user.flags | UserFlags.PREMIUM_PURCHASE_DISABLED;
-			const updatedUser = await this.userRepository.patchUpsert(payment.userId, updates, user.toRow());
+			const updatedUser = await this.userRepository.patchUpsert(user.id, updates, user.toRow());
 			await this.dispatchUser(updatedUser);
 			Logger.debug(
-				{userId: payment.userId, chargeId: charge.id, paymentIntentId},
+				{userId: user.id, chargeId: charge.id, paymentIntentId},
 				'Second refund recorded - permanent purchase block applied',
 			);
 		}

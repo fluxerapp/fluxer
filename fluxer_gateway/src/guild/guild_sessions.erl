@@ -82,11 +82,14 @@ register_new_session(Request, Pid, UserId, SessionId, State) ->
         user_roles => UserRoles,
         bot => Bot,
         is_staff => maps:get(is_staff, Request, false),
-        previous_passive_updates => InitialLastMessageIds,
-        previous_passive_channel_versions => InitialChannelVersions,
-        previous_passive_voice_states => #{},
         viewable_channels => InitialViewableChannels
     },
+    InitialPassiveState = #{
+        previous_passive_updates => InitialLastMessageIds,
+        previous_passive_channel_versions => InitialChannelVersions,
+        previous_passive_voice_states => #{}
+    },
+    passive_sync_registry:store(SessionId, GuildId, InitialPassiveState),
     NewSessions = maps:put(SessionId, SessionData, Sessions),
     State1 = maps:put(sessions, NewSessions, State),
     State2 = subscribe_to_user_presence(UserId, State1),
@@ -199,7 +202,9 @@ cleanup_disconnecting_session(undefined, State) ->
 cleanup_disconnecting_session(Session, State) ->
     UserId = maps:get(user_id, Session),
     SessionId = maps:get(session_id, Session),
+    GuildId = maps:get(id, State),
     _ = maybe_notify_coordinator(session_disconnected, SessionId, UserId, State),
+    passive_sync_registry:delete(SessionId, GuildId),
     StateAfterPresence = unsubscribe_from_user_presence(UserId, State),
     StateAfterMemberList = guild_member_list:unsubscribe_session(SessionId, StateAfterPresence),
     MemberSubs = maps:get(
@@ -675,12 +680,10 @@ remove_session_removes_entry_test() ->
         mref => make_ref(),
         active_guilds => sets:new(),
         user_roles => [],
-        bot => false,
-        previous_passive_updates => #{},
-        previous_passive_channel_versions => #{},
-        previous_passive_voice_states => #{}
+        bot => false
     },
     State = #{
+        id => 42,
         sessions => #{SessionId => SessionData},
         presence_subscriptions => #{1 => 1},
         member_list_subscriptions => #{},
@@ -699,12 +702,10 @@ remove_session_cleans_connect_pending_test() ->
         mref => make_ref(),
         active_guilds => sets:new(),
         user_roles => [],
-        bot => false,
-        previous_passive_updates => #{},
-        previous_passive_channel_versions => #{},
-        previous_passive_voice_states => #{}
+        bot => false
     },
     State = #{
+        id => 42,
         sessions => #{SessionId => SessionData},
         presence_subscriptions => #{1 => 1},
         member_list_subscriptions => #{},
@@ -803,5 +804,223 @@ pending_connect_filtered_from_channel_sessions_test() ->
     ?assertEqual(1, length(Result)),
     [{ResultSid, _}] = Result,
     ?assertEqual(<<"s1">>, ResultSid).
+
+set_session_viewable_channels_test() ->
+    Sessions = #{<<"s1">> => #{user_id => 1, pid => self()}},
+    State = #{sessions => Sessions},
+    ViewableChannels = #{100 => true, 200 => true},
+    UpdatedState = set_session_viewable_channels(<<"s1">>, ViewableChannels, State),
+    UpdatedSession = maps:get(<<"s1">>, maps:get(sessions, UpdatedState)),
+    ?assertEqual(ViewableChannels, maps:get(viewable_channels, UpdatedSession)).
+
+set_session_viewable_channels_missing_session_test() ->
+    State = #{sessions => #{}},
+    Result = set_session_viewable_channels(<<"nonexistent">>, #{100 => true}, State),
+    ?assertEqual(State, Result).
+
+set_session_active_guild_missing_session_test() ->
+    State = #{sessions => #{}},
+    Result = set_session_active_guild(<<"nonexistent">>, 42, State),
+    ?assertEqual(State, Result).
+
+set_session_passive_guild_missing_session_test() ->
+    State = #{sessions => #{}},
+    Result = set_session_passive_guild(<<"nonexistent">>, 42, State),
+    ?assertEqual(State, Result).
+
+is_session_active_missing_session_test() ->
+    State = #{id => 42, sessions => #{}},
+    ?assertEqual(false, is_session_active(<<"nonexistent">>, State)).
+
+filter_sessions_for_channel_excludes_specified_session_test() ->
+    S1 = #{session_id => <<"s1">>, user_id => 10, pid => self(), viewable_channels => #{200 => true}},
+    S2 = #{session_id => <<"s2">>, user_id => 11, pid => self(), viewable_channels => #{200 => true}},
+    Sessions = #{<<"s1">> => S1, <<"s2">> => S2},
+    State = #{sessions => Sessions, data => #{<<"members">> => #{}}},
+    Result = filter_sessions_for_channel(Sessions, 200, <<"s1">>, State),
+    ?assertEqual(1, length(Result)),
+    [{ResultSid, _}] = Result,
+    ?assertEqual(<<"s2">>, ResultSid).
+
+filter_sessions_for_channel_falls_back_to_permission_check_test() ->
+    GuildId = 42,
+    UserId = 10,
+    ChannelId = 200,
+    ViewPerm = constants:view_channel_permission(),
+    SessionData = #{
+        session_id => <<"s1">>,
+        user_id => UserId,
+        pid => self()
+    },
+    Sessions = #{<<"s1">> => SessionData},
+    State = #{
+        id => GuildId,
+        sessions => Sessions,
+        data => #{
+            <<"guild">> => #{<<"owner_id">> => <<"999">>},
+            <<"roles">> => [
+                #{<<"id">> => integer_to_binary(GuildId), <<"permissions">> => integer_to_binary(ViewPerm)}
+            ],
+            <<"members">> => #{
+                UserId => #{<<"user">> => #{<<"id">> => integer_to_binary(UserId)}, <<"roles">> => []}
+            },
+            <<"channels">> => [
+                #{<<"id">> => integer_to_binary(ChannelId), <<"permission_overwrites">> => []}
+            ]
+        }
+    },
+    Result = filter_sessions_for_channel(Sessions, ChannelId, undefined, State),
+    ?assertEqual(1, length(Result)).
+
+filter_sessions_for_channel_no_member_returns_empty_test() ->
+    SessionData = #{
+        session_id => <<"s1">>,
+        user_id => 999,
+        pid => self()
+    },
+    Sessions = #{<<"s1">> => SessionData},
+    State = #{
+        sessions => Sessions,
+        data => #{
+            <<"guild">> => #{<<"owner_id">> => <<"888">>},
+            <<"members">> => [],
+            <<"roles">> => [],
+            <<"channels">> => []
+        }
+    },
+    Result = filter_sessions_for_channel(Sessions, 200, undefined, State),
+    ?assertEqual([], Result).
+
+filter_sessions_exclude_session_filters_pending_test() ->
+    Sessions = #{
+        <<"s1">> => #{pending_connect => true},
+        <<"s2">> => #{},
+        <<"s3">> => #{pending_connect => false}
+    },
+    Result = filter_sessions_exclude_session(Sessions, undefined),
+    ResultIds = lists:sort([Sid || {Sid, _} <- Result]),
+    ?assertEqual([<<"s2">>, <<"s3">>], ResultIds).
+
+subscribe_unsubscribe_presence_test_() ->
+    {setup,
+        fun() -> ensure_test_deps() end,
+        fun(_) -> stop_test_deps() end,
+        fun(_) ->
+            [fun() ->
+                State0 = #{presence_subscriptions => #{}},
+                State1 = subscribe_to_user_presence(10, State0),
+                Subs1 = maps:get(presence_subscriptions, State1),
+                ?assertEqual(1, maps:get(10, Subs1)),
+                State2 = subscribe_to_user_presence(10, State1),
+                Subs2 = maps:get(presence_subscriptions, State2),
+                ?assertEqual(2, maps:get(10, Subs2)),
+                State3 = unsubscribe_from_user_presence(10, State2),
+                Subs3 = maps:get(presence_subscriptions, State3),
+                ?assertEqual(1, maps:get(10, Subs3)),
+                State4 = unsubscribe_from_user_presence(10, State3),
+                Subs4 = maps:get(presence_subscriptions, State4),
+                ?assertEqual(0, maps:get(10, Subs4))
+            end]
+        end}.
+
+unsubscribe_from_user_presence_zero_count_noop_test() ->
+    State = #{presence_subscriptions => #{10 => 0}},
+    Result = unsubscribe_from_user_presence(10, State),
+    ?assertEqual(State, Result).
+
+unsubscribe_from_user_presence_missing_user_noop_test() ->
+    State = #{presence_subscriptions => #{}},
+    Result = unsubscribe_from_user_presence(999, State),
+    ?assertEqual(State, Result).
+
+handle_user_offline_nonzero_count_noop_test() ->
+    State = #{
+        presence_subscriptions => #{10 => 1},
+        member_presence => #{10 => #{<<"status">> => <<"online">>}}
+    },
+    Result = handle_user_offline(10, State),
+    ?assertEqual(State, Result).
+
+handle_user_offline_missing_user_noop_test() ->
+    State = #{presence_subscriptions => #{}},
+    Result = handle_user_offline(999, State),
+    ?assertEqual(State, Result).
+
+should_auto_stop_on_empty_default_test() ->
+    State = #{},
+    ?assertEqual(true, should_auto_stop_on_empty(State)).
+
+should_auto_stop_on_empty_disabled_test() ->
+    State = #{disable_auto_stop_on_empty => true},
+    ?assertEqual(false, should_auto_stop_on_empty(State)).
+
+should_auto_stop_on_empty_vlg_coordinator_test() ->
+    State = #{very_large_guild_coordinator_pid => self()},
+    ?assertEqual(false, should_auto_stop_on_empty(State)).
+
+build_viewable_channel_map_test() ->
+    Map = build_viewable_channel_map([100, 200, 300]),
+    ?assertEqual(3, map_size(Map)),
+    ?assertEqual(true, maps:get(100, Map)),
+    ?assertEqual(true, maps:get(200, Map)),
+    ?assertEqual(true, maps:get(300, Map)).
+
+build_viewable_channel_map_empty_test() ->
+    ?assertEqual(#{}, build_viewable_channel_map([])).
+
+normalize_connect_queue_list_test() ->
+    List = [#{a => 1}, #{a => 2}],
+    Queue = normalize_connect_queue(List),
+    ?assert(queue:is_queue(Queue)),
+    ?assertEqual(2, queue:len(Queue)).
+
+normalize_connect_queue_queue_test() ->
+    Q = queue:from_list([1, 2, 3]),
+    ?assertEqual(Q, normalize_connect_queue(Q)).
+
+normalize_connect_queue_undefined_test() ->
+    ?assertEqual(undefined, normalize_connect_queue(undefined)),
+    ?assertEqual(undefined, normalize_connect_queue(42)).
+
+ensure_test_deps() ->
+    ensure_mock_registered(presence_bus),
+    ensure_mock_registered(presence_cache).
+
+stop_test_deps() ->
+    stop_mock_registered(presence_bus),
+    stop_mock_registered(presence_cache).
+
+ensure_mock_registered(Name) ->
+    case whereis(Name) of
+        undefined ->
+            Pid = spawn(fun() -> mock_gen_server_loop() end),
+            register(Name, Pid),
+            Pid;
+        Pid ->
+            Pid
+    end.
+
+stop_mock_registered(Name) ->
+    case whereis(Name) of
+        undefined -> ok;
+        Pid ->
+            catch unregister(Name),
+            Pid ! stop,
+            ok
+    end.
+
+mock_gen_server_loop() ->
+    receive
+        {'$gen_call', From, {get, _}} ->
+            gen_server:reply(From, not_found),
+            mock_gen_server_loop();
+        {'$gen_call', From, _Msg} ->
+            gen_server:reply(From, ok),
+            mock_gen_server_loop();
+        stop ->
+            ok;
+        _ ->
+            mock_gen_server_loop()
+    end.
 
 -endif.

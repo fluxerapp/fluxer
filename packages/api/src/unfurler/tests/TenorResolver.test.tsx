@@ -19,9 +19,10 @@
 
 import {TenorResolver} from '@fluxer/api/src/unfurler/resolvers/TenorResolver';
 import {createMockContent, MockMediaService} from '@fluxer/api/src/unfurler/tests/ResolverTestUtils';
+import {EmbedMediaFlags} from '@fluxer/constants/src/ChannelConstants';
 import {afterEach, beforeEach, describe, expect, it} from 'vitest';
 
-function createTenorHtml(options: {thumbnailUrl?: string; videoUrl?: string}): string {
+function createTenorHtml(options: {thumbnailUrl?: string; videoUrl?: string; ogImage?: string}): string {
 	const jsonLd: Record<string, unknown> = {};
 
 	if (options.thumbnailUrl) {
@@ -31,9 +32,15 @@ function createTenorHtml(options: {thumbnailUrl?: string; videoUrl?: string}): s
 		jsonLd.video = {contentUrl: options.videoUrl};
 	}
 
+	const metaTags: Array<string> = [];
+	if (options.ogImage) {
+		metaTags.push(`<meta property="og:image" content="${options.ogImage}" />`);
+	}
+
 	return `<!DOCTYPE html>
 <html>
 <head>
+${metaTags.join('\n')}
 <script class="dynamic" type="application/ld+json">
 ${JSON.stringify(jsonLd)}
 </script>
@@ -100,7 +107,51 @@ describe('TenorResolver', () => {
 	});
 
 	describe('resolve', () => {
-		it('returns gifv embed with thumbnail and video', async () => {
+		it('prefers og:image GIF URL over JSON-LD video', async () => {
+			const url = new URL('https://tenor.com/view/cat-gif-12345');
+			const html = createTenorHtml({
+				ogImage: 'https://media.tenor.com/cat-gif-AAAAC/cat.gif',
+				thumbnailUrl: 'https://media.tenor.com/thumbnail.png',
+				videoUrl: 'https://media.tenor.com/video.mp4',
+			});
+
+			mediaService.setMetadata('https://media.tenor.com/cat-gif-AAAAC/cat.gif', {
+				content_type: 'image/gif',
+				animated: true,
+				width: 320,
+				height: 240,
+			});
+
+			const embeds = await resolver.resolve(url, createMockContent(html));
+
+			expect(embeds).toHaveLength(1);
+			expect(embeds[0]!.type).toBe('gifv');
+			expect(embeds[0]!.url).toBe('https://tenor.com/view/cat-gif-12345');
+			expect(embeds[0]!.provider).toEqual({name: 'Tenor', url: 'https://tenor.com'});
+			expect(embeds[0]!.thumbnail).toBeDefined();
+			expect(embeds[0]!.thumbnail!.url).toBe('https://media.tenor.com/cat-gif-AAAAC/cat.gif');
+			expect(embeds[0]!.thumbnail!.content_type).toBe('image/gif');
+			expect(embeds[0]!.thumbnail!.flags).toBe(EmbedMediaFlags.IS_ANIMATED);
+			expect(embeds[0]!.video).toBeUndefined();
+		});
+
+		it('falls back to JSON-LD when og:image is not a GIF', async () => {
+			const url = new URL('https://tenor.com/view/cat-gif-12345');
+			const html = createTenorHtml({
+				ogImage: 'https://media.tenor.com/thumbnail.png',
+				thumbnailUrl: 'https://media.tenor.com/thumbnail.png',
+				videoUrl: 'https://media.tenor.com/video.mp4',
+			});
+
+			const embeds = await resolver.resolve(url, createMockContent(html));
+
+			expect(embeds).toHaveLength(1);
+			expect(embeds[0]!.type).toBe('gifv');
+			expect(embeds[0]!.thumbnail).toBeDefined();
+			expect(embeds[0]!.video).toBeDefined();
+		});
+
+		it('falls back to JSON-LD when og:image is absent', async () => {
 			const url = new URL('https://tenor.com/view/cat-gif-12345');
 			const html = createTenorHtml({
 				thumbnailUrl: 'https://media.tenor.com/thumbnail.png',
@@ -111,11 +162,29 @@ describe('TenorResolver', () => {
 
 			expect(embeds).toHaveLength(1);
 			expect(embeds[0]!.type).toBe('gifv');
-			expect(embeds[0]!.url).toBe('https://tenor.com/view/cat-gif-12345');
-			expect(embeds[0]!.provider).toEqual({name: 'Tenor', url: 'https://tenor.com'});
+			expect(embeds[0]!.thumbnail).toBeDefined();
+			expect(embeds[0]!.video).toBeDefined();
 		});
 
-		it('handles tenor page with only thumbnail', async () => {
+		it('falls back to JSON-LD when og:image GIF fails to resolve', async () => {
+			const url = new URL('https://tenor.com/view/cat-gif-12345');
+			const html = createTenorHtml({
+				ogImage: 'https://media.tenor.com/broken.gif',
+				thumbnailUrl: 'https://media.tenor.com/thumbnail.png',
+				videoUrl: 'https://media.tenor.com/video.mp4',
+			});
+
+			mediaService.markAsFailing('https://media.tenor.com/broken.gif');
+
+			const embeds = await resolver.resolve(url, createMockContent(html));
+
+			expect(embeds).toHaveLength(1);
+			expect(embeds[0]!.type).toBe('gifv');
+			expect(embeds[0]!.thumbnail).toBeDefined();
+			expect(embeds[0]!.video).toBeDefined();
+		});
+
+		it('handles tenor page with only thumbnail in JSON-LD', async () => {
 			const url = new URL('https://tenor.com/view/cat-gif-12345');
 			const html = createTenorHtml({
 				thumbnailUrl: 'https://media.tenor.com/thumbnail.png',
@@ -128,7 +197,7 @@ describe('TenorResolver', () => {
 			expect(embeds[0]!.thumbnail).toBeDefined();
 		});
 
-		it('handles tenor page with only video', async () => {
+		it('handles tenor page with only video in JSON-LD', async () => {
 			const url = new URL('https://tenor.com/view/cat-gif-12345');
 			const html = createTenorHtml({
 				videoUrl: 'https://media.tenor.com/video.mp4',
@@ -141,7 +210,7 @@ describe('TenorResolver', () => {
 			expect(embeds[0]!.video).toBeDefined();
 		});
 
-		it('returns empty array when no JSON-LD found', async () => {
+		it('returns empty array when no JSON-LD found and no og:image', async () => {
 			const url = new URL('https://tenor.com/view/cat-gif-12345');
 			const html = '<!DOCTYPE html><html><head></head><body></body></html>';
 
@@ -150,7 +219,7 @@ describe('TenorResolver', () => {
 			expect(embeds).toHaveLength(0);
 		});
 
-		it('returns empty array when JSON-LD is empty', async () => {
+		it('returns empty array when JSON-LD is empty and no og:image', async () => {
 			const url = new URL('https://tenor.com/view/cat-gif-12345');
 			const html = `<!DOCTYPE html>
 <html>
@@ -167,7 +236,7 @@ describe('TenorResolver', () => {
 			expect(embeds).toHaveLength(1);
 		});
 
-		it('returns empty array for invalid JSON-LD', async () => {
+		it('returns empty array for invalid JSON-LD and no og:image', async () => {
 			const url = new URL('https://tenor.com/view/cat-gif-12345');
 			const html = `<!DOCTYPE html>
 <html>
@@ -184,25 +253,33 @@ describe('TenorResolver', () => {
 			expect(embeds).toHaveLength(0);
 		});
 
-		it('handles NSFW content flag when allowed', async () => {
+		it('handles NSFW content with og:image GIF', async () => {
 			const url = new URL('https://tenor.com/view/adult-gif-12345');
 			const html = createTenorHtml({
-				thumbnailUrl: 'https://media.tenor.com/nsfw-thumbnail.png',
-				videoUrl: 'https://media.tenor.com/nsfw-video.mp4',
+				ogImage: 'https://media.tenor.com/nsfw.gif',
 			});
 
-			mediaService.markAsNsfw('https://media.tenor.com/nsfw-thumbnail.png');
-			mediaService.markAsNsfw('https://media.tenor.com/nsfw-video.mp4');
+			mediaService.markAsNsfw('https://media.tenor.com/nsfw.gif');
+			mediaService.setMetadata('https://media.tenor.com/nsfw.gif', {
+				content_type: 'image/gif',
+				animated: true,
+			});
 
 			const embeds = await resolver.resolve(url, createMockContent(html), true);
 
 			expect(embeds).toHaveLength(1);
+			expect(embeds[0]!.thumbnail!.flags).toBe(EmbedMediaFlags.IS_ANIMATED | EmbedMediaFlags.CONTAINS_EXPLICIT_MEDIA);
 		});
 
 		it('preserves URL in embed output', async () => {
 			const url = new URL('https://tenor.com/view/special-chars-gif%20test-12345');
 			const html = createTenorHtml({
-				thumbnailUrl: 'https://media.tenor.com/thumbnail.png',
+				ogImage: 'https://media.tenor.com/test.gif',
+			});
+
+			mediaService.setMetadata('https://media.tenor.com/test.gif', {
+				content_type: 'image/gif',
+				animated: true,
 			});
 
 			const embeds = await resolver.resolve(url, createMockContent(html));
@@ -210,11 +287,12 @@ describe('TenorResolver', () => {
 			expect(embeds[0]!.url).toBe('https://tenor.com/view/special-chars-gif%20test-12345');
 		});
 
-		it('handles missing dynamic class on script tag', async () => {
+		it('handles missing dynamic class on script tag with og:image', async () => {
 			const url = new URL('https://tenor.com/view/cat-gif-12345');
 			const html = `<!DOCTYPE html>
 <html>
 <head>
+<meta property="og:image" content="https://media.tenor.com/cat.gif" />
 <script type="application/ld+json">
 {"image": {"thumbnailUrl": "https://media.tenor.com/thumbnail.png"}}
 </script>
@@ -222,9 +300,62 @@ describe('TenorResolver', () => {
 <body></body>
 </html>`;
 
+			mediaService.setMetadata('https://media.tenor.com/cat.gif', {
+				content_type: 'image/gif',
+				animated: true,
+			});
+
 			const embeds = await resolver.resolve(url, createMockContent(html));
 
-			expect(embeds).toHaveLength(0);
+			expect(embeds).toHaveLength(1);
+			expect(embeds[0]!.thumbnail!.url).toBe('https://media.tenor.com/cat.gif');
+			expect(embeds[0]!.video).toBeUndefined();
+		});
+
+		it('handles og:image with uppercase .GIF extension', async () => {
+			const url = new URL('https://tenor.com/view/cat-gif-12345');
+			const html = createTenorHtml({
+				ogImage: 'https://media.tenor.com/cat.GIF',
+			});
+
+			mediaService.setMetadata('https://media.tenor.com/cat.GIF', {
+				content_type: 'image/gif',
+				animated: true,
+			});
+
+			const embeds = await resolver.resolve(url, createMockContent(html));
+
+			expect(embeds).toHaveLength(1);
+			expect(embeds[0]!.thumbnail!.url).toBe('https://media.tenor.com/cat.GIF');
+			expect(embeds[0]!.video).toBeUndefined();
+		});
+
+		it('resolves og:image GIF with only og:image present (no JSON-LD)', async () => {
+			const url = new URL('https://tenor.com/view/cat-gif-12345');
+			const html = `<!DOCTYPE html>
+<html>
+<head>
+<meta property="og:image" content="https://media.tenor.com/cat.gif" />
+</head>
+<body></body>
+</html>`;
+
+			mediaService.setMetadata('https://media.tenor.com/cat.gif', {
+				content_type: 'image/gif',
+				animated: true,
+				width: 500,
+				height: 400,
+			});
+
+			const embeds = await resolver.resolve(url, createMockContent(html));
+
+			expect(embeds).toHaveLength(1);
+			expect(embeds[0]!.type).toBe('gifv');
+			expect(embeds[0]!.thumbnail).toBeDefined();
+			expect(embeds[0]!.thumbnail!.url).toBe('https://media.tenor.com/cat.gif');
+			expect(embeds[0]!.thumbnail!.width).toBe(500);
+			expect(embeds[0]!.thumbnail!.height).toBe(400);
+			expect(embeds[0]!.video).toBeUndefined();
 		});
 	});
 });

@@ -57,6 +57,7 @@ type VoiceSettingsUpdate = Partial<{
 	showVoiceConnectionId: boolean;
 	pauseOwnScreenSharePreviewOnUnfocus: boolean;
 	disablePictureInPicturePopout: boolean;
+	screenShareHardwareAcceleration: boolean;
 }>;
 
 class VoiceSettingsStore {
@@ -82,6 +83,7 @@ class VoiceSettingsStore {
 	showVoiceConnectionIdPrefV2 = true;
 	pauseOwnScreenSharePreviewOnUnfocusPrefV2 = true;
 	disablePictureInPicturePopout = false;
+	screenShareHardwareAcceleration = true;
 
 	constructor() {
 		makeAutoObservable(
@@ -109,6 +111,7 @@ class VoiceSettingsStore {
 				getShowVoiceConnectionId: false,
 				getDisablePictureInPicturePopout: false,
 				getPauseOwnScreenSharePreviewOnUnfocus: false,
+				getScreenShareHardwareAcceleration: false,
 			},
 			{autoBind: true},
 		);
@@ -138,6 +141,7 @@ class VoiceSettingsStore {
 			'showVoiceConnectionIdPrefV2',
 			'pauseOwnScreenSharePreviewOnUnfocusPrefV2',
 			'disablePictureInPicturePopout',
+			'screenShareHardwareAcceleration',
 		]);
 	}
 
@@ -296,6 +300,10 @@ class VoiceSettingsStore {
 		return this.pauseOwnScreenSharePreviewOnUnfocus;
 	}
 
+	getScreenShareHardwareAcceleration(): boolean {
+		return this.screenShareHardwareAcceleration;
+	}
+
 	updateSettings(data: VoiceSettingsUpdate): void {
 		const validated = this.validateSettings(data);
 
@@ -326,6 +334,8 @@ class VoiceSettingsStore {
 			this.pauseOwnScreenSharePreviewOnUnfocus = validated.pauseOwnScreenSharePreviewOnUnfocus;
 		if (validated.disablePictureInPicturePopout !== undefined)
 			this.disablePictureInPicturePopout = validated.disablePictureInPicturePopout;
+		if (validated.screenShareHardwareAcceleration !== undefined)
+			this.screenShareHardwareAcceleration = validated.screenShareHardwareAcceleration;
 	}
 
 	private validateSettings(data: VoiceSettingsUpdate): VoiceSettingsUpdate {
@@ -387,6 +397,7 @@ class VoiceSettingsStore {
 			pauseOwnScreenSharePreviewOnUnfocus:
 				data.pauseOwnScreenSharePreviewOnUnfocus ?? this.pauseOwnScreenSharePreviewOnUnfocus,
 			disablePictureInPicturePopout: data.disablePictureInPicturePopout ?? this.disablePictureInPicturePopout,
+			screenShareHardwareAcceleration: data.screenShareHardwareAcceleration ?? this.screenShareHardwareAcceleration,
 		};
 	}
 }

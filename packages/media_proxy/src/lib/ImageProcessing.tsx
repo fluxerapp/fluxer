@@ -22,6 +22,22 @@ import type {TracingInterface} from '@fluxer/media_proxy/src/types/Tracing';
 import sharp from 'sharp';
 import {rgbaToThumbHash} from 'thumbhash';
 
+export class ImageProcessingError extends Error {
+	readonly isExpected = true;
+
+	constructor(message: string, cause?: unknown) {
+		super(message);
+		this.name = 'ImageProcessingError';
+		this.cause = cause;
+	}
+}
+
+const VIPS_ERROR_PATTERN = /^Vips|^Input |unexpected end of|load_buffer: |save_buffer: /i;
+
+function isCorruptImageError(error: unknown): error is Error {
+	return error instanceof Error && VIPS_ERROR_PATTERN.test(error.message);
+}
+
 export async function generatePlaceholder(imageBuffer: Buffer): Promise<string> {
 	try {
 		const metadata = await sharp(imageBuffer).metadata();
@@ -75,45 +91,61 @@ export function createImageProcessor(options?: {
 		animated: boolean;
 	}): Promise<Buffer> => {
 		const fn = async () => {
-			const startTime = Date.now();
-			const metadata = await sharp(opts.buffer).metadata();
+			try {
+				const startTime = Date.now();
+				const metadata = await sharp(opts.buffer).metadata();
 
-			const resizeWidth = Math.min(opts.width, metadata.width || 0);
-			const resizeHeight = Math.min(opts.height, metadata.height || 0);
-			const targetFormat = opts.format.toLowerCase();
-			if (!targetFormat) {
-				throw new Error('Target image format is required');
+				const resizeWidth = Math.min(opts.width, metadata.width || 0);
+				const resizeHeight = Math.min(opts.height, metadata.height || 0);
+				const targetFormat = opts.format.toLowerCase();
+				if (!targetFormat) {
+					throw new Error('Target image format is required');
+				}
+
+				const supportsAnimation = ANIMATED_OUTPUT_FORMATS.has(targetFormat);
+				const shouldAnimate = opts.animated && supportsAnimation;
+
+				const buildPipeline = (animated: boolean) =>
+					sharp(opts.buffer, {animated})
+						.resize(resizeWidth, resizeHeight, {
+							fit: 'cover',
+							withoutEnlargement: true,
+						})
+						.toFormat(targetFormat as keyof sharp.FormatEnum, {
+							quality: opts.quality === 'high' ? 80 : opts.quality === 'low' ? 20 : 100,
+						})
+						.toBuffer();
+
+				let result: Buffer;
+				try {
+					result = await buildPipeline(shouldAnimate);
+				} catch (error) {
+					if (!shouldAnimate || !isCorruptImageError(error)) {
+						throw error;
+					}
+					result = await buildPipeline(false);
+				}
+
+				const duration = Date.now() - startTime;
+				metrics?.histogram({
+					name: 'media_proxy.transform.latency',
+					dimensions: {format: targetFormat, quality: opts.quality},
+					valueMs: duration,
+				});
+
+				metrics?.counter({
+					name: 'media_proxy.transform.bytes',
+					dimensions: {format: targetFormat, quality: opts.quality},
+					value: result.length,
+				});
+
+				return result;
+			} catch (error) {
+				if (isCorruptImageError(error)) {
+					throw new ImageProcessingError(error.message, error);
+				}
+				throw error;
 			}
-
-			const supportsAnimation = ANIMATED_OUTPUT_FORMATS.has(targetFormat);
-			const shouldAnimate = opts.animated && supportsAnimation;
-
-			const result = await sharp(opts.buffer, {
-				animated: shouldAnimate,
-			})
-				.resize(resizeWidth, resizeHeight, {
-					fit: 'cover',
-					withoutEnlargement: true,
-				})
-				.toFormat(targetFormat as keyof sharp.FormatEnum, {
-					quality: opts.quality === 'high' ? 80 : opts.quality === 'low' ? 20 : 100,
-				})
-				.toBuffer();
-
-			const duration = Date.now() - startTime;
-			metrics?.histogram({
-				name: 'media_proxy.transform.latency',
-				dimensions: {format: targetFormat, quality: opts.quality},
-				valueMs: duration,
-			});
-
-			metrics?.counter({
-				name: 'media_proxy.transform.bytes',
-				dimensions: {format: targetFormat, quality: opts.quality},
-				value: result.length,
-			});
-
-			return result;
 		};
 
 		if (tracing) {

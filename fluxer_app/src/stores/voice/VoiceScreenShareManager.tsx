@@ -23,6 +23,7 @@ import {Logger} from '@app/lib/Logger';
 import {Platform} from '@app/lib/Platform';
 import LocalVoiceStateStore from '@app/stores/LocalVoiceStateStore';
 import MediaPermissionStore from '@app/stores/MediaPermissionStore';
+import VoiceSettingsStore from '@app/stores/VoiceSettingsStore';
 import VoiceConnectionManager from '@app/stores/voice/VoiceConnectionManager';
 import {syncLocalVoiceStateWithServer, updateLocalParticipantFromRoom} from '@app/stores/voice/VoiceMediaEngineBridge';
 import VoiceMediaStateCoordinator from '@app/stores/voice/VoiceMediaStateCoordinator';
@@ -30,10 +31,24 @@ import {ScreenRecordingPermissionDeniedError} from '@app/utils/errors/ScreenReco
 import {ensureNativePermission} from '@app/utils/NativePermissions';
 import {isDesktop, isNativeMacOS} from '@app/utils/NativeUtils';
 import {SoundType} from '@app/utils/SoundUtils';
-import {type Room, type ScreenShareCaptureOptions, Track, type TrackPublishOptions} from 'livekit-client';
+import {
+	type Room,
+	type ScreenShareCaptureOptions,
+	Track,
+	type TrackPublishOptions,
+	type VideoCodec,
+} from 'livekit-client';
 import {makeAutoObservable, runInAction} from 'mobx';
 
 const logger = new Logger('VoiceScreenShareManager');
+
+function getPreferredScreenShareCodec(): VideoCodec {
+	if (VoiceSettingsStore.getScreenShareHardwareAcceleration()) {
+		return 'h265';
+	}
+
+	return 'vp9';
+}
 
 class VoiceScreenShareManager {
 	isScreenSharePending = false;
@@ -160,8 +175,16 @@ class VoiceScreenShareManager {
 			this.isScreenSharePending = true;
 		});
 
+		const preferredVideoCodec = publishOptions?.videoCodec ?? getPreferredScreenShareCodec();
+		const effectivePublishOptions = enabled
+			? {
+					...publishOptions,
+					videoCodec: preferredVideoCodec,
+				}
+			: publishOptions;
+
 		try {
-			await participant.setScreenShareEnabled(enabled, restOptions, publishOptions);
+			await participant.setScreenShareEnabled(enabled, restOptions, effectivePublishOptions);
 			if (enabled) applyState(true);
 
 			updateLocalParticipantFromRoom(room);

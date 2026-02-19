@@ -23,17 +23,9 @@
 			"oauth_client_secret": "test-oauth-client-secret"
 		},
 		"gateway": {
-			"rpc_tcp_port": 8089,
-			"api_host": "http://localhost:8088/api",
 			"admin_reload_secret": "test-gateway-admin-reload-secret-32-chars",
 			"media_proxy_endpoint": "http://localhost:8088/media"
-		},
-		"queue": {
-			"secret": "test-queue-secret-key-minimum-32-chars"
 		}
-	},
-	"gateway": {
-		"rpc_secret": "test-gateway-rpc-secret-minimum-32-chars"
 	},
 	"auth": {
 		"sudo_mode_secret": "test-sudo-mode-secret-minimum-32-chars",

@@ -69,10 +69,6 @@ export interface InstancePush {
 
 export interface InstanceAppPublic {
 	sentry_dsn: string;
-	sentry_proxy_path: string;
-	sentry_report_host: string;
-	sentry_project_id: string;
-	sentry_public_key: string;
 }
 
 export type GifProvider = 'klipy' | 'tenor';
@@ -110,10 +106,6 @@ export interface RuntimeConfigSnapshot {
 	publicPushVapidKey: string | null;
 	limits: LimitConfigSnapshot;
 	sentryDsn: string;
-	sentryProxyPath: string;
-	sentryReportHost: string;
-	sentryProjectId: string;
-	sentryPublicKey: string;
 	relayDirectoryUrl: string | null;
 }
 
@@ -160,10 +152,6 @@ class RuntimeConfigStore {
 	currentDefaultsHash: string | null = null;
 
 	sentryDsn: string = '';
-	sentryProxyPath: string = '/error-reporting-proxy';
-	sentryReportHost: string = '';
-	sentryProjectId: string = '';
-	sentryPublicKey: string = '';
 
 	relayDirectoryUrl: string | null = Config.PUBLIC_RELAY_DIRECTORY_URL;
 
@@ -237,10 +225,6 @@ class RuntimeConfigStore {
 				'limits',
 				'currentDefaultsHash',
 				'sentryDsn',
-				'sentryProxyPath',
-				'sentryReportHost',
-				'sentryProjectId',
-				'sentryPublicKey',
 				'relayDirectoryUrl',
 			]);
 
@@ -302,10 +286,6 @@ class RuntimeConfigStore {
 		this.currentDefaultsHash = null;
 
 		this.sentryDsn = snapshot.sentryDsn;
-		this.sentryProxyPath = snapshot.sentryProxyPath;
-		this.sentryReportHost = snapshot.sentryReportHost;
-		this.sentryProjectId = snapshot.sentryProjectId;
-		this.sentryPublicKey = snapshot.sentryPublicKey;
 
 		this.relayDirectoryUrl = snapshot.relayDirectoryUrl;
 	}
@@ -331,10 +311,6 @@ class RuntimeConfigStore {
 			publicPushVapidKey: this.publicPushVapidKey,
 			limits: this.cloneLimits(this.limits),
 			sentryDsn: this.sentryDsn,
-			sentryProxyPath: this.sentryProxyPath,
-			sentryReportHost: this.sentryReportHost,
-			sentryProjectId: this.sentryProjectId,
-			sentryPublicKey: this.sentryPublicKey,
 			relayDirectoryUrl: this.relayDirectoryUrl,
 		};
 	}
@@ -472,10 +448,6 @@ class RuntimeConfigStore {
 
 			if (instance.app_public) {
 				this.sentryDsn = instance.app_public.sentry_dsn;
-				this.sentryProxyPath = instance.app_public.sentry_proxy_path;
-				this.sentryReportHost = instance.app_public.sentry_report_host;
-				this.sentryProjectId = instance.app_public.sentry_project_id;
-				this.sentryPublicKey = instance.app_public.sentry_public_key;
 			}
 		});
 	}

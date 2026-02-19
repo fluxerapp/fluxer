@@ -121,21 +121,21 @@ const GuildDiscoveryTab: React.FC<{guildId: string}> = ({guildId}) => {
 			application.status === DiscoveryApplicationStatus.REJECTED ||
 			application.status === DiscoveryApplicationStatus.REMOVED);
 
+	const formValues = useMemo(
+		() =>
+			hasActiveApplication && application
+				? {description: application.description, category_type: application.category_type}
+				: undefined,
+		[hasActiveApplication, application],
+	);
+
 	const form = useForm<FormInputs>({
 		defaultValues: {
-			description: hasActiveApplication ? application.description : '',
-			category_type: hasActiveApplication ? application.category_type : 0,
+			description: '',
+			category_type: 0,
 		},
+		values: formValues,
 	});
-
-	useEffect(() => {
-		if (hasActiveApplication && application) {
-			form.reset({
-				description: application.description,
-				category_type: application.category_type,
-			});
-		}
-	}, [application, hasActiveApplication, form]);
 
 	const setApplicationFromResponse = useCallback((response: DiscoveryApplicationResponse) => {
 		setStatus((prev) => (prev ? {...prev, application: response} : prev));
@@ -291,8 +291,10 @@ const GuildDiscoveryTab: React.FC<{guildId: string}> = ({guildId}) => {
 							<div className={styles.fieldLabel}>
 								<Trans>Description</Trans>
 							</div>
-							<Textarea
-								{...form.register('description', {
+							<Controller
+								name="description"
+								control={form.control}
+								rules={{
 									required: t`A description is required.`,
 									minLength: {
 										value: DISCOVERY_DESCRIPTION_MIN_LENGTH,
@@ -302,15 +304,24 @@ const GuildDiscoveryTab: React.FC<{guildId: string}> = ({guildId}) => {
 										value: DISCOVERY_DESCRIPTION_MAX_LENGTH,
 										message: t`Description must be no more than ${DISCOVERY_DESCRIPTION_MAX_LENGTH} characters.`,
 									},
-								})}
-								error={form.formState.errors.description?.message}
-								label=""
-								placeholder={t`Describe what your community is about...`}
-								minRows={3}
-								maxRows={6}
-								maxLength={DISCOVERY_DESCRIPTION_MAX_LENGTH}
-								showCharacterCount
-								disabled={!eligible && canApply}
+								}}
+								render={({field, fieldState}) => (
+									<Textarea
+										name={field.name}
+										value={field.value}
+										onChange={field.onChange}
+										onBlur={field.onBlur}
+										ref={field.ref}
+										error={fieldState.error?.message}
+										label=""
+										placeholder={t`Describe what your community is about...`}
+										minRows={3}
+										maxRows={6}
+										maxLength={DISCOVERY_DESCRIPTION_MAX_LENGTH}
+										showCharacterCount
+										disabled={!eligible && canApply}
+									/>
+								)}
 							/>
 						</div>
 

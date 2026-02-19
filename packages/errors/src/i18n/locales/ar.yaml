@@ -150,6 +150,7 @@ calls_and_voice.voice_messages_require_single_attachment: الرسائل الص�
 captcha.invalid: الكابتشا غير صحيحة.
 captcha.required: الكابتشا مطلوبة.
 connections.already_exists: اتصال من هذا النوع بنفس المعرّف موجود أصلاً.
+connections.bluesky_oauth_authorization_failed: ما قدرنا نحل عنوان بلوسكاي هذا. تأكد منه وجرّب مرة ثانية.
 connections.bluesky_oauth_callback_failed: ما قدرنا نكمل اتصال بلوسكاي. جرّب مرة ثانية.
 connections.bluesky_oauth_not_enabled: اتصالات بلوسكاي مو مفعّلة على هذا الخادم.
 connections.bluesky_oauth_session_expired: انتهت صلاحية جلسة بلوسكاي. أعد ربط حسابك.

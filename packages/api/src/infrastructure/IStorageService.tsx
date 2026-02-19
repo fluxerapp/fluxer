@@ -88,4 +88,23 @@ export interface IStorageService {
 	>;
 
 	deleteObjects(params: {bucket: string; objects: ReadonlyArray<{Key: string}>}): Promise<void>;
+
+	createMultipartUpload(params: {bucket: string; key: string; contentType?: string}): Promise<{uploadId: string}>;
+
+	uploadPart(params: {
+		bucket: string;
+		key: string;
+		uploadId: string;
+		partNumber: number;
+		body: Uint8Array;
+	}): Promise<{etag: string}>;
+
+	completeMultipartUpload(params: {
+		bucket: string;
+		key: string;
+		uploadId: string;
+		parts: Array<{partNumber: number; etag: string}>;
+	}): Promise<void>;
+
+	abortMultipartUpload(params: {bucket: string; key: string; uploadId: string}): Promise<void>;
 }

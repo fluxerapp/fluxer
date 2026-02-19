@@ -18,10 +18,10 @@ description: 'config.json reference for self-hosted Fluxer.'
 - [csam](#csam)
 - [database](#database)
 - [dev](#dev)
+- [discovery](#discovery)
 - [domain](#domain)
 - [endpoint_overrides](#endpoint-overrides)
 - [federation](#federation)
-- [gateway_connection](#gateway-connection)
 - [geoip](#geoip)
 - [instance](#instance)
 - [integrations](#integrations)
@@ -59,11 +59,11 @@ These are the top-level configuration options in your `config.json`.
 | database | [database](#database) | Primary database configuration. Selects the backend (Cassandra vs SQLite) and provides connection details. |
 | deletion_grace_period_hours? | number | Grace period in hours before soft-deleted items are permanently removed. Default: `72` |
 | dev? | [dev](#dev) | Development-only overrides and flags. These should generally be disabled in production. Default: `{}` |
+| discovery? | [discovery](#discovery) | Guild discovery listing configuration. Default: `{}` |
 | domain | [domain](#domain) | Global domain and port configuration used to derive public endpoints for all services. |
 | endpoint_overrides? | [endpoint_overrides](#endpoint-overrides) | Manual overrides for specific public endpoints. If set, these take precedence over automatically derived URLs. |
 | env | enum&lt;`development`, `production`, `test`&gt; | Runtime environment for the application. Controls behavior such as logging verbosity, error details, and optimization levels. |
 | federation? | [federation](#federation) | Federation configuration for connecting with other Fluxer instances. Default: `{}` |
-| gateway | [gateway_connection](#gateway-connection) | Configuration for the real-time Gateway service connection. |
 | geoip? | [geoip](#geoip) | GeoIP database configuration. Default: `{}` |
 | inactivity_deletion_threshold_days? | number | Days of inactivity after which data may be subject to deletion. Default: `365` |
 | instance? | [instance](#instance) | Instance-specific settings and policies. Default: `{}` |
@@ -117,10 +117,6 @@ Public configuration exposed to the frontend application.
 | bootstrap_api_endpoint? | string | Bootstrap API endpoint. Default: `""` |
 | bootstrap_api_public_endpoint? | string | Public Bootstrap API endpoint. Default: `""` |
 | sentry_dsn? | string | Frontend Sentry DSN. Default: `""` |
-| sentry_project_id? | string | Sentry Project ID. Default: `""` |
-| sentry_proxy_path? | string | Path to proxy Sentry requests. Default: `/error-reporting-proxy` |
-| sentry_public_key? | string | Sentry Public Key. Default: `""` |
-| sentry_report_host? | string | Host for Sentry reporting. Default: `""` |
 
 <Expandable title="Example JSON">
 ```json
@@ -128,11 +124,7 @@ Public configuration exposed to the frontend application.
   "api_version": 1,
   "bootstrap_api_endpoint": "",
   "bootstrap_api_public_endpoint": "",
-  "sentry_dsn": "",
-  "sentry_project_id": "",
-  "sentry_proxy_path": "/error-reporting-proxy",
-  "sentry_public_key": "",
-  "sentry_report_host": ""
+  "sentry_dsn": ""
 }
 ```
 </Expandable>
@@ -383,6 +375,30 @@ Development environment flags.
 
 ---
 
+## discovery
+
+<a id="discovery"></a>
+
+JSON path: `discovery`
+
+Guild discovery listing configuration.
+
+| Property | Type | Description |
+|----------|------|-------------|
+| enabled? | boolean | Whether guild discovery is enabled on this instance. Default: `true` |
+| min_member_count? | number | Minimum number of members a guild needs before it can apply for discovery listing. Default: `1` |
+
+<Expandable title="Example JSON">
+```json
+{
+  "enabled": true,
+  "min_member_count": 1
+}
+```
+</Expandable>
+
+---
+
 ## domain
 
 <a id="domain"></a>
@@ -475,30 +491,6 @@ Federation configuration for connecting with other Fluxer instances.
 ```json
 {
   "enabled": false
-}
-```
-</Expandable>
-
----
-
-## gateway_connection
-
-<a id="gateway-connection"></a>
-
-JSON path: `gateway`
-
-Configuration for backend services to call the Gateway via RPC.
-
-| Property | Type | Description |
-|----------|------|-------------|
-| rpc_endpoint? | string | Gateway RPC endpoint URL (e.g. http://gateway:8080). Default: `http://127.0.0.1:8088` |
-| rpc_secret | string | Shared secret for authenticating RPC calls to the Gateway. |
-
-<Expandable title="Example JSON">
-```json
-{
-  "rpc_secret": "your_rpc_secret",
-  "rpc_endpoint": "http://127.0.0.1:8088"
 }
 ```
 </Expandable>
@@ -601,7 +593,7 @@ When `enabled` = `true` and `provider` = `smtp`, the following properties are re
 | from_name? | string | Default sender name. Default: `Fluxer` |
 | provider? | enum&lt;`smtp`, `none`&gt; | Email provider selection. Default: `none` |
 | smtp? | [smtp_email](#smtp-email) |  |
-| webhook_secret? | string | SendGrid signed event webhook public key (PEM or base64-encoded DER). |
+| webhook_secret? | string | Sweego webhook signing secret (base64-encoded). |
 
 <Expandable title="Example JSON">
 ```json
@@ -1162,6 +1154,7 @@ Container for all service-specific configurations.
 | gateway | [gateway_service](#gateway-service) |  |
 | marketing? | [marketing_service](#marketing-service) |  |
 | media_proxy | [media_proxy_service](#media-proxy-service) |  |
+| nats? | [nats_services](#nats-services) | Default: `{}` |
 | queue? | [queue_service](#queue-service) | Default: `{}` |
 | s3? | [s3_service](#s3-service) | Default: `{}` |
 | server? | [server_service](#server-service) | Default: `{}` |
@@ -1211,6 +1204,28 @@ Rate limiting parameters.
 ```
 </Expandable>
 
+### nats_services
+
+JSON path: `services.nats`
+
+Configuration for NATS messaging.
+
+| Property | Type | Description |
+|----------|------|-------------|
+| auth_token? | string | Authentication token for NATS connections. Default: `""` |
+| core_url? | string | NATS Core server URL for RPC. Default: `nats://127.0.0.1:4222` |
+| jetstream_url? | string | NATS JetStream server URL for job queues. Default: `nats://127.0.0.1:4223` |
+
+<Expandable title="Example JSON">
+```json
+{
+  "auth_token": "",
+  "core_url": "nats://127.0.0.1:4222",
+  "jetstream_url": "nats://127.0.0.1:4223"
+}
+```
+</Expandable>
+
 ### queue_service
 
 JSON path: `services.queue`
@@ -1219,37 +1234,26 @@ Configuration for the Job Queue service.
 
 | Property | Type | Description |
 |----------|------|-------------|
-| command_buffer? | number | Size of the internal command buffer. Default: `1000` |
-| concurrency? | number | Number of concurrent worker threads. Default: `2` |
+| concurrency? | number | Number of concurrent worker threads. Default: `1` |
 | data_dir? | string | Filesystem path to store queue data. Default: `./data/queue` |
 | default_visibility_timeout_ms? | number | Default time in milliseconds a message remains invisible after being received. Default: `30000` |
-| export_timeout? | number | Timeout in milliseconds for data export operations. Default: `30000` |
-| host? | string | Network interface to bind to. Default: `0.0.0.0` |
-| max_receive_batch? | number | Maximum number of messages to retrieve in a single batch. Default: `10` |
-| port? | number | Port to listen on. Default: `8080` |
-| rate_limit? | [rate_limit](#rate-limit) | Rate limiting configuration for the Queue service. |
-| secret? | string | Authentication secret for the Queue service. |
+| port? | number | Port to listen on. Default: `8088` |
+| secret? | string | Secret for queue API authentication. Default: `""` |
 | snapshot_after_ops? | number | Number of operations after which to take a queue snapshot. Default: `10000` |
 | snapshot_every_ms? | number | Interval in milliseconds to take queue snapshots. Default: `60000` |
 | snapshot_zstd_level? | number | Zstd compression level for snapshots (1-22). Default: `3` |
-| visibility_timeout_backoff_ms? | number | Backoff duration in milliseconds for visibility timeouts. Default: `1000` |
 
 <Expandable title="Example JSON">
 ```json
 {
-  "command_buffer": 1000,
-  "concurrency": 2,
+  "concurrency": 1,
   "data_dir": "./data/queue",
   "default_visibility_timeout_ms": 30000,
-  "export_timeout": 30000,
-  "host": "0.0.0.0",
-  "max_receive_batch": 10,
-  "port": 8080,
+  "port": 8088,
   "secret": "",
   "snapshot_after_ops": 10000,
   "snapshot_every_ms": 60000,
-  "snapshot_zstd_level": 3,
-  "visibility_timeout_backoff_ms": 1000
+  "snapshot_zstd_level": 3
 }
 ```
 </Expandable>
@@ -1366,73 +1370,15 @@ Configuration for the App Proxy service (frontend server).
 | Property | Type | Description |
 |----------|------|-------------|
 | assets_dir? | string | Filesystem directory containing static assets. Default: `./assets` |
-| kv? | [app_proxy_kv](#app-proxy-kv) | Valkey/Redis configuration for the proxy. |
 | port? | number | Port to listen on. Default: `8773` |
-| rate_limit? | [app_proxy_rate_limit](#app-proxy-rate-limit) | Rate limiting configuration for the App Proxy. Default: `{}` |
-| sentry_dsn | string | Sentry DSN (Data Source Name) for frontend error tracking. |
-| sentry_proxy_path? | string | URL path for proxying Sentry requests. Default: `/error-reporting-proxy` |
-| sentry_report_host | string | Hostname to which Sentry reports should be sent. |
 | static_cdn_endpoint? | string | URL endpoint for serving static assets via CDN. Default: `""` |
 
 <Expandable title="Example JSON">
 ```json
 {
-  "sentry_dsn": "your_sentry_dsn",
-  "sentry_report_host": "your_sentry_report_host",
   "assets_dir": "./assets",
   "port": 8773,
-  "sentry_proxy_path": "/error-reporting-proxy",
   "static_cdn_endpoint": ""
-}
-```
-</Expandable>
-
-### app_proxy_kv
-
-JSON path: `services.app_proxy.kv`
-
-Valkey/Redis settings for the App Proxy.
-
-| Property | Type | Description |
-|----------|------|-------------|
-| timeout_ms? | number | Request timeout for Valkey/Redis in milliseconds. Default: `5000` |
-| url | string | Full URL to Valkey/Redis. |
-
-<Expandable title="Example JSON">
-```json
-{
-  "url": "your_url",
-  "timeout_ms": 5000
-}
-```
-</Expandable>
-
-### app_proxy_rate_limit
-
-JSON path: `services.app_proxy.rate_limit`
-
-Rate limit settings for the App Proxy.
-
-| Property | Type | Description |
-|----------|------|-------------|
-| sentry? | [app_proxy_sentry_rate_limit](#app-proxy-sentry-rate-limit) | Sentry reporting rate limit configuration. Default: `{}` |
-
-### app_proxy_sentry_rate_limit
-
-JSON path: `services.app_proxy.rate_limit.sentry`
-
-Rate limiting for Sentry error reporting requests.
-
-| Property | Type | Description |
-|----------|------|-------------|
-| limit? | number | Number of Sentry requests allowed per window. Default: `100` |
-| window_ms? | number | Time window for Sentry rate limiting in milliseconds. Default: `1000` |
-
-<Expandable title="Example JSON">
-```json
-{
-  "limit": 100,
-  "window_ms": 1000
 }
 ```
 </Expandable>
@@ -1446,8 +1392,6 @@ Configuration for the Gateway service (WebSocket).
 | Property | Type | Description |
 |----------|------|-------------|
 | admin_reload_secret | string | Secret used to trigger code hot-swapping/reloads. |
-| api_canary_host? | string | Host/Port of the Canary API service (optional). Default: `""` |
-| api_host | string | Host/Port of the API service to communicate with. |
 | gateway_metrics_enabled? | boolean | Enable collection of gateway metrics. Default: `false` |
 | gateway_metrics_report_interval_ms? | number | Interval in milliseconds to report gateway metrics. Default: `30000` |
 | guild_shards? | number | Number of shards for guild handling. Default: `1` |
@@ -1465,15 +1409,12 @@ Configuration for the Gateway service (WebSocket).
 | push_subscriptions_cache_mb? | number | Memory cache size (MB) for push subscriptions. Default: `1024` |
 | push_user_guild_settings_cache_mb? | number | Memory cache size (MB) for user guild settings. Default: `1024` |
 | release_node? | string | Erlang node name for the release. Default: `fluxer_gateway@gateway` |
-| rpc_tcp_port? | number | Port for API-to-Gateway internal RPC over TCP. Default: `8772` |
 
 <Expandable title="Example JSON">
 ```json
 {
   "admin_reload_secret": "your_admin_reload_secret",
-  "api_host": "your_api_host",
   "media_proxy_endpoint": "your_media_proxy_endpoint",
-  "api_canary_host": "",
   "gateway_metrics_enabled": false,
   "gateway_metrics_report_interval_ms": 30000,
   "guild_shards": 1,
@@ -1489,8 +1430,7 @@ Configuration for the Gateway service (WebSocket).
   "push_enabled": true,
   "push_subscriptions_cache_mb": 1024,
   "push_user_guild_settings_cache_mb": 1024,
-  "release_node": "fluxer_gateway@gateway",
-  "rpc_tcp_port": 8772
+  "release_node": "fluxer_gateway@gateway"
 }
 ```
 </Expandable>

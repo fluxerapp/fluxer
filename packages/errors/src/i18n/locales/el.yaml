@@ -195,6 +195,7 @@ channels_and_guilds.voice_channels_cannot_be_above_text_channels: Τα voice κ�
 colors.color_value_too_high: Η τιμή χρώματος δεν πρέπει να ξεπερνά το 0xffffff.
 colors.color_value_too_low: Η τιμή χρώματος πρέπει να είναι τουλάχιστον 0x000000.
 connections.already_exists: Μια σύνδεση αυτού του τύπου με αυτό το αναγνωριστικό υπάρχει ήδη.
+connections.bluesky_oauth_authorization_failed: Δεν μπορέσαμε να επιλύσουμε αυτό το αναγνωριστικό Bluesky. Έλεγξέ το και δοκίμασε ξανά.
 connections.bluesky_oauth_callback_failed: Δεν μπορέσαμε να ολοκληρώσουμε τη σύνδεση Bluesky. Παρακαλώ δοκίμασε ξανά.
 connections.bluesky_oauth_not_enabled: Οι συνδέσεις Bluesky δεν είναι ενεργοποιημένες σε αυτόν τον server.
 connections.bluesky_oauth_session_expired: Η συνεδρία σου στο Bluesky έληξε. Παρακαλώ επανασύνδεσε τον λογαριασμό σου.

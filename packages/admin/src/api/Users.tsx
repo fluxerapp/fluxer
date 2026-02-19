@@ -33,6 +33,7 @@ import type {
 	LookupUserResponse,
 	UserAdminResponse,
 } from '@fluxer/schema/src/domains/admin/AdminUserSchemas';
+import type {WebAuthnCredentialListResponse} from '@fluxer/schema/src/domains/auth/AuthSchemas';
 
 export async function getCurrentAdmin(config: Config, session: Session): Promise<ApiResult<UserAdminResponse | null>> {
 	const client = new ApiClient(config, session);
@@ -416,4 +417,30 @@ export async function sendPasswordReset(
 ): Promise<ApiResult<void>> {
 	const client = new ApiClient(config, session);
 	return client.postVoid('/admin/users/send-password-reset', {user_id: userId}, auditLogReason);
+}
+
+export async function listWebAuthnCredentials(
+	config: Config,
+	session: Session,
+	userId: string,
+): Promise<ApiResult<WebAuthnCredentialListResponse>> {
+	const client = new ApiClient(config, session);
+	return client.post<WebAuthnCredentialListResponse>('/admin/users/list-webauthn-credentials', {
+		user_id: userId,
+	});
+}
+
+export async function deleteWebAuthnCredential(
+	config: Config,
+	session: Session,
+	userId: string,
+	credentialId: string,
+	auditLogReason?: string,
+): Promise<ApiResult<void>> {
+	const client = new ApiClient(config, session);
+	return client.postVoid(
+		'/admin/users/delete-webauthn-credential',
+		{user_id: userId, credential_id: credentialId},
+		auditLogReason,
+	);
 }

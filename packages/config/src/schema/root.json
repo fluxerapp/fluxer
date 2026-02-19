@@ -3,7 +3,7 @@
 	"title": "Fluxer Config",
 	"type": "object",
 	"additionalProperties": false,
-	"required": ["env", "domain", "database", "services", "gateway", "auth"],
+	"required": ["env", "domain", "database", "services", "auth"],
 	"if": {
 		"required": ["instance"],
 		"properties": {
@@ -88,10 +88,6 @@
 		"services": {
 			"description": "Configuration for individual Fluxer services.",
 			"$ref": "#/$defs/services"
-		},
-		"gateway": {
-			"description": "Configuration for the real-time Gateway service connection.",
-			"$ref": "#/$defs/gateway_connection"
 		},
 		"auth": {
 			"description": "Authentication and security settings.",

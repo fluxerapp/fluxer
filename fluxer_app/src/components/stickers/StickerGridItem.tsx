@@ -38,10 +38,16 @@ import {observer} from 'mobx-react-lite';
 interface StickerGridItemProps {
 	guildId: string;
 	sticker: GuildStickerWithUser;
+	canModify: boolean;
 	onUpdate: () => void;
 }
 
-export const StickerGridItem = observer(function StickerGridItem({guildId, sticker, onUpdate}: StickerGridItemProps) {
+export const StickerGridItem = observer(function StickerGridItem({
+	guildId,
+	sticker,
+	canModify,
+	onUpdate,
+}: StickerGridItemProps) {
 	const {t} = useLingui();
 	const {shouldAnimate} = useStickerAnimation();
 
@@ -107,23 +113,25 @@ export const StickerGridItem = observer(function StickerGridItem({guildId, stick
 				)}
 			</div>
 
-			<div className={styles.actions}>
-				<Tooltip text={t`Edit`}>
-					<FocusRing offset={-2}>
-						<button type="button" onClick={handleEdit} className={styles.actionButton}>
-							<PencilIcon className={styles.icon} weight="bold" />
-						</button>
-					</FocusRing>
-				</Tooltip>
+			{canModify && (
+				<div className={styles.actions}>
+					<Tooltip text={t`Edit`}>
+						<FocusRing offset={-2}>
+							<button type="button" onClick={handleEdit} className={styles.actionButton}>
+								<PencilIcon className={styles.icon} weight="bold" />
+							</button>
+						</FocusRing>
+					</Tooltip>
 
-				<Tooltip text={t`Delete`}>
-					<FocusRing offset={-2}>
-						<button type="button" onClick={handleDelete} className={clsx(styles.actionButton, styles.deleteButton)}>
-							<XIcon className={styles.icon} weight="bold" />
-						</button>
-					</FocusRing>
-				</Tooltip>
-			</div>
+					<Tooltip text={t`Delete`}>
+						<FocusRing offset={-2}>
+							<button type="button" onClick={handleDelete} className={clsx(styles.actionButton, styles.deleteButton)}>
+								<XIcon className={styles.icon} weight="bold" />
+							</button>
+						</FocusRing>
+					</Tooltip>
+				</div>
+			)}
 		</div>
 	);
 });

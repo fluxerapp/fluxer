@@ -102,6 +102,7 @@ import {UnknownHarvestError} from '@fluxer/errors/src/domains/moderation/Unknown
 import {InvalidBotFlagError} from '@fluxer/errors/src/domains/oauth/InvalidBotFlagError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import {UnknownUserFlagError} from '@fluxer/errors/src/domains/user/UnknownUserFlagError';
+import {RpcRequest} from '@fluxer/schema/src/domains/rpc/RpcSchemas';
 import {createSnowflakeFromTimestamp, snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 import * as BucketUtils from '@fluxer/snowflake/src/SnowflakeBuckets';
 import type {Context} from 'hono';
@@ -3095,6 +3096,46 @@ export function TestHarnessController(app: HonoApp) {
 		return ctx.json(result, result.success ? 200 : 409);
 	});
 
+	app.post('/test/users/:userId/set-contact-info', async (ctx) => {
+		ensureHarnessAccess(ctx);
+
+		const params = ctx.req.param() as {userId?: string};
+		const userIdParam = params.userId;
+		if (!userIdParam) {
+			throw new Error('Missing userId parameter');
+		}
+		const userId = createUserID(BigInt(userIdParam));
+		const body = await ctx.req.json();
+		const {phone, email} = body as {phone?: string | null; email?: string | null};
+
+		const userRepository = new UserRepository();
+		const user = await userRepository.findUnique(userId);
+		if (!user) {
+			throw new UnknownUserError();
+		}
+
+		const updates: Record<string, unknown> = {};
+		if (phone !== undefined) {
+			updates['phone'] = phone;
+		}
+		if (email !== undefined) {
+			updates['email'] = email;
+		}
+
+		if (Object.keys(updates).length === 0) {
+			return ctx.json({success: true, updated: false});
+		}
+
+		await userRepository.patchUpsert(userId, updates, user.toRow());
+
+		return ctx.json({
+			success: true,
+			updated: true,
+			phone: updates['phone'] ?? user.phone,
+			email: updates['email'] ?? user.email,
+		});
+	});
+
 	app.post('/test/cache-clear', async (ctx) => {
 		ensureHarnessAccess(ctx);
 		const cacheService = ctx.get('cacheService');
@@ -3106,5 +3147,11 @@ export function TestHarnessController(app: HonoApp) {
 		} while (deleted > 0);
 		Logger.info({totalDeleted}, 'Cleared KV cache via test harness');
 		return ctx.json({cleared: true, deleted_count: totalDeleted});
+	});
+
+	app.post('/test/rpc-session-init', async (ctx) => {
+		const request = RpcRequest.parse(await ctx.req.json());
+		const response = await ctx.get('rpcService').handleRpcRequest({request, requestCache: ctx.get('requestCache')});
+		return ctx.json(response);
 	});
 }

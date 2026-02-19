@@ -17,6 +17,7 @@
  * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
  */
 
+import fs from 'node:fs/promises';
 import {createAttachmentID} from '@fluxer/api/src/BrandedTypes';
 import {Config} from '@fluxer/api/src/Config';
 import type {AttachmentToProcess} from '@fluxer/api/src/channel/AttachmentDTOs';
@@ -45,6 +46,7 @@ import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMe
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import {recordCounter} from '@fluxer/telemetry/src/Metrics';
 import type {IVirusScanService} from '@fluxer/virus_scan/src/IVirusScanService';
+import {temporaryFile} from 'tempy';
 
 interface ProcessAttachmentParams {
 	message: Message;
@@ -397,16 +399,14 @@ export class AttachmentProcessingService {
 	}
 
 	private async scanMalware(attachment: AttachmentToProcess): Promise<{isVirusDetected: boolean}> {
-		const fileData = await this.storageService.readObject(Config.s3.buckets.uploads, attachment.upload_filename);
-
-		if (!fileData) {
-			throw InputValidationError.fromCode('attachment', ValidationErrorCodes.FILE_NOT_FOUND_FOR_SCANNING);
+		const tempPath = temporaryFile();
+		try {
+			await this.storageService.writeObjectToDisk(Config.s3.buckets.uploads, attachment.upload_filename, tempPath);
+			const scanResult = await this.virusScanService.scanFile(tempPath);
+			return {isVirusDetected: !scanResult.isClean};
+		} finally {
+			await fs.unlink(tempPath).catch(() => {});
 		}
-
-		const fileBuffer = Buffer.from(fileData);
-		const scanResult = await this.virusScanService.scanBuffer(fileBuffer, attachment.filename);
-
-		return {isVirusDetected: !scanResult.isClean};
 	}
 
 	private deleteUploadObject(bucket: string, key: string): void {

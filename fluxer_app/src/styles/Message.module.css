@@ -380,9 +380,8 @@
 	line-height: var(--message-line-height);
 	vertical-align: baseline;
 	min-inline-size: 0;
-	max-inline-size: min(32ch, 100%);
-	overflow: hidden;
-	text-overflow: ellipsis;
+	max-inline-size: none;
+	overflow: visible;
 	white-space: nowrap;
 }
 

@@ -47,7 +47,7 @@
 			},
 			"webhook_secret": {
 				"type": "string",
-				"description": "SendGrid signed event webhook public key (PEM or base64-encoded DER)."
+				"description": "Sweego webhook signing secret (base64-encoded)."
 			},
 			"from_email": {
 				"type": "string",

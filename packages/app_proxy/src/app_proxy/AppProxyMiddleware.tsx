@@ -17,44 +17,25 @@
  * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import type {AppProxyConfig, AppProxyHonoEnv, AppProxyMiddleware} from '@fluxer/app_proxy/src/AppProxyTypes';
-import {createProxyRateLimitMiddleware} from '@fluxer/app_proxy/src/app_proxy/middleware/ProxyRateLimit';
-import {createSentryHostProxyMiddleware} from '@fluxer/app_proxy/src/app_proxy/middleware/SentryHostProxy';
-import {proxySentry} from '@fluxer/app_proxy/src/app_proxy/proxy/SentryProxy';
-import {resolveSentryHost} from '@fluxer/app_proxy/src/app_proxy/utils/Host';
+import type {AppProxyHonoEnv, AppProxyMiddleware} from '@fluxer/app_proxy/src/AppProxyTypes';
 import {isExpectedError} from '@fluxer/app_proxy/src/ErrorClassification';
 import {applyMiddlewareStack} from '@fluxer/hono/src/middleware/MiddlewareStack';
 import type {MetricsCollector} from '@fluxer/hono_types/src/MetricsTypes';
 import type {TracingOptions} from '@fluxer/hono_types/src/TracingTypes';
 import type {Logger} from '@fluxer/logger/src/Logger';
-import type {IRateLimitService} from '@fluxer/rate_limit/src/IRateLimitService';
 import {captureException} from '@fluxer/sentry/src/Sentry';
 import type {Context, Hono} from 'hono';
 
 interface ApplyAppProxyMiddlewareOptions {
 	app: Hono<AppProxyHonoEnv>;
-	config: AppProxyConfig;
 	customMiddleware: Array<AppProxyMiddleware>;
 	logger: Logger;
 	metricsCollector?: MetricsCollector;
-	rateLimitService: IRateLimitService | null;
-	sentryProxyEnabled: boolean;
-	sentryProxyPath: string;
 	tracing?: TracingOptions;
 }
 
 export function applyAppProxyMiddleware(options: ApplyAppProxyMiddlewareOptions): void {
-	const {
-		app,
-		config,
-		customMiddleware,
-		logger,
-		metricsCollector,
-		rateLimitService,
-		sentryProxyEnabled,
-		sentryProxyPath,
-		tracing,
-	} = options;
+	const {app, customMiddleware, logger, metricsCollector, tracing} = options;
 
 	applyMiddlewareStack(app, {
 		requestId: {},
@@ -81,7 +62,7 @@ export function applyAppProxyMiddleware(options: ApplyAppProxyMiddlewareOptions)
 			skip: ['/_health'],
 		},
 		errorHandler: {
-			includeStack: !sentryProxyEnabled,
+			includeStack: true,
 			logger: (error: Error, ctx: Context) => {
 				if (!isExpectedError(error)) {
 					captureException(error, {
@@ -103,58 +84,4 @@ export function applyAppProxyMiddleware(options: ApplyAppProxyMiddlewareOptions)
 		},
 		customMiddleware,
 	});
-
-	applySentryHostProxyMiddleware({
-		app,
-		config,
-		logger,
-		rateLimitService,
-		sentryProxyEnabled,
-		sentryProxyPath,
-	});
-}
-
-interface ApplySentryHostProxyMiddlewareOptions {
-	app: Hono<AppProxyHonoEnv>;
-	config: AppProxyConfig;
-	logger: Logger;
-	rateLimitService: IRateLimitService | null;
-	sentryProxyEnabled: boolean;
-	sentryProxyPath: string;
-}
-
-function applySentryHostProxyMiddleware(options: ApplySentryHostProxyMiddlewareOptions): void {
-	const {app, config, logger, rateLimitService, sentryProxyEnabled, sentryProxyPath} = options;
-	const sentryHost = resolveSentryHost(config);
-	const sentryProxy = config.sentry_proxy;
-
-	if (!sentryProxyEnabled || !sentryHost || !sentryProxy) {
-		return;
-	}
-
-	const sentryRateLimitMiddleware = createProxyRateLimitMiddleware({
-		rateLimitService,
-		bucketPrefix: 'sentry-proxy',
-		config: {
-			enabled: config.rate_limit.sentry.limit > 0,
-			limit: config.rate_limit.sentry.limit,
-			windowMs: config.rate_limit.sentry.window_ms,
-			skipPaths: ['/_health'],
-		},
-		logger,
-	});
-
-	const sentryHostMiddleware = createSentryHostProxyMiddleware({
-		sentryHost,
-		rateLimitMiddleware: sentryRateLimitMiddleware,
-		proxyHandler: (c) =>
-			proxySentry(c, {
-				enabled: true,
-				logger,
-				sentryProxy,
-				sentryProxyPath,
-			}),
-	});
-
-	app.use('*', sentryHostMiddleware);
 }

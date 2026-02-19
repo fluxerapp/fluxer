@@ -193,6 +193,7 @@ channels_and_guilds.vanity_url_requires_feature: A vanity URL exige o recurso VA
 channels_and_guilds.voice_channel_full: O canal de voz está cheio.
 channels_and_guilds.voice_channels_cannot_be_above_text_channels: Canais de voz não podem ficar acima de canais de texto dentro da mesma categoria.
 connections.already_exists: Uma conexão deste tipo com este identificador já existe.
+connections.bluesky_oauth_authorization_failed: Não conseguimos encontrar esse nome de usuário do Bluesky. Verifique-o e tente novamente.
 connections.bluesky_oauth_callback_failed: Não conseguimos completar a conexão com o Bluesky. Por favor, tente novamente.
 connections.bluesky_oauth_not_enabled: Conexões com o Bluesky não estão habilitadas neste servidor.
 connections.bluesky_oauth_session_expired: Sua sessão do Bluesky expirou. Por favor, reconecte sua conta.

@@ -21,7 +21,6 @@ import {clearSqliteStore} from '@fluxer/api/src/database/SqliteKV';
 import {Logger} from '@fluxer/api/src/Logger';
 import {resetSearchServices} from '@fluxer/api/src/SearchFactory';
 import type {IKVProvider} from '@fluxer/kv_client/src/IKVProvider';
-import type {QueueEngine} from '@fluxer/queue/src/engine/QueueEngine';
 import type {S3Service} from '@fluxer/s3/src/s3/S3Service';
 
 export type TestHarnessResetHandler = () => Promise<void>;
@@ -41,7 +40,6 @@ export async function resetTestHarnessState(): Promise<void> {
 
 interface CreateTestHarnessResetOptions {
 	kvProvider?: IKVProvider;
-	queueEngine?: QueueEngine;
 	s3Service?: S3Service;
 }
 
@@ -57,11 +55,6 @@ export function createTestHarnessResetHandler(options: CreateTestHarnessResetOpt
 			if (keys.length > 0) {
 				await options.kvProvider.del(...keys);
 			}
-		}
-
-		if (options.queueEngine) {
-			Logger.info('Resetting queue engine');
-			await options.queueEngine.resetState();
 		}
 
 		if (options.s3Service) {

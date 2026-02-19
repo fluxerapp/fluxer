@@ -35,8 +35,8 @@ export interface MarketingConfig {
 	appEndpoint: string;
 	staticCdnEndpoint: string;
 	marketingEndpoint: string;
-	apiRpcHost: string;
-	gatewayRpcSecret: string;
+	geoipDbPath: string;
+	trustCfConnectingIp: boolean;
 	releaseChannel: string;
 	buildTimestamp: string;
 	rateLimit: RateLimitConfig | null;

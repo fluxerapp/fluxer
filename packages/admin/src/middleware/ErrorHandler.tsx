@@ -32,7 +32,13 @@ import type {Context, ErrorHandler} from 'hono';
 
 const KNOWN_HTTP_STATUS_CODES: Array<HttpStatusCode> = Object.values(HttpStatus);
 
-export function createAdminErrorHandler(logger: LoggerInterface, includeStack: boolean): ErrorHandler {
+export function createAdminErrorHandler(
+	logger: LoggerInterface,
+	includeStack: boolean,
+	basePath: string,
+): ErrorHandler {
+	const homeUrl = basePath || '/';
+
 	return createErrorHandler({
 		includeStack,
 		logError: (error, c) => {
@@ -55,9 +61,9 @@ export function createAdminErrorHandler(logger: LoggerInterface, includeStack: b
 		customHandler: (error, c) => {
 			const status = getStatus(error) ?? 500;
 			if (status === 404) {
-				return renderNotFound(c);
+				return renderNotFound(c, homeUrl);
 			}
-			return renderError(c, status);
+			return renderError(c, status, homeUrl);
 		},
 	});
 }
@@ -67,7 +73,7 @@ function getStatus(error: Error): number | null {
 	return typeof statusValue === 'number' ? statusValue : null;
 }
 
-function renderNotFound(c: Context): Response | Promise<Response> {
+function renderNotFound(c: Context, homeUrl: string): Response | Promise<Response> {
 	c.status(404);
 	return c.html(
 		<ErrorPage
@@ -75,13 +81,13 @@ function renderNotFound(c: Context): Response | Promise<Response> {
 			title="Page not found"
 			description="The page you are looking for does not exist or has been moved."
 			staticCdnEndpoint={CdnEndpoints.STATIC}
-			homeUrl="/admin"
+			homeUrl={homeUrl}
 			homeLabel="Go to admin"
 		/>,
 	);
 }
 
-function renderError(c: Context, status: number): Response | Promise<Response> {
+function renderError(c: Context, status: number, homeUrl: string): Response | Promise<Response> {
 	const statusCode = isHttpStatusCode(status) ? status : HttpStatus.INTERNAL_SERVER_ERROR;
 	c.status(statusCode);
 	return c.html(
@@ -90,7 +96,7 @@ function renderError(c: Context, status: number): Response | Promise<Response> {
 			title="Something went wrong"
 			description="An unexpected error occurred. Please try again later."
 			staticCdnEndpoint={CdnEndpoints.STATIC}
-			homeUrl="/admin"
+			homeUrl={homeUrl}
 			homeLabel="Go to admin"
 		/>,
 	);

@@ -25,12 +25,14 @@ import {mountRoutes} from '@app/Routes';
 import {createGatewayProcessManager, type GatewayProcessManager} from '@app/utils/GatewayProcessManager';
 import {createGatewayProxy} from '@app/utils/GatewayProxy';
 import {getSnowflakeService} from '@fluxer/api/src/middleware/ServiceRegistry';
+import {CronScheduler} from '@fluxer/api/src/worker/CronScheduler';
+import {JetStreamWorkerQueue} from '@fluxer/api/src/worker/JetStreamWorkerQueue';
+import {setWorkerDependencies} from '@fluxer/api/src/worker/WorkerContext';
 import {initializeWorkerDependencies} from '@fluxer/api/src/worker/WorkerDependencies';
+import {WorkerRunner} from '@fluxer/api/src/worker/WorkerRunner';
 import {workerTasks} from '@fluxer/api/src/worker/WorkerTaskRegistry';
 import {createServerWithUpgrade} from '@fluxer/hono/src/Server';
 import type {BaseHonoEnv} from '@fluxer/hono_types/src/HonoTypes';
-import {DirectQueueProvider} from '@fluxer/worker/src/providers/DirectQueueProvider';
-import {createWorker, type WorkerResult} from '@fluxer/worker/src/runtime/WorkerFactory';
 import type {Hono} from 'hono';
 
 export interface FluxerServerOptions {
@@ -55,7 +57,8 @@ export async function createFluxerServer(options: FluxerServerOptions = {}): Pro
 	});
 
 	let server: Server | null = null;
-	let worker: WorkerResult | null = null;
+	let workerRunner: WorkerRunner | null = null;
+	let cronScheduler: CronScheduler | null = null;
 	let gatewayManager: GatewayProcessManager | null = null;
 	let isShuttingDown = false;
 
@@ -66,12 +69,11 @@ export async function createFluxerServer(options: FluxerServerOptions = {}): Pro
 				port: config.port,
 				env: config.env,
 				database: config.database.backend,
-				workerEnabled: config.services.queue !== undefined,
 			},
 			'Starting Fluxer Server',
 		);
 
-		Logger.info('Starting background services (queue engine, cron scheduler)');
+		Logger.info('Starting background services');
 		await mounted.start();
 
 		const shouldStartGatewayProcess =
@@ -82,40 +84,41 @@ export async function createFluxerServer(options: FluxerServerOptions = {}): Pro
 			await gatewayManager.start();
 		}
 
-		if (config.services.queue !== undefined) {
+		if (mounted.services.jsConnectionManager) {
 			const workerLogger = createComponentLogger('worker');
-
-			let queueProvider: DirectQueueProvider | undefined;
-			if (mounted.services.queue) {
-				workerLogger.info('Creating DirectQueueProvider for in-process communication');
-				queueProvider = new DirectQueueProvider({
-					engine: mounted.services.queue.engine,
-					cronScheduler: mounted.services.queue.cronScheduler,
-				});
-			}
 
 			workerLogger.info('Initializing worker dependencies');
 			const snowflakeService = getSnowflakeService();
 			await snowflakeService.initialize();
-			const workerDependencies = await initializeWorkerDependencies(snowflakeService);
+			const workerDeps = await initializeWorkerDependencies(snowflakeService);
+			setWorkerDependencies(workerDeps);
 
-			worker = createWorker({
-				queue: {
-					queueBaseUrl: config.internal.queue,
-					queueProvider,
-				},
-				runtime: {
-					concurrency: config.services.queue.concurrency ?? 1,
-				},
-				logger: workerLogger,
-				dependencies: workerDependencies,
+			const workerQueue = new JetStreamWorkerQueue(mounted.services.jsConnectionManager);
+			const concurrency = 5;
+
+			cronScheduler = new CronScheduler(workerQueue, workerLogger);
+			cronScheduler.upsert('processAssetDeletionQueue', 'processAssetDeletionQueue', {}, '0 */5 * * * *');
+			cronScheduler.upsert('processCloudflarePurgeQueue', 'processCloudflarePurgeQueue', {}, '0 */2 * * * *');
+			cronScheduler.upsert(
+				'processPendingBulkMessageDeletions',
+				'processPendingBulkMessageDeletions',
+				{},
+				'0 */10 * * * *',
+			);
+			cronScheduler.upsert('processInactivityDeletions', 'processInactivityDeletions', {}, '0 0 */6 * * *');
+			cronScheduler.upsert('expireAttachments', 'expireAttachments', {}, '0 0 */12 * * *');
+			cronScheduler.upsert('syncDiscoveryIndex', 'syncDiscoveryIndex', {}, '0 */15 * * * *');
+			cronScheduler.start();
+			workerLogger.info('Cron scheduler started');
+
+			workerRunner = new WorkerRunner({
+				tasks: workerTasks,
+				queue: workerQueue,
+				concurrency,
 			});
 
-			workerLogger.info({taskCount: Object.keys(workerTasks).length}, 'Registering worker tasks');
-			worker.registerTasks(workerTasks);
-
-			workerLogger.info({concurrency: config.services.queue.concurrency ?? 1}, 'Starting embedded worker');
-			await worker.start();
+			workerLogger.info({taskCount: Object.keys(workerTasks).length, concurrency}, 'Starting embedded worker');
+			await workerRunner.start();
 		}
 
 		const gatewayProxy = createGatewayProxy();
@@ -154,9 +157,15 @@ export async function createFluxerServer(options: FluxerServerOptions = {}): Pro
 			{
 				name: 'Worker',
 				fn: async () => {
-					if (worker !== null) {
+					if (cronScheduler !== null) {
+						Logger.info('Stopping cron scheduler');
+						cronScheduler.stop();
+						cronScheduler = null;
+					}
+					if (workerRunner !== null) {
 						Logger.info('Stopping embedded worker');
-						await worker.shutdown();
+						await workerRunner.stop();
+						workerRunner = null;
 					}
 				},
 			},

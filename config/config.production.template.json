@@ -16,7 +16,7 @@
 	"s3": {
 		"access_key_id": "YOUR_S3_ACCESS_KEY",
 		"secret_access_key": "YOUR_S3_SECRET_KEY",
-		"endpoint": "http://127.0.0.1:3900"
+		"endpoint": "http://127.0.0.1:8080/s3"
 	},
 	"services": {
 		"server": {
@@ -36,18 +36,14 @@
 		},
 		"gateway": {
 			"port": 8082,
-			"rpc_tcp_port": 8083,
-			"api_host": "http://127.0.0.1:8080/api",
 			"admin_reload_secret": "GENERATE_A_64_CHAR_HEX_SECRET",
 			"media_proxy_endpoint": "http://127.0.0.1:8080/media"
 		},
-		"queue": {
-			"secret": "GENERATE_A_64_CHAR_HEX_SECRET"
+		"nats": {
+			"core_url": "nats://nats:4222",
+			"jetstream_url": "nats://nats:4222",
+			"auth_token": "GENERATE_A_NATS_AUTH_TOKEN"
 		}
-	},
-	"gateway": {
-		"rpc_endpoint": "http://127.0.0.1:8082",
-		"rpc_secret": "GENERATE_A_64_CHAR_HEX_SECRET"
 	},
 	"auth": {
 		"sudo_mode_secret": "GENERATE_A_64_CHAR_HEX_SECRET",

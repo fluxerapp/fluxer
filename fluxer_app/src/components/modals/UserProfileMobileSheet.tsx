@@ -129,6 +129,10 @@ export const UserProfileMobileSheet: React.FC = observer(function UserProfileMob
 	);
 	const [profile, setProfile] = useState<ProfileRecord | null>(initialProfile);
 	const [isProfileLoading, setIsProfileLoading] = useState(() => !initialProfile);
+	const profileMatchesContext = profile?.userId === userId && (profile?.guildId ?? null) === (guildId ?? null);
+	const activeProfile = profileMatchesContext ? profile : initialProfile;
+	const isContextSwitching = Boolean(userId) && !activeProfile && !profileMatchesContext;
+	const shouldShowProfileLoading = (isProfileLoading && !activeProfile) || isContextSwitching;
 
 	useEffect(() => {
 		setProfile(initialProfile);
@@ -136,7 +140,7 @@ export const UserProfileMobileSheet: React.FC = observer(function UserProfileMob
 	}, [initialProfile]);
 
 	useEffect(() => {
-		if (!userId || profile) {
+		if (!userId || activeProfile) {
 			setIsProfileLoading(false);
 			return;
 		}
@@ -164,7 +168,7 @@ export const UserProfileMobileSheet: React.FC = observer(function UserProfileMob
 		return () => {
 			cancelled = true;
 		};
-	}, [userId, guildId, profile]);
+	}, [userId, guildId, activeProfile]);
 
 	useEffect(() => {
 		if (!guildId || !userId) {
@@ -190,22 +194,24 @@ export const UserProfileMobileSheet: React.FC = observer(function UserProfileMob
 		return null;
 	}
 
-	const effectiveProfile: ProfileRecord | null = profile ?? mockProfile ?? fallbackProfile;
+	const effectiveProfile: ProfileRecord | null = activeProfile ?? mockProfile ?? fallbackProfile;
 	const resolvedProfile: ProfileRecord = effectiveProfile ?? fallbackProfile!;
 	const userNote = userId ? UserNoteStore.getUserNote(userId) : null;
 
 	const handleClose = () => {
 		store.close();
 	};
+	const profileIdentityKey = `${displayUser.id}:${guildId ?? 'global'}`;
 
 	return (
 		<UserProfileMobileSheetContent
+			key={profileIdentityKey}
 			user={displayUser}
 			profile={resolvedProfile}
 			userNote={userNote}
 			guildId={guildId}
 			autoFocusNote={autoFocusNote}
-			isLoading={isProfileLoading}
+			isLoading={shouldShowProfileLoading}
 			onClose={handleClose}
 		/>
 	);

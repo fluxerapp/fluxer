@@ -20,7 +20,6 @@
 import {readFileSync} from 'node:fs';
 import {join} from 'node:path';
 import {createTestAccount, type TestAccount} from '@fluxer/api/src/auth/tests/AuthTestUtils';
-import {Config} from '@fluxer/api/src/Config';
 import {ensureSessionStarted} from '@fluxer/api/src/message/tests/MessageTestUtils';
 import type {ApiTestHarness} from '@fluxer/api/src/test/ApiTestHarness';
 import {createBuilder} from '@fluxer/api/src/test/TestRequestBuilder';
@@ -152,14 +151,5 @@ export async function setupTestGuildAndChannel(
 export async function createTestAccountForAttachmentTests(harness: ApiTestHarness): Promise<TestAccount> {
 	const account = await createTestAccount(harness);
 	await ensureSessionStarted(harness, account.token);
-	await createBuilder<{type: 'session'}>(harness, `Bearer ${Config.gateway.rpcSecret}`)
-		.post('/_rpc')
-		.body({
-			type: 'session',
-			token: account.token,
-			version: 1,
-			ip: '127.0.0.1',
-		})
-		.execute();
 	return account;
 }

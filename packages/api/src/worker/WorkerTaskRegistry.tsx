@@ -20,8 +20,8 @@
 import applicationProcessDeletion from '@fluxer/api/src/worker/tasks/ApplicationProcessDeletion';
 import batchGuildAuditLogMessageDeletes from '@fluxer/api/src/worker/tasks/BatchGuildAuditLogMessageDeletes';
 import bulkDeleteUserMessages from '@fluxer/api/src/worker/tasks/BulkDeleteUserMessages';
-import cleanupCsamEvidence from '@fluxer/api/src/worker/tasks/CleanupCsamEvidence';
-import csamScanConsumer from '@fluxer/api/src/worker/tasks/CsamScanConsumerWorker';
+// import cleanupCsamEvidence from '@fluxer/api/src/worker/tasks/CleanupCsamEvidence';
+// import csamScanConsumer from '@fluxer/api/src/worker/tasks/CsamScanConsumerWorker';
 import deleteUserMessagesInGuildByTime from '@fluxer/api/src/worker/tasks/DeleteUserMessagesInGuildByTime';
 import expireAttachments from '@fluxer/api/src/worker/tasks/ExpireAttachments';
 import extractEmbeds from '@fluxer/api/src/worker/tasks/ExtractEmbeds';
@@ -48,7 +48,7 @@ export const workerTasks: Record<string, WorkerTaskHandler> = {
 	applicationProcessDeletion,
 	batchGuildAuditLogMessageDeletes,
 	bulkDeleteUserMessages,
-	csamScanConsumer,
+	// csamScanConsumer,
 	deleteUserMessagesInGuildByTime,
 	expireAttachments,
 	extractEmbeds,
@@ -59,7 +59,7 @@ export const workerTasks: Record<string, WorkerTaskHandler> = {
 	indexGuildMembers,
 	messageShred,
 	processAssetDeletionQueue,
-	cleanupCsamEvidence,
+	// cleanupCsamEvidence,
 	processCloudflarePurgeQueue,
 	processInactivityDeletions,
 	processPendingBulkMessageDeletions,

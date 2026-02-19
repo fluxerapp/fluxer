@@ -193,6 +193,7 @@ channels_and_guilds.vanity_url_requires_feature: Для vanity URL потріб�
 channels_and_guilds.voice_channel_full: Голосовий канал заповнений.
 channels_and_guilds.voice_channels_cannot_be_above_text_channels: Голосові канали не можуть бути вище текстових у межах однієї категорії.
 connections.already_exists: З'єднання цього типу з цим ідентифікатором уже існує.
+connections.bluesky_oauth_authorization_failed: Не вдалося знайти цей акаунт Bluesky. Перевір його та спробуй ще раз.
 connections.bluesky_oauth_callback_failed: Ми не змогли завершити підключення Bluesky. Спробуй ще раз.
 connections.bluesky_oauth_not_enabled: На цьому сервері не ввімкнено підключення Bluesky.
 connections.bluesky_oauth_session_expired: Твоя сесія Bluesky була прострочена. Будь ласка, повторно підключи свій акаунт.

@@ -40,7 +40,6 @@ export const NotificationsInlineContent: React.FC = observer(() => {
 	const {afkTimeout} = UserSettingsStore;
 
 	const {
-		hasCustomNotificationSounds,
 		soundTypeLabels,
 		customSounds,
 		handleToggleAllSounds,
@@ -69,7 +68,6 @@ export const NotificationsInlineContent: React.FC = observer(() => {
 			<SettingsSection id="sounds" title={t`Sounds`}>
 				<Sounds
 					soundSettings={soundSettings}
-					hasCustomNotificationSounds={hasCustomNotificationSounds}
 					soundTypeLabels={soundTypeLabels}
 					customSounds={customSounds}
 					onToggleAllSounds={handleToggleAllSounds}

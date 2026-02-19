@@ -65,15 +65,13 @@ export class ChannelDataRepository extends IChannelDataRepository {
 		const channelId = data.channel_id;
 
 		const result = await executeVersionedUpdate<ChannelRow, 'channel_id' | 'soft_deleted'>(
-			async () => {
-				if (oldData !== undefined) return oldData;
-				return await fetchOne<ChannelRow>(FETCH_CHANNEL_BY_ID.bind({channel_id: channelId, soft_deleted: false}));
-			},
+			async () => fetchOne<ChannelRow>(FETCH_CHANNEL_BY_ID.bind({channel_id: channelId, soft_deleted: false})),
 			(current) => ({
 				pk: {channel_id: channelId, soft_deleted: false},
 				patch: buildPatchFromData(data, current, CHANNEL_COLUMNS, ['channel_id', 'soft_deleted']),
 			}),
 			Channels,
+			{initialData: oldData},
 		);
 
 		if (data.guild_id) {

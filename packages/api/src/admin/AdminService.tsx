@@ -99,11 +99,14 @@ import type {
 	ChangeEmailRequest,
 	ChangeUsernameRequest,
 	ClearUserFieldsRequest,
+	DeleteWebAuthnCredentialRequest,
 	DisableForSuspiciousActivityRequest,
 	DisableMfaRequest,
 	ListUserChangeLogRequest,
 	ListUserDmChannelsRequest,
+	ListWebAuthnCredentialsRequest,
 	LookupUserRequest,
+	ResendVerificationEmailRequest,
 	SendPasswordResetRequest,
 	SetUserAclsRequest,
 	SetUserBotStatusRequest,
@@ -376,6 +379,14 @@ export class AdminService {
 		return this.userService.verifyUserEmail(data, adminUserId, auditLogReason);
 	}
 
+	async resendVerificationEmail(
+		data: ResendVerificationEmailRequest,
+		adminUserId: UserID,
+		auditLogReason: string | null,
+	) {
+		return this.userService.resendVerificationEmail(data, adminUserId, auditLogReason);
+	}
+
 	async sendPasswordReset(data: SendPasswordResetRequest, adminUserId: UserID, auditLogReason: string | null) {
 		return this.userService.sendPasswordReset(data, adminUserId, auditLogReason);
 	}
@@ -570,6 +581,22 @@ export class AdminService {
 
 	async listUserSessions(userId: bigint, adminUserId: UserID, auditLogReason: string | null) {
 		return this.userService.listUserSessions(userId, adminUserId, auditLogReason);
+	}
+
+	async listWebAuthnCredentials(
+		data: ListWebAuthnCredentialsRequest,
+		adminUserId: UserID,
+		auditLogReason: string | null,
+	) {
+		return this.userService.listWebAuthnCredentials(data, adminUserId, auditLogReason);
+	}
+
+	async deleteWebAuthnCredential(
+		data: DeleteWebAuthnCredentialRequest,
+		adminUserId: UserID,
+		auditLogReason: string | null,
+	) {
+		return this.userService.deleteWebAuthnCredential(data, adminUserId, auditLogReason);
 	}
 
 	async listUserDmChannels(data: ListUserDmChannelsRequest) {
@@ -781,7 +808,8 @@ export class AdminService {
 				| 'audit_logs'
 				| 'channel_messages'
 				| 'guild_members'
-				| 'favorite_memes';
+				| 'favorite_memes'
+				| 'discovery';
 			guild_id?: bigint;
 			user_id?: bigint;
 		},

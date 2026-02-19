@@ -18,6 +18,7 @@
 -module(guild_client).
 
 -export([voice_state_update/3]).
+-export([voice_state_update/4]).
 
 -export_type([
     voice_state_update_success/0,
@@ -54,15 +55,38 @@
 -spec voice_state_update(pid(), map(), timeout()) -> voice_state_update_result().
 voice_state_update(GuildPid, Request, Timeout) ->
     ensure_table(),
-    case acquire_slot(GuildPid) of
+    TargetPid = GuildPid,
+    case acquire_slot(TargetPid) of
         ok ->
             try
-                execute_with_circuit_breaker(GuildPid, Request, Timeout)
+                execute_with_circuit_breaker(TargetPid, Request, Timeout)
             after
-                release_slot(GuildPid)
+                release_slot(TargetPid)
             end;
         {error, Reason} ->
             {error, Reason}
+    end.
+
+-spec voice_state_update(pid(), integer(), map(), timeout()) -> voice_state_update_result().
+voice_state_update(GuildPid, GuildId, Request, Timeout) ->
+    ensure_table(),
+    TargetPid = resolve_voice_pid(GuildId, GuildPid),
+    case acquire_slot(TargetPid) of
+        ok ->
+            try
+                execute_with_circuit_breaker(TargetPid, Request, Timeout)
+            after
+                release_slot(TargetPid)
+            end;
+        {error, Reason} ->
+            {error, Reason}
+    end.
+
+-spec resolve_voice_pid(integer(), pid()) -> pid().
+resolve_voice_pid(GuildId, FallbackGuildPid) ->
+    case guild_voice_server:lookup(GuildId) of
+        {ok, VoicePid} -> VoicePid;
+        {error, not_found} -> FallbackGuildPid
     end.
 
 -spec execute_with_circuit_breaker(pid(), map(), timeout()) -> voice_state_update_result().
@@ -203,23 +227,13 @@ safe_lookup(GuildPid) ->
 
 -spec ensure_table() -> ok.
 ensure_table() ->
-    case ets:whereis(?CIRCUIT_BREAKER_TABLE) of
-        undefined ->
-            try
-                ets:new(?CIRCUIT_BREAKER_TABLE, [
-                    named_table,
-                    public,
-                    set,
-                    {read_concurrency, true},
-                    {write_concurrency, true}
-                ]),
-                ok
-            catch
-                error:badarg -> ok
-            end;
-        _ ->
-            ok
-    end.
+    guild_ets_utils:ensure_table(?CIRCUIT_BREAKER_TABLE, [
+        named_table,
+        public,
+        set,
+        {read_concurrency, true},
+        {write_concurrency, true}
+    ]).
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").

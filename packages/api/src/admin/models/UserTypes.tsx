@@ -19,8 +19,9 @@
 
 import dns from 'node:dns';
 import type {User} from '@fluxer/api/src/models/User';
-import {formatGeoipLocation, lookupGeoip} from '@fluxer/api/src/utils/IpUtils';
+import {lookupGeoip} from '@fluxer/api/src/utils/IpUtils';
 import type {ICacheService} from '@fluxer/cache/src/ICacheService';
+import {formatGeoipLocation} from '@fluxer/geoip/src/GeoipLookup';
 import type {UserAdminResponse} from '@fluxer/schema/src/domains/admin/AdminUserSchemas';
 import {seconds} from 'itty-time';
 

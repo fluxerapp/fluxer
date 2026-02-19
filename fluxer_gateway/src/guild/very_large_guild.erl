@@ -265,8 +265,9 @@ handle_cast({very_large_guild_member_list_deliver, DeliveriesByShard}, State) wh
         DeliveriesByShard
     ),
     {noreply, State};
-handle_cast({dispatch, _Event, _EventData} = Msg, State) ->
-    broadcast_cast(Msg, State),
+handle_cast({dispatch, #{event := Event, data := EventData} = Request}, State) ->
+    broadcast_cast({dispatch, Request}, State),
+    maybe_trigger_push(Event, EventData, State),
     {noreply, State};
 handle_cast(_Msg, State) ->
     {noreply, State}.
@@ -363,13 +364,6 @@ terminate(_Reason, State) ->
 code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
 
--spec strip_members(map()) -> map().
-strip_members(Data) when is_map(Data) ->
-    Data1 = maps:remove(<<"members">>, Data),
-    maps:remove(<<"member_role_index">>, Data1);
-strip_members(Data) ->
-    Data.
-
 -spec determine_shard_count(map()) -> pos_integer().
 determine_shard_count(GuildState) ->
     Override = maps:get(very_large_guild_shard_count, GuildState, undefined),
@@ -392,32 +386,9 @@ determine_shard_count(GuildState) ->
 
 -spec start_shards(guild_id(), map(), pos_integer()) -> {#{shard_index() => shard_entry()}, ok}.
 start_shards(GuildId, Data, ShardCount) ->
-    MemberCount = guild_data_index:member_count(Data),
     Shards = lists:foldl(
         fun(Index, Acc) ->
-            DisableCache = Index =/= 0,
-            ShardData =
-                case DisableCache of
-                    true -> strip_members(Data);
-                    false -> Data
-                end,
-            ShardState0 = #{
-                id => GuildId,
-                data => ShardData,
-                sessions => #{},
-                member_count => MemberCount,
-                disable_push_notifications => true,
-                disable_member_list_updates => DisableCache,
-                disable_auto_stop_on_empty => true,
-                very_large_guild_coordinator_pid => self(),
-                very_large_guild_shard_count => ShardCount,
-                very_large_guild_shard_index => Index
-            },
-            ShardState =
-                case DisableCache of
-                    true -> maps:put(disable_permission_cache_updates, true, ShardState0);
-                    false -> ShardState0
-                end,
+            ShardState = guild_common:build_shard_state(GuildId, Data, ShardCount, Index),
             case guild:start_link(ShardState) of
                 {ok, Pid} ->
                     MRef = monitor(process, Pid),
@@ -439,37 +410,15 @@ restart_shard(ShardIndex, State) ->
     Data =
         case maps:get(0, Shards0, undefined) of
             #{pid := Pid0} ->
-                case safe_call(Pid0, {get_push_base_state}, 5000) of
+                case guild_common:safe_call(Pid0, {get_push_base_state}, 5000) of
                     #{data := D} -> D;
                     _ -> Fallback
                 end;
             _ ->
                 Fallback
         end,
-    DisableCache = ShardIndex =/= 0,
-    ShardData =
-        case DisableCache of
-            true -> strip_members(Data);
-            false -> Data
-        end,
-    MemberCount = guild_data_index:member_count(Data),
-    ShardState0 = #{
-        id => GuildId,
-        data => ShardData,
-        sessions => #{},
-        member_count => MemberCount,
-        disable_push_notifications => true,
-        disable_member_list_updates => DisableCache,
-        disable_auto_stop_on_empty => true,
-        very_large_guild_coordinator_pid => self(),
-        very_large_guild_shard_count => maps:get(shard_count, State, 1),
-        very_large_guild_shard_index => ShardIndex
-    },
-    ShardState =
-        case DisableCache of
-            true -> maps:put(disable_permission_cache_updates, true, ShardState0);
-            false -> ShardState0
-        end,
+    ShardCount = maps:get(shard_count, State, 1),
+    ShardState = guild_common:build_shard_state(GuildId, Data, ShardCount, ShardIndex),
     case guild:start_link(ShardState) of
         {ok, NewPid} ->
             MRef = monitor(process, NewPid),
@@ -586,9 +535,9 @@ reload_shards(NewData, State) ->
             Payload =
                 case Index of
                     0 -> NewData;
-                    _ -> strip_members(NewData)
+                    _ -> guild_common:strip_members(NewData)
                 end,
-            _ = safe_call(Pid, {reload, Payload}, 20000),
+            _ = guild_common:safe_call(Pid, {reload, Payload}, 20000),
             ok
         end,
         Shards
@@ -635,15 +584,8 @@ do_prime_connected_members(State) ->
     ok.
 
 -spec safe_call(pid(), term(), timeout()) -> term().
-safe_call(Pid, Msg, Timeout) when is_pid(Pid) ->
-    try gen_server:call(Pid, Msg, Timeout) of
-        Reply -> Reply
-    catch
-        exit:{timeout, _} -> {error, timeout};
-        exit:{noproc, _} -> {error, noproc};
-        exit:{normal, _} -> {error, noproc};
-        _:Reason -> {error, Reason}
-    end.
+safe_call(Pid, Msg, Timeout) ->
+    guild_common:safe_call(Pid, Msg, Timeout).
 
 -spec safe_call_to_session_shard(session_id(), term(), timeout(), state()) -> term().
 safe_call_to_session_shard(SessionId, Msg, Timeout, State) ->
@@ -764,41 +706,7 @@ maybe_notify_member_list_virtual_access_cleanup(UserId, State) ->
 
 -spec merge_cluster_state(map(), map()) -> map().
 merge_cluster_state(Acc, Frag) ->
-    SessionsAcc = maps:get(sessions, Acc, #{}),
-    SessionsFrag = maps:get(sessions, Frag, #{}),
-    VoiceAcc = maps:get(voice_states, Acc, #{}),
-    VoiceFrag = maps:get(voice_states, Frag, #{}),
-    VAAcc = maps:get(virtual_channel_access, Acc, #{}),
-    VAFrag = maps:get(virtual_channel_access, Frag, #{}),
-    PendingAcc = maps:get(virtual_channel_access_pending, Acc, #{}),
-    PendingFrag = maps:get(virtual_channel_access_pending, Frag, #{}),
-    PreserveAcc = maps:get(virtual_channel_access_preserve, Acc, #{}),
-    PreserveFrag = maps:get(virtual_channel_access_preserve, Frag, #{}),
-    MoveAcc = maps:get(virtual_channel_access_move_pending, Acc, #{}),
-    MoveFrag = maps:get(virtual_channel_access_move_pending, Frag, #{}),
-    Acc#{
-        sessions => maps:merge(SessionsAcc, SessionsFrag),
-        voice_states => maps:merge(VoiceAcc, VoiceFrag),
-        virtual_channel_access => merge_user_set_maps(VAAcc, VAFrag),
-        virtual_channel_access_pending => merge_user_set_maps(PendingAcc, PendingFrag),
-        virtual_channel_access_preserve => merge_user_set_maps(PreserveAcc, PreserveFrag),
-        virtual_channel_access_move_pending => merge_user_set_maps(MoveAcc, MoveFrag)
-    }.
-
--spec merge_user_set_maps(map(), map()) -> map().
-merge_user_set_maps(A, B) ->
-    maps:fold(
-        fun(UserId, SetB, Acc) ->
-            case maps:get(UserId, Acc, undefined) of
-                undefined ->
-                    maps:put(UserId, SetB, Acc);
-                SetA ->
-                    maps:put(UserId, sets:union(SetA, SetB), Acc)
-            end
-        end,
-        A,
-        B
-    ).
+    guild_common:merge_cluster_state(Acc, Frag).
 
 -spec relay_to_other_shards(shard_index(), term(), state()) -> ok.
 relay_to_other_shards(SourceIndex, Msg, State) ->
@@ -1382,13 +1290,13 @@ strip_members_removes_members_and_role_index_test() ->
         <<"channels">> => [#{<<"id">> => <<"10">>}],
         <<"roles">> => [#{<<"id">> => <<"role1">>}]
     },
-    Stripped = strip_members(Data),
+    Stripped = guild_common:strip_members(Data),
     ?assertEqual(false, maps:is_key(<<"members">>, Stripped)),
     ?assertEqual(false, maps:is_key(<<"member_role_index">>, Stripped)),
     ?assertEqual([#{<<"id">> => <<"10">>}], maps:get(<<"channels">>, Stripped)),
     ?assertEqual([#{<<"id">> => <<"role1">>}], maps:get(<<"roles">>, Stripped)),
-    ?assertEqual(#{}, strip_members(#{})),
-    ?assertEqual(not_a_map, strip_members(not_a_map)),
+    ?assertEqual(#{}, guild_common:strip_members(#{})),
+    ?assertEqual(not_a_map, guild_common:strip_members(not_a_map)),
     ok.
 
 coordinator_stops_on_last_disconnect_test() ->
@@ -1421,7 +1329,7 @@ merge_user_set_maps_test() ->
     SetB = sets:from_list([2, 3]),
     MapA = #{10 => SetA},
     MapB = #{10 => SetB, 20 => SetB},
-    Merged = merge_user_set_maps(MapA, MapB),
+    Merged = guild_common:merge_user_set_maps(MapA, MapB),
     ?assert(maps:is_key(10, Merged)),
     ?assert(maps:is_key(20, Merged)),
     MergedSet10 = maps:get(10, Merged),
@@ -1430,7 +1338,7 @@ merge_user_set_maps_test() ->
     ?assert(sets:is_element(3, MergedSet10)),
     ?assertEqual(3, sets:size(MergedSet10)),
     ?assertEqual(SetB, maps:get(20, Merged)),
-    EmptyMerge = merge_user_set_maps(#{}, #{}),
+    EmptyMerge = guild_common:merge_user_set_maps(#{}, #{}),
     ?assertEqual(#{}, EmptyMerge),
     ok.
 

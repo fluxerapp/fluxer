@@ -50,6 +50,7 @@ export async function createAPIApp(options: CreateAPIAppOptions): Promise<APIApp
 	configureMiddleware(routes, {
 		logger,
 		nodeEnv: config.nodeEnv,
+		corsOrigins: [config.endpoints.webApp, config.endpoints.marketing],
 		setSentryUser,
 		isTelemetryActive,
 	});

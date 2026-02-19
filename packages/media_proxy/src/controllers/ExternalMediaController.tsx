@@ -21,6 +21,7 @@ import type {HttpClient} from '@fluxer/http_client/src/HttpClientTypes';
 import type {LoggerInterface} from '@fluxer/logger/src/LoggerInterface';
 import {toBodyData} from '@fluxer/media_proxy/src/lib/BinaryUtils';
 import {parseRange, setHeaders} from '@fluxer/media_proxy/src/lib/HttpUtils';
+import {ImageProcessingError} from '@fluxer/media_proxy/src/lib/ImageProcessing';
 import type {InMemoryCoalescer} from '@fluxer/media_proxy/src/lib/InMemoryCoalescer';
 import type {MediaTransformService} from '@fluxer/media_proxy/src/lib/MediaTransformService';
 import type {MediaValidator} from '@fluxer/media_proxy/src/lib/MediaValidation';
@@ -141,14 +142,22 @@ export function createExternalMediaHandler(deps: ExternalMediaControllerDeps) {
 
 					if (mediaType === 'image') {
 						tracing?.addSpanEvent('image.process.start', {mimeType});
-						return transformImage(buffer, {
-							width,
-							height,
-							format: normalizedFormat || undefined,
-							quality,
-							animated,
-							fallbackContentType: mimeType,
-						});
+						try {
+							return await transformImage(buffer, {
+								width,
+								height,
+								format: normalizedFormat || undefined,
+								quality,
+								animated,
+								fallbackContentType: mimeType,
+							});
+						} catch (error) {
+							if (error instanceof ImageProcessingError) {
+								logger.warn({error}, 'Image transformation failed, serving original');
+								return {data: buffer, contentType: mimeType};
+							}
+							throw error;
+						}
 					}
 
 					if (mediaType === 'video' && format) {
@@ -164,7 +173,11 @@ export function createExternalMediaHandler(deps: ExternalMediaControllerDeps) {
 					return {data: buffer, contentType: mimeType};
 				} catch (error) {
 					if (error instanceof HTTPException) throw error;
-					logger.error({error}, 'Failed to process external media');
+					if (error instanceof Error && 'isExpected' in error) {
+						logger.warn({error}, 'Failed to process external media');
+					} else {
+						logger.error({error}, 'Failed to process external media');
+					}
 					throw new HTTPException(400, {message: 'Failed to process media'});
 				}
 			};

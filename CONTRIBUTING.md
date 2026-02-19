@@ -115,28 +115,6 @@ Don't block on formatting or linting before opening a PR. CI enforces required c
 
 Open the PR when it's ready for review, then iterate based on CI and feedback.
 
-## CLA (required)
-
-We require a Contributor License Agreement (CLA) for this repository.
-
-Why:
-
-- The project is available under AGPLv3.
-- We also offer a commercial license for organisations that can't (or don't want to) comply with AGPL obligations.
-- To keep both options possible, we need permission to include contributions in both distributions.
-
-What it means for you:
-
-- You keep ownership of your contribution.
-- You can keep using your contribution in your own work.
-- You grant us the rights needed to distribute your contribution as part of the project, including under a commercial license.
-- We may refactor or remove code over time and aren't required to include every contribution. However, any distributed version that includes your contribution remains properly licensed under the project licence(s) that applied when you contributed.
-
-How to sign:
-
-- On your first PR, a bot will comment with a CLA link.
-- Click it, sign with your GitHub account, and you're done.
-
 ## PR checklist
 
 Before requesting review:
@@ -147,7 +125,6 @@ Before requesting review:
 - [ ] You understand every change in the PR and can explain it during review
 - [ ] Tests added or updated where it makes sense (especially backend changes)
 - [ ] CI is green (or you're actively addressing failures)
-- [ ] CLA signed (the bot will guide you)
 
 Optional but helpful:
 

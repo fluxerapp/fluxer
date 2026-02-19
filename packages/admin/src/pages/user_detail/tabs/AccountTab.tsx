@@ -32,6 +32,10 @@ import type {
 	UserAdminResponse,
 	UserSessionResponse,
 } from '@fluxer/schema/src/domains/admin/AdminUserSchemas';
+import type {
+	WebAuthnCredentialListResponse,
+	WebAuthnCredentialResponse,
+} from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import {Button} from '@fluxer/ui/src/components/Button';
 import {Card} from '@fluxer/ui/src/components/Card';
 import {CsrfInput} from '@fluxer/ui/src/components/CsrfInput';
@@ -43,10 +47,18 @@ interface AccountTabProps {
 	user: UserAdminResponse;
 	userId: string;
 	sessionsResult: {ok: true; data: ListUserSessionsResponse} | {ok: false; error: ApiError} | null;
+	webAuthnCredentials: WebAuthnCredentialListResponse | null;
 	csrfToken: string;
 }
 
-export function AccountTab({config: _config, user, userId: _userId, sessionsResult, csrfToken}: AccountTabProps) {
+export function AccountTab({
+	config: _config,
+	user,
+	userId: _userId,
+	sessionsResult,
+	webAuthnCredentials,
+	csrfToken,
+}: AccountTabProps) {
 	return (
 		<VStack gap={6}>
 			<Card padding="md">
@@ -266,9 +278,81 @@ export function AccountTab({config: _config, user, userId: _userId, sessionsResu
 					</div>
 				</VStack>
 			</Card>
+
+			{webAuthnCredentials && webAuthnCredentials.length > 0 && (
+				<Card padding="md">
+					<VStack gap={4}>
+						<Heading level={2} size="base">
+							WebAuthn Credentials
+						</Heading>
+						<div class="overflow-x-auto">
+							<table class="w-full text-sm">
+								<thead>
+									<tr class="border-neutral-200 border-b text-left">
+										<th class="pb-2 font-medium text-neutral-600">Name</th>
+										<th class="pb-2 font-medium text-neutral-600">Created</th>
+										<th class="pb-2 font-medium text-neutral-600">Last Used</th>
+										<th class="pb-2 font-medium text-neutral-600" />
+									</tr>
+								</thead>
+								<tbody>
+									{webAuthnCredentials.map((credential) => (
+										<WebAuthnCredentialRow credential={credential} csrfToken={csrfToken} />
+									))}
+								</tbody>
+							</table>
+						</div>
+					</VStack>
+				</Card>
+			)}
 		</VStack>
 	);
 }
+
+const WebAuthnCredentialRow: FC<{credential: WebAuthnCredentialResponse; csrfToken: string}> = ({
+	credential,
+	csrfToken,
+}) => {
+	function formatTimestamp(value: string): string {
+		const [datePart, timePartRaw] = value.split('T');
+		if (!datePart || !timePartRaw) return value;
+		const timePart = timePartRaw.replace('Z', '').split('.')[0] ?? timePartRaw;
+		return `${datePart} ${timePart}`;
+	}
+
+	return (
+		<tr class="border-neutral-100 border-b">
+			<td class="py-2 pr-4">
+				<Text size="sm" class="text-neutral-900">
+					{credential.name}
+				</Text>
+			</td>
+			<td class="py-2 pr-4">
+				<Text size="sm" class="text-neutral-900">
+					{formatTimestamp(credential.created_at)}
+				</Text>
+			</td>
+			<td class="py-2 pr-4">
+				<Text size="sm" class="text-neutral-900">
+					{credential.last_used_at ? formatTimestamp(credential.last_used_at) : 'Never'}
+				</Text>
+			</td>
+			<td class="py-2">
+				<form
+					method="post"
+					action="?action=delete_webauthn_credential&tab=account"
+					onsubmit={`return confirm('Are you sure you want to delete the WebAuthn credential "${credential.name}"?')`}
+				>
+					<CsrfInput token={csrfToken} />
+					<input type="hidden" name="credential_id" value={credential.id} />
+					<Button type="submit" variant="primary" size="small">
+						Delete
+					</Button>
+				</form>
+			</td>
+		</tr>
+	);
+};
 
 const SessionCard: FC<{session: UserSessionResponse}> = ({session}) => {
 	function formatSessionTimestamp(value: string): string {

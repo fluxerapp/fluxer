@@ -40,7 +40,6 @@
 	border-radius: 6px;
 	padding: 4px;
 	background: color-mix(in srgb, var(--background-secondary) 80%, transparent);
-	backdrop-filter: blur(10px) saturate(1.1);
 }
 
 .badgeMobile {

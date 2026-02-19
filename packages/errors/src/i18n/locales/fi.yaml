@@ -204,6 +204,7 @@ content_and_safety.ncmec_already_submitted: Tämä sisältö on jo ilmoitettu NC
 content_and_safety.ncmec_submission_failed: Ilmoitusta ei voitu lähettää NCMEC:lle. Yritä myöhemmin uudelleen.
 content_and_safety.nsfw_age_restricted: NSFW-sisältö on ikärajoitettua.
 connections.already_exists: Tämän tyyppinen yhteys tällä tunnisteella on jo olemassa.
+connections.bluesky_oauth_authorization_failed: Emme pystyneet selvittämään kyseistä Bluesky-tunnistetta. Tarkista se ja yritä uudelleen.
 connections.bluesky_oauth_callback_failed: Emme voineet suorittaa Bluesky-yhteyden muodostamista loppuun. Yritä uudelleen.
 connections.bluesky_oauth_not_enabled: Bluesky-yhteyksiä ei ole otettu käyttöön tällä palvelimella.
 connections.bluesky_oauth_session_expired: Bluesky-istuntosi on vanhentunut. Muodosta tilisi uudelleen.

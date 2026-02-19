@@ -50,7 +50,7 @@ admin_and_system.test_harness_forbidden: Test harness non consentito.
 admin_and_system.unknown_suspicious_flag: Suspicious flag sconosciuta.
 admin_and_system.update_failed: Aggiornamento non riuscito.
 admin_and_system.user_must_be_bot_for_system_user: Per essere marcato come utente di sistema, deve essere un bot.
-attachments_and_uploads.attachment_fields_required: '`attachment_id`, `channel_id`, `message_id`, and `expires_at` are required.'
+attachments_and_uploads.attachment_fields_required: '`attachment_id`, `channel_id`, `message_id` e `expires_at` sono obbligatori.'
 attachments_and_uploads.attachment_ids_must_be_valid_integers: '`attachment_id`, `channel_id`, and `message_id` must be valid integers.'
 attachments_and_uploads.cannot_edit_attachment_metadata: Gli utenti con MANAGE_MESSAGES possono modificare solo le descrizioni degli allegati, non altri metadati.
 attachments_and_uploads.attachment_metadata_without_files: I metadata dell'allegato includono un nome file, ma non è stato caricato nessun file.
@@ -204,6 +204,7 @@ content_and_safety.ncmec_already_submitted: Questo contenuto è già stato invia
 content_and_safety.ncmec_submission_failed: Non siamo riusciti a inviare la segnalazione a NCMEC. Riprova più tardi.
 content_and_safety.nsfw_age_restricted: I contenuti NSFW sono riservati ai maggiorenni.
 connections.already_exists: Una connessione di questo tipo con questo identificatore esiste già.
+connections.bluesky_oauth_authorization_failed: Non siamo riusciti a trovare quel nome utente Bluesky. Controllalo e riprova.
 connections.bluesky_oauth_callback_failed: Non siamo riusciti a completare la connessione a Bluesky. Riprova.
 connections.bluesky_oauth_not_enabled: Le connessioni a Bluesky non sono abilitate su questo server.
 connections.bluesky_oauth_session_expired: La tua sessione Bluesky è scaduta. Ricollega il tuo account.

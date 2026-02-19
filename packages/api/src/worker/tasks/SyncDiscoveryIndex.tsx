@@ -17,9 +17,7 @@
  * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import type {GuildID} from '@fluxer/api/src/BrandedTypes';
 import {GuildDiscoveryRepository} from '@fluxer/api/src/guild/repositories/GuildDiscoveryRepository';
-import {Logger} from '@fluxer/api/src/Logger';
 import {getGuildSearchService} from '@fluxer/api/src/SearchFactory';
 import {getWorkerDependencies} from '@fluxer/api/src/worker/WorkerContext';
 import {DiscoveryApplicationStatus} from '@fluxer/constants/src/DiscoveryConstants';
@@ -36,7 +34,7 @@ const syncDiscoveryIndex: WorkerTaskHandler = async (_payload, helpers) => {
 		return;
 	}
 
-	const {guildRepository, gatewayService} = getWorkerDependencies();
+	const {guildRepository} = getWorkerDependencies();
 	const discoveryRepository = new GuildDiscoveryRepository();
 
 	const approvedRows = await discoveryRepository.listByStatus(DiscoveryApplicationStatus.APPROVED, 1000);
@@ -46,13 +44,6 @@ const syncDiscoveryIndex: WorkerTaskHandler = async (_payload, helpers) => {
 	}
 
 	const guildIds = approvedRows.map((row) => row.guild_id);
-	let onlineCounts = new Map<GuildID, number>();
-
-	try {
-		onlineCounts = await gatewayService.getDiscoveryOnlineCounts(guildIds);
-	} catch (error) {
-		Logger.warn({err: error}, 'Failed to fetch online counts from gateway, proceeding with zero counts');
-	}
 
 	let synced = 0;
 	for (let i = 0; i < guildIds.length; i += BATCH_SIZE) {
@@ -68,7 +59,6 @@ const syncDiscoveryIndex: WorkerTaskHandler = async (_payload, helpers) => {
 			await guildSearchService.updateGuild(guild, {
 				description: discoveryRow.description,
 				categoryId: discoveryRow.category_type,
-				onlineCount: onlineCounts.get(guildId) ?? 0,
 			});
 
 			synced++;

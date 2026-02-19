@@ -44,6 +44,7 @@ import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidat
 import {MaxFavoriteMemesError} from '@fluxer/errors/src/domains/core/MaxFavoriteMemesError';
 import {MediaMetadataError} from '@fluxer/errors/src/domains/core/MediaMetadataError';
 import {UnknownFavoriteMemeError} from '@fluxer/errors/src/domains/core/UnknownFavoriteMemeError';
+import {normalizeFilename} from '@fluxer/schema/src/primitives/FileValidators';
 import mime from 'mime';
 
 export class FavoriteMemeService {
@@ -431,8 +432,10 @@ export class FavoriteMemeService {
 		const extension = mime.getExtension(contentType) || 'bin';
 		try {
 			const urlPath = new URL(url).pathname;
-			const urlFilename = urlPath.split('/').pop() || 'media';
-			return urlFilename.includes('.') ? urlFilename : `${urlFilename}.${extension}`;
+			const rawSegment = urlPath.split('/').pop() || 'media';
+			const decoded = decodeURIComponent(rawSegment);
+			const base = decoded.includes('.') ? decoded : `${decoded}.${extension}`;
+			return normalizeFilename(base) || `media.${extension}`;
 		} catch {
 			return `media.${extension}`;
 		}
@@ -675,8 +678,12 @@ export class FavoriteMemeService {
 	private extractFilenameFromUrl(url: string): string | null {
 		try {
 			const urlObj = new URL(url);
-			const parts = urlObj.pathname.split('/');
-			return parts[parts.length - 1] || null;
+			const rawSegment = urlObj.pathname.split('/').pop();
+			if (!rawSegment) {
+				return null;
+			}
+			const decoded = decodeURIComponent(rawSegment);
+			return normalizeFilename(decoded) || null;
 		} catch {
 			return null;
 		}

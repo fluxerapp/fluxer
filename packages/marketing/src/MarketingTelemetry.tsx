@@ -58,8 +58,8 @@ export async function getMarketingRequestInfo(c: Context, config: MarketingConfi
 	const platform = detectPlatform(userAgent);
 	const architecture = detectArchitecture(userAgent, platform);
 	const countryCode = await getCountryCode(c.req.raw, {
-		apiHost: config.apiRpcHost,
-		rpcSecret: config.gatewayRpcSecret,
+		geoipDbPath: config.geoipDbPath,
+		trustCfConnectingIp: config.trustCfConnectingIp,
 	});
 	const referrerDomain = extractReferrerDomain(c.req.header('referer') ?? c.req.header('referrer'));
 

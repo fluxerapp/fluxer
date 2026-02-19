@@ -47,18 +47,21 @@ export function Navigation(props: NavigationProps): JSX.Element {
 	return (
 		<nav id="navbar" class="fixed top-0 right-0 left-0 z-40">
 			<input type="checkbox" id="nav-toggle" class="peer hidden" />
-			<div class="px-6 py-4 sm:px-8 md:px-12 md:py-5 lg:px-16 xl:px-20">
+			<div class="px-6 py-4 sm:px-8 md:px-12 md:py-5 lg:px-8 xl:px-16">
 				<div class="mx-auto max-w-7xl rounded-2xl border border-gray-200/60 bg-white/95 px-3 py-2 shadow-lg backdrop-blur-lg md:px-5 md:py-2.5">
 					<div class="flex items-center justify-between">
-						<div class="flex items-center gap-6 xl:gap-8">
+						<div class="flex items-center gap-4 xl:gap-6">
 							<a
 								href={href(ctx, '/')}
-								class="relative z-10 flex items-center transition-opacity hover:opacity-80"
+								class="relative z-10 flex shrink-0 items-center transition-opacity hover:opacity-80"
 								aria-label={ctx.i18n.getMessage('navigation.go_home', ctx.locale)}
 							>
 								<FluxerLogoWordmarkIcon class="h-8 text-[#4641D9] md:h-9" />
+								<span class="absolute right-0 -bottom-1.5 whitespace-nowrap rounded-full border border-white bg-[#4641D9] px-1.5 py-0.5 font-bold text-[8px] text-white leading-none">
+									{ctx.i18n.getMessage('beta_and_access.public_beta', ctx.locale)}
+								</span>
 							</a>
-							<div class="marketing-nav-links hidden items-center gap-6 lg:flex xl:gap-8">
+							<div class="marketing-nav-links hidden items-center gap-4 lg:flex xl:gap-6">
 								<a
 									href={href(ctx, '/download')}
 									class="body-lg font-semibold text-gray-900/90 transition-colors hover:text-gray-900"
@@ -97,7 +100,7 @@ export function Navigation(props: NavigationProps): JSX.Element {
 								</a>
 							</div>
 						</div>
-						<div class="flex items-center gap-3">
+						<div class="flex items-center gap-1 xl:gap-2">
 							<a
 								href="https://bsky.app/profile/fluxer.app"
 								class="hidden items-center rounded-lg p-2 text-[#4641D9] transition-colors hover:bg-gray-100 hover:text-[#3d38c7] lg:flex"
@@ -118,7 +121,7 @@ export function Navigation(props: NavigationProps): JSX.Element {
 							</a>
 							<a
 								href="https://blog.fluxer.app/rss/"
-								class="marketing-nav-rss hidden items-center rounded-lg p-2 text-[#4641D9] transition-colors hover:bg-gray-100 hover:text-[#3d38c7] lg:flex"
+								class="marketing-nav-rss hidden items-center rounded-lg p-2 text-[#4641D9] transition-colors hover:bg-gray-100 hover:text-[#3d38c7] xl:flex"
 								target="_blank"
 								rel="noopener noreferrer"
 								aria-label={ctx.i18n.getMessage('social_and_feeds.rss.label', ctx.locale)}
@@ -132,7 +135,7 @@ export function Navigation(props: NavigationProps): JSX.Element {
 							<MarketingButton
 								href={`${ctx.appEndpoint}/channels/@me`}
 								size="medium"
-								class="hidden whitespace-nowrap lg:inline-flex"
+								class="ml-2 hidden whitespace-nowrap lg:inline-flex lg:px-4 lg:py-2 lg:text-sm xl:px-6 xl:py-3 xl:text-base"
 							>
 								{ctx.i18n.getMessage('app.open.open_fluxer', ctx.locale)}
 							</MarketingButton>

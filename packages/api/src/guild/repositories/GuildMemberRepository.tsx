@@ -40,6 +40,10 @@ const FETCH_GUILD_MEMBERS_BY_GUILD_ID_QUERY = GuildMembers.selectCql({
 	where: GuildMembers.where.eq('guild_id'),
 });
 
+const COUNT_GUILD_MEMBERS_BY_GUILD_ID_QUERY = GuildMembers.selectCountCql({
+	where: GuildMembers.where.eq('guild_id'),
+});
+
 function createPaginatedFirstPageQuery(limit: number) {
 	return GuildMembers.selectCql({
 		where: GuildMembers.where.eq('guild_id'),
@@ -70,23 +74,29 @@ export class GuildMemberRepository extends IGuildMemberRepository {
 		return members.map((member) => new GuildMember(member));
 	}
 
+	async countMembers(guildId: GuildID): Promise<number> {
+		const result = await fetchOne<{count: bigint}>(COUNT_GUILD_MEMBERS_BY_GUILD_ID_QUERY, {
+			guild_id: guildId,
+		});
+		return result ? Number(result.count) : 0;
+	}
+
 	async upsertMember(data: GuildMemberRow, oldData?: GuildMemberRow | null): Promise<GuildMember> {
 		const guildId = data.guild_id;
 		const userId = data.user_id;
 
 		const result = await executeVersionedUpdate<GuildMemberRow, 'guild_id' | 'user_id'>(
-			async () => {
-				if (oldData !== undefined) return oldData;
-				return await fetchOne<GuildMemberRow>(FETCH_GUILD_MEMBER_BY_GUILD_AND_USER_ID_QUERY, {
+			async () =>
+				fetchOne<GuildMemberRow>(FETCH_GUILD_MEMBER_BY_GUILD_AND_USER_ID_QUERY, {
 					guild_id: guildId,
 					user_id: userId,
-				});
-			},
+				}),
 			(current) => ({
 				pk: {guild_id: guildId, user_id: userId},
 				patch: buildPatchFromData(data, current, GUILD_MEMBER_COLUMNS, ['guild_id', 'user_id']),
 			}),
 			GuildMembers,
+			{initialData: oldData},
 		);
 
 		await fetchOne(

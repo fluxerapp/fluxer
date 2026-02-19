@@ -36,7 +36,6 @@ import {OAuth2Controller} from '@fluxer/api/src/oauth/OAuth2Controller';
 import {registerPackControllers} from '@fluxer/api/src/pack/controllers';
 import {ReadStateController} from '@fluxer/api/src/read_state/ReadStateController';
 import {ReportController} from '@fluxer/api/src/report/ReportController';
-import {RpcController} from '@fluxer/api/src/rpc/RpcController';
 import {SearchController} from '@fluxer/api/src/search/controllers/SearchController';
 import {StripeController} from '@fluxer/api/src/stripe/StripeController';
 import {TenorController} from '@fluxer/api/src/tenor/TenorController';
@@ -60,7 +59,6 @@ export function registerControllers(routes: HonoApp, config: APIConfig): void {
 	registerPackControllers(routes);
 	ReadStateController(routes);
 	ReportController(routes);
-	RpcController(routes);
 	GuildController(routes);
 	SearchController(routes);
 	KlipyController(routes);

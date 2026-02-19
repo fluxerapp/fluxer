@@ -57,7 +57,7 @@ register_and_monitor(Name, Pid, ProcessMap) ->
         {ok, Pid, Ref, NewMap}
     catch
         error:badarg ->
-            catch gen_server:stop(Pid, normal, 5000),
+            force_stop_process(Pid),
             case whereis(Name) of
                 undefined ->
                     {error, registration_race_condition};
@@ -68,6 +68,22 @@ register_and_monitor(Name, Pid, ProcessMap) ->
             end;
         Error:Reason ->
             {error, {Error, Reason}}
+    end.
+
+-spec force_stop_process(pid()) -> ok.
+force_stop_process(Pid) ->
+    MRef = monitor(process, Pid),
+    exit(Pid, shutdown),
+    receive
+        {'DOWN', MRef, process, Pid, _} -> ok
+    after 3000 ->
+        exit(Pid, kill),
+        receive
+            {'DOWN', MRef, process, Pid, _} -> ok
+        after 2000 ->
+            demonitor(MRef, [flush]),
+            ok
+        end
     end.
 
 -spec lookup_or_monitor(atom(), term(), process_map()) -> lookup_result().
@@ -659,6 +675,56 @@ integration_rapid_cycles_test_() ->
             end,
             lists:seq(1, 10)
         )
+    end}.
+
+force_stop_process_normal_test_() ->
+    {timeout, 15, fun() ->
+        Pid = spawn(fun() ->
+            receive stop -> ok end
+        end),
+        ?assert(is_process_alive(Pid)),
+        force_stop_process(Pid),
+        timer:sleep(50),
+        ?assertEqual(false, is_process_alive(Pid))
+    end}.
+
+force_stop_process_already_dead_test() ->
+    Pid = spawn(fun() -> ok end),
+    timer:sleep(10),
+    ?assertEqual(false, is_process_alive(Pid)),
+    force_stop_process(Pid).
+
+force_stop_process_kills_unresponsive_test_() ->
+    {timeout, 15, fun() ->
+        Pid = spawn(fun() ->
+            process_flag(trap_exit, true),
+            receive
+                never_arrives -> ok
+            end
+        end),
+        ?assert(is_process_alive(Pid)),
+        force_stop_process(Pid),
+        timer:sleep(100),
+        ?assertEqual(false, is_process_alive(Pid))
+    end}.
+
+register_and_monitor_duplicate_stops_loser_test_() ->
+    {timeout, 15, fun() ->
+        Name = test_reg_dup_stops_loser,
+        WinnerPid = spawn(fun() -> timer:sleep(5000) end),
+        register(Name, WinnerPid),
+        LoserPid = spawn(fun() ->
+            process_flag(trap_exit, true),
+            receive
+                never_arrives -> ok
+            end
+        end),
+        ?assert(is_process_alive(LoserPid)),
+        Result = register_and_monitor(Name, LoserPid, #{}),
+        ?assertMatch({ok, WinnerPid, _, _}, Result),
+        timer:sleep(100),
+        ?assertEqual(false, is_process_alive(LoserPid)),
+        unregister(Name)
     end}.
 
 -endif.

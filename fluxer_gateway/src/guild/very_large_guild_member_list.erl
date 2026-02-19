@@ -199,22 +199,10 @@ handle_subscribe(SessionId, ChannelId, Ranges, State) ->
     NormalizedRanges = guild_member_list:normalize_ranges(Ranges),
     ListId = guild_member_list:calculate_list_id(ChannelId, Snapshot0),
     Subs0 = maps:get(subscriptions, State, #{}),
-    ListSubs0 = maps:get(ListId, Subs0, #{}),
-    OldRanges = maps:get(SessionId, ListSubs0, []),
-    Subs =
-        case NormalizedRanges of
-            [] ->
-                ListSubs1 = maps:remove(SessionId, ListSubs0),
-                case map_size(ListSubs1) of
-                    0 -> maps:remove(ListId, Subs0);
-                    _ -> maps:put(ListId, ListSubs1, Subs0)
-                end;
-            _ ->
-                ListSubs1 = maps:put(SessionId, NormalizedRanges, ListSubs0),
-                maps:put(ListId, ListSubs1, Subs0)
-        end,
+    {Subs, _OldRanges, ShouldSync} =
+        guild_member_list_common:update_subscriptions(SessionId, ListId, NormalizedRanges, Subs0),
     State1 = maps:put(subscriptions, Subs, State),
-    case NormalizedRanges =/= [] andalso NormalizedRanges =/= OldRanges of
+    case ShouldSync of
         true ->
             self() ! {send_initial_sync, SessionId, ChannelId, ListId, NormalizedRanges},
             State1;
@@ -524,8 +512,7 @@ maybe_normalize_data(_Data0) ->
 
 -spec member_user_id(map()) -> user_id().
 member_user_id(MemberData) ->
-    User = maps:get(<<"user">>, MemberData, #{}),
-    map_utils:get_integer(User, <<"id">>, 0).
+    guild_member_list_common:get_member_user_id(MemberData).
 
 -spec upsert_item_by_id(term(), map(), [map()]) -> [map()].
 upsert_item_by_id(Id, NewItem, Items) ->
@@ -758,17 +745,7 @@ cleanup_virtual_access(UserId, State) ->
 -spec remove_session_subscriptions(session_id(), state()) -> state().
 remove_session_subscriptions(SessionId, State) ->
     Subs0 = maps:get(subscriptions, State, #{}),
-    Subs = maps:fold(
-        fun(ListId, ListSubs0, Acc) ->
-            ListSubs = maps:remove(SessionId, ListSubs0),
-            case map_size(ListSubs) of
-                0 -> Acc;
-                _ -> maps:put(ListId, ListSubs, Acc)
-            end
-        end,
-        #{},
-        Subs0
-    ),
+    Subs = guild_member_list_common:remove_session_from_subscriptions(SessionId, Subs0),
     maps:put(subscriptions, Subs, State).
 
 -spec safe_call(pid(), term(), timeout()) -> term().
@@ -1480,6 +1457,641 @@ notify_channel_update_triggers_channel_sync_test() ->
         State = sys:get_state(Pid),
         maps:get(compute_inflight, State, true) =:= false
     end),
+    catch gen_server:stop(Pid),
+    unlink(Shard0Pid),
+    exit(Shard0Pid, shutdown),
+    ok.
+
+session_connected_first_session_triggers_delta_test() ->
+    Shard0Pid = start_stub_shard0(),
+    {ok, Pid} = start_link(#{
+        id => 1,
+        coordinator_pid => self(),
+        shard0_pid => Shard0Pid
+    }),
+    ok = await(fun() ->
+        State = sys:get_state(Pid),
+        maps:get(compute_inflight, State, true) =:= false
+    end),
+    gen_server:cast(Pid, {session_connected, <<"s1">>, 0, 42}),
+    ok = await(fun() ->
+        State = sys:get_state(Pid),
+        Counts = maps:get(user_session_counts, State, #{}),
+        maps:get(42, Counts, 0) =:= 1
+    end),
+    State = sys:get_state(Pid),
+    Routes = maps:get(session_routes, State, #{}),
+    ?assertEqual(0, maps:get(<<"s1">>, Routes)),
+    catch gen_server:stop(Pid),
+    unlink(Shard0Pid),
+    exit(Shard0Pid, shutdown),
+    ok.
+
+session_connected_second_session_no_delta_test() ->
+    Shard0Pid = start_stub_shard0(),
+    {ok, Pid} = start_link(#{
+        id => 1,
+        coordinator_pid => self(),
+        shard0_pid => Shard0Pid
+    }),
+    gen_server:cast(Pid, {session_connected, <<"s1">>, 0, 42}),
+    ok = await(fun() ->
+        State = sys:get_state(Pid),
+        maps:get(compute_inflight, State, true) =:= false
+    end),
+    gen_server:cast(Pid, {session_connected, <<"s2">>, 1, 42}),
+    ok = await(fun() ->
+        State = sys:get_state(Pid),
+        maps:get(user_session_counts, State, #{}) =:= #{42 => 2}
+    end),
+    State = sys:get_state(Pid),
+    Routes = maps:get(session_routes, State, #{}),
+    ?assertEqual(0, maps:get(<<"s1">>, Routes)),
+    ?assertEqual(1, maps:get(<<"s2">>, Routes)),
+    catch gen_server:stop(Pid),
+    unlink(Shard0Pid),
+    exit(Shard0Pid, shutdown),
+    ok.
+
+session_disconnected_last_session_triggers_delta_test() ->
+    Shard0Pid = start_stub_shard0(),
+    {ok, Pid} = start_link(#{
+        id => 1,
+        coordinator_pid => self(),
+        shard0_pid => Shard0Pid
+    }),
+    gen_server:cast(Pid, {session_connected, <<"s1">>, 0, 42}),
+    ok = await(fun() ->
+        State = sys:get_state(Pid),
+        Counts = maps:get(user_session_counts, State, #{}),
+        maps:get(42, Counts, 0) =:= 1
+    end),
+    ok = await(fun() ->
+        State = sys:get_state(Pid),
+        maps:get(compute_inflight, State, true) =:= false
+    end),
+    gen_server:cast(Pid, {session_disconnected, <<"s1">>, 42}),
+    ok = await(fun() ->
+        State = sys:get_state(Pid),
+        Counts = maps:get(user_session_counts, State, #{}),
+        not maps:is_key(42, Counts)
+    end),
+    State = sys:get_state(Pid),
+    Routes = maps:get(session_routes, State, #{}),
+    ?assertNot(maps:is_key(<<"s1">>, Routes)),
+    catch gen_server:stop(Pid),
+    unlink(Shard0Pid),
+    exit(Shard0Pid, shutdown),
+    ok.
+
+session_disconnected_not_last_no_delta_test() ->
+    Shard0Pid = start_stub_shard0(),
+    {ok, Pid} = start_link(#{
+        id => 1,
+        coordinator_pid => self(),
+        shard0_pid => Shard0Pid
+    }),
+    gen_server:cast(Pid, {session_connected, <<"s1">>, 0, 42}),
+    gen_server:cast(Pid, {session_connected, <<"s2">>, 1, 42}),
+    ok = await(fun() ->
+        State = sys:get_state(Pid),
+        maps:get(user_session_counts, State, #{}) =:= #{42 => 2}
+    end),
+    ok = await(fun() ->
+        State = sys:get_state(Pid),
+        maps:get(compute_inflight, State, true) =:= false
+    end),
+    gen_server:cast(Pid, {session_disconnected, <<"s1">>, 42}),
+    ok = await(fun() ->
+        State = sys:get_state(Pid),
+        maps:get(user_session_counts, State, #{}) =:= #{42 => 1}
+    end),
+    State = sys:get_state(Pid),
+    ?assertNot(maps:is_key(<<"s1">>, maps:get(session_routes, State, #{}))),
+    ?assert(maps:is_key(<<"s2">>, maps:get(session_routes, State, #{}))),
+    catch gen_server:stop(Pid),
+    unlink(Shard0Pid),
+    exit(Shard0Pid, shutdown),
+    ok.
+
+virtual_access_added_and_removed_restores_state_test() ->
+    Shard0Pid = start_stub_shard0(),
+    {ok, Pid} = start_link(#{
+        id => 1,
+        coordinator_pid => self(),
+        shard0_pid => Shard0Pid
+    }),
+    gen_server:cast(Pid, {virtual_access_added, 10, 50}),
+    ok = await(fun() ->
+        State = sys:get_state(Pid),
+        VA = maps:get(virtual_channel_access, State, #{}),
+        maps:is_key(10, VA)
+    end),
+    gen_server:cast(Pid, {virtual_access_removed, 10, 50}),
+    ok = await(fun() ->
+        State = sys:get_state(Pid),
+        VA = maps:get(virtual_channel_access, State, #{}),
+        not maps:is_key(10, VA)
+    end),
+    catch gen_server:stop(Pid),
+    unlink(Shard0Pid),
+    exit(Shard0Pid, shutdown),
+    ok.
+
+virtual_access_multiple_channels_test() ->
+    Shard0Pid = start_stub_shard0(),
+    {ok, Pid} = start_link(#{
+        id => 1,
+        coordinator_pid => self(),
+        shard0_pid => Shard0Pid
+    }),
+    gen_server:cast(Pid, {virtual_access_added, 10, 50}),
+    gen_server:cast(Pid, {virtual_access_added, 10, 60}),
+    ok = await(fun() ->
+        State = sys:get_state(Pid),
+        VA = maps:get(virtual_channel_access, State, #{}),
+        case maps:get(10, VA, undefined) of
+            undefined -> false;
+            Channels -> sets:size(Channels) =:= 2
+        end
+    end),
+    gen_server:cast(Pid, {virtual_access_removed, 10, 50}),
+    ok = await(fun() ->
+        State = sys:get_state(Pid),
+        VA = maps:get(virtual_channel_access, State, #{}),
+        case maps:get(10, VA, undefined) of
+            undefined -> false;
+            Channels -> sets:size(Channels) =:= 1
+        end
+    end),
+    State = sys:get_state(Pid),
+    VA = maps:get(virtual_channel_access, State, #{}),
+    Channels = maps:get(10, VA),
+    ?assertEqual(true, sets:is_element(60, Channels)),
+    ?assertEqual(false, sets:is_element(50, Channels)),
+    catch gen_server:stop(Pid),
+    unlink(Shard0Pid),
+    exit(Shard0Pid, shutdown),
+    ok.
+
+virtual_access_cleanup_removes_all_channels_test() ->
+    Shard0Pid = start_stub_shard0(),
+    {ok, Pid} = start_link(#{
+        id => 1,
+        coordinator_pid => self(),
+        shard0_pid => Shard0Pid
+    }),
+    gen_server:cast(Pid, {virtual_access_added, 10, 50}),
+    gen_server:cast(Pid, {virtual_access_added, 10, 60}),
+    ok = await(fun() ->
+        State = sys:get_state(Pid),
+        VA = maps:get(virtual_channel_access, State, #{}),
+        maps:is_key(10, VA)
+    end),
+    gen_server:cast(Pid, {virtual_access_cleanup, 10}),
+    ok = await(fun() ->
+        State = sys:get_state(Pid),
+        VA = maps:get(virtual_channel_access, State, #{}),
+        not maps:is_key(10, VA)
+    end),
+    catch gen_server:stop(Pid),
+    unlink(Shard0Pid),
+    exit(Shard0Pid, shutdown),
+    ok.
+
+virtual_access_removed_nonexistent_user_noop_test() ->
+    Shard0Pid = start_stub_shard0(),
+    {ok, Pid} = start_link(#{
+        id => 1,
+        coordinator_pid => self(),
+        shard0_pid => Shard0Pid
+    }),
+    ok = await(fun() ->
+        State = sys:get_state(Pid),
+        maps:get(compute_inflight, State, true) =:= false
+    end),
+    gen_server:cast(Pid, {virtual_access_removed, 999, 50}),
+    timer:sleep(100),
+    State = sys:get_state(Pid),
+    VA = maps:get(virtual_channel_access, State, #{}),
+    ?assertNot(maps:is_key(999, VA)),
+    catch gen_server:stop(Pid),
+    unlink(Shard0Pid),
+    exit(Shard0Pid, shutdown),
+    ok.
+
+presence_update_multiple_users_test() ->
+    Shard0Pid = start_stub_shard0(),
+    {ok, Pid} = start_link(#{
+        id => 1,
+        coordinator_pid => self(),
+        shard0_pid => Shard0Pid
+    }),
+    gen_server:cast(Pid, {presence_update, 10, #{<<"status">> => <<"online">>}}),
+    gen_server:cast(Pid, {presence_update, 20, #{<<"status">> => <<"idle">>}}),
+    gen_server:cast(Pid, {presence_update, 30, #{<<"status">> => <<"dnd">>}}),
+    ok = await(fun() ->
+        State = sys:get_state(Pid),
+        Presence = maps:get(member_presence, State, #{}),
+        maps:is_key(10, Presence) andalso maps:is_key(20, Presence) andalso maps:is_key(30, Presence)
+    end),
+    State = sys:get_state(Pid),
+    Presence = maps:get(member_presence, State, #{}),
+    ?assertEqual(#{<<"status">> => <<"online">>}, maps:get(10, Presence)),
+    ?assertEqual(#{<<"status">> => <<"idle">>}, maps:get(20, Presence)),
+    ?assertEqual(#{<<"status">> => <<"dnd">>}, maps:get(30, Presence)),
+    catch gen_server:stop(Pid),
+    unlink(Shard0Pid),
+    exit(Shard0Pid, shutdown),
+    ok.
+
+presence_update_overwrite_test() ->
+    Shard0Pid = start_stub_shard0(),
+    {ok, Pid} = start_link(#{
+        id => 1,
+        coordinator_pid => self(),
+        shard0_pid => Shard0Pid
+    }),
+    gen_server:cast(Pid, {presence_update, 10, #{<<"status">> => <<"online">>}}),
+    ok = await(fun() ->
+        State = sys:get_state(Pid),
+        Presence = maps:get(member_presence, State, #{}),
+        maps:get(10, Presence, #{}) =:= #{<<"status">> => <<"online">>}
+    end),
+    gen_server:cast(Pid, {presence_update, 10, #{<<"status">> => <<"offline">>}}),
+    ok = await(fun() ->
+        State = sys:get_state(Pid),
+        Presence = maps:get(member_presence, State, #{}),
+        maps:get(10, Presence, #{}) =:= #{<<"status">> => <<"offline">>}
+    end),
+    gen_server:cast(Pid, {presence_update, 10, #{<<"status">> => <<"online">>}}),
+    ok = await(fun() ->
+        State = sys:get_state(Pid),
+        Presence = maps:get(member_presence, State, #{}),
+        maps:get(10, Presence, #{}) =:= #{<<"status">> => <<"online">>}
+    end),
+    catch gen_server:stop(Pid),
+    unlink(Shard0Pid),
+    exit(Shard0Pid, shutdown),
+    ok.
+
+subscribe_multiple_sessions_to_same_channel_test() ->
+    Shard0Pid = start_stub_shard0(),
+    {ok, Pid} = start_link(#{
+        id => 1,
+        coordinator_pid => self(),
+        shard0_pid => Shard0Pid
+    }),
+    gen_server:cast(Pid, {session_connected, <<"s1">>, 0, 10}),
+    gen_server:cast(Pid, {session_connected, <<"s2">>, 0, 20}),
+    gen_server:cast(Pid, {subscribe, <<"s1">>, 10, [{0, 50}]}),
+    gen_server:cast(Pid, {subscribe, <<"s2">>, 10, [{25, 75}]}),
+    ok = await(fun() ->
+        State = sys:get_state(Pid),
+        Subs = maps:get(subscriptions, State, #{}),
+        case maps:get(<<"10">>, Subs, undefined) of
+            undefined -> false;
+            ListSubs ->
+                maps:is_key(<<"s1">>, ListSubs) andalso maps:is_key(<<"s2">>, ListSubs)
+        end
+    end),
+    State = sys:get_state(Pid),
+    Subs = maps:get(subscriptions, State, #{}),
+    ListSubs = maps:get(<<"10">>, Subs),
+    ?assertEqual([{0, 50}], maps:get(<<"s1">>, ListSubs)),
+    ?assertEqual([{25, 75}], maps:get(<<"s2">>, ListSubs)),
+    catch gen_server:stop(Pid),
+    unlink(Shard0Pid),
+    exit(Shard0Pid, shutdown),
+    ok.
+
+subscribe_invalid_ranges_filtered_test() ->
+    Shard0Pid = start_stub_shard0(),
+    {ok, Pid} = start_link(#{
+        id => 1,
+        coordinator_pid => self(),
+        shard0_pid => Shard0Pid
+    }),
+    gen_server:cast(Pid, {session_connected, <<"s1">>, 0, 10}),
+    gen_server:cast(Pid, {subscribe, <<"s1">>, 10, [{100, 50}, {-1, 10}]}),
+    ok = await(fun() ->
+        State = sys:get_state(Pid),
+        maps:get(compute_inflight, State, true) =:= false
+    end),
+    State = sys:get_state(Pid),
+    Subs = maps:get(subscriptions, State, #{}),
+    ?assertEqual(#{}, Subs),
+    catch gen_server:stop(Pid),
+    unlink(Shard0Pid),
+    exit(Shard0Pid, shutdown),
+    ok.
+
+upsert_member_with_no_user_field_test() ->
+    Shard0Pid = start_stub_shard0(),
+    {ok, Pid} = start_link(#{
+        id => 1,
+        coordinator_pid => self(),
+        shard0_pid => Shard0Pid
+    }),
+    MemberData = #{<<"nick">> => <<"orphan">>},
+    gen_server:cast(Pid, {upsert_member, MemberData}),
+    ok = await(fun() ->
+        State = sys:get_state(Pid),
+        maps:get(compute_inflight, State, true) =:= false
+    end),
+    catch gen_server:stop(Pid),
+    unlink(Shard0Pid),
+    exit(Shard0Pid, shutdown),
+    ok.
+
+upsert_member_then_update_roles_test() ->
+    Shard0Pid = start_stub_shard0(),
+    {ok, Pid} = start_link(#{
+        id => 1,
+        coordinator_pid => self(),
+        shard0_pid => Shard0Pid
+    }),
+    MemberData = #{
+        <<"user">> => #{<<"id">> => <<"42">>, <<"username">> => <<"alice">>},
+        <<"roles">> => [<<"100">>]
+    },
+    gen_server:cast(Pid, {upsert_member, MemberData}),
+    ok = await(fun() ->
+        State = sys:get_state(Pid),
+        Base = maps:get(base_data, State, #{}),
+        Members = guild_data_index:member_map(Base),
+        maps:is_key(42, Members)
+    end),
+    UpdatedMemberData = #{
+        <<"user">> => #{<<"id">> => <<"42">>, <<"username">> => <<"alice">>},
+        <<"roles">> => [<<"200">>, <<"300">>]
+    },
+    gen_server:cast(Pid, {upsert_member, UpdatedMemberData}),
+    ok = await(fun() ->
+        State = sys:get_state(Pid),
+        Base = maps:get(base_data, State, #{}),
+        Members = guild_data_index:member_map(Base),
+        case maps:get(42, Members, undefined) of
+            undefined -> false;
+            M -> maps:get(<<"roles">>, M, []) =:= [<<"200">>, <<"300">>]
+        end
+    end),
+    catch gen_server:stop(Pid),
+    unlink(Shard0Pid),
+    exit(Shard0Pid, shutdown),
+    ok.
+
+remove_member_then_upsert_again_test() ->
+    Shard0Pid = start_stub_shard0(),
+    {ok, Pid} = start_link(#{
+        id => 1,
+        coordinator_pid => self(),
+        shard0_pid => Shard0Pid
+    }),
+    MemberData = #{
+        <<"user">> => #{<<"id">> => <<"42">>, <<"username">> => <<"alice">>},
+        <<"roles">> => []
+    },
+    gen_server:cast(Pid, {upsert_member, MemberData}),
+    ok = await(fun() ->
+        State = sys:get_state(Pid),
+        Base = maps:get(base_data, State, #{}),
+        maps:is_key(42, guild_data_index:member_map(Base))
+    end),
+    gen_server:cast(Pid, {remove_member, 42}),
+    ok = await(fun() ->
+        State = sys:get_state(Pid),
+        Base = maps:get(base_data, State, #{}),
+        not maps:is_key(42, guild_data_index:member_map(Base))
+    end),
+    gen_server:cast(Pid, {upsert_member, MemberData}),
+    ok = await(fun() ->
+        State = sys:get_state(Pid),
+        Base = maps:get(base_data, State, #{}),
+        maps:is_key(42, guild_data_index:member_map(Base))
+    end),
+    catch gen_server:stop(Pid),
+    unlink(Shard0Pid),
+    exit(Shard0Pid, shutdown),
+    ok.
+
+multiple_rapid_presence_updates_coalesce_test() ->
+    Shard0Pid = start_stub_shard0(),
+    {ok, Pid} = start_link(#{
+        id => 1,
+        coordinator_pid => self(),
+        shard0_pid => Shard0Pid
+    }),
+    ok = await(fun() ->
+        State = sys:get_state(Pid),
+        maps:get(compute_inflight, State, true) =:= false
+    end),
+    gen_server:cast(Pid, {presence_update, 10, #{<<"status">> => <<"online">>}}),
+    gen_server:cast(Pid, {presence_update, 10, #{<<"status">> => <<"idle">>}}),
+    gen_server:cast(Pid, {presence_update, 10, #{<<"status">> => <<"dnd">>}}),
+    gen_server:cast(Pid, {presence_update, 10, #{<<"status">> => <<"offline">>}}),
+    ok = await(fun() ->
+        State = sys:get_state(Pid),
+        maps:get(compute_inflight, State, true) =:= false
+    end),
+    State = sys:get_state(Pid),
+    Presence = maps:get(member_presence, State, #{}),
+    ?assertEqual(#{<<"status">> => <<"offline">>}, maps:get(10, Presence)),
+    catch gen_server:stop(Pid),
+    unlink(Shard0Pid),
+    exit(Shard0Pid, shutdown),
+    ok.
+
+unknown_cast_ignored_test() ->
+    Shard0Pid = start_stub_shard0(),
+    {ok, Pid} = start_link(#{
+        id => 1,
+        coordinator_pid => self(),
+        shard0_pid => Shard0Pid
+    }),
+    gen_server:cast(Pid, {unknown_message, <<"data">>}),
+    timer:sleep(50),
+    ?assertEqual(true, is_process_alive(Pid)),
+    catch gen_server:stop(Pid),
+    unlink(Shard0Pid),
+    exit(Shard0Pid, shutdown),
+    ok.
+
+unknown_info_ignored_test() ->
+    Shard0Pid = start_stub_shard0(),
+    {ok, Pid} = start_link(#{
+        id => 1,
+        coordinator_pid => self(),
+        shard0_pid => Shard0Pid
+    }),
+    Pid ! {unknown_info_message},
+    timer:sleep(50),
+    ?assertEqual(true, is_process_alive(Pid)),
+    catch gen_server:stop(Pid),
+    unlink(Shard0Pid),
+    exit(Shard0Pid, shutdown),
+    ok.
+
+snapshot_includes_presence_and_sessions_test() ->
+    Shard0Pid = start_stub_shard0(),
+    {ok, Pid} = start_link(#{
+        id => 1,
+        coordinator_pid => self(),
+        shard0_pid => Shard0Pid
+    }),
+    gen_server:cast(Pid, {session_connected, <<"s1">>, 0, 10}),
+    gen_server:cast(Pid, {presence_update, 10, #{<<"status">> => <<"online">>}}),
+    ok = await(fun() ->
+        State = sys:get_state(Pid),
+        maps:get(compute_inflight, State, true) =:= false
+    end),
+    State = sys:get_state(Pid),
+    Snapshot = maps:get(snapshot, State),
+    ?assertEqual(1, maps:get(id, Snapshot)),
+    SnapshotPresence = maps:get(member_presence, Snapshot),
+    ?assertEqual(#{<<"status">> => <<"online">>}, maps:get(10, SnapshotPresence)),
+    SnapshotSessions = maps:get(sessions, Snapshot),
+    ?assert(map_size(SnapshotSessions) > 0),
+    catch gen_server:stop(Pid),
+    unlink(Shard0Pid),
+    exit(Shard0Pid, shutdown),
+    ok.
+
+channels_bulk_update_invalid_input_test() ->
+    Shard0Pid = start_stub_shard0(),
+    {ok, Pid} = start_link(#{
+        id => 1,
+        coordinator_pid => self(),
+        shard0_pid => Shard0Pid
+    }),
+    ok = await(fun() ->
+        State = sys:get_state(Pid),
+        maps:get(compute_inflight, State, true) =:= false
+    end),
+    gen_server:cast(Pid, {channels_bulk_update, not_a_list}),
+    timer:sleep(100),
+    ?assertEqual(true, is_process_alive(Pid)),
+    catch gen_server:stop(Pid),
+    unlink(Shard0Pid),
+    exit(Shard0Pid, shutdown),
+    ok.
+
+roles_bulk_update_invalid_input_test() ->
+    Shard0Pid = start_stub_shard0(),
+    {ok, Pid} = start_link(#{
+        id => 1,
+        coordinator_pid => self(),
+        shard0_pid => Shard0Pid
+    }),
+    ok = await(fun() ->
+        State = sys:get_state(Pid),
+        maps:get(compute_inflight, State, true) =:= false
+    end),
+    gen_server:cast(Pid, {roles_bulk_update, not_a_list}),
+    timer:sleep(100),
+    ?assertEqual(true, is_process_alive(Pid)),
+    catch gen_server:stop(Pid),
+    unlink(Shard0Pid),
+    exit(Shard0Pid, shutdown),
+    ok.
+
+upsert_channel_new_channel_test() ->
+    Shard0Pid = start_stub_shard0(),
+    {ok, Pid} = start_link(#{
+        id => 1,
+        coordinator_pid => self(),
+        shard0_pid => Shard0Pid
+    }),
+    ok = await(fun() ->
+        State = sys:get_state(Pid),
+        maps:get(compute_inflight, State, true) =:= false
+    end),
+    NewChannel = #{<<"id">> => <<"999">>, <<"name">> => <<"new-channel">>},
+    gen_server:cast(Pid, {upsert_channel, NewChannel}),
+    ok = await(fun() ->
+        State = sys:get_state(Pid),
+        Base = maps:get(base_data, State, #{}),
+        Channels = guild_data_index:channel_list(Base),
+        lists:any(fun(C) -> maps:get(<<"id">>, C, undefined) =:= <<"999">> end, Channels)
+    end),
+    catch gen_server:stop(Pid),
+    unlink(Shard0Pid),
+    exit(Shard0Pid, shutdown),
+    ok.
+
+member_removed_while_presence_update_test() ->
+    Shard0Pid = start_stub_shard0(),
+    {ok, Pid} = start_link(#{
+        id => 1,
+        coordinator_pid => self(),
+        shard0_pid => Shard0Pid
+    }),
+    MemberData = #{
+        <<"user">> => #{<<"id">> => <<"42">>, <<"username">> => <<"alice">>},
+        <<"roles">> => []
+    },
+    gen_server:cast(Pid, {upsert_member, MemberData}),
+    ok = await(fun() ->
+        State = sys:get_state(Pid),
+        Base = maps:get(base_data, State, #{}),
+        maps:is_key(42, guild_data_index:member_map(Base))
+    end),
+    gen_server:cast(Pid, {presence_update, 42, #{<<"status">> => <<"online">>}}),
+    gen_server:cast(Pid, {remove_member, 42}),
+    ok = await(fun() ->
+        State = sys:get_state(Pid),
+        Base = maps:get(base_data, State, #{}),
+        not maps:is_key(42, guild_data_index:member_map(Base))
+    end),
+    ok = await(fun() ->
+        State = sys:get_state(Pid),
+        maps:get(compute_inflight, State, true) =:= false
+    end),
+    ?assertEqual(true, is_process_alive(Pid)),
+    catch gen_server:stop(Pid),
+    unlink(Shard0Pid),
+    exit(Shard0Pid, shutdown),
+    ok.
+
+upsert_member_non_map_ignored_test() ->
+    Shard0Pid = start_stub_shard0(),
+    {ok, Pid} = start_link(#{
+        id => 1,
+        coordinator_pid => self(),
+        shard0_pid => Shard0Pid
+    }),
+    ok = await(fun() ->
+        State = sys:get_state(Pid),
+        maps:get(compute_inflight, State, true) =:= false
+    end),
+    gen_server:cast(Pid, {upsert_member, not_a_map}),
+    timer:sleep(100),
+    ?assertEqual(true, is_process_alive(Pid)),
+    catch gen_server:stop(Pid),
+    unlink(Shard0Pid),
+    exit(Shard0Pid, shutdown),
+    ok.
+
+full_sync_all_clears_pending_test() ->
+    Shard0Pid = start_stub_shard0(),
+    {ok, Pid} = start_link(#{
+        id => 1,
+        coordinator_pid => self(),
+        shard0_pid => Shard0Pid
+    }),
+    ok = await(fun() ->
+        State = sys:get_state(Pid),
+        maps:get(compute_inflight, State, true) =:= false
+    end),
+    gen_server:cast(Pid, {notify_role_update}),
+    ok = await(fun() ->
+        State = sys:get_state(Pid),
+        maps:get(compute_inflight, State, true) =:= false
+    end),
+    State = sys:get_state(Pid),
+    ?assertEqual(false, maps:get(pending_full_sync_all, State)),
+    ?assertEqual(false, maps:get(pending_delta, State)),
+    ?assertEqual(false, maps:get(pending_refresh_base_data, State)),
     catch gen_server:stop(Pid),
     unlink(Shard0Pid),
     exit(Shard0Pid, shutdown),

@@ -769,6 +769,449 @@ role_ids_from_roles_test() ->
     ],
     ?assertEqual([100, 200], role_ids_from_roles(Roles)).
 
+check_target_member_owner_can_manage_anyone_test() ->
+    State = test_state(),
+    {reply, #{can_manage := CanManage}, _} =
+        check_target_member(#{user_id => 1, target_user_id => 2}, State),
+    ?assertEqual(true, CanManage).
+
+check_target_member_cannot_manage_owner_test() ->
+    State = test_state(),
+    {reply, #{can_manage := CanManage}, _} =
+        check_target_member(#{user_id => 2, target_user_id => 1}, State),
+    ?assertEqual(false, CanManage).
+
+check_target_member_higher_role_can_manage_lower_test() ->
+    State = test_state(),
+    {reply, #{can_manage := CanManage}, _} =
+        check_target_member(#{user_id => 3, target_user_id => 2}, State),
+    ?assertEqual(true, CanManage).
+
+check_target_member_lower_role_cannot_manage_higher_test() ->
+    State = test_state(),
+    {reply, #{can_manage := CanManage}, _} =
+        check_target_member(#{user_id => 2, target_user_id => 3}, State),
+    ?assertEqual(false, CanManage).
+
+can_manage_roles_owner_always_true_test() ->
+    State = test_state(),
+    {reply, #{can_manage := CanManage}, _} =
+        can_manage_roles(#{user_id => 1, role_id => 201}, State),
+    ?assertEqual(true, CanManage).
+
+can_manage_roles_member_lower_role_test() ->
+    State = test_state(),
+    {reply, #{can_manage := CanManage}, _} =
+        can_manage_roles(#{user_id => 2, role_id => 201}, State),
+    ?assertEqual(false, CanManage).
+
+can_manage_roles_unknown_role_test() ->
+    State = test_state(),
+    {reply, #{can_manage := CanManage}, _} =
+        can_manage_roles(#{user_id => 2, role_id => 999}, State),
+    ?assertEqual(false, CanManage).
+
+get_viewable_channels_unknown_user_test() ->
+    State = test_state(),
+    {reply, #{channel_ids := ChannelIds}, _} =
+        get_viewable_channels(#{user_id => 999}, State),
+    ?assertEqual([], ChannelIds).
+
+get_viewable_channels_owner_sees_all_test() ->
+    State = test_state(),
+    {reply, #{channel_ids := ChannelIds}, _} =
+        get_viewable_channels(#{user_id => 1}, State),
+    ?assert(length(ChannelIds) >= 2).
+
+get_viewable_channels_with_deny_overwrite_test() ->
+    ViewPerm = constants:view_channel_permission(),
+    ManageRoles = constants:manage_roles_permission(),
+    State = #{
+        id => 100,
+        data => #{
+            <<"guild">> => #{<<"owner_id">> => <<"1">>},
+            <<"roles">> => [
+                #{<<"id">> => <<"100">>, <<"permissions">> => integer_to_binary(ViewPerm bor ManageRoles), <<"position">> => 0}
+            ],
+            <<"channels">> => [
+                #{
+                    <<"id">> => <<"500">>,
+                    <<"type">> => 0,
+                    <<"permission_overwrites">> => [
+                        #{<<"id">> => <<"100">>, <<"type">> => 0, <<"allow">> => <<"0">>, <<"deny">> => integer_to_binary(ViewPerm)}
+                    ]
+                },
+                #{<<"id">> => <<"501">>, <<"type">> => 0, <<"permission_overwrites">> => []}
+            ],
+            <<"members">> => [
+                #{<<"user">> => #{<<"id">> => <<"1">>}, <<"roles">> => [<<"100">>]},
+                #{<<"user">> => #{<<"id">> => <<"2">>}, <<"roles">> => [<<"100">>]}
+            ]
+        }
+    },
+    {reply, #{channel_ids := OwnerChannels}, _} =
+        get_viewable_channels(#{user_id => 1}, State),
+    ?assert(lists:member(500, OwnerChannels)),
+    {reply, #{channel_ids := MemberChannels}, _} =
+        get_viewable_channels(#{user_id => 2}, State),
+    ?assertNot(lists:member(500, MemberChannels)),
+    ?assert(lists:member(501, MemberChannels)).
+
+resolve_all_mentions_mention_everyone_test() ->
+    State = test_state(),
+    Request = #{
+        channel_id => 500,
+        author_id => 1,
+        mention_everyone => true,
+        mention_here => false,
+        role_ids => [],
+        user_ids => []
+    },
+    {reply, #{user_ids := UserIds}, _} = resolve_all_mentions(Request, State),
+    ?assert(lists:member(2, UserIds)),
+    ?assert(lists:member(3, UserIds)),
+    ?assertNot(lists:member(1, UserIds)).
+
+resolve_all_mentions_mention_here_only_connected_test() ->
+    State0 = test_state(),
+    State = State0#{
+        sessions => #{
+            <<"sess_2">> => #{user_id => 2}
+        }
+    },
+    Request = #{
+        channel_id => 500,
+        author_id => 1,
+        mention_everyone => false,
+        mention_here => true,
+        role_ids => [],
+        user_ids => []
+    },
+    {reply, #{user_ids := UserIds}, _} = resolve_all_mentions(Request, State),
+    ?assert(lists:member(2, UserIds)),
+    ?assertNot(lists:member(3, UserIds)).
+
+resolve_all_mentions_excludes_bots_test() ->
+    ViewPerm = constants:view_channel_permission(),
+    ManageRoles = constants:manage_roles_permission(),
+    State = #{
+        id => 100,
+        data => #{
+            <<"guild">> => #{<<"owner_id">> => <<"1">>},
+            <<"roles">> => [
+                #{<<"id">> => <<"100">>, <<"permissions">> => integer_to_binary(ViewPerm bor ManageRoles), <<"position">> => 0}
+            ],
+            <<"channels">> => [
+                #{<<"id">> => <<"500">>, <<"type">> => 0, <<"permission_overwrites">> => []}
+            ],
+            <<"members">> => [
+                #{<<"user">> => #{<<"id">> => <<"1">>}, <<"roles">> => [<<"100">>]},
+                #{<<"user">> => #{<<"id">> => <<"2">>, <<"bot">> => true}, <<"roles">> => [<<"100">>]},
+                #{<<"user">> => #{<<"id">> => <<"3">>}, <<"roles">> => [<<"100">>]}
+            ]
+        },
+        sessions => #{}
+    },
+    Request = #{
+        channel_id => 500,
+        author_id => 1,
+        mention_everyone => true,
+        mention_here => false,
+        role_ids => [],
+        user_ids => []
+    },
+    {reply, #{user_ids := UserIds}, _} = resolve_all_mentions(Request, State),
+    ?assertNot(lists:member(2, UserIds)),
+    ?assert(lists:member(3, UserIds)).
+
+resolve_all_mentions_author_always_excluded_test() ->
+    State = test_state(),
+    Request = #{
+        channel_id => 500,
+        author_id => 2,
+        mention_everyone => false,
+        mention_here => false,
+        role_ids => [],
+        user_ids => [2]
+    },
+    {reply, #{user_ids := UserIds}, _} = resolve_all_mentions(Request, State),
+    ?assertNot(lists:member(2, UserIds)).
+
+get_all_users_to_mention_excludes_author_test() ->
+    State = test_state(),
+    {reply, #{user_ids := UserIds}, _} =
+        get_all_users_to_mention(#{channel_id => 500, author_id => 1}, State),
+    ?assertNot(lists:member(1, UserIds)),
+    ?assert(lists:member(2, UserIds)),
+    ?assert(lists:member(3, UserIds)).
+
+get_members_with_role_undefined_role_id_test() ->
+    State = test_state(),
+    {reply, #{user_ids := UserIds}, _} =
+        get_members_with_role(#{role_id => undefined}, State),
+    ?assertEqual([], UserIds).
+
+get_members_with_role_nonexistent_role_test() ->
+    State = test_state(),
+    {reply, #{user_ids := UserIds}, _} =
+        get_members_with_role(#{role_id => 999}, State),
+    ?assertEqual([], UserIds).
+
+get_assignable_roles_non_member_test() ->
+    State = test_state(),
+    {reply, #{role_ids := RoleIds}, _} =
+        get_assignable_roles(#{user_id => 999}, State),
+    ?assertEqual([], RoleIds).
+
+member_user_id_missing_user_test() ->
+    ?assertEqual(undefined, member_user_id(#{})).
+
+member_user_id_missing_id_test() ->
+    ?assertEqual(undefined, member_user_id(#{<<"user">> => #{}})).
+
+member_user_id_valid_test() ->
+    ?assertEqual(42, member_user_id(#{<<"user">> => #{<<"id">> => <<"42">>}})).
+
+member_roles_empty_test() ->
+    ?assertEqual([], member_roles(#{})).
+
+member_roles_binary_ids_test() ->
+    Member = #{<<"roles">> => [<<"100">>, <<"200">>]},
+    ?assertEqual([100, 200], member_roles(Member)).
+
+is_member_bot_missing_user_test() ->
+    ?assertEqual(false, is_member_bot(#{})).
+
+is_member_bot_missing_bot_field_test() ->
+    ?assertEqual(false, is_member_bot(#{<<"user">> => #{}})).
+
+role_position_default_test() ->
+    ?assertEqual(0, role_position(#{})).
+
+role_position_explicit_test() ->
+    ?assertEqual(5, role_position(#{<<"position">> => 5})).
+
+role_ids_from_roles_empty_test() ->
+    ?assertEqual([], role_ids_from_roles([])).
+
+role_ids_from_roles_skips_undefined_ids_test() ->
+    Roles = [#{}, #{<<"id">> => <<"100">>}],
+    ?assertEqual([100], role_ids_from_roles(Roles)).
+
+normalize_int_list_mixed_types_test() ->
+    ?assertEqual([1, 2], normalize_int_list([<<"1">>, <<"invalid">>, 2])).
+
+normalize_int_list_non_list_input_test() ->
+    ?assertEqual([], normalize_int_list(not_a_list)).
+
+member_has_any_role_set_empty_roles_test() ->
+    Member = #{<<"roles">> => []},
+    RoleSet = gb_sets:from_list([100]),
+    ?assertEqual(false, member_has_any_role_set(Member, RoleSet)).
+
+member_has_any_role_set_empty_set_test() ->
+    Member = #{<<"roles">> => [<<"100">>]},
+    RoleSet = gb_sets:empty(),
+    ?assertEqual(false, member_has_any_role_set(Member, RoleSet)).
+
+compare_roles_first_undefined_test() ->
+    Role = #{<<"position">> => 5, <<"id">> => <<"10">>},
+    ?assertEqual(Role, compare_roles(Role, undefined)).
+
+compare_roles_higher_position_wins_test() ->
+    RoleA = #{<<"position">> => 5, <<"id">> => <<"10">>},
+    RoleB = #{<<"position">> => 10, <<"id">> => <<"20">>},
+    ?assertEqual(RoleB, compare_roles(RoleB, RoleA)).
+
+compare_roles_same_position_lower_id_wins_test() ->
+    RoleA = #{<<"position">> => 5, <<"id">> => <<"20">>},
+    RoleB = #{<<"position">> => 5, <<"id">> => <<"10">>},
+    ?assertEqual(RoleB, compare_roles(RoleB, RoleA)).
+
+compare_roles_same_position_higher_id_loses_test() ->
+    RoleA = #{<<"position">> => 5, <<"id">> => <<"10">>},
+    RoleB = #{<<"position">> => 5, <<"id">> => <<"20">>},
+    ?assertEqual(RoleA, compare_roles(RoleB, RoleA)).
+
+get_highest_role_empty_roles_test() ->
+    ?assertEqual(undefined, get_highest_role([], #{})).
+
+get_highest_role_no_matching_roles_test() ->
+    Roles = #{999 => #{<<"id">> => <<"999">>, <<"position">> => 5}},
+    ?assertEqual(undefined, get_highest_role([100], Roles)).
+
+get_highest_role_picks_highest_position_test() ->
+    RoleLow = #{<<"id">> => <<"100">>, <<"position">> => 5},
+    RoleHigh = #{<<"id">> => <<"200">>, <<"position">> => 10},
+    Roles = #{100 => RoleLow, 200 => RoleHigh},
+    ?assertEqual(RoleHigh, get_highest_role([100, 200], Roles)).
+
+build_connected_user_ids_false_returns_empty_test() ->
+    Sessions = #{<<"s1">> => #{user_id => 1}},
+    ?assertEqual(gb_sets:empty(), build_connected_user_ids(false, Sessions)).
+
+build_connected_user_ids_true_collects_user_ids_test() ->
+    Sessions = #{
+        <<"s1">> => #{user_id => 1},
+        <<"s2">> => #{user_id => 2},
+        <<"s3">> => #{other => data}
+    },
+    Result = build_connected_user_ids(true, Sessions),
+    ?assert(gb_sets:is_member(1, Result)),
+    ?assert(gb_sets:is_member(2, Result)),
+    ?assertEqual(2, gb_sets:size(Result)).
+
+build_connected_user_ids_empty_sessions_test() ->
+    Result = build_connected_user_ids(true, #{}),
+    ?assertEqual(gb_sets:empty(), Result).
+
+check_should_mention_everyone_true_test() ->
+    Member = #{<<"roles">> => []},
+    ?assertEqual(true, check_should_mention(
+        1, Member, true, false, false, false,
+        gb_sets:empty(), gb_sets:empty(), gb_sets:empty()
+    )).
+
+check_should_mention_here_connected_test() ->
+    Member = #{<<"roles">> => []},
+    Connected = gb_sets:from_list([1]),
+    ?assertEqual(true, check_should_mention(
+        1, Member, false, true, false, false,
+        gb_sets:empty(), gb_sets:empty(), Connected
+    )).
+
+check_should_mention_here_not_connected_test() ->
+    Member = #{<<"roles">> => []},
+    Connected = gb_sets:from_list([2]),
+    ?assertEqual(false, check_should_mention(
+        1, Member, false, true, false, false,
+        gb_sets:empty(), gb_sets:empty(), Connected
+    )).
+
+check_should_mention_role_match_test() ->
+    Member = #{<<"roles">> => [<<"100">>]},
+    RoleSet = gb_sets:from_list([100]),
+    ?assertEqual(true, check_should_mention(
+        1, Member, false, false, true, false,
+        RoleSet, gb_sets:empty(), gb_sets:empty()
+    )).
+
+check_should_mention_direct_id_match_test() ->
+    Member = #{<<"roles">> => []},
+    DirectSet = gb_sets:from_list([1]),
+    ?assertEqual(true, check_should_mention(
+        1, Member, false, false, false, true,
+        gb_sets:empty(), DirectSet, gb_sets:empty()
+    )).
+
+check_should_mention_nothing_matches_test() ->
+    Member = #{<<"roles">> => []},
+    ?assertEqual(false, check_should_mention(
+        1, Member, false, false, false, false,
+        gb_sets:empty(), gb_sets:empty(), gb_sets:empty()
+    )).
+
+member_can_view_channel_non_integer_channel_id_test() ->
+    ?assertEqual(false, member_can_view_channel(1, undefined, #{}, #{})).
+
+collect_mentions_excludes_author_test() ->
+    ViewPerm = constants:view_channel_permission(),
+    State = #{
+        id => 100,
+        data => #{
+            <<"guild">> => #{<<"owner_id">> => <<"1">>},
+            <<"roles">> => [
+                #{<<"id">> => <<"100">>, <<"permissions">> => integer_to_binary(ViewPerm), <<"position">> => 0}
+            ],
+            <<"channels">> => [
+                #{<<"id">> => <<"500">>, <<"type">> => 0, <<"permission_overwrites">> => []}
+            ],
+            <<"members">> => [
+                #{<<"user">> => #{<<"id">> => <<"1">>}, <<"roles">> => [<<"100">>]},
+                #{<<"user">> => #{<<"id">> => <<"2">>}, <<"roles">> => [<<"100">>]}
+            ]
+        }
+    },
+    Members = [
+        #{<<"user">> => #{<<"id">> => <<"1">>}, <<"roles">> => [<<"100">>]},
+        #{<<"user">> => #{<<"id">> => <<"2">>}, <<"roles">> => [<<"100">>]}
+    ],
+    UserIds = collect_mentions(Members, 1, 500, State, fun(_) -> true end),
+    ?assertNot(lists:member(1, UserIds)),
+    ?assert(lists:member(2, UserIds)).
+
+collect_mentions_skips_members_without_user_id_test() ->
+    ViewPerm = constants:view_channel_permission(),
+    State = #{
+        id => 100,
+        data => #{
+            <<"guild">> => #{<<"owner_id">> => <<"1">>},
+            <<"roles">> => [
+                #{<<"id">> => <<"100">>, <<"permissions">> => integer_to_binary(ViewPerm), <<"position">> => 0}
+            ],
+            <<"channels">> => [
+                #{<<"id">> => <<"500">>, <<"type">> => 0, <<"permission_overwrites">> => []}
+            ],
+            <<"members">> => []
+        }
+    },
+    Members = [#{}, #{<<"user">> => #{}}],
+    UserIds = collect_mentions(Members, 1, 500, State, fun(_) -> true end),
+    ?assertEqual([], UserIds).
+
+filter_assignable_role_below_position_test() ->
+    Role = #{<<"id">> => <<"100">>, <<"position">> => 5},
+    ?assertEqual({true, 100}, filter_assignable_role(Role, 10)).
+
+filter_assignable_role_at_position_test() ->
+    Role = #{<<"id">> => <<"100">>, <<"position">> => 10},
+    ?assertEqual(false, filter_assignable_role(Role, 10)).
+
+filter_assignable_role_above_position_test() ->
+    Role = #{<<"id">> => <<"100">>, <<"position">> => 15},
+    ?assertEqual(false, filter_assignable_role(Role, 10)).
+
+filter_assignable_role_no_id_test() ->
+    Role = #{<<"position">> => 5},
+    ?assertEqual(false, filter_assignable_role(Role, 10)).
+
+user_ids_for_any_role_empty_roles_test() ->
+    State = test_state(),
+    ?assertEqual([], user_ids_for_any_role([], State)).
+
+user_ids_for_any_role_nonexistent_role_test() ->
+    State = test_state(),
+    ?assertEqual([], user_ids_for_any_role([999], State)).
+
+user_ids_for_any_role_multiple_roles_test() ->
+    State = test_state(),
+    UserIds = lists:sort(user_ids_for_any_role([200, 201], State)),
+    ?assertEqual([2, 3], UserIds).
+
+owner_id_valid_test() ->
+    State = test_state(),
+    ?assertEqual(1, owner_id(State)).
+
+owner_id_missing_guild_test() ->
+    State = #{data => #{}},
+    ?assertEqual(0, owner_id(State)).
+
+guild_data_missing_data_test() ->
+    State = #{},
+    ?assertEqual(#{}, guild_data(State)).
+
+guild_members_empty_test() ->
+    State = #{data => #{<<"members">> => []}},
+    ?assertEqual([], guild_members(State)).
+
+guild_roles_empty_test() ->
+    State = #{data => #{<<"roles">> => []}},
+    ?assertEqual([], guild_roles(State)).
+
+guild_channels_empty_test() ->
+    State = #{data => #{<<"channels">> => []}},
+    ?assertEqual([], guild_channels(State)).
+
 test_state() ->
     GuildId = 100,
     OwnerId = 1,

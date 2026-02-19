@@ -316,6 +316,7 @@ is_fluxer_module(Module) ->
         lists:prefix("gateway_http_", ModuleStr) orelse
         lists:prefix("session", ModuleStr) orelse
         lists:prefix("guild", ModuleStr) orelse
+        lists:prefix("passive_sync_registry", ModuleStr) orelse
         lists:prefix("presence", ModuleStr) orelse
         lists:prefix("push", ModuleStr) orelse
         lists:prefix("push_dispatcher", ModuleStr) orelse

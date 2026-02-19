@@ -1830,12 +1830,12 @@ export async function executeVersionedUpdate<
 	fetchCurrent: () => Promise<Row | null>,
 	buildPatch: (current: Row | null) => {pk: Record<string, unknown>; patch: Patch},
 	table: Table<Row, PK>,
-	opts?: {maxRetries?: number},
+	opts?: {maxRetries?: number; initialData?: Row | null},
 ): Promise<{applied: boolean; finalVersion: number | null}> {
 	const maxRetries = opts?.maxRetries ?? DEFAULT_LWT_RETRIES;
 
 	for (let attempt = 0; attempt < maxRetries; attempt++) {
-		const current = await fetchCurrent();
+		const current = attempt === 0 && opts?.initialData !== undefined ? opts.initialData : await fetchCurrent();
 		const currentVersion = current?.version ?? null;
 		const newVersion = nextVersion(currentVersion);
 

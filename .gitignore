@@ -23,7 +23,7 @@ devenv.local.nix
 /dev/livekit.yaml
 /dev/bluesky_oauth_key.pem
 /dev/meilisearch_master_key
-/dev/data/meilisearch/
+/dev/data/
 **/.dev.vars
 **/.DS_Store
 **/.env

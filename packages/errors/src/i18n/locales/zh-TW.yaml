@@ -150,6 +150,7 @@ calls_and_voice.voice_messages_require_single_attachment: 語音訊息必須剛�
 captcha.invalid: Captcha 驗證失敗。
 captcha.required: 需要完成 Captcha 驗證。
 connections.already_exists: 這個類型的連線已存在且識別碼相同。
+connections.bluesky_oauth_authorization_failed: 我們無法解析該 Bluesky 使用者名稱。請檢查後再試一次。
 connections.bluesky_oauth_callback_failed: 我們無法完成 Bluesky 連線。請再試一次。
 connections.bluesky_oauth_not_enabled: 此伺服器未啟用 Bluesky 連線。
 connections.bluesky_oauth_session_expired: 你的 Bluesky 工作階段已過期。請重新連接你的帳號。

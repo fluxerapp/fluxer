@@ -20,6 +20,7 @@
 import {Tooltip} from '@app/components/uikit/tooltip/Tooltip';
 import type {RendererProps} from '@app/lib/markdown/renderers/RendererTypes';
 import {formatTimestamp} from '@app/lib/markdown/utils/DateFormatter';
+import {getDateFromUnixTimestampSeconds} from '@app/lib/markdown/utils/TimestampValidation';
 import WindowStore from '@app/stores/WindowStore';
 import markupStyles from '@app/styles/Markup.module.css';
 import timestampRendererStyles from '@app/styles/TimestampRenderer.module.css';
@@ -32,8 +33,7 @@ import {ClockIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import {DateTime} from 'luxon';
 import {observer} from 'mobx-react-lite';
-import type {ReactElement} from 'react';
-import {useEffect, useState} from 'react';
+import React, {type ReactElement, useEffect, useState} from 'react';
 
 export const TimestampRenderer = observer(function TimestampRenderer({
 	node,
@@ -43,25 +43,26 @@ export const TimestampRenderer = observer(function TimestampRenderer({
 	const {timestamp, style} = node;
 	const i18n = options.i18n;
 
-	const totalMillis = timestamp * 1000;
-	const date = new Date(totalMillis);
+	const date = getDateFromUnixTimestampSeconds(timestamp);
+	const isValidTimestamp = date !== null;
 	const now = new Date();
 
-	const isPast = date < now;
-	const isFuture = date > now;
-	const isTodayDate = isSameDay(date);
+	const isPast = date !== null && date < now;
+	const isFuture = date !== null && date > now;
+	const isTodayDate = date !== null && isSameDay(date);
 
 	const locale = getCurrentLocale();
-	const fullDateTime = getFormattedDateTimeWithSeconds(date, locale);
+	const fullDateTime = date !== null ? getFormattedDateTimeWithSeconds(date, locale) : null;
 
 	const isRelativeStyle = style === TimestampStyle.RelativeTime;
 	const isWindowFocused = WindowStore.focused;
-	const [relativeDisplayTime, setRelativeDisplayTime] = useState(() => formatTimestamp(timestamp, style, i18n));
-	const luxonDate = DateTime.fromMillis(totalMillis);
-	const relativeTime = luxonDate.toRelative();
+	const [relativeDisplayTime, setRelativeDisplayTime] = useState(() =>
+		isValidTimestamp ? formatTimestamp(timestamp, style, i18n) : '',
+	);
+	const relativeTime = date !== null ? DateTime.fromJSDate(date).toRelative() : null;
 
 	useEffect(() => {
-		if (!isRelativeStyle || !isWindowFocused) {
+		if (!isValidTimestamp || !isRelativeStyle || !isWindowFocused) {
 			return;
 		}
 
@@ -75,7 +76,11 @@ export const TimestampRenderer = observer(function TimestampRenderer({
 		refreshDisplay();
 		const intervalId = setInterval(refreshDisplay, 1000);
 		return () => clearInterval(intervalId);
-	}, [isRelativeStyle, isWindowFocused, style, timestamp, i18n]);
+	}, [isValidTimestamp, isRelativeStyle, isWindowFocused, style, timestamp, i18n]);
+
+	if (date === null || fullDateTime === null) {
+		return React.createElement('span', {className: markupStyles.timestamp}, String(timestamp));
+	}
 
 	const tooltipContent = (
 		<div className={timestampRendererStyles.tooltipContainer}>

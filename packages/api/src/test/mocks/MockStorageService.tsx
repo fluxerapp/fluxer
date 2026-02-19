@@ -17,6 +17,7 @@
  * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
  */
 
+import crypto from 'node:crypto';
 import type {Readable} from 'node:stream';
 import {S3ServiceException} from '@aws-sdk/client-s3';
 import type {IStorageService} from '@fluxer/api/src/infrastructure/IStorageService';
@@ -33,6 +34,7 @@ export interface MockStorageServiceConfig {
 
 export class MockStorageService implements IStorageService {
 	private objects: Map<string, {data: Uint8Array; contentType?: string}> = new Map();
+	private multipartUploads: Map<string, {parts: Map<number, Uint8Array>; key: string; bucket: string}> = new Map();
 	private deletedObjects: Array<{bucket: string; key: string}> = [];
 	private copiedObjects: Array<{
 		sourceBucket: string;
@@ -56,6 +58,10 @@ export class MockStorageService implements IStorageService {
 	readonly deleteAvatarSpy = vi.fn();
 	readonly listObjectsSpy = vi.fn();
 	readonly deleteObjectsSpy = vi.fn();
+	readonly createMultipartUploadSpy = vi.fn();
+	readonly uploadPartSpy = vi.fn();
+	readonly completeMultipartUploadSpy = vi.fn();
+	readonly abortMultipartUploadSpy = vi.fn();
 
 	private config: MockStorageServiceConfig;
 
@@ -227,6 +233,62 @@ export class MockStorageService implements IStorageService {
 		this.deleteObjectsSpy(_params);
 	}
 
+	async createMultipartUpload(params: {
+		bucket: string;
+		key: string;
+		contentType?: string;
+	}): Promise<{uploadId: string}> {
+		this.createMultipartUploadSpy(params);
+		const uploadId = crypto.randomUUID();
+		this.multipartUploads.set(uploadId, {parts: new Map(), key: params.key, bucket: params.bucket});
+		return {uploadId};
+	}
+
+	async uploadPart(params: {
+		bucket: string;
+		key: string;
+		uploadId: string;
+		partNumber: number;
+		body: Uint8Array;
+	}): Promise<{etag: string}> {
+		this.uploadPartSpy(params);
+		const upload = this.multipartUploads.get(params.uploadId);
+		if (!upload) {
+			throw new Error(`Mock: multipart upload ${params.uploadId} not found`);
+		}
+		upload.parts.set(params.partNumber, params.body);
+		const etag = `"etag-${params.partNumber}"`;
+		return {etag};
+	}
+
+	async completeMultipartUpload(params: {
+		bucket: string;
+		key: string;
+		uploadId: string;
+		parts: Array<{partNumber: number; etag: string}>;
+	}): Promise<void> {
+		this.completeMultipartUploadSpy(params);
+		const upload = this.multipartUploads.get(params.uploadId);
+		if (!upload) {
+			throw new Error(`Mock: multipart upload ${params.uploadId} not found`);
+		}
+		const sortedParts = [...upload.parts.entries()].sort(([a], [b]) => a - b);
+		const totalSize = sortedParts.reduce((sum, [, data]) => sum + data.length, 0);
+		const combined = new Uint8Array(totalSize);
+		let offset = 0;
+		for (const [, data] of sortedParts) {
+			combined.set(data, offset);
+			offset += data.length;
+		}
+		this.objects.set(upload.key, {data: combined});
+		this.multipartUploads.delete(params.uploadId);
+	}
+
+	async abortMultipartUpload(params: {bucket: string; key: string; uploadId: string}): Promise<void> {
+		this.abortMultipartUploadSpy(params);
+		this.multipartUploads.delete(params.uploadId);
+	}
+
 	getDeletedObjects(): Array<{bucket: string; key: string}> {
 		return [...this.deletedObjects];
 	}
@@ -246,6 +308,7 @@ export class MockStorageService implements IStorageService {
 
 	reset(): void {
 		this.objects.clear();
+		this.multipartUploads.clear();
 		this.deletedObjects = [];
 		this.copiedObjects = [];
 		this.config = {};
@@ -264,5 +327,9 @@ export class MockStorageService implements IStorageService {
 		this.deleteAvatarSpy.mockClear();
 		this.listObjectsSpy.mockClear();
 		this.deleteObjectsSpy.mockClear();
+		this.createMultipartUploadSpy.mockClear();
+		this.uploadPartSpy.mockClear();
+		this.completeMultipartUploadSpy.mockClear();
+		this.abortMultipartUploadSpy.mockClear();
 	}
 }

@@ -56,8 +56,11 @@ export const GuildSettingsModal: React.FC<GuildSettingsModalProps> = observer(
 			if (!guild) return guildSettingsTabs;
 
 			return guildSettingsTabs.filter((tab) => {
-				if (tab.permission && !PermissionStore.can(tab.permission, {guildId})) {
-					return false;
+				if (tab.permission) {
+					const perms = Array.isArray(tab.permission) ? tab.permission : [tab.permission];
+					if (!perms.some((p) => PermissionStore.can(p, {guildId}))) {
+						return false;
+					}
 				}
 				if (tab.requireFeature && !guild.features.has(tab.requireFeature)) {
 					return false;

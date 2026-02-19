@@ -54,7 +54,7 @@ function makeMinimalConfig(overrides: Record<string, unknown> = {}): Record<stri
 				secret_key_base: 'abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789',
 				oauth_client_secret: 'fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210',
 			},
-			app_proxy: {port: 8773, sentry_report_host: 'sentry.io', sentry_dsn: 'https://test@sentry.io/1'},
+			app_proxy: {port: 8773},
 			marketing: {
 				enabled: false,
 				port: 8774,
@@ -63,13 +63,9 @@ function makeMinimalConfig(overrides: Record<string, unknown> = {}): Record<stri
 			},
 			gateway: {
 				port: 8771,
-				api_host: 'http://localhost:8772/api',
 				admin_reload_secret: 'deadbeef0123456789abcdef0123456789abcdef0123456789abcdef01234567',
 				media_proxy_endpoint: 'http://localhost:8772/media',
 			},
-		},
-		gateway: {
-			rpc_secret: 'rpc-test-secret',
 		},
 		auth: {
 			sudo_mode_secret: 'sudo-test-secret',

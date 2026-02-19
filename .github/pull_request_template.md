@@ -26,7 +26,6 @@
 - [ ] PR targets `canary`
 - [ ] PR title follows Conventional Commits (mostly lowercase)
 - [ ] CI is green (or I'm actively addressing failures)
-- [ ] CLA signed (the bot will guide you on first PR)
 
 ## Screenshots / recordings (UI changes)
 

@@ -72,6 +72,7 @@ import {
 import {DisabledLiveKitService} from '@fluxer/api/src/infrastructure/DisabledLiveKitService';
 import {DisabledVirusScanService} from '@fluxer/api/src/infrastructure/DisabledVirusScanService';
 import {DiscriminatorService} from '@fluxer/api/src/infrastructure/DiscriminatorService';
+import {EmailDnsValidationService} from '@fluxer/api/src/infrastructure/EmailDnsValidationService';
 import {EmbedService} from '@fluxer/api/src/infrastructure/EmbedService';
 import {EntityAssetService} from '@fluxer/api/src/infrastructure/EntityAssetService';
 import {ErrorI18nService} from '@fluxer/api/src/infrastructure/ErrorI18nService';
@@ -153,7 +154,7 @@ import {UserService} from '@fluxer/api/src/user/services/UserService';
 import {UserPermissionUtils} from '@fluxer/api/src/utils/UserPermissionUtils';
 import {VoiceRepository} from '@fluxer/api/src/voice/VoiceRepository';
 import {VoiceService} from '@fluxer/api/src/voice/VoiceService';
-import {SendGridWebhookService} from '@fluxer/api/src/webhook/SendGridWebhookService';
+import {SweegoWebhookService} from '@fluxer/api/src/webhook/SweegoWebhookService';
 import {WebhookRepository} from '@fluxer/api/src/webhook/WebhookRepository';
 import {WebhookRequestService} from '@fluxer/api/src/webhook/WebhookRequestService';
 import {WebhookService} from '@fluxer/api/src/webhook/WebhookService';
@@ -199,6 +200,14 @@ function getRateLimitService(): RateLimitService {
 		_rateLimitService = new RateLimitService(getCacheService());
 	}
 	return _rateLimitService;
+}
+
+let _emailDnsValidationService: EmailDnsValidationService | null = null;
+function getEmailDnsValidationService(): EmailDnsValidationService {
+	if (!_emailDnsValidationService) {
+		_emailDnsValidationService = new EmailDnsValidationService();
+	}
+	return _emailDnsValidationService;
 }
 
 function createRuntimeSmsProvider(): ISmsProvider {
@@ -351,6 +360,7 @@ export const ServiceMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => 
 	const cacheService = getCacheService();
 	const kvClient = getKVClient();
 	const rateLimitService = getRateLimitService();
+	const emailDnsValidationService = getEmailDnsValidationService();
 	const purgeQueue = getPurgeQueue();
 	const assetDeletionQueue = getAssetDeletionQueue();
 	const csamLegalHoldService = getCsamLegalHoldService();
@@ -592,6 +602,7 @@ export const ServiceMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => 
 		gatewayService,
 		rateLimitService,
 		emailService,
+		emailDnsValidationService,
 		smsService,
 		snowflakeService,
 		snowflakeReservationService,
@@ -622,6 +633,7 @@ export const ServiceMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => 
 		userRepository,
 		inviteRepository,
 		emailService,
+		emailDnsValidationService,
 		snowflakeService,
 		storageService,
 		reportSearchService,
@@ -717,6 +729,7 @@ export const ServiceMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => 
 		emailService,
 		userRepository,
 		rateLimitService,
+		emailDnsValidationService,
 	);
 
 	const passwordChangeRepository = new PasswordChangeRepository();
@@ -788,12 +801,20 @@ export const ServiceMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => 
 			donationRepository,
 		);
 
-		const donationMagicLinkService = new DonationMagicLinkService(donationRepository, emailService);
-		const donationCheckoutService = new DonationCheckoutService(stripeService.getStripe(), donationRepository);
+		const donationMagicLinkService = new DonationMagicLinkService(
+			donationRepository,
+			emailService,
+			emailDnsValidationService,
+		);
+		const donationCheckoutService = new DonationCheckoutService(
+			stripeService.getStripe(),
+			donationRepository,
+			emailDnsValidationService,
+		);
 		donationService = new DonationService(donationMagicLinkService, donationCheckoutService);
 	}
 
-	const sendGridWebhookService = new SendGridWebhookService(userRepository, gatewayService);
+	const sweegoWebhookService = new SweegoWebhookService(userRepository, gatewayService);
 
 	const applicationService = new ApplicationService({
 		applicationRepository,
@@ -853,7 +874,7 @@ export const ServiceMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => 
 		userCacheService,
 		mediaService,
 		liveKitWebhookService ?? null,
-		sendGridWebhookService,
+		sweegoWebhookService,
 	);
 	const packRequestService = new PackRequestService(packService);
 
@@ -912,7 +933,7 @@ export const ServiceMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => 
 	ctx.set('reportRequestService', reportRequestService);
 	ctx.set('rpcService', rpcService);
 	ctx.set('searchService', searchService);
-	ctx.set('sendGridWebhookService', sendGridWebhookService);
+	ctx.set('sweegoWebhookService', sweegoWebhookService);
 	ctx.set('snowflakeService', snowflakeService);
 	ctx.set('storageService', storageService);
 	ctx.set('themeService', themeService);

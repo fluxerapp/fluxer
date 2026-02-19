@@ -195,6 +195,7 @@ channels_and_guilds.voice_channels_cannot_be_above_text_channels: Aynı kategori
 colors.color_value_too_high: Renk değeri 0xffffff değerini aşamaz.
 colors.color_value_too_low: Renk değeri en az 0x000000 olmalı.
 connections.already_exists: Bu türden bir bağlantı bu tanımlayıcıyla zaten mevcut.
+connections.bluesky_oauth_authorization_failed: O Bluesky kullanıcı adını çözemedik. Lütfen kontrol edip tekrar dene.
 connections.bluesky_oauth_callback_failed: Bluesky bağlantısını tamamlayamadık. Lütfen tekrar dene.
 connections.bluesky_oauth_not_enabled: Bluesky bağlantıları bu sunucuda etkinleştirilmemiş.
 connections.bluesky_oauth_session_expired: Bluesky oturumunun süresi dolmuş. Lütfen hesabını yeniden bağla.

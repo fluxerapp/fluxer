@@ -272,6 +272,12 @@ export const VerifyUserEmailRequest = z.object({
 
 export type VerifyUserEmailRequest = z.infer<typeof VerifyUserEmailRequest>;
 
+export const ResendVerificationEmailRequest = z.object({
+	user_id: SnowflakeType.describe('ID of the user to resend verification email to'),
+});
+
+export type ResendVerificationEmailRequest = z.infer<typeof ResendVerificationEmailRequest>;
+
 export const SendPasswordResetRequest = z.object({
 	user_id: SnowflakeType.describe('ID of the user to send password reset to'),
 });
@@ -406,6 +412,19 @@ export const BulkScheduleUserDeletionRequest = z.object({
 });
 
 export type BulkScheduleUserDeletionRequest = z.infer<typeof BulkScheduleUserDeletionRequest>;
+
+export const ListWebAuthnCredentialsRequest = z.object({
+	user_id: SnowflakeType.describe('ID of the user to list WebAuthn credentials for'),
+});
+
+export type ListWebAuthnCredentialsRequest = z.infer<typeof ListWebAuthnCredentialsRequest>;
+
+export const DeleteWebAuthnCredentialRequest = z.object({
+	user_id: SnowflakeType.describe('ID of the user who owns the credential'),
+	credential_id: createStringType(1, 512).describe('ID of the WebAuthn credential to delete'),
+});
+
+export type DeleteWebAuthnCredentialRequest = z.infer<typeof DeleteWebAuthnCredentialRequest>;
 
 export const ListUserChangeLogRequest = z.object({
 	user_id: SnowflakeType.describe('ID of the user to list change logs for'),

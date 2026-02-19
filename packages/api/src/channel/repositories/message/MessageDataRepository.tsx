@@ -727,7 +727,6 @@ export class MessageDataRepository {
 
 		const result = await executeVersionedUpdate<MessageRow, 'channel_id' | 'bucket' | 'message_id'>(
 			async () => {
-				if (oldData !== undefined) return oldData;
 				const pk = {
 					channel_id: data.channel_id,
 					bucket: data.bucket,
@@ -745,6 +744,7 @@ export class MessageDataRepository {
 				patch: buildPatchFromData(data, current, MESSAGE_COLUMNS, ['channel_id', 'bucket', 'message_id']),
 			}),
 			Messages,
+			{initialData: oldData},
 		);
 
 		if (!result.applied) {

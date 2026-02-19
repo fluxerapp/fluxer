@@ -20,6 +20,7 @@
 import styles from '@app/components/channel/ChannelMembers.module.css';
 import {MemberListContainer} from '@app/components/channel/MemberListContainer';
 import {MemberListItem} from '@app/components/channel/MemberListItem';
+import {MemberListUnavailableFallback} from '@app/components/channel/shared/MemberListUnavailableFallback';
 import {OutlineFrame} from '@app/components/layout/OutlineFrame';
 import {resolveMemberListPresence} from '@app/hooks/useMemberListPresence';
 import {useMemberListSubscription} from '@app/hooks/useMemberListSubscription';
@@ -34,6 +35,7 @@ import type {GroupDMMemberGroup} from '@app/utils/MemberListUtils';
 import * as MemberListUtils from '@app/utils/MemberListUtils';
 import * as NicknameUtils from '@app/utils/NicknameUtils';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
+import {GuildOperations} from '@fluxer/constants/src/GuildConstants';
 import {isOfflineStatus} from '@fluxer/constants/src/StatusConstants';
 import {useLingui} from '@lingui/react/macro';
 import clsx from 'clsx';
@@ -152,11 +154,12 @@ interface LazyMemberListProps {
 
 const LazyMemberList = observer(function LazyMemberList({guild, channel}: LazyMemberListProps) {
 	const [subscribedRange, setSubscribedRange] = useState<[number, number]>(INITIAL_MEMBER_RANGE);
+	const memberListUpdatesDisabled = (guild.disabledOperations & GuildOperations.MEMBER_LIST_UPDATES) !== 0;
 
 	const {subscribe} = useMemberListSubscription({
 		guildId: guild.id,
 		channelId: channel.id,
-		enabled: true,
+		enabled: !memberListUpdatesDisabled,
 		allowInitialUnfocusedLoad: true,
 	});
 
@@ -180,6 +183,14 @@ const LazyMemberList = observer(function LazyMemberList({guild, channel}: LazyMe
 		},
 		[subscribedRange, subscribe],
 	);
+
+	if (memberListUpdatesDisabled) {
+		return (
+			<MemberListContainer channelId={channel.id}>
+				<MemberListUnavailableFallback />
+			</MemberListContainer>
+		);
+	}
 
 	if (isLoading) {
 		return (

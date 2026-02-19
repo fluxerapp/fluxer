@@ -184,7 +184,7 @@ lookup_guild(GuildId, SessionState) ->
         {Pid, _Ref} when is_pid(Pid) ->
             {ok, Pid};
         undefined ->
-            case gen_server:call(guild_manager, {lookup, GuildId}, 5000) of
+            case guild_manager:lookup(GuildId) of
                 {ok, Pid} when is_pid(Pid) -> {ok, Pid};
                 _ -> {error, not_found}
             end;
@@ -459,5 +459,322 @@ normalize_nonce_test() ->
     ?assertEqual(<<"abc">>, normalize_nonce(<<"abc">>)),
     ?assertEqual(null, normalize_nonce(<<"this_nonce_is_way_too_long_to_be_valid">>)),
     ?assertEqual(null, normalize_nonce(undefined)).
+
+validate_user_ids_too_many_test() ->
+    UserIds = lists:seq(1, 101),
+    ?assertEqual({error, too_many_user_ids}, validate_user_ids(UserIds)).
+
+validate_user_ids_exactly_max_test() ->
+    UserIds = lists:seq(1, 100),
+    {ok, Parsed} = validate_user_ids(UserIds),
+    ?assertEqual(100, length(Parsed)).
+
+validate_user_ids_non_list_test() ->
+    {ok, []} = validate_user_ids(not_a_list).
+
+validate_user_ids_filters_invalid_test() ->
+    {ok, Parsed} = validate_user_ids([<<"1">>, <<"invalid">>, 3, -5, 0]),
+    ?assertEqual([1, 3], Parsed).
+
+validate_user_ids_empty_test() ->
+    {ok, []} = validate_user_ids([]).
+
+parse_user_id_integer_test() ->
+    ?assertEqual({ok, 42}, parse_user_id(42)).
+
+parse_user_id_binary_test() ->
+    ?assertEqual({ok, 123}, parse_user_id(<<"123">>)).
+
+parse_user_id_zero_test() ->
+    ?assertEqual(error, parse_user_id(0)).
+
+parse_user_id_negative_test() ->
+    ?assertEqual(error, parse_user_id(-1)).
+
+parse_user_id_invalid_binary_test() ->
+    ?assertEqual(error, parse_user_id(<<"abc">>)).
+
+parse_user_id_other_type_test() ->
+    ?assertEqual(error, parse_user_id(1.5)).
+
+ensure_binary_binary_test() ->
+    ?assertEqual(<<"hello">>, ensure_binary(<<"hello">>)).
+
+ensure_binary_integer_test() ->
+    ?assertEqual(<<>>, ensure_binary(42)).
+
+ensure_binary_undefined_test() ->
+    ?assertEqual(<<>>, ensure_binary(undefined)).
+
+ensure_limit_valid_test() ->
+    ?assertEqual(10, ensure_limit(10)).
+
+ensure_limit_zero_test() ->
+    ?assertEqual(0, ensure_limit(0)).
+
+ensure_limit_negative_test() ->
+    ?assertEqual(0, ensure_limit(-1)).
+
+ensure_limit_non_integer_test() ->
+    ?assertEqual(0, ensure_limit(<<"10">>)).
+
+validate_guild_id_integer_test() ->
+    ?assertEqual({ok, 123}, validate_guild_id(123)).
+
+validate_guild_id_zero_test() ->
+    ?assertEqual({error, invalid_guild_id}, validate_guild_id(0)).
+
+validate_guild_id_negative_test() ->
+    ?assertEqual({error, invalid_guild_id}, validate_guild_id(-1)).
+
+validate_guild_id_atom_test() ->
+    ?assertEqual({error, invalid_guild_id}, validate_guild_id(undefined)).
+
+build_chunk_data_basic_test() ->
+    Members = [#{<<"user">> => #{<<"id">> => <<"1">>}}],
+    Result = build_chunk_data(Members, [], 0, 1, null),
+    ?assertEqual(Members, maps:get(<<"members">>, Result)),
+    ?assertEqual(0, maps:get(<<"chunk_index">>, Result)),
+    ?assertEqual(1, maps:get(<<"chunk_count">>, Result)),
+    ?assertNot(maps:is_key(<<"presences">>, Result)),
+    ?assertNot(maps:is_key(<<"nonce">>, Result)).
+
+build_chunk_data_with_presences_test() ->
+    Members = [#{<<"user">> => #{<<"id">> => <<"1">>}}],
+    Presences = [#{<<"user">> => #{<<"id">> => <<"1">>}, <<"status">> => <<"online">>}],
+    Result = build_chunk_data(Members, Presences, 0, 1, null),
+    ?assertEqual(Presences, maps:get(<<"presences">>, Result)),
+    ?assertNot(maps:is_key(<<"nonce">>, Result)).
+
+build_chunk_data_with_nonce_test() ->
+    Members = [],
+    Result = build_chunk_data(Members, [], 0, 1, <<"my_nonce">>),
+    ?assertEqual(<<"my_nonce">>, maps:get(<<"nonce">>, Result)).
+
+build_chunk_data_with_presences_and_nonce_test() ->
+    Members = [#{<<"user">> => #{<<"id">> => <<"1">>}}],
+    Presences = [#{<<"user">> => #{<<"id">> => <<"1">>}, <<"status">> => <<"online">>}],
+    Result = build_chunk_data(Members, Presences, 2, 5, <<"nonce1">>),
+    ?assertEqual(Presences, maps:get(<<"presences">>, Result)),
+    ?assertEqual(<<"nonce1">>, maps:get(<<"nonce">>, Result)),
+    ?assertEqual(2, maps:get(<<"chunk_index">>, Result)),
+    ?assertEqual(5, maps:get(<<"chunk_count">>, Result)).
+
+chunk_presences_aligns_with_member_chunks_test() ->
+    Members1 = [
+        #{<<"user">> => #{<<"id">> => <<"1">>}},
+        #{<<"user">> => #{<<"id">> => <<"2">>}}
+    ],
+    Members2 = [
+        #{<<"user">> => #{<<"id">> => <<"3">>}}
+    ],
+    Presences = [
+        #{<<"user">> => #{<<"id">> => <<"1">>}, <<"status">> => <<"online">>},
+        #{<<"user">> => #{<<"id">> => <<"3">>}, <<"status">> => <<"idle">>}
+    ],
+    Result = chunk_presences(Presences, [Members1, Members2]),
+    ?assertEqual(2, length(Result)),
+    [P1, P2] = Result,
+    ?assertEqual(1, length(P1)),
+    ?assertEqual(1, length(P2)).
+
+chunk_presences_empty_presences_test() ->
+    Members = [#{<<"user">> => #{<<"id">> => <<"1">>}}],
+    Result = chunk_presences([], [Members]),
+    ?assertEqual([[]], Result).
+
+chunk_presences_no_matching_presences_test() ->
+    Members = [#{<<"user">> => #{<<"id">> => <<"1">>}}],
+    Presences = [#{<<"user">> => #{<<"id">> => <<"999">>}, <<"status">> => <<"online">>}],
+    Result = chunk_presences(Presences, [Members]),
+    ?assertEqual([[]], Result).
+
+filter_members_by_ids_basic_test() ->
+    Members = [
+        #{<<"user">> => #{<<"id">> => <<"1">>}},
+        #{<<"user">> => #{<<"id">> => <<"2">>}},
+        #{<<"user">> => #{<<"id">> => <<"3">>}}
+    ],
+    Result = filter_members_by_ids(Members, [1, 3]),
+    ?assertEqual(2, length(Result)).
+
+filter_members_by_ids_empty_ids_test() ->
+    Members = [#{<<"user">> => #{<<"id">> => <<"1">>}}],
+    Result = filter_members_by_ids(Members, []),
+    ?assertEqual([], Result).
+
+filter_members_by_ids_no_match_test() ->
+    Members = [#{<<"user">> => #{<<"id">> => <<"1">>}}],
+    Result = filter_members_by_ids(Members, [999]),
+    ?assertEqual([], Result).
+
+filter_members_by_ids_skips_invalid_members_test() ->
+    Members = [#{}, #{<<"user">> => #{}}, #{<<"user">> => #{<<"id">> => <<"1">>}}],
+    Result = filter_members_by_ids(Members, [1]),
+    ?assertEqual(1, length(Result)).
+
+filter_members_by_query_case_insensitive_test() ->
+    Members = [
+        #{<<"user">> => #{<<"id">> => <<"1">>, <<"username">> => <<"Alice">>}},
+        #{<<"user">> => #{<<"id">> => <<"2">>, <<"username">> => <<"bob">>}}
+    ],
+    Results = filter_members_by_query(Members, <<"ALICE">>, 10),
+    ?assertEqual(1, length(Results)).
+
+filter_members_by_query_respects_limit_test() ->
+    Members = [
+        #{<<"user">> => #{<<"id">> => <<"1">>, <<"username">> => <<"alice1">>}},
+        #{<<"user">> => #{<<"id">> => <<"2">>, <<"username">> => <<"alice2">>}},
+        #{<<"user">> => #{<<"id">> => <<"3">>, <<"username">> => <<"alice3">>}}
+    ],
+    Results = filter_members_by_query(Members, <<"alice">>, 2),
+    ?assertEqual(2, length(Results)).
+
+filter_members_by_query_empty_query_matches_all_test() ->
+    Members = [
+        #{<<"user">> => #{<<"id">> => <<"1">>, <<"username">> => <<"alice">>}},
+        #{<<"user">> => #{<<"id">> => <<"2">>, <<"username">> => <<"bob">>}}
+    ],
+    Results = filter_members_by_query(Members, <<>>, 10),
+    ?assertEqual(2, length(Results)).
+
+filter_members_by_query_no_match_test() ->
+    Members = [
+        #{<<"user">> => #{<<"id">> => <<"1">>, <<"username">> => <<"alice">>}}
+    ],
+    Results = filter_members_by_query(Members, <<"zzz">>, 10),
+    ?assertEqual(0, length(Results)).
+
+filter_members_by_query_matches_nick_test() ->
+    Members = [
+        #{
+            <<"user">> => #{<<"id">> => <<"1">>, <<"username">> => <<"alice">>},
+            <<"nick">> => <<"SuperNick">>
+        }
+    ],
+    Results = filter_members_by_query(Members, <<"super">>, 10),
+    ?assertEqual(1, length(Results)).
+
+get_display_name_null_nick_test() ->
+    Member = #{
+        <<"user">> => #{<<"username">> => <<"user">>},
+        <<"nick">> => null
+    },
+    ?assertEqual(<<"user">>, get_display_name(Member)).
+
+get_display_name_non_binary_nick_test() ->
+    Member = #{
+        <<"user">> => #{<<"username">> => <<"user">>},
+        <<"nick">> => 12345
+    },
+    ?assertEqual(<<"user">>, get_display_name(Member)).
+
+get_display_name_non_map_test() ->
+    ?assertEqual(<<>>, get_display_name(not_a_map)).
+
+get_display_name_null_global_name_test() ->
+    Member = #{<<"user">> => #{<<"username">> => <<"user">>, <<"global_name">> => null}},
+    ?assertEqual(<<"user">>, get_display_name(Member)).
+
+get_display_name_non_binary_global_name_test() ->
+    Member = #{<<"user">> => #{<<"username">> => <<"user">>, <<"global_name">> => 12345}},
+    ?assertEqual(<<"user">>, get_display_name(Member)).
+
+get_username_null_test() ->
+    ?assertEqual(<<>>, get_username(#{<<"username">> => null})).
+
+get_username_undefined_test() ->
+    ?assertEqual(<<>>, get_username(#{<<"username">> => undefined})).
+
+get_username_non_binary_test() ->
+    ?assertEqual(<<>>, get_username(#{<<"username">> => 12345})).
+
+get_username_missing_test() ->
+    ?assertEqual(<<>>, get_username(#{})).
+
+extract_user_id_valid_test() ->
+    ?assertEqual(42, extract_user_id(#{<<"user">> => #{<<"id">> => <<"42">>}})).
+
+extract_user_id_missing_user_test() ->
+    ?assertEqual(undefined, extract_user_id(#{})).
+
+extract_user_id_non_map_test() ->
+    ?assertEqual(undefined, extract_user_id(not_a_map)).
+
+presence_visible_online_test() ->
+    ?assertEqual(true, presence_visible(#{<<"status">> => <<"online">>})).
+
+presence_visible_idle_test() ->
+    ?assertEqual(true, presence_visible(#{<<"status">> => <<"idle">>})).
+
+presence_visible_dnd_test() ->
+    ?assertEqual(true, presence_visible(#{<<"status">> => <<"dnd">>})).
+
+presence_visible_offline_test() ->
+    ?assertEqual(false, presence_visible(#{<<"status">> => <<"offline">>})).
+
+presence_visible_invisible_test() ->
+    ?assertEqual(false, presence_visible(#{<<"status">> => <<"invisible">>})).
+
+presence_visible_missing_status_test() ->
+    ?assertEqual(false, presence_visible(#{})).
+
+normalize_nonce_exactly_max_length_test() ->
+    Nonce = list_to_binary(lists:duplicate(32, $a)),
+    ?assertEqual(Nonce, normalize_nonce(Nonce)).
+
+normalize_nonce_one_over_max_test() ->
+    Nonce = list_to_binary(lists:duplicate(33, $a)),
+    ?assertEqual(null, normalize_nonce(Nonce)).
+
+normalize_nonce_empty_binary_test() ->
+    ?assertEqual(<<>>, normalize_nonce(<<>>)).
+
+normalize_nonce_integer_test() ->
+    ?assertEqual(null, normalize_nonce(42)).
+
+normalize_nonce_null_atom_test() ->
+    ?assertEqual(null, normalize_nonce(null)).
+
+parse_request_defaults_test() ->
+    Data = #{<<"guild_id">> => 12345},
+    {ok, Request} = parse_request(Data),
+    ?assertEqual(12345, maps:get(guild_id, Request)),
+    ?assertEqual(<<>>, maps:get(query, Request)),
+    ?assertEqual(0, maps:get(limit, Request)),
+    ?assertEqual([], maps:get(user_ids, Request)),
+    ?assertEqual(false, maps:get(presences, Request)),
+    ?assertEqual(null, maps:get(nonce, Request)).
+
+parse_request_non_binary_query_test() ->
+    Data = #{<<"guild_id">> => 123, <<"query">> => 42},
+    {ok, Request} = parse_request(Data),
+    ?assertEqual(<<>>, maps:get(query, Request)).
+
+parse_request_negative_limit_test() ->
+    Data = #{<<"guild_id">> => 123, <<"limit">> => -5},
+    {ok, Request} = parse_request(Data),
+    ?assertEqual(0, maps:get(limit, Request)).
+
+parse_request_presences_not_true_test() ->
+    Data = #{<<"guild_id">> => 123, <<"presences">> => <<"yes">>},
+    {ok, Request} = parse_request(Data),
+    ?assertEqual(false, maps:get(presences, Request)).
+
+parse_request_missing_guild_id_test() ->
+    Data = #{<<"query">> => <<"test">>},
+    ?assertEqual({error, invalid_guild_id}, parse_request(Data)).
+
+handle_request_invalid_data_test() ->
+    ?assertEqual({error, invalid_request}, handle_request(not_a_map, self(), #{})).
+
+chunk_list_single_element_test() ->
+    ?assertEqual([[1]], chunk_list([1], 1)).
+
+chunk_list_exact_multiple_test() ->
+    ?assertEqual([[1, 2], [3, 4]], chunk_list([1, 2, 3, 4], 2)).
+
+chunk_list_large_size_test() ->
+    ?assertEqual([[1, 2, 3]], chunk_list([1, 2, 3], 1000)).
 
 -endif.

@@ -19,7 +19,10 @@
 
 import {Config} from '@fluxer/api/src/Config';
 import type {IDonationRepository} from '@fluxer/api/src/donation/IDonationRepository';
+import type {IEmailDnsValidationService} from '@fluxer/api/src/infrastructure/IEmailDnsValidationService';
 import {Logger} from '@fluxer/api/src/Logger';
+import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
+import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {DonationAmountInvalidError} from '@fluxer/errors/src/domains/donation/DonationAmountInvalidError';
 import {StripeError} from '@fluxer/errors/src/domains/payment/StripeError';
 import {StripePaymentNotAvailableError} from '@fluxer/errors/src/domains/payment/StripePaymentNotAvailableError';
@@ -32,6 +35,7 @@ export class DonationCheckoutService {
 	constructor(
 		private stripe: Stripe | null,
 		private donationRepository: IDonationRepository,
+		private emailDnsValidationService: IEmailDnsValidationService,
 	) {}
 
 	async createCheckout(params: {
@@ -46,6 +50,11 @@ export class DonationCheckoutService {
 
 		if (params.amountCents < MIN_DONATION_CENTS || params.amountCents > MAX_DONATION_CENTS) {
 			throw new DonationAmountInvalidError();
+		}
+
+		const hasValidDns = await this.emailDnsValidationService.hasValidDnsRecords(params.email);
+		if (!hasValidDns) {
+			throw InputValidationError.fromCode('email', ValidationErrorCodes.INVALID_EMAIL_ADDRESS);
 		}
 
 		const isRecurring = params.interval !== null;

@@ -149,4 +149,26 @@ handle_virtual_channel_access_for_move(UserId, ChannelId, _ConnectionsToMove, Gu
 
 -spec cleanup_virtual_access_on_disconnect(integer(), pid()) -> ok.
 cleanup_virtual_access_on_disconnect(UserId, GuildPid) ->
-    gen_server:cast(GuildPid, {cleanup_virtual_access_for_user, UserId}).
+    GuildId = resolve_guild_id_from_pid(GuildPid),
+    TargetPid = resolve_voice_server(GuildId, GuildPid),
+    gen_server:cast(TargetPid, {cleanup_virtual_access_for_user, UserId}).
+
+-spec resolve_guild_id_from_pid(pid()) -> integer() | undefined.
+resolve_guild_id_from_pid(GuildPid) ->
+    try gen_server:call(GuildPid, {get_sessions}, 5000) of
+        State when is_map(State) ->
+            maps:get(id, State, undefined);
+        _ ->
+            undefined
+    catch
+        _:_ -> undefined
+    end.
+
+-spec resolve_voice_server(integer() | undefined, pid()) -> pid().
+resolve_voice_server(undefined, FallbackPid) ->
+    FallbackPid;
+resolve_voice_server(GuildId, FallbackPid) ->
+    case guild_voice_server:lookup(GuildId) of
+        {ok, VoicePid} -> VoicePid;
+        {error, not_found} -> FallbackPid
+    end.

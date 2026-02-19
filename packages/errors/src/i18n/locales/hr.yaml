@@ -195,6 +195,7 @@ channels_and_guilds.voice_channels_cannot_be_above_text_channels: Glasovni kanal
 colors.color_value_too_high: Vrijednost boje ne smije prelaziti 0xffffff.
 colors.color_value_too_low: Vrijednost boje mora biti barem 0x000000.
 connections.already_exists: Veza ovog tipa s ovim identifikatorom već postoji.
+connections.bluesky_oauth_authorization_failed: Nismo uspjeli razriješiti taj Bluesky identifikator. Provjeri ga i pokušaj opet.
 connections.bluesky_oauth_callback_failed: Nismo uspjeli dovršiti povezivanje s Blueskyem. Pokušaj opet.
 connections.bluesky_oauth_not_enabled: Veze s Blueskyem nisu uključene na ovom serveru.
 connections.bluesky_oauth_session_expired: Tvoja Bluesky sesija je istekla. Ponovno poveži svoj račun.

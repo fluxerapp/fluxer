@@ -37,7 +37,7 @@
 }
 
 .input::placeholder {
-	color: var(--text-primary-muted);
+	color: var(--text-tertiary);
 }
 
 .input.minHeight {
@@ -209,7 +209,7 @@
 }
 
 .textarea::placeholder {
-	color: var(--text-primary-muted);
+	color: var(--text-tertiary);
 }
 
 .textareaActions {
