@@ -73,7 +73,7 @@ TBD
 
 ### Devenv development environment
 
-Fluxer supports development through **devenv** only. It provides a reproducible Nix environment and a single, declarative process manager for the dev stack. If you need a different setup, it is currently unsupported.
+Fluxer supports development through **devenv** only. It provides a reproducible Nix environment and a single, declarative process manager for the dev stack.
 
 1. Install Nix and devenv using the [devenv getting started guide](https://devenv.sh/getting-started/).
 2. Enter the environment:
@@ -107,6 +107,20 @@ If you develop on a remote VM behind Cloudflare Tunnels (or a similar HTTP-only 
 | 50000-50100 | UDP      | RTP/RTCP media   |
 
 The bootstrap script configures LiveKit automatically based on `domain.base_domain` in your `config.json`. When set to a non-localhost domain, it enables external IP discovery so clients can connect directly for media while signaling continues through the tunnel.
+
+### Devcontainer (experimental)
+
+There is experimental support for developing in a **VS Code Dev Container** / GitHub Codespace without Nix. The `.devcontainer/` directory provides a Docker Compose setup with all required tooling and backing services.
+
+```bash
+# Inside the dev container, start all processes:
+process-compose -f .devcontainer/process-compose.yml up
+```
+
+Open the app at `http://localhost:48763` and the dev email inbox at `http://localhost:48763/mailpit/`. Predefined VS Code debugging targets are available in `.vscode/launch.json`.
+
+> [!WARNING]
+> Bluesky OAuth is disabled in the devcontainer because it requires HTTPS. All other features work normally.
 
 ### Documentation
 

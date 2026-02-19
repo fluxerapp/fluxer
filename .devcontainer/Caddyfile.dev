@@ -1,0 +1,54 @@
+# Like dev/Caddyfile.dev, but LiveKit and Mailpit are referenced by their
+# Docker Compose hostnames instead of 127.0.0.1.
+
+{
+	auto_https off
+	admin off
+}
+
+:48763 {
+	handle /_caddy_health {
+		respond "OK" 200
+	}
+
+	@gateway path /gateway /gateway/*
+	handle @gateway {
+		uri strip_prefix /gateway
+		reverse_proxy 127.0.0.1:49107
+	}
+
+	@marketing path /marketing /marketing/*
+	handle @marketing {
+		uri strip_prefix /marketing
+		reverse_proxy 127.0.0.1:49531
+	}
+
+	@server path /admin /admin/* /api /api/* /s3 /s3/* /queue /queue/* /media /media/* /_health /_ready /_live /.well-known/fluxer
+	handle @server {
+		reverse_proxy 127.0.0.1:49319
+	}
+
+	@livekit path /livekit /livekit/*
+	handle @livekit {
+		uri strip_prefix /livekit
+		reverse_proxy livekit:7880
+	}
+
+	redir /mailpit /mailpit/
+	handle_path /mailpit/* {
+		rewrite * /mailpit{path}
+		reverse_proxy mailpit:8025
+	}
+
+	handle {
+		reverse_proxy 127.0.0.1:49427 {
+			header_up Connection {http.request.header.Connection}
+			header_up Upgrade {http.request.header.Upgrade}
+		}
+	}
+
+	log {
+		output stdout
+		format console
+	}
+}

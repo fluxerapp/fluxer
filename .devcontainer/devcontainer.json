@@ -1,0 +1,75 @@
+{
+	"name": "Fluxer",
+	"dockerComposeFile": "docker-compose.yml",
+	"service": "app",
+	"workspaceFolder": "/workspace",
+
+	"features": {
+		"ghcr.io/devcontainers/features/node:1": {
+			"version": "24",
+			"pnpmVersion": "10.29.3"
+		},
+		"ghcr.io/devcontainers/features/go:1": {
+			"version": "1.24"
+		},
+		"ghcr.io/devcontainers/features/rust:1": {
+			"version": "1.93.0",
+			"targets": "wasm32-unknown-unknown"
+		},
+		"ghcr.io/devcontainers/features/python:1": {
+			"version": "os-provided",
+			"installTools": false
+		}
+	},
+
+	"onCreateCommand": ".devcontainer/on-create.sh",
+
+	"remoteEnv": {
+		"FLUXER_CONFIG": "${containerWorkspaceFolder}/config/config.json",
+		"FLUXER_DATABASE": "sqlite"
+	},
+
+	"forwardPorts": [48763, 6379, 7700, 7880],
+
+	"portsAttributes": {
+		"48763": {
+			"label": "Fluxer (Caddy)",
+			"onAutoForward": "openBrowser",
+			"protocol": "http"
+		},
+		"6379": {
+			"label": "Valkey",
+			"onAutoForward": "silent"
+		},
+		"7700": {
+			"label": "Meilisearch",
+			"onAutoForward": "silent"
+		},
+		"7880": {
+			"label": "LiveKit",
+			"onAutoForward": "silent"
+		},
+		"9229": {
+			"label": "Node.js Debugger",
+			"onAutoForward": "silent"
+		}
+	},
+
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"TypeScriptTeam.native-preview",
+				"biomejs.biome",
+				"clinyong.vscode-css-modules",
+				"pgourlain.erlang",
+				"golang.go",
+				"rust-lang.rust-analyzer"
+			],
+			"settings": {
+				"typescript.preferences.includePackageJsonAutoImports": "auto",
+				"typescript.suggest.autoImports": true,
+				"typescript.experimental.useTsgo": true
+			}
+		}
+	}
+}

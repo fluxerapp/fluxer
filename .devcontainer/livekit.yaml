@@ -1,0 +1,30 @@
+# Credentials here must match the values on-create.sh writes to config.json.
+
+port: 7880
+
+keys:
+  fluxer-devcontainer-key: fluxer-devcontainer-secret-key-00000000
+
+rtc:
+  tcp_port: 7881
+  port_range_start: 50000
+  port_range_end: 50100
+  use_external_ip: false
+  node_ip: 127.0.0.1
+
+turn:
+  enabled: true
+  domain: localhost
+  udp_port: 3478
+
+webhook:
+  api_key: fluxer-devcontainer-key
+  urls:
+    - http://app:49319/api/webhooks/livekit
+
+room:
+  auto_create: true
+  max_participants: 100
+  empty_timeout: 300
+
+development: true

@@ -1,0 +1,84 @@
+{
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"type": "node",
+			"request": "launch",
+			"name": "Debug: fluxer_server",
+			"program": "${workspaceFolder}/fluxer_server/src/startServer.tsx",
+			"runtimeArgs": ["--import", "tsx"],
+			"cwd": "${workspaceFolder}/fluxer_server",
+			"env": {
+				"FLUXER_CONFIG": "${workspaceFolder}/config/config.json",
+				"FLUXER_DATABASE": "sqlite"
+			},
+			"console": "integratedTerminal",
+			"skipFiles": ["<node_internals>/**", "**/node_modules/**"]
+		},
+		{
+			"type": "node",
+			"request": "launch",
+			"name": "Debug: fluxer_api (standalone)",
+			"program": "${workspaceFolder}/fluxer_api/src/AppEntrypoint.tsx",
+			"runtimeArgs": ["--import", "tsx"],
+			"cwd": "${workspaceFolder}/fluxer_api",
+			"env": {
+				"FLUXER_CONFIG": "${workspaceFolder}/config/config.json",
+				"FLUXER_DATABASE": "sqlite"
+			},
+			"console": "integratedTerminal",
+			"skipFiles": ["<node_internals>/**", "**/node_modules/**"]
+		},
+		{
+			"type": "node",
+			"request": "launch",
+			"name": "Debug: fluxer_marketing",
+			"program": "${workspaceFolder}/fluxer_marketing/src/index.tsx",
+			"runtimeArgs": ["--import", "tsx"],
+			"cwd": "${workspaceFolder}/fluxer_marketing",
+			"env": {
+				"FLUXER_CONFIG": "${workspaceFolder}/config/config.json"
+			},
+			"console": "integratedTerminal",
+			"skipFiles": ["<node_internals>/**", "**/node_modules/**"]
+		},
+		{
+			"type": "node",
+			"request": "launch",
+			"name": "Debug: fluxer_app (DevServer)",
+			"program": "${workspaceFolder}/fluxer_app/scripts/DevServer.tsx",
+			"runtimeArgs": ["--import", "tsx"],
+			"cwd": "${workspaceFolder}/fluxer_app",
+			"env": {
+				"FLUXER_APP_DEV_PORT": "49427",
+				"FORCE_COLOR": "1"
+			},
+			"console": "integratedTerminal",
+			"skipFiles": ["<node_internals>/**", "**/node_modules/**"]
+		},
+		{
+			"type": "node",
+			"request": "launch",
+			"name": "Debug: Test Current File",
+			"program": "${workspaceFolder}/node_modules/vitest/vitest.mjs",
+			"args": ["run", "--no-coverage", "${relativeFile}"],
+			"autoAttachChildProcesses": true,
+			"console": "integratedTerminal",
+			"skipFiles": ["<node_internals>/**", "**/node_modules/**"]
+		},
+		{
+			"type": "node",
+			"request": "attach",
+			"name": "Attach to Node Process",
+			"port": 9229,
+			"restart": true,
+			"skipFiles": ["<node_internals>/**", "**/node_modules/**"]
+		}
+	],
+	"compounds": [
+		{
+			"name": "Debug: Server + App",
+			"configurations": ["Debug: fluxer_server", "Debug: fluxer_app (DevServer)"]
+		}
+	]
+}

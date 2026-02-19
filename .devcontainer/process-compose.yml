@@ -1,0 +1,57 @@
+# Application processes only — backing services (Valkey, Meilisearch, LiveKit,
+# Mailpit) run via Docker Compose.
+#   process-compose -f .devcontainer/process-compose.yml up
+
+is_tui_disabled: false
+log_level: info
+log_configuration:
+  flush_each_line: true
+
+processes:
+  caddy:
+    command: caddy run --config .devcontainer/Caddyfile.dev --adapter caddyfile
+    log_location: dev/logs/caddy.log
+    readiness_probe:
+      http_get:
+        host: 127.0.0.1
+        port: 48763
+        path: /_caddy_health
+    availability:
+      restart: always
+
+  fluxer_server:
+    command: pnpm --filter fluxer_server dev
+    log_location: dev/logs/fluxer_server.log
+    availability:
+      restart: always
+
+  fluxer_app:
+    command: ./scripts/dev_fluxer_app.sh
+    environment:
+      - FORCE_COLOR=1
+      - FLUXER_APP_DEV_PORT=49427
+    log_location: dev/logs/fluxer_app.log
+    availability:
+      restart: always
+
+  fluxer_gateway:
+    command: ./scripts/dev_gateway.sh
+    environment:
+      - FLUXER_GATEWAY_NO_SHELL=1
+    log_location: dev/logs/fluxer_gateway.log
+    availability:
+      restart: always
+
+  marketing_dev:
+    command: pnpm --filter fluxer_marketing dev
+    environment:
+      - FORCE_COLOR=1
+    log_location: dev/logs/marketing_dev.log
+    availability:
+      restart: always
+
+  css_watch:
+    command: ./scripts/dev_css_watch.sh
+    log_location: dev/logs/css_watch.log
+    availability:
+      restart: always
