@@ -1,5 +1,5 @@
 # Application processes only — backing services (Valkey, Meilisearch, LiveKit,
-# Mailpit) run via Docker Compose.
+# Mailpit, NATS) run via Docker Compose.
 #   process-compose -f .devcontainer/process-compose.yml up
 
 is_tui_disabled: false

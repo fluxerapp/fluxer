@@ -46,6 +46,9 @@ jq '
 	.integrations.email.smtp.host = "mailpit" |
 	.integrations.email.smtp.port = 1025 |
 
+	.services.nats.core_url = "nats://nats-core:4222" |
+	.services.nats.jetstream_url = "nats://nats-jetstream:4223" |
+
 	# Bluesky OAuth requires HTTPS + loopback IPs (RFC 8252), incompatible with
 	# the HTTP-only devcontainer setup.
 	.auth.bluesky.enabled = false

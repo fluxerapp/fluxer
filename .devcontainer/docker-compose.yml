@@ -46,6 +46,19 @@ services:
     restart: unless-stopped
     command: ['--webroot', '/mailpit/']
 
+  nats-core:
+    image: nats:2-alpine
+    restart: unless-stopped
+    command: ['--port', '4222']
+
+  nats-jetstream:
+    image: nats:2-alpine
+    restart: unless-stopped
+    command: ['--port', '4223', '--jetstream', '--store_dir', '/data']
+    volumes:
+      - nats-jetstream-data:/data
+
 volumes:
   valkey-data:
   meilisearch-data:
+  nats-jetstream-data:
