@@ -248,7 +248,14 @@ call_shard(GuildId, Request, Timeout) ->
 
 -spec call_via_manager(term(), pos_integer()) -> term().
 call_via_manager(Request, Timeout) ->
-    gen_server:call(?MODULE, Request, Timeout + 1000).
+    case catch gen_server:call(?MODULE, Request, Timeout + 1000) of
+        {'EXIT', {timeout, _}} ->
+            {error, timeout};
+        {'EXIT', _} ->
+            {error, unavailable};
+        Reply ->
+            Reply
+    end.
 
 -spec forward_call(guild_id(), term(), state()) -> {term(), state()}.
 forward_call(GuildId, {start_or_lookup, _} = Request, State) ->

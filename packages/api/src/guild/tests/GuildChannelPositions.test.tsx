@@ -18,6 +18,8 @@
  */
 
 import {createTestAccount} from '@fluxer/api/src/auth/tests/AuthTestUtils';
+import {createGuildID} from '@fluxer/api/src/BrandedTypes';
+import {ChannelRepository} from '@fluxer/api/src/channel/ChannelRepository';
 import {
 	acceptInvite,
 	addMemberRole,
@@ -33,6 +35,7 @@ import {type ApiTestHarness, createApiTestHarness} from '@fluxer/api/src/test/Ap
 import {HTTP_STATUS} from '@fluxer/api/src/test/TestConstants';
 import {createBuilder} from '@fluxer/api/src/test/TestRequestBuilder';
 import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 
 describe('Guild Channel Positions', () => {
@@ -256,5 +259,218 @@ describe('Guild Channel Positions', () => {
 			.filter((channel) => channel.parent_id === textCategory.id)
 			.sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
 		expect(destinationSiblings.map((channel) => channel.id)).toEqual([textOne.id, textTwo.id, voiceChannel.id]);
+	});
+
+	test('should move default general text under the default voice category', async () => {
+		const account = await createTestAccount(harness);
+		const guild = await createGuild(harness, account.token, 'Test Guild');
+		const channels = await getGuildChannels(harness, account.token, guild.id);
+
+		const general = channels.find((channel) => channel.type === ChannelTypes.GUILD_TEXT && channel.name === 'general');
+		const voiceCategory = channels.find(
+			(channel) => channel.type === ChannelTypes.GUILD_CATEGORY && channel.name === 'Voice Channels',
+		);
+		const generalVoice = channels.find(
+			(channel) => channel.type === ChannelTypes.GUILD_VOICE && channel.name === 'General',
+		);
+
+		expect(general).toBeDefined();
+		expect(voiceCategory).toBeDefined();
+		expect(generalVoice).toBeDefined();
+
+		await updateChannelPositions(harness, account.token, guild.id, [
+			{
+				id: general!.id,
+				parent_id: voiceCategory!.id,
+				position: 0,
+			},
+		]);
+
+		const updatedChannels = await getGuildChannels(harness, account.token, guild.id);
+		const voiceCategorySiblings = updatedChannels
+			.filter((channel) => channel.parent_id === voiceCategory!.id)
+			.sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
+		expect(voiceCategorySiblings.map((channel) => channel.id)).toEqual([general!.id, generalVoice!.id]);
+	});
+
+	test('should prioritise preceding_sibling_id over position when both are provided', async () => {
+		const account = await createTestAccount(harness);
+		const guild = await createGuild(harness, account.token, 'Test Guild');
+
+		const category = await createChannel(harness, account.token, guild.id, 'Category', ChannelTypes.GUILD_CATEGORY);
+		const textOne = await createChannel(harness, account.token, guild.id, 'one', ChannelTypes.GUILD_TEXT);
+		const textTwo = await createChannel(harness, account.token, guild.id, 'two', ChannelTypes.GUILD_TEXT);
+		const textThree = await createChannel(harness, account.token, guild.id, 'three', ChannelTypes.GUILD_TEXT);
+
+		await updateChannelPositions(harness, account.token, guild.id, [
+			{id: textOne.id, parent_id: category.id},
+			{id: textTwo.id, parent_id: category.id},
+			{id: textThree.id, parent_id: category.id},
+		]);
+
+		await updateChannelPositions(harness, account.token, guild.id, [
+			{
+				id: textThree.id,
+				parent_id: category.id,
+				position: 0,
+				preceding_sibling_id: textOne.id,
+			},
+		]);
+
+		const channels = await getGuildChannels(harness, account.token, guild.id);
+		const siblings = channels
+			.filter((channel) => channel.parent_id === category.id)
+			.sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
+		expect(siblings.map((channel) => channel.id)).toEqual([textOne.id, textThree.id, textTwo.id]);
+	});
+
+	test('should reject preceding sibling from a different parent', async () => {
+		const account = await createTestAccount(harness);
+		const guild = await createGuild(harness, account.token, 'Test Guild');
+
+		const categoryOne = await createChannel(harness, account.token, guild.id, 'Cat 1', ChannelTypes.GUILD_CATEGORY);
+		const categoryTwo = await createChannel(harness, account.token, guild.id, 'Cat 2', ChannelTypes.GUILD_CATEGORY);
+		const textOne = await createChannel(harness, account.token, guild.id, 'one', ChannelTypes.GUILD_TEXT);
+		const textTwo = await createChannel(harness, account.token, guild.id, 'two', ChannelTypes.GUILD_TEXT);
+
+		await updateChannelPositions(harness, account.token, guild.id, [
+			{id: textOne.id, parent_id: categoryOne.id},
+			{id: textTwo.id, parent_id: categoryTwo.id},
+		]);
+
+		const response = await createBuilder<{
+			code: string;
+			errors: Array<{path: string; code: string; message: string}>;
+		}>(harness, account.token)
+			.patch(`/guilds/${guild.id}/channels`)
+			.body([
+				{
+					id: textOne.id,
+					parent_id: categoryOne.id,
+					preceding_sibling_id: textTwo.id,
+				},
+			])
+			.expect(HTTP_STATUS.BAD_REQUEST)
+			.execute();
+
+		expect(response.code).toBe('INVALID_FORM_BODY');
+		expect(response.errors[0]?.path).toBe('preceding_sibling_id');
+		expect(response.errors[0]?.code).toBe(ValidationErrorCodes.PRECEDING_CHANNEL_MUST_SHARE_PARENT);
+	});
+
+	test('should reject positioning a category relative to its own child', async () => {
+		const account = await createTestAccount(harness);
+		const guild = await createGuild(harness, account.token, 'Test Guild');
+
+		const category = await createChannel(harness, account.token, guild.id, 'Cat', ChannelTypes.GUILD_CATEGORY);
+		const child = await createChannel(harness, account.token, guild.id, 'child', ChannelTypes.GUILD_TEXT);
+
+		await updateChannelPositions(harness, account.token, guild.id, [{id: child.id, parent_id: category.id}]);
+
+		const response = await createBuilder<{
+			code: string;
+			errors: Array<{path: string; code: string; message: string}>;
+		}>(harness, account.token)
+			.patch(`/guilds/${guild.id}/channels`)
+			.body([
+				{
+					id: category.id,
+					parent_id: null,
+					preceding_sibling_id: child.id,
+				},
+			])
+			.expect(HTTP_STATUS.BAD_REQUEST)
+			.execute();
+
+		expect(response.code).toBe('INVALID_FORM_BODY');
+		expect(response.errors[0]?.path).toBe('preceding_sibling_id');
+		expect(response.errors[0]?.code).toBe(ValidationErrorCodes.CANNOT_POSITION_CHANNEL_RELATIVE_TO_ITSELF);
+	});
+
+	test('should reorder top-level categories despite unrelated legacy voice and text ordering', async () => {
+		const account = await createTestAccount(harness);
+		const guild = await createGuild(harness, account.token, 'Test Guild');
+
+		const milsims = await createChannel(harness, account.token, guild.id, 'MILSIMS', ChannelTypes.GUILD_CATEGORY);
+		const coopGames = await createChannel(harness, account.token, guild.id, 'COOP GAMES', ChannelTypes.GUILD_CATEGORY);
+		const frontDoor = await createChannel(harness, account.token, guild.id, 'FRONT DOOR', ChannelTypes.GUILD_CATEGORY);
+		const coopText = await createChannel(harness, account.token, guild.id, 'coop-text', ChannelTypes.GUILD_TEXT);
+		const coopVoice = await createChannel(harness, account.token, guild.id, 'coop-voice', ChannelTypes.GUILD_VOICE);
+
+		await updateChannelPositions(harness, account.token, guild.id, [
+			{id: coopText.id, parent_id: coopGames.id},
+			{id: coopVoice.id, parent_id: coopGames.id},
+		]);
+
+		const channelRepository = new ChannelRepository();
+		const channelsBeforeMove = await channelRepository.listGuildChannels(createGuildID(BigInt(guild.id)));
+		const storedCoopText = channelsBeforeMove.find((channel) => channel.id.toString() === coopText.id);
+		const storedCoopVoice = channelsBeforeMove.find((channel) => channel.id.toString() === coopVoice.id);
+
+		expect(storedCoopText).toBeDefined();
+		expect(storedCoopVoice).toBeDefined();
+		if (!storedCoopText || !storedCoopVoice) {
+			return;
+		}
+
+		await channelRepository.upsert({...storedCoopVoice.toRow(), position: 1});
+		await channelRepository.upsert({...storedCoopText.toRow(), position: 2});
+
+		await updateChannelPositions(harness, account.token, guild.id, [
+			{
+				id: frontDoor.id,
+				parent_id: null,
+				preceding_sibling_id: milsims.id,
+			},
+		]);
+
+		const channels = await getGuildChannels(harness, account.token, guild.id);
+		const orderedRootCategories = channels
+			.filter((channel) => channel.type === ChannelTypes.GUILD_CATEGORY && channel.parent_id == null)
+			.sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
+			.map((channel) => channel.id);
+
+		const milsimsIndex = orderedRootCategories.indexOf(milsims.id);
+		const frontDoorIndex = orderedRootCategories.indexOf(frontDoor.id);
+		const coopGamesIndex = orderedRootCategories.indexOf(coopGames.id);
+
+		expect(milsimsIndex).toBeGreaterThanOrEqual(0);
+		expect(frontDoorIndex).toBeGreaterThanOrEqual(0);
+		expect(coopGamesIndex).toBeGreaterThanOrEqual(0);
+		expect(frontDoorIndex).toBeGreaterThan(milsimsIndex);
+		expect(frontDoorIndex).toBeLessThan(coopGamesIndex);
+	});
+
+	test('should reject text channels being positioned below voice channels via preceding_sibling_id', async () => {
+		const account = await createTestAccount(harness);
+		const guild = await createGuild(harness, account.token, 'Test Guild');
+
+		const category = await createChannel(harness, account.token, guild.id, 'Mixed', ChannelTypes.GUILD_CATEGORY);
+		const text = await createChannel(harness, account.token, guild.id, 'text', ChannelTypes.GUILD_TEXT);
+		const voice = await createChannel(harness, account.token, guild.id, 'voice', ChannelTypes.GUILD_VOICE);
+
+		await updateChannelPositions(harness, account.token, guild.id, [
+			{id: text.id, parent_id: category.id},
+			{id: voice.id, parent_id: category.id},
+		]);
+
+		const response = await createBuilder<{
+			code: string;
+			errors: Array<{path: string; code: string; message: string}>;
+		}>(harness, account.token)
+			.patch(`/guilds/${guild.id}/channels`)
+			.body([
+				{
+					id: text.id,
+					parent_id: category.id,
+					preceding_sibling_id: voice.id,
+				},
+			])
+			.expect(HTTP_STATUS.BAD_REQUEST)
+			.execute();
+
+		expect(response.code).toBe('INVALID_FORM_BODY');
+		expect(response.errors[0]?.path).toBe('preceding_sibling_id');
+		expect(response.errors[0]?.code).toBe(ValidationErrorCodes.VOICE_CHANNELS_CANNOT_BE_ABOVE_TEXT_CHANNELS);
 	});
 });

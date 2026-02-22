@@ -47,9 +47,8 @@ export const Endpoints = {
 	AUTH_AUTHORIZE_IP: '/auth/authorize-ip',
 	AUTH_IP_AUTHORIZATION_RESEND: '/auth/ip-authorization/resend',
 	AUTH_IP_AUTHORIZATION_POLL: (ticket: string) => {
-		const url = new URL('https://fluxer.invalid/auth/ip-authorization/poll');
-		url.searchParams.set('ticket', ticket);
-		return `${url.pathname}${url.search}`;
+		const params = new URLSearchParams({ticket});
+		return `/auth/ip-authorization/poll?${params}`;
 	},
 	AUTH_SSO_START: '/auth/sso/start',
 	AUTH_SSO_COMPLETE: '/auth/sso/complete',

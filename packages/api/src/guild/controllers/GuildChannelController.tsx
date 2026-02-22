@@ -114,6 +114,10 @@ export function GuildChannelController(app: HonoApp) {
 						channelId: createChannelID(item.id),
 						position: item.position,
 						parentId: item.parent_id == null ? item.parent_id : createChannelID(item.parent_id),
+						precedingSiblingId:
+							item.preceding_sibling_id == null
+								? item.preceding_sibling_id
+								: createChannelID(item.preceding_sibling_id),
 						lockPermissions: item.lock_permissions ?? false,
 					})),
 					requestCache,

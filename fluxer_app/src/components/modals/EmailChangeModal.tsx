@@ -26,7 +26,7 @@ import styles from '@app/components/modals/EmailChangeModal.module.css';
 import * as Modal from '@app/components/modals/Modal';
 import {Button} from '@app/components/uikit/button/Button';
 import {useFormSubmit} from '@app/hooks/useFormSubmit';
-import UserStore from '@app/stores/UserStore';
+import type {UserRecord} from '@app/records/UserRecord';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import {useEffect, useMemo, useState} from 'react';
@@ -38,9 +38,12 @@ interface NewEmailForm {
 	email: string;
 }
 
-export const EmailChangeModal = observer(() => {
+interface EmailChangeModalProps {
+	user: UserRecord;
+}
+
+export const EmailChangeModal = observer(({user}: EmailChangeModalProps) => {
 	const {t} = useLingui();
-	const user = UserStore.getCurrentUser()!;
 	const newEmailForm = useForm<NewEmailForm>({defaultValues: {email: ''}});
 	const [stage, setStage] = useState<Stage>('intro');
 	const [ticket, setTicket] = useState<string | null>(null);

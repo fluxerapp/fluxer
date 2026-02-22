@@ -17,6 +17,7 @@
  * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
  */
 
+import {parseMention} from '@fluxer/markdown_parser/src/parsers/MentionParsers';
 import {NodeType, ParserFlags} from '@fluxer/markdown_parser/src/types/Enums';
 import {MAX_LINK_URL_LENGTH} from '@fluxer/markdown_parser/src/types/MarkdownConstants';
 import type {Node, ParserResult} from '@fluxer/markdown_parser/src/types/Nodes';
@@ -53,7 +54,7 @@ function containsLinkSyntax(text: string): boolean {
 
 export function parseLink(
 	text: string,
-	_parserFlags: number,
+	parserFlags: number,
 	parseInline: (text: string) => Array<Node>,
 ): ParserResult | null {
 	if (text.charCodeAt(0) !== OPEN_BRACKET) return null;
@@ -72,6 +73,13 @@ export function parseLink(
 
 		if (bracketResult) {
 			const {bracketPosition, linkText} = bracketResult;
+			const trimmedLinkText = linkText.trim();
+
+			const mentionResult = parseMention(trimmedLinkText, parserFlags);
+
+			if (mentionResult && mentionResult.advance === trimmedLinkText.length) {
+				return null;
+			}
 
 			if (containsLinkSyntax(linkText)) {
 				return {

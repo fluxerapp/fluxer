@@ -234,6 +234,9 @@ export const ChannelPositionUpdateRequest = z.array(
 		id: SnowflakeType.describe('The ID of the channel to reposition'),
 		position: z.number().int().nonnegative().optional().describe('New position for the channel'),
 		parent_id: SnowflakeType.nullish().describe('New parent category ID'),
+		preceding_sibling_id: SnowflakeType.nullish().describe(
+			'ID of the sibling channel that should directly precede this channel after reordering',
+		),
 		lock_permissions: z.boolean().optional().describe('Whether to sync permissions with the new parent'),
 	}),
 );

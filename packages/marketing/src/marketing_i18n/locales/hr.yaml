@@ -371,7 +371,7 @@ pricing_and_tiers.free.label: Besplatno
 pricing_and_tiers.plutonium.benefits_note_official_instance_only: 'Napomena: Plutonium i Visionary pogodnosti vrijede samo na službenoj instanci Fluxer.app, ne na trećim stranama ili self-hostanim instancama.'
 pricing_and_tiers.plutonium.feature_highlights: Uploadovi do 500 MB, poruke do 4,000 znakova, 300 oznaka, 50 paketa emojija i još puno toga.
 pricing_and_tiers.plutonium.features.bio_character_limit: Limit znakova u biografiji
-pricing_and_tiers.plutonium.features.choose_custom_4_digit_tag: Odaberi vlastitu 4-znamenkastu oznaku kao #0001, #1337, ili #9999 kako bi svoje korisničko ime bio doista jedinstveno.
+pricing_and_tiers.plutonium.features.choose_custom_4_digit_tag: Odaberi bilo koju dostupnu 4-znamenkastu oznaku od #0001 do #9999 kako bi svoje korisničko ime učinio doista jedinstvenim.
 pricing_and_tiers.plutonium.features.custom_4_digit_username_tag: Prilagođena 4-znamenkasta oznaka korisničkog imena
 pricing_and_tiers.plutonium.features.custom_username_tag: Prilagođena oznaka korisničkog imena
 pricing_and_tiers.plutonium.features.custom_video_backgrounds: Video pozadine

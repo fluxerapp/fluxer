@@ -189,8 +189,6 @@ const HOSTED_ONLY_GUILD_FEATURES: ReadonlyArray<string> = [
 	GuildFeatures.VISIONARY,
 	GuildFeatures.VIP_VOICE,
 	GuildFeatures.OPERATOR,
-	GuildFeatures.MANAGED_MESSAGE_SCHEDULING,
-	GuildFeatures.MANAGED_EXPRESSION_PACKS,
 ];
 
 export const SELF_HOSTED_GUILD_FEATURES: ReadonlyArray<string> = GUILD_FEATURES.filter(

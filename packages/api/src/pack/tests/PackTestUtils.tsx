@@ -23,7 +23,6 @@ import {createTestAccount, type TestAccount} from '@fluxer/api/src/auth/tests/Au
 import type {ApiTestHarness} from '@fluxer/api/src/test/ApiTestHarness';
 import {HTTP_STATUS} from '@fluxer/api/src/test/TestConstants';
 import {createBuilder, createBuilderWithoutAuth} from '@fluxer/api/src/test/TestRequestBuilder';
-import {ManagedTraits} from '@fluxer/constants/src/ManagedTraits';
 import type {
 	GuildEmojiResponse,
 	GuildEmojiWithUserResponse,
@@ -54,13 +53,8 @@ export async function createGuild(harness: ApiTestHarness, token: string, name: 
 	return createBuilder<GuildResponse>(harness, token).post('/guilds').body({name}).expect(HTTP_STATUS.OK).execute();
 }
 
-export async function enableExpressionPacksForGuild(harness: ApiTestHarness, guildId: string): Promise<void> {
-	await createBuilderWithoutAuth(harness)
-		.post(`/test/guilds/${guildId}/features`)
-		.body({
-			add_features: [ManagedTraits.EXPRESSION_PACKS],
-		})
-		.execute();
+export async function grantStaffAccess(harness: ApiTestHarness, userId: string): Promise<void> {
+	await createBuilderWithoutAuth(harness).patch(`/test/users/${userId}/flags`).body({flags: 1}).execute();
 }
 
 export async function grantPremium(harness: ApiTestHarness, userId: string): Promise<void> {
@@ -90,7 +84,7 @@ export async function setupPackTestAccount(harness: ApiTestHarness): Promise<{
 }> {
 	const account = await createTestAccount(harness);
 	const guild = await createGuild(harness, account.token, 'Pack Test Guild');
-	await enableExpressionPacksForGuild(harness, guild.id);
+	await grantStaffAccess(harness, account.userId);
 	await grantPremium(harness, account.userId);
 	return {account, guild};
 }
@@ -101,7 +95,7 @@ export async function setupNonPremiumPackTestAccount(harness: ApiTestHarness): P
 }> {
 	const account = await createTestAccount(harness);
 	const guild = await createGuild(harness, account.token, 'Pack Test Guild');
-	await enableExpressionPacksForGuild(harness, guild.id);
+	await grantStaffAccess(harness, account.userId);
 	return {account, guild};
 }
 

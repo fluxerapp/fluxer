@@ -27,7 +27,7 @@ import {ScheduledMessage} from '@fluxer/api/src/models/ScheduledMessage';
 import type {User} from '@fluxer/api/src/models/User';
 import {withBusinessSpan} from '@fluxer/api/src/telemetry/BusinessSpans';
 import type {ScheduledMessageRepository} from '@fluxer/api/src/user/repositories/ScheduledMessageRepository';
-import {ManagedTraits} from '@fluxer/constants/src/ManagedTraits';
+import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {FeatureTemporarilyDisabledError} from '@fluxer/errors/src/domains/core/FeatureTemporarilyDisabledError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
@@ -134,7 +134,7 @@ export class ScheduledMessageService {
 	private async upsertScheduledMessage(params: UpdateScheduleParams): Promise<ScheduledMessage> {
 		const {user, channelId, data, scheduledLocalAt, timezone} = params;
 
-		if (!user.traits.has(ManagedTraits.MESSAGE_SCHEDULING)) {
+		if ((user.flags & UserFlags.STAFF) === 0n) {
 			throw new FeatureTemporarilyDisabledError();
 		}
 

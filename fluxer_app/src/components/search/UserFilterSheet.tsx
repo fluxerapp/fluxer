@@ -62,7 +62,7 @@ export const UserFilterSheet: React.FC<UserFilterSheetProps> = observer(
 				const members = GuildMemberStore.getMembers(channel.guildId);
 				return members.map((m) => m.user);
 			}
-			return channel.recipientIds.map((id) => UserStore.getUser(id)).filter((u): u is UserRecord => u !== null);
+			return channel.recipientIds.map((id) => UserStore.getUser(id)).filter((u): u is UserRecord => u != null);
 		}, [channel.guildId, channel.recipientIds]);
 
 		const filteredUsers = useMemo(() => {

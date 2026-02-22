@@ -50,7 +50,7 @@ export const POLICY_METADATA: ReadonlyArray<PolicyMetadata> = [
 		description:
 			'The rules and expectations for participating in the Fluxer community. Help us keep Fluxer safe and welcoming.',
 		category: 'Community',
-		lastUpdated: '2026-02-13',
+		lastUpdated: '2026-02-21',
 	},
 	{
 		slug: 'security',

@@ -134,12 +134,12 @@ msgid "{0} of {totalAttachments}"
 msgstr "{0} от {totalAttachments}"
 
 #. placeholder {0}: passkeys.length
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:285
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:288
 msgid "{0} passkey registered (max 10)"
 msgstr "{0} парола регистрирана (макс 10)"
 
 #. placeholder {0}: passkeys.length
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:286
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:289
 msgid "{0} passkeys registered (max 10)"
 msgstr "{0} пароли регистрирани (макс 10)"
 
@@ -633,11 +633,11 @@ msgstr "{lockedStickerCount} стикер"
 msgid "{lockedStickerCount} stickers"
 msgstr "{lockedStickerCount} стикера"
 
-#: src/components/alerts/MaxBookmarksModal.tsx:38
+#: src/components/alerts/MaxBookmarksModal.tsx:41
 msgid "{maxBookmarks} bookmark"
 msgstr "{maxBookmarks} отметка"
 
-#: src/components/alerts/MaxBookmarksModal.tsx:38
+#: src/components/alerts/MaxBookmarksModal.tsx:41
 msgid "{maxBookmarks} bookmarks"
 msgstr "{maxBookmarks} отметки"
 
@@ -718,11 +718,11 @@ msgstr "{participantCount} участник в обаждане"
 msgid "{participantCount} participants in call"
 msgstr "{participantCount} участници в обаждане"
 
-#: src/components/alerts/MaxBookmarksModal.tsx:63
+#: src/components/alerts/MaxBookmarksModal.tsx:66
 msgid "{premiumBookmarks} bookmark"
 msgstr "{premiumBookmarks} отметка"
 
-#: src/components/alerts/MaxBookmarksModal.tsx:63
+#: src/components/alerts/MaxBookmarksModal.tsx:66
 msgid "{premiumBookmarks} bookmarks"
 msgstr "{premiumBookmarks} отметки"
 
@@ -875,11 +875,11 @@ msgstr "{username} премахна някого от групата."
 msgid "{username} started a call."
 msgstr "{username} започна разговор."
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:100
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:102
 msgid "{v} gift"
 msgstr "{v} подарък"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:100
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:102
 msgid "{v} gifts"
 msgstr "{v} подаръка"
 
@@ -1088,7 +1088,7 @@ msgstr "<0>Раззаглуших</0> члена."
 msgid "<0>Unmuted</0> the member."
 msgstr "<0>Възстанових</0> члена."
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:370
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:373
 msgid "<0>Warning:</0> This will also disable SMS two-factor authentication."
 msgstr "<0>Внимание:</0> Това ще деактивира и SMS двуфакторното удостоверяване."
 
@@ -1362,9 +1362,9 @@ msgstr "30 секунди"
 msgid "4 hours"
 msgstr "4 часа"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:203
-#: src/components/modals/FluxerTagChangeModal.tsx:231
-#: src/components/modals/FluxerTagChangeModal.tsx:248
+#: src/components/modals/FluxerTagChangeModal.tsx:217
+#: src/components/modals/FluxerTagChangeModal.tsx:245
+#: src/components/modals/FluxerTagChangeModal.tsx:262
 msgid "4-digit tag"
 msgstr "4-цифров таг"
 
@@ -1634,7 +1634,7 @@ msgstr "Акаунтът беше успешно заявен"
 msgid "Account Connected"
 msgstr "Акаунт свързан"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:55
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:57
 msgid "Account State Overrides"
 msgstr "Пренаписвания на състоянието на акаунта"
 
@@ -1642,7 +1642,7 @@ msgstr "Пренаписвания на състоянието на акаунт
 msgid "Account Too New"
 msgstr "Акаунтът е твърде нов"
 
-#: src/actions/InviteActionCreators.tsx:178
+#: src/actions/InviteActionCreators.tsx:182
 #: src/components/modals/RequiredActionModal.tsx:143
 #: src/components/modals/RequiredActionModal.tsx:416
 msgid "Account Verification Required"
@@ -1763,7 +1763,7 @@ msgstr "Добави"
 msgid "Add a bot to a community with requested permissions"
 msgstr "Добави бот в общност с изискваните разрешения"
 
-#: src/components/modals/ForwardModal.tsx:309
+#: src/components/modals/ForwardModal.tsx:314
 msgid "Add a comment (optional)"
 msgstr "Добави коментар (по избор)"
 
@@ -1782,7 +1782,7 @@ msgstr "Добави персонализиран фон"
 msgid "Add a different account"
 msgstr "Добави друг акаунт"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:348
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:351
 msgid "Add a phone number to enable SMS two-factor authentication"
 msgstr "Добави телефонен номер, за да активираш двуфакторна автентикация по SMS"
 
@@ -1844,7 +1844,7 @@ msgstr "Форма за добавяне на връзка"
 msgid "Add domain connection"
 msgstr "Добави домейн връзка"
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:98
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:101
 msgid "Add Email"
 msgstr "Добави имейл"
 
@@ -1902,12 +1902,12 @@ msgstr "Добави или промени телефонния си номер"
 msgid "Add Override"
 msgstr "Добави пренаписване"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:290
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:293
 msgid "Add Passkey"
 msgstr "Добави ключ за достъп"
 
 #: src/components/channel/barriers/BarrierComponents.tsx:198
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:395
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:398
 msgid "Add Phone"
 msgstr "Добави телефон"
 
@@ -2010,7 +2010,7 @@ msgstr "Добавени са {0}."
 msgid "Added roles."
 msgstr "Добавени роли."
 
-#: src/actions/SavedMessageActionCreators.tsx:58
+#: src/actions/SavedMessageActionCreators.tsx:59
 msgid "Added to bookmarks"
 msgstr "Добавено в отметки"
 
@@ -2028,11 +2028,11 @@ msgstr "Добавено в любими"
 msgid "Added to saved media"
 msgstr "Добавено в запазени медии"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:313
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:316
 msgid "Added: {createdDate}"
 msgstr "Добавено: {createdDate}"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:309
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:312
 msgid "Added: {createdDate} • Last used: {lastUsedDate}"
 msgstr "Добавено: {createdDate} • Последно използвано: {lastUsedDate}"
 
@@ -2930,7 +2930,7 @@ msgid "Are you sure you want to remove this connection? This action cannot be un
 msgstr "Сигурен ли си, че искаш да премахнеш тази връзка? Тази операция не може да бъде отменена."
 
 #. placeholder {0}: user.phone
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:364
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:367
 msgid "Are you sure you want to remove your phone number <0>{0}</0>?"
 msgstr "Сигурен ли си, че искаш да премахнеш телефонния си номер <0>{0}</0>?"
 
@@ -3395,7 +3395,7 @@ msgstr "Назад към ролите"
 msgid "Back to Settings"
 msgstr "Назад към настройките"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:118
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:120
 msgid "Backend Premium Override"
 msgstr "Пренаписване на Premium от бекенда"
 
@@ -3438,12 +3438,12 @@ msgid "backup codes"
 msgstr "кодове за резервно копие"
 
 #: src/components/modals/BackupCodesModal.tsx:43
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:254
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:257
 #: src/components/modals/utils/SettingsSearchIndex.tsx:140
 msgid "Backup Codes"
 msgstr "Резервни кодове"
 
-#: src/components/modals/BackupCodesRegenerateModal.tsx:48
+#: src/components/modals/BackupCodesRegenerateModal.tsx:55
 msgid "Backup codes regenerated"
 msgstr "Резервните кодове бяха генерирани отново"
 
@@ -3720,9 +3720,9 @@ msgstr "Клуб на читателите"
 msgid "Bookmark"
 msgstr "Отметка"
 
-#: src/components/alerts/MaxBookmarksModal.tsx:43
-#: src/components/alerts/MaxBookmarksModal.tsx:54
-#: src/components/alerts/MaxBookmarksModal.tsx:67
+#: src/components/alerts/MaxBookmarksModal.tsx:46
+#: src/components/alerts/MaxBookmarksModal.tsx:57
+#: src/components/alerts/MaxBookmarksModal.tsx:70
 msgid "Bookmark Limit Reached"
 msgstr "Достигнат лимит на отметките"
 
@@ -3750,7 +3750,7 @@ msgstr "Отбелязано!"
 
 #: src/components/modals/BookmarksBottomSheet.tsx:109
 #: src/components/pages/SavedMessagesPage.tsx:67
-#: src/components/popouts/InboxPopout.tsx:58
+#: src/components/popouts/InboxPopout.tsx:57
 msgid "Bookmarks"
 msgstr "Отметки"
 
@@ -4055,7 +4055,7 @@ msgstr "Камерите са деактивирани, когато има по
 #: src/components/alerts/FileSizeTooLargeModal.tsx:87
 #: src/components/auth/BrowserLoginHandoffModal.tsx:269
 #: src/components/bottomsheets/CreateDMBottomSheet.tsx:130
-#: src/components/channel/ChannelTextarea.tsx:312
+#: src/components/channel/ChannelTextarea.tsx:310
 #: src/components/channel/friends/FriendListItem.tsx:259
 #: src/components/channel/MentionEveryonePopout.tsx:128
 #: src/components/emojis/EmojiListItem.tsx:125
@@ -4069,8 +4069,8 @@ msgstr "Камерите са деактивирани, когато има по
 #: src/components/modals/AddGuildModal.tsx:413
 #: src/components/modals/AddGuildStickerModal.tsx:120
 #: src/components/modals/AttachmentEditModal.tsx:122
-#: src/components/modals/BackupCodesRegenerateModal.tsx:72
-#: src/components/modals/BackupCodesViewModal.tsx:70
+#: src/components/modals/BackupCodesRegenerateModal.tsx:79
+#: src/components/modals/BackupCodesViewModal.tsx:75
 #: src/components/modals/BanMemberModal.tsx:143
 #: src/components/modals/CameraPreviewModal.tsx:485
 #: src/components/modals/CaptchaModal.tsx:187
@@ -4094,14 +4094,14 @@ msgstr "Камерите са деактивирани, когато има по
 #: src/components/modals/EditFavoriteMemeModal.tsx:85
 #: src/components/modals/EditGuildStickerModal.tsx:113
 #: src/components/modals/EditPackModal.tsx:103
-#: src/components/modals/EmailChangeModal.tsx:199
-#: src/components/modals/EmailChangeModal.tsx:230
-#: src/components/modals/EmailChangeModal.tsx:267
-#: src/components/modals/EmailChangeModal.tsx:298
+#: src/components/modals/EmailChangeModal.tsx:202
+#: src/components/modals/EmailChangeModal.tsx:233
+#: src/components/modals/EmailChangeModal.tsx:270
+#: src/components/modals/EmailChangeModal.tsx:301
 #: src/components/modals/ExternalLinkWarningModal.tsx:102
-#: src/components/modals/FluxerTagChangeModal.tsx:117
-#: src/components/modals/FluxerTagChangeModal.tsx:280
-#: src/components/modals/ForwardModal.tsx:373
+#: src/components/modals/FluxerTagChangeModal.tsx:122
+#: src/components/modals/FluxerTagChangeModal.tsx:294
+#: src/components/modals/ForwardModal.tsx:378
 #: src/components/modals/guild_tabs/GuildBansTab.tsx:103
 #: src/components/modals/guild_tabs/GuildRolesTab.tsx:624
 #: src/components/modals/GuildFolderSettingsModal.tsx:199
@@ -4113,7 +4113,7 @@ msgstr "Камерите са деактивирани, когато има по
 #: src/components/modals/KickMemberModal.tsx:63
 #: src/components/modals/MessageHistoryThresholdModal.tsx:103
 #: src/components/modals/MfaTotpDisableModal.tsx:75
-#: src/components/modals/MfaTotpEnableModal.tsx:103
+#: src/components/modals/MfaTotpEnableModal.tsx:106
 #: src/components/modals/PasskeyNameModal.tsx:62
 #: src/components/modals/PasswordChangeModal.tsx:145
 #: src/components/modals/PasswordChangeModal.tsx:176
@@ -4146,7 +4146,7 @@ msgstr "Отказ"
 msgid "Cancel Friend Request"
 msgstr "Отмени заявката за приятелство"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:112
+#: src/components/modals/FluxerTagChangeModal.tsx:117
 msgid "Cancel if you want to choose a different username instead."
 msgstr "Отмени, ако искаш да избереш друго потребителско име."
 
@@ -4178,11 +4178,11 @@ msgstr "Не може да бъде редактирано"
 msgid "Cannot Delete Account"
 msgstr "Не може да се изтрие акаунтът"
 
-#: src/actions/InviteActionCreators.tsx:313
+#: src/actions/InviteActionCreators.tsx:317
 msgid "Cannot install emoji pack"
 msgstr "Не може да се инсталира пакетът с емоджита"
 
-#: src/actions/InviteActionCreators.tsx:314
+#: src/actions/InviteActionCreators.tsx:318
 msgid "Cannot install sticker pack"
 msgstr "Не може да се инсталира пакетът със стикери"
 
@@ -4279,7 +4279,7 @@ msgstr "Смени банера"
 msgid "Change email"
 msgstr "Промяна на имейл"
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:81
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:84
 msgid "Change Email"
 msgstr "Смени имейла"
 
@@ -4288,12 +4288,12 @@ msgstr "Смени имейла"
 msgid "Change emoji"
 msgstr "Смени емоджито"
 
-#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:59
-#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:69
+#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:60
+#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:70
 msgid "Change FluxerTag"
 msgstr "Смени FluxerTag"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:158
+#: src/components/modals/FluxerTagChangeModal.tsx:163
 msgid "Change FluxerTag form"
 msgstr "Форма за смяна на FluxerTag"
 
@@ -4360,7 +4360,7 @@ msgid "change password"
 msgstr "смяна на парола"
 
 #: src/components/modals/PasswordChangeModal.tsx:227
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:124
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:127
 msgid "Change Password"
 msgstr "Смени паролата"
 
@@ -4372,7 +4372,7 @@ msgstr "Форма за смяна на парола"
 msgid "Change what users without Read Message History can see"
 msgstr "Променете какво могат да видят потребителите без достъп до История на съобщенията"
 
-#: src/components/modals/EmailChangeModal.tsx:183
+#: src/components/modals/EmailChangeModal.tsx:186
 msgid "Change Your Email"
 msgstr "Смени имейла си"
 
@@ -4380,7 +4380,7 @@ msgstr "Смени имейла си"
 msgid "Change your email address"
 msgstr "Промени имейл адреса си"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:159
+#: src/components/modals/FluxerTagChangeModal.tsx:164
 msgid "Change Your FluxerTag"
 msgstr "Смени FluxerTag-а си"
 
@@ -4392,7 +4392,7 @@ msgstr "Смени прякора си в тази общност."
 msgid "Change your password"
 msgstr "Промени паролата си"
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:106
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:109
 msgid "Change your password to keep your account secure"
 msgstr "Промени паролата си, за да подсигуриш акаунта си"
 
@@ -4404,7 +4404,7 @@ msgstr "Промени профилната си снимка"
 msgid "Change your username"
 msgstr "Промени потребителското си име"
 
-#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:90
+#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:91
 msgid "Change your username and 4-digit tag"
 msgstr "Смени потребителското си име и 4-цифрения таг"
 
@@ -4424,7 +4424,7 @@ msgstr "Битрейтът е променен на {0}."
 msgid "Changed the voice region to {0}."
 msgstr "Регионът на гласа е променен на {0}."
 
-#: src/components/channel/ChannelTextarea.tsx:751
+#: src/components/channel/ChannelTextarea.tsx:749
 #: src/utils/SearchUtils.tsx:268
 msgid "channel"
 msgstr "канал"
@@ -4846,7 +4846,7 @@ msgstr "Регистрирай акаунта си, за да използваш
 msgid "Claim your account to call"
 msgstr "Претендирайте за акаунта си, за да се обадите"
 
-#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:56
+#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:57
 msgid "Claim your account to change your FluxerTag"
 msgstr "Регистрирайте акаунта си, за да промените FluxerTag"
 
@@ -5144,7 +5144,7 @@ msgstr "Клиентският секрет беше регенериран. А�
 #: src/components/modals/components/SettingsModalHeader.tsx:98
 #: src/components/modals/InviteModal.tsx:135
 #: src/components/modals/MediaModal.tsx:349
-#: src/components/modals/MobileVideoViewer.tsx:252
+#: src/components/modals/MobileVideoViewer.tsx:260
 #: src/components/modals/Modal.tsx:382
 #: src/components/modals/Modal.tsx:460
 #: src/components/modals/PackInviteModal.tsx:152
@@ -5201,7 +5201,7 @@ msgstr "Въгленова тема"
 #: src/components/auth/MfaScreen.tsx:131
 #: src/components/invites/InviteListItem.tsx:56
 #: src/components/modals/MfaTotpDisableModal.tsx:63
-#: src/components/modals/MfaTotpEnableModal.tsx:91
+#: src/components/modals/MfaTotpEnableModal.tsx:94
 #: src/components/pages/report/ReportBreadcrumbs.tsx:48
 msgid "Code"
 msgstr "Код"
@@ -5333,7 +5333,7 @@ msgid "Communication"
 msgstr "Комуникация"
 
 #: src/components/modals/components/FeatureComparisonTable.tsx:49
-#: src/stores/QuickSwitcherStore.tsx:1354
+#: src/stores/QuickSwitcherStore.tsx:1352
 #: src/utils/quick_switcher/QuickSwitcherModalUtils.tsx:99
 msgid "Communities"
 msgstr "Общности"
@@ -5651,7 +5651,7 @@ msgid "Configure your profile badge"
 msgstr "Конфигурирайте профилната си значка"
 
 #: src/components/channel/MentionEveryonePopout.tsx:134
-#: src/components/modals/EmailChangeModal.tsx:304
+#: src/components/modals/EmailChangeModal.tsx:307
 msgid "Confirm"
 msgstr "Потвърди"
 
@@ -5825,15 +5825,15 @@ msgstr "Контекстни менюта"
 msgid "Context menus can be opened with left-click (on buttons) or right-click (on other elements). This demonstrates various menu items including checkboxes, radio buttons, sliders, and submenus."
 msgstr "Контекстните менюта могат да се отворят с левия бутон (за бутони) или десния бутон (за други елементи). Това демонстрира различни елементи от менюто, включително квадратчета, радио бутони, плъзгачи и подменюта."
 
-#: src/components/channel/ChannelTextarea.tsx:311
+#: src/components/channel/ChannelTextarea.tsx:309
 #: src/components/modals/AddConnectionModal.tsx:221
-#: src/components/modals/BackupCodesRegenerateModal.tsx:75
-#: src/components/modals/BackupCodesViewModal.tsx:73
+#: src/components/modals/BackupCodesRegenerateModal.tsx:82
+#: src/components/modals/BackupCodesViewModal.tsx:78
 #: src/components/modals/DeviceRevokeModal.tsx:82
-#: src/components/modals/FluxerTagChangeModal.tsx:116
-#: src/components/modals/FluxerTagChangeModal.tsx:283
+#: src/components/modals/FluxerTagChangeModal.tsx:121
+#: src/components/modals/FluxerTagChangeModal.tsx:297
 #: src/components/modals/MfaTotpDisableModal.tsx:78
-#: src/components/modals/MfaTotpEnableModal.tsx:106
+#: src/components/modals/MfaTotpEnableModal.tsx:109
 #: src/components/modals/SudoVerificationModal.tsx:410
 msgid "Continue"
 msgstr "Продължи"
@@ -6555,7 +6555,7 @@ msgstr "Текущо устройство"
 msgid "Current DM"
 msgstr "Текущо директно съобщение"
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:113
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:116
 msgid "Current Password"
 msgstr "Текуща парола"
 
@@ -6601,7 +6601,7 @@ msgstr "Персонализирани CSS замествания"
 msgid "Custom Date Range"
 msgstr "Персонализиран диапазон от дати"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:227
+#: src/components/modals/FluxerTagChangeModal.tsx:241
 msgid "Custom discriminators are not available on this instance"
 msgstr "Персонализираните дискриминатори не са налични в тази инстанция"
 
@@ -6727,11 +6727,12 @@ msgstr "Персонализирайте кои бутони се появява
 msgid "Customize which buttons are visible in the message input area. Keyboard shortcuts will continue to work even if buttons are hidden."
 msgstr "Персонализирайте кои бутони са видими в областта за въвеждане на съобщения. Клавишните комбинации ще продължат да работят, дори ако бутоните са скрити."
 
-#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:74
-msgid "Customize your 4-digit tag (#{discriminator}) to your liking with Plutonium"
-msgstr "Персонализирай 4-цифрения си таг (#{discriminator}) както желаеш с Plutonium"
+#. placeholder {0}: user.discriminator
+#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:75
+msgid "Customize your 4-digit tag (#{0}) to your liking with Plutonium"
+msgstr "Персонализирайте вашия 4-цифрен етикет (#{0}) по ваше желание с Plutonium"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:272
+#: src/components/modals/FluxerTagChangeModal.tsx:286
 msgid "Customize your 4-digit tag or keep it when changing your username"
 msgstr "Персонализирай 4-цифрения си таг или го запази при смяна на потребителското си име"
 
@@ -7069,7 +7070,7 @@ msgstr "изтрий"
 #: src/components/emojis/EmojiListItem.tsx:195
 #: src/components/emojis/EmojiListItem.tsx:252
 #: src/components/emojis/EmojiListItem.tsx:308
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:322
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:325
 #: src/components/modals/tabs/component_gallery_tab/ButtonsTab.tsx:157
 #: src/components/modals/tabs/component_gallery_tab/ButtonsTab.tsx:242
 #: src/components/modals/tabs/component_gallery_tab/index.tsx:165
@@ -7515,7 +7516,7 @@ msgstr "Лично съобщение"
 #: src/components/layout/guild_list/FluxerButton.tsx:80
 #: src/components/modals/GuildPrivacySettingsModal.tsx:76
 #: src/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:221
-#: src/stores/QuickSwitcherStore.tsx:833
+#: src/stores/QuickSwitcherStore.tsx:831
 msgid "Direct Messages"
 msgstr "Лични съобщения"
 
@@ -7530,7 +7531,7 @@ msgstr "деактивирай"
 
 #: src/components/invites/DisableInvitesButton.tsx:60
 #: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:240
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:426
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:429
 msgid "Disable"
 msgstr "Изключи"
 
@@ -7558,7 +7559,7 @@ msgstr "Изключи анимациите и преходите в цялот�
 msgid "Disable animations and transitions. Currently controlled by your system setting."
 msgstr "Изключи анимациите и преходите. В момента се управляват от системните настройки."
 
-#: src/stores/QuickSwitcherStore.tsx:915
+#: src/stores/QuickSwitcherStore.tsx:913
 msgid "Disable Compact Mode"
 msgstr "Изключи компактен режим"
 
@@ -7585,7 +7586,7 @@ msgstr "Изключи потискането на шума"
 msgid "Disable Picture-in-Picture Popout"
 msgstr "Деактивиране на Picture-in-Picture Popout"
 
-#: src/stores/QuickSwitcherStore.tsx:931
+#: src/stores/QuickSwitcherStore.tsx:929
 msgid "Disable Reduced Motion"
 msgstr "Изключи намаленото движение"
 
@@ -7754,7 +7755,7 @@ msgstr "Дискриминатор"
 msgid "Discussion or promotion of illegal activities"
 msgstr "Обсъждане или пропагандиране на незаконни дейности"
 
-#: src/components/alerts/MaxBookmarksModal.tsx:76
+#: src/components/alerts/MaxBookmarksModal.tsx:79
 #: src/components/layout/GuildLayout.tsx:106
 #: src/components/layout/NagbarContent.tsx:42
 #: src/components/modals/GiftAcceptModal.tsx:110
@@ -7890,12 +7891,12 @@ msgstr "Искате ли също да блокирате лични съобщ
 msgid "Do you want to send this pin back in time?"
 msgstr "Искате ли да върнете тази щифт назад във времето?"
 
-#: src/components/channel/MessageActionUtils.tsx:410
+#: src/components/channel/MessageActionUtils.tsx:411
 msgid "Do you want to send this pin back to the future?"
 msgstr "Искате ли да изпратите този щифт обратно в бъдещето?"
 
 #: src/components/modals/tabs/AccessibilityTab.tsx:148
-#: src/components/modals/tabs/MyProfileTab.tsx:768
+#: src/components/modals/tabs/MyProfileTab.tsx:767
 msgid "Doc, I'm from the future. I came here in a time machine that you invented. Now, I need your help to get back to the year 1985."
 msgstr "Док, аз съм от бъдещето. Дойдох тук с машина на времето, която ти изобрети. Сега имам нужда от помощта ти да се върна в 1985 г."
 
@@ -8344,13 +8345,13 @@ msgid "Email"
 msgstr "Имейл"
 
 #: src/components/modals/tabs/account_security_tab/AccountTab.tsx:65
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:91
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:94
 #: src/components/modals/tabs/component_gallery_tab/InputsTab.tsx:107
 #: src/components/pages/report/ReportStepEmail.tsx:76
 msgid "Email Address"
 msgstr "Имейл адрес"
 
-#: src/components/modals/EmailChangeModal.tsx:165
+#: src/components/modals/EmailChangeModal.tsx:168
 msgid "Email changed"
 msgstr "Имейлът е променен"
 
@@ -8388,7 +8389,7 @@ msgstr "Лента за проверка на имейл"
 msgid "Email Verification Required"
 msgstr "Необходима верификация на имейл"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:57
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:59
 msgid "Email Verified Override"
 msgstr "Прескача проверката на имейл"
 
@@ -8426,11 +8427,11 @@ msgstr "вградени"
 msgid "Embeds"
 msgstr "Вградени обекти"
 
-#: src/components/channel/MessageActionUtils.tsx:520
+#: src/components/channel/MessageActionUtils.tsx:526
 msgid "Embeds suppressed"
 msgstr "Вграденото съдържание е скрито"
 
-#: src/components/channel/MessageActionUtils.tsx:506
+#: src/components/channel/MessageActionUtils.tsx:512
 msgid "Embeds unsuppressed"
 msgstr "Вграденото съдържание е показано"
 
@@ -8485,7 +8486,7 @@ msgstr "Имената на емоджитата трябва да са поне
 msgid "Emoji pack"
 msgstr "Пакет емоджита"
 
-#: src/actions/InviteActionCreators.tsx:255
+#: src/actions/InviteActionCreators.tsx:259
 msgid "Emoji pack creation limit reached"
 msgstr "Достигнат е лимитът за създаване на пакети емоджита"
 
@@ -8493,7 +8494,7 @@ msgstr "Достигнат е лимитът за създаване на пак
 msgid "Emoji Pack Invite"
 msgstr "Покана за пакет емоджита"
 
-#: src/actions/InviteActionCreators.tsx:241
+#: src/actions/InviteActionCreators.tsx:245
 msgid "Emoji pack limit reached"
 msgstr "Достигнат е лимитът за пакети емоджита"
 
@@ -8530,9 +8531,9 @@ msgstr "празно състояние"
 
 #: src/components/invites/DisableInvitesButton.tsx:60
 #: src/components/layout/GuildLayout.tsx:74
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:244
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:432
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:438
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:247
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:435
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:441
 #: src/components/modals/tabs/components/InputMonitoringSection.tsx:85
 msgid "Enable"
 msgstr "Активирай"
@@ -8566,7 +8567,7 @@ msgstr "Активирай бета функция"
 msgid "Enable Browser Notifications"
 msgstr "Активирай известия от браузъра"
 
-#: src/stores/QuickSwitcherStore.tsx:916
+#: src/stores/QuickSwitcherStore.tsx:914
 msgid "Enable Compact Mode"
 msgstr "Активирай компактен режим"
 
@@ -8642,7 +8643,7 @@ msgstr "Включи push за това устройство"
 msgid "Enable push notifications for this installed PWA to keep receiving messages when the browser is backgrounded."
 msgstr "Включи push известия за тази инсталирана PWA, за да получаваш съобщения, когато браузърът е във фонов режим."
 
-#: src/stores/QuickSwitcherStore.tsx:932
+#: src/stores/QuickSwitcherStore.tsx:930
 msgid "Enable Reduced Motion"
 msgstr "Активирай намалено движение"
 
@@ -8658,7 +8659,7 @@ msgstr "Активиране на Shift за разширяване"
 msgid "Enable SMS 2FA"
 msgstr "Активирай SMS 2FA"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:415
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:418
 msgid "Enable SMS codes as a backup for your authenticator app"
 msgstr "Активирай SMS кодовете като резервен вариант за приложението за удостоверяване"
 
@@ -8678,7 +8679,7 @@ msgstr "Активирайте двуфакторна автентикация"
 msgid "Enable two-factor authentication"
 msgstr "Активирай двуфакторно удостоверяване"
 
-#: src/components/modals/MfaTotpEnableModal.tsx:70
+#: src/components/modals/MfaTotpEnableModal.tsx:73
 msgid "Enable two-factor authentication form"
 msgstr "Активирай формата за двуфакторно удостоверяване"
 
@@ -8782,7 +8783,7 @@ msgid "Enter the 6-digit code from your authenticator app or one of your backup 
 msgstr "Въведи 6-цифрения код от приложението за удостоверяване или един от резервните си кодове."
 
 #: src/components/modals/MfaTotpDisableModal.tsx:67
-#: src/components/modals/MfaTotpEnableModal.tsx:95
+#: src/components/modals/MfaTotpEnableModal.tsx:98
 msgid "Enter the 6-digit code from your authenticator app."
 msgstr "Въведи 6-цифрения код от приложението за удостоверяване."
 
@@ -8804,7 +8805,7 @@ msgstr "Въведи кода преди да продължиш."
 msgid "Enter the code from your authenticator app."
 msgstr "Въведи кода от приложението за удостоверяване."
 
-#: src/components/modals/EmailChangeModal.tsx:213
+#: src/components/modals/EmailChangeModal.tsx:216
 msgid "Enter the code sent to your current email."
 msgstr "Въведи кода, изпратен на текущия ти имейл."
 
@@ -8812,7 +8813,7 @@ msgstr "Въведи кода, изпратен на текущия ти име�
 msgid "Enter the code sent to your email address."
 msgstr "Въведете кода, изпратен на вашия имейл адрес."
 
-#: src/components/modals/EmailChangeModal.tsx:281
+#: src/components/modals/EmailChangeModal.tsx:284
 msgid "Enter the code we emailed to your new address."
 msgstr "Въведи кода, който изпратихме на новия ти адрес."
 
@@ -8824,7 +8825,7 @@ msgstr "Въведи кода, който изпратихме на имейла
 msgid "Enter the invite link to join a community."
 msgstr "Въведи поканата, за да се присъединиш към общност."
 
-#: src/components/modals/EmailChangeModal.tsx:247
+#: src/components/modals/EmailChangeModal.tsx:250
 msgid "Enter the new email you want to use. We'll send a code there next."
 msgstr "Въведи новия имейл, който ще използваш. След това ще изпратим код там."
 
@@ -9313,11 +9314,11 @@ msgstr "Неуспешно игнориране на заявка за прия�
 msgid "Failed to initiate connection"
 msgstr "Неуспешно иницииране на връзка"
 
-#: src/actions/InviteActionCreators.tsx:322
+#: src/actions/InviteActionCreators.tsx:326
 msgid "Failed to install this emoji pack. Please try again later."
 msgstr "Неуспешна инсталация на този пакет емоджита. Опитайте по-късно."
 
-#: src/actions/InviteActionCreators.tsx:323
+#: src/actions/InviteActionCreators.tsx:327
 msgid "Failed to install this sticker pack. Please try again later."
 msgstr "Неуспешна инсталация на този пакет стикери. Опитайте по-късно."
 
@@ -9715,9 +9716,9 @@ msgstr "любими"
 #: src/components/modals/tabs/AppearanceTab.tsx:116
 #: src/components/modals/utils/SettingsConstants.tsx:279
 #: src/components/modals/utils/SettingsSectionRegistry.tsx:233
-#: src/stores/QuickSwitcherStore.tsx:843
-#: src/stores/QuickSwitcherStore.tsx:1261
-#: src/stores/QuickSwitcherStore.tsx:1273
+#: src/stores/QuickSwitcherStore.tsx:841
+#: src/stores/QuickSwitcherStore.tsx:1259
+#: src/stores/QuickSwitcherStore.tsx:1271
 msgid "Favorites"
 msgstr "Любими"
 
@@ -9872,11 +9873,11 @@ msgstr "Символ на приложението Fluxer"
 msgid "Fluxer avoids sending push notifications to your mobile devices when you are at your computer. Use this setting to control how long you need to be inactive on desktop for before you receive push notifications, ranging from 1 minute to 10 minutes."
 msgstr "Fluxer се въздържа от изпращане на push известия към мобилните ви устройства, когато сте на компютъра си. Използвайте тази настройка, за да контролирате колко време трябва да сте неактивни на десктопа, преди да получите push известие – от 1 до 10 минути."
 
-#: src/components/popouts/UserProfileBadges.tsx:89
+#: src/components/popouts/UserProfileBadges.tsx:115
 msgid "Fluxer Bug Hunter"
 msgstr "Fluxer ловец на бъгове"
 
-#: src/components/popouts/UserProfileBadges.tsx:71
+#: src/components/popouts/UserProfileBadges.tsx:95
 msgid "Fluxer Community Team"
 msgstr "Екипът на общността Fluxer"
 
@@ -9944,18 +9945,18 @@ msgstr "Fluxer се нуждае от разрешение за следене �
 msgid "Fluxer needs permission to monitor keyboard and mouse input so that <0>Push-to-Talk</0> and <1>Global Shortcuts</1> work even when you're in another app or game."
 msgstr "Fluxer се нуждае от разрешение да следи клавиатурата и мишката, за да работят <0>Push-to-Talk</0> и <1>Глобалните клавишни комбинации</1>, дори когато сте в друго приложение или игра."
 
-#: src/components/popouts/UserProfileBadges.tsx:80
+#: src/components/popouts/UserProfileBadges.tsx:105
 msgid "Fluxer Partner"
 msgstr "Партньор на Fluxer"
 
 #: src/components/modals/components/PlutoniumContent.tsx:165
 #: src/components/modals/PremiumModal.tsx:34
 #: src/components/modals/utils/SettingsConstants.tsx:124
-#: src/components/popouts/UserProfileBadges.tsx:95
+#: src/components/popouts/UserProfileBadges.tsx:121
 msgid "Fluxer Plutonium"
 msgstr "Fluxer Plutonium"
 
-#: src/components/popouts/UserProfileBadges.tsx:62
+#: src/components/popouts/UserProfileBadges.tsx:85
 msgid "Fluxer Staff"
 msgstr "Екип Fluxer"
 
@@ -9963,16 +9964,16 @@ msgstr "Екип Fluxer"
 msgid "Fluxer uses push notifications when installed as a mobile PWA. Registering ensures the gateway can reach your device even when the browser is backgrounded."
 msgstr "Fluxer използва push известия, когато е инсталиран като мобилно PWA. Регистрацията гарантира, че шлюзът може да достигне устройството ви, дори когато браузърът е на заден план."
 
-#: src/components/modals/FluxerTagChangeModal.tsx:176
+#: src/components/modals/FluxerTagChangeModal.tsx:190
 #: src/components/modals/tabs/applications_tab/application_detail/BotProfileSection.tsx:103
 msgid "FluxerTag"
 msgstr "FluxerTag"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:102
+#: src/components/modals/FluxerTagChangeModal.tsx:107
 msgid "FluxerTag already taken"
 msgstr "FluxerTag вече е зает"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:144
+#: src/components/modals/FluxerTagChangeModal.tsx:149
 msgid "FluxerTag updated"
 msgstr "FluxerTag актуализиран"
 
@@ -10208,7 +10209,7 @@ msgstr "Напред"
 msgid "Forward {DEFAULT_SEEK_AMOUNT} seconds"
 msgstr "Превърти {DEFAULT_SEEK_AMOUNT} секунди напред"
 
-#: src/components/modals/ForwardModal.tsx:198
+#: src/components/modals/ForwardModal.tsx:203
 #: src/stores/KeybindStore.tsx:361
 msgid "Forward Message"
 msgstr "Препрати съобщение"
@@ -10490,7 +10491,7 @@ msgstr "Получавайте известия, когато получите �
 
 #: src/components/alerts/FileSizeTooLargeModal.tsx:84
 #: src/components/modals/BackgroundImageGalleryModal.tsx:678
-#: src/components/modals/FluxerTagChangeModal.tsx:221
+#: src/components/modals/FluxerTagChangeModal.tsx:235
 #: src/components/modals/tabs/components/EntranceSoundSection.tsx:67
 #: src/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:138
 #: src/components/modals/tabs/VideoTab.tsx:281
@@ -10503,11 +10504,11 @@ msgstr "Вземете Plutonium"
 msgid "Get Plutonium for yourself and unlock higher limits and exclusive features."
 msgstr "Вземете Plutonium за себе си и отключете по-високи лимити и ексклузивни функции."
 
-#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:81
+#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:82
 msgid "Get Plutonium to customize your tag"
 msgstr "Вземете Plutonium, за да персонализирате тага си"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:199
+#: src/components/modals/FluxerTagChangeModal.tsx:213
 msgid "Get Plutonium to customize your tag or keep it when changing your username"
 msgstr "Вземете Plutonium, за да персонализирате тага си или да го запазите при смяна на потребителското си име"
 
@@ -10725,7 +10726,7 @@ msgstr "Отидете на началната страница"
 msgid "Go to login"
 msgstr "Отидете към вход"
 
-#: src/stores/QuickSwitcherStore.tsx:528
+#: src/stores/QuickSwitcherStore.tsx:526
 msgid "Go to message"
 msgstr "Отидете до съобщението"
 
@@ -10866,12 +10867,12 @@ msgstr "Групова икона"
 msgid "Group Invites"
 msgstr "Групови покани"
 
-#: src/stores/QuickSwitcherStore.tsx:667
+#: src/stores/QuickSwitcherStore.tsx:665
 #: src/utils/modals/guild_tabs/GuildAuditLogTabUtils.tsx:235
 msgid "Group message"
 msgstr "Групово съобщение"
 
-#: src/stores/QuickSwitcherStore.tsx:1347
+#: src/stores/QuickSwitcherStore.tsx:1345
 msgid "Group messages"
 msgstr "Групови съобщения"
 
@@ -10963,7 +10964,7 @@ msgstr "Хардуерно ускорение"
 msgid "Has"
 msgstr "Има"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:126
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:128
 msgid "Has ever purchased override"
 msgstr "Никога не е купувал замяна"
 
@@ -11277,7 +11278,7 @@ msgid "Hold to temporarily unmute when push-to-talk is enabled"
 msgstr "Задръж, за да се включиш временно, когато push-to-talk е включен"
 
 #: src/components/layout/MobileBottomNav.tsx:93
-#: src/stores/QuickSwitcherStore.tsx:832
+#: src/stores/QuickSwitcherStore.tsx:830
 msgid "Home"
 msgstr "Начало"
 
@@ -11619,7 +11620,7 @@ msgstr "Неподходящ профил"
 msgid "Inbox"
 msgstr "Входящи"
 
-#: src/components/popouts/InboxPopout.tsx:89
+#: src/components/popouts/InboxPopout.tsx:88
 msgid "Inbox tabs"
 msgstr "Вкладки на входящите"
 
@@ -11883,8 +11884,8 @@ msgstr "Невалиден подаръчен код"
 msgid "Invalid instance URL. Try something like \"example.com\" or \"https://example.com\"."
 msgstr "Невалидна URL адреса на инстанцията. Опитай нещо като \"example.com\" или \"https://example.com\"."
 
-#: src/components/modals/EmailChangeModal.tsx:107
-#: src/components/modals/EmailChangeModal.tsx:168
+#: src/components/modals/EmailChangeModal.tsx:110
+#: src/components/modals/EmailChangeModal.tsx:171
 #: src/components/modals/PasswordChangeModal.tsx:90
 msgid "Invalid or expired code"
 msgstr "Невалиден или изтекъл код"
@@ -12569,11 +12570,11 @@ msgid "Last active {0}"
 msgstr "Последно активен {0}"
 
 #. placeholder {0}: DateUtils.getRelativeDateString(user.passwordLastChangedAt, i18n)
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:117
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:120
 msgid "Last changed: {0}"
 msgstr "Последна промяна: {0}"
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:119
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:122
 msgid "Last changed: Never"
 msgstr "Последна промяна: никога"
 
@@ -12633,6 +12634,10 @@ msgstr "Напусни обаждането"
 #: src/hooks/useLeaveGuild.tsx:44
 msgid "Leave Community"
 msgstr "Напусни общността"
+
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:142
+msgid "Leave empty for actual value"
+msgstr "Оставете празно за действителната стойност"
 
 #: src/components/bottomsheets/ChannelDetailsBottomSheet.tsx:1317
 #: src/components/channel/direct_message/DMList.tsx:569
@@ -12713,7 +12718,7 @@ msgid "Letters (a-z, A-Z), numbers (0-9), and underscores (_) only"
 msgstr "Само букви (a-z, A-Z), цифри (0-9) и долни черти (_)"
 
 #: src/components/modals/components/plutonium/SubscriptionCard.tsx:131
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:50
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:52
 #: src/components/modals/tabs/developer_options_tab/MockingTab.tsx:317
 msgid "Lifetime"
 msgstr "Доживотен"
@@ -13217,7 +13222,7 @@ msgstr "Управлявай имейла, паролата и настройк�
 msgid "Manage your gifts"
 msgstr "Управление на вашите подаръци"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:337
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:340
 msgid "Manage your phone number for SMS two-factor authentication"
 msgstr "Управлявай телефонния си номер за SMS двуфакторна автентикация"
 
@@ -13342,12 +13347,12 @@ msgstr "Отбелязах потребителя като временен."
 msgid "Markers Below Slider"
 msgstr "Маркерите под плъзгача"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:188
+#: src/components/modals/FluxerTagChangeModal.tsx:202
 msgid "Marty_McFly"
 msgstr "Marty_McFly"
 
 #: src/components/modals/ClaimAccountModal.tsx:157
-#: src/components/modals/EmailChangeModal.tsx:258
+#: src/components/modals/EmailChangeModal.tsx:261
 msgid "marty@example.com"
 msgstr "marty@example.com"
 
@@ -13652,7 +13657,7 @@ msgstr "споменавания"
 
 #: src/components/modals/GuildNotificationSettingsModal.tsx:227
 #: src/components/pages/NotificationsPage.tsx:42
-#: src/components/popouts/InboxPopout.tsx:63
+#: src/components/popouts/InboxPopout.tsx:62
 msgid "Mentions"
 msgstr "Споменавания"
 
@@ -13687,15 +13692,15 @@ msgstr "менюта"
 msgid "Message"
 msgstr "Съобщение"
 
-#: src/components/channel/ChannelTextarea.tsx:754
+#: src/components/channel/ChannelTextarea.tsx:752
 msgid "Message "
 msgstr "Съобщение "
 
-#: src/components/channel/ChannelTextarea.tsx:754
+#: src/components/channel/ChannelTextarea.tsx:752
 msgid "Message @"
 msgstr "Съобщение @"
 
-#: src/components/channel/ChannelTextarea.tsx:751
+#: src/components/channel/ChannelTextarea.tsx:749
 msgid "Message #"
 msgstr "Съобщение #"
 
@@ -13746,7 +13751,7 @@ msgstr "Режим на показване на съобщението"
 msgid "Message display settings are only available on desktop."
 msgstr "Настройките за показване на съобщения са налични само на настолни устройства."
 
-#: src/components/modals/ForwardModal.tsx:148
+#: src/components/modals/ForwardModal.tsx:153
 msgid "Message forwarded"
 msgstr "Съобщението е препратено"
 
@@ -13772,7 +13777,7 @@ msgstr "Прагът за история на съобщенията е акту
 msgid "Message Input Buttons"
 msgstr "Бутони за въвеждане на съобщение"
 
-#: src/components/modals/ForwardModal.tsx:84
+#: src/components/modals/ForwardModal.tsx:89
 #: src/components/uikit/character_counter/CharacterCounter.tsx:52
 msgid "Message is too long"
 msgstr "Съобщението е твърде дълго"
@@ -14073,7 +14078,7 @@ msgstr "Още слотове за емоджита"
 #: src/components/channel/embeds/attachments/TextualAttachmentPreviewFooter.tsx:66
 #: src/components/modals/guild_tabs/UserListItem.tsx:113
 #: src/components/modals/MediaModal.tsx:353
-#: src/components/modals/MobileVideoViewer.tsx:260
+#: src/components/modals/MobileVideoViewer.tsx:268
 msgid "More options"
 msgstr "Още опции"
 
@@ -14205,7 +14210,7 @@ msgstr "приглушаване"
 #: src/components/media_player/components/MediaVerticalVolumeControl.tsx:249
 #: src/components/media_player/components/MediaVolumeControl.tsx:208
 #: src/components/modals/GuildNotificationSettingsModal.tsx:229
-#: src/components/modals/MobileVideoViewer.tsx:272
+#: src/components/modals/MobileVideoViewer.tsx:280
 #: src/components/uikit/context_menu/items/VoiceParticipantMenuData.tsx:319
 #: src/components/uikit/context_menu/items/VoiceParticipantMenuData.tsx:506
 #: src/components/uikit/context_menu/items/VoiceParticipantMenuItems.tsx:92
@@ -14572,12 +14577,12 @@ msgstr "Новите общности, които присъединявате, 
 msgid "New communities you join will no longer have muted channels hidden automatically. Would you also like to show muted channels in all your existing communities?"
 msgstr "Новите общности, които присъединявате, вече няма да имат скрити заглушени канали автоматично. Искате ли също да показвате заглушени канали във всички ваши съществуващи общности?"
 
-#: src/components/modals/EmailChangeModal.tsx:255
+#: src/components/modals/EmailChangeModal.tsx:258
 #: src/components/modals/RequiredActionModal.tsx:471
 msgid "New Email"
 msgstr "Нов имейл"
 
-#: src/components/modals/EmailChangeModal.tsx:243
+#: src/components/modals/EmailChangeModal.tsx:246
 msgid "New email form"
 msgstr "Форма за нов имейл"
 
@@ -14732,7 +14737,7 @@ msgid "No cameras detected"
 msgstr "Не са открити камери"
 
 #: src/components/invites/InviteListItem.tsx:179
-#: src/components/modals/ForwardModal.tsx:246
+#: src/components/modals/ForwardModal.tsx:251
 #: src/components/modals/GuildNotificationSettingsModal.tsx:258
 msgid "No Category"
 msgstr "Няма категория"
@@ -14745,7 +14750,7 @@ msgstr "Няма промени за запис"
 msgid "No channels available"
 msgstr "Няма налични канали"
 
-#: src/components/modals/ForwardModal.tsx:216
+#: src/components/modals/ForwardModal.tsx:221
 msgid "No channels found"
 msgstr "Не са намерени канали"
 
@@ -14769,7 +14774,7 @@ msgstr "Все още няма връзки"
 msgid "No description provided."
 msgstr "Не е предоставено описание."
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:94
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:97
 msgid "No email address set"
 msgstr "Не е зададен имейл адрес"
 
@@ -14879,11 +14884,11 @@ msgstr "Не са намерени общи приятели."
 msgid "No mutual groups found."
 msgstr "Не са намерени общи групи."
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:283
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:286
 msgid "No passkeys registered"
 msgstr "Няма регистрирани пароли."
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:134
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:137
 msgid "No password set"
 msgstr "Не е зададена парола"
 
@@ -15066,7 +15071,7 @@ msgstr "Неанимирани емоджита ({0})"
 
 #: src/components/modals/guild_tabs/GuildModerationTab.tsx:157
 #: src/components/modals/tabs/accessibility_tab/VisualTab.tsx:48
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:48
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:50
 msgid "None"
 msgstr "Нито едно"
 
@@ -15574,7 +15579,7 @@ msgstr "Отвори в нов раздел"
 msgid "Open Link"
 msgstr "Отвори връзката"
 
-#: src/components/channel/ChannelTextarea.tsx:953
+#: src/components/channel/ChannelTextarea.tsx:951
 #: src/components/channel/textarea/MobileTextareaLayout.tsx:112
 msgid "Open menu"
 msgstr "Отвори меню"
@@ -15828,7 +15833,7 @@ msgstr "Override"
 msgid "Override {0}"
 msgstr "Override {0}"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:59
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:61
 msgid "Override email verification status"
 msgstr "Презапиши статуса на верификация по имейл"
 
@@ -15836,15 +15841,15 @@ msgstr "Презапиши статуса на верификация по им�
 msgid "Override instance limits locally for testing. Changes only affect your client."
 msgstr "Override instance limits locally for testing. Changes only affect your client."
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:109
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:111
 msgid "Override Premium Type"
 msgstr "Презапиши типа Premium"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:67
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:69
 msgid "Override unclaimed account status"
 msgstr "Презапиши статуса на нерегистриран акаунт"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:75
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:77
 msgid "Override unread gift inventory status"
 msgstr "Презапиши статуса на неизползваните подаръци"
 
@@ -15925,7 +15930,7 @@ msgstr "Партнирана Общност"
 msgid "Passkey Name"
 msgstr "Име на ключ за достъп"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:273
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:276
 msgid "Passkeys"
 msgstr "Ключове за достъп"
 
@@ -15949,8 +15954,8 @@ msgstr "парола"
 #: src/components/modals/ClaimAccountModal.tsx:207
 #: src/components/modals/SudoVerificationModal.tsx:174
 #: src/components/modals/SudoVerificationModal.tsx:239
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:105
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:131
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:108
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:134
 #: src/components/modals/tabs/component_gallery_tab/InputsTab.tsx:114
 #: src/components/modals/utils/SettingsSearchIndex.tsx:107
 msgid "Password"
@@ -16006,7 +16011,7 @@ msgstr "Поставете го там, откъдето дойдохте, за 
 #: src/components/media_player/components/InlineAudioPlayer.tsx:201
 #: src/components/media_player/components/InlineAudioPlayer.tsx:296
 #: src/components/media_player/components/MediaPlayButton.tsx:70
-#: src/components/modals/MobileVideoViewer.tsx:286
+#: src/components/modals/MobileVideoViewer.tsx:294
 msgid "Pause"
 msgstr "Пауза"
 
@@ -16040,7 +16045,7 @@ msgid "Pending deletion canceled"
 msgstr "Изчакващото изтриване бе отменено"
 
 #: src/lib/UnicodeEmojis.tsx:234
-#: src/stores/QuickSwitcherStore.tsx:1345
+#: src/stores/QuickSwitcherStore.tsx:1343
 #: src/utils/quick_switcher/QuickSwitcherModalUtils.tsx:96
 msgid "People"
 msgstr "Хора"
@@ -16143,8 +16148,8 @@ msgstr "Телефон"
 
 #: src/components/modals/PhoneAddModal.tsx:192
 #: src/components/modals/RequiredActionModal.tsx:616
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:336
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:342
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:339
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:345
 #: src/components/modals/utils/SettingsSearchIndex.tsx:115
 msgid "Phone Number"
 msgstr "Телефонен номер"
@@ -16154,7 +16159,7 @@ msgid "Phone number added"
 msgstr "Телефонният номер е добавен"
 
 #. placeholder {0}: user.phone
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:346
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:349
 msgid "Phone number added: {0}"
 msgstr "Телефонен номер добавен: {0}"
 
@@ -16221,11 +16226,11 @@ msgstr "Закрепване на ЛС"
 msgid "Pin Group DM"
 msgstr "Закрепване на групово ЛС"
 
-#: src/components/channel/MessageActionUtils.tsx:429
+#: src/components/channel/MessageActionUtils.tsx:430
 msgid "Pin it real good"
 msgstr "Закрепете го много добре"
 
-#: src/components/channel/MessageActionUtils.tsx:426
+#: src/components/channel/MessageActionUtils.tsx:427
 msgid "Pin it. Pin it good."
 msgstr "Закрепи го. Закрепи го както трябва."
 
@@ -16246,7 +16251,7 @@ msgstr "Закрепи съобщения"
 msgid "Pin or unpin the focused message"
 msgstr "Закрепи или развали закрепването на фокусирането съобщение"
 
-#: src/components/channel/MessageActionUtils.tsx:427
+#: src/components/channel/MessageActionUtils.tsx:428
 msgid "Pin this message to the channel for all to see. Unless ... you're chicken."
 msgstr "Закрепете това съобщение в канала, за да го видят всички. Освен ако не сте страхливец."
 
@@ -16319,7 +16324,7 @@ msgstr "Администратор на платформата"
 #: src/components/media_player/components/InlineAudioPlayer.tsx:201
 #: src/components/media_player/components/InlineAudioPlayer.tsx:296
 #: src/components/media_player/components/MediaPlayButton.tsx:70
-#: src/components/modals/MobileVideoViewer.tsx:286
+#: src/components/modals/MobileVideoViewer.tsx:294
 #: src/components/modals/tabs/component_gallery_tab/ButtonsTab.tsx:215
 msgid "Play"
 msgstr "Пусни"
@@ -16416,7 +16421,7 @@ msgstr "Моля, опитайте отново по-късно."
 msgid "Please update Fluxer to view this message."
 msgstr "Моля, актуализирайте Fluxer, за да видите това съобщение."
 
-#: src/actions/InviteActionCreators.tsx:180
+#: src/actions/InviteActionCreators.tsx:184
 msgid "Please verify your account by setting an email and password before joining communities."
 msgstr "Моля, потвърдете акаунта си, като зададете имейл и парола, преди да се присъедините към общности."
 
@@ -16526,11 +16531,11 @@ msgstr "Предимства на Premium"
 msgid "Premium state reset on the backend."
 msgstr "Премиум състоянието е нулирано на бекенда."
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:135
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:155
 msgid "Premium Subscription Scenarios"
 msgstr "Сценарии за Premium абонамент"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:107
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:109
 msgid "Premium Type Override"
 msgstr "Презаписване на типа Premium"
 
@@ -16928,7 +16933,7 @@ msgstr "Python"
 msgid "quick access"
 msgstr "бърз достъп"
 
-#: src/stores/QuickSwitcherStore.tsx:1358
+#: src/stores/QuickSwitcherStore.tsx:1356
 #: src/utils/quick_switcher/QuickSwitcherModalUtils.tsx:100
 msgid "Quick Actions"
 msgstr "Бързи действия"
@@ -17071,7 +17076,7 @@ msgstr "Получаване"
 msgid "Receive notifications when someone mentions you"
 msgstr "Получавайте известия, когато някой ви спомене"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:404
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:407
 msgid "Receive verification codes via SMS as a backup authentication method"
 msgstr "Получавайте кодове за потвърждение чрез SMS като резервен метод за удостоверяване"
 
@@ -17198,7 +17203,7 @@ msgstr "Обнови push абонамента"
 msgid "Regenerate"
 msgstr "Прегенерирай"
 
-#: src/components/modals/BackupCodesRegenerateModal.tsx:61
+#: src/components/modals/BackupCodesRegenerateModal.tsx:68
 msgid "Regenerate Backup Codes"
 msgstr "Генерирай отново кодовете за резервно копие"
 
@@ -17228,7 +17233,7 @@ msgstr "Прегенерирането ще анулира текущия ток
 msgid "Register"
 msgstr "Регистрация"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:279
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:282
 msgid "Registered Passkeys"
 msgstr "Регистрирани ключове"
 
@@ -17298,7 +17303,7 @@ msgstr "премахни"
 #: src/components/modals/guild_tabs/guild_overview_tab/fields/GuildEmbedSplashUploadField.tsx:101
 #: src/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx:107
 #: src/components/modals/guild_tabs/guild_overview_tab/fields/GuildInviteSplashUploadField.tsx:113
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:391
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:394
 #: src/components/modals/tabs/ExpressionPacksTab.tsx:96
 #: src/components/modals/tabs/ExpressionPacksTab.tsx:226
 #: src/components/modals/tabs/LinkedAccountsTab.tsx:191
@@ -17472,11 +17477,11 @@ msgstr "Премахни заместването"
 msgid "Remove Pack"
 msgstr "Премахни пакета"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:377
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:380
 msgid "Remove Phone"
 msgstr "Премахни телефона"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:360
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:363
 msgid "Remove Phone Number"
 msgstr "Премахни телефонния номер"
 
@@ -17557,7 +17562,7 @@ msgstr "Премахнато е разрешението за {0}."
 msgid "Removed deny for {0}."
 msgstr "Премахнато е отказването за {0}."
 
-#: src/actions/SavedMessageActionCreators.tsx:80
+#: src/actions/SavedMessageActionCreators.tsx:85
 msgid "Removed from bookmarks"
 msgstr "Премахнато от отметки"
 
@@ -17631,7 +17636,7 @@ msgstr "Премахването на пакета ще го деинстали�
 msgid "Removing the timeout will allow <0>{0}</0> to send messages, react, and join voice channels again."
 msgstr "Премахването на таймаута ще позволи на <0>{0}</0> отново да изпраща съобщения, да реагира и да се присъединява към гласови канали."
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:319
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:322
 msgid "Rename"
 msgstr "Преименувай"
 
@@ -17866,22 +17871,22 @@ msgstr "Изисква всичко от средното ниво, плюс д�
 msgid "Requires Plutonium"
 msgstr "Изисква Plutonium"
 
-#: src/components/channel/ChannelTextarea.tsx:1032
+#: src/components/channel/ChannelTextarea.tsx:1030
 msgid "Reschedule Message"
 msgstr "Пренасрочи съобщението"
 
 #: src/components/modals/ClaimAccountModal.tsx:222
-#: src/components/modals/EmailChangeModal.tsx:233
-#: src/components/modals/EmailChangeModal.tsx:301
+#: src/components/modals/EmailChangeModal.tsx:236
+#: src/components/modals/EmailChangeModal.tsx:304
 #: src/components/modals/PasswordChangeModal.tsx:179
 msgid "Resend"
 msgstr "Изпрати отново"
 
-#: src/components/modals/EmailChangeModal.tsx:301
+#: src/components/modals/EmailChangeModal.tsx:304
 msgid "Resend ({newSecondsRemaining}s)"
 msgstr "Изпрати отново ({newSecondsRemaining}с)"
 
-#: src/components/modals/EmailChangeModal.tsx:233
+#: src/components/modals/EmailChangeModal.tsx:236
 msgid "Resend ({originalSecondsRemaining}s)"
 msgstr "Изпрати отново ({originalSecondsRemaining}с)"
 
@@ -18425,7 +18430,7 @@ msgstr "запазвания"
 msgid "scale"
 msgstr "мащаб"
 
-#: src/components/modals/MfaTotpEnableModal.tsx:78
+#: src/components/modals/MfaTotpEnableModal.tsx:81
 msgid "Scan the QR code with your authenticator app to generate codes for two-factor authentication."
 msgstr "Сканирай QR кода с приложението ти за автентикация, за да генерираш кодове за двуфакторно удостоверяване."
 
@@ -18437,7 +18442,7 @@ msgstr "График"
 msgid "Schedule Message"
 msgstr "Насрочи съобщение"
 
-#: src/components/popouts/InboxPopout.tsx:70
+#: src/components/popouts/InboxPopout.tsx:69
 #: src/components/popouts/ScheduledMessagesContent.tsx:89
 msgid "Scheduled"
 msgstr "Насрочено"
@@ -18562,7 +18567,7 @@ msgstr "Търсене по потребителско име или ID"
 msgid "Search channels"
 msgstr "Търси канали"
 
-#: src/components/modals/ForwardModal.tsx:204
+#: src/components/modals/ForwardModal.tsx:209
 msgid "Search channels or DMs"
 msgstr "Търси канали или лични съобщения"
 
@@ -18963,7 +18968,7 @@ msgid "Send"
 msgstr "Изпрати"
 
 #. placeholder {0}: selectedChannelIds.size
-#: src/components/modals/ForwardModal.tsx:380
+#: src/components/modals/ForwardModal.tsx:385
 msgid "Send ({0}/5)"
 msgstr "Изпрати ({0}/5)"
 
@@ -19000,7 +19005,7 @@ msgid "Send an SMS code first."
 msgstr "Първо изпрати SMS код."
 
 #: src/components/modals/ClaimAccountModal.tsx:180
-#: src/components/modals/EmailChangeModal.tsx:270
+#: src/components/modals/EmailChangeModal.tsx:273
 #: src/components/modals/PhoneAddModal.tsx:208
 msgid "Send code"
 msgstr "Изпрати код"
@@ -19195,7 +19200,7 @@ msgstr "Задай прякора на {0}."
 msgid "Set NSFW level to {0}."
 msgstr "Задай NSFW нивото на {0}."
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:138
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:141
 msgid "Set Password"
 msgstr "Задай парола"
 
@@ -19261,7 +19266,7 @@ msgstr "Задай типа на канала на {0}."
 msgid "Set the invite splash alignment to {0}."
 msgstr "Задай подравняването на поканата за splash на {0}."
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:88
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:90
 msgid "Set the number of unread gifts in inventory."
 msgstr "Задай броя непрочетени подаръци в инвентара."
 
@@ -19341,7 +19346,7 @@ msgstr "Задай часовата си зона"
 #: src/components/modals/tabs/component_gallery_tab/ButtonsTab.tsx:221
 #: src/components/modals/tabs/component_gallery_tab/index.tsx:95
 #: src/components/modals/tabs/component_gallery_tab/Inline.tsx:90
-#: src/stores/QuickSwitcherStore.tsx:1356
+#: src/stores/QuickSwitcherStore.tsx:1354
 msgid "Settings"
 msgstr "Настройки"
 
@@ -19357,7 +19362,7 @@ msgstr "Раздели на настройките"
 msgid "Settings!"
 msgstr "Настройки!"
 
-#: src/components/modals/MfaTotpEnableModal.tsx:71
+#: src/components/modals/MfaTotpEnableModal.tsx:74
 msgid "Setup Authenticator App"
 msgstr "Настройте приложението за удостоверяване"
 
@@ -19837,7 +19842,7 @@ msgstr "Тихи повиквания от всички"
 msgid "simulate"
 msgstr "симулирай"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:128
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:130
 msgid "Simulates having a Stripe customer ID (for testing purchase history access)"
 msgstr "Симулира наличието на Stripe клиентски идентификатор (за тестване на достъп до историята на покупки)"
 
@@ -19985,11 +19990,11 @@ msgstr "По-малък размер на медията"
 msgid "sms"
 msgstr "sms"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:409
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:412
 msgid "SMS Backup"
 msgstr "SMS архив"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:429
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:432
 msgid "SMS backup is disabled for partners"
 msgstr "SMS архивът е деактивиран за партньори"
 
@@ -20002,7 +20007,7 @@ msgstr "SMS код"
 msgid "SMS Code"
 msgstr "SMS код"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:403
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:406
 msgid "SMS Two-Factor Authentication"
 msgstr "Двуфакторна SMS автентикация"
 
@@ -20010,7 +20015,7 @@ msgstr "Двуфакторна SMS автентикация"
 msgid "SMS two-factor authentication adds an additional layer of security to your account by requiring a verification code sent to your phone number when signing in."
 msgstr "Двуфакторната SMS автентикация добавя допълнителен пласт сигурност към акаунта ти чрез изискване на код за потвърждение, изпратен на телефонния ти номер при вход."
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:413
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:416
 msgid "SMS two-factor authentication is enabled"
 msgstr "Двуфакторната SMS автентикация е активирана"
 
@@ -20334,7 +20339,7 @@ msgstr "Звезда"
 msgid "starred"
 msgstr "отбелязани"
 
-#: src/components/modals/EmailChangeModal.tsx:202
+#: src/components/modals/EmailChangeModal.tsx:205
 #: src/components/modals/PasswordChangeModal.tsx:148
 msgid "Start"
 msgstr "Старт"
@@ -20490,7 +20495,7 @@ msgstr "Плътност на стикерите"
 msgid "Sticker pack"
 msgstr "Пакет стикери"
 
-#: src/actions/InviteActionCreators.tsx:287
+#: src/actions/InviteActionCreators.tsx:291
 msgid "Sticker pack creation limit reached"
 msgstr "Достигнат е лимит за създаване на пакети стикери"
 
@@ -20498,7 +20503,7 @@ msgstr "Достигнат е лимит за създаване на пакет
 msgid "Sticker Pack Invite"
 msgstr "Покана за пакет стикери"
 
-#: src/actions/InviteActionCreators.tsx:273
+#: src/actions/InviteActionCreators.tsx:277
 msgid "Sticker pack limit reached"
 msgstr "Достигнат е лимит за пакети стикери"
 
@@ -20674,7 +20679,7 @@ msgstr "Изпращане"
 msgid "subscription"
 msgstr "абонамент"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:49
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:51
 #: src/components/modals/utils/SettingsSearchIndex.tsx:261
 msgid "Subscription"
 msgstr "Абонамент"
@@ -20796,7 +20801,7 @@ msgstr "Смени акаунт"
 msgid "Switch Accounts"
 msgstr "Смени акаунти"
 
-#: src/stores/QuickSwitcherStore.tsx:900
+#: src/stores/QuickSwitcherStore.tsx:898
 msgid "Switch between Light and Dark mode"
 msgstr "Превключвай между светъл и тъмен режим"
 
@@ -20989,7 +20994,7 @@ msgstr "Условия за ползване"
 msgid "Test Bulk Delete (60s)"
 msgstr "Тествай масово изтриване (60 с)"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:137
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:157
 msgid "Test Subscription State"
 msgstr "Тествай състояние на абонамента"
 
@@ -21025,7 +21030,7 @@ msgstr "Текстов канал"
 msgid "Text Channel Names"
 msgstr "Имена на текстови канали"
 
-#: src/stores/QuickSwitcherStore.tsx:1349
+#: src/stores/QuickSwitcherStore.tsx:1347
 #: src/utils/quick_switcher/QuickSwitcherModalUtils.tsx:97
 msgid "Text channels"
 msgstr "Текстови канали"
@@ -21106,7 +21111,7 @@ msgid "That message didn't delete"
 msgstr "Съобщението не беше изтрито"
 
 #. placeholder {0}: invite.pack.name
-#: src/actions/InviteActionCreators.tsx:103
+#: src/actions/InviteActionCreators.tsx:104
 msgid "The {packLabel} {0} has been installed."
 msgstr "{packLabel} {0} е инсталиран."
 
@@ -21148,7 +21153,7 @@ msgstr "Файлът съдържа проверъчния токен, койт�
 msgid "The file you're trying to upload exceeds the maximum size limit of {maxSizeFormatted}."
 msgstr "Файлът, който се опитвате да качите, надвишава максималния размер от {maxSizeFormatted}."
 
-#: src/components/modals/FluxerTagChangeModal.tsx:106
+#: src/components/modals/FluxerTagChangeModal.tsx:111
 msgid "The FluxerTag <0>{fluxerTag}</0> is already taken. Continuing will reroll your discriminator automatically."
 msgstr "FluxerTag <0>{fluxerTag}</0> вече е зает. Продължаването ще презавърти дискриминатора ти автоматично."
 
@@ -21298,10 +21303,6 @@ msgstr "те"
 #: src/components/channel/channel_view/DMChannelView.tsx:932
 msgid "They might have taken the DeLorean elsewhere."
 msgstr "Може би са взели ДеЛореана на друго място."
-
-#: src/components/modals/tabs/MyProfileTab.tsx:711
-msgid "they/them"
-msgstr "те/тях"
 
 #: src/components/channel/channel_view/DMChannelView.tsx:918
 msgid "Think, McFly! Did you type the right address?"
@@ -21717,11 +21718,11 @@ msgstr "Това ще създаде разлом в пространствен�
 msgid "This will hide all favorites-related UI elements including buttons and menu items. Your existing favorites will be preserved and can be re-enabled anytime from <0>User Settings → Look & Feel → Favorites</0>."
 msgstr "Това ще скрие всички UI елементи, свързани с любими, включително бутони и менюта. Съществуващите ти любими ще бъдат запазени и могат да бъдат активирани отново по всяко време от <0>Настройки на потребителя → Външен вид → Любими</0>."
 
-#: src/components/modals/BackupCodesRegenerateModal.tsx:65
+#: src/components/modals/BackupCodesRegenerateModal.tsx:72
 msgid "This will invalidate your existing backup codes and generate new ones."
 msgstr "Това ще анулира вашите съществуващи кодове за резервно копие и ще генерира нови."
 
-#: src/components/channel/ChannelTextarea.tsx:1036
+#: src/components/channel/ChannelTextarea.tsx:1034
 msgid "This will modify the existing scheduled message rather than sending immediately."
 msgstr "Това ще промени съществуващото планирано съобщение, вместо да го изпраща веднага."
 
@@ -21907,11 +21908,11 @@ msgstr "превключвател"
 msgid "Toggle Channel Member List"
 msgstr "Превключване на списъка с членове на канала"
 
-#: src/stores/QuickSwitcherStore.tsx:913
+#: src/stores/QuickSwitcherStore.tsx:911
 msgid "Toggle Compact Mode"
 msgstr "Превключване на компактен режим"
 
-#: src/components/modals/MobileVideoViewer.tsx:239
+#: src/components/modals/MobileVideoViewer.tsx:247
 msgid "Toggle controls"
 msgstr "Превключване на контроли"
 
@@ -21963,11 +21964,11 @@ msgstr "Превключване на заглушаване"
 msgid "Toggle Pins Popout"
 msgstr "Превключване на изскачащия панел за прикачени"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:120
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:122
 msgid "Toggle premium_enabled_override on the backend"
 msgstr "Превключване на преодоляването на premium_enabled в бекенда"
 
-#: src/stores/QuickSwitcherStore.tsx:929
+#: src/stores/QuickSwitcherStore.tsx:927
 msgid "Toggle Reduced Motion"
 msgstr "Превключване на намалено движение"
 
@@ -21983,7 +21984,7 @@ msgstr "Превключване на селектора за стикери"
 msgid "Toggle switches on and off to see state changes."
 msgstr "Превключете бутоните за включване и изключване, за да видите промени в състоянието."
 
-#: src/stores/QuickSwitcherStore.tsx:899
+#: src/stores/QuickSwitcherStore.tsx:897
 msgid "Toggle Theme"
 msgstr "Превключване на тема"
 
@@ -22008,7 +22009,7 @@ msgstr "Тонирайте HDR изображенията до стандарт�
 msgid "Too Loud"
 msgstr "Твърде силно"
 
-#: src/components/alerts/MaxGuildsModal.tsx:32
+#: src/components/alerts/MaxGuildsModal.tsx:35
 msgid "Too Many Communities"
 msgstr "Твърде много общности"
 
@@ -22307,7 +22308,7 @@ msgstr "Двуфакторно удостоверяване"
 msgid "Two-factor authentication disabled"
 msgstr "Двуфакторното удостоверяване е деактивирано"
 
-#: src/components/modals/MfaTotpEnableModal.tsx:55
+#: src/components/modals/MfaTotpEnableModal.tsx:58
 msgid "Two-factor authentication enabled"
 msgstr "Двуфакторното удостоверяване е активирано"
 
@@ -22404,11 +22405,11 @@ msgstr "Украински"
 msgid "Ultra (1440p)"
 msgstr "Ultra (1440p)"
 
-#: src/actions/InviteActionCreators.tsx:319
+#: src/actions/InviteActionCreators.tsx:323
 msgid "Unable to install emoji pack"
 msgstr "Не може да се инсталира пакетът с емоджита"
 
-#: src/actions/InviteActionCreators.tsx:320
+#: src/actions/InviteActionCreators.tsx:324
 msgid "Unable to install sticker pack"
 msgstr "Не може да се инсталира пакетът със стикери"
 
@@ -22436,13 +22437,13 @@ msgstr "Не може да се зареди банер на профила, з�
 msgid "Unable to prepare any emojis for upload. The following errors occurred:"
 msgstr "Не може да се подготвят емоджита за качване. Възникнаха следните грешки:"
 
-#: src/components/modals/EmailChangeModal.tsx:121
-#: src/components/modals/EmailChangeModal.tsx:151
+#: src/components/modals/EmailChangeModal.tsx:124
+#: src/components/modals/EmailChangeModal.tsx:154
 #: src/components/modals/PasswordChangeModal.tsx:104
 msgid "Unable to resend code right now"
 msgstr "Не може да се препрати кодът в момента"
 
-#: src/components/modals/EmailChangeModal.tsx:136
+#: src/components/modals/EmailChangeModal.tsx:139
 msgid "Unable to send code to new email"
 msgstr "Не може да се изпрати кодът на новия имейл"
 
@@ -22455,7 +22456,7 @@ msgstr "Неуспешно изпращане на гласово съобщен
 msgid "Unable to Start Call"
 msgstr "Не може да се започне разговор"
 
-#: src/components/modals/EmailChangeModal.tsx:91
+#: src/components/modals/EmailChangeModal.tsx:94
 msgid "Unable to start email change"
 msgstr "Не може да се започне промяна на имейла"
 
@@ -22526,7 +22527,7 @@ msgstr "Непретендиран акаунт"
 msgid "Unclaimed Account Nagbar"
 msgstr "Бар за напомняне на непредендиран акаунт"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:65
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:67
 msgid "Unclaimed Account Override"
 msgstr "Надмощаване на непредендиран акаунт"
 
@@ -22554,10 +22555,10 @@ msgstr "Непълнолетен потребител"
 #: src/components/alerts/GenericErrorModal.tsx:31
 #: src/components/alerts/GuildAtCapacityModal.tsx:31
 #: src/components/alerts/InvitesDisabledModal.tsx:31
-#: src/components/alerts/MaxBookmarksModal.tsx:45
-#: src/components/alerts/MaxBookmarksModal.tsx:56
+#: src/components/alerts/MaxBookmarksModal.tsx:48
+#: src/components/alerts/MaxBookmarksModal.tsx:59
 #: src/components/alerts/MaxFavoriteMemesModal.tsx:46
-#: src/components/alerts/MaxGuildsModal.tsx:38
+#: src/components/alerts/MaxGuildsModal.tsx:41
 #: src/components/alerts/MicrophonePermissionDeniedModal.tsx:50
 #: src/components/alerts/NSFWContentRejectedModal.tsx:31
 #: src/components/alerts/ReactionInteractionDisabledModal.tsx:30
@@ -22632,7 +22633,7 @@ msgstr "неизвестен канал"
 #: src/components/modals/guild_tabs/GuildAuditLogTab.Utils.tsx:479
 #: src/components/modals/guild_tabs/GuildWebhooksTab.tsx:61
 #: src/components/modals/guild_tabs/GuildWebhooksTab.tsx:67
-#: src/stores/QuickSwitcherStore.tsx:690
+#: src/stores/QuickSwitcherStore.tsx:688
 msgid "Unknown channel"
 msgstr "Непознат канал"
 
@@ -22781,7 +22782,7 @@ msgstr "Отключете стикери в ЛС с Plutonium"
 #: src/components/layout/UserArea.tsx:168
 #: src/components/media_player/components/MediaVerticalVolumeControl.tsx:249
 #: src/components/media_player/components/MediaVolumeControl.tsx:208
-#: src/components/modals/MobileVideoViewer.tsx:272
+#: src/components/modals/MobileVideoViewer.tsx:280
 #: src/components/voice/VoiceControlBar.tsx:602
 msgid "Unmute"
 msgstr "Включване на звук"
@@ -22872,7 +22873,7 @@ msgstr "Разкачване на ЛС"
 msgid "Unpin Group DM"
 msgstr "Разкачване на груповото ЛС"
 
-#: src/components/channel/MessageActionUtils.tsx:412
+#: src/components/channel/MessageActionUtils.tsx:413
 #: src/components/shared/ChannelPinsContent.tsx:102
 msgid "Unpin it"
 msgstr "Разкачи го"
@@ -22880,7 +22881,7 @@ msgstr "Разкачи го"
 #: src/components/channel/MessageActionBar.tsx:519
 #: src/components/channel/MessageActionBar.tsx:735
 #: src/components/channel/MessageActionMenu.tsx:243
-#: src/components/channel/MessageActionUtils.tsx:409
+#: src/components/channel/MessageActionUtils.tsx:410
 #: src/components/shared/ChannelPinsContent.tsx:99
 #: src/components/shared/ChannelPinsContent.tsx:260
 #: src/components/uikit/context_menu/items/MessageMenuItems.tsx:163
@@ -22907,7 +22908,7 @@ msgstr "Раззакрепен групов DM"
 msgid "unread"
 msgstr "непрочетено"
 
-#: src/components/popouts/InboxPopout.tsx:53
+#: src/components/popouts/InboxPopout.tsx:52
 msgid "Unread"
 msgstr "Непрочетени"
 
@@ -22915,11 +22916,11 @@ msgstr "Непрочетени"
 msgid "Unread DMs only"
 msgstr "Само непрочетени ЛС"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:85
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:87
 msgid "Unread Gift Count"
 msgstr "Брой непрочетени подаръци"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:73
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:75
 msgid "Unread gift inventory override"
 msgstr "Непрочетен подаръчен инвентар"
 
@@ -22962,7 +22963,7 @@ msgstr "Непотвърден имейл"
 msgid "Up to 4K/60fps"
 msgstr "До 4K/60fps"
 
-#: src/components/channel/ChannelTextarea.tsx:1033
+#: src/components/channel/ChannelTextarea.tsx:1031
 msgid "Update"
 msgstr "Актуализиране"
 
@@ -23085,7 +23086,7 @@ msgstr "надстройка"
 msgid "Upgrade Now"
 msgstr "Актуализирай сега"
 
-#: src/components/alerts/MaxBookmarksModal.tsx:69
+#: src/components/alerts/MaxBookmarksModal.tsx:72
 #: src/components/alerts/MaxFavoriteMemesModal.tsx:70
 msgid "Upgrade to Plutonium"
 msgstr "Актуализирай до Plutonium"
@@ -23249,7 +23250,7 @@ msgstr "Използвайте специален модал, за да зада
 msgid "Use Actual"
 msgstr "Използвай реални данни"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:47
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:49
 msgid "Use actual premium type"
 msgstr "Използвайте действителен премиум тип"
 
@@ -23322,7 +23323,7 @@ msgstr "Използвайте глобален профил"
 msgid "Use light theme"
 msgstr "Използвай светла тема"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:274
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:277
 msgid "Use passkeys for passwordless sign-in and two-factor authentication"
 msgstr "Използвай ключове за вход без парола и двуфакторна автентикация"
 
@@ -23454,7 +23455,7 @@ msgstr "Запис за потребител"
 #: src/components/layout/UserArea.tsx:286
 #: src/components/layout/UserArea.tsx:291
 #: src/components/modals/components/DesktopSettingsView.tsx:357
-#: src/components/modals/UserSettingsModal.tsx:154
+#: src/components/modals/UserSettingsModal.tsx:153
 msgid "User Settings"
 msgstr "Потребителски настройки"
 
@@ -23475,9 +23476,9 @@ msgstr "потребител, бот или webhook"
 msgid "username"
 msgstr "потребителско име"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:187
+#: src/components/modals/FluxerTagChangeModal.tsx:201
 #: src/components/modals/tabs/component_gallery_tab/InputsTab.tsx:101
-#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:51
+#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:52
 #: src/components/modals/utils/SettingsSearchIndex.tsx:63
 msgid "Username"
 msgstr "Потребителско име"
@@ -23510,13 +23511,17 @@ msgstr "Потребителското име трябва да е максим�
 msgid "Username#0000"
 msgstr "ПотребителскоИме#0000"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:169
+#: src/components/modals/FluxerTagChangeModal.tsx:183
 msgid "Usernames can only contain letters (a-z, A-Z), numbers (0-9), and underscores. Usernames are case-insensitive."
 msgstr "Потребителските имена могат да съдържат само букви (a-z, A-Z), цифри (0-9) и долни черти. Няма значение дали пишеш с главни или малки."
 
-#: src/components/modals/FluxerTagChangeModal.tsx:164
-msgid "Usernames can only contain letters (a-z, A-Z), numbers (0-9), and underscores. Usernames are case-insensitive. You can pick your own 4-digit tag if it's available."
-msgstr "Потребителските имена могат да съдържат само букви (a-z, A-Z), цифри (0-9) и долни черти. Няма значение дали пишеш с главни или малки. Можеш да си избереш собствен четирицифрен таг, ако е наличен."
+#: src/components/modals/FluxerTagChangeModal.tsx:170
+msgid "Usernames can only contain letters (a-z, A-Z), numbers (0-9), and underscores. Usernames are case-insensitive. You can pick any available 4-digit tag from #0000 to #9999."
+msgstr "Потребителските имена могат да съдържат само букви (a-z, A-Z), цифри (0-9) и долни черти. Потребителските имена не различават главни и малки букви. Можеш да избереш наличен таг с 4 цифри от #0000 до #9999."
+
+#: src/components/modals/FluxerTagChangeModal.tsx:176
+msgid "Usernames can only contain letters (a-z, A-Z), numbers (0-9), and underscores. Usernames are case-insensitive. You can pick any available 4-digit tag from #0001 to #9999."
+msgstr "Потребителските имена могат да съдържат само букви (a-z, A-Z), цифри (0-9) и долни черти. Потребителските имена не различават главни и малки букви. Можеш да избереш наличен таг с 4 цифри от #0001 до #9999."
 
 #: src/components/modals/utils/SettingsSearchIndex.tsx:246
 #: src/components/modals/utils/SettingsSectionRegistry.tsx:172
@@ -23634,8 +23639,8 @@ msgid "Verification Barriers"
 msgstr "Бариери за верификация"
 
 #: src/components/modals/ClaimAccountModal.tsx:198
-#: src/components/modals/EmailChangeModal.tsx:220
-#: src/components/modals/EmailChangeModal.tsx:288
+#: src/components/modals/EmailChangeModal.tsx:223
+#: src/components/modals/EmailChangeModal.tsx:291
 #: src/components/modals/PasswordChangeModal.tsx:166
 #: src/components/modals/PhoneAddModal.tsx:226
 #: src/components/modals/RequiredActionModal.tsx:495
@@ -23662,7 +23667,7 @@ msgstr "Имейлът за верификация е изпратен! Моля
 msgid "Verification failed"
 msgstr "Верификацията се провали"
 
-#: src/components/modals/BackupCodesViewModal.tsx:63
+#: src/components/modals/BackupCodesViewModal.tsx:68
 msgid "Verification may be required before viewing your backup codes."
 msgstr "Може да се изисква верификация, преди да видите резервните си кодове."
 
@@ -23684,7 +23689,7 @@ msgid "verify"
 msgstr "потвърдете"
 
 #: src/components/modals/AddConnectionModal.tsx:315
-#: src/components/modals/EmailChangeModal.tsx:236
+#: src/components/modals/EmailChangeModal.tsx:239
 #: src/components/modals/PasswordChangeModal.tsx:182
 #: src/components/modals/PhoneAddModal.tsx:240
 #: src/components/modals/RequiredActionModal.tsx:652
@@ -23785,7 +23790,7 @@ msgstr "предварителен преглед на видео"
 msgid "Video preview"
 msgstr "Преглед на видео"
 
-#: src/components/modals/MobileVideoViewer.tsx:311
+#: src/components/modals/MobileVideoViewer.tsx:319
 msgid "Video progress"
 msgstr "Напредък на видеото"
 
@@ -23859,15 +23864,15 @@ msgstr "Прегледай и управлявай забранените пот
 msgid "View and manage every webhook configured across your community."
 msgstr "Прегледай и управлявай всички webhooks, конфигурирани в общността ти."
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:257
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:260
 msgid "View and manage your backup codes for account recovery"
 msgstr "Прегледай и управлявай резервните си кодове за възстановяване на акаунта"
 
-#: src/components/modals/BackupCodesViewModal.tsx:59
+#: src/components/modals/BackupCodesViewModal.tsx:64
 msgid "View Backup Codes"
 msgstr "Преглед на резервните кодове"
 
-#: src/components/modals/BackupCodesViewModal.tsx:58
+#: src/components/modals/BackupCodesViewModal.tsx:63
 msgid "View backup codes form"
 msgstr "Форма за преглед на резервни кодове"
 
@@ -23884,7 +23889,7 @@ msgstr "Преглед на контролите на повикването"
 msgid "View Channel"
 msgstr "Преглед на канала"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:265
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:268
 msgid "View Codes"
 msgstr "Преглед на кодовете"
 
@@ -24016,6 +24021,19 @@ msgstr "Visionary (пожизнено Plutonium)"
 msgid "Visionary 2FA Nagbar"
 msgstr "Visionary 2FA Nagbar"
 
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:137
+msgid "Visionary Badge Override"
+msgstr "Надпис за значка Visionary"
+
+#. placeholder {0}: profile.premiumLifetimeSequence
+#: src/components/popouts/UserProfileBadges.tsx:150
+msgid "Visionary ID #{0}"
+msgstr "Visionary ID #{0}"
+
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:139
+msgid "Visionary ID Number"
+msgstr "Номер на Visionary ID"
+
 #: src/components/modals/ExternalLinkWarningModal.tsx:111
 msgid "Visit Site"
 msgstr "Посети сайта"
@@ -24086,7 +24104,7 @@ msgstr "Гласови повиквания"
 msgid "voice channel"
 msgstr "гласов канал"
 
-#: src/stores/QuickSwitcherStore.tsx:720
+#: src/stores/QuickSwitcherStore.tsx:718
 #: src/utils/modals/guild_tabs/GuildAuditLogTabUtils.tsx:227
 msgid "Voice channel"
 msgstr "Гласов канал"
@@ -24106,7 +24124,7 @@ msgstr "Гласовият канал е пълен"
 msgid "Voice channel join behavior"
 msgstr "Поведение при присъединяване към гласов канал"
 
-#: src/stores/QuickSwitcherStore.tsx:1351
+#: src/stores/QuickSwitcherStore.tsx:1349
 #: src/utils/quick_switcher/QuickSwitcherModalUtils.tsx:98
 msgid "Voice channels"
 msgstr "Гласови канали"
@@ -24374,11 +24392,11 @@ msgstr "Ще изпратим код за потвърждение на този
 msgid "We'll send a verification code to your email before you can change your password."
 msgstr "Ще изпратим код за потвърждение на вашия имейл, преди да можете да смените паролата си."
 
-#: src/components/modals/EmailChangeModal.tsx:190
+#: src/components/modals/EmailChangeModal.tsx:193
 msgid "We'll verify your current email and then your new email with one-time codes."
 msgstr "Ще потвърдим текущия ви имейл и след това новия с еднократни кодове."
 
-#: src/components/modals/EmailChangeModal.tsx:192
+#: src/components/modals/EmailChangeModal.tsx:195
 msgid "We'll verify your new email with a one-time code."
 msgstr "Ще потвърдим новия ви имейл с еднократен код."
 
@@ -24984,7 +25002,7 @@ msgstr "Не можете да включите микрофона си, защ�
 msgid "You do not have access to the channel where this message was sent."
 msgstr "Нямате достъп до канала, в който е изпратено това съобщение."
 
-#: src/components/channel/ChannelTextarea.tsx:749
+#: src/components/channel/ChannelTextarea.tsx:747
 #: src/components/channel/textarea/TextareaPlusMenu.tsx:52
 msgid "You do not have permission to send messages in this channel."
 msgstr "Нямате разрешение да изпращате съобщения в този канал."
@@ -25005,11 +25023,11 @@ msgstr "Все още нямате персонализирани преопре
 msgid "You don't have permission to connect to this voice channel."
 msgstr "Нямате разрешение да се свържете с този гласов канал."
 
-#: src/actions/InviteActionCreators.tsx:316
+#: src/actions/InviteActionCreators.tsx:320
 msgid "You don't have permission to install this emoji pack."
 msgstr "Нямате разрешение да инсталирате този пакет емоджита."
 
-#: src/actions/InviteActionCreators.tsx:317
+#: src/actions/InviteActionCreators.tsx:321
 msgid "You don't have permission to install this sticker pack."
 msgstr "Нямате разрешение да инсталирате този пакет стикери."
 
@@ -25065,35 +25083,35 @@ msgstr "Имате всичко <0/> чрез <1>подаръчен абонам
 msgid "You have blocked {username}. Unblock them to send messages."
 msgstr "Блокирали сте {username}. Разблокирайте го, за да изпращате съобщения."
 
-#: src/actions/InviteActionCreators.tsx:260
+#: src/actions/InviteActionCreators.tsx:264
 msgid "You have created the maximum of {limit} emoji pack. Delete one to create another."
 msgstr "Създал си максималното количество от {limit} емоджи пак."
 
-#: src/actions/InviteActionCreators.tsx:261
+#: src/actions/InviteActionCreators.tsx:265
 msgid "You have created the maximum of {limit} emoji packs. Delete one to create another."
 msgstr "Създал си максималното количество от {limit} емоджи пакове."
 
-#: src/actions/InviteActionCreators.tsx:292
+#: src/actions/InviteActionCreators.tsx:296
 msgid "You have created the maximum of {limit} sticker pack. Delete one to create another."
 msgstr "Създал си максималното количество от {limit} стикер пак."
 
-#: src/actions/InviteActionCreators.tsx:293
+#: src/actions/InviteActionCreators.tsx:297
 msgid "You have created the maximum of {limit} sticker packs. Delete one to create another."
 msgstr "Създал си максималното количество от {limit} стикер пакове."
 
-#: src/actions/InviteActionCreators.tsx:246
+#: src/actions/InviteActionCreators.tsx:250
 msgid "You have installed the maximum of {limit} emoji pack. Remove one to install another."
 msgstr "Инсталирал си максималното количество от {limit} емоджи пак."
 
-#: src/actions/InviteActionCreators.tsx:247
+#: src/actions/InviteActionCreators.tsx:251
 msgid "You have installed the maximum of {limit} emoji packs. Remove one to install another."
 msgstr "Инсталирал си максималното количество от {limit} емоджи пакове."
 
-#: src/actions/InviteActionCreators.tsx:278
+#: src/actions/InviteActionCreators.tsx:282
 msgid "You have installed the maximum of {limit} sticker pack. Remove one to install another."
 msgstr "Инсталирал си максималното количество от {limit} стикер пак."
 
-#: src/actions/InviteActionCreators.tsx:279
+#: src/actions/InviteActionCreators.tsx:283
 msgid "You have installed the maximum of {limit} sticker packs. Remove one to install another."
 msgstr "Инсталирал си максималното количество от {limit} стикер пакове."
 
@@ -25101,19 +25119,19 @@ msgstr "Инсталирал си максималното количество 
 msgid "You have no friends yet"
 msgstr "Все още нямате приятели"
 
-#: src/actions/InviteActionCreators.tsx:264
+#: src/actions/InviteActionCreators.tsx:268
 msgid "You have reached the limit for creating emoji packs. Delete one of your packs to create another."
 msgstr "Достигнали сте лимита за създаване на пакети емоджита. Изтрийте един от пакетите си, за да създадете друг."
 
-#: src/actions/InviteActionCreators.tsx:296
+#: src/actions/InviteActionCreators.tsx:300
 msgid "You have reached the limit for creating sticker packs. Delete one of your packs to create another."
 msgstr "Достигнали сте лимита за създаване на пакети стикери. Изтрийте един от пакетите си, за да създадете друг."
 
-#: src/actions/InviteActionCreators.tsx:250
+#: src/actions/InviteActionCreators.tsx:254
 msgid "You have reached the limit for installing emoji packs. Remove one of your installed packs to install another."
 msgstr "Достигнали сте лимита за инсталиране на пакети емоджита. Премахнете един от инсталираните пакети, за да инсталирате друг."
 
-#: src/actions/InviteActionCreators.tsx:282
+#: src/actions/InviteActionCreators.tsx:286
 msgid "You have reached the limit for installing sticker packs. Remove one of your installed packs to install another."
 msgstr "Достигнали сте лимита за инсталиране на пакети стикери. Премахнете един от инсталираните пакети, за да инсталирате друг."
 
@@ -25377,23 +25395,23 @@ msgstr "Достигнал си максималния лимит от {maxFavor
 msgid "You've reached the maximum limit of {maxFavoriteMemes} saved media items. To add more, you'll need to remove some existing items from your collection."
 msgstr "Достигнал си максималния лимит от {maxFavoriteMemes} запазени медийни елемента. За да добавиш повече, ще трябва да премахнеш някои съществуващи елементи от колекцията си."
 
-#: src/components/alerts/MaxBookmarksModal.tsx:55
+#: src/components/alerts/MaxBookmarksModal.tsx:58
 msgid "You've reached the maximum number of bookmarks ({bookmarksText}). Please remove some bookmarks before adding new ones."
 msgstr "Достигнал си максималния брой на отметки ({bookmarksText}). Моля, премахни някои отметки, преди да добавиш нови."
 
-#: src/components/alerts/MaxBookmarksModal.tsx:44
+#: src/components/alerts/MaxBookmarksModal.tsx:47
 msgid "You've reached the maximum number of bookmarks ({bookmarksText}). This limit is configured by your instance administrator. Please remove some bookmarks before adding new ones."
 msgstr "Достигнал си максималния брой на отметки ({bookmarksText}). Този лимит е конфигуриран от администратора на твоята инстанция. Моля, премахни някои отметки, преди да добавиш нови."
 
-#: src/components/alerts/MaxBookmarksModal.tsx:68
+#: src/components/alerts/MaxBookmarksModal.tsx:71
 msgid "You've reached the maximum number of bookmarks for free users ({bookmarksText}). Upgrade to Plutonium to increase your limit to {premiumBookmarksText}, or remove some bookmarks to add new ones."
 msgstr "Достигнал си максималния брой на отметки за безплатни потребители ({bookmarksText}). Премини на Plutonium, за да увеличиш лимита си до {premiumBookmarksText}, или премахни някои отметки, за да добавиш нови."
 
-#: src/components/alerts/MaxGuildsModal.tsx:36
+#: src/components/alerts/MaxGuildsModal.tsx:39
 msgid "You've reached the maximum number of communities you can join ({maxGuilds} communities). Please leave a community before joining another one."
 msgstr "Достигнал си максималния брой на общности, които можеш да се присъединиш ({maxGuilds} общности). Моля, напусни една общност, преди да се присъединиш към друга."
 
-#: src/components/alerts/MaxGuildsModal.tsx:35
+#: src/components/alerts/MaxGuildsModal.tsx:38
 msgid "You've reached the maximum number of communities you can join ({maxGuilds} community). Please leave a community before joining another one."
 msgstr "Достигнал си максималния брой на общности, които можеш да се присъединиш ({maxGuilds} общност). Моля, напусни една общност, преди да се присъединиш към друга."
 

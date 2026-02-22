@@ -134,12 +134,12 @@ msgid "{0} of {totalAttachments}"
 msgstr "{0} / {totalAttachments}"
 
 #. placeholder {0}: passkeys.length
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:285
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:288
 msgid "{0} passkey registered (max 10)"
 msgstr "{0} geçiş anahtarı kaydedildi (maks 10)"
 
 #. placeholder {0}: passkeys.length
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:286
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:289
 msgid "{0} passkeys registered (max 10)"
 msgstr "{0} geçiş anahtarı kaydedildi (maks 10)"
 
@@ -633,11 +633,11 @@ msgstr "{lockedStickerCount} çıkartma"
 msgid "{lockedStickerCount} stickers"
 msgstr "{lockedStickerCount} çıkartmalar"
 
-#: src/components/alerts/MaxBookmarksModal.tsx:38
+#: src/components/alerts/MaxBookmarksModal.tsx:41
 msgid "{maxBookmarks} bookmark"
 msgstr "{maxBookmarks} yer imi"
 
-#: src/components/alerts/MaxBookmarksModal.tsx:38
+#: src/components/alerts/MaxBookmarksModal.tsx:41
 msgid "{maxBookmarks} bookmarks"
 msgstr "{maxBookmarks} yer imleri"
 
@@ -718,11 +718,11 @@ msgstr "{participantCount} katılımcı çağrıda"
 msgid "{participantCount} participants in call"
 msgstr "{participantCount} katılımcı çağrıda"
 
-#: src/components/alerts/MaxBookmarksModal.tsx:63
+#: src/components/alerts/MaxBookmarksModal.tsx:66
 msgid "{premiumBookmarks} bookmark"
 msgstr "{premiumBookmarks} yer imi"
 
-#: src/components/alerts/MaxBookmarksModal.tsx:63
+#: src/components/alerts/MaxBookmarksModal.tsx:66
 msgid "{premiumBookmarks} bookmarks"
 msgstr "{premiumBookmarks} yer imleri"
 
@@ -875,11 +875,11 @@ msgstr "{username} birini gruptan çıkardı."
 msgid "{username} started a call."
 msgstr "{username} bir çağrı başlattı."
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:100
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:102
 msgid "{v} gift"
 msgstr "{v} hediye"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:100
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:102
 msgid "{v} gifts"
 msgstr "{v} hediyeler"
 
@@ -1088,7 +1088,7 @@ msgstr "<0>Üyenin sağırlığını kaldırdı.</0>"
 msgid "<0>Unmuted</0> the member."
 msgstr "<0>Üyenin susturmasını kaldırdı.</0>"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:370
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:373
 msgid "<0>Warning:</0> This will also disable SMS two-factor authentication."
 msgstr "<0>Uyarı:</0> Bu aynı zamanda SMS iki faktörlü kimlik doğrulamayı da devre dışı bırakacaktır."
 
@@ -1362,9 +1362,9 @@ msgstr "30 saniye"
 msgid "4 hours"
 msgstr "4 saat"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:203
-#: src/components/modals/FluxerTagChangeModal.tsx:231
-#: src/components/modals/FluxerTagChangeModal.tsx:248
+#: src/components/modals/FluxerTagChangeModal.tsx:217
+#: src/components/modals/FluxerTagChangeModal.tsx:245
+#: src/components/modals/FluxerTagChangeModal.tsx:262
 msgid "4-digit tag"
 msgstr "4 haneli etiket"
 
@@ -1634,7 +1634,7 @@ msgstr "Hesap başarıyla talep edildi"
 msgid "Account Connected"
 msgstr "Hesap Bağlandı"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:55
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:57
 msgid "Account State Overrides"
 msgstr "Hesap Durumu Geçersiz Kılmaları"
 
@@ -1642,7 +1642,7 @@ msgstr "Hesap Durumu Geçersiz Kılmaları"
 msgid "Account Too New"
 msgstr "Hesap Çok Yeni"
 
-#: src/actions/InviteActionCreators.tsx:178
+#: src/actions/InviteActionCreators.tsx:182
 #: src/components/modals/RequiredActionModal.tsx:143
 #: src/components/modals/RequiredActionModal.tsx:416
 msgid "Account Verification Required"
@@ -1763,7 +1763,7 @@ msgstr "Ekle"
 msgid "Add a bot to a community with requested permissions"
 msgstr "Bir topluluğa istenen izinlerle bir bot ekle"
 
-#: src/components/modals/ForwardModal.tsx:309
+#: src/components/modals/ForwardModal.tsx:314
 msgid "Add a comment (optional)"
 msgstr "Yorum ekle (isteğe bağlı)"
 
@@ -1782,7 +1782,7 @@ msgstr "Özel bir arka plan ekle"
 msgid "Add a different account"
 msgstr "Farklı bir hesap ekle"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:348
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:351
 msgid "Add a phone number to enable SMS two-factor authentication"
 msgstr "SMS iki faktörlü kimlik doğrulamayı etkinleştirmek için bir telefon numarası ekle"
 
@@ -1844,7 +1844,7 @@ msgstr "Bağlantı ekleme formu"
 msgid "Add domain connection"
 msgstr "alan adı bağlantısı ekle"
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:98
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:101
 msgid "Add Email"
 msgstr "E-posta Ekle"
 
@@ -1902,12 +1902,12 @@ msgstr "Telefon numaranı ekle veya değiştir"
 msgid "Add Override"
 msgstr "Geçersiz Kılma Ekle"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:290
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:293
 msgid "Add Passkey"
 msgstr "Parola Anahtarı Ekle"
 
 #: src/components/channel/barriers/BarrierComponents.tsx:198
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:395
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:398
 msgid "Add Phone"
 msgstr "Telefon Ekle"
 
@@ -2010,7 +2010,7 @@ msgstr "{0} eklendi."
 msgid "Added roles."
 msgstr "Roller eklendi."
 
-#: src/actions/SavedMessageActionCreators.tsx:58
+#: src/actions/SavedMessageActionCreators.tsx:59
 msgid "Added to bookmarks"
 msgstr "Yer imlerine eklendi"
 
@@ -2028,11 +2028,11 @@ msgstr "Favorilere Eklendi"
 msgid "Added to saved media"
 msgstr "Kaydedilen medyaya eklendi"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:313
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:316
 msgid "Added: {createdDate}"
 msgstr "Eklendi: {createdDate}"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:309
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:312
 msgid "Added: {createdDate} • Last used: {lastUsedDate}"
 msgstr "Eklendi: {createdDate} • Son kullanım: {lastUsedDate}"
 
@@ -2930,7 +2930,7 @@ msgid "Are you sure you want to remove this connection? This action cannot be un
 msgstr "Bu bağlantıyı kaldırmak istediğinizden emin misiniz? Bu işlem geri alınamaz."
 
 #. placeholder {0}: user.phone
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:364
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:367
 msgid "Are you sure you want to remove your phone number <0>{0}</0>?"
 msgstr "<0>{0}</0> telefon numaranı kaldırmak istediğine emin misin?"
 
@@ -3395,7 +3395,7 @@ msgstr "Rollere Geri Dön"
 msgid "Back to Settings"
 msgstr "Ayarlara Geri Dön"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:118
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:120
 msgid "Backend Premium Override"
 msgstr "Arka Uç Premium Geçersiz Kılma"
 
@@ -3438,12 +3438,12 @@ msgid "backup codes"
 msgstr "yedek kodlar"
 
 #: src/components/modals/BackupCodesModal.tsx:43
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:254
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:257
 #: src/components/modals/utils/SettingsSearchIndex.tsx:140
 msgid "Backup Codes"
 msgstr "Yedek Kodlar"
 
-#: src/components/modals/BackupCodesRegenerateModal.tsx:48
+#: src/components/modals/BackupCodesRegenerateModal.tsx:55
 msgid "Backup codes regenerated"
 msgstr "Yedek kodlar yenilendi"
 
@@ -3720,9 +3720,9 @@ msgstr "Kitap Kulübü"
 msgid "Bookmark"
 msgstr "Yer İmi"
 
-#: src/components/alerts/MaxBookmarksModal.tsx:43
-#: src/components/alerts/MaxBookmarksModal.tsx:54
-#: src/components/alerts/MaxBookmarksModal.tsx:67
+#: src/components/alerts/MaxBookmarksModal.tsx:46
+#: src/components/alerts/MaxBookmarksModal.tsx:57
+#: src/components/alerts/MaxBookmarksModal.tsx:70
 msgid "Bookmark Limit Reached"
 msgstr "Yer İmi Sınırına Ulaşıldı"
 
@@ -3750,7 +3750,7 @@ msgstr "Yer İmi Olarak İşaretlendi!"
 
 #: src/components/modals/BookmarksBottomSheet.tsx:109
 #: src/components/pages/SavedMessagesPage.tsx:67
-#: src/components/popouts/InboxPopout.tsx:58
+#: src/components/popouts/InboxPopout.tsx:57
 msgid "Bookmarks"
 msgstr "Yer İmleri"
 
@@ -4055,7 +4055,7 @@ msgstr "Kamera sayısı {VOICE_CHANNEL_CAMERA_USER_LIMIT} katılımcıdan fazla 
 #: src/components/alerts/FileSizeTooLargeModal.tsx:87
 #: src/components/auth/BrowserLoginHandoffModal.tsx:269
 #: src/components/bottomsheets/CreateDMBottomSheet.tsx:130
-#: src/components/channel/ChannelTextarea.tsx:312
+#: src/components/channel/ChannelTextarea.tsx:310
 #: src/components/channel/friends/FriendListItem.tsx:259
 #: src/components/channel/MentionEveryonePopout.tsx:128
 #: src/components/emojis/EmojiListItem.tsx:125
@@ -4069,8 +4069,8 @@ msgstr "Kamera sayısı {VOICE_CHANNEL_CAMERA_USER_LIMIT} katılımcıdan fazla 
 #: src/components/modals/AddGuildModal.tsx:413
 #: src/components/modals/AddGuildStickerModal.tsx:120
 #: src/components/modals/AttachmentEditModal.tsx:122
-#: src/components/modals/BackupCodesRegenerateModal.tsx:72
-#: src/components/modals/BackupCodesViewModal.tsx:70
+#: src/components/modals/BackupCodesRegenerateModal.tsx:79
+#: src/components/modals/BackupCodesViewModal.tsx:75
 #: src/components/modals/BanMemberModal.tsx:143
 #: src/components/modals/CameraPreviewModal.tsx:485
 #: src/components/modals/CaptchaModal.tsx:187
@@ -4094,14 +4094,14 @@ msgstr "Kamera sayısı {VOICE_CHANNEL_CAMERA_USER_LIMIT} katılımcıdan fazla 
 #: src/components/modals/EditFavoriteMemeModal.tsx:85
 #: src/components/modals/EditGuildStickerModal.tsx:113
 #: src/components/modals/EditPackModal.tsx:103
-#: src/components/modals/EmailChangeModal.tsx:199
-#: src/components/modals/EmailChangeModal.tsx:230
-#: src/components/modals/EmailChangeModal.tsx:267
-#: src/components/modals/EmailChangeModal.tsx:298
+#: src/components/modals/EmailChangeModal.tsx:202
+#: src/components/modals/EmailChangeModal.tsx:233
+#: src/components/modals/EmailChangeModal.tsx:270
+#: src/components/modals/EmailChangeModal.tsx:301
 #: src/components/modals/ExternalLinkWarningModal.tsx:102
-#: src/components/modals/FluxerTagChangeModal.tsx:117
-#: src/components/modals/FluxerTagChangeModal.tsx:280
-#: src/components/modals/ForwardModal.tsx:373
+#: src/components/modals/FluxerTagChangeModal.tsx:122
+#: src/components/modals/FluxerTagChangeModal.tsx:294
+#: src/components/modals/ForwardModal.tsx:378
 #: src/components/modals/guild_tabs/GuildBansTab.tsx:103
 #: src/components/modals/guild_tabs/GuildRolesTab.tsx:624
 #: src/components/modals/GuildFolderSettingsModal.tsx:199
@@ -4113,7 +4113,7 @@ msgstr "Kamera sayısı {VOICE_CHANNEL_CAMERA_USER_LIMIT} katılımcıdan fazla 
 #: src/components/modals/KickMemberModal.tsx:63
 #: src/components/modals/MessageHistoryThresholdModal.tsx:103
 #: src/components/modals/MfaTotpDisableModal.tsx:75
-#: src/components/modals/MfaTotpEnableModal.tsx:103
+#: src/components/modals/MfaTotpEnableModal.tsx:106
 #: src/components/modals/PasskeyNameModal.tsx:62
 #: src/components/modals/PasswordChangeModal.tsx:145
 #: src/components/modals/PasswordChangeModal.tsx:176
@@ -4146,7 +4146,7 @@ msgstr "İptal"
 msgid "Cancel Friend Request"
 msgstr "Arkadaşlık İsteğini İptal Et"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:112
+#: src/components/modals/FluxerTagChangeModal.tsx:117
 msgid "Cancel if you want to choose a different username instead."
 msgstr "Farklı bir kullanıcı adı seçmek istiyorsanız iptal edin."
 
@@ -4178,11 +4178,11 @@ msgstr "Düzenlenemez"
 msgid "Cannot Delete Account"
 msgstr "Hesap Silinemiyor"
 
-#: src/actions/InviteActionCreators.tsx:313
+#: src/actions/InviteActionCreators.tsx:317
 msgid "Cannot install emoji pack"
 msgstr "Emoji paketi yüklenemiyor"
 
-#: src/actions/InviteActionCreators.tsx:314
+#: src/actions/InviteActionCreators.tsx:318
 msgid "Cannot install sticker pack"
 msgstr "Sticker paketi yüklenemiyor"
 
@@ -4279,7 +4279,7 @@ msgstr "Banner'ı Değiştir"
 msgid "Change email"
 msgstr "E-posta değiştir"
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:81
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:84
 msgid "Change Email"
 msgstr "E-postayı Değiştir"
 
@@ -4288,12 +4288,12 @@ msgstr "E-postayı Değiştir"
 msgid "Change emoji"
 msgstr "Emojiyi değiştir"
 
-#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:59
-#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:69
+#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:60
+#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:70
 msgid "Change FluxerTag"
 msgstr "FluxerTag'ı Değiştir"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:158
+#: src/components/modals/FluxerTagChangeModal.tsx:163
 msgid "Change FluxerTag form"
 msgstr "FluxerTag değiştirme formu"
 
@@ -4360,7 +4360,7 @@ msgid "change password"
 msgstr "şifre değiştir"
 
 #: src/components/modals/PasswordChangeModal.tsx:227
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:124
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:127
 msgid "Change Password"
 msgstr "Parolayı Değiştir"
 
@@ -4372,7 +4372,7 @@ msgstr "Şifre değiştirme formu"
 msgid "Change what users without Read Message History can see"
 msgstr "Okuma Mesaj Geçmişi olmayan kullanıcıların görebileceği şeyi değiştirin"
 
-#: src/components/modals/EmailChangeModal.tsx:183
+#: src/components/modals/EmailChangeModal.tsx:186
 msgid "Change Your Email"
 msgstr "E-posta Adresinizi Değiştirin"
 
@@ -4380,7 +4380,7 @@ msgstr "E-posta Adresinizi Değiştirin"
 msgid "Change your email address"
 msgstr "E-posta adresinizi değiştirin"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:159
+#: src/components/modals/FluxerTagChangeModal.tsx:164
 msgid "Change Your FluxerTag"
 msgstr "FluxerTag'inizi Değiştirin"
 
@@ -4392,7 +4392,7 @@ msgstr "Bu topluluktaki takma adınızı değiştirin."
 msgid "Change your password"
 msgstr "Şifrenizi değiştirin"
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:106
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:109
 msgid "Change your password to keep your account secure"
 msgstr "Hesabınızı güvende tutmak için şifrenizi değiştirin"
 
@@ -4404,7 +4404,7 @@ msgstr "Profil fotoğrafınızı değiştirin"
 msgid "Change your username"
 msgstr "Kullanıcı adınızı değiştirin"
 
-#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:90
+#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:91
 msgid "Change your username and 4-digit tag"
 msgstr "Kullanıcı adınızı ve 4 haneli etiketinizi değiştirin"
 
@@ -4424,7 +4424,7 @@ msgstr "Bit hızı {0} olarak değiştirildi."
 msgid "Changed the voice region to {0}."
 msgstr "Ses bölgesi {0} olarak değiştirildi."
 
-#: src/components/channel/ChannelTextarea.tsx:751
+#: src/components/channel/ChannelTextarea.tsx:749
 #: src/utils/SearchUtils.tsx:268
 msgid "channel"
 msgstr "kanal"
@@ -4846,7 +4846,7 @@ msgstr "İki faktörlü kimlik doğrulama ve geçiş anahtarları gibi güvenlik
 msgid "Claim your account to call"
 msgstr "Arama yapmak için hesabınızı talep edin"
 
-#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:56
+#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:57
 msgid "Claim your account to change your FluxerTag"
 msgstr "FluxerTag'ını değiştirmek için hesabını talep et"
 
@@ -5144,7 +5144,7 @@ msgstr "İstemci sırrı yeniden oluşturuldu. Eski sırrı kullanan tüm kodlar
 #: src/components/modals/components/SettingsModalHeader.tsx:98
 #: src/components/modals/InviteModal.tsx:135
 #: src/components/modals/MediaModal.tsx:349
-#: src/components/modals/MobileVideoViewer.tsx:252
+#: src/components/modals/MobileVideoViewer.tsx:260
 #: src/components/modals/Modal.tsx:382
 #: src/components/modals/Modal.tsx:460
 #: src/components/modals/PackInviteModal.tsx:152
@@ -5201,7 +5201,7 @@ msgstr "Kömür Teması"
 #: src/components/auth/MfaScreen.tsx:131
 #: src/components/invites/InviteListItem.tsx:56
 #: src/components/modals/MfaTotpDisableModal.tsx:63
-#: src/components/modals/MfaTotpEnableModal.tsx:91
+#: src/components/modals/MfaTotpEnableModal.tsx:94
 #: src/components/pages/report/ReportBreadcrumbs.tsx:48
 msgid "Code"
 msgstr "Kod"
@@ -5333,7 +5333,7 @@ msgid "Communication"
 msgstr "İletişim"
 
 #: src/components/modals/components/FeatureComparisonTable.tsx:49
-#: src/stores/QuickSwitcherStore.tsx:1354
+#: src/stores/QuickSwitcherStore.tsx:1352
 #: src/utils/quick_switcher/QuickSwitcherModalUtils.tsx:99
 msgid "Communities"
 msgstr "Topluluklar"
@@ -5651,7 +5651,7 @@ msgid "Configure your profile badge"
 msgstr "Profil rozetini yapılandır"
 
 #: src/components/channel/MentionEveryonePopout.tsx:134
-#: src/components/modals/EmailChangeModal.tsx:304
+#: src/components/modals/EmailChangeModal.tsx:307
 msgid "Confirm"
 msgstr "Onayla"
 
@@ -5825,15 +5825,15 @@ msgstr "Bağlam Menüleri"
 msgid "Context menus can be opened with left-click (on buttons) or right-click (on other elements). This demonstrates various menu items including checkboxes, radio buttons, sliders, and submenus."
 msgstr "Bağlam menüleri sol tıkla (düğmelerde) veya sağ tıkla (diğer öğelerde) açılabilir. Bu, onay kutuları, radyo düğmeleri, kaydırıcılar ve alt menüler dahil çeşitli menü öğelerini gösterir."
 
-#: src/components/channel/ChannelTextarea.tsx:311
+#: src/components/channel/ChannelTextarea.tsx:309
 #: src/components/modals/AddConnectionModal.tsx:221
-#: src/components/modals/BackupCodesRegenerateModal.tsx:75
-#: src/components/modals/BackupCodesViewModal.tsx:73
+#: src/components/modals/BackupCodesRegenerateModal.tsx:82
+#: src/components/modals/BackupCodesViewModal.tsx:78
 #: src/components/modals/DeviceRevokeModal.tsx:82
-#: src/components/modals/FluxerTagChangeModal.tsx:116
-#: src/components/modals/FluxerTagChangeModal.tsx:283
+#: src/components/modals/FluxerTagChangeModal.tsx:121
+#: src/components/modals/FluxerTagChangeModal.tsx:297
 #: src/components/modals/MfaTotpDisableModal.tsx:78
-#: src/components/modals/MfaTotpEnableModal.tsx:106
+#: src/components/modals/MfaTotpEnableModal.tsx:109
 #: src/components/modals/SudoVerificationModal.tsx:410
 msgid "Continue"
 msgstr "Devam Et"
@@ -6555,7 +6555,7 @@ msgstr "Mevcut Cihaz"
 msgid "Current DM"
 msgstr "Mevcut DM"
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:113
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:116
 msgid "Current Password"
 msgstr "Mevcut Şifre"
 
@@ -6601,7 +6601,7 @@ msgstr "Özel CSS Üstü"
 msgid "Custom Date Range"
 msgstr "Özel Tarih Aralığı"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:227
+#: src/components/modals/FluxerTagChangeModal.tsx:241
 msgid "Custom discriminators are not available on this instance"
 msgstr "Özel ayırtıcılar bu örnekte mevcut değil"
 
@@ -6727,11 +6727,12 @@ msgstr "Mesajların üzerine geldiğinizde medya ekleri ve gömülü içeriklerd
 msgid "Customize which buttons are visible in the message input area. Keyboard shortcuts will continue to work even if buttons are hidden."
 msgstr "Mesaj girişi alanında hangi düğmelerin görünür olduğunu özelleştirin. Düğmeler gizlense bile klavye kısayolları çalışmaya devam edecektir."
 
-#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:74
-msgid "Customize your 4-digit tag (#{discriminator}) to your liking with Plutonium"
-msgstr "4 haneli etiketinizi (#{discriminator}) Plutonium ile istediğiniz gibi özelleştirin"
+#. placeholder {0}: user.discriminator
+#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:75
+msgid "Customize your 4-digit tag (#{0}) to your liking with Plutonium"
+msgstr "Plutonium ile 4 haneli etiketinizi (#{0}) istediğiniz gibi özelleştirin"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:272
+#: src/components/modals/FluxerTagChangeModal.tsx:286
 msgid "Customize your 4-digit tag or keep it when changing your username"
 msgstr "4 haneli etiketinizi özelleştirin veya kullanıcı adınızı değiştirirken koruyun"
 
@@ -7069,7 +7070,7 @@ msgstr "sil"
 #: src/components/emojis/EmojiListItem.tsx:195
 #: src/components/emojis/EmojiListItem.tsx:252
 #: src/components/emojis/EmojiListItem.tsx:308
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:322
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:325
 #: src/components/modals/tabs/component_gallery_tab/ButtonsTab.tsx:157
 #: src/components/modals/tabs/component_gallery_tab/ButtonsTab.tsx:242
 #: src/components/modals/tabs/component_gallery_tab/index.tsx:165
@@ -7515,7 +7516,7 @@ msgstr "Doğrudan Mesaj"
 #: src/components/layout/guild_list/FluxerButton.tsx:80
 #: src/components/modals/GuildPrivacySettingsModal.tsx:76
 #: src/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:221
-#: src/stores/QuickSwitcherStore.tsx:833
+#: src/stores/QuickSwitcherStore.tsx:831
 msgid "Direct Messages"
 msgstr "Doğrudan Mesajlar"
 
@@ -7530,7 +7531,7 @@ msgstr "devre dışı bırak"
 
 #: src/components/invites/DisableInvitesButton.tsx:60
 #: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:240
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:426
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:429
 msgid "Disable"
 msgstr "Devre dışı bırak"
 
@@ -7558,7 +7559,7 @@ msgstr "Uygulama genelinde animasyonları ve geçişleri devre dışı bırak."
 msgid "Disable animations and transitions. Currently controlled by your system setting."
 msgstr "Animasyonları ve geçişleri devre dışı bırak. Şu anda sistem ayarınız tarafından kontrol ediliyor."
 
-#: src/stores/QuickSwitcherStore.tsx:915
+#: src/stores/QuickSwitcherStore.tsx:913
 msgid "Disable Compact Mode"
 msgstr "Kompakt Modu Devre Dışı Bırak"
 
@@ -7585,7 +7586,7 @@ msgstr "Gürültü Bastırmayı Devre Dışı Bırak"
 msgid "Disable Picture-in-Picture Popout"
 msgstr "Resim içinde Resim Pop-out'u Devre Dışı Bırak"
 
-#: src/stores/QuickSwitcherStore.tsx:931
+#: src/stores/QuickSwitcherStore.tsx:929
 msgid "Disable Reduced Motion"
 msgstr "Azaltılmış Hareketi Devre Dışı Bırak"
 
@@ -7754,7 +7755,7 @@ msgstr "Ayırıcı"
 msgid "Discussion or promotion of illegal activities"
 msgstr "Yasadışı faaliyetlerin tartışılması veya teşvik edilmesi"
 
-#: src/components/alerts/MaxBookmarksModal.tsx:76
+#: src/components/alerts/MaxBookmarksModal.tsx:79
 #: src/components/layout/GuildLayout.tsx:106
 #: src/components/layout/NagbarContent.tsx:42
 #: src/components/modals/GiftAcceptModal.tsx:110
@@ -7890,12 +7891,12 @@ msgstr "Mevcut topluluklarınızın üyelerinden gelen doğrudan mesajları da e
 msgid "Do you want to send this pin back in time?"
 msgstr "Bu sabitlemeyi zamanda geri göndermek istiyor musunuz?"
 
-#: src/components/channel/MessageActionUtils.tsx:410
+#: src/components/channel/MessageActionUtils.tsx:411
 msgid "Do you want to send this pin back to the future?"
 msgstr "Bu sabitlemeyi geleceğe geri göndermek istiyor musunuz?"
 
 #: src/components/modals/tabs/AccessibilityTab.tsx:148
-#: src/components/modals/tabs/MyProfileTab.tsx:768
+#: src/components/modals/tabs/MyProfileTab.tsx:767
 msgid "Doc, I'm from the future. I came here in a time machine that you invented. Now, I need your help to get back to the year 1985."
 msgstr "Doktor, ben gelecekten geliyorum. Senin icat ettiğin bir zaman makinesiyle buraya geldim. Şimdi, 1985 yılına geri dönmek için yardımına ihtiyacım var."
 
@@ -8344,13 +8345,13 @@ msgid "Email"
 msgstr "E-posta"
 
 #: src/components/modals/tabs/account_security_tab/AccountTab.tsx:65
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:91
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:94
 #: src/components/modals/tabs/component_gallery_tab/InputsTab.tsx:107
 #: src/components/pages/report/ReportStepEmail.tsx:76
 msgid "Email Address"
 msgstr "E-posta Adresi"
 
-#: src/components/modals/EmailChangeModal.tsx:165
+#: src/components/modals/EmailChangeModal.tsx:168
 msgid "Email changed"
 msgstr "E-posta değiştirildi"
 
@@ -8388,7 +8389,7 @@ msgstr "E-posta Doğrulama Hatırlatması"
 msgid "Email Verification Required"
 msgstr "E-posta Doğrulaması Gerekli"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:57
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:59
 msgid "Email Verified Override"
 msgstr "E-posta Doğrulaması Geçersiz Kılma"
 
@@ -8426,11 +8427,11 @@ msgstr "gömülü içerikler"
 msgid "Embeds"
 msgstr "Gömülü İçerikler"
 
-#: src/components/channel/MessageActionUtils.tsx:520
+#: src/components/channel/MessageActionUtils.tsx:526
 msgid "Embeds suppressed"
 msgstr "Gömülü içerikler gizlendi"
 
-#: src/components/channel/MessageActionUtils.tsx:506
+#: src/components/channel/MessageActionUtils.tsx:512
 msgid "Embeds unsuppressed"
 msgstr "Gömülü içerikler gösteriliyor"
 
@@ -8485,7 +8486,7 @@ msgstr "Emoji adları en az 2 karakter uzunluğunda olmalı ve yalnızca alfasay
 msgid "Emoji pack"
 msgstr "Emoji paketi"
 
-#: src/actions/InviteActionCreators.tsx:255
+#: src/actions/InviteActionCreators.tsx:259
 msgid "Emoji pack creation limit reached"
 msgstr "Emoji paketi oluşturma sınırına ulaşıldı"
 
@@ -8493,7 +8494,7 @@ msgstr "Emoji paketi oluşturma sınırına ulaşıldı"
 msgid "Emoji Pack Invite"
 msgstr "Emoji Paketi Daveti"
 
-#: src/actions/InviteActionCreators.tsx:241
+#: src/actions/InviteActionCreators.tsx:245
 msgid "Emoji pack limit reached"
 msgstr "Emoji paketi sınırına ulaşıldı"
 
@@ -8530,9 +8531,9 @@ msgstr "boş durum"
 
 #: src/components/invites/DisableInvitesButton.tsx:60
 #: src/components/layout/GuildLayout.tsx:74
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:244
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:432
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:438
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:247
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:435
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:441
 #: src/components/modals/tabs/components/InputMonitoringSection.tsx:85
 msgid "Enable"
 msgstr "Etkinleştir"
@@ -8566,7 +8567,7 @@ msgstr "Beta Özelliğini Etkinleştir"
 msgid "Enable Browser Notifications"
 msgstr "Tarayıcı Bildirimlerini Etkinleştir"
 
-#: src/stores/QuickSwitcherStore.tsx:916
+#: src/stores/QuickSwitcherStore.tsx:914
 msgid "Enable Compact Mode"
 msgstr "Kompakt Modu Etkinleştir"
 
@@ -8642,7 +8643,7 @@ msgstr "Bu cihaz için push'ı etkinleştir"
 msgid "Enable push notifications for this installed PWA to keep receiving messages when the browser is backgrounded."
 msgstr "Tarayıcı arka plandayken mesaj almaya devam etmek için bu yüklü PWA için push bildirimlerini etkinleştirin."
 
-#: src/stores/QuickSwitcherStore.tsx:932
+#: src/stores/QuickSwitcherStore.tsx:930
 msgid "Enable Reduced Motion"
 msgstr "Azaltılmış Hareketi Etkinleştir"
 
@@ -8658,7 +8659,7 @@ msgstr "Genişletmek için Shift'i Etkinleştir"
 msgid "Enable SMS 2FA"
 msgstr "SMS 2FA'yı Etkinleştir"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:415
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:418
 msgid "Enable SMS codes as a backup for your authenticator app"
 msgstr "Doğrulayıcı uygulamanız için yedek olarak SMS kodlarını etkinleştirin"
 
@@ -8678,7 +8679,7 @@ msgstr "İki Aşamalı Kimlik Doğrulamayı Etkinleştir"
 msgid "Enable two-factor authentication"
 msgstr "İki faktörlü kimlik doğrulamayı etkinleştir"
 
-#: src/components/modals/MfaTotpEnableModal.tsx:70
+#: src/components/modals/MfaTotpEnableModal.tsx:73
 msgid "Enable two-factor authentication form"
 msgstr "İki faktörlü kimlik doğrulama formunu etkinleştir"
 
@@ -8782,7 +8783,7 @@ msgid "Enter the 6-digit code from your authenticator app or one of your backup 
 msgstr "Kimlik doğrulama uygulamanızdan veya yedek kodlarınızdan birinden 6 haneli kodu girin."
 
 #: src/components/modals/MfaTotpDisableModal.tsx:67
-#: src/components/modals/MfaTotpEnableModal.tsx:95
+#: src/components/modals/MfaTotpEnableModal.tsx:98
 msgid "Enter the 6-digit code from your authenticator app."
 msgstr "Kimlik doğrulama uygulamanızdan 6 haneli kodu girin."
 
@@ -8804,7 +8805,7 @@ msgstr "Devam etmeden önce kodu girin."
 msgid "Enter the code from your authenticator app."
 msgstr "Kimlik doğrulama uygulamanızdan kodu girin."
 
-#: src/components/modals/EmailChangeModal.tsx:213
+#: src/components/modals/EmailChangeModal.tsx:216
 msgid "Enter the code sent to your current email."
 msgstr "Mevcut e-postanıza gönderilen kodu girin."
 
@@ -8812,7 +8813,7 @@ msgstr "Mevcut e-postanıza gönderilen kodu girin."
 msgid "Enter the code sent to your email address."
 msgstr "E-posta adresinize gönderilen kodu girin."
 
-#: src/components/modals/EmailChangeModal.tsx:281
+#: src/components/modals/EmailChangeModal.tsx:284
 msgid "Enter the code we emailed to your new address."
 msgstr "Yeni adresinize e-posta ile gönderdiğimiz kodu girin."
 
@@ -8824,7 +8825,7 @@ msgstr "Doğrulamak için e-postanıza gönderdiğimiz kodu girin. Kod onayland�
 msgid "Enter the invite link to join a community."
 msgstr "Bir topluluğa katılmak için davet bağlantısını girin."
 
-#: src/components/modals/EmailChangeModal.tsx:247
+#: src/components/modals/EmailChangeModal.tsx:250
 msgid "Enter the new email you want to use. We'll send a code there next."
 msgstr "Kullanmak istediğiniz yeni e-posta adresini girin. Ardından oraya bir kod göndereceğiz."
 
@@ -9313,11 +9314,11 @@ msgstr "Arkadaşlık isteği reddedilemedi. Lütfen tekrar deneyin."
 msgid "Failed to initiate connection"
 msgstr "Bağlantıyı başlatma başarısız oldu"
 
-#: src/actions/InviteActionCreators.tsx:322
+#: src/actions/InviteActionCreators.tsx:326
 msgid "Failed to install this emoji pack. Please try again later."
 msgstr "Bu emoji paketi yüklenemedi. Lütfen daha sonra tekrar deneyin."
 
-#: src/actions/InviteActionCreators.tsx:323
+#: src/actions/InviteActionCreators.tsx:327
 msgid "Failed to install this sticker pack. Please try again later."
 msgstr "Bu sticker paketi yüklenemedi. Lütfen daha sonra tekrar deneyin."
 
@@ -9715,9 +9716,9 @@ msgstr "favoriler"
 #: src/components/modals/tabs/AppearanceTab.tsx:116
 #: src/components/modals/utils/SettingsConstants.tsx:279
 #: src/components/modals/utils/SettingsSectionRegistry.tsx:233
-#: src/stores/QuickSwitcherStore.tsx:843
-#: src/stores/QuickSwitcherStore.tsx:1261
-#: src/stores/QuickSwitcherStore.tsx:1273
+#: src/stores/QuickSwitcherStore.tsx:841
+#: src/stores/QuickSwitcherStore.tsx:1259
+#: src/stores/QuickSwitcherStore.tsx:1271
 msgid "Favorites"
 msgstr "Favoriler"
 
@@ -9872,11 +9873,11 @@ msgstr "Fluxer uygulama sembolü"
 msgid "Fluxer avoids sending push notifications to your mobile devices when you are at your computer. Use this setting to control how long you need to be inactive on desktop for before you receive push notifications, ranging from 1 minute to 10 minutes."
 msgstr "Fluxer, bilgisayarınızdayken mobil cihazlarınıza anlık bildirimler göndermekten kaçınır. Anlık bildirimleri almadan önce masaüstünde ne kadar süre hareketsiz kalmanız gerektiğini kontrol etmek için bu ayarı kullanın, süre 1 dakika ile 10 dakika arasında değişir."
 
-#: src/components/popouts/UserProfileBadges.tsx:89
+#: src/components/popouts/UserProfileBadges.tsx:115
 msgid "Fluxer Bug Hunter"
 msgstr "Fluxer Hata Avcısı"
 
-#: src/components/popouts/UserProfileBadges.tsx:71
+#: src/components/popouts/UserProfileBadges.tsx:95
 msgid "Fluxer Community Team"
 msgstr "Fluxer Topluluk Ekibi"
 
@@ -9944,18 +9945,18 @@ msgstr "Fluxer'ın penceresi arka plandayken konuşma tuşu ve genel kısayollar
 msgid "Fluxer needs permission to monitor keyboard and mouse input so that <0>Push-to-Talk</0> and <1>Global Shortcuts</1> work even when you're in another app or game."
 msgstr "Fluxer'ın başka bir uygulamada veya oyundayken bile <0>Konuşma Tuşu</0> ve <1>Genel Kısayolların</1> çalışması için klavye ve fare girişini izleme iznine ihtiyacı var."
 
-#: src/components/popouts/UserProfileBadges.tsx:80
+#: src/components/popouts/UserProfileBadges.tsx:105
 msgid "Fluxer Partner"
 msgstr "Fluxer Partner"
 
 #: src/components/modals/components/PlutoniumContent.tsx:165
 #: src/components/modals/PremiumModal.tsx:34
 #: src/components/modals/utils/SettingsConstants.tsx:124
-#: src/components/popouts/UserProfileBadges.tsx:95
+#: src/components/popouts/UserProfileBadges.tsx:121
 msgid "Fluxer Plutonium"
 msgstr "Fluxer Plutonium"
 
-#: src/components/popouts/UserProfileBadges.tsx:62
+#: src/components/popouts/UserProfileBadges.tsx:85
 msgid "Fluxer Staff"
 msgstr "Fluxer Staff"
 
@@ -9963,16 +9964,16 @@ msgstr "Fluxer Staff"
 msgid "Fluxer uses push notifications when installed as a mobile PWA. Registering ensures the gateway can reach your device even when the browser is backgrounded."
 msgstr "Fluxer, mobil PWA olarak kurulduğunda anlık bildirimleri kullanır. Kayıt olmak, tarayıcı arka planda olsa bile ağ geçidinin cihazınıza ulaşmasını sağlar."
 
-#: src/components/modals/FluxerTagChangeModal.tsx:176
+#: src/components/modals/FluxerTagChangeModal.tsx:190
 #: src/components/modals/tabs/applications_tab/application_detail/BotProfileSection.tsx:103
 msgid "FluxerTag"
 msgstr "FluxerTag"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:102
+#: src/components/modals/FluxerTagChangeModal.tsx:107
 msgid "FluxerTag already taken"
 msgstr "FluxerTag zaten alınmış"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:144
+#: src/components/modals/FluxerTagChangeModal.tsx:149
 msgid "FluxerTag updated"
 msgstr "FluxerTag güncellendi"
 
@@ -10208,7 +10209,7 @@ msgstr "İlet"
 msgid "Forward {DEFAULT_SEEK_AMOUNT} seconds"
 msgstr "{DEFAULT_SEEK_AMOUNT} saniye ileri sar"
 
-#: src/components/modals/ForwardModal.tsx:198
+#: src/components/modals/ForwardModal.tsx:203
 #: src/stores/KeybindStore.tsx:361
 msgid "Forward Message"
 msgstr "Mesajı İlet"
@@ -10490,7 +10491,7 @@ msgstr "Mesaj aldığınızda bildirim alın. Tarayıcı ayarlarınızda bildiri
 
 #: src/components/alerts/FileSizeTooLargeModal.tsx:84
 #: src/components/modals/BackgroundImageGalleryModal.tsx:678
-#: src/components/modals/FluxerTagChangeModal.tsx:221
+#: src/components/modals/FluxerTagChangeModal.tsx:235
 #: src/components/modals/tabs/components/EntranceSoundSection.tsx:67
 #: src/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:138
 #: src/components/modals/tabs/VideoTab.tsx:281
@@ -10503,11 +10504,11 @@ msgstr "Plutonium Edin"
 msgid "Get Plutonium for yourself and unlock higher limits and exclusive features."
 msgstr "Kendiniz için Plutonium edinin ve daha yüksek limitler ile özel özelliklerin kilidini açın."
 
-#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:81
+#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:82
 msgid "Get Plutonium to customize your tag"
 msgstr "Etiketinizi özelleştirmek için Plutonium edinin"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:199
+#: src/components/modals/FluxerTagChangeModal.tsx:213
 msgid "Get Plutonium to customize your tag or keep it when changing your username"
 msgstr "Etiketinizi özelleştirmek veya kullanıcı adınızı değiştirirken onu korumak için Plutonium edinin"
 
@@ -10725,7 +10726,7 @@ msgstr "Ana Sayfaya Git"
 msgid "Go to login"
 msgstr "Giriş yap"
 
-#: src/stores/QuickSwitcherStore.tsx:528
+#: src/stores/QuickSwitcherStore.tsx:526
 msgid "Go to message"
 msgstr "Mesaja git"
 
@@ -10866,12 +10867,12 @@ msgstr "Grup Simgesi"
 msgid "Group Invites"
 msgstr "Grup Davetleri"
 
-#: src/stores/QuickSwitcherStore.tsx:667
+#: src/stores/QuickSwitcherStore.tsx:665
 #: src/utils/modals/guild_tabs/GuildAuditLogTabUtils.tsx:235
 msgid "Group message"
 msgstr "Grup mesajı"
 
-#: src/stores/QuickSwitcherStore.tsx:1347
+#: src/stores/QuickSwitcherStore.tsx:1345
 msgid "Group messages"
 msgstr "Grup mesajları"
 
@@ -10963,7 +10964,7 @@ msgstr "Donanım Hızlandırma"
 msgid "Has"
 msgstr "Var"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:126
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:128
 msgid "Has ever purchased override"
 msgstr "Hiç satın alım iptali yaptı"
 
@@ -11277,7 +11278,7 @@ msgid "Hold to temporarily unmute when push-to-talk is enabled"
 msgstr "Push-to-talk etkinleştirildiğinde geçici olarak sesi açmak için basılı tut"
 
 #: src/components/layout/MobileBottomNav.tsx:93
-#: src/stores/QuickSwitcherStore.tsx:832
+#: src/stores/QuickSwitcherStore.tsx:830
 msgid "Home"
 msgstr "Ana Sayfa"
 
@@ -11619,7 +11620,7 @@ msgstr "Uygunsuz Profil"
 msgid "Inbox"
 msgstr "Gelen Kutusu"
 
-#: src/components/popouts/InboxPopout.tsx:89
+#: src/components/popouts/InboxPopout.tsx:88
 msgid "Inbox tabs"
 msgstr "Gelen kutusu sekmeleri"
 
@@ -11883,8 +11884,8 @@ msgstr "Geçersiz Hediye Kodu"
 msgid "Invalid instance URL. Try something like \"example.com\" or \"https://example.com\"."
 msgstr "Geçersiz örnek URL'si. \"example.com\" veya \"https://example.com\" gibi bir şey deneyin."
 
-#: src/components/modals/EmailChangeModal.tsx:107
-#: src/components/modals/EmailChangeModal.tsx:168
+#: src/components/modals/EmailChangeModal.tsx:110
+#: src/components/modals/EmailChangeModal.tsx:171
 #: src/components/modals/PasswordChangeModal.tsx:90
 msgid "Invalid or expired code"
 msgstr "Geçersiz veya süresi dolmuş kod"
@@ -12569,11 +12570,11 @@ msgid "Last active {0}"
 msgstr "Son aktif: {0}"
 
 #. placeholder {0}: DateUtils.getRelativeDateString(user.passwordLastChangedAt, i18n)
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:117
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:120
 msgid "Last changed: {0}"
 msgstr "Son değiştirilme: {0}"
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:119
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:122
 msgid "Last changed: Never"
 msgstr "Son değiştirilme: Hiçbir zaman"
 
@@ -12633,6 +12634,10 @@ msgstr "Çağrıyı bırak"
 #: src/hooks/useLeaveGuild.tsx:44
 msgid "Leave Community"
 msgstr "Topluluktan Ayrıl"
+
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:142
+msgid "Leave empty for actual value"
+msgstr "Gerçek değer için boş bırakın"
 
 #: src/components/bottomsheets/ChannelDetailsBottomSheet.tsx:1317
 #: src/components/channel/direct_message/DMList.tsx:569
@@ -12713,7 +12718,7 @@ msgid "Letters (a-z, A-Z), numbers (0-9), and underscores (_) only"
 msgstr "Sadece harfler (a-z, A-Z), rakamlar (0-9) ve alt çizgiler (_)"
 
 #: src/components/modals/components/plutonium/SubscriptionCard.tsx:131
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:50
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:52
 #: src/components/modals/tabs/developer_options_tab/MockingTab.tsx:317
 msgid "Lifetime"
 msgstr "Ömür boyu"
@@ -13217,7 +13222,7 @@ msgstr "E-posta, şifre ve hesap ayarlarınızı yönetin"
 msgid "Manage your gifts"
 msgstr "Hediyelerini yönet"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:337
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:340
 msgid "Manage your phone number for SMS two-factor authentication"
 msgstr "SMS iki faktörlü kimlik doğrulaması için telefon numaranızı yönetin"
 
@@ -13342,12 +13347,12 @@ msgstr "Üye geçici olarak işaretlendi."
 msgid "Markers Below Slider"
 msgstr "Kaydırıcının Altındaki İşaretçiler"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:188
+#: src/components/modals/FluxerTagChangeModal.tsx:202
 msgid "Marty_McFly"
 msgstr "Marty_McFly"
 
 #: src/components/modals/ClaimAccountModal.tsx:157
-#: src/components/modals/EmailChangeModal.tsx:258
+#: src/components/modals/EmailChangeModal.tsx:261
 msgid "marty@example.com"
 msgstr "marty@example.com"
 
@@ -13652,7 +13657,7 @@ msgstr "bahsetmeler"
 
 #: src/components/modals/GuildNotificationSettingsModal.tsx:227
 #: src/components/pages/NotificationsPage.tsx:42
-#: src/components/popouts/InboxPopout.tsx:63
+#: src/components/popouts/InboxPopout.tsx:62
 msgid "Mentions"
 msgstr "Anmalar"
 
@@ -13687,15 +13692,15 @@ msgstr "menüler"
 msgid "Message"
 msgstr "Mesaj"
 
-#: src/components/channel/ChannelTextarea.tsx:754
+#: src/components/channel/ChannelTextarea.tsx:752
 msgid "Message "
 msgstr "Mesaj "
 
-#: src/components/channel/ChannelTextarea.tsx:754
+#: src/components/channel/ChannelTextarea.tsx:752
 msgid "Message @"
 msgstr "Mesaj @"
 
-#: src/components/channel/ChannelTextarea.tsx:751
+#: src/components/channel/ChannelTextarea.tsx:749
 msgid "Message #"
 msgstr "Mesaj #"
 
@@ -13746,7 +13751,7 @@ msgstr "Mesaj görüntüleme modu"
 msgid "Message display settings are only available on desktop."
 msgstr "Mesaj görüntüleme ayarları yalnızca masaüstünde kullanılabilir."
 
-#: src/components/modals/ForwardModal.tsx:148
+#: src/components/modals/ForwardModal.tsx:153
 msgid "Message forwarded"
 msgstr "Mesaj iletildi"
 
@@ -13772,7 +13777,7 @@ msgstr "Mesaj geçmişi eşiği güncellendi"
 msgid "Message Input Buttons"
 msgstr "Mesaj Giriş Düğmeleri"
 
-#: src/components/modals/ForwardModal.tsx:84
+#: src/components/modals/ForwardModal.tsx:89
 #: src/components/uikit/character_counter/CharacterCounter.tsx:52
 msgid "Message is too long"
 msgstr "Mesaj çok uzun"
@@ -14073,7 +14078,7 @@ msgstr "Daha fazla emoji yuvası"
 #: src/components/channel/embeds/attachments/TextualAttachmentPreviewFooter.tsx:66
 #: src/components/modals/guild_tabs/UserListItem.tsx:113
 #: src/components/modals/MediaModal.tsx:353
-#: src/components/modals/MobileVideoViewer.tsx:260
+#: src/components/modals/MobileVideoViewer.tsx:268
 msgid "More options"
 msgstr "Daha fazla seçenek"
 
@@ -14205,7 +14210,7 @@ msgstr "sessiz"
 #: src/components/media_player/components/MediaVerticalVolumeControl.tsx:249
 #: src/components/media_player/components/MediaVolumeControl.tsx:208
 #: src/components/modals/GuildNotificationSettingsModal.tsx:229
-#: src/components/modals/MobileVideoViewer.tsx:272
+#: src/components/modals/MobileVideoViewer.tsx:280
 #: src/components/uikit/context_menu/items/VoiceParticipantMenuData.tsx:319
 #: src/components/uikit/context_menu/items/VoiceParticipantMenuData.tsx:506
 #: src/components/uikit/context_menu/items/VoiceParticipantMenuItems.tsx:92
@@ -14572,12 +14577,12 @@ msgstr "Katıldığınız yeni topluluklarda otomatik olarak sessiz kanallar giz
 msgid "New communities you join will no longer have muted channels hidden automatically. Would you also like to show muted channels in all your existing communities?"
 msgstr "Katıldığınız yeni topluluklarda sessiz kanallar otomatik olarak gizlenmeyecek. Mevcut tüm topluluklarınızda sessiz kanalları göstermek ister misiniz?"
 
-#: src/components/modals/EmailChangeModal.tsx:255
+#: src/components/modals/EmailChangeModal.tsx:258
 #: src/components/modals/RequiredActionModal.tsx:471
 msgid "New Email"
 msgstr "Yeni E-posta"
 
-#: src/components/modals/EmailChangeModal.tsx:243
+#: src/components/modals/EmailChangeModal.tsx:246
 msgid "New email form"
 msgstr "Yeni e-posta formu"
 
@@ -14732,7 +14737,7 @@ msgid "No cameras detected"
 msgstr "Kamera algılanmadı"
 
 #: src/components/invites/InviteListItem.tsx:179
-#: src/components/modals/ForwardModal.tsx:246
+#: src/components/modals/ForwardModal.tsx:251
 #: src/components/modals/GuildNotificationSettingsModal.tsx:258
 msgid "No Category"
 msgstr "Kategori Yok"
@@ -14745,7 +14750,7 @@ msgstr "Kaydedilecek değişiklik yok"
 msgid "No channels available"
 msgstr "Kullanılabilir kanal yok"
 
-#: src/components/modals/ForwardModal.tsx:216
+#: src/components/modals/ForwardModal.tsx:221
 msgid "No channels found"
 msgstr "Kanal bulunamadı"
 
@@ -14769,7 +14774,7 @@ msgstr "Henüz bağlantı yok"
 msgid "No description provided."
 msgstr "Açıklama sağlanmadı."
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:94
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:97
 msgid "No email address set"
 msgstr "E-posta adresi ayarlanmadı"
 
@@ -14879,11 +14884,11 @@ msgstr "Ortak arkadaş bulunamadı."
 msgid "No mutual groups found."
 msgstr "Ortak grup bulunamadı."
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:283
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:286
 msgid "No passkeys registered"
 msgstr "Hiçbir geçiş anahtarı kaydedilmedi"
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:134
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:137
 msgid "No password set"
 msgstr "Parola ayarlanmadı"
 
@@ -15066,7 +15071,7 @@ msgstr "Hareketli Olmayan Emoji ({0})"
 
 #: src/components/modals/guild_tabs/GuildModerationTab.tsx:157
 #: src/components/modals/tabs/accessibility_tab/VisualTab.tsx:48
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:48
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:50
 msgid "None"
 msgstr "Hiçbiri"
 
@@ -15574,7 +15579,7 @@ msgstr "Yeni sekmede aç"
 msgid "Open Link"
 msgstr "Bağlantıyı Aç"
 
-#: src/components/channel/ChannelTextarea.tsx:953
+#: src/components/channel/ChannelTextarea.tsx:951
 #: src/components/channel/textarea/MobileTextareaLayout.tsx:112
 msgid "Open menu"
 msgstr "Menüyü aç"
@@ -15828,7 +15833,7 @@ msgstr "Override"
 msgid "Override {0}"
 msgstr "Override {0}"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:59
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:61
 msgid "Override email verification status"
 msgstr "E-posta doğrulama durumunu geçersiz kıl"
 
@@ -15836,15 +15841,15 @@ msgstr "E-posta doğrulama durumunu geçersiz kıl"
 msgid "Override instance limits locally for testing. Changes only affect your client."
 msgstr "Override instance limits locally for testing. Changes only affect your client."
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:109
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:111
 msgid "Override Premium Type"
 msgstr "Premium Türünü Geçersiz Kıl"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:67
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:69
 msgid "Override unclaimed account status"
 msgstr "Talep edilmemiş hesap durumunu geçersiz kıl"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:75
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:77
 msgid "Override unread gift inventory status"
 msgstr "Okunmamış hediye envanteri durumunu geçersiz kıl"
 
@@ -15925,7 +15930,7 @@ msgstr "Ortak Topluluk"
 msgid "Passkey Name"
 msgstr "Geçiş Anahtarı Adı"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:273
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:276
 msgid "Passkeys"
 msgstr "Geçiş Anahtarları"
 
@@ -15949,8 +15954,8 @@ msgstr "şifre"
 #: src/components/modals/ClaimAccountModal.tsx:207
 #: src/components/modals/SudoVerificationModal.tsx:174
 #: src/components/modals/SudoVerificationModal.tsx:239
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:105
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:131
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:108
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:134
 #: src/components/modals/tabs/component_gallery_tab/InputsTab.tsx:114
 #: src/components/modals/utils/SettingsSearchIndex.tsx:107
 msgid "Password"
@@ -16006,7 +16011,7 @@ msgstr "Oturum açmayı tamamlamak için geldiğiniz yere yapıştırın."
 #: src/components/media_player/components/InlineAudioPlayer.tsx:201
 #: src/components/media_player/components/InlineAudioPlayer.tsx:296
 #: src/components/media_player/components/MediaPlayButton.tsx:70
-#: src/components/modals/MobileVideoViewer.tsx:286
+#: src/components/modals/MobileVideoViewer.tsx:294
 msgid "Pause"
 msgstr "Duraklat"
 
@@ -16040,7 +16045,7 @@ msgid "Pending deletion canceled"
 msgstr "Bekleyen silme iptal edildi"
 
 #: src/lib/UnicodeEmojis.tsx:234
-#: src/stores/QuickSwitcherStore.tsx:1345
+#: src/stores/QuickSwitcherStore.tsx:1343
 #: src/utils/quick_switcher/QuickSwitcherModalUtils.tsx:96
 msgid "People"
 msgstr "Kişiler"
@@ -16143,8 +16148,8 @@ msgstr "Telefon"
 
 #: src/components/modals/PhoneAddModal.tsx:192
 #: src/components/modals/RequiredActionModal.tsx:616
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:336
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:342
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:339
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:345
 #: src/components/modals/utils/SettingsSearchIndex.tsx:115
 msgid "Phone Number"
 msgstr "Telefon Numarası"
@@ -16154,7 +16159,7 @@ msgid "Phone number added"
 msgstr "Telefon numarası eklendi"
 
 #. placeholder {0}: user.phone
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:346
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:349
 msgid "Phone number added: {0}"
 msgstr "Telefon numarası eklendi: {0}"
 
@@ -16221,11 +16226,11 @@ msgstr "DM'i Sabitle"
 msgid "Pin Group DM"
 msgstr "Grup DM'ini Sabitle"
 
-#: src/components/channel/MessageActionUtils.tsx:429
+#: src/components/channel/MessageActionUtils.tsx:430
 msgid "Pin it real good"
 msgstr "İyice sabitle"
 
-#: src/components/channel/MessageActionUtils.tsx:426
+#: src/components/channel/MessageActionUtils.tsx:427
 msgid "Pin it. Pin it good."
 msgstr "Sabitle. İyice sabitle."
 
@@ -16246,7 +16251,7 @@ msgstr "Mesajları Sabitle"
 msgid "Pin or unpin the focused message"
 msgstr "Mesajı sabitle veya sabitlemeyi kaldır"
 
-#: src/components/channel/MessageActionUtils.tsx:427
+#: src/components/channel/MessageActionUtils.tsx:428
 msgid "Pin this message to the channel for all to see. Unless ... you're chicken."
 msgstr "Bu mesajı herkesin görmesi için kanala sabitle. Tabii ... korkak değilsen."
 
@@ -16319,7 +16324,7 @@ msgstr "Platform Yöneticisi"
 #: src/components/media_player/components/InlineAudioPlayer.tsx:201
 #: src/components/media_player/components/InlineAudioPlayer.tsx:296
 #: src/components/media_player/components/MediaPlayButton.tsx:70
-#: src/components/modals/MobileVideoViewer.tsx:286
+#: src/components/modals/MobileVideoViewer.tsx:294
 #: src/components/modals/tabs/component_gallery_tab/ButtonsTab.tsx:215
 msgid "Play"
 msgstr "Oynat"
@@ -16416,7 +16421,7 @@ msgstr "Lütfen daha sonra tekrar deneyin."
 msgid "Please update Fluxer to view this message."
 msgstr "Bu mesajı görüntülemek için lütfen Fluxer'ı güncelleyin."
 
-#: src/actions/InviteActionCreators.tsx:180
+#: src/actions/InviteActionCreators.tsx:184
 msgid "Please verify your account by setting an email and password before joining communities."
 msgstr "Lütfen topluluklara katılmadan önce bir e-posta ve şifre belirleyerek hesabınızı doğrulayın."
 
@@ -16526,11 +16531,11 @@ msgstr "Premium Avantajlar"
 msgid "Premium state reset on the backend."
 msgstr "Premium durumu arka planda sıfırlandı."
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:135
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:155
 msgid "Premium Subscription Scenarios"
 msgstr "Premium Abonelik Senaryoları"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:107
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:109
 msgid "Premium Type Override"
 msgstr "Premium Tür Geçersiz Kılma"
 
@@ -16928,7 +16933,7 @@ msgstr "Python"
 msgid "quick access"
 msgstr "hızlı erişim"
 
-#: src/stores/QuickSwitcherStore.tsx:1358
+#: src/stores/QuickSwitcherStore.tsx:1356
 #: src/utils/quick_switcher/QuickSwitcherModalUtils.tsx:100
 msgid "Quick Actions"
 msgstr "Hızlı İşlemler"
@@ -17071,7 +17076,7 @@ msgstr "Al"
 msgid "Receive notifications when someone mentions you"
 msgstr "Biri sizden bahsettiğinde bildirim al"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:404
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:407
 msgid "Receive verification codes via SMS as a backup authentication method"
 msgstr "Yedek kimlik doğrulama yöntemi olarak SMS ile doğrulama kodları al"
 
@@ -17198,7 +17203,7 @@ msgstr "Push aboneliğini yenile"
 msgid "Regenerate"
 msgstr "Yeniden oluştur"
 
-#: src/components/modals/BackupCodesRegenerateModal.tsx:61
+#: src/components/modals/BackupCodesRegenerateModal.tsx:68
 msgid "Regenerate Backup Codes"
 msgstr "Yedek Kodları Yeniden Oluştur"
 
@@ -17228,7 +17233,7 @@ msgstr "Yeniden oluşturma mevcut token'ı geçersiz kılacaktır. Eski değeri 
 msgid "Register"
 msgstr "Kayıt ol"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:279
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:282
 msgid "Registered Passkeys"
 msgstr "Kayıtlı Geçiş Anahtarları"
 
@@ -17298,7 +17303,7 @@ msgstr "kaldır"
 #: src/components/modals/guild_tabs/guild_overview_tab/fields/GuildEmbedSplashUploadField.tsx:101
 #: src/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx:107
 #: src/components/modals/guild_tabs/guild_overview_tab/fields/GuildInviteSplashUploadField.tsx:113
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:391
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:394
 #: src/components/modals/tabs/ExpressionPacksTab.tsx:96
 #: src/components/modals/tabs/ExpressionPacksTab.tsx:226
 #: src/components/modals/tabs/LinkedAccountsTab.tsx:191
@@ -17472,11 +17477,11 @@ msgstr "Geçersiz Kılmayı Kaldır"
 msgid "Remove Pack"
 msgstr "Paketi Kaldır"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:377
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:380
 msgid "Remove Phone"
 msgstr "Telefonu Kaldır"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:360
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:363
 msgid "Remove Phone Number"
 msgstr "Telefon Numarasını Kaldır"
 
@@ -17557,7 +17562,7 @@ msgstr "{0} için izin kaldırıldı."
 msgid "Removed deny for {0}."
 msgstr "{0} için red kaldırıldı."
 
-#: src/actions/SavedMessageActionCreators.tsx:80
+#: src/actions/SavedMessageActionCreators.tsx:85
 msgid "Removed from bookmarks"
 msgstr "Yer işaretlerinden kaldırıldı"
 
@@ -17631,7 +17636,7 @@ msgstr "Paketi kaldırmak hesabınızdan kaldıracaktır."
 msgid "Removing the timeout will allow <0>{0}</0> to send messages, react, and join voice channels again."
 msgstr "Zaman aşımını kaldırmak, <0>{0}</0>'ın mesaj göndermesine, tepki vermesine ve sesli kanallara katılmasına yeniden izin verecektir."
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:319
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:322
 msgid "Rename"
 msgstr "Yeniden Adlandır"
 
@@ -17866,22 +17871,22 @@ msgstr "Orta'daki her şeyi ve sunucu üyesi olarak en az 10 dakika geçirmiş o
 msgid "Requires Plutonium"
 msgstr "Plutonium gerektirir"
 
-#: src/components/channel/ChannelTextarea.tsx:1032
+#: src/components/channel/ChannelTextarea.tsx:1030
 msgid "Reschedule Message"
 msgstr "Mesajı Yeniden Planla"
 
 #: src/components/modals/ClaimAccountModal.tsx:222
-#: src/components/modals/EmailChangeModal.tsx:233
-#: src/components/modals/EmailChangeModal.tsx:301
+#: src/components/modals/EmailChangeModal.tsx:236
+#: src/components/modals/EmailChangeModal.tsx:304
 #: src/components/modals/PasswordChangeModal.tsx:179
 msgid "Resend"
 msgstr "Yeniden Gönder"
 
-#: src/components/modals/EmailChangeModal.tsx:301
+#: src/components/modals/EmailChangeModal.tsx:304
 msgid "Resend ({newSecondsRemaining}s)"
 msgstr "Yeniden Gönder ({newSecondsRemaining}s)"
 
-#: src/components/modals/EmailChangeModal.tsx:233
+#: src/components/modals/EmailChangeModal.tsx:236
 msgid "Resend ({originalSecondsRemaining}s)"
 msgstr "Yeniden Gönder ({originalSecondsRemaining}s)"
 
@@ -18425,7 +18430,7 @@ msgstr "kaydediyor"
 msgid "scale"
 msgstr "ölçek"
 
-#: src/components/modals/MfaTotpEnableModal.tsx:78
+#: src/components/modals/MfaTotpEnableModal.tsx:81
 msgid "Scan the QR code with your authenticator app to generate codes for two-factor authentication."
 msgstr "İki faktörlü kimlik doğrulama için kodlar oluşturmak üzere QR kodunu doğrulayıcı uygulamanızla tarayın."
 
@@ -18437,7 +18442,7 @@ msgstr "Zamanla"
 msgid "Schedule Message"
 msgstr "Mesajı Zamanla"
 
-#: src/components/popouts/InboxPopout.tsx:70
+#: src/components/popouts/InboxPopout.tsx:69
 #: src/components/popouts/ScheduledMessagesContent.tsx:89
 msgid "Scheduled"
 msgstr "Zamanlanmış"
@@ -18562,7 +18567,7 @@ msgstr "Kullanıcı adı veya ID ile ara"
 msgid "Search channels"
 msgstr "Kanalları ara"
 
-#: src/components/modals/ForwardModal.tsx:204
+#: src/components/modals/ForwardModal.tsx:209
 msgid "Search channels or DMs"
 msgstr "Kanalları veya DM'leri ara"
 
@@ -18963,7 +18968,7 @@ msgid "Send"
 msgstr "Gönder"
 
 #. placeholder {0}: selectedChannelIds.size
-#: src/components/modals/ForwardModal.tsx:380
+#: src/components/modals/ForwardModal.tsx:385
 msgid "Send ({0}/5)"
 msgstr "Gönder ({0}/5)"
 
@@ -19000,7 +19005,7 @@ msgid "Send an SMS code first."
 msgstr "Önce bir SMS kodu gönder."
 
 #: src/components/modals/ClaimAccountModal.tsx:180
-#: src/components/modals/EmailChangeModal.tsx:270
+#: src/components/modals/EmailChangeModal.tsx:273
 #: src/components/modals/PhoneAddModal.tsx:208
 msgid "Send code"
 msgstr "Kodu gönder"
@@ -19195,7 +19200,7 @@ msgstr "Takma adı {0} olarak ayarla."
 msgid "Set NSFW level to {0}."
 msgstr "NSFW seviyesini {0} olarak ayarla."
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:138
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:141
 msgid "Set Password"
 msgstr "Şifre Belirle"
 
@@ -19261,7 +19266,7 @@ msgstr "Kanal türünü {0} olarak ayarla."
 msgid "Set the invite splash alignment to {0}."
 msgstr "Davet açılış hizalamasını {0} olarak ayarla."
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:88
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:90
 msgid "Set the number of unread gifts in inventory."
 msgstr "Envanterdeki okunmamış hediyelerin sayısını ayarla."
 
@@ -19341,7 +19346,7 @@ msgstr "Saat dilimini ayarla"
 #: src/components/modals/tabs/component_gallery_tab/ButtonsTab.tsx:221
 #: src/components/modals/tabs/component_gallery_tab/index.tsx:95
 #: src/components/modals/tabs/component_gallery_tab/Inline.tsx:90
-#: src/stores/QuickSwitcherStore.tsx:1356
+#: src/stores/QuickSwitcherStore.tsx:1354
 msgid "Settings"
 msgstr "Ayarlar"
 
@@ -19357,7 +19362,7 @@ msgstr "Ayarlar bölümleri"
 msgid "Settings!"
 msgstr "Ayarlar!"
 
-#: src/components/modals/MfaTotpEnableModal.tsx:71
+#: src/components/modals/MfaTotpEnableModal.tsx:74
 msgid "Setup Authenticator App"
 msgstr "Doğrulayıcı Uygulamasını Ayarlayın"
 
@@ -19837,7 +19842,7 @@ msgstr "Herkesin sessiz aramaları"
 msgid "simulate"
 msgstr "simüle et"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:128
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:130
 msgid "Simulates having a Stripe customer ID (for testing purchase history access)"
 msgstr "Stripe müşteri kimliğine sahip olmayı simüle eder (satın alma geçmişi erişimi testi için)"
 
@@ -19985,11 +19990,11 @@ msgstr "Daha küçük medya boyutu"
 msgid "sms"
 msgstr "sms"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:409
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:412
 msgid "SMS Backup"
 msgstr "SMS Yedekleme"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:429
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:432
 msgid "SMS backup is disabled for partners"
 msgstr "SMS yedekleme partnerler için devre dışı"
 
@@ -20002,7 +20007,7 @@ msgstr "SMS kodu"
 msgid "SMS Code"
 msgstr "SMS Kodu"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:403
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:406
 msgid "SMS Two-Factor Authentication"
 msgstr "SMS İki Faktörlü Kimlik Doğrulama"
 
@@ -20010,7 +20015,7 @@ msgstr "SMS İki Faktörlü Kimlik Doğrulama"
 msgid "SMS two-factor authentication adds an additional layer of security to your account by requiring a verification code sent to your phone number when signing in."
 msgstr "SMS iki faktörlü kimlik doğrulama, oturum açarken telefon numaranıza gönderilen bir doğrulama kodu gerektirerek hesabınıza ek bir güvenlik katmanı ekler."
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:413
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:416
 msgid "SMS two-factor authentication is enabled"
 msgstr "SMS iki faktörlü kimlik doğrulama etkin"
 
@@ -20334,7 +20339,7 @@ msgstr "Yıldız"
 msgid "starred"
 msgstr "yıldızlı"
 
-#: src/components/modals/EmailChangeModal.tsx:202
+#: src/components/modals/EmailChangeModal.tsx:205
 #: src/components/modals/PasswordChangeModal.tsx:148
 msgid "Start"
 msgstr "Başlat"
@@ -20490,7 +20495,7 @@ msgstr "Çıkartma yoğunluğu"
 msgid "Sticker pack"
 msgstr "Çıkartma paketi"
 
-#: src/actions/InviteActionCreators.tsx:287
+#: src/actions/InviteActionCreators.tsx:291
 msgid "Sticker pack creation limit reached"
 msgstr "Çıkartma paketi oluşturma sınırına ulaşıldı"
 
@@ -20498,7 +20503,7 @@ msgstr "Çıkartma paketi oluşturma sınırına ulaşıldı"
 msgid "Sticker Pack Invite"
 msgstr "Çıkartma Paketi Daveti"
 
-#: src/actions/InviteActionCreators.tsx:273
+#: src/actions/InviteActionCreators.tsx:277
 msgid "Sticker pack limit reached"
 msgstr "Çıkartma paketi sınırına ulaşıldı"
 
@@ -20674,7 +20679,7 @@ msgstr "Gönderiliyor"
 msgid "subscription"
 msgstr "abonelik"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:49
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:51
 #: src/components/modals/utils/SettingsSearchIndex.tsx:261
 msgid "Subscription"
 msgstr "Abonelik"
@@ -20796,7 +20801,7 @@ msgstr "Hesap değiştir"
 msgid "Switch Accounts"
 msgstr "Hesapları Değiştir"
 
-#: src/stores/QuickSwitcherStore.tsx:900
+#: src/stores/QuickSwitcherStore.tsx:898
 msgid "Switch between Light and Dark mode"
 msgstr "Açık ve Koyu mod arasında geçiş yap"
 
@@ -20989,7 +20994,7 @@ msgstr "Hizmet Şartları"
 msgid "Test Bulk Delete (60s)"
 msgstr "Toplu Silmeyi Test Et (60s)"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:137
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:157
 msgid "Test Subscription State"
 msgstr "Abonelik Durumunu Test Et"
 
@@ -21025,7 +21030,7 @@ msgstr "Metin Kanalı"
 msgid "Text Channel Names"
 msgstr "Metin Kanalı İsimleri"
 
-#: src/stores/QuickSwitcherStore.tsx:1349
+#: src/stores/QuickSwitcherStore.tsx:1347
 #: src/utils/quick_switcher/QuickSwitcherModalUtils.tsx:97
 msgid "Text channels"
 msgstr "Metin kanalları"
@@ -21106,7 +21111,7 @@ msgid "That message didn't delete"
 msgstr "Bu mesaj silinmedi"
 
 #. placeholder {0}: invite.pack.name
-#: src/actions/InviteActionCreators.tsx:103
+#: src/actions/InviteActionCreators.tsx:104
 msgid "The {packLabel} {0} has been installed."
 msgstr "{packLabel} {0} yüklendi."
 
@@ -21148,7 +21153,7 @@ msgstr "Dosya, <0>{dnsUrl}</0>'dan alacağımız doğrulama tokenını içeriyor
 msgid "The file you're trying to upload exceeds the maximum size limit of {maxSizeFormatted}."
 msgstr "Yüklemeye çalıştığınız dosya, {maxSizeFormatted} maksimum boyut sınırını aşıyor."
 
-#: src/components/modals/FluxerTagChangeModal.tsx:106
+#: src/components/modals/FluxerTagChangeModal.tsx:111
 msgid "The FluxerTag <0>{fluxerTag}</0> is already taken. Continuing will reroll your discriminator automatically."
 msgstr "<0>{fluxerTag}</0> FluxerTag'i zaten alınmış. Devam etmek, ayırıcınızı otomatik olarak yeniden atayacaktır."
 
@@ -21298,10 +21303,6 @@ msgstr "onlar"
 #: src/components/channel/channel_view/DMChannelView.tsx:932
 msgid "They might have taken the DeLorean elsewhere."
 msgstr "DeLorean'ı başka bir yere götürmüş olabilirler."
-
-#: src/components/modals/tabs/MyProfileTab.tsx:711
-msgid "they/them"
-msgstr "onlar/onların"
 
 #: src/components/channel/channel_view/DMChannelView.tsx:918
 msgid "Think, McFly! Did you type the right address?"
@@ -21717,11 +21718,11 @@ msgstr "Bu, uzay-zaman sürekliliğinde bir yarık oluşturacak ve geri alınama
 msgid "This will hide all favorites-related UI elements including buttons and menu items. Your existing favorites will be preserved and can be re-enabled anytime from <0>User Settings → Look & Feel → Favorites</0>."
 msgstr "Bu, düğmeler ve menü öğeleri dahil tüm favorilerle ilgili kullanıcı arayüzü öğelerini gizleyecek. Mevcut favorileriniz korunacak ve istediğiniz zaman <0>Kullanıcı Ayarları → Görünüm ve Hissiyat → Favoriler</0> bölümünden yeniden etkinleştirilebilir."
 
-#: src/components/modals/BackupCodesRegenerateModal.tsx:65
+#: src/components/modals/BackupCodesRegenerateModal.tsx:72
 msgid "This will invalidate your existing backup codes and generate new ones."
 msgstr "Bu, mevcut yedekleme kodlarınızı geçersiz kılacak ve yenilerini oluşturacaktır."
 
-#: src/components/channel/ChannelTextarea.tsx:1036
+#: src/components/channel/ChannelTextarea.tsx:1034
 msgid "This will modify the existing scheduled message rather than sending immediately."
 msgstr "Bu, hemen göndermek yerine mevcut zamanlanmış mesajı değiştirecek."
 
@@ -21907,11 +21908,11 @@ msgstr "aç/kapa"
 msgid "Toggle Channel Member List"
 msgstr "Kanal Üye Listesini Aç/Kapat"
 
-#: src/stores/QuickSwitcherStore.tsx:913
+#: src/stores/QuickSwitcherStore.tsx:911
 msgid "Toggle Compact Mode"
 msgstr "Kompakt Modu Aç/Kapat"
 
-#: src/components/modals/MobileVideoViewer.tsx:239
+#: src/components/modals/MobileVideoViewer.tsx:247
 msgid "Toggle controls"
 msgstr "Kontrolleri değiştir"
 
@@ -21963,11 +21964,11 @@ msgstr "Susturmayı Aç/Kapat"
 msgid "Toggle Pins Popout"
 msgstr "Sabitlemeler Açılır Penceresini Aç/Kapat"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:120
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:122
 msgid "Toggle premium_enabled_override on the backend"
 msgstr "Arka uçta premium_enabled_override'ı aç/kapat"
 
-#: src/stores/QuickSwitcherStore.tsx:929
+#: src/stores/QuickSwitcherStore.tsx:927
 msgid "Toggle Reduced Motion"
 msgstr "Azaltılmış Hareketi Aç/Kapat"
 
@@ -21983,7 +21984,7 @@ msgstr "Çıkartma Seçiciyi Aç/Kapat"
 msgid "Toggle switches on and off to see state changes."
 msgstr "Durum değişikliklerini görmek için anahtarları açıp kapatın."
 
-#: src/stores/QuickSwitcherStore.tsx:899
+#: src/stores/QuickSwitcherStore.tsx:897
 msgid "Toggle Theme"
 msgstr "Temayı Aç/Kapat"
 
@@ -22008,7 +22009,7 @@ msgstr "HDR görüntüleri standart aralığa ton haritalandır, pik parlaklığ
 msgid "Too Loud"
 msgstr "Çok Yüksek"
 
-#: src/components/alerts/MaxGuildsModal.tsx:32
+#: src/components/alerts/MaxGuildsModal.tsx:35
 msgid "Too Many Communities"
 msgstr "Çok Fazla Topluluk"
 
@@ -22307,7 +22308,7 @@ msgstr "İki Faktörlü Kimlik Doğrulama"
 msgid "Two-factor authentication disabled"
 msgstr "İki faktörlü kimlik doğrulama devre dışı"
 
-#: src/components/modals/MfaTotpEnableModal.tsx:55
+#: src/components/modals/MfaTotpEnableModal.tsx:58
 msgid "Two-factor authentication enabled"
 msgstr "İki faktörlü kimlik doğrulama etkin"
 
@@ -22404,11 +22405,11 @@ msgstr "Ukraynaca"
 msgid "Ultra (1440p)"
 msgstr "Ultra (1440p)"
 
-#: src/actions/InviteActionCreators.tsx:319
+#: src/actions/InviteActionCreators.tsx:323
 msgid "Unable to install emoji pack"
 msgstr "Emoji paketi yüklenemedi"
 
-#: src/actions/InviteActionCreators.tsx:320
+#: src/actions/InviteActionCreators.tsx:324
 msgid "Unable to install sticker pack"
 msgstr "Sticker paketi yüklenemedi"
 
@@ -22436,13 +22437,13 @@ msgstr "Profil afişi, rozetler ve biyografi yüklenemedi."
 msgid "Unable to prepare any emojis for upload. The following errors occurred:"
 msgstr "Yükleme için hiçbir emoji hazırlanamadı. Aşağıdaki hatalar oluştu:"
 
-#: src/components/modals/EmailChangeModal.tsx:121
-#: src/components/modals/EmailChangeModal.tsx:151
+#: src/components/modals/EmailChangeModal.tsx:124
+#: src/components/modals/EmailChangeModal.tsx:154
 #: src/components/modals/PasswordChangeModal.tsx:104
 msgid "Unable to resend code right now"
 msgstr "Kod şu anda yeniden gönderilemiyor"
 
-#: src/components/modals/EmailChangeModal.tsx:136
+#: src/components/modals/EmailChangeModal.tsx:139
 msgid "Unable to send code to new email"
 msgstr "Kod yeni e-postaya gönderilemiyor"
 
@@ -22455,7 +22456,7 @@ msgstr "Sesli mesaj gönderilemiyor. Lütfen tekrar deneyin."
 msgid "Unable to Start Call"
 msgstr "Arama Başlatılamıyor"
 
-#: src/components/modals/EmailChangeModal.tsx:91
+#: src/components/modals/EmailChangeModal.tsx:94
 msgid "Unable to start email change"
 msgstr "E-posta değişikliği başlatılamıyor"
 
@@ -22526,7 +22527,7 @@ msgstr "Talep Edilmemiş Hesap"
 msgid "Unclaimed Account Nagbar"
 msgstr "Talep Edilmemiş Hesap Nagbar'ı"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:65
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:67
 msgid "Unclaimed Account Override"
 msgstr "Talep Edilmemiş Hesap Geçersiz Kılma"
 
@@ -22554,10 +22555,10 @@ msgstr "Yaşı Küçük Kullanıcı"
 #: src/components/alerts/GenericErrorModal.tsx:31
 #: src/components/alerts/GuildAtCapacityModal.tsx:31
 #: src/components/alerts/InvitesDisabledModal.tsx:31
-#: src/components/alerts/MaxBookmarksModal.tsx:45
-#: src/components/alerts/MaxBookmarksModal.tsx:56
+#: src/components/alerts/MaxBookmarksModal.tsx:48
+#: src/components/alerts/MaxBookmarksModal.tsx:59
 #: src/components/alerts/MaxFavoriteMemesModal.tsx:46
-#: src/components/alerts/MaxGuildsModal.tsx:38
+#: src/components/alerts/MaxGuildsModal.tsx:41
 #: src/components/alerts/MicrophonePermissionDeniedModal.tsx:50
 #: src/components/alerts/NSFWContentRejectedModal.tsx:31
 #: src/components/alerts/ReactionInteractionDisabledModal.tsx:30
@@ -22632,7 +22633,7 @@ msgstr "bilinmeyen kanal"
 #: src/components/modals/guild_tabs/GuildAuditLogTab.Utils.tsx:479
 #: src/components/modals/guild_tabs/GuildWebhooksTab.tsx:61
 #: src/components/modals/guild_tabs/GuildWebhooksTab.tsx:67
-#: src/stores/QuickSwitcherStore.tsx:690
+#: src/stores/QuickSwitcherStore.tsx:688
 msgid "Unknown channel"
 msgstr "Bilinmeyen kanal"
 
@@ -22781,7 +22782,7 @@ msgstr "Plutonium ile DM'lerde çıkartmaları aç"
 #: src/components/layout/UserArea.tsx:168
 #: src/components/media_player/components/MediaVerticalVolumeControl.tsx:249
 #: src/components/media_player/components/MediaVolumeControl.tsx:208
-#: src/components/modals/MobileVideoViewer.tsx:272
+#: src/components/modals/MobileVideoViewer.tsx:280
 #: src/components/voice/VoiceControlBar.tsx:602
 msgid "Unmute"
 msgstr "Sesi aç"
@@ -22872,7 +22873,7 @@ msgstr "DM'i Sabitlemeyi Kaldır"
 msgid "Unpin Group DM"
 msgstr "Grup DM'ini Sabitlemeyi Kaldır"
 
-#: src/components/channel/MessageActionUtils.tsx:412
+#: src/components/channel/MessageActionUtils.tsx:413
 #: src/components/shared/ChannelPinsContent.tsx:102
 msgid "Unpin it"
 msgstr "Sabitlemeyi kaldır"
@@ -22880,7 +22881,7 @@ msgstr "Sabitlemeyi kaldır"
 #: src/components/channel/MessageActionBar.tsx:519
 #: src/components/channel/MessageActionBar.tsx:735
 #: src/components/channel/MessageActionMenu.tsx:243
-#: src/components/channel/MessageActionUtils.tsx:409
+#: src/components/channel/MessageActionUtils.tsx:410
 #: src/components/shared/ChannelPinsContent.tsx:99
 #: src/components/shared/ChannelPinsContent.tsx:260
 #: src/components/uikit/context_menu/items/MessageMenuItems.tsx:163
@@ -22907,7 +22908,7 @@ msgstr "Sabitlenmemiş grup DM"
 msgid "unread"
 msgstr "okunmamış"
 
-#: src/components/popouts/InboxPopout.tsx:53
+#: src/components/popouts/InboxPopout.tsx:52
 msgid "Unread"
 msgstr "Okunmamış"
 
@@ -22915,11 +22916,11 @@ msgstr "Okunmamış"
 msgid "Unread DMs only"
 msgstr "Sadece okunmamış DM'ler"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:85
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:87
 msgid "Unread Gift Count"
 msgstr "Okunmamış Hediye Sayısı"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:73
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:75
 msgid "Unread gift inventory override"
 msgstr "Okunmamış hediye envanteri geçersiz kılma"
 
@@ -22962,7 +22963,7 @@ msgstr "Doğrulanmamış E-posta"
 msgid "Up to 4K/60fps"
 msgstr "4K/60fps'ye kadar"
 
-#: src/components/channel/ChannelTextarea.tsx:1033
+#: src/components/channel/ChannelTextarea.tsx:1031
 msgid "Update"
 msgstr "Güncelle"
 
@@ -23085,7 +23086,7 @@ msgstr "yükselt"
 msgid "Upgrade Now"
 msgstr "Şimdi Yükselt"
 
-#: src/components/alerts/MaxBookmarksModal.tsx:69
+#: src/components/alerts/MaxBookmarksModal.tsx:72
 #: src/components/alerts/MaxFavoriteMemesModal.tsx:70
 msgid "Upgrade to Plutonium"
 msgstr "Plutonium'a Yükselt"
@@ -23249,7 +23250,7 @@ msgstr "Okuma Mesaj Geçmişi olmayan üyeler için mesaj geçmişi eşiği tari
 msgid "Use Actual"
 msgstr "Gerçeği Kullan"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:47
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:49
 msgid "Use actual premium type"
 msgstr "Gerçek premium türünü kullan"
 
@@ -23322,7 +23323,7 @@ msgstr "Küresel Profili Kullan"
 msgid "Use light theme"
 msgstr "Açık tema kullan"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:274
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:277
 msgid "Use passkeys for passwordless sign-in and two-factor authentication"
 msgstr "Parolasız giriş ve iki aşamalı doğrulama için geçiş anahtarları kullan"
 
@@ -23454,7 +23455,7 @@ msgstr "Kullanıcı Kaydı"
 #: src/components/layout/UserArea.tsx:286
 #: src/components/layout/UserArea.tsx:291
 #: src/components/modals/components/DesktopSettingsView.tsx:357
-#: src/components/modals/UserSettingsModal.tsx:154
+#: src/components/modals/UserSettingsModal.tsx:153
 msgid "User Settings"
 msgstr "Kullanıcı Ayarları"
 
@@ -23475,9 +23476,9 @@ msgstr "kullanıcı, bot veya webhook"
 msgid "username"
 msgstr "kullanıcı adı"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:187
+#: src/components/modals/FluxerTagChangeModal.tsx:201
 #: src/components/modals/tabs/component_gallery_tab/InputsTab.tsx:101
-#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:51
+#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:52
 #: src/components/modals/utils/SettingsSearchIndex.tsx:63
 msgid "Username"
 msgstr "Kullanıcı Adı"
@@ -23510,13 +23511,17 @@ msgstr "Kullanıcı adı en fazla 32 karakter olmalıdır"
 msgid "Username#0000"
 msgstr "KullanıcıAdı#0000"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:169
+#: src/components/modals/FluxerTagChangeModal.tsx:183
 msgid "Usernames can only contain letters (a-z, A-Z), numbers (0-9), and underscores. Usernames are case-insensitive."
 msgstr "Kullanıcı adları yalnızca harfler (a-z, A-Z), sayılar (0-9) ve alt çizgi içerebilir. Kullanıcı adları büyük/küçük harf duyarlı değildir."
 
-#: src/components/modals/FluxerTagChangeModal.tsx:164
-msgid "Usernames can only contain letters (a-z, A-Z), numbers (0-9), and underscores. Usernames are case-insensitive. You can pick your own 4-digit tag if it's available."
-msgstr "Kullanıcı adları yalnızca harfler (a-z, A-Z), sayılar (0-9) ve alt çizgi içerebilir. Kullanıcı adları büyük/küçük harf duyarlı değildir. Müsaitse kendi 4 haneli etiketini seçebilirsin."
+#: src/components/modals/FluxerTagChangeModal.tsx:170
+msgid "Usernames can only contain letters (a-z, A-Z), numbers (0-9), and underscores. Usernames are case-insensitive. You can pick any available 4-digit tag from #0000 to #9999."
+msgstr "Kullanıcı adları yalnızca harf (a-z, A-Z), rakam (0-9) ve alt çizgi içerebilir. Kullanıcı adları büyük/küçük harf duyarsızdır. #0000'dan #9999'a kadar uygun bir 4 haneli etiket seçebilirsin."
+
+#: src/components/modals/FluxerTagChangeModal.tsx:176
+msgid "Usernames can only contain letters (a-z, A-Z), numbers (0-9), and underscores. Usernames are case-insensitive. You can pick any available 4-digit tag from #0001 to #9999."
+msgstr "Kullanıcı adları yalnızca harf (a-z, A-Z), rakam (0-9) ve alt çizgi içerebilir. Kullanıcı adları büyük/küçük harf duyarsızdır. #0001'den #9999'a kadar uygun bir 4 haneli etiket seçebilirsin."
 
 #: src/components/modals/utils/SettingsSearchIndex.tsx:246
 #: src/components/modals/utils/SettingsSectionRegistry.tsx:172
@@ -23634,8 +23639,8 @@ msgid "Verification Barriers"
 msgstr "Doğrulama Engelleri"
 
 #: src/components/modals/ClaimAccountModal.tsx:198
-#: src/components/modals/EmailChangeModal.tsx:220
-#: src/components/modals/EmailChangeModal.tsx:288
+#: src/components/modals/EmailChangeModal.tsx:223
+#: src/components/modals/EmailChangeModal.tsx:291
 #: src/components/modals/PasswordChangeModal.tsx:166
 #: src/components/modals/PhoneAddModal.tsx:226
 #: src/components/modals/RequiredActionModal.tsx:495
@@ -23662,7 +23667,7 @@ msgstr "Doğrulama e-postası gönderildi! Lütfen gelen kutunuzu kontrol edin."
 msgid "Verification failed"
 msgstr "Doğrulama başarısız oldu"
 
-#: src/components/modals/BackupCodesViewModal.tsx:63
+#: src/components/modals/BackupCodesViewModal.tsx:68
 msgid "Verification may be required before viewing your backup codes."
 msgstr "Yedek kodlarınızı görüntülemeden önce doğrulama gerekebilir."
 
@@ -23684,7 +23689,7 @@ msgid "verify"
 msgstr "doğrula"
 
 #: src/components/modals/AddConnectionModal.tsx:315
-#: src/components/modals/EmailChangeModal.tsx:236
+#: src/components/modals/EmailChangeModal.tsx:239
 #: src/components/modals/PasswordChangeModal.tsx:182
 #: src/components/modals/PhoneAddModal.tsx:240
 #: src/components/modals/RequiredActionModal.tsx:652
@@ -23785,7 +23790,7 @@ msgstr "video önizlemesi"
 msgid "Video preview"
 msgstr "Video önizlemesi"
 
-#: src/components/modals/MobileVideoViewer.tsx:311
+#: src/components/modals/MobileVideoViewer.tsx:319
 msgid "Video progress"
 msgstr "Video ilerlemesi"
 
@@ -23859,15 +23864,15 @@ msgstr "Yasaklanan kullanıcıları görüntüle ve yönet."
 msgid "View and manage every webhook configured across your community."
 msgstr "Topluluğunuzda yapılandırılan her webhook'u görüntüleyin ve yönetin."
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:257
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:260
 msgid "View and manage your backup codes for account recovery"
 msgstr "Hesap kurtarma için yedek kodlarınızı görüntüleyin ve yönetin"
 
-#: src/components/modals/BackupCodesViewModal.tsx:59
+#: src/components/modals/BackupCodesViewModal.tsx:64
 msgid "View Backup Codes"
 msgstr "Yedek Kodları Görüntüle"
 
-#: src/components/modals/BackupCodesViewModal.tsx:58
+#: src/components/modals/BackupCodesViewModal.tsx:63
 msgid "View backup codes form"
 msgstr "Yedek kodlar formunu görüntüle"
 
@@ -23884,7 +23889,7 @@ msgstr "Arama kontrollerini görüntüle"
 msgid "View Channel"
 msgstr "Kanalı Görüntüle"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:265
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:268
 msgid "View Codes"
 msgstr "Kodları Görüntüle"
 
@@ -24016,6 +24021,19 @@ msgstr "Visionary (Lifetime Plutonium)"
 msgid "Visionary 2FA Nagbar"
 msgstr "Visionary 2FA Nagbar"
 
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:137
+msgid "Visionary Badge Override"
+msgstr "Vizyoner Rozet Üstü"
+
+#. placeholder {0}: profile.premiumLifetimeSequence
+#: src/components/popouts/UserProfileBadges.tsx:150
+msgid "Visionary ID #{0}"
+msgstr "Vizyoner ID #{0}"
+
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:139
+msgid "Visionary ID Number"
+msgstr "Vizyoner ID Numarası"
+
 #: src/components/modals/ExternalLinkWarningModal.tsx:111
 msgid "Visit Site"
 msgstr "Siteyi Ziyaret Et"
@@ -24086,7 +24104,7 @@ msgstr "Sesli Aramalar"
 msgid "voice channel"
 msgstr "ses kanalı"
 
-#: src/stores/QuickSwitcherStore.tsx:720
+#: src/stores/QuickSwitcherStore.tsx:718
 #: src/utils/modals/guild_tabs/GuildAuditLogTabUtils.tsx:227
 msgid "Voice channel"
 msgstr "Ses kanalı"
@@ -24106,7 +24124,7 @@ msgstr "Ses Kanalı Dolu"
 msgid "Voice channel join behavior"
 msgstr "Ses kanalı katılım davranışı"
 
-#: src/stores/QuickSwitcherStore.tsx:1351
+#: src/stores/QuickSwitcherStore.tsx:1349
 #: src/utils/quick_switcher/QuickSwitcherModalUtils.tsx:98
 msgid "Voice channels"
 msgstr "Ses kanalları"
@@ -24374,11 +24392,11 @@ msgstr "Bu e-posta adresine bir doğrulama kodu göndereceğiz."
 msgid "We'll send a verification code to your email before you can change your password."
 msgstr "Şifrenizi değiştirmeden önce e-posta adresinize bir doğrulama kodu göndereceğiz."
 
-#: src/components/modals/EmailChangeModal.tsx:190
+#: src/components/modals/EmailChangeModal.tsx:193
 msgid "We'll verify your current email and then your new email with one-time codes."
 msgstr "Mevcut e-postanı ve ardından yeni e-postanı tek kullanımlık kodlarla doğrulayacağız."
 
-#: src/components/modals/EmailChangeModal.tsx:192
+#: src/components/modals/EmailChangeModal.tsx:195
 msgid "We'll verify your new email with a one-time code."
 msgstr "Yeni e-postanı tek kullanımlık bir kodla doğrulayacağız."
 
@@ -24984,7 +25002,7 @@ msgstr "Bir moderatör tarafından susturulduğun için kendini sessizden çıka
 msgid "You do not have access to the channel where this message was sent."
 msgstr "Bu mesajın gönderildiği kanala erişimin yok."
 
-#: src/components/channel/ChannelTextarea.tsx:749
+#: src/components/channel/ChannelTextarea.tsx:747
 #: src/components/channel/textarea/TextareaPlusMenu.tsx:52
 msgid "You do not have permission to send messages in this channel."
 msgstr "Bu kanalda mesaj gönderme iznin yok."
@@ -25005,11 +25023,11 @@ msgstr "Henüz paylaşacak özel tema geçersiz kılmaların yok."
 msgid "You don't have permission to connect to this voice channel."
 msgstr "Bu ses kanalına bağlanma iznin yok."
 
-#: src/actions/InviteActionCreators.tsx:316
+#: src/actions/InviteActionCreators.tsx:320
 msgid "You don't have permission to install this emoji pack."
 msgstr "Bu emoji paketini yükleme iznin yok."
 
-#: src/actions/InviteActionCreators.tsx:317
+#: src/actions/InviteActionCreators.tsx:321
 msgid "You don't have permission to install this sticker pack."
 msgstr "Bu çıkartma paketini yükleme iznin yok."
 
@@ -25065,35 +25083,35 @@ msgstr "<2>{giftEndDate}</2> tarihine kadar <1>hediye aboneliği</1> ile tüm <0
 msgid "You have blocked {username}. Unblock them to send messages."
 msgstr "{username}'yi engelledin. Mesaj göndermek için engelini kaldır."
 
-#: src/actions/InviteActionCreators.tsx:260
+#: src/actions/InviteActionCreators.tsx:264
 msgid "You have created the maximum of {limit} emoji pack. Delete one to create another."
 msgstr "Maksimum {limit} emoji paketi oluşturdun. Başka birini oluşturmak için birini sil."
 
-#: src/actions/InviteActionCreators.tsx:261
+#: src/actions/InviteActionCreators.tsx:265
 msgid "You have created the maximum of {limit} emoji packs. Delete one to create another."
 msgstr "Maksimum {limit} emoji paketi oluşturdun. Başka birini oluşturmak için birini sil."
 
-#: src/actions/InviteActionCreators.tsx:292
+#: src/actions/InviteActionCreators.tsx:296
 msgid "You have created the maximum of {limit} sticker pack. Delete one to create another."
 msgstr "Maksimum {limit} etiket paketi oluşturdun. Başka birini oluşturmak için birini sil."
 
-#: src/actions/InviteActionCreators.tsx:293
+#: src/actions/InviteActionCreators.tsx:297
 msgid "You have created the maximum of {limit} sticker packs. Delete one to create another."
 msgstr "Maksimum {limit} etiket paketi oluşturdun. Başka birini oluşturmak için birini sil."
 
-#: src/actions/InviteActionCreators.tsx:246
+#: src/actions/InviteActionCreators.tsx:250
 msgid "You have installed the maximum of {limit} emoji pack. Remove one to install another."
 msgstr "Maksimum {limit} emoji paketi kurdun. Başka birini kurmak için birini kaldır."
 
-#: src/actions/InviteActionCreators.tsx:247
+#: src/actions/InviteActionCreators.tsx:251
 msgid "You have installed the maximum of {limit} emoji packs. Remove one to install another."
 msgstr "Maksimum {limit} emoji paketi kurdun. Başka birini kurmak için birini kaldır."
 
-#: src/actions/InviteActionCreators.tsx:278
+#: src/actions/InviteActionCreators.tsx:282
 msgid "You have installed the maximum of {limit} sticker pack. Remove one to install another."
 msgstr "Maksimum {limit} etiket paketi kurdun. Başka birini kurmak için birini kaldır."
 
-#: src/actions/InviteActionCreators.tsx:279
+#: src/actions/InviteActionCreators.tsx:283
 msgid "You have installed the maximum of {limit} sticker packs. Remove one to install another."
 msgstr "Maksimum {limit} etiket paketi kurdun. Başka birini kurmak için birini kaldır."
 
@@ -25101,19 +25119,19 @@ msgstr "Maksimum {limit} etiket paketi kurdun. Başka birini kurmak için birini
 msgid "You have no friends yet"
 msgstr "Henüz arkadaşın yok"
 
-#: src/actions/InviteActionCreators.tsx:264
+#: src/actions/InviteActionCreators.tsx:268
 msgid "You have reached the limit for creating emoji packs. Delete one of your packs to create another."
 msgstr "Emoji paketi oluşturma limitine ulaştın. Başka bir paket oluşturmak için mevcut paketlerinden birini sil."
 
-#: src/actions/InviteActionCreators.tsx:296
+#: src/actions/InviteActionCreators.tsx:300
 msgid "You have reached the limit for creating sticker packs. Delete one of your packs to create another."
 msgstr "Çıkartma paketi oluşturma limitine ulaştın. Başka bir paket oluşturmak için mevcut paketlerinden birini sil."
 
-#: src/actions/InviteActionCreators.tsx:250
+#: src/actions/InviteActionCreators.tsx:254
 msgid "You have reached the limit for installing emoji packs. Remove one of your installed packs to install another."
 msgstr "Emoji paketi yükleme limitine ulaştın. Başka bir paket yüklemek için yüklü paketlerinden birini kaldır."
 
-#: src/actions/InviteActionCreators.tsx:282
+#: src/actions/InviteActionCreators.tsx:286
 msgid "You have reached the limit for installing sticker packs. Remove one of your installed packs to install another."
 msgstr "Çıkartma paketi yükleme limitine ulaştın. Başka bir paket yüklemek için yüklü paketlerinden birini kaldır."
 
@@ -25377,23 +25395,23 @@ msgstr "Kaydedilen medya öğeleri için {maxFavoriteMemes} maksimum sınırına
 msgid "You've reached the maximum limit of {maxFavoriteMemes} saved media items. To add more, you'll need to remove some existing items from your collection."
 msgstr "Kaydedilen medya öğeleri için {maxFavoriteMemes} maksimum sınırına ulaştın. Daha fazla eklemek için, koleksiyonundan bazı mevcut öğeleri kaldırman gerekecek."
 
-#: src/components/alerts/MaxBookmarksModal.tsx:55
+#: src/components/alerts/MaxBookmarksModal.tsx:58
 msgid "You've reached the maximum number of bookmarks ({bookmarksText}). Please remove some bookmarks before adding new ones."
 msgstr "Yer imleri sayısı maksimuma ulaştı ({bookmarksText}). Lütfen yeni yer imleri eklemeden önce bazı yer imlerini kaldır."
 
-#: src/components/alerts/MaxBookmarksModal.tsx:44
+#: src/components/alerts/MaxBookmarksModal.tsx:47
 msgid "You've reached the maximum number of bookmarks ({bookmarksText}). This limit is configured by your instance administrator. Please remove some bookmarks before adding new ones."
 msgstr "Yer imleri sayısı maksimuma ulaştı ({bookmarksText}). Bu sınır, örneğin yöneticin tarafından yapılandırılmıştır. Lütfen yeni yer imleri eklemeden önce bazı yer imlerini kaldır."
 
-#: src/components/alerts/MaxBookmarksModal.tsx:68
+#: src/components/alerts/MaxBookmarksModal.tsx:71
 msgid "You've reached the maximum number of bookmarks for free users ({bookmarksText}). Upgrade to Plutonium to increase your limit to {premiumBookmarksText}, or remove some bookmarks to add new ones."
 msgstr "Ücretsiz kullanıcılar için yer imleri sayısı maksimuma ulaştı ({bookmarksText}). Sınırını {premiumBookmarksText} olarak artırmak için Plutonium'a geç veya yeni yer imleri eklemek için bazı yer imlerini kaldır."
 
-#: src/components/alerts/MaxGuildsModal.tsx:36
+#: src/components/alerts/MaxGuildsModal.tsx:39
 msgid "You've reached the maximum number of communities you can join ({maxGuilds} communities). Please leave a community before joining another one."
 msgstr "Katılabileceğin maksimum topluluk sayısına ulaştın ({maxGuilds} topluluk). Başka birine katılmadan önce bir topluluktan ayrıl."
 
-#: src/components/alerts/MaxGuildsModal.tsx:35
+#: src/components/alerts/MaxGuildsModal.tsx:38
 msgid "You've reached the maximum number of communities you can join ({maxGuilds} community). Please leave a community before joining another one."
 msgstr "Katılabileceğin maksimum topluluk sayısına ulaştın ({maxGuilds} topluluk). Başka birine katılmadan önce bir topluluktan ayrıl."
 

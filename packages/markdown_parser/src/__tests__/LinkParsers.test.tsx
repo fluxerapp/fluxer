@@ -18,7 +18,7 @@
  */
 
 import {Parser} from '@fluxer/markdown_parser/src/parser/Parser';
-import {NodeType, ParserFlags} from '@fluxer/markdown_parser/src/types/Enums';
+import {MentionKind, NodeType, ParserFlags} from '@fluxer/markdown_parser/src/types/Enums';
 import type {LinkNode} from '@fluxer/markdown_parser/src/types/Nodes';
 import {describe, expect, test} from 'vitest';
 
@@ -540,6 +540,22 @@ describe('Fluxer Markdown Parser', () => {
 				url: 'https://example.com/',
 				escaped: false,
 			},
+		]);
+	});
+
+	test('link parser should not escape bracketed mentions', () => {
+		const input = '[ <@1473362285356646457> ]';
+		const flags = ParserFlags.ALLOW_MASKED_LINKS | ParserFlags.ALLOW_USER_MENTIONS;
+		const parser = new Parser(input, flags);
+		const {nodes: ast} = parser.parse();
+
+		expect(ast).toEqual([
+			{type: NodeType.Text, content: '[ '},
+			{
+				type: NodeType.Mention,
+				kind: {kind: MentionKind.User, id: '1473362285356646457'},
+			},
+			{type: NodeType.Text, content: ' ]'},
 		]);
 	});
 

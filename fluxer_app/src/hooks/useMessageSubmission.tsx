@@ -51,8 +51,6 @@ export type SendMessageFunction = (
 ) => void;
 
 export const useMessageSubmission = ({channel, referencedMessage, replyingMessage}: UseMessageSubmissionOptions) => {
-	const currentUser = UserStore.getCurrentUser()!;
-
 	const sendMessage = useCallback(
 		(
 			content: string,
@@ -74,7 +72,8 @@ export const useMessageSubmission = ({channel, referencedMessage, replyingMessag
 					? favoriteMemeIdOrStickers
 					: undefined;
 
-			if (!channel) return;
+			const currentUser = UserStore.getCurrentUser();
+			if (!channel || !currentUser) return;
 			const nonce = SnowflakeUtils.fromTimestamp(Date.now());
 			const messageReference = MessageSubmitUtils.prepareMessageReference(channel.id, referencedMessage);
 
@@ -100,7 +99,7 @@ export const useMessageSubmission = ({channel, referencedMessage, replyingMessag
 					content,
 					channelId: channel.id,
 					nonce,
-					currentUser: UserStore.getCurrentUser()!,
+					currentUser,
 					referencedMessage,
 					replyMentioning: replyingMessage?.mentioning,
 					stickers,
@@ -145,7 +144,8 @@ export const useMessageSubmission = ({channel, referencedMessage, replyingMessag
 				favoriteMemeId?: string;
 			},
 		) => {
-			if (!channel) return;
+			const currentUser = UserStore.getCurrentUser();
+			if (!channel || !currentUser) return;
 			const nonce = SnowflakeUtils.fromTimestamp(Date.now());
 
 			TypingUtils.clear(channel.id);
@@ -192,7 +192,7 @@ export const useMessageSubmission = ({channel, referencedMessage, replyingMessag
 				favoriteMemeId: sendOptions.favoriteMemeId,
 			});
 		},
-		[channel?.id, currentUser, referencedMessage, replyingMessage],
+		[channel?.id, referencedMessage, replyingMessage],
 	);
 
 	return {sendMessage, sendOptimisticMessage};

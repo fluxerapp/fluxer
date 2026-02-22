@@ -134,12 +134,12 @@ msgid "{0} of {totalAttachments}"
 msgstr "{0} z {totalAttachments}"
 
 #. placeholder {0}: passkeys.length
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:285
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:288
 msgid "{0} passkey registered (max 10)"
 msgstr "{0} klucz dostępu zarejestrowany (maks. 10)"
 
 #. placeholder {0}: passkeys.length
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:286
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:289
 msgid "{0} passkeys registered (max 10)"
 msgstr "{0} klucze dostępu zarejestrowane (maks. 10)"
 
@@ -633,11 +633,11 @@ msgstr "{lockedStickerCount} naklejka"
 msgid "{lockedStickerCount} stickers"
 msgstr "{lockedStickerCount} naklejki"
 
-#: src/components/alerts/MaxBookmarksModal.tsx:38
+#: src/components/alerts/MaxBookmarksModal.tsx:41
 msgid "{maxBookmarks} bookmark"
 msgstr "{maxBookmarks} zakładka"
 
-#: src/components/alerts/MaxBookmarksModal.tsx:38
+#: src/components/alerts/MaxBookmarksModal.tsx:41
 msgid "{maxBookmarks} bookmarks"
 msgstr "{maxBookmarks} zakładki"
 
@@ -718,11 +718,11 @@ msgstr "{participantCount} uczestnik w rozmowie"
 msgid "{participantCount} participants in call"
 msgstr "{participantCount} uczestników w rozmowie"
 
-#: src/components/alerts/MaxBookmarksModal.tsx:63
+#: src/components/alerts/MaxBookmarksModal.tsx:66
 msgid "{premiumBookmarks} bookmark"
 msgstr "{premiumBookmarks} zakładka"
 
-#: src/components/alerts/MaxBookmarksModal.tsx:63
+#: src/components/alerts/MaxBookmarksModal.tsx:66
 msgid "{premiumBookmarks} bookmarks"
 msgstr "{premiumBookmarks} zakładki"
 
@@ -875,11 +875,11 @@ msgstr "{username} usunął kogoś z grupy."
 msgid "{username} started a call."
 msgstr "{username} rozpoczął rozmowę."
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:100
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:102
 msgid "{v} gift"
 msgstr "{v} prezent"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:100
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:102
 msgid "{v} gifts"
 msgstr "{v} prezenty"
 
@@ -1088,7 +1088,7 @@ msgstr "<0>Przywrócono dźwięk</0> członkowi."
 msgid "<0>Unmuted</0> the member."
 msgstr "<0>Włączono dźwięk</0> członkowi."
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:370
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:373
 msgid "<0>Warning:</0> This will also disable SMS two-factor authentication."
 msgstr "<0>Uwaga:</0> To również wyłączy SMS-owe uwierzytelnianie dwuskładnikowe."
 
@@ -1362,9 +1362,9 @@ msgstr "30 sekund"
 msgid "4 hours"
 msgstr "4 godziny"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:203
-#: src/components/modals/FluxerTagChangeModal.tsx:231
-#: src/components/modals/FluxerTagChangeModal.tsx:248
+#: src/components/modals/FluxerTagChangeModal.tsx:217
+#: src/components/modals/FluxerTagChangeModal.tsx:245
+#: src/components/modals/FluxerTagChangeModal.tsx:262
 msgid "4-digit tag"
 msgstr "4-cyfrowy tag"
 
@@ -1634,7 +1634,7 @@ msgstr "Konto pomyślnie zarejestrowane"
 msgid "Account Connected"
 msgstr "Konto połączone"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:55
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:57
 msgid "Account State Overrides"
 msgstr "Nadpisania stanu konta"
 
@@ -1642,7 +1642,7 @@ msgstr "Nadpisania stanu konta"
 msgid "Account Too New"
 msgstr "Konto zbyt nowe"
 
-#: src/actions/InviteActionCreators.tsx:178
+#: src/actions/InviteActionCreators.tsx:182
 #: src/components/modals/RequiredActionModal.tsx:143
 #: src/components/modals/RequiredActionModal.tsx:416
 msgid "Account Verification Required"
@@ -1763,7 +1763,7 @@ msgstr "Dodaj"
 msgid "Add a bot to a community with requested permissions"
 msgstr "Dodaj bota do społeczności z wymaganymi uprawnieniami"
 
-#: src/components/modals/ForwardModal.tsx:309
+#: src/components/modals/ForwardModal.tsx:314
 msgid "Add a comment (optional)"
 msgstr "Dodaj komentarz (opcjonalnie)"
 
@@ -1782,7 +1782,7 @@ msgstr "Dodaj własne tło"
 msgid "Add a different account"
 msgstr "Dodaj inne konto"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:348
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:351
 msgid "Add a phone number to enable SMS two-factor authentication"
 msgstr "Dodaj numer telefonu, aby włączyć SMS-owe uwierzytelnianie dwuskładnikowe"
 
@@ -1844,7 +1844,7 @@ msgstr "Formularz dodawania połączenia"
 msgid "Add domain connection"
 msgstr "Dodaj połączenie domeny"
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:98
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:101
 msgid "Add Email"
 msgstr "Dodaj e-mail"
 
@@ -1902,12 +1902,12 @@ msgstr "Dodaj lub zmień swój numer telefonu"
 msgid "Add Override"
 msgstr "Dodaj nadpisanie"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:290
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:293
 msgid "Add Passkey"
 msgstr "Dodaj klucz dostępu"
 
 #: src/components/channel/barriers/BarrierComponents.tsx:198
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:395
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:398
 msgid "Add Phone"
 msgstr "Dodaj telefon"
 
@@ -2010,7 +2010,7 @@ msgstr "Dodano {0}."
 msgid "Added roles."
 msgstr "Dodano role."
 
-#: src/actions/SavedMessageActionCreators.tsx:58
+#: src/actions/SavedMessageActionCreators.tsx:59
 msgid "Added to bookmarks"
 msgstr "Dodano do zakładek"
 
@@ -2028,11 +2028,11 @@ msgstr "Dodano do ulubionych"
 msgid "Added to saved media"
 msgstr "Dodano do zapisanych multimediów"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:313
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:316
 msgid "Added: {createdDate}"
 msgstr "Dodano: {createdDate}"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:309
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:312
 msgid "Added: {createdDate} • Last used: {lastUsedDate}"
 msgstr "Dodano: {createdDate} • Ostatnio użyto: {lastUsedDate}"
 
@@ -2930,7 +2930,7 @@ msgid "Are you sure you want to remove this connection? This action cannot be un
 msgstr "Czy na pewno chcesz usunąć to połączenie? Ta akcja nie może być cofnięta."
 
 #. placeholder {0}: user.phone
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:364
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:367
 msgid "Are you sure you want to remove your phone number <0>{0}</0>?"
 msgstr "Czy na pewno chcesz usunąć swój numer telefonu <0>{0}</0>?"
 
@@ -3395,7 +3395,7 @@ msgstr "Powrót do ról"
 msgid "Back to Settings"
 msgstr "Powrót do ustawień"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:118
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:120
 msgid "Backend Premium Override"
 msgstr "Nadpisanie premium po stronie zaplecza"
 
@@ -3438,12 +3438,12 @@ msgid "backup codes"
 msgstr "kody zapasowe"
 
 #: src/components/modals/BackupCodesModal.tsx:43
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:254
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:257
 #: src/components/modals/utils/SettingsSearchIndex.tsx:140
 msgid "Backup Codes"
 msgstr "Kody zapasowe"
 
-#: src/components/modals/BackupCodesRegenerateModal.tsx:48
+#: src/components/modals/BackupCodesRegenerateModal.tsx:55
 msgid "Backup codes regenerated"
 msgstr "Kody zapasowe zostały wygenerowane ponownie"
 
@@ -3720,9 +3720,9 @@ msgstr "Klub książki"
 msgid "Bookmark"
 msgstr "Zakładka"
 
-#: src/components/alerts/MaxBookmarksModal.tsx:43
-#: src/components/alerts/MaxBookmarksModal.tsx:54
-#: src/components/alerts/MaxBookmarksModal.tsx:67
+#: src/components/alerts/MaxBookmarksModal.tsx:46
+#: src/components/alerts/MaxBookmarksModal.tsx:57
+#: src/components/alerts/MaxBookmarksModal.tsx:70
 msgid "Bookmark Limit Reached"
 msgstr "Osiągnięto limit zakładek"
 
@@ -3750,7 +3750,7 @@ msgstr "Zapisano!"
 
 #: src/components/modals/BookmarksBottomSheet.tsx:109
 #: src/components/pages/SavedMessagesPage.tsx:67
-#: src/components/popouts/InboxPopout.tsx:58
+#: src/components/popouts/InboxPopout.tsx:57
 msgid "Bookmarks"
 msgstr "Zakładki"
 
@@ -4055,7 +4055,7 @@ msgstr "Kamery są wyłączone, gdy jest więcej niż {VOICE_CHANNEL_CAMERA_USER
 #: src/components/alerts/FileSizeTooLargeModal.tsx:87
 #: src/components/auth/BrowserLoginHandoffModal.tsx:269
 #: src/components/bottomsheets/CreateDMBottomSheet.tsx:130
-#: src/components/channel/ChannelTextarea.tsx:312
+#: src/components/channel/ChannelTextarea.tsx:310
 #: src/components/channel/friends/FriendListItem.tsx:259
 #: src/components/channel/MentionEveryonePopout.tsx:128
 #: src/components/emojis/EmojiListItem.tsx:125
@@ -4069,8 +4069,8 @@ msgstr "Kamery są wyłączone, gdy jest więcej niż {VOICE_CHANNEL_CAMERA_USER
 #: src/components/modals/AddGuildModal.tsx:413
 #: src/components/modals/AddGuildStickerModal.tsx:120
 #: src/components/modals/AttachmentEditModal.tsx:122
-#: src/components/modals/BackupCodesRegenerateModal.tsx:72
-#: src/components/modals/BackupCodesViewModal.tsx:70
+#: src/components/modals/BackupCodesRegenerateModal.tsx:79
+#: src/components/modals/BackupCodesViewModal.tsx:75
 #: src/components/modals/BanMemberModal.tsx:143
 #: src/components/modals/CameraPreviewModal.tsx:485
 #: src/components/modals/CaptchaModal.tsx:187
@@ -4094,14 +4094,14 @@ msgstr "Kamery są wyłączone, gdy jest więcej niż {VOICE_CHANNEL_CAMERA_USER
 #: src/components/modals/EditFavoriteMemeModal.tsx:85
 #: src/components/modals/EditGuildStickerModal.tsx:113
 #: src/components/modals/EditPackModal.tsx:103
-#: src/components/modals/EmailChangeModal.tsx:199
-#: src/components/modals/EmailChangeModal.tsx:230
-#: src/components/modals/EmailChangeModal.tsx:267
-#: src/components/modals/EmailChangeModal.tsx:298
+#: src/components/modals/EmailChangeModal.tsx:202
+#: src/components/modals/EmailChangeModal.tsx:233
+#: src/components/modals/EmailChangeModal.tsx:270
+#: src/components/modals/EmailChangeModal.tsx:301
 #: src/components/modals/ExternalLinkWarningModal.tsx:102
-#: src/components/modals/FluxerTagChangeModal.tsx:117
-#: src/components/modals/FluxerTagChangeModal.tsx:280
-#: src/components/modals/ForwardModal.tsx:373
+#: src/components/modals/FluxerTagChangeModal.tsx:122
+#: src/components/modals/FluxerTagChangeModal.tsx:294
+#: src/components/modals/ForwardModal.tsx:378
 #: src/components/modals/guild_tabs/GuildBansTab.tsx:103
 #: src/components/modals/guild_tabs/GuildRolesTab.tsx:624
 #: src/components/modals/GuildFolderSettingsModal.tsx:199
@@ -4113,7 +4113,7 @@ msgstr "Kamery są wyłączone, gdy jest więcej niż {VOICE_CHANNEL_CAMERA_USER
 #: src/components/modals/KickMemberModal.tsx:63
 #: src/components/modals/MessageHistoryThresholdModal.tsx:103
 #: src/components/modals/MfaTotpDisableModal.tsx:75
-#: src/components/modals/MfaTotpEnableModal.tsx:103
+#: src/components/modals/MfaTotpEnableModal.tsx:106
 #: src/components/modals/PasskeyNameModal.tsx:62
 #: src/components/modals/PasswordChangeModal.tsx:145
 #: src/components/modals/PasswordChangeModal.tsx:176
@@ -4146,7 +4146,7 @@ msgstr "Anuluj"
 msgid "Cancel Friend Request"
 msgstr "Anuluj zaproszenie"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:112
+#: src/components/modals/FluxerTagChangeModal.tsx:117
 msgid "Cancel if you want to choose a different username instead."
 msgstr "Anuluj, jeśli chcesz wybrać inną nazwę użytkownika."
 
@@ -4178,11 +4178,11 @@ msgstr "Nie można edytować"
 msgid "Cannot Delete Account"
 msgstr "Nie można usunąć konta"
 
-#: src/actions/InviteActionCreators.tsx:313
+#: src/actions/InviteActionCreators.tsx:317
 msgid "Cannot install emoji pack"
 msgstr "Nie można zainstalować pakietu emoji"
 
-#: src/actions/InviteActionCreators.tsx:314
+#: src/actions/InviteActionCreators.tsx:318
 msgid "Cannot install sticker pack"
 msgstr "Nie można zainstalować pakietu naklejek"
 
@@ -4279,7 +4279,7 @@ msgstr "Zmień baner"
 msgid "Change email"
 msgstr "Zmień email"
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:81
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:84
 msgid "Change Email"
 msgstr "Zmień e-mail"
 
@@ -4288,12 +4288,12 @@ msgstr "Zmień e-mail"
 msgid "Change emoji"
 msgstr "Zmień emoji"
 
-#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:59
-#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:69
+#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:60
+#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:70
 msgid "Change FluxerTag"
 msgstr "Zmień FluxerTag"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:158
+#: src/components/modals/FluxerTagChangeModal.tsx:163
 msgid "Change FluxerTag form"
 msgstr "Formularz zmiany FluxerTag"
 
@@ -4360,7 +4360,7 @@ msgid "change password"
 msgstr "zmień hasło"
 
 #: src/components/modals/PasswordChangeModal.tsx:227
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:124
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:127
 msgid "Change Password"
 msgstr "Zmień hasło"
 
@@ -4372,7 +4372,7 @@ msgstr "Formularz zmiany hasła"
 msgid "Change what users without Read Message History can see"
 msgstr "Zmień, co użytkownicy bez dostępu do historii wiadomości mogą zobaczyć"
 
-#: src/components/modals/EmailChangeModal.tsx:183
+#: src/components/modals/EmailChangeModal.tsx:186
 msgid "Change Your Email"
 msgstr "Zmień swój adres e-mail"
 
@@ -4380,7 +4380,7 @@ msgstr "Zmień swój adres e-mail"
 msgid "Change your email address"
 msgstr "Zmień swój adres e-mail"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:159
+#: src/components/modals/FluxerTagChangeModal.tsx:164
 msgid "Change Your FluxerTag"
 msgstr "Zmień swój FluxerTag"
 
@@ -4392,7 +4392,7 @@ msgstr "Zmień swoje przezwisko w tej społeczności."
 msgid "Change your password"
 msgstr "Zmień swoje hasło"
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:106
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:109
 msgid "Change your password to keep your account secure"
 msgstr "Zmień hasło, aby zabezpieczyć swoje konto"
 
@@ -4404,7 +4404,7 @@ msgstr "Zmień swoje zdjęcie profilowe"
 msgid "Change your username"
 msgstr "Zmień swoją nazwę użytkownika"
 
-#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:90
+#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:91
 msgid "Change your username and 4-digit tag"
 msgstr "Zmień swoją nazwę użytkownika i czterocyfrowy tag"
 
@@ -4424,7 +4424,7 @@ msgstr "Zmieniono bitrate na {0}."
 msgid "Changed the voice region to {0}."
 msgstr "Zmieniono region głosowy na {0}."
 
-#: src/components/channel/ChannelTextarea.tsx:751
+#: src/components/channel/ChannelTextarea.tsx:749
 #: src/utils/SearchUtils.tsx:268
 msgid "channel"
 msgstr "kanał"
@@ -4846,7 +4846,7 @@ msgstr "Przejmij konto, aby uzyskać dostęp do funkcji bezpieczeństwa, takich 
 msgid "Claim your account to call"
 msgstr "Przypisz swoje konto, aby dzwonić"
 
-#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:56
+#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:57
 msgid "Claim your account to change your FluxerTag"
 msgstr "Przejmij konto, aby zmienić swój FluxerTag"
 
@@ -5144,7 +5144,7 @@ msgstr "Sekret klienta został wygenerowany ponownie. Zaktualizuj kod korzystaj�
 #: src/components/modals/components/SettingsModalHeader.tsx:98
 #: src/components/modals/InviteModal.tsx:135
 #: src/components/modals/MediaModal.tsx:349
-#: src/components/modals/MobileVideoViewer.tsx:252
+#: src/components/modals/MobileVideoViewer.tsx:260
 #: src/components/modals/Modal.tsx:382
 #: src/components/modals/Modal.tsx:460
 #: src/components/modals/PackInviteModal.tsx:152
@@ -5201,7 +5201,7 @@ msgstr "Motyw węglowy"
 #: src/components/auth/MfaScreen.tsx:131
 #: src/components/invites/InviteListItem.tsx:56
 #: src/components/modals/MfaTotpDisableModal.tsx:63
-#: src/components/modals/MfaTotpEnableModal.tsx:91
+#: src/components/modals/MfaTotpEnableModal.tsx:94
 #: src/components/pages/report/ReportBreadcrumbs.tsx:48
 msgid "Code"
 msgstr "Kod"
@@ -5333,7 +5333,7 @@ msgid "Communication"
 msgstr "Komunikacja"
 
 #: src/components/modals/components/FeatureComparisonTable.tsx:49
-#: src/stores/QuickSwitcherStore.tsx:1354
+#: src/stores/QuickSwitcherStore.tsx:1352
 #: src/utils/quick_switcher/QuickSwitcherModalUtils.tsx:99
 msgid "Communities"
 msgstr "Społeczności"
@@ -5651,7 +5651,7 @@ msgid "Configure your profile badge"
 msgstr "Skonfiguruj swoją odznakę profilową"
 
 #: src/components/channel/MentionEveryonePopout.tsx:134
-#: src/components/modals/EmailChangeModal.tsx:304
+#: src/components/modals/EmailChangeModal.tsx:307
 msgid "Confirm"
 msgstr "Potwierdź"
 
@@ -5825,15 +5825,15 @@ msgstr "Menu kontekstowe"
 msgid "Context menus can be opened with left-click (on buttons) or right-click (on other elements). This demonstrates various menu items including checkboxes, radio buttons, sliders, and submenus."
 msgstr "Menu kontekstowe można otworzyć lewym przyciskiem myszy (na przyciskach) lub prawym (na innych elementach). Przykład pokazuje różne pozycje menu, w tym pola wyboru, przyciski radiowe, suwaki i podmenu."
 
-#: src/components/channel/ChannelTextarea.tsx:311
+#: src/components/channel/ChannelTextarea.tsx:309
 #: src/components/modals/AddConnectionModal.tsx:221
-#: src/components/modals/BackupCodesRegenerateModal.tsx:75
-#: src/components/modals/BackupCodesViewModal.tsx:73
+#: src/components/modals/BackupCodesRegenerateModal.tsx:82
+#: src/components/modals/BackupCodesViewModal.tsx:78
 #: src/components/modals/DeviceRevokeModal.tsx:82
-#: src/components/modals/FluxerTagChangeModal.tsx:116
-#: src/components/modals/FluxerTagChangeModal.tsx:283
+#: src/components/modals/FluxerTagChangeModal.tsx:121
+#: src/components/modals/FluxerTagChangeModal.tsx:297
 #: src/components/modals/MfaTotpDisableModal.tsx:78
-#: src/components/modals/MfaTotpEnableModal.tsx:106
+#: src/components/modals/MfaTotpEnableModal.tsx:109
 #: src/components/modals/SudoVerificationModal.tsx:410
 msgid "Continue"
 msgstr "Kontynuuj"
@@ -6555,7 +6555,7 @@ msgstr "Aktualne urządzenie"
 msgid "Current DM"
 msgstr "Aktualne DM"
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:113
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:116
 msgid "Current Password"
 msgstr "Aktualne hasło"
 
@@ -6601,7 +6601,7 @@ msgstr "Niestandardowe nadpisania CSS"
 msgid "Custom Date Range"
 msgstr "Niestandardowy zakres dat"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:227
+#: src/components/modals/FluxerTagChangeModal.tsx:241
 msgid "Custom discriminators are not available on this instance"
 msgstr "Niestandardowe dyskryminatory nie są dostępne w tej instancji"
 
@@ -6727,11 +6727,12 @@ msgstr "Dostosuj, które przyciski pojawiają się na załącznikach multimedial
 msgid "Customize which buttons are visible in the message input area. Keyboard shortcuts will continue to work even if buttons are hidden."
 msgstr "Dostosuj, które przyciski są widoczne w obszarze wprowadzania wiadomości. Skróty klawiaturowe będą nadal działać, nawet jeśli przyciski są ukryte."
 
-#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:74
-msgid "Customize your 4-digit tag (#{discriminator}) to your liking with Plutonium"
-msgstr "Dostosuj swój czterocyfrowy tag (#{discriminator}) tak, jak lubisz, dzięki Plutonium"
+#. placeholder {0}: user.discriminator
+#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:75
+msgid "Customize your 4-digit tag (#{0}) to your liking with Plutonium"
+msgstr "Dostosuj swój 4-cyfrowy tag (#{0}) według własnych upodobań z Plutonium"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:272
+#: src/components/modals/FluxerTagChangeModal.tsx:286
 msgid "Customize your 4-digit tag or keep it when changing your username"
 msgstr "Dostosuj czterocyfrowy tag lub zachowaj go przy zmianie nazwy użytkownika"
 
@@ -7069,7 +7070,7 @@ msgstr "usuń"
 #: src/components/emojis/EmojiListItem.tsx:195
 #: src/components/emojis/EmojiListItem.tsx:252
 #: src/components/emojis/EmojiListItem.tsx:308
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:322
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:325
 #: src/components/modals/tabs/component_gallery_tab/ButtonsTab.tsx:157
 #: src/components/modals/tabs/component_gallery_tab/ButtonsTab.tsx:242
 #: src/components/modals/tabs/component_gallery_tab/index.tsx:165
@@ -7515,7 +7516,7 @@ msgstr "Wiadomość bezpośrednia"
 #: src/components/layout/guild_list/FluxerButton.tsx:80
 #: src/components/modals/GuildPrivacySettingsModal.tsx:76
 #: src/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:221
-#: src/stores/QuickSwitcherStore.tsx:833
+#: src/stores/QuickSwitcherStore.tsx:831
 msgid "Direct Messages"
 msgstr "Wiadomości bezpośrednie"
 
@@ -7530,7 +7531,7 @@ msgstr "wyłącz"
 
 #: src/components/invites/DisableInvitesButton.tsx:60
 #: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:240
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:426
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:429
 msgid "Disable"
 msgstr "Wyłącz"
 
@@ -7558,7 +7559,7 @@ msgstr "Wyłącz animacje i przejścia w całej aplikacji."
 msgid "Disable animations and transitions. Currently controlled by your system setting."
 msgstr "Wyłącz animacje i przejścia. Obecnie kontrolowane przez ustawienie systemowe."
 
-#: src/stores/QuickSwitcherStore.tsx:915
+#: src/stores/QuickSwitcherStore.tsx:913
 msgid "Disable Compact Mode"
 msgstr "Wyłącz tryb kompaktowy"
 
@@ -7585,7 +7586,7 @@ msgstr "Wyłącz tłumienie szumów"
 msgid "Disable Picture-in-Picture Popout"
 msgstr "Wyłącz okno obrazu w obrazie"
 
-#: src/stores/QuickSwitcherStore.tsx:931
+#: src/stores/QuickSwitcherStore.tsx:929
 msgid "Disable Reduced Motion"
 msgstr "Wyłącz zmniejszony ruch"
 
@@ -7754,7 +7755,7 @@ msgstr "Dyskryminator"
 msgid "Discussion or promotion of illegal activities"
 msgstr "Dyskusja lub promowanie nielegalnej działalności"
 
-#: src/components/alerts/MaxBookmarksModal.tsx:76
+#: src/components/alerts/MaxBookmarksModal.tsx:79
 #: src/components/layout/GuildLayout.tsx:106
 #: src/components/layout/NagbarContent.tsx:42
 #: src/components/modals/GiftAcceptModal.tsx:110
@@ -7890,12 +7891,12 @@ msgstr "Czy chcesz również zablokować wiadomości bezpośrednie od członków
 msgid "Do you want to send this pin back in time?"
 msgstr "Chcesz wysłać ten przypięty post w przeszłość?"
 
-#: src/components/channel/MessageActionUtils.tsx:410
+#: src/components/channel/MessageActionUtils.tsx:411
 msgid "Do you want to send this pin back to the future?"
 msgstr "Chcesz wysłać ten przypięty post z powrotem do przyszłości?"
 
 #: src/components/modals/tabs/AccessibilityTab.tsx:148
-#: src/components/modals/tabs/MyProfileTab.tsx:768
+#: src/components/modals/tabs/MyProfileTab.tsx:767
 msgid "Doc, I'm from the future. I came here in a time machine that you invented. Now, I need your help to get back to the year 1985."
 msgstr "Doc, jestem z przyszłości. Przybyłem tu maszyną czasu, którą wynalazłeś. Teraz potrzebuję twojej pomocy, by wrócić do roku 1985."
 
@@ -8344,13 +8345,13 @@ msgid "Email"
 msgstr "E-mail"
 
 #: src/components/modals/tabs/account_security_tab/AccountTab.tsx:65
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:91
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:94
 #: src/components/modals/tabs/component_gallery_tab/InputsTab.tsx:107
 #: src/components/pages/report/ReportStepEmail.tsx:76
 msgid "Email Address"
 msgstr "Adres e-mail"
 
-#: src/components/modals/EmailChangeModal.tsx:165
+#: src/components/modals/EmailChangeModal.tsx:168
 msgid "Email changed"
 msgstr "E-mail zmieniony"
 
@@ -8388,7 +8389,7 @@ msgstr "Pasek przypominający o weryfikacji e-mail"
 msgid "Email Verification Required"
 msgstr "Wymagana weryfikacja emaila"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:57
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:59
 msgid "Email Verified Override"
 msgstr "Nadpisanie potwierdzenia e-maila"
 
@@ -8426,11 +8427,11 @@ msgstr "osadzenia"
 msgid "Embeds"
 msgstr "Osadzenia"
 
-#: src/components/channel/MessageActionUtils.tsx:520
+#: src/components/channel/MessageActionUtils.tsx:526
 msgid "Embeds suppressed"
 msgstr "Osadzenia zablokowane"
 
-#: src/components/channel/MessageActionUtils.tsx:506
+#: src/components/channel/MessageActionUtils.tsx:512
 msgid "Embeds unsuppressed"
 msgstr "Osadzenia odblokowane"
 
@@ -8485,7 +8486,7 @@ msgstr "Nazwy emoji muszą mieć co najmniej 2 znaki i mogą zawierać tylko zna
 msgid "Emoji pack"
 msgstr "Pakiet emoji"
 
-#: src/actions/InviteActionCreators.tsx:255
+#: src/actions/InviteActionCreators.tsx:259
 msgid "Emoji pack creation limit reached"
 msgstr "Osiągnięto limit tworzenia pakietów emoji"
 
@@ -8493,7 +8494,7 @@ msgstr "Osiągnięto limit tworzenia pakietów emoji"
 msgid "Emoji Pack Invite"
 msgstr "Zaproszenie do pakietu emoji"
 
-#: src/actions/InviteActionCreators.tsx:241
+#: src/actions/InviteActionCreators.tsx:245
 msgid "Emoji pack limit reached"
 msgstr "Osiągnięto limit pakietów emoji"
 
@@ -8530,9 +8531,9 @@ msgstr "pusty stan"
 
 #: src/components/invites/DisableInvitesButton.tsx:60
 #: src/components/layout/GuildLayout.tsx:74
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:244
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:432
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:438
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:247
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:435
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:441
 #: src/components/modals/tabs/components/InputMonitoringSection.tsx:85
 msgid "Enable"
 msgstr "Włącz"
@@ -8566,7 +8567,7 @@ msgstr "Włącz funkcję beta"
 msgid "Enable Browser Notifications"
 msgstr "Włącz powiadomienia przeglądarki"
 
-#: src/stores/QuickSwitcherStore.tsx:916
+#: src/stores/QuickSwitcherStore.tsx:914
 msgid "Enable Compact Mode"
 msgstr "Włącz tryb zwarty"
 
@@ -8642,7 +8643,7 @@ msgstr "Włącz push dla tego urządzenia"
 msgid "Enable push notifications for this installed PWA to keep receiving messages when the browser is backgrounded."
 msgstr "Włącz powiadomienia push dla tej zainstalowanej PWA, aby otrzymywać wiadomości, gdy przeglądarka jest w tle."
 
-#: src/stores/QuickSwitcherStore.tsx:932
+#: src/stores/QuickSwitcherStore.tsx:930
 msgid "Enable Reduced Motion"
 msgstr "Włącz ograniczone animacje"
 
@@ -8658,7 +8659,7 @@ msgstr "Włącz Shift, aby rozszerzyć"
 msgid "Enable SMS 2FA"
 msgstr "Włącz SMS 2FA"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:415
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:418
 msgid "Enable SMS codes as a backup for your authenticator app"
 msgstr "Włącz kody SMS jako kopię zapasową dla aplikacji uwierzytelniającej"
 
@@ -8678,7 +8679,7 @@ msgstr "Włącz uwierzytelnianie dwuskładnikowe"
 msgid "Enable two-factor authentication"
 msgstr "Włącz uwierzytelnianie dwuskładnikowe"
 
-#: src/components/modals/MfaTotpEnableModal.tsx:70
+#: src/components/modals/MfaTotpEnableModal.tsx:73
 msgid "Enable two-factor authentication form"
 msgstr "Włącz formularz dwuskładnikowego uwierzytelniania"
 
@@ -8782,7 +8783,7 @@ msgid "Enter the 6-digit code from your authenticator app or one of your backup 
 msgstr "Wprowadź 6-cyfrowy kod z aplikacji uwierzytelniającej lub jeden z kodów zapasowych."
 
 #: src/components/modals/MfaTotpDisableModal.tsx:67
-#: src/components/modals/MfaTotpEnableModal.tsx:95
+#: src/components/modals/MfaTotpEnableModal.tsx:98
 msgid "Enter the 6-digit code from your authenticator app."
 msgstr "Wprowadź 6-cyfrowy kod z aplikacji uwierzytelniającej."
 
@@ -8804,7 +8805,7 @@ msgstr "Wprowadź kod, zanim przejdziesz dalej."
 msgid "Enter the code from your authenticator app."
 msgstr "Wprowadź kod z aplikacji uwierzytelniającej."
 
-#: src/components/modals/EmailChangeModal.tsx:213
+#: src/components/modals/EmailChangeModal.tsx:216
 msgid "Enter the code sent to your current email."
 msgstr "Wprowadź kod wysłany na aktualny adres e-mail."
 
@@ -8812,7 +8813,7 @@ msgstr "Wprowadź kod wysłany na aktualny adres e-mail."
 msgid "Enter the code sent to your email address."
 msgstr "Wprowadź kod wysłany na Twój adres e-mail."
 
-#: src/components/modals/EmailChangeModal.tsx:281
+#: src/components/modals/EmailChangeModal.tsx:284
 msgid "Enter the code we emailed to your new address."
 msgstr "Wprowadź kod wysłany na nowy adres e-mail."
 
@@ -8824,7 +8825,7 @@ msgstr "Wprowadź kod wysłany na twój e-mail, aby go zweryfikować. Hasło zos
 msgid "Enter the invite link to join a community."
 msgstr "Wprowadź link zaproszenia, aby dołączyć do społeczności."
 
-#: src/components/modals/EmailChangeModal.tsx:247
+#: src/components/modals/EmailChangeModal.tsx:250
 msgid "Enter the new email you want to use. We'll send a code there next."
 msgstr "Wprowadź nowy adres e-mail, którego chcesz użyć. Wyślemy tam kod."
 
@@ -9313,11 +9314,11 @@ msgstr "Nie udało się zignorować zaproszenia do znajomych. Spróbuj ponownie.
 msgid "Failed to initiate connection"
 msgstr "Nie udało się zainicjować połączenia"
 
-#: src/actions/InviteActionCreators.tsx:322
+#: src/actions/InviteActionCreators.tsx:326
 msgid "Failed to install this emoji pack. Please try again later."
 msgstr "Nie udało się zainstalować tego pakietu emoji. Spróbuj później."
 
-#: src/actions/InviteActionCreators.tsx:323
+#: src/actions/InviteActionCreators.tsx:327
 msgid "Failed to install this sticker pack. Please try again later."
 msgstr "Nie udało się zainstalować tego pakietu naklejek. Spróbuj później."
 
@@ -9715,9 +9716,9 @@ msgstr "ulubione"
 #: src/components/modals/tabs/AppearanceTab.tsx:116
 #: src/components/modals/utils/SettingsConstants.tsx:279
 #: src/components/modals/utils/SettingsSectionRegistry.tsx:233
-#: src/stores/QuickSwitcherStore.tsx:843
-#: src/stores/QuickSwitcherStore.tsx:1261
-#: src/stores/QuickSwitcherStore.tsx:1273
+#: src/stores/QuickSwitcherStore.tsx:841
+#: src/stores/QuickSwitcherStore.tsx:1259
+#: src/stores/QuickSwitcherStore.tsx:1271
 msgid "Favorites"
 msgstr "Ulubione"
 
@@ -9872,11 +9873,11 @@ msgstr "Symbol aplikacji Fluxer"
 msgid "Fluxer avoids sending push notifications to your mobile devices when you are at your computer. Use this setting to control how long you need to be inactive on desktop for before you receive push notifications, ranging from 1 minute to 10 minutes."
 msgstr "Fluxer unika wysyłania powiadomień push na urządzenia mobilne, gdy jesteś przy komputerze. Ustaw tutaj, jak długo musisz być nieaktywny na komputerze, zanim otrzymasz powiadomienia push — od 1 do 10 minut."
 
-#: src/components/popouts/UserProfileBadges.tsx:89
+#: src/components/popouts/UserProfileBadges.tsx:115
 msgid "Fluxer Bug Hunter"
 msgstr "Łowca błędów Fluxer"
 
-#: src/components/popouts/UserProfileBadges.tsx:71
+#: src/components/popouts/UserProfileBadges.tsx:95
 msgid "Fluxer Community Team"
 msgstr "Zespół społeczności Fluxer"
 
@@ -9944,18 +9945,18 @@ msgstr "Fluxer potrzebuje uprawnienia do monitorowania wejścia, by przycisk pus
 msgid "Fluxer needs permission to monitor keyboard and mouse input so that <0>Push-to-Talk</0> and <1>Global Shortcuts</1> work even when you're in another app or game."
 msgstr "Fluxer potrzebuje uprawnienia do monitorowania klawiatury i myszy, żeby <0>Push-to-Talk</0> i <1>Globalne skróty</1> działały nawet, gdy jesteś w innej aplikacji lub grze."
 
-#: src/components/popouts/UserProfileBadges.tsx:80
+#: src/components/popouts/UserProfileBadges.tsx:105
 msgid "Fluxer Partner"
 msgstr "Partner Fluxer"
 
 #: src/components/modals/components/PlutoniumContent.tsx:165
 #: src/components/modals/PremiumModal.tsx:34
 #: src/components/modals/utils/SettingsConstants.tsx:124
-#: src/components/popouts/UserProfileBadges.tsx:95
+#: src/components/popouts/UserProfileBadges.tsx:121
 msgid "Fluxer Plutonium"
 msgstr "Fluxer Plutonium"
 
-#: src/components/popouts/UserProfileBadges.tsx:62
+#: src/components/popouts/UserProfileBadges.tsx:85
 msgid "Fluxer Staff"
 msgstr "Zespół Fluxer"
 
@@ -9963,16 +9964,16 @@ msgstr "Zespół Fluxer"
 msgid "Fluxer uses push notifications when installed as a mobile PWA. Registering ensures the gateway can reach your device even when the browser is backgrounded."
 msgstr "Fluxer korzysta z powiadomień push, gdy jest zainstalowany jako mobilne PWA. Rejestracja zapewnia, że bramka dotrze do urządzenia nawet, gdy przeglądarka działa w tle."
 
-#: src/components/modals/FluxerTagChangeModal.tsx:176
+#: src/components/modals/FluxerTagChangeModal.tsx:190
 #: src/components/modals/tabs/applications_tab/application_detail/BotProfileSection.tsx:103
 msgid "FluxerTag"
 msgstr "FluxerTag"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:102
+#: src/components/modals/FluxerTagChangeModal.tsx:107
 msgid "FluxerTag already taken"
 msgstr "FluxerTag już zajęty"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:144
+#: src/components/modals/FluxerTagChangeModal.tsx:149
 msgid "FluxerTag updated"
 msgstr "FluxerTag zaktualizowany"
 
@@ -10208,7 +10209,7 @@ msgstr "Przewiń do przodu"
 msgid "Forward {DEFAULT_SEEK_AMOUNT} seconds"
 msgstr "Przewiń o {DEFAULT_SEEK_AMOUNT} sekund"
 
-#: src/components/modals/ForwardModal.tsx:198
+#: src/components/modals/ForwardModal.tsx:203
 #: src/stores/KeybindStore.tsx:361
 msgid "Forward Message"
 msgstr "Przekaż wiadomość"
@@ -10490,7 +10491,7 @@ msgstr "Otrzymuj powiadomienia o nowych wiadomościach. Może być konieczne wł
 
 #: src/components/alerts/FileSizeTooLargeModal.tsx:84
 #: src/components/modals/BackgroundImageGalleryModal.tsx:678
-#: src/components/modals/FluxerTagChangeModal.tsx:221
+#: src/components/modals/FluxerTagChangeModal.tsx:235
 #: src/components/modals/tabs/components/EntranceSoundSection.tsx:67
 #: src/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:138
 #: src/components/modals/tabs/VideoTab.tsx:281
@@ -10503,11 +10504,11 @@ msgstr "Zdobądź Plutonium"
 msgid "Get Plutonium for yourself and unlock higher limits and exclusive features."
 msgstr "Kup Plutonium i odblokuj wyższe limity oraz ekskluzywne funkcje."
 
-#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:81
+#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:82
 msgid "Get Plutonium to customize your tag"
 msgstr "Zdobądź Plutonium, aby spersonalizować swój tag"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:199
+#: src/components/modals/FluxerTagChangeModal.tsx:213
 msgid "Get Plutonium to customize your tag or keep it when changing your username"
 msgstr "Zdobądź Plutonium, aby spersonalizować tag lub zachować go przy zmianie nazwy użytkownika"
 
@@ -10725,7 +10726,7 @@ msgstr "Przejdź do strony głównej"
 msgid "Go to login"
 msgstr "Przejdź do logowania"
 
-#: src/stores/QuickSwitcherStore.tsx:528
+#: src/stores/QuickSwitcherStore.tsx:526
 msgid "Go to message"
 msgstr "Przejdź do wiadomości"
 
@@ -10866,12 +10867,12 @@ msgstr "Ikona grupy"
 msgid "Group Invites"
 msgstr "Zaproszenia grupowe"
 
-#: src/stores/QuickSwitcherStore.tsx:667
+#: src/stores/QuickSwitcherStore.tsx:665
 #: src/utils/modals/guild_tabs/GuildAuditLogTabUtils.tsx:235
 msgid "Group message"
 msgstr "Wiadomość grupowa"
 
-#: src/stores/QuickSwitcherStore.tsx:1347
+#: src/stores/QuickSwitcherStore.tsx:1345
 msgid "Group messages"
 msgstr "Wiadomości grupowe"
 
@@ -10963,7 +10964,7 @@ msgstr "Przyspieszenie sprzętowe"
 msgid "Has"
 msgstr "Ma"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:126
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:128
 msgid "Has ever purchased override"
 msgstr "Kiedykolwiek zakupiono nadpisanie"
 
@@ -11277,7 +11278,7 @@ msgid "Hold to temporarily unmute when push-to-talk is enabled"
 msgstr "Przytrzymaj, by tymczasowo włączyć dźwięk, gdy push-to-talk jest aktywny"
 
 #: src/components/layout/MobileBottomNav.tsx:93
-#: src/stores/QuickSwitcherStore.tsx:832
+#: src/stores/QuickSwitcherStore.tsx:830
 msgid "Home"
 msgstr "Start"
 
@@ -11619,7 +11620,7 @@ msgstr "Nieodpowiedni profil"
 msgid "Inbox"
 msgstr "Skrzynka odbiorcza"
 
-#: src/components/popouts/InboxPopout.tsx:89
+#: src/components/popouts/InboxPopout.tsx:88
 msgid "Inbox tabs"
 msgstr "Zakładki skrzynki odbiorczej"
 
@@ -11883,8 +11884,8 @@ msgstr "Nieprawidłowy kod podarunkowy"
 msgid "Invalid instance URL. Try something like \"example.com\" or \"https://example.com\"."
 msgstr "Nieprawidłowy adres URL instancji. Spróbuj czegoś takiego jak \"example.com\" lub \"https://example.com\"."
 
-#: src/components/modals/EmailChangeModal.tsx:107
-#: src/components/modals/EmailChangeModal.tsx:168
+#: src/components/modals/EmailChangeModal.tsx:110
+#: src/components/modals/EmailChangeModal.tsx:171
 #: src/components/modals/PasswordChangeModal.tsx:90
 msgid "Invalid or expired code"
 msgstr "Nieprawidłowy lub wygasły kod"
@@ -12569,11 +12570,11 @@ msgid "Last active {0}"
 msgstr "Ostatnio aktywny {0}"
 
 #. placeholder {0}: DateUtils.getRelativeDateString(user.passwordLastChangedAt, i18n)
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:117
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:120
 msgid "Last changed: {0}"
 msgstr "Ostatnia zmiana: {0}"
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:119
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:122
 msgid "Last changed: Never"
 msgstr "Ostatnia zmiana: nigdy"
 
@@ -12633,6 +12634,10 @@ msgstr "Opuszczam rozmowę"
 #: src/hooks/useLeaveGuild.tsx:44
 msgid "Leave Community"
 msgstr "Opuść społeczność"
+
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:142
+msgid "Leave empty for actual value"
+msgstr "Zostaw puste dla rzeczywistej wartości"
 
 #: src/components/bottomsheets/ChannelDetailsBottomSheet.tsx:1317
 #: src/components/channel/direct_message/DMList.tsx:569
@@ -12713,7 +12718,7 @@ msgid "Letters (a-z, A-Z), numbers (0-9), and underscores (_) only"
 msgstr "Tylko litery (a-z, A-Z), liczby (0-9) i podkreślenia (_)"
 
 #: src/components/modals/components/plutonium/SubscriptionCard.tsx:131
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:50
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:52
 #: src/components/modals/tabs/developer_options_tab/MockingTab.tsx:317
 msgid "Lifetime"
 msgstr "Dożywotnio"
@@ -13217,7 +13222,7 @@ msgstr "Zarządzaj e-mailem, hasłem i ustawieniami konta"
 msgid "Manage your gifts"
 msgstr "Zarządzaj swoimi prezentami"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:337
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:340
 msgid "Manage your phone number for SMS two-factor authentication"
 msgstr "Zarządzaj numerem telefonu do SMS-owej dwuskładnikowej autoryzacji"
 
@@ -13342,12 +13347,12 @@ msgstr "Oznaczono członka jako tymczasowego."
 msgid "Markers Below Slider"
 msgstr "Markery poniżej suwaka"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:188
+#: src/components/modals/FluxerTagChangeModal.tsx:202
 msgid "Marty_McFly"
 msgstr "Marty_McFly"
 
 #: src/components/modals/ClaimAccountModal.tsx:157
-#: src/components/modals/EmailChangeModal.tsx:258
+#: src/components/modals/EmailChangeModal.tsx:261
 msgid "marty@example.com"
 msgstr "marty@example.com"
 
@@ -13652,7 +13657,7 @@ msgstr "wzmianki"
 
 #: src/components/modals/GuildNotificationSettingsModal.tsx:227
 #: src/components/pages/NotificationsPage.tsx:42
-#: src/components/popouts/InboxPopout.tsx:63
+#: src/components/popouts/InboxPopout.tsx:62
 msgid "Mentions"
 msgstr "Wzmianki"
 
@@ -13687,15 +13692,15 @@ msgstr "menu"
 msgid "Message"
 msgstr "Wiadomość"
 
-#: src/components/channel/ChannelTextarea.tsx:754
+#: src/components/channel/ChannelTextarea.tsx:752
 msgid "Message "
 msgstr "Wiadomość "
 
-#: src/components/channel/ChannelTextarea.tsx:754
+#: src/components/channel/ChannelTextarea.tsx:752
 msgid "Message @"
 msgstr "Wiadomość @"
 
-#: src/components/channel/ChannelTextarea.tsx:751
+#: src/components/channel/ChannelTextarea.tsx:749
 msgid "Message #"
 msgstr "Wiadomość #"
 
@@ -13746,7 +13751,7 @@ msgstr "Tryb wyświetlania wiadomości"
 msgid "Message display settings are only available on desktop."
 msgstr "Ustawienia wyświetlania wiadomości są dostępne tylko na komputerze."
 
-#: src/components/modals/ForwardModal.tsx:148
+#: src/components/modals/ForwardModal.tsx:153
 msgid "Message forwarded"
 msgstr "Wiadomość przekazana dalej"
 
@@ -13772,7 +13777,7 @@ msgstr "Próg historii wiadomości zaktualizowany"
 msgid "Message Input Buttons"
 msgstr "Przyciski wprowadzania wiadomości"
 
-#: src/components/modals/ForwardModal.tsx:84
+#: src/components/modals/ForwardModal.tsx:89
 #: src/components/uikit/character_counter/CharacterCounter.tsx:52
 msgid "Message is too long"
 msgstr "Wiadomość jest za długa"
@@ -14073,7 +14078,7 @@ msgstr "Więcej miejsc na emoji"
 #: src/components/channel/embeds/attachments/TextualAttachmentPreviewFooter.tsx:66
 #: src/components/modals/guild_tabs/UserListItem.tsx:113
 #: src/components/modals/MediaModal.tsx:353
-#: src/components/modals/MobileVideoViewer.tsx:260
+#: src/components/modals/MobileVideoViewer.tsx:268
 msgid "More options"
 msgstr "Więcej opcji"
 
@@ -14205,7 +14210,7 @@ msgstr "wycisz"
 #: src/components/media_player/components/MediaVerticalVolumeControl.tsx:249
 #: src/components/media_player/components/MediaVolumeControl.tsx:208
 #: src/components/modals/GuildNotificationSettingsModal.tsx:229
-#: src/components/modals/MobileVideoViewer.tsx:272
+#: src/components/modals/MobileVideoViewer.tsx:280
 #: src/components/uikit/context_menu/items/VoiceParticipantMenuData.tsx:319
 #: src/components/uikit/context_menu/items/VoiceParticipantMenuData.tsx:506
 #: src/components/uikit/context_menu/items/VoiceParticipantMenuItems.tsx:92
@@ -14572,12 +14577,12 @@ msgstr "Nowe społeczności, do których dołączysz, będą miały automatyczni
 msgid "New communities you join will no longer have muted channels hidden automatically. Would you also like to show muted channels in all your existing communities?"
 msgstr "Nowe społeczności, do których dołączysz, nie będą miały już automatycznie ukrytych wyciszonych kanałów. Czy chcesz również pokazać wyciszone kanały we wszystkich swoich istniejących społecznościach?"
 
-#: src/components/modals/EmailChangeModal.tsx:255
+#: src/components/modals/EmailChangeModal.tsx:258
 #: src/components/modals/RequiredActionModal.tsx:471
 msgid "New Email"
 msgstr "Nowy e-mail"
 
-#: src/components/modals/EmailChangeModal.tsx:243
+#: src/components/modals/EmailChangeModal.tsx:246
 msgid "New email form"
 msgstr "Formularz nowego e-maila"
 
@@ -14732,7 +14737,7 @@ msgid "No cameras detected"
 msgstr "Nie wykryto kamer"
 
 #: src/components/invites/InviteListItem.tsx:179
-#: src/components/modals/ForwardModal.tsx:246
+#: src/components/modals/ForwardModal.tsx:251
 #: src/components/modals/GuildNotificationSettingsModal.tsx:258
 msgid "No Category"
 msgstr "Brak kategorii"
@@ -14745,7 +14750,7 @@ msgstr "Brak zmian do zapisania"
 msgid "No channels available"
 msgstr "Brak dostępnych kanałów"
 
-#: src/components/modals/ForwardModal.tsx:216
+#: src/components/modals/ForwardModal.tsx:221
 msgid "No channels found"
 msgstr "Nie znaleziono kanałów"
 
@@ -14769,7 +14774,7 @@ msgstr "Brak połączeń"
 msgid "No description provided."
 msgstr "Brak opisu."
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:94
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:97
 msgid "No email address set"
 msgstr "Brak ustawionego adresu e-mail"
 
@@ -14879,11 +14884,11 @@ msgstr "Nie znaleziono wspólnych znajomych."
 msgid "No mutual groups found."
 msgstr "Nie znaleziono wspólnych grup."
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:283
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:286
 msgid "No passkeys registered"
 msgstr "Brak zarejestrowanych kluczy dostępu"
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:134
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:137
 msgid "No password set"
 msgstr "Nie ustawiono hasła"
 
@@ -15066,7 +15071,7 @@ msgstr "Nieanimowane emoji ({0})"
 
 #: src/components/modals/guild_tabs/GuildModerationTab.tsx:157
 #: src/components/modals/tabs/accessibility_tab/VisualTab.tsx:48
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:48
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:50
 msgid "None"
 msgstr "Brak"
 
@@ -15574,7 +15579,7 @@ msgstr "Otwórz w nowej karcie"
 msgid "Open Link"
 msgstr "Otwórz link"
 
-#: src/components/channel/ChannelTextarea.tsx:953
+#: src/components/channel/ChannelTextarea.tsx:951
 #: src/components/channel/textarea/MobileTextareaLayout.tsx:112
 msgid "Open menu"
 msgstr "Otwórz menu"
@@ -15828,7 +15833,7 @@ msgstr "Override"
 msgid "Override {0}"
 msgstr "Override {0}"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:59
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:61
 msgid "Override email verification status"
 msgstr "Nadpisz status weryfikacji e-mail"
 
@@ -15836,15 +15841,15 @@ msgstr "Nadpisz status weryfikacji e-mail"
 msgid "Override instance limits locally for testing. Changes only affect your client."
 msgstr "Override instance limits locally for testing. Changes only affect your client."
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:109
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:111
 msgid "Override Premium Type"
 msgstr "Nadpisz typ Premium"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:67
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:69
 msgid "Override unclaimed account status"
 msgstr "Nadpisz status nieodebranego konta"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:75
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:77
 msgid "Override unread gift inventory status"
 msgstr "Nadpisz status nieprzeczytanego prezentu"
 
@@ -15925,7 +15930,7 @@ msgstr "Społeczność partnerska"
 msgid "Passkey Name"
 msgstr "Nazwa klucza dostępu"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:273
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:276
 msgid "Passkeys"
 msgstr "Klucze dostępu"
 
@@ -15949,8 +15954,8 @@ msgstr "hasło"
 #: src/components/modals/ClaimAccountModal.tsx:207
 #: src/components/modals/SudoVerificationModal.tsx:174
 #: src/components/modals/SudoVerificationModal.tsx:239
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:105
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:131
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:108
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:134
 #: src/components/modals/tabs/component_gallery_tab/InputsTab.tsx:114
 #: src/components/modals/utils/SettingsSearchIndex.tsx:107
 msgid "Password"
@@ -16006,7 +16011,7 @@ msgstr "Wklej tam, skąd przyszedłeś, by dokończyć logowanie."
 #: src/components/media_player/components/InlineAudioPlayer.tsx:201
 #: src/components/media_player/components/InlineAudioPlayer.tsx:296
 #: src/components/media_player/components/MediaPlayButton.tsx:70
-#: src/components/modals/MobileVideoViewer.tsx:286
+#: src/components/modals/MobileVideoViewer.tsx:294
 msgid "Pause"
 msgstr "Wstrzymaj"
 
@@ -16040,7 +16045,7 @@ msgid "Pending deletion canceled"
 msgstr "Usuwanie anulowane"
 
 #: src/lib/UnicodeEmojis.tsx:234
-#: src/stores/QuickSwitcherStore.tsx:1345
+#: src/stores/QuickSwitcherStore.tsx:1343
 #: src/utils/quick_switcher/QuickSwitcherModalUtils.tsx:96
 msgid "People"
 msgstr "Osoby"
@@ -16143,8 +16148,8 @@ msgstr "Telefon"
 
 #: src/components/modals/PhoneAddModal.tsx:192
 #: src/components/modals/RequiredActionModal.tsx:616
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:336
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:342
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:339
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:345
 #: src/components/modals/utils/SettingsSearchIndex.tsx:115
 msgid "Phone Number"
 msgstr "Numer telefonu"
@@ -16154,7 +16159,7 @@ msgid "Phone number added"
 msgstr "Numer telefonu dodany"
 
 #. placeholder {0}: user.phone
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:346
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:349
 msgid "Phone number added: {0}"
 msgstr "Dodano numer telefonu: {0}"
 
@@ -16221,11 +16226,11 @@ msgstr "Przypnij wiadomość prywatną"
 msgid "Pin Group DM"
 msgstr "Przypnij grupową wiadomość prywatną"
 
-#: src/components/channel/MessageActionUtils.tsx:429
+#: src/components/channel/MessageActionUtils.tsx:430
 msgid "Pin it real good"
 msgstr "Przypnij to porządnie"
 
-#: src/components/channel/MessageActionUtils.tsx:426
+#: src/components/channel/MessageActionUtils.tsx:427
 msgid "Pin it. Pin it good."
 msgstr "Przypnij to. Przyzwoicie przypnij."
 
@@ -16246,7 +16251,7 @@ msgstr "Przypnij wiadomości"
 msgid "Pin or unpin the focused message"
 msgstr "Przypnij lub odpinij wybraną wiadomość"
 
-#: src/components/channel/MessageActionUtils.tsx:427
+#: src/components/channel/MessageActionUtils.tsx:428
 msgid "Pin this message to the channel for all to see. Unless ... you're chicken."
 msgstr "Przypnij tę wiadomość do kanału, niech wszyscy ją widzą. Chyba że... boisz się."
 
@@ -16319,7 +16324,7 @@ msgstr "Administrator platformy"
 #: src/components/media_player/components/InlineAudioPlayer.tsx:201
 #: src/components/media_player/components/InlineAudioPlayer.tsx:296
 #: src/components/media_player/components/MediaPlayButton.tsx:70
-#: src/components/modals/MobileVideoViewer.tsx:286
+#: src/components/modals/MobileVideoViewer.tsx:294
 #: src/components/modals/tabs/component_gallery_tab/ButtonsTab.tsx:215
 msgid "Play"
 msgstr "Odtwórz"
@@ -16416,7 +16421,7 @@ msgstr "Spróbuj ponownie później."
 msgid "Please update Fluxer to view this message."
 msgstr "Zaktualizuj Fluxer, aby zobaczyć tę wiadomość."
 
-#: src/actions/InviteActionCreators.tsx:180
+#: src/actions/InviteActionCreators.tsx:184
 msgid "Please verify your account by setting an email and password before joining communities."
 msgstr "Zweryfikuj konto, ustawiając e-mail i hasło przed dołączeniem do społeczności."
 
@@ -16526,11 +16531,11 @@ msgstr "Korzyści Premium"
 msgid "Premium state reset on the backend."
 msgstr "Stan premium zresetowany w backendzie."
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:135
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:155
 msgid "Premium Subscription Scenarios"
 msgstr "Scenariusze subskrypcji Premium"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:107
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:109
 msgid "Premium Type Override"
 msgstr "Nadpisanie typu Premium"
 
@@ -16928,7 +16933,7 @@ msgstr "Python"
 msgid "quick access"
 msgstr "szybki dostęp"
 
-#: src/stores/QuickSwitcherStore.tsx:1358
+#: src/stores/QuickSwitcherStore.tsx:1356
 #: src/utils/quick_switcher/QuickSwitcherModalUtils.tsx:100
 msgid "Quick Actions"
 msgstr "Szybkie akcje"
@@ -17071,7 +17076,7 @@ msgstr "Odbierz"
 msgid "Receive notifications when someone mentions you"
 msgstr "Otrzymuj powiadomienia, gdy ktoś Cię wspomni"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:404
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:407
 msgid "Receive verification codes via SMS as a backup authentication method"
 msgstr "Odbieraj kody weryfikacyjne przez SMS jako zapasową metodę uwierzytelniania"
 
@@ -17198,7 +17203,7 @@ msgstr "Odśwież subskrypcję push"
 msgid "Regenerate"
 msgstr "Wygeneruj ponownie"
 
-#: src/components/modals/BackupCodesRegenerateModal.tsx:61
+#: src/components/modals/BackupCodesRegenerateModal.tsx:68
 msgid "Regenerate Backup Codes"
 msgstr "Regeneruj kody zapasowe"
 
@@ -17228,7 +17233,7 @@ msgstr "Regeneracja unieważni bieżący token. Zaktualizuj każdy kod korzystaj
 msgid "Register"
 msgstr "Zarejestruj"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:279
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:282
 msgid "Registered Passkeys"
 msgstr "Zarejestrowane klucze"
 
@@ -17298,7 +17303,7 @@ msgstr "usuń"
 #: src/components/modals/guild_tabs/guild_overview_tab/fields/GuildEmbedSplashUploadField.tsx:101
 #: src/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx:107
 #: src/components/modals/guild_tabs/guild_overview_tab/fields/GuildInviteSplashUploadField.tsx:113
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:391
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:394
 #: src/components/modals/tabs/ExpressionPacksTab.tsx:96
 #: src/components/modals/tabs/ExpressionPacksTab.tsx:226
 #: src/components/modals/tabs/LinkedAccountsTab.tsx:191
@@ -17472,11 +17477,11 @@ msgstr "Usuń nadpisanie"
 msgid "Remove Pack"
 msgstr "Usuń pakiet"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:377
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:380
 msgid "Remove Phone"
 msgstr "Usuń telefon"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:360
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:363
 msgid "Remove Phone Number"
 msgstr "Usuń numer telefonu"
 
@@ -17557,7 +17562,7 @@ msgstr "Usunięto zezwolenie dla {0}."
 msgid "Removed deny for {0}."
 msgstr "Usunięto odmowę dla {0}."
 
-#: src/actions/SavedMessageActionCreators.tsx:80
+#: src/actions/SavedMessageActionCreators.tsx:85
 msgid "Removed from bookmarks"
 msgstr "Usunięto z zakładek"
 
@@ -17631,7 +17636,7 @@ msgstr "Usunięcie paczki odinstaluje ją z Twojego konta."
 msgid "Removing the timeout will allow <0>{0}</0> to send messages, react, and join voice channels again."
 msgstr "Usunięcie timeoutu pozwoli <0>{0}</0> ponownie wysyłać wiadomości, reagować i dołączać do kanałów głosowych."
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:319
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:322
 msgid "Rename"
 msgstr "Zmień nazwę"
 
@@ -17866,22 +17871,22 @@ msgstr "Wymaga wszystkiego z poziomu Średniego oraz członkostwa na serwerze pr
 msgid "Requires Plutonium"
 msgstr "Wymaga Plutonium"
 
-#: src/components/channel/ChannelTextarea.tsx:1032
+#: src/components/channel/ChannelTextarea.tsx:1030
 msgid "Reschedule Message"
 msgstr "Zaplanuj wiadomość ponownie"
 
 #: src/components/modals/ClaimAccountModal.tsx:222
-#: src/components/modals/EmailChangeModal.tsx:233
-#: src/components/modals/EmailChangeModal.tsx:301
+#: src/components/modals/EmailChangeModal.tsx:236
+#: src/components/modals/EmailChangeModal.tsx:304
 #: src/components/modals/PasswordChangeModal.tsx:179
 msgid "Resend"
 msgstr "Wyślij ponownie"
 
-#: src/components/modals/EmailChangeModal.tsx:301
+#: src/components/modals/EmailChangeModal.tsx:304
 msgid "Resend ({newSecondsRemaining}s)"
 msgstr "Wyślij ponownie ({newSecondsRemaining}s)"
 
-#: src/components/modals/EmailChangeModal.tsx:233
+#: src/components/modals/EmailChangeModal.tsx:236
 msgid "Resend ({originalSecondsRemaining}s)"
 msgstr "Wyślij ponownie ({originalSecondsRemaining}s)"
 
@@ -18425,7 +18430,7 @@ msgstr "zapisuje"
 msgid "scale"
 msgstr "skala"
 
-#: src/components/modals/MfaTotpEnableModal.tsx:78
+#: src/components/modals/MfaTotpEnableModal.tsx:81
 msgid "Scan the QR code with your authenticator app to generate codes for two-factor authentication."
 msgstr "Zeskanuj kod QR za pomocą aplikacji uwierzytelniającej, aby wygenerować kody do dwuetapowej weryfikacji."
 
@@ -18437,7 +18442,7 @@ msgstr "Zaplanuj"
 msgid "Schedule Message"
 msgstr "Zaplanuj wiadomość"
 
-#: src/components/popouts/InboxPopout.tsx:70
+#: src/components/popouts/InboxPopout.tsx:69
 #: src/components/popouts/ScheduledMessagesContent.tsx:89
 msgid "Scheduled"
 msgstr "Zaplanowano"
@@ -18562,7 +18567,7 @@ msgstr "Szukaj według nazwy użytkownika lub ID"
 msgid "Search channels"
 msgstr "Szukaj kanałów"
 
-#: src/components/modals/ForwardModal.tsx:204
+#: src/components/modals/ForwardModal.tsx:209
 msgid "Search channels or DMs"
 msgstr "Szukaj kanałów lub wiadomości prywatnych"
 
@@ -18963,7 +18968,7 @@ msgid "Send"
 msgstr "Wyślij"
 
 #. placeholder {0}: selectedChannelIds.size
-#: src/components/modals/ForwardModal.tsx:380
+#: src/components/modals/ForwardModal.tsx:385
 msgid "Send ({0}/5)"
 msgstr "Wyślij ({0}/5)"
 
@@ -19000,7 +19005,7 @@ msgid "Send an SMS code first."
 msgstr "Najpierw wyślij kod SMS."
 
 #: src/components/modals/ClaimAccountModal.tsx:180
-#: src/components/modals/EmailChangeModal.tsx:270
+#: src/components/modals/EmailChangeModal.tsx:273
 #: src/components/modals/PhoneAddModal.tsx:208
 msgid "Send code"
 msgstr "Wyślij kod"
@@ -19195,7 +19200,7 @@ msgstr "Ustaw pseudonim na {0}."
 msgid "Set NSFW level to {0}."
 msgstr "Ustaw poziom NSFW na {0}."
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:138
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:141
 msgid "Set Password"
 msgstr "Ustaw hasło"
 
@@ -19261,7 +19266,7 @@ msgstr "Ustaw typ kanału na {0}."
 msgid "Set the invite splash alignment to {0}."
 msgstr "Ustaw wyrównanie splash zaproszenia na {0}."
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:88
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:90
 msgid "Set the number of unread gifts in inventory."
 msgstr "Ustaw liczbę nieprzeczytanych prezentów w ekwipunku."
 
@@ -19341,7 +19346,7 @@ msgstr "Ustaw swoją strefę czasową"
 #: src/components/modals/tabs/component_gallery_tab/ButtonsTab.tsx:221
 #: src/components/modals/tabs/component_gallery_tab/index.tsx:95
 #: src/components/modals/tabs/component_gallery_tab/Inline.tsx:90
-#: src/stores/QuickSwitcherStore.tsx:1356
+#: src/stores/QuickSwitcherStore.tsx:1354
 msgid "Settings"
 msgstr "Ustawienia"
 
@@ -19357,7 +19362,7 @@ msgstr "Sekcje ustawień"
 msgid "Settings!"
 msgstr "Ustawienia!"
 
-#: src/components/modals/MfaTotpEnableModal.tsx:71
+#: src/components/modals/MfaTotpEnableModal.tsx:74
 msgid "Setup Authenticator App"
 msgstr "Skonfiguruj aplikację Authenticator"
 
@@ -19837,7 +19842,7 @@ msgstr "Ciche połączenia od wszystkich"
 msgid "simulate"
 msgstr "symuluj"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:128
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:130
 msgid "Simulates having a Stripe customer ID (for testing purchase history access)"
 msgstr "Symuluje posiadanie identyfikatora klienta Stripe (do testowania dostępu do historii zakupów)"
 
@@ -19985,11 +19990,11 @@ msgstr "Mniejszy rozmiar mediów"
 msgid "sms"
 msgstr "sms"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:409
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:412
 msgid "SMS Backup"
 msgstr "Kopia zapasowa SMS"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:429
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:432
 msgid "SMS backup is disabled for partners"
 msgstr "Kopia zapasowa SMS jest wyłączona dla partnerów"
 
@@ -20002,7 +20007,7 @@ msgstr "Kod SMS"
 msgid "SMS Code"
 msgstr "Kod SMS"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:403
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:406
 msgid "SMS Two-Factor Authentication"
 msgstr "Uwierzytelnianie dwuskładnikowe SMS"
 
@@ -20010,7 +20015,7 @@ msgstr "Uwierzytelnianie dwuskładnikowe SMS"
 msgid "SMS two-factor authentication adds an additional layer of security to your account by requiring a verification code sent to your phone number when signing in."
 msgstr "Uwierzytelnianie dwuskładnikowe SMS dodaje dodatkową warstwę bezpieczeństwa do twojego konta, wymagając kodu weryfikacyjnego wysłanego na twój numer telefonu podczas logowania."
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:413
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:416
 msgid "SMS two-factor authentication is enabled"
 msgstr "Uwierzytelnianie dwuskładnikowe SMS jest włączone"
 
@@ -20334,7 +20339,7 @@ msgstr "Gwiazda"
 msgid "starred"
 msgstr "oznaczone gwiazdką"
 
-#: src/components/modals/EmailChangeModal.tsx:202
+#: src/components/modals/EmailChangeModal.tsx:205
 #: src/components/modals/PasswordChangeModal.tsx:148
 msgid "Start"
 msgstr "Rozpocznij"
@@ -20490,7 +20495,7 @@ msgstr "Gęstość naklejek"
 msgid "Sticker pack"
 msgstr "Pakiet naklejek"
 
-#: src/actions/InviteActionCreators.tsx:287
+#: src/actions/InviteActionCreators.tsx:291
 msgid "Sticker pack creation limit reached"
 msgstr "Osiągnięto limit tworzenia pakietów naklejek"
 
@@ -20498,7 +20503,7 @@ msgstr "Osiągnięto limit tworzenia pakietów naklejek"
 msgid "Sticker Pack Invite"
 msgstr "Zaproszenie do pakietu naklejek"
 
-#: src/actions/InviteActionCreators.tsx:273
+#: src/actions/InviteActionCreators.tsx:277
 msgid "Sticker pack limit reached"
 msgstr "Osiągnięto limit pakietów naklejek"
 
@@ -20674,7 +20679,7 @@ msgstr "Wysyłanie"
 msgid "subscription"
 msgstr "subskrypcja"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:49
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:51
 #: src/components/modals/utils/SettingsSearchIndex.tsx:261
 msgid "Subscription"
 msgstr "Subskrypcja"
@@ -20796,7 +20801,7 @@ msgstr "Zmień konto"
 msgid "Switch Accounts"
 msgstr "Zmień konta"
 
-#: src/stores/QuickSwitcherStore.tsx:900
+#: src/stores/QuickSwitcherStore.tsx:898
 msgid "Switch between Light and Dark mode"
 msgstr "Przełączaj między trybem jasnym i ciemnym"
 
@@ -20989,7 +20994,7 @@ msgstr "Regulamin"
 msgid "Test Bulk Delete (60s)"
 msgstr "Test masowego usuwania (60 s)"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:137
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:157
 msgid "Test Subscription State"
 msgstr "Test stanu subskrypcji"
 
@@ -21025,7 +21030,7 @@ msgstr "Kanał tekstowy"
 msgid "Text Channel Names"
 msgstr "Nazwy kanałów tekstowych"
 
-#: src/stores/QuickSwitcherStore.tsx:1349
+#: src/stores/QuickSwitcherStore.tsx:1347
 #: src/utils/quick_switcher/QuickSwitcherModalUtils.tsx:97
 msgid "Text channels"
 msgstr "Kanały tekstowe"
@@ -21106,7 +21111,7 @@ msgid "That message didn't delete"
 msgstr "Ta wiadomość nie została usunięta"
 
 #. placeholder {0}: invite.pack.name
-#: src/actions/InviteActionCreators.tsx:103
+#: src/actions/InviteActionCreators.tsx:104
 msgid "The {packLabel} {0} has been installed."
 msgstr "Pakiet {packLabel} {0} został zainstalowany."
 
@@ -21148,7 +21153,7 @@ msgstr "Plik zawiera token weryfikacyjny, który pobierzemy z <0>{dnsUrl}</0>."
 msgid "The file you're trying to upload exceeds the maximum size limit of {maxSizeFormatted}."
 msgstr "Plik, który próbujesz przesłać, przekracza maksymalny rozmiar {maxSizeFormatted}."
 
-#: src/components/modals/FluxerTagChangeModal.tsx:106
+#: src/components/modals/FluxerTagChangeModal.tsx:111
 msgid "The FluxerTag <0>{fluxerTag}</0> is already taken. Continuing will reroll your discriminator automatically."
 msgstr "Tag Fluxer <0>{fluxerTag}</0> jest już zajęty. Kontynuacja automatycznie ponownie wylosuje twój dyskryminator."
 
@@ -21298,10 +21303,6 @@ msgstr "oni"
 #: src/components/channel/channel_view/DMChannelView.tsx:932
 msgid "They might have taken the DeLorean elsewhere."
 msgstr "Możliwe, że zabrali DeLoreana gdzie indziej."
-
-#: src/components/modals/tabs/MyProfileTab.tsx:711
-msgid "they/them"
-msgstr "oni/one"
 
 #: src/components/channel/channel_view/DMChannelView.tsx:918
 msgid "Think, McFly! Did you type the right address?"
@@ -21717,11 +21718,11 @@ msgstr "To stworzy rozdarcie w kontinuum czasoprzestrzennym i nie da się tego c
 msgid "This will hide all favorites-related UI elements including buttons and menu items. Your existing favorites will be preserved and can be re-enabled anytime from <0>User Settings → Look & Feel → Favorites</0>."
 msgstr "To ukryje wszystkie elementy UI związane z ulubionymi, włącznie z przyciskami i pozycjami menu. Twoje ulubione zostaną zachowane i można je ponownie włączyć w dowolnym momencie z <0>Ustawienia użytkownika → Wygląd → Ulubione</0>."
 
-#: src/components/modals/BackupCodesRegenerateModal.tsx:65
+#: src/components/modals/BackupCodesRegenerateModal.tsx:72
 msgid "This will invalidate your existing backup codes and generate new ones."
 msgstr "To unieważni istniejące kody zapasowe i wygenerować nowe."
 
-#: src/components/channel/ChannelTextarea.tsx:1036
+#: src/components/channel/ChannelTextarea.tsx:1034
 msgid "This will modify the existing scheduled message rather than sending immediately."
 msgstr "To zmodyfikuje istniejącą zaplanowaną wiadomość zamiast wysyłać ją od razu."
 
@@ -21907,11 +21908,11 @@ msgstr "przełącznik"
 msgid "Toggle Channel Member List"
 msgstr "Przełącz listę członków kanału"
 
-#: src/stores/QuickSwitcherStore.tsx:913
+#: src/stores/QuickSwitcherStore.tsx:911
 msgid "Toggle Compact Mode"
 msgstr "Przełącz tryb kompaktowy"
 
-#: src/components/modals/MobileVideoViewer.tsx:239
+#: src/components/modals/MobileVideoViewer.tsx:247
 msgid "Toggle controls"
 msgstr "Przełącz kontrolki"
 
@@ -21963,11 +21964,11 @@ msgstr "Przełącz wyciszenie"
 msgid "Toggle Pins Popout"
 msgstr "Przełącz wyskakujące przypięcia"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:120
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:122
 msgid "Toggle premium_enabled_override on the backend"
 msgstr "Przełącz nadpisanie premium_enabled w backendzie"
 
-#: src/stores/QuickSwitcherStore.tsx:929
+#: src/stores/QuickSwitcherStore.tsx:927
 msgid "Toggle Reduced Motion"
 msgstr "Przełącz zmniejszony ruch"
 
@@ -21983,7 +21984,7 @@ msgstr "Przełącz wybieranie naklejek"
 msgid "Toggle switches on and off to see state changes."
 msgstr "Przełączaj przełączniki, by zobaczyć zmiany stanu."
 
-#: src/stores/QuickSwitcherStore.tsx:899
+#: src/stores/QuickSwitcherStore.tsx:897
 msgid "Toggle Theme"
 msgstr "Przełącz motyw"
 
@@ -22008,7 +22009,7 @@ msgstr "Mapuj obrazy HDR do standardowego zakresu, redukując maksymalną jasno�
 msgid "Too Loud"
 msgstr "Za głośno"
 
-#: src/components/alerts/MaxGuildsModal.tsx:32
+#: src/components/alerts/MaxGuildsModal.tsx:35
 msgid "Too Many Communities"
 msgstr "Zbyt wiele społeczności"
 
@@ -22307,7 +22308,7 @@ msgstr "Uwierzytelnianie dwuskładnikowe"
 msgid "Two-factor authentication disabled"
 msgstr "Uwierzytelnianie dwuskładnikowe wyłączone"
 
-#: src/components/modals/MfaTotpEnableModal.tsx:55
+#: src/components/modals/MfaTotpEnableModal.tsx:58
 msgid "Two-factor authentication enabled"
 msgstr "Uwierzytelnianie dwuskładnikowe włączone"
 
@@ -22404,11 +22405,11 @@ msgstr "ukraiński"
 msgid "Ultra (1440p)"
 msgstr "Ultra (1440p)"
 
-#: src/actions/InviteActionCreators.tsx:319
+#: src/actions/InviteActionCreators.tsx:323
 msgid "Unable to install emoji pack"
 msgstr "Nie można zainstalować zestawu emoji"
 
-#: src/actions/InviteActionCreators.tsx:320
+#: src/actions/InviteActionCreators.tsx:324
 msgid "Unable to install sticker pack"
 msgstr "Nie można zainstalować zestawu naklejek"
 
@@ -22436,13 +22437,13 @@ msgstr "Nie można załadować banera profilu, odznak i biografii."
 msgid "Unable to prepare any emojis for upload. The following errors occurred:"
 msgstr "Nie można przygotować emoji do wgrania. Wystąpiły następujące błędy:"
 
-#: src/components/modals/EmailChangeModal.tsx:121
-#: src/components/modals/EmailChangeModal.tsx:151
+#: src/components/modals/EmailChangeModal.tsx:124
+#: src/components/modals/EmailChangeModal.tsx:154
 #: src/components/modals/PasswordChangeModal.tsx:104
 msgid "Unable to resend code right now"
 msgstr "Nie można teraz ponownie wysłać kodu"
 
-#: src/components/modals/EmailChangeModal.tsx:136
+#: src/components/modals/EmailChangeModal.tsx:139
 msgid "Unable to send code to new email"
 msgstr "Nie można wysłać kodu na nowy e-mail"
 
@@ -22455,7 +22456,7 @@ msgstr "Nie można wysłać wiadomości głosowej. Proszę spróbować ponownie.
 msgid "Unable to Start Call"
 msgstr "Nie można rozpocząć połączenia"
 
-#: src/components/modals/EmailChangeModal.tsx:91
+#: src/components/modals/EmailChangeModal.tsx:94
 msgid "Unable to start email change"
 msgstr "Nie można rozpocząć zmiany e-maila"
 
@@ -22526,7 +22527,7 @@ msgstr "Nieodebrane konto"
 msgid "Unclaimed Account Nagbar"
 msgstr "Pasek przypominający o nieodebranym koncie"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:65
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:67
 msgid "Unclaimed Account Override"
 msgstr "Nadpisanie nieodebranego konta"
 
@@ -22554,10 +22555,10 @@ msgstr "Nieletni użytkownik"
 #: src/components/alerts/GenericErrorModal.tsx:31
 #: src/components/alerts/GuildAtCapacityModal.tsx:31
 #: src/components/alerts/InvitesDisabledModal.tsx:31
-#: src/components/alerts/MaxBookmarksModal.tsx:45
-#: src/components/alerts/MaxBookmarksModal.tsx:56
+#: src/components/alerts/MaxBookmarksModal.tsx:48
+#: src/components/alerts/MaxBookmarksModal.tsx:59
 #: src/components/alerts/MaxFavoriteMemesModal.tsx:46
-#: src/components/alerts/MaxGuildsModal.tsx:38
+#: src/components/alerts/MaxGuildsModal.tsx:41
 #: src/components/alerts/MicrophonePermissionDeniedModal.tsx:50
 #: src/components/alerts/NSFWContentRejectedModal.tsx:31
 #: src/components/alerts/ReactionInteractionDisabledModal.tsx:30
@@ -22632,7 +22633,7 @@ msgstr "nieznany kanał"
 #: src/components/modals/guild_tabs/GuildAuditLogTab.Utils.tsx:479
 #: src/components/modals/guild_tabs/GuildWebhooksTab.tsx:61
 #: src/components/modals/guild_tabs/GuildWebhooksTab.tsx:67
-#: src/stores/QuickSwitcherStore.tsx:690
+#: src/stores/QuickSwitcherStore.tsx:688
 msgid "Unknown channel"
 msgstr "Nieznany kanał"
 
@@ -22781,7 +22782,7 @@ msgstr "Odblokuj naklejki w DM-ach dzięki Plutonium"
 #: src/components/layout/UserArea.tsx:168
 #: src/components/media_player/components/MediaVerticalVolumeControl.tsx:249
 #: src/components/media_player/components/MediaVolumeControl.tsx:208
-#: src/components/modals/MobileVideoViewer.tsx:272
+#: src/components/modals/MobileVideoViewer.tsx:280
 #: src/components/voice/VoiceControlBar.tsx:602
 msgid "Unmute"
 msgstr "Włącz dźwięk"
@@ -22872,7 +22873,7 @@ msgstr "Odepnij DM"
 msgid "Unpin Group DM"
 msgstr "Odepnij grupowy DM"
 
-#: src/components/channel/MessageActionUtils.tsx:412
+#: src/components/channel/MessageActionUtils.tsx:413
 #: src/components/shared/ChannelPinsContent.tsx:102
 msgid "Unpin it"
 msgstr "Odepnij to"
@@ -22880,7 +22881,7 @@ msgstr "Odepnij to"
 #: src/components/channel/MessageActionBar.tsx:519
 #: src/components/channel/MessageActionBar.tsx:735
 #: src/components/channel/MessageActionMenu.tsx:243
-#: src/components/channel/MessageActionUtils.tsx:409
+#: src/components/channel/MessageActionUtils.tsx:410
 #: src/components/shared/ChannelPinsContent.tsx:99
 #: src/components/shared/ChannelPinsContent.tsx:260
 #: src/components/uikit/context_menu/items/MessageMenuItems.tsx:163
@@ -22907,7 +22908,7 @@ msgstr "Odpięty grupowy DM"
 msgid "unread"
 msgstr "nieprzeczytane"
 
-#: src/components/popouts/InboxPopout.tsx:53
+#: src/components/popouts/InboxPopout.tsx:52
 msgid "Unread"
 msgstr "Nieprzeczytane"
 
@@ -22915,11 +22916,11 @@ msgstr "Nieprzeczytane"
 msgid "Unread DMs only"
 msgstr "Tylko nieprzeczytane DM-y"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:85
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:87
 msgid "Unread Gift Count"
 msgstr "Liczba nieprzeczytanych prezentów"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:73
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:75
 msgid "Unread gift inventory override"
 msgstr "Nieużywana nadwyżka prezentów"
 
@@ -22962,7 +22963,7 @@ msgstr "Niezweryfikowany e-mail"
 msgid "Up to 4K/60fps"
 msgstr "Do 4K/60 kl./s"
 
-#: src/components/channel/ChannelTextarea.tsx:1033
+#: src/components/channel/ChannelTextarea.tsx:1031
 msgid "Update"
 msgstr "Aktualizuj"
 
@@ -23085,7 +23086,7 @@ msgstr "aktualizuj"
 msgid "Upgrade Now"
 msgstr "Uaktualnij teraz"
 
-#: src/components/alerts/MaxBookmarksModal.tsx:69
+#: src/components/alerts/MaxBookmarksModal.tsx:72
 #: src/components/alerts/MaxFavoriteMemesModal.tsx:70
 msgid "Upgrade to Plutonium"
 msgstr "Uaktualnij do Plutonium"
@@ -23249,7 +23250,7 @@ msgstr "Użyj dedykowanego modalu, aby ustawić datę progu historii wiadomości
 msgid "Use Actual"
 msgstr "Użyj aktualnego"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:47
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:49
 msgid "Use actual premium type"
 msgstr "Użyj rzeczywistego typu premium"
 
@@ -23322,7 +23323,7 @@ msgstr "Użyj globalnego profilu"
 msgid "Use light theme"
 msgstr "Użyj jasnego motywu"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:274
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:277
 msgid "Use passkeys for passwordless sign-in and two-factor authentication"
 msgstr "Użyj kluczy dostępowych do logowania bez hasła i uwierzytelniania dwuskładnikowego"
 
@@ -23454,7 +23455,7 @@ msgstr "Rekord użytkownika"
 #: src/components/layout/UserArea.tsx:286
 #: src/components/layout/UserArea.tsx:291
 #: src/components/modals/components/DesktopSettingsView.tsx:357
-#: src/components/modals/UserSettingsModal.tsx:154
+#: src/components/modals/UserSettingsModal.tsx:153
 msgid "User Settings"
 msgstr "Ustawienia użytkownika"
 
@@ -23475,9 +23476,9 @@ msgstr "użytkownik, bot lub webhook"
 msgid "username"
 msgstr "nazwa użytkownika"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:187
+#: src/components/modals/FluxerTagChangeModal.tsx:201
 #: src/components/modals/tabs/component_gallery_tab/InputsTab.tsx:101
-#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:51
+#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:52
 #: src/components/modals/utils/SettingsSearchIndex.tsx:63
 msgid "Username"
 msgstr "Nazwa użytkownika"
@@ -23510,13 +23511,17 @@ msgstr "Nazwa użytkownika może mieć maksymalnie 32 znaki"
 msgid "Username#0000"
 msgstr "NazwaUżytkownika#0000"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:169
+#: src/components/modals/FluxerTagChangeModal.tsx:183
 msgid "Usernames can only contain letters (a-z, A-Z), numbers (0-9), and underscores. Usernames are case-insensitive."
 msgstr "Nazwy użytkownika mogą zawierać tylko litery (a-z, A-Z), cyfry (0-9) i podkreślenia. Nazwy są niewrażliwe na wielkość liter."
 
-#: src/components/modals/FluxerTagChangeModal.tsx:164
-msgid "Usernames can only contain letters (a-z, A-Z), numbers (0-9), and underscores. Usernames are case-insensitive. You can pick your own 4-digit tag if it's available."
-msgstr "Nazwy użytkownika mogą zawierać tylko litery (a-z, A-Z), cyfry (0-9) i podkreślenia. Nazwy są niewrażliwe na wielkość liter. Możesz wybrać własny 4-cyfrowy tag, jeśli jest dostępny."
+#: src/components/modals/FluxerTagChangeModal.tsx:170
+msgid "Usernames can only contain letters (a-z, A-Z), numbers (0-9), and underscores. Usernames are case-insensitive. You can pick any available 4-digit tag from #0000 to #9999."
+msgstr "Nazwy użytkownika mogą zawierać tylko litery (a-z, A-Z), cyfry (0-9) i podkreślenia. Nazwy użytkownika nie rozróżniają wielkich i małych liter. Możesz wybrać dowolny dostępny tag czterocyfrowy od #0000 do #9999."
+
+#: src/components/modals/FluxerTagChangeModal.tsx:176
+msgid "Usernames can only contain letters (a-z, A-Z), numbers (0-9), and underscores. Usernames are case-insensitive. You can pick any available 4-digit tag from #0001 to #9999."
+msgstr "Nazwy użytkownika mogą zawierać tylko litery (a-z, A-Z), cyfry (0-9) i podkreślenia. Nazwy użytkownika nie rozróżniają wielkich i małych liter. Możesz wybrać dowolny dostępny tag czterocyfrowy od #0001 do #9999."
 
 #: src/components/modals/utils/SettingsSearchIndex.tsx:246
 #: src/components/modals/utils/SettingsSectionRegistry.tsx:172
@@ -23634,8 +23639,8 @@ msgid "Verification Barriers"
 msgstr "Bariery weryfikacji"
 
 #: src/components/modals/ClaimAccountModal.tsx:198
-#: src/components/modals/EmailChangeModal.tsx:220
-#: src/components/modals/EmailChangeModal.tsx:288
+#: src/components/modals/EmailChangeModal.tsx:223
+#: src/components/modals/EmailChangeModal.tsx:291
 #: src/components/modals/PasswordChangeModal.tsx:166
 #: src/components/modals/PhoneAddModal.tsx:226
 #: src/components/modals/RequiredActionModal.tsx:495
@@ -23662,7 +23667,7 @@ msgstr "E-mail weryfikacyjny wysłany! Sprawdź skrzynkę odbiorczą."
 msgid "Verification failed"
 msgstr "Weryfikacja nie powiodła się"
 
-#: src/components/modals/BackupCodesViewModal.tsx:63
+#: src/components/modals/BackupCodesViewModal.tsx:68
 msgid "Verification may be required before viewing your backup codes."
 msgstr "Weryfikacja może być wymagana przed wyświetleniem kodów zapasowych."
 
@@ -23684,7 +23689,7 @@ msgid "verify"
 msgstr "zweryfikuj"
 
 #: src/components/modals/AddConnectionModal.tsx:315
-#: src/components/modals/EmailChangeModal.tsx:236
+#: src/components/modals/EmailChangeModal.tsx:239
 #: src/components/modals/PasswordChangeModal.tsx:182
 #: src/components/modals/PhoneAddModal.tsx:240
 #: src/components/modals/RequiredActionModal.tsx:652
@@ -23785,7 +23790,7 @@ msgstr "podgląd wideo"
 msgid "Video preview"
 msgstr "Podgląd wideo"
 
-#: src/components/modals/MobileVideoViewer.tsx:311
+#: src/components/modals/MobileVideoViewer.tsx:319
 msgid "Video progress"
 msgstr "Postęp wideo"
 
@@ -23859,15 +23864,15 @@ msgstr "Zobacz i zarządzaj zbanowanymi użytkownikami."
 msgid "View and manage every webhook configured across your community."
 msgstr "Zobacz i zarządzaj wszystkimi webhookami skonfigurowanymi w społeczności."
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:257
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:260
 msgid "View and manage your backup codes for account recovery"
 msgstr "Zobacz i zarządzaj kodami zapasowymi do odzyskiwania konta"
 
-#: src/components/modals/BackupCodesViewModal.tsx:59
+#: src/components/modals/BackupCodesViewModal.tsx:64
 msgid "View Backup Codes"
 msgstr "Zobacz kody zapasowe"
 
-#: src/components/modals/BackupCodesViewModal.tsx:58
+#: src/components/modals/BackupCodesViewModal.tsx:63
 msgid "View backup codes form"
 msgstr "Formularz kodów zapasowych"
 
@@ -23884,7 +23889,7 @@ msgstr "Wyświetl kontrolki połączenia"
 msgid "View Channel"
 msgstr "Wyświetl kanał"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:265
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:268
 msgid "View Codes"
 msgstr "Wyświetl kody"
 
@@ -24016,6 +24021,19 @@ msgstr "Visionary (dożywotnio Plutonium)"
 msgid "Visionary 2FA Nagbar"
 msgstr "Pasek powiadomień Visionary 2FA"
 
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:137
+msgid "Visionary Badge Override"
+msgstr "Nadpisanie odznaki wizjonera"
+
+#. placeholder {0}: profile.premiumLifetimeSequence
+#: src/components/popouts/UserProfileBadges.tsx:150
+msgid "Visionary ID #{0}"
+msgstr "ID wizjonera #{0}"
+
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:139
+msgid "Visionary ID Number"
+msgstr "Numer ID wizjonera"
+
 #: src/components/modals/ExternalLinkWarningModal.tsx:111
 msgid "Visit Site"
 msgstr "Odwiedź stronę"
@@ -24086,7 +24104,7 @@ msgstr "Połączenia głosowe"
 msgid "voice channel"
 msgstr "kanał głosowy"
 
-#: src/stores/QuickSwitcherStore.tsx:720
+#: src/stores/QuickSwitcherStore.tsx:718
 #: src/utils/modals/guild_tabs/GuildAuditLogTabUtils.tsx:227
 msgid "Voice channel"
 msgstr "Kanał głosowy"
@@ -24106,7 +24124,7 @@ msgstr "Kanał głosowy pełny"
 msgid "Voice channel join behavior"
 msgstr "Zachowanie dołączania do kanału głosowego"
 
-#: src/stores/QuickSwitcherStore.tsx:1351
+#: src/stores/QuickSwitcherStore.tsx:1349
 #: src/utils/quick_switcher/QuickSwitcherModalUtils.tsx:98
 msgid "Voice channels"
 msgstr "Kanały głosowe"
@@ -24374,11 +24392,11 @@ msgstr "Wyślemy kod weryfikacyjny na ten adres e-mail."
 msgid "We'll send a verification code to your email before you can change your password."
 msgstr "Wyślemy kod weryfikacyjny na Twój e-mail, zanim będziesz mógł zmienić swoje hasło."
 
-#: src/components/modals/EmailChangeModal.tsx:190
+#: src/components/modals/EmailChangeModal.tsx:193
 msgid "We'll verify your current email and then your new email with one-time codes."
 msgstr "Zweryfikujemy najpierw twój obecny e-mail, a potem nowy za pomocą jednorazowych kodów."
 
-#: src/components/modals/EmailChangeModal.tsx:192
+#: src/components/modals/EmailChangeModal.tsx:195
 msgid "We'll verify your new email with a one-time code."
 msgstr "Zweryfikujemy twój nowy adres e-mail jednorazowym kodem."
 
@@ -24984,7 +25002,7 @@ msgstr "Nie możesz wyłączyć wyciszenia, bo zostało nałożone przez moderat
 msgid "You do not have access to the channel where this message was sent."
 msgstr "Nie masz dostępu do kanału, na którym wysłano tę wiadomość."
 
-#: src/components/channel/ChannelTextarea.tsx:749
+#: src/components/channel/ChannelTextarea.tsx:747
 #: src/components/channel/textarea/TextareaPlusMenu.tsx:52
 msgid "You do not have permission to send messages in this channel."
 msgstr "Nie masz uprawnień do wysyłania wiadomości na tym kanale."
@@ -25005,11 +25023,11 @@ msgstr "Nie masz jeszcze żadnych niestandardowych nadpisów motywu do udostępn
 msgid "You don't have permission to connect to this voice channel."
 msgstr "Nie masz uprawnień, aby połączyć się z tym kanałem głosowym."
 
-#: src/actions/InviteActionCreators.tsx:316
+#: src/actions/InviteActionCreators.tsx:320
 msgid "You don't have permission to install this emoji pack."
 msgstr "Nie masz uprawnień do zainstalowania tego pakietu emoji."
 
-#: src/actions/InviteActionCreators.tsx:317
+#: src/actions/InviteActionCreators.tsx:321
 msgid "You don't have permission to install this sticker pack."
 msgstr "Nie masz uprawnień do zainstalowania tego pakietu naklejek."
 
@@ -25065,35 +25083,35 @@ msgstr "Masz wszystko <0/> dzięki <1>subskrypcji prezentowej</1> do <2>{giftEnd
 msgid "You have blocked {username}. Unblock them to send messages."
 msgstr "Zablokowałeś {username}. Odblokuj go, aby wysyłać wiadomości."
 
-#: src/actions/InviteActionCreators.tsx:260
+#: src/actions/InviteActionCreators.tsx:264
 msgid "You have created the maximum of {limit} emoji pack. Delete one to create another."
 msgstr "Utworzyłeś maksymalnie {limit} pakietów emoji. Usuń jeden, aby utworzyć kolejny."
 
-#: src/actions/InviteActionCreators.tsx:261
+#: src/actions/InviteActionCreators.tsx:265
 msgid "You have created the maximum of {limit} emoji packs. Delete one to create another."
 msgstr "Utworzyłeś maksymalnie {limit} pakietów emoji. Usuń jeden, aby utworzyć kolejny."
 
-#: src/actions/InviteActionCreators.tsx:292
+#: src/actions/InviteActionCreators.tsx:296
 msgid "You have created the maximum of {limit} sticker pack. Delete one to create another."
 msgstr "Utworzyłeś maksymalnie {limit} pakietów naklejek. Usuń jeden, aby utworzyć kolejny."
 
-#: src/actions/InviteActionCreators.tsx:293
+#: src/actions/InviteActionCreators.tsx:297
 msgid "You have created the maximum of {limit} sticker packs. Delete one to create another."
 msgstr "Utworzyłeś maksymalnie {limit} pakietów naklejek. Usuń jeden, aby utworzyć kolejny."
 
-#: src/actions/InviteActionCreators.tsx:246
+#: src/actions/InviteActionCreators.tsx:250
 msgid "You have installed the maximum of {limit} emoji pack. Remove one to install another."
 msgstr "Zainstalowałeś maksymalnie {limit} pakietów emoji. Usuń jeden, aby zainstalować kolejny."
 
-#: src/actions/InviteActionCreators.tsx:247
+#: src/actions/InviteActionCreators.tsx:251
 msgid "You have installed the maximum of {limit} emoji packs. Remove one to install another."
 msgstr "Zainstalowałeś maksymalnie {limit} pakietów emoji. Usuń jeden, aby zainstalować kolejny."
 
-#: src/actions/InviteActionCreators.tsx:278
+#: src/actions/InviteActionCreators.tsx:282
 msgid "You have installed the maximum of {limit} sticker pack. Remove one to install another."
 msgstr "Zainstalowałeś maksymalnie {limit} pakietów naklejek. Usuń jeden, aby zainstalować kolejny."
 
-#: src/actions/InviteActionCreators.tsx:279
+#: src/actions/InviteActionCreators.tsx:283
 msgid "You have installed the maximum of {limit} sticker packs. Remove one to install another."
 msgstr "Zainstalowałeś maksymalnie {limit} pakietów naklejek. Usuń jeden, aby zainstalować kolejny."
 
@@ -25101,19 +25119,19 @@ msgstr "Zainstalowałeś maksymalnie {limit} pakietów naklejek. Usuń jeden, ab
 msgid "You have no friends yet"
 msgstr "Jeszcze nie masz znajomych"
 
-#: src/actions/InviteActionCreators.tsx:264
+#: src/actions/InviteActionCreators.tsx:268
 msgid "You have reached the limit for creating emoji packs. Delete one of your packs to create another."
 msgstr "Osiągnąłeś limit tworzenia pakietów emoji. Usuń jeden ze swoich pakietów, aby utworzyć nowy."
 
-#: src/actions/InviteActionCreators.tsx:296
+#: src/actions/InviteActionCreators.tsx:300
 msgid "You have reached the limit for creating sticker packs. Delete one of your packs to create another."
 msgstr "Osiągnąłeś limit tworzenia pakietów naklejek. Usuń jeden ze swoich pakietów, aby utworzyć nowy."
 
-#: src/actions/InviteActionCreators.tsx:250
+#: src/actions/InviteActionCreators.tsx:254
 msgid "You have reached the limit for installing emoji packs. Remove one of your installed packs to install another."
 msgstr "Osiągnąłeś limit instalowania pakietów emoji. Usuń jeden z zainstalowanych pakietów, aby zainstalować inny."
 
-#: src/actions/InviteActionCreators.tsx:282
+#: src/actions/InviteActionCreators.tsx:286
 msgid "You have reached the limit for installing sticker packs. Remove one of your installed packs to install another."
 msgstr "Osiągnąłeś limit instalowania pakietów naklejek. Usuń jeden z zainstalowanych pakietów, aby zainstalować inny."
 
@@ -25377,23 +25395,23 @@ msgstr "Osiągnąłeś maksymalny limit {maxFavoriteMemes} zapisanych mediów. A
 msgid "You've reached the maximum limit of {maxFavoriteMemes} saved media items. To add more, you'll need to remove some existing items from your collection."
 msgstr "Osiągnąłeś maksymalny limit {maxFavoriteMemes} zapisanych mediów. Aby dodać więcej, musisz usunąć niektóre istniejące elementy ze swojej kolekcji."
 
-#: src/components/alerts/MaxBookmarksModal.tsx:55
+#: src/components/alerts/MaxBookmarksModal.tsx:58
 msgid "You've reached the maximum number of bookmarks ({bookmarksText}). Please remove some bookmarks before adding new ones."
 msgstr "Osiągnąłeś maksymalną liczbę zakładek ({bookmarksText}). Proszę usuń kilka zakładek przed dodaniem nowych."
 
-#: src/components/alerts/MaxBookmarksModal.tsx:44
+#: src/components/alerts/MaxBookmarksModal.tsx:47
 msgid "You've reached the maximum number of bookmarks ({bookmarksText}). This limit is configured by your instance administrator. Please remove some bookmarks before adding new ones."
 msgstr "Osiągnąłeś maksymalną liczbę zakładek ({bookmarksText}). Ten limit jest skonfigurowany przez administratora Twojej instancji. Proszę usuń kilka zakładek przed dodaniem nowych."
 
-#: src/components/alerts/MaxBookmarksModal.tsx:68
+#: src/components/alerts/MaxBookmarksModal.tsx:71
 msgid "You've reached the maximum number of bookmarks for free users ({bookmarksText}). Upgrade to Plutonium to increase your limit to {premiumBookmarksText}, or remove some bookmarks to add new ones."
 msgstr "Osiągnąłeś maksymalną liczbę zakładek dla użytkowników darmowych ({bookmarksText}). Uaktualnij do Plutonium, aby zwiększyć swój limit do {premiumBookmarksText}, lub usuń kilka zakładek, aby dodać nowe."
 
-#: src/components/alerts/MaxGuildsModal.tsx:36
+#: src/components/alerts/MaxGuildsModal.tsx:39
 msgid "You've reached the maximum number of communities you can join ({maxGuilds} communities). Please leave a community before joining another one."
 msgstr "Osiągnąłeś maksymalną liczbę społeczności, do których możesz dołączyć ({maxGuilds} społeczności). Proszę opuść jedną społeczność przed dołączeniem do innej."
 
-#: src/components/alerts/MaxGuildsModal.tsx:35
+#: src/components/alerts/MaxGuildsModal.tsx:38
 msgid "You've reached the maximum number of communities you can join ({maxGuilds} community). Please leave a community before joining another one."
 msgstr "Osiągnąłeś maksymalną liczbę społeczności, do których możesz dołączyć ({maxGuilds} społeczność). Proszę opuść jedną społeczność przed dołączeniem do innej."
 

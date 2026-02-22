@@ -80,8 +80,6 @@ export const GuildFeatureSchema = withOpenApiType(
 			[GuildFeatures.OPERATOR, 'OPERATOR', 'Guild is an operator guild'],
 			[GuildFeatures.LARGE_GUILD_OVERRIDE, 'LARGE_GUILD_OVERRIDE', 'Guild has large guild overrides enabled'],
 			[GuildFeatures.VERY_LARGE_GUILD, 'VERY_LARGE_GUILD', 'Guild has increased member capacity enabled'],
-			[GuildFeatures.MANAGED_MESSAGE_SCHEDULING, 'MT_MESSAGE_SCHEDULING', 'Guild has managed message scheduling'],
-			[GuildFeatures.MANAGED_EXPRESSION_PACKS, 'MT_EXPRESSION_PACKS', 'Guild has managed expression packs'],
 		],
 		'A guild feature flag',
 	),

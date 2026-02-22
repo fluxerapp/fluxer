@@ -140,6 +140,12 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 
 		kv: {
 			url: master.internal.kv,
+			mode: ((master.internal as {kv_mode?: string}).kv_mode ?? 'standalone') as 'standalone' | 'cluster',
+			clusterNodes:
+				(master.internal as {kv_cluster_nodes?: Array<{host: string; port: number}>}).kv_cluster_nodes ?? [],
+			clusterNatMap:
+				(master.internal as {kv_cluster_nat_map?: Record<string, {host: string; port: number}>}).kv_cluster_nat_map ??
+				{},
 		},
 
 		nats: {
@@ -240,8 +246,13 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 			defaultRegion: master.integrations.voice.default_region,
 		},
 		search: {
+			engine: ((master.integrations.search as {engine?: string}).engine ?? 'meilisearch') as
+				| 'meilisearch'
+				| 'elasticsearch',
 			url: master.integrations.search.url,
 			apiKey: master.integrations.search.api_key,
+			username: (master.integrations.search as {username?: string}).username ?? '',
+			password: (master.integrations.search as {password?: string}).password ?? '',
 		},
 		stripe: {
 			enabled: master.integrations.stripe.enabled,

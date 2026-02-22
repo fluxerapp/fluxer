@@ -371,7 +371,7 @@ pricing_and_tiers.free.label: مجاني
 pricing_and_tiers.plutonium.benefits_note_official_instance_only: 'ملاحظة: مزايا Plutonium وVisionary تنطبق فقط على نسخة Fluxer.app الرسمية، وليس على النسخ الخارجية أو المستضافة ذاتياً.'
 pricing_and_tiers.plutonium.feature_highlights: رفع 500 MB، رسائل حتى 4,000 حرف، 300 علامة مرجعية، 50 حزمة إيموجي، وأكثر بكثير.
 pricing_and_tiers.plutonium.features.bio_character_limit: حد أحرف النبذة
-pricing_and_tiers.plutonium.features.choose_custom_4_digit_tag: اختر وسم 4 أرقام مخصص مثل #0001 أو #1337 أو #9999 لاسم مستخدم فريد حقاً.
+pricing_and_tiers.plutonium.features.choose_custom_4_digit_tag: اختر أي وسم 4 أرقام متاح من #0001 إلى #9999 لاسم مستخدم فريد حقاً.
 pricing_and_tiers.plutonium.features.custom_4_digit_username_tag: وسم اسم مستخدم 4 أرقام مخصص
 pricing_and_tiers.plutonium.features.custom_username_tag: وسم اسم مستخدم مخصص
 pricing_and_tiers.plutonium.features.custom_video_backgrounds: خلفيات فيديو

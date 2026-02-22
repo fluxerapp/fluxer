@@ -679,6 +679,55 @@
 					"description": "Internal Valkey/Redis URL for key-value operations.",
 					"default": "redis://localhost:6379/0"
 				},
+				"kv_mode": {
+					"type": "string",
+					"description": "Valkey/Redis connection mode. Use 'standalone' for a single node or 'cluster' for a Valkey/Redis cluster.",
+					"enum": [
+						"standalone",
+						"cluster"
+					],
+					"default": "standalone"
+				},
+				"kv_cluster_nodes": {
+					"type": "array",
+					"description": "List of cluster node URLs when kv_mode is 'cluster'. Each entry should be a host:port string.",
+					"items": {
+						"type": "object",
+						"properties": {
+							"host": {
+								"type": "string"
+							},
+							"port": {
+								"type": "integer"
+							}
+						},
+						"required": [
+							"host",
+							"port"
+						]
+					},
+					"default": []
+				},
+				"kv_cluster_nat_map": {
+					"type": "object",
+					"description": "NAT mapping for Valkey/Redis cluster nodes. Maps internal addresses to external addresses for NAT traversal.",
+					"additionalProperties": {
+						"type": "object",
+						"properties": {
+							"host": {
+								"type": "string"
+							},
+							"port": {
+								"type": "integer"
+							}
+						},
+						"required": [
+							"host",
+							"port"
+						]
+					},
+					"default": {}
+				},
 				"queue": {
 					"type": "string",
 					"description": "Internal URL for the Queue service.",
@@ -1265,16 +1314,36 @@
 		},
 		"search_integration": {
 			"type": "object",
-			"description": "Search engine integration (Meilisearch). Fluxer always uses Meilisearch for indexing and querying.",
+			"description": "Search engine integration. Supports Meilisearch and Elasticsearch backends.",
 			"properties": {
+				"engine": {
+					"type": "string",
+					"description": "Search engine backend to use.",
+					"enum": [
+						"meilisearch",
+						"elasticsearch"
+					],
+					"default": "meilisearch"
+				},
 				"url": {
 					"type": "string",
-					"description": "Meilisearch HTTP API URL.",
+					"description": "Search engine HTTP API URL. Used by both Meilisearch and Elasticsearch.",
 					"default": "http://127.0.0.1:7700"
 				},
 				"api_key": {
 					"type": "string",
-					"description": "Meilisearch API key used by the API for index management and writes. Use a key with access to documents and settings."
+					"description": "API key for authenticating with the search engine. For Meilisearch, this is the master or admin key. For Elasticsearch, this is an API key.",
+					"default": ""
+				},
+				"username": {
+					"type": "string",
+					"description": "Username for Elasticsearch basic authentication. Only used when engine is elasticsearch and api_key is not set.",
+					"default": ""
+				},
+				"password": {
+					"type": "string",
+					"description": "Password for Elasticsearch basic authentication. Only used when engine is elasticsearch and api_key is not set.",
+					"default": ""
 				}
 			},
 			"required": [

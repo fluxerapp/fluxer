@@ -371,7 +371,7 @@ pricing_and_tiers.free.label: Безплатно
 pricing_and_tiers.plutonium.benefits_note_official_instance_only: 'Забележка: Plutonium и Visionary важат само за официалната инстанция Fluxer.app, не и за външни или самостоятелно хоствани инстанции.'
 pricing_and_tiers.plutonium.feature_highlights: Качвания до 500 MB, съобщения до 4 000 знака, 300 отметки, 50 пакета с емоджита и още много.
 pricing_and_tiers.plutonium.features.bio_character_limit: Лимит на знаците в биото
-pricing_and_tiers.plutonium.features.choose_custom_4_digit_tag: Избери си собствен таг с 4 цифри като #0001, #1337 или #9999, за да направиш потребителското си име наистина уникално.
+pricing_and_tiers.plutonium.features.choose_custom_4_digit_tag: Избери си наличен таг с 4 цифри от #0001 до #9999, за да направиш потребителското си име наистина уникално.
 pricing_and_tiers.plutonium.features.custom_4_digit_username_tag: Таг с 4 цифри по избор
 pricing_and_tiers.plutonium.features.custom_username_tag: Таг по избор към потребителското име
 pricing_and_tiers.plutonium.features.custom_video_backgrounds: Видео фонове по избор

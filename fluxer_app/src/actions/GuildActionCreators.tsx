@@ -123,6 +123,7 @@ export async function moveChannel(guildId: string, operation: ChannelMoveOperati
 				{
 					id: operation.channelId,
 					parent_id: operation.newParentId,
+					preceding_sibling_id: operation.precedingSiblingId,
 					lock_permissions: false,
 					position: operation.position,
 				},

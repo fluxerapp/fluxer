@@ -371,7 +371,7 @@ pricing_and_tiers.free.label: Gratuit
 pricing_and_tiers.plutonium.benefits_note_official_instance_only: '"Note : les avantages Plutonium et Visionary ne s''appliquent que sur l''instance officielle Fluxer.app, pas sur les instances tierces ou auto-hébergées."'
 pricing_and_tiers.plutonium.feature_highlights: Envois jusqu'à 500 Mo, messages de 4 000 caractères, 300 favoris, 50 packs d'emoji, et bien plus.
 pricing_and_tiers.plutonium.features.bio_character_limit: Limite de caractères de bio
-pricing_and_tiers.plutonium.features.choose_custom_4_digit_tag: Choisis ton propre tag 4 chiffres comme #0001, #1337 ou #9999 pour te rendre vraiment unique.
+pricing_and_tiers.plutonium.features.choose_custom_4_digit_tag: Choisis un tag 4 chiffres disponible de #0001 à #9999 pour te rendre vraiment unique.
 pricing_and_tiers.plutonium.features.custom_4_digit_username_tag: Tag de pseudo 4 chiffres personnalisé
 pricing_and_tiers.plutonium.features.custom_username_tag: Tag de pseudo perso
 pricing_and_tiers.plutonium.features.custom_video_backgrounds: Arrière-plans vidéo

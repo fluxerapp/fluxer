@@ -34,7 +34,6 @@ import type {UserCacheService} from '@fluxer/api/src/infrastructure/UserCacheSer
 import type {LimitConfigService} from '@fluxer/api/src/limits/LimitConfigService';
 import type {RequestCache} from '@fluxer/api/src/middleware/RequestCacheMiddleware';
 import type {GuildMember} from '@fluxer/api/src/models/GuildMember';
-import type {GuildManagedTraitService} from '@fluxer/api/src/traits/GuildManagedTraitService';
 import type {IUserRepository} from '@fluxer/api/src/user/IUserRepository';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import {UnknownGuildMemberError} from '@fluxer/errors/src/domains/guild/UnknownGuildMemberError';
@@ -62,7 +61,6 @@ export class GuildMemberService {
 		rateLimitService: IRateLimitService,
 		private readonly guildAuditLogService: GuildAuditLogService,
 		limitConfigService: LimitConfigService,
-		guildManagedTraitService?: GuildManagedTraitService,
 	) {
 		this.userRepository = userRepository;
 		this.authService = new GuildMemberAuthService(gatewayService);
@@ -82,7 +80,6 @@ export class GuildMemberService {
 			this.validationService,
 			this.guildAuditLogService,
 			limitConfigService,
-			guildManagedTraitService,
 			this.searchIndexService,
 		);
 		this.roleService = new GuildMemberRoleService(

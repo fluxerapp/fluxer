@@ -371,7 +371,7 @@ pricing_and_tiers.free.label: Безкоштовно
 pricing_and_tiers.plutonium.benefits_note_official_instance_only: 'Примітка: переваги Plutonium і Visionary діють лише на офіційному інстансі Fluxer.app, а не на сторонніх чи самохостингових.'
 pricing_and_tiers.plutonium.feature_highlights: Завантаження до 500 МБ, повідомлення до 4 000 символів, 300 закладок, 50 паків емодзі та багато іншого.
 pricing_and_tiers.plutonium.features.bio_character_limit: Ліміт символів у біо
-pricing_and_tiers.plutonium.features.choose_custom_4_digit_tag: Обери власний 4-цифровий тег типу #0001, #1337 або #9999, щоб зробити свій нікнейм дійсно унікальним.
+pricing_and_tiers.plutonium.features.choose_custom_4_digit_tag: Обери будь-який доступний 4-цифровий тег від #0001 до #9999, щоб зробити свій нікнейм дійсно унікальним.
 pricing_and_tiers.plutonium.features.custom_4_digit_username_tag: Кастомний 4-цифровий тег імені
 pricing_and_tiers.plutonium.features.custom_username_tag: Кастомний тег імені
 pricing_and_tiers.plutonium.features.custom_video_backgrounds: Кастомні відеофони

@@ -29,7 +29,7 @@ import * as Modal from '@app/components/modals/Modal';
 import {Button} from '@app/components/uikit/button/Button';
 import {QRCodeCanvas} from '@app/components/uikit/QRCodeCanvas';
 import {useFormSubmit} from '@app/hooks/useFormSubmit';
-import UserStore from '@app/stores/UserStore';
+import type {UserRecord} from '@app/records/UserRecord';
 import * as MfaUtils from '@app/utils/MfaUtils';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
@@ -40,9 +40,12 @@ interface FormInputs {
 	code: string;
 }
 
-export const MfaTotpEnableModal = observer(() => {
+interface MfaTotpEnableModalProps {
+	user: UserRecord;
+}
+
+export const MfaTotpEnableModal = observer(({user}: MfaTotpEnableModalProps) => {
 	const {t} = useLingui();
-	const user = UserStore.getCurrentUser()!;
 	const form = useForm<FormInputs>();
 	const [secret] = useState(() => MfaUtils.generateTotpSecret());
 
@@ -54,7 +57,7 @@ export const MfaTotpEnableModal = observer(() => {
 		ModalActionCreators.pop();
 		ToastActionCreators.createToast({type: 'success', children: <Trans>Two-factor authentication enabled</Trans>});
 		ModalActionCreators.pushWithKey(
-			modal(() => <BackupCodesModal backupCodes={backupCodes} />),
+			modal(() => <BackupCodesModal backupCodes={backupCodes} user={user} />),
 			'backup-codes',
 		);
 	};

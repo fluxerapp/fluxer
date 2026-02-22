@@ -371,7 +371,7 @@ pricing_and_tiers.free.label: Ücretsiz
 pricing_and_tiers.plutonium.benefits_note_official_instance_only: '"Not: Plutonium ve Visionary avantajları yalnızca resmi Fluxer.app instance''ı için geçerli, üçüncü taraf veya self-hosted instance''lar için değil."'
 pricing_and_tiers.plutonium.feature_highlights: 500 MB yükleme, 4.000 karakter mesaj, 300 yer imi, 50 emoji paketi ve çok daha fazlası.
 pricing_and_tiers.plutonium.features.bio_character_limit: Bio karakter limiti
-pricing_and_tiers.plutonium.features.choose_custom_4_digit_tag: Kullanıcı adını gerçekten benzersiz kılmak için #0001, #1337 ya da #9999 gibi kendi 4 haneli etiketini seç.
+pricing_and_tiers.plutonium.features.choose_custom_4_digit_tag: Kullanıcı adını gerçekten benzersiz kılmak için #0001'den #9999'a kadar uygun bir 4 haneli etiket seç.
 pricing_and_tiers.plutonium.features.custom_4_digit_username_tag: Özel 4 haneli kullanıcı adı etiketi
 pricing_and_tiers.plutonium.features.custom_username_tag: Özel kullanıcı adı etiketi
 pricing_and_tiers.plutonium.features.custom_video_backgrounds: Video arka planları

@@ -26,6 +26,7 @@ import http from '@app/lib/HttpClient';
 import {Logger} from '@app/lib/Logger';
 import {type SavedMessageEntry, SavedMessageEntryRecord} from '@app/records/SavedMessageEntryRecord';
 import SavedMessagesStore from '@app/stores/SavedMessagesStore';
+import UserStore from '@app/stores/UserStore';
 import {getApiErrorCode} from '@app/utils/ApiErrorUtils';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import type {I18n} from '@lingui/core';
@@ -62,7 +63,11 @@ export async function create(i18n: I18n, channelId: string, messageId: string): 
 		logger.error(`Failed to save message ${messageId}:`, error);
 
 		if (getApiErrorCode(error) === APIErrorCodes.MAX_BOOKMARKS) {
-			ModalActionCreators.push(modal(() => <MaxBookmarksModal />));
+			const currentUser = UserStore.currentUser;
+			if (!currentUser) {
+				throw error;
+			}
+			ModalActionCreators.push(modal(() => <MaxBookmarksModal user={currentUser} />));
 			return;
 		}
 

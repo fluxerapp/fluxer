@@ -894,7 +894,7 @@ export const ChannelDetailsBottomSheet: React.FC<ChannelDetailsBottomSheetProps>
 				}
 			}
 
-			const users = memberIds.map((id) => UserStore.getUser(id)).filter((u): u is UserRecord => u !== null);
+			const users = memberIds.map((id) => UserStore.getUser(id)).filter((u): u is UserRecord => u != null);
 			return MemberListUtils.getGroupDMMemberGroups(users);
 		})();
 

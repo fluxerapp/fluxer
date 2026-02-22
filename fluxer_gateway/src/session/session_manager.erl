@@ -136,6 +136,8 @@ call_shard(SessionId, Request, Timeout) ->
     case shard_pid_from_table(SessionId) of
         {ok, Pid} ->
             case catch gen_server:call(Pid, Request, Timeout) of
+                {'EXIT', {timeout, _}} ->
+                    {error, timeout};
                 {'EXIT', _} ->
                     call_via_manager(SessionId, Request, Timeout);
                 Reply ->
@@ -147,7 +149,14 @@ call_shard(SessionId, Request, Timeout) ->
 
 -spec call_via_manager(session_id(), term(), pos_integer()) -> term().
 call_via_manager(SessionId, Request, Timeout) ->
-    gen_server:call(?MODULE, {proxy_call, SessionId, Request, Timeout}, Timeout + 1000).
+    case catch gen_server:call(?MODULE, {proxy_call, SessionId, Request, Timeout}, Timeout + 1000) of
+        {'EXIT', {timeout, _}} ->
+            {error, timeout};
+        {'EXIT', _} ->
+            {error, unavailable};
+        Reply ->
+            Reply
+    end.
 
 -spec forward_call(session_id(), term(), pos_integer(), state()) -> {term(), state()}.
 forward_call(SessionId, Request, Timeout, State) ->

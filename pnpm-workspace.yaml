@@ -44,6 +44,7 @@ catalog:
   '@biomejs/biome': 2.3.14
   '@bluesky-social/jwk-jose': 0.1.11
   '@bluesky-social/oauth-client-node': 0.3.9
+  '@elastic/elasticsearch': 9.3.1
   '@floating-ui/react': 0.27.17
   '@floating-ui/react-dom': 2.1.7
   '@hcaptcha/react-hcaptcha': 2.0.2

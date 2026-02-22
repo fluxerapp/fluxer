@@ -308,6 +308,7 @@ function generateZodObject(schema: JsonSchema, defs: Record<string, JsonSchema>,
 				!Array.isArray(propSchema.default) &&
 				Object.keys(propSchema.default).length === 0
 			) {
+				propType += '.default(() => ({}))';
 			} else {
 				propType += `.default(${JSON.stringify(propSchema.default)})`;
 			}
@@ -428,6 +429,7 @@ function generateRootSchema(schema: JsonSchema, defs: Record<string, JsonSchema>
 				!Array.isArray(propSchema.default) &&
 				Object.keys(propSchema.default).length === 0
 			) {
+				propType += '.default(() => ({}))';
 			} else {
 				propType += `.default(${JSON.stringify(propSchema.default)})`;
 			}

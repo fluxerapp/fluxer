@@ -328,7 +328,7 @@ export const ChannelMembers = observer(function ChannelMembers({guild = null, ch
 	if (channel.type === ChannelTypes.GROUP_DM) {
 		const currentUserId = AuthenticationStore.currentUserId;
 		const allUserIds = currentUserId ? [currentUserId, ...channel.recipientIds] : channel.recipientIds;
-		const users = allUserIds.map((id) => UserStore.getUser(id)).filter((user): user is UserRecord => user !== null);
+		const users = allUserIds.map((id) => UserStore.getUser(id)).filter((user): user is UserRecord => user != null);
 		const memberGroups = MemberListUtils.getGroupDMMemberGroups(users);
 
 		return (

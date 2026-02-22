@@ -136,7 +136,7 @@ update_circuit_state(GuildPid, Result, PrevState) ->
     IsSuccess = is_success_result(Result),
     case {IsSuccess, PrevState} of
         {true, half_open} ->
-            ets:delete(?CIRCUIT_BREAKER_TABLE, GuildPid),
+            safe_delete(GuildPid),
             ok;
         {true, closed} ->
             reset_failures(GuildPid);
@@ -152,7 +152,7 @@ is_success_result(_) -> false.
 reset_failures(GuildPid) ->
     case safe_lookup(GuildPid) of
         [{_, State}] ->
-            ets:insert(?CIRCUIT_BREAKER_TABLE, {GuildPid, State#{failures => 0}}),
+            safe_insert(GuildPid, State#{failures => 0}),
             ok;
         [] ->
             ok
@@ -163,27 +163,21 @@ record_failure(GuildPid) ->
     Now = erlang:system_time(millisecond),
     case safe_lookup(GuildPid) of
         [] ->
-            ets:insert(
-                ?CIRCUIT_BREAKER_TABLE,
-                {GuildPid, #{
-                    state => closed,
-                    failures => 1,
-                    concurrent => 0
-                }}
-            ),
+            safe_insert(GuildPid, #{
+                state => closed,
+                failures => 1,
+                concurrent => 0
+            }),
             ok;
         [{_, #{failures := F} = State}] when F + 1 >= ?FAILURE_THRESHOLD ->
-            ets:insert(
-                ?CIRCUIT_BREAKER_TABLE,
-                {GuildPid, State#{
-                    state => open,
-                    failures => F + 1,
-                    opened_at => Now
-                }}
-            ),
+            safe_insert(GuildPid, State#{
+                state => open,
+                failures => F + 1,
+                opened_at => Now
+            }),
             ok;
         [{_, #{failures := F} = State}] ->
-            ets:insert(?CIRCUIT_BREAKER_TABLE, {GuildPid, State#{failures => F + 1}}),
+            safe_insert(GuildPid, State#{failures => F + 1}),
             ok
     end.
 
@@ -191,19 +185,16 @@ record_failure(GuildPid) ->
 acquire_slot(GuildPid) ->
     case safe_lookup(GuildPid) of
         [] ->
-            ets:insert(
-                ?CIRCUIT_BREAKER_TABLE,
-                {GuildPid, #{
-                    state => closed,
-                    failures => 0,
-                    concurrent => 1
-                }}
-            ),
+            safe_insert(GuildPid, #{
+                state => closed,
+                failures => 0,
+                concurrent => 1
+            }),
             ok;
         [{_, #{concurrent := C}}] when C >= ?MAX_CONCURRENT ->
             {error, too_many_requests};
         [{_, #{concurrent := C} = State}] ->
-            ets:insert(?CIRCUIT_BREAKER_TABLE, {GuildPid, State#{concurrent => C + 1}}),
+            safe_insert(GuildPid, State#{concurrent => C + 1}),
             ok
     end.
 
@@ -211,10 +202,34 @@ acquire_slot(GuildPid) ->
 release_slot(GuildPid) ->
     case safe_lookup(GuildPid) of
         [{_, #{concurrent := C} = State}] when C > 0 ->
-            ets:insert(?CIRCUIT_BREAKER_TABLE, {GuildPid, State#{concurrent => C - 1}}),
+            safe_insert(GuildPid, State#{concurrent => C - 1}),
             ok;
         _ ->
             ok
+    end.
+
+-spec safe_insert(pid(), map()) -> ok.
+safe_insert(GuildPid, State) ->
+    ensure_table(),
+    try ets:insert(?CIRCUIT_BREAKER_TABLE, {GuildPid, State}) of
+        true -> ok
+    catch
+        error:badarg ->
+            ensure_table(),
+            try ets:insert(?CIRCUIT_BREAKER_TABLE, {GuildPid, State}) of
+                true -> ok
+            catch
+                error:badarg -> ok
+            end
+    end.
+
+-spec safe_delete(pid()) -> ok.
+safe_delete(GuildPid) ->
+    ensure_table(),
+    try ets:delete(?CIRCUIT_BREAKER_TABLE, GuildPid) of
+        true -> ok
+    catch
+        error:badarg -> ok
     end.
 
 -spec safe_lookup(pid()) -> list().
@@ -367,6 +382,18 @@ record_failure_opens_circuit_test() ->
     record_failure(Pid),
     [{Pid, State}] = ets:lookup(?CIRCUIT_BREAKER_TABLE, Pid),
     ?assertEqual(open, maps:get(state, State)),
+    Pid ! done.
+
+record_failure_recreates_missing_table_test() ->
+    catch ets:delete(?CIRCUIT_BREAKER_TABLE),
+    Pid = spawn(fun() ->
+        receive
+            done -> ok
+        end
+    end),
+    ?assertEqual(ok, record_failure(Pid)),
+    [{Pid, State}] = ets:lookup(?CIRCUIT_BREAKER_TABLE, Pid),
+    ?assertEqual(1, maps:get(failures, State)),
     Pid ! done.
 
 is_success_result_test() ->

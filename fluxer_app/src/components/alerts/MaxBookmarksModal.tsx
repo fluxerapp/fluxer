@@ -20,18 +20,21 @@
 import {modal, push} from '@app/actions/ModalActionCreators';
 import {ConfirmModal} from '@app/components/modals/ConfirmModal';
 import {PremiumModal} from '@app/components/modals/PremiumModal';
-import UserStore from '@app/stores/UserStore';
+import type {UserRecord} from '@app/records/UserRecord';
 import {Limits} from '@app/utils/limits/UserLimits';
 import {shouldShowPremiumFeatures} from '@app/utils/PremiumUtils';
 import {MAX_BOOKMARKS_PREMIUM} from '@fluxer/constants/src/LimitConstants';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 
-export const MaxBookmarksModal = observer(() => {
+interface MaxBookmarksModalProps {
+	user: UserRecord;
+}
+
+export const MaxBookmarksModal = observer(({user}: MaxBookmarksModalProps) => {
 	const {t} = useLingui();
-	const currentUser = UserStore.currentUser!;
 	const showPremium = shouldShowPremiumFeatures();
-	const maxBookmarks = currentUser.maxBookmarks;
+	const maxBookmarks = user.maxBookmarks;
 	const premiumBookmarks = Limits.getPremiumValue('max_bookmarks', MAX_BOOKMARKS_PREMIUM);
 	const canUpgradeBookmarks = maxBookmarks < premiumBookmarks;
 

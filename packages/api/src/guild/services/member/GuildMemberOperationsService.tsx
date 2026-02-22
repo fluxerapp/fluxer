@@ -43,7 +43,6 @@ import type {GuildMember} from '@fluxer/api/src/models/GuildMember';
 import type {User} from '@fluxer/api/src/models/User';
 import type {UserGuildSettings} from '@fluxer/api/src/models/UserGuildSettings';
 import type {UserSettings} from '@fluxer/api/src/models/UserSettings';
-import type {GuildManagedTraitService} from '@fluxer/api/src/traits/GuildManagedTraitService';
 import type {IUserRepository} from '@fluxer/api/src/user/IUserRepository';
 import {mapUserGuildSettingsToResponse, mapUserSettingsToResponse} from '@fluxer/api/src/user/UserMappers';
 import {removeGuildFromUserFolders} from '@fluxer/api/src/user/utils/GuildFolderUtils';
@@ -117,7 +116,6 @@ export class GuildMemberOperationsService {
 		private readonly validationService: GuildMemberValidationService,
 		private readonly guildAuditLogService: GuildAuditLogService,
 		private readonly limitConfigService: LimitConfigService,
-		private readonly guildManagedTraitService?: GuildManagedTraitService,
 		private readonly searchIndexService?: GuildMemberSearchIndexService,
 	) {}
 
@@ -373,10 +371,6 @@ export class GuildMemberOperationsService {
 				});
 			}
 
-			if (guild && this.guildManagedTraitService) {
-				await this.guildManagedTraitService.reconcileTraitsForGuildLeave({guild, userId});
-			}
-
 			await this.gatewayService.leaveGuild({userId: targetId, guildId});
 			succeeded = true;
 		} finally {
@@ -500,13 +494,6 @@ export class GuildMemberOperationsService {
 
 			if (this.searchIndexService && guild.membersIndexedAt) {
 				void this.searchIndexService.indexMember(guildMember, user);
-			}
-
-			if (this.guildManagedTraitService) {
-				await this.guildManagedTraitService.ensureTraitsForGuildJoin({
-					guild,
-					user,
-				});
 			}
 
 			if (sendJoinMessage && !(guild.systemChannelFlags & SystemChannelFlags.SUPPRESS_JOIN_NOTIFICATIONS)) {

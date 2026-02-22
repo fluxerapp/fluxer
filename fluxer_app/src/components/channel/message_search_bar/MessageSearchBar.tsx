@@ -408,7 +408,7 @@ export const MessageSearchBar = observer(
 
 		useEffect(() => {
 			const context = MemberSearchStore.getSearchContext((results) => {
-				const users = results.map((result) => UserStore.getUser(result.id)).filter((u): u is UserRecord => u !== null);
+				const users = results.map((result) => UserStore.getUser(result.id)).filter((u): u is UserRecord => u != null);
 				setMemberSearchResults(users);
 			}, 25);
 
@@ -660,7 +660,7 @@ export const MessageSearchBar = observer(
 					if (channel) {
 						const users = channel.recipientIds
 							.map((id) => UserStore.getUser(id))
-							.filter((u): u is UserRecord => u !== null);
+							.filter((u): u is UserRecord => u != null);
 
 						return matchSorter(users, searchTerm, {keys: ['username', 'tag']}).slice(0, 12);
 					}

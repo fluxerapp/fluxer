@@ -130,7 +130,19 @@ filter_sessions_for_event(Event, FinalData, SessionIdOpt, Sessions, UpdatedState
                             )
                     end;
                 false ->
-                    guild_sessions:filter_sessions_exclude_session(Sessions, SessionIdOpt)
+                    FilteredSessions = guild_sessions:filter_sessions_exclude_session(
+                        Sessions, SessionIdOpt
+                    ),
+                    case Event of
+                        guild_member_add ->
+                            [
+                                {Sid, SessionData}
+                             || {Sid, SessionData} <- FilteredSessions,
+                                maps:get(bot, SessionData, false) =:= true
+                            ];
+                        _ ->
+                            FilteredSessions
+                    end
             end
     end.
 
@@ -1149,8 +1161,16 @@ filter_sessions_for_event_guild_wide_goes_to_all_sessions_test() ->
     S2 = #{session_id => <<"s2">>, user_id => 11, pid => self()},
     Sessions = #{<<"s1">> => S1, <<"s2">> => S2},
     State = #{sessions => Sessions, data => #{<<"members">> => #{}}},
-    Result = filter_sessions_for_event(guild_member_add, #{}, undefined, Sessions, State),
+    Result = filter_sessions_for_event(guild_update, #{}, undefined, Sessions, State),
     ?assertEqual(2, length(Result)).
+
+filter_sessions_for_event_guild_member_add_bots_only_test() ->
+    S1 = #{session_id => <<"s1">>, user_id => 10, pid => self(), bot => false},
+    S2 = #{session_id => <<"s2">>, user_id => 11, pid => self(), bot => true},
+    Sessions = #{<<"s1">> => S1, <<"s2">> => S2},
+    State = #{sessions => Sessions, data => #{<<"members">> => #{}}},
+    Result = filter_sessions_for_event(guild_member_add, #{}, undefined, Sessions, State),
+    ?assertEqual([{<<"s2">>, S2}], Result).
 
 extract_channel_id_message_create_uses_channel_id_field_test() ->
     Data = #{<<"channel_id">> => <<"42">>},

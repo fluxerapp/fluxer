@@ -371,7 +371,7 @@ pricing_and_tiers.free.label: Zdarma
 pricing_and_tiers.plutonium.benefits_note_official_instance_only: 'Poznámka: výhody Plutonia a Visionary platí jen pro oficiální instanci Fluxer.app, ne pro third-party nebo self-hostované instance.'
 pricing_and_tiers.plutonium.feature_highlights: Nahrávání do 500 MB, zprávy do 4 000 znaků, 300 záložek, 50 balíčků emoji a mnohem víc.
 pricing_and_tiers.plutonium.features.bio_character_limit: Limit znaků v bio
-pricing_and_tiers.plutonium.features.choose_custom_4_digit_tag: Vyber si vlastní 4místný tag jako #0001, #1337 nebo #9999, aby byla tvoje uživatelské jméno opravdu jedinečné.
+pricing_and_tiers.plutonium.features.choose_custom_4_digit_tag: Vyber si jakýkoli dostupný 4místný tag od #0001 do #9999, aby tvoje uživatelské jméno bylo opravdu jedinečné.
 pricing_and_tiers.plutonium.features.custom_4_digit_username_tag: Vlastní 4místný tag uživatelského jména
 pricing_and_tiers.plutonium.features.custom_username_tag: Vlastní tag u uživatelského jména
 pricing_and_tiers.plutonium.features.custom_video_backgrounds: Video pozadí

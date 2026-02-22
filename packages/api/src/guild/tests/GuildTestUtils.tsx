@@ -97,7 +97,13 @@ export async function updateChannelPositions(
 	harness: ApiTestHarness,
 	token: string,
 	guildId: string,
-	positions: Array<{id: string; position?: number; lock_permissions?: boolean | null; parent_id?: string | null}>,
+	positions: Array<{
+		id: string;
+		position?: number;
+		lock_permissions?: boolean | null;
+		parent_id?: string | null;
+		preceding_sibling_id?: string | null;
+	}>,
 ): Promise<void> {
 	await createBuilder(harness, token).patch(`/guilds/${guildId}/channels`).body(positions).expect(204).execute();
 }

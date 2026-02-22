@@ -17,21 +17,26 @@
  * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import UserStore from '@app/stores/UserStore';
-import {type ManagedTrait, ManagedTraits} from '@fluxer/constants/src/ManagedTraits';
+import {Client} from '@elastic/elasticsearch';
 
-export function hasManagedTrait(trait: ManagedTrait | string): boolean {
-	const currentUser = UserStore.getCurrentUser();
-	if (!currentUser) {
-		return false;
-	}
-	return currentUser.traits.includes(trait);
+export interface ElasticsearchClientConfig {
+	node: string;
+	auth?: {
+		apiKey?: string;
+		username?: string;
+		password?: string;
+	};
+	requestTimeoutMs: number;
 }
 
-export function hasExpressionPackTrait(): boolean {
-	return hasManagedTrait(ManagedTraits.EXPRESSION_PACKS);
-}
-
-export function hasMessageSchedulingTrait(): boolean {
-	return hasManagedTrait(ManagedTraits.MESSAGE_SCHEDULING);
+export function createElasticsearchClient(config: ElasticsearchClientConfig): Client {
+	return new Client({
+		node: config.node,
+		auth: config.auth?.apiKey
+			? {apiKey: config.auth.apiKey}
+			: config.auth?.username
+				? {username: config.auth.username, password: config.auth.password ?? ''}
+				: undefined,
+		requestTimeout: config.requestTimeoutMs,
+	});
 }

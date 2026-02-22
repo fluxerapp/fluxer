@@ -18,6 +18,8 @@
  */
 
 import {createTestAccount} from '@fluxer/api/src/auth/tests/AuthTestUtils';
+import {createGuildID, createRoleID} from '@fluxer/api/src/BrandedTypes';
+import {GuildRoleRepository} from '@fluxer/api/src/guild/repositories/GuildRoleRepository';
 import {
 	acceptInvite,
 	addMemberRole,
@@ -174,5 +176,44 @@ describe('Guild Role Operations', () => {
 		});
 
 		expect(newRole.name).toBe('Member Created Role');
+	});
+
+	test('should preserve concurrent position updates when applying stale role snapshot', async () => {
+		const account = await createTestAccount(harness);
+		const guild = await createGuild(harness, account.token, 'Test Guild');
+
+		const role = await createRole(harness, account.token, guild.id, {
+			name: 'Role',
+		});
+
+		const guildId = createGuildID(BigInt(guild.id));
+		const roleId = createRoleID(BigInt(role.id));
+		const roleRepository = new GuildRoleRepository();
+		const staleRole = await roleRepository.getRole(roleId, guildId);
+		expect(staleRole).toBeDefined();
+		if (!staleRole) {
+			return;
+		}
+
+		const staleRoleRow = staleRole.toRow();
+		const movedRole = await roleRepository.upsertRole(
+			{
+				...staleRoleRow,
+				position: staleRoleRow.position + 5,
+			},
+			staleRoleRow,
+		);
+
+		await roleRepository.upsertRole(
+			{
+				...staleRoleRow,
+				name: 'Renamed Role',
+			},
+			staleRoleRow,
+		);
+
+		const finalRole = await roleRepository.getRole(roleId, guildId);
+		expect(finalRole?.name).toBe('Renamed Role');
+		expect(finalRole?.position).toBe(movedRole.position);
 	});
 });

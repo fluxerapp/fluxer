@@ -371,7 +371,7 @@ pricing_and_tiers.free.label: 無料
 pricing_and_tiers.plutonium.benefits_note_official_instance_only: '注: PlutoniumとVisionaryの特典は公式のFluxer.appインスタンスのみ対象です。第三者やセルフホストのインスタンスには適用されません。'
 pricing_and_tiers.plutonium.feature_highlights: 500MBアップロード、4,000文字メッセージ、ブックマーク300件、絵文字パック50個など、まだまだ。
 pricing_and_tiers.plutonium.features.bio_character_limit: 自己紹介の文字数上限
-pricing_and_tiers.plutonium.features.choose_custom_4_digit_tag: #0001、#1337、#9999みたいに自分だけの4桁タグを選んで、ユーザー名をもっとユニークに。
+pricing_and_tiers.plutonium.features.choose_custom_4_digit_tag: '#0001から#9999の間で好きな4桁タグを選んで、ユーザー名をもっとユニークに。'
 pricing_and_tiers.plutonium.features.custom_4_digit_username_tag: カスタム4桁ユーザータグ
 pricing_and_tiers.plutonium.features.custom_username_tag: カスタムユーザータグ
 pricing_and_tiers.plutonium.features.custom_video_backgrounds: ビデオ背景

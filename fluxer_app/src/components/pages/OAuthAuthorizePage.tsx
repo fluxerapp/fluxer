@@ -370,16 +370,6 @@ const OAuthAuthorizePage: React.FC = observer(() => {
 	const appName = publicApp?.name?.trim();
 	const clientLabel = appName || t`This application`;
 
-	const appAvatarUrl = useMemo<string | null>(() => {
-		if (!publicApp?.id || !publicApp.icon) {
-			return null;
-		}
-		const url = AvatarUtils.getUserAvatarURL({id: publicApp.id, avatar: publicApp.icon}, false);
-		return url ?? null;
-	}, [publicApp?.icon, publicApp?.id]);
-
-	const appInitial = clientLabel.charAt(0).toUpperCase();
-
 	const formattedPermissions = useMemo(() => {
 		if (!hasBotScope || !authParams?.permissions) return authParams?.permissions ?? undefined;
 		return formatBotPermissionsQuery(Array.from(selectedPermissions ?? []));
@@ -587,16 +577,6 @@ const OAuthAuthorizePage: React.FC = observer(() => {
 				</div>
 
 				<div className={styles.heroCard}>
-					<div className={styles.heroAvatarShell}>
-						<BaseAvatar
-							size={48}
-							avatarUrl={appAvatarUrl || ''}
-							shouldPlayAnimated={false}
-							className={!appAvatarUrl ? styles.appAvatarFallback : undefined}
-							userTag={clientLabel}
-						/>
-						{!appAvatarUrl && <span className={styles.appAvatarInitial}>{appInitial}</span>}
-					</div>
 					<div className={styles.heroCopy}>
 						<h1 className={styles.heroTitle}>
 							<Trans>Configure bot permissions</Trans>
@@ -724,17 +704,6 @@ const OAuthAuthorizePage: React.FC = observer(() => {
 			)}
 
 			<div className={styles.heroCard}>
-				<div className={styles.heroAvatarShell}>
-					<BaseAvatar
-						size={48}
-						avatarUrl={appAvatarUrl || ''}
-						shouldPlayAnimated={false}
-						className={!appAvatarUrl ? styles.appAvatarFallback : undefined}
-						userTag={clientLabel}
-					/>
-					{!appAvatarUrl && <span className={styles.appAvatarInitial}>{appInitial}</span>}
-				</div>
-
 				<div className={styles.heroCopy}>
 					<p className={styles.eyebrow}>
 						<Trans>Authorization request</Trans>

@@ -21,8 +21,8 @@ import {createTestAccount} from '@fluxer/api/src/auth/tests/AuthTestUtils';
 import {
 	createChannelInvite,
 	createGuildChannel,
-	enableMessageSchedulingForGuild,
 	getScheduledMessages,
+	grantStaffAccess,
 	joinGuild,
 	removeGuildMember,
 	scheduleMessage,
@@ -47,7 +47,7 @@ describe('Scheduled messages list invalid entry', () => {
 		const owner = await createTestAccount(harness);
 		const member = await createTestAccount(harness);
 		const guild = await createGuild(harness, owner.token, 'scheduled-invalid');
-		await enableMessageSchedulingForGuild(harness, guild.id);
+		await grantStaffAccess(harness, member.userId);
 		const channel = await createGuildChannel(harness, owner.token, guild.id, 'scheduled-invalid');
 
 		const invite = await createChannelInvite(harness, owner.token, channel.id);

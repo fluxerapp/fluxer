@@ -42,6 +42,7 @@ import MobileLayoutStore from '@app/stores/MobileLayoutStore';
 import PermissionStore from '@app/stores/PermissionStore';
 import RelationshipStore from '@app/stores/RelationshipStore';
 import SavedMessagesStore from '@app/stores/SavedMessagesStore';
+import UserStore from '@app/stores/UserStore';
 import type {UnicodeEmoji} from '@app/types/EmojiTypes';
 import {isSystemDmChannel} from '@app/utils/ChannelUtils';
 import {buildMessageJumpLink} from '@app/utils/MessageLinkUtils';
@@ -450,7 +451,12 @@ export function requestMessageForward(message: MessageRecord): void {
 		return;
 	}
 
-	ModalActionCreators.push(modal(() => <ForwardModal message={message} />));
+	const currentUser = UserStore.currentUser;
+	if (!currentUser) {
+		return;
+	}
+
+	ModalActionCreators.push(modal(() => <ForwardModal message={message} user={currentUser} />));
 }
 
 export function requestCopyMessageText(message: MessageRecord, i18n: I18n): void {

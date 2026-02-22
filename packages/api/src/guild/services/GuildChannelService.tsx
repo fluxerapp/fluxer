@@ -112,6 +112,7 @@ export class GuildChannelService {
 				channelId: ChannelID;
 				position?: number;
 				parentId: ChannelID | null | undefined;
+				precedingSiblingId: ChannelID | null | undefined;
 				lockPermissions: boolean;
 			}>;
 			requestCache: RequestCache;

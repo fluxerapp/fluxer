@@ -36,6 +36,9 @@ export interface APIConfig {
 
 	kv: {
 		url: string;
+		mode: 'standalone' | 'cluster';
+		clusterNodes: Array<{host: string; port: number}>;
+		clusterNatMap: Record<string, {host: string; port: number}>;
 	};
 
 	nats: {
@@ -149,8 +152,11 @@ export interface APIConfig {
 	};
 
 	search: {
+		engine: 'meilisearch' | 'elasticsearch';
 		url: string;
 		apiKey: string;
+		username: string;
+		password: string;
 	};
 
 	stripe: {

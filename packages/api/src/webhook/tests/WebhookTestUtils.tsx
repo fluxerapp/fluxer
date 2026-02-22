@@ -21,7 +21,6 @@ import {createMultipartFormData} from '@fluxer/api/src/channel/tests/AttachmentT
 import {getPngDataUrl, VALID_PNG_BASE64} from '@fluxer/api/src/emoji/tests/EmojiTestUtils';
 import type {ApiTestHarness} from '@fluxer/api/src/test/ApiTestHarness';
 import {createBuilder, createBuilderWithoutAuth} from '@fluxer/api/src/test/TestRequestBuilder';
-import {ManagedTraits} from '@fluxer/constants/src/ManagedTraits';
 import type {GuildEmojiWithUserResponse} from '@fluxer/schema/src/domains/guild/GuildEmojiSchemas';
 import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import type {WebhookResponse, WebhookTokenResponse} from '@fluxer/schema/src/domains/webhook/WebhookSchemas';
@@ -215,13 +214,8 @@ export async function getChannelMessage(
 	return createBuilder<MessageResponse>(harness, token).get(`/channels/${channelId}/messages/${messageId}`).execute();
 }
 
-export async function enableExpressionPacksForGuild(harness: ApiTestHarness, guildId: string): Promise<void> {
-	return createBuilderWithoutAuth<void>(harness)
-		.post(`/test/guilds/${guildId}/features`)
-		.body({
-			add_features: [ManagedTraits.EXPRESSION_PACKS],
-		})
-		.execute();
+export async function grantStaffAccess(harness: ApiTestHarness, userId: string): Promise<void> {
+	await createBuilderWithoutAuth(harness).patch(`/test/users/${userId}/flags`).body({flags: 1}).execute();
 }
 
 const CREATE_EXPRESSIONS = 0x08000000n;

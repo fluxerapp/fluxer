@@ -23,6 +23,7 @@ import {
 	createChannelInvite,
 	createDmChannel,
 	createFriendship,
+	createGroupDmChannel,
 	createGuild,
 	getChannel,
 } from '@fluxer/api/src/channel/tests/ChannelTestUtils';
@@ -30,7 +31,12 @@ import {ensureSessionStarted} from '@fluxer/api/src/message/tests/MessageTestUti
 import {type ApiTestHarness, createApiTestHarness} from '@fluxer/api/src/test/ApiTestHarness';
 import {HTTP_STATUS} from '@fluxer/api/src/test/TestConstants';
 import {createBuilder} from '@fluxer/api/src/test/TestRequestBuilder';
-import {afterAll, beforeAll, beforeEach, describe, it} from 'vitest';
+import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
+
+interface ErrorResponse {
+	code: string;
+	errors?: Array<{code?: string}>;
+}
 
 describe('Voice Call Ringing', () => {
 	let harness: ApiTestHarness;
@@ -59,6 +65,20 @@ describe('Voice Call Ringing', () => {
 		await acceptInvite(harness, user2.token, invite.code);
 
 		return {user1, user2, guild};
+	}
+
+	async function setupGroupDmUsers() {
+		const owner = await createTestAccount(harness);
+		const memberOne = await createTestAccount(harness);
+		const memberTwo = await createTestAccount(harness);
+		const outsider = await createTestAccount(harness);
+
+		await createFriendship(harness, owner, memberOne);
+		await createFriendship(harness, owner, memberTwo);
+
+		const groupDm = await createGroupDmChannel(harness, owner.token, [memberOne.userId, memberTwo.userId]);
+
+		return {owner, memberOne, memberTwo, outsider, groupDm};
 	}
 
 	describe('Ring call', () => {
@@ -125,6 +145,50 @@ describe('Voice Call Ringing', () => {
 				.post(`/channels/${textChannel.id}/call/ring`)
 				.body({})
 				.expect(HTTP_STATUS.BAD_REQUEST, 'INVALID_CHANNEL_TYPE_FOR_CALL')
+				.execute();
+		});
+
+		it('non-member cannot ring group DM call', async () => {
+			const {owner, memberOne, outsider, groupDm} = await setupGroupDmUsers();
+
+			await createBuilder(harness, owner.token)
+				.post(`/channels/${groupDm.id}/call/ring`)
+				.body({recipients: [memberOne.userId]})
+				.expect(HTTP_STATUS.NO_CONTENT)
+				.execute();
+
+			await createBuilder(harness, outsider.token)
+				.post(`/channels/${groupDm.id}/call/ring`)
+				.body({recipients: [memberOne.userId]})
+				.expect(HTTP_STATUS.NOT_FOUND, 'UNKNOWN_CHANNEL')
+				.execute();
+		});
+
+		it('rejects non-recipient ids in group DM ring payload', async () => {
+			const {owner, memberOne, outsider, groupDm} = await setupGroupDmUsers();
+
+			const error = await createBuilder<ErrorResponse>(harness, owner.token)
+				.post(`/channels/${groupDm.id}/call/ring`)
+				.body({recipients: [memberOne.userId, outsider.userId]})
+				.expect(HTTP_STATUS.BAD_REQUEST, 'INVALID_FORM_BODY')
+				.execute();
+
+			expect(error.errors?.[0]?.code).toBe('USER_NOT_IN_CHANNEL');
+		});
+
+		it('group DM members can ring valid subset and default recipients', async () => {
+			const {owner, memberOne, memberTwo, groupDm} = await setupGroupDmUsers();
+
+			await createBuilder(harness, memberOne.token)
+				.post(`/channels/${groupDm.id}/call/ring`)
+				.body({recipients: [owner.userId]})
+				.expect(HTTP_STATUS.NO_CONTENT)
+				.execute();
+
+			await createBuilder(harness, memberTwo.token)
+				.post(`/channels/${groupDm.id}/call/ring`)
+				.body({})
+				.expect(HTTP_STATUS.NO_CONTENT)
 				.execute();
 		});
 	});

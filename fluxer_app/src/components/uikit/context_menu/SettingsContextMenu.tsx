@@ -30,8 +30,7 @@ import {MenuGroup} from '@app/components/uikit/context_menu/MenuGroup';
 import {MenuItem} from '@app/components/uikit/context_menu/MenuItem';
 import {MenuItemSubmenu} from '@app/components/uikit/context_menu/MenuItemSubmenu';
 import DeveloperModeStore from '@app/stores/DeveloperModeStore';
-import {hasManagedTrait} from '@app/utils/traits/UserTraits';
-import {ManagedTraits} from '@fluxer/constants/src/ManagedTraits';
+import UserStore from '@app/stores/UserStore';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
@@ -44,7 +43,7 @@ interface SettingsContextMenuProps {
 export const SettingsContextMenu: React.FC<SettingsContextMenuProps> = observer(({onClose}) => {
 	const {i18n} = useLingui();
 	const isDeveloper = DeveloperModeStore.isDeveloper;
-	const hasExpressionPackAccess = hasManagedTrait(ManagedTraits.EXPRESSION_PACKS);
+	const hasExpressionPackAccess = UserStore.getCurrentUser()?.isStaff() ?? false;
 
 	const handleOpenSettings = useCallback(
 		(tab: SettingsTab, subtab?: SettingsSubtab) => {

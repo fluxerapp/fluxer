@@ -89,7 +89,7 @@ export class GuildRoleRepository extends IGuildRoleRepository {
 				}),
 			(current) => ({
 				pk: {guild_id: guildId, role_id: roleId},
-				patch: buildPatchFromData(data, current, GUILD_ROLE_COLUMNS, ['guild_id', 'role_id']),
+				patch: buildPatchFromData(data, oldData ?? current, GUILD_ROLE_COLUMNS, ['guild_id', 'role_id']),
 			}),
 			GuildRoles,
 			{initialData: oldData},

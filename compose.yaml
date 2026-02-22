@@ -64,6 +64,27 @@ services:
       retries: 5
     logging: *default-logging
 
+  elasticsearch:
+    image: elasticsearch:8.19.11
+    container_name: elasticsearch
+    profiles: ['search']
+    restart: unless-stopped
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: 'false'
+      xpack.security.http.ssl.enabled: 'false'
+      ES_JAVA_OPTS: '-Xms512m -Xmx512m'
+    ports:
+      - '${ELASTICSEARCH_PORT:-9200}:9200'
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -fsS http://127.0.0.1:9200/_cluster/health || exit 1']
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    logging: *default-logging
+
   livekit:
     image: livekit/livekit-server:v1.9.11
     container_name: livekit
@@ -88,3 +109,4 @@ volumes:
   valkey_data:
   fluxer_data:
   meilisearch_data:
+  elasticsearch_data:

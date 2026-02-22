@@ -21,9 +21,9 @@ import {createTestAccount} from '@fluxer/api/src/auth/tests/AuthTestUtils';
 import {
 	createChannelInvite,
 	createGuildChannel,
-	enableMessageSchedulingForGuild,
 	getChannelMessages,
 	getScheduledMessage,
+	grantStaffAccess,
 	joinGuild,
 	messageFromAuthorContains,
 	removeGuildMember,
@@ -49,7 +49,7 @@ describe('Scheduled message worker lifecycle', () => {
 	it('delivers scheduled message when permissions remain', async () => {
 		const owner = await createTestAccount(harness);
 		const guild = await createGuild(harness, owner.token, 'scheduled-messages');
-		await enableMessageSchedulingForGuild(harness, guild.id);
+		await grantStaffAccess(harness, owner.userId);
 		const channel = await createGuildChannel(harness, owner.token, guild.id, 'scheduled');
 
 		const content = 'scheduled message goes through';
@@ -67,7 +67,7 @@ describe('Scheduled message worker lifecycle', () => {
 	it('reschedules pending message before worker execution', async () => {
 		const owner = await createTestAccount(harness);
 		const guild = await createGuild(harness, owner.token, 'scheduled-messages');
-		await enableMessageSchedulingForGuild(harness, guild.id);
+		await grantStaffAccess(harness, owner.userId);
 		const channel = await createGuildChannel(harness, owner.token, guild.id, 'scheduled');
 
 		const content = 'scheduled message initial content';
@@ -106,7 +106,7 @@ describe('Scheduled message worker lifecycle', () => {
 		const owner = await createTestAccount(harness);
 		const member = await createTestAccount(harness);
 		const guild = await createGuild(harness, owner.token, 'scheduled-messages');
-		await enableMessageSchedulingForGuild(harness, guild.id);
+		await grantStaffAccess(harness, member.userId);
 		const channel = await createGuildChannel(harness, owner.token, guild.id, 'scheduled');
 
 		const invite = await createChannelInvite(harness, owner.token, channel.id);

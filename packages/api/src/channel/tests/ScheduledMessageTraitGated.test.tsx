@@ -20,7 +20,7 @@
 import {createTestAccount} from '@fluxer/api/src/auth/tests/AuthTestUtils';
 import {
 	createGuildChannel,
-	enableMessageSchedulingForGuild,
+	grantStaffAccess,
 	scheduleMessage,
 } from '@fluxer/api/src/channel/tests/ScheduledMessageTestUtils';
 import {createGuild} from '@fluxer/api/src/guild/tests/GuildTestUtils';
@@ -29,7 +29,7 @@ import {type ApiTestHarness, createApiTestHarness} from '@fluxer/api/src/test/Ap
 import {createBuilder} from '@fluxer/api/src/test/TestRequestBuilder';
 import {beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
-describe('Scheduled message trait gating', () => {
+describe('Scheduled message staff gating', () => {
 	let harness: ApiTestHarness;
 
 	beforeAll(async () => {
@@ -40,7 +40,7 @@ describe('Scheduled message trait gating', () => {
 		await harness.reset();
 	});
 
-	it('rejects scheduling message before trait enabled', async () => {
+	it('rejects scheduling message before staff flag granted', async () => {
 		const owner = await createTestAccount(harness);
 		const guild = await createGuild(harness, owner.token, 'scheduled-flag');
 		const channel = await createGuildChannel(harness, owner.token, guild.id, 'scheduled-channel');
@@ -56,7 +56,7 @@ describe('Scheduled message trait gating', () => {
 			.expect(403)
 			.execute();
 
-		await enableMessageSchedulingForGuild(harness, guild.id);
+		await grantStaffAccess(harness, owner.userId);
 
 		const scheduled = await scheduleMessage(harness, channel.id, owner.token, 'enabled now');
 		expect(scheduled.id).toBeDefined();

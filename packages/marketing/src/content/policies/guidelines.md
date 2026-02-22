@@ -99,9 +99,13 @@ We have a zero-tolerance stance on child sexual exploitation.
 
 - **Users under 18:** If you are under 18, you must not engage with, share, or distribute any sexual or sexually suggestive content.
 
-- **Content involving minors (real or fictional):** No user may share, distribute, request, or possess sexual or sexually suggestive content involving minors (whether real, fictional, or simulated). This includes "age play" or any portrayal that sexualizes minors.
+- **Child sexual abuse material (CSAM):** CSAM – sexual or sexually suggestive imagery depicting real children – is strictly prohibited and will be reported to law enforcement authorities as required by law. We use automated tools and safety systems to detect and prevent CSAM in media where technically feasible and take immediate action when we identify it. This includes realistic AI-generated or digitally manipulated imagery that is indistinguishable from photographs of real children.
 
-- **Child sexual abuse material (CSAM):** CSAM is strictly prohibited and will be reported to law enforcement authorities as required by law. We use automated tools and safety systems to detect and prevent CSAM in media where technically feasible and take immediate action when we identify it.
+- **Sexualisation of real minors:** No user may share, distribute, request, or create sexual or sexually suggestive content depicting a real, identified minor in any medium, including text, imagery, or audio.
+
+- **Fictional depictions:** Sexual or sexually suggestive content featuring fictional characters who are explicitly described as minors, or who are unambiguously depicted as prepubescent, is prohibited in all spaces. This includes drawn, animated, AI-generated, and written content where the character is clearly a child. We assess fictional content based on the totality of context – including stated age, narrative framing, visual presentation, and the setting in which the character appears. This rule does not apply to non-sexual coming-of-age narratives, survivor stories, educational content, or literary works that depict difficult subject matter without sexualizing it.
+
+- **Grooming:** Using the platform to build a relationship with a minor for the purpose of sexual exploitation is strictly prohibited, regardless of whether explicit content is involved.
 
 - **Adult content restrictions:** Adult content is only permitted in clearly marked 18+ spaces. Communities must apply an age restriction to the Community as a whole, to individual channels, or both. We may restrict or remove Communities that fail to enforce these requirements.
 

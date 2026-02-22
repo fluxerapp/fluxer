@@ -51,7 +51,7 @@ import {
 	MAX_INSTALLED_PACKS_NON_PREMIUM,
 	MAX_PACK_EXPRESSIONS,
 } from '@fluxer/constants/src/LimitConstants';
-import {ManagedTraits} from '@fluxer/constants/src/ManagedTraits';
+import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {FeatureAccessError} from '@fluxer/errors/src/domains/core/FeatureAccessError';
 import {FeatureTemporarilyDisabledError} from '@fluxer/errors/src/domains/core/FeatureTemporarilyDisabledError';
 import {UnknownGuildEmojiError} from '@fluxer/errors/src/domains/guild/UnknownGuildEmojiError';
@@ -83,7 +83,7 @@ export class PackService {
 
 	private async requireExpressionPackAccess(userId: UserID): Promise<void> {
 		const user = await this.userRepository.findUnique(userId);
-		if (!user || !user.traits.has(ManagedTraits.EXPRESSION_PACKS)) {
+		if (!user || (user.flags & UserFlags.STAFF) === 0n) {
 			throw new FeatureTemporarilyDisabledError();
 		}
 	}

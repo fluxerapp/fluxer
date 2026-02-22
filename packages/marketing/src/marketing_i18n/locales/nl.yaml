@@ -371,7 +371,7 @@ pricing_and_tiers.free.label: Gratis
 pricing_and_tiers.plutonium.benefits_note_official_instance_only: 'Let op: Plutonium- en Visionary-voordelen gelden alleen op de officiële Fluxer.app-instance, niet op instances van derden of zelf gehoste instances.'
 pricing_and_tiers.plutonium.feature_highlights: Uploads tot 500 MB, berichten tot 4.000 tekens, 300 bladwijzers, 50 emojipakketten en nog veel meer.
 pricing_and_tiers.plutonium.features.bio_character_limit: Bio-limiet (tekens)
-pricing_and_tiers.plutonium.features.choose_custom_4_digit_tag: Kies je eigen 4-cijferige tag zoals #0001, #1337 of #9999 om je gebruikersnaam echt uniek te maken.
+pricing_and_tiers.plutonium.features.choose_custom_4_digit_tag: Kies een beschikbare 4-cijferige tag van #0001 tot #9999 om je gebruikersnaam echt uniek te maken.
 pricing_and_tiers.plutonium.features.custom_4_digit_username_tag: Eigen 4-cijferige gebruikers-tag
 pricing_and_tiers.plutonium.features.custom_username_tag: Eigen gebruikers-tag
 pricing_and_tiers.plutonium.features.custom_video_backgrounds: Eigen videobackgrounds

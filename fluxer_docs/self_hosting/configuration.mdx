@@ -750,18 +750,24 @@ Default voice region to create on startup if none exist. When provided, automati
 
 JSON path: `integrations.search`
 
-Search engine integration (Meilisearch). Fluxer always uses Meilisearch for indexing and querying.
+Search engine integration. Supports Meilisearch and Elasticsearch backends.
 
 | Property | Type | Description |
 |----------|------|-------------|
-| api_key | string | Meilisearch API key used by the API for index management and writes. Use a key with access to documents and settings. |
-| url | string | Meilisearch HTTP API URL. Default: `http://127.0.0.1:7700` |
+| api_key | string | API key for authenticating with the search engine. For Meilisearch, this is the master or admin key. For Elasticsearch, this is an API key. Default: `""` |
+| engine? | enum&lt;`meilisearch`, `elasticsearch`&gt; | Search engine backend to use. Default: `meilisearch` |
+| password? | string | Password for Elasticsearch basic authentication. Only used when engine is elasticsearch and api_key is not set. Default: `""` |
+| url | string | Search engine HTTP API URL. Used by both Meilisearch and Elasticsearch. Default: `http://127.0.0.1:7700` |
+| username? | string | Username for Elasticsearch basic authentication. Only used when engine is elasticsearch and api_key is not set. Default: `""` |
 
 <Expandable title="Example JSON">
 ```json
 {
-  "api_key": "your_api_key",
-  "url": "http://127.0.0.1:7700"
+  "api_key": "",
+  "url": "http://127.0.0.1:7700",
+  "engine": "meilisearch",
+  "password": "",
+  "username": ""
 }
 ```
 </Expandable>
@@ -1018,6 +1024,9 @@ Direct internal endpoints for backend services. In monolith mode these are serve
 | Property | Type | Description |
 |----------|------|-------------|
 | kv? | string | Internal Valkey/Redis URL for key-value operations. Default: `redis://localhost:6379/0` |
+| kv_cluster_nat_map? | object | NAT mapping for Valkey/Redis cluster nodes. Maps internal addresses to external addresses for NAT traversal. Default: `{}` |
+| kv_cluster_nodes? | array&lt;object&gt; | List of cluster node URLs when kv_mode is 'cluster'. Each entry should be a host:port string. Default: `[]` |
+| kv_mode? | enum&lt;`standalone`, `cluster`&gt; | Valkey/Redis connection mode. Use 'standalone' for a single node or 'cluster' for a Valkey/Redis cluster. Default: `standalone` |
 | media_proxy? | string | Internal URL for the Media Proxy service. Default: `http://localhost:8088/media` |
 | queue? | string | Internal URL for the Queue service. Default: `http://localhost:8088/queue` |
 
@@ -1025,6 +1034,9 @@ Direct internal endpoints for backend services. In monolith mode these are serve
 ```json
 {
   "kv": "redis://localhost:6379/0",
+  "kv_cluster_nat_map": {},
+  "kv_cluster_nodes": [],
+  "kv_mode": "standalone",
   "media_proxy": "http://localhost:8088/media",
   "queue": "http://localhost:8088/queue"
 }

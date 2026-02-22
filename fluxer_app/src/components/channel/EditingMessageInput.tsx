@@ -40,7 +40,7 @@ import MobileLayoutStore from '@app/stores/MobileLayoutStore';
 import UserStore from '@app/stores/UserStore';
 import {Limits} from '@app/utils/limits/UserLimits';
 import {applyMarkdownSegments} from '@app/utils/MarkdownToSegmentUtils';
-import {MAX_MESSAGE_LENGTH_PREMIUM} from '@fluxer/constants/src/LimitConstants';
+import {MAX_MESSAGE_LENGTH_NON_PREMIUM, MAX_MESSAGE_LENGTH_PREMIUM} from '@fluxer/constants/src/LimitConstants';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {SmileyIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
@@ -64,8 +64,8 @@ export const EditingMessageInput = observer(
 		setValue: React.Dispatch<React.SetStateAction<string>>;
 	}) => {
 		const {t} = useLingui();
-		const currentUser = UserStore.getCurrentUser()!;
-		const maxMessageLength = currentUser.maxMessageLength;
+		const currentUser = UserStore.getCurrentUser();
+		const maxMessageLength = currentUser?.maxMessageLength ?? MAX_MESSAGE_LENGTH_NON_PREMIUM;
 		const premiumMaxLength = Limits.getPremiumValue('max_message_length', MAX_MESSAGE_LENGTH_PREMIUM);
 		const [expressionPickerOpen, setExpressionPickerOpen] = useState(false);
 		const hasInitializedRef = useRef(false);

@@ -134,12 +134,12 @@ msgid "{0} of {totalAttachments}"
 msgstr "{0}/{totalAttachments}"
 
 #. placeholder {0}: passkeys.length
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:285
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:288
 msgid "{0} passkey registered (max 10)"
 msgstr "{0} 패스키 등록됨 (최대 10개)"
 
 #. placeholder {0}: passkeys.length
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:286
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:289
 msgid "{0} passkeys registered (max 10)"
 msgstr "{0} 패스키 등록됨 (최대 10개)"
 
@@ -633,11 +633,11 @@ msgstr "{lockedStickerCount} 스티커"
 msgid "{lockedStickerCount} stickers"
 msgstr "{lockedStickerCount} 스티커"
 
-#: src/components/alerts/MaxBookmarksModal.tsx:38
+#: src/components/alerts/MaxBookmarksModal.tsx:41
 msgid "{maxBookmarks} bookmark"
 msgstr "{maxBookmarks} 북마크"
 
-#: src/components/alerts/MaxBookmarksModal.tsx:38
+#: src/components/alerts/MaxBookmarksModal.tsx:41
 msgid "{maxBookmarks} bookmarks"
 msgstr "{maxBookmarks} 북마크"
 
@@ -718,11 +718,11 @@ msgstr "통화 중인 {participantCount} 참여자"
 msgid "{participantCount} participants in call"
 msgstr "통화 중인 {participantCount} 참여자들"
 
-#: src/components/alerts/MaxBookmarksModal.tsx:63
+#: src/components/alerts/MaxBookmarksModal.tsx:66
 msgid "{premiumBookmarks} bookmark"
 msgstr "{premiumBookmarks} 북마크"
 
-#: src/components/alerts/MaxBookmarksModal.tsx:63
+#: src/components/alerts/MaxBookmarksModal.tsx:66
 msgid "{premiumBookmarks} bookmarks"
 msgstr "{premiumBookmarks} 북마크"
 
@@ -875,11 +875,11 @@ msgstr "{username}님이 누군가를 그룹에서 제거했습니다."
 msgid "{username} started a call."
 msgstr "{username}님이 통화를 시작했습니다."
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:100
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:102
 msgid "{v} gift"
 msgstr "{v} 선물"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:100
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:102
 msgid "{v} gifts"
 msgstr "{v} 선물들"
 
@@ -1088,7 +1088,7 @@ msgstr "<0>멤버의 음소거를 해제했습니다</0>."
 msgid "<0>Unmuted</0> the member."
 msgstr "<0>멤버의 음소거를 해제했습니다</0>."
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:370
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:373
 msgid "<0>Warning:</0> This will also disable SMS two-factor authentication."
 msgstr "<0>경고:</0> 이 작업은 SMS 2단계 인증도 비활성화합니다."
 
@@ -1362,9 +1362,9 @@ msgstr "30초"
 msgid "4 hours"
 msgstr "4시간"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:203
-#: src/components/modals/FluxerTagChangeModal.tsx:231
-#: src/components/modals/FluxerTagChangeModal.tsx:248
+#: src/components/modals/FluxerTagChangeModal.tsx:217
+#: src/components/modals/FluxerTagChangeModal.tsx:245
+#: src/components/modals/FluxerTagChangeModal.tsx:262
 msgid "4-digit tag"
 msgstr "4자리 태그"
 
@@ -1634,7 +1634,7 @@ msgstr "계정이 성공적으로 등록되었습니다."
 msgid "Account Connected"
 msgstr "계정 연결됨"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:55
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:57
 msgid "Account State Overrides"
 msgstr "계정 상태 재정의"
 
@@ -1642,7 +1642,7 @@ msgstr "계정 상태 재정의"
 msgid "Account Too New"
 msgstr "계정이 너무 새로워요"
 
-#: src/actions/InviteActionCreators.tsx:178
+#: src/actions/InviteActionCreators.tsx:182
 #: src/components/modals/RequiredActionModal.tsx:143
 #: src/components/modals/RequiredActionModal.tsx:416
 msgid "Account Verification Required"
@@ -1763,7 +1763,7 @@ msgstr "추가"
 msgid "Add a bot to a community with requested permissions"
 msgstr "요청된 권한으로 커뮤니티에 봇 추가"
 
-#: src/components/modals/ForwardModal.tsx:309
+#: src/components/modals/ForwardModal.tsx:314
 msgid "Add a comment (optional)"
 msgstr "댓글 추가 (선택)"
 
@@ -1782,7 +1782,7 @@ msgstr "맞춤 배경 추가"
 msgid "Add a different account"
 msgstr "다른 계정 추가"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:348
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:351
 msgid "Add a phone number to enable SMS two-factor authentication"
 msgstr "SMS 2단계 인증을 활성화하려면 전화번호 추가"
 
@@ -1844,7 +1844,7 @@ msgstr "연결 추가 양식"
 msgid "Add domain connection"
 msgstr "도메인 연결 추가"
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:98
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:101
 msgid "Add Email"
 msgstr "이메일 추가"
 
@@ -1902,12 +1902,12 @@ msgstr "전화번호 추가 또는 변경"
 msgid "Add Override"
 msgstr "재정의 추가"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:290
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:293
 msgid "Add Passkey"
 msgstr "패스키 추가"
 
 #: src/components/channel/barriers/BarrierComponents.tsx:198
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:395
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:398
 msgid "Add Phone"
 msgstr "전화 추가"
 
@@ -2010,7 +2010,7 @@ msgstr "{0}을(를) 추가했습니다."
 msgid "Added roles."
 msgstr "역할이 추가되었습니다."
 
-#: src/actions/SavedMessageActionCreators.tsx:58
+#: src/actions/SavedMessageActionCreators.tsx:59
 msgid "Added to bookmarks"
 msgstr "북마크에 추가됨"
 
@@ -2028,11 +2028,11 @@ msgstr "즐겨찾기에 추가됨"
 msgid "Added to saved media"
 msgstr "저장된 미디어에 추가됨"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:313
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:316
 msgid "Added: {createdDate}"
 msgstr "추가됨: {createdDate}"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:309
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:312
 msgid "Added: {createdDate} • Last used: {lastUsedDate}"
 msgstr "추가됨: {createdDate} • 마지막 사용: {lastUsedDate}"
 
@@ -2930,7 +2930,7 @@ msgid "Are you sure you want to remove this connection? This action cannot be un
 msgstr "이 연결을 제거하시겠습니까? 이 작업은 실행 취소할 수 없습니다."
 
 #. placeholder {0}: user.phone
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:364
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:367
 msgid "Are you sure you want to remove your phone number <0>{0}</0>?"
 msgstr "전화번호 <0>{0}</0>를 삭제하시겠어요?"
 
@@ -3395,7 +3395,7 @@ msgstr "역할로 돌아가기"
 msgid "Back to Settings"
 msgstr "설정으로 돌아가기"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:118
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:120
 msgid "Backend Premium Override"
 msgstr "백엔드 프리미엄 재정의"
 
@@ -3438,12 +3438,12 @@ msgid "backup codes"
 msgstr "백업 코드"
 
 #: src/components/modals/BackupCodesModal.tsx:43
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:254
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:257
 #: src/components/modals/utils/SettingsSearchIndex.tsx:140
 msgid "Backup Codes"
 msgstr "백업 코드"
 
-#: src/components/modals/BackupCodesRegenerateModal.tsx:48
+#: src/components/modals/BackupCodesRegenerateModal.tsx:55
 msgid "Backup codes regenerated"
 msgstr "백업 코드가 재생성되었습니다"
 
@@ -3720,9 +3720,9 @@ msgstr "독서 모임"
 msgid "Bookmark"
 msgstr "북마크"
 
-#: src/components/alerts/MaxBookmarksModal.tsx:43
-#: src/components/alerts/MaxBookmarksModal.tsx:54
-#: src/components/alerts/MaxBookmarksModal.tsx:67
+#: src/components/alerts/MaxBookmarksModal.tsx:46
+#: src/components/alerts/MaxBookmarksModal.tsx:57
+#: src/components/alerts/MaxBookmarksModal.tsx:70
 msgid "Bookmark Limit Reached"
 msgstr "북마크 한도 도달"
 
@@ -3750,7 +3750,7 @@ msgstr "북마크됨!"
 
 #: src/components/modals/BookmarksBottomSheet.tsx:109
 #: src/components/pages/SavedMessagesPage.tsx:67
-#: src/components/popouts/InboxPopout.tsx:58
+#: src/components/popouts/InboxPopout.tsx:57
 msgid "Bookmarks"
 msgstr "북마크"
 
@@ -4055,7 +4055,7 @@ msgstr "참여자가 {VOICE_CHANNEL_CAMERA_USER_LIMIT}명을 초과하면 카메
 #: src/components/alerts/FileSizeTooLargeModal.tsx:87
 #: src/components/auth/BrowserLoginHandoffModal.tsx:269
 #: src/components/bottomsheets/CreateDMBottomSheet.tsx:130
-#: src/components/channel/ChannelTextarea.tsx:312
+#: src/components/channel/ChannelTextarea.tsx:310
 #: src/components/channel/friends/FriendListItem.tsx:259
 #: src/components/channel/MentionEveryonePopout.tsx:128
 #: src/components/emojis/EmojiListItem.tsx:125
@@ -4069,8 +4069,8 @@ msgstr "참여자가 {VOICE_CHANNEL_CAMERA_USER_LIMIT}명을 초과하면 카메
 #: src/components/modals/AddGuildModal.tsx:413
 #: src/components/modals/AddGuildStickerModal.tsx:120
 #: src/components/modals/AttachmentEditModal.tsx:122
-#: src/components/modals/BackupCodesRegenerateModal.tsx:72
-#: src/components/modals/BackupCodesViewModal.tsx:70
+#: src/components/modals/BackupCodesRegenerateModal.tsx:79
+#: src/components/modals/BackupCodesViewModal.tsx:75
 #: src/components/modals/BanMemberModal.tsx:143
 #: src/components/modals/CameraPreviewModal.tsx:485
 #: src/components/modals/CaptchaModal.tsx:187
@@ -4094,14 +4094,14 @@ msgstr "참여자가 {VOICE_CHANNEL_CAMERA_USER_LIMIT}명을 초과하면 카메
 #: src/components/modals/EditFavoriteMemeModal.tsx:85
 #: src/components/modals/EditGuildStickerModal.tsx:113
 #: src/components/modals/EditPackModal.tsx:103
-#: src/components/modals/EmailChangeModal.tsx:199
-#: src/components/modals/EmailChangeModal.tsx:230
-#: src/components/modals/EmailChangeModal.tsx:267
-#: src/components/modals/EmailChangeModal.tsx:298
+#: src/components/modals/EmailChangeModal.tsx:202
+#: src/components/modals/EmailChangeModal.tsx:233
+#: src/components/modals/EmailChangeModal.tsx:270
+#: src/components/modals/EmailChangeModal.tsx:301
 #: src/components/modals/ExternalLinkWarningModal.tsx:102
-#: src/components/modals/FluxerTagChangeModal.tsx:117
-#: src/components/modals/FluxerTagChangeModal.tsx:280
-#: src/components/modals/ForwardModal.tsx:373
+#: src/components/modals/FluxerTagChangeModal.tsx:122
+#: src/components/modals/FluxerTagChangeModal.tsx:294
+#: src/components/modals/ForwardModal.tsx:378
 #: src/components/modals/guild_tabs/GuildBansTab.tsx:103
 #: src/components/modals/guild_tabs/GuildRolesTab.tsx:624
 #: src/components/modals/GuildFolderSettingsModal.tsx:199
@@ -4113,7 +4113,7 @@ msgstr "참여자가 {VOICE_CHANNEL_CAMERA_USER_LIMIT}명을 초과하면 카메
 #: src/components/modals/KickMemberModal.tsx:63
 #: src/components/modals/MessageHistoryThresholdModal.tsx:103
 #: src/components/modals/MfaTotpDisableModal.tsx:75
-#: src/components/modals/MfaTotpEnableModal.tsx:103
+#: src/components/modals/MfaTotpEnableModal.tsx:106
 #: src/components/modals/PasskeyNameModal.tsx:62
 #: src/components/modals/PasswordChangeModal.tsx:145
 #: src/components/modals/PasswordChangeModal.tsx:176
@@ -4146,7 +4146,7 @@ msgstr "취소"
 msgid "Cancel Friend Request"
 msgstr "친구 요청 취소"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:112
+#: src/components/modals/FluxerTagChangeModal.tsx:117
 msgid "Cancel if you want to choose a different username instead."
 msgstr "다른 사용자명을 선택하려면 취소하세요."
 
@@ -4178,11 +4178,11 @@ msgstr "수정할 수 없음"
 msgid "Cannot Delete Account"
 msgstr "계정을 삭제할 수 없음"
 
-#: src/actions/InviteActionCreators.tsx:313
+#: src/actions/InviteActionCreators.tsx:317
 msgid "Cannot install emoji pack"
 msgstr "이모지 팩을 설치할 수 없음"
 
-#: src/actions/InviteActionCreators.tsx:314
+#: src/actions/InviteActionCreators.tsx:318
 msgid "Cannot install sticker pack"
 msgstr "스티커 팩을 설치할 수 없음"
 
@@ -4279,7 +4279,7 @@ msgstr "배너 변경"
 msgid "Change email"
 msgstr "이메일 변경"
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:81
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:84
 msgid "Change Email"
 msgstr "이메일 변경"
 
@@ -4288,12 +4288,12 @@ msgstr "이메일 변경"
 msgid "Change emoji"
 msgstr "이모지 변경"
 
-#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:59
-#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:69
+#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:60
+#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:70
 msgid "Change FluxerTag"
 msgstr "FluxerTag 변경"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:158
+#: src/components/modals/FluxerTagChangeModal.tsx:163
 msgid "Change FluxerTag form"
 msgstr "FluxerTag 변경 양식"
 
@@ -4360,7 +4360,7 @@ msgid "change password"
 msgstr "비밀번호 변경"
 
 #: src/components/modals/PasswordChangeModal.tsx:227
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:124
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:127
 msgid "Change Password"
 msgstr "비밀번호 변경"
 
@@ -4372,7 +4372,7 @@ msgstr "비밀번호 변경 양식"
 msgid "Change what users without Read Message History can see"
 msgstr "읽기 메시지 기록이 없는 사용자가 볼 수 있는 내용을 변경하세요"
 
-#: src/components/modals/EmailChangeModal.tsx:183
+#: src/components/modals/EmailChangeModal.tsx:186
 msgid "Change Your Email"
 msgstr "이메일 변경"
 
@@ -4380,7 +4380,7 @@ msgstr "이메일 변경"
 msgid "Change your email address"
 msgstr "이메일 주소 변경"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:159
+#: src/components/modals/FluxerTagChangeModal.tsx:164
 msgid "Change Your FluxerTag"
 msgstr "FluxerTag 변경"
 
@@ -4392,7 +4392,7 @@ msgstr "이 커뮤니티에서 닉네임을 변경하세요."
 msgid "Change your password"
 msgstr "비밀번호 변경"
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:106
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:109
 msgid "Change your password to keep your account secure"
 msgstr "계정을 안전하게 유지하려면 비밀번호를 변경하세요"
 
@@ -4404,7 +4404,7 @@ msgstr "프로필 사진 변경"
 msgid "Change your username"
 msgstr "사용자 이름 변경"
 
-#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:90
+#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:91
 msgid "Change your username and 4-digit tag"
 msgstr "사용자 이름과 4자리 태그 변경"
 
@@ -4424,7 +4424,7 @@ msgstr "비트레이트를 {0}(으)로 변경했습니다."
 msgid "Changed the voice region to {0}."
 msgstr "음성 지역을 {0}(으)로 변경했습니다."
 
-#: src/components/channel/ChannelTextarea.tsx:751
+#: src/components/channel/ChannelTextarea.tsx:749
 #: src/utils/SearchUtils.tsx:268
 msgid "channel"
 msgstr "채널"
@@ -4846,7 +4846,7 @@ msgstr "2단계 인증, 패스키 같은 보안 기능 이용하려면 계정을
 msgid "Claim your account to call"
 msgstr "전화를 걸기 위해 계정을 확인하세요."
 
-#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:56
+#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:57
 msgid "Claim your account to change your FluxerTag"
 msgstr "FluxerTag를 변경하려면 계정을 인증하세요."
 
@@ -5144,7 +5144,7 @@ msgstr "클라이언트 비밀키 재생성됨. 이전 비밀키 사용 중인 �
 #: src/components/modals/components/SettingsModalHeader.tsx:98
 #: src/components/modals/InviteModal.tsx:135
 #: src/components/modals/MediaModal.tsx:349
-#: src/components/modals/MobileVideoViewer.tsx:252
+#: src/components/modals/MobileVideoViewer.tsx:260
 #: src/components/modals/Modal.tsx:382
 #: src/components/modals/Modal.tsx:460
 #: src/components/modals/PackInviteModal.tsx:152
@@ -5201,7 +5201,7 @@ msgstr "콜 테마"
 #: src/components/auth/MfaScreen.tsx:131
 #: src/components/invites/InviteListItem.tsx:56
 #: src/components/modals/MfaTotpDisableModal.tsx:63
-#: src/components/modals/MfaTotpEnableModal.tsx:91
+#: src/components/modals/MfaTotpEnableModal.tsx:94
 #: src/components/pages/report/ReportBreadcrumbs.tsx:48
 msgid "Code"
 msgstr "코드"
@@ -5333,7 +5333,7 @@ msgid "Communication"
 msgstr "커뮤니케이션"
 
 #: src/components/modals/components/FeatureComparisonTable.tsx:49
-#: src/stores/QuickSwitcherStore.tsx:1354
+#: src/stores/QuickSwitcherStore.tsx:1352
 #: src/utils/quick_switcher/QuickSwitcherModalUtils.tsx:99
 msgid "Communities"
 msgstr "커뮤니티"
@@ -5651,7 +5651,7 @@ msgid "Configure your profile badge"
 msgstr "프로필 배지 구성"
 
 #: src/components/channel/MentionEveryonePopout.tsx:134
-#: src/components/modals/EmailChangeModal.tsx:304
+#: src/components/modals/EmailChangeModal.tsx:307
 msgid "Confirm"
 msgstr "확인"
 
@@ -5825,15 +5825,15 @@ msgstr "상황별 메뉴"
 msgid "Context menus can be opened with left-click (on buttons) or right-click (on other elements). This demonstrates various menu items including checkboxes, radio buttons, sliders, and submenus."
 msgstr "상황별 메뉴는 버튼은 왼쪽 클릭, 다른 요소는 오른쪽 클릭으로 열 수 있습니다. 다양한 메뉴 항목(체크박스, 라디오 버튼, 슬라이더, 하위 메뉴 등)을 보여줍니다."
 
-#: src/components/channel/ChannelTextarea.tsx:311
+#: src/components/channel/ChannelTextarea.tsx:309
 #: src/components/modals/AddConnectionModal.tsx:221
-#: src/components/modals/BackupCodesRegenerateModal.tsx:75
-#: src/components/modals/BackupCodesViewModal.tsx:73
+#: src/components/modals/BackupCodesRegenerateModal.tsx:82
+#: src/components/modals/BackupCodesViewModal.tsx:78
 #: src/components/modals/DeviceRevokeModal.tsx:82
-#: src/components/modals/FluxerTagChangeModal.tsx:116
-#: src/components/modals/FluxerTagChangeModal.tsx:283
+#: src/components/modals/FluxerTagChangeModal.tsx:121
+#: src/components/modals/FluxerTagChangeModal.tsx:297
 #: src/components/modals/MfaTotpDisableModal.tsx:78
-#: src/components/modals/MfaTotpEnableModal.tsx:106
+#: src/components/modals/MfaTotpEnableModal.tsx:109
 #: src/components/modals/SudoVerificationModal.tsx:410
 msgid "Continue"
 msgstr "계속"
@@ -6555,7 +6555,7 @@ msgstr "현재 디바이스"
 msgid "Current DM"
 msgstr "현재 DM"
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:113
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:116
 msgid "Current Password"
 msgstr "현재 비밀번호"
 
@@ -6601,7 +6601,7 @@ msgstr "사용자 정의 CSS 재정의"
 msgid "Custom Date Range"
 msgstr "사용자 지정 날짜 범위"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:227
+#: src/components/modals/FluxerTagChangeModal.tsx:241
 msgid "Custom discriminators are not available on this instance"
 msgstr "사용자 지정 구분자는 이 인스턴스에서 사용할 수 없습니다."
 
@@ -6727,11 +6727,12 @@ msgstr "메시지 위에 마우스를 올릴 때 미디어 첨부 및 임베드�
 msgid "Customize which buttons are visible in the message input area. Keyboard shortcuts will continue to work even if buttons are hidden."
 msgstr "메시지 입력 영역에 표시되는 버튼을 사용자 정의하세요. 버튼이 숨겨져 있어도 키보드 단축키는 계속 작동합니다."
 
-#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:74
-msgid "Customize your 4-digit tag (#{discriminator}) to your liking with Plutonium"
-msgstr "Plutonium으로 4자리 태그(#{discriminator})를 원하는 대로 바꿔 보세요."
+#. placeholder {0}: user.discriminator
+#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:75
+msgid "Customize your 4-digit tag (#{0}) to your liking with Plutonium"
+msgstr "Plutonium을 사용하여 원하는 대로 4자리 태그(#{0})를 사용자 정의하세요."
 
-#: src/components/modals/FluxerTagChangeModal.tsx:272
+#: src/components/modals/FluxerTagChangeModal.tsx:286
 msgid "Customize your 4-digit tag or keep it when changing your username"
 msgstr "사용자명을 바꿀 때 4자리 태그를 유지하거나 새로 설정하세요."
 
@@ -7069,7 +7070,7 @@ msgstr "삭제"
 #: src/components/emojis/EmojiListItem.tsx:195
 #: src/components/emojis/EmojiListItem.tsx:252
 #: src/components/emojis/EmojiListItem.tsx:308
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:322
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:325
 #: src/components/modals/tabs/component_gallery_tab/ButtonsTab.tsx:157
 #: src/components/modals/tabs/component_gallery_tab/ButtonsTab.tsx:242
 #: src/components/modals/tabs/component_gallery_tab/index.tsx:165
@@ -7515,7 +7516,7 @@ msgstr "다이렉트 메시지"
 #: src/components/layout/guild_list/FluxerButton.tsx:80
 #: src/components/modals/GuildPrivacySettingsModal.tsx:76
 #: src/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:221
-#: src/stores/QuickSwitcherStore.tsx:833
+#: src/stores/QuickSwitcherStore.tsx:831
 msgid "Direct Messages"
 msgstr "다이렉트 메시지"
 
@@ -7530,7 +7531,7 @@ msgstr "비활성화"
 
 #: src/components/invites/DisableInvitesButton.tsx:60
 #: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:240
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:426
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:429
 msgid "Disable"
 msgstr "비활성화"
 
@@ -7558,7 +7559,7 @@ msgstr "앱 전체의 애니메이션과 전환을 끕니다."
 msgid "Disable animations and transitions. Currently controlled by your system setting."
 msgstr "애니메이션과 전환을 끕니다. 현재 시스템 설정에서 제어합니다."
 
-#: src/stores/QuickSwitcherStore.tsx:915
+#: src/stores/QuickSwitcherStore.tsx:913
 msgid "Disable Compact Mode"
 msgstr "콤팩트 모드 끄기"
 
@@ -7585,7 +7586,7 @@ msgstr "노이즈 억제 끄기"
 msgid "Disable Picture-in-Picture Popout"
 msgstr "그림 속 그림 팝아웃 비활성화"
 
-#: src/stores/QuickSwitcherStore.tsx:931
+#: src/stores/QuickSwitcherStore.tsx:929
 msgid "Disable Reduced Motion"
 msgstr "모션 감소 끄기"
 
@@ -7754,7 +7755,7 @@ msgstr "식별 번호"
 msgid "Discussion or promotion of illegal activities"
 msgstr "불법 활동의 토론 또는 홍보"
 
-#: src/components/alerts/MaxBookmarksModal.tsx:76
+#: src/components/alerts/MaxBookmarksModal.tsx:79
 #: src/components/layout/GuildLayout.tsx:106
 #: src/components/layout/NagbarContent.tsx:42
 #: src/components/modals/GiftAcceptModal.tsx:110
@@ -7890,12 +7891,12 @@ msgstr "기존 커뮤니티 멤버의 다이렉트 메시지도 차단할까요?
 msgid "Do you want to send this pin back in time?"
 msgstr "이 핀을 과거로 보내시겠습니까?"
 
-#: src/components/channel/MessageActionUtils.tsx:410
+#: src/components/channel/MessageActionUtils.tsx:411
 msgid "Do you want to send this pin back to the future?"
 msgstr "이 핀을 미래로 보내시겠습니까?"
 
 #: src/components/modals/tabs/AccessibilityTab.tsx:148
-#: src/components/modals/tabs/MyProfileTab.tsx:768
+#: src/components/modals/tabs/MyProfileTab.tsx:767
 msgid "Doc, I'm from the future. I came here in a time machine that you invented. Now, I need your help to get back to the year 1985."
 msgstr "닥터, 저는 미래에서 왔어요. 님이 만든 타임머신을 타고 왔습니다. 이제 1985년으로 돌아가야 해서 도움이 필요해요."
 
@@ -8344,13 +8345,13 @@ msgid "Email"
 msgstr "이메일"
 
 #: src/components/modals/tabs/account_security_tab/AccountTab.tsx:65
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:91
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:94
 #: src/components/modals/tabs/component_gallery_tab/InputsTab.tsx:107
 #: src/components/pages/report/ReportStepEmail.tsx:76
 msgid "Email Address"
 msgstr "이메일 주소"
 
-#: src/components/modals/EmailChangeModal.tsx:165
+#: src/components/modals/EmailChangeModal.tsx:168
 msgid "Email changed"
 msgstr "이메일 변경됨"
 
@@ -8388,7 +8389,7 @@ msgstr "이메일 인증 알림 표시줄"
 msgid "Email Verification Required"
 msgstr "이메일 확인이 필요합니다"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:57
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:59
 msgid "Email Verified Override"
 msgstr "이메일 인증 우회"
 
@@ -8426,11 +8427,11 @@ msgstr "임베드"
 msgid "Embeds"
 msgstr "임베드"
 
-#: src/components/channel/MessageActionUtils.tsx:520
+#: src/components/channel/MessageActionUtils.tsx:526
 msgid "Embeds suppressed"
 msgstr "임베드 숨김"
 
-#: src/components/channel/MessageActionUtils.tsx:506
+#: src/components/channel/MessageActionUtils.tsx:512
 msgid "Embeds unsuppressed"
 msgstr "임베드 숨김 해제"
 
@@ -8485,7 +8486,7 @@ msgstr "이모지 이름은 최소 2자 이상이어야 하며 영숫자와 밑�
 msgid "Emoji pack"
 msgstr "이모지 팩"
 
-#: src/actions/InviteActionCreators.tsx:255
+#: src/actions/InviteActionCreators.tsx:259
 msgid "Emoji pack creation limit reached"
 msgstr "이모지 팩 생성 한도에 도달했습니다"
 
@@ -8493,7 +8494,7 @@ msgstr "이모지 팩 생성 한도에 도달했습니다"
 msgid "Emoji Pack Invite"
 msgstr "이모지 팩 초대"
 
-#: src/actions/InviteActionCreators.tsx:241
+#: src/actions/InviteActionCreators.tsx:245
 msgid "Emoji pack limit reached"
 msgstr "이모지 팩 한도에 도달했습니다"
 
@@ -8530,9 +8531,9 @@ msgstr "빈 상태"
 
 #: src/components/invites/DisableInvitesButton.tsx:60
 #: src/components/layout/GuildLayout.tsx:74
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:244
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:432
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:438
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:247
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:435
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:441
 #: src/components/modals/tabs/components/InputMonitoringSection.tsx:85
 msgid "Enable"
 msgstr "활성화"
@@ -8566,7 +8567,7 @@ msgstr "베타 기능 활성화"
 msgid "Enable Browser Notifications"
 msgstr "브라우저 알림 활성화"
 
-#: src/stores/QuickSwitcherStore.tsx:916
+#: src/stores/QuickSwitcherStore.tsx:914
 msgid "Enable Compact Mode"
 msgstr "컴팩트 모드 활성화"
 
@@ -8642,7 +8643,7 @@ msgstr "이 기기에서 푸시 알림 활성화"
 msgid "Enable push notifications for this installed PWA to keep receiving messages when the browser is backgrounded."
 msgstr "설치한 PWA에서 푸시 알림을 활성화하면 브라우저가 백그라운드에 있을 때도 메시지를 받을 수 있습니다."
 
-#: src/stores/QuickSwitcherStore.tsx:932
+#: src/stores/QuickSwitcherStore.tsx:930
 msgid "Enable Reduced Motion"
 msgstr "모션 감소 활성화"
 
@@ -8658,7 +8659,7 @@ msgstr "확장을 위한 Shift 활성화"
 msgid "Enable SMS 2FA"
 msgstr "SMS 2FA 활성화"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:415
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:418
 msgid "Enable SMS codes as a backup for your authenticator app"
 msgstr "인증 앱의 백업으로 SMS 코드 활성화"
 
@@ -8678,7 +8679,7 @@ msgstr "2단계 인증 활성화"
 msgid "Enable two-factor authentication"
 msgstr "2단계 인증 활성화"
 
-#: src/components/modals/MfaTotpEnableModal.tsx:70
+#: src/components/modals/MfaTotpEnableModal.tsx:73
 msgid "Enable two-factor authentication form"
 msgstr "이중 인증 양식 활성화"
 
@@ -8782,7 +8783,7 @@ msgid "Enter the 6-digit code from your authenticator app or one of your backup 
 msgstr "인증 앱에서 받은 6자리 코드 또는 백업 코드 중 하나를 입력하세요."
 
 #: src/components/modals/MfaTotpDisableModal.tsx:67
-#: src/components/modals/MfaTotpEnableModal.tsx:95
+#: src/components/modals/MfaTotpEnableModal.tsx:98
 msgid "Enter the 6-digit code from your authenticator app."
 msgstr "인증 앱에서 받은 6자리 코드를 입력하세요."
 
@@ -8804,7 +8805,7 @@ msgstr "계속하기 전에 코드를 입력하세요."
 msgid "Enter the code from your authenticator app."
 msgstr "인증 앱에서 받은 코드를 입력하세요."
 
-#: src/components/modals/EmailChangeModal.tsx:213
+#: src/components/modals/EmailChangeModal.tsx:216
 msgid "Enter the code sent to your current email."
 msgstr "현재 이메일로 보낸 코드를 입력하세요."
 
@@ -8812,7 +8813,7 @@ msgstr "현재 이메일로 보낸 코드를 입력하세요."
 msgid "Enter the code sent to your email address."
 msgstr "귀하의 이메일 주소로 전송된 코드를 입력하세요."
 
-#: src/components/modals/EmailChangeModal.tsx:281
+#: src/components/modals/EmailChangeModal.tsx:284
 msgid "Enter the code we emailed to your new address."
 msgstr "새 이메일 주소로 보낸 코드를 입력하세요."
 
@@ -8824,7 +8825,7 @@ msgstr "이메일 확인을 위해 보낸 코드를 입력하세요. 코드가 �
 msgid "Enter the invite link to join a community."
 msgstr "커뮤니티에 참여하려면 초대 링크를 입력하세요."
 
-#: src/components/modals/EmailChangeModal.tsx:247
+#: src/components/modals/EmailChangeModal.tsx:250
 msgid "Enter the new email you want to use. We'll send a code there next."
 msgstr "사용하려는 새 이메일을 입력하세요. 다음에 그곳으로 코드를 보내드립니다."
 
@@ -9313,11 +9314,11 @@ msgstr "친구 요청을 무시하지 못했습니다. 다시 시도하세요."
 msgid "Failed to initiate connection"
 msgstr "연결을 시작하지 못했습니다."
 
-#: src/actions/InviteActionCreators.tsx:322
+#: src/actions/InviteActionCreators.tsx:326
 msgid "Failed to install this emoji pack. Please try again later."
 msgstr "이 이모지 팩을 설치하지 못했습니다. 나중에 다시 시도하세요."
 
-#: src/actions/InviteActionCreators.tsx:323
+#: src/actions/InviteActionCreators.tsx:327
 msgid "Failed to install this sticker pack. Please try again later."
 msgstr "이 스티커 팩을 설치하지 못했습니다. 나중에 다시 시도하세요."
 
@@ -9715,9 +9716,9 @@ msgstr "즐겨찾기"
 #: src/components/modals/tabs/AppearanceTab.tsx:116
 #: src/components/modals/utils/SettingsConstants.tsx:279
 #: src/components/modals/utils/SettingsSectionRegistry.tsx:233
-#: src/stores/QuickSwitcherStore.tsx:843
-#: src/stores/QuickSwitcherStore.tsx:1261
-#: src/stores/QuickSwitcherStore.tsx:1273
+#: src/stores/QuickSwitcherStore.tsx:841
+#: src/stores/QuickSwitcherStore.tsx:1259
+#: src/stores/QuickSwitcherStore.tsx:1271
 msgid "Favorites"
 msgstr "즐겨찾기"
 
@@ -9872,11 +9873,11 @@ msgstr "Fluxer 애플리케이션 심볼"
 msgid "Fluxer avoids sending push notifications to your mobile devices when you are at your computer. Use this setting to control how long you need to be inactive on desktop for before you receive push notifications, ranging from 1 minute to 10 minutes."
 msgstr "Fluxer는 컴퓨터 앞에 있을 때 모바일 기기로 푸시 알림을 보내지 않습니다. 이 설정으로 데스크톱에서 비활성 상태가 되어야 푸시 알림을 받을지 1분에서 10분까지 조정할 수 있습니다."
 
-#: src/components/popouts/UserProfileBadges.tsx:89
+#: src/components/popouts/UserProfileBadges.tsx:115
 msgid "Fluxer Bug Hunter"
 msgstr "Fluxer 버그 헌터"
 
-#: src/components/popouts/UserProfileBadges.tsx:71
+#: src/components/popouts/UserProfileBadges.tsx:95
 msgid "Fluxer Community Team"
 msgstr "Fluxer 커뮤니티 팀"
 
@@ -9944,18 +9945,18 @@ msgstr "Fluxer는 창이 백그라운드에 있어도 푸시 투 토크와 글�
 msgid "Fluxer needs permission to monitor keyboard and mouse input so that <0>Push-to-Talk</0> and <1>Global Shortcuts</1> work even when you're in another app or game."
 msgstr "Fluxer는 다른 앱이나 게임 중에도 <0>푸시 투 토크</0>와 <1>글로벌 단축키</1>가 작동하려면 키보드 및 마우스 입력을 모니터링할 권한이 필요합니다."
 
-#: src/components/popouts/UserProfileBadges.tsx:80
+#: src/components/popouts/UserProfileBadges.tsx:105
 msgid "Fluxer Partner"
 msgstr "Fluxer 파트너"
 
 #: src/components/modals/components/PlutoniumContent.tsx:165
 #: src/components/modals/PremiumModal.tsx:34
 #: src/components/modals/utils/SettingsConstants.tsx:124
-#: src/components/popouts/UserProfileBadges.tsx:95
+#: src/components/popouts/UserProfileBadges.tsx:121
 msgid "Fluxer Plutonium"
 msgstr "Fluxer Plutonium"
 
-#: src/components/popouts/UserProfileBadges.tsx:62
+#: src/components/popouts/UserProfileBadges.tsx:85
 msgid "Fluxer Staff"
 msgstr "Fluxer 스태프"
 
@@ -9963,16 +9964,16 @@ msgstr "Fluxer 스태프"
 msgid "Fluxer uses push notifications when installed as a mobile PWA. Registering ensures the gateway can reach your device even when the browser is backgrounded."
 msgstr "Fluxer는 모바일 PWA로 설치되면 푸시 알림을 사용합니다. 등록하면 브라우저가 백그라운드에 있어도 게이트웨이가 기기에 도달할 수 있습니다."
 
-#: src/components/modals/FluxerTagChangeModal.tsx:176
+#: src/components/modals/FluxerTagChangeModal.tsx:190
 #: src/components/modals/tabs/applications_tab/application_detail/BotProfileSection.tsx:103
 msgid "FluxerTag"
 msgstr "FluxerTag"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:102
+#: src/components/modals/FluxerTagChangeModal.tsx:107
 msgid "FluxerTag already taken"
 msgstr "FluxerTag가 이미 사용 중입니다"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:144
+#: src/components/modals/FluxerTagChangeModal.tsx:149
 msgid "FluxerTag updated"
 msgstr "FluxerTag가 업데이트되었습니다"
 
@@ -10208,7 +10209,7 @@ msgstr "앞으로"
 msgid "Forward {DEFAULT_SEEK_AMOUNT} seconds"
 msgstr "{DEFAULT_SEEK_AMOUNT}초 앞으로"
 
-#: src/components/modals/ForwardModal.tsx:198
+#: src/components/modals/ForwardModal.tsx:203
 #: src/stores/KeybindStore.tsx:361
 msgid "Forward Message"
 msgstr "메시지 전달"
@@ -10490,7 +10491,7 @@ msgstr "메시지를 받으면 알림을 받아보세요. 브라우저 설정에
 
 #: src/components/alerts/FileSizeTooLargeModal.tsx:84
 #: src/components/modals/BackgroundImageGalleryModal.tsx:678
-#: src/components/modals/FluxerTagChangeModal.tsx:221
+#: src/components/modals/FluxerTagChangeModal.tsx:235
 #: src/components/modals/tabs/components/EntranceSoundSection.tsx:67
 #: src/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:138
 #: src/components/modals/tabs/VideoTab.tsx:281
@@ -10503,11 +10504,11 @@ msgstr "Plutonium 받기"
 msgid "Get Plutonium for yourself and unlock higher limits and exclusive features."
 msgstr "자신을 위해 Plutonium을 얻고 더 높은 한도와 독점 기능을 열어보세요."
 
-#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:81
+#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:82
 msgid "Get Plutonium to customize your tag"
 msgstr "태그를 꾸미려면 Plutonium을 받으세요"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:199
+#: src/components/modals/FluxerTagChangeModal.tsx:213
 msgid "Get Plutonium to customize your tag or keep it when changing your username"
 msgstr "태그를 꾸미거나 사용자 이름을 바꿀 때 유지하려면 Plutonium을 받으세요"
 
@@ -10725,7 +10726,7 @@ msgstr "홈으로 이동"
 msgid "Go to login"
 msgstr "로그인으로 이동"
 
-#: src/stores/QuickSwitcherStore.tsx:528
+#: src/stores/QuickSwitcherStore.tsx:526
 msgid "Go to message"
 msgstr "메시지로 이동"
 
@@ -10866,12 +10867,12 @@ msgstr "그룹 아이콘"
 msgid "Group Invites"
 msgstr "그룹 초대"
 
-#: src/stores/QuickSwitcherStore.tsx:667
+#: src/stores/QuickSwitcherStore.tsx:665
 #: src/utils/modals/guild_tabs/GuildAuditLogTabUtils.tsx:235
 msgid "Group message"
 msgstr "그룹 메시지"
 
-#: src/stores/QuickSwitcherStore.tsx:1347
+#: src/stores/QuickSwitcherStore.tsx:1345
 msgid "Group messages"
 msgstr "그룹 메시지"
 
@@ -10963,7 +10964,7 @@ msgstr "하드웨어 가속"
 msgid "Has"
 msgstr "가지고 있음"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:126
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:128
 msgid "Has ever purchased override"
 msgstr "구매한 적이 있는 오버라이드"
 
@@ -11277,7 +11278,7 @@ msgid "Hold to temporarily unmute when push-to-talk is enabled"
 msgstr "푸시 투 토크가 활성화되어 있을 때 일시적으로 음소거 해제하려면 누르고 있기"
 
 #: src/components/layout/MobileBottomNav.tsx:93
-#: src/stores/QuickSwitcherStore.tsx:832
+#: src/stores/QuickSwitcherStore.tsx:830
 msgid "Home"
 msgstr "홈"
 
@@ -11619,7 +11620,7 @@ msgstr "부적절한 프로필"
 msgid "Inbox"
 msgstr "받은 편지함"
 
-#: src/components/popouts/InboxPopout.tsx:89
+#: src/components/popouts/InboxPopout.tsx:88
 msgid "Inbox tabs"
 msgstr "받은 편지함 탭"
 
@@ -11883,8 +11884,8 @@ msgstr "유효하지 않은 기프트 코드"
 msgid "Invalid instance URL. Try something like \"example.com\" or \"https://example.com\"."
 msgstr "유효하지 않은 인스턴스 URL입니다. \"example.com\" 또는 \"https://example.com\"와 같은 형식을 사용해 보세요."
 
-#: src/components/modals/EmailChangeModal.tsx:107
-#: src/components/modals/EmailChangeModal.tsx:168
+#: src/components/modals/EmailChangeModal.tsx:110
+#: src/components/modals/EmailChangeModal.tsx:171
 #: src/components/modals/PasswordChangeModal.tsx:90
 msgid "Invalid or expired code"
 msgstr "유효하지 않거나 만료된 코드"
@@ -12569,11 +12570,11 @@ msgid "Last active {0}"
 msgstr "마지막 활동: {0}"
 
 #. placeholder {0}: DateUtils.getRelativeDateString(user.passwordLastChangedAt, i18n)
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:117
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:120
 msgid "Last changed: {0}"
 msgstr "마지막 변경: {0}"
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:119
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:122
 msgid "Last changed: Never"
 msgstr "마지막 변경: 없음"
 
@@ -12633,6 +12634,10 @@ msgstr "통화 종료"
 #: src/hooks/useLeaveGuild.tsx:44
 msgid "Leave Community"
 msgstr "커뮤니티 나가기"
+
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:142
+msgid "Leave empty for actual value"
+msgstr "실제 값을 위해 비워 두세요"
 
 #: src/components/bottomsheets/ChannelDetailsBottomSheet.tsx:1317
 #: src/components/channel/direct_message/DMList.tsx:569
@@ -12713,7 +12718,7 @@ msgid "Letters (a-z, A-Z), numbers (0-9), and underscores (_) only"
 msgstr "문자(a-z, A-Z), 숫자(0-9), 밑줄(_)만 허용됩니다"
 
 #: src/components/modals/components/plutonium/SubscriptionCard.tsx:131
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:50
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:52
 #: src/components/modals/tabs/developer_options_tab/MockingTab.tsx:317
 msgid "Lifetime"
 msgstr "평생"
@@ -13217,7 +13222,7 @@ msgstr "이메일, 비밀번호, 계정 설정 관리"
 msgid "Manage your gifts"
 msgstr "내 선물 관리"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:337
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:340
 msgid "Manage your phone number for SMS two-factor authentication"
 msgstr "SMS 2단계 인증용 전화번호 관리"
 
@@ -13342,12 +13347,12 @@ msgstr "멤버가 임시로 표시되었습니다."
 msgid "Markers Below Slider"
 msgstr "슬라이더 아래 마커"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:188
+#: src/components/modals/FluxerTagChangeModal.tsx:202
 msgid "Marty_McFly"
 msgstr "Marty_McFly"
 
 #: src/components/modals/ClaimAccountModal.tsx:157
-#: src/components/modals/EmailChangeModal.tsx:258
+#: src/components/modals/EmailChangeModal.tsx:261
 msgid "marty@example.com"
 msgstr "marty@example.com"
 
@@ -13652,7 +13657,7 @@ msgstr "멘션"
 
 #: src/components/modals/GuildNotificationSettingsModal.tsx:227
 #: src/components/pages/NotificationsPage.tsx:42
-#: src/components/popouts/InboxPopout.tsx:63
+#: src/components/popouts/InboxPopout.tsx:62
 msgid "Mentions"
 msgstr "멘션"
 
@@ -13687,15 +13692,15 @@ msgstr "메뉴"
 msgid "Message"
 msgstr "메시지"
 
-#: src/components/channel/ChannelTextarea.tsx:754
+#: src/components/channel/ChannelTextarea.tsx:752
 msgid "Message "
 msgstr "메시지 "
 
-#: src/components/channel/ChannelTextarea.tsx:754
+#: src/components/channel/ChannelTextarea.tsx:752
 msgid "Message @"
 msgstr "메시지 @"
 
-#: src/components/channel/ChannelTextarea.tsx:751
+#: src/components/channel/ChannelTextarea.tsx:749
 msgid "Message #"
 msgstr "메시지 #"
 
@@ -13746,7 +13751,7 @@ msgstr "메시지 표시 모드"
 msgid "Message display settings are only available on desktop."
 msgstr "메시지 표시 설정은 데스크톱에서만 사용할 수 있습니다."
 
-#: src/components/modals/ForwardModal.tsx:148
+#: src/components/modals/ForwardModal.tsx:153
 msgid "Message forwarded"
 msgstr "메시지가 전달되었습니다"
 
@@ -13772,7 +13777,7 @@ msgstr "메시지 기록 임계값이 업데이트되었습니다."
 msgid "Message Input Buttons"
 msgstr "메시지 입력 버튼"
 
-#: src/components/modals/ForwardModal.tsx:84
+#: src/components/modals/ForwardModal.tsx:89
 #: src/components/uikit/character_counter/CharacterCounter.tsx:52
 msgid "Message is too long"
 msgstr "메시지가 너무 깁니다"
@@ -14073,7 +14078,7 @@ msgstr "추가 이모지 슬롯"
 #: src/components/channel/embeds/attachments/TextualAttachmentPreviewFooter.tsx:66
 #: src/components/modals/guild_tabs/UserListItem.tsx:113
 #: src/components/modals/MediaModal.tsx:353
-#: src/components/modals/MobileVideoViewer.tsx:260
+#: src/components/modals/MobileVideoViewer.tsx:268
 msgid "More options"
 msgstr "추가 옵션"
 
@@ -14205,7 +14210,7 @@ msgstr "음소거"
 #: src/components/media_player/components/MediaVerticalVolumeControl.tsx:249
 #: src/components/media_player/components/MediaVolumeControl.tsx:208
 #: src/components/modals/GuildNotificationSettingsModal.tsx:229
-#: src/components/modals/MobileVideoViewer.tsx:272
+#: src/components/modals/MobileVideoViewer.tsx:280
 #: src/components/uikit/context_menu/items/VoiceParticipantMenuData.tsx:319
 #: src/components/uikit/context_menu/items/VoiceParticipantMenuData.tsx:506
 #: src/components/uikit/context_menu/items/VoiceParticipantMenuItems.tsx:92
@@ -14572,12 +14577,12 @@ msgstr "가입하는 새 커뮤니티에서는 자동으로 음소거된 채널�
 msgid "New communities you join will no longer have muted channels hidden automatically. Would you also like to show muted channels in all your existing communities?"
 msgstr "가입하는 새 커뮤니티에서는 더 이상 음소거된 채널이 자동으로 숨겨지지 않습니다. 기존의 모든 커뮤니티에서 음소거된 채널을 표시하시겠습니까?"
 
-#: src/components/modals/EmailChangeModal.tsx:255
+#: src/components/modals/EmailChangeModal.tsx:258
 #: src/components/modals/RequiredActionModal.tsx:471
 msgid "New Email"
 msgstr "새 이메일"
 
-#: src/components/modals/EmailChangeModal.tsx:243
+#: src/components/modals/EmailChangeModal.tsx:246
 msgid "New email form"
 msgstr "새 이메일 양식"
 
@@ -14732,7 +14737,7 @@ msgid "No cameras detected"
 msgstr "카메라가 감지되지 않았습니다"
 
 #: src/components/invites/InviteListItem.tsx:179
-#: src/components/modals/ForwardModal.tsx:246
+#: src/components/modals/ForwardModal.tsx:251
 #: src/components/modals/GuildNotificationSettingsModal.tsx:258
 msgid "No Category"
 msgstr "카테고리 없음"
@@ -14745,7 +14750,7 @@ msgstr "저장할 변경 사항이 없습니다"
 msgid "No channels available"
 msgstr "사용 가능한 채널이 없습니다"
 
-#: src/components/modals/ForwardModal.tsx:216
+#: src/components/modals/ForwardModal.tsx:221
 msgid "No channels found"
 msgstr "채널을 찾을 수 없습니다"
 
@@ -14769,7 +14774,7 @@ msgstr "아직 연결이 없습니다"
 msgid "No description provided."
 msgstr "설명이 제공되지 않았습니다."
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:94
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:97
 msgid "No email address set"
 msgstr "설정된 이메일 주소가 없습니다"
 
@@ -14879,11 +14884,11 @@ msgstr "공통 친구를 찾을 수 없습니다."
 msgid "No mutual groups found."
 msgstr "공통 그룹을 찾을 수 없습니다."
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:283
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:286
 msgid "No passkeys registered"
 msgstr "등록된 패스키가 없습니다."
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:134
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:137
 msgid "No password set"
 msgstr "설정된 비밀번호가 없습니다"
 
@@ -15066,7 +15071,7 @@ msgstr "비움직이는 이모지 ({0})"
 
 #: src/components/modals/guild_tabs/GuildModerationTab.tsx:157
 #: src/components/modals/tabs/accessibility_tab/VisualTab.tsx:48
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:48
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:50
 msgid "None"
 msgstr "없음"
 
@@ -15574,7 +15579,7 @@ msgstr "새 탭에서 열기"
 msgid "Open Link"
 msgstr "링크 열기"
 
-#: src/components/channel/ChannelTextarea.tsx:953
+#: src/components/channel/ChannelTextarea.tsx:951
 #: src/components/channel/textarea/MobileTextareaLayout.tsx:112
 msgid "Open menu"
 msgstr "메뉴 열기"
@@ -15828,7 +15833,7 @@ msgstr "Override"
 msgid "Override {0}"
 msgstr "Override {0}"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:59
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:61
 msgid "Override email verification status"
 msgstr "이메일 인증 상태 재설정"
 
@@ -15836,15 +15841,15 @@ msgstr "이메일 인증 상태 재설정"
 msgid "Override instance limits locally for testing. Changes only affect your client."
 msgstr "Override instance limits locally for testing. Changes only affect your client."
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:109
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:111
 msgid "Override Premium Type"
 msgstr "프리미엄 유형 재설정"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:67
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:69
 msgid "Override unclaimed account status"
 msgstr "청구되지 않은 계정 상태 재설정"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:75
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:77
 msgid "Override unread gift inventory status"
 msgstr "읽지 않은 선물 인벤토리 상태 재설정"
 
@@ -15925,7 +15930,7 @@ msgstr "파트너 커뮤니티"
 msgid "Passkey Name"
 msgstr "패스키 이름"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:273
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:276
 msgid "Passkeys"
 msgstr "패스키"
 
@@ -15949,8 +15954,8 @@ msgstr "비밀번호"
 #: src/components/modals/ClaimAccountModal.tsx:207
 #: src/components/modals/SudoVerificationModal.tsx:174
 #: src/components/modals/SudoVerificationModal.tsx:239
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:105
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:131
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:108
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:134
 #: src/components/modals/tabs/component_gallery_tab/InputsTab.tsx:114
 #: src/components/modals/utils/SettingsSearchIndex.tsx:107
 msgid "Password"
@@ -16006,7 +16011,7 @@ msgstr "로그인을 완료하려면 돌아간 곳에 붙여넣으세요."
 #: src/components/media_player/components/InlineAudioPlayer.tsx:201
 #: src/components/media_player/components/InlineAudioPlayer.tsx:296
 #: src/components/media_player/components/MediaPlayButton.tsx:70
-#: src/components/modals/MobileVideoViewer.tsx:286
+#: src/components/modals/MobileVideoViewer.tsx:294
 msgid "Pause"
 msgstr "일시 중지"
 
@@ -16040,7 +16045,7 @@ msgid "Pending deletion canceled"
 msgstr "삭제 대기 취소됨"
 
 #: src/lib/UnicodeEmojis.tsx:234
-#: src/stores/QuickSwitcherStore.tsx:1345
+#: src/stores/QuickSwitcherStore.tsx:1343
 #: src/utils/quick_switcher/QuickSwitcherModalUtils.tsx:96
 msgid "People"
 msgstr "사람들"
@@ -16143,8 +16148,8 @@ msgstr "전화"
 
 #: src/components/modals/PhoneAddModal.tsx:192
 #: src/components/modals/RequiredActionModal.tsx:616
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:336
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:342
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:339
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:345
 #: src/components/modals/utils/SettingsSearchIndex.tsx:115
 msgid "Phone Number"
 msgstr "전화번호"
@@ -16154,7 +16159,7 @@ msgid "Phone number added"
 msgstr "전화번호 추가됨"
 
 #. placeholder {0}: user.phone
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:346
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:349
 msgid "Phone number added: {0}"
 msgstr "전화번호 추가됨: {0}"
 
@@ -16221,11 +16226,11 @@ msgstr "DM 고정"
 msgid "Pin Group DM"
 msgstr "그룹 DM 고정"
 
-#: src/components/channel/MessageActionUtils.tsx:429
+#: src/components/channel/MessageActionUtils.tsx:430
 msgid "Pin it real good"
 msgstr "정말 잘 고정하세요"
 
-#: src/components/channel/MessageActionUtils.tsx:426
+#: src/components/channel/MessageActionUtils.tsx:427
 msgid "Pin it. Pin it good."
 msgstr "고정하세요. 잘 고정하세요."
 
@@ -16246,7 +16251,7 @@ msgstr "메시지 고정"
 msgid "Pin or unpin the focused message"
 msgstr "포커스된 메시지를 고정하거나 고정 해제하기"
 
-#: src/components/channel/MessageActionUtils.tsx:427
+#: src/components/channel/MessageActionUtils.tsx:428
 msgid "Pin this message to the channel for all to see. Unless ... you're chicken."
 msgstr "이 메시지를 모두가 볼 수 있도록 채널에 고정하세요. 아니면… 겁쟁이신 거죠."
 
@@ -16319,7 +16324,7 @@ msgstr "플랫폼 관리자"
 #: src/components/media_player/components/InlineAudioPlayer.tsx:201
 #: src/components/media_player/components/InlineAudioPlayer.tsx:296
 #: src/components/media_player/components/MediaPlayButton.tsx:70
-#: src/components/modals/MobileVideoViewer.tsx:286
+#: src/components/modals/MobileVideoViewer.tsx:294
 #: src/components/modals/tabs/component_gallery_tab/ButtonsTab.tsx:215
 msgid "Play"
 msgstr "재생"
@@ -16416,7 +16421,7 @@ msgstr "나중에 다시 시도하세요."
 msgid "Please update Fluxer to view this message."
 msgstr "이 메시지를 보려면 Fluxer를 업데이트하세요."
 
-#: src/actions/InviteActionCreators.tsx:180
+#: src/actions/InviteActionCreators.tsx:184
 msgid "Please verify your account by setting an email and password before joining communities."
 msgstr "커뮤니티에 가입하기 전에 이메일과 비밀번호를 설정하여 계정을 인증하세요."
 
@@ -16526,11 +16531,11 @@ msgstr "프리미엄 혜택"
 msgid "Premium state reset on the backend."
 msgstr "백엔드에서 프리미엄 상태가 재설정되었습니다."
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:135
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:155
 msgid "Premium Subscription Scenarios"
 msgstr "프리미엄 구독 시나리오"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:107
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:109
 msgid "Premium Type Override"
 msgstr "프리미엄 유형 재정의"
 
@@ -16928,7 +16933,7 @@ msgstr "파이썬"
 msgid "quick access"
 msgstr "빠른 접근"
 
-#: src/stores/QuickSwitcherStore.tsx:1358
+#: src/stores/QuickSwitcherStore.tsx:1356
 #: src/utils/quick_switcher/QuickSwitcherModalUtils.tsx:100
 msgid "Quick Actions"
 msgstr "빠른 작업"
@@ -17071,7 +17076,7 @@ msgstr "수신"
 msgid "Receive notifications when someone mentions you"
 msgstr "누군가 나를 언급하면 알림 받기"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:404
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:407
 msgid "Receive verification codes via SMS as a backup authentication method"
 msgstr "보조 인증 수단으로 SMS로 인증 코드 받기"
 
@@ -17198,7 +17203,7 @@ msgstr "푸시 구독 새로고침"
 msgid "Regenerate"
 msgstr "재생성"
 
-#: src/components/modals/BackupCodesRegenerateModal.tsx:61
+#: src/components/modals/BackupCodesRegenerateModal.tsx:68
 msgid "Regenerate Backup Codes"
 msgstr "백업 코드 재생성"
 
@@ -17228,7 +17233,7 @@ msgstr "재생성하면 현재 토큰이 무효화됩니다. 기존 값을 사�
 msgid "Register"
 msgstr "등록"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:279
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:282
 msgid "Registered Passkeys"
 msgstr "등록된 패스키"
 
@@ -17298,7 +17303,7 @@ msgstr "제거하다"
 #: src/components/modals/guild_tabs/guild_overview_tab/fields/GuildEmbedSplashUploadField.tsx:101
 #: src/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx:107
 #: src/components/modals/guild_tabs/guild_overview_tab/fields/GuildInviteSplashUploadField.tsx:113
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:391
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:394
 #: src/components/modals/tabs/ExpressionPacksTab.tsx:96
 #: src/components/modals/tabs/ExpressionPacksTab.tsx:226
 #: src/components/modals/tabs/LinkedAccountsTab.tsx:191
@@ -17472,11 +17477,11 @@ msgstr "재정의 제거"
 msgid "Remove Pack"
 msgstr "팩 제거"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:377
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:380
 msgid "Remove Phone"
 msgstr "전화 제거"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:360
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:363
 msgid "Remove Phone Number"
 msgstr "전화번호 제거"
 
@@ -17557,7 +17562,7 @@ msgstr "{0}에 대한 허용을 제거했습니다."
 msgid "Removed deny for {0}."
 msgstr "{0}에 대한 거부를 제거했습니다."
 
-#: src/actions/SavedMessageActionCreators.tsx:80
+#: src/actions/SavedMessageActionCreators.tsx:85
 msgid "Removed from bookmarks"
 msgstr "북마크에서 제거됨"
 
@@ -17631,7 +17636,7 @@ msgstr "팩을 제거하면 계정에서 삭제됩니다."
 msgid "Removing the timeout will allow <0>{0}</0> to send messages, react, and join voice channels again."
 msgstr "타임아웃을 해제하면 <0>{0}</0>가 다시 메시지를 보내고 반응하며 음성 채널에 참여할 수 있습니다."
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:319
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:322
 msgid "Rename"
 msgstr "이름 변경"
 
@@ -17866,22 +17871,22 @@ msgstr "중간 조건에 추가로 서버의 멤버로 최소 10분 이상 머�
 msgid "Requires Plutonium"
 msgstr "Plutonium 필요"
 
-#: src/components/channel/ChannelTextarea.tsx:1032
+#: src/components/channel/ChannelTextarea.tsx:1030
 msgid "Reschedule Message"
 msgstr "메시지 다시 예약"
 
 #: src/components/modals/ClaimAccountModal.tsx:222
-#: src/components/modals/EmailChangeModal.tsx:233
-#: src/components/modals/EmailChangeModal.tsx:301
+#: src/components/modals/EmailChangeModal.tsx:236
+#: src/components/modals/EmailChangeModal.tsx:304
 #: src/components/modals/PasswordChangeModal.tsx:179
 msgid "Resend"
 msgstr "다시 보내기"
 
-#: src/components/modals/EmailChangeModal.tsx:301
+#: src/components/modals/EmailChangeModal.tsx:304
 msgid "Resend ({newSecondsRemaining}s)"
 msgstr "다시 보내기 ({newSecondsRemaining}s)"
 
-#: src/components/modals/EmailChangeModal.tsx:233
+#: src/components/modals/EmailChangeModal.tsx:236
 msgid "Resend ({originalSecondsRemaining}s)"
 msgstr "다시 보내기 ({originalSecondsRemaining}s)"
 
@@ -18425,7 +18430,7 @@ msgstr "저장됨"
 msgid "scale"
 msgstr "비율"
 
-#: src/components/modals/MfaTotpEnableModal.tsx:78
+#: src/components/modals/MfaTotpEnableModal.tsx:81
 msgid "Scan the QR code with your authenticator app to generate codes for two-factor authentication."
 msgstr "2단계 인증 코드를 생성하려면 인증 앱으로 QR 코드를 스캔하세요."
 
@@ -18437,7 +18442,7 @@ msgstr "일정"
 msgid "Schedule Message"
 msgstr "메시지 예약"
 
-#: src/components/popouts/InboxPopout.tsx:70
+#: src/components/popouts/InboxPopout.tsx:69
 #: src/components/popouts/ScheduledMessagesContent.tsx:89
 msgid "Scheduled"
 msgstr "예약됨"
@@ -18562,7 +18567,7 @@ msgstr "사용자 이름 또는 ID로 검색"
 msgid "Search channels"
 msgstr "채널 검색"
 
-#: src/components/modals/ForwardModal.tsx:204
+#: src/components/modals/ForwardModal.tsx:209
 msgid "Search channels or DMs"
 msgstr "채널 또는 DM 검색"
 
@@ -18963,7 +18968,7 @@ msgid "Send"
 msgstr "전송"
 
 #. placeholder {0}: selectedChannelIds.size
-#: src/components/modals/ForwardModal.tsx:380
+#: src/components/modals/ForwardModal.tsx:385
 msgid "Send ({0}/5)"
 msgstr "전송 ({0}/5)"
 
@@ -19000,7 +19005,7 @@ msgid "Send an SMS code first."
 msgstr "먼저 SMS 코드를 보내세요."
 
 #: src/components/modals/ClaimAccountModal.tsx:180
-#: src/components/modals/EmailChangeModal.tsx:270
+#: src/components/modals/EmailChangeModal.tsx:273
 #: src/components/modals/PhoneAddModal.tsx:208
 msgid "Send code"
 msgstr "코드 보내기"
@@ -19195,7 +19200,7 @@ msgstr "별명을 {0}로 설정하세요."
 msgid "Set NSFW level to {0}."
 msgstr "NSFW 수준을 {0}로 설정하세요."
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:138
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:141
 msgid "Set Password"
 msgstr "비밀번호 설정"
 
@@ -19261,7 +19266,7 @@ msgstr "채널 유형을 {0}으로 설정했습니다."
 msgid "Set the invite splash alignment to {0}."
 msgstr "초대 스플래시 정렬을 {0}으로 설정했습니다."
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:88
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:90
 msgid "Set the number of unread gifts in inventory."
 msgstr "인벤토리에서 읽지 않은 선물 수를 설정하세요."
 
@@ -19341,7 +19346,7 @@ msgstr "시간대 설정"
 #: src/components/modals/tabs/component_gallery_tab/ButtonsTab.tsx:221
 #: src/components/modals/tabs/component_gallery_tab/index.tsx:95
 #: src/components/modals/tabs/component_gallery_tab/Inline.tsx:90
-#: src/stores/QuickSwitcherStore.tsx:1356
+#: src/stores/QuickSwitcherStore.tsx:1354
 msgid "Settings"
 msgstr "설정"
 
@@ -19357,7 +19362,7 @@ msgstr "설정 섹션"
 msgid "Settings!"
 msgstr "설정!"
 
-#: src/components/modals/MfaTotpEnableModal.tsx:71
+#: src/components/modals/MfaTotpEnableModal.tsx:74
 msgid "Setup Authenticator App"
 msgstr "인증자 앱 설정"
 
@@ -19837,7 +19842,7 @@ msgstr "모든 사람의 무음 통화"
 msgid "simulate"
 msgstr "시뮬레이트"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:128
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:130
 msgid "Simulates having a Stripe customer ID (for testing purchase history access)"
 msgstr "Stripe 고객 ID가 있는 것처럼 시뮬레이션합니다 (구매 내역 접근 테스트용)"
 
@@ -19985,11 +19990,11 @@ msgstr "더 작은 미디어 크기"
 msgid "sms"
 msgstr "문자 메시지"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:409
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:412
 msgid "SMS Backup"
 msgstr "SMS 백업"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:429
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:432
 msgid "SMS backup is disabled for partners"
 msgstr "파트너는 SMS 백업이 비활성화되어 있습니다"
 
@@ -20002,7 +20007,7 @@ msgstr "SMS 코드"
 msgid "SMS Code"
 msgstr "SMS 코드"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:403
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:406
 msgid "SMS Two-Factor Authentication"
 msgstr "SMS 이중 인증"
 
@@ -20010,7 +20015,7 @@ msgstr "SMS 이중 인증"
 msgid "SMS two-factor authentication adds an additional layer of security to your account by requiring a verification code sent to your phone number when signing in."
 msgstr "SMS 이중 인증은 로그인 시 전화번호로 전송된 인증 코드를 요구하여 계정에 추가 보안 계층을 더합니다."
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:413
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:416
 msgid "SMS two-factor authentication is enabled"
 msgstr "SMS 이중 인증이 활성화되어 있습니다"
 
@@ -20334,7 +20339,7 @@ msgstr "별"
 msgid "starred"
 msgstr "별표"
 
-#: src/components/modals/EmailChangeModal.tsx:202
+#: src/components/modals/EmailChangeModal.tsx:205
 #: src/components/modals/PasswordChangeModal.tsx:148
 msgid "Start"
 msgstr "시작"
@@ -20490,7 +20495,7 @@ msgstr "스티커 밀도"
 msgid "Sticker pack"
 msgstr "스티커 팩"
 
-#: src/actions/InviteActionCreators.tsx:287
+#: src/actions/InviteActionCreators.tsx:291
 msgid "Sticker pack creation limit reached"
 msgstr "스티커 팩 생성 한도에 도달했습니다"
 
@@ -20498,7 +20503,7 @@ msgstr "스티커 팩 생성 한도에 도달했습니다"
 msgid "Sticker Pack Invite"
 msgstr "스티커 팩 초대"
 
-#: src/actions/InviteActionCreators.tsx:273
+#: src/actions/InviteActionCreators.tsx:277
 msgid "Sticker pack limit reached"
 msgstr "스티커 팩 한도 도달"
 
@@ -20674,7 +20679,7 @@ msgstr "제출 중"
 msgid "subscription"
 msgstr "구독"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:49
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:51
 #: src/components/modals/utils/SettingsSearchIndex.tsx:261
 msgid "Subscription"
 msgstr "구독"
@@ -20796,7 +20801,7 @@ msgstr "계정 전환"
 msgid "Switch Accounts"
 msgstr "계정 전환"
 
-#: src/stores/QuickSwitcherStore.tsx:900
+#: src/stores/QuickSwitcherStore.tsx:898
 msgid "Switch between Light and Dark mode"
 msgstr "라이트와 다크 모드 전환"
 
@@ -20989,7 +20994,7 @@ msgstr "서비스 약관"
 msgid "Test Bulk Delete (60s)"
 msgstr "대량 삭제 테스트(60초)"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:137
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:157
 msgid "Test Subscription State"
 msgstr "구독 상태 테스트"
 
@@ -21025,7 +21030,7 @@ msgstr "텍스트 채널"
 msgid "Text Channel Names"
 msgstr "텍스트 채널 이름"
 
-#: src/stores/QuickSwitcherStore.tsx:1349
+#: src/stores/QuickSwitcherStore.tsx:1347
 #: src/utils/quick_switcher/QuickSwitcherModalUtils.tsx:97
 msgid "Text channels"
 msgstr "텍스트 채널"
@@ -21106,7 +21111,7 @@ msgid "That message didn't delete"
 msgstr "해당 메시지는 삭제되지 않았습니다"
 
 #. placeholder {0}: invite.pack.name
-#: src/actions/InviteActionCreators.tsx:103
+#: src/actions/InviteActionCreators.tsx:104
 msgid "The {packLabel} {0} has been installed."
 msgstr "{packLabel} {0}이(가) 설치되었습니다."
 
@@ -21148,7 +21153,7 @@ msgstr "파일에는 <0>{dnsUrl}</0>에서 가져올 확인 토큰이 포함되�
 msgid "The file you're trying to upload exceeds the maximum size limit of {maxSizeFormatted}."
 msgstr "업로드하려는 파일이 최대 크기 제한인 {maxSizeFormatted}를 초과했습니다."
 
-#: src/components/modals/FluxerTagChangeModal.tsx:106
+#: src/components/modals/FluxerTagChangeModal.tsx:111
 msgid "The FluxerTag <0>{fluxerTag}</0> is already taken. Continuing will reroll your discriminator automatically."
 msgstr "FluxerTag <0>{fluxerTag}</0>는 이미 사용 중입니다. 계속하면 식별자가 자동으로 다시 결정됩니다."
 
@@ -21298,10 +21303,6 @@ msgstr "그들"
 #: src/components/channel/channel_view/DMChannelView.tsx:932
 msgid "They might have taken the DeLorean elsewhere."
 msgstr "그들은 DeLorean을 다른 곳으로 가져갔을지도 모릅니다."
-
-#: src/components/modals/tabs/MyProfileTab.tsx:711
-msgid "they/them"
-msgstr "they/them"
 
 #: src/components/channel/channel_view/DMChannelView.tsx:918
 msgid "Think, McFly! Did you type the right address?"
@@ -21717,11 +21718,11 @@ msgstr "이 작업은 시공간 연속성에 균열을 만들며 되돌릴 수 �
 msgid "This will hide all favorites-related UI elements including buttons and menu items. Your existing favorites will be preserved and can be re-enabled anytime from <0>User Settings → Look & Feel → Favorites</0>."
 msgstr "이 작업은 버튼과 메뉴 항목을 포함한 즐겨찾기 관련 UI 요소를 모두 숨깁니다. 기존 즐겨찾기는 유지되며 언제든지 <0>사용자 설정 → 모양 및 느낌 → 즐겨찾기</0>에서 다시 활성화할 수 있습니다."
 
-#: src/components/modals/BackupCodesRegenerateModal.tsx:65
+#: src/components/modals/BackupCodesRegenerateModal.tsx:72
 msgid "This will invalidate your existing backup codes and generate new ones."
 msgstr "이 작업은 기존 백업 코드를 무효화하고 새로운 코드를 생성합니다."
 
-#: src/components/channel/ChannelTextarea.tsx:1036
+#: src/components/channel/ChannelTextarea.tsx:1034
 msgid "This will modify the existing scheduled message rather than sending immediately."
 msgstr "이 작업은 즉시 전송하는 대신 기존 예약 메시지를 수정합니다."
 
@@ -21907,11 +21908,11 @@ msgstr "토글"
 msgid "Toggle Channel Member List"
 msgstr "채널 멤버 목록 전환"
 
-#: src/stores/QuickSwitcherStore.tsx:913
+#: src/stores/QuickSwitcherStore.tsx:911
 msgid "Toggle Compact Mode"
 msgstr "콤팩트 모드 전환"
 
-#: src/components/modals/MobileVideoViewer.tsx:239
+#: src/components/modals/MobileVideoViewer.tsx:247
 msgid "Toggle controls"
 msgstr "컨트롤 전환"
 
@@ -21963,11 +21964,11 @@ msgstr "음소거 전환"
 msgid "Toggle Pins Popout"
 msgstr "핀 팝아웃 전환"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:120
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:122
 msgid "Toggle premium_enabled_override on the backend"
 msgstr "백엔드에서 premium_enabled_override 전환"
 
-#: src/stores/QuickSwitcherStore.tsx:929
+#: src/stores/QuickSwitcherStore.tsx:927
 msgid "Toggle Reduced Motion"
 msgstr "모션 감소 전환"
 
@@ -21983,7 +21984,7 @@ msgstr "스티커 선택기 전환"
 msgid "Toggle switches on and off to see state changes."
 msgstr "전환 스위치를 켜고 꺼서 상태 변화를 확인하세요."
 
-#: src/stores/QuickSwitcherStore.tsx:899
+#: src/stores/QuickSwitcherStore.tsx:897
 msgid "Toggle Theme"
 msgstr "테마 전환"
 
@@ -22008,7 +22009,7 @@ msgstr "HDR 이미지를 표준 범위로 톤 맵핑하여 피크 밝기를 줄�
 msgid "Too Loud"
 msgstr "너무 시끄러움"
 
-#: src/components/alerts/MaxGuildsModal.tsx:32
+#: src/components/alerts/MaxGuildsModal.tsx:35
 msgid "Too Many Communities"
 msgstr "커뮤니티가 너무 많아요"
 
@@ -22307,7 +22308,7 @@ msgstr "2단계 인증"
 msgid "Two-factor authentication disabled"
 msgstr "2단계 인증 해제됨"
 
-#: src/components/modals/MfaTotpEnableModal.tsx:55
+#: src/components/modals/MfaTotpEnableModal.tsx:58
 msgid "Two-factor authentication enabled"
 msgstr "2단계 인증 활성화됨"
 
@@ -22404,11 +22405,11 @@ msgstr "우크라이나어"
 msgid "Ultra (1440p)"
 msgstr "울트라 (1440p)"
 
-#: src/actions/InviteActionCreators.tsx:319
+#: src/actions/InviteActionCreators.tsx:323
 msgid "Unable to install emoji pack"
 msgstr "이모지 팩을 설치할 수 없습니다"
 
-#: src/actions/InviteActionCreators.tsx:320
+#: src/actions/InviteActionCreators.tsx:324
 msgid "Unable to install sticker pack"
 msgstr "스티커 팩을 설치할 수 없습니다"
 
@@ -22436,13 +22437,13 @@ msgstr "프로필 배너, 배지 및 약력을 불러올 수 없습니다."
 msgid "Unable to prepare any emojis for upload. The following errors occurred:"
 msgstr "업로드할 이모지를 준비할 수 없습니다. 다음 오류가 발생했습니다:"
 
-#: src/components/modals/EmailChangeModal.tsx:121
-#: src/components/modals/EmailChangeModal.tsx:151
+#: src/components/modals/EmailChangeModal.tsx:124
+#: src/components/modals/EmailChangeModal.tsx:154
 #: src/components/modals/PasswordChangeModal.tsx:104
 msgid "Unable to resend code right now"
 msgstr "지금 코드를 다시 보낼 수 없습니다"
 
-#: src/components/modals/EmailChangeModal.tsx:136
+#: src/components/modals/EmailChangeModal.tsx:139
 msgid "Unable to send code to new email"
 msgstr "새 이메일로 코드를 보낼 수 없습니다"
 
@@ -22455,7 +22456,7 @@ msgstr "음성 메시지를 보낼 수 없습니다. 다시 시도해 주세요.
 msgid "Unable to Start Call"
 msgstr "통화를 시작할 수 없습니다"
 
-#: src/components/modals/EmailChangeModal.tsx:91
+#: src/components/modals/EmailChangeModal.tsx:94
 msgid "Unable to start email change"
 msgstr "이메일 변경을 시작할 수 없습니다"
 
@@ -22526,7 +22527,7 @@ msgstr "청구되지 않은 계정"
 msgid "Unclaimed Account Nagbar"
 msgstr "청구되지 않은 계정 안내 바"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:65
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:67
 msgid "Unclaimed Account Override"
 msgstr "청구되지 않은 계정 재정의"
 
@@ -22554,10 +22555,10 @@ msgstr "미성년자 사용자"
 #: src/components/alerts/GenericErrorModal.tsx:31
 #: src/components/alerts/GuildAtCapacityModal.tsx:31
 #: src/components/alerts/InvitesDisabledModal.tsx:31
-#: src/components/alerts/MaxBookmarksModal.tsx:45
-#: src/components/alerts/MaxBookmarksModal.tsx:56
+#: src/components/alerts/MaxBookmarksModal.tsx:48
+#: src/components/alerts/MaxBookmarksModal.tsx:59
 #: src/components/alerts/MaxFavoriteMemesModal.tsx:46
-#: src/components/alerts/MaxGuildsModal.tsx:38
+#: src/components/alerts/MaxGuildsModal.tsx:41
 #: src/components/alerts/MicrophonePermissionDeniedModal.tsx:50
 #: src/components/alerts/NSFWContentRejectedModal.tsx:31
 #: src/components/alerts/ReactionInteractionDisabledModal.tsx:30
@@ -22632,7 +22633,7 @@ msgstr "알 수 없는 채널"
 #: src/components/modals/guild_tabs/GuildAuditLogTab.Utils.tsx:479
 #: src/components/modals/guild_tabs/GuildWebhooksTab.tsx:61
 #: src/components/modals/guild_tabs/GuildWebhooksTab.tsx:67
-#: src/stores/QuickSwitcherStore.tsx:690
+#: src/stores/QuickSwitcherStore.tsx:688
 msgid "Unknown channel"
 msgstr "알 수 없는 채널"
 
@@ -22781,7 +22782,7 @@ msgstr "Plutonium으로 DM에서 스티커를 잠금 해제하세요"
 #: src/components/layout/UserArea.tsx:168
 #: src/components/media_player/components/MediaVerticalVolumeControl.tsx:249
 #: src/components/media_player/components/MediaVolumeControl.tsx:208
-#: src/components/modals/MobileVideoViewer.tsx:272
+#: src/components/modals/MobileVideoViewer.tsx:280
 #: src/components/voice/VoiceControlBar.tsx:602
 msgid "Unmute"
 msgstr "음소거 해제"
@@ -22872,7 +22873,7 @@ msgstr "DM 고정 해제"
 msgid "Unpin Group DM"
 msgstr "그룹 DM 고정 해제"
 
-#: src/components/channel/MessageActionUtils.tsx:412
+#: src/components/channel/MessageActionUtils.tsx:413
 #: src/components/shared/ChannelPinsContent.tsx:102
 msgid "Unpin it"
 msgstr "고정 해제"
@@ -22880,7 +22881,7 @@ msgstr "고정 해제"
 #: src/components/channel/MessageActionBar.tsx:519
 #: src/components/channel/MessageActionBar.tsx:735
 #: src/components/channel/MessageActionMenu.tsx:243
-#: src/components/channel/MessageActionUtils.tsx:409
+#: src/components/channel/MessageActionUtils.tsx:410
 #: src/components/shared/ChannelPinsContent.tsx:99
 #: src/components/shared/ChannelPinsContent.tsx:260
 #: src/components/uikit/context_menu/items/MessageMenuItems.tsx:163
@@ -22907,7 +22908,7 @@ msgstr "고정 해제된 그룹 DM"
 msgid "unread"
 msgstr "읽지 않음"
 
-#: src/components/popouts/InboxPopout.tsx:53
+#: src/components/popouts/InboxPopout.tsx:52
 msgid "Unread"
 msgstr "읽지 않음"
 
@@ -22915,11 +22916,11 @@ msgstr "읽지 않음"
 msgid "Unread DMs only"
 msgstr "읽지 않은 DM만"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:85
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:87
 msgid "Unread Gift Count"
 msgstr "읽지 않은 선물 수"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:73
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:75
 msgid "Unread gift inventory override"
 msgstr "읽지 않은 선물 재고 무시"
 
@@ -22962,7 +22963,7 @@ msgstr "인증되지 않은 이메일"
 msgid "Up to 4K/60fps"
 msgstr "최대 4K/60fps"
 
-#: src/components/channel/ChannelTextarea.tsx:1033
+#: src/components/channel/ChannelTextarea.tsx:1031
 msgid "Update"
 msgstr "업데이트"
 
@@ -23085,7 +23086,7 @@ msgstr "업그레이드"
 msgid "Upgrade Now"
 msgstr "지금 업그레이드"
 
-#: src/components/alerts/MaxBookmarksModal.tsx:69
+#: src/components/alerts/MaxBookmarksModal.tsx:72
 #: src/components/alerts/MaxFavoriteMemesModal.tsx:70
 msgid "Upgrade to Plutonium"
 msgstr "Plutonium으로 업그레이드"
@@ -23249,7 +23250,7 @@ msgstr "읽기 메시지 기록이 없는 회원을 위해 메시지 기록 임�
 msgid "Use Actual"
 msgstr "실제 값 사용"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:47
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:49
 msgid "Use actual premium type"
 msgstr "실제 프리미엄 유형 사용"
 
@@ -23322,7 +23323,7 @@ msgstr "전역 프로필 사용"
 msgid "Use light theme"
 msgstr "밝은 테마 사용"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:274
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:277
 msgid "Use passkeys for passwordless sign-in and two-factor authentication"
 msgstr "비밀번호 없이 로그인 및 2단계 인증을 위해 패스키 사용"
 
@@ -23454,7 +23455,7 @@ msgstr "사용자 기록"
 #: src/components/layout/UserArea.tsx:286
 #: src/components/layout/UserArea.tsx:291
 #: src/components/modals/components/DesktopSettingsView.tsx:357
-#: src/components/modals/UserSettingsModal.tsx:154
+#: src/components/modals/UserSettingsModal.tsx:153
 msgid "User Settings"
 msgstr "사용자 설정"
 
@@ -23475,9 +23476,9 @@ msgstr "사용자, 봇 또는 웹훅"
 msgid "username"
 msgstr "사용자 이름"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:187
+#: src/components/modals/FluxerTagChangeModal.tsx:201
 #: src/components/modals/tabs/component_gallery_tab/InputsTab.tsx:101
-#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:51
+#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:52
 #: src/components/modals/utils/SettingsSearchIndex.tsx:63
 msgid "Username"
 msgstr "사용자 이름"
@@ -23510,13 +23511,17 @@ msgstr "사용자 이름은 최대 32자여야 해요."
 msgid "Username#0000"
 msgstr "사용자이름#0000"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:169
+#: src/components/modals/FluxerTagChangeModal.tsx:183
 msgid "Usernames can only contain letters (a-z, A-Z), numbers (0-9), and underscores. Usernames are case-insensitive."
 msgstr "사용자 이름은 문자(a-z, A-Z), 숫자(0-9), 밑줄만 사용할 수 있어요. 대소문자를 구분하지 않아요."
 
-#: src/components/modals/FluxerTagChangeModal.tsx:164
-msgid "Usernames can only contain letters (a-z, A-Z), numbers (0-9), and underscores. Usernames are case-insensitive. You can pick your own 4-digit tag if it's available."
-msgstr "사용자 이름은 문자(a-z, A-Z), 숫자(0-9), 밑줄만 사용할 수 있어요. 대소문자를 구분하지 않으며, 사용 가능하면 원하는 4자리 태그를 선택할 수 있어요."
+#: src/components/modals/FluxerTagChangeModal.tsx:170
+msgid "Usernames can only contain letters (a-z, A-Z), numbers (0-9), and underscores. Usernames are case-insensitive. You can pick any available 4-digit tag from #0000 to #9999."
+msgstr "사용자 이름에는 영문자(a-z, A-Z), 숫자(0-9), 밑줄만 사용할 수 있습니다. 사용자 이름은 대소문자를 구분하지 않습니다. #0000부터 #9999까지 사용 가능한 4자리 태그를 선택할 수 있습니다."
+
+#: src/components/modals/FluxerTagChangeModal.tsx:176
+msgid "Usernames can only contain letters (a-z, A-Z), numbers (0-9), and underscores. Usernames are case-insensitive. You can pick any available 4-digit tag from #0001 to #9999."
+msgstr "사용자 이름에는 영문자(a-z, A-Z), 숫자(0-9), 밑줄만 사용할 수 있습니다. 사용자 이름은 대소문자를 구분하지 않습니다. #0001부터 #9999까지 사용 가능한 4자리 태그를 선택할 수 있습니다."
 
 #: src/components/modals/utils/SettingsSearchIndex.tsx:246
 #: src/components/modals/utils/SettingsSectionRegistry.tsx:172
@@ -23634,8 +23639,8 @@ msgid "Verification Barriers"
 msgstr "인증 장벽"
 
 #: src/components/modals/ClaimAccountModal.tsx:198
-#: src/components/modals/EmailChangeModal.tsx:220
-#: src/components/modals/EmailChangeModal.tsx:288
+#: src/components/modals/EmailChangeModal.tsx:223
+#: src/components/modals/EmailChangeModal.tsx:291
 #: src/components/modals/PasswordChangeModal.tsx:166
 #: src/components/modals/PhoneAddModal.tsx:226
 #: src/components/modals/RequiredActionModal.tsx:495
@@ -23662,7 +23667,7 @@ msgstr "인증 이메일이 전송되었어요! 받은편지함을 확인하세�
 msgid "Verification failed"
 msgstr "인증 실패"
 
-#: src/components/modals/BackupCodesViewModal.tsx:63
+#: src/components/modals/BackupCodesViewModal.tsx:68
 msgid "Verification may be required before viewing your backup codes."
 msgstr "백업 코드를 보기 전에 인증이 필요할 수 있어요."
 
@@ -23684,7 +23689,7 @@ msgid "verify"
 msgstr "확인하다"
 
 #: src/components/modals/AddConnectionModal.tsx:315
-#: src/components/modals/EmailChangeModal.tsx:236
+#: src/components/modals/EmailChangeModal.tsx:239
 #: src/components/modals/PasswordChangeModal.tsx:182
 #: src/components/modals/PhoneAddModal.tsx:240
 #: src/components/modals/RequiredActionModal.tsx:652
@@ -23785,7 +23790,7 @@ msgstr "비디오 미리보기"
 msgid "Video preview"
 msgstr "비디오 미리보기"
 
-#: src/components/modals/MobileVideoViewer.tsx:311
+#: src/components/modals/MobileVideoViewer.tsx:319
 msgid "Video progress"
 msgstr "비디오 진행"
 
@@ -23859,15 +23864,15 @@ msgstr "차단된 사용자를 보고 관리하세요."
 msgid "View and manage every webhook configured across your community."
 msgstr "커뮤니티 전반에 설정된 모든 웹훅을 보고 관리하세요."
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:257
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:260
 msgid "View and manage your backup codes for account recovery"
 msgstr "계정 복구를 위한 백업 코드를 보고 관리하세요."
 
-#: src/components/modals/BackupCodesViewModal.tsx:59
+#: src/components/modals/BackupCodesViewModal.tsx:64
 msgid "View Backup Codes"
 msgstr "백업 코드 보기"
 
-#: src/components/modals/BackupCodesViewModal.tsx:58
+#: src/components/modals/BackupCodesViewModal.tsx:63
 msgid "View backup codes form"
 msgstr "백업 코드 양식 보기"
 
@@ -23884,7 +23889,7 @@ msgstr "통화 제어 보기"
 msgid "View Channel"
 msgstr "채널 보기"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:265
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:268
 msgid "View Codes"
 msgstr "코드 보기"
 
@@ -24016,6 +24021,19 @@ msgstr "Visionary (Lifetime Plutonium)"
 msgid "Visionary 2FA Nagbar"
 msgstr "Visionary 2FA 알림바"
 
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:137
+msgid "Visionary Badge Override"
+msgstr "비전 배지 재정의"
+
+#. placeholder {0}: profile.premiumLifetimeSequence
+#: src/components/popouts/UserProfileBadges.tsx:150
+msgid "Visionary ID #{0}"
+msgstr "비전 ID #{0}"
+
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:139
+msgid "Visionary ID Number"
+msgstr "비전 ID 번호"
+
 #: src/components/modals/ExternalLinkWarningModal.tsx:111
 msgid "Visit Site"
 msgstr "사이트 방문"
@@ -24086,7 +24104,7 @@ msgstr "음성 통화"
 msgid "voice channel"
 msgstr "음성 채널"
 
-#: src/stores/QuickSwitcherStore.tsx:720
+#: src/stores/QuickSwitcherStore.tsx:718
 #: src/utils/modals/guild_tabs/GuildAuditLogTabUtils.tsx:227
 msgid "Voice channel"
 msgstr "음성 채널"
@@ -24106,7 +24124,7 @@ msgstr "음성 채널이 꽉 찼습니다"
 msgid "Voice channel join behavior"
 msgstr "음성 채널 참여 행동"
 
-#: src/stores/QuickSwitcherStore.tsx:1351
+#: src/stores/QuickSwitcherStore.tsx:1349
 #: src/utils/quick_switcher/QuickSwitcherModalUtils.tsx:98
 msgid "Voice channels"
 msgstr "음성 채널"
@@ -24374,11 +24392,11 @@ msgstr "이 이메일 주소로 인증 코드를 전송할 것입니다."
 msgid "We'll send a verification code to your email before you can change your password."
 msgstr "비밀번호를 변경하기 전에 귀하의 이메일로 인증 코드를 전송하겠습니다."
 
-#: src/components/modals/EmailChangeModal.tsx:190
+#: src/components/modals/EmailChangeModal.tsx:193
 msgid "We'll verify your current email and then your new email with one-time codes."
 msgstr "현재 이메일과 새 이메일을 순서대로 일회용 코드로 인증합니다."
 
-#: src/components/modals/EmailChangeModal.tsx:192
+#: src/components/modals/EmailChangeModal.tsx:195
 msgid "We'll verify your new email with a one-time code."
 msgstr "새 이메일을 일회용 코드로 인증합니다."
 
@@ -24984,7 +25002,7 @@ msgstr "관리자에게 음소거되어 음소거를 해제할 수 없습니다.
 msgid "You do not have access to the channel where this message was sent."
 msgstr "이 메시지가 보내진 채널에 접근 권한이 없습니다."
 
-#: src/components/channel/ChannelTextarea.tsx:749
+#: src/components/channel/ChannelTextarea.tsx:747
 #: src/components/channel/textarea/TextareaPlusMenu.tsx:52
 msgid "You do not have permission to send messages in this channel."
 msgstr "이 채널에서 메시지를 보낼 권한이 없습니다."
@@ -25005,11 +25023,11 @@ msgstr "공유할 커스텀 테마 오버라이드가 아직 없습니다."
 msgid "You don't have permission to connect to this voice channel."
 msgstr "이 음성 채널에 연결할 권한이 없습니다."
 
-#: src/actions/InviteActionCreators.tsx:316
+#: src/actions/InviteActionCreators.tsx:320
 msgid "You don't have permission to install this emoji pack."
 msgstr "이 이모지 팩을 설치할 권한이 없습니다."
 
-#: src/actions/InviteActionCreators.tsx:317
+#: src/actions/InviteActionCreators.tsx:321
 msgid "You don't have permission to install this sticker pack."
 msgstr "이 스티커 팩을 설치할 권한이 없습니다."
 
@@ -25065,35 +25083,35 @@ msgstr "<2>{giftEndDate}</2>까지 <1>선물 구독</1>으로 모든 <0/>를 이
 msgid "You have blocked {username}. Unblock them to send messages."
 msgstr "{username}님을 차단했습니다. 메시지를 보내려면 차단을 해제하세요."
 
-#: src/actions/InviteActionCreators.tsx:260
+#: src/actions/InviteActionCreators.tsx:264
 msgid "You have created the maximum of {limit} emoji pack. Delete one to create another."
 msgstr "최대 {limit} 개의 이모지 팩을 생성했습니다. 다른 것을 만들기 위해 하나를 삭제하세요."
 
-#: src/actions/InviteActionCreators.tsx:261
+#: src/actions/InviteActionCreators.tsx:265
 msgid "You have created the maximum of {limit} emoji packs. Delete one to create another."
 msgstr "최대 {limit} 개의 이모지 팩을 생성했습니다. 다른 것을 만들기 위해 하나를 삭제하세요."
 
-#: src/actions/InviteActionCreators.tsx:292
+#: src/actions/InviteActionCreators.tsx:296
 msgid "You have created the maximum of {limit} sticker pack. Delete one to create another."
 msgstr "최대 {limit} 개의 스티커 팩을 생성했습니다. 다른 것을 만들기 위해 하나를 삭제하세요."
 
-#: src/actions/InviteActionCreators.tsx:293
+#: src/actions/InviteActionCreators.tsx:297
 msgid "You have created the maximum of {limit} sticker packs. Delete one to create another."
 msgstr "최대 {limit} 개의 스티커 팩을 생성했습니다. 다른 것을 만들기 위해 하나를 삭제하세요."
 
-#: src/actions/InviteActionCreators.tsx:246
+#: src/actions/InviteActionCreators.tsx:250
 msgid "You have installed the maximum of {limit} emoji pack. Remove one to install another."
 msgstr "최대 {limit} 개의 이모지 팩을 설치했습니다. 다른 것을 설치하기 위해 하나를 제거하세요."
 
-#: src/actions/InviteActionCreators.tsx:247
+#: src/actions/InviteActionCreators.tsx:251
 msgid "You have installed the maximum of {limit} emoji packs. Remove one to install another."
 msgstr "최대 {limit} 개의 이모지 팩을 설치했습니다. 다른 것을 설치하기 위해 하나를 제거하세요."
 
-#: src/actions/InviteActionCreators.tsx:278
+#: src/actions/InviteActionCreators.tsx:282
 msgid "You have installed the maximum of {limit} sticker pack. Remove one to install another."
 msgstr "최대 {limit} 개의 스티커 팩을 설치했습니다. 다른 것을 설치하기 위해 하나를 제거하세요."
 
-#: src/actions/InviteActionCreators.tsx:279
+#: src/actions/InviteActionCreators.tsx:283
 msgid "You have installed the maximum of {limit} sticker packs. Remove one to install another."
 msgstr "최대 {limit} 개의 스티커 팩을 설치했습니다. 다른 것을 설치하기 위해 하나를 제거하세요."
 
@@ -25101,19 +25119,19 @@ msgstr "최대 {limit} 개의 스티커 팩을 설치했습니다. 다른 것을
 msgid "You have no friends yet"
 msgstr "아직 친구가 없습니다"
 
-#: src/actions/InviteActionCreators.tsx:264
+#: src/actions/InviteActionCreators.tsx:268
 msgid "You have reached the limit for creating emoji packs. Delete one of your packs to create another."
 msgstr "이모지 팩 생성 한도에 도달했습니다. 다른 팩을 만들려면 기존 팩 중 하나를 삭제하세요."
 
-#: src/actions/InviteActionCreators.tsx:296
+#: src/actions/InviteActionCreators.tsx:300
 msgid "You have reached the limit for creating sticker packs. Delete one of your packs to create another."
 msgstr "스티커 팩 생성 한도에 도달했습니다. 다른 팩을 만들려면 기존 팩 중 하나를 삭제하세요."
 
-#: src/actions/InviteActionCreators.tsx:250
+#: src/actions/InviteActionCreators.tsx:254
 msgid "You have reached the limit for installing emoji packs. Remove one of your installed packs to install another."
 msgstr "설치 가능한 이모지 팩 한도에 도달했습니다. 다른 팩을 설치하려면 설치된 팩 중 하나를 제거하세요."
 
-#: src/actions/InviteActionCreators.tsx:282
+#: src/actions/InviteActionCreators.tsx:286
 msgid "You have reached the limit for installing sticker packs. Remove one of your installed packs to install another."
 msgstr "설치 가능한 스티커 팩 한도에 도달했습니다. 다른 팩을 설치하려면 설치된 팩 중 하나를 제거하세요."
 
@@ -25377,23 +25395,23 @@ msgstr "당신은 {maxFavoriteMemes}개의 저장된 미디어 항목의 최대 
 msgid "You've reached the maximum limit of {maxFavoriteMemes} saved media items. To add more, you'll need to remove some existing items from your collection."
 msgstr "당신은 {maxFavoriteMemes}개의 저장된 미디어 항목의 최대 한도에 도달했습니다. 더 추가하려면 기존 항목 중 일부를 제거해야 합니다."
 
-#: src/components/alerts/MaxBookmarksModal.tsx:55
+#: src/components/alerts/MaxBookmarksModal.tsx:58
 msgid "You've reached the maximum number of bookmarks ({bookmarksText}). Please remove some bookmarks before adding new ones."
 msgstr "북마크의 최대 수에 도달했습니다 ({bookmarksText}). 새로운 북마크를 추가하기 전에 일부 북마크를 제거하세요."
 
-#: src/components/alerts/MaxBookmarksModal.tsx:44
+#: src/components/alerts/MaxBookmarksModal.tsx:47
 msgid "You've reached the maximum number of bookmarks ({bookmarksText}). This limit is configured by your instance administrator. Please remove some bookmarks before adding new ones."
 msgstr "북마크의 최대 수에 도달했습니다 ({bookmarksText}). 이 한도는 귀하의 인스턴스 관리자에 의해 설정되었습니다. 새로운 북마크를 추가하기 전에 일부 북마크를 제거하세요."
 
-#: src/components/alerts/MaxBookmarksModal.tsx:68
+#: src/components/alerts/MaxBookmarksModal.tsx:71
 msgid "You've reached the maximum number of bookmarks for free users ({bookmarksText}). Upgrade to Plutonium to increase your limit to {premiumBookmarksText}, or remove some bookmarks to add new ones."
 msgstr "무료 사용자로서 북마크의 최대 수에 도달했습니다 ({bookmarksText}). 플루토늄으로 업그레이드하여 한도를 {premiumBookmarksText}로 늘리거나, 새로운 북마크를 추가하기 위해 일부 북마크를 제거하세요."
 
-#: src/components/alerts/MaxGuildsModal.tsx:36
+#: src/components/alerts/MaxGuildsModal.tsx:39
 msgid "You've reached the maximum number of communities you can join ({maxGuilds} communities). Please leave a community before joining another one."
 msgstr "가입할 수 있는 커뮤니티의 최대 수에 도달했습니다 ({maxGuilds}개의 커뮤니티). 다른 커뮤니티에 가입하기 전에 하나의 커뮤니티를 나가세요."
 
-#: src/components/alerts/MaxGuildsModal.tsx:35
+#: src/components/alerts/MaxGuildsModal.tsx:38
 msgid "You've reached the maximum number of communities you can join ({maxGuilds} community). Please leave a community before joining another one."
 msgstr "가입할 수 있는 커뮤니티의 최대 수에 도달했습니다 ({maxGuilds}개의 커뮤니티). 다른 커뮤니티에 가입하기 전에 하나의 커뮤니티를 나가세요."
 

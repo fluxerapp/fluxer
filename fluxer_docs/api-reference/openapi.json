@@ -62591,9 +62591,7 @@
           "VISIONARY",
           "OPERATOR",
           "LARGE_GUILD_OVERRIDE",
-          "VERY_LARGE_GUILD",
-          "MT_MESSAGE_SCHEDULING",
-          "MT_EXPRESSION_PACKS"
+          "VERY_LARGE_GUILD"
         ],
         "x-enumDescriptions": [
           "Guild can have an animated icon",
@@ -62616,11 +62614,9 @@
           "Guild is a visionary guild",
           "Guild is an operator guild",
           "Guild has large guild overrides enabled",
-          "Guild has increased member capacity enabled",
-          "Guild has managed message scheduling",
-          "Guild has managed expression packs"
+          "Guild has increased member capacity enabled"
         ],
-        "description": "A guild feature flag Known values: ANIMATED_ICON, ANIMATED_BANNER, BANNER, DETACHED_BANNER, INVITE_SPLASH, INVITES_DISABLED, TEXT_CHANNEL_FLEXIBLE_NAMES, MORE_EMOJI, MORE_STICKERS, UNLIMITED_EMOJI, UNLIMITED_STICKERS, EXPRESSION_PURGE_ALLOWED, VANITY_URL, VERIFIED, VIP_VOICE, UNAVAILABLE_FOR_EVERYONE, UNAVAILABLE_FOR_EVERYONE_BUT_STAFF, VISIONARY, OPERATOR, LARGE_GUILD_OVERRIDE, VERY_LARGE_GUILD, MT_MESSAGE_SCHEDULING, MT_EXPRESSION_PACKS (other values allowed)"
+        "description": "A guild feature flag Known values: ANIMATED_ICON, ANIMATED_BANNER, BANNER, DETACHED_BANNER, INVITE_SPLASH, INVITES_DISABLED, TEXT_CHANNEL_FLEXIBLE_NAMES, MORE_EMOJI, MORE_STICKERS, UNLIMITED_EMOJI, UNLIMITED_STICKERS, EXPRESSION_PURGE_ALLOWED, VANITY_URL, VERIFIED, VIP_VOICE, UNAVAILABLE_FOR_EVERYONE, UNAVAILABLE_FOR_EVERYONE_BUT_STAFF, VISIONARY, OPERATOR, LARGE_GUILD_OVERRIDE, VERY_LARGE_GUILD (other values allowed)"
       },
       "BulkUpdateUserFlagsRequest": {
         "type": "object",
@@ -75627,6 +75623,17 @@
                 }
               ],
               "description": "New parent category ID"
+            },
+            "preceding_sibling_id": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/SnowflakeType"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "ID of the sibling channel that should directly precede this channel after reordering"
             },
             "lock_permissions": {
               "type": "boolean",

@@ -10,7 +10,8 @@
 		"sqlite_path": "./data/dev.db"
 	},
 	"internal": {
-		"kv": "redis://127.0.0.1:6379/0"
+		"kv": "redis://127.0.0.1:6379/0",
+		"kv_mode": "standalone"
 	},
 	"s3": {
 		"access_key_id": "",
@@ -101,6 +102,7 @@
 			}
 		},
 		"search": {
+			"engine": "meilisearch",
 			"url": "http://127.0.0.1:7700",
 			"api_key": ""
 		}

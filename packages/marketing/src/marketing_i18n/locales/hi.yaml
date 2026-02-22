@@ -371,7 +371,7 @@ pricing_and_tiers.free.label: फ्री
 pricing_and_tiers.plutonium.benefits_note_official_instance_only: 'नोट: प्लूटोनियम और विजनरी के फायदे सिर्फ आधिकारिक Fluxer.app इंस्टेंस पर लागू होते हैं, थर्ड-पार्टी या सेल्फ-होस्टेड इंस्टेंस पर नहीं.'
 pricing_and_tiers.plutonium.feature_highlights: 500 MB अपलोड्स, 4,000 कैरेक्टर के मैसेज, 300 बुकमार्क्स, 50 इमोजी पैक्स, और बहुत कुछ.
 pricing_and_tiers.plutonium.features.bio_character_limit: बायो कैरेक्टर लिमिट
-pricing_and_tiers.plutonium.features.choose_custom_4_digit_tag: 'अपना यूनिक यूज़रनेम बनाने के लिए #0001, #1337, या #9999 जैसा अपना खुद का 4-अंकीय टैग चुनें।'
+pricing_and_tiers.plutonium.features.choose_custom_4_digit_tag: '#0001 से #9999 तक कोई भी उपलब्ध 4-अंकीय टैग चुनें और अपना यूज़रनेम सच में यूनिक बनाएं।'
 pricing_and_tiers.plutonium.features.custom_4_digit_username_tag: कस्टम 4-अंकीय यूज़रनेम टैग
 pricing_and_tiers.plutonium.features.custom_username_tag: कस्टम यूज़रनेम टैग
 pricing_and_tiers.plutonium.features.custom_video_backgrounds: वीडियो बैकग्राउंड्स

@@ -672,7 +672,7 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 						) : (
 							<div className={styles.contentLayout}>
 								<div className={styles.formColumn}>
-									{!isPerGuildProfile && <UsernameSection isClaimed={isClaimed} discriminator={user.discriminator} />}
+									{!isPerGuildProfile && <UsernameSection isClaimed={isClaimed} user={user} />}
 
 									{isPerGuildProfile && (
 										<div>

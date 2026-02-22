@@ -51,10 +51,8 @@ import UserStore from '@app/stores/UserStore';
 import * as ChannelUtils from '@app/utils/ChannelUtils';
 import {parseChannelUrl} from '@app/utils/DeepLinkUtils';
 import * as NicknameUtils from '@app/utils/NicknameUtils';
-import {hasManagedTrait} from '@app/utils/traits/UserTraits';
 import {FAVORITES_GUILD_ID} from '@fluxer/constants/src/AppConstants';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
-import {ManagedTraits} from '@fluxer/constants/src/ManagedTraits';
 import type {QuickSwitcherResultType} from '@fluxer/constants/src/QuickSwitcherConstants';
 import {QuickSwitcherResultTypes} from '@fluxer/constants/src/QuickSwitcherConstants';
 import {RelationshipTypes, ThemeTypes} from '@fluxer/constants/src/UserConstants';
@@ -850,7 +848,7 @@ class QuickSwitcherStore {
 
 		const settingsCandidates: Array<SettingsCandidate> = [];
 
-		const hasExpressionPackAccess = hasManagedTrait(ManagedTraits.EXPRESSION_PACKS);
+		const hasExpressionPackAccess = UserStore.getCurrentUser()?.isStaff() ?? false;
 
 		const accessibleTabs = getSettingsTabs(this.i18n!).filter((tab) => {
 			if (!DeveloperModeStore.isDeveloper && tab.category === 'staff_only') {

@@ -371,7 +371,7 @@ pricing_and_tiers.free.label: Gratis
 pricing_and_tiers.plutonium.benefits_note_official_instance_only: 'Catatan: manfaat Plutonium dan Visionary hanya berlaku untuk instance resmi Fluxer.app, bukan instance pihak ketiga atau self-hosted.'
 pricing_and_tiers.plutonium.feature_highlights: Unggahan 500 MB, pesan 4.000 karakter, 300 bookmark, 50 paket emoji, dan masih banyak lagi.
 pricing_and_tiers.plutonium.features.bio_character_limit: Batas karakter bio
-pricing_and_tiers.plutonium.features.choose_custom_4_digit_tag: Pilih tag 4 digit kamu sendiri seperti #0001, #1337, atau #9999 untuk membuat username kamu benar-benar unik.
+pricing_and_tiers.plutonium.features.choose_custom_4_digit_tag: Pilih tag 4 digit yang tersedia dari #0001 sampai #9999 untuk membuat username kamu benar-benar unik.
 pricing_and_tiers.plutonium.features.custom_4_digit_username_tag: Tag nama pengguna 4 digit kustom
 pricing_and_tiers.plutonium.features.custom_username_tag: Tag nama pengguna kustom
 pricing_and_tiers.plutonium.features.custom_video_backgrounds: Latar belakang video

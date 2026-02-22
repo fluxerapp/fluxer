@@ -186,7 +186,7 @@ const DMListItem = observer(({channel, isSelected}: {channel: ChannelRecord; isS
 	}, []);
 	const contextMenuOpen = useContextMenuHoverState(scrollTargetRef);
 	const closeAllSheets = useCallback(() => {
-		closeAllSheets();
+		setMenuOpen(false);
 		setNestedSheet(null);
 	}, []);
 	const openNestedSheet = useCallback((title: string, groups: Array<MenuGroupType>) => {

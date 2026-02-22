@@ -257,7 +257,7 @@ export class GuildRoleService {
 			mentionable: updateData.mentionable ?? role.isMentionable,
 		};
 
-		const updatedRole = await this.guildRoleRepository.upsertRole(updatedRoleData);
+		const updatedRole = await this.guildRoleRepository.upsertRole(updatedRoleData, role.toRow());
 
 		await this.dispatchGuildRoleUpdate({guildId, role: updatedRole});
 
@@ -424,10 +424,14 @@ export class GuildRoleService {
 				const role = roleMap.get(update.roleId)!;
 				if (role.hoistPosition === update.hoistPosition) continue;
 
-				const updatedRole = await this.guildRoleRepository.upsertRole({
-					...role.toRow(),
-					hoist_position: update.hoistPosition,
-				});
+				const roleRow = role.toRow();
+				const updatedRole = await this.guildRoleRepository.upsertRole(
+					{
+						...roleRow,
+						hoist_position: update.hoistPosition,
+					},
+					roleRow,
+				);
 				changedRoles.push(updatedRole);
 			}
 
@@ -460,10 +464,14 @@ export class GuildRoleService {
 			for (const role of allRoles) {
 				if (role.hoistPosition === null) continue;
 
-				const updatedRole = await this.guildRoleRepository.upsertRole({
-					...role.toRow(),
-					hoist_position: null,
-				});
+				const roleRow = role.toRow();
+				const updatedRole = await this.guildRoleRepository.upsertRole(
+					{
+						...roleRow,
+						hoist_position: null,
+					},
+					roleRow,
+				);
 				changedRoles.push(updatedRole);
 			}
 
@@ -649,7 +657,11 @@ export class GuildRoleService {
 		const reorderedIds = targetOrder.map((r) => r.id);
 		const reorderedRoles = this.reorderRolePositions({allRoles, reorderedIds, guildId});
 
-		const updatePromises = reorderedRoles.map((role) => this.guildRoleRepository.upsertRole(role.toRow()));
+		const updatePromises = reorderedRoles.map((role) => {
+			const roleRow = role.toRow();
+			const oldRole = roleMap.get(role.id);
+			return this.guildRoleRepository.upsertRole(roleRow, oldRole ? oldRole.toRow() : undefined);
+		});
 		await Promise.all(updatePromises);
 
 		const updatedRoles = await this.guildRoleRepository.listRoles(guildId);

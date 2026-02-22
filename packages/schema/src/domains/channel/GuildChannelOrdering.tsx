@@ -67,7 +67,52 @@ export function compareChannelOrdering<Id extends string | bigint>(
 export function sortChannelsForOrdering<Id extends string | bigint, Channel extends ChannelOrderingChannel<Id>>(
 	channels: ReadonlyArray<Channel>,
 ): Array<Channel> {
-	return [...channels].sort(compareChannelOrdering);
+	const channelById = new Map<Id, Channel>(channels.map((channel) => [channel.id, channel]));
+	const childrenByParent = new Map<Id, Array<Channel>>();
+	const rootChannels: Array<Channel> = [];
+
+	for (const channel of channels) {
+		const parentId = channel.parentId ?? null;
+		if (parentId === null || !channelById.has(parentId)) {
+			rootChannels.push(channel);
+			continue;
+		}
+
+		const existingChildren = childrenByParent.get(parentId);
+		if (existingChildren) {
+			existingChildren.push(channel);
+		} else {
+			childrenByParent.set(parentId, [channel]);
+		}
+	}
+
+	const orderedChannels: Array<Channel> = [];
+	const seen = new Set<Id>();
+
+	const sortedRoots = [...rootChannels].sort(compareChannelOrdering);
+	for (const root of sortedRoots) {
+		orderedChannels.push(root);
+		seen.add(root.id);
+
+		if (root.type !== ChannelTypes.GUILD_CATEGORY) {
+			continue;
+		}
+
+		const children = childrenByParent.get(root.id);
+		if (!children) {
+			continue;
+		}
+
+		for (const child of [...children].sort(compareChannelOrdering)) {
+			orderedChannels.push(child);
+			seen.add(child.id);
+		}
+	}
+
+	const remaining = channels.filter((channel) => !seen.has(channel.id)).sort(compareChannelOrdering);
+	orderedChannels.push(...remaining);
+
+	return orderedChannels;
 }
 
 export function computeChannelMoveBlockIds<Id extends string | bigint, Channel extends ChannelOrderingChannel<Id>>({

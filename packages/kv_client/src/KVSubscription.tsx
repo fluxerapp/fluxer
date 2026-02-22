@@ -18,17 +18,21 @@
  */
 
 import type {IKVSubscription} from '@fluxer/kv_client/src/IKVProvider';
-import type {IKVLogger} from '@fluxer/kv_client/src/KVClientConfig';
+import type {IKVLogger, KVClientMode, KVClusterNode} from '@fluxer/kv_client/src/KVClientConfig';
 import Redis from 'ioredis';
 
 interface KVSubscriptionConfig {
 	url: string;
+	mode?: KVClientMode;
+	clusterNodes?: Array<KVClusterNode>;
 	timeoutMs: number;
 	logger: IKVLogger;
 }
 
 export class KVSubscription implements IKVSubscription {
 	private readonly url: string;
+	private readonly mode: KVClientMode;
+	private readonly clusterNodes: Array<KVClusterNode>;
 	private readonly timeoutMs: number;
 	private readonly logger: IKVLogger;
 	private readonly channels: Set<string> = new Set();
@@ -38,6 +42,8 @@ export class KVSubscription implements IKVSubscription {
 
 	constructor(config: KVSubscriptionConfig) {
 		this.url = config.url;
+		this.mode = config.mode ?? 'standalone';
+		this.clusterNodes = config.clusterNodes ?? [];
 		this.timeoutMs = config.timeoutMs;
 		this.logger = config.logger;
 	}
@@ -47,7 +53,8 @@ export class KVSubscription implements IKVSubscription {
 			return;
 		}
 
-		const client = new Redis(this.url, {
+		const connectionUrl = this.resolveSubscriptionUrl();
+		const client = new Redis(connectionUrl, {
 			autoResubscribe: true,
 			connectTimeout: this.timeoutMs,
 			commandTimeout: this.timeoutMs,
@@ -143,6 +150,15 @@ export class KVSubscription implements IKVSubscription {
 		if (!event || event === 'error') {
 			this.errorCallbacks.clear();
 		}
+	}
+
+	private resolveSubscriptionUrl(): string {
+		if (this.mode !== 'cluster' || this.clusterNodes.length === 0) {
+			return this.url;
+		}
+
+		const node = this.clusterNodes[0];
+		return `redis://${node.host}:${node.port}`;
 	}
 }
 

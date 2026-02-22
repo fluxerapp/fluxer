@@ -54,6 +54,9 @@ export function getKVClient(): IKVProvider {
 	if (!_kvClient) {
 		_kvClient = new KVClient({
 			url: Config.kv.url,
+			mode: Config.kv.mode,
+			clusterNodes: Config.kv.clusterNodes,
+			clusterNatMap: Config.kv.clusterNatMap,
 		});
 	}
 	return _kvClient;

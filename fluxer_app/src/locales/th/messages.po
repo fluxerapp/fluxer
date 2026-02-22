@@ -134,12 +134,12 @@ msgid "{0} of {totalAttachments}"
 msgstr "{0} จาก {totalAttachments}"
 
 #. placeholder {0}: passkeys.length
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:285
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:288
 msgid "{0} passkey registered (max 10)"
 msgstr "{0} รหัสผ่านที่ลงทะเบียน (สูงสุด 10)"
 
 #. placeholder {0}: passkeys.length
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:286
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:289
 msgid "{0} passkeys registered (max 10)"
 msgstr "{0} รหัสผ่านที่ลงทะเบียน (สูงสุด 10)"
 
@@ -633,11 +633,11 @@ msgstr "{lockedStickerCount} สติ๊กเกอร์"
 msgid "{lockedStickerCount} stickers"
 msgstr "{lockedStickerCount} สติ๊กเกอร์"
 
-#: src/components/alerts/MaxBookmarksModal.tsx:38
+#: src/components/alerts/MaxBookmarksModal.tsx:41
 msgid "{maxBookmarks} bookmark"
 msgstr "{maxBookmarks} บุ๊กมาร์ก"
 
-#: src/components/alerts/MaxBookmarksModal.tsx:38
+#: src/components/alerts/MaxBookmarksModal.tsx:41
 msgid "{maxBookmarks} bookmarks"
 msgstr "{maxBookmarks} บุ๊กมาร์ก"
 
@@ -718,11 +718,11 @@ msgstr "{participantCount} ผู้เข้าร่วมในสาย"
 msgid "{participantCount} participants in call"
 msgstr "{participantCount} ผู้เข้าร่วมในสาย"
 
-#: src/components/alerts/MaxBookmarksModal.tsx:63
+#: src/components/alerts/MaxBookmarksModal.tsx:66
 msgid "{premiumBookmarks} bookmark"
 msgstr "{premiumBookmarks} บุ๊กมาร์ก"
 
-#: src/components/alerts/MaxBookmarksModal.tsx:63
+#: src/components/alerts/MaxBookmarksModal.tsx:66
 msgid "{premiumBookmarks} bookmarks"
 msgstr "{premiumBookmarks} บุ๊กมาร์ก"
 
@@ -875,11 +875,11 @@ msgstr "{username} เอาใครบางคนออกจากกลุ�
 msgid "{username} started a call."
 msgstr "{username} เริ่มการโทร"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:100
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:102
 msgid "{v} gift"
 msgstr "{v} ของขวัญ"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:100
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:102
 msgid "{v} gifts"
 msgstr "{v} ของขวัญ"
 
@@ -1088,7 +1088,7 @@ msgstr "<0>เปิดเสียง</0> สมาชิกนี้"
 msgid "<0>Unmuted</0> the member."
 msgstr "<0>ปลดปิดเสียง</0> สมาชิกนี้"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:370
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:373
 msgid "<0>Warning:</0> This will also disable SMS two-factor authentication."
 msgstr "<0>คำเตือน:</0> การกระทำนี้จะปิดการใช้งานการยืนยันตัวตนสองขั้นตอนผ่าน SMS ด้วย"
 
@@ -1362,9 +1362,9 @@ msgstr "30 วินาที"
 msgid "4 hours"
 msgstr "4 ชั่วโมง"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:203
-#: src/components/modals/FluxerTagChangeModal.tsx:231
-#: src/components/modals/FluxerTagChangeModal.tsx:248
+#: src/components/modals/FluxerTagChangeModal.tsx:217
+#: src/components/modals/FluxerTagChangeModal.tsx:245
+#: src/components/modals/FluxerTagChangeModal.tsx:262
 msgid "4-digit tag"
 msgstr "แท็ก 4 หลัก"
 
@@ -1634,7 +1634,7 @@ msgstr "ยืนยันบัญชีเรียบร้อยแล้ว
 msgid "Account Connected"
 msgstr "บัญชีที่เชื่อมต่อแล้ว"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:55
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:57
 msgid "Account State Overrides"
 msgstr "การยกเว้นสถานะบัญชี"
 
@@ -1642,7 +1642,7 @@ msgstr "การยกเว้นสถานะบัญชี"
 msgid "Account Too New"
 msgstr "บัญชีใหม่เกินไป"
 
-#: src/actions/InviteActionCreators.tsx:178
+#: src/actions/InviteActionCreators.tsx:182
 #: src/components/modals/RequiredActionModal.tsx:143
 #: src/components/modals/RequiredActionModal.tsx:416
 msgid "Account Verification Required"
@@ -1763,7 +1763,7 @@ msgstr "เพิ่ม"
 msgid "Add a bot to a community with requested permissions"
 msgstr "เพิ่มบอทในคอมมูนิตี้พร้อมสิทธิ์ที่ร้องขอ"
 
-#: src/components/modals/ForwardModal.tsx:309
+#: src/components/modals/ForwardModal.tsx:314
 msgid "Add a comment (optional)"
 msgstr "เพิ่มความคิดเห็น (ไม่บังคับ)"
 
@@ -1782,7 +1782,7 @@ msgstr "เพิ่มพื้นหลังแบบกำหนดเอง
 msgid "Add a different account"
 msgstr "เพิ่มบัญชีอื่น"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:348
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:351
 msgid "Add a phone number to enable SMS two-factor authentication"
 msgstr "เพิ่มหมายเลขโทรศัพท์เพื่อเปิดใช้งาน SMS สองขั้นตอน"
 
@@ -1844,7 +1844,7 @@ msgstr "แบบฟอร์มเพิ่มการเชื่อมต่
 msgid "Add domain connection"
 msgstr "เพิ่มการเชื่อมต่อโดเมน"
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:98
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:101
 msgid "Add Email"
 msgstr "เพิ่มอีเมล"
 
@@ -1902,12 +1902,12 @@ msgstr "เพิ่มหรือเปลี่ยนหมายเลขโ
 msgid "Add Override"
 msgstr "เพิ่มการยกเว้น"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:290
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:293
 msgid "Add Passkey"
 msgstr "เพิ่มรหัสผ่าน"
 
 #: src/components/channel/barriers/BarrierComponents.tsx:198
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:395
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:398
 msgid "Add Phone"
 msgstr "เพิ่มโทรศัพท์"
 
@@ -2010,7 +2010,7 @@ msgstr "เพิ่ม {0} แล้ว"
 msgid "Added roles."
 msgstr "เพิ่มบทบาทแล้ว"
 
-#: src/actions/SavedMessageActionCreators.tsx:58
+#: src/actions/SavedMessageActionCreators.tsx:59
 msgid "Added to bookmarks"
 msgstr "เพิ่มในบุ๊กมาร์กแล้ว"
 
@@ -2028,11 +2028,11 @@ msgstr "เพิ่มไปยังรายการโปรด"
 msgid "Added to saved media"
 msgstr "เพิ่มในสื่อที่บันทึกแล้ว"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:313
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:316
 msgid "Added: {createdDate}"
 msgstr "เพิ่มเมื่อ: {createdDate}"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:309
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:312
 msgid "Added: {createdDate} • Last used: {lastUsedDate}"
 msgstr "เพิ่มเมื่อ: {createdDate} • ใช้ล่าสุด: {lastUsedDate}"
 
@@ -2930,7 +2930,7 @@ msgid "Are you sure you want to remove this connection? This action cannot be un
 msgstr "คุณแน่ใจหรือว่าต้องการลบการเชื่อมต่อนี้? การกระทำนี้ไม่สามารถย้อนกลับได้."
 
 #. placeholder {0}: user.phone
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:364
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:367
 msgid "Are you sure you want to remove your phone number <0>{0}</0>?"
 msgstr "แน่ใจไหมว่าต้องการลบหมายเลขโทรศัพท์ <0>{0}</0>?"
 
@@ -3395,7 +3395,7 @@ msgstr "กลับไปยังบทบาท"
 msgid "Back to Settings"
 msgstr "กลับไปยังการตั้งค่า"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:118
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:120
 msgid "Backend Premium Override"
 msgstr "การแทนค่าพรีเมียมฝั่งหลัง"
 
@@ -3438,12 +3438,12 @@ msgid "backup codes"
 msgstr "รหัสสำรอง"
 
 #: src/components/modals/BackupCodesModal.tsx:43
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:254
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:257
 #: src/components/modals/utils/SettingsSearchIndex.tsx:140
 msgid "Backup Codes"
 msgstr "รหัสสำรอง"
 
-#: src/components/modals/BackupCodesRegenerateModal.tsx:48
+#: src/components/modals/BackupCodesRegenerateModal.tsx:55
 msgid "Backup codes regenerated"
 msgstr "สร้างรหัสสำรองใหม่แล้ว"
 
@@ -3720,9 +3720,9 @@ msgstr "ชมรมหนังสือ"
 msgid "Bookmark"
 msgstr "บุ๊กมาร์ก"
 
-#: src/components/alerts/MaxBookmarksModal.tsx:43
-#: src/components/alerts/MaxBookmarksModal.tsx:54
-#: src/components/alerts/MaxBookmarksModal.tsx:67
+#: src/components/alerts/MaxBookmarksModal.tsx:46
+#: src/components/alerts/MaxBookmarksModal.tsx:57
+#: src/components/alerts/MaxBookmarksModal.tsx:70
 msgid "Bookmark Limit Reached"
 msgstr "ถึงขีดจำกัดบุ๊กมาร์กแล้ว"
 
@@ -3750,7 +3750,7 @@ msgstr "บุ๊กมาร์กแล้ว!"
 
 #: src/components/modals/BookmarksBottomSheet.tsx:109
 #: src/components/pages/SavedMessagesPage.tsx:67
-#: src/components/popouts/InboxPopout.tsx:58
+#: src/components/popouts/InboxPopout.tsx:57
 msgid "Bookmarks"
 msgstr "บุ๊กมาร์ก"
 
@@ -4055,7 +4055,7 @@ msgstr "กล้องจะถูกปิดเมื่อมีผู้เ
 #: src/components/alerts/FileSizeTooLargeModal.tsx:87
 #: src/components/auth/BrowserLoginHandoffModal.tsx:269
 #: src/components/bottomsheets/CreateDMBottomSheet.tsx:130
-#: src/components/channel/ChannelTextarea.tsx:312
+#: src/components/channel/ChannelTextarea.tsx:310
 #: src/components/channel/friends/FriendListItem.tsx:259
 #: src/components/channel/MentionEveryonePopout.tsx:128
 #: src/components/emojis/EmojiListItem.tsx:125
@@ -4069,8 +4069,8 @@ msgstr "กล้องจะถูกปิดเมื่อมีผู้เ
 #: src/components/modals/AddGuildModal.tsx:413
 #: src/components/modals/AddGuildStickerModal.tsx:120
 #: src/components/modals/AttachmentEditModal.tsx:122
-#: src/components/modals/BackupCodesRegenerateModal.tsx:72
-#: src/components/modals/BackupCodesViewModal.tsx:70
+#: src/components/modals/BackupCodesRegenerateModal.tsx:79
+#: src/components/modals/BackupCodesViewModal.tsx:75
 #: src/components/modals/BanMemberModal.tsx:143
 #: src/components/modals/CameraPreviewModal.tsx:485
 #: src/components/modals/CaptchaModal.tsx:187
@@ -4094,14 +4094,14 @@ msgstr "กล้องจะถูกปิดเมื่อมีผู้เ
 #: src/components/modals/EditFavoriteMemeModal.tsx:85
 #: src/components/modals/EditGuildStickerModal.tsx:113
 #: src/components/modals/EditPackModal.tsx:103
-#: src/components/modals/EmailChangeModal.tsx:199
-#: src/components/modals/EmailChangeModal.tsx:230
-#: src/components/modals/EmailChangeModal.tsx:267
-#: src/components/modals/EmailChangeModal.tsx:298
+#: src/components/modals/EmailChangeModal.tsx:202
+#: src/components/modals/EmailChangeModal.tsx:233
+#: src/components/modals/EmailChangeModal.tsx:270
+#: src/components/modals/EmailChangeModal.tsx:301
 #: src/components/modals/ExternalLinkWarningModal.tsx:102
-#: src/components/modals/FluxerTagChangeModal.tsx:117
-#: src/components/modals/FluxerTagChangeModal.tsx:280
-#: src/components/modals/ForwardModal.tsx:373
+#: src/components/modals/FluxerTagChangeModal.tsx:122
+#: src/components/modals/FluxerTagChangeModal.tsx:294
+#: src/components/modals/ForwardModal.tsx:378
 #: src/components/modals/guild_tabs/GuildBansTab.tsx:103
 #: src/components/modals/guild_tabs/GuildRolesTab.tsx:624
 #: src/components/modals/GuildFolderSettingsModal.tsx:199
@@ -4113,7 +4113,7 @@ msgstr "กล้องจะถูกปิดเมื่อมีผู้เ
 #: src/components/modals/KickMemberModal.tsx:63
 #: src/components/modals/MessageHistoryThresholdModal.tsx:103
 #: src/components/modals/MfaTotpDisableModal.tsx:75
-#: src/components/modals/MfaTotpEnableModal.tsx:103
+#: src/components/modals/MfaTotpEnableModal.tsx:106
 #: src/components/modals/PasskeyNameModal.tsx:62
 #: src/components/modals/PasswordChangeModal.tsx:145
 #: src/components/modals/PasswordChangeModal.tsx:176
@@ -4146,7 +4146,7 @@ msgstr "ยกเลิก"
 msgid "Cancel Friend Request"
 msgstr "ยกเลิกคำขอเป็นเพื่อน"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:112
+#: src/components/modals/FluxerTagChangeModal.tsx:117
 msgid "Cancel if you want to choose a different username instead."
 msgstr "ยกเลิกหากคุณต้องการเลือกชื่อผู้ใช้ใหม่แทน"
 
@@ -4178,11 +4178,11 @@ msgstr "ไม่สามารถแก้ไขได้"
 msgid "Cannot Delete Account"
 msgstr "ไม่สามารถลบบัญชีได้"
 
-#: src/actions/InviteActionCreators.tsx:313
+#: src/actions/InviteActionCreators.tsx:317
 msgid "Cannot install emoji pack"
 msgstr "ไม่สามารถติดตั้งชุดอีโมจิ"
 
-#: src/actions/InviteActionCreators.tsx:314
+#: src/actions/InviteActionCreators.tsx:318
 msgid "Cannot install sticker pack"
 msgstr "ไม่สามารถติดตั้งชุดสติกเกอร์"
 
@@ -4279,7 +4279,7 @@ msgstr "เปลี่ยนแบนเนอร์"
 msgid "Change email"
 msgstr "เปลี่ยนอีเมล"
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:81
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:84
 msgid "Change Email"
 msgstr "เปลี่ยนอีเมล"
 
@@ -4288,12 +4288,12 @@ msgstr "เปลี่ยนอีเมล"
 msgid "Change emoji"
 msgstr "เปลี่ยนอีโมจิ"
 
-#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:59
-#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:69
+#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:60
+#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:70
 msgid "Change FluxerTag"
 msgstr "เปลี่ยน FluxerTag"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:158
+#: src/components/modals/FluxerTagChangeModal.tsx:163
 msgid "Change FluxerTag form"
 msgstr "แบบฟอร์มเปลี่ยน FluxerTag"
 
@@ -4360,7 +4360,7 @@ msgid "change password"
 msgstr "เปลี่ยนรหัสผ่าน"
 
 #: src/components/modals/PasswordChangeModal.tsx:227
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:124
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:127
 msgid "Change Password"
 msgstr "เปลี่ยนรหัสผ่าน"
 
@@ -4372,7 +4372,7 @@ msgstr "แบบฟอร์มเปลี่ยนรหัสผ่าน"
 msgid "Change what users without Read Message History can see"
 msgstr "เปลี่ยนสิ่งที่ผู้ใช้ที่ไม่มีสิทธิ์อ่านประวัติข้อความสามารถเห็นได้"
 
-#: src/components/modals/EmailChangeModal.tsx:183
+#: src/components/modals/EmailChangeModal.tsx:186
 msgid "Change Your Email"
 msgstr "เปลี่ยนอีเมลของคุณ"
 
@@ -4380,7 +4380,7 @@ msgstr "เปลี่ยนอีเมลของคุณ"
 msgid "Change your email address"
 msgstr "เปลี่ยนที่อยู่อีเมลของคุณ"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:159
+#: src/components/modals/FluxerTagChangeModal.tsx:164
 msgid "Change Your FluxerTag"
 msgstr "เปลี่ยน FluxerTag ของคุณ"
 
@@ -4392,7 +4392,7 @@ msgstr "เปลี่ยนนามแฝงของคุณในชุม
 msgid "Change your password"
 msgstr "เปลี่ยนรหัสผ่านของคุณ"
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:106
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:109
 msgid "Change your password to keep your account secure"
 msgstr "เปลี่ยนรหัสผ่านของคุณเพื่อเก็บบัญชีให้ปลอดภัย"
 
@@ -4404,7 +4404,7 @@ msgstr "เปลี่ยนรูปโปรไฟล์ของคุณ"
 msgid "Change your username"
 msgstr "เปลี่ยนชื่อผู้ใช้ของคุณ"
 
-#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:90
+#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:91
 msgid "Change your username and 4-digit tag"
 msgstr "เปลี่ยนชื่อผู้ใช้และแท็ก 4 หลักของคุณ"
 
@@ -4424,7 +4424,7 @@ msgstr "เปลี่ยนบิตเรตเป็น {0}"
 msgid "Changed the voice region to {0}."
 msgstr "เปลี่ยนภูมิภาคเสียงเป็น {0}"
 
-#: src/components/channel/ChannelTextarea.tsx:751
+#: src/components/channel/ChannelTextarea.tsx:749
 #: src/utils/SearchUtils.tsx:268
 msgid "channel"
 msgstr "แชนแนล"
@@ -4846,7 +4846,7 @@ msgstr "ยืนยันบัญชีของคุณเพื่อเข
 msgid "Claim your account to call"
 msgstr "ยืนยันบัญชีของคุณเพื่อโทร"
 
-#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:56
+#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:57
 msgid "Claim your account to change your FluxerTag"
 msgstr "ยืนยันบัญชีของคุณเพื่อเปลี่ยน FluxerTag"
 
@@ -5144,7 +5144,7 @@ msgstr "รหัสลับไคลเอนต์ได้รับการ
 #: src/components/modals/components/SettingsModalHeader.tsx:98
 #: src/components/modals/InviteModal.tsx:135
 #: src/components/modals/MediaModal.tsx:349
-#: src/components/modals/MobileVideoViewer.tsx:252
+#: src/components/modals/MobileVideoViewer.tsx:260
 #: src/components/modals/Modal.tsx:382
 #: src/components/modals/Modal.tsx:460
 #: src/components/modals/PackInviteModal.tsx:152
@@ -5201,7 +5201,7 @@ msgstr "ธีมถ่าน"
 #: src/components/auth/MfaScreen.tsx:131
 #: src/components/invites/InviteListItem.tsx:56
 #: src/components/modals/MfaTotpDisableModal.tsx:63
-#: src/components/modals/MfaTotpEnableModal.tsx:91
+#: src/components/modals/MfaTotpEnableModal.tsx:94
 #: src/components/pages/report/ReportBreadcrumbs.tsx:48
 msgid "Code"
 msgstr "โค้ด"
@@ -5333,7 +5333,7 @@ msgid "Communication"
 msgstr "การสื่อสาร"
 
 #: src/components/modals/components/FeatureComparisonTable.tsx:49
-#: src/stores/QuickSwitcherStore.tsx:1354
+#: src/stores/QuickSwitcherStore.tsx:1352
 #: src/utils/quick_switcher/QuickSwitcherModalUtils.tsx:99
 msgid "Communities"
 msgstr "ชุมชน"
@@ -5651,7 +5651,7 @@ msgid "Configure your profile badge"
 msgstr "ตั้งค่าตราสัญลักษณ์โปรไฟล์ของคุณ"
 
 #: src/components/channel/MentionEveryonePopout.tsx:134
-#: src/components/modals/EmailChangeModal.tsx:304
+#: src/components/modals/EmailChangeModal.tsx:307
 msgid "Confirm"
 msgstr "ยืนยัน"
 
@@ -5825,15 +5825,15 @@ msgstr "เมนูบริบท"
 msgid "Context menus can be opened with left-click (on buttons) or right-click (on other elements). This demonstrates various menu items including checkboxes, radio buttons, sliders, and submenus."
 msgstr "เมนูบริบทสามารถเปิดได้ด้วยการคลิกซ้าย (บนปุ่ม) หรือคลิกขวา (บนองค์ประกอบอื่น) ตัวอย่างนี้แสดงรายการเมนูต่างๆ รวมทั้งช่องทำเครื่องหมาย ปุ่มตัวเลือก แถบเลื่อน และเมนูย่อย"
 
-#: src/components/channel/ChannelTextarea.tsx:311
+#: src/components/channel/ChannelTextarea.tsx:309
 #: src/components/modals/AddConnectionModal.tsx:221
-#: src/components/modals/BackupCodesRegenerateModal.tsx:75
-#: src/components/modals/BackupCodesViewModal.tsx:73
+#: src/components/modals/BackupCodesRegenerateModal.tsx:82
+#: src/components/modals/BackupCodesViewModal.tsx:78
 #: src/components/modals/DeviceRevokeModal.tsx:82
-#: src/components/modals/FluxerTagChangeModal.tsx:116
-#: src/components/modals/FluxerTagChangeModal.tsx:283
+#: src/components/modals/FluxerTagChangeModal.tsx:121
+#: src/components/modals/FluxerTagChangeModal.tsx:297
 #: src/components/modals/MfaTotpDisableModal.tsx:78
-#: src/components/modals/MfaTotpEnableModal.tsx:106
+#: src/components/modals/MfaTotpEnableModal.tsx:109
 #: src/components/modals/SudoVerificationModal.tsx:410
 msgid "Continue"
 msgstr "ดำเนินการต่อ"
@@ -6555,7 +6555,7 @@ msgstr "อุปกรณ์ปัจจุบัน"
 msgid "Current DM"
 msgstr "ข้อความส่วนตัวปัจจุบัน"
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:113
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:116
 msgid "Current Password"
 msgstr "รหัสผ่านปัจจุบัน"
 
@@ -6601,7 +6601,7 @@ msgstr "การปรับแต่ง CSS"
 msgid "Custom Date Range"
 msgstr "ช่วงวันที่กำหนดเอง"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:227
+#: src/components/modals/FluxerTagChangeModal.tsx:241
 msgid "Custom discriminators are not available on this instance"
 msgstr "ตัวแยกที่กำหนดเองไม่สามารถใช้งานได้ในกรณีนี้"
 
@@ -6727,11 +6727,12 @@ msgstr "ปรับแต่งปุ่มที่ปรากฏบนกา
 msgid "Customize which buttons are visible in the message input area. Keyboard shortcuts will continue to work even if buttons are hidden."
 msgstr "ปรับแต่งปุ่มที่มองเห็นได้ในพื้นที่ป้อนข้อความ ช็อตคัตคีย์บอร์ดจะยังคงทำงานแม้ว่าปุ่มจะถูกซ่อน"
 
-#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:74
-msgid "Customize your 4-digit tag (#{discriminator}) to your liking with Plutonium"
-msgstr "ปรับแท็กสี่หลัก (#{discriminator}) ตามใจด้วย Plutonium"
+#. placeholder {0}: user.discriminator
+#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:75
+msgid "Customize your 4-digit tag (#{0}) to your liking with Plutonium"
+msgstr "ปรับแต่งแท็ก 4 หลักของคุณ (#{0}) ให้ตรงตามที่คุณต้องการด้วย Plutonium"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:272
+#: src/components/modals/FluxerTagChangeModal.tsx:286
 msgid "Customize your 4-digit tag or keep it when changing your username"
 msgstr "ปรับแท็กสี่หลักหรือเก็บไว้เมื่อเปลี่ยนชื่อผู้ใช้"
 
@@ -7069,7 +7070,7 @@ msgstr "ลบ"
 #: src/components/emojis/EmojiListItem.tsx:195
 #: src/components/emojis/EmojiListItem.tsx:252
 #: src/components/emojis/EmojiListItem.tsx:308
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:322
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:325
 #: src/components/modals/tabs/component_gallery_tab/ButtonsTab.tsx:157
 #: src/components/modals/tabs/component_gallery_tab/ButtonsTab.tsx:242
 #: src/components/modals/tabs/component_gallery_tab/index.tsx:165
@@ -7515,7 +7516,7 @@ msgstr "ข้อความโดยตรง"
 #: src/components/layout/guild_list/FluxerButton.tsx:80
 #: src/components/modals/GuildPrivacySettingsModal.tsx:76
 #: src/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:221
-#: src/stores/QuickSwitcherStore.tsx:833
+#: src/stores/QuickSwitcherStore.tsx:831
 msgid "Direct Messages"
 msgstr "ข้อความโดยตรง"
 
@@ -7530,7 +7531,7 @@ msgstr "ปิดใช้งาน"
 
 #: src/components/invites/DisableInvitesButton.tsx:60
 #: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:240
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:426
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:429
 msgid "Disable"
 msgstr "ปิดใช้งาน"
 
@@ -7558,7 +7559,7 @@ msgstr "ปิดแอนิเมชันและการเปลี่ย
 msgid "Disable animations and transitions. Currently controlled by your system setting."
 msgstr "ปิดแอนิเมชันและการเปลี่ยนผ่าน ปัจจุบันควบคุมโดยการตั้งค่าระบบของคุณ"
 
-#: src/stores/QuickSwitcherStore.tsx:915
+#: src/stores/QuickSwitcherStore.tsx:913
 msgid "Disable Compact Mode"
 msgstr "ปิดโหมดกะทัดรัด"
 
@@ -7585,7 +7586,7 @@ msgstr "ปิดการลดเสียงรบกวน"
 msgid "Disable Picture-in-Picture Popout"
 msgstr "ปิดการใช้งาน Picture-in-Picture Popout"
 
-#: src/stores/QuickSwitcherStore.tsx:931
+#: src/stores/QuickSwitcherStore.tsx:929
 msgid "Disable Reduced Motion"
 msgstr "ปิดการลดการเคลื่อนไหว"
 
@@ -7754,7 +7755,7 @@ msgstr "ตัวแยกแยะ"
 msgid "Discussion or promotion of illegal activities"
 msgstr "การพูดคุยหรือส่งเสริมกิจกรรมผิดกฎหมาย"
 
-#: src/components/alerts/MaxBookmarksModal.tsx:76
+#: src/components/alerts/MaxBookmarksModal.tsx:79
 #: src/components/layout/GuildLayout.tsx:106
 #: src/components/layout/NagbarContent.tsx:42
 #: src/components/modals/GiftAcceptModal.tsx:110
@@ -7890,12 +7891,12 @@ msgstr "คุณต้องการบล็อกข้อความตร
 msgid "Do you want to send this pin back in time?"
 msgstr "คุณต้องการส่งปักหมุดนี้ย้อนเวลาไหม"
 
-#: src/components/channel/MessageActionUtils.tsx:410
+#: src/components/channel/MessageActionUtils.tsx:411
 msgid "Do you want to send this pin back to the future?"
 msgstr "คุณต้องการส่งปักหมุดนี้กลับไปอนาคตไหม"
 
 #: src/components/modals/tabs/AccessibilityTab.tsx:148
-#: src/components/modals/tabs/MyProfileTab.tsx:768
+#: src/components/modals/tabs/MyProfileTab.tsx:767
 msgid "Doc, I'm from the future. I came here in a time machine that you invented. Now, I need your help to get back to the year 1985."
 msgstr "ด็อก ผมมาจากอนาคต ผมมาในเครื่องย้อนเวลาที่คุณประดิษฐ์ไว้ ตอนนี้ผมต้องการความช่วยเหลือให้กลับไปปี 1985"
 
@@ -8344,13 +8345,13 @@ msgid "Email"
 msgstr "อีเมล"
 
 #: src/components/modals/tabs/account_security_tab/AccountTab.tsx:65
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:91
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:94
 #: src/components/modals/tabs/component_gallery_tab/InputsTab.tsx:107
 #: src/components/pages/report/ReportStepEmail.tsx:76
 msgid "Email Address"
 msgstr "ที่อยู่อีเมล"
 
-#: src/components/modals/EmailChangeModal.tsx:165
+#: src/components/modals/EmailChangeModal.tsx:168
 msgid "Email changed"
 msgstr "อีเมลถูกเปลี่ยน"
 
@@ -8388,7 +8389,7 @@ msgstr "แถบเตือนยืนยันอีเมล"
 msgid "Email Verification Required"
 msgstr "ต้องยืนยันอีเมล"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:57
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:59
 msgid "Email Verified Override"
 msgstr "แทนที่การยืนยันอีเมล"
 
@@ -8426,11 +8427,11 @@ msgstr "ฝัง"
 msgid "Embeds"
 msgstr "การฝัง"
 
-#: src/components/channel/MessageActionUtils.tsx:520
+#: src/components/channel/MessageActionUtils.tsx:526
 msgid "Embeds suppressed"
 msgstr "ปิดการแสดงฝังแล้ว"
 
-#: src/components/channel/MessageActionUtils.tsx:506
+#: src/components/channel/MessageActionUtils.tsx:512
 msgid "Embeds unsuppressed"
 msgstr "เปิดการแสดงฝังแล้ว"
 
@@ -8485,7 +8486,7 @@ msgstr "ชื่ออีโมจิต้องมีความยาวอ
 msgid "Emoji pack"
 msgstr "ชุดอีโมจิ"
 
-#: src/actions/InviteActionCreators.tsx:255
+#: src/actions/InviteActionCreators.tsx:259
 msgid "Emoji pack creation limit reached"
 msgstr "ถึงขีดจำกัดการสร้างชุดอีโมจิแล้ว"
 
@@ -8493,7 +8494,7 @@ msgstr "ถึงขีดจำกัดการสร้างชุดอี
 msgid "Emoji Pack Invite"
 msgstr "คำเชิญชุดอีโมจิ"
 
-#: src/actions/InviteActionCreators.tsx:241
+#: src/actions/InviteActionCreators.tsx:245
 msgid "Emoji pack limit reached"
 msgstr "ถึงขีดจำกัดชุดอีโมจิแล้ว"
 
@@ -8530,9 +8531,9 @@ msgstr "สถานะว่าง"
 
 #: src/components/invites/DisableInvitesButton.tsx:60
 #: src/components/layout/GuildLayout.tsx:74
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:244
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:432
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:438
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:247
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:435
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:441
 #: src/components/modals/tabs/components/InputMonitoringSection.tsx:85
 msgid "Enable"
 msgstr "เปิดใช้งาน"
@@ -8566,7 +8567,7 @@ msgstr "เปิดฟีเจอร์เบต้า"
 msgid "Enable Browser Notifications"
 msgstr "เปิดการแจ้งเตือนเบราว์เซอร์"
 
-#: src/stores/QuickSwitcherStore.tsx:916
+#: src/stores/QuickSwitcherStore.tsx:914
 msgid "Enable Compact Mode"
 msgstr "เปิดโหมดกะทัดรัด"
 
@@ -8642,7 +8643,7 @@ msgstr "เปิดการแจ้งเตือน push สำหรับ
 msgid "Enable push notifications for this installed PWA to keep receiving messages when the browser is backgrounded."
 msgstr "เปิดการแจ้งเตือน push สำหรับ PWA ที่ติดตั้งนี้เพื่อรับข้อความแม้เบราว์เซอร์จะอยู่เบื้องหลัง"
 
-#: src/stores/QuickSwitcherStore.tsx:932
+#: src/stores/QuickSwitcherStore.tsx:930
 msgid "Enable Reduced Motion"
 msgstr "เปิดการลดการเคลื่อนไหว"
 
@@ -8658,7 +8659,7 @@ msgstr "เปิดใช้งาน Shift เพื่อขยาย"
 msgid "Enable SMS 2FA"
 msgstr "เปิด SMS 2FA"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:415
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:418
 msgid "Enable SMS codes as a backup for your authenticator app"
 msgstr "เปิดรหัส SMS เป็นสำรองสำหรับแอปยืนยันตัวตนของคุณ"
 
@@ -8678,7 +8679,7 @@ msgstr "เปิดใช้งานการยืนยันตัวตน
 msgid "Enable two-factor authentication"
 msgstr "เปิดการยืนยันตัวตนสองขั้นตอน"
 
-#: src/components/modals/MfaTotpEnableModal.tsx:70
+#: src/components/modals/MfaTotpEnableModal.tsx:73
 msgid "Enable two-factor authentication form"
 msgstr "เปิดแบบฟอร์มการยืนยันตัวตนสองชั้น"
 
@@ -8782,7 +8783,7 @@ msgid "Enter the 6-digit code from your authenticator app or one of your backup 
 msgstr "ใส่รหัส 6 หลักจากแอปยืนยันตัวตนของคุณหรือรหัสสำรองหนึ่งชุด"
 
 #: src/components/modals/MfaTotpDisableModal.tsx:67
-#: src/components/modals/MfaTotpEnableModal.tsx:95
+#: src/components/modals/MfaTotpEnableModal.tsx:98
 msgid "Enter the 6-digit code from your authenticator app."
 msgstr "ใส่รหัส 6 หลักจากแอปยืนยันตัวตนของคุณ"
 
@@ -8804,7 +8805,7 @@ msgstr "ใส่รหัสก่อนดำเนินการต่อ"
 msgid "Enter the code from your authenticator app."
 msgstr "ใส่รหัสจากแอปยืนยันตัวตนของคุณ"
 
-#: src/components/modals/EmailChangeModal.tsx:213
+#: src/components/modals/EmailChangeModal.tsx:216
 msgid "Enter the code sent to your current email."
 msgstr "ใส่รหัสที่ส่งไปยังอีเมลปัจจุบันของคุณ"
 
@@ -8812,7 +8813,7 @@ msgstr "ใส่รหัสที่ส่งไปยังอีเมลป
 msgid "Enter the code sent to your email address."
 msgstr "กรอกรหัสที่ส่งไปยังที่อยู่อีเมลของคุณ."
 
-#: src/components/modals/EmailChangeModal.tsx:281
+#: src/components/modals/EmailChangeModal.tsx:284
 msgid "Enter the code we emailed to your new address."
 msgstr "ใส่รหัสที่เราส่งไปยังที่อยู่อีเมลใหม่ของคุณ"
 
@@ -8824,7 +8825,7 @@ msgstr "ใส่รหัสที่เราส่งไปยังอีเ
 msgid "Enter the invite link to join a community."
 msgstr "ใส่ลิงก์คำเชิญเพื่อเข้าร่วมชุมชน"
 
-#: src/components/modals/EmailChangeModal.tsx:247
+#: src/components/modals/EmailChangeModal.tsx:250
 msgid "Enter the new email you want to use. We'll send a code there next."
 msgstr "ใส่อีเมลใหม่ที่คุณต้องการใช้ เราจะส่งรหัสไปที่นั่นในขั้นตอนถัดไป"
 
@@ -9313,11 +9314,11 @@ msgstr "ละเลยคำขอเป็นเพื่อนไม่สำ
 msgid "Failed to initiate connection"
 msgstr "ไม่สามารถเริ่มการเชื่อมต่อได้"
 
-#: src/actions/InviteActionCreators.tsx:322
+#: src/actions/InviteActionCreators.tsx:326
 msgid "Failed to install this emoji pack. Please try again later."
 msgstr "ติดตั้งชุดอีโมจิไม่สำเร็จ โปรดลองอีกครั้งภายหลัง"
 
-#: src/actions/InviteActionCreators.tsx:323
+#: src/actions/InviteActionCreators.tsx:327
 msgid "Failed to install this sticker pack. Please try again later."
 msgstr "ติดตั้งชุดสติกเกอร์ไม่สำเร็จ โปรดลองอีกครั้งภายหลัง"
 
@@ -9715,9 +9716,9 @@ msgstr "รายการโปรด"
 #: src/components/modals/tabs/AppearanceTab.tsx:116
 #: src/components/modals/utils/SettingsConstants.tsx:279
 #: src/components/modals/utils/SettingsSectionRegistry.tsx:233
-#: src/stores/QuickSwitcherStore.tsx:843
-#: src/stores/QuickSwitcherStore.tsx:1261
-#: src/stores/QuickSwitcherStore.tsx:1273
+#: src/stores/QuickSwitcherStore.tsx:841
+#: src/stores/QuickSwitcherStore.tsx:1259
+#: src/stores/QuickSwitcherStore.tsx:1271
 msgid "Favorites"
 msgstr "รายการโปรด"
 
@@ -9872,11 +9873,11 @@ msgstr "สัญลักษณ์แอป Fluxer"
 msgid "Fluxer avoids sending push notifications to your mobile devices when you are at your computer. Use this setting to control how long you need to be inactive on desktop for before you receive push notifications, ranging from 1 minute to 10 minutes."
 msgstr "Fluxer จะหลีกเลี่ยงการส่งการแจ้งเตือนไปยังอุปกรณ์มือถือ เมื่อคุณอยู่หน้าคอมพิวเตอร์ ใช้การตั้งค่านี้เพื่อกำหนดระยะเวลาที่ต้องไม่เคลื่อนไหวบนเดสก์ท็อปก่อนจะรับการแจ้งเตือน ตั้งแต่ 1 นาที ถึง 10 นาที"
 
-#: src/components/popouts/UserProfileBadges.tsx:89
+#: src/components/popouts/UserProfileBadges.tsx:115
 msgid "Fluxer Bug Hunter"
 msgstr "นักล่าบั๊ก Fluxer"
 
-#: src/components/popouts/UserProfileBadges.tsx:71
+#: src/components/popouts/UserProfileBadges.tsx:95
 msgid "Fluxer Community Team"
 msgstr "ทีมชุมชน Fluxer"
 
@@ -9944,18 +9945,18 @@ msgstr "Fluxer ต้องการสิทธิ์ตรวจสอบอ�
 msgid "Fluxer needs permission to monitor keyboard and mouse input so that <0>Push-to-Talk</0> and <1>Global Shortcuts</1> work even when you're in another app or game."
 msgstr "Fluxer ต้องการสิทธิ์ติดตามอินพุตจากแป้นพิมพ์และเมาส์ เพื่อให้ฟีเจอร์ <0>กดคุย</0> และ <1>ทางลัดทั่วไป</1> ทำงานแม้คุณจะอยู่ในแอปหรือเกมอื่น"
 
-#: src/components/popouts/UserProfileBadges.tsx:80
+#: src/components/popouts/UserProfileBadges.tsx:105
 msgid "Fluxer Partner"
 msgstr "พาร์ทเนอร์ Fluxer"
 
 #: src/components/modals/components/PlutoniumContent.tsx:165
 #: src/components/modals/PremiumModal.tsx:34
 #: src/components/modals/utils/SettingsConstants.tsx:124
-#: src/components/popouts/UserProfileBadges.tsx:95
+#: src/components/popouts/UserProfileBadges.tsx:121
 msgid "Fluxer Plutonium"
 msgstr "Fluxer Plutonium"
 
-#: src/components/popouts/UserProfileBadges.tsx:62
+#: src/components/popouts/UserProfileBadges.tsx:85
 msgid "Fluxer Staff"
 msgstr "ทีมงาน Fluxer"
 
@@ -9963,16 +9964,16 @@ msgstr "ทีมงาน Fluxer"
 msgid "Fluxer uses push notifications when installed as a mobile PWA. Registering ensures the gateway can reach your device even when the browser is backgrounded."
 msgstr "Fluxer ใช้การแจ้งเตือนแบบพุชเมื่อติดตั้งในรูปแบบ PWA บนมือถือ การลงทะเบียนจะทำให้เกตเวย์ส่งข้อความถึงอุปกรณ์ได้แม้เบราว์เซอร์จะอยู่เบื้องหลัง"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:176
+#: src/components/modals/FluxerTagChangeModal.tsx:190
 #: src/components/modals/tabs/applications_tab/application_detail/BotProfileSection.tsx:103
 msgid "FluxerTag"
 msgstr "FluxerTag"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:102
+#: src/components/modals/FluxerTagChangeModal.tsx:107
 msgid "FluxerTag already taken"
 msgstr "FluxerTag ถูกใช้ไปแล้ว"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:144
+#: src/components/modals/FluxerTagChangeModal.tsx:149
 msgid "FluxerTag updated"
 msgstr "FluxerTag อัปเดตแล้ว"
 
@@ -10208,7 +10209,7 @@ msgstr "ส่งต่อ"
 msgid "Forward {DEFAULT_SEEK_AMOUNT} seconds"
 msgstr "ขยับไปข้างหน้า {DEFAULT_SEEK_AMOUNT} วินาที"
 
-#: src/components/modals/ForwardModal.tsx:198
+#: src/components/modals/ForwardModal.tsx:203
 #: src/stores/KeybindStore.tsx:361
 msgid "Forward Message"
 msgstr "ส่งต่อข้อความ"
@@ -10490,7 +10491,7 @@ msgstr "รับการแจ้งเตือนเมื่อได้ร
 
 #: src/components/alerts/FileSizeTooLargeModal.tsx:84
 #: src/components/modals/BackgroundImageGalleryModal.tsx:678
-#: src/components/modals/FluxerTagChangeModal.tsx:221
+#: src/components/modals/FluxerTagChangeModal.tsx:235
 #: src/components/modals/tabs/components/EntranceSoundSection.tsx:67
 #: src/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:138
 #: src/components/modals/tabs/VideoTab.tsx:281
@@ -10503,11 +10504,11 @@ msgstr "รับ Plutonium"
 msgid "Get Plutonium for yourself and unlock higher limits and exclusive features."
 msgstr "รับ Plutonium สำหรับตัวคุณเองเพื่อปลดล็อกขีดจำกัดที่สูงขึ้นและฟีเจอร์พิเศษ"
 
-#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:81
+#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:82
 msgid "Get Plutonium to customize your tag"
 msgstr "รับ Plutonium เพื่อปรับแต่งแท็กของคุณ"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:199
+#: src/components/modals/FluxerTagChangeModal.tsx:213
 msgid "Get Plutonium to customize your tag or keep it when changing your username"
 msgstr "รับ Plutonium เพื่อปรับแต่งแท็กหรือรักษาไว้เมื่อเปลี่ยนชื่อผู้ใช้"
 
@@ -10725,7 +10726,7 @@ msgstr "ไปยังหน้าหลัก"
 msgid "Go to login"
 msgstr "ไปยังหน้าลงชื่อเข้าใช้"
 
-#: src/stores/QuickSwitcherStore.tsx:528
+#: src/stores/QuickSwitcherStore.tsx:526
 msgid "Go to message"
 msgstr "ไปยังข้อความ"
 
@@ -10866,12 +10867,12 @@ msgstr "ไอคอนกลุ่ม"
 msgid "Group Invites"
 msgstr "คำเชิญกลุ่ม"
 
-#: src/stores/QuickSwitcherStore.tsx:667
+#: src/stores/QuickSwitcherStore.tsx:665
 #: src/utils/modals/guild_tabs/GuildAuditLogTabUtils.tsx:235
 msgid "Group message"
 msgstr "ข้อความกลุ่ม"
 
-#: src/stores/QuickSwitcherStore.tsx:1347
+#: src/stores/QuickSwitcherStore.tsx:1345
 msgid "Group messages"
 msgstr "ข้อความกลุ่ม"
 
@@ -10963,7 +10964,7 @@ msgstr "การเร่งความเร็วด้วยฮาร์ด
 msgid "Has"
 msgstr "มี"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:126
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:128
 msgid "Has ever purchased override"
 msgstr "เคยซื้อการข้าม"
 
@@ -11277,7 +11278,7 @@ msgid "Hold to temporarily unmute when push-to-talk is enabled"
 msgstr "กดค้างเพื่อปลดปิดเสียงชั่วคราวเมื่อเปิดใช้งาน push-to-talk"
 
 #: src/components/layout/MobileBottomNav.tsx:93
-#: src/stores/QuickSwitcherStore.tsx:832
+#: src/stores/QuickSwitcherStore.tsx:830
 msgid "Home"
 msgstr "หน้าแรก"
 
@@ -11619,7 +11620,7 @@ msgstr "โปรไฟล์ไม่เหมาะสม"
 msgid "Inbox"
 msgstr "กล่องข้อความ"
 
-#: src/components/popouts/InboxPopout.tsx:89
+#: src/components/popouts/InboxPopout.tsx:88
 msgid "Inbox tabs"
 msgstr "แท็บกล่องข้อความ"
 
@@ -11883,8 +11884,8 @@ msgstr "รหัสของขวัญไม่ถูกต้อง"
 msgid "Invalid instance URL. Try something like \"example.com\" or \"https://example.com\"."
 msgstr "URL ของอินสแตนซ์ไม่ถูกต้อง ลองใช้บางอย่างเช่น \"example.com\" หรือ \"https://example.com\"."
 
-#: src/components/modals/EmailChangeModal.tsx:107
-#: src/components/modals/EmailChangeModal.tsx:168
+#: src/components/modals/EmailChangeModal.tsx:110
+#: src/components/modals/EmailChangeModal.tsx:171
 #: src/components/modals/PasswordChangeModal.tsx:90
 msgid "Invalid or expired code"
 msgstr "รหัสไม่ถูกต้องหรือหมดอายุ"
@@ -12569,11 +12570,11 @@ msgid "Last active {0}"
 msgstr "ใช้งานครั้งล่าสุด {0}"
 
 #. placeholder {0}: DateUtils.getRelativeDateString(user.passwordLastChangedAt, i18n)
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:117
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:120
 msgid "Last changed: {0}"
 msgstr "เปลี่ยนล่าสุด: {0}"
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:119
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:122
 msgid "Last changed: Never"
 msgstr "เปลี่ยนล่าสุด: ไม่เคย"
 
@@ -12633,6 +12634,10 @@ msgstr "ออกจากการโทร"
 #: src/hooks/useLeaveGuild.tsx:44
 msgid "Leave Community"
 msgstr "ออกจากชุมชน"
+
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:142
+msgid "Leave empty for actual value"
+msgstr "เว้นว่างไว้สำหรับค่าจริง"
 
 #: src/components/bottomsheets/ChannelDetailsBottomSheet.tsx:1317
 #: src/components/channel/direct_message/DMList.tsx:569
@@ -12713,7 +12718,7 @@ msgid "Letters (a-z, A-Z), numbers (0-9), and underscores (_) only"
 msgstr "เฉพาะตัวอักษร (a-z, A-Z) ตัวเลข (0-9) และขีดล่าง (_)"
 
 #: src/components/modals/components/plutonium/SubscriptionCard.tsx:131
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:50
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:52
 #: src/components/modals/tabs/developer_options_tab/MockingTab.tsx:317
 msgid "Lifetime"
 msgstr "ตลอดชีพ"
@@ -13217,7 +13222,7 @@ msgstr "จัดการอีเมล รหัสผ่าน และก�
 msgid "Manage your gifts"
 msgstr "จัดการของขวัญของคุณ"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:337
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:340
 msgid "Manage your phone number for SMS two-factor authentication"
 msgstr "จัดการหมายเลขโทรศัพท์สำหรับการยืนยันตัวตนสองขั้นตอนทาง SMS"
 
@@ -13342,12 +13347,12 @@ msgstr "ตั้งค่าสมาชิกเป็นแบบชั่ว
 msgid "Markers Below Slider"
 msgstr "ตัวชี้ด้านล่างแถบเลื่อน"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:188
+#: src/components/modals/FluxerTagChangeModal.tsx:202
 msgid "Marty_McFly"
 msgstr "Marty_McFly"
 
 #: src/components/modals/ClaimAccountModal.tsx:157
-#: src/components/modals/EmailChangeModal.tsx:258
+#: src/components/modals/EmailChangeModal.tsx:261
 msgid "marty@example.com"
 msgstr "marty@example.com"
 
@@ -13652,7 +13657,7 @@ msgstr "การกล่าวถึง"
 
 #: src/components/modals/GuildNotificationSettingsModal.tsx:227
 #: src/components/pages/NotificationsPage.tsx:42
-#: src/components/popouts/InboxPopout.tsx:63
+#: src/components/popouts/InboxPopout.tsx:62
 msgid "Mentions"
 msgstr "การกล่าวถึง"
 
@@ -13687,15 +13692,15 @@ msgstr "เมนู"
 msgid "Message"
 msgstr "ข้อความ"
 
-#: src/components/channel/ChannelTextarea.tsx:754
+#: src/components/channel/ChannelTextarea.tsx:752
 msgid "Message "
 msgstr "ข้อความ "
 
-#: src/components/channel/ChannelTextarea.tsx:754
+#: src/components/channel/ChannelTextarea.tsx:752
 msgid "Message @"
 msgstr "ข้อความ @"
 
-#: src/components/channel/ChannelTextarea.tsx:751
+#: src/components/channel/ChannelTextarea.tsx:749
 msgid "Message #"
 msgstr "ข้อความ #"
 
@@ -13746,7 +13751,7 @@ msgstr "โหมดแสดงผลข้อความ"
 msgid "Message display settings are only available on desktop."
 msgstr "การตั้งค่าการแสดงข้อความมีเฉพาะบนเดสก์ท็อปเท่านั้น"
 
-#: src/components/modals/ForwardModal.tsx:148
+#: src/components/modals/ForwardModal.tsx:153
 msgid "Message forwarded"
 msgstr "ส่งต่อข้อความแล้ว"
 
@@ -13772,7 +13777,7 @@ msgstr "อัปเดตเกณฑ์ประวัติข้อควา
 msgid "Message Input Buttons"
 msgstr "ปุ่มป้อนข้อความ"
 
-#: src/components/modals/ForwardModal.tsx:84
+#: src/components/modals/ForwardModal.tsx:89
 #: src/components/uikit/character_counter/CharacterCounter.tsx:52
 msgid "Message is too long"
 msgstr "ข้อความยาวเกินไป"
@@ -14073,7 +14078,7 @@ msgstr "ช่องว่างอีโมจิเพิ่ม"
 #: src/components/channel/embeds/attachments/TextualAttachmentPreviewFooter.tsx:66
 #: src/components/modals/guild_tabs/UserListItem.tsx:113
 #: src/components/modals/MediaModal.tsx:353
-#: src/components/modals/MobileVideoViewer.tsx:260
+#: src/components/modals/MobileVideoViewer.tsx:268
 msgid "More options"
 msgstr "ตัวเลือกเพิ่มเติม"
 
@@ -14205,7 +14210,7 @@ msgstr "ปิดเสียง"
 #: src/components/media_player/components/MediaVerticalVolumeControl.tsx:249
 #: src/components/media_player/components/MediaVolumeControl.tsx:208
 #: src/components/modals/GuildNotificationSettingsModal.tsx:229
-#: src/components/modals/MobileVideoViewer.tsx:272
+#: src/components/modals/MobileVideoViewer.tsx:280
 #: src/components/uikit/context_menu/items/VoiceParticipantMenuData.tsx:319
 #: src/components/uikit/context_menu/items/VoiceParticipantMenuData.tsx:506
 #: src/components/uikit/context_menu/items/VoiceParticipantMenuItems.tsx:92
@@ -14572,12 +14577,12 @@ msgstr "ชุมชนใหม่ที่คุณเข้าร่วมจ
 msgid "New communities you join will no longer have muted channels hidden automatically. Would you also like to show muted channels in all your existing communities?"
 msgstr "ชุมชนใหม่ที่คุณเข้าร่วมจะไม่ซ่อนช่องที่ถูกปิดเสียงโดยอัตโนมัติอีกต่อไป คุณต้องการแสดงช่องที่ถูกปิดเสียงในชุมชนที่มีอยู่ทั้งหมดของคุณด้วยหรือไม่?"
 
-#: src/components/modals/EmailChangeModal.tsx:255
+#: src/components/modals/EmailChangeModal.tsx:258
 #: src/components/modals/RequiredActionModal.tsx:471
 msgid "New Email"
 msgstr "อีเมลใหม่"
 
-#: src/components/modals/EmailChangeModal.tsx:243
+#: src/components/modals/EmailChangeModal.tsx:246
 msgid "New email form"
 msgstr "แบบฟอร์มอีเมลใหม่"
 
@@ -14732,7 +14737,7 @@ msgid "No cameras detected"
 msgstr "ไม่พบกล้อง"
 
 #: src/components/invites/InviteListItem.tsx:179
-#: src/components/modals/ForwardModal.tsx:246
+#: src/components/modals/ForwardModal.tsx:251
 #: src/components/modals/GuildNotificationSettingsModal.tsx:258
 msgid "No Category"
 msgstr "ไม่มีหมวดหมู่"
@@ -14745,7 +14750,7 @@ msgstr "ไม่มีการเปลี่ยนแปลงให้บั
 msgid "No channels available"
 msgstr "ไม่มีแชนแนลที่ใช้งานได้"
 
-#: src/components/modals/ForwardModal.tsx:216
+#: src/components/modals/ForwardModal.tsx:221
 msgid "No channels found"
 msgstr "ไม่พบแชนแนล"
 
@@ -14769,7 +14774,7 @@ msgstr "ยังไม่มีการเชื่อมต่อ"
 msgid "No description provided."
 msgstr "ไม่มีคำอธิบาย"
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:94
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:97
 msgid "No email address set"
 msgstr "ยังไม่ได้ตั้งที่อยู่อีเมล"
 
@@ -14879,11 +14884,11 @@ msgstr "ไม่พบเพื่อนร่วมกัน"
 msgid "No mutual groups found."
 msgstr "ไม่พบกลุ่มร่วมกัน"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:283
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:286
 msgid "No passkeys registered"
 msgstr "ไม่มีรหัสผ่านที่ลงทะเบียน"
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:134
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:137
 msgid "No password set"
 msgstr "ยังไม่ได้ตั้งรหัสผ่าน"
 
@@ -15066,7 +15071,7 @@ msgstr "อิโมจิไม่เคลื่อนไหว ({0})"
 
 #: src/components/modals/guild_tabs/GuildModerationTab.tsx:157
 #: src/components/modals/tabs/accessibility_tab/VisualTab.tsx:48
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:48
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:50
 msgid "None"
 msgstr "ไม่มี"
 
@@ -15574,7 +15579,7 @@ msgstr "เปิดในแท็บใหม่"
 msgid "Open Link"
 msgstr "เปิดลิงก์"
 
-#: src/components/channel/ChannelTextarea.tsx:953
+#: src/components/channel/ChannelTextarea.tsx:951
 #: src/components/channel/textarea/MobileTextareaLayout.tsx:112
 msgid "Open menu"
 msgstr "เปิดเมนู"
@@ -15828,7 +15833,7 @@ msgstr "Override"
 msgid "Override {0}"
 msgstr "Override {0}"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:59
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:61
 msgid "Override email verification status"
 msgstr "แทนที่สถานะยืนยันอีเมล"
 
@@ -15836,15 +15841,15 @@ msgstr "แทนที่สถานะยืนยันอีเมล"
 msgid "Override instance limits locally for testing. Changes only affect your client."
 msgstr "Override instance limits locally for testing. Changes only affect your client."
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:109
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:111
 msgid "Override Premium Type"
 msgstr "แทนที่ประเภทพรีเมียม"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:67
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:69
 msgid "Override unclaimed account status"
 msgstr "แทนที่สถานะบัญชียังไม่รับสิทธิ์"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:75
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:77
 msgid "Override unread gift inventory status"
 msgstr "แทนที่สถานะคลังของขวัญที่ยังไม่อ่าน"
 
@@ -15925,7 +15930,7 @@ msgstr "ชุมชนที่เป็นพันธมิตร"
 msgid "Passkey Name"
 msgstr "ชื่อ Passkey"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:273
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:276
 msgid "Passkeys"
 msgstr "Passkey"
 
@@ -15949,8 +15954,8 @@ msgstr "รหัสผ่าน"
 #: src/components/modals/ClaimAccountModal.tsx:207
 #: src/components/modals/SudoVerificationModal.tsx:174
 #: src/components/modals/SudoVerificationModal.tsx:239
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:105
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:131
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:108
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:134
 #: src/components/modals/tabs/component_gallery_tab/InputsTab.tsx:114
 #: src/components/modals/utils/SettingsSearchIndex.tsx:107
 msgid "Password"
@@ -16006,7 +16011,7 @@ msgstr "วางไว้ที่เดิมที่คุณมาเพื
 #: src/components/media_player/components/InlineAudioPlayer.tsx:201
 #: src/components/media_player/components/InlineAudioPlayer.tsx:296
 #: src/components/media_player/components/MediaPlayButton.tsx:70
-#: src/components/modals/MobileVideoViewer.tsx:286
+#: src/components/modals/MobileVideoViewer.tsx:294
 msgid "Pause"
 msgstr "หยุดชั่วคราว"
 
@@ -16040,7 +16045,7 @@ msgid "Pending deletion canceled"
 msgstr "ยกเลิกการรอกระบวนการลบแล้ว"
 
 #: src/lib/UnicodeEmojis.tsx:234
-#: src/stores/QuickSwitcherStore.tsx:1345
+#: src/stores/QuickSwitcherStore.tsx:1343
 #: src/utils/quick_switcher/QuickSwitcherModalUtils.tsx:96
 msgid "People"
 msgstr "ผู้คน"
@@ -16143,8 +16148,8 @@ msgstr "โทรศัพท์"
 
 #: src/components/modals/PhoneAddModal.tsx:192
 #: src/components/modals/RequiredActionModal.tsx:616
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:336
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:342
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:339
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:345
 #: src/components/modals/utils/SettingsSearchIndex.tsx:115
 msgid "Phone Number"
 msgstr "หมายเลขโทรศัพท์"
@@ -16154,7 +16159,7 @@ msgid "Phone number added"
 msgstr "เพิ่มหมายเลขโทรศัพท์แล้ว"
 
 #. placeholder {0}: user.phone
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:346
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:349
 msgid "Phone number added: {0}"
 msgstr "เพิ่มหมายเลขโทรศัพท์: {0}"
 
@@ -16221,11 +16226,11 @@ msgstr "ปักหมุดข้อความส่วนตัว"
 msgid "Pin Group DM"
 msgstr "ปักหมุดข้อความกลุ่ม"
 
-#: src/components/channel/MessageActionUtils.tsx:429
+#: src/components/channel/MessageActionUtils.tsx:430
 msgid "Pin it real good"
 msgstr "ปักหมุดให้สุดๆ"
 
-#: src/components/channel/MessageActionUtils.tsx:426
+#: src/components/channel/MessageActionUtils.tsx:427
 msgid "Pin it. Pin it good."
 msgstr "ปักหมุดเลย ปักให้แน่น"
 
@@ -16246,7 +16251,7 @@ msgstr "ปักหมุดข้อความทั้งหมด"
 msgid "Pin or unpin the focused message"
 msgstr "ปักหมุดหรือยกเลิกปักหมุดข้อความที่เลือก"
 
-#: src/components/channel/MessageActionUtils.tsx:427
+#: src/components/channel/MessageActionUtils.tsx:428
 msgid "Pin this message to the channel for all to see. Unless ... you're chicken."
 msgstr "ปักหมุดข้อความนี้ที่แชนแนลให้ทุกคนเห็น ยกเว้น...ถ้าคุณยังกลัวอยู่"
 
@@ -16319,7 +16324,7 @@ msgstr "ผู้ดูแลแพลตฟอร์ม"
 #: src/components/media_player/components/InlineAudioPlayer.tsx:201
 #: src/components/media_player/components/InlineAudioPlayer.tsx:296
 #: src/components/media_player/components/MediaPlayButton.tsx:70
-#: src/components/modals/MobileVideoViewer.tsx:286
+#: src/components/modals/MobileVideoViewer.tsx:294
 #: src/components/modals/tabs/component_gallery_tab/ButtonsTab.tsx:215
 msgid "Play"
 msgstr "เล่น"
@@ -16416,7 +16421,7 @@ msgstr "โปรดลองอีกครั้งในภายหลัง
 msgid "Please update Fluxer to view this message."
 msgstr "โปรดอัปเดต Fluxer เพื่อดูข้อความนี้"
 
-#: src/actions/InviteActionCreators.tsx:180
+#: src/actions/InviteActionCreators.tsx:184
 msgid "Please verify your account by setting an email and password before joining communities."
 msgstr "โปรดยืนยันบัญชีโดยตั้งอีเมลและรหัสผ่านก่อนเข้าร่วมชุมชน"
 
@@ -16526,11 +16531,11 @@ msgstr "สิทธิพิเศษพรีเมียม"
 msgid "Premium state reset on the backend."
 msgstr "รีเซ็ตสถานะพรีเมียมในแบ็คเอนด์"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:135
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:155
 msgid "Premium Subscription Scenarios"
 msgstr "สถานการณ์การสมัครสมาชิกพรีเมียม"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:107
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:109
 msgid "Premium Type Override"
 msgstr "การแทนที่ชนิดพรีเมียม"
 
@@ -16928,7 +16933,7 @@ msgstr "Python"
 msgid "quick access"
 msgstr "เข้าถึงอย่างรวดเร็ว"
 
-#: src/stores/QuickSwitcherStore.tsx:1358
+#: src/stores/QuickSwitcherStore.tsx:1356
 #: src/utils/quick_switcher/QuickSwitcherModalUtils.tsx:100
 msgid "Quick Actions"
 msgstr "การดำเนินการด่วน"
@@ -17071,7 +17076,7 @@ msgstr "รับ"
 msgid "Receive notifications when someone mentions you"
 msgstr "รับการแจ้งเตือนเมื่อมีคนกล่าวถึงคุณ"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:404
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:407
 msgid "Receive verification codes via SMS as a backup authentication method"
 msgstr "รับรหัสยืนยันทาง SMS เป็นวิธีสำรองในการยืนยันตัวตน"
 
@@ -17198,7 +17203,7 @@ msgstr "รีเฟรชการสมัครแจ้งเตือนแ
 msgid "Regenerate"
 msgstr "สร้างใหม่"
 
-#: src/components/modals/BackupCodesRegenerateModal.tsx:61
+#: src/components/modals/BackupCodesRegenerateModal.tsx:68
 msgid "Regenerate Backup Codes"
 msgstr "สร้างรหัสสำรองใหม่"
 
@@ -17228,7 +17233,7 @@ msgstr "การสร้างใหม่จะทำให้โทเค็
 msgid "Register"
 msgstr "ลงทะเบียน"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:279
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:282
 msgid "Registered Passkeys"
 msgstr "พาสคีย์ที่ลงทะเบียนแล้ว"
 
@@ -17298,7 +17303,7 @@ msgstr "ลบ"
 #: src/components/modals/guild_tabs/guild_overview_tab/fields/GuildEmbedSplashUploadField.tsx:101
 #: src/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx:107
 #: src/components/modals/guild_tabs/guild_overview_tab/fields/GuildInviteSplashUploadField.tsx:113
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:391
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:394
 #: src/components/modals/tabs/ExpressionPacksTab.tsx:96
 #: src/components/modals/tabs/ExpressionPacksTab.tsx:226
 #: src/components/modals/tabs/LinkedAccountsTab.tsx:191
@@ -17472,11 +17477,11 @@ msgstr "ลบการแทนที่"
 msgid "Remove Pack"
 msgstr "ลบแพ็ค"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:377
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:380
 msgid "Remove Phone"
 msgstr "ลบเบอร์โทร"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:360
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:363
 msgid "Remove Phone Number"
 msgstr "ลบหมายเลขโทรศัพท์"
 
@@ -17557,7 +17562,7 @@ msgstr "ลบการอนุญาตสำหรับ {0} แล้ว"
 msgid "Removed deny for {0}."
 msgstr "ลบการปฏิเสธสำหรับ {0} แล้ว"
 
-#: src/actions/SavedMessageActionCreators.tsx:80
+#: src/actions/SavedMessageActionCreators.tsx:85
 msgid "Removed from bookmarks"
 msgstr "เอาออกจากที่คั่นหน้าแล้ว"
 
@@ -17631,7 +17636,7 @@ msgstr "การลบชุดจะถอนการติดตั้งอ
 msgid "Removing the timeout will allow <0>{0}</0> to send messages, react, and join voice channels again."
 msgstr "การลบการจำกัดเวลาจะอนุญาตให้ <0>{0}</0> ส่งข้อความ ตอบสนอง และเข้าร่วมแชนแนลเสียงได้อีกครั้ง"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:319
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:322
 msgid "Rename"
 msgstr "เปลี่ยนชื่อ"
 
@@ -17866,22 +17871,22 @@ msgstr "ต้องมีทุกอย่างในระดับกลา
 msgid "Requires Plutonium"
 msgstr "ต้องมี Plutonium"
 
-#: src/components/channel/ChannelTextarea.tsx:1032
+#: src/components/channel/ChannelTextarea.tsx:1030
 msgid "Reschedule Message"
 msgstr "เปลี่ยนเวลาข้อความ"
 
 #: src/components/modals/ClaimAccountModal.tsx:222
-#: src/components/modals/EmailChangeModal.tsx:233
-#: src/components/modals/EmailChangeModal.tsx:301
+#: src/components/modals/EmailChangeModal.tsx:236
+#: src/components/modals/EmailChangeModal.tsx:304
 #: src/components/modals/PasswordChangeModal.tsx:179
 msgid "Resend"
 msgstr "ส่งใหม่"
 
-#: src/components/modals/EmailChangeModal.tsx:301
+#: src/components/modals/EmailChangeModal.tsx:304
 msgid "Resend ({newSecondsRemaining}s)"
 msgstr "ส่งใหม่ ({newSecondsRemaining}s)"
 
-#: src/components/modals/EmailChangeModal.tsx:233
+#: src/components/modals/EmailChangeModal.tsx:236
 msgid "Resend ({originalSecondsRemaining}s)"
 msgstr "ส่งใหม่ ({originalSecondsRemaining}s)"
 
@@ -18425,7 +18430,7 @@ msgstr "บันทึก"
 msgid "scale"
 msgstr "ขนาด"
 
-#: src/components/modals/MfaTotpEnableModal.tsx:78
+#: src/components/modals/MfaTotpEnableModal.tsx:81
 msgid "Scan the QR code with your authenticator app to generate codes for two-factor authentication."
 msgstr "สแกน QR โค้ดด้วยแอปยืนยันตัวตนเพื่อสร้างโค้ดสองขั้นตอน"
 
@@ -18437,7 +18442,7 @@ msgstr "กำหนดเวลา"
 msgid "Schedule Message"
 msgstr "ตั้งเวลาข้อความ"
 
-#: src/components/popouts/InboxPopout.tsx:70
+#: src/components/popouts/InboxPopout.tsx:69
 #: src/components/popouts/ScheduledMessagesContent.tsx:89
 msgid "Scheduled"
 msgstr "ตั้งเวลาแล้ว"
@@ -18562,7 +18567,7 @@ msgstr "ค้นหาตามชื่อผู้ใช้หรือ ID"
 msgid "Search channels"
 msgstr "ค้นหาแชนแนล"
 
-#: src/components/modals/ForwardModal.tsx:204
+#: src/components/modals/ForwardModal.tsx:209
 msgid "Search channels or DMs"
 msgstr "ค้นหาแชนแนลหรือข้อความตรง"
 
@@ -18963,7 +18968,7 @@ msgid "Send"
 msgstr "ส่ง"
 
 #. placeholder {0}: selectedChannelIds.size
-#: src/components/modals/ForwardModal.tsx:380
+#: src/components/modals/ForwardModal.tsx:385
 msgid "Send ({0}/5)"
 msgstr "ส่ง ({0}/5)"
 
@@ -19000,7 +19005,7 @@ msgid "Send an SMS code first."
 msgstr "ส่งรหัส SMS ก่อน"
 
 #: src/components/modals/ClaimAccountModal.tsx:180
-#: src/components/modals/EmailChangeModal.tsx:270
+#: src/components/modals/EmailChangeModal.tsx:273
 #: src/components/modals/PhoneAddModal.tsx:208
 msgid "Send code"
 msgstr "ส่งรหัส"
@@ -19195,7 +19200,7 @@ msgstr "ตั้งชื่อเล่นเป็น {0}"
 msgid "Set NSFW level to {0}."
 msgstr "ตั้งค่าระดับ NSFW เป็น {0}"
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:138
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:141
 msgid "Set Password"
 msgstr "ตั้งค่ารหัสผ่าน"
 
@@ -19261,7 +19266,7 @@ msgstr "ตั้งค่าประเภทแชนแนลเป็น {0
 msgid "Set the invite splash alignment to {0}."
 msgstr "ตั้งค่าการจัดแนวภาพพื้นหลังคำเชิญเป็น {0}"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:88
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:90
 msgid "Set the number of unread gifts in inventory."
 msgstr "ตั้งค่าจำนวนของขวัญที่ยังไม่อ่านในคลัง"
 
@@ -19341,7 +19346,7 @@ msgstr "ตั้งค่าเขตเวลาของคุณ"
 #: src/components/modals/tabs/component_gallery_tab/ButtonsTab.tsx:221
 #: src/components/modals/tabs/component_gallery_tab/index.tsx:95
 #: src/components/modals/tabs/component_gallery_tab/Inline.tsx:90
-#: src/stores/QuickSwitcherStore.tsx:1356
+#: src/stores/QuickSwitcherStore.tsx:1354
 msgid "Settings"
 msgstr "การตั้งค่า"
 
@@ -19357,7 +19362,7 @@ msgstr "ส่วนของการตั้งค่า"
 msgid "Settings!"
 msgstr "การตั้งค่า!"
 
-#: src/components/modals/MfaTotpEnableModal.tsx:71
+#: src/components/modals/MfaTotpEnableModal.tsx:74
 msgid "Setup Authenticator App"
 msgstr "ตั้งค่าแอปยืนยันตัวตน"
 
@@ -19837,7 +19842,7 @@ msgstr "ปิดเสียงการโทรจากทุกคน"
 msgid "simulate"
 msgstr "จำลอง"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:128
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:130
 msgid "Simulates having a Stripe customer ID (for testing purchase history access)"
 msgstr "จำลองการมีรหัสลูกค้า Stripe (เพื่อทดสอบการเข้าถึงประวัติการซื้อ)"
 
@@ -19985,11 +19990,11 @@ msgstr "ขนาดมีเดียเล็กลง"
 msgid "sms"
 msgstr "ข้อความสั้น"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:409
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:412
 msgid "SMS Backup"
 msgstr "สำรอง SMS"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:429
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:432
 msgid "SMS backup is disabled for partners"
 msgstr "ปิดใช้งานการสำรอง SMS สำหรับพาร์ทเนอร์"
 
@@ -20002,7 +20007,7 @@ msgstr "รหัส SMS"
 msgid "SMS Code"
 msgstr "รหัส SMS"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:403
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:406
 msgid "SMS Two-Factor Authentication"
 msgstr "การยืนยันตัวตนสองขั้นตอนทาง SMS"
 
@@ -20010,7 +20015,7 @@ msgstr "การยืนยันตัวตนสองขั้นตอน
 msgid "SMS two-factor authentication adds an additional layer of security to your account by requiring a verification code sent to your phone number when signing in."
 msgstr "การยืนยันตัวตนสองขั้นตอนทาง SMS เพิ่มความปลอดภัยให้บัญชีของคุณด้วยการขอรหัสยืนยันที่ส่งไปยังหมายเลขโทรศัพท์เมื่อเข้าสู่ระบบ"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:413
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:416
 msgid "SMS two-factor authentication is enabled"
 msgstr "เปิดใช้งานการยืนยันตัวตนสองขั้นตอนทาง SMS"
 
@@ -20334,7 +20339,7 @@ msgstr "ดาว"
 msgid "starred"
 msgstr "ดาวน์โหลด"
 
-#: src/components/modals/EmailChangeModal.tsx:202
+#: src/components/modals/EmailChangeModal.tsx:205
 #: src/components/modals/PasswordChangeModal.tsx:148
 msgid "Start"
 msgstr "เริ่ม"
@@ -20490,7 +20495,7 @@ msgstr "ความหนาแน่นของสติกเกอร์"
 msgid "Sticker pack"
 msgstr "ชุดสติกเกอร์"
 
-#: src/actions/InviteActionCreators.tsx:287
+#: src/actions/InviteActionCreators.tsx:291
 msgid "Sticker pack creation limit reached"
 msgstr "ถึงขีดจำกัดการสร้างชุดสติกเกอร์แล้ว"
 
@@ -20498,7 +20503,7 @@ msgstr "ถึงขีดจำกัดการสร้างชุดสต
 msgid "Sticker Pack Invite"
 msgstr "คำเชิญชุดสติกเกอร์"
 
-#: src/actions/InviteActionCreators.tsx:273
+#: src/actions/InviteActionCreators.tsx:277
 msgid "Sticker pack limit reached"
 msgstr "ถึงขีดจำกัดชุดสติกเกอร์แล้ว"
 
@@ -20674,7 +20679,7 @@ msgstr "กำลังส่ง"
 msgid "subscription"
 msgstr "การสมัครสมาชิก"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:49
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:51
 #: src/components/modals/utils/SettingsSearchIndex.tsx:261
 msgid "Subscription"
 msgstr "การสมัครสมาชิก"
@@ -20796,7 +20801,7 @@ msgstr "สลับบัญชี"
 msgid "Switch Accounts"
 msgstr "สลับบัญชี"
 
-#: src/stores/QuickSwitcherStore.tsx:900
+#: src/stores/QuickSwitcherStore.tsx:898
 msgid "Switch between Light and Dark mode"
 msgstr "สลับระหว่างโหมดสว่างและมืด"
 
@@ -20989,7 +20994,7 @@ msgstr "ข้อกำหนดในการให้บริการ"
 msgid "Test Bulk Delete (60s)"
 msgstr "ทดสอบลบจำนวนมาก (60 วินาที)"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:137
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:157
 msgid "Test Subscription State"
 msgstr "ทดสอบสถานะการสมัครสมาชิก"
 
@@ -21025,7 +21030,7 @@ msgstr "ช่องข้อความ"
 msgid "Text Channel Names"
 msgstr "ชื่อช่องข้อความ"
 
-#: src/stores/QuickSwitcherStore.tsx:1349
+#: src/stores/QuickSwitcherStore.tsx:1347
 #: src/utils/quick_switcher/QuickSwitcherModalUtils.tsx:97
 msgid "Text channels"
 msgstr "ช่องข้อความ"
@@ -21106,7 +21111,7 @@ msgid "That message didn't delete"
 msgstr "ไม่สามารถลบข้อความนั้นได้"
 
 #. placeholder {0}: invite.pack.name
-#: src/actions/InviteActionCreators.tsx:103
+#: src/actions/InviteActionCreators.tsx:104
 msgid "The {packLabel} {0} has been installed."
 msgstr "{packLabel} {0} ได้ถูกติดตั้งแล้ว"
 
@@ -21148,7 +21153,7 @@ msgstr "ไฟล์นี้มีโทเคนการตรวจสอบ
 msgid "The file you're trying to upload exceeds the maximum size limit of {maxSizeFormatted}."
 msgstr "ไฟล์ที่คุณพยายามอัปโหลดมีขนาดเกินขีดจำกัดขนาดสูงสุดที่ {maxSizeFormatted}."
 
-#: src/components/modals/FluxerTagChangeModal.tsx:106
+#: src/components/modals/FluxerTagChangeModal.tsx:111
 msgid "The FluxerTag <0>{fluxerTag}</0> is already taken. Continuing will reroll your discriminator automatically."
 msgstr "FluxerTag <0>{fluxerTag}</0> ถูกใช้ไปแล้ว หากดำเนินการต่อระบบจะสุ่มตัวระบุใหม่ให้โดยอัตโนมัติ"
 
@@ -21298,10 +21303,6 @@ msgstr "พวกเขา"
 #: src/components/channel/channel_view/DMChannelView.tsx:932
 msgid "They might have taken the DeLorean elsewhere."
 msgstr "พวกเขาอาจพา DeLorean ไปที่อื่นแล้ว"
-
-#: src/components/modals/tabs/MyProfileTab.tsx:711
-msgid "they/them"
-msgstr "พวกเขา/ของพวกเขา"
 
 #: src/components/channel/channel_view/DMChannelView.tsx:918
 msgid "Think, McFly! Did you type the right address?"
@@ -21717,11 +21718,11 @@ msgstr "สิ่งนี้จะสร้างรอยแยกในมิ
 msgid "This will hide all favorites-related UI elements including buttons and menu items. Your existing favorites will be preserved and can be re-enabled anytime from <0>User Settings → Look & Feel → Favorites</0>."
 msgstr "สิ่งนี้จะซ่อนองค์ประกอบ UI ที่เกี่ยวกับรายการโปรดทั้งหมดรวมถึงปุ่มและเมนู รายการโปรดของคุณจะถูกเก็บไว้และสามารถเปิดใช้งานใหม่ได้เสมอจาก <0>การตั้งค่าผู้ใช้ → ลักษณะและความรู้สึก → รายการโปรด</0>"
 
-#: src/components/modals/BackupCodesRegenerateModal.tsx:65
+#: src/components/modals/BackupCodesRegenerateModal.tsx:72
 msgid "This will invalidate your existing backup codes and generate new ones."
 msgstr "สิ่งนี้จะทำให้รหัสสำรองที่มีอยู่ของคุณไม่ถูกต้องและสร้างรหัสใหม่ขึ้นมา"
 
-#: src/components/channel/ChannelTextarea.tsx:1036
+#: src/components/channel/ChannelTextarea.tsx:1034
 msgid "This will modify the existing scheduled message rather than sending immediately."
 msgstr "สิ่งนี้จะปรับข้อความที่กำหนดเวลาปัจจุบันแทนที่จะส่งทันที"
 
@@ -21907,11 +21908,11 @@ msgstr "สลับ"
 msgid "Toggle Channel Member List"
 msgstr "สลับรายการสมาชิกแชนแนล"
 
-#: src/stores/QuickSwitcherStore.tsx:913
+#: src/stores/QuickSwitcherStore.tsx:911
 msgid "Toggle Compact Mode"
 msgstr "สลับโหมดกะทัดรัด"
 
-#: src/components/modals/MobileVideoViewer.tsx:239
+#: src/components/modals/MobileVideoViewer.tsx:247
 msgid "Toggle controls"
 msgstr "สลับการควบคุม"
 
@@ -21963,11 +21964,11 @@ msgstr "สลับปิดเสียง"
 msgid "Toggle Pins Popout"
 msgstr "สลับหน้าต่างปักหมุด"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:120
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:122
 msgid "Toggle premium_enabled_override on the backend"
 msgstr "สลับ premium_enabled_override ด้านหลังระบบ"
 
-#: src/stores/QuickSwitcherStore.tsx:929
+#: src/stores/QuickSwitcherStore.tsx:927
 msgid "Toggle Reduced Motion"
 msgstr "สลับลดการเคลื่อนไหว"
 
@@ -21983,7 +21984,7 @@ msgstr "สลับแผงเลือกสติกเกอร์"
 msgid "Toggle switches on and off to see state changes."
 msgstr "เปิด/ปิดสวิตช์เพื่อดูการเปลี่ยนแปลงสถานะ"
 
-#: src/stores/QuickSwitcherStore.tsx:899
+#: src/stores/QuickSwitcherStore.tsx:897
 msgid "Toggle Theme"
 msgstr "สลับธีม"
 
@@ -22008,7 +22009,7 @@ msgstr "ปรับภาพ HDR ให้เป็นช่วงมาตร�
 msgid "Too Loud"
 msgstr "ดังเกินไป"
 
-#: src/components/alerts/MaxGuildsModal.tsx:32
+#: src/components/alerts/MaxGuildsModal.tsx:35
 msgid "Too Many Communities"
 msgstr "ชุมชนเยอะเกินไป"
 
@@ -22307,7 +22308,7 @@ msgstr "การยืนยันตัวตนสองชั้น"
 msgid "Two-factor authentication disabled"
 msgstr "ปิดการยืนยันตัวตนสองชั้นแล้ว"
 
-#: src/components/modals/MfaTotpEnableModal.tsx:55
+#: src/components/modals/MfaTotpEnableModal.tsx:58
 msgid "Two-factor authentication enabled"
 msgstr "เปิดการยืนยันตัวตนสองชั้นแล้ว"
 
@@ -22404,11 +22405,11 @@ msgstr "ยูเครน"
 msgid "Ultra (1440p)"
 msgstr "Ultra (1440p)"
 
-#: src/actions/InviteActionCreators.tsx:319
+#: src/actions/InviteActionCreators.tsx:323
 msgid "Unable to install emoji pack"
 msgstr "ไม่สามารถติดตั้งชุดอิโมจิได้"
 
-#: src/actions/InviteActionCreators.tsx:320
+#: src/actions/InviteActionCreators.tsx:324
 msgid "Unable to install sticker pack"
 msgstr "ไม่สามารถติดตั้งชุดสติกเกอร์ได้"
 
@@ -22436,13 +22437,13 @@ msgstr "ไม่สามารถโหลดแบนเนอร์โปร
 msgid "Unable to prepare any emojis for upload. The following errors occurred:"
 msgstr "ไม่สามารถเตรียมอิโมจิสำหรับอัปโหลดได้ เกิดข้อผิดพลาดดังต่อไปนี้:"
 
-#: src/components/modals/EmailChangeModal.tsx:121
-#: src/components/modals/EmailChangeModal.tsx:151
+#: src/components/modals/EmailChangeModal.tsx:124
+#: src/components/modals/EmailChangeModal.tsx:154
 #: src/components/modals/PasswordChangeModal.tsx:104
 msgid "Unable to resend code right now"
 msgstr "ตอนนี้ไม่สามารถส่งรหัสอีกครั้งได้"
 
-#: src/components/modals/EmailChangeModal.tsx:136
+#: src/components/modals/EmailChangeModal.tsx:139
 msgid "Unable to send code to new email"
 msgstr "ไม่สามารถส่งรหัสไปยังอีเมลใหม่ได้"
 
@@ -22455,7 +22456,7 @@ msgstr "ไม่สามารถส่งข้อความเสียง
 msgid "Unable to Start Call"
 msgstr "ไม่สามารถเริ่มสายได้"
 
-#: src/components/modals/EmailChangeModal.tsx:91
+#: src/components/modals/EmailChangeModal.tsx:94
 msgid "Unable to start email change"
 msgstr "ไม่สามารถเริ่มเปลี่ยนอีเมลได้"
 
@@ -22526,7 +22527,7 @@ msgstr "บัญชีที่ยังไม่ได้อ้างสิท
 msgid "Unclaimed Account Nagbar"
 msgstr "แถบแจ้งเตือนบัญชีที่ยังไม่ได้อ้างสิทธิ์"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:65
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:67
 msgid "Unclaimed Account Override"
 msgstr "เปลี่ยนแปลงบัญชีที่ยังไม่ได้อ้างสิทธิ์"
 
@@ -22554,10 +22555,10 @@ msgstr "ผู้ใช้ยังไม่บรรลุนิติภาว
 #: src/components/alerts/GenericErrorModal.tsx:31
 #: src/components/alerts/GuildAtCapacityModal.tsx:31
 #: src/components/alerts/InvitesDisabledModal.tsx:31
-#: src/components/alerts/MaxBookmarksModal.tsx:45
-#: src/components/alerts/MaxBookmarksModal.tsx:56
+#: src/components/alerts/MaxBookmarksModal.tsx:48
+#: src/components/alerts/MaxBookmarksModal.tsx:59
 #: src/components/alerts/MaxFavoriteMemesModal.tsx:46
-#: src/components/alerts/MaxGuildsModal.tsx:38
+#: src/components/alerts/MaxGuildsModal.tsx:41
 #: src/components/alerts/MicrophonePermissionDeniedModal.tsx:50
 #: src/components/alerts/NSFWContentRejectedModal.tsx:31
 #: src/components/alerts/ReactionInteractionDisabledModal.tsx:30
@@ -22632,7 +22633,7 @@ msgstr "ช่องที่ไม่รู้จัก"
 #: src/components/modals/guild_tabs/GuildAuditLogTab.Utils.tsx:479
 #: src/components/modals/guild_tabs/GuildWebhooksTab.tsx:61
 #: src/components/modals/guild_tabs/GuildWebhooksTab.tsx:67
-#: src/stores/QuickSwitcherStore.tsx:690
+#: src/stores/QuickSwitcherStore.tsx:688
 msgid "Unknown channel"
 msgstr "แชนแนลไม่รู้จัก"
 
@@ -22781,7 +22782,7 @@ msgstr "ปลดล็อกสติกเกอร์ใน DM ด้วย P
 #: src/components/layout/UserArea.tsx:168
 #: src/components/media_player/components/MediaVerticalVolumeControl.tsx:249
 #: src/components/media_player/components/MediaVolumeControl.tsx:208
-#: src/components/modals/MobileVideoViewer.tsx:272
+#: src/components/modals/MobileVideoViewer.tsx:280
 #: src/components/voice/VoiceControlBar.tsx:602
 msgid "Unmute"
 msgstr "เปิดเสียง"
@@ -22872,7 +22873,7 @@ msgstr "ปลดปักหมุด DM"
 msgid "Unpin Group DM"
 msgstr "ปลดปักหมุด Group DM"
 
-#: src/components/channel/MessageActionUtils.tsx:412
+#: src/components/channel/MessageActionUtils.tsx:413
 #: src/components/shared/ChannelPinsContent.tsx:102
 msgid "Unpin it"
 msgstr "ปลดปักหมุด"
@@ -22880,7 +22881,7 @@ msgstr "ปลดปักหมุด"
 #: src/components/channel/MessageActionBar.tsx:519
 #: src/components/channel/MessageActionBar.tsx:735
 #: src/components/channel/MessageActionMenu.tsx:243
-#: src/components/channel/MessageActionUtils.tsx:409
+#: src/components/channel/MessageActionUtils.tsx:410
 #: src/components/shared/ChannelPinsContent.tsx:99
 #: src/components/shared/ChannelPinsContent.tsx:260
 #: src/components/uikit/context_menu/items/MessageMenuItems.tsx:163
@@ -22907,7 +22908,7 @@ msgstr "ยกเลิกการปักหมุด DM กลุ่ม"
 msgid "unread"
 msgstr "ยังไม่ได้อ่าน"
 
-#: src/components/popouts/InboxPopout.tsx:53
+#: src/components/popouts/InboxPopout.tsx:52
 msgid "Unread"
 msgstr "ยังไม่ได้อ่าน"
 
@@ -22915,11 +22916,11 @@ msgstr "ยังไม่ได้อ่าน"
 msgid "Unread DMs only"
 msgstr "เฉพาะ DM ที่ยังไม่อ่าน"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:85
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:87
 msgid "Unread Gift Count"
 msgstr "จำนวนของขวัญที่ยังไม่อ่าน"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:73
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:75
 msgid "Unread gift inventory override"
 msgstr "การแทนที่สินค้าของขวัญที่ยังไม่ได้อ่าน"
 
@@ -22962,7 +22963,7 @@ msgstr "อีเมลยังไม่ยืนยัน"
 msgid "Up to 4K/60fps"
 msgstr "สูงสุด 4K/60fps"
 
-#: src/components/channel/ChannelTextarea.tsx:1033
+#: src/components/channel/ChannelTextarea.tsx:1031
 msgid "Update"
 msgstr "อัปเดต"
 
@@ -23085,7 +23086,7 @@ msgstr "อัปเกรด"
 msgid "Upgrade Now"
 msgstr "อัปเกรดตอนนี้"
 
-#: src/components/alerts/MaxBookmarksModal.tsx:69
+#: src/components/alerts/MaxBookmarksModal.tsx:72
 #: src/components/alerts/MaxFavoriteMemesModal.tsx:70
 msgid "Upgrade to Plutonium"
 msgstr "อัปเกรดเป็น Plutonium"
@@ -23249,7 +23250,7 @@ msgstr "ใช้โมดัลเฉพาะเพื่อกำหนดว
 msgid "Use Actual"
 msgstr "ใช้ข้อมูลจริง"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:47
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:49
 msgid "Use actual premium type"
 msgstr "ใช้ประเภทพรีเมียมจริง"
 
@@ -23322,7 +23323,7 @@ msgstr "ใช้โปรไฟล์ทั่วโลก"
 msgid "Use light theme"
 msgstr "ใช้ธีมสว่าง"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:274
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:277
 msgid "Use passkeys for passwordless sign-in and two-factor authentication"
 msgstr "ใช้พาสคีย์สำหรับการเข้าสู่ระบบแบบไม่ใช้รหัสผ่านและการยืนยันสองขั้นตอน"
 
@@ -23454,7 +23455,7 @@ msgstr "บันทึกผู้ใช้"
 #: src/components/layout/UserArea.tsx:286
 #: src/components/layout/UserArea.tsx:291
 #: src/components/modals/components/DesktopSettingsView.tsx:357
-#: src/components/modals/UserSettingsModal.tsx:154
+#: src/components/modals/UserSettingsModal.tsx:153
 msgid "User Settings"
 msgstr "การตั้งค่าผู้ใช้"
 
@@ -23475,9 +23476,9 @@ msgstr "ผู้ใช้, บอท หรือเว็บฮุค"
 msgid "username"
 msgstr "ชื่อผู้ใช้"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:187
+#: src/components/modals/FluxerTagChangeModal.tsx:201
 #: src/components/modals/tabs/component_gallery_tab/InputsTab.tsx:101
-#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:51
+#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:52
 #: src/components/modals/utils/SettingsSearchIndex.tsx:63
 msgid "Username"
 msgstr "ชื่อผู้ใช้"
@@ -23510,13 +23511,17 @@ msgstr "ชื่อผู้ใช้ต้องมีไม่เกิน 32
 msgid "Username#0000"
 msgstr "ชื่อผู้ใช้#0000"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:169
+#: src/components/modals/FluxerTagChangeModal.tsx:183
 msgid "Usernames can only contain letters (a-z, A-Z), numbers (0-9), and underscores. Usernames are case-insensitive."
 msgstr "ชื่อผู้ใช้สามารถมีได้เฉพาะตัวอักษร (a-z, A-Z) ตัวเลข (0-9) และขีดเส้นใต้ ชื่อผู้ใช้ไม่แยกพิมพ์ใหญ่พิมพ์เล็ก"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:164
-msgid "Usernames can only contain letters (a-z, A-Z), numbers (0-9), and underscores. Usernames are case-insensitive. You can pick your own 4-digit tag if it's available."
-msgstr "ชื่อผู้ใช้สามารถมีได้เฉพาะตัวอักษร (a-z, A-Z) ตัวเลข (0-9) และขีดเส้นใต้ ชื่อผู้ใช้ไม่แยกพิมพ์ใหญ่พิมพ์เล็ก คุณสามารถเลือกแท็ก 4 หลักที่ว่างได้"
+#: src/components/modals/FluxerTagChangeModal.tsx:170
+msgid "Usernames can only contain letters (a-z, A-Z), numbers (0-9), and underscores. Usernames are case-insensitive. You can pick any available 4-digit tag from #0000 to #9999."
+msgstr "ชื่อผู้ใช้สามารถมีเฉพาะตัวอักษร (a-z, A-Z) ตัวเลข (0-9) และขีดล่างเท่านั้น ชื่อผู้ใช้ไม่แยกตัวพิมพ์ใหญ่พิมพ์เล็ก คุณเลือกแท็ก 4 หลักที่ว่างอยู่ได้ตั้งแต่ #0000 ถึง #9999"
+
+#: src/components/modals/FluxerTagChangeModal.tsx:176
+msgid "Usernames can only contain letters (a-z, A-Z), numbers (0-9), and underscores. Usernames are case-insensitive. You can pick any available 4-digit tag from #0001 to #9999."
+msgstr "ชื่อผู้ใช้สามารถมีเฉพาะตัวอักษร (a-z, A-Z) ตัวเลข (0-9) และขีดล่างเท่านั้น ชื่อผู้ใช้ไม่แยกตัวพิมพ์ใหญ่พิมพ์เล็ก คุณเลือกแท็ก 4 หลักที่ว่างอยู่ได้ตั้งแต่ #0001 ถึง #9999"
 
 #: src/components/modals/utils/SettingsSearchIndex.tsx:246
 #: src/components/modals/utils/SettingsSectionRegistry.tsx:172
@@ -23634,8 +23639,8 @@ msgid "Verification Barriers"
 msgstr "อุปสรรคการยืนยันตัวตน"
 
 #: src/components/modals/ClaimAccountModal.tsx:198
-#: src/components/modals/EmailChangeModal.tsx:220
-#: src/components/modals/EmailChangeModal.tsx:288
+#: src/components/modals/EmailChangeModal.tsx:223
+#: src/components/modals/EmailChangeModal.tsx:291
 #: src/components/modals/PasswordChangeModal.tsx:166
 #: src/components/modals/PhoneAddModal.tsx:226
 #: src/components/modals/RequiredActionModal.tsx:495
@@ -23662,7 +23667,7 @@ msgstr "ส่งอีเมลยืนยันแล้ว! กรุณา�
 msgid "Verification failed"
 msgstr "การยืนยันล้มเหลว"
 
-#: src/components/modals/BackupCodesViewModal.tsx:63
+#: src/components/modals/BackupCodesViewModal.tsx:68
 msgid "Verification may be required before viewing your backup codes."
 msgstr "อาจต้องยืนยันก่อนดูรหัสสำรอง"
 
@@ -23684,7 +23689,7 @@ msgid "verify"
 msgstr "ตรวจสอบ"
 
 #: src/components/modals/AddConnectionModal.tsx:315
-#: src/components/modals/EmailChangeModal.tsx:236
+#: src/components/modals/EmailChangeModal.tsx:239
 #: src/components/modals/PasswordChangeModal.tsx:182
 #: src/components/modals/PhoneAddModal.tsx:240
 #: src/components/modals/RequiredActionModal.tsx:652
@@ -23785,7 +23790,7 @@ msgstr "ตัวอย่างวิดีโอ"
 msgid "Video preview"
 msgstr "ตัวอย่างวิดีโอ"
 
-#: src/components/modals/MobileVideoViewer.tsx:311
+#: src/components/modals/MobileVideoViewer.tsx:319
 msgid "Video progress"
 msgstr "ความก้าวหน้าของวิดีโอ"
 
@@ -23859,15 +23864,15 @@ msgstr "ดูและจัดการผู้ใช้ที่ถูกแ
 msgid "View and manage every webhook configured across your community."
 msgstr "ดูและจัดการเว็บฮุคทั้งหมดที่ตั้งค่าในคอมมูนิตี้ของคุณ"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:257
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:260
 msgid "View and manage your backup codes for account recovery"
 msgstr "ดูและจัดการรหัสสำรองของคุณสำหรับกู้คืนบัญชี"
 
-#: src/components/modals/BackupCodesViewModal.tsx:59
+#: src/components/modals/BackupCodesViewModal.tsx:64
 msgid "View Backup Codes"
 msgstr "ดูรหัสสำรอง"
 
-#: src/components/modals/BackupCodesViewModal.tsx:58
+#: src/components/modals/BackupCodesViewModal.tsx:63
 msgid "View backup codes form"
 msgstr "แบบฟอร์มดูรหัสสำรอง"
 
@@ -23884,7 +23889,7 @@ msgstr "ดูการควบคุมการโทร"
 msgid "View Channel"
 msgstr "ดูช่อง"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:265
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:268
 msgid "View Codes"
 msgstr "ดูรหัส"
 
@@ -24016,6 +24021,19 @@ msgstr "Visionary (Lifetime Plutonium)"
 msgid "Visionary 2FA Nagbar"
 msgstr "Visionary 2FA Nagbar"
 
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:137
+msgid "Visionary Badge Override"
+msgstr "การแทนที่เหรียญวิสัยทัศน์"
+
+#. placeholder {0}: profile.premiumLifetimeSequence
+#: src/components/popouts/UserProfileBadges.tsx:150
+msgid "Visionary ID #{0}"
+msgstr "รหัสวิสัยทัศน์ #{0}"
+
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:139
+msgid "Visionary ID Number"
+msgstr "หมายเลขรหัสวิสัยทัศน์"
+
 #: src/components/modals/ExternalLinkWarningModal.tsx:111
 msgid "Visit Site"
 msgstr "เยี่ยมชมเว็บไซต์"
@@ -24086,7 +24104,7 @@ msgstr "การโทรเสียง"
 msgid "voice channel"
 msgstr "ช่องเสียง"
 
-#: src/stores/QuickSwitcherStore.tsx:720
+#: src/stores/QuickSwitcherStore.tsx:718
 #: src/utils/modals/guild_tabs/GuildAuditLogTabUtils.tsx:227
 msgid "Voice channel"
 msgstr "แชนแนลเสียง"
@@ -24106,7 +24124,7 @@ msgstr "แชนแนลเสียงเต็ม"
 msgid "Voice channel join behavior"
 msgstr "พฤติกรรมการเข้าช่องเสียง"
 
-#: src/stores/QuickSwitcherStore.tsx:1351
+#: src/stores/QuickSwitcherStore.tsx:1349
 #: src/utils/quick_switcher/QuickSwitcherModalUtils.tsx:98
 msgid "Voice channels"
 msgstr "แชนแนลเสียง"
@@ -24374,11 +24392,11 @@ msgstr "เราจะส่งรหัสยืนยันไปยังท
 msgid "We'll send a verification code to your email before you can change your password."
 msgstr "เราจะส่งรหัสยืนยันไปยังอีเมลของคุณก่อนที่คุณจะสามารถเปลี่ยนรหัสผ่านได้."
 
-#: src/components/modals/EmailChangeModal.tsx:190
+#: src/components/modals/EmailChangeModal.tsx:193
 msgid "We'll verify your current email and then your new email with one-time codes."
 msgstr "เราจะยืนยันอีเมลปัจจุบันของคุณก่อนแล้วจึงยืนยันอีเมลใหม่ด้วยรหัสใช้ครั้งเดียว"
 
-#: src/components/modals/EmailChangeModal.tsx:192
+#: src/components/modals/EmailChangeModal.tsx:195
 msgid "We'll verify your new email with a one-time code."
 msgstr "เราจะยืนยันอีเมลใหม่ของคุณด้วยรหัสใช้ครั้งเดียว"
 
@@ -24984,7 +25002,7 @@ msgstr "คุณไม่สามารถเปิดเสียงไมโ
 msgid "You do not have access to the channel where this message was sent."
 msgstr "คุณไม่มีสิทธิ์เข้าถึงแชนแนลที่ส่งข้อความนี้"
 
-#: src/components/channel/ChannelTextarea.tsx:749
+#: src/components/channel/ChannelTextarea.tsx:747
 #: src/components/channel/textarea/TextareaPlusMenu.tsx:52
 msgid "You do not have permission to send messages in this channel."
 msgstr "คุณไม่มีสิทธิ์ส่งข้อความในแชนแนลนี้"
@@ -25005,11 +25023,11 @@ msgstr "คุณยังไม่มีการปรับแต่งธี
 msgid "You don't have permission to connect to this voice channel."
 msgstr "คุณไม่มีสิทธิ์เชื่อมต่อแชนแนลเสียงนี้"
 
-#: src/actions/InviteActionCreators.tsx:316
+#: src/actions/InviteActionCreators.tsx:320
 msgid "You don't have permission to install this emoji pack."
 msgstr "คุณไม่มีสิทธิ์ติดตั้งชุดอิโมจินี้"
 
-#: src/actions/InviteActionCreators.tsx:317
+#: src/actions/InviteActionCreators.tsx:321
 msgid "You don't have permission to install this sticker pack."
 msgstr "คุณไม่มีสิทธิ์ติดตั้งชุดสติกเกอร์นี้"
 
@@ -25065,35 +25083,35 @@ msgstr "คุณมีทุกอย่าง <0/> ผ่าน <1>การ�
 msgid "You have blocked {username}. Unblock them to send messages."
 msgstr "คุณได้บล็อก {username} อยู่ ยกเลิกการบล็อกเพื่อส่งข้อความ"
 
-#: src/actions/InviteActionCreators.tsx:260
+#: src/actions/InviteActionCreators.tsx:264
 msgid "You have created the maximum of {limit} emoji pack. Delete one to create another."
 msgstr "คุณสร้างแพ็คอิโมจิสูงสุด {limit} แพ็คแล้ว ลบหนึ่งแพ็คเพื่อสร้างอีกแพ็ค"
 
-#: src/actions/InviteActionCreators.tsx:261
+#: src/actions/InviteActionCreators.tsx:265
 msgid "You have created the maximum of {limit} emoji packs. Delete one to create another."
 msgstr "คุณสร้างแพ็คอิโมจิสูงสุด {limit} แพ็คแล้ว ลบหนึ่งแพ็คเพื่อสร้างอีกแพ็ค"
 
-#: src/actions/InviteActionCreators.tsx:292
+#: src/actions/InviteActionCreators.tsx:296
 msgid "You have created the maximum of {limit} sticker pack. Delete one to create another."
 msgstr "คุณสร้างแพ็คสติ๊กเกอร์สูงสุด {limit} แพ็คแล้ว ลบหนึ่งแพ็คเพื่อสร้างอีกแพ็ค"
 
-#: src/actions/InviteActionCreators.tsx:293
+#: src/actions/InviteActionCreators.tsx:297
 msgid "You have created the maximum of {limit} sticker packs. Delete one to create another."
 msgstr "คุณสร้างแพ็คสติ๊กเกอร์สูงสุด {limit} แพ็คแล้ว ลบหนึ่งแพ็คเพื่อสร้างอีกแพ็ค"
 
-#: src/actions/InviteActionCreators.tsx:246
+#: src/actions/InviteActionCreators.tsx:250
 msgid "You have installed the maximum of {limit} emoji pack. Remove one to install another."
 msgstr "คุณติดตั้งแพ็คอิโมจิสูงสุด {limit} แพ็คแล้ว ลบหนึ่งแพ็คเพื่อติดตั้งอีกแพ็ค"
 
-#: src/actions/InviteActionCreators.tsx:247
+#: src/actions/InviteActionCreators.tsx:251
 msgid "You have installed the maximum of {limit} emoji packs. Remove one to install another."
 msgstr "คุณติดตั้งแพ็คอิโมจิสูงสุด {limit} แพ็คแล้ว ลบหนึ่งแพ็คเพื่อติดตั้งอีกแพ็ค"
 
-#: src/actions/InviteActionCreators.tsx:278
+#: src/actions/InviteActionCreators.tsx:282
 msgid "You have installed the maximum of {limit} sticker pack. Remove one to install another."
 msgstr "คุณติดตั้งแพ็คสติ๊กเกอร์สูงสุด {limit} แพ็คแล้ว ลบหนึ่งแพ็คเพื่อติดตั้งอีกแพ็ค"
 
-#: src/actions/InviteActionCreators.tsx:279
+#: src/actions/InviteActionCreators.tsx:283
 msgid "You have installed the maximum of {limit} sticker packs. Remove one to install another."
 msgstr "คุณติดตั้งแพ็คสติ๊กเกอร์สูงสุด {limit} แพ็คแล้ว ลบหนึ่งแพ็คเพื่อติดตั้งอีกแพ็ค"
 
@@ -25101,19 +25119,19 @@ msgstr "คุณติดตั้งแพ็คสติ๊กเกอร์
 msgid "You have no friends yet"
 msgstr "คุณยังไม่มีเพื่อน"
 
-#: src/actions/InviteActionCreators.tsx:264
+#: src/actions/InviteActionCreators.tsx:268
 msgid "You have reached the limit for creating emoji packs. Delete one of your packs to create another."
 msgstr "คุณถึงขีดจำกัดการสร้างชุดอีโมจิแล้ว ลบชุดหนึ่งออกเพื่อสร้างชุดใหม่"
 
-#: src/actions/InviteActionCreators.tsx:296
+#: src/actions/InviteActionCreators.tsx:300
 msgid "You have reached the limit for creating sticker packs. Delete one of your packs to create another."
 msgstr "คุณถึงขีดจำกัดการสร้างชุดสติกเกอร์แล้ว ลบชุดหนึ่งออกเพื่อสร้างชุดใหม่"
 
-#: src/actions/InviteActionCreators.tsx:250
+#: src/actions/InviteActionCreators.tsx:254
 msgid "You have reached the limit for installing emoji packs. Remove one of your installed packs to install another."
 msgstr "คุณถึงขีดจำกัดการติดตั้งชุดอีโมจิแล้ว ลบชุดที่ติดตั้งอยู่หนึ่งชุดเพื่อเพิ่มชุดใหม่"
 
-#: src/actions/InviteActionCreators.tsx:282
+#: src/actions/InviteActionCreators.tsx:286
 msgid "You have reached the limit for installing sticker packs. Remove one of your installed packs to install another."
 msgstr "คุณถึงขีดจำกัดการติดตั้งชุดสติกเกอร์แล้ว ลบชุดที่ติดตั้งอยู่หนึ่งชุดเพื่อเพิ่มชุดใหม่"
 
@@ -25377,23 +25395,23 @@ msgstr "คุณถึงขีดจำกัดสูงสุดของ {m
 msgid "You've reached the maximum limit of {maxFavoriteMemes} saved media items. To add more, you'll need to remove some existing items from your collection."
 msgstr "คุณถึงขีดจำกัดสูงสุดของ {maxFavoriteMemes} ไอเท็มมีเดียที่บันทึกไว้แล้ว หากต้องการเพิ่มมากขึ้น คุณต้องลบไอเท็มที่มีอยู่บางรายการจากคอลเลกชันของคุณ."
 
-#: src/components/alerts/MaxBookmarksModal.tsx:55
+#: src/components/alerts/MaxBookmarksModal.tsx:58
 msgid "You've reached the maximum number of bookmarks ({bookmarksText}). Please remove some bookmarks before adding new ones."
 msgstr "คุณถึงจำนวนบุ๊กมาร์กสูงสุด ({bookmarksText}) แล้ว กรุณาลบบุ๊กมาร์กบางรายการก่อนที่จะเพิ่มรายการใหม่."
 
-#: src/components/alerts/MaxBookmarksModal.tsx:44
+#: src/components/alerts/MaxBookmarksModal.tsx:47
 msgid "You've reached the maximum number of bookmarks ({bookmarksText}). This limit is configured by your instance administrator. Please remove some bookmarks before adding new ones."
 msgstr "คุณถึงจำนวนบุ๊กมาร์กสูงสุด ({bookmarksText}) แล้ว ขีดจำกัดนี้ถูกกำหนดโดยผู้ดูแลระบบของคุณ กรุณาลบบุ๊กมาร์กบางรายการก่อนที่จะเพิ่มรายการใหม่."
 
-#: src/components/alerts/MaxBookmarksModal.tsx:68
+#: src/components/alerts/MaxBookmarksModal.tsx:71
 msgid "You've reached the maximum number of bookmarks for free users ({bookmarksText}). Upgrade to Plutonium to increase your limit to {premiumBookmarksText}, or remove some bookmarks to add new ones."
 msgstr "คุณถึงจำนวนบุ๊กมาร์กสูงสุดสำหรับผู้ใช้ฟรี ({bookmarksText}) แล้ว อัปเกรดเป็น Plutonium เพื่อเพิ่มขีดจำกัดของคุณเป็น {premiumBookmarksText} หรือ ลบบุ๊กมาร์กบางรายการเพื่อเพิ่มรายการใหม่."
 
-#: src/components/alerts/MaxGuildsModal.tsx:36
+#: src/components/alerts/MaxGuildsModal.tsx:39
 msgid "You've reached the maximum number of communities you can join ({maxGuilds} communities). Please leave a community before joining another one."
 msgstr "คุณถึงจำนวนชุมชนสูงสุดที่คุณสามารถเข้าร่วมได้ ({maxGuilds} ชุมชน) กรุณาออกจากชุมชนก่อนที่จะเข้าร่วมชุมชนใหม่."
 
-#: src/components/alerts/MaxGuildsModal.tsx:35
+#: src/components/alerts/MaxGuildsModal.tsx:38
 msgid "You've reached the maximum number of communities you can join ({maxGuilds} community). Please leave a community before joining another one."
 msgstr "คุณถึงจำนวนชุมชนสูงสุดที่คุณสามารถเข้าร่วมได้ ({maxGuilds} ชุมชน) กรุณาออกจากชุมชนก่อนที่จะเข้าร่วมชุมชนใหม่."
 

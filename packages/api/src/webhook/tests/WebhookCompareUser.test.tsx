@@ -25,10 +25,10 @@ import {
 	createGuildEmoji,
 	createWebhook,
 	deleteWebhook,
-	enableExpressionPacksForGuild,
 	executeWebhook,
 	getChannelMessage,
 	grantCreateExpressionsPermission,
+	grantStaffAccess,
 	sendChannelMessage,
 } from '@fluxer/api/src/webhook/tests/WebhookTestUtils';
 import {afterEach, beforeEach, describe, expect, it} from 'vitest';
@@ -54,7 +54,7 @@ describe('Webhook compare to regular user', () => {
 		const emojiGuild = await createGuild(harness, user.token, 'Emoji Source Guild');
 		const emojiGuildId = emojiGuild.id;
 
-		await enableExpressionPacksForGuild(harness, emojiGuildId);
+		await grantStaffAccess(harness, user.userId);
 		await grantCreateExpressionsPermission(harness, user.token, emojiGuildId);
 
 		const emoji = await createGuildEmoji(harness, user.token, emojiGuildId, 'compare');

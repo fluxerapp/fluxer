@@ -60,7 +60,7 @@ export interface ApiTestHarness {
 }
 
 export interface CreateApiTestHarnessOptions {
-	search?: 'disabled' | 'meilisearch';
+	search?: 'disabled' | 'meilisearch' | 'elasticsearch';
 }
 
 export async function createApiTestHarness(options: CreateApiTestHarnessOptions = {}): Promise<ApiTestHarness> {

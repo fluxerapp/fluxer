@@ -61,6 +61,11 @@ export const MobileVideoViewer = observer(function MobileVideoViewer({
 	const hudTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const [hasInitialized, setHasInitialized] = useState(false);
 
+	const safelyPlayVideo = useCallback((video: HTMLVideoElement) => {
+		const playPromise = video.play();
+		void playPromise?.catch(() => {});
+	}, []);
+
 	const progress = duration > 0 ? currentTime / duration : 0;
 
 	const scheduleHudHide = useCallback(() => {
@@ -86,18 +91,21 @@ export const MobileVideoViewer = observer(function MobileVideoViewer({
 		setZoomScale(state.scale);
 	}, []);
 
-	const handlePlayPause = useCallback((e: React.MouseEvent) => {
-		e.stopPropagation();
-		const video = videoRef.current;
-		if (!video) return;
+	const handlePlayPause = useCallback(
+		(e: React.MouseEvent) => {
+			e.stopPropagation();
+			const video = videoRef.current;
+			if (!video) return;
 
-		if (video.paused) {
-			video.play();
-			transformRef.current?.resetTransform();
-		} else {
-			video.pause();
-		}
-	}, []);
+			if (video.paused) {
+				safelyPlayVideo(video);
+				transformRef.current?.resetTransform();
+			} else {
+				video.pause();
+			}
+		},
+		[safelyPlayVideo],
+	);
 
 	const handleToggleMute = useCallback((e: React.MouseEvent) => {
 		e.stopPropagation();
@@ -139,7 +147,7 @@ export const MobileVideoViewer = observer(function MobileVideoViewer({
 			if (initialTime && !hasInitialized) {
 				video.currentTime = initialTime;
 				setHasInitialized(true);
-				video.play();
+				safelyPlayVideo(video);
 			}
 		};
 		const handleDurationChange = () => setDuration(video.duration);
@@ -157,7 +165,7 @@ export const MobileVideoViewer = observer(function MobileVideoViewer({
 			video.removeEventListener('loadedmetadata', handleLoadedMetadata);
 			video.removeEventListener('durationchange', handleDurationChange);
 		};
-	}, [initialTime, hasInitialized, scheduleHudHide]);
+	}, [initialTime, hasInitialized, scheduleHudHide, safelyPlayVideo]);
 
 	useEffect(() => {
 		const video = videoRef.current;

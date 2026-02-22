@@ -32,9 +32,8 @@ import {ComponentDispatch} from '@app/lib/ComponentDispatch';
 import DeveloperModeStore from '@app/stores/DeveloperModeStore';
 import MobileLayoutStore from '@app/stores/MobileLayoutStore';
 import UnsavedChangesStore from '@app/stores/UnsavedChangesStore';
+import UserStore from '@app/stores/UserStore';
 import {isMobileExperienceEnabled} from '@app/utils/MobileExperience';
-import {hasManagedTrait} from '@app/utils/traits/UserTraits';
-import {ManagedTraits} from '@fluxer/constants/src/ManagedTraits';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
@@ -67,7 +66,7 @@ export const UserSettingsModal: React.FC<UserSettingsModalProps> = observer(
 
 		const unsavedChangesStore = UnsavedChangesStore;
 		const isDeveloper = DeveloperModeStore.isDeveloper;
-		const hasExpressionPackAccess = hasManagedTrait(ManagedTraits.EXPRESSION_PACKS);
+		const hasExpressionPackAccess = UserStore.getCurrentUser()?.isStaff() ?? false;
 
 		const groupedSettingsTabs = useMemo(() => {
 			const tabsToGroup = settingsTabs.filter((tab) => {

@@ -58,7 +58,6 @@ import {getKVClient} from '@fluxer/api/src/middleware/ServiceRegistry';
 import {OAuth2TokenRepository} from '@fluxer/api/src/oauth/repositories/OAuth2TokenRepository';
 import {IpAuthorizationTokens, OAuth2AccessTokensByUser} from '@fluxer/api/src/Tables';
 import {resetTestHarnessState} from '@fluxer/api/src/test/TestHarnessReset';
-import type {GuildManagedTraitService} from '@fluxer/api/src/traits/GuildManagedTraitService';
 import type {HonoApp, HonoEnv} from '@fluxer/api/src/types/HonoEnv';
 import {AuthSessionRepository} from '@fluxer/api/src/user/repositories/auth/AuthSessionRepository';
 import {ScheduledMessageRepository} from '@fluxer/api/src/user/repositories/ScheduledMessageRepository';
@@ -67,7 +66,6 @@ import {UserRepository} from '@fluxer/api/src/user/repositories/UserRepository';
 import {processUserDeletion} from '@fluxer/api/src/user/services/UserDeletionService';
 import {UserHarvestRepository} from '@fluxer/api/src/user/UserHarvestRepository';
 import {getExpiryBucket} from '@fluxer/api/src/utils/AttachmentDecay';
-import {areFeatureSetsEqual} from '@fluxer/api/src/utils/featureUtils';
 import {ScheduledMessageExecutor} from '@fluxer/api/src/worker/executors/ScheduledMessageExecutor';
 import {processExpiredAttachments} from '@fluxer/api/src/worker/tasks/ExpireAttachments';
 import {processInactivityDeletionsCore} from '@fluxer/api/src/worker/tasks/ProcessInactivityDeletions';
@@ -75,7 +73,6 @@ import {setWorkerDependencies} from '@fluxer/api/src/worker/WorkerContext';
 import {initializeWorkerDependencies} from '@fluxer/api/src/worker/WorkerDependencies';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {MAX_GUILD_MEMBERS_VERY_LARGE_GUILD} from '@fluxer/constants/src/LimitConstants';
-import {isManagedTrait} from '@fluxer/constants/src/ManagedTraits';
 import {SuspiciousActivityFlags, UserFlags} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import type {IEmailService} from '@fluxer/email/src/IEmailService';
@@ -107,19 +104,6 @@ import {createSnowflakeFromTimestamp, snowflakeToDate} from '@fluxer/snowflake/s
 import * as BucketUtils from '@fluxer/snowflake/src/SnowflakeBuckets';
 import type {Context} from 'hono';
 import {seconds} from 'itty-time';
-
-function differenceSet<T>(base: Iterable<T>, comparator: Iterable<T>): Set<T> {
-	const comparatorSet = new Set(comparator);
-	const result = new Set<T>();
-
-	for (const entry of base) {
-		if (!comparatorSet.has(entry)) {
-			result.add(entry);
-		}
-	}
-
-	return result;
-}
 
 const TEST_EMAIL_ENDPOINT = '/test/emails';
 const TEST_AUTH_HEADER = 'x-test-token';
@@ -1093,7 +1077,6 @@ export function TestHarnessController(app: HonoApp) {
 			throw new UnknownGuildError();
 		}
 
-		const previousFeatures = guild.features ? new Set(guild.features) : null;
 		const newFeatures = new Set(guild.features);
 
 		if (Array.isArray(addFeatures)) {
@@ -1112,65 +1095,11 @@ export function TestHarnessController(app: HonoApp) {
 			}
 		}
 
-		const featuresChanged = !areFeatureSetsEqual(previousFeatures, newFeatures);
 		const guildRow = guild.toRow();
 		await guildRepository.upsert({
 			...guildRow,
 			features: newFeatures,
 		});
-
-		const guildManagedTraitService = ctx.get('guildManagedTraitService') as GuildManagedTraitService | undefined;
-		if (featuresChanged) {
-			if (guildManagedTraitService) {
-				try {
-					await guildManagedTraitService.reconcileTraitsForGuildFeatureChange({
-						guildId,
-						previousFeatures,
-						newFeatures,
-					});
-				} catch (error) {
-					Logger.error(
-						{error, guildId: guildId.toString()},
-						'Failed to reconcile managed traits after test harness guild feature update',
-					);
-				}
-			} else {
-				const userRepository = ctx.get('userRepository');
-				const userCacheService = ctx.get('userCacheService');
-				const members = await guildRepository.listMembers(guildId);
-
-				const addedTraits = differenceSet(new Set(addFeatures || []), new Set(previousFeatures || []));
-				const removedTraits = differenceSet(new Set(previousFeatures || []), new Set(addFeatures || []));
-
-				for (const member of members) {
-					const user = await userRepository.findUnique(member.userId);
-					if (!user) continue;
-
-					const updatedTraits = new Set(user.traits);
-					let changed = false;
-
-					for (const trait of addedTraits) {
-						if (isManagedTrait(trait) && !updatedTraits.has(trait)) {
-							updatedTraits.add(trait);
-							changed = true;
-						}
-					}
-
-					for (const trait of removedTraits) {
-						if (updatedTraits.has(trait)) {
-							updatedTraits.delete(trait);
-							changed = true;
-						}
-					}
-
-					if (changed) {
-						const traitValue = updatedTraits.size > 0 ? new Set(updatedTraits) : null;
-						await userRepository.patchUpsert(member.userId, {traits: traitValue}, user.toRow());
-						await userCacheService.invalidateUserCache(member.userId);
-					}
-				}
-			}
-		}
 
 		return ctx.json({
 			success: true,

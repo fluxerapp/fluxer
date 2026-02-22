@@ -371,7 +371,7 @@ pricing_and_tiers.free.label: 무료
 pricing_and_tiers.plutonium.benefits_note_official_instance_only: '참고: 플루토늄과 비저너리 혜택은 공식 Fluxer.app 인스턴스에서만 적용돼요.'
 pricing_and_tiers.plutonium.feature_highlights: 500MB 업로드, 4,000자 메시지, 300개 북마크, 50개 이모지 팩 등 더 많은 기능이 있어요.
 pricing_and_tiers.plutonium.features.bio_character_limit: 소개 글자 수 제한
-pricing_and_tiers.plutonium.features.choose_custom_4_digit_tag: '#0001, #1337, #9999 같은 나만의 4자리 태그를 선택해 사용자 이름을 정말 독특하게 만들어보세요.'
+pricing_and_tiers.plutonium.features.choose_custom_4_digit_tag: '#0001부터 #9999까지 사용 가능한 4자리 태그를 선택해 사용자 이름을 정말 독특하게 만들어보세요.'
 pricing_and_tiers.plutonium.features.custom_4_digit_username_tag: 커스텀 4자리 사용자명 태그
 pricing_and_tiers.plutonium.features.custom_username_tag: 커스텀 사용자 태그
 pricing_and_tiers.plutonium.features.custom_video_backgrounds: 커스텀 영상 배경

@@ -47,7 +47,6 @@ import type {GuildAuditLog} from '@fluxer/api/src/models/GuildAuditLog';
 import type {GuildMember} from '@fluxer/api/src/models/GuildMember';
 import type {User} from '@fluxer/api/src/models/User';
 import type {Webhook} from '@fluxer/api/src/models/Webhook';
-import type {GuildManagedTraitService} from '@fluxer/api/src/traits/GuildManagedTraitService';
 import type {IUserRepository} from '@fluxer/api/src/user/IUserRepository';
 import {getCachedUserPartialResponses} from '@fluxer/api/src/user/UserCacheHelpers';
 import type {IWebhookRepository} from '@fluxer/api/src/webhook/IWebhookRepository';
@@ -169,7 +168,6 @@ export class GuildService {
 		webhookRepository: IWebhookRepository,
 		guildAuditLogService: GuildAuditLogService,
 		limitConfigService: LimitConfigService,
-		guildManagedTraitService?: GuildManagedTraitService,
 	) {
 		this.gatewayService = gatewayService;
 		this.guildRepository = guildRepository;
@@ -189,7 +187,6 @@ export class GuildService {
 			webhookRepository,
 			guildAuditLogService,
 			limitConfigService,
-			guildManagedTraitService,
 		);
 		this.members = new GuildMemberService(
 			guildRepository,
@@ -201,7 +198,6 @@ export class GuildService {
 			rateLimitService,
 			guildAuditLogService,
 			limitConfigService,
-			guildManagedTraitService,
 		);
 		this.roles = new GuildRoleService(
 			guildRepository,
@@ -803,6 +799,7 @@ export class GuildService {
 				channelId: ChannelID;
 				position?: number;
 				parentId: ChannelID | null | undefined;
+				precedingSiblingId: ChannelID | null | undefined;
 				lockPermissions: boolean;
 			}>;
 			requestCache: RequestCache;

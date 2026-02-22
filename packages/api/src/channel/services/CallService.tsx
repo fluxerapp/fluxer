@@ -184,6 +184,18 @@ export class CallService {
 			throw new InvalidChannelTypeForCallError();
 		}
 
+		this.ensureRequesterIsGroupDmRecipient({
+			channelType: channel.type,
+			channelRecipientIds: channel.recipientIds,
+			userId,
+		});
+
+		this.validateExplicitRingRecipients({
+			channelRecipientIds: channel.recipientIds,
+			userId,
+			recipients: ringing,
+		});
+
 		const recipientIds = Array.from(channel.recipientIds);
 		const channelRecipients = recipientIds.length > 0 ? await this.userRepository.listUsers(recipientIds) : [];
 
@@ -321,6 +333,20 @@ export class CallService {
 
 		if (channel.type !== ChannelTypes.DM && channel.type !== ChannelTypes.GROUP_DM) {
 			throw new InvalidChannelTypeForCallError();
+		}
+
+		this.ensureRequesterIsGroupDmRecipient({
+			channelType: channel.type,
+			channelRecipientIds: channel.recipientIds,
+			userId,
+		});
+
+		if (recipients !== undefined) {
+			this.validateExplicitRingRecipients({
+				channelRecipientIds: channel.recipientIds,
+				userId,
+				recipients,
+			});
 		}
 
 		if (channel.type === ChannelTypes.DM) {
@@ -525,6 +551,42 @@ export class CallService {
 			throw InputValidationError.fromCode('region', ValidationErrorCodes.INVALID_OR_RESTRICTED_RTC_REGION, {
 				region,
 			});
+		}
+	}
+
+	private ensureRequesterIsGroupDmRecipient({
+		channelType,
+		channelRecipientIds,
+		userId,
+	}: {
+		channelType: number;
+		channelRecipientIds: Set<UserID>;
+		userId: UserID;
+	}): void {
+		if (channelType !== ChannelTypes.GROUP_DM) {
+			return;
+		}
+
+		if (!channelRecipientIds.has(userId)) {
+			throw new UnknownChannelError();
+		}
+	}
+
+	private validateExplicitRingRecipients({
+		channelRecipientIds,
+		userId,
+		recipients,
+	}: {
+		channelRecipientIds: Set<UserID>;
+		userId: UserID;
+		recipients: Array<UserID>;
+	}): void {
+		const allowedRecipientIds = new Set(Array.from(channelRecipientIds).filter((id) => id !== userId));
+
+		for (const recipientId of recipients) {
+			if (!allowedRecipientIds.has(recipientId)) {
+				throw InputValidationError.fromCode('recipients', ValidationErrorCodes.USER_NOT_IN_CHANNEL);
+			}
 		}
 	}
 

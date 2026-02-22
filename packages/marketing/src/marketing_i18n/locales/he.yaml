@@ -371,7 +371,7 @@ pricing_and_tiers.free.label: חינם
 pricing_and_tiers.plutonium.benefits_note_official_instance_only: 'שימו לב: ההטבות של Plutonium ושל Visionary חלות רק על המופע הרשמי ב-Fluxer.app, לא על מופעים צד שלישי או כאלה באירוח עצמי.'
 pricing_and_tiers.plutonium.feature_highlights: העלאות של 500 MB, הודעות עד 4,000 תווים, 300 סימניות, 50 חבילות אימוג'י ועוד הרבה.
 pricing_and_tiers.plutonium.features.bio_character_limit: מגבלת תווים לביו
-pricing_and_tiers.plutonium.features.choose_custom_4_digit_tag: בחרו את התג שלכם כמו #0001, #1337, או #9999 כדי לעשות את שם המשתמש שלכם באמת ייחודי.
+pricing_and_tiers.plutonium.features.choose_custom_4_digit_tag: בחרו כל תג 4 ספרות זמין מ-#0001 עד #9999 כדי לעשות את שם המשתמש שלכם באמת ייחודי.
 pricing_and_tiers.plutonium.features.custom_4_digit_username_tag: תג שם משתמש בעל 4 ספרות מותאם
 pricing_and_tiers.plutonium.features.custom_username_tag: תג שם משתמש מותאם
 pricing_and_tiers.plutonium.features.custom_video_backgrounds: רקעים מותאמים לוידאו

@@ -30,6 +30,10 @@
 -define(VOICE_RATE_LIMIT_TABLE, voice_update_rate_limit).
 -define(VOICE_QUEUE_PROCESS_INTERVAL, 100).
 -define(MAX_VOICE_QUEUE_LENGTH, 64).
+-define(RATE_LIMIT_WINDOW_MS, 60000).
+-define(RATE_LIMIT_MAX_EVENTS, 120).
+-define(REQUEST_GUILD_MEMBERS_RATE_LIMIT_WINDOW_MS, 10000).
+-define(REQUEST_GUILD_MEMBERS_RATE_LIMIT_MAX_EVENTS, 3).
 
 -type state() :: #{
     version := 1 | undefined,
@@ -40,6 +44,7 @@
     socket_pid := pid() | undefined,
     peer_ip := binary() | undefined,
     rate_limit_state := map(),
+    request_guild_members_pid := pid() | undefined,
     otel_span_ctx := term(),
     voice_queue_timer := reference() | undefined
 }.
@@ -54,7 +59,12 @@ new_state() ->
         heartbeat_state => #{},
         socket_pid => undefined,
         peer_ip => undefined,
-        rate_limit_state => #{events => [], window_start => undefined},
+        rate_limit_state => #{
+            events => [],
+            request_guild_members_events => [],
+            window_start => undefined
+        },
+        request_guild_members_pid => undefined,
         otel_span_ctx => undefined,
         voice_queue_timer => undefined
     }.
@@ -140,7 +150,7 @@ handle_incoming_data(Data, State = #{encoding := Encoding, compress_ctx := Compr
 -spec handle_decode({ok, map()} | {error, term()}, state()) -> ws_result().
 handle_decode({ok, #{<<"op">> := Op} = Payload}, State) ->
     OpAtom = constants:gateway_opcode(Op),
-    case check_rate_limit(State) of
+    case check_rate_limit(State, OpAtom) of
         {ok, RateLimitedState} ->
             handle_gateway_payload(OpAtom, Payload, RateLimitedState);
         rate_limited ->
@@ -160,6 +170,10 @@ websocket_info({session_backpressure_error, Details}, State) ->
     handle_session_backpressure_error(Details, State);
 websocket_info({'DOWN', _, process, Pid, _}, State = #{session_pid := Pid}) ->
     handle_session_down(State);
+websocket_info(
+    {'DOWN', _, process, Pid, _}, State = #{request_guild_members_pid := Pid}
+) ->
+    {ok, State#{request_guild_members_pid => undefined}};
 websocket_info({process_voice_queue}, State) ->
     NewState = process_queued_voice_updates(State#{voice_queue_timer => undefined}),
     {ok, NewState};
@@ -541,9 +555,13 @@ handle_voice_state_update(Pid, Data, State) ->
     end.
 
 -spec handle_request_guild_members(map(), pid(), state()) -> ws_result().
+handle_request_guild_members(
+    _Data, _Pid, State = #{request_guild_members_pid := RequestPid}
+) when is_pid(RequestPid) ->
+    {ok, State};
 handle_request_guild_members(Data, Pid, State) ->
     SocketPid = self(),
-    spawn(fun() ->
+    {WorkerPid, _Ref} = spawn_monitor(fun() ->
         try
             case gen_server:call(Pid, {get_state}, 5000) of
                 SessionState when is_map(SessionState) ->
@@ -555,7 +573,7 @@ handle_request_guild_members(Data, Pid, State) ->
             _:_ -> ok
         end
     end),
-    {ok, State}.
+    {ok, State#{request_guild_members_pid => WorkerPid}}.
 
 -spec handle_lazy_request(map(), pid(), state()) -> ws_result().
 handle_lazy_request(Data, Pid, State) ->
@@ -578,22 +596,40 @@ handle_lazy_request(Data, Pid, State) ->
 schedule_heartbeat_check() ->
     erlang:send_after(constants:heartbeat_interval() div 3, self(), {heartbeat_check}).
 
--spec check_rate_limit(state()) -> {ok, state()} | rate_limited.
-check_rate_limit(State = #{rate_limit_state := RateLimitState}) ->
+-spec check_rate_limit(state(), atom()) -> {ok, state()} | rate_limited.
+check_rate_limit(State = #{rate_limit_state := RateLimitState}, Op) ->
     Now = erlang:system_time(millisecond),
     Events = maps:get(events, RateLimitState, []),
     WindowStart = maps:get(window_start, RateLimitState, Now),
-    WindowDuration = 60000,
-    MaxEvents = 120,
-    EventsInWindow = [T || T <- Events, (Now - T) < WindowDuration],
-    case length(EventsInWindow) >= MaxEvents of
+    EventsInWindow = [T || T <- Events, (Now - T) < ?RATE_LIMIT_WINDOW_MS],
+    case length(EventsInWindow) >= ?RATE_LIMIT_MAX_EVENTS of
         true ->
             rate_limited;
         false ->
-            NewEvents = [Now | EventsInWindow],
-            NewRateLimitState = #{events => NewEvents, window_start => WindowStart},
-            {ok, State#{rate_limit_state => NewRateLimitState}}
+            case check_opcode_rate_limit(Op, RateLimitState, Now) of
+                rate_limited ->
+                    rate_limited;
+                {ok, OpRateLimitState} ->
+                    NewEvents = [Now | EventsInWindow],
+                    NewRateLimitState =
+                        OpRateLimitState#{events => NewEvents, window_start => WindowStart},
+                    {ok, State#{rate_limit_state => NewRateLimitState}}
+            end
     end.
+
+-spec check_opcode_rate_limit(atom(), map(), integer()) -> {ok, map()} | rate_limited.
+check_opcode_rate_limit(request_guild_members, RateLimitState, Now) ->
+    RequestEvents = maps:get(request_guild_members_events, RateLimitState, []),
+    RequestEventsInWindow =
+        [T || T <- RequestEvents, (Now - T) < ?REQUEST_GUILD_MEMBERS_RATE_LIMIT_WINDOW_MS],
+    case length(RequestEventsInWindow) >= ?REQUEST_GUILD_MEMBERS_RATE_LIMIT_MAX_EVENTS of
+        true ->
+            rate_limited;
+        false ->
+            {ok, RateLimitState#{request_guild_members_events => [Now | RequestEventsInWindow]}}
+    end;
+check_opcode_rate_limit(_, RateLimitState, _Now) ->
+    {ok, RateLimitState}.
 
 -spec extract_client_ip(cowboy_req:req()) -> binary().
 extract_client_ip(Req) ->
@@ -953,5 +989,43 @@ adjust_status_test() ->
     ?assertEqual(invisible, adjust_status(offline)),
     ?assertEqual(online, adjust_status(online)),
     ?assertEqual(idle, adjust_status(idle)).
+
+check_rate_limit_blocks_general_flood_test() ->
+    Now = erlang:system_time(millisecond),
+    Events = lists:duplicate(?RATE_LIMIT_MAX_EVENTS, Now - 1000),
+    State = (new_state())#{
+        rate_limit_state => #{
+            events => Events,
+            request_guild_members_events => [],
+            window_start => Now
+        }
+    },
+    ?assertEqual(rate_limited, check_rate_limit(State, heartbeat)).
+
+check_rate_limit_blocks_request_guild_members_burst_test() ->
+    Now = erlang:system_time(millisecond),
+    RequestEvents =
+        lists:duplicate(?REQUEST_GUILD_MEMBERS_RATE_LIMIT_MAX_EVENTS, Now - 1000),
+    State = (new_state())#{
+        rate_limit_state => #{
+            events => [],
+            request_guild_members_events => RequestEvents,
+            window_start => Now
+        }
+    },
+    ?assertEqual(rate_limited, check_rate_limit(State, request_guild_members)).
+
+check_rate_limit_allows_other_ops_when_request_guild_members_is_hot_test() ->
+    Now = erlang:system_time(millisecond),
+    RequestEvents =
+        lists:duplicate(?REQUEST_GUILD_MEMBERS_RATE_LIMIT_MAX_EVENTS, Now - 1000),
+    State = (new_state())#{
+        rate_limit_state => #{
+            events => [],
+            request_guild_members_events => RequestEvents,
+            window_start => Now
+        }
+    },
+    ?assertMatch({ok, _}, check_rate_limit(State, heartbeat)).
 
 -endif.

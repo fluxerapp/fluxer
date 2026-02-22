@@ -371,7 +371,7 @@ pricing_and_tiers.free.label: Ingyenes
 pricing_and_tiers.plutonium.benefits_note_official_instance_only: 'Megjegyzés: a Plutonium és a Visionary előnyök csak a hivatalos Fluxer.app példányra érvényesek, nem harmadik fél vagy saját hosztolt példányokra.'
 pricing_and_tiers.plutonium.feature_highlights: 500 MB feltöltések, 4 000 karakteres üzenetek, 300 könyvjelző, 50 emojicsomag, és még sok más.
 pricing_and_tiers.plutonium.features.bio_character_limit: Bio karakterlimit
-pricing_and_tiers.plutonium.features.choose_custom_4_digit_tag: Válassza ki saját 4 jegyű címkéjét, mint a #0001, #1337, vagy #9999, hogy valóban egyedivé tegyük felhasználónevét.
+pricing_and_tiers.plutonium.features.choose_custom_4_digit_tag: Válasszon bármilyen elérhető 4 jegyű címkét #0001-től #9999-ig, hogy valóban egyedivé tegye felhasználónevét.
 pricing_and_tiers.plutonium.features.custom_4_digit_username_tag: Egyedi 4 jegyű felhasználónév címke
 pricing_and_tiers.plutonium.features.custom_username_tag: Egyedi felhasználónévcímke
 pricing_and_tiers.plutonium.features.custom_video_backgrounds: Egyedi videóháttér

@@ -39,15 +39,15 @@ export const ChannelIndexPage = observer(() => {
 		messageId?: string;
 	};
 
-	if (!channelId) {
-		return null;
-	}
-
-	const channel = ChannelStore.getChannel(channelId);
+	const channel = channelId ? ChannelStore.getChannel(channelId) : undefined;
 	const isInFavorites = location.pathname.startsWith('/channels/@favorites');
 	const derivedGuildId = isInFavorites ? channel?.guildId : routeGuildId || channel?.guildId;
 
 	useEffect(() => {
+		if (!channelId) {
+			return;
+		}
+
 		if (!channel) {
 			return;
 		}
@@ -62,7 +62,11 @@ export const ChannelIndexPage = observer(() => {
 		}
 
 		NavigationActionCreators.selectChannel(fallbackGuildId, undefined, undefined, 'replace');
-	}, [channel, routeGuildId, isInFavorites]);
+	}, [channelId, channel, routeGuildId, isInFavorites]);
+
+	if (!channelId) {
+		return null;
+	}
 
 	if (channel && (channel.type === ChannelTypes.GUILD_CATEGORY || channel.type === ChannelTypes.GUILD_LINK)) {
 		return null;

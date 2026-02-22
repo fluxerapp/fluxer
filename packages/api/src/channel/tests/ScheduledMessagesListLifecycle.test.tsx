@@ -21,8 +21,8 @@ import {createTestAccount} from '@fluxer/api/src/auth/tests/AuthTestUtils';
 import {
 	cancelScheduledMessage,
 	createGuildChannel,
-	enableMessageSchedulingForGuild,
 	getScheduledMessages,
+	grantStaffAccess,
 	scheduleMessage,
 } from '@fluxer/api/src/channel/tests/ScheduledMessageTestUtils';
 import {createGuild} from '@fluxer/api/src/guild/tests/GuildTestUtils';
@@ -43,7 +43,7 @@ describe('Scheduled messages list lifecycle', () => {
 	it('lists scheduled messages and removes after cancel', async () => {
 		const owner = await createTestAccount(harness);
 		const guild = await createGuild(harness, owner.token, 'scheduled-list');
-		await enableMessageSchedulingForGuild(harness, guild.id);
+		await grantStaffAccess(harness, owner.userId);
 		const channel = await createGuildChannel(harness, owner.token, guild.id, 'scheduled-list');
 
 		const content = 'list scheduled';

@@ -371,7 +371,7 @@ pricing_and_tiers.free.label: 免费
 pricing_and_tiers.plutonium.benefits_note_official_instance_only: 注意：Plutonium 和 Visionary 福利仅适用于官方 Fluxer.app 实例，不适用于第三方或自建实例。
 pricing_and_tiers.plutonium.feature_highlights: 500 MB 上传、4,000 字消息、300 条收藏、50 套表情包，还有更多。
 pricing_and_tiers.plutonium.features.bio_character_limit: 簡介字元上限
-pricing_and_tiers.plutonium.features.choose_custom_4_digit_tag: 選擇你自己的 4 位數標籤，例如 #0001、#1337 或 #9999，讓你的使用者名稱真正獨一無二。
+pricing_and_tiers.plutonium.features.choose_custom_4_digit_tag: 選擇 #0001 到 #9999 之間任何可用的 4 位數標籤，讓你的使用者名稱真正獨一無二。
 pricing_and_tiers.plutonium.features.custom_4_digit_username_tag: 自訂 4 位數使用者名稱標籤
 pricing_and_tiers.plutonium.features.custom_username_tag: 自訂使用者名稱標籤
 pricing_and_tiers.plutonium.features.custom_video_backgrounds: 自訂視訊背景

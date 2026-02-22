@@ -18,14 +18,17 @@
  */
 
 import {ConfirmModal} from '@app/components/modals/ConfirmModal';
-import UserStore from '@app/stores/UserStore';
+import type {UserRecord} from '@app/records/UserRecord';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 
-export const MaxGuildsModal = observer(() => {
+interface MaxGuildsModalProps {
+	user: UserRecord;
+}
+
+export const MaxGuildsModal = observer(({user}: MaxGuildsModalProps) => {
 	const {t} = useLingui();
-	const currentUser = UserStore.currentUser!;
-	const maxGuilds = currentUser.maxGuilds;
+	const maxGuilds = user.maxGuilds;
 
 	return (
 		<ConfirmModal

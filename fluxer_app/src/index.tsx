@@ -139,6 +139,14 @@ function initSentry(): void {
 				if (error.name === 'HTTPResponseError' || error.name === 'TimeoutError') {
 					return null;
 				}
+
+				const isBlobWorkerImportScriptsFailure =
+					error.name === 'NetworkError' &&
+					error.message.includes("Failed to execute 'importScripts' on 'WorkerGlobalScope'") &&
+					error.message.includes('blob:');
+				if (isBlobWorkerImportScriptsFailure) {
+					return null;
+				}
 			}
 			return event;
 		},

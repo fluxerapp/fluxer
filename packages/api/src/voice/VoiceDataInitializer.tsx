@@ -38,61 +38,91 @@ export class VoiceDataInitializer {
 
 		try {
 			const repository = new VoiceRepository();
-
+			const serverId = `${defaultRegion.id}-server-1`;
+			const livekitEndpoint = this.resolveLivekitEndpoint();
 			const existingRegions = await repository.listRegions();
-			if (existingRegions.length > 0) {
+
+			if (existingRegions.length === 0) {
+				Logger.info('[VoiceDataInitializer] Creating default voice region from config...');
+				await repository.createRegion({
+					id: defaultRegion.id,
+					name: defaultRegion.name,
+					emoji: defaultRegion.emoji,
+					latitude: defaultRegion.latitude,
+					longitude: defaultRegion.longitude,
+					isDefault: true,
+					restrictions: {
+						vipOnly: false,
+						requiredGuildFeatures: new Set(),
+						allowedGuildIds: new Set(),
+						allowedUserIds: new Set(),
+					},
+				});
+				Logger.info(`[VoiceDataInitializer] Created region: ${defaultRegion.name} (${defaultRegion.id})`);
+
+				await repository.createServer({
+					regionId: defaultRegion.id,
+					serverId,
+					endpoint: livekitEndpoint,
+					apiKey: livekitApiKey,
+					apiSecret: livekitApiSecret,
+					isActive: true,
+					restrictions: {
+						vipOnly: false,
+						requiredGuildFeatures: new Set(),
+						allowedGuildIds: new Set(),
+						allowedUserIds: new Set(),
+					},
+				});
+
+				Logger.info(`[VoiceDataInitializer] Created server: ${serverId} -> ${livekitEndpoint}`);
+				Logger.info('[VoiceDataInitializer] Successfully created default voice region');
+				return;
+			}
+
+			const configuredRegion = await repository.getRegion(defaultRegion.id);
+			if (!configuredRegion) {
 				Logger.info(
-					`[VoiceDataInitializer] ${existingRegions.length} voice region(s) already exist, skipping default region creation`,
+					`[VoiceDataInitializer] ${existingRegions.length} voice region(s) already exist and configured default region (${defaultRegion.id}) is absent, skipping config sync`,
 				);
 				return;
 			}
 
-			Logger.info('[VoiceDataInitializer] Creating default voice region from config...');
+			const configuredServer = await repository.getServer(defaultRegion.id, serverId);
+			if (!configuredServer) {
+				Logger.info(
+					`[VoiceDataInitializer] Region ${defaultRegion.id} exists but server ${serverId} is absent, skipping config sync`,
+				);
+				return;
+			}
 
-			const livekitEndpoint =
-				Config.voice.url ||
-				(() => {
-					const protocol = new URL(Config.endpoints.apiPublic).protocol.slice(0, -1) === 'https' ? 'wss' : 'ws';
-					return `${protocol}://${new URL(Config.endpoints.apiPublic).hostname}/livekit`;
-				})();
+			const endpointChanged = configuredServer.endpoint !== livekitEndpoint;
+			const apiKeyChanged = configuredServer.apiKey !== livekitApiKey;
+			const apiSecretChanged = configuredServer.apiSecret !== livekitApiSecret;
+			if (!endpointChanged && !apiKeyChanged && !apiSecretChanged) {
+				Logger.info(`[VoiceDataInitializer] Default voice server ${serverId} already matches config credentials`);
+				return;
+			}
 
-			await repository.createRegion({
-				id: defaultRegion.id,
-				name: defaultRegion.name,
-				emoji: defaultRegion.emoji,
-				latitude: defaultRegion.latitude,
-				longitude: defaultRegion.longitude,
-				isDefault: true,
-				restrictions: {
-					vipOnly: false,
-					requiredGuildFeatures: new Set(),
-					allowedGuildIds: new Set(),
-					allowedUserIds: new Set(),
-				},
-			});
-			Logger.info(`[VoiceDataInitializer] Created region: ${defaultRegion.name} (${defaultRegion.id})`);
-
-			const serverId = `${defaultRegion.id}-server-1`;
-
-			await repository.createServer({
-				regionId: defaultRegion.id,
-				serverId,
+			await repository.upsertServer({
+				...configuredServer,
 				endpoint: livekitEndpoint,
 				apiKey: livekitApiKey,
 				apiSecret: livekitApiSecret,
-				isActive: true,
-				restrictions: {
-					vipOnly: false,
-					requiredGuildFeatures: new Set(),
-					allowedGuildIds: new Set(),
-					allowedUserIds: new Set(),
-				},
+				updatedAt: new Date(),
 			});
-
-			Logger.info(`[VoiceDataInitializer] Created server: ${serverId} -> ${livekitEndpoint}`);
-			Logger.info('[VoiceDataInitializer] Successfully created default voice region');
+			Logger.info(`[VoiceDataInitializer] Synced default voice server ${serverId} credentials from config`);
 		} catch (error) {
-			Logger.error({error}, '[VoiceDataInitializer] Failed to create default voice region');
+			Logger.error({error}, '[VoiceDataInitializer] Failed to initialise config-managed voice topology');
 		}
+	}
+
+	private resolveLivekitEndpoint(): string {
+		if (Config.voice.url) {
+			return Config.voice.url;
+		}
+
+		const protocol = new URL(Config.endpoints.apiPublic).protocol.slice(0, -1) === 'https' ? 'wss' : 'ws';
+		return `${protocol}://${new URL(Config.endpoints.apiPublic).hostname}/livekit`;
 	}
 }

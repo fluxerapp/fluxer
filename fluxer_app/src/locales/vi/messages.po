@@ -134,12 +134,12 @@ msgid "{0} of {totalAttachments}"
 msgstr "{0} của {totalAttachments}"
 
 #. placeholder {0}: passkeys.length
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:285
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:288
 msgid "{0} passkey registered (max 10)"
 msgstr "{0} mã truy cập đã đăng ký (tối đa 10)"
 
 #. placeholder {0}: passkeys.length
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:286
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:289
 msgid "{0} passkeys registered (max 10)"
 msgstr "{0} mã truy cập đã đăng ký (tối đa 10)"
 
@@ -633,11 +633,11 @@ msgstr "{lockedStickerCount} nhãn dán"
 msgid "{lockedStickerCount} stickers"
 msgstr "{lockedStickerCount} nhãn dán"
 
-#: src/components/alerts/MaxBookmarksModal.tsx:38
+#: src/components/alerts/MaxBookmarksModal.tsx:41
 msgid "{maxBookmarks} bookmark"
 msgstr "{maxBookmarks} mục đánh dấu"
 
-#: src/components/alerts/MaxBookmarksModal.tsx:38
+#: src/components/alerts/MaxBookmarksModal.tsx:41
 msgid "{maxBookmarks} bookmarks"
 msgstr "{maxBookmarks} mục đánh dấu"
 
@@ -718,11 +718,11 @@ msgstr "{participantCount} người tham gia trong cuộc gọi"
 msgid "{participantCount} participants in call"
 msgstr "{participantCount} người tham gia trong cuộc gọi"
 
-#: src/components/alerts/MaxBookmarksModal.tsx:63
+#: src/components/alerts/MaxBookmarksModal.tsx:66
 msgid "{premiumBookmarks} bookmark"
 msgstr "{premiumBookmarks} mục đánh dấu"
 
-#: src/components/alerts/MaxBookmarksModal.tsx:63
+#: src/components/alerts/MaxBookmarksModal.tsx:66
 msgid "{premiumBookmarks} bookmarks"
 msgstr "{premiumBookmarks} mục đánh dấu"
 
@@ -875,11 +875,11 @@ msgstr "{username} đã gỡ ai đó khỏi nhóm."
 msgid "{username} started a call."
 msgstr "{username} đã bắt đầu một cuộc gọi."
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:100
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:102
 msgid "{v} gift"
 msgstr "{v} quà"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:100
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:102
 msgid "{v} gifts"
 msgstr "{v} quà"
 
@@ -1088,7 +1088,7 @@ msgstr "<0>Đã bật tiếng</0> thành viên."
 msgid "<0>Unmuted</0> the member."
 msgstr "<0>Đã bật tiếng</0> thành viên."
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:370
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:373
 msgid "<0>Warning:</0> This will also disable SMS two-factor authentication."
 msgstr "<0>Cảnh báo:</0> Điều này cũng sẽ tắt xác thực hai yếu tố qua SMS."
 
@@ -1362,9 +1362,9 @@ msgstr "30 giây"
 msgid "4 hours"
 msgstr "4 giờ"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:203
-#: src/components/modals/FluxerTagChangeModal.tsx:231
-#: src/components/modals/FluxerTagChangeModal.tsx:248
+#: src/components/modals/FluxerTagChangeModal.tsx:217
+#: src/components/modals/FluxerTagChangeModal.tsx:245
+#: src/components/modals/FluxerTagChangeModal.tsx:262
 msgid "4-digit tag"
 msgstr "Thẻ 4 chữ số"
 
@@ -1634,7 +1634,7 @@ msgstr "Yêu cầu tài khoản thành công"
 msgid "Account Connected"
 msgstr "Tài khoản đã kết nối"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:55
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:57
 msgid "Account State Overrides"
 msgstr "Ghi đè trạng thái tài khoản"
 
@@ -1642,7 +1642,7 @@ msgstr "Ghi đè trạng thái tài khoản"
 msgid "Account Too New"
 msgstr "Tài khoản quá mới"
 
-#: src/actions/InviteActionCreators.tsx:178
+#: src/actions/InviteActionCreators.tsx:182
 #: src/components/modals/RequiredActionModal.tsx:143
 #: src/components/modals/RequiredActionModal.tsx:416
 msgid "Account Verification Required"
@@ -1763,7 +1763,7 @@ msgstr "Thêm"
 msgid "Add a bot to a community with requested permissions"
 msgstr "Thêm bot vào cộng đồng với quyền yêu cầu"
 
-#: src/components/modals/ForwardModal.tsx:309
+#: src/components/modals/ForwardModal.tsx:314
 msgid "Add a comment (optional)"
 msgstr "Thêm bình luận (không bắt buộc)"
 
@@ -1782,7 +1782,7 @@ msgstr "Thêm nền tùy chỉnh"
 msgid "Add a different account"
 msgstr "Thêm tài khoản khác"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:348
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:351
 msgid "Add a phone number to enable SMS two-factor authentication"
 msgstr "Thêm số điện thoại để bật xác thực hai yếu tố qua SMS"
 
@@ -1844,7 +1844,7 @@ msgstr "Biểu mẫu thêm kết nối"
 msgid "Add domain connection"
 msgstr "Thêm kết nối miền"
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:98
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:101
 msgid "Add Email"
 msgstr "Thêm email"
 
@@ -1902,12 +1902,12 @@ msgstr "Thêm hoặc thay đổi số điện thoại của bạn"
 msgid "Add Override"
 msgstr "Thêm ghi đè"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:290
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:293
 msgid "Add Passkey"
 msgstr "Thêm khóa bí mật"
 
 #: src/components/channel/barriers/BarrierComponents.tsx:198
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:395
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:398
 msgid "Add Phone"
 msgstr "Thêm số điện thoại"
 
@@ -2010,7 +2010,7 @@ msgstr "Đã thêm {0}."
 msgid "Added roles."
 msgstr "Đã thêm vai trò."
 
-#: src/actions/SavedMessageActionCreators.tsx:58
+#: src/actions/SavedMessageActionCreators.tsx:59
 msgid "Added to bookmarks"
 msgstr "Đã thêm vào dấu trang"
 
@@ -2028,11 +2028,11 @@ msgstr "Đã thêm vào mục Yêu thích"
 msgid "Added to saved media"
 msgstr "Đã thêm vào phương tiện đã lưu"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:313
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:316
 msgid "Added: {createdDate}"
 msgstr "Đã thêm: {createdDate}"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:309
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:312
 msgid "Added: {createdDate} • Last used: {lastUsedDate}"
 msgstr "Đã thêm: {createdDate} • Lần cuối dùng: {lastUsedDate}"
 
@@ -2930,7 +2930,7 @@ msgid "Are you sure you want to remove this connection? This action cannot be un
 msgstr "Bạn có chắc chắn muốn xóa kết nối này không? Hành động này không thể hoàn tác."
 
 #. placeholder {0}: user.phone
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:364
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:367
 msgid "Are you sure you want to remove your phone number <0>{0}</0>?"
 msgstr "Bạn có chắc muốn gỡ số điện thoại <0>{0}</0> không?"
 
@@ -3395,7 +3395,7 @@ msgstr "Quay lại Vai trò"
 msgid "Back to Settings"
 msgstr "Quay lại Cài đặt"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:118
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:120
 msgid "Backend Premium Override"
 msgstr "Ghi đè cao cấp phía sau"
 
@@ -3438,12 +3438,12 @@ msgid "backup codes"
 msgstr "mã sao lưu"
 
 #: src/components/modals/BackupCodesModal.tsx:43
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:254
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:257
 #: src/components/modals/utils/SettingsSearchIndex.tsx:140
 msgid "Backup Codes"
 msgstr "Mã dự phòng"
 
-#: src/components/modals/BackupCodesRegenerateModal.tsx:48
+#: src/components/modals/BackupCodesRegenerateModal.tsx:55
 msgid "Backup codes regenerated"
 msgstr "Đã tạo lại mã dự phòng"
 
@@ -3720,9 +3720,9 @@ msgstr "Câu lạc bộ sách"
 msgid "Bookmark"
 msgstr "Đánh dấu"
 
-#: src/components/alerts/MaxBookmarksModal.tsx:43
-#: src/components/alerts/MaxBookmarksModal.tsx:54
-#: src/components/alerts/MaxBookmarksModal.tsx:67
+#: src/components/alerts/MaxBookmarksModal.tsx:46
+#: src/components/alerts/MaxBookmarksModal.tsx:57
+#: src/components/alerts/MaxBookmarksModal.tsx:70
 msgid "Bookmark Limit Reached"
 msgstr "Đã đạt giới hạn đánh dấu"
 
@@ -3750,7 +3750,7 @@ msgstr "Đã đánh dấu!"
 
 #: src/components/modals/BookmarksBottomSheet.tsx:109
 #: src/components/pages/SavedMessagesPage.tsx:67
-#: src/components/popouts/InboxPopout.tsx:58
+#: src/components/popouts/InboxPopout.tsx:57
 msgid "Bookmarks"
 msgstr "Các mục đánh dấu"
 
@@ -4055,7 +4055,7 @@ msgstr "Camera bị tắt khi có hơn {VOICE_CHANNEL_CAMERA_USER_LIMIT} ngườ
 #: src/components/alerts/FileSizeTooLargeModal.tsx:87
 #: src/components/auth/BrowserLoginHandoffModal.tsx:269
 #: src/components/bottomsheets/CreateDMBottomSheet.tsx:130
-#: src/components/channel/ChannelTextarea.tsx:312
+#: src/components/channel/ChannelTextarea.tsx:310
 #: src/components/channel/friends/FriendListItem.tsx:259
 #: src/components/channel/MentionEveryonePopout.tsx:128
 #: src/components/emojis/EmojiListItem.tsx:125
@@ -4069,8 +4069,8 @@ msgstr "Camera bị tắt khi có hơn {VOICE_CHANNEL_CAMERA_USER_LIMIT} ngườ
 #: src/components/modals/AddGuildModal.tsx:413
 #: src/components/modals/AddGuildStickerModal.tsx:120
 #: src/components/modals/AttachmentEditModal.tsx:122
-#: src/components/modals/BackupCodesRegenerateModal.tsx:72
-#: src/components/modals/BackupCodesViewModal.tsx:70
+#: src/components/modals/BackupCodesRegenerateModal.tsx:79
+#: src/components/modals/BackupCodesViewModal.tsx:75
 #: src/components/modals/BanMemberModal.tsx:143
 #: src/components/modals/CameraPreviewModal.tsx:485
 #: src/components/modals/CaptchaModal.tsx:187
@@ -4094,14 +4094,14 @@ msgstr "Camera bị tắt khi có hơn {VOICE_CHANNEL_CAMERA_USER_LIMIT} ngườ
 #: src/components/modals/EditFavoriteMemeModal.tsx:85
 #: src/components/modals/EditGuildStickerModal.tsx:113
 #: src/components/modals/EditPackModal.tsx:103
-#: src/components/modals/EmailChangeModal.tsx:199
-#: src/components/modals/EmailChangeModal.tsx:230
-#: src/components/modals/EmailChangeModal.tsx:267
-#: src/components/modals/EmailChangeModal.tsx:298
+#: src/components/modals/EmailChangeModal.tsx:202
+#: src/components/modals/EmailChangeModal.tsx:233
+#: src/components/modals/EmailChangeModal.tsx:270
+#: src/components/modals/EmailChangeModal.tsx:301
 #: src/components/modals/ExternalLinkWarningModal.tsx:102
-#: src/components/modals/FluxerTagChangeModal.tsx:117
-#: src/components/modals/FluxerTagChangeModal.tsx:280
-#: src/components/modals/ForwardModal.tsx:373
+#: src/components/modals/FluxerTagChangeModal.tsx:122
+#: src/components/modals/FluxerTagChangeModal.tsx:294
+#: src/components/modals/ForwardModal.tsx:378
 #: src/components/modals/guild_tabs/GuildBansTab.tsx:103
 #: src/components/modals/guild_tabs/GuildRolesTab.tsx:624
 #: src/components/modals/GuildFolderSettingsModal.tsx:199
@@ -4113,7 +4113,7 @@ msgstr "Camera bị tắt khi có hơn {VOICE_CHANNEL_CAMERA_USER_LIMIT} ngườ
 #: src/components/modals/KickMemberModal.tsx:63
 #: src/components/modals/MessageHistoryThresholdModal.tsx:103
 #: src/components/modals/MfaTotpDisableModal.tsx:75
-#: src/components/modals/MfaTotpEnableModal.tsx:103
+#: src/components/modals/MfaTotpEnableModal.tsx:106
 #: src/components/modals/PasskeyNameModal.tsx:62
 #: src/components/modals/PasswordChangeModal.tsx:145
 #: src/components/modals/PasswordChangeModal.tsx:176
@@ -4146,7 +4146,7 @@ msgstr "Hủy"
 msgid "Cancel Friend Request"
 msgstr "Hủy lời mời kết bạn"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:112
+#: src/components/modals/FluxerTagChangeModal.tsx:117
 msgid "Cancel if you want to choose a different username instead."
 msgstr "Hủy nếu bạn muốn chọn tên người dùng khác."
 
@@ -4178,11 +4178,11 @@ msgstr "Không thể chỉnh sửa"
 msgid "Cannot Delete Account"
 msgstr "Không thể xóa tài khoản"
 
-#: src/actions/InviteActionCreators.tsx:313
+#: src/actions/InviteActionCreators.tsx:317
 msgid "Cannot install emoji pack"
 msgstr "Không thể cài gói biểu tượng cảm xúc"
 
-#: src/actions/InviteActionCreators.tsx:314
+#: src/actions/InviteActionCreators.tsx:318
 msgid "Cannot install sticker pack"
 msgstr "Không thể cài gói nhãn dán"
 
@@ -4279,7 +4279,7 @@ msgstr "Thay biểu ngữ"
 msgid "Change email"
 msgstr "Thay đổi email"
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:81
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:84
 msgid "Change Email"
 msgstr "Thay email"
 
@@ -4288,12 +4288,12 @@ msgstr "Thay email"
 msgid "Change emoji"
 msgstr "Thay biểu tượng cảm xúc"
 
-#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:59
-#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:69
+#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:60
+#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:70
 msgid "Change FluxerTag"
 msgstr "Thay FluxerTag"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:158
+#: src/components/modals/FluxerTagChangeModal.tsx:163
 msgid "Change FluxerTag form"
 msgstr "Mẫu thay FluxerTag"
 
@@ -4360,7 +4360,7 @@ msgid "change password"
 msgstr "đổi mật khẩu"
 
 #: src/components/modals/PasswordChangeModal.tsx:227
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:124
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:127
 msgid "Change Password"
 msgstr "Đổi mật khẩu"
 
@@ -4372,7 +4372,7 @@ msgstr "Mẫu đổi mật khẩu"
 msgid "Change what users without Read Message History can see"
 msgstr "Thay đổi những gì người dùng không có quyền Xem Lịch sử Tin nhắn có thể thấy"
 
-#: src/components/modals/EmailChangeModal.tsx:183
+#: src/components/modals/EmailChangeModal.tsx:186
 msgid "Change Your Email"
 msgstr "Thay đổi Email của bạn"
 
@@ -4380,7 +4380,7 @@ msgstr "Thay đổi Email của bạn"
 msgid "Change your email address"
 msgstr "Thay đổi địa chỉ email của bạn"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:159
+#: src/components/modals/FluxerTagChangeModal.tsx:164
 msgid "Change Your FluxerTag"
 msgstr "Thay đổi FluxerTag của bạn"
 
@@ -4392,7 +4392,7 @@ msgstr "Đổi biệt danh của bạn trong cộng đồng này."
 msgid "Change your password"
 msgstr "Thay đổi mật khẩu của bạn"
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:106
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:109
 msgid "Change your password to keep your account secure"
 msgstr "Đổi mật khẩu để bảo mật tài khoản của bạn"
 
@@ -4404,7 +4404,7 @@ msgstr "Thay đổi ảnh đại diện của bạn"
 msgid "Change your username"
 msgstr "Thay đổi tên người dùng của bạn"
 
-#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:90
+#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:91
 msgid "Change your username and 4-digit tag"
 msgstr "Đổi tên người dùng và mã 4 chữ số của bạn"
 
@@ -4424,7 +4424,7 @@ msgstr "Đã đổi bitrate thành {0}."
 msgid "Changed the voice region to {0}."
 msgstr "Đã đổi vùng âm thanh thành {0}."
 
-#: src/components/channel/ChannelTextarea.tsx:751
+#: src/components/channel/ChannelTextarea.tsx:749
 #: src/utils/SearchUtils.tsx:268
 msgid "channel"
 msgstr "kênh"
@@ -4846,7 +4846,7 @@ msgstr "Xác nhận tài khoản của bạn để truy cập các tính năng b
 msgid "Claim your account to call"
 msgstr "Xác nhận tài khoản của bạn để gọi"
 
-#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:56
+#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:57
 msgid "Claim your account to change your FluxerTag"
 msgstr "Xác nhận tài khoản để thay đổi FluxerTag của bạn"
 
@@ -5144,7 +5144,7 @@ msgstr "Bí mật client đã được tạo lại. Cập nhật mọi mã sử 
 #: src/components/modals/components/SettingsModalHeader.tsx:98
 #: src/components/modals/InviteModal.tsx:135
 #: src/components/modals/MediaModal.tsx:349
-#: src/components/modals/MobileVideoViewer.tsx:252
+#: src/components/modals/MobileVideoViewer.tsx:260
 #: src/components/modals/Modal.tsx:382
 #: src/components/modals/Modal.tsx:460
 #: src/components/modals/PackInviteModal.tsx:152
@@ -5201,7 +5201,7 @@ msgstr "Giao diện Than"
 #: src/components/auth/MfaScreen.tsx:131
 #: src/components/invites/InviteListItem.tsx:56
 #: src/components/modals/MfaTotpDisableModal.tsx:63
-#: src/components/modals/MfaTotpEnableModal.tsx:91
+#: src/components/modals/MfaTotpEnableModal.tsx:94
 #: src/components/pages/report/ReportBreadcrumbs.tsx:48
 msgid "Code"
 msgstr "Mã"
@@ -5333,7 +5333,7 @@ msgid "Communication"
 msgstr "Giao tiếp"
 
 #: src/components/modals/components/FeatureComparisonTable.tsx:49
-#: src/stores/QuickSwitcherStore.tsx:1354
+#: src/stores/QuickSwitcherStore.tsx:1352
 #: src/utils/quick_switcher/QuickSwitcherModalUtils.tsx:99
 msgid "Communities"
 msgstr "Các cộng đồng"
@@ -5651,7 +5651,7 @@ msgid "Configure your profile badge"
 msgstr "Cấu hình huy hiệu hồ sơ của bạn"
 
 #: src/components/channel/MentionEveryonePopout.tsx:134
-#: src/components/modals/EmailChangeModal.tsx:304
+#: src/components/modals/EmailChangeModal.tsx:307
 msgid "Confirm"
 msgstr "Xác nhận"
 
@@ -5825,15 +5825,15 @@ msgstr "Menu ngữ cảnh"
 msgid "Context menus can be opened with left-click (on buttons) or right-click (on other elements). This demonstrates various menu items including checkboxes, radio buttons, sliders, and submenus."
 msgstr "Menu ngữ cảnh có thể mở bằng cách nhấp trái (trên nút) hoặc nhấp phải (trên các phần tử khác). Đây minh họa nhiều mục menu bao gồm hộp chọn, nút radio, thanh trượt và menu con."
 
-#: src/components/channel/ChannelTextarea.tsx:311
+#: src/components/channel/ChannelTextarea.tsx:309
 #: src/components/modals/AddConnectionModal.tsx:221
-#: src/components/modals/BackupCodesRegenerateModal.tsx:75
-#: src/components/modals/BackupCodesViewModal.tsx:73
+#: src/components/modals/BackupCodesRegenerateModal.tsx:82
+#: src/components/modals/BackupCodesViewModal.tsx:78
 #: src/components/modals/DeviceRevokeModal.tsx:82
-#: src/components/modals/FluxerTagChangeModal.tsx:116
-#: src/components/modals/FluxerTagChangeModal.tsx:283
+#: src/components/modals/FluxerTagChangeModal.tsx:121
+#: src/components/modals/FluxerTagChangeModal.tsx:297
 #: src/components/modals/MfaTotpDisableModal.tsx:78
-#: src/components/modals/MfaTotpEnableModal.tsx:106
+#: src/components/modals/MfaTotpEnableModal.tsx:109
 #: src/components/modals/SudoVerificationModal.tsx:410
 msgid "Continue"
 msgstr "Tiếp tục"
@@ -6555,7 +6555,7 @@ msgstr "Thiết bị hiện tại"
 msgid "Current DM"
 msgstr "Tin nhắn riêng hiện tại"
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:113
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:116
 msgid "Current Password"
 msgstr "Mật khẩu hiện tại"
 
@@ -6601,7 +6601,7 @@ msgstr "Ghi đè CSS tùy chỉnh"
 msgid "Custom Date Range"
 msgstr "Khoảng thời gian tùy chỉnh"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:227
+#: src/components/modals/FluxerTagChangeModal.tsx:241
 msgid "Custom discriminators are not available on this instance"
 msgstr "Phân biệt tùy chỉnh không khả dụng trên phiên bản này"
 
@@ -6727,11 +6727,12 @@ msgstr "Tùy chỉnh các nút nào xuất hiện trên các tệp đính kèm v
 msgid "Customize which buttons are visible in the message input area. Keyboard shortcuts will continue to work even if buttons are hidden."
 msgstr "Tùy chỉnh các nút nào hiển thị trong khu vực nhập tin nhắn. Các phím tắt bàn phím sẽ tiếp tục hoạt động ngay cả khi các nút bị ẩn."
 
-#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:74
-msgid "Customize your 4-digit tag (#{discriminator}) to your liking with Plutonium"
-msgstr "Tùy chỉnh thẻ 4 chữ số của bạn (#{discriminator}) theo ý muốn với Plutonium"
+#. placeholder {0}: user.discriminator
+#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:75
+msgid "Customize your 4-digit tag (#{0}) to your liking with Plutonium"
+msgstr "Tùy chỉnh thẻ 4 chữ số của bạn (#{0}) theo sở thích với Plutonium"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:272
+#: src/components/modals/FluxerTagChangeModal.tsx:286
 msgid "Customize your 4-digit tag or keep it when changing your username"
 msgstr "Tùy chỉnh thẻ 4 chữ số hoặc giữ nguyên khi bạn đổi tên người dùng"
 
@@ -7069,7 +7070,7 @@ msgstr "xóa"
 #: src/components/emojis/EmojiListItem.tsx:195
 #: src/components/emojis/EmojiListItem.tsx:252
 #: src/components/emojis/EmojiListItem.tsx:308
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:322
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:325
 #: src/components/modals/tabs/component_gallery_tab/ButtonsTab.tsx:157
 #: src/components/modals/tabs/component_gallery_tab/ButtonsTab.tsx:242
 #: src/components/modals/tabs/component_gallery_tab/index.tsx:165
@@ -7515,7 +7516,7 @@ msgstr "Tin nhắn trực tiếp"
 #: src/components/layout/guild_list/FluxerButton.tsx:80
 #: src/components/modals/GuildPrivacySettingsModal.tsx:76
 #: src/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:221
-#: src/stores/QuickSwitcherStore.tsx:833
+#: src/stores/QuickSwitcherStore.tsx:831
 msgid "Direct Messages"
 msgstr "Tin nhắn trực tiếp"
 
@@ -7530,7 +7531,7 @@ msgstr "vô hiệu hóa"
 
 #: src/components/invites/DisableInvitesButton.tsx:60
 #: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:240
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:426
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:429
 msgid "Disable"
 msgstr "Vô hiệu hoá"
 
@@ -7558,7 +7559,7 @@ msgstr "Tắt hoạt ảnh và chuyển đổi trong toàn bộ ứng dụng."
 msgid "Disable animations and transitions. Currently controlled by your system setting."
 msgstr "Tắt hoạt ảnh và chuyển đổi. Hiện được điều khiển bởi cài đặt hệ thống của bạn."
 
-#: src/stores/QuickSwitcherStore.tsx:915
+#: src/stores/QuickSwitcherStore.tsx:913
 msgid "Disable Compact Mode"
 msgstr "Tắt chế độ gọn"
 
@@ -7585,7 +7586,7 @@ msgstr "Tắt khử tiếng ồn"
 msgid "Disable Picture-in-Picture Popout"
 msgstr "Tắt chế độ Hình trong Hình"
 
-#: src/stores/QuickSwitcherStore.tsx:931
+#: src/stores/QuickSwitcherStore.tsx:929
 msgid "Disable Reduced Motion"
 msgstr "Tắt giảm chuyển động"
 
@@ -7754,7 +7755,7 @@ msgstr "Bộ phân biệt"
 msgid "Discussion or promotion of illegal activities"
 msgstr "Thảo luận hoặc quảng bá hoạt động bất hợp pháp"
 
-#: src/components/alerts/MaxBookmarksModal.tsx:76
+#: src/components/alerts/MaxBookmarksModal.tsx:79
 #: src/components/layout/GuildLayout.tsx:106
 #: src/components/layout/NagbarContent.tsx:42
 #: src/components/modals/GiftAcceptModal.tsx:110
@@ -7890,12 +7891,12 @@ msgstr "Bạn có muốn chặn tin nhắn trực tiếp từ thành viên các 
 msgid "Do you want to send this pin back in time?"
 msgstr "Bạn có muốn gửi ghim này trở lại quá khứ không?"
 
-#: src/components/channel/MessageActionUtils.tsx:410
+#: src/components/channel/MessageActionUtils.tsx:411
 msgid "Do you want to send this pin back to the future?"
 msgstr "Bạn có muốn gửi ghim này trở lại tương lai không?"
 
 #: src/components/modals/tabs/AccessibilityTab.tsx:148
-#: src/components/modals/tabs/MyProfileTab.tsx:768
+#: src/components/modals/tabs/MyProfileTab.tsx:767
 msgid "Doc, I'm from the future. I came here in a time machine that you invented. Now, I need your help to get back to the year 1985."
 msgstr "Bác sĩ, tôi đến từ tương lai. Tôi tới đây bằng cỗ máy thời gian mà ông đã phát minh. Giờ tôi cần ông giúp để trở về năm 1985."
 
@@ -8344,13 +8345,13 @@ msgid "Email"
 msgstr "Email"
 
 #: src/components/modals/tabs/account_security_tab/AccountTab.tsx:65
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:91
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:94
 #: src/components/modals/tabs/component_gallery_tab/InputsTab.tsx:107
 #: src/components/pages/report/ReportStepEmail.tsx:76
 msgid "Email Address"
 msgstr "Địa chỉ email"
 
-#: src/components/modals/EmailChangeModal.tsx:165
+#: src/components/modals/EmailChangeModal.tsx:168
 msgid "Email changed"
 msgstr "Email đã thay đổi"
 
@@ -8388,7 +8389,7 @@ msgstr "Thanh cảnh báo xác minh email"
 msgid "Email Verification Required"
 msgstr "Cần xác minh Email"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:57
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:59
 msgid "Email Verified Override"
 msgstr "Ghi đè xác minh email"
 
@@ -8426,11 +8427,11 @@ msgstr "nhúng"
 msgid "Embeds"
 msgstr "Nhúng"
 
-#: src/components/channel/MessageActionUtils.tsx:520
+#: src/components/channel/MessageActionUtils.tsx:526
 msgid "Embeds suppressed"
 msgstr "Đã ẩn nội dung nhúng"
 
-#: src/components/channel/MessageActionUtils.tsx:506
+#: src/components/channel/MessageActionUtils.tsx:512
 msgid "Embeds unsuppressed"
 msgstr "Đã hiển thị nội dung nhúng"
 
@@ -8485,7 +8486,7 @@ msgstr "Tên biểu tượng phải có ít nhất 2 ký tự và chỉ chứa c
 msgid "Emoji pack"
 msgstr "Gói biểu tượng cảm xúc"
 
-#: src/actions/InviteActionCreators.tsx:255
+#: src/actions/InviteActionCreators.tsx:259
 msgid "Emoji pack creation limit reached"
 msgstr "Đã đạt giới hạn tạo gói biểu tượng"
 
@@ -8493,7 +8494,7 @@ msgstr "Đã đạt giới hạn tạo gói biểu tượng"
 msgid "Emoji Pack Invite"
 msgstr "Lời mời gói biểu tượng"
 
-#: src/actions/InviteActionCreators.tsx:241
+#: src/actions/InviteActionCreators.tsx:245
 msgid "Emoji pack limit reached"
 msgstr "Đã đạt giới hạn gói biểu tượng"
 
@@ -8530,9 +8531,9 @@ msgstr "trạng thái trống"
 
 #: src/components/invites/DisableInvitesButton.tsx:60
 #: src/components/layout/GuildLayout.tsx:74
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:244
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:432
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:438
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:247
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:435
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:441
 #: src/components/modals/tabs/components/InputMonitoringSection.tsx:85
 msgid "Enable"
 msgstr "Bật"
@@ -8566,7 +8567,7 @@ msgstr "Bật tính năng Beta"
 msgid "Enable Browser Notifications"
 msgstr "Bật thông báo trình duyệt"
 
-#: src/stores/QuickSwitcherStore.tsx:916
+#: src/stores/QuickSwitcherStore.tsx:914
 msgid "Enable Compact Mode"
 msgstr "Bật chế độ nhỏ gọn"
 
@@ -8642,7 +8643,7 @@ msgstr "Bật thông báo đẩy cho thiết bị này"
 msgid "Enable push notifications for this installed PWA to keep receiving messages when the browser is backgrounded."
 msgstr "Bật thông báo đẩy cho PWA đã cài đặt để tiếp tục nhận tin nhắn khi trình duyệt ở chế độ nền."
 
-#: src/stores/QuickSwitcherStore.tsx:932
+#: src/stores/QuickSwitcherStore.tsx:930
 msgid "Enable Reduced Motion"
 msgstr "Bật giảm chuyển động"
 
@@ -8658,7 +8659,7 @@ msgstr "Bật Shift để Mở rộng"
 msgid "Enable SMS 2FA"
 msgstr "Bật xác thực hai yếu tố qua SMS"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:415
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:418
 msgid "Enable SMS codes as a backup for your authenticator app"
 msgstr "Bật mã SMS làm phương án dự phòng cho ứng dụng xác thực"
 
@@ -8678,7 +8679,7 @@ msgstr "Bật Xác thực Hai yếu tố"
 msgid "Enable two-factor authentication"
 msgstr "Bật xác thực hai yếu tố"
 
-#: src/components/modals/MfaTotpEnableModal.tsx:70
+#: src/components/modals/MfaTotpEnableModal.tsx:73
 msgid "Enable two-factor authentication form"
 msgstr "Bật biểu mẫu xác thực hai yếu tố"
 
@@ -8782,7 +8783,7 @@ msgid "Enter the 6-digit code from your authenticator app or one of your backup 
 msgstr "Nhập mã 6 chữ số từ ứng dụng xác thực hoặc một trong các mã dự phòng của bạn."
 
 #: src/components/modals/MfaTotpDisableModal.tsx:67
-#: src/components/modals/MfaTotpEnableModal.tsx:95
+#: src/components/modals/MfaTotpEnableModal.tsx:98
 msgid "Enter the 6-digit code from your authenticator app."
 msgstr "Nhập mã 6 chữ số từ ứng dụng xác thực."
 
@@ -8804,7 +8805,7 @@ msgstr "Nhập mã trước khi tiếp tục."
 msgid "Enter the code from your authenticator app."
 msgstr "Nhập mã từ ứng dụng xác thực của bạn."
 
-#: src/components/modals/EmailChangeModal.tsx:213
+#: src/components/modals/EmailChangeModal.tsx:216
 msgid "Enter the code sent to your current email."
 msgstr "Nhập mã đã gửi đến email hiện tại của bạn."
 
@@ -8812,7 +8813,7 @@ msgstr "Nhập mã đã gửi đến email hiện tại của bạn."
 msgid "Enter the code sent to your email address."
 msgstr "Nhập mã được gửi đến địa chỉ email của bạn."
 
-#: src/components/modals/EmailChangeModal.tsx:281
+#: src/components/modals/EmailChangeModal.tsx:284
 msgid "Enter the code we emailed to your new address."
 msgstr "Nhập mã mà chúng tôi đã gửi đến địa chỉ email mới của bạn."
 
@@ -8824,7 +8825,7 @@ msgstr "Nhập mã chúng tôi gửi đến email của bạn để xác minh n�
 msgid "Enter the invite link to join a community."
 msgstr "Nhập liên kết lời mời để tham gia cộng đồng."
 
-#: src/components/modals/EmailChangeModal.tsx:247
+#: src/components/modals/EmailChangeModal.tsx:250
 msgid "Enter the new email you want to use. We'll send a code there next."
 msgstr "Nhập email mới mà bạn muốn dùng. Chúng tôi sẽ gửi mã đến đó."
 
@@ -9313,11 +9314,11 @@ msgstr "Không thể bỏ qua lời mời kết bạn. Vui lòng thử lại."
 msgid "Failed to initiate connection"
 msgstr "Không thể khởi động kết nối"
 
-#: src/actions/InviteActionCreators.tsx:322
+#: src/actions/InviteActionCreators.tsx:326
 msgid "Failed to install this emoji pack. Please try again later."
 msgstr "Không thể cài gói biểu tượng này. Vui lòng thử lại sau."
 
-#: src/actions/InviteActionCreators.tsx:323
+#: src/actions/InviteActionCreators.tsx:327
 msgid "Failed to install this sticker pack. Please try again later."
 msgstr "Không thể cài gói nhãn dán này. Vui lòng thử lại sau."
 
@@ -9715,9 +9716,9 @@ msgstr "yêu thích"
 #: src/components/modals/tabs/AppearanceTab.tsx:116
 #: src/components/modals/utils/SettingsConstants.tsx:279
 #: src/components/modals/utils/SettingsSectionRegistry.tsx:233
-#: src/stores/QuickSwitcherStore.tsx:843
-#: src/stores/QuickSwitcherStore.tsx:1261
-#: src/stores/QuickSwitcherStore.tsx:1273
+#: src/stores/QuickSwitcherStore.tsx:841
+#: src/stores/QuickSwitcherStore.tsx:1259
+#: src/stores/QuickSwitcherStore.tsx:1271
 msgid "Favorites"
 msgstr "Các mục yêu thích"
 
@@ -9872,11 +9873,11 @@ msgstr "Biểu tượng Fluxer"
 msgid "Fluxer avoids sending push notifications to your mobile devices when you are at your computer. Use this setting to control how long you need to be inactive on desktop for before you receive push notifications, ranging from 1 minute to 10 minutes."
 msgstr "Fluxer tránh gửi thông báo đẩy đến thiết bị di động khi bạn đang dùng máy tính. Dùng cài đặt này để điều chỉnh thời gian bạn phải không hoạt động trên máy tính trước khi nhận thông báo, từ 1 đến 10 phút."
 
-#: src/components/popouts/UserProfileBadges.tsx:89
+#: src/components/popouts/UserProfileBadges.tsx:115
 msgid "Fluxer Bug Hunter"
 msgstr "Fluxer Bug Hunter"
 
-#: src/components/popouts/UserProfileBadges.tsx:71
+#: src/components/popouts/UserProfileBadges.tsx:95
 msgid "Fluxer Community Team"
 msgstr "Đội ngũ cộng đồng Fluxer"
 
@@ -9944,18 +9945,18 @@ msgstr "Fluxer cần quyền Giám sát nhập để giữ cho push-to-talk và 
 msgid "Fluxer needs permission to monitor keyboard and mouse input so that <0>Push-to-Talk</0> and <1>Global Shortcuts</1> work even when you're in another app or game."
 msgstr "Fluxer cần quyền theo dõi đầu vào bàn phím và chuột để <0>Push-to-Talk</0> và <1>Phím tắt toàn cục</1> vẫn hoạt động ngay cả khi bạn đang ở ứng dụng hoặc trò chơi khác."
 
-#: src/components/popouts/UserProfileBadges.tsx:80
+#: src/components/popouts/UserProfileBadges.tsx:105
 msgid "Fluxer Partner"
 msgstr "Đối tác Fluxer"
 
 #: src/components/modals/components/PlutoniumContent.tsx:165
 #: src/components/modals/PremiumModal.tsx:34
 #: src/components/modals/utils/SettingsConstants.tsx:124
-#: src/components/popouts/UserProfileBadges.tsx:95
+#: src/components/popouts/UserProfileBadges.tsx:121
 msgid "Fluxer Plutonium"
 msgstr "Fluxer Plutonium"
 
-#: src/components/popouts/UserProfileBadges.tsx:62
+#: src/components/popouts/UserProfileBadges.tsx:85
 msgid "Fluxer Staff"
 msgstr "Nhân viên Fluxer"
 
@@ -9963,16 +9964,16 @@ msgstr "Nhân viên Fluxer"
 msgid "Fluxer uses push notifications when installed as a mobile PWA. Registering ensures the gateway can reach your device even when the browser is backgrounded."
 msgstr "Fluxer sử dụng thông báo đẩy khi cài dưới dạng PWA trên di động. Đăng ký đảm bảo cổng thông báo có thể liên hệ thiết bị của bạn ngay cả khi trình duyệt bị đưa ra nền."
 
-#: src/components/modals/FluxerTagChangeModal.tsx:176
+#: src/components/modals/FluxerTagChangeModal.tsx:190
 #: src/components/modals/tabs/applications_tab/application_detail/BotProfileSection.tsx:103
 msgid "FluxerTag"
 msgstr "FluxerTag"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:102
+#: src/components/modals/FluxerTagChangeModal.tsx:107
 msgid "FluxerTag already taken"
 msgstr "FluxerTag đã có người dùng"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:144
+#: src/components/modals/FluxerTagChangeModal.tsx:149
 msgid "FluxerTag updated"
 msgstr "FluxerTag đã được cập nhật"
 
@@ -10208,7 +10209,7 @@ msgstr "Chuyển tiếp"
 msgid "Forward {DEFAULT_SEEK_AMOUNT} seconds"
 msgstr "Tiến {DEFAULT_SEEK_AMOUNT} giây"
 
-#: src/components/modals/ForwardModal.tsx:198
+#: src/components/modals/ForwardModal.tsx:203
 #: src/stores/KeybindStore.tsx:361
 msgid "Forward Message"
 msgstr "Chuyển tiếp tin nhắn"
@@ -10490,7 +10491,7 @@ msgstr "Nhận thông báo khi bạn có tin nhắn. Bạn có thể cần bật
 
 #: src/components/alerts/FileSizeTooLargeModal.tsx:84
 #: src/components/modals/BackgroundImageGalleryModal.tsx:678
-#: src/components/modals/FluxerTagChangeModal.tsx:221
+#: src/components/modals/FluxerTagChangeModal.tsx:235
 #: src/components/modals/tabs/components/EntranceSoundSection.tsx:67
 #: src/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:138
 #: src/components/modals/tabs/VideoTab.tsx:281
@@ -10503,11 +10504,11 @@ msgstr "Tải Plutonium"
 msgid "Get Plutonium for yourself and unlock higher limits and exclusive features."
 msgstr "Mua Plutonium cho bạn và mở khóa giới hạn cao hơn cùng tính năng độc quyền."
 
-#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:81
+#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:82
 msgid "Get Plutonium to customize your tag"
 msgstr "Mua Plutonium để tùy chỉnh thẻ của bạn"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:199
+#: src/components/modals/FluxerTagChangeModal.tsx:213
 msgid "Get Plutonium to customize your tag or keep it when changing your username"
 msgstr "Mua Plutonium để tùy chỉnh thẻ hoặc giữ nguyên khi đổi tên người dùng"
 
@@ -10725,7 +10726,7 @@ msgstr "Đến Trang chủ"
 msgid "Go to login"
 msgstr "Đến đăng nhập"
 
-#: src/stores/QuickSwitcherStore.tsx:528
+#: src/stores/QuickSwitcherStore.tsx:526
 msgid "Go to message"
 msgstr "Đến tin nhắn"
 
@@ -10866,12 +10867,12 @@ msgstr "Biểu tượng nhóm"
 msgid "Group Invites"
 msgstr "Lời mời nhóm"
 
-#: src/stores/QuickSwitcherStore.tsx:667
+#: src/stores/QuickSwitcherStore.tsx:665
 #: src/utils/modals/guild_tabs/GuildAuditLogTabUtils.tsx:235
 msgid "Group message"
 msgstr "Tin nhắn nhóm"
 
-#: src/stores/QuickSwitcherStore.tsx:1347
+#: src/stores/QuickSwitcherStore.tsx:1345
 msgid "Group messages"
 msgstr "Các tin nhắn nhóm"
 
@@ -10963,7 +10964,7 @@ msgstr "Tăng tốc phần cứng"
 msgid "Has"
 msgstr "Có"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:126
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:128
 msgid "Has ever purchased override"
 msgstr "Đã từng mua hàng thay thế"
 
@@ -11277,7 +11278,7 @@ msgid "Hold to temporarily unmute when push-to-talk is enabled"
 msgstr "Giữ để tạm bật tiếng khi bật nhấn để nói"
 
 #: src/components/layout/MobileBottomNav.tsx:93
-#: src/stores/QuickSwitcherStore.tsx:832
+#: src/stores/QuickSwitcherStore.tsx:830
 msgid "Home"
 msgstr "Trang chủ"
 
@@ -11619,7 +11620,7 @@ msgstr "Hồ sơ không phù hợp"
 msgid "Inbox"
 msgstr "Hộp thư đến"
 
-#: src/components/popouts/InboxPopout.tsx:89
+#: src/components/popouts/InboxPopout.tsx:88
 msgid "Inbox tabs"
 msgstr "Các tab hộp thư đến"
 
@@ -11883,8 +11884,8 @@ msgstr "Mã quà tặng không hợp lệ"
 msgid "Invalid instance URL. Try something like \"example.com\" or \"https://example.com\"."
 msgstr "URL phiên bản không hợp lệ. Hãy thử cái gì đó như \"example.com\" hoặc \"https://example.com\"."
 
-#: src/components/modals/EmailChangeModal.tsx:107
-#: src/components/modals/EmailChangeModal.tsx:168
+#: src/components/modals/EmailChangeModal.tsx:110
+#: src/components/modals/EmailChangeModal.tsx:171
 #: src/components/modals/PasswordChangeModal.tsx:90
 msgid "Invalid or expired code"
 msgstr "Mã không hợp lệ hoặc đã hết hạn"
@@ -12569,11 +12570,11 @@ msgid "Last active {0}"
 msgstr "Hoạt động lần cuối {0}"
 
 #. placeholder {0}: DateUtils.getRelativeDateString(user.passwordLastChangedAt, i18n)
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:117
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:120
 msgid "Last changed: {0}"
 msgstr "Đã thay đổi lần cuối: {0}"
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:119
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:122
 msgid "Last changed: Never"
 msgstr "Đã thay đổi lần cuối: Chưa bao giờ"
 
@@ -12633,6 +12634,10 @@ msgstr "Rời cuộc gọi"
 #: src/hooks/useLeaveGuild.tsx:44
 msgid "Leave Community"
 msgstr "Rời cộng đồng"
+
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:142
+msgid "Leave empty for actual value"
+msgstr "Để trống cho giá trị thực tế"
 
 #: src/components/bottomsheets/ChannelDetailsBottomSheet.tsx:1317
 #: src/components/channel/direct_message/DMList.tsx:569
@@ -12713,7 +12718,7 @@ msgid "Letters (a-z, A-Z), numbers (0-9), and underscores (_) only"
 msgstr "Chỉ phép chữ cái (a-z, A-Z), số (0-9) và gạch dưới (_)"
 
 #: src/components/modals/components/plutonium/SubscriptionCard.tsx:131
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:50
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:52
 #: src/components/modals/tabs/developer_options_tab/MockingTab.tsx:317
 msgid "Lifetime"
 msgstr "Trọn đời"
@@ -13217,7 +13222,7 @@ msgstr "Quản lý email, mật khẩu và cài đặt tài khoản của bạn"
 msgid "Manage your gifts"
 msgstr "Quản lý quà tặng của bạn"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:337
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:340
 msgid "Manage your phone number for SMS two-factor authentication"
 msgstr "Quản lý số điện thoại cho xác thực hai yếu tố qua SMS"
 
@@ -13342,12 +13347,12 @@ msgstr "Đã đánh dấu thành viên là tạm thời."
 msgid "Markers Below Slider"
 msgstr "Chỉ báo dưới thanh trượt"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:188
+#: src/components/modals/FluxerTagChangeModal.tsx:202
 msgid "Marty_McFly"
 msgstr "Marty_McFly"
 
 #: src/components/modals/ClaimAccountModal.tsx:157
-#: src/components/modals/EmailChangeModal.tsx:258
+#: src/components/modals/EmailChangeModal.tsx:261
 msgid "marty@example.com"
 msgstr "marty@example.com"
 
@@ -13652,7 +13657,7 @@ msgstr "đề cập"
 
 #: src/components/modals/GuildNotificationSettingsModal.tsx:227
 #: src/components/pages/NotificationsPage.tsx:42
-#: src/components/popouts/InboxPopout.tsx:63
+#: src/components/popouts/InboxPopout.tsx:62
 msgid "Mentions"
 msgstr "Đề cập"
 
@@ -13687,15 +13692,15 @@ msgstr "thực đơn"
 msgid "Message"
 msgstr "Tin nhắn"
 
-#: src/components/channel/ChannelTextarea.tsx:754
+#: src/components/channel/ChannelTextarea.tsx:752
 msgid "Message "
 msgstr "Tin nhắn "
 
-#: src/components/channel/ChannelTextarea.tsx:754
+#: src/components/channel/ChannelTextarea.tsx:752
 msgid "Message @"
 msgstr "Tin nhắn @"
 
-#: src/components/channel/ChannelTextarea.tsx:751
+#: src/components/channel/ChannelTextarea.tsx:749
 msgid "Message #"
 msgstr "Tin nhắn #"
 
@@ -13746,7 +13751,7 @@ msgstr "Chế độ hiển thị tin nhắn"
 msgid "Message display settings are only available on desktop."
 msgstr "Cài đặt hiển thị tin nhắn chỉ có trên máy tính."
 
-#: src/components/modals/ForwardModal.tsx:148
+#: src/components/modals/ForwardModal.tsx:153
 msgid "Message forwarded"
 msgstr "Tin nhắn được chuyển tiếp"
 
@@ -13772,7 +13777,7 @@ msgstr "Ngưỡng lịch sử tin nhắn đã được cập nhật"
 msgid "Message Input Buttons"
 msgstr "Nút nhập tin nhắn"
 
-#: src/components/modals/ForwardModal.tsx:84
+#: src/components/modals/ForwardModal.tsx:89
 #: src/components/uikit/character_counter/CharacterCounter.tsx:52
 msgid "Message is too long"
 msgstr "Tin nhắn quá dài"
@@ -14073,7 +14078,7 @@ msgstr "Thêm vị trí emoji"
 #: src/components/channel/embeds/attachments/TextualAttachmentPreviewFooter.tsx:66
 #: src/components/modals/guild_tabs/UserListItem.tsx:113
 #: src/components/modals/MediaModal.tsx:353
-#: src/components/modals/MobileVideoViewer.tsx:260
+#: src/components/modals/MobileVideoViewer.tsx:268
 msgid "More options"
 msgstr "Thêm tùy chọn"
 
@@ -14205,7 +14210,7 @@ msgstr "tắt tiếng"
 #: src/components/media_player/components/MediaVerticalVolumeControl.tsx:249
 #: src/components/media_player/components/MediaVolumeControl.tsx:208
 #: src/components/modals/GuildNotificationSettingsModal.tsx:229
-#: src/components/modals/MobileVideoViewer.tsx:272
+#: src/components/modals/MobileVideoViewer.tsx:280
 #: src/components/uikit/context_menu/items/VoiceParticipantMenuData.tsx:319
 #: src/components/uikit/context_menu/items/VoiceParticipantMenuData.tsx:506
 #: src/components/uikit/context_menu/items/VoiceParticipantMenuItems.tsx:92
@@ -14572,12 +14577,12 @@ msgstr "Các cộng đồng mới bạn tham gia sẽ tự động ẩn các kê
 msgid "New communities you join will no longer have muted channels hidden automatically. Would you also like to show muted channels in all your existing communities?"
 msgstr "Các cộng đồng mới bạn tham gia sẽ không còn tự động ẩn các kênh đã tắt tiếng. Bạn có muốn hiển thị các kênh đã tắt tiếng trong tất cả các cộng đồng hiện tại của bạn không?"
 
-#: src/components/modals/EmailChangeModal.tsx:255
+#: src/components/modals/EmailChangeModal.tsx:258
 #: src/components/modals/RequiredActionModal.tsx:471
 msgid "New Email"
 msgstr "Email mới"
 
-#: src/components/modals/EmailChangeModal.tsx:243
+#: src/components/modals/EmailChangeModal.tsx:246
 msgid "New email form"
 msgstr "Biểu mẫu email mới"
 
@@ -14732,7 +14737,7 @@ msgid "No cameras detected"
 msgstr "Không phát hiện được camera"
 
 #: src/components/invites/InviteListItem.tsx:179
-#: src/components/modals/ForwardModal.tsx:246
+#: src/components/modals/ForwardModal.tsx:251
 #: src/components/modals/GuildNotificationSettingsModal.tsx:258
 msgid "No Category"
 msgstr "Không có hạng mục"
@@ -14745,7 +14750,7 @@ msgstr "Không có thay đổi để lưu"
 msgid "No channels available"
 msgstr "Không có kênh nào"
 
-#: src/components/modals/ForwardModal.tsx:216
+#: src/components/modals/ForwardModal.tsx:221
 msgid "No channels found"
 msgstr "Không tìm thấy kênh nào"
 
@@ -14769,7 +14774,7 @@ msgstr "Chưa có kết nối nào"
 msgid "No description provided."
 msgstr "Không có mô tả nào."
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:94
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:97
 msgid "No email address set"
 msgstr "Chưa đặt địa chỉ email"
 
@@ -14879,11 +14884,11 @@ msgstr "Không tìm thấy bạn chung nào."
 msgid "No mutual groups found."
 msgstr "Không tìm thấy nhóm chung nào."
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:283
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:286
 msgid "No passkeys registered"
 msgstr "Không có khóa truy cập nào được đăng ký"
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:134
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:137
 msgid "No password set"
 msgstr "Chưa đặt mật khẩu"
 
@@ -15066,7 +15071,7 @@ msgstr "Emoji tĩnh ({0})"
 
 #: src/components/modals/guild_tabs/GuildModerationTab.tsx:157
 #: src/components/modals/tabs/accessibility_tab/VisualTab.tsx:48
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:48
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:50
 msgid "None"
 msgstr "Không"
 
@@ -15574,7 +15579,7 @@ msgstr "Mở trong tab mới"
 msgid "Open Link"
 msgstr "Mở liên kết"
 
-#: src/components/channel/ChannelTextarea.tsx:953
+#: src/components/channel/ChannelTextarea.tsx:951
 #: src/components/channel/textarea/MobileTextareaLayout.tsx:112
 msgid "Open menu"
 msgstr "Mở menu"
@@ -15828,7 +15833,7 @@ msgstr "Override"
 msgid "Override {0}"
 msgstr "Override {0}"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:59
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:61
 msgid "Override email verification status"
 msgstr "Ghi đè trạng thái xác minh email"
 
@@ -15836,15 +15841,15 @@ msgstr "Ghi đè trạng thái xác minh email"
 msgid "Override instance limits locally for testing. Changes only affect your client."
 msgstr "Override instance limits locally for testing. Changes only affect your client."
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:109
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:111
 msgid "Override Premium Type"
 msgstr "Ghi đè loại Premium"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:67
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:69
 msgid "Override unclaimed account status"
 msgstr "Ghi đè trạng thái tài khoản chưa nhận"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:75
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:77
 msgid "Override unread gift inventory status"
 msgstr "Ghi đè trạng thái tồn kho quà chưa đọc"
 
@@ -15925,7 +15930,7 @@ msgstr "Cộng đồng Đối tác"
 msgid "Passkey Name"
 msgstr "Tên khóa đăng nhập"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:273
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:276
 msgid "Passkeys"
 msgstr "Khóa đăng nhập"
 
@@ -15949,8 +15954,8 @@ msgstr "mật khẩu"
 #: src/components/modals/ClaimAccountModal.tsx:207
 #: src/components/modals/SudoVerificationModal.tsx:174
 #: src/components/modals/SudoVerificationModal.tsx:239
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:105
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:131
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:108
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:134
 #: src/components/modals/tabs/component_gallery_tab/InputsTab.tsx:114
 #: src/components/modals/utils/SettingsSearchIndex.tsx:107
 msgid "Password"
@@ -16006,7 +16011,7 @@ msgstr "Dán nó vào nơi bạn vừa đến để hoàn tất đăng nhập."
 #: src/components/media_player/components/InlineAudioPlayer.tsx:201
 #: src/components/media_player/components/InlineAudioPlayer.tsx:296
 #: src/components/media_player/components/MediaPlayButton.tsx:70
-#: src/components/modals/MobileVideoViewer.tsx:286
+#: src/components/modals/MobileVideoViewer.tsx:294
 msgid "Pause"
 msgstr "Tạm dừng"
 
@@ -16040,7 +16045,7 @@ msgid "Pending deletion canceled"
 msgstr "Đã hủy xóa đang chờ"
 
 #: src/lib/UnicodeEmojis.tsx:234
-#: src/stores/QuickSwitcherStore.tsx:1345
+#: src/stores/QuickSwitcherStore.tsx:1343
 #: src/utils/quick_switcher/QuickSwitcherModalUtils.tsx:96
 msgid "People"
 msgstr "Mọi người"
@@ -16143,8 +16148,8 @@ msgstr "Điện thoại"
 
 #: src/components/modals/PhoneAddModal.tsx:192
 #: src/components/modals/RequiredActionModal.tsx:616
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:336
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:342
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:339
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:345
 #: src/components/modals/utils/SettingsSearchIndex.tsx:115
 msgid "Phone Number"
 msgstr "Số điện thoại"
@@ -16154,7 +16159,7 @@ msgid "Phone number added"
 msgstr "Đã thêm số điện thoại"
 
 #. placeholder {0}: user.phone
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:346
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:349
 msgid "Phone number added: {0}"
 msgstr "Đã thêm số điện thoại: {0}"
 
@@ -16221,11 +16226,11 @@ msgstr "Ghim tin nhắn riêng"
 msgid "Pin Group DM"
 msgstr "Ghim nhóm tin nhắn riêng"
 
-#: src/components/channel/MessageActionUtils.tsx:429
+#: src/components/channel/MessageActionUtils.tsx:430
 msgid "Pin it real good"
 msgstr "Ghim nó thật tốt"
 
-#: src/components/channel/MessageActionUtils.tsx:426
+#: src/components/channel/MessageActionUtils.tsx:427
 msgid "Pin it. Pin it good."
 msgstr "Ghim ngay. Ghim thật chuẩn."
 
@@ -16246,7 +16251,7 @@ msgstr "Ghim tin nhắn"
 msgid "Pin or unpin the focused message"
 msgstr "Ghim hoặc bỏ ghim tin nhắn đang chọn"
 
-#: src/components/channel/MessageActionUtils.tsx:427
+#: src/components/channel/MessageActionUtils.tsx:428
 msgid "Pin this message to the channel for all to see. Unless ... you're chicken."
 msgstr "Ghim tin nhắn này lên kênh để mọi người cùng xem. Trừ khi... bạn nhát gan."
 
@@ -16319,7 +16324,7 @@ msgstr "Quản trị viên nền tảng"
 #: src/components/media_player/components/InlineAudioPlayer.tsx:201
 #: src/components/media_player/components/InlineAudioPlayer.tsx:296
 #: src/components/media_player/components/MediaPlayButton.tsx:70
-#: src/components/modals/MobileVideoViewer.tsx:286
+#: src/components/modals/MobileVideoViewer.tsx:294
 #: src/components/modals/tabs/component_gallery_tab/ButtonsTab.tsx:215
 msgid "Play"
 msgstr "Phát"
@@ -16416,7 +16421,7 @@ msgstr "Vui lòng thử lại sau."
 msgid "Please update Fluxer to view this message."
 msgstr "Vui lòng cập nhật Fluxer để xem tin nhắn này."
 
-#: src/actions/InviteActionCreators.tsx:180
+#: src/actions/InviteActionCreators.tsx:184
 msgid "Please verify your account by setting an email and password before joining communities."
 msgstr "Vui lòng xác minh tài khoản bằng cách đặt email và mật khẩu trước khi tham gia cộng đồng."
 
@@ -16526,11 +16531,11 @@ msgstr "Đặc quyền Premium"
 msgid "Premium state reset on the backend."
 msgstr "Trạng thái premium đã được đặt lại ở backend."
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:135
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:155
 msgid "Premium Subscription Scenarios"
 msgstr "Các tình huống đăng ký Premium"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:107
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:109
 msgid "Premium Type Override"
 msgstr "Ghi đè loại Premium"
 
@@ -16928,7 +16933,7 @@ msgstr "Python"
 msgid "quick access"
 msgstr "truy cập nhanh"
 
-#: src/stores/QuickSwitcherStore.tsx:1358
+#: src/stores/QuickSwitcherStore.tsx:1356
 #: src/utils/quick_switcher/QuickSwitcherModalUtils.tsx:100
 msgid "Quick Actions"
 msgstr "Hành động nhanh"
@@ -17071,7 +17076,7 @@ msgstr "Nhận"
 msgid "Receive notifications when someone mentions you"
 msgstr "Nhận thông báo khi ai đó nhắc đến bạn"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:404
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:407
 msgid "Receive verification codes via SMS as a backup authentication method"
 msgstr "Nhận mã xác minh qua SMS như phương thức xác thực dự phòng"
 
@@ -17198,7 +17203,7 @@ msgstr "Làm mới đăng ký đẩy"
 msgid "Regenerate"
 msgstr "Tạo lại"
 
-#: src/components/modals/BackupCodesRegenerateModal.tsx:61
+#: src/components/modals/BackupCodesRegenerateModal.tsx:68
 msgid "Regenerate Backup Codes"
 msgstr "Tạo lại mã sao lưu"
 
@@ -17228,7 +17233,7 @@ msgstr "Việc tạo lại sẽ làm vô hiệu token hiện tại. Cập nhật
 msgid "Register"
 msgstr "Đăng ký"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:279
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:282
 msgid "Registered Passkeys"
 msgstr "Khóa đăng nhập đã đăng ký"
 
@@ -17298,7 +17303,7 @@ msgstr "xóa"
 #: src/components/modals/guild_tabs/guild_overview_tab/fields/GuildEmbedSplashUploadField.tsx:101
 #: src/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx:107
 #: src/components/modals/guild_tabs/guild_overview_tab/fields/GuildInviteSplashUploadField.tsx:113
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:391
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:394
 #: src/components/modals/tabs/ExpressionPacksTab.tsx:96
 #: src/components/modals/tabs/ExpressionPacksTab.tsx:226
 #: src/components/modals/tabs/LinkedAccountsTab.tsx:191
@@ -17472,11 +17477,11 @@ msgstr "Xóa ghi đè"
 msgid "Remove Pack"
 msgstr "Xóa gói"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:377
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:380
 msgid "Remove Phone"
 msgstr "Xóa điện thoại"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:360
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:363
 msgid "Remove Phone Number"
 msgstr "Xóa số điện thoại"
 
@@ -17557,7 +17562,7 @@ msgstr "Đã gỡ quyền cho {0}."
 msgid "Removed deny for {0}."
 msgstr "Đã gỡ cấm cho {0}."
 
-#: src/actions/SavedMessageActionCreators.tsx:80
+#: src/actions/SavedMessageActionCreators.tsx:85
 msgid "Removed from bookmarks"
 msgstr "Đã gỡ khỏi đánh dấu"
 
@@ -17631,7 +17636,7 @@ msgstr "Gỡ gói sẽ gỡ cài đặt khỏi tài khoản của bạn."
 msgid "Removing the timeout will allow <0>{0}</0> to send messages, react, and join voice channels again."
 msgstr "Hủy thời gian chờ sẽ cho phép <0>{0}</0> gửi tin nhắn, phản ứng và tham gia kênh thoại trở lại."
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:319
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:322
 msgid "Rename"
 msgstr "Đổi tên"
 
@@ -17866,22 +17871,22 @@ msgstr "Yêu cầu mọi điều kiện trong cấp Trung bình, cộng thêm l�
 msgid "Requires Plutonium"
 msgstr "Yêu cầu Plutonium"
 
-#: src/components/channel/ChannelTextarea.tsx:1032
+#: src/components/channel/ChannelTextarea.tsx:1030
 msgid "Reschedule Message"
 msgstr "Đặt lại lịch tin nhắn"
 
 #: src/components/modals/ClaimAccountModal.tsx:222
-#: src/components/modals/EmailChangeModal.tsx:233
-#: src/components/modals/EmailChangeModal.tsx:301
+#: src/components/modals/EmailChangeModal.tsx:236
+#: src/components/modals/EmailChangeModal.tsx:304
 #: src/components/modals/PasswordChangeModal.tsx:179
 msgid "Resend"
 msgstr "Gửi lại"
 
-#: src/components/modals/EmailChangeModal.tsx:301
+#: src/components/modals/EmailChangeModal.tsx:304
 msgid "Resend ({newSecondsRemaining}s)"
 msgstr "Gửi lại ({newSecondsRemaining}s)"
 
-#: src/components/modals/EmailChangeModal.tsx:233
+#: src/components/modals/EmailChangeModal.tsx:236
 msgid "Resend ({originalSecondsRemaining}s)"
 msgstr "Gửi lại ({originalSecondsRemaining}s)"
 
@@ -18425,7 +18430,7 @@ msgstr "lưu lại"
 msgid "scale"
 msgstr "tỉ lệ"
 
-#: src/components/modals/MfaTotpEnableModal.tsx:78
+#: src/components/modals/MfaTotpEnableModal.tsx:81
 msgid "Scan the QR code with your authenticator app to generate codes for two-factor authentication."
 msgstr "Quét mã QR bằng ứng dụng xác thực để tạo mã cho xác thực hai yếu tố."
 
@@ -18437,7 +18442,7 @@ msgstr "Lên lịch"
 msgid "Schedule Message"
 msgstr "Lên lịch tin nhắn"
 
-#: src/components/popouts/InboxPopout.tsx:70
+#: src/components/popouts/InboxPopout.tsx:69
 #: src/components/popouts/ScheduledMessagesContent.tsx:89
 msgid "Scheduled"
 msgstr "Đã lên lịch"
@@ -18562,7 +18567,7 @@ msgstr "Tìm kiếm theo tên người dùng hoặc ID"
 msgid "Search channels"
 msgstr "Tìm kênh"
 
-#: src/components/modals/ForwardModal.tsx:204
+#: src/components/modals/ForwardModal.tsx:209
 msgid "Search channels or DMs"
 msgstr "Tìm kênh hoặc tin nhắn trực tiếp"
 
@@ -18963,7 +18968,7 @@ msgid "Send"
 msgstr "Gửi"
 
 #. placeholder {0}: selectedChannelIds.size
-#: src/components/modals/ForwardModal.tsx:380
+#: src/components/modals/ForwardModal.tsx:385
 msgid "Send ({0}/5)"
 msgstr "Gửi ({0}/5)"
 
@@ -19000,7 +19005,7 @@ msgid "Send an SMS code first."
 msgstr "Gửi mã SMS trước."
 
 #: src/components/modals/ClaimAccountModal.tsx:180
-#: src/components/modals/EmailChangeModal.tsx:270
+#: src/components/modals/EmailChangeModal.tsx:273
 #: src/components/modals/PhoneAddModal.tsx:208
 msgid "Send code"
 msgstr "Gửi mã"
@@ -19195,7 +19200,7 @@ msgstr "Đặt biệt danh thành {0}."
 msgid "Set NSFW level to {0}."
 msgstr "Đặt mức NSFW thành {0}."
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:138
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:141
 msgid "Set Password"
 msgstr "Đặt mật khẩu"
 
@@ -19261,7 +19266,7 @@ msgstr "Đặt loại kênh thành {0}."
 msgid "Set the invite splash alignment to {0}."
 msgstr "Đặt căn chỉnh hình nền lời mời thành {0}."
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:88
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:90
 msgid "Set the number of unread gifts in inventory."
 msgstr "Đặt số lượng quà chưa đọc trong kho."
 
@@ -19341,7 +19346,7 @@ msgstr "Đặt múi giờ của bạn"
 #: src/components/modals/tabs/component_gallery_tab/ButtonsTab.tsx:221
 #: src/components/modals/tabs/component_gallery_tab/index.tsx:95
 #: src/components/modals/tabs/component_gallery_tab/Inline.tsx:90
-#: src/stores/QuickSwitcherStore.tsx:1356
+#: src/stores/QuickSwitcherStore.tsx:1354
 msgid "Settings"
 msgstr "Cài đặt"
 
@@ -19357,7 +19362,7 @@ msgstr "Các mục cài đặt"
 msgid "Settings!"
 msgstr "Cài đặt!"
 
-#: src/components/modals/MfaTotpEnableModal.tsx:71
+#: src/components/modals/MfaTotpEnableModal.tsx:74
 msgid "Setup Authenticator App"
 msgstr "Cài đặt Ứng dụng Xác thực"
 
@@ -19837,7 +19842,7 @@ msgstr "Tắt tiếng cuộc gọi từ mọi người"
 msgid "simulate"
 msgstr "mô phỏng"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:128
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:130
 msgid "Simulates having a Stripe customer ID (for testing purchase history access)"
 msgstr "Mô phỏng có ID khách hàng Stripe (dùng để thử truy cập lịch sử mua hàng)"
 
@@ -19985,11 +19990,11 @@ msgstr "Kích thước phương tiện nhỏ hơn"
 msgid "sms"
 msgstr "sms"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:409
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:412
 msgid "SMS Backup"
 msgstr "Sao lưu SMS"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:429
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:432
 msgid "SMS backup is disabled for partners"
 msgstr "Sao lưu SMS bị vô hiệu hóa cho đối tác"
 
@@ -20002,7 +20007,7 @@ msgstr "Mã SMS"
 msgid "SMS Code"
 msgstr "Mã SMS"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:403
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:406
 msgid "SMS Two-Factor Authentication"
 msgstr "Xác thực hai yếu tố bằng SMS"
 
@@ -20010,7 +20015,7 @@ msgstr "Xác thực hai yếu tố bằng SMS"
 msgid "SMS two-factor authentication adds an additional layer of security to your account by requiring a verification code sent to your phone number when signing in."
 msgstr "Xác thực hai yếu tố bằng SMS thêm lớp bảo mật cho tài khoản bằng cách yêu cầu mã xác minh gửi đến số điện thoại khi đăng nhập."
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:413
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:416
 msgid "SMS two-factor authentication is enabled"
 msgstr "Xác thực hai yếu tố bằng SMS đã được bật"
 
@@ -20334,7 +20339,7 @@ msgstr "Ngôi sao"
 msgid "starred"
 msgstr "được đánh dấu"
 
-#: src/components/modals/EmailChangeModal.tsx:202
+#: src/components/modals/EmailChangeModal.tsx:205
 #: src/components/modals/PasswordChangeModal.tsx:148
 msgid "Start"
 msgstr "Bắt đầu"
@@ -20490,7 +20495,7 @@ msgstr "Mật độ nhãn dán"
 msgid "Sticker pack"
 msgstr "Bộ nhãn dán"
 
-#: src/actions/InviteActionCreators.tsx:287
+#: src/actions/InviteActionCreators.tsx:291
 msgid "Sticker pack creation limit reached"
 msgstr "Đã đạt giới hạn tạo bộ nhãn dán"
 
@@ -20498,7 +20503,7 @@ msgstr "Đã đạt giới hạn tạo bộ nhãn dán"
 msgid "Sticker Pack Invite"
 msgstr "Lời mời bộ nhãn dán"
 
-#: src/actions/InviteActionCreators.tsx:273
+#: src/actions/InviteActionCreators.tsx:277
 msgid "Sticker pack limit reached"
 msgstr "Đã đạt giới hạn bộ nhãn dán"
 
@@ -20674,7 +20679,7 @@ msgstr "Đang gửi"
 msgid "subscription"
 msgstr "đăng ký"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:49
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:51
 #: src/components/modals/utils/SettingsSearchIndex.tsx:261
 msgid "Subscription"
 msgstr "Đăng ký"
@@ -20796,7 +20801,7 @@ msgstr "Chuyển tài khoản"
 msgid "Switch Accounts"
 msgstr "Chuyển các tài khoản"
 
-#: src/stores/QuickSwitcherStore.tsx:900
+#: src/stores/QuickSwitcherStore.tsx:898
 msgid "Switch between Light and Dark mode"
 msgstr "Chuyển giữa chế độ Sáng và Tối"
 
@@ -20989,7 +20994,7 @@ msgstr "Điều khoản Dịch vụ"
 msgid "Test Bulk Delete (60s)"
 msgstr "Kiểm tra xóa hàng loạt (60s)"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:137
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:157
 msgid "Test Subscription State"
 msgstr "Kiểm tra trạng thái đăng ký"
 
@@ -21025,7 +21030,7 @@ msgstr "Kênh văn bản"
 msgid "Text Channel Names"
 msgstr "Tên kênh văn bản"
 
-#: src/stores/QuickSwitcherStore.tsx:1349
+#: src/stores/QuickSwitcherStore.tsx:1347
 #: src/utils/quick_switcher/QuickSwitcherModalUtils.tsx:97
 msgid "Text channels"
 msgstr "Các kênh văn bản"
@@ -21106,7 +21111,7 @@ msgid "That message didn't delete"
 msgstr "Tin nhắn đó không bị xóa"
 
 #. placeholder {0}: invite.pack.name
-#: src/actions/InviteActionCreators.tsx:103
+#: src/actions/InviteActionCreators.tsx:104
 msgid "The {packLabel} {0} has been installed."
 msgstr "{packLabel} {0} đã được cài đặt."
 
@@ -21148,7 +21153,7 @@ msgstr "Tệp này chứa token xác minh mà chúng tôi sẽ lấy từ <0>{dn
 msgid "The file you're trying to upload exceeds the maximum size limit of {maxSizeFormatted}."
 msgstr "Tệp bạn đang cố gắng tải lên vượt quá giới hạn kích thước tối đa là {maxSizeFormatted}."
 
-#: src/components/modals/FluxerTagChangeModal.tsx:106
+#: src/components/modals/FluxerTagChangeModal.tsx:111
 msgid "The FluxerTag <0>{fluxerTag}</0> is already taken. Continuing will reroll your discriminator automatically."
 msgstr "FluxerTag <0>{fluxerTag}</0> đã có người dùng. Tiếp tục sẽ tự động thay đổi discriminator của bạn."
 
@@ -21298,10 +21303,6 @@ msgstr "họ"
 #: src/components/channel/channel_view/DMChannelView.tsx:932
 msgid "They might have taken the DeLorean elsewhere."
 msgstr "Có thể họ đã đưa DeLorean đi nơi khác."
-
-#: src/components/modals/tabs/MyProfileTab.tsx:711
-msgid "they/them"
-msgstr "họ/ông"
 
 #: src/components/channel/channel_view/DMChannelView.tsx:918
 msgid "Think, McFly! Did you type the right address?"
@@ -21717,11 +21718,11 @@ msgstr "Điều này sẽ tạo ra một vết nứt trong không-thời gian v�
 msgid "This will hide all favorites-related UI elements including buttons and menu items. Your existing favorites will be preserved and can be re-enabled anytime from <0>User Settings → Look & Feel → Favorites</0>."
 msgstr "Điều này sẽ ẩn tất cả thành phần giao diện liên quan đến Ưa thích bao gồm nút và mục menu. Các mục ưa thích hiện có sẽ được giữ và có thể bật lại bất cứ lúc nào từ <0>Cài đặt người dùng → Giao diện → Ưa thích</0>."
 
-#: src/components/modals/BackupCodesRegenerateModal.tsx:65
+#: src/components/modals/BackupCodesRegenerateModal.tsx:72
 msgid "This will invalidate your existing backup codes and generate new ones."
 msgstr "Điều này sẽ làm vô hiệu hóa các mã sao lưu hiện tại của bạn và tạo ra các mã mới."
 
-#: src/components/channel/ChannelTextarea.tsx:1036
+#: src/components/channel/ChannelTextarea.tsx:1034
 msgid "This will modify the existing scheduled message rather than sending immediately."
 msgstr "Điều này sẽ sửa tin nhắn đã lên lịch thay vì gửi ngay."
 
@@ -21907,11 +21908,11 @@ msgstr "bật tắt"
 msgid "Toggle Channel Member List"
 msgstr "Bật/tắt danh sách thành viên kênh"
 
-#: src/stores/QuickSwitcherStore.tsx:913
+#: src/stores/QuickSwitcherStore.tsx:911
 msgid "Toggle Compact Mode"
 msgstr "Bật/tắt chế độ gọn"
 
-#: src/components/modals/MobileVideoViewer.tsx:239
+#: src/components/modals/MobileVideoViewer.tsx:247
 msgid "Toggle controls"
 msgstr "Bật tắt điều khiển"
 
@@ -21963,11 +21964,11 @@ msgstr "Bật/tắt tắt tiếng"
 msgid "Toggle Pins Popout"
 msgstr "Bật/tắt cửa sổ ghim"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:120
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:122
 msgid "Toggle premium_enabled_override on the backend"
 msgstr "Bật/tắt ghi đè kích hoạt premium ở phần backend"
 
-#: src/stores/QuickSwitcherStore.tsx:929
+#: src/stores/QuickSwitcherStore.tsx:927
 msgid "Toggle Reduced Motion"
 msgstr "Bật/tắt giảm chuyển động"
 
@@ -21983,7 +21984,7 @@ msgstr "Bật/tắt bộ chọn nhãn dán"
 msgid "Toggle switches on and off to see state changes."
 msgstr "Bật hoặc tắt các công tắc để xem trạng thái thay đổi."
 
-#: src/stores/QuickSwitcherStore.tsx:899
+#: src/stores/QuickSwitcherStore.tsx:897
 msgid "Toggle Theme"
 msgstr "Đổi chủ đề"
 
@@ -22008,7 +22009,7 @@ msgstr "Chuyển đổi hình ảnh HDR sang phạm vi tiêu chuẩn, giảm đ�
 msgid "Too Loud"
 msgstr "Quá lớn"
 
-#: src/components/alerts/MaxGuildsModal.tsx:32
+#: src/components/alerts/MaxGuildsModal.tsx:35
 msgid "Too Many Communities"
 msgstr "Quá nhiều cộng đồng"
 
@@ -22307,7 +22308,7 @@ msgstr "Xác thực hai yếu tố"
 msgid "Two-factor authentication disabled"
 msgstr "Đã tắt xác thực hai yếu tố"
 
-#: src/components/modals/MfaTotpEnableModal.tsx:55
+#: src/components/modals/MfaTotpEnableModal.tsx:58
 msgid "Two-factor authentication enabled"
 msgstr "Đã bật xác thực hai yếu tố"
 
@@ -22404,11 +22405,11 @@ msgstr "Ukraina"
 msgid "Ultra (1440p)"
 msgstr "Siêu (1440p)"
 
-#: src/actions/InviteActionCreators.tsx:319
+#: src/actions/InviteActionCreators.tsx:323
 msgid "Unable to install emoji pack"
 msgstr "Không thể cài gói biểu tượng cảm xúc"
 
-#: src/actions/InviteActionCreators.tsx:320
+#: src/actions/InviteActionCreators.tsx:324
 msgid "Unable to install sticker pack"
 msgstr "Không thể cài gói nhãn dán"
 
@@ -22436,13 +22437,13 @@ msgstr "Không thể tải banner hồ sơ, huy hiệu và tiểu sử."
 msgid "Unable to prepare any emojis for upload. The following errors occurred:"
 msgstr "Không thể chuẩn bị bất kỳ biểu tượng cảm xúc nào để tải lên. Đã xảy ra các lỗi sau:"
 
-#: src/components/modals/EmailChangeModal.tsx:121
-#: src/components/modals/EmailChangeModal.tsx:151
+#: src/components/modals/EmailChangeModal.tsx:124
+#: src/components/modals/EmailChangeModal.tsx:154
 #: src/components/modals/PasswordChangeModal.tsx:104
 msgid "Unable to resend code right now"
 msgstr "Hiện không thể gửi lại mã"
 
-#: src/components/modals/EmailChangeModal.tsx:136
+#: src/components/modals/EmailChangeModal.tsx:139
 msgid "Unable to send code to new email"
 msgstr "Không thể gửi mã đến email mới"
 
@@ -22455,7 +22456,7 @@ msgstr "Không thể gửi tin nhắn thoại. Vui lòng thử lại."
 msgid "Unable to Start Call"
 msgstr "Không thể bắt đầu cuộc gọi"
 
-#: src/components/modals/EmailChangeModal.tsx:91
+#: src/components/modals/EmailChangeModal.tsx:94
 msgid "Unable to start email change"
 msgstr "Không thể bắt đầu thay đổi email"
 
@@ -22526,7 +22527,7 @@ msgstr "Tài khoản chưa nhận"
 msgid "Unclaimed Account Nagbar"
 msgstr "Thanh nhắc tài khoản chưa nhận"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:65
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:67
 msgid "Unclaimed Account Override"
 msgstr "Ghi đè tài khoản chưa nhận"
 
@@ -22554,10 +22555,10 @@ msgstr "Người dùng vị thành niên"
 #: src/components/alerts/GenericErrorModal.tsx:31
 #: src/components/alerts/GuildAtCapacityModal.tsx:31
 #: src/components/alerts/InvitesDisabledModal.tsx:31
-#: src/components/alerts/MaxBookmarksModal.tsx:45
-#: src/components/alerts/MaxBookmarksModal.tsx:56
+#: src/components/alerts/MaxBookmarksModal.tsx:48
+#: src/components/alerts/MaxBookmarksModal.tsx:59
 #: src/components/alerts/MaxFavoriteMemesModal.tsx:46
-#: src/components/alerts/MaxGuildsModal.tsx:38
+#: src/components/alerts/MaxGuildsModal.tsx:41
 #: src/components/alerts/MicrophonePermissionDeniedModal.tsx:50
 #: src/components/alerts/NSFWContentRejectedModal.tsx:31
 #: src/components/alerts/ReactionInteractionDisabledModal.tsx:30
@@ -22632,7 +22633,7 @@ msgstr "kênh không xác định"
 #: src/components/modals/guild_tabs/GuildAuditLogTab.Utils.tsx:479
 #: src/components/modals/guild_tabs/GuildWebhooksTab.tsx:61
 #: src/components/modals/guild_tabs/GuildWebhooksTab.tsx:67
-#: src/stores/QuickSwitcherStore.tsx:690
+#: src/stores/QuickSwitcherStore.tsx:688
 msgid "Unknown channel"
 msgstr "Kênh không xác định"
 
@@ -22781,7 +22782,7 @@ msgstr "Mở khóa nhãn dán trong DM với Plutonium"
 #: src/components/layout/UserArea.tsx:168
 #: src/components/media_player/components/MediaVerticalVolumeControl.tsx:249
 #: src/components/media_player/components/MediaVolumeControl.tsx:208
-#: src/components/modals/MobileVideoViewer.tsx:272
+#: src/components/modals/MobileVideoViewer.tsx:280
 #: src/components/voice/VoiceControlBar.tsx:602
 msgid "Unmute"
 msgstr "Bỏ tắt tiếng"
@@ -22872,7 +22873,7 @@ msgstr "Bỏ ghim tin nhắn"
 msgid "Unpin Group DM"
 msgstr "Bỏ ghim nhóm DM"
 
-#: src/components/channel/MessageActionUtils.tsx:412
+#: src/components/channel/MessageActionUtils.tsx:413
 #: src/components/shared/ChannelPinsContent.tsx:102
 msgid "Unpin it"
 msgstr "Bỏ ghim"
@@ -22880,7 +22881,7 @@ msgstr "Bỏ ghim"
 #: src/components/channel/MessageActionBar.tsx:519
 #: src/components/channel/MessageActionBar.tsx:735
 #: src/components/channel/MessageActionMenu.tsx:243
-#: src/components/channel/MessageActionUtils.tsx:409
+#: src/components/channel/MessageActionUtils.tsx:410
 #: src/components/shared/ChannelPinsContent.tsx:99
 #: src/components/shared/ChannelPinsContent.tsx:260
 #: src/components/uikit/context_menu/items/MessageMenuItems.tsx:163
@@ -22907,7 +22908,7 @@ msgstr "Đã bỏ ghim nhóm DM"
 msgid "unread"
 msgstr "chưa đọc"
 
-#: src/components/popouts/InboxPopout.tsx:53
+#: src/components/popouts/InboxPopout.tsx:52
 msgid "Unread"
 msgstr "Chưa đọc"
 
@@ -22915,11 +22916,11 @@ msgstr "Chưa đọc"
 msgid "Unread DMs only"
 msgstr "Chỉ DM chưa đọc"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:85
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:87
 msgid "Unread Gift Count"
 msgstr "Số quà chưa đọc"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:73
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:75
 msgid "Unread gift inventory override"
 msgstr "Ghi đè kho quà chưa đọc"
 
@@ -22962,7 +22963,7 @@ msgstr "Email chưa xác minh"
 msgid "Up to 4K/60fps"
 msgstr "Lên đến 4K/60fps"
 
-#: src/components/channel/ChannelTextarea.tsx:1033
+#: src/components/channel/ChannelTextarea.tsx:1031
 msgid "Update"
 msgstr "Cập nhật"
 
@@ -23085,7 +23086,7 @@ msgstr "nâng cấp"
 msgid "Upgrade Now"
 msgstr "Nâng cấp ngay"
 
-#: src/components/alerts/MaxBookmarksModal.tsx:69
+#: src/components/alerts/MaxBookmarksModal.tsx:72
 #: src/components/alerts/MaxFavoriteMemesModal.tsx:70
 msgid "Upgrade to Plutonium"
 msgstr "Nâng cấp lên Plutonium"
@@ -23249,7 +23250,7 @@ msgstr "Sử dụng một modal riêng để đặt ngày ngưỡng lịch sử 
 msgid "Use Actual"
 msgstr "Sử dụng Thực tế"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:47
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:49
 msgid "Use actual premium type"
 msgstr "Sử dụng loại cao cấp thực tế"
 
@@ -23322,7 +23323,7 @@ msgstr "Sử dụng hồ sơ toàn cầu"
 msgid "Use light theme"
 msgstr "Dùng chủ đề sáng"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:274
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:277
 msgid "Use passkeys for passwordless sign-in and two-factor authentication"
 msgstr "Dùng passkey để đăng nhập không mật khẩu và xác thực hai yếu tố"
 
@@ -23454,7 +23455,7 @@ msgstr "Hồ sơ hoạt động người dùng"
 #: src/components/layout/UserArea.tsx:286
 #: src/components/layout/UserArea.tsx:291
 #: src/components/modals/components/DesktopSettingsView.tsx:357
-#: src/components/modals/UserSettingsModal.tsx:154
+#: src/components/modals/UserSettingsModal.tsx:153
 msgid "User Settings"
 msgstr "Cài đặt người dùng"
 
@@ -23475,9 +23476,9 @@ msgstr "người dùng, bot hoặc webhook"
 msgid "username"
 msgstr "tên người dùng"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:187
+#: src/components/modals/FluxerTagChangeModal.tsx:201
 #: src/components/modals/tabs/component_gallery_tab/InputsTab.tsx:101
-#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:51
+#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:52
 #: src/components/modals/utils/SettingsSearchIndex.tsx:63
 msgid "Username"
 msgstr "Tên người dùng"
@@ -23510,13 +23511,17 @@ msgstr "Tên người dùng tối đa 32 ký tự"
 msgid "Username#0000"
 msgstr "TênNgườiDùng#0000"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:169
+#: src/components/modals/FluxerTagChangeModal.tsx:183
 msgid "Usernames can only contain letters (a-z, A-Z), numbers (0-9), and underscores. Usernames are case-insensitive."
 msgstr "Tên người dùng chỉ chứa chữ cái (a-z, A-Z), số (0-9) và dấu gạch dưới. Không phân biệt chữ hoa thường."
 
-#: src/components/modals/FluxerTagChangeModal.tsx:164
-msgid "Usernames can only contain letters (a-z, A-Z), numbers (0-9), and underscores. Usernames are case-insensitive. You can pick your own 4-digit tag if it's available."
-msgstr "Tên người dùng chỉ chứa chữ cái (a-z, A-Z), số (0-9) và dấu gạch dưới. Không phân biệt chữ hoa thường. Bạn có thể chọn thẻ 4 chữ số của riêng mình nếu còn tồn tại."
+#: src/components/modals/FluxerTagChangeModal.tsx:170
+msgid "Usernames can only contain letters (a-z, A-Z), numbers (0-9), and underscores. Usernames are case-insensitive. You can pick any available 4-digit tag from #0000 to #9999."
+msgstr "Tên người dùng chỉ được chứa chữ cái (a-z, A-Z), số (0-9) và dấu gạch dưới. Tên người dùng không phân biệt chữ hoa chữ thường. Bạn có thể chọn bất kỳ tag 4 chữ số nào còn trống từ #0000 đến #9999."
+
+#: src/components/modals/FluxerTagChangeModal.tsx:176
+msgid "Usernames can only contain letters (a-z, A-Z), numbers (0-9), and underscores. Usernames are case-insensitive. You can pick any available 4-digit tag from #0001 to #9999."
+msgstr "Tên người dùng chỉ được chứa chữ cái (a-z, A-Z), số (0-9) và dấu gạch dưới. Tên người dùng không phân biệt chữ hoa chữ thường. Bạn có thể chọn bất kỳ tag 4 chữ số nào còn trống từ #0001 đến #9999."
 
 #: src/components/modals/utils/SettingsSearchIndex.tsx:246
 #: src/components/modals/utils/SettingsSectionRegistry.tsx:172
@@ -23634,8 +23639,8 @@ msgid "Verification Barriers"
 msgstr "Rào cản xác minh"
 
 #: src/components/modals/ClaimAccountModal.tsx:198
-#: src/components/modals/EmailChangeModal.tsx:220
-#: src/components/modals/EmailChangeModal.tsx:288
+#: src/components/modals/EmailChangeModal.tsx:223
+#: src/components/modals/EmailChangeModal.tsx:291
 #: src/components/modals/PasswordChangeModal.tsx:166
 #: src/components/modals/PhoneAddModal.tsx:226
 #: src/components/modals/RequiredActionModal.tsx:495
@@ -23662,7 +23667,7 @@ msgstr "Đã gửi email xác minh! Vui lòng kiểm tra hộp thư đến."
 msgid "Verification failed"
 msgstr "Xác minh thất bại"
 
-#: src/components/modals/BackupCodesViewModal.tsx:63
+#: src/components/modals/BackupCodesViewModal.tsx:68
 msgid "Verification may be required before viewing your backup codes."
 msgstr "Có thể cần xác minh trước khi xem mã dự phòng của bạn."
 
@@ -23684,7 +23689,7 @@ msgid "verify"
 msgstr "xác minh"
 
 #: src/components/modals/AddConnectionModal.tsx:315
-#: src/components/modals/EmailChangeModal.tsx:236
+#: src/components/modals/EmailChangeModal.tsx:239
 #: src/components/modals/PasswordChangeModal.tsx:182
 #: src/components/modals/PhoneAddModal.tsx:240
 #: src/components/modals/RequiredActionModal.tsx:652
@@ -23785,7 +23790,7 @@ msgstr "xem trước video"
 msgid "Video preview"
 msgstr "Xem trước video"
 
-#: src/components/modals/MobileVideoViewer.tsx:311
+#: src/components/modals/MobileVideoViewer.tsx:319
 msgid "Video progress"
 msgstr "Tiến độ video"
 
@@ -23859,15 +23864,15 @@ msgstr "Xem và quản lý người dùng bị cấm."
 msgid "View and manage every webhook configured across your community."
 msgstr "Xem và quản lý mọi webhook đã cấu hình trong cộng đồng của bạn."
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:257
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:260
 msgid "View and manage your backup codes for account recovery"
 msgstr "Xem và quản lý mã dự phòng để khôi phục tài khoản"
 
-#: src/components/modals/BackupCodesViewModal.tsx:59
+#: src/components/modals/BackupCodesViewModal.tsx:64
 msgid "View Backup Codes"
 msgstr "Xem mã sao lưu"
 
-#: src/components/modals/BackupCodesViewModal.tsx:58
+#: src/components/modals/BackupCodesViewModal.tsx:63
 msgid "View backup codes form"
 msgstr "Biểu mẫu xem mã dự phòng"
 
@@ -23884,7 +23889,7 @@ msgstr "Xem điều khiển cuộc gọi"
 msgid "View Channel"
 msgstr "Xem kênh"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:265
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:268
 msgid "View Codes"
 msgstr "Xem mã"
 
@@ -24016,6 +24021,19 @@ msgstr "Visionary (Trọn đời Plutonium)"
 msgid "Visionary 2FA Nagbar"
 msgstr "Thanh thông báo 2FA Visionary"
 
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:137
+msgid "Visionary Badge Override"
+msgstr "Ghi chú Visionary"
+
+#. placeholder {0}: profile.premiumLifetimeSequence
+#: src/components/popouts/UserProfileBadges.tsx:150
+msgid "Visionary ID #{0}"
+msgstr "Mã Visionary #{0}"
+
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:139
+msgid "Visionary ID Number"
+msgstr "Số ID Visionary"
+
 #: src/components/modals/ExternalLinkWarningModal.tsx:111
 msgid "Visit Site"
 msgstr "Truy cập trang"
@@ -24086,7 +24104,7 @@ msgstr "Các cuộc gọi thoại"
 msgid "voice channel"
 msgstr "kênh giọng nói"
 
-#: src/stores/QuickSwitcherStore.tsx:720
+#: src/stores/QuickSwitcherStore.tsx:718
 #: src/utils/modals/guild_tabs/GuildAuditLogTabUtils.tsx:227
 msgid "Voice channel"
 msgstr "Kênh thoại"
@@ -24106,7 +24124,7 @@ msgstr "Kênh thoại đầy"
 msgid "Voice channel join behavior"
 msgstr "Hành vi tham gia kênh giọng nói"
 
-#: src/stores/QuickSwitcherStore.tsx:1351
+#: src/stores/QuickSwitcherStore.tsx:1349
 #: src/utils/quick_switcher/QuickSwitcherModalUtils.tsx:98
 msgid "Voice channels"
 msgstr "Các kênh thoại"
@@ -24374,11 +24392,11 @@ msgstr "Chúng tôi sẽ gửi một mã xác minh đến địa chỉ email nà
 msgid "We'll send a verification code to your email before you can change your password."
 msgstr "Chúng tôi sẽ gửi một mã xác minh đến email của bạn trước khi bạn có thể thay đổi mật khẩu."
 
-#: src/components/modals/EmailChangeModal.tsx:190
+#: src/components/modals/EmailChangeModal.tsx:193
 msgid "We'll verify your current email and then your new email with one-time codes."
 msgstr "Chúng tôi sẽ xác minh email hiện tại của bạn và sau đó email mới bằng mã một lần."
 
-#: src/components/modals/EmailChangeModal.tsx:192
+#: src/components/modals/EmailChangeModal.tsx:195
 msgid "We'll verify your new email with a one-time code."
 msgstr "Chúng tôi sẽ xác minh email mới của bạn bằng mã một lần."
 
@@ -24984,7 +25002,7 @@ msgstr "Bạn không thể bật lại tiếng vì bạn đã bị người đi�
 msgid "You do not have access to the channel where this message was sent."
 msgstr "Bạn không có quyền truy cập vào kênh nơi tin nhắn này được gửi."
 
-#: src/components/channel/ChannelTextarea.tsx:749
+#: src/components/channel/ChannelTextarea.tsx:747
 #: src/components/channel/textarea/TextareaPlusMenu.tsx:52
 msgid "You do not have permission to send messages in this channel."
 msgstr "Bạn không có quyền gửi tin nhắn trong kênh này."
@@ -25005,11 +25023,11 @@ msgstr "Bạn chưa có ghi đè chủ đề tùy chỉnh nào để chia sẻ."
 msgid "You don't have permission to connect to this voice channel."
 msgstr "Bạn không có quyền kết nối vào kênh thoại này."
 
-#: src/actions/InviteActionCreators.tsx:316
+#: src/actions/InviteActionCreators.tsx:320
 msgid "You don't have permission to install this emoji pack."
 msgstr "Bạn không có quyền cài gói biểu tượng cảm xúc này."
 
-#: src/actions/InviteActionCreators.tsx:317
+#: src/actions/InviteActionCreators.tsx:321
 msgid "You don't have permission to install this sticker pack."
 msgstr "Bạn không có quyền cài gói nhãn dán này."
 
@@ -25065,35 +25083,35 @@ msgstr "Bạn có tất cả <0/> nhờ <1>đăng ký quà tặng</1> đến <2>
 msgid "You have blocked {username}. Unblock them to send messages."
 msgstr "Bạn đã chặn {username}. Bỏ chặn để gửi tin nhắn."
 
-#: src/actions/InviteActionCreators.tsx:260
+#: src/actions/InviteActionCreators.tsx:264
 msgid "You have created the maximum of {limit} emoji pack. Delete one to create another."
 msgstr "Bạn đã tạo tối đa {limit} bộ biểu tượng cảm xúc. Xóa một cái để tạo cái khác."
 
-#: src/actions/InviteActionCreators.tsx:261
+#: src/actions/InviteActionCreators.tsx:265
 msgid "You have created the maximum of {limit} emoji packs. Delete one to create another."
 msgstr "Bạn đã tạo tối đa {limit} bộ biểu tượng cảm xúc. Xóa một cái để tạo cái khác."
 
-#: src/actions/InviteActionCreators.tsx:292
+#: src/actions/InviteActionCreators.tsx:296
 msgid "You have created the maximum of {limit} sticker pack. Delete one to create another."
 msgstr "Bạn đã tạo tối đa {limit} bộ nhãn dán. Xóa một cái để tạo cái khác."
 
-#: src/actions/InviteActionCreators.tsx:293
+#: src/actions/InviteActionCreators.tsx:297
 msgid "You have created the maximum of {limit} sticker packs. Delete one to create another."
 msgstr "Bạn đã tạo tối đa {limit} bộ nhãn dán. Xóa một cái để tạo cái khác."
 
-#: src/actions/InviteActionCreators.tsx:246
+#: src/actions/InviteActionCreators.tsx:250
 msgid "You have installed the maximum of {limit} emoji pack. Remove one to install another."
 msgstr "Bạn đã cài đặt tối đa {limit} bộ biểu tượng cảm xúc. Gỡ bỏ một cái để cài đặt cái khác."
 
-#: src/actions/InviteActionCreators.tsx:247
+#: src/actions/InviteActionCreators.tsx:251
 msgid "You have installed the maximum of {limit} emoji packs. Remove one to install another."
 msgstr "Bạn đã cài đặt tối đa {limit} bộ biểu tượng cảm xúc. Gỡ bỏ một cái để cài đặt cái khác."
 
-#: src/actions/InviteActionCreators.tsx:278
+#: src/actions/InviteActionCreators.tsx:282
 msgid "You have installed the maximum of {limit} sticker pack. Remove one to install another."
 msgstr "Bạn đã cài đặt tối đa {limit} bộ nhãn dán. Gỡ bỏ một cái để cài đặt cái khác."
 
-#: src/actions/InviteActionCreators.tsx:279
+#: src/actions/InviteActionCreators.tsx:283
 msgid "You have installed the maximum of {limit} sticker packs. Remove one to install another."
 msgstr "Bạn đã cài đặt tối đa {limit} bộ nhãn dán. Gỡ bỏ một cái để cài đặt cái khác."
 
@@ -25101,19 +25119,19 @@ msgstr "Bạn đã cài đặt tối đa {limit} bộ nhãn dán. Gỡ bỏ mộ
 msgid "You have no friends yet"
 msgstr "Bạn chưa có bạn bè nào"
 
-#: src/actions/InviteActionCreators.tsx:264
+#: src/actions/InviteActionCreators.tsx:268
 msgid "You have reached the limit for creating emoji packs. Delete one of your packs to create another."
 msgstr "Bạn đã đạt giới hạn tạo gói biểu tượng cảm xúc. Xóa một gói của bạn để tạo gói mới."
 
-#: src/actions/InviteActionCreators.tsx:296
+#: src/actions/InviteActionCreators.tsx:300
 msgid "You have reached the limit for creating sticker packs. Delete one of your packs to create another."
 msgstr "Bạn đã đạt giới hạn tạo gói nhãn dán. Xóa một gói của bạn để tạo gói mới."
 
-#: src/actions/InviteActionCreators.tsx:250
+#: src/actions/InviteActionCreators.tsx:254
 msgid "You have reached the limit for installing emoji packs. Remove one of your installed packs to install another."
 msgstr "Bạn đã đạt giới hạn cài đặt gói biểu tượng cảm xúc. Gỡ một gói đang cài để cài gói khác."
 
-#: src/actions/InviteActionCreators.tsx:282
+#: src/actions/InviteActionCreators.tsx:286
 msgid "You have reached the limit for installing sticker packs. Remove one of your installed packs to install another."
 msgstr "Bạn đã đạt giới hạn cài đặt gói nhãn dán. Gỡ một gói đang cài để cài gói khác."
 
@@ -25377,23 +25395,23 @@ msgstr "Bạn đã đạt giới hạn tối đa của {maxFavoriteMemes} mục 
 msgid "You've reached the maximum limit of {maxFavoriteMemes} saved media items. To add more, you'll need to remove some existing items from your collection."
 msgstr "Bạn đã đạt giới hạn tối đa của {maxFavoriteMemes} mục phương tiện đã lưu. Để thêm nhiều hơn, bạn sẽ cần xóa một số mục hiện có trong bộ sưu tập của bạn."
 
-#: src/components/alerts/MaxBookmarksModal.tsx:55
+#: src/components/alerts/MaxBookmarksModal.tsx:58
 msgid "You've reached the maximum number of bookmarks ({bookmarksText}). Please remove some bookmarks before adding new ones."
 msgstr "Bạn đã đạt số lượng đánh dấu tối đa ({bookmarksText}). Vui lòng xóa một số đánh dấu trước khi thêm mới."
 
-#: src/components/alerts/MaxBookmarksModal.tsx:44
+#: src/components/alerts/MaxBookmarksModal.tsx:47
 msgid "You've reached the maximum number of bookmarks ({bookmarksText}). This limit is configured by your instance administrator. Please remove some bookmarks before adding new ones."
 msgstr "Bạn đã đạt số lượng đánh dấu tối đa ({bookmarksText}). Giới hạn này được cấu hình bởi quản trị viên của bạn. Vui lòng xóa một số đánh dấu trước khi thêm mới."
 
-#: src/components/alerts/MaxBookmarksModal.tsx:68
+#: src/components/alerts/MaxBookmarksModal.tsx:71
 msgid "You've reached the maximum number of bookmarks for free users ({bookmarksText}). Upgrade to Plutonium to increase your limit to {premiumBookmarksText}, or remove some bookmarks to add new ones."
 msgstr "Bạn đã đạt số lượng đánh dấu tối đa cho người dùng miễn phí ({bookmarksText}). Nâng cấp lên Plutonium để tăng giới hạn của bạn lên {premiumBookmarksText}, hoặc xóa một số đánh dấu để thêm mới."
 
-#: src/components/alerts/MaxGuildsModal.tsx:36
+#: src/components/alerts/MaxGuildsModal.tsx:39
 msgid "You've reached the maximum number of communities you can join ({maxGuilds} communities). Please leave a community before joining another one."
 msgstr "Bạn đã đạt số lượng cộng đồng tối đa mà bạn có thể tham gia ({maxGuilds} cộng đồng). Vui lòng rời khỏi một cộng đồng trước khi tham gia cộng đồng khác."
 
-#: src/components/alerts/MaxGuildsModal.tsx:35
+#: src/components/alerts/MaxGuildsModal.tsx:38
 msgid "You've reached the maximum number of communities you can join ({maxGuilds} community). Please leave a community before joining another one."
 msgstr "Bạn đã đạt số lượng cộng đồng tối đa mà bạn có thể tham gia ({maxGuilds} cộng đồng). Vui lòng rời khỏi một cộng đồng trước khi tham gia cộng đồng khác."
 

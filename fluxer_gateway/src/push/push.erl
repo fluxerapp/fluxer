@@ -228,6 +228,11 @@ get_cache_stats() ->
 
 -spec do_handle_message_create(map(), state()) -> state().
 do_handle_message_create(Params, State) ->
+    spawn(fun() -> run_eligibility_and_dispatch(Params, State) end),
+    State.
+
+-spec run_eligibility_and_dispatch(map(), state()) -> ok.
+run_eligibility_and_dispatch(Params, State) ->
     MessageData = maps:get(message_data, Params),
     UserIds = maps:get(user_ids, Params),
     GuildId = maps:get(guild_id, Params),
@@ -274,7 +279,7 @@ do_handle_message_create(Params, State) ->
     ),
     case EligibleUsers of
         [] ->
-            State;
+            ok;
         _ ->
             push_dispatcher:enqueue_send_notifications(
                 EligibleUsers,
@@ -286,5 +291,5 @@ do_handle_message_create(Params, State) ->
                 ChannelName,
                 State
             ),
-            State
+            ok
     end.

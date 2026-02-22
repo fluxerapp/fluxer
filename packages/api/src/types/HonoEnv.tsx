@@ -84,7 +84,6 @@ import type {RpcService} from '@fluxer/api/src/rpc/RpcService';
 import type {SearchService} from '@fluxer/api/src/search/SearchService';
 import type {StripeService} from '@fluxer/api/src/stripe/StripeService';
 import type {ThemeService} from '@fluxer/api/src/theme/ThemeService';
-import type {GuildManagedTraitService} from '@fluxer/api/src/traits/GuildManagedTraitService';
 import type {IUserRepository} from '@fluxer/api/src/user/IUserRepository';
 import type {EmailChangeService} from '@fluxer/api/src/user/services/EmailChangeService';
 import type {PasswordChangeService} from '@fluxer/api/src/user/services/PasswordChangeService';
@@ -154,7 +153,6 @@ export interface HonoEnv {
 		alertService: AlertService;
 		discoveryService: IGuildDiscoveryService;
 		guildService: GuildService;
-		guildManagedTraitService: GuildManagedTraitService;
 		packService: PackService;
 		packRequestService: PackRequestService;
 		packRepository: PackRepository;

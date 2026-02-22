@@ -33,12 +33,20 @@ import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useMemo} from 'react';
 
-interface Badge {
+interface BaseBadge {
 	key: string;
-	iconUrl: string;
 	tooltip: string;
 	url: string;
 }
+interface IconBadge extends BaseBadge {
+	type: 'icon';
+	iconUrl: string;
+}
+interface TextBadge extends BaseBadge {
+	type: 'text';
+	text: string;
+}
+type Badge = IconBadge | TextBadge;
 
 interface UserProfileBadgesProps {
 	user: UserRecord;
@@ -57,6 +65,7 @@ export const UserProfileBadges: React.FC<UserProfileBadgesProps> = observer(
 
 			if (user.flags & PublicUserFlags.STAFF) {
 				result.push({
+					type: 'icon',
 					key: 'staff',
 					iconUrl: cdnUrl('badges/staff.svg'),
 					tooltip: t`Fluxer Staff`,
@@ -66,6 +75,7 @@ export const UserProfileBadges: React.FC<UserProfileBadgesProps> = observer(
 
 			if (!selfHosted && user.flags & PublicUserFlags.CTP_MEMBER) {
 				result.push({
+					type: 'icon',
 					key: 'ctp',
 					iconUrl: cdnUrl('badges/ctp.svg'),
 					tooltip: t`Fluxer Community Team`,
@@ -75,6 +85,7 @@ export const UserProfileBadges: React.FC<UserProfileBadgesProps> = observer(
 
 			if (!selfHosted && user.flags & PublicUserFlags.PARTNER) {
 				result.push({
+					type: 'icon',
 					key: 'partner',
 					iconUrl: cdnUrl('badges/partner.svg'),
 					tooltip: t`Fluxer Partner`,
@@ -84,6 +95,7 @@ export const UserProfileBadges: React.FC<UserProfileBadgesProps> = observer(
 
 			if (!selfHosted && user.flags & PublicUserFlags.BUG_HUNTER) {
 				result.push({
+					type: 'icon',
 					key: 'bug_hunter',
 					iconUrl: cdnUrl('badges/bug-hunter.svg'),
 					tooltip: t`Fluxer Bug Hunter`,
@@ -109,15 +121,26 @@ export const UserProfileBadges: React.FC<UserProfileBadgesProps> = observer(
 				}
 
 				result.push({
+					type: 'icon',
 					key: 'premium',
 					iconUrl: cdnUrl('badges/plutonium.svg'),
 					tooltip: tooltipText,
 					url: badgeUrl,
 				});
+
+				if (profile.premiumType === UserPremiumTypes.LIFETIME && profile.premiumLifetimeSequence != null) {
+					result.push({
+						type: 'text',
+						key: 'premium_sequence',
+						text: `#${profile.premiumLifetimeSequence}`,
+						tooltip: t`Visionary ID #${profile.premiumLifetimeSequence}`,
+						url: badgeUrl,
+					});
+				}
 			}
 
 			return result;
-		}, [selfHosted, user.flags, profile?.premiumType, profile?.premiumSince]);
+		}, [selfHosted, user.flags, profile?.premiumType, profile?.premiumSince, profile?.premiumLifetimeSequence]);
 
 		if (badges.length === 0) {
 			return null;
@@ -145,7 +168,15 @@ export const UserProfileBadges: React.FC<UserProfileBadgesProps> = observer(
 		return (
 			<div className={containerClassName}>
 				{badges.map((badge) => {
-					const badgeContent = <img src={badge.iconUrl} alt={badge.tooltip} className={badgeClassName} />;
+					const sequenceClassName = isModal && isMobile ? styles.sequenceBadgeMobile : styles.sequenceBadgeDesktop;
+					const badgeContent =
+						badge.type === 'icon' ? (
+							<img src={badge.iconUrl} alt={badge.tooltip} className={badgeClassName} />
+						) : (
+							<span className={clsx(styles.sequenceBadge, sequenceClassName)} aria-hidden="true">
+								{badge.text}
+							</span>
+						);
 
 					return (
 						<Tooltip key={badge.key} text={badge.tooltip} maxWidth="xl">

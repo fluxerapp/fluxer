@@ -19,10 +19,9 @@
 
 import {createTestAccount} from '@fluxer/api/src/auth/tests/AuthTestUtils';
 import {
-	createGuild,
 	createPack,
-	enableExpressionPacksForGuild,
 	grantPremium,
+	grantStaffAccess,
 	installPack,
 	listPacks,
 	revokePremium,
@@ -45,13 +44,13 @@ describe('Pack Premium Requirements', () => {
 		await harness?.shutdown();
 	});
 
-	test('user without expression_packs trait cannot list packs', async () => {
+	test('user without staff flag cannot list packs', async () => {
 		const account = await createTestAccount(harness);
 
 		await createBuilder(harness, account.token).get('/packs').expect(HTTP_STATUS.FORBIDDEN).execute();
 	});
 
-	test('user with trait but no premium cannot create pack', async () => {
+	test('user with staff flag but no premium cannot create pack', async () => {
 		const {account} = await setupNonPremiumPackTestAccount(harness);
 
 		await createBuilder(harness, account.token)
@@ -61,7 +60,7 @@ describe('Pack Premium Requirements', () => {
 			.execute();
 	});
 
-	test('premium user with trait can create emoji pack', async () => {
+	test('premium user with staff flag can create emoji pack', async () => {
 		const {account} = await setupPackTestAccount(harness);
 
 		const pack = await createPack(harness, account.token, 'emoji', {name: 'My Emoji Pack'});
@@ -71,7 +70,7 @@ describe('Pack Premium Requirements', () => {
 		expect(pack.type).toBe('emoji');
 	});
 
-	test('premium user with trait can create sticker pack', async () => {
+	test('premium user with staff flag can create sticker pack', async () => {
 		const {account} = await setupPackTestAccount(harness);
 
 		const pack = await createPack(harness, account.token, 'sticker', {name: 'My Sticker Pack'});
@@ -120,7 +119,7 @@ describe('Pack Premium Requirements', () => {
 		expect(installed).toBeTruthy();
 	});
 
-	test('user without trait cannot access pack endpoints', async () => {
+	test('user without staff flag cannot access pack endpoints', async () => {
 		const account = await createTestAccount(harness);
 
 		await createBuilder(harness, account.token).get('/packs').expect(HTTP_STATUS.FORBIDDEN).execute();
@@ -132,10 +131,9 @@ describe('Pack Premium Requirements', () => {
 			.execute();
 	});
 
-	test('user gains trait when joining guild with expression_packs feature', async () => {
+	test('user gains staff flag and can access expression packs', async () => {
 		const owner = await createTestAccount(harness);
-		const guild = await createGuild(harness, owner.token, 'Feature Guild');
-		await enableExpressionPacksForGuild(harness, guild.id);
+		await grantStaffAccess(harness, owner.userId);
 		await grantPremium(harness, owner.userId);
 
 		const dashboard = await listPacks(harness, owner.token);
@@ -155,7 +153,7 @@ describe('Pack Premium Requirements', () => {
 		expect(dashboard.sticker.installed_limit).toBeGreaterThan(0);
 	});
 
-	test('pack limits show zero for non-premium user with trait', async () => {
+	test('pack limits show zero for non-premium user with staff flag', async () => {
 		const {account} = await setupNonPremiumPackTestAccount(harness);
 
 		const dashboard = await listPacks(harness, account.token);

@@ -47,6 +47,7 @@ export type DeveloperOptionsState = Readonly<{
 	forceShowVanityURLDisclaimer: boolean;
 	forceShowVoiceConnection: boolean;
 	premiumTypeOverride: number | null;
+	premiumLifetimeSequenceOverride: number | null;
 	premiumSinceOverride: Date | null;
 	premiumUntilOverride: Date | null;
 	premiumBillingCycleOverride: string | null;
@@ -122,6 +123,7 @@ class DeveloperOptionsStore implements DeveloperOptionsState {
 	forceShowVanityURLDisclaimer = false;
 	forceShowVoiceConnection = false;
 	premiumTypeOverride: number | null = null;
+	premiumLifetimeSequenceOverride: number | null = null;
 	premiumSinceOverride: Date | null = null;
 	premiumUntilOverride: Date | null = null;
 	premiumBillingCycleOverride: string | null = null;
@@ -200,6 +202,7 @@ class DeveloperOptionsStore implements DeveloperOptionsState {
 			'forceShowVanityURLDisclaimer',
 			'forceShowVoiceConnection',
 			'premiumTypeOverride',
+			'premiumLifetimeSequenceOverride',
 			'premiumSinceOverride',
 			'premiumUntilOverride',
 			'premiumBillingCycleOverride',

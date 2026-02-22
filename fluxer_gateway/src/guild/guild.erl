@@ -244,7 +244,7 @@ handle_info(_, State) ->
 -spec terminate(term(), guild_state() | term()) -> ok.
 terminate(Reason, State) when is_map(State) ->
     PresenceSubs = maps:get(presence_subscriptions, State, #{}),
-    lists:foreach(fun(UserId) -> presence_bus:unsubscribe(UserId) end, maps:keys(PresenceSubs)),
+    lists:foreach(fun(UserId) -> safe_unsubscribe_presence(UserId) end, maps:keys(PresenceSubs)),
     GuildId = maps:get(id, State, undefined),
     case is_integer(GuildId) of
         true -> guild_counts_cache:delete(GuildId);
@@ -256,6 +256,17 @@ terminate(Reason, State) when is_map(State) ->
 terminate(Reason, State) ->
     maybe_report_crash(Reason, State),
     ok.
+
+-spec safe_unsubscribe_presence(user_id()) -> ok.
+safe_unsubscribe_presence(UserId) ->
+    case catch presence_bus:unsubscribe(UserId) of
+        ok ->
+            ok;
+        {'EXIT', _} ->
+            ok;
+        _ ->
+            ok
+    end.
 
 -spec code_change(term(), guild_state(), term()) -> {ok, guild_state()}.
 code_change(_OldVsn, State, _Extra) ->

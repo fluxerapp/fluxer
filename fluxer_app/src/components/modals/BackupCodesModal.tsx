@@ -24,7 +24,7 @@ import styles from '@app/components/modals/BackupCodesModal.module.css';
 import {BackupCodesRegenerateModal} from '@app/components/modals/BackupCodesRegenerateModal';
 import * as Modal from '@app/components/modals/Modal';
 import {Button} from '@app/components/uikit/button/Button';
-import UserStore from '@app/stores/UserStore';
+import type {UserRecord} from '@app/records/UserRecord';
 import type {BackupCode} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {CheckIcon, ClipboardIcon, DownloadIcon} from '@phosphor-icons/react';
@@ -32,11 +32,11 @@ import {observer} from 'mobx-react-lite';
 
 interface BackupCodesModalProps {
 	backupCodes: ReadonlyArray<BackupCode>;
+	user: UserRecord;
 }
 
-export const BackupCodesModal = observer(({backupCodes}: BackupCodesModalProps) => {
+export const BackupCodesModal = observer(({backupCodes, user}: BackupCodesModalProps) => {
 	const {t, i18n} = useLingui();
-	const user = UserStore.getCurrentUser()!;
 
 	return (
 		<Modal.Root size="small" centered>
@@ -89,7 +89,7 @@ export const BackupCodesModal = observer(({backupCodes}: BackupCodesModalProps) 
 					<Button
 						variant="danger-secondary"
 						small={true}
-						onClick={() => ModalActionCreators.push(modal(() => <BackupCodesRegenerateModal />))}
+						onClick={() => ModalActionCreators.push(modal(() => <BackupCodesRegenerateModal user={user} />))}
 					>
 						<Trans>Regenerate</Trans>
 					</Button>

@@ -38,6 +38,7 @@ import {Logger} from '@app/lib/Logger';
 import AuthenticationStore from '@app/stores/AuthenticationStore';
 import GuildMemberStore from '@app/stores/GuildMemberStore';
 import InviteStore from '@app/stores/InviteStore';
+import UserStore from '@app/stores/UserStore';
 import {isGroupDmInvite, isGuildInvite, isPackInvite} from '@app/types/InviteTypes';
 import {getApiErrorCode, getApiErrorMessage} from '@app/utils/ApiErrorUtils';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
@@ -164,7 +165,10 @@ export async function acceptAndTransitionToChannel(code: string, i18n: I18n): Pr
 		} else if (errorCode === APIErrorCodes.MAX_GUILD_MEMBERS) {
 			ModalActionCreators.push(modal(() => <GuildAtCapacityModal />));
 		} else if (errorCode === APIErrorCodes.MAX_GUILDS) {
-			ModalActionCreators.push(modal(() => <MaxGuildsModal />));
+			const currentUser = UserStore.currentUser;
+			if (currentUser) {
+				ModalActionCreators.push(modal(() => <MaxGuildsModal user={currentUser} />));
+			}
 		} else if (errorCode === APIErrorCodes.TEMPORARY_INVITE_REQUIRES_PRESENCE) {
 			ModalActionCreators.push(modal(() => <TemporaryInviteRequiresPresenceModal />));
 		} else if (errorCode === APIErrorCodes.USER_BANNED_FROM_GUILD) {

@@ -41,13 +41,13 @@ export function getUserAccentColor(
 	profileAccentColor?: RawAccentColor,
 	fallback = DEFAULT_ACCENT_COLOR,
 ): string {
-	if (user && typeof user.avatarColor === 'number') {
-		return ColorUtils.int2hex(user.avatarColor);
-	}
-
 	const profileColor = getAccentColorHex(profileAccentColor);
 	if (profileColor) {
 		return profileColor;
+	}
+
+	if (user && typeof user.avatarColor === 'number') {
+		return ColorUtils.int2hex(user.avatarColor);
 	}
 
 	if (user && !user.avatar) {

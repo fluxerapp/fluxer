@@ -26,8 +26,7 @@ import {UnreadChannelsContent} from '@app/components/popouts/UnreadChannelsConte
 import FocusRing from '@app/components/uikit/focus_ring/FocusRing';
 import FocusRingScope from '@app/components/uikit/focus_ring/FocusRingScope';
 import InboxStore, {type InboxTab} from '@app/stores/InboxStore';
-import {hasManagedTrait} from '@app/utils/traits/UserTraits';
-import {ManagedTraits} from '@fluxer/constants/src/ManagedTraits';
+import UserStore from '@app/stores/UserStore';
 import {useLingui} from '@lingui/react/macro';
 import {AtIcon, BellIcon, BookmarkSimpleIcon, ClockIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
@@ -71,7 +70,7 @@ export const InboxPopout = observer(({initialTab}: {initialTab?: InboxTab} = {})
 		icon: <ClockIcon className={styles.iconSmall} />,
 	};
 
-	const showScheduledTab = hasManagedTrait(ManagedTraits.MESSAGE_SCHEDULING);
+	const showScheduledTab = UserStore.getCurrentUser()?.isStaff() ?? false;
 	const tabs = showScheduledTab ? [...baseTabs, scheduledTab] : baseTabs;
 
 	const normalizedActiveTab = tabs.some((tab) => tab.key === activeTab) ? activeTab : tabs[0].key;

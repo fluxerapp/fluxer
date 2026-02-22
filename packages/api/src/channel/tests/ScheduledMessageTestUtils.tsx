@@ -19,8 +19,7 @@
 
 import {ensureSessionStarted} from '@fluxer/api/src/message/tests/MessageTestUtils';
 import type {ApiTestHarness} from '@fluxer/api/src/test/ApiTestHarness';
-import {createBuilder} from '@fluxer/api/src/test/TestRequestBuilder';
-import {ManagedTraits} from '@fluxer/constants/src/ManagedTraits';
+import {createBuilder, createBuilderWithoutAuth} from '@fluxer/api/src/test/TestRequestBuilder';
 import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import type {ScheduledMessageResponseSchema} from '@fluxer/schema/src/domains/message/ScheduledMessageSchemas';
 import type {z} from 'zod';
@@ -45,14 +44,8 @@ export async function createGuildChannel(
 	return json as {id: string};
 }
 
-export async function enableMessageSchedulingForGuild(harness: ApiTestHarness, guildId: string): Promise<void> {
-	await createBuilder<void>(harness, '')
-		.post(`/test/guilds/${guildId}/features`)
-		.body({
-			add_features: [ManagedTraits.MESSAGE_SCHEDULING],
-		})
-		.expect(200)
-		.execute();
+export async function grantStaffAccess(harness: ApiTestHarness, userId: string): Promise<void> {
+	await createBuilderWithoutAuth(harness).patch(`/test/users/${userId}/flags`).body({flags: 1}).execute();
 }
 
 export async function scheduleMessage(

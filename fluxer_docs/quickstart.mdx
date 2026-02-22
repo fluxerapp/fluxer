@@ -1,6 +1,171 @@
 ---
-title: 'Quickstart: ping-pong bot'
+title: "Quickstart: ping-pong bot"
 description: 'Create a bot application, invite it to a guild, and reply "pong" to "ping".'
 ---
 
-TBD
+<Warning>
+  A lot of the documentation here is still being written, sorry for the incompleteness! This guide should get you up and running with a bot fairly quickly, though.
+</Warning>
+
+So, you're thinking about creating a Fluxer bot, huh? Think no further, for this guide will get you up and running in no time. You'll need a few things to follow this guide through:
+
+- A text/code editor (such as [VS Code](https://code.visualstudio.com/)) or an integrated development environment (IDE)
+- Some basic programming skills and familiarity with JavaScript/Node.js
+- [Node.js](https://nodejs.org/en) (a recent LTS version is fine) installed on your system
+- An account registered at [Fluxer.app](https://web.fluxer.app/register) (though you're not forced to use this instance, of course!)
+- A community (referred to as a guild in the API) that you've created
+
+### Step 1: Open "User Settings" in the bottom-left
+
+On mobile web, press "You" in the bottom-right, then the settings icon in the upper-right.
+
+<Frame>
+  ![Clean Shot 2026 02 21 At 13 18 41@2x](/images/CleanShot2026-02-21at13.18.41@2x.png)
+</Frame>
+
+### Step 2: Scroll down and open "Applications" in the sidebar
+
+This should work on mobile web devices too!
+
+<Frame>
+  ![Clean Shot 2026 02 21 At 13 20 05@2x](/images/CleanShot2026-02-21at13.20.05@2x.png)
+</Frame>
+
+### Step 3: Create a new application
+
+Give it a fancy name. This will be the default username of your application unless changed.
+
+<Frame>
+  ![Clean Shot 2026 02 21 At 14 33 30@2x](/images/CleanShot2026-02-21at14.33.30@2x.png)
+</Frame>
+
+### Step 4: Regenerate the bot token
+
+Press the "Regenerate" button for the bot token field, confirm the action, and store the generated value somewhere secure, such as in a password manager.
+
+<Frame>
+  ![Clean Shot 2026 02 21 At 14 34 47@2x](/images/CleanShot2026-02-21at14.34.47@2x.png)
+</Frame>
+
+### Step 5: Mark the bot as private (optional)
+
+You might not want anyone to be able to invite your bot if they know its user ID.
+
+<Frame>
+  ![Clean Shot 2026 02 21 At 14 37 16@2x](/images/CleanShot2026-02-21at14.37.16@2x.png)
+</Frame>
+
+### Step 6: Generate the bot invite URL
+
+Check "bot" (you don't need any extra permissions for now) and copy the "Authorize URL."
+
+<Frame>
+  ![Clean Shot 2026 02 21 At 14 38 28@2x](/images/CleanShot2026-02-21at14.38.28@2x.png)
+</Frame>
+
+Paste the authorization URL in the browser address bar in a new tab and hit enter to add your bot.
+
+### Step 7: Invite the bot to your community
+
+Visiting the URL should bring up a view similar to this one:
+
+<Frame>
+  ![Clean Shot 2026 02 21 At 15 03 47@2x](/images/CleanShot2026-02-21at15.03.47@2x.png)
+</Frame>
+
+Choose a community where you have "Manage Community" permissions to continue.
+
+#### Step 8: A wild bot has appeared!
+
+Now it's time to start writing some code to make our awesome application do awesome things.
+
+<Frame>
+  ![Clean Shot 2026 02 21 At 15 05 04@2x](/images/CleanShot2026-02-21at15.05.04@2x.png)
+</Frame>
+
+### Step 9: Write the code and run the bot
+
+First, create a new project directory:
+
+```
+mkdir fluxer_bot && cd fluxer_bot && npm init -y
+```
+
+Second, install the required dependencies:
+
+```
+npm i -E @discordjs/core@2.4.0 @discordjs/rest@2.6.0 @discordjs/ws@2.0.4
+```
+
+Third, store your token from Step 4 in a `.env` file in this folder:
+
+```
+FLUXER_BOT_TOKEN=<your token goes here>
+```
+
+Fourth, create a new `bot.mjs` file, looking like so:
+
+```javascript
+import {Client, GatewayDispatchEvents} from '@discordjs/core';
+import {REST} from '@discordjs/rest';
+import {WebSocketManager} from '@discordjs/ws';
+
+const token = process.env['FLUXER_BOT_TOKEN'];
+if (!token) {
+  throw new Error('You forgot the token!');
+}
+
+const rest = new REST({api: 'https://api.fluxer.app', version: '1'}).setToken(token);
+
+const gateway = new WebSocketManager({
+  intents: 0,
+  rest,
+  token,
+  version: '1',
+});
+
+const client = new Client({rest, gateway});
+
+client.on(GatewayDispatchEvents.MessageCreate, async ({api, data}) => {
+  if (data.author.bot) {
+    return;
+  }
+
+  if (data.content === '!ping') {
+    await api.channels.createMessage(data.channel_id, {
+      content: 'pong!',
+      message_reference: {message_id: data.id},
+    });
+  }
+});
+
+client.on(GatewayDispatchEvents.Ready, ({data}) => {
+  const {username, discriminator} = data.user;
+  console.log(`Logged in as @${username}#${discriminator}`);
+});
+
+gateway.connect();
+```
+
+Finally, save this file and run it via `node --env-file=.env bot.mjs`.
+
+```
+➜  fluxer_bot node --env-file=.env bot.mjs
+Logged in as @My_Awesome_Application#0168
+```
+
+<Frame caption="Your bot should now be alive and well!">
+  ![Clean Shot 2026 02 21 At 16 23 04@2x](/images/CleanShot2026-02-21at16.23.04@2x.png)
+</Frame>
+
+<Frame caption="Heyo!">
+  ![Clean Shot 2026 02 21 At 16 24 19@2x](/images/CleanShot2026-02-21at16.24.19@2x.png)
+</Frame>
+
+<Warning>
+  A lot of the documentation here is still being written, sorry for the incompleteness! This guide should get you up and running with a bot fairly quickly, though.\
+  \
+  Fluxer's HTTP API & Gateway API share similarities with the Discord API to make it easy for you to migrate existing Discord bot libraries. Note that slash commands & interactions are not yet implemented on Fluxer, but they're coming soon!
+</Warning>
+
+Hack the planet!

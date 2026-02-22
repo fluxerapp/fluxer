@@ -18,6 +18,7 @@
  */
 
 import {Config} from '@fluxer/api/src/Config';
+import {ElasticsearchSearchProvider} from '@fluxer/api/src/infrastructure/ElasticsearchSearchProvider';
 import {MeilisearchSearchProvider} from '@fluxer/api/src/infrastructure/MeilisearchSearchProvider';
 import {NullSearchProvider} from '@fluxer/api/src/infrastructure/NullSearchProvider';
 import {Logger} from '@fluxer/api/src/Logger';
@@ -34,6 +35,29 @@ import {DEFAULT_SEARCH_CLIENT_TIMEOUT_MS} from '@fluxer/constants/src/Timeouts';
 let searchProvider: ISearchProvider | null = null;
 
 export function createSearchProvider(): ISearchProvider {
+	const engine = Config.search.engine ?? 'meilisearch';
+
+	if (engine === 'elasticsearch') {
+		if (!Config.search.apiKey && !Config.search.username) {
+			Logger.warn('Elasticsearch credentials are not configured; search will be unavailable');
+			return new NullSearchProvider();
+		}
+
+		Logger.info({url: Config.search.url}, 'Using Elasticsearch for search');
+		return new ElasticsearchSearchProvider({
+			config: {
+				node: Config.search.url,
+				auth: Config.search.apiKey
+					? {apiKey: Config.search.apiKey}
+					: Config.search.username
+						? {username: Config.search.username, password: Config.search.password}
+						: undefined,
+				requestTimeoutMs: DEFAULT_SEARCH_CLIENT_TIMEOUT_MS,
+			},
+			logger: Logger,
+		});
+	}
+
 	if (!Config.search.apiKey) {
 		Logger.warn('Search API key is not configured; search will be unavailable');
 		return new NullSearchProvider();

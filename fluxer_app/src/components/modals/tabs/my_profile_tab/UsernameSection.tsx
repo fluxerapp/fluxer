@@ -24,6 +24,7 @@ import {FluxerTagChangeModal} from '@app/components/modals/FluxerTagChangeModal'
 import styles from '@app/components/modals/tabs/my_profile_tab/UsernameSection.module.css';
 import {Button} from '@app/components/uikit/button/Button';
 import {Tooltip} from '@app/components/uikit/tooltip/Tooltip';
+import type {UserRecord} from '@app/records/UserRecord';
 import {LimitResolver} from '@app/utils/limits/LimitResolverAdapter';
 import {isLimitToggleEnabled} from '@app/utils/limits/LimitUtils';
 import {shouldShowPremiumFeatures} from '@app/utils/PremiumUtils';
@@ -34,10 +35,10 @@ import {observer} from 'mobx-react-lite';
 
 interface UsernameSectionProps {
 	isClaimed: boolean;
-	discriminator: string;
+	user: UserRecord;
 }
 
-export const UsernameSection = observer(({isClaimed, discriminator}: UsernameSectionProps) => {
+export const UsernameSection = observer(({isClaimed, user}: UsernameSectionProps) => {
 	const {t} = useLingui();
 
 	const hasCustomDiscriminator = isLimitToggleEnabled(
@@ -64,14 +65,14 @@ export const UsernameSection = observer(({isClaimed, discriminator}: UsernameSec
 					<Button
 						variant="primary"
 						small
-						onClick={() => ModalActionCreators.push(modal(() => <FluxerTagChangeModal />))}
+						onClick={() => ModalActionCreators.push(modal(() => <FluxerTagChangeModal user={user} />))}
 					>
 						<Trans>Change FluxerTag</Trans>
 					</Button>
 				)}
 
 				{!hasCustomDiscriminator && shouldShowPremiumFeatures() && (
-					<Tooltip text={t(msg`Customize your 4-digit tag (#${discriminator}) to your liking with Plutonium`)}>
+					<Tooltip text={t(msg`Customize your 4-digit tag (#${user.discriminator}) to your liking with Plutonium`)}>
 						<button
 							type="button"
 							onClick={() => {

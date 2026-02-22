@@ -135,7 +135,6 @@ import {SearchService} from '@fluxer/api/src/search/SearchService';
 import {StripeService} from '@fluxer/api/src/stripe/StripeService';
 import {TenorService} from '@fluxer/api/src/tenor/TenorService';
 import {ThemeService} from '@fluxer/api/src/theme/ThemeService';
-import {GuildManagedTraitService} from '@fluxer/api/src/traits/GuildManagedTraitService';
 import type {HonoEnv} from '@fluxer/api/src/types/HonoEnv';
 import {EmailChangeRepository} from '@fluxer/api/src/user/repositories/auth/EmailChangeRepository';
 import {PasswordChangeRepository} from '@fluxer/api/src/user/repositories/auth/PasswordChangeRepository';
@@ -375,12 +374,6 @@ export const ServiceMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => 
 	const themeService = new ThemeService(storageService);
 	const csamEvidenceRetentionService = new CsamEvidenceRetentionService(storageService);
 	const gatewayService = getGatewayService();
-	const guildManagedTraitService = new GuildManagedTraitService({
-		userRepository,
-		guildRepository,
-		gatewayService,
-		userCacheService,
-	});
 	const alertService = getAlertService();
 	const workerService = getWorkerService();
 	const botMfaMirrorService = new BotMfaMirrorService(applicationRepository, userRepository, gatewayService);
@@ -511,7 +504,6 @@ export const ServiceMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => 
 		webhookRepository,
 		guildAuditLogService,
 		limitConfigService,
-		guildManagedTraitService,
 	);
 
 	const discoveryRepository = new GuildDiscoveryRepository();
@@ -963,7 +955,6 @@ export const ServiceMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => 
 	ctx.set('csamEvidenceRetentionService', csamEvidenceRetentionService);
 	ctx.set('instanceConfigRepository', instanceConfigRepository);
 	ctx.set('limitConfigService', limitConfigService);
-	ctx.set('guildManagedTraitService', guildManagedTraitService);
 	ctx.set('errorI18nService', errorI18nService);
 
 	const ncmecReporter = new NcmecReporter({config: createNcmecApiConfig(), fetch});

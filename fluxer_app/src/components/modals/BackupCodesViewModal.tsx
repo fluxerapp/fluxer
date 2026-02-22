@@ -26,6 +26,7 @@ import {BackupCodesModal} from '@app/components/modals/BackupCodesModal';
 import * as Modal from '@app/components/modals/Modal';
 import {Button} from '@app/components/uikit/button/Button';
 import {useFormSubmit} from '@app/hooks/useFormSubmit';
+import type {UserRecord} from '@app/records/UserRecord';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import {useForm} from 'react-hook-form';
@@ -34,7 +35,11 @@ interface FormInputs {
 	form: string;
 }
 
-export const BackupCodesViewModal = observer(() => {
+interface BackupCodesViewModalProps {
+	user: UserRecord;
+}
+
+export const BackupCodesViewModal = observer(({user}: BackupCodesViewModalProps) => {
 	const {t} = useLingui();
 	const form = useForm<FormInputs>();
 
@@ -42,7 +47,7 @@ export const BackupCodesViewModal = observer(() => {
 		const backupCodes = await MfaActionCreators.getBackupCodes();
 		ModalActionCreators.pop();
 		ModalActionCreators.pushWithKey(
-			modal(() => <BackupCodesModal backupCodes={backupCodes} />),
+			modal(() => <BackupCodesModal backupCodes={backupCodes} user={user} />),
 			'backup-codes',
 		);
 	};

@@ -366,8 +366,6 @@ A guild feature flag
 | `OPERATOR` | Guild is an operator guild |
 | `LARGE_GUILD_OVERRIDE` | Guild has large guild overrides enabled |
 | `VERY_LARGE_GUILD` | Guild has increased member capacity enabled |
-| `MT_MESSAGE_SCHEDULING` | Guild has managed message scheduling |
-| `MT_EXPRESSION_PACKS` | Guild has managed expression packs |
 
 <a id="guildfolderflags"></a>
 
@@ -1192,6 +1190,7 @@ Value after the change
 | lock_permissions? | boolean | Whether to sync permissions with the new parent |
 | parent_id? | ?[SnowflakeType](#snowflaketype) | New parent category ID |
 | position? | integer (int64) | New position for the channel |
+| preceding_sibling_id? | ?[SnowflakeType](#snowflaketype) | ID of the sibling channel that should directly precede this channel after reordering |
 
 <a id="guildauditlogentryresponseoptions"></a>
 

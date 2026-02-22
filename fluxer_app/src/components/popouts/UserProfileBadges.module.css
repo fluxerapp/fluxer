@@ -52,41 +52,31 @@
 	width: 20px;
 }
 
-.virtualBadge {
+.sequenceBadge {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	padding-top: 1px;
+	color: var(--brand-primary-light);
 	font-weight: 700;
-	font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
-	color: #4641d9;
+	font-family: var(--font-primary);
 	line-height: 1;
-	letter-spacing: 0.05em;
+	font-variant-numeric: tabular-nums;
 	white-space: nowrap;
-	text-decoration: none;
-	touch-action: manipulation;
-	user-select: none;
-	-webkit-user-select: none;
-	cursor: pointer;
+	pointer-events: none;
 }
 
-.virtualBadgeMobile {
+:global(.theme-light) .sequenceBadge {
+	color: var(--brand-primary);
+}
+
+.sequenceBadgeMobile {
 	height: 28px;
-	min-width: 28px;
-	font-size: 18px;
-	line-height: 24px;
+	font-size: 24px;
 }
 
-.virtualBadgeDesktop {
+.sequenceBadgeDesktop {
 	height: 20px;
-	min-width: 20px;
-	font-size: 14px;
-	line-height: 20px;
-}
-
-.virtualBadge:hover,
-.virtualBadge:active {
-	text-decoration: none;
+	font-size: 17px;
 }
 
 .link {

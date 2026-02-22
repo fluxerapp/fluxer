@@ -18,11 +18,24 @@
  */
 
 import {createTestAccount} from '@fluxer/api/src/auth/tests/AuthTestUtils';
-import {createDmChannel, createGuild} from '@fluxer/api/src/channel/tests/ChannelTestUtils';
+import {
+	createDmChannel,
+	createFriendship,
+	createGroupDmChannel,
+	createGuild,
+	type MinimalChannelResponse,
+} from '@fluxer/api/src/channel/tests/ChannelTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@fluxer/api/src/test/ApiTestHarness';
 import {createBuilder} from '@fluxer/api/src/test/TestRequestBuilder';
 import type {GuildInviteMetadataResponse} from '@fluxer/schema/src/domains/invite/InviteSchemas';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
+
+interface ErrorResponse {
+	code: string;
+	errors?: Array<{code?: string}>;
+}
+
+interface PrivateChannelsResponse extends Array<MinimalChannelResponse> {}
 
 describe('Call Endpoints', () => {
 	let harness: ApiTestHarness;
@@ -53,6 +66,20 @@ describe('Call Endpoints', () => {
 		await createBuilder(harness, user2.token).post(`/invites/${invite.code}`).body(null).execute();
 
 		return {user1, user2};
+	}
+
+	async function setupGroupDmUsers() {
+		const owner = await createTestAccount(harness);
+		const memberOne = await createTestAccount(harness);
+		const memberTwo = await createTestAccount(harness);
+		const outsider = await createTestAccount(harness);
+
+		await createFriendship(harness, owner, memberOne);
+		await createFriendship(harness, owner, memberTwo);
+
+		const groupDm = await createGroupDmChannel(harness, owner.token, [memberOne.userId, memberTwo.userId]);
+
+		return {owner, memberOne, memberTwo, outsider, groupDm};
 	}
 
 	describe('GET /channels/:channel_id/call', () => {
@@ -142,6 +169,70 @@ describe('Call Endpoints', () => {
 				.post('/channels/123456789/call/ring')
 				.body({recipients: [user2.userId]})
 				.expect(404)
+				.execute();
+		});
+
+		it('non-member cannot create or start a group DM call', async () => {
+			const {outsider, groupDm} = await setupGroupDmUsers();
+
+			await createBuilder(harness, outsider.token)
+				.post(`/channels/${groupDm.id}/call/ring`)
+				.body({})
+				.expect(404, 'UNKNOWN_CHANNEL')
+				.execute();
+		});
+
+		it('non-member cannot ring an existing group DM call', async () => {
+			const {owner, memberOne, outsider, groupDm} = await setupGroupDmUsers();
+
+			await createBuilder(harness, owner.token)
+				.post(`/channels/${groupDm.id}/call/ring`)
+				.body({recipients: [memberOne.userId]})
+				.expect(204)
+				.execute();
+
+			await createBuilder(harness, outsider.token)
+				.post(`/channels/${groupDm.id}/call/ring`)
+				.body({recipients: [memberOne.userId]})
+				.expect(404, 'UNKNOWN_CHANNEL')
+				.execute();
+		});
+
+		it('rejects group DM ring recipients outside the channel recipient set', async () => {
+			const {owner, memberOne, outsider, groupDm} = await setupGroupDmUsers();
+
+			const error = await createBuilder<ErrorResponse>(harness, owner.token)
+				.post(`/channels/${groupDm.id}/call/ring`)
+				.body({recipients: [memberOne.userId, outsider.userId]})
+				.expect(400, 'INVALID_FORM_BODY')
+				.execute();
+
+			expect(error.errors?.[0]?.code).toBe('USER_NOT_IN_CHANNEL');
+
+			const outsiderChannels = await createBuilder<PrivateChannelsResponse>(harness, outsider.token)
+				.get('/users/@me/channels')
+				.execute();
+
+			expect(outsiderChannels.some((channel) => channel.id === groupDm.id)).toBe(false);
+		});
+
+		it('group DM member can ring a valid recipient subset', async () => {
+			const {memberOne, owner, groupDm} = await setupGroupDmUsers();
+
+			await createBuilder(harness, memberOne.token)
+				.post(`/channels/${groupDm.id}/call/ring`)
+				.body({recipients: [owner.userId]})
+				.expect(204)
+				.execute();
+		});
+
+		it('group DM member can ring default recipients when recipients are omitted', async () => {
+			const {memberTwo, groupDm} = await setupGroupDmUsers();
+
+			await createBuilder(harness, memberTwo.token)
+				.post(`/channels/${groupDm.id}/call/ring`)
+				.body({})
+				.expect(204)
 				.execute();
 		});
 	});

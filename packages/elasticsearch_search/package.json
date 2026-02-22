@@ -1,0 +1,20 @@
+{
+	"name": "@fluxer/elasticsearch_search",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"exports": {
+		"./*": "./*"
+	},
+	"scripts": {
+		"typecheck": "tsgo --noEmit"
+	},
+	"dependencies": {
+		"@elastic/elasticsearch": "catalog:",
+		"@fluxer/schema": "workspace:*"
+	},
+	"devDependencies": {
+		"@types/node": "catalog:",
+		"@typescript/native-preview": "catalog:"
+	}
+}

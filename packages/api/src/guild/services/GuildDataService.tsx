@@ -36,7 +36,6 @@ import type {RequestCache} from '@fluxer/api/src/middleware/RequestCacheMiddlewa
 import type {Guild} from '@fluxer/api/src/models/Guild';
 import type {GuildMember} from '@fluxer/api/src/models/GuildMember';
 import type {User} from '@fluxer/api/src/models/User';
-import type {GuildManagedTraitService} from '@fluxer/api/src/traits/GuildManagedTraitService';
 import type {IUserRepository} from '@fluxer/api/src/user/IUserRepository';
 import type {IWebhookRepository} from '@fluxer/api/src/webhook/IWebhookRepository';
 import type {GuildCreateRequest, GuildUpdateRequest} from '@fluxer/schema/src/domains/guild/GuildRequestSchemas';
@@ -64,7 +63,6 @@ export class GuildDataService {
 		private readonly webhookRepository: IWebhookRepository,
 		private readonly guildAuditLogService: GuildAuditLogService,
 		private readonly limitConfigService: LimitConfigService,
-		private readonly guildManagedTraitService?: GuildManagedTraitService,
 	) {
 		this.helpers = new GuildDataHelpers(this.gatewayService, this.guildAuditLogService);
 
@@ -81,7 +79,6 @@ export class GuildDataService {
 			this.helpers,
 			this.limitConfigService,
 			new GuildDiscoveryRepository(),
-			this.guildManagedTraitService,
 		);
 
 		this.vanityService = new GuildVanityService(this.guildRepository, this.inviteRepository, this.helpers);

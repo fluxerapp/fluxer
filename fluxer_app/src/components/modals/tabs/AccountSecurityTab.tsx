@@ -37,6 +37,7 @@ const AccountSecurityTab: React.FC = observer(() => {
 	const {t} = useLingui();
 	const user = UserStore.currentUser;
 	const [showMaskedEmail, setShowMaskedEmail] = useState(false);
+	const [showMaskedPhone, setShowMaskedPhone] = useState(false);
 	const [passkeys, setPasskeys] = useState<Array<UserActionCreators.WebAuthnCredential>>([]);
 	const [loadingPasskeys, setLoadingPasskeys] = useState(false);
 	const [enablingSmsMfa, setEnablingSmsMfa] = useState(false);
@@ -100,9 +101,11 @@ const AccountSecurityTab: React.FC = observer(() => {
 						loadingPasskeys={loadingPasskeys}
 						enablingSmsMfa={enablingSmsMfa}
 						disablingSmsMfa={disablingSmsMfa}
+						showMaskedPhone={showMaskedPhone}
 						loadPasskeys={loadPasskeys}
 						setEnablingSmsMfa={setEnablingSmsMfa}
 						setDisablingSmsMfa={setDisablingSmsMfa}
+						setShowMaskedPhone={setShowMaskedPhone}
 					/>
 				</SettingsSection>
 

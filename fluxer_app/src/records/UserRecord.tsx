@@ -75,7 +75,7 @@ export class UserRecord {
 	private readonly _premiumUntil?: Date | null;
 	private readonly _premiumWillCancel?: boolean;
 	private readonly _premiumBillingCycle?: string | null;
-	readonly premiumLifetimeSequence?: number | null;
+	private readonly _premiumLifetimeSequence?: number | null;
 	readonly premiumBadgeHidden?: boolean;
 	readonly premiumBadgeMasked?: boolean;
 	readonly premiumBadgeTimestampHidden?: boolean;
@@ -121,7 +121,7 @@ export class UserRecord {
 		if ('premium_until' in user) this._premiumUntil = user.premium_until ? new Date(user.premium_until) : null;
 		if ('premium_will_cancel' in user) this._premiumWillCancel = user.premium_will_cancel;
 		if ('premium_billing_cycle' in user) this._premiumBillingCycle = user.premium_billing_cycle;
-		if ('premium_lifetime_sequence' in user) this.premiumLifetimeSequence = user.premium_lifetime_sequence;
+		if ('premium_lifetime_sequence' in user) this._premiumLifetimeSequence = user.premium_lifetime_sequence;
 		if ('premium_badge_hidden' in user) this.premiumBadgeHidden = user.premium_badge_hidden;
 		if ('premium_badge_masked' in user) this.premiumBadgeMasked = user.premium_badge_masked;
 		if ('premium_badge_timestamp_hidden' in user)
@@ -195,6 +195,11 @@ export class UserRecord {
 	get premiumBillingCycle(): string | null | undefined {
 		const override = DeveloperOptionsStore.premiumBillingCycleOverride;
 		return override != null ? override : this._premiumBillingCycle;
+	}
+
+	get premiumLifetimeSequence(): number | null | undefined {
+		const override = DeveloperOptionsStore.premiumLifetimeSequenceOverride;
+		return override != null ? override : this._premiumLifetimeSequence;
 	}
 
 	get premiumWillCancel(): boolean | undefined {
@@ -339,8 +344,8 @@ export class UserRecord {
 			...(this._premiumBillingCycle !== undefined || updates.premium_billing_cycle !== undefined
 				? {premium_billing_cycle: updates.premium_billing_cycle ?? this._premiumBillingCycle}
 				: {}),
-			...(this.premiumLifetimeSequence !== undefined || updates.premium_lifetime_sequence !== undefined
-				? {premium_lifetime_sequence: updates.premium_lifetime_sequence ?? this.premiumLifetimeSequence}
+			...(this._premiumLifetimeSequence !== undefined || updates.premium_lifetime_sequence !== undefined
+				? {premium_lifetime_sequence: updates.premium_lifetime_sequence ?? this._premiumLifetimeSequence}
 				: {}),
 			...(this.premiumBadgeHidden !== undefined || updates.premium_badge_hidden !== undefined
 				? {premium_badge_hidden: updates.premium_badge_hidden ?? this.premiumBadgeHidden}
@@ -520,7 +525,7 @@ export class UserRecord {
 			this.premiumUntil?.getTime() === other.premiumUntil?.getTime() &&
 			this.premiumWillCancel === other.premiumWillCancel &&
 			this._premiumBillingCycle === other._premiumBillingCycle &&
-			this.premiumLifetimeSequence === other.premiumLifetimeSequence &&
+			this._premiumLifetimeSequence === other._premiumLifetimeSequence &&
 			this.premiumBadgeHidden === other.premiumBadgeHidden &&
 			this.premiumBadgeMasked === other.premiumBadgeMasked &&
 			this.premiumBadgeTimestampHidden === other.premiumBadgeTimestampHidden &&
@@ -582,7 +587,9 @@ export class UserRecord {
 			...(this._premiumUntil !== undefined ? {premium_until: normalizeDate(this._premiumUntil)} : {}),
 			...(this._premiumWillCancel !== undefined ? {premium_will_cancel: this._premiumWillCancel} : {}),
 			...(this._premiumBillingCycle !== undefined ? {premium_billing_cycle: this._premiumBillingCycle} : {}),
-			...(this.premiumLifetimeSequence !== undefined ? {premium_lifetime_sequence: this.premiumLifetimeSequence} : {}),
+			...(this._premiumLifetimeSequence !== undefined
+				? {premium_lifetime_sequence: this._premiumLifetimeSequence}
+				: {}),
 			...(this.premiumBadgeHidden !== undefined ? {premium_badge_hidden: this.premiumBadgeHidden} : {}),
 			...(this.premiumBadgeMasked !== undefined ? {premium_badge_masked: this.premiumBadgeMasked} : {}),
 			...(this.premiumBadgeTimestampHidden !== undefined

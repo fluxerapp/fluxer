@@ -401,6 +401,7 @@ export class ChannelOperationsService {
 			channelId: ChannelID;
 			position?: number;
 			parentId: ChannelID | null | undefined;
+			precedingSiblingId: ChannelID | null | undefined;
 			lockPermissions: boolean;
 		}>;
 		requestCache: RequestCache;
@@ -424,6 +425,11 @@ export class ChannelOperationsService {
 				if (update.parentId && !channelMap.has(update.parentId)) {
 					throw InputValidationError.fromCode('parent_id', ValidationErrorCodes.INVALID_PARENT_CHANNEL);
 				}
+				if (update.precedingSiblingId && !channelMap.has(update.precedingSiblingId)) {
+					throw InputValidationError.fromCode('preceding_sibling_id', ValidationErrorCodes.INVALID_CHANNEL_ID, {
+						channelId: update.precedingSiblingId.toString(),
+					});
+				}
 			}
 
 			const viewable = new Set(await this.gatewayService.getViewableChannels({guildId, userId}));
@@ -433,6 +439,9 @@ export class ChannelOperationsService {
 					throw new MissingPermissionsError();
 				}
 				if (update.parentId && !viewable.has(update.parentId)) {
+					throw new MissingPermissionsError();
+				}
+				if (update.precedingSiblingId && !viewable.has(update.precedingSiblingId)) {
 					throw new MissingPermissionsError();
 				}
 			}
@@ -453,7 +462,13 @@ export class ChannelOperationsService {
 	private async applySinglePositionUpdate(params: {
 		guildId: GuildID;
 		userId: UserID;
-		update: {channelId: ChannelID; position?: number; parentId: ChannelID | null | undefined; lockPermissions: boolean};
+		update: {
+			channelId: ChannelID;
+			position?: number;
+			parentId: ChannelID | null | undefined;
+			precedingSiblingId: ChannelID | null | undefined;
+			lockPermissions: boolean;
+		};
 		requestCache: RequestCache;
 	}): Promise<void> {
 		const {guildId, update, requestCache} = params;
@@ -478,26 +493,29 @@ export class ChannelOperationsService {
 			throw InputValidationError.fromCode('parent_id', ValidationErrorCodes.CATEGORIES_CANNOT_HAVE_PARENTS);
 		}
 
-		const orderedChannels = sortChannelsForOrdering(allChannels);
-		const siblings = orderedChannels.filter((ch) => (ch.parentId ?? null) === desiredParent);
-		const blockIds = computeChannelMoveBlockIds({channels: orderedChannels, targetId: target.id});
-		const siblingsWithoutBlock = siblings.filter((ch) => !blockIds.has(ch.id));
+		let precedingSibling = update.precedingSiblingId ?? null;
+		if (update.precedingSiblingId === undefined) {
+			const orderedChannels = sortChannelsForOrdering(allChannels);
+			const siblings = orderedChannels.filter((ch) => (ch.parentId ?? null) === desiredParent);
+			const blockIds = computeChannelMoveBlockIds({channels: orderedChannels, targetId: target.id});
+			const siblingsWithoutBlock = siblings.filter((ch) => !blockIds.has(ch.id));
 
-		let insertIndex = siblingsWithoutBlock.length;
-		if (update.position !== undefined) {
-			const adjustedPosition = Math.max(update.position, 0);
-			insertIndex = Math.min(adjustedPosition, siblingsWithoutBlock.length);
-		} else {
-			const isVoice = target.type === ChannelTypes.GUILD_VOICE;
-			if (isVoice) {
-				insertIndex = siblingsWithoutBlock.length;
+			let insertIndex = siblingsWithoutBlock.length;
+			if (update.position !== undefined) {
+				const adjustedPosition = Math.max(update.position, 0);
+				insertIndex = Math.min(adjustedPosition, siblingsWithoutBlock.length);
 			} else {
-				const firstVoice = siblingsWithoutBlock.findIndex((ch) => ch.type === ChannelTypes.GUILD_VOICE);
-				insertIndex = firstVoice === -1 ? siblingsWithoutBlock.length : firstVoice;
+				const isVoice = target.type === ChannelTypes.GUILD_VOICE;
+				if (isVoice) {
+					insertIndex = siblingsWithoutBlock.length;
+				} else {
+					const firstVoice = siblingsWithoutBlock.findIndex((ch) => ch.type === ChannelTypes.GUILD_VOICE);
+					insertIndex = firstVoice === -1 ? siblingsWithoutBlock.length : firstVoice;
+				}
 			}
-		}
 
-		const precedingSibling = insertIndex === 0 ? null : siblingsWithoutBlock[insertIndex - 1].id;
+			precedingSibling = insertIndex === 0 ? null : siblingsWithoutBlock[insertIndex - 1].id;
+		}
 
 		await this.executeChannelReorder({
 			guildId,
@@ -552,11 +570,18 @@ export class ChannelOperationsService {
 		const desiredParentId = plan.desiredParentById.get(operation.channelId) ?? null;
 		const targetChannel = allChannels.find((ch) => ch.id === operation.channelId);
 		const currentParentId = targetChannel?.parentId ?? null;
+		const parentIdsToValidate = new Set<ChannelID>();
+		if (currentParentId) {
+			parentIdsToValidate.add(currentParentId);
+		}
+		if (desiredParentId) {
+			parentIdsToValidate.add(desiredParentId);
+		}
 		if (desiredParentId && desiredParentId !== currentParentId) {
 			await this.ensureCategoryHasCapacity({guildId, categoryId: desiredParentId});
 		}
 
-		ChannelHelpers.validateChannelVoicePlacement(plan.finalChannels, plan.desiredParentById);
+		ChannelHelpers.validateChannelVoicePlacement(plan.finalChannels, plan.desiredParentById, parentIdsToValidate);
 
 		if (plan.orderUnchanged) {
 			return;

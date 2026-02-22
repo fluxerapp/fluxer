@@ -17,7 +17,6 @@
  * along with Fluxer. If not, see <https://www.gnu.org/licenses/>.
  */
 
-import {ManagedTraits} from '@fluxer/constants/src/ManagedTraits';
 import type {ValueOf} from '@fluxer/constants/src/ValueOf';
 
 export const GuildVerificationLevel = {
@@ -123,8 +122,6 @@ export const GuildFeatures = {
 	OPERATOR: 'OPERATOR',
 	LARGE_GUILD_OVERRIDE: 'LARGE_GUILD_OVERRIDE',
 	VERY_LARGE_GUILD: 'VERY_LARGE_GUILD',
-	MANAGED_MESSAGE_SCHEDULING: ManagedTraits.MESSAGE_SCHEDULING,
-	MANAGED_EXPRESSION_PACKS: ManagedTraits.EXPRESSION_PACKS,
 } as const;
 
 export type GuildFeature = ValueOf<typeof GuildFeatures>;

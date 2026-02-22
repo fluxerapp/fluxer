@@ -11,7 +11,8 @@
 		"sqlite_path": "./data/fluxer.db"
 	},
 	"internal": {
-		"kv": "redis://valkey:6379/0"
+		"kv": "redis://valkey:6379/0",
+		"kv_mode": "standalone"
 	},
 	"s3": {
 		"access_key_id": "YOUR_S3_ACCESS_KEY",
@@ -55,6 +56,7 @@
 	},
 	"integrations": {
 		"search": {
+			"engine": "meilisearch",
 			"url": "http://meilisearch:7700",
 			"api_key": "YOUR_MEILISEARCH_API_KEY"
 		}

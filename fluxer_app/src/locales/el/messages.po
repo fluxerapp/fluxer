@@ -134,12 +134,12 @@ msgid "{0} of {totalAttachments}"
 msgstr "{0} από {totalAttachments}"
 
 #. placeholder {0}: passkeys.length
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:285
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:288
 msgid "{0} passkey registered (max 10)"
 msgstr "{0} κωδικός πρόσβασης καταχωρημένος (μέγιστο 10)"
 
 #. placeholder {0}: passkeys.length
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:286
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:289
 msgid "{0} passkeys registered (max 10)"
 msgstr "{0} κωδικοί πρόσβασης καταχωρημένοι (μέγιστο 10)"
 
@@ -633,11 +633,11 @@ msgstr "{lockedStickerCount} αυτοκόλλητο"
 msgid "{lockedStickerCount} stickers"
 msgstr "{lockedStickerCount} αυτοκόλλητα"
 
-#: src/components/alerts/MaxBookmarksModal.tsx:38
+#: src/components/alerts/MaxBookmarksModal.tsx:41
 msgid "{maxBookmarks} bookmark"
 msgstr "{maxBookmarks} σελιδοδείκτης"
 
-#: src/components/alerts/MaxBookmarksModal.tsx:38
+#: src/components/alerts/MaxBookmarksModal.tsx:41
 msgid "{maxBookmarks} bookmarks"
 msgstr "{maxBookmarks} σελιδοδείκτες"
 
@@ -718,11 +718,11 @@ msgstr "{participantCount} συμμετέχων στην κλήση"
 msgid "{participantCount} participants in call"
 msgstr "{participantCount} συμμετέχοντες στην κλήση"
 
-#: src/components/alerts/MaxBookmarksModal.tsx:63
+#: src/components/alerts/MaxBookmarksModal.tsx:66
 msgid "{premiumBookmarks} bookmark"
 msgstr "{premiumBookmarks} σελιδοδείκτης"
 
-#: src/components/alerts/MaxBookmarksModal.tsx:63
+#: src/components/alerts/MaxBookmarksModal.tsx:66
 msgid "{premiumBookmarks} bookmarks"
 msgstr "{premiumBookmarks} σελιδοδείκτες"
 
@@ -875,11 +875,11 @@ msgstr "{username} αφαίρεσε κάποιον από την ομάδα."
 msgid "{username} started a call."
 msgstr "{username} ξεκίνησε μια κλήση."
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:100
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:102
 msgid "{v} gift"
 msgstr "{v} δώρο"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:100
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:102
 msgid "{v} gifts"
 msgstr "{v} δώρα"
 
@@ -1088,7 +1088,7 @@ msgstr "<0>Ξαναέδωσε ήχο</0> στο μέλος."
 msgid "<0>Unmuted</0> the member."
 msgstr "<0>Αποσιώπησε</0> το μέλος."
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:370
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:373
 msgid "<0>Warning:</0> This will also disable SMS two-factor authentication."
 msgstr "<0>Προειδοποίηση:</0> Αυτό θα απενεργοποιήσει επίσης τον έλεγχο δύο παραγόντων SMS."
 
@@ -1362,9 +1362,9 @@ msgstr "30 δευτερόλεπτα"
 msgid "4 hours"
 msgstr "4 ώρες"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:203
-#: src/components/modals/FluxerTagChangeModal.tsx:231
-#: src/components/modals/FluxerTagChangeModal.tsx:248
+#: src/components/modals/FluxerTagChangeModal.tsx:217
+#: src/components/modals/FluxerTagChangeModal.tsx:245
+#: src/components/modals/FluxerTagChangeModal.tsx:262
 msgid "4-digit tag"
 msgstr "τετραψήφια ετικέτα"
 
@@ -1634,7 +1634,7 @@ msgstr "Ο λογαριασμός δηλώθηκε με επιτυχία"
 msgid "Account Connected"
 msgstr "Λογαριασμός Συνδεδεμένος"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:55
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:57
 msgid "Account State Overrides"
 msgstr "Παράκαμψη κατάστασης λογαριασμού"
 
@@ -1642,7 +1642,7 @@ msgstr "Παράκαμψη κατάστασης λογαριασμού"
 msgid "Account Too New"
 msgstr "Ο λογαριασμός είναι πολύ νέος"
 
-#: src/actions/InviteActionCreators.tsx:178
+#: src/actions/InviteActionCreators.tsx:182
 #: src/components/modals/RequiredActionModal.tsx:143
 #: src/components/modals/RequiredActionModal.tsx:416
 msgid "Account Verification Required"
@@ -1763,7 +1763,7 @@ msgstr "Προσθήκη"
 msgid "Add a bot to a community with requested permissions"
 msgstr "Προσθέστε ένα bot σε μια κοινότητα με τα απαιτούμενα δικαιώματα"
 
-#: src/components/modals/ForwardModal.tsx:309
+#: src/components/modals/ForwardModal.tsx:314
 msgid "Add a comment (optional)"
 msgstr "Προσθήκη σχολίου (προαιρετικό)"
 
@@ -1782,7 +1782,7 @@ msgstr "Προσθήκη προσαρμοσμένου φόντου"
 msgid "Add a different account"
 msgstr "Προσθήκη άλλου λογαριασμού"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:348
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:351
 msgid "Add a phone number to enable SMS two-factor authentication"
 msgstr "Προσθέστε αριθμό τηλεφώνου για ενεργοποίηση του SMS δύο παραγόντων"
 
@@ -1844,7 +1844,7 @@ msgstr "Φόρμα προσθήκης σύνδεσης"
 msgid "Add domain connection"
 msgstr "Προσθήκη σύνδεσης τομέα"
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:98
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:101
 msgid "Add Email"
 msgstr "Προσθήκη Email"
 
@@ -1902,12 +1902,12 @@ msgstr "Προσθέστε ή αλλάξτε τον αριθμό τηλεφών�
 msgid "Add Override"
 msgstr "Προσθήκη Παράκαμψης"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:290
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:293
 msgid "Add Passkey"
 msgstr "Προσθήκη Κωδικού πρόσβασης"
 
 #: src/components/channel/barriers/BarrierComponents.tsx:198
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:395
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:398
 msgid "Add Phone"
 msgstr "Προσθήκη Τηλεφώνου"
 
@@ -2010,7 +2010,7 @@ msgstr "Προστέθηκε {0}."
 msgid "Added roles."
 msgstr "Προστέθηκαν ρόλοι."
 
-#: src/actions/SavedMessageActionCreators.tsx:58
+#: src/actions/SavedMessageActionCreators.tsx:59
 msgid "Added to bookmarks"
 msgstr "Προστέθηκε στα σελιδοδείκτες"
 
@@ -2028,11 +2028,11 @@ msgstr "Προστέθηκε στα Αγαπημένα"
 msgid "Added to saved media"
 msgstr "Προστέθηκε στα αποθηκευμένα μέσα"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:313
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:316
 msgid "Added: {createdDate}"
 msgstr "Προστέθηκε: {createdDate}"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:309
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:312
 msgid "Added: {createdDate} • Last used: {lastUsedDate}"
 msgstr "Προστέθηκε: {createdDate} • Τελευταία χρήση: {lastUsedDate}"
 
@@ -2930,7 +2930,7 @@ msgid "Are you sure you want to remove this connection? This action cannot be un
 msgstr "Είστε σίγουροι ότι θέλετε να αφαιρέσετε αυτή τη σύνδεση; Αυτή η ενέργεια δεν μπορεί να αναιρεθεί."
 
 #. placeholder {0}: user.phone
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:364
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:367
 msgid "Are you sure you want to remove your phone number <0>{0}</0>?"
 msgstr "Είστε σίγουροι ότι θέλετε να αφαιρέσετε τον αριθμό τηλεφώνου σας <0>{0}</0>;"
 
@@ -3395,7 +3395,7 @@ msgstr "Επιστροφή στους Ρόλους"
 msgid "Back to Settings"
 msgstr "Επιστροφή στις Ρυθμίσεις"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:118
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:120
 msgid "Backend Premium Override"
 msgstr "Παρακάμψη backend Premium"
 
@@ -3438,12 +3438,12 @@ msgid "backup codes"
 msgstr "κωδικοί εφεδρείας"
 
 #: src/components/modals/BackupCodesModal.tsx:43
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:254
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:257
 #: src/components/modals/utils/SettingsSearchIndex.tsx:140
 msgid "Backup Codes"
 msgstr "Κωδικοί αντιγράφων ασφαλείας"
 
-#: src/components/modals/BackupCodesRegenerateModal.tsx:48
+#: src/components/modals/BackupCodesRegenerateModal.tsx:55
 msgid "Backup codes regenerated"
 msgstr "Οι κωδικοί αντιγράφων ασφαλείας αναδημιουργήθηκαν"
 
@@ -3720,9 +3720,9 @@ msgstr "Λέσχη βιβλίου"
 msgid "Bookmark"
 msgstr "Σελιδοδείκτης"
 
-#: src/components/alerts/MaxBookmarksModal.tsx:43
-#: src/components/alerts/MaxBookmarksModal.tsx:54
-#: src/components/alerts/MaxBookmarksModal.tsx:67
+#: src/components/alerts/MaxBookmarksModal.tsx:46
+#: src/components/alerts/MaxBookmarksModal.tsx:57
+#: src/components/alerts/MaxBookmarksModal.tsx:70
 msgid "Bookmark Limit Reached"
 msgstr "Έφτασε το όριο σελιδοδεικτών"
 
@@ -3750,7 +3750,7 @@ msgstr "Σημειώθηκε ως σελιδοδείκτης!"
 
 #: src/components/modals/BookmarksBottomSheet.tsx:109
 #: src/components/pages/SavedMessagesPage.tsx:67
-#: src/components/popouts/InboxPopout.tsx:58
+#: src/components/popouts/InboxPopout.tsx:57
 msgid "Bookmarks"
 msgstr "Σελιδοδείκτες"
 
@@ -4055,7 +4055,7 @@ msgstr "Οι κάμερες είναι απενεργοποιημένες ότα
 #: src/components/alerts/FileSizeTooLargeModal.tsx:87
 #: src/components/auth/BrowserLoginHandoffModal.tsx:269
 #: src/components/bottomsheets/CreateDMBottomSheet.tsx:130
-#: src/components/channel/ChannelTextarea.tsx:312
+#: src/components/channel/ChannelTextarea.tsx:310
 #: src/components/channel/friends/FriendListItem.tsx:259
 #: src/components/channel/MentionEveryonePopout.tsx:128
 #: src/components/emojis/EmojiListItem.tsx:125
@@ -4069,8 +4069,8 @@ msgstr "Οι κάμερες είναι απενεργοποιημένες ότα
 #: src/components/modals/AddGuildModal.tsx:413
 #: src/components/modals/AddGuildStickerModal.tsx:120
 #: src/components/modals/AttachmentEditModal.tsx:122
-#: src/components/modals/BackupCodesRegenerateModal.tsx:72
-#: src/components/modals/BackupCodesViewModal.tsx:70
+#: src/components/modals/BackupCodesRegenerateModal.tsx:79
+#: src/components/modals/BackupCodesViewModal.tsx:75
 #: src/components/modals/BanMemberModal.tsx:143
 #: src/components/modals/CameraPreviewModal.tsx:485
 #: src/components/modals/CaptchaModal.tsx:187
@@ -4094,14 +4094,14 @@ msgstr "Οι κάμερες είναι απενεργοποιημένες ότα
 #: src/components/modals/EditFavoriteMemeModal.tsx:85
 #: src/components/modals/EditGuildStickerModal.tsx:113
 #: src/components/modals/EditPackModal.tsx:103
-#: src/components/modals/EmailChangeModal.tsx:199
-#: src/components/modals/EmailChangeModal.tsx:230
-#: src/components/modals/EmailChangeModal.tsx:267
-#: src/components/modals/EmailChangeModal.tsx:298
+#: src/components/modals/EmailChangeModal.tsx:202
+#: src/components/modals/EmailChangeModal.tsx:233
+#: src/components/modals/EmailChangeModal.tsx:270
+#: src/components/modals/EmailChangeModal.tsx:301
 #: src/components/modals/ExternalLinkWarningModal.tsx:102
-#: src/components/modals/FluxerTagChangeModal.tsx:117
-#: src/components/modals/FluxerTagChangeModal.tsx:280
-#: src/components/modals/ForwardModal.tsx:373
+#: src/components/modals/FluxerTagChangeModal.tsx:122
+#: src/components/modals/FluxerTagChangeModal.tsx:294
+#: src/components/modals/ForwardModal.tsx:378
 #: src/components/modals/guild_tabs/GuildBansTab.tsx:103
 #: src/components/modals/guild_tabs/GuildRolesTab.tsx:624
 #: src/components/modals/GuildFolderSettingsModal.tsx:199
@@ -4113,7 +4113,7 @@ msgstr "Οι κάμερες είναι απενεργοποιημένες ότα
 #: src/components/modals/KickMemberModal.tsx:63
 #: src/components/modals/MessageHistoryThresholdModal.tsx:103
 #: src/components/modals/MfaTotpDisableModal.tsx:75
-#: src/components/modals/MfaTotpEnableModal.tsx:103
+#: src/components/modals/MfaTotpEnableModal.tsx:106
 #: src/components/modals/PasskeyNameModal.tsx:62
 #: src/components/modals/PasswordChangeModal.tsx:145
 #: src/components/modals/PasswordChangeModal.tsx:176
@@ -4146,7 +4146,7 @@ msgstr "Ακύρωση"
 msgid "Cancel Friend Request"
 msgstr "Ακύρωση αιτήματος φιλίας"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:112
+#: src/components/modals/FluxerTagChangeModal.tsx:117
 msgid "Cancel if you want to choose a different username instead."
 msgstr "Ακύρωσε αν θέλεις να επιλέξεις διαφορετικό όνομα χρήστη."
 
@@ -4178,11 +4178,11 @@ msgstr "Δεν μπορεί να επεξεργαστεί"
 msgid "Cannot Delete Account"
 msgstr "Δεν είναι δυνατή η διαγραφή λογαριασμού"
 
-#: src/actions/InviteActionCreators.tsx:313
+#: src/actions/InviteActionCreators.tsx:317
 msgid "Cannot install emoji pack"
 msgstr "Δεν είναι δυνατή η εγκατάσταση πακέτου emoji"
 
-#: src/actions/InviteActionCreators.tsx:314
+#: src/actions/InviteActionCreators.tsx:318
 msgid "Cannot install sticker pack"
 msgstr "Δεν είναι δυνατή η εγκατάσταση πακέτου αυτοκόλλητων"
 
@@ -4279,7 +4279,7 @@ msgstr "Αλλαγή πανό"
 msgid "Change email"
 msgstr "Αλλαγή email"
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:81
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:84
 msgid "Change Email"
 msgstr "Αλλαγή email"
 
@@ -4288,12 +4288,12 @@ msgstr "Αλλαγή email"
 msgid "Change emoji"
 msgstr "Αλλαγή emoji"
 
-#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:59
-#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:69
+#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:60
+#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:70
 msgid "Change FluxerTag"
 msgstr "Αλλαγή FluxerTag"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:158
+#: src/components/modals/FluxerTagChangeModal.tsx:163
 msgid "Change FluxerTag form"
 msgstr "Φόρμα αλλαγής FluxerTag"
 
@@ -4360,7 +4360,7 @@ msgid "change password"
 msgstr "αλλαγή κωδικού"
 
 #: src/components/modals/PasswordChangeModal.tsx:227
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:124
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:127
 msgid "Change Password"
 msgstr "Αλλαγή κωδικού"
 
@@ -4372,7 +4372,7 @@ msgstr "Φόρμα αλλαγής κωδικού πρόσβασης"
 msgid "Change what users without Read Message History can see"
 msgstr "Αλλάξτε τι μπορούν να δουν οι χρήστες χωρίς δικαίωμα Ανάγνωσης Ιστορικού Μηνυμάτων"
 
-#: src/components/modals/EmailChangeModal.tsx:183
+#: src/components/modals/EmailChangeModal.tsx:186
 msgid "Change Your Email"
 msgstr "Αλλάξτε το Email σας"
 
@@ -4380,7 +4380,7 @@ msgstr "Αλλάξτε το Email σας"
 msgid "Change your email address"
 msgstr "Αλλάξτε τη διεύθυνση email σας"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:159
+#: src/components/modals/FluxerTagChangeModal.tsx:164
 msgid "Change Your FluxerTag"
 msgstr "Αλλάξτε το FluxerTag σας"
 
@@ -4392,7 +4392,7 @@ msgstr "Αλλάξτε το παρατσούκλι σας σε αυτή την �
 msgid "Change your password"
 msgstr "Αλλάξτε τον κωδικό πρόσβασής σας"
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:106
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:109
 msgid "Change your password to keep your account secure"
 msgstr "Αλλάξτε τον κωδικό σας για να ασφαλίσετε τον λογαριασμό σας"
 
@@ -4404,7 +4404,7 @@ msgstr "Αλλάξτε την εικόνα προφίλ σας"
 msgid "Change your username"
 msgstr "Αλλάξτε το όνομα χρήστη σας"
 
-#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:90
+#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:91
 msgid "Change your username and 4-digit tag"
 msgstr "Αλλάξτε το όνομα χρήστη και το τετραψήφιο tag σας"
 
@@ -4424,7 +4424,7 @@ msgstr "Η ρυθμόμεση άλλαξε σε {0}."
 msgid "Changed the voice region to {0}."
 msgstr "Η περιοχή φωνής άλλαξε σε {0}."
 
-#: src/components/channel/ChannelTextarea.tsx:751
+#: src/components/channel/ChannelTextarea.tsx:749
 #: src/utils/SearchUtils.tsx:268
 msgid "channel"
 msgstr "κανάλι"
@@ -4846,7 +4846,7 @@ msgstr "Διεκδικήστε τον λογαριασμό σας για να α
 msgid "Claim your account to call"
 msgstr "Διεκδικήστε τον λογαριασμό σας για να καλέσετε"
 
-#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:56
+#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:57
 msgid "Claim your account to change your FluxerTag"
 msgstr "Διεκδικήστε τον λογαριασμό σας για να αλλάξετε το FluxerTag σας"
 
@@ -5144,7 +5144,7 @@ msgstr "Το μυστικό πελάτη ξαναδημιουργήθηκε. Ε�
 #: src/components/modals/components/SettingsModalHeader.tsx:98
 #: src/components/modals/InviteModal.tsx:135
 #: src/components/modals/MediaModal.tsx:349
-#: src/components/modals/MobileVideoViewer.tsx:252
+#: src/components/modals/MobileVideoViewer.tsx:260
 #: src/components/modals/Modal.tsx:382
 #: src/components/modals/Modal.tsx:460
 #: src/components/modals/PackInviteModal.tsx:152
@@ -5201,7 +5201,7 @@ msgstr "Θέμα Άνθρακα"
 #: src/components/auth/MfaScreen.tsx:131
 #: src/components/invites/InviteListItem.tsx:56
 #: src/components/modals/MfaTotpDisableModal.tsx:63
-#: src/components/modals/MfaTotpEnableModal.tsx:91
+#: src/components/modals/MfaTotpEnableModal.tsx:94
 #: src/components/pages/report/ReportBreadcrumbs.tsx:48
 msgid "Code"
 msgstr "Κώδικας"
@@ -5333,7 +5333,7 @@ msgid "Communication"
 msgstr "Επικοινωνία"
 
 #: src/components/modals/components/FeatureComparisonTable.tsx:49
-#: src/stores/QuickSwitcherStore.tsx:1354
+#: src/stores/QuickSwitcherStore.tsx:1352
 #: src/utils/quick_switcher/QuickSwitcherModalUtils.tsx:99
 msgid "Communities"
 msgstr "Κοινότητες"
@@ -5651,7 +5651,7 @@ msgid "Configure your profile badge"
 msgstr "Ρύθμιση σήματος προφίλ"
 
 #: src/components/channel/MentionEveryonePopout.tsx:134
-#: src/components/modals/EmailChangeModal.tsx:304
+#: src/components/modals/EmailChangeModal.tsx:307
 msgid "Confirm"
 msgstr "Επιβεβαίωση"
 
@@ -5825,15 +5825,15 @@ msgstr "Μενού περιεχομένου"
 msgid "Context menus can be opened with left-click (on buttons) or right-click (on other elements). This demonstrates various menu items including checkboxes, radio buttons, sliders, and submenus."
 msgstr "Τα μενού περιεχομένου ανοίγουν με αριστερό κλικ (στα κουμπιά) ή δεξί κλικ (στα υπόλοιπα στοιχεία). Αυτό δείχνει διάφορα στοιχεία μενού όπως πλαίσια ελέγχου, ραδιοκουμπιά, ρυθμιστικά και υπομενού."
 
-#: src/components/channel/ChannelTextarea.tsx:311
+#: src/components/channel/ChannelTextarea.tsx:309
 #: src/components/modals/AddConnectionModal.tsx:221
-#: src/components/modals/BackupCodesRegenerateModal.tsx:75
-#: src/components/modals/BackupCodesViewModal.tsx:73
+#: src/components/modals/BackupCodesRegenerateModal.tsx:82
+#: src/components/modals/BackupCodesViewModal.tsx:78
 #: src/components/modals/DeviceRevokeModal.tsx:82
-#: src/components/modals/FluxerTagChangeModal.tsx:116
-#: src/components/modals/FluxerTagChangeModal.tsx:283
+#: src/components/modals/FluxerTagChangeModal.tsx:121
+#: src/components/modals/FluxerTagChangeModal.tsx:297
 #: src/components/modals/MfaTotpDisableModal.tsx:78
-#: src/components/modals/MfaTotpEnableModal.tsx:106
+#: src/components/modals/MfaTotpEnableModal.tsx:109
 #: src/components/modals/SudoVerificationModal.tsx:410
 msgid "Continue"
 msgstr "Συνέχεια"
@@ -6555,7 +6555,7 @@ msgstr "Τρέχουσα συσκευή"
 msgid "Current DM"
 msgstr "Τρέχον ιδιωτικό μήνυμα"
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:113
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:116
 msgid "Current Password"
 msgstr "Τρέχον συνθηματικό"
 
@@ -6601,7 +6601,7 @@ msgstr "Προσαρμογές CSS"
 msgid "Custom Date Range"
 msgstr "Προσαρμοσμένη περίοδος ημερομηνιών"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:227
+#: src/components/modals/FluxerTagChangeModal.tsx:241
 msgid "Custom discriminators are not available on this instance"
 msgstr "Προσαρμοσμένοι διακριτές δεν είναι διαθέσιμοι σε αυτήν την έκδοση"
 
@@ -6727,11 +6727,12 @@ msgstr "Προσαρμόστε ποια κουμπιά εμφανίζονται 
 msgid "Customize which buttons are visible in the message input area. Keyboard shortcuts will continue to work even if buttons are hidden."
 msgstr "Προσαρμόστε ποια κουμπιά είναι ορατά στην περιοχή εισαγωγής μηνυμάτων. Οι συντομεύσεις πληκτρολογίου θα συνεχίσουν να λειτουργούν ακόμη και αν τα κουμπιά είναι κρυμμένα."
 
-#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:74
-msgid "Customize your 4-digit tag (#{discriminator}) to your liking with Plutonium"
-msgstr "Προσαρμόστε την 4ψήφια ετικέτα σας (#{discriminator}) όπως θέλετε με το Plutonium"
+#. placeholder {0}: user.discriminator
+#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:75
+msgid "Customize your 4-digit tag (#{0}) to your liking with Plutonium"
+msgstr "Προσαρμόστε την 4-ψήφια ετικέτα σας (#{0}) σύμφωνα με τις προτιμήσεις σας με το Plutonium"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:272
+#: src/components/modals/FluxerTagChangeModal.tsx:286
 msgid "Customize your 4-digit tag or keep it when changing your username"
 msgstr "Προσαρμόστε την 4ψήφια ετικέτα σας ή διατηρήστε την όταν αλλάζετε όνομα χρήστη"
 
@@ -7069,7 +7070,7 @@ msgstr "διαγραφή"
 #: src/components/emojis/EmojiListItem.tsx:195
 #: src/components/emojis/EmojiListItem.tsx:252
 #: src/components/emojis/EmojiListItem.tsx:308
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:322
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:325
 #: src/components/modals/tabs/component_gallery_tab/ButtonsTab.tsx:157
 #: src/components/modals/tabs/component_gallery_tab/ButtonsTab.tsx:242
 #: src/components/modals/tabs/component_gallery_tab/index.tsx:165
@@ -7515,7 +7516,7 @@ msgstr "Άμεσο Μήνυμα"
 #: src/components/layout/guild_list/FluxerButton.tsx:80
 #: src/components/modals/GuildPrivacySettingsModal.tsx:76
 #: src/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:221
-#: src/stores/QuickSwitcherStore.tsx:833
+#: src/stores/QuickSwitcherStore.tsx:831
 msgid "Direct Messages"
 msgstr "Άμεσα Μηνύματα"
 
@@ -7530,7 +7531,7 @@ msgstr "απενεργοποίηση"
 
 #: src/components/invites/DisableInvitesButton.tsx:60
 #: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:240
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:426
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:429
 msgid "Disable"
 msgstr "Απενεργοποίηση"
 
@@ -7558,7 +7559,7 @@ msgstr "Απενεργοποίηση κινούμενων εικόνων και 
 msgid "Disable animations and transitions. Currently controlled by your system setting."
 msgstr "Απενεργοποίηση κινούμενων εικόνων και μεταβάσεων. Ελέγχεται αυτήν τη στιγμή από τις ρυθμίσεις του συστήματός σου."
 
-#: src/stores/QuickSwitcherStore.tsx:915
+#: src/stores/QuickSwitcherStore.tsx:913
 msgid "Disable Compact Mode"
 msgstr "Απενεργοποίηση συμπαγούς λειτουργίας"
 
@@ -7585,7 +7586,7 @@ msgstr "Απενεργοποίηση καταστολής θορύβου"
 msgid "Disable Picture-in-Picture Popout"
 msgstr "Απενεργοποίηση Εικόνας σε Εικόνα"
 
-#: src/stores/QuickSwitcherStore.tsx:931
+#: src/stores/QuickSwitcherStore.tsx:929
 msgid "Disable Reduced Motion"
 msgstr "Απενεργοποίηση μειωμένης κίνησης"
 
@@ -7754,7 +7755,7 @@ msgstr "Διακριτής"
 msgid "Discussion or promotion of illegal activities"
 msgstr "Συζήτηση ή προώθηση παράνομων δραστηριοτήτων"
 
-#: src/components/alerts/MaxBookmarksModal.tsx:76
+#: src/components/alerts/MaxBookmarksModal.tsx:79
 #: src/components/layout/GuildLayout.tsx:106
 #: src/components/layout/NagbarContent.tsx:42
 #: src/components/modals/GiftAcceptModal.tsx:110
@@ -7890,12 +7891,12 @@ msgstr "Θέλεις επίσης να αποκλείσεις άμεσα μην�
 msgid "Do you want to send this pin back in time?"
 msgstr "Θέλεις να στείλεις αυτό το καρφί πίσω στον χρόνο;"
 
-#: src/components/channel/MessageActionUtils.tsx:410
+#: src/components/channel/MessageActionUtils.tsx:411
 msgid "Do you want to send this pin back to the future?"
 msgstr "Θέλεις να στείλεις αυτό το καρφί πίσω στο μέλλον;"
 
 #: src/components/modals/tabs/AccessibilityTab.tsx:148
-#: src/components/modals/tabs/MyProfileTab.tsx:768
+#: src/components/modals/tabs/MyProfileTab.tsx:767
 msgid "Doc, I'm from the future. I came here in a time machine that you invented. Now, I need your help to get back to the year 1985."
 msgstr "Δόκτορα, έρχομαι από το μέλλον. Ήρθα με μια μηχανή του χρόνου που εφεύρες. Τώρα, χρειάζομαι τη βοήθειά σου για να γυρίσω στο 1985."
 
@@ -8344,13 +8345,13 @@ msgid "Email"
 msgstr "Email"
 
 #: src/components/modals/tabs/account_security_tab/AccountTab.tsx:65
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:91
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:94
 #: src/components/modals/tabs/component_gallery_tab/InputsTab.tsx:107
 #: src/components/pages/report/ReportStepEmail.tsx:76
 msgid "Email Address"
 msgstr "Διεύθυνση email"
 
-#: src/components/modals/EmailChangeModal.tsx:165
+#: src/components/modals/EmailChangeModal.tsx:168
 msgid "Email changed"
 msgstr "Το email άλλαξε"
 
@@ -8388,7 +8389,7 @@ msgstr "Μπάρα ειδοποίησης επαλήθευσης email"
 msgid "Email Verification Required"
 msgstr "Απαιτείται επαλήθευση email"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:57
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:59
 msgid "Email Verified Override"
 msgstr "Παράκαμψη επαλήθευσης email"
 
@@ -8426,11 +8427,11 @@ msgstr "ενσωματώσεις"
 msgid "Embeds"
 msgstr "Ενσωματώσεις"
 
-#: src/components/channel/MessageActionUtils.tsx:520
+#: src/components/channel/MessageActionUtils.tsx:526
 msgid "Embeds suppressed"
 msgstr "Οι ενσωματώσεις αποσιωπήθηκαν"
 
-#: src/components/channel/MessageActionUtils.tsx:506
+#: src/components/channel/MessageActionUtils.tsx:512
 msgid "Embeds unsuppressed"
 msgstr "Οι ενσωματώσεις αποκαταστάθηκαν"
 
@@ -8485,7 +8486,7 @@ msgstr "Τα ονόματα emoji πρέπει να έχουν τουλάχισ�
 msgid "Emoji pack"
 msgstr "Πακέτο emoji"
 
-#: src/actions/InviteActionCreators.tsx:255
+#: src/actions/InviteActionCreators.tsx:259
 msgid "Emoji pack creation limit reached"
 msgstr "Επιτεύχθηκε το όριο δημιουργίας πακέτων emoji"
 
@@ -8493,7 +8494,7 @@ msgstr "Επιτεύχθηκε το όριο δημιουργίας πακέτω
 msgid "Emoji Pack Invite"
 msgstr "Πρόσκληση πακέτου emoji"
 
-#: src/actions/InviteActionCreators.tsx:241
+#: src/actions/InviteActionCreators.tsx:245
 msgid "Emoji pack limit reached"
 msgstr "Επιτεύχθηκε το όριο πακέτων emoji"
 
@@ -8530,9 +8531,9 @@ msgstr "κενή κατάσταση"
 
 #: src/components/invites/DisableInvitesButton.tsx:60
 #: src/components/layout/GuildLayout.tsx:74
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:244
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:432
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:438
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:247
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:435
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:441
 #: src/components/modals/tabs/components/InputMonitoringSection.tsx:85
 msgid "Enable"
 msgstr "Ενεργοποίηση"
@@ -8566,7 +8567,7 @@ msgstr "Ενεργοποίηση λειτουργίας beta"
 msgid "Enable Browser Notifications"
 msgstr "Ενεργοποιήστε τις ειδοποιήσεις του προγράμματος περιήγησης"
 
-#: src/stores/QuickSwitcherStore.tsx:916
+#: src/stores/QuickSwitcherStore.tsx:914
 msgid "Enable Compact Mode"
 msgstr "Ενεργοποίηση συμπαγούς λειτουργίας"
 
@@ -8642,7 +8643,7 @@ msgstr "Ενεργοποίηση push για αυτή τη συσκευή"
 msgid "Enable push notifications for this installed PWA to keep receiving messages when the browser is backgrounded."
 msgstr "Ενεργοποιήστε τις ειδοποιήσεις push για αυτήν την εγκατεστημένη PWA για να λαμβάνετε μηνύματα όταν το πρόγραμμα περιήγησης είναι στο παρασκήνιο."
 
-#: src/stores/QuickSwitcherStore.tsx:932
+#: src/stores/QuickSwitcherStore.tsx:930
 msgid "Enable Reduced Motion"
 msgstr "Ενεργοποίηση μειωμένης κίνησης"
 
@@ -8658,7 +8659,7 @@ msgstr "Ενεργοποίηση Shift για Επέκταση"
 msgid "Enable SMS 2FA"
 msgstr "Ενεργοποίηση 2FA με SMS"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:415
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:418
 msgid "Enable SMS codes as a backup for your authenticator app"
 msgstr "Ενεργοποιήστε κωδικούς SMS ως εφεδρική επιλογή για την εφαρμογή ελέγχου ταυτότητας"
 
@@ -8678,7 +8679,7 @@ msgstr "Ενεργοποίηση Δύο-Βηματικής Αυθεντικοπ�
 msgid "Enable two-factor authentication"
 msgstr "Ενεργοποίηση ταυτοποίησης δύο παραγόντων"
 
-#: src/components/modals/MfaTotpEnableModal.tsx:70
+#: src/components/modals/MfaTotpEnableModal.tsx:73
 msgid "Enable two-factor authentication form"
 msgstr "Ενεργοποίηση φόρμας ταυτοποίησης δύο παραγόντων"
 
@@ -8782,7 +8783,7 @@ msgid "Enter the 6-digit code from your authenticator app or one of your backup 
 msgstr "Εισάγετε τον 6-ψήφιο κωδικό από την εφαρμογή ελέγχου ταυτότητας ή έναν από τους εφεδρικούς σας κωδικούς."
 
 #: src/components/modals/MfaTotpDisableModal.tsx:67
-#: src/components/modals/MfaTotpEnableModal.tsx:95
+#: src/components/modals/MfaTotpEnableModal.tsx:98
 msgid "Enter the 6-digit code from your authenticator app."
 msgstr "Εισάγετε τον 6-ψήφιο κωδικό από την εφαρμογή ελέγχου ταυτότητας."
 
@@ -8804,7 +8805,7 @@ msgstr "Εισάγετε τον κωδικό πριν συνεχίσετε."
 msgid "Enter the code from your authenticator app."
 msgstr "Εισάγετε τον κωδικό από την εφαρμογή ελέγχου ταυτότητας."
 
-#: src/components/modals/EmailChangeModal.tsx:213
+#: src/components/modals/EmailChangeModal.tsx:216
 msgid "Enter the code sent to your current email."
 msgstr "Εισάγετε τον κωδικό που εστάλη στο τρέχον email σας."
 
@@ -8812,7 +8813,7 @@ msgstr "Εισάγετε τον κωδικό που εστάλη στο τρέχ
 msgid "Enter the code sent to your email address."
 msgstr "Εισάγετε τον κωδικό που στάλθηκε στη διεύθυνση email σας."
 
-#: src/components/modals/EmailChangeModal.tsx:281
+#: src/components/modals/EmailChangeModal.tsx:284
 msgid "Enter the code we emailed to your new address."
 msgstr "Εισάγετε τον κωδικό που στείλαμε στη νέα σας διεύθυνση."
 
@@ -8824,7 +8825,7 @@ msgstr "Εισάγετε τον κωδικό που στείλαμε στο emai
 msgid "Enter the invite link to join a community."
 msgstr "Εισάγετε τον σύνδεσμο πρόσκλησης για να συμμετάσχετε σε μια κοινότητα."
 
-#: src/components/modals/EmailChangeModal.tsx:247
+#: src/components/modals/EmailChangeModal.tsx:250
 msgid "Enter the new email you want to use. We'll send a code there next."
 msgstr "Εισάγετε το νέο email που θέλετε να χρησιμοποιήσετε. Θα στείλουμε κωδικό εκεί στη συνέχεια."
 
@@ -9313,11 +9314,11 @@ msgstr "Αποτυχία αγνόησης αίτησης φιλίας. Παρα�
 msgid "Failed to initiate connection"
 msgstr "Αποτυχία εκκίνησης σύνδεσης"
 
-#: src/actions/InviteActionCreators.tsx:322
+#: src/actions/InviteActionCreators.tsx:326
 msgid "Failed to install this emoji pack. Please try again later."
 msgstr "Αποτυχία εγκατάστασης αυτού του πακέτου emoji. Παρακαλώ δοκιμάστε αργότερα."
 
-#: src/actions/InviteActionCreators.tsx:323
+#: src/actions/InviteActionCreators.tsx:327
 msgid "Failed to install this sticker pack. Please try again later."
 msgstr "Αποτυχία εγκατάστασης αυτού του πακέτου αυτοκόλλητων. Παρακαλώ δοκιμάστε αργότερα."
 
@@ -9715,9 +9716,9 @@ msgstr "αγαπημένα"
 #: src/components/modals/tabs/AppearanceTab.tsx:116
 #: src/components/modals/utils/SettingsConstants.tsx:279
 #: src/components/modals/utils/SettingsSectionRegistry.tsx:233
-#: src/stores/QuickSwitcherStore.tsx:843
-#: src/stores/QuickSwitcherStore.tsx:1261
-#: src/stores/QuickSwitcherStore.tsx:1273
+#: src/stores/QuickSwitcherStore.tsx:841
+#: src/stores/QuickSwitcherStore.tsx:1259
+#: src/stores/QuickSwitcherStore.tsx:1271
 msgid "Favorites"
 msgstr "Αγαπημένα"
 
@@ -9872,11 +9873,11 @@ msgstr "Σύμβολο εφαρμογής Fluxer"
 msgid "Fluxer avoids sending push notifications to your mobile devices when you are at your computer. Use this setting to control how long you need to be inactive on desktop for before you receive push notifications, ranging from 1 minute to 10 minutes."
 msgstr "Το Fluxer αποφεύγει την αποστολή ειδοποιήσεων push στις κινητές συσκευές όταν βρίσκεστε στον υπολογιστή. Χρησιμοποιήστε αυτήν τη ρύθμιση για να ελέγξετε πόσο πρέπει να είστε ανενεργοί στον υπολογιστή πριν λάβετε ειδοποιήσεις push, από 1 έως 10 λεπτά."
 
-#: src/components/popouts/UserProfileBadges.tsx:89
+#: src/components/popouts/UserProfileBadges.tsx:115
 msgid "Fluxer Bug Hunter"
 msgstr "Fluxer Bug Hunter"
 
-#: src/components/popouts/UserProfileBadges.tsx:71
+#: src/components/popouts/UserProfileBadges.tsx:95
 msgid "Fluxer Community Team"
 msgstr "Ομάδα Κοινότητας Fluxer"
 
@@ -9944,18 +9945,18 @@ msgstr "Το Fluxer χρειάζεται άδεια παρακολούθησης
 msgid "Fluxer needs permission to monitor keyboard and mouse input so that <0>Push-to-Talk</0> and <1>Global Shortcuts</1> work even when you're in another app or game."
 msgstr "Το Fluxer χρειάζεται άδεια να παρακολουθεί την είσοδο πληκτρολογίου και ποντικιού ώστε τα <0>Push-to-Talk</0> και <1>Global Shortcuts</1> να λειτουργούν ακόμα κι όταν βρίσκεστε σε άλλη εφαρμογή ή παιχνίδι."
 
-#: src/components/popouts/UserProfileBadges.tsx:80
+#: src/components/popouts/UserProfileBadges.tsx:105
 msgid "Fluxer Partner"
 msgstr "Συνεργάτης Fluxer"
 
 #: src/components/modals/components/PlutoniumContent.tsx:165
 #: src/components/modals/PremiumModal.tsx:34
 #: src/components/modals/utils/SettingsConstants.tsx:124
-#: src/components/popouts/UserProfileBadges.tsx:95
+#: src/components/popouts/UserProfileBadges.tsx:121
 msgid "Fluxer Plutonium"
 msgstr "Fluxer Plutonium"
 
-#: src/components/popouts/UserProfileBadges.tsx:62
+#: src/components/popouts/UserProfileBadges.tsx:85
 msgid "Fluxer Staff"
 msgstr "Προσωπικό Fluxer"
 
@@ -9963,16 +9964,16 @@ msgstr "Προσωπικό Fluxer"
 msgid "Fluxer uses push notifications when installed as a mobile PWA. Registering ensures the gateway can reach your device even when the browser is backgrounded."
 msgstr "Το Fluxer χρησιμοποιεί ειδοποιήσεις push όταν εγκαθίσταται ως mobile PWA. Η εγγραφή διασφαλίζει ότι η πύλη μπορεί να φτάσει στη συσκευή σας ακόμη και όταν το πρόγραμμα περιήγησης είναι στο παρασκήνιο."
 
-#: src/components/modals/FluxerTagChangeModal.tsx:176
+#: src/components/modals/FluxerTagChangeModal.tsx:190
 #: src/components/modals/tabs/applications_tab/application_detail/BotProfileSection.tsx:103
 msgid "FluxerTag"
 msgstr "FluxerTag"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:102
+#: src/components/modals/FluxerTagChangeModal.tsx:107
 msgid "FluxerTag already taken"
 msgstr "Το FluxerTag έχει ήδη ληφθεί"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:144
+#: src/components/modals/FluxerTagChangeModal.tsx:149
 msgid "FluxerTag updated"
 msgstr "Το FluxerTag ενημερώθηκε"
 
@@ -10208,7 +10209,7 @@ msgstr "Προώθηση"
 msgid "Forward {DEFAULT_SEEK_AMOUNT} seconds"
 msgstr "Προώθηση κατά {DEFAULT_SEEK_AMOUNT} δευτερόλεπτα"
 
-#: src/components/modals/ForwardModal.tsx:198
+#: src/components/modals/ForwardModal.tsx:203
 #: src/stores/KeybindStore.tsx:361
 msgid "Forward Message"
 msgstr "Προώθηση Μηνύματος"
@@ -10490,7 +10491,7 @@ msgstr "Λάβετε ειδοποίηση όταν λαμβάνετε μηνύμ
 
 #: src/components/alerts/FileSizeTooLargeModal.tsx:84
 #: src/components/modals/BackgroundImageGalleryModal.tsx:678
-#: src/components/modals/FluxerTagChangeModal.tsx:221
+#: src/components/modals/FluxerTagChangeModal.tsx:235
 #: src/components/modals/tabs/components/EntranceSoundSection.tsx:67
 #: src/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:138
 #: src/components/modals/tabs/VideoTab.tsx:281
@@ -10503,11 +10504,11 @@ msgstr "Αποκτήστε Plutonium"
 msgid "Get Plutonium for yourself and unlock higher limits and exclusive features."
 msgstr "Αποκτήστε Plutonium για εσάς και ξεκλειδώστε υψηλότερα όρια και αποκλειστικές λειτουργίες."
 
-#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:81
+#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:82
 msgid "Get Plutonium to customize your tag"
 msgstr "Αποκτήστε Plutonium για να προσαρμόσετε την ετικέτα σας"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:199
+#: src/components/modals/FluxerTagChangeModal.tsx:213
 msgid "Get Plutonium to customize your tag or keep it when changing your username"
 msgstr "Αποκτήστε Plutonium για να προσαρμόσετε την ετικέτα σας ή να τη διατηρήσετε όταν αλλάζετε όνομα χρήστη"
 
@@ -10725,7 +10726,7 @@ msgstr "Μετάβαση στην Αρχική"
 msgid "Go to login"
 msgstr "Μετάβαση στη σύνδεση"
 
-#: src/stores/QuickSwitcherStore.tsx:528
+#: src/stores/QuickSwitcherStore.tsx:526
 msgid "Go to message"
 msgstr "Μετάβαση στο μήνυμα"
 
@@ -10866,12 +10867,12 @@ msgstr "Εικονίδιο ομάδας"
 msgid "Group Invites"
 msgstr "Προσκλήσεις ομάδας"
 
-#: src/stores/QuickSwitcherStore.tsx:667
+#: src/stores/QuickSwitcherStore.tsx:665
 #: src/utils/modals/guild_tabs/GuildAuditLogTabUtils.tsx:235
 msgid "Group message"
 msgstr "Μήνυμα ομάδας"
 
-#: src/stores/QuickSwitcherStore.tsx:1347
+#: src/stores/QuickSwitcherStore.tsx:1345
 msgid "Group messages"
 msgstr "Μηνύματα ομάδας"
 
@@ -10963,7 +10964,7 @@ msgstr "Επιτάχυνση υλικού"
 msgid "Has"
 msgstr "Έχει"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:126
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:128
 msgid "Has ever purchased override"
 msgstr "Έχει ποτέ αγοράσει ανατροπή"
 
@@ -11277,7 +11278,7 @@ msgid "Hold to temporarily unmute when push-to-talk is enabled"
 msgstr "Κρατήστε πατημένο για προσωρινή επαναφορά ήχου όταν το push-to-talk είναι ενεργό"
 
 #: src/components/layout/MobileBottomNav.tsx:93
-#: src/stores/QuickSwitcherStore.tsx:832
+#: src/stores/QuickSwitcherStore.tsx:830
 msgid "Home"
 msgstr "Αρχική"
 
@@ -11619,7 +11620,7 @@ msgstr "Ακατάλληλο Προφίλ"
 msgid "Inbox"
 msgstr "Εισερχόμενα"
 
-#: src/components/popouts/InboxPopout.tsx:89
+#: src/components/popouts/InboxPopout.tsx:88
 msgid "Inbox tabs"
 msgstr "Καρτέλες εισερχομένων"
 
@@ -11883,8 +11884,8 @@ msgstr "Μη έγκυρος Κωδικός Δώρου"
 msgid "Invalid instance URL. Try something like \"example.com\" or \"https://example.com\"."
 msgstr "Μη έγκυρη διεύθυνση URL της στιγμής. Δοκιμάστε κάτι όπως \"example.com\" ή \"https://example.com\"."
 
-#: src/components/modals/EmailChangeModal.tsx:107
-#: src/components/modals/EmailChangeModal.tsx:168
+#: src/components/modals/EmailChangeModal.tsx:110
+#: src/components/modals/EmailChangeModal.tsx:171
 #: src/components/modals/PasswordChangeModal.tsx:90
 msgid "Invalid or expired code"
 msgstr "Μη έγκυρος ή ληγμένος κωδικός"
@@ -12569,11 +12570,11 @@ msgid "Last active {0}"
 msgstr "Τελευταία ενεργός {0}"
 
 #. placeholder {0}: DateUtils.getRelativeDateString(user.passwordLastChangedAt, i18n)
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:117
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:120
 msgid "Last changed: {0}"
 msgstr "Τελευταία αλλαγή: {0}"
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:119
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:122
 msgid "Last changed: Never"
 msgstr "Τελευταία αλλαγή: Ποτέ"
 
@@ -12633,6 +12634,10 @@ msgstr "Αποχώρηση από την κλήση"
 #: src/hooks/useLeaveGuild.tsx:44
 msgid "Leave Community"
 msgstr "Αποχώρηση από την κοινότητα"
+
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:142
+msgid "Leave empty for actual value"
+msgstr "Αφήστε κενό για την πραγματική τιμή"
 
 #: src/components/bottomsheets/ChannelDetailsBottomSheet.tsx:1317
 #: src/components/channel/direct_message/DMList.tsx:569
@@ -12713,7 +12718,7 @@ msgid "Letters (a-z, A-Z), numbers (0-9), and underscores (_) only"
 msgstr "Μόνο γράμματα (a-z, A-Z), αριθμοί (0-9) και κάτω παύλες (_)"
 
 #: src/components/modals/components/plutonium/SubscriptionCard.tsx:131
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:50
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:52
 #: src/components/modals/tabs/developer_options_tab/MockingTab.tsx:317
 msgid "Lifetime"
 msgstr "Διά βίου"
@@ -13217,7 +13222,7 @@ msgstr "Διαχείριση του email, του κωδικού πρόσβασ�
 msgid "Manage your gifts"
 msgstr "Διαχείριση των δώρων σας"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:337
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:340
 msgid "Manage your phone number for SMS two-factor authentication"
 msgstr "Διαχείριση του αριθμού τηλεφώνου σας για έλεγχο ταυτότητας δύο παραγόντων μέσω SMS"
 
@@ -13342,12 +13347,12 @@ msgstr "Το μέλος σημειώθηκε ως προσωρινό."
 msgid "Markers Below Slider"
 msgstr "Ενδείξεις κάτω από το ρυθμιστικό"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:188
+#: src/components/modals/FluxerTagChangeModal.tsx:202
 msgid "Marty_McFly"
 msgstr "Marty_McFly"
 
 #: src/components/modals/ClaimAccountModal.tsx:157
-#: src/components/modals/EmailChangeModal.tsx:258
+#: src/components/modals/EmailChangeModal.tsx:261
 msgid "marty@example.com"
 msgstr "marty@example.com"
 
@@ -13652,7 +13657,7 @@ msgstr "αναφορές"
 
 #: src/components/modals/GuildNotificationSettingsModal.tsx:227
 #: src/components/pages/NotificationsPage.tsx:42
-#: src/components/popouts/InboxPopout.tsx:63
+#: src/components/popouts/InboxPopout.tsx:62
 msgid "Mentions"
 msgstr "Αναφορές"
 
@@ -13687,15 +13692,15 @@ msgstr "μενού"
 msgid "Message"
 msgstr "Μήνυμα"
 
-#: src/components/channel/ChannelTextarea.tsx:754
+#: src/components/channel/ChannelTextarea.tsx:752
 msgid "Message "
 msgstr "Μήνυμα "
 
-#: src/components/channel/ChannelTextarea.tsx:754
+#: src/components/channel/ChannelTextarea.tsx:752
 msgid "Message @"
 msgstr "Μήνυμα @"
 
-#: src/components/channel/ChannelTextarea.tsx:751
+#: src/components/channel/ChannelTextarea.tsx:749
 msgid "Message #"
 msgstr "Μήνυμα #"
 
@@ -13746,7 +13751,7 @@ msgstr "Τρόπος εμφάνισης μηνύματος"
 msgid "Message display settings are only available on desktop."
 msgstr "Οι ρυθμίσεις εμφάνισης μηνύματος είναι διαθέσιμες μόνο σε επιτραπέζιο."
 
-#: src/components/modals/ForwardModal.tsx:148
+#: src/components/modals/ForwardModal.tsx:153
 msgid "Message forwarded"
 msgstr "Το μήνυμα προωθήθηκε"
 
@@ -13772,7 +13777,7 @@ msgstr "Το όριο ιστορικού μηνυμάτων ενημερώθηκ
 msgid "Message Input Buttons"
 msgstr "Κουμπιά Εισόδου Μηνυμάτων"
 
-#: src/components/modals/ForwardModal.tsx:84
+#: src/components/modals/ForwardModal.tsx:89
 #: src/components/uikit/character_counter/CharacterCounter.tsx:52
 msgid "Message is too long"
 msgstr "Το μήνυμα είναι πολύ μεγάλο"
@@ -14073,7 +14078,7 @@ msgstr "Περισσότερες θέσεις emoji"
 #: src/components/channel/embeds/attachments/TextualAttachmentPreviewFooter.tsx:66
 #: src/components/modals/guild_tabs/UserListItem.tsx:113
 #: src/components/modals/MediaModal.tsx:353
-#: src/components/modals/MobileVideoViewer.tsx:260
+#: src/components/modals/MobileVideoViewer.tsx:268
 msgid "More options"
 msgstr "Περισσότερες επιλογές"
 
@@ -14205,7 +14210,7 @@ msgstr "σιγή"
 #: src/components/media_player/components/MediaVerticalVolumeControl.tsx:249
 #: src/components/media_player/components/MediaVolumeControl.tsx:208
 #: src/components/modals/GuildNotificationSettingsModal.tsx:229
-#: src/components/modals/MobileVideoViewer.tsx:272
+#: src/components/modals/MobileVideoViewer.tsx:280
 #: src/components/uikit/context_menu/items/VoiceParticipantMenuData.tsx:319
 #: src/components/uikit/context_menu/items/VoiceParticipantMenuData.tsx:506
 #: src/components/uikit/context_menu/items/VoiceParticipantMenuItems.tsx:92
@@ -14572,12 +14577,12 @@ msgstr "Οι νέες κοινότητες που θα συμμετάσχετε 
 msgid "New communities you join will no longer have muted channels hidden automatically. Would you also like to show muted channels in all your existing communities?"
 msgstr "Οι νέες κοινότητες που θα συμμετάσχετε δεν θα έχουν πλέον αυτόματα κρυφές τις σιωπηλές κανάλια. Θα θέλατε επίσης να δείξετε τις σιωπηλές κανάλια σε όλες τις υπάρχουσες κοινότητές σας;"
 
-#: src/components/modals/EmailChangeModal.tsx:255
+#: src/components/modals/EmailChangeModal.tsx:258
 #: src/components/modals/RequiredActionModal.tsx:471
 msgid "New Email"
 msgstr "Νέο Email"
 
-#: src/components/modals/EmailChangeModal.tsx:243
+#: src/components/modals/EmailChangeModal.tsx:246
 msgid "New email form"
 msgstr "Φόρμα νέου email"
 
@@ -14732,7 +14737,7 @@ msgid "No cameras detected"
 msgstr "Δεν ανιχνεύτηκαν κάμερες"
 
 #: src/components/invites/InviteListItem.tsx:179
-#: src/components/modals/ForwardModal.tsx:246
+#: src/components/modals/ForwardModal.tsx:251
 #: src/components/modals/GuildNotificationSettingsModal.tsx:258
 msgid "No Category"
 msgstr "Χωρίς κατηγορία"
@@ -14745,7 +14750,7 @@ msgstr "Δεν υπάρχουν αλλαγές για αποθήκευση"
 msgid "No channels available"
 msgstr "Δεν υπάρχουν διαθέσιμα κανάλια"
 
-#: src/components/modals/ForwardModal.tsx:216
+#: src/components/modals/ForwardModal.tsx:221
 msgid "No channels found"
 msgstr "Δεν βρέθηκαν κανάλια"
 
@@ -14769,7 +14774,7 @@ msgstr "Δεν υπάρχουν συνδέσεις ακόμα"
 msgid "No description provided."
 msgstr "Δεν παρέχεται περιγραφή."
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:94
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:97
 msgid "No email address set"
 msgstr "Δεν έχει οριστεί διεύθυνση email"
 
@@ -14879,11 +14884,11 @@ msgstr "Δεν βρέθηκαν κοινοί φίλοι."
 msgid "No mutual groups found."
 msgstr "Δεν βρέθηκαν κοινοί όμιλοι."
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:283
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:286
 msgid "No passkeys registered"
 msgstr "Δεν υπάρχουν καταχωρημένα κλειδιά πρόσβασης"
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:134
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:137
 msgid "No password set"
 msgstr "Δεν έχει οριστεί κωδικός"
 
@@ -15066,7 +15071,7 @@ msgstr "Μη κινούμενο emoji ({0})"
 
 #: src/components/modals/guild_tabs/GuildModerationTab.tsx:157
 #: src/components/modals/tabs/accessibility_tab/VisualTab.tsx:48
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:48
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:50
 msgid "None"
 msgstr "Κανένα"
 
@@ -15574,7 +15579,7 @@ msgstr "Άνοιξε σε νέα καρτέλα"
 msgid "Open Link"
 msgstr "Άνοιξε σύνδεσμο"
 
-#: src/components/channel/ChannelTextarea.tsx:953
+#: src/components/channel/ChannelTextarea.tsx:951
 #: src/components/channel/textarea/MobileTextareaLayout.tsx:112
 msgid "Open menu"
 msgstr "Άνοιγμα μενού"
@@ -15828,7 +15833,7 @@ msgstr "Override"
 msgid "Override {0}"
 msgstr "Override {0}"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:59
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:61
 msgid "Override email verification status"
 msgstr "Παράκαμψε την κατάσταση επαλήθευσης email"
 
@@ -15836,15 +15841,15 @@ msgstr "Παράκαμψε την κατάσταση επαλήθευσης emai
 msgid "Override instance limits locally for testing. Changes only affect your client."
 msgstr "Override instance limits locally for testing. Changes only affect your client."
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:109
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:111
 msgid "Override Premium Type"
 msgstr "Παράκαμψε τον τύπο Premium"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:67
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:69
 msgid "Override unclaimed account status"
 msgstr "Παράκαμψε την κατάσταση μη διεκδικούμενου λογαριασμού"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:75
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:77
 msgid "Override unread gift inventory status"
 msgstr "Παράκαμψε την κατάσταση μη αναγνωσμένου αποθέματος δώρων"
 
@@ -15925,7 +15930,7 @@ msgstr "Συνεργαζόμενη Κοινότητα"
 msgid "Passkey Name"
 msgstr "Όνομα κλειδιού πρόσβασης"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:273
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:276
 msgid "Passkeys"
 msgstr "Κλειδιά πρόσβασης"
 
@@ -15949,8 +15954,8 @@ msgstr "κωδικός πρόσβασης"
 #: src/components/modals/ClaimAccountModal.tsx:207
 #: src/components/modals/SudoVerificationModal.tsx:174
 #: src/components/modals/SudoVerificationModal.tsx:239
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:105
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:131
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:108
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:134
 #: src/components/modals/tabs/component_gallery_tab/InputsTab.tsx:114
 #: src/components/modals/utils/SettingsSearchIndex.tsx:107
 msgid "Password"
@@ -16006,7 +16011,7 @@ msgstr "Επικόλλησέ το από όπου ήρθες για να ολο�
 #: src/components/media_player/components/InlineAudioPlayer.tsx:201
 #: src/components/media_player/components/InlineAudioPlayer.tsx:296
 #: src/components/media_player/components/MediaPlayButton.tsx:70
-#: src/components/modals/MobileVideoViewer.tsx:286
+#: src/components/modals/MobileVideoViewer.tsx:294
 msgid "Pause"
 msgstr "Παύση"
 
@@ -16040,7 +16045,7 @@ msgid "Pending deletion canceled"
 msgstr "Η εκκρεμότητα διαγραφής ακυρώθηκε"
 
 #: src/lib/UnicodeEmojis.tsx:234
-#: src/stores/QuickSwitcherStore.tsx:1345
+#: src/stores/QuickSwitcherStore.tsx:1343
 #: src/utils/quick_switcher/QuickSwitcherModalUtils.tsx:96
 msgid "People"
 msgstr "Άνθρωποι"
@@ -16143,8 +16148,8 @@ msgstr "Τηλέφωνο"
 
 #: src/components/modals/PhoneAddModal.tsx:192
 #: src/components/modals/RequiredActionModal.tsx:616
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:336
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:342
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:339
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:345
 #: src/components/modals/utils/SettingsSearchIndex.tsx:115
 msgid "Phone Number"
 msgstr "Αριθμός τηλεφώνου"
@@ -16154,7 +16159,7 @@ msgid "Phone number added"
 msgstr "Προστέθηκε αριθμός τηλεφώνου"
 
 #. placeholder {0}: user.phone
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:346
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:349
 msgid "Phone number added: {0}"
 msgstr "Προστέθηκε αριθμός τηλεφώνου: {0}"
 
@@ -16221,11 +16226,11 @@ msgstr "Καρφίτσωσε άμεσο μήνυμα"
 msgid "Pin Group DM"
 msgstr "Καρφίτσωσε ομαδικό άμεσο μήνυμα"
 
-#: src/components/channel/MessageActionUtils.tsx:429
+#: src/components/channel/MessageActionUtils.tsx:430
 msgid "Pin it real good"
 msgstr "Καρφίτσωσέ το καλά"
 
-#: src/components/channel/MessageActionUtils.tsx:426
+#: src/components/channel/MessageActionUtils.tsx:427
 msgid "Pin it. Pin it good."
 msgstr "Καρφίτσωσέ το. Καρφίτσωσέ το καλά."
 
@@ -16246,7 +16251,7 @@ msgstr "Καρφίτσωσε μηνύματα"
 msgid "Pin or unpin the focused message"
 msgstr "Αγαπημένη ή απογαπημένη το εστιασμένο μήνυμα"
 
-#: src/components/channel/MessageActionUtils.tsx:427
+#: src/components/channel/MessageActionUtils.tsx:428
 msgid "Pin this message to the channel for all to see. Unless ... you're chicken."
 msgstr "Καρφίτσωσε αυτό το μήνυμα στο κανάλι για να το βλέπουν όλοι. Εκτός αν... είσαι κότα."
 
@@ -16319,7 +16324,7 @@ msgstr "Διαχειριστής Πλατφόρμας"
 #: src/components/media_player/components/InlineAudioPlayer.tsx:201
 #: src/components/media_player/components/InlineAudioPlayer.tsx:296
 #: src/components/media_player/components/MediaPlayButton.tsx:70
-#: src/components/modals/MobileVideoViewer.tsx:286
+#: src/components/modals/MobileVideoViewer.tsx:294
 #: src/components/modals/tabs/component_gallery_tab/ButtonsTab.tsx:215
 msgid "Play"
 msgstr "Αναπαραγωγή"
@@ -16416,7 +16421,7 @@ msgstr "Παρακαλώ δοκίμασε ξανά αργότερα."
 msgid "Please update Fluxer to view this message."
 msgstr "Ενημέρωσε το Fluxer για να δεις αυτό το μήνυμα."
 
-#: src/actions/InviteActionCreators.tsx:180
+#: src/actions/InviteActionCreators.tsx:184
 msgid "Please verify your account by setting an email and password before joining communities."
 msgstr "Επαλήθευσε τον λογαριασμό σου ορίζοντας email και κωδικό πριν μπεις σε κοινότητες."
 
@@ -16526,11 +16531,11 @@ msgstr "Πλεονεκτήματα Premium"
 msgid "Premium state reset on the backend."
 msgstr "Η κατάσταση premium επαναφέρθηκε στο backend."
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:135
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:155
 msgid "Premium Subscription Scenarios"
 msgstr "Σενάρια συνδρομής Premium"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:107
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:109
 msgid "Premium Type Override"
 msgstr "Παράκαμψη τύπου Premium"
 
@@ -16928,7 +16933,7 @@ msgstr "Python"
 msgid "quick access"
 msgstr "γρήγορη πρόσβαση"
 
-#: src/stores/QuickSwitcherStore.tsx:1358
+#: src/stores/QuickSwitcherStore.tsx:1356
 #: src/utils/quick_switcher/QuickSwitcherModalUtils.tsx:100
 msgid "Quick Actions"
 msgstr "Γρήγορες ενέργειες"
@@ -17071,7 +17076,7 @@ msgstr "Λήψη"
 msgid "Receive notifications when someone mentions you"
 msgstr "Λάβε ειδοποιήσεις όταν σε αναφέρουν"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:404
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:407
 msgid "Receive verification codes via SMS as a backup authentication method"
 msgstr "Λάβε κωδικούς επαλήθευσης μέσω SMS ως εφεδρική μέθοδο ταυτοποίησης"
 
@@ -17198,7 +17203,7 @@ msgstr "Ανανέωση συνδρομής push"
 msgid "Regenerate"
 msgstr "Επαναδημιουργία"
 
-#: src/components/modals/BackupCodesRegenerateModal.tsx:61
+#: src/components/modals/BackupCodesRegenerateModal.tsx:68
 msgid "Regenerate Backup Codes"
 msgstr "Αναδημιουργία Κωδικών Αντίγραφου"
 
@@ -17228,7 +17233,7 @@ msgstr "Η επαναδημιουργία θα ακυρώσει το τρέχο�
 msgid "Register"
 msgstr "Εγγραφή"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:279
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:282
 msgid "Registered Passkeys"
 msgstr "Εγγεγραμμένα passkeys"
 
@@ -17298,7 +17303,7 @@ msgstr "αφαίρεση"
 #: src/components/modals/guild_tabs/guild_overview_tab/fields/GuildEmbedSplashUploadField.tsx:101
 #: src/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx:107
 #: src/components/modals/guild_tabs/guild_overview_tab/fields/GuildInviteSplashUploadField.tsx:113
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:391
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:394
 #: src/components/modals/tabs/ExpressionPacksTab.tsx:96
 #: src/components/modals/tabs/ExpressionPacksTab.tsx:226
 #: src/components/modals/tabs/LinkedAccountsTab.tsx:191
@@ -17472,11 +17477,11 @@ msgstr "Αφαίρεση Παράκαμψης"
 msgid "Remove Pack"
 msgstr "Αφαίρεση Πακέτου"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:377
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:380
 msgid "Remove Phone"
 msgstr "Κατάργηση τηλεφώνου"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:360
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:363
 msgid "Remove Phone Number"
 msgstr "Κατάργηση αριθμού τηλεφώνου"
 
@@ -17557,7 +17562,7 @@ msgstr "Αφαιρέθηκε η άδεια για {0}."
 msgid "Removed deny for {0}."
 msgstr "Αφαιρέθηκε η άρνηση για {0}."
 
-#: src/actions/SavedMessageActionCreators.tsx:80
+#: src/actions/SavedMessageActionCreators.tsx:85
 msgid "Removed from bookmarks"
 msgstr "Αφαιρέθηκε από τους σελιδοδείκτες"
 
@@ -17631,7 +17636,7 @@ msgstr "Η αφαίρεση του πακέτου θα το απεγκαταστ
 msgid "Removing the timeout will allow <0>{0}</0> to send messages, react, and join voice channels again."
 msgstr "Η αφαίρεση του χρονικού περιορισμού θα επιτρέψει στον <0>{0}</0> να στέλνει ξανά μηνύματα, να αντιδρά και να μπαίνει σε φωνητικά κανάλια."
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:319
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:322
 msgid "Rename"
 msgstr "Μετονομασία"
 
@@ -17866,22 +17871,22 @@ msgstr "Απαιτεί τα πάντα από το επίπεδο Μέτριο �
 msgid "Requires Plutonium"
 msgstr "Απαιτεί Plutonium"
 
-#: src/components/channel/ChannelTextarea.tsx:1032
+#: src/components/channel/ChannelTextarea.tsx:1030
 msgid "Reschedule Message"
 msgstr "Επαναπρογραμματισμός μηνύματος"
 
 #: src/components/modals/ClaimAccountModal.tsx:222
-#: src/components/modals/EmailChangeModal.tsx:233
-#: src/components/modals/EmailChangeModal.tsx:301
+#: src/components/modals/EmailChangeModal.tsx:236
+#: src/components/modals/EmailChangeModal.tsx:304
 #: src/components/modals/PasswordChangeModal.tsx:179
 msgid "Resend"
 msgstr "Αποστολή ξανά"
 
-#: src/components/modals/EmailChangeModal.tsx:301
+#: src/components/modals/EmailChangeModal.tsx:304
 msgid "Resend ({newSecondsRemaining}s)"
 msgstr "Αποστολή ξανά ({newSecondsRemaining}s)"
 
-#: src/components/modals/EmailChangeModal.tsx:233
+#: src/components/modals/EmailChangeModal.tsx:236
 msgid "Resend ({originalSecondsRemaining}s)"
 msgstr "Αποστολή ξανά ({originalSecondsRemaining}s)"
 
@@ -18425,7 +18430,7 @@ msgstr "αποθηκεύσεις"
 msgid "scale"
 msgstr "κλίμακα"
 
-#: src/components/modals/MfaTotpEnableModal.tsx:78
+#: src/components/modals/MfaTotpEnableModal.tsx:81
 msgid "Scan the QR code with your authenticator app to generate codes for two-factor authentication."
 msgstr "Σαρώστε τον κωδικό QR με την εφαρμογή πιστοποίησής σας για να δημιουργήσετε κωδικούς για τη διπλή ταυτοποίηση."
 
@@ -18437,7 +18442,7 @@ msgstr "Προγραμματισμός"
 msgid "Schedule Message"
 msgstr "Προγραμματισμός μηνύματος"
 
-#: src/components/popouts/InboxPopout.tsx:70
+#: src/components/popouts/InboxPopout.tsx:69
 #: src/components/popouts/ScheduledMessagesContent.tsx:89
 msgid "Scheduled"
 msgstr "Προγραμματισμένο"
@@ -18562,7 +18567,7 @@ msgstr "Αναζήτηση με όνομα χρήστη ή ID"
 msgid "Search channels"
 msgstr "Αναζήτηση καναλιών"
 
-#: src/components/modals/ForwardModal.tsx:204
+#: src/components/modals/ForwardModal.tsx:209
 msgid "Search channels or DMs"
 msgstr "Αναζήτηση καναλιών ή DM"
 
@@ -18963,7 +18968,7 @@ msgid "Send"
 msgstr "Αποστολή"
 
 #. placeholder {0}: selectedChannelIds.size
-#: src/components/modals/ForwardModal.tsx:380
+#: src/components/modals/ForwardModal.tsx:385
 msgid "Send ({0}/5)"
 msgstr "Αποστολή ({0}/5)"
 
@@ -19000,7 +19005,7 @@ msgid "Send an SMS code first."
 msgstr "Στείλτε πρώτα κωδικό SMS."
 
 #: src/components/modals/ClaimAccountModal.tsx:180
-#: src/components/modals/EmailChangeModal.tsx:270
+#: src/components/modals/EmailChangeModal.tsx:273
 #: src/components/modals/PhoneAddModal.tsx:208
 msgid "Send code"
 msgstr "Αποστολή κώδικα"
@@ -19195,7 +19200,7 @@ msgstr "Ορίστε παρατσούκλι σε {0}."
 msgid "Set NSFW level to {0}."
 msgstr "Ορίστε το επίπεδο NSFW σε {0}."
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:138
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:141
 msgid "Set Password"
 msgstr "Ορισμός κωδικού"
 
@@ -19261,7 +19266,7 @@ msgstr "Ορίστε τον τύπο καναλιού σε {0}."
 msgid "Set the invite splash alignment to {0}."
 msgstr "Ορίστε την ευθυγράμμιση της εικόνας πρόσκλησης σε {0}."
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:88
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:90
 msgid "Set the number of unread gifts in inventory."
 msgstr "Ορίστε τον αριθμό των μη αναγνωσμένων δώρων στο απόθεμα."
 
@@ -19341,7 +19346,7 @@ msgstr "Ορίστε τη ζώνη ώρας σας"
 #: src/components/modals/tabs/component_gallery_tab/ButtonsTab.tsx:221
 #: src/components/modals/tabs/component_gallery_tab/index.tsx:95
 #: src/components/modals/tabs/component_gallery_tab/Inline.tsx:90
-#: src/stores/QuickSwitcherStore.tsx:1356
+#: src/stores/QuickSwitcherStore.tsx:1354
 msgid "Settings"
 msgstr "Ρυθμίσεις"
 
@@ -19357,7 +19362,7 @@ msgstr "Ενότητες ρυθμίσεων"
 msgid "Settings!"
 msgstr "Ρυθμίσεις!"
 
-#: src/components/modals/MfaTotpEnableModal.tsx:71
+#: src/components/modals/MfaTotpEnableModal.tsx:74
 msgid "Setup Authenticator App"
 msgstr "Ρύθμιση Εφαρμογής Αυθεντικοποίησης"
 
@@ -19837,7 +19842,7 @@ msgstr "Σιγανές κλήσεις από όλους"
 msgid "simulate"
 msgstr "προσομοίωση"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:128
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:130
 msgid "Simulates having a Stripe customer ID (for testing purchase history access)"
 msgstr "Προσομοιώνει ότι έχεις ID πελάτη Stripe (για δοκιμές πρόσβασης ιστορικού αγορών)"
 
@@ -19985,11 +19990,11 @@ msgstr "Μικρότερο μέγεθος πολυμέσων"
 msgid "sms"
 msgstr "sms"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:409
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:412
 msgid "SMS Backup"
 msgstr "Αντίγραφο ασφαλείας SMS"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:429
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:432
 msgid "SMS backup is disabled for partners"
 msgstr "Το αντίγραφο ασφαλείας SMS είναι απενεργοποιημένο για συνεργάτες"
 
@@ -20002,7 +20007,7 @@ msgstr "Κωδικός SMS"
 msgid "SMS Code"
 msgstr "Κωδικός SMS"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:403
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:406
 msgid "SMS Two-Factor Authentication"
 msgstr "Διπλός έλεγχος ταυτότητας μέσω SMS"
 
@@ -20010,7 +20015,7 @@ msgstr "Διπλός έλεγχος ταυτότητας μέσω SMS"
 msgid "SMS two-factor authentication adds an additional layer of security to your account by requiring a verification code sent to your phone number when signing in."
 msgstr "Ο διπλός έλεγχος ταυτότητας μέσω SMS προσθέτει ένα επιπλέον επίπεδο ασφάλειας στον λογαριασμό σου, απαιτώντας έναν κωδικό επαλήθευσης που αποστέλλεται στον αριθμό τηλεφώνου σου κατά την είσοδο."
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:413
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:416
 msgid "SMS two-factor authentication is enabled"
 msgstr "Ο διπλός έλεγχος ταυτότητας μέσω SMS είναι ενεργοποιημένος"
 
@@ -20334,7 +20339,7 @@ msgstr "Αστέρι"
 msgid "starred"
 msgstr "σημειωμένα"
 
-#: src/components/modals/EmailChangeModal.tsx:202
+#: src/components/modals/EmailChangeModal.tsx:205
 #: src/components/modals/PasswordChangeModal.tsx:148
 msgid "Start"
 msgstr "Έναρξη"
@@ -20490,7 +20495,7 @@ msgstr "Πυκνότητα αυτοκόλλητων"
 msgid "Sticker pack"
 msgstr "Πακέτο αυτοκόλλητων"
 
-#: src/actions/InviteActionCreators.tsx:287
+#: src/actions/InviteActionCreators.tsx:291
 msgid "Sticker pack creation limit reached"
 msgstr "Έφτασες το όριο δημιουργίας πακέτων αυτοκόλλητων"
 
@@ -20498,7 +20503,7 @@ msgstr "Έφτασες το όριο δημιουργίας πακέτων αυ�
 msgid "Sticker Pack Invite"
 msgstr "Πρόσκληση πακέτου αυτοκόλλητων"
 
-#: src/actions/InviteActionCreators.tsx:273
+#: src/actions/InviteActionCreators.tsx:277
 msgid "Sticker pack limit reached"
 msgstr "Έφτασες το όριο πακέτων αυτοκόλλητων"
 
@@ -20674,7 +20679,7 @@ msgstr "Υποβολή"
 msgid "subscription"
 msgstr "συνδρομή"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:49
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:51
 #: src/components/modals/utils/SettingsSearchIndex.tsx:261
 msgid "Subscription"
 msgstr "Συνδρομή"
@@ -20796,7 +20801,7 @@ msgstr "Αλλαγή λογαριασμού"
 msgid "Switch Accounts"
 msgstr "Εναλλαγή λογαριασμών"
 
-#: src/stores/QuickSwitcherStore.tsx:900
+#: src/stores/QuickSwitcherStore.tsx:898
 msgid "Switch between Light and Dark mode"
 msgstr "Εναλλαγή μεταξύ φωτεινής και σκοτεινής λειτουργίας"
 
@@ -20989,7 +20994,7 @@ msgstr "Όροι Παροχής Υπηρεσιών"
 msgid "Test Bulk Delete (60s)"
 msgstr "Δοκιμή μαζικής διαγραφής (60 δευτ.)"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:137
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:157
 msgid "Test Subscription State"
 msgstr "Δοκιμή κατάστασης συνδρομής"
 
@@ -21025,7 +21030,7 @@ msgstr "Κανάλι κειμένου"
 msgid "Text Channel Names"
 msgstr "Ονόματα καναλιών κειμένου"
 
-#: src/stores/QuickSwitcherStore.tsx:1349
+#: src/stores/QuickSwitcherStore.tsx:1347
 #: src/utils/quick_switcher/QuickSwitcherModalUtils.tsx:97
 msgid "Text channels"
 msgstr "Κανάλια κειμένου"
@@ -21106,7 +21111,7 @@ msgid "That message didn't delete"
 msgstr "Το μήνυμα δεν διαγράφηκε"
 
 #. placeholder {0}: invite.pack.name
-#: src/actions/InviteActionCreators.tsx:103
+#: src/actions/InviteActionCreators.tsx:104
 msgid "The {packLabel} {0} has been installed."
 msgstr "Το {packLabel} {0} έχει εγκατασταθεί."
 
@@ -21148,7 +21153,7 @@ msgstr "Το αρχείο περιέχει το token επαλήθευσης π�
 msgid "The file you're trying to upload exceeds the maximum size limit of {maxSizeFormatted}."
 msgstr "Το αρχείο που προσπαθείτε να ανεβάσετε υπερβαίνει το μέγιστο όριο μεγέθους των {maxSizeFormatted}."
 
-#: src/components/modals/FluxerTagChangeModal.tsx:106
+#: src/components/modals/FluxerTagChangeModal.tsx:111
 msgid "The FluxerTag <0>{fluxerTag}</0> is already taken. Continuing will reroll your discriminator automatically."
 msgstr "Το FluxerTag <0>{fluxerTag}</0> έχει ήδη καταληφθεί. Η συνέχεια θα ανανεώσει αυτόματα τον διακριτικό σας αριθμό."
 
@@ -21298,10 +21303,6 @@ msgstr "αυτοί"
 #: src/components/channel/channel_view/DMChannelView.tsx:932
 msgid "They might have taken the DeLorean elsewhere."
 msgstr "Ίσως πήραν τη DeLorean αλλού."
-
-#: src/components/modals/tabs/MyProfileTab.tsx:711
-msgid "they/them"
-msgstr "αυτοί/αυτές"
 
 #: src/components/channel/channel_view/DMChannelView.tsx:918
 msgid "Think, McFly! Did you type the right address?"
@@ -21717,11 +21718,11 @@ msgstr "Αυτό θα δημιουργήσει ένα ρήγμα στο χωρο
 msgid "This will hide all favorites-related UI elements including buttons and menu items. Your existing favorites will be preserved and can be re-enabled anytime from <0>User Settings → Look & Feel → Favorites</0>."
 msgstr "Αυτό θα αποκρύψει όλα τα στοιχεία διεπαφής που σχετίζονται με τα αγαπημένα, συμπεριλαμβανομένων κουμπιών και μενού. Τα υπάρχοντα αγαπημένα σας θα διατηρηθούν και μπορούν να επανενεργοποιηθούν οποτεδήποτε από τις <0>Ρυθμίσεις χρήστη → Εμφάνιση & Αίσθηση → Αγαπημένα</0>."
 
-#: src/components/modals/BackupCodesRegenerateModal.tsx:65
+#: src/components/modals/BackupCodesRegenerateModal.tsx:72
 msgid "This will invalidate your existing backup codes and generate new ones."
 msgstr "Αυτό θα ακυρώσει τους υπάρχοντες κωδικούς εφεδρείας σας και θα δημιουργήσει νέους."
 
-#: src/components/channel/ChannelTextarea.tsx:1036
+#: src/components/channel/ChannelTextarea.tsx:1034
 msgid "This will modify the existing scheduled message rather than sending immediately."
 msgstr "Αυτό θα τροποποιήσει το υπάρχον προγραμματισμένο μήνυμα αντί να αποσταλεί άμεσα."
 
@@ -21907,11 +21908,11 @@ msgstr "εναλλαγή"
 msgid "Toggle Channel Member List"
 msgstr "Εναλλαγή λίστας μελών καναλιού"
 
-#: src/stores/QuickSwitcherStore.tsx:913
+#: src/stores/QuickSwitcherStore.tsx:911
 msgid "Toggle Compact Mode"
 msgstr "Εναλλαγή συμπαγούς λειτουργίας"
 
-#: src/components/modals/MobileVideoViewer.tsx:239
+#: src/components/modals/MobileVideoViewer.tsx:247
 msgid "Toggle controls"
 msgstr "Εναλλαγή ελέγχων"
 
@@ -21963,11 +21964,11 @@ msgstr "Εναλλαγή σίγασης"
 msgid "Toggle Pins Popout"
 msgstr "Εναλλαγή αναδυόμενου καρφιτσωμένων"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:120
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:122
 msgid "Toggle premium_enabled_override on the backend"
 msgstr "Εναλλαγή premium_enabled_override στο backend"
 
-#: src/stores/QuickSwitcherStore.tsx:929
+#: src/stores/QuickSwitcherStore.tsx:927
 msgid "Toggle Reduced Motion"
 msgstr "Εναλλαγή μειωμένης κίνησης"
 
@@ -21983,7 +21984,7 @@ msgstr "Εναλλαγή επιλογέα αυτοκόλλητων"
 msgid "Toggle switches on and off to see state changes."
 msgstr "Ενεργοποιήστε ή απενεργοποιήστε τους διακόπτες για να δείτε τις αλλαγές κατάστασης."
 
-#: src/stores/QuickSwitcherStore.tsx:899
+#: src/stores/QuickSwitcherStore.tsx:897
 msgid "Toggle Theme"
 msgstr "Εναλλαγή θέματος"
 
@@ -22008,7 +22009,7 @@ msgstr "Χάρτης τόνου HDR εικόνων σε τυπική περιο�
 msgid "Too Loud"
 msgstr "Πολύ δυνατά"
 
-#: src/components/alerts/MaxGuildsModal.tsx:32
+#: src/components/alerts/MaxGuildsModal.tsx:35
 msgid "Too Many Communities"
 msgstr "Πάρα πολλές κοινότητες"
 
@@ -22307,7 +22308,7 @@ msgstr "Διπλός έλεγχος ταυτότητας"
 msgid "Two-factor authentication disabled"
 msgstr "Ο διπλός έλεγχος ταυτότητας απενεργοποιήθηκε"
 
-#: src/components/modals/MfaTotpEnableModal.tsx:55
+#: src/components/modals/MfaTotpEnableModal.tsx:58
 msgid "Two-factor authentication enabled"
 msgstr "Ο διπλός έλεγχος ταυτότητας ενεργοποιήθηκε"
 
@@ -22404,11 +22405,11 @@ msgstr "Ουκρανικά"
 msgid "Ultra (1440p)"
 msgstr "Ultra (1440p)"
 
-#: src/actions/InviteActionCreators.tsx:319
+#: src/actions/InviteActionCreators.tsx:323
 msgid "Unable to install emoji pack"
 msgstr "Δεν είναι δυνατή η εγκατάσταση πακέτου emoji"
 
-#: src/actions/InviteActionCreators.tsx:320
+#: src/actions/InviteActionCreators.tsx:324
 msgid "Unable to install sticker pack"
 msgstr "Δεν είναι δυνατή η εγκατάσταση πακέτου αυτοκόλλητων"
 
@@ -22436,13 +22437,13 @@ msgstr "Αδυναμία φόρτωσης πανό προφίλ, εμβλημά�
 msgid "Unable to prepare any emojis for upload. The following errors occurred:"
 msgstr "Δεν ήταν δυνατή η προετοιμασία emoji για μεταφόρτωση. Παρουσιάστηκαν τα ακόλουθα σφάλματα:"
 
-#: src/components/modals/EmailChangeModal.tsx:121
-#: src/components/modals/EmailChangeModal.tsx:151
+#: src/components/modals/EmailChangeModal.tsx:124
+#: src/components/modals/EmailChangeModal.tsx:154
 #: src/components/modals/PasswordChangeModal.tsx:104
 msgid "Unable to resend code right now"
 msgstr "Δεν είναι δυνατή η επαναποστολή του κωδικού αυτή τη στιγμή"
 
-#: src/components/modals/EmailChangeModal.tsx:136
+#: src/components/modals/EmailChangeModal.tsx:139
 msgid "Unable to send code to new email"
 msgstr "Δεν είναι δυνατή η αποστολή του κωδικού στο νέο email"
 
@@ -22455,7 +22456,7 @@ msgstr "Αδυναμία αποστολής φωνητικού μηνύματο�
 msgid "Unable to Start Call"
 msgstr "Αδύνατη η έναρξη κλήσης"
 
-#: src/components/modals/EmailChangeModal.tsx:91
+#: src/components/modals/EmailChangeModal.tsx:94
 msgid "Unable to start email change"
 msgstr "Αδύνατη η έναρξη αλλαγής email"
 
@@ -22526,7 +22527,7 @@ msgstr "Ανεξαργύρωτος λογαριασμός"
 msgid "Unclaimed Account Nagbar"
 msgstr "Μπάρα ειδοποίησης ανεξαργύρωτου λογαριασμού"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:65
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:67
 msgid "Unclaimed Account Override"
 msgstr "Παράκαμψη ανεξαργύρωτου λογαριασμού"
 
@@ -22554,10 +22555,10 @@ msgstr "Ανήλικος χρήστης"
 #: src/components/alerts/GenericErrorModal.tsx:31
 #: src/components/alerts/GuildAtCapacityModal.tsx:31
 #: src/components/alerts/InvitesDisabledModal.tsx:31
-#: src/components/alerts/MaxBookmarksModal.tsx:45
-#: src/components/alerts/MaxBookmarksModal.tsx:56
+#: src/components/alerts/MaxBookmarksModal.tsx:48
+#: src/components/alerts/MaxBookmarksModal.tsx:59
 #: src/components/alerts/MaxFavoriteMemesModal.tsx:46
-#: src/components/alerts/MaxGuildsModal.tsx:38
+#: src/components/alerts/MaxGuildsModal.tsx:41
 #: src/components/alerts/MicrophonePermissionDeniedModal.tsx:50
 #: src/components/alerts/NSFWContentRejectedModal.tsx:31
 #: src/components/alerts/ReactionInteractionDisabledModal.tsx:30
@@ -22632,7 +22633,7 @@ msgstr "άγνωστο κανάλι"
 #: src/components/modals/guild_tabs/GuildAuditLogTab.Utils.tsx:479
 #: src/components/modals/guild_tabs/GuildWebhooksTab.tsx:61
 #: src/components/modals/guild_tabs/GuildWebhooksTab.tsx:67
-#: src/stores/QuickSwitcherStore.tsx:690
+#: src/stores/QuickSwitcherStore.tsx:688
 msgid "Unknown channel"
 msgstr "Άγνωστο κανάλι"
 
@@ -22781,7 +22782,7 @@ msgstr "Ξεκλειδώστε αυτοκόλλητα στις προσωπικ�
 #: src/components/layout/UserArea.tsx:168
 #: src/components/media_player/components/MediaVerticalVolumeControl.tsx:249
 #: src/components/media_player/components/MediaVolumeControl.tsx:208
-#: src/components/modals/MobileVideoViewer.tsx:272
+#: src/components/modals/MobileVideoViewer.tsx:280
 #: src/components/voice/VoiceControlBar.tsx:602
 msgid "Unmute"
 msgstr "Κατάργηση σίγασης"
@@ -22872,7 +22873,7 @@ msgstr "Ξεκαρφίτσωμα προσωπικής συνομιλίας"
 msgid "Unpin Group DM"
 msgstr "Ξεκαρφίτσωμα ομάδας"
 
-#: src/components/channel/MessageActionUtils.tsx:412
+#: src/components/channel/MessageActionUtils.tsx:413
 #: src/components/shared/ChannelPinsContent.tsx:102
 msgid "Unpin it"
 msgstr "Ξεκαρφίτσωμα"
@@ -22880,7 +22881,7 @@ msgstr "Ξεκαρφίτσωμα"
 #: src/components/channel/MessageActionBar.tsx:519
 #: src/components/channel/MessageActionBar.tsx:735
 #: src/components/channel/MessageActionMenu.tsx:243
-#: src/components/channel/MessageActionUtils.tsx:409
+#: src/components/channel/MessageActionUtils.tsx:410
 #: src/components/shared/ChannelPinsContent.tsx:99
 #: src/components/shared/ChannelPinsContent.tsx:260
 #: src/components/uikit/context_menu/items/MessageMenuItems.tsx:163
@@ -22907,7 +22908,7 @@ msgstr "Αποκαρφωμένο ομαδικό DM"
 msgid "unread"
 msgstr "μη αναγνωσμένο"
 
-#: src/components/popouts/InboxPopout.tsx:53
+#: src/components/popouts/InboxPopout.tsx:52
 msgid "Unread"
 msgstr "Μη Αναγνωσμένα"
 
@@ -22915,11 +22916,11 @@ msgstr "Μη Αναγνωσμένα"
 msgid "Unread DMs only"
 msgstr "Μόνο μη αναγνωσμένες προσωπικές συνομιλίες"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:85
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:87
 msgid "Unread Gift Count"
 msgstr "Αριθμός μη αναγνωσμένων δώρων"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:73
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:75
 msgid "Unread gift inventory override"
 msgstr "Αναγνωριστικό δώρου που δεν έχει διαβαστεί"
 
@@ -22962,7 +22963,7 @@ msgstr "Μη επαληθευμένο email"
 msgid "Up to 4K/60fps"
 msgstr "Μέχρι 4K/60fps"
 
-#: src/components/channel/ChannelTextarea.tsx:1033
+#: src/components/channel/ChannelTextarea.tsx:1031
 msgid "Update"
 msgstr "Ενημέρωση"
 
@@ -23085,7 +23086,7 @@ msgstr "αναβάθμιση"
 msgid "Upgrade Now"
 msgstr "Αναβάθμιση τώρα"
 
-#: src/components/alerts/MaxBookmarksModal.tsx:69
+#: src/components/alerts/MaxBookmarksModal.tsx:72
 #: src/components/alerts/MaxFavoriteMemesModal.tsx:70
 msgid "Upgrade to Plutonium"
 msgstr "Αναβάθμιση σε Plutonium"
@@ -23249,7 +23250,7 @@ msgstr "Χρησιμοποιήστε μια αφιερωμένη αναδυόμ�
 msgid "Use Actual"
 msgstr "Χρήση πραγματικού"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:47
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:49
 msgid "Use actual premium type"
 msgstr "Χρήση πραγματικού τύπου premium"
 
@@ -23322,7 +23323,7 @@ msgstr "Χρήση παγκόσμιου προφίλ"
 msgid "Use light theme"
 msgstr "Χρήση ανοιχτού θέματος"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:274
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:277
 msgid "Use passkeys for passwordless sign-in and two-factor authentication"
 msgstr "Χρήση passkeys για σύνδεση χωρίς κωδικό και έλεγχο ταυτότητας δύο παραγόντων"
 
@@ -23454,7 +23455,7 @@ msgstr "Αρχείο χρήστη"
 #: src/components/layout/UserArea.tsx:286
 #: src/components/layout/UserArea.tsx:291
 #: src/components/modals/components/DesktopSettingsView.tsx:357
-#: src/components/modals/UserSettingsModal.tsx:154
+#: src/components/modals/UserSettingsModal.tsx:153
 msgid "User Settings"
 msgstr "Ρυθμίσεις χρήστη"
 
@@ -23475,9 +23476,9 @@ msgstr "χρήστης, bot ή webhook"
 msgid "username"
 msgstr "όνομα χρήστη"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:187
+#: src/components/modals/FluxerTagChangeModal.tsx:201
 #: src/components/modals/tabs/component_gallery_tab/InputsTab.tsx:101
-#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:51
+#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:52
 #: src/components/modals/utils/SettingsSearchIndex.tsx:63
 msgid "Username"
 msgstr "Όνομα χρήστη"
@@ -23510,13 +23511,17 @@ msgstr "Το όνομα χρήστη πρέπει να έχει το πολύ 32
 msgid "Username#0000"
 msgstr "Όνομα χρήστη#0000"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:169
+#: src/components/modals/FluxerTagChangeModal.tsx:183
 msgid "Usernames can only contain letters (a-z, A-Z), numbers (0-9), and underscores. Usernames are case-insensitive."
 msgstr "Τα ονόματα χρήστη μπορούν να περιέχουν μόνο γράμματα (a-z, A-Z), αριθμούς (0-9) και κάτω παύλες. Τα ονόματα χρήστη δεν κάνουν διάκριση πεζών-κεφαλαίων."
 
-#: src/components/modals/FluxerTagChangeModal.tsx:164
-msgid "Usernames can only contain letters (a-z, A-Z), numbers (0-9), and underscores. Usernames are case-insensitive. You can pick your own 4-digit tag if it's available."
-msgstr "Τα ονόματα χρήστη μπορούν να περιέχουν μόνο γράμματα (a-z, A-Z), αριθμούς (0-9) και κάτω παύλες. Τα ονόματα χρήστη δεν κάνουν διάκριση πεζών-κεφαλαίων. Μπορείτε να επιλέξετε τη δική σας ετικέτα 4 ψηφίων εφόσον είναι διαθέσιμη."
+#: src/components/modals/FluxerTagChangeModal.tsx:170
+msgid "Usernames can only contain letters (a-z, A-Z), numbers (0-9), and underscores. Usernames are case-insensitive. You can pick any available 4-digit tag from #0000 to #9999."
+msgstr "Τα ονόματα χρήστη μπορούν να περιέχουν μόνο γράμματα (a-z, A-Z), αριθμούς (0-9) και κάτω παύλες. Τα ονόματα χρήστη δεν κάνουν διάκριση πεζών-κεφαλαίων. Μπορείς να διαλέξεις οποιοδήποτε διαθέσιμο 4-digit tag από #0000 έως #9999."
+
+#: src/components/modals/FluxerTagChangeModal.tsx:176
+msgid "Usernames can only contain letters (a-z, A-Z), numbers (0-9), and underscores. Usernames are case-insensitive. You can pick any available 4-digit tag from #0001 to #9999."
+msgstr "Τα ονόματα χρήστη μπορούν να περιέχουν μόνο γράμματα (a-z, A-Z), αριθμούς (0-9) και κάτω παύλες. Τα ονόματα χρήστη δεν κάνουν διάκριση πεζών-κεφαλαίων. Μπορείς να διαλέξεις οποιοδήποτε διαθέσιμο 4-digit tag από #0001 έως #9999."
 
 #: src/components/modals/utils/SettingsSearchIndex.tsx:246
 #: src/components/modals/utils/SettingsSectionRegistry.tsx:172
@@ -23634,8 +23639,8 @@ msgid "Verification Barriers"
 msgstr "Φραγμοί επαλήθευσης"
 
 #: src/components/modals/ClaimAccountModal.tsx:198
-#: src/components/modals/EmailChangeModal.tsx:220
-#: src/components/modals/EmailChangeModal.tsx:288
+#: src/components/modals/EmailChangeModal.tsx:223
+#: src/components/modals/EmailChangeModal.tsx:291
 #: src/components/modals/PasswordChangeModal.tsx:166
 #: src/components/modals/PhoneAddModal.tsx:226
 #: src/components/modals/RequiredActionModal.tsx:495
@@ -23662,7 +23667,7 @@ msgstr "Το email επαλήθευσης στάλθηκε! Ελέγξτε το 
 msgid "Verification failed"
 msgstr "Η επαλήθευση απέτυχε"
 
-#: src/components/modals/BackupCodesViewModal.tsx:63
+#: src/components/modals/BackupCodesViewModal.tsx:68
 msgid "Verification may be required before viewing your backup codes."
 msgstr "Μπορεί να απαιτείται επαλήθευση πριν δείτε τους κωδικούς αντιγράφου ασφαλείας σας."
 
@@ -23684,7 +23689,7 @@ msgid "verify"
 msgstr "επικύρωσε"
 
 #: src/components/modals/AddConnectionModal.tsx:315
-#: src/components/modals/EmailChangeModal.tsx:236
+#: src/components/modals/EmailChangeModal.tsx:239
 #: src/components/modals/PasswordChangeModal.tsx:182
 #: src/components/modals/PhoneAddModal.tsx:240
 #: src/components/modals/RequiredActionModal.tsx:652
@@ -23785,7 +23790,7 @@ msgstr "προεπισκόπηση βίντεο"
 msgid "Video preview"
 msgstr "Προεπισκόπηση βίντεο"
 
-#: src/components/modals/MobileVideoViewer.tsx:311
+#: src/components/modals/MobileVideoViewer.tsx:319
 msgid "Video progress"
 msgstr "Πρόοδος βίντεο"
 
@@ -23859,15 +23864,15 @@ msgstr "Δείτε και διαχειριστείτε τους αποκλεισ
 msgid "View and manage every webhook configured across your community."
 msgstr "Δείτε και διαχειριστείτε κάθε webhook που έχει ρυθμιστεί στην κοινότητά σας."
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:257
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:260
 msgid "View and manage your backup codes for account recovery"
 msgstr "Δείτε και διαχειριστείτε τους κωδικούς αντιγράφου ασφαλείας για την ανάκτηση λογαριασμού"
 
-#: src/components/modals/BackupCodesViewModal.tsx:59
+#: src/components/modals/BackupCodesViewModal.tsx:64
 msgid "View Backup Codes"
 msgstr "Δείτε τους κωδικούς ασφαλείας"
 
-#: src/components/modals/BackupCodesViewModal.tsx:58
+#: src/components/modals/BackupCodesViewModal.tsx:63
 msgid "View backup codes form"
 msgstr "Φόρμα προβολής κωδικών αντιγράφου ασφαλείας"
 
@@ -23884,7 +23889,7 @@ msgstr "Προβολή χειριστηρίων κλήσης"
 msgid "View Channel"
 msgstr "Προβολή καναλιού"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:265
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:268
 msgid "View Codes"
 msgstr "Προβολή κωδικών"
 
@@ -24016,6 +24021,19 @@ msgstr "Visionary (Διάρκειας ζωής Plutonium)"
 msgid "Visionary 2FA Nagbar"
 msgstr "Visionary 2FA Nagbar"
 
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:137
+msgid "Visionary Badge Override"
+msgstr "Ανατροπή Σήματος Οραματιστή"
+
+#. placeholder {0}: profile.premiumLifetimeSequence
+#: src/components/popouts/UserProfileBadges.tsx:150
+msgid "Visionary ID #{0}"
+msgstr "Αριθμός ID Οραματιστή #{0}"
+
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:139
+msgid "Visionary ID Number"
+msgstr "Αριθμός ID Οραματιστή"
+
 #: src/components/modals/ExternalLinkWarningModal.tsx:111
 msgid "Visit Site"
 msgstr "Επίσκεψη στη σελίδα"
@@ -24086,7 +24104,7 @@ msgstr "Κλήσεις Φωνής"
 msgid "voice channel"
 msgstr "φωνητικό κανάλι"
 
-#: src/stores/QuickSwitcherStore.tsx:720
+#: src/stores/QuickSwitcherStore.tsx:718
 #: src/utils/modals/guild_tabs/GuildAuditLogTabUtils.tsx:227
 msgid "Voice channel"
 msgstr "Φωνητικό κανάλι"
@@ -24106,7 +24124,7 @@ msgstr "Το φωνητικό κανάλι είναι γεμάτο"
 msgid "Voice channel join behavior"
 msgstr "Συμπεριφορά συμμετοχής καναλιού φωνής"
 
-#: src/stores/QuickSwitcherStore.tsx:1351
+#: src/stores/QuickSwitcherStore.tsx:1349
 #: src/utils/quick_switcher/QuickSwitcherModalUtils.tsx:98
 msgid "Voice channels"
 msgstr "Φωνητικά κανάλια"
@@ -24374,11 +24392,11 @@ msgstr "Θα στείλουμε έναν κωδικό επαλήθευσης σ�
 msgid "We'll send a verification code to your email before you can change your password."
 msgstr "Θα στείλουμε έναν κωδικό επιβεβαίωσης στο email σας πριν μπορέσετε να αλλάξετε τον κωδικό πρόσβασής σας."
 
-#: src/components/modals/EmailChangeModal.tsx:190
+#: src/components/modals/EmailChangeModal.tsx:193
 msgid "We'll verify your current email and then your new email with one-time codes."
 msgstr "Θα επαληθεύσουμε πρώτα το τρέχον email σας και μετά το νέο με κωδικούς μίας χρήσης."
 
-#: src/components/modals/EmailChangeModal.tsx:192
+#: src/components/modals/EmailChangeModal.tsx:195
 msgid "We'll verify your new email with a one-time code."
 msgstr "Θα επαληθεύσουμε το νέο email σας με έναν κωδικό μίας χρήσης."
 
@@ -24984,7 +25002,7 @@ msgstr "Δεν μπορείς να αποσιγάσεις τον εαυτό σο
 msgid "You do not have access to the channel where this message was sent."
 msgstr "Δεν έχεις πρόσβαση στο κανάλι όπου στάλθηκε αυτό το μήνυμα."
 
-#: src/components/channel/ChannelTextarea.tsx:749
+#: src/components/channel/ChannelTextarea.tsx:747
 #: src/components/channel/textarea/TextareaPlusMenu.tsx:52
 msgid "You do not have permission to send messages in this channel."
 msgstr "Δεν έχεις άδεια να στέλνεις μηνύματα σε αυτό το κανάλι."
@@ -25005,11 +25023,11 @@ msgstr "Δεν έχεις ακόμα προσαρμοσμένες αλλαγές
 msgid "You don't have permission to connect to this voice channel."
 msgstr "Δεν έχεις άδεια να συνδεθείς σε αυτό το φωνητικό κανάλι."
 
-#: src/actions/InviteActionCreators.tsx:316
+#: src/actions/InviteActionCreators.tsx:320
 msgid "You don't have permission to install this emoji pack."
 msgstr "Δεν έχεις άδεια να εγκαταστήσεις αυτό το πακέτο emoji."
 
-#: src/actions/InviteActionCreators.tsx:317
+#: src/actions/InviteActionCreators.tsx:321
 msgid "You don't have permission to install this sticker pack."
 msgstr "Δεν έχεις άδεια να εγκαταστήσεις αυτό το πακέτο αυτοκόλλητων."
 
@@ -25065,35 +25083,35 @@ msgstr "Έχεις όλα τα <0/> μέσω <1>δώρου συνδρομής</1
 msgid "You have blocked {username}. Unblock them to send messages."
 msgstr "Έχεις αποκλείσει τον {username}. Ξεκλείδωσέ τον για να στείλεις μηνύματα."
 
-#: src/actions/InviteActionCreators.tsx:260
+#: src/actions/InviteActionCreators.tsx:264
 msgid "You have created the maximum of {limit} emoji pack. Delete one to create another."
 msgstr "Έχεις δημιουργήσει το μέγιστο των {limit} πακέτων emoji. Διέγραψε ένα για να δημιουργήσεις άλλο."
 
-#: src/actions/InviteActionCreators.tsx:261
+#: src/actions/InviteActionCreators.tsx:265
 msgid "You have created the maximum of {limit} emoji packs. Delete one to create another."
 msgstr "Έχεις δημιουργήσει το μέγιστο των {limit} πακέτων emoji. Διέγραψε ένα για να δημιουργήσεις άλλο."
 
-#: src/actions/InviteActionCreators.tsx:292
+#: src/actions/InviteActionCreators.tsx:296
 msgid "You have created the maximum of {limit} sticker pack. Delete one to create another."
 msgstr "Έχεις δημιουργήσει το μέγιστο των {limit} πακέτων αυτοκόλλητων. Διέγραψε ένα για να δημιουργήσεις άλλο."
 
-#: src/actions/InviteActionCreators.tsx:293
+#: src/actions/InviteActionCreators.tsx:297
 msgid "You have created the maximum of {limit} sticker packs. Delete one to create another."
 msgstr "Έχεις δημιουργήσει το μέγιστο των {limit} πακέτων αυτοκόλλητων. Διέγραψε ένα για να δημιουργήσεις άλλο."
 
-#: src/actions/InviteActionCreators.tsx:246
+#: src/actions/InviteActionCreators.tsx:250
 msgid "You have installed the maximum of {limit} emoji pack. Remove one to install another."
 msgstr "Έχεις εγκαταστήσει το μέγιστο των {limit} πακέτων emoji. Αφαίρεσε ένα για να εγκαταστήσεις άλλο."
 
-#: src/actions/InviteActionCreators.tsx:247
+#: src/actions/InviteActionCreators.tsx:251
 msgid "You have installed the maximum of {limit} emoji packs. Remove one to install another."
 msgstr "Έχεις εγκαταστήσει το μέγιστο των {limit} πακέτων emoji. Αφαίρεσε ένα για να εγκαταστήσεις άλλο."
 
-#: src/actions/InviteActionCreators.tsx:278
+#: src/actions/InviteActionCreators.tsx:282
 msgid "You have installed the maximum of {limit} sticker pack. Remove one to install another."
 msgstr "Έχεις εγκαταστήσει το μέγιστο των {limit} πακέτων αυτοκόλλητων. Αφαίρεσε ένα για να εγκαταστήσεις άλλο."
 
-#: src/actions/InviteActionCreators.tsx:279
+#: src/actions/InviteActionCreators.tsx:283
 msgid "You have installed the maximum of {limit} sticker packs. Remove one to install another."
 msgstr "Έχεις εγκαταστήσει το μέγιστο των {limit} πακέτων αυτοκόλλητων. Αφαίρεσε ένα για να εγκαταστήσεις άλλο."
 
@@ -25101,19 +25119,19 @@ msgstr "Έχεις εγκαταστήσει το μέγιστο των {limit} �
 msgid "You have no friends yet"
 msgstr "Δεν έχεις ακόμη φίλους"
 
-#: src/actions/InviteActionCreators.tsx:264
+#: src/actions/InviteActionCreators.tsx:268
 msgid "You have reached the limit for creating emoji packs. Delete one of your packs to create another."
 msgstr "Έχεις φτάσει το όριο δημιουργίας πακέτων emoji. Διέγραψε ένα από τα πακέτα σου για να δημιουργήσεις άλλο."
 
-#: src/actions/InviteActionCreators.tsx:296
+#: src/actions/InviteActionCreators.tsx:300
 msgid "You have reached the limit for creating sticker packs. Delete one of your packs to create another."
 msgstr "Έχεις φτάσει το όριο δημιουργίας πακέτων αυτοκόλλητων. Διέγραψε ένα από τα πακέτα σου για να δημιουργήσεις άλλο."
 
-#: src/actions/InviteActionCreators.tsx:250
+#: src/actions/InviteActionCreators.tsx:254
 msgid "You have reached the limit for installing emoji packs. Remove one of your installed packs to install another."
 msgstr "Έχεις φτάσει το όριο εγκατάστασης πακέτων emoji. Αφαίρεσε ένα από τα εγκατεστημένα πακέτα σου για να εγκαταστήσεις άλλο."
 
-#: src/actions/InviteActionCreators.tsx:282
+#: src/actions/InviteActionCreators.tsx:286
 msgid "You have reached the limit for installing sticker packs. Remove one of your installed packs to install another."
 msgstr "Έχεις φτάσει το όριο εγκατάστασης πακέτων αυτοκόλλητων. Αφαίρεσε ένα από τα εγκατεστημένα πακέτα σου για να εγκαταστήσεις άλλο."
 
@@ -25377,23 +25395,23 @@ msgstr "Έχετε φτάσει στο μέγιστο όριο των {maxFavori
 msgid "You've reached the maximum limit of {maxFavoriteMemes} saved media items. To add more, you'll need to remove some existing items from your collection."
 msgstr "Έχετε φτάσει στο μέγιστο όριο των {maxFavoriteMemes} αποθηκευμένων μέσων. Για να προσθέσετε περισσότερα, θα χρειαστεί να αφαιρέσετε κάποια υπάρχοντα στοιχεία από τη συλλογή σας."
 
-#: src/components/alerts/MaxBookmarksModal.tsx:55
+#: src/components/alerts/MaxBookmarksModal.tsx:58
 msgid "You've reached the maximum number of bookmarks ({bookmarksText}). Please remove some bookmarks before adding new ones."
 msgstr "Έχετε φτάσει στον μέγιστο αριθμό σελιδοδεικτών ({bookmarksText}). Παρακαλώ αφαιρέστε μερικούς σελιδοδείκτες πριν προσθέσετε νέους."
 
-#: src/components/alerts/MaxBookmarksModal.tsx:44
+#: src/components/alerts/MaxBookmarksModal.tsx:47
 msgid "You've reached the maximum number of bookmarks ({bookmarksText}). This limit is configured by your instance administrator. Please remove some bookmarks before adding new ones."
 msgstr "Έχετε φτάσει στον μέγιστο αριθμό σελιδοδεικτών ({bookmarksText}). Αυτό το όριο έχει ρυθμιστεί από τον διαχειριστή της εγκατάστασής σας. Παρακαλώ αφαιρέστε μερικούς σελιδοδείκτες πριν προσθέσετε νέους."
 
-#: src/components/alerts/MaxBookmarksModal.tsx:68
+#: src/components/alerts/MaxBookmarksModal.tsx:71
 msgid "You've reached the maximum number of bookmarks for free users ({bookmarksText}). Upgrade to Plutonium to increase your limit to {premiumBookmarksText}, or remove some bookmarks to add new ones."
 msgstr "Έχετε φτάσει στον μέγιστο αριθμό σελιδοδεικτών για δωρεάν χρήστες ({bookmarksText}). Αναβαθμίστε σε Plutonium για να αυξήσετε το όριό σας σε {premiumBookmarksText}, ή αφαιρέστε μερικούς σελιδοδείκτες για να προσθέσετε νέους."
 
-#: src/components/alerts/MaxGuildsModal.tsx:36
+#: src/components/alerts/MaxGuildsModal.tsx:39
 msgid "You've reached the maximum number of communities you can join ({maxGuilds} communities). Please leave a community before joining another one."
 msgstr "Έχετε φτάσει στον μέγιστο αριθμό κοινοτήτων που μπορείτε να συμμετάσχετε ({maxGuilds} κοινοτήτων). Παρακαλώ αποχωρήστε από μια κοινότητα πριν συμμετάσχετε σε άλλη."
 
-#: src/components/alerts/MaxGuildsModal.tsx:35
+#: src/components/alerts/MaxGuildsModal.tsx:38
 msgid "You've reached the maximum number of communities you can join ({maxGuilds} community). Please leave a community before joining another one."
 msgstr "Έχετε φτάσει στον μέγιστο αριθμό κοινοτήτων που μπορείτε να συμμετάσχετε ({maxGuilds} κοινότητα). Παρακαλώ αποχωρήστε από μια κοινότητα πριν συμμετάσχετε σε άλλη."
 

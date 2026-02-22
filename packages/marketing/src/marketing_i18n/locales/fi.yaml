@@ -371,7 +371,7 @@ pricing_and_tiers.free.label: Ilmainen
 pricing_and_tiers.plutonium.benefits_note_official_instance_only: 'Huom: Plutonium- ja Visionary-edut koskevat vain virallista Fluxer.app-instanssia, eivät kolmannen osapuolen tai itsehostattuja instansseja.'
 pricing_and_tiers.plutonium.feature_highlights: 500 Mt lataukset, 4 000 merkin viestit, 300 kirjanmerkkiä, 50 emojipakettia ja paljon muuta.
 pricing_and_tiers.plutonium.features.bio_character_limit: Bion merkkiraja
-pricing_and_tiers.plutonium.features.choose_custom_4_digit_tag: Valitse oma 4-numeroinen tunniste, kuten #0001, #1337 tai #9999, ja tee käyttäjänimi todella ainutlaatuiseksi.
+pricing_and_tiers.plutonium.features.choose_custom_4_digit_tag: Valitse mikä tahansa saatavilla oleva 4-numeroinen tunniste väliltä #0001–#9999 ja tee käyttäjänimestä todella ainutlaatuinen.
 pricing_and_tiers.plutonium.features.custom_4_digit_username_tag: Oma 4-numeroinen käyttäjätunniste
 pricing_and_tiers.plutonium.features.custom_username_tag: Oma käyttäjätunniste
 pricing_and_tiers.plutonium.features.custom_video_backgrounds: Videotaustat

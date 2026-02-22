@@ -371,7 +371,7 @@ pricing_and_tiers.free.label: Miễn phí
 pricing_and_tiers.plutonium.benefits_note_official_instance_only: 'Lưu ý: quyền lợi Plutonium và Visionary chỉ áp dụng cho instance chính thức Fluxer.app, không áp dụng cho instance bên thứ ba hoặc tự host.'
 pricing_and_tiers.plutonium.feature_highlights: Tải lên 500 MB, tin nhắn 4.000 ký tự, 300 bookmark, 50 gói emoji, và còn nhiều nữa.
 pricing_and_tiers.plutonium.features.bio_character_limit: Giới hạn ký tự phần giới thiệu
-pricing_and_tiers.plutonium.features.choose_custom_4_digit_tag: Chọn tag 4 chữ số riêng của mình như #0001, #1337, hoặc #9999 để làm tên người dùng của bạn thực sự độc đáo.
+pricing_and_tiers.plutonium.features.choose_custom_4_digit_tag: Chọn bất kỳ tag 4 chữ số nào còn trống từ #0001 đến #9999 để làm tên người dùng của bạn thực sự độc đáo.
 pricing_and_tiers.plutonium.features.custom_4_digit_username_tag: Tag tên người dùng 4 chữ số tuỳ chỉnh
 pricing_and_tiers.plutonium.features.custom_username_tag: Tag tên người dùng tuỳ chỉnh
 pricing_and_tiers.plutonium.features.custom_video_backgrounds: Nền video tuỳ chỉnh

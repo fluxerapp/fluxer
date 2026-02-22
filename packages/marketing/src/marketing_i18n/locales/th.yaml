@@ -371,7 +371,7 @@ pricing_and_tiers.free.label: ฟรี
 pricing_and_tiers.plutonium.benefits_note_official_instance_only: 'หมายเหตุ: สิทธิประโยชน์ Plutonium และ Visionary ใช้ได้เฉพาะบนอินสแตนซ์ทางการ Fluxer.app เท่านั้น ไม่รวมอินสแตนซ์ของบุคคลที่สามหรือแบบโฮสต์เอง'
 pricing_and_tiers.plutonium.feature_highlights: อัปโหลด 500 MB ข้อความยาว 4,000 ตัวอักษร บุ๊กมาร์ก 300 รายการ แพ็กอีโมจิ 50 แพ็ก และอีกมากมาย
 pricing_and_tiers.plutonium.features.bio_character_limit: ลิมิตตัวอักษรใน bio
-pricing_and_tiers.plutonium.features.choose_custom_4_digit_tag: เลือกแท็ก 4 หลักของคุณเองเช่น #0001, #1337, หรือ #9999 เพื่อให้ชื่อผู้ใช้ของคุณไม่ซ้ำใคร
+pricing_and_tiers.plutonium.features.choose_custom_4_digit_tag: เลือกแท็ก 4 หลักที่ว่างอยู่ตั้งแต่ #0001 ถึง #9999 เพื่อให้ชื่อผู้ใช้ของคุณไม่ซ้ำใคร
 pricing_and_tiers.plutonium.features.custom_4_digit_username_tag: แท็กชื่อผู้ใช้ 4 หลักแบบกำหนดเอง
 pricing_and_tiers.plutonium.features.custom_username_tag: แท็กชื่อผู้ใช้แบบกำหนดเอง
 pricing_and_tiers.plutonium.features.custom_video_backgrounds: พื้นหลังวิดีโอ

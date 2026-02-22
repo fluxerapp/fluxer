@@ -52,6 +52,7 @@ import {Logger} from '@app/lib/Logger';
 import {TextareaAutosize} from '@app/lib/TextareaAutosize';
 import type {ChannelRecord} from '@app/records/ChannelRecord';
 import type {MessageRecord} from '@app/records/MessageRecord';
+import type {UserRecord} from '@app/records/UserRecord';
 import ChannelStore from '@app/stores/ChannelStore';
 import MobileLayoutStore from '@app/stores/MobileLayoutStore';
 import UserStore from '@app/stores/UserStore';
@@ -66,7 +67,12 @@ import {useCallback, useMemo, useRef, useState} from 'react';
 
 const logger = new Logger('ForwardModal');
 
-export const ForwardModal = observer(({message}: {message: MessageRecord}) => {
+interface ForwardModalProps {
+	message: MessageRecord;
+	user: UserRecord;
+}
+
+export const ForwardModal = observer(({message, user}: ForwardModalProps) => {
 	const {t} = useLingui();
 	const {filteredChannels, handleToggleChannel, isChannelDisabled, searchQuery, selectedChannelIds, setSearchQuery} =
 		useForwardChannelSelection({excludedChannelId: message.channelId});
@@ -75,7 +81,6 @@ export const ForwardModal = observer(({message}: {message: MessageRecord}) => {
 	const [expressionPickerOpen, setExpressionPickerOpen] = useState(false);
 	const textareaRef = useRef<HTMLTextAreaElement>(null);
 	const containerRef = useRef<HTMLDivElement>(null);
-	const currentUser = UserStore.currentUser!;
 	const premiumMaxLength = Limits.getPremiumValue('max_message_length', MAX_MESSAGE_LENGTH_PREMIUM);
 	const mobileLayout = MobileLayoutStore;
 
@@ -88,7 +93,7 @@ export const ForwardModal = observer(({message}: {message: MessageRecord}) => {
 		textareaRef,
 		segmentManagerRef,
 		previousValueRef,
-		maxActualLength: currentUser.maxMessageLength,
+		maxActualLength: user.maxMessageLength,
 		onExceedMaxLength: handleOptionalMessageExceedsLimit,
 	});
 
@@ -109,7 +114,7 @@ export const ForwardModal = observer(({message}: {message: MessageRecord}) => {
 		textareaRef,
 		segmentManagerRef,
 		previousValueRef,
-		maxActualLength: currentUser.maxMessageLength,
+		maxActualLength: user.maxMessageLength,
 		onExceedMaxLength: handleOptionalMessageExceedsLimit,
 	});
 
@@ -119,14 +124,14 @@ export const ForwardModal = observer(({message}: {message: MessageRecord}) => {
 		segmentManagerRef,
 		setValue: setOptionalMessage,
 		previousValueRef,
-		maxMessageLength: currentUser.maxMessageLength,
+		maxMessageLength: user.maxMessageLength,
 		onPasteExceedsLimit: () => handleOptionalMessageExceedsLimit(),
 	});
 
 	const actualOptionalMessage = useMemo(() => displayToActual(optionalMessage), [displayToActual, optionalMessage]);
 	const optionalMessageDisplayMaxLength = useMemo(() => {
-		return Math.max(0, optionalMessage.length + (currentUser.maxMessageLength - actualOptionalMessage.length));
-	}, [actualOptionalMessage.length, currentUser.maxMessageLength, optionalMessage.length]);
+		return Math.max(0, optionalMessage.length + (user.maxMessageLength - actualOptionalMessage.length));
+	}, [actualOptionalMessage.length, user.maxMessageLength, optionalMessage.length]);
 
 	const handleForward = async () => {
 		if (selectedChannelIds.size === 0 || isForwarding) return;
@@ -310,8 +315,8 @@ export const ForwardModal = observer(({message}: {message: MessageRecord}) => {
 					/>
 					<MessageCharacterCounter
 						currentLength={actualOptionalMessage.length}
-						maxLength={currentUser.maxMessageLength}
-						canUpgrade={currentUser.maxMessageLength < premiumMaxLength}
+						maxLength={user.maxMessageLength}
+						canUpgrade={user.maxMessageLength < premiumMaxLength}
 						premiumMaxLength={premiumMaxLength}
 					/>
 					<div className={modalStyles.messageInputActions}>

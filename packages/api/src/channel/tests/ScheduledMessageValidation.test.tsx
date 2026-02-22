@@ -20,7 +20,7 @@
 import {createTestAccount} from '@fluxer/api/src/auth/tests/AuthTestUtils';
 import {
 	createGuildChannel,
-	enableMessageSchedulingForGuild,
+	grantStaffAccess,
 	scheduleMessage,
 } from '@fluxer/api/src/channel/tests/ScheduledMessageTestUtils';
 import {createGuild} from '@fluxer/api/src/guild/tests/GuildTestUtils';
@@ -49,7 +49,7 @@ describe('Scheduled message validation', () => {
 	it('rejects scheduling message with past time', async () => {
 		const owner = await createTestAccount(harness);
 		const guild = await createGuild(harness, owner.token, 'sched-validation-past');
-		await enableMessageSchedulingForGuild(harness, guild.id);
+		await grantStaffAccess(harness, owner.userId);
 		const channel = await createGuildChannel(harness, owner.token, guild.id, 'test');
 		await ensureSessionStarted(harness, owner.token);
 
@@ -76,7 +76,7 @@ describe('Scheduled message validation', () => {
 	it('rejects scheduling message exceeding 30 days', async () => {
 		const owner = await createTestAccount(harness);
 		const guild = await createGuild(harness, owner.token, 'sched-validation-30day');
-		await enableMessageSchedulingForGuild(harness, guild.id);
+		await grantStaffAccess(harness, owner.userId);
 		const channel = await createGuildChannel(harness, owner.token, guild.id, 'test');
 		await ensureSessionStarted(harness, owner.token);
 
@@ -103,7 +103,7 @@ describe('Scheduled message validation', () => {
 	it('rejects scheduling message with invalid timezone', async () => {
 		const owner = await createTestAccount(harness);
 		const guild = await createGuild(harness, owner.token, 'sched-validation-tz');
-		await enableMessageSchedulingForGuild(harness, guild.id);
+		await grantStaffAccess(harness, owner.userId);
 		const channel = await createGuildChannel(harness, owner.token, guild.id, 'test');
 		await ensureSessionStarted(harness, owner.token);
 
@@ -130,7 +130,7 @@ describe('Scheduled message validation', () => {
 	it('accepts scheduling message at 30 day boundary', async () => {
 		const owner = await createTestAccount(harness);
 		const guild = await createGuild(harness, owner.token, 'sched-validation-boundary');
-		await enableMessageSchedulingForGuild(harness, guild.id);
+		await grantStaffAccess(harness, owner.userId);
 		const channel = await createGuildChannel(harness, owner.token, guild.id, 'test');
 
 		const futureTime = new Date(Date.now() + 29 * 24 * 60 * 60 * 1000 + 23 * 60 * 60 * 1000).toISOString();

@@ -50,11 +50,9 @@ import {
 } from '@fluxer/api/src/Tables';
 import {withBusinessSpan} from '@fluxer/api/src/telemetry/BusinessSpans';
 import {withSpan} from '@fluxer/api/src/telemetry/Tracing';
-import type {GuildManagedTraitService} from '@fluxer/api/src/traits/GuildManagedTraitService';
 import type {IUserRepository} from '@fluxer/api/src/user/IUserRepository';
 import {mapUserSettingsToResponse} from '@fluxer/api/src/user/UserMappers';
 import {removeGuildFromUserFolders} from '@fluxer/api/src/user/utils/GuildFolderUtils';
-import {areFeatureSetsEqual} from '@fluxer/api/src/utils/featureUtils';
 import type {IWebhookRepository} from '@fluxer/api/src/webhook/IWebhookRepository';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import {ChannelTypes, DEFAULT_PERMISSIONS, Permissions} from '@fluxer/constants/src/ChannelConstants';
@@ -106,7 +104,6 @@ export class GuildOperationsService {
 		private readonly helpers: GuildDataHelpers,
 		private readonly limitConfigService: LimitConfigService,
 		private readonly discoveryRepository: IGuildDiscoveryRepository,
-		private readonly guildManagedTraitService?: GuildManagedTraitService,
 	) {}
 
 	async getGuild({userId, guildId}: {userId: UserID; guildId: GuildID}): Promise<GuildResponse> {
@@ -663,9 +660,7 @@ export class GuildOperationsService {
 			sanitizedSystemChannelFlags = data.system_channel_flags & SUPPORTED_SYSTEM_CHANNEL_FLAGS;
 		}
 
-		const previousFeatures = new Set(currentGuild.features);
 		let updatedFeatures = currentGuild.features;
-		let featuresChanged = false;
 		if (data.features !== undefined) {
 			const newFeatures = new Set(currentGuild.features);
 
@@ -692,7 +687,6 @@ export class GuildOperationsService {
 			}
 
 			updatedFeatures = newFeatures;
-			featuresChanged = !areFeatureSetsEqual(previousFeatures, updatedFeatures);
 		}
 
 		let messageHistoryCutoff: Date | null | undefined;
@@ -762,14 +756,6 @@ export class GuildOperationsService {
 			await this.commitPreparedAssets(preparedAssets);
 		} catch (error) {
 			Logger.error({error, guildId}, 'Failed to commit asset changes after successful guild update');
-		}
-
-		if (featuresChanged && this.guildManagedTraitService) {
-			await this.guildManagedTraitService.reconcileTraitsForGuildFeatureChange({
-				guildId,
-				previousFeatures,
-				newFeatures: updatedFeatures,
-			});
 		}
 
 		await this.helpers.dispatchGuildUpdate(updatedGuild);

@@ -97,6 +97,48 @@
 	gap: 0.5rem;
 }
 
+.phoneRow {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+
+@media (min-width: 640px) {
+	.phoneRow {
+		flex-direction: row;
+		align-items: center;
+		gap: 0.5rem;
+	}
+}
+
+.phoneText {
+	color: var(--text-primary-muted);
+	font-size: 0.875rem;
+}
+
+.phoneTextSelectable {
+	user-select: text;
+	-webkit-user-select: text;
+}
+
+.toggleButton {
+	margin-top: 0.1em;
+	text-align: left;
+	color: var(--text-link);
+	font-size: 0.875rem;
+	cursor: pointer;
+}
+
+.toggleButton:hover {
+	text-decoration: underline;
+}
+
+@media (min-width: 640px) {
+	.toggleButton {
+		text-align: center;
+	}
+}
+
 .claimButton {
 	align-self: flex-start;
 }

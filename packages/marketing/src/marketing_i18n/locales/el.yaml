@@ -371,7 +371,7 @@ pricing_and_tiers.free.label: Δωρεάν
 pricing_and_tiers.plutonium.benefits_note_official_instance_only: 'Σημείωση: τα οφέλη Plutonium και Visionary ισχύουν μόνο στο επίσημο instance Fluxer.app, όχι σε τρίτα ή self-hosted instances.'
 pricing_and_tiers.plutonium.feature_highlights: Uploads 500 MB, μηνύματα 4.000 χαρακτήρων, 300 σελιδοδείκτες, 50 πακέτα emoji και πολλά ακόμη.
 pricing_and_tiers.plutonium.features.bio_character_limit: Όριο χαρακτήρων bio
-pricing_and_tiers.plutonium.features.choose_custom_4_digit_tag: Διάλεξε το δικό σου 4-digit tag όπως #0001, #1337 ή #9999 για να κάνεις το username σου πραγματικά μοναδικό.
+pricing_and_tiers.plutonium.features.choose_custom_4_digit_tag: Διάλεξε οποιοδήποτε διαθέσιμο 4-digit tag από #0001 έως #9999 για να κάνεις το username σου πραγματικά μοναδικό.
 pricing_and_tiers.plutonium.features.custom_username_tag: Προσαρμοσμένο tag χρήστη
 pricing_and_tiers.plutonium.features.custom_4_digit_username_tag: Προσαρμοσμένο 4-digit username tag
 pricing_and_tiers.plutonium.features.custom_video_backgrounds: Προσαρμοσμένα φόντα βίντεο

@@ -371,7 +371,7 @@ pricing_and_tiers.free.label: Nemokama
 pricing_and_tiers.plutonium.benefits_note_official_instance_only: 'Pastaba: Plutonium ir Visionary naudos galioja tik oficialioje Fluxer.app instancijoje, o ne trečiųjų šalių ar savihostinamose instancijose.'
 pricing_and_tiers.plutonium.feature_highlights: 500 MB įkėlimai, 4 000 simbolių žinutės, 300 žymių, 50 emoji paketų ir dar daug daugiau.
 pricing_and_tiers.plutonium.features.bio_character_limit: Aprašymo simbolių limitas
-pricing_and_tiers.plutonium.features.choose_custom_4_digit_tag: 'Pasirink savą 4 skaitmenų žymę, pavyzdžiui #0001, #1337 arba #9999, kad tavo naudotojo vardas būtų iš tiesų unikalus.'
+pricing_and_tiers.plutonium.features.choose_custom_4_digit_tag: 'Pasirink bet kurią laisvą 4 skaitmenų žymę nuo #0001 iki #9999, kad tavo naudotojo vardas būtų iš tiesų unikalus.'
 pricing_and_tiers.plutonium.features.custom_4_digit_username_tag: Pasirinktinis 4 skaitmenų naudotojo vardas žymuo
 pricing_and_tiers.plutonium.features.custom_username_tag: Pasirinktinis naudotojo žymuo
 pricing_and_tiers.plutonium.features.custom_video_backgrounds: Pasirinktiniai vaizdo fonai

@@ -191,6 +191,7 @@ export async function initializeWorkerDependencies(snowflakeService: SnowflakeSe
 	const limitConfigSubscriber = getKVClient();
 	const limitConfigService = new LimitConfigService(instanceConfigRepository, cacheService, limitConfigSubscriber);
 	await limitConfigService.initialize();
+	limitConfigService.setAsGlobalInstance();
 	const userCacheService = new UserCacheService(cacheService, userRepository);
 	const storageService = createStorageService({s3Service: getInjectedS3Service()});
 	const csamEvidenceRetentionService = new CsamEvidenceRetentionService(storageService);
@@ -321,7 +322,6 @@ export async function initializeWorkerDependencies(snowflakeService: SnowflakeSe
 		webhookRepository,
 		guildAuditLogService,
 		limitConfigService,
-		undefined,
 	);
 	const inviteService = new InviteService(
 		inviteRepository,

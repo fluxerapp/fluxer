@@ -27,6 +27,7 @@ import {BackupCodesModal} from '@app/components/modals/BackupCodesModal';
 import * as Modal from '@app/components/modals/Modal';
 import {Button} from '@app/components/uikit/button/Button';
 import {useFormSubmit} from '@app/hooks/useFormSubmit';
+import type {UserRecord} from '@app/records/UserRecord';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import {useForm} from 'react-hook-form';
@@ -35,14 +36,20 @@ interface FormInputs {
 	form: string;
 }
 
-export const BackupCodesRegenerateModal = observer(() => {
+interface BackupCodesRegenerateModalProps {
+	user: UserRecord;
+}
+
+export const BackupCodesRegenerateModal = observer(({user}: BackupCodesRegenerateModalProps) => {
 	const {t} = useLingui();
 	const form = useForm<FormInputs>();
 
 	const onSubmit = async () => {
 		const backupCodes = await MfaActionCreators.getBackupCodes(true);
 		ModalActionCreators.pop();
-		ModalActionCreators.update('backup-codes', () => modal(() => <BackupCodesModal backupCodes={backupCodes} />));
+		ModalActionCreators.update('backup-codes', () =>
+			modal(() => <BackupCodesModal backupCodes={backupCodes} user={user} />),
+		);
 		ToastActionCreators.createToast({
 			type: 'success',
 			children: t`Backup codes regenerated`,

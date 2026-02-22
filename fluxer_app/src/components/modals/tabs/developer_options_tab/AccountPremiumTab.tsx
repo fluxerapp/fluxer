@@ -19,6 +19,7 @@
 
 import * as DeveloperOptionsActionCreators from '@app/actions/DeveloperOptionsActionCreators';
 import * as UserActionCreators from '@app/actions/UserActionCreators';
+import {Input} from '@app/components/form/Input';
 import {Select} from '@app/components/form/Select';
 import {Switch} from '@app/components/form/Switch';
 import {SettingsTabSection} from '@app/components/modals/shared/SettingsTabLayout';
@@ -36,6 +37,7 @@ import type {MessageDescriptor} from '@lingui/core';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
+import {useCallback} from 'react';
 
 interface AccountPremiumTabContentProps {
 	user: UserRecord;
@@ -129,6 +131,24 @@ export const AccountPremiumTabContent: React.FC<AccountPremiumTabContentProps> =
 					onChange={(value) =>
 						DeveloperOptionsActionCreators.updateOption('hasEverPurchasedOverride', value ? true : null)
 					}
+				/>
+			</SettingsTabSection>
+
+			<SettingsTabSection title={<Trans>Visionary Badge Override</Trans>}>
+				<Input
+					label={t`Visionary ID Number`}
+					type="number"
+					min={1}
+					placeholder={t`Leave empty for actual value`}
+					value={DeveloperOptionsStore.premiumLifetimeSequenceOverride?.toString() ?? ''}
+					onChange={useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+						const value = event.target.value;
+						const parsed = value === '' ? null : Number.parseInt(value, 10);
+						DeveloperOptionsActionCreators.updateOption(
+							'premiumLifetimeSequenceOverride',
+							parsed != null && !Number.isNaN(parsed) ? parsed : null,
+						);
+					}, [])}
 				/>
 			</SettingsTabSection>
 

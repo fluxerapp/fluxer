@@ -373,12 +373,9 @@ get_sorted_members_for_list(ListId, State) ->
     Data = maps:get(data, State, #{}),
     Members = guild_data_index:member_values(Data),
     FilteredMembers = guild_member_list_common:filter_members_for_list(ListId, Members, State),
-    lists:sort(
-        fun(A, B) ->
-            guild_member_list_common:get_member_sort_key(A) =< guild_member_list_common:get_member_sort_key(B)
-        end,
-        FilteredMembers
-    ).
+    Decorated = [{guild_member_list_common:get_member_sort_key(M), M} || M <- FilteredMembers],
+    Sorted = lists:sort(fun({KeyA, _}, {KeyB, _}) -> KeyA =< KeyB end, Decorated),
+    [M || {_, M} <- Sorted].
 
 -spec build_full_items(list_id(), guild_state(), [map()]) -> [list_item()].
 build_full_items(ListId, State, SortedMembers) ->

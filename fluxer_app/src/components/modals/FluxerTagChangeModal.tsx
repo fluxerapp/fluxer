@@ -33,10 +33,11 @@ import FocusRing from '@app/components/uikit/focus_ring/FocusRing';
 import {PlutoniumUpsell} from '@app/components/uikit/plutonium_upsell/PlutoniumUpsell';
 import {Tooltip} from '@app/components/uikit/tooltip/Tooltip';
 import {useFormSubmit} from '@app/hooks/useFormSubmit';
-import UserStore from '@app/stores/UserStore';
+import type {UserRecord} from '@app/records/UserRecord';
 import {LimitResolver} from '@app/utils/limits/LimitResolverAdapter';
 import {isLimitToggleEnabled} from '@app/utils/limits/LimitUtils';
 import {shouldShowPremiumFeatures} from '@app/utils/PremiumUtils';
+import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import {useCallback, useEffect, useRef} from 'react';
@@ -47,14 +48,18 @@ interface FormInputs {
 	discriminator: string;
 }
 
-export const FluxerTagChangeModal = observer(() => {
+interface FluxerTagChangeModalProps {
+	user: UserRecord;
+}
+
+export const FluxerTagChangeModal = observer(({user}: FluxerTagChangeModalProps) => {
 	const {t} = useLingui();
-	const user = UserStore.getCurrentUser()!;
 	const usernameRef = useRef<HTMLInputElement>(null);
 	const hasCustomDiscriminator = isLimitToggleEnabled(
 		{feature_custom_discriminator: LimitResolver.resolve({key: 'feature_custom_discriminator', fallback: 0})},
 		'feature_custom_discriminator',
 	);
+	const isVisionary = user.premiumType === UserPremiumTypes.LIFETIME;
 	const showPremium = shouldShowPremiumFeatures();
 	const skipAvailabilityCheckRef = useRef(false);
 	const resubmitHandlerRef = useRef<(() => Promise<void>) | null>(null);
@@ -143,7 +148,7 @@ export const FluxerTagChangeModal = observer(() => {
 			ModalActionCreators.pop();
 			ToastActionCreators.createToast({type: 'success', children: t`FluxerTag updated`});
 		},
-		[hasCustomDiscriminator, user.username, user.discriminator],
+		[hasCustomDiscriminator],
 	);
 
 	const {handleSubmit, isSubmitting} = useFormSubmit({
@@ -161,10 +166,19 @@ export const FluxerTagChangeModal = observer(() => {
 					<Modal.ContentLayout>
 						<Modal.Description>
 							{hasCustomDiscriminator ? (
-								<Trans>
-									Usernames can only contain letters (a-z, A-Z), numbers (0-9), and underscores. Usernames are
-									case-insensitive. You can pick your own 4-digit tag if it's available.
-								</Trans>
+								isVisionary ? (
+									<Trans>
+										Usernames can only contain letters (a-z, A-Z), numbers (0-9), and underscores.
+										Usernames are case-insensitive. You can pick any available 4-digit tag from #0000
+										to #9999.
+									</Trans>
+								) : (
+									<Trans>
+										Usernames can only contain letters (a-z, A-Z), numbers (0-9), and underscores.
+										Usernames are case-insensitive. You can pick any available 4-digit tag from #0001
+										to #9999.
+									</Trans>
+								)
 							) : (
 								<Trans>
 									Usernames can only contain letters (a-z, A-Z), numbers (0-9), and underscores. Usernames are

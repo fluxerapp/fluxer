@@ -77,7 +77,10 @@ export const AccountTabContent: React.FC<AccountTabProps> = observer(
 										</button>
 									</div>
 								</div>
-								<Button small={true} onClick={() => ModalActionCreators.push(modal(() => <EmailChangeModal />))}>
+								<Button
+									small={true}
+									onClick={() => ModalActionCreators.push(modal(() => <EmailChangeModal user={user} />))}
+								>
 									<Trans>Change Email</Trans>
 								</Button>
 							</div>

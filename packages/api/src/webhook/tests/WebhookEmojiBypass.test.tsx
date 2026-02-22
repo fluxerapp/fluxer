@@ -25,9 +25,9 @@ import {
 	createGuildEmojiWithFile,
 	createWebhook,
 	deleteWebhook,
-	enableExpressionPacksForGuild,
 	executeWebhook,
 	grantCreateExpressionsPermission,
+	grantStaffAccess,
 } from '@fluxer/api/src/webhook/tests/WebhookTestUtils';
 import {beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
@@ -48,7 +48,7 @@ describe('Webhook emoji bypass', () => {
 		const guildId = guild.id;
 		const channelId = guild.system_channel_id!;
 
-		await enableExpressionPacksForGuild(harness, guildId);
+		await grantStaffAccess(harness, user.userId);
 		await grantCreateExpressionsPermission(harness, user.token, guildId);
 
 		const emoji = await createGuildEmoji(harness, user.token, guildId, 'external');
@@ -112,7 +112,7 @@ describe('Webhook emoji bypass', () => {
 		const guildId = guild.id;
 		const channelId = guild.system_channel_id!;
 
-		await enableExpressionPacksForGuild(harness, guildId);
+		await grantStaffAccess(harness, user.userId);
 		await grantCreateExpressionsPermission(harness, user.token, guildId);
 
 		const emoji = await createGuildEmoji(harness, user.token, guildId, 'wait_emoji');

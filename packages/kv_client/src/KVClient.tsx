@@ -18,7 +18,12 @@
  */
 
 import type {IKVPipeline, IKVProvider, IKVSubscription} from '@fluxer/kv_client/src/IKVProvider';
-import {type IKVLogger, type KVClientConfig, resolveKVClientConfig} from '@fluxer/kv_client/src/KVClientConfig';
+import {
+	type IKVLogger,
+	type KVClientConfig,
+	type ResolvedKVClientConfig,
+	resolveKVClientConfig,
+} from '@fluxer/kv_client/src/KVClientConfig';
 import {KVClientError, KVClientErrorCode} from '@fluxer/kv_client/src/KVClientError';
 import {
 	createStringEntriesFromPairs,
@@ -29,7 +34,7 @@ import {
 } from '@fluxer/kv_client/src/KVCommandArguments';
 import {KVPipeline} from '@fluxer/kv_client/src/KVPipeline';
 import {KVSubscription} from '@fluxer/kv_client/src/KVSubscription';
-import Redis from 'ioredis';
+import Redis, {Cluster} from 'ioredis';
 
 const RELEASE_LOCK_SCRIPT = `
 if redis.call('GET', KEYS[1]) == ARGV[1] then
@@ -106,21 +111,47 @@ return 1
 `;
 
 export class KVClient implements IKVProvider {
-	private readonly client: Redis;
+	private readonly client: Redis | Cluster;
+	private readonly config: ResolvedKVClientConfig;
 	private readonly logger: IKVLogger;
 	private readonly url: string;
 	private readonly timeoutMs: number;
 
 	constructor(config: KVClientConfig | string) {
 		const resolvedConfig = resolveKVClientConfig(config);
+		this.config = resolvedConfig;
 		this.url = resolvedConfig.url;
 		this.timeoutMs = resolvedConfig.timeoutMs;
 		this.logger = resolvedConfig.logger;
-		this.client = new Redis(this.url, {
-			connectTimeout: this.timeoutMs,
-			commandTimeout: this.timeoutMs,
-			maxRetriesPerRequest: 1,
-			retryStrategy: createRetryStrategy(),
+
+		if (resolvedConfig.mode === 'cluster') {
+			this.client = this.createClusterClient(resolvedConfig);
+		} else {
+			this.client = new Redis(this.url, {
+				connectTimeout: this.timeoutMs,
+				commandTimeout: this.timeoutMs,
+				maxRetriesPerRequest: 1,
+				retryStrategy: createRetryStrategy(),
+			});
+		}
+	}
+
+	private createClusterClient(clusterConfig: ResolvedKVClientConfig): Cluster {
+		const nodes =
+			clusterConfig.clusterNodes.length > 0 ? clusterConfig.clusterNodes : parseClusterNodesFromUrl(clusterConfig.url);
+
+		const natMap = clusterConfig.clusterNatMap;
+		const hasNatMap = Object.keys(natMap).length > 0;
+
+		return new Cluster(nodes, {
+			clusterRetryStrategy: createRetryStrategy(),
+			redisOptions: {
+				connectTimeout: clusterConfig.timeoutMs,
+				commandTimeout: clusterConfig.timeoutMs,
+				maxRetriesPerRequest: 1,
+			},
+			scaleReads: 'master',
+			...(hasNatMap ? {natMap} : {}),
 		});
 	}
 
@@ -374,6 +405,8 @@ export class KVClient implements IKVProvider {
 	duplicate(): IKVSubscription {
 		return new KVSubscription({
 			url: this.url,
+			mode: this.config.mode,
+			clusterNodes: this.config.clusterNodes,
 			timeoutMs: this.timeoutMs,
 			logger: this.logger,
 		});
@@ -477,6 +510,15 @@ export class KVClient implements IKVProvider {
 			code: KVClientErrorCode.REQUEST_FAILED,
 			message: `KV request failed (${command}): ${getErrorMessage(error)}`,
 		});
+	}
+}
+
+function parseClusterNodesFromUrl(url: string): Array<{host: string; port: number}> {
+	try {
+		const parsed = new URL(url);
+		return [{host: parsed.hostname, port: Number.parseInt(parsed.port || '6379', 10)}];
+	} catch {
+		return [{host: '127.0.0.1', port: 6379}];
 	}
 }
 

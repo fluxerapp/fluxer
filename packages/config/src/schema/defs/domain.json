@@ -105,6 +105,38 @@
 				"description": "Internal Valkey/Redis URL for key-value operations.",
 				"default": "redis://localhost:6379/0"
 			},
+			"kv_mode": {
+				"type": "string",
+				"description": "Valkey/Redis connection mode. Use 'standalone' for a single node or 'cluster' for a Valkey/Redis cluster.",
+				"enum": ["standalone", "cluster"],
+				"default": "standalone"
+			},
+			"kv_cluster_nodes": {
+				"type": "array",
+				"description": "List of cluster node URLs when kv_mode is 'cluster'. Each entry should be a host:port string.",
+				"items": {
+					"type": "object",
+					"properties": {
+						"host": {"type": "string"},
+						"port": {"type": "integer"}
+					},
+					"required": ["host", "port"]
+				},
+				"default": []
+			},
+			"kv_cluster_nat_map": {
+				"type": "object",
+				"description": "NAT mapping for Valkey/Redis cluster nodes. Maps internal addresses to external addresses for NAT traversal.",
+				"additionalProperties": {
+					"type": "object",
+					"properties": {
+						"host": {"type": "string"},
+						"port": {"type": "integer"}
+					},
+					"required": ["host", "port"]
+				},
+				"default": {}
+			},
 			"queue": {
 				"type": "string",
 				"description": "Internal URL for the Queue service.",

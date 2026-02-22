@@ -94,14 +94,12 @@ import {Limits} from '@app/utils/limits/UserLimits';
 import {normalizeMessageContent} from '@app/utils/MessageRequestUtils';
 import * as MessageSubmitUtils from '@app/utils/MessageSubmitUtils';
 import * as PlaceholderUtils from '@app/utils/PlaceholderUtils';
-import {hasManagedTrait} from '@app/utils/traits/UserTraits';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {
 	MAX_ATTACHMENTS_PER_MESSAGE,
 	MAX_MESSAGE_LENGTH_NON_PREMIUM,
 	MAX_MESSAGE_LENGTH_PREMIUM,
 } from '@fluxer/constants/src/LimitConstants';
-import {ManagedTraits} from '@fluxer/constants/src/ManagedTraits';
 import {useLingui} from '@lingui/react/macro';
 import {PlusCircleIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
@@ -246,7 +244,7 @@ const ChannelTextareaContent = observer(
 		const scheduledMessageEditorState = ScheduledMessageEditorStore.getEditingState();
 		const isEditingScheduledMessage = ScheduledMessageEditorStore.isEditingChannel(channel.id);
 		const editingScheduledMessage = isEditingScheduledMessage ? scheduledMessageEditorState : null;
-		const hasMessageSchedulingAccess = hasManagedTrait(ManagedTraits.MESSAGE_SCHEDULING);
+		const hasMessageSchedulingAccess = UserStore.getCurrentUser()?.isStaff() ?? false;
 
 		const {sendMessage, sendOptimisticMessage} = useMessageSubmission({
 			channel,

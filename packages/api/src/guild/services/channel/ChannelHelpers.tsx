@@ -82,6 +82,7 @@ export class ChannelHelpers {
 	static validateChannelVoicePlacement(
 		finalChannels: Array<Channel>,
 		parentMap: Map<ChannelID, ChannelID | null>,
+		parentIdsToValidate?: ReadonlySet<ChannelID>,
 	): void {
 		const orderedByParent = new Map<ChannelID | null, Array<Channel>>();
 
@@ -95,6 +96,9 @@ export class ChannelHelpers {
 
 		for (const [parentId, siblings] of orderedByParent.entries()) {
 			if (parentId === null) continue;
+			if (parentIdsToValidate && !parentIdsToValidate.has(parentId)) {
+				continue;
+			}
 			let encounteredVoice = false;
 			for (const sibling of siblings) {
 				if (sibling.type === ChannelTypes.GUILD_VOICE) {

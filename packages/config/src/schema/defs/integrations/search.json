@@ -1,17 +1,34 @@
 {
 	"search_integration": {
 		"type": "object",
-		"description": "Search engine integration (Meilisearch). Fluxer always uses Meilisearch for indexing and querying.",
+		"description": "Search engine integration. Supports Meilisearch and Elasticsearch backends.",
 		"additionalProperties": false,
 		"properties": {
+			"engine": {
+				"type": "string",
+				"description": "Search engine backend to use.",
+				"enum": ["meilisearch", "elasticsearch"],
+				"default": "meilisearch"
+			},
 			"url": {
 				"type": "string",
-				"description": "Meilisearch HTTP API URL.",
+				"description": "Search engine HTTP API URL. Used by both Meilisearch and Elasticsearch.",
 				"default": "http://127.0.0.1:7700"
 			},
 			"api_key": {
 				"type": "string",
-				"description": "Meilisearch API key used by the API for index management and writes. Use a key with access to documents and settings."
+				"description": "API key for authenticating with the search engine. For Meilisearch, this is the master or admin key. For Elasticsearch, this is an API key.",
+				"default": ""
+			},
+			"username": {
+				"type": "string",
+				"description": "Username for Elasticsearch basic authentication. Only used when engine is elasticsearch and api_key is not set.",
+				"default": ""
+			},
+			"password": {
+				"type": "string",
+				"description": "Password for Elasticsearch basic authentication. Only used when engine is elasticsearch and api_key is not set.",
+				"default": ""
 			}
 		},
 		"required": ["url", "api_key"]

@@ -134,12 +134,12 @@ msgid "{0} of {totalAttachments}"
 msgstr "{totalAttachments} में से {0}"
 
 #. placeholder {0}: passkeys.length
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:285
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:288
 msgid "{0} passkey registered (max 10)"
 msgstr "{0} पासकी पंजीकृत (अधिकतम 10)"
 
 #. placeholder {0}: passkeys.length
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:286
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:289
 msgid "{0} passkeys registered (max 10)"
 msgstr "{0} पासकी पंजीकृत (अधिकतम 10)"
 
@@ -633,11 +633,11 @@ msgstr "{lockedStickerCount} स्टिकर"
 msgid "{lockedStickerCount} stickers"
 msgstr "{lockedStickerCount} स्टिकर"
 
-#: src/components/alerts/MaxBookmarksModal.tsx:38
+#: src/components/alerts/MaxBookmarksModal.tsx:41
 msgid "{maxBookmarks} bookmark"
 msgstr "{maxBookmarks} बुकमार्क"
 
-#: src/components/alerts/MaxBookmarksModal.tsx:38
+#: src/components/alerts/MaxBookmarksModal.tsx:41
 msgid "{maxBookmarks} bookmarks"
 msgstr "{maxBookmarks} बुकमार्क"
 
@@ -718,11 +718,11 @@ msgstr "{participantCount} कॉल में प्रतिभागी"
 msgid "{participantCount} participants in call"
 msgstr "{participantCount} कॉल में प्रतिभागी"
 
-#: src/components/alerts/MaxBookmarksModal.tsx:63
+#: src/components/alerts/MaxBookmarksModal.tsx:66
 msgid "{premiumBookmarks} bookmark"
 msgstr "{premiumBookmarks} बुकमार्क"
 
-#: src/components/alerts/MaxBookmarksModal.tsx:63
+#: src/components/alerts/MaxBookmarksModal.tsx:66
 msgid "{premiumBookmarks} bookmarks"
 msgstr "{premiumBookmarks} बुकमार्क"
 
@@ -875,11 +875,11 @@ msgstr "{username} ने किसी को समूह से निका�
 msgid "{username} started a call."
 msgstr "{username} ने एक कॉल शुरू की।"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:100
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:102
 msgid "{v} gift"
 msgstr "{v} उपहार"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:100
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:102
 msgid "{v} gifts"
 msgstr "{v} उपहार"
 
@@ -1088,7 +1088,7 @@ msgstr "<0>सदस्य को सुनने योग्य</0> बना�
 msgid "<0>Unmuted</0> the member."
 msgstr "<0>सदस्य का म्यूट हटाया</0>।"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:370
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:373
 msgid "<0>Warning:</0> This will also disable SMS two-factor authentication."
 msgstr "<0>चेतावनी:</0> इससे SMS दो-कारक प्रमाणीकरण भी अक्षम हो जाएगा।"
 
@@ -1362,9 +1362,9 @@ msgstr "30 सेकंड"
 msgid "4 hours"
 msgstr "4 घंटे"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:203
-#: src/components/modals/FluxerTagChangeModal.tsx:231
-#: src/components/modals/FluxerTagChangeModal.tsx:248
+#: src/components/modals/FluxerTagChangeModal.tsx:217
+#: src/components/modals/FluxerTagChangeModal.tsx:245
+#: src/components/modals/FluxerTagChangeModal.tsx:262
 msgid "4-digit tag"
 msgstr "4-अंकों वाला टैग"
 
@@ -1634,7 +1634,7 @@ msgstr "खाता सफलतापूर्वक दावा किया
 msgid "Account Connected"
 msgstr "खाता जुड़ा हुआ"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:55
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:57
 msgid "Account State Overrides"
 msgstr "खाता स्थिति ओवरराइड्स"
 
@@ -1642,7 +1642,7 @@ msgstr "खाता स्थिति ओवरराइड्स"
 msgid "Account Too New"
 msgstr "खाता बहुत नया है"
 
-#: src/actions/InviteActionCreators.tsx:178
+#: src/actions/InviteActionCreators.tsx:182
 #: src/components/modals/RequiredActionModal.tsx:143
 #: src/components/modals/RequiredActionModal.tsx:416
 msgid "Account Verification Required"
@@ -1763,7 +1763,7 @@ msgstr "जोड़ें"
 msgid "Add a bot to a community with requested permissions"
 msgstr "अनुरोधित अनुमतियों के साथ किसी कम्युनिटी में बॉट जोड़ें"
 
-#: src/components/modals/ForwardModal.tsx:309
+#: src/components/modals/ForwardModal.tsx:314
 msgid "Add a comment (optional)"
 msgstr "टिप्पणी जोड़ें (वैकल्पिक)"
 
@@ -1782,7 +1782,7 @@ msgstr "कस्टम बैकग्राउंड जोड़ें"
 msgid "Add a different account"
 msgstr "एक अलग खाता जोड़ें"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:348
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:351
 msgid "Add a phone number to enable SMS two-factor authentication"
 msgstr "SMS टू-फैक्टर ऑथेंटिकेशन सक्षम करने के लिए फ़ोन नंबर जोड़ें"
 
@@ -1844,7 +1844,7 @@ msgstr "कनेक्शन जोड़ने का फॉर्म"
 msgid "Add domain connection"
 msgstr "डोमेन कनेक्शन जोड़ें"
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:98
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:101
 msgid "Add Email"
 msgstr "ईमेल जोड़ें"
 
@@ -1902,12 +1902,12 @@ msgstr "अपना फ़ोन नंबर जोड़ें या बद�
 msgid "Add Override"
 msgstr "ओवरराइड जोड़ें"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:290
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:293
 msgid "Add Passkey"
 msgstr "पासकी जोड़ें"
 
 #: src/components/channel/barriers/BarrierComponents.tsx:198
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:395
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:398
 msgid "Add Phone"
 msgstr "फ़ोन जोड़ें"
 
@@ -2010,7 +2010,7 @@ msgstr "{0} जोड़ा गया।"
 msgid "Added roles."
 msgstr "भूमिकाएँ जोड़ी गईं।"
 
-#: src/actions/SavedMessageActionCreators.tsx:58
+#: src/actions/SavedMessageActionCreators.tsx:59
 msgid "Added to bookmarks"
 msgstr "बुकमार्क में जोड़ा गया"
 
@@ -2028,11 +2028,11 @@ msgstr "पसंदीदा में जोड़ा गया"
 msgid "Added to saved media"
 msgstr "सहेजी गई मीडिया में जोड़ा गया"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:313
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:316
 msgid "Added: {createdDate}"
 msgstr "जोड़ा गया: {createdDate}"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:309
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:312
 msgid "Added: {createdDate} • Last used: {lastUsedDate}"
 msgstr "जोड़ा गया: {createdDate} • अंतिम उपयोग: {lastUsedDate}"
 
@@ -2930,7 +2930,7 @@ msgid "Are you sure you want to remove this connection? This action cannot be un
 msgstr "क्या आप सुनिश्चित हैं कि आप इस कनेक्शन को हटाना चाहते हैं? यह क्रिया पूर्ववत नहीं की जा सकती।"
 
 #. placeholder {0}: user.phone
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:364
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:367
 msgid "Are you sure you want to remove your phone number <0>{0}</0>?"
 msgstr "क्या तुम वाकई अपना फोन नंबर <0>{0}</0> हटाना चाहते हो?"
 
@@ -3395,7 +3395,7 @@ msgstr "रोल पर वापस"
 msgid "Back to Settings"
 msgstr "सेटिंग्स पर वापस"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:118
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:120
 msgid "Backend Premium Override"
 msgstr "बैकएंड प्रीमियम ओवरराइड"
 
@@ -3438,12 +3438,12 @@ msgid "backup codes"
 msgstr "बैकअप कोड"
 
 #: src/components/modals/BackupCodesModal.tsx:43
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:254
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:257
 #: src/components/modals/utils/SettingsSearchIndex.tsx:140
 msgid "Backup Codes"
 msgstr "बैकअप कोड"
 
-#: src/components/modals/BackupCodesRegenerateModal.tsx:48
+#: src/components/modals/BackupCodesRegenerateModal.tsx:55
 msgid "Backup codes regenerated"
 msgstr "बैकअप कोड पुनः बनाए गए"
 
@@ -3720,9 +3720,9 @@ msgstr "बुक क्लब"
 msgid "Bookmark"
 msgstr "बुकमार्क"
 
-#: src/components/alerts/MaxBookmarksModal.tsx:43
-#: src/components/alerts/MaxBookmarksModal.tsx:54
-#: src/components/alerts/MaxBookmarksModal.tsx:67
+#: src/components/alerts/MaxBookmarksModal.tsx:46
+#: src/components/alerts/MaxBookmarksModal.tsx:57
+#: src/components/alerts/MaxBookmarksModal.tsx:70
 msgid "Bookmark Limit Reached"
 msgstr "बुकमार्क सीमा पूरी हो गई"
 
@@ -3750,7 +3750,7 @@ msgstr "बुकमार्क किया गया!"
 
 #: src/components/modals/BookmarksBottomSheet.tsx:109
 #: src/components/pages/SavedMessagesPage.tsx:67
-#: src/components/popouts/InboxPopout.tsx:58
+#: src/components/popouts/InboxPopout.tsx:57
 msgid "Bookmarks"
 msgstr "बुकमार्क"
 
@@ -4055,7 +4055,7 @@ msgstr "जब प्रतिभागियों की संख्या {V
 #: src/components/alerts/FileSizeTooLargeModal.tsx:87
 #: src/components/auth/BrowserLoginHandoffModal.tsx:269
 #: src/components/bottomsheets/CreateDMBottomSheet.tsx:130
-#: src/components/channel/ChannelTextarea.tsx:312
+#: src/components/channel/ChannelTextarea.tsx:310
 #: src/components/channel/friends/FriendListItem.tsx:259
 #: src/components/channel/MentionEveryonePopout.tsx:128
 #: src/components/emojis/EmojiListItem.tsx:125
@@ -4069,8 +4069,8 @@ msgstr "जब प्रतिभागियों की संख्या {V
 #: src/components/modals/AddGuildModal.tsx:413
 #: src/components/modals/AddGuildStickerModal.tsx:120
 #: src/components/modals/AttachmentEditModal.tsx:122
-#: src/components/modals/BackupCodesRegenerateModal.tsx:72
-#: src/components/modals/BackupCodesViewModal.tsx:70
+#: src/components/modals/BackupCodesRegenerateModal.tsx:79
+#: src/components/modals/BackupCodesViewModal.tsx:75
 #: src/components/modals/BanMemberModal.tsx:143
 #: src/components/modals/CameraPreviewModal.tsx:485
 #: src/components/modals/CaptchaModal.tsx:187
@@ -4094,14 +4094,14 @@ msgstr "जब प्रतिभागियों की संख्या {V
 #: src/components/modals/EditFavoriteMemeModal.tsx:85
 #: src/components/modals/EditGuildStickerModal.tsx:113
 #: src/components/modals/EditPackModal.tsx:103
-#: src/components/modals/EmailChangeModal.tsx:199
-#: src/components/modals/EmailChangeModal.tsx:230
-#: src/components/modals/EmailChangeModal.tsx:267
-#: src/components/modals/EmailChangeModal.tsx:298
+#: src/components/modals/EmailChangeModal.tsx:202
+#: src/components/modals/EmailChangeModal.tsx:233
+#: src/components/modals/EmailChangeModal.tsx:270
+#: src/components/modals/EmailChangeModal.tsx:301
 #: src/components/modals/ExternalLinkWarningModal.tsx:102
-#: src/components/modals/FluxerTagChangeModal.tsx:117
-#: src/components/modals/FluxerTagChangeModal.tsx:280
-#: src/components/modals/ForwardModal.tsx:373
+#: src/components/modals/FluxerTagChangeModal.tsx:122
+#: src/components/modals/FluxerTagChangeModal.tsx:294
+#: src/components/modals/ForwardModal.tsx:378
 #: src/components/modals/guild_tabs/GuildBansTab.tsx:103
 #: src/components/modals/guild_tabs/GuildRolesTab.tsx:624
 #: src/components/modals/GuildFolderSettingsModal.tsx:199
@@ -4113,7 +4113,7 @@ msgstr "जब प्रतिभागियों की संख्या {V
 #: src/components/modals/KickMemberModal.tsx:63
 #: src/components/modals/MessageHistoryThresholdModal.tsx:103
 #: src/components/modals/MfaTotpDisableModal.tsx:75
-#: src/components/modals/MfaTotpEnableModal.tsx:103
+#: src/components/modals/MfaTotpEnableModal.tsx:106
 #: src/components/modals/PasskeyNameModal.tsx:62
 #: src/components/modals/PasswordChangeModal.tsx:145
 #: src/components/modals/PasswordChangeModal.tsx:176
@@ -4146,7 +4146,7 @@ msgstr "रद्द करें"
 msgid "Cancel Friend Request"
 msgstr "मित्र अनुरोध रद्द करें"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:112
+#: src/components/modals/FluxerTagChangeModal.tsx:117
 msgid "Cancel if you want to choose a different username instead."
 msgstr "यदि आप कोई अलग उपयोगकर्ता नाम चुनना चाहते हैं तो रद्द करें।"
 
@@ -4178,11 +4178,11 @@ msgstr "संपादित नहीं किया जा सकता"
 msgid "Cannot Delete Account"
 msgstr "खाता हटाया नहीं जा सकता"
 
-#: src/actions/InviteActionCreators.tsx:313
+#: src/actions/InviteActionCreators.tsx:317
 msgid "Cannot install emoji pack"
 msgstr "इमोजी पैक स्थापित नहीं किया जा सकता"
 
-#: src/actions/InviteActionCreators.tsx:314
+#: src/actions/InviteActionCreators.tsx:318
 msgid "Cannot install sticker pack"
 msgstr "स्टिकर पैक स्थापित नहीं किया जा सकता"
 
@@ -4279,7 +4279,7 @@ msgstr "बैनर बदलें"
 msgid "Change email"
 msgstr "ईमेल बदलें"
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:81
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:84
 msgid "Change Email"
 msgstr "ईमेल बदलें"
 
@@ -4288,12 +4288,12 @@ msgstr "ईमेल बदलें"
 msgid "Change emoji"
 msgstr "इमोजी बदलें"
 
-#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:59
-#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:69
+#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:60
+#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:70
 msgid "Change FluxerTag"
 msgstr "FluxerTag बदलें"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:158
+#: src/components/modals/FluxerTagChangeModal.tsx:163
 msgid "Change FluxerTag form"
 msgstr "FluxerTag फ़ॉर्म बदलें"
 
@@ -4360,7 +4360,7 @@ msgid "change password"
 msgstr "पासवर्ड बदलें"
 
 #: src/components/modals/PasswordChangeModal.tsx:227
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:124
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:127
 msgid "Change Password"
 msgstr "पासवर्ड बदलें"
 
@@ -4372,7 +4372,7 @@ msgstr "पासवर्ड बदलने का फॉर्म"
 msgid "Change what users without Read Message History can see"
 msgstr "उन उपयोगकर्ताओं के लिए जो संदेश इतिहास पढ़ने का अधिकार नहीं रखते हैं, वे क्या देख सकते हैं, इसे बदलें"
 
-#: src/components/modals/EmailChangeModal.tsx:183
+#: src/components/modals/EmailChangeModal.tsx:186
 msgid "Change Your Email"
 msgstr "अपना ईमेल बदलें"
 
@@ -4380,7 +4380,7 @@ msgstr "अपना ईमेल बदलें"
 msgid "Change your email address"
 msgstr "अपना ईमेल पता बदलें"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:159
+#: src/components/modals/FluxerTagChangeModal.tsx:164
 msgid "Change Your FluxerTag"
 msgstr "अपना फ्लक्सरटैग बदलें"
 
@@ -4392,7 +4392,7 @@ msgstr "इस समुदाय में अपना उपनाम बद�
 msgid "Change your password"
 msgstr "अपना पासवर्ड बदलें"
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:106
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:109
 msgid "Change your password to keep your account secure"
 msgstr "अपना खाता सुरक्षित रखने के लिए अपना पासवर्ड बदलें"
 
@@ -4404,7 +4404,7 @@ msgstr "अपनी प्रोफ़ाइल तस्वीर बदले
 msgid "Change your username"
 msgstr "अपना यूज़रनेम बदलें"
 
-#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:90
+#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:91
 msgid "Change your username and 4-digit tag"
 msgstr "अपना उपयोगकर्ता नाम और 4-अंकीय टैग बदलें"
 
@@ -4424,7 +4424,7 @@ msgstr "बिटरेट को {0} में बदल दिया गया
 msgid "Changed the voice region to {0}."
 msgstr "वॉइस क्षेत्र को {0} में बदल दिया गया।"
 
-#: src/components/channel/ChannelTextarea.tsx:751
+#: src/components/channel/ChannelTextarea.tsx:749
 #: src/utils/SearchUtils.tsx:268
 msgid "channel"
 msgstr "चैनल"
@@ -4846,7 +4846,7 @@ msgstr "दो-चरणीय प्रमाणन और पासकी ज�
 msgid "Claim your account to call"
 msgstr "कॉल करने के लिए अपने खाते का दावा करें"
 
-#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:56
+#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:57
 msgid "Claim your account to change your FluxerTag"
 msgstr "अपना FluxerTag बदलने के लिए अपना खाता दावा करें"
 
@@ -5144,7 +5144,7 @@ msgstr "क्लाइंट सीक्रेट फिर से बना�
 #: src/components/modals/components/SettingsModalHeader.tsx:98
 #: src/components/modals/InviteModal.tsx:135
 #: src/components/modals/MediaModal.tsx:349
-#: src/components/modals/MobileVideoViewer.tsx:252
+#: src/components/modals/MobileVideoViewer.tsx:260
 #: src/components/modals/Modal.tsx:382
 #: src/components/modals/Modal.tsx:460
 #: src/components/modals/PackInviteModal.tsx:152
@@ -5201,7 +5201,7 @@ msgstr "कोल थीम"
 #: src/components/auth/MfaScreen.tsx:131
 #: src/components/invites/InviteListItem.tsx:56
 #: src/components/modals/MfaTotpDisableModal.tsx:63
-#: src/components/modals/MfaTotpEnableModal.tsx:91
+#: src/components/modals/MfaTotpEnableModal.tsx:94
 #: src/components/pages/report/ReportBreadcrumbs.tsx:48
 msgid "Code"
 msgstr "कोड"
@@ -5333,7 +5333,7 @@ msgid "Communication"
 msgstr "संचार"
 
 #: src/components/modals/components/FeatureComparisonTable.tsx:49
-#: src/stores/QuickSwitcherStore.tsx:1354
+#: src/stores/QuickSwitcherStore.tsx:1352
 #: src/utils/quick_switcher/QuickSwitcherModalUtils.tsx:99
 msgid "Communities"
 msgstr "समुदाय"
@@ -5651,7 +5651,7 @@ msgid "Configure your profile badge"
 msgstr "अपना प्रोफ़ाइल बैज कॉन्फ़िगर करें"
 
 #: src/components/channel/MentionEveryonePopout.tsx:134
-#: src/components/modals/EmailChangeModal.tsx:304
+#: src/components/modals/EmailChangeModal.tsx:307
 msgid "Confirm"
 msgstr "पुष्टि करें"
 
@@ -5825,15 +5825,15 @@ msgstr "संदर्भ मेनू"
 msgid "Context menus can be opened with left-click (on buttons) or right-click (on other elements). This demonstrates various menu items including checkboxes, radio buttons, sliders, and submenus."
 msgstr "संदर्भ मेनू बाएं क्लिक (बटन पर) या दाएं क्लिक (अन्य तत्वों पर) से खोले जा सकते हैं। यह चेकबॉक्स, रेडियो बटन, स्लाइडर और सबमेनू सहित विभिन्न मेनू आइटम दिखाता है।"
 
-#: src/components/channel/ChannelTextarea.tsx:311
+#: src/components/channel/ChannelTextarea.tsx:309
 #: src/components/modals/AddConnectionModal.tsx:221
-#: src/components/modals/BackupCodesRegenerateModal.tsx:75
-#: src/components/modals/BackupCodesViewModal.tsx:73
+#: src/components/modals/BackupCodesRegenerateModal.tsx:82
+#: src/components/modals/BackupCodesViewModal.tsx:78
 #: src/components/modals/DeviceRevokeModal.tsx:82
-#: src/components/modals/FluxerTagChangeModal.tsx:116
-#: src/components/modals/FluxerTagChangeModal.tsx:283
+#: src/components/modals/FluxerTagChangeModal.tsx:121
+#: src/components/modals/FluxerTagChangeModal.tsx:297
 #: src/components/modals/MfaTotpDisableModal.tsx:78
-#: src/components/modals/MfaTotpEnableModal.tsx:106
+#: src/components/modals/MfaTotpEnableModal.tsx:109
 #: src/components/modals/SudoVerificationModal.tsx:410
 msgid "Continue"
 msgstr "जारी रखें"
@@ -6555,7 +6555,7 @@ msgstr "वर्तमान डिवाइस"
 msgid "Current DM"
 msgstr "वर्तमान डीएम"
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:113
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:116
 msgid "Current Password"
 msgstr "वर्तमान पासवर्ड"
 
@@ -6601,7 +6601,7 @@ msgstr "कस्टम CSS ओवरराइड्स"
 msgid "Custom Date Range"
 msgstr "कस्टम तारीख रेंज"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:227
+#: src/components/modals/FluxerTagChangeModal.tsx:241
 msgid "Custom discriminators are not available on this instance"
 msgstr "कस्टम डिस्क्रिमिनेटर्स इस उदाहरण पर उपलब्ध नहीं हैं"
 
@@ -6727,11 +6727,12 @@ msgstr "संदेशों पर होवर करते समय मी�
 msgid "Customize which buttons are visible in the message input area. Keyboard shortcuts will continue to work even if buttons are hidden."
 msgstr "संदेश इनपुट क्षेत्र में कौन से बटन दिखाई देते हैं, इसे कस्टमाइज़ करें। कीबोर्ड शॉर्टकट काम करते रहेंगे, भले ही बटन छिपे हों।"
 
-#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:74
-msgid "Customize your 4-digit tag (#{discriminator}) to your liking with Plutonium"
-msgstr "Plutonium के साथ अपना 4-अंकीय टैग (#{discriminator}) अपनी पसंद के अनुसार कस्टमाइज़ करें"
+#. placeholder {0}: user.discriminator
+#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:75
+msgid "Customize your 4-digit tag (#{0}) to your liking with Plutonium"
+msgstr "प्लूटोनियम के साथ अपने 4-अंकीय टैग (#{0}) को अपनी पसंद के अनुसार अनुकूलित करें"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:272
+#: src/components/modals/FluxerTagChangeModal.tsx:286
 msgid "Customize your 4-digit tag or keep it when changing your username"
 msgstr "अपना 4-अंकीय टैग कस्टमाइज़ करें या यूज़रनेम बदलते समय वही रखें"
 
@@ -7069,7 +7070,7 @@ msgstr "हटाएं"
 #: src/components/emojis/EmojiListItem.tsx:195
 #: src/components/emojis/EmojiListItem.tsx:252
 #: src/components/emojis/EmojiListItem.tsx:308
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:322
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:325
 #: src/components/modals/tabs/component_gallery_tab/ButtonsTab.tsx:157
 #: src/components/modals/tabs/component_gallery_tab/ButtonsTab.tsx:242
 #: src/components/modals/tabs/component_gallery_tab/index.tsx:165
@@ -7515,7 +7516,7 @@ msgstr "निजी संदेश"
 #: src/components/layout/guild_list/FluxerButton.tsx:80
 #: src/components/modals/GuildPrivacySettingsModal.tsx:76
 #: src/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:221
-#: src/stores/QuickSwitcherStore.tsx:833
+#: src/stores/QuickSwitcherStore.tsx:831
 msgid "Direct Messages"
 msgstr "निजी संदेश"
 
@@ -7530,7 +7531,7 @@ msgstr "अक्षम करें"
 
 #: src/components/invites/DisableInvitesButton.tsx:60
 #: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:240
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:426
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:429
 msgid "Disable"
 msgstr "अक्षम करें"
 
@@ -7558,7 +7559,7 @@ msgstr "ऐप में सभी एनीमेशन और ट्रां�
 msgid "Disable animations and transitions. Currently controlled by your system setting."
 msgstr "एनीमेशन और ट्रांज़िशन अक्षम करें। यह वर्तमान में आपके सिस्टम सेटिंग से नियंत्रित होता है।"
 
-#: src/stores/QuickSwitcherStore.tsx:915
+#: src/stores/QuickSwitcherStore.tsx:913
 msgid "Disable Compact Mode"
 msgstr "कम्पैक्ट मोड अक्षम करें"
 
@@ -7585,7 +7586,7 @@ msgstr "नॉइज़ सप्रेशन अक्षम करें"
 msgid "Disable Picture-in-Picture Popout"
 msgstr "पिक्चर-इन-पिक्चर पॉपआउट बंद करें"
 
-#: src/stores/QuickSwitcherStore.tsx:931
+#: src/stores/QuickSwitcherStore.tsx:929
 msgid "Disable Reduced Motion"
 msgstr "कम गति मोशन अक्षम करें"
 
@@ -7754,7 +7755,7 @@ msgstr "डिस्क्रिमिनेटर"
 msgid "Discussion or promotion of illegal activities"
 msgstr "अवैध गतिविधियों की चर्चा या प्रचार"
 
-#: src/components/alerts/MaxBookmarksModal.tsx:76
+#: src/components/alerts/MaxBookmarksModal.tsx:79
 #: src/components/layout/GuildLayout.tsx:106
 #: src/components/layout/NagbarContent.tsx:42
 #: src/components/modals/GiftAcceptModal.tsx:110
@@ -7890,12 +7891,12 @@ msgstr "क्या आप अपने मौजूदा समुदाय�
 msgid "Do you want to send this pin back in time?"
 msgstr "क्या आप इस पिन को समय में पीछे भेजना चाहते हैं?"
 
-#: src/components/channel/MessageActionUtils.tsx:410
+#: src/components/channel/MessageActionUtils.tsx:411
 msgid "Do you want to send this pin back to the future?"
 msgstr "क्या आप इस पिन को भविष्य में वापस भेजना चाहते हैं?"
 
 #: src/components/modals/tabs/AccessibilityTab.tsx:148
-#: src/components/modals/tabs/MyProfileTab.tsx:768
+#: src/components/modals/tabs/MyProfileTab.tsx:767
 msgid "Doc, I'm from the future. I came here in a time machine that you invented. Now, I need your help to get back to the year 1985."
 msgstr "डॉक्टर, मैं भविष्य से आया हूँ। मैं उस टाइम मशीन से आया जो तुमने बनाई थी। अब, मुझे 1985 में वापस जाने में तुम्हारी मदद चाहिए।"
 
@@ -8344,13 +8345,13 @@ msgid "Email"
 msgstr "ईमेल"
 
 #: src/components/modals/tabs/account_security_tab/AccountTab.tsx:65
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:91
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:94
 #: src/components/modals/tabs/component_gallery_tab/InputsTab.tsx:107
 #: src/components/pages/report/ReportStepEmail.tsx:76
 msgid "Email Address"
 msgstr "ईमेल पता"
 
-#: src/components/modals/EmailChangeModal.tsx:165
+#: src/components/modals/EmailChangeModal.tsx:168
 msgid "Email changed"
 msgstr "ईमेल बदला गया"
 
@@ -8388,7 +8389,7 @@ msgstr "ईमेल सत्यापन नॅगबार"
 msgid "Email Verification Required"
 msgstr "ईमेल सत्यापन आवश्यक है"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:57
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:59
 msgid "Email Verified Override"
 msgstr "ईमेल सत्यापित ओवरराइड"
 
@@ -8426,11 +8427,11 @@ msgstr "एंबेड्स"
 msgid "Embeds"
 msgstr "एम्बेड्स"
 
-#: src/components/channel/MessageActionUtils.tsx:520
+#: src/components/channel/MessageActionUtils.tsx:526
 msgid "Embeds suppressed"
 msgstr "एंबेड्स दबा दिए गए"
 
-#: src/components/channel/MessageActionUtils.tsx:506
+#: src/components/channel/MessageActionUtils.tsx:512
 msgid "Embeds unsuppressed"
 msgstr "एंबेड्स अब फिर से दिखेंगे"
 
@@ -8485,7 +8486,7 @@ msgstr "इमोजी नाम कम से कम 2 अक्षर के 
 msgid "Emoji pack"
 msgstr "इमोजी पैक"
 
-#: src/actions/InviteActionCreators.tsx:255
+#: src/actions/InviteActionCreators.tsx:259
 msgid "Emoji pack creation limit reached"
 msgstr "इमोजी पैक बनाने की सीमा पूरी हो चुकी है"
 
@@ -8493,7 +8494,7 @@ msgstr "इमोजी पैक बनाने की सीमा पूर�
 msgid "Emoji Pack Invite"
 msgstr "इमोजी पैक निमंत्रण"
 
-#: src/actions/InviteActionCreators.tsx:241
+#: src/actions/InviteActionCreators.tsx:245
 msgid "Emoji pack limit reached"
 msgstr "इमोजी पैक की सीमा पूरी हो चुकी है"
 
@@ -8530,9 +8531,9 @@ msgstr "खाली स्थिति"
 
 #: src/components/invites/DisableInvitesButton.tsx:60
 #: src/components/layout/GuildLayout.tsx:74
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:244
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:432
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:438
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:247
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:435
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:441
 #: src/components/modals/tabs/components/InputMonitoringSection.tsx:85
 msgid "Enable"
 msgstr "सक्षम करें"
@@ -8566,7 +8567,7 @@ msgstr "बीटा फीचर सक्षम करें"
 msgid "Enable Browser Notifications"
 msgstr "ब्राउज़र नोटिफिकेशन सक्षम करें"
 
-#: src/stores/QuickSwitcherStore.tsx:916
+#: src/stores/QuickSwitcherStore.tsx:914
 msgid "Enable Compact Mode"
 msgstr "कॉम्पैक्ट मोड सक्षम करें"
 
@@ -8642,7 +8643,7 @@ msgstr "इस डिवाइस के लिए पुश सक्षम क
 msgid "Enable push notifications for this installed PWA to keep receiving messages when the browser is backgrounded."
 msgstr "ब्राउज़र बैकग्राउंड में होने पर भी संदेश पाने के लिए इस इंस्टॉल किए गए PWA के लिए पुश नोटिफिकेशन सक्षम करें।"
 
-#: src/stores/QuickSwitcherStore.tsx:932
+#: src/stores/QuickSwitcherStore.tsx:930
 msgid "Enable Reduced Motion"
 msgstr "कम गति सक्षम करें"
 
@@ -8658,7 +8659,7 @@ msgstr "विस्तार के लिए शिफ्ट सक्षम �
 msgid "Enable SMS 2FA"
 msgstr "SMS 2FA सक्षम करें"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:415
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:418
 msgid "Enable SMS codes as a backup for your authenticator app"
 msgstr "अपने ऑथेंटिकेटर ऐप के बैकअप के रूप में SMS कोड सक्षम करें"
 
@@ -8678,7 +8679,7 @@ msgstr "दो-चरणीय प्रमाणीकरण सक्षम �
 msgid "Enable two-factor authentication"
 msgstr "दो-चरणीय प्रमाणीकरण सक्षम करें"
 
-#: src/components/modals/MfaTotpEnableModal.tsx:70
+#: src/components/modals/MfaTotpEnableModal.tsx:73
 msgid "Enable two-factor authentication form"
 msgstr "टू-फैक्टर ऑथेंटिकेशन फ़ॉर्म सक्षम करें"
 
@@ -8782,7 +8783,7 @@ msgid "Enter the 6-digit code from your authenticator app or one of your backup 
 msgstr "अपने ऑथेंटिकेटर ऐप से 6-अंकीय कोड या किसी बैकअप कोड में से एक दर्ज करें।"
 
 #: src/components/modals/MfaTotpDisableModal.tsx:67
-#: src/components/modals/MfaTotpEnableModal.tsx:95
+#: src/components/modals/MfaTotpEnableModal.tsx:98
 msgid "Enter the 6-digit code from your authenticator app."
 msgstr "अपने ऑथेंटिकेटर ऐप से 6-अंकीय कोड दर्ज करें।"
 
@@ -8804,7 +8805,7 @@ msgstr "जारी रखने से पहले कोड दर्ज क
 msgid "Enter the code from your authenticator app."
 msgstr "अपने ऑथेंटिकेटर ऐप से कोड दर्ज करें।"
 
-#: src/components/modals/EmailChangeModal.tsx:213
+#: src/components/modals/EmailChangeModal.tsx:216
 msgid "Enter the code sent to your current email."
 msgstr "आपके वर्तमान ईमेल पर भेजा गया कोड दर्ज करें।"
 
@@ -8812,7 +8813,7 @@ msgstr "आपके वर्तमान ईमेल पर भेजा ग�
 msgid "Enter the code sent to your email address."
 msgstr "अपने ईमेल पते पर भेजा गया कोड दर्ज करें।"
 
-#: src/components/modals/EmailChangeModal.tsx:281
+#: src/components/modals/EmailChangeModal.tsx:284
 msgid "Enter the code we emailed to your new address."
 msgstr "हमने आपके नए पते पर जो कोड भेजा है वह दर्ज करें।"
 
@@ -8824,7 +8825,7 @@ msgstr "आपके ईमेल को सत्यापित करने �
 msgid "Enter the invite link to join a community."
 msgstr "किसी समुदाय में शामिल होने के लिए निमंत्रण लिंक दर्ज करें।"
 
-#: src/components/modals/EmailChangeModal.tsx:247
+#: src/components/modals/EmailChangeModal.tsx:250
 msgid "Enter the new email you want to use. We'll send a code there next."
 msgstr "वह नया ईमेल दर्ज करें जिसका आप उपयोग करना चाहते हैं। हम वहाँ एक कोड भेजेंगे।"
 
@@ -9313,11 +9314,11 @@ msgstr "मित्र अनुरोध नज़रअंदाज़ कर
 msgid "Failed to initiate connection"
 msgstr "कनेक्शन आरंभ करने में विफल"
 
-#: src/actions/InviteActionCreators.tsx:322
+#: src/actions/InviteActionCreators.tsx:326
 msgid "Failed to install this emoji pack. Please try again later."
 msgstr "इस इमोजी पैक को इंस्टॉल करने में विफल। कृपया बाद में प्रयास करें।"
 
-#: src/actions/InviteActionCreators.tsx:323
+#: src/actions/InviteActionCreators.tsx:327
 msgid "Failed to install this sticker pack. Please try again later."
 msgstr "इस स्टिकर पैक को इंस्टॉल करने में विफल। कृपया बाद में प्रयास करें।"
 
@@ -9715,9 +9716,9 @@ msgstr "पसंदीदा"
 #: src/components/modals/tabs/AppearanceTab.tsx:116
 #: src/components/modals/utils/SettingsConstants.tsx:279
 #: src/components/modals/utils/SettingsSectionRegistry.tsx:233
-#: src/stores/QuickSwitcherStore.tsx:843
-#: src/stores/QuickSwitcherStore.tsx:1261
-#: src/stores/QuickSwitcherStore.tsx:1273
+#: src/stores/QuickSwitcherStore.tsx:841
+#: src/stores/QuickSwitcherStore.tsx:1259
+#: src/stores/QuickSwitcherStore.tsx:1271
 msgid "Favorites"
 msgstr "पसंदीदा"
 
@@ -9872,11 +9873,11 @@ msgstr "Fluxer एप्लिकेशन प्रतीक"
 msgid "Fluxer avoids sending push notifications to your mobile devices when you are at your computer. Use this setting to control how long you need to be inactive on desktop for before you receive push notifications, ranging from 1 minute to 10 minutes."
 msgstr "जब आप अपने कंप्यूटर पर होते हैं तो Fluxer आपके मोबाइल उपकरणों को पुश नोटिफिकेशन भेजने से बचता है। इस सेटिंग का उपयोग करके निर्धारित करें कि पुश नोटिफिकेशन आने से पहले आपको डेस्कटॉप पर कितनी देर तक निष्क्रिय रहना होगा, 1 मिनट से 10 मिनट तक।"
 
-#: src/components/popouts/UserProfileBadges.tsx:89
+#: src/components/popouts/UserProfileBadges.tsx:115
 msgid "Fluxer Bug Hunter"
 msgstr "Fluxer बग हंटर"
 
-#: src/components/popouts/UserProfileBadges.tsx:71
+#: src/components/popouts/UserProfileBadges.tsx:95
 msgid "Fluxer Community Team"
 msgstr "Fluxer कम्युनिटी टीम"
 
@@ -9944,18 +9945,18 @@ msgstr "जब विंडो बैकग्राउंड में हो �
 msgid "Fluxer needs permission to monitor keyboard and mouse input so that <0>Push-to-Talk</0> and <1>Global Shortcuts</1> work even when you're in another app or game."
 msgstr "Fluxer को कीबोर्ड और माउस इनपुट मॉनिटर करने की अनुमति चाहिए ताकि <0>Push-to-Talk</0> और <1>Global Shortcuts</1> तब भी काम करें जब आप किसी अन्य ऐप या गेम में हों।"
 
-#: src/components/popouts/UserProfileBadges.tsx:80
+#: src/components/popouts/UserProfileBadges.tsx:105
 msgid "Fluxer Partner"
 msgstr "Fluxer पार्टनर"
 
 #: src/components/modals/components/PlutoniumContent.tsx:165
 #: src/components/modals/PremiumModal.tsx:34
 #: src/components/modals/utils/SettingsConstants.tsx:124
-#: src/components/popouts/UserProfileBadges.tsx:95
+#: src/components/popouts/UserProfileBadges.tsx:121
 msgid "Fluxer Plutonium"
 msgstr "Fluxer Plutonium"
 
-#: src/components/popouts/UserProfileBadges.tsx:62
+#: src/components/popouts/UserProfileBadges.tsx:85
 msgid "Fluxer Staff"
 msgstr "Fluxer स्टाफ"
 
@@ -9963,16 +9964,16 @@ msgstr "Fluxer स्टाफ"
 msgid "Fluxer uses push notifications when installed as a mobile PWA. Registering ensures the gateway can reach your device even when the browser is backgrounded."
 msgstr "जब Fluxer को मोबाइल PWA के रूप में इंस्टॉल किया जाता है तो यह पुश नोटिफिकेशन का उपयोग करता है। पंजीकरण करने से गेटवे आपके डिवाइस तक पहुँच सकेगा, भले ही ब्राउज़र बैकग्राउंड में हो।"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:176
+#: src/components/modals/FluxerTagChangeModal.tsx:190
 #: src/components/modals/tabs/applications_tab/application_detail/BotProfileSection.tsx:103
 msgid "FluxerTag"
 msgstr "FluxerTag"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:102
+#: src/components/modals/FluxerTagChangeModal.tsx:107
 msgid "FluxerTag already taken"
 msgstr "FluxerTag पहले से लिया जा चुका है"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:144
+#: src/components/modals/FluxerTagChangeModal.tsx:149
 msgid "FluxerTag updated"
 msgstr "FluxerTag अपडेट किया गया"
 
@@ -10208,7 +10209,7 @@ msgstr "फॉरवर्ड"
 msgid "Forward {DEFAULT_SEEK_AMOUNT} seconds"
 msgstr "{DEFAULT_SEEK_AMOUNT} सेकंड आगे बढ़ाएँ"
 
-#: src/components/modals/ForwardModal.tsx:198
+#: src/components/modals/ForwardModal.tsx:203
 #: src/stores/KeybindStore.tsx:361
 msgid "Forward Message"
 msgstr "संदेश आगे भेजें"
@@ -10490,7 +10491,7 @@ msgstr "जब आपको संदेश मिलें तो सूचन�
 
 #: src/components/alerts/FileSizeTooLargeModal.tsx:84
 #: src/components/modals/BackgroundImageGalleryModal.tsx:678
-#: src/components/modals/FluxerTagChangeModal.tsx:221
+#: src/components/modals/FluxerTagChangeModal.tsx:235
 #: src/components/modals/tabs/components/EntranceSoundSection.tsx:67
 #: src/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:138
 #: src/components/modals/tabs/VideoTab.tsx:281
@@ -10503,11 +10504,11 @@ msgstr "प्लूटोनियम प्राप्त करें"
 msgid "Get Plutonium for yourself and unlock higher limits and exclusive features."
 msgstr "अपने लिए प्लूटोनियम पाएं और उच्च सीमाएं व विशेष सुविधाएँ अनलॉक करें।"
 
-#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:81
+#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:82
 msgid "Get Plutonium to customize your tag"
 msgstr "टैग कस्टमाइज़ करने के लिए प्लूटोनियम पाएं"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:199
+#: src/components/modals/FluxerTagChangeModal.tsx:213
 msgid "Get Plutonium to customize your tag or keep it when changing your username"
 msgstr "टैग कस्टमाइज़ करने या यूज़रनेम बदलते समय उसे बनाए रखने के लिए प्लूटोनियम पाएं"
 
@@ -10725,7 +10726,7 @@ msgstr "होम पर जाएँ"
 msgid "Go to login"
 msgstr "लॉगिन पर जाएँ"
 
-#: src/stores/QuickSwitcherStore.tsx:528
+#: src/stores/QuickSwitcherStore.tsx:526
 msgid "Go to message"
 msgstr "संदेश पर जाएँ"
 
@@ -10866,12 +10867,12 @@ msgstr "ग्रुप आइकन"
 msgid "Group Invites"
 msgstr "ग्रुप आमंत्रण"
 
-#: src/stores/QuickSwitcherStore.tsx:667
+#: src/stores/QuickSwitcherStore.tsx:665
 #: src/utils/modals/guild_tabs/GuildAuditLogTabUtils.tsx:235
 msgid "Group message"
 msgstr "ग्रुप संदेश"
 
-#: src/stores/QuickSwitcherStore.tsx:1347
+#: src/stores/QuickSwitcherStore.tsx:1345
 msgid "Group messages"
 msgstr "ग्रुप संदेश"
 
@@ -10963,7 +10964,7 @@ msgstr "हार्डवेयर त्वरण"
 msgid "Has"
 msgstr "है"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:126
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:128
 msgid "Has ever purchased override"
 msgstr "कभी भी खरीदी गई ओवरराइड"
 
@@ -11277,7 +11278,7 @@ msgid "Hold to temporarily unmute when push-to-talk is enabled"
 msgstr "पुश-टू-टॉक सक्षम होने पर अस्थायी रूप से अनम्यूट करने के लिए दबाए रखें"
 
 #: src/components/layout/MobileBottomNav.tsx:93
-#: src/stores/QuickSwitcherStore.tsx:832
+#: src/stores/QuickSwitcherStore.tsx:830
 msgid "Home"
 msgstr "होम"
 
@@ -11619,7 +11620,7 @@ msgstr "अशोभनीय प्रोफ़ाइल"
 msgid "Inbox"
 msgstr "इनबॉक्स"
 
-#: src/components/popouts/InboxPopout.tsx:89
+#: src/components/popouts/InboxPopout.tsx:88
 msgid "Inbox tabs"
 msgstr "इनबॉक्स टैब"
 
@@ -11883,8 +11884,8 @@ msgstr "अमान्य उपहार कोड"
 msgid "Invalid instance URL. Try something like \"example.com\" or \"https://example.com\"."
 msgstr "अमान्य उदाहरण URL। कुछ ऐसा आजमाएं जैसे \"example.com\" या \"https://example.com\"।"
 
-#: src/components/modals/EmailChangeModal.tsx:107
-#: src/components/modals/EmailChangeModal.tsx:168
+#: src/components/modals/EmailChangeModal.tsx:110
+#: src/components/modals/EmailChangeModal.tsx:171
 #: src/components/modals/PasswordChangeModal.tsx:90
 msgid "Invalid or expired code"
 msgstr "अमान्य या समाप्त कोड"
@@ -12569,11 +12570,11 @@ msgid "Last active {0}"
 msgstr "अंतिम सक्रिय {0}"
 
 #. placeholder {0}: DateUtils.getRelativeDateString(user.passwordLastChangedAt, i18n)
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:117
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:120
 msgid "Last changed: {0}"
 msgstr "अंतिम बार बदला गया: {0}"
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:119
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:122
 msgid "Last changed: Never"
 msgstr "अंतिम बार बदला गया: कभी नहीं"
 
@@ -12633,6 +12634,10 @@ msgstr "कॉल छोड़ें"
 #: src/hooks/useLeaveGuild.tsx:44
 msgid "Leave Community"
 msgstr "कम्युनिटी छोड़ें"
+
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:142
+msgid "Leave empty for actual value"
+msgstr "वास्तविक मान के लिए खाली छोड़ें"
 
 #: src/components/bottomsheets/ChannelDetailsBottomSheet.tsx:1317
 #: src/components/channel/direct_message/DMList.tsx:569
@@ -12713,7 +12718,7 @@ msgid "Letters (a-z, A-Z), numbers (0-9), and underscores (_) only"
 msgstr "केवल अक्षर (a-z, A-Z), अंक (0-9) और अंडरस्कोर (_)"
 
 #: src/components/modals/components/plutonium/SubscriptionCard.tsx:131
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:50
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:52
 #: src/components/modals/tabs/developer_options_tab/MockingTab.tsx:317
 msgid "Lifetime"
 msgstr "सदाबी"
@@ -13217,7 +13222,7 @@ msgstr "अपने ईमेल, पासवर्ड और खाता स
 msgid "Manage your gifts"
 msgstr "अपने उपहार प्रबंधित करें"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:337
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:340
 msgid "Manage your phone number for SMS two-factor authentication"
 msgstr "SMS टू-फैक्टर ऑथेंटिकेशन के लिए अपना फोन नंबर प्रबंधित करें"
 
@@ -13342,12 +13347,12 @@ msgstr "सदस्य को अस्थायी के रूप में 
 msgid "Markers Below Slider"
 msgstr "स्लाइडर के नीचे मार्कर"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:188
+#: src/components/modals/FluxerTagChangeModal.tsx:202
 msgid "Marty_McFly"
 msgstr "Marty_McFly"
 
 #: src/components/modals/ClaimAccountModal.tsx:157
-#: src/components/modals/EmailChangeModal.tsx:258
+#: src/components/modals/EmailChangeModal.tsx:261
 msgid "marty@example.com"
 msgstr "marty@example.com"
 
@@ -13652,7 +13657,7 @@ msgstr "उल्लेख"
 
 #: src/components/modals/GuildNotificationSettingsModal.tsx:227
 #: src/components/pages/NotificationsPage.tsx:42
-#: src/components/popouts/InboxPopout.tsx:63
+#: src/components/popouts/InboxPopout.tsx:62
 msgid "Mentions"
 msgstr "उल्लेख"
 
@@ -13687,15 +13692,15 @@ msgstr "मेनू"
 msgid "Message"
 msgstr "संदेश"
 
-#: src/components/channel/ChannelTextarea.tsx:754
+#: src/components/channel/ChannelTextarea.tsx:752
 msgid "Message "
 msgstr "संदेश "
 
-#: src/components/channel/ChannelTextarea.tsx:754
+#: src/components/channel/ChannelTextarea.tsx:752
 msgid "Message @"
 msgstr "संदेश @"
 
-#: src/components/channel/ChannelTextarea.tsx:751
+#: src/components/channel/ChannelTextarea.tsx:749
 msgid "Message #"
 msgstr "संदेश #"
 
@@ -13746,7 +13751,7 @@ msgstr "संदेश प्रदर्शन मोड"
 msgid "Message display settings are only available on desktop."
 msgstr "संदेश प्रदर्शन सेटिंग्स केवल डेस्कटॉप पर उपलब्ध हैं।"
 
-#: src/components/modals/ForwardModal.tsx:148
+#: src/components/modals/ForwardModal.tsx:153
 msgid "Message forwarded"
 msgstr "संदेश अग्रेषित किया गया"
 
@@ -13772,7 +13777,7 @@ msgstr "संदेश इतिहास सीमा अपडेट की �
 msgid "Message Input Buttons"
 msgstr "संदेश इनपुट बटन"
 
-#: src/components/modals/ForwardModal.tsx:84
+#: src/components/modals/ForwardModal.tsx:89
 #: src/components/uikit/character_counter/CharacterCounter.tsx:52
 msgid "Message is too long"
 msgstr "संदेश बहुत लंबा है"
@@ -14073,7 +14078,7 @@ msgstr "अधिक इमोजी स्लॉट"
 #: src/components/channel/embeds/attachments/TextualAttachmentPreviewFooter.tsx:66
 #: src/components/modals/guild_tabs/UserListItem.tsx:113
 #: src/components/modals/MediaModal.tsx:353
-#: src/components/modals/MobileVideoViewer.tsx:260
+#: src/components/modals/MobileVideoViewer.tsx:268
 msgid "More options"
 msgstr "अधिक विकल्प"
 
@@ -14205,7 +14210,7 @@ msgstr "म्यूट"
 #: src/components/media_player/components/MediaVerticalVolumeControl.tsx:249
 #: src/components/media_player/components/MediaVolumeControl.tsx:208
 #: src/components/modals/GuildNotificationSettingsModal.tsx:229
-#: src/components/modals/MobileVideoViewer.tsx:272
+#: src/components/modals/MobileVideoViewer.tsx:280
 #: src/components/uikit/context_menu/items/VoiceParticipantMenuData.tsx:319
 #: src/components/uikit/context_menu/items/VoiceParticipantMenuData.tsx:506
 #: src/components/uikit/context_menu/items/VoiceParticipantMenuItems.tsx:92
@@ -14572,12 +14577,12 @@ msgstr "नए समुदाय जिन्हें आप जोड़त�
 msgid "New communities you join will no longer have muted channels hidden automatically. Would you also like to show muted channels in all your existing communities?"
 msgstr "नए समुदाय जिन्हें आप जोड़ते हैं, उनके म्यूटेड चैनल अब स्वचालित रूप से छिपे नहीं रहेंगे। क्या आप अपने सभी मौजूदा समुदायों में म्यूटेड चैनल दिखाना चाहेंगे?"
 
-#: src/components/modals/EmailChangeModal.tsx:255
+#: src/components/modals/EmailChangeModal.tsx:258
 #: src/components/modals/RequiredActionModal.tsx:471
 msgid "New Email"
 msgstr "नया ईमेल"
 
-#: src/components/modals/EmailChangeModal.tsx:243
+#: src/components/modals/EmailChangeModal.tsx:246
 msgid "New email form"
 msgstr "नया ईमेल फॉर्म"
 
@@ -14732,7 +14737,7 @@ msgid "No cameras detected"
 msgstr "कोई कैमरा नहीं मिला"
 
 #: src/components/invites/InviteListItem.tsx:179
-#: src/components/modals/ForwardModal.tsx:246
+#: src/components/modals/ForwardModal.tsx:251
 #: src/components/modals/GuildNotificationSettingsModal.tsx:258
 msgid "No Category"
 msgstr "कोई श्रेणी नहीं"
@@ -14745,7 +14750,7 @@ msgstr "सहेजने के लिए कोई परिवर्तन �
 msgid "No channels available"
 msgstr "कोई चैनल उपलब्ध नहीं"
 
-#: src/components/modals/ForwardModal.tsx:216
+#: src/components/modals/ForwardModal.tsx:221
 msgid "No channels found"
 msgstr "कोई चैनल नहीं मिला"
 
@@ -14769,7 +14774,7 @@ msgstr "अभी तक कोई कनेक्शन नहीं"
 msgid "No description provided."
 msgstr "कोई विवरण नहीं दिया गया।"
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:94
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:97
 msgid "No email address set"
 msgstr "कोई ईमेल पता सेट नहीं है"
 
@@ -14879,11 +14884,11 @@ msgstr "कोई सामान्य दोस्त नहीं मिल�
 msgid "No mutual groups found."
 msgstr "कोई सामान्य समूह नहीं मिला।"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:283
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:286
 msgid "No passkeys registered"
 msgstr "कोई पासकी पंजीकृत नहीं है"
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:134
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:137
 msgid "No password set"
 msgstr "कोई पासवर्ड सेट नहीं"
 
@@ -15066,7 +15071,7 @@ msgstr "गैर-एनिमेटेड इमोजी ({0})"
 
 #: src/components/modals/guild_tabs/GuildModerationTab.tsx:157
 #: src/components/modals/tabs/accessibility_tab/VisualTab.tsx:48
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:48
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:50
 msgid "None"
 msgstr "कोई नहीं"
 
@@ -15574,7 +15579,7 @@ msgstr "नई टैब में खोलें"
 msgid "Open Link"
 msgstr "लिंक खोलें"
 
-#: src/components/channel/ChannelTextarea.tsx:953
+#: src/components/channel/ChannelTextarea.tsx:951
 #: src/components/channel/textarea/MobileTextareaLayout.tsx:112
 msgid "Open menu"
 msgstr "मेनू खोलें"
@@ -15828,7 +15833,7 @@ msgstr "Override"
 msgid "Override {0}"
 msgstr "Override {0}"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:59
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:61
 msgid "Override email verification status"
 msgstr "ईमेल सत्यापन स्थिति को ओवरराइड करें"
 
@@ -15836,15 +15841,15 @@ msgstr "ईमेल सत्यापन स्थिति को ओवर�
 msgid "Override instance limits locally for testing. Changes only affect your client."
 msgstr "Override instance limits locally for testing. Changes only affect your client."
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:109
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:111
 msgid "Override Premium Type"
 msgstr "प्रीमियम प्रकार को ओवरराइड करें"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:67
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:69
 msgid "Override unclaimed account status"
 msgstr "अदाबी खाते की स्थिति को ओवरराइड करें"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:75
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:77
 msgid "Override unread gift inventory status"
 msgstr "अनपढ़े उपहार इन्वेंटरी स्थिति को ओवरराइड करें"
 
@@ -15925,7 +15930,7 @@ msgstr "साझेदार समुदाय"
 msgid "Passkey Name"
 msgstr "पासकी नाम"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:273
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:276
 msgid "Passkeys"
 msgstr "पासकी"
 
@@ -15949,8 +15954,8 @@ msgstr "पासवर्ड"
 #: src/components/modals/ClaimAccountModal.tsx:207
 #: src/components/modals/SudoVerificationModal.tsx:174
 #: src/components/modals/SudoVerificationModal.tsx:239
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:105
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:131
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:108
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:134
 #: src/components/modals/tabs/component_gallery_tab/InputsTab.tsx:114
 #: src/components/modals/utils/SettingsSearchIndex.tsx:107
 msgid "Password"
@@ -16006,7 +16011,7 @@ msgstr "साइन-इन पूरा करने के लिए उसे
 #: src/components/media_player/components/InlineAudioPlayer.tsx:201
 #: src/components/media_player/components/InlineAudioPlayer.tsx:296
 #: src/components/media_player/components/MediaPlayButton.tsx:70
-#: src/components/modals/MobileVideoViewer.tsx:286
+#: src/components/modals/MobileVideoViewer.tsx:294
 msgid "Pause"
 msgstr "रोकें"
 
@@ -16040,7 +16045,7 @@ msgid "Pending deletion canceled"
 msgstr "हटाने की प्रक्रिया रद्द"
 
 #: src/lib/UnicodeEmojis.tsx:234
-#: src/stores/QuickSwitcherStore.tsx:1345
+#: src/stores/QuickSwitcherStore.tsx:1343
 #: src/utils/quick_switcher/QuickSwitcherModalUtils.tsx:96
 msgid "People"
 msgstr "लोग"
@@ -16143,8 +16148,8 @@ msgstr "फ़ोन"
 
 #: src/components/modals/PhoneAddModal.tsx:192
 #: src/components/modals/RequiredActionModal.tsx:616
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:336
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:342
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:339
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:345
 #: src/components/modals/utils/SettingsSearchIndex.tsx:115
 msgid "Phone Number"
 msgstr "फ़ोन नंबर"
@@ -16154,7 +16159,7 @@ msgid "Phone number added"
 msgstr "फ़ोन नंबर जोड़ा गया"
 
 #. placeholder {0}: user.phone
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:346
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:349
 msgid "Phone number added: {0}"
 msgstr "फ़ोन नंबर जोड़ा गया: {0}"
 
@@ -16221,11 +16226,11 @@ msgstr "डीएम पिन करें"
 msgid "Pin Group DM"
 msgstr "ग्रुप डीएम पिन करें"
 
-#: src/components/channel/MessageActionUtils.tsx:429
+#: src/components/channel/MessageActionUtils.tsx:430
 msgid "Pin it real good"
 msgstr "इसे अच्छे से पिन करें"
 
-#: src/components/channel/MessageActionUtils.tsx:426
+#: src/components/channel/MessageActionUtils.tsx:427
 msgid "Pin it. Pin it good."
 msgstr "इसे पिन करो। इसे अच्छे से पिन करो।"
 
@@ -16246,7 +16251,7 @@ msgstr "संदेश पिन करें"
 msgid "Pin or unpin the focused message"
 msgstr "ध्यान केंद्रित संदेश को पिन या अनपिन करें"
 
-#: src/components/channel/MessageActionUtils.tsx:427
+#: src/components/channel/MessageActionUtils.tsx:428
 msgid "Pin this message to the channel for all to see. Unless ... you're chicken."
 msgstr "इस संदेश को सबकी देखने के लिए चैनल में पिन करें। जब तक... आप डरपोक न हों।"
 
@@ -16319,7 +16324,7 @@ msgstr "प्लेटफ़ॉर्म प्रशासक"
 #: src/components/media_player/components/InlineAudioPlayer.tsx:201
 #: src/components/media_player/components/InlineAudioPlayer.tsx:296
 #: src/components/media_player/components/MediaPlayButton.tsx:70
-#: src/components/modals/MobileVideoViewer.tsx:286
+#: src/components/modals/MobileVideoViewer.tsx:294
 #: src/components/modals/tabs/component_gallery_tab/ButtonsTab.tsx:215
 msgid "Play"
 msgstr "चलाएं"
@@ -16416,7 +16421,7 @@ msgstr "कृपया बाद में पुनः प्रयास क�
 msgid "Please update Fluxer to view this message."
 msgstr "इस संदेश को देखने के लिए कृपया Fluxer अपडेट करें।"
 
-#: src/actions/InviteActionCreators.tsx:180
+#: src/actions/InviteActionCreators.tsx:184
 msgid "Please verify your account by setting an email and password before joining communities."
 msgstr "कृपया समुदायों में शामिल होने से पहले अपना ईमेल और पासवर्ड सेट करके अपना खाता सत्यापित करें।"
 
@@ -16526,11 +16531,11 @@ msgstr "प्रीमियम सुविधाएं"
 msgid "Premium state reset on the backend."
 msgstr "बैकएंड पर प्रीमियम स्थिति रीसेट की गई।"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:135
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:155
 msgid "Premium Subscription Scenarios"
 msgstr "प्रीमियम सदस्यता परिदृश्य"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:107
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:109
 msgid "Premium Type Override"
 msgstr "प्रीमियम प्रकार ओवरराइड"
 
@@ -16928,7 +16933,7 @@ msgstr "पायथन"
 msgid "quick access"
 msgstr "त्वरित पहुँच"
 
-#: src/stores/QuickSwitcherStore.tsx:1358
+#: src/stores/QuickSwitcherStore.tsx:1356
 #: src/utils/quick_switcher/QuickSwitcherModalUtils.tsx:100
 msgid "Quick Actions"
 msgstr "त्वरित क्रियाएँ"
@@ -17071,7 +17076,7 @@ msgstr "प्राप्त करें"
 msgid "Receive notifications when someone mentions you"
 msgstr "जब कोई आपका जिक्र करे तो सूचनाएँ प्राप्त करें"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:404
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:407
 msgid "Receive verification codes via SMS as a backup authentication method"
 msgstr "बैकअप प्रमाणीकरण विधि के रूप में एसएमएस द्वारा सत्यापन कोड प्राप्त करें"
 
@@ -17198,7 +17203,7 @@ msgstr "पुश सब्सक्रिप्शन ताज़ा करे
 msgid "Regenerate"
 msgstr "पुनः उत्पन्न करें"
 
-#: src/components/modals/BackupCodesRegenerateModal.tsx:61
+#: src/components/modals/BackupCodesRegenerateModal.tsx:68
 msgid "Regenerate Backup Codes"
 msgstr "बैकअप कोड फिर से उत्पन्न करें"
 
@@ -17228,7 +17233,7 @@ msgstr "पुनः उत्पन्न करने से वर्तम�
 msgid "Register"
 msgstr "पंजीकरण करें"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:279
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:282
 msgid "Registered Passkeys"
 msgstr "पंजीकृत पासकीज़"
 
@@ -17298,7 +17303,7 @@ msgstr "हटाएँ"
 #: src/components/modals/guild_tabs/guild_overview_tab/fields/GuildEmbedSplashUploadField.tsx:101
 #: src/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx:107
 #: src/components/modals/guild_tabs/guild_overview_tab/fields/GuildInviteSplashUploadField.tsx:113
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:391
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:394
 #: src/components/modals/tabs/ExpressionPacksTab.tsx:96
 #: src/components/modals/tabs/ExpressionPacksTab.tsx:226
 #: src/components/modals/tabs/LinkedAccountsTab.tsx:191
@@ -17472,11 +17477,11 @@ msgstr "ओवरराइड हटाएँ"
 msgid "Remove Pack"
 msgstr "पैक हटाएं"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:377
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:380
 msgid "Remove Phone"
 msgstr "फ़ोन हटाएँ"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:360
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:363
 msgid "Remove Phone Number"
 msgstr "फ़ोन नंबर हटाएँ"
 
@@ -17557,7 +17562,7 @@ msgstr "{0} के लिए अनुमति हटाई गई।"
 msgid "Removed deny for {0}."
 msgstr "{0} के लिए अस्वीकृति हटाई गई।"
 
-#: src/actions/SavedMessageActionCreators.tsx:80
+#: src/actions/SavedMessageActionCreators.tsx:85
 msgid "Removed from bookmarks"
 msgstr "बुकमार्क से हटाया गया"
 
@@ -17631,7 +17636,7 @@ msgstr "पैक हटाने से यह आपके खाते से
 msgid "Removing the timeout will allow <0>{0}</0> to send messages, react, and join voice channels again."
 msgstr "टाइमआउट हटाने से <0>{0}</0> फिर से संदेश भेज सकेगा, प्रतिक्रिया दे सकेगा, और वॉइस चैनलों में शामिल हो सकेगा।"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:319
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:322
 msgid "Rename"
 msgstr "नाम बदलें"
 
@@ -17866,22 +17871,22 @@ msgstr "माध्यम में जो कुछ भी है उसके
 msgid "Requires Plutonium"
 msgstr "प्लूटोनियम आवश्यक है"
 
-#: src/components/channel/ChannelTextarea.tsx:1032
+#: src/components/channel/ChannelTextarea.tsx:1030
 msgid "Reschedule Message"
 msgstr "संदेश को पुनर्नियोजित करें"
 
 #: src/components/modals/ClaimAccountModal.tsx:222
-#: src/components/modals/EmailChangeModal.tsx:233
-#: src/components/modals/EmailChangeModal.tsx:301
+#: src/components/modals/EmailChangeModal.tsx:236
+#: src/components/modals/EmailChangeModal.tsx:304
 #: src/components/modals/PasswordChangeModal.tsx:179
 msgid "Resend"
 msgstr "फिर से भेजें"
 
-#: src/components/modals/EmailChangeModal.tsx:301
+#: src/components/modals/EmailChangeModal.tsx:304
 msgid "Resend ({newSecondsRemaining}s)"
 msgstr "फिर से भेजें ({newSecondsRemaining}सेकंड)"
 
-#: src/components/modals/EmailChangeModal.tsx:233
+#: src/components/modals/EmailChangeModal.tsx:236
 msgid "Resend ({originalSecondsRemaining}s)"
 msgstr "फिर से भेजें ({originalSecondsRemaining}सेकंड)"
 
@@ -18425,7 +18430,7 @@ msgstr "सहेजता है"
 msgid "scale"
 msgstr "स्केल"
 
-#: src/components/modals/MfaTotpEnableModal.tsx:78
+#: src/components/modals/MfaTotpEnableModal.tsx:81
 msgid "Scan the QR code with your authenticator app to generate codes for two-factor authentication."
 msgstr "दो-कारक प्रमाणीकरण के कोड बनाने के लिए अपने ऑथेंटिकेटर ऐप से QR कोड स्कैन करें।"
 
@@ -18437,7 +18442,7 @@ msgstr "निर्धारित करें"
 msgid "Schedule Message"
 msgstr "संदेश निर्धारित करें"
 
-#: src/components/popouts/InboxPopout.tsx:70
+#: src/components/popouts/InboxPopout.tsx:69
 #: src/components/popouts/ScheduledMessagesContent.tsx:89
 msgid "Scheduled"
 msgstr "निर्धारित"
@@ -18562,7 +18567,7 @@ msgstr "उपयोगकर्ता नाम या आईडी द्व�
 msgid "Search channels"
 msgstr "चैनल खोजें"
 
-#: src/components/modals/ForwardModal.tsx:204
+#: src/components/modals/ForwardModal.tsx:209
 msgid "Search channels or DMs"
 msgstr "चैनल या डीएम खोजें"
 
@@ -18963,7 +18968,7 @@ msgid "Send"
 msgstr "भेजें"
 
 #. placeholder {0}: selectedChannelIds.size
-#: src/components/modals/ForwardModal.tsx:380
+#: src/components/modals/ForwardModal.tsx:385
 msgid "Send ({0}/5)"
 msgstr "भेजें ({0}/5)"
 
@@ -19000,7 +19005,7 @@ msgid "Send an SMS code first."
 msgstr "पहले SMS कोड भेजें।"
 
 #: src/components/modals/ClaimAccountModal.tsx:180
-#: src/components/modals/EmailChangeModal.tsx:270
+#: src/components/modals/EmailChangeModal.tsx:273
 #: src/components/modals/PhoneAddModal.tsx:208
 msgid "Send code"
 msgstr "कोड भेजें"
@@ -19195,7 +19200,7 @@ msgstr "निकनेम को {0} पर सेट करें।"
 msgid "Set NSFW level to {0}."
 msgstr "NSFW स्तर को {0} पर सेट करें।"
 
-#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:138
+#: src/components/modals/tabs/account_security_tab/AccountTab.tsx:141
 msgid "Set Password"
 msgstr "पासवर्ड सेट करें"
 
@@ -19261,7 +19266,7 @@ msgstr "चैनल प्रकार को {0} पर सेट करें
 msgid "Set the invite splash alignment to {0}."
 msgstr "निमंत्रण स्प्लैश संरेखण को {0} पर सेट करें।"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:88
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:90
 msgid "Set the number of unread gifts in inventory."
 msgstr "इन्वेंट्री में न पढ़े गए गिफ्ट्स की संख्या सेट करें।"
 
@@ -19341,7 +19346,7 @@ msgstr "अपना समय क्षेत्र सेट करें"
 #: src/components/modals/tabs/component_gallery_tab/ButtonsTab.tsx:221
 #: src/components/modals/tabs/component_gallery_tab/index.tsx:95
 #: src/components/modals/tabs/component_gallery_tab/Inline.tsx:90
-#: src/stores/QuickSwitcherStore.tsx:1356
+#: src/stores/QuickSwitcherStore.tsx:1354
 msgid "Settings"
 msgstr "सेटिंग्स"
 
@@ -19357,7 +19362,7 @@ msgstr "सेटिंग्स अनुभाग"
 msgid "Settings!"
 msgstr "सेटिंग्स!"
 
-#: src/components/modals/MfaTotpEnableModal.tsx:71
+#: src/components/modals/MfaTotpEnableModal.tsx:74
 msgid "Setup Authenticator App"
 msgstr "ऑथेंटिकेटर ऐप सेटअप करें"
 
@@ -19837,7 +19842,7 @@ msgstr "सभी से मूक कॉल"
 msgid "simulate"
 msgstr "अनुकरण करें"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:128
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:130
 msgid "Simulates having a Stripe customer ID (for testing purchase history access)"
 msgstr "स्ट्राइप ग्राहक आईडी का अनुकरण करता है (खरीद इतिहास एक्सेस का परीक्षण करने के लिए)"
 
@@ -19985,11 +19990,11 @@ msgstr "छोटा मीडिया आकार"
 msgid "sms"
 msgstr "एसएमएस"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:409
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:412
 msgid "SMS Backup"
 msgstr "SMS बैकअप"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:429
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:432
 msgid "SMS backup is disabled for partners"
 msgstr "पार्टनर्स के लिए SMS बैकअप अक्षम है"
 
@@ -20002,7 +20007,7 @@ msgstr "SMS कोड"
 msgid "SMS Code"
 msgstr "SMS कोड"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:403
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:406
 msgid "SMS Two-Factor Authentication"
 msgstr "SMS दो-कारक प्रमाणीकरण"
 
@@ -20010,7 +20015,7 @@ msgstr "SMS दो-कारक प्रमाणीकरण"
 msgid "SMS two-factor authentication adds an additional layer of security to your account by requiring a verification code sent to your phone number when signing in."
 msgstr "SMS दो-कारक प्रमाणीकरण आपके खाते में एक अतिरिक्त सुरक्षा परत जोड़ता है जो साइन इन करते समय आपके फ़ोन नंबर पर भेजे गए सत्यापन कोड की आवश्यकता रखता है।"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:413
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:416
 msgid "SMS two-factor authentication is enabled"
 msgstr "SMS दो-कारक प्रमाणीकरण सक्षम है"
 
@@ -20334,7 +20339,7 @@ msgstr "तारा"
 msgid "starred"
 msgstr "स्टारred"
 
-#: src/components/modals/EmailChangeModal.tsx:202
+#: src/components/modals/EmailChangeModal.tsx:205
 #: src/components/modals/PasswordChangeModal.tsx:148
 msgid "Start"
 msgstr "शुरू करें"
@@ -20490,7 +20495,7 @@ msgstr "स्टिकर घनत्व"
 msgid "Sticker pack"
 msgstr "स्टिकर पैक"
 
-#: src/actions/InviteActionCreators.tsx:287
+#: src/actions/InviteActionCreators.tsx:291
 msgid "Sticker pack creation limit reached"
 msgstr "स्टिकर पैक निर्माण सीमा पहुँच गई"
 
@@ -20498,7 +20503,7 @@ msgstr "स्टिकर पैक निर्माण सीमा पह�
 msgid "Sticker Pack Invite"
 msgstr "स्टिकर पैक निमंत्रण"
 
-#: src/actions/InviteActionCreators.tsx:273
+#: src/actions/InviteActionCreators.tsx:277
 msgid "Sticker pack limit reached"
 msgstr "स्टिकर पैक सीमा पहुँच गई"
 
@@ -20674,7 +20679,7 @@ msgstr "जमा हो रहा है"
 msgid "subscription"
 msgstr "सदस्यता"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:49
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:51
 #: src/components/modals/utils/SettingsSearchIndex.tsx:261
 msgid "Subscription"
 msgstr "सदस्यता"
@@ -20796,7 +20801,7 @@ msgstr "खाता बदलें"
 msgid "Switch Accounts"
 msgstr "खाते बदलें"
 
-#: src/stores/QuickSwitcherStore.tsx:900
+#: src/stores/QuickSwitcherStore.tsx:898
 msgid "Switch between Light and Dark mode"
 msgstr "लाइट और डार्क मोड के बीच स्विच करें"
 
@@ -20989,7 +20994,7 @@ msgstr "सेवा की शर्तें"
 msgid "Test Bulk Delete (60s)"
 msgstr "बल्क डिलीट टेस्ट (60s)"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:137
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:157
 msgid "Test Subscription State"
 msgstr "सदस्यता स्थिति टेस्ट"
 
@@ -21025,7 +21030,7 @@ msgstr "टेक्स्ट चैनल"
 msgid "Text Channel Names"
 msgstr "टेक्स्ट चैनल नाम"
 
-#: src/stores/QuickSwitcherStore.tsx:1349
+#: src/stores/QuickSwitcherStore.tsx:1347
 #: src/utils/quick_switcher/QuickSwitcherModalUtils.tsx:97
 msgid "Text channels"
 msgstr "टेक्स्ट चैनल"
@@ -21106,7 +21111,7 @@ msgid "That message didn't delete"
 msgstr "यह संदेश हटाया नहीं गया"
 
 #. placeholder {0}: invite.pack.name
-#: src/actions/InviteActionCreators.tsx:103
+#: src/actions/InviteActionCreators.tsx:104
 msgid "The {packLabel} {0} has been installed."
 msgstr "{packLabel} {0} स्थापित हो चुका है।"
 
@@ -21148,7 +21153,7 @@ msgstr "फ़ाइल में वह सत्यापन टोकन ह�
 msgid "The file you're trying to upload exceeds the maximum size limit of {maxSizeFormatted}."
 msgstr "आप जिस फ़ाइल को अपलोड करने की कोशिश कर रहे हैं, वह {maxSizeFormatted} के अधिकतम आकार सीमा को पार कर गई है।"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:106
+#: src/components/modals/FluxerTagChangeModal.tsx:111
 msgid "The FluxerTag <0>{fluxerTag}</0> is already taken. Continuing will reroll your discriminator automatically."
 msgstr "FluxerTag <0>{fluxerTag}</0> पहले से लिया जा चुका है। जारी रखने पर आपका डिस्क्रिमिनेटर ऑटोमैटिक फिर से चुना जाएगा।"
 
@@ -21298,10 +21303,6 @@ msgstr "वे"
 #: src/components/channel/channel_view/DMChannelView.tsx:932
 msgid "They might have taken the DeLorean elsewhere."
 msgstr "शायद उन्होंने DeLorean को कहीं और ले जाया होगा।"
-
-#: src/components/modals/tabs/MyProfileTab.tsx:711
-msgid "they/them"
-msgstr "वो/उनका"
 
 #: src/components/channel/channel_view/DMChannelView.tsx:918
 msgid "Think, McFly! Did you type the right address?"
@@ -21717,11 +21718,11 @@ msgstr "यह अंतरिक्ष-काल निरंतरता म�
 msgid "This will hide all favorites-related UI elements including buttons and menu items. Your existing favorites will be preserved and can be re-enabled anytime from <0>User Settings → Look & Feel → Favorites</0>."
 msgstr "यह सभी पसंदीदा संबंधित UI तत्वों को छिपा देगा, जिनमें बटन और मेनू आइटम शामिल हैं। आपके मौजूदा पसंदीदा सुरक्षित रहेंगे और उन्हें कभी भी <0>User Settings → Look & Feel → Favorites</0> से पुनः सक्षम किया जा सकता है।"
 
-#: src/components/modals/BackupCodesRegenerateModal.tsx:65
+#: src/components/modals/BackupCodesRegenerateModal.tsx:72
 msgid "This will invalidate your existing backup codes and generate new ones."
 msgstr "यह आपके मौजूदा बैकअप कोड को अमान्य कर देगा और नए कोड उत्पन्न करेगा।"
 
-#: src/components/channel/ChannelTextarea.tsx:1036
+#: src/components/channel/ChannelTextarea.tsx:1034
 msgid "This will modify the existing scheduled message rather than sending immediately."
 msgstr "यह मौजूदा निर्धारित संदेश को तुरंत भेजने के बजाय संशोधित करेगा।"
 
@@ -21907,11 +21908,11 @@ msgstr "टॉगल"
 msgid "Toggle Channel Member List"
 msgstr "चैनल सदस्य सूची दिखाएं/छिपाएं"
 
-#: src/stores/QuickSwitcherStore.tsx:913
+#: src/stores/QuickSwitcherStore.tsx:911
 msgid "Toggle Compact Mode"
 msgstr "कॉम्पैक्ट मोड चालू/बंद करें"
 
-#: src/components/modals/MobileVideoViewer.tsx:239
+#: src/components/modals/MobileVideoViewer.tsx:247
 msgid "Toggle controls"
 msgstr "नियंत्रण टॉगल करें"
 
@@ -21963,11 +21964,11 @@ msgstr "म्यूट चालू/बंद करें"
 msgid "Toggle Pins Popout"
 msgstr "पिन पॉपआउट चालू/बंद करें"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:120
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:122
 msgid "Toggle premium_enabled_override on the backend"
 msgstr "बैकएंड पर premium_enabled_override चालू/बंद करें"
 
-#: src/stores/QuickSwitcherStore.tsx:929
+#: src/stores/QuickSwitcherStore.tsx:927
 msgid "Toggle Reduced Motion"
 msgstr "गति कम करें चालू/बंद करें"
 
@@ -21983,7 +21984,7 @@ msgstr "स्टीकर पिकर चालू/बंद करें"
 msgid "Toggle switches on and off to see state changes."
 msgstr "स्टेट बदलने के लिए स्विच ऑन/ऑफ करें।"
 
-#: src/stores/QuickSwitcherStore.tsx:899
+#: src/stores/QuickSwitcherStore.tsx:897
 msgid "Toggle Theme"
 msgstr "थीम बदलें"
 
@@ -22008,7 +22009,7 @@ msgstr "एचडीआर छवियों को मानक रेंज �
 msgid "Too Loud"
 msgstr "बहुत तेज़"
 
-#: src/components/alerts/MaxGuildsModal.tsx:32
+#: src/components/alerts/MaxGuildsModal.tsx:35
 msgid "Too Many Communities"
 msgstr "बहुत सारी कम्युनिटी"
 
@@ -22307,7 +22308,7 @@ msgstr "दो-चरणीय प्रमाणीकरण"
 msgid "Two-factor authentication disabled"
 msgstr "दो-चरणीय प्रमाणीकरण अक्षम"
 
-#: src/components/modals/MfaTotpEnableModal.tsx:55
+#: src/components/modals/MfaTotpEnableModal.tsx:58
 msgid "Two-factor authentication enabled"
 msgstr "दो-चरणीय प्रमाणीकरण सक्षम"
 
@@ -22404,11 +22405,11 @@ msgstr "यूक्रेनी"
 msgid "Ultra (1440p)"
 msgstr "अल्ट्रा (1440p)"
 
-#: src/actions/InviteActionCreators.tsx:319
+#: src/actions/InviteActionCreators.tsx:323
 msgid "Unable to install emoji pack"
 msgstr "इमोजी पैक इंस्टॉल करने में असमर्थ"
 
-#: src/actions/InviteActionCreators.tsx:320
+#: src/actions/InviteActionCreators.tsx:324
 msgid "Unable to install sticker pack"
 msgstr "स्टीकर पैक इंस्टॉल करने में असमर्थ"
 
@@ -22436,13 +22437,13 @@ msgstr "प्रोफ़ाइल बैनर, बैज, और जीवन
 msgid "Unable to prepare any emojis for upload. The following errors occurred:"
 msgstr "किसी भी इमोजी को अपलोड के लिए तैयार करने में असमर्थ। निम्न त्रुटियाँ हुईं:"
 
-#: src/components/modals/EmailChangeModal.tsx:121
-#: src/components/modals/EmailChangeModal.tsx:151
+#: src/components/modals/EmailChangeModal.tsx:124
+#: src/components/modals/EmailChangeModal.tsx:154
 #: src/components/modals/PasswordChangeModal.tsx:104
 msgid "Unable to resend code right now"
 msgstr "अभी कोड दोबारा भेजने में असमर्थ"
 
-#: src/components/modals/EmailChangeModal.tsx:136
+#: src/components/modals/EmailChangeModal.tsx:139
 msgid "Unable to send code to new email"
 msgstr "नए ईमेल पर कोड भेजने में असमर्थ"
 
@@ -22455,7 +22456,7 @@ msgstr "स्वर संदेश भेजने में असमर्�
 msgid "Unable to Start Call"
 msgstr "कॉल शुरू नहीं कर सकते"
 
-#: src/components/modals/EmailChangeModal.tsx:91
+#: src/components/modals/EmailChangeModal.tsx:94
 msgid "Unable to start email change"
 msgstr "ईमेल परिवर्तन शुरू करने में असमर्थ"
 
@@ -22526,7 +22527,7 @@ msgstr "अनदावी खाता"
 msgid "Unclaimed Account Nagbar"
 msgstr "अनदावी खाता नोटिफिकेशन"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:65
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:67
 msgid "Unclaimed Account Override"
 msgstr "अनदावी खाता ओवरराइड"
 
@@ -22554,10 +22555,10 @@ msgstr "नाबालिग उपयोगकर्ता"
 #: src/components/alerts/GenericErrorModal.tsx:31
 #: src/components/alerts/GuildAtCapacityModal.tsx:31
 #: src/components/alerts/InvitesDisabledModal.tsx:31
-#: src/components/alerts/MaxBookmarksModal.tsx:45
-#: src/components/alerts/MaxBookmarksModal.tsx:56
+#: src/components/alerts/MaxBookmarksModal.tsx:48
+#: src/components/alerts/MaxBookmarksModal.tsx:59
 #: src/components/alerts/MaxFavoriteMemesModal.tsx:46
-#: src/components/alerts/MaxGuildsModal.tsx:38
+#: src/components/alerts/MaxGuildsModal.tsx:41
 #: src/components/alerts/MicrophonePermissionDeniedModal.tsx:50
 #: src/components/alerts/NSFWContentRejectedModal.tsx:31
 #: src/components/alerts/ReactionInteractionDisabledModal.tsx:30
@@ -22632,7 +22633,7 @@ msgstr "अज्ञात चैनल"
 #: src/components/modals/guild_tabs/GuildAuditLogTab.Utils.tsx:479
 #: src/components/modals/guild_tabs/GuildWebhooksTab.tsx:61
 #: src/components/modals/guild_tabs/GuildWebhooksTab.tsx:67
-#: src/stores/QuickSwitcherStore.tsx:690
+#: src/stores/QuickSwitcherStore.tsx:688
 msgid "Unknown channel"
 msgstr "अज्ञात चैनल"
 
@@ -22781,7 +22782,7 @@ msgstr "Plutonium के साथ DMs में स्टीकर्स अन
 #: src/components/layout/UserArea.tsx:168
 #: src/components/media_player/components/MediaVerticalVolumeControl.tsx:249
 #: src/components/media_player/components/MediaVolumeControl.tsx:208
-#: src/components/modals/MobileVideoViewer.tsx:272
+#: src/components/modals/MobileVideoViewer.tsx:280
 #: src/components/voice/VoiceControlBar.tsx:602
 msgid "Unmute"
 msgstr "अनम्यूट करें"
@@ -22872,7 +22873,7 @@ msgstr "DM अनपिन करें"
 msgid "Unpin Group DM"
 msgstr "ग्रुप DM अनपिन करें"
 
-#: src/components/channel/MessageActionUtils.tsx:412
+#: src/components/channel/MessageActionUtils.tsx:413
 #: src/components/shared/ChannelPinsContent.tsx:102
 msgid "Unpin it"
 msgstr "इसे अनपिन करें"
@@ -22880,7 +22881,7 @@ msgstr "इसे अनपिन करें"
 #: src/components/channel/MessageActionBar.tsx:519
 #: src/components/channel/MessageActionBar.tsx:735
 #: src/components/channel/MessageActionMenu.tsx:243
-#: src/components/channel/MessageActionUtils.tsx:409
+#: src/components/channel/MessageActionUtils.tsx:410
 #: src/components/shared/ChannelPinsContent.tsx:99
 #: src/components/shared/ChannelPinsContent.tsx:260
 #: src/components/uikit/context_menu/items/MessageMenuItems.tsx:163
@@ -22907,7 +22908,7 @@ msgstr "अनपिन किया गया ग्रुप DM"
 msgid "unread"
 msgstr "पढ़ा नहीं गया"
 
-#: src/components/popouts/InboxPopout.tsx:53
+#: src/components/popouts/InboxPopout.tsx:52
 msgid "Unread"
 msgstr "अनपढ़"
 
@@ -22915,11 +22916,11 @@ msgstr "अनपढ़"
 msgid "Unread DMs only"
 msgstr "केवल अनपढ़ी हुई DMs"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:85
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:87
 msgid "Unread Gift Count"
 msgstr "अनपढ़े उपहारों की संख्या"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:73
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:75
 msgid "Unread gift inventory override"
 msgstr "अवांछित उपहार इन्वेंटरी ओवरराइड"
 
@@ -22962,7 +22963,7 @@ msgstr "असत्यापित ईमेल"
 msgid "Up to 4K/60fps"
 msgstr "4K/60fps तक"
 
-#: src/components/channel/ChannelTextarea.tsx:1033
+#: src/components/channel/ChannelTextarea.tsx:1031
 msgid "Update"
 msgstr "अपडेट"
 
@@ -23085,7 +23086,7 @@ msgstr "अपग्रेड करें"
 msgid "Upgrade Now"
 msgstr "अब अपग्रेड करें"
 
-#: src/components/alerts/MaxBookmarksModal.tsx:69
+#: src/components/alerts/MaxBookmarksModal.tsx:72
 #: src/components/alerts/MaxFavoriteMemesModal.tsx:70
 msgid "Upgrade to Plutonium"
 msgstr "Plutonium में अपग्रेड करें"
@@ -23249,7 +23250,7 @@ msgstr "उन सदस्यों के लिए संदेश इति�
 msgid "Use Actual"
 msgstr "वास्तविक का उपयोग करें"
 
-#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:47
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:49
 msgid "Use actual premium type"
 msgstr "वास्तविक प्रीमियम प्रकार का उपयोग करें"
 
@@ -23322,7 +23323,7 @@ msgstr "वैश्विक प्रोफ़ाइल का उपयोग
 msgid "Use light theme"
 msgstr "लाइट थीम का उपयोग करें"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:274
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:277
 msgid "Use passkeys for passwordless sign-in and two-factor authentication"
 msgstr "पासवर्डलेस साइन-इन और दो-कारक प्रमाणीकरण के लिए पासकी का उपयोग करें"
 
@@ -23454,7 +23455,7 @@ msgstr "उपयोगकर्ता रिकॉर्ड"
 #: src/components/layout/UserArea.tsx:286
 #: src/components/layout/UserArea.tsx:291
 #: src/components/modals/components/DesktopSettingsView.tsx:357
-#: src/components/modals/UserSettingsModal.tsx:154
+#: src/components/modals/UserSettingsModal.tsx:153
 msgid "User Settings"
 msgstr "उपयोगकर्ता सेटिंग्स"
 
@@ -23475,9 +23476,9 @@ msgstr "उपयोगकर्ता, बॉट या वेबहुक"
 msgid "username"
 msgstr "उपयोगकर्ता नाम"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:187
+#: src/components/modals/FluxerTagChangeModal.tsx:201
 #: src/components/modals/tabs/component_gallery_tab/InputsTab.tsx:101
-#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:51
+#: src/components/modals/tabs/my_profile_tab/UsernameSection.tsx:52
 #: src/components/modals/utils/SettingsSearchIndex.tsx:63
 msgid "Username"
 msgstr "उपयोगकर्ता नाम"
@@ -23510,13 +23511,17 @@ msgstr "उपयोगकर्ता नाम अधिकतम 32 वर्
 msgid "Username#0000"
 msgstr "उपयोगकर्ता नाम#0000"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:169
+#: src/components/modals/FluxerTagChangeModal.tsx:183
 msgid "Usernames can only contain letters (a-z, A-Z), numbers (0-9), and underscores. Usernames are case-insensitive."
 msgstr "उपयोगकर्ता नाम में केवल अक्षर (a-z, A-Z), अंक (0-9) और अंडरस्कोर हो सकते हैं। उपयोगकर्ता नाम केस-संवेदी नहीं होते।"
 
-#: src/components/modals/FluxerTagChangeModal.tsx:164
-msgid "Usernames can only contain letters (a-z, A-Z), numbers (0-9), and underscores. Usernames are case-insensitive. You can pick your own 4-digit tag if it's available."
-msgstr "उपयोगकर्ता नाम में केवल अक्षर (a-z, A-Z), अंक (0-9) और अंडरस्कोर हो सकते हैं। उपयोगकर्ता नाम केस-संवेदी नहीं होते। यदि उपलब्ध हो तो आप अपनी खुद की 4-अंकीय टैग चुन सकते हैं।"
+#: src/components/modals/FluxerTagChangeModal.tsx:170
+msgid "Usernames can only contain letters (a-z, A-Z), numbers (0-9), and underscores. Usernames are case-insensitive. You can pick any available 4-digit tag from #0000 to #9999."
+msgstr "यूज़रनेम में केवल अक्षर (a-z, A-Z), अंक (0-9), और अंडरस्कोर हो सकते हैं। यूज़रनेम केस-इनसेंसिटिव हैं। आप #0000 से #9999 तक कोई भी उपलब्ध 4-अंकीय टैग चुन सकते हैं।"
+
+#: src/components/modals/FluxerTagChangeModal.tsx:176
+msgid "Usernames can only contain letters (a-z, A-Z), numbers (0-9), and underscores. Usernames are case-insensitive. You can pick any available 4-digit tag from #0001 to #9999."
+msgstr "यूज़रनेम में केवल अक्षर (a-z, A-Z), अंक (0-9), और अंडरस्कोर हो सकते हैं। यूज़रनेम केस-इनसेंसिटिव हैं। आप #0001 से #9999 तक कोई भी उपलब्ध 4-अंकीय टैग चुन सकते हैं।"
 
 #: src/components/modals/utils/SettingsSearchIndex.tsx:246
 #: src/components/modals/utils/SettingsSectionRegistry.tsx:172
@@ -23634,8 +23639,8 @@ msgid "Verification Barriers"
 msgstr "सत्यापन बाधाएँ"
 
 #: src/components/modals/ClaimAccountModal.tsx:198
-#: src/components/modals/EmailChangeModal.tsx:220
-#: src/components/modals/EmailChangeModal.tsx:288
+#: src/components/modals/EmailChangeModal.tsx:223
+#: src/components/modals/EmailChangeModal.tsx:291
 #: src/components/modals/PasswordChangeModal.tsx:166
 #: src/components/modals/PhoneAddModal.tsx:226
 #: src/components/modals/RequiredActionModal.tsx:495
@@ -23662,7 +23667,7 @@ msgstr "सत्यापन ईमेल भेजा गया! कृपय�
 msgid "Verification failed"
 msgstr "सत्यापन विफल"
 
-#: src/components/modals/BackupCodesViewModal.tsx:63
+#: src/components/modals/BackupCodesViewModal.tsx:68
 msgid "Verification may be required before viewing your backup codes."
 msgstr "बैकअप कोड देखने से पहले सत्यापन आवश्यक हो सकता है।"
 
@@ -23684,7 +23689,7 @@ msgid "verify"
 msgstr "पुष्टि करें"
 
 #: src/components/modals/AddConnectionModal.tsx:315
-#: src/components/modals/EmailChangeModal.tsx:236
+#: src/components/modals/EmailChangeModal.tsx:239
 #: src/components/modals/PasswordChangeModal.tsx:182
 #: src/components/modals/PhoneAddModal.tsx:240
 #: src/components/modals/RequiredActionModal.tsx:652
@@ -23785,7 +23790,7 @@ msgstr "वीडियो पूर्वावलोकन"
 msgid "Video preview"
 msgstr "वीडियो पूर्वावलोकन"
 
-#: src/components/modals/MobileVideoViewer.tsx:311
+#: src/components/modals/MobileVideoViewer.tsx:319
 msgid "Video progress"
 msgstr "वीडियो प्रगति"
 
@@ -23859,15 +23864,15 @@ msgstr "बैन किए गए उपयोगकर्ताओं को �
 msgid "View and manage every webhook configured across your community."
 msgstr "अपने पूरे समुदाय में कॉन्फ़िगर किए गए प्रत्येक वेबहुक को देखें और प्रबंधित करें।"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:257
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:260
 msgid "View and manage your backup codes for account recovery"
 msgstr "खाते की रिकवरी के लिए अपने बैकअप कोड देखें और प्रबंधित करें"
 
-#: src/components/modals/BackupCodesViewModal.tsx:59
+#: src/components/modals/BackupCodesViewModal.tsx:64
 msgid "View Backup Codes"
 msgstr "बैकअप कोड देखें"
 
-#: src/components/modals/BackupCodesViewModal.tsx:58
+#: src/components/modals/BackupCodesViewModal.tsx:63
 msgid "View backup codes form"
 msgstr "बैकअप कोड फ़ॉर्म देखें"
 
@@ -23884,7 +23889,7 @@ msgstr "कॉल नियंत्रण देखें"
 msgid "View Channel"
 msgstr "चैनल देखें"
 
-#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:265
+#: src/components/modals/tabs/account_security_tab/SecurityTab.tsx:268
 msgid "View Codes"
 msgstr "कोड देखें"
 
@@ -24016,6 +24021,19 @@ msgstr "Visionary (लाइफटाइम Plutonium)"
 msgid "Visionary 2FA Nagbar"
 msgstr "Visionary 2FA नागबार"
 
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:137
+msgid "Visionary Badge Override"
+msgstr "विजनरी बैज ओवरराइड"
+
+#. placeholder {0}: profile.premiumLifetimeSequence
+#: src/components/popouts/UserProfileBadges.tsx:150
+msgid "Visionary ID #{0}"
+msgstr "विजनरी आईडी #{0}"
+
+#: src/components/modals/tabs/developer_options_tab/AccountPremiumTab.tsx:139
+msgid "Visionary ID Number"
+msgstr "विजनरी आईडी नंबर"
+
 #: src/components/modals/ExternalLinkWarningModal.tsx:111
 msgid "Visit Site"
 msgstr "साइट पर जाएँ"
@@ -24086,7 +24104,7 @@ msgstr "वॉइस कॉल्स"
 msgid "voice channel"
 msgstr "स्वर चैनल"
 
-#: src/stores/QuickSwitcherStore.tsx:720
+#: src/stores/QuickSwitcherStore.tsx:718
 #: src/utils/modals/guild_tabs/GuildAuditLogTabUtils.tsx:227
 msgid "Voice channel"
 msgstr "वॉइस चैनल"
@@ -24106,7 +24124,7 @@ msgstr "वॉइस चैनल पूर्ण"
 msgid "Voice channel join behavior"
 msgstr "वॉयस चैनल जॉइन व्यवहार"
 
-#: src/stores/QuickSwitcherStore.tsx:1351
+#: src/stores/QuickSwitcherStore.tsx:1349
 #: src/utils/quick_switcher/QuickSwitcherModalUtils.tsx:98
 msgid "Voice channels"
 msgstr "वॉइस चैनल"
@@ -24374,11 +24392,11 @@ msgstr "हम इस ईमेल पते पर एक सत्यापन
 msgid "We'll send a verification code to your email before you can change your password."
 msgstr "आप अपना पासवर्ड बदलने से पहले हम आपके ईमेल पर एक सत्यापन कोड भेजेंगे।"
 
-#: src/components/modals/EmailChangeModal.tsx:190
+#: src/components/modals/EmailChangeModal.tsx:193
 msgid "We'll verify your current email and then your new email with one-time codes."
 msgstr "हम पहले आपके वर्तमान ईमेल को और फिर नए ईमेल को वन-टाइम कोड के साथ सत्यापित करेंगे।"
 
-#: src/components/modals/EmailChangeModal.tsx:192
+#: src/components/modals/EmailChangeModal.tsx:195
 msgid "We'll verify your new email with a one-time code."
 msgstr "हम आपके नए ईमेल को एक वन-टाइम कोड से सत्यापित करेंगे।"
 
@@ -24984,7 +25002,7 @@ msgstr "आप खुद को अनम्यूट नहीं कर सक
 msgid "You do not have access to the channel where this message was sent."
 msgstr "आपके पास उस चैनल तक पहुंच नहीं है जहां यह संदेश भेजा गया था।"
 
-#: src/components/channel/ChannelTextarea.tsx:749
+#: src/components/channel/ChannelTextarea.tsx:747
 #: src/components/channel/textarea/TextareaPlusMenu.tsx:52
 msgid "You do not have permission to send messages in this channel."
 msgstr "आपके पास इस चैनल में संदेश भेजने की अनुमति नहीं है।"
@@ -25005,11 +25023,11 @@ msgstr "आपके पास अभी साझा करने के लि
 msgid "You don't have permission to connect to this voice channel."
 msgstr "आपके पास इस वॉइस चैनल से जुड़ने की अनुमति नहीं है।"
 
-#: src/actions/InviteActionCreators.tsx:316
+#: src/actions/InviteActionCreators.tsx:320
 msgid "You don't have permission to install this emoji pack."
 msgstr "आपके पास इस इमोजी पैक को इंस्टॉल करने की अनुमति नहीं है।"
 
-#: src/actions/InviteActionCreators.tsx:317
+#: src/actions/InviteActionCreators.tsx:321
 msgid "You don't have permission to install this sticker pack."
 msgstr "आपके पास इस स्टिकर पैक को इंस्टॉल करने की अनुमति नहीं है।"
 
@@ -25065,35 +25083,35 @@ msgstr "आपके पास <1>उपहार सब्सक्रिप्
 msgid "You have blocked {username}. Unblock them to send messages."
 msgstr "आपने {username} को ब्लॉक किया है। संदेश भेजने के लिए उन्हें अनब्लॉक करें।"
 
-#: src/actions/InviteActionCreators.tsx:260
+#: src/actions/InviteActionCreators.tsx:264
 msgid "You have created the maximum of {limit} emoji pack. Delete one to create another."
 msgstr "आपने {limit} इमोजी पैक का अधिकतम संख्या बना ली है। एक को हटाएं और दूसरा बनाएं।"
 
-#: src/actions/InviteActionCreators.tsx:261
+#: src/actions/InviteActionCreators.tsx:265
 msgid "You have created the maximum of {limit} emoji packs. Delete one to create another."
 msgstr "आपने {limit} इमोजी पैक्स का अधिकतम संख्या बना ली है। एक को हटाएं और दूसरा बनाएं।"
 
-#: src/actions/InviteActionCreators.tsx:292
+#: src/actions/InviteActionCreators.tsx:296
 msgid "You have created the maximum of {limit} sticker pack. Delete one to create another."
 msgstr "आपने {limit} स्टिकर पैक का अधिकतम संख्या बना ली है। एक को हटाएं और दूसरा बनाएं।"
 
-#: src/actions/InviteActionCreators.tsx:293
+#: src/actions/InviteActionCreators.tsx:297
 msgid "You have created the maximum of {limit} sticker packs. Delete one to create another."
 msgstr "आपने {limit} स्टिकर पैक्स का अधिकतम संख्या बना ली है। एक को हटाएं और दूसरा बनाएं।"
 
-#: src/actions/InviteActionCreators.tsx:246
+#: src/actions/InviteActionCreators.tsx:250
 msgid "You have installed the maximum of {limit} emoji pack. Remove one to install another."
 msgstr "आपने {limit} इमोजी पैक का अधिकतम संख्या इंस्टॉल कर ली है। एक को हटाएं और दूसरा इंस्टॉल करें।"
 
-#: src/actions/InviteActionCreators.tsx:247
+#: src/actions/InviteActionCreators.tsx:251
 msgid "You have installed the maximum of {limit} emoji packs. Remove one to install another."
 msgstr "आपने {limit} इमोजी पैक्स का अधिकतम संख्या इंस्टॉल कर ली है। एक को हटाएं और दूसरा इंस्टॉल करें।"
 
-#: src/actions/InviteActionCreators.tsx:278
+#: src/actions/InviteActionCreators.tsx:282
 msgid "You have installed the maximum of {limit} sticker pack. Remove one to install another."
 msgstr "आपने {limit} स्टिकर पैक का अधिकतम संख्या इंस्टॉल कर ली है। एक को हटाएं और दूसरा इंस्टॉल करें।"
 
-#: src/actions/InviteActionCreators.tsx:279
+#: src/actions/InviteActionCreators.tsx:283
 msgid "You have installed the maximum of {limit} sticker packs. Remove one to install another."
 msgstr "आपने {limit} स्टिकर पैक्स का अधिकतम संख्या इंस्टॉल कर ली है। एक को हटाएं और दूसरा इंस्टॉल करें।"
 
@@ -25101,19 +25119,19 @@ msgstr "आपने {limit} स्टिकर पैक्स का अधि
 msgid "You have no friends yet"
 msgstr "आपके अब तक कोई दोस्त नहीं हैं"
 
-#: src/actions/InviteActionCreators.tsx:264
+#: src/actions/InviteActionCreators.tsx:268
 msgid "You have reached the limit for creating emoji packs. Delete one of your packs to create another."
 msgstr "आपकी इमोजी पैक बनाने की सीमा पूरी हो गई है। नया पैक बनाने के लिए अपना कोई पैक हटाएं।"
 
-#: src/actions/InviteActionCreators.tsx:296
+#: src/actions/InviteActionCreators.tsx:300
 msgid "You have reached the limit for creating sticker packs. Delete one of your packs to create another."
 msgstr "आपकी स्टिकर पैक बनाने की सीमा पूरी हो गई है। नया पैक बनाने के लिए अपना कोई पैक हटाएं।"
 
-#: src/actions/InviteActionCreators.tsx:250
+#: src/actions/InviteActionCreators.tsx:254
 msgid "You have reached the limit for installing emoji packs. Remove one of your installed packs to install another."
 msgstr "आपकी इमोजी पैक इंस्टॉल करने की सीमा पूरी हो गई है। दूसरा इंस्टॉल करने के लिए कोई इंस्टॉल किया हुआ पैक हटाएं।"
 
-#: src/actions/InviteActionCreators.tsx:282
+#: src/actions/InviteActionCreators.tsx:286
 msgid "You have reached the limit for installing sticker packs. Remove one of your installed packs to install another."
 msgstr "आपकी स्टिकर पैक इंस्टॉल करने की सीमा पूरी हो गई है। नया इंस्टॉल करने के लिए कोई इंस्टॉल किया हुआ पैक हटाएं।"
 
@@ -25377,23 +25395,23 @@ msgstr "आपने {maxFavoriteMemes} सहेजे गए मीडिय�
 msgid "You've reached the maximum limit of {maxFavoriteMemes} saved media items. To add more, you'll need to remove some existing items from your collection."
 msgstr "आपने {maxFavoriteMemes} सहेजे गए मीडिया आइटम की अधिकतम सीमा तक पहुँच चुके हैं। अधिक जोड़ने के लिए, आपको अपनी संग्रह से कुछ मौजूदा आइटम हटाने होंगे।"
 
-#: src/components/alerts/MaxBookmarksModal.tsx:55
+#: src/components/alerts/MaxBookmarksModal.tsx:58
 msgid "You've reached the maximum number of bookmarks ({bookmarksText}). Please remove some bookmarks before adding new ones."
 msgstr "आपने बुकमार्क्स की अधिकतम संख्या ({bookmarksText}) तक पहुँच चुके हैं। कृपया नए जोड़ने से पहले कुछ बुकमार्क्स हटाएँ।"
 
-#: src/components/alerts/MaxBookmarksModal.tsx:44
+#: src/components/alerts/MaxBookmarksModal.tsx:47
 msgid "You've reached the maximum number of bookmarks ({bookmarksText}). This limit is configured by your instance administrator. Please remove some bookmarks before adding new ones."
 msgstr "आपने बुकमार्क्स की अधिकतम संख्या ({bookmarksText}) तक पहुँच चुके हैं। यह सीमा आपके इंस्टेंस प्रशासक द्वारा कॉन्फ़िगर की गई है। कृपया नए जोड़ने से पहले कुछ बुकमार्क्स हटाएँ।"
 
-#: src/components/alerts/MaxBookmarksModal.tsx:68
+#: src/components/alerts/MaxBookmarksModal.tsx:71
 msgid "You've reached the maximum number of bookmarks for free users ({bookmarksText}). Upgrade to Plutonium to increase your limit to {premiumBookmarksText}, or remove some bookmarks to add new ones."
 msgstr "आपने मुफ्त उपयोगकर्ताओं के लिए बुकमार्क्स की अधिकतम संख्या ({bookmarksText}) तक पहुँच चुके हैं। अपनी सीमा को {premiumBookmarksText} तक बढ़ाने के लिए प्लूटोनियम में अपग्रेड करें, या नए जोड़ने के लिए कुछ बुकमार्क्स हटाएँ।"
 
-#: src/components/alerts/MaxGuildsModal.tsx:36
+#: src/components/alerts/MaxGuildsModal.tsx:39
 msgid "You've reached the maximum number of communities you can join ({maxGuilds} communities). Please leave a community before joining another one."
 msgstr "आपने शामिल होने के लिए अधिकतम समुदायों की संख्या ({maxGuilds} समुदाय) तक पहुँच चुके हैं। कृपया किसी समुदाय को छोड़ें इससे पहले कि आप किसी अन्य में शामिल हों।"
 
-#: src/components/alerts/MaxGuildsModal.tsx:35
+#: src/components/alerts/MaxGuildsModal.tsx:38
 msgid "You've reached the maximum number of communities you can join ({maxGuilds} community). Please leave a community before joining another one."
 msgstr "आपने शामिल होने के लिए अधिकतम समुदायों की संख्या ({maxGuilds} समुदाय) तक पहुँच चुके हैं। कृपया किसी समुदाय को छोड़ें इससे पहले कि आप किसी अन्य में शामिल हों।"
 

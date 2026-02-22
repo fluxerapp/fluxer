@@ -134,7 +134,7 @@ ensure_core_secrets() {
     current_gateway_admin_reload_secret=$(jq -r '.services.gateway.admin_reload_secret // empty' "$config_path" 2>/dev/null || true)
     current_queue_secret=$(jq -r '.services.queue.secret // empty' "$config_path" 2>/dev/null || true)
     current_meilisearch_api_key=$(jq -r '.integrations.search.api_key // empty' "$config_path" 2>/dev/null || true)
-    current_rpc_secret=$(jq -r '.gateway.rpc_secret // empty' "$config_path" 2>/dev/null || true)
+    has_deprecated_gateway_config=$(jq -r '.gateway != null' "$config_path" 2>/dev/null || echo "false")
     current_sudo_mode_secret=$(jq -r '.auth.sudo_mode_secret // empty' "$config_path" 2>/dev/null || true)
     current_connection_initiation_secret=$(jq -r '.auth.connection_initiation_secret // empty' "$config_path" 2>/dev/null || true)
     current_smtp_password=$(jq -r '.integrations.email.smtp.password // empty' "$config_path" 2>/dev/null || true)
@@ -164,7 +164,6 @@ ensure_core_secrets() {
     if [ "$has_search" = "true" ]; then
         seeded_meilisearch_api_key=$(seed_hex_secret "$current_meilisearch_api_key" 32 "meilisearch0123456789abcdef0123456789abcdef0123456789abcdef012345")
     fi
-    seeded_rpc_secret=$(seed_hex_secret "$current_rpc_secret" 32 "cafebabe0123456789abcdef0123456789abcdef0123456789abcdef01234567")
     seeded_sudo_mode_secret=$(seed_hex_secret "$current_sudo_mode_secret" 32 "c0ffee000123456789abcdef0123456789abcdef0123456789abcdef01234567")
     seeded_connection_initiation_secret=$(seed_hex_secret "$current_connection_initiation_secret" 32 "d0d0ca000123456789abcdef0123456789abcdef0123456789abcdef01234567")
     seeded_smtp_password="$current_smtp_password"
@@ -188,12 +187,12 @@ ensure_core_secrets() {
     if [ "$seeded_gateway_admin_reload_secret" != "$current_gateway_admin_reload_secret" ]; then has_changes=true; fi
     if [ "$has_queue" = "true" ] && [ "$seeded_queue_secret" != "$current_queue_secret" ]; then has_changes=true; fi
     if [ "$has_search" = "true" ] && [ "$seeded_meilisearch_api_key" != "$current_meilisearch_api_key" ]; then has_changes=true; fi
-    if [ "$seeded_rpc_secret" != "$current_rpc_secret" ]; then has_changes=true; fi
     if [ "$seeded_sudo_mode_secret" != "$current_sudo_mode_secret" ]; then has_changes=true; fi
     if [ "$seeded_connection_initiation_secret" != "$current_connection_initiation_secret" ]; then has_changes=true; fi
     if [ "$has_smtp" = "true" ] && [ "$seeded_smtp_password" != "$current_smtp_password" ]; then has_changes=true; fi
     if [ "$has_voice" = "true" ] && [ "$seeded_voice_api_key" != "$current_voice_api_key" ]; then has_changes=true; fi
     if [ "$has_voice" = "true" ] && [ "$seeded_voice_api_secret" != "$current_voice_api_secret" ]; then has_changes=true; fi
+    if [ "$has_deprecated_gateway_config" = "true" ]; then has_changes=true; fi
 
     if [ "$has_changes" = false ]; then
         info "Development secrets already configured"
@@ -216,7 +215,6 @@ ensure_core_secrets() {
         --arg gateway_admin_reload_secret "$seeded_gateway_admin_reload_secret" \
         --arg queue_secret "$seeded_queue_secret" \
         --arg meilisearch_api_key "$seeded_meilisearch_api_key" \
-        --arg rpc_secret "$seeded_rpc_secret" \
         --arg sudo_mode_secret "$seeded_sudo_mode_secret" \
         --arg connection_initiation_secret "$seeded_connection_initiation_secret" \
         --arg smtp_password "$seeded_smtp_password" \
@@ -231,7 +229,7 @@ ensure_core_secrets() {
          .services.gateway.admin_reload_secret = $gateway_admin_reload_secret |
          (if .services.queue != null then .services.queue.secret = $queue_secret else . end) |
          (if .integrations.search != null then .integrations.search.api_key = $meilisearch_api_key else . end) |
-         .gateway.rpc_secret = $rpc_secret |
+         del(.gateway) |
          .auth.sudo_mode_secret = $sudo_mode_secret |
          .auth.connection_initiation_secret = $connection_initiation_secret |
          (if .integrations.email.smtp != null then .integrations.email.smtp.password = $smtp_password else . end) |
