@@ -395,8 +395,7 @@ generate_bluesky_oauth_keys() {
 
     jq --arg kid "dev-key-1" \
        --arg key_path "$key_path" \
-       '.auth.bluesky.enabled = true |
-        .auth.bluesky.logo_uri = "https://fluxerstatic.com/web/apple-touch-icon.png" |
+       '.auth.bluesky.logo_uri = "https://fluxerstatic.com/web/apple-touch-icon.png" |
         .auth.bluesky.tos_uri = "https://fluxer.app/terms" |
         .auth.bluesky.policy_uri = "https://fluxer.app/privacy" |
         .auth.bluesky.token_endpoint_auth_signing_alg = "ES256" |
@@ -407,7 +406,7 @@ generate_bluesky_oauth_keys() {
 
     if [ $? -eq 0 ]; then
         mv "$temp_config" "$config_path"
-        info "Bluesky OAuth configured with dev key (enabled: true)"
+        info "Bluesky OAuth dev key configured"
     else
         error "Failed to update config.json with Bluesky OAuth key"
         rm -f "$temp_config"
