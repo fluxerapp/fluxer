@@ -1,10 +1,9 @@
 [Desktop Entry]
 Name=Fluxer
 Comment=Instant messaging and VoIP application
-Exec=fluxer %U
-Icon=app.fluxer
-Type=Application
-Categories=Network;InstantMessaging;
-StartupWMClass=fluxer
-MimeType=x-scheme-handler/fluxer;
+Exec=app.fluxer.Fluxer %U
 Terminal=false
+Type=Application
+Icon=app.fluxer.Fluxer
+Categories=Network;InstantMessaging;
+StartupWMClass=app.fluxer.Fluxer

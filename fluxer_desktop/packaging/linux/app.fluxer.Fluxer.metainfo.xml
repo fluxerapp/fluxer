@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+    <id>app.fluxer.Fluxer</id>
+    <launchable type="desktop-id">app.fluxer.Fluxer.desktop</launchable>
+    <name>Fluxer</name>
+    <developer id="app.fluxer">
+        <name>Fluxer</name>
+    </developer>
+    <summary>Instant messaging and VoIP application</summary>
+    <metadata_license>CC0-1.0</metadata_license>
+    <project_license>AGPL-3.0-or-later</project_license>
+    <icon type="stock">app.fluxer.Fluxer</icon>
+    <description>
+        <p>Fluxer is a free and open-source instant messaging and voice-over-IP application. It provides text chat, voice calls, video calls, and screen sharing in a modern interface.</p>
+        <p>Features include:</p>
+        <ul>
+            <li>Text messaging with rich formatting and media support</li>
+            <li>Voice and video calls</li>
+            <li>Screen sharing</li>
+            <li>Communities with channels</li>
+            <li>Direct messages and group chats</li>
+            <li>Custom emoji and reactions</li>
+        </ul>
+    </description>
+    <categories>
+        <category>Network</category>
+        <category>InstantMessaging</category>
+    </categories>
+    <branding>
+        <color type="primary">#4641D9</color>
+    </branding>
+    <screenshots>
+        <screenshot type="default">
+            <caption>The main Fluxer window.</caption>
+            <image type="source" width="1920" height="1080">https://fluxerstatic.com/marketing/screenshots/desktop-1920w.avif</image>
+        </screenshot>
+    </screenshots>
+    <releases>
+        <release version="0.0.8" date="2026-02-16"/>
+    </releases>
+    <url type="bugtracker">https://github.com/fluxerapp/fluxer/issues</url>
+    <url type="homepage">https://fluxer.app</url>
+    <url type="donation">https://fluxer.app/donate</url>
+    <url type="vcs-browser">https://github.com/fluxerapp/fluxer.git</url>
+    <update_contact>fen@unix.dog</update_contact>
+    <content_rating type="oars-1.1">
+        <content_attribute id="social-chat">intense</content_attribute>
+        <content_attribute id="social-info">intense</content_attribute>
+        <content_attribute id="social-audio">intense</content_attribute>
+        <content_attribute id="social-contacts">intense</content_attribute>
+    </content_rating>
+    <requires>
+        <internet>always</internet>
+    </requires>
+    <supports>
+        <control>keyboard</control>
+        <control>pointing</control>
+    </supports>
+</component>
