@@ -53,7 +53,7 @@ export const useSubscriptionStatus = (
 	const premiumType =
 		useScenarioOverride || DeveloperOptions.premiumTypeOverride !== null
 			? DeveloperOptions.premiumTypeOverride
-			: (actual?.premium_type ?? currentUser?.premiumType ?? null);
+			: (effective?.premium_type ?? currentUser?.premiumType ?? null);
 	const premiumUntil = useScenarioOverride
 		? DeveloperOptions.premiumUntilOverride
 		: (DeveloperOptions.premiumUntilOverride ??
