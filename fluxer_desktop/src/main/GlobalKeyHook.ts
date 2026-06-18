@@ -209,8 +209,8 @@ function keyEventMatchesRegistration(
 	keybind: Pick<KeybindRegistration, 'keycode' | 'keyName'>,
 	event: Pick<NativeInputEvent, 'keycode' | 'keyName'>,
 ): boolean {
-	if (keybind.keyName !== null) {
-		return keybind.keyName === event.keyName;
+	if (keybind.keyName !== null && event.keyName !== null && keybind.keyName === event.keyName) {
+		return true;
 	}
 	return keybind.keycode !== 0 && keybind.keycode === event.keycode;
 }
@@ -309,7 +309,10 @@ async function startEvdevBackend(): Promise<boolean> {
 	if (!ok || !evdev) {
 		return false;
 	}
-	evdev.on('key', (event: EvdevKeyEvent) => dispatchKeyEvent(event));
+	evdev.on('key', (event: EvdevKeyEvent) => dispatchKeyEvent({
+		...event,
+		keyName: event.keyName ?? keycodeToKeyName(event.keycode ?? 0)
+	}));
 	evdev.on('mouse', (event: EvdevMouseEvent) => dispatchMouseEvent(event));
 	logger.info('Global key hook running on evdev backend (Linux)');
 	return true;
