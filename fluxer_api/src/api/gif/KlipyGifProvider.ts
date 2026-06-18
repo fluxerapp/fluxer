@@ -177,7 +177,7 @@ export class KlipyGifProvider implements IGifProvider {
 	}
 
 	private async fetchKlipyData(url: URL): Promise<unknown> {
-		let lastError: unknown = new Error('KLIPY API request failed');
+		let lastError = new Error('KLIPY API request failed');
 		for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
 			try {
 				const response = await fetch(url.toString(), {
@@ -203,15 +203,13 @@ export class KlipyGifProvider implements IGifProvider {
 				if (error instanceof ServiceUnavailableError) {
 					throw error;
 				}
-				lastError = error;
+				lastError = error instanceof Error ? error : new Error(String(error));
 			}
 			if (attempt < MAX_RETRIES - 1) {
 				await new Promise((resolve) => setTimeout(resolve, BACKOFF_BASE_DELAY * 2 ** attempt));
 			}
 		}
-		throw new ServiceUnavailableError({
-			message: lastError instanceof Error ? lastError.message : 'KLIPY API request failed',
-		});
+		throw new ServiceUnavailableError({message: lastError.message});
 	}
 
 	private async fetchAndTransformGifs(url: URL): Promise<Array<GifResponse>> {
