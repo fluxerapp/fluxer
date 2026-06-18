@@ -85,6 +85,20 @@ export async function getScheduledMessages(
 	return json;
 }
 
+export async function exportScheduledMessagesCalendar(
+	harness: ApiTestHarness,
+	token: string,
+): Promise<{
+	response: Response;
+	text: string;
+}> {
+	const {response, text} = await createBuilder(harness, token)
+		.get('/users/@me/scheduled-messages/calendar.ics')
+		.expect(200)
+		.executeRaw();
+	return {response, text};
+}
+
 export async function getScheduledMessage(
 	harness: ApiTestHarness,
 	scheduledMessageId: string,
@@ -99,6 +113,22 @@ export async function getScheduledMessage(
 		return null;
 	}
 	return json as ScheduledMessageResponse;
+}
+
+export async function exportScheduledMessageCalendar(
+	harness: ApiTestHarness,
+	scheduledMessageId: string,
+	token: string,
+	expectedStatus: 200 | 404 = 200,
+): Promise<{
+	response: Response;
+	text: string;
+}> {
+	const {response, text} = await createBuilder(harness, token)
+		.get(`/users/@me/scheduled-messages/${scheduledMessageId}/calendar.ics`)
+		.expect(expectedStatus)
+		.executeRaw();
+	return {response, text};
 }
 
 export async function cancelScheduledMessage(

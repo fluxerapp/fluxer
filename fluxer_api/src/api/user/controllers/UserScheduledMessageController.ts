@@ -16,6 +16,13 @@ import {OpenAPI} from '../../middleware/ResponseTypeMiddleware';
 import {RateLimitConfigs} from '../../RateLimitConfig';
 import type {HonoApp, HonoEnv} from '../../types/HonoEnv';
 import {Validator} from '../../Validator';
+import {buildScheduledMessagesCalendar} from '../UserCalendarExport';
+
+function sendCalendar(ctx: Context<HonoEnv>, body: string, filename: string) {
+	ctx.header('Content-Type', 'text/calendar; charset=utf-8');
+	ctx.header('Content-Disposition', `attachment; filename="${filename}"`);
+	return ctx.body(body, 200);
+}
 
 export function UserScheduledMessageController(app: HonoApp) {
 	app.get(
@@ -44,6 +51,28 @@ export function UserScheduledMessageController(app: HonoApp) {
 		},
 	);
 	app.get(
+		'/users/@me/scheduled-messages/calendar.ics',
+		RateLimitMiddleware(RateLimitConfigs.USER_SAVED_MESSAGES_READ),
+		LoginRequired,
+		DefaultUserOnly,
+		OpenAPI({
+			operationId: 'export_scheduled_messages_calendar',
+			summary: 'Export scheduled messages as iCalendar',
+			responseSchema: null,
+			statusCode: 200,
+			security: ['bearerToken', 'sessionToken'],
+			tags: ['Users'],
+			description:
+				'Exports scheduled messages for the current user as an iCalendar file that can be imported into external calendar providers.',
+		}),
+		async (ctx: Context<HonoEnv>) => {
+			const userId = ctx.get('user').id;
+			const scheduledMessageService = ctx.get('scheduledMessageService');
+			const scheduledMessages = await scheduledMessageService.listScheduledMessages(userId);
+			return sendCalendar(ctx, buildScheduledMessagesCalendar(scheduledMessages), 'fluxer-scheduled-messages.ics');
+		},
+	);
+	app.get(
 		'/users/@me/scheduled-messages/:scheduled_message_id',
 		RateLimitMiddleware(RateLimitConfigs.USER_SAVED_MESSAGES_READ),
 		LoginRequired,
@@ -68,6 +97,37 @@ export function UserScheduledMessageController(app: HonoApp) {
 				throw new UnknownMessageError();
 			}
 			return ctx.json(scheduledMessage.toResponse(), 200);
+		},
+	);
+	app.get(
+		'/users/@me/scheduled-messages/:scheduled_message_id/calendar.ics',
+		RateLimitMiddleware(RateLimitConfigs.USER_SAVED_MESSAGES_READ),
+		LoginRequired,
+		DefaultUserOnly,
+		Validator('param', ScheduledMessageIdParam),
+		OpenAPI({
+			operationId: 'export_scheduled_message_calendar',
+			summary: 'Export a scheduled message as iCalendar',
+			responseSchema: null,
+			statusCode: 200,
+			security: ['bearerToken', 'sessionToken'],
+			tags: ['Users'],
+			description:
+				'Exports one scheduled message for the current user as an iCalendar file that can be imported into external calendar providers.',
+		}),
+		async (ctx) => {
+			const userId = ctx.get('user').id;
+			const scheduledMessageId = createMessageID(ctx.req.valid('param').scheduled_message_id);
+			const scheduledMessageService = ctx.get('scheduledMessageService');
+			const scheduledMessage = await scheduledMessageService.getScheduledMessage(userId, scheduledMessageId);
+			if (!scheduledMessage) {
+				throw new UnknownMessageError();
+			}
+			return sendCalendar(
+				ctx,
+				buildScheduledMessagesCalendar([scheduledMessage]),
+				`fluxer-scheduled-message-${scheduledMessage.id.toString()}.ics`,
+			);
 		},
 	);
 	app.delete(
