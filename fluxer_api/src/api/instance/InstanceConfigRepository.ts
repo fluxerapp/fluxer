@@ -1232,6 +1232,11 @@ export class InstanceConfigRepository {
 		return integrations.youtube.api_key ?? normalizeSecretString(Config.youtube.apiKey);
 	}
 
+	async getEffectiveKlipyApiKey(): Promise<string | null> {
+		const integrations = await this.getInstanceIntegrationsConfig();
+		return integrations.gif.klipy_api_key ?? normalizeSecretString(Config.klipy.apiKey);
+	}
+
 	async getEffectiveCaptchaConfig(): Promise<InstanceCaptchaEffectiveConfig> {
 		const integrations = await this.getInstanceIntegrationsConfig();
 		const provider = integrations.captcha.provider ?? (Config.captcha.enabled ? Config.captcha.provider : 'none');

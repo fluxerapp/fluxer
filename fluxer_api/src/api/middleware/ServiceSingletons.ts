@@ -357,7 +357,11 @@ const getDefaultUnfurlerService = singleton(() => {
 	void manager.connect().catch((error) => {
 		Logger.error({error}, '[nats-unfurl] Failed to establish NATS connection');
 	});
-	return new NatsUnfurlerService(manager, async () => getInstanceConfigRepository().getEffectiveYoutubeApiKey());
+	return new NatsUnfurlerService(
+		manager,
+		async () => getInstanceConfigRepository().getEffectiveYoutubeApiKey(),
+		async () => getInstanceConfigRepository().getEffectiveKlipyApiKey(),
+	);
 });
 
 export function getUnfurlerService(): IUnfurlerService {
