@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {FLUXER_USER_AGENT} from '@fluxer/constants/src/Core';
+import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
 import type {GifCategoryTagResponse, GifMediaFormat, GifResponse} from '@fluxer/schema/src/domains/gif/GifSchemas';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import {ms} from 'itty-time';
@@ -176,32 +177,41 @@ export class KlipyGifProvider implements IGifProvider {
 	}
 
 	private async fetchKlipyData(url: URL): Promise<unknown> {
+		let lastError: unknown = new Error('KLIPY API request failed');
 		for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
 			try {
 				const response = await fetch(url.toString(), {
 					headers: {'User-Agent': FLUXER_USER_AGENT},
 					signal: AbortSignal.timeout(ms('30 seconds')),
 				});
-				if (!response.ok) {
-					throw new Error(`Failed to fetch KLIPY data: ${response.statusText}`);
+				if (response.ok) {
+					const responseText = await FetchUtils.streamToStringWithLimit(response.body, {
+						maxBytes: EXTERNAL_RESPONSE_LIMITS.klipyApiBytes,
+						headers: response.headers,
+						url: response.url,
+						description: 'KLIPY API response',
+					});
+					return parseJsonUnknown(responseText);
 				}
-				const responseText = await FetchUtils.streamToStringWithLimit(response.body, {
-					maxBytes: EXTERNAL_RESPONSE_LIMITS.klipyApiBytes,
-					headers: response.headers,
-					url: response.url,
-					description: 'KLIPY API response',
-				});
-				return parseJsonUnknown(responseText);
+				if (response.status === 429 || (response.status >= 400 && response.status < 500)) {
+					throw new ServiceUnavailableError({
+						message: `KLIPY API request failed with status ${response.status}`,
+					});
+				}
+				lastError = new Error(`KLIPY API request failed with status ${response.status}`);
 			} catch (error) {
-				if (attempt < MAX_RETRIES - 1) {
-					const delay = BACKOFF_BASE_DELAY * 2 ** attempt;
-					await new Promise((resolve) => setTimeout(resolve, delay));
-				} else {
+				if (error instanceof ServiceUnavailableError) {
 					throw error;
 				}
+				lastError = error;
+			}
+			if (attempt < MAX_RETRIES - 1) {
+				await new Promise((resolve) => setTimeout(resolve, BACKOFF_BASE_DELAY * 2 ** attempt));
 			}
 		}
-		throw new Error('Exceeded maximum retries');
+		throw new ServiceUnavailableError({
+			message: lastError instanceof Error ? lastError.message : 'KLIPY API request failed',
+		});
 	}
 
 	private async fetchAndTransformGifs(url: URL): Promise<Array<GifResponse>> {
