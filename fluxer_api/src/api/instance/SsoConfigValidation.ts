@@ -117,7 +117,8 @@ async function normalizeOptionalSsoUrl(
 		return normalized;
 	}
 	const validUrl = await validateSsoPublicOutboundUrl(normalized, fieldName);
-	return validUrl.toString();
+	const result = validUrl.toString();
+	return fieldName === 'issuer' && result.endsWith('/') ? result.slice(0, -1) : result;
 }
 
 function resolveSsoReadiness(config: SsoConfigValidationInput, isTestProvider: boolean): boolean {
