@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
-import {OKAY_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {GenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModal';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import {msg} from '@lingui/core/macro';
@@ -21,13 +20,9 @@ const YOUR_ACTION_COULD_NOT_BE_COMPLETED_BECAUSE_IT_DESCRIPTOR = msg({
 const ContentBlockedModal = observer(() => {
 	const {i18n} = useLingui();
 	return (
-		<ConfirmModal
+		<GenericErrorModal
 			title={i18n._(CONTENT_BLOCKED_DESCRIPTOR)}
-			description={i18n._(YOUR_ACTION_COULD_NOT_BE_COMPLETED_BECAUSE_IT_DESCRIPTOR)}
-			primaryText={i18n._(OKAY_DESCRIPTOR)}
-			onPrimary={() => {}}
-			secondaryText={false}
-			hideCloseButton
+			message={i18n._(YOUR_ACTION_COULD_NOT_BE_COMPLETED_BECAUSE_IT_DESCRIPTOR)}
 			data-flx="auth.content-blocked-handler.content-blocked-modal.confirm-modal"
 		/>
 	);
