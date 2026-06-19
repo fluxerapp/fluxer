@@ -878,7 +878,7 @@ export class SsoService {
 		};
 	}
 
-	private async validatePublicOutboundUrl(rawUrl: string, fieldName: string): Promise<URL> {
+	private async validatePublicOutboundUrl(rawUrl: string, fieldName: string): Promise<string> {
 		return validateSsoPublicOutboundUrl(rawUrl, fieldName);
 	}
 
@@ -887,9 +887,7 @@ export class SsoService {
 			return null;
 		}
 		try {
-			const validUrl = await this.validatePublicOutboundUrl(rawUrl, fieldName);
-			const normalized = validUrl.toString();
-			return fieldName === 'issuer' && normalized.endsWith('/') ? normalized.slice(0, -1) : normalized;
+			return await this.validatePublicOutboundUrl(rawUrl, fieldName);
 		} catch (error) {
 			this.logger.warn({fieldName, rawUrl, error}, 'Ignoring SSO URL that failed outbound policy validation');
 			return null;
