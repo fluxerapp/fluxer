@@ -159,11 +159,6 @@ Keep these defaults unless you know you need to change them:
           - caddy
         networks:
           - fluxer
-
-    networks:
-      fluxer:
-        external: true
-        name: fluxer_fluxer
     YAML
 
     export CLOUDFLARED_TOKEN='paste-your-tunnel-token-here'
