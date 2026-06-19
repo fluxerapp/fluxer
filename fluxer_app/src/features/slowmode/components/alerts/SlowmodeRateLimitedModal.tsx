@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
+import {GenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModal';
 import {
 	MINUTES_AND_SECONDS_DURATION_DESCRIPTOR,
 	MINUTES_DURATION_PLURAL_DESCRIPTOR,
-	OKAY_DESCRIPTOR,
 	SECONDS_DURATION_PLURAL_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {msg} from '@lingui/core/macro';
@@ -39,13 +38,9 @@ export const SlowmodeRateLimitedModal = observer(({retryAfter}: SlowmodeRateLimi
 		return i18n._(MINUTES_AND_SECONDS_DURATION_DESCRIPTOR, {minutes, seconds: remainingSeconds});
 	};
 	return (
-		<ConfirmModal
+		<GenericErrorModal
 			title={i18n._(SLOWMODE_ACTIVE_DESCRIPTOR)}
-			description={i18n._(SLOWMODE_WAIT_DURATION_DESCRIPTOR, {duration: formatTime(retryAfter)})}
-			primaryText={i18n._(OKAY_DESCRIPTOR)}
-			onPrimary={() => {}}
-			secondaryText={false}
-			hideCloseButton
+			message={i18n._(SLOWMODE_WAIT_DURATION_DESCRIPTOR, {duration: formatTime(retryAfter)})}
 			data-flx="slowmode.slowmode-rate-limited-modal.confirm-modal"
 		/>
 	);

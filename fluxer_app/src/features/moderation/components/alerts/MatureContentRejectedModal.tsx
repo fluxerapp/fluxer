@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
-import {UNDERSTOOD_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {GenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModal';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
@@ -18,13 +17,9 @@ const THIS_CHANNEL_IS_NOT_MARKED_FOR_MATURE_CONTENT_DESCRIPTOR = msg({
 export const MatureContentRejectedModal = observer(() => {
 	const {i18n} = useLingui();
 	return (
-		<ConfirmModal
+		<GenericErrorModal
 			title={i18n._(MATURE_CONTENT_NOT_ALLOWED_DESCRIPTOR)}
-			description={i18n._(THIS_CHANNEL_IS_NOT_MARKED_FOR_MATURE_CONTENT_DESCRIPTOR)}
-			primaryText={i18n._(UNDERSTOOD_DESCRIPTOR)}
-			onPrimary={() => {}}
-			secondaryText={false}
-			hideCloseButton
+			message={i18n._(THIS_CHANNEL_IS_NOT_MARKED_FOR_MATURE_CONTENT_DESCRIPTOR)}
 			data-flx="moderation.mature-content-rejected-modal.confirm-modal"
 		/>
 	);

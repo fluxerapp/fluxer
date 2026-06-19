@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {GenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModal';
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import {GlobalLimits} from '@app/features/app/utils/GlobalLimits';
 import {EmojiListHeader, EmojiListItem} from '@app/features/emoji/components/emojis/EmojiListItem';
@@ -18,7 +19,7 @@ import styles from '@app/features/guild/components/modals/guild_tabs/GuildEmojiT
 import {UploadDropZone} from '@app/features/guild/components/UploadDropZone';
 import {UploadSlotInfo} from '@app/features/guild/components/UploadSlotInfo';
 import Guilds from '@app/features/guild/state/Guilds';
-import {OKAY_DESCRIPTOR, UNDERSTOOD_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {OKAY_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {openFilePicker} from '@app/features/messaging/utils/FilePickerUtils';
 import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
 import Permission from '@app/features/permissions/state/Permission';
@@ -251,11 +252,9 @@ const GuildEmojiTab: React.FC<{guildId: string}> = observer(function GuildEmojiT
 			if (availableSlots <= 0) {
 				ModalCommands.push(
 					modal(() => (
-						<ConfirmModal
+						<GenericErrorModal
 							title={i18n._(NO_EMOJI_SLOTS_AVAILABLE_DESCRIPTOR)}
-							description={i18n._(EMOJI_SLOTS_FULL_DESCRIPTION_DESCRIPTOR)}
-							primaryText={i18n._(UNDERSTOOD_DESCRIPTOR)}
-							onPrimary={() => {}}
+							message={i18n._(EMOJI_SLOTS_FULL_DESCRIPTION_DESCRIPTOR)}
 							data-flx="guild.guild-tabs.guild-emoji-tab.handle-file-select.confirm-modal"
 						/>
 					)),

@@ -186,6 +186,24 @@ describe('Guild Member Management', () => {
 			.expect(HTTP_STATUS.NO_CONTENT)
 			.execute();
 	});
+	test('should ban non-member from guild', async () => {
+		const {owner, guild} = await setupTestGuildWithMembers(harness, 1);
+		const nonMember = await createTestAccount(harness);
+		await createBuilder(harness, owner.token)
+			.put(`/guilds/${guild.id}/bans/${nonMember.userId}`)
+			.body({})
+			.expect(HTTP_STATUS.NO_CONTENT)
+			.execute();
+	});
+	test('should disallow banning nonexistent user from guild', async () => {
+		const {owner, guild} = await setupTestGuildWithMembers(harness, 1);
+		const nonExistentId = '1234567890123456789';
+		await createBuilder(harness, owner.token)
+			.put(`/guilds/${guild.id}/bans/${nonExistentId}`)
+			.body({})
+			.expect(HTTP_STATUS.NOT_FOUND)
+			.execute();
+	});
 	test('should fall back to audit log reason header when ban reason is omitted', async () => {
 		const {owner, members, guild} = await setupTestGuildWithMembers(harness, 1);
 		const member = members[0];
