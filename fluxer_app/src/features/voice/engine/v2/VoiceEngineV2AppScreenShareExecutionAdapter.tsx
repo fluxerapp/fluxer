@@ -2,6 +2,7 @@
 
 import assert from 'node:assert/strict';
 import i18n from '@app/app/I18n';
+import {GenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModal';
 import {SoundType} from '@app/features/notification/utils/SoundUtils';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import * as SoundCommands from '@app/features/ui/commands/SoundCommands';
@@ -100,7 +101,6 @@ import {
 	type TrackPublishOptions,
 	type VideoCodec,
 } from 'livekit-client';
-import {GenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModal';
 
 export type {NativeScreenShareReconnectSnapshot} from '@app/features/voice/engine/v2/VoiceEngineV2AppScreenShareReconnect';
 export type {DeviceScreenShareCaptureOptions} from '@app/features/voice/engine/voice_screen_share_manager/shared';
