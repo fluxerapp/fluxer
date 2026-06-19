@@ -888,7 +888,8 @@ export class SsoService {
 		}
 		try {
 			const validUrl = await this.validatePublicOutboundUrl(rawUrl, fieldName);
-			return validUrl.toString();
+			const normalized = validUrl.toString();
+			return fieldName === 'issuer' && normalized.endsWith('/') ? normalized.slice(0, -1) : normalized;
 		} catch (error) {
 			this.logger.warn({fieldName, rawUrl, error}, 'Ignoring SSO URL that failed outbound policy validation');
 			return null;
