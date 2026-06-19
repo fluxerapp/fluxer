@@ -3,7 +3,7 @@
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
-import { GenericErrorModal } from './GenericErrorModal';
+import {GenericErrorModal} from './GenericErrorModal';
 
 const ROLE_NAME_CANNOT_BE_BLANK_DESCRIPTOR = msg({
 	message: 'Role name is required',
