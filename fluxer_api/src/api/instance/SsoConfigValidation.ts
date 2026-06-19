@@ -86,7 +86,7 @@ export function normalizeSsoAllowedEmailDomains(domains: Array<string>): Array<s
 	return Array.from(normalized);
 }
 
-export async function validateSsoPublicOutboundUrl(rawUrl: string, fieldName: string): Promise<string> {
+export async function validateSsoPublicOutboundUrl(rawUrl: string, fieldName: string): Promise<URL> {
 	let parsedUrl: URL;
 	try {
 		parsedUrl = new URL(rawUrl);
