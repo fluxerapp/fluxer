@@ -21,6 +21,7 @@
     status := status(),
     afk := boolean(),
     mobile := boolean(),
+    activities := [map()],
     pid := pid(),
     mref := reference(),
     socket_pid := pid() | undefined
@@ -39,6 +40,7 @@ handle_session_connect(Request, Pid, State) ->
     Status = normalize_status(maps:get(status, Request, offline)),
     Afk = normalize_boolean(maps:get(afk, Request, false)),
     Mobile = normalize_boolean(maps:get(mobile, Request, false)),
+    Activities = normalize_activities(maps:get(<<"activities">>, Request, [])),
     SocketPid = normalize_socket_pid(maps:get(socket_pid, Request, undefined)),
     Sessions = maps:get(sessions, State),
     case maps:get(SessionId, Sessions, undefined) of
@@ -49,6 +51,7 @@ handle_session_connect(Request, Pid, State) ->
                 status => Status,
                 afk => Afk,
                 mobile => Mobile,
+                activities => Activities,
                 pid => Pid,
                 mref => Ref,
                 socket_pid => SocketPid
@@ -59,7 +62,7 @@ handle_session_connect(Request, Pid, State) ->
             {reply, {ok, SessionsData}, NewState};
         Existing ->
             {UpdatedSession, NewState0} = refresh_existing_session(
-                Existing, Pid, Status, Afk, Mobile, SocketPid, State
+                Existing, Pid, Status, Afk, Mobile, Activities, SocketPid, State
             ),
             NewSessions = Sessions#{SessionId => UpdatedSession},
             NewState = NewState0#{sessions => NewSessions},
@@ -68,15 +71,16 @@ handle_session_connect(Request, Pid, State) ->
     end.
 
 -spec refresh_existing_session(
-    session_entry(), pid(), status(), boolean(), boolean(), pid() | undefined, state()
+    session_entry(), pid(), status(), boolean(), boolean(), [map()], pid() | undefined, state()
 ) -> {session_entry(), state()}.
-refresh_existing_session(Existing, Pid, Status, Afk, Mobile, SocketPid, State) ->
+refresh_existing_session(Existing, Pid, Status, Afk, Mobile, Activities, SocketPid, State) ->
     {Ref, State1} = refresh_monitor(Existing, Pid, State),
     {
         Existing#{
             status => Status,
             afk => Afk,
             mobile => Mobile,
+            activities => Activities,
             pid => Pid,
             mref => Ref,
             socket_pid => SocketPid
@@ -108,8 +112,11 @@ handle_presence_update(Request, State) ->
             Mobile = normalize_boolean(
                 maps:get(mobile, Request, maps:get(mobile, Session, false))
             ),
+            Activities = normalize_activities(
+                maps:get(<<"activities">>, Request, maps:get(activities, Session, []))
+            ),
             handle_session_presence_change(
-                SessionId, Session, Status, Afk, Mobile, Sessions, State
+                SessionId, Session, Status, Afk, Mobile, Activities, Sessions, State
             )
     end.
 
@@ -119,26 +126,28 @@ handle_presence_update(Request, State) ->
     status(),
     boolean(),
     boolean(),
+    [map()],
     sessions(),
     state()
 ) -> {noreply, state()}.
-handle_session_presence_change(SessionId, Session, Status, Afk, Mobile, Sessions, State) ->
-    case session_presence_changed(Session, Status, Afk, Mobile) of
+handle_session_presence_change(SessionId, Session, Status, Afk, Mobile, Activities, Sessions, State) ->
+    case session_presence_changed(Session, Status, Afk, Mobile, Activities) of
         false ->
             {noreply, State};
         true ->
-            UpdatedSession = Session#{status => Status, afk => Afk, mobile => Mobile},
+            UpdatedSession = Session#{status => Status, afk => Afk, mobile => Mobile, activities => Activities},
             NewSessions = Sessions#{SessionId => UpdatedSession},
             NewState = State#{sessions => NewSessions},
             dispatch_sessions_replace(NewState),
             {noreply, NewState}
     end.
 
--spec session_presence_changed(session_entry(), status(), boolean(), boolean()) -> boolean().
-session_presence_changed(Session, Status, Afk, Mobile) ->
+-spec session_presence_changed(session_entry(), status(), boolean(), boolean(), [map()]) -> boolean().
+session_presence_changed(Session, Status, Afk, Mobile, Activities) ->
     maps:get(status, Session) =/= Status orelse
         maps:get(afk, Session, false) =/= Afk orelse
-        maps:get(mobile, Session, false) =/= Mobile.
+        maps:get(mobile, Session, false) =/= Mobile orelse
+        maps:get(activities, Session, []) =/= Activities.
 
 -spec dispatch_sessions_replace(state()) -> ok.
 dispatch_sessions_replace(State) ->
@@ -209,6 +218,12 @@ normalize_boolean(_) -> false.
 -spec normalize_socket_pid(term()) -> pid() | undefined.
 normalize_socket_pid(Pid) when is_pid(Pid) -> Pid;
 normalize_socket_pid(_) -> undefined.
+
+-spec normalize_activities(term()) -> [map()].
+normalize_activities(Activities) when is_list(Activities) ->
+    [Activity || Activity <- Activities, is_map(Activity)];
+normalize_activities(_) ->
+    [].
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
@@ -282,6 +297,44 @@ handle_presence_update_unchanged_session_is_noop_test() ->
             ?assert(false)
     after 50 ->
         ok
+    end.
+
+handle_presence_update_updates_activities_test() ->
+    flush_test_messages(),
+    SessionId = <<"s1">>,
+    Activity = #{<<"type">> => <<"game">>, <<"name">> => <<"Flux Racer">>},
+    State = #{
+        sessions => #{
+            SessionId => #{
+                session_id => SessionId,
+                status => online,
+                afk => false,
+                mobile => false,
+                activities => [],
+                pid => self(),
+                mref => make_ref(),
+                socket_pid => undefined
+            }
+        }
+    },
+    {noreply, NewState} = handle_presence_update(
+        #{
+            session_id => SessionId,
+            status => online,
+            afk => false,
+            mobile => false,
+            <<"activities">> => [Activity]
+        },
+        State
+    ),
+    UpdatedSession = maps:get(SessionId, maps:get(sessions, NewState)),
+    ?assertEqual([Activity], maps:get(activities, UpdatedSession)),
+    receive
+        {'$gen_cast', {dispatch, sessions_replace, SessionsData}} ->
+            AllSession = hd(SessionsData),
+            ?assertEqual([Activity], maps:get(<<"activities">>, AllSession))
+    after 1000 ->
+        ?assert(false)
     end.
 
 handle_session_connect_existing_session_refreshes_status_test() ->

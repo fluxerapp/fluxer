@@ -7,6 +7,7 @@
     get_current_status/1,
     get_flattened_mobile/1,
     get_flattened_afk/1,
+    get_flattened_activities/1,
     collect_sessions_for_replace/1
 ]).
 
@@ -14,8 +15,11 @@
 
 -type session_id() :: binary().
 -type status() :: online | offline | idle | dnd | invisible.
--type session_entry() :: #{status := status(), afk := boolean(), mobile := boolean(), _ => _}.
+-type session_entry() :: #{
+    status := status(), afk := boolean(), mobile := boolean(), activities => [map()], _ => _
+}.
 -type sessions() :: #{session_id() => session_entry()}.
+-define(MAX_FLATTENED_ACTIVITIES, 4).
 
 -spec get_current_status(sessions()) -> status().
 get_current_status(Sessions) ->
@@ -64,6 +68,27 @@ get_flattened_afk(Sessions) ->
         false -> all_sessions_afk(Sessions)
     end.
 
+-spec get_flattened_activities(sessions()) -> [map()].
+get_flattened_activities(Sessions) ->
+    lists:sublist(
+        lists:flatmap(fun session_activities_for_presence/1, maps:values(Sessions)),
+        ?MAX_FLATTENED_ACTIVITIES
+    ).
+
+-spec session_activities_for_presence(session_entry()) -> [map()].
+session_activities_for_presence(Session) ->
+    case maps:get(status, Session, offline) of
+        offline -> [];
+        invisible -> [];
+        _ -> normalize_activities(maps:get(activities, Session, []))
+    end.
+
+-spec normalize_activities(term()) -> [map()].
+normalize_activities(Activities) when is_list(Activities) ->
+    [Activity || Activity <- Activities, is_map(Activity)];
+normalize_activities(_) ->
+    [].
+
 -spec all_sessions_afk(sessions()) -> boolean().
 all_sessions_afk(Sessions) ->
     case maps:size(Sessions) of
@@ -80,12 +105,14 @@ collect_sessions_for_replace(Sessions) ->
     Status = get_current_status(Sessions),
     Mobile = get_flattened_mobile(Sessions),
     Afk = get_flattened_afk(Sessions),
+    Activities = get_flattened_activities(Sessions),
     BaseSessions = [
         #{
             <<"session_id">> => <<"all">>,
             <<"status">> => constants:status_type_atom(Status),
             <<"mobile">> => Mobile,
-            <<"afk">> => Afk
+            <<"afk">> => Afk,
+            <<"activities">> => Activities
         }
     ],
     SessionEntries = maps:fold(
@@ -95,7 +122,8 @@ collect_sessions_for_replace(Sessions) ->
                     <<"session_id">> => SessionId,
                     <<"status">> => constants:status_type_atom(maps:get(status, Session)),
                     <<"afk">> => maps:get(afk, Session, false),
-                    <<"mobile">> => maps:get(mobile, Session, false)
+                    <<"mobile">> => maps:get(mobile, Session, false),
+                    <<"activities">> => maps:get(activities, Session, [])
                 }
                 | Acc
             ]
@@ -195,6 +223,15 @@ get_flattened_afk_mobile_overrides_test() ->
 
 get_flattened_afk_empty_test() ->
     ?assertEqual(false, get_flattened_afk(#{})).
+
+get_flattened_activities_visible_sessions_test() ->
+    Game = #{<<"type">> => <<"game">>, <<"name">> => <<"Flux Racer">>},
+    Music = #{<<"type">> => <<"music">>, <<"name">> => <<"Playlist">>},
+    Sessions = #{
+        <<"s1">> => #{status => online, afk => false, mobile => false, activities => [Game]},
+        <<"s2">> => #{status => invisible, afk => false, mobile => false, activities => [Music]}
+    },
+    ?assertEqual([Game], get_flattened_activities(Sessions)).
 
 collect_sessions_for_replace_test() ->
     Sessions = #{

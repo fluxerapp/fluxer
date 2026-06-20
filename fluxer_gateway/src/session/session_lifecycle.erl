@@ -441,8 +441,10 @@ handle_presence_update_cast(Update, State) ->
     NewStatus = maps:get(status, Update, Status),
     NewAfk = maps:get(afk, Update, Afk),
     NewMobile = maps:get(mobile, Update, Mobile),
+    NewActivities = normalize_activities(maps:get(<<"activities">>, Update, maps:get(activities, State, []))),
     NewState = maybe_update_resume_status(
-        NewStatus, State#{status => NewStatus, afk => NewAfk, mobile => NewMobile}
+        NewStatus,
+        State#{status => NewStatus, afk => NewAfk, mobile => NewMobile, activities => NewActivities}
     ),
     send_presence_update(State, SessionId, NewStatus, NewAfk, NewMobile, Update),
     {noreply, NewState}.
@@ -468,8 +470,19 @@ send_presence_update(#{presence_pid := Pid}, SessionId, NewStatus, NewAfk, NewMo
             {ok, CS} -> BaseMsg#{<<"custom_status">> => CS};
             error -> BaseMsg
         end,
-    gen_server:cast(Pid, {presence_update, Msg}),
+    MsgWithActivities =
+        case maps:find(<<"activities">>, Update) of
+            {ok, Activities} -> Msg#{<<"activities">> => Activities};
+            error -> Msg
+        end,
+    gen_server:cast(Pid, {presence_update, MsgWithActivities}),
     ok.
+
+-spec normalize_activities(term()) -> [map()].
+normalize_activities(Activities) when is_list(Activities) ->
+    [Activity || Activity <- Activities, is_map(Activity)];
+normalize_activities(_) ->
+    [].
 
 -spec handle_initial_global_presences([map()], session_state()) -> {noreply, session_state()}.
 handle_initial_global_presences(Presences, State) ->
@@ -500,6 +513,7 @@ serialize_state(State) ->
         resume_status => maps:get(resume_status, State, maps:get(status, State)),
         afk => maps:get(afk, State),
         mobile => maps:get(mobile, State),
+        activities => maps:get(activities, State, []),
         buffer => maps:get(buffer, State),
         ready => maps:get(ready, State),
         bot => maps:get(bot, State, false),
@@ -532,6 +546,7 @@ serialize_transfer_identity(State) ->
         resume_status => maps:get(resume_status, State, maps:get(status, State)),
         afk => maps:get(afk, State),
         mobile => maps:get(mobile, State),
+        activities => maps:get(activities, State, []),
         socket_pid => undefined,
         guilds => session_init:normalize_guild_ids(maps:keys(maps:get(guilds, State, #{}))),
         ready => maps:get(ready, State),

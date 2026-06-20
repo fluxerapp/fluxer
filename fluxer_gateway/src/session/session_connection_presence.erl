@@ -58,7 +58,8 @@ build_presence_request(State) when is_map(State) ->
         status => maps:get(status, State),
         friend_ids => FriendIds,
         group_dm_recipients => DmRecipients,
-        custom_status => maps:get(custom_status, State, null)
+        custom_status => maps:get(custom_status, State, null),
+        <<"activities">> => maps:get(activities, State, [])
     }.
 
 -spec do_session_connect(pid(), attempt(), session_state()) ->
@@ -68,6 +69,7 @@ do_session_connect(Pid, Attempt, State) when is_map(State) ->
     Status = maps:get(status, State),
     Afk = maps:get(afk, State),
     Mobile = maps:get(mobile, State),
+    Activities = maps:get(activities, State, []),
     SocketPid = maps:get(socket_pid, State, undefined),
     FriendIds = presence_targets:friend_ids_from_state(State),
     DmRecipients = presence_targets:dm_recipients_from_state(State),
@@ -113,6 +115,7 @@ try_session_connect(
         status => Status,
         afk => Afk,
         mobile => Mobile,
+        <<"activities">> => Activities,
         socket_pid => SocketPid
     },
     ConnectStartedAt = gateway_timings:start(),

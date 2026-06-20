@@ -292,6 +292,41 @@ validate_presence_data_valid_test() ->
     {ok, Result} = gateway_handler_dispatch:validate_presence_data(Data),
     ?assertEqual(online, maps:get(status, Result)).
 
+validate_presence_data_activities_test() ->
+    Data = #{
+        <<"status">> => <<"online">>,
+        <<"activities">> => [
+            #{
+                <<"type">> => <<"game">>,
+                <<"name">> => <<"Flux Racer">>,
+                <<"state">> => <<"In match">>,
+                <<"details">> => <<"Ranked">>,
+                <<"started_at">> => 123
+            },
+            #{<<"type">> => <<"invalid">>, <<"name">> => <<"Dropped">>},
+            #{<<"type">> => <<"music">>, <<"name">> => <<"Playlist">>}
+        ]
+    },
+    {ok, Result} = gateway_handler_dispatch:validate_presence_data(Data),
+    ?assertEqual(
+        [
+            #{
+                <<"type">> => <<"game">>,
+                <<"name">> => <<"Flux Racer">>,
+                <<"state">> => <<"In match">>,
+                <<"details">> => <<"Ranked">>,
+                <<"started_at">> => 123
+            },
+            #{<<"type">> => <<"music">>, <<"name">> => <<"Playlist">>}
+        ],
+        maps:get(<<"activities">>, Result)
+    ).
+
+validate_presence_data_invalid_activities_clear_test() ->
+    Data = #{<<"status">> => <<"online">>, <<"activities">> => null},
+    {ok, Result} = gateway_handler_dispatch:validate_presence_data(Data),
+    ?assertEqual([], maps:get(<<"activities">>, Result)).
+
 validate_presence_data_missing_status_test() ->
     ?assertEqual(
         {error, invalid_presence},

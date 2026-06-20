@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {AccountPresenceIntent} from '@app/features/auth/state/AccountStorage';
+import type {GatewayPresenceActivity} from '@app/features/gateway/types/GatewayPresenceTypes';
 import {deferUntilModulesLoaded} from '@app/features/platform/utils/DeferUntilModulesLoaded';
 import Idle from '@app/features/ui/state/Idle';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
@@ -16,6 +17,7 @@ type Presence = Readonly<{
 	afk: boolean;
 	mobile: boolean;
 	custom_status: GatewayCustomStatusPayload | null;
+	activities: ReadonlyArray<GatewayPresenceActivity>;
 }>;
 
 export const ACCOUNT_PRESENCE_INTENT_MAX_AGE_MS = 60 * 1000;
@@ -42,6 +44,7 @@ class LocalPresence {
 	afk: boolean = false;
 	mobile: boolean = false;
 	customStatus: CustomStatus | null = null;
+	activities: Array<GatewayPresenceActivity> = [];
 	private restoredIntent: AccountPresenceIntent | null = null;
 
 	constructor() {
@@ -93,6 +96,7 @@ class LocalPresence {
 			afk: this.afk,
 			mobile: this.mobile,
 			custom_status: toGatewayCustomStatus(this.customStatus),
+			activities: this.activities,
 		};
 	}
 
@@ -131,11 +135,17 @@ class LocalPresence {
 		this.updatePresence();
 	}
 
+	setActivities(activities: ReadonlyArray<GatewayPresenceActivity>): void {
+		const normalized = this.normalizeActivities(activities);
+		if (this.activitiesKey(this.activities) === this.activitiesKey(normalized)) return;
+		this.activities = normalized;
+	}
+
 	get presenceKey(): string {
 		const hydrated = userSettings?.isHydrated() ? '1' : '0';
 		const afk = this.afk ? '1' : '0';
 		const mobile = this.mobile ? '1' : '0';
-		return `hydrated:${hydrated}|${this.status}|${customStatusToKey(this.customStatus)}|afk:${afk}|mobile:${mobile}`;
+		return `hydrated:${hydrated}|${this.status}|${customStatusToKey(this.customStatus)}|afk:${afk}|mobile:${mobile}|activities:${this.activitiesKey(this.activities)}`;
 	}
 
 	private computeAfk(idleSince: number, isMobile: boolean, settings: LocalPresenceUserSettings | null): boolean {
@@ -183,6 +193,27 @@ class LocalPresence {
 			return null;
 		}
 		return normalizeStatus(status);
+	}
+
+	private normalizeActivities(activities: ReadonlyArray<GatewayPresenceActivity>): Array<GatewayPresenceActivity> {
+		return activities
+			.filter((activity) => activity.name.trim().length > 0)
+			.slice(0, 4)
+			.map((activity) => ({...activity}));
+	}
+
+	private activitiesKey(activities: ReadonlyArray<GatewayPresenceActivity>): string {
+		return activities
+			.map((activity) =>
+				[
+					activity.type,
+					activity.name,
+					activity.state ?? '',
+					activity.details ?? '',
+					activity.started_at?.toString() ?? '',
+				].join(':'),
+			)
+			.join('|');
 	}
 }
 

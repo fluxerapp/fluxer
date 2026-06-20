@@ -28,6 +28,8 @@
 
 -define(REQUEST_WORKER_TIMEOUT_MS, 10000).
 -define(MAX_REQUEST_WORKERS, 4).
+-define(MAX_PRESENCE_ACTIVITIES, 4).
+-define(MAX_PRESENCE_ACTIVITY_TEXT_BYTES, 128).
 
 -type request_worker_type() ::
     request_guild_members | request_guild_counts | request_channel_member_counts | lazy_request.
@@ -210,7 +212,7 @@ parse_presence_status(StatusRaw, Data) ->
         Afk = presence_boolean(<<"afk">>, Data),
         Mobile = presence_boolean(<<"mobile">>, Data),
         Base = #{status => AdjustedStatus, afk => Afk, mobile => Mobile},
-        Result = maybe_add_custom_status(Base, Data),
+        Result = maybe_add_activities(maybe_add_custom_status(Base, Data), Data),
         {ok, Result}
     catch
         error:function_clause -> {error, invalid_presence}
@@ -229,6 +231,79 @@ maybe_add_custom_status(Base, Data) ->
         {ok, CS} -> Base#{<<"custom_status">> => CS};
         error -> Base
     end.
+
+-spec maybe_add_activities(map(), map()) -> map().
+maybe_add_activities(Base, Data) ->
+    case maps:find(<<"activities">>, Data) of
+        {ok, Activities} when is_list(Activities) ->
+            Base#{<<"activities">> => normalize_presence_activities(Activities)};
+        {ok, null} ->
+            Base#{<<"activities">> => []};
+        _ ->
+            Base
+    end.
+
+-spec normalize_presence_activities([term()]) -> [map()].
+normalize_presence_activities(Activities) ->
+    lists:sublist(
+        [Activity || {ok, Activity} <- [normalize_presence_activity(Item) || Item <- Activities]],
+        ?MAX_PRESENCE_ACTIVITIES
+    ).
+
+-spec normalize_presence_activity(term()) -> {ok, map()} | error.
+normalize_presence_activity(Activity) when is_map(Activity) ->
+    Type = normalize_activity_type(maps:get(<<"type">>, Activity, undefined)),
+    Name = normalize_activity_text(maps:get(<<"name">>, Activity, undefined)),
+    case {Type, Name} of
+        {Type, Name} when is_binary(Type), is_binary(Name) ->
+            {ok,
+                maybe_put_activity_integer(
+                    <<"started_at">>,
+                    maps:get(<<"started_at">>, Activity, undefined),
+                    maybe_put_activity_text(
+                        <<"details">>,
+                        maps:get(<<"details">>, Activity, undefined),
+                        maybe_put_activity_text(
+                            <<"state">>, maps:get(<<"state">>, Activity, undefined), #{
+                                <<"type">> => Type, <<"name">> => Name
+                            }
+                        )
+                    )
+                )};
+        _ ->
+            error
+    end;
+normalize_presence_activity(_) ->
+    error.
+
+-spec normalize_activity_type(term()) -> binary() | undefined.
+normalize_activity_type(<<"game">>) -> <<"game">>;
+normalize_activity_type(<<"music">>) -> <<"music">>;
+normalize_activity_type(<<"software">>) -> <<"software">>;
+normalize_activity_type(_) -> undefined.
+
+-spec normalize_activity_text(term()) -> binary() | undefined.
+normalize_activity_text(Value) when
+    is_binary(Value),
+    Value =/= <<>>,
+    byte_size(Value) =< ?MAX_PRESENCE_ACTIVITY_TEXT_BYTES
+->
+    Value;
+normalize_activity_text(_) ->
+    undefined.
+
+-spec maybe_put_activity_text(binary(), term(), map()) -> map().
+maybe_put_activity_text(Key, Value, Activity) ->
+    case normalize_activity_text(Value) of
+        Text when is_binary(Text) -> Activity#{Key => Text};
+        undefined -> Activity
+    end.
+
+-spec maybe_put_activity_integer(binary(), term(), map()) -> map().
+maybe_put_activity_integer(Key, Value, Activity) when is_integer(Value), Value >= 0 ->
+    Activity#{Key => Value};
+maybe_put_activity_integer(_Key, _Value, Activity) ->
+    Activity.
 
 -spec adjust_status(atom()) -> atom().
 adjust_status(offline) -> invisible;

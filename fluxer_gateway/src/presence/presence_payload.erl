@@ -3,22 +3,23 @@
 -module(presence_payload).
 -typing([eqwalizer]).
 
--export([build/5]).
+-export([build/6]).
 
 -export_type([status/0, custom_status/0]).
 
 -type status() :: online | offline | idle | dnd | invisible | binary().
 -type custom_status() :: map() | null.
 
--spec build(map(), status(), boolean(), boolean(), custom_status()) -> map().
-build(UserData, Status, Mobile, Afk, CustomStatus) ->
+-spec build(map(), status(), boolean(), boolean(), custom_status(), [map()]) -> map().
+build(UserData, Status, Mobile, Afk, CustomStatus, Activities) ->
     StatusBin = ensure_status_binary(Status),
     #{
         <<"user">> => user_utils:normalize_user(UserData),
         <<"status">> => StatusBin,
         <<"mobile">> => Mobile,
         <<"afk">> => Afk,
-        <<"custom_status">> => custom_status_for(StatusBin, CustomStatus)
+        <<"custom_status">> => custom_status_for(StatusBin, CustomStatus),
+        <<"activities">> => activities_for(StatusBin, Activities)
     }.
 
 -spec ensure_status_binary(term()) -> binary().
@@ -40,6 +41,14 @@ custom_status_for(_StatusBin, CustomStatus) -> normalize_custom_status(CustomSta
 normalize_custom_status(null) -> null;
 normalize_custom_status(CustomStatus) when is_map(CustomStatus) -> CustomStatus;
 normalize_custom_status(_) -> null.
+
+-spec activities_for(binary(), term()) -> [map()].
+activities_for(<<"offline">>, _Activities) -> [];
+activities_for(<<"invisible">>, _Activities) -> [];
+activities_for(_StatusBin, Activities) when is_list(Activities) ->
+    [Activity || Activity <- Activities, is_map(Activity)];
+activities_for(_StatusBin, _Activities) ->
+    [].
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
@@ -74,6 +83,10 @@ custom_status_for_invisible_test() ->
 custom_status_for_null_test() ->
     ?assertEqual(null, custom_status_for(<<"online">>, null)).
 
+activities_for_visible_test() ->
+    Activity = #{<<"type">> => <<"game">>, <<"name">> => <<"Flux Racer">>},
+    ?assertEqual([Activity], activities_for(<<"online">>, [Activity])).
+
 normalize_custom_status_test() ->
     ?assertEqual(null, normalize_custom_status(null)),
     ?assertEqual(#{<<"text">> => <<"hi">>}, normalize_custom_status(#{<<"text">> => <<"hi">>})),
@@ -83,14 +96,16 @@ normalize_custom_status_test() ->
 build_invisible_atom_normalized_to_offline_test() ->
     User = #{<<"id">> => <<"1">>, <<"username">> => <<"Test">>},
     CustomStatus = #{<<"text">> => <<"hello">>},
-    Result = build(User, invisible, false, false, CustomStatus),
+    Result = build(User, invisible, false, false, CustomStatus, [#{<<"name">> => <<"Game">>}]),
     ?assertEqual(<<"offline">>, maps:get(<<"status">>, Result)),
-    ?assertEqual(null, maps:get(<<"custom_status">>, Result)).
+    ?assertEqual(null, maps:get(<<"custom_status">>, Result)),
+    ?assertEqual([], maps:get(<<"activities">>, Result)).
 
 build_invisible_binary_normalized_to_offline_test() ->
     User = #{<<"id">> => <<"1">>, <<"username">> => <<"Test">>},
     CustomStatus = #{<<"text">> => <<"hello">>},
-    Result = build(User, <<"invisible">>, false, false, CustomStatus),
+    Result = build(User, <<"invisible">>, false, false, CustomStatus, [#{<<"name">> => <<"Game">>}]),
     ?assertEqual(<<"offline">>, maps:get(<<"status">>, Result)),
-    ?assertEqual(null, maps:get(<<"custom_status">>, Result)).
+    ?assertEqual(null, maps:get(<<"custom_status">>, Result)),
+    ?assertEqual([], maps:get(<<"activities">>, Result)).
 -endif.

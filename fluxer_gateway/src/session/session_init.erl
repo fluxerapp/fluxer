@@ -201,6 +201,7 @@ extract_core_fields(
         resume_status => maps:get(resume_status, D, Status),
         afk => maps:get(afk, D, false),
         mobile => maps:get(mobile, D, false),
+        activities => normalize_activities(maps:get(activities, D, [])),
         presence_pid => undefined,
         presence_mref => undefined,
         socket_pid => SocketPid,
@@ -217,6 +218,12 @@ extract_core_fields(
         is_staff => IsStaff,
         e2ee_capable => maps:get(e2ee_capable, D, false)
     }.
+
+-spec normalize_activities(term()) -> [map()].
+normalize_activities(Activities) when is_list(Activities) ->
+    [Activity || Activity <- Activities, is_map(Activity)];
+normalize_activities(_) ->
+    [].
 
 -spec extract_extra_fields(map(), map() | undefined) -> map().
 extract_extra_fields(D, Ready) ->

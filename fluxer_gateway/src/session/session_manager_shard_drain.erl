@@ -22,6 +22,8 @@
 
 -define(IDENTIFY_FLAG_DEBOUNCE_MESSAGE_REACTIONS, 16#2).
 -define(SESSION_RPC_RETRY_CONFIG, {1, 1000, 10000, 500}).
+-define(MAX_PRESENCE_ACTIVITIES, 4).
+-define(MAX_PRESENCE_ACTIVITY_TEXT_BYTES, 128).
 
 -type session_id() :: binary().
 -type session_ref() :: {pid(), reference()}.
@@ -186,6 +188,7 @@ build_session_data(Data, IdentifyData, Version, SocketPid, SessionId, UserDataMa
         status => session_manager_shard_lookup:parse_presence(Data, IdentifyData),
         afk => extract_afk(Presence),
         mobile => extract_mobile(Presence, Properties),
+        activities => extract_activities(Presence),
         socket_pid => SocketPid,
         guilds => filter_guild_ids_for_identify(Data, IdentifyData),
         ready => build_ready_data_for_session(Data),
@@ -272,6 +275,77 @@ extract_afk(P) when is_map(P) ->
     is_truthy(map_utils:get_safe(P, <<"afk">>, false));
 extract_afk(_) ->
     false.
+
+-spec extract_activities(term()) -> [map()].
+extract_activities(Presence) when is_map(Presence) ->
+    case map_utils:get_safe(Presence, <<"activities">>, []) of
+        Activities when is_list(Activities) -> normalize_activities(Activities);
+        _ -> []
+    end;
+extract_activities(_) ->
+    [].
+
+-spec normalize_activities([term()]) -> [map()].
+normalize_activities(Activities) ->
+    lists:sublist(
+        [Activity || {ok, Activity} <- [normalize_activity(Item) || Item <- Activities]],
+        ?MAX_PRESENCE_ACTIVITIES
+    ).
+
+-spec normalize_activity(term()) -> {ok, map()} | error.
+normalize_activity(Activity) when is_map(Activity) ->
+    Type = normalize_activity_type(map_utils:get_safe(Activity, <<"type">>, undefined)),
+    Name = normalize_activity_text(map_utils:get_safe(Activity, <<"name">>, undefined)),
+    case {Type, Name} of
+        {Type, Name} when is_binary(Type), is_binary(Name) ->
+            {ok,
+                maybe_put_activity_integer(
+                    <<"started_at">>,
+                    map_utils:get_safe(Activity, <<"started_at">>, undefined),
+                    maybe_put_activity_text(
+                        <<"details">>,
+                        map_utils:get_safe(Activity, <<"details">>, undefined),
+                        maybe_put_activity_text(
+                            <<"state">>, map_utils:get_safe(Activity, <<"state">>, undefined), #{
+                                <<"type">> => Type, <<"name">> => Name
+                            }
+                        )
+                    )
+                )};
+        _ ->
+            error
+    end;
+normalize_activity(_) ->
+    error.
+
+-spec normalize_activity_type(term()) -> binary() | undefined.
+normalize_activity_type(<<"game">>) -> <<"game">>;
+normalize_activity_type(<<"music">>) -> <<"music">>;
+normalize_activity_type(<<"software">>) -> <<"software">>;
+normalize_activity_type(_) -> undefined.
+
+-spec normalize_activity_text(term()) -> binary() | undefined.
+normalize_activity_text(Value) when
+    is_binary(Value),
+    Value =/= <<>>,
+    byte_size(Value) =< ?MAX_PRESENCE_ACTIVITY_TEXT_BYTES
+->
+    Value;
+normalize_activity_text(_) ->
+    undefined.
+
+-spec maybe_put_activity_text(binary(), term(), map()) -> map().
+maybe_put_activity_text(Key, Value, Activity) ->
+    case normalize_activity_text(Value) of
+        Text when is_binary(Text) -> Activity#{Key => Text};
+        undefined -> Activity
+    end.
+
+-spec maybe_put_activity_integer(binary(), term(), map()) -> map().
+maybe_put_activity_integer(Key, Value, Activity) when is_integer(Value), Value >= 0 ->
+    Activity#{Key => Value};
+maybe_put_activity_integer(_Key, _Value, Activity) ->
+    Activity.
 
 -spec is_truthy(term()) -> boolean().
 is_truthy(true) -> true;

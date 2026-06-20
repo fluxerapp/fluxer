@@ -40,6 +40,7 @@
     resume_status => status(),
     afk => boolean(),
     mobile => boolean(),
+    activities => [map()],
     presence_pid => pid() | undefined,
     presence_mref => reference() | undefined,
     socket_pid => pid() | undefined,

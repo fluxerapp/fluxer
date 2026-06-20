@@ -32,7 +32,8 @@ default_presence() ->
     #{
         <<"status">> => <<"offline">>,
         <<"mobile">> => false,
-        <<"afk">> => false
+        <<"afk">> => false,
+        <<"activities">> => []
     }.
 
 -spec resolve_presence_for_user(guild_state(), user_id()) -> map().
