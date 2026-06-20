@@ -45,41 +45,23 @@ function parseListeningDetailsTitle(details: string, state?: string): string | n
 	return trimmed;
 }
 
-export function shouldUseAppNameForListeningName(
-	appName: string,
-	activityName: string,
-	details?: string,
-	state?: string,
-): boolean {
-	const name = activityName.trim();
-	if (!name || name === appName) return false;
-	const normalizedState = state?.trim();
-	if (normalizedState && name.localeCompare(normalizedState, undefined, {sensitivity: 'accent'}) === 0) {
-		return true;
-	}
-	const detailsText = details?.trim();
-	if (!detailsText) return false;
-	const title = parseListeningDetailsTitle(detailsText, normalizedState);
-	if (title && name.localeCompare(title, undefined, {sensitivity: 'accent'}) === 0) {
-		return true;
-	}
-	return detailsText.includes(name);
+function isUnknownActivityName(name: string | undefined): boolean {
+	return name?.trim().localeCompare('unknown', undefined, {sensitivity: 'accent'}) === 0;
 }
 
-export function resolveListeningActivityName(
+export function resolveRpcActivityName(
 	appName: string,
 	rawName: string | undefined,
 	details: string | undefined,
 	state: string | undefined,
-	type: number,
 ): string {
 	const fallbackName = appName.trim() || 'Unknown';
-	const name = rawName?.trim() || fallbackName;
-	if (type !== 2) return name || fallbackName;
-	if (shouldUseAppNameForListeningName(fallbackName, name, details, state)) {
-		return fallbackName;
-	}
-	return name || fallbackName;
+	const name = rawName?.trim();
+	if (name && !isUnknownActivityName(name)) return name;
+	const normalizedState = state?.trim();
+	const detailsText = details?.trim();
+	const title = detailsText ? parseListeningDetailsTitle(detailsText, normalizedState) : null;
+	return title ?? detailsText ?? normalizedState ?? fallbackName;
 }
 
 export function encodeIpcMessage(type: number, data: unknown): Buffer {

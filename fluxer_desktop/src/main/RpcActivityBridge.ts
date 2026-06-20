@@ -4,6 +4,7 @@ import {getMainWindow} from '@electron/main/Window';
 import {getConnectedIpcClientCount, onRpcActivity} from '@electron/main/ArRpcServer';
 import {loadDetectableApplications, resolveByClientId} from '@electron/main/DetectableApplications';
 import {startLinuxProcessScanner, stopLinuxProcessScanner} from '@electron/main/LinuxProcessScanner';
+import {resolveMprisCoverArtUrl} from '@electron/main/MprisCoverArt';
 import {resolveRpcActivityAssetsForDisplay, sanitizeRpcActivityAssetsForGateway} from '@electron/main/RpcCoverArt';
 import type {RpcActivityUpdatePayload} from '@electron/common/RpcActivityTypes';
 import type {RpcActivityPayload} from '@electron/main/rpc/RpcTypes';
@@ -62,24 +63,30 @@ export function startRpcActivityBridge(): void {
 		log.info('[RPC] Process scanner enabled (FLUXER_RPC_PROCESS_SCAN=1)');
 	}
 	unsubscribe = onRpcActivity((activity, pid, source = 'ipc') => {
-		if (source !== 'ipc') {
+		const payloadSource: RpcActivityUpdatePayload['source'] = source === 'process-scan' ? 'process-scan' : 'ipc';
+		if (payloadSource !== 'ipc') {
 			return;
 		}
-		if (activity === null && hasConnectedIpcClients()) {
+		if (activity === null && source === 'ipc-disconnect' && hasConnectedIpcClients()) {
 			return;
 		}
 		void (async () => {
 			let displayActivity = activity;
 			let gatewayActivity = activity;
 			if (activity?.assets) {
-				const displayAssets = await resolveRpcActivityAssetsForDisplay(activity.assets);
+				const mprisCoverArt = await resolveMprisCoverArtUrl(activity);
+				const displaySourceAssets =
+					mprisCoverArt && mprisCoverArt !== activity.assets.large_image
+						? {...activity.assets, large_image: mprisCoverArt}
+						: activity.assets;
+				const displayAssets = await resolveRpcActivityAssetsForDisplay(displaySourceAssets);
 				const gatewayAssets = sanitizeRpcActivityAssetsForGateway(activity.assets);
 				displayActivity =
 					displayAssets !== activity.assets ? {...activity, assets: displayAssets} : activity;
 				gatewayActivity =
 					gatewayAssets !== activity.assets ? {...activity, assets: gatewayAssets} : activity;
 			}
-			const payload = toUpdatePayload(displayActivity, pid, source, gatewayActivity);
+			const payload = toUpdatePayload(displayActivity, pid, payloadSource, gatewayActivity);
 			log.info('[RPC] Forwarding activity update', {
 				name: payload.activity?.name ?? null,
 				source: payload.source,

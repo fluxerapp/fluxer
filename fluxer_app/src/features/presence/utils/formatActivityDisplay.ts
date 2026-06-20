@@ -9,6 +9,14 @@ export interface ActivityDisplayLines {
 	secondary: string | null;
 }
 
+function prefersDetailsFirst(activity: UserActivity): boolean {
+	return activity.status_display_type === 1;
+}
+
+function prefersStateFirst(activity: UserActivity): boolean {
+	return activity.status_display_type === 2;
+}
+
 function normalize(value: string | undefined): string | null {
 	if (!value) return null;
 	const trimmed = value.trim();
@@ -103,10 +111,18 @@ function formatListeningActivity(activity: UserActivity): ActivityDisplayLines {
 }
 
 function formatDefaultActivity(activity: UserActivity): ActivityDisplayLines {
-	const primary = normalize(activity.details) ?? normalize(activity.name) ?? 'Unknown';
 	const name = normalize(activity.name);
+	const details = normalize(activity.details);
 	const state = normalize(activity.state);
-	const secondary = dedupeLine(state, primary) ?? dedupeLine(name, primary);
+	let primary = details ?? name ?? 'Unknown';
+	let secondary = dedupeLine(state, primary) ?? dedupeLine(name, primary);
+	if (prefersStateFirst(activity) && state) {
+		primary = state;
+		secondary = dedupeLine(details, primary) ?? dedupeLine(name, primary);
+	} else if (prefersDetailsFirst(activity) && details) {
+		primary = details;
+		secondary = dedupeLine(state, primary) ?? dedupeLine(name, primary);
+	}
 	return {headerSuffix: null, listeningSource: null, primary, secondary};
 }
 
@@ -139,6 +155,8 @@ export function formatActivityMemberListLine(activity: UserActivity): ActivityMe
 			const state = normalize(activity.state);
 			const details = normalize(activity.details);
 			const name = normalize(activity.name);
+			if (prefersDetailsFirst(activity) && details) return {kind: 'playing', text: details};
+			if (prefersStateFirst(activity) && state) return {kind: 'playing', text: state};
 			if (state) return {kind: 'playing', text: state};
 			if (details) return {kind: 'playing', text: details};
 			return {kind: 'playing', text: name ?? display.primary};

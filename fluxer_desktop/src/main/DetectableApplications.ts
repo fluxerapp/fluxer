@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {app} from 'electron';
 import log from 'electron-log';
-import {DISCORD_CDN_HOST, EXECUTABLE_EXACT_MATCH_PREFIX} from '@electron/main/rpc/RpcConstants';
+import {EXECUTABLE_EXACT_MATCH_PREFIX} from '@electron/main/rpc/RpcConstants';
 import type {DetectableApp, DetectableExecutable} from '@electron/main/rpc/RpcTypes';
 
 export interface ResolvedApplication {
@@ -16,14 +16,14 @@ export interface ResolvedApplication {
 interface FluxerDetectableRecord {
 	name: string;
 	url?: string;
-	aliases?: string[];
-	executables?: DetectableExecutable[];
+	aliases?: Array<string>;
+	executables?: Array<DetectableExecutable>;
 	client_id?: string;
 }
 
-let detectableDb: DetectableApp[] = [];
+let detectableDb: Array<DetectableApp> = [];
 const clientIdIndex = new Map<string, DetectableApp>();
-const executableIndex = new Map<string, DetectableApp[]>();
+const executableIndex = new Map<string, Array<DetectableApp>>();
 let loaded = false;
 let syncPromise: Promise<void> | null = null;
 
@@ -96,9 +96,6 @@ function buildIndexes(): void {
 
 function buildIconUrl(entry: DetectableApp): string | null {
 	if (entry.url) return entry.url;
-	if (entry.icon_hash) {
-		return `https://${DISCORD_CDN_HOST}/app-assets/${entry.id}/${entry.icon_hash}.png`;
-	}
 	return null;
 }
 
@@ -148,7 +145,7 @@ export function loadDetectableApplications(): void {
 		loaded = true;
 		return;
 	}
-	const raw = JSON.parse(fs.readFileSync(detectablePath, 'utf8')) as FluxerDetectableRecord[];
+	const raw = JSON.parse(fs.readFileSync(detectablePath, 'utf8')) as Array<FluxerDetectableRecord>;
 	detectableDb = raw.map(normalizeDetectableRecord);
 	buildIndexes();
 	loaded = true;
@@ -182,19 +179,19 @@ export function resolveByExecutable(exeName: string): DetectableApp | null {
 	return candidates?.[0] ?? null;
 }
 
-export function getDetectableDb(): DetectableApp[] {
+export function getDetectableDb(): Array<DetectableApp> {
 	loadDetectableApplications();
 	return detectableDb;
 }
 
-export function getExecutableIndex(): Map<string, DetectableApp[]> {
+export function getExecutableIndex(): Map<string, Array<DetectableApp>> {
 	loadDetectableApplications();
 	return executableIndex;
 }
 
 export function matchLinuxExecutable(
 	executable: DetectableExecutable,
-	pathVariations: string[],
+	pathVariations: Array<string>,
 	platform: string = process.platform,
 ): boolean {
 	if (executable.os && executable.os !== platform) return false;
@@ -213,17 +210,17 @@ interface WindowsCmdlinePattern {
 	app: DetectableApp;
 }
 
-let windowsCmdlinePatternsByBasename: Map<string, WindowsCmdlinePattern[]> | null = null;
+let windowsCmdlinePatternsByBasename: Map<string, Array<WindowsCmdlinePattern>> | null = null;
 const WIN32_EXE_IN_CMDLINE = /[^/\\]+\.exe/gi;
 
-function addCmdlinePattern(map: Map<string, WindowsCmdlinePattern[]>, key: string, entry: WindowsCmdlinePattern): void {
+function addCmdlinePattern(map: Map<string, Array<WindowsCmdlinePattern>>, key: string, entry: WindowsCmdlinePattern): void {
 	const list = map.get(key) ?? [];
 	list.push(entry);
 	map.set(key, list);
 }
 
-function buildWindowsCmdlinePatternsByBasename(): Map<string, WindowsCmdlinePattern[]> {
-	const byBasename = new Map<string, WindowsCmdlinePattern[]>();
+function buildWindowsCmdlinePatternsByBasename(): Map<string, Array<WindowsCmdlinePattern>> {
+	const byBasename = new Map<string, Array<WindowsCmdlinePattern>>();
 	for (const entry of detectableDb) {
 		if (!entry.executables) continue;
 		for (const exe of entry.executables) {
@@ -243,7 +240,7 @@ function buildWindowsCmdlinePatternsByBasename(): Map<string, WindowsCmdlinePatt
 	return byBasename;
 }
 
-export function matchAppByWindowsCmdline(args: string[]): DetectableApp | null {
+export function matchAppByWindowsCmdline(args: Array<string>): DetectableApp | null {
 	loadDetectableApplications();
 	const cmdlineLower = args.join(' ').toLowerCase();
 	if (!cmdlineLower.includes('.exe')) return null;

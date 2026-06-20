@@ -3,12 +3,12 @@
 import {cacheRpcCoverArt} from '@electron/main/RpcCoverArtProtocol';
 
 const ALLOWED_IMAGE_HOSTS = [
-	'cdn.discordapp.com',
-	'media.discordapp.net',
 	'i.scdn.co',
 	'i.ytimg.com',
 	'static-cdn.jtvnw.net',
 ];
+
+const BLOCKED_IMAGE_HOSTS = ['cdn.discordapp.com', 'media.discordapp.net'];
 
 const protocolUrlCache = new Map<string, string>();
 
@@ -16,6 +16,15 @@ function isAllowedImageHost(url: string): boolean {
 	try {
 		const {hostname} = new URL(url);
 		return ALLOWED_IMAGE_HOSTS.some((host) => hostname === host || hostname.endsWith(`.${host}`));
+	} catch {
+		return false;
+	}
+}
+
+function isBlockedImageHost(url: string): boolean {
+	try {
+		const {hostname} = new URL(url);
+		return BLOCKED_IMAGE_HOSTS.some((host) => hostname === host || hostname.endsWith(`.${host}`));
 	} catch {
 		return false;
 	}
@@ -32,6 +41,7 @@ function isLocalImageReference(url: string): boolean {
 
 export async function resolveRpcCoverArtUrl(url: string | undefined): Promise<string | undefined> {
 	if (!url || isLocalImageReference(url)) return url;
+	if (isBlockedImageHost(url)) return undefined;
 	if (isAllowedImageHost(url)) return url;
 
 	const cached = protocolUrlCache.get(url);

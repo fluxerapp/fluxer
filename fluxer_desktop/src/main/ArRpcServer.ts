@@ -9,7 +9,6 @@ import {resolveByClientId} from '@electron/main/DetectableApplications';
 import {
 	ACTIVITY_FLAG_INSTANCE,
 	ActivityType,
-	DISCORD_CDN_HOST,
 	IPCErrorCode,
 	IPCMessageType,
 	IPC_SOCKET_NAME,
@@ -20,9 +19,10 @@ import {
 	RPC_PROTOCOL_VERSION,
 } from '@electron/main/rpc/RpcConstants';
 import type {ExtendedSocket, RPCMessage, RpcActivityPayload, SetActivityArgs} from '@electron/main/rpc/RpcTypes';
-import {encodeIpcMessage, getUnixSocketBaseDir, normalizeTimestamps, resolveListeningActivityName} from '@electron/main/rpc/RpcUtils';
+import {encodeIpcMessage, getUnixSocketBaseDir, normalizeTimestamps, resolveRpcActivityName} from '@electron/main/rpc/RpcUtils';
 
 const RPC_GENERIC_ERROR = 1000;
+type RpcActivityEventSource = 'ipc' | 'ipc-clear' | 'ipc-disconnect' | 'process-scan';
 
 let ipcServer: Server | null = null;
 let socketPath: string | null = null;
@@ -35,7 +35,7 @@ export function getConnectedIpcClientCount(): number {
 }
 
 export function onRpcActivity(
-	listener: (activity: RpcActivityPayload | null, pid?: number, source?: 'ipc' | 'process-scan') => void,
+	listener: (activity: RpcActivityPayload | null, pid?: number, source?: RpcActivityEventSource) => void,
 ): () => void {
 	activityEmitter.on('activity', listener);
 	return () => activityEmitter.off('activity', listener);
@@ -93,7 +93,7 @@ function readSocket(socket: ExtendedSocket): void {
 	socket._readBuffer = buffer.length > 0 ? buffer : undefined;
 }
 
-function closeSocket(socket: ExtendedSocket, code = IPCCloseCode.CLOSE_NORMAL, message = ''): void {
+function closeSocket(socket: ExtendedSocket, code: IPCCloseCode | IPCErrorCode = IPCCloseCode.CLOSE_NORMAL, message = ''): void {
 	socket.write(encodeIpcMessage(IPCMessageType.CLOSE, {code, message}));
 	socket.end();
 	socket.destroy();
@@ -106,7 +106,7 @@ function sendFrame(socket: ExtendedSocket, msg: RPCMessage): void {
 function emitActivity(
 	activity: RpcActivityPayload | null,
 	pid?: number,
-	source: 'ipc' | 'process-scan' = 'ipc',
+	source: RpcActivityEventSource = 'ipc',
 ): void {
 	activityEmitter.emit('activity', activity, pid, source);
 }
@@ -117,7 +117,7 @@ function handleConnectionClose(socket: ExtendedSocket): void {
 		notifyIpcClientCountChanged();
 	}
 	if (connectedIpcClients === 0) {
-		emitActivity(null, socket.lastPid);
+		emitActivity(null, socket.lastPid, 'ipc-disconnect');
 	}
 }
 
@@ -155,7 +155,7 @@ function handleHandshake(socket: ExtendedSocket, params: {v?: string; client_id?
 		data: {
 			v: RPC_PROTOCOL_VERSION,
 			config: {
-				cdn_host: DISCORD_CDN_HOST,
+				cdn_host: '',
 				api_endpoint: '//fluxer.app/api',
 				environment: 'production',
 			},
@@ -184,41 +184,41 @@ function handleSetActivity(socket: ExtendedSocket, msg: RPCMessage): void {
 
 	if (!activity) {
 		sendFrame(socket, {cmd: RPCCommand.SET_ACTIVITY, data: null, evt: null, nonce: msg.nonce ?? null});
-		emitActivity(null, pid);
+		emitActivity(null, pid, 'ipc-clear');
 		return;
 	}
 
-	const {buttons, timestamps, instance, ...rest} = activity as Record<string, unknown> & {
-		buttons?: Array<{url: string; label: string}>;
+	const normalizedActivity = {...activity} as Record<string, unknown> & {
 		timestamps?: Record<string, unknown>;
 		instance?: boolean;
 		name?: string;
 		type?: number;
 	};
+	const timestamps = normalizedActivity.timestamps;
 	normalizeTimestamps(timestamps);
 	const resolved = socket.clientId ? resolveByClientId(socket.clientId) : null;
 	const appName = socket.clientName || resolved?.name || 'Unknown';
-	const type = typeof rest.type === 'number' ? rest.type : ActivityType.PLAYING;
-	const details = typeof rest.details === 'string' ? rest.details : undefined;
-	const state = typeof rest.state === 'string' ? rest.state : undefined;
-	const rawName = typeof rest.name === 'string' && rest.name.length > 0 ? rest.name : undefined;
-	const name = resolveListeningActivityName(appName, rawName, details, state, type);
+	const type = typeof normalizedActivity.type === 'number' ? normalizedActivity.type : ActivityType.PLAYING;
+	const details = typeof normalizedActivity.details === 'string' ? normalizedActivity.details : undefined;
+	const state = typeof normalizedActivity.state === 'string' ? normalizedActivity.state : undefined;
+	const rawName =
+		typeof normalizedActivity.name === 'string' && normalizedActivity.name.length > 0
+			? normalizedActivity.name
+			: undefined;
+	const name = resolveRpcActivityName(appName, rawName, details, state);
 	const payload: RpcActivityPayload = {
 		application_id: socket.clientId ?? '',
 		name,
 		type,
-		flags: instance ? ACTIVITY_FLAG_INSTANCE : 0,
-		...(rest as Omit<RpcActivityPayload, 'application_id' | 'name' | 'type' | 'flags'>),
+		flags: normalizedActivity.instance ? ACTIVITY_FLAG_INSTANCE : 0,
+		...(normalizedActivity as Omit<RpcActivityPayload, 'application_id' | 'name' | 'type' | 'flags'>),
 		...(timestamps ? {timestamps: timestamps as RpcActivityPayload['timestamps']} : {}),
 		pid,
 	};
 	sendFrame(socket, {
 		cmd: RPCCommand.SET_ACTIVITY,
 		data: {
-			application_id: payload.application_id,
-			name: payload.name,
-			type: payload.type,
-			...rest,
+			...payload,
 		},
 		evt: null,
 		nonce: msg.nonce ?? null,

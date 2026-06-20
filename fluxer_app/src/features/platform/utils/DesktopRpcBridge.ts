@@ -10,21 +10,35 @@ const logger = new Logger('DesktopRpcBridge');
 
 function toUserActivity(desktopActivity: {
 	type: number;
+	status_display_type?: number;
 	application_id: string;
 	name: string;
 	details?: string;
+	details_url?: string;
 	state?: string;
+	state_url?: string;
 	timestamps?: {start?: number; end?: number};
 	assets?: UserActivity['assets'];
+	buttons?: UserActivity['buttons'];
+	party?: UserActivity['party'];
+	secrets?: UserActivity['secrets'];
+	metadata?: UserActivity['metadata'];
 }): UserActivity {
 	return {
 		type: desktopActivity.type,
+		status_display_type: desktopActivity.status_display_type,
 		name: desktopActivity.name,
 		application_id: desktopActivity.application_id,
 		details: desktopActivity.details,
+		details_url: desktopActivity.details_url,
 		state: desktopActivity.state,
+		state_url: desktopActivity.state_url,
 		timestamps: desktopActivity.timestamps,
 		assets: desktopActivity.assets,
+		buttons: desktopActivity.buttons,
+		party: desktopActivity.party,
+		secrets: desktopActivity.secrets,
+		metadata: desktopActivity.metadata,
 	};
 }
 

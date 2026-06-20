@@ -96,4 +96,33 @@ const memberListPlaying = formatActivityMemberListLine({
 assert.equal(memberListPlaying.kind, 'playing');
 assert.equal(memberListPlaying.text, 'ante 69');
 
+const detailsFirst = formatActivityDisplay({
+	type: 0,
+	status_display_type: 1,
+	name: 'Tauon',
+	details: 'Turned Around',
+	state: 'Cicada Sirens & 1000 Eyes',
+});
+assert.equal(detailsFirst.primary, 'Turned Around');
+assert.equal(detailsFirst.secondary, 'Cicada Sirens & 1000 Eyes');
+
+const stateFirst = formatActivityDisplay({
+	type: 0,
+	status_display_type: 2,
+	name: 'Balatro',
+	details: 'Playing a run',
+	state: 'ante 69',
+});
+assert.equal(stateFirst.primary, 'ante 69');
+assert.equal(stateFirst.secondary, 'Playing a run');
+
+const memberListDetailsFirst = formatActivityMemberListLine({
+	type: 0,
+	status_display_type: 1,
+	name: 'Tauon',
+	details: 'Turned Around',
+	state: 'Cicada Sirens & 1000 Eyes',
+});
+assert.equal(memberListDetailsFirst.text, 'Turned Around');
+
 console.log('formatActivityDisplay test passed');

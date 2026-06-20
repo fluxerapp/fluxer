@@ -270,21 +270,58 @@ export const UserActivityAssets = z
 	.object({
 		large_image: z.string().max(256).optional(),
 		large_text: z.string().max(128).optional(),
+		large_url: z.string().url().max(2048).optional(),
 		small_image: z.string().max(256).optional(),
 		small_text: z.string().max(128).optional(),
+		small_url: z.string().url().max(2048).optional(),
 	})
 	.describe('Activity image assets');
 
 export type UserActivityAssets = z.infer<typeof UserActivityAssets>;
 
+export const UserActivityButton = z.object({
+	label: z.string().max(32),
+	url: z.string().url().max(2048),
+});
+
+export type UserActivityButton = z.infer<typeof UserActivityButton>;
+
+export const UserActivityParty = z.object({
+	id: z.string().max(128).optional(),
+	size: z.tuple([z.number().int().nonnegative(), z.number().int().positive()]).optional(),
+});
+
+export type UserActivityParty = z.infer<typeof UserActivityParty>;
+
+export const UserActivitySecrets = z.object({
+	join: z.string().max(128).optional(),
+	spectate: z.string().max(128).optional(),
+	match: z.string().max(128).optional(),
+});
+
+export type UserActivitySecrets = z.infer<typeof UserActivitySecrets>;
+
+export const UserActivityMetadata = z.object({
+	button_urls: z.array(z.string().url().max(2048)).max(2).optional(),
+});
+
+export type UserActivityMetadata = z.infer<typeof UserActivityMetadata>;
+
 export const UserActivitySchema = z.object({
 	name: z.string().max(128).describe('Activity name (usually the application or song title)'),
 	type: z.number().int().min(0).max(5).describe('Activity type (0 = Playing)'),
+	status_display_type: z.number().int().min(0).max(2).optional(),
 	application_id: SnowflakeStringType.optional().describe('Application ID for rich presence'),
 	details: z.string().max(128).optional().describe('First line of rich presence text'),
+	details_url: z.string().url().max(2048).optional(),
 	state: z.string().max(128).optional().describe('Second line of rich presence text'),
+	state_url: z.string().url().max(2048).optional(),
 	timestamps: UserActivityTimestamps.optional(),
 	assets: UserActivityAssets.optional(),
+	buttons: z.array(UserActivityButton).max(2).optional(),
+	party: UserActivityParty.optional(),
+	secrets: UserActivitySecrets.optional(),
+	metadata: UserActivityMetadata.optional(),
 });
 
 export type UserActivity = z.infer<typeof UserActivitySchema>;
