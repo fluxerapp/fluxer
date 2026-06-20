@@ -25,6 +25,16 @@ const IMAGE_SOURCES: &[&str] = &[
     "https://*.youtube.com",
     "https://*.fluxer.media",
     "https://fluxer.media",
+    "https://cdn.discordapp.com",
+    "https://media.discordapp.net",
+    "https://i.scdn.co",
+    "https://*.scdn.co",
+    "https://*.mzstatic.com",
+    "https://static-cdn.jtvnw.net",
+    "fluxer-rpc-art:",
+    // Rich presence album art / game assets can come from arbitrary player or mod URLs. I'm not really sure what else to do for this for now. I do not think it is the best option though.
+    "https:",
+    "http:",
 ];
 
 const MEDIA_SOURCES: &[&str] = &[
