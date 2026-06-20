@@ -99,13 +99,22 @@
 	white-space: nowrap;
 }
 
+.memberActivityStatus {
+	max-width: 100%;
+	opacity: 0.9;
+}
+
 :global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
 	.button:hover
-	.memberCustomStatus {
+	.memberCustomStatus,
+:global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
+	.button:hover
+	.memberActivityStatus {
 	--emoji-show-animated: 1;
 }
 
-.buttonContextMenuOpen .memberCustomStatus {
+.buttonContextMenuOpen .memberCustomStatus,
+.buttonContextMenuOpen .memberActivityStatus {
 	--emoji-show-animated: 1;
 }
 

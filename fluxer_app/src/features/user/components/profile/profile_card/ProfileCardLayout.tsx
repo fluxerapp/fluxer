@@ -9,6 +9,7 @@ import {useMemo} from 'react';
 
 interface ProfileCardLayoutProps {
 	borderColor: string;
+	borderGradient: string;
 	showPreviewLabel?: boolean;
 	hoverRef?: (instance: HTMLDivElement | null) => void;
 	className?: string;
@@ -17,8 +18,15 @@ interface ProfileCardLayoutProps {
 }
 
 export const ProfileCardLayout: React.FC<ProfileCardLayoutProps> = observer(
-	({borderColor, showPreviewLabel = false, hoverRef, className, style, children}) => {
-		const cardStyle = useMemo<React.CSSProperties>(() => ({...style, borderColor}), [borderColor, style]);
+	({borderColor, borderGradient, showPreviewLabel = false, hoverRef, className, style, children}) => {
+		const frameStyle = useMemo<React.CSSProperties>(
+			() => ({
+				...style,
+				['--profile-card-border-color' as string]: borderColor,
+				['--profile-card-border-gradient' as string]: borderGradient,
+			}),
+			[borderColor, borderGradient, style],
+		);
 		return (
 			<div data-flx="user.profile.profile-card.profile-card-layout.div">
 				{showPreviewLabel && (
@@ -27,12 +35,17 @@ export const ProfileCardLayout: React.FC<ProfileCardLayoutProps> = observer(
 					</div>
 				)}
 				<div
-					ref={hoverRef}
-					className={clsx(styles.profileCard, className)}
-					style={cardStyle}
-					data-flx="user.profile.profile-card.profile-card-layout.profile-card"
+					className={clsx(styles.profileCardFrame, className)}
+					style={frameStyle}
+					data-flx="user.profile.profile-card.profile-card-layout.profile-card-frame"
 				>
-					{children}
+					<div
+						ref={hoverRef}
+						className={styles.profileCardInner}
+						data-flx="user.profile.profile-card.profile-card-layout.profile-card"
+					>
+						{children}
+					</div>
 				</div>
 			</div>
 		);

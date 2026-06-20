@@ -4,6 +4,7 @@ import {LongPressable} from '@app/features/app/components/LongPressable';
 import Authentication from '@app/features/auth/state/Authentication';
 import styles from '@app/features/channel/components/bottomsheets/ChannelDetailsBottomSheet.module.css';
 import {UserTag} from '@app/features/channel/components/ChannelUserTag';
+import {CompactMemberActivityStatus} from '@app/features/channel/components/CompactMemberActivityStatus';
 import {CompactMemberCustomStatus} from '@app/features/channel/components/CompactMemberCustomStatus';
 import {PreloadableUserPopout} from '@app/features/channel/components/PreloadableUserPopout';
 import {MemberListUnavailableFallback} from '@app/features/channel/components/shared/MemberListUnavailableFallback';
@@ -227,6 +228,14 @@ export const MobileMemberListItem = observer(
 								showText={true}
 								deferMediaLoad={deferAvatarLoad}
 								data-flx="channel.channel-details-bottom-sheet-member-list.mobile-member-list-item.member-custom-status"
+							/>
+						)}
+						{!member.user.bot && (
+							<CompactMemberActivityStatus
+								customStatus={memberListCustomStatus}
+								userId={member.user.id}
+								className={styles.memberActivityStatus}
+								data-flx="channel.channel-details-bottom-sheet-member-list.mobile-member-list-item.member-activity-status"
 							/>
 						)}
 					</div>

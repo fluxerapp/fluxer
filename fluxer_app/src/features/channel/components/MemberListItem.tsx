@@ -2,6 +2,7 @@
 
 import Authentication from '@app/features/auth/state/Authentication';
 import {UserTag} from '@app/features/channel/components/ChannelUserTag';
+import {CompactMemberActivityStatus} from '@app/features/channel/components/CompactMemberActivityStatus';
 import {CompactMemberCustomStatus} from '@app/features/channel/components/CompactMemberCustomStatus';
 import styles from '@app/features/channel/components/MemberListItem.module.css';
 import {PreloadableUserPopout} from '@app/features/channel/components/PreloadableUserPopout';
@@ -248,6 +249,12 @@ export const MemberListItem: React.FC<MemberListItemProps> = observer((props) =>
 								className={styles.memberCustomStatus}
 								deferMediaLoad={deferCustomStatusMedia}
 								data-flx="channel.member-list-item.member-custom-status"
+							/>
+							<CompactMemberActivityStatus
+								customStatus={memberListCustomStatus}
+								userId={user.id}
+								className={styles.memberActivityStatus}
+								data-flx="channel.member-list-item.member-activity-status"
 							/>
 						</div>
 					</span>

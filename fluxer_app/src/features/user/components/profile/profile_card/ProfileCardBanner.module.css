@@ -10,8 +10,8 @@
 	min-height: 6.5625rem;
 	position: relative;
 	overflow: hidden;
-	border-top-left-radius: calc(0.375rem - var(--profile-card-border-width, 0.15625rem));
-	border-top-right-radius: calc(0.375rem - var(--profile-card-border-width, 0.15625rem));
+	border-top-left-radius: 0.375rem;
+	border-top-right-radius: 0.375rem;
 }
 
 .banner {

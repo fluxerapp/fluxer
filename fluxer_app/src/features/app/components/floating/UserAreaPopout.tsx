@@ -18,7 +18,11 @@ import {COPY_USERNAME_DESCRIPTOR, UNKNOWN_DESCRIPTOR} from '@app/features/i18n/u
 import type {Account} from '@app/features/platform/state/AuthSession';
 import {formatClientBuildInfo, getClientInfo, getClientInfoSync} from '@app/features/platform/utils/ClientInfo';
 import Presence from '@app/features/presence/state/Presence';
-import {getUserAccentColor} from '@app/features/theme/utils/AccentColorUtils';
+import {
+	getProfileCardBannerFallbackColor,
+	getProfileCardBorderPresentation,
+} from '@app/features/user/utils/ProfileCardBorderUtils';
+import {PROFILE_POPOUT_GEOMETRY_STYLE} from '@app/features/user/constants/UserProfileSurfaceGeometry';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
@@ -511,9 +515,19 @@ export const UserAreaPopout = observer(() => {
 		}
 		return ProfileDisplayUtils.getProfileBannerUrls(profileContext, undefined, MEDIA_PROXY_PROFILE_BANNER_SIZE_POPOUT);
 	}, [profileContext]);
-	const accentColor = getUserAccentColor(currentUser, profileData?.accent_color);
-	const borderColor = accentColor;
-	const bannerColor = accentColor;
+	const hasBannerImage = Boolean(bannerUrl);
+	const {borderColor, borderGradient} = getProfileCardBorderPresentation(
+		currentUser,
+		profileData?.accent_color,
+		profileData?.banner_color,
+		hasBannerImage,
+	);
+	const bannerFallbackColor = getProfileCardBannerFallbackColor(
+		currentUser,
+		profileData?.accent_color,
+		profileData?.banner_color,
+		hasBannerImage,
+	);
 	const displayName = currentUser ? NicknameUtils.getNickname(currentUser) : '';
 	const customStatus = currentUserId ? Presence.getCustomStatus(currentUserId) : null;
 	const hasCustomStatus = Boolean(normalizeCustomStatus(customStatus));
@@ -524,11 +538,17 @@ export const UserAreaPopout = observer(() => {
 	return (
 		<FocusRingScope containerRef={popoutContainerRef} data-flx="app.floating.user-area-popout.focus-ring-scope">
 			<div ref={popoutContainerRef} className={styles.container} data-flx="app.floating.user-area-popout.container">
-				<ProfileCardLayout borderColor={borderColor} data-flx="app.floating.user-area-popout.profile-card-layout">
+				<ProfileCardLayout
+					borderColor={borderColor}
+					borderGradient={borderGradient}
+					className={userProfilePopoutStyles.profilePopoutCard}
+					style={PROFILE_POPOUT_GEOMETRY_STYLE}
+					data-flx="app.floating.user-area-popout.profile-card-layout"
+				>
 					<ProfileCardBanner
 						bannerUrl={bannerUrl}
 						hoverBannerUrl={hoverBannerUrl}
-						bannerColor={bannerColor}
+						bannerColor={bannerFallbackColor}
 						user={currentUser}
 						avatarUrl={avatarUrl}
 						hoverAvatarUrl={hoverAvatarUrl}

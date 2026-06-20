@@ -21,7 +21,9 @@ import {ProfileCardContent} from '@app/features/user/components/profile/profile_
 import {ProfileCardFooter} from '@app/features/user/components/profile/profile_card/ProfileCardFooter';
 import {ProfileCardLayout} from '@app/features/user/components/profile/profile_card/ProfileCardLayout';
 import {ProfileCardUserInfo} from '@app/features/user/components/profile/profile_card/ProfileCardUserInfo';
+import {ProfileRichPresence} from '@app/features/user/components/profile/ProfileRichPresence';
 import {useProfileCardDisplayState} from '@app/features/user/components/profile/useProfileCardDisplayState';
+import {PROFILE_POPOUT_GEOMETRY_STYLE} from '@app/features/user/constants/UserProfileSurfaceGeometry';
 import {useAutoplayExpandedProfileAnimations} from '@app/features/user/hooks/useAutoplayExpandedProfileAnimations';
 import type {Profile} from '@app/features/user/models/Profile';
 import type {User} from '@app/features/user/models/User';
@@ -168,7 +170,9 @@ export const ProfilePreview: React.FC<ProfilePreviewProps> = observer(
 			hoverAvatarUrl: finalHoverAvatarUrl,
 			bannerUrl: finalBannerUrl,
 			hoverBannerUrl: finalHoverBannerUrl,
-			accentColor,
+			borderColor,
+			borderGradient,
+			bannerFallbackColor,
 		} = useProfileCardDisplayState({
 			user,
 			profile: mockProfile,
@@ -216,8 +220,6 @@ export const ProfilePreview: React.FC<ProfilePreviewProps> = observer(
 		const pronouns = previewPronouns !== undefined ? previewPronouns : user.pronouns;
 		const displayName =
 			previewNick || (guildId ? NicknameUtils.getNickname(previewUser, guildId) : previewUser.displayName);
-		const borderColor = accentColor;
-		const bannerColor = accentColor;
 		const selectedGuild = guildId ? Guilds.getGuild(guildId) : null;
 		const hasPreviewStatus = previewCustomStatus !== undefined;
 		const handlePreviewKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
@@ -237,13 +239,15 @@ export const ProfilePreview: React.FC<ProfilePreviewProps> = observer(
 				>
 					<ProfileCardLayout
 						borderColor={borderColor}
+						borderGradient={borderGradient}
 						showPreviewLabel={showPreviewLabel}
+						style={PROFILE_POPOUT_GEOMETRY_STYLE}
 						data-flx="user.profile.profile-preview.profile-card-layout"
 					>
 						<ProfileCardBanner
 							bannerUrl={finalBannerUrl}
 							hoverBannerUrl={finalHoverBannerUrl}
-							bannerColor={bannerColor}
+							bannerColor={bannerFallbackColor}
 							user={user}
 							avatarUrl={finalAvatarUrl}
 							hoverAvatarUrl={finalHoverAvatarUrl}
@@ -283,6 +287,7 @@ export const ProfilePreview: React.FC<ProfilePreviewProps> = observer(
 								onShowMore={openMockProfile}
 								data-flx="user.profile.profile-preview.user-profile-preview-bio"
 							/>
+							<ProfileRichPresence userId={user.id} />
 							<UserProfileTimezoneInfo
 								profile={mockProfile}
 								data-flx="user.profile.profile-preview.user-profile-timezone-info"

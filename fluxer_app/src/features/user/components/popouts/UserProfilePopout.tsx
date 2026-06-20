@@ -52,6 +52,7 @@ import {ProfileCardLayout} from '@app/features/user/components/profile/profile_c
 import {ProfileCardUserInfo} from '@app/features/user/components/profile/profile_card/ProfileCardUserInfo';
 import {UserProfileLoadingSkeleton} from '@app/features/user/components/profile/UserProfileLoadingSkeleton';
 import {useProfileCardDisplayState} from '@app/features/user/components/profile/useProfileCardDisplayState';
+import {ProfileRichPresence} from '@app/features/user/components/profile/ProfileRichPresence';
 import {VoiceActivitySection} from '@app/features/user/components/profile/VoiceActivitySection';
 import {PROFILE_POPOUT_GEOMETRY_STYLE} from '@app/features/user/constants/UserProfileSurfaceGeometry';
 import {useAutoplayExpandedProfileAnimations} from '@app/features/user/hooks/useAutoplayExpandedProfileAnimations';
@@ -209,7 +210,7 @@ export const UserProfilePopout: React.FC<UserProfilePopoutProps> = observer(
 			);
 			requestClose();
 		};
-		const {profileContext, avatarUrl, hoverAvatarUrl, bannerUrl, hoverBannerUrl, accentColor, profileData} =
+		const {profileContext, avatarUrl, hoverAvatarUrl, bannerUrl, hoverBannerUrl, borderColor, borderGradient, bannerFallbackColor, profileData} =
 			useProfileCardDisplayState({
 				user,
 				profile,
@@ -261,20 +262,19 @@ export const UserProfilePopout: React.FC<UserProfilePopoutProps> = observer(
 					<div ref={popoutContainerRef} data-flx="user.user-profile-popout.skeleton.container">
 						<UserProfileLoadingSkeleton
 							variant="popout"
-							borderColor={accentColor}
+							borderColor={borderColor}
 							data-flx="user.user-profile-popout.user-profile-loading-skeleton"
 						/>
 					</div>
 				</FocusRingScope>
 			);
 		}
-		const borderColor = accentColor;
-		const bannerColor = accentColor;
 		return (
 			<FocusRingScope containerRef={popoutContainerRef} data-flx="user.user-profile-popout.focus-ring-scope">
 				<div ref={popoutContainerRef} data-flx="user.user-profile-popout.div">
 					<ProfileCardLayout
 						borderColor={borderColor}
+						borderGradient={borderGradient}
 						hoverRef={hoverRef}
 						className={styles.profilePopoutCard}
 						style={PROFILE_POPOUT_GEOMETRY_STYLE}
@@ -283,7 +283,7 @@ export const UserProfilePopout: React.FC<UserProfilePopoutProps> = observer(
 						<ProfileCardBanner
 							bannerUrl={bannerUrl as string | null}
 							hoverBannerUrl={hoverBannerUrl}
-							bannerColor={bannerColor}
+							bannerColor={bannerFallbackColor}
 							user={user}
 							avatarUrl={avatarUrl}
 							hoverAvatarUrl={hoverAvatarUrl}
@@ -346,19 +346,20 @@ export const UserProfilePopout: React.FC<UserProfilePopoutProps> = observer(
 									/>
 								</div>
 							)}
-							{!isWebhook && (
-								<VoiceActivitySection
-									userId={user.id}
-									onNavigate={handleClosePopout}
-									data-flx="user.user-profile-popout.voice-activity-section"
-								/>
-							)}
 							{profile && (
 								<UserProfilePreviewBio
 									profile={profile}
 									profileData={profileData ?? null}
 									onShowMore={handleOpenFullProfile}
 									data-flx="user.user-profile-popout.user-profile-preview-bio"
+								/>
+							)}
+							{!isWebhook && <ProfileRichPresence userId={user.id} />}
+							{!isWebhook && (
+								<VoiceActivitySection
+									userId={user.id}
+									onNavigate={handleClosePopout}
+									data-flx="user.user-profile-popout.voice-activity-section"
 								/>
 							)}
 							{profile && (

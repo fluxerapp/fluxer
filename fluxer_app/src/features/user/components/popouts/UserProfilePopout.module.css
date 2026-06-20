@@ -59,14 +59,5 @@
 }
 
 .profilePopoutCard {
-	--profile-popout-content-width: 18.75rem;
-	--profile-popout-border-width: 0.15625rem;
-	--profile-card-width: calc(
-		var(--profile-popout-content-width) +
-		var(--profile-popout-border-width) +
-		var(--profile-popout-border-width)
-	);
-	--profile-card-border-width: var(--profile-popout-border-width);
-
 	box-sizing: border-box;
 }

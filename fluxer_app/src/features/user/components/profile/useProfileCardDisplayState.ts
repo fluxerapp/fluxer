@@ -5,6 +5,10 @@ import {getUserAccentColor} from '@app/features/theme/utils/AccentColorUtils';
 import type {Profile} from '@app/features/user/models/Profile';
 import type {User} from '@app/features/user/models/User';
 import * as ProfileDisplayUtils from '@app/features/user/utils/ProfileDisplayUtils';
+import {
+	getProfileCardBannerFallbackColor,
+	getProfileCardBorderPresentation,
+} from '@app/features/user/utils/ProfileCardBorderUtils';
 import {MEDIA_PROXY_PROFILE_BANNER_SIZE_POPOUT} from '@fluxer/constants/src/MediaProxyAssetSizes';
 import type {MediaProxyImageSize} from '@fluxer/constants/src/MediaProxyImageSizes';
 import type {UserProfile} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
@@ -28,6 +32,9 @@ export interface ProfileCardDisplayState {
 	bannerUrl: string | null;
 	hoverBannerUrl: string | null;
 	accentColor: string;
+	borderColor: string;
+	borderGradient: string;
+	bannerFallbackColor: string;
 	profileData: Readonly<UserProfile> | null;
 }
 
@@ -65,6 +72,27 @@ export function useProfileCardDisplayState({
 		() => getUserAccentColor(accentUser ?? user, profileData?.accent_color),
 		[accentUser ?? user, profileData?.accent_color],
 	);
+	const hasBannerImage = Boolean(bannerUrls.bannerUrl);
+	const borderPresentation = useMemo(
+		() =>
+			getProfileCardBorderPresentation(
+				accentUser ?? user,
+				profileData?.accent_color,
+				profileData?.banner_color,
+				hasBannerImage,
+			),
+		[accentUser ?? user, profileData?.accent_color, profileData?.banner_color, hasBannerImage],
+	);
+	const bannerFallbackColor = useMemo(
+		() =>
+			getProfileCardBannerFallbackColor(
+				accentUser ?? user,
+				profileData?.accent_color,
+				profileData?.banner_color,
+				hasBannerImage,
+			),
+		[accentUser ?? user, profileData?.accent_color, profileData?.banner_color, hasBannerImage],
+	);
 	return {
 		profileContext,
 		avatarUrl: avatarUrls.avatarUrl,
@@ -72,6 +100,9 @@ export function useProfileCardDisplayState({
 		bannerUrl: bannerUrls.bannerUrl,
 		hoverBannerUrl: bannerUrls.hoverBannerUrl,
 		accentColor,
+		borderColor: borderPresentation.borderColor,
+		borderGradient: borderPresentation.borderGradient,
+		bannerFallbackColor,
 		profileData,
 	};
 }

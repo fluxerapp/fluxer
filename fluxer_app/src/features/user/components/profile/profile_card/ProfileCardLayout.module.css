@@ -8,16 +8,23 @@
 	color: var(--text-primary-muted);
 }
 
-.profileCard {
+.profileCardFrame {
+	display: inline-flex;
+	box-sizing: border-box;
+	max-width: 100%;
+	padding: var(--profile-card-border-width, 0.25rem);
+	border-radius: calc(0.375rem + var(--profile-card-border-width, 0.25rem));
+	background: var(--profile-card-border-gradient, var(--profile-card-border-color, #4641d9));
+}
+
+.profileCardInner {
 	position: relative;
 	display: flex;
-	width: var(--profile-card-width, 18.75rem);
+	width: var(--profile-popout-content-width, 18.75rem);
 	flex-direction: column;
 	gap: 0.25rem;
-	overflow: visible;
+	overflow: hidden;
 	border-radius: 0.375rem;
-	border-style: solid;
-	border-width: var(--profile-card-border-width, 0.15625rem);
 	background-color: var(--background-primary);
 	padding-bottom: 0.75rem;
 }

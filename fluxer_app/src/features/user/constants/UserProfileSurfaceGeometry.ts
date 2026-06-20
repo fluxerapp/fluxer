@@ -18,7 +18,7 @@ const PROFILE_MODAL_AVATAR_OUTER_RADIUS_PX = PROFILE_MODAL_AVATAR_SIZE_PX / 2 + 
 export const PROFILE_POPOUT_GEOMETRY = {
 	contentWidthPx: 300,
 	contentHeightPx: 520,
-	borderWidthPx: 2.5,
+	borderWidthPx: 4,
 	avatarSizePx: PROFILE_POPOUT_AVATAR_SIZE_PX,
 	avatarBorderPx: PROFILE_POPOUT_AVATAR_BORDER_PX,
 	avatarLeftPx: PROFILE_POPOUT_AVATAR_LEFT_PX,
@@ -62,6 +62,7 @@ export const PROFILE_POPOUT_GEOMETRY_STYLE: CssLengthVariables = {
 	'--profile-popout-content-width': remFromPx(PROFILE_POPOUT_GEOMETRY.contentWidthPx),
 	'--profile-popout-content-height': remFromPx(PROFILE_POPOUT_GEOMETRY.contentHeightPx),
 	'--profile-popout-border-width': remFromPx(PROFILE_POPOUT_GEOMETRY.borderWidthPx),
+	'--profile-card-border-width': remFromPx(PROFILE_POPOUT_GEOMETRY.borderWidthPx),
 	'--profile-popout-avatar-size': remFromPx(PROFILE_POPOUT_GEOMETRY.avatarSizePx),
 	'--profile-popout-avatar-border': remFromPx(PROFILE_POPOUT_GEOMETRY.avatarBorderPx),
 	'--profile-popout-avatar-left': remFromPx(PROFILE_POPOUT_GEOMETRY.avatarLeftPx),

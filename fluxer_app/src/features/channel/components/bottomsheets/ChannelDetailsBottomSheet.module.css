@@ -54,8 +54,14 @@
 	max-width: 100%;
 }
 
+.memberActivityStatus {
+	max-width: 100%;
+}
+
 .memberListItem:hover .memberCustomStatus,
-.memberListItem:active .memberCustomStatus {
+.memberListItem:active .memberCustomStatus,
+.memberListItem:hover .memberActivityStatus,
+.memberListItem:active .memberActivityStatus {
 	--emoji-show-animated: 1;
 }
 
