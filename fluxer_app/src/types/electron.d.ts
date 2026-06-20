@@ -171,6 +171,39 @@ export type TrayActionPayload =
 	| {action: 'disconnect-voice'}
 	| {action: 'check-for-updates'};
 
+export interface RpcActivityUpdatePayload {
+	activity: {
+		type: number;
+		application_id: string;
+		name: string;
+		details?: string;
+		state?: string;
+		timestamps?: {start?: number; end?: number};
+		assets?: {
+			large_image?: string;
+			large_text?: string;
+			small_image?: string;
+			small_text?: string;
+		};
+	} | null;
+	gatewayActivity?: {
+		type: number;
+		application_id: string;
+		name: string;
+		details?: string;
+		state?: string;
+		timestamps?: {start?: number; end?: number};
+		assets?: {
+			large_image?: string;
+			large_text?: string;
+			small_image?: string;
+			small_text?: string;
+		};
+	} | null;
+	pid?: number;
+	source: 'ipc' | 'process-scan';
+}
+
 export interface TextareaContextMenuParams {
 	x: number;
 	y: number;
@@ -462,6 +495,7 @@ export interface ElectronAPI {
 	resetStreamingPriority?(): void;
 	getStreamingPriorityDiagnostics?(): Promise<StreamingPriorityDiagnostics>;
 	onTrayAction?(callback: (payload: TrayActionPayload) => void): () => void;
+	onRpcActivityUpdate?(callback: (payload: RpcActivityUpdatePayload) => void): () => void;
 	clipboardWriteText?(text: string): Promise<void>;
 	clipboardReadText?(): Promise<string>;
 	clipboardWriteFile?(options: ClipboardWriteFileOptions): Promise<ClipboardWriteFileResult>;
