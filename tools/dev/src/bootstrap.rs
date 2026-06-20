@@ -6,13 +6,24 @@ use crate::paths::{ensure_state_dirs, ensure_writable_dev_paths};
 use crate::proc::{PNPM_INSTALL_ENV, RunOptions, run_command, wait_http, wait_tcp};
 use crate::smoke::{bootstrap_schema_and_object_store, run_smoke, wait_s3_api};
 use anyhow::Result;
+use std::process::Command;
+
+fn command_exists(program: &str) -> bool {
+    Command::new(program)
+        .arg("--version")
+        .output()
+        .map(|output| output.status.success())
+        .unwrap_or(false)
+}
 
 pub async fn bootstrap(skip_install: bool, skip_desktop_install: bool) -> Result<()> {
     ensure_state_dirs()?;
     ensure_writable_dev_paths()?;
     if !skip_install {
-        crate::proc::run(&["corepack", "enable"])?;
-        crate::proc::run(&["corepack", "prepare", "pnpm@10.29.3", "--activate"])?;
+        if !command_exists("pnpm") {
+            crate::proc::run(&["corepack", "enable"])?;
+            crate::proc::run(&["corepack", "prepare", "pnpm@10.29.3", "--activate"])?;
+        }
         run_command(
             &["pnpm", "install", "--frozen-lockfile"],
             RunOptions {
