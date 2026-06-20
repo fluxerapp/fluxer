@@ -1099,6 +1099,11 @@ module.exports = {
 			to: 'badges',
 			filter: ['**/*'],
 		},
+		{
+			from: 'assets/rpc/',
+			to: 'rpc',
+			filter: ['*.json', '*.md'],
+		},
 	],
 	asar: {
 		smartUnpack: false,

@@ -1,0 +1,5 @@
+{
+	"repo": "fluxerapp/detectables",
+	"ref": "main",
+	"files": ["detectables.json", "detectables.schema.json"]
+}

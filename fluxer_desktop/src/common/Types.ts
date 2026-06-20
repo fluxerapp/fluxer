@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {RpcActivityUpdatePayload} from '@electron/common/RpcActivityTypes';
 import type {VoiceEngineV2BridgeApi} from '@fluxer/voice_engine_v2/bridge';
 import type {
 	AuthenticationResponseJSON,
@@ -746,6 +747,7 @@ export interface ElectronAPI {
 	resetStreamingPriority: () => void;
 	getStreamingPriorityDiagnostics: () => Promise<StreamingPriorityDiagnostics>;
 	onTrayAction: (callback: (action: TrayActionPayload) => void) => () => void;
+	onRpcActivityUpdate: (callback: (payload: RpcActivityUpdatePayload) => void) => () => void;
 	globalKeyHookStart: () => Promise<boolean>;
 	globalKeyHookStop: () => Promise<void>;
 	globalKeyHookIsRunning: () => Promise<boolean>;
@@ -878,6 +880,8 @@ export interface TextareaContextMenuParams {
 	x: number;
 	y: number;
 }
+
+export type {RpcActivityUpdatePayload} from '@electron/common/RpcActivityTypes';
 
 declare global {
 	interface Window {

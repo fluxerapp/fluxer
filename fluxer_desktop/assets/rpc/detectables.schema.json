@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/fluxerapp/detectables/blob/main/detectables.schema.json",
+  "title": "Activity Detectables",
+  "description": "A list of detectable applications used for activity detection. Each entry maps one or more process executables to a display name and an icon URL, used solely to identify a running application.",
+  "type": "array",
+  "items": { "$ref": "#/$defs/detectable" },
+
+  "$defs": {
+    "detectable": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "url", "executables"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Display name shown for this application, e.g. \"Minecraft\"."
+        },
+        "aliases": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 },
+          "description": "Optional. Alternate names and search terms for this application, e.g. [\"Minecraft Launcher\", \"Minecraft: Java Edition\"]."
+        },
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "pattern": "^https://",
+          "description": "HTTPS URL to the application's icon. Should point at a first-party / official source; clients fetch it lazily at runtime."
+        },
+        "executables": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/executable" },
+          "description": "Process executables that identify this application. At least one is required for the entry to be detectable. Match if ANY executable matches."
+        }
+      }
+    },
+
+    "executable": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "os"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Process to match. Stored lowercase for case-insensitive matching. Three forms: (1) a bare executable name, e.g. \"spotify.exe\"; (2) a path suffix using forward slashes, matched against the tail of the process path, e.g. \"content/minecraft.exe\"; (3) a \">\"-prefixed name, e.g. \">javaw.exe\", used together with `arguments` to pin a shared runtime to a specific application."
+        },
+        "os": {
+          "type": "string",
+          "enum": ["win32", "linux", "darwin"],
+          "description": "Operating system this executable applies to. Values match Node's process.platform."
+        },
+        "arguments": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Optional. A command-line substring the process must be running with to match, e.g. \"net.minecraft.client.main.Main\". Pair with a \">\"-prefixed `name` to disambiguate shared runtimes such as java/javaw, so they are only detected when launching this specific application."
+        }
+      }
+    }
+  }
+}

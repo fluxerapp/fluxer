@@ -1,0 +1,30 @@
+[
+  {
+    "name": "Minecraft",
+    "aliases": [
+      "Minecraft Launcher",
+      "Minecraft Windows 10 Edition",
+      "Minecraft: Java Edition"
+    ],
+    "url": "https://www.minecraft.net/favicon.ico",
+    "executables": [
+      { "name": "minecraft.windows.exe", "os": "win32" },
+      { "name": "content/minecraft.exe", "os": "win32" },
+      {
+        "name": ">javaw.exe",
+        "os": "win32",
+        "arguments": "net.minecraft.client.main.Main"
+      },
+      {
+        "name": ">java",
+        "os": "darwin",
+        "arguments": "net.minecraft.client.main.Main"
+      },
+      {
+        "name": ">java",
+        "os": "linux",
+        "arguments": "net.minecraft.client.main.Main"
+      }
+    ]
+  }
+]

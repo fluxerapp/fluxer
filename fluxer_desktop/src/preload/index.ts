@@ -54,6 +54,7 @@ import type {
 	TextareaContextMenuParams,
 	TrayActionPayload,
 	TrayRuntimeStatePayload,
+	RpcActivityUpdatePayload,
 	UpdaterContext,
 	UpdaterEvent,
 	VirtmicAvailability,
@@ -620,6 +621,11 @@ const api: ElectronAPI = {
 		const handler = (_event: Electron.IpcRendererEvent, data: TrayActionPayload): void => callback(data);
 		ipcRenderer.on('tray-action', handler);
 		return () => ipcRenderer.removeListener('tray-action', handler);
+	},
+	onRpcActivityUpdate: (callback: (payload: RpcActivityUpdatePayload) => void): (() => void) => {
+		const handler = (_event: Electron.IpcRendererEvent, data: RpcActivityUpdatePayload): void => callback(data);
+		ipcRenderer.on('rpc-activity-update', handler);
+		return () => ipcRenderer.removeListener('rpc-activity-update', handler);
 	},
 	globalKeyHookStart: (): Promise<boolean> => ipcRenderer.invoke('global-key-hook-start'),
 	globalKeyHookStop: (): Promise<void> => ipcRenderer.invoke('global-key-hook-stop'),

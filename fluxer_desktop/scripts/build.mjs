@@ -663,9 +663,22 @@ async function build() {
 	}
 	fs.mkdirSync(path.join(DIST_DIR, 'main'), {recursive: true});
 	fs.mkdirSync(path.join(DIST_DIR, 'preload'), {recursive: true});
+	copyRpcAssets();
 	buildNativeAddons();
 	await Promise.all([buildMain(), buildPreload()]);
 	console.log('Build complete!');
+}
+
+function copyRpcAssets() {
+	const sourceDir = path.join(ROOT_DIR, 'assets', 'rpc');
+	const targetDir = path.join(DIST_DIR, 'rpc');
+	if (!fs.existsSync(sourceDir)) return;
+	fs.mkdirSync(targetDir, {recursive: true});
+	for (const file of fs.readdirSync(sourceDir)) {
+		if (!file.endsWith('.json')) continue;
+		fs.copyFileSync(path.join(sourceDir, file), path.join(targetDir, file));
+	}
+	console.log('Copied RPC detectable assets to dist/rpc');
 }
 
 build().catch((error) => {
