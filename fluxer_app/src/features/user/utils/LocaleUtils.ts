@@ -85,6 +85,10 @@ const JAPANESE_DESCRIPTOR = msg({
 	message: 'Japanese',
 	comment: 'Short label in the language and locale names. Keep it concise.',
 });
+const KHMER_DESCRIPTOR = msg({
+	message: 'Khmer',
+	comment: 'Short label in the language and locale names. Keep it concise.',
+});
 const KOREAN_DESCRIPTOR = msg({
 	message: 'Korean',
 	comment: 'Short label in the language and locale names. Keep it concise.',
@@ -175,6 +179,7 @@ const SUPPORTED_LOCALES: Array<LocaleInfo> = [
 	{code: 'id', name: INDONESIAN_DESCRIPTOR, nativeName: 'Bahasa Indonesia', flag: '🇮🇩'},
 	{code: 'it', name: ITALIAN_DESCRIPTOR, nativeName: 'Italiano', flag: '🇮🇹'},
 	{code: 'ja', name: JAPANESE_DESCRIPTOR, nativeName: '日本語', flag: '🇯🇵'},
+	{code: 'km', name: KHMER_DESCRIPTOR, nativeName: 'ភាសាខ្មែរ', flag: '🇰🇭'},
 	{code: 'ko', name: KOREAN_DESCRIPTOR, nativeName: '한국어', flag: '🇰🇷'},
 	{code: 'lt', name: LITHUANIAN_DESCRIPTOR, nativeName: 'Lietuvių', flag: '🇱🇹'},
 	{code: 'nl', name: DUTCH_DESCRIPTOR, nativeName: 'Nederlands', flag: '🇳🇱'},
