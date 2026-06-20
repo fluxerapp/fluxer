@@ -25,8 +25,9 @@ let detectableDb: DetectableApp[] = [];
 const clientIdIndex = new Map<string, DetectableApp>();
 const executableIndex = new Map<string, DetectableApp[]>();
 let loaded = false;
+let syncPromise: Promise<void> | null = null;
 
-function getAssetsDir(): string {
+function getBundledRpcDir(): string {
 	if (app.isPackaged) {
 		return path.join(process.resourcesPath, 'rpc');
 	}
@@ -40,6 +41,18 @@ function getAssetsDir(): string {
 		}
 	}
 	return path.join(app.getAppPath(), 'assets', 'rpc');
+}
+
+function getDetectablesCacheDir(): string {
+	return path.join(app.getPath('userData'), 'rpc');
+}
+
+function getLockPath(): string {
+	return path.join(getBundledRpcDir(), 'detectable-lock.json');
+}
+
+function getDetectablesPath(): string {
+	return path.join(getDetectablesCacheDir(), 'detectables.json');
 }
 
 function slugifyDetectableId(name: string): string {
@@ -89,15 +102,66 @@ function buildIconUrl(entry: DetectableApp): string | null {
 	return null;
 }
 
+async function syncDetectableApplicationsInner(): Promise<void> {
+	const lockPath = getLockPath();
+	const lock = JSON.parse(fs.readFileSync(lockPath, 'utf8')) as {
+		repo?: string;
+		ref?: string;
+		files?: Array<string>;
+	};
+	const repo = lock.repo ?? 'fluxerapp/detectables';
+	const ref = lock.ref ?? 'main';
+	const files = lock.files ?? ['detectables.json', 'detectables.schema.json'];
+	const baseUrl = `https://raw.githubusercontent.com/${repo}/${ref}`;
+	const cacheDir = getDetectablesCacheDir();
+
+	fs.mkdirSync(cacheDir, {recursive: true});
+	for (const file of files) {
+		const url = `${baseUrl}/${file}`;
+		const res = await fetch(url, {cache: 'no-store'});
+		if (!res.ok) {
+			throw new Error(`Failed ${url}: ${res.status}`);
+		}
+		const targetPath = path.join(cacheDir, file);
+		fs.writeFileSync(targetPath, Buffer.from(await res.arrayBuffer()));
+	}
+	log.info('[RPC] Synced detectables', {repo, ref, files});
+}
+
+export function syncDetectableApplications(): Promise<void> {
+	if (!syncPromise) {
+		syncPromise = syncDetectableApplicationsInner().catch((error) => {
+			syncPromise = null;
+			throw error;
+		});
+	}
+	return syncPromise;
+}
+
 export function loadDetectableApplications(): void {
 	if (loaded) return;
-	const assetsDir = getAssetsDir();
-	const detectablePath = path.join(assetsDir, 'detectables.json');
+	const detectablePath = getDetectablesPath();
+	if (!fs.existsSync(detectablePath)) {
+		log.warn('[RPC] Detectables cache missing, using empty database', {path: detectablePath});
+		detectableDb = [];
+		buildIndexes();
+		loaded = true;
+		return;
+	}
 	const raw = JSON.parse(fs.readFileSync(detectablePath, 'utf8')) as FluxerDetectableRecord[];
 	detectableDb = raw.map(normalizeDetectableRecord);
 	buildIndexes();
 	loaded = true;
 	log.info(`[RPC] Loaded ${detectableDb.length} detectable applications`);
+}
+
+export function resetDetectableApplicationsForTests(): void {
+	detectableDb = [];
+	clientIdIndex.clear();
+	executableIndex.clear();
+	windowsCmdlinePatternsByBasename = null;
+	loaded = false;
+	syncPromise = null;
 }
 
 export function resolveByClientId(clientId: string): ResolvedApplication | null {

@@ -53,6 +53,7 @@ import {
 import {destroyDesktopTray, hasActiveDesktopTray, initializeDesktopTray} from '@electron/main/DesktopTray';
 import {registerDisplayMediaHandlers} from '@electron/main/DisplayMedia';
 import {initializeDockMenu} from '@electron/main/DockMenu';
+import {syncDetectableApplications} from '@electron/main/DetectableApplications';
 import {cleanupGlobalKeyHook, registerGlobalKeyHookHandlers} from '@electron/main/GlobalKeyHook';
 import {cleanupIpcHandlers, registerIpcHandlers} from '@electron/main/IpcHandlers';
 import {initializeJumpList} from '@electron/main/JumpList';
@@ -322,6 +323,11 @@ if (launchConfigurationError) {
 					});
 				} catch (error) {
 					log.error('[DebugInfo] Failed to collect desktop debug info:', error);
+				}
+				try {
+					await runStartupPhaseAsync('detectables-sync', syncDetectableApplications);
+				} catch (error) {
+					log.warn('[Init] Detectables sync failed:', error);
 				}
 				try {
 					runStartupPhase('main-i18n', initializeMainI18n);
