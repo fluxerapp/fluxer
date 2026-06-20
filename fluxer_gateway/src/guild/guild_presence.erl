@@ -84,7 +84,8 @@ build_presence_map(Payload, Member) ->
     Afk = maps:get(<<"afk">>, Payload, false),
     MemberUser = maps:get(<<"user">>, Member, #{}),
     CustomStatus = maps:get(<<"custom_status">>, Payload, null),
-    presence_payload:build(MemberUser, NormalizedStatusBin, Mobile, Afk, CustomStatus).
+    Activities = maps:get(<<"activities">>, Payload, null),
+    presence_payload:build(MemberUser, NormalizedStatusBin, Mobile, Afk, CustomStatus, Activities).
 
 -spec maybe_handle_offline(atom(), user_id(), guild_state()) -> guild_state().
 maybe_handle_offline(offline, UserId, State) ->

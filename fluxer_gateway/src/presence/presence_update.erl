@@ -5,6 +5,7 @@
 
 -export([
     maybe_handle_custom_status/2,
+    maybe_handle_activities/2,
     handle_user_settings_update/2,
     handle_user_update_event/2,
     handle_message_create_event/2,
@@ -37,6 +38,40 @@ maybe_handle_custom_status(Request, State) ->
             compare_and_validate(CustomStatus, Request, State);
         _ ->
             {Request, State}
+    end.
+
+-spec maybe_handle_activities(map(), state()) -> {map(), state()}.
+maybe_handle_activities(Request, State) ->
+    case maps:find(<<"activities">>, Request) of
+        error ->
+            {Request, State};
+        {ok, null} ->
+            {Request#{<<"activities">> => null}, State#{activities := null}};
+        {ok, Activities} when is_list(Activities) ->
+            Normalized = normalize_activities(Activities),
+            {Request#{<<"activities">> => Normalized}, State#{activities := Normalized}};
+        _ ->
+            {Request, State}
+    end.
+
+-spec normalize_activities([term()]) -> [map()] | null.
+normalize_activities(Activities) ->
+    Valid = [Activity || Activity <- Activities, is_map(Activity), is_valid_activity(Activity)],
+    case Valid of
+        [] -> null;
+        List -> lists:sublist(List, 5)
+    end.
+
+-spec is_valid_activity(map()) -> boolean().
+is_valid_activity(Activity) ->
+    case maps:get(<<"name">>, Activity, undefined) of
+        Name when is_binary(Name), byte_size(Name) > 0, byte_size(Name) =< 128 ->
+            case maps:get(<<"type">>, Activity, undefined) of
+                Type when is_integer(Type), Type >= 0, Type =< 5 -> true;
+                _ -> false
+            end;
+        _ ->
+            false
     end.
 
 -spec handle_user_settings_update(map(), state()) -> state().

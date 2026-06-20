@@ -181,7 +181,8 @@ build_presence_external(State) ->
         status => ExternalStatus,
         mobile => maps:get(<<"mobile">>, Payload, false),
         afk => maps:get(<<"afk">>, Payload, false),
-        custom_status => maps:get(<<"custom_status">>, Payload, null)
+        custom_status => maps:get(<<"custom_status">>, Payload, null),
+        activities => maps:get(<<"activities">>, Payload, null)
     },
     {Payload, CurrentExternal, ExternalStatus}.
 
@@ -210,7 +211,8 @@ build_presence_payload(State) ->
     Afk = presence_status:get_flattened_afk(Sessions),
     UserData = maps:get(user_data, State, #{}),
     CustomStatus = maps:get(custom_status, State, null),
-    presence_payload:build(UserData, Status, Mobile, Afk, CustomStatus).
+    Activities = maps:get(activities, State, null),
+    presence_payload:build(UserData, Status, Mobile, Afk, CustomStatus, Activities).
 
 -spec dispatch_foreign_presence(user_id(), map(), state()) -> {noreply, state()}.
 dispatch_foreign_presence(TargetId, Payload, State) ->

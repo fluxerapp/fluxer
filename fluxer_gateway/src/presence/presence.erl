@@ -30,6 +30,7 @@
     sessions := sessions(),
     push_buffer := [push_buffer_entry()],
     custom_status := custom_status(),
+    activities := [map()] | null,
     status := status(),
     guild_ids := #{integer() => true},
     temporary_guild_ids := #{integer() => true},
@@ -181,6 +182,7 @@ build_initial_state(PresenceData) ->
         sessions => #{},
         push_buffer => [],
         custom_status => maps:get(custom_status, PresenceData, null),
+        activities => null,
         status => Status,
         guild_ids => presence_targets:map_from_ids(GuildIds),
         temporary_guild_ids => #{},
@@ -204,8 +206,11 @@ handle_presence_update_cast(Request, State) ->
     {UpdatedRequest, StateWithCustomStatus} = presence_update:maybe_handle_custom_status(
         Request, State
     ),
-    {noreply, NewState} = presence_session:handle_presence_update(
+    {FinalRequest, StateWithActivities} = presence_update:maybe_handle_activities(
         UpdatedRequest, StateWithCustomStatus
+    ),
+    {noreply, NewState} = presence_session:handle_presence_update(
+        FinalRequest, StateWithActivities
     ),
     FinalState = presence_broadcast:publish_global_presence(
         maps:get(sessions, NewState), NewState
@@ -299,6 +304,7 @@ test_state(Sessions) ->
         sessions => Sessions,
         push_buffer => [],
         custom_status => null,
+        activities => null,
         status => online,
         guild_ids => #{},
         temporary_guild_ids => #{},

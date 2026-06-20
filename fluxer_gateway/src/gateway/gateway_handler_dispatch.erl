@@ -210,7 +210,8 @@ parse_presence_status(StatusRaw, Data) ->
         Afk = presence_boolean(<<"afk">>, Data),
         Mobile = presence_boolean(<<"mobile">>, Data),
         Base = #{status => AdjustedStatus, afk => Afk, mobile => Mobile},
-        Result = maybe_add_custom_status(Base, Data),
+        WithCustomStatus = maybe_add_custom_status(Base, Data),
+        Result = maybe_add_activities(WithCustomStatus, Data),
         {ok, Result}
     catch
         error:function_clause -> {error, invalid_presence}
@@ -228,6 +229,29 @@ maybe_add_custom_status(Base, Data) ->
     case maps:find(<<"custom_status">>, Data) of
         {ok, CS} -> Base#{<<"custom_status">> => CS};
         error -> Base
+    end.
+
+-spec maybe_add_activities(map(), map()) -> map().
+maybe_add_activities(Base, Data) ->
+    case maps:find(<<"activities">>, Data) of
+        {ok, null} -> Base#{<<"activities">> => null};
+        {ok, Activities} when is_list(Activities) ->
+            Valid = [
+                Activity
+             || Activity <- Activities,
+                is_map(Activity),
+                is_binary(maps:get(<<"name">>, Activity, undefined)),
+                byte_size(maps:get(<<"name">>, Activity, <<>>)) =< 128,
+                is_integer(maps:get(<<"type">>, Activity, -1)),
+                maps:get(<<"type">>, Activity, -1) >= 0,
+                maps:get(<<"type">>, Activity, -1) =< 5
+            ],
+            case Valid of
+                [] -> Base;
+                List -> Base#{<<"activities">> => lists:sublist(List, 5)}
+            end;
+        error -> Base;
+        _ -> Base
     end.
 
 -spec adjust_status(atom()) -> atom().

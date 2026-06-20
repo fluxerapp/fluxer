@@ -292,6 +292,17 @@ validate_presence_data_valid_test() ->
     {ok, Result} = gateway_handler_dispatch:validate_presence_data(Data),
     ?assertEqual(online, maps:get(status, Result)).
 
+validate_presence_data_with_activities_test() ->
+    Data = #{
+        <<"status">> => <<"online">>,
+        <<"activities">> => [
+            #{<<"name">> => <<"Overwatch">>, <<"type">> => 0, <<"details">> => <<"In a match">>}
+        ]
+    },
+    {ok, Result} = gateway_handler_dispatch:validate_presence_data(Data),
+    ?assertEqual(online, maps:get(status, Result)),
+    ?assertMatch([#{<<"name">> := <<"Overwatch">>}], maps:get(<<"activities">>, Result)).
+
 validate_presence_data_missing_status_test() ->
     ?assertEqual(
         {error, invalid_presence},

@@ -257,6 +257,38 @@ export const CustomStatusResponse = z.object({
 
 export type CustomStatusResponse = z.infer<typeof CustomStatusResponse>;
 
+export const UserActivityTimestamps = z
+	.object({
+		start: z.number().int().optional().describe('Unix timestamp (seconds) when the activity started'),
+		end: z.number().int().optional().describe('Unix timestamp (seconds) when the activity ends'),
+	})
+	.describe('Activity timestamp metadata');
+
+export type UserActivityTimestamps = z.infer<typeof UserActivityTimestamps>;
+
+export const UserActivityAssets = z
+	.object({
+		large_image: z.string().max(256).optional(),
+		large_text: z.string().max(128).optional(),
+		small_image: z.string().max(256).optional(),
+		small_text: z.string().max(128).optional(),
+	})
+	.describe('Activity image assets');
+
+export type UserActivityAssets = z.infer<typeof UserActivityAssets>;
+
+export const UserActivitySchema = z.object({
+	name: z.string().max(128).describe('Activity name (usually the application or song title)'),
+	type: z.number().int().min(0).max(5).describe('Activity type (0 = Playing)'),
+	application_id: SnowflakeStringType.optional().describe('Application ID for rich presence'),
+	details: z.string().max(128).optional().describe('First line of rich presence text'),
+	state: z.string().max(128).optional().describe('Second line of rich presence text'),
+	timestamps: UserActivityTimestamps.optional(),
+	assets: UserActivityAssets.optional(),
+});
+
+export type UserActivity = z.infer<typeof UserActivitySchema>;
+
 const GuildFolderIconSchema = withOpenApiType(
 	createNamedStringLiteralUnion(
 		[

@@ -3,23 +3,43 @@
 -module(presence_payload).
 -typing([eqwalizer]).
 
--export([build/5]).
+-export([build/5, build/6]).
 
--export_type([status/0, custom_status/0]).
+-export_type([status/0, custom_status/0, activities/0]).
 
 -type status() :: online | offline | idle | dnd | invisible | binary().
 -type custom_status() :: map() | null.
+-type activities() :: [map()] | null.
 
 -spec build(map(), status(), boolean(), boolean(), custom_status()) -> map().
 build(UserData, Status, Mobile, Afk, CustomStatus) ->
+    build(UserData, Status, Mobile, Afk, CustomStatus, null).
+
+-spec build(map(), status(), boolean(), boolean(), custom_status(), activities()) -> map().
+build(UserData, Status, Mobile, Afk, CustomStatus, Activities) ->
     StatusBin = ensure_status_binary(Status),
-    #{
+    Base = #{
         <<"user">> => user_utils:normalize_user(UserData),
         <<"status">> => StatusBin,
         <<"mobile">> => Mobile,
         <<"afk">> => Afk,
         <<"custom_status">> => custom_status_for(StatusBin, CustomStatus)
-    }.
+    },
+    maybe_add_activities(Base, StatusBin, Activities).
+
+-spec maybe_add_activities(map(), binary(), activities()) -> map().
+maybe_add_activities(Base, StatusBin, Activities) ->
+    case activities_for(StatusBin, Activities) of
+        null -> Base;
+        Normalized -> Base#{<<"activities">> => Normalized}
+    end.
+
+-spec activities_for(binary(), activities()) -> activities().
+activities_for(<<"offline">>, _Activities) -> null;
+activities_for(<<"invisible">>, _Activities) -> null;
+activities_for(_StatusBin, null) -> null;
+activities_for(_StatusBin, Activities) when is_list(Activities) -> Activities;
+activities_for(_StatusBin, _) -> null.
 
 -spec ensure_status_binary(term()) -> binary().
 ensure_status_binary(online) -> <<"online">>;
@@ -93,4 +113,16 @@ build_invisible_binary_normalized_to_offline_test() ->
     Result = build(User, <<"invisible">>, false, false, CustomStatus),
     ?assertEqual(<<"offline">>, maps:get(<<"status">>, Result)),
     ?assertEqual(null, maps:get(<<"custom_status">>, Result)).
+
+build_with_activities_test() ->
+    User = #{<<"id">> => <<"1">>, <<"username">> => <<"Test">>},
+    Activities = [#{<<"name">> => <<"Game">>, <<"type">> => 0}],
+    Result = build(User, online, false, false, null, Activities),
+    ?assertEqual(Activities, maps:get(<<"activities">>, Result)).
+
+build_offline_strips_activities_test() ->
+    User = #{<<"id">> => <<"1">>, <<"username">> => <<"Test">>},
+    Activities = [#{<<"name">> => <<"Game">>, <<"type">> => 0}],
+    Result = build(User, offline, false, false, null, Activities),
+    ?assertEqual(undefined, maps:get(<<"activities">>, Result, undefined)).
 -endif.
