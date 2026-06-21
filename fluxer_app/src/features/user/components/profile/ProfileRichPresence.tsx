@@ -7,7 +7,7 @@ import {usePresenceActivities} from '@app/features/presence/hooks/usePresenceAct
 import styles from '@app/features/user/components/profile/ProfileRichPresence.module.css';
 import type {UserActivity} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {Trans} from '@lingui/react/macro';
-import {GameControllerIcon, HeadphonesIcon} from '@phosphor-icons/react';
+import {CaretLeftIcon, CaretRightIcon, GameControllerIcon, HeadphonesIcon} from '@phosphor-icons/react';
 import type React from 'react';
 import {useEffect, useMemo, useState} from 'react';
 
@@ -145,13 +145,43 @@ function ActivityLine({
 
 export const ProfileRichPresence: React.FC<ProfileRichPresenceProps> = ({userId}) => {
 	const activities = usePresenceActivities({userId});
-	const activity = useMemo(() => activities[0] ?? null, [activities]);
+	const [activityIndex, setActivityIndex] = useState(0);
+	useEffect(() => {
+		setActivityIndex((currentIndex) => Math.min(currentIndex, Math.max(activities.length - 1, 0)));
+	}, [activities.length]);
+	const hasMultipleActivities = activities.length > 1;
+	const activity = useMemo(() => activities[activityIndex] ?? null, [activities, activityIndex]);
 	const display = useMemo(() => (activity ? formatActivityDisplay(activity) : null), [activity]);
 	if (!activity || !display) return null;
 	return (
 		<div className={styles.activityCard} data-flx="user.profile.profile-rich-presence">
 			<div className={styles.headerRow}>
 				<span className={styles.activityLabel}>{getActivityHeader(activity, display.listeningSource)}</span>
+				{hasMultipleActivities ? (
+					<div className={styles.activityCarouselControls}>
+						<button
+							type="button"
+							className={styles.activityCarouselButton}
+							onClick={() => setActivityIndex((currentIndex) => Math.max(currentIndex - 1, 0))}
+							disabled={activityIndex === 0}
+							aria-label="Show previous activity"
+						>
+							<CaretLeftIcon size={14} weight="bold" aria-hidden />
+						</button>
+						<span className={styles.activityCarouselCount}>
+							{activityIndex + 1}/{activities.length}
+						</span>
+						<button
+							type="button"
+							className={styles.activityCarouselButton}
+							onClick={() => setActivityIndex((currentIndex) => Math.min(currentIndex + 1, activities.length - 1))}
+							disabled={activityIndex >= activities.length - 1}
+							aria-label="Show next activity"
+						>
+							<CaretRightIcon size={14} weight="bold" aria-hidden />
+						</button>
+					</div>
+				) : null}
 			</div>
 			<div className={styles.activityRow}>
 				<div className={styles.activityArt}>

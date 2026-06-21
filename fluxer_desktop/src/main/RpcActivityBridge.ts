@@ -64,6 +64,7 @@ async function buildPayload(
 	if (!activity) {
 		return {activity: null, pid, source};
 	}
+	const resolved = resolveByClientId(activity.application_id);
 	let displayActivity = activity;
 	let gatewayActivity = activity;
 	if (activity.assets) {
@@ -76,6 +77,17 @@ async function buildPayload(
 		const gatewayAssets = sanitizeRpcActivityAssetsForGateway(activity.assets);
 		displayActivity = displayAssets !== activity.assets ? {...activity, assets: displayAssets} : activity;
 		gatewayActivity = gatewayAssets !== activity.assets ? {...activity, assets: gatewayAssets} : activity;
+	} else if (resolved?.iconUrl) {
+		const fallbackAssets = await resolveRpcActivityAssetsForDisplay({
+			large_image: resolved.iconUrl,
+			large_text: resolved.name,
+		});
+		const gatewayFallbackAssets = sanitizeRpcActivityAssetsForGateway({
+			large_image: resolved.iconUrl,
+			large_text: resolved.name,
+		});
+		displayActivity = {...activity, assets: fallbackAssets};
+		gatewayActivity = {...activity, assets: gatewayFallbackAssets};
 	}
 	return toUpdatePayload(displayActivity, pid, source, gatewayActivity);
 }
@@ -84,12 +96,12 @@ export function startRpcActivityBridge(): void {
 	if (unsubscribe) return;
 	loadDetectableApplications();
 	unsubscribe = onRpcActivity((activity, pid, source = 'ipc') => {
-		if (source === 'process-scan') return;
 		if (activity === null && source === 'ipc-disconnect' && hasConnectedIpcClients()) {
 			return;
 		}
 		void (async () => {
-			const payload = await buildPayload(activity, pid, 'ipc');
+			const payloadSource: RpcActivityUpdatePayload['source'] = source === 'process-scan' ? 'process-scan' : 'ipc';
+			const payload = await buildPayload(activity, pid, payloadSource);
 			log.info('[RPC] Forwarding activity update', {
 				name: payload.activity?.name ?? null,
 				source: payload.source,

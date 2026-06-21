@@ -2,7 +2,7 @@
 
 import Authentication from '@app/features/auth/state/Authentication';
 import {ActivityEmitter} from '@app/features/presence/state/ActivityEmitter';
-import LocalRpcPresence from '@app/features/presence/state/LocalRpcPresence';
+import ActivityManager from '@app/features/presence/state/ActivityManager';
 import Presence from '@app/features/presence/state/Presence';
 import type {UserActivity} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {useCallback, useSyncExternalStore} from 'react';
@@ -14,19 +14,16 @@ interface UsePresenceActivitiesOptions {
 
 const EMPTY_ACTIVITIES: Array<UserActivity> = [];
 
-let cachedLocalActivity: UserActivity | null | undefined;
 let cachedLocalVersion = -1;
 let cachedLocalActivities: Array<UserActivity> = EMPTY_ACTIVITIES;
 
 function getLocalActivitiesSnapshot(): Array<UserActivity> {
-	const activity = LocalRpcPresence.activity;
-	const version = LocalRpcPresence.activityVersion;
-	if (activity === cachedLocalActivity && version === cachedLocalVersion) {
+	const version = ActivityManager.activityVersion;
+	if (version === cachedLocalVersion) {
 		return cachedLocalActivities;
 	}
-	cachedLocalActivity = activity;
 	cachedLocalVersion = version;
-	cachedLocalActivities = activity ? [activity] : EMPTY_ACTIVITIES;
+	cachedLocalActivities = ActivityManager.getActivities();
 	return cachedLocalActivities;
 }
 

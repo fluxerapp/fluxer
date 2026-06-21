@@ -2,11 +2,21 @@
 
 import Authentication from '@app/features/auth/state/Authentication';
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import LocalRpcPresence from '@app/features/presence/state/LocalRpcPresence';
+import ActivityManager, {type ActivitySource} from '@app/features/presence/state/ActivityManager';
 import {getElectronAPI, isDesktop} from '@app/features/ui/utils/NativeUtils';
 import type {UserActivity} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 
 const logger = new Logger('DesktopRpcBridge');
+
+function getActivityKey(payload: {source: 'ipc' | 'process-scan'; pid?: number; activity: UserActivity | null}): string | null {
+	if (typeof payload.pid === 'number' && Number.isFinite(payload.pid)) {
+		return `pid:${payload.pid}`;
+	}
+	if (payload.activity?.application_id) {
+		return `app:${payload.activity.application_id}`;
+	}
+	return payload.activity ? `${payload.source}:singleton` : null;
+}
 
 function toUserActivity(desktopActivity: {
 	type: number;
@@ -45,13 +55,16 @@ function toUserActivity(desktopActivity: {
 function applyDesktopActivityPayload(payload: {
 	activity: UserActivity | null;
 	gatewayActivity?: UserActivity | null;
+	pid?: number;
 	source: 'ipc' | 'process-scan';
 }): void {
 	if (!Authentication.isAuthenticated) return;
+	const activitySource: ActivitySource = payload.source === 'process-scan' ? 'detected' : 'rpc';
+	const activityKey = getActivityKey(payload);
 	if (payload.activity) {
-		LocalRpcPresence.applyActivityImmediate(payload.activity, payload.gatewayActivity ?? payload.activity);
+		ActivityManager.setSourceActivity(activitySource, activityKey ?? `${activitySource}:singleton`, payload.activity, payload.gatewayActivity ?? payload.activity);
 	} else {
-		LocalRpcPresence.clearImmediately();
+		ActivityManager.clearSourceActivity(activitySource, activityKey ?? undefined);
 	}
 	logger.debug('RPC activity updated', {name: payload.activity?.name ?? null, source: payload.source});
 }
@@ -66,6 +79,7 @@ export function initializeDesktopRpcBridge(): (() => void) | null {
 		applyDesktopActivityPayload({
 			activity: displayActivity,
 			gatewayActivity,
+			pid: payload.pid,
 			source: payload.source,
 		});
 	});
@@ -78,6 +92,7 @@ export function initializeDesktopRpcBridge(): (() => void) | null {
 			applyDesktopActivityPayload({
 				activity: displayActivity,
 				gatewayActivity,
+				pid: payload.pid,
 				source: payload.source,
 			});
 		})

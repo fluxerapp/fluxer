@@ -17,6 +17,8 @@
 .headerRow {
 	display: flex;
 	align-items: center;
+	justify-content: space-between;
+	gap: 0.5rem;
 	min-width: 0;
 }
 
@@ -27,6 +29,51 @@
 	color: var(--text-primary);
 	text-transform: uppercase;
 	letter-spacing: 0.02em;
+}
+
+.activityCarouselControls {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.25rem;
+	flex-shrink: 0;
+}
+
+.activityCarouselButton {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 1.5rem;
+	height: 1.5rem;
+	padding: 0;
+	border: 0;
+	border-radius: 999px;
+	background: var(--background-tertiary);
+	color: var(--text-normal);
+	cursor: pointer;
+	transition:
+		background-color 120ms ease,
+		color 120ms ease,
+		opacity 120ms ease;
+}
+
+.activityCarouselButton:hover:not(:disabled) {
+	background: rgb(255 255 255 / 0.12);
+}
+
+.activityCarouselButton:disabled {
+	background: rgb(0 0 0 / 0.18);
+	color: var(--text-muted);
+	opacity: 0.55;
+	cursor: default;
+}
+
+.activityCarouselCount {
+	min-width: 2.5rem;
+	text-align: center;
+	font-size: 0.6875rem;
+	font-weight: 600;
+	line-height: 1;
+	color: var(--text-muted);
 }
 
 .activityRow {

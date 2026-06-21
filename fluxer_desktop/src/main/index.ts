@@ -59,6 +59,7 @@ import {cleanupIpcHandlers, registerIpcHandlers} from '@electron/main/IpcHandler
 import {initializeJumpList} from '@electron/main/JumpList';
 import {describeLaunchDiagnosticOptions, shouldStartHiddenAtLogin} from '@electron/main/LaunchOptions';
 import {cleanupVirtmic, registerVirtmicHandlers} from '@electron/main/LinuxAudioCapture';
+import {startLinuxProcessScanner, stopLinuxProcessScanner} from '@electron/main/LinuxProcessScanner';
 import {initializeMainI18n} from '@electron/main/MainI18n';
 import {createApplicationMenu} from '@electron/main/Menu';
 import {cleanupNativeAudio, registerNativeAudioHandlers} from '@electron/main/NativeAudio';
@@ -444,6 +445,7 @@ if (launchConfigurationError) {
 					.then(() => {
 						registerRpcCoverArtHandler();
 						startRpcActivityBridge();
+						startLinuxProcessScanner();
 					})
 					.catch((error: unknown) => {
 						log.error('[RPC] Failed to start ArRpcServer:', error);
@@ -498,6 +500,7 @@ if (launchConfigurationError) {
 				stopArRpcServer(),
 			];
 			stopRpcActivityBridge();
+			stopLinuxProcessScanner();
 			if (netLog.currentlyLogging) {
 				asyncCleanups.push(
 					netLog.stopLogging().catch((error) => {

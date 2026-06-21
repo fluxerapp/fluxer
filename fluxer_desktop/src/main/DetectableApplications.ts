@@ -192,11 +192,19 @@ export function getExecutableIndex(): Map<string, Array<DetectableApp>> {
 export function matchLinuxExecutable(
 	executable: DetectableExecutable,
 	pathVariations: Array<string>,
+	args: Array<string> = [],
 	platform: string = process.platform,
 ): boolean {
 	if (executable.os && executable.os !== platform) return false;
 	const firstCompare = pathVariations[0];
 	if (!firstCompare) return false;
+	const argsPattern = executable.arguments?.toLowerCase();
+	if (argsPattern) {
+		const cmdlineLower = args.join(' ').toLowerCase();
+		if (!cmdlineLower.includes(argsPattern)) {
+			return false;
+		}
+	}
 	const firstChar = executable.name[0];
 	if (firstChar === EXECUTABLE_EXACT_MATCH_PREFIX) {
 		return executable.name.slice(1) === firstCompare;

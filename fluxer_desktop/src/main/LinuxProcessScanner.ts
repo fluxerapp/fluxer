@@ -170,7 +170,7 @@ async function scan(): Promise<void> {
 				const candidates = getCandidateApps(variations);
 				for (const app of candidates) {
 					if (!app.executables) continue;
-					const matched = app.executables.some((exe) => matchLinuxExecutable(exe, variations));
+					const matched = app.executables.some((exe) => matchLinuxExecutable(exe, variations, args));
 					if (matched) {
 						matchedApp = app;
 						break;
