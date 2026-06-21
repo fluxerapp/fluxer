@@ -174,12 +174,14 @@ build_session_data(Data, IdentifyData, Version, SocketPid, SessionId, UserDataMa
     IgnoredEvents = map_utils:get_safe(IdentifyData, ignored_events, []),
     Shard = maps:get(shard, IdentifyData, undefined),
     DetachedCustomStatus = detach_custom_status(resolve_custom_status(Data, Presence)),
+    DetachedActivities = detach_activities(resolve_activities(Presence)),
     BaseFields = #{
         id => SessionId,
         user_id => UserId,
         version => Version,
         user_data => term_detach:detach(build_user_data(UserDataMap)),
         custom_status => DetachedCustomStatus,
+        activities => DetachedActivities,
         token_hash => utils:hash_token(maps:get(token, IdentifyData)),
         auth_session_id_hash => extract_auth_session_id_hash(Data),
         properties => term_detach:detach(Properties),
@@ -248,6 +250,18 @@ detach_custom_status(CustomStatus) when is_map(CustomStatus) ->
         _ -> null
     end.
 
+-spec detach_activities([map()] | null) -> [map()] | null.
+detach_activities(null) ->
+    null;
+detach_activities(Activities) when is_list(Activities) ->
+    Detached = term_detach:detach(Activities),
+    case Detached of
+        List when is_list(List) -> [A || A <- List, is_map(A)];
+        _ -> null
+    end;
+detach_activities(_) ->
+    null.
+
 -spec resolve_custom_status(map(), term()) -> map() | null.
 resolve_custom_status(Data, Presence) ->
     UserSettingsMap = map_utils:get_safe(Data, <<"user_settings">>, #{}),
@@ -256,6 +270,15 @@ resolve_custom_status(Data, Presence) ->
         CustomStatus when is_map(CustomStatus) -> CustomStatus;
         _ -> null
     end.
+
+-spec resolve_activities(term()) -> [map()] | null.
+resolve_activities(Presence) when is_map(Presence) ->
+    case map_utils:get_safe(Presence, <<"activities">>, null) of
+        List when is_list(List) -> [A || A <- List, is_map(A)];
+        _ -> null
+    end;
+resolve_activities(_) ->
+    null.
 
 -spec extract_mobile(term(), map()) -> boolean().
 extract_mobile(null, Properties) ->

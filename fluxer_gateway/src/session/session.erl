@@ -28,6 +28,7 @@
     user_id => user_id(),
     user_data => map(),
     custom_status => map() | null,
+    activities => [map()] | null,
     version => non_neg_integer(),
     token_hash => binary(),
     auth_session_id_hash => binary(),

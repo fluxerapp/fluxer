@@ -212,7 +212,7 @@ build_presence_payload(State) ->
     Afk = presence_status:get_flattened_afk(Sessions),
     UserData = maps:get(user_data, State, #{}),
     CustomStatus = maps:get(custom_status, State, null),
-    Activities = maps:get(activities, State, null),
+    Activities = presence_status:get_current_activities(Sessions),
     presence_payload:build(UserData, Status, Mobile, Afk, CustomStatus, Activities).
 
 -spec dispatch_foreign_presence(user_id(), map(), state()) -> {noreply, state()}.

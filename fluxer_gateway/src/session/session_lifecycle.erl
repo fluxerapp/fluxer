@@ -441,8 +441,15 @@ handle_presence_update_cast(Update, State) ->
     NewStatus = maps:get(status, Update, Status),
     NewAfk = maps:get(afk, Update, Afk),
     NewMobile = maps:get(mobile, Update, Mobile),
+    NewActivities = maps:get(<<"activities">>, Update, maps:get(activities, State, null)),
     NewState = maybe_update_resume_status(
-        NewStatus, State#{status => NewStatus, afk => NewAfk, mobile => NewMobile}
+        NewStatus,
+        State#{
+            status => NewStatus,
+            afk => NewAfk,
+            mobile => NewMobile,
+            activities => NewActivities
+        }
     ),
     send_presence_update(State, SessionId, NewStatus, NewAfk, NewMobile, Update),
     {noreply, NewState}.
@@ -505,6 +512,7 @@ serialize_state(State) ->
         resume_status => maps:get(resume_status, State, maps:get(status, State)),
         afk => maps:get(afk, State),
         mobile => maps:get(mobile, State),
+        activities => maps:get(activities, State, null),
         buffer => maps:get(buffer, State),
         ready => maps:get(ready, State),
         bot => maps:get(bot, State, false),
@@ -537,6 +545,7 @@ serialize_transfer_identity(State) ->
         resume_status => maps:get(resume_status, State, maps:get(status, State)),
         afk => maps:get(afk, State),
         mobile => maps:get(mobile, State),
+        activities => maps:get(activities, State, null),
         socket_pid => undefined,
         guilds => session_init:normalize_guild_ids(maps:keys(maps:get(guilds, State, #{}))),
         ready => maps:get(ready, State),

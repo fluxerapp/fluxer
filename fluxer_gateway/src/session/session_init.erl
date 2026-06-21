@@ -189,6 +189,7 @@ extract_core_fields(
         user_id => UserId,
         user_data => UserData,
         custom_status => maps:get(custom_status, D, null),
+        activities => maps:get(activities, D, null),
         version => Version,
         token_hash => TokenHash,
         auth_session_id_hash => AuthSessionIdHash,

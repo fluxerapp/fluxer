@@ -5,6 +5,7 @@
 
 -export([
     get_current_status/1,
+    get_current_activities/1,
     get_flattened_mobile/1,
     get_flattened_afk/1,
     collect_sessions_for_replace/1
@@ -14,7 +15,10 @@
 
 -type session_id() :: binary().
 -type status() :: online | offline | idle | dnd | invisible.
--type session_entry() :: #{status := status(), afk := boolean(), mobile := boolean(), _ => _}.
+-type activities() :: [map()] | null.
+-type session_entry() :: #{
+    status := status(), afk := boolean(), mobile := boolean(), activities => activities(), _ => _
+}.
 -type sessions() :: #{session_id() => session_entry()}.
 
 -spec get_current_status(sessions()) -> status().
@@ -53,6 +57,24 @@ get_flattened_mobile(Sessions) ->
         fun(Session) ->
             maps:get(mobile, Session, false)
         end,
+        maps:values(Sessions)
+    ).
+
+-spec get_current_activities(sessions()) -> activities().
+get_current_activities(Sessions) ->
+    lists:foldl(
+        fun
+            (_Session, Activities) when is_list(Activities), Activities =/= [] ->
+                Activities;
+            (Session, _Acc) ->
+                case {maps:get(status, Session, offline), maps:get(activities, Session, null)} of
+                    {Status, Activities} when Status =/= offline, Status =/= invisible, is_list(Activities), Activities =/= [] ->
+                        Activities;
+                    _ ->
+                        null
+                end
+        end,
+        null,
         maps:values(Sessions)
     ).
 
@@ -172,6 +194,21 @@ get_flattened_mobile_false_test() ->
 
 get_flattened_mobile_empty_test() ->
     ?assertEqual(false, get_flattened_mobile(#{})).
+
+get_current_activities_prefers_visible_session_test() ->
+    Sessions = #{
+        <<"desktop">> => #{
+            status => online,
+            afk => false,
+            mobile => false,
+            activities => [#{<<"name">> => <<"Fluxcap">>, <<"type">> => 0}]
+        },
+        <<"browser">> => #{status => online, afk => false, mobile => false, activities => null}
+    },
+    ?assertEqual(
+        [#{<<"name">> => <<"Fluxcap">>, <<"type">> => 0}],
+        get_current_activities(Sessions)
+    ).
 
 get_flattened_afk_all_afk_test() ->
     Sessions = #{
