@@ -36,6 +36,15 @@ export function getActiveScannedGameId(): string | null {
 	return lastEmittedPrimaryId;
 }
 
+export function getScannedGameIdByPid(pid: number): string | null {
+	for (const [id, state] of gameState) {
+		if (state.pid === pid) {
+			return id;
+		}
+	}
+	return null;
+}
+
 function isIgnoredPath(processPath: string): boolean {
 	const lower = processPath.toLowerCase();
 	return ANTI_CHEAT_EXECUTABLES.some((name) => lower.includes(name));

@@ -2,7 +2,8 @@
 
 import type {RpcActivityUpdatePayload} from '@electron/common/RpcActivityTypes';
 import {getConnectedIpcClientCount, onRpcActivity} from '@electron/main/ArRpcServer';
-import {loadDetectableApplications, resolveByClientId} from '@electron/main/DetectableApplications';
+import {loadDetectableApplications, resolveByClientId, resolveMappedRpcImage} from '@electron/main/DetectableApplications';
+import {getScannedGameIdByPid} from '@electron/main/LinuxProcessScanner';
 import {resolveMprisCoverArtUrl} from '@electron/main/MprisCoverArt';
 import {resolveRpcActivityAssetsForDisplay, sanitizeRpcActivityAssetsForGateway} from '@electron/main/RpcCoverArt';
 import type {RpcActivityPayload} from '@electron/main/rpc/RpcTypes';
@@ -12,6 +13,34 @@ import log from 'electron-log';
 
 let unsubscribe: (() => void) | null = null;
 let latestActivityPayload: RpcActivityUpdatePayload | null = null;
+
+function resolveApplication(applicationId: string, pid?: number) {
+	const resolved = resolveByClientId(applicationId);
+	if (resolved || pid === undefined) {
+		return resolved;
+	}
+	const scannedGameId = getScannedGameIdByPid(pid);
+	return scannedGameId ? resolveByClientId(scannedGameId) : null;
+}
+
+function resolveMappedAssets(
+	applicationId: string,
+	pid: number | undefined,
+	assets: RpcActivityPayload['assets'] | undefined,
+): RpcActivityPayload['assets'] | undefined {
+	if (!assets) return assets;
+	const mappedApplicationId = resolveApplication(applicationId, pid)?.id ?? applicationId;
+	const largeImage = resolveMappedRpcImage(mappedApplicationId, assets.large_image);
+	const smallImage = resolveMappedRpcImage(mappedApplicationId, assets.small_image);
+	if (largeImage === assets.large_image && smallImage === assets.small_image) {
+		return assets;
+	}
+	return {
+		...assets,
+		large_image: largeImage,
+		small_image: smallImage,
+	};
+}
 
 function hasConnectedIpcClients(): boolean {
 	return getConnectedIpcClientCount() > 0;
@@ -30,7 +59,7 @@ function toUpdatePayload(
 	if (timestamps) {
 		normalizeTimestamps(timestamps);
 	}
-	const resolved = resolveByClientId(activity.application_id);
+	const resolved = resolveApplication(activity.application_id, pid);
 	return {
 		activity: {
 			...activity,
@@ -64,17 +93,18 @@ async function buildPayload(
 	if (!activity) {
 		return {activity: null, pid, source};
 	}
-	const resolved = resolveByClientId(activity.application_id);
+	const resolved = resolveApplication(activity.application_id, pid);
 	let displayActivity = activity;
 	let gatewayActivity = activity;
 	if (activity.assets) {
 		const mprisCoverArt = await resolveMprisCoverArtUrl(activity);
+		const resolvedAssets = resolveMappedAssets(activity.application_id, pid, activity.assets);
 		const displaySourceAssets =
 			mprisCoverArt && mprisCoverArt !== activity.assets.large_image
-				? {...activity.assets, large_image: mprisCoverArt}
-				: activity.assets;
+				? {...resolvedAssets, large_image: mprisCoverArt}
+				: resolvedAssets;
 		const displayAssets = await resolveRpcActivityAssetsForDisplay(displaySourceAssets);
-		const gatewayAssets = sanitizeRpcActivityAssetsForGateway(activity.assets);
+		const gatewayAssets = sanitizeRpcActivityAssetsForGateway(resolvedAssets);
 		displayActivity = displayAssets !== activity.assets ? {...activity, assets: displayAssets} : activity;
 		gatewayActivity = gatewayAssets !== activity.assets ? {...activity, assets: gatewayAssets} : activity;
 	} else if (resolved?.iconUrl) {

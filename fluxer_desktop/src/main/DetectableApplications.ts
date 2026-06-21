@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {app} from 'electron';
 import log from 'electron-log';
+import {cacheRpcCoverArt} from '@electron/main/RpcCoverArtProtocol';
 import {EXECUTABLE_EXACT_MATCH_PREFIX} from '@electron/main/rpc/RpcConstants';
 import type {DetectableApp, DetectableExecutable} from '@electron/main/rpc/RpcTypes';
 
@@ -16,16 +17,26 @@ export interface ResolvedApplication {
 interface FluxerDetectableRecord {
 	name: string;
 	url?: string;
+	icon?: string;
 	aliases?: Array<string>;
 	executables?: Array<DetectableExecutable>;
+	presence_assets?: Record<string, string>;
 	client_id?: string;
 }
 
 let detectableDb: Array<DetectableApp> = [];
 const clientIdIndex = new Map<string, DetectableApp>();
 const executableIndex = new Map<string, Array<DetectableApp>>();
+const detectableAssetUrlCache = new Map<string, string>();
 let loaded = false;
 let syncPromise: Promise<void> | null = null;
+
+function hasDetectablesJson(dir: string): boolean {
+	return (
+		fs.existsSync(path.join(dir, 'data', 'detectables.json')) ||
+		fs.existsSync(path.join(dir, 'detectables.json'))
+	);
+}
 
 function getBundledRpcDir(): string {
 	if (app.isPackaged) {
@@ -36,7 +47,7 @@ function getBundledRpcDir(): string {
 		path.join(app.getAppPath(), 'dist', 'rpc'),
 	];
 	for (const candidate of candidates) {
-		if (fs.existsSync(path.join(candidate, 'detectables.json'))) {
+		if (hasDetectablesJson(candidate)) {
 			return candidate;
 		}
 	}
@@ -52,7 +63,40 @@ function getLockPath(): string {
 }
 
 function getDetectablesPath(): string {
-	return path.join(getDetectablesCacheDir(), 'detectables.json');
+	const cacheDir = getDetectablesCacheDir();
+	const bundledDir = getBundledRpcDir();
+	const candidates = [
+		path.join(cacheDir, 'data', 'detectables.json'),
+		path.join(cacheDir, 'detectables.json'),
+		path.join(bundledDir, 'data', 'detectables.json'),
+		path.join(bundledDir, 'detectables.json'),
+	];
+	return candidates.find((candidate) => fs.existsSync(candidate)) ?? candidates[0];
+}
+
+function resolveDetectableAssetFile(assetPath: string): string | null {
+	const roots = [
+		path.join(getDetectablesCacheDir(), 'assets'),
+		path.join(getBundledRpcDir(), 'assets'),
+	];
+	for (const root of roots) {
+		const candidate = path.join(root, assetPath);
+		if (fs.existsSync(candidate)) {
+			return candidate;
+		}
+	}
+	return null;
+}
+
+function resolveDetectableAssetUrl(assetPath: string | undefined): string | null {
+	if (!assetPath) return null;
+	const assetFile = resolveDetectableAssetFile(assetPath);
+	if (!assetFile) return null;
+	const cached = detectableAssetUrlCache.get(assetFile);
+	if (cached) return cached;
+	const protocolUrl = cacheRpcCoverArt(`detectable:${assetPath}`, 'image/png', fs.readFileSync(assetFile));
+	detectableAssetUrlCache.set(assetFile, protocolUrl);
+	return protocolUrl;
 }
 
 function slugifyDetectableId(name: string): string {
@@ -68,8 +112,10 @@ function normalizeDetectableRecord(record: FluxerDetectableRecord): DetectableAp
 		id,
 		name: record.name,
 		url: record.url,
+		icon: record.icon,
 		aliases: record.aliases,
 		executables: record.executables,
+		presence_assets: record.presence_assets,
 		client_id: record.client_id,
 	};
 }
@@ -96,33 +142,65 @@ function buildIndexes(): void {
 
 function buildIconUrl(entry: DetectableApp): string | null {
 	if (entry.url) return entry.url;
+	if (entry.icon) return resolveDetectableAssetUrl(entry.icon);
 	return null;
+}
+
+async function downloadToFile(baseUrl: string, file: string, rootDir: string): Promise<void> {
+	const url = `${baseUrl}/${file}`;
+	const res = await fetch(url, {cache: 'no-store'});
+	if (!res.ok) {
+		throw new Error(`Failed ${url}: ${res.status}`);
+	}
+	const targetPath = path.join(rootDir, file);
+	fs.mkdirSync(path.dirname(targetPath), {recursive: true});
+	fs.writeFileSync(targetPath, Buffer.from(await res.arrayBuffer()));
+}
+
+async function listRepoFiles(repo: string, ref: string): Promise<Array<string>> {
+	const url = `https://api.github.com/repos/${repo}/git/trees/${encodeURIComponent(ref)}?recursive=1`;
+	const res = await fetch(url, {
+		cache: 'no-store',
+		headers: {
+			Accept: 'application/vnd.github+json',
+			'User-Agent': 'fluxer-detectables-sync',
+		},
+	});
+	if (!res.ok) {
+		throw new Error(`Failed ${url}: ${res.status}`);
+	}
+	const payload = (await res.json()) as {
+		tree?: Array<{path?: string; type?: string}>;
+		truncated?: boolean;
+	};
+	if (payload.truncated) {
+		throw new Error(`Detectables tree for ${repo}@${ref} is truncated`);
+	}
+	return (payload.tree ?? [])
+		.filter((entry) => entry.type === 'blob' && typeof entry.path === 'string')
+		.map((entry) => entry.path!);
 }
 
 async function syncDetectableApplicationsInner(): Promise<void> {
 	const lockPath = getLockPath();
-	const lock = JSON.parse(fs.readFileSync(lockPath, 'utf8')) as {
-		repo?: string;
-		ref?: string;
-		files?: Array<string>;
-	};
+	const lock = JSON.parse(fs.readFileSync(lockPath, 'utf8')) as {repo?: string; ref?: string};
 	const repo = lock.repo ?? 'fluxerapp/detectables';
 	const ref = lock.ref ?? 'main';
-	const files = lock.files ?? ['detectables.json', 'detectables.schema.json'];
+	const files = await listRepoFiles(repo, ref);
 	const baseUrl = `https://raw.githubusercontent.com/${repo}/${ref}`;
 	const cacheDir = getDetectablesCacheDir();
 
+	fs.rmSync(cacheDir, {recursive: true, force: true});
 	fs.mkdirSync(cacheDir, {recursive: true});
 	for (const file of files) {
-		const url = `${baseUrl}/${file}`;
-		const res = await fetch(url, {cache: 'no-store'});
-		if (!res.ok) {
-			throw new Error(`Failed ${url}: ${res.status}`);
-		}
-		const targetPath = path.join(cacheDir, file);
-		fs.writeFileSync(targetPath, Buffer.from(await res.arrayBuffer()));
+		await downloadToFile(baseUrl, file, cacheDir);
 	}
-	log.info('[RPC] Synced detectables', {repo, ref, files});
+	log.info('[RPC] Synced detectables', {
+		repo,
+		ref,
+		fileCount: files.length,
+		filePreview: files.slice(0, 10),
+	});
 }
 
 export function syncDetectableApplications(): Promise<void> {
@@ -156,6 +234,7 @@ export function resetDetectableApplicationsForTests(): void {
 	detectableDb = [];
 	clientIdIndex.clear();
 	executableIndex.clear();
+	detectableAssetUrlCache.clear();
 	windowsCmdlinePatternsByBasename = null;
 	loaded = false;
 	syncPromise = null;
@@ -187,6 +266,23 @@ export function getDetectableDb(): Array<DetectableApp> {
 export function getExecutableIndex(): Map<string, Array<DetectableApp>> {
 	loadDetectableApplications();
 	return executableIndex;
+}
+
+export function resolveMappedRpcImage(clientId: string, image: string | undefined): string | undefined {
+	if (!image) return image;
+	if (
+		image.startsWith('http://') ||
+		image.startsWith('https://') ||
+		image.startsWith('data:') ||
+		image.startsWith('blob:') ||
+		image.startsWith('fluxer-rpc-art://') ||
+		image.includes(':')
+	) {
+		return image;
+	}
+	loadDetectableApplications();
+	const assetPath = clientIdIndex.get(clientId)?.presence_assets?.[image.toLowerCase()];
+	return resolveDetectableAssetUrl(assetPath) ?? image;
 }
 
 export function matchLinuxExecutable(

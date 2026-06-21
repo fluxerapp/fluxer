@@ -124,9 +124,9 @@ export class ActivityManager {
 		this.recomputeActiveActivity();
 	}
 
-	getGatewayActivities(): Array<UserActivity> | null {
+	getGatewayActivities(): Array<UserActivity> {
 		const activity = this.gatewayActivity ?? this.activity;
-		return activity ? [sanitizeActivityAssetsForGateway(activity)] : null;
+		return activity ? [sanitizeActivityAssetsForGateway(activity)] : [];
 	}
 
 	private recomputeActiveActivity(): void {

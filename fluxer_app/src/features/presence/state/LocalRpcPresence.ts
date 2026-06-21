@@ -73,9 +73,9 @@ class LocalRpcPresence {
 		}, DEBOUNCE_MS);
 	}
 
-	getGatewayActivities(): Array<UserActivity> | null {
+	getGatewayActivities(): Array<UserActivity> {
 		const activity = this.gatewayActivity ?? this.activity;
-		return activity ? [sanitizeActivityAssetsForGateway(activity)] : null;
+		return activity ? [sanitizeActivityAssetsForGateway(activity)] : [];
 	}
 
 	clearImmediately(): void {

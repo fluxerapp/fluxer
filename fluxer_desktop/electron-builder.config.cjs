@@ -1102,7 +1102,7 @@ module.exports = {
 		{
 			from: 'assets/rpc/',
 			to: 'rpc',
-			filter: ['*.json', '*.md'],
+			filter: ['**/*.json', '**/*.md'],
 		},
 	],
 	asar: {

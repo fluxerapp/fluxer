@@ -13,10 +13,12 @@ export interface DetectableApp {
 	id: string;
 	name: string;
 	url?: string;
+	icon?: string;
 	icon_hash?: string;
 	cover_image_hash?: string;
 	executables?: Array<DetectableExecutable>;
 	aliases?: Array<string>;
+	presence_assets?: Record<string, string>;
 	hook?: boolean;
 	overlay?: boolean;
 	client_id?: string;

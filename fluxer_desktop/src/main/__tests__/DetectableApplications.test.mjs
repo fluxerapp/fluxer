@@ -50,6 +50,13 @@ function loadDetectableApplicationsModule({userDataPath, appPath}) {
 				EXECUTABLE_EXACT_MATCH_PREFIX: '>',
 			};
 		}
+		if (specifier === '@electron/main/RpcCoverArtProtocol') {
+			return {
+				cacheRpcCoverArt() {
+					return 'fluxer-rpc-art://mock/';
+				},
+			};
+		}
 		return require(specifier);
 	};
 	const context = vm.createContext({
@@ -69,14 +76,18 @@ describe('DetectableApplications', () => {
 		const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'fluxer-detectables-test-'));
 		const appPath = path.dirname(path.dirname(sourcePath));
 		const rpcDir = path.join(tempDir, 'rpc');
-		fs.mkdirSync(rpcDir, {recursive: true});
+		fs.mkdirSync(path.join(rpcDir, 'data'), {recursive: true});
+		fs.mkdirSync(path.join(rpcDir, 'assets', 'osu'), {recursive: true});
+		fs.writeFileSync(path.join(rpcDir, 'assets', 'minecraft.png'), Buffer.from([0x89, 0x50, 0x4e, 0x47]));
+		fs.writeFileSync(path.join(rpcDir, 'assets', 'osu', 'mode_0.png'), Buffer.from([0x89, 0x50, 0x4e, 0x47]));
 		fs.writeFileSync(
-			path.join(rpcDir, 'detectables.json'),
+			path.join(rpcDir, 'data', 'detectables.json'),
 			JSON.stringify([
 				{
 					name: 'Minecraft',
-					url: 'https://www.minecraft.net/favicon.ico',
+					icon: 'minecraft.png',
 					executables: [{name: '>java', os: 'linux', arguments: 'net.minecraft.client.main.Main'}],
+					presence_assets: {mode_0: 'osu/mode_0.png'},
 				},
 			]),
 		);
@@ -87,8 +98,10 @@ describe('DetectableApplications', () => {
 
 		assert.equal(detectables.length, 1);
 		assert.equal(detectables[0]?.name, 'Minecraft');
-		assert.ok(detectables[0]?.url?.startsWith('https://'));
+		assert.equal(detectables[0]?.icon, 'minecraft.png');
 		assert.ok(detectables[0]?.executables?.some((exe) => exe.os === 'linux' && exe.name === '>java'));
+		assert.equal(detectablesModule.resolveMappedRpcImage('minecraft', 'mode_0'), 'fluxer-rpc-art://mock/');
+		assert.equal(detectablesModule.resolveByClientId('minecraft')?.iconUrl, 'fluxer-rpc-art://mock/');
 	});
 
 	test('falls back to an empty database when the cache is missing', () => {
@@ -98,6 +111,6 @@ describe('DetectableApplications', () => {
 
 		detectablesModule.loadDetectableApplications();
 
-		assert.deepEqual(detectablesModule.getDetectableDb(), []);
+		assert.equal(detectablesModule.getDetectableDb().length, 0);
 	});
 });
