@@ -9,7 +9,6 @@ import {
 	getExecutableIndex,
 	matchAppByWindowsCmdline,
 	matchLinuxExecutable,
-	resolveByClientId,
 } from '@electron/main/DetectableApplications';
 import {
 	ANTI_CHEAT_EXECUTABLES,
@@ -42,8 +41,8 @@ function isIgnoredPath(processPath: string): boolean {
 	return ANTI_CHEAT_EXECUTABLES.some((name) => lower.includes(name));
 }
 
-function generatePathVariations(normalizedPath: string): string[] {
-	const toCompare: string[] = [];
+function generatePathVariations(normalizedPath: string): Array<string> {
+	const toCompare: Array<string> = [];
 	const splitPath = normalizedPath.split('/');
 	for (let i = 1; i <= splitPath.length; i++) {
 		toCompare.push(splitPath.slice(-i).join('/'));
@@ -61,9 +60,9 @@ function generatePathVariations(normalizedPath: string): string[] {
 	return toCompare;
 }
 
-async function readProcessEntries(): Promise<Array<[number, string, string[]]>> {
+async function readProcessEntries(): Promise<Array<[number, string, Array<string>]>> {
 	const entries = await fs.readdir(LINUX_PROC_DIR, {withFileTypes: true});
-	const processes: Array<[number, string, string[]]> = [];
+	const processes: Array<[number, string, Array<string>]> = [];
 	for (const entry of entries) {
 		if (!entry.isDirectory() || !/^\d+$/.test(entry.name)) continue;
 		const pid = Number.parseInt(entry.name, 10);
@@ -81,13 +80,13 @@ async function readProcessEntries(): Promise<Array<[number, string, string[]]>> 
 	return processes;
 }
 
-function getCandidateApps(pathVariations: string[]): DetectableApp[] {
+function getCandidateApps(pathVariations: Array<string>): Array<DetectableApp> {
 	const executableIndex = getExecutableIndex();
 	const candidateSet = new Set<DetectableApp>();
 	for (const pathVar of pathVariations) {
 		const apps = executableIndex.get(pathVar);
 		if (apps) {
-			for (const app of apps) apps.forEach((a) => candidateSet.add(a));
+			for (const candidate of apps) candidateSet.add(candidate);
 		}
 		const lastSlash = pathVar.lastIndexOf('/');
 		const filename = lastSlash >= 0 ? pathVar.slice(lastSlash + 1) : pathVar;
@@ -210,7 +209,7 @@ async function scan(): Promise<void> {
 export function startLinuxProcessScanner(): void {
 	if (process.platform !== 'linux' || scanTimer) return;
 	scanTimer = setInterval(() => void scan(), PROCESS_SCAN_INTERVAL);
-	setTimeout(() => void scan(), 10_000);
+	void scan();
 	log.info('[RPC] LinuxProcessScanner started');
 }
 
@@ -223,18 +222,18 @@ export function stopLinuxProcessScanner(): void {
 	lastEmittedPrimaryId = null;
 }
 
-export function __testGeneratePathVariations(normalizedPath: string): string[] {
+export function __testGeneratePathVariations(normalizedPath: string): Array<string> {
 	return generatePathVariations(normalizedPath);
 }
 
-export function __testGetCandidateApps(pathVariations: string[]): DetectableApp[] {
+export function __testGetCandidateApps(pathVariations: Array<string>): Array<DetectableApp> {
 	return getCandidateApps(pathVariations);
 }
 
-export function __testReadProcessEntries(): Promise<Array<[number, string, string[]]>> {
+export function __testReadProcessEntries(): Promise<Array<[number, string, Array<string>]>> {
 	return readProcessEntries();
 }
 
-export function __testMatchAppByWindowsCmdline(args: string[]) {
+export function __testMatchAppByWindowsCmdline(args: Array<string>) {
 	return matchAppByWindowsCmdline(args);
 }

@@ -37,6 +37,7 @@ import {openExternalDeduped} from '@electron/main/OpenExternal';
 import {getStatus as getOpenH264Status, setEnabled as setOpenH264Enabled} from '@electron/main/OpenH264Manager';
 import {registerPasskeyHandlers} from '@electron/main/Passkeys';
 import {getAppMetricsSnapshot, getDesktopInfo, getGpuInfo} from '@electron/main/PlatformInfo';
+import {getLatestRpcActivityUpdate} from '@electron/main/RpcActivityBridge';
 import {getStreamerModeCaptureAppStatus} from '@electron/main/StreamerModeProcessDetection';
 import {
 	acquireStreamingPriority,
@@ -246,6 +247,7 @@ export function registerIpcHandlers(): void {
 	ipcMain.handle('get-desktop-info', () => getDesktopInfo());
 	ipcMain.handle('get-gpu-info', () => getGpuInfo());
 	ipcMain.handle('get-app-metrics', () => getAppMetricsSnapshot());
+	ipcMain.handle('rpc-activity-get-latest', () => getLatestRpcActivityUpdate());
 	ipcMain.handle('get-openh264-status', () => getOpenH264Status());
 	ipcMain.handle('set-openh264-enabled', (_event, enabled: unknown) => setOpenH264Enabled(Boolean(enabled)));
 	ipcMain.handle('streamer-mode:get-capture-app-status', () => getStreamerModeCaptureAppStatus());

@@ -2,6 +2,7 @@
 
 import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
+import {ActivityType} from '@electron/main/rpc/RpcConstants';
 import type {RpcActivityPayload} from '@electron/main/rpc/RpcTypes';
 
 const execFileAsync = promisify(execFile);
@@ -45,9 +46,11 @@ function metadataMatchesActivity(activity: RpcActivityPayload, metadata: MprisMe
 	const activityArtist = normalizeText(activity.state);
 	const metadataTitle = normalizeText(metadata.title);
 	const metadataArtist = normalizeText(metadata.artist);
-	return Boolean(activityTitle && activityArtist && metadataTitle && metadataArtist) &&
+	return (
+		Boolean(activityTitle && activityArtist && metadataTitle && metadataArtist) &&
 		activityTitle === metadataTitle &&
-		activityArtist === metadataArtist;
+		activityArtist === metadataArtist
+	);
 }
 
 function parseBusctlMetadata(jsonText: string): MprisMetadata | null {
@@ -61,11 +64,17 @@ function parseBusctlMetadata(jsonText: string): MprisMetadata | null {
 		const title = typeof parsed.data['xesam:title']?.data === 'string' ? parsed.data['xesam:title'].data : undefined;
 		const artistData = parsed.data['xesam:artist']?.data;
 		const artist = Array.isArray(artistData) && typeof artistData[0] === 'string' ? artistData[0] : undefined;
-		if (!artUrl) return null;
 		return {artUrl, title, artist};
 	} catch {
 		return null;
 	}
+}
+
+function formatPlayerName(player: string): string {
+	const rawName = player.replace(/^org\.mpris\.MediaPlayer2\./, '').split('.')[0] ?? player;
+	const normalized = rawName.replace(/[_-]+/g, ' ').trim();
+	if (!normalized) return 'Music';
+	return normalized.replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
 async function listMprisPlayers(): Promise<Array<string>> {
@@ -133,7 +142,28 @@ export async function resolveMprisCoverArtUrl(activity: RpcActivityPayload): Pro
 	return undefined;
 }
 
+export async function resolveCurrentMprisActivity(): Promise<RpcActivityPayload | null> {
+	if (process.platform !== 'linux') return null;
+	const players = await listMprisPlayers();
+	for (const player of players) {
+		const playbackStatus = await readPlaybackStatus(player);
+		if (playbackStatus !== 'Playing' && playbackStatus !== 'Paused') continue;
+		const metadata = await readMetadata(player);
+		if (!metadata?.title || !metadata.artist) continue;
+		return {
+			type: ActivityType.LISTENING,
+			application_id: `mpris:${player}`,
+			name: formatPlayerName(player),
+			details: metadata.title,
+			state: metadata.artist,
+			assets: metadata.artUrl ? {large_image: metadata.artUrl, large_text: metadata.title} : undefined,
+		};
+	}
+	return null;
+}
+
 export const __testables__ = {
+	formatPlayerName,
 	isStaticAssetKey,
 	isMusicLikeActivity,
 	metadataMatchesActivity,

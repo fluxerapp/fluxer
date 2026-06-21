@@ -42,21 +42,47 @@ function toUserActivity(desktopActivity: {
 	};
 }
 
+function applyDesktopActivityPayload(payload: {
+	activity: UserActivity | null;
+	gatewayActivity?: UserActivity | null;
+	source: 'ipc' | 'process-scan';
+}): void {
+	if (!Authentication.isAuthenticated) return;
+	if (payload.activity) {
+		LocalRpcPresence.applyActivityImmediate(payload.activity, payload.gatewayActivity ?? payload.activity);
+	} else {
+		LocalRpcPresence.clearImmediately();
+	}
+	logger.debug('RPC activity updated', {name: payload.activity?.name ?? null, source: payload.source});
+}
+
 export function initializeDesktopRpcBridge(): (() => void) | null {
 	if (!isDesktop()) return null;
 	const electronApi = getElectronAPI();
 	if (!electronApi?.onRpcActivityUpdate) return null;
-	return electronApi.onRpcActivityUpdate((payload) => {
-		if (!Authentication.isAuthenticated) return;
-		if (payload.activity) {
-			const displayActivity = toUserActivity(payload.activity);
-			const gatewayActivity = payload.gatewayActivity
-				? toUserActivity(payload.gatewayActivity)
-				: displayActivity;
-			LocalRpcPresence.applyActivityImmediate(displayActivity, gatewayActivity);
-		} else {
-			LocalRpcPresence.clearImmediately();
-		}
-		logger.debug('RPC activity updated', {name: payload.activity?.name ?? null, source: payload.source});
+	const unsubscribe = electronApi.onRpcActivityUpdate((payload) => {
+		const displayActivity = payload.activity ? toUserActivity(payload.activity) : null;
+		const gatewayActivity = payload.gatewayActivity ? toUserActivity(payload.gatewayActivity) : displayActivity;
+		applyDesktopActivityPayload({
+			activity: displayActivity,
+			gatewayActivity,
+			source: payload.source,
+		});
 	});
+	void electronApi
+		.getLatestRpcActivityUpdate?.()
+		.then((payload) => {
+			if (!payload) return;
+			const displayActivity = payload.activity ? toUserActivity(payload.activity) : null;
+			const gatewayActivity = payload.gatewayActivity ? toUserActivity(payload.gatewayActivity) : displayActivity;
+			applyDesktopActivityPayload({
+				activity: displayActivity,
+				gatewayActivity,
+				source: payload.source,
+			});
+		})
+		.catch((error: unknown) => {
+			logger.warn('Failed to hydrate latest RPC activity', error);
+		});
+	return unsubscribe;
 }

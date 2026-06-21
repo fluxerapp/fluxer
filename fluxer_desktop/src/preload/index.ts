@@ -361,6 +361,8 @@ const api: ElectronAPI = {
 	getDesktopInfo: (): Promise<DesktopInfo> => ipcRenderer.invoke('get-desktop-info'),
 	getGpuInfo: (): Promise<GpuInfo> => ipcRenderer.invoke('get-gpu-info'),
 	getAppMetrics: (): Promise<AppMetricsSnapshot> => ipcRenderer.invoke('get-app-metrics'),
+	getLatestRpcActivityUpdate: (): Promise<RpcActivityUpdatePayload | null> =>
+		ipcRenderer.invoke('rpc-activity-get-latest'),
 	getOpenH264Status: (): Promise<OpenH264Status> => ipcRenderer.invoke('get-openh264-status'),
 	setOpenH264Enabled: (enabled: boolean): Promise<OpenH264Status> =>
 		ipcRenderer.invoke('set-openh264-enabled', enabled),

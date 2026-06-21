@@ -654,6 +654,7 @@ export interface ElectronAPI {
 	buildVariant: DesktopBuildVariant;
 	getDesktopInfo: () => Promise<DesktopInfo>;
 	getGpuInfo: () => Promise<GpuInfo>;
+	getLatestRpcActivityUpdate: () => Promise<RpcActivityUpdatePayload | null>;
 	getOpenH264Status: () => Promise<OpenH264Status>;
 	setOpenH264Enabled: (enabled: boolean) => Promise<OpenH264Status>;
 	getDesktopWindowBehaviorSettings: () => Promise<DesktopWindowBehaviorSettings>;

@@ -422,6 +422,7 @@ export interface ElectronAPI {
 	getDesktopInfo(): Promise<DesktopInfo>;
 	getGpuInfo?(): Promise<GpuInfo>;
 	getAppMetrics?(): Promise<AppMetricsSnapshot>;
+	getLatestRpcActivityUpdate?(): Promise<RpcActivityUpdatePayload | null>;
 	getDesktopWindowBehaviorSettings?(): Promise<DesktopWindowBehaviorSettings>;
 	setDesktopWindowBehaviorSettings?(
 		settings: Partial<DesktopWindowBehaviorSettings>,
