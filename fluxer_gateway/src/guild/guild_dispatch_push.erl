@@ -358,8 +358,9 @@ do_send_push(
 ) ->
     DefaultMessageNotifications = maps:get(<<"default_message_notifications">>, Guild, 0),
     GuildName = maps:get(<<"name">>, Guild, <<"Unknown">>),
+    PushMessageData = add_parent_channel_id(MessageData, Data),
     push:handle_message_create(#{
-        message_data => MessageData,
+        message_data => PushMessageData,
         user_ids => EligibleUserIds,
         guild_id => GuildId,
         author_id => AuthorId,
@@ -374,6 +375,40 @@ do_send_push(
         user_roles => UserRolesMap,
         connected_users => ConnectedUsers
     }).
+
+-spec add_parent_channel_id(event_data(), map()) -> event_data().
+add_parent_channel_id(MessageData, Data) ->
+    case maps:is_key(<<"parent_id">>, MessageData) of
+        true ->
+            MessageData;
+        false ->
+            add_parent_channel_id_from_channel(MessageData, Data)
+    end.
+
+-spec add_parent_channel_id_from_channel(event_data(), map()) -> event_data().
+add_parent_channel_id_from_channel(MessageData, Data) ->
+    ChannelIdBin = maps:get(<<"channel_id">>, MessageData, undefined),
+    case guild_dispatch_decorate:parse_snowflake(<<"channel_id">>, ChannelIdBin) of
+        undefined ->
+            MessageData;
+        ChannelId ->
+            add_parent_channel_id_from_index(MessageData, ChannelId, Data)
+    end.
+
+-spec add_parent_channel_id_from_index(event_data(), integer(), map()) -> event_data().
+add_parent_channel_id_from_index(MessageData, ChannelId, Data) ->
+    Channels = guild_data_index:channel_index(Data),
+    case maps:get(ChannelId, Channels, undefined) of
+        undefined ->
+            MessageData;
+        Channel ->
+            case maps:get(<<"parent_id">>, Channel, undefined) of
+                ParentId when is_binary(ParentId), byte_size(ParentId) > 0 ->
+                    MessageData#{<<"parent_id">> => ParentId};
+                _ ->
+                    MessageData
+            end
+    end.
 
 -spec find_channel_name(binary(), map()) -> binary().
 find_channel_name(ChannelIdBin, Data) ->
@@ -544,10 +579,18 @@ send_push_to_eligible_users_uses_full_data_for_channel_name_test() ->
                 <<"default_message_notifications">> => 0
             },
             <<"channels">> => [
-                #{<<"id">> => <<"100">>, <<"name">> => <<"general">>}
+                #{
+                    <<"id">> => <<"100">>,
+                    <<"name">> => <<"general">>,
+                    <<"parent_id">> => <<"50">>
+                }
             ],
             <<"channel_index">> => #{
-                100 => #{<<"id">> => <<"100">>, <<"name">> => <<"general">>}
+                100 => #{
+                    <<"id">> => <<"100">>,
+                    <<"name">> => <<"general">>,
+                    <<"parent_id">> => <<"50">>
+                }
             },
             <<"roles">> => [
                 #{<<"id">> => <<"200">>, <<"name">> => <<"Alerts">>}
@@ -563,6 +606,9 @@ send_push_to_eligible_users_uses_full_data_for_channel_name_test() ->
             {push_params, Params} ->
                 ?assertEqual(<<"general">>, maps:get(channel_name, Params)),
                 ?assertEqual(<<"Test Guild">>, maps:get(guild_name, Params)),
+                ?assertEqual(
+                    <<"50">>, maps:get(<<"parent_id">>, maps:get(message_data, Params))
+                ),
                 ?assertEqual(#{200 => <<"Alerts">>}, maps:get(role_names, Params))
         after 1000 ->
             ?assert(false)

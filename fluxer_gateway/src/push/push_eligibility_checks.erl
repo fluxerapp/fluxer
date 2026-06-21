@@ -83,7 +83,7 @@ check_muted_and_notifications(
             false;
         false ->
             Level = resolve_message_notifications(
-                ChannelId, Settings, GuildDefaultNotifications
+                ChannelId, Settings, GuildDefaultNotifications, MessageData
             ),
             EffectiveLevel = override_for_large_guild_metadata(LargeGuildMetadata, Level),
             push_eligibility:should_allow_notification(
@@ -145,6 +145,20 @@ resolve_message_notifications(ChannelId, Settings, GuildDefaultNotifications) ->
     Level = extract_channel_level(ChannelId, ChannelOverrides),
     resolve_level_or_guild(Level, Settings, GuildDefaultNotifications).
 
+-spec resolve_message_notifications(integer(), map(), integer(), map()) -> integer().
+resolve_message_notifications(ChannelId, Settings, GuildDefaultNotifications, MessageData) ->
+    ChannelOverrides = map_setting(channel_overrides, Settings),
+    Level = extract_channel_level(ChannelId, ChannelOverrides),
+    ParentLevel = extract_parent_channel_level(MessageData, ChannelOverrides),
+    resolve_level_parent_or_guild(Level, ParentLevel, Settings, GuildDefaultNotifications).
+
+-spec extract_parent_channel_level(map(), map()) -> integer() | undefined.
+extract_parent_channel_level(MessageData, ChannelOverrides) ->
+    case snowflake_id:parse_maybe(maps:get(<<"parent_id">>, MessageData, undefined)) of
+        undefined -> undefined;
+        ParentChannelId -> extract_channel_level(ParentChannelId, ChannelOverrides)
+    end.
+
 -spec extract_channel_level(integer(), map()) -> integer() | undefined.
 extract_channel_level(ChannelId, ChannelOverrides) ->
     case channel_override(ChannelId, ChannelOverrides, undefined) of
@@ -164,6 +178,18 @@ resolve_level_or_guild(?MESSAGE_NOTIFICATIONS_INHERIT, Settings, GuildDefault) -
 resolve_level_or_guild(undefined, Settings, GuildDefault) ->
     resolve_guild_notification(Settings, GuildDefault);
 resolve_level_or_guild(Valid, _Settings, _GuildDefault) ->
+    normalize_notification_level(Valid).
+
+-spec resolve_level_parent_or_guild(term(), term(), map(), integer()) -> integer().
+resolve_level_parent_or_guild(?MESSAGE_NOTIFICATIONS_NULL, ParentLevel, Settings, GuildDefault) ->
+    resolve_level_or_guild(ParentLevel, Settings, GuildDefault);
+resolve_level_parent_or_guild(
+    ?MESSAGE_NOTIFICATIONS_INHERIT, ParentLevel, Settings, GuildDefault
+) ->
+    resolve_level_or_guild(ParentLevel, Settings, GuildDefault);
+resolve_level_parent_or_guild(undefined, ParentLevel, Settings, GuildDefault) ->
+    resolve_level_or_guild(ParentLevel, Settings, GuildDefault);
+resolve_level_parent_or_guild(Valid, _ParentLevel, _Settings, _GuildDefault) ->
     normalize_notification_level(Valid).
 
 -spec resolve_guild_notification(map(), integer()) -> integer().
@@ -373,6 +399,33 @@ normalize_notification_level_test() ->
     ?assertEqual(1, normalize_notification_level(1)),
     ?assertEqual(2, normalize_notification_level(2)),
     ?assertEqual(0, normalize_notification_level(99)).
+
+parent_channel_notification_level_inherits_before_guild_default_test() ->
+    Settings = #{
+        message_notifications => ?MESSAGE_NOTIFICATIONS_ALL,
+        channel_overrides => #{
+            <<"100">> => #{message_notifications => ?MESSAGE_NOTIFICATIONS_NO_MESSAGES}
+        }
+    },
+    MessageData = #{<<"parent_id">> => <<"100">>},
+    ?assertEqual(
+        ?MESSAGE_NOTIFICATIONS_NO_MESSAGES,
+        resolve_message_notifications(200, Settings, ?MESSAGE_NOTIFICATIONS_ALL, MessageData)
+    ).
+
+direct_channel_notification_level_overrides_parent_level_test() ->
+    Settings = #{
+        message_notifications => ?MESSAGE_NOTIFICATIONS_ALL,
+        channel_overrides => #{
+            <<"100">> => #{message_notifications => ?MESSAGE_NOTIFICATIONS_NO_MESSAGES},
+            <<"200">> => #{message_notifications => ?MESSAGE_NOTIFICATIONS_ONLY_MENTIONS}
+        }
+    },
+    MessageData = #{<<"parent_id">> => <<"100">>},
+    ?assertEqual(
+        ?MESSAGE_NOTIFICATIONS_ONLY_MENTIONS,
+        resolve_message_notifications(200, Settings, ?MESSAGE_NOTIFICATIONS_ALL, MessageData)
+    ).
 
 enforce_only_mentions_test() ->
     ?assertEqual(1, enforce_only_mentions(0)),
