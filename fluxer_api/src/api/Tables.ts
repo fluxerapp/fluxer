@@ -207,8 +207,10 @@ import {
 	type ChannelStateRow,
 	MESSAGE_BY_AUTHOR_COLUMNS,
 	MESSAGE_COLUMNS,
+	MESSAGE_POLL_VOTE_COLUMNS,
 	MESSAGE_REACTION_COLUMNS,
 	type MessageByAuthorRow,
+	type MessagePollVoteRow,
 	type MessageReactionRow,
 	type MessageRow,
 } from './database/types/MessageTypes';
@@ -650,6 +652,16 @@ export const MessageReactions = defineTable<
 	name: 'message_reactions',
 	columns: MESSAGE_REACTION_COLUMNS,
 	primaryKey: ['channel_id', 'bucket', 'message_id', 'emoji_id', 'emoji_name', 'user_id'],
+	partitionKey: ['channel_id', 'bucket'],
+});
+export const MessagePollVotes = defineTable<
+	MessagePollVoteRow,
+	'channel_id' | 'bucket' | 'message_id' | 'answer_id' | 'user_id',
+	'channel_id' | 'bucket'
+>({
+	name: 'message_poll_votes',
+	columns: MESSAGE_POLL_VOTE_COLUMNS,
+	primaryKey: ['channel_id', 'bucket', 'message_id', 'answer_id', 'user_id'],
 	partitionKey: ['channel_id', 'bucket'],
 });
 export const AttachmentLookup = defineTable<AttachmentLookupRow, 'channel_id' | 'attachment_id' | 'filename'>({

@@ -125,6 +125,36 @@ export interface MessageCall {
 	ended_timestamp: Nullish<Date>;
 }
 
+export interface MessagePollMedia {
+	text: Nullish<string>;
+	attachment_id: Nullish<AttachmentID>;
+}
+
+export interface MessagePollAnswer {
+	answer_id: number;
+	poll_media: MessagePollMedia;
+}
+
+export interface MessagePollResultsAnswerCount {
+	answer_id: number;
+	count: number;
+	me_voted: boolean;
+}
+
+export interface MessagePollResults {
+	is_finalized: boolean;
+	answer_counts: Nullish<Array<MessagePollResultsAnswerCount>>;
+}
+
+export interface MessagePoll {
+	question: MessagePollMedia;
+	answers: Array<MessagePollAnswer>;
+	expiry: Nullish<Date>;
+	allow_multiselect: boolean;
+	layout_type: number;
+	results: Nullish<MessagePollResults>;
+}
+
 export interface MessageRow {
 	channel_id: ChannelID;
 	bucket: number;
@@ -150,6 +180,7 @@ export interface MessageRow {
 	call: Nullish<MessageCall>;
 	nsfw_emojis: Nullish<Set<EmojiID>>;
 	has_reaction: Nullish<boolean>;
+	poll: Nullish<MessagePoll>;
 	version: number;
 }
 
@@ -178,6 +209,7 @@ export const MESSAGE_COLUMNS = [
 	'call',
 	'nsfw_emojis',
 	'has_reaction',
+	'poll',
 	'version',
 ] as const satisfies ReadonlyArray<keyof MessageRow>;
 
@@ -197,6 +229,24 @@ export interface MessageReactionRow {
 	emoji_animated: boolean;
 	created_at: Nullish<Date>;
 }
+
+export interface MessagePollVoteRow {
+	channel_id: ChannelID;
+	bucket: number;
+	message_id: MessageID;
+	answer_id: number;
+	user_id: UserID;
+	created_at: Nullish<Date>;
+}
+
+export const MESSAGE_POLL_VOTE_COLUMNS = [
+	'channel_id',
+	'bucket',
+	'message_id',
+	'answer_id',
+	'user_id',
+	'created_at',
+] as const satisfies ReadonlyArray<keyof MessagePollVoteRow>;
 
 export interface AttachmentLookupRow {
 	channel_id: ChannelID;

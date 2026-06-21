@@ -617,6 +617,91 @@
 					"type": "bigint"
 				}
 			]
+		},
+		{
+			"name": "message_poll_media",
+			"fields": [
+				{
+					"name": "text",
+					"type": "text"
+				},
+				{
+					"name": "attachment_id",
+					"type": "bigint"
+				}
+			]
+		},
+		{
+			"name": "message_poll_answer",
+			"fields": [
+				{
+					"name": "answer_id",
+					"type": "int"
+				},
+				{
+					"name": "poll_media",
+					"type": "frozen<message_poll_media>"
+				}
+			]
+		},
+		{
+			"name": "message_poll_results_answer_count",
+			"fields": [
+				{
+					"name": "answer_id",
+					"type": "int"
+				},
+				{
+					"name": "count",
+					"type": "int"
+				},
+				{
+					"name": "me_voted",
+					"type": "boolean"
+				}
+			]
+		},
+		{
+			"name": "message_poll_results",
+			"fields": [
+				{
+					"name": "is_finalized",
+					"type": "boolean"
+				},
+				{
+					"name": "answer_counts",
+					"type": "frozen<list<message_poll_results_answer_count>>"
+				}
+			]
+		},
+		{
+			"name": "message_poll",
+			"fields": [
+				{
+					"name": "question",
+					"type": "frozen<message_poll_media>"
+				},
+				{
+					"name": "answers",
+					"type": "frozen<list<message_poll_answer>>"
+				},
+				{
+					"name": "expiry",
+					"type": "timestamp"
+				},
+				{
+					"name": "allow_multiselect",
+					"type": "boolean"
+				},
+				{
+					"name": "layout_type",
+					"type": "int"
+				},
+				{
+					"name": "results",
+					"type": "frozen<message_poll_results>"
+				}
+			]
 		}
 	],
 	"tables": [
@@ -6576,6 +6661,10 @@
 				{
 					"name": "nsfw_emojis",
 					"type": "set<bigint>"
+				},
+				{
+					"name": "poll",
+					"type": "frozen<message_poll>"
 				}
 			],
 			"primary_key": "((channel_id, bucket), message_id)",
@@ -9323,6 +9412,37 @@
 			],
 			"primary_key": "((build_sha, node_name), event_id)",
 			"options": "CLUSTERING ORDER BY (event_id ASC)"
+		},
+		{
+			"name": "message_poll_votes",
+			"columns": [
+				{
+					"name": "channel_id",
+					"type": "bigint"
+				},
+				{
+					"name": "bucket",
+					"type": "int"
+				},
+				{
+					"name": "message_id",
+					"type": "bigint"
+				},
+				{
+					"name": "answer_id",
+					"type": "int"
+				},
+				{
+					"name": "user_id",
+					"type": "bigint"
+				},
+				{
+					"name": "created_at",
+					"type": "timestamp"
+				}
+			],
+			"primary_key": "((channel_id, bucket), message_id, answer_id, user_id)",
+			"options": ""
 		}
 	],
 	"indexes": [
