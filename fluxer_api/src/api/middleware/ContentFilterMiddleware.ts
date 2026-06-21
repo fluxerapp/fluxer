@@ -71,6 +71,7 @@ const SKIP_FIELD_SUFFIXES = [
 	'_tokens',
 ] as const;
 const SKIP_CONTENT_FILTER_PATH_PARTS = [
+	'/admin/',
 	'/auth/',
 	'/oauth2/',
 	'/reports/dsa/email/',
