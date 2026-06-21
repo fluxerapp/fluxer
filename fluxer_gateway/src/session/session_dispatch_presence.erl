@@ -53,10 +53,16 @@ check_non_guild_presence(Data, State) ->
 check_user_presence_buffering(undefined, _State) ->
     false;
 check_user_presence_buffering(UserId, State) ->
-    Relationships = maps:get(relationships, State, #{}),
-    IsRelationship = relationship_allows_presence(UserId, Relationships),
-    IsDmRecipient = is_dm_recipient(UserId, State),
-    not (IsRelationship orelse IsDmRecipient).
+    SelfUserId = maps:get(user_id, State, undefined),
+    case UserId =:= SelfUserId of
+        true ->
+            false;
+        false ->
+            Relationships = maps:get(relationships, State, #{}),
+            IsRelationship = relationship_allows_presence(UserId, Relationships),
+            IsDmRecipient = is_dm_recipient(UserId, State),
+            not (IsRelationship orelse IsDmRecipient)
+    end.
 
 -spec relationship_allows_presence(user_id(), #{user_id() => integer()}) -> boolean().
 relationship_allows_presence(UserId, Relationships) when
@@ -84,12 +90,12 @@ is_dm_recipient(UserId, State) when is_map(State) ->
 
 -spec buffer_presence(event(), map(), session_state()) -> session_state().
 buffer_presence(Event, Data, State) ->
-    Pending = maps:get(pending_presences, State, []),
+    PendingQ = ensure_queue(maps:get(pending_presences, State, [])),
     UserId = presence_user_id(Data),
     Entry = #{event => Event, data => Data, user_id => UserId},
-    Trimmed = trim_rev_list(Pending, ?MAX_PENDING_PRESENCE_BUFFER_SIZE - 1),
-    NewPending = [Entry | Trimmed],
-    State#{pending_presences => NewPending}.
+    PendingList = queue:to_list(PendingQ),
+    Trimmed = lists:sublist(PendingList, ?MAX_PENDING_PRESENCE_BUFFER_SIZE - 1),
+    State#{pending_presences => queue:from_list([Entry | Trimmed])}.
 
 -spec maybe_flush_pending_presences(event(), map(), session_state()) ->
     {session_state(), [user_id()]}.
@@ -253,10 +259,6 @@ relationship_target_id(Data) when is_map(Data) ->
 ensure_queue(List) when is_list(List) -> queue:from_list(List);
 ensure_queue(Q) -> Q.
 
--spec trim_rev_list([T], non_neg_integer()) -> [T].
-trim_rev_list(List, MaxLen) when length(List) =< MaxLen -> List;
-trim_rev_list(List, MaxLen) -> lists:sublist(List, MaxLen).
-
 -spec send_to_socket(pid() | undefined, event(), map(), non_neg_integer()) -> ok.
 send_to_socket(undefined, _Event, _Data, _Seq) ->
     ok;
@@ -321,6 +323,12 @@ should_buffer_presence_passes_friend_test() ->
     State = (buffering_test_state())#{channels => #{}, relationships => #{4 => 1}},
     ?assertEqual(
         false, should_buffer_presence(presence_update, presence_data(<<"4">>), State)
+    ).
+
+should_buffer_presence_passes_self_presence_test() ->
+    State = buffering_test_state(),
+    ?assertEqual(
+        false, should_buffer_presence(presence_update, presence_data(<<"1">>), State)
     ).
 
 should_buffer_presence_passes_guild_presence_test() ->

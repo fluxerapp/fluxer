@@ -24,7 +24,7 @@ import {RelationshipTypes} from '@fluxer/constants/src/UserConstants';
 import type {UserActivity, UserPrivate} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {makeAutoObservable, observable, reaction} from 'mobx';
 
-const EMPTY_ACTIVITIES: UserActivity[] = [];
+const EMPTY_ACTIVITIES: Array<UserActivity> = [];
 
 interface FlattenedPresence {
 	status: StatusType;
@@ -33,7 +33,7 @@ interface FlattenedPresence {
 	mobile?: boolean;
 	guildIds: Set<string>;
 	customStatus: CustomStatus | null;
-	activities: UserActivity[];
+	activities: Array<UserActivity>;
 }
 
 type StatusListener = (userId: string, status: StatusType, isMobile: boolean) => void;
@@ -44,7 +44,7 @@ class Presence {
 	private remotePresenceCountsByGuild = new Map<string, number>();
 	private remotePresenceCountVersionByGuild = observable.map<string, number>();
 	private customStatuses = new Map<string, CustomStatus | null>();
-	private activitiesByUser = new Map<string, UserActivity[]>();
+	private activitiesByUser = new Map<string, Array<UserActivity>>();
 	statuses = new Map<string, StatusType>();
 	presenceVersion = 0;
 	private statusListeners: Map<string, Set<StatusListener>> = new Map();
@@ -167,7 +167,7 @@ class Presence {
 		return this.customStatuses.get(userId) ?? null;
 	}
 
-	getActivities(userId: string): UserActivity[] {
+	getActivities(userId: string): Array<UserActivity> {
 		return this.activitiesByUser.get(userId) ?? EMPTY_ACTIVITIES;
 	}
 
@@ -275,6 +275,7 @@ class Presence {
 		this.remotePresenceCountVersionByGuild.clear();
 		this.statuses.clear();
 		this.customStatuses.clear();
+		this.activitiesByUser.clear();
 		this.bumpPresenceVersion();
 		this.statuses.set(user.id, localStatus);
 		this.customStatuses.set(user.id, localCustomStatus);
@@ -313,6 +314,7 @@ class Presence {
 		this.remotePresenceCountVersionByGuild.clear();
 		this.statuses.clear();
 		this.customStatuses.clear();
+		this.activitiesByUser.clear();
 		this.bumpPresenceVersion();
 		for (const userId of previousUserIds) {
 			this.notifyStatusListeners(userId, StatusTypes.OFFLINE, false);
@@ -390,6 +392,7 @@ class Presence {
 		const customStatus = fromGatewayCustomStatus(customStatusPayload);
 		const activities = activitiesPayload ?? [];
 		if (userId === Authentication.currentUserId) {
+			this.handleCurrentUserPresence(userId, customStatus, activities);
 			return;
 		}
 		const guildId = guildIdRaw ?? ME;
@@ -458,11 +461,13 @@ class Presence {
 	}
 
 	private handleReadyPresence(presence: WirePresence, initialGuildIds?: Set<string>, hasMeContext = false): void {
-		const {user, status, afk, mobile, custom_status: customStatusPayload} = presence;
+		const {user, status, afk, mobile, custom_status: customStatusPayload, activities: activitiesPayload} = presence;
 		const normalizedStatus = normalizeStatus(status);
 		const customStatus = fromGatewayCustomStatus(customStatusPayload);
+		const activities = activitiesPayload ?? [];
 		const userId = user.id;
 		if (userId === Authentication.currentUserId) {
+			this.handleCurrentUserPresence(userId, customStatus, activities);
 			return;
 		}
 		const now = Date.now();
@@ -477,13 +482,32 @@ class Presence {
 			mobile,
 			guildIds,
 			customStatus,
+			activities,
 		};
 		this.presences.set(userId, flattened);
 		this.addPresenceCounts(flattened);
 		this.customStatuses.set(userId, customStatus);
+		this.activitiesByUser.set(userId, activities);
 		this.updateStatusFromPresence(userId, flattened);
 		this.bumpPresenceVersion();
-		queueMicrotask(() => CustomStatusEmitter.emitPresenceChange(userId));
+		queueMicrotask(() => {
+			CustomStatusEmitter.emitPresenceChange(userId);
+			ActivityEmitter.emitPresenceChange(userId);
+		});
+	}
+
+	private handleCurrentUserPresence(
+		userId: string,
+		customStatus: CustomStatus | null,
+		activities: Array<UserActivity>,
+	): void {
+		this.customStatuses.set(userId, customStatus);
+		this.activitiesByUser.set(userId, activities);
+		this.bumpPresenceVersion();
+		queueMicrotask(() => {
+			CustomStatusEmitter.emitPresenceChange(userId);
+			ActivityEmitter.emitPresenceChange(userId);
+		});
 	}
 
 	private indexGuildMembers(

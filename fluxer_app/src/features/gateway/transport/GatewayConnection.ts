@@ -287,6 +287,7 @@ class GatewayConnection {
 					afk: presence.afk,
 					mobile: presence.mobile,
 					custom_status: presence.custom_status,
+					activities: LocalRpcPresence.getGatewayActivities(),
 				},
 			}),
 			compression,

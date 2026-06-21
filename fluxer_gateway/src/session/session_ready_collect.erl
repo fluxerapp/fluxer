@@ -47,7 +47,7 @@ collect_ready_presences(#{bot := true}, _CollectedGuilds) ->
 collect_ready_presences(State, _CollectedGuilds) ->
     CurrentUserId = maps:get(user_id, State),
     Targets = collect_presence_targets(State, CurrentUserId),
-    fetch_visible_presences(Targets).
+    dedup_presences(current_user_visible_presence(State) ++ fetch_visible_presences(Targets)).
 
 -spec collect_presence_targets(session_state(), user_id()) -> [user_id()].
 collect_presence_targets(State, CurrentUserId) when is_map(State) ->
@@ -68,6 +68,22 @@ fetch_visible_presences([]) ->
     [];
 fetch_visible_presences(Targets) ->
     dedup_presences(presence_cache_safe:visible_bulk_get(Targets)).
+
+-spec current_user_visible_presence(session_state()) -> [map()].
+current_user_visible_presence(State) ->
+    case maps:get(presence_pid, State, undefined) of
+        Pid when is_pid(Pid) ->
+            try gen_server:call(Pid, get_current_visible_presence, 1000) of
+                {ok, Presence} when is_map(Presence) -> [Presence];
+                not_found -> [];
+                _ -> []
+            catch
+                exit:_ -> [];
+                error:_ -> []
+            end;
+        _ ->
+            []
+    end.
 
 -spec presence_user_id(map()) -> user_id() | undefined.
 presence_user_id(P) when is_map(P) ->
@@ -396,6 +412,32 @@ collect_channel_users_skips_invalid_dm_recipient_ids_test() ->
     Channels = [#{<<"type">> => 3, <<"recipients">> => [InvalidUser, ValidUser]}],
     Users = collect_channel_users(Channels),
     ?assertEqual([11], lists:sort([maps:get(<<"id">>, U) || U <- Users])).
+
+fake_presence_server(Presence) ->
+    receive
+        {'$gen_call', From, get_current_visible_presence} ->
+            gen_server:reply(From, {ok, Presence}),
+            fake_presence_server(Presence);
+        stop ->
+            ok
+    end.
+
+collect_ready_presences_includes_current_user_visible_presence_test() ->
+    SelfPresence = #{
+        <<"user">> => #{<<"id">> => <<"1">>},
+        <<"status">> => <<"online">>,
+        <<"activities">> => [#{<<"name">> => <<"Fluxcap">>, <<"type">> => 0}]
+    },
+    Pid = spawn_link(fun() -> fake_presence_server(SelfPresence) end),
+    State = #{
+        bot => false,
+        user_id => 1,
+        friends => #{},
+        group_dm_recipients => #{},
+        presence_pid => Pid
+    },
+    ?assertEqual([SelfPresence], collect_ready_presences(State, [])),
+    Pid ! stop.
 
 strip_user_from_member_test() ->
     Member = #{

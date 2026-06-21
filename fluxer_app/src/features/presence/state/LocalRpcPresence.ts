@@ -15,7 +15,10 @@ class LocalRpcPresence {
 	activityVersion = 0;
 
 	constructor() {
-		makeAutoObservable(
+		makeAutoObservable<
+			this,
+			'debounceTimer' | 'pendingActivity' | 'setActivity' | 'applyActivityImmediate' | 'commitPendingActivity' | 'clearActivityState'
+		>(
 			this,
 			{
 				debounceTimer: false,
@@ -33,6 +36,7 @@ class LocalRpcPresence {
 		this.debounceTimer = null;
 		if (this.pendingActivity === undefined) return;
 		this.activity = this.pendingActivity;
+		this.gatewayActivity = this.pendingActivity;
 		this.pendingActivity = undefined;
 		this.activityVersion++;
 	}
@@ -69,7 +73,7 @@ class LocalRpcPresence {
 		}, DEBOUNCE_MS);
 	}
 
-	getGatewayActivities(): UserActivity[] | null {
+	getGatewayActivities(): Array<UserActivity> | null {
 		const activity = this.gatewayActivity ?? this.activity;
 		return activity ? [sanitizeActivityAssetsForGateway(activity)] : null;
 	}

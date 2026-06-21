@@ -73,6 +73,7 @@ export interface GatewayPresence {
 	afk: boolean;
 	mobile: boolean;
 	custom_status?: GatewayCustomStatusPayload | null;
+	activities?: Array<UserActivity> | null;
 }
 
 export interface GatewayVoiceStateUpdateParams {
@@ -411,8 +412,11 @@ export class GatewaySocket extends EventEmitter<GatewaySocketEvents> {
 		afk?: boolean,
 		mobile?: boolean,
 		customStatus?: GatewayCustomStatusPayload | null,
-		activities?: UserActivity[] | null,
+		activities?: Array<UserActivity> | null,
 	): void {
+		if (this.invalidSessionTimeoutId != null || this.activeSessionId == null) {
+			return;
+		}
 		if (!this.isConnected()) return;
 		this.sendPayload({
 			op: GatewayOpcodes.PRESENCE_UPDATE,

@@ -63,7 +63,7 @@ force_publish_global_presence(State) ->
 -spec dispatch_global_presence(user_id(), map(), state()) -> {noreply, state()}.
 dispatch_global_presence(TargetId, Payload, State) ->
     UserId = maps:get(user_id, State),
-    case TargetId =:= UserId of
+    case TargetId =:= UserId andalso is_local_self_presence_echo(Payload, State) of
         true -> {noreply, State};
         false -> dispatch_foreign_presence(TargetId, Payload, State)
     end.
@@ -191,6 +191,7 @@ publish_presence_payload(State, Payload, CurrentExternal, ExternalStatus) ->
     UserId = maps:get(user_id, State),
     update_cache_for_status(UserId, ExternalStatus, Payload),
     presence_bus:publish(UserId, Payload),
+    dispatch_to_sessions(Payload, State),
     State#{last_published_presence := CurrentExternal}.
 
 -spec update_cache_for_status(user_id(), binary(), map()) -> ok.
@@ -242,3 +243,119 @@ dispatch_global_user_update(TargetId, Payload, State) ->
 dispatch_to_sessions(Payload, State) ->
     SessionPids = presence_connect:collect_session_pids(State),
     gateway_dispatch_relay:dispatch_many(SessionPids, presence_update, Payload).
+
+-spec is_local_self_presence_echo(map(), state()) -> boolean().
+is_local_self_presence_echo(Payload, State) ->
+    case maps:get(<<"user_update">>, Payload, false) of
+        true ->
+            true;
+        false ->
+            {CurrentPayload, _CurrentExternal, _ExternalStatus} = build_presence_external(State),
+            CurrentPayload =:= Payload
+    end.
+
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+
+is_local_self_presence_echo_matches_current_payload_test() ->
+    Payload = #{
+        <<"user">> => #{<<"id">> => <<"1">>},
+        <<"status">> => <<"online">>,
+        <<"mobile">> => false,
+        <<"afk">> => false,
+        <<"custom_status">> => null,
+        <<"activities">> => [#{<<"name">> => <<"Fluxcap">>, <<"type">> => 0}]
+    },
+    State = #{
+        user_id => 1,
+        user_data => #{<<"id">> => <<"1">>},
+        sessions => #{
+            <<"s1">> => #{
+                session_id => <<"s1">>,
+                status => online,
+                afk => false,
+                mobile => false,
+                pid => self(),
+                mref => make_ref(),
+                socket_pid => undefined
+            }
+        },
+        push_buffer => [],
+        custom_status => null,
+        activities => [#{<<"name">> => <<"Fluxcap">>, <<"type">> => 0}],
+        status => online,
+        guild_ids => #{},
+        temporary_guild_ids => #{},
+        friends => #{},
+        group_dm_recipients => #{},
+        subscriptions => #{},
+        is_bot => false,
+        initial_presences_sent => false,
+        last_published_presence => undefined
+    },
+    ?assert(is_local_self_presence_echo(Payload, State)).
+
+is_local_self_presence_echo_rejects_remote_self_presence_test() ->
+    Payload = #{
+        <<"user">> => #{<<"id">> => <<"1">>},
+        <<"status">> => <<"online">>,
+        <<"mobile">> => false,
+        <<"afk">> => false,
+        <<"custom_status">> => null,
+        <<"activities">> => [#{<<"name">> => <<"Other App">>, <<"type">> => 0}]
+    },
+    State = #{
+        user_id => 1,
+        user_data => #{<<"id">> => <<"1">>},
+        sessions => #{
+            <<"s1">> => #{
+                session_id => <<"s1">>,
+                status => online,
+                afk => false,
+                mobile => false,
+                pid => self(),
+                mref => make_ref(),
+                socket_pid => undefined
+            }
+        },
+        push_buffer => [],
+        custom_status => null,
+        activities => [#{<<"name">> => <<"Fluxcap">>, <<"type">> => 0}],
+        status => online,
+        guild_ids => #{},
+        temporary_guild_ids => #{},
+        friends => #{},
+        group_dm_recipients => #{},
+        subscriptions => #{},
+        is_bot => false,
+        initial_presences_sent => false,
+        last_published_presence => undefined
+    },
+    ?assertNot(is_local_self_presence_echo(Payload, State)).
+
+is_local_self_presence_echo_always_ignores_user_updates_test() ->
+    State = #{
+        user_id => 1,
+        user_data => #{<<"id">> => <<"1">>},
+        sessions => #{},
+        push_buffer => [],
+        custom_status => null,
+        activities => null,
+        status => online,
+        guild_ids => #{},
+        temporary_guild_ids => #{},
+        friends => #{},
+        group_dm_recipients => #{},
+        subscriptions => #{},
+        is_bot => false,
+        initial_presences_sent => false,
+        last_published_presence => undefined
+    },
+    ?assert(
+        is_local_self_presence_echo(
+            #{<<"user">> => #{<<"id">> => <<"1">>}, <<"user_update">> => true},
+            State
+        )
+    ).
+
+-endif.
