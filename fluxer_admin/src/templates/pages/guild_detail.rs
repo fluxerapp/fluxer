@@ -28,6 +28,7 @@ pub const GUILD_TABS: &[(&str, &str)] = &[
     ("stickers", "Stickers"),
     ("audit_logs", "Admin Audit Logs"),
     ("audit_log", "Guild Audit Log"),
+    ("events", "Events"),
     ("reports", "Reports"),
 ];
 
@@ -82,6 +83,7 @@ pub fn simple_tab_content(
         "stickers" => {
             guild_detail_tabs::stickers::stickers_tab(config, &guild_info, &[], csrf_token)
         }
+        "events" => guild_detail_tabs::events::events_tab(&[]),
         _ => guild_detail_tabs::overview::overview_tab(config, guild, csrf_token),
     }
 }
