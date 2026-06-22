@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::common::{CommandSpec, run_command};
+use crate::desktop::write_build_channel_file;
 use crate::gateway::{GatewayStep, run_gateway_step};
 use anyhow::{Context, Result};
 use clap::{Args, ValueEnum};
@@ -65,6 +66,18 @@ pub async fn run_ci(args: CiArgs) -> Result<()> {
             ))
         }
         CiStep::Knip => {
+            run_command(
+                CommandSpec::new("pnpm")
+                    .args(["--filter", "fluxer_app", "wasm:codegen"])
+                    .current_dir(&root),
+            )?;
+            run_command(
+                CommandSpec::new("pnpm")
+                    .args(["--filter", "fluxer_app", "generate:masks"])
+                    .current_dir(&root),
+            )?;
+            let channel = env::var("BUILD_CHANNEL").unwrap_or_else(|_| "stable".to_string());
+            write_build_channel_file(&root.join("fluxer_desktop"), &channel)?;
             run_command(
                 CommandSpec::new("pnpm")
                     .args(["--filter", "fluxer_app", "i18n:compile"])

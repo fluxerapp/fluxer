@@ -234,13 +234,3 @@ function createRateLimitService(
 	}
 	return new RateLimitService(store, options);
 }
-
-export function createInMemoryRateLimitService(
-	enabled: boolean,
-	options: RateLimitServiceOptions = {},
-): RateLimitService | null {
-	if (!enabled) {
-		return null;
-	}
-	return createRateLimitService(new InMemoryRateLimitStore(options.getCurrentTimeMs), options);
-}

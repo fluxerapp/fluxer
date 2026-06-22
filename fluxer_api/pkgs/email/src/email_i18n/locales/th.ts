@@ -2,7 +2,7 @@
 
 import {defineEmailI18nLocaleMessages} from '../EmailI18nMessages';
 
-export const EMAIL_I18N_TH_MESSAGES = defineEmailI18nLocaleMessages({
+const EMAIL_I18N_TH_MESSAGES = defineEmailI18nLocaleMessages({
 	"account_disabled_suspicious": {
 		"subject": "บัญชี {product_name} ของคุณถูกปิดใช้งานชั่วคราว",
 		"body": "สวัสดี {username},\n\nเราปิดใช้งานบัญชี {product_name} ของคุณชั่วคราว เนื่องจากเราตรวจพบกิจกรรมที่น่าสงสัย\n\n{reason, select,\n  null {}\n  other {เหตุผล: {reason}}\n}\n\nหากต้องการเข้าถึงบัญชีอีกครั้ง ให้รีเซ็ตรหัสผ่าน:\n\n{forgotUrl}\n\nหลังจากรีเซ็ตรหัสผ่านแล้ว คุณจะสามารถเข้าสู่ระบบได้อีกครั้ง\n\nหากคุณเชื่อว่านี่เป็นข้อผิดพลาด โปรดติดต่อทีมสนับสนุนของเรา\n\n– ทีมความปลอดภัย {product_name}"

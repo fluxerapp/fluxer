@@ -378,7 +378,7 @@ fn resolve_desktop_dir() -> Result<PathBuf> {
     ))
 }
 
-fn write_build_channel_file(root: &Path, channel: &str) -> Result<()> {
+pub(crate) fn write_build_channel_file(root: &Path, channel: &str) -> Result<()> {
     ensure!(
         matches!(channel, "stable" | "canary"),
         "Invalid BUILD_CHANNEL: {channel}. Must be 'stable' or 'canary'."

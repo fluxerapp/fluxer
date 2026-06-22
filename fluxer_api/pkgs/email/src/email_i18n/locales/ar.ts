@@ -2,7 +2,7 @@
 
 import {defineEmailI18nLocaleMessages} from '../EmailI18nMessages';
 
-export const EMAIL_I18N_AR_MESSAGES = defineEmailI18nLocaleMessages({
+const EMAIL_I18N_AR_MESSAGES = defineEmailI18nLocaleMessages({
 	"account_disabled_suspicious": {
 		"subject": "تم تعطيل حسابك في {product_name} مؤقتًا",
 		"body": "مرحباً {username}،\n\nلقد قمنا بتعطيل حسابك في {product_name} مؤقتًا لأننا اكتشفنا نشاطًا مشبوهًا.\n\n{reason, select,\n  null {}\n  other {السبب: {reason}}\n}\n\nلاستعادة الوصول إلى حسابك، ستحتاج إلى إعادة تعيين كلمة المرور الخاصة بك:\n\n{forgotUrl}\n\nبعد إعادة تعيين كلمة المرور الخاصة بك، ستتمكن من تسجيل الدخول مرة أخرى.\n\nإذا كنت تعتقد أن هذا حدث عن طريق الخطأ، يرجى الاتصال بفريق الدعم لدينا.\n\n– فريق أمان {product_name}"

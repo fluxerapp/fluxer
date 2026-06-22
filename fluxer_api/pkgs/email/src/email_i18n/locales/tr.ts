@@ -2,7 +2,7 @@
 
 import {defineEmailI18nLocaleMessages} from '../EmailI18nMessages';
 
-export const EMAIL_I18N_TR_MESSAGES = defineEmailI18nLocaleMessages({
+const EMAIL_I18N_TR_MESSAGES = defineEmailI18nLocaleMessages({
 	"account_disabled_suspicious": {
 		"subject": "{product_name} hesabın geçici olarak devre dışı bırakıldı",
 		"body": "Merhaba {username},\n\nŞüpheli etkinlik tespit ettiğimiz için {product_name} hesabını geçici olarak devre dışı bıraktık.\n\n{reason, select,\n  null {}\n  other {Sebep: {reason}}\n}\n\nHesabına tekrar erişmek için şifreni sıfırlaman gerekiyor:\n\n{forgotUrl}\n\nŞifreni sıfırladıktan sonra tekrar giriş yapabilirsin.\n\nBunun bir hata olduğunu düşünüyorsan, lütfen destek ekibimizle iletişime geç.\n\n– {product_name} Güvenlik Ekibi"
