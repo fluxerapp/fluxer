@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
+import {GenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModal';
 import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
-import {UNDERSTOOD_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
@@ -27,17 +26,13 @@ interface InvitesDisabledModalProps {
 export const InvitesDisabledModal = observer(({isRaidDetected = false}: InvitesDisabledModalProps) => {
 	const {i18n} = useLingui();
 	return (
-		<ConfirmModal
+		<GenericErrorModal
 			title={i18n._(INVITES_PAUSED_DESCRIPTOR)}
-			description={
+			message={
 				isRaidDetected
 					? i18n._(DETECTED_A_POTENTIAL_RAID_IN_THIS_COMMUNITY_SO_DESCRIPTOR, {productName: PRODUCT_NAME})
 					: i18n._(COMMUNITY_ADMINS_HAVE_PAUSED_INVITES_SO_YOU_CAN_DESCRIPTOR)
 			}
-			primaryText={i18n._(UNDERSTOOD_DESCRIPTOR)}
-			onPrimary={() => {}}
-			secondaryText={false}
-			hideCloseButton
 			data-flx="invite.invites-disabled-modal.confirm-modal"
 		/>
 	);

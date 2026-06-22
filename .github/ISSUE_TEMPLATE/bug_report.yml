@@ -1,6 +1,6 @@
 name: Bug report
 description: Report a reproducible problem in Fluxer.
-labels: ["bug"]
+type: Bug
 body:
   - type: markdown
     attributes:

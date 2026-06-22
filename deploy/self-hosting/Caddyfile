@@ -1,3 +1,9 @@
+{
+	servers {
+		trusted_proxies static private_ranges
+	}
+}
+
 {$FLUXER_CADDY_SITE_ADDRESS} {
 	encode zstd gzip
 

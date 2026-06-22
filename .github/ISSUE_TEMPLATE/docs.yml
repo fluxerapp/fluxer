@@ -1,6 +1,8 @@
 name: Documentation
 description: Report a docs issue or suggest a docs improvement.
-labels: ["docs"]
+type: Task
+labels:
+  - docs
 body:
   - type: markdown
     attributes:

@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
-import {UNDERSTOOD_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
+import {GenericErrorModal} from './GenericErrorModal';
 
 const FEATURE_TEMPORARILY_DISABLED_DESCRIPTOR = msg({
 	message: 'Feature temporarily disabled',
@@ -17,13 +16,9 @@ const THIS_FEATURE_HAS_BEEN_TEMPORARILY_DISABLED_PLEASE_TRY_DESCRIPTOR = msg({
 export const FeatureTemporarilyDisabledModal = observer(() => {
 	const {i18n} = useLingui();
 	return (
-		<ConfirmModal
+		<GenericErrorModal
 			title={i18n._(FEATURE_TEMPORARILY_DISABLED_DESCRIPTOR)}
-			description={i18n._(THIS_FEATURE_HAS_BEEN_TEMPORARILY_DISABLED_PLEASE_TRY_DESCRIPTOR)}
-			primaryText={i18n._(UNDERSTOOD_DESCRIPTOR)}
-			onPrimary={() => {}}
-			secondaryText={false}
-			hideCloseButton
+			message={i18n._(THIS_FEATURE_HAS_BEEN_TEMPORARILY_DISABLED_PLEASE_TRY_DESCRIPTOR)}
 			data-flx="app.feature-temporarily-disabled-modal.confirm-modal"
 		/>
 	);
