@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
-import {UNDERSTOOD_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {GenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModal';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
@@ -26,17 +25,13 @@ export const ScreenShareUnsupportedModal = observer(
 	({variant = 'unsupported'}: {variant?: 'unsupported' | 'portal-empty'}) => {
 		const {i18n} = useLingui();
 		return (
-			<ConfirmModal
+			<GenericErrorModal
 				title={i18n._(SCREEN_SHARING_NOT_SUPPORTED_DESCRIPTOR)}
-				description={i18n._(
+				message={i18n._(
 					variant === 'portal-empty'
 						? SCREEN_SHARING_PORTAL_EMPTY_DESCRIPTOR
 						: SCREEN_SHARING_IS_NOT_SUPPORTED_ON_THIS_DEVICE_DESCRIPTOR,
 				)}
-				primaryText={i18n._(UNDERSTOOD_DESCRIPTOR)}
-				onPrimary={() => {}}
-				secondaryText={false}
-				hideCloseButton
 				data-flx="voice.screen-share-unsupported-modal.confirm-modal"
 			/>
 		);

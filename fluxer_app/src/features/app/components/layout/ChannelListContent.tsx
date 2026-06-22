@@ -2,7 +2,6 @@
 
 import {Routes} from '@app/app/Routes';
 import Accessibility from '@app/features/accessibility/state/Accessibility';
-import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import {ChannelItem} from '@app/features/app/components/layout/ChannelItem';
 import channelItemStyles from '@app/features/app/components/layout/ChannelItem.module.css';
 import {ChannelItemContent} from '@app/features/app/components/layout/ChannelItemContent';
@@ -28,7 +27,7 @@ import {useRovingFocusList} from '@app/features/app/hooks/useRovingFocusList';
 import Channels from '@app/features/channel/state/Channels';
 import * as GuildCommands from '@app/features/guild/commands/GuildCommands';
 import type {Guild} from '@app/features/guild/models/Guild';
-import {MEMBERS_DESCRIPTOR, UNDERSTOOD_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {MEMBERS_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
 import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
 import Permission from '@app/features/permissions/state/Permission';
@@ -58,6 +57,7 @@ import {observer} from 'mobx-react-lite';
 import type {MotionValue} from 'motion';
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {useDragLayer} from 'react-dnd';
+import {GenericErrorModal} from '../alerts/GenericErrorModal';
 
 const CATEGORY_FULL_DESCRIPTOR = msg({
 	message: 'Category full',
@@ -185,15 +185,11 @@ export const ChannelListContent = observer(({guild, scrollY}: {guild: Guild; scr
 					if (failureCode(error) === APIErrorCodes.MAX_CATEGORY_CHANNELS) {
 						ModalCommands.push(
 							ModalCommands.modal(() => (
-								<ConfirmModal
+								<GenericErrorModal
 									title={i18n._(CATEGORY_FULL_DESCRIPTOR)}
-									description={i18n._(THIS_CATEGORY_ALREADY_CONTAINS_THE_MAXIMUM_OF_CHANNELS_DESCRIPTOR, {
+									message={i18n._(THIS_CATEGORY_ALREADY_CONTAINS_THE_MAXIMUM_OF_CHANNELS_DESCRIPTOR, {
 										maxChannelsPerCategory: MAX_CHANNELS_PER_CATEGORY,
 									})}
-									primaryText={i18n._(UNDERSTOOD_DESCRIPTOR)}
-									onPrimary={() => {}}
-									secondaryText={false}
-									hideCloseButton
 									data-flx="app.channel-list-content.handle-channel-drop.confirm-modal"
 								/>
 							)),

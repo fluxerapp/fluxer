@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
+import {GenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModal';
 import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
-import {UNDERSTOOD_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {isDesktop} from '@app/features/ui/utils/NativeUtils';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -74,13 +73,9 @@ export const MediaPermissionBlockedModal = observer(({kind}: {kind: MediaPermiss
 	const {i18n} = useLingui();
 	const desktop = isDesktop();
 	return (
-		<ConfirmModal
+		<GenericErrorModal
 			title={i18n._(titleDescriptorForKind(kind))}
-			description={i18n._(bodyDescriptorForKind(kind, desktop), {productName: PRODUCT_NAME})}
-			primaryText={i18n._(UNDERSTOOD_DESCRIPTOR)}
-			onPrimary={() => {}}
-			secondaryText={false}
-			hideCloseButton
+			message={i18n._(bodyDescriptorForKind(kind, desktop), {productName: PRODUCT_NAME})}
 			data-flx="permissions.media-permission-blocked-modal.confirm-modal"
 		/>
 	);

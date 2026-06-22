@@ -1,10 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
-import {
-	CANNOT_SEND_MESSAGES_IN_CHANNEL_DESCRIPTOR,
-	UNDERSTOOD_DESCRIPTOR,
-} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {GenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModal';
+import {CANNOT_SEND_MESSAGES_IN_CHANNEL_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
@@ -46,13 +43,9 @@ export const AttachmentPermissionDeniedModal = observer(
 			i18n._(CANNOT_SEND_MESSAGES_IN_CHANNEL_DESCRIPTOR)
 		);
 		return (
-			<ConfirmModal
+			<GenericErrorModal
 				title={title}
-				description={description}
-				primaryText={i18n._(UNDERSTOOD_DESCRIPTOR)}
-				onPrimary={() => {}}
-				secondaryText={false}
-				hideCloseButton
+				message={description}
 				data-flx="messaging.attachment-permission-denied-modal.confirm-modal"
 			/>
 		);

@@ -2,8 +2,7 @@
 
 import assert from 'node:assert/strict';
 import i18n from '@app/app/I18n';
-import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
-import {UNDERSTOOD_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {GenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModal';
 import {SoundType} from '@app/features/notification/utils/SoundUtils';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import * as SoundCommands from '@app/features/ui/commands/SoundCommands';
@@ -524,12 +523,9 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 	showScreenShareEndedModalInternal(description: string): void {
 		ModalCommands.pushWithKey(
 			ModalCommands.modal(() => (
-				<ConfirmModal
+				<GenericErrorModal
 					title={i18n._(SCREEN_SHARE_ENDED_DESCRIPTOR)}
-					description={description}
-					primaryText={i18n._(UNDERSTOOD_DESCRIPTOR)}
-					onPrimary={() => {}}
-					secondaryText={false}
+					message={description}
 					data-flx="voice.screen-share-manager.screen-share-ended-modal"
 				/>
 			)),

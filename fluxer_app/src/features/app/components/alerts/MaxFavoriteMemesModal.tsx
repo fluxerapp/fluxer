@@ -3,7 +3,7 @@
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import {PREMIUM_PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import {Limits} from '@app/features/app/utils/UserLimits';
-import {CLOSE_DESCRIPTOR, UNDERSTOOD_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {CLOSE_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as PremiumModalCommands from '@app/features/premium/commands/PremiumModalCommands';
 import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import Users from '@app/features/user/state/Users';
@@ -11,6 +11,7 @@ import {MAX_FAVORITE_MEMES_PREMIUM} from '@fluxer/constants/src/LimitConstants';
 import {msg, plural} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
+import {GenericErrorModal} from './GenericErrorModal';
 
 const SAVED_MEDIA_LIMIT_REACHED_DESCRIPTOR = msg({
 	message: 'Saved media limit reached',
@@ -50,13 +51,9 @@ export const MaxFavoriteMemesModal = observer(() => {
 	);
 	if (!showPremium) {
 		return (
-			<ConfirmModal
+			<GenericErrorModal
 				title={i18n._(SAVED_MEDIA_LIMIT_REACHED_DESCRIPTOR)}
-				description={i18n._(YOU_VE_REACHED_THE_MAXIMUM_LIMIT_OF_THIS_DESCRIPTOR, {freeItemsText})}
-				primaryText={i18n._(UNDERSTOOD_DESCRIPTOR)}
-				onPrimary={() => {}}
-				secondaryText={false}
-				hideCloseButton
+				message={i18n._(YOU_VE_REACHED_THE_MAXIMUM_LIMIT_OF_THIS_DESCRIPTOR, {freeItemsText})}
 				data-flx="app.max-favorite-memes-modal.confirm-modal"
 			/>
 		);
