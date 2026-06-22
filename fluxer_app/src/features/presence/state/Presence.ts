@@ -20,7 +20,7 @@ import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {StatusType} from '@fluxer/constants/src/StatusConstants';
 import {normalizeStatus, StatusTypes} from '@fluxer/constants/src/StatusConstants';
 import {RelationshipTypes} from '@fluxer/constants/src/UserConstants';
-import type {UserPrivate} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
+import type {UserActivity, UserPrivate} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {makeAutoObservable, observable, reaction} from 'mobx';
 
 interface FlattenedPresence {
@@ -30,6 +30,7 @@ interface FlattenedPresence {
 	mobile?: boolean;
 	guildIds: Set<string>;
 	customStatus: CustomStatus | null;
+	activities: Array<UserActivity>;
 }
 
 type StatusListener = (userId: string, status: StatusType, isMobile: boolean) => void;
@@ -160,6 +161,10 @@ class Presence {
 
 	getCustomStatus(userId: string): CustomStatus | null {
 		return this.customStatuses.get(userId) ?? null;
+	}
+
+	getActivities(userId: string): Array<UserActivity> {
+		return this.presences.get(userId)?.activities ?? [];
 	}
 
 	getPresenceCount(guildId: string): number {
@@ -367,7 +372,7 @@ class Presence {
 	}
 
 	handlePresenceUpdate(presence: WirePresence): void {
-		const {guild_id: guildIdRaw, user, status, afk, mobile, custom_status: customStatusPayload} = presence;
+		const {guild_id: guildIdRaw, user, status, afk, mobile, custom_status: customStatusPayload, activities} = presence;
 		const normalizedStatus = normalizeStatus(status);
 		const userId = user.id;
 		const customStatus = fromGatewayCustomStatus(customStatusPayload);
@@ -390,6 +395,7 @@ class Presence {
 				mobile,
 				guildIds,
 				customStatus,
+				activities: activities ?? [],
 			};
 			this.presences.set(userId, flattened);
 			this.addPresenceCounts(flattened);
@@ -416,6 +422,9 @@ class Presence {
 			existing.mobile = mobile;
 		}
 		existing.customStatus = customStatus;
+		if (activities !== undefined) {
+			existing.activities = activities ?? [];
+		}
 		this.customStatuses.set(userId, customStatus);
 		if (normalizedStatus === StatusTypes.OFFLINE && guildIdRaw == null) {
 			existing.guildIds.delete(ME);
@@ -430,7 +439,7 @@ class Presence {
 	}
 
 	private handleReadyPresence(presence: WirePresence, initialGuildIds?: Set<string>, hasMeContext = false): void {
-		const {user, status, afk, mobile, custom_status: customStatusPayload} = presence;
+		const {user, status, afk, mobile, custom_status: customStatusPayload, activities} = presence;
 		const normalizedStatus = normalizeStatus(status);
 		const customStatus = fromGatewayCustomStatus(customStatusPayload);
 		const userId = user.id;
@@ -449,6 +458,7 @@ class Presence {
 			mobile,
 			guildIds,
 			customStatus,
+			activities: activities ?? [],
 		};
 		this.presences.set(userId, flattened);
 		this.addPresenceCounts(flattened);
