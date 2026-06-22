@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserPartial} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 
 vi.mock('@app/features/auth/state/Authentication', () => ({
@@ -84,6 +85,18 @@ const richPresenceActivity = {
 	state: 'Testing RPC',
 };
 
+function partialUser(id: string): UserPartial {
+	return {
+		id,
+		username: id,
+		discriminator: '0000',
+		global_name: null,
+		avatar: null,
+		avatar_color: null,
+		flags: 0,
+	};
+}
+
 describe('Presence activity records', () => {
 	beforeEach(() => {
 		vi.resetModules();
@@ -94,7 +107,7 @@ describe('Presence activity records', () => {
 
 		Presence.handlePresenceUpdate({
 			guild_id: 'guild-1',
-			user: {id: 'friend-1'},
+			user: partialUser('friend-1'),
 			status: 'online',
 			activities: [richPresenceActivity],
 		});
@@ -111,12 +124,12 @@ describe('Presence activity records', () => {
 				{
 					id: 'guild-1',
 					unavailable: false,
-					members: [{user: {id: 'friend-1'}}],
+					members: [{user: partialUser('friend-1')}],
 				},
 			] as never,
 			[
 				{
-					user: {id: 'friend-1'},
+					user: partialUser('friend-1'),
 					status: 'online',
 					activities: [richPresenceActivity],
 				},

@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserActivity} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 
-type RpcActivityPayload = Parameters<NonNullable<Window['electronApi']['onRpcActivityUpdate']>>[0] extends (
-	payload: infer Payload,
-) => void
-	? Payload
-	: never;
+interface RpcActivityPayload {
+	activity: UserActivity | null;
+	gatewayActivity?: UserActivity;
+	receivedAt?: number;
+	source: string;
+}
 
 const applyActivityImmediate = vi.fn();
 const clearImmediately = vi.fn();
