@@ -74,7 +74,11 @@ check_muted_and_notifications(
     Muted = boolean_setting(muted, Settings, false),
     ChannelOverrides = map_setting(channel_overrides, Settings),
     ChannelOverride = channel_override(ChannelId, ChannelOverrides, #{}),
-    ChannelMuted = optional_boolean_setting(muted, ChannelOverride),
+    ParentChannelOverride = parent_channel_override(MessageData, ChannelOverrides),
+    ChannelMuted = resolve_inherited_boolean_override(
+        optional_boolean_setting(muted, ChannelOverride),
+        optional_boolean_setting(muted, ParentChannelOverride)
+    ),
     ActualMuted = resolve_actual_muted(ChannelMuted, Muted),
     MuteConfig = push_eligibility:get_setting(mute_config, Settings, undefined),
     IsTempMuted = check_temp_muted(MuteConfig),
@@ -94,6 +98,11 @@ check_muted_and_notifications(
 -spec resolve_actual_muted(boolean() | undefined, boolean()) -> boolean().
 resolve_actual_muted(undefined, Muted) -> Muted;
 resolve_actual_muted(ChannelMuted, _Muted) -> ChannelMuted.
+
+-spec resolve_inherited_boolean_override(boolean() | undefined, boolean() | undefined) ->
+    boolean() | undefined.
+resolve_inherited_boolean_override(undefined, ParentValue) -> ParentValue;
+resolve_inherited_boolean_override(ChannelValue, _ParentValue) -> ChannelValue.
 
 -spec check_temp_muted(term()) -> boolean().
 check_temp_muted(undefined) ->
@@ -154,9 +163,18 @@ resolve_message_notifications(ChannelId, Settings, GuildDefaultNotifications, Me
 
 -spec extract_parent_channel_level(map(), map()) -> integer() | undefined.
 extract_parent_channel_level(MessageData, ChannelOverrides) ->
+    case parent_channel_override(MessageData, ChannelOverrides) of
+        undefined ->
+            undefined;
+        ParentOverride ->
+            notification_level_setting(ParentOverride, ?MESSAGE_NOTIFICATIONS_NULL)
+    end.
+
+-spec parent_channel_override(map(), map()) -> map() | undefined.
+parent_channel_override(MessageData, ChannelOverrides) ->
     case snowflake_id:parse_maybe(maps:get(<<"parent_id">>, MessageData, undefined)) of
         undefined -> undefined;
-        ParentChannelId -> extract_channel_level(ParentChannelId, ChannelOverrides)
+        ParentChannelId -> channel_override(ParentChannelId, ChannelOverrides, undefined)
     end.
 
 -spec extract_channel_level(integer(), map()) -> integer() | undefined.
@@ -355,6 +373,49 @@ muted_channel_suppresses_push_test() ->
 
 guild_muted_suppresses_push_test() ->
     ?assertEqual(false, check_with_settings(#{muted => true})).
+
+parent_channel_mute_suppresses_thread_push_test() ->
+    Settings = #{
+        channel_overrides => #{
+            <<"100">> => #{muted => true}
+        }
+    },
+    ?assertEqual(
+        false,
+        check_muted_and_notifications(
+            100,
+            200,
+            #{<<"channel_type">> => 0, <<"parent_id">> => <<"100">>},
+            0,
+            #{},
+            Settings,
+            1,
+            #{},
+            undefined
+        )
+    ).
+
+direct_channel_mute_override_wins_over_parent_mute_test() ->
+    Settings = #{
+        channel_overrides => #{
+            <<"100">> => #{muted => true},
+            <<"200">> => #{muted => false}
+        }
+    },
+    ?assertEqual(
+        true,
+        check_muted_and_notifications(
+            100,
+            200,
+            #{<<"channel_type">> => 0, <<"parent_id">> => <<"100">>},
+            0,
+            #{},
+            Settings,
+            1,
+            #{},
+            undefined
+        )
+    ).
 
 temp_muted_suppresses_push_test() ->
     FutureMs = integer_to_binary(erlang:system_time(millisecond) + 60000),
