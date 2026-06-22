@@ -48,6 +48,7 @@ import {GuildModerationService} from './GuildModerationService';
 import {GuildRoleService} from './GuildRoleService';
 import {GuildSearchService} from './GuildSearchService';
 import {GuildScheduledEventService} from './GuildScheduledEventService';
+import {GuildScheduledEventRepository} from '../repositories/GuildScheduledEventRepository';
 
 interface AuditLogOptions {
 	channel_id?: string;
@@ -222,7 +223,7 @@ export class GuildService {
 			workerService,
 		);
 		this.events = new GuildScheduledEventService(
-			null as any,
+			new GuildScheduledEventRepository(),
 			gatewayService,
 			snowflakeService,
 			avatarService,
