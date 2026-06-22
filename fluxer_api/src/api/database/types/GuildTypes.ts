@@ -320,3 +320,26 @@ export interface GuildMemberByUserIdRow {
 export const GUILD_MEMBER_BY_USER_ID_COLUMNS = ['user_id', 'guild_id'] as const satisfies ReadonlyArray<
 	keyof GuildMemberByUserIdRow
 >;
+
+export interface GuildScheduledEventRow {
+	event_id: import('../../BrandedTypes').ScheduledEventID;
+	guild_id: import('../../BrandedTypes').GuildID;
+	channel_id?: import('../../BrandedTypes').ChannelID | null;
+	creator_id: import('../../BrandedTypes').UserID;
+	name: string;
+	description?: string | null;
+	image_hash?: string | null;
+	scheduled_start_time: Date;
+	scheduled_end_time?: Date | null;
+	status: string;
+	entity_type: string;
+	entity_id?: bigint | null;
+	entity_metadata?: {location?: string | null} | null;
+}
+
+export interface GuildScheduledEventUserRow {
+	event_id: import('../../BrandedTypes').ScheduledEventID;
+	guild_id: import('../../BrandedTypes').GuildID;
+	user_id: import('../../BrandedTypes').UserID;
+	created_at: Date;
+}
