@@ -90,7 +90,8 @@ export class GuildScheduledEventService {
 			status: 'SCHEDULED',
 			entity_type: data.entity_type,
 			entity_id: null,
-			entity_metadata: data.entity_metadata ?? null,
+			entity_location: data.entity_metadata?.location ?? null,
+			version: null,
 		});
 
 		await this.guildAuditLogService.log({
