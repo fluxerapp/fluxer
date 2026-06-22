@@ -1,0 +1,64 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.section {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	min-width: 0;
+}
+
+.activityGrid {
+	display: grid;
+	grid-template-columns: repeat(1, minmax(0, 1fr));
+	gap: 0.5rem;
+	max-height: min(56vh, 32.5rem);
+	overflow-y: auto;
+	padding-right: 0.125rem;
+}
+
+.card {
+	display: flex;
+	flex-direction: column;
+	gap: 0.375rem;
+	width: 100%;
+	min-width: 0;
+	align-self: stretch;
+	padding: 0.75rem 0.875rem;
+	border-radius: var(--radius-md, 0.375rem);
+	background-color: var(--background-secondary);
+	border: 0.0625rem solid var(--border-color, rgba(255, 255, 255, 0.04));
+	box-shadow: 0 0.375rem 1.125rem rgba(0, 0, 0, 0.08);
+}
+
+.activityLabel {
+	color: var(--text-primary);
+	font-size: 0.75rem;
+	font-weight: 600;
+	line-height: 1.2;
+	text-transform: uppercase;
+}
+
+.activityName {
+	min-width: 0;
+	color: var(--text-primary);
+	font-size: 0.9375rem;
+	font-weight: 700;
+	line-height: 1.25;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.activitySubtitle {
+	color: var(--text-primary-muted);
+	font-size: 0.8125rem;
+	font-weight: 500;
+	line-height: 1.35;
+	overflow-wrap: anywhere;
+}
+
+@media (min-width: 768px) {
+	.activityGrid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}

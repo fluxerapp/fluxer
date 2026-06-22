@@ -50,6 +50,7 @@ import {ProfileCardContent} from '@app/features/user/components/profile/profile_
 import {ProfileCardFooter} from '@app/features/user/components/profile/profile_card/ProfileCardFooter';
 import {ProfileCardLayout} from '@app/features/user/components/profile/profile_card/ProfileCardLayout';
 import {ProfileCardUserInfo} from '@app/features/user/components/profile/profile_card/ProfileCardUserInfo';
+import {RpcActivitySection} from '@app/features/user/components/profile/RpcActivitySection';
 import {UserProfileLoadingSkeleton} from '@app/features/user/components/profile/UserProfileLoadingSkeleton';
 import {useProfileCardDisplayState} from '@app/features/user/components/profile/useProfileCardDisplayState';
 import {VoiceActivitySection} from '@app/features/user/components/profile/VoiceActivitySection';
@@ -347,11 +348,14 @@ export const UserProfilePopout: React.FC<UserProfilePopoutProps> = observer(
 								</div>
 							)}
 							{!isWebhook && (
-								<VoiceActivitySection
-									userId={user.id}
-									onNavigate={handleClosePopout}
-									data-flx="user.user-profile-popout.voice-activity-section"
-								/>
+								<>
+									<RpcActivitySection userId={user.id} data-flx="user.user-profile-popout.rpc-activity-section" />
+									<VoiceActivitySection
+										userId={user.id}
+										onNavigate={handleClosePopout}
+										data-flx="user.user-profile-popout.voice-activity-section"
+									/>
+								</>
 							)}
 							{profile && (
 								<UserProfilePreviewBio
