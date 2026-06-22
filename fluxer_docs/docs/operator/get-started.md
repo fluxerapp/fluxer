@@ -157,6 +157,8 @@ Keep these defaults unless you know you need to change them:
         command: tunnel run --token ${CLOUDFLARED_TOKEN:?set CLOUDFLARED_TOKEN}
         depends_on:
           - caddy
+        networks:
+          - fluxer
     YAML
 
     export CLOUDFLARED_TOKEN='paste-your-tunnel-token-here'

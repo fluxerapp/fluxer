@@ -3,7 +3,7 @@
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import {PREMIUM_PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import {Limits} from '@app/features/app/utils/UserLimits';
-import {CLOSE_DESCRIPTOR, UNDERSTOOD_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {CLOSE_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as PremiumModalCommands from '@app/features/premium/commands/PremiumModalCommands';
 import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import type {User} from '@app/features/user/models/User';
@@ -11,6 +11,7 @@ import {MAX_BOOKMARKS_PREMIUM} from '@fluxer/constants/src/LimitConstants';
 import {msg, plural} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
+import {GenericErrorModal} from './GenericErrorModal';
 
 const BOOKMARK_LIMIT_REACHED_DESCRIPTOR = msg({
 	message: 'Bookmark limit reached',
@@ -56,26 +57,18 @@ export const MaxBookmarksModal = observer(({user}: MaxBookmarksModalProps) => {
 	);
 	if (!showPremium) {
 		return (
-			<ConfirmModal
+			<GenericErrorModal
 				title={i18n._(BOOKMARK_LIMIT_REACHED_DESCRIPTOR)}
-				description={i18n._(YOU_VE_REACHED_THE_MAXIMUM_NUMBER_OF_BOOKMARKS_DESCRIPTOR, {bookmarksText})}
-				primaryText={i18n._(UNDERSTOOD_DESCRIPTOR)}
-				onPrimary={() => {}}
-				secondaryText={false}
-				hideCloseButton
+				message={i18n._(YOU_VE_REACHED_THE_MAXIMUM_NUMBER_OF_BOOKMARKS_DESCRIPTOR, {bookmarksText})}
 				data-flx="app.max-bookmarks-modal.confirm-modal"
 			/>
 		);
 	}
 	if (!canUpgradeBookmarks) {
 		return (
-			<ConfirmModal
+			<GenericErrorModal
 				title={i18n._(BOOKMARK_LIMIT_REACHED_DESCRIPTOR)}
-				description={i18n._(YOU_VE_REACHED_THE_MAXIMUM_NUMBER_OF_BOOKMARKS_2_DESCRIPTOR, {bookmarksText})}
-				primaryText={i18n._(UNDERSTOOD_DESCRIPTOR)}
-				onPrimary={() => {}}
-				secondaryText={false}
-				hideCloseButton
+				message={i18n._(YOU_VE_REACHED_THE_MAXIMUM_NUMBER_OF_BOOKMARKS_2_DESCRIPTOR, {bookmarksText})}
 				data-flx="app.max-bookmarks-modal.confirm-modal--2"
 			/>
 		);
