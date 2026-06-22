@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {GuildID, ScheduledEventID, UserID} from '../../BrandedTypes';
-import {BatchBuilder, fetchMany, fetchOne, upsertOne} from '../../database/CassandraQueryExecution';
+import {BatchBuilder, deleteOneOrMany, fetchMany, fetchOne, upsertOne} from '../../database/CassandraQueryExecution';
 import {buildPatchFromData, executeVersionedUpdate} from '../../database/CassandraVersionedUpdate';
 import {
 	GUILD_SCHEDULED_EVENT_COLUMNS,
@@ -11,7 +11,6 @@ import {
 import {GuildScheduledEvent} from '../../models/GuildScheduledEvent';
 import {GuildScheduledEvents, GuildScheduledEventUsers} from '../../Tables';
 import {IGuildScheduledEventRepository} from './IGuildScheduledEventRepository';
-import {Db} from '../../database/CassandraTypes';
 
 const FETCH_EVENT_QUERY = GuildScheduledEvents.selectCql({
 	where: [GuildScheduledEvents.where.eq('guild_id'), GuildScheduledEvents.where.eq('event_id')],
@@ -115,7 +114,7 @@ export class GuildScheduledEventRepository extends IGuildScheduledEventRepositor
 	}
 
 	async unrsvpEvent(guildId: GuildID, eventId: ScheduledEventID, userId: UserID): Promise<void> {
-		await upsertOne(
+		await deleteOneOrMany(
 			GuildScheduledEventUsers.deleteByPk({
 				guild_id: guildId,
 				event_id: eventId,
