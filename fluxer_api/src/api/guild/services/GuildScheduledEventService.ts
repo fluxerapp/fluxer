@@ -146,7 +146,7 @@ export class GuildScheduledEventService {
 			...(imageHash !== existing.imageHash && {image_hash: imageHash}),
 			...(data.channel_id !== undefined && {channel_id: data.channel_id ? (BigInt(data.channel_id) as any) : null}),
 			...(data.entity_type !== undefined && {entity_type: data.entity_type}),
-			...(data.entity_metadata !== undefined && {entity_metadata: data.entity_metadata ?? null}),
+			...(data.entity_metadata !== undefined && {entity_location: data.entity_metadata?.location ?? null}),
 			...(data.scheduled_start_time !== undefined && {scheduled_start_time: new Date(data.scheduled_start_time)}),
 			...(data.scheduled_end_time !== undefined && {
 				scheduled_end_time: data.scheduled_end_time ? new Date(data.scheduled_end_time) : null,
