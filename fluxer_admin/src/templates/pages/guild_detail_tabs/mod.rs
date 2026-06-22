@@ -12,6 +12,7 @@ pub mod overview;
 pub mod reports;
 pub mod settings;
 pub mod stickers;
+pub mod events;
 
 use crate::api::types::GuildDetailInfo;
 
