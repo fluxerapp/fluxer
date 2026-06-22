@@ -40,7 +40,7 @@ export class GuildScheduledEvent {
 		this.status = toStatus(row.status);
 		this.entityType = toEntityType(row.entity_type);
 		this.entityId = row.entity_id ?? null;
-		this.entityMetadata = row.entity_metadata ?? null;
+		this.entityMetadata = row.entity_location ? {location: row.entity_location} : null;
 	}
 }
 
