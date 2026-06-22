@@ -2703,7 +2703,7 @@ fn write_macos_releases(
         }],
     });
     write_json_pretty(&dest.join("RELEASES.json"), &releases)?;
-    fs::copy(dest.join("RELEASES.json"), dest.join("releases.json"))?;
+    write_json_pretty(&dest.join("releases.json"), &releases)?;
     Ok(())
 }
 

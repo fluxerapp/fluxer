@@ -236,18 +236,19 @@ mod tests {
             .env
             .into_iter()
             .collect::<std::collections::BTreeMap<_, _>>();
+        let default_nats_url = OsString::from(default_test_nats_url());
 
         assert_eq!(
             env.get(&OsString::from("FLUXER_NATS_URL")),
-            Some(&OsString::from("nats://nats:4222"))
+            Some(&default_nats_url)
         );
         assert_eq!(
             env.get(&OsString::from("FLUXER_NATS_CORE_URL")),
-            Some(&OsString::from("nats://nats:4222"))
+            Some(&default_nats_url)
         );
         assert_eq!(
             env.get(&OsString::from("FLUXER_NATS_JETSTREAM_URL")),
-            Some(&OsString::from("nats://nats:4222"))
+            Some(&default_nats_url)
         );
         assert_eq!(
             env.get(&OsString::from("API_TEST_MAX_WORKERS")),
