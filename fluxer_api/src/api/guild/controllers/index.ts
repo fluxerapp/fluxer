@@ -12,6 +12,7 @@ import {GuildMemberSearchController} from './GuildMemberSearchController';
 import {GuildRoleController} from './GuildRoleController';
 import {GuildStickerController} from './GuildStickerController';
 import {GuildScheduledEventController} from './GuildScheduledEventController';
+import {GuildCalendarExportController} from './GuildCalendarExportController';
 
 export function registerGuildControllers(app: HonoApp) {
 	GuildBaseController(app);
@@ -25,4 +26,5 @@ export function registerGuildControllers(app: HonoApp) {
 	GuildAuditLogController(app);
 	GuildDiscoveryController(app);
 	GuildScheduledEventController(app);
+	GuildCalendarExportController(app);
 }
