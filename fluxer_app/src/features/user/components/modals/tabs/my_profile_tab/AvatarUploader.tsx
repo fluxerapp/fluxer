@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {GenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModal';
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import {
 	ANIMATED_AVATAR_FORMATS,
@@ -33,7 +34,6 @@ import {
 	FAILED_TO_PROCESS_CROPPED_IMAGE_DESCRIPTOR,
 	GET_PREMIUM_DESCRIPTOR,
 	INVALID_IMAGE_TRY_ANOTHER_DESCRIPTOR,
-	UNDERSTOOD_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {openFilePicker} from '@app/features/messaging/utils/FilePickerUtils';
 import * as PremiumModalCommands from '@app/features/premium/commands/PremiumModalCommands';
@@ -233,16 +233,14 @@ export const AvatarUploader = observer(
 					} else {
 						ModalCommands.push(
 							modal(() => (
-								<ConfirmModal
+								<GenericErrorModal
 									title={i18n._(ANIMATED_AVATARS_NOT_AVAILABLE_DESCRIPTOR)}
-									description={
+									message={
 										<Trans>
 											Animated avatars ({ANIMATED_AVATAR_FORMATS}) are not available on this instance. Upload a static
 											image instead.
 										</Trans>
 									}
-									primaryText={i18n._(UNDERSTOOD_DESCRIPTOR)}
-									onPrimary={() => {}}
 									data-flx="user.my-profile-tab.avatar-uploader.handle-avatar-upload.confirm-modal--2"
 								/>
 							)),

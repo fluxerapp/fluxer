@@ -1,13 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {GenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModal';
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import {PREMIUM_PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import {Limits} from '@app/features/app/utils/UserLimits';
-import {
-	CANCEL_DESCRIPTOR,
-	GET_PREMIUM_DESCRIPTOR,
-	UNDERSTOOD_DESCRIPTOR,
-} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {CANCEL_DESCRIPTOR, GET_PREMIUM_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
 import * as PremiumModalCommands from '@app/features/premium/commands/PremiumModalCommands';
 import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
@@ -76,13 +73,9 @@ export const FileSizeTooLargeModal = observer(({oversizedFileCount}: FileSizeToo
 		: i18n._(ONE_OR_MORE_FILES_YOU_RE_TRYING_TO_DESCRIPTOR, {maxSizeFormatted});
 	if (!showPremium || !canUpgradeAttachmentLimit) {
 		return (
-			<ConfirmModal
+			<GenericErrorModal
 				title={i18n._(FILE_SIZE_TOO_LARGE_DESCRIPTOR)}
-				description={!showPremium ? `${baseDescription} ${i18n._(INSTANCE_ADMIN_LIMIT_DESCRIPTOR)}` : baseDescription}
-				primaryText={i18n._(UNDERSTOOD_DESCRIPTOR)}
-				onPrimary={() => {}}
-				secondaryText={false}
-				hideCloseButton
+				message={!showPremium ? `${baseDescription} ${i18n._(INSTANCE_ADMIN_LIMIT_DESCRIPTOR)}` : baseDescription}
 				data-flx="messaging.file-size-too-large-modal.confirm-modal"
 			/>
 		);
