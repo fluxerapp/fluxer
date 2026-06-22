@@ -675,6 +675,7 @@ export interface RpcActivityUpdatePayload {
 	activity: RpcActivityPayload | null;
 	gatewayActivity?: RpcActivityPayload | null;
 	pid?: number;
+	receivedAt?: number;
 	source: 'ipc' | 'process-scan';
 }
 

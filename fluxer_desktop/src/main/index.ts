@@ -438,7 +438,7 @@ if (launchConfigurationError) {
 				stopRpcActivityForwarding = onRpcActivity((activity, pid, source = 'ipc') => {
 					const mainWindow = getMainWindow();
 					if (!mainWindow || mainWindow.isDestroyed()) return;
-					mainWindow.webContents.send('rpc-activity-update', {activity, pid, source});
+					mainWindow.webContents.send('rpc-activity-update', {activity, pid, receivedAt: Date.now(), source});
 				});
 				log.info('App initialized successfully');
 			})

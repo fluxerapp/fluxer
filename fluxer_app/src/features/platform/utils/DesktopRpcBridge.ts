@@ -7,6 +7,7 @@ import {getElectronAPI, isDesktop} from '@app/features/ui/utils/NativeUtils';
 import type {UserActivity} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 
 const logger = new Logger('DesktopRpcBridge');
+let lastRpcActivityReceivedAt = 0;
 
 function toUserActivity(desktopActivity: {
 	type: number;
@@ -34,6 +35,12 @@ export function initializeDesktopRpcBridge(): (() => void) | null {
 	if (!electronApi?.onRpcActivityUpdate) return null;
 	return electronApi.onRpcActivityUpdate((payload) => {
 		if (!Authentication.isAuthenticated) return;
+		const receivedAt = payload.receivedAt ?? Date.now();
+		if (receivedAt < lastRpcActivityReceivedAt) {
+			logger.debug('Ignored stale RPC activity update', {receivedAt, lastReceivedAt: lastRpcActivityReceivedAt});
+			return;
+		}
+		lastRpcActivityReceivedAt = receivedAt;
 		if (payload.activity) {
 			const displayActivity = toUserActivity(payload.activity);
 			const gatewayActivity = payload.gatewayActivity ? toUserActivity(payload.gatewayActivity) : displayActivity;
