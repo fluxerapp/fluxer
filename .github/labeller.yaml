@@ -1,0 +1,99 @@
+f:admin:
+  - changed-files:
+    - any-glob-to-any-file: fluxer_admin/**/*
+f:api:
+  - changed-files:
+    - any-glob-to-any-file: fluxer_api/**/*
+f:app:
+  - changed-files:
+    - any-glob-to-any-file: fluxer_app/**/*
+f:app_proxy:
+  - changed-files:
+    - any-glob-to-any-file: fluxer_app_proxy/**/*
+f:common:
+  - changed-files:
+    - any-glob-to-any-file: fluxer_common/**/*
+f:desktop:
+  - changed-files:
+    - any-glob-to-any-file: fluxer_desktop/**/*
+f:docs:
+  - changed-files:
+    - any-glob-to-any-file: fluxer_docs/**/*
+f:gateway:
+  - changed-files:
+    - any-glob-to-any-file: fluxer_gateway/**/*
+f:marketing:
+  - changed-files:
+    - any-glob-to-any-file: fluxer_marketing/**/*
+f:media_proxy:
+  - changed-files:
+    - any-glob-to-any-file: fluxer_media_proxy/**/*
+f:messages:
+  - changed-files:
+    - any-glob-to-any-file: fluxer_messages/**/*
+f:snowflakes:
+  - changed-files:
+    - any-glob-to-any-file: fluxer_snowflakes/**/*
+f:static:
+  - changed-files:
+    - any-glob-to-any-file: fluxer_static/**/*
+f:svc:
+  - changed-files:
+    - any-glob-to-any-file: fluxer_svc/**/*
+f:unfurl:
+  - changed-files:
+    - any-glob-to-any-file: fluxer_unfurl/**/*
+f:users:
+  - changed-files:
+    - any-glob-to-any-file: fluxer_users/**/*
+p:config:
+  - changed-files:
+    - any-glob-to-any-file: packages/config/**/*
+p:constants:
+  - changed-files:
+    - any-glob-to-any-file: packages/constants/**/*
+p:date-utils:
+  - changed-files:
+    - any-glob-to-any-file: packages/date_utils/**/*
+p:errors:
+  - changed-files:
+    - any-glob-to-any-file: packages/errors/**/*
+p:geo-utils:
+  - changed-files:
+    - any-glob-to-any-file: packages/geo_utils/**/*
+p:hono:
+  - changed-files:
+    - any-glob-to-any-file: packages/hono/**/*
+p:hono-types:
+  - changed-files:
+    - any-glob-to-any-file: packages/hono_types/**/*
+p:i18n:
+  - changed-files:
+    - any-glob-to-any-file: packages/i18n/**/*
+p:instance-bootstrap:
+  - changed-files:
+    - any-glob-to-any-file: packages/instance_bootstrap/**/*
+p:ip-utils:
+  - changed-files:
+    - any-glob-to-any-file: packages/ip_utils/**/*
+p:limits:
+  - changed-files:
+    - any-glob-to-any-file: packages/limits/**/*
+p:logger:
+  - changed-files:
+    - any-glob-to-any-file: packages/logger/**/*
+p:markdown-parser:
+  - changed-files:
+    - any-glob-to-any-file: packages/markdown_parser/**/*
+p:openapi:
+  - changed-files:
+    - any-glob-to-any-file: packages/openapi/**/*
+p:schema:
+  - changed-files:
+    - any-glob-to-any-file: packages/schema/**/*
+p:snowflake:
+  - changed-files:
+    - any-glob-to-any-file: packages/snowflake/**/*
+p:voice-engine-v2:
+  - changed-files:
+    - any-glob-to-any-file: packages/voice_engine_v2/**/*

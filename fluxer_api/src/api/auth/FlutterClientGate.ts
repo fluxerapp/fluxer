@@ -3,6 +3,7 @@
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {createGuildID} from '../BrandedTypes';
+import {Config} from '../Config';
 import type {IGuildMemberRepository} from '../guild/repositories/IGuildMemberRepository';
 import type {User} from '../models/User';
 import {accountPolicyContactHasCapability} from '../risk/AccountPolicyService';
@@ -20,6 +21,7 @@ export async function assertFlutterClientLoginAllowed(
 	memberRepository: FlutterClientGateMemberRepository,
 ): Promise<void> {
 	if (!isFluxerFlutterClient(request)) return;
+	if (Config.instance.selfHosted) return;
 	if (accountPolicyContactHasCapability(user.email, 'client_gate_exempt')) return;
 	if (isFluxerFlutterAndroidClient(request) && isAndroidOpenAccessActive()) return;
 	if (isFluxerFlutterIosClient(request) && checkHasActivePaidPremium(user)) return;
@@ -33,6 +35,7 @@ export async function assertFlutterClientLoginAllowed(
 
 export function assertFlutterClientRegistrationAllowed(request: Request, email: string | null | undefined): void {
 	if (!isFluxerFlutterClient(request)) return;
+	if (Config.instance.selfHosted) return;
 	if (accountPolicyContactHasCapability(email, 'client_gate_exempt')) return;
 	if (isFluxerFlutterAndroidClient(request) && isAndroidOpenAccessActive()) return;
 	throw InputValidationError.fromCode('email', ValidationErrorCodes.INVALID_EMAIL_ADDRESS);
