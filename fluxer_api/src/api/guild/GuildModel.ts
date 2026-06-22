@@ -248,3 +248,26 @@ export async function mapGuildBansToResponse(
 		.filter((ban) => userPartials.has(ban.userId))
 		.map((ban) => mapBanWithUser(ban, userPartials.get(ban.userId)!));
 }
+
+export function mapScheduledEventToResponse(
+	event: import('../models/GuildScheduledEvent').GuildScheduledEvent,
+	userCount: number,
+): import('@fluxer/schema/src/domains/guild/GuildScheduledEventSchemas').GuildScheduledEventResponse {
+	return {
+		id: event.id.toString(),
+		guild_id: event.guildId.toString(),
+		channel_id: event.channelId?.toString() ?? null,
+		creator_id: event.creatorId.toString(),
+		name: event.name,
+		description: event.description,
+		image: event.imageHash,
+		scheduled_start_time: event.scheduledStartTime.toISOString(),
+		scheduled_end_time: event.scheduledEndTime?.toISOString() ?? null,
+		privacy_level: event.privacyLevel,
+		status: event.status,
+		entity_type: event.entityType,
+		entity_id: event.entityId?.toString() ?? null,
+		entity_metadata: event.entityMetadata,
+		user_count: userCount,
+	};
+}
