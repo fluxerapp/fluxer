@@ -139,6 +139,7 @@ export interface RpcActivityPayload {
 
 export interface RpcActivityUpdatePayload {
 	activity: RpcActivityPayload | null;
+	gatewayActivity?: RpcActivityPayload | null;
 	pid?: number;
 	source: 'ipc' | 'process-scan';
 }

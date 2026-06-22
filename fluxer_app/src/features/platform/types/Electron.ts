@@ -138,6 +138,37 @@ export interface TrayRuntimeStatePayload {
 	buildInfo: string | null;
 }
 
+export interface RpcActivityTimestamps {
+	start?: number;
+	end?: number;
+}
+
+export interface RpcActivityAssets {
+	large_image?: string;
+	large_text?: string;
+	small_image?: string;
+	small_text?: string;
+}
+
+export interface RpcActivityPayload {
+	application_id?: string;
+	name?: string;
+	state?: string;
+	details?: string;
+	type?: number;
+	timestamps?: RpcActivityTimestamps;
+	assets?: RpcActivityAssets;
+	metadata?: Record<string, unknown>;
+	instance?: boolean;
+}
+
+export interface RpcActivityUpdatePayload {
+	activity: RpcActivityPayload | null;
+	gatewayActivity?: RpcActivityPayload | null;
+	pid?: number;
+	source: 'ipc' | 'process-scan';
+}
+
 export type TrayActionPayload =
 	| {
 			action: 'set-status';
@@ -351,6 +382,7 @@ export interface ElectronAPI {
 	onDeepLink: (callback: (url: string) => void) => () => void;
 	getInitialDeepLink: () => Promise<string | null>;
 	onRpcNavigate: (callback: (path: string) => void) => () => void;
+	onRpcActivityUpdate?: (callback: (payload: RpcActivityUpdatePayload) => void) => () => void;
 	autostartEnable: () => Promise<void>;
 	autostartDisable: () => Promise<void>;
 	autostartIsEnabled: () => Promise<boolean>;

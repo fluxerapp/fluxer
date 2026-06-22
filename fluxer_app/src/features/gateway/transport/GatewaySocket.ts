@@ -23,6 +23,7 @@ import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
 import type {GatewayErrorCode} from '@fluxer/constants/src/GatewayConstants';
 import {GatewayCloseCodes, GatewayOpcodes} from '@fluxer/constants/src/GatewayConstants';
 import type {ValueOf} from '@fluxer/constants/src/ValueOf';
+import type {UserActivity} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import EventEmitter from 'eventemitter3';
 
 const GATEWAY_TIMEOUTS = {
@@ -72,6 +73,7 @@ export interface GatewayPresence {
 	afk: boolean;
 	mobile: boolean;
 	custom_status?: GatewayCustomStatusPayload | null;
+	activities?: Array<UserActivity> | null;
 }
 
 export interface GatewayVoiceStateUpdateParams {
@@ -410,6 +412,7 @@ export class GatewaySocket extends EventEmitter<GatewaySocketEvents> {
 		afk?: boolean,
 		mobile?: boolean,
 		customStatus?: GatewayCustomStatusPayload | null,
+		activities?: Array<UserActivity> | null,
 	): void {
 		if (!this.isConnected()) return;
 		this.sendPayload({
@@ -419,6 +422,7 @@ export class GatewaySocket extends EventEmitter<GatewaySocketEvents> {
 				...(afk !== undefined && {afk}),
 				...(mobile !== undefined && {mobile}),
 				...(customStatus !== undefined && {custom_status: customStatus}),
+				...(activities !== undefined && {activities}),
 			},
 		});
 	}

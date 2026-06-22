@@ -33,6 +33,7 @@ import {Logger} from '@app/features/platform/utils/AppLogger';
 import {getGatewayClientProperties} from '@app/features/platform/utils/ClientInfo';
 import {deferUntilModulesLoaded} from '@app/features/platform/utils/DeferUntilModulesLoaded';
 import LocalPresence from '@app/features/presence/state/LocalPresence';
+import LocalRpcPresence from '@app/features/presence/state/LocalRpcPresence';
 import Presence from '@app/features/presence/state/Presence';
 import QuickSwitcher from '@app/features/search/state/QuickSwitcher';
 import TypingIndicator from '@app/features/typing/state/TypingIndicator';
@@ -146,16 +147,29 @@ class GatewayConnection {
 	private setupPresenceSync(): void {
 		deferUntilModulesLoaded(() => {
 			reaction(
-				() => LocalPresence.presenceKey,
+				() => ({
+					presenceKey: LocalPresence.presenceKey,
+					rpcKey: LocalRpcPresence.activityKey,
+				}),
 				() => {
-					const presence = LocalPresence.getGatewayPresence();
-					if (!presence) {
-						return;
-					}
-					this.socket?.updatePresence(presence.status, presence.afk, presence.mobile, presence.custom_status);
+					this.syncLocalPresence();
 				},
 			);
 		});
+	}
+
+	syncLocalPresence(): void {
+		const presence = LocalPresence.getGatewayPresence();
+		if (!presence) {
+			return;
+		}
+		this.socket?.updatePresence(
+			presence.status,
+			presence.afk,
+			presence.mobile,
+			presence.custom_status,
+			LocalRpcPresence.getGatewayActivities(),
+		);
 	}
 
 	private setupSelectedGuildSync(): void {
@@ -273,6 +287,7 @@ class GatewayConnection {
 					afk: presence.afk,
 					mobile: presence.mobile,
 					custom_status: presence.custom_status,
+					activities: LocalRpcPresence.getGatewayActivities(),
 				},
 			}),
 			compression,
