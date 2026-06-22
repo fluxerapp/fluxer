@@ -2,7 +2,6 @@
 
 export function resolveActivityImageUrl(image: string | undefined, applicationId?: string): string | null {
 	if (!image) return null;
-	if (image.startsWith('fluxer-rpc-art://')) return image;
 	if (image.startsWith('http://') || image.startsWith('https://')) return image;
 
 	const colonIndex = image.indexOf(':');

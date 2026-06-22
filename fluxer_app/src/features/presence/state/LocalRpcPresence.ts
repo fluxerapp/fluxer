@@ -7,6 +7,24 @@ import {action, makeAutoObservable} from 'mobx';
 
 const DEBOUNCE_MS = 1000;
 
+function buildActivityIdentity(activity: UserActivity | null): string {
+	if (!activity) return 'none';
+	return JSON.stringify({
+		application_id: activity.application_id ?? null,
+		name: activity.name ?? null,
+		type: activity.type ?? null,
+		details: activity.details ?? null,
+		state: activity.state ?? null,
+		large_image: activity.assets?.large_image ?? null,
+		small_image: activity.assets?.small_image ?? null,
+		large_text: activity.assets?.large_text ?? null,
+		small_text: activity.assets?.small_text ?? null,
+		start: activity.timestamps?.start ?? null,
+		end: activity.timestamps?.end ?? null,
+		buttons: activity.buttons?.map((button) => `${button.label}:${button.url}`) ?? [],
+	});
+}
+
 class LocalRpcPresence {
 	activity: UserActivity | null = null;
 	gatewayActivity: UserActivity | null = null;
@@ -49,7 +67,7 @@ class LocalRpcPresence {
 	}
 
 	get activityKey(): string {
-		return `${this.activityVersion}:${this.activity?.application_id ?? 'none'}:${this.activity?.name ?? 'none'}`;
+		return `${this.activityVersion}:${buildActivityIdentity(this.activity)}`;
 	}
 
 	applyActivityImmediate(activity: UserActivity, gatewayActivity?: UserActivity): void {

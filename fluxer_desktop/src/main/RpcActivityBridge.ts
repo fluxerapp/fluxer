@@ -2,10 +2,12 @@
 
 import type {RpcActivityUpdatePayload} from '@electron/common/RpcActivityTypes';
 import {getConnectedIpcClientCount, onRpcActivity} from '@electron/main/ArRpcServer';
-import {loadDetectableApplications, resolveByClientId, resolveMappedRpcImage} from '@electron/main/DetectableApplications';
+import {
+	loadDetectableApplications,
+	resolveByClientId,
+	resolveMappedRpcImage,
+} from '@electron/main/DetectableApplications';
 import {getScannedGameIdByPid} from '@electron/main/LinuxProcessScanner';
-import {resolveMprisCoverArtUrl} from '@electron/main/MprisCoverArt';
-import {resolveRpcActivityAssetsForDisplay, sanitizeRpcActivityAssetsForGateway} from '@electron/main/RpcCoverArt';
 import type {RpcActivityPayload} from '@electron/main/rpc/RpcTypes';
 import {normalizeTimestamps} from '@electron/main/rpc/RpcUtils';
 import {getMainWindow} from '@electron/main/Window';
@@ -44,6 +46,26 @@ function resolveMappedAssets(
 
 function hasConnectedIpcClients(): boolean {
 	return getConnectedIpcClientCount() > 0;
+}
+
+function sanitizeRpcActivityAssetsForGateway(
+	assets: {large_image?: string; large_text?: string; small_image?: string; small_text?: string} | undefined,
+): typeof assets {
+	if (!assets) return assets;
+	const sanitize = (image: string | undefined): string | undefined => {
+		if (!image) return undefined;
+		if (image.startsWith('data:') || image.startsWith('blob:') || image.startsWith('file:')) {
+			return undefined;
+		}
+		if (image.length > 256) return undefined;
+		return image;
+	};
+	const largeImage = sanitize(assets.large_image);
+	const smallImage = sanitize(assets.small_image);
+	if (largeImage === assets.large_image && smallImage === assets.small_image) {
+		return assets;
+	}
+	return {...assets, large_image: largeImage, small_image: smallImage};
 }
 
 function toUpdatePayload(
@@ -97,21 +119,15 @@ async function buildPayload(
 	let displayActivity = activity;
 	let gatewayActivity = activity;
 	if (activity.assets) {
-		const mprisCoverArt = await resolveMprisCoverArtUrl(activity);
 		const resolvedAssets = resolveMappedAssets(activity.application_id, pid, activity.assets);
-		const displaySourceAssets =
-			mprisCoverArt && mprisCoverArt !== activity.assets.large_image
-				? {...resolvedAssets, large_image: mprisCoverArt}
-				: resolvedAssets;
-		const displayAssets = await resolveRpcActivityAssetsForDisplay(displaySourceAssets);
 		const gatewayAssets = sanitizeRpcActivityAssetsForGateway(resolvedAssets);
-		displayActivity = displayAssets !== activity.assets ? {...activity, assets: displayAssets} : activity;
+		displayActivity = resolvedAssets !== activity.assets ? {...activity, assets: resolvedAssets} : activity;
 		gatewayActivity = gatewayAssets !== activity.assets ? {...activity, assets: gatewayAssets} : activity;
 	} else if (resolved?.iconUrl) {
-		const fallbackAssets = await resolveRpcActivityAssetsForDisplay({
+		const fallbackAssets = {
 			large_image: resolved.iconUrl,
 			large_text: resolved.name,
-		});
+		};
 		const gatewayFallbackAssets = sanitizeRpcActivityAssetsForGateway({
 			large_image: resolved.iconUrl,
 			large_text: resolved.name,

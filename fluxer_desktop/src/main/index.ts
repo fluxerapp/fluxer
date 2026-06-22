@@ -70,7 +70,6 @@ import {appendOpenH264Switches} from '@electron/main/OpenH264Manager';
 import {startRpcServer, stopRpcServer} from '@electron/main/RpcServer';
 import {startArRpcServer, stopArRpcServer} from '@electron/main/ArRpcServer';
 import {startRpcActivityBridge, stopRpcActivityBridge} from '@electron/main/RpcActivityBridge';
-import {registerRpcCoverArtHandler, registerRpcCoverArtScheme} from '@electron/main/RpcCoverArtProtocol';
 import {cleanupLinuxChromiumSpellcheckDictionaries} from '@electron/main/Spellcheck';
 import {registerUpdater} from '@electron/main/Updater';
 import {
@@ -192,7 +191,6 @@ if (launchConfigurationError) {
 	log.info('Launch diagnostic modes', launchDiagnosticOptions);
 	const CHANNEL_APP_NAME = DESKTOP_APP_NAME;
 	app.setName(CHANNEL_APP_NAME);
-	registerRpcCoverArtScheme();
 	if (process.platform === 'linux') {
 		process.env.FLUXER_LINUX_DESKTOP_ENTRY_ID = LINUX_DESKTOP_ENTRY_ID;
 	}
@@ -443,7 +441,6 @@ if (launchConfigurationError) {
 				});
 				void startArRpcServer()
 					.then(() => {
-						registerRpcCoverArtHandler();
 						startRpcActivityBridge();
 						startLinuxProcessScanner();
 					})

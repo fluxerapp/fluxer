@@ -17,6 +17,24 @@ interface ActivityEntry {
 
 const SOURCE_PRIORITY: ReadonlyArray<ActivitySource> = ['rpc', 'detected'];
 
+function buildActivityIdentity(activity: UserActivity | null): string {
+	if (!activity) return 'none';
+	return JSON.stringify({
+		application_id: activity.application_id ?? null,
+		name: activity.name ?? null,
+		type: activity.type ?? null,
+		details: activity.details ?? null,
+		state: activity.state ?? null,
+		large_image: activity.assets?.large_image ?? null,
+		small_image: activity.assets?.small_image ?? null,
+		large_text: activity.assets?.large_text ?? null,
+		small_text: activity.assets?.small_text ?? null,
+		start: activity.timestamps?.start ?? null,
+		end: activity.timestamps?.end ?? null,
+		buttons: activity.buttons?.map((button) => `${button.label}:${button.url}`) ?? [],
+	});
+}
+
 function hasResolvablePrimaryImage(activity: UserActivity | null): boolean {
 	const image = activity?.assets?.large_image ?? activity?.assets?.small_image;
 	return Boolean(resolveActivityImageUrl(image, activity?.application_id));
@@ -49,6 +67,7 @@ function mergeRpcEntryWithDetectedFallback(rpcEntry: ActivityEntry, detectedEntr
 export class ActivityManager {
 	activities: Array<UserActivity> = [];
 	activity: UserActivity | null = null;
+	gatewayActivities: Array<UserActivity> = [];
 	gatewayActivity: UserActivity | null = null;
 	currentSource: ActivitySource | null = null;
 	activityVersion = 0;
@@ -69,7 +88,7 @@ export class ActivityManager {
 	}
 
 	get activityKey(): string {
-		return `${this.activityVersion}:${this.currentSource ?? 'none'}:${this.activity?.application_id ?? 'none'}:${this.activity?.name ?? 'none'}`;
+		return `${this.activityVersion}:${this.currentSource ?? 'none'}:${buildActivityIdentity(this.activity)}`;
 	}
 
 	getActivities(): Array<UserActivity> {
@@ -115,6 +134,7 @@ export class ActivityManager {
 			this.sourceActivities.size === 0 &&
 			this.activities.length === 0 &&
 			this.activity === null &&
+			this.gatewayActivities.length === 0 &&
 			this.gatewayActivity === null &&
 			this.currentSource === null
 		) {
@@ -125,8 +145,7 @@ export class ActivityManager {
 	}
 
 	getGatewayActivities(): Array<UserActivity> {
-		const activity = this.gatewayActivity ?? this.activity;
-		return activity ? [sanitizeActivityAssetsForGateway(activity)] : [];
+		return this.gatewayActivities.map(sanitizeActivityAssetsForGateway);
 	}
 
 	private recomputeActiveActivity(): void {
@@ -171,11 +190,18 @@ export class ActivityManager {
 			}
 		}
 		const nextActivities = orderedEntries.map((entry) => entry.activity!).filter(Boolean);
+		const nextGatewayActivities = orderedEntries
+			.map((entry) => entry.gatewayActivity ?? entry.activity)
+			.filter((activity): activity is UserActivity => Boolean(activity));
 		const activitiesChanged =
 			this.activities.length !== nextActivities.length || this.activities.some((activity, index) => activity !== nextActivities[index]);
+		const gatewayActivitiesChanged =
+			this.gatewayActivities.length !== nextGatewayActivities.length ||
+			this.gatewayActivities.some((activity, index) => activity !== nextGatewayActivities[index]);
 
 		if (
 			!activitiesChanged &&
+			!gatewayActivitiesChanged &&
 			this.currentSource === nextSource &&
 			this.activity === nextActivity &&
 			this.gatewayActivity === nextGatewayActivity
@@ -184,6 +210,7 @@ export class ActivityManager {
 		}
 
 		this.activities = nextActivities;
+		this.gatewayActivities = nextGatewayActivities;
 		this.currentSource = nextSource;
 		this.activity = nextActivity;
 		this.gatewayActivity = nextGatewayActivity;

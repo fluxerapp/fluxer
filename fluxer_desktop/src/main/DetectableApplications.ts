@@ -4,7 +4,6 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {app} from 'electron';
 import log from 'electron-log';
-import {cacheRpcCoverArt} from '@electron/main/RpcCoverArtProtocol';
 import {EXECUTABLE_EXACT_MATCH_PREFIX} from '@electron/main/rpc/RpcConstants';
 import type {DetectableApp, DetectableExecutable} from '@electron/main/rpc/RpcTypes';
 
@@ -27,7 +26,6 @@ interface FluxerDetectableRecord {
 let detectableDb: Array<DetectableApp> = [];
 const clientIdIndex = new Map<string, DetectableApp>();
 const executableIndex = new Map<string, Array<DetectableApp>>();
-const detectableAssetUrlCache = new Map<string, string>();
 let loaded = false;
 let syncPromise: Promise<void> | null = null;
 
@@ -62,6 +60,18 @@ function getLockPath(): string {
 	return path.join(getBundledRpcDir(), 'detectable-lock.json');
 }
 
+function getDetectableRepoConfig(): {repo: string; ref: string} {
+	try {
+		const lock = JSON.parse(fs.readFileSync(getLockPath(), 'utf8')) as {repo?: string; ref?: string};
+		return {
+			repo: lock.repo ?? 'fluxerapp/detectables',
+			ref: lock.ref ?? 'main',
+		};
+	} catch {
+		return {repo: 'fluxerapp/detectables', ref: 'main'};
+	}
+}
+
 function getDetectablesPath(): string {
 	const cacheDir = getDetectablesCacheDir();
 	const bundledDir = getBundledRpcDir();
@@ -74,29 +84,10 @@ function getDetectablesPath(): string {
 	return candidates.find((candidate) => fs.existsSync(candidate)) ?? candidates[0];
 }
 
-function resolveDetectableAssetFile(assetPath: string): string | null {
-	const roots = [
-		path.join(getDetectablesCacheDir(), 'assets'),
-		path.join(getBundledRpcDir(), 'assets'),
-	];
-	for (const root of roots) {
-		const candidate = path.join(root, assetPath);
-		if (fs.existsSync(candidate)) {
-			return candidate;
-		}
-	}
-	return null;
-}
-
-function resolveDetectableAssetUrl(assetPath: string | undefined): string | null {
+function resolveDetectableAssetRemoteUrl(assetPath: string | undefined): string | null {
 	if (!assetPath) return null;
-	const assetFile = resolveDetectableAssetFile(assetPath);
-	if (!assetFile) return null;
-	const cached = detectableAssetUrlCache.get(assetFile);
-	if (cached) return cached;
-	const protocolUrl = cacheRpcCoverArt(`detectable:${assetPath}`, 'image/png', fs.readFileSync(assetFile));
-	detectableAssetUrlCache.set(assetFile, protocolUrl);
-	return protocolUrl;
+	const {repo, ref} = getDetectableRepoConfig();
+	return `https://raw.githubusercontent.com/${repo}/${ref}/assets/${assetPath}`;
 }
 
 function slugifyDetectableId(name: string): string {
@@ -142,7 +133,7 @@ function buildIndexes(): void {
 
 function buildIconUrl(entry: DetectableApp): string | null {
 	if (entry.url) return entry.url;
-	if (entry.icon) return resolveDetectableAssetUrl(entry.icon);
+	if (entry.icon) return resolveDetectableAssetRemoteUrl(entry.icon);
 	return null;
 }
 
@@ -182,10 +173,7 @@ async function listRepoFiles(repo: string, ref: string): Promise<Array<string>> 
 }
 
 async function syncDetectableApplicationsInner(): Promise<void> {
-	const lockPath = getLockPath();
-	const lock = JSON.parse(fs.readFileSync(lockPath, 'utf8')) as {repo?: string; ref?: string};
-	const repo = lock.repo ?? 'fluxerapp/detectables';
-	const ref = lock.ref ?? 'main';
+	const {repo, ref} = getDetectableRepoConfig();
 	const files = await listRepoFiles(repo, ref);
 	const baseUrl = `https://raw.githubusercontent.com/${repo}/${ref}`;
 	const cacheDir = getDetectablesCacheDir();
@@ -234,7 +222,6 @@ export function resetDetectableApplicationsForTests(): void {
 	detectableDb = [];
 	clientIdIndex.clear();
 	executableIndex.clear();
-	detectableAssetUrlCache.clear();
 	windowsCmdlinePatternsByBasename = null;
 	loaded = false;
 	syncPromise = null;
@@ -275,14 +262,13 @@ export function resolveMappedRpcImage(clientId: string, image: string | undefine
 		image.startsWith('https://') ||
 		image.startsWith('data:') ||
 		image.startsWith('blob:') ||
-		image.startsWith('fluxer-rpc-art://') ||
 		image.includes(':')
 	) {
 		return image;
 	}
 	loadDetectableApplications();
 	const assetPath = clientIdIndex.get(clientId)?.presence_assets?.[image.toLowerCase()];
-	return resolveDetectableAssetUrl(assetPath) ?? image;
+	return resolveDetectableAssetRemoteUrl(assetPath) ?? image;
 }
 
 export function matchLinuxExecutable(

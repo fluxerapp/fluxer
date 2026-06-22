@@ -4,7 +4,7 @@ import type {UserActivity} from '@fluxer/schema/src/domains/user/UserResponseSch
 
 function sanitizeImage(image: string | undefined): string | undefined {
 	if (!image) return undefined;
-	if (image.startsWith('data:') || image.startsWith('fluxer-rpc-art://') || image.startsWith('blob:')) {
+	if (image.startsWith('data:') || image.startsWith('blob:')) {
 		return undefined;
 	}
 	if (image.length > 256) return undefined;
