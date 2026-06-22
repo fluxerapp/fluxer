@@ -375,3 +375,67 @@ export const GuildMemberListQuery = z.object({
 });
 
 export type GuildMemberListQuery = z.infer<typeof GuildMemberListQuery>;
+
+export const GuildScheduledEventCreateRequest = z.object({
+	name: createStringType(1, 100).describe('The name of the scheduled event (1-100 characters)'),
+	description: createStringType(1, 1000).nullish().describe('The description of the scheduled event'),
+	image: createBase64StringType(1, Math.ceil(AVATAR_MAX_SIZE * (4 / 3)))
+		.nullish()
+		.describe('Base64-encoded cover image for the event. Scanned for NSFW/CSAM content on upload.'),
+	channel_id: SnowflakeType.nullish().describe('The voice or stage channel ID where the event takes place'),
+	entity_type: z
+		.enum(['STAGE_INSTANCE', 'VOICE', 'EXTERNAL'])
+		.describe('The type of hosting entity associated with this event'),
+	entity_metadata: z
+		.object({
+			location: createStringType(1, 100).nullish().describe('Location string for EXTERNAL entity type events'),
+		})
+		.nullish()
+		.describe('Additional entity metadata (required for EXTERNAL events)'),
+	scheduled_start_time: z.string().datetime({offset: true}).describe('ISO8601 timestamp when the event starts'),
+	scheduled_end_time: z
+		.string()
+		.datetime({offset: true})
+		.nullish()
+		.describe('ISO8601 timestamp when the event ends'),
+	privacy_level: z.enum(['GUILD_ONLY']).default('GUILD_ONLY').describe('The privacy level of the event'),
+});
+
+export type GuildScheduledEventCreateRequest = z.infer<typeof GuildScheduledEventCreateRequest>;
+
+export const GuildScheduledEventUpdateRequest = z
+	.object({
+		name: createStringType(1, 100).optional().describe('The name of the scheduled event (1-100 characters)'),
+		description: createStringType(1, 1000).nullish().describe('The description of the scheduled event'),
+		image: createBase64StringType(1, Math.ceil(AVATAR_MAX_SIZE * (4 / 3)))
+			.nullish()
+			.describe('Base64-encoded cover image for the event. Pass null to remove. Scanned for NSFW/CSAM on upload.'),
+		channel_id: SnowflakeType.nullish().describe('The voice or stage channel ID where the event takes place'),
+		entity_type: z
+			.enum(['STAGE_INSTANCE', 'VOICE', 'EXTERNAL'])
+			.optional()
+			.describe('The type of hosting entity associated with this event'),
+		entity_metadata: z
+			.object({
+				location: createStringType(1, 100).nullish().describe('Location string for EXTERNAL entity type events'),
+			})
+			.nullish()
+			.describe('Additional entity metadata'),
+		scheduled_start_time: z
+			.string()
+			.datetime({offset: true})
+			.optional()
+			.describe('ISO8601 timestamp when the event starts'),
+		scheduled_end_time: z
+			.string()
+			.datetime({offset: true})
+			.nullish()
+			.describe('ISO8601 timestamp when the event ends'),
+		status: z
+			.enum(['ACTIVE', 'COMPLETED', 'CANCELLED'])
+			.optional()
+			.describe('Transition the event status'),
+	})
+	.refine((data) => Object.keys(data).length > 0, {message: 'At least one field must be provided for update'});
+
+export type GuildScheduledEventUpdateRequest = z.infer<typeof GuildScheduledEventUpdateRequest>;
