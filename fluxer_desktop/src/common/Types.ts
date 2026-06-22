@@ -647,6 +647,36 @@ export type TrayActionPayload =
 			action: 'check-for-updates';
 	  };
 
+export interface RpcActivityTimestamps {
+	start?: number;
+	end?: number;
+}
+
+export interface RpcActivityAssets {
+	large_image?: string;
+	large_text?: string;
+	small_image?: string;
+	small_text?: string;
+}
+
+export interface RpcActivityPayload {
+	type: number;
+	application_id: string;
+	name: string;
+	details?: string;
+	state?: string;
+	timestamps?: RpcActivityTimestamps;
+	assets?: RpcActivityAssets;
+	flags?: number;
+	pid?: number;
+}
+
+export interface RpcActivityUpdatePayload {
+	activity: RpcActivityPayload | null;
+	pid?: number;
+	source: 'ipc' | 'process-scan';
+}
+
 export interface ElectronAPI {
 	platform: NodeJS.Platform;
 	buildChannel: 'stable' | 'canary';
@@ -700,6 +730,7 @@ export interface ElectronAPI {
 	onDeepLink: (callback: (url: string) => void) => () => void;
 	getInitialDeepLink: () => Promise<string | null>;
 	onRpcNavigate: (callback: (path: string) => void) => () => void;
+	onRpcActivityUpdate: (callback: (payload: RpcActivityUpdatePayload) => void) => () => void;
 	autostartEnable: () => Promise<void>;
 	autostartDisable: () => Promise<void>;
 	autostartIsEnabled: () => Promise<boolean>;

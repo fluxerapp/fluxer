@@ -44,6 +44,7 @@ import type {
 	NotificationOptions,
 	NotificationResult,
 	OpenH264Status,
+	RpcActivityUpdatePayload,
 	SetDesktopTroubleshootingDisableHardwareAccelerationOptions,
 	SpellcheckBundledDictionary,
 	SpellcheckResolvedEngineInfo,
@@ -454,6 +455,11 @@ const api: ElectronAPI = {
 		return () => {
 			ipcRenderer.removeListener('rpc-navigate', handler);
 		};
+	},
+	onRpcActivityUpdate: (callback: (payload: RpcActivityUpdatePayload) => void): (() => void) => {
+		const handler = (_event: Electron.IpcRendererEvent, data: RpcActivityUpdatePayload): void => callback(data);
+		ipcRenderer.on('rpc-activity-update', handler);
+		return () => ipcRenderer.removeListener('rpc-activity-update', handler);
 	},
 	autostartEnable: (): Promise<void> => ipcRenderer.invoke('autostart-enable'),
 	autostartDisable: (): Promise<void> => ipcRenderer.invoke('autostart-disable'),
