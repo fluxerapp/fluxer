@@ -3,7 +3,7 @@
     {kernel, [
         {logger_level, warning},
         {logger, [
-            {handler, default, undefined}
+            {handler, default, logger_std_h, #{}}
         ]}
     ]},
     {sasl, [
