@@ -1,12 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 export const IPC_MAX_RETRIES = 9;
-export const IPC_HEADER_SIZE = 8;
-export const IPC_MESSAGE_TYPE_MAX = 5;
-export const MAX_IPC_PAYLOAD = 1024 * 1024;
 export const IPC_SOCKET_NAME = 'discord-ipc';
-export const UNIX_TEMP_DIR_FALLBACK = '/tmp';
-export const SOCKET_AVAILABILITY_TIMEOUT = 1000;
 
 export const RPC_PROTOCOL_VERSION = 1;
 export const ACTIVITY_FLAG_INSTANCE = 1 << 0;
@@ -17,8 +12,6 @@ export const EXECUTABLE_ARCH_SUFFIXES = ['64', '.x64', 'x64', '_64'] as const;
 export const EXECUTABLE_EXACT_MATCH_PREFIX = '>';
 export const LINUX_PROC_DIR = '/proc';
 export const CMDLINE_NULL_SEPARATOR = '\0';
-
-export const DISCORD_CDN_HOST = 'cdn.discordapp.com';
 
 export enum IPCMessageType {
 	HANDSHAKE = 0,
@@ -73,12 +66,4 @@ export const ANTI_CHEAT_EXECUTABLES = [
 	'gameguard',
 	'vanguard',
 	'anticheattoolkit',
-];
-
-export const STEAM_RUNTIME_PATHS = [
-	'SteamLinuxRuntime',
-	'Proton',
-	'pressure-vessel',
-	'steam-runtime',
-	'compatibilitytools.d',
 ];

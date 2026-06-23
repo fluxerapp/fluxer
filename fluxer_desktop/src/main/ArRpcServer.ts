@@ -41,11 +41,6 @@ export function onRpcActivity(
 	return () => activityEmitter.off('activity', listener);
 }
 
-export function onIpcClientCountChange(listener: (count: number) => void): () => void {
-	activityEmitter.on('ipc-clients-changed', listener);
-	return () => activityEmitter.off('ipc-clients-changed', listener);
-}
-
 function notifyIpcClientCountChanged(): void {
 	activityEmitter.emit('ipc-clients-changed', connectedIpcClients);
 }

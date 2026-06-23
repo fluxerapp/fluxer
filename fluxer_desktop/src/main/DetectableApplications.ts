@@ -7,7 +7,7 @@ import log from 'electron-log';
 import {EXECUTABLE_EXACT_MATCH_PREFIX} from '@electron/main/rpc/RpcConstants';
 import type {DetectableApp, DetectableExecutable} from '@electron/main/rpc/RpcTypes';
 
-export interface ResolvedApplication {
+interface ResolvedApplication {
 	id: string;
 	name: string;
 	iconUrl: string | null;
@@ -218,15 +218,6 @@ export function loadDetectableApplications(): void {
 	log.info(`[RPC] Loaded ${detectableDb.length} detectable applications`);
 }
 
-export function resetDetectableApplicationsForTests(): void {
-	detectableDb = [];
-	clientIdIndex.clear();
-	executableIndex.clear();
-	windowsCmdlinePatternsByBasename = null;
-	loaded = false;
-	syncPromise = null;
-}
-
 export function resolveByClientId(clientId: string): ResolvedApplication | null {
 	loadDetectableApplications();
 	const entry = clientIdIndex.get(clientId);
@@ -236,13 +227,6 @@ export function resolveByClientId(clientId: string): ResolvedApplication | null 
 		name: entry.name,
 		iconUrl: buildIconUrl(entry),
 	};
-}
-
-export function resolveByExecutable(exeName: string): DetectableApp | null {
-	loadDetectableApplications();
-	const key = exeName.toLowerCase();
-	const candidates = executableIndex.get(key);
-	return candidates?.[0] ?? null;
 }
 
 export function getDetectableDb(): Array<DetectableApp> {

@@ -257,16 +257,14 @@ export const CustomStatusResponse = z.object({
 
 export type CustomStatusResponse = z.infer<typeof CustomStatusResponse>;
 
-export const UserActivityTimestamps = z
+const UserActivityTimestamps = z
 	.object({
 		start: z.number().int().optional().describe('Unix timestamp (seconds) when the activity started'),
 		end: z.number().int().optional().describe('Unix timestamp (seconds) when the activity ends'),
 	})
 	.describe('Activity timestamp metadata');
 
-export type UserActivityTimestamps = z.infer<typeof UserActivityTimestamps>;
-
-export const UserActivityAssets = z
+const UserActivityAssets = z
 	.object({
 		large_image: z.string().max(256).optional(),
 		large_text: z.string().max(128).optional(),
@@ -277,35 +275,25 @@ export const UserActivityAssets = z
 	})
 	.describe('Activity image assets');
 
-export type UserActivityAssets = z.infer<typeof UserActivityAssets>;
-
-export const UserActivityButton = z.object({
+const UserActivityButton = z.object({
 	label: z.string().max(32),
 	url: z.string().url().max(2048),
 });
 
-export type UserActivityButton = z.infer<typeof UserActivityButton>;
-
-export const UserActivityParty = z.object({
+const UserActivityParty = z.object({
 	id: z.string().max(128).optional(),
 	size: z.tuple([z.number().int().nonnegative(), z.number().int().positive()]).optional(),
 });
 
-export type UserActivityParty = z.infer<typeof UserActivityParty>;
-
-export const UserActivitySecrets = z.object({
+const UserActivitySecrets = z.object({
 	join: z.string().max(128).optional(),
 	spectate: z.string().max(128).optional(),
 	match: z.string().max(128).optional(),
 });
 
-export type UserActivitySecrets = z.infer<typeof UserActivitySecrets>;
-
-export const UserActivityMetadata = z.object({
+const UserActivityMetadata = z.object({
 	button_urls: z.array(z.string().url().max(2048)).max(2).optional(),
 });
-
-export type UserActivityMetadata = z.infer<typeof UserActivityMetadata>;
 
 export const UserActivitySchema = z.object({
 	name: z.string().max(128).describe('Activity name (usually the application or song title)'),

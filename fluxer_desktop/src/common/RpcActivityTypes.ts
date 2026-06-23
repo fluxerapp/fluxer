@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-export interface RpcActivityTimestamps {
+interface RpcActivityTimestamps {
 	start?: number;
 	end?: number;
 }
 
-export interface RpcActivityAssets {
+interface RpcActivityAssets {
 	large_image?: string;
 	large_text?: string;
 	large_url?: string;
@@ -14,23 +14,23 @@ export interface RpcActivityAssets {
 	small_url?: string;
 }
 
-export interface RpcActivityButton {
+interface RpcActivityButton {
 	label: string;
 	url: string;
 }
 
-export interface RpcActivityParty {
+interface RpcActivityParty {
 	id?: string;
 	size?: [number, number];
 }
 
-export interface RpcActivitySecrets {
+interface RpcActivitySecrets {
 	join?: string;
 	spectate?: string;
 	match?: string;
 }
 
-export interface RpcActivityMetadata {
+interface RpcActivityMetadata {
 	button_urls?: Array<string>;
 }
 

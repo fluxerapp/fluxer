@@ -32,10 +32,6 @@ let isScanning = false;
 const gameState = new Map<string, GameState>();
 let lastEmittedPrimaryId: string | null = null;
 
-export function getActiveScannedGameId(): string | null {
-	return lastEmittedPrimaryId;
-}
-
 export function getScannedGameIdByPid(pid: number): string | null {
 	for (const [id, state] of gameState) {
 		if (state.pid === pid) {
@@ -140,11 +136,6 @@ function emitPrimaryGame(id: string): void {
 	log.info('[RPC] Process scan active game', state.name);
 }
 
-export function reemitActiveScannedGame(): void {
-	if (!lastEmittedPrimaryId) return;
-	emitPrimaryGame(lastEmittedPrimaryId);
-}
-
 function clearPrimaryGame(): void {
 	if (!lastEmittedPrimaryId) return;
 	emitSyntheticActivity(null);
@@ -231,18 +222,18 @@ export function stopLinuxProcessScanner(): void {
 	lastEmittedPrimaryId = null;
 }
 
-export function __testGeneratePathVariations(normalizedPath: string): Array<string> {
+function __testGeneratePathVariations(normalizedPath: string): Array<string> {
 	return generatePathVariations(normalizedPath);
 }
 
-export function __testGetCandidateApps(pathVariations: Array<string>): Array<DetectableApp> {
+function __testGetCandidateApps(pathVariations: Array<string>): Array<DetectableApp> {
 	return getCandidateApps(pathVariations);
 }
 
-export function __testReadProcessEntries(): Promise<Array<[number, string, Array<string>]>> {
+function __testReadProcessEntries(): Promise<Array<[number, string, Array<string>]>> {
 	return readProcessEntries();
 }
 
-export function __testMatchAppByWindowsCmdline(args: Array<string>) {
+function __testMatchAppByWindowsCmdline(args: Array<string>) {
 	return matchAppByWindowsCmdline(args);
 }
