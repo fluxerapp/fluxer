@@ -48,10 +48,6 @@ export function getEmailTemplate(
 	return emailI18n.getTemplate(templateKey, locale, {...DEFAULT_EMAIL_TEMPLATE_VARIABLES, ...variables});
 }
 
-export function hasEmailLocale(locale: string): boolean {
-	return emailI18n.hasLocale(locale);
-}
-
 export function resetEmailI18n(): void {
 	emailI18n.reset();
 }

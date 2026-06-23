@@ -2,7 +2,7 @@
 
 import {defineErrorI18nLocaleMessages} from '../ErrorI18nMessages';
 
-export const ERROR_I18N_KO_MESSAGES = defineErrorI18nLocaleMessages({
+const ERROR_I18N_KO_MESSAGES = defineErrorI18nLocaleMessages({
 	"account.already_verified": "계정이 이미 인증되었어요.",
 	"account.communication_disabled": "메시지 보내기가 비활성화되었어요.",
 	"account.disabled": "이 계정은 비활성화되었어요.",

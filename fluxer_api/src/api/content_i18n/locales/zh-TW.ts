@@ -2,7 +2,7 @@
 
 import {defineContentI18nLocaleMessages} from '../ContentI18nMessages';
 
-export const CONTENT_I18N_ZH_TW_MESSAGES = defineContentI18nLocaleMessages({
+const CONTENT_I18N_ZH_TW_MESSAGES = defineContentI18nLocaleMessages({
 	"billing.eu_withdrawal_waiver_checkout": "若我是歐盟/歐洲經濟區消費者，我明確同意立即提供 {product_name} {premium_tier_name} 數位內容，並了解一旦取得存取權，即喪失法定撤回權。這不影響其他強制性消費者權益。請參閱[服務條款]({terms_url})。",
 	"bulk_message_deletion.complete": "我們已刪除你的訊息。從 {channel_count, plural, =0 {0 個位置} other {# 個位置}} 中移除了 {message_count, plural, =0 {0 則訊息} other {# 則訊息}}。",
 	"content.virus_detected": "該檔案已被標記為可能不安全，並已移除。",
