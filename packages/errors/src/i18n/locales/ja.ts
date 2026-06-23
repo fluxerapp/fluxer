@@ -2,7 +2,7 @@
 
 import {defineErrorI18nLocaleMessages} from '../ErrorI18nMessages';
 
-export const ERROR_I18N_JA_MESSAGES = defineErrorI18nLocaleMessages({
+const ERROR_I18N_JA_MESSAGES = defineErrorI18nLocaleMessages({
 	"account.already_verified": "アカウントはすでに認証済みです。",
 	"account.communication_disabled": "メッセージ機能が無効です。",
 	"account.disabled": "このアカウントは無効になっています。",

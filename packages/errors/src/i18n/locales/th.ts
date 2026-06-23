@@ -2,7 +2,7 @@
 
 import {defineErrorI18nLocaleMessages} from '../ErrorI18nMessages';
 
-export const ERROR_I18N_TH_MESSAGES = defineErrorI18nLocaleMessages({
+const ERROR_I18N_TH_MESSAGES = defineErrorI18nLocaleMessages({
 	"account.already_verified": "บัญชีของคุณได้รับการยืนยันแล้ว",
 	"account.communication_disabled": "ปิดใช้งานการสื่อสารแล้ว",
 	"account.disabled": "บัญชีนี้ถูกปิดใช้งานแล้ว",

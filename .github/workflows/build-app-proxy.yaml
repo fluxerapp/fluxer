@@ -23,7 +23,6 @@ permissions:
   packages: write
 
 env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
   GHCR_OWNER: ${{ github.repository_owner }}
 
 jobs:

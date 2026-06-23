@@ -2,7 +2,7 @@
 
 import {defineErrorI18nLocaleMessages} from '../ErrorI18nMessages';
 
-export const ERROR_I18N_VI_MESSAGES = defineErrorI18nLocaleMessages({
+const ERROR_I18N_VI_MESSAGES = defineErrorI18nLocaleMessages({
 	"account.already_verified": "Tài khoản của bạn đã được xác minh.",
 	"account.communication_disabled": "Tính năng giao tiếp đã bị tắt.",
 	"account.disabled": "Tài khoản này đã bị vô hiệu hóa.",

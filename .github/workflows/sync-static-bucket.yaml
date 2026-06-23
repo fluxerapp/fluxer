@@ -4,9 +4,6 @@ name: sync static bucket
 on:
   workflow_dispatch:
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
-
 jobs:
   push:
     runs-on: ubuntu-24.04

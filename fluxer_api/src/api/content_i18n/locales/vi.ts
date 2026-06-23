@@ -2,7 +2,7 @@
 
 import {defineContentI18nLocaleMessages} from '../ContentI18nMessages';
 
-export const CONTENT_I18N_VI_MESSAGES = defineContentI18nLocaleMessages({
+const CONTENT_I18N_VI_MESSAGES = defineContentI18nLocaleMessages({
 	"billing.eu_withdrawal_waiver_checkout": "Nếu tôi là người tiêu dùng EU/EEA, tôi đồng ý rõ ràng rằng nội dung kỹ thuật số {product_name} {premium_tier_name} được cung cấp ngay lập tức và thừa nhận rằng tôi mất quyền hủy bỏ theo luật định sau khi có quyền truy cập. Điều này không ảnh hưởng đến các quyền lợi người tiêu dùng bắt buộc khác. Xem [Điều khoản dịch vụ]({terms_url}).",
 	"bulk_message_deletion.complete": "Chúng tôi đã xóa xong tin nhắn của bạn. Đã xóa {message_count, plural, =0 {0 tin nhắn} other {# tin nhắn}} khỏi {channel_count, plural, =0 {0 nơi} other {# nơi}}.",
 	"content.virus_detected": "Tệp đó bị gắn cờ là có khả năng không an toàn và đã bị xóa.",

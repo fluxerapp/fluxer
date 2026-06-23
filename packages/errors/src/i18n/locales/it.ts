@@ -2,7 +2,7 @@
 
 import {defineErrorI18nLocaleMessages} from '../ErrorI18nMessages';
 
-export const ERROR_I18N_IT_MESSAGES = defineErrorI18nLocaleMessages({
+const ERROR_I18N_IT_MESSAGES = defineErrorI18nLocaleMessages({
 	"account.already_verified": "Il tuo account è già verificato.",
 	"account.communication_disabled": "La comunicazione è disabilitata.",
 	"account.disabled": "Questo account è stato disabilitato.",

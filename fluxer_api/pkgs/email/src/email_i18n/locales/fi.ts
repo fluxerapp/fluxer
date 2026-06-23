@@ -2,7 +2,7 @@
 
 import {defineEmailI18nLocaleMessages} from '../EmailI18nMessages';
 
-export const EMAIL_I18N_FI_MESSAGES = defineEmailI18nLocaleMessages({
+const EMAIL_I18N_FI_MESSAGES = defineEmailI18nLocaleMessages({
 	"account_disabled_suspicious": {
 		"subject": "Käyttäjätilisi {product_name}-palvelussa on tilapäisesti poistettu käytöstä",
 		"body": "Hei {username},\n\nOlemme poistaneet {product_name}-tilisi tilapäisesti käytöstä, koska havaitsimme epäilyttävää toimintaa.\n\n{reason, select,\n  null {}\n  other {Syy: {reason}}\n}\n\nPäästäksesi takaisin tilillesi sinun on nollattava salasanasi:\n\n{forgotUrl}\n\nKun olet nollannut salasanasi, voit kirjautua sisään uudelleen.\n\nJos uskot, että tämä oli virhe, ota yhteyttä tukitiimiimme.\n\n– {product_name}-turvallisuustiimi"

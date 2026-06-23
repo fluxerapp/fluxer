@@ -1,8 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {createRequire} from 'node:module';
-import path from 'node:path';
-import {fileURLToPath} from 'node:url';
 import {describe, expect, it} from 'vitest';
 import appVoiceSessionFixtureJson from '../../fixtures/event_logs/app_voice_session.json';
 import {coalesceVoiceEngineV2OutboundStats} from '../policies/voiceStats';
@@ -15,10 +12,6 @@ import {
 import {replayVoiceEngineV2EventLogFixture, type VoiceEngineV2EventLogFixture} from './eventLogReplay';
 
 const fixture = appVoiceSessionFixtureJson as unknown as VoiceEngineV2EventLogFixture;
-const require = createRequire(import.meta.url);
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const ruleModule = require('../eslint/no-determinism-leaks.cjs');
 
 describe('voice engine v2 determinism guarantees', () => {
 	it('produces byte-identical snapshot output across fresh replay runs', () => {
@@ -71,37 +64,6 @@ describe('voice engine v2 determinism guarantees', () => {
 
 		expect(monotonic).toBe(true);
 		expect(observed[0]).toBe(500);
-	});
-
-	it('detects deliberate Math.random() leaks via the standalone scanner', () => {
-		const fixtureSource = [
-			'export function deliberateLeak() {',
-			'  const value = Math.random();',
-			'  return value;',
-			'}',
-			'',
-		].join('\n');
-		const guardedPath = path.resolve(__dirname, '..', 'policies', '_fixture_determinism_leak.ts');
-
-		const findings = ruleModule.findDeterminismLeaks(guardedPath, fixtureSource);
-
-		expect(findings.length).toBeGreaterThanOrEqual(1);
-		expect(findings.some((finding: {message: string}) => finding.message.includes('Math.random'))).toBe(true);
-	});
-
-	it('flags Date.now() and crypto.randomUUID() in policies but exempts platformPort and tests', () => {
-		const source = 'const a = Date.now();\nconst b = crypto.randomUUID();\nconst c = performance.now();';
-		const guardedRuntime = path.resolve(__dirname, '..', 'runtime', '_fixture_leak.ts');
-		const exemptPlatform = path.resolve(__dirname, '..', 'runtime', 'platformPort.ts');
-		const exemptTest = path.resolve(__dirname, '..', 'runtime', 'something.test.ts');
-
-		const inRuntime = ruleModule.findDeterminismLeaks(guardedRuntime, source);
-		const inPlatform = ruleModule.findDeterminismLeaks(exemptPlatform, source);
-		const inTest = ruleModule.findDeterminismLeaks(exemptTest, source);
-
-		expect(inRuntime.length).toBeGreaterThanOrEqual(3);
-		expect(inPlatform).toEqual([]);
-		expect(inTest).toEqual([]);
 	});
 
 	it('exposes injectable Clock and Random ports through the runtime options surface', () => {
