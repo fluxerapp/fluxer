@@ -17,7 +17,51 @@ import type {IGuildScheduledEventRepository} from '../repositories/IGuildSchedul
 import type {GuildID, ScheduledEventID, UserID} from '../../BrandedTypes';
 import {createScheduledEventID} from '../../BrandedTypes';
 import type {User} from '../../models/User';
+import type {GuildScheduledEvent} from '../../models/GuildScheduledEvent';
 import {mapScheduledEventToResponse} from '../GuildModel';
+
+function formatIcsDate(date: Date): string {
+	return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+}
+
+function escapeIcsText(text: string): string {
+	return text.replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n');
+}
+
+function buildICalendar(events: GuildScheduledEvent[]): string {
+	const now = formatIcsDate(new Date());
+	const lines: string[] = [
+		'BEGIN:VCALENDAR',
+		'VERSION:2.0',
+		'PRODID:-//Fluxer//Fluxer Scheduled Events//EN',
+		'CALSCALE:GREGORIAN',
+		'METHOD:PUBLISH',
+	];
+
+	for (const event of events) {
+		const start = formatIcsDate(event.scheduledStartTime);
+		const end = event.scheduledEndTime
+			? formatIcsDate(event.scheduledEndTime)
+			: formatIcsDate(new Date(event.scheduledStartTime.getTime() + 3_600_000));
+
+		lines.push('BEGIN:VEVENT');
+		lines.push(`UID:${event.id}@fluxer`);
+		lines.push(`DTSTAMP:${now}`);
+		lines.push(`DTSTART:${start}`);
+		lines.push(`DTEND:${end}`);
+		lines.push(`SUMMARY:${escapeIcsText(event.name)}`);
+		if (event.description) {
+			lines.push(`DESCRIPTION:${escapeIcsText(event.description)}`);
+		}
+		if (event.entityMetadata?.location) {
+			lines.push(`LOCATION:${escapeIcsText(event.entityMetadata.location)}`);
+		}
+		lines.push('END:VEVENT');
+	}
+
+	lines.push('END:VCALENDAR');
+	return lines.join('\r\n') + '\r\n';
+}
 
 export class GuildScheduledEventService {
 	constructor(
@@ -39,6 +83,14 @@ export class GuildScheduledEventService {
 				return mapScheduledEventToResponse(event, userCount);
 			}),
 		);
+	}
+
+	async exportCalendar(params: {userId: UserID; guildId: GuildID}): Promise<string> {
+		const {userId, guildId} = params;
+		const guildData = await this.gatewayService.getGuildData({guildId, userId});
+		if (!guildData) throw new UnknownGuildError();
+		const events = await this.eventRepository.listEvents(guildId);
+		return buildICalendar(events);
 	}
 
 	async getEvent(params: {
