@@ -92,7 +92,7 @@ impl ByteCoalescer {
 
             let mut guard = CleanupGuard {
                 in_flight: &self.in_flight,
-                key: &key,
+                key: key.as_str(),
                 slot: &slot,
                 completed: false,
             };
