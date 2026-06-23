@@ -2,7 +2,7 @@
 
 import {defineEmailI18nLocaleMessages} from '../EmailI18nMessages';
 
-export const EMAIL_I18N_HR_MESSAGES = defineEmailI18nLocaleMessages({
+const EMAIL_I18N_HR_MESSAGES = defineEmailI18nLocaleMessages({
 	"account_disabled_suspicious": {
 		"subject": "Tvoj {product_name} račun je privremeno onemogućen",
 		"body": "Pozdrav {username},\n\nPrivremeno smo onemogućili tvoj {product_name} račun jer smo otkrili sumnjivu aktivnost.\n\n{reason, select,\n  null {}\n  other {Razlog: {reason}}\n}\n\nDa bi ponovno pristupio svom računu, morat ćeš poništiti lozinku:\n\n{forgotUrl}\n\nNakon što poništiš lozinku, moći ćeš se ponovno prijaviti.\n\nAko misliš da je ovo pogreška, kontaktiraj naš tim za podršku.\n\n– {product_name} Sigurnosni Tim"

@@ -2,7 +2,7 @@
 
 import {defineContentI18nLocaleMessages} from '../ContentI18nMessages';
 
-export const CONTENT_I18N_LT_MESSAGES = defineContentI18nLocaleMessages({
+const CONTENT_I18N_LT_MESSAGES = defineContentI18nLocaleMessages({
 	"billing.eu_withdrawal_waiver_checkout": "Jei esu ES/EEE vartotojas, aiškiai sutinku, kad {product_name} {premium_tier_name} skaitmeninis turinys būtų suteiktas nedelsiant ir pripažįstu, kad, suteikus prieigą, netenku teisės atsisakyti sutarties. Tai neturi įtakos kitoms privalomoms vartotojų teisėms. Žr. [Paslaugų teikimo sąlygas]({terms_url}).",
 	"bulk_message_deletion.complete": "Baigėme trinti tavo žinutes. Pašalinome {message_count, plural, =0 {0 žinučių} one {# žinutę} few {# žinutes} many {# žinutės} other {# žinučių}} iš {channel_count, plural, =0 {0 vietų} one {# vietos} few {# vietų} many {# vietos} other {# vietų}}.",
 	"content.virus_detected": "Failas buvo pažymėtas kaip galimai nesaugus ir pašalintas.",

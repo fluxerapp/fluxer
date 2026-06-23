@@ -15,6 +15,7 @@
         ranch,
         cowboy,
         ezstd,
+        erlcass,
         base64url,
         enats
     ]},

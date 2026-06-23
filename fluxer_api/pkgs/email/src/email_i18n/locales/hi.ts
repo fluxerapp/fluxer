@@ -2,7 +2,7 @@
 
 import {defineEmailI18nLocaleMessages} from '../EmailI18nMessages';
 
-export const EMAIL_I18N_HI_MESSAGES = defineEmailI18nLocaleMessages({
+const EMAIL_I18N_HI_MESSAGES = defineEmailI18nLocaleMessages({
 	"account_disabled_suspicious": {
 		"subject": "आपका {product_name} अकाउंट अस्थायी रूप से डिसेबल कर दिया गया है",
 		"body": "नमस्ते {username},\n\nहमने आपके {product_name} अकाउंट को अस्थायी रूप से डिसेबल कर दिया है क्योंकि हमें संदिग्ध एक्टिविटी देखी गई है।\n\n{reason, select,\n  null {}\n  other {वजह: {reason}}\n}\n\nअपने अकाउंट का एक्सेस फिर से पाने के लिए, आपको अपना पासवर्ड रीसेट करना होगा:\n\n{forgotUrl}\n\nअपना पासवर्ड रीसेट करने के बाद, आप फिर से लॉगिन कर पाएंगे।\n\nअगर आपको लगता है कि यह गलती से हुआ है, तो कृपया हमारी सपोर्ट टीम से संपर्क करें।\n\n– {product_name} सेफ्टी टीम"
