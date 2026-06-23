@@ -72,6 +72,14 @@ export interface GatewayPresence {
 	afk: boolean;
 	mobile: boolean;
 	custom_status?: GatewayCustomStatusPayload | null;
+	activities?: ReadonlyArray<GatewayActivityPayload>;
+}
+
+export interface GatewayActivityPayload {
+	id: string;
+	type: 'application';
+	name: string;
+	icon?: string;
 }
 
 export interface GatewayVoiceStateUpdateParams {
@@ -410,6 +418,7 @@ export class GatewaySocket extends EventEmitter<GatewaySocketEvents> {
 		afk?: boolean,
 		mobile?: boolean,
 		customStatus?: GatewayCustomStatusPayload | null,
+		activities?: ReadonlyArray<GatewayActivityPayload>,
 	): void {
 		if (!this.isConnected()) return;
 		this.sendPayload({
@@ -419,6 +428,7 @@ export class GatewaySocket extends EventEmitter<GatewaySocketEvents> {
 				...(afk !== undefined && {afk}),
 				...(mobile !== undefined && {mobile}),
 				...(customStatus !== undefined && {custom_status: customStatus}),
+				...(activities !== undefined && {activities}),
 			},
 		});
 	}

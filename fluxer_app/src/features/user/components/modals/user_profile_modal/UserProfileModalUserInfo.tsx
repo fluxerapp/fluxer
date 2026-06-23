@@ -2,6 +2,7 @@
 
 import {CustomStatusDisplay} from '@app/features/app/components/shared/custom_status_display/CustomStatusDisplay';
 import {UserTag} from '@app/features/channel/components/ChannelUserTag';
+import Presence from '@app/features/presence/state/Presence';
 import userProfileModalStyles from '@app/features/user/components/modals/UserProfileModal.module.css';
 import type {UserInfoProps} from '@app/features/user/components/modals/user_profile_modal/UserProfileModalShared';
 import {LimitedProfileNotice} from '@app/features/user/components/popouts/LimitedProfileNotice';
@@ -23,6 +24,8 @@ export const UserInfo: React.FC<UserInfoProps> = observer(({user, profile, guild
 	const displayName = getProfileMembershipDisplayName(user, membership, guildId);
 	const effectiveProfile = profile?.getEffectiveProfile() ?? null;
 	const shouldAutoplayProfileAnimations = useAutoplayExpandedProfileAnimations();
+	const activities = Presence.getActivities(user.id);
+	const primaryActivity = activities[0] ?? null;
 	return (
 		<div className={userProfileModalStyles.userInfo} data-flx="user.user-profile-modal.user-info.div">
 			<div
@@ -92,6 +95,13 @@ export const UserInfo: React.FC<UserInfoProps> = observer(({user, profile, guild
 							data-flx="user.user-profile-modal.user-info.custom-status-display"
 						/>
 					</div>
+					{primaryActivity && (
+						<div className={userProfileModalStyles.customStatusRow} data-flx="user.user-profile-modal.user-info.activity">
+							<span className={userProfileModalStyles.customStatusText} data-flx="user.user-profile-modal.user-info.activity-text">
+								<Trans>Playing {primaryActivity.name}</Trans>
+							</span>
+						</div>
+					)}
 				</div>
 			</div>
 		</div>

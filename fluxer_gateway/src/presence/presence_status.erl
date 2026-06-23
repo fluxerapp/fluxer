@@ -7,6 +7,7 @@
     get_current_status/1,
     get_flattened_mobile/1,
     get_flattened_afk/1,
+    get_flattened_activities/1,
     collect_sessions_for_replace/1
 ]).
 
@@ -64,6 +65,19 @@ get_flattened_afk(Sessions) ->
         false -> all_sessions_afk(Sessions)
     end.
 
+-spec get_flattened_activities(sessions()) -> [map()].
+get_flattened_activities(Sessions) ->
+    VisibleSessions = [
+        S
+     || S <- maps:values(Sessions),
+        maps:get(status, S, offline) =/= offline,
+        maps:get(status, S, offline) =/= invisible
+    ],
+    lists:sublist(
+        lists:flatmap(fun(Session) -> maps:get(activities, Session, []) end, VisibleSessions),
+        5
+    ).
+
 -spec all_sessions_afk(sessions()) -> boolean().
 all_sessions_afk(Sessions) ->
     case maps:size(Sessions) of
@@ -85,7 +99,8 @@ collect_sessions_for_replace(Sessions) ->
             <<"session_id">> => <<"all">>,
             <<"status">> => constants:status_type_atom(Status),
             <<"mobile">> => Mobile,
-            <<"afk">> => Afk
+            <<"afk">> => Afk,
+            <<"activities">> => get_flattened_activities(Sessions)
         }
     ],
     SessionEntries = maps:fold(
@@ -95,7 +110,8 @@ collect_sessions_for_replace(Sessions) ->
                     <<"session_id">> => SessionId,
                     <<"status">> => constants:status_type_atom(maps:get(status, Session)),
                     <<"afk">> => maps:get(afk, Session, false),
-                    <<"mobile">> => maps:get(mobile, Session, false)
+                    <<"mobile">> => maps:get(mobile, Session, false),
+                    <<"activities">> => maps:get(activities, Session, [])
                 }
                 | Acc
             ]

@@ -3,6 +3,13 @@
 import type {GatewayCustomStatusPayload} from '@app/features/user/state/CustomStatus';
 import type {UserPartial} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 
+export interface GatewayActivityPayload {
+	readonly id: string;
+	readonly type: 'application';
+	readonly name: string;
+	readonly icon?: string;
+}
+
 export interface PresenceRecord {
 	readonly guild_id?: string | null;
 	readonly user: UserPartial;
@@ -10,6 +17,7 @@ export interface PresenceRecord {
 	readonly afk?: boolean;
 	readonly mobile?: boolean;
 	readonly custom_status?: GatewayCustomStatusPayload | null;
+	readonly activities?: ReadonlyArray<GatewayActivityPayload>;
 }
 
 export type Presence = PresenceRecord;

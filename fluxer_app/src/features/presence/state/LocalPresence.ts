@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {AccountPresenceIntent} from '@app/features/auth/state/AccountStorage';
+import type {GatewayActivityPayload} from '@app/features/gateway/transport/GatewaySocket';
 import {deferUntilModulesLoaded} from '@app/features/platform/utils/DeferUntilModulesLoaded';
 import Idle from '@app/features/ui/state/Idle';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
@@ -16,6 +17,7 @@ type Presence = Readonly<{
 	afk: boolean;
 	mobile: boolean;
 	custom_status: GatewayCustomStatusPayload | null;
+	activities: ReadonlyArray<GatewayActivityPayload>;
 }>;
 
 export const ACCOUNT_PRESENCE_INTENT_MAX_AGE_MS = 60 * 1000;
@@ -42,7 +44,9 @@ class LocalPresence {
 	afk: boolean = false;
 	mobile: boolean = false;
 	customStatus: CustomStatus | null = null;
+	activities: Array<GatewayActivityPayload> = [];
 	private restoredIntent: AccountPresenceIntent | null = null;
+	private activityPollTimer: number | null = null;
 
 	constructor() {
 		makeAutoObservable(this, {}, {autoBind: true});
@@ -51,6 +55,7 @@ class LocalPresence {
 				() => MobileLayout.isMobileLayout(),
 				() => this.updatePresence(),
 			);
+			this.startActivityDetectionPolling();
 		});
 	}
 
@@ -67,6 +72,7 @@ class LocalPresence {
 			this.afk = false;
 			this.mobile = isMobile;
 			this.customStatus = null;
+			this.activities = [];
 			return;
 		}
 		this.restoredIntent = null;
@@ -93,6 +99,7 @@ class LocalPresence {
 			afk: this.afk,
 			mobile: this.mobile,
 			custom_status: toGatewayCustomStatus(this.customStatus),
+			activities: this.activities.map((activity) => ({...activity})),
 		};
 	}
 
@@ -135,7 +142,47 @@ class LocalPresence {
 		const hydrated = userSettings?.isHydrated() ? '1' : '0';
 		const afk = this.afk ? '1' : '0';
 		const mobile = this.mobile ? '1' : '0';
-		return `hydrated:${hydrated}|${this.status}|${customStatusToKey(this.customStatus)}|afk:${afk}|mobile:${mobile}`;
+		return `hydrated:${hydrated}|${this.status}|${customStatusToKey(this.customStatus)}|afk:${afk}|mobile:${mobile}|activities:${this.activitiesKey}`;
+	}
+
+	private get activitiesKey(): string {
+		return this.activities.map((activity) => `${activity.id}:${activity.name}`).join(',');
+	}
+
+	private startActivityDetectionPolling(): void {
+		if (this.activityPollTimer != null) return;
+		if (!window.electron?.getActivityDetectionStatus) return;
+		const poll = () => {
+			void this.pollDetectedActivities();
+		};
+		poll();
+		this.activityPollTimer = window.setInterval(poll, 15_000);
+	}
+
+	private async pollDetectedActivities(): Promise<void> {
+		const getStatus = window.electron?.getActivityDetectionStatus;
+		if (!getStatus || !userSettings?.isHydrated()) {
+			this.setActivities([]);
+			return;
+		}
+		try {
+			const status = await getStatus();
+			this.setActivities(
+				status.activities.map((activity) => ({
+					id: activity.id,
+					type: activity.type,
+					name: activity.name,
+					...(activity.icon ? {icon: activity.icon} : {}),
+				})),
+			);
+		} catch {
+			this.setActivities([]);
+		}
+	}
+
+	private setActivities(next: Array<GatewayActivityPayload>): void {
+		if (this.activitiesKey === next.map((activity) => `${activity.id}:${activity.name}`).join(',')) return;
+		this.activities = next;
 	}
 
 	private computeAfk(idleSince: number, isMobile: boolean, settings: LocalPresenceUserSettings | null): boolean {

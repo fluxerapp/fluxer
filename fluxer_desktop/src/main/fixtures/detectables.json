@@ -1,0 +1,44 @@
+[
+	{
+		"name": "Minecraft",
+		"aliases": ["Minecraft Launcher", "Minecraft Windows 10 Edition", "Minecraft: Java Edition"],
+		"icon": "minecraft.png",
+		"executables": [
+			{"name": "minecraft.windows.exe", "os": "win32"},
+			{"name": "content/minecraft.exe", "os": "win32"},
+			{
+				"name": ">javaw.exe",
+				"os": "win32",
+				"arguments": "net.minecraft.client.main.Main"
+			},
+			{
+				"name": ">java",
+				"os": "darwin",
+				"arguments": "net.minecraft.client.main.Main"
+			},
+			{
+				"name": ">java",
+				"os": "linux",
+				"arguments": "net.minecraft.client.main.Main"
+			}
+		]
+	},
+	{
+		"name": "osu!",
+		"aliases": ["osu!(lazer)", "osu!(stable)"],
+		"icon": "osu.png",
+		"executables": [
+			{"name": "osu!.exe", "os": "win32"},
+			{"name": "osu!.app", "os": "darwin"},
+			{"name": "osu!", "os": "linux"}
+		],
+		"presence_assets": {
+			"mode_custom": "osu/mode_custom.png",
+			"mode_2": "osu/mode_2.png",
+			"mode_0": "osu/mode_0.png",
+			"mode_3": "osu/mode_3.png",
+			"mode_1": "osu/mode_1.png",
+			"osu_logo_lazer": "osu/osu_logo_lazer.png"
+		}
+	}
+]

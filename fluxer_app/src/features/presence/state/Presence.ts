@@ -3,7 +3,7 @@
 import Authentication from '@app/features/auth/state/Authentication';
 import Channels from '@app/features/channel/state/Channels';
 import type {GuildReadyData} from '@app/features/gateway/types/GatewayGuildTypes';
-import type {Presence as WirePresence} from '@app/features/gateway/types/GatewayPresenceTypes';
+import type {GatewayActivityPayload, Presence as WirePresence} from '@app/features/gateway/types/GatewayPresenceTypes';
 import Guilds from '@app/features/guild/state/Guilds';
 import GuildMembers from '@app/features/member/state/GuildMembers';
 import MemberSidebar from '@app/features/member/state/MemberSidebar';
@@ -30,6 +30,7 @@ interface FlattenedPresence {
 	mobile?: boolean;
 	guildIds: Set<string>;
 	customStatus: CustomStatus | null;
+	activities: Array<GatewayActivityPayload>;
 }
 
 type StatusListener = (userId: string, status: StatusType, isMobile: boolean) => void;
@@ -65,7 +66,11 @@ class Presence {
 		);
 		deferUntilModulesLoaded(() => {
 			reaction(
-				() => ({status: LocalPresence.status, customStatus: LocalPresence.customStatus}),
+				() => ({
+					status: LocalPresence.status,
+					customStatus: LocalPresence.customStatus,
+					activities: LocalPresence.activities.map((activity) => `${activity.id}:${activity.name}`).join(','),
+				}),
 				() => this.syncLocalPresence(),
 			);
 		});
@@ -160,6 +165,14 @@ class Presence {
 
 	getCustomStatus(userId: string): CustomStatus | null {
 		return this.customStatuses.get(userId) ?? null;
+	}
+
+	getActivities(userId: string): ReadonlyArray<GatewayActivityPayload> {
+		this.presenceVersion;
+		if (userId === Authentication.currentUserId) {
+			return LocalPresence.activities;
+		}
+		return this.presences.get(userId)?.activities ?? [];
 	}
 
 	getPresenceCount(guildId: string): number {
@@ -367,7 +380,7 @@ class Presence {
 	}
 
 	handlePresenceUpdate(presence: WirePresence): void {
-		const {guild_id: guildIdRaw, user, status, afk, mobile, custom_status: customStatusPayload} = presence;
+		const {guild_id: guildIdRaw, user, status, afk, mobile, custom_status: customStatusPayload, activities} = presence;
 		const normalizedStatus = normalizeStatus(status);
 		const userId = user.id;
 		const customStatus = fromGatewayCustomStatus(customStatusPayload);
@@ -390,6 +403,7 @@ class Presence {
 				mobile,
 				guildIds,
 				customStatus,
+				activities: normalizeActivities(activities),
 			};
 			this.presences.set(userId, flattened);
 			this.addPresenceCounts(flattened);
@@ -416,6 +430,7 @@ class Presence {
 			existing.mobile = mobile;
 		}
 		existing.customStatus = customStatus;
+		existing.activities = normalizeActivities(activities);
 		this.customStatuses.set(userId, customStatus);
 		if (normalizedStatus === StatusTypes.OFFLINE && guildIdRaw == null) {
 			existing.guildIds.delete(ME);
@@ -430,7 +445,7 @@ class Presence {
 	}
 
 	private handleReadyPresence(presence: WirePresence, initialGuildIds?: Set<string>, hasMeContext = false): void {
-		const {user, status, afk, mobile, custom_status: customStatusPayload} = presence;
+		const {user, status, afk, mobile, custom_status: customStatusPayload, activities} = presence;
 		const normalizedStatus = normalizeStatus(status);
 		const customStatus = fromGatewayCustomStatus(customStatusPayload);
 		const userId = user.id;
@@ -449,6 +464,7 @@ class Presence {
 			mobile,
 			guildIds,
 			customStatus,
+			activities: normalizeActivities(activities),
 		};
 		this.presences.set(userId, flattened);
 		this.addPresenceCounts(flattened);
@@ -574,6 +590,26 @@ class Presence {
 			this.notifyStatusListeners(userId, StatusTypes.OFFLINE, false);
 		}
 	}
+}
+
+function normalizeActivities(activities: ReadonlyArray<GatewayActivityPayload> | undefined): Array<GatewayActivityPayload> {
+	if (!Array.isArray(activities)) return [];
+	return activities
+		.filter(
+			(activity): activity is GatewayActivityPayload =>
+				typeof activity?.id === 'string' &&
+				typeof activity.name === 'string' &&
+				activity.type === 'application' &&
+				activity.id.length > 0 &&
+				activity.name.length > 0,
+		)
+		.slice(0, 5)
+		.map((activity) => ({
+			id: activity.id,
+			type: activity.type,
+			name: activity.name,
+			...(typeof activity.icon === 'string' ? {icon: activity.icon} : {}),
+		}));
 }
 
 export default new Presence();

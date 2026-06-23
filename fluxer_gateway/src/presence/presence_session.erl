@@ -21,6 +21,7 @@
     status := status(),
     afk := boolean(),
     mobile := boolean(),
+    activities := [map()],
     pid := pid(),
     mref := reference(),
     socket_pid := pid() | undefined
@@ -39,6 +40,7 @@ handle_session_connect(Request, Pid, State) ->
     Status = normalize_status(maps:get(status, Request, offline)),
     Afk = normalize_boolean(maps:get(afk, Request, false)),
     Mobile = normalize_boolean(maps:get(mobile, Request, false)),
+    Activities = normalize_activities(maps:get(activities, Request, [])),
     SocketPid = normalize_socket_pid(maps:get(socket_pid, Request, undefined)),
     Sessions = maps:get(sessions, State),
     case maps:get(SessionId, Sessions, undefined) of
@@ -49,6 +51,7 @@ handle_session_connect(Request, Pid, State) ->
                 status => Status,
                 afk => Afk,
                 mobile => Mobile,
+                activities => Activities,
                 pid => Pid,
                 mref => Ref,
                 socket_pid => SocketPid
@@ -59,7 +62,7 @@ handle_session_connect(Request, Pid, State) ->
             {reply, {ok, SessionsData}, NewState};
         Existing ->
             {UpdatedSession, NewState0} = refresh_existing_session(
-                Existing, Pid, Status, Afk, Mobile, SocketPid, State
+                Existing, Pid, Status, Afk, Mobile, Activities, SocketPid, State
             ),
             NewSessions = Sessions#{SessionId => UpdatedSession},
             NewState = NewState0#{sessions => NewSessions},
@@ -68,15 +71,16 @@ handle_session_connect(Request, Pid, State) ->
     end.
 
 -spec refresh_existing_session(
-    session_entry(), pid(), status(), boolean(), boolean(), pid() | undefined, state()
+    session_entry(), pid(), status(), boolean(), boolean(), [map()], pid() | undefined, state()
 ) -> {session_entry(), state()}.
-refresh_existing_session(Existing, Pid, Status, Afk, Mobile, SocketPid, State) ->
+refresh_existing_session(Existing, Pid, Status, Afk, Mobile, Activities, SocketPid, State) ->
     {Ref, State1} = refresh_monitor(Existing, Pid, State),
     {
         Existing#{
             status => Status,
             afk => Afk,
             mobile => Mobile,
+            activities => Activities,
             pid => Pid,
             mref => Ref,
             socket_pid => SocketPid
@@ -108,8 +112,11 @@ handle_presence_update(Request, State) ->
             Mobile = normalize_boolean(
                 maps:get(mobile, Request, maps:get(mobile, Session, false))
             ),
+            Activities = normalize_activities(
+                maps:get(activities, Request, maps:get(activities, Session, []))
+            ),
             handle_session_presence_change(
-                SessionId, Session, Status, Afk, Mobile, Sessions, State
+                SessionId, Session, Status, Afk, Mobile, Activities, Sessions, State
             )
     end.
 
@@ -119,26 +126,30 @@ handle_presence_update(Request, State) ->
     status(),
     boolean(),
     boolean(),
+    [map()],
     sessions(),
     state()
 ) -> {noreply, state()}.
-handle_session_presence_change(SessionId, Session, Status, Afk, Mobile, Sessions, State) ->
-    case session_presence_changed(Session, Status, Afk, Mobile) of
+handle_session_presence_change(SessionId, Session, Status, Afk, Mobile, Activities, Sessions, State) ->
+    case session_presence_changed(Session, Status, Afk, Mobile, Activities) of
         false ->
             {noreply, State};
         true ->
-            UpdatedSession = Session#{status => Status, afk => Afk, mobile => Mobile},
+            UpdatedSession = Session#{
+                status => Status, afk => Afk, mobile => Mobile, activities => Activities
+            },
             NewSessions = Sessions#{SessionId => UpdatedSession},
             NewState = State#{sessions => NewSessions},
             dispatch_sessions_replace(NewState),
             {noreply, NewState}
     end.
 
--spec session_presence_changed(session_entry(), status(), boolean(), boolean()) -> boolean().
-session_presence_changed(Session, Status, Afk, Mobile) ->
+-spec session_presence_changed(session_entry(), status(), boolean(), boolean(), [map()]) -> boolean().
+session_presence_changed(Session, Status, Afk, Mobile, Activities) ->
     maps:get(status, Session) =/= Status orelse
         maps:get(afk, Session, false) =/= Afk orelse
-        maps:get(mobile, Session, false) =/= Mobile.
+        maps:get(mobile, Session, false) =/= Mobile orelse
+        maps:get(activities, Session, []) =/= Activities.
 
 -spec dispatch_sessions_replace(state()) -> ok.
 dispatch_sessions_replace(State) ->
@@ -205,6 +216,10 @@ normalize_status(_) -> offline.
 -spec normalize_boolean(term()) -> boolean().
 normalize_boolean(true) -> true;
 normalize_boolean(_) -> false.
+
+-spec normalize_activities(term()) -> [map()].
+normalize_activities(Activities) when is_list(Activities) -> lists:sublist(Activities, 5);
+normalize_activities(_) -> [].
 
 -spec normalize_socket_pid(term()) -> pid() | undefined.
 normalize_socket_pid(Pid) when is_pid(Pid) -> Pid;

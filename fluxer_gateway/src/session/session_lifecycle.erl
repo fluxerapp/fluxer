@@ -306,8 +306,15 @@ handle_resume(Seq, _SocketPid, #{ack_seq := AckSeq} = State) when
 ->
     {reply, invalid_seq, State};
 handle_resume(Seq, SocketPid, #{seq := CurrentSeq} = State) ->
-    #{buffer := Buffer, id := SessionId, status := Status, afk := Afk, mobile := Mobile} =
+    #{
+        buffer := Buffer,
+        id := SessionId,
+        status := Status,
+        afk := Afk,
+        mobile := Mobile
+    } =
         State,
+    Activities = maps:get(activities, State, []),
     ResumeStatus = status_on_resume(State, Status),
     BufferList =
         case is_list(Buffer) of
@@ -319,17 +326,17 @@ handle_resume(Seq, SocketPid, #{seq := CurrentSeq} = State) ->
     NewState1 = replace_socket(SocketPid, NewState0),
     NewState = NewState1#{status => ResumeStatus, resume_status => ResumeStatus},
     NewState2 = ensure_presence_attached_on_resume(
-        NewState, SessionId, ResumeStatus, Afk, Mobile
+        NewState, SessionId, ResumeStatus, Afk, Mobile, Activities
     ),
     {reply, {ok, MissedEvents, CurrentSeq}, NewState2}.
 
 -spec ensure_presence_attached_on_resume(
-    session_state(), session_id(), status(), boolean(), boolean()
+    session_state(), session_id(), status(), boolean(), boolean(), [map()]
 ) -> session_state().
-ensure_presence_attached_on_resume(State, SessionId, Status, Afk, Mobile) ->
+ensure_presence_attached_on_resume(State, SessionId, Status, Afk, Mobile, Activities) ->
     case session_connection_presence:presence_attachment_healthy(State) of
         true ->
-            notify_presence_on_resume(State, SessionId, Status, Afk, Mobile),
+            notify_presence_on_resume(State, SessionId, Status, Afk, Mobile, Activities),
             State;
         false ->
             session_connection_presence:force_presence_reconnect(State)
@@ -410,22 +417,28 @@ handle_resume_offline_timeout({resume_offline_timeout, _Token}, State) ->
 handle_resume_offline_timeout(_Msg, State) ->
     {noreply, State}.
 
--spec notify_presence_on_resume(session_state(), session_id(), status(), boolean(), boolean()) ->
+-spec notify_presence_on_resume(session_state(), session_id(), status(), boolean(), boolean(), [map()]) ->
     ok.
-notify_presence_on_resume(#{presence_pid := undefined}, _Sid, _St, _Afk, _Mob) ->
+notify_presence_on_resume(#{presence_pid := undefined}, _Sid, _St, _Afk, _Mob, _Acts) ->
     ok;
-notify_presence_on_resume(#{presence_pid := Pid}, SessionId, Status, Afk, Mobile) ->
-    spawn(fun() -> notify_presence_on_resume_worker(Pid, SessionId, Status, Afk, Mobile) end),
+notify_presence_on_resume(#{presence_pid := Pid}, SessionId, Status, Afk, Mobile, Activities) ->
+    spawn(fun() ->
+        notify_presence_on_resume_worker(Pid, SessionId, Status, Afk, Mobile, Activities)
+    end),
     ok.
 
--spec notify_presence_on_resume_worker(pid(), session_id(), status(), boolean(), boolean()) ->
+-spec notify_presence_on_resume_worker(pid(), session_id(), status(), boolean(), boolean(), [map()]) ->
     ok.
-notify_presence_on_resume_worker(Pid, SessionId, Status, Afk, Mobile) ->
+notify_presence_on_resume_worker(Pid, SessionId, Status, Afk, Mobile, Activities) ->
     try
         gen_server:call(
             Pid,
             {session_connect, #{
-                session_id => SessionId, status => Status, afk => Afk, mobile => Mobile
+                session_id => SessionId,
+                status => Status,
+                afk => Afk,
+                mobile => Mobile,
+                activities => Activities
             }},
             10000
         ),
@@ -441,8 +454,10 @@ handle_presence_update_cast(Update, State) ->
     NewStatus = maps:get(status, Update, Status),
     NewAfk = maps:get(afk, Update, Afk),
     NewMobile = maps:get(mobile, Update, Mobile),
+    NewActivities = maps:get(activities, Update, maps:get(activities, State, [])),
     NewState = maybe_update_resume_status(
-        NewStatus, State#{status => NewStatus, afk => NewAfk, mobile => NewMobile}
+        NewStatus,
+        State#{status => NewStatus, afk => NewAfk, mobile => NewMobile, activities => NewActivities}
     ),
     send_presence_update(State, SessionId, NewStatus, NewAfk, NewMobile, Update),
     {noreply, NewState}.
@@ -463,10 +478,15 @@ send_presence_update(#{presence_pid := Pid}, SessionId, NewStatus, NewAfk, NewMo
     BaseMsg = #{
         session_id => SessionId, status => NewStatus, afk => NewAfk, mobile => NewMobile
     },
+    Msg0 =
+        case maps:find(activities, Update) of
+            {ok, Activities} -> BaseMsg#{activities => Activities};
+            error -> BaseMsg
+        end,
     Msg =
         case maps:find(<<"custom_status">>, Update) of
-            {ok, CS} -> BaseMsg#{<<"custom_status">> => CS};
-            error -> BaseMsg
+            {ok, CS} -> Msg0#{<<"custom_status">> => CS};
+            error -> Msg0
         end,
     gen_server:cast(Pid, {presence_update, Msg}),
     ok.
@@ -500,6 +520,7 @@ serialize_state(State) ->
         resume_status => maps:get(resume_status, State, maps:get(status, State)),
         afk => maps:get(afk, State),
         mobile => maps:get(mobile, State),
+        activities => maps:get(activities, State, []),
         buffer => maps:get(buffer, State),
         ready => maps:get(ready, State),
         bot => maps:get(bot, State, false),
@@ -532,6 +553,7 @@ serialize_transfer_identity(State) ->
         resume_status => maps:get(resume_status, State, maps:get(status, State)),
         afk => maps:get(afk, State),
         mobile => maps:get(mobile, State),
+        activities => maps:get(activities, State, []),
         socket_pid => undefined,
         guilds => session_init:normalize_guild_ids(maps:keys(maps:get(guilds, State, #{}))),
         ready => maps:get(ready, State),
