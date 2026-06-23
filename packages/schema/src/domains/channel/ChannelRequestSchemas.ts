@@ -367,3 +367,8 @@ export const StreamPreviewUploadUrlResponseSchema = z.object({
 });
 
 export type StreamPreviewUploadUrlResponseSchema = z.infer<typeof StreamPreviewUploadUrlResponseSchema>;
+
+export const ValidateVoicePasswordRequest = z.object({
+	password: z.string().min(1).max(128),
+});
+export type ValidateVoicePasswordRequest = z.infer<typeof ValidateVoicePasswordRequest>;
