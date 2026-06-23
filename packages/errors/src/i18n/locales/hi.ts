@@ -2,7 +2,7 @@
 
 import {defineErrorI18nLocaleMessages} from '../ErrorI18nMessages';
 
-export const ERROR_I18N_HI_MESSAGES = defineErrorI18nLocaleMessages({
+const ERROR_I18N_HI_MESSAGES = defineErrorI18nLocaleMessages({
 	"account.already_verified": "आपका अकाउंट पहले से वेरिफाई किया जा चुका है.",
 	"account.communication_disabled": "कम्युनिकेशन डिसेबल कर दिया गया है.",
 	"account.disabled": "यह अकाउंट डिसेबल कर दिया गया है.",

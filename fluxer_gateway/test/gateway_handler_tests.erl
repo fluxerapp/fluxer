@@ -4,6 +4,9 @@
 -typing([eqwalizer]).
 -include_lib("eunit/include/eunit.hrl").
 
+-define(TEST_GATEWAY_RATE_LIMIT_MAX_EVENTS, 600).
+-define(TEST_IDENTIFY_MAX_PER_IP, 300).
+
 websocket_info_session_reconnect_sends_reconnect_then_close_test() ->
     assert_reconnect_close(
         gateway_handler:websocket_info(session_reconnect, new_json_state()),
@@ -191,7 +194,7 @@ adjust_status_test() ->
 check_rate_limit_blocks_general_flood_test() ->
     with_rate_limits_enabled(fun() ->
         Now = erlang:system_time(millisecond),
-        Events = lists:duplicate(120, Now - 1000),
+        Events = lists:duplicate(?TEST_GATEWAY_RATE_LIMIT_MAX_EVENTS, Now - 1000),
         State = (gateway_handler:new_state())#{
             rate_limit_state => #{events => Events, op_events => #{}}
         },
@@ -406,19 +409,21 @@ validate_identify_data_rejects_invalid_shard_test() ->
 handle_identify_runs_identify_rate_check_at_zero_rollout_test() ->
     session_abuse_protection:ensure_tables(),
     OldConfig = gateway_rollout_config:get(),
-    IP = <<"203.0.113.55">>,
+    IP = unique_test_peer_ip(<<"zero-rollout-identify">>),
     try
         persistent_term:put(gateway_rollout_config, OldConfig#{
             <<"session_rollout_percentage">> => 0
         }),
         lists:foreach(
             fun(_) ->
-                gateway_handler_identify:handle_identify(
-                    valid_identify_data(#{}), IP, new_json_state()
-                )
+                ?assertEqual(ok, session_abuse_protection:check_identify_rate(IP))
             end,
-            lists:seq(1, 60)
+            lists:seq(1, ?TEST_IDENTIFY_MAX_PER_IP - 1)
         ),
+        {ok, HeldState} = gateway_handler_identify:handle_identify(
+            valid_identify_data(#{}), IP, new_json_state()
+        ),
+        cancel_pending_identify_timer(HeldState),
         ?assertEqual(
             {error, identify_rate_limited},
             session_abuse_protection:check_identify_rate(IP)
@@ -520,3 +525,7 @@ restore_env(Key, false) ->
     os:unsetenv(Key);
 restore_env(Key, Value) ->
     os:putenv(Key, Value).
+
+unique_test_peer_ip(Prefix) ->
+    Suffix = integer_to_binary(erlang:unique_integer([positive])),
+    <<Prefix/binary, "-", Suffix/binary>>.

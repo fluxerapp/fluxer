@@ -2,7 +2,7 @@
 
 import {defineEmailI18nLocaleMessages} from '../EmailI18nMessages';
 
-export const EMAIL_I18N_ZH_TW_MESSAGES = defineEmailI18nLocaleMessages({
+const EMAIL_I18N_ZH_TW_MESSAGES = defineEmailI18nLocaleMessages({
 	"account_disabled_suspicious": {
 		"subject": "您的 {product_name} 帳號已暫時停用",
 		"body": "哈囉 {username}，\n\n我們偵測到您的 {product_name} 帳號有可疑活動，因此已暫時停用您的帳號。\n\n{reason, select,\n  null {}\n  other {原因：{reason}}\n}\n\n若要重新取得帳號存取權，您需要重設密碼：\n\n{forgotUrl}\n\n重設密碼後，您將可以再次登入。\n\n如果您認為這是錯誤操作，請聯絡我們的支援團隊。\n\n– {product_name} 安全團隊"

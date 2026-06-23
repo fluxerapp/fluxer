@@ -20,24 +20,24 @@ init() ->
 
 -spec available() -> boolean().
 available() ->
-    false.
+    erlang:nif_error(nif_not_loaded).
 
 -spec render_push_preview_nif(binary(), binary()) -> binary().
 render_push_preview_nif(_Content, _ContextJson) ->
     erlang:nif_error(nif_not_loaded).
 
--spec nif_path() -> file:filename().
+-spec nif_path() -> file:filename_all().
 nif_path() ->
     filename:join(priv_dir(), ?NIF_NAME).
 
--spec priv_dir() -> file:filename().
+-spec priv_dir() -> file:filename_all().
 priv_dir() ->
     case code:priv_dir(fluxer_gateway) of
         {error, _Reason} -> priv_dir_from_beam();
         Dir -> Dir
     end.
 
--spec priv_dir_from_beam() -> file:filename().
+-spec priv_dir_from_beam() -> file:filename_all().
 priv_dir_from_beam() ->
     case code:which(?MODULE) of
         Beam when is_list(Beam) ->

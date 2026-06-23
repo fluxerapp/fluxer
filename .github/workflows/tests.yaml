@@ -1,11 +1,17 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
-name: CI
+name: Tests
 
 on:
-  workflow_dispatch:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
 
 env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
   GHCR_REGISTRY: ghcr.io/${{ github.repository_owner }}
 
 jobs:
@@ -20,6 +26,7 @@ jobs:
         uses: dtolnay/rust-toolchain@b3b07ba8b418998c39fb20f53e8b695cdcc8de1b
         with:
           toolchain: "1.93.0"
+          targets: wasm32-unknown-unknown
 
       - name: Install pnpm
         uses: pnpm/action-setup@c5ba7f7862a0f64c1b1a05fbac13e0b8e86ba08c
@@ -51,6 +58,7 @@ jobs:
         uses: dtolnay/rust-toolchain@b3b07ba8b418998c39fb20f53e8b695cdcc8de1b
         with:
           toolchain: "1.93.0"
+          targets: wasm32-unknown-unknown
 
       - name: Install pnpm
         uses: pnpm/action-setup@c5ba7f7862a0f64c1b1a05fbac13e0b8e86ba08c
@@ -84,6 +92,15 @@ jobs:
           toolchain: stable
           components: clippy, rustfmt
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@c5ba7f7862a0f64c1b1a05fbac13e0b8e86ba08c
+
+      - name: Install Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+
       - name: Cache cargo
         uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
         with:
@@ -95,6 +112,21 @@ jobs:
           restore-keys: |
             rust-${{ runner.os }}-
 
+      - name: Install native dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            pkg-config \
+            build-essential \
+            libcurl4-openssl-dev \
+            libvips-dev \
+            libavfilter-dev \
+            libheif-dev \
+            libwebp-dev
+
+      - name: Install Node.js dependencies
+        run: pnpm --filter fluxer_admin --filter fluxer_marketing install
+
       - name: Check formatting
         run: cargo fmt --all -- --check
 
@@ -103,33 +135,6 @@ jobs:
 
       - name: Run tests
         run: cargo test --workspace
-
-  marketing-docker:
-    runs-on: blacksmith-4vcpu-ubuntu-2404
-    timeout-minutes: 45
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-
-      - name: Set up Rust toolchain (CI helpers)
-        uses: dtolnay/rust-toolchain@b3b07ba8b418998c39fb20f53e8b695cdcc8de1b
-        with:
-          toolchain: "1.93.0"
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f
-
-      - name: Build marketing image
-        run: |
-          BUILD_VERSION="$(cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- resolve-calver)"
-          docker build \
-            -f fluxer_marketing/Dockerfile \
-            -t "fluxer-marketing:${BUILD_VERSION}" \
-            --build-arg "BUILD_VERSION=${BUILD_VERSION}" \
-            .
-        env:
-          DOCKER_BUILD_SUMMARY: false
-          DOCKER_BUILD_RECORD_UPLOAD: false
 
   gateway:
     runs-on: ubuntu-24.04
@@ -190,6 +195,7 @@ jobs:
         uses: dtolnay/rust-toolchain@b3b07ba8b418998c39fb20f53e8b695cdcc8de1b
         with:
           toolchain: "1.93.0"
+          targets: wasm32-unknown-unknown
 
       - name: Install pnpm
         uses: pnpm/action-setup@c5ba7f7862a0f64c1b1a05fbac13e0b8e86ba08c
@@ -290,6 +296,9 @@ jobs:
                   ;;
                 *marketing*)
                   EXTRA_SETS+=(--set-string app.name=marketing --set-string "app.tag=${HELM_TEST_BUILD_VERSION}" --set-string app.config=stable --set-string "app.build.version=${HELM_TEST_BUILD_VERSION}")
+                  ;;
+                *docs*)
+                  EXTRA_SETS+=(--set-string app.name=docs --set-string "app.tag=${HELM_TEST_BUILD_VERSION}" --set-string app.config=stable --set-string "app.build.version=${HELM_TEST_BUILD_VERSION}")
                   ;;
                 *media-proxy*)
                   EXTRA_SETS+=(--set-string "mediaProxy.tag=${HELM_TEST_BUILD_VERSION}" --set-string "staticProxy.tag=${HELM_TEST_BUILD_VERSION}" --set-string "mediaProxy.build.version=${HELM_TEST_BUILD_VERSION}" --set-string "staticProxy.build.version=${HELM_TEST_BUILD_VERSION}")

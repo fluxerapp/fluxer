@@ -2,7 +2,7 @@
 
 import {defineErrorI18nLocaleMessages} from '../ErrorI18nMessages';
 
-export const ERROR_I18N_ZH_CN_MESSAGES = defineErrorI18nLocaleMessages({
+const ERROR_I18N_ZH_CN_MESSAGES = defineErrorI18nLocaleMessages({
 	"account.already_verified": "你的账号已验证。",
 	"account.communication_disabled": "通信已禁用。",
 	"account.disabled": "此账号已被禁用。",
