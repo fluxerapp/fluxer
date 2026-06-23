@@ -30,7 +30,12 @@ describe('Email verification flow', () => {
 		await harness?.shutdown();
 	});
 	it('allows resending verification email and verifying email', async () => {
-		const account = await createTestAccount(harness);
+		const account = await createTestAccount(harness, {skipEmailVerification: true});
+		await createBuilderWithoutAuth(harness)
+			.post(`/test/users/${account.userId}/security-flags`)
+			.body({email_verified: false})
+			.expect(200)
+			.execute();
 		await createBuilder(harness, account.token).post('/auth/verify/resend').body({}).expect(204).execute();
 		const emails = await listTestEmails(harness, {recipient: account.email});
 		const verificationEmail = findLastTestEmail(emails, 'email_verification');

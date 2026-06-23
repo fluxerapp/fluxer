@@ -1,13 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import type {LimitKey} from '@fluxer/constants/src/LimitConfigMetadata';
 import {LIMIT_KEYS} from '@fluxer/constants/src/LimitConfigMetadata';
+import {MAX_GUILD_MEMBERS_VERY_LARGE_GUILD} from '@fluxer/constants/src/LimitConstants';
 import {DEFAULT_RESTRICTED_LIMITS, DEFAULT_STOCK_LIMITS} from '@fluxer/limits/src/LimitDefaults';
 import type {LimitConfigSnapshot, LimitRule} from '@fluxer/limits/src/LimitTypes';
 
 const LIMIT_RULE_IDS = {
 	DEFAULT: 'default',
 	HOSTED_UPGRADE: 'premium',
+	VERY_LARGE_GUILD: 'very_large_guild',
 } as const;
 
 export interface CachedLimitConfig {
@@ -73,11 +76,21 @@ export function createDefaultLimitConfig(options?: {
 						id: LIMIT_RULE_IDS.DEFAULT,
 						limits: {...DEFAULT_RESTRICTED_LIMITS},
 					},
+					{
+						id: LIMIT_RULE_IDS.VERY_LARGE_GUILD,
+						filters: {guildFeatures: [GuildFeatures.VERY_LARGE_GUILD]},
+						limits: {max_guild_members: MAX_GUILD_MEMBERS_VERY_LARGE_GUILD},
+					},
 				]
 			: [
 					{
 						id: LIMIT_RULE_IDS.DEFAULT,
 						limits: {...DEFAULT_STOCK_LIMITS},
+					},
+					{
+						id: LIMIT_RULE_IDS.VERY_LARGE_GUILD,
+						filters: {guildFeatures: [GuildFeatures.VERY_LARGE_GUILD]},
+						limits: {max_guild_members: MAX_GUILD_MEMBERS_VERY_LARGE_GUILD},
 					},
 				],
 	};

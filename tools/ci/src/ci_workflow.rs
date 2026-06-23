@@ -51,6 +51,7 @@ pub async fn run_ci(args: CiArgs) -> Result<()> {
         CiStep::Typecheck => {
             ensure_desktop_build_channel_file(&root)?;
             run_generators(&root, true)?;
+            run_app_test_artifact_generators(&root)?;
             run_command(
                 CommandSpec::new("pnpm")
                     .args(["-r", "--if-present", "typecheck"])
@@ -59,6 +60,7 @@ pub async fn run_ci(args: CiArgs) -> Result<()> {
         }
         CiStep::Test => {
             run_generators(&root, false)?;
+            run_app_test_artifact_generators(&root)?;
             run_workspace_tests(&root)?;
             run_command(with_test_env(
                 CommandSpec::new("pnpm")
@@ -67,22 +69,9 @@ pub async fn run_ci(args: CiArgs) -> Result<()> {
             ))
         }
         CiStep::Knip => {
-            run_command(
-                CommandSpec::new("pnpm")
-                    .args(["--filter", "fluxer_app", "wasm:codegen"])
-                    .current_dir(&root),
-            )?;
-            run_command(
-                CommandSpec::new("pnpm")
-                    .args(["--filter", "fluxer_app", "generate:masks"])
-                    .current_dir(&root),
-            )?;
+            run_app_test_artifact_generators(&root)?;
             ensure_desktop_build_channel_file(&root)?;
-            run_command(
-                CommandSpec::new("pnpm")
-                    .args(["--filter", "fluxer_app", "i18n:compile"])
-                    .current_dir(&root),
-            )?;
+            run_fluxer_app_script(&root, "i18n:compile")?;
             run_command(
                 CommandSpec::new("pnpm")
                     .args(["exec", "knip"])
@@ -107,6 +96,19 @@ pub async fn run_ci(args: CiArgs) -> Result<()> {
 fn ensure_desktop_build_channel_file(root: &Path) -> Result<()> {
     let channel = env::var("BUILD_CHANNEL").unwrap_or_else(|_| "stable".to_string());
     write_build_channel_file(&root.join("fluxer_desktop"), &channel)
+}
+
+fn run_app_test_artifact_generators(root: &Path) -> Result<()> {
+    run_fluxer_app_script(root, "wasm:codegen")?;
+    run_fluxer_app_script(root, "generate:masks")
+}
+
+fn run_fluxer_app_script(root: &Path, script: &str) -> Result<()> {
+    run_command(
+        CommandSpec::new("pnpm")
+            .args(["--filter", "fluxer_app", script])
+            .current_dir(root),
+    )
 }
 
 pub async fn run_ci_scripts(args: CiScriptsArgs) -> Result<()> {
