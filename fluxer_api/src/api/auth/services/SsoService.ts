@@ -264,11 +264,11 @@ export class SsoService {
 		const codeVerifier = randomBase64UrlToken(CODE_VERIFIER_BYTE_LENGTH);
 		const codeChallenge = buildCodeChallenge(codeVerifier);
 		const nonce = randomBase64UrlToken(NONCE_BYTE_LENGTH);
-		let redirect_uri = sanitizeSsoRedirectTo(redirectTo) ?? config.redirectUri;
+		const redirectUri = sanitizeSsoRedirectTo(redirectTo) ?? config.redirectUri;
 		const statePayload: SsoStatePayload = {
 			codeVerifier,
 			nonce,
-			redirectTo: redirect_uri,
+			redirectTo: redirectUri,
 			createdAt: Date.now(),
 		};
 		const {cache} = this.apiContext.services;
@@ -276,7 +276,7 @@ export class SsoService {
 		const searchParams = new URLSearchParams({
 			response_type: 'code',
 			client_id: config.clientId ?? '',
-			redirect_uri: redirect_uri,
+			redirect_uri: redirectUri,
 			scope: config.scope,
 			state,
 			code_challenge: codeChallenge,
@@ -298,7 +298,7 @@ export class SsoService {
 				throw new FeatureTemporarilyDisabledError();
 			}
 		}
-		return {authorization_url: authorizationUrlString, state, redirect_uri: redirect_uri};
+		return {authorization_url: authorizationUrlString, state, redirect_uri: redirectUri};
 	}
 
 	async completeLogin({code, state, request}: {code: string; state: string; request: Request}): Promise<{
