@@ -417,7 +417,9 @@ handle_resume_offline_timeout({resume_offline_timeout, _Token}, State) ->
 handle_resume_offline_timeout(_Msg, State) ->
     {noreply, State}.
 
--spec notify_presence_on_resume(session_state(), session_id(), status(), boolean(), boolean(), [map()]) ->
+-spec notify_presence_on_resume(
+    session_state(), session_id(), status(), boolean(), boolean(), [map()]
+) ->
     ok.
 notify_presence_on_resume(#{presence_pid := undefined}, _Sid, _St, _Afk, _Mob, _Acts) ->
     ok;
@@ -427,7 +429,9 @@ notify_presence_on_resume(#{presence_pid := Pid}, SessionId, Status, Afk, Mobile
     end),
     ok.
 
--spec notify_presence_on_resume_worker(pid(), session_id(), status(), boolean(), boolean(), [map()]) ->
+-spec notify_presence_on_resume_worker(
+    pid(), session_id(), status(), boolean(), boolean(), [map()]
+) ->
     ok.
 notify_presence_on_resume_worker(Pid, SessionId, Status, Afk, Mobile, Activities) ->
     try
@@ -457,7 +461,12 @@ handle_presence_update_cast(Update, State) ->
     NewActivities = maps:get(activities, Update, maps:get(activities, State, [])),
     NewState = maybe_update_resume_status(
         NewStatus,
-        State#{status => NewStatus, afk => NewAfk, mobile => NewMobile, activities => NewActivities}
+        State#{
+            status => NewStatus,
+            afk => NewAfk,
+            mobile => NewMobile,
+            activities => NewActivities
+        }
     ),
     send_presence_update(State, SessionId, NewStatus, NewAfk, NewMobile, Update),
     {noreply, NewState}.
@@ -476,7 +485,10 @@ send_presence_update(#{presence_pid := undefined}, _Sid, _St, _Afk, _Mob, _Upd) 
     ok;
 send_presence_update(#{presence_pid := Pid}, SessionId, NewStatus, NewAfk, NewMobile, Update) ->
     BaseMsg = #{
-        session_id => SessionId, status => NewStatus, afk => NewAfk, mobile => NewMobile
+        session_id => SessionId,
+        status => NewStatus,
+        afk => NewAfk,
+        mobile => NewMobile
     },
     Msg0 =
         case maps:find(activities, Update) of
