@@ -167,9 +167,7 @@ user_nickname(UserId0, UserNicknames) when is_map(UserNicknames) ->
     case user_id_binary(UserId0) of
         Id when is_binary(Id) -> maps:get(Id, UserNicknames, undefined);
         undefined -> undefined
-    end;
-user_nickname(_UserId0, _UserNicknames) ->
-    undefined.
+    end.
 
 -spec user_id_binary(term()) -> binary() | undefined.
 user_id_binary(UserId) when is_integer(UserId), UserId > 0 ->
@@ -266,9 +264,7 @@ channel_names_from_guild_data(ChannelIds, GuildData) when is_map(GuildData) ->
         fun(ChannelId, Acc) -> put_index_channel_name(ChannelId, ChannelIndex, Acc) end,
         #{},
         ChannelIds
-    );
-channel_names_from_guild_data(_ChannelIds, _GuildData) ->
-    #{}.
+    ).
 
 -spec put_index_channel_name(integer(), map(), map()) -> map().
 put_index_channel_name(ChannelId, ChannelIndex, Acc) ->

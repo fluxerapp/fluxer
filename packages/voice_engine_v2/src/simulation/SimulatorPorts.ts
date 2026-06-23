@@ -33,7 +33,7 @@ import type {
 import type {VoiceEngineV2ClockPort, VoiceEngineV2RandomPort} from '../runtime/platformPort';
 
 const SIMULATOR_CLOCK_MAX_NS = 1_000_000_000_000;
-export const SIMULATOR_NS_PER_MS = 1_000_000;
+const SIMULATOR_NS_PER_MS = 1_000_000;
 const SIMULATOR_RANDOM_MULTIPLIER = 0x5deece66d;
 const SIMULATOR_RANDOM_INCREMENT = 0xbn;
 const SIMULATOR_RANDOM_MASK = (1n << 48n) - 1n;

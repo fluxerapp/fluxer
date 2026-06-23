@@ -2,7 +2,7 @@
 
 import {defineEmailI18nLocaleMessages} from '../EmailI18nMessages';
 
-export const EMAIL_I18N_KO_MESSAGES = defineEmailI18nLocaleMessages({
+const EMAIL_I18N_KO_MESSAGES = defineEmailI18nLocaleMessages({
 	"account_disabled_suspicious": {
 		"subject": "{product_name} 계정이 일시적으로 비활성화되었어요",
 		"body": "안녕하세요, {username}님.\n\n의심스러운 활동이 감지되어 {product_name} 계정을 일시적으로 비활성화했어요.\n\n{reason, select,\n  null {}\n  other {사유: {reason}}\n}\n\n계정에 다시 액세스하려면 비밀번호를 재설정해야 해요:\n\n{forgotUrl}\n\n비밀번호를 재설정한 후 다시 로그인할 수 있어요.\n\n실수로 비활성화되었다고 생각되면 고객지원팀에 문의해 주세요.\n\n– {product_name} 안전팀"

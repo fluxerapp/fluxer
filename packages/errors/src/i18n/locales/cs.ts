@@ -2,7 +2,7 @@
 
 import {defineErrorI18nLocaleMessages} from '../ErrorI18nMessages';
 
-export const ERROR_I18N_CS_MESSAGES = defineErrorI18nLocaleMessages({
+const ERROR_I18N_CS_MESSAGES = defineErrorI18nLocaleMessages({
 	"account.already_verified": "Tvůj účet je již ověřen.",
 	"account.communication_disabled": "Komunikace je zakázána.",
 	"account.disabled": "Tento účet byl deaktivován.",

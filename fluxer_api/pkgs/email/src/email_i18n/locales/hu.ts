@@ -2,7 +2,7 @@
 
 import {defineEmailI18nLocaleMessages} from '../EmailI18nMessages';
 
-export const EMAIL_I18N_HU_MESSAGES = defineEmailI18nLocaleMessages({
+const EMAIL_I18N_HU_MESSAGES = defineEmailI18nLocaleMessages({
 	"account_disabled_suspicious": {
 		"subject": "A {product_name} fiókodat ideiglenesen letiltottuk",
 		"body": "Szia {username},\n\nIdeiglenesen letiltottuk a {product_name} fiókodat, mert gyanús tevékenységet észleltünk.\n\n{reason, select,\n  null {}\n  other {Indok: {reason}}\n}\n\nA fiókodhoz való hozzáférés visszaszerzéséhez vissza kell állítanod a jelszavadat:\n\n{forgotUrl}\n\nA jelszó visszaállítása után újra be tudsz jelentkezni.\n\nHa úgy gondolod, hogy ez tévedésből történt, vedd fel a kapcsolatot a támogatási csapatunkkal.\n\n– {product_name} Biztonsági Csapat"

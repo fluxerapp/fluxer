@@ -2,7 +2,7 @@
 
 import {defineEmailI18nLocaleMessages} from '../EmailI18nMessages';
 
-export const EMAIL_I18N_ID_MESSAGES = defineEmailI18nLocaleMessages({
+const EMAIL_I18N_ID_MESSAGES = defineEmailI18nLocaleMessages({
 	"account_disabled_suspicious": {
 		"subject": "Akun {product_name}mu telah dinonaktifkan sementara",
 		"body": "Halo {username},\n\nKami menonaktifkan sementara akun {product_name}mu karena kami mendeteksi aktivitas mencurigakan.\n\n{reason, select,\n  null {}\n  other {Alasan: {reason}}\n}\n\nUntuk mendapatkan kembali akses ke akunmu, kamu perlu mengatur ulang kata sandimu:\n\n{forgotUrl}\n\nSetelah kamu mengatur ulang kata sandimu, kamu akan bisa masuk lagi.\n\nKalau kamu merasa ini salah, hubungi tim dukungan kami.\n\n– Tim Keamanan {product_name}"

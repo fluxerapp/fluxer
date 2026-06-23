@@ -2,7 +2,7 @@
 
 import {defineErrorI18nLocaleMessages} from '../ErrorI18nMessages';
 
-export const ERROR_I18N_LT_MESSAGES = defineErrorI18nLocaleMessages({
+const ERROR_I18N_LT_MESSAGES = defineErrorI18nLocaleMessages({
 	"account.already_verified": "Tavo paskyra jau patvirtinta.",
 	"account.communication_disabled": "Bendravimas išjungtas.",
 	"account.disabled": "Ši paskyra buvo išjungta.",

@@ -2,7 +2,7 @@
 
 import {defineEmailI18nLocaleMessages} from '../EmailI18nMessages';
 
-export const EMAIL_I18N_ZH_CN_MESSAGES = defineEmailI18nLocaleMessages({
+const EMAIL_I18N_ZH_CN_MESSAGES = defineEmailI18nLocaleMessages({
 	"account_disabled_suspicious": {
 		"subject": "你的 {product_name} 账号已被暂时禁用",
 		"body": "你好 {username}，\n\n我们检测到你的 {product_name} 账号存在可疑活动，因此暂时禁用了你的账号。\n\n{reason, select,\n  null {}\n  other {原因： {reason}}\n}\n\n要重新获得账号访问权限，你需要重置密码：\n\n{forgotUrl}\n\n重置密码后，你将能够再次登录。\n\n如果你认为这是误操作，请联系我们的支持团队。\n\n– {product_name} 安全团队"
