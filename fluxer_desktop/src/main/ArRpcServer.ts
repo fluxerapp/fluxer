@@ -34,20 +34,11 @@ let socketIdCounter = 0;
 let connectedIpcClients = 0;
 const activityEmitter = new EventEmitter();
 
-export function getConnectedIpcClientCount(): number {
-	return connectedIpcClients;
-}
-
 export function onRpcActivity(
 	listener: (activity: RpcActivityPayload | null, pid?: number, source?: 'ipc' | 'process-scan') => void,
 ): () => void {
 	activityEmitter.on('activity', listener);
 	return () => activityEmitter.off('activity', listener);
-}
-
-export function onIpcClientCountChange(listener: (count: number) => void): () => void {
-	activityEmitter.on('ipc-clients-changed', listener);
-	return () => activityEmitter.off('ipc-clients-changed', listener);
 }
 
 function notifyIpcClientCountChanged(): void {
@@ -315,8 +306,4 @@ export async function stopArRpcServer(): Promise<void> {
 			unlinkSync(path);
 		} catch {}
 	}
-}
-
-export function emitSyntheticActivity(activity: RpcActivityPayload | null, pid?: number): void {
-	emitActivity(activity, pid, 'process-scan');
 }

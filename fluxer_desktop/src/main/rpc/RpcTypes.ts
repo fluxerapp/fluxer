@@ -26,13 +26,6 @@ export interface RpcActivityPayload {
 	pid?: number;
 }
 
-export interface RpcActivityUpdatePayload {
-	activity: RpcActivityPayload | null;
-	pid?: number;
-	receivedAt?: number;
-	source: 'ipc' | 'process-scan';
-}
-
 export interface SetActivityArgs {
 	pid?: number;
 	activity: Record<string, unknown> | null;

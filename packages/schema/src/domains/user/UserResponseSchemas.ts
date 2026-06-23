@@ -257,16 +257,14 @@ export const CustomStatusResponse = z.object({
 
 export type CustomStatusResponse = z.infer<typeof CustomStatusResponse>;
 
-export const UserActivityTimestamps = z
+const UserActivityTimestamps = z
 	.object({
 		start: z.number().int().optional().describe('Unix timestamp in seconds when the activity started'),
 		end: z.number().int().optional().describe('Unix timestamp in seconds when the activity ends'),
 	})
 	.describe('Activity timestamp metadata');
 
-export type UserActivityTimestamps = z.infer<typeof UserActivityTimestamps>;
-
-export const UserActivityAssets = z
+const UserActivityAssets = z
 	.object({
 		large_image: z.string().max(256).optional(),
 		large_text: z.string().max(128).optional(),
@@ -274,8 +272,6 @@ export const UserActivityAssets = z
 		small_text: z.string().max(128).optional(),
 	})
 	.describe('Activity image assets');
-
-export type UserActivityAssets = z.infer<typeof UserActivityAssets>;
 
 export const UserActivitySchema = z.object({
 	name: z.string().max(128).describe('Activity name, usually the application or media title'),
