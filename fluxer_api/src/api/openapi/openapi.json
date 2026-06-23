@@ -26323,7 +26323,7 @@
 				"properties": {
 					"authorization_url": {"type": "string", "description": "URL to redirect user to for SSO authentication"},
 					"state": {"type": "string", "description": "State parameter for CSRF protection"},
-					"redirect_uri": {"type": "string", "description": "Redirect URI after SSO completion"}
+					"redirect_uri": {"type": "string", "description": "OAuth redirect URI used for the SSO provider callback"}
 				},
 				"required": ["authorization_url", "state", "redirect_uri"]
 			},
@@ -26333,6 +26333,10 @@
 					"redirect_to": {
 						"anyOf": [{"type": "string"}, {"type": "null"}],
 						"description": "URL to redirect to after SSO completion"
+					},
+					"redirect_uri": {
+						"anyOf": [{"type": "string"}, {"type": "null"}],
+						"description": "OAuth redirect URI to use for the SSO provider callback"
 					}
 				}
 			},
