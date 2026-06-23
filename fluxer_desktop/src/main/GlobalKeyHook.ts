@@ -309,10 +309,7 @@ async function startEvdevBackend(): Promise<boolean> {
 	if (!ok || !evdev) {
 		return false;
 	}
-	evdev.on('key', (event: EvdevKeyEvent) => dispatchKeyEvent({
-		...event,
-		keyName: event.keyName ?? keycodeToKeyName(event.keycode ?? 0)
-	}));
+	evdev.on('key', (event: EvdevKeyEvent) => dispatchKeyEvent(event));
 	evdev.on('mouse', (event: EvdevMouseEvent) => dispatchMouseEvent(event));
 	logger.info('Global key hook running on evdev backend (Linux)');
 	return true;
