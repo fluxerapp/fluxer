@@ -17,7 +17,6 @@ defaults:
     shell: bash
 
 env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
   SOURCE_BRANCH: automation/i18n-source-catalogs
   GH_TOKEN: ${{ github.token }}
 

@@ -178,7 +178,7 @@ pub struct InstanceMediaResponse {
     pub attachment_decay: InstanceAttachmentDecayResponse,
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct InstanceAttachmentDecayResponse {
     pub enabled: Option<bool>,
     pub min_size_mb: Option<f64>,
@@ -191,23 +191,6 @@ pub struct InstanceAttachmentDecayResponse {
     pub renew_window_days: Option<u32>,
     #[serde(default)]
     pub effective: InstanceAttachmentDecayEffectiveResponse,
-}
-
-impl Default for InstanceAttachmentDecayResponse {
-    fn default() -> Self {
-        Self {
-            enabled: None,
-            min_size_mb: None,
-            max_size_mb: None,
-            max_eligible_size_mb: None,
-            min_lifetime_days: None,
-            max_lifetime_days: None,
-            curve: None,
-            renew_threshold_days: None,
-            renew_window_days: None,
-            effective: InstanceAttachmentDecayEffectiveResponse::default(),
-        }
-    }
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -297,7 +280,7 @@ impl PremiumMode {
     }
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct AppPublicConfigResponse {
     #[serde(default)]
     pub branding: AppBrandingConfigResponse,
@@ -307,17 +290,6 @@ pub struct AppPublicConfigResponse {
     pub legal: AppLegalConfigResponse,
     #[serde(default)]
     pub registration: AppRegistrationConfigResponse,
-}
-
-impl Default for AppPublicConfigResponse {
-    fn default() -> Self {
-        Self {
-            branding: AppBrandingConfigResponse::default(),
-            setup: AppSetupConfigResponse::default(),
-            legal: AppLegalConfigResponse::default(),
-            registration: AppRegistrationConfigResponse::default(),
-        }
-    }
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]

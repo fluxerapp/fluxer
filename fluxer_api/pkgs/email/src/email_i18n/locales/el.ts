@@ -2,7 +2,7 @@
 
 import {defineEmailI18nLocaleMessages} from '../EmailI18nMessages';
 
-export const EMAIL_I18N_EL_MESSAGES = defineEmailI18nLocaleMessages({
+const EMAIL_I18N_EL_MESSAGES = defineEmailI18nLocaleMessages({
 	"account_disabled_suspicious": {
 		"subject": "Ο λογαριασμός σου στο {product_name} έχει απενεργοποιηθεί προσωρινά",
 		"body": "Γεια σου {username},\n\nΑπενεργοποιήσαμε προσωρινά τον λογαριασμό σου στο {product_name} επειδή εντοπίσαμε ύποπτη δραστηριότητα.\n\n{reason, select,\n  null {}\n  other {Λόγος: {reason}}\n}\n\nΓια να αποκτήσεις ξανά πρόσβαση στον λογαριασμό σου, θα πρέπει να επαναφέρεις τον κωδικό πρόσβασής σου:\n\n{forgotUrl}\n\nΑφού επαναφέρεις τον κωδικό πρόσβασής σου, θα μπορείς να συνδεθείς ξανά.\n\nΕάν πιστεύεις ότι αυτό έγινε κατά λάθος, επικοινώνησε με την ομάδα υποστήριξής μας.\n\n– Ομάδα Ασφαλείας {product_name}"

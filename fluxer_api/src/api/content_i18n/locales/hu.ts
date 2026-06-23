@@ -2,7 +2,7 @@
 
 import {defineContentI18nLocaleMessages} from '../ContentI18nMessages';
 
-export const CONTENT_I18N_HU_MESSAGES = defineContentI18nLocaleMessages({
+const CONTENT_I18N_HU_MESSAGES = defineContentI18nLocaleMessages({
 	"billing.eu_withdrawal_waiver_checkout": "Ha EU/EGT-fogyasztó vagyok, kifejezetten hozzájárulok ahhoz, hogy a {product_name} {premium_tier_name} digitális tartalmat azonnal biztosítsák, és tudomásul veszem, hogy a hozzáférés megadásával elveszítem a törvényes elállási jogomat. Ez nem érinti a többi kötelező fogyasztói jogot. Lásd a [Felhasználási feltételeket]({terms_url}).",
 	"bulk_message_deletion.complete": "Befejeztük az üzeneteid törlését. Eltávolítottunk {message_count, plural, =0 {0 üzenetet} one {# üzenetet} other {# üzenetet}} {channel_count, plural, =0 {0 helyről} one {# helyről} other {# helyről}}.",
 	"content.virus_detected": "A fájl potenciálisan veszélyesnek minősült, ezért eltávolítottuk.",

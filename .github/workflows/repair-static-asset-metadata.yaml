@@ -10,9 +10,6 @@ on:
         required: false
         default: "assets/"
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
-
 jobs:
   repair:
     runs-on: ubuntu-24.04
