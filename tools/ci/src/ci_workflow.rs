@@ -49,6 +49,7 @@ pub async fn run_ci(args: CiArgs) -> Result<()> {
                 .current_dir(root),
         ),
         CiStep::Typecheck => {
+            ensure_desktop_build_channel_file(&root)?;
             run_generators(&root, true)?;
             run_command(
                 CommandSpec::new("pnpm")
@@ -76,8 +77,7 @@ pub async fn run_ci(args: CiArgs) -> Result<()> {
                     .args(["--filter", "fluxer_app", "generate:masks"])
                     .current_dir(&root),
             )?;
-            let channel = env::var("BUILD_CHANNEL").unwrap_or_else(|_| "stable".to_string());
-            write_build_channel_file(&root.join("fluxer_desktop"), &channel)?;
+            ensure_desktop_build_channel_file(&root)?;
             run_command(
                 CommandSpec::new("pnpm")
                     .args(["--filter", "fluxer_app", "i18n:compile"])
@@ -102,6 +102,11 @@ pub async fn run_ci(args: CiArgs) -> Result<()> {
             run_gateway_step(&root.join("fluxer_gateway"), GatewayStep::Eunit, "test")
         }
     }
+}
+
+fn ensure_desktop_build_channel_file(root: &Path) -> Result<()> {
+    let channel = env::var("BUILD_CHANNEL").unwrap_or_else(|_| "stable".to_string());
+    write_build_channel_file(&root.join("fluxer_desktop"), &channel)
 }
 
 pub async fn run_ci_scripts(args: CiScriptsArgs) -> Result<()> {
