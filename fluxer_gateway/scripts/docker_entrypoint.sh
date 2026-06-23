@@ -13,4 +13,4 @@ export FLUXER_ERLANG_COOKIE
 export FLUXER_ERLANG_DIST_PORT
 export RELX_REPLACE_OS_VARS="${RELX_REPLACE_OS_VARS:-true}"
 
-exec /opt/fluxer_gateway/bin/fluxer_gateway foreground >/dev/null 2>&1
+exec /opt/fluxer_gateway/bin/fluxer_gateway foreground
