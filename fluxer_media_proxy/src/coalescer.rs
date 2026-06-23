@@ -25,6 +25,24 @@ pub struct ByteCoalescer {
     in_flight: Mutex<HashMap<String, Arc<Slot>>>,
 }
 
+struct CleanupGuard<'a> {
+    in_flight: &'a Mutex<HashMap<String, Arc<Slot>>>,
+    key: &'a str,
+    slot: &'a Arc<Slot>,
+    completed: bool,
+}
+
+impl Drop for CleanupGuard<'_> {
+    fn drop(&mut self) {
+        if !self.completed {
+            self.in_flight.lock().remove(self.key);
+            let mut state = self.slot.state.lock();
+            *state = Some(Err(CoalescerError::WorkFailed));
+            self.slot.notify.notify_waiters();
+        }
+    }
+}
+
 impl ByteCoalescer {
     pub fn new() -> Self {
         Self::default()
@@ -71,24 +89,6 @@ impl ByteCoalescer {
             crate::metrics::GLOBAL
                 .coalescer_leader
                 .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-
-            struct CleanupGuard<'a> {
-                in_flight: &'a Mutex<HashMap<String, Arc<Slot>>>,
-                key: &'a str,
-                slot: &'a Arc<Slot>,
-                completed: bool,
-            }
-
-            impl Drop for CleanupGuard<'_> {
-                fn drop(&mut self) {
-                    if !self.completed {
-                        self.in_flight.lock().remove(self.key);
-                        let mut state = self.slot.state.lock();
-                        *state = Some(Err(CoalescerError::WorkFailed));
-                        self.slot.notify.notify_waiters();
-                    }
-                }
-            }
 
             let mut guard = CleanupGuard {
                 in_flight: &self.in_flight,
