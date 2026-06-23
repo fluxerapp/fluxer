@@ -40,9 +40,7 @@ channel_index(Data) when is_map(Data) ->
 channel_index(_) ->
     #{}.
 
--spec put_channels
-    (term(), guild_data()) -> guild_data();
-    (term(), term()) -> term().
+-spec put_channels(term(), term()) -> term().
 put_channels(Channels, Data) when is_map(Data) ->
     ChannelList = lists:filtermap(
         fun normalize_channel_item/1,

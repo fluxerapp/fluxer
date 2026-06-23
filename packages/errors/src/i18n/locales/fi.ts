@@ -2,7 +2,7 @@
 
 import {defineErrorI18nLocaleMessages} from '../ErrorI18nMessages';
 
-export const ERROR_I18N_FI_MESSAGES = defineErrorI18nLocaleMessages({
+const ERROR_I18N_FI_MESSAGES = defineErrorI18nLocaleMessages({
 	"account.already_verified": "Tilisi on jo vahvistettu.",
 	"account.communication_disabled": "Viestintä on poistettu käytöstä.",
 	"account.disabled": "Tämä tili on poistettu käytöstä.",

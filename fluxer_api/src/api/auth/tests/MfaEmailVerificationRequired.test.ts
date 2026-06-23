@@ -22,8 +22,17 @@ describe('MFA requires verified email', () => {
 	afterAll(async () => {
 		await harness?.shutdown();
 	});
-	it('rejects TOTP enablement for unverified accounts', async () => {
+	async function createUnverifiedAccount() {
 		const account = await createTestAccount(harness, {skipEmailVerification: true});
+		await createBuilder(harness, '')
+			.post(`/test/users/${account.userId}/security-flags`)
+			.body({email_verified: false})
+			.expect(200)
+			.execute();
+		return account;
+	}
+	it('rejects TOTP enablement for unverified accounts', async () => {
+		const account = await createUnverifiedAccount();
 		const secret = createTotpSecret();
 		const {json} = await createBuilder<ErrorResponse>(harness, account.token)
 			.post('/users/@me/mfa/totp/enable')
@@ -33,7 +42,7 @@ describe('MFA requires verified email', () => {
 		expect(json.code).toBe(APIErrorCodes.MFA_EMAIL_VERIFICATION_REQUIRED);
 	});
 	it('rejects WebAuthn registration setup for unverified accounts', async () => {
-		const account = await createTestAccount(harness, {skipEmailVerification: true});
+		const account = await createUnverifiedAccount();
 		const {json} = await createBuilder<ErrorResponse>(harness, account.token)
 			.post('/users/@me/mfa/webauthn/credentials/registration-options')
 			.body({password: account.password})

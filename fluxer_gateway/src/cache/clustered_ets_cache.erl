@@ -205,11 +205,9 @@ active_nodes_for_role(undefined) ->
 active_nodes_for_role(Role) ->
     gateway_node_router:active_nodes(Role).
 
--spec select_owner_nodes(term(), [node()], pos_integer()) -> [node()].
+-spec select_owner_nodes(term(), [node(), ...], pos_integer()) -> [node()].
 select_owner_nodes(Key, CandidateNodes, ReplicaCount) ->
     case lists:usort(CandidateNodes) of
-        [] ->
-            [];
         [SingleNode] ->
             [SingleNode];
         UniqueNodes when ReplicaCount =:= 1 ->

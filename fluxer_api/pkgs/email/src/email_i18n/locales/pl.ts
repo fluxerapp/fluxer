@@ -2,7 +2,7 @@
 
 import {defineEmailI18nLocaleMessages} from '../EmailI18nMessages';
 
-export const EMAIL_I18N_PL_MESSAGES = defineEmailI18nLocaleMessages({
+const EMAIL_I18N_PL_MESSAGES = defineEmailI18nLocaleMessages({
 	"account_disabled_suspicious": {
 		"subject": "Twoje konto {product_name} zostało tymczasowo wyłączone",
 		"body": "Witaj {username},\n\nTymczasowo wyłączyliśmy Twoje konto {product_name}, ponieważ wykryliśmy podejrzaną aktywność.\n\n{reason, select,\n  null {}\n  other {Powód: {reason}}\n}\n\nAby odzyskać dostęp do konta, musisz zresetować hasło:\n\n{forgotUrl}\n\nPo zresetowaniu hasła będziesz mógł ponownie się zalogować.\n\nJeśli uważasz, że to błąd, skontaktuj się z naszym zespołem wsparcia.\n\n– Zespół Bezpieczeństwa {product_name}"

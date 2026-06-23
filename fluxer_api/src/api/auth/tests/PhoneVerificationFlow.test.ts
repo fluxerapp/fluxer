@@ -187,7 +187,9 @@ describe('Phone verification flow', () => {
 		await allowPhoneVerification(account.userId);
 		const config = getConfig();
 		const previousInboundNumber = config.sms.inboundChallengeNumber;
+		const previousInboundPrefixes = config.abusePolicy.phoneVerification.inboundRequiredPrefixes;
 		config.sms.inboundChallengeNumber = '+15551234567';
+		config.abusePolicy.phoneVerification.inboundRequiredPrefixes = ['+998'];
 		try {
 			const response = await createBuilder<{
 				channel: string;
@@ -207,6 +209,7 @@ describe('Phone verification flow', () => {
 			expect(response.challenge_code).toMatch(/^\d{6}$/);
 		} finally {
 			config.sms.inboundChallengeNumber = previousInboundNumber;
+			config.abusePolicy.phoneVerification.inboundRequiredPrefixes = previousInboundPrefixes;
 		}
 	});
 	it('does not let clients force SMS for inbound-only prefixes', async () => {
@@ -214,7 +217,9 @@ describe('Phone verification flow', () => {
 		await allowPhoneVerification(account.userId);
 		const config = getConfig();
 		const previousInboundNumber = config.sms.inboundChallengeNumber;
+		const previousInboundPrefixes = config.abusePolicy.phoneVerification.inboundRequiredPrefixes;
 		config.sms.inboundChallengeNumber = '+15551234567';
+		config.abusePolicy.phoneVerification.inboundRequiredPrefixes = ['+593'];
 		try {
 			const response = await createBuilder<{
 				channel: string;
@@ -233,6 +238,7 @@ describe('Phone verification flow', () => {
 			});
 		} finally {
 			config.sms.inboundChallengeNumber = previousInboundNumber;
+			config.abusePolicy.phoneVerification.inboundRequiredPrefixes = previousInboundPrefixes;
 		}
 	});
 });

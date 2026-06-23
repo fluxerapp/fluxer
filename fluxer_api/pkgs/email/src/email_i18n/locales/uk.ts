@@ -2,7 +2,7 @@
 
 import {defineEmailI18nLocaleMessages} from '../EmailI18nMessages';
 
-export const EMAIL_I18N_UK_MESSAGES = defineEmailI18nLocaleMessages({
+const EMAIL_I18N_UK_MESSAGES = defineEmailI18nLocaleMessages({
 	"account_disabled_suspicious": {
 		"subject": "Твій акаунт {product_name} тимчасово вимкнено",
 		"body": "Привіт, {username},\n\nМи тимчасово вимкнули твій акаунт {product_name}, оскільки виявили підозрілу активність.\n\n{reason, select,\n  null {}\n  other {Причина: {reason}}\n}\n\nЩоб відновити доступ до акаунту, тобі потрібно скинути пароль:\n\n{forgotUrl}\n\nПісля скидання пароля ти зможеш знову увійти.\n\nЯкщо ти вважаєш, що це помилка, будь ласка, зв'яжися з нашою службою підтримки.\n\n– Команда безпеки {product_name}"
