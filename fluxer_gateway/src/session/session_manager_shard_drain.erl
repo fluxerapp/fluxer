@@ -258,9 +258,7 @@ detach_activities(Activities) when is_list(Activities) ->
     case Detached of
         List when is_list(List) -> [A || A <- List, is_map(A)];
         _ -> null
-    end;
-detach_activities(_) ->
-    null.
+    end.
 
 -spec resolve_custom_status(map(), term()) -> map() | null.
 resolve_custom_status(Data, Presence) ->
