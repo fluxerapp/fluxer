@@ -2,7 +2,7 @@
 
 import {defineErrorI18nLocaleMessages} from '../ErrorI18nMessages';
 
-export const ERROR_I18N_UK_MESSAGES = defineErrorI18nLocaleMessages({
+const ERROR_I18N_UK_MESSAGES = defineErrorI18nLocaleMessages({
 	"account.already_verified": "Твій акаунт уже підтверджено.",
 	"account.communication_disabled": "Спілкування вимкнено.",
 	"account.disabled": "Цей акаунт вимкнено.",

@@ -2,7 +2,7 @@
 
 import {defineErrorI18nLocaleMessages} from '../ErrorI18nMessages';
 
-export const ERROR_I18N_BG_MESSAGES = defineErrorI18nLocaleMessages({
+const ERROR_I18N_BG_MESSAGES = defineErrorI18nLocaleMessages({
 	"account.already_verified": "Акаунтът ти вече е потвърден.",
 	"account.communication_disabled": "Комуникацията е деактивирана.",
 	"account.disabled": "Този акаунт е деактивиран.",

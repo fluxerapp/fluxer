@@ -2,7 +2,7 @@
 
 import {defineEmailI18nLocaleMessages} from '../EmailI18nMessages';
 
-export const EMAIL_I18N_VI_MESSAGES = defineEmailI18nLocaleMessages({
+const EMAIL_I18N_VI_MESSAGES = defineEmailI18nLocaleMessages({
 	"account_disabled_suspicious": {
 		"subject": "Tài khoản {product_name} của bạn đã bị vô hiệu hóa tạm thời",
 		"body": "Xin chào {username},\n\nChúng tôi đã tạm thời vô hiệu hóa tài khoản {product_name} của bạn vì phát hiện hoạt động đáng ngờ.\n\n{reason, select,\n  null {}\n  other {Lý do: {reason}}\n}\n\nĐể truy cập lại tài khoản, bạn cần đặt lại mật khẩu:\n\n{forgotUrl}\n\nSau khi đặt lại mật khẩu, bạn sẽ có thể đăng nhập lại.\n\nNếu bạn cho rằng đây là lỗi, vui lòng liên hệ đội ngũ hỗ trợ của chúng tôi.\n\n– Đội ngũ An toàn {product_name}"

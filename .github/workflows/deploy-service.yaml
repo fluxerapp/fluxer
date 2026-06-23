@@ -80,7 +80,6 @@ on:
         required: false
 
 env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
   GHCR_OWNER: ${{ github.repository_owner }}
   GHCR_REGISTRY: ghcr.io/${{ github.repository_owner }}
 

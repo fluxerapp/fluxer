@@ -2,7 +2,7 @@
 
 import {defineEmailI18nLocaleMessages} from '../EmailI18nMessages';
 
-export const EMAIL_I18N_HE_MESSAGES = defineEmailI18nLocaleMessages({
+const EMAIL_I18N_HE_MESSAGES = defineEmailI18nLocaleMessages({
 	"account_disabled_suspicious": {
 		"subject": "חשבון ה-{product_name} שלך הושבת זמנית",
 		"body": "שלום {username},\n\nחשבון ה-{product_name} שלך הושבת זמנית עקב זיהוי פעילות חשודה.\n\n{reason, select,\n  null {}\n  other {סיבה: {reason}}\n}\n\nכדי לקבל בחזרה גישה לחשבון, יש לאפס את הסיסמה:\n\n{forgotUrl}\n\nלאחר איפוס הסיסמה, ניתן יהיה להתחבר שוב.\n\nאם אתם חושבים שזו טעות, צרו קשר עם צוות התמיכה שלנו.\n\nצוות הבטיחות של {product_name}"
