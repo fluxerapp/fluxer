@@ -247,7 +247,7 @@ maybe_add_activities(Base, Data) ->
                 maps:get(<<"type">>, Activity, -1) =< 5
             ],
             case Valid of
-                [] -> Base;
+                [] -> Base#{<<"activities">> => []};
                 List -> Base#{<<"activities">> => lists:sublist(List, 5)}
             end;
         error -> Base;

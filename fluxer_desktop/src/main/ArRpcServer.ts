@@ -117,7 +117,7 @@ function handleConnectionClose(socket: ExtendedSocket): void {
 		notifyIpcClientCountChanged();
 	}
 	if (connectedIpcClients === 0) {
-		emitActivity(null, socket.lastPid, 'ipc-disconnect');
+		emitActivity(null, undefined, 'ipc-disconnect');
 	}
 }
 

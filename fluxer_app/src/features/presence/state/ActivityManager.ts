@@ -71,6 +71,7 @@ export class ActivityManager {
 	gatewayActivity: UserActivity | null = null;
 	currentSource: ActivitySource | null = null;
 	activityVersion = 0;
+	everHadActivity = false;
 	private readonly sourceActivities = new Map<ActivitySource, Map<string, ActivityEntry>>();
 
 	constructor() {
@@ -107,6 +108,7 @@ export class ActivityManager {
 			gatewayActivity: gatewayActivity ?? activity,
 			updatedAt: Date.now(),
 		});
+		this.everHadActivity = true;
 		this.recomputeActiveActivity();
 	}
 
@@ -138,9 +140,11 @@ export class ActivityManager {
 			this.gatewayActivity === null &&
 			this.currentSource === null
 		) {
+			this.everHadActivity = false;
 			return;
 		}
 		this.sourceActivities.clear();
+		this.everHadActivity = false;
 		this.recomputeActiveActivity();
 	}
 

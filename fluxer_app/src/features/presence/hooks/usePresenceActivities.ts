@@ -32,6 +32,9 @@ function getCurrentUserActivitiesSnapshot(userId: string): Array<UserActivity> {
 	if (localActivities.length > 0) {
 		return localActivities;
 	}
+	if (ActivityManager.everHadActivity) {
+		return EMPTY_ACTIVITIES;
+	}
 	return Presence.getActivities(userId);
 }
 
