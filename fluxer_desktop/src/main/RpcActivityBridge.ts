@@ -151,7 +151,7 @@ export function startRpcActivityBridge(): void {
 			log.info('[RPC] Forwarding activity update', {
 				name: payload.activity?.name ?? null,
 				source: payload.source,
-				coverArt: payload.activity?.assets?.large_image?.slice(0, 32) ?? null,
+				coverArt: payload.activity?.assets?.large_image ?? null,
 			});
 			forwardActivity(payload);
 		})();
