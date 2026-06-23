@@ -43,6 +43,32 @@ export function GuildScheduledEventController(app: HonoApp) {
 		},
 	);
 
+	app.get(
+		'/guilds/:guild_id/scheduled-events/ical',
+		RateLimitMiddleware(RateLimitConfigs.GUILD_SCHEDULED_EVENTS_LIST),
+		LoginRequired,
+		Validator('param', GuildIdParam),
+		OpenAPI({
+			operationId: 'export_guild_scheduled_events_ical',
+			summary: 'Export guild scheduled events as iCalendar',
+			responseSchema: null,
+			statusCode: 200,
+			security: ['botToken', 'bearerToken', 'sessionToken'],
+			tags: ['Guilds'],
+			description:
+				'Returns all scheduled events for a guild as an iCalendar (.ics) file for import into external calendar providers. Requires guild membership.',
+		}),
+		async (ctx) => {
+			const userId = ctx.get('user').id;
+			const guildId = createGuildID(ctx.req.valid('param').guild_id);
+			const ics = await ctx.get('guildService').events.exportCalendar({userId, guildId});
+			return ctx.body(ics, 200, {
+				'Content-Type': 'text/calendar; charset=utf-8',
+				'Content-Disposition': 'attachment; filename="guild-events.ics"',
+			});
+		},
+	);
+
 	app.post(
 		'/guilds/:guild_id/scheduled-events',
 		RateLimitMiddleware(RateLimitConfigs.GUILD_SCHEDULED_EVENT_CREATE),
