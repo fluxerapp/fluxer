@@ -198,7 +198,7 @@ describe('Auth SSO flow', () => {
 					state: startData.state,
 				})
 				.execute();
-			expect(completeData.redirect_to).toBe('');
+			expect(completeData.redirect_to).toBe(startData.redirect_uri);
 		});
 		it('rejects protocol-relative redirects', async () => {
 			const startData = await createBuilderWithoutAuth<SsoStartResponse>(harness)
@@ -213,7 +213,7 @@ describe('Auth SSO flow', () => {
 					state: startData.state,
 				})
 				.execute();
-			expect(completeData.redirect_to).toBe('');
+			expect(completeData.redirect_to).toBe(startData.redirect_uri);
 		});
 		it('rejects redirects with newlines', async () => {
 			const startData = await createBuilderWithoutAuth<SsoStartResponse>(harness)
@@ -228,7 +228,7 @@ describe('Auth SSO flow', () => {
 					state: startData.state,
 				})
 				.execute();
-			expect(completeData.redirect_to).toBe('');
+			expect(completeData.redirect_to).toBe(startData.redirect_uri);
 		});
 		it('rejects too long redirects', async () => {
 			const longRedirect = `/${'a'.repeat(2100)}`;
@@ -251,7 +251,7 @@ describe('Auth SSO flow', () => {
 					state: startData.state,
 				})
 				.execute();
-			expect(completeData.redirect_to.trim()).toBe('');
+			expect(completeData.redirect_to.trim()).toBe(startData.redirect_uri);
 		});
 		it('treats empty redirect as missing', async () => {
 			const startData = await createBuilderWithoutAuth<SsoStartResponse>(harness)
@@ -266,7 +266,7 @@ describe('Auth SSO flow', () => {
 					state: startData.state,
 				})
 				.execute();
-			expect(completeData.redirect_to.trim()).toBe('');
+			expect(completeData.redirect_to.trim()).toBe(startData.redirect_uri);
 		});
 	});
 	describe('state validation', () => {
