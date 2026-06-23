@@ -2,7 +2,7 @@
 
 import {defineEmailI18nLocaleMessages} from '../EmailI18nMessages';
 
-export const EMAIL_I18N_ES_419_MESSAGES = defineEmailI18nLocaleMessages({
+const EMAIL_I18N_ES_419_MESSAGES = defineEmailI18nLocaleMessages({
 	"account_disabled_suspicious": {
 		"subject": "Tu cuenta de {product_name} ha sido deshabilitada temporalmente",
 		"body": "Hola {username}:\n\nDeshabilitamos temporalmente tu cuenta de {product_name} porque detectamos actividad sospechosa.\n\n{reason, select,\n  null {}\n  other {Motivo: {reason}}\n}\n\nPara recuperar el acceso a tu cuenta, deberás restablecer tu contraseña:\n\n{forgotUrl}\n\nDespués de restablecer tu contraseña, podrás iniciar sesión de nuevo.\n\nSi crees que esto fue un error, comunícate con nuestro equipo de soporte.\n\n– Equipo de Seguridad de {product_name}"

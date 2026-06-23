@@ -37,9 +37,7 @@ role_index(Data) when is_map(Data) ->
 role_index(_) ->
     #{}.
 
--spec put_roles
-    (term(), guild_data()) -> guild_data();
-    (term(), term()) -> term().
+-spec put_roles(term(), term()) -> term().
 put_roles(Roles, Data) when is_map(Data) ->
     RoleList = [
         normalize_role(Role)

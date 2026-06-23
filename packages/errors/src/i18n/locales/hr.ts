@@ -2,7 +2,7 @@
 
 import {defineErrorI18nLocaleMessages} from '../ErrorI18nMessages';
 
-export const ERROR_I18N_HR_MESSAGES = defineErrorI18nLocaleMessages({
+const ERROR_I18N_HR_MESSAGES = defineErrorI18nLocaleMessages({
 	"account.already_verified": "Tvoj je račun već potvrđen.",
 	"account.communication_disabled": "Komunikacija je isključena.",
 	"account.disabled": "Ovaj je račun isključen.",

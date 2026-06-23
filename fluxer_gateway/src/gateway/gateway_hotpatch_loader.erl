@@ -89,7 +89,6 @@ beam_module_from_info(Info) ->
 beam_md5(Beam) when is_binary(Beam) ->
     case beam_lib:md5(Beam) of
         {ok, {_Module, Md5}} when is_binary(Md5) -> {ok, Md5};
-        {ok, Md5} when is_binary(Md5) -> {ok, Md5};
         Error -> {error, {beam_md5_failed, Error}}
     end.
 

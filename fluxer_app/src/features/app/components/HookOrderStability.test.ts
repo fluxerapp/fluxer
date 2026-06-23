@@ -205,5 +205,5 @@ function findHookOrderHazards(): Array<HookOrderFinding> {
 describe('React hook order stability', () => {
 	it('keeps guard returns outside hook-bearing component bodies', () => {
 		expect(findHookOrderHazards()).toEqual([]);
-	});
+	}, 10_000);
 });

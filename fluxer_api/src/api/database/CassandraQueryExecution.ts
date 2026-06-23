@@ -51,10 +51,6 @@ export function setCassandraQueryExecutorForTesting(executor: CassandraQueryExec
 	injectedExecutorForTesting = executor;
 }
 
-export function hasCassandraQueryExecutorForTesting(): boolean {
-	return injectedExecutorForTesting !== null;
-}
-
 export function resetCassandraQueryExecutorForTesting(): void {
 	injectedExecutorForTesting?.reset?.();
 }
