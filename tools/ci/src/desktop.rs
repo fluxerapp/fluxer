@@ -378,7 +378,7 @@ fn resolve_desktop_dir() -> Result<PathBuf> {
     ))
 }
 
-fn write_build_channel_file(root: &Path, channel: &str) -> Result<()> {
+pub(crate) fn write_build_channel_file(root: &Path, channel: &str) -> Result<()> {
     ensure!(
         matches!(channel, "stable" | "canary"),
         "Invalid BUILD_CHANNEL: {channel}. Must be 'stable' or 'canary'."
@@ -2703,7 +2703,7 @@ fn write_macos_releases(
         }],
     });
     write_json_pretty(&dest.join("RELEASES.json"), &releases)?;
-    fs::copy(dest.join("RELEASES.json"), dest.join("releases.json"))?;
+    write_json_pretty(&dest.join("releases.json"), &releases)?;
     Ok(())
 }
 

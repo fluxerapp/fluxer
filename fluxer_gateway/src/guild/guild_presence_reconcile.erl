@@ -44,12 +44,12 @@ start_async(State) ->
         UserIds -> spawn_reconcile_fetch(UserIds, self())
     end.
 
--spec spawn_reconcile_fetch([user_id()], pid()) -> ok.
+-spec spawn_reconcile_fetch([user_id(), ...], pid()) -> ok.
 spawn_reconcile_fetch(UserIds, Parent) ->
     _ = spawn(fun() -> fetch_and_reply(UserIds, Parent) end),
     ok.
 
--spec fetch_and_reply([user_id()], pid()) -> ok.
+-spec fetch_and_reply([user_id(), ...], pid()) -> ok.
 fetch_and_reply(UserIds, Parent) ->
     Parent ! {presence_reconcile_apply, authoritative_presence_map(UserIds)},
     ok.
@@ -183,9 +183,7 @@ authoritative_presence(UserId) ->
         exit:_ -> undefined
     end.
 
--spec authoritative_presence_map([user_id()]) -> presence_by_id().
-authoritative_presence_map([]) ->
-    #{};
+-spec authoritative_presence_map([user_id(), ...]) -> presence_by_id().
 authoritative_presence_map(UserIds) ->
     lists:foldl(fun add_presence_to_map/2, #{}, safe_bulk_get(UserIds)).
 
@@ -199,8 +197,7 @@ add_presence_to_map(Presence, Acc) ->
 -spec safe_bulk_get([user_id()]) -> [presence()].
 safe_bulk_get(UserIds) ->
     try presence_cache:bulk_get(UserIds) of
-        Presences when is_list(Presences) -> Presences;
-        _ -> []
+        Presences -> Presences
     catch
         error:_ -> [];
         exit:_ -> []

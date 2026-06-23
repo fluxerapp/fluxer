@@ -2,7 +2,7 @@
 
 import {defineContentI18nLocaleMessages} from '../ContentI18nMessages';
 
-export const CONTENT_I18N_KO_MESSAGES = defineContentI18nLocaleMessages({
+const CONTENT_I18N_KO_MESSAGES = defineContentI18nLocaleMessages({
 	"billing.eu_withdrawal_waiver_checkout": "EU/EEA 소비자로서 {product_name} {premium_tier_name} 디지털 콘텐츠를 즉시 제공받는 데 명시적으로 동의하며, 액세스가 제공된 후에는 법정 철회권을 상실함을 인정합니다. 이는 다른 필수 소비자 권리에 영향을 미치지 않습니다. [서비스 약관]({terms_url})을 확인하세요.",
 	"bulk_message_deletion.complete": "메시지 삭제를 완료했습니다. {channel_count, plural, =0 {0 곳에서} other {# 곳에서}} {message_count, plural, =0 {0 개의 메시지를 삭제했습니다} other {# 개의 메시지를 삭제했습니다}}.",
 	"content.virus_detected": "해당 파일은 잠재적으로 안전하지 않은 것으로 확인되어 삭제되었어요.",

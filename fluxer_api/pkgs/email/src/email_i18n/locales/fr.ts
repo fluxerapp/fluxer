@@ -2,7 +2,7 @@
 
 import {defineEmailI18nLocaleMessages} from '../EmailI18nMessages';
 
-export const EMAIL_I18N_FR_MESSAGES = defineEmailI18nLocaleMessages({
+const EMAIL_I18N_FR_MESSAGES = defineEmailI18nLocaleMessages({
 	"account_disabled_suspicious": {
 		"subject": "Ton compte {product_name} a été temporairement désactivé",
 		"body": "Bonjour {username},\n\nNous avons temporairement désactivé ton compte {product_name} car nous avons détecté une activité suspecte.\n\n{reason, select,\n  null {}\n  other {Raison : {reason}}\n}\n\nPour retrouver l'accès à ton compte, tu devras réinitialiser ton mot de passe :\n\n{forgotUrl}\n\nAprès avoir réinitialisé ton mot de passe, tu pourras te connecter à nouveau.\n\nSi tu penses qu'il s'agit d'une erreur, contacte notre équipe d'assistance.\n\n– Équipe de sécurité de {product_name}"

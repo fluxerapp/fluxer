@@ -34,9 +34,7 @@
 
 -export_type([guild_data/0]).
 
--spec normalize_data
-    (map()) -> guild_data();
-    (term()) -> term().
+-spec normalize_data(term()) -> term().
 normalize_data(Data) when is_map(Data) ->
     Data0 =
         case guild_data_normalize:guild_data(Data) of

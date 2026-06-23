@@ -2,7 +2,7 @@
 
 import {defineEmailI18nLocaleMessages} from '../EmailI18nMessages';
 
-export const EMAIL_I18N_LT_MESSAGES = defineEmailI18nLocaleMessages({
+const EMAIL_I18N_LT_MESSAGES = defineEmailI18nLocaleMessages({
 	"account_disabled_suspicious": {
 		"subject": "Tavo {product_name} paskyra laikinai išjungta",
 		"body": "Sveikas, {username},\n\nLaikinai išjungėme tavo {product_name} paskyrą, nes aptikome įtartiną veiklą.\n\n{reason, select,\n  null {}\n  other {Priežastis: {reason}}\n}\n\nNorėdamas atgauti prieigą prie paskyros, turėsi iš naujo nustatyti slaptažodį:\n\n{forgotUrl}\n\nNustatęs slaptažodį iš naujo, galėsi vėl prisijungti.\n\nJei manai, kad tai įvyko per klaidą, susisiek su mūsų palaikymo komanda.\n\n– {product_name} saugos komanda"

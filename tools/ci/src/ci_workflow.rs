@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::common::{CommandSpec, run_command};
+use crate::desktop::write_build_channel_file;
 use crate::gateway::{GatewayStep, run_gateway_step};
 use anyhow::{Context, Result};
 use clap::{Args, ValueEnum};
@@ -48,7 +49,9 @@ pub async fn run_ci(args: CiArgs) -> Result<()> {
                 .current_dir(root),
         ),
         CiStep::Typecheck => {
+            ensure_desktop_build_channel_file(&root)?;
             run_generators(&root, true)?;
+            run_app_test_artifact_generators(&root)?;
             run_command(
                 CommandSpec::new("pnpm")
                     .args(["-r", "--if-present", "typecheck"])
@@ -57,6 +60,7 @@ pub async fn run_ci(args: CiArgs) -> Result<()> {
         }
         CiStep::Test => {
             run_generators(&root, false)?;
+            run_app_test_artifact_generators(&root)?;
             run_workspace_tests(&root)?;
             run_command(with_test_env(
                 CommandSpec::new("pnpm")
@@ -65,11 +69,9 @@ pub async fn run_ci(args: CiArgs) -> Result<()> {
             ))
         }
         CiStep::Knip => {
-            run_command(
-                CommandSpec::new("pnpm")
-                    .args(["--filter", "fluxer_app", "i18n:compile"])
-                    .current_dir(&root),
-            )?;
+            run_app_test_artifact_generators(&root)?;
+            ensure_desktop_build_channel_file(&root)?;
+            run_fluxer_app_script(&root, "i18n:compile")?;
             run_command(
                 CommandSpec::new("pnpm")
                     .args(["exec", "knip"])
@@ -89,6 +91,24 @@ pub async fn run_ci(args: CiArgs) -> Result<()> {
             run_gateway_step(&root.join("fluxer_gateway"), GatewayStep::Eunit, "test")
         }
     }
+}
+
+fn ensure_desktop_build_channel_file(root: &Path) -> Result<()> {
+    let channel = env::var("BUILD_CHANNEL").unwrap_or_else(|_| "stable".to_string());
+    write_build_channel_file(&root.join("fluxer_desktop"), &channel)
+}
+
+fn run_app_test_artifact_generators(root: &Path) -> Result<()> {
+    run_fluxer_app_script(root, "wasm:codegen")?;
+    run_fluxer_app_script(root, "generate:masks")
+}
+
+fn run_fluxer_app_script(root: &Path, script: &str) -> Result<()> {
+    run_command(
+        CommandSpec::new("pnpm")
+            .args(["--filter", "fluxer_app", script])
+            .current_dir(root),
+    )
 }
 
 pub async fn run_ci_scripts(args: CiScriptsArgs) -> Result<()> {
@@ -223,18 +243,19 @@ mod tests {
             .env
             .into_iter()
             .collect::<std::collections::BTreeMap<_, _>>();
+        let default_nats_url = OsString::from(default_test_nats_url());
 
         assert_eq!(
             env.get(&OsString::from("FLUXER_NATS_URL")),
-            Some(&OsString::from("nats://nats:4222"))
+            Some(&default_nats_url)
         );
         assert_eq!(
             env.get(&OsString::from("FLUXER_NATS_CORE_URL")),
-            Some(&OsString::from("nats://nats:4222"))
+            Some(&default_nats_url)
         );
         assert_eq!(
             env.get(&OsString::from("FLUXER_NATS_JETSTREAM_URL")),
-            Some(&OsString::from("nats://nats:4222"))
+            Some(&default_nats_url)
         );
         assert_eq!(
             env.get(&OsString::from("API_TEST_MAX_WORKERS")),
