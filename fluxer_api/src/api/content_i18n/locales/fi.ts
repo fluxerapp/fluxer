@@ -2,7 +2,7 @@
 
 import {defineContentI18nLocaleMessages} from '../ContentI18nMessages';
 
-export const CONTENT_I18N_FI_MESSAGES = defineContentI18nLocaleMessages({
+const CONTENT_I18N_FI_MESSAGES = defineContentI18nLocaleMessages({
 	"billing.eu_withdrawal_waiver_checkout": "Jos olen EU/ETA-kuluttaja, annan nimenomaisen suostumukseni sille, että {product_name}-tuotteen {premium_tier_name} digitaalinen sisältö toimitetaan välittömästi, ja hyväksyn, että menetän lakisääteisen peruutusoikeuteni, kun pääsy on myönnetty. Tämä ei vaikuta muihin pakollisiin kuluttajaoikeuksiin. Katso [käyttöehdot]({terms_url}).",
 	"bulk_message_deletion.complete": "Olemme poistaneet viestisi. Poistimme {message_count, plural, =0 {0 viestiä} one {# viestin} other {# viestiä}} {channel_count, plural, =0 {0 paikasta} one {# paikasta} other {# paikasta}}.",
 	"content.virus_detected": "Tiedosto merkittiin mahdollisesti vaaralliseksi ja se on poistettu.",

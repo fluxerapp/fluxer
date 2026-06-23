@@ -52,9 +52,7 @@ upsert_voice_state(ConnectionId, VoiceState, State) ->
         end,
     State#{voice_states => VoiceStates}.
 
--spec strip_members
-    (map()) -> map();
-    (term()) -> term().
+-spec strip_members(term()) -> term().
 strip_members(Data) when is_map(Data) ->
     Data1 = maps:remove(<<"members">>, Data),
     maps:remove(<<"member_role_index">>, Data1);

@@ -82,10 +82,6 @@ user_id(User) when is_map(User) ->
 user_id(_) ->
     undefined.
 
--spec presence_visible(map()) -> boolean().
-presence_visible(P) ->
-    presence_utils:is_visible_presence(P).
-
 -spec dedup_presences([map()]) -> [map()].
 dedup_presences(Presences) ->
     Map = lists:foldl(fun add_presence_by_id/2, #{}, Presences),
@@ -324,15 +320,6 @@ ensure_relationship_id(Rel, UserId) ->
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
-
-presence_visible_test() ->
-    ?assertEqual(true, presence_visible(#{<<"status">> => <<"online">>})),
-    ?assertEqual(true, presence_visible(#{<<"status">> => <<"idle">>})),
-    ?assertEqual(true, presence_visible(#{<<"status">> => <<"dnd">>})),
-    ?assertEqual(false, presence_visible(#{<<"status">> => <<"offline">>})),
-    ?assertEqual(false, presence_visible(#{<<"status">> => <<"invisible">>})),
-    ?assertEqual(false, presence_visible(#{})),
-    ok.
 
 presence_user_id_rejects_malformed_id_test() ->
     ?assertEqual(undefined, presence_user_id(#{<<"user">> => #{<<"id">> => <<"001">>}})).

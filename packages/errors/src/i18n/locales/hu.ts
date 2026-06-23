@@ -2,7 +2,7 @@
 
 import {defineErrorI18nLocaleMessages} from '../ErrorI18nMessages';
 
-export const ERROR_I18N_HU_MESSAGES = defineErrorI18nLocaleMessages({
+const ERROR_I18N_HU_MESSAGES = defineErrorI18nLocaleMessages({
 	"account.already_verified": "Fiókod már ellenőrizve van.",
 	"account.communication_disabled": "A kommunikáció letiltva.",
 	"account.disabled": "Ez a fiók le van tiltva.",

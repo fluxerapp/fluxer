@@ -308,19 +308,6 @@ export async function createGroupDmChannel(
 	return channel;
 }
 
-export async function addRecipientToGroupDm(
-	harness: ApiTestHarness,
-	token: string,
-	channelId: string,
-	userId: string,
-): Promise<void> {
-	await createBuilder(harness, token)
-		.put(`/channels/${channelId}/recipients/${userId}`)
-		.body(null)
-		.expect(204)
-		.execute();
-}
-
 export async function updateUserSettings(
 	harness: ApiTestHarness,
 	token: string,

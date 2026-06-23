@@ -171,8 +171,6 @@ rollback_on_start_failure({reply, {success, Pid}, _State} = Result, _UserId) whe
     Result;
 rollback_on_start_failure({reply, {error, _Reason}, _State} = Result, UserId) ->
     session_abuse_protection:decrement_user_sessions(UserId),
-    Result;
-rollback_on_start_failure(Result, _UserId) ->
     Result.
 
 -spec validate_identify_payload(term()) ->
