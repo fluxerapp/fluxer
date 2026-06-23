@@ -100,9 +100,10 @@ impl ByteCoalescer {
             let result = work().await.map(Bytes::from).map_err(coalesced_work_error);
             *slot.state.lock() = Some(result.clone());
             guard.completed = true;
+            drop(guard);
             slot.notify.notify_waiters();
             self.in_flight.lock().remove(&key);
-            
+
             result
         } else {
             crate::metrics::GLOBAL
