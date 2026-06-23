@@ -2,7 +2,7 @@
 
 import {defineErrorI18nLocaleMessages} from '../ErrorI18nMessages';
 
-export const ERROR_I18N_EL_MESSAGES = defineErrorI18nLocaleMessages({
+const ERROR_I18N_EL_MESSAGES = defineErrorI18nLocaleMessages({
 	"account.already_verified": "Ο λογαριασμός σου έχει ήδη επαληθευτεί.",
 	"account.communication_disabled": "Η επικοινωνία είναι απενεργοποιημένη.",
 	"account.disabled": "Αυτός ο λογαριασμός έχει απενεργοποιηθεί.",

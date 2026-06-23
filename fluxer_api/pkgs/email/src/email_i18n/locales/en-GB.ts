@@ -2,7 +2,7 @@
 
 import {defineEmailI18nLocaleMessages} from '../EmailI18nMessages';
 
-export const EMAIL_I18N_EN_GB_MESSAGES = defineEmailI18nLocaleMessages({
+const EMAIL_I18N_EN_GB_MESSAGES = defineEmailI18nLocaleMessages({
 	"account_disabled_suspicious": {
 		"subject": "Your {product_name} account has been temporarily disabled",
 		"body": "Hello {username},\n\nWe temporarily disabled your {product_name} account because we detected suspicious activity.\n\n{reason, select,\n  null {}\n  other {Reason: {reason}}\n}\n\nTo regain access to your account, you'll need to reset your password:\n\n{forgotUrl}\n\nAfter you reset your password, you'll be able to log in again.\n\nIf you believe this was done in error, please contact our support team.\n\n– {product_name} Safety Team"

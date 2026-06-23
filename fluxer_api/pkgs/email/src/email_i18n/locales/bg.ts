@@ -2,7 +2,7 @@
 
 import {defineEmailI18nLocaleMessages} from '../EmailI18nMessages';
 
-export const EMAIL_I18N_BG_MESSAGES = defineEmailI18nLocaleMessages({
+const EMAIL_I18N_BG_MESSAGES = defineEmailI18nLocaleMessages({
 	"account_disabled_suspicious": {
 		"subject": "Акаунтът ти във {product_name} е временно деактивиран",
 		"body": "Здравей, {username},\n\nВременно деактивирахме акаунта ти във {product_name}, защото открихме подозрителна активност.\n\n{reason, select,\n  null {}\n  other {Причина: {reason}}\n}\n\nЗа да възстановиш достъпа до акаунта си, трябва да нулираш паролата си:\n\n{forgotUrl}\n\nСлед като нулираш паролата си, ще можеш да влезеш отново.\n\nАко смяташ, че това е грешка, свържи се с нашия екип за поддръжка.\n\n– Екип за безопасност на {product_name}"

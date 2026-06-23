@@ -169,12 +169,12 @@ fn ghcr_owner() -> Result<String> {
         }
     }
 
-    if let Ok(repository) = env::var("GITHUB_REPOSITORY") {
-        if let Some((owner, _)) = repository.split_once('/') {
-            let owner = owner.trim();
-            if !owner.is_empty() {
-                return Ok(owner.to_string());
-            }
+    if let Ok(repository) = env::var("GITHUB_REPOSITORY")
+        && let Some((owner, _)) = repository.split_once('/')
+    {
+        let owner = owner.trim();
+        if !owner.is_empty() {
+            return Ok(owner.to_string());
         }
     }
 

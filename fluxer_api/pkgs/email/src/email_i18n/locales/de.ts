@@ -2,7 +2,7 @@
 
 import {defineEmailI18nLocaleMessages} from '../EmailI18nMessages';
 
-export const EMAIL_I18N_DE_MESSAGES = defineEmailI18nLocaleMessages({
+const EMAIL_I18N_DE_MESSAGES = defineEmailI18nLocaleMessages({
 	"account_disabled_suspicious": {
 		"subject": "Dein {product_name}-Konto wurde vorübergehend deaktiviert",
 		"body": "Hallo {username},\n\nwir haben dein {product_name}-Konto vorübergehend deaktiviert, da wir verdächtige Aktivitäten festgestellt haben.\n\n{reason, select,\n  null {}\n  other {Grund: {reason}}\n}\n\nUm wieder Zugriff auf dein Konto zu erhalten, musst du dein Passwort zurücksetzen:\n\n{forgotUrl}\n\nNachdem du dein Passwort zurückgesetzt hast, kannst du dich wieder anmelden.\n\nWenn du glaubst, dass dies ein Fehler war, kontaktiere bitte unser Support-Team.\n\n– {product_name}-Sicherheitsteam"

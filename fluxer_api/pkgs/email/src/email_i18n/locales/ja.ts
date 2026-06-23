@@ -2,7 +2,7 @@
 
 import {defineEmailI18nLocaleMessages} from '../EmailI18nMessages';
 
-export const EMAIL_I18N_JA_MESSAGES = defineEmailI18nLocaleMessages({
+const EMAIL_I18N_JA_MESSAGES = defineEmailI18nLocaleMessages({
 	"account_disabled_suspicious": {
 		"subject": "{product_name}アカウントが一時的に無効になりました",
 		"body": "こんにちは、{username}さん\n\n不審なアクティビティが検出されたため、{product_name}アカウントを一時的に無効にしました。\n\n{reason, select,\n  null {}\n  other {理由: {reason}}\n}\n\nアカウントに再度アクセスするには、パスワードをリセットする必要があります。\n\n{forgotUrl}\n\nパスワードをリセットすると、再度ログインできるようになります。\n\nこの措置が誤りであると思われる場合は、サポートチームにお問い合わせください。\n\n– {product_name}安全チーム"
