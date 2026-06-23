@@ -3,7 +3,6 @@
 import {createHash, randomBytes} from 'node:crypto';
 import {ProfileFieldPrivacyFlags} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
-import {RegistrationClosedError} from '@fluxer/errors/src/domains/auth/RegistrationClosedError';
 import {RegistrationPendingApprovalError} from '@fluxer/errors/src/domains/auth/RegistrationPendingApprovalError';
 import {SsoRequiredError} from '@fluxer/errors/src/domains/auth/SsoRequiredError';
 import {ContentBlockedError} from '@fluxer/errors/src/domains/content/ContentBlockedError';
@@ -362,9 +361,6 @@ export class SsoService {
 			throw new SsoRequiredError();
 		}
 		const registrationConfig = await this.instanceConfigRepository.getRegistrationConfig();
-		if (registrationConfig.mode === 'closed') {
-			throw new RegistrationClosedError();
-		}
 		const pendingApproval = registrationConfig.mode === 'approval';
 		const user = await this.provisionUserFromClaims(claims, config, {pendingApproval});
 		if (pendingApproval) {
