@@ -17,7 +17,11 @@
 -type status() :: online | offline | idle | dnd | invisible.
 -type activities() :: [map()] | null.
 -type session_entry() :: #{
-    status := status(), afk := boolean(), mobile := boolean(), activities => activities(), _ => _
+    status := status(),
+    afk := boolean(),
+    mobile := boolean(),
+    activities => activities(),
+    _ => _
 }.
 -type sessions() :: #{session_id() => session_entry()}.
 
@@ -67,8 +71,15 @@ get_current_activities(Sessions) ->
             (_Session, Activities) when is_list(Activities), Activities =/= [] ->
                 Activities;
             (Session, _Acc) ->
-                case {maps:get(status, Session, offline), maps:get(activities, Session, null)} of
-                    {Status, Activities} when Status =/= offline, Status =/= invisible, is_list(Activities), Activities =/= [] ->
+                case
+                    {maps:get(status, Session, offline), maps:get(activities, Session, null)}
+                of
+                    {Status, Activities} when
+                        Status =/= offline,
+                        Status =/= invisible,
+                        is_list(Activities),
+                        Activities =/= []
+                    ->
                         Activities;
                     _ ->
                         null

@@ -234,7 +234,8 @@ maybe_add_custom_status(Base, Data) ->
 -spec maybe_add_activities(map(), map()) -> map().
 maybe_add_activities(Base, Data) ->
     case maps:find(<<"activities">>, Data) of
-        {ok, null} -> Base#{<<"activities">> => null};
+        {ok, null} ->
+            Base#{<<"activities">> => null};
         {ok, Activities} when is_list(Activities) ->
             Valid = [
                 Activity
@@ -250,8 +251,10 @@ maybe_add_activities(Base, Data) ->
                 [] -> Base#{<<"activities">> => []};
                 List -> Base#{<<"activities">> => lists:sublist(List, 5)}
             end;
-        error -> Base;
-        _ -> Base
+        error ->
+            Base;
+        _ ->
+            Base
     end.
 
 -spec adjust_status(atom()) -> atom().

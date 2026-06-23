@@ -72,7 +72,14 @@ handle_session_connect(Request, Pid, State) ->
     end.
 
 -spec refresh_existing_session(
-    session_entry(), pid(), status(), boolean(), boolean(), activities(), pid() | undefined, state()
+    session_entry(),
+    pid(),
+    status(),
+    boolean(),
+    boolean(),
+    activities(),
+    pid() | undefined,
+    state()
 ) -> {session_entry(), state()}.
 refresh_existing_session(Existing, Pid, Status, Afk, Mobile, Activities, SocketPid, State) ->
     {Ref, State1} = refresh_monitor(Existing, Pid, State),
@@ -131,7 +138,9 @@ handle_presence_update(Request, State) ->
     sessions(),
     state()
 ) -> {noreply, state()}.
-handle_session_presence_change(SessionId, Session, Status, Afk, Mobile, Activities, Sessions, State) ->
+handle_session_presence_change(
+    SessionId, Session, Status, Afk, Mobile, Activities, Sessions, State
+) ->
     case session_presence_changed(Session, Status, Afk, Mobile, Activities) of
         false ->
             {noreply, State};
@@ -148,7 +157,8 @@ handle_session_presence_change(SessionId, Session, Status, Afk, Mobile, Activiti
             {noreply, NewState}
     end.
 
--spec session_presence_changed(session_entry(), status(), boolean(), boolean(), activities()) -> boolean().
+-spec session_presence_changed(session_entry(), status(), boolean(), boolean(), activities()) ->
+    boolean().
 session_presence_changed(Session, Status, Afk, Mobile, Activities) ->
     maps:get(status, Session) =/= Status orelse
         maps:get(afk, Session, false) =/= Afk orelse

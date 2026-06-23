@@ -250,7 +250,9 @@ is_local_self_presence_echo(Payload, State) ->
         true ->
             true;
         false ->
-            {CurrentPayload, _CurrentExternal, _ExternalStatus} = build_presence_external(State),
+            {CurrentPayload, _CurrentExternal, _ExternalStatus} = build_presence_external(
+                State
+            ),
             CurrentPayload =:= Payload
     end.
 
