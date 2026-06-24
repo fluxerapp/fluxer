@@ -248,6 +248,7 @@ try_session_connect_failure_schedules_retry_test() ->
         online,
         false,
         false,
+        null,
         undefined,
         [],
         #{},
