@@ -1,0 +1,42 @@
+name: Trigger Dart SDK Validation
+
+on:
+  pull_request:
+    paths:
+      - 'fluxer_api/src/api/openapi/openapi.json'
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sdk-validation-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  trigger-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send repository dispatch to dart_sdk
+        uses: peter-evans/repository-dispatch@ff45666b9427631e3450c54bf1fb527427f0a2c1
+        with:
+          token: ${{ secrets.FLUXER_AUTOMATION_PAT }}
+          repository: fluxerapp/dart_sdk
+          event-type: openapi-spec-validation
+          client-payload: |
+            {
+              "sha": "${{ github.event.pull_request.head.sha }}",
+              "pr_number": "${{ github.event.pull_request.number }}",
+              "repo": "${{ github.repository }}",
+              "ref": "${{ github.head_ref }}"
+            }
+
+      - name: Log trigger sent
+        run: |
+          echo "Triggered dart_sdk validation for:"
+          echo "  PR: #${{ github.event.pull_request.number }}"
+          echo "  Commit: ${{ github.event.pull_request.head.sha }}"
+          echo "  Branch: ${{ github.head_ref }}"
