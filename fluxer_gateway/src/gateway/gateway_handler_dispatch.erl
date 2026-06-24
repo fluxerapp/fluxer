@@ -209,7 +209,7 @@ parse_presence_status(StatusRaw, Data) ->
         AdjustedStatus = adjust_status(Status),
         Afk = presence_boolean(<<"afk">>, Data),
         Mobile = presence_boolean(<<"mobile">>, Data),
-        Activities = normalize_activities(maps:get(<<"activities">>, Data, [])),
+        Activities = maps:get(<<"activities">>, Data, []),
         Base = #{
             status => AdjustedStatus,
             afk => Afk,
@@ -227,41 +227,6 @@ presence_boolean(Key, Data) ->
     case maps:get(Key, Data, false) of
         true -> true;
         _ -> false
-    end.
-
--spec normalize_activities(term()) -> [map()].
-normalize_activities(Activities) when is_list(Activities) ->
-    lists:sublist(
-        [normalize_activity(A) || A <- Activities, is_valid_activity(A)],
-        5
-    );
-normalize_activities(_) ->
-    [].
-
--spec is_valid_activity(term()) -> boolean().
-is_valid_activity(#{
-    <<"id">> := Id,
-    <<"type">> := <<"application">>,
-    <<"name">> := Name
-}) ->
-    is_binary(Id) andalso
-        byte_size(Id) > 0 andalso
-        is_binary(Name) andalso
-        byte_size(Name) > 0;
-is_valid_activity(_) ->
-    false.
-
--spec normalize_activity(map()) -> map().
-normalize_activity(Activity) ->
-    Base = #{
-        <<"id">> => maps:get(<<"id">>, Activity),
-        <<"type">> => <<"application">>,
-        <<"name">> => maps:get(<<"name">>, Activity)
-    },
-    case maps:get(<<"icon">>, Activity, undefined) of
-        Icon when is_binary(Icon), byte_size(Icon) > 0 ->
-            Base#{<<"icon">> => Icon};
-        _ -> Base
     end.
 
 -spec maybe_add_custom_status(map(), map()) -> map().
