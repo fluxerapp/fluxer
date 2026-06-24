@@ -231,12 +231,19 @@ presence_boolean(Key, Data) ->
 
 -spec normalize_activities(term()) -> [map()].
 normalize_activities(Activities) when is_list(Activities) ->
-    lists:sublist([normalize_activity(A) || A <- Activities, is_valid_activity(A)], 5);
+    lists:sublist(
+        [normalize_activity(A) || A <- Activities, is_valid_activity(A)],
+        5
+    );
 normalize_activities(_) ->
     [].
 
 -spec is_valid_activity(term()) -> boolean().
-is_valid_activity(#{<<"id">> := Id, <<"type">> := <<"application">>, <<"name">> := Name}) ->
+is_valid_activity(#{
+    <<"id">> := Id,
+    <<"type">> := <<"application">>,
+    <<"name">> := Name
+}) ->
     is_binary(Id) andalso
         byte_size(Id) > 0 andalso
         is_binary(Name) andalso
