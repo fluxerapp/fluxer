@@ -170,6 +170,16 @@ describe('UserChannelService', () => {
 			expect(reopened.id).toBe(channelId.toString());
 			expect(reopened.type).toBe(ChannelTypes.DM);
 		});
+		test('can create new system user DM without friendship or mutual guilds', async () => {
+			const user = await createTestAccount(harness);
+			const channel = await createBuilder<MinimalChannelResponse>(harness, user.token)
+				.post('/users/@me/channels')
+				.body({recipient_id: FLUXERBOT_ID})
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			expect(channel.id).toBeDefined();
+			expect(channel.type).toBe(ChannelTypes.DM);
+		});
 	});
 	describe('Group DM creation', () => {
 		test('can create group DM with friends', async () => {

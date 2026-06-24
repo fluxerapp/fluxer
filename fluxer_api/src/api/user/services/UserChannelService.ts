@@ -23,6 +23,7 @@ import {requireEmailVerified} from '../../auth/EmailVerificationUtils';
 import type {ChannelID, UserID} from '../../BrandedTypes';
 import {createChannelID, createMessageID, createUserID} from '../../BrandedTypes';
 import {mapChannelToResponse} from '../../channel/ChannelMappers';
+import {SYSTEM_USER_ID} from '../../constants/Core';
 import type {IChannelRepository} from '../../channel/IChannelRepository';
 import type {ChannelService} from '../../channel/services/ChannelService';
 import {dispatchMessageCreateBroadcast} from '../../channel/services/message/MessageGatewayDispatch';
@@ -179,6 +180,9 @@ export class UserChannelService {
 		}
 		const targetUser = await this.userRepository.findUnique(recipientId);
 		if (!targetUser) throw new UnknownUserError();
+		if (recipientId === SYSTEM_USER_ID) {
+			return await this.createNewDMChannel({userId, recipientId, userCacheService, requestCache});
+		}
 		await this.validateNewDmAllowed({sender: callingUser, recipient: targetUser});
 		const channel = await this.createNewDMChannel({userId, recipientId, userCacheService, requestCache});
 		return channel;
