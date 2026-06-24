@@ -2,6 +2,7 @@
 
 import {registerAdminControllers} from '../admin/controllers/index';
 import {AuthController} from '../auth/AuthController';
+import {CalendarController} from '../calendar/CalendarController';
 import {BlueskyOAuthController} from '../bluesky/BlueskyOAuthController';
 import {Config} from '../Config';
 import {CanaryTesterController} from '../canary_tester/CanaryTesterController';
