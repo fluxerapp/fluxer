@@ -135,7 +135,7 @@ export type SsoStatusResponse = z.infer<typeof SsoStatusResponse>;
 export const SsoStartResponse = z.object({
 	authorization_url: z.string().describe('URL to redirect user to for SSO authentication'),
 	state: z.string().describe('State parameter for CSRF protection'),
-	redirect_uri: z.string().describe('Redirect URI after SSO completion'),
+	redirect_uri: z.string().describe('OAuth redirect URI used for the SSO provider callback'),
 });
 
 export type SsoStartResponse = z.infer<typeof SsoStartResponse>;
@@ -254,6 +254,7 @@ export type HandoffStatusResponse = z.infer<typeof HandoffStatusResponse>;
 
 export const SsoStartRequest = z.object({
 	redirect_to: createStringType(0, 2048).nullish().describe('URL to redirect to after SSO completion'),
+	redirect_uri: createStringType(0, 2048).nullish().describe('OAuth redirect URI to use for the SSO provider callback'),
 });
 
 export type SsoStartRequest = z.infer<typeof SsoStartRequest>;
