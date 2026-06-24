@@ -161,7 +161,7 @@ export class UserChannelService {
 				requestCache,
 			});
 		}
-		if (!data.recipient_id) {
+		if (data.recipient_id == null) {
 			throw InputValidationError.fromCode('recipient_id', ValidationErrorCodes.RECIPIENT_IDS_CANNOT_BE_EMPTY);
 		}
 		const recipientId = createUserID(data.recipient_id);
