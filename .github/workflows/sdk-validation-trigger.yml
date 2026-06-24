@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Send repository dispatch to dart_sdk
-        uses: peter-evans/repository-dispatch@ff45666b9427631e3450c54bf1fb527427f0a2c1
+        uses: peter-evans/repository-dispatch@28959ce8df70de7be546dd1250a005dd32156697
         with:
           token: ${{ secrets.FLUXER_AUTOMATION_PAT }}
           repository: fluxerapp/dart_sdk
