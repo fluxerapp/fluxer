@@ -103,6 +103,14 @@ drain_stale_dispatches() ->
         ok
     end.
 
+drain_stale_dispatches_async() ->
+    receive
+        {'$gen_cast', {dispatch, _Event, _Payload}} ->
+            drain_stale_dispatches_async()
+    after 1000 ->
+        ok
+    end.
+
 assert_no_dispatch() ->
     receive
         {'$gen_cast', {dispatch, Event, Payload}} ->
@@ -434,7 +442,8 @@ moderator_move_into_private_channel_grants_lease_test() ->
     ?assert(guild_virtual_channel_access:is_move_pending(10, 200, NewState)),
     Payload = receive_channel_dispatch(channel_create),
     ?assertEqual(<<"200">>, maps:get(<<"id">>, Payload)),
-    ?assertEqual(<<"999">>, maps:get(<<"guild_id">>, Payload)).
+    ?assertEqual(<<"999">>, maps:get(<<"guild_id">>, Payload)),
+    drain_stale_dispatches_async().
 
 moderator_move_out_of_leased_channel_revokes_lease_test() ->
     drain_stale_dispatches(),
@@ -449,7 +458,8 @@ moderator_move_out_of_leased_channel_revokes_lease_test() ->
     ?assert(guild_virtual_channel_access:has_virtual_access(10, 200, NewState)),
     DeletePayload = receive_channel_dispatch(channel_delete),
     ?assertEqual(<<"100">>, maps:get(<<"id">>, DeletePayload)),
-    ?assertEqual(<<"999">>, maps:get(<<"guild_id">>, DeletePayload)).
+    ?assertEqual(<<"999">>, maps:get(<<"guild_id">>, DeletePayload)),
+    drain_stale_dispatches_async().
 
 moderator_move_without_lease_dispatches_no_channel_delete_test() ->
     drain_stale_dispatches(),
@@ -462,7 +472,8 @@ moderator_move_without_lease_dispatches_no_channel_delete_test() ->
         VoiceStates, 200, 10, 10, <<"old-conn">>, VoiceStates, State
     ),
     ?assertEqual(true, maps:get(success, reply_map(Reply0))),
-    assert_no_channel_delete().
+    assert_no_channel_delete(),
+    drain_stale_dispatches_async().
 
 assert_no_channel_delete() ->
     receive
@@ -485,4 +496,5 @@ self_move_revokes_lease_scenario() ->
     {_Reply, NewState} = run_client_move(VoiceStates, State),
     ?assertNot(guild_virtual_channel_access:has_virtual_access(10, 100, NewState)),
     DeletePayload = receive_channel_dispatch(channel_delete),
-    ?assertEqual(<<"100">>, maps:get(<<"id">>, DeletePayload)).
+    ?assertEqual(<<"100">>, maps:get(<<"id">>, DeletePayload)),
+    drain_stale_dispatches_async().

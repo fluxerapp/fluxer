@@ -174,8 +174,12 @@ assert_probe_presence(SessionPid, UserId) ->
     receive
         {session_probe_dispatch, SessionPid, presence_update, Payload} ->
             User = maps:get(<<"user">>, Payload, #{}),
-            ?assertEqual(UserId, snowflake_id:parse_maybe(maps:get(<<"id">>, User))),
-            ?assertEqual(<<"online">>, maps:get(<<"status">>, Payload))
+            case snowflake_id:parse_maybe(maps:get(<<"id">>, User)) of
+                UserId ->
+                    ?assertEqual(<<"online">>, maps:get(<<"status">>, Payload));
+                _ ->
+                    assert_probe_presence(SessionPid, UserId)
+            end
     after 1000 ->
         ?assert(false)
     end.

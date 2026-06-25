@@ -466,7 +466,15 @@ collect_ready_presences_uses_live_friend_presence_when_cache_missing_test() ->
     ?assertMatch({ok, _}, presence_cache:get(TargetId)),
     ok = gen_server:stop(TargetPid),
     stop_presence_manager(ManagerPid, ManagerStarted),
-    ?assertEqual(ok, gen_server:stop(CachePid)).
+    ?assertEqual(ok, gen_server:stop(CachePid)),
+    drain_session_dispatches().
+
+drain_session_dispatches() ->
+    receive
+        {'$gen_cast', {dispatch, _, _}} -> drain_session_dispatches()
+    after 200 ->
+        ok
+    end.
 
 collect_ready_presences_skips_offline_dm_recipients_test() ->
     {ok, CachePid} = maybe_start_presence_cache(),

@@ -350,17 +350,38 @@ receive_dispatch(ExpectedEvent) ->
         #{}
     end.
 
+fresh_session_pid() ->
+    Parent = self(),
+    spawn(fun() ->
+        receive
+            {'$gen_cast', {dispatch, Event, Payload}} ->
+                Parent ! {unexpected_session_dispatch, Event, Payload}
+        after 200 ->
+            ok
+        end
+    end).
+
+assert_session_no_dispatch() ->
+    receive
+        {unexpected_session_dispatch, E, P} ->
+            ?assert(false, {unexpected_dispatch, E, P})
+    after 300 ->
+        ok
+    end.
+
 in_channel_update_reply_does_not_dispatch_test() ->
+    SessionPid = fresh_session_pid(),
     Reply = #{
         success => true,
         voice_state => #{<<"channel_id">> => <<"456">>, <<"self_deaf">> => true}
     },
-    ok = handle_guild_reply_ok(Reply, test_voice_ctx(456), self()),
-    assert_no_dispatch().
+    ok = handle_guild_reply_ok(Reply, test_voice_ctx(456), SessionPid),
+    assert_session_no_dispatch().
 
 plain_success_reply_does_not_dispatch_test() ->
-    ok = handle_guild_reply_ok(#{success => true}, test_voice_ctx(456), self()),
-    assert_no_dispatch().
+    SessionPid = fresh_session_pid(),
+    ok = handle_guild_reply_ok(#{success => true}, test_voice_ctx(456), SessionPid),
+    assert_session_no_dispatch().
 
 rejected_mutation_reply_dispatches_ack_only_test() ->
     Ack = #{<<"status">> => <<"rejected">>, <<"mutation_id">> => <<"m1">>},
@@ -424,23 +445,26 @@ null_channel_falls_back_to_reply_voice_state_test() ->
     ?assertEqual(<<"789">>, maps:get(<<"channel_id">>, Payload)).
 
 token_reply_without_resolvable_channel_does_not_dispatch_test() ->
+    SessionPid = fresh_session_pid(),
     Reply = #{
         success => true,
         token => <<"tok">>,
         endpoint => <<"wss://voice">>,
         connection_id => <<"conn-3">>
     },
-    ok = handle_guild_reply_ok(Reply, test_voice_ctx(null), self()),
-    assert_no_dispatch().
+    ok = handle_guild_reply_ok(Reply, test_voice_ctx(null), SessionPid),
+    assert_session_no_dispatch().
 
 partial_token_reply_does_not_dispatch_test() ->
+    SessionPid = fresh_session_pid(),
     Reply = #{success => true, token => <<"tok">>},
-    ok = handle_guild_reply_ok(Reply, test_voice_ctx(456), self()),
-    assert_no_dispatch().
+    ok = handle_guild_reply_ok(Reply, test_voice_ctx(456), SessionPid),
+    assert_session_no_dispatch().
 
 dm_connect_reply_does_not_dispatch_test() ->
+    SessionPid = fresh_session_pid(),
     Reply = #{success => true, needs_token => false, connection_id => <<"conn-4">>},
-    ok = handle_guild_reply_ok(Reply, test_voice_ctx(456), self()),
-    assert_no_dispatch().
+    ok = handle_guild_reply_ok(Reply, test_voice_ctx(456), SessionPid),
+    assert_session_no_dispatch().
 
 -endif.
