@@ -261,7 +261,7 @@ is_local_self_presence_echo(Payload, State) ->
 
 is_local_self_presence_echo_matches_current_payload_test() ->
     Payload = #{
-        <<"user">> => #{<<"id">> => <<"1">>},
+        <<"user">> => #{<<"id">> => 1},
         <<"status">> => <<"online">>,
         <<"mobile">> => false,
         <<"afk">> => false,
@@ -270,7 +270,7 @@ is_local_self_presence_echo_matches_current_payload_test() ->
     },
     State = #{
         user_id => 1,
-        user_data => #{<<"id">> => <<"1">>},
+        user_data => #{<<"id">> => 1},
         sessions => #{
             <<"s1">> => #{
                 session_id => <<"s1">>,
@@ -279,7 +279,8 @@ is_local_self_presence_echo_matches_current_payload_test() ->
                 mobile => false,
                 pid => self(),
                 mref => make_ref(),
-                socket_pid => undefined
+                socket_pid => undefined,
+                activities => [#{<<"name">> => <<"Fluxcap">>, <<"type">> => 0}]
             }
         },
         push_buffer => [],
@@ -299,7 +300,7 @@ is_local_self_presence_echo_matches_current_payload_test() ->
 
 is_local_self_presence_echo_rejects_remote_self_presence_test() ->
     Payload = #{
-        <<"user">> => #{<<"id">> => <<"1">>},
+        <<"user">> => #{<<"id">> => 1},
         <<"status">> => <<"online">>,
         <<"mobile">> => false,
         <<"afk">> => false,
@@ -308,7 +309,7 @@ is_local_self_presence_echo_rejects_remote_self_presence_test() ->
     },
     State = #{
         user_id => 1,
-        user_data => #{<<"id">> => <<"1">>},
+        user_data => #{<<"id">> => 1},
         sessions => #{
             <<"s1">> => #{
                 session_id => <<"s1">>,
@@ -317,7 +318,8 @@ is_local_self_presence_echo_rejects_remote_self_presence_test() ->
                 mobile => false,
                 pid => self(),
                 mref => make_ref(),
-                socket_pid => undefined
+                socket_pid => undefined,
+                activities => [#{<<"name">> => <<"Fluxcap">>, <<"type">> => 0}]
             }
         },
         push_buffer => [],
@@ -338,7 +340,7 @@ is_local_self_presence_echo_rejects_remote_self_presence_test() ->
 is_local_self_presence_echo_always_ignores_user_updates_test() ->
     State = #{
         user_id => 1,
-        user_data => #{<<"id">> => <<"1">>},
+        user_data => #{<<"id">> => 1},
         sessions => #{},
         push_buffer => [],
         custom_status => null,
@@ -355,7 +357,7 @@ is_local_self_presence_echo_always_ignores_user_updates_test() ->
     },
     ?assert(
         is_local_self_presence_echo(
-            #{<<"user">> => #{<<"id">> => <<"1">>}, <<"user_update">> => true},
+            #{<<"user">> => #{<<"id">> => 1}, <<"user_update">> => true},
             State
         )
     ).
