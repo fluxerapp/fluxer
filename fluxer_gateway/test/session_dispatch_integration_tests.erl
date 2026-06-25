@@ -42,7 +42,7 @@ presence_update_without_guild_id_buffered_for_non_relationship_test() ->
     State0 = base_state(#{}),
     Presence = #{<<"user">> => #{<<"id">> => <<"2">>}, <<"status">> => <<"online">>},
     {noreply, State1} = session_dispatch:handle_dispatch(presence_update, Presence, State0),
-    ?assertEqual(1, length(maps:get(pending_presences, State1, []))),
+    ?assertEqual(1, pending_presence_count(State1)),
     ?assertEqual(0, limited_deque:size(maps:get(buffer, State1))).
 
 presence_update_without_guild_id_not_buffered_for_relationship_test() ->
@@ -56,7 +56,7 @@ presence_update_buffered_for_outgoing_request_relationship_test() ->
     State0 = base_state(#{relationships => #{2 => 4}}),
     Presence = #{<<"user">> => #{<<"id">> => <<"2">>}, <<"status">> => <<"online">>},
     {noreply, State1} = session_dispatch:handle_dispatch(presence_update, Presence, State0),
-    ?assertEqual(1, length(maps:get(pending_presences, State1, []))),
+    ?assertEqual(1, pending_presence_count(State1)),
     ?assertEqual(0, limited_deque:size(maps:get(buffer, State1))).
 
 presence_update_not_buffered_for_incoming_request_test() ->
