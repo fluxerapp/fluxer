@@ -1428,7 +1428,7 @@ export const LimitConfigGetResponse = z.object({
 	}),
 	limit_config_json: z.string(),
 	self_hosted: z.boolean(),
-	defaults: z.record(z.string(), z.record(LimitKeySchema, z.number())),
+	defaults: z.record(z.string(), z.record(LimitKeySchema, z.number().optional())),
 	metadata: z.record(LimitKeySchema, LimitKeyMetadataSchema),
 	categories: z.record(z.string(), z.string()),
 	limit_keys: z.array(z.string()),
