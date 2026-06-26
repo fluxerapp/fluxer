@@ -30,7 +30,7 @@ jobs:
             echo "openapi=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Check out fluxer
+      - name: Checkout fluxer
         if: steps.changes.outputs.openapi == 'true'
         uses: actions/checkout@b9e0990d219a03df7633c93f6f005a8fecbcab22
         with:
