@@ -14222,8 +14222,7 @@
 					"me": {
 						"description": "Whether the current user has reacted with this emoji",
 						"nullable": true,
-						"type": "boolean",
-						"enum": [true]
+						"type": "boolean"
 					}
 				},
 				"required": ["emoji", "count"]
