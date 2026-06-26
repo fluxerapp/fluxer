@@ -65,6 +65,7 @@ const LANE_CONFIG = {
 		tasks: [
 			'enqueueGifFeaturedCategoriesRefresh',
 			'expireAttachments',
+			'recalculateAttachmentDecay',
 			'indexChannelMessages',
 			'indexGuildMembers',
 			'processAssetDeletionQueue',

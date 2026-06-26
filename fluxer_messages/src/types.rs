@@ -86,6 +86,7 @@ pub enum MessageRequest {
         include_reactions: Option<bool>,
         nonce: Option<String>,
         tts: Option<bool>,
+        attachment_decay_enabled: Option<bool>,
     },
     BuildResponse {
         message: Message,
@@ -98,6 +99,7 @@ pub enum MessageRequest {
         include_reactions: Option<bool>,
         nonce: Option<String>,
         tts: Option<bool>,
+        attachment_decay_enabled: Option<bool>,
     },
     BuildResponses {
         messages: Vec<Message>,
@@ -108,6 +110,7 @@ pub enum MessageRequest {
         media_endpoint: String,
         media_proxy_secret_key: String,
         include_reactions: Option<bool>,
+        attachment_decay_enabled: Option<bool>,
     },
     ListResponses {
         channel_id: String,
@@ -122,6 +125,7 @@ pub enum MessageRequest {
         media_endpoint: String,
         media_proxy_secret_key: String,
         include_reactions: Option<bool>,
+        attachment_decay_enabled: Option<bool>,
     },
     ExtractMentions {
         contents: Vec<String>,

@@ -26,9 +26,11 @@ import {
 	REGISTRATION_REJECTED_TRAIT,
 } from '../../instance/InstanceConfigRepository';
 import {deriveSsoRedirectUri, normalizeAndValidateSsoConfig} from '../../instance/SsoConfigValidation';
+import {Logger} from '../../Logger';
 import {requireAdminACL} from '../../middleware/AdminMiddleware';
 import {RateLimitMiddleware} from '../../middleware/RateLimitMiddleware';
 import {OpenAPI} from '../../middleware/ResponseTypeMiddleware';
+import {getWorkerService} from '../../middleware/ServiceRegistry';
 import {getGatewayRolloutConfigPublisher, getInstanceConfigRepository} from '../../middleware/ServiceSingletons';
 import {RateLimitConfigs} from '../../RateLimitConfig';
 import type {HonoApp, HonoEnv} from '../../types/HonoEnv';
@@ -359,6 +361,13 @@ export function InstanceConfigAdminController(app: HonoApp) {
 							})
 						: undefined,
 				});
+				if (data.media.attachment_decay) {
+					try {
+						await getWorkerService().addJob('recalculateAttachmentDecay', {});
+					} catch (workerErr) {
+						Logger.error({err: workerErr}, 'Failed to enqueue recalculateAttachmentDecay worker task');
+					}
+				}
 			}
 			if (data.policy) {
 				await applyInstancePolicyUpdate(ctx, data.policy);

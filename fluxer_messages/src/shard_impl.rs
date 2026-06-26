@@ -242,6 +242,7 @@ struct ResponseBuildOptions {
     include_reactions: bool,
     nonce: Option<String>,
     tts: bool,
+    attachment_decay_enabled: bool,
 }
 
 #[derive(Debug, Default)]
@@ -752,7 +753,13 @@ impl MessagesShard {
         let channel_ids = collect_channel_mention_ids(&all_messages, &mention_context);
         let user_ids = collect_user_ids(&all_messages, &mention_context);
         let reactions_future = self.fetch_reactions_for_messages(messages, options);
-        let attachment_decay_future = self.fetch_attachment_decay(attachment_ids);
+        let attachment_decay_future = async {
+            if options.attachment_decay_enabled {
+                self.fetch_attachment_decay(attachment_ids).await
+            } else {
+                Ok(HashMap::new())
+            }
+        };
         let channel_mentions_future = self.resolve_channel_mentions(channel_ids, options);
         let (reactions, attachment_decay, channel_mentions) = tokio::join!(
             reactions_future,
@@ -2140,6 +2147,7 @@ impl ShardService for MessagesShard {
                 include_reactions,
                 nonce,
                 tts,
+                attachment_decay_enabled,
             } => {
                 let channel_id = parse_i64(&channel_id, "channel_id")?;
                 let message_id = parse_i64(&message_id, "message_id")?;
@@ -2162,6 +2170,7 @@ impl ShardService for MessagesShard {
                             include_reactions: include_reactions.unwrap_or(true),
                             nonce,
                             tts: tts.unwrap_or(false),
+                            attachment_decay_enabled: attachment_decay_enabled.unwrap_or(true),
                         },
                     )
                     .await?;
@@ -2181,6 +2190,7 @@ impl ShardService for MessagesShard {
                 include_reactions,
                 nonce,
                 tts,
+                attachment_decay_enabled,
             } => {
                 let viewer_user_id = parse_i64(&viewer_user_id, "viewer_user_id")?;
                 let source_guild_id = source_guild_id
@@ -2200,6 +2210,7 @@ impl ShardService for MessagesShard {
                             include_reactions: include_reactions.unwrap_or(true),
                             nonce,
                             tts: tts.unwrap_or(false),
+                            attachment_decay_enabled: attachment_decay_enabled.unwrap_or(true),
                         },
                     )
                     .await?;
@@ -2217,6 +2228,7 @@ impl ShardService for MessagesShard {
                 media_endpoint,
                 media_proxy_secret_key,
                 include_reactions,
+                attachment_decay_enabled,
             } => {
                 let viewer_user_id = parse_i64(&viewer_user_id, "viewer_user_id")?;
                 let source_guild_id = source_guild_id
@@ -2236,6 +2248,7 @@ impl ShardService for MessagesShard {
                             include_reactions: include_reactions.unwrap_or(true),
                             nonce: None,
                             tts: false,
+                            attachment_decay_enabled: attachment_decay_enabled.unwrap_or(true),
                         },
                     )
                     .await?;
@@ -2254,6 +2267,7 @@ impl ShardService for MessagesShard {
                 media_endpoint,
                 media_proxy_secret_key,
                 include_reactions,
+                attachment_decay_enabled,
             } => {
                 let channel_id = parse_i64(&channel_id, "channel_id")?;
                 let viewer_user_id = parse_i64(&viewer_user_id, "viewer_user_id")?;
@@ -2290,6 +2304,7 @@ impl ShardService for MessagesShard {
                             include_reactions: include_reactions.unwrap_or(true),
                             nonce: None,
                             tts: false,
+                            attachment_decay_enabled: attachment_decay_enabled.unwrap_or(true),
                         },
                     )
                     .await?;

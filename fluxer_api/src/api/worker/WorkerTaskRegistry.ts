@@ -33,6 +33,7 @@ import processPendingBulkMessageDeletions from './tasks/ProcessPendingBulkMessag
 import processPremiumStateReconciliationQueue from './tasks/ProcessPremiumStateReconciliationQueue';
 import processStripeWebhook from './tasks/ProcessStripeWebhook';
 import prunePostgresKvTtl from './tasks/PrunePostgresKvTtl';
+import recalculateAttachmentDecay from './tasks/RecalculateAttachmentDecay';
 import reconcileUserPayments from './tasks/ReconcileUserPayments';
 import refreshGifFeaturedCategories from './tasks/RefreshGifFeaturedCategories';
 import refreshSearchIndex from './tasks/RefreshSearchIndex';
@@ -62,6 +63,7 @@ export const workerTasks: Record<WorkerTaskName, WorkerTaskHandler> = {
 	deleteUserMessagesInGuildByTime,
 	enqueueGifFeaturedCategoriesRefresh,
 	expireAttachments,
+	recalculateAttachmentDecay,
 	extractEmbeds,
 	finalizeNcmecAttachmentReport,
 	handleMentions,
