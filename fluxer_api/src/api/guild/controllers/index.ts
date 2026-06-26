@@ -10,6 +10,7 @@ import {GuildFeatureToggleController} from './GuildFeatureToggleController';
 import {GuildMemberController} from './GuildMemberController';
 import {GuildMemberSearchController} from './GuildMemberSearchController';
 import {GuildRoleController} from './GuildRoleController';
+import {GuildScheduledEventController} from './GuildScheduledEventController';
 import {GuildStickerController} from './GuildStickerController';
 
 export function registerGuildControllers(app: HonoApp) {
@@ -20,6 +21,7 @@ export function registerGuildControllers(app: HonoApp) {
 	GuildRoleController(app);
 	GuildChannelController(app);
 	GuildEmojiController(app);
+	GuildScheduledEventController(app);
 	GuildStickerController(app);
 	GuildAuditLogController(app);
 	GuildDiscoveryController(app);
