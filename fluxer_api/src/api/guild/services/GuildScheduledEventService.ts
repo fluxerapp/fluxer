@@ -2,7 +2,7 @@
 
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPermissionsError';
-import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
+import {MissingAccessError} from '@fluxer/errors/src/domains/core/MissingAccessError';
 import type {
 	GuildScheduledEventCreateRequest,
 	GuildScheduledEventUpdateRequest,
@@ -13,6 +13,7 @@ import type {
 } from '@fluxer/schema/src/domains/guild/GuildScheduledEventSchemas';
 import type {GuildID, ScheduledEventID, UserID} from '../../BrandedTypes';
 import {createScheduledEventID} from '../../BrandedTypes';
+import type {GuildScheduledEventRow, GuildScheduledEventRsvpRow} from '../../database/types/GuildTypes';
 import type {IGatewayService} from '../../infrastructure/IGatewayService';
 import type {ISnowflakeService} from '../../infrastructure/ISnowflakeService';
 import {GuildScheduledEventRepository} from '../repositories/GuildScheduledEventRepository';
@@ -34,7 +35,7 @@ export class GuildScheduledEventService {
 		await this.requireManageGuild(userId, guildId);
 
 		const eventId = createScheduledEventID(await this.snowflakeService.generate());
-		const row: import('../../database/types/GuildTypes').GuildScheduledEventRow = {
+		const row: GuildScheduledEventRow = {
 			guild_id: guildId,
 			scheduled_event_id: eventId,
 			channel_id: data.channel_id ? (BigInt(data.channel_id) as any) : null,
@@ -107,7 +108,7 @@ export class GuildScheduledEventService {
 	): Promise<GuildScheduledEventRsvpResponse> {
 		await this.requireGuildAccess(userId, guildId);
 
-		const row: import('../../database/types/GuildTypes').GuildScheduledEventRsvpRow = {
+		const row: GuildScheduledEventRsvpRow = {
 			guild_id: guildId,
 			scheduled_event_id: eventId,
 			user_id: userId,
@@ -138,9 +139,7 @@ export class GuildScheduledEventService {
 		}));
 	}
 
-	private toResponse(
-		row: import('../../database/types/GuildTypes').GuildScheduledEventRow,
-	): GuildScheduledEventResponse {
+	private toResponse(row: GuildScheduledEventRow): GuildScheduledEventResponse {
 		return {
 			id: row.scheduled_event_id.toString(),
 			guild_id: row.guild_id.toString(),
@@ -174,6 +173,6 @@ export class GuildScheduledEventService {
 			userId,
 			permission: Permissions.VIEW_CHANNEL,
 		});
-		if (!ok) throw new UnknownGuildError();
+		if (!ok) throw new MissingAccessError();
 	}
 }

@@ -160,24 +160,4 @@ export const GuildRateLimitConfigs = {
 		bucket: 'guild:sticker:metadata::user_id',
 		config: {limit: 60, windowMs: ms('10 seconds')},
 	} as RouteRateLimitConfig,
-	GUILD_SCHEDULED_EVENTS_LIST: {
-		bucket: 'guild:scheduled_events:list::guild_id',
-		config: {limit: 60, windowMs: ms('10 seconds')},
-	} as RouteRateLimitConfig,
-	GUILD_SCHEDULED_EVENT_CREATE: {
-		bucket: 'guild:scheduled_event:create::guild_id',
-		config: {limit: 20, windowMs: ms('10 seconds')},
-	} as RouteRateLimitConfig,
-	GUILD_SCHEDULED_EVENT_UPDATE: {
-		bucket: 'guild:scheduled_event:update::guild_id',
-		config: {limit: 20, windowMs: ms('10 seconds')},
-	} as RouteRateLimitConfig,
-	GUILD_SCHEDULED_EVENT_DELETE: {
-		bucket: 'guild:scheduled_event:delete::guild_id',
-		config: {limit: 20, windowMs: ms('10 seconds')},
-	} as RouteRateLimitConfig,
-	GUILD_SCHEDULED_EVENT_RSVP: {
-		bucket: 'guild:scheduled_event:rsvp::guild_id',
-		config: {limit: 30, windowMs: ms('10 seconds')},
-	} as RouteRateLimitConfig,
 } as const;
