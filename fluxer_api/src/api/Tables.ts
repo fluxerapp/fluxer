@@ -173,6 +173,8 @@ import {
 	GUILD_ROLE_COLUMNS,
 	GUILD_STICKER_BY_STICKER_ID_COLUMNS,
 	GUILD_STICKER_COLUMNS,
+	GUILD_SCHEDULED_EVENT_COLUMNS,
+	GUILD_SCHEDULED_EVENT_RSVP_COLUMNS,
 	type GuildAuditLogRow,
 	type GuildBanByEmailRow,
 	type GuildBanByUserIdRow,
@@ -183,6 +185,8 @@ import {
 	type GuildMembershipMetadataRow,
 	type GuildRoleRow,
 	type GuildRow,
+	type GuildScheduledEventRow,
+	type GuildScheduledEventRsvpRow,
 	type GuildStickerRow,
 } from './database/types/GuildTypes';
 import {INSTANCE_CONFIGURATION_COLUMNS, type InstanceConfigurationRow} from './database/types/InstanceConfigTypes';
@@ -1484,4 +1488,14 @@ export const BillingActionIntents = defineTable<BillingActionIntentRow, 'intent_
 	name: 'billing_action_intents',
 	columns: BILLING_ACTION_INTENT_COLUMNS,
 	primaryKey: ['intent_id'],
+});
+export const GuildScheduledEvents = defineTable<GuildScheduledEventRow, 'guild_id' | 'scheduled_event_id'>({
+	name: 'guild_scheduled_events',
+	columns: GUILD_SCHEDULED_EVENT_COLUMNS,
+	primaryKey: ['guild_id', 'scheduled_event_id'],
+});
+export const GuildScheduledEventRsvps = defineTable<GuildScheduledEventRsvpRow, 'guild_id' | 'scheduled_event_id' | 'user_id'>({
+	name: 'guild_scheduled_event_rsvps',
+	columns: GUILD_SCHEDULED_EVENT_RSVP_COLUMNS,
+	primaryKey: ['guild_id', 'scheduled_event_id', 'user_id'],
 });
