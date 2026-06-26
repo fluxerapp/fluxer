@@ -375,3 +375,25 @@ export const GuildMemberListQuery = z.object({
 });
 
 export type GuildMemberListQuery = z.infer<typeof GuildMemberListQuery>;
+
+export const GuildScheduledEventCreateRequest = z.object({
+	channel_id: SnowflakeType.optional().describe('The channel this event is associated with'),
+	name: createStringType(1, 100).describe('The name of the event (1-100 characters)'),
+	description: createStringType(0, 1000).optional().describe('The description of the event (max 1000 characters)'),
+	scheduled_start_time: z.string().describe('The start time of the event (ISO 8601)'),
+	scheduled_end_time: z.string().optional().describe('The end time of the event (ISO 8601)'),
+	privacy_level: z.literal(2).default(2).describe('The privacy level (2 = GUILD_ONLY)'),
+	entity_type: z.number().int().min(1).max(3).optional().describe('The entity type (1=STAGE, 2=VOICE, 3=EXTERNAL)'),
+	entity_id: SnowflakeType.optional().describe('The entity ID associated with this event'),
+	location: createStringType(1, 100).optional().describe('The location for external events (max 100 characters)'),
+	image: z.string().optional().describe('Base64-encoded image data for the event cover'),
+});
+export type GuildScheduledEventCreateRequest = z.infer<typeof GuildScheduledEventCreateRequest>;
+
+export const GuildScheduledEventUpdateRequest = GuildScheduledEventCreateRequest.partial();
+export type GuildScheduledEventUpdateRequest = z.infer<typeof GuildScheduledEventUpdateRequest>;
+
+export const GuildScheduledEventRsvpRequest = z.object({
+	status: z.number().int().min(1).max(4).describe('The RSVP status (1=INTERESTED, 2=GOING, 3=NOT_GOING, 4=MAYBE)'),
+});
+export type GuildScheduledEventRsvpRequest = z.infer<typeof GuildScheduledEventRsvpRequest>;

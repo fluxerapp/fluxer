@@ -320,3 +320,53 @@ export interface GuildMemberByUserIdRow {
 export const GUILD_MEMBER_BY_USER_ID_COLUMNS = ['user_id', 'guild_id'] as const satisfies ReadonlyArray<
 	keyof GuildMemberByUserIdRow
 >;
+
+export interface GuildScheduledEventRow {
+	guild_id: GuildID;
+	scheduled_event_id: ScheduledEventID;
+	channel_id: ChannelID | null;
+	creator_id: UserID;
+	name: string;
+	description: string | null;
+	scheduled_start_time: string;
+	scheduled_end_time: string | null;
+	privacy_level: number;
+	status: number;
+	entity_type: number | null;
+	entity_id: string | null;
+	location: string | null;
+	image: string | null;
+	version: number;
+}
+
+export const GUILD_SCHEDULED_EVENT_COLUMNS = [
+	'guild_id',
+	'scheduled_event_id',
+	'channel_id',
+	'creator_id',
+	'name',
+	'description',
+	'scheduled_start_time',
+	'scheduled_end_time',
+	'privacy_level',
+	'status',
+	'entity_type',
+	'entity_id',
+	'location',
+	'image',
+	'version',
+] as const satisfies ReadonlyArray<keyof GuildScheduledEventRow>;
+
+export interface GuildScheduledEventRsvpRow {
+	guild_id: GuildID;
+	scheduled_event_id: ScheduledEventID;
+	user_id: UserID;
+	status: number;
+}
+
+export const GUILD_SCHEDULED_EVENT_RSVP_COLUMNS = [
+	'guild_id',
+	'scheduled_event_id',
+	'user_id',
+	'status',
+] as const satisfies ReadonlyArray<keyof GuildScheduledEventRsvpRow>;
