@@ -119,6 +119,23 @@ export function getRegisteredDiscriminatedUnionBranchSchemas(): Record<string, O
 	return result;
 }
 
+const namedObjectRegistry = new Map<string, OpenAPISchema>();
+
+export function getRegisteredNamedObjectSchemas(): Record<string, OpenAPISchema> {
+	const result: Record<string, OpenAPISchema> = {};
+	for (const [name, schema] of namedObjectRegistry) {
+		result[name] = schema;
+	}
+	return result;
+}
+
+function makeNamedObjectRef(name: string, fieldDescription: string | undefined): OpenAPISchemaOrRef {
+	if (fieldDescription) {
+		return {$ref: `#/components/schemas/${name}`, description: fieldDescription};
+	}
+	return {$ref: `#/components/schemas/${name}`};
+}
+
 function toPascalCase(value: string): string {
 	return value
 		.split(/[^A-Za-z0-9]+/)
@@ -437,6 +454,15 @@ export function zodToOpenAPISchema(schema: ZodTypeAny, depth = 0): OpenAPISchema
 			if (!shape) {
 				return {type: 'object'};
 			}
+			const objectAnnotation = parseFluxerTypeAnnotation(getDescription(schema));
+			const namedObjectName =
+				objectAnnotation?.typeName === 'NamedObject' ? objectAnnotation.objectName : undefined;
+			if (namedObjectName && depth > 0 && namedObjectRegistry.has(namedObjectName)) {
+				return makeNamedObjectRef(namedObjectName, objectAnnotation?.fieldDescription);
+			}
+			if (namedObjectName) {
+				namedObjectRegistry.set(namedObjectName, {type: 'object'});
+			}
 			const properties: Record<string, OpenAPISchemaOrRef> = {};
 			const required: Array<string> = [];
 			for (const [key, value] of Object.entries(shape)) {
@@ -451,6 +477,16 @@ export function zodToOpenAPISchema(schema: ZodTypeAny, depth = 0): OpenAPISchema
 			};
 			if (required.length > 0) {
 				result.required = required;
+			}
+			if (namedObjectName) {
+				if (objectAnnotation?.userDescription) {
+					result.description = objectAnnotation.userDescription;
+				}
+				namedObjectRegistry.set(namedObjectName, result);
+				if (depth > 0) {
+					return makeNamedObjectRef(namedObjectName, objectAnnotation?.fieldDescription);
+				}
+				return result;
 			}
 			return addDescription(result, schema);
 		}

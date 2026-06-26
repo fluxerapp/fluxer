@@ -31988,41 +31988,42 @@
 			},
 			"OAuth2AuthorizationsListResponse": {
 				"type": "array",
-				"items": {
-					"type": "object",
-					"properties": {
-						"application": {
-							"type": "object",
-							"properties": {
-								"id": {
-									"type": "string",
-									"pattern": "^(0|[1-9][0-9]*)$",
-									"description": "The unique identifier of the application"
-								},
-								"name": {"type": "string", "description": "The name of the application"},
-								"icon": {
-									"anyOf": [{"type": "string"}, {"type": "null"}],
-									"description": "The icon hash of the application"
-								},
-								"description": {
-									"anyOf": [{"type": "string"}, {"type": "null"}],
-									"description": "The description of the application"
-								},
-								"bot_public": {"type": "boolean", "description": "Whether the bot can be invited by anyone"}
+				"items": {"$ref": "#/components/schemas/OAuth2AuthorizationResponse"}
+			},
+			"OAuth2AuthorizationResponse": {
+				"type": "object",
+				"properties": {
+					"application": {
+						"type": "object",
+						"properties": {
+							"id": {
+								"type": "string",
+								"pattern": "^(0|[1-9][0-9]*)$",
+								"description": "The unique identifier of the application"
 							},
-							"required": ["id", "name", "icon", "description", "bot_public"],
-							"description": "The application that was authorized"
+							"name": {"type": "string", "description": "The name of the application"},
+							"icon": {
+								"anyOf": [{"type": "string"}, {"type": "null"}],
+								"description": "The icon hash of the application"
+							},
+							"description": {
+								"anyOf": [{"type": "string"}, {"type": "null"}],
+								"description": "The description of the application"
+							},
+							"bot_public": {"type": "boolean", "description": "Whether the bot can be invited by anyone"}
 						},
-						"scopes": {
-							"type": "array",
-							"items": {"type": "string"},
-							"maxItems": 50,
-							"description": "The list of granted OAuth2 scopes"
-						},
-						"authorized_at": {"type": "string", "description": "The timestamp when the authorization was granted"}
+						"required": ["id", "name", "icon", "description", "bot_public"],
+						"description": "The application that was authorized"
 					},
-					"required": ["application", "scopes", "authorized_at"]
-				}
+					"scopes": {
+						"type": "array",
+						"items": {"type": "string"},
+						"maxItems": 50,
+						"description": "The list of granted OAuth2 scopes"
+					},
+					"authorized_at": {"type": "string", "description": "The timestamp when the authorization was granted"}
+				},
+				"required": ["application", "scopes", "authorized_at"]
 			},
 			"OAuth2AuthorizationsBulkRevokeRequest": {
 				"type": "object",

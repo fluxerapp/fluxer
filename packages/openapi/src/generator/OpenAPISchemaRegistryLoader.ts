@@ -3,6 +3,7 @@ import {
 	getRegisteredBitflagSchemas,
 	getRegisteredDiscriminatedUnionBranchSchemas,
 	getRegisteredInt32EnumSchemas,
+	getRegisteredNamedObjectSchemas,
 } from '@fluxer/openapi/src/converters/ZodToOpenAPI';
 import {OpenAPIGeneratorCatalog} from '@fluxer/openapi/src/generator/OpenAPIGeneratorCatalog';
 import {type LoadedSchema, loadSchemas} from '@fluxer/openapi/src/registry/SchemaLoader';
@@ -48,6 +49,11 @@ export async function loadSchemasIntoRegistry(
 		}
 	}
 	for (const [name, schema] of Object.entries(getRegisteredDiscriminatedUnionBranchSchemas())) {
+		if (!schemaRegistry.has(name)) {
+			schemaRegistry.register(name, schema);
+		}
+	}
+	for (const [name, schema] of Object.entries(getRegisteredNamedObjectSchemas())) {
 		if (!schemaRegistry.has(name)) {
 			schemaRegistry.register(name, schema);
 		}
