@@ -1,11 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {
-	MessageEmbedTypes,
-	MessageFlags,
-	Permissions,
-	SENDABLE_MESSAGE_FLAGS,
-} from '@fluxer/constants/src/ChannelConstants';
+import {MessageFlags, Permissions, SENDABLE_MESSAGE_FLAGS} from '@fluxer/constants/src/ChannelConstants';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
@@ -48,6 +43,7 @@ import type {AttachmentUploadTraceRepository} from '../../repositories/message/A
 import {AttachmentProcessingService} from './AttachmentProcessingService';
 import {type DmNsfwContext, MessageContentService} from './MessageContentService';
 import {MessageEmbedAttachmentResolver} from './MessageEmbedAttachmentResolver';
+import {mergeRichFirst} from './MessageEmbedMerge';
 import {collectMessageAttachments} from './MessageHelpers';
 import {MessageStickerService} from './MessageStickerService';
 
@@ -538,14 +534,11 @@ export class MessagePersistenceService {
 			});
 			if (data.embeds === undefined) {
 				// A content-only edit must not drop the rich embeds the author
-				// already set (forwarded media lives in message_snapshots, not in
-				// row embeds, and is preserved separately). getInitialEmbeds only
-				// returns the URL auto-embeds re-derived from the new content, so
-				// keep the existing rich embeds and merge the refreshed URL embeds.
-				const preservedCustomEmbeds = (updatedRowData.embeds ?? []).filter(
-					(embed) => embed.type === MessageEmbedTypes.RICH,
-				);
-				const mergedEmbeds = [...preservedCustomEmbeds, ...(initialEmbeds ?? [])];
+				// already set. getInitialEmbeds only returns the URL auto-embeds
+				// re-derived from the new content, so keep the existing rich embeds
+				// (mergeRichFirst is the shared invariant, identical to the deferred
+				// unfurl persist + broadcast in ExtractEmbeds).
+				const mergedEmbeds = mergeRichFirst(updatedRowData.embeds ?? [], initialEmbeds ?? []);
 				updatedRowData.embeds = mergedEmbeds.length > 0 ? mergedEmbeds : null;
 			} else {
 				updatedRowData.embeds = initialEmbeds;

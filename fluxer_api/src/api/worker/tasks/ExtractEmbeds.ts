@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {MessageEmbedTypes, MessageFlags} from '@fluxer/constants/src/ChannelConstants';
+import {MessageFlags} from '@fluxer/constants/src/ChannelConstants';
 import {MAX_EMBEDS_PER_MESSAGE} from '@fluxer/constants/src/LimitConstants';
 import {ContentBlockedError} from '@fluxer/errors/src/domains/content/ContentBlockedError';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
@@ -9,6 +9,7 @@ import {z} from 'zod';
 import type {ChannelID, GuildID, MessageID} from '../../BrandedTypes';
 import {createChannelID, createGuildID, createMessageID, createUserID} from '../../BrandedTypes';
 import type {ChannelRepository} from '../../channel/ChannelRepository';
+import {mergeRichFirst} from '../../channel/services/message/MessageEmbedMerge';
 import {buildBroadcastMessageData} from '../../channel/services/message/MessageGatewayDispatch';
 import type {MessageEmbed, MessageEmbedChild} from '../../database/types/MessageTypes';
 import type {ModerationContext} from '../../infrastructure/ContentModerationService';
@@ -18,7 +19,6 @@ import type {IGatewayService} from '../../infrastructure/IGatewayService';
 import type {MediaProxyNsfwMode} from '../../infrastructure/IMediaService';
 import {Logger} from '../../Logger';
 import type {Channel} from '../../models/Channel';
-import {Embed} from '../../models/Embed';
 import {Message} from '../../models/Message';
 import {deleteMessageSearchDocuments} from '../../search/MessageSearchIndexCleanup';
 import * as UnfurlerUtils from '../../utils/UnfurlerUtils';
@@ -370,10 +370,9 @@ export async function updateMessageEmbeds(
 	const existingEmbeds = (freshMessage.embeds ?? []).map((embed) => embed.toMessageEmbed());
 	// The deferred unfurl only produces URL auto-embeds; it must not drop a
 	// rich embed the author already set (mirrors the synchronous edit path in
-	// MessagePersistenceService.updateMessage). Keep the existing rich embeds
-	// rich-first, then append the freshly-unfurled URL embeds.
-	const preservedRichEmbeds = existingEmbeds.filter((embed) => embed.type === MessageEmbedTypes.RICH);
-	const mergedEmbeds = [...preservedRichEmbeds, ...orderedEmbeds];
+	// MessagePersistenceService.updateMessage). mergeRichFirst is the single
+	// definition of that invariant, shared with the sync persist + broadcast.
+	const mergedEmbeds = mergeRichFirst(existingEmbeds, orderedEmbeds);
 	if (areEmbedsEquivalent(existingEmbeds, mergedEmbeds)) {
 		Logger.debug({messageId: freshMessage.id.toString()}, 'Embeds unchanged, skipping update');
 		return freshMessage;
@@ -388,23 +387,23 @@ export async function updateMessageEmbeds(
 
 interface DispatchEmbedUpdateParams {
 	latestMessage: Message;
-	orderedEmbeds: Array<MessageEmbed>;
 	channel: Channel;
 	guildId: GuildID | null;
 	gatewayService: IGatewayService;
 }
 
-async function dispatchEmbedUpdate({
+export async function dispatchEmbedUpdate({
 	latestMessage,
-	orderedEmbeds,
 	channel,
 	guildId,
 	gatewayService,
 }: DispatchEmbedUpdateParams): Promise<void> {
-	const embedObjects = orderedEmbeds.length > 0 ? orderedEmbeds.map((e) => new Embed(e)) : latestMessage.embeds;
+	// latestMessage.embeds is the merged rich-first set updateMessageEmbeds
+	// persisted; broadcasting it verbatim keeps the realtime MESSAGE_UPDATE
+	// identical to the DB row (the rich embed must not be dropped here).
 	const messageWithUpdatedEmbeds = new Message({
 		...latestMessage.toRow(),
-		embeds: embedObjects.map((e) => e.toMessageEmbed()),
+		embeds: latestMessage.embeds.map((e) => e.toMessageEmbed()),
 	});
 	const messageData = await buildBroadcastMessageData({
 		channel,
@@ -518,7 +517,6 @@ const extractEmbeds: WorkerTaskHandler = async (payload, helpers) => {
 			if (!(latestMessage.flags & MessageFlags.SUPPRESS_EMBEDS)) {
 				await dispatchEmbedUpdate({
 					latestMessage,
-					orderedEmbeds,
 					channel,
 					guildId,
 					gatewayService,
