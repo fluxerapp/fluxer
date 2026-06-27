@@ -174,17 +174,12 @@ function makeChannel(): Channel {
 	});
 }
 
-function capturingGatewayService(): {gatewayService: IGatewayService; captured: () => Array<unknown>} {
-	const captured: Array<unknown> = [];
+function capturingGatewayService(): {gatewayService: IGatewayService} {
 	const gatewayService = {
-		async dispatchGuild(params: {data: unknown}) {
-			captured.push(params.data);
-		},
-		async dispatchChannel(params: {data: unknown}) {
-			captured.push(params.data);
-		},
+		async dispatchGuild() {},
+		async dispatchChannel() {},
 	} as never as IGatewayService;
-	return {gatewayService, captured: () => captured};
+	return {gatewayService};
 }
 
 describe('ExtractEmbeds.dispatchEmbedUpdate', () => {
