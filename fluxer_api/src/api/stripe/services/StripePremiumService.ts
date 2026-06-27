@@ -305,13 +305,20 @@ export class StripePremiumService {
 			Logger.debug({userId, guildId: visionariesGuildId}, 'Added visionary user to visionaries guild');
 		}
 
-		await this.guildService.members.systemAddMemberRole({
-			targetId: userId,
-			guildId: visionariesGuildId,
-			roleId: visionaryRoleId,
-			initiatorId: SYSTEM_USER_ID,
-			requestCache,
-		});
+		try {
+			await this.guildService.members.systemAddMemberRole({
+				targetId: userId,
+				guildId: visionariesGuildId,
+				roleId: visionaryRoleId,
+				initiatorId: SYSTEM_USER_ID,
+				requestCache,
+			});
+		} catch (error) {
+			Logger.error(
+				{userId, guildId: visionariesGuildId, roleId: visionaryRoleId, error},
+				'Failed to add visionary role to a rejoining visionary.',
+			);
+		}
 	}
 
 	private async dispatchUser(user: User): Promise<void> {
