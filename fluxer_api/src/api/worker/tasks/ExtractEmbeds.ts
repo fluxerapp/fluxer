@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {MessageFlags} from '@fluxer/constants/src/ChannelConstants';
+import {MessageEmbedTypes, MessageFlags} from '@fluxer/constants/src/ChannelConstants';
 import {MAX_EMBEDS_PER_MESSAGE} from '@fluxer/constants/src/LimitConstants';
 import {ContentBlockedError} from '@fluxer/errors/src/domains/content/ContentBlockedError';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
@@ -345,7 +345,7 @@ async function scanEmbedsForBannedContent(
 	}
 }
 
-function buildOrderedEmbeds(
+export function buildOrderedEmbeds(
 	urls: Array<string>,
 	unfurledEmbedsByUrl: Map<string, Array<MessageEmbed>>,
 ): Array<MessageEmbed> {
@@ -362,19 +362,25 @@ function buildOrderedEmbeds(
 	return orderedEmbeds;
 }
 
-async function updateMessageEmbeds(
+export async function updateMessageEmbeds(
 	channelRepository: ChannelRepository,
 	freshMessage: Message,
 	orderedEmbeds: Array<MessageEmbed>,
 ): Promise<Message | null> {
 	const existingEmbeds = (freshMessage.embeds ?? []).map((embed) => embed.toMessageEmbed());
-	if (areEmbedsEquivalent(existingEmbeds, orderedEmbeds)) {
+	// The deferred unfurl only produces URL auto-embeds; it must not drop a
+	// rich embed the author already set (mirrors the synchronous edit path in
+	// MessagePersistenceService.updateMessage). Keep the existing rich embeds
+	// rich-first, then append the freshly-unfurled URL embeds.
+	const preservedRichEmbeds = existingEmbeds.filter((embed) => embed.type === MessageEmbedTypes.RICH);
+	const mergedEmbeds = [...preservedRichEmbeds, ...orderedEmbeds];
+	if (areEmbedsEquivalent(existingEmbeds, mergedEmbeds)) {
 		Logger.debug({messageId: freshMessage.id.toString()}, 'Embeds unchanged, skipping update');
 		return freshMessage;
 	}
 	const messageWithEmbeds = new Message({
 		...freshMessage.toRow(),
-		embeds: orderedEmbeds.length > 0 ? orderedEmbeds : null,
+		embeds: mergedEmbeds.length > 0 ? mergedEmbeds : null,
 	});
 	await channelRepository.updateEmbeds(messageWithEmbeds);
 	return messageWithEmbeds;

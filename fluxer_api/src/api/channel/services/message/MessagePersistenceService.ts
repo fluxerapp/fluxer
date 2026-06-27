@@ -537,10 +537,11 @@ export class MessagePersistenceService {
 				isBugHunterBot: params.isBugHunterBot,
 			});
 			if (data.embeds === undefined) {
-				// A content-only edit must not drop embeds the author already set
-				// (rich embeds and forwarded media). getInitialEmbeds only returns
-				// the URL auto-embeds re-derived from the new content, so keep the
-				// existing custom (rich) embeds and merge the refreshed URL embeds.
+				// A content-only edit must not drop the rich embeds the author
+				// already set (forwarded media lives in message_snapshots, not in
+				// row embeds, and is preserved separately). getInitialEmbeds only
+				// returns the URL auto-embeds re-derived from the new content, so
+				// keep the existing rich embeds and merge the refreshed URL embeds.
 				const preservedCustomEmbeds = (updatedRowData.embeds ?? []).filter(
 					(embed) => embed.type === MessageEmbedTypes.RICH,
 				);

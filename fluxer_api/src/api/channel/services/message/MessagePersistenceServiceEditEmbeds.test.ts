@@ -157,13 +157,13 @@ function fakeChannelRepository(): IChannelRepositoryAggregate {
 	} as never;
 }
 
-function createService(): MessagePersistenceService {
+function createService(embedService: EmbedService = fakeEmbedService()): MessagePersistenceService {
 	const service = new MessagePersistenceService(
 		fakeChannelRepository(),
 		{} as never,
 		{} as never,
 		{} as never,
-		fakeEmbedService(),
+		embedService,
 		{} as never,
 		{} as never,
 		{} as never,
@@ -183,8 +183,8 @@ function createService(): MessagePersistenceService {
 	return service;
 }
 
-async function runUpdate(message: Message, data: MessageUpdateRequest): Promise<Message> {
-	const service = createService();
+async function runUpdate(message: Message, data: MessageUpdateRequest, embedService?: EmbedService): Promise<Message> {
+	const service = createService(embedService);
 	const result = await service.updateMessage({
 		message,
 		messageId: message.id,
@@ -215,6 +215,27 @@ describe('MessagePersistenceService.updateMessage embeds', () => {
 		const updated = await runUpdate(message, {embeds: [{title: 'new'} as never]});
 		expect(updated.content).toBe('keep me');
 		expect(updated.embeds.map((e) => e.type)).toContain(MessageEmbedTypes.RICH);
+	});
+
+	// Mirrors the real EmbedService.getInitialEmbeds cacheOnly branch when the
+	// edited content contains an uncached URL: it returns no embeds and flags
+	// hasUncachedUrls=true (the URL embeds are unfurled later by the worker).
+	function uncachedUrlEmbedService(): EmbedService {
+		return {
+			async getInitialEmbeds() {
+				return {embeds: null, hasUncachedUrls: true};
+			},
+		} as never;
+	}
+
+	it('keeps the rich embed on the synchronous row when the new content has an uncached URL', async () => {
+		const message = makeMessage({content: 'before', embeds: [richEmbed('kept')]});
+		const updated = await runUpdate(message, {content: 'see https://uncached.example'}, uncachedUrlEmbedService());
+		// getInitialEmbeds returned no embeds (uncached) -- the synchronous row
+		// must still carry the author's rich embed; the URL embed is deferred.
+		const types = updated.embeds.map((e) => e.type);
+		expect(types).toContain(MessageEmbedTypes.RICH);
+		expect(updated.embeds.find((e) => e.type === MessageEmbedTypes.RICH)?.title).toBe('kept');
 	});
 
 	it('re-derives the URL auto-embed when a content edit changes a link', async () => {
