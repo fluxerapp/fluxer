@@ -13,25 +13,66 @@ interface LRUEntry {
 	lastAccessed: number;
 }
 
+const MEMBER_UNSUBSCRIBE_DEBOUNCE_MS = 1000;
+
 class MemberPresenceSubscription {
 	private subscriptions: Map<string, Map<string, number>> = new Map();
 	private activeGuildId: string | null = null;
 	private syncTimeoutId: number | null = null;
 	private pruneIntervalId: number | null = null;
 	private pendingSyncGuilds: Set<string> = new Set();
+	private unsubscribeTimeouts: Map<string, number> = new Map();
+	private subscriptionRefs: Map<string, number> = new Map();
 	subscriptionVersion = 0;
 
 	constructor() {
-		makeAutoObservable<this, 'subscriptions' | 'syncTimeoutId' | 'pruneIntervalId' | 'pendingSyncGuilds'>(
+		makeAutoObservable<
+			this,
+			| 'subscriptions'
+			| 'syncTimeoutId'
+			| 'pruneIntervalId'
+			| 'pendingSyncGuilds'
+			| 'unsubscribeTimeouts'
+			| 'subscriptionRefs'
+		>(
 			this,
 			{
 				subscriptions: false,
 				syncTimeoutId: false,
 				pruneIntervalId: false,
 				pendingSyncGuilds: false,
+				unsubscribeTimeouts: false,
+				subscriptionRefs: false,
 			},
 			{autoBind: true},
 		);
+	}
+
+	private unsubscribeKey(guildId: string, userId: string): string {
+		return `${guildId}:${userId}`;
+	}
+
+	private cancelPendingUnsubscribe(guildId: string, userId: string): void {
+		const key = this.unsubscribeKey(guildId, userId);
+		const pending = this.unsubscribeTimeouts.get(key);
+		if (pending != null) {
+			clearTimeout(pending);
+			this.unsubscribeTimeouts.delete(key);
+		}
+	}
+
+	private doUnsubscribe(guildId: string, userId: string): void {
+		const key = this.unsubscribeKey(guildId, userId);
+		if ((this.subscriptionRefs.get(key) ?? 0) > 0) return;
+		const guildMembers = this.subscriptions.get(guildId);
+		if (!guildMembers) return;
+		guildMembers.delete(userId);
+		if (guildMembers.size === 0) {
+			this.subscriptions.delete(guildId);
+		}
+		this.syncPruneInterval();
+		this.bumpVersion();
+		this.syncToGatewayImmediate(guildId);
 	}
 
 	private startPruneInterval(): void {
@@ -69,6 +110,9 @@ class MemberPresenceSubscription {
 	}
 
 	touchMember(guildId: string, userId: string): void {
+		const key = this.unsubscribeKey(guildId, userId);
+		this.subscriptionRefs.set(key, (this.subscriptionRefs.get(key) ?? 0) + 1);
+		this.cancelPendingUnsubscribe(guildId, userId);
 		const guildSubs = this.getGuildSubscriptions(guildId);
 		const now = Date.now();
 		if (guildSubs.has(userId)) {
@@ -82,15 +126,25 @@ class MemberPresenceSubscription {
 	}
 
 	unsubscribe(guildId: string, userId: string): void {
-		const guildMembers = this.subscriptions.get(guildId);
-		if (!guildMembers) return;
-		guildMembers.delete(userId);
-		if (guildMembers.size === 0) {
-			this.subscriptions.delete(guildId);
+		const key = this.unsubscribeKey(guildId, userId);
+		const isSubscribed = this.subscriptions.get(guildId)?.has(userId) ?? false;
+		const refs = (this.subscriptionRefs.get(key) ?? (isSubscribed ? 1 : 0)) - 1;
+		if (refs > 0) {
+			this.subscriptionRefs.set(key, refs);
+			return;
 		}
-		this.syncPruneInterval();
-		this.bumpVersion();
-		this.syncToGatewayImmediate(guildId);
+		this.subscriptionRefs.delete(key);
+		const pending = this.unsubscribeTimeouts.get(key);
+		if (pending != null) clearTimeout(pending);
+		if (!isSubscribed) {
+			this.unsubscribeTimeouts.delete(key);
+			return;
+		}
+		const timeoutId = window.setTimeout(() => {
+			this.unsubscribeTimeouts.delete(key);
+			this.doUnsubscribe(guildId, userId);
+		}, MEMBER_UNSUBSCRIBE_DEBOUNCE_MS);
+		this.unsubscribeTimeouts.set(key, timeoutId);
 	}
 
 	setActiveGuild(guildId: string): void {
@@ -116,6 +170,17 @@ class MemberPresenceSubscription {
 	}
 
 	clearGuild(guildId: string): void {
+		for (const [key, timeoutId] of this.unsubscribeTimeouts) {
+			if (key.startsWith(`${guildId}:`)) {
+				clearTimeout(timeoutId);
+				this.unsubscribeTimeouts.delete(key);
+			}
+		}
+		for (const key of this.subscriptionRefs.keys()) {
+			if (key.startsWith(`${guildId}:`)) {
+				this.subscriptionRefs.delete(key);
+			}
+		}
 		const hadSubscriptions = this.subscriptions.has(guildId);
 		const wasActiveGuild = this.activeGuildId === guildId;
 		this.subscriptions.delete(guildId);
@@ -131,6 +196,11 @@ class MemberPresenceSubscription {
 	}
 
 	clearAll(): void {
+		for (const timeoutId of this.unsubscribeTimeouts.values()) {
+			clearTimeout(timeoutId);
+		}
+		this.unsubscribeTimeouts.clear();
+		this.subscriptionRefs.clear();
 		const socket = GatewayConnection.socket;
 		const guildIds = Array.from(this.subscriptions.keys());
 		const previousActive = this.activeGuildId;
@@ -195,6 +265,7 @@ class MemberPresenceSubscription {
 				}
 			}
 			for (const userId of toRemove) {
+				if ((this.subscriptionRefs.get(this.unsubscribeKey(guildId, userId)) ?? 0) > 0) continue;
 				guildSubs.delete(userId);
 				guildsToSync.add(guildId);
 			}
