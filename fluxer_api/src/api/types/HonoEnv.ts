@@ -32,6 +32,7 @@ import type {GatewayRequestService} from '../gateway/GatewayRequestService';
 import type {GifService} from '../gif/GifService';
 import type {IGuildDiscoveryService} from '../guild/services/GuildDiscoveryService';
 import type {GuildService} from '../guild/services/GuildService';
+import type {GuildScheduledEventService} from '../guild_scheduled_event/services/GuildScheduledEventService';
 import type {EmbedService} from '../infrastructure/EmbedService';
 import type {EntityAssetService} from '../infrastructure/EntityAssetService';
 import type {ErrorI18nService} from '../infrastructure/ErrorI18nService';
@@ -141,6 +142,7 @@ export interface HonoEnv {
 		gatewayRequestService: GatewayRequestService;
 		discoveryService: IGuildDiscoveryService;
 		guildService: GuildService;
+		guildScheduledEventService: GuildScheduledEventService;
 		packService: PackService;
 		packRepository: PackRepository;
 		inviteService: InviteService;

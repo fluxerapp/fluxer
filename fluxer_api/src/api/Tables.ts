@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {AttachmentID, ChannelID, GuildID, MemeID, PasswordResetToken, UserID} from './BrandedTypes';
+import type {AttachmentID, ChannelID, GuildID, GuildScheduledEventID, MemeID, PasswordResetToken, UserID} from './BrandedTypes';
 import {defineTable} from './database/CassandraTableDsl';
 import {
 	ADMIN_ARCHIVE_COLUMNS,
@@ -212,6 +212,16 @@ import {
 	type MessageReactionRow,
 	type MessageRow,
 } from './database/types/MessageTypes';
+import {
+	GUILD_SCHEDULED_EVENT_COLUMNS,
+	GUILD_SCHEDULED_EVENT_BY_GUILD_COLUMNS,
+	GUILD_SCHEDULED_EVENT_USER_COLUMNS,
+	GUILD_SCHEDULED_EVENT_USER_BY_EVENT_COLUMNS,
+	type GuildScheduledEventRow,
+	type GuildScheduledEventByGuildRow,
+	type GuildScheduledEventUserRow,
+	type GuildScheduledEventUserByEventRow,
+} from './database/types/GuildScheduledEventTypes';
 import {
 	APPLICATION_COLUMNS,
 	type ApplicationByOwnerRow,
@@ -694,6 +704,38 @@ export const ScheduledMessages = defineTable<ScheduledMessageRow, 'user_id' | 's
 	name: 'scheduled_messages',
 	columns: SCHEDULED_MESSAGE_COLUMNS,
 	primaryKey: ['user_id', 'scheduled_message_id'],
+});
+export const GuildScheduledEvents = defineTable<
+	GuildScheduledEventRow,
+	'guild_scheduled_event_id'
+>({
+	name: 'guild_scheduled_events',
+	columns: GUILD_SCHEDULED_EVENT_COLUMNS,
+	primaryKey: ['guild_scheduled_event_id'],
+});
+export const GuildScheduledEventsByGuild = defineTable<
+	GuildScheduledEventByGuildRow,
+	'guild_id' | 'scheduled_start_time' | 'guild_scheduled_event_id'
+>({
+	name: 'guild_scheduled_events_by_guild',
+	columns: GUILD_SCHEDULED_EVENT_BY_GUILD_COLUMNS,
+	primaryKey: ['guild_id', 'scheduled_start_time', 'guild_scheduled_event_id'],
+});
+export const GuildScheduledEventUsers = defineTable<
+	GuildScheduledEventUserRow,
+	'user_id' | 'guild_scheduled_event_id'
+>({
+	name: 'guild_scheduled_event_users',
+	columns: GUILD_SCHEDULED_EVENT_USER_COLUMNS,
+	primaryKey: ['user_id', 'guild_scheduled_event_id'],
+});
+export const GuildScheduledEventUsersByEvent = defineTable<
+	GuildScheduledEventUserByEventRow,
+	'guild_scheduled_event_id' | 'user_id'
+>({
+	name: 'guild_scheduled_event_users_by_event',
+	columns: GUILD_SCHEDULED_EVENT_USER_BY_EVENT_COLUMNS,
+	primaryKey: ['guild_scheduled_event_id', 'user_id'],
 });
 export const PushSubscriptions = defineTable<PushSubscriptionRow, 'user_id' | 'subscription_id'>({
 	name: 'push_subscriptions',

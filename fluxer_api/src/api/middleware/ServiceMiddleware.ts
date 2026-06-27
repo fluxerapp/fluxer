@@ -30,6 +30,8 @@ import {FavoriteMemeRequestService} from '../favorite_meme/FavoriteMemeRequestSe
 import {FavoriteMemeService} from '../favorite_meme/FavoriteMemeService';
 import {GatewayRequestService} from '../gateway/GatewayRequestService';
 import {GuildDiscoveryService} from '../guild/services/GuildDiscoveryService';
+import {GuildScheduledEventRepository} from '../guild_scheduled_event/repositories/GuildScheduledEventRepository';
+import {GuildScheduledEventService} from '../guild_scheduled_event/services/GuildScheduledEventService';
 import {DisabledLiveKitService} from '../infrastructure/DisabledLiveKitService';
 import type {ILiveKitService} from '../infrastructure/ILiveKitService';
 import {InMemoryVoiceRoomStore} from '../infrastructure/InMemoryVoiceRoomStore';
@@ -638,6 +640,14 @@ export const ServiceMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => 
 	ctx.set('gatewayService', gatewayService);
 	ctx.set('gatewayRequestService', new GatewayRequestService(botAuthService));
 	ctx.set('guildService', guildService);
+	ctx.set(
+		'guildScheduledEventService',
+		new GuildScheduledEventService(
+			new GuildScheduledEventRepository(),
+			snowflakeService,
+			gatewayService,
+		),
+	);
 	ctx.set('singleCommunityService', singleCommunityService);
 	ctx.set(
 		'discoveryService',
