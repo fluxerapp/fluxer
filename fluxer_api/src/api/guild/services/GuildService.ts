@@ -47,6 +47,8 @@ import {GuildMemberService} from './GuildMemberService';
 import {GuildModerationService} from './GuildModerationService';
 import {GuildRoleService} from './GuildRoleService';
 import {GuildSearchService} from './GuildSearchService';
+import {GuildScheduledEventService} from './GuildScheduledEventService';
+import {GuildScheduledEventRepository} from '../repositories/GuildScheduledEventRepository';
 
 interface AuditLogOptions {
 	channel_id?: string;
@@ -114,6 +116,7 @@ export class GuildService {
 	public readonly content: GuildContentService;
 	public readonly channels: GuildChannelService;
 	public readonly search: GuildSearchService;
+	public readonly events: GuildScheduledEventService;
 	private readonly guildRepository: IGuildRepositoryAggregate;
 	private readonly userCacheService: UserCacheService;
 	private readonly webhookRepository: IWebhookRepository;
@@ -218,6 +221,12 @@ export class GuildService {
 			gatewayService,
 			userRepository,
 			workerService,
+		);
+		this.events = new GuildScheduledEventService(
+			new GuildScheduledEventRepository(),
+			gatewayService,
+			snowflakeService,
+			avatarService,
 		);
 	}
 

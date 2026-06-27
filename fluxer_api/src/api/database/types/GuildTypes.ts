@@ -320,3 +320,51 @@ export interface GuildMemberByUserIdRow {
 export const GUILD_MEMBER_BY_USER_ID_COLUMNS = ['user_id', 'guild_id'] as const satisfies ReadonlyArray<
 	keyof GuildMemberByUserIdRow
 >;
+
+export interface GuildScheduledEventRow {
+	event_id: import('../../BrandedTypes').ScheduledEventID;
+	guild_id: import('../../BrandedTypes').GuildID;
+	channel_id: import('../../BrandedTypes').ChannelID | null;
+	creator_id: import('../../BrandedTypes').UserID;
+	name: string;
+	description: string | null;
+	image_hash: string | null;
+	scheduled_start_time: Date;
+	scheduled_end_time: Date | null;
+	status: string;
+	entity_type: string;
+	entity_id: bigint | null;
+	entity_location: string | null;
+	version: number | null;
+}
+
+export const GUILD_SCHEDULED_EVENT_COLUMNS = [
+	'event_id',
+	'guild_id',
+	'channel_id',
+	'creator_id',
+	'name',
+	'description',
+	'image_hash',
+	'scheduled_start_time',
+	'scheduled_end_time',
+	'status',
+	'entity_type',
+	'entity_id',
+	'entity_location',
+	'version',
+] as const satisfies ReadonlyArray<keyof GuildScheduledEventRow>;
+
+export interface GuildScheduledEventUserRow {
+	event_id: import('../../BrandedTypes').ScheduledEventID;
+	guild_id: import('../../BrandedTypes').GuildID;
+	user_id: import('../../BrandedTypes').UserID;
+	created_at: Date;
+}
+
+export const GUILD_SCHEDULED_EVENT_USER_COLUMNS = [
+	'event_id',
+	'guild_id',
+	'user_id',
+	'created_at',
+] as const satisfies ReadonlyArray<keyof GuildScheduledEventUserRow>;

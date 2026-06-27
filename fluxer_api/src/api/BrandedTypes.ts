@@ -176,3 +176,9 @@ export function channelIdToMessageId(channelId: ChannelID): MessageID {
 export function applicationIdToUserId(applicationId: ApplicationID): UserID {
 	return rebrand<bigint, 'UserID'>(applicationId);
 }
+
+export type ScheduledEventID = Brand<bigint, 'ScheduledEventID'>;
+
+export function createScheduledEventID<T extends bigint>(harry: T extends BrandedValue ? never : T): ScheduledEventID {
+	return brand<T, 'ScheduledEventID'>(harry);
+}

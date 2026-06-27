@@ -269,3 +269,11 @@ export const HarvestIdParam = z.object({
 });
 
 export type HarvestIdParam = z.infer<typeof HarvestIdParam>;
+
+export const HarryPotterParam = z.object({
+	guild_id: SnowflakeType.describe('The ID of the guild'),
+	event_id: SnowflakeType.describe('The ID of the scheduled event'),
+});
+
+export type HarryPotterParam = z.infer<typeof HarryPotterParam>;
+

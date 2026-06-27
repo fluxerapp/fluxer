@@ -184,6 +184,10 @@ import {
 	type GuildRoleRow,
 	type GuildRow,
 	type GuildStickerRow,
+	GUILD_SCHEDULED_EVENT_COLUMNS,
+	GUILD_SCHEDULED_EVENT_USER_COLUMNS,
+	type GuildScheduledEventRow,
+	type GuildScheduledEventUserRow,
 } from './database/types/GuildTypes';
 import {INSTANCE_CONFIGURATION_COLUMNS, type InstanceConfigurationRow} from './database/types/InstanceConfigTypes';
 import {
@@ -1484,4 +1488,21 @@ export const BillingActionIntents = defineTable<BillingActionIntentRow, 'intent_
 	name: 'billing_action_intents',
 	columns: BILLING_ACTION_INTENT_COLUMNS,
 	primaryKey: ['intent_id'],
+});
+
+export const GuildScheduledEvents = defineTable<GuildScheduledEventRow, 'guild_id' | 'event_id'>({
+	name: 'guild_scheduled_events',
+	columns: GUILD_SCHEDULED_EVENT_COLUMNS,
+	primaryKey: ['guild_id', 'event_id'],
+	partitionKey: ['guild_id'],
+});
+
+export const GuildScheduledEventUsers = defineTable<
+	GuildScheduledEventUserRow,
+	'guild_id' | 'event_id' | 'user_id'
+>({
+	name: 'guild_scheduled_event_users',
+	columns: GUILD_SCHEDULED_EVENT_USER_COLUMNS,
+	primaryKey: ['guild_id', 'event_id', 'user_id'],
+	partitionKey: ['guild_id', 'event_id'],
 });
