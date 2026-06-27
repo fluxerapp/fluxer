@@ -322,6 +322,7 @@ export interface MasterConfig {
 		self_hosted: boolean;
 		auto_join_invite_code?: string;
 		visionaries_guild_id?: string;
+		visionaries_guild_visionary_role_id?: string;
 		branding: InstanceBrandingConfig;
 		setup: {
 			configured: boolean;

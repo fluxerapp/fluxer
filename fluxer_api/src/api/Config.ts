@@ -376,6 +376,7 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 			selfHosted: master.instance.self_hosted,
 			autoJoinInviteCode: master.instance.auto_join_invite_code,
 			visionariesGuildId: master.instance.visionaries_guild_id,
+			visionariesGuildVisionaryRoleId: master.instance.visionaries_guild_visionary_role_id,
 			branding: {
 				productName: master.instance.branding.product_name,
 				iconUrl: master.instance.branding.icon_url,
