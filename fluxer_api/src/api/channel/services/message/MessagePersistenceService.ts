@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {MessageFlags, Permissions, SENDABLE_MESSAGE_FLAGS} from '@fluxer/constants/src/ChannelConstants';
+import {
+	MessageEmbedTypes,
+	MessageFlags,
+	Permissions,
+	SENDABLE_MESSAGE_FLAGS,
+} from '@fluxer/constants/src/ChannelConstants';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
@@ -531,7 +536,19 @@ export class MessagePersistenceService {
 				nsfwMode: isNSFWAllowed ? 'allow' : 'block',
 				isBugHunterBot: params.isBugHunterBot,
 			});
-			updatedRowData.embeds = initialEmbeds;
+			if (data.embeds === undefined) {
+				// A content-only edit must not drop embeds the author already set
+				// (rich embeds and forwarded media). getInitialEmbeds only returns
+				// the URL auto-embeds re-derived from the new content, so keep the
+				// existing custom (rich) embeds and merge the refreshed URL embeds.
+				const preservedCustomEmbeds = (updatedRowData.embeds ?? []).filter(
+					(embed) => embed.type === MessageEmbedTypes.RICH,
+				);
+				const mergedEmbeds = [...preservedCustomEmbeds, ...(initialEmbeds ?? [])];
+				updatedRowData.embeds = mergedEmbeds.length > 0 ? mergedEmbeds : null;
+			} else {
+				updatedRowData.embeds = initialEmbeds;
+			}
 			hasUncachedUrls = embedUrls;
 			hasChanges = true;
 		}
