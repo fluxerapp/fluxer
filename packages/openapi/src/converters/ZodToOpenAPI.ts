@@ -109,6 +109,88 @@ function makeNullableSchema(inner: OpenAPISchemaOrRef): OpenAPISchema {
 		anyOf: [inner, {type: 'null'}],
 	};
 }
+const discriminatedUnionBranchRegistry = new Map<string, OpenAPISchema>();
+
+export function getRegisteredDiscriminatedUnionBranchSchemas(): Record<string, OpenAPISchema> {
+	const result: Record<string, OpenAPISchema> = {};
+	for (const [name, schema] of discriminatedUnionBranchRegistry) {
+		result[name] = schema;
+	}
+	return result;
+}
+
+const namedObjectRegistry = new Map<string, OpenAPISchema>();
+
+export function getRegisteredNamedObjectSchemas(): Record<string, OpenAPISchema> {
+	const result: Record<string, OpenAPISchema> = {};
+	for (const [name, schema] of namedObjectRegistry) {
+		result[name] = schema;
+	}
+	return result;
+}
+
+function makeNamedObjectRef(name: string, fieldDescription: string | undefined): OpenAPISchemaOrRef {
+	if (fieldDescription) {
+		return {$ref: `#/components/schemas/${name}`, description: fieldDescription};
+	}
+	return {$ref: `#/components/schemas/${name}`};
+}
+
+function toPascalCase(value: string): string {
+	return value
+		.split(/[^A-Za-z0-9]+/)
+		.filter((word) => word.length > 0)
+		.map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+		.join('');
+}
+
+function discriminatedUnionBranchSuffix(
+	branch: OpenAPISchema,
+	discriminator: string,
+	index: number,
+	usedSuffixes: Set<string>,
+): string {
+	let base = '';
+	const discriminatorProp = branch.properties?.[discriminator];
+	if (discriminatorProp && isOpenAPISchema(discriminatorProp)) {
+		const enumNames = (discriminatorProp as {['x-enumNames']?: Array<string | null>})['x-enumNames'];
+		const enumValues = discriminatorProp.enum;
+		if (Array.isArray(enumNames) && typeof enumNames[0] === 'string') {
+			base = toPascalCase(enumNames[0]);
+		} else if (Array.isArray(enumValues) && enumValues.length === 1 && typeof enumValues[0] === 'string') {
+			base = toPascalCase(enumValues[0]);
+		}
+	}
+	if (base.length === 0) {
+		base = `Variant${index}`;
+	}
+	let suffix = base;
+	if (usedSuffixes.has(suffix)) {
+		suffix = `${base}${index}`;
+	}
+	usedSuffixes.add(suffix);
+	return suffix;
+}
+
+function registerDiscriminatedUnionBranches(
+	unionName: string,
+	discriminator: string,
+	branches: Array<OpenAPISchemaOrRef>,
+): Array<OpenAPISchemaOrRef> {
+	const usedSuffixes = new Set<string>();
+	return branches.map((branch, index) => {
+		if (!isOpenAPISchema(branch)) {
+			return branch;
+		}
+		const suffix = discriminatedUnionBranchSuffix(branch, discriminator, index, usedSuffixes);
+		const branchName = `${suffix}${unionName}`;
+		if (!discriminatedUnionBranchRegistry.has(branchName)) {
+			discriminatedUnionBranchRegistry.set(branchName, branch);
+		}
+		return {$ref: `#/components/schemas/${branchName}`};
+	});
+}
+
 export function zodToOpenAPISchema(schema: ZodTypeAny, depth = 0): OpenAPISchemaOrRef {
 	if (depth > 20) {
 		return {type: 'object'};
@@ -372,6 +454,15 @@ export function zodToOpenAPISchema(schema: ZodTypeAny, depth = 0): OpenAPISchema
 			if (!shape) {
 				return {type: 'object'};
 			}
+			const objectAnnotation = parseFluxerTypeAnnotation(getDescription(schema));
+			const namedObjectName =
+				objectAnnotation?.typeName === 'NamedObject' ? objectAnnotation.objectName : undefined;
+			if (namedObjectName && depth > 0 && namedObjectRegistry.has(namedObjectName)) {
+				return makeNamedObjectRef(namedObjectName, objectAnnotation?.fieldDescription);
+			}
+			if (namedObjectName) {
+				namedObjectRegistry.set(namedObjectName, {type: 'object'});
+			}
 			const properties: Record<string, OpenAPISchemaOrRef> = {};
 			const required: Array<string> = [];
 			for (const [key, value] of Object.entries(shape)) {
@@ -386,6 +477,16 @@ export function zodToOpenAPISchema(schema: ZodTypeAny, depth = 0): OpenAPISchema
 			};
 			if (required.length > 0) {
 				result.required = required;
+			}
+			if (namedObjectName) {
+				if (objectAnnotation?.userDescription) {
+					result.description = objectAnnotation.userDescription;
+				}
+				namedObjectRegistry.set(namedObjectName, result);
+				if (depth > 0) {
+					return makeNamedObjectRef(namedObjectName, objectAnnotation?.fieldDescription);
+				}
+				return result;
 			}
 			return addDescription(result, schema);
 		}
@@ -480,61 +581,16 @@ export function zodToOpenAPISchema(schema: ZodTypeAny, depth = 0): OpenAPISchema
 					return addDescription(literalSchema, schema);
 				}
 			}
-			return addDescription(
-				{
-					oneOf: options.map((opt) => zodToOpenAPISchema(opt, depth + 1)),
-				},
-				schema,
-			);
-		}
-		case 'ZodDiscriminatedUnion':
-		case 'discriminatedUnion': {
-			const def = getZodDefinition(schema);
-			const discriminator = def.discriminator;
-			let optionsArray: Array<ZodTypeAny>;
-			let discriminatorValues: Array<unknown> = [];
-			if (def.options instanceof Map) {
-				discriminatorValues = Array.from(def.options.keys());
-				optionsArray = Array.from(def.options.values());
-			} else if (Array.isArray(def.options)) {
-				optionsArray = def.options;
-			} else {
-				return {type: 'object'};
+			const oneOfBranches = options.map((opt) => zodToOpenAPISchema(opt, depth + 1));
+			const unionName = getSchemaName(schema);
+			const unionDiscriminator = getZodDefinition(schema).discriminator;
+			if (unionName && typeof unionDiscriminator === 'string') {
+				return addDescription(
+					{oneOf: registerDiscriminatedUnionBranches(unionName, unionDiscriminator, oneOfBranches)},
+					schema,
+				);
 			}
-			if (optionsArray.length === 0) {
-				return {type: 'object'};
-			}
-			const schemas = optionsArray.map((opt) => zodToOpenAPISchema(opt, depth + 1));
-			if (discriminator) {
-				const result: OpenAPISchema = {
-					oneOf: schemas,
-					discriminator: {
-						propertyName: discriminator,
-					},
-				};
-				if (discriminatorValues.length > 0 && discriminatorValues.length === schemas.length) {
-					const mapping: Record<string, string> = {};
-					for (let i = 0; i < discriminatorValues.length; i++) {
-						const value = discriminatorValues[i];
-						if (typeof value === 'string' || typeof value === 'number') {
-							const schemaObj = schemas[i];
-							if (isOpenAPISchema(schemaObj) && schemaObj.properties?.[discriminator]) {
-								mapping[String(value)] = `#/components/schemas/Option${i}`;
-							}
-						}
-					}
-					if (Object.keys(mapping).length > 0) {
-						result.discriminator!.mapping = mapping;
-					}
-				}
-				return addDescription(result, schema);
-			}
-			return addDescription(
-				{
-					oneOf: schemas,
-				},
-				schema,
-			);
+			return addDescription({oneOf: oneOfBranches}, schema);
 		}
 		case 'ZodLiteral':
 		case 'literal': {
