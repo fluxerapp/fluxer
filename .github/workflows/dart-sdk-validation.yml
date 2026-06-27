@@ -41,7 +41,6 @@ jobs:
         uses: actions/checkout@b9e0990d219a03df7633c93f6f005a8fecbcab22
         with:
           repository: fluxerapp/dart_sdk
-          ref: canary
           path: dart_sdk
           persist-credentials: false
 
