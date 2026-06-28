@@ -87,7 +87,7 @@ jobs:
           BODY
           )"
           if [[ -z "$pr_number" ]]; then
-            gh pr create --base main --head "$WEBLATE_BRANCH" --title "i18n: update translations from Weblate" --body "$body"
+            gh pr create --base main --head "$WEBLATE_BRANCH" --title "chore(i18n): update translations from Weblate" --body "$body"
           else
-            gh pr edit "$pr_number" --title "i18n: update translations from Weblate" --body "$body"
+            gh pr edit "$pr_number" --title "chore(i18n): update translations from Weblate" --body "$body"
           fi

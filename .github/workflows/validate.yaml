@@ -1,0 +1,28 @@
+name: Validate
+
+on:
+  pull_request:
+    types:
+      - opened
+      - edited
+      - reopened
+      - synchronize
+
+permissions: {}
+
+jobs:
+  validate-title:
+    name: Validate title
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate pull request title
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          REGEX="^(revert: )?(feat|fix|docs|style|refactor|perf|test|build|ci|chore)(\\(.+\\))?!?: .{1,72}$"
+
+          echo "Title: \"$TITLE\""
+
+          if [[ ! "$TITLE" =~ $REGEX ]]; then
+            exit 1
+          fi
