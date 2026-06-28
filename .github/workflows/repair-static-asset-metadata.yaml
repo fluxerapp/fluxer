@@ -31,7 +31,9 @@ jobs:
           toolchain: 1.93.0
 
       - name: Repair app asset metadata
+        env:
+          REPAIR_PREFIX: ${{ inputs.prefix }}
         run: >-
           cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- repair-static-asset-metadata
           --bucket "${STATIC_BUCKET}"
-          --prefix "${{ inputs.prefix }}"
+          --prefix "${REPAIR_PREFIX}"
