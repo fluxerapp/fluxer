@@ -4,9 +4,7 @@ name: i18n source sync
 on:
   workflow_dispatch:
 
-permissions:
-  contents: write
-  pull-requests: write
+permissions: {}
 
 concurrency:
   group: i18n-source-sync
@@ -18,7 +16,6 @@ defaults:
 
 env:
   SOURCE_BRANCH: automation/i18n-source-catalogs
-  GH_TOKEN: ${{ github.token }}
 
 jobs:
   sync:
@@ -26,10 +23,23 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
+      - name: Create token
+        id: create-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1
+        with:
+          client-id: ${{ vars.FLUXER_CI_APP_ID }}
+          private-key: ${{ secrets.FLUXER_CI_APP_KEY }}
+          owner: fluxerapp
+          repositories: fluxer
+          permission-contents: write
+          permission-pull-requests: write
+
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
+          token: ${{ steps.create-token.outputs.token }}
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Set up Rust toolchain
         uses: dtolnay/rust-toolchain@b3b07ba8b418998c39fb20f53e8b695cdcc8de1b
@@ -57,6 +67,8 @@ jobs:
         run: pnpm biome format --write package.json packages/i18n/package.json packages/i18n/scripts/SyncStaticI18nCatalogs.ts packages/errors/src/i18n fluxer_api/pkgs/email/src/email_i18n fluxer_api/src/api/content_i18n
 
       - name: Open source catalog PR
+        env:
+          GH_TOKEN: ${{ steps.create-token.outputs.token }}
         run: |
           set -euo pipefail
           if [[ -z "$(git status --porcelain -- fluxer_app/src/features/i18n/locales fluxer_marketing/locales packages/errors/src/i18n fluxer_api/pkgs/email/src/email_i18n fluxer_api/src/api/content_i18n)" ]]; then
@@ -64,11 +76,12 @@ jobs:
             exit 0
           fi
 
-          git config user.name "fluxer-i18n-bot"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "fluxer-ci[bot]"
+          git config user.email "${{ vars.FLUXER_CI_APP_ID }}+fluxer-ci[bot]@users.noreply.github.com"
           git switch -c "$SOURCE_BRANCH"
           git add fluxer_app/src/features/i18n/locales fluxer_marketing/locales packages/errors/src/i18n fluxer_api/pkgs/email/src/email_i18n fluxer_api/src/api/content_i18n
           git commit -m "chore(i18n): refresh source catalogs"
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
           git fetch origin "$SOURCE_BRANCH" || true
           git push --force-with-lease="refs/heads/$SOURCE_BRANCH" origin "HEAD:$SOURCE_BRANCH"
 
