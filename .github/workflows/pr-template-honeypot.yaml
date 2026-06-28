@@ -45,9 +45,16 @@ jobs:
           fi
 
           author="$(jq -r '.pull_request.user.login' "$GITHUB_EVENT_PATH")"
+          author_type="$(jq -r '.pull_request.user.type // ""' "$GITHUB_EVENT_PATH")"
           author_association="$(jq -r '.pull_request.author_association' "$GITHUB_EVENT_PATH")"
+          head_repository="$(jq -r '.pull_request.head.repo.full_name // ""' "$GITHUB_EVENT_PATH")"
           body_file="$(mktemp)"
           jq -r '.pull_request.body // ""' "$GITHUB_EVENT_PATH" > "$body_file"
+
+          if [ "$author_type" = "Bot" ] && [ "$head_repository" = "$GITHUB_REPOSITORY" ]; then
+            echo "Skipping repository-local bot pull request: $author"
+            exit 0
+          fi
 
           if grep -Fq "$HONEYPOT_MARKER" "$body_file"; then
             echo "Honeypot marker is present."
