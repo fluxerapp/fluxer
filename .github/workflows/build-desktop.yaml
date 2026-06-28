@@ -45,6 +45,7 @@ jobs:
   meta:
     name: Resolve build metadata
     runs-on: ubuntu-24.04-arm
+    environment: desktop-releases
     timeout-minutes: 25
     outputs:
       version: ${{ steps.meta.outputs.version }}
@@ -79,6 +80,7 @@ jobs:
   matrix:
     name: Resolve build matrix
     runs-on: ubuntu-24.04-arm
+    environment: desktop-releases
     timeout-minutes: 25
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
@@ -110,6 +112,7 @@ jobs:
       - meta
       - matrix
     runs-on: ${{ matrix.os }}
+    environment: desktop-releases
     timeout-minutes: 60
     strategy:
       fail-fast: false
@@ -421,6 +424,7 @@ jobs:
   check_signing:
     name: Check signing secrets
     runs-on: ubuntu-24.04-arm
+    environment: desktop-releases
     timeout-minutes: 5
     outputs:
       enabled: ${{ steps.check.outputs.enabled }}
@@ -450,6 +454,7 @@ jobs:
       - build
       - check_signing
     runs-on: blacksmith-32vcpu-windows-2025
+    environment: desktop-releases
     timeout-minutes: 25
     env:
       BUILD_CHANNEL: ${{ needs.meta.outputs.build_channel }}
@@ -562,6 +567,7 @@ jobs:
       - build
       - sign_windows
     runs-on: ubuntu-24.04-arm
+    environment: desktop-releases
     timeout-minutes: 60
     env:
       CHANNEL: ${{ needs.meta.outputs.build_channel }}
