@@ -24808,10 +24808,7 @@
 					"gif": {
 						"type": "object",
 						"properties": {
-							"provider": {
-								"type": "string",
-								"description": "Stable machine name of the active GIF provider (e.g. \"klipy\", \"tenor\")"
-							},
+							"provider": {"type": "string", "description": "Stable machine name of the active GIF provider."},
 							"display_name": {"type": "string", "description": "Human-readable provider name shown in the UI"},
 							"attribution_required": {
 								"type": "boolean",
@@ -29258,7 +29255,7 @@
 					},
 					"gif_provider": {
 						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "Stable name of the GIF provider that issued gif_slug (e.g. \"klipy\", \"tenor\"), if any"
+						"description": "Stable name of the GIF provider that issued gif_slug, if any. Legacy records may contain older provider names."
 					},
 					"media": {
 						"anyOf": [
@@ -35767,7 +35764,7 @@
 					},
 					"gif_provider": {
 						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "Stable name of the GIF provider that issued gif_slug (e.g. \"klipy\", \"tenor\")"
+						"description": "Stable name of the GIF provider that issued gif_slug. New provider GIFs are sourced from KLIPY."
 					},
 					"media": {
 						"anyOf": [

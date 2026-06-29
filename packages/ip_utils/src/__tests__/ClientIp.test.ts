@@ -21,13 +21,11 @@ describe('extractClientIp', () => {
 	it('prioritises configured header', () => {
 		const request = new Request('http://example.com', {
 			headers: {
-				'Cf-Connecting-Ip': '203.0.113.40',
+				'X-Real-Ip': '203.0.113.40',
 				'X-Forwarded-For': '203.0.113.60',
 			},
 		});
-		expect(extractClientIp(request, {trustClientIpHeader: true, clientIpHeaderName: 'cf-connecting-ip'})).toBe(
-			'203.0.113.40',
-		);
+		expect(extractClientIp(request, {trustClientIpHeader: true, clientIpHeaderName: 'x-real-ip'})).toBe('203.0.113.40');
 	});
 	it('uses default header name (x-forwarded-for) when clientIpHeaderName is not specified', () => {
 		const request = new Request('http://example.com', {
@@ -39,7 +37,7 @@ describe('extractClientIp', () => {
 		const request = new Request('http://example.com', {
 			headers: {'X-Forwarded-For': '192.168.1.3'},
 		});
-		expect(extractClientIp(request, {trustClientIpHeader: true, clientIpHeaderName: 'cf-connecting-ip'})).toBeNull();
+		expect(extractClientIp(request, {trustClientIpHeader: true, clientIpHeaderName: 'x-real-ip'})).toBeNull();
 	});
 	it('extracts first hop from x-forwarded-for', () => {
 		const request = new Request('http://example.com', {
@@ -108,7 +106,7 @@ describe('resolveClientIpHeaderName', () => {
 		expect(resolveClientIpHeaderName()).toBe('x-forwarded-for');
 	});
 	it('returns the configured header name normalised to lowercase', () => {
-		expect(resolveClientIpHeaderName('cf-connecting-ip')).toBe('cf-connecting-ip');
+		expect(resolveClientIpHeaderName('x-client-ip')).toBe('x-client-ip');
 		expect(resolveClientIpHeaderName('X-Real-Ip')).toBe('x-real-ip');
 	});
 });

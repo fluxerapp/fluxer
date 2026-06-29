@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+{{ include "svc-common.statefulset" . }}
+---
+{{ include "svc-common.deployment" . }}
+---
+{{ include "svc-common.headless-service" . }}
+---
+{{ include "svc-common.service" . }}
+---
+{{ include "svc-common.pdb" . }}
+---
+{{ include "svc-common.router-pdb" . }}

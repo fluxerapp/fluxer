@@ -25,7 +25,6 @@ function createProvider(): IGifProvider {
 		getFeatured: async () => ({gifs: [], categories: []}),
 		getTrendingGifs: async () => [],
 		suggest: async () => [],
-		refreshFeaturedCategories: async () => undefined,
 		resolveByUrl: async () => null,
 		buildShareUrl: (slug) => `https://klipy.example/${slug}`,
 		extractSlugFromUrl: () => null,
@@ -47,7 +46,7 @@ function createApp(gifService?: GifService): Hono<HonoEnv> {
 
 describe('GifProviderHeaderMiddleware', () => {
 	it('emits active GIF provider metadata headers', async () => {
-		const gifService = new GifService({providers: [createProvider()], activeName: 'klipy'});
+		const gifService = new GifService(createProvider());
 		const response = await createApp(gifService).request('/probe');
 
 		expect(response.headers.get(GIF_PROVIDER_HEADER)).toBe('klipy');

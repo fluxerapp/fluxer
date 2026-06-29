@@ -1075,6 +1075,7 @@ mod tests {
             media_proxy,
             static_cdn_endpoint: "https://static.example.test",
             youtube_api_key: None,
+            klipy_api_key: None,
         }
     }
 

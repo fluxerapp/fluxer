@@ -271,13 +271,7 @@ export interface APIConfig {
 		domain: string;
 		secure: boolean;
 	};
-	gif: {
-		provider: 'klipy' | 'tenor';
-	};
 	klipy: {
-		apiKey?: string;
-	};
-	tenor: {
 		apiKey?: string;
 	};
 	youtube: {
