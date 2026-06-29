@@ -29981,7 +29981,9 @@
 						"description": "Channels visible to the requesting user from gateway state"
 					},
 					"member_count": {"$ref": "#/components/schemas/Int32Type"},
-					"online_count": {"$ref": "#/components/schemas/Int32Type"}
+					"online_count": {"$ref": "#/components/schemas/Int32Type"},
+					"approximate_member_count": {"$ref": "#/components/schemas/Int32Type"},
+					"approximate_presence_count": {"$ref": "#/components/schemas/Int32Type"}
 				},
 				"required": [
 					"id",
