@@ -9,11 +9,11 @@
 		"DOCKER_HOST": "unix:///var/run/docker.sock",
 		"KUBECONFIG": "/workspaces/fluxer/.fluxer/k8s/local-kubeconfig"
 	},
-	"runServices": ["workspace", "cassandra", "valkey", "nats", "livekit", "elasticsearch"],
+	"runServices": ["workspace", "postgres", "valkey", "nats", "livekit", "meilisearch", "mailpit"],
 	"forwardPorts": [
 		3000, 8088, 8080, 8771, 8082, 3010, 3020, 8100, 8101, 8102, 8103, 8104, 8105, 8106, 8107, 8108, 8109, 8110, 8111,
 		8112, 8113, 8114, 8115, 8116, 8117, 8118, 8119, 8120, 8121, 8122, 8123, 8124, 8125, 3900, 8888, 9333, 9340, 23646,
-		4222, 7880, 9200, 8000
+		4222, 7700, 7880, 7900, 9200, 8000
 	],
 	"portsAttributes": {
 		"8000": {
@@ -51,11 +51,14 @@
 		"7880": {
 			"label": "LiveKit"
 		},
+		"7700": {
+			"label": "Meilisearch"
+		},
 		"9200": {
 			"label": "Elasticsearch"
 		}
 	},
-	"postCreateCommand": "find /workspaces/fluxer -maxdepth 4 -type d -name node_modules -prune -exec sudo chown -R vscode:vscode {} + && sudo chown -R vscode:vscode /home/vscode/.local/share/pnpm && cargo run -p fluxer-dev -- bootstrap && bash /workspaces/fluxer/fluxer_docs/serve.sh --bootstrap",
+	"postCreateCommand": "sudo chown -R vscode:vscode /workspaces/fluxer/target && find /workspaces/fluxer -maxdepth 4 -type d -name node_modules -prune -exec sudo chown -R vscode:vscode {} + && sudo chown -R vscode:vscode /home/vscode/.local/share/pnpm && cargo run -p fluxer-dev -- bootstrap",
 	"postStartCommand": "cargo run -p fluxer-dev -- post-start && bash /workspaces/fluxer/fluxer_docs/serve.sh --daemon",
 	"customizations": {
 		"vscode": {

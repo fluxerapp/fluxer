@@ -79,4 +79,11 @@ describe('CreatePrivateChannelRequest', () => {
 		);
 		expect(CreatePrivateChannelRequest.safeParse({recipients}).success).toBe(false);
 	});
+	it('allows DM requests to the system user id 0', () => {
+		const parsed = CreatePrivateChannelRequest.safeParse({recipient_id: '0'});
+		expect(parsed.success).toBe(true);
+		if (parsed.success) {
+			expect(parsed.data.recipient_id).toBe(0n);
+		}
+	});
 });

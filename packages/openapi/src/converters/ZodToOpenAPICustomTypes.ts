@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import {
 	Base64ImageTypeRef,
+	DiscriminatorTypeRef,
 	EmailTypeRef,
 	Int32TypeRef,
 	Int64StringTypeRef,
@@ -58,6 +59,8 @@ function getRefForCustomTypeName(typeName: string): OpenAPISchemaOrRef | null {
 			return UnsignedInt64TypeRef;
 		case 'UsernameType':
 			return UsernameTypeRef;
+		case 'DiscriminatorType':
+			return DiscriminatorTypeRef;
 		case 'EmailType':
 			return EmailTypeRef;
 		case 'PasswordType':

@@ -50,13 +50,16 @@ export const EmailType = withOpenApiType(
 		}, ValidationErrorCodes.INVALID_EMAIL_LOCAL_PART),
 	'EmailType',
 );
-export const DiscriminatorType = z
-	.union([z.string(), z.number()])
-	.transform((value) => String(value))
-	.pipe(z.string().regex(DISCRIMINATOR_REGEX, ValidationErrorCodes.DISCRIMINATOR_INVALID_FORMAT))
-	.transform((value) => {
-		return Number.parseInt(value, 10);
-	});
+export const DiscriminatorType = withOpenApiType(
+	z
+		.union([z.string(), z.number()])
+		.transform((value) => String(value))
+		.pipe(z.string().regex(DISCRIMINATOR_REGEX, ValidationErrorCodes.DISCRIMINATOR_INVALID_FORMAT))
+		.transform((value) => {
+			return Number.parseInt(value, 10);
+		}),
+	'DiscriminatorType',
+);
 export const UsernameType = withOpenApiType(
 	z
 		.string()

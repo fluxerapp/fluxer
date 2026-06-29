@@ -8,6 +8,7 @@ import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidat
 import type {UserUpdateRequest} from '@fluxer/schema/src/domains/user/UserRequestSchemas';
 import type {IRateLimitService} from '@pkgs/rate_limit/src/IRateLimitService';
 import type {ApiContext} from '../../ApiContext';
+import {Config} from '../../Config';
 import * as AuthPassword from '../../auth/AuthPassword';
 import * as AuthSession from '../../auth/AuthSession';
 import type {SudoVerificationResult} from '../../auth/services/SudoVerificationService';
@@ -227,7 +228,7 @@ export class UserAccountSecurityService {
 			};
 		}
 		const discriminatorToUse = normalizedRequestedDiscriminator ?? user.discriminator;
-		if (discriminatorToUse === 0 && user.premiumType !== UserPremiumTypes.LIFETIME) {
+		if (this.requiresVisionaryForDiscriminator0000(user, discriminatorToUse)) {
 			throw InputValidationError.fromCode('discriminator', ValidationErrorCodes.VISIONARY_REQUIRED_FOR_DISCRIMINATOR);
 		}
 		const discriminatorResult = await this.deps.discriminatorService.generateDiscriminator({
@@ -263,7 +264,7 @@ export class UserAccountSecurityService {
 				ValidationErrorCodes.CHANGING_DISCRIMINATOR_REQUIRES_PREMIUM,
 			);
 		}
-		if (discriminator === 0 && user.premiumType !== UserPremiumTypes.LIFETIME) {
+		if (this.requiresVisionaryForDiscriminator0000(user, discriminator)) {
 			throw InputValidationError.fromCode('discriminator', ValidationErrorCodes.VISIONARY_REQUIRED_FOR_DISCRIMINATOR);
 		}
 		const discriminatorResult = await this.deps.discriminatorService.generateDiscriminator({
@@ -275,6 +276,13 @@ export class UserAccountSecurityService {
 			throw InputValidationError.fromCode('discriminator', ValidationErrorCodes.TAG_ALREADY_TAKEN);
 		}
 		return discriminator;
+	}
+
+	private requiresVisionaryForDiscriminator0000(user: User, discriminator: number): boolean {
+		if (Config.instance.selfHosted) {
+			return false;
+		}
+		return discriminator === 0 && user.premiumType !== UserPremiumTypes.LIFETIME;
 	}
 
 	private async enforceFluxerTagChangeRateLimit(params: {

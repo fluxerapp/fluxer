@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+name: build gifs
+
+on:
+  workflow_dispatch:
+    inputs:
+      build-version:
+        description: "Explicit Fluxer CalVer build version (YYYY.MDD.MICRO, UTC HHMMSS without leading zeroes) to use instead of automatic UTC clock allocation"
+        type: string
+        required: false
+        default: ""
+  workflow_call:
+    inputs:
+      build-version:
+        description: "Explicit Fluxer CalVer build version (YYYY.MDD.MICRO, UTC HHMMSS without leading zeroes) to use instead of automatic UTC clock allocation"
+        type: string
+        required: false
+        default: ""
+
+permissions:
+  actions: read
+  contents: read
+  packages: write
+
+jobs:
+  image:
+    uses: ./.github/workflows/_build-image.yaml
+    with:
+      image: fluxer-gifs
+      dockerfile: fluxer_gifs/Dockerfile
+      build-version: ${{ inputs.build-version }}
+    secrets: inherit

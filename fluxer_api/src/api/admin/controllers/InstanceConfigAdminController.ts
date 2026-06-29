@@ -290,8 +290,6 @@ export function InstanceConfigAdminController(app: HonoApp) {
 				await instanceConfigRepository.setInstanceIntegrationsConfig({
 					gif: data.integrations.gif
 						? omitUndefinedFields({
-								provider: readOptionalField(data.integrations.gif, 'provider'),
-								tenor_api_key: readOptionalField(data.integrations.gif, 'tenor_api_key'),
 								klipy_api_key: readOptionalField(data.integrations.gif, 'klipy_api_key'),
 							})
 						: undefined,

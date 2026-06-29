@@ -29,6 +29,7 @@ jobs:
   meta:
     name: resolve metadata
     runs-on: ubuntu-24.04
+    environment: builds
     timeout-minutes: 5
     outputs:
       build_version: ${{ steps.vars.outputs.build_version }}
@@ -51,6 +52,7 @@ jobs:
     name: build app-proxy (amd64)
     needs: meta
     runs-on: blacksmith-4vcpu-ubuntu-2404
+    environment: builds
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
@@ -104,6 +106,7 @@ jobs:
     name: build app-proxy (arm64)
     needs: meta
     runs-on: blacksmith-4vcpu-ubuntu-2404-arm
+    environment: builds
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
@@ -136,6 +139,7 @@ jobs:
     name: merge multi-arch manifest
     needs: [meta, build, build-arm64]
     runs-on: ubuntu-24.04
+    environment: builds
     timeout-minutes: 10
     steps:
       - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f

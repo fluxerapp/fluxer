@@ -13,6 +13,7 @@ import {createBase64StringType} from '@fluxer/schema/src/primitives/FileValidato
 import {
 	createBitflagInt32Type,
 	createInt32EnumType,
+	createNamedObject,
 	createNamedStringLiteralUnion,
 	createStringType,
 	Int32Type,
@@ -324,7 +325,7 @@ export const OAuth2ApplicationsMeResponse = z.union([ApplicationListResponse, Ap
 
 export type OAuth2ApplicationsMeResponse = z.infer<typeof OAuth2ApplicationsMeResponse>;
 
-const OAuth2AuthorizationResponse = z.object({
+const OAuth2AuthorizationResponse = createNamedObject('OAuth2AuthorizationResponse', {
 	application: z
 		.object({
 			id: SnowflakeStringType.describe('The unique identifier of the application'),

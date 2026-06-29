@@ -165,6 +165,12 @@ export const GuildResponse = z.object({
 	channels: z.array(ChannelResponse).optional().describe('Channels visible to the requesting user from gateway state'),
 	member_count: Int32Type.optional().describe('Total number of members in the guild'),
 	online_count: Int32Type.optional().describe('Number of online members visible in the guild'),
+	approximate_member_count: Int32Type.optional().describe(
+		'Approximate total member count (only when with_counts is true)',
+	),
+	approximate_presence_count: Int32Type.optional().describe(
+		'Approximate online member count (only when with_counts is true)',
+	),
 });
 
 export type GuildResponse = z.infer<typeof GuildResponse>;
@@ -232,6 +238,8 @@ export interface Guild {
 	readonly unavailable_hidden?: boolean;
 	readonly member_count?: number;
 	readonly online_count?: number;
+	readonly approximate_member_count?: number;
+	readonly approximate_presence_count?: number;
 	readonly roles?: ReadonlyArray<z.infer<typeof GuildRoleResponse>>;
 	readonly emojis?: ReadonlyArray<z.infer<typeof GuildEmojiResponse>>;
 	readonly stickers?: ReadonlyArray<z.infer<typeof GuildStickerResponse>>;

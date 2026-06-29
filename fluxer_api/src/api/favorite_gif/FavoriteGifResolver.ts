@@ -4,6 +4,7 @@ import {Logger} from '@fluxer/logger/src/Logger';
 import type {ResolvedGifEntrySchema} from '@fluxer/schema/src/domains/gif/FavoriteGifSchemas';
 import type {GifMediaFormat, GifResponse} from '@fluxer/schema/src/domains/gif/GifSchemas';
 import type {EmbedMediaResponse} from '@fluxer/schema/src/domains/message/EmbedSchemas';
+import {tryExtractGifProviderSlug} from '../gif/GifProviderUtils';
 import type {GifService} from '../gif/GifService';
 import type {IGifProvider} from '../gif/IGifProvider';
 import type {IMediaService, MediaProxyMetadataResponse} from '../infrastructure/IMediaService';
@@ -91,12 +92,9 @@ async function resolveProviderGifUrl({
 	country: string;
 	gifService: GifService;
 }): Promise<GifResponse | null> {
-	for (const provider of gifService.listProviders()) {
-		if (!(await provider.isAvailable()) || !provider.extractSlugFromUrl(url)) continue;
-		const gif = await resolveProviderUrl(provider, {url, locale, country});
-		if (gif) return gif;
-	}
-	return null;
+	const provider = gifService.getProvider();
+	if (!(await tryExtractGifProviderSlug(provider, url))) return null;
+	return resolveProviderUrl(provider, {url, locale, country});
 }
 
 async function resolveProviderUrl(

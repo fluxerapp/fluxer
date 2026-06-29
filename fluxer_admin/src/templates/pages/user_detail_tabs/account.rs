@@ -47,8 +47,8 @@ fn edit_account_card(base: &str, user: &AdminUser, csrf_token: &str) -> Markup {
                     p class="text-sm font-medium text-neutral-700" { "Change Username:" }
                     input type="text" name="username" placeholder="New username"
                         required class=(INPUT_CLS);
-                    input type="number" name="discriminator"
-                        placeholder="Discriminator (optional)" min="0" max="9999"
+                    input type="text" name="discriminator"
+                        placeholder="Discriminator (optional)" inputmode="numeric" pattern="[0-9]{1,4}" maxlength="4"
                         class=(INPUT_CLS);
                     (form_actions(html! {
                         (submit_button("Change Username"))
