@@ -125,6 +125,7 @@ mod tests {
             bypass_cache: false,
             cache_only,
             youtube_api_key: None,
+            klipy_api_key: None,
         }
     }
 

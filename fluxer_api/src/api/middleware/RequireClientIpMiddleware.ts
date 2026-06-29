@@ -2,6 +2,7 @@
 
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {ForbiddenError} from '@fluxer/errors/src/domains/core/ForbiddenError';
+import {resolveClientIpHeaderName} from '@fluxer/ip_utils/src/ClientIp';
 import {createMiddleware} from 'hono/factory';
 import {Config} from '../Config';
 import {Logger} from '../Logger';
@@ -23,7 +24,7 @@ const defaultExemptPaths: Array<string> = [
 
 export function RequireClientIpMiddleware({
 	exemptPaths = defaultExemptPaths,
-	requiredHeaders = ['x-forwarded-for'],
+	requiredHeaders = [resolveClientIpHeaderName(Config.proxy.client_ip_header)],
 }: RequireClientIpOptions = {}) {
 	return createMiddleware<HonoEnv>(async (ctx, next) => {
 		if (Config.dev.testModeEnabled) {

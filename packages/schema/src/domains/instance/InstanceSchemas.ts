@@ -91,7 +91,7 @@ export const WellKnownFluxerResponse = z.object({
 		.describe('Feature flags for this instance'),
 	gif: z
 		.object({
-			provider: z.string().describe('Stable machine name of the active GIF provider (e.g. "klipy", "tenor")'),
+			provider: z.string().describe('Stable machine name of the active GIF provider.'),
 			display_name: z.string().describe('Human-readable provider name shown in the UI'),
 			attribution_required: z
 				.boolean()

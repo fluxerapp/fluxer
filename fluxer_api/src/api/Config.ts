@@ -360,14 +360,8 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 			bluesky: master.auth.bluesky as BlueskyOAuthConfig,
 		},
 		cookie: master.cookie,
-		gif: {
-			provider: master.integrations.gif.provider,
-		},
 		klipy: {
 			apiKey: master.integrations.klipy.api_key,
-		},
-		tenor: {
-			apiKey: master.integrations.tenor.api_key,
 		},
 		youtube: {
 			apiKey: master.integrations.youtube.api_key,

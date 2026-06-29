@@ -526,7 +526,6 @@ const InstancePolicyResponse = z.object({
 	}),
 });
 
-const GifProviderSchema = z.enum(['tenor', 'klipy']);
 const CaptchaProviderSchema = z.enum(['hcaptcha', 'turnstile', 'none']);
 const EmailProviderSchema = z.enum(['smtp', 'none']);
 
@@ -559,9 +558,6 @@ const InstanceMediaResponse = z.object({
 
 const InstanceIntegrationsResponse = z.object({
 	gif: z.object({
-		provider: GifProviderSchema.nullable(),
-		effective_provider: GifProviderSchema,
-		tenor_api_key_set: z.boolean(),
 		klipy_api_key_set: z.boolean(),
 		effective_available: z.boolean(),
 	}),
@@ -648,8 +644,6 @@ export const InstanceConfigUpdateRequest = z.object({
 		.object({
 			gif: z
 				.object({
-					provider: GifProviderSchema.nullish(),
-					tenor_api_key: z.string().trim().max(4096).nullish(),
 					klipy_api_key: z.string().trim().max(4096).nullish(),
 				})
 				.nullish(),

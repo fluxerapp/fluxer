@@ -461,9 +461,29 @@ async fn wait_for_search_backend_if_needed(selected: &[String]) -> Result<()> {
     {
         return Ok(());
     }
-    let search_url =
-        std::env::var("FLUXER_SEARCH_URL").unwrap_or_else(|_| "http://127.0.0.1:9200".to_owned());
-    wait_http("Elasticsearch", &search_url, 120).await
+    let env = merged_env(None, true)?;
+    let search_url = env
+        .get("FLUXER_SEARCH_URL")
+        .cloned()
+        .unwrap_or_else(|| default_search_url(&env));
+    wait_http(search_backend_label(&env), &search_url, 120).await
+}
+
+fn default_search_url(env: &BTreeMap<String, String>) -> String {
+    if env
+        .get("FLUXER_SEARCH_ENGINE")
+        .is_some_and(|engine| engine == "meilisearch")
+    {
+        return "http://127.0.0.1:7700".to_owned();
+    }
+    "http://127.0.0.1:9200".to_owned()
+}
+
+fn search_backend_label(env: &BTreeMap<String, String>) -> &'static str {
+    match env.get("FLUXER_SEARCH_ENGINE").map(String::as_str) {
+        Some("meilisearch") => "Meilisearch",
+        _ => "Elasticsearch",
+    }
 }
 
 fn self_tool_command() -> Result<Vec<String>> {

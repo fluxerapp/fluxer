@@ -81,6 +81,7 @@ async fn resolve_html(ctx: &ResolveContext<'_>) -> anyhow::Result<ResolverResult
         media_proxy: ctx.media_proxy,
         static_cdn_endpoint: ctx.static_cdn_endpoint,
         youtube_api_key: ctx.youtube_api_key.clone(),
+        klipy_api_key: ctx.klipy_api_key.clone(),
     };
 
     if let Some(embeds) = activity_pub::try_resolve(

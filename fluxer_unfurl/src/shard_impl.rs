@@ -91,6 +91,7 @@ impl UnfurlShard {
         url_str: &str,
         nsfw_mode: NsfwMode,
         youtube_api_key: Option<&str>,
+        klipy_api_key: Option<&str>,
     ) -> anyhow::Result<UnfurlResult> {
         let parsed = Url::parse(url_str)?;
 
@@ -104,6 +105,7 @@ impl UnfurlShard {
             media_proxy: &self.media_proxy,
             static_cdn_endpoint: &self.static_cdn_endpoint,
             youtube_api_key: youtube_api_key.map(str::to_owned),
+            klipy_api_key: klipy_api_key.map(str::to_owned),
         };
 
         if let Some(idx) = matched_resolver_idx {
@@ -204,6 +206,7 @@ impl ShardService for UnfurlShard {
                 bypass_cache,
                 cache_only,
                 ref youtube_api_key,
+                ref klipy_api_key,
             } => {
                 let nsfw = nsfw_mode.unwrap_or_default();
                 let cache_key = unfurl_cache_key(url, nsfw);
@@ -219,7 +222,12 @@ impl ShardService for UnfurlShard {
                 }
 
                 let result = match self
-                    .resolve_url(url, nsfw, youtube_api_key.as_deref())
+                    .resolve_url(
+                        url,
+                        nsfw,
+                        youtube_api_key.as_deref(),
+                        klipy_api_key.as_deref(),
+                    )
                     .await
                 {
                     Ok(r) => Arc::new(r),

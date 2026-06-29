@@ -1,0 +1,55 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+global:
+  namespace: fluxer
+  imagePullSecret: ghcr-pull-secret
+  registry: ""
+
+svc:
+  name: gifs
+  image: fluxer-gifs
+  tag: ''
+  shard:
+    replicas: 2
+    port: 8090
+    minReadySeconds: 10
+    terminationGracePeriodSeconds: 60
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        memory: 512Mi
+  router:
+    replicas: 2
+    port: 8090
+    minReadySeconds: 10
+    maxSurge: 1
+    maxUnavailable: 0
+    terminationGracePeriodSeconds: 60
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        memory: 256Mi
+  nats:
+    url: nats://nats-core:4222
+  cache:
+    maxEntries: 250000
+    ttlMs: '30000'
+  extraEnv:
+    - name: FLUXER_MEDIA_PROXY_ENDPOINT
+      value: http://media-proxy:8080
+    - name: FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT
+      value: https://fluxerusercontent.com
+    - name: FLUXER_MEDIA_PROXY_SECRET_KEY
+      valueFrom:
+        secretKeyRef:
+          name: fluxer-media-proxy-v2-env
+          key: FLUXER_MEDIA_PROXY_SECRET_KEY
+  nodeSelector: {}
+  tolerations: []
+
+pdb:
+  minAvailable: '50%'

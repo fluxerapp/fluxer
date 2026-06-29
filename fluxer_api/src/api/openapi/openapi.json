@@ -23611,7 +23611,7 @@
 						"name": "discriminator",
 						"in": "query",
 						"required": true,
-						"schema": {"type": "string", "pattern": "^\\d{1,4}$", "description": "The discriminator to check"}
+						"schema": {"$ref": "#/components/schemas/DiscriminatorType"}
 					}
 				]
 			}
@@ -24808,10 +24808,7 @@
 					"gif": {
 						"type": "object",
 						"properties": {
-							"provider": {
-								"type": "string",
-								"description": "Stable machine name of the active GIF provider (e.g. \"klipy\", \"tenor\")"
-							},
+							"provider": {"type": "string", "description": "Stable machine name of the active GIF provider."},
 							"display_name": {"type": "string", "description": "Human-readable provider name shown in the UI"},
 							"attribution_required": {
 								"type": "boolean",
@@ -29258,7 +29255,7 @@
 					},
 					"gif_provider": {
 						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "Stable name of the GIF provider that issued gif_slug (e.g. \"klipy\", \"tenor\"), if any"
+						"description": "Stable name of the GIF provider that issued gif_slug, if any. Legacy records may contain older provider names."
 					},
 					"media": {
 						"anyOf": [
@@ -29981,7 +29978,9 @@
 						"description": "Channels visible to the requesting user from gateway state"
 					},
 					"member_count": {"$ref": "#/components/schemas/Int32Type"},
-					"online_count": {"$ref": "#/components/schemas/Int32Type"}
+					"online_count": {"$ref": "#/components/schemas/Int32Type"},
+					"approximate_member_count": {"$ref": "#/components/schemas/Int32Type"},
+					"approximate_presence_count": {"$ref": "#/components/schemas/Int32Type"}
 				},
 				"required": [
 					"id",
@@ -32141,7 +32140,7 @@
 				"type": "object",
 				"properties": {
 					"username": {"$ref": "#/components/schemas/UsernameType"},
-					"discriminator": {"type": "string", "pattern": "^\\d{1,4}$", "description": "The discriminator of the bot"},
+					"discriminator": {"$ref": "#/components/schemas/DiscriminatorType"},
 					"avatar": {
 						"anyOf": [{"$ref": "#/components/schemas/Base64ImageType"}, {"type": "null"}],
 						"description": "The avatar image as base64"
@@ -32154,6 +32153,7 @@
 					"bot_flags": {"$ref": "#/components/schemas/BotFlags"}
 				}
 			},
+			"DiscriminatorType": {"type": "string", "pattern": "^\\d{1,4}$"},
 			"BotTokenResetResponse": {
 				"type": "object",
 				"properties": {
@@ -34723,7 +34723,7 @@
 				"type": "object",
 				"properties": {
 					"username": {"$ref": "#/components/schemas/UsernameType"},
-					"discriminator": {"type": "string", "pattern": "^\\d{1,4}$", "description": "The 4-digit discriminator tag"},
+					"discriminator": {"$ref": "#/components/schemas/DiscriminatorType"},
 					"global_name": {
 						"anyOf": [{"type": "string"}, {"type": "null"}],
 						"description": "The display name shown to other users"
@@ -35765,7 +35765,7 @@
 					},
 					"gif_provider": {
 						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "Stable name of the GIF provider that issued gif_slug (e.g. \"klipy\", \"tenor\")"
+						"description": "Stable name of the GIF provider that issued gif_slug. New provider GIFs are sourced from KLIPY."
 					},
 					"media": {
 						"anyOf": [
@@ -36399,7 +36399,7 @@
 				"type": "object",
 				"properties": {
 					"username": {"$ref": "#/components/schemas/UsernameType"},
-					"discriminator": {"type": "string", "pattern": "^\\d{1,4}$", "description": "Discriminator tag of the user"}
+					"discriminator": {"$ref": "#/components/schemas/DiscriminatorType"}
 				},
 				"required": ["username", "discriminator"]
 			},
