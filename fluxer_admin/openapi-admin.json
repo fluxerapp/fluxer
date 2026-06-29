@@ -12594,20 +12594,8 @@
 						"properties": {
 							"gif": {
 								"type": "object",
-								"properties": {
-									"provider": {"nullable": true, "enum": ["tenor", "klipy"], "type": "string"},
-									"effective_provider": {"enum": ["tenor", "klipy"], "type": "string"},
-									"tenor_api_key_set": {"type": "boolean"},
-									"klipy_api_key_set": {"type": "boolean"},
-									"effective_available": {"type": "boolean"}
-								},
-								"required": [
-									"provider",
-									"effective_provider",
-									"tenor_api_key_set",
-									"klipy_api_key_set",
-									"effective_available"
-								]
+								"properties": {"klipy_api_key_set": {"type": "boolean"}, "effective_available": {"type": "boolean"}},
+								"required": ["klipy_api_key_set", "effective_available"]
 							},
 							"youtube": {
 								"type": "object",
@@ -12990,11 +12978,7 @@
 							"gif": {
 								"nullable": true,
 								"type": "object",
-								"properties": {
-									"provider": {"nullable": true, "enum": ["tenor", "klipy"], "type": "string"},
-									"tenor_api_key": {"nullable": true, "type": "string", "maxLength": 4096},
-									"klipy_api_key": {"nullable": true, "type": "string", "maxLength": 4096}
-								}
+								"properties": {"klipy_api_key": {"nullable": true, "type": "string", "maxLength": 4096}}
 							},
 							"youtube": {
 								"nullable": true,

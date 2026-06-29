@@ -2,6 +2,7 @@
 
 import {ResolveGifUrlsBodySchema, ResolveGifUrlsResponse} from '@fluxer/schema/src/domains/gif/FavoriteGifSchemas';
 import type {Context} from 'hono';
+import {resolveGifRequestCountry} from '../gif/GifRequestCountry';
 import {DefaultUserOnly, LoginRequired} from '../middleware/AuthMiddleware';
 import {RateLimitMiddleware} from '../middleware/RateLimitMiddleware';
 import {OpenAPI} from '../middleware/ResponseTypeMiddleware';
@@ -11,8 +12,8 @@ import type {HonoApp, HonoEnv} from '../types/HonoEnv';
 import {Validator} from '../Validator';
 import {resolveFavoriteGifEntry} from './FavoriteGifResolver';
 
-function getCountry(ctx: Context<HonoEnv>): string {
-	return ctx.req.header('CF-IPCountry') || 'US';
+async function getCountry(ctx: Context<HonoEnv>): Promise<string> {
+	return resolveGifRequestCountry(ctx.req.raw);
 }
 
 function getLocale(ctx: Context<HonoEnv>): string {
@@ -42,7 +43,7 @@ export function FavoriteGifController(app: HonoApp) {
 			const gifService = ctx.get('gifService');
 			const unfurlerService = getUnfurlerService();
 			const locale = getLocale(ctx);
-			const country = getCountry(ctx);
+			const country = await getCountry(ctx);
 			const entries = await Promise.all(
 				urls.map((url) => resolveFavoriteGifEntry({url, locale, country, gifService, mediaService, unfurlerService})),
 			);

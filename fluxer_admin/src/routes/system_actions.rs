@@ -603,8 +603,6 @@ fn build_integrations_update(form: &MultiValueForm) -> InstanceConfigUpdateReque
         policy: None,
         integrations: Some(InstanceIntegrationsUpdateRequest {
             gif: Some(InstanceGifIntegrationUpdateRequest {
-                provider: clean("integration_gif_provider"),
-                tenor_api_key: clean("integration_tenor_api_key"),
                 klipy_api_key: clean("integration_klipy_api_key"),
             }),
             youtube: Some(InstanceYoutubeIntegrationUpdateRequest {

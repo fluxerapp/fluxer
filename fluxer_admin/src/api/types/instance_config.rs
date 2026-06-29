@@ -100,12 +100,6 @@ pub struct InstanceIntegrationsResponse {
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct InstanceGifIntegrationResponse {
-    pub provider: Option<String>,
-    #[serde(default)]
-    pub effective_provider: String,
-    #[serde(default)]
-    pub tenor_api_key_set: bool,
-    #[serde(default)]
     pub klipy_api_key_set: bool,
     #[serde(default)]
     pub effective_available: bool,
@@ -549,10 +543,6 @@ pub struct InstanceIntegrationsUpdateRequest {
 
 #[derive(Clone, Debug, Default, Serialize)]
 pub struct InstanceGifIntegrationUpdateRequest {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub provider: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub tenor_api_key: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub klipy_api_key: Option<String>,
 }

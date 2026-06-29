@@ -19,6 +19,7 @@ interface NatsUnfurlRequest {
 	bypass_cache: boolean;
 	cache_only: boolean;
 	youtube_api_key: string | null;
+	klipy_api_key: string | null;
 }
 
 interface NatsUnfurlInnerResult {
@@ -59,6 +60,7 @@ export class NatsUnfurlerService extends IUnfurlerService {
 	constructor(
 		connectionManager: INatsConnectionManager,
 		private readonly resolveYoutubeApiKey: (() => Promise<string | null>) | null = null,
+		private readonly resolveKlipyApiKey: (() => Promise<string | null>) | null = null,
 	) {
 		super();
 		this.connectionManager = connectionManager;
@@ -77,6 +79,7 @@ export class NatsUnfurlerService extends IUnfurlerService {
 				bypass_cache: options.bypassCache === true,
 				cache_only: options.cacheOnly === true,
 				youtube_api_key: this.resolveYoutubeApiKey ? await this.resolveYoutubeApiKey() : null,
+				klipy_api_key: this.resolveKlipyApiKey ? await this.resolveKlipyApiKey() : null,
 			};
 			if (this.connectionManager.isClosed()) {
 				await this.connectionManager.connect();
