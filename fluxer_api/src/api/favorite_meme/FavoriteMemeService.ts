@@ -18,8 +18,12 @@ import {createAttachmentID, createMemeID, userIdToChannelId} from '../BrandedTyp
 import {Config} from '../Config';
 import type {ChannelService} from '../channel/services/ChannelService';
 import {makeAttachmentCdnKey, makeAttachmentCdnUrl} from '../channel/services/message/MessageHelpers';
+import {
+	isOptionalGifProviderError,
+	type ResolvedGifProviderSlug,
+	tryExtractGifProviderSlug,
+} from '../gif/GifProviderUtils';
 import type {GifService} from '../gif/GifService';
-import type {IGifProvider} from '../gif/IGifProvider';
 import type {MediaProxyMetadataResponse} from '../infrastructure/IMediaService';
 import type {IStorageService} from '../infrastructure/IStorageService';
 import type {IUnfurlerService} from '../infrastructure/IUnfurlerService';
@@ -122,7 +126,7 @@ export class FavoriteMemeService {
 		if (!message) {
 			throw new UnknownMessageError();
 		}
-		const media = this.findMediaInMessage(message, attachmentId, embedIndex);
+		const media = await this.findMediaInMessage(message, attachmentId, embedIndex);
 		if (!media) {
 			throw InputValidationError.fromCode('media', ValidationErrorCodes.NO_VALID_MEDIA_IN_MESSAGE);
 		}
@@ -319,18 +323,9 @@ export class FavoriteMemeService {
 			throw new MediaMetadataError('URL');
 		}
 		let contentHash = metadata.content_hash;
-		const fileData = Buffer.from(metadata.base64 ?? '', 'base64');
-		const resolvedGif = this.resolveGifFromInputs({slug: gifSlug, providerName: gifProvider, url});
+		const resolvedGif = await this.resolveGifFromInputs({slug: gifSlug, providerName: gifProvider, url});
 		if (resolvedGif) {
-			const canonicalUrl = resolvedGif.provider.buildShareUrl(resolvedGif.slug);
-			const unfurled = await this.unfurlerService.unfurl(canonicalUrl, 'allow');
-			if (unfurled.length > 0 && unfurled[0].video?.content_hash) {
-				contentHash = unfurled[0].video.content_hash;
-				Logger.debug(
-					{provider: resolvedGif.provider.meta.name, gifSlug: resolvedGif.slug, contentHash},
-					'Using unfurled video content_hash for provider GIF',
-				);
-			}
+			contentHash = await this.resolveProviderGifContentHash(resolvedGif, contentHash);
 		}
 		const existingMemes = await this.favoriteMemeRepository.findByUserId(user.id);
 		const duplicate = existingMemes.find((meme) => meme.contentHash === contentHash);
@@ -343,6 +338,7 @@ export class FavoriteMemeService {
 		const userChannelId = userIdToChannelId(user.id);
 		const newAttachmentId = createAttachmentID(await this.apiContext.services.snowflake.generate());
 		const storageKey = makeAttachmentCdnKey(userChannelId, newAttachmentId, filename);
+		const fileData = Buffer.from(metadata.base64 ?? '', 'base64');
 		await this.storageService.uploadObject({
 			bucket: Config.s3.buckets.cdn,
 			key: storageKey,
@@ -470,7 +466,7 @@ export class FavoriteMemeService {
 		}
 	}
 
-	private resolveGifFromInputs({
+	private async resolveGifFromInputs({
 		slug,
 		providerName,
 		url,
@@ -478,32 +474,49 @@ export class FavoriteMemeService {
 		slug?: string | null;
 		providerName?: string | null;
 		url: string;
-	}): {
-		provider: IGifProvider;
-		slug: string;
-	} | null {
+	}): Promise<ResolvedGifProviderSlug | null> {
 		if (slug && providerName) {
 			const provider = this.gifService.getByName(providerName);
 			const trimmed = slug.trim();
 			if (provider && trimmed) {
-				const normalized = provider.extractSlugFromUrl(trimmed) ?? trimmed;
+				const normalized = (await tryExtractGifProviderSlug(provider, trimmed)) ?? trimmed;
 				return {provider, slug: normalized};
 			}
 		}
-		for (const provider of this.gifService.listProviders()) {
-			const extracted = provider.extractSlugFromUrl(url);
-			if (extracted) {
-				return {provider, slug: extracted};
-			}
-		}
-		return null;
+		const provider = this.gifService.getProvider();
+		const extracted = await tryExtractGifProviderSlug(provider, url);
+		return extracted ? {provider, slug: extracted} : null;
 	}
 
-	private detectGifFromUrl(url: string): {
-		provider: IGifProvider;
-		slug: string;
-	} | null {
+	private async detectGifFromUrl(url: string): Promise<ResolvedGifProviderSlug | null> {
 		return this.resolveGifFromInputs({url});
+	}
+
+	private async resolveProviderGifContentHash(
+		resolvedGif: ResolvedGifProviderSlug,
+		fallbackContentHash: string,
+	): Promise<string> {
+		try {
+			const canonicalUrl = resolvedGif.provider.buildShareUrl(resolvedGif.slug);
+			const unfurled = await this.unfurlerService.unfurl(canonicalUrl, 'allow');
+			if (unfurled.length > 0 && unfurled[0].video?.content_hash) {
+				Logger.debug(
+					{
+						provider: resolvedGif.provider.meta.name,
+						gifSlug: resolvedGif.slug,
+						contentHash: unfurled[0].video.content_hash,
+					},
+					'Using unfurled video content_hash for provider GIF',
+				);
+				return unfurled[0].video.content_hash;
+			}
+		} catch (error) {
+			if (!isOptionalGifProviderError(error)) {
+				throw error;
+			}
+			Logger.debug({error, provider: resolvedGif.provider.meta.name}, 'Skipping unavailable GIF provider enrichment');
+		}
+		return fallbackContentHash;
 	}
 
 	private resolveFavoriteMemeName(name: string | undefined | null, fallbackFilename: string): string {
@@ -517,11 +530,11 @@ export class FavoriteMemeService {
 		return finalName;
 	}
 
-	private findMediaInMessage(
+	private async findMediaInMessage(
 		message: Message,
 		preferredAttachmentId?: string,
 		preferredEmbedIndex?: number,
-	): FavoriteMemeMedia | null {
+	): Promise<FavoriteMemeMedia | null> {
 		const attachments = this.getMessageAttachmentCandidates(message);
 		const embeds = this.getMessageEmbedCandidates(message);
 		if (preferredEmbedIndex !== undefined) {
@@ -553,7 +566,7 @@ export class FavoriteMemeService {
 			}
 		}
 		for (const embed of embeds) {
-			const media = this.mediaFromEmbed(embed, 'media');
+			const media = await this.mediaFromEmbed(embed, 'media');
 			if (media) return media;
 		}
 		return null;
@@ -591,7 +604,10 @@ export class FavoriteMemeService {
 		};
 	}
 
-	private mediaFromEmbed(embed: MessageEmbedCandidate, fallbackFilename: string): FavoriteMemeMedia | null {
+	private async mediaFromEmbed(
+		embed: MessageEmbedCandidate,
+		fallbackFilename: string,
+	): Promise<FavoriteMemeMedia | null> {
 		const media = embed.image || embed.video || embed.thumbnail;
 		if (!media?.url) {
 			return null;
@@ -603,7 +619,7 @@ export class FavoriteMemeService {
 		}
 		const isExternal = !this.isInternalCDNUrl(media.url);
 		const isGifv = embed.type === 'gifv' || isAnimatedEmbedMedia(media.contentType, media.flags);
-		const detectedGif = embed.type === 'gifv' ? this.detectGifFromUrl(media.url) : null;
+		const detectedGif = embed.type === 'gifv' ? await this.detectGifFromUrl(media.url) : null;
 		return {
 			isExternal,
 			url: media.url,

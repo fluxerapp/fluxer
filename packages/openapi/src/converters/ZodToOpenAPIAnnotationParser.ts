@@ -16,6 +16,7 @@ export interface FluxerTypeAnnotation {
 	enumEntries?: Array<EnumEntry>;
 	bitflagValues?: Array<BitflagEntry>;
 	bitflagTypeName?: string;
+	objectName?: string;
 	fieldDescription?: string;
 }
 interface BitflagEntryJson {
@@ -161,6 +162,10 @@ export function parseFluxerTypeAnnotation(description: string | undefined): Flux
 			fieldDescription = userDescription.slice(fieldDescIndex + '|fieldDesc:'.length).trim();
 			userDescription = userDescription.slice(0, fieldDescIndex).trim() || undefined;
 		}
+	}
+	if (typeAndData.startsWith('NamedObject:')) {
+		const objectName = typeAndData.slice('NamedObject:'.length);
+		return {typeName: 'NamedObject', objectName, userDescription, fieldDescription};
 	}
 	if (typeAndData.startsWith('IntegerEnum:')) {
 		const namesStr = typeAndData.slice('IntegerEnum:'.length);

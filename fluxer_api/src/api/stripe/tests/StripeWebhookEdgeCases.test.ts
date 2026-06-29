@@ -5,26 +5,31 @@ import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
 import {createTestAccount} from '../../auth/tests/AuthTestUtils';
 import {Config} from '../../Config';
-import {createGuild} from '../../guild/tests/GuildTestUtils';
+import {createGuild, createRole, getMember} from '../../guild/tests/GuildTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
 import {createBuilder} from '../../test/TestRequestBuilder';
 
 describe('Stripe Webhook Edge Cases', () => {
 	let harness: ApiTestHarness;
 	let originalVisionariesGuildId: string | undefined;
+	let originalVisionariesGuildVisionaryRoleId: string | undefined;
 	beforeAll(async () => {
 		harness = await createApiTestHarness();
 		originalVisionariesGuildId = Config.instance.visionariesGuildId ?? undefined;
+		originalVisionariesGuildVisionaryRoleId = Config.instance.visionariesGuildVisionaryRoleId ?? undefined;
 	});
 	afterAll(async () => {
 		await harness.shutdown();
 		Config.instance.visionariesGuildId = originalVisionariesGuildId;
+		Config.instance.visionariesGuildVisionaryRoleId = originalVisionariesGuildVisionaryRoleId;
 	});
 	beforeEach(async () => {
 		await harness.resetData();
 		const owner = await createTestAccount(harness);
 		const visionariesGuild = await createGuild(harness, owner.token, 'Visionaries Webhook Test Guild');
+		const visionaryRole = await createRole(harness, owner.token, visionariesGuild.id, {name: 'Visionary'});
 		Config.instance.visionariesGuildId = visionariesGuild.id;
+		Config.instance.visionariesGuildVisionaryRoleId = visionaryRole.id;
 	});
 	describe('Premium stacking - consecutive grants extending duration', () => {
 		test('stacks multiple monthly subscriptions end-to-end', async () => {
@@ -366,6 +371,8 @@ describe('Stripe Webhook Edge Cases', () => {
 				.execute();
 			expect(receiverAfter.premium_type).toBe(UserPremiumTypes.LIFETIME);
 			expect(receiverAfter.premium_lifetime_sequence).toBe(0);
+			const member = await getMember(harness, receiver.token, Config.instance.visionariesGuildId!, receiver.userId);
+			expect(member.roles).toContain(Config.instance.visionariesGuildVisionaryRoleId);
 		});
 		test('redeeming 1-month gift code grants subscription premium', async () => {
 			const gifter = await createTestAccount(harness);

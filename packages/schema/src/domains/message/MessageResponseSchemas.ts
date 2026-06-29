@@ -58,7 +58,7 @@ const ReactionEmojiResponse = z.object({
 export const MessageReactionResponse = z.object({
 	emoji: ReactionEmojiResponse.describe('The emoji used for the reaction'),
 	count: Int32Type.describe('The total number of times this reaction has been used'),
-	me: z.literal(true).nullish().describe('Whether the current user has reacted with this emoji'),
+	me: z.boolean().nullish().describe('Whether the current user has reacted with this emoji'),
 });
 
 export type MessageReactionResponse = z.infer<typeof MessageReactionResponse>;

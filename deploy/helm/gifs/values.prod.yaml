@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+svc:
+  shard:
+    replicas: 4
+    resources:
+      requests:
+        cpu: 100m
+        memory: 512Mi
+      limits:
+        memory: 1Gi
+  router:
+    replicas: 3
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        memory: 512Mi
+  cache:
+    maxEntries: 500000
+    ttlMs: '30000'
+  extraEnv:
+    - name: FLUXER_MEDIA_PROXY_ENDPOINT
+      value: http://media-proxy:8080
+    - name: FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT
+      value: https://fluxerusercontent.com
+    - name: FLUXER_MEDIA_PROXY_SECRET_KEY
+      valueFrom:
+        secretKeyRef:
+          name: fluxer-media-proxy-v2-env
+          key: FLUXER_MEDIA_PROXY_SECRET_KEY
