@@ -12197,7 +12197,9 @@
 						"description": "Custom content warning text shown before entry",
 						"nullable": true,
 						"type": "string"
-					}
+					},
+					"approximate_member_count": {"$ref": "#/components/schemas/Int32Type"},
+					"approximate_presence_count": {"$ref": "#/components/schemas/Int32Type"}
 				},
 				"required": [
 					"id",

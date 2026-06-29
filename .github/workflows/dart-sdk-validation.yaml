@@ -41,7 +41,6 @@ jobs:
         uses: actions/checkout@b9e0990d219a03df7633c93f6f005a8fecbcab22
         with:
           repository: fluxerapp/dart_sdk
-          ref: canary
           path: dart_sdk
           persist-credentials: false
 
@@ -54,6 +53,4 @@ jobs:
       - name: Validate Dart SDK generation
         if: steps.changes.outputs.openapi == 'true'
         working-directory: dart_sdk
-        run: |
-          chmod +x scripts/validate_upstream_spec.sh
-          ./scripts/validate_upstream_spec.sh "file://${GITHUB_WORKSPACE}/fluxer_api/src/api/openapi/openapi.json"
+        run: ./scripts/openapi_sdk.sh validate

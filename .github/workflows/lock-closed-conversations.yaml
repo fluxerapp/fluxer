@@ -1,0 +1,117 @@
+name: Lock closed conversations
+
+on:
+  issues:
+    types:
+      - closed
+  pull_request_target:
+    types:
+      - closed
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Report matching closed conversations without locking them.
+        required: true
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
+
+permissions: {}
+
+concurrency:
+  group: lock-closed-conversations-${{ github.event.issue.number || github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  automatic:
+    name: Lock closed conversation
+    if: github.event_name != 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create token
+        id: create-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1
+        with:
+          client-id: ${{ vars.FLUXER_CI_APP_ID }}
+          private-key: ${{ secrets.FLUXER_CI_APP_KEY }}
+          owner: fluxerapp
+          repositories: fluxer
+          permission-issues: write
+          permission-pull-requests: write
+
+      - name: Lock conversation
+        env:
+          GH_TOKEN: ${{ steps.create-token.outputs.token }}
+        run: |
+          set -euo pipefail
+
+          number="$(jq -r '.issue.number // .pull_request.number' "$GITHUB_EVENT_PATH")"
+          sleep 10
+
+          issue="$(gh api "repos/${GITHUB_REPOSITORY}/issues/${number}")"
+          state="$(jq -r '.state' <<<"$issue")"
+          locked="$(jq -r '.locked' <<<"$issue")"
+
+          if [ "$state" != "closed" ]; then
+            echo "Skipping #${number}; state is ${state}."
+            exit 0
+          fi
+
+          if [ "$locked" = "true" ]; then
+            echo "Skipping #${number}; conversation is already locked."
+            exit 0
+          fi
+
+          gh api \
+            --method PUT \
+            "repos/${GITHUB_REPOSITORY}/issues/${number}/lock" \
+            --field lock_reason=resolved
+
+  retroactive:
+    name: Lock closed conversations retroactively
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create token
+        id: create-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1
+        with:
+          client-id: ${{ vars.FLUXER_CI_APP_ID }}
+          private-key: ${{ secrets.FLUXER_CI_APP_KEY }}
+          owner: fluxerapp
+          repositories: fluxer
+          permission-issues: write
+          permission-pull-requests: write
+
+      - name: Lock closed conversations
+        env:
+          DRY_RUN: ${{ inputs.dry_run }}
+          GH_TOKEN: ${{ steps.create-token.outputs.token }}
+        run: |
+          set -euo pipefail
+
+          count=0
+          while IFS=$'\t' read -r number kind; do
+            count=$((count + 1))
+
+            if [ "$DRY_RUN" = "true" ]; then
+              echo "Would lock ${kind} #${number} as resolved."
+              continue
+            fi
+
+            echo "Locking ${kind} #${number} as resolved."
+            gh api \
+              --method PUT \
+              "repos/${GITHUB_REPOSITORY}/issues/${number}/lock" \
+              --field lock_reason=resolved \
+              --silent
+          done < <(
+            gh api --paginate "repos/${GITHUB_REPOSITORY}/issues?state=closed&per_page=100" \
+              --jq '.[] | select(.locked == false) | [.number, (if has("pull_request") then "pull request" else "issue" end)] | @tsv'
+          )
+
+          if [ "$count" -eq 0 ]; then
+            echo "No unlocked closed conversations found."
+          fi
