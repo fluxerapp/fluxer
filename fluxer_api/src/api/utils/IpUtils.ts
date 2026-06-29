@@ -16,16 +16,17 @@ interface GetIpAddressReverseOptions {
 	cacheTtlSeconds?: number;
 }
 
+export function resolveRequestClientIp(req: Request): string | null {
+	return extractClientIp(req, {
+		trustClientIpHeader: Config.proxy.trust_client_ip_header,
+		clientIpHeaderName: Config.proxy.client_ip_header,
+	});
+}
+
 export async function lookupGeoip(req: Request): Promise<GeoipResult>;
 export async function lookupGeoip(ip: string): Promise<GeoipResult>;
 export async function lookupGeoip(input: string | Request): Promise<GeoipResult> {
-	const ip =
-		typeof input === 'string'
-			? input
-			: extractClientIp(input, {
-					trustClientIpHeader: Config.proxy.trust_client_ip_header,
-					clientIpHeaderName: Config.proxy.client_ip_header,
-				});
+	const ip = typeof input === 'string' ? input : resolveRequestClientIp(input);
 	if (!ip) {
 		return {countryCode: null, normalizedIp: null, city: null, region: null, countryName: null};
 	}

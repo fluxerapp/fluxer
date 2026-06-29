@@ -259,13 +259,7 @@ export interface MasterConfig {
 			port: number;
 			fail_open: boolean;
 		};
-		gif: {
-			provider: 'tenor' | 'klipy';
-		};
 		klipy: {
-			api_key: string;
-		};
-		tenor: {
 			api_key: string;
 		};
 		youtube: {

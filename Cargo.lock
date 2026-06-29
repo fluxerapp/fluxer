@@ -1954,6 +1954,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "fluxer-gifs"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "base64",
+ "fluxer-svc",
+ "hmac 0.13.0",
+ "moka",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "sha2 0.11.0",
+ "tokio",
+ "tracing",
+ "url",
+ "urlencoding",
+]
+
+[[package]]
 name = "fluxer-i18n-auto"
 version = "0.1.0"
 dependencies = [
@@ -2097,11 +2116,9 @@ dependencies = [
  "fluxer-svc",
  "hmac 0.13.0",
  "infer",
- "mime_guess",
  "moka",
  "regex",
  "reqwest",
- "rmp-serde",
  "scraper",
  "serde",
  "serde_json",

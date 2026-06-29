@@ -2,6 +2,7 @@
 import {
 	APIErrorCodeSchema,
 	Base64ImageTypeSchema,
+	DiscriminatorTypeSchema,
 	EmailTypeSchema,
 	Int32TypeSchema,
 	Int64StringTypeSchema,
@@ -130,6 +131,7 @@ const BUILT_IN_SCHEMAS: ReadonlyArray<readonly [string, OpenAPISchema]> = [
 	['Int64StringType', Int64StringTypeSchema],
 	['UnsignedInt64Type', UnsignedInt64TypeSchema],
 	['UsernameType', UsernameTypeSchema],
+	['DiscriminatorType', DiscriminatorTypeSchema],
 	['EmailType', EmailTypeSchema],
 	['PasswordType', PasswordTypeSchema],
 	['PhoneNumberType', PhoneNumberTypeSchema],

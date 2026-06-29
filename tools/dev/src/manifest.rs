@@ -190,6 +190,12 @@ pub struct RustServiceSpec {
 pub fn rust_services() -> Vec<RustServiceSpec> {
     vec![
         RustServiceSpec {
+            name: "gifs",
+            package: "fluxer-gifs",
+            path: ROOT.join("fluxer_gifs"),
+            port_base: 8110,
+        },
+        RustServiceSpec {
             name: "messages",
             package: "fluxer-messages",
             path: ROOT.join("fluxer_messages"),

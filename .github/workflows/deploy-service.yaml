@@ -101,19 +101,26 @@ jobs:
 
       - name: configure kubectl
         shell: bash
+        env:
+          KUBE_CONFIG_B64: ${{ secrets.KUBE_CONFIG }}
         run: |
           mkdir -p "$HOME/.kube"
-          echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > "$HOME/.kube/config"
+          printf '%s' "$KUBE_CONFIG_B64" | base64 -d > "$HOME/.kube/config"
           chmod 600 "$HOME/.kube/config"
 
       - name: resolve helm args
         id: helm
         shell: bash
+        env:
+          INPUT_SERVICE: ${{ inputs.service }}
+          INPUT_CHANNEL: ${{ inputs.channel }}
+          INPUT_IMAGE_TAG: ${{ inputs['image-tag'] }}
+          INPUT_BUILD_VERSION: ${{ inputs['build-version'] }}
         run: |
-          SERVICE="${{ inputs.service }}"
-          CHANNEL="${{ inputs.channel }}"
-          TAG="${{ inputs['image-tag'] }}"
-          BUILD_VERSION="${{ inputs['build-version'] }}"
+          SERVICE="$INPUT_SERVICE"
+          CHANNEL="$INPUT_CHANNEL"
+          TAG="$INPUT_IMAGE_TAG"
+          BUILD_VERSION="$INPUT_BUILD_VERSION"
           GHCR_REGISTRY="${GHCR_REGISTRY:?GHCR_REGISTRY is required}"
           if [[ -z "$BUILD_VERSION" ]]; then
             BUILD_VERSION="$TAG"
@@ -347,9 +354,11 @@ jobs:
       - name: approve api image for admission policy
         if: ${{ inputs.service == 'api' }}
         shell: bash
+        env:
+          INPUT_CHANNEL: ${{ inputs.channel }}
         run: |
           DEPLOYMENT="api"
-          if [[ "${{ inputs.channel }}" == "canary" ]]; then
+          if [[ "$INPUT_CHANNEL" == "canary" ]]; then
             DEPLOYMENT="api-canary"
           fi
           IMAGE_REF="${GHCR_REGISTRY}/${{ steps.helm.outputs.deploy-image }}:${{ steps.helm.outputs.deploy-tag }}"

@@ -397,10 +397,13 @@ impl AdminApiClient {
         &self,
         user_id: &str,
         username: &str,
-        discriminator: Option<i32>,
+        discriminator: Option<&str>,
     ) -> ApiResult<AdminUser> {
         let body = generated_types::ChangeUsernameRequest {
-            discriminator: discriminator.map(generated_types::Int32Type::from),
+            discriminator: discriminator
+                .map(generated_types::DiscriminatorType::try_from)
+                .transpose()
+                .map_err(|e| ApiError::Parse(e.to_string()))?,
             user_id: snowflake(user_id),
             username: generated_types::UsernameType::try_from(username)
                 .map_err(|e| ApiError::Parse(e.to_string()))?,

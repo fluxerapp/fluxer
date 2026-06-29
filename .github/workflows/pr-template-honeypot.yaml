@@ -1,0 +1,94 @@
+name: Pull request template honeypot
+
+on:
+  pull_request_target:
+    types:
+      - opened
+      - edited
+      - reopened
+      - synchronize
+
+permissions: {}
+
+concurrency:
+  group: pr-template-honeypot-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  enforce:
+    name: Enforce template marker
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create token
+        id: create-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1
+        with:
+          client-id: ${{ vars.FLUXER_CI_APP_ID }}
+          private-key: ${{ secrets.FLUXER_CI_APP_KEY }}
+          owner: fluxerapp
+          repositories: fluxer
+          permission-issues: write
+          permission-organization-user-blocking: write
+          permission-pull-requests: write
+
+      - name: Enforce missing template marker
+        env:
+          GH_TOKEN: ${{ steps.create-token.outputs.token }}
+          HONEYPOT_MARKER: '"I have A.I.: actual intelligence."'
+        run: |
+          set -euo pipefail
+
+          pr_number="$(jq -r '.pull_request.number' "$GITHUB_EVENT_PATH")"
+          if [ "$pr_number" -le 1200 ]; then
+            echo "Skipping pull request #${pr_number}; enforcement starts after #1200."
+            exit 0
+          fi
+
+          author="$(jq -r '.pull_request.user.login' "$GITHUB_EVENT_PATH")"
+          author_type="$(jq -r '.pull_request.user.type // ""' "$GITHUB_EVENT_PATH")"
+          author_association="$(jq -r '.pull_request.author_association' "$GITHUB_EVENT_PATH")"
+          head_repository="$(jq -r '.pull_request.head.repo.full_name // ""' "$GITHUB_EVENT_PATH")"
+          body_file="$(mktemp)"
+          jq -r '.pull_request.body // ""' "$GITHUB_EVENT_PATH" > "$body_file"
+
+          if [ "$author_type" = "Bot" ] && [ "$head_repository" = "$GITHUB_REPOSITORY" ]; then
+            echo "Skipping repository-local bot pull request: $author"
+            exit 0
+          fi
+
+          if grep -Fq "$HONEYPOT_MARKER" "$body_file"; then
+            echo "Honeypot marker is present."
+            exit 0
+          fi
+
+          permission="$(
+            gh api "repos/${GITHUB_REPOSITORY}/collaborators/${author}/permission" --jq '.permission' 2>/dev/null || true
+          )"
+          case "$permission" in
+            admin|maintain|write)
+              echo "Skipping author with elevated repository permission: $permission"
+              exit 0
+              ;;
+          esac
+
+          case "$author_association" in
+            FIRST_TIMER|FIRST_TIME_CONTRIBUTOR)
+              gh api \
+                --method PATCH \
+                "repos/${GITHUB_REPOSITORY}/pulls/${pr_number}" \
+                --field state=closed
+
+              gh api \
+                --method PUT \
+                "repos/${GITHUB_REPOSITORY}/issues/${pr_number}/lock" \
+                --field lock_reason=spam
+
+              gh api \
+                --method PUT \
+                "orgs/fluxerapp/blocks/${author}"
+              ;;
+            *)
+              echo "::error::Pull request template marker is missing."
+              exit 1
+              ;;
+          esac

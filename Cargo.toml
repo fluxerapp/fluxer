@@ -5,6 +5,7 @@ members = [
 	"fluxer_common",
 	"fluxer_marketing",
 	"fluxer_media_proxy",
+	"fluxer_gifs",
 	"fluxer_svc",
 	"fluxer_messages",
 	"fluxer_snowflakes",

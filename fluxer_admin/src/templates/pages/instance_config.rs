@@ -408,11 +408,6 @@ fn integrations_config_section(
     csrf_token: &str,
     integrations: &InstanceIntegrationsResponse,
 ) -> Markup {
-    let gif_provider = integrations
-        .gif
-        .provider
-        .as_deref()
-        .unwrap_or(integrations.gif.effective_provider.as_str());
     let captcha_provider = integrations
         .captcha
         .provider
@@ -435,15 +430,9 @@ fn integrations_config_section(
                         div class="flex flex-wrap items-center gap-2" {
                             h3 class="text-sm font-semibold text-neutral-900" { "GIF provider" }
                             (secret_badge("KLIPY key", integrations.gif.klipy_api_key_set))
-                            (secret_badge("Tenor key", integrations.gif.tenor_api_key_set))
                         }
-                        div class="grid grid-cols-1 gap-4 sm:grid-cols-3" {
-                            (select_input("integration_gif_provider", "Provider", &[
-                                ("klipy", "KLIPY"),
-                                ("tenor", "Tenor"),
-                            ], gif_provider))
+                        div class="grid grid-cols-1 gap-4" {
                             (password_input("integration_klipy_api_key", "KLIPY API key", Some("Leave blank to keep the current key.")))
-                            (password_input("integration_tenor_api_key", "Tenor API key", Some("Leave blank to keep the current key.")))
                         }
                     }
 

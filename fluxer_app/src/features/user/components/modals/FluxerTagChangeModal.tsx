@@ -29,6 +29,7 @@ import * as UserCommands from '@app/features/user/commands/UserCommands';
 import styles from '@app/features/user/components/modals/FluxerTagChangeModal.module.css';
 import type {User} from '@app/features/user/models/User';
 import {getFormattedDateTime} from '@app/features/user/utils/DateFormatting';
+import {isVisionaryDiscriminator0000Blocked} from '@app/features/user/utils/FluxerTagDiscriminatorUtils';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
@@ -315,7 +316,11 @@ export const FluxerTagChangeModal = observer(({user}: FluxerTagChangeModalProps)
 											data-flx="user.fluxer-tag-change-modal.input.set-value.text--3"
 											{...form.register('discriminator', {
 												validate: (value) =>
-													!isVisionary && value === '0000'
+													isVisionaryDiscriminator0000Blocked({
+														showPremium,
+														isVisionary,
+														discriminator: value,
+													})
 														? i18n._(THE_0000_TAG_IS_RESERVED_FOR_VISIONARY_SUBSCRIBERS_DESCRIPTOR)
 														: true,
 											})}

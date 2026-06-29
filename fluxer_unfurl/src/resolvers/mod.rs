@@ -27,6 +27,7 @@ pub struct ResolveContext<'mp> {
     pub media_proxy: &'mp MediaProxyClient,
     pub static_cdn_endpoint: &'mp str,
     pub youtube_api_key: Option<String>,
+    pub klipy_api_key: Option<String>,
 }
 
 impl ResolveContext<'_> {
