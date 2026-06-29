@@ -23611,7 +23611,7 @@
 						"name": "discriminator",
 						"in": "query",
 						"required": true,
-						"schema": {"type": "string", "pattern": "^\\d{1,4}$", "description": "The discriminator to check"}
+						"schema": {"$ref": "#/components/schemas/DiscriminatorType"}
 					}
 				]
 			}
@@ -32143,7 +32143,7 @@
 				"type": "object",
 				"properties": {
 					"username": {"$ref": "#/components/schemas/UsernameType"},
-					"discriminator": {"type": "string", "pattern": "^\\d{1,4}$", "description": "The discriminator of the bot"},
+					"discriminator": {"$ref": "#/components/schemas/DiscriminatorType"},
 					"avatar": {
 						"anyOf": [{"$ref": "#/components/schemas/Base64ImageType"}, {"type": "null"}],
 						"description": "The avatar image as base64"
@@ -32156,6 +32156,7 @@
 					"bot_flags": {"$ref": "#/components/schemas/BotFlags"}
 				}
 			},
+			"DiscriminatorType": {"type": "string", "pattern": "^\\d{1,4}$"},
 			"BotTokenResetResponse": {
 				"type": "object",
 				"properties": {
@@ -34725,7 +34726,7 @@
 				"type": "object",
 				"properties": {
 					"username": {"$ref": "#/components/schemas/UsernameType"},
-					"discriminator": {"type": "string", "pattern": "^\\d{1,4}$", "description": "The 4-digit discriminator tag"},
+					"discriminator": {"$ref": "#/components/schemas/DiscriminatorType"},
 					"global_name": {
 						"anyOf": [{"type": "string"}, {"type": "null"}],
 						"description": "The display name shown to other users"
@@ -36401,7 +36402,7 @@
 				"type": "object",
 				"properties": {
 					"username": {"$ref": "#/components/schemas/UsernameType"},
-					"discriminator": {"type": "string", "pattern": "^\\d{1,4}$", "description": "Discriminator tag of the user"}
+					"discriminator": {"$ref": "#/components/schemas/DiscriminatorType"}
 				},
 				"required": ["username", "discriminator"]
 			},

@@ -15028,11 +15028,12 @@
 				"properties": {
 					"user_id": {"$ref": "#/components/schemas/SnowflakeType"},
 					"username": {"$ref": "#/components/schemas/UsernameType"},
-					"discriminator": {"type": "string", "pattern": "^\\d{1,4}$", "description": "Legacy discriminator value"}
+					"discriminator": {"$ref": "#/components/schemas/DiscriminatorType"}
 				},
 				"required": ["user_id", "username"]
 			},
 			"UsernameType": {"type": "string", "minLength": 1, "maxLength": 32, "pattern": "^[a-zA-Z0-9_]+$"},
+			"DiscriminatorType": {"type": "string", "pattern": "^\\d{1,4}$"},
 			"ClearUserFieldsRequest": {
 				"type": "object",
 				"properties": {
