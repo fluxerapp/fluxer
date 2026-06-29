@@ -15028,7 +15028,7 @@
 				"properties": {
 					"user_id": {"$ref": "#/components/schemas/SnowflakeType"},
 					"username": {"$ref": "#/components/schemas/UsernameType"},
-					"discriminator": {"$ref": "#/components/schemas/Int32Type"}
+					"discriminator": {"type": "string", "pattern": "^\\d{1,4}$", "description": "Legacy discriminator value"}
 				},
 				"required": ["user_id", "username"]
 			},
