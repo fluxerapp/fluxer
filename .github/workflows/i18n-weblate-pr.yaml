@@ -83,7 +83,7 @@ jobs:
           fi
 
           git config user.name "fluxer-ci[bot]"
-          git config user.email "${{ vars.FLUXER_CI_APP_ID }}+fluxer-ci[bot]@users.noreply.github.com"
+          git config user.email "${{ vars.FLUXER_CI_APP_USER_ID }}+fluxer-ci[bot]@users.noreply.github.com"
           git add fluxer_app/src/features/i18n/locales packages/errors/src/i18n fluxer_api/pkgs/email/src/email_i18n fluxer_api/src/api/content_i18n
           git commit -m "i18n: compile Weblate catalogs"
           git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"

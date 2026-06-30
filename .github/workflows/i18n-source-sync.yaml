@@ -77,7 +77,7 @@ jobs:
           fi
 
           git config user.name "fluxer-ci[bot]"
-          git config user.email "${{ vars.FLUXER_CI_APP_ID }}+fluxer-ci[bot]@users.noreply.github.com"
+          git config user.email "${{ vars.FLUXER_CI_APP_USER_ID }}+fluxer-ci[bot]@users.noreply.github.com"
           git switch -c "$SOURCE_BRANCH"
           git add fluxer_app/src/features/i18n/locales fluxer_marketing/locales packages/errors/src/i18n fluxer_api/pkgs/email/src/email_i18n fluxer_api/src/api/content_i18n
           git commit -m "chore(i18n): refresh source catalogs"
