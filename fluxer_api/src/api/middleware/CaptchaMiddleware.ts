@@ -11,7 +11,6 @@ import type {InstanceCaptchaEffectiveConfig, InstanceCaptchaProvider} from '../i
 import type {User} from '../models/User';
 import {accountPolicyContactHasCapability} from '../risk/AccountPolicyService';
 import type {HonoEnv} from '../types/HonoEnv';
-import {isFluxerFlutterClient} from '../utils/UserAgentUtils';
 
 function resolveProviderSecret(
 	config: InstanceCaptchaEffectiveConfig,
@@ -86,11 +85,5 @@ async function requestContactHasCaptchaExemption(request: Request): Promise<bool
 
 export const CaptchaMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => {
 	await verifyCaptchaToken(ctx);
-	await next();
-});
-export const CaptchaMiddlewareSkipFlutter = createMiddleware<HonoEnv>(async (ctx, next) => {
-	if (!isFluxerFlutterClient(ctx.req.raw)) {
-		await verifyCaptchaToken(ctx);
-	}
 	await next();
 });
