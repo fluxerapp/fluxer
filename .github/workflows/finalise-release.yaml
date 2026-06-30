@@ -1,0 +1,51 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+name: finalise release
+
+on:
+  workflow_dispatch:
+    inputs:
+      build-version:
+        description: "Fluxer CalVer build version (YYYY.MDD.MICRO, UTC HHMMSS without leading zeroes)"
+        type: string
+        required: true
+      fragment-run-id:
+        description: "Workflow run id that produced the release-fragment-* artifacts"
+        type: string
+        required: true
+
+permissions:
+  actions: read
+  contents: write
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  finalise:
+    name: finalise GitHub release manifest
+    runs-on: ubuntu-24.04
+    environment: builds
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        env:
+          GIT_CONFIG_GLOBAL: ${{ runner.temp }}/gitconfig
+      - name: Set up Rust toolchain (CI helpers)
+        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
+        with:
+          toolchain: "1.93.0"
+      - name: Download GitHub release fragments
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          gh run download "${{ inputs.fragment-run-id }}"
+          --pattern "release-fragment-*"
+          --dir release-out/fragments
+      - name: Finalise release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- release
+          finalise
+          --build-version "${{ inputs.build-version }}"

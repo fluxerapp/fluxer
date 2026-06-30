@@ -26,7 +26,6 @@ on:
         required: false
         default: ""
         type: string
-
 permissions:
   contents: write
   id-token: write
@@ -57,12 +56,12 @@ jobs:
       source_sha: ${{ steps.meta.outputs.source_sha }}
     steps:
       - name: Checkout source
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
         with:
           ref: main
 
       - name: Set up Rust toolchain (CI helpers)
-        uses: dtolnay/rust-toolchain@b3b07ba8b418998c39fb20f53e8b695cdcc8de1b
+        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
         with:
           toolchain: "1.93.0"
 
@@ -92,10 +91,10 @@ jobs:
       windows_game_capture_arm64: ${{ steps.set-matrix.outputs.windows_game_capture_arm64 }}
     steps:
       - name: Checkout source
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
 
       - name: Set up Rust toolchain (CI helpers)
-        uses: dtolnay/rust-toolchain@b3b07ba8b418998c39fb20f53e8b695cdcc8de1b
+        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
         with:
           toolchain: "1.93.0"
 
@@ -143,25 +142,25 @@ jobs:
       FLUXER_WINDOWS_GAME_CAPTURE_MODULE_ENABLED: ${{ matrix.desktop_variant == 'windows-game-capture' && 'true' || 'false' }}
     steps:
       - name: Checkout CI helpers
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
         with:
           ref: ${{ needs.meta.outputs.source_sha }}
           path: _ci
 
       - name: Checkout source
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
         with:
           ref: ${{ needs.meta.outputs.source_sha }}
           path: source
 
       - name: Set up Rust toolchain (CI helpers)
-        uses: dtolnay/rust-toolchain@b3b07ba8b418998c39fb20f53e8b695cdcc8de1b
+        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
         with:
           toolchain: "1.93.0"
 
       - name: Set up Python (Windows)
         if: runner.os == 'Windows'
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
         with:
           python-version: "3.13"
 
@@ -188,7 +187,7 @@ jobs:
           --step set_workdir_unix
 
       - name: Set up Node.js
-        uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version: 24
 
@@ -210,7 +209,7 @@ jobs:
           --step resolve_pnpm_store_unix
 
       - name: Cache pnpm store
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
           path: ${{ env.PNPM_STORE_PATH }}
           key: ${{ runner.os }}-${{ matrix.arch }}-pnpm-store-${{ hashFiles('source/**/pnpm-lock.yaml') }}
@@ -239,7 +238,7 @@ jobs:
 
       - name: Set up Rust toolchain (Unix)
         if: matrix.platform != 'windows'
-        uses: dtolnay/rust-toolchain@b3b07ba8b418998c39fb20f53e8b695cdcc8de1b
+        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
         with:
           toolchain: "1.93.0"
           targets: ${{ matrix.platform == 'macos' && (matrix.arch == 'arm64' && 'aarch64-apple-darwin' || 'x86_64-apple-darwin') || (matrix.arch == 'arm64' && 'aarch64-unknown-linux-gnu' || 'x86_64-unknown-linux-gnu') }}
@@ -294,7 +293,7 @@ jobs:
 
       - name: Set up .NET SDK (Windows)
         if: matrix.platform == 'windows'
-        uses: actions/setup-dotnet@9a946fdbd5fb07b82b2f5a4466058b876ab72bb2
+        uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1
         with:
           dotnet-version: "8.0.x"
 
@@ -430,10 +429,10 @@ jobs:
       enabled: ${{ steps.check.outputs.enabled }}
     steps:
       - name: Checkout source
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
 
       - name: Set up Rust toolchain (CI helpers)
-        uses: dtolnay/rust-toolchain@b3b07ba8b418998c39fb20f53e8b695cdcc8de1b
+        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
         with:
           toolchain: "1.93.0"
 
@@ -485,12 +484,12 @@ jobs:
             desktop_variant: windows-game-capture
     steps:
       - name: Checkout CI helpers
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
         with:
           ref: ${{ needs.meta.outputs.source_sha }}
 
       - name: Set up Rust toolchain (CI helpers)
-        uses: dtolnay/rust-toolchain@b3b07ba8b418998c39fb20f53e8b695cdcc8de1b
+        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
         with:
           toolchain: "1.93.0"
 
@@ -513,7 +512,7 @@ jobs:
 
       - name: Azure login for Artifact Signing
         if: steps.check_artifacts.outputs.found == 'true'
-        uses: azure/login@1384c340ab2dda50fed2bee3041d1d87018aa5e8
+        uses: azure/login@532459ea530d8321f2fb9bb10d1e0bcf23869a43
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
@@ -521,7 +520,7 @@ jobs:
 
       - name: Sign Windows executables with Artifact Signing
         if: steps.check_artifacts.outputs.found == 'true'
-        uses: azure/artifact-signing-action@5289deff81257f39600de2188534e17b633ba835
+        uses: azure/artifact-signing-action@c7ab2a863ab5f9a846ddb8265964877ef296ee82
         with:
           endpoint: ${{ secrets.AZURE_ARTIFACT_SIGNING_ENDPOINT }}
           signing-account-name: ${{ secrets.AZURE_ARTIFACT_SIGNING_ACCOUNT_NAME }}
@@ -589,12 +588,12 @@ jobs:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
     steps:
       - name: Checkout source
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
         with:
           ref: ${{ needs.meta.outputs.source_sha }}
 
       - name: Set up Rust toolchain (CI helpers)
-        uses: dtolnay/rust-toolchain@b3b07ba8b418998c39fb20f53e8b695cdcc8de1b
+        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
         with:
           toolchain: "1.93.0"
 
@@ -626,6 +625,26 @@ jobs:
           cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- build-desktop
           --step build_summary
 
+      - name: Write GitHub release desktop fragment
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- release
+          publish-desktop
+          --build-version "${{ needs.meta.outputs.version }}"
+          --channel "${{ needs.meta.outputs.build_channel }}"
+          --test-build "${{ needs.meta.outputs.test_build }}"
+          --s3-prefix "${{ needs.meta.outputs.s3_prefix }}"
+          --payload-root s3_payload
+          --source-sha "${{ needs.meta.outputs.source_sha }}"
+      - name: Upload GitHub release fragment
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: release-fragment-desktop
+          path: release-out/fragments/fluxer-release-fragment-desktop-${{ needs.meta.outputs.build_channel }}.json
+          if-no-files-found: error
+          retention-days: 14
+
       - name: Notify canary desktop webhook
         if: ${{ success() && needs.meta.outputs.channel == 'canary' }}
         env:
@@ -639,3 +658,38 @@ jobs:
         run: >-
           cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- build-desktop
           --step cleanup_handoff
+
+  finalise_release:
+    name: Finalise GitHub desktop release
+    if: ${{ !failure() && !cancelled() && needs.meta.outputs.test_build != 'true' }}
+    needs:
+      - meta
+      - upload
+    runs-on: ubuntu-24.04-arm
+    environment: desktop-releases
+    timeout-minutes: 10
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        with:
+          ref: ${{ needs.meta.outputs.source_sha }}
+
+      - name: Set up Rust toolchain (CI helpers)
+        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
+        with:
+          toolchain: "1.93.0"
+      - name: Download GitHub release fragments
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          pattern: release-fragment-*
+          path: release-out/fragments
+          merge-multiple: true
+
+      - name: Finalise GitHub desktop release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- release
+          finalise
+          --build-version "${{ needs.meta.outputs.version }}"
+          --source-sha "${{ needs.meta.outputs.source_sha }}"

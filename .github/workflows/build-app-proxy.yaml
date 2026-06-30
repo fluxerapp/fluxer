@@ -9,6 +9,11 @@ on:
         type: string
         required: false
         default: ""
+      finalise-release:
+        description: "Publish the GitHub Release after this workflow completes. Set false when an orchestrator will finalise the release."
+        type: boolean
+        required: false
+        default: true
   workflow_call:
     inputs:
       build-version:
@@ -16,10 +21,15 @@ on:
         type: string
         required: false
         default: ""
+      finalise-release:
+        description: "Publish the GitHub Release after this workflow completes. Set false when an orchestrator will finalise the release."
+        type: boolean
+        required: false
+        default: true
 
 permissions:
   actions: read
-  contents: read
+  contents: write
   packages: write
 
 env:
@@ -34,11 +44,11 @@ jobs:
     outputs:
       build_version: ${{ steps.vars.outputs.build_version }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
         env:
           GIT_CONFIG_GLOBAL: ${{ runner.temp }}/gitconfig
       - name: Set up Rust toolchain (CI helpers)
-        uses: dtolnay/rust-toolchain@b3b07ba8b418998c39fb20f53e8b695cdcc8de1b
+        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
         with:
           toolchain: "1.93.0"
       - name: set variables
@@ -55,18 +65,18 @@ jobs:
     environment: builds
     timeout-minutes: 45
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
         env:
           GIT_CONFIG_GLOBAL: ${{ runner.temp }}/gitconfig
       - name: Set up Rust toolchain (CI helpers)
-        uses: dtolnay/rust-toolchain@b3b07ba8b418998c39fb20f53e8b695cdcc8de1b
+        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
         with:
           toolchain: "1.93.0"
       - name: prepare docker config
         run: >-
           cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- build-app-proxy
           --step prepare_docker_config
-      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f
+      - uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5
       - name: configure ghcr auth
         env:
           GHCR_USERNAME: ${{ github.actor }}
@@ -92,6 +102,13 @@ jobs:
           cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- build-app-proxy
           --step generate_asset_manifest
 
+      - name: Upload asset manifest handoff
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: app-proxy-assets-manifest
+          path: app-dist-output/dist/assets-manifest.txt
+          if-no-files-found: error
+
       - name: upload assets to S3 static bucket
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -109,16 +126,16 @@ jobs:
     environment: builds
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
         env:
           GIT_CONFIG_GLOBAL: ${{ runner.temp }}/gitconfig
-      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f
-      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9
+      - uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5
+      - uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8
+      - uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf
         with:
           context: .
           file: fluxer_app_proxy/Dockerfile
@@ -142,8 +159,20 @@ jobs:
     environment: builds
     timeout-minutes: 10
     steps:
-      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f
-      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        env:
+          GIT_CONFIG_GLOBAL: ${{ runner.temp }}/gitconfig
+      - name: Set up Rust toolchain (CI helpers)
+        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
+        with:
+          toolchain: "1.93.0"
+      - name: Download app-proxy asset manifest
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: app-proxy-assets-manifest
+          path: release-input/app-proxy
+      - uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5
+      - uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -163,3 +192,54 @@ jobs:
             "${IMAGE}@${amd64_digest}" \
             "${IMAGE}:${VERSION}-arm64"
           docker buildx imagetools inspect "${IMAGE}:${VERSION}"
+
+      - name: Write GitHub release app-proxy fragment
+        env:
+          GH_TOKEN: ${{ github.token }}
+          IMAGE_REF: ghcr.io/${{ env.GHCR_OWNER }}/fluxer-app-proxy:${{ needs.meta.outputs.build_version }}
+          VERSION: ${{ needs.meta.outputs.build_version }}
+        run: >-
+          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- release
+          publish-app-proxy
+          --build-version "${VERSION}"
+          --image fluxer-app-proxy
+          --image-ref "${IMAGE_REF}"
+          --moving-tags "v1,latest"
+          --asset-manifest release-input/app-proxy/assets-manifest.txt
+      - name: Upload GitHub release fragment
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: release-fragment-fluxer-app-proxy
+          path: release-out/fragments/fluxer-release-fragment-app-proxy.json
+          if-no-files-found: error
+          retention-days: 14
+
+  finalise:
+    name: finalise GitHub release
+    if: ${{ inputs['finalise-release'] != false }}
+    needs: [meta, merge]
+    runs-on: ubuntu-24.04
+    environment: builds
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        env:
+          GIT_CONFIG_GLOBAL: ${{ runner.temp }}/gitconfig
+      - name: Set up Rust toolchain (CI helpers)
+        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
+        with:
+          toolchain: "1.93.0"
+      - name: Download GitHub release fragments
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          pattern: release-fragment-*
+          path: release-out/fragments
+          merge-multiple: true
+      - name: finalise GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.meta.outputs.build_version }}
+        run: >-
+          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- release
+          finalise
+          --build-version "${VERSION}"

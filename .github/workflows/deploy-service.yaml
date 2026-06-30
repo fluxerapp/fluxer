@@ -16,7 +16,6 @@ on:
           - marketing
           - media-proxy
           - gateway
-          - data-service
           - messages
           - search
           - snowflakes
@@ -93,11 +92,11 @@ jobs:
       contents: read
       packages: read
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
         env:
           GIT_CONFIG_GLOBAL: ${{ runner.temp }}/gitconfig
       - name: install helm
-        uses: azure/setup-helm@bf6a7d304bc2fdb57e0331155b7ebf2c504acf0a
+        uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310
 
       - name: configure kubectl
         shell: bash
@@ -195,17 +194,6 @@ jobs:
               VALUES_ARGS="${VALUES_ARGS} -f ${CHART_DIR}/values.prod.yaml"
               SETS="--set-string gateway.image=${DEPLOY_IMAGE} --set-string gateway.tag=${TAG}"
               BUILD_PATHS="gateway"
-              ;;
-            data-service)
-              DEPLOY_IMAGE="fluxer-data-service"
-              if [[ "$CHANNEL" == "stable" ]]; then
-                echo "::error::data-service stable in-place upgrades are blocked. Deploy channel=canary to create the standby color, mirror writes and invalidations through API grpc_standby_host_template, then promote shards through grpc_promoted_standby_shards."
-                exit 1
-              fi
-              RELEASE="fluxer-${SERVICE}-canary"
-              SETS="--set-string dataService.name=data-service-canary --set-string dataService.image=${DEPLOY_IMAGE} --set-string dataService.tag=${TAG} --set-string dataService.configSecret=fluxer-config-shared"
-              SETS="${SETS} --set-string dataService.rolloutRole=standby --set-string dataService.updateStrategy=RollingUpdate --set rolloutAdmission.enabled=false"
-              BUILD_PATHS="dataService"
               ;;
             worker)
               if [[ "$CHANNEL" != "stable" ]]; then
