@@ -500,12 +500,7 @@ fn upload_release_assets(version: &str, assets: &[PathBuf]) -> Result<()> {
 
 fn publish_release(version: &str, notes_path: &Path) -> Result<()> {
     let tag = release_tag(version);
-    let release_id = output_text(
-        CommandSpec::new("gh")
-            .arg("api")
-            .arg(format!("repos/{{owner}}/{{repo}}/releases/tags/{tag}"))
-            .args(["--jq", ".id"]),
-    )?;
+    let release_id = release_database_id(&tag)?;
     let payload_dir = tempdir()?;
     let payload_path = payload_dir.path().join("release-update.json");
     write_json_pretty(
@@ -524,6 +519,22 @@ fn publish_release(version: &str, notes_path: &Path) -> Result<()> {
             .arg("--input")
             .arg(&payload_path),
     )
+}
+
+fn release_database_id(tag: &str) -> Result<String> {
+    let release_id = output_text(release_database_id_command(tag))?;
+    ensure!(
+        !release_id.trim().is_empty(),
+        "GitHub release {tag} did not include a database id"
+    );
+    Ok(release_id)
+}
+
+fn release_database_id_command(tag: &str) -> CommandSpec {
+    CommandSpec::new("gh")
+        .args(["release", "view", tag])
+        .args(["--json", "databaseId"])
+        .args(["--jq", ".databaseId"])
 }
 
 fn write_fragment(name: &str, value: &Value) -> Result<PathBuf> {
@@ -998,6 +1009,17 @@ mod tests {
         assert!(notes.contains("- `fluxer-users`"));
         assert!(notes.contains("- `helm`"));
         assert!(notes.contains("- `self-hosting`"));
+    }
+
+    #[test]
+    fn release_database_id_command_uses_gh_release_view_for_drafts() {
+        assert_eq!(
+            release_database_id_command("2026.520.1"),
+            CommandSpec::new("gh")
+                .args(["release", "view", "2026.520.1"])
+                .args(["--json", "databaseId"])
+                .args(["--jq", ".databaseId"])
+        );
     }
 
     #[test]

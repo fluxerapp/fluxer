@@ -54,7 +54,6 @@ jobs:
   meta:
     name: resolve metadata
     runs-on: ubuntu-24.04
-    environment: builds
     timeout-minutes: 5
     outputs:
       build_version: ${{ steps.vars.outputs.build_version }}
@@ -79,7 +78,6 @@ jobs:
     name: build ${{ matrix.platform }}
     needs: meta
     runs-on: ${{ matrix.runner }}
-    environment: builds
     timeout-minutes: 75
     strategy:
       fail-fast: false
@@ -120,7 +118,6 @@ jobs:
     name: merge multi-arch manifest
     needs: [meta, build]
     runs-on: ubuntu-24.04
-    environment: builds
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
@@ -180,7 +177,6 @@ jobs:
     if: ${{ inputs['finalise-release'] }}
     needs: [meta, merge]
     runs-on: ubuntu-24.04
-    environment: builds
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0

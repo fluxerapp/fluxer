@@ -26,6 +26,11 @@ on:
         type: boolean
         required: false
         default: true
+      approval-required:
+        description: "Require the protected builds environment approval before this build runs."
+        type: boolean
+        required: false
+        default: true
 
 permissions:
   actions: read
@@ -33,7 +38,19 @@ permissions:
   packages: write
 
 jobs:
+  approve:
+    name: approve build release
+    if: ${{ inputs['approval-required'] == true || inputs['approval-required'] == null }}
+    runs-on: ubuntu-24.04
+    environment: builds
+    timeout-minutes: 5
+    steps:
+      - name: approved
+        run: echo "Build release approved."
+
   image:
+    needs: approve
+    if: ${{ !cancelled() && (needs.approve.result == 'success' || needs.approve.result == 'skipped') }}
     uses: ./.github/workflows/_build-image.yaml
     with:
       image: fluxer-gateway

@@ -24,10 +24,20 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  meta:
-    name: resolve metadata
+  approve:
+    name: approve release build
     runs-on: ubuntu-24.04
     environment: builds
+    timeout-minutes: 5
+    steps:
+      - name: approved
+        run: echo "Release build approved."
+
+  meta:
+    name: resolve metadata
+    needs: approve
+    if: ${{ !failure() && !cancelled() }}
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     outputs:
       build_version: ${{ steps.vars.outputs.build_version }}
@@ -54,6 +64,7 @@ jobs:
     with:
       build-version: ${{ needs.meta.outputs.build_version }}
       finalise-release: false
+      approval-required: false
     secrets: inherit
 
   build_api:
@@ -62,6 +73,7 @@ jobs:
     with:
       build-version: ${{ needs.meta.outputs.build_version }}
       finalise-release: false
+      approval-required: false
     secrets: inherit
 
   build_app_proxy:
@@ -70,6 +82,7 @@ jobs:
     with:
       build-version: ${{ needs.meta.outputs.build_version }}
       finalise-release: false
+      approval-required: false
     secrets: inherit
 
   build_app_proxy_self_hosted:
@@ -78,6 +91,7 @@ jobs:
     with:
       build-version: ${{ needs.meta.outputs.build_version }}
       finalise-release: false
+      approval-required: false
     secrets: inherit
 
   build_docs:
@@ -86,6 +100,7 @@ jobs:
     with:
       build-version: ${{ needs.meta.outputs.build_version }}
       finalise-release: false
+      approval-required: false
     secrets: inherit
 
   build_gateway:
@@ -94,6 +109,7 @@ jobs:
     with:
       build-version: ${{ needs.meta.outputs.build_version }}
       finalise-release: false
+      approval-required: false
     secrets: inherit
 
   build_gifs:
@@ -102,6 +118,7 @@ jobs:
     with:
       build-version: ${{ needs.meta.outputs.build_version }}
       finalise-release: false
+      approval-required: false
     secrets: inherit
 
   build_marketing:
@@ -110,6 +127,7 @@ jobs:
     with:
       build-version: ${{ needs.meta.outputs.build_version }}
       finalise-release: false
+      approval-required: false
     secrets: inherit
 
   build_media_proxy:
@@ -118,6 +136,7 @@ jobs:
     with:
       build-version: ${{ needs.meta.outputs.build_version }}
       finalise-release: false
+      approval-required: false
     secrets: inherit
 
   build_messages:
@@ -126,6 +145,7 @@ jobs:
     with:
       build-version: ${{ needs.meta.outputs.build_version }}
       finalise-release: false
+      approval-required: false
     secrets: inherit
 
   build_snowflakes:
@@ -134,6 +154,7 @@ jobs:
     with:
       build-version: ${{ needs.meta.outputs.build_version }}
       finalise-release: false
+      approval-required: false
     secrets: inherit
 
   build_static:
@@ -142,6 +163,7 @@ jobs:
     with:
       build-version: ${{ needs.meta.outputs.build_version }}
       finalise-release: false
+      approval-required: false
     secrets: inherit
 
   build_unfurl:
@@ -150,6 +172,7 @@ jobs:
     with:
       build-version: ${{ needs.meta.outputs.build_version }}
       finalise-release: false
+      approval-required: false
     secrets: inherit
 
   build_users:
@@ -158,6 +181,7 @@ jobs:
     with:
       build-version: ${{ needs.meta.outputs.build_version }}
       finalise-release: false
+      approval-required: false
     secrets: inherit
 
   release_assets:
@@ -180,7 +204,6 @@ jobs:
       - build_unfurl
       - build_users
     runs-on: ubuntu-24.04
-    environment: builds
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
@@ -235,7 +258,6 @@ jobs:
       - build_users
       - release_assets
     runs-on: ubuntu-24.04
-    environment: builds
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
