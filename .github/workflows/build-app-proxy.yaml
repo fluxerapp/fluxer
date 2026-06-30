@@ -43,7 +43,7 @@ env:
 jobs:
   approve:
     name: approve build release
-    if: ${{ inputs['approval-required'] == true || inputs['approval-required'] == null }}
+    if: ${{ format('{0}', inputs['approval-required']) != 'false' }}
     runs-on: ubuntu-24.04
     environment: builds
     timeout-minutes: 5
