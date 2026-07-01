@@ -536,6 +536,13 @@ impl KlipyClient {
 }
 
 pub fn normalize_locale(locale: &str) -> String {
+    // KLIPY v2 rejects numeric-region tags such as es-419 on categories and autocomplete.
+    if let Some((language, region)) = locale.split_once(['-', '_'])
+        && region.chars().all(|ch| ch.is_ascii_digit())
+    {
+        return language.to_owned();
+    }
+
     locale.replace('-', "_")
 }
 
@@ -638,9 +645,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn locale_uses_klipy_underscore_form() {
+    fn locale_uses_klipy_supported_form() {
         assert_eq!(normalize_locale("en-US"), "en_US");
+        assert_eq!(normalize_locale("pt-BR"), "pt_BR");
+        assert_eq!(normalize_locale("zh-CN"), "zh_CN");
         assert_eq!(normalize_locale("sv_SE"), "sv_SE");
+        assert_eq!(normalize_locale("es-419"), "es");
+        assert_eq!(normalize_locale("es_419"), "es");
+        assert_eq!(normalize_locale("fr"), "fr");
     }
 
     #[test]
@@ -687,6 +699,81 @@ mod tests {
         assert_eq!(public_format_key("hd", "webm"), "webm");
         assert_eq!(public_format_key("sm", "gif"), "tinygif");
         assert_eq!(public_format_key("xs", "webp"), "nanowebp");
+    }
+
+    #[tokio::test]
+    #[ignore]
+    async fn live_accepts_es_419_locale_for_picker_endpoints() {
+        let api_key = std::env::var("FLUXER_KLIPY_API_KEY")
+            .or_else(|_| std::env::var("KLIPY_API_KEY"))
+            .expect("FLUXER_KLIPY_API_KEY or KLIPY_API_KEY set");
+        let locale = normalize_locale("es-419");
+        assert_eq!(locale, "es");
+
+        for (endpoint, params) in [
+            (
+                "featured",
+                vec![
+                    ("country", "US"),
+                    ("locale", locale.as_str()),
+                    ("limit", "1"),
+                ],
+            ),
+            (
+                "categories",
+                vec![
+                    ("country", "US"),
+                    ("locale", locale.as_str()),
+                    ("type", "featured"),
+                ],
+            ),
+            (
+                "search",
+                vec![
+                    ("country", "US"),
+                    ("locale", locale.as_str()),
+                    ("q", "cat"),
+                    ("limit", "1"),
+                ],
+            ),
+            (
+                "autocomplete",
+                vec![("locale", locale.as_str()), ("q", "cat")],
+            ),
+        ] {
+            assert_live_klipy_endpoint_accepts(endpoint, &api_key, &params).await;
+        }
+    }
+
+    async fn assert_live_klipy_endpoint_accepts(
+        endpoint: &str,
+        api_key: &str,
+        params: &[(&str, &str)],
+    ) {
+        let mut url = Url::parse(&format!("{KLIPY_BASE_URL}/{endpoint}")).expect("KLIPY URL");
+        {
+            let mut query = url.query_pairs_mut();
+            query.append_pair("client_key", CLIENT_KEY);
+            query.append_pair("contentfilter", DEFAULT_CONTENT_FILTER);
+            query.append_pair("key", api_key);
+            for (key, value) in params {
+                query.append_pair(key, value);
+            }
+        }
+
+        let status = reqwest::Client::builder()
+            .user_agent(FLUXER_USER_AGENT)
+            .build()
+            .expect("KLIPY HTTP client")
+            .get(url)
+            .send()
+            .await
+            .expect("KLIPY live request")
+            .status();
+        assert!(
+            status.is_success(),
+            "KLIPY {endpoint} request failed with status {status}"
+        );
     }
 
     #[tokio::test]
