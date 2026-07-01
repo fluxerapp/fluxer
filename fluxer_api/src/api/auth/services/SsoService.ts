@@ -893,7 +893,7 @@ export class SsoService {
 		};
 	}
 
-	private async validatePublicOutboundUrl(rawUrl: string, fieldName: string): Promise<URL> {
+	private async validatePublicOutboundUrl(rawUrl: string, fieldName: string): Promise<string> {
 		return validateSsoPublicOutboundUrl(rawUrl, fieldName);
 	}
 
