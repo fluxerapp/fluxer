@@ -116,6 +116,14 @@ export const UserRateLimitConfigs = {
 		bucket: 'user:channels',
 		config: {limit: 40, windowMs: ms('10 seconds')},
 	} as RouteRateLimitConfig,
+	USER_GROUP_DM_CREATE: {
+		bucket: 'user:group_dm:create',
+		config: {limit: 10, windowMs: ms('1 hour'), exemptFromGlobal: true},
+	} as RouteRateLimitConfig,
+	USER_GROUP_DM_RECIPIENT_ADD: {
+		bucket: 'user:group_dm:recipient:add',
+		config: {limit: 10, windowMs: ms('1 hour'), exemptFromGlobal: true},
+	} as RouteRateLimitConfig,
 	USER_RELATIONSHIPS_LIST: {
 		bucket: 'user:relationships:list',
 		config: {limit: 40, windowMs: ms('10 seconds')},

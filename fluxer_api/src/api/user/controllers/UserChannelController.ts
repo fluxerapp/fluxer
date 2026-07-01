@@ -7,6 +7,7 @@ import {CreatePrivateChannelRequest} from '@fluxer/schema/src/domains/user/UserR
 import {z} from 'zod';
 import {createChannelID} from '../../BrandedTypes';
 import {LoginRequired} from '../../middleware/AuthMiddleware';
+import {GroupDmCreateProtectionMiddleware} from '../../middleware/GroupDmProtectionMiddleware';
 import {RateLimitMiddleware} from '../../middleware/RateLimitMiddleware';
 import {OpenAPI} from '../../middleware/ResponseTypeMiddleware';
 import {RateLimitConfigs} from '../../RateLimitConfig';
@@ -41,6 +42,7 @@ export function UserChannelController(app: HonoApp) {
 		RateLimitMiddleware(RateLimitConfigs.USER_CHANNELS),
 		LoginRequired,
 		Validator('json', CreatePrivateChannelRequest),
+		GroupDmCreateProtectionMiddleware,
 		OpenAPI({
 			operationId: 'create_private_channel',
 			summary: 'Create private channel',
@@ -49,7 +51,7 @@ export function UserChannelController(app: HonoApp) {
 			security: ['botToken', 'bearerToken', 'sessionToken'],
 			tags: ['Users'],
 			description:
-				'Creates a new private channel (direct message) between the current user and one or more recipients. Returns the newly created channel object.',
+				'Creates a new private channel (direct message) between the current user and one or more recipients. Group DM creation requires CAPTCHA verification. Returns the newly created channel object.',
 		}),
 		async (ctx) => {
 			const user = ctx.get('user');

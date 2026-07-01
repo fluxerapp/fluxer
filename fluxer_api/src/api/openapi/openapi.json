@@ -5119,7 +5119,7 @@
 					}
 				},
 				"x-mint": {"metadata": {"title": "Add recipient to group DM"}},
-				"description": "Adds a user to a group direct message channel. The requesting user must be a member of the group DM.",
+				"description": "Adds a user to a group direct message channel. The requesting user must be a member of the group DM. Requires CAPTCHA verification.",
 				"security": [{"botToken": []}, {"sessionToken": []}],
 				"parameters": [
 					{
@@ -16329,7 +16329,7 @@
 					}
 				},
 				"x-mint": {"metadata": {"title": "Create private channel"}},
-				"description": "Creates a new private channel (direct message) between the current user and one or more recipients. Returns the newly created channel object.",
+				"description": "Creates a new private channel (direct message) between the current user and one or more recipients. Group DM creation requires CAPTCHA verification. Returns the newly created channel object.",
 				"security": [{"botToken": []}, {"sessionToken": []}],
 				"requestBody": {
 					"required": true,
