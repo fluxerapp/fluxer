@@ -32,13 +32,13 @@ jobs:
 
       - name: Checkout fluxer
         if: steps.changes.outputs.openapi == 'true'
-        uses: actions/checkout@b9e0990d219a03df7633c93f6f005a8fecbcab22
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
         with:
           persist-credentials: false
 
       - name: Checkout Dart SDK
         if: steps.changes.outputs.openapi == 'true'
-        uses: actions/checkout@b9e0990d219a03df7633c93f6f005a8fecbcab22
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
         with:
           repository: fluxerapp/dart_sdk
           path: dart_sdk
@@ -46,7 +46,7 @@ jobs:
 
       - name: Setup Dart
         if: steps.changes.outputs.openapi == 'true'
-        uses: dart-lang/setup-dart@2bd11704788983a6a210731656d0042e2df8b2c1
+        uses: dart-lang/setup-dart@65eb853c7ba17dde3be364c3d2858773e7144260
         with:
           sdk: stable
 

@@ -9,6 +9,11 @@ on:
         type: string
         required: false
         default: ""
+      finalise-release:
+        description: "Publish the GitHub Release after this workflow completes. Set false when an orchestrator will finalise the release."
+        type: boolean
+        required: false
+        default: true
   workflow_call:
     inputs:
       build-version:
@@ -16,18 +21,41 @@ on:
         type: string
         required: false
         default: ""
+      finalise-release:
+        description: "Publish the GitHub Release after this workflow completes. Set false when an orchestrator will finalise the release."
+        type: boolean
+        required: false
+        default: true
+      approval-required:
+        description: "Require the protected builds environment approval before this build runs."
+        type: boolean
+        required: false
+        default: true
 
 permissions:
   actions: read
-  contents: read
+  contents: write
   packages: write
 
 jobs:
+  approve:
+    name: approve build release
+    if: ${{ format('{0}', inputs['approval-required']) != 'false' }}
+    runs-on: ubuntu-24.04
+    environment: builds
+    timeout-minutes: 5
+    steps:
+      - name: approved
+        run: echo "Build release approved."
+
   build:
+    needs: approve
+    if: ${{ !cancelled() && (needs.approve.result == 'success' || needs.approve.result == 'skipped') }}
     uses: ./.github/workflows/_build-image.yaml
     with:
       image: fluxer-app-proxy-self-hosted
       dockerfile: fluxer_app_proxy/Dockerfile
       build-version: ${{ inputs['build-version'] }}
+      finalise-release: ${{ inputs['finalise-release'] != false }}
       extra-build-args: |
         FLUXER_APP_PROXY_TIME_FREEZE_ENABLED=false

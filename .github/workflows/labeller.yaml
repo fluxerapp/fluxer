@@ -18,7 +18,7 @@ jobs:
           permission-pull-requests: write
 
       - name: Label pull request
-        uses: actions/labeler@e52e4fb63ed5cd0e07abaad9826b2a893ccb921f
+        uses: actions/labeler@f27b608878404679385c85cfa523b85ccb86e213
         with:
           repo-token: ${{ steps.create-token.outputs.token }}
           configuration-path: .github/labeller.yaml

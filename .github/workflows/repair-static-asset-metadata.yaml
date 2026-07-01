@@ -24,10 +24,10 @@ jobs:
       S3_ENDPOINT: https://ewr1.vultrobjects.com
     steps:
       - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
 
       - name: Set up Rust
-        uses: dtolnay/rust-toolchain@a02741459ec5e501b9843ed30b535ca0a0376ae4
+        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
         with:
           toolchain: 1.93.0
 
