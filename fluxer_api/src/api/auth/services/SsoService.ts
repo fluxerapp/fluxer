@@ -644,7 +644,7 @@ export class SsoService {
 	}
 
 	private async getOrCreateJwks(jwksUrl: string): Promise<RemoteJwkSetResolver> {
-		await this.validatePublicOutboundUrl(jwksUrl, 'jwks_url');
+		await this.assertPublicOutboundUrl(jwksUrl, 'jwks_url');
 		const now = Date.now();
 		const cached = this.jwksCache.get(jwksUrl);
 		if (cached && now - cached.cachedAt < SsoService.JWKS_CACHE_TTL_MS) {
@@ -893,7 +893,7 @@ export class SsoService {
 		};
 	}
 
-	private async validatePublicOutboundUrl(rawUrl: string, fieldName: string): Promise<string> {
+	private async assertPublicOutboundUrl(rawUrl: string, fieldName: string): Promise<string> {
 		return validateSsoPublicOutboundUrl(rawUrl, fieldName);
 	}
 
@@ -902,7 +902,7 @@ export class SsoService {
 			return null;
 		}
 		try {
-			return await this.validatePublicOutboundUrl(rawUrl, fieldName);
+			return await this.assertPublicOutboundUrl(rawUrl, fieldName);
 		} catch (error) {
 			this.logger.warn({fieldName, rawUrl, error}, 'Ignoring SSO URL that failed outbound policy validation');
 			return null;
