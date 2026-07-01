@@ -15,6 +15,8 @@ pub enum UnfurlRequest {
         cache_only: bool,
         #[serde(default)]
         youtube_api_key: Option<String>,
+        #[serde(default)]
+        klipy_api_key: Option<String>,
     },
     Invalidate {
         url: String,
@@ -203,12 +205,14 @@ mod tests {
                 bypass_cache,
                 cache_only,
                 youtube_api_key,
+                klipy_api_key,
             } => {
                 assert_eq!(url, "https://fxtwitter.com/example/status/1");
                 assert_eq!(nsfw_mode, Some(NsfwMode::Block));
                 assert!(!bypass_cache);
                 assert!(!cache_only);
                 assert!(youtube_api_key.is_none());
+                assert!(klipy_api_key.is_none());
             }
             UnfurlRequest::Invalidate { .. } => panic!("expected unfurl request"),
         }

@@ -42,6 +42,11 @@ export const UsernameTypeSchema: OpenAPISchema = {
 	pattern: '^[a-zA-Z0-9_]+$',
 };
 export const UsernameTypeRef: OpenAPIRef = {$ref: '#/components/schemas/UsernameType'};
+export const DiscriminatorTypeSchema: OpenAPISchema = {
+	type: 'string',
+	pattern: '^\\d{1,4}$',
+};
+export const DiscriminatorTypeRef: OpenAPIRef = {$ref: '#/components/schemas/DiscriminatorType'};
 export const EmailTypeSchema: OpenAPISchema = {
 	type: 'string',
 	format: 'email',

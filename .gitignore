@@ -86,8 +86,6 @@ devenv.local.nix
 /fluxer_gateway/config/vm.args
 /packages/config/src/ConfigSchema.json
 /packages/config/src/MasterZodSchema.generated.tsx
-CLAUDE.md
-AGENTS.md
 fluxer.yaml
 GEMINI.md
 geoip_data

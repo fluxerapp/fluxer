@@ -53,6 +53,7 @@ interface SsoStatePayload {
 	codeVerifier: string;
 	nonce: string;
 	redirectTo?: string;
+	redirectUri?: string;
 	createdAt: number;
 }
 
@@ -96,6 +97,7 @@ interface JwksCacheEntry {
 const CODE_VERIFIER_BYTE_LENGTH = 32;
 const STATE_BYTE_LENGTH = 16;
 const NONCE_BYTE_LENGTH = 16;
+const MOBILE_SSO_REDIRECT_URI = 'fluxer://auth/sso/callback';
 
 function randomBase64UrlToken(byteLength: number): string {
 	return randomBytes(byteLength).toString('base64url');
@@ -116,6 +118,14 @@ function buildStateCacheKey(state: string): string {
 function buildDiscoveryCacheKey(issuer: string): string {
 	const key = createHash('sha256').update(issuer).digest('hex').slice(0, 32);
 	return `sso:oidc-discovery:${key}`;
+}
+
+function resolveSsoRedirectUri(requestedRedirectUri: string | undefined, defaultRedirectUri: string): string {
+	if (!requestedRedirectUri) return defaultRedirectUri;
+	const trimmed = requestedRedirectUri.trim();
+	if (!trimmed) return defaultRedirectUri;
+	if (trimmed === defaultRedirectUri || trimmed === MOBILE_SSO_REDIRECT_URI) return trimmed;
+	throw InputValidationError.fromCode('redirect_uri', ValidationErrorCodes.INVALID_URL_FORMAT);
 }
 
 function coerceEmailVerified(value: unknown): boolean | undefined {
@@ -254,7 +264,7 @@ export class SsoService {
 		return config.enabled && config.ready && config.enforced;
 	}
 
-	async startLogin(redirectTo?: string): Promise<{
+	async startLogin({redirectTo, redirectUri}: {redirectTo?: string; redirectUri?: string} = {}): Promise<{
 		authorization_url: string;
 		state: string;
 		redirect_uri: string;
@@ -264,10 +274,12 @@ export class SsoService {
 		const codeVerifier = randomBase64UrlToken(CODE_VERIFIER_BYTE_LENGTH);
 		const codeChallenge = buildCodeChallenge(codeVerifier);
 		const nonce = randomBase64UrlToken(NONCE_BYTE_LENGTH);
+		const ssoRedirectUri = resolveSsoRedirectUri(redirectUri, config.redirectUri);
 		const statePayload: SsoStatePayload = {
 			codeVerifier,
 			nonce,
 			redirectTo: sanitizeSsoRedirectTo(redirectTo),
+			redirectUri: ssoRedirectUri,
 			createdAt: Date.now(),
 		};
 		const {cache} = this.apiContext.services;
@@ -275,7 +287,7 @@ export class SsoService {
 		const searchParams = new URLSearchParams({
 			response_type: 'code',
 			client_id: config.clientId ?? '',
-			redirect_uri: config.redirectUri,
+			redirect_uri: ssoRedirectUri,
 			scope: config.scope,
 			state,
 			code_challenge: codeChallenge,
@@ -297,7 +309,7 @@ export class SsoService {
 				throw new FeatureTemporarilyDisabledError();
 			}
 		}
-		return {authorization_url: authorizationUrlString, state, redirect_uri: config.redirectUri};
+		return {authorization_url: authorizationUrlString, state, redirect_uri: ssoRedirectUri};
 	}
 
 	async completeLogin({code, state, request}: {code: string; state: string; request: Request}): Promise<{
@@ -314,6 +326,7 @@ export class SsoService {
 		const tokenResponse = await this.exchangeCode({
 			code,
 			codeVerifier: statePayload.codeVerifier,
+			redirectUri: statePayload.redirectUri ?? config.redirectUri,
 			config,
 		});
 		const claims = await this.resolveClaims(tokenResponse, config, statePayload.nonce);
@@ -764,10 +777,12 @@ export class SsoService {
 	private async exchangeCode({
 		code,
 		codeVerifier,
+		redirectUri,
 		config,
 	}: {
 		code: string;
 		codeVerifier: string;
+		redirectUri: string;
 		config: ResolvedSsoConfig;
 	}): Promise<{
 		id_token?: string;
@@ -779,7 +794,7 @@ export class SsoService {
 		const body = new URLSearchParams({
 			grant_type: 'authorization_code',
 			code,
-			redirect_uri: config.redirectUri,
+			redirect_uri: redirectUri,
 			client_id: config.clientId ?? '',
 			code_verifier: codeVerifier,
 		});

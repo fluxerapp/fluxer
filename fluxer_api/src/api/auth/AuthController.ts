@@ -39,7 +39,7 @@ import {
 } from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import {Config} from '../Config';
 import {DefaultUserOnly, LoginRequiredAllowSuspicious} from '../middleware/AuthMiddleware';
-import {CaptchaMiddleware, CaptchaMiddlewareSkipFlutter} from '../middleware/CaptchaMiddleware';
+import {CaptchaMiddleware} from '../middleware/CaptchaMiddleware';
 import {LocalAuthMiddleware} from '../middleware/LocalAuthMiddleware';
 import {RateLimitMiddleware} from '../middleware/RateLimitMiddleware';
 import {OpenAPI} from '../middleware/ResponseTypeMiddleware';
@@ -133,7 +133,7 @@ export function AuthController(app: HonoApp) {
 	app.post(
 		'/auth/login',
 		LocalAuthMiddleware,
-		CaptchaMiddlewareSkipFlutter,
+		CaptchaMiddleware,
 		RateLimitMiddleware(RateLimitConfigs.AUTH_LOGIN),
 		Validator('json', LoginRequest),
 		OpenAPI({

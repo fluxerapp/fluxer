@@ -9,3 +9,5 @@
 {{ include "svc-common.service" . }}
 ---
 {{ include "svc-common.pdb" . }}
+---
+{{ include "svc-common.router-pdb" . }}

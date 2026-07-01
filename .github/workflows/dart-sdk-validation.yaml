@@ -1,0 +1,56 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+name: Dart SDK Validation
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check changed files
+        id: changes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          changed_files="$(mktemp)"
+          gh pr diff "$PULL_REQUEST_NUMBER" --repo "$GITHUB_REPOSITORY" --name-only > "$changed_files"
+          if grep -Fxq 'fluxer_api/src/api/openapi/openapi.json' "$changed_files"; then
+            echo "openapi=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "openapi=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout fluxer
+        if: steps.changes.outputs.openapi == 'true'
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        with:
+          persist-credentials: false
+
+      - name: Checkout Dart SDK
+        if: steps.changes.outputs.openapi == 'true'
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        with:
+          repository: fluxerapp/dart_sdk
+          path: dart_sdk
+          persist-credentials: false
+
+      - name: Setup Dart
+        if: steps.changes.outputs.openapi == 'true'
+        uses: dart-lang/setup-dart@65eb853c7ba17dde3be364c3d2858773e7144260
+        with:
+          sdk: stable
+
+      - name: Validate Dart SDK generation
+        if: steps.changes.outputs.openapi == 'true'
+        working-directory: dart_sdk
+        run: ./scripts/openapi_sdk.sh validate

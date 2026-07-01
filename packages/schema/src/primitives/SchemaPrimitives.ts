@@ -316,6 +316,11 @@ export function createNamedStringLiteralUnion<T extends string>(
 		.describe(`fluxer:EnumValues:${JSON.stringify(entries)}${descPart}`);
 }
 
+export function createNamedObject<T extends z.ZodRawShape>(typeName: string, shape: T, description?: string) {
+	const descPart = description ? ` ${description}` : '';
+	return z.object(shape).describe(`fluxer:NamedObject:${typeName}${descPart}`);
+}
+
 type FlexibleStringLiteralUnionOperand<T extends string> = z.ZodLiteral<T> | z.ZodString;
 type FlexibleStringLiteralUnionOperands<T extends string> = [
 	z.ZodLiteral<T>,

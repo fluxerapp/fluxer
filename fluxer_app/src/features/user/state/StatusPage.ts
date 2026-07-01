@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {ExternalUrls} from '@fluxer/constants/src/ExternalUrls';
 import {makeAutoObservable, runInAction} from 'mobx';
@@ -191,6 +192,7 @@ export class StatusPage {
 	private checkInFlight: Promise<void> | null = null;
 	private lastCheckedAt = 0;
 	private pollingStarted = false;
+	private readonly isSelfHosted = RuntimeConfig.isSelfHosted();
 
 	constructor() {
 		makeAutoObservable<StatusPage, 'checkInFlight' | 'lastCheckedAt' | 'pollingStarted' | 'pollTimerId'>(
@@ -206,9 +208,10 @@ export class StatusPage {
 	}
 
 	startPolling(): void {
-		if (this.pollingStarted) {
+		if (this.isSelfHosted || this.pollingStarted) {
 			return;
 		}
+
 		this.pollingStarted = true;
 		this.addResumeListeners();
 		this.schedulePoll();
@@ -236,6 +239,9 @@ export class StatusPage {
 	}
 
 	async checkIncidents(): Promise<void> {
+		if (this.isSelfHosted) {
+			return;
+		}
 		if (this.checkInFlight) {
 			return this.checkInFlight;
 		}

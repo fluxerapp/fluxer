@@ -30,7 +30,7 @@ export const CreateFavoriteMemeFromUrlBodySchema = FavoriteMemeBase.extend({
 		.describe('Provider-issued slug or slug-id token for the GIF, when sourced from a provider'),
 	gif_provider: createStringType(1, 32)
 		.nullish()
-		.describe('Stable name of the GIF provider that issued gif_slug (e.g. "klipy", "tenor")'),
+		.describe('Stable name of the GIF provider that issued gif_slug. New provider GIFs are sourced from KLIPY.'),
 	media: z
 		.record(z.string(), GifMediaFormat)
 		.nullish()
@@ -77,7 +77,9 @@ export const FavoriteMemeResponse = z.object({
 	gif_provider: z
 		.string()
 		.nullish()
-		.describe('Stable name of the GIF provider that issued gif_slug (e.g. "klipy", "tenor"), if any'),
+		.describe(
+			'Stable name of the GIF provider that issued gif_slug, if any. Legacy records may contain older provider names.',
+		),
 	media: z
 		.record(z.string(), GifMediaFormat)
 		.nullish()

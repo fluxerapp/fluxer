@@ -1,8 +1,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 #
 # Daily sync of the MaxMind GeoLite2 City and ASN MMDB files into S3.
-# The api reads these out of the CDN bucket at runtime to enrich
-# request logs and the data-service for ratelimits. Adopted into helm
+# Runtime services read these out of the CDN bucket. Adopted into helm
 # from a previously hand-applied kubectl manifest.
 
 apiVersion: batch/v1

@@ -219,13 +219,7 @@ function defaultConfig(): MasterConfig {
 				port: 3310,
 				fail_open: false,
 			},
-			gif: {
-				provider: 'tenor',
-			},
 			klipy: {
-				api_key: '',
-			},
-			tenor: {
 				api_key: '',
 			},
 			youtube: {
@@ -399,7 +393,6 @@ function normalizeConfig(config: MasterConfig): MasterConfig {
 	assertOneOf(config.integrations.email.provider, ['smtp', 'none'], 'FLUXER_EMAIL_PROVIDER');
 	assertOneOf(config.integrations.captcha.provider, ['hcaptcha', 'turnstile', 'none'], 'FLUXER_CAPTCHA_PROVIDER');
 	assertOneOf(config.integrations.search.engine, ['elasticsearch', 'meilisearch'], 'FLUXER_SEARCH_ENGINE');
-	assertOneOf(config.integrations.gif.provider, ['tenor', 'klipy'], 'FLUXER_GIF_PROVIDER');
 	assertOneOf(
 		config.instance.abuse_policy.direct_contact_spam.action,
 		['flag_spammer', 'suppress_delivery'],

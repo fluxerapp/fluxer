@@ -8,7 +8,9 @@ mod ci_workflow;
 mod common;
 mod desktop;
 mod desktop_native;
+mod functions;
 mod gateway;
+mod release;
 mod schema;
 mod static_bucket;
 
@@ -37,6 +39,7 @@ enum Command {
     CleanSchemaGeneratedFiles(schema::CleanSchemaGeneratedFilesArgs),
     Gateway(gateway::GatewayArgs),
     RepairStaticAssetMetadata(static_bucket::RepairStaticAssetMetadataArgs),
+    Release(release::ReleaseArgs),
     ResolveCalver(calver::ResolveCalverArgs),
     SyncStaticBucket(static_bucket::SyncStaticBucketArgs),
     TestWebrtcSenderRust(desktop_native::TestWebrtcSenderRustArgs),
@@ -60,6 +63,7 @@ pub async fn run() -> Result<()> {
         Command::RepairStaticAssetMetadata(args) => {
             static_bucket::repair_asset_metadata(args).await
         }
+        Command::Release(args) => release::run(args).await,
         Command::ResolveCalver(args) => calver::run(args),
         Command::SyncStaticBucket(args) => static_bucket::run(args).await,
         Command::TestWebrtcSenderRust(args) => desktop_native::run_test_webrtc_sender_rust(args),

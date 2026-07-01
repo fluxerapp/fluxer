@@ -78,8 +78,8 @@ ports:
   gateway: 8080
   uploads: 8080
 
-# MaxMind GeoLite2 sync — daily at 05:17 UTC. The api + data-service
-# read these mmdb files out of the CDN bucket at runtime.
+# MaxMind GeoLite2 sync — daily at 05:17 UTC. Runtime services read
+# these mmdb files out of the CDN bucket.
 geoipSync:
   image: amazon/aws-cli:2.17.12
   schedule: '17 5 * * *'

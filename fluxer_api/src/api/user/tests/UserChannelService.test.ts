@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {FLUXERBOT_ID} from '@fluxer/constants/src/AppConstants';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
@@ -13,10 +14,14 @@ import {
 	createFriendship,
 	createGroupDmChannel,
 	createGuild,
+	deleteChannel,
 	getChannel,
 	type MinimalChannelResponse,
 	sendChannelMessage,
 } from '../../channel/tests/ChannelTestUtils';
+import {createChannelID, createUserID} from '../../BrandedTypes';
+import {SYSTEM_USER_ID} from '../../constants/Core';
+import {UserRepository} from '../../user/repositories/UserRepository';
 import {ensureSessionStarted} from '../../message/tests/MessageTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
 import {HTTP_STATUS} from '../../test/TestConstants';
@@ -148,6 +153,32 @@ describe('UserChannelService', () => {
 			await blockUser(harness, user1, user2.userId);
 			const channel2 = await createDmChannel(harness, user1.token, user2.userId);
 			expect(channel2.id).toBe(channel1.id);
+		});
+		test('reopening closed system user DM accepts recipient_id 0', async () => {
+			const user = await createTestAccount(harness);
+			const userId = createUserID(BigInt(user.userId));
+			const channelId = createChannelID(1000000000000000001n);
+			const userRepository = new UserRepository();
+			const channel = await userRepository.createDmChannelAndState(userId, SYSTEM_USER_ID, channelId);
+			await userRepository.openPrivateChannelForUser(userId, channel);
+			await deleteChannel(harness, user.token, channelId.toString());
+			const reopened = await createBuilder<MinimalChannelResponse>(harness, user.token)
+				.post('/users/@me/channels')
+				.body({recipient_id: FLUXERBOT_ID})
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			expect(reopened.id).toBe(channelId.toString());
+			expect(reopened.type).toBe(ChannelTypes.DM);
+		});
+		test('can create new system user DM without friendship or mutual guilds', async () => {
+			const user = await createTestAccount(harness);
+			const channel = await createBuilder<MinimalChannelResponse>(harness, user.token)
+				.post('/users/@me/channels')
+				.body({recipient_id: FLUXERBOT_ID})
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			expect(channel.id).toBeDefined();
+			expect(channel.type).toBe(ChannelTypes.DM);
 		});
 	});
 	describe('Group DM creation', () => {
