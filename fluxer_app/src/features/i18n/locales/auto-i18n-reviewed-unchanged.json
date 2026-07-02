@@ -1330,6 +1330,9 @@
 				"msgid": "Enable the integrations whose credentials you have configured. Only available services are shown."
 			},
 			{
+				"msgid": "Ensures file messages appear in the order you sent them"
+			},
+			{
 				"msgid": "Enter a community name between 1 and 100 characters."
 			},
 			{
@@ -1343,6 +1346,9 @@
 			},
 			{
 				"msgid": "Favicon"
+			},
+			{
+				"msgid": "File ordering"
 			},
 			{
 				"msgid": "Finish"
@@ -1423,6 +1429,9 @@
 				"msgid": "Optional services"
 			},
 			{
+				"msgid": "Ordered upload"
+			},
+			{
 				"msgid": "Per-device volume"
 			},
 			{
@@ -1469,6 +1478,15 @@
 			},
 			{
 				"msgid": "Self-host setup"
+			},
+			{
+				"msgid": "Send file messages in order"
+			},
+			{
+				"msgid": "Sequential send"
+			},
+			{
+				"msgid": "Serial send"
 			},
 			{
 				"msgid": "Set up {productName}"
