@@ -8,6 +8,19 @@ on:
     types:
       - closed
   discussion:
+    types:
+      - answered
+      - category_changed
+      - created
+      - edited
+      - labeled
+      - pinned
+      - transferred
+      - unanswered
+      - unlabeled
+      - unpinned
+  schedule:
+    - cron: "17 4 * * *"
   workflow_dispatch:
     inputs:
       dry_run:
@@ -28,7 +41,7 @@ concurrency:
 jobs:
   automatic:
     name: Lock closed conversation
-    if: github.event_name != 'workflow_dispatch'
+    if: github.event_name != 'workflow_dispatch' && github.event_name != 'schedule'
     runs-on: ubuntu-latest
     steps:
       - name: Create token
@@ -142,7 +155,7 @@ jobs:
 
   retroactive:
     name: Lock closed conversations retroactively
-    if: github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
     runs-on: ubuntu-latest
     steps:
       - name: Create token
@@ -159,7 +172,7 @@ jobs:
 
       - name: Lock closed conversations
         env:
-          DRY_RUN: ${{ inputs.dry_run }}
+          DRY_RUN: ${{ inputs.dry_run || 'false' }}
           GH_TOKEN: ${{ steps.create-token.outputs.token }}
         run: |
           set -euo pipefail
