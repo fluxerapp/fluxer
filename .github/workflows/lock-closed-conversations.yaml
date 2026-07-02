@@ -56,7 +56,7 @@ jobs:
               -f id="$discussion_id" \
               -f query="
                 mutation(\$id: ID!) {
-                  lockLockable(input: {lockableId: \$id, lockReason: RESOLVED}) {
+                  lockLockable(input: {lockableId: \$id}) {
                     lockedRecord {
                       locked
                     }
@@ -171,7 +171,7 @@ jobs:
               -f id="$discussion_id" \
               -f query="
                 mutation(\$id: ID!) {
-                  lockLockable(input: {lockableId: \$id, lockReason: RESOLVED}) {
+                  lockLockable(input: {lockableId: \$id}) {
                     lockedRecord {
                       locked
                     }
