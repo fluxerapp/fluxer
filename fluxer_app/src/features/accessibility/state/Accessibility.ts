@@ -601,6 +601,7 @@ export interface AccessibilitySettings {
 	stayInteractiveWhenUnfocused: boolean;
 	firstClickPassThroughWhenUnfocused: boolean;
 	scrollToBottomOnMessageSend: boolean;
+	sequentialFileSend: boolean;
 	showNeko: boolean;
 	keepNekoStill: boolean;
 	showVideoSeekPreviewThumbnails: boolean;
@@ -718,6 +719,7 @@ class Accessibility {
 	stayInteractiveWhenUnfocused = false;
 	firstClickPassThroughWhenUnfocused = false;
 	scrollToBottomOnMessageSend = true;
+	sequentialFileSend = false;
 	showNeko = false;
 	keepNekoStill = false;
 	showVideoSeekPreviewThumbnails = false;
@@ -828,6 +830,7 @@ class Accessibility {
 				'stayInteractiveWhenUnfocused',
 				'firstClickPassThroughWhenUnfocused',
 				'scrollToBottomOnMessageSend',
+				'sequentialFileSend',
 			],
 			toMessage: (s) => ({
 				saturationFactor: s.saturationFactor,
@@ -888,6 +891,7 @@ class Accessibility {
 				stayInteractiveWhenUnfocused: s.stayInteractiveWhenUnfocused,
 				firstClickPassThroughWhenUnfocused: s.firstClickPassThroughWhenUnfocused,
 				scrollToBottomOnMessageSend: s.scrollToBottomOnMessageSend,
+				sequentialFileSend: s.sequentialFileSend,
 			}),
 			applyMessage: (s, m) => {
 				if (m.saturationFactor !== undefined) s.saturationFactor = m.saturationFactor;
@@ -978,6 +982,7 @@ class Accessibility {
 				if (m.firstClickPassThroughWhenUnfocused !== undefined)
 					s.firstClickPassThroughWhenUnfocused = m.firstClickPassThroughWhenUnfocused;
 				if (m.scrollToBottomOnMessageSend !== undefined) s.scrollToBottomOnMessageSend = m.scrollToBottomOnMessageSend;
+				if (m.sequentialFileSend !== undefined) s.sequentialFileSend = m.sequentialFileSend;
 			},
 		});
 		await this.applyStoredZoom();
@@ -1314,6 +1319,8 @@ class Accessibility {
 			this.firstClickPassThroughWhenUnfocused = validated.firstClickPassThroughWhenUnfocused;
 		if (validated.scrollToBottomOnMessageSend !== undefined)
 			this.scrollToBottomOnMessageSend = validated.scrollToBottomOnMessageSend;
+		if (validated.sequentialFileSend !== undefined)
+			this.sequentialFileSend = validated.sequentialFileSend;
 		if (validated.showNeko !== undefined && validated.showNeko !== this.showNeko) {
 			this.showNeko = validated.showNeko;
 			persistLocalShowNeko(validated.showNeko);
@@ -1414,6 +1421,7 @@ class Accessibility {
 			firstClickPassThroughWhenUnfocused:
 				data.firstClickPassThroughWhenUnfocused ?? this.firstClickPassThroughWhenUnfocused,
 			scrollToBottomOnMessageSend: data.scrollToBottomOnMessageSend ?? this.scrollToBottomOnMessageSend,
+			sequentialFileSend: data.sequentialFileSend ?? this.sequentialFileSend,
 			showNeko: data.showNeko ?? this.showNeko,
 			keepNekoStill: data.keepNekoStill ?? this.keepNekoStill,
 			showVideoSeekPreviewThumbnails: data.showVideoSeekPreviewThumbnails ?? this.showVideoSeekPreviewThumbnails,

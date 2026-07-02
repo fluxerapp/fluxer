@@ -44,6 +44,7 @@ import {Logger} from '@app/features/platform/utils/AppLogger';
 import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
 import {failureCode} from '@app/features/platform/utils/ResponseInspection';
 import * as ReadStateCommands from '@app/features/read_state/commands/ReadStateCommands';
+import type {RestResponse} from '@app/features/platform/types/TransportTypes';
 import ReadStates from '@app/features/read_state/state/ReadStates';
 import * as SlowmodeCommands from '@app/features/slowmode/commands/SlowmodeCommands';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
@@ -426,6 +427,61 @@ export async function fetchMessages(
 	return promise;
 }
 
+interface SequentialSendEntry {
+	task: () => Promise<RestResponse<WireMessage> | undefined>;
+	resolve: (value: RestResponse<WireMessage> | undefined) => void;
+}
+
+interface ChannelSendOrderState {
+	nextOrder: number;
+	nextExpected: number;
+	pending: Map<number, SequentialSendEntry>;
+	processing: boolean;
+	channelId: string;
+}
+
+const channelSendOrders = new Map<string, ChannelSendOrderState>();
+
+function getOrCreateChannelState(channelId: string): ChannelSendOrderState {
+	let state = channelSendOrders.get(channelId);
+	if (!state) {
+		state = {nextOrder: 0, nextExpected: 0, pending: new Map(), processing: false, channelId};
+		channelSendOrders.set(channelId, state);
+	}
+	return state;
+}
+
+function orderedSendImmediately(
+	channelId: string,
+	order: number,
+	task: () => Promise<RestResponse<WireMessage> | undefined>,
+): Promise<RestResponse<WireMessage> | undefined> {
+	return new Promise<RestResponse<WireMessage> | undefined>((resolve) => {
+		const state = getOrCreateChannelState(channelId);
+		state.pending.set(order, {task, resolve});
+		void processSequentialQueue(state);
+	});
+}
+
+async function processSequentialQueue(state: ChannelSendOrderState): Promise<void> {
+	if (state.processing) return;
+	state.processing = true;
+	try {
+		while (state.pending.has(state.nextExpected)) {
+			const entry = state.pending.get(state.nextExpected)!;
+			state.pending.delete(state.nextExpected);
+			state.nextExpected++;
+			const result = await entry.task();
+			entry.resolve(result);
+		}
+	} finally {
+		state.processing = false;
+		if (state.pending.size === 0 && state.nextExpected === state.nextOrder) {
+			channelSendOrders.delete(state.channelId);
+		}
+	}
+}
+
 async function prepareSendAttachments(
 	channelId: string,
 	params: SendMessageParams,
@@ -445,13 +501,24 @@ async function prepareSendAttachments(
 	return {attachments: prepared.attachments, files: prepared.files};
 }
 
+function nextChannelOrder(channelId: string): number {
+	return getOrCreateChannelState(channelId).nextOrder++;
+}
+
 export async function send(channelId: string, params: SendMessageParams): Promise<WireMessage | null> {
 	if (!MessageQueue.consumeLocalSendReservation(channelId, params.nonce)) {
 		MessageQueue.rejectLocalRateLimitedSend(channelId, params.nonce, params.hasAttachments);
 		return null;
 	}
+	const sendOrder =
+		Accessibility.sequentialFileSend && params.hasAttachments ? nextChannelOrder(channelId) : -1;
 	const prepared = await prepareSendAttachments(channelId, params);
-	if (!prepared) return null;
+	if (!prepared) {
+		if (Accessibility.sequentialFileSend) {
+			orderedSendImmediately(channelId, sendOrder, () => Promise.resolve(undefined));
+		}
+		return null;
+	}
 	const payload = {
 		type: 'send' as const,
 		channelId,
@@ -469,7 +536,9 @@ export async function send(channelId: string, params: SendMessageParams): Promis
 	};
 	if (params.hasAttachments) {
 		logger.debug(`Sending attachment message immediately for channel ${channelId}`);
-		const result = await MessageQueue.sendImmediately(payload);
+		const result = Accessibility.sequentialFileSend
+			? await orderedSendImmediately(channelId, sendOrder, () => MessageQueue.sendImmediately(payload))
+			: await MessageQueue.sendImmediately(payload);
 		if (result?.body) {
 			logger.debug(`Attachment message sent successfully in channel ${channelId}`);
 			Messages.handleIncomingMessage({channelId, message: result.body});
