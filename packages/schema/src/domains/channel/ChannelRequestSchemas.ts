@@ -392,6 +392,13 @@ export const UpdateThreadRequest = z.object({
 		.max(2_592_000_000)
 		.optional()
 		.describe('New auto-close duration from now in milliseconds'),
+	rate_limit_per_user: z
+		.number()
+		.int()
+		.min(0)
+		.max(21600)
+		.optional()
+		.describe('Slowmode delay in seconds (0 to disable)'),
 });
 
 export type UpdateThreadRequest = z.infer<typeof UpdateThreadRequest>;

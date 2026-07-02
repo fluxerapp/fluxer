@@ -241,3 +241,15 @@ export const THREAD_MEMBERS_BY_USER_COLUMNS = [
 	'user_id',
 	'thread_id',
 ] as const satisfies ReadonlyArray<keyof ThreadMembersByUserRow>;
+
+export interface OpenThreadRow {
+	bucket: string;
+	thread_id: ChannelID;
+	expires_at: Nullish<Date>;
+}
+
+export const OPEN_THREAD_COLUMNS = [
+	'bucket',
+	'thread_id',
+	'expires_at',
+] as const satisfies ReadonlyArray<keyof OpenThreadRow>;

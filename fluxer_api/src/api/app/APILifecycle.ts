@@ -11,6 +11,8 @@ import {ensurePostgresKvSchema, PostgresKvQueryExecutor} from '../database/Postg
 import {GuildDataRepository} from '../guild/repositories/GuildDataRepository';
 import type {ILogger} from '../ILogger';
 import {JobLedgerRepository} from '../jobs/JobLedgerRepository';
+import {ThreadAutoArchiveJob} from '../jobs/ThreadAutoArchiveJob';
+import {ChannelDataRepository} from '../channel/repositories/ChannelDataRepository';
 import {startAbuseReplicationSubscriber, stopAbuseReplicationSubscriber} from '../middleware/AbusiveIpAutoBanner';
 import {ipBanCache} from '../middleware/IpBanMiddleware';
 import {
@@ -20,6 +22,7 @@ import {
 } from '../middleware/ServiceMiddleware';
 import {
 	ensureVoiceResourcesInitialized,
+	getGatewayService,
 	getKVClient,
 	getSnowflakeService,
 	setInjectedWorkerService,
@@ -42,8 +45,10 @@ import {WorkerService} from '../worker/WorkerService';
 let jsConnectionManager: JetStreamConnectionManager | null = null;
 let riskCacheRefreshInterval: NodeJS.Timeout | null = null;
 let riskCacheRefreshInFlight = false;
+let threadAutoArchiveInterval: NodeJS.Timeout | null = null;
 
 const RISK_CACHE_REFRESH_INTERVAL_MS = 5 * 60 * 1000;
+const THREAD_AUTO_ARCHIVE_INTERVAL_MS = 5 * 60 * 1000;
 
 async function refreshRiskCache(logger: ILogger, source: 'startup' | 'interval'): Promise<void> {
 	if (riskCacheRefreshInFlight) {
@@ -89,6 +94,22 @@ function stopRiskCacheRefreshLoop(): void {
 	}
 	clearInterval(riskCacheRefreshInterval);
 	riskCacheRefreshInterval = null;
+}
+
+function startThreadAutoArchiveLoop(logger: ILogger): void {
+	if (threadAutoArchiveInterval) return;
+	const repo = new ChannelDataRepository();
+	const gatewayService = getGatewayService();
+	const job = new ThreadAutoArchiveJob(repo, gatewayService, logger);
+	threadAutoArchiveInterval = setInterval(() => {
+		void job.run();
+	}, THREAD_AUTO_ARCHIVE_INTERVAL_MS);
+}
+
+function stopThreadAutoArchiveLoop(): void {
+	if (!threadAutoArchiveInterval) return;
+	clearInterval(threadAutoArchiveInterval);
+	threadAutoArchiveInterval = null;
 }
 
 export function createInitializer(config: APIConfig, logger: ILogger): () => Promise<void> {
@@ -173,6 +194,7 @@ export function createInitializer(config: APIConfig, logger: ILogger): () => Pro
 			logger.info('Service singletons initialized');
 			await refreshRiskCache(logger, 'startup');
 			startRiskCacheRefreshLoop(logger);
+			startThreadAutoArchiveLoop(logger);
 			if (!config.dev.testModeEnabled) {
 				jsConnectionManager = new JetStreamConnectionManager({
 					url: config.nats.jetStreamUrl,
@@ -287,6 +309,7 @@ export function createShutdown(logger: ILogger): () => Promise<void> {
 		}
 		try {
 			stopRiskCacheRefreshLoop();
+			stopThreadAutoArchiveLoop();
 			logger.info('Risk cache refresh loop shut down');
 		} catch (error) {
 			logger.error({error}, 'Error shutting down risk cache refresh loop');

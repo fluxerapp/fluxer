@@ -2,6 +2,7 @@
 
 import {Channel} from '@app/features/channel/models/Channel';
 import Channels from '@app/features/channel/state/Channels';
+import Users from '@app/features/user/state/Users';
 import type {ThreadPreviewCard, ThreadResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import {action, makeAutoObservable, observable} from 'mobx';
 import Permission from '@app/features/permissions/state/Permission';
@@ -74,6 +75,10 @@ export class Thread {
 		return this.threadState === 2;
 	}
 
+	isLocked(): boolean {
+		return false;
+	}
+
 	toChannel(): Channel {
 		return this._channel;
 	}
@@ -115,12 +120,18 @@ class ThreadStore {
 
 	@action
 	private setThread(data: ThreadResponse): void {
-		const thread = new Thread(data);
 		const existing = this.threadsById.get(data.id);
+		const thread = new Thread(data);
 		if (existing) {
 			const prevParent = existing.threadParentChannelId;
 			if (prevParent !== thread.threadParentChannelId) {
 				this.threadsByChannel.get(prevParent)?.delete(data.id);
+			}
+			if (data.thread_member_count == null) {
+				thread.messageCount = existing.messageCount;
+			}
+			if (!data.last_message_preview && existing.preview.lastMessagePreview) {
+				Object.assign(thread.preview, existing.preview);
 			}
 		}
 		this.threadsById.set(data.id, thread);
@@ -159,13 +170,19 @@ class ThreadStore {
 	}
 
 	@action
-	handleThreadMemberAdd({threadId}: {threadId: string}): void {
-		this.joinedThreadIds.add(threadId);
+	handleThreadMemberAdd({threadId, userId}: {threadId: string; userId?: string}): void {
+		const currentUser = Users.getCurrentUser();
+		if (!userId || !currentUser || userId === currentUser.id) {
+			this.joinedThreadIds.add(threadId);
+		}
 	}
 
 	@action
-	handleThreadMemberRemove({threadId}: {threadId: string}): void {
-		this.joinedThreadIds.delete(threadId);
+	handleThreadMemberRemove({threadId, userId}: {threadId: string; userId?: string}): void {
+		const currentUser = Users.getCurrentUser();
+		if (!userId || !currentUser || userId === currentUser.id) {
+			this.joinedThreadIds.delete(threadId);
+		}
 	}
 
 	@action

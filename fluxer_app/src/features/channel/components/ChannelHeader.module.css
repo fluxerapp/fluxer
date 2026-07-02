@@ -643,11 +643,24 @@
 .threadBreadcrumbSeparator {
 	color: var(--text-muted);
 	flex-shrink: 0;
-	font-size: 13px;
-	margin: 0 2px;
+	font-size: 12px;
+	font-weight: 400;
+	margin: 0 1px;
+	opacity: 0.6;
 }
 
 .threadBreadcrumbIcon {
+	color: currentColor;
 	flex-shrink: 0;
-	margin-left: 2px;
+}
+
+.threadBreadcrumbName {
+	min-width: 0;
+	flex-shrink: 1;
+	font-weight: 600;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	max-width: 200px;
+	margin-left: 4px;
 }

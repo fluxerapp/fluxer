@@ -81,7 +81,9 @@ channel_event_map() ->
         <<"THREAD_DELETE">> => thread_delete,
         <<"THREAD_MEMBER_ADD">> => thread_member_add,
         <<"THREAD_MEMBER_REMOVE">> => thread_member_remove,
-        <<"THREAD_LIST_SYNC">> => thread_list_sync
+        <<"THREAD_LIST_SYNC">> => thread_list_sync,
+        <<"THREAD_MEMBER_UPDATE">> => thread_member_update,
+        <<"THREAD_MEMBERS_UPDATE">> => thread_members_update
     }.
 
 -spec guild_event_map() -> #{binary() => atom()}.

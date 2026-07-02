@@ -149,6 +149,8 @@ import {
 	type ThreadMembersByUserRow,
 	THREADS_BY_CHANNEL_COLUMNS,
 	type ThreadsByChannelRow,
+	OPEN_THREAD_COLUMNS,
+	type OpenThreadRow,
 	WEBHOOK_COLUMNS,
 	type WebhookRow,
 } from './database/types/ChannelTypes';
@@ -629,6 +631,13 @@ export const ThreadMembersByUser = defineTable<ThreadMembersByUserRow, 'user_id'
 	columns: THREAD_MEMBERS_BY_USER_COLUMNS,
 	primaryKey: ['user_id', 'thread_id'],
 	partitionKey: ['user_id'],
+});
+
+export const OpenThreads = defineTable<OpenThreadRow, 'bucket' | 'thread_id', 'bucket'>({
+	name: 'open_threads',
+	columns: OPEN_THREAD_COLUMNS,
+	primaryKey: ['bucket', 'thread_id'],
+	partitionKey: ['bucket'],
 });
 
 interface PinnedDmRow {

@@ -4,12 +4,15 @@
 	margin-block: 4px 2px;
 	margin-inline-start: calc(-1 * (var(--message-avatar-size, 2.5rem) / 2 + var(--message-gutter, 1rem) + 4px));
 	margin-inline-end: 0;
+	overflow: visible;
 }
 
 .branchArm {
 	color: var(--background-modifier-accent);
 	flex-shrink: 0;
-	height: 32px;
+	height: 52px;
+	margin-top: -20px;
+	overflow: visible;
 	width: calc(var(--message-avatar-size, 2.5rem) / 2 + var(--message-gutter, 1rem) + 4px);
 }
 
@@ -18,6 +21,7 @@
 	flex: none;
 	flex-direction: column;
 	margin-inline-start: 6px;
+	margin-top: 0;
 	width: 350px;
 }
 

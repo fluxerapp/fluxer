@@ -14,9 +14,11 @@ import type {IGatewayService} from '../../infrastructure/IGatewayService';
 import type {ISnowflakeService} from '../../infrastructure/ISnowflakeService';
 import type {RequestCache} from '../../middleware/RequestCacheMiddleware';
 import type {Channel} from '../../models/Channel';
+import {Message} from '../../models/Message';
 import type {IUserRepository} from '../../user/IUserRepository';
 import type {IChannelRepositoryAggregate} from '../repositories/IChannelRepositoryAggregate';
 import type {ChannelAuthService} from './channel_data/ChannelAuthService';
+import {dispatchMessageCreateBroadcast} from './message/MessageGatewayDispatch';
 
 const DEFAULT_THREAD_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000;
 const THREAD_ELIGIBLE_CHANNEL_TYPES = new Set<number>([ChannelTypes.GUILD_TEXT, ChannelTypes.GUILD_VOICE]);
@@ -123,6 +125,45 @@ export class ThreadService {
 			}
 		}
 
+		// Dispatch THREAD_CREATED system message to the parent channel
+		const threadCreatedMsgId = createMessageID(await this.snowflakeService.generate());
+		const threadCreatedMsgRow = {
+			channel_id: channelId,
+			bucket: BucketUtils.makeBucket(threadCreatedMsgId),
+			message_id: threadCreatedMsgId,
+			author_id: userId,
+			type: MessageTypes.THREAD_CREATED,
+			webhook_id: null,
+			webhook_name: null,
+			webhook_avatar_hash: null,
+			content: data.name,
+			edited_timestamp: null,
+			pinned_timestamp: null,
+			flags: 0,
+			mention_everyone: false,
+			mention_users: null,
+			mention_roles: null,
+			mention_channels: null,
+			attachments: null,
+			embeds: null,
+			sticker_items: null,
+			message_reference: null,
+			message_snapshots: null,
+			call: null,
+			nsfw_emojis: null,
+			has_reaction: null,
+			thread_id: null,
+			thread_name: null,
+			version: 1,
+		};
+		await this.channelRepository.messages.upsertMessage(threadCreatedMsgRow);
+		await dispatchMessageCreateBroadcast({
+			gatewayService: this.gatewayService,
+			channel,
+			message: new Message(threadCreatedMsgRow),
+			currentUserId: userId,
+		});
+
 		if (thread.guildId) {
 			await this.gatewayService.dispatchGuild({
 				guildId: thread.guildId as GuildID,
@@ -130,6 +171,8 @@ export class ThreadService {
 				data: mapThreadToResponse(thread),
 			});
 		}
+
+		await this.channelRepository.channelData.upsertOpenThread(threadId, expiresAt);
 
 		return thread;
 	}
@@ -196,7 +239,39 @@ export class ThreadService {
 			thread_state: data.state !== undefined ? (data.state as ThreadState) : thread.threadState,
 			thread_expires_at:
 				data.expires_in_ms !== undefined ? new Date(Date.now() + data.expires_in_ms) : thread.threadExpiresAt,
+			rate_limit_per_user: data.rate_limit_per_user !== undefined ? data.rate_limit_per_user : thread.rateLimitPerUser,
 		});
+
+		if (data.name !== undefined && data.name !== thread.name) {
+			const nameChangeMsgId = createMessageID(await this.snowflakeService.generate());
+			await this.channelRepository.messages.upsertMessage({
+				channel_id: threadId,
+				bucket: BucketUtils.makeBucket(nameChangeMsgId),
+				message_id: nameChangeMsgId,
+				author_id: userId,
+				type: MessageTypes.CHANNEL_NAME_CHANGE,
+				webhook_id: null,
+				webhook_name: null,
+				webhook_avatar_hash: null,
+				content: data.name,
+				edited_timestamp: null,
+				pinned_timestamp: null,
+				flags: 0,
+				mention_everyone: false,
+				mention_users: null,
+				mention_roles: null,
+				mention_channels: null,
+				attachments: null,
+				embeds: null,
+				sticker_items: null,
+				message_reference: null,
+				message_snapshots: null,
+				call: null,
+				nsfw_emojis: null,
+				has_reaction: null,
+				version: 1,
+			});
+		}
 
 		if (updated.guildId) {
 			await this.gatewayService.dispatchGuild({
@@ -204,6 +279,13 @@ export class ThreadService {
 				event: 'THREAD_UPDATE',
 				data: mapThreadToResponse(updated),
 			});
+		}
+
+		const newState = data.state !== undefined ? data.state : thread.threadState;
+		if (newState === ThreadStates.OPEN) {
+			await this.channelRepository.channelData.upsertOpenThread(threadId, updated.threadExpiresAt);
+		} else {
+			await this.channelRepository.channelData.deleteOpenThread(threadId);
 		}
 
 		return updated;
@@ -228,6 +310,7 @@ export class ThreadService {
 		await this.channelRepository.messages.deleteAllChannelMessages(threadId);
 		await this.channelRepository.channelData.deleteThreadByChannel(channelId, threadId);
 		await this.channelRepository.channelData.delete(threadId, thread.guildId ?? undefined);
+		await this.channelRepository.channelData.deleteOpenThread(threadId);
 
 		if (thread.guildId) {
 			await this.gatewayService.dispatchGuild({
@@ -252,7 +335,7 @@ export class ThreadService {
 		if (thread.guildId) {
 			await this.gatewayService.dispatchGuild({
 				guildId: thread.guildId as GuildID,
-				event: 'THREAD_MEMBER_ADD',
+				event: 'THREAD_MEMBER_UPDATE',
 				data: {thread_id: threadId.toString(), user_id: userId.toString(), joined_at: new Date().toISOString()},
 			});
 		}
@@ -271,8 +354,8 @@ export class ThreadService {
 		if (thread.guildId) {
 			await this.gatewayService.dispatchGuild({
 				guildId: thread.guildId as GuildID,
-				event: 'THREAD_MEMBER_REMOVE',
-				data: {thread_id: threadId.toString(), user_id: userId.toString()},
+				event: 'THREAD_MEMBERS_UPDATE',
+				data: {thread_id: threadId.toString(), removed_member_ids: [userId.toString()], added_members: []},
 			});
 		}
 	}
@@ -354,6 +437,7 @@ export function mapThreadToResponse(thread: Channel, lastMessage?: {
 		type: thread.type,
 		guild_id: thread.guildId?.toString(),
 		name: thread.name ?? undefined,
+		owner_id: thread.ownerId?.toString() ?? null,
 		parent_id: thread.threadParentChannelId?.toString() ?? null,
 		last_message_id: thread.lastMessageId?.toString() ?? null,
 		last_pin_timestamp: thread.lastPinTimestamp?.toISOString() ?? null,
@@ -369,6 +453,7 @@ export function mapThreadToResponse(thread: Channel, lastMessage?: {
 		thread_creator_username: thread.threadCreatorUsername ?? null,
 		thread_expires_at: thread.threadExpiresAt?.toISOString() ?? null,
 		thread_source_message_id: thread.threadSourceMessageId?.toString() ?? null,
+		rate_limit_per_user: thread.rateLimitPerUser,
 		last_message_preview: lastMessage?.content ? lastMessage.content.slice(0, 100) : null,
 		last_message_at: lastMessage?.timestamp.toISOString() ?? null,
 		last_message_author_id: lastMessage?.authorId ?? null,

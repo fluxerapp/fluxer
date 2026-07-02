@@ -2,47 +2,18 @@
 
 import styles from '@app/features/channel/components/ThreadPreviewCard.module.css';
 import * as ThreadCommands from '@app/features/channel/commands/ThreadCommands';
+import {openThreadContextMenu} from '@app/features/channel/components/ThreadContextMenu';
 import Threads from '@app/features/channel/state/Threads';
 import * as NavigationCommands from '@app/features/navigation/commands/NavigationCommands';
-import Permission from '@app/features/permissions/state/Permission';
-import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
-import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
-import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
-import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
 import {getFormattedShortDate} from '@app/features/user/utils/DateFormatting';
-import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {CaretRightIcon, ClockIcon, WarningCircleIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import {useCallback} from 'react';
-
-const LEAVE_THREAD_DESCRIPTOR = msg({
-	message: 'Leave Thread',
-	comment: 'Context menu item to leave a thread.',
-});
-const CLOSE_THREAD_DESCRIPTOR = msg({
-	message: 'Close Thread',
-	comment: 'Context menu item to close a thread.',
-});
-const OPEN_THREAD_DESCRIPTOR = msg({
-	message: 'Open Thread',
-	comment: 'Context menu item to re-open a closed thread.',
-});
-const DELETE_THREAD_DESCRIPTOR = msg({
-	message: 'Delete Thread',
-	comment: 'Context menu item to delete a thread.',
-});
-const THREAD_CLOSED_DESCRIPTOR = msg({
-	message: 'Thread closed',
-	comment: 'Toast shown after closing a thread.',
-});
-const THREAD_OPENED_DESCRIPTOR = msg({
-	message: 'Thread opened',
-	comment: 'Toast shown after reopening a thread.',
-});
+import type React from 'react';
 
 const MESSAGES_DESCRIPTOR = msg({
 	message: '· {count, plural, one {# message} other {# messages}}',
@@ -72,7 +43,6 @@ export const ThreadPreviewCard = observer(({threadId, threadName, guildId, paren
 	const {i18n} = useLingui();
 	const thread = Threads.getThread(threadId);
 	const isJoined = Threads.isJoined(threadId);
-	const canManage = thread ? Permission.can(Permissions.MANAGE_CHANNELS, thread.toChannel()) : false;
 
 	const name = thread?.name ?? threadName;
 	const preview = thread?.preview;
@@ -93,59 +63,11 @@ export const ThreadPreviewCard = observer(({threadId, threadName, guildId, paren
 		(event: React.MouseEvent) => {
 			event.preventDefault();
 			event.stopPropagation();
-			ContextMenuCommands.openFromEvent(event, ({onClose}) => (
-				<MenuGroup data-flx="channel.thread-preview-card.context-menu.menu-group">
-					{isJoined && (
-						<MenuItem
-							onClick={() => {
-								void ThreadCommands.leave(parentChannelId, threadId);
-								onClose();
-							}}
-							data-flx="channel.thread-preview-card.context-menu.leave"
-						>
-							{i18n._(LEAVE_THREAD_DESCRIPTOR)}
-						</MenuItem>
-					)}
-					{canManage && thread?.isOpen() && (
-						<MenuItem
-							onClick={async () => {
-								await ThreadCommands.update(parentChannelId, threadId, {state: 1});
-								ToastCommands.createToast({type: 'success', children: i18n._(THREAD_CLOSED_DESCRIPTOR)});
-								onClose();
-							}}
-							data-flx="channel.thread-preview-card.context-menu.close"
-						>
-							{i18n._(CLOSE_THREAD_DESCRIPTOR)}
-						</MenuItem>
-					)}
-					{canManage && thread?.isClosed() && (
-						<MenuItem
-							onClick={async () => {
-								await ThreadCommands.update(parentChannelId, threadId, {state: 0});
-								ToastCommands.createToast({type: 'success', children: i18n._(THREAD_OPENED_DESCRIPTOR)});
-								onClose();
-							}}
-							data-flx="channel.thread-preview-card.context-menu.open"
-						>
-							{i18n._(OPEN_THREAD_DESCRIPTOR)}
-						</MenuItem>
-					)}
-					{canManage && (
-						<MenuItem
-							danger
-							onClick={() => {
-								void ThreadCommands.remove(parentChannelId, threadId);
-								onClose();
-							}}
-							data-flx="channel.thread-preview-card.context-menu.delete"
-						>
-							{i18n._(DELETE_THREAD_DESCRIPTOR)}
-						</MenuItem>
-					)}
-				</MenuGroup>
-			));
+			if (thread && guildId) {
+				openThreadContextMenu(event, {thread, guildId, i18n});
+			}
 		},
-		[thread, threadId, parentChannelId, isJoined, canManage, i18n],
+		[thread, guildId, i18n],
 	);
 
 	const avatarUrl = preview?.lastMessageAuthorId
@@ -170,13 +92,13 @@ export const ThreadPreviewCard = observer(({threadId, threadName, guildId, paren
 		<div className={styles.wrap} onContextMenu={handleContextMenu} data-flx="channel.thread-preview-card.wrap">
 			<svg
 				className={styles.branchArm}
-				viewBox="0 0 56 32"
+				viewBox="0 0 56 52"
 				preserveAspectRatio="none"
 				fill="none"
 				aria-hidden="true"
 				data-flx="channel.thread-preview-card.branch-arm"
 			>
-				<path d="M28 0 V20 Q28 28 36 28 H56" stroke="currentColor" strokeWidth="2" fill="none" vectorEffect="non-scaling-stroke" />
+				<path d="M6 0 V38 Q6 48 16 48 H56" stroke="currentColor" strokeWidth="2" fill="none" vectorEffect="non-scaling-stroke" />
 			</svg>
 			<div className={styles.cardColumn} data-flx="channel.thread-preview-card.card-column">
 				<div

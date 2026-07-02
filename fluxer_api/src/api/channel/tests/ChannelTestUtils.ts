@@ -422,3 +422,26 @@ export async function deleteThread(
 		.expect(204)
 		.execute();
 }
+
+export async function listThreadMessages(
+	harness: ApiTestHarness,
+	token: string,
+	threadId: string,
+): Promise<Array<Record<string, unknown>>> {
+	return createBuilder<Array<Record<string, unknown>>>(harness, token)
+		.get(`/channels/${threadId}/messages`)
+		.execute();
+}
+
+export async function updateThread(
+	harness: ApiTestHarness,
+	token: string,
+	channelId: string,
+	threadId: string,
+	body: Record<string, unknown>,
+): Promise<Record<string, unknown>> {
+	return createBuilder<Record<string, unknown>>(harness, token)
+		.patch(`/channels/${channelId}/threads/${threadId}`)
+		.body(body)
+		.execute();
+}

@@ -6,6 +6,8 @@ import {createTestAccount} from '../../auth/tests/AuthTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
 import {HTTP_STATUS} from '../../test/TestConstants';
 import {createBuilder} from '../../test/TestRequestBuilder';
+import {sendMessage} from '../../message/tests/MessageTestUtils';
+import {ChannelDataRepository} from '../repositories/ChannelDataRepository';
 import {
 	acceptInvite,
 	addMemberRole,
@@ -19,7 +21,9 @@ import {
 	getThread,
 	joinThread,
 	leaveThread,
+	listThreadMessages,
 	listThreads,
+	updateThread,
 } from './ChannelTestUtils';
 
 describe('Thread Lifecycle', () => {
@@ -380,5 +384,187 @@ describe('Thread Lifecycle', () => {
 			.get('/users/@me/thread-members')
 			.execute();
 		expect(afterLeave.map((t) => t.id)).not.toContain(thread.id);
+	});
+
+	it('creating a thread writes a THREAD_CREATED system message to the parent channel', async () => {
+		const owner = await createTestAccount(harness);
+		const guild = await createGuild(harness, owner.token, 'System Msg Guild');
+		const channel = await createChannel(harness, owner.token, guild.id, 'general');
+
+		const thread = await createThread(harness, owner.token, channel.id, 'My Thread');
+
+		const messages = await listThreadMessages(harness, owner.token, channel.id);
+		const systemMsg = messages.find((m) => m.type === 18);
+		expect(systemMsg).toBeDefined();
+		expect(systemMsg?.content).toBe(thread.name);
+	});
+
+	it('renaming a thread writes a CHANNEL_NAME_CHANGE message inside the thread', async () => {
+		const owner = await createTestAccount(harness);
+		const guild = await createGuild(harness, owner.token, 'Rename Msg Guild');
+		const channel = await createChannel(harness, owner.token, guild.id, 'general');
+		const thread = await createThread(harness, owner.token, channel.id, 'Old Name');
+
+		await updateThread(harness, owner.token, channel.id, thread.id as string, {name: 'New Name'});
+
+		const messages = await listThreadMessages(harness, owner.token, thread.id as string);
+		const nameChangeMsg = messages.find((m) => m.type === 4);
+		expect(nameChangeMsg).toBeDefined();
+		expect(nameChangeMsg?.content).toBe('New Name');
+	});
+
+	it('rename with same name does not write CHANNEL_NAME_CHANGE', async () => {
+		const owner = await createTestAccount(harness);
+		const guild = await createGuild(harness, owner.token, 'No Rename Msg Guild');
+		const channel = await createChannel(harness, owner.token, guild.id, 'general');
+		const thread = await createThread(harness, owner.token, channel.id, 'Stable Name');
+
+		await updateThread(harness, owner.token, channel.id, thread.id as string, {name: 'Stable Name'});
+
+		const messages = await listThreadMessages(harness, owner.token, thread.id as string);
+		const nameChangeMsgs = messages.filter((m) => m.type === 4);
+		expect(nameChangeMsgs).toHaveLength(0);
+	});
+
+	it('rate_limit_per_user is accepted in updateThread', async () => {
+		const owner = await createTestAccount(harness);
+		const guild = await createGuild(harness, owner.token, 'Slowmode Guild');
+		const channel = await createChannel(harness, owner.token, guild.id, 'general');
+		const thread = await createThread(harness, owner.token, channel.id, 'Slowmode Thread');
+
+		const updated = await updateThread(harness, owner.token, channel.id, thread.id as string, {
+			rate_limit_per_user: 30,
+		});
+
+		expect(updated.rate_limit_per_user).toBe(30);
+	});
+
+	it('creating a thread with a source message writes a THREAD_STARTED message inside the thread', async () => {
+		const owner = await createTestAccount(harness);
+		const guild = await createGuild(harness, owner.token, 'Starter Msg Guild');
+		const channel = await createChannel(harness, owner.token, guild.id, 'general');
+
+		const sourceMsg = await sendMessage(harness, owner.token, channel.id, 'source content') as unknown as Record<string, unknown>;
+
+		const thread = await createThread(
+			harness,
+			owner.token,
+			channel.id,
+			'From Source',
+			sourceMsg.id as string,
+		);
+
+		const messages = await listThreadMessages(harness, owner.token, thread.id as string);
+		const starterMsg = messages.find((m) => m.type === 21);
+		expect(starterMsg).toBeDefined();
+		expect(starterMsg?.content).toBe('source content');
+	});
+
+	it('member cannot create a second thread from the same source message', async () => {
+		const owner = await createTestAccount(harness);
+		const guild = await createGuild(harness, owner.token, 'Duplicate Thread Guild');
+		const channel = await createChannel(harness, owner.token, guild.id, 'general');
+
+		const sourceMsg = await sendMessage(harness, owner.token, channel.id, 'original') as unknown as Record<string, unknown>;
+
+		await createThread(harness, owner.token, channel.id, 'First Thread', sourceMsg.id as string);
+
+		await createBuilder(harness, owner.token)
+			.post(`/channels/${channel.id}/threads`)
+			.body({name: 'Duplicate Thread', source_message_id: sourceMsg.id})
+			.expect(HTTP_STATUS.BAD_REQUEST)
+			.execute();
+	});
+
+	it('updateThread rejects invalid rate_limit_per_user', async () => {
+		const owner = await createTestAccount(harness);
+		const guild = await createGuild(harness, owner.token, 'Invalid Slowmode Guild');
+		const channel = await createChannel(harness, owner.token, guild.id, 'general');
+		const thread = await createThread(harness, owner.token, channel.id, 'Slowmode Thread 2');
+
+		await createBuilder(harness, owner.token)
+			.patch(`/channels/${channel.id}/threads/${thread.id}`)
+			.body({rate_limit_per_user: -1})
+			.expect(HTTP_STATUS.BAD_REQUEST)
+			.execute();
+	});
+});
+
+describe('Thread Auto-Archive', () => {
+	let harness: ApiTestHarness;
+	beforeAll(async () => {
+		harness = await createApiTestHarness();
+	});
+	beforeEach(async () => {
+		await harness.reset();
+	});
+
+	it('open thread with past expiry appears in listExpiredOpenThreads', async () => {
+		const owner = await createTestAccount(harness);
+		const guild = await createGuild(harness, owner.token, 'Archive Guild');
+		const channel = await createChannel(harness, owner.token, guild.id, 'general');
+
+		const thread = await createThread(harness, owner.token, channel.id, 'Expiring Thread');
+
+		const repo = new ChannelDataRepository();
+		const farFuture = new Date(Date.now() + 99_999_999_000);
+		const expired = await repo.listExpiredOpenThreads(farFuture, 200);
+		expect(expired.map(String)).toContain(thread.id);
+	});
+
+	it('open thread with future expiry does not appear in listExpiredOpenThreads with current time', async () => {
+		const owner = await createTestAccount(harness);
+		const guild = await createGuild(harness, owner.token, 'Active Guild');
+		const channel = await createChannel(harness, owner.token, guild.id, 'general');
+
+		const thread = await createThread(harness, owner.token, channel.id, 'Active Thread');
+
+		const repo = new ChannelDataRepository();
+		const now = new Date();
+		const expired = await repo.listExpiredOpenThreads(now, 200);
+		expect(expired.map(String)).not.toContain(thread.id);
+	});
+
+	it('closing a thread removes it from listExpiredOpenThreads', async () => {
+		const owner = await createTestAccount(harness);
+		const guild = await createGuild(harness, owner.token, 'Close Guild');
+		const channel = await createChannel(harness, owner.token, guild.id, 'general');
+
+		const thread = await createThread(harness, owner.token, channel.id, 'Closed Thread');
+		await updateThread(harness, owner.token, channel.id, thread.id as string, {state: 1});
+
+		const repo = new ChannelDataRepository();
+		const farFuture = new Date(Date.now() + 99_999_999_000);
+		const expired = await repo.listExpiredOpenThreads(farFuture, 200);
+		expect(expired.map(String)).not.toContain(thread.id);
+	});
+
+	it('deleted thread is not returned by listExpiredOpenThreads', async () => {
+		const owner = await createTestAccount(harness);
+		const guild = await createGuild(harness, owner.token, 'Deleted Thread Guild');
+		const channel = await createChannel(harness, owner.token, guild.id, 'general');
+
+		const thread = await createThread(harness, owner.token, channel.id, 'To Be Deleted');
+		await deleteThread(harness, owner.token, channel.id, thread.id as string);
+
+		const repo = new ChannelDataRepository();
+		const farFuture = new Date(Date.now() + 99_999_999_000);
+		const expired = await repo.listExpiredOpenThreads(farFuture, 200);
+		expect(expired.map(String)).not.toContain(thread.id);
+	});
+
+	it('reopening a closed thread restores it in listExpiredOpenThreads', async () => {
+		const owner = await createTestAccount(harness);
+		const guild = await createGuild(harness, owner.token, 'Reopen Guild');
+		const channel = await createChannel(harness, owner.token, guild.id, 'general');
+
+		const thread = await createThread(harness, owner.token, channel.id, 'Reopen Thread');
+		await updateThread(harness, owner.token, channel.id, thread.id as string, {state: 1});
+		await updateThread(harness, owner.token, channel.id, thread.id as string, {state: 0});
+
+		const repo = new ChannelDataRepository();
+		const farFuture = new Date(Date.now() + 99_999_999_000);
+		const expired = await repo.listExpiredOpenThreads(farFuture, 200);
+		expect(expired.map(String)).toContain(thread.id);
 	});
 });

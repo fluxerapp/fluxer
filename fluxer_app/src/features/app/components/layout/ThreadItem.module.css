@@ -35,10 +35,10 @@
 	border-bottom: 1.5px solid var(--color-background-modifier-accent, rgba(79,84,92,0.48));
 	border-left: 1.5px solid var(--color-background-modifier-accent, rgba(79,84,92,0.48));
 	border-bottom-left-radius: 4px;
-	height: 50%;
+	height: calc(50% + 17px);
 	left: 15px;
 	position: absolute;
-	top: 0;
+	top: -17px;
 	width: 9px;
 }
 

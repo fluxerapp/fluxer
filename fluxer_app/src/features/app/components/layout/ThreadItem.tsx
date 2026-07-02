@@ -2,17 +2,12 @@
 
 import styles from '@app/features/app/components/layout/ThreadItem.module.css';
 import * as ThreadCommands from '@app/features/channel/commands/ThreadCommands';
+import {openThreadContextMenu} from '@app/features/channel/components/ThreadContextMenu';
 import type {Thread} from '@app/features/channel/state/Threads';
 import Threads from '@app/features/channel/state/Threads';
 import type {Guild} from '@app/features/guild/models/Guild';
 import * as NavigationCommands from '@app/features/navigation/commands/NavigationCommands';
-import Permission from '@app/features/permissions/state/Permission';
-import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
-import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
-import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
-import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
-import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {clsx} from 'clsx';
@@ -24,30 +19,6 @@ const THREAD_DESCRIPTOR = msg({
 	message: 'thread',
 	comment: 'Lowercase channel type label for threads in accessible text.',
 });
-const LEAVE_THREAD_DESCRIPTOR = msg({
-	message: 'Leave Thread',
-	comment: 'Context menu item to leave a thread.',
-});
-const CLOSE_THREAD_DESCRIPTOR = msg({
-	message: 'Close Thread',
-	comment: 'Context menu item to close a thread.',
-});
-const OPEN_THREAD_DESCRIPTOR = msg({
-	message: 'Open Thread',
-	comment: 'Context menu item to re-open a closed thread.',
-});
-const DELETE_THREAD_DESCRIPTOR = msg({
-	message: 'Delete Thread',
-	comment: 'Context menu item to delete a thread.',
-});
-const THREAD_CLOSED_DESCRIPTOR = msg({
-	message: 'Thread closed',
-	comment: 'Toast shown after closing a thread.',
-});
-const THREAD_OPENED_DESCRIPTOR = msg({
-	message: 'Thread opened',
-	comment: 'Toast shown after reopening a thread.',
-});
 
 interface ThreadItemProps {
 	guild: Guild;
@@ -58,7 +29,6 @@ interface ThreadItemProps {
 export const ThreadItem = observer(({guild, thread, isSelectedByPath}: ThreadItemProps) => {
 	const {i18n} = useLingui();
 	const isJoined = Threads.isJoined(thread.id);
-	const canManage = Permission.can(Permissions.MANAGE_CHANNELS, thread);
 
 	const handleClick = useCallback(async () => {
 		if (!isJoined) {
@@ -71,59 +41,9 @@ export const ThreadItem = observer(({guild, thread, isSelectedByPath}: ThreadIte
 		(event: React.MouseEvent) => {
 			event.preventDefault();
 			event.stopPropagation();
-			ContextMenuCommands.openFromEvent(event, ({onClose}) => (
-				<MenuGroup data-flx="app.thread-item.handle-context-menu.menu-group">
-					{isJoined && (
-						<MenuItem
-							onClick={() => {
-								void ThreadCommands.leave(thread.threadParentChannelId, thread.id);
-								onClose();
-							}}
-							data-flx="app.thread-item.handle-context-menu.leave"
-						>
-							{i18n._(LEAVE_THREAD_DESCRIPTOR)}
-						</MenuItem>
-					)}
-					{canManage && thread.isOpen() && (
-						<MenuItem
-							onClick={async () => {
-								await ThreadCommands.update(thread.threadParentChannelId, thread.id, {state: 1});
-								ToastCommands.createToast({type: 'success', children: i18n._(THREAD_CLOSED_DESCRIPTOR)});
-								onClose();
-							}}
-							data-flx="app.thread-item.handle-context-menu.close"
-						>
-							{i18n._(CLOSE_THREAD_DESCRIPTOR)}
-						</MenuItem>
-					)}
-					{canManage && thread.isClosed() && (
-						<MenuItem
-							onClick={async () => {
-								await ThreadCommands.update(thread.threadParentChannelId, thread.id, {state: 0});
-								ToastCommands.createToast({type: 'success', children: i18n._(THREAD_OPENED_DESCRIPTOR)});
-								onClose();
-							}}
-							data-flx="app.thread-item.handle-context-menu.open"
-						>
-							{i18n._(OPEN_THREAD_DESCRIPTOR)}
-						</MenuItem>
-					)}
-					{canManage && (
-						<MenuItem
-							danger
-							onClick={() => {
-								void ThreadCommands.remove(thread.threadParentChannelId, thread.id);
-								onClose();
-							}}
-							data-flx="app.thread-item.handle-context-menu.delete"
-						>
-							{i18n._(DELETE_THREAD_DESCRIPTOR)}
-						</MenuItem>
-					)}
-				</MenuGroup>
-			));
+			openThreadContextMenu(event, {thread, guildId: guild.id, i18n});
 		},
-		[thread, isJoined, canManage, i18n],
+		[thread, guild.id, i18n],
 	);
 
 	const ariaLabel = `${thread.name ?? ''}, ${i18n._(THREAD_DESCRIPTOR)}`;
@@ -151,10 +71,6 @@ export const ThreadItem = observer(({guild, thread, isSelectedByPath}: ThreadIte
 				data-channel-id={thread.id}
 				data-channel-list-focus-item="true"
 			>
-				<div
-					className={clsx(styles.stateIndicator, thread.isOpen() ? styles.stateIndicatorOpen : styles.stateIndicatorClosed)}
-					data-flx="app.thread-item.state-indicator"
-				/>
 				<div className={styles.connector} data-flx="app.thread-item.connector" />
 				<span
 					className={clsx(styles.name, isSelectedByPath && styles.nameSelected)}

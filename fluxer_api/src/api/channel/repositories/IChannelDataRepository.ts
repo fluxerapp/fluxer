@@ -39,4 +39,10 @@ export abstract class IChannelDataRepository {
 	abstract listThreadMembers(threadId: ChannelID): Promise<Array<{userId: UserID; joinedAt: Date}>>;
 
 	abstract isThreadMember(threadId: ChannelID, userId: UserID): Promise<boolean>;
+
+	abstract listExpiredOpenThreads(now: Date, limit: number): Promise<Array<ChannelID>>;
+
+	abstract upsertOpenThread(threadId: ChannelID, expiresAt: Date | null): Promise<void>;
+
+	abstract deleteOpenThread(threadId: ChannelID): Promise<void>;
 }

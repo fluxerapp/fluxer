@@ -24,7 +24,7 @@ export async function create(channelId: string, params: CreateThreadParams): Pro
 export async function update(
 	channelId: string,
 	threadId: string,
-	params: {name?: string; state?: number; expires_in_ms?: number},
+	params: {name?: string; state?: number; expires_in_ms?: number; rate_limit_per_user?: number},
 ): Promise<ThreadResponse> {
 	const response = await http.patch<ThreadResponse>(
 		`/channels/${channelId}/threads/${threadId}`,

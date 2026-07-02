@@ -34,6 +34,7 @@ import {CallButtons} from '@app/features/channel/components/channel_header_compo
 import {ChannelHeaderIcon} from '@app/features/channel/components/channel_header_components/ChannelHeaderIcon';
 import {ChannelNotificationSettingsButton} from '@app/features/channel/components/channel_header_components/ChannelNotificationSettingsButton';
 import {ChannelPinsButton} from '@app/features/channel/components/channel_header_components/ChannelPinsButton';
+import {ThreadsButton} from '@app/features/channel/components/channel_header_components/ThreadsButton';
 import {UpdaterIcon} from '@app/features/channel/components/channel_header_components/UpdaterIcon';
 import {InboxButton, StaffToolsButton} from '@app/features/channel/components/channel_header_components/UtilityButtons';
 import {useChannelSearchState} from '@app/features/channel/components/channel_view/useChannelSearchState';
@@ -205,6 +206,13 @@ export const ChannelHeader = observer(
 		}, [onVoiceCallChromePinChange]);
 		const searchInputRef = useRef<HTMLInputElement>(null);
 		const isSearchResultsVisible = isSearchResultsOpen ?? isSearchActive;
+		useEffect(() => {
+			return ComponentDispatch.subscribe('SEARCH_BAR_FOCUS', (payload?: unknown) => {
+				const {channelId} = (payload ?? {}) as {channelId?: string};
+				if (channelId && channelId !== channel?.id) return;
+				searchInputRef.current?.focus();
+			});
+		}, [channel?.id]);
 		const dmNameRef = useRef<HTMLSpanElement>(null);
 		const groupDMNameRef = useRef<HTMLSpanElement>(null);
 		const guildChannelNameRef = useRef<HTMLSpanElement>(null);
@@ -794,14 +802,14 @@ export const ChannelHeader = observer(
 													<span className={styles.threadBreadcrumbSeparator} aria-hidden="true" data-flx="channel.channel-header.thread-breadcrumb-separator">
 														›
 													</span>
-													<ThreadIcon size={11} className={styles.threadBreadcrumbIcon} aria-hidden="true" data-flx="channel.channel-header.thread-icon" />
+													<ThreadIcon size={14} className={styles.threadBreadcrumbIcon} aria-hidden="true" data-flx="channel.channel-header.thread-icon" />
 													<Tooltip
 														text={isGuildChannelNameOverflowing && channelName ? channelName : ''}
 														data-flx="channel.channel-header.tooltip--8"
 													>
 														<span
 															ref={guildChannelNameRef}
-															className={styles.channelName}
+															className={styles.threadBreadcrumbName}
 															data-flx="channel.channel-header.channel-name--8"
 														>
 															{channelName}
@@ -956,6 +964,12 @@ export const ChannelHeader = observer(
 								<ChannelNotificationSettingsButton
 									channel={channel}
 									data-flx="channel.channel-header.channel-notification-settings-button"
+								/>
+							)}
+							{channel && isGuildChannel && !isMobile && !isPersonalNotes && channel.type === ChannelTypes.GUILD_TEXT && (
+								<ThreadsButton
+									channel={channel}
+									data-flx="channel.channel-header.threads-button"
 								/>
 							)}
 							{(isDM || isGroupDM) && channel && !isMobile && !(isDM && isBotDMRecipient) && (

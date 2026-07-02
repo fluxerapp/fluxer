@@ -4,11 +4,11 @@ import type {ChannelID, GuildID, MessageID, UserID} from '../../BrandedTypes';
 import {BatchBuilder, fetchMany, fetchManyInChunks, fetchOne, upsertOne} from '../../database/CassandraQueryExecution';
 import {Db} from '../../database/CassandraTypes';
 import {buildPatchFromData, executeVersionedUpdate} from '../../database/CassandraVersionedUpdate';
-import type {ChannelRow, ThreadMemberRow, ThreadMembersByUserRow} from '../../database/types/ChannelTypes';
+import type {ChannelRow, ThreadMemberRow, ThreadMembersByUserRow, OpenThreadRow} from '../../database/types/ChannelTypes';
 import {CHANNEL_COLUMNS} from '../../database/types/ChannelTypes';
 import {Logger} from '../../Logger';
 import {Channel} from '../../models/Channel';
-import {Channels, ChannelsByGuild, PrivateChannels, ThreadMembers, ThreadMembersByUser, ThreadsByChannel} from '../../Tables';
+import {Channels, ChannelsByGuild, OpenThreads, PrivateChannels, ThreadMembers, ThreadMembersByUser, ThreadsByChannel} from '../../Tables';
 import {
 	privateChannelFanOutTargets,
 	privateChannelLastMessageIdPatch,
@@ -47,6 +47,12 @@ const FETCH_THREAD_MEMBERS = ThreadMembers.select({
 
 const FETCH_JOINED_THREAD_IDS = ThreadMembersByUser.select({
 	where: [ThreadMembersByUser.where.eq('user_id')],
+});
+
+const OPEN_THREADS_BUCKET = 'all';
+
+const FETCH_OPEN_THREADS = OpenThreads.select({
+	where: [OpenThreads.where.eq('bucket')],
 });
 
 export class ChannelDataRepository extends IChannelDataRepository {
@@ -300,5 +306,27 @@ export class ChannelDataRepository extends IChannelDataRepository {
 	async isThreadMember(threadId: ChannelID, userId: UserID): Promise<boolean> {
 		const row = await fetchOne<ThreadMemberRow>(FETCH_THREAD_MEMBER.bind({thread_id: threadId, user_id: userId}));
 		return row !== null;
+	}
+
+	async listExpiredOpenThreads(now: Date, limit: number): Promise<Array<ChannelID>> {
+		const rows = await fetchMany<OpenThreadRow>(FETCH_OPEN_THREADS.bind({bucket: OPEN_THREADS_BUCKET}));
+		return rows
+			.filter((row) => row.expires_at != null && row.expires_at <= now)
+			.slice(0, limit)
+			.map((row) => row.thread_id);
+	}
+
+	async upsertOpenThread(threadId: ChannelID, expiresAt: Date | null): Promise<void> {
+		await upsertOne(
+			OpenThreads.upsertAll({
+				bucket: OPEN_THREADS_BUCKET,
+				thread_id: threadId,
+				expires_at: expiresAt,
+			} as OpenThreadRow),
+		);
+	}
+
+	async deleteOpenThread(threadId: ChannelID): Promise<void> {
+		await upsertOne(OpenThreads.deleteByPk({bucket: OPEN_THREADS_BUCKET, thread_id: threadId}));
 	}
 }
