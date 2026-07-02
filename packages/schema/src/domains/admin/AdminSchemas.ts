@@ -36,6 +36,7 @@ import {
 	createStringType,
 	Int32Type,
 	Int64StringType,
+	NonNegativeSafeIntegerType,
 	SnowflakeStringType,
 	SnowflakeType,
 	withOpenApiType,
@@ -800,7 +801,7 @@ const LimitRuleSchema = z.object({
 	id: z.string().min(1).describe('Unique rule identifier'),
 	filters: LimitFilterSchema.optional().describe('Optional filters that scope the rule'),
 	limits: z
-		.record(z.string(), z.number().min(0))
+		.record(z.string(), NonNegativeSafeIntegerType)
 		.refine(
 			(limits) => {
 				const limitKeys = Object.keys(limits);
@@ -1258,7 +1259,7 @@ const AdminMessageAttachmentSchema = z.object({
 	content_type: z.string().nullable(),
 	width: Int32Type.nullable(),
 	height: Int32Type.nullable(),
-	size: Int32Type.nullable().optional(),
+	size: NonNegativeSafeIntegerType.nullable().optional(),
 	ncmec_status: NcmecSubmissionStatusEnum,
 	ncmec_report_id: createStringType(1, 256).nullable(),
 	ncmec_failure_reason: createStringType(1, 4000).nullable(),

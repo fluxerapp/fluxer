@@ -2,14 +2,19 @@
 
 import {ATTACHMENT_UPLOAD_MAX_CHUNKS, MAX_ATTACHMENTS_PER_MESSAGE} from '@fluxer/constants/src/LimitConstants';
 import {FilenameType} from '@fluxer/schema/src/primitives/FileValidators';
-import {coerceNumberFromString, createStringType, Int32Type} from '@fluxer/schema/src/primitives/SchemaPrimitives';
+import {
+	coerceNumberFromString,
+	createStringType,
+	Int32Type,
+	NonNegativeSafeIntegerType,
+} from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {URLType} from '@fluxer/schema/src/primitives/UrlValidators';
 import {z} from 'zod';
 
 export const PresignedAttachmentUploadRequestItem = z.object({
 	id: coerceNumberFromString(Int32Type).describe('The client-side identifier for this attachment'),
 	filename: FilenameType.describe('The name of the file that will be uploaded'),
-	file_size: coerceNumberFromString(Int32Type).describe('Expected file size in bytes'),
+	file_size: coerceNumberFromString(NonNegativeSafeIntegerType).describe('Expected file size in bytes'),
 	content_type: createStringType(1, 255).describe('MIME type the client will upload'),
 });
 
@@ -29,7 +34,7 @@ const PresignedAttachmentUploadBase = z.object({
 	id: coerceNumberFromString(Int32Type).describe('The client-side identifier for this attachment'),
 	filename: FilenameType.describe('The original filename for this upload'),
 	upload_filename: createStringType(1, 4096).describe('Temporary upload key to reference in message send payloads'),
-	file_size: coerceNumberFromString(Int32Type).describe('Expected file size in bytes'),
+	file_size: coerceNumberFromString(NonNegativeSafeIntegerType).describe('Expected file size in bytes'),
 	content_type: createStringType(1, 255).describe('Expected MIME type for this upload'),
 });
 const PresignedAttachmentUploadSinglepart = PresignedAttachmentUploadBase.extend({
@@ -45,7 +50,7 @@ const PresignedAttachmentUploadPart = z.object({
 const PresignedAttachmentUploadMultipart = PresignedAttachmentUploadBase.extend({
 	upload_mode: z.literal('multipart'),
 	upload_id: createStringType(1, 1024).describe('S3 multipart upload identifier; required to complete the upload'),
-	part_size: coerceNumberFromString(Int32Type).describe('Size in bytes of each part except the last'),
+	part_size: coerceNumberFromString(NonNegativeSafeIntegerType).describe('Size in bytes of each part except the last'),
 	parts: z
 		.array(PresignedAttachmentUploadPart)
 		.min(1)
