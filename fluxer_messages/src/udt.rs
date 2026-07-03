@@ -198,3 +198,28 @@ pub struct MessageSnapshotUdt {
     pub flags: Option<i32>,
     pub edited_timestamp: Option<DateTime<Utc>>,
 }
+
+#[cfg_attr(
+    feature = 'scylla',
+    derive(scylla::DeserializeValue, scylla::SerializeValue)
+)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PollOptionUdt {
+    pub index: Option<i32>,
+    pub text: Option<String>,
+    pub image_url: Option<String>,
+    pub vote_count: Option<i32>,
+}
+
+#[cfg_attr(
+    feature = 'scylla',
+    derive(scylla::DeserializeValue, scylla::SerializeValue)
+)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PollVoteUdt {
+    pub poll_id: Option<i64>,
+    pub option_index: Option<i32>,
+    pub user_id: Option<i64>,
+    pub voted_at: Option<i64>,
+}
+
