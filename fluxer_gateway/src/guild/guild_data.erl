@@ -92,6 +92,7 @@ get_guild_state(UserId, State) ->
     VoiceMembers = guild_data_channels:voice_members_from_states(VoiceStates, AllMembers),
     Members = guild_data_channels:merge_members(OwnMemberList, VoiceMembers),
     MemberCount = maps:get(member_count, State, length(AllMembers)),
+    JoinedThreads = fetch_joined_threads_for_user(UserId, GuildId),
     build_guild_state_map(
         GuildId,
         Data,
@@ -100,7 +101,8 @@ get_guild_state(UserId, State) ->
         MemberCount,
         OnlineCount,
         VoiceStates,
-        JoinedAt
+        JoinedAt,
+        JoinedThreads
     ).
 
 -spec fetch_latest_voice_states(guild_state()) -> guild_state().
@@ -127,7 +129,6 @@ build_complete_guild_data(Data, State) ->
     GuildProperties = maps:get(<<"guild">>, Data, #{}),
     Channels = map_utils:ensure_list(maps:get(<<"channels">>, Data, [])),
     maps:merge(GuildProperties, build_guild_collection_data(Data, Channels, State)).
-
 -spec build_member_guild_data(user_id(), map(), map(), guild_state()) -> map().
 build_member_guild_data(UserId, Member, Data, State) ->
     GuildProperties = maps:get(<<"guild">>, Data, #{}),
@@ -170,7 +171,8 @@ filter_voice_states(AllVoiceStates, ViewableChannelIds) ->
     non_neg_integer(),
     non_neg_integer(),
     [map()],
-    term()
+    term(),
+    [map()]
 ) -> map().
 build_guild_state_map(
     GuildId,
@@ -180,13 +182,15 @@ build_guild_state_map(
     MemberCount,
     OnlineCount,
     VoiceStates,
-    JoinedAt
+    JoinedAt,
+    JoinedThreads
 ) ->
     #{
         <<"id">> => guild_id_wire_value(GuildId),
         <<"properties">> => maps:get(<<"guild">>, Data, #{}),
         <<"roles">> => map_utils:ensure_list(maps:get(<<"roles">>, Data, [])),
         <<"channels">> => Channels,
+        <<"threads">> => JoinedThreads,
         <<"emojis">> => maps:get(<<"emojis">>, Data, []),
         <<"stickers">> => maps:get(<<"stickers">>, Data, []),
         <<"members">> => Members,
@@ -196,6 +200,22 @@ build_guild_state_map(
         <<"voice_states">> => VoiceStates,
         <<"joined_at">> => JoinedAt
     }.
+
+-spec fetch_joined_threads_for_user(user_id(), guild_id() | undefined) -> [map()].
+fetch_joined_threads_for_user(_UserId, undefined) ->
+    [];
+fetch_joined_threads_for_user(UserId, GuildId) ->
+    Request = #{
+        <<"type">> => <<"get_guild_threads">>,
+        <<"guild_id">> => integer_to_binary(GuildId),
+        <<"user_id">> => integer_to_binary(UserId)
+    },
+    case rpc_client:call(Request) of
+        {ok, Data} ->
+            map_utils:ensure_list(maps:get(<<"threads">>, Data, []));
+        {error, _Reason} ->
+            []
+    end.
 
 -spec fetch_from_voice_pid(pid(), guild_state()) -> guild_state().
 fetch_from_voice_pid(VoiceServerPid, State) ->

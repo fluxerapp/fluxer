@@ -14,7 +14,10 @@
     handle_stickers_update/2,
     handle_guild_update/2,
     extract_channel_ids_from_channel_update/1,
-    extract_channel_ids_from_channel_update_bulk/1
+    extract_channel_ids_from_channel_update_bulk/1,
+    handle_thread_create/2,
+    handle_thread_update/2,
+    handle_thread_delete/2
 ]).
 
 -type guild_data() :: map().
@@ -113,6 +116,25 @@ extract_channel_id(ChannelData) ->
         undefined -> false;
         ChannelId -> {true, ChannelId}
     end.
+
+-spec handle_thread_create(event_data(), guild_data()) -> guild_data().
+handle_thread_create(EventData, Data) ->
+    Threads = maps:get(<<"threads">>, Data, []),
+    guild_data_index:put_threads([EventData | Threads], Data).
+
+-spec handle_thread_update(event_data(), guild_data()) -> guild_data().
+handle_thread_update(EventData, Data) ->
+    Threads = maps:get(<<"threads">>, Data, []),
+    ThreadId = maps:get(<<"id">>, EventData),
+    UpdatedThreads = guild_state_utils:replace_item_by_id(Threads, ThreadId, EventData),
+    guild_data_index:put_threads(UpdatedThreads, Data).
+
+-spec handle_thread_delete(event_data(), guild_data()) -> guild_data().
+handle_thread_delete(EventData, Data) ->
+    Threads = maps:get(<<"threads">>, Data, []),
+    ThreadId = maps:get(<<"id">>, EventData),
+    FilteredThreads = guild_state_utils:remove_item_by_id(Threads, ThreadId),
+    guild_data_index:put_threads(FilteredThreads, Data).
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").

@@ -67,6 +67,7 @@ interface WebhookTokenUpdateParams extends WebhookTokenParams {
 
 interface WebhookExecuteParams extends WebhookTokenParams {
 	data: WebhookExecuteMessageData;
+	threadId?: ChannelID;
 	requestCache: RequestCache;
 }
 
@@ -330,12 +331,21 @@ export class WebhookService {
 		});
 	}
 
-	async executeWebhook({webhookId, token, data, requestCache}: WebhookExecuteParams): Promise<Message> {
+	async executeWebhook({webhookId, token, data, threadId, requestCache}: WebhookExecuteParams): Promise<Message> {
 		const webhook = await this.getTokenAuthenticatedWebhook({webhookId, token});
 		await this.assertWebhookGuildChannel(webhook);
+
+		let targetWebhook = webhook;
+		if (threadId) {
+			const thread = await this.channelRepository.findUnique(threadId);
+			if (!thread || thread.type !== 11) throw new UnknownChannelError();
+			if (thread.threadParentChannelId !== webhook.channelId) throw new UnknownChannelError();
+			targetWebhook = {...webhook, channelId: threadId} as typeof webhook;
+		}
+
 		const attachments = data.attachments?.filter((attachment) => this.isUploadedAttachmentData(attachment));
 		return this.channelService.messages.send.sendWebhookMessage({
-			webhook,
+			webhook: targetWebhook,
 			data: {
 				content: data.content,
 				embeds: data.embeds,

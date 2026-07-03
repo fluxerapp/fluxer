@@ -3551,6 +3551,38 @@
 				{
 					"name": "thread_expires_at",
 					"type": "timestamp"
+				},
+				{
+					"name": "thread_source_message_id",
+					"type": "bigint"
+				},
+				{
+					"name": "thread_message_count",
+					"type": "int"
+				},
+				{
+					"name": "thread_total_message_sent",
+					"type": "int"
+				},
+				{
+					"name": "thread_member_count_actual",
+					"type": "int"
+				},
+				{
+					"name": "thread_archived",
+					"type": "boolean"
+				},
+				{
+					"name": "thread_locked",
+					"type": "boolean"
+				},
+				{
+					"name": "thread_auto_archive_duration",
+					"type": "int"
+				},
+				{
+					"name": "thread_archive_timestamp",
+					"type": "timestamp"
 				}
 			],
 			"primary_key": "((channel_id, soft_deleted))",

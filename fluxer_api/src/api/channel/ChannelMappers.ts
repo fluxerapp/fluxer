@@ -149,6 +149,16 @@ function serializeGuildThreadChannel(channel: Channel, ctx: ContentWarningCtx): 
 		thread_creator_username: channel.threadCreatorUsername ?? null,
 		thread_expires_at: channel.threadExpiresAt?.toISOString() ?? null,
 		thread_source_message_id: channel.threadSourceMessageId?.toString() ?? null,
+		thread_metadata: {
+			archived: channel.threadArchived,
+			locked: channel.threadLocked,
+			auto_archive_duration: ([60, 1440, 4320, 10080].includes(channel.threadAutoArchiveDuration ?? 10080)
+				? channel.threadAutoArchiveDuration
+				: 10080) as 60 | 1440 | 4320 | 10080,
+			archive_timestamp: channel.threadArchiveTimestamp?.toISOString() ?? null,
+		},
+		thread_total_message_sent: channel.threadTotalMessageSent,
+		thread_member_count_actual: channel.threadMemberCountActual,
 	};
 }
 

@@ -85,10 +85,13 @@ export const ThreadSettingsModal = observer(({threadId, parentChannelId}: Thread
 	const threadGroupLabel = thread?.name?.toUpperCase() ?? 'THREAD';
 
 	const onSubmit = async (data: FormInputs) => {
+		const durationMs = data.expires_in_ms;
+		const autoArchive = durationMs <= 3_600_000 ? 60 : durationMs <= 86_400_000 ? 1440 : durationMs <= 259_200_000 ? 4320 : 10080;
 		await ThreadCommands.update(parentChannelId, threadId, {
 			name: data.name || undefined,
 			rate_limit_per_user: data.rate_limit_per_user,
 			expires_in_ms: data.expires_in_ms,
+			auto_archive_duration: autoArchive,
 		});
 		ToastCommands.createToast({type: 'success', children: i18n._(CHANGES_SAVED_DESCRIPTOR)});
 		ModalCommands.pop();

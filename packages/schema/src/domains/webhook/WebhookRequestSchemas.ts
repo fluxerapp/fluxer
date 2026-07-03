@@ -130,6 +130,7 @@ export type WebhookMessageEditRequest = z.infer<typeof WebhookMessageEditRequest
 
 export const WebhookExecuteQueryRequest = z.object({
 	wait: QueryBooleanType.optional().default(false).describe('Whether to wait for the webhook response'),
+	thread_id: SnowflakeType.optional().describe('Send a message to the specified thread within the webhook channel'),
 });
 
 export type WebhookExecuteQueryRequest = z.infer<typeof WebhookExecuteQueryRequest>;

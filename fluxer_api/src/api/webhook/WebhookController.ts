@@ -340,7 +340,7 @@ export function WebhookController(app: HonoApp) {
 		Validator('query', WebhookExecuteQueryRequest),
 		async (ctx) => {
 			const {webhook_id: webhookId, token} = ctx.req.valid('param');
-			const {wait} = ctx.req.valid('query');
+			const {wait, thread_id} = ctx.req.valid('query');
 			const contentType = ctx.req.header('content-type') ?? '';
 			const data = contentType.includes('multipart/form-data')
 				? await parseWebhookMultipartMessageData(ctx, webhookId, token)
@@ -350,6 +350,7 @@ export function WebhookController(app: HonoApp) {
 				token: createWebhookToken(token),
 				data,
 				wait,
+				threadId: thread_id ? createChannelID(thread_id) : undefined,
 				requestCache: ctx.get('requestCache'),
 			});
 			if (!response) {

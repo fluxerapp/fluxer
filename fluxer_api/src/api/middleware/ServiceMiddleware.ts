@@ -615,16 +615,14 @@ export const ServiceMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => 
 	ctx.set('channelRequestService', new ChannelRequestService(channelService, userCacheService));
 	ctx.set('messageRequestService', new MessageRequestService(channelService, createMessageResponseDataService()));
 	ctx.set('channelRepository', channelRepository);
-	ctx.set(
-		'threadService',
-		new ThreadService(
-			channelRepository,
-			userRepository,
-			gatewayService,
-			snowflakeService,
-			channelService.channelData.auth,
-		),
+	const threadService = new ThreadService(
+		channelRepository,
+		userRepository,
+		gatewayService,
+		snowflakeService,
+		channelService.channelData.auth,
 	);
+	ctx.set('threadService', threadService);
 	ctx.set('connectionService', connectionService);
 	ctx.set(
 		'connectionRequestService',
@@ -718,6 +716,7 @@ export const ServiceMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => 
 			avatarService,
 			channelService,
 			userService.channelService,
+			threadService,
 			rateLimitService,
 			limitConfigService,
 			kvClient,

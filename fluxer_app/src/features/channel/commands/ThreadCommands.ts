@@ -24,13 +24,20 @@ export async function create(channelId: string, params: CreateThreadParams): Pro
 export async function update(
 	channelId: string,
 	threadId: string,
-	params: {name?: string; state?: number; expires_in_ms?: number; rate_limit_per_user?: number},
+	params: {name?: string; state?: number; archived?: boolean; locked?: boolean; auto_archive_duration?: number; expires_in_ms?: number; rate_limit_per_user?: number},
 ): Promise<ThreadResponse> {
-	const response = await http.patch<ThreadResponse>(
-		`/channels/${channelId}/threads/${threadId}`,
-		{body: params},
-	);
-	return response.body;
+	try {
+		logger.info(`Updating thread ${threadId} in channel ${channelId} with params: ${JSON.stringify(params)}`);
+		const response = await http.patch<ThreadResponse>(
+			`/channels/${channelId}/threads/${threadId}`,
+			{body: params},
+		);
+		Threads.handleThreadUpdate(response.body);
+		return response.body;
+	} catch (error) {
+		logger.error(`Failed to update thread ${threadId} (parent: ${channelId}):`, error);
+		throw error;
+	}
 }
 
 export async function remove(channelId: string, threadId: string): Promise<void> {

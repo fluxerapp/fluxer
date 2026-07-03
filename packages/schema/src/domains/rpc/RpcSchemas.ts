@@ -3,7 +3,7 @@
 import {RTC_REGION_ID_MAX_LENGTH, RTC_REGION_ID_MIN_LENGTH} from '@fluxer/constants/src/LimitConstants';
 import {GatewayRolloutConfigResponse} from '@fluxer/schema/src/domains/admin/GatewayRolloutSchemas';
 import {WebAuthnCredentialResponse} from '@fluxer/schema/src/domains/auth/AuthSchemas';
-import {ChannelResponse, RtcRegionResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
+import {ChannelResponse, RtcRegionResponse, ThreadResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import {VoiceStateResponse} from '@fluxer/schema/src/domains/gateway/GatewaySchemas';
 import {GuildEmojiResponse, GuildStickerResponse} from '@fluxer/schema/src/domains/guild/GuildEmojiSchemas';
 import {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
@@ -209,6 +209,11 @@ export const RpcRequest = z.discriminatedUnion('type', [
 	}),
 	z.object({
 		type: z.literal('get_gateway_rollout_config').describe('Request type for fetching gateway rollout configuration'),
+	}),
+	z.object({
+		type: z.literal('get_guild_threads').describe('Request type for fetching joined threads for a user in a guild'),
+		guild_id: SnowflakeType.describe('ID of the guild'),
+		user_id: SnowflakeType.describe('ID of the user'),
 	}),
 ]);
 
@@ -511,6 +516,14 @@ export const RpcResponse = z.discriminatedUnion('type', [
 				config: GatewayRolloutConfigResponse.describe('Gateway rollout configuration'),
 			})
 			.describe('Gateway rollout config result'),
+	}),
+	z.object({
+		type: z.literal('get_guild_threads').describe('Response type for guild threads fetch'),
+		data: z
+			.object({
+				threads: z.array(ThreadResponse).describe('Threads the user has joined in the guild'),
+			})
+			.describe('Guild threads result'),
 	}),
 ]);
 

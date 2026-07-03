@@ -34,6 +34,8 @@ export class ThreadAutoArchiveJob {
 						const updated = await this.channelDataRepository.upsert({
 							...thread.toRow(),
 							thread_state: ThreadStates.ARCHIVED as ThreadState,
+							thread_archived: true,
+							thread_archive_timestamp: now,
 							thread_expires_at: now,
 						});
 						archived++;

@@ -243,7 +243,7 @@ function getMessagePermissionsForChannel(message: Message, channel: Channel): Me
 		!isDM &&
 		!sendMessageDisabled &&
 		channel?.type !== ChannelTypes.GUILD_THREAD &&
-		Permission.can(Permissions.CREATE_THREADS, {channelId: message.channelId}) &&
+		Permission.can(Permissions.CREATE_PUBLIC_THREADS, {channelId: message.channelId}) &&
 		passesVerification;
 	return {
 		channel,

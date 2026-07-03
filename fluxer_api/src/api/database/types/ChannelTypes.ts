@@ -53,6 +53,12 @@ export interface ChannelRow {
 	thread_expires_at?: Nullish<Date>;
 	thread_source_message_id?: Nullish<MessageID>;
 	thread_message_count?: Nullish<number>;
+	thread_total_message_sent?: Nullish<number>;
+	thread_member_count_actual?: Nullish<number>;
+	thread_archived?: Nullish<boolean>;
+	thread_locked?: Nullish<boolean>;
+	thread_auto_archive_duration?: Nullish<number>;
+	thread_archive_timestamp?: Nullish<Date>;
 }
 
 export interface InviteRow {
@@ -146,6 +152,12 @@ export const CHANNEL_COLUMNS = [
 	'thread_expires_at',
 	'thread_source_message_id',
 	'thread_message_count',
+	'thread_total_message_sent',
+	'thread_member_count_actual',
+	'thread_archived',
+	'thread_locked',
+	'thread_auto_archive_duration',
+	'thread_archive_timestamp',
 ] as const satisfies ReadonlyArray<keyof ChannelRow>;
 
 export interface ChannelsByGuildRow {

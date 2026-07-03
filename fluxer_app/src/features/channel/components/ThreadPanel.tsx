@@ -54,6 +54,9 @@ const PINS_DESCRIPTOR = msg({message: 'Pins', comment: '... menu item.'});
 const CLOSE_THREAD_DESCRIPTOR = msg({message: 'Close Thread', comment: '... menu item.'});
 const OPEN_THREAD_DESCRIPTOR = msg({message: 'Open Thread', comment: '... menu item.'});
 const LOCK_THREAD_DESCRIPTOR = msg({message: 'Lock Thread', comment: '... menu item.'});
+const UNLOCK_THREAD_DESCRIPTOR = msg({message: 'Unlock Thread', comment: '... menu item.'});
+const LOCK_FAILED_DESCRIPTOR = msg({message: 'Failed to lock thread', comment: 'Error toast.'});
+const UNLOCK_FAILED_DESCRIPTOR = msg({message: 'Failed to unlock thread', comment: 'Error toast.'});
 const DELETE_THREAD_DESCRIPTOR = msg({message: 'Delete Thread', comment: '... menu item.'});
 const COPY_LINK_DESCRIPTOR = msg({message: 'Copy Link', comment: '... menu item.'});
 const COPY_THREAD_ID_DESCRIPTOR = msg({message: 'Copy Thread ID', comment: '... menu item.'});
@@ -216,12 +219,36 @@ export const ThreadPanel = observer(({threadId, onClose}: ThreadPanelProps) => {
 									{i18n._(OPEN_THREAD_DESCRIPTOR)}
 								</MenuItem>
 							)}
-							<MenuItem
-								onClick={() => closeMenu()}
-								data-flx="channel.thread-panel.menu.lock"
-							>
-								{i18n._(LOCK_THREAD_DESCRIPTOR)}
-							</MenuItem>
+							{!isLocked && (
+								<MenuItem
+									onClick={async () => {
+										try {
+											await ThreadCommands.update(parentChannelId, threadId, {locked: true, archived: true});
+										} catch {
+											ToastCommands.createToast({type: 'error', children: i18n._(LOCK_FAILED_DESCRIPTOR)});
+										}
+										closeMenu();
+									}}
+									data-flx="channel.thread-panel.menu.lock"
+								>
+									{i18n._(LOCK_THREAD_DESCRIPTOR)}
+								</MenuItem>
+							)}
+							{isLocked && (
+								<MenuItem
+									onClick={async () => {
+										try {
+											await ThreadCommands.update(parentChannelId, threadId, {locked: false, archived: false});
+										} catch {
+											ToastCommands.createToast({type: 'error', children: i18n._(UNLOCK_FAILED_DESCRIPTOR)});
+										}
+										closeMenu();
+									}}
+									data-flx="channel.thread-panel.menu.unlock"
+								>
+									{i18n._(UNLOCK_THREAD_DESCRIPTOR)}
+								</MenuItem>
+							)}
 							<MenuItem
 								danger
 								onClick={() => {

@@ -112,7 +112,14 @@ export function openThreadContextMenu(
 					)}
 					{canManage && (
 						<MenuItem
-							onClick={() => close()}
+							onClick={async () => {
+								if (thread.isLocked()) {
+									await ThreadCommands.update(parentChannelId, threadId, {locked: false, archived: false});
+								} else {
+									await ThreadCommands.update(parentChannelId, threadId, {locked: true, archived: true});
+								}
+								close();
+							}}
 							data-flx="channel.thread-context-menu.lock"
 						>
 							{thread.isLocked() ? i18n._(UNLOCK_THREAD_DESCRIPTOR) : i18n._(LOCK_THREAD_DESCRIPTOR)}

@@ -41,6 +41,7 @@ import {Config} from '../Config';
 import {mapChannelToResponse} from '../channel/ChannelMappers';
 import type {IChannelRepository} from '../channel/IChannelRepository';
 import type {ChannelService} from '../channel/services/ChannelService';
+import type {ThreadService} from '../channel/services/ThreadService';
 import {buildBroadcastMessageData} from '../channel/services/message/MessageGatewayDispatch';
 import {ensurePersonalNotesChannelExists} from '../channel/services/PersonalNotesChannelRepair';
 import {mapFavoriteMemeToResponse} from '../favorite_meme/FavoriteMemeModel';
@@ -249,6 +250,7 @@ export class RpcService {
 		private avatarService: AvatarService,
 		private channelService: ChannelService,
 		private userChannelService: UserChannelService,
+		private threadService: ThreadService,
 		private rateLimitService: IRateLimitService,
 		private readonly limitConfigService: LimitConfigService,
 		private readonly kvClient: IKVProvider,
@@ -642,6 +644,16 @@ export class RpcService {
 				return {
 					type: 'get_gateway_rollout_config',
 					data: {config: rolloutConfig},
+				};
+			}
+			case 'get_guild_threads': {
+				const userId = createUserID(request.user_id);
+				const guildIdStr = request.guild_id.toString();
+				const threads = await this.threadService.listJoinedThreads({userId});
+				const guildThreads = threads.filter((t) => t.guild_id === guildIdStr);
+				return {
+					type: 'get_guild_threads',
+					data: {threads: guildThreads},
 				};
 			}
 			default: {

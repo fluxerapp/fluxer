@@ -6,46 +6,40 @@
 	box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
 	display: flex;
 	flex-direction: column;
-	max-height: min(calc(100vh - 7.5rem), 45rem);
+	max-height: min(calc(100vh - 7.5rem), 52rem);
 	overflow: hidden;
 	padding-bottom: 8px;
-	width: 360px;
+	width: 420px;
 }
 
 .header {
 	align-items: center;
 	display: flex;
-	gap: 8px;
-	padding: 14px 14px 10px;
+	gap: 10px;
+	padding: 14px 14px 12px;
 }
 
 .headerIcon {
-	color: var(--text-muted);
+	color: var(--text-primary);
 	flex-shrink: 0;
 }
 
 .title {
 	color: var(--text-primary);
-	font-size: 15px;
+	font-size: 16px;
 	font-weight: 700;
-}
-
-.searchRow {
-	align-items: center;
-	display: flex;
-	gap: 8px;
-	padding: 0 14px 12px;
+	flex-shrink: 0;
 }
 
 .searchWrap {
 	align-items: center;
 	background: var(--background-primary);
-	border: 1px solid var(--brand-primary);
+	border: 1.5px solid var(--brand-primary);
 	border-radius: 6px;
 	display: flex;
 	flex: 1;
 	gap: 8px;
-	padding: 8px 10px;
+	padding: 7px 10px;
 }
 
 .searchIcon {
@@ -56,7 +50,7 @@
 .searchInput {
 	background: none;
 	border: none;
-	color: var(--text-muted);
+	color: var(--text-primary);
 	flex: 1;
 	font-size: 13px;
 	min-width: 0;
@@ -74,10 +68,10 @@
 	color: #fff;
 	cursor: pointer;
 	flex-shrink: 0;
-	font-size: 13px;
+	font-size: 14px;
 	font-weight: 600;
-	padding: 0 16px;
 	height: 36px;
+	padding: 0 18px;
 }
 
 .createBtn:hover {
@@ -96,15 +90,16 @@
 	color: var(--text-muted);
 	font-size: 11px;
 	font-weight: 700;
-	letter-spacing: 0.03em;
+	letter-spacing: 0.05em;
 	margin: 0;
-	padding: 0 14px 8px;
+	padding: 12px 14px 6px;
+	text-transform: uppercase;
 }
 
 .empty {
 	color: var(--text-muted);
 	font-size: 13px;
-	padding: 16px;
+	padding: 20px 16px;
 	text-align: center;
 }
 
@@ -122,8 +117,8 @@
 	border-radius: 8px;
 	cursor: pointer;
 	display: flex;
-	gap: 10px;
-	padding: 9px 10px;
+	gap: 12px;
+	padding: 10px 12px;
 	text-align: left;
 	width: 100%;
 }
@@ -132,12 +127,18 @@
 	background: var(--background-modifier-hover);
 }
 
+.row:hover .stackAvatar,
+.row:hover .stackAvatarPlaceholder,
+.row:hover .stackOverflow {
+	border-color: var(--background-modifier-hover);
+}
+
 .rowInfo {
 	display: flex;
 	flex: 1;
 	flex-direction: column;
+	gap: 3px;
 	min-width: 0;
-	gap: 2px;
 }
 
 .rowName {
@@ -155,50 +156,100 @@
 	color: var(--text-muted);
 	display: flex;
 	font-size: 12px;
-	gap: 3px;
+	gap: 4px;
 	margin: 0;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
+	min-width: 0;
 }
 
-.rowMetaIcon {
-	color: var(--brand-primary);
+.rowMetaAvatar {
+	border-radius: 50%;
 	flex-shrink: 0;
+	height: 14px;
+	width: 14px;
+	object-fit: cover;
+}
+
+.rowMetaAvatarPlaceholder {
+	background: var(--background-modifier-accent);
+	border-radius: 50%;
+	flex-shrink: 0;
+	height: 14px;
+	width: 14px;
 }
 
 .rowSender {
-	color: var(--text-primary-muted);
-	font-weight: 500;
+	color: var(--text-primary);
+	font-weight: 600;
+	flex-shrink: 0;
+}
+
+.rowStartedBy {
+	color: var(--text-muted);
+	flex-shrink: 0;
+}
+
+.rowStartedByName {
+	color: var(--text-primary);
+	font-weight: 600;
 }
 
 .rowPreviewText {
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
+	min-width: 0;
+}
+
+.rowDot {
+	color: var(--text-muted);
+	flex-shrink: 0;
 }
 
 .rowTime {
+	color: var(--text-muted);
 	flex-shrink: 0;
-	color: var(--text-muted);
 }
 
-.rowNoMessages {
-	color: var(--text-muted);
+.avatarStack {
+	align-items: center;
+	display: flex;
+	flex-shrink: 0;
 }
 
-.rowAvatar {
+.stackAvatar {
+	border: 2px solid var(--background-secondary-alt);
 	border-radius: 50%;
 	flex-shrink: 0;
-	height: 34px;
-	width: 34px;
+	height: 28px;
 	object-fit: cover;
+	width: 28px;
 }
 
-.rowAvatarPlaceholder {
+.stackAvatar + .stackAvatar {
+	margin-left: -8px;
+}
+
+.stackAvatarPlaceholder {
 	background: var(--background-modifier-accent);
+	border: 2px solid var(--background-secondary-alt);
 	border-radius: 50%;
 	flex-shrink: 0;
-	height: 34px;
-	width: 34px;
+	height: 28px;
+	width: 28px;
+}
+
+.stackOverflow {
+	align-items: center;
+	background: var(--background-modifier-accent);
+	border: 2px solid var(--background-secondary-alt);
+	border-radius: 10px;
+	color: var(--text-muted);
+	display: flex;
+	font-size: 10px;
+	font-weight: 700;
+	height: 20px;
+	justify-content: center;
+	margin-left: 4px;
+	min-width: 28px;
+	padding: 0 4px;
 }

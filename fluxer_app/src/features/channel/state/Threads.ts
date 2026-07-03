@@ -13,6 +13,7 @@ export interface ThreadPreview {
 	lastMessageAuthorId: string | null;
 	lastMessageAuthorUsername: string | null;
 	lastMessageAuthorAvatar: string | null;
+	recentMemberAvatars: Array<{id: string; avatar: string | null}> | null;
 }
 
 function mapPreview(card: Partial<ThreadPreviewCard>): ThreadPreview {
@@ -22,6 +23,7 @@ function mapPreview(card: Partial<ThreadPreviewCard>): ThreadPreview {
 		lastMessageAuthorId: card.last_message_author_id ?? null,
 		lastMessageAuthorUsername: card.last_message_author_username ?? null,
 		lastMessageAuthorAvatar: card.last_message_author_avatar ?? null,
+		recentMemberAvatars: card.recent_member_avatars?.map((m) => ({id: m.id, avatar: m.avatar ?? null})) ?? null,
 	};
 }
 
@@ -37,6 +39,10 @@ export class Thread {
 	readonly threadCreatorUsername: string | null;
 	readonly threadExpiresAt: Date | null;
 	readonly threadSourceMessageId: string | null;
+	threadMetadataArchived: boolean;
+	threadMetadataLocked: boolean;
+	autoArchiveDuration: number;
+	archiveTimestamp: Date | null;
 	preview: ThreadPreview;
 	messageCount: number;
 	private readonly _channel: Channel;
@@ -54,6 +60,10 @@ export class Thread {
 		this.threadCreatorUsername = data.thread_creator_username ?? null;
 		this.threadExpiresAt = data.thread_expires_at ? new Date(data.thread_expires_at) : null;
 		this.threadSourceMessageId = data.thread_source_message_id ?? null;
+		this.threadMetadataArchived = data.thread_metadata?.archived ?? data.thread_state === 2;
+		this.threadMetadataLocked = data.thread_metadata?.locked ?? false;
+		this.autoArchiveDuration = data.thread_metadata?.auto_archive_duration ?? 10080;
+		this.archiveTimestamp = data.thread_metadata?.archive_timestamp ? new Date(data.thread_metadata.archive_timestamp) : null;
 		this.preview = mapPreview(data);
 		this.messageCount = data.thread_member_count ?? 0;
 		makeAutoObservable(this, {id: false, guildId: false, type: false, threadParentChannelId: false}, {autoBind: true});
@@ -64,19 +74,19 @@ export class Thread {
 	}
 
 	isOpen(): boolean {
-		return this.threadState === 0;
+		return !this.threadMetadataArchived && this.threadState !== 1;
 	}
 
 	isClosed(): boolean {
-		return this.threadState === 1;
+		return this.threadState === 1 && !this.threadMetadataArchived;
 	}
 
 	isArchived(): boolean {
-		return this.threadState === 2;
+		return this.threadMetadataArchived;
 	}
 
 	isLocked(): boolean {
-		return false;
+		return this.threadMetadataLocked;
 	}
 
 	toChannel(): Channel {

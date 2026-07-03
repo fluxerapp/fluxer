@@ -568,3 +568,147 @@ describe('Thread Auto-Archive', () => {
 		expect(expired.map(String)).toContain(thread.id);
 	});
 });
+
+describe('Thread Phase 2 — member count and message count', () => {
+	let harness: ApiTestHarness;
+	beforeAll(async () => {
+		harness = await createApiTestHarness();
+	});
+	beforeEach(async () => {
+		await harness.reset();
+	});
+
+	it('thread_member_count_actual increments on join and decrements on leave', async () => {
+		const owner = await createTestAccount(harness);
+		const member = await createTestAccount(harness);
+		const guild = await createGuild(harness, owner.token, 'Member Count Guild');
+		const channel = await createChannel(harness, owner.token, guild.id, 'general');
+		const invite = await createChannelInvite(harness, owner.token, channel.id);
+		await acceptInvite(harness, member.token, invite.code);
+
+		const thread = await createThread(harness, owner.token, channel.id, 'Count Thread');
+		const afterCreate = await getThread(harness, owner.token, channel.id, thread.id as string);
+		expect(afterCreate.thread_member_count_actual).toBe(1);
+
+		await joinThread(harness, member.token, channel.id, thread.id as string);
+		const afterJoin = await getThread(harness, owner.token, channel.id, thread.id as string);
+		expect(afterJoin.thread_member_count_actual).toBe(2);
+
+		await leaveThread(harness, member.token, channel.id, thread.id as string);
+		const afterLeave = await getThread(harness, owner.token, channel.id, thread.id as string);
+		expect(afterLeave.thread_member_count_actual).toBe(1);
+	});
+
+	it('thread_total_message_sent increments on each message and never decrements', async () => {
+		const owner = await createTestAccount(harness);
+		const guild = await createGuild(harness, owner.token, 'Total Msg Guild');
+		const channel = await createChannel(harness, owner.token, guild.id, 'general');
+		const thread = await createThread(harness, owner.token, channel.id, 'Msg Count Thread');
+
+		const msg = await createBuilder<Record<string, unknown>>(harness, owner.token)
+			.post(`/channels/${thread.id}/messages`)
+			.body({content: 'first'})
+			.execute();
+
+		await createBuilder<Record<string, unknown>>(harness, owner.token)
+			.post(`/channels/${thread.id}/messages`)
+			.body({content: 'second'})
+			.execute();
+
+		const fetched = await getThread(harness, owner.token, channel.id, thread.id as string);
+		expect(fetched.thread_total_message_sent).toBeGreaterThanOrEqual(2);
+
+		await createBuilder<void>(harness, owner.token)
+			.delete(`/channels/${thread.id}/messages/${msg.id}`)
+			.expect(204)
+			.execute();
+
+		const afterDelete = await getThread(harness, owner.token, channel.id, thread.id as string);
+		expect(afterDelete.thread_total_message_sent).toBeGreaterThanOrEqual(2);
+	});
+
+	it('duplicate thread from same source message is rejected', async () => {
+		const owner = await createTestAccount(harness);
+		const guild = await createGuild(harness, owner.token, 'Dedup Source Guild');
+		const channel = await createChannel(harness, owner.token, guild.id, 'general');
+
+		const sourceMsg = await sendMessage(harness, owner.token, channel.id, 'source') as unknown as Record<string, unknown>;
+
+		await createThread(harness, owner.token, channel.id, 'First', sourceMsg.id as string);
+
+		await createBuilder(harness, owner.token)
+			.post(`/channels/${channel.id}/threads`)
+			.body({name: 'Dupe', source_message_id: sourceMsg.id})
+			.expect(HTTP_STATUS.BAD_REQUEST)
+			.execute();
+	});
+});
+
+describe('Thread Metadata', () => {
+	let harness: ApiTestHarness;
+	beforeAll(async () => {
+		harness = await createApiTestHarness();
+	});
+	beforeEach(async () => {
+		await harness.reset();
+	});
+
+	it('new thread has thread_metadata with archived=false and locked=false', async () => {
+		const owner = await createTestAccount(harness);
+		const guild = await createGuild(harness, owner.token, 'Metadata Guild');
+		const channel = await createChannel(harness, owner.token, guild.id, 'general');
+
+		const thread = await createThread(harness, owner.token, channel.id, 'Meta Thread') as Record<string, unknown>;
+
+		expect((thread.thread_metadata as Record<string, unknown>).archived).toBe(false);
+		expect((thread.thread_metadata as Record<string, unknown>).locked).toBe(false);
+		expect((thread.thread_metadata as Record<string, unknown>).auto_archive_duration).toBeGreaterThan(0);
+	});
+
+	it('archiving a thread sets thread_metadata.archived=true', async () => {
+		const owner = await createTestAccount(harness);
+		const guild = await createGuild(harness, owner.token, 'Archive Meta Guild');
+		const channel = await createChannel(harness, owner.token, guild.id, 'general');
+		const thread = await createThread(harness, owner.token, channel.id, 'Archive Me');
+
+		const updated = await updateThread(harness, owner.token, channel.id, thread.id as string, {archived: true}) as Record<string, unknown>;
+
+		expect((updated.thread_metadata as Record<string, unknown>).archived).toBe(true);
+		expect(updated.thread_state).toBe(2);
+	});
+
+	it('locking a thread sets thread_metadata.locked=true', async () => {
+		const owner = await createTestAccount(harness);
+		const guild = await createGuild(harness, owner.token, 'Lock Meta Guild');
+		const channel = await createChannel(harness, owner.token, guild.id, 'general');
+		const thread = await createThread(harness, owner.token, channel.id, 'Lock Me');
+
+		const updated = await updateThread(harness, owner.token, channel.id, thread.id as string, {locked: true}) as Record<string, unknown>;
+
+		expect((updated.thread_metadata as Record<string, unknown>).locked).toBe(true);
+	});
+
+	it('setting auto_archive_duration is stored and reflected in thread_metadata', async () => {
+		const owner = await createTestAccount(harness);
+		const guild = await createGuild(harness, owner.token, 'Duration Meta Guild');
+		const channel = await createChannel(harness, owner.token, guild.id, 'general');
+		const thread = await createThread(harness, owner.token, channel.id, 'Duration Thread');
+
+		const updated = await updateThread(harness, owner.token, channel.id, thread.id as string, {auto_archive_duration: 1440}) as Record<string, unknown>;
+
+		expect((updated.thread_metadata as Record<string, unknown>).auto_archive_duration).toBe(1440);
+	});
+
+	it('unarchiving sets thread_metadata.archived=false', async () => {
+		const owner = await createTestAccount(harness);
+		const guild = await createGuild(harness, owner.token, 'Unarchive Meta Guild');
+		const channel = await createChannel(harness, owner.token, guild.id, 'general');
+		const thread = await createThread(harness, owner.token, channel.id, 'Unarchive Me');
+
+		await updateThread(harness, owner.token, channel.id, thread.id as string, {archived: true});
+		const unarchived = await updateThread(harness, owner.token, channel.id, thread.id as string, {archived: false}) as Record<string, unknown>;
+
+		expect((unarchived.thread_metadata as Record<string, unknown>).archived).toBe(false);
+		expect(unarchived.thread_state).toBe(0);
+	});
+});

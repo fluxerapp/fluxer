@@ -351,6 +351,7 @@ handle_visibility_transition(false, true, ChId, Pid, Sid, SD, _Old, New, GId, VM
 ->
     guild_visibility_roles:dispatch_channel_create(ChId, Pid, New, GId),
     guild_visibility_roles:send_member_list_sync(Sid, SD, ChId, GId, New),
+    dispatch_thread_list_sync_for_channel(ChId, maps:get(user_id, SD, undefined), Pid, GId, New),
     FinalMap = guild_visibility_roles:maybe_ensure_parent_category_visible(
         ChId, VMap, New, Pid, GId
     ),
@@ -361,3 +362,35 @@ handle_visibility_transition(_, _, _ChId, _Pid, _Sid, _SD, _Old, New, _GId, VMap
 -spec guild_id(guild_state()) -> integer() | undefined.
 guild_id(State) ->
     snowflake_id:parse_optional(maps:get(id, State, undefined)).
+
+-spec dispatch_thread_list_sync_for_channel(
+    channel_id(), integer() | undefined, pid(), integer(), guild_state()
+) -> ok.
+dispatch_thread_list_sync_for_channel(_ChId, undefined, _Pid, _GuildId, _State) ->
+    ok;
+dispatch_thread_list_sync_for_channel(ChId, UserId, Pid, GuildId, State) ->
+    Data = guild_data_index:ensure_data_map(State),
+    AllThreads = guild_data_index:thread_list(Data),
+    ChannelThreads = lists:filter(
+        fun(Thread) ->
+            SafeThread = map_utils:ensure_map(Thread),
+            case snowflake_id:parse_optional(maps:get(<<"thread_parent_channel_id">>, SafeThread, undefined)) of
+                ChId -> true;
+                _ -> false
+            end
+        end,
+        AllThreads
+    ),
+    case ChannelThreads of
+        [] ->
+            ok;
+        _ ->
+            EventData = #{
+                <<"guild_id">> => integer_to_binary(GuildId),
+                <<"threads">> => ChannelThreads,
+                <<"members">> => [],
+                <<"id">> => integer_to_binary(UserId)
+            },
+            gateway_dispatch_relay:dispatch(Pid, thread_list_sync, EventData, GuildId),
+            ok
+    end.

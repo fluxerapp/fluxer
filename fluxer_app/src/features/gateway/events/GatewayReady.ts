@@ -8,6 +8,7 @@ import AuthSession from '@app/features/auth/state/AuthSession';
 import ChannelPins from '@app/features/channel/state/ChannelPins';
 import Channels from '@app/features/channel/state/Channels';
 import * as ThreadCommands from '@app/features/channel/commands/ThreadCommands';
+import Threads from '@app/features/channel/state/Threads';
 import UserConnection from '@app/features/connection/state/UserConnection';
 import Emoji from '@app/features/emoji/state/Emoji';
 import Sticker from '@app/features/emoji/state/EmojiSticker';
@@ -105,6 +106,16 @@ function handleReadyInternal(data: ReadyPayload, context: GatewayHandlerContext)
 		if (guild.unavailable) continue;
 		for (const channel of guild.channels) {
 			channels.push({...channel, guild_id: guild.id});
+		}
+		if (guild.threads && guild.threads.length > 0) {
+			const joinedIds: string[] = [];
+			for (const thread of guild.threads) {
+				Threads.handleThreadCreate(thread);
+				joinedIds.push(thread.id);
+			}
+			for (const threadId of joinedIds) {
+				Threads.handleThreadMemberAdd({threadId});
+			}
 		}
 	}
 	GuildAvailability.loadUnavailableGuilds(guilds);

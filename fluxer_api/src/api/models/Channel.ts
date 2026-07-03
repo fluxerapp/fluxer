@@ -41,6 +41,12 @@ export class Channel {
 	readonly threadExpiresAt: Date | null;
 	readonly threadSourceMessageId: MessageID | null;
 	readonly threadMessageCount: number;
+	readonly threadTotalMessageSent: number;
+	readonly threadMemberCountActual: number;
+	readonly threadArchived: boolean;
+	readonly threadLocked: boolean;
+	readonly threadAutoArchiveDuration: number | null;
+	readonly threadArchiveTimestamp: Date | null;
 
 	get isThread(): boolean {
 		return this.type === ChannelTypes.GUILD_THREAD;
@@ -87,6 +93,12 @@ export class Channel {
 		this.threadExpiresAt = row.thread_expires_at ?? null;
 		this.threadSourceMessageId = row.thread_source_message_id ?? null;
 		this.threadMessageCount = row.thread_message_count ?? 0;
+		this.threadTotalMessageSent = row.thread_total_message_sent ?? 0;
+		this.threadMemberCountActual = row.thread_member_count_actual ?? 0;
+		this.threadArchived = row.thread_archived ?? false;
+		this.threadLocked = row.thread_locked ?? false;
+		this.threadAutoArchiveDuration = row.thread_auto_archive_duration ?? null;
+		this.threadArchiveTimestamp = row.thread_archive_timestamp ?? null;
 	}
 
 	toRow(): ChannelRow {
@@ -132,6 +144,12 @@ export class Channel {
 			thread_expires_at: this.threadExpiresAt,
 			thread_source_message_id: this.threadSourceMessageId,
 			thread_message_count: this.threadMessageCount,
+			thread_total_message_sent: this.threadTotalMessageSent,
+			thread_member_count_actual: this.threadMemberCountActual,
+			thread_archived: this.threadArchived,
+			thread_locked: this.threadLocked,
+			thread_auto_archive_duration: this.threadAutoArchiveDuration,
+			thread_archive_timestamp: this.threadArchiveTimestamp,
 		};
 	}
 }

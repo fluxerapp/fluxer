@@ -154,6 +154,38 @@ const CHANNEL_MANAGEMENT_DESCRIPTOR = msg({
 	message: 'Channel management',
 	comment: 'Permission category for managing channels and channel settings.',
 });
+const SEND_MESSAGES_IN_THREADS_DESCRIPTOR = msg({
+	message: 'Send Messages in Threads and Posts',
+	comment: 'Permission name: allows sending messages in threads.',
+});
+const SEND_MESSAGES_IN_THREADS_PERMISSION_DESCRIPTION_DESCRIPTOR = msg({
+	message: 'Allow members to send messages in threads and posts under these channels.',
+	comment: 'Permission description for Send Messages in Threads.',
+});
+const CREATE_PUBLIC_THREADS_DESCRIPTOR = msg({
+	message: 'Create Public Threads',
+	comment: 'Permission name: allows creating public threads.',
+});
+const CREATE_PUBLIC_THREADS_PERMISSION_DESCRIPTION_DESCRIPTOR = msg({
+	message: 'Allow members to create threads that everyone in these channels can view.',
+	comment: 'Permission description for Create Public Threads.',
+});
+const CREATE_PRIVATE_THREADS_DESCRIPTOR = msg({
+	message: 'Create Private Threads',
+	comment: 'Permission name: allows creating private (invite-only) threads.',
+});
+const CREATE_PRIVATE_THREADS_PERMISSION_DESCRIPTION_DESCRIPTOR = msg({
+	message: 'Allow members to create invite-only threads in these channels.',
+	comment: 'Permission description for Create Private Threads.',
+});
+const MANAGE_THREADS_DESCRIPTOR = msg({
+	message: 'Manage Threads and Posts',
+	comment: 'Permission name: allows managing threads.',
+});
+const MANAGE_THREADS_PERMISSION_DESCRIPTION_DESCRIPTOR = msg({
+	message: 'Allows members to rename, delete, close and turn on slow mode for threads and posts in these channels. They can also view private threads.',
+	comment: 'Permission description for Manage Threads and Posts.',
+});
 const ADMINISTRATOR_DESCRIPTOR = msg({
 	message: 'Administrator',
 	comment: 'Permission name: grants all permissions and bypasses restrictions.',
@@ -369,6 +401,10 @@ const PERMISSION_TITLE_DESCRIPTORS = new Map<bigint, MessageDescriptor>([
 	[Permissions.DEAFEN_MEMBERS, DEAFEN_MEMBERS_DESCRIPTOR],
 	[Permissions.MOVE_MEMBERS, MOVE_MEMBERS_DESCRIPTOR],
 	[Permissions.UPDATE_RTC_REGION, SET_VOICE_REGION_DESCRIPTOR],
+	[Permissions.SEND_MESSAGES_IN_THREADS, SEND_MESSAGES_IN_THREADS_DESCRIPTOR],
+	[Permissions.CREATE_PUBLIC_THREADS, CREATE_PUBLIC_THREADS_DESCRIPTOR],
+	[Permissions.CREATE_PRIVATE_THREADS, CREATE_PRIVATE_THREADS_DESCRIPTOR],
+	[Permissions.MANAGE_THREADS, MANAGE_THREADS_DESCRIPTOR],
 ]);
 const PERMISSION_DESCRIPTION_DESCRIPTORS = new Map<bigint, MessageDescriptor>([
 	[Permissions.ADMINISTRATOR, ADMINISTRATOR_PERMISSION_DESCRIPTION_DESCRIPTOR],
@@ -391,6 +427,10 @@ const PERMISSION_DESCRIPTION_DESCRIPTORS = new Map<bigint, MessageDescriptor>([
 	[Permissions.VIEW_CHANNEL_MEMBERS, VIEW_CHANNEL_MEMBERS_GUILD_PERMISSION_DESCRIPTION_DESCRIPTOR],
 	[Permissions.USE_VAD, USE_VOICE_ACTIVITY_PERMISSION_DESCRIPTION_DESCRIPTOR],
 	[Permissions.MOVE_MEMBERS, MOVE_MEMBERS_PERMISSION_DESCRIPTION_DESCRIPTOR],
+	[Permissions.SEND_MESSAGES_IN_THREADS, SEND_MESSAGES_IN_THREADS_PERMISSION_DESCRIPTION_DESCRIPTOR],
+	[Permissions.CREATE_PUBLIC_THREADS, CREATE_PUBLIC_THREADS_PERMISSION_DESCRIPTION_DESCRIPTOR],
+	[Permissions.CREATE_PRIVATE_THREADS, CREATE_PRIVATE_THREADS_PERMISSION_DESCRIPTION_DESCRIPTOR],
+	[Permissions.MANAGE_THREADS, MANAGE_THREADS_PERMISSION_DESCRIPTION_DESCRIPTOR],
 ]);
 const CHANNEL_PERMISSION_TITLE_OVERRIDES = new Map<bigint, MessageDescriptor>([
 	[Permissions.MANAGE_CHANNELS, MANAGE_CHANNEL_DESCRIPTOR],

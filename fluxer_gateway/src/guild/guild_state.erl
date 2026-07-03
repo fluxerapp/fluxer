@@ -81,6 +81,12 @@ update_channel_event(guild_emojis_update, ED, D) ->
     guild_state_channels:handle_emojis_update(ED, D);
 update_channel_event(guild_stickers_update, ED, D) ->
     guild_state_channels:handle_stickers_update(ED, D);
+update_channel_event(thread_create, ED, D) ->
+    guild_state_channels:handle_thread_create(ED, D);
+update_channel_event(thread_update, ED, D) ->
+    guild_state_channels:handle_thread_update(ED, D);
+update_channel_event(thread_delete, ED, D) ->
+    guild_state_channels:handle_thread_delete(ED, D);
 update_channel_event(_Event, _EventData, Data) ->
     Data.
 
@@ -111,6 +117,17 @@ handle_post_update(Event, EventData, OldState, NewState) when
     Event =:= channel_delete
 ->
     post_update_channel(Event, EventData, OldState, NewState);
+handle_post_update(Event, _EventData, _OldState, NewState) when
+    Event =:= thread_create;
+    Event =:= thread_update;
+    Event =:= thread_delete;
+    Event =:= thread_member_add;
+    Event =:= thread_member_remove;
+    Event =:= thread_member_update;
+    Event =:= thread_members_update;
+    Event =:= thread_list_sync
+->
+    NewState;
 handle_post_update(guild_member_remove, EventData, _OldState, NewState) ->
     post_update_member_remove(EventData, NewState);
 handle_post_update(Event, _EventData, OldState, NewState) ->

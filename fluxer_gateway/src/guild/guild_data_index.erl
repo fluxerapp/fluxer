@@ -22,6 +22,8 @@
     channel_list/1,
     channel_index/1,
     put_channels/2,
+    thread_list/1,
+    put_threads/2,
     build_id_index/1,
     build_role_perms_cache/1,
     build_overwrite_perms_cache/1,
@@ -114,6 +116,14 @@ channel_index(Data) -> guild_data_index_channels:channel_index(Data).
 
 -spec put_channels(term(), guild_data()) -> guild_data().
 put_channels(Channels, Data) -> guild_data_index_channels:put_channels(Channels, Data).
+
+-spec thread_list(term()) -> [map()].
+thread_list(Data) ->
+    map_utils:ensure_list(maps:get(<<"threads">>, Data, [])).
+
+-spec put_threads([map()], guild_data()) -> guild_data().
+put_threads(Threads, Data) ->
+    Data#{<<"threads">> => Threads}.
 
 -spec build_role_perms_cache([map()]) -> map().
 build_role_perms_cache(Roles) -> guild_data_index_roles:build_role_perms_cache(Roles).

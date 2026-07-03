@@ -103,6 +103,7 @@ export class ChannelDataRepository extends IChannelDataRepository {
 		const patch: Partial<Record<string, unknown>> = {last_message_id: Db.set(messageId)};
 		if (existing.type === 11) {
 			patch.thread_message_count = Db.set((existing.thread_message_count ?? 0) + 1);
+			patch.thread_total_message_sent = Db.set((existing.thread_total_message_sent ?? 0) + 1);
 		}
 		await upsertOne(
 			Channels.patchByPk({channel_id: channelId, soft_deleted: false}, patch as Parameters<typeof Channels.patchByPk>[1]),
@@ -268,6 +269,8 @@ export class ChannelDataRepository extends IChannelDataRepository {
 		joinedAt: Date;
 		notificationOverride: number | null;
 	}): Promise<void> {
+		const existing = await fetchOne<{user_id: UserID}>(FETCH_THREAD_MEMBER.bind({thread_id: params.threadId, user_id: params.userId}));
+		const isNew = existing === null;
 		await Promise.all([
 			upsertOne(
 				ThreadMembers.upsertAll({
@@ -284,13 +287,42 @@ export class ChannelDataRepository extends IChannelDataRepository {
 				} as ThreadMembersByUserRow),
 			),
 		]);
+		if (isNew) {
+			const thread = await fetchOne<ChannelRow>(FETCH_CHANNEL_BY_ID.bind({channel_id: params.threadId, soft_deleted: false}));
+			if (thread) {
+				const current = thread.thread_member_count_actual ?? 0;
+				if (current < 50) {
+					await upsertOne(
+						Channels.patchByPk(
+							{channel_id: params.threadId, soft_deleted: false},
+							{thread_member_count_actual: Db.set(current + 1)} as Parameters<typeof Channels.patchByPk>[1],
+						),
+					);
+				}
+			}
+		}
 	}
 
 	async removeThreadMember(threadId: ChannelID, userId: UserID): Promise<void> {
+		const existing = await fetchOne<{user_id: UserID}>(FETCH_THREAD_MEMBER.bind({thread_id: threadId, user_id: userId}));
 		await Promise.all([
 			upsertOne(ThreadMembers.deleteByPk({thread_id: threadId, user_id: userId})),
 			upsertOne(ThreadMembersByUser.deleteByPk({user_id: userId, thread_id: threadId})),
 		]);
+		if (existing !== null) {
+			const thread = await fetchOne<ChannelRow>(FETCH_CHANNEL_BY_ID.bind({channel_id: threadId, soft_deleted: false}));
+			if (thread) {
+				const current = thread.thread_member_count_actual ?? 0;
+				if (current > 0) {
+					await upsertOne(
+						Channels.patchByPk(
+							{channel_id: threadId, soft_deleted: false},
+							{thread_member_count_actual: Db.set(current - 1)} as Parameters<typeof Channels.patchByPk>[1],
+						),
+					);
+				}
+			}
+		}
 	}
 
 	async listJoinedThreadIds(userId: UserID): Promise<Array<ChannelID>> {

@@ -2,7 +2,7 @@
 
 import type {PresenceRecord} from '@app/features/gateway/types/GatewayPresenceTypes';
 import type {VoiceState} from '@app/features/gateway/types/GatewayVoiceTypes';
-import type {Channel} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
+import type {Channel, ThreadResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import type {GuildEmoji, GuildSticker} from '@fluxer/schema/src/domains/guild/GuildEmojiSchemas';
 import type {GuildMemberData} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import type {Guild} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
@@ -12,6 +12,7 @@ export type GuildReadyData = Readonly<{
 	id: string;
 	properties: Omit<Guild, 'roles'>;
 	channels: ReadonlyArray<Channel>;
+	threads?: ReadonlyArray<ThreadResponse>;
 	emojis: ReadonlyArray<GuildEmoji>;
 	stickers?: ReadonlyArray<GuildSticker>;
 	members: ReadonlyArray<GuildMemberData>;

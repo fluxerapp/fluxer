@@ -384,14 +384,17 @@ export type CreateThreadRequest = z.infer<typeof CreateThreadRequest>;
 
 export const UpdateThreadRequest = z.object({
 	name: createStringType(1, 36).optional().describe('New thread name'),
-	state: z.number().int().min(0).max(2).optional().describe('Thread state: 0=open, 1=closed, 2=archived'),
+	state: z.number().int().min(0).max(2).optional().describe('Thread state: 0=open, 1=closed, 2=archived (legacy)'),
+	archived: z.boolean().optional().describe('Whether to archive (true) or unarchive (false) the thread'),
+	locked: z.boolean().optional().describe('Whether to lock the thread (requires MANAGE_THREADS to unarchive when locked)'),
+	auto_archive_duration: z.union([z.literal(60), z.literal(1440), z.literal(4320), z.literal(10080)]).optional().describe('Duration in minutes before the thread auto-archives'),
 	expires_in_ms: z
 		.number()
 		.int()
 		.min(3_600_000)
 		.max(2_592_000_000)
 		.optional()
-		.describe('New auto-close duration from now in milliseconds'),
+		.describe('New auto-close duration from now in milliseconds (legacy)'),
 	rate_limit_per_user: z
 		.number()
 		.int()
