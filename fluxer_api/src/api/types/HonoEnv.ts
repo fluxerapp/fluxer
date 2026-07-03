@@ -18,6 +18,8 @@ import type {IChannelRepository} from '../channel/IChannelRepository';
 import type {ChannelRequestService} from '../channel/services/ChannelRequestService';
 import type {ChannelService} from '../channel/services/ChannelService';
 import type {MessageRequestService} from '../channel/services/message/MessageRequestService';
+import type {PollService} from '../polls/PollService';
+
 import type {ScheduledMessageService} from '../channel/services/ScheduledMessageService';
 import type {StreamPreviewService} from '../channel/services/StreamPreviewService';
 import type {StreamService} from '../channel/services/StreamService';
@@ -192,6 +194,7 @@ export interface HonoEnv {
 		limitConfigService: LimitConfigService;
 		requestLocale: string;
 		errorI18nService: ErrorI18nService;
+		pollsService: PollService;
 		channelUpdateType?: number;
 	};
 }
