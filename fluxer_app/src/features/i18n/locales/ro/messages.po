@@ -345,8 +345,8 @@ msgstr "{count, plural, one {# atașament} other {# atașamente}}"
 msgid "{count, plural, one {# blocked message} other {# blocked messages}}"
 msgstr "{count, plural, one {# mesaj blocat} other {# mesaje blocate}}"
 
-#: src/features/app/components/alerts/MaxBookmarksModal.tsx:50
-#: src/features/app/components/alerts/MaxBookmarksModal.tsx:83
+#: src/features/app/components/alerts/MaxBookmarksModal.tsx:51
+#: src/features/app/components/alerts/MaxBookmarksModal.tsx:76
 msgid "{count, plural, one {# bookmark} other {# bookmarks}}"
 msgstr "{count, plural, one {# marcaj} other {# marcaje}}"
 
@@ -420,8 +420,8 @@ msgstr "{count, plural, one {# reacție} other {# reacții}}"
 msgid "{count, plural, one {# reactor} other {# reactors}}"
 msgstr "{count, plural, one {# reacție} few {# reacții} other {# de reacții}}"
 
-#: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx:44
-#: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx:82
+#: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx:45
+#: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx:79
 msgid "{count, plural, one {# saved media item} other {# saved media items}}"
 msgstr "{count, plural, one {# element media salvat} few {# elemente media salvate} other {# elemente media salvate}}"
 
@@ -500,7 +500,7 @@ msgstr "{count, plural, one {Deconectează # dispozitiv} other {Deconectează # 
 msgid "{count, plural, one {Used # time.} other {Used # times.}}"
 msgstr "{count, plural, one {Folosit o dată.} other {Folosit de # ori.}}"
 
-#: src/features/messaging/components/alerts/TooManyAttachmentsModal.tsx:21
+#: src/features/messaging/components/alerts/TooManyAttachmentsModal.tsx:20
 msgid "{count, plural, one {You can only upload # file at a time. Try again with fewer files.} other {You can only upload # files at a time. Try again with fewer files.}}"
 msgstr "{count, plural, one {Poți încărca doar # fișier odată. Încearcă din nou cu mai puține fișiere.} other {Poți încărca doar # fișiere odată. Încearcă din nou cu mai puține fișiere.}}"
 
@@ -525,7 +525,7 @@ msgstr "{count, plural, one {Ești deja conectat la acest canal vocal de pe # al
 msgid "{count, plural, one {You're already using the one allowed connection for this voice channel. Switch to this device or cancel.} other {You're already using all # allowed connections for this voice channel. Switch to this device or cancel.}}"
 msgstr "{count, plural, one {Folosești deja singura conexiune permisă pentru acest canal vocal. Comută la acest dispozitiv sau anulează.} other {Folosești deja toate cele # conexiuni permise pentru acest canal vocal. Comută la acest dispozitiv sau anulează.}}"
 
-#: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx:65
+#: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx:62
 msgid "{count, plural, one {You're at the cap of # saved media item. Remove one to add another.} other {You're at the cap of # saved media items. Remove one to add another.}}"
 msgstr "{count, plural, one {Ai atins limita de # element media salvat. Elimină unul pentru a adăuga altul.} other {Ai atins limita de # elemente media salvate. Elimină unul pentru a adăuga altul.}}"
 
@@ -545,7 +545,7 @@ msgstr "{count, plural, one {Ai atins limita de # pachet de stickere instalat. E
 msgid "{count, plural, one {You're at the limit of # sticker pack. Delete one to create another.} other {You're at the limit of # sticker packs. Delete one to create another.}}"
 msgstr "{count, plural, one {Ai atins limita de # pachet de stickere. Șterge unul pentru a crea altul.} other {Ai atins limita de # pachete de stickere. Șterge unul pentru a crea altul.}}"
 
-#: src/features/guild/components/alerts/MaxGuildsModal.tsx:25
+#: src/features/guild/components/alerts/MaxGuildsModal.tsx:24
 msgid "{count, plural, one {You've reached the maximum number of communities you can join (# community). Leave a community before joining another one.} other {You've reached the maximum number of communities you can join (# communities). Leave a community before joining another one.}}"
 msgstr "{count, plural, one {Ai atins numărul maxim de comunități în care te poți alătura (o comunitate). Părăsește o comunitate înainte de a te alătura alteia.} other {Ai atins numărul maxim de comunități în care te poți alătura (# comunități). Părăsește o comunitate înainte de a te alătura alteia.}}"
 
@@ -1124,22 +1124,22 @@ msgid "{productName} member since"
 msgstr "Membru {productName} din"
 
 #. Body of the camera-permission-denied modal on web. {productName} is Fluxer.
-#: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx:40
+#: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx:39
 msgid "{productName} needs access to your camera to enable video chat. Grant camera permission in your browser settings and try again."
 msgstr "{productName} are nevoie de acces la camera ta pentru a activa chatul video. Acordă permisiunea pentru cameră în setările browserului și încearcă din nou."
 
 #. Body of the camera-permission-denied modal on Windows and Linux. {productName} is Fluxer.
-#: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx:35
+#: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx:34
 msgid "{productName} needs access to your camera. Allow camera access in your operating system privacy settings and restart the app."
 msgstr "{productName} are nevoie de acces la camera ta. Permite accesul la cameră în setările de confidențialitate ale sistemului de operare și repornește aplicația."
 
 #. Body of the microphone-permission-denied modal on web. {productName} is Fluxer.
-#: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx:30
+#: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx:29
 msgid "{productName} needs access to your microphone to enable voice chat. Grant microphone permission in your browser settings and try again."
 msgstr "{productName} are nevoie de acces la microfon pentru a activa chatul vocal. Acordă permisiunea pentru microfon în setările browserului și încearcă din nou."
 
 #. Body of the microphone-permission-denied modal on Windows and Linux. {productName} is Fluxer.
-#: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx:25
+#: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx:24
 msgid "{productName} needs access to your microphone. Allow microphone access in your operating system privacy settings and restart the app."
 msgstr "{productName} are nevoie de acces la microfonul tău. Permite accesul la microfon în setările de confidențialitate ale sistemului de operare și repornește aplicația."
 
@@ -1154,7 +1154,7 @@ msgid "{productName} needs microphone access to list your devices."
 msgstr "{productName} are nevoie de acces la microfon pentru a-ți afișa dispozitivele."
 
 #. Body of the screen-permission-denied modal on non-mac desktop platforms. {productName} is Fluxer.
-#: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx:45
+#: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx:44
 msgid "{productName} needs screen recording access. Allow screen recording in your operating system privacy settings and restart the app."
 msgstr "{productName} necesită acces la înregistrarea ecranului. Permite înregistrarea ecranului în setările de confidențialitate ale sistemului tău de operare și repornește aplicația."
 
@@ -1179,7 +1179,7 @@ msgid "{productName} spellcheck settings…"
 msgstr "Setări de verificare ortografică {productName}…"
 
 #. Label in the invites disabled modal.
-#: src/features/invite/components/alerts/InvitesDisabledModal.tsx:14
+#: src/features/invite/components/alerts/InvitesDisabledModal.tsx:13
 msgid "{productName} spotted a possible raid here. Invites are paused — try again later."
 msgstr "{productName} a detectat un posibil raid aici. Invitațiile sunt întrerupte — încearcă din nou mai târziu."
 
@@ -2247,7 +2247,7 @@ msgid "Action"
 msgstr "Acțiune"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:283
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:307
 msgid "Action bar"
 msgstr "Bară de acțiuni"
 
@@ -2844,7 +2844,7 @@ msgid "Administrator"
 msgstr "Administrator"
 
 #. Error message in the invites disabled modal.
-#: src/features/invite/components/alerts/InvitesDisabledModal.tsx:18
+#: src/features/invite/components/alerts/InvitesDisabledModal.tsx:17
 msgid "Admins paused invites — you can't join right now."
 msgstr "Administratorii au întrerupt invitațiile — nu te poți alătura acum."
 
@@ -3253,7 +3253,7 @@ msgid "Already set to cancel"
 msgstr "Anulat deja"
 
 #. Toggle-switch label in the moderator delete-message confirmation dialog. When enabled, the message is reported (category: other) before being deleted. {productName} is the product name (e.g., Fluxer).
-#: src/features/messaging/commands/MessageCommands.tsx:75
+#: src/features/messaging/commands/MessageCommands.tsx:76
 msgid "Also report this message to the {productName} Safety Team"
 msgstr "Raportează acest mesaj și echipei de siguranță {productName}"
 
@@ -3423,12 +3423,12 @@ msgstr "Și 1 alt apel"
 msgid "Animate on interaction"
 msgstr "Animație la interacțiune"
 
-#: src/features/expressions/utils/AnimatedAvifModalUtils.tsx:27
+#: src/features/expressions/utils/AnimatedAvifModalUtils.tsx:26
 msgid "Animated {AVIF_FORMAT_LABEL} files aren't supported. Upload a static {AVIF_FORMAT_LABEL} file instead."
 msgstr "Fișierele animate {AVIF_FORMAT_LABEL} nu sunt acceptate. Încarcă în schimb un fișier {AVIF_FORMAT_LABEL} static."
 
 #. Modal title shown when an animated AVIF upload is rejected by the client.
-#: src/features/expressions/utils/AnimatedAvifModalUtils.tsx:12
+#: src/features/expressions/utils/AnimatedAvifModalUtils.tsx:11
 msgid "Animated {avifFormatLabel} not supported"
 msgstr "Formatul animat {avifFormatLabel} nu este acceptat"
 
@@ -3476,7 +3476,7 @@ msgid "Animated emoji"
 msgstr "Emoji animate"
 
 #. Section heading for animated emoji in community emoji settings.
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:104
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:105
 msgid "Animated emoji ({emojiCount})"
 msgstr "Emoji animate ({emojiCount})"
 
@@ -3861,7 +3861,7 @@ msgid "Apply theme"
 msgstr "Aplică tema"
 
 #. Short confirmation button label in advanced settings.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:140
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:144
 msgid "Apply to all communities"
 msgstr "Aplică tuturor comunităților"
 
@@ -4019,7 +4019,7 @@ msgid "asc or desc"
 msgstr "asc sau desc"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:351
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:375
 msgid "ASCII smileys"
 msgstr "Smiley-uri ASCII"
 
@@ -4119,7 +4119,7 @@ msgid "Attachment upload"
 msgstr "Încărcare atașament"
 
 #. Short label in the attachment upload connectivity modal. Keep it concise.
-#: src/features/messaging/components/alerts/AttachmentUploadConnectivityModal.tsx:13
+#: src/features/messaging/components/alerts/AttachmentUploadConnectivityModal.tsx:12
 msgid "Attachment upload unavailable"
 msgstr "Încărcarea atașamentului nu este disponibilă"
 
@@ -4619,7 +4619,7 @@ msgid "Automatically remove tracking parameters (like utm_source, fbclid, gclid)
 msgstr "Elimină automat parametrii de urmărire (precum utm_source, fbclid, gclid) din URL-urile mesajelor pe care le trimiți. Curăță linkul înainte ca acesta să ajungă la altcineva."
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:167
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:191
 msgid "Automatically remove tracking parameters from URLs in messages you send"
 msgstr "Elimină automat parametrii de urmărire din URL-urile mesajelor pe care le trimiți"
 
@@ -4685,8 +4685,8 @@ msgstr "Disponibil în aplicația desktop."
 #. Form label for a webhook avatar image.
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #: src/features/ui/components/BaseAvatar.tsx:17
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:374
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:422
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:372
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:420
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:13
 #: src/features/webhook/components/WebhookListItem.tsx:251
 msgid "Avatar"
@@ -5273,7 +5273,7 @@ msgid "Bookmark"
 msgstr "Marchează"
 
 #. Short label in the max bookmarks modal.
-#: src/features/app/components/alerts/MaxBookmarksModal.tsx:15
+#: src/features/app/components/alerts/MaxBookmarksModal.tsx:16
 msgid "Bookmark limit reached"
 msgstr "Limită de marcaje atinsă"
 
@@ -5761,7 +5761,7 @@ msgid "Camera on"
 msgstr "Cameră activată"
 
 #. Title of the modal shown when camera permission is denied. Keep tone plain.
-#: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx:17
+#: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx:16
 msgid "Camera permission required"
 msgstr "Este necesară permisiunea pentru cameră"
 
@@ -5805,12 +5805,12 @@ msgid "Can't access that email?"
 msgstr "Nu poți accesa acel e-mail?"
 
 #. Error message in the attachment permission denied modal. Keep the tone plain and specific.
-#: src/features/messaging/components/alerts/AttachmentPermissionDeniedModal.tsx:12
+#: src/features/messaging/components/alerts/AttachmentPermissionDeniedModal.tsx:9
 msgid "Can't paste image here"
 msgstr "Nu se poate lipi imaginea aici"
 
 #. Error message in the attachment permission denied modal. Keep the tone plain and specific.
-#: src/features/messaging/components/alerts/AttachmentPermissionDeniedModal.tsx:16
+#: src/features/messaging/components/alerts/AttachmentPermissionDeniedModal.tsx:13
 msgid "Can't upload files here"
 msgstr "Nu se pot încărca fișiere aici"
 
@@ -5872,7 +5872,7 @@ msgstr "Bară de notificare CTA pentru testeri Canary"
 #: src/features/user/components/modals/EmailChangeModal.tsx:289
 #: src/features/user/components/modals/EmailChangeModal.tsx:311
 #: src/features/user/components/modals/EmailChangeModal.tsx:326
-#: src/features/user/components/modals/FluxerTagChangeModal.tsx:389
+#: src/features/user/components/modals/FluxerTagChangeModal.tsx:394
 #: src/features/user/components/modals/PasswordChangeModal.tsx:226
 #: src/features/user/components/modals/PasswordChangeModal.tsx:237
 #: src/features/user/components/modals/PasswordChangeModal.tsx:255
@@ -5899,7 +5899,7 @@ msgstr "Anulează editarea mesajului programat"
 msgid "Cancel friend request"
 msgstr "Anulează cererea de prietenie"
 
-#: src/features/user/components/modals/FluxerTagChangeModal.tsx:144
+#: src/features/user/components/modals/FluxerTagChangeModal.tsx:145
 msgid "Cancel if you want to choose a different username instead."
 msgstr "Anulează dacă vrei să alegi un alt nume de utilizator."
 
@@ -6142,8 +6142,8 @@ msgstr "Centrat"
 
 #. Title of the modal where the user picks an avatar source (file upload or GIF provider). Keep it concise.
 #: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:110
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:396
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:432
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:394
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:430
 msgid "Change avatar"
 msgstr "Schimbă avatarul"
 
@@ -6289,7 +6289,7 @@ msgid "Change username"
 msgstr "Schimbă numele de utilizator"
 
 #. Short label in the FluxerTag change modal. Keep it concise.
-#: src/features/user/components/modals/FluxerTagChangeModal.tsx:47
+#: src/features/user/components/modals/FluxerTagChangeModal.tsx:48
 msgid "Change username form"
 msgstr "Formular de schimbare a numelui de utilizator"
 
@@ -6339,7 +6339,7 @@ msgstr "Schimbă-ți fotografia de profil"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #. Short label in the FluxerTag change modal. Keep it concise.
-#: src/features/user/components/modals/FluxerTagChangeModal.tsx:51
+#: src/features/user/components/modals/FluxerTagChangeModal.tsx:52
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:77
 msgid "Change your username"
 msgstr "Schimbă-ți numele de utilizator"
@@ -6851,7 +6851,7 @@ msgid "Choose hCaptcha or Cloudflare Turnstile for signup challenges."
 msgstr "Alege hCaptcha sau Cloudflare Turnstile pentru provocările de înregistrare."
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:403
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:427
 msgid "Choose how chat moves after you send a message"
 msgstr "Alege cum să se deplaseze conversația după ce trimiți un mesaj"
 
@@ -7139,7 +7139,7 @@ msgid "Claiming to be another person, brand, or organization."
 msgstr "Se dă drept o altă persoană, marcă sau organizație."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:151
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:175
 msgid "Clean link"
 msgstr "Curăță linkul"
 
@@ -7687,7 +7687,7 @@ msgstr "Două puncte"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:323
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:347
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:154
 msgid "Colon autocomplete"
 msgstr "Completare automată cu două puncte"
@@ -7829,7 +7829,7 @@ msgid "Community"
 msgstr "Comunitate"
 
 #. Short label in the guild at capacity modal. Keep it concise.
-#: src/features/guild/components/alerts/GuildAtCapacityModal.tsx:9
+#: src/features/guild/components/alerts/GuildAtCapacityModal.tsx:8
 msgid "Community at capacity"
 msgstr "Comunitatea a atins capacitatea maximă"
 
@@ -8042,7 +8042,7 @@ msgid "Community-wide"
 msgstr "Community-wide"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:276
+#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:271
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:242
 msgid "Compact"
 msgstr "Compact"
@@ -8126,7 +8126,7 @@ msgstr "Buton de compunere"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:371
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:395
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:190
 msgid "Composer buttons"
 msgstr "Butoane compozitor"
@@ -8138,7 +8138,7 @@ msgstr "Focalizare compozitor"
 
 #. Button label that opens a dedicated advanced settings modal for configuring screen-share encoder controls.
 #. Button label that opens a dedicated advanced settings modal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:156
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:160
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:162
 msgid "Configure"
 msgstr "Configurează"
@@ -8179,7 +8179,7 @@ msgid "Configure role settings and permissions"
 msgstr "Configurează setările și permisiunile rolului"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:239
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:263
 msgid "Configure search engines used from selected text"
 msgstr "Configurează motoarele de căutare utilizate pentru textul selectat"
 
@@ -8189,7 +8189,7 @@ msgid "Configure spellcheck, dictionaries, and personal words"
 msgstr "Configurează verificarea ortografică, dicționarele și cuvintele personale"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:271
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:295
 msgid "Configure translator providers used from selected text"
 msgstr "Configurează furnizorii de traducere utilizați pentru textul selectat"
 
@@ -8212,7 +8212,7 @@ msgstr "Configurează-ți insigna de profil"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/channel/components/MentionEveryonePopout.tsx:180
 #: src/features/user/components/modals/EmailChangeModal.tsx:340
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:419
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:443
 msgid "Confirm"
 msgstr "Confirmă"
 
@@ -8264,7 +8264,7 @@ msgid "Confirm voice join"
 msgstr "Confirmă alăturarea vocală"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:415
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:439
 msgid "Confirmation"
 msgstr "Confirmare"
 
@@ -8449,7 +8449,7 @@ msgid "Contact support"
 msgstr "Contactați asistența"
 
 #. Short label in the authentication content blocked handler. Keep the tone plain and specific.
-#: src/features/auth/components/ContentBlockedHandler.tsx:11
+#: src/features/auth/components/ContentBlockedHandler.tsx:10
 msgid "Content blocked"
 msgstr "Conținut blocat"
 
@@ -8515,7 +8515,7 @@ msgstr "Meniurile contextuale pot fi deschise cu clic stânga (pe butoane) sau c
 #: src/features/auth/flow/HandoffApprovalFlow.tsx:118
 #: src/features/connection/components/modals/AddConnectionModal.tsx:383
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:711
-#: src/features/user/components/modals/FluxerTagChangeModal.tsx:392
+#: src/features/user/components/modals/FluxerTagChangeModal.tsx:397
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:181
 msgid "Continue"
 msgstr "Continuă"
@@ -9000,7 +9000,7 @@ msgid "Could not load this page"
 msgstr "Pagina nu a putut fi încărcată"
 
 #. Body of the modal shown when a screen share attempt fails. Advises the user to try sharing the full screen.
-#: src/features/voice/components/alerts/ScreenShareFailedModal.tsx:13
+#: src/features/voice/components/alerts/ScreenShareFailedModal.tsx:12
 msgid "Could not start the screen share. The selected source may no longer be available or may have blocked capture. Try sharing your entire screen or monitor instead of a specific window."
 msgstr "Nu s-a putut începe partajarea ecranului. Sursa selectată ar putea să nu mai fie disponibilă sau să fi blocat capturarea. Încearcă să partajezi întregul ecran sau monitor în loc de o fereastră specifică."
 
@@ -9558,7 +9558,7 @@ msgid "Cover"
 msgstr "Copertă"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:267
+#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:262
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:246
 msgid "Cozy"
 msgstr "Confortabil"
@@ -10034,7 +10034,7 @@ msgid "Custom date range"
 msgstr "Interval de date personalizat"
 
 #. Error message in the FluxerTag change modal.
-#: src/features/user/components/modals/FluxerTagChangeModal.tsx:64
+#: src/features/user/components/modals/FluxerTagChangeModal.tsx:65
 msgid "Custom discriminators are not available on this instance"
 msgstr "Discriminatorii personalizați nu sunt disponibili pe această instanță"
 
@@ -10099,7 +10099,7 @@ msgid "Custom ringtone"
 msgstr "Ton de apel personalizat"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:219
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:243
 msgid "Custom search engine"
 msgstr "Motor de căutare personalizat"
 
@@ -10168,7 +10168,7 @@ msgid "Custom title bar"
 msgstr "Bară de titlu personalizată"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:235
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:259
 msgid "Custom translator"
 msgstr "Traducător personalizat"
 
@@ -10227,7 +10227,7 @@ msgid "Customize interface elements and behaviors."
 msgstr "Personalizează elementele și comportamentele interfeței."
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:315
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:339
 msgid "Customize the action bar that appears when hovering over messages"
 msgstr "Personalizează bara de acțiuni care apare la trecerea cu mouse-ul peste mesaje"
 
@@ -10251,7 +10251,7 @@ msgstr "Personalizează-ți bannerul de profil"
 msgid "Customize your tag ({discriminatorLabel}) to your liking with {premiumProductName}"
 msgstr "Personalizează-ți eticheta ({discriminatorLabel}) după bunul plac cu {premiumProductName}"
 
-#: src/features/user/components/modals/FluxerTagChangeModal.tsx:381
+#: src/features/user/components/modals/FluxerTagChangeModal.tsx:386
 msgid "Customize your tag or keep it when changing your username"
 msgstr "Personalizează-ți eticheta sau păstreaz-o când îți schimbi numele de utilizator"
 
@@ -10663,7 +10663,7 @@ msgstr "Dezactivat implicit pe mobil pentru a economisi bateria și datele mobil
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:203
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:215
 #: src/features/emoji/components/stickers/StickerGridItem.tsx:34
-#: src/features/messaging/commands/MessageCommands.tsx:71
+#: src/features/messaging/commands/MessageCommands.tsx:72
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:135
 #: src/features/theme_studio/sections/LibrarySection.tsx:514
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:399
@@ -10908,7 +10908,7 @@ msgid "Delete this message"
 msgstr "Șterge acest mesaj"
 
 #. Error message in the messaging commands. Keep the tone plain and specific.
-#: src/features/messaging/commands/MessageCommands.tsx:67
+#: src/features/messaging/commands/MessageCommands.tsx:68
 msgid "Delete this message? Can't be undone."
 msgstr "Ștergi acest mesaj? Acțiunea nu poate fi anulată."
 
@@ -12197,7 +12197,7 @@ msgstr "Ciornă"
 msgid "Drag and drop"
 msgstr "Trage și plasează"
 
-#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:295
+#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:290
 msgid "Drag and drop a sticker file here (one at a time)"
 msgstr "Trageți și plasați un fișier sticker aici (unul pe rând)"
 
@@ -12206,7 +12206,7 @@ msgstr "Trageți și plasați un fișier sticker aici (unul pe rând)"
 msgid "Drag and drop area for file upload"
 msgstr "Trageți și plasați fișierele aici pentru a le încărca"
 
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:471
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:470
 msgid "Drag and drop emoji files here"
 msgstr "Trageți și plasați fișierele emoji aici"
 
@@ -12808,12 +12808,12 @@ msgid "Emoji & sticker packs"
 msgstr "Pachete de emoji și stickere"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:327
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:351
 msgid "Emoji autocomplete"
 msgstr "Completare automată emoji"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:379
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:403
 msgid "Emoji button"
 msgstr "Buton emoji"
 
@@ -12848,7 +12848,7 @@ msgid "Emoji name must be at most 32 characters long"
 msgstr "Numele emojiului trebuie să aibă maximum 32 de caractere"
 
 #. Description in the community emoji upload section. {maxSize} is the formatted size limit.
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:95
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:96
 msgid "Emoji names need at least 2 characters and can use letters, numbers, and underscores. Emojis must be under {maxSize}. Static images are resized to 128x128 pixels and compressed automatically. Animated emojis and SVGs must already fit the limit."
 msgstr "Numele emoji-urilor trebuie să aibă cel puțin 2 caractere și pot conține litere, numere și linii inferioare. Emoji-urile trebuie să aibă mai puțin de {maxSize}. Imaginile statice sunt redimensionate automat la 128x128 pixeli și sunt comprimate. Emoji-urile animate și SVG-urile trebuie să respecte deja limita."
 
@@ -12896,7 +12896,7 @@ msgstr "Pachete de emojiuri"
 msgid "Emoji picker"
 msgstr "Selector de emoji"
 
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:451
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:450
 msgid "Emoji slots"
 msgstr "Sloturi emoji"
 
@@ -12921,13 +12921,13 @@ msgid "Emojis"
 msgstr "Emoji"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:347
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:371
 msgid "Emoticon"
 msgstr "Emoticon"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:343
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:367
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:142
 msgid "Emoticons"
 msgstr "Emoticon"
@@ -13337,6 +13337,11 @@ msgstr "Îmbunătățit"
 msgctxt "noise-suppression-option"
 msgid "Enhanced"
 msgstr "Îmbunătățită"
+
+#. Settings search entry description. One-line summary of what the settings search entry controls.
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:147
+msgid "Ensures file messages appear in the order you sent them"
+msgstr "Asigură că mesajele cu fișiere apar în ordinea în care le-ai trimis"
 
 #. Keyboard key label for confirming a mass-mention warning.
 #. Keyboard shortcut keycap label for Enter. Keep it short.
@@ -13816,7 +13821,7 @@ msgid "Expand"
 msgstr "Extindeți"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:303
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:327
 msgid "Expand action bar"
 msgstr "Extinde bara de acțiuni"
 
@@ -14019,7 +14024,7 @@ msgstr "Afișează secțiunea cu setările de fus orar disponibile doar pentru p
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:319
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:343
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:158
 msgid "Expression autocomplete"
 msgstr "Completare automată expresii"
@@ -14073,7 +14078,7 @@ msgstr "Extern"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Warning text in the external link warning modal. Keep the tone plain and specific.
 #: src/features/messaging/components/modals/ExternalLinkWarningModal.tsx:17
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:191
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:215
 msgid "External link warning"
 msgstr "Avertisment link extern"
 
@@ -14219,7 +14224,7 @@ msgstr "Nu s-a putut încărca"
 msgid "Failed to load authorized applications"
 msgstr "Nu s-au putut încărca aplicațiile autorizate"
 
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:444
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:443
 msgid "Failed to load emojis. Try again later."
 msgstr "Nu s-au putut încărca emoji-urile. Încearcă din nou mai târziu."
 
@@ -14243,7 +14248,7 @@ msgid "Failed to load shareable sources."
 msgstr "Nu s-au putut încărca sursele partajabile."
 
 #. Error message in the guild stickers tab.
-#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:74
+#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:71
 msgid "Failed to load stickers"
 msgstr "Nu s-au putut încărca stickerele"
 
@@ -14293,7 +14298,7 @@ msgid "Failed to pin message"
 msgstr "Fixarea mesajului nu a reușit"
 
 #. Error message in the guild emoji tab.
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:54
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:55
 msgid "Failed to prepare emojis"
 msgstr "Nu s-au putut pregăti emojiurile"
 
@@ -14439,12 +14444,12 @@ msgid "Failed to upload custom sound"
 msgstr "Nu s-a putut încărca sunetul personalizat"
 
 #. Error message in the emoji upload failure modal. startLabel is a chunk label like "#1"; errorMsg is the server error.
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:62
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:63
 msgid "Failed to upload emojis starting at {startLabel}: {errorMsg}"
 msgstr "Nu s-au putut încărca emoji-urile începând cu {startLabel}: {errorMsg}"
 
 #. Error message in the guild emoji tab.
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:58
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:59
 msgid "Failed to upload emojis. Try again."
 msgstr "Nu s-au putut încărca emoji-urile. Încearcă din nou."
 
@@ -14538,7 +14543,7 @@ msgid "Feature"
 msgstr "Funcționalitate"
 
 #. Short label in the feature temporarily disabled modal.
-#: src/features/app/components/alerts/FeatureTemporarilyDisabledModal.tsx:9
+#: src/features/app/components/alerts/FeatureTemporarilyDisabledModal.tsx:8
 msgid "Feature temporarily disabled"
 msgstr "Funcție dezactivată temporar"
 
@@ -14580,13 +14585,18 @@ msgstr "Fișierul este prea mare. Dimensiunea maximă este {maxSize}."
 msgid "File options"
 msgstr "Opțiuni fișier"
 
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:135
+msgid "File ordering"
+msgstr "Ordonare fișiere"
+
 #. Title of the file-too-large alert variant that offers a Plutonium upsell.
-#: src/features/messaging/components/alerts/FileSizeTooLargeModal.tsx:38
+#: src/features/messaging/components/alerts/FileSizeTooLargeModal.tsx:35
 msgid "File size limit exceeded"
 msgstr "Limita de dimensiune a fișierului a fost depășită"
 
 #. Title of the file-too-large alert.
-#: src/features/messaging/components/alerts/FileSizeTooLargeModal.tsx:34
+#: src/features/messaging/components/alerts/FileSizeTooLargeModal.tsx:31
 msgid "File size too large"
 msgstr "Fișierul este prea mare"
 
@@ -15436,7 +15446,7 @@ msgid "Gap"
 msgstr "Spațiu"
 
 #. Short label in the temporary invite requires presence modal.
-#: src/features/app/components/alerts/TemporaryInviteRequiresPresenceModal.tsx:9
+#: src/features/app/components/alerts/TemporaryInviteRequiresPresenceModal.tsx:8
 msgid "Gateway connection required"
 msgstr "Este necesară o conexiune la gateway"
 
@@ -15512,7 +15522,7 @@ msgid "Get {premiumProductName} to customize your tag"
 msgstr "Obțineți {premiumProductName} pentru a vă personaliza eticheta"
 
 #. Description text in the FluxerTag change modal. Preserve {premiumProductName}; it is inserted by code. Keep the tone plain and specific.
-#: src/features/user/components/modals/FluxerTagChangeModal.tsx:55
+#: src/features/user/components/modals/FluxerTagChangeModal.tsx:56
 msgid "Get {premiumProductName} to customize your tag or keep it when changing your username"
 msgstr "Obțineți {premiumProductName} pentru a vă personaliza eticheta sau pentru a o păstra atunci când vă schimbați numele de utilizator"
 
@@ -15550,7 +15560,7 @@ msgid "GIF"
 msgstr "GIF"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:375
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:399
 msgid "GIF button"
 msgstr "Buton GIF"
 
@@ -15753,7 +15763,7 @@ msgid "Give everyone on this instance the highest premium limits."
 msgstr "Oferă tuturor din această instanță cele mai mari limite premium."
 
 #. Modal body shown when the role-edit form is submitted with an empty role name.
-#: src/features/app/components/alerts/RoleNameBlankModal.tsx:13
+#: src/features/app/components/alerts/RoleNameBlankModal.tsx:12
 msgid "Give the role a name before saving."
 msgstr "Dă un nume rolului înainte de a salva."
 
@@ -15884,7 +15894,7 @@ msgid "Go to third community"
 msgstr "Mergi la a treia comunitate"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:263
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:287
 msgid "Google lens"
 msgstr "Google Lens"
 
@@ -16395,7 +16405,7 @@ msgid "Hide avatars"
 msgstr "Ascunde avatarele"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:455
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:479
 msgid "Hide channels you've muted from community sidebars"
 msgstr "Ascunde canalele dezactivate din barele laterale ale comunității"
 
@@ -16447,7 +16457,7 @@ msgid "Hide members"
 msgstr "Ascunde membrii"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:447
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:471
 msgid "Hide muted"
 msgstr "Ascunde conversațiile dezactivate"
 
@@ -16458,13 +16468,13 @@ msgstr "Ascunde canalele dezactivate"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced sidebar preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:132
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:435
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:136
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:459
 msgid "Hide muted channels by default"
 msgstr "Ascunde canalele dezactivate în mod implicit"
 
 #. Confirmation prompt in advanced settings.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:136
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:140
 msgid "Hide muted channels by default?"
 msgstr "Ascunzi canalele dezactivate în mod implicit?"
 
@@ -16637,7 +16647,7 @@ msgid "Hours"
 msgstr "Ore"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:291
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:315
 msgid "Hover buttons"
 msgstr "Butoane plutitoare"
 
@@ -16910,11 +16920,11 @@ msgstr "Dacă plătești cu un card în PLN, acesta trebuie să fie emis în Pol
 msgid "If you prefer, you can switch to standard USD pricing instead."
 msgstr "Dacă preferi, poți trece la prețurile standard în USD."
 
-#: src/features/user/components/modals/FluxerTagChangeModal.tsx:349
+#: src/features/user/components/modals/FluxerTagChangeModal.tsx:354
 msgid "If you save this username, your tag will reroll randomly when your {PREMIUM_PRODUCT_NAME} expires on <0>{premiumExpiresAtLabel}</0>, unless it renews."
 msgstr "Dacă salvezi acest nume de utilizator, eticheta ta va fi reinițializată aleatoriu când {PREMIUM_PRODUCT_NAME} expiră pe <0>{premiumExpiresAtLabel}</0>, cu excepția cazului în care se reînnoiește."
 
-#: src/features/user/components/modals/FluxerTagChangeModal.tsx:356
+#: src/features/user/components/modals/FluxerTagChangeModal.tsx:361
 msgid "If you save this username, your tag will reroll randomly when your {PREMIUM_PRODUCT_NAME} expires, unless it renews."
 msgstr "Dacă salvezi acest nume de utilizator, eticheta ta va fi realocată aleatoriu la expirarea abonamentului {PREMIUM_PRODUCT_NAME}, cu excepția cazului în care acesta se reînnoiește."
 
@@ -17045,7 +17055,7 @@ msgid "Image dimensions must be between {min}x{min2} and {max}x{max2} pixels."
 msgstr "Dimensiunile imaginii trebuie să fie între {min}x{min2} și {max}x{max2} de pixeli."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:259
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:283
 msgid "Image lookup"
 msgstr "Căutare imagine"
 
@@ -17060,12 +17070,12 @@ msgid "Image preview"
 msgstr "Previzualizare imagine"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:251
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:275
 msgid "Image search"
 msgstr "Căutare imagini"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:267
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:291
 msgid "Image search provider"
 msgstr "Furnizor căutare imagini"
 
@@ -17088,7 +17098,7 @@ msgstr "Încărcare imagine"
 msgid "Images"
 msgstr "Imagini"
 
-#: src/features/messaging/components/alerts/AttachmentPermissionDeniedModal.tsx:38
+#: src/features/messaging/components/alerts/AttachmentPermissionDeniedModal.tsx:35
 msgid "Images pasted from your clipboard are sent as attachments, and you don't have permission to attach files in this channel."
 msgstr "Imaginile copiate din clipboard sunt trimise ca atașamente, iar tu nu ai permisiunea să atașezi fișiere pe acest canal."
 
@@ -18014,7 +18024,7 @@ msgstr "Bara de notificare \"Invitații dezactivate\""
 
 #. Button or menu action label in the invite accept modal. Keep it concise.
 #. Button or menu action label in the invites disabled modal. Keep it concise.
-#: src/features/invite/components/alerts/InvitesDisabledModal.tsx:10
+#: src/features/invite/components/alerts/InvitesDisabledModal.tsx:9
 #: src/features/invite/components/modals/InviteAcceptModal.tsx:49
 msgid "Invites paused"
 msgstr "Invitații întrerupte"
@@ -18954,7 +18964,7 @@ msgid "Link underline"
 msgstr "Subliniere link"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:195
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:219
 msgid "Link warnings"
 msgstr "Avertismente link"
 
@@ -19511,7 +19521,7 @@ msgstr "Actualizare manuală pentru desktop"
 #. Action label in the inbox popout overflow menu. Marks every inbox channel as read.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/messaging/components/popouts/InboxPopout.tsx:42
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:411
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:435
 msgid "Mark all as read"
 msgstr "Marchează tot ca citit"
 
@@ -19533,7 +19543,7 @@ msgid "Mark all inbox channels as read"
 msgstr "Marchează toate canalele din inbox ca citite"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:431
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:455
 msgid "Mark all unread inbox channels as read immediately, without asking to confirm"
 msgstr "Marchează imediat toate canalele necitite din inbox ca fiind citite, fără a cere confirmare"
 
@@ -19634,7 +19644,7 @@ msgid "Markers below slider"
 msgstr "Marcaje sub glisor"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:143
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:167
 msgid "Marketing parameters"
 msgstr "Parametri de marketing"
 
@@ -19741,7 +19751,7 @@ msgid "Mature content media gate"
 msgstr "Filtru conținut matur"
 
 #. Error message in the mature content rejected modal.
-#: src/features/moderation/components/alerts/MatureContentRejectedModal.tsx:9
+#: src/features/moderation/components/alerts/MatureContentRejectedModal.tsx:8
 msgid "Mature content not allowed"
 msgstr "Conținutul matur nu este permis"
 
@@ -19837,7 +19847,7 @@ msgid "Maximum screen share bitrate"
 msgstr "Bitrate maxim pentru partajarea ecranului"
 
 #. Short label in the max favorite memes modal.
-#: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx:33
+#: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx:34
 #: src/features/expressions/components/modals/GiftAcceptModal.tsx:220
 #: src/features/expressions/components/modals/GiftAcceptModal.tsx:277
 msgid "Maybe later"
@@ -20221,7 +20231,7 @@ msgid "Message @"
 msgstr "Mesaj @"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:279
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:303
 msgid "Message action bar"
 msgstr "Bară de acțiuni mesaje"
 
@@ -20243,7 +20253,7 @@ msgid "Message badge"
 msgstr "Pictogramă mesaj"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:311
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:335
 msgid "Message buttons"
 msgstr "Butoane mesaj"
 
@@ -20319,7 +20329,7 @@ msgid "Message history threshold updated"
 msgstr "Pragul istoricului mesajelor a fost actualizat"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:287
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:311
 msgid "Message hover"
 msgstr "Trecere cu mouse-ul peste mesaj"
 
@@ -20332,7 +20342,7 @@ msgstr "Câmp de introducere mesaj"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:367
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:391
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:194
 msgid "Message input buttons"
 msgstr "Butoane de introducere a mesajului"
@@ -20533,7 +20543,7 @@ msgid "Microphone gain"
 msgstr "Volumul microfonului"
 
 #. Title of the modal shown when microphone permission is denied. Keep tone plain.
-#: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx:13
+#: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx:12
 msgid "Microphone permission required"
 msgstr "Este necesară permisiunea pentru microfon"
 
@@ -20821,7 +20831,7 @@ msgid "More actions for {displayName}"
 msgstr "Mai multe acțiuni pentru {displayName}"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:307
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:331
 msgid "More button"
 msgstr "Butonul Mai multe"
 
@@ -21170,7 +21180,7 @@ msgstr "dezactivat"
 #: src/features/app/components/layout/sidebar_nav/GuildListItem.tsx:80
 #: src/features/app/components/layout/VoiceStateIcons.tsx:19
 #: src/features/ui/avatars/AvatarWithPresence.tsx:15
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:439
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:463
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:73
 #: src/features/voice/components/voice_participant_tile/shared.ts:75
 #: src/lib/overlay/OverlayContextMenu.tsx:24
@@ -21184,7 +21194,7 @@ msgstr "Oprit de moderatori"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:443
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:467
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:69
 msgid "Muted channels"
 msgstr "Canale dezactivate"
@@ -21539,7 +21549,7 @@ msgid "NEW"
 msgstr "NEW"
 
 #. Description text in the new account guild limit modal.
-#: src/features/guild/components/alerts/NewAccountGuildLimitModal.tsx:13
+#: src/features/guild/components/alerts/NewAccountGuildLimitModal.tsx:12
 msgid "New accounts can join up to 10 communities in the first 24 hours. Try again later."
 msgstr "Conturile noi se pot alătura la maximum 10 comunități în primele 24 de ore. Încearcă din nou mai târziu."
 
@@ -21556,20 +21566,20 @@ msgid "New category"
 msgstr "Categorie nouă"
 
 #. Short confirmation button label in advanced settings.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:144
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:148
 msgid "New communities only"
 msgstr "Doar comunități noi"
 
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:618
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:635
 msgid "New communities you join will automatically have muted channels hidden. Would you also like to apply this setting to all your existing communities?"
 msgstr "Canalele comunităților noi la care te alături vor fi ascunse automat. Vrei să aplici această setare și comunităților tale existente?"
 
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:649
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:666
 msgid "New communities you join will no longer have muted channels hidden automatically. Would you also like to show muted channels in all your existing communities?"
 msgstr "Comunitățile noi la care te alături nu vor mai avea canalele dezactivate ascunse automat. Vrei să afișezi canalele dezactivate și în toate comunitățile tale existente?"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:451
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:475
 msgid "New community muted"
 msgstr "Comunitate nouă dezactivată"
 
@@ -21902,11 +21912,11 @@ msgid "No embeds returned"
 msgstr "Niciun conținut încorporat nu a fost returnat"
 
 #. Empty-state text in the guild emoji tab.
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:46
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:47
 msgid "No emoji slots available"
 msgstr "Nu sunt sloturi disponibile pentru emojiuri"
 
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:479
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:478
 msgid "No emojis found matching your search."
 msgstr "Nu s-au găsit emojiuri care să corespundă căutării tale."
 
@@ -22157,7 +22167,7 @@ msgid "No scheduled messages"
 msgstr "Niciun mesaj programat"
 
 #. Body of the screen-share-unsupported modal shown when xdg-desktop-portal returns no capturable sources.
-#: src/features/voice/components/alerts/ScreenShareUnsupportedModal.tsx:19
+#: src/features/voice/components/alerts/ScreenShareUnsupportedModal.tsx:18
 msgid "No screens or windows were returned by the Linux screen sharing portal. Try again after checking that your desktop environment allows screen capture."
 msgstr "Nu s-au returnat ecrane sau ferestre din portalul de partajare a ecranului Linux. Încearcă din nou după ce verifici dacă mediul tău desktop permite capturarea ecranului."
 
@@ -22185,17 +22195,17 @@ msgid "No specific scopes requested."
 msgstr "Nu s-au solicitat permisiuni specifice."
 
 #. Empty-state text in the guild stickers tab.
-#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:61
+#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:58
 msgid "No sticker slots available"
 msgstr "Nu sunt sloturi disponibile pentru stickere"
 
 #. Empty-state text in the guild stickers tab.
-#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:57
+#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:54
 msgid "No stickers found"
 msgstr "Nu s-au găsit stickere"
 
 #. Empty-state text in the guild stickers tab.
-#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:70
+#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:67
 msgid "No stickers found matching your search."
 msgstr "Nu s-au găsit stickere care să se potrivească căutării tale."
 
@@ -22322,7 +22332,7 @@ msgid "Noise suppression: {noiseSuppressionLabel}"
 msgstr "Suprimare zgomot: {noiseSuppressionLabel}"
 
 #. Section heading for static emoji in community emoji settings.
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:100
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:101
 msgid "Non-animated emoji ({emojiCount})"
 msgstr "Emoji non-animate ({emojiCount})"
 
@@ -22640,7 +22650,7 @@ msgid "One or more attachments couldn't be read or uploaded. The file may have b
 msgstr "Unul sau mai multe fișiere atașate nu au putut fi citite sau încărcate. Este posibil ca fișierul să fi fost mutat sau șters. Adaugă-l din nou și reîncearcă."
 
 #. Body of the file-too-large alert for ambiguous count (single or multiple) over the per-file size limit.
-#: src/features/messaging/components/alerts/FileSizeTooLargeModal.tsx:30
+#: src/features/messaging/components/alerts/FileSizeTooLargeModal.tsx:27
 msgid "One or more files you're trying to upload exceed the maximum size limit of {maxSizeFormatted} per file."
 msgstr "Unul sau mai multe fișiere pe care încerci să le încarci depășesc limita maximă de dimensiune de {maxSizeFormatted} per fișier."
 
@@ -23373,6 +23383,11 @@ msgstr "sau trimite linkul cadoului unui prieten:"
 msgid "Ordered"
 msgstr "Ordonat"
 
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:139
+msgid "Ordered upload"
+msgstr "Încărcare ordonată"
+
 #. Error message in the channel and chat reply preview.
 #: src/features/channel/components/ReplyPreview.tsx:29
 msgid "Original message failed to load"
@@ -24078,12 +24093,12 @@ msgid "Pick the rule to review."
 msgstr "Alege regula de revizuit."
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:335
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:359
 msgid "Pick what appears when you type a colon in the message input"
 msgstr "Alege ce apare când tastezi două puncte în câmpul de mesaj"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:387
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:411
 msgid "Pick which buttons show in the message input"
 msgstr "Alegeți ce butoane să apară în câmpul de introducere a mesajelor"
 
@@ -24921,7 +24936,7 @@ msgid "Promotion or instructions encouraging self-harm or eating disorders."
 msgstr "Promovarea sau instrucțiunile care încurajează autovătămarea sau tulburările de alimentație."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:423
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:447
 msgid "Prompt"
 msgstr "Sugestie"
 
@@ -25197,7 +25212,7 @@ msgid "Quick CSS replaced from {fileName}."
 msgstr "CSS rapid înlocuit din {fileName}."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:295
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:319
 msgid "Quick reactions"
 msgstr "Reacții rapide"
 
@@ -25621,7 +25636,7 @@ msgid "Reference copied."
 msgstr "Referință copiată."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:147
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:171
 msgid "Referral parameters"
 msgstr "Parametri de recomandare"
 
@@ -25918,8 +25933,8 @@ msgstr "Elimină atașamentul"
 msgid "Remove authenticator app"
 msgstr "Eliminați aplicația de autentificare"
 
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:406
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:442
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:404
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:440
 msgid "Remove avatar"
 msgstr "Elimină avatarul"
 
@@ -26938,14 +26953,14 @@ msgid "Reverify your phone number to continue using {productName}."
 msgstr "Reverifică-ți numărul de telefon pentru a continua să folosești {productName}."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:247
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:271
 msgid "Reverse image"
 msgstr "Căutare imagine inversă"
 
 #. Generic action label that runs a reverse-image search on the selected media.
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:603
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:243
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:267
 msgid "Reverse image search"
 msgstr "Căutare imagine inversă"
 
@@ -26955,7 +26970,7 @@ msgid "Reverse image search provider"
 msgstr "Furnizor de căutare inversă a imaginii"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:275
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:299
 msgid "Reverse image search providers"
 msgstr "Furnizori pentru căutarea inversă a imaginilor"
 
@@ -27020,7 +27035,7 @@ msgid "Review the permissions {productName} uses for voice, video, screen sharin
 msgstr "Revizuiește permisiunile pe care le folosește {productName} pentru voce, video, partajarea ecranului și comenzi rapide."
 
 #. Intro text in the error modal shown after some emoji uploads fail.
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:71
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:72
 msgid "Review these files and try again with smaller or simpler images."
 msgstr "Revizuiește aceste fișiere și încearcă din nou cu imagini mai mici sau mai simple."
 
@@ -27191,7 +27206,7 @@ msgid "Role name"
 msgstr "Nume rol"
 
 #. Validation modal title when the role-edit form is submitted with an empty role name.
-#: src/features/app/components/alerts/RoleNameBlankModal.tsx:9
+#: src/features/app/components/alerts/RoleNameBlankModal.tsx:8
 msgid "Role name is required"
 msgstr "Numele rolului este obligatoriu"
 
@@ -27300,7 +27315,7 @@ msgid "Same time as you"
 msgstr "Același fus orar ca al tău"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:155
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:179
 msgid "Sanitize link"
 msgstr "Curăță linkul"
 
@@ -27421,7 +27436,7 @@ msgid "Saved media autocomplete"
 msgstr "Completare automată media salvată"
 
 #. Short label in the max favorite memes modal.
-#: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx:15
+#: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx:16
 msgid "Saved media limit reached"
 msgstr "Limită de media salvată atinsă"
 
@@ -27528,7 +27543,7 @@ msgstr "Anunțuri cititor de ecran"
 
 #. Heading in the screen-share picker when macOS screen recording permission is missing.
 #. Title of the modal shown when screen recording permission is denied. Keep tone plain.
-#: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx:21
+#: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx:20
 #: src/features/voice/components/modals/screen_share_picker_modal/ScreenSharePickerDisplayPermissionPrompt.tsx:18
 msgid "Screen recording permission required"
 msgstr "Este necesară permisiunea de înregistrare a ecranului"
@@ -27561,7 +27576,7 @@ msgid "Screen share encoder controls"
 msgstr "Controalele codificatorului pentru partajarea ecranului"
 
 #. Title of a modal shown when an active screen share stops unexpectedly.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:111
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:110
 msgctxt "screen-share"
 msgid "Screen share ended"
 msgstr "Partajarea ecranului s-a încheiat"
@@ -27648,17 +27663,17 @@ msgid "Screen sharing codec"
 msgstr "Codec partajare ecran"
 
 #. Title of the modal shown when a screen share attempt fails due to a video source error.
-#: src/features/voice/components/alerts/ScreenShareFailedModal.tsx:9
+#: src/features/voice/components/alerts/ScreenShareFailedModal.tsx:8
 msgid "Screen sharing failed"
 msgstr "Partajarea ecranului a eșuat"
 
 #. Body of the screen-share-unsupported modal. Mentions specific browsers and OSes; keep all proper nouns intact.
-#: src/features/voice/components/alerts/ScreenShareUnsupportedModal.tsx:13
+#: src/features/voice/components/alerts/ScreenShareUnsupportedModal.tsx:12
 msgid "Screen sharing is not supported on this device or browser. This feature requires a desktop browser that supports screen sharing, such as Chrome, Firefox, or Edge on Windows, macOS, or Linux."
 msgstr "Partajarea ecranului nu este acceptată pe acest dispozitiv sau browser. Această funcție necesită un browser desktop care acceptă partajarea ecranului, cum ar fi Chrome, Firefox sau Edge pe Windows, macOS sau Linux."
 
 #. Title of the modal shown when screen sharing is not supported on the current device / browser.
-#: src/features/voice/components/alerts/ScreenShareUnsupportedModal.tsx:9
+#: src/features/voice/components/alerts/ScreenShareUnsupportedModal.tsx:8
 msgid "Screen sharing not supported"
 msgstr "Partajarea ecranului nu este acceptată"
 
@@ -27698,15 +27713,15 @@ msgstr "Derulează în jos pentru a vedea toate beneficiile incluse în {premium
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the whats new modal.
 #: src/features/app/components/whats_new/WhatsNewModal.tsx:28
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:395
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:419
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:178
 msgid "Scroll to bottom"
 msgstr "Derulați în jos"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced message input preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:124
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:391
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:128
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:415
 msgid "Scroll to bottom when sending a message"
 msgstr "Derulează în jos la trimiterea unui mesaj"
 
@@ -27758,7 +27773,7 @@ msgid "Search bans"
 msgstr "Căutați interdicții"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:255
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:279
 msgid "Search by image"
 msgstr "Căutare după imagine"
 
@@ -27795,17 +27810,17 @@ msgid "Search countries…"
 msgstr "Căutați țări…"
 
 #. Button or menu action label in the guild emoji tab. Keep it concise.
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:91
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:92
 msgid "Search emojis"
 msgstr "Căutați emojiuri"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:207
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:231
 msgid "Search engine"
 msgstr "Motor de căutare"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:203
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:227
 msgid "Search engines"
 msgstr "Motoare de căutare"
 
@@ -27935,7 +27950,7 @@ msgid "Search scope: {label}"
 msgstr "Căutare în: {label}"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:215
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:239
 msgid "Search selected text"
 msgstr "Căutați textul selectat"
 
@@ -27960,7 +27975,7 @@ msgid "Search shortcuts…"
 msgstr "Căutați scurtături…"
 
 #. Button or menu action label in the guild stickers tab. Keep it concise.
-#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:49
+#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:46
 msgid "Search stickers"
 msgstr "Căutați stickere"
 
@@ -28423,7 +28438,7 @@ msgstr "Trimite un alt raport"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:383
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:407
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:170
 msgid "Send button"
 msgstr "Buton de trimitere"
@@ -28438,6 +28453,13 @@ msgstr "Trimite codul"
 #: src/features/moderation/components/report/ReportStepDetails.tsx:302
 msgid "Send DSA report"
 msgstr "Trimite raport DSA"
+
+#. Settings search entry label. Names the settings search entry in the settings UI.
+#. Short label for an advanced message input preference.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:112
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:127
+msgid "Send file messages in order"
+msgstr "Trimite mesaje de tip fișier în ordine"
 
 #. Button or menu action label in the user profile mobile sheet. Keep it concise.
 #. Button or menu action label in the user profile modal. Keep it concise.
@@ -28631,10 +28653,20 @@ msgstr "a trimis un conținut încorporat"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:399
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:423
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:182
 msgid "Sent messages"
 msgstr "Mesaje trimise"
+
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:131
+msgid "Sequential send"
+msgstr "Trimitere secvențială"
+
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:143
+msgid "Serial send"
+msgstr "Trimitere serială"
 
 #: src/features/connection/components/modals/AddConnectionModal.tsx:326
 msgid "Serve the token file"
@@ -29098,7 +29130,7 @@ msgid "Shift"
 msgstr "Schimb"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:299
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:323
 msgid "Shift expand"
 msgstr "Extindere schimbare"
 
@@ -29299,7 +29331,7 @@ msgstr "Afișează încorporări și previzualizări pentru linkuri web"
 #. Short label for an advanced message input preference.
 #. Short label in the channel and chat textarea plus menu. Keep it concise.
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx:55
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:116
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:120
 msgid "Show emoji button"
 msgstr "Afișează butonul de emoji"
 
@@ -29353,7 +29385,7 @@ msgid "Show icon when collapsed"
 msgstr "Afișează pictograma când este restrâns"
 
 #. Short confirmation button label in advanced settings.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:152
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:156
 msgid "Show in all communities"
 msgstr "Afișează în toate comunitățile"
 
@@ -29543,7 +29575,7 @@ msgstr "Afișează media salvată în completarea automată a expresiilor"
 #. Short label for an advanced message input preference.
 #. Short label in the channel and chat textarea plus menu. Keep it concise.
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx:59
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:120
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:124
 msgid "Show send button"
 msgstr "Afișează butonul de trimitere"
 
@@ -29555,7 +29587,7 @@ msgstr "Afișează conținutul spoiler la atingere"
 #. Short label for an advanced message input preference.
 #. Short label in the channel and chat textarea plus menu. Keep it concise.
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx:51
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:112
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:116
 msgid "Show stickers button"
 msgstr "Afișează butonul de stickere"
 
@@ -29860,14 +29892,14 @@ msgid "Size selection"
 msgstr "Selectare dimensiune"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:427
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:451
 msgid "Skip"
 msgstr "Omitere"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced inbox preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:128
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:407
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:132
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:431
 msgid "Skip \"Mark all as read\" confirmation"
 msgstr "Omitere confirmare \"Marchează tot ca citit\""
 
@@ -29881,7 +29913,7 @@ msgid "Skip external link warnings. Less secure."
 msgstr "Omitere avertismente linkuri externe. Mai puțin sigur."
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:199
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:223
 msgid "Skip the external link warning for all domains"
 msgstr "Omitere avertisment link extern pentru toate domeniile"
 
@@ -29954,7 +29986,7 @@ msgid "Slow attachment upload"
 msgstr "Încărcare lentă atașament"
 
 #. Short label in the new account guild limit modal. Keep it concise.
-#: src/features/guild/components/alerts/NewAccountGuildLimitModal.tsx:9
+#: src/features/guild/components/alerts/NewAccountGuildLimitModal.tsx:8
 msgid "Slow down"
 msgstr "Mai încet"
 
@@ -30004,7 +30036,7 @@ msgstr "Mod lent · așteptați {remaining}"
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #. Short label in the slowmode rate limited modal. Keep it concise.
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:249
-#: src/features/slowmode/components/alerts/SlowmodeRateLimitedModal.tsx:14
+#: src/features/slowmode/components/alerts/SlowmodeRateLimitedModal.tsx:13
 msgid "Slowmode active"
 msgstr "Modul lent activ"
 
@@ -30019,7 +30051,7 @@ msgid "Slowmode is enabled, but you are immune."
 msgstr "Modul lent este activat, dar ești imun."
 
 #. Modal body shown when slowmode blocks sending a message. {duration} is a localized short duration such as "2 minutes".
-#: src/features/slowmode/components/alerts/SlowmodeRateLimitedModal.tsx:18
+#: src/features/slowmode/components/alerts/SlowmodeRateLimitedModal.tsx:17
 msgid "Slowmode is on — wait {duration} before sending another."
 msgstr "Modul lent este activat — așteaptă {duration} înainte de a trimite un alt mesaj."
 
@@ -30087,7 +30119,7 @@ msgid "Smaller media size"
 msgstr "Dimensiune media mai mică"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:355
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:379
 msgid "Smiley face"
 msgstr "Față zâmbitoare"
 
@@ -30150,12 +30182,12 @@ msgid "Sold out"
 msgstr "Epuizat"
 
 #. Title of the error modal shown after some emoji uploads fail.
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:67
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:68
 msgid "Some emojis couldn't be added"
 msgstr "Unele emojiuri nu au putut fi adăugate"
 
 #. Body of the file-too-large alert when multiple files exceed the per-file size limit. maxSizeFormatted is the limit formatted with units.
-#: src/features/messaging/components/alerts/FileSizeTooLargeModal.tsx:21
+#: src/features/messaging/components/alerts/FileSizeTooLargeModal.tsx:18
 msgid "Some files you're trying to upload exceed the maximum size limit of {maxSizeFormatted} per file."
 msgstr "Unele fișiere pe care încerci să le încarci depășesc limita maximă de {maxSizeFormatted} per fișier."
 
@@ -30794,7 +30826,7 @@ msgid "Start searches with <0>{peoplePrefix}</0> <1>{textChannelPrefix}</1> <2>{
 msgstr "Începeți căutările cu <0>{peoplePrefix}</0> <1>{textChannelPrefix}</1> <2>{voiceChannelPrefix}</2> <3>{communityPrefix}</3> pentru a restrânge rezultatele."
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:127
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:151
 msgid "Start uploading attachments as soon as they are added to the message input"
 msgstr "Începe încărcarea atașamentelor imediat ce sunt adăugate în câmpul de mesaj"
 
@@ -30923,7 +30955,7 @@ msgid "Sticker attached to the message"
 msgstr "Sticker atașat mesajului"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:331
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:355
 msgid "Sticker autocomplete"
 msgstr "Completare automată pentru stickere"
 
@@ -30948,7 +30980,7 @@ msgid "Sticker deleted"
 msgstr "Sticker șters"
 
 #. Short label in the guild stickers tab. Keep it concise.
-#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:53
+#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:50
 msgid "Sticker density"
 msgstr "Densitate stickere"
 
@@ -30996,7 +31028,7 @@ msgstr "Limită pachet de stickere atinsă"
 msgid "Sticker packs"
 msgstr "Pachete de stickere"
 
-#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:283
+#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:278
 msgid "Sticker slots"
 msgstr "Sloturi pentru stickere"
 
@@ -31032,7 +31064,7 @@ msgid "Stickers"
 msgstr "Autocolante"
 
 #. Description in the community sticker upload section. {maxSize} is the formatted size limit.
-#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:82
+#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:79
 msgid "Stickers are saved at 320x320 pixels and must be under {maxSize}. Static images are resized and compressed automatically. Animated stickers and SVGs must already fit the limit."
 msgstr "Autocolantele sunt salvate la 320x320 pixeli și trebuie să aibă mai puțin de {maxSize}. Imaginile statice sunt redimensionate și comprimate automat. Autocolantele animate și SVG-urile trebuie să respecte deja limita."
 
@@ -31077,7 +31109,7 @@ msgid "Stop"
 msgstr "Oprește"
 
 #. Confirmation prompt in advanced settings.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:148
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:152
 msgid "Stop hiding muted channels by default?"
 msgstr "Nu mai ascunzi canalele dezactivate în mod implicit?"
 
@@ -31228,19 +31260,19 @@ msgid "Strikethrough"
 msgstr "Tăiere text"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:163
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:187
 msgid "Strip parameters"
 msgstr "Elimină parametri"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:159
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:183
 msgid "Strip tracking"
 msgstr "Elimină urmărirea"
 
 #. Label in the links tab.
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabLinksTab.tsx:43
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:131
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:155
 msgid "Strip tracking parameters from URLs"
 msgstr "Elimină parametrii de urmărire din URL-uri"
 
@@ -31403,7 +31435,7 @@ msgid "SVC mode"
 msgstr "Mod SVC"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:363
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:387
 msgid "Swap common text faces such as :) and <3 for emoji when sending messages"
 msgstr "Înlocuiește expresiile textuale obișnuite, cum ar fi :) și <3, cu emoji atunci când trimiți mesaje"
 
@@ -31754,7 +31786,7 @@ msgstr "Filă"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the FluxerTag change modal. Keep it concise.
-#: src/features/user/components/modals/FluxerTagChangeModal.tsx:60
+#: src/features/user/components/modals/FluxerTagChangeModal.tsx:61
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:73
 msgid "Tag"
 msgstr "Etichetă"
@@ -31862,7 +31894,7 @@ msgid "temporarily unavailable"
 msgstr "indisponibil temporar"
 
 #. Modal body shown when the user tries to accept a temporary invite while the realtime connection is offline.
-#: src/features/app/components/alerts/TemporaryInviteRequiresPresenceModal.tsx:13
+#: src/features/app/components/alerts/TemporaryInviteRequiresPresenceModal.tsx:12
 msgid "Temporary invites need a live connection. Check yours and try again."
 msgstr "Invitațiile temporare necesită o conexiune activă. Verifică-ți conexiunea și încearcă din nou."
 
@@ -31943,7 +31975,7 @@ msgstr "Formatare text"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:359
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:383
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:150
 msgid "Text replacement"
 msgstr "Înlocuire text"
@@ -31982,12 +32014,12 @@ msgid "Text-to-speech"
 msgstr "Text-to-speech"
 
 #. Body of the TTS-unsupported modal. Mentions specific browsers; keep Chrome, Firefox, Edge, and Brave as literal proper nouns.
-#: src/features/voice/components/alerts/TtsUnsupportedModal.tsx:13
+#: src/features/voice/components/alerts/TtsUnsupportedModal.tsx:12
 msgid "Text-to-speech is not supported by your browser. Some browsers like Brave block this feature for privacy reasons. Try using Chrome, Firefox, or Edge, or adjust your browser's privacy settings."
 msgstr "Funcția text-to-speech nu este acceptată de browserul tău. Unele browsere, cum ar fi Brave, blochează această funcție din motive de confidențialitate. Încearcă să folosești Chrome, Firefox sau Edge sau ajustează setările de confidențialitate ale browserului tău."
 
 #. Title of the modal shown when the browser does not support text-to-speech.
-#: src/features/voice/components/alerts/TtsUnsupportedModal.tsx:9
+#: src/features/voice/components/alerts/TtsUnsupportedModal.tsx:8
 msgid "Text-to-speech not supported"
 msgstr "Text-to-speech nu este acceptat"
 
@@ -32090,7 +32122,7 @@ msgid "That's everything in the queue."
 msgstr "Asta e tot ce e în așteptare."
 
 #. Description text in the FluxerTag change modal.
-#: src/features/user/components/modals/FluxerTagChangeModal.tsx:68
+#: src/features/user/components/modals/FluxerTagChangeModal.tsx:69
 msgid "The #0000 tag is reserved for Visionary subscribers. Visionary is no longer available for purchase."
 msgstr "Eticheta #0000 este rezervată abonaților Visionary. Abonamentul Visionary nu mai este disponibil pentru achiziție."
 
@@ -32148,7 +32180,7 @@ msgid "The file contains the verification token we will fetch from <0>{dnsUrl}</
 msgstr "Fișierul conține tokenul de verificare pe care îl vom prelua de la <0>{dnsUrl}</0>."
 
 #. Body of the file-too-large alert when a single file exceeds the per-file size limit.
-#: src/features/messaging/components/alerts/FileSizeTooLargeModal.tsx:26
+#: src/features/messaging/components/alerts/FileSizeTooLargeModal.tsx:23
 msgid "The file you're trying to upload exceeds the maximum size limit of {maxSizeFormatted}."
 msgstr "Fișierul pe care încerci să-l încarci depășește limita maximă de {maxSizeFormatted}."
 
@@ -32198,7 +32230,7 @@ msgid "The provided redirect_uri must use HTTP or HTTPS."
 msgstr "redirect_uri furnizat trebuie să utilizeze HTTP sau HTTPS."
 
 #. Body of a modal shown when a browser screen share track ends outside the app, for example from the browser sharing controls.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:116
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:115
 msgctxt "screen-share"
 msgid "The screen share source stopped sending video, so your screen share was stopped."
 msgstr "Sursa partajării ecranului a încetat să trimită video, astfel încât partajarea ecranului s-a oprit."
@@ -32225,7 +32257,7 @@ msgstr "Serviciul de încărcare a respins acest sticker deoarece este mai mare 
 msgid "The URL of the {productName} instance you want to sign in to."
 msgstr "Adresa URL a instanței {productName} la care vrei să te conectezi."
 
-#: src/features/user/components/modals/FluxerTagChangeModal.tsx:134
+#: src/features/user/components/modals/FluxerTagChangeModal.tsx:135
 msgid "The username <0>{fluxerTag}</0> is already taken. Continuing will reroll your tag automatically."
 msgstr "Numele de utilizator <0>{fluxerTag}</0> este deja folosit. Continuarea va schimba automat eticheta ta."
 
@@ -32370,7 +32402,7 @@ msgid "There was an error loading the invites. Try again."
 msgstr "A apărut o eroare la încărcarea invitațiilor. Încearcă din nou."
 
 #. Error message in the guild stickers tab.
-#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:78
+#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:75
 msgid "There was an error loading the stickers. Try again."
 msgstr "A apărut o eroare la încărcarea stickere-lor. Încearcă din nou."
 
@@ -32516,7 +32548,7 @@ msgid "This channel is marked for mature content and may contain material that m
 msgstr "Acest canal este marcat pentru conținut matur și poate conține materiale care ar putea fi nepotrivite pentru unii utilizatori."
 
 #. Label in the mature content rejected modal.
-#: src/features/moderation/components/alerts/MatureContentRejectedModal.tsx:13
+#: src/features/moderation/components/alerts/MatureContentRejectedModal.tsx:12
 msgid "This channel is not marked for mature content. Mature content can only be sent in channels marked for mature content. Ask a moderator to update this channel if appropriate."
 msgstr "Acest canal nu este marcat pentru conținut matur. Conținutul matur poate fi trimis doar în canalele marcate pentru conținut matur. Roagă un moderator să actualizeze acest canal, dacă este cazul."
 
@@ -32579,7 +32611,7 @@ msgid "This community has paused invites. You can try again later."
 msgstr "Această comunitate a întrerupt invitațiile. Poți încerca din nou mai târziu."
 
 #. Description text in the guild at capacity modal.
-#: src/features/guild/components/alerts/GuildAtCapacityModal.tsx:13
+#: src/features/guild/components/alerts/GuildAtCapacityModal.tsx:12
 msgid "This community has reached its maximum member limit and is not accepting new members at this time."
 msgstr "Această comunitate a atins numărul maxim de membri și nu mai acceptă alți membri în acest moment."
 
@@ -32657,7 +32689,7 @@ msgid "This doesn't look like a valid template response. Make sure you copied th
 msgstr "Acesta nu pare a fi un răspuns de șablon valid. Asigură-te că ai copiat întregul document JSON."
 
 #. Generic per-file error text shown when preparing an emoji upload fails.
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:87
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:88
 msgid "This emoji could not be prepared. Try another file or try again in a moment."
 msgstr "Acest emoji nu a putut fi pregătit. Încearcă un alt fișier sau încearcă din nou mai târziu."
 
@@ -32674,7 +32706,7 @@ msgid "This expression is gone"
 msgstr "Această expresie a dispărut"
 
 #. Modal body shown when an instance admin has temporarily disabled a feature. Keep plain.
-#: src/features/app/components/alerts/FeatureTemporarilyDisabledModal.tsx:13
+#: src/features/app/components/alerts/FeatureTemporarilyDisabledModal.tsx:12
 msgid "This feature is paused. Try again later."
 msgstr "Această funcționalitate este întreruptă. Încearcă din nou mai târziu."
 
@@ -32684,7 +32716,7 @@ msgid "This field has an error"
 msgstr "Acest câmp conține o eroare"
 
 #. Error text for animated emoji or SVG uploads that exceed the file size limit. {fileSize} and {maxSize} are formatted file sizes.
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:75
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:76
 msgid "This file is {fileSize}, over the {maxSize} limit. Animated emojis and SVGs must already be small enough to upload. Choose a smaller file or shorten the animation."
 msgstr "Acest fișier are {fileSize}, depășind limita de {maxSize}. Emoji-urile animate și SVG-urile trebuie să fie deja suficient de mici pentru a fi încărcate. Alege un fișier mai mic sau scurtează animația."
 
@@ -32833,7 +32865,7 @@ msgid "This is not the community you're looking for."
 msgstr "Aceasta nu este comunitatea pe care o cauți."
 
 #. Description text in the too many reactions modal. Keep the tone plain and specific.
-#: src/features/messaging/components/alerts/TooManyReactionsModal.tsx:13
+#: src/features/messaging/components/alerts/TooManyReactionsModal.tsx:12
 msgid "This is one heavy message. Some reactions need to be removed before you can add more."
 msgstr "Acesta este un mesaj foarte încărcat. Unele reacții trebuie eliminate înainte de a putea adăuga altele."
 
@@ -32855,7 +32887,7 @@ msgid "This is the third option description"
 msgstr "Aceasta este descrierea celei de-a treia opțiuni"
 
 #. Extra file-too-large alert sentence shown when premium upload-limit upgrades are unavailable.
-#: src/features/messaging/components/alerts/FileSizeTooLargeModal.tsx:42
+#: src/features/messaging/components/alerts/FileSizeTooLargeModal.tsx:39
 msgid "This limit is configured by your instance administrator."
 msgstr "Această limită este configurată de administratorul instanței tale."
 
@@ -33570,7 +33602,7 @@ msgid "Too many attempts. Wait a bit, then try again."
 msgstr "Prea multe încercări. Așteaptă puțin, apoi încearcă din nou."
 
 #. Error message in the max guilds modal.
-#: src/features/guild/components/alerts/MaxGuildsModal.tsx:10
+#: src/features/guild/components/alerts/MaxGuildsModal.tsx:9
 msgid "Too many communities"
 msgstr "Prea multe comunități"
 
@@ -33627,12 +33659,12 @@ msgid "Track moderator actions across the community."
 msgstr "Urmărește acțiunile moderatorilor în comunitate."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:135
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:159
 msgid "Tracking"
 msgstr "Urmărire"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:139
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:163
 msgid "Tracking parameters"
 msgstr "Parametri de urmărire"
 
@@ -33665,7 +33697,7 @@ msgstr "A transferat proprietatea către {0}."
 #. Generic action label that translates a message body.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:583
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:231
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:255
 msgid "Translate"
 msgstr "Traduceți"
 
@@ -33684,12 +33716,12 @@ msgid "Translations are automated. Help improve localization by emailing <0>{I18
 msgstr "Traducerile sunt automate. Ajută la îmbunătățirea localizării trimițând un e-mail la <0>{I18N_EMAIL}</0>."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:223
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:247
 msgid "Translator"
 msgstr "Traducător"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:227
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:251
 msgid "Translators"
 msgstr "Traducători"
 
@@ -33746,14 +33778,14 @@ msgstr "adevărat sau fals"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the links tab. Keep it concise.
 #: src/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabLinksTab.tsx:27
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:175
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:199
 msgid "Trust all"
 msgstr "Ai încredere în toate"
 
 #. Label in the links tab.
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabLinksTab.tsx:39
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:171
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:195
 msgid "Trust all external links"
 msgstr "Am încredere în toate linkurile externe"
 
@@ -33763,17 +33795,17 @@ msgid "Trust all external links?"
 msgstr "Ai încredere în toate linkurile externe?"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:179
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:203
 msgid "Trust all links"
 msgstr "Ai încredere în toate linkurile"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:187
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:211
 msgid "Trust domain"
 msgstr "Domeniu de încredere"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:183
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:207
 msgid "Trusted domains"
 msgstr "Domenii de încredere"
 
@@ -34000,7 +34032,7 @@ msgstr "Activează confidențialitatea pentru streaming"
 #. Label in the input tab.
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabInputTab.tsx:10
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:339
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:363
 msgid "Turn text smileys into emoji"
 msgstr "Activează înlocuirea emoji pentru expresiile textuale"
 
@@ -34199,8 +34231,8 @@ msgstr "Nu se poate încărca previzualizarea."
 msgid "Unable to load profile banner, badges, and bio."
 msgstr "Nu se poate încărca bannerul de profil, insignele și biografia."
 
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:272
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:328
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:271
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:327
 msgid "Unable to prepare any emojis for upload. The following errors occurred:"
 msgstr "Nu s-a putut pregăti niciun emoji pentru încărcare. Au apărut următoarele erori:"
 
@@ -34932,7 +34964,7 @@ msgid "Unsupported icon format"
 msgstr "Format pictogramă neacceptat"
 
 #. Title of the error modal shown when an unsupported sticker file type is selected.
-#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:87
+#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:84
 msgid "Unsupported sticker file"
 msgstr "Fișier autocolant neacceptat"
 
@@ -35135,8 +35167,8 @@ msgstr "Actualizează acum"
 
 #. Short label in the max bookmarks modal. Preserve {premiumProductName}; it is inserted by code.
 #. Short label in the max favorite memes modal. Preserve {premiumProductName}; it is inserted by code.
-#: src/features/app/components/alerts/MaxBookmarksModal.tsx:35
-#: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx:29
+#: src/features/app/components/alerts/MaxBookmarksModal.tsx:36
+#: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx:30
 msgid "Upgrade to {premiumProductName}"
 msgstr "Treci la {premiumProductName}"
 
@@ -35208,7 +35240,7 @@ msgstr "Încarcă un sunet personalizat pentru {label}"
 msgid "Upload directly to {displayName}"
 msgstr "Încarcă direct la {displayName}"
 
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:454
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:453
 msgid "Upload emoji"
 msgstr "Încarcă emoji"
 
@@ -35252,7 +35284,7 @@ msgstr "Încarcă cadrele de previzualizare pentru partajarea ecranului."
 msgid "Upload sound"
 msgstr "Încarcă sunet"
 
-#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:286
+#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:281
 msgid "Upload sticker"
 msgstr "Încarcă un sticker"
 
@@ -35857,7 +35889,7 @@ msgstr "utilizator, bot sau webhook"
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:952
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:567
-#: src/features/user/components/modals/FluxerTagChangeModal.tsx:217
+#: src/features/user/components/modals/FluxerTagChangeModal.tsx:218
 #: src/features/user/components/modals/tabs/my_profile_tab/MyProfileTabUsernameSection.tsx:55
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:53
 msgid "Username"
@@ -35869,7 +35901,7 @@ msgid "Username (optional)"
 msgstr "Nume de utilizator (opțional)"
 
 #. Short label in the FluxerTag change modal. Keep it concise.
-#: src/features/user/components/modals/FluxerTagChangeModal.tsx:39
+#: src/features/user/components/modals/FluxerTagChangeModal.tsx:40
 msgid "Username already taken"
 msgstr "Nume de utilizator deja folosit"
 
@@ -35899,11 +35931,11 @@ msgid "Username must be at most 32 characters"
 msgstr "Numele de utilizator trebuie să aibă maximum 32 de caractere"
 
 #. Short label in the FluxerTag change modal. Keep it concise.
-#: src/features/user/components/modals/FluxerTagChangeModal.tsx:43
+#: src/features/user/components/modals/FluxerTagChangeModal.tsx:44
 msgid "Username updated"
 msgstr "Nume de utilizator actualizat"
 
-#: src/features/user/components/modals/FluxerTagChangeModal.tsx:210
+#: src/features/user/components/modals/FluxerTagChangeModal.tsx:211
 msgid "Usernames can only contain letters (a-z, A-Z), numbers (0-9), and underscores. Usernames are case-insensitive."
 msgstr "Numele de utilizator pot conține doar litere (a-z, A-Z), cifre (0-9) și cratime. Numele de utilizator nu țin cont de majuscule/minuscule."
 
@@ -36996,7 +37028,7 @@ msgid "Volume sliders"
 msgstr "Controale volum"
 
 #. Description text in the message delete too quick modal. Keep the tone plain and specific.
-#: src/features/messaging/components/alerts/MessageDeleteTooQuickModal.tsx:13
+#: src/features/messaging/components/alerts/MessageDeleteTooQuickModal.tsx:12
 msgid "Wait a moment before deleting more messages."
 msgstr "Așteaptă un moment înainte să ștergi mai multe mesaje."
 
@@ -37148,7 +37180,7 @@ msgstr "Nu am putut trimite mesajul mai departe acum."
 msgid "We couldn't import that theme library file."
 msgstr "Nu am putut importa fișierul bibliotecii de teme."
 
-#: src/features/messaging/components/alerts/AttachmentUploadConnectivityModal.tsx:24
+#: src/features/messaging/components/alerts/AttachmentUploadConnectivityModal.tsx:23
 msgid "We couldn't reach the attachment upload service. {PRODUCT_NAME} can fall back to the standard upload path for messages up to {fallbackSizeFormatted} total, but these attachments exceed that combined limit and can't be sent until connectivity is restored. Try again later or contact <0>{SUPPORT_EMAIL}</0> if this keeps happening."
 msgstr "Nu am putut contacta serviciul de încărcare a atașamentelor. {PRODUCT_NAME} poate reveni la calea standard de încărcare pentru mesaje de până la {fallbackSizeFormatted} în total, dar aceste atașamente depășesc limita combinată și nu pot fi trimise până la restabilirea conectivității. Încearcă din nou mai târziu sau contactează <0>{SUPPORT_EMAIL}</0> dacă problema persistă."
 
@@ -37191,7 +37223,7 @@ msgid "We recommend saving these codes now so that you don't get locked out of y
 msgstr "Îți recomandăm să salvezi aceste coduri acum, ca să nu-ți pierzi accesul la cont."
 
 #. Error text for static emoji uploads that still exceed the file size limit after resizing. {fileSize} and {maxSize} are formatted file sizes.
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:81
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:82
 msgid "We resized and compressed this emoji to 128x128 pixels, but it is still {fileSize}. The limit is {maxSize}. Try a simpler image, fewer colors, or a smaller source file."
 msgstr "Am redimensionat și am comprimat acest emoji la 128x128 pixeli, dar are în continuare {fileSize}. Limita este {maxSize}. Încearcă o imagine mai simplă, mai puține culori sau un fișier sursă mai mic."
 
@@ -37311,7 +37343,7 @@ msgid "Web authentication"
 msgstr "Autentificare web"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:211
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:235
 msgid "Web search"
 msgstr "Căutare pe web"
 
@@ -37657,8 +37689,8 @@ msgstr "Uau, e o apocalipsă a tastatului"
 
 #. Label in the too many attachments modal.
 #. Label in the too many reactions modal.
-#: src/features/messaging/components/alerts/TooManyAttachmentsModal.tsx:10
-#: src/features/messaging/components/alerts/TooManyReactionsModal.tsx:9
+#: src/features/messaging/components/alerts/TooManyAttachmentsModal.tsx:9
+#: src/features/messaging/components/alerts/TooManyReactionsModal.tsx:8
 msgid "Whoa, this is heavy"
 msgstr "Uau, e prea mult"
 
@@ -37741,7 +37773,7 @@ msgid "With {PREMIUM_PRODUCT_NAME}, you can use animated avatars ({ANIMATED_AVAT
 msgstr "Cu {PREMIUM_PRODUCT_NAME}, poți folosi avatare animate ({ANIMATED_AVATAR_FORMATS}), bannere de profil, poți personaliza eticheta și poți debloca multe alte avantaje {PREMIUM_PRODUCT_NAME}."
 
 #. Premium upsell sentence in the file-too-large alert. premiumProductName is the paid product name; fileSizeLimit is a localized file size.
-#: src/features/messaging/components/alerts/FileSizeTooLargeModal.tsx:46
+#: src/features/messaging/components/alerts/FileSizeTooLargeModal.tsx:43
 msgid "With {premiumProductName}, your per-file upload limit increases to {fileSizeLimit}, plus animated avatars, longer messages, and many other {premiumProductName} perks."
 msgstr "Cu {premiumProductName}, limita ta de încărcare per fișier crește la {fileSizeLimit}, plus avatare animate, mesaje mai lungi și multe alte avantaje {premiumProductName}."
 
@@ -37871,7 +37903,7 @@ msgid "You are about to transfer ownership of this community to <0>{0}</0>. This
 msgstr "Ești pe cale să transferi proprietatea acestei comunități către <0>{0}</0>. Această acțiune este <1>ireversibilă</1> și vei pierde toate privilegiile de proprietar."
 
 #. Error message in the user banned from guild modal. Keep the tone plain and specific.
-#: src/features/moderation/components/alerts/UserBannedFromGuildModal.tsx:13
+#: src/features/moderation/components/alerts/UserBannedFromGuildModal.tsx:12
 msgid "You are banned from this community and cannot join."
 msgstr "Ai fost interzis din această comunitate și nu te poți alătura."
 
@@ -37994,7 +38026,7 @@ msgid "You can't add new reactions while you're on timeout."
 msgstr "Nu poți adăuga reacții noi cât timp ești în pauză."
 
 #. Description text in the attachment permission denied modal. Keep the tone plain and specific.
-#: src/features/messaging/components/alerts/AttachmentPermissionDeniedModal.tsx:20
+#: src/features/messaging/components/alerts/AttachmentPermissionDeniedModal.tsx:17
 msgid "You can't attach files in this channel."
 msgstr "Nu poți atașa fișiere pe acest canal."
 
@@ -38180,11 +38212,11 @@ msgstr "Nu poți elimina această permisiune, deoarece te-ar elimina și pe tine
 msgid "You changed your nickname in this community from **{previousNickname}** to **{newNickname}**."
 msgstr "Ți-ai schimbat porecla în această comunitate din **{previousNickname}** în **{newNickname}**."
 
-#: src/features/user/components/modals/FluxerTagChangeModal.tsx:362
+#: src/features/user/components/modals/FluxerTagChangeModal.tsx:367
 msgid "You changed your tag while on {PREMIUM_PRODUCT_NAME}. It will reroll randomly when your {PREMIUM_PRODUCT_NAME} expires on <0>{premiumExpiresAtLabel}</0>, unless it renews."
 msgstr "Ți-ai schimbat eticheta în timp ce erai pe {PREMIUM_PRODUCT_NAME}. Aceasta se va reinițializa aleatoriu când {PREMIUM_PRODUCT_NAME} expiră pe <0>{premiumExpiresAtLabel}</0>, dacă nu se reînnoiește."
 
-#: src/features/user/components/modals/FluxerTagChangeModal.tsx:369
+#: src/features/user/components/modals/FluxerTagChangeModal.tsx:374
 msgid "You changed your tag while on {PREMIUM_PRODUCT_NAME}. It will reroll randomly when your {PREMIUM_PRODUCT_NAME} expires, unless it renews."
 msgstr "Ți-ai schimbat eticheta în timp ce erai la {PREMIUM_PRODUCT_NAME}. Aceasta se va reatribui aleatoriu când expiră abonamentul tău {PREMIUM_PRODUCT_NAME}, cu excepția cazului în care se reînnoiește."
 
@@ -38502,17 +38534,17 @@ msgid "You're already Visionary"
 msgstr "Ești deja Vizionar"
 
 #. Modal body shown when the bookmarks limit is reached on a self-hosted instance with no upgrade path. Limit count is interpolated.
-#: src/features/app/components/alerts/MaxBookmarksModal.tsx:19
+#: src/features/app/components/alerts/MaxBookmarksModal.tsx:20
 msgid "You're at {bookmarksText} — your instance admin sets this cap. Remove one to add another."
 msgstr "Ai atins limita de {bookmarksText} — administratorul instanței tale a setat această limită. Șterge unul pentru a adăuga altul."
 
 #. Modal body shown when the bookmarks limit is reached and Plutonium is unavailable on this instance. Limit count is interpolated.
-#: src/features/app/components/alerts/MaxBookmarksModal.tsx:24
+#: src/features/app/components/alerts/MaxBookmarksModal.tsx:25
 msgid "You're at {bookmarksText}. Remove one to add another."
 msgstr "Ai atins limita de {bookmarksText}. Șterge unul pentru a adăuga altul."
 
 #. Modal body shown when the favorite-memes limit is reached on a self-hosted instance with no Plutonium upgrade path. Limit text is interpolated.
-#: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx:19
+#: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx:20
 msgid "You're at the cap of {freeItemsText} — your instance admin sets this limit."
 msgstr "Ai atins limita de {freeItemsText} — administratorul instanței tale setează această limită."
 
@@ -38524,12 +38556,12 @@ msgid "You're at the creation limit. Delete one to create another."
 msgstr "Ai atins limita de creare. Șterge unul pentru a crea altul."
 
 #. Modal body shown when the free bookmarks limit is reached and Plutonium would increase it. Free and Plutonium limits are interpolated.
-#: src/features/app/components/alerts/MaxBookmarksModal.tsx:29
+#: src/features/app/components/alerts/MaxBookmarksModal.tsx:30
 msgid "You're at the free cap of {bookmarksText}. {premiumProductName} bumps you up to {premiumBookmarksText} — or remove one to add another."
 msgstr "Ai atins limita gratuită de {bookmarksText}. {premiumProductName} te ridică la {premiumBookmarksText} — sau șterge unul pentru a adăuga altul."
 
 #. Modal body shown when the free favorite-memes limit is reached and Plutonium would increase it. Free and Plutonium limits are interpolated.
-#: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx:24
+#: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx:25
 msgid "You're at the free cap of {freeItemsText}. {premiumProductName} bumps you up to {premiumItemsText}."
 msgstr "Ai atins limita gratuită de {freeItemsText}. {premiumProductName} te ridică la {premiumItemsText}."
 
@@ -38541,7 +38573,7 @@ msgid "You're at the install limit. Remove one to add another."
 msgstr "Ai atins limita de instalări. Șterge una pentru a adăuga alta."
 
 #. Short label in the user banned from guild modal. Keep it concise. Keep the tone plain and specific.
-#: src/features/moderation/components/alerts/UserBannedFromGuildModal.tsx:9
+#: src/features/moderation/components/alerts/UserBannedFromGuildModal.tsx:8
 msgid "You're banned"
 msgstr "Ai fost interzis"
 
@@ -38566,7 +38598,7 @@ msgid "You're deafened"
 msgstr "Ești în modul „nu aud”."
 
 #. Label in the message delete too quick modal. Keep the tone plain and specific.
-#: src/features/messaging/components/alerts/MessageDeleteTooQuickModal.tsx:9
+#: src/features/messaging/components/alerts/MessageDeleteTooQuickModal.tsx:8
 msgid "You're deleting messages too quickly"
 msgstr "Ștergi mesajele prea repede"
 
@@ -38725,12 +38757,12 @@ msgid "You've reached the group DM limit"
 msgstr "Ați atins limita de DM-uri de grup"
 
 #. Emoji upload limit message in community emoji settings. Do not suggest that communities can be upgraded.
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:50
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:51
 msgid "You've reached the maximum number of emojis. Delete some existing emojis to make room."
 msgstr "Ați atins numărul maxim de emojiuri. Ștergeți câteva emojiuri existente pentru a face loc."
 
 #. Sticker upload limit message in community sticker settings. Do not suggest that communities can be upgraded.
-#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:65
+#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:62
 msgid "You've reached the maximum number of stickers. Delete some existing stickers to make room."
 msgstr "Ați atins numărul maxim de stickere. Ștergeți stickere existente pentru a face loc altora."
 
@@ -38803,7 +38835,7 @@ msgid "Your account requires multi-factor authentication, but no supported metho
 msgstr "Contul tău necesită autentificare multi-factor, dar nu sunt configurate metode acceptate pe acest dispozitiv. Conectează-te pe un dispozitiv cu aplicația de autentificare sau cu cheia de securitate, sau contactează asistența."
 
 #. Modal body shown when the safety system blocks the requested action. Keep plain and calm; offer support path.
-#: src/features/auth/components/ContentBlockedHandler.tsx:15
+#: src/features/auth/components/ContentBlockedHandler.tsx:14
 msgid "Your action could not be completed because it was flagged by our safety systems. If you believe this is a mistake, please contact support."
 msgstr "Acțiunea ta nu a putut fi finalizată deoarece a fost semnalată de sistemele noastre de siguranță. Dacă crezi că este o greșeală, te rugăm să contactezi asistența."
 
@@ -38928,12 +38960,12 @@ msgid "Your IP address has been successfully authorized."
 msgstr "Adresa ta IP a fost autorizată cu succes."
 
 #. Error message in the user ip banned from guild modal. Keep the tone plain and specific.
-#: src/features/moderation/components/alerts/UserIpBannedFromGuildModal.tsx:13
+#: src/features/moderation/components/alerts/UserIpBannedFromGuildModal.tsx:12
 msgid "Your IP address is banned from this community and you cannot join."
 msgstr "Adresa ta IP a fost blocată din această comunitate și nu te poți alătura."
 
 #. Label in the user ip banned from guild modal. Keep the tone plain and specific.
-#: src/features/moderation/components/alerts/UserIpBannedFromGuildModal.tsx:9
+#: src/features/moderation/components/alerts/UserIpBannedFromGuildModal.tsx:8
 msgid "Your IP is banned"
 msgstr "IP-ul tău este blocat"
 

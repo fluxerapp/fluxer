@@ -6224,7 +6224,7 @@
 							"type": "integer",
 							"minimum": 0,
 							"maximum": 9007199254740991,
-							"format": "int64",
+							"format": "int53",
 							"description": "Pagination offset"
 						}
 					}
@@ -27115,8 +27115,8 @@
 					"size": {
 						"type": "integer",
 						"minimum": 0,
-						"maximum": 2147483647,
-						"format": "int32",
+						"maximum": 9007199254740991,
+						"format": "int53",
 						"description": "The size of the attachment in bytes"
 					},
 					"url": {"anyOf": [{"type": "string"}, {"type": "null"}], "description": "The URL of the attachment"},
@@ -27900,7 +27900,7 @@
 						"type": "string",
 						"description": "Temporary upload key to reference in message send payloads"
 					},
-					"file_size": {"$ref": "#/components/schemas/Int32Type"},
+					"file_size": {"$ref": "#/components/schemas/NonNegativeSafeIntegerType"},
 					"content_type": {"type": "string", "description": "Expected MIME type for this upload"},
 					"upload_mode": {"type": "string", "enum": ["singlepart"]},
 					"upload_url": {
@@ -27910,6 +27910,7 @@
 				},
 				"required": ["id", "filename", "upload_filename", "file_size", "content_type", "upload_mode", "upload_url"]
 			},
+			"NonNegativeSafeIntegerType": {"type": "integer", "minimum": 0, "maximum": 9007199254740991, "format": "int53"},
 			"MultipartPresignedAttachmentUploadResponseItem": {
 				"type": "object",
 				"properties": {
@@ -27919,14 +27920,14 @@
 						"type": "string",
 						"description": "Temporary upload key to reference in message send payloads"
 					},
-					"file_size": {"$ref": "#/components/schemas/Int32Type"},
+					"file_size": {"$ref": "#/components/schemas/NonNegativeSafeIntegerType"},
 					"content_type": {"type": "string", "description": "Expected MIME type for this upload"},
 					"upload_mode": {"type": "string", "enum": ["multipart"]},
 					"upload_id": {
 						"type": "string",
 						"description": "S3 multipart upload identifier; required to complete the upload"
 					},
-					"part_size": {"$ref": "#/components/schemas/Int32Type"},
+					"part_size": {"$ref": "#/components/schemas/NonNegativeSafeIntegerType"},
 					"parts": {
 						"type": "array",
 						"items": {
@@ -27972,7 +27973,7 @@
 				"properties": {
 					"id": {"$ref": "#/components/schemas/Int32Type"},
 					"filename": {"type": "string", "description": "The name of the file that will be uploaded"},
-					"file_size": {"$ref": "#/components/schemas/Int32Type"},
+					"file_size": {"$ref": "#/components/schemas/NonNegativeSafeIntegerType"},
 					"content_type": {"type": "string", "description": "MIME type the client will upload"}
 				},
 				"required": ["id", "filename", "file_size", "content_type"]
@@ -28482,7 +28483,7 @@
 								"type": "string",
 								"pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:?\\d{2})?$"
 							},
-							{"type": "integer", "minimum": 0, "maximum": 8640000000000000, "format": "int64"},
+							{"type": "integer", "minimum": 0, "maximum": 8640000000000000, "format": "int53"},
 							{"type": "null"}
 						],
 						"description": "ISO8601 timestamp for the embed"
@@ -28599,7 +28600,7 @@
 						"type": "string",
 						"description": "Temporary upload key returned by the attachment upload endpoint"
 					},
-					"file_size": {"$ref": "#/components/schemas/Int32Type"},
+					"file_size": {"$ref": "#/components/schemas/NonNegativeSafeIntegerType"},
 					"content_type": {"type": "string", "description": "MIME type of the uploaded file"}
 				},
 				"required": ["id", "filename", "upload_filename", "file_size", "content_type"]
@@ -29234,7 +29235,13 @@
 						"anyOf": [{"type": "string"}, {"type": "null"}],
 						"description": "Hash of the file content for deduplication"
 					},
-					"size": {"type": "number", "description": "File size in bytes"},
+					"size": {
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 9007199254740991,
+						"format": "int53",
+						"description": "File size in bytes"
+					},
 					"width": {
 						"anyOf": [{"type": "integer", "format": "int53"}, {"type": "null"}],
 						"description": "Width of the image or video in pixels"
@@ -29311,7 +29318,7 @@
 					},
 					"embed_index": {
 						"anyOf": [
-							{"type": "integer", "minimum": 0, "maximum": 9007199254740991, "format": "int64"},
+							{"type": "integer", "minimum": 0, "maximum": 9007199254740991, "format": "int53"},
 							{"type": "null"}
 						],
 						"description": "Index of the message embed to save as a meme"
@@ -29529,14 +29536,14 @@
 					},
 					"started_at_ms": {
 						"anyOf": [
-							{"type": "integer", "minimum": 0, "maximum": 9007199254740991, "format": "int64"},
+							{"type": "integer", "minimum": 0, "maximum": 9007199254740991, "format": "int53"},
 							{"type": "null"}
 						],
 						"description": "Session start Unix timestamp in milliseconds"
 					},
 					"expires_at_ms": {
 						"anyOf": [
-							{"type": "integer", "minimum": 0, "maximum": 9007199254740991, "format": "int64"},
+							{"type": "integer", "minimum": 0, "maximum": 9007199254740991, "format": "int53"},
 							{"type": "null"}
 						],
 						"description": "Session expiration Unix timestamp in milliseconds"
@@ -29605,7 +29612,7 @@
 						"type": "integer",
 						"minimum": 0,
 						"maximum": 9007199254740991,
-						"format": "int64",
+						"format": "int53",
 						"description": "Unix timestamp in milliseconds when this heartbeat expires"
 					}
 				},
@@ -30183,7 +30190,7 @@
 					"explicit_content_filter": {"type": "number", "description": "The explicit content filter level"},
 					"system_channel_id": {
 						"oneOf": [
-							{"type": "integer", "minimum": 0, "maximum": 9007199254740991, "format": "int64"},
+							{"type": "integer", "minimum": 0, "maximum": 9007199254740991, "format": "int53"},
 							{"type": "string"},
 							{"type": "null"}
 						],
@@ -30209,7 +30216,7 @@
 				"properties": {
 					"id": {
 						"oneOf": [
-							{"type": "integer", "minimum": 0, "maximum": 9007199254740991, "format": "int64"},
+							{"type": "integer", "minimum": 0, "maximum": 9007199254740991, "format": "int53"},
 							{"type": "string"}
 						],
 						"description": "The template-local role ID"
@@ -30218,14 +30225,14 @@
 					"permissions": {
 						"oneOf": [
 							{"type": "string"},
-							{"type": "integer", "minimum": 0, "maximum": 9007199254740991, "format": "int64"}
+							{"type": "integer", "minimum": 0, "maximum": 9007199254740991, "format": "int53"}
 						],
 						"description": "The permissions bitfield as a string (legacy)"
 					},
 					"permissions_new": {
 						"oneOf": [
 							{"type": "string"},
-							{"type": "integer", "minimum": 0, "maximum": 9007199254740991, "format": "int64"}
+							{"type": "integer", "minimum": 0, "maximum": 9007199254740991, "format": "int53"}
 						],
 						"description": "The permissions bitfield as a string (preferred)"
 					},
@@ -30244,7 +30251,7 @@
 				"properties": {
 					"id": {
 						"oneOf": [
-							{"type": "integer", "minimum": 0, "maximum": 9007199254740991, "format": "int64"},
+							{"type": "integer", "minimum": 0, "maximum": 9007199254740991, "format": "int53"},
 							{"type": "string"}
 						],
 						"description": "The template-local channel ID"
@@ -30255,7 +30262,7 @@
 					"position": {"type": "number", "description": "The position of the channel"},
 					"parent_id": {
 						"oneOf": [
-							{"type": "integer", "minimum": 0, "maximum": 9007199254740991, "format": "int64"},
+							{"type": "integer", "minimum": 0, "maximum": 9007199254740991, "format": "int53"},
 							{"type": "string"},
 							{"type": "null"}
 						],
@@ -30279,7 +30286,7 @@
 							"properties": {
 								"id": {
 									"oneOf": [
-										{"type": "integer", "minimum": 0, "maximum": 9007199254740991, "format": "int64"},
+										{"type": "integer", "minimum": 0, "maximum": 9007199254740991, "format": "int53"},
 										{"type": "string"}
 									],
 									"description": "The ID of the role or user for this overwrite"
@@ -30291,14 +30298,14 @@
 								"allow": {
 									"oneOf": [
 										{"type": "string"},
-										{"type": "integer", "minimum": 0, "maximum": 9007199254740991, "format": "int64"}
+										{"type": "integer", "minimum": 0, "maximum": 9007199254740991, "format": "int53"}
 									],
 									"description": "The allowed permissions bitfield as a string"
 								},
 								"deny": {
 									"oneOf": [
 										{"type": "string"},
-										{"type": "integer", "minimum": 0, "maximum": 9007199254740991, "format": "int64"}
+										{"type": "integer", "minimum": 0, "maximum": 9007199254740991, "format": "int53"}
 									],
 									"description": "The denied permissions bitfield as a string"
 								}
@@ -30960,7 +30967,7 @@
 							"type": "integer",
 							"minimum": 0,
 							"maximum": 9007199254740991,
-							"format": "int64",
+							"format": "int53",
 							"description": "New position for the channel"
 						},
 						"parent_id": {
@@ -31336,7 +31343,7 @@
 						"type": "integer",
 						"minimum": 0,
 						"maximum": 9007199254740991,
-						"format": "int64",
+						"format": "int53",
 						"description": "Number of results to skip for pagination"
 					},
 					"role_ids": {
@@ -33959,7 +33966,7 @@
 						"type": "integer",
 						"minimum": 1,
 						"maximum": 9007199254740991,
-						"format": "int64",
+						"format": "int53",
 						"description": "Page number for pagination (ignored when cursor is provided)"
 					},
 					"cursor": {
@@ -35434,7 +35441,7 @@
 												"type": "string",
 												"pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:?\\d{2})?$"
 											},
-											{"type": "integer", "minimum": 0, "maximum": 8640000000000000, "format": "int64"},
+											{"type": "integer", "minimum": 0, "maximum": 8640000000000000, "format": "int53"},
 											{"type": "null"}
 										],
 										"description": "When the mute expires"
@@ -35479,7 +35486,7 @@
 																	"type": "string",
 																	"pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:?\\d{2})?$"
 																},
-																{"type": "integer", "minimum": 0, "maximum": 8640000000000000, "format": "int64"},
+																{"type": "integer", "minimum": 0, "maximum": 8640000000000000, "format": "int53"},
 																{"type": "null"}
 															],
 															"description": "When the mute expires"
@@ -35530,7 +35537,7 @@
 																		"type": "string",
 																		"pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:?\\d{2})?$"
 																	},
-																	{"type": "integer", "minimum": 0, "maximum": 8640000000000000, "format": "int64"},
+																	{"type": "integer", "minimum": 0, "maximum": 8640000000000000, "format": "int53"},
 																	{"type": "null"}
 																],
 																"description": "When the mute expires"
@@ -36416,7 +36423,7 @@
 						"type": "integer",
 						"maximum": 9007199254740991,
 						"exclusiveMinimum": 0,
-						"format": "int64"
+						"format": "int53"
 					}
 				}
 			},
@@ -36977,7 +36984,7 @@
 								"type": "string",
 								"pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:?\\d{2})?$"
 							},
-							{"type": "integer", "minimum": 0, "maximum": 8640000000000000, "format": "int64"},
+							{"type": "integer", "minimum": 0, "maximum": 8640000000000000, "format": "int53"},
 							{"type": "null"}
 						],
 						"description": "When status resets"
@@ -37157,7 +37164,7 @@
 								"type": "string",
 								"pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:?\\d{2})?$"
 							},
-							{"type": "integer", "minimum": 0, "maximum": 8640000000000000, "format": "int64"},
+							{"type": "integer", "minimum": 0, "maximum": 8640000000000000, "format": "int53"},
 							{"type": "null"}
 						],
 						"description": "When the custom status expires"
@@ -37423,7 +37430,7 @@
 									"description": "Description for the attachment (max 4096 characters)"
 								},
 								"content_type": {"type": "string", "description": "MIME type of the file"},
-								"size": {"type": "integer", "format": "int53", "description": "Size of the file in bytes"},
+								"size": {"$ref": "#/components/schemas/NonNegativeSafeIntegerType"},
 								"url": {"type": "string", "description": "URL of the attachment"},
 								"proxy_url": {"type": "string", "description": "Proxied URL of the attachment"},
 								"height": {"type": "integer", "format": "int53", "description": "Height of the image/video in pixels"},
@@ -37896,7 +37903,7 @@
 									"type": "integer",
 									"minimum": 0,
 									"maximum": 9007199254740991,
-									"format": "int64",
+									"format": "int53",
 									"description": "Unix timestamp for the attachment footer"
 								},
 								"author_name": {"type": "string", "description": "Name of the author"},

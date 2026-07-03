@@ -35,6 +35,7 @@ import {getPurgeQueue, getStorageService} from '../../middleware/ServiceSingleto
 import {getMessageSearchService} from '../../SearchFactory';
 import {deleteMessageSearchDocuments} from '../../search/MessageSearchIndexCleanup';
 import {searchExistingMessages} from '../../search/MessageSearchResultReconciler';
+import {assertSafeByteSize} from '../../utils/ByteSizeUtils';
 import type {AdminAuditService} from './AdminAuditService';
 
 interface AdminMessageServiceDeps {
@@ -330,7 +331,7 @@ export class AdminMessageService {
 					content_type: attachment.content_type ?? null,
 					width: attachment.width ?? null,
 					height: attachment.height ?? null,
-					size: attachment.size ?? null,
+					size: attachment.size == null ? null : assertSafeByteSize(attachment.size, 'admin message attachment size'),
 					ncmec_status: attachmentStatuses.get(attachment.id)?.status ?? 'not_submitted',
 					ncmec_report_id: attachmentStatuses.get(attachment.id)?.ncmec_report_id ?? null,
 					ncmec_failure_reason: attachmentStatuses.get(attachment.id)?.failure_reason ?? null,

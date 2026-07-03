@@ -9,6 +9,7 @@ import {
 	Int32Type,
 	Int64StringType,
 	Int64Type,
+	NonNegativeSafeIntegerType,
 	normalizeString,
 	normalizeWhitespace,
 	removeStandaloneSurrogates,
@@ -210,6 +211,29 @@ describe('Int32Type', () => {
 	});
 	it('rejects values exceeding int32 max', () => {
 		const result = Int32Type.safeParse(2147483648);
+		expect(result.success).toBe(false);
+	});
+});
+
+describe('NonNegativeSafeIntegerType', () => {
+	it('accepts maximum JavaScript safe integer', () => {
+		const result = NonNegativeSafeIntegerType.safeParse(Number.MAX_SAFE_INTEGER);
+		expect(result.success).toBe(true);
+	});
+	it('accepts values above int32', () => {
+		const result = NonNegativeSafeIntegerType.safeParse(2147483648);
+		expect(result.success).toBe(true);
+	});
+	it('rejects unsafe JavaScript integers', () => {
+		const result = NonNegativeSafeIntegerType.safeParse(Number.MAX_SAFE_INTEGER + 1);
+		expect(result.success).toBe(false);
+	});
+	it('rejects negative values', () => {
+		const result = NonNegativeSafeIntegerType.safeParse(-1);
+		expect(result.success).toBe(false);
+	});
+	it('rejects non-integer values', () => {
+		const result = NonNegativeSafeIntegerType.safeParse(1.5);
 		expect(result.success).toBe(false);
 	});
 });

@@ -38,6 +38,7 @@ import type {IARMessageContext, IARSubmission} from '../../report/IReportReposit
 import type {ReportService} from '../../report/ReportService';
 import {getReportSearchService} from '../../SearchFactory';
 import type {UserChannelService} from '../../user/services/UserChannelService';
+import {assertSafeByteSize} from '../../utils/ByteSizeUtils';
 import type {AdminAuditService} from './AdminAuditService';
 
 interface AdminReportServiceDeps {
@@ -580,7 +581,7 @@ export class AdminReportService {
 				content_type: attachment.content_type ?? null,
 				width: attachment.width ?? null,
 				height: attachment.height ?? null,
-				size: attachment.size != null ? Number(attachment.size) : null,
+				size: attachment.size != null ? assertSafeByteSize(attachment.size, 'admin report attachment size') : null,
 				ncmec_status: attachmentStatusesById.get(attachment.attachment_id.toString())?.status ?? 'not_submitted',
 				ncmec_report_id: attachmentStatusesById.get(attachment.attachment_id.toString())?.ncmec_report_id ?? null,
 				ncmec_failure_reason: attachmentStatusesById.get(attachment.attachment_id.toString())?.failure_reason ?? null,

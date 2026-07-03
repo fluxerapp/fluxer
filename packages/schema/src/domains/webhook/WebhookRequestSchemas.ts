@@ -21,6 +21,7 @@ import {
 	createStringType,
 	createUnboundedStringType,
 	Int32Type,
+	NonNegativeSafeIntegerType,
 	SnowflakeType,
 } from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {URLType} from '@fluxer/schema/src/primitives/UrlValidators';
@@ -68,7 +69,7 @@ const WebhookAttachmentRequest = z.object({
 	filename: createStringType(1, 1024).optional().describe('Name of the file (1-1024 characters)'),
 	description: createStringType(1, 4096).optional().describe('Description for the attachment (max 4096 characters)'),
 	content_type: createStringType(1, 256).optional().describe('MIME type of the file'),
-	size: z.number().int().optional().describe('Size of the file in bytes'),
+	size: NonNegativeSafeIntegerType.optional().describe('Size of the file in bytes'),
 	url: URLType.optional().describe('URL of the attachment'),
 	proxy_url: URLType.optional().describe('Proxied URL of the attachment'),
 	height: z.number().int().optional().describe('Height of the image/video in pixels'),

@@ -15,6 +15,20 @@ pub struct MediaProxyUrlBuilder {
 }
 
 impl MediaProxyUrlBuilder {
+    #[cfg(test)]
+    pub(crate) fn for_test(endpoint: &str, secret_key: &str) -> Self {
+        let endpoint = endpoint.trim_end_matches('/').to_owned();
+        let endpoint_host = Url::parse(&endpoint)
+            .ok()
+            .and_then(|parsed| parsed.host_str().map(ToOwned::to_owned));
+
+        Self {
+            endpoint,
+            endpoint_host,
+            secret_key: secret_key.to_owned(),
+        }
+    }
+
     pub fn from_env() -> anyhow::Result<Self> {
         let endpoint = std::env::var("FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT")
             .or_else(|_| std::env::var("FLUXER_MEDIA_ENDPOINT"))

@@ -1,7 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {GifMediaFormat} from '@fluxer/schema/src/domains/gif/GifSchemas';
-import {createStringType, SnowflakeStringType, SnowflakeType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
+import {
+	createStringType,
+	NonNegativeSafeIntegerType,
+	SnowflakeStringType,
+	SnowflakeType,
+} from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {z} from 'zod';
 
 const FavoriteMemeBase = z.object({
@@ -67,7 +72,7 @@ export const FavoriteMemeResponse = z.object({
 	filename: z.string().describe('Original filename of the meme'),
 	content_type: z.string().describe('MIME type of the meme file'),
 	content_hash: z.string().nullish().describe('Hash of the file content for deduplication'),
-	size: z.number().describe('File size in bytes'),
+	size: NonNegativeSafeIntegerType.describe('File size in bytes'),
 	width: z.number().int().nullish().describe('Width of the image or video in pixels'),
 	height: z.number().int().nullish().describe('Height of the image or video in pixels'),
 	duration: z.number().nullish().describe('Duration of the video in seconds'),
