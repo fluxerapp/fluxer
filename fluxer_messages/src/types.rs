@@ -340,6 +340,8 @@ pub struct ApiMessageEmbedChildResponse {
     pub html_width: Option<i32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub html_height: Option<i32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub poll_data: Option<PollData>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -580,6 +582,8 @@ pub struct MessageEmbedChild {
     pub html: Option<String>,
     pub html_width: Option<i32>,
     pub html_height: Option<i32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub poll_data: Option<PollData>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -604,6 +608,61 @@ pub struct MessageEmbed {
     pub html: Option<String>,
     pub html_width: Option<i32>,
     pub html_height: Option<i32>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PollData {
+    pub poll_id: String,
+    pub title: String,
+    pub options: Vec<PollOptionData>,
+    #[serde(default)]
+    pub allow_multiple: bool,
+    #[serde(default)]
+    pub is_anonymous: bool,
+    #[serde(default)]
+    pub allow_custom_answers: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub expires_at: Option<i64>,
+    #[serde(default)]
+    pub is_closed: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PollOptionData {
+    pub index: i32,
+    pub text: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub image_url: Option<String>,
+    #[serde(default)]
+    pub vote_count: i32,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PollVoteRequest {
+    #[serde(default, deserialize_with = "serde_id::opt_i64_from_string_or_number")]
+    pub message_id: Option<i64>,
+    #[serde(default, deserialize_with = "serde_id::opt_i64_from_string_or_number")]
+    pub channel_id: Option<i64>,
+    pub option_indices: Vec<i32>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PollResults {
+    pub poll_id: String,
+    pub title: String,
+    pub options: Vec<PollOptionResult>,
+    pub total_votes: i32,
+    pub is_closed: bool,
+    pub is_anonymous: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PollOptionResult {
+    pub index: i32,
+    pub text: String,
+    pub vote_count: i32,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub voters: Option<Vec<ApiUserPartialResponse>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
