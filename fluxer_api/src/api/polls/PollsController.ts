@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { Hono } from "hono";
-import type { HonoEnv } from "../../types/HonoEnv";
-import { requireAuth } from "../../middleware/AuthMiddleware";
-import { validateBody } from "../../middleware/ValidationMiddleware";
-import { z } from "zod";
-import type { PollData, PollResults } from "@fluxer/messages";
+import { Hono } from 'hono';
+import { z } from 'zod';
+import type { HonoApp, HonoEnv } from '../types/HonoEnv';
+import { requireAuth } from '../middleware/AuthMiddleware';
+import { validateBody } from '../middleware/ValidationMiddleware';
 
 // --- Validation Schemas ---
 
@@ -16,7 +15,7 @@ const CreatePollSchema = z.object({
       z.object({
         text: z.string().min(1).max(512),
         image_url: z.string().url().optional(),
-      })
+      }),
     )
     .min(2)
     .max(25),
@@ -30,23 +29,23 @@ const VoteSchema = z.object({
   option_indices: z.array(z.number().int().min(0)).min(1),
 });
 
-// --- Route Handlers ---
+// --- Route Registration ---
 
-export function createPollsController(): Hono<HonoEnv> {
+export function PollsController(app: HonoApp): void {
   const polls = new Hono<HonoEnv>();
 
-  // POST /channels/:channelId/polls — Create a poll message
+  // POST /channels/:channelId/polls
   polls.post(
-    "/channels/:channelId/polls",
+    '/channels/:channelId/polls',
     requireAuth,
     validateBody(CreatePollSchema),
     async (ctx) => {
-      const channelId = ctx.req.param("channelId");
-      const userId = ctx.get("user").id;
-      const body = ctx.req.valid("json");
+      const channelId = ctx.req.param('channelId');
+      const userId = ctx.get('user').id;
+      const body = ctx.req.valid('json');
 
-      const pollData: PollData = {
-        poll_id: "", // Assigned by backend snowflake generator
+      const pollData = {
+        poll_id: '', // assigned by snowflake service
         title: body.title,
         options: body.options.map((opt: any, i: number) => ({
           index: i,
@@ -63,29 +62,28 @@ export function createPollsController(): Hono<HonoEnv> {
         is_closed: false,
       };
 
-      // Create the poll as an embed-type message
-      const message = await ctx.var.services.messages.createPollMessage({
+      const message = await ctx.var.messageRequestService.createPollMessage({
         channel_id: channelId,
         author_id: userId,
         poll_data: pollData,
       });
 
       return ctx.json(message, 201);
-    }
+    },
   );
 
-  // POST /channels/:channelId/polls/:messageId/vote — Vote on a poll
+  // POST /channels/:channelId/polls/:messageId/vote
   polls.post(
-    "/channels/:channelId/polls/:messageId/vote",
+    '/channels/:channelId/polls/:messageId/vote',
     requireAuth,
     validateBody(VoteSchema),
     async (ctx) => {
-      const channelId = ctx.req.param("channelId");
-      const messageId = ctx.req.param("messageId");
-      const userId = ctx.get("user").id;
-      const { option_indices } = ctx.req.valid("json");
+      const channelId = ctx.req.param('channelId');
+      const messageId = ctx.req.param('messageId');
+      const userId = ctx.get('user').id;
+      const { option_indices } = ctx.req.valid('json');
 
-      await ctx.var.services.polls.castVote({
+      await ctx.var.pollsService.castVote({
         poll_message_id: messageId,
         channel_id: channelId,
         user_id: userId,
@@ -93,46 +91,46 @@ export function createPollsController(): Hono<HonoEnv> {
       });
 
       return ctx.json({ success: true });
-    }
+    },
   );
 
-  // GET /channels/:channelId/polls/:messageId/results — Get poll results
+  // GET /channels/:channelId/polls/:messageId/results
   polls.get(
-    "/channels/:channelId/polls/:messageId/results",
+    '/channels/:channelId/polls/:messageId/results',
     requireAuth,
     async (ctx) => {
-      const channelId = ctx.req.param("channelId");
-      const messageId = ctx.req.param("messageId");
-      const userId = ctx.get("user").id;
+      const channelId = ctx.req.param('channelId');
+      const messageId = ctx.req.param('messageId');
+      const userId = ctx.get('user').id;
 
-      const results: PollResults = await ctx.var.services.polls.getResults({
+      const results = await ctx.var.pollsService.getResults({
         poll_message_id: messageId,
         channel_id: channelId,
         requesting_user_id: userId,
       });
 
       return ctx.json(results);
-    }
+    },
   );
 
-  // DELETE /channels/:channelId/polls/:messageId — Close/delete a poll
+  // DELETE /channels/:channelId/polls/:messageId
   polls.delete(
-    "/channels/:channelId/polls/:messageId",
+    '/channels/:channelId/polls/:messageId',
     requireAuth,
     async (ctx) => {
-      const channelId = ctx.req.param("channelId");
-      const messageId = ctx.req.param("messageId");
-      const userId = ctx.get("user").id;
+      const channelId = ctx.req.param('channelId');
+      const messageId = ctx.req.param('messageId');
+      const userId = ctx.get('user').id;
 
-      await ctx.var.services.polls.closePoll({
+      await ctx.var.pollsService.closePoll({
         poll_message_id: messageId,
         channel_id: channelId,
         user_id: userId,
       });
 
       return ctx.json({ success: true });
-    }
+    },
   );
 
-  return polls;
+  app.route('/', polls);
 }
