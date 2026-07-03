@@ -206,21 +206,6 @@ export interface Channel {
 	readonly nicks?: Readonly<Record<string, string>>;
 }
 
-export const ThreadMetadata = z.object({
-	archived: z.boolean().describe('Whether the thread is archived'),
-	locked: z.boolean().describe('Whether the thread is locked (only MANAGE_THREADS can unarchive a locked thread)'),
-	auto_archive_duration: z.number().int().describe('Duration in minutes after which the thread auto-archives (60, 1440, 4320, or 10080)'),
-	archive_timestamp: z.iso.datetime().nullish().describe('ISO 8601 timestamp when the thread was archived, or null'),
-});
-
-export type ThreadMetadata = z.infer<typeof ThreadMetadata>;
-
-export const ThreadMemberAvatar = z.object({
-	id: SnowflakeStringType.describe('User ID'),
-	avatar: z.string().nullish().describe('Avatar hash'),
-});
-
-export type ThreadMemberAvatar = z.infer<typeof ThreadMemberAvatar>;
 
 export const ThreadPreviewCard = z.object({
 	last_message_preview: z.string().nullish().describe('Truncated content of the last message in the thread'),
@@ -228,14 +213,22 @@ export const ThreadPreviewCard = z.object({
 	last_message_author_id: SnowflakeStringType.nullish().describe('User ID of the last message author'),
 	last_message_author_username: z.string().nullish().describe('Username of the last message author'),
 	last_message_author_avatar: z.string().nullish().describe('Avatar hash of the last message author'),
-	recent_member_avatars: z.array(ThreadMemberAvatar).max(3).nullish().describe('Up to 3 recent member avatars for the thread card'),
+	recent_member_avatars: z.array(z.object({
+		id: SnowflakeStringType.describe('User ID'),
+		avatar: z.string().nullish().describe('Avatar hash'),
+	})).max(3).nullish().describe('Up to 3 recent member avatars for the thread card'),
 });
 
 export type ThreadPreviewCard = z.infer<typeof ThreadPreviewCard>;
 
 export const ThreadResponse = ChannelResponse.extend({
 	thread_state: z.number().int().describe('Thread state: 0=open, 1=closed, 2=archived'),
-	thread_metadata: ThreadMetadata.optional().describe('Discord-compatible thread metadata object'),
+	thread_metadata: z.object({
+		archived: z.boolean().describe('Whether the thread is archived'),
+		locked: z.boolean().describe('Whether the thread is locked (only MANAGE_THREADS can unarchive a locked thread)'),
+		auto_archive_duration: z.number().int().describe('Duration in minutes after which the thread auto-archives (60, 1440, 4320, or 10080)'),
+		archive_timestamp: z.iso.datetime().nullish().describe('ISO 8601 timestamp when the thread was archived, or null'),
+	}).optional().describe('Discord-compatible thread metadata object'),
 	thread_parent_channel_id: SnowflakeStringType.describe('ID of the parent channel this thread belongs to'),
 	thread_creator_id: SnowflakeStringType.nullish().describe('ID of the user who created the thread'),
 	thread_creator_username: z.string().nullish().describe('Username of the thread creator at time of creation'),

@@ -351,7 +351,9 @@ handle_visibility_transition(false, true, ChId, Pid, Sid, SD, _Old, New, GId, VM
 ->
     guild_visibility_roles:dispatch_channel_create(ChId, Pid, New, GId),
     guild_visibility_roles:send_member_list_sync(Sid, SD, ChId, GId, New),
-    dispatch_thread_list_sync_for_channel(ChId, maps:get(user_id, SD, undefined), Pid, GId, New),
+    dispatch_thread_list_sync_for_channel(
+        ChId, maps:get(user_id, SD, undefined), Pid, GId, New
+    ),
     FinalMap = guild_visibility_roles:maybe_ensure_parent_category_visible(
         ChId, VMap, New, Pid, GId
     ),
@@ -374,7 +376,11 @@ dispatch_thread_list_sync_for_channel(ChId, UserId, Pid, GuildId, State) ->
     ChannelThreads = lists:filter(
         fun(Thread) ->
             SafeThread = map_utils:ensure_map(Thread),
-            case snowflake_id:parse_optional(maps:get(<<"thread_parent_channel_id">>, SafeThread, undefined)) of
+            case
+                snowflake_id:parse_optional(
+                    maps:get(<<"thread_parent_channel_id">>, SafeThread, undefined)
+                )
+            of
                 ChId -> true;
                 _ -> false
             end

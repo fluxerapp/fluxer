@@ -109,7 +109,9 @@ collect_and_send_push_notifications(MessageData, GuildId, State) ->
 is_member_list_updates_enabled(State) ->
     guild_dispatch_config:is_member_list_updates_enabled(State).
 
--spec maybe_dispatch_thread_create_on_member_add(event(), event_data(), integer(), guild_state()) -> ok.
+-spec maybe_dispatch_thread_create_on_member_add(
+    event(), event_data(), integer(), guild_state()
+) -> ok.
 maybe_dispatch_thread_create_on_member_add(thread_member_update, EventData, GuildId, State) ->
     ThreadIdBin = maps:get(<<"thread_id">>, EventData, undefined),
     UserIdBin = maps:get(<<"user_id">>, EventData, undefined),
@@ -121,7 +123,9 @@ maybe_dispatch_thread_create_on_member_add(thread_member_update, EventData, Guil
             AllThreads = guild_data_index:thread_list(Data),
             AlreadyKnown = lists:any(
                 fun(T) ->
-                    snowflake_id:parse_optional(maps:get(<<"id">>, map_utils:ensure_map(T), undefined)) =:= ThreadId
+                    snowflake_id:parse_optional(
+                        maps:get(<<"id">>, map_utils:ensure_map(T), undefined)
+                    ) =:= ThreadId
                 end,
                 AllThreads
             ),
@@ -129,7 +133,9 @@ maybe_dispatch_thread_create_on_member_add(thread_member_update, EventData, Guil
                 true ->
                     ok;
                 false ->
-                    dispatch_thread_create_to_user(ThreadId, ThreadIdBin, UserId, GuildId, State)
+                    dispatch_thread_create_to_user(
+                        ThreadId, ThreadIdBin, UserId, GuildId, State
+                    )
             end;
         _ ->
             ok
@@ -137,7 +143,8 @@ maybe_dispatch_thread_create_on_member_add(thread_member_update, EventData, Guil
 maybe_dispatch_thread_create_on_member_add(_Event, _EventData, _GuildId, _State) ->
     ok.
 
--spec dispatch_thread_create_to_user(integer(), binary(), integer(), integer(), guild_state()) -> ok.
+-spec dispatch_thread_create_to_user(integer(), binary(), integer(), integer(), guild_state()) ->
+    ok.
 dispatch_thread_create_to_user(ThreadId, ThreadIdBin, UserId, GuildId, State) ->
     Sessions = maps:get(sessions, State, #{}),
     UserSessions = maps:filter(
@@ -151,18 +158,25 @@ dispatch_thread_create_to_user(ThreadId, ThreadIdBin, UserId, GuildId, State) ->
             Data = guild_data_index:ensure_data_map(State),
             AllChannels = guild_data_index:channel_list(Data),
             ThreadData = find_channel_by_id(ThreadId, AllChannels),
-            ThreadPayload = case ThreadData of
-                undefined ->
-                    #{<<"id">> => ThreadIdBin, <<"guild_id">> => integer_to_binary(GuildId), <<"type">> => 11};
-                T ->
-                    T#{<<"guild_id">> => integer_to_binary(GuildId)}
-            end,
+            ThreadPayload =
+                case ThreadData of
+                    undefined ->
+                        #{
+                            <<"id">> => ThreadIdBin,
+                            <<"guild_id">> => integer_to_binary(GuildId),
+                            <<"type">> => 11
+                        };
+                    T ->
+                        T#{<<"guild_id">> => integer_to_binary(GuildId)}
+                end,
             maps:foreach(
                 fun(_SId, SData) ->
                     Pid = maps:get(pid, SData, undefined),
                     case is_pid(Pid) of
                         true ->
-                            gateway_dispatch_relay:dispatch(Pid, thread_create, ThreadPayload, GuildId);
+                            gateway_dispatch_relay:dispatch(
+                                Pid, thread_create, ThreadPayload, GuildId
+                            );
                         false ->
                             ok
                     end
@@ -174,10 +188,16 @@ dispatch_thread_create_to_user(ThreadId, ThreadIdBin, UserId, GuildId, State) ->
 
 -spec find_channel_by_id(integer(), [map()]) -> map() | undefined.
 find_channel_by_id(ChannelId, Channels) ->
-    case lists:dropwhile(
-        fun(C) -> snowflake_id:parse_optional(maps:get(<<"id">>, map_utils:ensure_map(C), undefined)) =/= ChannelId end,
-        Channels
-    ) of
+    case
+        lists:dropwhile(
+            fun(C) ->
+                snowflake_id:parse_optional(
+                    maps:get(<<"id">>, map_utils:ensure_map(C), undefined)
+                ) =/= ChannelId
+            end,
+            Channels
+        )
+    of
         [] -> undefined;
         [Found | _] -> Found
     end.
