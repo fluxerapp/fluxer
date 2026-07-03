@@ -39,6 +39,7 @@ import type {HonoApp} from '../types/HonoEnv';
 import {UnfurlController} from '../unfurl/UnfurlController';
 import {UserController} from '../user/controllers/UserController';
 import {WebhookController} from '../webhook/WebhookController';
+import {PollsController} from '../polls/PollsController';
 
 export function registerControllers(routes: HonoApp, config: APIConfig): void {
 	InternalRpcController(routes);
@@ -47,6 +48,7 @@ export function registerControllers(routes: HonoApp, config: APIConfig): void {
 	registerAdminControllers(routes);
 	AuthController(routes);
 	ChannelController(routes);
+	PollsController(routes);
 	ConnectionController(routes);
 	BlueskyOAuthController(routes);
 	InstanceController(routes);
