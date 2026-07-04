@@ -282,7 +282,7 @@ const UserActivityButton = z.object({
 
 const UserActivityParty = z.object({
 	id: z.string().max(128).optional(),
-	size: z.tuple([z.number().int().nonnegative(), z.number().int().positive()]).optional(),
+	size: z.array(z.number().int().nonnegative()).length(2).optional(),
 });
 
 const UserActivitySecrets = z.object({

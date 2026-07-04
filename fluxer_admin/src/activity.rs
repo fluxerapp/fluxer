@@ -120,10 +120,10 @@ fn sanitize_activity_image_url(url: &str) -> Option<String> {
     if parsed.password().is_some() {
         return None;
     }
-    if let Ok(ip) = host.parse::<IpAddr>() {
-        if !is_public_ip(ip) {
-            return None;
-        }
+    if let Ok(ip) = host.parse::<IpAddr>()
+        && !is_public_ip(ip)
+    {
+        return None;
     }
     let port = parsed.port_or_known_default()?;
     if port != 80 && port != 443 {

@@ -60,11 +60,9 @@ fn equals_ignore_case(a: &str, b: &str) -> bool {
 
 fn dedupe_line(value: Option<String>, others: &[Option<String>]) -> Option<String> {
     let value = value?;
-    for other in others {
-        if let Some(other) = other {
-            if equals_ignore_case(&value, other) {
-                return None;
-            }
+    for other in others.iter().flatten() {
+        if equals_ignore_case(&value, other) {
+            return None;
         }
     }
     Some(value)

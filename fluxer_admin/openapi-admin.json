@@ -14869,80 +14869,7 @@
 					"banner": {"nullable": true, "type": "string"},
 					"bio": {"nullable": true, "type": "string"},
 					"pronouns": {"nullable": true, "type": "string"},
-					"activities": {
-						"type": "array",
-						"maxItems": 16,
-						"items": {
-							"type": "object",
-							"properties": {
-								"name": {"type": "string"},
-								"type": {"type": "integer", "format": "int32"},
-								"status_display_type": {"nullable": true, "type": "integer", "format": "int32"},
-								"application_id": {"nullable": true, "type": "string"},
-								"details": {"nullable": true, "type": "string"},
-								"details_url": {"nullable": true, "type": "string"},
-								"state": {"nullable": true, "type": "string"},
-								"state_url": {"nullable": true, "type": "string"},
-								"timestamps": {
-									"nullable": true,
-									"type": "object",
-									"properties": {
-										"start": {"nullable": true, "type": "integer", "format": "int64"},
-										"end": {"nullable": true, "type": "integer", "format": "int64"}
-									}
-								},
-								"assets": {
-									"nullable": true,
-									"type": "object",
-									"properties": {
-										"large_image": {"nullable": true, "type": "string"},
-										"large_text": {"nullable": true, "type": "string"},
-										"large_url": {"nullable": true, "type": "string"},
-										"small_image": {"nullable": true, "type": "string"},
-										"small_text": {"nullable": true, "type": "string"},
-										"small_url": {"nullable": true, "type": "string"}
-									}
-								},
-								"buttons": {
-									"type": "array",
-									"items": {
-										"type": "object",
-										"properties": {
-											"label": {"type": "string"},
-											"url": {"type": "string"}
-										},
-										"required": ["label", "url"]
-									}
-								},
-								"party": {
-									"nullable": true,
-									"type": "object",
-									"properties": {
-										"id": {"nullable": true, "type": "string"},
-										"size": {
-											"nullable": true,
-											"type": "array",
-											"items": {"type": "integer", "format": "int32"},
-											"minItems": 2,
-											"maxItems": 2
-										}
-									}
-								},
-								"metadata": {
-									"nullable": true,
-									"type": "object",
-									"properties": {
-										"button_urls": {
-											"nullable": true,
-											"type": "array",
-											"items": {"type": "string"}
-										}
-									}
-								}
-							},
-							"required": ["name", "type"]
-						}
-					},
+					"activities": {"type": "array", "items": {"$ref": "#/components/schemas/UserActivitySchema"}, "maxItems": 16},
 					"accent_color": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/Int32Type"}]},
 					"email": {"nullable": true, "type": "string"},
 					"email_verified": {"type": "boolean"},
@@ -15018,6 +14945,100 @@
 				"minimum": 0,
 				"maximum": 2147483647,
 				"description": "A single premium flag value to add or remove"
+			},
+			"UserActivitySchema": {
+				"type": "object",
+				"properties": {
+					"name": {
+						"type": "string",
+						"maxLength": 128,
+						"description": "Activity name (usually the application or song title)"
+					},
+					"type": {
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 5,
+						"format": "int32",
+						"description": "Activity type (0 = Playing)"
+					},
+					"status_display_type": {"type": "integer", "minimum": 0, "maximum": 2, "format": "int32"},
+					"application_id": {"type": "string", "maxLength": 128, "description": "Application ID for rich presence"},
+					"details": {"type": "string", "maxLength": 128, "description": "First line of rich presence text"},
+					"details_url": {"type": "string", "maxLength": 2048, "format": "uri"},
+					"state": {"type": "string", "maxLength": 128, "description": "Second line of rich presence text"},
+					"state_url": {"type": "string", "maxLength": 2048, "format": "uri"},
+					"timestamps": {
+						"type": "object",
+						"properties": {
+							"start": {
+								"type": "integer",
+								"format": "int53",
+								"description": "Unix timestamp (seconds) when the activity started"
+							},
+							"end": {
+								"type": "integer",
+								"format": "int53",
+								"description": "Unix timestamp (seconds) when the activity ends"
+							}
+						},
+						"description": "Activity timestamp metadata"
+					},
+					"assets": {
+						"type": "object",
+						"properties": {
+							"large_image": {"type": "string", "maxLength": 256},
+							"large_text": {"type": "string", "maxLength": 128},
+							"large_url": {"type": "string", "maxLength": 2048, "format": "uri"},
+							"small_image": {"type": "string", "maxLength": 256},
+							"small_text": {"type": "string", "maxLength": 128},
+							"small_url": {"type": "string", "maxLength": 2048, "format": "uri"}
+						},
+						"description": "Activity image assets"
+					},
+					"buttons": {
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"label": {"type": "string", "maxLength": 32},
+								"url": {"type": "string", "maxLength": 2048, "format": "uri"}
+							},
+							"required": ["label", "url"]
+						},
+						"maxItems": 2
+					},
+						"party": {
+							"type": "object",
+							"properties": {
+								"id": {"type": "string", "maxLength": 128},
+								"size": {
+									"type": "array",
+									"items": {"type": "integer", "minimum": 0, "maximum": 9007199254740991, "format": "int53"},
+									"minItems": 2,
+									"maxItems": 2
+								}
+							}
+						},
+					"secrets": {
+						"type": "object",
+						"properties": {
+							"join": {"type": "string", "maxLength": 128},
+							"spectate": {"type": "string", "maxLength": 128},
+							"match": {"type": "string", "maxLength": 128}
+						}
+					},
+					"metadata": {
+						"type": "object",
+						"properties": {
+							"button_urls": {
+								"type": "array",
+								"items": {"type": "string", "maxLength": 2048, "format": "uri"},
+								"maxItems": 2
+							}
+						}
+					}
+				},
+				"required": ["name", "type"]
 			},
 			"SuspiciousActivityFlags": {
 				"type": "integer",
