@@ -265,6 +265,7 @@ find_session_by_ref_empty_test() ->
     ?assertEqual(not_found, find_session_by_ref(make_ref(), #{})).
 
 handle_presence_update_updates_mobile_test() ->
+    flush_test_messages(),
     SessionId = <<"s1">>,
     State = #{
         sessions => #{
