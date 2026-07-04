@@ -93,6 +93,18 @@ handle_call({session_connect, Request}, {Pid, _}, State) when is_map(Request), i
     {reply, Reply, FinalState};
 handle_call(get_current_visible_presence, _From, State) ->
     {reply, presence_broadcast:current_visible_presence(State), State};
+handle_call(clear_activities, _From, State) ->
+    Sessions = maps:get(sessions, State),
+    NewSessions = maps:map(
+        fun(_SessionId, Session) ->
+            Session#{activities => null}
+        end,
+        Sessions
+    ),
+    NewState = State#{sessions => NewSessions, activities => null},
+    presence_session:dispatch_sessions_replace(NewState),
+    FinalState = presence_broadcast:publish_global_presence(NewSessions, NewState),
+    {reply, ok, FinalState};
 handle_call({terminate_session, SessionIdHashes}, _From, State) when is_list(SessionIdHashes) ->
     presence_connect:handle_terminate_session_call(binary_list(SessionIdHashes), State);
 handle_call({dispatch, EventAtom, Data}, _From, State) when is_atom(EventAtom), is_map(Data) ->
@@ -295,6 +307,24 @@ presence_rejoin_notifies_all_sessions_test() ->
 presence_rejoin_with_no_sessions_is_noop_test() ->
     State = test_state(#{}),
     ?assertEqual({noreply, State}, handle_cast(presence_rejoin, State)).
+
+clear_activities_clears_all_session_entries_test() ->
+    SessionId = <<"desktop">>,
+    State = test_state(#{
+        SessionId => #{
+            session_id => SessionId,
+            status => online,
+            afk => false,
+            mobile => false,
+            activities => [#{<<"name">> => <<"Fluxcap">>}],
+            pid => self(),
+            mref => make_ref(),
+            socket_pid => undefined
+        }
+    }),
+    {reply, ok, NewState} = handle_call(clear_activities, {self(), make_ref()}, State),
+    ClearedSession = maps:get(SessionId, maps:get(sessions, NewState)),
+    ?assertEqual(null, maps:get(activities, ClearedSession, undefined)).
 
 -spec test_state(sessions()) -> state().
 test_state(Sessions) ->

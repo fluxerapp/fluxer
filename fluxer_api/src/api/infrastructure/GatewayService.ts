@@ -12,6 +12,7 @@ import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildEr
 import {UserNotInVoiceError} from '@fluxer/errors/src/domains/user/UserNotInVoiceError';
 import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
+import {type UserActivity, UserActivitySchema} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {ms} from 'itty-time';
 import type {ChannelID, GuildID, MessageID, RoleID, UserID} from '../BrandedTypes';
 import {createChannelID, createGuildID, createRoleID, createUserID} from '../BrandedTypes';
@@ -1334,6 +1335,37 @@ export class GatewayService {
 			user_id: userId.toString(),
 		});
 		return result.has_active;
+	}
+
+	async getCurrentActivities(userId: UserID): Promise<Array<UserActivity>> {
+		const result = await this.call<{
+			activities?: unknown;
+		}>('presence.get_current_activities', {
+			user_id: userId.toString(),
+		});
+		if (!Array.isArray(result.activities)) {
+			return [];
+		}
+
+		const activities: Array<UserActivity> = [];
+		for (const [index, value] of result.activities.entries()) {
+			const parsed = UserActivitySchema.safeParse(value);
+			if (parsed.success) {
+				activities.push(parsed.data);
+				continue;
+			}
+			Logger.warn(
+				{userId: userId.toString(), index, issues: parsed.error.issues},
+				'[GatewayService] Skipping invalid activity payload',
+			);
+		}
+		return activities;
+	}
+
+	async clearCurrentActivities(userId: UserID): Promise<void> {
+		await this.call('presence.clear_activities', {
+			user_id: userId.toString(),
+		});
 	}
 
 	async addTemporaryGuild({userId, guildId}: {userId: UserID; guildId: GuildID}): Promise<void> {

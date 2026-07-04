@@ -2,6 +2,7 @@
 
 import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
+import type {UserActivity} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import type {ChannelID, GuildID, MessageID, RoleID, UserID} from '../BrandedTypes';
 import type {GatewayDispatchEvent} from '../constants/Gateway';
 
@@ -279,6 +280,10 @@ export abstract class IGatewayService {
 	abstract getFirstViewableTextChannel(guildId: GuildID): Promise<ChannelID | null>;
 
 	abstract dispatchPresence(params: {userId: UserID; event: GatewayDispatchEvent; data: unknown}): Promise<void>;
+
+	abstract getCurrentActivities(userId: UserID): Promise<Array<UserActivity>>;
+
+	abstract clearCurrentActivities(userId: UserID): Promise<void>;
 
 	abstract invalidatePushBadgeCount(params: {userId: UserID}): Promise<void>;
 

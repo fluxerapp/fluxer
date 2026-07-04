@@ -4,6 +4,7 @@ import {ALL_PERMISSIONS, Permissions} from '@fluxer/constants/src/ChannelConstan
 import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
 import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
+import type {UserActivity} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {type ChannelID, type GuildID, guildIdToRoleId, type MessageID, type RoleID, type UserID} from '../BrandedTypes';
 import type {GatewayDispatchEvent} from '../constants/Gateway';
 import {
@@ -794,6 +795,12 @@ export class NoopGatewayService extends IGatewayService {
 	}
 
 	async dispatchPresence(_params: {userId: UserID; event: GatewayDispatchEvent; data: unknown}): Promise<void> {}
+
+	async getCurrentActivities(_userId: UserID): Promise<Array<UserActivity>> {
+		return [];
+	}
+
+	async clearCurrentActivities(_userId: UserID): Promise<void> {}
 
 	async invalidatePushBadgeCount(_params: {userId: UserID}): Promise<void> {}
 

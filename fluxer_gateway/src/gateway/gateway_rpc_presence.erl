@@ -18,6 +18,8 @@ execute_method(<<"presence.leave_guild">>, P) -> handle_leave_guild(P);
 execute_method(<<"presence.terminate_sessions">>, P) -> handle_terminate_sessions(P);
 execute_method(<<"presence.terminate_all_sessions">>, P) -> handle_terminate_all(P);
 execute_method(<<"presence.has_active">>, P) -> handle_has_active(P);
+execute_method(<<"presence.get_current_activities">>, P) -> handle_get_current_activities(P);
+execute_method(<<"presence.clear_activities">>, P) -> handle_clear_activities(P);
 execute_method(<<"presence.add_temporary_guild">>, P) -> handle_add_temp_guild(P);
 execute_method(<<"presence.remove_temporary_guild">>, P) -> handle_remove_temp_guild(P);
 execute_method(<<"presence.sync_group_dm_recipients">>, P) -> handle_sync_dm_recipients(P).
@@ -87,6 +89,36 @@ handle_has_active(#{<<"user_id">> := UserIdBin}) ->
         {ok, _Pid} -> #{<<"has_active">> => true};
         {error, not_found} -> #{<<"has_active">> => false};
         _ -> gateway_rpc_error:raise(<<"presence_lookup_error">>)
+    end.
+
+-spec handle_get_current_activities(map()) -> map().
+handle_get_current_activities(#{<<"user_id">> := UserIdBin}) ->
+    UserId = validation:snowflake_or_throw(<<"user_id">>, UserIdBin),
+    case lookup_owner_presence(UserId) of
+        {ok, Pid} ->
+            case get_current_activities(Pid) of
+                {ok, Activities} -> #{<<"activities">> => Activities};
+                {error, _Reason} -> gateway_rpc_error:raise(<<"presence_lookup_error">>)
+            end;
+        {error, not_found} ->
+            #{<<"activities">> => []};
+        _ ->
+            gateway_rpc_error:raise(<<"presence_lookup_error">>)
+    end.
+
+-spec handle_clear_activities(map()) -> true.
+handle_clear_activities(#{<<"user_id">> := UserIdBin}) ->
+    UserId = validation:snowflake_or_throw(<<"user_id">>, UserIdBin),
+    case lookup_owner_presence(UserId) of
+        {ok, Pid} ->
+            case clear_activities(Pid) of
+                ok -> true;
+                {error, _Reason} -> gateway_rpc_error:raise(<<"presence_lookup_error">>)
+            end;
+        {error, not_found} ->
+            true;
+        _ ->
+            gateway_rpc_error:raise(<<"presence_lookup_error">>)
     end.
 
 -spec handle_add_temp_guild(map()) -> true.
@@ -203,6 +235,35 @@ call_presence(Pid, Message) ->
         exit:{noproc, _} -> {error, unavailable};
         exit:Reason -> {error, Reason};
         error:Reason:Stack -> {error, {Reason, Stack}}
+    end.
+
+-spec clear_activities(pid()) -> ok | {error, timeout | unavailable | term()}.
+clear_activities(Pid) ->
+    call_presence(Pid, clear_activities).
+
+-spec get_current_activities(pid()) -> {ok, [map()]} | {error, timeout | unavailable | term()}.
+get_current_activities(Pid) ->
+    try gen_server:call(Pid, get_current_visible_presence, ?PRESENCE_LOOKUP_TIMEOUT) of
+        {ok, Presence} when is_map(Presence) ->
+            {ok, extract_activities(Presence)};
+        not_found ->
+            {ok, []};
+        Other ->
+            {error, {invalid_reply, Other}}
+    catch
+        exit:{timeout, _} -> {error, timeout};
+        exit:{noproc, _} -> {error, unavailable};
+        exit:Reason -> {error, Reason};
+        error:Reason:Stack -> {error, {Reason, Stack}}
+    end.
+
+-spec extract_activities(map()) -> [map()].
+extract_activities(Presence) ->
+    case maps:get(<<"activities">>, Presence, null) of
+        Activities when is_list(Activities) ->
+            [Activity || Activity <- Activities, is_map(Activity)];
+        _ ->
+            []
     end.
 
 -spec lookup_owner_presence(integer()) ->
@@ -383,5 +444,15 @@ offline_message_create_system_author_is_success_test() ->
             }
         )
     ).
+
+extract_activities_reads_visible_activities_test() ->
+    Activity = #{<<"name">> => <<"Fluxcap">>, <<"details">> => <<"Queueing">>},
+    Other = #{<<"name">> => <<"Other">>},
+    Presence = #{<<"activities">> => [Activity, Other, <<"skip">>]},
+    ?assertEqual([Activity, Other], extract_activities(Presence)).
+
+extract_activities_returns_empty_when_missing_test() ->
+    ?assertEqual([], extract_activities(#{})),
+    ?assertEqual([], extract_activities(#{<<"activities">> => []})).
 
 -endif.
