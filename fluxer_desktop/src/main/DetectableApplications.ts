@@ -239,7 +239,10 @@ export function getExecutableIndex(): Map<string, Array<DetectableApp>> {
 	return executableIndex;
 }
 
-export function resolveMappedRpcImage(clientId: string, image: string | undefined): string | undefined {
+export function resolveMappedRpcImage(clientId: string, image: unknown): string | undefined {
+	if (typeof image !== 'string') {
+		return undefined;
+	}
 	if (!image) return image;
 	if (
 		image.startsWith('http://') ||

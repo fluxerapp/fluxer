@@ -299,7 +299,7 @@ export const UserActivitySchema = z.object({
 	name: z.string().max(128).describe('Activity name (usually the application or song title)'),
 	type: z.number().int().min(0).max(5).describe('Activity type (0 = Playing)'),
 	status_display_type: z.number().int().min(0).max(2).optional(),
-	application_id: SnowflakeStringType.optional().describe('Application ID for rich presence'),
+	application_id: z.string().max(128).optional().describe('Application ID for rich presence'),
 	details: z.string().max(128).optional().describe('First line of rich presence text'),
 	details_url: z.string().url().max(2048).optional(),
 	state: z.string().max(128).optional().describe('Second line of rich presence text'),
