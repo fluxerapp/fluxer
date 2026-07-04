@@ -547,7 +547,7 @@ fn spawn_signal_thread(
                 let conn = zbus::Connection::session().await?;
                 let rule = MatchRule::builder()
                     .msg_type(MessageType::Signal)
-                    .sender(NOTIFY_DEST)?
+                    .path(NOTIFY_PATH)?
                     .interface(NOTIFY_IFACE)?
                     .build();
                 let stream = MessageStream::for_match_rule(rule, &conn, Some(64)).await?;
