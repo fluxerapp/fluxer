@@ -21,6 +21,58 @@ pub fn deserialize_string_or_u64<'de, D: Deserializer<'de>>(d: D) -> Result<u64,
     }
 }
 
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct AdminUserActivityTimestamps {
+    pub start: Option<i64>,
+    pub end: Option<i64>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct AdminUserActivityAssets {
+    pub large_image: Option<String>,
+    pub large_text: Option<String>,
+    pub large_url: Option<String>,
+    pub small_image: Option<String>,
+    pub small_text: Option<String>,
+    pub small_url: Option<String>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct AdminUserActivityButton {
+    pub label: String,
+    pub url: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct AdminUserActivityParty {
+    pub id: Option<String>,
+    pub size: Option<(i32, i32)>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct AdminUserActivityMetadata {
+    pub button_urls: Option<Vec<String>>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct AdminUserActivity {
+    pub name: String,
+    #[serde(rename = "type")]
+    pub activity_type: i32,
+    pub status_display_type: Option<i32>,
+    pub application_id: Option<String>,
+    pub details: Option<String>,
+    pub details_url: Option<String>,
+    pub state: Option<String>,
+    pub state_url: Option<String>,
+    pub timestamps: Option<AdminUserActivityTimestamps>,
+    pub assets: Option<AdminUserActivityAssets>,
+    #[serde(default)]
+    pub buttons: Vec<AdminUserActivityButton>,
+    pub party: Option<AdminUserActivityParty>,
+    pub metadata: Option<AdminUserActivityMetadata>,
+}
+
 #[derive(Clone, Debug, Deserialize)]
 pub struct AdminUserMeResponse {
     pub user: AdminUser,
@@ -79,6 +131,8 @@ pub struct AdminUser {
     pub global_name: Option<String>,
     pub bio: Option<String>,
     pub pronouns: Option<String>,
+    #[serde(default)]
+    pub activities: Vec<AdminUserActivity>,
     pub accent_color: Option<i32>,
     pub date_of_birth: Option<String>,
     pub locale: Option<String>,

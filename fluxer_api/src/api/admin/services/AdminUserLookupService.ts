@@ -14,12 +14,16 @@ export class AdminUserLookupService {
 	constructor(private readonly deps: AdminUserLookupServiceDeps) {}
 
 	async lookupUser(data: LookupUserRequest, acls: ReadonlySet<string>) {
-		const {users: userRepository, cache: cacheService} = this.deps.apiContext.services;
+		const {users: userRepository, cache: cacheService, gateway: gatewayService} = this.deps.apiContext.services;
 		if ('user_ids' in data) {
 			const userIds = data.user_ids.map((id) => createUserID(id));
 			const users = await userRepository.listUsers(userIds);
 			return {
-				users: await Promise.all(users.map((user) => mapUserToAdminResponse(user, cacheService, acls))),
+				users: await Promise.all(
+					users.map((user) =>
+						mapUserToAdminResponse(user, cacheService, acls, gatewayService, {includeActivities: false}),
+					),
+				),
 			};
 		}
 		let user = null;
@@ -43,7 +47,7 @@ export class AdminUserLookupService {
 			user = await userRepository.findByStripeSubscriptionId(query);
 		}
 		return {
-			users: user ? [await mapUserToAdminResponse(user, cacheService, acls)] : [],
+			users: user ? [await mapUserToAdminResponse(user, cacheService, acls, gatewayService)] : [],
 		};
 	}
 }

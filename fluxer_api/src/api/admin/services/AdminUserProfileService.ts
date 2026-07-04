@@ -50,7 +50,7 @@ export class AdminUserProfileService {
 		auditLogReason: string | null,
 		acls: ReadonlySet<string>,
 	) {
-		const {users: userRepository, cache: cacheService} = this.deps.apiContext.services;
+		const {users: userRepository, cache: cacheService, gateway: gatewayService} = this.deps.apiContext.services;
 		const {entityAssetService, auditService, updatePropagator} = this.deps;
 		const userId = createUserID(data.user_id);
 		const user = await userRepository.findUnique(userId);
@@ -86,19 +86,23 @@ export class AdminUserProfileService {
 				updates['bio'] = null;
 			} else if (field === 'pronouns') {
 				updates['pronouns'] = null;
+			} else if (field === 'activity') {
+				await gatewayService.clearCurrentActivities(userId);
 			} else if (field === 'global_name') {
 				updates['global_name'] = null;
 			}
 		}
-		let updatedUser: User;
-		try {
-			updatedUser = await userRepository.patchUpsert(userId, updates, user.toRow());
-		} catch (error) {
-			await Promise.all(preparedAssets.map((p) => entityAssetService.rollbackAssetUpload(p)));
-			throw error;
+		let updatedUser = user;
+		if (Object.keys(updates).length > 0) {
+			try {
+				updatedUser = await userRepository.patchUpsert(userId, updates, user.toRow());
+			} catch (error) {
+				await Promise.all(preparedAssets.map((p) => entityAssetService.rollbackAssetUpload(p)));
+				throw error;
+			}
+			await Promise.all(preparedAssets.map((p) => entityAssetService.commitAssetChange({prepared: p})));
+			await updatePropagator.propagateUserUpdate({userId, oldUser: user, updatedUser: updatedUser});
 		}
-		await Promise.all(preparedAssets.map((p) => entityAssetService.commitAssetChange({prepared: p})));
-		await updatePropagator.propagateUserUpdate({userId, oldUser: user, updatedUser: updatedUser});
 		await auditService.createAuditLog({
 			adminUserId,
 			targetType: 'user',
@@ -108,7 +112,7 @@ export class AdminUserProfileService {
 			metadata: new Map([['fields', data.fields.join(',')]]),
 		});
 		return {
-			user: await mapUserToAdminResponse(updatedUser, cacheService, acls),
+			user: await mapUserToAdminResponse(updatedUser, cacheService, acls, gatewayService),
 		};
 	}
 
@@ -118,7 +122,7 @@ export class AdminUserProfileService {
 		auditLogReason: string | null,
 		acls: ReadonlySet<string>,
 	) {
-		const {users: userRepository, cache: cacheService} = this.deps.apiContext.services;
+		const {users: userRepository, cache: cacheService, gateway: gatewayService} = this.deps.apiContext.services;
 		const {auditService, updatePropagator} = this.deps;
 		const userId = createUserID(data.user_id);
 		const user = await userRepository.findUnique(userId);
@@ -143,7 +147,7 @@ export class AdminUserProfileService {
 			metadata: new Map([['bot', data.bot.toString()]]),
 		});
 		return {
-			user: await mapUserToAdminResponse(updatedUser, cacheService, acls),
+			user: await mapUserToAdminResponse(updatedUser, cacheService, acls, gatewayService),
 		};
 	}
 
@@ -153,7 +157,7 @@ export class AdminUserProfileService {
 		auditLogReason: string | null,
 		acls: ReadonlySet<string>,
 	) {
-		const {users: userRepository, cache: cacheService} = this.deps.apiContext.services;
+		const {users: userRepository, cache: cacheService, gateway: gatewayService} = this.deps.apiContext.services;
 		const {auditService, updatePropagator} = this.deps;
 		const userId = createUserID(data.user_id);
 		const user = await userRepository.findUnique(userId);
@@ -177,7 +181,7 @@ export class AdminUserProfileService {
 			metadata: new Map([['system', data.system.toString()]]),
 		});
 		return {
-			user: await mapUserToAdminResponse(updatedUser, cacheService, acls),
+			user: await mapUserToAdminResponse(updatedUser, cacheService, acls, gatewayService),
 		};
 	}
 
@@ -187,7 +191,7 @@ export class AdminUserProfileService {
 		auditLogReason: string | null,
 		acls: ReadonlySet<string>,
 	) {
-		const {users: userRepository, cache: cacheService} = this.deps.apiContext.services;
+		const {users: userRepository, cache: cacheService, gateway: gatewayService} = this.deps.apiContext.services;
 		const {auditService, updatePropagator} = this.deps;
 		const userId = createUserID(data.user_id);
 		const user = await userRepository.findUnique(userId);
@@ -219,7 +223,7 @@ export class AdminUserProfileService {
 			metadata: new Map([['email', user.email ?? 'null']]),
 		});
 		return {
-			user: await mapUserToAdminResponse(updatedUser, cacheService, acls),
+			user: await mapUserToAdminResponse(updatedUser, cacheService, acls, gatewayService),
 		};
 	}
 
@@ -232,6 +236,7 @@ export class AdminUserProfileService {
 		const {
 			users: userRepository,
 			cache: cacheService,
+			gateway: gatewayService,
 			contactChangeLog: contactChangeLogService,
 		} = this.deps.apiContext.services;
 		const {discriminatorService, auditService, updatePropagator} = this.deps;
@@ -277,7 +282,7 @@ export class AdminUserProfileService {
 		});
 		void this.reindexGuildMembersForUser(updatedUser);
 		return {
-			user: await mapUserToAdminResponse(updatedUser, cacheService, acls),
+			user: await mapUserToAdminResponse(updatedUser, cacheService, acls, gatewayService),
 		};
 	}
 
@@ -290,6 +295,7 @@ export class AdminUserProfileService {
 		const {
 			users: userRepository,
 			cache: cacheService,
+			gateway: gatewayService,
 			contactChangeLog: contactChangeLogService,
 		} = this.deps.apiContext.services;
 		const {auditService, updatePropagator} = this.deps;
@@ -325,7 +331,7 @@ export class AdminUserProfileService {
 			]),
 		});
 		return {
-			user: await mapUserToAdminResponse(updatedUser, cacheService, acls),
+			user: await mapUserToAdminResponse(updatedUser, cacheService, acls, gatewayService),
 		};
 	}
 
@@ -363,7 +369,7 @@ export class AdminUserProfileService {
 		auditLogReason: string | null,
 		acls: ReadonlySet<string>,
 	) {
-		const {users: userRepository, cache: cacheService} = this.deps.apiContext.services;
+		const {users: userRepository, cache: cacheService, gateway: gatewayService} = this.deps.apiContext.services;
 		const {auditService, updatePropagator} = this.deps;
 		const userId = createUserID(data.user_id);
 		const user = await userRepository.findUnique(userId);
@@ -390,7 +396,7 @@ export class AdminUserProfileService {
 			]),
 		});
 		return {
-			user: await mapUserToAdminResponse(updatedUser, cacheService, acls),
+			user: await mapUserToAdminResponse(updatedUser, cacheService, acls, gatewayService),
 		};
 	}
 }

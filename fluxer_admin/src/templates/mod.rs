@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+pub mod activity_card_script;
 pub mod components;
 pub mod layout;
 pub mod layout_header;

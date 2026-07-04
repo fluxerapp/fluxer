@@ -131,7 +131,7 @@ export class AdminUserSecurityService {
 		auditLogReason: string | null;
 		acls: ReadonlySet<string>;
 	}) {
-		const {users: userRepository, cache: cacheService} = this.deps.apiContext.services;
+		const {users: userRepository, cache: cacheService, gateway: gatewayService} = this.deps.apiContext.services;
 		const {auditService, updatePropagator} = this.deps;
 		const user = await userRepository.findUnique(userId);
 		if (!user) {
@@ -159,7 +159,7 @@ export class AdminUserSecurityService {
 			}),
 		});
 		return {
-			user: await mapUserToAdminResponse(updatedUser, cacheService, acls),
+			user: await mapUserToAdminResponse(updatedUser, cacheService, acls, gatewayService),
 		};
 	}
 
@@ -179,7 +179,7 @@ export class AdminUserSecurityService {
 		auditLogReason: string | null;
 		acls: ReadonlySet<string>;
 	}) {
-		const {users: userRepository, cache: cacheService} = this.deps.apiContext.services;
+		const {users: userRepository, cache: cacheService, gateway: gatewayService} = this.deps.apiContext.services;
 		const {auditService, updatePropagator} = this.deps;
 		const user = await userRepository.findUnique(userId);
 		if (!user) {
@@ -207,7 +207,7 @@ export class AdminUserSecurityService {
 			}),
 		});
 		return {
-			user: await mapUserToAdminResponse(updatedUser, cacheService, acls),
+			user: await mapUserToAdminResponse(updatedUser, cacheService, acls, gatewayService),
 		};
 	}
 
@@ -321,7 +321,7 @@ export class AdminUserSecurityService {
 		auditLogReason: string | null,
 		acls: ReadonlySet<string>,
 	) {
-		const {users: userRepository, cache: cacheService} = this.deps.apiContext.services;
+		const {users: userRepository, cache: cacheService, gateway: gatewayService} = this.deps.apiContext.services;
 		const {auditService, updatePropagator} = this.deps;
 		const userId = createUserID(data.user_id);
 		if (userId === adminUserId) {
@@ -354,7 +354,7 @@ export class AdminUserSecurityService {
 			metadata: new Map([['acls', data.acls.join(',')]]),
 		});
 		return {
-			user: await mapUserToAdminResponse(updatedUser, cacheService, acls),
+			user: await mapUserToAdminResponse(updatedUser, cacheService, acls, gatewayService),
 		};
 	}
 
@@ -364,7 +364,7 @@ export class AdminUserSecurityService {
 		auditLogReason: string | null,
 		acls: ReadonlySet<string>,
 	) {
-		const {users: userRepository, cache: cacheService} = this.deps.apiContext.services;
+		const {users: userRepository, cache: cacheService, gateway: gatewayService} = this.deps.apiContext.services;
 		const {auditService, updatePropagator} = this.deps;
 		const userId = createUserID(data.user_id);
 		const user = await userRepository.findUnique(userId);
@@ -389,7 +389,7 @@ export class AdminUserSecurityService {
 			metadata: new Map(data.traits.length > 0 ? [['traits', data.traits.join(',')]] : []),
 		});
 		return {
-			user: await mapUserToAdminResponse(updatedUser, cacheService, acls),
+			user: await mapUserToAdminResponse(updatedUser, cacheService, acls, gatewayService),
 		};
 	}
 
@@ -399,7 +399,7 @@ export class AdminUserSecurityService {
 		auditLogReason: string | null,
 		acls: ReadonlySet<string>,
 	) {
-		const {users: userRepository, cache: cacheService} = this.deps.apiContext.services;
+		const {users: userRepository, cache: cacheService, gateway: gatewayService} = this.deps.apiContext.services;
 		const {auditService, updatePropagator} = this.deps;
 		const userId = createUserID(data.user_id);
 		const user = await userRepository.findUnique(userId);
@@ -421,7 +421,7 @@ export class AdminUserSecurityService {
 			metadata: new Map([['has_verified_phone', String(data.has_verified_phone)]]),
 		});
 		return {
-			user: await mapUserToAdminResponse(updatedUser, cacheService, acls),
+			user: await mapUserToAdminResponse(updatedUser, cacheService, acls, gatewayService),
 		};
 	}
 
@@ -431,7 +431,7 @@ export class AdminUserSecurityService {
 		auditLogReason: string | null,
 		acls: ReadonlySet<string>,
 	) {
-		const {users: userRepository, cache: cacheService} = this.deps.apiContext.services;
+		const {users: userRepository, cache: cacheService, gateway: gatewayService} = this.deps.apiContext.services;
 		const {auditService, updatePropagator} = this.deps;
 		const userId = createUserID(data.user_id);
 		const user = await userRepository.findUnique(userId);
@@ -458,7 +458,7 @@ export class AdminUserSecurityService {
 			metadata: new Map([['flags', data.flags.toString()]]),
 		});
 		return {
-			user: await mapUserToAdminResponse(updatedUser, cacheService, acls),
+			user: await mapUserToAdminResponse(updatedUser, cacheService, acls, gatewayService),
 		};
 	}
 
@@ -468,7 +468,7 @@ export class AdminUserSecurityService {
 		auditLogReason: string | null,
 		acls: ReadonlySet<string>,
 	) {
-		const {users: userRepository, email: emailService, cache: cacheService} = this.deps.apiContext.services;
+		const {users: userRepository, email: emailService, cache: cacheService, gateway: gatewayService} = this.deps.apiContext.services;
 		const {auditService, updatePropagator} = this.deps;
 		const userId = createUserID(data.user_id);
 		const user = await userRepository.findUnique(userId);
@@ -503,7 +503,7 @@ export class AdminUserSecurityService {
 			metadata: new Map([['flags', data.flags.toString()]]),
 		});
 		return {
-			user: await mapUserToAdminResponse(updatedUser, cacheService, acls),
+			user: await mapUserToAdminResponse(updatedUser, cacheService, acls, gatewayService),
 		};
 	}
 

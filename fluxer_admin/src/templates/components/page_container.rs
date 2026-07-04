@@ -116,7 +116,7 @@ pub fn detail_row(label: &str, value: Markup) -> Markup {
             dt class="w-48 flex-shrink-0 text-sm font-medium text-neutral-500" {
                 (label)
             }
-            dd class="text-sm text-neutral-900" {
+            dd class="min-w-0 flex-1 text-sm text-neutral-900" {
                 (value)
             }
         }

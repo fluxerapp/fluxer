@@ -9,6 +9,7 @@ build = "build.rs"
 anyhow = "1.0.102"
 axum = { version = "0.8.9", features = ["macros"] }
 base64 = "0.22.1"
+bytes = "1.10.1"
 chrono = { version = "0.4", default-features = false, features = ["serde"] }
 cookie = "0.18.1"
 hmac = "0.13.0"

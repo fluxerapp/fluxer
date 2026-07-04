@@ -95,14 +95,14 @@ export class AdminSearchService {
 		},
 		acls: ReadonlySet<string>,
 	) {
-		const {users: userRepository, cache: cacheService} = this.deps.apiContext.services;
+		const {users: userRepository, cache: cacheService, gateway: gatewayService} = this.deps.apiContext.services;
 		const email = data.email?.trim();
 		if (email) {
 			const user = await userRepository.findByEmail(email);
 			if (!user) {
 				return {users: [], total: 0};
 			}
-			const response = await mapUserToAdminResponse(user, cacheService, acls);
+			const response = await mapUserToAdminResponse(user, cacheService, acls, gatewayService);
 			return {users: [response], total: 1};
 		}
 		const lastActiveIp = data.last_active_ip?.trim();
@@ -117,7 +117,11 @@ export class AdminSearchService {
 					orderedUsers.push(user);
 				}
 			}
-			const response = await Promise.all(orderedUsers.map((user) => mapUserToAdminResponse(user, cacheService, acls)));
+			const response = await Promise.all(
+				orderedUsers.map((user) =>
+					mapUserToAdminResponse(user, cacheService, acls, gatewayService, {includeActivities: false}),
+				),
+			);
 			return {
 				users: response,
 				total,
@@ -138,11 +142,17 @@ export class AdminSearchService {
 		const {hits, total} = searchResult;
 		const userIds = hits.map((hit) => createUserID(BigInt(hit.id)));
 		const users = await userRepository.listUsers(userIds);
-		const response = await Promise.all(users.map((user) => mapUserToAdminResponse(user, cacheService, acls)));
+		const response = await Promise.all(
+			users.map((user) => mapUserToAdminResponse(user, cacheService, acls, gatewayService, {includeActivities: false})),
+		);
 		if (directUser && data.offset === 0) {
 			const directId = directUser.id.toString();
 			if (!response.some((u) => u.id === directId)) {
-				response.unshift(await mapUserToAdminResponse(directUser, cacheService, acls));
+				response.unshift(
+					await mapUserToAdminResponse(directUser, cacheService, acls, gatewayService, {
+						includeActivities: false,
+					}),
+				);
 			}
 		}
 		return {

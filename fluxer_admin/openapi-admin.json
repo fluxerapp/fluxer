@@ -14869,6 +14869,80 @@
 					"banner": {"nullable": true, "type": "string"},
 					"bio": {"nullable": true, "type": "string"},
 					"pronouns": {"nullable": true, "type": "string"},
+					"activities": {
+						"type": "array",
+						"maxItems": 16,
+						"items": {
+							"type": "object",
+							"properties": {
+								"name": {"type": "string"},
+								"type": {"type": "integer", "format": "int32"},
+								"status_display_type": {"nullable": true, "type": "integer", "format": "int32"},
+								"application_id": {"nullable": true, "type": "string"},
+								"details": {"nullable": true, "type": "string"},
+								"details_url": {"nullable": true, "type": "string"},
+								"state": {"nullable": true, "type": "string"},
+								"state_url": {"nullable": true, "type": "string"},
+								"timestamps": {
+									"nullable": true,
+									"type": "object",
+									"properties": {
+										"start": {"nullable": true, "type": "integer", "format": "int64"},
+										"end": {"nullable": true, "type": "integer", "format": "int64"}
+									}
+								},
+								"assets": {
+									"nullable": true,
+									"type": "object",
+									"properties": {
+										"large_image": {"nullable": true, "type": "string"},
+										"large_text": {"nullable": true, "type": "string"},
+										"large_url": {"nullable": true, "type": "string"},
+										"small_image": {"nullable": true, "type": "string"},
+										"small_text": {"nullable": true, "type": "string"},
+										"small_url": {"nullable": true, "type": "string"}
+									}
+								},
+								"buttons": {
+									"type": "array",
+									"items": {
+										"type": "object",
+										"properties": {
+											"label": {"type": "string"},
+											"url": {"type": "string"}
+										},
+										"required": ["label", "url"]
+									}
+								},
+								"party": {
+									"nullable": true,
+									"type": "object",
+									"properties": {
+										"id": {"nullable": true, "type": "string"},
+										"size": {
+											"nullable": true,
+											"type": "array",
+											"items": {"type": "integer", "format": "int32"},
+											"minItems": 2,
+											"maxItems": 2
+										}
+									}
+								},
+								"metadata": {
+									"nullable": true,
+									"type": "object",
+									"properties": {
+										"button_urls": {
+											"nullable": true,
+											"type": "array",
+											"items": {"type": "string"}
+										}
+									}
+								}
+							},
+							"required": ["name", "type"]
+						}
+					},
 					"accent_color": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/Int32Type"}]},
 					"email": {"nullable": true, "type": "string"},
 					"email_verified": {"type": "boolean"},
@@ -14909,6 +14983,7 @@
 					"banner",
 					"bio",
 					"pronouns",
+					"activities",
 					"accent_color",
 					"email",
 					"email_verified",
@@ -15035,7 +15110,7 @@
 						"type": "array",
 						"items": {
 							"type": "string",
-							"enum": ["avatar", "banner", "bio", "pronouns", "global_name"],
+							"enum": ["avatar", "banner", "bio", "pronouns", "activity", "global_name"],
 							"description": "User profile field that can be cleared"
 						},
 						"maxItems": 10,

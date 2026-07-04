@@ -64,6 +64,7 @@ export class AdminUserService {
 	private readonly channelRepository: IChannelRepository;
 	private readonly bulkMessageDeletionQueue: KVBulkMessageDeletionQueueService;
 	private readonly cacheService: ICacheService;
+	private readonly gatewayService: ApiContext['services']['gateway'];
 
 	constructor(deps: AdminUserServiceDeps) {
 		const {users, cache, gateway, contactChangeLog} = deps.apiContext.services;
@@ -79,6 +80,7 @@ export class AdminUserService {
 		this.auditService = deps.auditService;
 		this.bulkMessageDeletionQueue = deps.bulkMessageDeletionQueue;
 		this.cacheService = cache;
+		this.gatewayService = gateway;
 		this.lookupService = new AdminUserLookupService({
 			apiContext: deps.apiContext,
 		});
@@ -323,7 +325,7 @@ export class AdminUserService {
 			metadata: new Map(),
 		});
 		return {
-			user: await mapUserToAdminResponse(updatedUser, this.cacheService, acls),
+			user: await mapUserToAdminResponse(updatedUser, this.cacheService, acls, this.gatewayService),
 		};
 	}
 }

@@ -254,3 +254,16 @@ async fn not_found(State(state): State<AppState>) -> impl IntoResponse {
     };
     (StatusCode::NOT_FOUND, Html(body.into_string()))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::build_admin_csp;
+    use crate::config::AdminConfig;
+
+    #[test]
+    fn admin_csp_does_not_widen_img_src_for_activity_hosts() {
+        let csp = build_admin_csp(&AdminConfig::from_env());
+        assert!(!csp.contains("https://coverartarchive.org"));
+        assert!(!csp.contains("https://example.com"));
+    }
+}

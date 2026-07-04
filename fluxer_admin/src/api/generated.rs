@@ -56,6 +56,7 @@ mod tests {
                 "banner": null,
                 "bio": "Hello world",
                 "pronouns": null,
+                "activities": [],
                 "accent_color": null,
                 "email": "admin@example.com",
                 "email_verified": true,

@@ -18,6 +18,7 @@ import {
 	SnowflakeStringType,
 	SnowflakeType,
 } from '@fluxer/schema/src/primitives/SchemaPrimitives';
+import {UserActivitySchema} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {DiscriminatorType, EmailType, UsernameType} from '@fluxer/schema/src/primitives/UserValidators';
 import {z} from 'zod';
 
@@ -39,6 +40,7 @@ export const UserAdminResponseSchema = z.object({
 	banner: z.string().nullable(),
 	bio: z.string().nullable(),
 	pronouns: z.string().nullable(),
+	activities: z.array(UserActivitySchema).max(16),
 	accent_color: Int32Type.nullable(),
 	email: z.string().nullable(),
 	email_verified: z.boolean(),
@@ -256,6 +258,7 @@ const UserProfileFieldEnum = createNamedStringLiteralUnion(
 		['banner', 'banner', 'User profile banner image'],
 		['bio', 'bio', 'User biography text'],
 		['pronouns', 'pronouns', 'User pronouns'],
+		['activity', 'activity', 'User current activity'],
 		['global_name', 'global_name', 'User display name'],
 	],
 	'User profile field that can be cleared',

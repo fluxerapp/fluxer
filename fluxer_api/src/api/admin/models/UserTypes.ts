@@ -2,10 +2,16 @@
 
 import dns from 'node:dns';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
+import {BadGatewayError} from '@fluxer/errors/src/domains/core/BadGatewayError';
+import {GatewayTimeoutError} from '@fluxer/errors/src/domains/core/GatewayTimeoutError';
+import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
 import type {UserAdminResponse} from '@fluxer/schema/src/domains/admin/AdminUserSchemas';
+import type {UserActivity} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import {formatGeoipLocation} from '@pkgs/geoip/src/GeoipLookup';
 import {seconds} from 'itty-time';
+import type {IGatewayService} from '../../infrastructure/IGatewayService';
+import {Logger} from '../../Logger';
 import type {User} from '../../models/User';
 import {lookupGeoip} from '../../utils/IpUtils';
 
@@ -36,10 +42,35 @@ function hasAcl(acls: ReadonlySet<string>, acl: string): boolean {
 	return acls.has(acl) || acls.has(AdminACLs.WILDCARD);
 }
 
+async function getAdminActivities(user: User, gatewayService?: IGatewayService): Promise<Array<UserActivity>> {
+	if (!gatewayService) {
+		return [];
+	}
+	try {
+		return await gatewayService.getCurrentActivities(user.id);
+	} catch (error) {
+		if (
+			error instanceof GatewayTimeoutError ||
+			error instanceof BadGatewayError ||
+			error instanceof ServiceUnavailableError
+		) {
+			Logger.warn({userId: user.id.toString(), error}, 'Failed to fetch current activities for admin response');
+			return [];
+		}
+		throw error;
+	}
+}
+
+interface MapUserToAdminResponseOptions {
+	includeActivities?: boolean;
+}
+
 export async function mapUserToAdminResponse(
 	user: User,
 	cacheService?: ICacheService,
 	acls?: ReadonlySet<string>,
+	gatewayService?: IGatewayService,
+	options?: MapUserToAdminResponseOptions,
 ): Promise<UserAdminResponse> {
 	const canViewEmail = !acls || hasAcl(acls, AdminACLs.USER_VIEW_EMAIL);
 	const canViewDob = !acls || hasAcl(acls, AdminACLs.USER_VIEW_DOB);
@@ -56,6 +87,7 @@ export async function mapUserToAdminResponse(
 			lastActiveLocation = null;
 		}
 	}
+	const activities = options?.includeActivities === false ? [] : await getAdminActivities(user, gatewayService);
 	return {
 		id: user.id.toString(),
 		username: user.username,
@@ -69,6 +101,7 @@ export async function mapUserToAdminResponse(
 		banner: user.bannerHash,
 		bio: user.bio,
 		pronouns: user.pronouns,
+		activities,
 		accent_color: user.accentColor,
 		email: canViewEmail ? (user.email ?? null) : null,
 		email_verified: canViewEmail ? user.emailVerified : false,

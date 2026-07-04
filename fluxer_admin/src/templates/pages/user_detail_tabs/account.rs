@@ -191,6 +191,7 @@ fn clear_fields_card(base: &str, user: &AdminUser, csrf_token: &str) -> Markup {
         || user.banner.is_some()
         || user.bio.is_some()
         || user.pronouns.is_some()
+        || !user.activities.is_empty()
         || user.global_name.is_some();
     if !has {
         return html! {};
@@ -211,6 +212,7 @@ fn clear_fields_card(base: &str, user: &AdminUser, csrf_token: &str) -> Markup {
                         @if user.banner.is_some() { (checkbox("fields[]", "banner", "Banner", false, true)) }
                         @if user.bio.is_some() { (checkbox("fields[]", "bio", "Bio", false, true)) }
                         @if user.pronouns.is_some() { (checkbox("fields[]", "pronouns", "Pronouns", false, true)) }
+                        @if !user.activities.is_empty() { (checkbox("fields[]", "activity", "Activity", false, true)) }
                         @if user.global_name.is_some() { (checkbox("fields[]", "global_name", "Display Name", false, true)) }
                     }
                     (form_actions(html! {

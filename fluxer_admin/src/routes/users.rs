@@ -2,6 +2,7 @@
 
 use crate::{
     acl,
+    activity::{ActivityImageFetchError, fetch_activity_image},
     api::client::{AdminApiClient, ApiResultExt},
     middleware::{auth::AuthContext, csrf::CsrfToken, flash, htmx},
     routes::user_tabs,
@@ -12,7 +13,7 @@ use crate::{
 use axum::{
     Router,
     extract::{Path, Query, Request, State},
-    http::HeaderMap,
+    http::{HeaderMap, HeaderValue, StatusCode, header},
     response::{Html, IntoResponse, Response},
     routing::get,
 };
@@ -50,13 +51,53 @@ struct ActionQuery {
     tab: Option<String>,
 }
 
+#[derive(Deserialize)]
+struct ActivityImageQuery {
+    url: String,
+}
+
 pub fn router() -> Router<AppState> {
     Router::new()
         .route("/users", get(users_list))
+        .route("/activity-image", get(activity_image))
         .route("/users/{user_id}", get(user_detail).post(user_detail_post))
+        .route(
+            "/users/{user_id}/activity-fragment",
+            get(user_activity_fragment),
+        )
         .route("/users/{user_id}/tabs/{tab}", get(user_tab))
         .route("/users/{user_id}/peek", get(user_peek))
         .route("/users/{user_id}/fragment", get(user_peek))
+}
+
+async fn activity_image(Query(query): Query<ActivityImageQuery>) -> Response {
+    match fetch_activity_image(&query.url).await {
+        Ok((content_type, bytes)) => {
+            let mut response = (StatusCode::OK, bytes).into_response();
+            if let Ok(value) = HeaderValue::from_str(&content_type) {
+                response.headers_mut().insert(header::CONTENT_TYPE, value);
+            }
+            response.headers_mut().insert(
+                header::CACHE_CONTROL,
+                HeaderValue::from_static("public, max-age=3600"),
+            );
+            response
+        }
+        Err(
+            ActivityImageFetchError::InvalidUrl
+            | ActivityImageFetchError::UntrustedHost
+            | ActivityImageFetchError::BadContentType,
+        ) => (StatusCode::BAD_REQUEST, "").into_response(),
+        Err(ActivityImageFetchError::TooLarge) => {
+            (StatusCode::PAYLOAD_TOO_LARGE, "").into_response()
+        }
+        Err(ActivityImageFetchError::BadStatus(StatusCode::NOT_FOUND)) => {
+            (StatusCode::NOT_FOUND, "").into_response()
+        }
+        Err(ActivityImageFetchError::BadStatus(_)) | Err(ActivityImageFetchError::Upstream(_)) => {
+            (StatusCode::BAD_GATEWAY, "").into_response()
+        }
+    }
 }
 
 async fn users_list(
@@ -252,6 +293,29 @@ async fn user_tab(
         }
         None => maud::html! {
             div class="p-4 text-red-600 text-sm" { "Failed to load user data." }
+        },
+    };
+    Html(markup.into_string()).into_response()
+}
+
+async fn user_activity_fragment(
+    State(state): State<AppState>,
+    auth: axum::Extension<AuthContext>,
+    Path(user_id): Path<String>,
+) -> Response {
+    let config = state.config();
+    let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
+    let user = client
+        .get_user_by_id(&user_id)
+        .await
+        .log_error("load user activity fragment");
+    let markup = match user {
+        Some(ref u) => templates::pages::user_detail_tabs::overview::activity_detail_row(config, u),
+        None => maud::html! {
+            div class="flex flex-col gap-1 py-3 sm:flex-row sm:gap-4" id="user-activity-row" {
+                dt class="w-48 flex-shrink-0 text-sm font-medium text-neutral-500" { "Activity" }
+                dd class="min-w-0 flex-1 text-sm text-neutral-400" { "None" }
+            }
         },
     };
     Html(markup.into_string()).into_response()

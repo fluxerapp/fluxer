@@ -73,7 +73,7 @@ export function UserAdminController(app: HonoApp) {
 			const adminUser = ctx.get('user');
 			const cacheService = ctx.get('cacheService');
 			return ctx.json({
-				user: await mapUserToAdminResponse(adminUser, cacheService),
+				user: await mapUserToAdminResponse(adminUser, cacheService, undefined, ctx.get('apiContext').services.gateway),
 			});
 		},
 	);

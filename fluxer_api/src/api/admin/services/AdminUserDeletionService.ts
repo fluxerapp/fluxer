@@ -49,7 +49,7 @@ export class AdminUserDeletionService {
 		auditLogReason: string | null,
 		acls: ReadonlySet<string>,
 	) {
-		const {users: userRepository, email: emailService, cache: cacheService} = this.deps.apiContext.services;
+		const {users: userRepository, email: emailService, cache: cacheService, gateway: gatewayService} = this.deps.apiContext.services;
 		const {auditService, updatePropagator} = this.deps;
 		const userId = createUserID(data.user_id);
 		const user = await userRepository.findUnique(userId);
@@ -172,7 +172,7 @@ export class AdminUserDeletionService {
 			]),
 		});
 		return {
-			user: await mapUserToAdminResponse(updatedUser, cacheService, acls),
+			user: await mapUserToAdminResponse(updatedUser, cacheService, acls, gatewayService),
 		};
 	}
 
@@ -184,7 +184,7 @@ export class AdminUserDeletionService {
 		auditLogReason: string | null,
 		acls: ReadonlySet<string>,
 	) {
-		const {users: userRepository, email: emailService, cache: cacheService} = this.deps.apiContext.services;
+		const {users: userRepository, email: emailService, cache: cacheService, gateway: gatewayService} = this.deps.apiContext.services;
 		const {auditService, updatePropagator} = this.deps;
 		const userId = createUserID(data.user_id);
 		const user = await userRepository.findUnique(userId);
@@ -226,7 +226,7 @@ export class AdminUserDeletionService {
 			metadata: new Map(),
 		});
 		return {
-			user: await mapUserToAdminResponse(updatedUser, cacheService, acls),
+			user: await mapUserToAdminResponse(updatedUser, cacheService, acls, gatewayService),
 		};
 	}
 
