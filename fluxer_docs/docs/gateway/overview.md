@@ -1,4 +1,4 @@
-# Gateway
+# Overview
 
 `fluxer_gateway` is the Erlang OTP WebSocket gateway for Fluxer. Clients connect over WebSocket and interact with per-user Session processes, which coordinate with per-guild Guild processes, the Presence subsystem, and a NATS-backed inter-node RPC layer.
 
