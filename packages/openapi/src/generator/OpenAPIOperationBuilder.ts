@@ -253,6 +253,9 @@ export class OpenAPIOperationBuilder {
 		if (typeString.includes('UnsignedInt64Type')) {
 			return {type: 'string', format: 'int64', pattern: '^[0-9]+$'};
 		}
+		if (typeString.includes('NonNegativeSafeIntegerType')) {
+			return {type: 'integer', minimum: 0, maximum: 9007199254740991, format: 'int53'};
+		}
 		if (typeString.includes('Int64StringType')) {
 			return {type: 'string', format: 'int64', pattern: '^-?[0-9]+$'};
 		}

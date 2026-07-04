@@ -15,7 +15,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::env;
 use std::ffi::{OsStr, OsString};
 use std::fs::{self, OpenOptions};
-use std::io::{self, Read, Write};
+use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::sync::Arc;
@@ -23,6 +23,8 @@ use std::time::Duration;
 use tokio::sync::Semaphore;
 use tokio::task::JoinSet;
 use walkdir::WalkDir;
+
+pub(crate) use crate::functions::{remove_dir_if_exists, remove_file_if_exists};
 
 const DEFAULT_S3_WRITE_CONCURRENCY: usize = 8;
 const DEFAULT_S3_RETRY_ATTEMPTS: u32 = 8;
@@ -1482,22 +1484,6 @@ pub(crate) fn require_home() -> Result<PathBuf> {
         .or_else(|_| env::var("USERPROFILE"))
         .map(PathBuf::from)
         .context("HOME or USERPROFILE is required")
-}
-
-pub(crate) fn remove_file_if_exists(path: &Path) -> Result<()> {
-    match fs::remove_file(path) {
-        Ok(()) => Ok(()),
-        Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(()),
-        Err(error) => Err(error).with_context(|| format!("Failed to remove {}", path.display())),
-    }
-}
-
-pub(crate) fn remove_dir_if_exists(path: &Path) -> Result<()> {
-    match fs::remove_dir_all(path) {
-        Ok(()) => Ok(()),
-        Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(()),
-        Err(error) => Err(error).with_context(|| format!("Failed to remove {}", path.display())),
-    }
 }
 
 pub(crate) fn copy_dir_contents(source: &Path, dest: &Path) -> Result<()> {

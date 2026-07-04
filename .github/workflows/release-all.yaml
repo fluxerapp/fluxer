@@ -1,0 +1,282 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+name: release all builds
+
+on:
+  workflow_dispatch:
+    inputs:
+      build-version:
+        description: "Explicit Fluxer CalVer build version (YYYY.MDD.MICRO, UTC HHMMSS without leading zeroes) to use instead of automatic UTC clock allocation"
+        type: string
+        required: false
+        default: ""
+
+permissions:
+  actions: read
+  contents: write
+  packages: write
+
+defaults:
+  run:
+    shell: bash
+
+concurrency:
+  group: release-all-${{ inputs['build-version'] || github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  approve:
+    name: approve release build
+    runs-on: ubuntu-24.04
+    environment: builds
+    timeout-minutes: 5
+    steps:
+      - name: approved
+        run: echo "Release build approved."
+
+  meta:
+    name: resolve metadata
+    needs: approve
+    if: ${{ !failure() && !cancelled() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      build_version: ${{ steps.vars.outputs.build_version }}
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        env:
+          GIT_CONFIG_GLOBAL: ${{ runner.temp }}/gitconfig
+      - name: Set up Rust toolchain (CI helpers)
+        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
+        with:
+          toolchain: "1.93.0"
+      - name: set variables
+        id: vars
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FLUXER_BUILD_VERSION: ${{ inputs['build-version'] }}
+        run: >-
+          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- resolve-calver
+          --github-output
+
+  build_admin:
+    needs: meta
+    uses: ./.github/workflows/build-admin.yaml
+    with:
+      build-version: ${{ needs.meta.outputs.build_version }}
+      finalise-release: false
+      approval-required: false
+    secrets: inherit
+
+  build_api:
+    needs: meta
+    uses: ./.github/workflows/build-api.yaml
+    with:
+      build-version: ${{ needs.meta.outputs.build_version }}
+      finalise-release: false
+      approval-required: false
+    secrets: inherit
+
+  build_app_proxy:
+    needs: meta
+    uses: ./.github/workflows/build-app-proxy.yaml
+    with:
+      build-version: ${{ needs.meta.outputs.build_version }}
+      finalise-release: false
+      approval-required: false
+    secrets: inherit
+
+  build_app_proxy_self_hosted:
+    needs: meta
+    uses: ./.github/workflows/build-app-proxy-self-hosted.yaml
+    with:
+      build-version: ${{ needs.meta.outputs.build_version }}
+      finalise-release: false
+      approval-required: false
+    secrets: inherit
+
+  build_docs:
+    needs: meta
+    uses: ./.github/workflows/build-docs.yaml
+    with:
+      build-version: ${{ needs.meta.outputs.build_version }}
+      finalise-release: false
+      approval-required: false
+    secrets: inherit
+
+  build_gateway:
+    needs: meta
+    uses: ./.github/workflows/build-gateway.yaml
+    with:
+      build-version: ${{ needs.meta.outputs.build_version }}
+      finalise-release: false
+      approval-required: false
+    secrets: inherit
+
+  build_gifs:
+    needs: meta
+    uses: ./.github/workflows/build-gifs.yaml
+    with:
+      build-version: ${{ needs.meta.outputs.build_version }}
+      finalise-release: false
+      approval-required: false
+    secrets: inherit
+
+  build_marketing:
+    needs: meta
+    uses: ./.github/workflows/build-marketing.yaml
+    with:
+      build-version: ${{ needs.meta.outputs.build_version }}
+      finalise-release: false
+      approval-required: false
+    secrets: inherit
+
+  build_media_proxy:
+    needs: meta
+    uses: ./.github/workflows/build-media-proxy.yaml
+    with:
+      build-version: ${{ needs.meta.outputs.build_version }}
+      finalise-release: false
+      approval-required: false
+    secrets: inherit
+
+  build_messages:
+    needs: meta
+    uses: ./.github/workflows/build-messages.yaml
+    with:
+      build-version: ${{ needs.meta.outputs.build_version }}
+      finalise-release: false
+      approval-required: false
+    secrets: inherit
+
+  build_snowflakes:
+    needs: meta
+    uses: ./.github/workflows/build-snowflakes.yaml
+    with:
+      build-version: ${{ needs.meta.outputs.build_version }}
+      finalise-release: false
+      approval-required: false
+    secrets: inherit
+
+  build_static:
+    needs: meta
+    uses: ./.github/workflows/build-static.yaml
+    with:
+      build-version: ${{ needs.meta.outputs.build_version }}
+      finalise-release: false
+      approval-required: false
+    secrets: inherit
+
+  build_unfurl:
+    needs: meta
+    uses: ./.github/workflows/build-unfurl.yaml
+    with:
+      build-version: ${{ needs.meta.outputs.build_version }}
+      finalise-release: false
+      approval-required: false
+    secrets: inherit
+
+  build_users:
+    needs: meta
+    uses: ./.github/workflows/build-users.yaml
+    with:
+      build-version: ${{ needs.meta.outputs.build_version }}
+      finalise-release: false
+      approval-required: false
+    secrets: inherit
+
+  release_assets:
+    name: package Helm/self-hosting
+    if: ${{ !failure() && !cancelled() }}
+    needs:
+      - meta
+      - build_admin
+      - build_api
+      - build_app_proxy
+      - build_app_proxy_self_hosted
+      - build_docs
+      - build_gateway
+      - build_gifs
+      - build_marketing
+      - build_media_proxy
+      - build_messages
+      - build_snowflakes
+      - build_static
+      - build_unfurl
+      - build_users
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        env:
+          GIT_CONFIG_GLOBAL: ${{ runner.temp }}/gitconfig
+      - name: Set up Rust toolchain (CI helpers)
+        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
+        with:
+          toolchain: "1.93.0"
+      - name: Set up Helm
+        uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310
+      - name: Publish self-hosting bundle
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- release
+          publish-self-hosting
+          --build-version "${{ needs.meta.outputs.build_version }}"
+      - name: Publish Helm chart bundle
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- release
+          publish-helm
+          --build-version "${{ needs.meta.outputs.build_version }}"
+      - name: Upload release asset fragments
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: release-fragment-release-assets
+          path: release-out/fragments/*.json
+          if-no-files-found: error
+          retention-days: 14
+
+  finalise:
+    name: finalise GitHub release manifest
+    if: ${{ !failure() && !cancelled() }}
+    needs:
+      - meta
+      - build_admin
+      - build_api
+      - build_app_proxy
+      - build_app_proxy_self_hosted
+      - build_docs
+      - build_gateway
+      - build_gifs
+      - build_marketing
+      - build_media_proxy
+      - build_messages
+      - build_snowflakes
+      - build_static
+      - build_unfurl
+      - build_users
+      - release_assets
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        env:
+          GIT_CONFIG_GLOBAL: ${{ runner.temp }}/gitconfig
+      - name: Set up Rust toolchain (CI helpers)
+        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
+        with:
+          toolchain: "1.93.0"
+      - name: Download GitHub release fragments
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          pattern: release-fragment-*
+          path: release-out/fragments
+          merge-multiple: true
+      - name: Finalise GitHub release manifest
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- release
+          finalise
+          --build-version "${{ needs.meta.outputs.build_version }}"

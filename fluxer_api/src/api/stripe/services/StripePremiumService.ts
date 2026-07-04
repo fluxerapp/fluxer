@@ -4,8 +4,9 @@ import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {MissingAccessError} from '@fluxer/errors/src/domains/core/MissingAccessError';
 import {StripeError} from '@fluxer/errors/src/domains/payment/StripeError';
 import type {UserID} from '../../BrandedTypes';
-import {createGuildID} from '../../BrandedTypes';
+import {createGuildID, createRoleID} from '../../BrandedTypes';
 import {Config} from '../../Config';
+import {SYSTEM_USER_ID} from '../../constants/Core';
 import type {GiftCodeDurationType} from '../../database/types/PaymentTypes';
 import type {UserRow} from '../../database/types/UserTypes';
 import type {IGuildRepositoryAggregate} from '../../guild/repositories/IGuildRepositoryAggregate';
@@ -286,7 +287,12 @@ export class StripePremiumService {
 		if (!Config.instance.visionariesGuildId) {
 			throw new StripeError('Visionaries guild id not configured');
 		}
+		if (!Config.instance.visionariesGuildVisionaryRoleId) {
+			throw new StripeError('Visionaries guild visionary role id not configured');
+		}
 		const visionariesGuildId = createGuildID(BigInt(Config.instance.visionariesGuildId));
+		const visionaryRoleId = createRoleID(BigInt(Config.instance.visionariesGuildVisionaryRoleId));
+		const requestCache = createRequestCache();
 		const existingMember = await this.guildRepository.getMember(visionariesGuildId, userId);
 		if (!existingMember) {
 			await this.guildService.members.addUserToGuild({
@@ -294,9 +300,24 @@ export class StripePremiumService {
 				guildId: visionariesGuildId,
 				sendJoinMessage: true,
 				skipBanCheck: true,
-				requestCache: createRequestCache(),
+				requestCache,
 			});
 			Logger.debug({userId, guildId: visionariesGuildId}, 'Added visionary user to visionaries guild');
+		}
+
+		try {
+			await this.guildService.members.systemAddMemberRole({
+				targetId: userId,
+				guildId: visionariesGuildId,
+				roleId: visionaryRoleId,
+				initiatorId: SYSTEM_USER_ID,
+				requestCache,
+			});
+		} catch (error) {
+			Logger.error(
+				{userId, guildId: visionariesGuildId, roleId: visionaryRoleId, error},
+				'Failed to add visionary role to a rejoining visionary.',
+			);
 		}
 	}
 

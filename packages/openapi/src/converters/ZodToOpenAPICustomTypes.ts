@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import {
 	Base64ImageTypeRef,
+	DiscriminatorTypeRef,
 	EmailTypeRef,
 	Int32TypeRef,
 	Int64StringTypeRef,
 	Int64TypeRef,
 	LocaleRef,
+	NonNegativeSafeIntegerTypeRef,
 	PasswordTypeRef,
 	PhoneNumberTypeRef,
 	SnowflakeTypeRef,
@@ -50,6 +52,8 @@ function getRefForCustomTypeName(typeName: string): OpenAPISchemaOrRef | null {
 			return SnowflakeTypeRef;
 		case 'Int32Type':
 			return Int32TypeRef;
+		case 'NonNegativeSafeIntegerType':
+			return NonNegativeSafeIntegerTypeRef;
 		case 'Int64Type':
 			return Int64TypeRef;
 		case 'Int64StringType':
@@ -58,6 +62,8 @@ function getRefForCustomTypeName(typeName: string): OpenAPISchemaOrRef | null {
 			return UnsignedInt64TypeRef;
 		case 'UsernameType':
 			return UsernameTypeRef;
+		case 'DiscriminatorType':
+			return DiscriminatorTypeRef;
 		case 'EmailType':
 			return EmailTypeRef;
 		case 'PasswordType':
@@ -214,6 +220,7 @@ const FLUXER_CUSTOM_TYPES: Record<string, OpenAPISchema> = {
 	BitflagStringType: {type: 'string', format: 'int64', pattern: '^[0-9]+$'},
 	ColorType: {type: 'integer', minimum: 0, maximum: 16777215, format: 'int32'},
 	Int32Type: {type: 'integer', minimum: 0, maximum: 2147483647, format: 'int32'},
+	NonNegativeSafeIntegerType: {type: 'integer', minimum: 0, maximum: 9007199254740991, format: 'int53'},
 	EmailType: {type: 'string', format: 'email'},
 	PasswordType: {type: 'string', minLength: 8, maxLength: 256},
 	UsernameType: {type: 'string', minLength: 1, maxLength: 32, pattern: '^[a-zA-Z0-9_]+$'},

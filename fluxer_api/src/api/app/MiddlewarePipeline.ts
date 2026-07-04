@@ -68,7 +68,7 @@ export function configureMiddleware(routes: HonoApp, options: MiddlewarePipeline
 				enabled: true,
 				logger,
 				trustClientIpHeader,
-				clientIpHeaderName: clientIpHeaderName ?? 'x-forwarded-for',
+				clientIpHeaderName: resolvedHeader,
 			}),
 		);
 	}

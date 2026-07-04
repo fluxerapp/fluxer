@@ -408,11 +408,6 @@ fn integrations_config_section(
     csrf_token: &str,
     integrations: &InstanceIntegrationsResponse,
 ) -> Markup {
-    let gif_provider = integrations
-        .gif
-        .provider
-        .as_deref()
-        .unwrap_or(integrations.gif.effective_provider.as_str());
     let captcha_provider = integrations
         .captcha
         .provider
@@ -435,15 +430,9 @@ fn integrations_config_section(
                         div class="flex flex-wrap items-center gap-2" {
                             h3 class="text-sm font-semibold text-neutral-900" { "GIF provider" }
                             (secret_badge("KLIPY key", integrations.gif.klipy_api_key_set))
-                            (secret_badge("Tenor key", integrations.gif.tenor_api_key_set))
                         }
-                        div class="grid grid-cols-1 gap-4 sm:grid-cols-3" {
-                            (select_input("integration_gif_provider", "Provider", &[
-                                ("klipy", "KLIPY"),
-                                ("tenor", "Tenor"),
-                            ], gif_provider))
+                        div class="grid grid-cols-1 gap-4" {
                             (password_input("integration_klipy_api_key", "KLIPY API key", Some("Leave blank to keep the current key.")))
-                            (password_input("integration_tenor_api_key", "Tenor API key", Some("Leave blank to keep the current key.")))
                         }
                     }
 
@@ -492,6 +481,11 @@ fn integrations_config_section(
                             } @else {
                                 (badge("Effective: disabled", BadgeVariant::Default))
                             }
+                            @if integrations.email.effective_disable_new_ip_authorization {
+                                (badge("IP auth disabled", BadgeVariant::Warning))
+                            } @else {
+                                (badge("IP auth required", BadgeVariant::Default))
+                            }
                             (secret_badge("SMTP password", integrations.email.smtp.password_set))
                         }
                         (checkbox("integration_email_enabled", "true", "Enable email delivery", integrations.email.effective_enabled, true))
@@ -529,6 +523,7 @@ fn integrations_config_section(
                             (password_input("integration_smtp_password", "SMTP password", Some("Leave blank to keep the current password.")))
                         }
                         (checkbox("integration_smtp_secure", "true", "Use TLS", integrations.email.smtp.secure.unwrap_or(true), true))
+                        (checkbox("integration_email_disable_new_ip_authorization", "true", "Disable new IP login authorisation", integrations.email.disable_new_ip_authorization, true))
                         div class="flex flex-wrap gap-2" {
                             button type="submit"
                                 formaction={(base) "/instance-config?action=test_smtp"}

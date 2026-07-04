@@ -20,19 +20,19 @@ jobs:
     timeout-minutes: 25
     steps:
       - name: Checkout code
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
 
       - name: Set up Rust toolchain (CI helpers)
-        uses: dtolnay/rust-toolchain@b3b07ba8b418998c39fb20f53e8b695cdcc8de1b
+        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
         with:
           toolchain: "1.93.0"
           targets: wasm32-unknown-unknown
 
       - name: Install pnpm
-        uses: pnpm/action-setup@c5ba7f7862a0f64c1b1a05fbac13e0b8e86ba08c
+        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271
 
       - name: Install Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version: '24'
           cache: 'pnpm'
@@ -52,19 +52,19 @@ jobs:
     timeout-minutes: 25
     steps:
       - name: Checkout code
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
 
       - name: Set up Rust toolchain (CI helpers)
-        uses: dtolnay/rust-toolchain@b3b07ba8b418998c39fb20f53e8b695cdcc8de1b
+        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
         with:
           toolchain: "1.93.0"
           targets: wasm32-unknown-unknown
 
       - name: Install pnpm
-        uses: pnpm/action-setup@c5ba7f7862a0f64c1b1a05fbac13e0b8e86ba08c
+        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271
 
       - name: Install Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version: '24'
           cache: 'pnpm'
@@ -84,25 +84,25 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Checkout code
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
 
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8
+        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
         with:
           toolchain: stable
           components: clippy, rustfmt
 
       - name: Install pnpm
-        uses: pnpm/action-setup@c5ba7f7862a0f64c1b1a05fbac13e0b8e86ba08c
+        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271
 
       - name: Install Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version: '24'
           cache: 'pnpm'
 
       - name: Cache cargo
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
           path: |
             ~/.cargo/registry
@@ -141,21 +141,21 @@ jobs:
     timeout-minutes: 25
     steps:
       - name: Checkout code
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
 
       - name: Set up Rust toolchain (CI helpers)
-        uses: dtolnay/rust-toolchain@b3b07ba8b418998c39fb20f53e8b695cdcc8de1b
+        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
         with:
           toolchain: "1.93.0"
 
       - name: Set up Erlang
-        uses: erlef/setup-beam@3559ac3b631a9560f28817e8e7fdde1638664336
+        uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124
         with:
           otp-version: '28'
           rebar3-version: '3.24.0'
 
       - name: Cache rebar3 dependencies
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
           path: |
             fluxer_gateway/_build
@@ -189,19 +189,19 @@ jobs:
     timeout-minutes: 25
     steps:
       - name: Checkout code
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
 
       - name: Set up Rust toolchain (CI helpers)
-        uses: dtolnay/rust-toolchain@b3b07ba8b418998c39fb20f53e8b695cdcc8de1b
+        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
         with:
           toolchain: "1.93.0"
           targets: wasm32-unknown-unknown
 
       - name: Install pnpm
-        uses: pnpm/action-setup@c5ba7f7862a0f64c1b1a05fbac13e0b8e86ba08c
+        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271
 
       - name: Install Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version: '24'
           cache: 'pnpm'
@@ -221,10 +221,10 @@ jobs:
     timeout-minutes: 25
     steps:
       - name: Checkout code
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
 
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8
+        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
         with:
           toolchain: stable
           components: rustfmt
@@ -244,15 +244,15 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Checkout code
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
 
       - name: Set up Rust toolchain (CI helpers)
-        uses: dtolnay/rust-toolchain@b3b07ba8b418998c39fb20f53e8b695cdcc8de1b
+        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
         with:
           toolchain: "1.93.0"
 
       - name: Install helm
-        uses: azure/setup-helm@bf6a7d304bc2fdb57e0331155b7ebf2c504acf0a
+        uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310
 
       - name: Resolve Helm test build version
         run: >-
@@ -309,7 +309,7 @@ jobs:
                 *worker*)
                   EXTRA_SETS+=(--set-string "workerRealtime.tag=${HELM_TEST_BUILD_VERSION}" --set-string "workerUnfurl.tag=${HELM_TEST_BUILD_VERSION}" --set-string "workerLifecycle.tag=${HELM_TEST_BUILD_VERSION}" --set-string "workerBatch.tag=${HELM_TEST_BUILD_VERSION}" --set-string "workerRealtime.build.version=${HELM_TEST_BUILD_VERSION}" --set-string "workerUnfurl.build.version=${HELM_TEST_BUILD_VERSION}" --set-string "workerLifecycle.build.version=${HELM_TEST_BUILD_VERSION}" --set-string "workerBatch.build.version=${HELM_TEST_BUILD_VERSION}")
                   ;;
-                *member-lists*|*messages*|*presence*|*snowflakes*|*unfurl*|*users*|*voice-states*)
+                *gifs*|*messages*|*snowflakes*|*unfurl*|*users*)
                   EXTRA_SETS+=(--set-string "svc.tag=${HELM_TEST_BUILD_VERSION}" --set-string "svc.build.version=${HELM_TEST_BUILD_VERSION}" --set-string svc.build.channel=stable)
                   ;;
               esac

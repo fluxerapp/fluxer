@@ -12,6 +12,7 @@ import {Logger} from '../Logger';
 import type {HonoApp} from '../types/HonoEnv';
 import type {IUserRepository} from '../user/IUserRepository';
 import {mapUserToPrivateResponse} from '../user/UserMappers';
+import {resolveRequestClientIp} from '../utils/IpUtils';
 
 interface TwilioInboundSmsWebhookContext {
 	authToken: string;
@@ -29,7 +30,7 @@ export function installTwilioInboundSmsWebhook(app: HonoApp, ctx: TwilioInboundS
 		const params = parseFormUrlEncoded(rawBody);
 		const signature = c.req.header('x-twilio-signature') ?? '';
 		if (!verifyTwilioSignature(ctx.authToken, ctx.publicWebhookUrl, params, signature)) {
-			Logger.warn({ip: c.req.header('cf-connecting-ip') ?? '?'}, 'Twilio webhook signature failed; rejecting');
+			Logger.warn({ip: resolveRequestClientIp(c.req.raw) ?? '?'}, 'Twilio webhook signature failed; rejecting');
 			return c.text('forbidden', 403);
 		}
 		const fromPhone = params.get('From') ?? '';

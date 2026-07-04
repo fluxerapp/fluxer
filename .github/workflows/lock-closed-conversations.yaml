@@ -1,0 +1,256 @@
+name: Lock closed conversations
+
+on:
+  issues:
+    types:
+      - closed
+  pull_request_target:
+    types:
+      - closed
+  discussion:
+    types:
+      - answered
+      - category_changed
+      - created
+      - edited
+      - labeled
+      - pinned
+      - transferred
+      - unanswered
+      - unlabeled
+      - unpinned
+  schedule:
+    - cron: "17 4 * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Report matching closed conversations without locking them.
+        required: true
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
+
+permissions: {}
+
+concurrency:
+  group: lock-closed-conversations-${{ github.event.issue.number || github.event.pull_request.number || github.event.discussion.number || github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  automatic:
+    name: Lock closed conversation
+    if: github.event_name != 'workflow_dispatch' && github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create token
+        id: create-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1
+        with:
+          client-id: ${{ vars.FLUXER_CI_APP_ID }}
+          private-key: ${{ secrets.FLUXER_CI_APP_KEY }}
+          owner: fluxerapp
+          repositories: fluxer
+          permission-discussions: write
+          permission-issues: write
+          permission-pull-requests: write
+
+      - name: Lock conversation
+        env:
+          GH_TOKEN: ${{ steps.create-token.outputs.token }}
+        run: |
+          set -euo pipefail
+
+          lock_discussion() {
+            local discussion_id="$1"
+
+            gh api graphql \
+              -f id="$discussion_id" \
+              -f query="
+                mutation(\$id: ID!) {
+                  lockLockable(input: {lockableId: \$id}) {
+                    lockedRecord {
+                      locked
+                    }
+                  }
+                }
+              " \
+              --silent
+          }
+
+          owner="${GITHUB_REPOSITORY%/*}"
+          repository="${GITHUB_REPOSITORY#*/}"
+
+          if [ "$GITHUB_EVENT_NAME" = "discussion" ]; then
+            number="$(jq -r '.discussion.number // empty' "$GITHUB_EVENT_PATH")"
+            if [ -z "$number" ]; then
+              echo "Skipping discussion event; discussion number is unavailable."
+              exit 0
+            fi
+
+            sleep 10
+
+            discussion="$(
+              gh api graphql \
+                -F owner="$owner" \
+                -F name="$repository" \
+                -F number="$number" \
+                -f query="
+                  query(\$owner: String!, \$name: String!, \$number: Int!) {
+                    repository(owner: \$owner, name: \$name) {
+                      discussion(number: \$number) {
+                        id
+                        closed
+                        locked
+                      }
+                    }
+                  }
+                "
+            )"
+            discussion_id="$(jq -r '.data.repository.discussion.id // empty' <<<"$discussion")"
+            closed="$(jq -r '.data.repository.discussion.closed // empty' <<<"$discussion")"
+            locked="$(jq -r '.data.repository.discussion.locked // empty' <<<"$discussion")"
+
+            if [ -z "$discussion_id" ]; then
+              echo "Skipping discussion #${number}; discussion is unavailable."
+              exit 0
+            fi
+
+            if [ "$closed" != "true" ]; then
+              echo "Skipping discussion #${number}; discussion is not closed."
+              exit 0
+            fi
+
+            if [ "$locked" = "true" ]; then
+              echo "Skipping discussion #${number}; conversation is already locked."
+              exit 0
+            fi
+
+            lock_discussion "$discussion_id"
+            exit 0
+          fi
+
+          number="$(jq -r '.issue.number // .pull_request.number' "$GITHUB_EVENT_PATH")"
+          sleep 10
+
+          issue="$(gh api "repos/${GITHUB_REPOSITORY}/issues/${number}")"
+          state="$(jq -r '.state' <<<"$issue")"
+          locked="$(jq -r '.locked' <<<"$issue")"
+
+          if [ "$state" != "closed" ]; then
+            echo "Skipping #${number}; state is ${state}."
+            exit 0
+          fi
+
+          if [ "$locked" = "true" ]; then
+            echo "Skipping #${number}; conversation is already locked."
+            exit 0
+          fi
+
+          gh api \
+            --method PUT \
+            "repos/${GITHUB_REPOSITORY}/issues/${number}/lock" \
+            --field lock_reason=resolved
+
+  retroactive:
+    name: Lock closed conversations retroactively
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create token
+        id: create-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1
+        with:
+          client-id: ${{ vars.FLUXER_CI_APP_ID }}
+          private-key: ${{ secrets.FLUXER_CI_APP_KEY }}
+          owner: fluxerapp
+          repositories: fluxer
+          permission-discussions: write
+          permission-issues: write
+          permission-pull-requests: write
+
+      - name: Lock closed conversations
+        env:
+          DRY_RUN: ${{ inputs.dry_run || 'false' }}
+          GH_TOKEN: ${{ steps.create-token.outputs.token }}
+        run: |
+          set -euo pipefail
+
+          lock_discussion() {
+            local discussion_id="$1"
+
+            gh api graphql \
+              -f id="$discussion_id" \
+              -f query="
+                mutation(\$id: ID!) {
+                  lockLockable(input: {lockableId: \$id}) {
+                    lockedRecord {
+                      locked
+                    }
+                  }
+                }
+              " \
+              --silent
+          }
+
+          owner="${GITHUB_REPOSITORY%/*}"
+          repository="${GITHUB_REPOSITORY#*/}"
+
+          count=0
+          while IFS=$'\t' read -r number kind; do
+            count=$((count + 1))
+
+            if [ "$DRY_RUN" = "true" ]; then
+              echo "Would lock ${kind} #${number} as resolved."
+              continue
+            fi
+
+            echo "Locking ${kind} #${number} as resolved."
+            gh api \
+              --method PUT \
+              "repos/${GITHUB_REPOSITORY}/issues/${number}/lock" \
+              --field lock_reason=resolved \
+              --silent
+          done < <(
+            gh api --paginate "repos/${GITHUB_REPOSITORY}/issues?state=closed&per_page=100" \
+              --jq '.[] | select(.locked == false) | [.number, (if has("pull_request") then "pull request" else "issue" end)] | @tsv'
+          )
+
+          while IFS=$'\t' read -r discussion_id number; do
+            count=$((count + 1))
+
+            if [ "$DRY_RUN" = "true" ]; then
+              echo "Would lock discussion #${number} as resolved."
+              continue
+            fi
+
+            echo "Locking discussion #${number} as resolved."
+            lock_discussion "$discussion_id"
+          done < <(
+            gh api graphql --paginate \
+              -F owner="$owner" \
+              -F name="$repository" \
+              -f query="
+                query(\$owner: String!, \$name: String!, \$endCursor: String) {
+                  repository(owner: \$owner, name: \$name) {
+                    discussions(first: 100, after: \$endCursor, states: CLOSED, orderBy: {field: UPDATED_AT, direction: DESC}) {
+                      nodes {
+                        id
+                        number
+                        locked
+                      }
+                      pageInfo {
+                        hasNextPage
+                        endCursor
+                      }
+                    }
+                  }
+                }
+              " \
+              --jq '.data.repository.discussions.nodes[] | select(.locked == false) | [.id, .number] | @tsv'
+          )
+
+          if [ "$count" -eq 0 ]; then
+            echo "No unlocked closed conversations found."
+          fi

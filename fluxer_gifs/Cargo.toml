@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+[package]
+name = "fluxer-gifs"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+anyhow = "1.0.102"
+base64 = "0.22.1"
+fluxer-svc = { path = "../fluxer_svc", default-features = false }
+hmac = "0.13.0"
+moka = { version = "0.12.15", features = ["future", "sync"] }
+reqwest = { version = "0.13.4", default-features = false, features = ["json", "rustls"] }
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.150"
+sha2 = "0.11.0"
+tokio = { version = "1.52.3", features = ["macros", "rt-multi-thread", "signal", "sync", "time"] }
+tracing = "0.1.44"
+url = "2.5"
+urlencoding = "2.1"

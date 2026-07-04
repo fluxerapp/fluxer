@@ -13,7 +13,6 @@ import bulkDeleteSelfMessagesImmediate from './tasks/BulkDeleteSelfMessagesImmed
 import bulkDeleteUserMessages from './tasks/BulkDeleteUserMessages';
 import bulkDeleteUserMessagesScoped from './tasks/BulkDeleteUserMessagesScoped';
 import deleteUserMessagesInGuildByTime from './tasks/DeleteUserMessagesInGuildByTime';
-import enqueueGifFeaturedCategoriesRefresh from './tasks/EnqueueGifFeaturedCategoriesRefresh';
 import expireAttachments from './tasks/ExpireAttachments';
 import extractEmbeds from './tasks/ExtractEmbeds';
 import finalizeNcmecAttachmentReport from './tasks/FinalizeNcmecAttachmentReport';
@@ -34,7 +33,6 @@ import processPremiumStateReconciliationQueue from './tasks/ProcessPremiumStateR
 import processStripeWebhook from './tasks/ProcessStripeWebhook';
 import prunePostgresKvTtl from './tasks/PrunePostgresKvTtl';
 import reconcileUserPayments from './tasks/ReconcileUserPayments';
-import refreshGifFeaturedCategories from './tasks/RefreshGifFeaturedCategories';
 import refreshSearchIndex from './tasks/RefreshSearchIndex';
 import revalidateUserConnections from './tasks/RevalidateUserConnections';
 import {sendScheduledMessage} from './tasks/SendScheduledMessage';
@@ -60,7 +58,6 @@ export const workerTasks: Record<WorkerTaskName, WorkerTaskHandler> = {
 	bulkUpdateSuspiciousActivityFlags: bulkUpdateSuspiciousActivityFlags,
 	bulkUpdateUserFlags: bulkUpdateUserFlags,
 	deleteUserMessagesInGuildByTime,
-	enqueueGifFeaturedCategoriesRefresh,
 	expireAttachments,
 	extractEmbeds,
 	finalizeNcmecAttachmentReport,
@@ -80,7 +77,6 @@ export const workerTasks: Record<WorkerTaskName, WorkerTaskHandler> = {
 	processPremiumStateReconciliationQueue,
 	reconcileUserPayments,
 	prunePostgresKvTtl,
-	refreshGifFeaturedCategories,
 	refreshSearchIndex,
 	revalidateUserConnections,
 	sendScheduledMessage,

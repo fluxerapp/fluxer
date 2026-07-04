@@ -371,7 +371,13 @@ export function zodToOpenAPISchema(schema: ZodTypeAny, depth = 0): OpenAPISchema
 				const min = result.minimum ?? result.exclusiveMinimum;
 				const max = result.maximum ?? result.exclusiveMaximum;
 				if (min != null && max != null) {
-					result.format = min >= -2147483648 && max <= 2147483647 ? 'int32' : 'int64';
+					if (min >= -2147483648 && max <= 2147483647) {
+						result.format = 'int32';
+					} else if (min >= Number.MIN_SAFE_INTEGER && max <= Number.MAX_SAFE_INTEGER) {
+						result.format = 'int53';
+					} else {
+						result.format = 'int64';
+					}
 				} else if (min == null && max == null) {
 					result.format = 'int53';
 				} else {

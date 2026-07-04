@@ -21,7 +21,6 @@ import {
 } from '@electron/main/DesktopDebugInfo';
 import {hasActiveDesktopTray, refreshDesktopTrayMenu} from '@electron/main/DesktopTray';
 import {drainPendingDisplayMediaRequests, registerDisplayMediaRequestHandler} from '@electron/main/DisplayMedia';
-import {shouldRestoreHtmlFullscreenWindowBounds} from '@electron/main/HtmlFullscreenWindowBounds';
 import {shouldDisableV8CodeCache} from '@electron/main/LaunchOptions';
 import {openExternalDeduped} from '@electron/main/OpenExternal';
 import {registerSpellcheck} from '@electron/main/Spellcheck';
@@ -159,6 +158,7 @@ const windowsHtmlFullscreenStates = new WeakMap<
 	BrowserWindow,
 	{resizable: boolean; bounds: Bounds; isMaximized: boolean; customChromeGuardActive: boolean}
 >();
+let lastGoodWindowBounds: Bounds | null = null;
 
 function getWindowStateFile(): string {
 	if (!windowStateFile) {
@@ -296,6 +296,7 @@ function saveWindowBounds(): void {
 			height: bounds.height,
 			isMaximized,
 		};
+		lastGoodWindowBounds = bounds;
 		const filePath = getWindowStateFile();
 		fs.writeFileSync(filePath, JSON.stringify(windowState, null, 2), 'utf-8');
 		log.debug('Saved window bounds:', windowState);
@@ -501,10 +502,12 @@ function enterWindowsHtmlFullscreenChromeGuard(window: BrowserWindow): void {
 	if (process.platform !== 'win32') return;
 	if (windowsHtmlFullscreenStates.has(window)) return;
 	const customChromeGuardActive = !getActiveUseNativeTitleBar();
+	const bounds = lastGoodWindowBounds ?? window.getNormalBounds();
+	const isMaximized = window.isMaximized();
 	windowsHtmlFullscreenStates.set(window, {
 		resizable: window.isResizable(),
-		bounds: window.getNormalBounds(),
-		isMaximized: window.isMaximized(),
+		bounds,
+		isMaximized,
 		customChromeGuardActive,
 	});
 	if (!customChromeGuardActive) return;
@@ -516,32 +519,10 @@ function restoreWindowsHtmlFullscreenBounds(
 	window: BrowserWindow,
 	previous: {bounds: Bounds; isMaximized: boolean},
 ): void {
-	const restoreIfNeeded = () => {
-		if (!isAliveWindow(window)) return;
-		if (windowsHtmlFullscreenStates.has(window)) return;
-		const currentBounds = window.getBounds();
-		const display = screen.getDisplayMatching(currentBounds);
-		if (
-			!shouldRestoreHtmlFullscreenWindowBounds({
-				previousBounds: previous.bounds,
-				currentBounds,
-				displayBounds: display.bounds,
-				wasMaximized: previous.isMaximized,
-				isMaximized: window.isMaximized(),
-			})
-		) {
-			return;
-		}
-		logger.info('Restoring window bounds after HTML fullscreen exit', {
-			currentBounds,
-			restoredBounds: previous.bounds,
-			displayBounds: display.bounds,
-		});
-		window.setBounds(previous.bounds);
-		saveWindowBounds();
-	};
-	setTimeout(restoreIfNeeded, 0);
-	setTimeout(restoreIfNeeded, 100);
+	if (!isAliveWindow(window) || windowsHtmlFullscreenStates.has(window)) return;
+	if (previous.isMaximized || window.isMaximized()) return;
+	window.setBounds(previous.bounds);
+	saveWindowBounds();
 }
 
 function leaveWindowsHtmlFullscreenChromeGuard(window: BrowserWindow): void {
@@ -783,6 +764,7 @@ export function createWindow(options: CreateWindowOptions = {}): BrowserWindow {
 	mainWindow = new BrowserWindow(windowOptions);
 	mainWindowRendererGone = false;
 	installHtmlFullscreenChromeGuard(mainWindow);
+	lastGoodWindowBounds = mainWindow.getNormalBounds();
 	logPhase('browser-window');
 	if (savedBounds?.isMaximized) {
 		mainWindow.maximize();
