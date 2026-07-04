@@ -13,6 +13,7 @@
 			"banner": null,
 			"bio": null,
 			"pronouns": null,
+			"activities": [],
 			"accent_color": null,
 			"email": "user@example.com",
 			"email_verified": true,

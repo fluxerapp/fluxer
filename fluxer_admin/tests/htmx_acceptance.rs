@@ -765,6 +765,7 @@ fn user(id: &str, username: &str) -> Value {
         "global_name": username,
         "bio": null,
         "pronouns": null,
+        "activities": [],
         "accent_color": null,
         "date_of_birth": null,
         "locale": "en-US",
