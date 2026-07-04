@@ -50,7 +50,7 @@ graph TD
 
 ## `GATEWAY_ROLE` environment variable
 
-`GATEWAY_ROLE` (read via `fluxer_gateway_env:get(gateway_role)`) controls which subsystem processes the supervisor starts. An unknown or missing value defaults to `all`.
+`GATEWAY_ROLE` (read via `fluxer_gateway_env:get(gateway_role)`) controls which subsystem processes the supervisor starts. A missing value (`undefined`) defaults to `all`. Any other unrecognised value defaults to `websocket`.
 
 | Value | Subsystems started |
 |---|---|

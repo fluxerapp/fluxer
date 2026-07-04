@@ -80,7 +80,7 @@ The EUnit tests in `fluxer_gateway_sup` verify this ordering for every relevant 
 
 ## Role-gated children
 
-After the common children, `role_children/1` appends children conditioned on `GATEWAY_ROLE`. The active role is read from `fluxer_gateway_env:get(gateway_role)` and normalised by `normalize_role/1`; an unknown or missing value defaults to `all`.
+After the common children, `role_children/1` appends children conditioned on `GATEWAY_ROLE`. The active role is read from `fluxer_gateway_env:get(gateway_role)` and normalised by `normalize_role/1`. A missing value (`undefined`) defaults to `all`; any other unrecognised value defaults to `websocket`.
 
 `role_enabled(RoleName, CurrentRole)` returns `true` when `CurrentRole =:= all` or `CurrentRole =:= RoleName`. Only matching children are appended.
 

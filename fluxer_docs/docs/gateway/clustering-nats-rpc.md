@@ -19,7 +19,7 @@ Polling interval defaults to 5 000 ms, configurable via `cluster_discovery_poll_
 
 ## Membership tracking: `gateway_cluster_membership`
 
-`gateway_cluster_membership` converts a peer list into a live membership set and, critically, maps each node to its role. It is the authoritative source that `gateway_node_router` reads.
+`gateway_cluster_membership` subscribes to `gateway_cluster_discovery` and receives `{cluster_peers_changed, Peers}` messages when the peer list changes. It also exposes its own `subscribe/1` / `unsubscribe/1` API; subscribers receive `{cluster_membership_changed, Members}` whenever the live member list or `members_by_role` map changes. `gateway_cluster_membership` subscribes to `gateway_cluster_discovery` at startup and calls `net_kernel:monitor_nodes/1` to receive `nodeup`/`nodedown` notifications.
 
 **Persistent terms written**:
 
@@ -34,7 +34,7 @@ Polling interval defaults to 5 000 ms, configurable via `cluster_discovery_poll_
 2. `{cluster_peers_changed, Peers}` triggers `apply_discovered/2`, which calls `net_kernel:connect_node/1` on each unknown peer and reconciles the connected-node list.
 3. `{nodeup, Node}` adds the node only if it was already in the `discovered` set; otherwise it triggers a `gateway_cluster_discovery:force_refresh/0` in a spawned process to avoid blocking.
 4. `{nodedown, Node}` removes the node from the members list immediately.
-5. A `refresh_roles` timer fires every 10 000 ms. It spawns one short-lived worker per member node, calls `rpc:call(Node, fluxer_gateway_sup, current_role, [], 1000)`, and collects results within 1 100 ms. Nodes that do not respond in time retain their previously known role. The updated `members_by_role` map is written to `persistent_term`.
+5. A `refresh_roles` timer fires every 10 000 ms. It triggers `reconcile_against_connected_nodes`, which calls `update_members` → `role_members` → `lookup_roles`. `lookup_roles` spawns one short-lived worker per member node; each worker calls `fluxer_gateway_sup:current_role()` locally or `rpc:call(Node, fluxer_gateway_sup, current_role, [], 1000)` for remote nodes. Results are collected within `ROLE_LOOKUP_COLLECT_TIMEOUT_MS = 1100 ms`. Nodes that do not respond in time are resolved via `resolved_role/3`, which falls back to `previous_role_for_node/2` using the existing `members_by_role` map so they retain their previously known role. The updated `members_by_role` map is written to `persistent_term`.
 6. A `reconcile_nodes` timer fires every 30 000 ms to catch any nodes that connected but whose `nodeup` was missed.
 
 Role validity is checked with `valid_role/1`, which accepts: `websocket`, `sessions`, `presence`, `guilds`, `calls`, `push`, `all`. Any other value is treated as `unknown` and excluded from the role map.
@@ -165,7 +165,7 @@ Each handler worker calls `gateway_nats_rpc_handler:handle_rpc_request/3`:
 1. The `rpc.gateway.` prefix is stripped from the subject, yielding the method path (e.g. `guild.dispatch`).
 2. The JSON payload is decoded.
 3. `gateway_rpc_router:execute(Method, Params)` is called. This synchronously routes to the relevant gen_server (guild, presence, push, call, etc.).
-4. The result is wrapped in `guild_data_wire:payload/1`, encoded to JSON, and published to `reply_to` via `gateway_nats_pool:pub_reply/2`.
+4. The result is passed through `guild_data_wire:payload/1` and placed under the `"result"` key in the response envelope `#{<<"ok">> => true, <<"result">> => Result}`, which is then encoded to JSON and published to `reply_to` via `gateway_nats_pool:pub_reply/2`.
 
 Error handling:
 
