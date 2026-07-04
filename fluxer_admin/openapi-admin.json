@@ -15007,18 +15007,16 @@
 						},
 						"maxItems": 2
 					},
-						"party": {
-							"type": "object",
-							"properties": {
-								"id": {"type": "string", "maxLength": 128},
-								"size": {
-									"type": "array",
-									"items": {"type": "integer", "minimum": 0, "maximum": 9007199254740991, "format": "int53"},
-									"minItems": 2,
-									"maxItems": 2
-								}
+					"party": {
+						"type": "object",
+						"properties": {
+							"id": {"type": "string", "maxLength": 128},
+							"size": {
+								"type": "array",
+								"items": {"type": "integer", "minimum": 0, "maximum": 9007199254740991, "format": "int53"}
 							}
-						},
+						}
+					},
 					"secrets": {
 						"type": "object",
 						"properties": {
