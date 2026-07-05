@@ -13,7 +13,6 @@ use crate::{
     signing,
     spool::{SpoolError, spool_to_temp},
     storage::{HeadResult, RelayBody, RelayPutOptions, StorageError, Store, StreamObject},
-    svg,
     timed_semaphore::TimedSemaphore,
     upload_relay,
 };
@@ -262,10 +261,16 @@ async fn metadata_handler(
         "allow" => false,
         _ => return text(StatusCode::BAD_REQUEST, "Bad Request"),
     };
-    let input = match load_metadata_input(&app, &req).await {
+    let mut input = match load_metadata_input(&app, &req).await {
         Ok(input) => input,
         Err(status) => return text(status, status.canonical_reason().unwrap_or("Bad Request")),
     };
+    if req.with_base64.unwrap_or(false) && metadata_input_is_svg(&input) {
+        input = match rasterize_metadata_svg(&app, input).await {
+            Ok(input) => input,
+            Err(response) => return response,
+        };
+    }
     let json = match media_process::metadata_json_with_options(
         &input.data,
         &input.filename,
@@ -302,6 +307,55 @@ async fn metadata_handler(
 struct InputData {
     data: Bytes,
     filename: String,
+}
+
+fn metadata_input_is_svg(input: &InputData) -> bool {
+    mime::sniff(&input.data).mime == "image/svg+xml"
+        || image_extension_from_filename(&input.filename) == Some(AssetExtension::Svg)
+}
+
+fn replace_image_extension(filename: &str, ext: AssetExtension) -> String {
+    let last_slash = filename.rfind('/').map(|idx| idx + 1).unwrap_or(0);
+    let last_dot = filename[last_slash..]
+        .rfind('.')
+        .map(|idx| last_slash + idx);
+    match last_dot {
+        Some(idx) => format!("{}.{}", &filename[..idx], ext.name()),
+        None => format!("{}.{}", filename, ext.name()),
+    }
+}
+
+async fn rasterize_metadata_svg(
+    app: &Arc<AppState>,
+    input: InputData,
+) -> Result<InputData, Response> {
+    let options = media_process::ImageOptions {
+        format: AssetExtension::Webp,
+        quality: "lossless".to_owned(),
+        animated: false,
+        deadline_ms: Some(metrics::now_ms() + app.cfg.transform_timeout_ms as i64),
+        max_encode_frames: Some(app.cfg.max_encode_frames),
+        max_encode_duration_ms: Some(app.cfg.max_encode_duration_ms),
+        ..Default::default()
+    };
+    match run_transform(app, input.data, options).await {
+        Ok(media) => Ok(InputData {
+            data: media.bytes.into(),
+            filename: replace_image_extension(&input.filename, AssetExtension::Webp),
+        }),
+        Err(err) if transform_error_is_timeout(&err) => Err(text_with_source(
+            StatusCode::GATEWAY_TIMEOUT,
+            "Gateway Timeout",
+            "metadata_svg_rasterize_timeout",
+            input.filename,
+        )),
+        Err(err) => Err(text_with_source(
+            StatusCode::BAD_REQUEST,
+            "Bad Request",
+            "metadata_svg_rasterize_failed",
+            format!("filename={} err={err:?}", input.filename),
+        )),
+    }
 }
 
 async fn load_metadata_input(
@@ -939,7 +993,10 @@ async fn serve_external(
         Ok(url) => url,
         Err(_) => return text(StatusCode::BAD_REQUEST, "Bad Request"),
     };
-    let wants_transform = params.contains_key("width")
+    let url_ext_is_svg =
+        image_extension_from_filename(&url_filename(&url)) == Some(AssetExtension::Svg);
+    let wants_transform = url_ext_is_svg
+        || params.contains_key("width")
         || params.contains_key("height")
         || params.contains_key("format")
         || params.contains_key("quality")
@@ -951,7 +1008,8 @@ async fn serve_external(
         .filter(|rv| !rv.is_empty() && rv.bytes().all(|b| b.is_ascii_graphic()));
     let forward_range = if wants_transform { None } else { client_range };
     let allow_stream = !wants_transform;
-    let fetched = match fetch_external_with_range(app, &url, forward_range, allow_stream).await {
+    let mut fetched = match fetch_external_with_range(app, &url, forward_range, allow_stream).await
+    {
         Ok(fetched) if fetched.status.is_success() => fetched,
         Ok(fetched) => {
             return text_with_source(
@@ -987,6 +1045,47 @@ async fn serve_external(
             );
         }
     };
+    if forward_range.is_some()
+        && fetched.status == StatusCode::PARTIAL_CONTENT
+        && is_svg_content_type(&fetched.content_type)
+    {
+        fetched = match fetch_external_with_range(app, &url, None, false).await {
+            Ok(fetched) if fetched.status.is_success() => fetched,
+            Ok(fetched) => {
+                return text_with_source(
+                    map_upstream_status(fetched.status),
+                    "Upstream fetch failed",
+                    "external_upstream_status",
+                    format!("url={url} upstream_status={}", fetched.status.as_u16()),
+                );
+            }
+            Err(ExternalFetchError::BlockedUrl) => {
+                return text_with_source(
+                    StatusCode::BAD_REQUEST,
+                    "Bad Request",
+                    "external_blocked_url",
+                    &url,
+                );
+            }
+            Err(ExternalFetchError::PayloadTooLarge) => {
+                return text_with_source(
+                    StatusCode::PAYLOAD_TOO_LARGE,
+                    "Payload Too Large",
+                    "external_payload_too_large",
+                    &url,
+                );
+            }
+            Err(err @ ExternalFetchError::TooManyRedirects)
+            | Err(err @ ExternalFetchError::FetchFailed) => {
+                return text_with_source(
+                    StatusCode::BAD_GATEWAY,
+                    "Bad Gateway",
+                    "external_fetch_failed",
+                    format!("url={url} err={err:?}"),
+                );
+            }
+        };
+    }
     let filename = url_filename(&fetched.url);
     let requested_download = bool_param(params, "download", false);
     if forward_range.is_some() && fetched.status == StatusCode::PARTIAL_CONTENT {
@@ -1091,7 +1190,7 @@ fn external_stream_length(
     if !content_type_is_trustworthy(content_type) {
         return None;
     }
-    if content_type.eq_ignore_ascii_case("image/svg+xml") {
+    if is_svg_content_type(content_type) {
         return None;
     }
     Some(len)
@@ -1403,29 +1502,6 @@ async fn serve_asset_image(
             .or(sniffed_source_ext)
             .unwrap_or(asset.original_ext)
     };
-    if source_format == AssetExtension::Svg {
-        let sanitized = match svg::sanitize(&object.data) {
-            Ok(bytes) => bytes,
-            Err(_) => {
-                return text_with_reason(
-                    StatusCode::BAD_REQUEST,
-                    "Bad Request",
-                    "svg_sanitize_failed",
-                );
-            }
-        };
-        return media_response(
-            method,
-            Bytes::from(sanitized),
-            "image/svg+xml",
-            headers.get(header::RANGE).and_then(|v| v.to_str().ok()),
-            Some(content_disposition_header(
-                "image/svg+xml",
-                requested_download,
-                Some(&asset_filename),
-            )),
-        );
-    }
     let serve_content_type = if object.content_type.is_empty()
         || object
             .content_type
@@ -1535,7 +1611,9 @@ async fn serve_asset_image(
             let src_is_displayable = src_ct.starts_with("image/")
                 && src_ct != "image/avif"
                 && src_ct != "image/heic"
-                && src_ct != "image/heif";
+                && src_ct != "image/heif"
+                && source_format != AssetExtension::Svg
+                && !is_svg_content_type(src_ct);
             if !src_is_displayable {
                 return text_with_source(
                     StatusCode::INTERNAL_SERVER_ERROR,
@@ -1681,28 +1759,23 @@ async fn serve_stored_passthrough_stream(
         return storage_error_response(key, StorageError::StreamTooLong);
     }
     let content_type = passthrough_content_type(&head, key);
-    if content_type.eq_ignore_ascii_case("image/svg+xml") {
+    if is_svg_content_type(&content_type)
+        || image_extension_from_filename(key) == Some(AssetExtension::Svg)
+    {
         let object = match app.store.read_object(bucket, key).await {
             Ok(object) => object,
             Err(err) => return storage_error_response(key, err),
         };
-        let sanitized = match svg::sanitize(&object.data) {
-            Ok(bytes) => bytes,
-            Err(_) => {
-                return text_with_reason(
-                    StatusCode::BAD_REQUEST,
-                    "Bad Request",
-                    "svg_sanitize_failed",
-                );
-            }
-        };
-        return media_response(
+        let cache_identity = format!("{bucket}/{key}");
+        return serve_stored_svg_rasterized(
+            app,
             method,
-            Bytes::from(sanitized),
-            &content_type,
-            headers.get(header::RANGE).and_then(|v| v.to_str().ok()),
-            passthrough_disposition_header(&disposition, &content_type),
-        );
+            object.data,
+            &cache_identity,
+            headers,
+            &disposition,
+        )
+        .await;
     }
     let total_len = match usize::try_from(head.content_length) {
         Ok(value) => value,
@@ -1781,6 +1854,91 @@ fn passthrough_disposition_header(
             Some(filename),
         )),
     }
+}
+
+async fn serve_stored_svg_rasterized(
+    app: &Arc<AppState>,
+    method: Method,
+    data: Bytes,
+    cache_identity: &str,
+    headers: &HeaderMap,
+    disposition: &PassthroughDisposition<'_>,
+) -> Response {
+    let format = AssetExtension::Webp;
+    let quality = "lossless".to_owned();
+    let options = media_process::ImageOptions {
+        format,
+        quality: quality.clone(),
+        animated: false,
+        deadline_ms: Some(metrics::now_ms() + app.cfg.transform_timeout_ms as i64),
+        max_encode_frames: Some(app.cfg.max_encode_frames),
+        max_encode_duration_ms: Some(app.cfg.max_encode_duration_ms),
+        ..Default::default()
+    };
+    let cache_key = transform_cache_key(TransformCacheKeyInput {
+        route: TransformRoute::Stored,
+        cache_identity,
+        width: None,
+        height: None,
+        format,
+        quality: &quality,
+        animated: false,
+        effort: None,
+    });
+    if let Some(cached) = app.transform_cache.get(&cache_key) {
+        metrics::GLOBAL
+            .transform_cache_hits
+            .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        return media_response(
+            method,
+            cached,
+            format.mime(),
+            headers.get(header::RANGE).and_then(|v| v.to_str().ok()),
+            passthrough_disposition_header(disposition, format.mime()),
+        );
+    }
+    metrics::GLOBAL
+        .transform_cache_misses
+        .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    let coalescer_deadline = deadline_instant(options.deadline_ms);
+    let transformed = match app
+        .coalescer
+        .run_once_until(cache_key.clone(), coalescer_deadline, || {
+            let app = app.clone();
+            let data = data.clone();
+            let options = options.clone();
+            async move {
+                coalesced_work_result(run_transform(&app, data, options).await)
+                    .map(|media| media.bytes)
+            }
+        })
+        .await
+    {
+        Ok(bytes) => bytes,
+        Err(CoalescerError::RequestTimeout) => {
+            return text_with_reason(
+                StatusCode::GATEWAY_TIMEOUT,
+                "Gateway Timeout",
+                "coalescer_timeout_svg_rasterize",
+            );
+        }
+        Err(CoalescerError::WorkFailed) => {
+            return text_with_source(
+                StatusCode::BAD_REQUEST,
+                "Bad Request",
+                "svg_rasterize_failed",
+                cache_identity,
+            );
+        }
+    };
+    app.transform_cache.put(cache_key, transformed.clone());
+    media_response(
+        method,
+        transformed,
+        format.mime(),
+        headers.get(header::RANGE).and_then(|v| v.to_str().ok()),
+        passthrough_disposition_header(disposition, format.mime()),
+    )
 }
 
 fn passthrough_head_response(
@@ -1890,6 +2048,7 @@ async fn serve_stored_with_override(
 enum TransformRoute {
     Attachment,
     External,
+    Stored,
 }
 
 struct ServeBytesRequest<'a> {
@@ -1915,39 +2074,23 @@ async fn serve_bytes_or_transform(app: &Arc<AppState>, request: ServeBytesReques
         headers,
     } = request;
     let animated = animated_param(params, false);
-    let wants_transform = params.contains_key("width")
-        || params.contains_key("height")
-        || params.contains_key("format")
-        || params.contains_key("quality")
-        || animated;
-    let content_type = if content_type_is_trustworthy(&content_type) {
+    let sniffed_prefix = mime::sniff(&data[..data.len().min(8192)]);
+    let content_type = if sniffed_prefix.mime == "image/svg+xml" {
+        "image/svg+xml".to_owned()
+    } else if content_type_is_trustworthy(&content_type) {
         content_type
     } else {
         mime::detect(&data[..data.len().min(8192)], filename, Some(&content_type))
     };
+    let source_is_svg = is_svg_content_type(&content_type)
+        || image_extension_from_filename(filename) == Some(AssetExtension::Svg);
+    let wants_transform = source_is_svg
+        || params.contains_key("width")
+        || params.contains_key("height")
+        || params.contains_key("format")
+        || params.contains_key("quality")
+        || animated;
     let requested_download = bool_param(params, "download", false);
-
-    if content_type.eq_ignore_ascii_case("image/svg+xml") {
-        let sanitized = match svg::sanitize(&data) {
-            Ok(bytes) => bytes,
-            Err(_) => {
-                return text_with_reason(
-                    StatusCode::BAD_REQUEST,
-                    "Bad Request",
-                    "svg_sanitize_failed",
-                );
-            }
-        };
-        let disposition =
-            content_disposition_header("image/svg+xml", requested_download, Some(filename));
-        return media_response(
-            method,
-            Bytes::from(sanitized),
-            "image/svg+xml",
-            headers.get(header::RANGE).and_then(|v| v.to_str().ok()),
-            Some(disposition),
-        );
-    }
 
     if !wants_transform {
         let disposition =
@@ -2098,6 +2241,9 @@ async fn serve_bytes_or_transform(app: &Arc<AppState>, request: ServeBytesReques
             image_extension_from_filename(filename).unwrap_or(AssetExtension::Webp)
         }
         TransformRoute::External => external_default_output_extension(filename, &content_type),
+        TransformRoute::Stored => {
+            image_extension_from_filename(filename).unwrap_or(AssetExtension::Webp)
+        }
     };
     let requested_format = explicit_requested_format.unwrap_or(default_out_ext);
     let requested_supported_format = output_format::coerce_unsupported_format(requested_format);
@@ -2752,6 +2898,11 @@ fn content_type_is_trustworthy(content_type: &str) -> bool {
     )
 }
 
+fn is_svg_content_type(content_type: &str) -> bool {
+    mime::normalize(Some(content_type))
+        .is_some_and(|value| value.eq_ignore_ascii_case("image/svg+xml"))
+}
+
 fn extension_from_mime(content_type: &str) -> Option<AssetExtension> {
     match mime::normalize(Some(content_type))? {
         "image/jpeg" => Some(AssetExtension::Jpeg),
@@ -2784,7 +2935,10 @@ fn transform_response_content_type(
     out_ext: AssetExtension,
     fallback_content_type: &str,
 ) -> &str {
-    if explicit_out_ext.is_some() || out_ext != requested_out_ext {
+    if explicit_out_ext.is_some()
+        || out_ext != requested_out_ext
+        || is_svg_content_type(fallback_content_type)
+    {
         out_ext.mime()
     } else {
         fallback_content_type
@@ -2806,9 +2960,10 @@ fn transform_cache_key(input: TransformCacheKeyInput<'_>) -> String {
     let prefix = match input.route {
         TransformRoute::Attachment => "attachment",
         TransformRoute::External => "external",
+        TransformRoute::Stored => "stored",
     };
     let identity = match input.route {
-        TransformRoute::Attachment => input.cache_identity.to_owned(),
+        TransformRoute::Attachment | TransformRoute::Stored => input.cache_identity.to_owned(),
         TransformRoute::External => sha256_hex(input.cache_identity.as_bytes()),
     };
     format!(
@@ -3018,6 +3173,60 @@ mod tests {
         assert_eq!(Some(128), parse_dimension(Some("128")));
         assert_eq!(None, parse_dimension(Some("0")));
         assert_eq!(None, parse_dimension(Some("999999999")));
+    }
+
+    #[test]
+    fn metadata_base64_svg_detection_uses_bytes_or_filename() {
+        let svg_bytes = InputData {
+            data: Bytes::from_static(br#"<svg xmlns="http://www.w3.org/2000/svg"></svg>"#),
+            filename: "upload.bin".to_owned(),
+        };
+        assert!(metadata_input_is_svg(&svg_bytes));
+
+        let svg_filename = InputData {
+            data: Bytes::from_static(b"not svg"),
+            filename: "icons/logo.svg".to_owned(),
+        };
+        assert!(metadata_input_is_svg(&svg_filename));
+
+        let png_filename = InputData {
+            data: Bytes::from_static(b"not svg"),
+            filename: "icons/logo.png".to_owned(),
+        };
+        assert!(!metadata_input_is_svg(&png_filename));
+    }
+
+    #[test]
+    fn replace_image_extension_only_changes_last_path_segment() {
+        assert_eq!(
+            "avatars/user.icon.webp",
+            replace_image_extension("avatars/user.icon.svg", AssetExtension::Webp)
+        );
+        assert_eq!(
+            "avatars.v1/user.webp",
+            replace_image_extension("avatars.v1/user", AssetExtension::Webp)
+        );
+    }
+
+    #[tokio::test]
+    async fn metadata_base64_svg_rasterizes_to_webp_bytes() {
+        let tmp = tempfile::tempdir().unwrap();
+        let cfg =
+            upload_relay_test_config(tmp.path(), tmp.path(), b"01234567890123456789012345678901");
+        let app = test_app_state(cfg);
+        let input = InputData {
+            data: Bytes::from_static(
+                br#"<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8"><rect width="8" height="8" fill="red"/></svg>"#,
+            ),
+            filename: "icons/logo.svg".to_owned(),
+        };
+        let raster = match rasterize_metadata_svg(&app, input).await {
+            Ok(raster) => raster,
+            Err(response) => panic!("unexpected status {}", response.status()),
+        };
+
+        assert_eq!("icons/logo.webp", raster.filename);
+        assert_eq!("image/webp", mime::sniff(&raster.data).mime);
     }
 
     #[test]
@@ -3690,6 +3899,15 @@ mod tests {
                 AssetExtension::Heic,
                 AssetExtension::Webp,
                 "image/heic"
+            )
+        );
+        assert_eq!(
+            "image/webp",
+            transform_response_content_type(
+                None,
+                AssetExtension::Webp,
+                AssetExtension::Webp,
+                "image/svg+xml; charset=utf-8"
             )
         );
         assert_eq!(
