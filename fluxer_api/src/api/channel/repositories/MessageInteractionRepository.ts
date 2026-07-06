@@ -5,10 +5,10 @@ import type {ChannelID, EmojiID, MessageID, UserID} from '../../BrandedTypes';
 import {createEmojiID} from '../../BrandedTypes';
 import {deleteOneOrMany, fetchMany, fetchOne, upsertOne} from '../../database/CassandraQueryExecution';
 import {Db} from '../../database/CassandraTypes';
-import type {ChannelPinRow, MessageReactionRow} from '../../database/types/MessageTypes';
+import type {ChannelPinRow, MessagePollVoteRow, MessageReactionRow} from '../../database/types/MessageTypes';
 import type {Message} from '../../models/Message';
 import {MessageReaction} from '../../models/MessageReaction';
-import {ChannelPins, MessageReactions, Messages} from '../../Tables';
+import {ChannelPins, MessagePollVotes, MessageReactions, Messages} from '../../Tables';
 import {IMessageInteractionRepository} from './IMessageInteractionRepository';
 import type {MessageRepository} from './MessageRepository';
 
@@ -23,6 +23,22 @@ const FETCH_MESSAGE_REACTIONS_BY_CHANNEL_AND_MESSAGE_QUERY = MessageReactions.se
 		MessageReactions.where.eq('bucket'),
 		MessageReactions.where.eq('message_id'),
 	],
+});
+const FETCH_POLL_VOTES_BY_CHANNEL_AND_MESSAGE_QUERY = MessagePollVotes.selectCql({
+	where: [
+		MessagePollVotes.where.eq('channel_id'),
+		MessagePollVotes.where.eq('bucket'),
+		MessagePollVotes.where.eq('message_id'),
+	],
+});
+const FETCH_POLL_VOTE_BY_USER_QUERY = MessagePollVotes.select({
+	where: [
+		MessagePollVotes.where.eq('channel_id'),
+		MessagePollVotes.where.eq('bucket'),
+		MessagePollVotes.where.eq('message_id'),
+		MessagePollVotes.where.eq('user_id'),
+	],
+	limit: 1,
 });
 const CHECK_MESSAGE_HAS_REACTIONS_QUERY = MessageReactions.selectCql({
 	columns: ['channel_id'],
@@ -127,6 +143,61 @@ export class MessageInteractionRepository extends IMessageInteractionRepository 
 			message_id: messageId,
 		});
 		return reactions.map((reaction) => new MessageReaction(reaction));
+	}
+
+	async listPollVotes(channelId: ChannelID, messageId: MessageID): Promise<Array<MessagePollVoteRow>> {
+		const bucket = BucketUtils.makeBucket(messageId);
+		return fetchMany<MessagePollVoteRow>(FETCH_POLL_VOTES_BY_CHANNEL_AND_MESSAGE_QUERY, {
+			channel_id: channelId,
+			bucket,
+			message_id: messageId,
+		});
+	}
+
+	async getPollVote(channelId: ChannelID, messageId: MessageID, userId: UserID): Promise<MessagePollVoteRow | null> {
+		const bucket = BucketUtils.makeBucket(messageId);
+		return fetchOne<MessagePollVoteRow>(
+			FETCH_POLL_VOTE_BY_USER_QUERY.bind({
+				channel_id: channelId,
+				bucket,
+				message_id: messageId,
+				user_id: userId,
+			}),
+		);
+	}
+
+	async upsertPollVote(
+		channelId: ChannelID,
+		messageId: MessageID,
+		userId: UserID,
+		optionIds: Array<MessageID>,
+	): Promise<MessagePollVoteRow> {
+		const bucket = BucketUtils.makeBucket(messageId);
+		const now = new Date();
+		const existingVote = await this.getPollVote(channelId, messageId, userId);
+		const voteRow: MessagePollVoteRow = {
+			channel_id: channelId,
+			bucket,
+			message_id: messageId,
+			user_id: userId,
+			option_ids: optionIds,
+			created_at: existingVote?.created_at ?? now,
+			updated_at: now,
+		};
+		await upsertOne(MessagePollVotes.upsertAll(voteRow));
+		return voteRow;
+	}
+
+	async removePollVote(channelId: ChannelID, messageId: MessageID, userId: UserID): Promise<void> {
+		const bucket = BucketUtils.makeBucket(messageId);
+		await deleteOneOrMany(
+			MessagePollVotes.deleteByPk({
+				channel_id: channelId,
+				bucket,
+				message_id: messageId,
+				user_id: userId,
+			}),
+		);
 	}
 
 	async listReactionUsers(

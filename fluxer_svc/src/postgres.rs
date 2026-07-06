@@ -134,6 +134,8 @@ pub async fn ensure_kv_schema(pool: &Pool, kv_table: &str) -> anyhow::Result<()>
     let messages_message_index = quote_identifier(&format!("{kv_table}_messages_message_idx"))?;
     let message_reactions_message_index =
         quote_identifier(&format!("{kv_table}_message_reactions_message_idx"))?;
+    let message_poll_votes_message_index =
+        quote_identifier(&format!("{kv_table}_message_poll_votes_message_idx"))?;
     let client = pool.get().await?;
     client
         .batch_execute(&format!(
@@ -152,6 +154,7 @@ CREATE INDEX IF NOT EXISTS {row_key_c_index} ON {table} (table_name, row_key COL
 CREATE INDEX IF NOT EXISTS {expires_index} ON {table} (expires_at) WHERE expires_at IS NOT NULL;
 CREATE INDEX IF NOT EXISTS {messages_message_index} ON {table} (partition_key, ((CASE WHEN row_data -> 'message_id' ->> 'value' ~ '^-?[0-9]+$' THEN (row_data -> 'message_id' ->> 'value')::bigint END))) WHERE table_name = 'messages';
 CREATE INDEX IF NOT EXISTS {message_reactions_message_index} ON {table} (partition_key, ((CASE WHEN row_data -> 'message_id' ->> 'value' ~ '^-?[0-9]+$' THEN (row_data -> 'message_id' ->> 'value')::bigint END))) WHERE table_name = 'message_reactions';
+CREATE INDEX IF NOT EXISTS {message_poll_votes_message_index} ON {table} (partition_key, ((CASE WHEN row_data -> 'message_id' ->> 'value' ~ '^-?[0-9]+$' THEN (row_data -> 'message_id' ->> 'value')::bigint END))) WHERE table_name = 'message_poll_votes';
 UPDATE {table}
 SET partition_key = split_part(row_key, chr(31), 1) || chr(31) || split_part(row_key, chr(31), 2)
 WHERE table_name = 'messages'

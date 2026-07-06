@@ -608,16 +608,19 @@ class Messages {
 	}
 
 	@action
-	handleMessageUpdate(action: {message: WireMessage}): boolean {
+	handleMessageUpdate(action: {message: WireMessage; preservePollViewerSelection?: boolean}): boolean {
 		const messageId = action.message.id;
 		const channelId = action.message.channel_id;
 		const existing = ChannelMessages.get(channelId);
 		if (!existing || !existing.has(messageId)) return false;
 		const updated = existing.update(messageId, (message) => {
 			if (message.isEditing && action.message.state === undefined) {
-				return message.withUpdates({...action.message, state: MessageStates.SENT});
+				return message.withUpdates(
+					{...action.message, state: MessageStates.SENT},
+					{preservePollViewerSelection: action.preservePollViewerSelection},
+				);
 			}
-			return message.withUpdates(action.message);
+			return message.withUpdates(action.message, {preservePollViewerSelection: action.preservePollViewerSelection});
 		});
 		this.commitMessages(updated);
 		this.notifyChange();

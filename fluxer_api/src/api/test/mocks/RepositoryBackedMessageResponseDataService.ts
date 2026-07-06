@@ -158,7 +158,7 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 		sourceGuildId?: GuildID | null;
 	}): Promise<MessageResponse> {
 		return this.mapMessage(params.message, {
-			currentUserId: params.userId ?? params.message.authorId ?? undefined,
+			currentUserId: params.userId,
 			nonce: params.nonce,
 			tts: params.tts,
 			includeReactions: false,
@@ -229,12 +229,13 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 			depth: number;
 		},
 	): Promise<MessageResponse> {
-		const [author, mentions, mentionChannels, reactions, referencedMessage] = await Promise.all([
+		const [author, mentions, mentionChannels, reactions, referencedMessage, poll] = await Promise.all([
 			this.resolveAuthor(message),
 			this.resolveUserPartials([...message.mentionedUserIds]),
 			this.resolveMentionChannels([...message.mentionedChannelIds]),
 			options.includeReactions ? this.mapReactions(message, options.currentUserId) : Promise.resolve(null),
 			this.resolveReferencedMessage(message, options),
+			this.mapPoll(message, options.currentUserId),
 		]);
 		return {
 			id: message.id.toString(),
@@ -255,6 +256,7 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 			embeds: this.mapEmbeds(message.embeds, message),
 			attachments: await this.mapAttachments(message.attachments, message),
 			stickers: this.mapStickers(message.stickers),
+			poll,
 			nsfw_emojis: message.nsfwEmojis.size > 0 ? [...message.nsfwEmojis].map((id) => id.toString()) : undefined,
 			reactions,
 			message_reference: message.reference
@@ -269,6 +271,84 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 			nonce: options.nonce ?? null,
 			call: this.mapCall(message.call),
 			referenced_message: referencedMessage,
+		};
+	}
+
+	private async mapPoll(message: Message, currentUserId?: UserID): Promise<MessageResponse['poll']> {
+		if (!message.poll) {
+			return null;
+		}
+		const shouldListVotes = !message.poll.anonymous || message.poll.allow_ranked_choice;
+		const [currentVote, votes] = await Promise.all([
+			currentUserId
+				? getChannelRepository().messageInteractions.getPollVote(message.channelId, message.id, currentUserId)
+				: Promise.resolve(null),
+			shouldListVotes
+				? getChannelRepository().messageInteractions.listPollVotes(message.channelId, message.id)
+				: Promise.resolve([]),
+		]);
+		const selectedOptionIds = new Set((currentVote?.option_ids ?? []).map((optionId) => optionId.toString()));
+		const voterIdsByOption = new Map<string, Array<string>>();
+		const optionIdSet = new Set(message.poll.options.map((option) => option.option_id.toString()));
+		const rankCountByOption = new Map<string, Array<number>>();
+		const rankedScoreByOption = new Map<string, number>();
+		for (const vote of votes) {
+			const firstChoice = vote.option_ids[0];
+			if (!firstChoice) {
+				continue;
+			}
+			const optionKey = firstChoice.toString();
+			if (!message.poll.anonymous) {
+				const voterIds = voterIdsByOption.get(optionKey) ?? [];
+				voterIds.push(vote.user_id.toString());
+				voterIdsByOption.set(optionKey, voterIds);
+			}
+			if (!message.poll.allow_ranked_choice) {
+				continue;
+			}
+			const seenOptionIds = new Set<string>();
+			for (const [rankIndex, optionId] of vote.option_ids.entries()) {
+				const rankedOptionKey = optionId.toString();
+				if (!optionIdSet.has(rankedOptionKey) || seenOptionIds.has(rankedOptionKey)) {
+					continue;
+				}
+				seenOptionIds.add(rankedOptionKey);
+				const rankCounts =
+					rankCountByOption.get(rankedOptionKey) ?? Array.from({length: message.poll.options.length}, () => 0);
+				if (rankIndex < rankCounts.length) {
+					rankCounts[rankIndex] += 1;
+					rankCountByOption.set(rankedOptionKey, rankCounts);
+					rankedScoreByOption.set(
+						rankedOptionKey,
+						(rankedScoreByOption.get(rankedOptionKey) ?? 0) + (message.poll.options.length - rankIndex),
+					);
+				}
+			}
+		}
+		return {
+			id: message.poll.poll_id.toString(),
+			title: message.poll.title,
+			options: message.poll.options.map((option) => ({
+				id: option.option_id.toString(),
+				text: option.text,
+				attachment_id: option.attachment_id?.toString() ?? null,
+				vote_count: option.vote_count,
+				rank_counts: message.poll?.allow_ranked_choice
+					? (rankCountByOption.get(option.option_id.toString()) ??
+						Array.from({length: message.poll.options.length}, () => 0))
+					: null,
+				ranked_score: message.poll?.allow_ranked_choice
+					? (rankedScoreByOption.get(option.option_id.toString()) ?? 0)
+					: null,
+				me: selectedOptionIds.has(option.option_id.toString()) || undefined,
+				voter_ids: message.poll?.anonymous ? null : (voterIdsByOption.get(option.option_id.toString()) ?? []),
+			})),
+			expires_at: message.poll.expires_at.toISOString(),
+			closed: message.poll.closed_at != null || message.poll.expires_at.getTime() <= Date.now(),
+			anonymous: message.poll.anonymous,
+			allow_ranked_choice: message.poll.allow_ranked_choice,
+			allow_custom_answers: message.poll.allow_custom_answers,
+			votes: null,
 		};
 	}
 

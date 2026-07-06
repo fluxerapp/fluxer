@@ -9,10 +9,11 @@ use crate::types::{
     ApiMessageAttachmentResponse, ApiMessageCallResponse, ApiMessageEmbedChildResponse,
     ApiMessageEmbedResponse, ApiMessageReactionResponse, ApiMessageReferenceResponse,
     ApiMessageResponse, ApiMessageSnapshotResponse, ApiMessageStickerResponse,
-    ApiReactionEmojiResponse, ApiUserPartialResponse, Message, MessageAttachment, MessageCall,
-    MessageEmbed, MessageEmbedAuthor, MessageEmbedChild, MessageEmbedField, MessageEmbedFooter,
-    MessageEmbedMedia, MessageEmbedProvider, MessageReference, MessageRequest, MessageResponse,
-    MessageSnapshot, MessageStickerItem,
+    ApiPollOptionResponse, ApiPollResponse, ApiReactionEmojiResponse, ApiUserPartialResponse,
+    Message, MessageAttachment, MessageCall, MessageEmbed, MessageEmbedAuthor, MessageEmbedChild,
+    MessageEmbedField, MessageEmbedFooter, MessageEmbedMedia, MessageEmbedProvider, MessagePoll,
+    MessagePollOption, MessageReference, MessageRequest, MessageResponse, MessageSnapshot,
+    MessageStickerItem,
 };
 use crate::udt;
 use base64::Engine;
@@ -75,7 +76,7 @@ const MESSAGE_COLUMNS: &str = "\
     content, edited_timestamp, pinned_timestamp, flags, mention_everyone, \
     mention_users, mention_roles, mention_channels, \
     has_reaction, version, nsfw_emojis, \
-    attachments, embeds, sticker_items, message_reference, call, message_snapshots";
+    attachments, embeds, sticker_items, message_reference, call, poll, message_snapshots";
 
 pub struct MessagesShard {
     storage: MessagesStorage,
@@ -106,6 +107,8 @@ struct ScyllaMessagesStorage {
     stmt_list_buckets_asc: PreparedStatement,
     stmt_get_reactions: PreparedStatement,
     stmt_get_reactions_for_messages: PreparedStatement,
+    stmt_get_poll_votes: PreparedStatement,
+    stmt_get_poll_votes_for_messages: PreparedStatement,
     stmt_get_attachment_decay: PreparedStatement,
     stmt_get_attachment_decay_many: PreparedStatement,
     stmt_delete_message: PreparedStatement,
@@ -138,6 +141,7 @@ struct MessageDbRow {
     sticker_items: Option<Vec<udt::StickerItemUdt>>,
     message_reference: Option<udt::MessageReferenceUdt>,
     call: Option<udt::MessageCallUdt>,
+    poll: Option<udt::MessagePollUdt>,
     message_snapshots: Option<Vec<udt::MessageSnapshotUdt>>,
 }
 
@@ -149,6 +153,13 @@ struct MessageReactionDbRow {
     emoji_name: String,
     emoji_animated: Option<bool>,
     created_at: Option<DateTime<Utc>>,
+}
+
+#[cfg_attr(feature = "scylla", derive(DeserializeRow))]
+#[derive(Debug, Clone)]
+struct MessagePollVoteDbRow {
+    user_id: i64,
+    option_ids: Vec<i64>,
 }
 
 #[cfg(feature = "scylla")]
@@ -166,6 +177,14 @@ struct BatchedMessageReactionDbRow {
     emoji_name: String,
     emoji_animated: Option<bool>,
     created_at: Option<DateTime<Utc>>,
+}
+
+#[cfg(feature = "scylla")]
+#[derive(Debug, DeserializeRow)]
+struct BatchedMessagePollVoteDbRow {
+    message_id: i64,
+    user_id: i64,
+    option_ids: Vec<i64>,
 }
 
 #[cfg(feature = "scylla")]
@@ -188,6 +207,17 @@ struct MessageReactionKvRow {
     emoji_name: String,
     emoji_animated: Option<bool>,
     created_at: Option<i64>,
+}
+
+#[derive(Debug, Deserialize)]
+struct MessagePollVoteKvRow {
+    message_id: i64,
+    user_id: i64,
+    #[serde(
+        default,
+        deserialize_with = "crate::types::serde_id::vec_i64_from_strings_or_numbers"
+    )]
+    option_ids: Vec<i64>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -257,6 +287,7 @@ struct ResponseBuildOptions {
 struct ResponseContext {
     users: HashMap<i64, ApiUserPartialResponse>,
     reactions: HashMap<i64, Vec<ApiMessageReactionResponse>>,
+    poll_votes: HashMap<i64, Vec<MessagePollVoteDbRow>>,
     referenced_messages: HashMap<(i64, i64), Message>,
     attachment_decay: HashMap<i64, DateTime<Utc>>,
     channel_mentions: HashMap<String, ApiChannelMentionResponse>,
@@ -319,6 +350,16 @@ impl MessagesShard {
                 "SELECT message_id, user_id, emoji_id, emoji_name, emoji_animated, created_at FROM message_reactions WHERE channel_id = ? AND bucket = ? AND message_id IN ?"
             )
             .await?;
+        let stmt_get_poll_votes = db
+            .prepare(
+                "SELECT user_id, option_ids FROM message_poll_votes WHERE channel_id = ? AND bucket = ? AND message_id = ?"
+            )
+            .await?;
+        let stmt_get_poll_votes_for_messages = db
+            .prepare(
+                "SELECT message_id, user_id, option_ids FROM message_poll_votes WHERE channel_id = ? AND bucket = ? AND message_id IN ?"
+            )
+            .await?;
         let stmt_get_attachment_decay = db
             .prepare(
                 "SELECT attachment_id, expires_at FROM attachment_decay_by_id WHERE attachment_id = ? LIMIT 1"
@@ -344,6 +385,8 @@ impl MessagesShard {
                 stmt_list_buckets_asc,
                 stmt_get_reactions,
                 stmt_get_reactions_for_messages,
+                stmt_get_poll_votes,
+                stmt_get_poll_votes_for_messages,
                 stmt_get_attachment_decay,
                 stmt_get_attachment_decay_many,
                 stmt_delete_message,
@@ -761,10 +804,12 @@ impl MessagesShard {
         let channel_ids = collect_channel_mention_ids(&all_messages, &mention_context);
         let user_ids = collect_user_ids(&all_messages, &mention_context);
         let reactions_future = self.fetch_reactions_for_messages(messages, options);
+        let poll_votes_future = self.fetch_poll_votes_for_messages(messages);
         let attachment_decay_future = self.fetch_attachment_decay(attachment_ids);
         let channel_mentions_future = self.resolve_channel_mentions(channel_ids, options);
-        let (reactions, attachment_decay, channel_mentions) = tokio::join!(
+        let (reactions, poll_votes, attachment_decay, channel_mentions) = tokio::join!(
             reactions_future,
+            poll_votes_future,
             attachment_decay_future,
             channel_mentions_future
         );
@@ -773,6 +818,7 @@ impl MessagesShard {
         Ok(ResponseContext {
             users,
             reactions,
+            poll_votes,
             referenced_messages,
             attachment_decay,
             channel_mentions,
@@ -879,6 +925,43 @@ impl MessagesShard {
         self.storage
             .fetch_reactions_for_message_batch(channel_id, bucket, message_ids, viewer_user_id)
             .await
+    }
+
+    async fn fetch_poll_votes_for_messages(
+        &self,
+        messages: &[Message],
+    ) -> HashMap<i64, Vec<MessagePollVoteDbRow>> {
+        let mut groups: HashMap<(i64, i32), Vec<i64>> = HashMap::new();
+        for message in messages {
+            if message.poll.is_none() {
+                continue;
+            }
+            let bucket = Self::snowflake_to_bucket(message.message_id);
+            groups
+                .entry((message.channel_id, bucket))
+                .or_default()
+                .push(message.message_id);
+        }
+        let mut batches = Vec::new();
+        for ((channel_id, bucket), mut message_ids) in groups {
+            message_ids.sort_unstable();
+            message_ids.dedup();
+            for chunk in message_ids.chunks(REACTION_MESSAGE_BATCH_SIZE) {
+                batches.push((channel_id, bucket, chunk.to_vec()));
+            }
+        }
+        stream::iter(batches)
+            .map(|(channel_id, bucket, message_ids)| async move {
+                self.storage
+                    .fetch_poll_votes_for_message_batch(channel_id, bucket, message_ids)
+                    .await
+            })
+            .buffer_unordered(ENRICHMENT_QUERY_CONCURRENCY)
+            .collect::<Vec<_>>()
+            .await
+            .into_iter()
+            .flatten()
+            .collect()
     }
 
     async fn fetch_attachment_decay(
@@ -1174,6 +1257,17 @@ impl MessagesShard {
             }),
             nonce: options.nonce.clone(),
             call: message.call.as_ref().map(map_call),
+            poll: message.poll.as_ref().and_then(|poll| {
+                map_poll(
+                    poll,
+                    context
+                        .poll_votes
+                        .get(&message.message_id)
+                        .map(Vec::as_slice)
+                        .unwrap_or_default(),
+                    options.viewer_user_id,
+                )
+            }),
             referenced_message,
         }
     }
@@ -1666,6 +1760,27 @@ impl MessagesStorage {
         }
     }
 
+    async fn fetch_poll_votes_for_message_batch(
+        &self,
+        channel_id: i64,
+        bucket: i32,
+        message_ids: Vec<i64>,
+    ) -> HashMap<i64, Vec<MessagePollVoteDbRow>> {
+        match self {
+            MessagesStorage::Postgres(storage) => {
+                storage
+                    .fetch_poll_votes_for_message_batch(channel_id, bucket, message_ids)
+                    .await
+            }
+            #[cfg(feature = "scylla")]
+            MessagesStorage::Scylla(storage) => {
+                storage
+                    .fetch_poll_votes_for_message_batch(channel_id, bucket, message_ids)
+                    .await
+            }
+        }
+    }
+
     async fn fetch_attachment_decay_batch(
         &self,
         attachment_ids: Vec<i64>,
@@ -1822,6 +1937,49 @@ impl PostgresMessagesStorage {
                 (!reactions.is_empty()).then_some((message_id, reactions))
             })
             .collect()
+    }
+
+    async fn fetch_poll_votes_for_message_batch(
+        &self,
+        channel_id: i64,
+        bucket: i32,
+        message_ids: Vec<i64>,
+    ) -> HashMap<i64, Vec<MessagePollVoteDbRow>> {
+        let wanted = message_ids.into_iter().collect::<HashSet<_>>();
+        if wanted.is_empty() {
+            return HashMap::new();
+        }
+        let partition_key = match postgres::kv_key(&[
+            KeyPart::BigInt(channel_id),
+            KeyPart::Number(bucket as i64),
+        ]) {
+            Ok(key) => key,
+            Err(_) => return HashMap::new(),
+        };
+        let wanted_values = wanted.iter().copied().collect::<Vec<_>>();
+        let rows = match self
+            .kv
+            .get_partition_rows_by_bigint_field_values(
+                "message_poll_votes",
+                &partition_key,
+                "message_id",
+                &wanted_values,
+            )
+            .await
+        {
+            Ok(rows) => rows,
+            Err(_) => return HashMap::new(),
+        };
+        let mut by_message: HashMap<i64, Vec<MessagePollVoteDbRow>> = HashMap::new();
+        for (_, row) in rows {
+            let Ok((message_id, vote)) = decode_postgres_poll_vote(row) else {
+                continue;
+            };
+            if wanted.contains(&message_id) {
+                by_message.entry(message_id).or_default().push(vote);
+            }
+        }
+        by_message
     }
 
     async fn fetch_attachment_decay_batch(
@@ -2039,6 +2197,74 @@ impl ScyllaMessagesStorage {
                     .collect();
                 let reactions = map_reactions(reactions, viewer_user_id);
                 (!reactions.is_empty()).then_some((message_id, reactions))
+            })
+            .buffer_unordered(ENRICHMENT_QUERY_CONCURRENCY)
+            .collect::<Vec<_>>()
+            .await
+            .into_iter()
+            .flatten()
+            .collect()
+    }
+
+    async fn fetch_poll_votes_for_message_batch(
+        &self,
+        channel_id: i64,
+        bucket: i32,
+        message_ids: Vec<i64>,
+    ) -> HashMap<i64, Vec<MessagePollVoteDbRow>> {
+        let result = self
+            .db
+            .execute_unpaged(
+                &self.stmt_get_poll_votes_for_messages,
+                (channel_id, bucket, message_ids.clone()),
+            )
+            .await;
+        let Ok(result) = result else {
+            return self
+                .fetch_poll_votes_for_messages_individually(channel_id, bucket, message_ids)
+                .await;
+        };
+        let Ok(rows) = result.into_rows_result() else {
+            return self
+                .fetch_poll_votes_for_messages_individually(channel_id, bucket, message_ids)
+                .await;
+        };
+        let Ok(rows) = rows.rows::<BatchedMessagePollVoteDbRow>() else {
+            return HashMap::new();
+        };
+        let mut by_message: HashMap<i64, Vec<MessagePollVoteDbRow>> = HashMap::new();
+        for row in rows.filter_map(Result::ok) {
+            by_message
+                .entry(row.message_id)
+                .or_default()
+                .push(MessagePollVoteDbRow {
+                    user_id: row.user_id,
+                    option_ids: row.option_ids,
+                });
+        }
+        by_message
+    }
+
+    async fn fetch_poll_votes_for_messages_individually(
+        &self,
+        channel_id: i64,
+        bucket: i32,
+        message_ids: Vec<i64>,
+    ) -> HashMap<i64, Vec<MessagePollVoteDbRow>> {
+        stream::iter(message_ids)
+            .map(|message_id| async move {
+                let result = self
+                    .db
+                    .execute_unpaged(&self.stmt_get_poll_votes, (channel_id, bucket, message_id))
+                    .await
+                    .ok()?;
+                let rows = result.into_rows_result().ok()?;
+                let votes: Vec<MessagePollVoteDbRow> = rows
+                    .rows::<MessagePollVoteDbRow>()
+                    .ok()?
+                    .filter_map(Result::ok)
+                    .collect();
+                (!votes.is_empty()).then_some((message_id, votes))
             })
             .buffer_unordered(ENRICHMENT_QUERY_CONCURRENCY)
             .collect::<Vec<_>>()
@@ -2368,6 +2594,20 @@ fn decode_postgres_reaction(row: serde_json::Value) -> anyhow::Result<(i64, Mess
             emoji_name: row.emoji_name,
             emoji_animated: row.emoji_animated,
             created_at,
+        },
+    ))
+}
+
+fn decode_postgres_poll_vote(
+    row: serde_json::Value,
+) -> anyhow::Result<(i64, MessagePollVoteDbRow)> {
+    let row = postgres::decode_row_dates_as_millis(row)?;
+    let row: MessagePollVoteKvRow = serde_json::from_value(row)?;
+    Ok((
+        row.message_id,
+        MessagePollVoteDbRow {
+            user_id: row.user_id,
+            option_ids: row.option_ids,
         },
     ))
 }
@@ -2770,6 +3010,123 @@ fn map_call(call: &MessageCall) -> ApiMessageCallResponse {
     }
 }
 
+fn map_poll_option(
+    option: &MessagePollOption,
+    selected_option_ids: &HashSet<i64>,
+    voter_ids_by_option: &HashMap<i64, Vec<String>>,
+    rank_counts_by_option: &HashMap<i64, Vec<i32>>,
+    ranked_score_by_option: &HashMap<i64, i32>,
+    rank_count_len: usize,
+    anonymous: bool,
+    allow_ranked_choice: bool,
+) -> Option<ApiPollOptionResponse> {
+    let option_id = option.option_id?;
+    Some(ApiPollOptionResponse {
+        id: option_id.to_string(),
+        text: option.text.clone().unwrap_or_default(),
+        attachment_id: option.attachment_id.map(|id| id.to_string()),
+        vote_count: option.vote_count.unwrap_or_default(),
+        rank_counts: allow_ranked_choice.then(|| {
+            rank_counts_by_option
+                .get(&option_id)
+                .cloned()
+                .unwrap_or_else(|| vec![0; rank_count_len])
+        }),
+        ranked_score: allow_ranked_choice.then(|| {
+            ranked_score_by_option
+                .get(&option_id)
+                .copied()
+                .unwrap_or_default()
+        }),
+        me: selected_option_ids.contains(&option_id).then_some(true),
+        voter_ids: (!anonymous).then(|| {
+            voter_ids_by_option
+                .get(&option_id)
+                .cloned()
+                .unwrap_or_default()
+        }),
+    })
+}
+
+fn map_poll(
+    poll: &MessagePoll,
+    votes: &[MessagePollVoteDbRow],
+    viewer_user_id: i64,
+) -> Option<ApiPollResponse> {
+    let expires_at = poll.expires_at?;
+    let anonymous = poll.anonymous.unwrap_or(false);
+    let allow_ranked_choice = poll.allow_ranked_choice.unwrap_or(false);
+    let poll_options = poll.options.as_deref().unwrap_or_default();
+    let rank_count_len = poll_options.len();
+    let valid_option_ids: HashSet<i64> = poll_options
+        .iter()
+        .filter_map(|option| option.option_id)
+        .collect();
+    let selected_option_ids = votes
+        .iter()
+        .find(|vote| vote.user_id == viewer_user_id)
+        .map(|vote| vote.option_ids.iter().copied().collect::<HashSet<_>>())
+        .unwrap_or_default();
+    let mut voter_ids_by_option: HashMap<i64, Vec<String>> = HashMap::new();
+    if !anonymous {
+        for vote in votes {
+            let Some(option_id) = vote.option_ids.first().copied() else {
+                continue;
+            };
+            voter_ids_by_option
+                .entry(option_id)
+                .or_default()
+                .push(vote.user_id.to_string());
+        }
+    }
+    let mut rank_counts_by_option: HashMap<i64, Vec<i32>> = HashMap::new();
+    let mut ranked_score_by_option: HashMap<i64, i32> = HashMap::new();
+    if allow_ranked_choice {
+        for vote in votes {
+            let mut seen_option_ids: HashSet<i64> = HashSet::new();
+            for (rank_index, option_id) in vote.option_ids.iter().copied().enumerate() {
+                if !valid_option_ids.contains(&option_id) || !seen_option_ids.insert(option_id) {
+                    continue;
+                }
+                if rank_index < rank_count_len {
+                    let rank_counts = rank_counts_by_option
+                        .entry(option_id)
+                        .or_insert_with(|| vec![0; rank_count_len]);
+                    rank_counts[rank_index] += 1;
+                    let score = rank_count_len.saturating_sub(rank_index) as i32;
+                    *ranked_score_by_option.entry(option_id).or_default() += score;
+                }
+            }
+        }
+    }
+    let options = poll_options
+        .iter()
+        .filter_map(|option| {
+            map_poll_option(
+                option,
+                &selected_option_ids,
+                &voter_ids_by_option,
+                &rank_counts_by_option,
+                &ranked_score_by_option,
+                rank_count_len,
+                anonymous,
+                allow_ranked_choice,
+            )
+        })
+        .collect();
+    Some(ApiPollResponse {
+        id: poll.poll_id?.to_string(),
+        title: poll.title.clone().unwrap_or_default(),
+        options,
+        expires_at: epoch_millis_to_iso(expires_at),
+        closed: poll.closed_at.is_some() || expires_at <= now_epoch_millis(),
+        anonymous,
+        allow_ranked_choice,
+        allow_custom_answers: poll.allow_custom_answers.unwrap_or(false),
+        votes: None,
+    })
+}
+
 fn make_attachment_cdn_url(
     media_endpoint: &str,
     channel_id: i64,
@@ -2965,6 +3322,30 @@ fn convert_message_call(c: udt::MessageCallUdt) -> MessageCall {
     }
 }
 
+fn convert_poll_option(option: udt::MessagePollOptionUdt) -> MessagePollOption {
+    MessagePollOption {
+        option_id: option.option_id,
+        text: option.text,
+        attachment_id: option.attachment_id,
+        vote_count: option.vote_count,
+    }
+}
+
+fn convert_poll(poll: udt::MessagePollUdt) -> MessagePoll {
+    MessagePoll {
+        poll_id: poll.poll_id,
+        title: poll.title,
+        options: poll
+            .options
+            .map(|options| options.into_iter().map(convert_poll_option).collect()),
+        expires_at: poll.expires_at.as_ref().map(dt_to_epoch_millis),
+        closed_at: poll.closed_at.as_ref().map(dt_to_epoch_millis),
+        anonymous: poll.anonymous,
+        allow_ranked_choice: poll.allow_ranked_choice,
+        allow_custom_answers: poll.allow_custom_answers,
+    }
+}
+
 fn convert_message_snapshot(s: udt::MessageSnapshotUdt) -> MessageSnapshot {
     let edited_ts = s
         .edited_timestamp
@@ -3045,6 +3426,7 @@ impl From<MessageDbRow> for Message {
                 .map(|v| v.into_iter().map(convert_sticker_item).collect()),
             message_reference: row.message_reference.map(convert_message_reference),
             call: row.call.map(convert_message_call),
+            poll: row.poll.map(convert_poll),
             message_snapshots: row
                 .message_snapshots
                 .map(|v| v.into_iter().map(convert_message_snapshot).collect()),
@@ -3141,6 +3523,13 @@ mod tests {
             emoji_name: emoji_name.to_owned(),
             emoji_animated: Some(false),
             created_at: DateTime::<Utc>::from_timestamp_millis(created_at_ms),
+        }
+    }
+
+    fn poll_vote(user_id: i64, option_ids: Vec<i64>) -> MessagePollVoteDbRow {
+        MessagePollVoteDbRow {
+            user_id,
+            option_ids,
         }
     }
 
@@ -3310,5 +3699,56 @@ mod tests {
         assert_eq!(mapped[1].count, 2);
         assert_eq!(mapped[1].me, Some(true));
         assert_eq!(mapped[2].emoji.name, "z");
+    }
+
+    #[test]
+    fn poll_mapping_is_viewer_aware_and_respects_anonymity() {
+        let poll = MessagePoll {
+            poll_id: Some(700),
+            title: Some("Ship window".to_owned()),
+            options: Some(vec![
+                MessagePollOption {
+                    option_id: Some(701),
+                    text: Some("Morning".to_owned()),
+                    attachment_id: None,
+                    vote_count: Some(1),
+                },
+                MessagePollOption {
+                    option_id: Some(702),
+                    text: Some("Afternoon".to_owned()),
+                    attachment_id: None,
+                    vote_count: Some(1),
+                },
+            ]),
+            expires_at: Some(now_epoch_millis() + 60_000),
+            closed_at: None,
+            anonymous: Some(false),
+            allow_ranked_choice: Some(true),
+            allow_custom_answers: Some(false),
+        };
+        let votes = vec![poll_vote(10, vec![701]), poll_vote(12, vec![702, 701])];
+
+        let mapped = map_poll(&poll, &votes, 12).unwrap();
+
+        assert_eq!(mapped.options[0].me, Some(true));
+        assert_eq!(mapped.options[0].voter_ids, Some(vec!["10".to_owned()]));
+        assert_eq!(mapped.options[0].rank_counts, Some(vec![1, 1]));
+        assert_eq!(mapped.options[0].ranked_score, Some(3));
+        assert_eq!(mapped.options[1].me, Some(true));
+        assert_eq!(mapped.options[1].voter_ids, Some(vec!["12".to_owned()]));
+        assert_eq!(mapped.options[1].rank_counts, Some(vec![1, 0]));
+        assert_eq!(mapped.options[1].ranked_score, Some(2));
+
+        let anonymous = map_poll(
+            &MessagePoll {
+                anonymous: Some(true),
+                ..poll
+            },
+            &votes,
+            12,
+        )
+        .unwrap();
+        assert_eq!(anonymous.options[1].me, Some(true));
+        assert_eq!(anonymous.options[1].voter_ids, None);
     }
 }

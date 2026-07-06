@@ -80,6 +80,10 @@ export const ChannelRateLimitConfigs = {
 		bucket: 'channel:reactions::channel_id',
 		config: {limit: 30, windowMs: ms('10 seconds')},
 	} as RouteRateLimitConfig,
+	CHANNEL_POLL_VOTES: {
+		bucket: 'channel:poll_votes::channel_id',
+		config: {limit: 30, windowMs: ms('10 seconds')},
+	} as RouteRateLimitConfig,
 	CHANNEL_CALL_GET: {
 		bucket: 'channel:call:get::channel_id',
 		config: {limit: 60, windowMs: ms('10 seconds')},

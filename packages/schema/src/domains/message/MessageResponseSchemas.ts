@@ -9,6 +9,7 @@ import {
 import {ChannelResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import type {GuildMemberData} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import {type MessageEmbed, MessageEmbedResponse} from '@fluxer/schema/src/domains/message/EmbedSchemas';
+import {PollResponse} from '@fluxer/schema/src/domains/message/PollSchemas';
 import {type UserPartial, UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {MessageReferenceTypeSchema, MessageTypeSchema} from '@fluxer/schema/src/primitives/MessageValidators';
 import {
@@ -149,6 +150,7 @@ const MessageBaseResponseSchema = z.object({
 		),
 	embeds: z.array(MessageEmbedResponse).nullish().describe('The embeds attached to the message'),
 	attachments: z.array(MessageAttachmentResponse).nullish().describe('The files attached to the message'),
+	poll: PollResponse.nullish().describe('Poll attached to this message'),
 	stickers: z.array(MessageStickerResponse).nullish().describe('The stickers sent with the message'),
 	nsfw_emojis: z
 		.array(SnowflakeStringType)
@@ -351,6 +353,7 @@ export interface Message {
 	readonly users?: ReadonlyArray<UserPartial>;
 	readonly embeds?: ReadonlyArray<MessageEmbed>;
 	readonly attachments?: ReadonlyArray<MessageAttachment>;
+	readonly poll?: PollResponse | null;
 	readonly stickers?: ReadonlyArray<MessageStickerItem>;
 	readonly nsfw_emojis?: ReadonlyArray<string>;
 	readonly reactions?: ReadonlyArray<MessageReaction>;

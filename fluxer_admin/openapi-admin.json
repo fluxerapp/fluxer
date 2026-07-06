@@ -5828,6 +5828,63 @@
 				}
 			}
 		},
+		"/admin/messages/delete-attachment": {
+			"post": {
+				"operationId": "admin_delete_message_attachment",
+				"summary": "Delete single message attachment",
+				"tags": ["Admin"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/DeleteMessageResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Deletes one attachment from a message while keeping the message intact. If the attachment backs a poll option image, the poll option image reference is cleared. Logged to audit log. Requires MESSAGE_DELETE permission.",
+				"security": [{"adminApiKey": []}],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/DeleteMessageAttachmentRequest"}}}
+				}
+			}
+		},
 		"/admin/messages/lookup": {
 			"post": {
 				"operationId": "lookup_message",
@@ -11699,6 +11756,8 @@
 							"id": {"type": "string", "description": "ID of the affected entity"},
 							"integration_type": {"type": "number", "description": "Type of integration"},
 							"message_id": {"type": "string", "description": "Message ID for relevant actions"},
+							"option_id": {"type": "string", "description": "Poll option ID for relevant poll actions"},
+							"poll_id": {"type": "string", "description": "Poll ID for relevant poll actions"},
 							"members_removed": {"type": "number", "description": "Number of members removed"},
 							"role_name": {"type": "string", "description": "Name of the role"},
 							"type": {"type": "number", "description": "Type identifier"},
@@ -11723,7 +11782,7 @@
 				"format": "int32",
 				"enum": [
 					1, 10, 11, 12, 13, 14, 15, 20, 21, 22, 23, 24, 25, 26, 27, 28, 30, 31, 32, 40, 41, 42, 50, 51, 52, 60, 61, 62,
-					90, 91, 92, 72, 73, 74, 75
+					90, 91, 92, 72, 73, 74, 75, 110, 111
 				],
 				"description": "The type of action that occurred"
 			},
@@ -13575,6 +13634,11 @@
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/MessageAttachmentResponse"}
 					},
+					"poll": {
+						"description": "Poll attached to this message",
+						"nullable": true,
+						"allOf": [{"$ref": "#/components/schemas/PollResponse"}]
+					},
 					"stickers": {
 						"description": "The stickers sent with the message",
 						"nullable": true,
@@ -13722,6 +13786,11 @@
 								"nullable": true,
 								"type": "array",
 								"items": {"$ref": "#/components/schemas/MessageAttachmentResponse"}
+							},
+							"poll": {
+								"description": "Poll attached to this message",
+								"nullable": true,
+								"allOf": [{"$ref": "#/components/schemas/PollResponse"}]
 							},
 							"stickers": {
 								"description": "The stickers sent with the message",
@@ -14170,6 +14239,102 @@
 				"maximum": 2147483647,
 				"description": "Attachment flags"
 			},
+			"PollResponse": {
+				"type": "object",
+				"properties": {
+					"id": {"type": "string", "pattern": "^(0|[1-9][0-9]*)$", "description": "Poll ID"},
+					"title": {"type": "string", "description": "Poll title or question"},
+					"options": {
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/PollOptionResponse"},
+						"minItems": 2,
+						"maxItems": 20,
+						"description": "Poll answer options"
+					},
+					"expires_at": {
+						"type": "string",
+						"format": "date-time",
+						"description": "ISO8601 timestamp when this poll closes"
+					},
+					"closed": {"type": "boolean", "description": "Whether this poll is closed to new votes"},
+					"anonymous": {"type": "boolean", "description": "Whether voter identities are hidden from normal users"},
+					"allow_ranked_choice": {"type": "boolean", "description": "Whether voters can rank multiple options"},
+					"allow_custom_answers": {"type": "boolean", "description": "Whether users can add custom answer options"},
+					"votes": {
+						"description": "Visible full vote records, usually only for moderation views",
+						"nullable": true,
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/PollVoteResponse"}
+					}
+				},
+				"required": [
+					"id",
+					"title",
+					"options",
+					"expires_at",
+					"closed",
+					"anonymous",
+					"allow_ranked_choice",
+					"allow_custom_answers"
+				]
+			},
+			"PollOptionResponse": {
+				"type": "object",
+				"properties": {
+					"id": {"type": "string", "pattern": "^(0|[1-9][0-9]*)$", "description": "Poll option ID"},
+					"text": {"type": "string", "description": "Text shown for this poll option"},
+					"attachment_id": {
+						"description": "Attachment ID for an optional image associated with this option",
+						"nullable": true,
+						"allOf": [{"$ref": "#/components/schemas/SnowflakeType"}]
+					},
+					"vote_count": {
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 2147483647,
+						"format": "int32",
+						"description": "Visible vote count for this option"
+					},
+					"rank_counts": {
+						"description": "Ranked-choice selection counts by rank, where index 0 is first choice",
+						"nullable": true,
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/Int32Type"}
+					},
+					"ranked_score": {
+						"description": "Borda-style aggregate score for ranked-choice poll results",
+						"nullable": true,
+						"allOf": [{"$ref": "#/components/schemas/Int32Type"}]
+					},
+					"me": {"type": "boolean", "description": "Whether the current user selected this option"},
+					"voter_ids": {
+						"description": "Visible voter IDs for non-anonymous poll results",
+						"nullable": true,
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/SnowflakeType"}
+					}
+				},
+				"required": ["id", "text", "vote_count"]
+			},
+			"PollVoteResponse": {
+				"type": "object",
+				"properties": {
+					"user_id": {"type": "string", "pattern": "^(0|[1-9][0-9]*)$", "description": "User who submitted this vote"},
+					"option_ids": {
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/SnowflakeType"},
+						"minItems": 1,
+						"maxItems": 20,
+						"description": "Selected option IDs in vote order"
+					},
+					"created_at": {
+						"type": "string",
+						"format": "date-time",
+						"description": "ISO8601 timestamp for when this vote was submitted"
+					}
+				},
+				"required": ["user_id", "option_ids", "created_at"]
+			},
 			"MessageStickerResponse": {
 				"type": "object",
 				"properties": {
@@ -14324,6 +14489,15 @@
 				"type": "object",
 				"properties": {"user_id": {"$ref": "#/components/schemas/SnowflakeType"}, "dry_run": {"type": "boolean"}},
 				"required": ["user_id"]
+			},
+			"DeleteMessageAttachmentRequest": {
+				"type": "object",
+				"properties": {
+					"channel_id": {"$ref": "#/components/schemas/SnowflakeType"},
+					"message_id": {"$ref": "#/components/schemas/SnowflakeType"},
+					"attachment_id": {"$ref": "#/components/schemas/SnowflakeType"}
+				},
+				"required": ["channel_id", "message_id", "attachment_id"]
 			},
 			"LookupMessageResponse": {
 				"type": "object",

@@ -103,6 +103,20 @@ pub(crate) async fn messages_post(
                 Err(e) => json_error(StatusCode::BAD_REQUEST, &format!("{e}")),
             };
         }
+        "delete-attachment" => {
+            let attachment_id = form.clean("attachment_id");
+            let (Some(cid), Some(mid), Some(aid)) = (&channel_id, &message_id, &attachment_id)
+            else {
+                return json_error(
+                    StatusCode::BAD_REQUEST,
+                    "Missing channel_id, message_id, or attachment_id",
+                );
+            };
+            return match client.delete_message_attachment(cid, mid, aid).await {
+                Ok(()) => Json(serde_json::json!({"success": true})).into_response(),
+                Err(e) => json_error(StatusCode::BAD_REQUEST, &format!("{e}")),
+            };
+        }
         "report-to-ncmec" => {
             let attachment_id = form.clean("attachment_id");
             let filename = form.clean("filename");

@@ -54,6 +54,7 @@ const LANE_CONFIG = {
 			'bulkUpdateGuildFeatures',
 			'bulkAddGuildMembers',
 			'bulkBanFileShas',
+			'closeExpiredPoll',
 		] as const,
 		concurrency: 8,
 		maxAckPending: 50,

@@ -10,6 +10,7 @@ import {
 import {
 	DeleteAllUserMessagesRequest,
 	DeleteAllUserMessagesResponse,
+	DeleteMessageAttachmentRequest,
 	DeleteMessageRequest,
 	LookupMessageByAttachmentRequest,
 	LookupMessageRequest,
@@ -128,6 +129,30 @@ export function MessageAdminController(app: HonoApp) {
 			const auditLogReason = ctx.get('auditLogReason');
 			return ctx.json(
 				await adminService.messageService.deleteMessage(ctx.req.valid('json'), adminUserId, auditLogReason),
+			);
+		},
+	);
+	app.post(
+		'/admin/messages/delete-attachment',
+		RateLimitMiddleware(RateLimitConfigs.ADMIN_MESSAGE_OPERATION),
+		requireAdminACL(AdminACLs.MESSAGE_DELETE),
+		Validator('json', DeleteMessageAttachmentRequest),
+		OpenAPI({
+			operationId: 'admin_delete_message_attachment',
+			summary: 'Delete single message attachment',
+			description:
+				'Deletes one attachment from a message while keeping the message intact. If the attachment backs a poll option image, the poll option image reference is cleared. Logged to audit log. Requires MESSAGE_DELETE permission.',
+			responseSchema: DeleteMessageResponse,
+			statusCode: 200,
+			security: 'adminApiKey',
+			tags: 'Admin',
+		}),
+		async (ctx) => {
+			const adminService = ctx.get('adminService');
+			const adminUserId = ctx.get('adminUserId');
+			const auditLogReason = ctx.get('auditLogReason');
+			return ctx.json(
+				await adminService.messageService.deleteMessageAttachment(ctx.req.valid('json'), adminUserId, auditLogReason),
 			);
 		},
 	);

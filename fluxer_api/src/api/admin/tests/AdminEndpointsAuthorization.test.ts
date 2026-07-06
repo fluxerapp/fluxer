@@ -17,6 +17,7 @@ const adminEndpoints = [
 	{method: 'POST', path: '/admin/users/search', requiredACL: 'user:lookup'},
 	{method: 'POST', path: '/admin/messages/lookup', requiredACL: 'message:lookup'},
 	{method: 'POST', path: '/admin/messages/delete', requiredACL: 'message:delete'},
+	{method: 'POST', path: '/admin/messages/delete-attachment', requiredACL: 'message:delete'},
 	{method: 'POST', path: '/admin/gateway/memory-stats', requiredACL: 'gateway:manage'},
 	{method: 'POST', path: '/admin/gateway/reload-all', requiredACL: 'gateway:manage'},
 	{method: 'GET', path: '/admin/gateway/stats', requiredACL: 'gateway:manage'},

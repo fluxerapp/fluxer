@@ -15,6 +15,8 @@ import type {
 	MessageReference,
 	MessageStickerItem,
 } from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import type {PollRequest, PollResponse} from '@fluxer/schema/src/domains/message/PollSchemas';
+import * as SnowflakeUtils from '@fluxer/snowflake/src/SnowflakeUtils';
 
 interface MessageSubmitData {
 	content: string;
@@ -25,6 +27,30 @@ interface MessageSubmitData {
 	replyMentioning?: boolean;
 	stickers?: Array<MessageStickerItem>;
 	favoriteMemeId?: string;
+	poll?: PollRequest;
+}
+
+function createOptimisticPoll(nonce: string, poll: PollRequest): PollResponse {
+	const now = Date.now();
+	const expiresAt =
+		poll.expires_at instanceof Date
+			? poll.expires_at.toISOString()
+			: (poll.expires_at ?? new Date(now + (poll.duration_seconds ?? 0) * 1000).toISOString());
+	return {
+		id: nonce,
+		title: poll.title,
+		options: poll.options.map((option, index) => ({
+			id: SnowflakeUtils.fromTimestamp(now + index + 1),
+			text: option.text,
+			attachment_id: option.attachment_id != null ? option.attachment_id.toString() : null,
+			vote_count: 0,
+		})),
+		expires_at: expiresAt,
+		closed: false,
+		anonymous: poll.anonymous ?? false,
+		allow_ranked_choice: poll.allow_ranked_choice ?? false,
+		allow_custom_answers: poll.allow_custom_answers ?? false,
+	};
 }
 
 export function createUploadingAttachments(
@@ -60,6 +86,7 @@ export function createOptimisticMessage(data: MessageSubmitData, attachments: Ar
 		state: MessageStates.SENDING,
 		nonce: data.nonce,
 		attachments,
+		poll: data.poll ? createOptimisticPoll(data.nonce, data.poll) : undefined,
 		_allowedMentions: data.referencedMessage ? {replied_user: data.replyMentioning ?? true} : undefined,
 	});
 }

@@ -15,6 +15,7 @@ import {MessageAttachments} from '@app/features/channel/components/MessageAttach
 import {MessageAuthorInfo} from '@app/features/channel/components/MessageAuthorInfo';
 import {MessageAvatar} from '@app/features/channel/components/MessageAvatar';
 import {shouldAnimateMessageEmojiByDefault} from '@app/features/channel/components/MessageEmojiAnimationUtils';
+import {MessagePoll} from '@app/features/channel/components/MessagePoll';
 import {MessageTimeoutIndicator} from '@app/features/channel/components/MessageTimeoutIndicator';
 import {MessageUsername} from '@app/features/channel/components/MessageUsername';
 import {useMessageViewContext} from '@app/features/channel/components/MessageViewContext';
@@ -177,6 +178,15 @@ export const UserMessage = observer(() => {
 				? styles.messageFailed
 				: undefined
 			: MessageStateToClassName[message.state];
+	const pollAttachmentIds = useMemo(() => {
+		const attachmentIds = new Set<string>();
+		for (const option of message.poll?.options ?? []) {
+			if (option.attachment_id) {
+				attachmentIds.add(option.attachment_id);
+			}
+		}
+		return attachmentIds;
+	}, [message.poll]);
 	const checkCustomEmojiAvailability = useCallback(
 		(content: string): boolean => {
 			CUSTOM_EMOJI_MARKDOWN_PATTERN.lastIndex = 0;
@@ -510,7 +520,10 @@ export const UserMessage = observer(() => {
 				/>
 				<div className={styles.messageGutterRight} data-flx="channel.user-message.message-gutter-right" />
 				<div className={styles.container} data-flx="channel.user-message.container">
-					<MessageAttachments data-flx="channel.user-message.message-attachments" />
+					<MessageAttachments
+						hiddenAttachmentIds={pollAttachmentIds}
+						data-flx="channel.user-message.message-attachments"
+					/>
 				</div>
 			</SpoilerSyncProvider>
 		);
@@ -595,7 +608,11 @@ export const UserMessage = observer(() => {
 					}
 				</CompactMessageLayout>
 				<div className={styles.container} data-flx="channel.user-message.container--2">
-					<MessageAttachments data-flx="channel.user-message.message-attachments--2" />
+					<MessagePoll message={message} />
+					<MessageAttachments
+						hiddenAttachmentIds={pollAttachmentIds}
+						data-flx="channel.user-message.message-attachments--2"
+					/>
 					{renderFailedFooter()}
 				</div>
 			</SpoilerSyncProvider>
@@ -772,7 +789,11 @@ export const UserMessage = observer(() => {
 						)}
 					</AuthorHeading>
 				)}
-				<MessageAttachments data-flx="channel.user-message.message-attachments--3" />
+				<MessagePoll message={message} />
+				<MessageAttachments
+					hiddenAttachmentIds={pollAttachmentIds}
+					data-flx="channel.user-message.message-attachments--3"
+				/>
 				{renderFailedFooter()}
 			</div>
 		</SpoilerSyncProvider>

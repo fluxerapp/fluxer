@@ -2,7 +2,7 @@
 
 use serde::{Deserialize, Serialize};
 
-mod serde_id {
+pub(crate) mod serde_id {
     use serde::Deserialize;
     use serde::de::{self, Deserializer};
 
@@ -192,7 +192,33 @@ pub struct Message {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub call: Option<MessageCall>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub poll: Option<MessagePoll>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub message_snapshots: Option<Vec<MessageSnapshot>>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MessagePollOption {
+    #[serde(default, deserialize_with = "serde_id::opt_i64_from_string_or_number")]
+    pub option_id: Option<i64>,
+    pub text: Option<String>,
+    #[serde(default, deserialize_with = "serde_id::opt_i64_from_string_or_number")]
+    pub attachment_id: Option<i64>,
+    pub vote_count: Option<i32>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MessagePoll {
+    #[serde(default, deserialize_with = "serde_id::opt_i64_from_string_or_number")]
+    pub poll_id: Option<i64>,
+    pub title: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub options: Option<Vec<MessagePollOption>>,
+    pub expires_at: Option<i64>,
+    pub closed_at: Option<i64>,
+    pub anonymous: Option<bool>,
+    pub allow_ranked_choice: Option<bool>,
+    pub allow_custom_answers: Option<bool>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -425,6 +451,43 @@ pub struct ApiMessageCallResponse {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ApiPollOptionResponse {
+    pub id: String,
+    pub text: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub attachment_id: Option<String>,
+    pub vote_count: i32,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub rank_counts: Option<Vec<i32>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ranked_score: Option<i32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub me: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub voter_ids: Option<Vec<String>>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ApiPollVoteResponse {
+    pub user_id: String,
+    pub option_ids: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ApiPollResponse {
+    pub id: String,
+    pub title: String,
+    pub options: Vec<ApiPollOptionResponse>,
+    pub expires_at: String,
+    pub closed: bool,
+    pub anonymous: bool,
+    pub allow_ranked_choice: bool,
+    pub allow_custom_answers: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub votes: Option<Vec<ApiPollVoteResponse>>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ApiMessageResponse {
     pub id: String,
     pub channel_id: String,
@@ -461,6 +524,8 @@ pub struct ApiMessageResponse {
     pub nonce: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub call: Option<ApiMessageCallResponse>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub poll: Option<ApiPollResponse>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub referenced_message: Option<Box<ApiMessageResponse>>,
 }

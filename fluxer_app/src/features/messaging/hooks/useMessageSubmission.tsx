@@ -20,6 +20,7 @@ import type {
 	MessageAttachment,
 	MessageStickerItem,
 } from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import type {PollRequest} from '@fluxer/schema/src/domains/message/PollSchemas';
 import * as SnowflakeUtils from '@fluxer/snowflake/src/SnowflakeUtils';
 import {useLingui} from '@lingui/react/macro';
 import {useCallback} from 'react';
@@ -37,6 +38,7 @@ export type SendMessageFunction = (
 	stickersOrTts?: Array<MessageStickerItem> | boolean,
 	favoriteMemeIdOrStickers?: string | Array<MessageStickerItem>,
 	maybeFavoriteMemeId?: string,
+	poll?: PollRequest,
 ) => void;
 
 function isBlockedBySlowmode(channel: Channel): boolean {
@@ -67,6 +69,7 @@ export const useMessageSubmission = ({channel, referencedMessage, replyingMessag
 			stickersOrTts: Array<MessageStickerItem> | boolean = [],
 			favoriteMemeIdOrStickers?: string | Array<MessageStickerItem>,
 			maybeFavoriteMemeId?: string,
+			poll?: PollRequest,
 		) => {
 			const isTtsCall = typeof stickersOrTts === 'boolean';
 			const tts = isTtsCall ? stickersOrTts : undefined;
@@ -114,6 +117,7 @@ export const useMessageSubmission = ({channel, referencedMessage, replyingMessag
 					replyMentioning: replyingMessage?.mentioning,
 					stickers,
 					favoriteMemeId,
+					poll,
 				},
 				uploadingAttachments,
 			);
@@ -132,6 +136,7 @@ export const useMessageSubmission = ({channel, referencedMessage, replyingMessag
 				stickers,
 				favoriteMemeId,
 				tts,
+				poll,
 			}).then((sentMessage) => {
 				if (sentMessage) {
 					SlowmodeCommands.recordMessageSend(channel.id);

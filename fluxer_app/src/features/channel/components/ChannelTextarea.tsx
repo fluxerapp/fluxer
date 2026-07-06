@@ -26,6 +26,7 @@ import {
 	MentionEveryonePopout,
 } from '@app/features/channel/components/MentionEveryonePopout';
 import {MessageCharacterCounter} from '@app/features/channel/components/MessageCharacterCounter';
+import {PollCreateModal} from '@app/features/channel/components/modals/PollCreateModal';
 import {ScheduledMessageEditBar} from '@app/features/channel/components/ScheduledMessageEditBar';
 import wrapperStyles from '@app/features/channel/components/textarea/InputWrapper.module.css';
 import {MobileTextareaLayout} from '@app/features/channel/components/textarea/MobileTextareaLayout';
@@ -109,6 +110,7 @@ import {
 	MAX_MESSAGE_LENGTH_NON_PREMIUM,
 	MAX_MESSAGE_LENGTH_PREMIUM,
 } from '@fluxer/constants/src/LimitConstants';
+import type {PollRequest} from '@fluxer/schema/src/domains/message/PollSchemas';
 import {useLingui} from '@lingui/react/macro';
 import {PlusCircleIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
@@ -126,6 +128,7 @@ const ChannelTextareaContent = observer(
 		disabled,
 		inputSuppressed = false,
 		canAttachFiles,
+		canCreatePoll,
 		canSendFavoriteMemeId,
 	}: {
 		channel: Channel;
@@ -134,6 +137,7 @@ const ChannelTextareaContent = observer(
 		disabled: boolean;
 		inputSuppressed?: boolean;
 		canAttachFiles: boolean;
+		canCreatePoll: boolean;
 		canSendFavoriteMemeId: boolean;
 	}) => {
 		const {i18n} = useLingui();
@@ -147,6 +151,7 @@ const ChannelTextareaContent = observer(
 		const mentionPopoutKey = useMemo(() => `mention-everyone-${channel.id}`, [channel.id]);
 		const mentionModalKey = useMemo(() => `mention-everyone-modal-${channel.id}`, [channel.id]);
 		const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+		const [isPollCreateModalOpen, setIsPollCreateModalOpen] = useState(false);
 		const [mobilePlusSheetOpen, setMobilePlusSheetOpen] = useState(false);
 		const autocompleteListId = useId();
 		const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -504,6 +509,18 @@ const ChannelTextareaContent = observer(
 			}
 			setIsScheduleModalOpen(true);
 		}, [hasMessageSchedulingAccess]);
+		const handleOpenPollCreateModal = useCallback(() => {
+			if (textareaInputDisabled || !canCreatePoll) {
+				return;
+			}
+			setIsPollCreateModalOpen(true);
+		}, [textareaInputDisabled, canCreatePoll]);
+		const handleCreatePoll = useCallback(
+			(poll: PollRequest) => {
+				handleSendMessage('', false, [], undefined, undefined, poll);
+			},
+			[handleSendMessage],
+		);
 		const handleOpenMobilePlusSheet = useCallback(() => {
 			setMobilePlusSheetOpen(true);
 		}, []);
@@ -906,8 +923,10 @@ const ChannelTextareaContent = observer(
 							canSchedule={canScheduleMessage}
 							canAttachFiles={canAttachFiles}
 							canSendMessages={!textareaInputDisabled}
+							canCreatePoll={canCreatePoll}
 							textareaValue={value}
 							onUploadAsFile={handleUploadMessageAsFile}
+							onCreatePoll={handleOpenPollCreateModal}
 							onSendVoiceMessage={
 								mobileLayout.enabled
 									? undefined
@@ -933,6 +952,7 @@ const ChannelTextareaContent = observer(
 			},
 			[
 				canAttachFiles,
+				canCreatePoll,
 				canScheduleMessage,
 				channel.id,
 				handleFileButtonClick,
@@ -943,6 +963,7 @@ const ChannelTextareaContent = observer(
 				mobileLayout.enabled,
 				textareaInputDisabled,
 				value,
+				handleOpenPollCreateModal,
 			],
 		);
 		const handlePlusMenuMouseDown = useCallback(
@@ -1274,9 +1295,19 @@ const ChannelTextareaContent = observer(
 							onUploadFile={handleFileButtonClick}
 							textareaValue={value}
 							onUploadAsFile={handleUploadMessageAsFile}
+							onCreatePoll={handleOpenPollCreateModal}
+							canCreatePoll={canCreatePoll}
 							data-flx="channel.channel-textarea.channel-textarea-content.mobile-textarea-plus-bottom-sheet"
 						/>
 					</>
+				)}
+				{isPollCreateModalOpen && (
+					<PollCreateModal
+						onSubmit={handleCreatePoll}
+						onClose={() => setIsPollCreateModalOpen(false)}
+						availableAttachments={uploadAttachments}
+						data-flx="channel.channel-textarea.channel-textarea-content.poll-create-modal"
+					/>
 				)}
 			</>
 		);
@@ -1296,6 +1327,7 @@ export const ChannelTextarea = observer(
 		const canAttachFiles = channel.isPrivate()
 			? !forceNoAttachFiles
 			: !forceNoAttachFiles && Permission.can(Permissions.ATTACH_FILES, channel);
+		const canCreatePoll = channel.isPrivate() ? true : Permission.can(Permissions.CREATE_POLLS, channel);
 		const canEmbedLinks = channel.isPrivate() ? true : Permission.can(Permissions.EMBED_LINKS, channel);
 		const canSendFavoriteMemeId = canAttachFiles && canEmbedLinks;
 		return (
@@ -1305,6 +1337,7 @@ export const ChannelTextarea = observer(
 				disabled={disabled}
 				inputSuppressed={inputSuppressed}
 				canAttachFiles={canAttachFiles}
+				canCreatePoll={canCreatePoll}
 				canSendFavoriteMemeId={canSendFavoriteMemeId}
 				draft={draft}
 				draftSegments={draftSegments}

@@ -231,6 +231,64 @@
 			]
 		},
 		{
+			"name": "message_poll_option",
+			"fields": [
+				{
+					"name": "option_id",
+					"type": "bigint"
+				},
+				{
+					"name": "text",
+					"type": "text"
+				},
+				{
+					"name": "attachment_id",
+					"type": "bigint"
+				},
+				{
+					"name": "vote_count",
+					"type": "int"
+				}
+			]
+		},
+		{
+			"name": "message_poll",
+			"fields": [
+				{
+					"name": "poll_id",
+					"type": "bigint"
+				},
+				{
+					"name": "title",
+					"type": "text"
+				},
+				{
+					"name": "options",
+					"type": "frozen<list<message_poll_option>>"
+				},
+				{
+					"name": "expires_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "closed_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "anonymous",
+					"type": "boolean"
+				},
+				{
+					"name": "allow_ranked_choice",
+					"type": "boolean"
+				},
+				{
+					"name": "allow_custom_answers",
+					"type": "boolean"
+				}
+			]
+		},
+		{
 			"name": "message_embed",
 			"fields": [
 				{
@@ -6448,6 +6506,41 @@
 			"options": ""
 		},
 		{
+			"name": "message_poll_votes",
+			"columns": [
+				{
+					"name": "channel_id",
+					"type": "bigint"
+				},
+				{
+					"name": "bucket",
+					"type": "int"
+				},
+				{
+					"name": "message_id",
+					"type": "bigint"
+				},
+				{
+					"name": "user_id",
+					"type": "bigint"
+				},
+				{
+					"name": "option_ids",
+					"type": "list<bigint>"
+				},
+				{
+					"name": "created_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "updated_at",
+					"type": "timestamp"
+				}
+			],
+			"primary_key": "((channel_id, bucket), message_id, user_id)",
+			"options": ""
+		},
+		{
 			"name": "message_report_submissions_by_reporter",
 			"columns": [
 				{
@@ -6560,6 +6653,10 @@
 				{
 					"name": "call",
 					"type": "frozen<message_call>"
+				},
+				{
+					"name": "poll",
+					"type": "frozen<message_poll>"
 				},
 				{
 					"name": "message_snapshots",

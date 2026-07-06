@@ -7,6 +7,7 @@ import {
 	ClientAttachmentRequest,
 	ClientUploadedAttachmentRequest,
 } from '@fluxer/schema/src/domains/message/AttachmentSchemas';
+import {PollRequest} from '@fluxer/schema/src/domains/message/PollSchemas';
 import {AllowedMentionsRequest, MessageReferenceRequest} from '@fluxer/schema/src/domains/message/SharedMessageSchemas';
 import {createQueryIntegerType, DateTimeType} from '@fluxer/schema/src/primitives/QueryValidators';
 import {
@@ -305,7 +306,7 @@ export const MessageContentRequest = createUnboundedStringType().describe(MESSAG
 
 export type MessageContentRequest = z.infer<typeof MessageContentRequest>;
 
-export const MessageRequestSchema = z
+const MessageRequestBaseSchema = z
 	.object({
 		content: MessageContentRequest.nullish(),
 		embeds: z.array(RichEmbedRequest).describe('Array of embed objects to include in the message'),
@@ -324,10 +325,30 @@ export const MessageRequestSchema = z
 		).default(0),
 		nonce: MessageNonceRequest,
 		favorite_meme_id: SnowflakeType.nullish().describe('ID of a favorite meme to attach'),
+		poll: PollRequest.nullish().describe('Poll to create with this message'),
 		sticker_ids: z.array(SnowflakeType).max(3).nullish().describe('Array of sticker IDs to include (max 3)'),
 		tts: z.boolean().optional().describe('Whether this is a text-to-speech message'),
 	})
 	.partial();
+
+export const MessageRequestSchema = MessageRequestBaseSchema.superRefine((value, ctx) => {
+	if (!value.poll) {
+		return;
+	}
+	const attachmentIds = new Set((value.attachments ?? []).map((attachment) => attachment.id));
+	for (const [index, option] of value.poll.options.entries()) {
+		if (option.attachment_id == null) {
+			continue;
+		}
+		if (!attachmentIds.has(option.attachment_id)) {
+			ctx.addIssue({
+				code: 'custom',
+				message: 'Poll option attachment_id must reference an attachment in the message request',
+				path: ['poll', 'options', index, 'attachment_id'],
+			});
+		}
+	}
+});
 
 export type MessageRequestSchemaType = z.infer<typeof MessageRequestSchema>;
 
@@ -341,7 +362,7 @@ const MessageSnapshotAttachmentEditRequest = z.object({
 const MessageSnapshotEditRequest = z.object({
 	attachments: z.array(MessageSnapshotAttachmentEditRequest).max(10).optional(),
 });
-export const MessageUpdateRequestSchema = MessageRequestSchema.pick({
+export const MessageUpdateRequestSchema = MessageRequestBaseSchema.pick({
 	content: true,
 	embeds: true,
 	allowed_mentions: true,

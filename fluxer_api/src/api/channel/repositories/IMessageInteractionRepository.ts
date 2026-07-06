@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {ChannelID, EmojiID, MessageID, UserID} from '../../BrandedTypes';
+import type {MessagePollVoteRow} from '../../database/types/MessageTypes';
 import type {Message} from '../../models/Message';
 import type {MessageReaction} from '../../models/MessageReaction';
 
@@ -12,6 +13,19 @@ export abstract class IMessageInteractionRepository {
 	abstract removeChannelPin(channelId: ChannelID, messageId: MessageID): Promise<void>;
 
 	abstract listMessageReactions(channelId: ChannelID, messageId: MessageID): Promise<Array<MessageReaction>>;
+
+	abstract listPollVotes(channelId: ChannelID, messageId: MessageID): Promise<Array<MessagePollVoteRow>>;
+
+	abstract getPollVote(channelId: ChannelID, messageId: MessageID, userId: UserID): Promise<MessagePollVoteRow | null>;
+
+	abstract upsertPollVote(
+		channelId: ChannelID,
+		messageId: MessageID,
+		userId: UserID,
+		optionIds: Array<MessageID>,
+	): Promise<MessagePollVoteRow>;
+
+	abstract removePollVote(channelId: ChannelID, messageId: MessageID, userId: UserID): Promise<void>;
 
 	abstract listReactionUsers(
 		channelId: ChannelID,

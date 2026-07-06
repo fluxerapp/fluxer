@@ -36,4 +36,6 @@ export enum AuditLogActionType {
 	MESSAGE_BULK_DELETE = 73,
 	MESSAGE_PIN = 74,
 	MESSAGE_UNPIN = 75,
+	POLL_OPTION_CREATE = 110,
+	POLL_CLOSE = 111,
 }

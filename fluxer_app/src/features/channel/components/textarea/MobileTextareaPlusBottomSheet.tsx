@@ -3,10 +3,14 @@
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import * as PremiumModalCommands from '@app/features/premium/commands/PremiumModalCommands';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
-import {MenuBottomSheet, type MenuGroupType} from '@app/features/ui/menu_bottom_sheet/MenuBottomSheet';
+import {
+	MenuBottomSheet,
+	type MenuGroupType,
+	type MenuSheetItem,
+} from '@app/features/ui/menu_bottom_sheet/MenuBottomSheet';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
-import {GiftIcon, PaperclipIcon, UploadSimpleIcon} from '@phosphor-icons/react';
+import {ChartBarIcon, GiftIcon, PaperclipIcon, UploadSimpleIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import {useMemo} from 'react';
 
@@ -22,6 +26,10 @@ const SEND_GIFT_DESCRIPTOR = msg({
 	message: 'Send gift',
 	comment: 'Button or menu action label in the channel and chat mobile textarea plus bottom sheet. Keep it concise.',
 });
+const CREATE_POLL_DESCRIPTOR = msg({
+	message: 'Create poll',
+	comment: 'Button or menu action label in the channel and chat mobile textarea plus bottom sheet. Keep it concise.',
+});
 
 interface MobileTextareaPlusBottomSheetProps {
 	isOpen: boolean;
@@ -29,14 +37,24 @@ interface MobileTextareaPlusBottomSheetProps {
 	onUploadFile: () => void;
 	textareaValue?: string;
 	onUploadAsFile?: () => void;
+	onCreatePoll?: () => void;
+	canCreatePoll: boolean;
 }
 
 export const MobileTextareaPlusBottomSheet = observer(
-	({isOpen, onClose, onUploadFile, textareaValue, onUploadAsFile}: MobileTextareaPlusBottomSheetProps) => {
+	({
+		isOpen,
+		onClose,
+		onUploadFile,
+		textareaValue,
+		onUploadAsFile,
+		onCreatePoll,
+		canCreatePoll,
+	}: MobileTextareaPlusBottomSheetProps) => {
 		const {i18n} = useLingui();
 		const isSelfHosted = RuntimeConfig.isSelfHosted();
 		const groups: Array<MenuGroupType> = useMemo(() => {
-			const items = [
+			const items: Array<MenuSheetItem> = [
 				{
 					icon: (
 						<PaperclipIcon
@@ -73,8 +91,23 @@ export const MobileTextareaPlusBottomSheet = observer(
 					},
 				});
 			}
+			if (onCreatePoll) {
+				items.push({
+					icon: (
+						<ChartBarIcon
+							weight="bold"
+							data-flx="channel.textarea.mobile-textarea-plus-bottom-sheet.groups.chart-bar-icon"
+						/>
+					),
+					label: i18n._(CREATE_POLL_DESCRIPTOR),
+					disabled: !canCreatePoll,
+					onClick: () => {
+						ModalCommands.runAfterBottomSheetClose(onClose, onCreatePoll);
+					},
+				});
+			}
 			return [{items}];
-		}, [isSelfHosted, onClose, onUploadFile, textareaValue, onUploadAsFile, i18n.locale]);
+		}, [isSelfHosted, onClose, onUploadFile, textareaValue, onUploadAsFile, onCreatePoll, canCreatePoll, i18n.locale]);
 		return (
 			<MenuBottomSheet
 				isOpen={isOpen}

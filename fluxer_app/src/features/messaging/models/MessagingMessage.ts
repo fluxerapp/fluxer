@@ -3,6 +3,7 @@
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import Authentication from '@app/features/auth/state/Authentication';
 import Channels from '@app/features/channel/state/Channels';
+import {mergePollViewerSelection} from '@app/features/channel/utils/MessagePollState';
 import * as GiftCodeUtils from '@app/features/gift/utils/GiftCodeUtils';
 import Guilds from '@app/features/guild/state/Guilds';
 import * as InviteUtils from '@app/features/invite/utils/InviteUtils';
@@ -31,6 +32,7 @@ import type {
 	ReactionEmoji,
 	Message as WireMessage,
 } from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import type {PollResponse} from '@fluxer/schema/src/domains/message/PollSchemas';
 
 type MessageInput = Omit<WireMessage, 'mentions' | 'mention_roles' | 'tts'> &
 	Partial<Pick<WireMessage, 'mentions' | 'mention_roles' | 'tts'>>;
@@ -155,6 +157,7 @@ export class Message {
 	readonly mentionChannels: ReadonlyArray<ChannelMention>;
 	readonly embeds: ReadonlyArray<MessageEmbed>;
 	readonly attachments: ReadonlyArray<MessageAttachment>;
+	readonly poll: PollResponse | null;
 	readonly stickerItems: ReadonlyArray<MessageStickerItem>;
 	readonly nsfwEmojis: ReadonlySet<string>;
 	readonly messageReference?: MessageReference;
@@ -215,6 +218,7 @@ export class Message {
 			}),
 		);
 		this.attachments = Object.freeze(message.attachments ?? []);
+		this.poll = message.poll ?? null;
 		this.stickerItems = Object.freeze(message.stickers ?? []);
 		this.nsfwEmojis = Object.freeze(new Set(message.nsfw_emojis ?? []));
 		if (!options?.skipReactionHydration) {
@@ -305,7 +309,7 @@ export class Message {
 		return MessageReactions.getMessageReactions(this.id);
 	}
 
-	withUpdates(updates: Partial<WireMessage>): Message {
+	withUpdates(updates: Partial<WireMessage>, options?: {preservePollViewerSelection?: boolean}): Message {
 		if ('reactions' in updates) {
 			MessageReactions.replaceMessageReactions(this.id, updates.reactions ?? []);
 		}
@@ -329,6 +333,10 @@ export class Message {
 				mention_channels: updates.mention_channels ?? this.mentionChannels,
 				embeds: updates.embeds ?? this.embeds,
 				attachments: updates.attachments ?? this.attachments,
+				poll:
+					'poll' in updates
+						? mergePollViewerSelection(this.poll, updates.poll ?? null, options?.preservePollViewerSelection ?? false)
+						: this.poll,
 				stickers: updates.stickers ?? this.stickerItems,
 				reactions: updates.reactions ?? this.reactions,
 				message_reference: updates.message_reference ?? this.messageReference,
@@ -407,6 +415,7 @@ export class Message {
 		if (this.mentionChannels.length !== other.mentionChannels.length) return false;
 		if (this.embeds.length !== other.embeds.length) return false;
 		if (this.attachments.length !== other.attachments.length) return false;
+		if (canonicalize(this.poll) !== canonicalize(other.poll)) return false;
 		if (this.stickerItems.length !== other.stickerItems.length) return false;
 		if (this.reactions.length !== other.reactions.length) return false;
 		if (this.invites.length !== other.invites.length) return false;
@@ -535,6 +544,7 @@ export class Message {
 			mention_channels: this.mentionChannels,
 			embeds: this.embeds,
 			attachments: this.attachments,
+			poll: this.poll,
 			stickers: this.stickerItems,
 			reactions: this.reactions,
 			message_reference: this.messageReference,

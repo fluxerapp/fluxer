@@ -2,6 +2,7 @@
 
 import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import type {ChannelPinResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import type {PollCustomOptionRequest, PollVoteRequest} from '@fluxer/schema/src/domains/message/PollSchemas';
 import type {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import type {ChannelID, MessageID, UserID} from '../../BrandedTypes';
 import type {GuildAuditLogService} from '../../guild/GuildAuditLogService';
@@ -18,15 +19,18 @@ import {assertGuildMemberCanCommunicate} from '../../utils/GuildCommunicationUti
 import type {IChannelRepository} from '../IChannelRepository';
 import {MessageInteractionAuthService} from './interaction/MessageInteractionAuthService';
 import {MessagePinService} from './interaction/MessagePinService';
+import {MessagePollVoteService} from './interaction/MessagePollVoteService';
 import {MessageReactionService} from './interaction/MessageReactionService';
 import {MessageReadStateService} from './interaction/MessageReadStateService';
 import {dispatchMessageUpdateBroadcast} from './message/MessageGatewayDispatch';
 import type {MessagePersistenceService} from './message/MessagePersistenceService';
+import type {MessageSearchService} from './message/MessageSearchService';
 
 export class MessageInteractionService {
 	readonly authService: MessageInteractionAuthService;
 	private readStateService: MessageReadStateService;
 	private pinService: MessagePinService;
+	private pollVoteService: MessagePollVoteService;
 	private reactionService: MessageReactionService;
 
 	constructor(
@@ -36,6 +40,7 @@ export class MessageInteractionService {
 		private gatewayService: IGatewayService,
 		snowflakeService: ISnowflakeService,
 		messagePersistenceService: MessagePersistenceService,
+		messageSearchService: MessageSearchService,
 		guildAuditLogService: GuildAuditLogService,
 		limitConfigService: LimitConfigService,
 	) {
@@ -51,6 +56,14 @@ export class MessageInteractionService {
 			channelRepository,
 			snowflakeService,
 			messagePersistenceService,
+			guildAuditLogService,
+		);
+		this.pollVoteService = new MessagePollVoteService(
+			gatewayService,
+			channelRepository,
+			snowflakeService,
+			messagePersistenceService,
+			messageSearchService,
 			guildAuditLogService,
 		);
 		this.reactionService = new MessageReactionService(
@@ -123,6 +136,69 @@ export class MessageInteractionService {
 			await this.authService.validateDMSendPermissions({channelId, userId});
 		}
 		await this.pinService.unpinMessage({authChannel, messageId, userId, requestCache});
+	}
+
+	async votePoll({
+		userId,
+		channelId,
+		messageId,
+		data,
+	}: {
+		userId: UserID;
+		channelId: ChannelID;
+		messageId: MessageID;
+		data: PollVoteRequest;
+		requestCache: RequestCache;
+	}): Promise<void> {
+		const authChannel = await this.authService.getChannelAuthenticated({userId, channelId});
+		await this.pollVoteService.vote({authChannel, messageId, userId, data});
+	}
+
+	async addCustomPollOption({
+		userId,
+		channelId,
+		messageId,
+		data,
+	}: {
+		userId: UserID;
+		channelId: ChannelID;
+		messageId: MessageID;
+		data: PollCustomOptionRequest;
+		requestCache: RequestCache;
+	}): Promise<void> {
+		const authChannel = await this.authService.getChannelAuthenticated({userId, channelId});
+		if (!authChannel.guild && authChannel.channel.type !== ChannelTypes.DM_PERSONAL_NOTES) {
+			await this.authService.validateDMSendPermissions({channelId, userId});
+		}
+		await this.pollVoteService.addCustomOption({authChannel, messageId, userId, data});
+	}
+
+	async removeOwnPollVote({
+		userId,
+		channelId,
+		messageId,
+	}: {
+		userId: UserID;
+		channelId: ChannelID;
+		messageId: MessageID;
+		requestCache: RequestCache;
+	}): Promise<void> {
+		const authChannel = await this.authService.getChannelAuthenticated({userId, channelId});
+		await this.pollVoteService.removeOwnVote({authChannel, messageId, userId});
+	}
+
+	async closePoll({
+		userId,
+		channelId,
+		messageId,
+	}: {
+		userId: UserID;
+		channelId: ChannelID;
+		messageId: MessageID;
+		requestCache: RequestCache;
+	}): Promise<void> {
+		const authChannel = await this.authService.getChannelAuthenticated({userId, channelId});
+		await this.pollVoteService.closePoll({authChannel, messageId, userId});
 	}
 
 	async getUsersForReaction({

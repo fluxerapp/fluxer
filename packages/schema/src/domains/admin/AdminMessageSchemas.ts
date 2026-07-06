@@ -28,6 +28,14 @@ export const DeleteMessageRequest = z.object({
 
 export type DeleteMessageRequest = z.infer<typeof DeleteMessageRequest>;
 
+export const DeleteMessageAttachmentRequest = z.object({
+	channel_id: SnowflakeType,
+	message_id: SnowflakeType,
+	attachment_id: SnowflakeType,
+});
+
+export type DeleteMessageAttachmentRequest = z.infer<typeof DeleteMessageAttachmentRequest>;
+
 export const ReportAttachmentToNcmecRequest = z.object({
 	channel_id: SnowflakeType,
 	message_id: SnowflakeType,

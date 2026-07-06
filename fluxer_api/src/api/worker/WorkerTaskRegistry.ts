@@ -12,6 +12,7 @@ import batchGuildAuditLogMessageDeletes from './tasks/BatchGuildAuditLogMessageD
 import bulkDeleteSelfMessagesImmediate from './tasks/BulkDeleteSelfMessagesImmediate';
 import bulkDeleteUserMessages from './tasks/BulkDeleteUserMessages';
 import bulkDeleteUserMessagesScoped from './tasks/BulkDeleteUserMessagesScoped';
+import closeExpiredPoll from './tasks/CloseExpiredPoll';
 import deleteUserMessagesInGuildByTime from './tasks/DeleteUserMessagesInGuildByTime';
 import expireAttachments from './tasks/ExpireAttachments';
 import extractEmbeds from './tasks/ExtractEmbeds';
@@ -57,6 +58,7 @@ export const workerTasks: Record<WorkerTaskName, WorkerTaskHandler> = {
 	bulkUpdateGuildFeatures: bulkUpdateGuildFeatures,
 	bulkUpdateSuspiciousActivityFlags: bulkUpdateSuspiciousActivityFlags,
 	bulkUpdateUserFlags: bulkUpdateUserFlags,
+	closeExpiredPoll,
 	deleteUserMessagesInGuildByTime,
 	expireAttachments,
 	extractEmbeds,

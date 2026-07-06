@@ -86,7 +86,7 @@ function makeMessage(): Message {
 }
 
 describe('MessageResponseDataService', () => {
-	it('omits reactions from broadcast message response requests', async () => {
+	it('omits reactions and uses a neutral viewer for broadcast message response requests', async () => {
 		const connectionManager = new FakeConnectionManager();
 		const service = new MessageResponseDataService(connectionManager);
 
@@ -98,7 +98,24 @@ describe('MessageResponseDataService', () => {
 		expect(connectionManager.payloads[0]).toMatchObject({
 			op: 'BuildResponse',
 			include_reactions: false,
-			viewer_user_id: '3',
+			viewer_user_id: '0',
+		});
+	});
+
+	it('honors an explicit viewer for viewer-specific broadcast message responses', async () => {
+		const connectionManager = new FakeConnectionManager();
+		const service = new MessageResponseDataService(connectionManager);
+
+		await service.buildBroadcastMessage({
+			channel: {guildId: null},
+			message: makeMessage(),
+			userId: createUserID(9n),
+		});
+
+		expect(connectionManager.payloads[0]).toMatchObject({
+			op: 'BuildResponse',
+			include_reactions: false,
+			viewer_user_id: '9',
 		});
 	});
 

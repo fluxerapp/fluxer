@@ -36,7 +36,7 @@ export function handleMessageUpdate(data: MessageUpdatePayload, _context: Gatewa
 	}
 	SavedMessages.handleMessageUpdate(message);
 	ChannelPins.handleMessageUpdate(message);
-	Messages.handleMessageUpdate({message});
+	Messages.handleMessageUpdate({message, preservePollViewerSelection: true});
 	MessageReferences.handleMessageUpdate(message);
 	MentionFeed.handleMessageUpdate(message);
 	if (message.channel_id && message.call) {

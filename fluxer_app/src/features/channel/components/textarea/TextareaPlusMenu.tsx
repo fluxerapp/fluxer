@@ -13,12 +13,16 @@ import {MenuItemSubmenu} from '@app/features/ui/action_menu/MenuItemSubmenu';
 import {KeybindHint} from '@app/features/ui/keybind_hint/KeybindHint';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
-import {GiftIcon, MicrophoneIcon, PaperclipIcon, UploadSimpleIcon} from '@phosphor-icons/react';
+import {ChartBarIcon, GiftIcon, MicrophoneIcon, PaperclipIcon, UploadSimpleIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 
 const YOU_DO_NOT_HAVE_PERMISSION_TO_UPLOAD_FILES_DESCRIPTOR = msg({
 	message: "You can't upload files in this channel.",
 	comment: 'Tooltip on the disabled upload file item when the user lacks Attach Files permission. Calm, factual tone.',
+});
+const YOU_DO_NOT_HAVE_PERMISSION_TO_CREATE_POLLS_DESCRIPTOR = msg({
+	message: "You can't create polls in this channel.",
+	comment: 'Tooltip on the disabled create poll item when the user lacks Create Polls permission.',
 });
 const UPLOAD_FILE_DESCRIPTOR = msg({
 	message: 'Upload file',
@@ -35,6 +39,10 @@ const SEND_GIFT_DESCRIPTOR = msg({
 const SEND_VOICE_MESSAGE_DESCRIPTOR = msg({
 	message: 'Send voice message',
 	comment: 'Plus menu item that opens the desktop voice message composer to record and send a voice clip.',
+});
+const CREATE_POLL_DESCRIPTOR = msg({
+	message: 'Create poll',
+	comment: 'Plus menu item that opens the poll creation modal.',
 });
 const CUSTOMIZE_DESCRIPTOR = msg({
 	message: 'Customize',
@@ -67,9 +75,11 @@ interface TextareaPlusMenuProps {
 	canSchedule?: boolean;
 	canAttachFiles: boolean;
 	canSendMessages: boolean;
+	canCreatePoll: boolean;
 	textareaValue?: string;
 	onUploadAsFile?: () => void;
 	onSendVoiceMessage?: () => void;
+	onCreatePoll?: () => void;
 }
 
 export const TextareaPlusMenu = observer(
@@ -77,9 +87,11 @@ export const TextareaPlusMenu = observer(
 		onUploadFile,
 		canAttachFiles,
 		canSendMessages,
+		canCreatePoll,
 		textareaValue,
 		onUploadAsFile,
 		onSendVoiceMessage,
+		onCreatePoll,
 	}: TextareaPlusMenuProps) => {
 		const {i18n} = useLingui();
 		const showGifButton = Accessibility.showGifButton;
@@ -91,6 +103,7 @@ export const TextareaPlusMenu = observer(
 		const hasTextContent = textareaValue && textareaValue.trim().length > 0;
 		const cannotSendMessagesHint = i18n._(CANNOT_SEND_MESSAGES_IN_CHANNEL_DESCRIPTOR);
 		const cannotUploadFilesHint = i18n._(YOU_DO_NOT_HAVE_PERMISSION_TO_UPLOAD_FILES_DESCRIPTOR);
+		const cannotCreatePollsHint = i18n._(YOU_DO_NOT_HAVE_PERMISSION_TO_CREATE_POLLS_DESCRIPTOR);
 		let uploadActionHint: string | undefined;
 		if (!canSendMessages) {
 			uploadActionHint = cannotSendMessagesHint;
@@ -102,6 +115,11 @@ export const TextareaPlusMenu = observer(
 			? cannotSendMessagesHint
 			: !canAttachFiles
 				? cannotUploadFilesHint
+				: undefined;
+		const createPollHint = !canSendMessages
+			? cannotSendMessagesHint
+			: !canCreatePoll
+				? cannotCreatePollsHint
 				: undefined;
 		const sendVoiceMessageKeybind = Keybind.getByAction('chat_send_voice_message').combo;
 		const sendVoiceMessageKeybindHint =
@@ -142,6 +160,17 @@ export const TextareaPlusMenu = observer(
 						data-flx="channel.textarea.textarea-plus-menu.menu-item.open"
 					>
 						{i18n._(SEND_GIFT_DESCRIPTOR)}
+					</MenuItem>
+				)}
+				{onCreatePoll && (
+					<MenuItem
+						icon={<ChartBarIcon weight="bold" data-flx="channel.textarea.textarea-plus-menu.chart-bar-icon" />}
+						onClick={onCreatePoll}
+						disabled={createPollHint != null}
+						hint={createPollHint}
+						data-flx="channel.textarea.textarea-plus-menu.menu-item.create-poll"
+					>
+						{i18n._(CREATE_POLL_DESCRIPTOR)}
 					</MenuItem>
 				)}
 				{onSendVoiceMessage && (

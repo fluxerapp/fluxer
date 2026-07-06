@@ -40,11 +40,11 @@ import * as NavigationCommands from '@app/features/navigation/commands/Navigatio
 import Permission from '@app/features/permissions/state/Permission';
 import {http} from '@app/features/platform/transport/RestTransport';
 import {HttpError} from '@app/features/platform/types/EndpointError';
+import type {RestResponse} from '@app/features/platform/types/TransportTypes';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
 import {failureCode} from '@app/features/platform/utils/ResponseInspection';
 import * as ReadStateCommands from '@app/features/read_state/commands/ReadStateCommands';
-import type {RestResponse} from '@app/features/platform/types/TransportTypes';
 import ReadStates from '@app/features/read_state/state/ReadStates';
 import * as SlowmodeCommands from '@app/features/slowmode/commands/SlowmodeCommands';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
@@ -61,6 +61,7 @@ import type {
 	MessageStickerItem,
 	Message as WireMessage,
 } from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import type {PollRequest} from '@fluxer/schema/src/domains/message/PollSchemas';
 import * as SnowflakeUtils from '@fluxer/snowflake/src/SnowflakeUtils';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
@@ -289,6 +290,7 @@ interface SendMessageParams {
 	favoriteMemeId?: string;
 	stickers?: Array<MessageStickerItem>;
 	tts?: boolean;
+	poll?: PollRequest;
 }
 
 export function jumpToPresent(channelId: string, limit = MAX_MESSAGES_PER_CHANNEL): void {
@@ -510,8 +512,7 @@ export async function send(channelId: string, params: SendMessageParams): Promis
 		MessageQueue.rejectLocalRateLimitedSend(channelId, params.nonce, params.hasAttachments);
 		return null;
 	}
-	const sendOrder =
-		Accessibility.sequentialFileSend && params.hasAttachments ? nextChannelOrder(channelId) : -1;
+	const sendOrder = Accessibility.sequentialFileSend && params.hasAttachments ? nextChannelOrder(channelId) : -1;
 	const prepared = await prepareSendAttachments(channelId, params);
 	if (!prepared) {
 		if (Accessibility.sequentialFileSend) {
@@ -533,6 +534,7 @@ export async function send(channelId: string, params: SendMessageParams): Promis
 		favoriteMemeId: params.favoriteMemeId,
 		stickers: params.stickers,
 		tts: params.tts,
+		poll: params.poll,
 	};
 	if (params.hasAttachments) {
 		logger.debug(`Sending attachment message immediately for channel ${channelId}`);
@@ -657,6 +659,83 @@ export async function remove(channelId: string, messageId: string): Promise<void
 	})();
 	pendingDeletePromises.set(messageId, deletePromise);
 	return deletePromise;
+}
+
+async function refreshMessage(channelId: string, messageId: string): Promise<void> {
+	try {
+		const response = await http.get<WireMessage>(Endpoints.CHANNEL_MESSAGE(channelId, messageId));
+		if (response.body) {
+			Messages.handleMessageUpdate({message: response.body});
+		}
+	} catch (error) {
+		logger.warn(`Failed to refresh message ${messageId} in channel ${channelId} after poll action:`, error);
+	}
+}
+
+export async function votePoll(channelId: string, messageId: string, optionIds: ReadonlyArray<string>): Promise<void> {
+	try {
+		logger.debug(`Voting in poll for message ${messageId} in channel ${channelId}`);
+		await http.put(Endpoints.CHANNEL_MESSAGE_POLL_VOTE(channelId, messageId), {
+			body: {option_ids: optionIds},
+		});
+		await refreshMessage(channelId, messageId);
+		logger.debug(`Poll vote submitted for message ${messageId} in channel ${channelId}`);
+	} catch (error) {
+		logger.error(`Failed to vote in poll for message ${messageId} in channel ${channelId}:`, error);
+		throw error;
+	}
+}
+
+export async function removeOwnPollVote(channelId: string, messageId: string): Promise<void> {
+	try {
+		logger.debug(`Removing own poll vote for message ${messageId} in channel ${channelId}`);
+		await http.delete(Endpoints.CHANNEL_MESSAGE_POLL_VOTE(channelId, messageId));
+		await refreshMessage(channelId, messageId);
+		logger.debug(`Poll vote removed for message ${messageId} in channel ${channelId}`);
+	} catch (error) {
+		logger.error(`Failed to remove poll vote for message ${messageId} in channel ${channelId}:`, error);
+		throw error;
+	}
+}
+
+export async function closePoll(channelId: string, messageId: string): Promise<void> {
+	try {
+		logger.debug(`Closing poll for message ${messageId} in channel ${channelId}`);
+		await http.post(Endpoints.CHANNEL_MESSAGE_POLL_CLOSE(channelId, messageId), {body: {}});
+		await refreshMessage(channelId, messageId);
+		logger.debug(`Poll closed for message ${messageId} in channel ${channelId}`);
+	} catch (error) {
+		logger.error(`Failed to close poll for message ${messageId} in channel ${channelId}:`, error);
+		throw error;
+	}
+}
+
+export async function addCustomPollOption(
+	channelId: string,
+	messageId: string,
+	text: string,
+	image?: File | null,
+): Promise<void> {
+	try {
+		logger.debug(`Adding custom poll option for message ${messageId} in channel ${channelId}`);
+		if (image) {
+			const formData = new FormData();
+			formData.append('payload_json', JSON.stringify({text}));
+			formData.append('files[0]', image);
+			await http.post(Endpoints.CHANNEL_MESSAGE_POLL_OPTIONS(channelId, messageId), {
+				body: formData,
+			});
+		} else {
+			await http.post(Endpoints.CHANNEL_MESSAGE_POLL_OPTIONS(channelId, messageId), {
+				body: {text},
+			});
+		}
+		await refreshMessage(channelId, messageId);
+		logger.debug(`Custom poll option added for message ${messageId} in channel ${channelId}`);
+	} catch (error) {
+		logger.error(`Failed to add custom poll option for message ${messageId} in channel ${channelId}:`, error);
+		throw error;
+	}
 }
 
 interface ShowDeleteConfirmationOptions {

@@ -380,6 +380,9 @@ CREATE TABLE IF NOT EXISTS ${table} (
 	await client.query(
 		`CREATE INDEX IF NOT EXISTS ${quoteIdentifier(`${client.kvTable()}_message_reactions_message_idx`)} ON ${table} (partition_key, ((CASE WHEN row_data -> 'message_id' ->> 'value' ~ '^-?[0-9]+$' THEN (row_data -> 'message_id' ->> 'value')::bigint END))) WHERE table_name = 'message_reactions'`,
 	);
+	await client.query(
+		`CREATE INDEX IF NOT EXISTS ${quoteIdentifier(`${client.kvTable()}_message_poll_votes_message_idx`)} ON ${table} (partition_key, ((CASE WHEN row_data -> 'message_id' ->> 'value' ~ '^-?[0-9]+$' THEN (row_data -> 'message_id' ->> 'value')::bigint END))) WHERE table_name = 'message_poll_votes'`,
+	);
 	await client.query(`
 UPDATE ${table}
 SET partition_key = split_part(row_key, chr(31), 1) || chr(31) || split_part(row_key, chr(31), 2)

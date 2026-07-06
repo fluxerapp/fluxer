@@ -255,6 +255,9 @@ export class MessageSendService {
 				throw new FeatureTemporarilyDisabledError();
 			}
 			await checkPermission(Permissions.SEND_MESSAGES);
+			if (data.poll) {
+				await checkPermission(Permissions.CREATE_POLLS);
+			}
 			assertGuildMemberCanCommunicate(member);
 			if (data.tts) {
 				const hasTtsPermission = await hasPermission(Permissions.SEND_TTS_MESSAGES);
@@ -533,6 +536,7 @@ export class MessageSendService {
 				data.content ||
 				(data.embeds && data.embeds.length > 0) ||
 				(data.attachments && data.attachments.length > 0) ||
+				data.poll ||
 				(data.sticker_ids && data.sticker_ids.length > 0)
 			) {
 				throw InputValidationError.fromCode(
@@ -922,6 +926,7 @@ export class MessageSendService {
 			attachments: attachmentsToProcess,
 			processedAttachments: favoriteMemeAttachment ? [favoriteMemeAttachment] : undefined,
 			stickerIds: data.sticker_ids ? data.sticker_ids.flatMap((stickerId) => createStickerID(stickerId)) : undefined,
+			poll: data.poll,
 			messageReference,
 			messageSnapshots,
 			guildId: guild?.id ? createGuildID(BigInt(guild.id)) : null,
@@ -1139,6 +1144,7 @@ export class MessageSendService {
 			flags: this.deps.validationService.calculateMessageFlags(data),
 			embeds: data.embeds,
 			attachments: this.attachmentsToProcess(data.attachments),
+			poll: data.poll,
 			messageReference,
 			messageSnapshots,
 			guildId: channel.guildId,
@@ -1293,6 +1299,7 @@ export class MessageSendService {
 			embeds: data.embeds,
 			attachments: attachmentsToProcess,
 			processedAttachments: favoriteMemeAttachment ? [favoriteMemeAttachment] : undefined,
+			poll: data.poll,
 			messageReference,
 			messageSnapshots,
 			guildId: null,

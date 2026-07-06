@@ -53,6 +53,7 @@ import {
 	makeAttachmentCdnKey,
 	makeAttachmentCdnUrl,
 	purgeMessageAttachments as purgeMessageAttachmentsHelper,
+	removePollAttachmentReference,
 } from './message/MessageHelpers';
 import {applyUploadRelayDecision, resolveUploadRelayDecision} from './UploadRelay';
 
@@ -367,6 +368,7 @@ export class AttachmentUploadService {
 			edited_timestamp: new Date(),
 			attachments:
 				updatedAttachments.length > 0 ? updatedAttachments.map((a: Attachment) => a.toMessageAttachment()) : null,
+			poll: removePollAttachmentReference(message, attachmentId),
 		};
 		const updatedMessage = await this.channelRepository.messages.upsertMessage(updatedRowData, message.toRow());
 		await this.messageInteractionService.dispatchMessageUpdate({channel, message: updatedMessage, requestCache});

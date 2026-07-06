@@ -16,6 +16,7 @@ import {Config} from '../../../Config';
 import type {
 	MessageSnapshot as CassandraMessageSnapshot,
 	MessageAttachment,
+	MessagePoll,
 } from '../../../database/types/MessageTypes';
 import type {IPurgeQueue} from '../../../infrastructure/BunnyPurgeQueue';
 import type {ISnowflakeService} from '../../../infrastructure/ISnowflakeService';
@@ -338,7 +339,32 @@ export function isMessageEmpty(message: Message, excludingAttachments = false): 
 	const hasEmbeds = message.embeds.length > 0;
 	const hasStickers = message.stickers.length > 0;
 	const hasAttachments = !excludingAttachments && message.attachments.length > 0;
-	return !hasContent && !hasEmbeds && !hasStickers && !hasAttachments;
+	const hasPoll = message.poll != null;
+	return !hasContent && !hasEmbeds && !hasStickers && !hasAttachments && !hasPoll;
+}
+
+export function removePollAttachmentReference(message: Message, attachmentId: AttachmentID): MessagePoll | null {
+	if (!message.poll) {
+		return message.poll;
+	}
+	let changed = false;
+	const options = message.poll.options.map((option) => {
+		if (option.attachment_id !== attachmentId) {
+			return option;
+		}
+		changed = true;
+		return {
+			...option,
+			attachment_id: null,
+		};
+	});
+	if (!changed) {
+		return message.poll;
+	}
+	return {
+		...message.poll,
+		options,
+	};
 }
 
 export function collectMessageAttachments(message: Message): Array<Attachment> {

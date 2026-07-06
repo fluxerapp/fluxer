@@ -20,6 +20,11 @@ import {
 	ReactionUsersListResponse,
 	ReactionUsersPageResponse,
 } from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import {
+	PollCustomOptionRequest,
+	type PollCustomOptionRequest as PollCustomOptionRequestData,
+	PollVoteRequest,
+} from '@fluxer/schema/src/domains/message/PollSchemas';
 import {createChannelID, createMessageID, createUserID} from '../../BrandedTypes';
 import {SYSTEM_USER_ID} from '../../constants/Core';
 import {LoginRequired} from '../../middleware/AuthMiddleware';
@@ -27,8 +32,10 @@ import {RateLimitMiddleware} from '../../middleware/RateLimitMiddleware';
 import {OpenAPI} from '../../middleware/ResponseTypeMiddleware';
 import {RateLimitConfigs} from '../../RateLimitConfig';
 import type {HonoApp} from '../../types/HonoEnv';
+import {parseJsonPreservingLargeIntegers} from '../../utils/LosslessJsonParser';
 import {Validator} from '../../Validator';
 import {isPersonalNotesChannel} from '../services/message/MessageHelpers';
+import {parseMultipartMessageData} from '../services/message/MessageRequestParser';
 
 export function MessageInteractionController(app: HonoApp) {
 	app.get(
@@ -137,6 +144,154 @@ export function MessageInteractionController(app: HonoApp) {
 			const messageId = createMessageID(message_id);
 			const requestCache = ctx.get('requestCache');
 			await ctx.get('channelService').interactions.unpinMessage({
+				userId,
+				channelId,
+				messageId,
+				requestCache,
+			});
+			return ctx.body(null, 204);
+		},
+	);
+	app.post(
+		'/channels/:channel_id/messages/:message_id/poll/options',
+		RateLimitMiddleware(RateLimitConfigs.CHANNEL_POLL_VOTES),
+		LoginRequired,
+		Validator('param', ChannelIdMessageIdParam),
+		OpenAPI({
+			operationId: 'add_custom_poll_option',
+			summary: 'Add custom poll option',
+			description:
+				'Adds a custom answer option to a message poll that allows custom answers. Supports an optional image attachment via JSON upload metadata or multipart form data. Requires permission to send messages in the channel, and attach files when an image is included. Returns 204 No Content on success.',
+			requestSchema: PollCustomOptionRequest,
+			requestFormSchema: PollCustomOptionRequest,
+			responseSchema: null,
+			statusCode: 204,
+			security: ['botToken', 'bearerToken', 'sessionToken'],
+			tags: 'Channels',
+		}),
+		async (ctx) => {
+			const {channel_id, message_id} = ctx.req.valid('param');
+			const userId = ctx.get('user').id;
+			const channelId = createChannelID(channel_id);
+			const messageId = createMessageID(message_id);
+			const requestCache = ctx.get('requestCache');
+			const contentType = ctx.req.header('content-type') ?? '';
+			const data = contentType.includes('multipart/form-data')
+				? ((await parseMultipartMessageData(
+						ctx,
+						ctx.get('user'),
+						channelId,
+						PollCustomOptionRequest,
+					)) as PollCustomOptionRequestData)
+				: await (async (): Promise<PollCustomOptionRequestData> => {
+						let rawData: unknown;
+						try {
+							const raw = await ctx.req.text();
+							rawData = raw.trim().length === 0 ? {} : parseJsonPreservingLargeIntegers(raw);
+						} catch {
+							throw InputValidationError.fromCode('message_data', ValidationErrorCodes.INVALID_MESSAGE_DATA);
+						}
+						const validationResult = PollCustomOptionRequest.safeParse(rawData);
+						if (!validationResult.success) {
+							throw InputValidationError.fromCode('message_data', ValidationErrorCodes.INVALID_MESSAGE_DATA);
+						}
+						return validationResult.data;
+					})();
+			await ctx.get('channelService').interactions.addCustomPollOption({
+				userId,
+				channelId,
+				messageId,
+				data,
+				requestCache,
+			});
+			return ctx.body(null, 204);
+		},
+	);
+	app.put(
+		'/channels/:channel_id/messages/:message_id/poll/votes/@me',
+		RateLimitMiddleware(RateLimitConfigs.CHANNEL_POLL_VOTES),
+		LoginRequired,
+		Validator('param', ChannelIdMessageIdParam),
+		Validator('json', PollVoteRequest),
+		OpenAPI({
+			operationId: 'vote_poll',
+			summary: 'Vote in a poll',
+			description:
+				'Sets or replaces your vote for a message poll. Simple polls accept one option ID. Ranked-choice polls accept multiple option IDs in preference order. Returns 204 No Content on success.',
+			requestSchema: PollVoteRequest,
+			responseSchema: null,
+			statusCode: 204,
+			security: ['botToken', 'bearerToken', 'sessionToken'],
+			tags: 'Channels',
+		}),
+		async (ctx) => {
+			const {channel_id, message_id} = ctx.req.valid('param');
+			const userId = ctx.get('user').id;
+			const channelId = createChannelID(channel_id);
+			const messageId = createMessageID(message_id);
+			const requestCache = ctx.get('requestCache');
+			await ctx.get('channelService').interactions.votePoll({
+				userId,
+				channelId,
+				messageId,
+				data: ctx.req.valid('json'),
+				requestCache,
+			});
+			return ctx.body(null, 204);
+		},
+	);
+	app.delete(
+		'/channels/:channel_id/messages/:message_id/poll/votes/@me',
+		RateLimitMiddleware(RateLimitConfigs.CHANNEL_POLL_VOTES),
+		LoginRequired,
+		Validator('param', ChannelIdMessageIdParam),
+		OpenAPI({
+			operationId: 'remove_own_poll_vote',
+			summary: 'Remove own poll vote',
+			description:
+				"Removes your own vote from a message poll. Returns 204 No Content on success. Has no effect if you haven't voted.",
+			responseSchema: null,
+			statusCode: 204,
+			security: ['botToken', 'bearerToken', 'sessionToken'],
+			tags: 'Channels',
+		}),
+		async (ctx) => {
+			const {channel_id, message_id} = ctx.req.valid('param');
+			const userId = ctx.get('user').id;
+			const channelId = createChannelID(channel_id);
+			const messageId = createMessageID(message_id);
+			const requestCache = ctx.get('requestCache');
+			await ctx.get('channelService').interactions.removeOwnPollVote({
+				userId,
+				channelId,
+				messageId,
+				requestCache,
+			});
+			return ctx.body(null, 204);
+		},
+	);
+	app.post(
+		'/channels/:channel_id/messages/:message_id/poll/close',
+		RateLimitMiddleware(RateLimitConfigs.CHANNEL_POLL_VOTES),
+		LoginRequired,
+		Validator('param', ChannelIdMessageIdParam),
+		OpenAPI({
+			operationId: 'close_poll',
+			summary: 'Close a poll',
+			description:
+				'Closes a message poll early. The poll author can close their own poll; users with permission to manage messages can close polls in guild channels. Returns 204 No Content on success.',
+			responseSchema: null,
+			statusCode: 204,
+			security: ['botToken', 'bearerToken', 'sessionToken'],
+			tags: 'Channels',
+		}),
+		async (ctx) => {
+			const {channel_id, message_id} = ctx.req.valid('param');
+			const userId = ctx.get('user').id;
+			const channelId = createChannelID(channel_id);
+			const messageId = createMessageID(message_id);
+			const requestCache = ctx.get('requestCache');
+			await ctx.get('channelService').interactions.closePoll({
 				userId,
 				channelId,
 				messageId,

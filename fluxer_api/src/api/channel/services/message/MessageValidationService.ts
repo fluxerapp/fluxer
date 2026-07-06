@@ -34,7 +34,7 @@ import type {Message} from '../../../models/Message';
 import type {User} from '../../../models/User';
 import {hasVisibleContent} from '../../../utils/StringUtils';
 import type {MessageRequest, MessageUpdateRequest} from '../../MessageTypes';
-import {assertAttachmentFileSizesWithinLimit, MESSAGE_NONCE_TTL} from './MessageHelpers';
+import {assertAttachmentFileSizesWithinLimit, getContentType, MESSAGE_NONCE_TTL} from './MessageHelpers';
 
 export class MessageValidationService {
 	constructor(
@@ -62,6 +62,7 @@ export class MessageValidationService {
 		const hasEmbeds = Boolean(data.embeds && data.embeds.length > 0);
 		const hasAttachments = Boolean(data.attachments && data.attachments.length > 0);
 		const hasFavoriteMeme = Boolean('favorite_meme_id' in data && data.favorite_meme_id != null);
+		const hasPoll = Boolean('poll' in data && data.poll != null);
 		const hasStickers = Boolean('sticker_ids' in data && data.sticker_ids != null && data.sticker_ids.length > 0);
 		const hasFlags = data.flags !== undefined && data.flags !== null;
 		const guildFeatures = options?.guildFeatures ?? null;
@@ -73,11 +74,20 @@ export class MessageValidationService {
 				hasEmbeds,
 				hasStickers,
 				hasFavoriteMeme,
+				hasPoll,
 				user,
 				guildFeatures,
 			);
 		}
-		if (!hasContent && !hasEmbeds && !hasAttachments && !hasFavoriteMeme && !hasStickers && (!isUpdate || !hasFlags)) {
+		if (
+			!hasContent &&
+			!hasEmbeds &&
+			!hasAttachments &&
+			!hasFavoriteMeme &&
+			!hasPoll &&
+			!hasStickers &&
+			(!isUpdate || !hasFlags)
+		) {
 			throw new CannotSendEmptyMessageError();
 		}
 		this.validateContentLength(data.content, user, guildFeatures, options?.messageAuthorType);
@@ -102,6 +112,13 @@ export class MessageValidationService {
 					}
 				}
 			}
+		}
+		if ('poll' in data && data.poll) {
+			contentModerationService.scanText(data.poll.title, modCtx);
+			for (const option of data.poll.options) {
+				contentModerationService.scanText(option.text, modCtx);
+			}
+			this.validatePollOptionAttachments(data);
 		}
 		const ctx = createLimitMatchContext({user, guildFeatures});
 		const evaluationContext = guildFeatures ? 'guild' : 'user';
@@ -150,6 +167,44 @@ export class MessageValidationService {
 			throw InputValidationError.fromCode('content', ValidationErrorCodes.CONTENT_EXCEEDS_MAX_LENGTH, {
 				maxLength,
 			});
+		}
+	}
+
+	private validatePollOptionAttachments(data: MessageRequest | MessageUpdateRequest): void {
+		if (!('poll' in data) || !data.poll) {
+			return;
+		}
+		const attachments = data.attachments ?? [];
+		const attachmentByClientId = new Map<string, (typeof attachments)[number]>();
+		for (const attachment of attachments) {
+			attachmentByClientId.set(attachment.id.toString(), attachment);
+		}
+		for (const option of data.poll.options) {
+			if (option.attachment_id == null) {
+				continue;
+			}
+			const attachment = attachmentByClientId.get(option.attachment_id.toString());
+			if (!attachment) {
+				throw InputValidationError.fromCode('poll.options.attachment_id', ValidationErrorCodes.NO_FILE_FOR_ATTACHMENT, {
+					attachmentId: option.attachment_id,
+				});
+			}
+			const filename = 'filename' in attachment ? attachment.filename : undefined;
+			const contentType =
+				'content_type' in attachment && attachment.content_type
+					? attachment.content_type
+					: filename
+						? getContentType(filename)
+						: null;
+			if (!contentType?.toLowerCase().startsWith('image/')) {
+				throw InputValidationError.fromCode(
+					'poll.options.attachment_id',
+					ValidationErrorCodes.ATTACHMENT_MUST_BE_IMAGE,
+					{
+						filename,
+					},
+				);
+			}
 		}
 	}
 
@@ -263,6 +318,7 @@ export class MessageValidationService {
 		hasEmbeds: boolean,
 		hasStickers: boolean,
 		hasFavoriteMeme: boolean,
+		hasPoll: boolean,
 		user: User | null,
 		guildFeatures: Iterable<string> | null | undefined,
 	): void {
@@ -280,6 +336,9 @@ export class MessageValidationService {
 		}
 		if (hasStickers) {
 			throw InputValidationError.fromCode('sticker_ids', ValidationErrorCodes.VOICE_MESSAGES_CANNOT_HAVE_STICKERS);
+		}
+		if (hasPoll) {
+			throw InputValidationError.fromCode('poll', ValidationErrorCodes.INVALID_MESSAGE_DATA);
 		}
 		const attachments = data.attachments ?? [];
 		if (attachments.length !== 1) {

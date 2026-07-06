@@ -55,6 +55,8 @@ interface AuditLogOptions {
 	id?: string;
 	integration_type?: number;
 	message_id?: string;
+	option_id?: string;
+	poll_id?: string;
 	members_removed?: number;
 	role_name?: string;
 	type?: number;
@@ -443,6 +445,12 @@ export class GuildService {
 					break;
 				case 'message_id':
 					mapped.message_id = value;
+					break;
+				case 'option_id':
+					mapped.option_id = value;
+					break;
+				case 'poll_id':
+					mapped.poll_id = value;
 					break;
 				case 'members_removed':
 					this.assignNumericOption(mapped, 'members_removed', value);

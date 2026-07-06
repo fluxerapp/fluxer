@@ -25,6 +25,87 @@ describe('MessageRequestSchema', () => {
 		}
 		expect(result.data.content).toBe('hello\x00\x01\u001Bworld');
 	});
+	it('accepts a simple poll with normalized options and default settings', () => {
+		const result = MessageRequestSchema.safeParse({
+			poll: {
+				title: '  Dinner?  ',
+				duration_seconds: '3600',
+				options: [{text: '  Pizza  '}, {text: 'Sushi'}],
+			},
+		});
+		expect(result.success).toBe(true);
+		if (!result.success) {
+			return;
+		}
+		expect(result.data.poll).toMatchObject({
+			title: 'Dinner?',
+			duration_seconds: 3600,
+			anonymous: false,
+			allow_ranked_choice: false,
+			allow_custom_answers: false,
+			options: [{text: 'Pizza'}, {text: 'Sushi'}],
+		});
+	});
+	it('accepts poll options that reference uploaded message attachments', () => {
+		const result = MessageRequestSchema.safeParse({
+			attachments: [
+				{
+					id: 0,
+					filename: 'pizza.png',
+					upload_filename: 'tmp-pizza',
+					file_size: 2048,
+					content_type: 'image/png',
+				},
+			],
+			poll: {
+				title: 'Dinner?',
+				duration_seconds: 3600,
+				options: [{text: 'Pizza', attachment_id: 0}, {text: 'Sushi'}],
+			},
+		});
+		expect(result.success).toBe(true);
+	});
+	it('rejects polls without enough options', () => {
+		const result = MessageRequestSchema.safeParse({
+			poll: {
+				title: 'Dinner?',
+				duration_seconds: 3600,
+				options: [{text: 'Pizza'}],
+			},
+		});
+		expect(result.success).toBe(false);
+	});
+	it('rejects poll options with duplicate text', () => {
+		const result = MessageRequestSchema.safeParse({
+			poll: {
+				title: 'Dinner?',
+				duration_seconds: 3600,
+				options: [{text: 'Pizza'}, {text: ' pizza '}],
+			},
+		});
+		expect(result.success).toBe(false);
+	});
+	it('rejects poll requests with ambiguous close times', () => {
+		const result = MessageRequestSchema.safeParse({
+			poll: {
+				title: 'Dinner?',
+				duration_seconds: 3600,
+				expires_at: '2026-07-04T20:00:00Z',
+				options: [{text: 'Pizza'}, {text: 'Sushi'}],
+			},
+		});
+		expect(result.success).toBe(false);
+	});
+	it('rejects poll option attachments that are not included in the message request', () => {
+		const result = MessageRequestSchema.safeParse({
+			poll: {
+				title: 'Dinner?',
+				duration_seconds: 3600,
+				options: [{text: 'Pizza', attachment_id: 0}, {text: 'Sushi'}],
+			},
+		});
+		expect(result.success).toBe(false);
+	});
 });
 
 describe('MessageUpdateRequestSchema', () => {

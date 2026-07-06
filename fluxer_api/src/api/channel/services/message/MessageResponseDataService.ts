@@ -210,7 +210,7 @@ export class MessageResponseDataService {
 		sourceGuildId?: GuildID | null;
 	}): Promise<MessageResponse> {
 		return this.buildMessage({
-			userId: messageResponseViewerId(params.message, params.userId),
+			userId: params.userId ?? createUserID(0n),
 			message: params.message,
 			access:
 				params.sourceGuildId !== undefined

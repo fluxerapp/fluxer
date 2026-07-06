@@ -182,6 +182,7 @@ export const Permissions = {
 	BYPASS_SLOWMODE: 1n << 52n,
 	UPDATE_RTC_REGION: 1n << 53n,
 	VIEW_CHANNEL_MEMBERS: 1n << 54n,
+	CREATE_POLLS: 1n << 55n,
 } as const;
 export const PermissionsDescriptions: Record<keyof typeof Permissions, string> = {
 	CREATE_INSTANT_INVITE: 'Allows creation of instant invites',
@@ -221,6 +222,7 @@ export const PermissionsDescriptions: Record<keyof typeof Permissions, string> =
 	BYPASS_SLOWMODE: 'Allows bypassing slowmode',
 	UPDATE_RTC_REGION: 'Allows updating the voice region',
 	VIEW_CHANNEL_MEMBERS: 'Allows viewing the member list in a channel',
+	CREATE_POLLS: 'Allows creating polls in a channel',
 };
 export const ALL_PERMISSIONS = Object.values(Permissions).reduce((acc, p) => acc | p, 0n);
 export const DEFAULT_PERMISSIONS =
@@ -238,7 +240,8 @@ export const DEFAULT_PERMISSIONS =
 	Permissions.USE_VAD |
 	Permissions.CHANGE_NICKNAME |
 	Permissions.USE_EXTERNAL_STICKERS |
-	Permissions.VIEW_CHANNEL_MEMBERS;
+	Permissions.VIEW_CHANNEL_MEMBERS |
+	Permissions.CREATE_POLLS;
 export const ElevatedPermissions =
 	Permissions.KICK_MEMBERS |
 	Permissions.BAN_MEMBERS |

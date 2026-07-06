@@ -72,6 +72,12 @@ export const Endpoints = {
 		`/channels/${channelId}/messages/${messageId}/reactions/${emoji}/${query}`,
 	CHANNEL_MESSAGE_REACTIONS: (channelId: string, messageId: string) =>
 		`/channels/${channelId}/messages/${messageId}/reactions`,
+	CHANNEL_MESSAGE_POLL_OPTIONS: (channelId: string, messageId: string) =>
+		`/channels/${channelId}/messages/${messageId}/poll/options`,
+	CHANNEL_MESSAGE_POLL_VOTE: (channelId: string, messageId: string) =>
+		`/channels/${channelId}/messages/${messageId}/poll/votes/@me`,
+	CHANNEL_MESSAGE_POLL_CLOSE: (channelId: string, messageId: string) =>
+		`/channels/${channelId}/messages/${messageId}/poll/close`,
 	CHANNEL_MESSAGES_PURGE: (channelId: string) => `/channels/${channelId}/messages/purge`,
 	CHANNEL_PIN: (channelId: string, messageId: string) => `/channels/${channelId}/pins/${messageId}`,
 	CHANNEL_PINS: (channelId: string) => `/channels/${channelId}/messages/pins`,

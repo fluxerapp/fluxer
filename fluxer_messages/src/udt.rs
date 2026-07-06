@@ -183,6 +183,34 @@ pub struct MessageCallUdt {
     derive(scylla::DeserializeValue, scylla::SerializeValue)
 )]
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MessagePollOptionUdt {
+    pub option_id: Option<i64>,
+    pub text: Option<String>,
+    pub attachment_id: Option<i64>,
+    pub vote_count: Option<i32>,
+}
+
+#[cfg_attr(
+    feature = "scylla",
+    derive(scylla::DeserializeValue, scylla::SerializeValue)
+)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MessagePollUdt {
+    pub poll_id: Option<i64>,
+    pub title: Option<String>,
+    pub options: Option<Vec<MessagePollOptionUdt>>,
+    pub expires_at: Option<DateTime<Utc>>,
+    pub closed_at: Option<DateTime<Utc>>,
+    pub anonymous: Option<bool>,
+    pub allow_ranked_choice: Option<bool>,
+    pub allow_custom_answers: Option<bool>,
+}
+
+#[cfg_attr(
+    feature = "scylla",
+    derive(scylla::DeserializeValue, scylla::SerializeValue)
+)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MessageSnapshotUdt {
     pub content: Option<String>,
     pub timestamp: Option<DateTime<Utc>>,

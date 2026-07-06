@@ -267,4 +267,60 @@ describe('MessageSearchSerializer', () => {
 		expect(result.content).toBeNull();
 		expect(result.attachmentFilenames).toEqual([]);
 	});
+	it('indexes poll presence and poll text', () => {
+		const row: MessageRow = {
+			channel_id: createChannelID(111n),
+			bucket: 0,
+			message_id: createMessageID(225n),
+			author_id: createUserID(333n),
+			type: 0,
+			webhook_id: null,
+			webhook_name: null,
+			webhook_avatar_hash: null,
+			content: null,
+			edited_timestamp: null,
+			pinned_timestamp: null,
+			flags: 0,
+			mention_everyone: false,
+			mention_users: new Set(),
+			mention_roles: new Set(),
+			mention_channels: new Set(),
+			attachments: [],
+			embeds: [],
+			sticker_items: [],
+			message_reference: null,
+			message_snapshots: [],
+			call: null,
+			poll: {
+				poll_id: createMessageID(900n),
+				title: 'Where should we ship first?',
+				options: [
+					{
+						option_id: createMessageID(901n),
+						text: 'Desktop',
+						attachment_id: null,
+						vote_count: 0,
+					},
+					{
+						option_id: createMessageID(902n),
+						text: 'Mobile',
+						attachment_id: null,
+						vote_count: 0,
+					},
+				],
+				expires_at: new Date(Date.now() + 60_000),
+				closed_at: null,
+				anonymous: false,
+				allow_ranked_choice: false,
+				allow_custom_answers: false,
+			},
+			nsfw_emojis: null,
+			has_reaction: null,
+			version: 1,
+		};
+		const message = new Message(row);
+		const result = convertToSearchableMessage(message);
+		expect(result.hasPoll).toBe(true);
+		expect(result.content).toBe('Where should we ship first?\nDesktop\nMobile');
+	});
 });

@@ -103,6 +103,7 @@ export class ChannelService {
 			snowflakeService,
 			readStateService,
 			limitConfigService,
+			workerService,
 		);
 		const directMessageSpamMitigationService = createDirectMessageSpamMitigationService(apiContext, userRepository);
 		this.channelData = new ChannelDataService(
@@ -152,6 +153,7 @@ export class ChannelService {
 			gatewayService,
 			snowflakeService,
 			messagePersistenceService,
+			this.messages.search,
 			guildAuditLogService,
 			limitConfigService,
 		);

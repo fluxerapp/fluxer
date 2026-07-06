@@ -573,12 +573,24 @@ const StickerItem = observer(
 		);
 	},
 );
-export const MessageAttachments = observer(() => {
+interface MessageAttachmentsProps {
+	hiddenAttachmentIds?: ReadonlySet<string>;
+	'data-flx'?: string;
+}
+
+export const MessageAttachments = observer(({hiddenAttachmentIds}: MessageAttachmentsProps) => {
 	const {channel, message, handleDelete, previewContext, onPopoutToggle, readonlyPreview} = useMessageViewContext();
 	const isPreview = Boolean(previewContext);
 	const reactionsIsPreview = isPreview || Boolean(readonlyPreview);
 	const reactions = useMessageReactionsSnapshot(message.id);
 	const {shouldAnimate, interactionHandlers} = useStickerAnimation();
+	const visibleAttachments = useMemo(
+		() =>
+			hiddenAttachmentIds && hiddenAttachmentIds.size > 0
+				? message.attachments.filter((attachment) => !hiddenAttachmentIds.has(attachment.id))
+				: message.attachments,
+		[hiddenAttachmentIds, message.attachments],
+	);
 	const spoileredUrlEmbeds = useMemo(() => {
 		const embeddableCodeLinkContent = extractEmbeddableCodeLinkContent(message.content);
 		return {
@@ -658,9 +670,8 @@ export const MessageAttachments = observer(() => {
 				</div>
 			)}
 			{(() => {
-				const {enrichedAttachments, mediaAttachments, shouldUseMosaic} = getAttachmentRenderingState(
-					message.attachments,
-				);
+				const {enrichedAttachments, mediaAttachments, shouldUseMosaic} =
+					getAttachmentRenderingState(visibleAttachments);
 				return (
 					<>
 						{shouldUseMosaic && (

@@ -39,6 +39,8 @@ const AuditLogOptionsSchema = z.object({
 	id: z.string().optional().describe('ID of the affected entity'),
 	integration_type: z.number().optional().describe('Type of integration'),
 	message_id: z.string().optional().describe('Message ID for relevant actions'),
+	option_id: z.string().optional().describe('Poll option ID for relevant poll actions'),
+	poll_id: z.string().optional().describe('Poll ID for relevant poll actions'),
 	members_removed: z.number().optional().describe('Number of members removed'),
 	role_name: z.string().optional().describe('Name of the role'),
 	type: z.number().optional().describe('Type identifier'),

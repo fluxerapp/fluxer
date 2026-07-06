@@ -65,6 +65,10 @@ const SEND_TTS_MESSAGES_PERMISSION_DESCRIPTION_DESCRIPTOR = msg({
 	comment:
 		'Permission description in the role/permission editor for the Send TTS Messages permission. Keep "text-to-speech" spelled out for clarity.',
 });
+const CREATE_POLLS_PERMISSION_DESCRIPTION_DESCRIPTOR = msg({
+	message: 'Create polls in text channels.',
+	comment: 'Permission description in the role/permission editor for the Create Polls permission.',
+});
 const MANAGE_MESSAGES_PERMISSION_DESCRIPTION_DESCRIPTOR = msg({
 	message: "Delete other members' messages. Pinning is controlled separately.",
 	comment:
@@ -214,6 +218,10 @@ const SEND_TTS_MESSAGES_DESCRIPTOR = msg({
 	message: 'Send TTS messages',
 	comment: 'Permission name: allows sending text-to-speech messages.',
 });
+const CREATE_POLLS_DESCRIPTOR = msg({
+	message: 'Create polls',
+	comment: 'Permission name: allows creating polls in text channels.',
+});
 const MANAGE_MESSAGES_DESCRIPTOR = msg({
 	message: 'Manage messages',
 	comment: "Permission name: allows deleting other members' messages.",
@@ -341,6 +349,7 @@ const PERMISSION_TITLE_DESCRIPTORS = new Map<bigint, MessageDescriptor>([
 	[Permissions.MANAGE_WEBHOOKS, MANAGE_WEBHOOKS_DESCRIPTOR],
 	[Permissions.SEND_MESSAGES, SEND_MESSAGES_DESCRIPTOR],
 	[Permissions.SEND_TTS_MESSAGES, SEND_TTS_MESSAGES_DESCRIPTOR],
+	[Permissions.CREATE_POLLS, CREATE_POLLS_DESCRIPTOR],
 	[Permissions.MANAGE_MESSAGES, MANAGE_MESSAGES_DESCRIPTOR],
 	[Permissions.PIN_MESSAGES, PIN_MESSAGES_DESCRIPTOR],
 	[Permissions.EMBED_LINKS, EMBED_LINKS_DESCRIPTOR],
@@ -382,6 +391,7 @@ const PERMISSION_DESCRIPTION_DESCRIPTORS = new Map<bigint, MessageDescriptor>([
 	[Permissions.MANAGE_EXPRESSIONS, MANAGE_EMOJI_AND_STICKERS_PERMISSION_DESCRIPTION_DESCRIPTOR],
 	[Permissions.MANAGE_WEBHOOKS, MANAGE_WEBHOOKS_PERMISSION_DESCRIPTION_DESCRIPTOR],
 	[Permissions.SEND_TTS_MESSAGES, SEND_TTS_MESSAGES_PERMISSION_DESCRIPTION_DESCRIPTOR],
+	[Permissions.CREATE_POLLS, CREATE_POLLS_PERMISSION_DESCRIPTION_DESCRIPTOR],
 	[Permissions.MANAGE_MESSAGES, MANAGE_MESSAGES_PERMISSION_DESCRIPTION_DESCRIPTOR],
 	[Permissions.MENTION_EVERYONE, MENTION_EVERYONE_PERMISSION_DESCRIPTION_DESCRIPTOR],
 	[Permissions.USE_EXTERNAL_EMOJIS, USE_EXTERNAL_EMOJI_PERMISSION_DESCRIPTION_DESCRIPTOR],

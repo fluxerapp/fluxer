@@ -1,0 +1,289 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.poll {
+	display: flex;
+	flex-direction: column;
+	gap: 0.625rem;
+	width: min(100%, 30rem);
+	min-width: 0;
+	margin-top: var(--message-container-gap, 0.25rem);
+	padding: 0.75rem;
+	border: 0.0625rem solid var(--background-modifier-accent);
+	border-radius: 0.5rem;
+	background: var(--background-secondary);
+	color: var(--text-chat);
+	box-sizing: border-box;
+}
+
+.header {
+	display: flex;
+	flex-direction: column;
+	gap: 0.375rem;
+	min-width: 0;
+}
+
+.title {
+	margin: 0;
+	font-size: 0.9375rem;
+	line-height: 1.25rem;
+	font-weight: 650;
+	color: var(--text-primary);
+	overflow-wrap: anywhere;
+}
+
+.metaRow {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 0.375rem;
+	min-width: 0;
+}
+
+.metaPill {
+	display: inline-flex;
+	align-items: center;
+	min-width: 0;
+	min-height: 1.25rem;
+	padding: 0 0.375rem;
+	border-radius: 0.375rem;
+	background: var(--background-tertiary);
+	color: var(--text-chat-muted);
+	font-size: 0.75rem;
+	line-height: 1rem;
+	font-weight: 500;
+}
+
+.options {
+	display: flex;
+	flex-direction: column;
+	gap: 0.375rem;
+	min-width: 0;
+}
+
+.optionButton {
+	position: relative;
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto;
+	gap: 0.5rem;
+	align-items: center;
+	width: 100%;
+	min-width: 0;
+	min-height: 2.5rem;
+	padding: 0.5rem 0.625rem;
+	border: 0.0625rem solid var(--background-modifier-accent);
+	border-radius: 0.375rem;
+	background: var(--background-primary);
+	color: var(--text-chat);
+	text-align: left;
+	cursor: pointer;
+	overflow: hidden;
+	box-sizing: border-box;
+}
+
+.optionButton:hover:not(:disabled) {
+	border-color: var(--interactive-hover);
+	background: var(--background-secondary-alt);
+}
+
+.optionButton:disabled {
+	cursor: default;
+	color: var(--text-chat-muted);
+}
+
+.optionButtonSelected {
+	border-color: var(--brand-experiment, var(--interactive-active));
+}
+
+.optionFill {
+	position: absolute;
+	inset-block: 0;
+	inset-inline-start: 0;
+	width: 0;
+	background: var(--background-modifier-hover);
+	pointer-events: none;
+}
+
+.optionContent {
+	position: relative;
+	z-index: 1;
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	min-width: 0;
+}
+
+.rankBadge {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex: 0 0 auto;
+	width: 1.25rem;
+	height: 1.25rem;
+	border-radius: 999rem;
+	background: var(--brand-experiment, var(--interactive-active));
+	color: var(--white, #fff);
+	font-size: 0.75rem;
+	line-height: 1;
+	font-weight: 700;
+}
+
+.optionImage {
+	flex: 0 0 auto;
+	width: 2rem;
+	height: 2rem;
+	border-radius: 0.25rem;
+	object-fit: cover;
+	background: var(--background-tertiary);
+}
+
+.optionText {
+	min-width: 0;
+	overflow-wrap: anywhere;
+	font-size: 0.875rem;
+	line-height: 1.25rem;
+	font-weight: 500;
+}
+
+.optionStats {
+	position: relative;
+	z-index: 1;
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	flex-wrap: wrap;
+	gap: 0.375rem;
+	min-width: 7rem;
+	color: var(--text-chat-muted);
+	font-size: 0.75rem;
+	line-height: 1rem;
+	font-weight: 600;
+}
+
+.actions {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	min-width: 0;
+}
+
+.actionButton,
+.iconButton {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.375rem;
+	min-height: 2rem;
+	border: 0.0625rem solid var(--background-modifier-accent);
+	border-radius: 0.375rem;
+	background: var(--background-primary);
+	color: var(--text-primary);
+	font-size: 0.8125rem;
+	line-height: 1rem;
+	font-weight: 650;
+	cursor: pointer;
+	box-sizing: border-box;
+}
+
+.actionButton {
+	padding: 0 0.625rem;
+}
+
+.iconButton {
+	width: 2rem;
+	padding: 0;
+}
+
+.actionButton:hover:not(:disabled),
+.iconButton:hover:not(:disabled) {
+	background: var(--background-secondary-alt);
+	border-color: var(--interactive-hover);
+}
+
+.actionButton:disabled,
+.iconButton:disabled {
+	cursor: default;
+	color: var(--text-chat-muted);
+	opacity: 0.65;
+}
+
+.customOptionForm {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	min-width: 0;
+	flex: 1 1 14rem;
+}
+
+.customOptionInput {
+	flex: 1 1 10rem;
+	min-width: 0;
+	height: 2rem;
+	padding: 0 0.625rem;
+	border: 0.0625rem solid var(--background-modifier-accent);
+	border-radius: 0.375rem;
+	background: var(--background-primary);
+	color: var(--text-primary);
+	font: inherit;
+	box-sizing: border-box;
+}
+
+.customOptionInput::placeholder {
+	color: var(--text-chat-muted);
+}
+
+.customOptionFileInput {
+	display: none;
+}
+
+.customOptionImageChip {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.375rem;
+	flex: 1 1 100%;
+	max-width: 100%;
+	min-width: 0;
+	min-height: 1.75rem;
+	padding: 0 0.5rem;
+	border: 0.0625rem solid var(--background-modifier-accent);
+	border-radius: 0.375rem;
+	background: var(--background-primary);
+	color: var(--text-chat-muted);
+	font-size: 0.75rem;
+	line-height: 1rem;
+	cursor: pointer;
+	box-sizing: border-box;
+}
+
+.customOptionImageChip:hover:not(:disabled) {
+	color: var(--text-primary);
+	border-color: var(--interactive-hover);
+	background: var(--background-secondary-alt);
+}
+
+.customOptionImageChip:disabled {
+	cursor: default;
+	opacity: 0.65;
+}
+
+.customOptionImageChip span {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+@media (max-width: 520px) {
+	.poll {
+		width: 100%;
+	}
+
+	.optionButton {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.optionStats {
+		justify-content: flex-start;
+	}
+}

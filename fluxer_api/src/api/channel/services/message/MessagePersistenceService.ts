@@ -8,17 +8,20 @@ import {NsfwEmojiStickerBlockedError} from '@fluxer/errors/src/domains/moderatio
 import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import type {RichEmbedRequest} from '@fluxer/schema/src/domains/message/MessageRequestSchemas';
+import type {PollRequest} from '@fluxer/schema/src/domains/message/PollSchemas';
 import type {AllowedMentionsRequest} from '@fluxer/schema/src/domains/message/SharedMessageSchemas';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 import * as BucketUtils from '@fluxer/snowflake/src/SnowflakeBuckets';
 import type {IVirusScanService} from '@pkgs/virus_scan/src/IVirusScanService';
+import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
 import {AttachmentDecayService} from '../../../attachment/AttachmentDecayService';
 import type {ChannelID, EmojiID, GuildID, MessageID, RoleID, StickerID, UserID, WebhookID} from '../../../BrandedTypes';
-import {createAttachmentID, createEmojiID, createGuildID} from '../../../BrandedTypes';
+import {createAttachmentID, createEmojiID, createGuildID, createMessageID} from '../../../BrandedTypes';
 import {getContentMessage} from '../../../content_i18n/ContentI18n';
 import type {
 	MessageAttachment,
 	MessageEmbed,
+	MessagePoll,
 	MessageReference,
 	MessageStickerItem,
 } from '../../../database/types/MessageTypes';
@@ -36,6 +39,7 @@ import type {PackService} from '../../../pack/PackService';
 import type {ReadStateService} from '../../../read_state/ReadStateService';
 import type {IUserRepository} from '../../../user/IUserRepository';
 import {hasVisibleContent} from '../../../utils/StringUtils';
+import type {WorkerTaskName} from '../../../worker/WorkerLaneConfig';
 import type {AttachmentToProcess} from '../../AttachmentDTOs';
 import type {MessageUpdateRequest} from '../../MessageTypes';
 import type {IChannelRepositoryAggregate} from '../../repositories/IChannelRepositoryAggregate';
@@ -86,6 +90,7 @@ interface CreateMessageParams {
 	attachments?: Array<AttachmentToProcess>;
 	processedAttachments?: Array<MessageAttachment>;
 	stickerIds?: Array<StickerID>;
+	poll?: PollRequest | null;
 	messageReference?: MessageReference;
 	messageSnapshots?: Array<MessageSnapshot>;
 	guildId: GuildID | null;
@@ -123,9 +128,10 @@ export class MessagePersistenceService {
 		attachmentUploadTraceRepository: AttachmentUploadTraceRepository,
 		mediaService: IMediaService,
 		virusScanService: IVirusScanService,
-		snowflakeService: ISnowflakeService,
+		private snowflakeService: ISnowflakeService,
 		private readStateService: ReadStateService,
 		limitConfigService: LimitConfigService,
+		private workerService: IWorkerService<WorkerTaskName>,
 	) {
 		this.attachmentService = new AttachmentProcessingService(
 			storageService,
@@ -152,6 +158,37 @@ export class MessagePersistenceService {
 
 	getEmbedAttachmentResolver(): MessageEmbedAttachmentResolver {
 		return this.embedAttachmentResolver;
+	}
+
+	async processAdditionalAttachments(params: {
+		message: Message;
+		attachments: Array<AttachmentToProcess>;
+		channel: Channel;
+		guild: GuildResponse | null;
+		member?: GuildMemberResponse | null;
+		isBot?: boolean;
+	}): Promise<Array<MessageAttachment>> {
+		if (params.attachments.length === 0) {
+			return [];
+		}
+		const isNSFWAllowed = this.contentService.isNSFWContentAllowed({
+			channel: params.channel,
+			guild: params.guild,
+			member: params.member,
+			isBot: params.isBot,
+		});
+		const attachmentResult = await this.attachmentService.computeAttachments({
+			message: params.message,
+			attachments: params.attachments,
+			channel: params.channel,
+			guild: params.guild,
+			member: params.member,
+			nsfwMode: isNSFWAllowed ? 'allow' : 'block',
+		});
+		if (attachmentResult.hasVirusDetected) {
+			throw InputValidationError.fromCode('attachments', ValidationErrorCodes.INVALID_MESSAGE_DATA);
+		}
+		return attachmentResult.attachments;
 	}
 
 	async createMessage(params: CreateMessageParams): Promise<CreateMessageResult> {
@@ -199,6 +236,15 @@ export class MessagePersistenceService {
 				processedAttachments = [...processedAttachments, ...attachmentResult.attachments];
 			}
 		}
+		const processedAttachmentByClientId = new Map<number, MessageAttachment>();
+		if (attachmentResult && !attachmentResult.hasVirusDetected && params.attachments) {
+			for (const [index, attachment] of params.attachments.entries()) {
+				const processed = attachmentResult.attachments[index];
+				if (processed) {
+					processedAttachmentByClientId.set(Number(attachment.id), processed);
+				}
+			}
+		}
 		const allowEmbeds = params.allowEmbeds ?? true;
 		let initialEmbeds: Array<MessageEmbed> | null = null;
 		let hasUncachedUrls = false;
@@ -222,6 +268,14 @@ export class MessagePersistenceService {
 			referencedFilenames.size > 0
 				? processedAttachments.filter((att) => !referencedFilenames.has(att.filename))
 				: processedAttachments;
+		const poll = params.poll
+			? await this.buildMessagePoll({
+					poll: params.poll,
+					messageId: params.messageId,
+					channelId: params.channelId,
+					processedAttachmentByClientId,
+				})
+			: null;
 		const messageRowData = {
 			channel_id: params.channelId,
 			bucket: BucketUtils.makeBucket(params.messageId),
@@ -248,6 +302,7 @@ export class MessagePersistenceService {
 					? params.messageSnapshots.map((snapshot) => snapshot.toMessageSnapshot())
 					: null,
 			call: null,
+			poll,
 			nsfw_emojis: nsfwEmojiIds.size > 0 ? nsfwEmojiIds : null,
 			has_reaction: false,
 			version: 1,
@@ -280,6 +335,37 @@ export class MessagePersistenceService {
 			hasPermission: params.guildId ? params.hasPermission : undefined,
 		});
 		return hasVisibleContent(sanitizedContent) ? sanitizedContent : null;
+	}
+
+	private async buildMessagePoll(params: {
+		poll: PollRequest;
+		messageId: MessageID;
+		channelId: ChannelID;
+		processedAttachmentByClientId: ReadonlyMap<number, MessageAttachment>;
+	}): Promise<MessagePoll> {
+		const createdAt = snowflakeToDate(params.messageId);
+		const expiresAt =
+			params.poll.expires_at ?? new Date(createdAt.getTime() + (params.poll.duration_seconds ?? 0) * 1000);
+		return {
+			poll_id: createMessageID(await this.snowflakeService.generateForChannel(params.channelId)),
+			title: params.poll.title,
+			options: await Promise.all(
+				params.poll.options.map(async (option) => ({
+					option_id: createMessageID(await this.snowflakeService.generateForChannel(params.channelId)),
+					text: option.text,
+					attachment_id:
+						option.attachment_id != null
+							? (params.processedAttachmentByClientId.get(option.attachment_id)?.attachment_id ?? null)
+							: null,
+					vote_count: 0,
+				})),
+			),
+			expires_at: expiresAt,
+			closed_at: null,
+			anonymous: params.poll.anonymous,
+			allow_ranked_choice: params.poll.allow_ranked_choice,
+			allow_custom_answers: params.poll.allow_custom_answers,
+		};
 	}
 
 	private async processAttachments(
@@ -371,6 +457,22 @@ export class MessagePersistenceService {
 				uploadedAt,
 			}));
 			operations.push(this.attachmentDecayService.upsertMany(decayPayloads));
+		}
+		if (message.poll) {
+			operations.push(
+				this.workerService.addJob(
+					'closeExpiredPoll',
+					{
+						channelId: params.channelId.toString(),
+						messageId: params.messageId.toString(),
+						pollId: message.poll.poll_id.toString(),
+					},
+					{
+						jobKey: `close-poll:${params.messageId}:${message.poll.poll_id}`,
+						runAt: message.poll.expires_at,
+					},
+				),
+			);
 		}
 		let enqueueDeferredEmbeds: () => Promise<void> = () => Promise.resolve();
 		if (allowEmbeds && hasUncachedUrls) {

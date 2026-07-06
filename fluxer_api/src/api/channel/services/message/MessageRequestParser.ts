@@ -208,6 +208,7 @@ function mergeMultipartScalarFields(body: MultipartBody, payload: unknown): unkn
 		switch (key) {
 			case 'content':
 			case 'nonce':
+			case 'text':
 				mergedPayload[key] = values[values.length - 1];
 				break;
 			case 'tts':

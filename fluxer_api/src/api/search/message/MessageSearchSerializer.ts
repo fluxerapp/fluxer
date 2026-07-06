@@ -105,6 +105,7 @@ interface IndexAccumulator {
 	hasImage: boolean;
 	hasVideo: boolean;
 	hasSound: boolean;
+	hasPoll: boolean;
 	hasSticker: boolean;
 }
 
@@ -124,6 +125,7 @@ function emptyAccumulator(): IndexAccumulator {
 		hasImage: false,
 		hasVideo: false,
 		hasSound: false,
+		hasPoll: false,
 		hasSticker: false,
 	};
 }
@@ -174,6 +176,17 @@ function accumulateContent(
 	}
 }
 
+function accumulatePoll(acc: IndexAccumulator, message: Message): void {
+	if (!message.poll) {
+		return;
+	}
+	acc.hasPoll = true;
+	acc.contentChunks.push(message.poll.title);
+	for (const option of message.poll.options) {
+		acc.contentChunks.push(option.text);
+	}
+}
+
 function mergeSnapshotsIntoAccumulator(acc: IndexAccumulator, snapshots: Array<MessageSnapshot>): void {
 	for (const snapshot of snapshots) {
 		accumulateContent(
@@ -200,6 +213,7 @@ export function convertToSearchableMessage(message: Message, authorIsBot?: boole
 		message.mentionedUserIds,
 		message.stickers.length,
 	);
+	accumulatePoll(acc, message);
 	const isForward = message.reference?.type === 1;
 	if (isForward) {
 		mergeSnapshotsIntoAccumulator(acc, message.messageSnapshots);
@@ -219,7 +233,7 @@ export function convertToSearchableMessage(message: Message, authorIsBot?: boole
 		mentionEveryone: message.mentionEveryone,
 		hasLink: acc.hasLink,
 		hasEmbed: acc.hasEmbed,
-		hasPoll: false,
+		hasPoll: acc.hasPoll,
 		hasFile: acc.hasFile,
 		hasVideo: acc.hasVideo,
 		hasImage: acc.hasImage,

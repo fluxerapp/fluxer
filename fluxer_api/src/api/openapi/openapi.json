@@ -4047,6 +4047,335 @@
 				}
 			}
 		},
+		"/channels/{channel_id}/messages/{message_id}/poll/close": {
+			"post": {
+				"operationId": "close_poll",
+				"summary": "Close a poll",
+				"tags": ["Channels"],
+				"responses": {
+					"204": {"description": "No Content"},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"code": {"type": "string", "enum": ["RATE_LIMITED"]},
+										"message": {"type": "string"},
+										"retry_after": {"type": "number", "description": "Seconds to wait before retrying"},
+										"global": {"type": "boolean", "description": "Whether this is a global rate limit"}
+									},
+									"required": ["code", "message", "retry_after"]
+								}
+							}
+						},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"x-mint": {"metadata": {"title": "Close a poll"}},
+				"description": "Closes a message poll early. The poll author can close their own poll; users with permission to manage messages can close polls in guild channels. Returns 204 No Content on success.",
+				"security": [{"botToken": []}, {"sessionToken": []}],
+				"parameters": [
+					{
+						"name": "channel_id",
+						"in": "path",
+						"required": true,
+						"schema": {"$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the channel"
+					},
+					{
+						"name": "message_id",
+						"in": "path",
+						"required": true,
+						"schema": {"$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the message"
+					}
+				]
+			}
+		},
+		"/channels/{channel_id}/messages/{message_id}/poll/options": {
+			"post": {
+				"operationId": "add_custom_poll_option",
+				"summary": "Add custom poll option",
+				"tags": ["Channels"],
+				"responses": {
+					"204": {"description": "No Content"},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"code": {"type": "string", "enum": ["RATE_LIMITED"]},
+										"message": {"type": "string"},
+										"retry_after": {"type": "number", "description": "Seconds to wait before retrying"},
+										"global": {"type": "boolean", "description": "Whether this is a global rate limit"}
+									},
+									"required": ["code", "message", "retry_after"]
+								}
+							}
+						},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"x-mint": {"metadata": {"title": "Add custom poll option"}},
+				"description": "Adds a custom answer option to a message poll that allows custom answers. Supports an optional image attachment via JSON upload metadata or multipart form data. Requires permission to send messages in the channel, and attach files when an image is included. Returns 204 No Content on success.",
+				"security": [{"botToken": []}, {"sessionToken": []}],
+				"parameters": [
+					{
+						"name": "channel_id",
+						"in": "path",
+						"required": true,
+						"schema": {"$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the channel"
+					},
+					{
+						"name": "message_id",
+						"in": "path",
+						"required": true,
+						"schema": {"$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the message"
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {"schema": {"$ref": "#/components/schemas/PollCustomOptionRequest"}},
+						"multipart/form-data": {"schema": {"$ref": "#/components/schemas/PollCustomOptionRequest"}}
+					}
+				}
+			}
+		},
+		"/channels/{channel_id}/messages/{message_id}/poll/votes/@me": {
+			"put": {
+				"operationId": "vote_poll",
+				"summary": "Vote in a poll",
+				"tags": ["Channels"],
+				"responses": {
+					"204": {"description": "No Content"},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"code": {"type": "string", "enum": ["RATE_LIMITED"]},
+										"message": {"type": "string"},
+										"retry_after": {"type": "number", "description": "Seconds to wait before retrying"},
+										"global": {"type": "boolean", "description": "Whether this is a global rate limit"}
+									},
+									"required": ["code", "message", "retry_after"]
+								}
+							}
+						},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"x-mint": {"metadata": {"title": "Vote in a poll"}},
+				"description": "Sets or replaces your vote for a message poll. Simple polls accept one option ID. Ranked-choice polls accept multiple option IDs in preference order. Returns 204 No Content on success.",
+				"security": [{"botToken": []}, {"sessionToken": []}],
+				"parameters": [
+					{
+						"name": "channel_id",
+						"in": "path",
+						"required": true,
+						"schema": {"$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the channel"
+					},
+					{
+						"name": "message_id",
+						"in": "path",
+						"required": true,
+						"schema": {"$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the message"
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/PollVoteRequest"}}}
+				}
+			},
+			"delete": {
+				"operationId": "remove_own_poll_vote",
+				"summary": "Remove own poll vote",
+				"tags": ["Channels"],
+				"responses": {
+					"204": {"description": "No Content"},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"code": {"type": "string", "enum": ["RATE_LIMITED"]},
+										"message": {"type": "string"},
+										"retry_after": {"type": "number", "description": "Seconds to wait before retrying"},
+										"global": {"type": "boolean", "description": "Whether this is a global rate limit"}
+									},
+									"required": ["code", "message", "retry_after"]
+								}
+							}
+						},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"x-mint": {"metadata": {"title": "Remove own poll vote"}},
+				"description": "Removes your own vote from a message poll. Returns 204 No Content on success. Has no effect if you haven't voted.",
+				"security": [{"botToken": []}, {"sessionToken": []}],
+				"parameters": [
+					{
+						"name": "channel_id",
+						"in": "path",
+						"required": true,
+						"schema": {"$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the channel"
+					},
+					{
+						"name": "message_id",
+						"in": "path",
+						"required": true,
+						"schema": {"$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the message"
+					}
+				]
+			}
+		},
 		"/channels/{channel_id}/messages/{message_id}/reactions": {
 			"delete": {
 				"operationId": "remove_all_reactions",
@@ -26505,6 +26834,10 @@
 						],
 						"description": "The files attached to the message"
 					},
+					"poll": {
+						"anyOf": [{"$ref": "#/components/schemas/PollResponse"}, {"type": "null"}],
+						"description": "Poll attached to this message"
+					},
 					"stickers": {
 						"anyOf": [
 							{"type": "array", "items": {"$ref": "#/components/schemas/MessageStickerResponse"}},
@@ -26682,6 +27015,10 @@
 											{"type": "null"}
 										],
 										"description": "The files attached to the message"
+									},
+									"poll": {
+										"anyOf": [{"$ref": "#/components/schemas/PollResponse"}, {"type": "null"}],
+										"description": "Poll attached to this message"
 									},
 									"stickers": {
 										"anyOf": [
@@ -27175,6 +27512,94 @@
 					{"name": "IS_ANIMATED", "value": "32", "description": "Attachment is animated"}
 				],
 				"description": "Attachment flags"
+			},
+			"PollResponse": {
+				"type": "object",
+				"properties": {
+					"id": {"type": "string", "pattern": "^(0|[1-9][0-9]*)$", "description": "Poll ID"},
+					"title": {"type": "string", "description": "Poll title or question"},
+					"options": {
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/PollOptionResponse"},
+						"minItems": 2,
+						"maxItems": 20,
+						"description": "Poll answer options"
+					},
+					"expires_at": {
+						"type": "string",
+						"format": "date-time",
+						"description": "ISO8601 timestamp when this poll closes"
+					},
+					"closed": {"type": "boolean", "description": "Whether this poll is closed to new votes"},
+					"anonymous": {"type": "boolean", "description": "Whether voter identities are hidden from normal users"},
+					"allow_ranked_choice": {"type": "boolean", "description": "Whether voters can rank multiple options"},
+					"allow_custom_answers": {"type": "boolean", "description": "Whether users can add custom answer options"},
+					"votes": {
+						"anyOf": [{"type": "array", "items": {"$ref": "#/components/schemas/PollVoteResponse"}}, {"type": "null"}],
+						"description": "Visible full vote records, usually only for moderation views"
+					}
+				},
+				"required": [
+					"id",
+					"title",
+					"options",
+					"expires_at",
+					"closed",
+					"anonymous",
+					"allow_ranked_choice",
+					"allow_custom_answers"
+				]
+			},
+			"PollOptionResponse": {
+				"type": "object",
+				"properties": {
+					"id": {"type": "string", "pattern": "^(0|[1-9][0-9]*)$", "description": "Poll option ID"},
+					"text": {"type": "string", "description": "Text shown for this poll option"},
+					"attachment_id": {
+						"anyOf": [{"$ref": "#/components/schemas/SnowflakeType"}, {"type": "null"}],
+						"description": "Attachment ID for an optional image associated with this option"
+					},
+					"vote_count": {
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 2147483647,
+						"format": "int32",
+						"description": "Visible vote count for this option"
+					},
+					"rank_counts": {
+						"anyOf": [{"type": "array", "items": {"$ref": "#/components/schemas/Int32Type"}}, {"type": "null"}],
+						"description": "Ranked-choice selection counts by rank, where index 0 is first choice"
+					},
+					"ranked_score": {
+						"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}],
+						"description": "Borda-style aggregate score for ranked-choice poll results"
+					},
+					"me": {"type": "boolean", "description": "Whether the current user selected this option"},
+					"voter_ids": {
+						"anyOf": [{"type": "array", "items": {"$ref": "#/components/schemas/SnowflakeType"}}, {"type": "null"}],
+						"description": "Visible voter IDs for non-anonymous poll results"
+					}
+				},
+				"required": ["id", "text", "vote_count"]
+			},
+			"PollVoteResponse": {
+				"type": "object",
+				"properties": {
+					"user_id": {"type": "string", "pattern": "^(0|[1-9][0-9]*)$", "description": "User who submitted this vote"},
+					"option_ids": {
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/SnowflakeType"},
+						"minItems": 1,
+						"maxItems": 20,
+						"description": "Selected option IDs in vote order"
+					},
+					"created_at": {
+						"type": "string",
+						"format": "date-time",
+						"description": "ISO8601 timestamp for when this vote was submitted"
+					}
+				},
+				"required": ["user_id", "option_ids", "created_at"]
 			},
 			"MessageStickerResponse": {
 				"type": "object",
@@ -28451,6 +28876,10 @@
 						"anyOf": [{"$ref": "#/components/schemas/SnowflakeType"}, {"type": "null"}],
 						"description": "ID of a favorite meme to attach"
 					},
+					"poll": {
+						"anyOf": [{"$ref": "#/components/schemas/PollRequest"}, {"type": "null"}],
+						"description": "Poll to create with this message"
+					},
 					"sticker_ids": {
 						"anyOf": [
 							{"type": "array", "items": {"$ref": "#/components/schemas/SnowflakeType"}, "maxItems": 3},
@@ -28690,6 +29119,51 @@
 				}
 			},
 			"MessageNonceRequest": {"type": "string", "description": "Client-generated identifier for the message"},
+			"PollRequest": {
+				"type": "object",
+				"properties": {
+					"title": {"type": "string", "description": "Poll title or question"},
+					"options": {
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/PollOptionRequest"},
+						"minItems": 2,
+						"maxItems": 20,
+						"description": "Poll answer options"
+					},
+					"duration_seconds": {
+						"type": "integer",
+						"minimum": 60,
+						"maximum": 2592000,
+						"format": "int32",
+						"description": "Relative poll duration in seconds"
+					},
+					"expires_at": {
+						"oneOf": [
+							{
+								"type": "string",
+								"pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:?\\d{2})?$"
+							},
+							{"type": "integer", "minimum": 0, "maximum": 8640000000000000, "format": "int53"}
+						],
+						"description": "Absolute poll close timestamp"
+					},
+					"anonymous": {"type": "boolean", "description": "Whether voter identities are hidden from normal users"},
+					"allow_ranked_choice": {"type": "boolean", "description": "Whether voters can rank multiple options"},
+					"allow_custom_answers": {"type": "boolean", "description": "Whether users can add custom answer options"}
+				},
+				"required": ["title", "options"]
+			},
+			"PollOptionRequest": {
+				"type": "object",
+				"properties": {
+					"text": {"type": "string", "description": "Text shown for this poll option"},
+					"attachment_id": {
+						"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}],
+						"description": "Client-side attachment identifier for an optional image associated with this option"
+					}
+				},
+				"required": ["text"]
+			},
 			"BulkDeleteMessagesRequest": {
 				"type": "object",
 				"properties": {
@@ -28819,6 +29293,10 @@
 									{"type": "null"}
 								],
 								"description": "The files attached to the message"
+							},
+							"poll": {
+								"anyOf": [{"$ref": "#/components/schemas/PollResponse"}, {"type": "null"}],
+								"description": "Poll attached to this message"
 							},
 							"stickers": {
 								"anyOf": [
@@ -29086,6 +29564,10 @@
 						"anyOf": [{"$ref": "#/components/schemas/SnowflakeType"}, {"type": "null"}],
 						"description": "ID of a favorite meme to attach"
 					},
+					"poll": {
+						"anyOf": [{"$ref": "#/components/schemas/PollRequest"}, {"type": "null"}],
+						"description": "Poll to create with this message"
+					},
 					"sticker_ids": {
 						"anyOf": [
 							{"type": "array", "items": {"$ref": "#/components/schemas/SnowflakeType"}, "maxItems": 3},
@@ -29325,6 +29807,37 @@
 					}
 				},
 				"required": ["name"]
+			},
+			"PollCustomOptionRequest": {
+				"type": "object",
+				"properties": {
+					"text": {"type": "string", "description": "Text shown for the custom poll option"},
+					"attachments": {
+						"type": "array",
+						"items": {
+							"oneOf": [
+								{"$ref": "#/components/schemas/ClientUploadedAttachmentRequest"},
+								{"$ref": "#/components/schemas/ClientAttachmentRequest"}
+							]
+						},
+						"maxItems": 1,
+						"description": "Optional image upload to associate with this custom poll option"
+					}
+				},
+				"required": ["text"]
+			},
+			"PollVoteRequest": {
+				"type": "object",
+				"properties": {
+					"option_ids": {
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/SnowflakeType"},
+						"minItems": 1,
+						"maxItems": 20,
+						"description": "Selected option IDs in preference order"
+					}
+				},
+				"required": ["option_ids"]
 			},
 			"ReactionUsersListResponse": {"type": "array", "items": {"$ref": "#/components/schemas/UserPartialResponse"}},
 			"ReactionUsersPageResponse": {
@@ -30470,6 +30983,8 @@
 							"id": {"type": "string", "description": "ID of the affected entity"},
 							"integration_type": {"type": "number", "description": "Type of integration"},
 							"message_id": {"type": "string", "description": "Message ID for relevant actions"},
+							"option_id": {"type": "string", "description": "Poll option ID for relevant poll actions"},
+							"poll_id": {"type": "string", "description": "Poll ID for relevant poll actions"},
 							"members_removed": {"type": "number", "description": "Number of members removed"},
 							"role_name": {"type": "string", "description": "Name of the role"},
 							"type": {"type": "number", "description": "Type identifier"},
@@ -30494,7 +31009,7 @@
 				"format": "int32",
 				"enum": [
 					1, 10, 11, 12, 13, 14, 15, 20, 21, 22, 23, 24, 25, 26, 27, 28, 30, 31, 32, 40, 41, 42, 50, 51, 52, 60, 61, 62,
-					90, 91, 92, 72, 73, 74, 75
+					90, 91, 92, 72, 73, 74, 75, 110, 111
 				],
 				"x-enumNames": [
 					"GUILD_UPDATE",
@@ -30531,7 +31046,9 @@
 					"MESSAGE_DELETE",
 					"MESSAGE_BULK_DELETE",
 					"MESSAGE_PIN",
-					"MESSAGE_UNPIN"
+					"MESSAGE_UNPIN",
+					"POLL_OPTION_CREATE",
+					"POLL_CLOSE"
 				],
 				"x-enumDescriptions": [
 					"Guild settings were updated",
@@ -30568,7 +31085,9 @@
 					"Message was deleted",
 					"Messages were bulk deleted",
 					"Message was pinned",
-					"Message was unpinned"
+					"Message was unpinned",
+					"Custom poll option was created",
+					"Poll was closed"
 				],
 				"description": "The type of action that occurred"
 			},
@@ -33821,6 +34340,10 @@
 										{"type": "null"}
 									],
 									"description": "The files attached to the message"
+								},
+								"poll": {
+									"anyOf": [{"$ref": "#/components/schemas/PollResponse"}, {"type": "null"}],
+									"description": "Poll attached to this message"
 								},
 								"stickers": {
 									"anyOf": [

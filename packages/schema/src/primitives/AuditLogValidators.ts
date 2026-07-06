@@ -41,6 +41,8 @@ export const AuditLogActionTypeSchema = withOpenApiType(
 			[AuditLogActionType.MESSAGE_BULK_DELETE, 'MESSAGE_BULK_DELETE', 'Messages were bulk deleted'],
 			[AuditLogActionType.MESSAGE_PIN, 'MESSAGE_PIN', 'Message was pinned'],
 			[AuditLogActionType.MESSAGE_UNPIN, 'MESSAGE_UNPIN', 'Message was unpinned'],
+			[AuditLogActionType.POLL_OPTION_CREATE, 'POLL_OPTION_CREATE', 'Custom poll option was created'],
+			[AuditLogActionType.POLL_CLOSE, 'POLL_CLOSE', 'Poll was closed'],
 		],
 		'The type of action that occurred',
 		'AuditLogActionType',

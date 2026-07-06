@@ -5,6 +5,7 @@ import type {
 	SearchChannelMessagesRequest,
 } from '@fluxer/schema/src/domains/admin/AdminMessageBrowseSchemas';
 import type {
+	DeleteMessageAttachmentRequest,
 	DeleteMessageRequest,
 	LookupMessageByAttachmentRequest,
 	LookupMessageRequest,
@@ -21,8 +22,15 @@ import {
 	type MessageID,
 	type UserID,
 } from '../../BrandedTypes';
+import {Config} from '../../Config';
 import type {IChannelRepository} from '../../channel/IChannelRepository';
-import {purgeMessageAttachments} from '../../channel/services/message/MessageHelpers';
+import {dispatchMessageUpdateBroadcast} from '../../channel/services/message/MessageGatewayDispatch';
+import {
+	makeAttachmentCdnKey,
+	makeAttachmentCdnUrl,
+	purgeMessageAttachments,
+	removePollAttachmentReference,
+} from '../../channel/services/message/MessageHelpers';
 import {
 	createMessageResponseDataService,
 	type MessageResponseAccessContext,
@@ -31,7 +39,9 @@ import {
 } from '../../channel/services/message/MessageResponseDataService';
 import type {NcmecAttachmentStatusResponse, NcmecSubmissionService} from '../../csam/NcmecSubmissionService';
 import type {IGuildRepositoryAggregate} from '../../guild/repositories/IGuildRepositoryAggregate';
+import {Logger} from '../../Logger';
 import {getPurgeQueue, getStorageService} from '../../middleware/ServiceSingletons';
+import type {Message} from '../../models/Message';
 import {getMessageSearchService} from '../../SearchFactory';
 import {deleteMessageSearchDocuments} from '../../search/MessageSearchIndexCleanup';
 import {searchExistingMessages} from '../../search/MessageSearchResultReconciler';
@@ -183,6 +193,73 @@ export class AdminMessageService {
 		};
 	}
 
+	async deleteMessageAttachment(
+		data: DeleteMessageAttachmentRequest,
+		adminUserId: UserID,
+		auditLogReason: string | null,
+	) {
+		const {channelRepository, auditService} = this.deps;
+		const {gateway: gatewayService} = this.deps.apiContext.services;
+		const channelId = createChannelID(data.channel_id);
+		const messageId = createMessageID(data.message_id);
+		const attachmentId = createAttachmentID(data.attachment_id);
+		const channel = await channelRepository.findUnique(channelId);
+		const message = await channelRepository.getMessage(channelId, messageId);
+		const attachment = message?.attachments.find((item) => item.id === attachmentId) ?? null;
+		const pollOption = message?.poll?.options.find((option) => option.attachment_id === attachmentId) ?? null;
+		if (message && attachment) {
+			const cdnKey = makeAttachmentCdnKey(message.channelId, attachment.id, attachment.filename);
+			await getStorageService().deleteObject(Config.s3.buckets.cdn, cdnKey);
+			if (Config.bunny.purgeEnabled) {
+				await getPurgeQueue().addUrls([makeAttachmentCdnUrl(message.channelId, attachment.id, attachment.filename)]);
+			}
+			const updatedAttachments = message.attachments.filter((item) => item.id !== attachmentId);
+			const updatedMessage = await channelRepository.upsertMessage(
+				{
+					...message.toRow(),
+					edited_timestamp: new Date(),
+					attachments:
+						updatedAttachments.length > 0 ? updatedAttachments.map((item) => item.toMessageAttachment()) : null,
+					poll: removePollAttachmentReference(message, attachmentId),
+				},
+				message.toRow(),
+			);
+			if (channel) {
+				await dispatchMessageUpdateBroadcast({
+					gatewayService,
+					channel,
+					message: updatedMessage,
+				});
+			}
+			void this.updateMessageSearchIndex(updatedMessage);
+		}
+		const metadata = new Map<string, string>([
+			['channel_id', channelId.toString()],
+			['message_id', messageId.toString()],
+			['attachment_id', attachmentId.toString()],
+		]);
+		if (attachment) {
+			metadata.set('filename', attachment.filename);
+		}
+		if (message?.poll) {
+			metadata.set('poll_id', message.poll.poll_id.toString());
+		}
+		if (pollOption) {
+			metadata.set('poll_option_id', pollOption.option_id.toString());
+		}
+		await auditService.createAuditLog({
+			adminUserId,
+			targetType: 'message_attachment',
+			targetId: BigInt(attachmentId),
+			action: 'delete_message_attachment',
+			auditLogReason,
+			metadata,
+		});
+		return {
+			success: true,
+		};
+	}
+
 	async browseChannel(data: BrowseChannelRequest) {
 		const {snowflake: snowflakeService} = this.deps.apiContext.services;
 		const channelId = createChannelID(data.channel_id);
@@ -247,6 +324,26 @@ export class AdminMessageService {
 			message_responses: messageResponses,
 			total: result.total,
 		};
+	}
+
+	private async updateMessageSearchIndex(message: Message): Promise<void> {
+		const searchService = getMessageSearchService();
+		if (!searchService) {
+			return;
+		}
+		try {
+			const author = message.authorId ? await this.deps.apiContext.services.users.findUnique(message.authorId) : null;
+			await searchService.updateMessage(message, author?.isBot ?? false);
+		} catch (error) {
+			Logger.error(
+				{
+					messageId: message.id,
+					channelId: message.channelId,
+					error,
+				},
+				'Failed to update message search index after admin attachment delete',
+			);
+		}
 	}
 
 	private async getAttachmentStatusesForMessages(

@@ -22,6 +22,24 @@ impl AdminApiClient {
         Ok(())
     }
 
+    pub async fn delete_message_attachment(
+        &self,
+        channel_id: &str,
+        message_id: &str,
+        attachment_id: &str,
+    ) -> ApiResult<()> {
+        let body = generated_types::DeleteMessageAttachmentRequest {
+            attachment_id: snowflake(attachment_id),
+            channel_id: snowflake(channel_id),
+            message_id: snowflake(message_id),
+        };
+        self.generated()
+            .admin_delete_message_attachment(&body)
+            .await
+            .map_err(|e| self.generated_error(e))?;
+        Ok(())
+    }
+
     pub async fn report_attachment_to_ncmec(
         &self,
         channel_id: &str,
