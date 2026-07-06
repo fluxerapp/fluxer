@@ -2,7 +2,7 @@
 
 import {defineEmailI18nLocaleMessages} from '../EmailI18nMessages';
 
-export const EMAIL_I18N_DA_MESSAGES = defineEmailI18nLocaleMessages({
+const EMAIL_I18N_DA_MESSAGES = defineEmailI18nLocaleMessages({
 	"account_disabled_suspicious": {
 		"subject": "Din {product_name}-konto er midlertidigt deaktiveret",
 		"body": "Hej {username},\n\nVi har midlertidigt deaktiveret din {product_name}-konto, fordi vi har registreret mistænkelig aktivitet.\n\n{reason, select,\n  null {}\n  other {Årsag: {reason}}\n}\n\nFor at få adgang til din konto igen skal du nulstille din adgangskode:\n\n{forgotUrl}\n\nNår du har nulstillet din adgangskode, kan du logge ind igen.\n\nHvis du mener, at dette er sket ved en fejl, kan du kontakte vores supportteam.\n\n– {product_name} Safety Team"

@@ -3,9 +3,13 @@
 use async_trait::async_trait;
 use bytes::Bytes;
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::Duration;
 use tokio::sync::Notify;
 use tracing::{info, warn};
+
+const SLOW_CONSUMER_LOG_INTERVAL_MS: u64 = 1_000;
+const SLOW_CONSUMER_LOG_NEVER_MS: u64 = u64::MAX;
 
 #[async_trait]
 pub trait Transport: Clone + Send + Sync + 'static {
@@ -76,8 +80,10 @@ impl NatsTransport {
         let reconnect_notify = Arc::new(Notify::new());
 
         let event_notify = reconnect_notify.clone();
+        let slow_consumer_last_log_ms = Arc::new(AtomicU64::new(SLOW_CONSUMER_LOG_NEVER_MS));
         let options = async_nats::ConnectOptions::new().event_callback(move |event| {
             let notify = event_notify.clone();
+            let slow_consumer_last_log_ms = slow_consumer_last_log_ms.clone();
             async move {
                 match event {
                     async_nats::Event::Connected => {
@@ -91,7 +97,12 @@ impl NatsTransport {
                         warn!("NATS server entering lame duck mode");
                     }
                     async_nats::Event::SlowConsumer(sid) => {
-                        warn!(subscription_id = sid, "NATS slow consumer detected");
+                        if should_log_slow_consumer(
+                            crate::metrics::now_ms().max(0) as u64,
+                            &slow_consumer_last_log_ms,
+                        ) {
+                            warn!(subscription_id = sid, "NATS slow consumer detected");
+                        }
                     }
                     other => {
                         info!(event = %other, "NATS event");
@@ -140,6 +151,23 @@ impl NatsTransport {
 
     pub fn is_connected(&self) -> bool {
         <Self as Transport>::is_connected(self)
+    }
+}
+
+fn should_log_slow_consumer(now_ms: u64, last_log_ms: &AtomicU64) -> bool {
+    let mut last = last_log_ms.load(Ordering::Relaxed);
+    loop {
+        if last != SLOW_CONSUMER_LOG_NEVER_MS
+            && now_ms.saturating_sub(last) < SLOW_CONSUMER_LOG_INTERVAL_MS
+        {
+            return false;
+        }
+
+        match last_log_ms.compare_exchange_weak(last, now_ms, Ordering::Relaxed, Ordering::Relaxed)
+        {
+            Ok(_) => return true,
+            Err(actual) => last = actual,
+        }
     }
 }
 
@@ -228,6 +256,40 @@ impl TransportMessage for NatsMessage {
 impl NatsMessage {
     pub async fn reply(&self, transport: &NatsTransport, payload: &[u8]) -> anyhow::Result<()> {
         reply_message(self, transport, payload).await
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn slow_consumer_logs_initial_event_then_throttles() {
+        let last_log_ms = AtomicU64::new(SLOW_CONSUMER_LOG_NEVER_MS);
+
+        assert!(should_log_slow_consumer(10, &last_log_ms));
+        assert!(!should_log_slow_consumer(1_009, &last_log_ms));
+        assert!(should_log_slow_consumer(1_010, &last_log_ms));
+    }
+
+    #[test]
+    fn slow_consumer_throttle_allows_one_racing_logger() {
+        let last_log_ms = Arc::new(AtomicU64::new(SLOW_CONSUMER_LOG_NEVER_MS));
+        let logged = Arc::new(AtomicU64::new(0));
+
+        std::thread::scope(|scope| {
+            for _ in 0..8 {
+                let last_log_ms = last_log_ms.clone();
+                let logged = logged.clone();
+                scope.spawn(move || {
+                    if should_log_slow_consumer(42, &last_log_ms) {
+                        logged.fetch_add(1, Ordering::Relaxed);
+                    }
+                });
+            }
+        });
+
+        assert_eq!(logged.load(Ordering::Relaxed), 1);
     }
 }
 

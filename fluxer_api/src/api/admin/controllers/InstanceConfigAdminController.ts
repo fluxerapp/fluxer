@@ -290,8 +290,6 @@ export function InstanceConfigAdminController(app: HonoApp) {
 				await instanceConfigRepository.setInstanceIntegrationsConfig({
 					gif: data.integrations.gif
 						? omitUndefinedFields({
-								provider: readOptionalField(data.integrations.gif, 'provider'),
-								tenor_api_key: readOptionalField(data.integrations.gif, 'tenor_api_key'),
 								klipy_api_key: readOptionalField(data.integrations.gif, 'klipy_api_key'),
 							})
 						: undefined,
@@ -316,6 +314,7 @@ export function InstanceConfigAdminController(app: HonoApp) {
 									provider: readOptionalField(data.integrations.email, 'provider'),
 									from_email: readOptionalField(data.integrations.email, 'from_email'),
 									from_name: readOptionalField(data.integrations.email, 'from_name'),
+									disable_new_ip_authorization: readOptionalField(data.integrations.email, 'disable_new_ip_authorization'),
 								}),
 								smtp: data.integrations.email.smtp
 									? omitUndefinedFields({

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import {pathToFileURL} from 'node:url';
 import {setSchemaName, zodToOpenAPISchema} from '@fluxer/openapi/src/converters/ZodToOpenAPI';
 import type {OpenAPISchema} from '@fluxer/openapi/src/Types';
 import type {z} from 'zod';
@@ -59,7 +60,7 @@ export async function loadSchemas(basePath: string): Promise<Map<string, LoadedS
 	const modulePaths = getModulePaths(basePath);
 	for (const modulePath of modulePaths) {
 		try {
-			const moduleExports = await import(modulePath);
+			const moduleExports = await import(pathToFileURL(modulePath).href);
 			for (const [exportName, exportValue] of Object.entries(moduleExports)) {
 				if (exportName.startsWith('_')) {
 					continue;

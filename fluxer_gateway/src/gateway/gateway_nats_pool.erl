@@ -15,6 +15,9 @@
     {no_opaque, [
         handle_info/2,
         handle_connect_ok/4,
+        handle_connect_ok_entry/5,
+        accept_connect_ok/4,
+        ignore_stale_connect_ok/2,
         handle_ready/4,
         handle_conn_event_down/2,
         handle_slot_monitor_down/5,

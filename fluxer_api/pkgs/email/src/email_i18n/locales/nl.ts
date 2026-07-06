@@ -2,7 +2,7 @@
 
 import {defineEmailI18nLocaleMessages} from '../EmailI18nMessages';
 
-export const EMAIL_I18N_NL_MESSAGES = defineEmailI18nLocaleMessages({
+const EMAIL_I18N_NL_MESSAGES = defineEmailI18nLocaleMessages({
 	"account_disabled_suspicious": {
 		"subject": "Je {product_name}-account is tijdelijk uitgeschakeld",
 		"body": "Hallo {username},\n\nWe hebben je {product_name}-account tijdelijk uitgeschakeld omdat we verdachte activiteit hebben gedetecteerd.\n\n{reason, select,\n  null {}\n  other {Reden: {reason}}\n}\n\nOm weer toegang te krijgen tot je account, moet je je wachtwoord opnieuw instellen:\n\n{forgotUrl}\n\nNadat je je wachtwoord opnieuw hebt ingesteld, kun je weer inloggen.\n\nAls je denkt dat dit een fout is, neem dan contact op met ons support-team.\n\n– {product_name} Safety Team"

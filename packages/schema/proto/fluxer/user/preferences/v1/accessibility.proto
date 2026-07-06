@@ -76,6 +76,7 @@ message AccessibilitySettings {
   optional double compact_message_group_spacing = 60;
   optional bool scroll_to_bottom_on_message_send = 61;
   optional bool dim_strikethrough_text = 62;
+  optional bool sequential_file_send = 63;
 }
 
 message AccessibilityOverrides {

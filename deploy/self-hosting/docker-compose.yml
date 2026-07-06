@@ -48,6 +48,9 @@ x-fluxer-env: &fluxer-env
   FLUXER_LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:?set LIVEKIT_API_KEY in .env}
   FLUXER_LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET:?set LIVEKIT_API_SECRET in .env}
   FLUXER_LIVEKIT_WEBHOOK_URL: http://api:8080/webhooks/livekit
+  FLUXER_LIVEKIT_DEFAULT_REGION: '{"id":"default","name":"Default","emoji":"🌍","latitude":0,"longitude":0}'
+
+  FLUXER_KLIPY_API_KEY: ${FLUXER_KLIPY_API_KEY:-}
 
   FLUXER_EMAIL_ENABLED: ${FLUXER_EMAIL_ENABLED:-false}
   FLUXER_EMAIL_PROVIDER: ${FLUXER_EMAIL_PROVIDER:-none}
@@ -210,6 +213,8 @@ services:
       nats: {condition: service_started}
       meilisearch: {condition: service_started}
       seaweedfs-init: {condition: service_completed_successfully}
+      gifs: {condition: service_started}
+      gifs-shard: {condition: service_started}
       snowflakes: {condition: service_started}
       snowflakes-shard: {condition: service_started}
       messages: {condition: service_started}
@@ -316,6 +321,29 @@ services:
       <<: *fluxer-env
       FLUXER_SVC_MODE: shard
       FLUXER_SVC_SHARD_ID: "0"
+    depends_on:
+      nats: {condition: service_started}
+
+  gifs:
+    <<: *fluxer-service
+    image: ${FLUXER_REGISTRY:-ghcr.io/${FLUXER_REGISTRY_OWNER:-fluxerapp}}/fluxer-gifs:${FLUXER_IMAGE_TAG:-v1}
+    environment:
+      <<: *fluxer-env
+      FLUXER_SVC_NAME: gifs
+      FLUXER_SVC_MODE: router
+      FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT: ${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN}/media
+    depends_on:
+      nats: {condition: service_started}
+
+  gifs-shard:
+    <<: *fluxer-service
+    image: ${FLUXER_REGISTRY:-ghcr.io/${FLUXER_REGISTRY_OWNER:-fluxerapp}}/fluxer-gifs:${FLUXER_IMAGE_TAG:-v1}
+    environment:
+      <<: *fluxer-env
+      FLUXER_SVC_NAME: gifs
+      FLUXER_SVC_MODE: shard
+      FLUXER_SVC_SHARD_ID: "0"
+      FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT: ${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN}/media
     depends_on:
       nats: {condition: service_started}
 

@@ -345,8 +345,8 @@ msgstr "{count, plural, one {# קובץ מצורף} other {# קבצים מצור
 msgid "{count, plural, one {# blocked message} other {# blocked messages}}"
 msgstr "{count, plural, one {# הודעה חסומה} other {# הודעות חסומות}}"
 
-#: src/features/app/components/alerts/MaxBookmarksModal.tsx:50
-#: src/features/app/components/alerts/MaxBookmarksModal.tsx:83
+#: src/features/app/components/alerts/MaxBookmarksModal.tsx:51
+#: src/features/app/components/alerts/MaxBookmarksModal.tsx:76
 msgid "{count, plural, one {# bookmark} other {# bookmarks}}"
 msgstr "{count, plural, one {# סימנייה} other {# סימניות}}"
 
@@ -420,8 +420,8 @@ msgstr "{count, plural, one {# ריאקציה} other {# ריאקציות}}"
 msgid "{count, plural, one {# reactor} other {# reactors}}"
 msgstr "{count, plural, one {# מגיב} other {# מגיבים}}"
 
-#: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx:44
-#: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx:82
+#: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx:45
+#: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx:79
 msgid "{count, plural, one {# saved media item} other {# saved media items}}"
 msgstr "{count, plural, one {# פריט מדיה שמור} other {# פריטי מדיה שמורים}}"
 
@@ -500,7 +500,7 @@ msgstr "{count, plural, one {התנתק ממכשיר אחד} other {התנתק �
 msgid "{count, plural, one {Used # time.} other {Used # times.}}"
 msgstr "{count, plural, one {שימוש פעם אחת.} other {שימוש # פעמים.}}"
 
-#: src/features/messaging/components/alerts/TooManyAttachmentsModal.tsx:21
+#: src/features/messaging/components/alerts/TooManyAttachmentsModal.tsx:20
 msgid "{count, plural, one {You can only upload # file at a time. Try again with fewer files.} other {You can only upload # files at a time. Try again with fewer files.}}"
 msgstr "{count, plural, one {אפשר להעלות קובץ אחד בלבד בכל פעם. יש לנסות שוב עם פחות קבצים.} other {אפשר להעלות {count} קבצים בלבד בכל פעם. יש לנסות שוב עם פחות קבצים.}}"
 
@@ -525,7 +525,7 @@ msgstr "{count, plural, one {אתה כבר מחובר לערוץ הקולי הז
 msgid "{count, plural, one {You're already using the one allowed connection for this voice channel. Switch to this device or cancel.} other {You're already using all # allowed connections for this voice channel. Switch to this device or cancel.}}"
 msgstr "{count, plural, one {אתה כבר משתמש בחיבור היחיד המותר לערוץ קולי זה. עבור למכשיר זה או בטל.} other {אתה כבר משתמש בכל # החיבורים המותרים לערוץ קולי זה. עבור למכשיר זה או בטל.}}"
 
-#: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx:65
+#: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx:62
 msgid "{count, plural, one {You're at the cap of # saved media item. Remove one to add another.} other {You're at the cap of # saved media items. Remove one to add another.}}"
 msgstr "{count, plural, one {הגעת למגבלה של פריט מדיה שמור אחד. הסר אחד כדי להוסיף אחר.} other {הגעת למגבלה של # פריטי מדיה שמורים. הסר אחד כדי להוסיף אחר.}}"
 
@@ -545,7 +545,7 @@ msgstr "{count, plural, one {הגעת למגבלה של חבילת מדבקות 
 msgid "{count, plural, one {You're at the limit of # sticker pack. Delete one to create another.} other {You're at the limit of # sticker packs. Delete one to create another.}}"
 msgstr "{count, plural, one {הגעת למגבלה של חבילת מדבקות אחת. מחק אחת כדי ליצור אחרת.} other {הגעת למגבלה של # חבילות מדבקות. מחק אחת כדי ליצור אחרת.}}"
 
-#: src/features/guild/components/alerts/MaxGuildsModal.tsx:25
+#: src/features/guild/components/alerts/MaxGuildsModal.tsx:24
 msgid "{count, plural, one {You've reached the maximum number of communities you can join (# community). Leave a community before joining another one.} other {You've reached the maximum number of communities you can join (# communities). Leave a community before joining another one.}}"
 msgstr "{count, plural, one {הגעת למספר הקהילות המרבי שבאפשרותך להצטרף אליהן (קהילה אחת). עזוב קהילה לפני שתצטרף לאחרת.} other {הגעת למספר הקהילות המרבי שבאפשרותך להצטרף אליהן ({count} קהילות). עזוב קהילה לפני שתצטרף לאחרת.}}"
 
@@ -1124,22 +1124,22 @@ msgid "{productName} member since"
 msgstr "חבר/ה ב- {productName} מאז"
 
 #. Body of the camera-permission-denied modal on web. {productName} is Fluxer.
-#: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx:40
+#: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx:39
 msgid "{productName} needs access to your camera to enable video chat. Grant camera permission in your browser settings and try again."
 msgstr "{productName} זקוק לגישה למצלמה שלך כדי לאפשר צ'אט וידאו. אשר את הרשאת המצלמה בהגדרות הדפדפן שלך ונסה שוב."
 
 #. Body of the camera-permission-denied modal on Windows and Linux. {productName} is Fluxer.
-#: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx:35
+#: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx:34
 msgid "{productName} needs access to your camera. Allow camera access in your operating system privacy settings and restart the app."
 msgstr "{productName} זקוק לגישה למצלמה שלך. אפשר גישה למצלמה בהגדרות הפרטיות של מערכת ההפעלה שלך והפעל מחדש את היישום."
 
 #. Body of the microphone-permission-denied modal on web. {productName} is Fluxer.
-#: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx:30
+#: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx:29
 msgid "{productName} needs access to your microphone to enable voice chat. Grant microphone permission in your browser settings and try again."
 msgstr "{productName} זקוק לגישה למיקרופון שלך כדי לאפשר צ'אט קולי. אשר את הרשאת המיקרופון בהגדרות הדפדפן שלך ונסה שוב."
 
 #. Body of the microphone-permission-denied modal on Windows and Linux. {productName} is Fluxer.
-#: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx:25
+#: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx:24
 msgid "{productName} needs access to your microphone. Allow microphone access in your operating system privacy settings and restart the app."
 msgstr "ל־{productName} דרושה גישה למיקרופון שלך. אפשר גישה למיקרופון בהגדרות הפרטיות של מערכת ההפעלה שלך והפעל מחדש את היישום."
 
@@ -1154,7 +1154,7 @@ msgid "{productName} needs microphone access to list your devices."
 msgstr "{productName} זקוק לגישה למיקרופון כדי להציג את המכשירים שלך."
 
 #. Body of the screen-permission-denied modal on non-mac desktop platforms. {productName} is Fluxer.
-#: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx:45
+#: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx:44
 msgid "{productName} needs screen recording access. Allow screen recording in your operating system privacy settings and restart the app."
 msgstr "{productName} דורש גישה להקלטת מסך. אפשר הקלטת מסך בהגדרות הפרטיות של מערכת ההפעלה שלך והפעל מחדש את האפליקציה."
 
@@ -1179,7 +1179,7 @@ msgid "{productName} spellcheck settings…"
 msgstr "הגדרות בדיקת איות של {productName}…"
 
 #. Label in the invites disabled modal.
-#: src/features/invite/components/alerts/InvitesDisabledModal.tsx:14
+#: src/features/invite/components/alerts/InvitesDisabledModal.tsx:13
 msgid "{productName} spotted a possible raid here. Invites are paused — try again later."
 msgstr "{productName} זיהה פשיטה אפשרית כאן. ההזמנות מושהות – נסו שוב מאוחר יותר."
 
@@ -2247,7 +2247,7 @@ msgid "Action"
 msgstr "פעולה"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:283
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:307
 msgid "Action bar"
 msgstr "שורת פעולות"
 
@@ -2844,7 +2844,7 @@ msgid "Administrator"
 msgstr "מנהל מערכת"
 
 #. Error message in the invites disabled modal.
-#: src/features/invite/components/alerts/InvitesDisabledModal.tsx:18
+#: src/features/invite/components/alerts/InvitesDisabledModal.tsx:17
 msgid "Admins paused invites — you can't join right now."
 msgstr "מנהלים השהו הזמנות – אינך יכול/ה להצטרף כרגע."
 
@@ -3253,7 +3253,7 @@ msgid "Already set to cancel"
 msgstr "כבר מוגדר לביטול"
 
 #. Toggle-switch label in the moderator delete-message confirmation dialog. When enabled, the message is reported (category: other) before being deleted. {productName} is the product name (e.g., Fluxer).
-#: src/features/messaging/commands/MessageCommands.tsx:75
+#: src/features/messaging/commands/MessageCommands.tsx:76
 msgid "Also report this message to the {productName} Safety Team"
 msgstr "דווח/י על ההודעה הזו גם לצוות הבטיחות של {productName}"
 
@@ -3423,12 +3423,12 @@ msgstr "ועוד שיחה אחת"
 msgid "Animate on interaction"
 msgstr "הנפשה באינטראקציה"
 
-#: src/features/expressions/utils/AnimatedAvifModalUtils.tsx:27
+#: src/features/expressions/utils/AnimatedAvifModalUtils.tsx:26
 msgid "Animated {AVIF_FORMAT_LABEL} files aren't supported. Upload a static {AVIF_FORMAT_LABEL} file instead."
 msgstr "קובצי {AVIF_FORMAT_LABEL} מונפשים אינם נתמכים. במקום זאת, יש להעלות קובץ {AVIF_FORMAT_LABEL} סטטי."
 
 #. Modal title shown when an animated AVIF upload is rejected by the client.
-#: src/features/expressions/utils/AnimatedAvifModalUtils.tsx:12
+#: src/features/expressions/utils/AnimatedAvifModalUtils.tsx:11
 msgid "Animated {avifFormatLabel} not supported"
 msgstr "{avifFormatLabel} מונפש אינו נתמך"
 
@@ -3476,7 +3476,7 @@ msgid "Animated emoji"
 msgstr "אמוג'י מונפשים"
 
 #. Section heading for animated emoji in community emoji settings.
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:104
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:105
 msgid "Animated emoji ({emojiCount})"
 msgstr "אמוג׳י מונפשים ({emojiCount})"
 
@@ -3861,7 +3861,7 @@ msgid "Apply theme"
 msgstr "החל ערכת נושא"
 
 #. Short confirmation button label in advanced settings.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:140
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:144
 msgid "Apply to all communities"
 msgstr "החל על כל הקהילות"
 
@@ -4019,7 +4019,7 @@ msgid "asc or desc"
 msgstr "עולה או יורד"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:351
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:375
 msgid "ASCII smileys"
 msgstr "סמלי חיוך ASCII"
 
@@ -4119,7 +4119,7 @@ msgid "Attachment upload"
 msgstr "העלאת קובץ מצורף"
 
 #. Short label in the attachment upload connectivity modal. Keep it concise.
-#: src/features/messaging/components/alerts/AttachmentUploadConnectivityModal.tsx:13
+#: src/features/messaging/components/alerts/AttachmentUploadConnectivityModal.tsx:12
 msgid "Attachment upload unavailable"
 msgstr "העלאת קבצים לא זמינה"
 
@@ -4619,7 +4619,7 @@ msgid "Automatically remove tracking parameters (like utm_source, fbclid, gclid)
 msgstr "הסרה אוטומטית של פרמטרי מעקב (כמו utm_source,‏ fbclid,‏ gclid) מכתובות URL בהודעות שאתם שולחים. הקישור מנוקה לפני שהוא מגיע למישהו אחר."
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:167
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:191
 msgid "Automatically remove tracking parameters from URLs in messages you send"
 msgstr "הסרה אוטומטית של פרמטרי מעקב מכתובות URL בהודעות שאתה שולח"
 
@@ -4685,8 +4685,8 @@ msgstr "זמין באפליקציית המחשב."
 #. Form label for a webhook avatar image.
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #: src/features/ui/components/BaseAvatar.tsx:17
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:374
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:422
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:372
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:420
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:13
 #: src/features/webhook/components/WebhookListItem.tsx:251
 msgid "Avatar"
@@ -5273,7 +5273,7 @@ msgid "Bookmark"
 msgstr "סימנייה"
 
 #. Short label in the max bookmarks modal.
-#: src/features/app/components/alerts/MaxBookmarksModal.tsx:15
+#: src/features/app/components/alerts/MaxBookmarksModal.tsx:16
 msgid "Bookmark limit reached"
 msgstr "הגעת למגבלת הסימניות"
 
@@ -5761,7 +5761,7 @@ msgid "Camera on"
 msgstr "מצלמה פועלת"
 
 #. Title of the modal shown when camera permission is denied. Keep tone plain.
-#: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx:17
+#: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx:16
 msgid "Camera permission required"
 msgstr "נדרשת הרשאת מצלמה"
 
@@ -5805,12 +5805,12 @@ msgid "Can't access that email?"
 msgstr "לא מצליחים לגשת למייל הזה?"
 
 #. Error message in the attachment permission denied modal. Keep the tone plain and specific.
-#: src/features/messaging/components/alerts/AttachmentPermissionDeniedModal.tsx:12
+#: src/features/messaging/components/alerts/AttachmentPermissionDeniedModal.tsx:9
 msgid "Can't paste image here"
 msgstr "לא ניתן להדביק תמונה כאן"
 
 #. Error message in the attachment permission denied modal. Keep the tone plain and specific.
-#: src/features/messaging/components/alerts/AttachmentPermissionDeniedModal.tsx:16
+#: src/features/messaging/components/alerts/AttachmentPermissionDeniedModal.tsx:13
 msgid "Can't upload files here"
 msgstr "לא ניתן להעלות קבצים לכאן"
 
@@ -5872,7 +5872,7 @@ msgstr "שורת התראה לבודקי גרסת Canary"
 #: src/features/user/components/modals/EmailChangeModal.tsx:289
 #: src/features/user/components/modals/EmailChangeModal.tsx:311
 #: src/features/user/components/modals/EmailChangeModal.tsx:326
-#: src/features/user/components/modals/FluxerTagChangeModal.tsx:389
+#: src/features/user/components/modals/FluxerTagChangeModal.tsx:394
 #: src/features/user/components/modals/PasswordChangeModal.tsx:226
 #: src/features/user/components/modals/PasswordChangeModal.tsx:237
 #: src/features/user/components/modals/PasswordChangeModal.tsx:255
@@ -5899,7 +5899,7 @@ msgstr "ביטול עריכת הודעה מתוזמנת"
 msgid "Cancel friend request"
 msgstr "ביטול בקשת חברות"
 
-#: src/features/user/components/modals/FluxerTagChangeModal.tsx:144
+#: src/features/user/components/modals/FluxerTagChangeModal.tsx:145
 msgid "Cancel if you want to choose a different username instead."
 msgstr "בטל אם ברצונך לבחור שם משתמש אחר במקום זאת."
 
@@ -6142,8 +6142,8 @@ msgstr "ממורכז"
 
 #. Title of the modal where the user picks an avatar source (file upload or GIF provider). Keep it concise.
 #: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:110
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:396
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:432
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:394
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:430
 msgid "Change avatar"
 msgstr "שינוי תמונת פרופיל"
 
@@ -6289,7 +6289,7 @@ msgid "Change username"
 msgstr "שינוי שם משתמש"
 
 #. Short label in the FluxerTag change modal. Keep it concise.
-#: src/features/user/components/modals/FluxerTagChangeModal.tsx:47
+#: src/features/user/components/modals/FluxerTagChangeModal.tsx:48
 msgid "Change username form"
 msgstr "טופס שינוי שם משתמש"
 
@@ -6339,7 +6339,7 @@ msgstr "שנה את תמונת הפרופיל שלך"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #. Short label in the FluxerTag change modal. Keep it concise.
-#: src/features/user/components/modals/FluxerTagChangeModal.tsx:51
+#: src/features/user/components/modals/FluxerTagChangeModal.tsx:52
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:77
 msgid "Change your username"
 msgstr "שינוי שם המשתמש שלך"
@@ -6851,7 +6851,7 @@ msgid "Choose hCaptcha or Cloudflare Turnstile for signup challenges."
 msgstr "בחר hCaptcha או Cloudflare Turnstile עבור אתגרי הרשמה."
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:403
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:427
 msgid "Choose how chat moves after you send a message"
 msgstr "בחר כיצד הצ'אט יתקדם לאחר שליחת הודעה"
 
@@ -7139,7 +7139,7 @@ msgid "Claiming to be another person, brand, or organization."
 msgstr "התחזות לאדם, למותג או לארגון אחר."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:151
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:175
 msgid "Clean link"
 msgstr "ניקוי קישור"
 
@@ -7687,7 +7687,7 @@ msgstr "נקודתיים"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:323
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:347
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:154
 msgid "Colon autocomplete"
 msgstr "השלמה אוטומטית של נקודתיים"
@@ -7829,7 +7829,7 @@ msgid "Community"
 msgstr "קהילה"
 
 #. Short label in the guild at capacity modal. Keep it concise.
-#: src/features/guild/components/alerts/GuildAtCapacityModal.tsx:9
+#: src/features/guild/components/alerts/GuildAtCapacityModal.tsx:8
 msgid "Community at capacity"
 msgstr "הקהילה הגיעה למגבלת החברים"
 
@@ -8042,7 +8042,7 @@ msgid "Community-wide"
 msgstr "Community-wide"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:276
+#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:271
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:242
 msgid "Compact"
 msgstr "קומפקטי"
@@ -8126,7 +8126,7 @@ msgstr "כפתור עורך ההודעות"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:371
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:395
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:190
 msgid "Composer buttons"
 msgstr "לחצני עורך ההודעות"
@@ -8138,7 +8138,7 @@ msgstr "מיקוד תיבת טקסט"
 
 #. Button label that opens a dedicated advanced settings modal for configuring screen-share encoder controls.
 #. Button label that opens a dedicated advanced settings modal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:156
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:160
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:162
 msgid "Configure"
 msgstr "הגדרות מתקדמות"
@@ -8179,7 +8179,7 @@ msgid "Configure role settings and permissions"
 msgstr "הגדרות הרשאות ותפקידים"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:239
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:263
 msgid "Configure search engines used from selected text"
 msgstr "הגדר מנועי חיפוש שישמשו בעת בחירת טקסט"
 
@@ -8189,7 +8189,7 @@ msgid "Configure spellcheck, dictionaries, and personal words"
 msgstr "הגדרת בדיקת איות, מילונים ומילים אישיות"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:271
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:295
 msgid "Configure translator providers used from selected text"
 msgstr "הגדר ספקי תרגום המשמשים לתרגום טקסט שנבחר"
 
@@ -8212,7 +8212,7 @@ msgstr "הגדר את תג הפרופיל שלך"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/channel/components/MentionEveryonePopout.tsx:180
 #: src/features/user/components/modals/EmailChangeModal.tsx:340
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:419
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:443
 msgid "Confirm"
 msgstr "אישור"
 
@@ -8264,7 +8264,7 @@ msgid "Confirm voice join"
 msgstr "אישור הצטרפות קולית"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:415
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:439
 msgid "Confirmation"
 msgstr "אישור"
 
@@ -8449,7 +8449,7 @@ msgid "Contact support"
 msgstr "יצירת קשר עם התמיכה"
 
 #. Short label in the authentication content blocked handler. Keep the tone plain and specific.
-#: src/features/auth/components/ContentBlockedHandler.tsx:11
+#: src/features/auth/components/ContentBlockedHandler.tsx:10
 msgid "Content blocked"
 msgstr "התוכן נחסם"
 
@@ -8515,7 +8515,7 @@ msgstr "ניתן לפתוח תפריטי הקשר בלחיצה שמאלית (ע�
 #: src/features/auth/flow/HandoffApprovalFlow.tsx:118
 #: src/features/connection/components/modals/AddConnectionModal.tsx:383
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:711
-#: src/features/user/components/modals/FluxerTagChangeModal.tsx:392
+#: src/features/user/components/modals/FluxerTagChangeModal.tsx:397
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:181
 msgid "Continue"
 msgstr "המשך"
@@ -9000,7 +9000,7 @@ msgid "Could not load this page"
 msgstr "לא ניתן לטעון את הדף הזה"
 
 #. Body of the modal shown when a screen share attempt fails. Advises the user to try sharing the full screen.
-#: src/features/voice/components/alerts/ScreenShareFailedModal.tsx:13
+#: src/features/voice/components/alerts/ScreenShareFailedModal.tsx:12
 msgid "Could not start the screen share. The selected source may no longer be available or may have blocked capture. Try sharing your entire screen or monitor instead of a specific window."
 msgstr "לא ניתן היה להתחיל את שיתוף המסך. ייתכן שהמקור הנבחר אינו זמין עוד או חסם את הלכידה. נסה לשתף את כל המסך או הצג במקום חלון ספציפי."
 
@@ -9558,7 +9558,7 @@ msgid "Cover"
 msgstr "שער"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:267
+#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:262
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:246
 msgid "Cozy"
 msgstr "נעים"
@@ -10034,7 +10034,7 @@ msgid "Custom date range"
 msgstr "טווח תאריכים מותאם אישית"
 
 #. Error message in the FluxerTag change modal.
-#: src/features/user/components/modals/FluxerTagChangeModal.tsx:64
+#: src/features/user/components/modals/FluxerTagChangeModal.tsx:65
 msgid "Custom discriminators are not available on this instance"
 msgstr "מזהים מותאמים אישית אינם זמינים במופע זה"
 
@@ -10099,7 +10099,7 @@ msgid "Custom ringtone"
 msgstr "רינגטון מותאם אישית"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:219
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:243
 msgid "Custom search engine"
 msgstr "מנוע חיפוש מותאם אישית"
 
@@ -10168,7 +10168,7 @@ msgid "Custom title bar"
 msgstr "שורת כותרת מותאמת אישית"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:235
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:259
 msgid "Custom translator"
 msgstr "מתרגם מותאם אישית"
 
@@ -10227,7 +10227,7 @@ msgid "Customize interface elements and behaviors."
 msgstr "התאמה אישית של רכיבי הממשק וההתנהגויות."
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:315
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:339
 msgid "Customize the action bar that appears when hovering over messages"
 msgstr "התאמה אישית של סרגל הפעולות שמופיע כשמרחפים מעל הודעות"
 
@@ -10251,7 +10251,7 @@ msgstr "התאמה אישית של באנר הפרופיל שלך"
 msgid "Customize your tag ({discriminatorLabel}) to your liking with {premiumProductName}"
 msgstr "התאם אישית את התגית שלך ({discriminatorLabel}) לטעמך עם {premiumProductName}"
 
-#: src/features/user/components/modals/FluxerTagChangeModal.tsx:381
+#: src/features/user/components/modals/FluxerTagChangeModal.tsx:386
 msgid "Customize your tag or keep it when changing your username"
 msgstr "התאם אישית את התג שלך או השאר אותו בעת שינוי שם המשתמש שלך"
 
@@ -10663,7 +10663,7 @@ msgstr "ברירת המחדל היא כבוי בנייד כדי לשמור על 
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:203
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:215
 #: src/features/emoji/components/stickers/StickerGridItem.tsx:34
-#: src/features/messaging/commands/MessageCommands.tsx:71
+#: src/features/messaging/commands/MessageCommands.tsx:72
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:135
 #: src/features/theme_studio/sections/LibrarySection.tsx:514
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:399
@@ -10908,7 +10908,7 @@ msgid "Delete this message"
 msgstr "מחיקת ההודעה הזו"
 
 #. Error message in the messaging commands. Keep the tone plain and specific.
-#: src/features/messaging/commands/MessageCommands.tsx:67
+#: src/features/messaging/commands/MessageCommands.tsx:68
 msgid "Delete this message? Can't be undone."
 msgstr "למחוק את ההודעה הזו? לא ניתן לבטל פעולה זו."
 
@@ -12197,7 +12197,7 @@ msgstr "טיוטה"
 msgid "Drag and drop"
 msgstr "גרור ושחרר"
 
-#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:295
+#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:290
 msgid "Drag and drop a sticker file here (one at a time)"
 msgstr "גרור ושחרר קובץ מדבקה לכאן (אחד בכל פעם)"
 
@@ -12206,7 +12206,7 @@ msgstr "גרור ושחרר קובץ מדבקה לכאן (אחד בכל פעם)"
 msgid "Drag and drop area for file upload"
 msgstr "גרור ושחרר קבצים להעלאה"
 
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:471
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:470
 msgid "Drag and drop emoji files here"
 msgstr "גרור ושחרר קובצי אימוג'י לכאן"
 
@@ -12808,12 +12808,12 @@ msgid "Emoji & sticker packs"
 msgstr "חבילות אימוג'י ומדבקות"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:327
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:351
 msgid "Emoji autocomplete"
 msgstr "השלמה אוטומטית של אימוג'י"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:379
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:403
 msgid "Emoji button"
 msgstr "כפתור אימוג'י"
 
@@ -12848,7 +12848,7 @@ msgid "Emoji name must be at most 32 characters long"
 msgstr "שם האימוג'י יכול להכיל עד 32 תווים"
 
 #. Description in the community emoji upload section. {maxSize} is the formatted size limit.
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:95
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:96
 msgid "Emoji names need at least 2 characters and can use letters, numbers, and underscores. Emojis must be under {maxSize}. Static images are resized to 128x128 pixels and compressed automatically. Animated emojis and SVGs must already fit the limit."
 msgstr "שמות אימוג'י צריכים לכלול לפחות 2 תווים ויכולים להשתמש באותיות, מספרים וקו תחתון. גודל האימוג'י לא יעלה על {maxSize}. תמונות סטטיות יוקטנו לגודל של 128x128 פיקסלים ויידחסו באופן אוטומטי. אימוג'ים מונפשים וקבצי SVG צריכים להתאים כבר למגבלה."
 
@@ -12896,7 +12896,7 @@ msgstr "חבילות אימוג'י"
 msgid "Emoji picker"
 msgstr "בורר אימוג'י"
 
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:451
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:450
 msgid "Emoji slots"
 msgstr "מקומות לאמוג'י"
 
@@ -12921,13 +12921,13 @@ msgid "Emojis"
 msgstr "אמוג'יז"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:347
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:371
 msgid "Emoticon"
 msgstr "אמוטיקון"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:343
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:367
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:142
 msgid "Emoticons"
 msgstr "אמוטיקונים"
@@ -13337,6 +13337,11 @@ msgstr "משופר"
 msgctxt "noise-suppression-option"
 msgid "Enhanced"
 msgstr "משופר"
+
+#. Settings search entry description. One-line summary of what the settings search entry controls.
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:147
+msgid "Ensures file messages appear in the order you sent them"
+msgstr "מוודא שהודעות קבצים יופיעו בסדר שבו שלחת אותן"
 
 #. Keyboard key label for confirming a mass-mention warning.
 #. Keyboard shortcut keycap label for Enter. Keep it short.
@@ -13816,7 +13821,7 @@ msgid "Expand"
 msgstr "הרחבה"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:303
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:327
 msgid "Expand action bar"
 msgstr "הרחבת סרגל הפעולות"
 
@@ -14019,7 +14024,7 @@ msgstr "הצג את סעיף אזור הזמן המיועד רק למנהלים 
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:319
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:343
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:158
 msgid "Expression autocomplete"
 msgstr "השלמה אוטומטית של ביטויים"
@@ -14073,7 +14078,7 @@ msgstr "חיצוני"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Warning text in the external link warning modal. Keep the tone plain and specific.
 #: src/features/messaging/components/modals/ExternalLinkWarningModal.tsx:17
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:191
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:215
 msgid "External link warning"
 msgstr "אזהרת קישור חיצוני"
 
@@ -14219,7 +14224,7 @@ msgstr "הטעינה נכשלה"
 msgid "Failed to load authorized applications"
 msgstr "טעינת היישומים המורשים נכשלה"
 
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:444
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:443
 msgid "Failed to load emojis. Try again later."
 msgstr "טעינת האימוג'י נכשלה. נסו שוב מאוחר יותר."
 
@@ -14243,7 +14248,7 @@ msgid "Failed to load shareable sources."
 msgstr "טעינת המקורות הניתנים לשיתוף נכשלה."
 
 #. Error message in the guild stickers tab.
-#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:74
+#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:71
 msgid "Failed to load stickers"
 msgstr "טעינת המדבקות נכשלה"
 
@@ -14293,7 +14298,7 @@ msgid "Failed to pin message"
 msgstr "ההצמדה של ההודעה נכשלה"
 
 #. Error message in the guild emoji tab.
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:54
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:55
 msgid "Failed to prepare emojis"
 msgstr "הכנת האימוג'י נכשלה"
 
@@ -14439,12 +14444,12 @@ msgid "Failed to upload custom sound"
 msgstr "העלאת הצליל המותאם אישית נכשלה"
 
 #. Error message in the emoji upload failure modal. startLabel is a chunk label like "#1"; errorMsg is the server error.
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:62
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:63
 msgid "Failed to upload emojis starting at {startLabel}: {errorMsg}"
 msgstr "העלאת האימוג'י נכשלה החל מ-{startLabel}: {errorMsg}"
 
 #. Error message in the guild emoji tab.
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:58
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:59
 msgid "Failed to upload emojis. Try again."
 msgstr "העלאת האימוג'י נכשלה. יש לנסות שוב."
 
@@ -14538,7 +14543,7 @@ msgid "Feature"
 msgstr "תכונה"
 
 #. Short label in the feature temporarily disabled modal.
-#: src/features/app/components/alerts/FeatureTemporarilyDisabledModal.tsx:9
+#: src/features/app/components/alerts/FeatureTemporarilyDisabledModal.tsx:8
 msgid "Feature temporarily disabled"
 msgstr "התכונה מושבתת זמנית"
 
@@ -14580,13 +14585,18 @@ msgstr "הקובץ גדול מדי. הגודל המקסימלי הוא {maxSize}
 msgid "File options"
 msgstr "אפשרויות קובץ"
 
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:135
+msgid "File ordering"
+msgstr "סדר קבצים"
+
 #. Title of the file-too-large alert variant that offers a Plutonium upsell.
-#: src/features/messaging/components/alerts/FileSizeTooLargeModal.tsx:38
+#: src/features/messaging/components/alerts/FileSizeTooLargeModal.tsx:35
 msgid "File size limit exceeded"
 msgstr "חריגה ממגבלת גודל הקובץ"
 
 #. Title of the file-too-large alert.
-#: src/features/messaging/components/alerts/FileSizeTooLargeModal.tsx:34
+#: src/features/messaging/components/alerts/FileSizeTooLargeModal.tsx:31
 msgid "File size too large"
 msgstr "גודל הקובץ גדול מדי"
 
@@ -15436,7 +15446,7 @@ msgid "Gap"
 msgstr "רווח"
 
 #. Short label in the temporary invite requires presence modal.
-#: src/features/app/components/alerts/TemporaryInviteRequiresPresenceModal.tsx:9
+#: src/features/app/components/alerts/TemporaryInviteRequiresPresenceModal.tsx:8
 msgid "Gateway connection required"
 msgstr "נדרש חיבור ל-Gateway"
 
@@ -15512,7 +15522,7 @@ msgid "Get {premiumProductName} to customize your tag"
 msgstr "קבלו את {premiumProductName} כדי להתאים אישית את התג שלכם"
 
 #. Description text in the FluxerTag change modal. Preserve {premiumProductName}; it is inserted by code. Keep the tone plain and specific.
-#: src/features/user/components/modals/FluxerTagChangeModal.tsx:55
+#: src/features/user/components/modals/FluxerTagChangeModal.tsx:56
 msgid "Get {premiumProductName} to customize your tag or keep it when changing your username"
 msgstr "קבלו את {premiumProductName} כדי להתאים אישית את התג שלכם או לשמור אותו בעת שינוי שם המשתמש שלכם"
 
@@ -15550,7 +15560,7 @@ msgid "GIF"
 msgstr "GIF"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:375
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:399
 msgid "GIF button"
 msgstr "כפתור GIF"
 
@@ -15753,7 +15763,7 @@ msgid "Give everyone on this instance the highest premium limits."
 msgstr "תן לכולם במופע הזה את מגבלות הפרימיום הגבוהות ביותר."
 
 #. Modal body shown when the role-edit form is submitted with an empty role name.
-#: src/features/app/components/alerts/RoleNameBlankModal.tsx:13
+#: src/features/app/components/alerts/RoleNameBlankModal.tsx:12
 msgid "Give the role a name before saving."
 msgstr "יש לתת שם לתפקיד לפני השמירה."
 
@@ -15884,7 +15894,7 @@ msgid "Go to third community"
 msgstr "עבור לקהילה השלישית"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:263
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:287
 msgid "Google lens"
 msgstr "Google Lens"
 
@@ -16395,7 +16405,7 @@ msgid "Hide avatars"
 msgstr "הסתרת תמונות פרופיל"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:455
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:479
 msgid "Hide channels you've muted from community sidebars"
 msgstr "הסתר ערוצים שהשתקת מסרגלי הצד של הקהילה"
 
@@ -16447,7 +16457,7 @@ msgid "Hide members"
 msgstr "הסתרת חברים"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:447
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:471
 msgid "Hide muted"
 msgstr "הסתר מושתקים"
 
@@ -16458,13 +16468,13 @@ msgstr "הסתר ערוצים מושתקים"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced sidebar preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:132
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:435
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:136
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:459
 msgid "Hide muted channels by default"
 msgstr "להסתיר ערוצים מושתקים כברירת מחדל"
 
 #. Confirmation prompt in advanced settings.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:136
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:140
 msgid "Hide muted channels by default?"
 msgstr "להסתיר ערוצים מושתקים כברירת מחדל?"
 
@@ -16637,7 +16647,7 @@ msgid "Hours"
 msgstr "שעות"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:291
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:315
 msgid "Hover buttons"
 msgstr "לחצני ריחוף"
 
@@ -16910,11 +16920,11 @@ msgstr "אם אתם משלמים בכרטיס אשראי ב-PLN, הוא עדיי
 msgid "If you prefer, you can switch to standard USD pricing instead."
 msgstr "אם תעדיף/תעדיפי, תוכל/י לעבור לתמחור רגיל בדולר אמריקאי במקום."
 
-#: src/features/user/components/modals/FluxerTagChangeModal.tsx:349
+#: src/features/user/components/modals/FluxerTagChangeModal.tsx:354
 msgid "If you save this username, your tag will reroll randomly when your {PREMIUM_PRODUCT_NAME} expires on <0>{premiumExpiresAtLabel}</0>, unless it renews."
 msgstr "אם תשמור את שם המשתמש הזה, התג שלך יוגרל מחדש באופן אקראי כשהמנוי שלך ל-{PREMIUM_PRODUCT_NAME} יפוג ב-<0>{premiumExpiresAtLabel}</0>, אלא אם כן הוא יתחדש."
 
-#: src/features/user/components/modals/FluxerTagChangeModal.tsx:356
+#: src/features/user/components/modals/FluxerTagChangeModal.tsx:361
 msgid "If you save this username, your tag will reroll randomly when your {PREMIUM_PRODUCT_NAME} expires, unless it renews."
 msgstr "אם תשמור את שם המשתמש הזה, התג שלך ישתנה באופן אקראי כשיפוג תוקף {PREMIUM_PRODUCT_NAME}, אלא אם כן הוא יחודש."
 
@@ -17045,7 +17055,7 @@ msgid "Image dimensions must be between {min}x{min2} and {max}x{max2} pixels."
 msgstr "מידות התמונה חייבות להיות בין {min}x{min2} לבין {max}x{max2} פיקסלים."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:259
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:283
 msgid "Image lookup"
 msgstr "חיפוש תמונה"
 
@@ -17060,12 +17070,12 @@ msgid "Image preview"
 msgstr "תצוגה מקדימה של תמונה"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:251
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:275
 msgid "Image search"
 msgstr "חיפוש תמונות"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:267
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:291
 msgid "Image search provider"
 msgstr "ספק חיפוש תמונות"
 
@@ -17088,7 +17098,7 @@ msgstr "העלאת תמונה"
 msgid "Images"
 msgstr "תמונות"
 
-#: src/features/messaging/components/alerts/AttachmentPermissionDeniedModal.tsx:38
+#: src/features/messaging/components/alerts/AttachmentPermissionDeniedModal.tsx:35
 msgid "Images pasted from your clipboard are sent as attachments, and you don't have permission to attach files in this channel."
 msgstr "תמונות שהודבקו מהלוח נשלחות כקובץ מצורף, ואין לך הרשאה לצרף קבצים בערוץ זה."
 
@@ -18014,7 +18024,7 @@ msgstr "סרגל התראות להזמנות מושבתות"
 
 #. Button or menu action label in the invite accept modal. Keep it concise.
 #. Button or menu action label in the invites disabled modal. Keep it concise.
-#: src/features/invite/components/alerts/InvitesDisabledModal.tsx:10
+#: src/features/invite/components/alerts/InvitesDisabledModal.tsx:9
 #: src/features/invite/components/modals/InviteAcceptModal.tsx:49
 msgid "Invites paused"
 msgstr "ההזמנות הושהו"
@@ -18954,7 +18964,7 @@ msgid "Link underline"
 msgstr "קו תחתון לקישור"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:195
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:219
 msgid "Link warnings"
 msgstr "אזהרות קישור"
 
@@ -19511,7 +19521,7 @@ msgstr "עדכון ידני של היישום למחשב"
 #. Action label in the inbox popout overflow menu. Marks every inbox channel as read.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/messaging/components/popouts/InboxPopout.tsx:42
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:411
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:435
 msgid "Mark all as read"
 msgstr "סמן הכל כנקרא"
 
@@ -19533,7 +19543,7 @@ msgid "Mark all inbox channels as read"
 msgstr "סמן את כל הערוצים בתיבת הדואר הנכנס כנקראו"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:431
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:455
 msgid "Mark all unread inbox channels as read immediately, without asking to confirm"
 msgstr "סמן את כל ערוצי תיבת הדואר הנכנס שלא נקראו כנקראו באופן מיידי, ללא בקשת אישור"
 
@@ -19634,7 +19644,7 @@ msgid "Markers below slider"
 msgstr "סמנים מתחת למחוון"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:143
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:167
 msgid "Marketing parameters"
 msgstr "פרמטרים שיווקיים"
 
@@ -19741,7 +19751,7 @@ msgid "Mature content media gate"
 msgstr "שער מדיה לתוכן למבוגרים"
 
 #. Error message in the mature content rejected modal.
-#: src/features/moderation/components/alerts/MatureContentRejectedModal.tsx:9
+#: src/features/moderation/components/alerts/MatureContentRejectedModal.tsx:8
 msgid "Mature content not allowed"
 msgstr "תוכן למבוגרים אינו מותר"
 
@@ -19837,7 +19847,7 @@ msgid "Maximum screen share bitrate"
 msgstr "קצב סיביות מרבי לשיתוף מסך"
 
 #. Short label in the max favorite memes modal.
-#: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx:33
+#: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx:34
 #: src/features/expressions/components/modals/GiftAcceptModal.tsx:220
 #: src/features/expressions/components/modals/GiftAcceptModal.tsx:277
 msgid "Maybe later"
@@ -20221,7 +20231,7 @@ msgid "Message @"
 msgstr "הודעה @"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:279
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:303
 msgid "Message action bar"
 msgstr "שורת פעולות להודעה"
 
@@ -20243,7 +20253,7 @@ msgid "Message badge"
 msgstr "תגית הודעה"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:311
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:335
 msgid "Message buttons"
 msgstr "לחצני הודעה"
 
@@ -20319,7 +20329,7 @@ msgid "Message history threshold updated"
 msgstr "סף היסטוריית ההודעות עודכן"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:287
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:311
 msgid "Message hover"
 msgstr "ריחוף הודעה"
 
@@ -20332,7 +20342,7 @@ msgstr "קלט הודעה"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:367
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:391
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:194
 msgid "Message input buttons"
 msgstr "לחצני קלט הודעה"
@@ -20533,7 +20543,7 @@ msgid "Microphone gain"
 msgstr "עוצמת המיקרופון"
 
 #. Title of the modal shown when microphone permission is denied. Keep tone plain.
-#: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx:13
+#: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx:12
 msgid "Microphone permission required"
 msgstr "נדרשת הרשאת מיקרופון"
 
@@ -20821,7 +20831,7 @@ msgid "More actions for {displayName}"
 msgstr "פעולות נוספות עבור {displayName}"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:307
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:331
 msgid "More button"
 msgstr "כפתור נוסף"
 
@@ -21170,7 +21180,7 @@ msgstr "מושתק"
 #: src/features/app/components/layout/sidebar_nav/GuildListItem.tsx:80
 #: src/features/app/components/layout/VoiceStateIcons.tsx:19
 #: src/features/ui/avatars/AvatarWithPresence.tsx:15
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:439
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:463
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:73
 #: src/features/voice/components/voice_participant_tile/shared.ts:75
 #: src/lib/overlay/OverlayContextMenu.tsx:24
@@ -21184,7 +21194,7 @@ msgstr "הושתק על ידי מנהלים"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:443
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:467
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:69
 msgid "Muted channels"
 msgstr "ערוצים מושתקים"
@@ -21539,7 +21549,7 @@ msgid "NEW"
 msgstr "NEW"
 
 #. Description text in the new account guild limit modal.
-#: src/features/guild/components/alerts/NewAccountGuildLimitModal.tsx:13
+#: src/features/guild/components/alerts/NewAccountGuildLimitModal.tsx:12
 msgid "New accounts can join up to 10 communities in the first 24 hours. Try again later."
 msgstr "חשבונות חדשים יכולים להצטרף לעד 10 קהילות ב-24 השעות הראשונות. נסו שוב מאוחר יותר."
 
@@ -21556,20 +21566,20 @@ msgid "New category"
 msgstr "קטגוריה חדשה"
 
 #. Short confirmation button label in advanced settings.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:144
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:148
 msgid "New communities only"
 msgstr "קהילות חדשות בלבד"
 
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:618
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:635
 msgid "New communities you join will automatically have muted channels hidden. Would you also like to apply this setting to all your existing communities?"
 msgstr "קהילות חדשות שתצטרף אליהן יסתירו אוטומטית ערוצים מושתקים. האם תרצה להחיל הגדרה זו גם על כל הקהילות הקיימות שלך?"
 
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:649
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:666
 msgid "New communities you join will no longer have muted channels hidden automatically. Would you also like to show muted channels in all your existing communities?"
 msgstr "ערוצים מושתקים בקהילות חדשות שאליהן תצטרף לא יוסתרו יותר באופן אוטומטי. האם ברצונך להציג ערוצים מושתקים גם בכל הקהילות הקיימות שלך?"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:451
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:475
 msgid "New community muted"
 msgstr "קהילה חדשה הושתקה"
 
@@ -21902,11 +21912,11 @@ msgid "No embeds returned"
 msgstr "לא הוחזרו הטמעות"
 
 #. Empty-state text in the guild emoji tab.
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:46
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:47
 msgid "No emoji slots available"
 msgstr "אין מקום לאמוג'י"
 
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:479
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:478
 msgid "No emojis found matching your search."
 msgstr "לא נמצאו אימוג'ים התואמים לחיפוש שלך."
 
@@ -22157,7 +22167,7 @@ msgid "No scheduled messages"
 msgstr "אין הודעות מתוזמנות"
 
 #. Body of the screen-share-unsupported modal shown when xdg-desktop-portal returns no capturable sources.
-#: src/features/voice/components/alerts/ScreenShareUnsupportedModal.tsx:19
+#: src/features/voice/components/alerts/ScreenShareUnsupportedModal.tsx:18
 msgid "No screens or windows were returned by the Linux screen sharing portal. Try again after checking that your desktop environment allows screen capture."
 msgstr "לא נמצאו מסכים או חלונות שהוחזרו על ידי פורטל שיתוף המסך של לינוקס. נסה שוב לאחר בדיקה שהסביבה הגרפית שלך מאפשרת לכידת מסך."
 
@@ -22185,17 +22195,17 @@ msgid "No specific scopes requested."
 msgstr "לא נתבקשו הרשאות ספציפיות."
 
 #. Empty-state text in the guild stickers tab.
-#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:61
+#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:58
 msgid "No sticker slots available"
 msgstr "אין מקומות פנויים למדבקות"
 
 #. Empty-state text in the guild stickers tab.
-#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:57
+#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:54
 msgid "No stickers found"
 msgstr "לא נמצאו מדבקות"
 
 #. Empty-state text in the guild stickers tab.
-#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:70
+#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:67
 msgid "No stickers found matching your search."
 msgstr "לא נמצאו מדבקות התואמות לחיפוש שלך."
 
@@ -22322,7 +22332,7 @@ msgid "Noise suppression: {noiseSuppressionLabel}"
 msgstr "דיכוי רעשים: {noiseSuppressionLabel}"
 
 #. Section heading for static emoji in community emoji settings.
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:100
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:101
 msgid "Non-animated emoji ({emojiCount})"
 msgstr "אמוג׳י לא מונפשים ({emojiCount})"
 
@@ -22640,7 +22650,7 @@ msgid "One or more attachments couldn't be read or uploaded. The file may have b
 msgstr "לא ניתן היה לקרוא או להעלות קובץ מצורף אחד או יותר. ייתכן שהקובץ הועבר או נמחק. יש להוסיף אותו שוב ולנסות שנית."
 
 #. Body of the file-too-large alert for ambiguous count (single or multiple) over the per-file size limit.
-#: src/features/messaging/components/alerts/FileSizeTooLargeModal.tsx:30
+#: src/features/messaging/components/alerts/FileSizeTooLargeModal.tsx:27
 msgid "One or more files you're trying to upload exceed the maximum size limit of {maxSizeFormatted} per file."
 msgstr "קובץ אחד או יותר שאתה מנסה להעלות חורגים ממגבלת הגודל המקסימלית של {maxSizeFormatted} לקובץ."
 
@@ -23373,6 +23383,11 @@ msgstr "או שלח/י את קישור המתנה לחבר/ה:"
 msgid "Ordered"
 msgstr "מסודר"
 
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:139
+msgid "Ordered upload"
+msgstr "העלאה לפי סדר"
+
 #. Error message in the channel and chat reply preview.
 #: src/features/channel/components/ReplyPreview.tsx:29
 msgid "Original message failed to load"
@@ -24078,12 +24093,12 @@ msgid "Pick the rule to review."
 msgstr "בחר את הכלל לבדיקה."
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:335
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:359
 msgid "Pick what appears when you type a colon in the message input"
 msgstr "בחר מה יופיע כשאתה מקליד נקודתיים בשדה ההודעות"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:387
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:411
 msgid "Pick which buttons show in the message input"
 msgstr "בחר אילו כפתורים יוצגו בשורת ההודעות"
 
@@ -24921,7 +24936,7 @@ msgid "Promotion or instructions encouraging self-harm or eating disorders."
 msgstr "קידום או הנחיות המעודדים פגיעה עצמית או הפרעות אכילה."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:423
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:447
 msgid "Prompt"
 msgstr "הנחיה"
 
@@ -25197,7 +25212,7 @@ msgid "Quick CSS replaced from {fileName}."
 msgstr "ה-CSS המהיר הוחלף מ־{fileName}."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:295
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:319
 msgid "Quick reactions"
 msgstr "תגובות מהירות"
 
@@ -25621,7 +25636,7 @@ msgid "Reference copied."
 msgstr "ההפניה הועתקה."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:147
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:171
 msgid "Referral parameters"
 msgstr "פרמטרים של הפניה"
 
@@ -25918,8 +25933,8 @@ msgstr "הסר קובץ מצורף"
 msgid "Remove authenticator app"
 msgstr "הסרת אפליקציית אימות"
 
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:406
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:442
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:404
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:440
 msgid "Remove avatar"
 msgstr "הסר/י תמונת פרופיל"
 
@@ -26938,14 +26953,14 @@ msgid "Reverify your phone number to continue using {productName}."
 msgstr "יש לאמת מחדש את מספר הטלפון שלך כדי להמשיך להשתמש ב- {productName}."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:247
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:271
 msgid "Reverse image"
 msgstr "חיפוש תמונה הפוך"
 
 #. Generic action label that runs a reverse-image search on the selected media.
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:603
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:243
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:267
 msgid "Reverse image search"
 msgstr "חיפוש תמונה הפוך"
 
@@ -26955,7 +26970,7 @@ msgid "Reverse image search provider"
 msgstr "ספק חיפוש תמונה הפוך"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:275
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:299
 msgid "Reverse image search providers"
 msgstr "ספקי חיפוש תמונות הפוך."
 
@@ -27020,7 +27035,7 @@ msgid "Review the permissions {productName} uses for voice, video, screen sharin
 msgstr "בדוק את ההרשאות ש-{productName} משתמש בהן עבור קול, וידאו, שיתוף מסך וקיצורי דרך."
 
 #. Intro text in the error modal shown after some emoji uploads fail.
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:71
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:72
 msgid "Review these files and try again with smaller or simpler images."
 msgstr "יש לבדוק את הקבצים האלה ולנסות שוב עם תמונות קטנות או פשוטות יותר."
 
@@ -27191,7 +27206,7 @@ msgid "Role name"
 msgstr "שם התפקיד"
 
 #. Validation modal title when the role-edit form is submitted with an empty role name.
-#: src/features/app/components/alerts/RoleNameBlankModal.tsx:9
+#: src/features/app/components/alerts/RoleNameBlankModal.tsx:8
 msgid "Role name is required"
 msgstr "שם התפקיד נדרש"
 
@@ -27300,7 +27315,7 @@ msgid "Same time as you"
 msgstr "אותה שעה כמו שלך"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:155
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:179
 msgid "Sanitize link"
 msgstr "ניקוי קישור"
 
@@ -27421,7 +27436,7 @@ msgid "Saved media autocomplete"
 msgstr "השלמה אוטומטית של מדיה שמורה"
 
 #. Short label in the max favorite memes modal.
-#: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx:15
+#: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx:16
 msgid "Saved media limit reached"
 msgstr "הגעת למגבלת המדיה השמורה"
 
@@ -27528,7 +27543,7 @@ msgstr "הודעות קורא מסך"
 
 #. Heading in the screen-share picker when macOS screen recording permission is missing.
 #. Title of the modal shown when screen recording permission is denied. Keep tone plain.
-#: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx:21
+#: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx:20
 #: src/features/voice/components/modals/screen_share_picker_modal/ScreenSharePickerDisplayPermissionPrompt.tsx:18
 msgid "Screen recording permission required"
 msgstr "נדרשת הרשאת הקלטת מסך"
@@ -27561,7 +27576,7 @@ msgid "Screen share encoder controls"
 msgstr "בקרות מקודד שיתוף מסך"
 
 #. Title of a modal shown when an active screen share stops unexpectedly.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:111
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:110
 msgctxt "screen-share"
 msgid "Screen share ended"
 msgstr "שיתוף מסך הסתיים"
@@ -27648,17 +27663,17 @@ msgid "Screen sharing codec"
 msgstr "קודק שיתוף מסך"
 
 #. Title of the modal shown when a screen share attempt fails due to a video source error.
-#: src/features/voice/components/alerts/ScreenShareFailedModal.tsx:9
+#: src/features/voice/components/alerts/ScreenShareFailedModal.tsx:8
 msgid "Screen sharing failed"
 msgstr "שיתוף המסך נכשל"
 
 #. Body of the screen-share-unsupported modal. Mentions specific browsers and OSes; keep all proper nouns intact.
-#: src/features/voice/components/alerts/ScreenShareUnsupportedModal.tsx:13
+#: src/features/voice/components/alerts/ScreenShareUnsupportedModal.tsx:12
 msgid "Screen sharing is not supported on this device or browser. This feature requires a desktop browser that supports screen sharing, such as Chrome, Firefox, or Edge on Windows, macOS, or Linux."
 msgstr "שיתוף מסך אינו נתמך במכשיר או בדפדפן זה. תכונה זו דורשת דפדפן שולחני התומך בשיתוף מסך, כגון Chrome, Firefox, או Edge ב-Windows, macOS, או Linux."
 
 #. Title of the modal shown when screen sharing is not supported on the current device / browser.
-#: src/features/voice/components/alerts/ScreenShareUnsupportedModal.tsx:9
+#: src/features/voice/components/alerts/ScreenShareUnsupportedModal.tsx:8
 msgid "Screen sharing not supported"
 msgstr "שיתוף מסך אינו נתמך"
 
@@ -27698,15 +27713,15 @@ msgstr "גללו למטה כדי לראות את כל ההטבות הכלולו�
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the whats new modal.
 #: src/features/app/components/whats_new/WhatsNewModal.tsx:28
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:395
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:419
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:178
 msgid "Scroll to bottom"
 msgstr "גלול למטה"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced message input preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:124
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:391
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:128
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:415
 msgid "Scroll to bottom when sending a message"
 msgstr "גלול לתחתית בעת שליחת הודעה"
 
@@ -27758,7 +27773,7 @@ msgid "Search bans"
 msgstr "חיפוש חסימות"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:255
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:279
 msgid "Search by image"
 msgstr "חיפוש לפי תמונה"
 
@@ -27795,17 +27810,17 @@ msgid "Search countries…"
 msgstr "חיפוש מדינות…"
 
 #. Button or menu action label in the guild emoji tab. Keep it concise.
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:91
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:92
 msgid "Search emojis"
 msgstr "חיפוש אימוג'י"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:207
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:231
 msgid "Search engine"
 msgstr "מנוע חיפוש"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:203
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:227
 msgid "Search engines"
 msgstr "מנועי חיפוש"
 
@@ -27935,7 +27950,7 @@ msgid "Search scope: {label}"
 msgstr "היקף חיפוש: {label}"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:215
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:239
 msgid "Search selected text"
 msgstr "חיפוש טקסט נבחר"
 
@@ -27960,7 +27975,7 @@ msgid "Search shortcuts…"
 msgstr "חיפוש קיצורי דרך…"
 
 #. Button or menu action label in the guild stickers tab. Keep it concise.
-#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:49
+#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:46
 msgid "Search stickers"
 msgstr "חיפוש מדבקות"
 
@@ -28423,7 +28438,7 @@ msgstr "שליחת דיווח נוסף"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:383
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:407
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:170
 msgid "Send button"
 msgstr "כפתור שליחה"
@@ -28438,6 +28453,13 @@ msgstr "שלח קוד"
 #: src/features/moderation/components/report/ReportStepDetails.tsx:302
 msgid "Send DSA report"
 msgstr "שליחת דיווח DSA"
+
+#. Settings search entry label. Names the settings search entry in the settings UI.
+#. Short label for an advanced message input preference.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:112
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:127
+msgid "Send file messages in order"
+msgstr "שלח הודעות קבצים לפי הסדר"
 
 #. Button or menu action label in the user profile mobile sheet. Keep it concise.
 #. Button or menu action label in the user profile modal. Keep it concise.
@@ -28631,10 +28653,20 @@ msgstr "שלח/ה הטמעה"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:399
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:423
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:182
 msgid "Sent messages"
 msgstr "הודעות שנשלחו"
+
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:131
+msgid "Sequential send"
+msgstr "שליחה עוקבת"
+
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:143
+msgid "Serial send"
+msgstr "שליחה טורית"
 
 #: src/features/connection/components/modals/AddConnectionModal.tsx:326
 msgid "Serve the token file"
@@ -29098,7 +29130,7 @@ msgid "Shift"
 msgstr "משמרת"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:299
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:323
 msgid "Shift expand"
 msgstr "הזז הרחבה"
 
@@ -29299,7 +29331,7 @@ msgstr "הצג הטמעות ותצוגה מקדימה של קישורי אתרי
 #. Short label for an advanced message input preference.
 #. Short label in the channel and chat textarea plus menu. Keep it concise.
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx:55
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:116
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:120
 msgid "Show emoji button"
 msgstr "הצגת לחצן אימוג'י"
 
@@ -29353,7 +29385,7 @@ msgid "Show icon when collapsed"
 msgstr "הצג סמל כשהתיקייה מקופלת"
 
 #. Short confirmation button label in advanced settings.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:152
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:156
 msgid "Show in all communities"
 msgstr "הצג בכל הקהילות"
 
@@ -29543,7 +29575,7 @@ msgstr "הצגת מדיה שמורה בהשלמה אוטומטית של ביטו
 #. Short label for an advanced message input preference.
 #. Short label in the channel and chat textarea plus menu. Keep it concise.
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx:59
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:120
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:124
 msgid "Show send button"
 msgstr "הצגת כפתור השליחה"
 
@@ -29555,7 +29587,7 @@ msgstr "הצג תוכן ספוילר בלחיצה"
 #. Short label for an advanced message input preference.
 #. Short label in the channel and chat textarea plus menu. Keep it concise.
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx:51
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:112
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:116
 msgid "Show stickers button"
 msgstr "הצגת כפתור המדבקות"
 
@@ -29860,14 +29892,14 @@ msgid "Size selection"
 msgstr "בחירת גודל"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:427
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:451
 msgid "Skip"
 msgstr "דלג"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced inbox preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:128
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:407
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:132
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:431
 msgid "Skip \"Mark all as read\" confirmation"
 msgstr "דלג על אישור \"סמן הכל כנקרא\""
 
@@ -29881,7 +29913,7 @@ msgid "Skip external link warnings. Less secure."
 msgstr "דלג על אזהרות קישורים חיצוניים. פחות מאובטח."
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:199
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:223
 msgid "Skip the external link warning for all domains"
 msgstr "דלג על אזהרת הקישור החיצוני עבור כל הדומיינים"
 
@@ -29954,7 +29986,7 @@ msgid "Slow attachment upload"
 msgstr "העלאת קבצים איטית"
 
 #. Short label in the new account guild limit modal. Keep it concise.
-#: src/features/guild/components/alerts/NewAccountGuildLimitModal.tsx:9
+#: src/features/guild/components/alerts/NewAccountGuildLimitModal.tsx:8
 msgid "Slow down"
 msgstr "לאט לאט"
 
@@ -30004,7 +30036,7 @@ msgstr "מצב איטי · המתן {remaining}"
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #. Short label in the slowmode rate limited modal. Keep it concise.
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:249
-#: src/features/slowmode/components/alerts/SlowmodeRateLimitedModal.tsx:14
+#: src/features/slowmode/components/alerts/SlowmodeRateLimitedModal.tsx:13
 msgid "Slowmode active"
 msgstr "מצב איטי פעיל"
 
@@ -30019,7 +30051,7 @@ msgid "Slowmode is enabled, but you are immune."
 msgstr "מצב איטי מופעל, אך אתה חסין."
 
 #. Modal body shown when slowmode blocks sending a message. {duration} is a localized short duration such as "2 minutes".
-#: src/features/slowmode/components/alerts/SlowmodeRateLimitedModal.tsx:18
+#: src/features/slowmode/components/alerts/SlowmodeRateLimitedModal.tsx:17
 msgid "Slowmode is on — wait {duration} before sending another."
 msgstr "מצב איטי מופעל – המתן {duration} לפני שליחת הודעה נוספת."
 
@@ -30087,7 +30119,7 @@ msgid "Smaller media size"
 msgstr "גודל מדיה קטן יותר"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:355
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:379
 msgid "Smiley face"
 msgstr "סמיילי"
 
@@ -30150,12 +30182,12 @@ msgid "Sold out"
 msgstr "אזל מהמלאי"
 
 #. Title of the error modal shown after some emoji uploads fail.
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:67
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:68
 msgid "Some emojis couldn't be added"
 msgstr "לא ניתן היה להוסיף חלק מהאימוג'י"
 
 #. Body of the file-too-large alert when multiple files exceed the per-file size limit. maxSizeFormatted is the limit formatted with units.
-#: src/features/messaging/components/alerts/FileSizeTooLargeModal.tsx:21
+#: src/features/messaging/components/alerts/FileSizeTooLargeModal.tsx:18
 msgid "Some files you're trying to upload exceed the maximum size limit of {maxSizeFormatted} per file."
 msgstr "חלק מהקבצים שאתה מנסה להעלות חורגים ממגבלת הגודל המקסימלית של {maxSizeFormatted} לקובץ."
 
@@ -30794,7 +30826,7 @@ msgid "Start searches with <0>{peoplePrefix}</0> <1>{textChannelPrefix}</1> <2>{
 msgstr "התחל חיפושים עם <0>{peoplePrefix}</0> <1>{textChannelPrefix}</1> <2>{voiceChannelPrefix}</2> <3>{communityPrefix}</3> כדי לצמצם את התוצאות."
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:127
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:151
 msgid "Start uploading attachments as soon as they are added to the message input"
 msgstr "התחל בהעלאת קבצים מצורפים ברגע שהם נוספו לשדה ההודעה"
 
@@ -30923,7 +30955,7 @@ msgid "Sticker attached to the message"
 msgstr "מדבקה מצורפת להודעה"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:331
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:355
 msgid "Sticker autocomplete"
 msgstr "השלמה אוטומטית של מדבקות"
 
@@ -30948,7 +30980,7 @@ msgid "Sticker deleted"
 msgstr "סטיקר נמחק"
 
 #. Short label in the guild stickers tab. Keep it concise.
-#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:53
+#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:50
 msgid "Sticker density"
 msgstr "צפיפות מדבקות"
 
@@ -30996,7 +31028,7 @@ msgstr "הגעת למגבלת חבילות המדבקות"
 msgid "Sticker packs"
 msgstr "חבילות מדבקות"
 
-#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:283
+#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:278
 msgid "Sticker slots"
 msgstr "מקומות למדבקות"
 
@@ -31032,7 +31064,7 @@ msgid "Stickers"
 msgstr "מדבקות"
 
 #. Description in the community sticker upload section. {maxSize} is the formatted size limit.
-#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:82
+#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:79
 msgid "Stickers are saved at 320x320 pixels and must be under {maxSize}. Static images are resized and compressed automatically. Animated stickers and SVGs must already fit the limit."
 msgstr "מדבקות נשמרות ברזולוציה של 320x320 פיקסלים וצריכות להיות קטנות מ-{maxSize}. תמונות סטטיות יוקטנו ויידחסו באופן אוטומטי. מדבקות מונפשות וקבצי SVG צריכים להתאים כבר למגבלה."
 
@@ -31077,7 +31109,7 @@ msgid "Stop"
 msgstr "עצור"
 
 #. Confirmation prompt in advanced settings.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:148
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:152
 msgid "Stop hiding muted channels by default?"
 msgstr "להפסיק להסתיר ערוצים מושתקים כברירת מחדל?"
 
@@ -31228,19 +31260,19 @@ msgid "Strikethrough"
 msgstr "קו חוצה"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:163
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:187
 msgid "Strip parameters"
 msgstr "הסרת פרמטרים"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:159
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:183
 msgid "Strip tracking"
 msgstr "הסרת מעקב"
 
 #. Label in the links tab.
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabLinksTab.tsx:43
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:131
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:155
 msgid "Strip tracking parameters from URLs"
 msgstr "הסרת פרמטרי מעקב מכתובות URL"
 
@@ -31403,7 +31435,7 @@ msgid "SVC mode"
 msgstr "מצב SVC"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:363
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:387
 msgid "Swap common text faces such as :) and <3 for emoji when sending messages"
 msgstr "החלף תווים נפוצים כמו :) ו- <3 באימוג'י כאשר שולחים הודעות"
 
@@ -31754,7 +31786,7 @@ msgstr "כרטיסייה"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the FluxerTag change modal. Keep it concise.
-#: src/features/user/components/modals/FluxerTagChangeModal.tsx:60
+#: src/features/user/components/modals/FluxerTagChangeModal.tsx:61
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:73
 msgid "Tag"
 msgstr "תגית"
@@ -31862,7 +31894,7 @@ msgid "temporarily unavailable"
 msgstr "(לא זמין באופן זמני)"
 
 #. Modal body shown when the user tries to accept a temporary invite while the realtime connection is offline.
-#: src/features/app/components/alerts/TemporaryInviteRequiresPresenceModal.tsx:13
+#: src/features/app/components/alerts/TemporaryInviteRequiresPresenceModal.tsx:12
 msgid "Temporary invites need a live connection. Check yours and try again."
 msgstr "הזמנות זמניות דורשות חיבור פעיל. בדוק את החיבור שלך ונסה שוב."
 
@@ -31943,7 +31975,7 @@ msgstr "עיצוב טקסט"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:359
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:383
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:150
 msgid "Text replacement"
 msgstr "החלפת טקסט"
@@ -31982,12 +32014,12 @@ msgid "Text-to-speech"
 msgstr "Text-to-speech"
 
 #. Body of the TTS-unsupported modal. Mentions specific browsers; keep Chrome, Firefox, Edge, and Brave as literal proper nouns.
-#: src/features/voice/components/alerts/TtsUnsupportedModal.tsx:13
+#: src/features/voice/components/alerts/TtsUnsupportedModal.tsx:12
 msgid "Text-to-speech is not supported by your browser. Some browsers like Brave block this feature for privacy reasons. Try using Chrome, Firefox, or Edge, or adjust your browser's privacy settings."
 msgstr "הדפדפן שלך אינו תומך בטקסט לדיבור. דפדפנים מסוימים, כמו Brave, חוסמים תכונה זו מסיבות פרטיות. נסה להשתמש ב-Chrome, Firefox או Edge, או שנה את הגדרות הפרטיות של הדפדפן שלך."
 
 #. Title of the modal shown when the browser does not support text-to-speech.
-#: src/features/voice/components/alerts/TtsUnsupportedModal.tsx:9
+#: src/features/voice/components/alerts/TtsUnsupportedModal.tsx:8
 msgid "Text-to-speech not supported"
 msgstr "טקסט לדיבור אינו נתמך"
 
@@ -32090,7 +32122,7 @@ msgid "That's everything in the queue."
 msgstr "זה הכל בתור."
 
 #. Description text in the FluxerTag change modal.
-#: src/features/user/components/modals/FluxerTagChangeModal.tsx:68
+#: src/features/user/components/modals/FluxerTagChangeModal.tsx:69
 msgid "The #0000 tag is reserved for Visionary subscribers. Visionary is no longer available for purchase."
 msgstr "התגית #0000 שמורה למנויי Visionary. מינוי Visionary אינו זמין עוד לרכישה."
 
@@ -32148,7 +32180,7 @@ msgid "The file contains the verification token we will fetch from <0>{dnsUrl}</
 msgstr "הקובץ מכיל את אסימון האימות שנאחזר מ-‎<0>{dnsUrl}</0>."
 
 #. Body of the file-too-large alert when a single file exceeds the per-file size limit.
-#: src/features/messaging/components/alerts/FileSizeTooLargeModal.tsx:26
+#: src/features/messaging/components/alerts/FileSizeTooLargeModal.tsx:23
 msgid "The file you're trying to upload exceeds the maximum size limit of {maxSizeFormatted}."
 msgstr "הקובץ שאתה מנסה להעלות חורג ממגבלת הגודל המקסימלי של {maxSizeFormatted}."
 
@@ -32198,7 +32230,7 @@ msgid "The provided redirect_uri must use HTTP or HTTPS."
 msgstr "ה-redirect_uri שסופק חייב להשתמש ב-HTTP או ב-HTTPS."
 
 #. Body of a modal shown when a browser screen share track ends outside the app, for example from the browser sharing controls.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:116
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:115
 msgctxt "screen-share"
 msgid "The screen share source stopped sending video, so your screen share was stopped."
 msgstr "מקור שיתוף המסך הפסיק לשלוח וידאו, ולכן שיתוף המסך שלך הופסק."
@@ -32225,7 +32257,7 @@ msgstr "שירות ההעלאה דחה את המדבקה הזו מכיוון ש�
 msgid "The URL of the {productName} instance you want to sign in to."
 msgstr "כתובת ה-URL של מופע {productName} שאליו ברצונך להיכנס."
 
-#: src/features/user/components/modals/FluxerTagChangeModal.tsx:134
+#: src/features/user/components/modals/FluxerTagChangeModal.tsx:135
 msgid "The username <0>{fluxerTag}</0> is already taken. Continuing will reroll your tag automatically."
 msgstr "שם המשתמש <0>{fluxerTag}</0> כבר תפוס. אם תמשיך, התג שלך ישונה אוטומטית."
 
@@ -32370,7 +32402,7 @@ msgid "There was an error loading the invites. Try again."
 msgstr "אירעה שגיאה בטעינת ההזמנות. יש לנסות שוב."
 
 #. Error message in the guild stickers tab.
-#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:78
+#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:75
 msgid "There was an error loading the stickers. Try again."
 msgstr "אירעה שגיאה בטעינת המדבקות. יש לנסות שוב."
 
@@ -32516,7 +32548,7 @@ msgid "This channel is marked for mature content and may contain material that m
 msgstr "הערוץ הזה מסומן כבעל תוכן למבוגרים ועשוי להכיל חומר שאינו הולם עבור חלק מהמשתמשים."
 
 #. Label in the mature content rejected modal.
-#: src/features/moderation/components/alerts/MatureContentRejectedModal.tsx:13
+#: src/features/moderation/components/alerts/MatureContentRejectedModal.tsx:12
 msgid "This channel is not marked for mature content. Mature content can only be sent in channels marked for mature content. Ask a moderator to update this channel if appropriate."
 msgstr "הערוץ הזה אינו מסומן ככולל תוכן למבוגרים. תוכן למבוגרים ניתן לשלוח רק בערוצים המסומנים ככאלה. בקש ממנהל לעדכן את הערוץ הזה אם זה מתאים."
 
@@ -32579,7 +32611,7 @@ msgid "This community has paused invites. You can try again later."
 msgstr "הקהילה הזו השהתה הזמנות. אפשר לנסות שוב מאוחר יותר."
 
 #. Description text in the guild at capacity modal.
-#: src/features/guild/components/alerts/GuildAtCapacityModal.tsx:13
+#: src/features/guild/components/alerts/GuildAtCapacityModal.tsx:12
 msgid "This community has reached its maximum member limit and is not accepting new members at this time."
 msgstr "הקהילה הזו הגיעה למגבלת החברים המקסימלית שלה ואינה מקבלת חברים חדשים כרגע."
 
@@ -32657,7 +32689,7 @@ msgid "This doesn't look like a valid template response. Make sure you copied th
 msgstr "זו לא נראית כתגובת תבנית חוקית. ודא שהעתקת את מסמך ה-JSON בשלמותו."
 
 #. Generic per-file error text shown when preparing an emoji upload fails.
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:87
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:88
 msgid "This emoji could not be prepared. Try another file or try again in a moment."
 msgstr "לא ניתן היה להכין את האימוג'י הזה. נסה קובץ אחר או נסה שוב בעוד רגע."
 
@@ -32674,7 +32706,7 @@ msgid "This expression is gone"
 msgstr "הביטוי הזה נעלם"
 
 #. Modal body shown when an instance admin has temporarily disabled a feature. Keep plain.
-#: src/features/app/components/alerts/FeatureTemporarilyDisabledModal.tsx:13
+#: src/features/app/components/alerts/FeatureTemporarilyDisabledModal.tsx:12
 msgid "This feature is paused. Try again later."
 msgstr "התכונה הזו מושהית. נסו שוב מאוחר יותר."
 
@@ -32684,7 +32716,7 @@ msgid "This field has an error"
 msgstr "בשדה זה קיימת שגיאה"
 
 #. Error text for animated emoji or SVG uploads that exceed the file size limit. {fileSize} and {maxSize} are formatted file sizes.
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:75
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:76
 msgid "This file is {fileSize}, over the {maxSize} limit. Animated emojis and SVGs must already be small enough to upload. Choose a smaller file or shorten the animation."
 msgstr "הקובץ הזה הוא בגודל {fileSize}, מעל המגבלה של {maxSize}. אימוג'י מונפשים וקבצי SVG חייבים להיות קטנים מספיק כדי להעלות אותם. בחר קובץ קטן יותר או קצר את האנימציה."
 
@@ -32833,7 +32865,7 @@ msgid "This is not the community you're looking for."
 msgstr "זו לא הקהילה שחיפשת."
 
 #. Description text in the too many reactions modal. Keep the tone plain and specific.
-#: src/features/messaging/components/alerts/TooManyReactionsModal.tsx:13
+#: src/features/messaging/components/alerts/TooManyReactionsModal.tsx:12
 msgid "This is one heavy message. Some reactions need to be removed before you can add more."
 msgstr "זו הודעה עמוסה במיוחד. יש להסיר חלק מהריאקציות לפני שתוכל/י להוסיף נוספות."
 
@@ -32855,7 +32887,7 @@ msgid "This is the third option description"
 msgstr "זוהו תיאור האפשרות השלישית"
 
 #. Extra file-too-large alert sentence shown when premium upload-limit upgrades are unavailable.
-#: src/features/messaging/components/alerts/FileSizeTooLargeModal.tsx:42
+#: src/features/messaging/components/alerts/FileSizeTooLargeModal.tsx:39
 msgid "This limit is configured by your instance administrator."
 msgstr "מגבלה זו מוגדרת על ידי מנהל המופע שלך."
 
@@ -33570,7 +33602,7 @@ msgid "Too many attempts. Wait a bit, then try again."
 msgstr "ניסית יותר מדי פעמים. המתן מעט ונסה שוב."
 
 #. Error message in the max guilds modal.
-#: src/features/guild/components/alerts/MaxGuildsModal.tsx:10
+#: src/features/guild/components/alerts/MaxGuildsModal.tsx:9
 msgid "Too many communities"
 msgstr "יותר מדי קהילות"
 
@@ -33627,12 +33659,12 @@ msgid "Track moderator actions across the community."
 msgstr "מעקב אחר פעולות מנהלים ברחבי הקהילה."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:135
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:159
 msgid "Tracking"
 msgstr "מעקב"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:139
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:163
 msgid "Tracking parameters"
 msgstr "פרמטרי מעקב"
 
@@ -33665,7 +33697,7 @@ msgstr "הבעלות הועברה אל {0}."
 #. Generic action label that translates a message body.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:583
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:231
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:255
 msgid "Translate"
 msgstr "תרגום"
 
@@ -33684,12 +33716,12 @@ msgid "Translations are automated. Help improve localization by emailing <0>{I18
 msgstr "התרגומים הם אוטומטיים. עזרו לשפר את הלוקליזציה על ידי שליחת אימייל לכתובת <0>{I18N_EMAIL}</0>."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:223
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:247
 msgid "Translator"
 msgstr "מתרגם"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:227
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:251
 msgid "Translators"
 msgstr "מתרגמים"
 
@@ -33746,14 +33778,14 @@ msgstr "אמת או שקר"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the links tab. Keep it concise.
 #: src/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabLinksTab.tsx:27
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:175
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:199
 msgid "Trust all"
 msgstr "בטח הכל"
 
 #. Label in the links tab.
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabLinksTab.tsx:39
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:171
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:195
 msgid "Trust all external links"
 msgstr "אפשר את כל הקישורים החיצוניים"
 
@@ -33763,17 +33795,17 @@ msgid "Trust all external links?"
 msgstr "לאשר את כל הקישורים החיצוניים?"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:179
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:203
 msgid "Trust all links"
 msgstr "אפשר את כל הקישורים"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:187
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:211
 msgid "Trust domain"
 msgstr "דומיין מהימן"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:183
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:207
 msgid "Trusted domains"
 msgstr "דומיינים מהימנים"
 
@@ -34000,7 +34032,7 @@ msgstr "הפעל פרטיות סטרימינג"
 #. Label in the input tab.
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabInputTab.tsx:10
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:339
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:363
 msgid "Turn text smileys into emoji"
 msgstr "הפעל את המרה של סמלים טקסטואליים לאימוג'י"
 
@@ -34199,8 +34231,8 @@ msgstr "לא ניתן לטעון תצוגה מקדימה."
 msgid "Unable to load profile banner, badges, and bio."
 msgstr "לא ניתן לטעון את באנר הפרופיל, התגים והביוגרפיה."
 
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:272
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:328
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:271
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:327
 msgid "Unable to prepare any emojis for upload. The following errors occurred:"
 msgstr "לא ניתן להכין אימוג'יז להעלאה. אירעו השגיאות הבאות:"
 
@@ -34932,7 +34964,7 @@ msgid "Unsupported icon format"
 msgstr "פורמט אייקון לא נתמך"
 
 #. Title of the error modal shown when an unsupported sticker file type is selected.
-#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:87
+#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:84
 msgid "Unsupported sticker file"
 msgstr "קובץ מדבקה לא נתמך"
 
@@ -35135,8 +35167,8 @@ msgstr "שדרגו עכשיו"
 
 #. Short label in the max bookmarks modal. Preserve {premiumProductName}; it is inserted by code.
 #. Short label in the max favorite memes modal. Preserve {premiumProductName}; it is inserted by code.
-#: src/features/app/components/alerts/MaxBookmarksModal.tsx:35
-#: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx:29
+#: src/features/app/components/alerts/MaxBookmarksModal.tsx:36
+#: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx:30
 msgid "Upgrade to {premiumProductName}"
 msgstr "שדרג ל-{premiumProductName}"
 
@@ -35208,7 +35240,7 @@ msgstr "העלאת צליל מותאם אישית עבור {label}"
 msgid "Upload directly to {displayName}"
 msgstr "העלה ישירות אל {displayName}"
 
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:454
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:453
 msgid "Upload emoji"
 msgstr "העלאת אימוג'י"
 
@@ -35252,7 +35284,7 @@ msgstr "העלה תמונות לדוגמה עבור שיתופי מסך."
 msgid "Upload sound"
 msgstr "העלאת צליל"
 
-#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:286
+#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:281
 msgid "Upload sticker"
 msgstr "העלאת מדבקה"
 
@@ -35857,7 +35889,7 @@ msgstr "משתמש, בוט או ווב-הוק"
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:952
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:567
-#: src/features/user/components/modals/FluxerTagChangeModal.tsx:217
+#: src/features/user/components/modals/FluxerTagChangeModal.tsx:218
 #: src/features/user/components/modals/tabs/my_profile_tab/MyProfileTabUsernameSection.tsx:55
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:53
 msgid "Username"
@@ -35869,7 +35901,7 @@ msgid "Username (optional)"
 msgstr "שם משתמש (אופציונלי)"
 
 #. Short label in the FluxerTag change modal. Keep it concise.
-#: src/features/user/components/modals/FluxerTagChangeModal.tsx:39
+#: src/features/user/components/modals/FluxerTagChangeModal.tsx:40
 msgid "Username already taken"
 msgstr "שם המשתמש כבר תפוס"
 
@@ -35899,11 +35931,11 @@ msgid "Username must be at most 32 characters"
 msgstr "שם המשתמש חייב להיות באורך מקסימלי של 32 תווים"
 
 #. Short label in the FluxerTag change modal. Keep it concise.
-#: src/features/user/components/modals/FluxerTagChangeModal.tsx:43
+#: src/features/user/components/modals/FluxerTagChangeModal.tsx:44
 msgid "Username updated"
 msgstr "שם המשתמש עודכן"
 
-#: src/features/user/components/modals/FluxerTagChangeModal.tsx:210
+#: src/features/user/components/modals/FluxerTagChangeModal.tsx:211
 msgid "Usernames can only contain letters (a-z, A-Z), numbers (0-9), and underscores. Usernames are case-insensitive."
 msgstr "שמות משתמש יכולים להכיל רק אותיות (a-z, A-Z), מספרים (0-9) וקווים תחתונים. שמות משתמש אינם תלויי רישיות."
 
@@ -36996,7 +37028,7 @@ msgid "Volume sliders"
 msgstr "סליידרים של עוצמת קול"
 
 #. Description text in the message delete too quick modal. Keep the tone plain and specific.
-#: src/features/messaging/components/alerts/MessageDeleteTooQuickModal.tsx:13
+#: src/features/messaging/components/alerts/MessageDeleteTooQuickModal.tsx:12
 msgid "Wait a moment before deleting more messages."
 msgstr "המתן רגע לפני מחיקת הודעות נוספות."
 
@@ -37148,7 +37180,7 @@ msgstr "לא הצלחנו להעביר את ההודעה כרגע."
 msgid "We couldn't import that theme library file."
 msgstr "לא הצלחנו לייבא את קובץ ספריית העיצוב הזה."
 
-#: src/features/messaging/components/alerts/AttachmentUploadConnectivityModal.tsx:24
+#: src/features/messaging/components/alerts/AttachmentUploadConnectivityModal.tsx:23
 msgid "We couldn't reach the attachment upload service. {PRODUCT_NAME} can fall back to the standard upload path for messages up to {fallbackSizeFormatted} total, but these attachments exceed that combined limit and can't be sent until connectivity is restored. Try again later or contact <0>{SUPPORT_EMAIL}</0> if this keeps happening."
 msgstr "לא הצלחנו להגיע לשירות העלאת הקבצים המצורפים. {PRODUCT_NAME} יכול לחזור לנתיב ההעלאה הרגיל עבור הודעות עד לגודל כולל של {fallbackSizeFormatted}, אך קבצים מצורפים אלה חורגים מהמגבלה המשולבת הזו ולא ניתן לשלוח אותם עד לחיבור מחדש. נסה שוב מאוחר יותר או צור קשר עם <0>{SUPPORT_EMAIL}</0> אם זה ממשיך לקרות."
 
@@ -37191,7 +37223,7 @@ msgid "We recommend saving these codes now so that you don't get locked out of y
 msgstr "אנו ממליצים לשמור את הקודים האלה עכשיו כדי שלא תינעל מחוץ לחשבונך."
 
 #. Error text for static emoji uploads that still exceed the file size limit after resizing. {fileSize} and {maxSize} are formatted file sizes.
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:81
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:82
 msgid "We resized and compressed this emoji to 128x128 pixels, but it is still {fileSize}. The limit is {maxSize}. Try a simpler image, fewer colors, or a smaller source file."
 msgstr "שינינו את גודל האימוג'י הזה ודחסנו אותו ל-128x128 פיקסלים, אבל הוא עדיין {fileSize}. המגבלה היא {maxSize}. נסה תמונה פשוטה יותר, פחות צבעים או קובץ מקור קטן יותר."
 
@@ -37311,7 +37343,7 @@ msgid "Web authentication"
 msgstr "אימות אינטרנט"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:211
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:235
 msgid "Web search"
 msgstr "חיפוש באינטרנט"
 
@@ -37657,8 +37689,8 @@ msgstr "וואו, כולם מקלידים בבת אחת"
 
 #. Label in the too many attachments modal.
 #. Label in the too many reactions modal.
-#: src/features/messaging/components/alerts/TooManyAttachmentsModal.tsx:10
-#: src/features/messaging/components/alerts/TooManyReactionsModal.tsx:9
+#: src/features/messaging/components/alerts/TooManyAttachmentsModal.tsx:9
+#: src/features/messaging/components/alerts/TooManyReactionsModal.tsx:8
 msgid "Whoa, this is heavy"
 msgstr "וואו, זה כבד"
 
@@ -37741,7 +37773,7 @@ msgid "With {PREMIUM_PRODUCT_NAME}, you can use animated avatars ({ANIMATED_AVAT
 msgstr "עם {PREMIUM_PRODUCT_NAME}, תוכלו להשתמש באווטרים אנימטיביים ({ANIMATED_AVATAR_FORMATS}), בבאנרים לפרופיל, להתאים אישית את התג שלכם ולפתוח הטבות רבות נוספות של {PREMIUM_PRODUCT_NAME}."
 
 #. Premium upsell sentence in the file-too-large alert. premiumProductName is the paid product name; fileSizeLimit is a localized file size.
-#: src/features/messaging/components/alerts/FileSizeTooLargeModal.tsx:46
+#: src/features/messaging/components/alerts/FileSizeTooLargeModal.tsx:43
 msgid "With {premiumProductName}, your per-file upload limit increases to {fileSizeLimit}, plus animated avatars, longer messages, and many other {premiumProductName} perks."
 msgstr "עם {premiumProductName}, מגבלת ההעלאה לקובץ תגדל ל-{fileSizeLimit}, בנוסף לאווטרים אנימטיביים, הודעות ארוכות יותר והרבה הטבות נוספות של {premiumProductName}."
 
@@ -37871,7 +37903,7 @@ msgid "You are about to transfer ownership of this community to <0>{0}</0>. This
 msgstr "אתה עומד להעביר את הבעלות על הקהילה הזו אל <0>{0}</0>. פעולה זו <1>בלתי הפיכה</1> ותאבד את כל הרשאות הבעלים."
 
 #. Error message in the user banned from guild modal. Keep the tone plain and specific.
-#: src/features/moderation/components/alerts/UserBannedFromGuildModal.tsx:13
+#: src/features/moderation/components/alerts/UserBannedFromGuildModal.tsx:12
 msgid "You are banned from this community and cannot join."
 msgstr "נאסר עליך להצטרף לקהילה זו."
 
@@ -37994,7 +38026,7 @@ msgid "You can't add new reactions while you're on timeout."
 msgstr "אינך יכול/ה להוסיף ריאקציות חדשות כשאת/ה בהשעיה."
 
 #. Description text in the attachment permission denied modal. Keep the tone plain and specific.
-#: src/features/messaging/components/alerts/AttachmentPermissionDeniedModal.tsx:20
+#: src/features/messaging/components/alerts/AttachmentPermissionDeniedModal.tsx:17
 msgid "You can't attach files in this channel."
 msgstr "לא ניתן לצרף קבצים בערוץ זה."
 
@@ -38180,11 +38212,11 @@ msgstr "לא ניתן להסיר הרשאה זו מכיוון שהיא תסיר 
 msgid "You changed your nickname in this community from **{previousNickname}** to **{newNickname}**."
 msgstr "שינית את הכינוי שלך בקהילה זו מ-**{previousNickname}** ל-**{newNickname}**."
 
-#: src/features/user/components/modals/FluxerTagChangeModal.tsx:362
+#: src/features/user/components/modals/FluxerTagChangeModal.tsx:367
 msgid "You changed your tag while on {PREMIUM_PRODUCT_NAME}. It will reroll randomly when your {PREMIUM_PRODUCT_NAME} expires on <0>{premiumExpiresAtLabel}</0>, unless it renews."
 msgstr "שינית את התג שלך בזמן שהיית ב- {PREMIUM_PRODUCT_NAME}. הוא יוגרל מחדש באופן אקראי כש- {PREMIUM_PRODUCT_NAME} יפוג ב-<0>{premiumExpiresAtLabel}</0>, אלא אם כן הוא יתחדש."
 
-#: src/features/user/components/modals/FluxerTagChangeModal.tsx:369
+#: src/features/user/components/modals/FluxerTagChangeModal.tsx:374
 msgid "You changed your tag while on {PREMIUM_PRODUCT_NAME}. It will reroll randomly when your {PREMIUM_PRODUCT_NAME} expires, unless it renews."
 msgstr "שינית את התג שלך בזמן שהיית ב-{PREMIUM_PRODUCT_NAME}. הוא ישתנה באופן אקראי כשתוקף ה-{PREMIUM_PRODUCT_NAME} שלך יפוג, אלא אם כן הוא יתחדש."
 
@@ -38502,17 +38534,17 @@ msgid "You're already Visionary"
 msgstr "אתה כבר Visionary"
 
 #. Modal body shown when the bookmarks limit is reached on a self-hosted instance with no upgrade path. Limit count is interpolated.
-#: src/features/app/components/alerts/MaxBookmarksModal.tsx:19
+#: src/features/app/components/alerts/MaxBookmarksModal.tsx:20
 msgid "You're at {bookmarksText} — your instance admin sets this cap. Remove one to add another."
 msgstr "הגעתם ל-{bookmarksText} – מנהל המופע שלכם קבע את המגבלה הזו. הסירו אחד כדי להוסיף אחר."
 
 #. Modal body shown when the bookmarks limit is reached and Plutonium is unavailable on this instance. Limit count is interpolated.
-#: src/features/app/components/alerts/MaxBookmarksModal.tsx:24
+#: src/features/app/components/alerts/MaxBookmarksModal.tsx:25
 msgid "You're at {bookmarksText}. Remove one to add another."
 msgstr "הגעתם ל-{bookmarksText}. הסירו אחד כדי להוסיף אחר."
 
 #. Modal body shown when the favorite-memes limit is reached on a self-hosted instance with no Plutonium upgrade path. Limit text is interpolated.
-#: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx:19
+#: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx:20
 msgid "You're at the cap of {freeItemsText} — your instance admin sets this limit."
 msgstr "הגעת למגבלה של {freeItemsText} — מנהל/ת השרת שלך קבע/ה את המגבלה הזו."
 
@@ -38524,12 +38556,12 @@ msgid "You're at the creation limit. Delete one to create another."
 msgstr "הגעת למגבלת היצירה. מחק פריט אחד כדי ליצור אחר."
 
 #. Modal body shown when the free bookmarks limit is reached and Plutonium would increase it. Free and Plutonium limits are interpolated.
-#: src/features/app/components/alerts/MaxBookmarksModal.tsx:29
+#: src/features/app/components/alerts/MaxBookmarksModal.tsx:30
 msgid "You're at the free cap of {bookmarksText}. {premiumProductName} bumps you up to {premiumBookmarksText} — or remove one to add another."
 msgstr "הגעת למגבלה החינמית של {bookmarksText}. ‏{premiumProductName} מקפיץ אותך ל-{premiumBookmarksText} – או הסר אחד כדי להוסיף אחר."
 
 #. Modal body shown when the free favorite-memes limit is reached and Plutonium would increase it. Free and Plutonium limits are interpolated.
-#: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx:24
+#: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx:25
 msgid "You're at the free cap of {freeItemsText}. {premiumProductName} bumps you up to {premiumItemsText}."
 msgstr "הגעת למגבלה החינמית של {freeItemsText}. {premiumProductName} מקפיץ אותך ל-{premiumItemsText}."
 
@@ -38541,7 +38573,7 @@ msgid "You're at the install limit. Remove one to add another."
 msgstr "הגעת למגבלת ההתקנה. הסר אחד כדי להוסיף אחר."
 
 #. Short label in the user banned from guild modal. Keep it concise. Keep the tone plain and specific.
-#: src/features/moderation/components/alerts/UserBannedFromGuildModal.tsx:9
+#: src/features/moderation/components/alerts/UserBannedFromGuildModal.tsx:8
 msgid "You're banned"
 msgstr "נחסמת"
 
@@ -38566,7 +38598,7 @@ msgid "You're deafened"
 msgstr "אתם במצב השתקה"
 
 #. Label in the message delete too quick modal. Keep the tone plain and specific.
-#: src/features/messaging/components/alerts/MessageDeleteTooQuickModal.tsx:9
+#: src/features/messaging/components/alerts/MessageDeleteTooQuickModal.tsx:8
 msgid "You're deleting messages too quickly"
 msgstr "אתה מוחק הודעות מהר מדי"
 
@@ -38725,12 +38757,12 @@ msgid "You've reached the group DM limit"
 msgstr "הגעת למגבלת קבוצות הדיוור הישיר"
 
 #. Emoji upload limit message in community emoji settings. Do not suggest that communities can be upgraded.
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:50
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:51
 msgid "You've reached the maximum number of emojis. Delete some existing emojis to make room."
 msgstr "הגעת למספר המרבי של אימוג'י. מחק אימוג'י קיימים כדי לפנות מקום."
 
 #. Sticker upload limit message in community sticker settings. Do not suggest that communities can be upgraded.
-#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:65
+#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:62
 msgid "You've reached the maximum number of stickers. Delete some existing stickers to make room."
 msgstr "הגעת למספר המרבי של מדבקות. מחק מדבקות קיימות כדי לפנות מקום."
 
@@ -38803,7 +38835,7 @@ msgid "Your account requires multi-factor authentication, but no supported metho
 msgstr "החשבון שלך דורש אימות רב-שלבי, אך לא הוגדרו שיטות נתמכות במכשיר זה. היכנס/י באמצעות מכשיר עם אפליקציית האימות או מפתח האבטחה שלך, או צור/צרי קשר עם התמיכה."
 
 #. Modal body shown when the safety system blocks the requested action. Keep plain and calm; offer support path.
-#: src/features/auth/components/ContentBlockedHandler.tsx:15
+#: src/features/auth/components/ContentBlockedHandler.tsx:14
 msgid "Your action could not be completed because it was flagged by our safety systems. If you believe this is a mistake, please contact support."
 msgstr "הפעולה שלך לא הושלמה כי היא סומנה על ידי מערכות הבטיחות שלנו. אם לדעתך מדובר בטעות, אנא פנה/י לתמיכה."
 
@@ -38928,12 +38960,12 @@ msgid "Your IP address has been successfully authorized."
 msgstr "כתובת ה-IP שלך אושרה בהצלחה."
 
 #. Error message in the user ip banned from guild modal. Keep the tone plain and specific.
-#: src/features/moderation/components/alerts/UserIpBannedFromGuildModal.tsx:13
+#: src/features/moderation/components/alerts/UserIpBannedFromGuildModal.tsx:12
 msgid "Your IP address is banned from this community and you cannot join."
 msgstr "כתובת ה-IP שלך נחסמה מהקהילה הזו ואינך יכול/ה להצטרף."
 
 #. Label in the user ip banned from guild modal. Keep the tone plain and specific.
-#: src/features/moderation/components/alerts/UserIpBannedFromGuildModal.tsx:9
+#: src/features/moderation/components/alerts/UserIpBannedFromGuildModal.tsx:8
 msgid "Your IP is banned"
 msgstr "כתובת ה-IP שלך נחסמה"
 

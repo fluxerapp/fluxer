@@ -26,6 +26,7 @@ import {
 	SaveGifFavoritesControl,
 	ScrollToBottomOnSendControl,
 	SearchEnginesControl,
+	SequentialFileSendControl,
 	SkipMarkAllAsReadControl,
 	StripTrackingControl,
 	TranslatorsControl,
@@ -76,6 +77,7 @@ export const DIRECT_CONTROL_ITEM_IDS = new Set([
 	'chat-settings-input-buttons',
 	'chat-settings-convert-emoticons',
 	'chat-settings-preupload-attachments',
+	'chat-settings-sequential-file-send',
 	'chat-settings-scroll-to-bottom-on-send',
 	'chat-settings-skip-mark-all-as-read-confirmation',
 	'chat-settings-hide-muted-channels',
@@ -115,6 +117,7 @@ export const COMPACT_SWITCH_CONTROL_ITEM_IDS = new Set([
 	'chat-settings-trust-domains',
 	'chat-settings-convert-emoticons',
 	'chat-settings-preupload-attachments',
+	'chat-settings-sequential-file-send',
 	'chat-settings-scroll-to-bottom-on-send',
 	'chat-settings-skip-mark-all-as-read-confirmation',
 	'chat-settings-hide-muted-channels',
@@ -239,6 +242,10 @@ export const AdvancedSettingControl = observer(({item}: {item: SearchableSetting
 		case 'chat-settings-preupload-attachments':
 			return (
 				<PreuploadMessageAttachmentsControl data-flx="user.advanced-setting-direct-controls.advanced-setting-control.preupload-message-attachments-control" />
+			);
+		case 'chat-settings-sequential-file-send':
+			return (
+				<SequentialFileSendControl data-flx="user.advanced-setting-direct-controls.advanced-setting-control.sequential-file-send-control" />
 			);
 		case 'chat-settings-scroll-to-bottom-on-send':
 			return (

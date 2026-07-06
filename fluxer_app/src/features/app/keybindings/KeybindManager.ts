@@ -1337,7 +1337,9 @@ class KeybindManager {
 			event.backend === 'evdev' || (event.backend === 'native' && isNativeMacOS())
 				? (binding.physicalKeyName ?? binding.keyName)
 				: binding.keyName;
-		if (expectedName !== null) return event.keyName === expectedName;
+		if (expectedName !== null && event.keyName === expectedName) {
+			return true;
+		}
 		return binding.keycode !== null && event.keycode === binding.keycode;
 	}
 

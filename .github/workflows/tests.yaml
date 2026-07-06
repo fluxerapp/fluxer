@@ -1,0 +1,347 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+name: Tests
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+  GHCR_REGISTRY: ghcr.io/${{ github.repository_owner }}
+
+jobs:
+  typecheck:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+
+      - name: Set up Rust toolchain (CI helpers)
+        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
+        with:
+          toolchain: "1.93.0"
+          targets: wasm32-unknown-unknown
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271
+
+      - name: Install Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: >-
+          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- ci
+          --step install_dependencies
+
+      - name: Run typecheck
+        run: >-
+          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- ci
+          --step typecheck
+
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+
+      - name: Set up Rust toolchain (CI helpers)
+        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
+        with:
+          toolchain: "1.93.0"
+          targets: wasm32-unknown-unknown
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271
+
+      - name: Install Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: >-
+          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- ci
+          --step install_dependencies
+
+      - name: Run tests
+        run: >-
+          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- ci
+          --step test
+
+  rust:
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    timeout-minutes: 30
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
+        with:
+          toolchain: stable
+          components: clippy, rustfmt
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271
+
+      - name: Install Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+
+      - name: Cache cargo
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: rust-${{ runner.os }}-${{ hashFiles('Cargo.lock') }}
+          restore-keys: |
+            rust-${{ runner.os }}-
+
+      - name: Install native dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            pkg-config \
+            build-essential \
+            libcurl4-openssl-dev \
+            libvips-dev \
+            libavfilter-dev \
+            libheif-dev \
+            libwebp-dev
+
+      - name: Install Node.js dependencies
+        run: pnpm --filter fluxer_admin --filter fluxer_marketing install
+
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+
+      - name: Clippy (warnings as errors)
+        run: cargo clippy --workspace -- -D warnings
+
+      - name: Run tests
+        run: cargo test --workspace
+
+  gateway:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+
+      - name: Set up Rust toolchain (CI helpers)
+        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
+        with:
+          toolchain: "1.93.0"
+
+      - name: Set up Erlang
+        uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124
+        with:
+          otp-version: '28'
+          rebar3-version: '3.24.0'
+
+      - name: Cache rebar3 dependencies
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: |
+            fluxer_gateway/_build
+            ~/.cache/rebar3
+          key: rebar3-${{ runner.os }}-${{ hashFiles('fluxer_gateway/rebar.lock') }}
+          restore-keys: |
+            rebar3-${{ runner.os }}-
+
+      - name: Check formatting
+        run: >-
+          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- ci
+          --step gateway_fmt
+
+      - name: Compile
+        run: >-
+          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- ci
+          --step gateway_compile
+
+      - name: Run dialyzer
+        run: >-
+          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- ci
+          --step gateway_dialyzer
+
+      - name: Run eunit tests
+        run: >-
+          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- ci
+          --step gateway_eunit
+
+  knip:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+
+      - name: Set up Rust toolchain (CI helpers)
+        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
+        with:
+          toolchain: "1.93.0"
+          targets: wasm32-unknown-unknown
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271
+
+      - name: Install Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: >-
+          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- ci
+          --step install_dependencies
+
+      - name: Run knip
+        run: >-
+          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- ci
+          --step knip
+
+  ci-scripts:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
+        with:
+          toolchain: stable
+          components: rustfmt
+
+      - name: Sync ci helper dependencies
+        run: >-
+          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- ci-scripts
+          --step sync
+
+      - name: Run ci helper tests
+        run: >-
+          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- ci-scripts
+          --step test
+
+  helm-and-scripts:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+
+      - name: Set up Rust toolchain (CI helpers)
+        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
+        with:
+          toolchain: "1.93.0"
+
+      - name: Install helm
+        uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310
+
+      - name: Resolve Helm test build version
+        run: >-
+          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- resolve-calver
+          --github-env
+          --env-name HELM_TEST_BUILD_VERSION
+
+      - name: Helm dependency update (all charts)
+        run: |
+          set -euo pipefail
+          for chart_dir in deploy/helm/*/; do
+            if [[ -f "${chart_dir}Chart.yaml" ]]; then
+              helm dependency update "$chart_dir"
+            fi
+          done
+
+      - name: Helm lint (all charts)
+        run: |
+          set -euo pipefail
+          FAILED=0
+          for chart_dir in deploy/helm/*/; do
+            if [[ -f "${chart_dir}Chart.yaml" ]]; then
+              echo "--- Linting ${chart_dir} ---"
+              VALUES_ARGS=()
+              if [[ -f "${chart_dir}values.yaml" ]]; then
+                VALUES_ARGS=(-f "${chart_dir}values.yaml")
+              fi
+              EXTRA_SETS=(--set-string "global.registry=${GHCR_REGISTRY}")
+              case "${chart_dir}" in
+                *gateway*)
+                  EXTRA_SETS+=(--set-string "gateway.tag=${HELM_TEST_BUILD_VERSION}" --set-string "gateway.build.version=${HELM_TEST_BUILD_VERSION}")
+                  ;;
+                *api*)
+                  EXTRA_SETS+=(--set-string app.name=api --set-string "app.tag=${HELM_TEST_BUILD_VERSION}" --set-string app.config=stable --set-string "app.build.version=${HELM_TEST_BUILD_VERSION}")
+                  ;;
+                *app-proxy*)
+                  EXTRA_SETS+=(--set-string app.name=app-proxy --set-string "app.tag=${HELM_TEST_BUILD_VERSION}" --set-string app.config=stable --set-string "app.build.version=${HELM_TEST_BUILD_VERSION}")
+                  ;;
+                *admin*)
+                  EXTRA_SETS+=(--set-string app.name=admin --set-string "app.tag=${HELM_TEST_BUILD_VERSION}" --set-string app.config=stable --set-string "app.build.version=${HELM_TEST_BUILD_VERSION}")
+                  ;;
+                *marketing*)
+                  EXTRA_SETS+=(--set-string app.name=marketing --set-string "app.tag=${HELM_TEST_BUILD_VERSION}" --set-string app.config=stable --set-string "app.build.version=${HELM_TEST_BUILD_VERSION}")
+                  ;;
+                *docs*)
+                  EXTRA_SETS+=(--set-string app.name=docs --set-string "app.tag=${HELM_TEST_BUILD_VERSION}" --set-string app.config=stable --set-string "app.build.version=${HELM_TEST_BUILD_VERSION}")
+                  ;;
+                *media-proxy*)
+                  EXTRA_SETS+=(--set-string "mediaProxy.tag=${HELM_TEST_BUILD_VERSION}" --set-string "staticProxy.tag=${HELM_TEST_BUILD_VERSION}" --set-string "mediaProxy.build.version=${HELM_TEST_BUILD_VERSION}" --set-string "staticProxy.build.version=${HELM_TEST_BUILD_VERSION}")
+                  ;;
+                *uploads*)
+                  EXTRA_SETS+=(--set-string app.name=uploads --set-string "app.tag=${HELM_TEST_BUILD_VERSION}" --set-string app.config=stable --set-string "app.build.version=${HELM_TEST_BUILD_VERSION}")
+                  ;;
+                *worker*)
+                  EXTRA_SETS+=(--set-string "workerRealtime.tag=${HELM_TEST_BUILD_VERSION}" --set-string "workerUnfurl.tag=${HELM_TEST_BUILD_VERSION}" --set-string "workerLifecycle.tag=${HELM_TEST_BUILD_VERSION}" --set-string "workerBatch.tag=${HELM_TEST_BUILD_VERSION}" --set-string "workerRealtime.build.version=${HELM_TEST_BUILD_VERSION}" --set-string "workerUnfurl.build.version=${HELM_TEST_BUILD_VERSION}" --set-string "workerLifecycle.build.version=${HELM_TEST_BUILD_VERSION}" --set-string "workerBatch.build.version=${HELM_TEST_BUILD_VERSION}")
+                  ;;
+                *gifs*|*messages*|*snowflakes*|*unfurl*|*users*)
+                  EXTRA_SETS+=(--set-string "svc.tag=${HELM_TEST_BUILD_VERSION}" --set-string "svc.build.version=${HELM_TEST_BUILD_VERSION}" --set-string svc.build.channel=stable)
+                  ;;
+              esac
+              if ! helm lint "$chart_dir" "${VALUES_ARGS[@]}" "${EXTRA_SETS[@]}" --strict; then
+                FAILED=1
+              fi
+            fi
+          done
+          if [[ "$FAILED" -ne 0 ]]; then
+            echo "::error::One or more Helm charts failed linting"
+            exit 1
+          fi
+
+      - name: Helm template (gateway)
+        run: |
+          set -euo pipefail
+          helm template fluxer-gateway deploy/helm/gateway \
+            -f deploy/helm/gateway/values.yaml \
+            --set-string "global.registry=${GHCR_REGISTRY}" \
+            --set-string "gateway.tag=${HELM_TEST_BUILD_VERSION}" \
+            --set-string "gateway.build.version=${HELM_TEST_BUILD_VERSION}" \
+            -n fluxer > /dev/null
+          echo "Gateway chart templates render successfully."
+
+      - name: Validate gateway manifests with kubeconform
+        run: |
+          set -euo pipefail
+          helm template fluxer-gateway deploy/helm/gateway \
+            -f deploy/helm/gateway/values.yaml \
+            --set-string "global.registry=${GHCR_REGISTRY}" \
+            --set-string "gateway.tag=${HELM_TEST_BUILD_VERSION}" \
+            --set-string "gateway.build.version=${HELM_TEST_BUILD_VERSION}" \
+            -n fluxer \
+            | docker run -i --rm ghcr.io/yannh/kubeconform:v0.6.7 \
+                -strict -summary -kubernetes-version 1.31.0

@@ -151,7 +151,10 @@ export class AuthRequestService {
 	}
 
 	startSso(data: SsoStartRequest) {
-		return this.ssoService.startLogin(data.redirect_to ?? undefined);
+		return this.ssoService.startLogin({
+			redirectTo: data.redirect_to ?? undefined,
+			redirectUri: data.redirect_uri ?? undefined,
+		});
 	}
 
 	completeSso(data: SsoCompleteRequest, request: Request) {

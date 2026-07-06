@@ -2,7 +2,7 @@
 
 import {defineContentI18nLocaleMessages} from '../ContentI18nMessages';
 
-export const CONTENT_I18N_ES_ES_MESSAGES = defineContentI18nLocaleMessages({
+const CONTENT_I18N_ES_ES_MESSAGES = defineContentI18nLocaleMessages({
 	"billing.eu_withdrawal_waiver_checkout": "Si soy un consumidor de la UE/EEE, doy mi consentimiento expreso para que el contenido digital de {product_name} {premium_tier_name} se proporcione de inmediato y reconozco que pierdo mi derecho legal de desistimiento una vez que se conceda el acceso. Esto no afecta a otros derechos de consumo obligatorios. Consulta los [Términos del servicio]({terms_url}).",
 	"bulk_message_deletion.complete": "Hemos terminado de eliminar tus mensajes. Hemos eliminado {message_count, plural, =0 {0 mensajes} one {# mensaje} other {# mensajes}} de {channel_count, plural, =0 {0 sitios} one {# sitio} other {# sitios}}.",
 	"content.virus_detected": "Ese archivo se ha marcado como potencialmente inseguro y se ha eliminado.",

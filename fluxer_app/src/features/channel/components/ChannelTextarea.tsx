@@ -575,6 +575,10 @@ const ChannelTextareaContent = observer(
 						<TooManyAttachmentsModal data-flx="channel.channel-textarea.handle-file-button-click.too-many-attachments-modal" />
 					)),
 				);
+				return;
+			}
+			if (files.length > 0) {
+				textareaRef.current?.focus();
 			}
 		}, [canAttachFiles, channel.id, textareaInputDisabled, maxAttachments, uploadAttachments.length]);
 		const handleUploadMessageAsFile = useCallback(async () => {
@@ -599,6 +603,7 @@ const ChannelTextareaContent = observer(
 			}
 			setValue('');
 			DraftCommands.deleteDraft(channel.id);
+			textareaRef.current?.focus();
 		}, [textareaInputDisabled, canAttachFiles, value, channel.id, uploadAttachments.length, maxAttachments]);
 		useTextareaExpressionHandlers({
 			setValue,

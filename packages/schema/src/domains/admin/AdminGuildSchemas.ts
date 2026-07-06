@@ -47,6 +47,12 @@ export const GuildAdminResponse = z.object({
 		.nullable()
 		.optional()
 		.describe('Custom content warning text shown before entry'),
+	approximate_member_count: Int32Type.optional().describe(
+		'Approximate total member count (only when with_counts is true)'
+	),
+	approximate_presence_count: Int32Type.optional().describe(
+		'Approximate online member count (only when with_counts is true)'
+	),
 });
 
 export type GuildAdminResponse = z.infer<typeof GuildAdminResponse>;

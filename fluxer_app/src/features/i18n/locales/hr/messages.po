@@ -345,8 +345,8 @@ msgstr "{count, plural, one {# privitak} other {# privitka}}"
 msgid "{count, plural, one {# blocked message} other {# blocked messages}}"
 msgstr "{count, plural, one {# blokirana poruka} other {# blokirane poruke}}"
 
-#: src/features/app/components/alerts/MaxBookmarksModal.tsx:50
-#: src/features/app/components/alerts/MaxBookmarksModal.tsx:83
+#: src/features/app/components/alerts/MaxBookmarksModal.tsx:51
+#: src/features/app/components/alerts/MaxBookmarksModal.tsx:76
 msgid "{count, plural, one {# bookmark} other {# bookmarks}}"
 msgstr "{count, plural, one {# oznaka} other {# oznake}}"
 
@@ -420,8 +420,8 @@ msgstr "{count, plural, one {# reakcija} few {# reakcije} other {# reakcija}}"
 msgid "{count, plural, one {# reactor} other {# reactors}}"
 msgstr "{count, plural, one {# reakcija} few {# reakcije} other {# reakcija}}"
 
-#: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx:44
-#: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx:82
+#: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx:45
+#: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx:79
 msgid "{count, plural, one {# saved media item} other {# saved media items}}"
 msgstr "{count, plural, one {# spremljeni medijski sadržaj} other {# spremljena medijska sadržaja} few {# spremljena medijska sadržaja} many {# spremljenih medijskih sadržaja}}"
 
@@ -500,7 +500,7 @@ msgstr "{count, plural, one {Odjavi # uređaj} other {Odjavi # uređaja}}"
 msgid "{count, plural, one {Used # time.} other {Used # times.}}"
 msgstr "{count, plural, one {Korišteno # put.} other {Korišteno # puta.}}"
 
-#: src/features/messaging/components/alerts/TooManyAttachmentsModal.tsx:21
+#: src/features/messaging/components/alerts/TooManyAttachmentsModal.tsx:20
 msgid "{count, plural, one {You can only upload # file at a time. Try again with fewer files.} other {You can only upload # files at a time. Try again with fewer files.}}"
 msgstr "{count, plural, one {Možete poslati samo # datoteku odjednom. Pokušajte ponovno s manje datoteka.} other {Možete poslati samo # datoteka odjednom. Pokušajte ponovno s manje datoteka.}}"
 
@@ -525,7 +525,7 @@ msgstr "{count, plural, one {Već ste povezani na ovaj glasovni kanal s # drugog
 msgid "{count, plural, one {You're already using the one allowed connection for this voice channel. Switch to this device or cancel.} other {You're already using all # allowed connections for this voice channel. Switch to this device or cancel.}}"
 msgstr "{count, plural, one {Već koristite jednu dopuštenu vezu za ovaj glasovni kanal. Prebacite se na ovaj uređaj ili odustanite.} other {Već koristite sve # dopuštene veze za ovaj glasovni kanal. Prebacite se na ovaj uređaj ili odustanite.}}"
 
-#: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx:65
+#: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx:62
 msgid "{count, plural, one {You're at the cap of # saved media item. Remove one to add another.} other {You're at the cap of # saved media items. Remove one to add another.}}"
 msgstr "{count, plural, one {Dosegnuli ste ograničenje od # spremljene medijske stavke. Uklonite jednu da biste dodali drugu.} other {Dosegnuli ste ograničenje od # spremljenih medijskih stavki. Uklonite jednu da biste dodali drugu.}}"
 
@@ -545,7 +545,7 @@ msgstr "{count, plural, one {Dosegnuli ste ograničenje od # instaliranog paketa
 msgid "{count, plural, one {You're at the limit of # sticker pack. Delete one to create another.} other {You're at the limit of # sticker packs. Delete one to create another.}}"
 msgstr "{count, plural, one {Dosegnuli ste ograničenje od # paketa naljepnica. Izbrišite jedan da biste stvorili drugi.} other {Dosegnuli ste ograničenje od # paketa naljepnica. Izbrišite jedan da biste stvorili drugi.}}"
 
-#: src/features/guild/components/alerts/MaxGuildsModal.tsx:25
+#: src/features/guild/components/alerts/MaxGuildsModal.tsx:24
 msgid "{count, plural, one {You've reached the maximum number of communities you can join (# community). Leave a community before joining another one.} other {You've reached the maximum number of communities you can join (# communities). Leave a community before joining another one.}}"
 msgstr "{count, plural, one {Dosegli ste maksimalan broj zajednica kojima se možete pridružiti (# zajednica). Napustite zajednicu prije nego što se pridružite drugoj.} other {Dosegli ste maksimalan broj zajednica kojima se možete pridružiti (# zajednica). Napustite zajednicu prije nego što se pridružite drugoj.}}"
 
@@ -1124,22 +1124,22 @@ msgid "{productName} member since"
 msgstr "Član {productName} od"
 
 #. Body of the camera-permission-denied modal on web. {productName} is Fluxer.
-#: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx:40
+#: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx:39
 msgid "{productName} needs access to your camera to enable video chat. Grant camera permission in your browser settings and try again."
 msgstr "Aplikaciji {productName} potreban je pristup vašoj kameri za omogućavanje videopoziva. Dajte dopuštenje za kameru u postavkama preglednika i pokušajte ponovno."
 
 #. Body of the camera-permission-denied modal on Windows and Linux. {productName} is Fluxer.
-#: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx:35
+#: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx:34
 msgid "{productName} needs access to your camera. Allow camera access in your operating system privacy settings and restart the app."
 msgstr "Aplikacija {productName} treba pristup vašoj kameri. Omogućite pristup kameri u postavkama privatnosti operativnog sustava i ponovno pokrenite aplikaciju."
 
 #. Body of the microphone-permission-denied modal on web. {productName} is Fluxer.
-#: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx:30
+#: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx:29
 msgid "{productName} needs access to your microphone to enable voice chat. Grant microphone permission in your browser settings and try again."
 msgstr "Aplikaciji {productName} potreban je pristup vašem mikrofonu za omogućavanje glasovnog chata. Dajte dopuštenje za mikrofon u postavkama preglednika i pokušajte ponovno."
 
 #. Body of the microphone-permission-denied modal on Windows and Linux. {productName} is Fluxer.
-#: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx:25
+#: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx:24
 msgid "{productName} needs access to your microphone. Allow microphone access in your operating system privacy settings and restart the app."
 msgstr "Aplikaciji {productName} potreban je pristup vašem mikrofonu. Omogućite pristup mikrofonu u postavkama privatnosti operativnog sustava i ponovno pokrenite aplikaciju."
 
@@ -1154,7 +1154,7 @@ msgid "{productName} needs microphone access to list your devices."
 msgstr "Aplikacija {productName} treba pristup mikrofonu za popisivanje vaših uređaja."
 
 #. Body of the screen-permission-denied modal on non-mac desktop platforms. {productName} is Fluxer.
-#: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx:45
+#: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx:44
 msgid "{productName} needs screen recording access. Allow screen recording in your operating system privacy settings and restart the app."
 msgstr "{productName} treba pristup snimanju zaslona. Dopustite snimanje zaslona u postavkama privatnosti vašeg operativnog sustava i ponovno pokrenite aplikaciju."
 
@@ -1179,7 +1179,7 @@ msgid "{productName} spellcheck settings…"
 msgstr "Postavke provjere pravopisa za {productName}…"
 
 #. Label in the invites disabled modal.
-#: src/features/invite/components/alerts/InvitesDisabledModal.tsx:14
+#: src/features/invite/components/alerts/InvitesDisabledModal.tsx:13
 msgid "{productName} spotted a possible raid here. Invites are paused — try again later."
 msgstr "{productName} je ovdje uočio mogući napad. Pozivnice su pauzirane — pokušajte ponovno kasnije."
 
@@ -2247,7 +2247,7 @@ msgid "Action"
 msgstr "Radnja"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:283
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:307
 msgid "Action bar"
 msgstr "Traka radnji"
 
@@ -2844,7 +2844,7 @@ msgid "Administrator"
 msgstr "Administrator"
 
 #. Error message in the invites disabled modal.
-#: src/features/invite/components/alerts/InvitesDisabledModal.tsx:18
+#: src/features/invite/components/alerts/InvitesDisabledModal.tsx:17
 msgid "Admins paused invites — you can't join right now."
 msgstr "Administratori su pauzirali pozivnice — trenutačno se ne možete pridružiti."
 
@@ -3253,7 +3253,7 @@ msgid "Already set to cancel"
 msgstr "Već je postavljeno za otkazivanje"
 
 #. Toggle-switch label in the moderator delete-message confirmation dialog. When enabled, the message is reported (category: other) before being deleted. {productName} is the product name (e.g., Fluxer).
-#: src/features/messaging/commands/MessageCommands.tsx:75
+#: src/features/messaging/commands/MessageCommands.tsx:76
 msgid "Also report this message to the {productName} Safety Team"
 msgstr "Prijavi ovu poruku i sigurnosnom timu {productName}a"
 
@@ -3423,12 +3423,12 @@ msgstr "I još 1 drugi poziv"
 msgid "Animate on interaction"
 msgstr "Animacija pri interakciji"
 
-#: src/features/expressions/utils/AnimatedAvifModalUtils.tsx:27
+#: src/features/expressions/utils/AnimatedAvifModalUtils.tsx:26
 msgid "Animated {AVIF_FORMAT_LABEL} files aren't supported. Upload a static {AVIF_FORMAT_LABEL} file instead."
 msgstr "Animirane {AVIF_FORMAT_LABEL} datoteke nisu podržane. Umjesto toga prenesite statičnu {AVIF_FORMAT_LABEL} datoteku."
 
 #. Modal title shown when an animated AVIF upload is rejected by the client.
-#: src/features/expressions/utils/AnimatedAvifModalUtils.tsx:12
+#: src/features/expressions/utils/AnimatedAvifModalUtils.tsx:11
 msgid "Animated {avifFormatLabel} not supported"
 msgstr "Animirani {avifFormatLabel} nije podržan"
 
@@ -3476,7 +3476,7 @@ msgid "Animated emoji"
 msgstr "Animirani emotikoni"
 
 #. Section heading for animated emoji in community emoji settings.
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:104
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:105
 msgid "Animated emoji ({emojiCount})"
 msgstr "Animirani emojiji ({emojiCount})"
 
@@ -3861,7 +3861,7 @@ msgid "Apply theme"
 msgstr "Primijeni temu"
 
 #. Short confirmation button label in advanced settings.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:140
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:144
 msgid "Apply to all communities"
 msgstr "Primijeni na sve zajednice"
 
@@ -4019,7 +4019,7 @@ msgid "asc or desc"
 msgstr "uzlazno ili silazno"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:351
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:375
 msgid "ASCII smileys"
 msgstr "ASCII emotikoni"
 
@@ -4119,7 +4119,7 @@ msgid "Attachment upload"
 msgstr "Prijenos privitka"
 
 #. Short label in the attachment upload connectivity modal. Keep it concise.
-#: src/features/messaging/components/alerts/AttachmentUploadConnectivityModal.tsx:13
+#: src/features/messaging/components/alerts/AttachmentUploadConnectivityModal.tsx:12
 msgid "Attachment upload unavailable"
 msgstr "Prijenos privitka nije dostupan"
 
@@ -4619,7 +4619,7 @@ msgid "Automatically remove tracking parameters (like utm_source, fbclid, gclid)
 msgstr "Automatski ukloni parametre za praćenje (kao što su utm_source, fbclid, gclid) iz URL-ova u porukama koje šalješ. Očisti vezu prije nego što dođe do bilo koga drugog."
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:167
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:191
 msgid "Automatically remove tracking parameters from URLs in messages you send"
 msgstr "Automatski ukloni parametre za praćenje iz URL-ova u porukama koje šalješ"
 
@@ -4685,8 +4685,8 @@ msgstr "Dostupno u aplikaciji za stolna računala."
 #. Form label for a webhook avatar image.
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #: src/features/ui/components/BaseAvatar.tsx:17
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:374
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:422
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:372
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:420
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:13
 #: src/features/webhook/components/WebhookListItem.tsx:251
 msgid "Avatar"
@@ -5273,7 +5273,7 @@ msgid "Bookmark"
 msgstr "Zabilježi"
 
 #. Short label in the max bookmarks modal.
-#: src/features/app/components/alerts/MaxBookmarksModal.tsx:15
+#: src/features/app/components/alerts/MaxBookmarksModal.tsx:16
 msgid "Bookmark limit reached"
 msgstr "Dosegnuto ograničenje oznaka"
 
@@ -5761,7 +5761,7 @@ msgid "Camera on"
 msgstr "Kamera uključena"
 
 #. Title of the modal shown when camera permission is denied. Keep tone plain.
-#: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx:17
+#: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx:16
 msgid "Camera permission required"
 msgstr "Potrebno je dopuštenje za kameru"
 
@@ -5805,12 +5805,12 @@ msgid "Can't access that email?"
 msgstr "Ne možete pristupiti toj e-pošti?"
 
 #. Error message in the attachment permission denied modal. Keep the tone plain and specific.
-#: src/features/messaging/components/alerts/AttachmentPermissionDeniedModal.tsx:12
+#: src/features/messaging/components/alerts/AttachmentPermissionDeniedModal.tsx:9
 msgid "Can't paste image here"
 msgstr "Ovdje nije moguće zalijepiti sliku"
 
 #. Error message in the attachment permission denied modal. Keep the tone plain and specific.
-#: src/features/messaging/components/alerts/AttachmentPermissionDeniedModal.tsx:16
+#: src/features/messaging/components/alerts/AttachmentPermissionDeniedModal.tsx:13
 msgid "Can't upload files here"
 msgstr "Ovdje nije moguće učitati datoteke"
 
@@ -5872,7 +5872,7 @@ msgstr "Kanarinac tester CTA nagbar"
 #: src/features/user/components/modals/EmailChangeModal.tsx:289
 #: src/features/user/components/modals/EmailChangeModal.tsx:311
 #: src/features/user/components/modals/EmailChangeModal.tsx:326
-#: src/features/user/components/modals/FluxerTagChangeModal.tsx:389
+#: src/features/user/components/modals/FluxerTagChangeModal.tsx:394
 #: src/features/user/components/modals/PasswordChangeModal.tsx:226
 #: src/features/user/components/modals/PasswordChangeModal.tsx:237
 #: src/features/user/components/modals/PasswordChangeModal.tsx:255
@@ -5899,7 +5899,7 @@ msgstr "Odustani od uređivanja zakazane poruke"
 msgid "Cancel friend request"
 msgstr "Poništi zahtjev za prijateljstvo"
 
-#: src/features/user/components/modals/FluxerTagChangeModal.tsx:144
+#: src/features/user/components/modals/FluxerTagChangeModal.tsx:145
 msgid "Cancel if you want to choose a different username instead."
 msgstr "Poništite ako želite odabrati drugo korisničko ime."
 
@@ -6142,8 +6142,8 @@ msgstr "Centrirano"
 
 #. Title of the modal where the user picks an avatar source (file upload or GIF provider). Keep it concise.
 #: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:110
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:396
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:432
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:394
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:430
 msgid "Change avatar"
 msgstr "Promijeni avatar"
 
@@ -6289,7 +6289,7 @@ msgid "Change username"
 msgstr "Promijeni korisničko ime"
 
 #. Short label in the FluxerTag change modal. Keep it concise.
-#: src/features/user/components/modals/FluxerTagChangeModal.tsx:47
+#: src/features/user/components/modals/FluxerTagChangeModal.tsx:48
 msgid "Change username form"
 msgstr "Obrazac za promjenu korisničkog imena"
 
@@ -6339,7 +6339,7 @@ msgstr "Promijenite profilnu sliku"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #. Short label in the FluxerTag change modal. Keep it concise.
-#: src/features/user/components/modals/FluxerTagChangeModal.tsx:51
+#: src/features/user/components/modals/FluxerTagChangeModal.tsx:52
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:77
 msgid "Change your username"
 msgstr "Promijenite svoje korisničko ime"
@@ -6851,7 +6851,7 @@ msgid "Choose hCaptcha or Cloudflare Turnstile for signup challenges."
 msgstr "Odaberite hCaptcha ili Cloudflare Turnstile za izazove prilikom prijave."
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:403
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:427
 msgid "Choose how chat moves after you send a message"
 msgstr "Odaberite kako se razgovor nastavlja nakon što pošaljete poruku"
 
@@ -7139,7 +7139,7 @@ msgid "Claiming to be another person, brand, or organization."
 msgstr "Predstavljanje kao druga osoba, brend ili organizacija."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:151
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:175
 msgid "Clean link"
 msgstr "Očisti poveznicu"
 
@@ -7687,7 +7687,7 @@ msgstr "Dvotočka"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:323
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:347
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:154
 msgid "Colon autocomplete"
 msgstr "Automatsko dovršavanje dvotočke"
@@ -7829,7 +7829,7 @@ msgid "Community"
 msgstr "Zajednica"
 
 #. Short label in the guild at capacity modal. Keep it concise.
-#: src/features/guild/components/alerts/GuildAtCapacityModal.tsx:9
+#: src/features/guild/components/alerts/GuildAtCapacityModal.tsx:8
 msgid "Community at capacity"
 msgstr "Zajednica je puna"
 
@@ -8042,7 +8042,7 @@ msgid "Community-wide"
 msgstr "Community-wide"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:276
+#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:271
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:242
 msgid "Compact"
 msgstr "Kompaktno"
@@ -8126,7 +8126,7 @@ msgstr "Gumb za sastavljanje"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:371
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:395
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:190
 msgid "Composer buttons"
 msgstr "Gumbi za sastavljanje poruka"
@@ -8138,7 +8138,7 @@ msgstr "Fokusiranje sastavljača"
 
 #. Button label that opens a dedicated advanced settings modal for configuring screen-share encoder controls.
 #. Button label that opens a dedicated advanced settings modal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:156
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:160
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:162
 msgid "Configure"
 msgstr "Konfiguriraj"
@@ -8179,7 +8179,7 @@ msgid "Configure role settings and permissions"
 msgstr "Konfigurirajte postavke i dopuštenja uloge"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:239
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:263
 msgid "Configure search engines used from selected text"
 msgstr "Konfigurirajte pretraživače koji se koriste za odabran tekst"
 
@@ -8189,7 +8189,7 @@ msgid "Configure spellcheck, dictionaries, and personal words"
 msgstr "Konfigurirajte provjeru pravopisa, rječnike i osobne riječi"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:271
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:295
 msgid "Configure translator providers used from selected text"
 msgstr "Konfigurirajte pružatelje prijevoda koji se koriste za odabrani tekst"
 
@@ -8212,7 +8212,7 @@ msgstr "Konfigurirajte svoju značku profila"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/channel/components/MentionEveryonePopout.tsx:180
 #: src/features/user/components/modals/EmailChangeModal.tsx:340
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:419
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:443
 msgid "Confirm"
 msgstr "Potvrdi"
 
@@ -8264,7 +8264,7 @@ msgid "Confirm voice join"
 msgstr "Potvrdi pridruživanje glasovnom chatu"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:415
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:439
 msgid "Confirmation"
 msgstr "Potvrda"
 
@@ -8449,7 +8449,7 @@ msgid "Contact support"
 msgstr "Kontaktirajte podršku"
 
 #. Short label in the authentication content blocked handler. Keep the tone plain and specific.
-#: src/features/auth/components/ContentBlockedHandler.tsx:11
+#: src/features/auth/components/ContentBlockedHandler.tsx:10
 msgid "Content blocked"
 msgstr "Sadržaj blokiran"
 
@@ -8515,7 +8515,7 @@ msgstr "Kontekstni izbornici mogu se otvoriti lijevim klikom (na gumbe) ili desn
 #: src/features/auth/flow/HandoffApprovalFlow.tsx:118
 #: src/features/connection/components/modals/AddConnectionModal.tsx:383
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:711
-#: src/features/user/components/modals/FluxerTagChangeModal.tsx:392
+#: src/features/user/components/modals/FluxerTagChangeModal.tsx:397
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:181
 msgid "Continue"
 msgstr "Nastavi"
@@ -9000,7 +9000,7 @@ msgid "Could not load this page"
 msgstr "Nije moguće učitati ovu stranicu"
 
 #. Body of the modal shown when a screen share attempt fails. Advises the user to try sharing the full screen.
-#: src/features/voice/components/alerts/ScreenShareFailedModal.tsx:13
+#: src/features/voice/components/alerts/ScreenShareFailedModal.tsx:12
 msgid "Could not start the screen share. The selected source may no longer be available or may have blocked capture. Try sharing your entire screen or monitor instead of a specific window."
 msgstr "Nije moguće pokrenuti dijeljenje zaslona. Odabrani izvor možda više nije dostupan ili je blokirao snimanje. Pokušajte umjesto određenog prozora dijeliti cijeli zaslon ili monitor."
 
@@ -9558,7 +9558,7 @@ msgid "Cover"
 msgstr "Naslovna"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:267
+#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:262
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:246
 msgid "Cozy"
 msgstr "Ugodno"
@@ -10034,7 +10034,7 @@ msgid "Custom date range"
 msgstr "Prilagođeni raspon datuma"
 
 #. Error message in the FluxerTag change modal.
-#: src/features/user/components/modals/FluxerTagChangeModal.tsx:64
+#: src/features/user/components/modals/FluxerTagChangeModal.tsx:65
 msgid "Custom discriminators are not available on this instance"
 msgstr "Prilagođeni diskriminatori nisu dostupni na ovoj instanci"
 
@@ -10099,7 +10099,7 @@ msgid "Custom ringtone"
 msgstr "Prilagođena melodija zvona"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:219
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:243
 msgid "Custom search engine"
 msgstr "prilagođeni mehanizam za pretraživanje"
 
@@ -10168,7 +10168,7 @@ msgid "Custom title bar"
 msgstr "Prilagođena naslovna traka"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:235
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:259
 msgid "Custom translator"
 msgstr "prilagođeni prevoditelj"
 
@@ -10227,7 +10227,7 @@ msgid "Customize interface elements and behaviors."
 msgstr "Prilagodite elemente i ponašanje sučelja."
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:315
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:339
 msgid "Customize the action bar that appears when hovering over messages"
 msgstr "Prilagodite traku radnji koja se prikazuje kada prijeđete mišem preko poruka"
 
@@ -10251,7 +10251,7 @@ msgstr "Prilagodite natpis profila"
 msgid "Customize your tag ({discriminatorLabel}) to your liking with {premiumProductName}"
 msgstr "Prilagodite svoju oznaku ({discriminatorLabel}) po želji uz {premiumProductName}"
 
-#: src/features/user/components/modals/FluxerTagChangeModal.tsx:381
+#: src/features/user/components/modals/FluxerTagChangeModal.tsx:386
 msgid "Customize your tag or keep it when changing your username"
 msgstr "Prilagodite svoju oznaku ili je zadržite prilikom promjene korisničkog imena"
 
@@ -10663,7 +10663,7 @@ msgstr "Na mobilnim uređajima je zadano isključeno radi očuvanja baterije i u
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:203
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:215
 #: src/features/emoji/components/stickers/StickerGridItem.tsx:34
-#: src/features/messaging/commands/MessageCommands.tsx:71
+#: src/features/messaging/commands/MessageCommands.tsx:72
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:135
 #: src/features/theme_studio/sections/LibrarySection.tsx:514
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:399
@@ -10908,7 +10908,7 @@ msgid "Delete this message"
 msgstr "Izbriši ovu poruku"
 
 #. Error message in the messaging commands. Keep the tone plain and specific.
-#: src/features/messaging/commands/MessageCommands.tsx:67
+#: src/features/messaging/commands/MessageCommands.tsx:68
 msgid "Delete this message? Can't be undone."
 msgstr "Izbrisati ovu poruku? Ne može se poništiti."
 
@@ -12197,7 +12197,7 @@ msgstr "Skica"
 msgid "Drag and drop"
 msgstr "Povuci i ispusti"
 
-#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:295
+#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:290
 msgid "Drag and drop a sticker file here (one at a time)"
 msgstr "Ovdje povucite i ispustite datoteku naljepnice (jednu po jednu)"
 
@@ -12206,7 +12206,7 @@ msgstr "Ovdje povucite i ispustite datoteku naljepnice (jednu po jednu)"
 msgid "Drag and drop area for file upload"
 msgstr "Povucite i ispustite datoteku za prijenos"
 
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:471
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:470
 msgid "Drag and drop emoji files here"
 msgstr "Povucite i ispustite datoteke emojija ovdje"
 
@@ -12808,12 +12808,12 @@ msgid "Emoji & sticker packs"
 msgstr "Paketi emojija i naljepnica"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:327
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:351
 msgid "Emoji autocomplete"
 msgstr "Automatsko dovršavanje emoji表情符号"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:379
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:403
 msgid "Emoji button"
 msgstr "Gumb za emoji"
 
@@ -12848,7 +12848,7 @@ msgid "Emoji name must be at most 32 characters long"
 msgstr "Naziv emojija mora imati najviše 32 znaka"
 
 #. Description in the community emoji upload section. {maxSize} is the formatted size limit.
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:95
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:96
 msgid "Emoji names need at least 2 characters and can use letters, numbers, and underscores. Emojis must be under {maxSize}. Static images are resized to 128x128 pixels and compressed automatically. Animated emojis and SVGs must already fit the limit."
 msgstr "Nazivi emotikona moraju imati najmanje 2 znaka i mogu sadržavati slova, brojeve i podvlake. Emotikoni moraju biti manji od {maxSize}. Statične slike se automatski mijenjaju veličine na 128x128 piksela i komprimiraju. Animirani emotikoni i SVG-ovi već trebaju odgovarati limitu."
 
@@ -12896,7 +12896,7 @@ msgstr "Paketi emotikona"
 msgid "Emoji picker"
 msgstr "Birač emotikona"
 
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:451
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:450
 msgid "Emoji slots"
 msgstr "Mjesta za emojije"
 
@@ -12921,13 +12921,13 @@ msgid "Emojis"
 msgstr "Emotikoni"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:347
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:371
 msgid "Emoticon"
 msgstr "Emotikon"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:343
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:367
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:142
 msgid "Emoticons"
 msgstr "Emotikoni"
@@ -13337,6 +13337,11 @@ msgstr "Poboljšano"
 msgctxt "noise-suppression-option"
 msgid "Enhanced"
 msgstr "Poboljšano"
+
+#. Settings search entry description. One-line summary of what the settings search entry controls.
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:147
+msgid "Ensures file messages appear in the order you sent them"
+msgstr "Datoteke se prikazuju redoslijedom kojim ste ih poslali"
 
 #. Keyboard key label for confirming a mass-mention warning.
 #. Keyboard shortcut keycap label for Enter. Keep it short.
@@ -13816,7 +13821,7 @@ msgid "Expand"
 msgstr "Proširi"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:303
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:327
 msgid "Expand action bar"
 msgstr "Proširi traku radnji"
 
@@ -14019,7 +14024,7 @@ msgstr "Prikaži odjeljak s vremenskom zonom rezerviran za osoblje u postavkama 
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:319
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:343
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:158
 msgid "Expression autocomplete"
 msgstr "Automatsko dovršavanje izraza"
@@ -14073,7 +14078,7 @@ msgstr "Vanjsko"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Warning text in the external link warning modal. Keep the tone plain and specific.
 #: src/features/messaging/components/modals/ExternalLinkWarningModal.tsx:17
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:191
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:215
 msgid "External link warning"
 msgstr "Upozorenje za vanjsku poveznicu"
 
@@ -14219,7 +14224,7 @@ msgstr "Učitavanje nije uspjelo"
 msgid "Failed to load authorized applications"
 msgstr "Učitavanje autoriziranih aplikacija nije uspjelo"
 
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:444
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:443
 msgid "Failed to load emojis. Try again later."
 msgstr "Učitavanje emotikona nije uspjelo. Pokušajte ponovno kasnije."
 
@@ -14243,7 +14248,7 @@ msgid "Failed to load shareable sources."
 msgstr "Učitavanje izvora za dijeljenje nije uspjelo."
 
 #. Error message in the guild stickers tab.
-#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:74
+#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:71
 msgid "Failed to load stickers"
 msgstr "Naljepnice se nisu uspjele učitati"
 
@@ -14293,7 +14298,7 @@ msgid "Failed to pin message"
 msgstr "Poruka nije prikvačena"
 
 #. Error message in the guild emoji tab.
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:54
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:55
 msgid "Failed to prepare emojis"
 msgstr "Priprema emojija nije uspjela"
 
@@ -14439,12 +14444,12 @@ msgid "Failed to upload custom sound"
 msgstr "Prijenos prilagođenog zvuka nije uspio"
 
 #. Error message in the emoji upload failure modal. startLabel is a chunk label like "#1"; errorMsg is the server error.
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:62
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:63
 msgid "Failed to upload emojis starting at {startLabel}: {errorMsg}"
 msgstr "Prijenos emotikona počevši od {startLabel} nije uspio: {errorMsg}"
 
 #. Error message in the guild emoji tab.
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:58
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:59
 msgid "Failed to upload emojis. Try again."
 msgstr "Prijenos emotikona nije uspio. Pokušajte ponovno."
 
@@ -14538,7 +14543,7 @@ msgid "Feature"
 msgstr "Značajka"
 
 #. Short label in the feature temporarily disabled modal.
-#: src/features/app/components/alerts/FeatureTemporarilyDisabledModal.tsx:9
+#: src/features/app/components/alerts/FeatureTemporarilyDisabledModal.tsx:8
 msgid "Feature temporarily disabled"
 msgstr "Značajka je privremeno onemogućena"
 
@@ -14580,13 +14585,18 @@ msgstr "Datoteka je prevelika. Maksimalna veličina je {maxSize}."
 msgid "File options"
 msgstr "Opcije datoteke"
 
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:135
+msgid "File ordering"
+msgstr "Redoslijed datoteka"
+
 #. Title of the file-too-large alert variant that offers a Plutonium upsell.
-#: src/features/messaging/components/alerts/FileSizeTooLargeModal.tsx:38
+#: src/features/messaging/components/alerts/FileSizeTooLargeModal.tsx:35
 msgid "File size limit exceeded"
 msgstr "Prekoračena veličina datoteke"
 
 #. Title of the file-too-large alert.
-#: src/features/messaging/components/alerts/FileSizeTooLargeModal.tsx:34
+#: src/features/messaging/components/alerts/FileSizeTooLargeModal.tsx:31
 msgid "File size too large"
 msgstr "Datoteka je prevelika"
 
@@ -15436,7 +15446,7 @@ msgid "Gap"
 msgstr "Razmak"
 
 #. Short label in the temporary invite requires presence modal.
-#: src/features/app/components/alerts/TemporaryInviteRequiresPresenceModal.tsx:9
+#: src/features/app/components/alerts/TemporaryInviteRequiresPresenceModal.tsx:8
 msgid "Gateway connection required"
 msgstr "Potrebna je veza s pristupnikom"
 
@@ -15512,7 +15522,7 @@ msgid "Get {premiumProductName} to customize your tag"
 msgstr "Nabavite {premiumProductName} da biste prilagodili svoju oznaku"
 
 #. Description text in the FluxerTag change modal. Preserve {premiumProductName}; it is inserted by code. Keep the tone plain and specific.
-#: src/features/user/components/modals/FluxerTagChangeModal.tsx:55
+#: src/features/user/components/modals/FluxerTagChangeModal.tsx:56
 msgid "Get {premiumProductName} to customize your tag or keep it when changing your username"
 msgstr "Nabavite {premiumProductName} da biste prilagodili svoju oznaku ili je zadržali prilikom promjene korisničkog imena"
 
@@ -15550,7 +15560,7 @@ msgid "GIF"
 msgstr "GIF"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:375
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:399
 msgid "GIF button"
 msgstr "Gumb za GIF-ove"
 
@@ -15753,7 +15763,7 @@ msgid "Give everyone on this instance the highest premium limits."
 msgstr "Omogući svima u ovoj instanci najviša premium ograničenja."
 
 #. Modal body shown when the role-edit form is submitted with an empty role name.
-#: src/features/app/components/alerts/RoleNameBlankModal.tsx:13
+#: src/features/app/components/alerts/RoleNameBlankModal.tsx:12
 msgid "Give the role a name before saving."
 msgstr "Dajte ulozi naziv prije spremanja."
 
@@ -15884,7 +15894,7 @@ msgid "Go to third community"
 msgstr "Idi na treću zajednicu"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:263
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:287
 msgid "Google lens"
 msgstr "Google Lens"
 
@@ -16395,7 +16405,7 @@ msgid "Hide avatars"
 msgstr "Sakrij avatare"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:455
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:479
 msgid "Hide channels you've muted from community sidebars"
 msgstr "Sakrij kanale koje ste isključili iz bočnih traka zajednice"
 
@@ -16447,7 +16457,7 @@ msgid "Hide members"
 msgstr "Sakrij članove"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:447
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:471
 msgid "Hide muted"
 msgstr "Sakrij isključene"
 
@@ -16458,13 +16468,13 @@ msgstr "Sakrij isključene kanale"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced sidebar preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:132
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:435
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:136
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:459
 msgid "Hide muted channels by default"
 msgstr "Sakrij isključene kanale po zadanim postavkama"
 
 #. Confirmation prompt in advanced settings.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:136
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:140
 msgid "Hide muted channels by default?"
 msgstr "Sakriti isključene kanale po zadanim postavkama?"
 
@@ -16637,7 +16647,7 @@ msgid "Hours"
 msgstr "Sati"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:291
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:315
 msgid "Hover buttons"
 msgstr "Gumbi za lebdenje"
 
@@ -16910,11 +16920,11 @@ msgstr "Ako plaćate karticom u PLN-u, ona i dalje mora biti izdana u Poljskoj d
 msgid "If you prefer, you can switch to standard USD pricing instead."
 msgstr "Ako želite, možete se prebaciti na standardne cijene u USD-u."
 
-#: src/features/user/components/modals/FluxerTagChangeModal.tsx:349
+#: src/features/user/components/modals/FluxerTagChangeModal.tsx:354
 msgid "If you save this username, your tag will reroll randomly when your {PREMIUM_PRODUCT_NAME} expires on <0>{premiumExpiresAtLabel}</0>, unless it renews."
 msgstr "Ako spremite ovo korisničko ime, vaša će se oznaka nasumično ponovno generirati kada vaš {PREMIUM_PRODUCT_NAME} istekne dana <0>{premiumExpiresAtLabel}</0>, osim ako se ne obnovi."
 
-#: src/features/user/components/modals/FluxerTagChangeModal.tsx:356
+#: src/features/user/components/modals/FluxerTagChangeModal.tsx:361
 msgid "If you save this username, your tag will reroll randomly when your {PREMIUM_PRODUCT_NAME} expires, unless it renews."
 msgstr "Ako spremite ovo korisničko ime, vaša će se oznaka nasumično ponovno generirati kada vam istekne {PREMIUM_PRODUCT_NAME}, osim ako se ne obnovi."
 
@@ -17045,7 +17055,7 @@ msgid "Image dimensions must be between {min}x{min2} and {max}x{max2} pixels."
 msgstr "Dimenzije slike moraju biti između {min}x{min2} i {max}x{max2} piksela."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:259
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:283
 msgid "Image lookup"
 msgstr "Pretraživanje slika"
 
@@ -17060,12 +17070,12 @@ msgid "Image preview"
 msgstr "Pregled slike"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:251
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:275
 msgid "Image search"
 msgstr "Pretraživanje slika"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:267
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:291
 msgid "Image search provider"
 msgstr "Davatelj usluge pretraživanja slika"
 
@@ -17088,7 +17098,7 @@ msgstr "Prijenos slike"
 msgid "Images"
 msgstr "Slike"
 
-#: src/features/messaging/components/alerts/AttachmentPermissionDeniedModal.tsx:38
+#: src/features/messaging/components/alerts/AttachmentPermissionDeniedModal.tsx:35
 msgid "Images pasted from your clipboard are sent as attachments, and you don't have permission to attach files in this channel."
 msgstr "Slike zalijepljene iz međuspremnika šalju se kao privici, a vi nemate dopuštenje za prilaganje datoteka u ovom kanalu."
 
@@ -18014,7 +18024,7 @@ msgstr "Traka s obavijestima o onemogućenim pozivnicama"
 
 #. Button or menu action label in the invite accept modal. Keep it concise.
 #. Button or menu action label in the invites disabled modal. Keep it concise.
-#: src/features/invite/components/alerts/InvitesDisabledModal.tsx:10
+#: src/features/invite/components/alerts/InvitesDisabledModal.tsx:9
 #: src/features/invite/components/modals/InviteAcceptModal.tsx:49
 msgid "Invites paused"
 msgstr "Pozivnice pauzirane"
@@ -18954,7 +18964,7 @@ msgid "Link underline"
 msgstr "Podcrtavanje poveznice"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:195
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:219
 msgid "Link warnings"
 msgstr "Upozorenja o poveznicama"
 
@@ -19511,7 +19521,7 @@ msgstr "Ručno ažuriranje radne površine"
 #. Action label in the inbox popout overflow menu. Marks every inbox channel as read.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/messaging/components/popouts/InboxPopout.tsx:42
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:411
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:435
 msgid "Mark all as read"
 msgstr "Označi sve kao pročitano"
 
@@ -19533,7 +19543,7 @@ msgid "Mark all inbox channels as read"
 msgstr "Označi sve kanale pristigle pošte kao pročitane"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:431
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:455
 msgid "Mark all unread inbox channels as read immediately, without asking to confirm"
 msgstr "Odmah označi sve nepročitane kanale pristigle pošte kao pročitane, bez traženja potvrde"
 
@@ -19634,7 +19644,7 @@ msgid "Markers below slider"
 msgstr "Oznake ispod klizača"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:143
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:167
 msgid "Marketing parameters"
 msgstr "Marketinški parametri"
 
@@ -19741,7 +19751,7 @@ msgid "Mature content media gate"
 msgstr "Medijski pristupnik za sadržaj za odrasle"
 
 #. Error message in the mature content rejected modal.
-#: src/features/moderation/components/alerts/MatureContentRejectedModal.tsx:9
+#: src/features/moderation/components/alerts/MatureContentRejectedModal.tsx:8
 msgid "Mature content not allowed"
 msgstr "Sadržaj za odrasle nije dopušten"
 
@@ -19837,7 +19847,7 @@ msgid "Maximum screen share bitrate"
 msgstr "Maksimalna brzina prijenosa zaslona"
 
 #. Short label in the max favorite memes modal.
-#: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx:33
+#: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx:34
 #: src/features/expressions/components/modals/GiftAcceptModal.tsx:220
 #: src/features/expressions/components/modals/GiftAcceptModal.tsx:277
 msgid "Maybe later"
@@ -20221,7 +20231,7 @@ msgid "Message @"
 msgstr "Poruka @"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:279
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:303
 msgid "Message action bar"
 msgstr "Traka radnji poruke"
 
@@ -20243,7 +20253,7 @@ msgid "Message badge"
 msgstr "Oznaka poruke"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:311
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:335
 msgid "Message buttons"
 msgstr "Gumbi za poruke"
 
@@ -20319,7 +20329,7 @@ msgid "Message history threshold updated"
 msgstr "Prag povijesti poruka ažuriran"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:287
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:311
 msgid "Message hover"
 msgstr "Zadržavanje pokazivača iznad poruke"
 
@@ -20332,7 +20342,7 @@ msgstr "Unos poruke"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:367
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:391
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:194
 msgid "Message input buttons"
 msgstr "Gumbi za unos poruke"
@@ -20533,7 +20543,7 @@ msgid "Microphone gain"
 msgstr "Pojačanje mikrofona"
 
 #. Title of the modal shown when microphone permission is denied. Keep tone plain.
-#: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx:13
+#: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx:12
 msgid "Microphone permission required"
 msgstr "Potrebno je dopuštenje za mikrofon"
 
@@ -20821,7 +20831,7 @@ msgid "More actions for {displayName}"
 msgstr "Više radnji za {displayName}"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:307
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:331
 msgid "More button"
 msgstr "Gumb Više"
 
@@ -21170,7 +21180,7 @@ msgstr "isključeno"
 #: src/features/app/components/layout/sidebar_nav/GuildListItem.tsx:80
 #: src/features/app/components/layout/VoiceStateIcons.tsx:19
 #: src/features/ui/avatars/AvatarWithPresence.tsx:15
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:439
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:463
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:73
 #: src/features/voice/components/voice_participant_tile/shared.ts:75
 #: src/lib/overlay/OverlayContextMenu.tsx:24
@@ -21184,7 +21194,7 @@ msgstr "Moderatori su vas isključili"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:443
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:467
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:69
 msgid "Muted channels"
 msgstr "Isključeni kanali"
@@ -21539,7 +21549,7 @@ msgid "NEW"
 msgstr "NEW"
 
 #. Description text in the new account guild limit modal.
-#: src/features/guild/components/alerts/NewAccountGuildLimitModal.tsx:13
+#: src/features/guild/components/alerts/NewAccountGuildLimitModal.tsx:12
 msgid "New accounts can join up to 10 communities in the first 24 hours. Try again later."
 msgstr "Novi računi mogu se pridružiti do 10 zajednica u prva 24 sata. Pokušajte ponovno kasnije."
 
@@ -21556,20 +21566,20 @@ msgid "New category"
 msgstr "Nova kategorija"
 
 #. Short confirmation button label in advanced settings.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:144
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:148
 msgid "New communities only"
 msgstr "Samo nove zajednice"
 
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:618
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:635
 msgid "New communities you join will automatically have muted channels hidden. Would you also like to apply this setting to all your existing communities?"
 msgstr "Nove zajednice kojima se pridružite automatski će imati skrivene isključene kanale. Želite li primijeniti ovu postavku i na sve postojeće zajednice?"
 
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:649
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:666
 msgid "New communities you join will no longer have muted channels hidden automatically. Would you also like to show muted channels in all your existing communities?"
 msgstr "Nove zajednice kojima se pridružite više neće automatski skrivati isključene kanale. Želite li prikazati isključene kanale i u svim postojećim zajednicama?"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:451
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:475
 msgid "New community muted"
 msgstr "Nova zajednica je isključena"
 
@@ -21902,11 +21912,11 @@ msgid "No embeds returned"
 msgstr "Nema vraćenih ugradbenih sadržaja"
 
 #. Empty-state text in the guild emoji tab.
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:46
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:47
 msgid "No emoji slots available"
 msgstr "Nema dostupnih mjesta za emotikone"
 
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:479
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:478
 msgid "No emojis found matching your search."
 msgstr "Nema emojija koji odgovaraju vašoj pretrazi."
 
@@ -22157,7 +22167,7 @@ msgid "No scheduled messages"
 msgstr "Nema zakazanih poruka"
 
 #. Body of the screen-share-unsupported modal shown when xdg-desktop-portal returns no capturable sources.
-#: src/features/voice/components/alerts/ScreenShareUnsupportedModal.tsx:19
+#: src/features/voice/components/alerts/ScreenShareUnsupportedModal.tsx:18
 msgid "No screens or windows were returned by the Linux screen sharing portal. Try again after checking that your desktop environment allows screen capture."
 msgstr "Nisu pronađeni zasloni ili prozori koje Linux portal za dijeljenje zaslona može prikazati. Pokušajte ponovno nakon što provjerite je li vaše okruženje omogućilo snimanje zaslona."
 
@@ -22185,17 +22195,17 @@ msgid "No specific scopes requested."
 msgstr "Nisu zatraženi specifični opsezi."
 
 #. Empty-state text in the guild stickers tab.
-#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:61
+#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:58
 msgid "No sticker slots available"
 msgstr "Nema dostupnih mjesta za naljepnice"
 
 #. Empty-state text in the guild stickers tab.
-#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:57
+#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:54
 msgid "No stickers found"
 msgstr "Nema pronađenih naljepnica"
 
 #. Empty-state text in the guild stickers tab.
-#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:70
+#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:67
 msgid "No stickers found matching your search."
 msgstr "Nema naljepnica koje odgovaraju vašoj pretrazi."
 
@@ -22322,7 +22332,7 @@ msgid "Noise suppression: {noiseSuppressionLabel}"
 msgstr "Suzbijanje buke: {noiseSuppressionLabel}"
 
 #. Section heading for static emoji in community emoji settings.
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:100
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:101
 msgid "Non-animated emoji ({emojiCount})"
 msgstr "Neanimirani emotikoni ({emojiCount})"
 
@@ -22640,7 +22650,7 @@ msgid "One or more attachments couldn't be read or uploaded. The file may have b
 msgstr "Jedan ili više privitaka nije moguće pročitati ili učitati. Datoteka je možda premještena ili izbrisana. Dodajte je ponovno i pokušajte opet."
 
 #. Body of the file-too-large alert for ambiguous count (single or multiple) over the per-file size limit.
-#: src/features/messaging/components/alerts/FileSizeTooLargeModal.tsx:30
+#: src/features/messaging/components/alerts/FileSizeTooLargeModal.tsx:27
 msgid "One or more files you're trying to upload exceed the maximum size limit of {maxSizeFormatted} per file."
 msgstr "Jedna ili više datoteka koje pokušavate prenijeti premašuju maksimalnu veličinu od {maxSizeFormatted} po datoteci."
 
@@ -23373,6 +23383,11 @@ msgstr "ili pošaljite poveznicu za dar prijatelju:"
 msgid "Ordered"
 msgstr "Naručeno"
 
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:139
+msgid "Ordered upload"
+msgstr "Uređeno učitavanje"
+
 #. Error message in the channel and chat reply preview.
 #: src/features/channel/components/ReplyPreview.tsx:29
 msgid "Original message failed to load"
@@ -24078,12 +24093,12 @@ msgid "Pick the rule to review."
 msgstr "Odaberite pravilo za pregled."
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:335
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:359
 msgid "Pick what appears when you type a colon in the message input"
 msgstr "Odaberite što se prikazuje kada upišete dvotočku u polje za unos poruke"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:387
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:411
 msgid "Pick which buttons show in the message input"
 msgstr "Odaberite koje se tipke prikazuju u polju za unos poruka"
 
@@ -24921,7 +24936,7 @@ msgid "Promotion or instructions encouraging self-harm or eating disorders."
 msgstr "Promicanje ili upute koje potiču samoozljeđivanje ili poremećaje prehrane."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:423
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:447
 msgid "Prompt"
 msgstr "Odgovor"
 
@@ -25197,7 +25212,7 @@ msgid "Quick CSS replaced from {fileName}."
 msgstr "Brzi CSS zamijenjen iz {fileName}."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:295
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:319
 msgid "Quick reactions"
 msgstr "Brze reakcije"
 
@@ -25621,7 +25636,7 @@ msgid "Reference copied."
 msgstr "Referenca kopirana."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:147
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:171
 msgid "Referral parameters"
 msgstr "Parametri preporuke"
 
@@ -25918,8 +25933,8 @@ msgstr "Ukloni privitak"
 msgid "Remove authenticator app"
 msgstr "Ukloni aplikaciju za provjeru autentičnosti"
 
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:406
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:442
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:404
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:440
 msgid "Remove avatar"
 msgstr "Ukloni avatar"
 
@@ -26938,14 +26953,14 @@ msgid "Reverify your phone number to continue using {productName}."
 msgstr "Ponovno potvrdite svoj telefonski broj kako biste nastavili koristiti {productName}."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:247
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:271
 msgid "Reverse image"
 msgstr "Obrnuta pretraga slike"
 
 #. Generic action label that runs a reverse-image search on the selected media.
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:603
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:243
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:267
 msgid "Reverse image search"
 msgstr "Obrnuto pretraživanje slika"
 
@@ -26955,7 +26970,7 @@ msgid "Reverse image search provider"
 msgstr "Davatelj usluge pretraživanja slika"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:275
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:299
 msgid "Reverse image search providers"
 msgstr "Davatelji usluga pretraživanja slika"
 
@@ -27020,7 +27035,7 @@ msgid "Review the permissions {productName} uses for voice, video, screen sharin
 msgstr "Pregledajte dozvole koje {productName} koristi za glas, video, dijeljenje zaslona i prečace."
 
 #. Intro text in the error modal shown after some emoji uploads fail.
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:71
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:72
 msgid "Review these files and try again with smaller or simpler images."
 msgstr "Pregledajte ove datoteke i pokušajte ponovno s manjim ili jednostavnijim slikama."
 
@@ -27191,7 +27206,7 @@ msgid "Role name"
 msgstr "Naziv uloge"
 
 #. Validation modal title when the role-edit form is submitted with an empty role name.
-#: src/features/app/components/alerts/RoleNameBlankModal.tsx:9
+#: src/features/app/components/alerts/RoleNameBlankModal.tsx:8
 msgid "Role name is required"
 msgstr "Naziv uloge je obavezan"
 
@@ -27300,7 +27315,7 @@ msgid "Same time as you"
 msgstr "Isto vrijeme kao i vaše"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:155
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:179
 msgid "Sanitize link"
 msgstr "Očisti poveznicu"
 
@@ -27421,7 +27436,7 @@ msgid "Saved media autocomplete"
 msgstr "Automatsko dovršavanje spremljenih medija"
 
 #. Short label in the max favorite memes modal.
-#: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx:15
+#: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx:16
 msgid "Saved media limit reached"
 msgstr "Dosegnuto ograničenje spremljenih medija"
 
@@ -27528,7 +27543,7 @@ msgstr "Najave čitača zaslona"
 
 #. Heading in the screen-share picker when macOS screen recording permission is missing.
 #. Title of the modal shown when screen recording permission is denied. Keep tone plain.
-#: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx:21
+#: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx:20
 #: src/features/voice/components/modals/screen_share_picker_modal/ScreenSharePickerDisplayPermissionPrompt.tsx:18
 msgid "Screen recording permission required"
 msgstr "Potrebna je dozvola za snimanje zaslona"
@@ -27561,7 +27576,7 @@ msgid "Screen share encoder controls"
 msgstr "Kontrole za enkoder dijeljenja zaslona"
 
 #. Title of a modal shown when an active screen share stops unexpectedly.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:111
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:110
 msgctxt "screen-share"
 msgid "Screen share ended"
 msgstr "Dijeljenje zaslona završeno"
@@ -27648,17 +27663,17 @@ msgid "Screen sharing codec"
 msgstr "Kodek za dijeljenje zaslona"
 
 #. Title of the modal shown when a screen share attempt fails due to a video source error.
-#: src/features/voice/components/alerts/ScreenShareFailedModal.tsx:9
+#: src/features/voice/components/alerts/ScreenShareFailedModal.tsx:8
 msgid "Screen sharing failed"
 msgstr "Dijeljenje zaslona nije uspjelo"
 
 #. Body of the screen-share-unsupported modal. Mentions specific browsers and OSes; keep all proper nouns intact.
-#: src/features/voice/components/alerts/ScreenShareUnsupportedModal.tsx:13
+#: src/features/voice/components/alerts/ScreenShareUnsupportedModal.tsx:12
 msgid "Screen sharing is not supported on this device or browser. This feature requires a desktop browser that supports screen sharing, such as Chrome, Firefox, or Edge on Windows, macOS, or Linux."
 msgstr "Dijeljenje zaslona nije podržano na ovom uređaju ili pregledniku. Ova značajka zahtijeva stolni preglednik koji podržava dijeljenje zaslona, kao što su Chrome, Firefox ili Edge na sustavima Windows, macOS ili Linux."
 
 #. Title of the modal shown when screen sharing is not supported on the current device / browser.
-#: src/features/voice/components/alerts/ScreenShareUnsupportedModal.tsx:9
+#: src/features/voice/components/alerts/ScreenShareUnsupportedModal.tsx:8
 msgid "Screen sharing not supported"
 msgstr "Dijeljenje zaslona nije podržano"
 
@@ -27698,15 +27713,15 @@ msgstr "Pomaknite se prema dolje za pregled svih pogodnosti uključenih u {premi
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the whats new modal.
 #: src/features/app/components/whats_new/WhatsNewModal.tsx:28
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:395
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:419
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:178
 msgid "Scroll to bottom"
 msgstr "Pomaknite se do dna"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced message input preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:124
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:391
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:128
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:415
 msgid "Scroll to bottom when sending a message"
 msgstr "Pomakni se na dno prilikom slanja poruke"
 
@@ -27758,7 +27773,7 @@ msgid "Search bans"
 msgstr "Pretraži zabrane"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:255
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:279
 msgid "Search by image"
 msgstr "Pretraživanje po slici"
 
@@ -27795,17 +27810,17 @@ msgid "Search countries…"
 msgstr "Pretražite države…"
 
 #. Button or menu action label in the guild emoji tab. Keep it concise.
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:91
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:92
 msgid "Search emojis"
 msgstr "Pretražite emojije"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:207
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:231
 msgid "Search engine"
 msgstr "Tražilica"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:203
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:227
 msgid "Search engines"
 msgstr "Tražilice"
 
@@ -27935,7 +27950,7 @@ msgid "Search scope: {label}"
 msgstr "Opseg pretraživanja: {label}"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:215
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:239
 msgid "Search selected text"
 msgstr "Pretraži odabrani tekst"
 
@@ -27960,7 +27975,7 @@ msgid "Search shortcuts…"
 msgstr "Pretražite prečace…"
 
 #. Button or menu action label in the guild stickers tab. Keep it concise.
-#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:49
+#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:46
 msgid "Search stickers"
 msgstr "Pretražite naljepnice"
 
@@ -28423,7 +28438,7 @@ msgstr "Pošalji još jednu prijavu"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:383
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:407
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:170
 msgid "Send button"
 msgstr "Gumb za slanje"
@@ -28438,6 +28453,13 @@ msgstr "Pošalji kod"
 #: src/features/moderation/components/report/ReportStepDetails.tsx:302
 msgid "Send DSA report"
 msgstr "Pošalji DSA izvješće"
+
+#. Settings search entry label. Names the settings search entry in the settings UI.
+#. Short label for an advanced message input preference.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:112
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:127
+msgid "Send file messages in order"
+msgstr "Šalji poruke datoteka redoslijedom"
 
 #. Button or menu action label in the user profile mobile sheet. Keep it concise.
 #. Button or menu action label in the user profile modal. Keep it concise.
@@ -28631,10 +28653,20 @@ msgstr "poslao je ugrađeni sadržaj"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:399
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:423
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:182
 msgid "Sent messages"
 msgstr "Poslane poruke"
+
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:131
+msgid "Sequential send"
+msgstr "Sekvencijalno slanje"
+
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:143
+msgid "Serial send"
+msgstr "Serijsko slanje"
 
 #: src/features/connection/components/modals/AddConnectionModal.tsx:326
 msgid "Serve the token file"
@@ -29098,7 +29130,7 @@ msgid "Shift"
 msgstr "Smjena"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:299
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:323
 msgid "Shift expand"
 msgstr "Pomakni proširenje"
 
@@ -29299,7 +29331,7 @@ msgstr "Prikaži ugrađene i pretpregledaj poveznice web-mjesta"
 #. Short label for an advanced message input preference.
 #. Short label in the channel and chat textarea plus menu. Keep it concise.
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx:55
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:116
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:120
 msgid "Show emoji button"
 msgstr "Prikaži gumb za emotikone"
 
@@ -29353,7 +29385,7 @@ msgid "Show icon when collapsed"
 msgstr "Prikaži ikonu kada je sažeto"
 
 #. Short confirmation button label in advanced settings.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:152
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:156
 msgid "Show in all communities"
 msgstr "Prikaži u svim zajednicama"
 
@@ -29543,7 +29575,7 @@ msgstr "Prikaži spremljene medije u automatskom dovršavanju izraza"
 #. Short label for an advanced message input preference.
 #. Short label in the channel and chat textarea plus menu. Keep it concise.
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx:59
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:120
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:124
 msgid "Show send button"
 msgstr "Prikaži gumb za slanje"
 
@@ -29555,7 +29587,7 @@ msgstr "Prikaži sadržaj spojlera kad se klikne"
 #. Short label for an advanced message input preference.
 #. Short label in the channel and chat textarea plus menu. Keep it concise.
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx:51
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:112
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:116
 msgid "Show stickers button"
 msgstr "Prikaži gumb za naljepnice"
 
@@ -29860,14 +29892,14 @@ msgid "Size selection"
 msgstr "Odabir veličine"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:427
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:451
 msgid "Skip"
 msgstr "Preskoči"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced inbox preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:128
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:407
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:132
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:431
 msgid "Skip \"Mark all as read\" confirmation"
 msgstr "Preskoči potvrdu za \"Označi sve kao pročitano\""
 
@@ -29881,7 +29913,7 @@ msgid "Skip external link warnings. Less secure."
 msgstr "Preskoči upozorenja za vanjske poveznice. Manje sigurno."
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:199
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:223
 msgid "Skip the external link warning for all domains"
 msgstr "Preskoči upozorenje za vanjske poveznice za sve domene"
 
@@ -29954,7 +29986,7 @@ msgid "Slow attachment upload"
 msgstr "Spora privitak datoteke"
 
 #. Short label in the new account guild limit modal. Keep it concise.
-#: src/features/guild/components/alerts/NewAccountGuildLimitModal.tsx:9
+#: src/features/guild/components/alerts/NewAccountGuildLimitModal.tsx:8
 msgid "Slow down"
 msgstr "Uspori"
 
@@ -30004,7 +30036,7 @@ msgstr "Usporeni način · čekajte {remaining}"
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #. Short label in the slowmode rate limited modal. Keep it concise.
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:249
-#: src/features/slowmode/components/alerts/SlowmodeRateLimitedModal.tsx:14
+#: src/features/slowmode/components/alerts/SlowmodeRateLimitedModal.tsx:13
 msgid "Slowmode active"
 msgstr "Usporeni način rada aktivan"
 
@@ -30019,7 +30051,7 @@ msgid "Slowmode is enabled, but you are immune."
 msgstr "Usporeni način rada je uključen, ali ste imuni."
 
 #. Modal body shown when slowmode blocks sending a message. {duration} is a localized short duration such as "2 minutes".
-#: src/features/slowmode/components/alerts/SlowmodeRateLimitedModal.tsx:18
+#: src/features/slowmode/components/alerts/SlowmodeRateLimitedModal.tsx:17
 msgid "Slowmode is on — wait {duration} before sending another."
 msgstr "Usporeni način rada je uključen — pričekajte {duration} prije nego što pošaljete drugu poruku."
 
@@ -30087,7 +30119,7 @@ msgid "Smaller media size"
 msgstr "Manja veličina medija"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:355
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:379
 msgid "Smiley face"
 msgstr "Smajlić"
 
@@ -30150,12 +30182,12 @@ msgid "Sold out"
 msgstr "Rasprodano"
 
 #. Title of the error modal shown after some emoji uploads fail.
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:67
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:68
 msgid "Some emojis couldn't be added"
 msgstr "Neki emojiji nisu mogli biti dodani"
 
 #. Body of the file-too-large alert when multiple files exceed the per-file size limit. maxSizeFormatted is the limit formatted with units.
-#: src/features/messaging/components/alerts/FileSizeTooLargeModal.tsx:21
+#: src/features/messaging/components/alerts/FileSizeTooLargeModal.tsx:18
 msgid "Some files you're trying to upload exceed the maximum size limit of {maxSizeFormatted} per file."
 msgstr "Neke datoteke koje pokušavate prenijeti premašuju maksimalnu veličinu od {maxSizeFormatted} po datoteci."
 
@@ -30794,7 +30826,7 @@ msgid "Start searches with <0>{peoplePrefix}</0> <1>{textChannelPrefix}</1> <2>{
 msgstr "Započnite pretraživanje s <0>{peoplePrefix}</0> <1>{textChannelPrefix}</1> <2>{voiceChannelPrefix}</2> <3>{communityPrefix}</3> kako biste suzili rezultate."
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:127
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:151
 msgid "Start uploading attachments as soon as they are added to the message input"
 msgstr "Počnite s prijenosom priloga čim se dodaju u polje za unos poruke"
 
@@ -30923,7 +30955,7 @@ msgid "Sticker attached to the message"
 msgstr "Naljepnica priložena poruci"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:331
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:355
 msgid "Sticker autocomplete"
 msgstr "Automatsko dovršavanje naljepnica"
 
@@ -30948,7 +30980,7 @@ msgid "Sticker deleted"
 msgstr "Naljepnica izbrisana"
 
 #. Short label in the guild stickers tab. Keep it concise.
-#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:53
+#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:50
 msgid "Sticker density"
 msgstr "Gustoća naljepnica"
 
@@ -30996,7 +31028,7 @@ msgstr "Dosegnuto ograničenje paketa naljepnica"
 msgid "Sticker packs"
 msgstr "Paketi naljepnica"
 
-#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:283
+#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:278
 msgid "Sticker slots"
 msgstr "Mjesta za naljepnice"
 
@@ -31032,7 +31064,7 @@ msgid "Stickers"
 msgstr "Naljepnice"
 
 #. Description in the community sticker upload section. {maxSize} is the formatted size limit.
-#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:82
+#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:79
 msgid "Stickers are saved at 320x320 pixels and must be under {maxSize}. Static images are resized and compressed automatically. Animated stickers and SVGs must already fit the limit."
 msgstr "Naljepnice se spremaju u veličini 320x320 piksela i moraju biti manje od {maxSize}. Statične slike se automatski mijenjaju veličine i komprimiraju. Animirane naljepnice i SVG-ovi već trebaju odgovarati limitu."
 
@@ -31077,7 +31109,7 @@ msgid "Stop"
 msgstr "Zaustavi"
 
 #. Confirmation prompt in advanced settings.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:148
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:152
 msgid "Stop hiding muted channels by default?"
 msgstr "Prestati skrivati isključene kanale po zadanim postavkama?"
 
@@ -31228,19 +31260,19 @@ msgid "Strikethrough"
 msgstr "Precrtano"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:163
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:187
 msgid "Strip parameters"
 msgstr "Ukloni parametre"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:159
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:183
 msgid "Strip tracking"
 msgstr "Ukloni praćenje"
 
 #. Label in the links tab.
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabLinksTab.tsx:43
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:131
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:155
 msgid "Strip tracking parameters from URLs"
 msgstr "Ukloni parametre praćenja iz URL-ova"
 
@@ -31403,7 +31435,7 @@ msgid "SVC mode"
 msgstr "SVC način rada"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:363
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:387
 msgid "Swap common text faces such as :) and <3 for emoji when sending messages"
 msgstr "Zamijeni uobičajene tekstualne izraze, kao što su :) i <3, emojiima prilikom slanja poruka"
 
@@ -31754,7 +31786,7 @@ msgstr "Kartica"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the FluxerTag change modal. Keep it concise.
-#: src/features/user/components/modals/FluxerTagChangeModal.tsx:60
+#: src/features/user/components/modals/FluxerTagChangeModal.tsx:61
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:73
 msgid "Tag"
 msgstr "Oznaka"
@@ -31862,7 +31894,7 @@ msgid "temporarily unavailable"
 msgstr "privremeno nedostupno"
 
 #. Modal body shown when the user tries to accept a temporary invite while the realtime connection is offline.
-#: src/features/app/components/alerts/TemporaryInviteRequiresPresenceModal.tsx:13
+#: src/features/app/components/alerts/TemporaryInviteRequiresPresenceModal.tsx:12
 msgid "Temporary invites need a live connection. Check yours and try again."
 msgstr "Privremene pozivnice zahtijevaju aktivnu vezu. Provjerite svoju vezu i pokušajte ponovno."
 
@@ -31943,7 +31975,7 @@ msgstr "Oblikovanje teksta"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:359
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:383
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:150
 msgid "Text replacement"
 msgstr "Zamjena teksta"
@@ -31982,12 +32014,12 @@ msgid "Text-to-speech"
 msgstr "Text-to-speech"
 
 #. Body of the TTS-unsupported modal. Mentions specific browsers; keep Chrome, Firefox, Edge, and Brave as literal proper nouns.
-#: src/features/voice/components/alerts/TtsUnsupportedModal.tsx:13
+#: src/features/voice/components/alerts/TtsUnsupportedModal.tsx:12
 msgid "Text-to-speech is not supported by your browser. Some browsers like Brave block this feature for privacy reasons. Try using Chrome, Firefox, or Edge, or adjust your browser's privacy settings."
 msgstr "Vaš preglednik ne podržava pretvaranje teksta u govor. Neki preglednici poput Bravea blokiraju ovu značajku iz razloga privatnosti. Pokušajte koristiti Chrome, Firefox ili Edge ili prilagodite postavke privatnosti svog preglednika."
 
 #. Title of the modal shown when the browser does not support text-to-speech.
-#: src/features/voice/components/alerts/TtsUnsupportedModal.tsx:9
+#: src/features/voice/components/alerts/TtsUnsupportedModal.tsx:8
 msgid "Text-to-speech not supported"
 msgstr "Pretvaranje teksta u govor nije podržano"
 
@@ -32090,7 +32122,7 @@ msgid "That's everything in the queue."
 msgstr "To je sve na čekanju."
 
 #. Description text in the FluxerTag change modal.
-#: src/features/user/components/modals/FluxerTagChangeModal.tsx:68
+#: src/features/user/components/modals/FluxerTagChangeModal.tsx:69
 msgid "The #0000 tag is reserved for Visionary subscribers. Visionary is no longer available for purchase."
 msgstr "Oznaka #0000 rezervirana je za pretplatnike Visionary. Visionary više nije dostupan za kupnju."
 
@@ -32148,7 +32180,7 @@ msgid "The file contains the verification token we will fetch from <0>{dnsUrl}</
 msgstr "Datoteka sadrži token za provjeru koji ćemo preuzeti s <0>{dnsUrl}</0>."
 
 #. Body of the file-too-large alert when a single file exceeds the per-file size limit.
-#: src/features/messaging/components/alerts/FileSizeTooLargeModal.tsx:26
+#: src/features/messaging/components/alerts/FileSizeTooLargeModal.tsx:23
 msgid "The file you're trying to upload exceeds the maximum size limit of {maxSizeFormatted}."
 msgstr "Datoteka koju pokušavate učitati premašuje maksimalnu veličinu od {maxSizeFormatted}."
 
@@ -32198,7 +32230,7 @@ msgid "The provided redirect_uri must use HTTP or HTTPS."
 msgstr "Navedeni redirect_uri mora koristiti HTTP ili HTTPS."
 
 #. Body of a modal shown when a browser screen share track ends outside the app, for example from the browser sharing controls.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:116
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:115
 msgctxt "screen-share"
 msgid "The screen share source stopped sending video, so your screen share was stopped."
 msgstr "Izvor dijeljenja zaslona prestao je slati video, pa je dijeljenje zaslona zaustavljeno."
@@ -32225,7 +32257,7 @@ msgstr "Usluga za prijenos odbila je ovu naljepnicu jer je veća od {maxSize}. P
 msgid "The URL of the {productName} instance you want to sign in to."
 msgstr "URL instance {productName} u koju se želite prijaviti."
 
-#: src/features/user/components/modals/FluxerTagChangeModal.tsx:134
+#: src/features/user/components/modals/FluxerTagChangeModal.tsx:135
 msgid "The username <0>{fluxerTag}</0> is already taken. Continuing will reroll your tag automatically."
 msgstr "Korisničko ime <0>{fluxerTag}</0> već je zauzeto. Nastavkom će se vaša oznaka automatski ponovno generirati."
 
@@ -32370,7 +32402,7 @@ msgid "There was an error loading the invites. Try again."
 msgstr "Došlo je do pogreške prilikom učitavanja pozivnica. Pokušajte ponovno."
 
 #. Error message in the guild stickers tab.
-#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:78
+#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:75
 msgid "There was an error loading the stickers. Try again."
 msgstr "Došlo je do pogreške prilikom učitavanja naljepnica. Pokušajte ponovno."
 
@@ -32516,7 +32548,7 @@ msgid "This channel is marked for mature content and may contain material that m
 msgstr "Ovaj je kanal označen kao sadržaj za odrasle i može sadržavati materijal koji možda nije prikladan za neke korisnike."
 
 #. Label in the mature content rejected modal.
-#: src/features/moderation/components/alerts/MatureContentRejectedModal.tsx:13
+#: src/features/moderation/components/alerts/MatureContentRejectedModal.tsx:12
 msgid "This channel is not marked for mature content. Mature content can only be sent in channels marked for mature content. Ask a moderator to update this channel if appropriate."
 msgstr "Ovaj kanal nije označen za sadržaj za odrasle. Sadržaj za odrasle može se slati samo u kanalima označenima za sadržaj za odrasle. Zamolite moderatora da ažurira ovaj kanal ako je prikladno."
 
@@ -32579,7 +32611,7 @@ msgid "This community has paused invites. You can try again later."
 msgstr "Ova je zajednica pauzirala pozivnice. Možete pokušati ponovno kasnije."
 
 #. Description text in the guild at capacity modal.
-#: src/features/guild/components/alerts/GuildAtCapacityModal.tsx:13
+#: src/features/guild/components/alerts/GuildAtCapacityModal.tsx:12
 msgid "This community has reached its maximum member limit and is not accepting new members at this time."
 msgstr "Ova je zajednica dosegla maksimalan broj članova i trenutačno ne prima nove članove."
 
@@ -32657,7 +32689,7 @@ msgid "This doesn't look like a valid template response. Make sure you copied th
 msgstr "Ovo ne izgleda kao valjani odgovor predloška. Provjerite jeste li kopirali cijeli JSON dokument."
 
 #. Generic per-file error text shown when preparing an emoji upload fails.
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:87
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:88
 msgid "This emoji could not be prepared. Try another file or try again in a moment."
 msgstr "Ovaj emoji nije bilo moguće pripremiti. Pokušajte s drugom datotekom ili pokušajte ponovno za nekoliko trenutaka."
 
@@ -32674,7 +32706,7 @@ msgid "This expression is gone"
 msgstr "Ovaj je izraz nestao"
 
 #. Modal body shown when an instance admin has temporarily disabled a feature. Keep plain.
-#: src/features/app/components/alerts/FeatureTemporarilyDisabledModal.tsx:13
+#: src/features/app/components/alerts/FeatureTemporarilyDisabledModal.tsx:12
 msgid "This feature is paused. Try again later."
 msgstr "Ova je značajka pauzirana. Pokušajte ponovno kasnije."
 
@@ -32684,7 +32716,7 @@ msgid "This field has an error"
 msgstr "Ovo polje sadrži pogrešku"
 
 #. Error text for animated emoji or SVG uploads that exceed the file size limit. {fileSize} and {maxSize} are formatted file sizes.
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:75
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:76
 msgid "This file is {fileSize}, over the {maxSize} limit. Animated emojis and SVGs must already be small enough to upload. Choose a smaller file or shorten the animation."
 msgstr "Ova datoteka je {fileSize}, što je iznad ograničenja od {maxSize}. Animirani emojiji i SVG-ovi moraju već biti dovoljno mali za prijenos. Odaberite manju datoteku ili skratite animaciju."
 
@@ -32833,7 +32865,7 @@ msgid "This is not the community you're looking for."
 msgstr "Ovo nije zajednica koju tražite."
 
 #. Description text in the too many reactions modal. Keep the tone plain and specific.
-#: src/features/messaging/components/alerts/TooManyReactionsModal.tsx:13
+#: src/features/messaging/components/alerts/TooManyReactionsModal.tsx:12
 msgid "This is one heavy message. Some reactions need to be removed before you can add more."
 msgstr "Ovo je jedna teška poruka. Neke reakcije treba ukloniti prije nego što možete dodati više."
 
@@ -32855,7 +32887,7 @@ msgid "This is the third option description"
 msgstr "Ovo je opis treće opcije"
 
 #. Extra file-too-large alert sentence shown when premium upload-limit upgrades are unavailable.
-#: src/features/messaging/components/alerts/FileSizeTooLargeModal.tsx:42
+#: src/features/messaging/components/alerts/FileSizeTooLargeModal.tsx:39
 msgid "This limit is configured by your instance administrator."
 msgstr "Ovo ograničenje konfigurirao je administrator vaše instance."
 
@@ -33570,7 +33602,7 @@ msgid "Too many attempts. Wait a bit, then try again."
 msgstr "Previše pokušaja. Pričekajte malo, pa pokušajte ponovno."
 
 #. Error message in the max guilds modal.
-#: src/features/guild/components/alerts/MaxGuildsModal.tsx:10
+#: src/features/guild/components/alerts/MaxGuildsModal.tsx:9
 msgid "Too many communities"
 msgstr "Previše zajednica"
 
@@ -33627,12 +33659,12 @@ msgid "Track moderator actions across the community."
 msgstr "Pratite radnje moderatora u cijeloj zajednici."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:135
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:159
 msgid "Tracking"
 msgstr "Praćenje"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:139
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:163
 msgid "Tracking parameters"
 msgstr "Parametri praćenja"
 
@@ -33665,7 +33697,7 @@ msgstr "Vlasništvo preneseno na {0}."
 #. Generic action label that translates a message body.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:583
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:231
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:255
 msgid "Translate"
 msgstr "Prevedi"
 
@@ -33684,12 +33716,12 @@ msgid "Translations are automated. Help improve localization by emailing <0>{I18
 msgstr "Prijevodi su automatizirani. Pomozite poboljšati lokalizaciju slanjem e-pošte na <0>{I18N_EMAIL}</0>."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:223
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:247
 msgid "Translator"
 msgstr "Prevoditelj"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:227
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:251
 msgid "Translators"
 msgstr "Prevoditelji"
 
@@ -33746,14 +33778,14 @@ msgstr "točno ili netočno"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the links tab. Keep it concise.
 #: src/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabLinksTab.tsx:27
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:175
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:199
 msgid "Trust all"
 msgstr "Vjeruj svima"
 
 #. Label in the links tab.
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabLinksTab.tsx:39
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:171
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:195
 msgid "Trust all external links"
 msgstr "Vjeruj svim vanjskim poveznicama"
 
@@ -33763,17 +33795,17 @@ msgid "Trust all external links?"
 msgstr "Vjerovati svim vanjskim poveznicama?"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:179
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:203
 msgid "Trust all links"
 msgstr "Vjeruj svim poveznicama"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:187
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:211
 msgid "Trust domain"
 msgstr "Domena povjerenja"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:183
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:207
 msgid "Trusted domains"
 msgstr "Pouzdane domene"
 
@@ -34000,7 +34032,7 @@ msgstr "Uključi privatnost pri streamingu"
 #. Label in the input tab.
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabInputTab.tsx:10
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:339
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:363
 msgid "Turn text smileys into emoji"
 msgstr "Uključi emoji umjesto tekstualnih izraza"
 
@@ -34199,8 +34231,8 @@ msgstr "Nije moguće učitati pretpregled."
 msgid "Unable to load profile banner, badges, and bio."
 msgstr "Nije moguće učitati naslovnu sliku profila, značke i opis."
 
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:272
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:328
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:271
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:327
 msgid "Unable to prepare any emojis for upload. The following errors occurred:"
 msgstr "Nije moguće pripremiti emojije za prijenos. Došlo je do sljedećih pogrešaka:"
 
@@ -34932,7 +34964,7 @@ msgid "Unsupported icon format"
 msgstr "Nepodržan format ikone"
 
 #. Title of the error modal shown when an unsupported sticker file type is selected.
-#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:87
+#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:84
 msgid "Unsupported sticker file"
 msgstr "Nepodržana datoteka naljepnice"
 
@@ -35135,8 +35167,8 @@ msgstr "Nadogradi sada"
 
 #. Short label in the max bookmarks modal. Preserve {premiumProductName}; it is inserted by code.
 #. Short label in the max favorite memes modal. Preserve {premiumProductName}; it is inserted by code.
-#: src/features/app/components/alerts/MaxBookmarksModal.tsx:35
-#: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx:29
+#: src/features/app/components/alerts/MaxBookmarksModal.tsx:36
+#: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx:30
 msgid "Upgrade to {premiumProductName}"
 msgstr "Nadogradite na {premiumProductName}"
 
@@ -35208,7 +35240,7 @@ msgstr "Učitaj prilagođeni zvuk za {label}"
 msgid "Upload directly to {displayName}"
 msgstr "Izravno prenesi u {displayName}"
 
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:454
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:453
 msgid "Upload emoji"
 msgstr "Učitaj emoji"
 
@@ -35252,7 +35284,7 @@ msgstr "Učitajte okvirne snimke za dijeljenje zaslona."
 msgid "Upload sound"
 msgstr "Učitaj zvuk"
 
-#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:286
+#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:281
 msgid "Upload sticker"
 msgstr "Učitaj naljepnicu"
 
@@ -35857,7 +35889,7 @@ msgstr "korisnik, bot ili webhook"
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:952
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:567
-#: src/features/user/components/modals/FluxerTagChangeModal.tsx:217
+#: src/features/user/components/modals/FluxerTagChangeModal.tsx:218
 #: src/features/user/components/modals/tabs/my_profile_tab/MyProfileTabUsernameSection.tsx:55
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:53
 msgid "Username"
@@ -35869,7 +35901,7 @@ msgid "Username (optional)"
 msgstr "Korisničko ime (neobavezno)"
 
 #. Short label in the FluxerTag change modal. Keep it concise.
-#: src/features/user/components/modals/FluxerTagChangeModal.tsx:39
+#: src/features/user/components/modals/FluxerTagChangeModal.tsx:40
 msgid "Username already taken"
 msgstr "Korisničko ime je već zauzeto"
 
@@ -35899,11 +35931,11 @@ msgid "Username must be at most 32 characters"
 msgstr "Korisničko ime mora imati najviše 32 znaka"
 
 #. Short label in the FluxerTag change modal. Keep it concise.
-#: src/features/user/components/modals/FluxerTagChangeModal.tsx:43
+#: src/features/user/components/modals/FluxerTagChangeModal.tsx:44
 msgid "Username updated"
 msgstr "Korisničko ime ažurirano"
 
-#: src/features/user/components/modals/FluxerTagChangeModal.tsx:210
+#: src/features/user/components/modals/FluxerTagChangeModal.tsx:211
 msgid "Usernames can only contain letters (a-z, A-Z), numbers (0-9), and underscores. Usernames are case-insensitive."
 msgstr "Korisnička imena mogu sadržavati samo slova (a-z, A-Z), brojeve (0-9) i podvlake. Kod korisničkih imena ne razlikuju se velika i mala slova."
 
@@ -36996,7 +37028,7 @@ msgid "Volume sliders"
 msgstr "Klizači glasnoće"
 
 #. Description text in the message delete too quick modal. Keep the tone plain and specific.
-#: src/features/messaging/components/alerts/MessageDeleteTooQuickModal.tsx:13
+#: src/features/messaging/components/alerts/MessageDeleteTooQuickModal.tsx:12
 msgid "Wait a moment before deleting more messages."
 msgstr "Pričekajte trenutak prije brisanja više poruka."
 
@@ -37148,7 +37180,7 @@ msgstr "Trenutno ne možemo proslijediti poruku."
 msgid "We couldn't import that theme library file."
 msgstr "Nismo uspjeli uvesti datoteku biblioteke tema."
 
-#: src/features/messaging/components/alerts/AttachmentUploadConnectivityModal.tsx:24
+#: src/features/messaging/components/alerts/AttachmentUploadConnectivityModal.tsx:23
 msgid "We couldn't reach the attachment upload service. {PRODUCT_NAME} can fall back to the standard upload path for messages up to {fallbackSizeFormatted} total, but these attachments exceed that combined limit and can't be sent until connectivity is restored. Try again later or contact <0>{SUPPORT_EMAIL}</0> if this keeps happening."
 msgstr "Nismo uspjeli doći do usluge za prijenos privitaka. {PRODUCT_NAME} se može vratiti na standardnu putanju za prijenos poruka do ukupno {fallbackSizeFormatted}, ali ovi privitci premašuju to kombinirano ograničenje i ne mogu se poslati dok se veza ne uspostavi. Pokušajte ponovno kasnije ili se obratite <0>{SUPPORT_EMAIL}</0> ako se ovo nastavi događati."
 
@@ -37191,7 +37223,7 @@ msgid "We recommend saving these codes now so that you don't get locked out of y
 msgstr "Preporučujemo da odmah spremite ove kodove kako ne biste bili zaključani iz svog računa."
 
 #. Error text for static emoji uploads that still exceed the file size limit after resizing. {fileSize} and {maxSize} are formatted file sizes.
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:81
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:82
 msgid "We resized and compressed this emoji to 128x128 pixels, but it is still {fileSize}. The limit is {maxSize}. Try a simpler image, fewer colors, or a smaller source file."
 msgstr "Promijenili smo veličinu i komprimirali ovaj emoji na 128x128 piksela, ali i dalje je {fileSize}. Ograničenje je {maxSize}. Pokušajte s jednostavnijom slikom, manje boja ili manjom izvornom datotekom."
 
@@ -37311,7 +37343,7 @@ msgid "Web authentication"
 msgstr "Web-autentifikacija"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:211
+#: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:235
 msgid "Web search"
 msgstr "Pretraživanje weba"
 
@@ -37657,8 +37689,8 @@ msgstr "Uf, tipka se kao ludo"
 
 #. Label in the too many attachments modal.
 #. Label in the too many reactions modal.
-#: src/features/messaging/components/alerts/TooManyAttachmentsModal.tsx:10
-#: src/features/messaging/components/alerts/TooManyReactionsModal.tsx:9
+#: src/features/messaging/components/alerts/TooManyAttachmentsModal.tsx:9
+#: src/features/messaging/components/alerts/TooManyReactionsModal.tsx:8
 msgid "Whoa, this is heavy"
 msgstr "Opa, ovo je previše"
 
@@ -37741,7 +37773,7 @@ msgid "With {PREMIUM_PRODUCT_NAME}, you can use animated avatars ({ANIMATED_AVAT
 msgstr "Uz {PREMIUM_PRODUCT_NAME}, možete koristiti animirane avatare ({ANIMATED_AVATAR_FORMATS}), profilne bannere, prilagoditi svoj tag i otključati mnoge druge prednosti {PREMIUM_PRODUCT_NAME}."
 
 #. Premium upsell sentence in the file-too-large alert. premiumProductName is the paid product name; fileSizeLimit is a localized file size.
-#: src/features/messaging/components/alerts/FileSizeTooLargeModal.tsx:46
+#: src/features/messaging/components/alerts/FileSizeTooLargeModal.tsx:43
 msgid "With {premiumProductName}, your per-file upload limit increases to {fileSizeLimit}, plus animated avatars, longer messages, and many other {premiumProductName} perks."
 msgstr "Uz {premiumProductName}, vaš limit za prijenos datoteka po datoteci povećava se na {fileSizeLimit}, plus animirani avatari, duže poruke i mnoge druge prednosti {premiumProductName}."
 
@@ -37871,7 +37903,7 @@ msgid "You are about to transfer ownership of this community to <0>{0}</0>. This
 msgstr "Uskoro ćete prenijeti vlasništvo nad ovom zajednicom na <0>{0}</0>. Ova je radnja <1>nepovratna</1> i izgubit ćete sve vlasničke privilegije."
 
 #. Error message in the user banned from guild modal. Keep the tone plain and specific.
-#: src/features/moderation/components/alerts/UserBannedFromGuildModal.tsx:13
+#: src/features/moderation/components/alerts/UserBannedFromGuildModal.tsx:12
 msgid "You are banned from this community and cannot join."
 msgstr "Zabranjen vam je pristup ovoj zajednici i ne možete se pridružiti."
 
@@ -37994,7 +38026,7 @@ msgid "You can't add new reactions while you're on timeout."
 msgstr "Ne možete dodavati nove reakcije dok ste na hlađenju."
 
 #. Description text in the attachment permission denied modal. Keep the tone plain and specific.
-#: src/features/messaging/components/alerts/AttachmentPermissionDeniedModal.tsx:20
+#: src/features/messaging/components/alerts/AttachmentPermissionDeniedModal.tsx:17
 msgid "You can't attach files in this channel."
 msgstr "Ne možete priložiti datoteke u ovom kanalu."
 
@@ -38180,11 +38212,11 @@ msgstr "Ne možete ukloniti ovo dopuštenje jer biste ga uklonili sami sebi"
 msgid "You changed your nickname in this community from **{previousNickname}** to **{newNickname}**."
 msgstr "Promijenili ste nadimak u ovoj zajednici iz **{previousNickname}** u **{newNickname}**."
 
-#: src/features/user/components/modals/FluxerTagChangeModal.tsx:362
+#: src/features/user/components/modals/FluxerTagChangeModal.tsx:367
 msgid "You changed your tag while on {PREMIUM_PRODUCT_NAME}. It will reroll randomly when your {PREMIUM_PRODUCT_NAME} expires on <0>{premiumExpiresAtLabel}</0>, unless it renews."
 msgstr "Promijenili ste oznaku dok ste bili na {PREMIUM_PRODUCT_NAME}. Nasumično će se ponovno generirati kada vam {PREMIUM_PRODUCT_NAME} istekne <0>{premiumExpiresAtLabel}</0>, osim ako se ne obnovi."
 
-#: src/features/user/components/modals/FluxerTagChangeModal.tsx:369
+#: src/features/user/components/modals/FluxerTagChangeModal.tsx:374
 msgid "You changed your tag while on {PREMIUM_PRODUCT_NAME}. It will reroll randomly when your {PREMIUM_PRODUCT_NAME} expires, unless it renews."
 msgstr "Promijenili ste svoju oznaku dok ste bili na {PREMIUM_PRODUCT_NAME}. Nasumično će se ponovno odabrati kada vam istekne {PREMIUM_PRODUCT_NAME}, osim ako se ne obnovi."
 
@@ -38502,17 +38534,17 @@ msgid "You're already Visionary"
 msgstr "Već ste Vizionar"
 
 #. Modal body shown when the bookmarks limit is reached on a self-hosted instance with no upgrade path. Limit count is interpolated.
-#: src/features/app/components/alerts/MaxBookmarksModal.tsx:19
+#: src/features/app/components/alerts/MaxBookmarksModal.tsx:20
 msgid "You're at {bookmarksText} — your instance admin sets this cap. Remove one to add another."
 msgstr "Dosegli ste {bookmarksText} — administrator vaše instance postavlja ovo ograničenje. Uklonite jednu da biste dodali drugu."
 
 #. Modal body shown when the bookmarks limit is reached and Plutonium is unavailable on this instance. Limit count is interpolated.
-#: src/features/app/components/alerts/MaxBookmarksModal.tsx:24
+#: src/features/app/components/alerts/MaxBookmarksModal.tsx:25
 msgid "You're at {bookmarksText}. Remove one to add another."
 msgstr "Dosegnuli ste {bookmarksText}. Uklonite jednu da biste dodali drugu."
 
 #. Modal body shown when the favorite-memes limit is reached on a self-hosted instance with no Plutonium upgrade path. Limit text is interpolated.
-#: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx:19
+#: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx:20
 msgid "You're at the cap of {freeItemsText} — your instance admin sets this limit."
 msgstr "Dosegnuli ste ograničenje od {freeItemsText} – administrator vaše instance postavlja ovo ograničenje."
 
@@ -38524,12 +38556,12 @@ msgid "You're at the creation limit. Delete one to create another."
 msgstr "Dosegnuli ste ograničenje stvaranja. Izbrišite jedan da biste stvorili drugi."
 
 #. Modal body shown when the free bookmarks limit is reached and Plutonium would increase it. Free and Plutonium limits are interpolated.
-#: src/features/app/components/alerts/MaxBookmarksModal.tsx:29
+#: src/features/app/components/alerts/MaxBookmarksModal.tsx:30
 msgid "You're at the free cap of {bookmarksText}. {premiumProductName} bumps you up to {premiumBookmarksText} — or remove one to add another."
 msgstr "Dosegnuli ste besplatno ograničenje od {bookmarksText}. {premiumProductName} vas podiže na {premiumBookmarksText} — ili uklonite jednu da biste dodali drugu."
 
 #. Modal body shown when the free favorite-memes limit is reached and Plutonium would increase it. Free and Plutonium limits are interpolated.
-#: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx:24
+#: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx:25
 msgid "You're at the free cap of {freeItemsText}. {premiumProductName} bumps you up to {premiumItemsText}."
 msgstr "Dostigli ste besplatno ograničenje od {freeItemsText}. {premiumProductName} vas podiže na {premiumItemsText}."
 
@@ -38541,7 +38573,7 @@ msgid "You're at the install limit. Remove one to add another."
 msgstr "Dosegnuli ste ograničenje instalacija. Uklonite jednu da biste dodali drugu."
 
 #. Short label in the user banned from guild modal. Keep it concise. Keep the tone plain and specific.
-#: src/features/moderation/components/alerts/UserBannedFromGuildModal.tsx:9
+#: src/features/moderation/components/alerts/UserBannedFromGuildModal.tsx:8
 msgid "You're banned"
 msgstr "Zabranjen vam je pristup"
 
@@ -38566,7 +38598,7 @@ msgid "You're deafened"
 msgstr "Isključili ste zvuk."
 
 #. Label in the message delete too quick modal. Keep the tone plain and specific.
-#: src/features/messaging/components/alerts/MessageDeleteTooQuickModal.tsx:9
+#: src/features/messaging/components/alerts/MessageDeleteTooQuickModal.tsx:8
 msgid "You're deleting messages too quickly"
 msgstr "Prebrzo brišete poruke"
 
@@ -38725,12 +38757,12 @@ msgid "You've reached the group DM limit"
 msgstr "Dosegnuto je ograničenje grupnih izravnih poruka"
 
 #. Emoji upload limit message in community emoji settings. Do not suggest that communities can be upgraded.
-#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:50
+#: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:51
 msgid "You've reached the maximum number of emojis. Delete some existing emojis to make room."
 msgstr "Dosegnuli ste maksimalan broj emojija. Izbrišite neke postojeće emojije kako biste oslobodili prostor."
 
 #. Sticker upload limit message in community sticker settings. Do not suggest that communities can be upgraded.
-#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:65
+#: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:62
 msgid "You've reached the maximum number of stickers. Delete some existing stickers to make room."
 msgstr "Dosegnuli ste maksimalan broj naljepnica. Izbrišite neke postojeće naljepnice kako biste oslobodili prostor."
 
@@ -38803,7 +38835,7 @@ msgid "Your account requires multi-factor authentication, but no supported metho
 msgstr "Vaš račun zahtijeva višestruku provjeru autentičnosti, ali na ovom uređaju nisu postavljene podržane metode. Prijavite se na uređaju s aplikacijom za provjeru autentičnosti ili sigurnosnim ključem ili se obratite podršci."
 
 #. Modal body shown when the safety system blocks the requested action. Keep plain and calm; offer support path.
-#: src/features/auth/components/ContentBlockedHandler.tsx:15
+#: src/features/auth/components/ContentBlockedHandler.tsx:14
 msgid "Your action could not be completed because it was flagged by our safety systems. If you believe this is a mistake, please contact support."
 msgstr "Vaša radnja nije mogla biti dovršena jer ju je naš sigurnosni sustav označio. Ako mislite da je ovo pogreška, obratite se podršci."
 
@@ -38928,12 +38960,12 @@ msgid "Your IP address has been successfully authorized."
 msgstr "Vaša IP adresa je uspješno autorizirana."
 
 #. Error message in the user ip banned from guild modal. Keep the tone plain and specific.
-#: src/features/moderation/components/alerts/UserIpBannedFromGuildModal.tsx:13
+#: src/features/moderation/components/alerts/UserIpBannedFromGuildModal.tsx:12
 msgid "Your IP address is banned from this community and you cannot join."
 msgstr "Vaša IP adresa je zabranjena u ovoj zajednici i ne možete se pridružiti."
 
 #. Label in the user ip banned from guild modal. Keep the tone plain and specific.
-#: src/features/moderation/components/alerts/UserIpBannedFromGuildModal.tsx:9
+#: src/features/moderation/components/alerts/UserIpBannedFromGuildModal.tsx:8
 msgid "Your IP is banned"
 msgstr "Vaša IP adresa je zabranjena"
 

@@ -69,7 +69,7 @@ const indexChannelMessages: WorkerTaskHandler = async (payload) => {
 				try {
 					await Promise.all(searchServices.map((s) => s.refreshIndex()));
 				} catch (error) {
-					Logger.warn({error}, 'Search refresh after bulk indexing failed; data-service will commit on idle');
+					Logger.warn({error}, 'Search refresh after bulk indexing failed');
 				}
 				await kvClient.del(validated.completionKey);
 				Logger.info({completionKey: validated.completionKey}, 'All channels indexed');

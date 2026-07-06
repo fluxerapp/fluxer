@@ -44,7 +44,6 @@ reqwest-retry = "0.9.1"
 serde = {version = "1.0.228", features = ["derive"]}
 serde_json = "1.0.150"
 sha2 = "0.11.0"
-svg-hush = "0.9.6"
 tempfile = "3.27.0"
 thiserror = "2.0.18"
 tokio = {version = "1.52.3", features = ["fs", "io-util", "macros", "net", "rt-multi-thread", "signal", "sync", "time"]}

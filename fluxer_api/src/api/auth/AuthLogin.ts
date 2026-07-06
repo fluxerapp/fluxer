@@ -30,6 +30,7 @@ import {REGISTRATION_PENDING_APPROVAL_TRAIT, REGISTRATION_REJECTED_TRAIT} from '
 import type {InviteService} from '../invite/InviteService';
 import {Logger} from '../Logger';
 import type {RequestCache} from '../middleware/RequestCacheMiddleware';
+import {getInstanceConfigRepository} from '../middleware/ServiceSingletons';
 import type {User} from '../models/User';
 import {lookupGeoip} from '../utils/IpUtils';
 import * as AuthMfa from './AuthMfa';
@@ -303,44 +304,53 @@ export async function login(
 	if (!hasMfa && !isAppStoreReviewer) {
 		const isIpAuthorized = await users.checkIpAuthorized(currentUser.id, clientIp);
 		if (!isIpAuthorized) {
-			const ticket = createIpAuthorizationTicket(await AuthUtility.generateSecureToken(ctx));
-			const authToken = createIpAuthorizationToken(await AuthUtility.generateSecureToken(ctx));
-			const geoipResult = await lookupGeoip(clientIp);
-			const clientLocation = formatGeoipLocation(geoipResult) ?? UNKNOWN_LOCATION;
-			const userAgent = request.headers.get('user-agent') || '';
-			const platform = request.headers.get('x-fluxer-platform');
-			const cachePayload: IpAuthorizationTicketCache = {
-				userId: currentUser.id.toString(),
-				email: currentUser.email!,
-				username: currentUser.username,
-				clientIp,
-				userAgent,
-				platform: platform ?? null,
-				authToken,
-				clientLocation,
-				inviteCode: data.invite_code ?? null,
-				resendUsed: false,
-				createdAt: Date.now(),
-			};
-			const ttlSeconds = seconds('15 minutes');
-			await cache.set<IpAuthorizationTicketCache>(`ip-auth-ticket:${ticket}`, cachePayload, ttlSeconds);
-			await cache.set<{
-				ticket: string;
-			}>(`ip-auth-token:${authToken}`, {ticket}, ttlSeconds);
-			await users.createIpAuthorizationToken(currentUser.id, authToken, currentUser.email!);
-			await email.sendIpAuthorizationEmail(
-				currentUser.email!,
-				currentUser.username,
-				authToken,
-				clientIp,
-				clientLocation,
-				currentUser.locale,
-			);
-			throw new IpAuthorizationRequiredError({
-				ticket,
-				email: currentUser.email!,
-				resendAvailableIn: 30,
-			});
+			const instanceConfigRepository = getInstanceConfigRepository();
+			const [integrationsConfig, effectiveEmailConfig] = await Promise.all([
+				instanceConfigRepository.getInstanceIntegrationsConfig(),
+				instanceConfigRepository.getEffectiveEmailConfig(),
+			]);
+			if (integrationsConfig.email.disable_new_ip_authorization || !effectiveEmailConfig.enabled) {
+				await users.createAuthorizedIp(currentUser.id, clientIp);
+			} else {
+				const ticket = createIpAuthorizationTicket(await AuthUtility.generateSecureToken(ctx));
+				const authToken = createIpAuthorizationToken(await AuthUtility.generateSecureToken(ctx));
+				const geoipResult = await lookupGeoip(clientIp);
+				const clientLocation = formatGeoipLocation(geoipResult) ?? UNKNOWN_LOCATION;
+				const userAgent = request.headers.get('user-agent') || '';
+				const platform = request.headers.get('x-fluxer-platform');
+				const cachePayload: IpAuthorizationTicketCache = {
+					userId: currentUser.id.toString(),
+					email: currentUser.email!,
+					username: currentUser.username,
+					clientIp,
+					userAgent,
+					platform: platform ?? null,
+					authToken,
+					clientLocation,
+					inviteCode: data.invite_code ?? null,
+					resendUsed: false,
+					createdAt: Date.now(),
+				};
+				const ttlSeconds = seconds('15 minutes');
+				await cache.set<IpAuthorizationTicketCache>(`ip-auth-ticket:${ticket}`, cachePayload, ttlSeconds);
+				await cache.set<{
+					ticket: string;
+				}>(`ip-auth-token:${authToken}`, {ticket}, ttlSeconds);
+				await users.createIpAuthorizationToken(currentUser.id, authToken, currentUser.email!);
+				await email.sendIpAuthorizationEmail(
+					currentUser.email!,
+					currentUser.username,
+					authToken,
+					clientIp,
+					clientLocation,
+					currentUser.locale,
+				);
+				throw new IpAuthorizationRequiredError({
+					ticket,
+					email: currentUser.email!,
+					resendAvailableIn: 30,
+				});
+			}
 		}
 	}
 	if (hasMfa) {

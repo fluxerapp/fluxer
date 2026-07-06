@@ -100,12 +100,6 @@ pub struct InstanceIntegrationsResponse {
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct InstanceGifIntegrationResponse {
-    pub provider: Option<String>,
-    #[serde(default)]
-    pub effective_provider: String,
-    #[serde(default)]
-    pub tenor_api_key_set: bool,
-    #[serde(default)]
     pub klipy_api_key_set: bool,
     #[serde(default)]
     pub effective_available: bool,
@@ -146,6 +140,10 @@ pub struct InstanceEmailIntegrationResponse {
     pub from_name: Option<String>,
     #[serde(default)]
     pub smtp: InstanceEmailSmtpIntegrationResponse,
+    #[serde(default)]
+    pub disable_new_ip_authorization: bool,
+    #[serde(default)]
+    pub effective_disable_new_ip_authorization: bool,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -178,7 +176,7 @@ pub struct InstanceMediaResponse {
     pub attachment_decay: InstanceAttachmentDecayResponse,
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct InstanceAttachmentDecayResponse {
     pub enabled: Option<bool>,
     pub min_size_mb: Option<f64>,
@@ -191,23 +189,6 @@ pub struct InstanceAttachmentDecayResponse {
     pub renew_window_days: Option<u32>,
     #[serde(default)]
     pub effective: InstanceAttachmentDecayEffectiveResponse,
-}
-
-impl Default for InstanceAttachmentDecayResponse {
-    fn default() -> Self {
-        Self {
-            enabled: None,
-            min_size_mb: None,
-            max_size_mb: None,
-            max_eligible_size_mb: None,
-            min_lifetime_days: None,
-            max_lifetime_days: None,
-            curve: None,
-            renew_threshold_days: None,
-            renew_window_days: None,
-            effective: InstanceAttachmentDecayEffectiveResponse::default(),
-        }
-    }
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -297,7 +278,7 @@ impl PremiumMode {
     }
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct AppPublicConfigResponse {
     #[serde(default)]
     pub branding: AppBrandingConfigResponse,
@@ -307,17 +288,6 @@ pub struct AppPublicConfigResponse {
     pub legal: AppLegalConfigResponse,
     #[serde(default)]
     pub registration: AppRegistrationConfigResponse,
-}
-
-impl Default for AppPublicConfigResponse {
-    fn default() -> Self {
-        Self {
-            branding: AppBrandingConfigResponse::default(),
-            setup: AppSetupConfigResponse::default(),
-            legal: AppLegalConfigResponse::default(),
-            registration: AppRegistrationConfigResponse::default(),
-        }
-    }
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -578,10 +548,6 @@ pub struct InstanceIntegrationsUpdateRequest {
 #[derive(Clone, Debug, Default, Serialize)]
 pub struct InstanceGifIntegrationUpdateRequest {
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub provider: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub tenor_api_key: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub klipy_api_key: Option<String>,
 }
 
@@ -617,6 +583,8 @@ pub struct InstanceEmailIntegrationUpdateRequest {
     pub from_name: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub smtp: Option<InstanceEmailSmtpIntegrationUpdateRequest>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub disable_new_ip_authorization: Option<bool>,
 }
 
 #[derive(Clone, Debug, Default, Serialize)]

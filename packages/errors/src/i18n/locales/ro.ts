@@ -2,7 +2,7 @@
 
 import {defineErrorI18nLocaleMessages} from '../ErrorI18nMessages';
 
-export const ERROR_I18N_RO_MESSAGES = defineErrorI18nLocaleMessages({
+const ERROR_I18N_RO_MESSAGES = defineErrorI18nLocaleMessages({
 	"account.already_verified": "Contul tău este deja verificat.",
 	"account.communication_disabled": "Comunicarea este dezactivată.",
 	"account.disabled": "Acest cont a fost dezactivat.",

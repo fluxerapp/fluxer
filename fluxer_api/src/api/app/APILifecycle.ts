@@ -197,7 +197,7 @@ export function createInitializer(config: APIConfig, logger: ILogger): () => Pro
 				logger.error({error}, 'Failed to verify KV deletion queue state');
 				throw error;
 			}
-			logger.info('Initializing data-service search...');
+			logger.info('Initializing search indexes...');
 			let searchInitialized = false;
 			try {
 				await initializeSearch(getCacheService());

@@ -1,0 +1,25 @@
+name: Triage pull request
+on:
+  pull_request_target:
+permissions: {}
+jobs:
+  label:
+    name: Label
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create token
+        id: create-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1
+        with:
+          client-id: ${{ vars.FLUXER_CI_APP_ID }}
+          private-key: ${{ secrets.FLUXER_CI_APP_KEY }}
+          owner: fluxerapp
+          repositories: fluxer
+          permission-pull-requests: write
+
+      - name: Label pull request
+        uses: actions/labeler@f27b608878404679385c85cfa523b85ccb86e213
+        with:
+          repo-token: ${{ steps.create-token.outputs.token }}
+          configuration-path: .github/labeller.yaml
+          sync-labels: true
