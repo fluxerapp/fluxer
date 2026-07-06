@@ -27535,7 +27535,35 @@
 					"allow_ranked_choice": {"type": "boolean", "description": "Whether voters can rank multiple options"},
 					"allow_custom_answers": {"type": "boolean", "description": "Whether users can add custom answer options"},
 					"votes": {
-						"anyOf": [{"type": "array", "items": {"$ref": "#/components/schemas/PollVoteResponse"}}, {"type": "null"}],
+						"anyOf": [
+							{
+								"type": "array",
+								"items": {
+									"type": "object",
+									"properties": {
+										"user_id": {
+											"type": "string",
+											"pattern": "^(0|[1-9][0-9]*)$",
+											"description": "User who submitted this vote"
+										},
+										"option_ids": {
+											"type": "array",
+											"items": {"$ref": "#/components/schemas/SnowflakeType"},
+											"minItems": 1,
+											"maxItems": 20,
+											"description": "Selected option IDs in vote order"
+										},
+										"created_at": {
+											"type": "string",
+											"format": "date-time",
+											"description": "ISO8601 timestamp for when this vote was submitted"
+										}
+									},
+									"required": ["user_id", "option_ids", "created_at"]
+								}
+							},
+							{"type": "null"}
+						],
 						"description": "Visible full vote records, usually only for moderation views"
 					}
 				},
@@ -27581,25 +27609,6 @@
 					}
 				},
 				"required": ["id", "text", "vote_count"]
-			},
-			"PollVoteResponse": {
-				"type": "object",
-				"properties": {
-					"user_id": {"type": "string", "pattern": "^(0|[1-9][0-9]*)$", "description": "User who submitted this vote"},
-					"option_ids": {
-						"type": "array",
-						"items": {"$ref": "#/components/schemas/SnowflakeType"},
-						"minItems": 1,
-						"maxItems": 20,
-						"description": "Selected option IDs in vote order"
-					},
-					"created_at": {
-						"type": "string",
-						"format": "date-time",
-						"description": "ISO8601 timestamp for when this vote was submitted"
-					}
-				},
-				"required": ["user_id", "option_ids", "created_at"]
 			},
 			"MessageStickerResponse": {
 				"type": "object",
@@ -29125,7 +29134,17 @@
 					"title": {"type": "string", "description": "Poll title or question"},
 					"options": {
 						"type": "array",
-						"items": {"$ref": "#/components/schemas/PollOptionRequest"},
+						"items": {
+							"type": "object",
+							"properties": {
+								"text": {"type": "string", "description": "Text shown for this poll option"},
+								"attachment_id": {
+									"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}],
+									"description": "Client-side attachment identifier for an optional image associated with this option"
+								}
+							},
+							"required": ["text"]
+						},
 						"minItems": 2,
 						"maxItems": 20,
 						"description": "Poll answer options"
@@ -29152,17 +29171,6 @@
 					"allow_custom_answers": {"type": "boolean", "description": "Whether users can add custom answer options"}
 				},
 				"required": ["title", "options"]
-			},
-			"PollOptionRequest": {
-				"type": "object",
-				"properties": {
-					"text": {"type": "string", "description": "Text shown for this poll option"},
-					"attachment_id": {
-						"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}],
-						"description": "Client-side attachment identifier for an optional image associated with this option"
-					}
-				},
-				"required": ["text"]
 			},
 			"BulkDeleteMessagesRequest": {
 				"type": "object",

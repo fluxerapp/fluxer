@@ -23,14 +23,12 @@ const PollDurationSecondsRequest = coerceNumberFromString(
 	z.number().int().min(MIN_POLL_DURATION_SECONDS).max(MAX_POLL_DURATION_SECONDS),
 ).describe('Poll duration in seconds');
 
-export const PollOptionRequest = z.object({
+const PollOptionRequest = z.object({
 	text: createStringType(1, MAX_POLL_OPTION_TEXT_LENGTH).describe('Text shown for this poll option'),
 	attachment_id: coerceNumberFromString(Int32Type)
 		.nullish()
 		.describe('Client-side attachment identifier for an optional image associated with this option'),
 });
-
-export type PollOptionRequest = z.infer<typeof PollOptionRequest>;
 
 export const PollRequest = z
 	.object({
@@ -105,13 +103,11 @@ export const PollVoteRequest = z
 
 export type PollVoteRequest = z.infer<typeof PollVoteRequest>;
 
-export const PollVoteResponse = z.object({
+const PollVoteResponse = z.object({
 	user_id: SnowflakeStringType.describe('User who submitted this vote'),
 	option_ids: z.array(SnowflakeStringType).min(1).max(MAX_POLL_OPTIONS).describe('Selected option IDs in vote order'),
 	created_at: z.iso.datetime().describe('ISO8601 timestamp for when this vote was submitted'),
 });
-
-export type PollVoteResponse = z.infer<typeof PollVoteResponse>;
 
 export const PollOptionResponse = z.object({
 	id: SnowflakeStringType.describe('Poll option ID'),

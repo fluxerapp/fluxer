@@ -3010,15 +3010,19 @@ fn map_call(call: &MessageCall) -> ApiMessageCallResponse {
     }
 }
 
-fn map_poll_option(
-    option: &MessagePollOption,
-    selected_option_ids: &HashSet<i64>,
-    voter_ids_by_option: &HashMap<i64, Vec<String>>,
-    rank_counts_by_option: &HashMap<i64, Vec<i32>>,
-    ranked_score_by_option: &HashMap<i64, i32>,
+struct PollOptionMapContext<'a> {
+    selected_option_ids: &'a HashSet<i64>,
+    voter_ids_by_option: &'a HashMap<i64, Vec<String>>,
+    rank_counts_by_option: &'a HashMap<i64, Vec<i32>>,
+    ranked_score_by_option: &'a HashMap<i64, i32>,
     rank_count_len: usize,
     anonymous: bool,
     allow_ranked_choice: bool,
+}
+
+fn map_poll_option(
+    option: &MessagePollOption,
+    context: &PollOptionMapContext<'_>,
 ) -> Option<ApiPollOptionResponse> {
     let option_id = option.option_id?;
     Some(ApiPollOptionResponse {
@@ -3026,21 +3030,27 @@ fn map_poll_option(
         text: option.text.clone().unwrap_or_default(),
         attachment_id: option.attachment_id.map(|id| id.to_string()),
         vote_count: option.vote_count.unwrap_or_default(),
-        rank_counts: allow_ranked_choice.then(|| {
-            rank_counts_by_option
+        rank_counts: context.allow_ranked_choice.then(|| {
+            context
+                .rank_counts_by_option
                 .get(&option_id)
                 .cloned()
-                .unwrap_or_else(|| vec![0; rank_count_len])
+                .unwrap_or_else(|| vec![0; context.rank_count_len])
         }),
-        ranked_score: allow_ranked_choice.then(|| {
-            ranked_score_by_option
+        ranked_score: context.allow_ranked_choice.then(|| {
+            context
+                .ranked_score_by_option
                 .get(&option_id)
                 .copied()
                 .unwrap_or_default()
         }),
-        me: selected_option_ids.contains(&option_id).then_some(true),
-        voter_ids: (!anonymous).then(|| {
-            voter_ids_by_option
+        me: context
+            .selected_option_ids
+            .contains(&option_id)
+            .then_some(true),
+        voter_ids: (!context.anonymous).then(|| {
+            context
+                .voter_ids_by_option
                 .get(&option_id)
                 .cloned()
                 .unwrap_or_default()
@@ -3099,20 +3109,18 @@ fn map_poll(
             }
         }
     }
+    let option_context = PollOptionMapContext {
+        selected_option_ids: &selected_option_ids,
+        voter_ids_by_option: &voter_ids_by_option,
+        rank_counts_by_option: &rank_counts_by_option,
+        ranked_score_by_option: &ranked_score_by_option,
+        rank_count_len,
+        anonymous,
+        allow_ranked_choice,
+    };
     let options = poll_options
         .iter()
-        .filter_map(|option| {
-            map_poll_option(
-                option,
-                &selected_option_ids,
-                &voter_ids_by_option,
-                &rank_counts_by_option,
-                &ranked_score_by_option,
-                rank_count_len,
-                anonymous,
-                allow_ranked_choice,
-            )
-        })
+        .filter_map(|option| map_poll_option(option, &option_context))
         .collect();
     Some(ApiPollResponse {
         id: poll.poll_id?.to_string(),

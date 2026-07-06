@@ -14264,7 +14264,29 @@
 						"description": "Visible full vote records, usually only for moderation views",
 						"nullable": true,
 						"type": "array",
-						"items": {"$ref": "#/components/schemas/PollVoteResponse"}
+						"items": {
+							"type": "object",
+							"properties": {
+								"user_id": {
+									"type": "string",
+									"pattern": "^(0|[1-9][0-9]*)$",
+									"description": "User who submitted this vote"
+								},
+								"option_ids": {
+									"type": "array",
+									"items": {"$ref": "#/components/schemas/SnowflakeType"},
+									"minItems": 1,
+									"maxItems": 20,
+									"description": "Selected option IDs in vote order"
+								},
+								"created_at": {
+									"type": "string",
+									"format": "date-time",
+									"description": "ISO8601 timestamp for when this vote was submitted"
+								}
+							},
+							"required": ["user_id", "option_ids", "created_at"]
+						}
 					}
 				},
 				"required": [
@@ -14315,25 +14337,6 @@
 					}
 				},
 				"required": ["id", "text", "vote_count"]
-			},
-			"PollVoteResponse": {
-				"type": "object",
-				"properties": {
-					"user_id": {"type": "string", "pattern": "^(0|[1-9][0-9]*)$", "description": "User who submitted this vote"},
-					"option_ids": {
-						"type": "array",
-						"items": {"$ref": "#/components/schemas/SnowflakeType"},
-						"minItems": 1,
-						"maxItems": 20,
-						"description": "Selected option IDs in vote order"
-					},
-					"created_at": {
-						"type": "string",
-						"format": "date-time",
-						"description": "ISO8601 timestamp for when this vote was submitted"
-					}
-				},
-				"required": ["user_id", "option_ids", "created_at"]
 			},
 			"MessageStickerResponse": {
 				"type": "object",
