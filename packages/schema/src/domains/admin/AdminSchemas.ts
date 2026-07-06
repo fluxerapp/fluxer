@@ -404,6 +404,7 @@ const SsoConfigResponse = z.object({
 	scope: z.string().nullable(),
 	allowed_domains: z.array(z.string()).max(100),
 	auto_provision: z.boolean(),
+	auto_redirect: z.boolean(),
 	redirect_uri: z.string().nullable(),
 });
 
@@ -640,6 +641,7 @@ export const InstanceConfigUpdateRequest = z.object({
 			scope: z.string().nullish(),
 			allowed_domains: z.array(z.string()).max(100).optional(),
 			auto_provision: z.boolean().optional(),
+			auto_redirect: z.boolean().optional(),
 		})
 		.nullish(),
 	app_public: AppPublicConfigUpdateRequest.nullish(),

@@ -385,6 +385,7 @@ fn build_sso_update(form: &MultiValueForm) -> InstanceConfigUpdateRequest {
             enabled: Some(flag("sso_enabled")),
             enforced: Some(flag("sso_enforced")),
             auto_provision: Some(flag("sso_auto_provision")),
+            auto_redirect: Some(flag("sso_auto_redirect")),
             display_name: get("sso_display_name"),
             issuer: get("sso_issuer"),
             authorization_url: get("sso_authorization_url"),
@@ -1002,6 +1003,13 @@ mod tests {
         );
     }
 
+    #[test]
+    fn build_sso_update_serializes_auto_redirect_flag() {
+        let form = MultiValueForm::parse(b"sso_enabled=true&sso_auto_redirect=on");
+        let request = build_sso_update(&form);
+        let value = serde_json::to_value(&request).expect("serialize request");
+        assert_eq!(value["sso"]["auto_redirect"], true);
+    }
     #[test]
     fn build_sso_update_splits_delimited_allowed_domains() {
         let form = MultiValueForm::parse(

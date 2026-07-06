@@ -90,6 +90,14 @@ export function normalizeInstanceCommunity(community?: InstanceCommunity | null)
 	};
 }
 
+export function normalizeInstanceSso(sso?: InstanceSsoConfig | null): InstanceSsoConfig | null {
+	if (!sso) return null;
+	return {
+		...sso,
+		auto_redirect: sso.auto_redirect ?? false,
+	};
+}
+
 export const DEFAULT_INSTANCE_SERVICES: InstanceServices = {
 	gif_enabled: true,
 	youtube_enabled: false,
@@ -316,7 +324,7 @@ class RuntimeConfig {
 			...DEFAULT_INSTANCE_FEATURES,
 			...snapshot.features,
 		};
-		this.sso = snapshot.sso;
+		this.sso = normalizeInstanceSso(snapshot.sso);
 		this.registration = normalizeInstanceRegistration(snapshot.registration);
 		this.community = normalizeInstanceCommunity(snapshot.community);
 		this.services = normalizeInstanceServices(snapshot.services);
@@ -479,7 +487,7 @@ class RuntimeConfig {
 		this.assertCodeVersion(instance.api_code_version);
 		const apiEndpoint = instance.endpoints.api_client ?? instance.endpoints.api;
 		const apiPublicEndpoint = instance.endpoints.api_public ?? apiEndpoint;
-		const sso = instance.sso ?? null;
+		const sso = normalizeInstanceSso(instance.sso);
 		const appPublic = normalizeAppPublicConfig(instance.app_public);
 		const gifProviderInfo = normalizeGifProviderInfo({
 			provider: instance.gif?.provider,

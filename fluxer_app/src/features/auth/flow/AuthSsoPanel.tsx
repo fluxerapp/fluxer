@@ -41,6 +41,8 @@ interface AuthSsoPanelProps {
 	redirectPath?: string;
 	extraTopContent?: ReactNode;
 	showTitle?: boolean;
+	submitting?: boolean;
+	error?: string | null;
 	dataFlx?: string;
 }
 
@@ -48,22 +50,24 @@ export const AuthSsoPanel = observer(function AuthSsoPanel({
 	redirectPath,
 	extraTopContent,
 	showTitle = true,
+	submitting = false,
+	error: externalError = null,
 	dataFlx = 'auth.flow.auth-sso-panel',
 }: AuthSsoPanelProps) {
 	const {i18n} = useLingui();
 	const ssoConfig = RuntimeConfig.sso;
 	const ssoDisplayName = ssoConfig?.display_name ?? 'Single Sign-On';
-	const [error, setError] = useState<string | null>(null);
+	const [localError, setLocalError] = useState<string | null>(null);
 	const [isStartingSso, setIsStartingSso] = useState(false);
 	const handleStartSso = useCallback(async () => {
 		if (!ssoConfig?.enabled) return;
 		try {
-			setError(null);
+			setLocalError(null);
 			setIsStartingSso(true);
 			const {authorizationUrl} = await startSsoLogin({redirectTo: redirectPath});
 			window.location.assign(authorizationUrl);
 		} catch (err) {
-			setError(
+			setLocalError(
 				err && typeof err === 'object' && 'body' in err
 					? FormUtils.extractErrorMessage(i18n, err)
 					: i18n._(FAILED_TO_START_SSO_DESCRIPTOR),
@@ -72,6 +76,7 @@ export const AuthSsoPanel = observer(function AuthSsoPanel({
 			setIsStartingSso(false);
 		}
 	}, [ssoConfig?.enabled, redirectPath, i18n]);
+	const error = externalError ?? localError;
 	return (
 		<div className={styles.ssoPane} data-flx={dataFlx}>
 			<AuthInstanceSelectorControl dataFlx={`${dataFlx}.auth-instance-selector-control`} />
@@ -87,7 +92,7 @@ export const AuthSsoPanel = observer(function AuthSsoPanel({
 			<Button
 				fitContainer
 				onClick={handleStartSso}
-				submitting={isStartingSso}
+				submitting={submitting || isStartingSso}
 				type="button"
 				disabled={!ssoConfig?.enabled}
 				data-flx={`${dataFlx}.button.start-sso`}

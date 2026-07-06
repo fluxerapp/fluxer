@@ -321,6 +321,9 @@ export interface MasterConfig {
 		setup: {
 			configured: boolean;
 		};
+		sso: {
+			auto_redirect: boolean;
+		};
 		abuse_policy: {
 			inbound_phone_country_codes: Array<string>;
 			phone_verification: {

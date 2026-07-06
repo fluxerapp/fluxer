@@ -6,6 +6,7 @@ import RuntimeConfig, {
 	normalizeAppPublicConfig,
 	normalizeInstanceCommunity,
 	normalizeInstanceRegistration,
+	normalizeInstanceSso,
 	normalizeInstanceServices,
 } from '@app/features/app/state/RuntimeConfig';
 import {Logger} from '@app/features/platform/utils/AppLogger';
@@ -152,7 +153,7 @@ class InstanceConfigs {
 				displayName: gifProviderInfo.displayName,
 				attributionRequired: gifProviderInfo.attributionRequired,
 			},
-			sso: data.sso ?? null,
+			sso: normalizeInstanceSso(data.sso),
 			registration: normalizeInstanceRegistration(data.registration),
 			community: normalizeInstanceCommunity(data.community),
 			services: normalizeInstanceServices(data.services),
@@ -219,7 +220,7 @@ class InstanceConfigs {
 				displayName: RuntimeConfig.gifProviderDisplayName,
 				attributionRequired: RuntimeConfig.gifAttributionRequired,
 			},
-			sso: RuntimeConfig.sso,
+			sso: normalizeInstanceSso(RuntimeConfig.sso),
 			registration: RuntimeConfig.registration,
 			community: RuntimeConfig.community,
 			services: RuntimeConfig.services,

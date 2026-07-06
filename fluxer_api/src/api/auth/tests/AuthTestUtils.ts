@@ -314,6 +314,7 @@ interface SsoConfig {
 	scope: string;
 	allowed_domains: Array<string>;
 	auto_provision: boolean;
+	auto_redirect: boolean;
 	redirect_uri: string;
 	display_name?: string;
 }
@@ -333,6 +334,7 @@ export async function enableSso(
 		scope: 'openid email profile',
 		allowed_domains: ['example.com'],
 		auto_provision: true,
+		auto_redirect: false,
 		redirect_uri: '',
 		...overrides,
 	};

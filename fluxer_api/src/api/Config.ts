@@ -383,6 +383,9 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 			setup: {
 				configured: master.instance.setup.configured,
 			},
+			sso: {
+				autoRedirect: master.instance.sso.auto_redirect,
+			},
 		},
 		abusePolicy: {
 			inboundPhoneCountryCodes: master.instance.abuse_policy.inbound_phone_country_codes,

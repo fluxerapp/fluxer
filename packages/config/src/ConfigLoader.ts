@@ -259,6 +259,9 @@ function defaultConfig(): MasterConfig {
 			setup: {
 				configured: false,
 			},
+			sso: {
+				auto_redirect: false,
+			},
 			abuse_policy: {
 				inbound_phone_country_codes: [],
 				phone_verification: {

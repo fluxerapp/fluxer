@@ -370,6 +370,8 @@ pub struct SsoConfigResponse {
     pub allowed_domains: Vec<String>,
     #[serde(default)]
     pub auto_provision: bool,
+    #[serde(default)]
+    pub auto_redirect: bool,
     pub redirect_uri: Option<String>,
 }
 
@@ -755,6 +757,8 @@ pub struct SsoConfigUpdateRequest {
     pub allowed_domains: Option<Vec<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub auto_provision: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub auto_redirect: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub redirect_uri: Option<Option<String>>,
 }

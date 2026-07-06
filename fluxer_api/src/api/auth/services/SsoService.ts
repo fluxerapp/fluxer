@@ -60,6 +60,7 @@ interface SsoStatePayload {
 interface PublicSsoStatus {
 	enabled: boolean;
 	enforced: boolean;
+	auto_redirect: boolean;
 	display_name: string | null;
 	redirect_uri: string;
 }
@@ -254,6 +255,7 @@ export class SsoService {
 		return {
 			enabled,
 			enforced: enabled && config.enforced,
+			auto_redirect: enabled && config.autoRedirect,
 			display_name: config.displayName ?? null,
 			redirect_uri: config.redirectUri,
 		};

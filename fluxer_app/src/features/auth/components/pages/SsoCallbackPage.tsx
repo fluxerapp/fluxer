@@ -8,6 +8,7 @@ import {
 	getPendingSsoRedirectTo,
 	startSsoLogin,
 } from '@app/features/auth/state/AuthFlow';
+import {LOCAL_SSO_LOGIN_PATH} from '@app/features/auth/utils/AutoSsoRedirect';
 import {safeRedirectTarget} from '@app/features/auth/utils/SafeRedirect';
 import {BACK_TO_SIGN_IN_DESCRIPTOR, TRY_AGAIN_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
@@ -41,7 +42,7 @@ const SsoCallbackPage = observer(function SsoCallbackPage() {
 	const [isProcessing, setIsProcessing] = useState(true);
 	const abortControllerRef = useRef<AbortController | null>(null);
 	const handleBackToLogin = useCallback(() => {
-		RouterUtils.replaceWith('/login');
+		RouterUtils.replaceWith(LOCAL_SSO_LOGIN_PATH);
 	}, []);
 	const handleRetry = useCallback(async () => {
 		setError(null);
@@ -50,7 +51,7 @@ const SsoCallbackPage = observer(function SsoCallbackPage() {
 			const {authorizationUrl} = await startSsoLogin({redirectTo: getPendingSsoRedirectTo()});
 			window.location.assign(authorizationUrl);
 		} catch {
-			RouterUtils.replaceWith('/login');
+			RouterUtils.replaceWith(LOCAL_SSO_LOGIN_PATH);
 		}
 	}, []);
 	useEffect(() => {
