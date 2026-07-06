@@ -21535,7 +21535,7 @@ msgstr "자동으로 안 함"
 #: src/features/channel/components/ChannelDivider.tsx:52
 #: src/features/channel/components/UnreadDividerSlot.tsx:30
 msgid "New"
-msgstr "새로운"
+msgstr "새 메시지"
 
 #. Small badge on a new or recently added app navigation item.
 #: src/features/app/components/layout/GuildsLayout.tsx:66
