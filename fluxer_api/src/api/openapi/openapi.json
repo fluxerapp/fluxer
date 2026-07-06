@@ -24823,13 +24823,17 @@
 						"properties": {
 							"enabled": {"type": "boolean", "description": "Whether SSO is enabled for this instance"},
 							"enforced": {"type": "boolean", "description": "Whether SSO is required for all users"},
+							"auto_redirect": {
+								"type": "boolean",
+								"description": "Whether SSO should start automatically from the login page"
+							},
 							"display_name": {
 								"anyOf": [{"type": "string"}, {"type": "null"}],
 								"description": "Display name of the SSO provider"
 							},
 							"redirect_uri": {"type": "string", "description": "OAuth redirect URI for SSO"}
 						},
-						"required": ["enabled", "enforced", "display_name", "redirect_uri"],
+						"required": ["enabled", "enforced", "auto_redirect", "display_name", "redirect_uri"],
 						"description": "Single sign-on configuration"
 					},
 					"registration": {
@@ -26342,13 +26346,17 @@
 				"properties": {
 					"enabled": {"type": "boolean", "description": "Whether SSO is enabled for this instance"},
 					"enforced": {"type": "boolean", "description": "Whether SSO is required for all users"},
+					"auto_redirect": {
+						"type": "boolean",
+						"description": "Whether SSO should start automatically from the login page"
+					},
 					"display_name": {
 						"anyOf": [{"type": "string"}, {"type": "null"}],
 						"description": "Display name of the SSO provider"
 					},
 					"redirect_uri": {"type": "string", "description": "OAuth redirect URI for SSO"}
 				},
-				"required": ["enabled", "enforced", "display_name", "redirect_uri"]
+				"required": ["enabled", "enforced", "auto_redirect", "display_name", "redirect_uri"]
 			},
 			"UsernameSuggestionsResponse": {
 				"type": "object",
