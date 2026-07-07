@@ -28,6 +28,7 @@ import {
 	SsoStartRequest,
 	SsoStartResponse,
 	SsoStatusResponse,
+	SsoSudoCompleteResponse,
 	SudoVerificationSchema,
 	UsernameSuggestionsRequest,
 	UsernameSuggestionsResponse,
@@ -43,9 +44,10 @@ import {CaptchaMiddleware} from '../middleware/CaptchaMiddleware';
 import {LocalAuthMiddleware} from '../middleware/LocalAuthMiddleware';
 import {RateLimitMiddleware} from '../middleware/RateLimitMiddleware';
 import {OpenAPI} from '../middleware/ResponseTypeMiddleware';
-import {SudoModeMiddleware} from '../middleware/SudoModeMiddleware';
+import {SUDO_MODE_HEADER, SudoModeMiddleware} from '../middleware/SudoModeMiddleware';
 import {RateLimitConfigs} from '../RateLimitConfig';
 import type {HonoApp} from '../types/HonoEnv';
+import {setSudoCookie} from '../utils/SudoCookieUtils';
 import {Validator} from '../Validator';
 import {requireSudoMode} from './services/SudoVerificationService';
 
@@ -102,6 +104,50 @@ export function AuthController(app: HonoApp) {
 		}),
 		async (ctx) => {
 			const result = await ctx.get('authRequestService').completeSso(ctx.req.valid('json'), ctx.req.raw);
+			return ctx.json(result);
+		},
+	);
+	app.post(
+		'/auth/sso/sudo/start',
+		LoginRequiredAllowSuspicious,
+		DefaultUserOnly,
+		RateLimitMiddleware(RateLimitConfigs.AUTH_SSO_START),
+		Validator('json', SsoStartRequest),
+		OpenAPI({
+			operationId: 'start_sso_sudo',
+			summary: 'Start SSO sudo verification',
+			responseSchema: SsoStartResponse,
+			statusCode: 200,
+			security: ['bearerToken', 'sessionToken'],
+			tags: ['Auth'],
+			description: 'Initiate a Single Sign-On (SSO) reauthentication session for sudo mode verification.',
+		}),
+		async (ctx) => {
+			const result = await ctx.get('authRequestService').startSsoSudo(ctx.get('user'), ctx.req.valid('json'));
+			return ctx.json(result);
+		},
+	);
+	app.post(
+		'/auth/sso/sudo/complete',
+		LoginRequiredAllowSuspicious,
+		DefaultUserOnly,
+		RateLimitMiddleware(RateLimitConfigs.AUTH_SSO_COMPLETE),
+		Validator('json', SsoCompleteRequest),
+		OpenAPI({
+			operationId: 'complete_sso_sudo',
+			summary: 'Complete SSO sudo verification',
+			responseSchema: SsoSudoCompleteResponse,
+			statusCode: 200,
+			security: ['bearerToken', 'sessionToken'],
+			tags: ['Auth'],
+			description:
+				'Complete an SSO reauthentication flow and issue a short-lived sudo mode token for the current user.',
+		}),
+		async (ctx) => {
+			const user = ctx.get('user');
+			const result = await ctx.get('authRequestService').completeSsoSudo(user, ctx.req.valid('json'));
+			ctx.header(SUDO_MODE_HEADER, result.sudo_token);
+			setSudoCookie(ctx, result.sudo_token, user.id.toString());
 			return ctx.json(result);
 		},
 	);

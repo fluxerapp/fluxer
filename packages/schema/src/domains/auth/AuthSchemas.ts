@@ -126,6 +126,9 @@ export const SudoVerificationSchema = z.object({
 export const SsoStatusResponse = z.object({
 	enabled: z.boolean().describe('Whether SSO is enabled for this instance'),
 	enforced: z.boolean().describe('Whether SSO is required for all users'),
+	disable_additional_auth: z
+		.boolean()
+		.describe('Whether SSO-managed accounts are prevented from adding or using local authentication methods'),
 	display_name: z.string().nullable().describe('Display name of the SSO provider'),
 	redirect_uri: z.string().describe('OAuth redirect URI for SSO'),
 });
@@ -148,6 +151,12 @@ export const SsoCompleteResponse = z.object({
 });
 
 export type SsoCompleteResponse = z.infer<typeof SsoCompleteResponse>;
+
+export const SsoSudoCompleteResponse = z.object({
+	sudo_token: z.string().describe('Short-lived sudo token issued after SSO reauthentication'),
+});
+
+export type SsoSudoCompleteResponse = z.infer<typeof SsoSudoCompleteResponse>;
 
 export const AuthTokenWithUserIdResponse = z.object({
 	token: z.string().describe('Authentication token for API requests'),

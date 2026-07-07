@@ -34,6 +34,8 @@ export const Endpoints = {
 	},
 	AUTH_SSO_START: '/auth/sso/start',
 	AUTH_SSO_COMPLETE: '/auth/sso/complete',
+	AUTH_SSO_SUDO_START: '/auth/sso/sudo/start',
+	AUTH_SSO_SUDO_COMPLETE: '/auth/sso/sudo/complete',
 	ADMIN_INSTANCE_CONFIG_GET: '/admin/instance-config/get',
 	ADMIN_INSTANCE_CONFIG_UPDATE: '/admin/instance-config/update',
 	ADMIN_INSTANCE_CONFIG_BRANDING_ASSET: '/admin/instance-config/branding-asset',

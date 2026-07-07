@@ -12388,6 +12388,7 @@
 						"properties": {
 							"enabled": {"type": "boolean"},
 							"enforced": {"type": "boolean"},
+							"disable_additional_auth": {"type": "boolean"},
 							"display_name": {"nullable": true, "type": "string"},
 							"issuer": {"nullable": true, "type": "string"},
 							"authorization_url": {"nullable": true, "type": "string"},
@@ -12404,6 +12405,7 @@
 						"required": [
 							"enabled",
 							"enforced",
+							"disable_additional_auth",
 							"display_name",
 							"issuer",
 							"authorization_url",
@@ -12929,6 +12931,7 @@
 						"properties": {
 							"enabled": {"type": "boolean"},
 							"enforced": {"type": "boolean"},
+							"disable_additional_auth": {"type": "boolean"},
 							"display_name": {"nullable": true, "type": "string"},
 							"issuer": {"nullable": true, "type": "string"},
 							"authorization_url": {"nullable": true, "type": "string"},

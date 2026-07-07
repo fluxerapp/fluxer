@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {AuthSessionResponse} from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 import type {ApiTestHarness} from '../../test/ApiTestHarness';
 import {createBuilder, createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
 import {
 	createAuthHarness,
 	createTestAccount,
+	createTotpSecret,
 	createUniqueEmail,
 	disableSso,
 	enableSso,
@@ -28,8 +30,19 @@ interface SsoCompleteResponse {
 interface SsoStatusResponse {
 	enabled: boolean;
 	enforced: boolean;
+	disable_additional_auth: boolean;
 	display_name?: string;
 	redirect_uri: string;
+}
+
+interface SudoModeRequiredResponse {
+	code: 'SUDO_MODE_REQUIRED';
+	has_mfa: boolean;
+	methods: {
+		totp: boolean;
+		webauthn: boolean;
+		sso?: boolean;
+	};
 }
 
 function getAuthorizationUrlParam(authorizationUrlString: string, param: string): string | null {
@@ -681,6 +694,96 @@ describe('Auth SSO flow', () => {
 				.execute();
 		});
 	});
+	describe('sudo verification', () => {
+		let admin: TestAccount;
+		beforeEach(async () => {
+			admin = await createTestAccount(harness);
+			admin = await setUserACLs(harness, admin, [
+				'admin:authenticate',
+				'instance:config:update',
+				'instance:config:view',
+			]);
+			await enableSso(harness, admin.token);
+		});
+		afterEach(async () => {
+			await disableSso(harness, admin.token);
+		});
+		it('issues a sudo token after the current SSO user reauthenticates with SSO', async () => {
+			const email = createUniqueEmail('sso-sudo');
+			const subject = `itest-sso-sudo-${Date.now()}`;
+			const loginStart = await createBuilderWithoutAuth<SsoStartResponse>(harness)
+				.post('/auth/sso/start')
+				.body({})
+				.execute();
+			const login = await createBuilderWithoutAuth<SsoCompleteResponse>(harness)
+				.post('/auth/sso/complete')
+				.body({
+					code: JSON.stringify({email, sub: subject, email_verified: true}),
+					state: loginStart.state,
+				})
+				.execute();
+			const sessions = await createBuilder<Array<AuthSessionResponse>>(harness, login.token)
+				.get('/auth/sessions')
+				.execute();
+			expect(sessions.length).toBeGreaterThan(0);
+			await createBuilder(harness, login.token)
+				.post('/auth/sessions/logout')
+				.body({session_id_hashes: [sessions[0]!.id_hash]})
+				.expect(403)
+				.execute();
+			const sudoStart = await createBuilder<SsoStartResponse>(harness, login.token)
+				.post('/auth/sso/sudo/start')
+				.body({})
+				.execute();
+			const {response, json} = await createBuilder<{sudo_token: string}>(harness, login.token)
+				.post('/auth/sso/sudo/complete')
+				.body({
+					code: JSON.stringify({email, sub: subject, email_verified: true}),
+					state: sudoStart.state,
+				})
+				.executeWithResponse();
+			const sudoToken = response.headers.get('X-Fluxer-Sudo-Mode-JWT');
+			expect(sudoToken).toBeTruthy();
+			expect(json.sudo_token).toBe(sudoToken);
+			await createBuilder(harness, login.token)
+				.post('/auth/sessions/logout')
+				.header('X-Fluxer-Sudo-Mode-JWT', sudoToken!)
+				.body({session_id_hashes: [sessions[0]!.id_hash]})
+				.expect(204)
+				.execute();
+		});
+		it('rejects SSO sudo completion when the provider identity belongs to another user', async () => {
+			const email = createUniqueEmail('sso-sudo-owner');
+			const subject = `itest-sso-sudo-owner-${Date.now()}`;
+			const loginStart = await createBuilderWithoutAuth<SsoStartResponse>(harness)
+				.post('/auth/sso/start')
+				.body({})
+				.execute();
+			const login = await createBuilderWithoutAuth<SsoCompleteResponse>(harness)
+				.post('/auth/sso/complete')
+				.body({
+					code: JSON.stringify({email, sub: subject, email_verified: true}),
+					state: loginStart.state,
+				})
+				.execute();
+			const sudoStart = await createBuilder<SsoStartResponse>(harness, login.token)
+				.post('/auth/sso/sudo/start')
+				.body({})
+				.execute();
+			await createBuilder(harness, login.token)
+				.post('/auth/sso/sudo/complete')
+				.body({
+					code: JSON.stringify({
+						email: createUniqueEmail('sso-sudo-other'),
+						sub: `itest-sso-sudo-other-${Date.now()}`,
+						email_verified: true,
+					}),
+					state: sudoStart.state,
+				})
+				.expect(400, 'INVALID_FORM_BODY')
+				.execute();
+		});
+	});
 	describe('status endpoint', () => {
 		let admin: TestAccount;
 		beforeEach(async () => {
@@ -711,6 +814,7 @@ describe('Auth SSO flow', () => {
 			const status = await createBuilderWithoutAuth<SsoStatusResponse>(harness).get('/auth/sso/status').execute();
 			expect(status.enabled).toBe(true);
 			expect(status.enforced).toBe(false);
+			expect(status.disable_additional_auth).toBe(false);
 			await disableSso(harness, admin.token);
 		});
 		it('does not advertise enabled SSO when optional SSO cannot resolve claims', async () => {
@@ -736,7 +840,166 @@ describe('Auth SSO flow', () => {
 			const status = await createBuilderWithoutAuth<SsoStatusResponse>(harness).get('/auth/sso/status').execute();
 			expect(status.enabled).toBe(false);
 			expect(status.enforced).toBe(false);
+			expect(status.disable_additional_auth).toBe(false);
 			await disableSso(harness, admin.token);
+		});
+	});
+
+	describe('SSO local credentials restrictions', () => {
+		let admin: TestAccount;
+		beforeEach(async () => {
+			admin = await createTestAccount(harness);
+			admin = await setUserACLs(harness, admin, [
+				'admin:authenticate',
+				'instance:config:update',
+				'instance:config:view',
+			]);
+		});
+		afterEach(async () => {
+			await disableSso(harness, admin.token);
+		});
+
+		it('enforces password and MFA restrictions based on sso configuration', async () => {
+			// 1. Enable SSO allowing additional auth, not enforced
+			await enableSso(harness, admin.token, {enforced: false, disable_additional_auth: false});
+
+			// Login via SSO
+			const startData = await createBuilderWithoutAuth<SsoStartResponse>(harness).post('/auth/sso/start').execute();
+			const email = `sso-user-restrict-${Date.now()}@example.com`;
+			const completeData = await createBuilderWithoutAuth<SsoCompleteResponse>(harness)
+				.post('/auth/sso/complete')
+				.body({
+					code: email,
+					state: startData.state,
+				})
+				.execute();
+
+			// SSO user obtains a sudo token via OIDC re-authentication
+			const sudoStart = await createBuilder<SsoStartResponse>(harness, completeData.token)
+				.post('/auth/sso/sudo/start')
+				.body({})
+				.execute();
+			const sudoTokenRes = await createBuilder<{sudo_token: string}>(harness, completeData.token)
+				.post('/auth/sso/sudo/complete')
+				.body({
+					code: email,
+					state: sudoStart.state,
+				})
+				.execute();
+			const sudoToken = sudoTokenRes.sudo_token;
+
+			// Under disable_additional_auth: false and enforced: false, SSO user CAN start password change
+			const pwStartResult = await createBuilder(harness, completeData.token)
+				.post('/users/@me/password-change/start')
+				.expect(200)
+				.execute();
+			expect(pwStartResult).toHaveProperty('ticket');
+
+			const validSecret = createTotpSecret();
+
+			// Under disable_additional_auth: false and enforced: false, SSO user CAN start TOTP enable (will fail on bad secret/code, but shouldn't be blocked by SSO)
+			await createBuilder(harness, completeData.token)
+				.post('/users/@me/mfa/totp/enable')
+				.header('X-Fluxer-Sudo-Mode-JWT', sudoToken)
+				.body({secret: validSecret, code: '000000'})
+				.expect(400) // Expect validation / code failure, NOT SSO_REQUIRED (403)
+				.execute();
+
+			// 2. Update config to disallow additional auth
+			await enableSso(harness, admin.token, {enforced: false, disable_additional_auth: true});
+
+			// Now, password change start should be blocked (403 Forbidden)
+			await createBuilder(harness, completeData.token).post('/users/@me/password-change/start').expect(403).execute();
+
+			// TOTP enable should be blocked (403 Forbidden)
+			await createBuilder(harness, completeData.token)
+				.post('/users/@me/mfa/totp/enable')
+				.header('X-Fluxer-Sudo-Mode-JWT', sudoToken)
+				.body({secret: validSecret, code: '000000'})
+				.expect(403)
+				.execute();
+
+			// 3. Update config to enforce SSO (and allow additional auth: true)
+			await enableSso(harness, admin.token, {enforced: true, disable_additional_auth: false});
+
+			// Should still be blocked because SSO is enforced!
+			await createBuilder(harness, completeData.token).post('/users/@me/password-change/start').expect(403).execute();
+
+			await createBuilder(harness, completeData.token)
+				.post('/users/@me/mfa/totp/enable')
+				.header('X-Fluxer-Sudo-Mode-JWT', sudoToken)
+				.body({secret: validSecret, code: '000000'})
+				.expect(403)
+				.execute();
+		});
+
+		it('normalizes disable_additional_auth to false when SSO is enforced', async () => {
+			// Update config with enforced: true and disable_additional_auth: true
+			await enableSso(harness, admin.token, {enforced: true, disable_additional_auth: true});
+
+			// Verify that the configuration fetched from the admin API has disable_additional_auth set to false
+			const config = await createBuilder<{sso: {enforced: boolean; disable_additional_auth: boolean}}>(
+				harness,
+				admin.token,
+			)
+				.post('/admin/instance-config/get')
+				.expect(200)
+				.execute();
+
+			expect(config.sso.enforced).toBe(true);
+			expect(config.sso.disable_additional_auth).toBe(false);
+		});
+
+		it('requires SSO sudo for SSO-managed accounts when additional auth is disabled', async () => {
+			await enableSso(harness, admin.token, {enforced: false, disable_additional_auth: true});
+
+			const startData = await createBuilderWithoutAuth<SsoStartResponse>(harness).post('/auth/sso/start').execute();
+			const email = `sso-sudo-restricted-${Date.now()}@example.com`;
+			const completeData = await createBuilderWithoutAuth<SsoCompleteResponse>(harness)
+				.post('/auth/sso/complete')
+				.body({
+					code: email,
+					state: startData.state,
+				})
+				.execute();
+			const sessions = await createBuilder<Array<AuthSessionResponse>>(harness, completeData.token)
+				.get('/auth/sessions')
+				.execute();
+			const sudoRequired = await createBuilder<SudoModeRequiredResponse>(harness, completeData.token)
+				.post('/auth/sessions/logout')
+				.body({
+					session_id_hashes: [sessions[0]!.id_hash],
+				})
+				.expect(403, 'SUDO_MODE_REQUIRED')
+				.execute();
+
+			expect(sudoRequired.methods).toEqual({totp: false, webauthn: false, sso: true});
+		});
+
+		it('includes SSO under allowed methods for SSO-managed accounts when SSO is optional', async () => {
+			await enableSso(harness, admin.token, {enforced: false, disable_additional_auth: false});
+
+			const startData = await createBuilderWithoutAuth<SsoStartResponse>(harness).post('/auth/sso/start').execute();
+			const email = `sso-sudo-optional-${Date.now()}@example.com`;
+			const completeData = await createBuilderWithoutAuth<SsoCompleteResponse>(harness)
+				.post('/auth/sso/complete')
+				.body({
+					code: email,
+					state: startData.state,
+				})
+				.execute();
+			const sessions = await createBuilder<Array<AuthSessionResponse>>(harness, completeData.token)
+				.get('/auth/sessions')
+				.execute();
+			const sudoRequired = await createBuilder<SudoModeRequiredResponse>(harness, completeData.token)
+				.post('/auth/sessions/logout')
+				.body({
+					session_id_hashes: [sessions[0]!.id_hash],
+				})
+				.expect(403, 'SUDO_MODE_REQUIRED')
+				.execute();
+
+			expect(sudoRequired.methods.sso).toBe(true);
 		});
 	});
 });

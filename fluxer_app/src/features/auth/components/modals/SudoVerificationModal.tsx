@@ -3,6 +3,7 @@
 import * as Modal from '@app/features/app/components/dialogs/Modal';
 import {Endpoints} from '@app/features/app/constants/Endpoints';
 import styles from '@app/features/auth/components/modals/SudoVerificationModal.module.css';
+import {SSO_SUDO_COMPLETE_MESSAGE, startSsoSudo} from '@app/features/auth/state/SsoSudoFlow';
 import SudoPrompt, {SudoVerificationMethod} from '@app/features/auth/state/SudoPrompt';
 import * as WebAuthnUtils from '@app/features/auth/utils/WebAuthnUtils';
 import {PASSWORD_DESCRIPTOR, VERIFY_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
@@ -25,6 +26,10 @@ const PASSKEYS_REQUIRE_A_SIGNED_MACOS_BUNDLE_WITH_A_DESCRIPTOR = msg({
 		'Passkeys require a signed macOS bundle with a valid application identifier. Install the signed desktop client and retry.',
 	comment:
 		'Sudo (re-auth) modal body shown on unsigned macOS desktop bundles where passkeys cannot work. Direct the user to install the signed client.',
+});
+const COULDN_T_VERIFY_WITH_SSO_PLEASE_TRY_AGAIN_DESCRIPTOR = msg({
+	message: "Couldn't verify with SSO. Try again.",
+	comment: 'Sudo (re-auth) modal toast error shown when SSO verification fails. Keep plain.',
 });
 const COULDN_T_VERIFY_WITH_PASSKEY_PLEASE_TRY_AGAIN_DESCRIPTOR = msg({
 	message: "Couldn't verify with passkey. Try again.",
@@ -71,15 +76,32 @@ const SudoVerificationModal: React.FC = observer(() => {
 	const form = useForm<FormInputs>({defaultValues: {password: '', totp: ''}});
 	const [webAuthnInFlight, setWebAuthnInFlight] = useState(false);
 	const [webAuthnError, setWebAuthnError] = useState<string | null>(null);
+	const [ssoInFlight, setSsoInFlight] = useState(false);
+	const [ssoError, setSsoError] = useState<string | null>(null);
 	const autoTriggeredRef = useRef(false);
+	const popupTimerRef = useRef<number | null>(null);
+	const messageListenerRef = useRef<((event: MessageEvent) => void) | null>(null);
 	const showPasskey = availableMethods.webauthn;
 	const showTotp = availableMethods.totp;
 	const showPassword = availableMethods.password;
-	const noMethodsAvailable = !showPasskey && !showTotp && !showPassword;
+	const showSso = availableMethods.sso;
+	const noMethodsAvailable = !showPasskey && !showTotp && !showPassword && !showSso;
+	useEffect(() => {
+		return () => {
+			if (popupTimerRef.current) {
+				window.clearInterval(popupTimerRef.current);
+			}
+			if (messageListenerRef.current) {
+				window.removeEventListener('message', messageListenerRef.current);
+			}
+		};
+	}, []);
 	useEffect(() => {
 		form.reset({password: '', totp: ''});
 		setWebAuthnError(null);
 		setWebAuthnInFlight(false);
+		setSsoError(null);
+		setSsoInFlight(false);
 		autoTriggeredRef.current = false;
 	}, [form]);
 	useEffect(() => {
@@ -91,9 +113,74 @@ const SudoVerificationModal: React.FC = observer(() => {
 			form.setError(fallback, {type: 'server', message: verificationError});
 		}
 		setWebAuthnInFlight(false);
+		setSsoInFlight(false);
 	}, [form, verificationError, rawError, i18n, showPassword, showTotp]);
+	const handleSso = async () => {
+		if (ssoInFlight || isVerifying) return;
+		setSsoError(null);
+		form.clearErrors();
+		setSsoInFlight(true);
+		try {
+			const redirectTo = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+			const result = await startSsoSudo({redirectTo});
+			const popup = window.open(result.authorizationUrl, 'fluxer-sso-sudo', 'popup,width=520,height=720');
+			if (!popup) {
+				window.location.assign(result.authorizationUrl);
+				return;
+			}
+			if (popupTimerRef.current) {
+				window.clearInterval(popupTimerRef.current);
+				popupTimerRef.current = null;
+			}
+			if (messageListenerRef.current) {
+				window.removeEventListener('message', messageListenerRef.current);
+				messageListenerRef.current = null;
+			}
+			const handleMessage = (event: MessageEvent) => {
+				if (event.origin !== window.location.origin) return;
+				const data = event.data as {type?: unknown; state?: unknown; sudoToken?: unknown};
+				if (data.type !== SSO_SUDO_COMPLETE_MESSAGE || data.state !== result.state) return;
+				if (popupTimerRef.current) {
+					window.clearInterval(popupTimerRef.current);
+					popupTimerRef.current = null;
+				}
+				window.removeEventListener('message', handleMessage);
+				messageListenerRef.current = null;
+				if (typeof data.sudoToken !== 'string' || !data.sudoToken) {
+					setSsoInFlight(false);
+					setSsoError(i18n._(COULDN_T_VERIFY_WITH_SSO_PLEASE_TRY_AGAIN_DESCRIPTOR));
+					return;
+				}
+				SudoPrompt.completeWithSsoToken(data.sudoToken);
+			};
+			messageListenerRef.current = handleMessage;
+			window.addEventListener('message', handleMessage);
+			popupTimerRef.current = window.setInterval(() => {
+				if (!popup.closed) return;
+				if (popupTimerRef.current) {
+					window.clearInterval(popupTimerRef.current);
+					popupTimerRef.current = null;
+				}
+				window.removeEventListener('message', handleMessage);
+				messageListenerRef.current = null;
+				setSsoInFlight(false);
+			}, 500);
+		} catch (err) {
+			logger.error('SSO verification failed', err);
+			if (popupTimerRef.current) {
+				window.clearInterval(popupTimerRef.current);
+				popupTimerRef.current = null;
+			}
+			if (messageListenerRef.current) {
+				window.removeEventListener('message', messageListenerRef.current);
+				messageListenerRef.current = null;
+			}
+			setSsoInFlight(false);
+			setSsoError(i18n._(COULDN_T_VERIFY_WITH_SSO_PLEASE_TRY_AGAIN_DESCRIPTOR));
+		}
+	};
 	const handleWebAuthn = async () => {
-		if (webAuthnInFlight || isVerifying) return;
+		if (webAuthnInFlight || isVerifying || ssoInFlight) return;
 		setWebAuthnError(null);
 		form.clearErrors();
 		setWebAuthnInFlight(true);
@@ -118,11 +205,12 @@ const SudoVerificationModal: React.FC = observer(() => {
 	};
 	useEffect(() => {
 		if (autoTriggeredRef.current) return;
+		if (showSso) return;
 		if (!showPasskey || showPassword || showTotp) return;
 		if (lastUsedMfaMethod && lastUsedMfaMethod !== 'webauthn') return;
 		autoTriggeredRef.current = true;
 		void handleWebAuthn();
-	}, [showPasskey, showPassword, showTotp]);
+	}, [showPasskey, showPassword, showTotp, showSso]);
 	const handleClose = () => {
 		SudoPrompt.reject(new DOMException('User cancelled verification', 'AbortError'));
 	};
@@ -204,6 +292,27 @@ const SudoVerificationModal: React.FC = observer(() => {
 									/>
 								)}
 
+								{showSso && (
+									<>
+										<Button
+											type="button"
+											onClick={handleSso}
+											submitting={ssoInFlight}
+											disabled={isVerifying || webAuthnInFlight || ssoInFlight}
+											fitContainer
+											autoFocus
+											data-flx="auth.sudo-verification-modal.button.sso"
+										>
+											<Trans>Continue with SSO</Trans>
+										</Button>
+										{ssoError && (
+											<p className={styles.formError} role="alert" data-flx="auth.sudo-verification-modal.sso-error">
+												{ssoError}
+											</p>
+										)}
+									</>
+								)}
+
 								{showPasskey && (
 									<>
 										{webAuthnInFlight ? (
@@ -266,7 +375,7 @@ const SudoVerificationModal: React.FC = observer(() => {
 						<Button
 							type="submit"
 							submitting={isVerifying}
-							disabled={isVerifying || webAuthnInFlight}
+							disabled={isVerifying || webAuthnInFlight || ssoInFlight}
 							data-flx="auth.sudo-verification-modal.button.submit"
 						>
 							{i18n._(VERIFY_DESCRIPTOR)}

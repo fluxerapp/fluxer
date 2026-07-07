@@ -13,12 +13,14 @@ import {LinkedDevicesManagementModal} from '@app/features/user/components/modals
 import type {AccountSettingsManagementSectionId} from '@app/features/user/components/settings_utils/SettingsNavigationGroups';
 import type {User} from '@app/features/user/models/User';
 import type {WebAuthnCredential} from '@app/features/user/state/WebAuthnCredentials';
+import {getAccountSecurityCapabilities} from '@app/features/user/utils/AccountSecurityCapabilities';
 import * as FormUtils from '@app/lib/forms';
 import {msg} from '@lingui/core/macro';
-import {useLingui} from '@lingui/react/macro';
+import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useRef, useState} from 'react';
+import styles from './SecurityTab.module.css';
 
 const SIGN_IN_DETAILS_DESCRIPTOR = msg({
 	message: 'Sign-in details',
@@ -53,6 +55,8 @@ interface AccountSecuritySectionsProps {
 export const AccountSecuritySections: React.FC<AccountSecuritySectionsProps> = observer(
 	({user, isClaimed, passkeys, showMaskedEmail, setShowMaskedEmail, targetSection}) => {
 		const {i18n} = useLingui();
+		const capabilities = getAccountSecurityCapabilities(user);
+		const showSignInDetails = isClaimed && (capabilities.canManageLocalEmail || capabilities.canManageLocalPassword);
 		const [authorizedAppsSubmitting, setAuthorizedAppsSubmitting] = useState(false);
 		const authorizedAppsSubmittingRef = useRef(false);
 		const openAuthorizedAppsModal = useCallback(() => {
@@ -91,13 +95,24 @@ export const AccountSecuritySections: React.FC<AccountSecuritySectionsProps> = o
 						title={i18n._(SIGN_IN_DETAILS_DESCRIPTOR)}
 						data-flx="user.account-security-sections.account"
 					>
-						<AccountTabContent
-							user={user}
-							isClaimed={isClaimed}
-							showMaskedEmail={showMaskedEmail}
-							setShowMaskedEmail={setShowMaskedEmail}
-							data-flx="user.account-security-sections.account-tab-content"
-						/>
+						{showSignInDetails ? (
+							<AccountTabContent
+								user={user}
+								isClaimed={isClaimed}
+								showMaskedEmail={showMaskedEmail}
+								setShowMaskedEmail={setShowMaskedEmail}
+								data-flx="user.account-security-sections.account-tab-content"
+							/>
+						) : (
+							<div className={styles.notice} data-flx="user.account-security-sections.notice">
+								<p className={styles.noticeText} data-flx="user.account-security-sections.notice-text">
+									<Trans>
+										This account is managed via Single Sign-On (SSO). Sign-in details and two-factor authentication are
+										managed by your provider.
+									</Trans>
+								</p>
+							</div>
+						)}
 					</SettingsSection>
 				)}
 				{isClaimed && (
@@ -109,6 +124,7 @@ export const AccountSecuritySections: React.FC<AccountSecuritySectionsProps> = o
 					>
 						<SecurityTabContent
 							user={user}
+							capabilities={capabilities}
 							isClaimed={isClaimed}
 							passkeys={passkeys}
 							authorizedAppsSubmitting={authorizedAppsSubmitting}

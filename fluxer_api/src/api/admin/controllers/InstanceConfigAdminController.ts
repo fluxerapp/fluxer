@@ -68,6 +68,7 @@ async function buildInstanceConfigResponse(): Promise<InstanceConfigResponse> {
 		sso: {
 			enabled: ssoConfig.enabled,
 			enforced: ssoConfig.enforced,
+			disable_additional_auth: ssoConfig.disableAdditionalAuth,
 			display_name: ssoConfig.displayName,
 			issuer: ssoConfig.issuer,
 			authorization_url: ssoConfig.authorizationUrl,
@@ -215,6 +216,10 @@ export function InstanceConfigAdminController(app: HonoApp) {
 				const next = {
 					enabled: mergeOptionalField(current.enabled, readOptionalField(sso, 'enabled')),
 					enforced: mergeOptionalField(current.enforced, readOptionalField(sso, 'enforced')),
+					disableAdditionalAuth: mergeOptionalField(
+						current.disableAdditionalAuth,
+						readOptionalField(sso, 'disable_additional_auth'),
+					),
 					displayName: mergeOptionalField(current.displayName, readOptionalField(sso, 'display_name')),
 					issuer: mergeOptionalField(current.issuer, readOptionalField(sso, 'issuer')),
 					authorizationUrl: mergeOptionalField(current.authorizationUrl, readOptionalField(sso, 'authorization_url')),
@@ -235,6 +240,7 @@ export function InstanceConfigAdminController(app: HonoApp) {
 				await instanceConfigRepository.setSsoConfig({
 					enabled: validated.enabled,
 					enforced: validated.enforced,
+					disableAdditionalAuth: validated.disableAdditionalAuth,
 					displayName: next.displayName,
 					issuer: validated.issuer,
 					authorizationUrl: validated.authorizationUrl,
@@ -314,7 +320,10 @@ export function InstanceConfigAdminController(app: HonoApp) {
 									provider: readOptionalField(data.integrations.email, 'provider'),
 									from_email: readOptionalField(data.integrations.email, 'from_email'),
 									from_name: readOptionalField(data.integrations.email, 'from_name'),
-									disable_new_ip_authorization: readOptionalField(data.integrations.email, 'disable_new_ip_authorization'),
+									disable_new_ip_authorization: readOptionalField(
+										data.integrations.email,
+										'disable_new_ip_authorization',
+									),
 								}),
 								smtp: data.integrations.email.smtp
 									? omitUndefinedFields({

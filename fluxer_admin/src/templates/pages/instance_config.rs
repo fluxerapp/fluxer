@@ -1387,7 +1387,32 @@ fn sso_config_section(base: &str, csrf_token: &str, sso: &SsoConfigResponse) -> 
                     div class="flex flex-col gap-2" {
                         (checkbox("sso_enabled", "true", "Enable SSO", sso.enabled, true))
                         (checkbox("sso_enforced", "true", "Require SSO (disables local password login and registration)", sso.enforced, true))
+                        div id="sso_disable_additional_auth_container" style=(if sso.enforced { "display: none;" } else { "" }) {
+                            (checkbox("sso_disable_additional_auth", "true", "Disallow SSO accounts from adding different authentication methods (e.g. passwords, TOTP)", sso.disable_additional_auth, true))
+                        }
                         (checkbox("sso_auto_provision", "true", "Automatically provision users on first SSO login", sso.auto_provision, true))
+                    }
+                    script {
+                        (maud::PreEscaped(r#"
+                            (function() {
+                                const enforcedCheckbox = document.querySelector('input[name="sso_enforced"]');
+                                const container = document.getElementById('sso_disable_additional_auth_container');
+                                if (enforcedCheckbox && container) {
+                                    function updateVisibility() {
+                                        if (enforcedCheckbox.checked) {
+                                            container.style.display = 'none';
+                                            const innerCheckbox = container.querySelector('input[type="checkbox"]');
+                                            if (innerCheckbox) {
+                                                innerCheckbox.checked = false;
+                                            }
+                                        } else {
+                                            container.style.display = '';
+                                        }
+                                    }
+                                    enforcedCheckbox.addEventListener('change', updateVisibility);
+                                }
+                            })();
+                        "#))
                     }
                     div class="grid grid-cols-1 gap-4 sm:grid-cols-2" {
                         (text_input("sso_display_name", "Display Name", sso.display_name.as_deref().unwrap_or(""), "Example Identity Provider"))

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import SudoVerificationModal from '@app/features/auth/components/modals/SudoVerificationModal';
 import Sudo from '@app/features/auth/state/AuthSudo';
 import type {SudoVerificationPayload} from '@app/features/auth/types/AuthSudoTypes';
@@ -11,6 +12,7 @@ import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import {makeSyncedField} from '@app/features/user/state/SyncedField';
 import Users from '@app/features/user/state/Users';
+import {isSsoManagedUser} from '@app/features/user/utils/AccountSecurityCapabilities';
 import {UserAuthenticatorTypes} from '@fluxer/constants/src/UserConstants';
 import {MfaMethod, SudoPromptStateSchema} from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/preferences_pb';
 import {makeAutoObservable, runInAction} from 'mobx';
@@ -20,6 +22,7 @@ interface SudoErrorPayload {
 	methods?: {
 		totp?: boolean;
 		webauthn?: boolean;
+		sso?: boolean;
 	};
 }
 
@@ -57,6 +60,7 @@ export interface AvailableMethods {
 	password: boolean;
 	totp: boolean;
 	webauthn: boolean;
+	sso: boolean;
 	hasMfa: boolean;
 }
 
@@ -75,6 +79,7 @@ const EMPTY_METHODS: AvailableMethods = {
 	password: false,
 	totp: false,
 	webauthn: false,
+	sso: false,
 	hasMfa: false,
 };
 
@@ -85,10 +90,22 @@ function deriveMethodsFromCurrentUser(): AvailableMethods {
 	const totp = types?.includes(UserAuthenticatorTypes.TOTP) ?? false;
 	const webauthn = types?.includes(UserAuthenticatorTypes.WEBAUTHN) ?? false;
 	const hasMfa = user.mfaEnabled ?? (totp || webauthn);
+	const isSso = isSsoManagedUser(user);
+	const ssoEnforced = RuntimeConfig.sso?.enforced ?? false;
+	const ssoDisableAdditional = RuntimeConfig.sso?.disable_additional_auth ?? false;
+	const ssoRestricted = isSso && (ssoEnforced || ssoDisableAdditional);
+	if (ssoRestricted) {
+		return {
+			...EMPTY_METHODS,
+			sso: true,
+			hasMfa: false,
+		};
+	}
 	return {
 		password: !hasMfa,
 		totp,
 		webauthn,
+		sso: isSso,
 		hasMfa,
 	};
 }
@@ -183,6 +200,14 @@ class SudoPrompt {
 		if (!payload) return;
 		const baseline = deriveMethodsFromCurrentUser();
 		const hasMfa = typeof payload.has_mfa === 'boolean' ? payload.has_mfa : baseline.hasMfa;
+		const isSso = isSsoManagedUser(Users.currentUser!);
+		const ssoEnforced = RuntimeConfig.sso?.enforced ?? false;
+		const ssoDisableAdditional = RuntimeConfig.sso?.disable_additional_auth ?? false;
+		const ssoRestricted = isSso && (ssoEnforced || ssoDisableAdditional);
+		if (ssoRestricted) {
+			this.availableMethods = {...EMPTY_METHODS, sso: true};
+			return;
+		}
 		const methods = payload.methods ?? {};
 		const totp = methods.totp === true || (methods.totp === undefined && baseline.totp);
 		const webauthn = methods.webauthn === true || (methods.webauthn === undefined && baseline.webauthn);
@@ -190,6 +215,7 @@ class SudoPrompt {
 			password: !hasMfa,
 			totp,
 			webauthn,
+			sso: baseline.sso,
 			hasMfa,
 		};
 	}
@@ -231,6 +257,11 @@ class SudoPrompt {
 			this.rejecter = null;
 			resolver(payload);
 		}
+	}
+
+	completeWithSsoToken(token: string): void {
+		Sudo.setToken(token);
+		this.submit({});
 	}
 
 	reject(reason?: unknown): void {

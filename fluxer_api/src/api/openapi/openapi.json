@@ -1546,6 +1546,148 @@
 				"description": "Retrieve the current status of the SSO authentication session without authentication required."
 			}
 		},
+		"/auth/sso/sudo/complete": {
+			"post": {
+				"operationId": "complete_sso_sudo",
+				"summary": "Complete SSO sudo verification",
+				"tags": ["Auth"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/SsoSudoCompleteResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"code": {"type": "string", "enum": ["RATE_LIMITED"]},
+										"message": {"type": "string"},
+										"retry_after": {"type": "number", "description": "Seconds to wait before retrying"},
+										"global": {"type": "boolean", "description": "Whether this is a global rate limit"}
+									},
+									"required": ["code", "message", "retry_after"]
+								}
+							}
+						},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"x-mint": {"metadata": {"title": "Complete SSO sudo verification"}},
+				"description": "Complete an SSO reauthentication flow and issue a short-lived sudo mode token for the current user.",
+				"security": [{"sessionToken": []}],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/SsoCompleteRequest"}}}
+				}
+			}
+		},
+		"/auth/sso/sudo/start": {
+			"post": {
+				"operationId": "start_sso_sudo",
+				"summary": "Start SSO sudo verification",
+				"tags": ["Auth"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/SsoStartResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"code": {"type": "string", "enum": ["RATE_LIMITED"]},
+										"message": {"type": "string"},
+										"retry_after": {"type": "number", "description": "Seconds to wait before retrying"},
+										"global": {"type": "boolean", "description": "Whether this is a global rate limit"}
+									},
+									"required": ["code", "message", "retry_after"]
+								}
+							}
+						},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"x-mint": {"metadata": {"title": "Start SSO sudo verification"}},
+				"description": "Initiate a Single Sign-On (SSO) reauthentication session for sudo mode verification.",
+				"security": [{"sessionToken": []}],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/SsoStartRequest"}}}
+				}
+			}
+		},
 		"/auth/username-suggestions": {
 			"post": {
 				"operationId": "get_username_suggestions",
@@ -24823,13 +24965,17 @@
 						"properties": {
 							"enabled": {"type": "boolean", "description": "Whether SSO is enabled for this instance"},
 							"enforced": {"type": "boolean", "description": "Whether SSO is required for all users"},
+							"disable_additional_auth": {
+								"type": "boolean",
+								"description": "Whether SSO-managed accounts are prevented from adding or using local authentication methods"
+							},
 							"display_name": {
 								"anyOf": [{"type": "string"}, {"type": "null"}],
 								"description": "Display name of the SSO provider"
 							},
 							"redirect_uri": {"type": "string", "description": "OAuth redirect URI for SSO"}
 						},
-						"required": ["enabled", "enforced", "display_name", "redirect_uri"],
+						"required": ["enabled", "enforced", "disable_additional_auth", "display_name", "redirect_uri"],
 						"description": "Single sign-on configuration"
 					},
 					"registration": {
@@ -26342,13 +26488,24 @@
 				"properties": {
 					"enabled": {"type": "boolean", "description": "Whether SSO is enabled for this instance"},
 					"enforced": {"type": "boolean", "description": "Whether SSO is required for all users"},
+					"disable_additional_auth": {
+						"type": "boolean",
+						"description": "Whether SSO-managed accounts are prevented from adding or using local authentication methods"
+					},
 					"display_name": {
 						"anyOf": [{"type": "string"}, {"type": "null"}],
 						"description": "Display name of the SSO provider"
 					},
 					"redirect_uri": {"type": "string", "description": "OAuth redirect URI for SSO"}
 				},
-				"required": ["enabled", "enforced", "display_name", "redirect_uri"]
+				"required": ["enabled", "enforced", "disable_additional_auth", "display_name", "redirect_uri"]
+			},
+			"SsoSudoCompleteResponse": {
+				"type": "object",
+				"properties": {
+					"sudo_token": {"type": "string", "description": "Short-lived sudo token issued after SSO reauthentication"}
+				},
+				"required": ["sudo_token"]
 			},
 			"UsernameSuggestionsResponse": {
 				"type": "object",

@@ -161,6 +161,18 @@ export class AuthRequestService {
 		return this.toSsoCompleteResponse(this.ssoService.completeLogin({code: data.code, state: data.state, request}));
 	}
 
+	startSsoSudo(user: User, data: SsoStartRequest) {
+		return this.ssoService.startSudo({
+			user,
+			redirectTo: data.redirect_to ?? undefined,
+			redirectUri: data.redirect_uri ?? undefined,
+		});
+	}
+
+	completeSsoSudo(user: User, data: SsoCompleteRequest) {
+		return this.ssoService.completeSudo({code: data.code, state: data.state, user});
+	}
+
 	async register({data, request, requestCache}: AuthRegisterRequest): Promise<AuthRegisterResponse> {
 		const result = await AuthRegistration.register(this.apiContext, this.registrationDependencies, {
 			data,
