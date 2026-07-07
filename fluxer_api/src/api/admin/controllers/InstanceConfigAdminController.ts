@@ -268,11 +268,6 @@ export function InstanceConfigAdminController(app: HonoApp) {
 								theme_color: readOptionalField(data.app_public.branding, 'theme_color'),
 							})
 						: undefined,
-					setup: data.app_public.setup
-						? omitUndefinedFields({
-								configured: readOptionalField(data.app_public.setup, 'configured'),
-							})
-						: undefined,
 					legal: data.app_public.legal
 						? omitUndefinedFields({
 								terms_url: readOptionalField(data.app_public.legal, 'terms_url'),
@@ -314,7 +309,10 @@ export function InstanceConfigAdminController(app: HonoApp) {
 									provider: readOptionalField(data.integrations.email, 'provider'),
 									from_email: readOptionalField(data.integrations.email, 'from_email'),
 									from_name: readOptionalField(data.integrations.email, 'from_name'),
-									disable_new_ip_authorization: readOptionalField(data.integrations.email, 'disable_new_ip_authorization'),
+									disable_new_ip_authorization: readOptionalField(
+										data.integrations.email,
+										'disable_new_ip_authorization',
+									),
 								}),
 								smtp: data.integrations.email.smtp
 									? omitUndefinedFields({
@@ -361,6 +359,13 @@ export function InstanceConfigAdminController(app: HonoApp) {
 			}
 			if (data.policy) {
 				await applyInstancePolicyUpdate(ctx, data.policy);
+			}
+			if (data.app_public?.setup) {
+				await instanceConfigRepository.setAppPublicConfig({
+					setup: omitUndefinedFields({
+						configured: readOptionalField(data.app_public.setup, 'configured'),
+					}),
+				});
 			}
 			if (shouldGrantSetupCompleterAdmin) {
 				await grantSetupCompleterAdminACL(ctx);
