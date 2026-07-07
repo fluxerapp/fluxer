@@ -5,12 +5,16 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fluxer-marketing\n"
 "POT-Creation-Date: 2026-06-16 00:00+0000\n"
-"PO-Revision-Date: 2026-06-16 00:00+0000\n"
+"PO-Revision-Date: 2026-07-08 23:18+0000\n"
 "Language: id\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Last-Translator: Hampus <hampus@fluxer.com>\n"
+"Language-Team: Indonesian <https://weblate.fluxer.tools/projects/fluxer/"
+"marketing/id/>\n"
+"X-Generator: Weblate 2026.7.dev0\n"
 
 #. Compact UI label used in the home-page communities/moderation feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.communities.community_support
@@ -723,7 +727,10 @@ msgctxt "company_and_resources.source_and_contribution.translation.llm_translati
 msgid ""
 "All translations are currently LLM-generated with minimal human revision. We'd love to get real people to help us localize {product_name} into your language. To do so, email {l10n_email} and we'll be happy to accept your contributions."
 msgstr ""
-"Semua terjemahan saat ini dihasilkan oleh LLM dengan revisi minimal dari manusia. Kami ingin sekali mendapatkan bantuan dari orang sungguhan untuk melokalisasi {product_name} ke bahasa kamu. Untuk melakukannya, kirim email ke {l10n_email} dan kami akan dengan senang hati menerima kontribusi kamu."
+"Semua terjemahan saat ini dihasilkan oleh LLM dengan revisi minimal dari "
+"manusia. Kami sangat senang jika dapat bantuan dari orang sungguhan untuk "
+"melokalisasi {product_name} ke bahasa kamu. Untuk melakukannya, kirim email "
+"ke {l10n_email} dan kami akan dengan senang hati menerima kontribusi kamu."
 
 #. Department or policy category label on content pages. Translate as a compact noun phrase, not as a sentence.
 #: fluxer_marketing/generated:content.labels.community
