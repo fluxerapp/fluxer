@@ -10,15 +10,19 @@ use super::types::{
 };
 
 impl AdminApiClient {
-    pub async fn delete_message(&self, channel_id: &str, message_id: &str) -> ApiResult<()> {
+    pub async fn delete_message(
+        &self,
+        channel_id: &str,
+        message_id: &str,
+        audit_log_reason: Option<&str>,
+    ) -> ApiResult<()> {
         let body = generated_types::DeleteMessageRequest {
             channel_id: snowflake(channel_id),
             message_id: snowflake(message_id),
         };
-        self.generated()
-            .admin_delete_message(&body)
-            .await
-            .map_err(|e| self.generated_error(e))?;
+        let _: serde_json::Value = self
+            .post_typed_with_reason("/admin/messages/delete", &body, audit_log_reason)
+            .await?;
         Ok(())
     }
 

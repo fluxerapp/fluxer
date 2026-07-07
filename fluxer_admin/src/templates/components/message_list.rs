@@ -309,10 +309,94 @@ pub fn message_list(
 }
 
 pub fn message_deletion_script(csrf_token: &str) -> Markup {
-    let script = format!(
-        r#"(function(){{var csrf={csrf};function bp(){{return document.documentElement.dataset.basePath||'';}}function toast(level,message){{document.body.dispatchEvent(new CustomEvent('showFlash',{{detail:{{level:level,message:message}}}}));}}function post(action,fd){{fd.append('_csrf',csrf);return fetch(bp()+'/messages?action='+action,{{method:'POST',body:fd,credentials:'same-origin'}});}}function deleteMessage(b){{var fd=new FormData();fd.append('channel_id',b.dataset.channelId||'');fd.append('message_id',b.dataset.messageId||'');b.disabled=true;b.textContent='Deleting...';toast('info','Deleting message...');post('delete',fd).then(function(r){{if(!r.ok)throw new Error('Failed');var row=b.closest('[data-message-id]');if(row){{row.style.opacity='0.5';row.style.pointerEvents='none';}}b.textContent='Deleted';toast('success','Message deleted.');}}).catch(function(){{b.disabled=false;b.textContent='Delete';toast('error','Failed to delete message.');}});}}function reportNcmec(b){{var name=prompt('Type your full name to confirm you personally viewed this image and want to submit it to NCMEC.');if(!name||!name.trim())return;var fd=new FormData();fd.append('channel_id',b.dataset.channelId||'');fd.append('message_id',b.dataset.messageId||'');fd.append('attachment_id',b.dataset.attachmentId||'');fd.append('filename',b.dataset.filename||'');fd.append('reporter_full_name',name.trim());fd.append('confirmed_viewed','true');b.disabled=true;b.textContent='Reporting...';toast('info','Submitting NCMEC report...');post('report-to-ncmec',fd).then(function(r){{return r.json().catch(function(){{return null;}}).then(function(data){{if(!r.ok||!data||data.success!==true)throw new Error(data&&(data.error||data.message)||'Failed to report attachment to NCMEC');return data;}});}}).then(function(data){{b.textContent='Reported to NCMEC';b.dataset.ncmecStatus='submitted';if(data.ncmec_report_id)b.dataset.ncmecReportId=data.ncmec_report_id;toast('success','NCMEC report submitted.');}}).catch(function(err){{b.disabled=false;b.textContent='Report to NCMEC';toast('error',err&&err.message?err.message:'Failed to report attachment to NCMEC.');}});}}document.addEventListener('click',function(e){{var t=e.target;if(!(t instanceof HTMLElement))return;var d=t.closest('.delete-message-btn');if(d instanceof HTMLButtonElement){{e.preventDefault();deleteMessage(d);return;}}var n=t.closest('.ncmec-report-btn');if(n instanceof HTMLButtonElement&&!n.disabled){{e.preventDefault();reportNcmec(n);}}}});}})();"#,
-        csrf = serde_json::to_string(csrf_token).unwrap_or_else(|_| "\"\"".into()),
-    );
+    let csrf = serde_json::to_string(csrf_token).unwrap_or_else(|_| "\"\"".into());
+    let script = r#"(function() {
+    var csrf = __CSRF__;
+    function bp() {
+        return document.documentElement.dataset.basePath || '';
+    }
+    function toast(level, message) {
+        document.body.dispatchEvent(new CustomEvent('showFlash', {detail: {level: level, message: message}}));
+    }
+    function post(action, fields) {
+        fields.append('_csrf', csrf);
+        return fetch(bp() + '/messages?action=' + action, {
+            method: 'POST',
+            body: fields,
+            credentials: 'same-origin',
+            headers: {'x-csrf-token': csrf}
+        });
+    }
+    function deleteMessage(b) {
+        var fields = new URLSearchParams();
+        fields.append('channel_id', b.dataset.channelId || '');
+        fields.append('message_id', b.dataset.messageId || '');
+        b.disabled = true;
+        b.textContent = 'Deleting...';
+        toast('info', 'Deleting message...');
+        post('delete', fields).then(function(r) {
+            if (!r.ok) throw new Error('Failed');
+            var row = b.closest('[data-message-id]');
+            if (row) {
+                row.style.opacity = '0.5';
+                row.style.pointerEvents = 'none';
+            }
+            b.textContent = 'Deleted';
+            toast('success', 'Message deleted.');
+        }).catch(function() {
+            b.disabled = false;
+            b.textContent = 'Delete';
+            toast('error', 'Failed to delete message.');
+        });
+    }
+    function reportNcmec(b) {
+        var name = prompt('Type your full name to confirm you personally viewed this image and want to submit it to NCMEC.');
+        if (!name || !name.trim()) return;
+        var fields = new URLSearchParams();
+        fields.append('channel_id', b.dataset.channelId || '');
+        fields.append('message_id', b.dataset.messageId || '');
+        fields.append('attachment_id', b.dataset.attachmentId || '');
+        fields.append('filename', b.dataset.filename || '');
+        fields.append('reporter_full_name', name.trim());
+        fields.append('confirmed_viewed', 'true');
+        b.disabled = true;
+        b.textContent = 'Reporting...';
+        toast('info', 'Submitting NCMEC report...');
+        post('report-to-ncmec', fields).then(function(r) {
+            return r.json().catch(function() {
+                return null;
+            }).then(function(data) {
+                if (!r.ok || !data || data.success !== true) throw new Error(data && (data.error || data.message) || 'Failed to report attachment to NCMEC');
+                return data;
+            });
+        }).then(function(data) {
+            b.textContent = 'Reported to NCMEC';
+            b.dataset.ncmecStatus = 'submitted';
+            if (data.ncmec_report_id) b.dataset.ncmecReportId = data.ncmec_report_id;
+            toast('success', 'NCMEC report submitted.');
+        }).catch(function(err) {
+            b.disabled = false;
+            b.textContent = 'Report to NCMEC';
+            toast('error', err && err.message ? err.message : 'Failed to report attachment to NCMEC.');
+        });
+    }
+    document.addEventListener('click', function(e) {
+        var t = e.target;
+        if (!(t instanceof HTMLElement)) return;
+        var d = t.closest('.delete-message-btn');
+        if (d instanceof HTMLButtonElement) {
+            e.preventDefault();
+            deleteMessage(d);
+            return;
+        }
+        var n = t.closest('.ncmec-report-btn');
+        if (n instanceof HTMLButtonElement && !n.disabled) {
+            e.preventDefault();
+            reportNcmec(n);
+        }
+    });
+})();"#
+    .replace("__CSRF__", &csrf);
     html! {
         script defer { (PreEscaped(script)) }
     }

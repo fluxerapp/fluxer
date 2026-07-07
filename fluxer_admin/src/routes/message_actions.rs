@@ -98,7 +98,11 @@ pub(crate) async fn messages_post(
             let (Some(cid), Some(mid)) = (&channel_id, &message_id) else {
                 return json_error(StatusCode::BAD_REQUEST, "Missing channel_id or message_id");
             };
-            return match client.delete_message(cid, mid).await {
+            let audit_log_reason = form.clean("audit_log_reason");
+            return match client
+                .delete_message(cid, mid, audit_log_reason.as_deref())
+                .await
+            {
                 Ok(()) => Json(serde_json::json!({"success": true})).into_response(),
                 Err(e) => json_error(StatusCode::BAD_REQUEST, &format!("{e}")),
             };
