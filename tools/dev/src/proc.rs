@@ -122,7 +122,14 @@ impl Default for RunOptions<'_> {
 pub fn run_command(args: &[&str], options: RunOptions<'_>) -> Result<Output> {
     println!("$ {}", format_command(args));
     let env = merged_env(Some(&options.env), options.load_default_env)?;
-    let mut command = Command::new(args[0]);
+    let program = args[0];
+    let mut command = if cfg!(windows) && (program == "pnpm" || program == "npm" || program == "corepack") {
+        let mut cmd = Command::new("cmd");
+        cmd.arg("/c").arg(program);
+        cmd
+    } else {
+        Command::new(program)
+    };
     command
         .args(&args[1..])
         .current_dir(options.cwd)

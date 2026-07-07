@@ -369,7 +369,14 @@ fn docker_command() -> Vec<PathBuf> {
 }
 
 fn docker_socket_is_writable() -> bool {
-    std::os::unix::net::UnixStream::connect("/var/run/docker.sock").is_ok()
+    #[cfg(unix)]
+    {
+        std::os::unix::net::UnixStream::connect("/var/run/docker.sock").is_ok()
+    }
+    #[cfg(not(unix))]
+    {
+        false
+    }
 }
 
 fn replace_marked_block(existing: &str, generated: &str) -> String {

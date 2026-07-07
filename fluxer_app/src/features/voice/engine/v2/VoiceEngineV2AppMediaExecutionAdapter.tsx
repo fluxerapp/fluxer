@@ -117,7 +117,7 @@ import type {
 import {Track} from 'livekit-client';
 
 const logger = new Logger('VoiceEngineV2AppMediaExecutionAdapter');
-const LOCAL_SPEAKING_ANALYSER_INTERVAL_MS = 50;
+const LOCAL_SPEAKING_ANALYSER_INTERVAL_MS = 20;
 export const REPUBLISH_MICROPHONE_GUARD_MS = 150;
 type VoiceMuteReason = VoiceEngineV2AppVoiceMuteReason;
 
@@ -1571,8 +1571,8 @@ export class VoiceEngineV2AppMediaExecutionAdapter extends Store {
 		const audioContext = new AudioContextCtor({latencyHint: 'interactive'});
 		const sourceNode = audioContext.createMediaStreamSource(new MediaStream([track]));
 		const analyserNode = audioContext.createAnalyser();
-		analyserNode.fftSize = 256;
-		analyserNode.smoothingTimeConstant = 0.15;
+		analyserNode.fftSize = 1024;
+		analyserNode.smoothingTimeConstant = 0;
 		sourceNode.connect(analyserNode);
 		if (audioContext.state === 'suspended') {
 			void audioContext.resume().catch((error) => {

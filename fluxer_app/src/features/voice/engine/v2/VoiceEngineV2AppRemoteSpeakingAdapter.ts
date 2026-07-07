@@ -27,7 +27,7 @@ import type {Participant, RemoteAudioTrack, RemoteTrack, RemoteTrackPublication,
 import {assertNonEmptyString, assertNonNegativeFinite, assertObjectLike} from './VoiceEngineV2AppAdapterAssertions';
 
 const logger = new Logger('VoiceEngineV2AppRemoteSpeakingAdapter');
-export const REMOTE_SPEAKING_ANALYSER_INTERVAL_MS = 50;
+export const REMOTE_SPEAKING_ANALYSER_INTERVAL_MS = 20;
 export const REMOTE_SPEAKING_ANALYSER_HANDLES_CAP = 256;
 
 interface AnalyserHandle {
@@ -185,8 +185,8 @@ export class VoiceEngineV2AppRemoteSpeakingAdapter {
 		try {
 			const source = ctx.createMediaStreamSource(new MediaStream([mediaStreamTrack]));
 			const analyser = ctx.createAnalyser();
-			analyser.fftSize = 512;
-			analyser.smoothingTimeConstant = 0.2;
+			analyser.fftSize = 1024;
+			analyser.smoothingTimeConstant = 0;
 			source.connect(analyser);
 			const handle: AnalyserHandle = {
 				identity,
