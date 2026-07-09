@@ -4,19 +4,20 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: @lingui/cli\n"
+"X-Generator: Weblate 2026.7.dev0\n"
 "Language: id\n"
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: \n"
-"Last-Translator: \n"
-"Language-Team: \n"
-"Plural-Forms: \n"
+"PO-Revision-Date: 2026-07-07 23:18+0000\n"
+"Last-Translator: Hampus <hampus@fluxer.com>\n"
+"Language-Team: Indonesian <https://weblate.fluxer.tools/projects/fluxer/app/"
+"id/>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
 
 #. Description text in the messages tab.
 #: src/features/user/components/modals/tabs/appearance_tab/MessagesTab.tsx:51
 msgid "... turn dense mode on. Nice!"
-msgstr "... aktifkan mode padat. Mantap!"
+msgstr "... nyalakan mode aktif dense. Nice!"
 
 #. Button or menu action label in the channel and chat user message. Keep it concise.
 #: src/features/channel/components/MessageAttachments.tsx:362
@@ -27,17 +28,17 @@ msgstr "(diedit)"
 #. Error message in the messaging emoji renderer.
 #: src/features/messaging/components/markdown/renderers/EmojiRenderer.tsx:29
 msgid "(failed to load)"
-msgstr "(gagal memuat)"
+msgstr "(gagal dimuat)"
 
 #. Placeholder content text shown for scheduled messages with neither text nor attachments. Keep the parentheses.
 #: src/features/messaging/components/popouts/ScheduledMessagesContent.tsx:38
 msgid "(no content)"
-msgstr "(tanpa konten)"
+msgstr "(tidak ada konten)"
 
 #: src/features/app/components/pages/YouPage.tsx:183
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:899
 msgid "(only visible to you)"
-msgstr "(hanya Anda yang bisa melihat)"
+msgstr "(hanya dilihat oleh kamu)"
 
 #. Short label in the keybinds tab. Keep it concise.
 #: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindsList.tsx:25
@@ -46,7 +47,7 @@ msgstr "(belum ditetapkan)"
 
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/DMMembersList.tsx:120
 msgid "(you)"
-msgstr "(anda)"
+msgstr "(kamu)"
 
 #. placeholder {0}: guild.member_count
 #: src/features/discovery/discovery/DiscoveryGuildCard.tsx:257
@@ -67,11 +68,12 @@ msgstr "{a}, {b}, dan {c} sedang mengetik..."
 
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:571
 msgid "{actor} added channel permissions for {targetEntity} in {channelNode}."
-msgstr "{actor} menambahkan izin saluran untuk {targetEntity} di {channelNode}."
+msgstr ""
+"{actor} menambahkan perizinan saluran untuk {targetEntity} di {channelNode}."
 
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:576
 msgid "{actor} added channel permissions for {targetEntity}."
-msgstr "{actor} menambahkan izin channel untuk {targetEntity}."
+msgstr "{actor} menambahkan izin saluran untuk {targetEntity}."
 
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:671
 msgid "{actor} added the bot {targetMember}."
@@ -87,7 +89,7 @@ msgstr "{actor} menambahkan stiker {namedTarget}."
 
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:612
 msgid "{actor} banned {targetMember}."
-msgstr "{actor} membanned {targetMember}."
+msgstr "{actor} menagguhkan {targetMember}."
 
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:552
 msgid "{actor} created the channel {namedTarget}."
@@ -149,7 +151,7 @@ msgstr "{actor} menghapus webhook {namedTarget}."
 
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:665
 msgid "{actor} disconnected {targetMember} from voice."
-msgstr "{actor} memutus sambungan {targetMember} dari panggilan suara."
+msgstr "{actor} sambungan panggilan suara dari {targetMember} terputus."
 
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:606
 msgid "{actor} kicked {targetMember}."
@@ -174,11 +176,13 @@ msgstr "{actor} menyematkan pesan{0}."
 
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:648
 msgid "{actor} pruned inactive members."
-msgstr "{actor} menghapus anggota tidak aktif."
+msgstr "{actor} membersihkan anggota tidak aktif."
 
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:637
 msgid "{actor} pruned members inactive for {pruneDays, plural, one {# day} other {# days}}."
-msgstr "{actor} menghapus anggota yang tidak aktif selama {pruneDays, plural, one {# hari} other {# hari}}."
+msgstr ""
+"{actor} membersihkan anggota yang tidak aktif selama {pruneDays, plural, one "
+"{# hari} other {# hari}}."
 
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:595
 msgid "{actor} removed channel permissions for {targetEntity} in {channelNode}."
@@ -190,20 +194,21 @@ msgstr "{actor} menghapus izin saluran untuk {targetEntity}."
 
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:618
 msgid "{actor} unbanned {targetMember}."
-msgstr "{actor} membatalkan pemblokiran {targetMember}."
+msgstr "{actor} batalkan pemblokiran untuk {targetMember}."
 
 #. placeholder {0}: channelNode ? <> in {channelNode}</> : null
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:801
 msgid "{actor} unpinned a message{0}."
-msgstr "{actor} melepas sematan pesan{0}."
+msgstr "{actor} batal menyematkan pesan{0}."
 
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:624
 msgid "{actor} updated {targetMember}."
-msgstr "{actor} memperbarui {targetMember}."
+msgstr "{actor} {targetMember} diperbarui."
 
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:583
 msgid "{actor} updated channel permissions for {targetEntity} in {channelNode}."
-msgstr "{actor} memperbarui izin saluran untuk {targetEntity} di {channelNode}."
+msgstr ""
+"{actor} izin saluran untuk {targetEntity} sudah diperbarui di {channelNode}."
 
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:588
 msgid "{actor} updated channel permissions for {targetEntity}."
@@ -2831,7 +2836,9 @@ msgstr "Sesuaikan tingkat zoom keseluruhan aplikasi. Firefox tetap menggunakan p
 #. Description for the app zoom setting. The placeholders are keyboard shortcuts.
 #: src/features/user/components/modals/tabs/appearance_tab/ScalingTab.tsx:46
 msgid "Adjust the overall zoom level of the app. Use {zoomIn} / {zoomOut} to adjust quickly."
-msgstr "Sesuaikan tingkat zoom aplikasi secara keseluruhan. Gunakan {zoomIn} / {zoomOut} untuk menyesuaikan dengan cepat."
+msgstr ""
+"Sesuaikan tingkat level zoom aplikasi secara keseluruhan. Gunakan {zoomIn} / "
+"{zoomOut} untuk menyesuaikan dengan cepat."
 
 #. Inline adaptive-quality status in the stream settings menu. Shows the current automatically lowered resolution and frame rate.
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:146
@@ -6749,7 +6756,9 @@ msgstr "Pilih"
 #. Settings section description. One-line summary of what the settings section controls.
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:34
 msgid "Choose a base appearance, manage quick CSS, organize saved theme files, and tune theme tokens."
-msgstr "Pilih tampilan dasar, kelola CSS cepat, atur file tema tersimpan, dan sesuaikan token tema."
+msgstr ""
+"Pilih tampilan dasar, kelola CSS cepat, kelola file tema tersimpan, dan "
+"sesuaikan tune token tema."
 
 #. Form field label or placeholder for choosing a community.
 #: src/features/expressions/components/modals/AddFavoriteChannelModal.tsx:40
@@ -8196,7 +8205,8 @@ msgstr "Konfigurasikan penyedia terjemahan yang digunakan dari teks yang dipilih
 #. Settings section description. One-line summary of what the settings section controls.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:153
 msgid "Configure your camera, screen sharing quality, previews, and frame rate."
-msgstr "Konfigurasi kamera, kualitas berbagi layar, pratinjau, dan kecepatan bingkai Anda."
+msgstr ""
+"Konfigurasi kameramu, kualitas berbagi layar, pratinjau, dan frame rate."
 
 #. Settings section description. One-line summary of what the settings section controls.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:17
@@ -11122,7 +11132,10 @@ msgstr "Bilah notifikasi desktop"
 
 #: src/features/ui/commands/NotificationCommands.tsx:31
 msgid "Desktop notifications have been blocked. You can enable them later in your browser settings or in user settings, or in {notificationSettingsPath}."
-msgstr "Notifikasi desktop telah diblokir. Anda dapat mengaktifkannya nanti di pengaturan browser atau di pengaturan pengguna, atau di {notificationSettingsPath}."
+msgstr ""
+"Notifikasi desktop telah diblokir. Kamu dapat mengaktifkannya nanti di "
+"pengaturan browser atau di pengaturan pengguna, atau di "
+"{notificationSettingsPath}."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:110
@@ -13023,7 +13036,7 @@ msgstr "Aktifkan notifikasi desktop"
 #. Nagbar body shown in desktop/web contexts when notification permission is not yet enabled.
 #: src/features/app/components/layout/app_layout/nagbars/DesktopNotificationNagbar.tsx:51
 msgid "Enable desktop notifications to stay updated on new messages."
-msgstr "Aktifkan notifikasi desktop agar tetap update dengan pesan baru."
+msgstr "Aktifkan notifikasi desktop agar tetap ter-update dengan pesan baru."
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #. Short label for an advanced developer setting.
@@ -15177,7 +15190,7 @@ msgstr "Laju bingkai"
 #. Video settings note shown when higher frame rates require premium.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:53
 msgid "Frame rates above 30 FPS require {premiumProductName}"
-msgstr "Kecepatan bingkai di atas 30 FPS memerlukan {premiumProductName}"
+msgstr "Frame rate di atas 30 FPS memerlukan {premiumProductName}"
 
 #. Section header in the stream settings menu for frame rate options.
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:121
@@ -16894,7 +16907,9 @@ msgstr "Jika Anda tidak dapat menggunakan metode verifikasi apa pun, hubungi duk
 #. Confirmation modal body shown before dismissing the desktop-notification nagbar. {notificationSettingsPath} is the localized settings path.
 #: src/features/app/components/layout/app_layout/nagbars/DesktopNotificationNagbar.tsx:38
 msgid "If you dismiss this, you can always enable desktop notifications later under {notificationSettingsPath}."
-msgstr "Jika Anda menutup ini, Anda selalu dapat mengaktifkan notifikasi desktop nanti di {notificationSettingsPath}."
+msgstr ""
+"Jika Anda menutup ini, Kamu selalu dapat mengaktifkan notifikasi desktop "
+"nanti di {notificationSettingsPath}."
 
 #: src/features/voice/components/dialogs/DisablePiPConfirmModal.tsx:56
 msgid "If you don't remember this preference, we'll only hide the popout for this session. You can change this any time in {audioVideoSettingsPath}."
@@ -25222,26 +25237,26 @@ msgstr "Reaksi cepat"
 #: src/features/search/components/quick_switcher/QuickSwitcherModal.tsx:77
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:50
 msgid "Quick switcher"
-msgstr "Pengalih cepat"
+msgstr "Beralih cepat"
 
 #. Accessible label for the desktop quick switcher result listbox.
 #. Accessible label for the quick switcher result listbox.
 #: src/features/search/components/bottomsheets/QuickSwitcherBottomSheet.tsx:106
 #: src/features/search/components/quick_switcher/QuickSwitcherModal.tsx:98
 msgid "Quick switcher results"
-msgstr "Hasil pengalih cepat"
+msgstr "Hasil beralih cepat"
 
 #. Accessible label for the desktop quick switcher search input region.
 #. Accessible label for the quick switcher search input region.
 #: src/features/search/components/bottomsheets/QuickSwitcherBottomSheet.tsx:93
 #: src/features/search/components/quick_switcher/QuickSwitcherModal.tsx:85
 msgid "Quick switcher search"
-msgstr "Pencarian pengalih cepat"
+msgstr "Beralih pencarian cepat"
 
 #. Accessible label for the tablist in the mobile quick switcher.
 #: src/features/search/components/bottomsheets/QuickSwitcherBottomSheet.tsx:89
 msgid "Quick switcher tabs"
-msgstr "Tab pengalih cepat"
+msgstr "Tab beralih cepat"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:187
@@ -25261,7 +25276,7 @@ msgstr "Keluar dari {appName}"
 #. Singular external-post stat label on a social post embed. Lowercase to appear after the count.
 #: src/features/channel/components/embeds/channel_embed/ChannelEmbedShared.ts:67
 msgid "quote"
-msgstr "kutipan"
+msgstr "kutip"
 
 #. Plural external-post stat label on a social post embed. Lowercase to appear after the count.
 #: src/features/channel/components/embeds/channel_embed/ChannelEmbedShared.ts:71
@@ -33513,7 +33528,7 @@ msgstr "Alihkan pesan tersemat"
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts:117
 msgid "Toggle quick switcher"
-msgstr "Alihkan pengalih cepat"
+msgstr "Tombol beralih cepat"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts:281

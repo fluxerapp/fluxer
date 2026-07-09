@@ -4,14 +4,15 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: @lingui/cli\n"
+"X-Generator: Weblate 2026.7.dev0\n"
 "Language: es-419\n"
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: \n"
-"Last-Translator: \n"
-"Language-Team: \n"
-"Plural-Forms: \n"
+"PO-Revision-Date: 2026-07-04 12:18+0000\n"
+"Last-Translator: Eyeflame <eyeflamx@gmail.com>\n"
+"Language-Team: Spanish (Latin America) <https://weblate.fluxer.tools/"
+"projects/fluxer/app/es_419/>\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
 
 #. Description text in the messages tab.
 #: src/features/user/components/modals/tabs/appearance_tab/MessagesTab.tsx:51
@@ -3176,7 +3177,7 @@ msgstr "Permitir menciones de roles"
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:105
 msgid "Allow selecting text in the app"
-msgstr "Permite seleccionar texto en la aplicación."
+msgstr "Permite seleccionar texto en la aplicación"
 
 #. Staff setting that allows the Fluxer staff to message the selected user.
 #: src/features/ui/action_menu/items/StaffUserControlsMenuItems.tsx:36
@@ -4026,7 +4027,7 @@ msgstr "Emojis ASCII"
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:49
 msgid "Ask before starting calls"
-msgstr "Pregunta antes de iniciar las llamadas."
+msgstr "Pregunta antes de iniciar las llamadas"
 
 #. Short label in the theme studio. Keep it concise.
 #: src/features/theme_studio/ThemeStudio.tsx:53
@@ -5487,7 +5488,7 @@ msgstr "Idioma del navegador: {format}"
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:64
 msgid "Browser mic gain for custom processing"
-msgstr "Ganancia del micrófono del navegador para procesamiento personalizado."
+msgstr "Ganancia del micrófono del navegador para procesamiento personalizado"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:123
@@ -7131,7 +7132,7 @@ msgstr "Reclama tu cuenta para iniciar o unirte a llamadas 1:1."
 #. Friendly CTA shown on a valid, unclaimed gift code. Preserve {premiumProductName}; it is inserted by code.
 #: src/features/expressions/components/modals/GiftAcceptModal.tsx:40
 msgid "Claim your gift to activate your {premiumProductName} subscription!"
-msgstr "Reclama tu regalo para activar tu suscripción a {premiumProductName}."
+msgstr "¡Reclama tu regalo para activar tu suscripción a {premiumProductName}!"
 
 #. IAR modal: rule description.
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:339
@@ -8271,7 +8272,7 @@ msgstr "Confirmación"
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:43
 msgid "Confirmation or double-click for community voice joins"
-msgstr "Confirmación o doble clic para unirse a canales de voz de la comunidad."
+msgstr "Confirmación o doble clic para unirse a canales de voz de la comunidad"
 
 #: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:153
 msgid "Conflicts with {conflictLabel}"
@@ -11113,7 +11114,7 @@ msgstr "Barra de descarga de escritorio"
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/NotificationsIndex.ts:78
 msgid "Desktop inactivity before mobile push"
-msgstr "Inactividad en el escritorio antes de enviar notificaciones al móvil."
+msgstr "Inactividad en el escritorio antes de enviar notificaciones al móvil"
 
 #. Developer control label for the desktop-notification banner.
 #: src/features/devtools/components/NagbarControls.ts:40
@@ -13247,7 +13248,9 @@ msgstr "Preferencia de codificador para nuevos flujos de pantalla."
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:164
 msgid "Encoder, SVC, backup stream, and bitrate presets"
-msgstr "Codificador, SVC, flujo secundario y ajustes preestablecidos de velocidad de bits."
+msgstr ""
+"Codificador, SVC, flujo secundario y ajustes preestablecidos de velocidad de "
+"bits"
 
 #. IAR modal: rule label.
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:375
@@ -18384,7 +18387,9 @@ msgstr "Mantener todos los mensajes"
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:66
 msgid "Keep animations, GIFs, hover, and tooltips running unfocused"
-msgstr "Mantén las animaciones, GIF, efectos visuales y consejos activos incluso cuando la ventana no esté enfocada."
+msgstr ""
+"Mantén las animaciones, GIF, efectos visuales y consejos activos incluso "
+"cuando la ventana no esté enfocada"
 
 #. Description for the mirror premium model.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:314
@@ -18463,7 +18468,7 @@ msgstr "Modo teclado"
 #. Settings search entry description. One-line summary of what the setting controls.
 #: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:59
 msgid "Keyboard shortcut hints in tooltips"
-msgstr "Muestra sugerencias de atajos de teclado en los consejos."
+msgstr "Muestra sugerencias de atajos de teclado en los consejos"
 
 #. Modal title for the keyboard shortcuts cheatsheet.
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
@@ -20401,7 +20406,7 @@ msgstr "Previsualizaciones de mensajes"
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:165
 msgid "Message previews in the DM list"
-msgstr "Previsualizaciones de mensajes en la lista de mensajes directos."
+msgstr "Previsualizaciones de mensajes en la lista de mensajes directos"
 
 #. Developer debug modal tab showing the raw message data record.
 #: src/features/devtools/components/debug/MessageDebugModal.tsx:15
@@ -24633,7 +24638,8 @@ msgstr "Previsualizar sonido"
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:136
 msgid "Preview, popout, and stream thumbnail behavior"
-msgstr "Comportamiento de la vista previa, ventana emergente y miniatura del stream."
+msgstr ""
+"Comportamiento de la vista previa, ventana emergente y miniatura del stream"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:82
@@ -24943,7 +24949,7 @@ msgstr "Mensaje"
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:24
 msgid "Prompt for new audio devices"
-msgstr "Solicitar nuevos dispositivos de audio."
+msgstr "Solicitar nuevos dispositivos de audio"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -26972,7 +26978,7 @@ msgstr "Proveedor de búsqueda inversa de imágenes"
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:299
 msgid "Reverse image search providers"
-msgstr "Proveedores de búsqueda inversa de imágenes."
+msgstr "Proveedores de búsqueda inversa de imágenes"
 
 #. Submenu label that lists reverse-image-search providers for the selected user avatar.
 #: src/features/ui/action_menu/items/UserImageMenuItems.tsx:20
@@ -29353,7 +29359,7 @@ msgstr "Mostrar botón de favoritos"
 #. Settings search entry description. One-line summary of what the setting controls.
 #: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:87
 msgid "Show favorites throughout the app"
-msgstr "Mostrar favoritos en toda la aplicación."
+msgstr "Mostrar favoritos en toda la aplicación"
 
 #. Button label in the sounds section for hiding less common sound effects.
 #: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabSounds.tsx:53
@@ -33301,7 +33307,7 @@ msgstr "Miniatura de {title}"
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:133
 msgid "Thumbnail or live frame while scrubbing video"
-msgstr "Miniatura o fotograma en vivo al reproducir video."
+msgstr "Miniatura o fotograma en vivo al reproducir video"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:129
@@ -34399,7 +34405,7 @@ msgstr "Subrayar enlaces"
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:77
 msgid "Underline website links"
-msgstr "Subrayar los enlaces a sitios web."
+msgstr "Subrayar los enlaces a sitios web"
 
 #. Acknowledgement button on an informational modal. Closes the modal after the user has read the message.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:302
@@ -36371,7 +36377,7 @@ msgstr "Códec de video"
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:84
 msgid "Video codec for screen sharing"
-msgstr "Códec de video para compartir pantalla."
+msgstr "Códec de video para compartir pantalla"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:169
@@ -38595,7 +38601,7 @@ msgstr "Actualmente tienes una suscripción de regalo. No se renovará. Puedes c
 #. Modal title shown when a push-to-talk shortcut is pressed while the user is deafened.
 #: src/features/app/keybindings/keybind_manager/shared.ts:18
 msgid "You're deafened"
-msgstr "Estás silenciado."
+msgstr "Estás ensordecido"
 
 #. Label in the message delete too quick modal. Keep the tone plain and specific.
 #: src/features/messaging/components/alerts/MessageDeleteTooQuickModal.tsx:8
