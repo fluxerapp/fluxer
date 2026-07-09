@@ -14,9 +14,9 @@ export async function transformPullRequest(body: GitHubWebhook): Promise<RichEmb
 	if (!(body.pull_request && body.action && body.repository)) {
 		return null;
 	}
-	const authorIconUrl = body.pull_request.user.avatar_url;
-	const authorName = body.pull_request.user.login;
-	const authorUrl = body.pull_request.user.html_url;
+	const authorIconUrl = body.sender.avatar_url;
+	const authorName = body.sender.login;
+	const authorUrl = body.sender.html_url;
 	const repoName = body.repository.full_name;
 	const prNumber = body.pull_request.number;
 	const prTitle = body.pull_request.title;
