@@ -1,12 +1,12 @@
 {
-	"billing.eu_withdrawal_waiver_checkout": "Si soy un consumidor de la UE/EEE, doy mi consentimiento expreso para que el contenido digital de {product_name} {premium_tier_name} se proporcione de inmediato y reconozco que pierdo mi derecho legal de desistimiento una vez que se conceda el acceso. Esto no afecta a otros derechos de consumo obligatorios. Consulta los [Términos del servicio]({terms_url}).",
-	"bulk_message_deletion.complete": "Hemos terminado de eliminar tus mensajes. Hemos eliminado {message_count, plural, =0 {0 mensajes} one {# mensaje} other {# mensajes}} de {channel_count, plural, =0 {0 sitios} one {# sitio} other {# sitios}}.",
-	"content.virus_detected": "Ese archivo se ha marcado como potencialmente inseguro y se ha eliminado.",
-	"guild.bulk_create.emoji_limit": "Se ha alcanzado el límite máximo de emojis ({limit}).",
-	"guild.bulk_create.sticker_limit": "Se ha alcanzado el límite máximo de pegatinas ({limit}).",
-	"guild.bulk_create.unknown_error": "Error desconocido.",
-	"guild.default_category_text": "Canales de texto",
-	"guild.default_category_voice": "Canales de voz",
-	"guild.default_channel_text": "general",
-	"guild.default_channel_voice": "General"
+    "billing.eu_withdrawal_waiver_checkout": "Si soy un consumidor de la UE/EEE, doy mi consentimiento expreso para que el contenido digital de {product_name} {premium_tier_name} se proporcione de inmediato y reconozco que pierdo mi derecho legal de desistimiento una vez que se conceda el acceso. Esto no afecta a otros derechos de consumo obligatorios. Consulta los [Términos del servicio]({terms_url}).",
+    "bulk_message_deletion.complete": "Hemos terminado de eliminar tus mensajes. Hemos eliminado {message_count, plural, =0 {0 mensajes} one {# mensaje} other {# mensajes}} de {channel_count, plural, =0 {0 sitios} one {# sitio} other {# sitios}}.",
+    "content.virus_detected": "Ese archivo se ha marcado como potencialmente inseguro y se ha eliminado.",
+    "guild.bulk_create.emoji_limit": "Se ha alcanzado el límite máximo de emojis ({limit}).",
+    "guild.bulk_create.sticker_limit": "Se ha alcanzado el límite máximo de stickers ({limit}).",
+    "guild.bulk_create.unknown_error": "Error desconocido.",
+    "guild.default_category_text": "Canales de texto",
+    "guild.default_category_voice": "Canales de voz",
+    "guild.default_channel_text": "general",
+    "guild.default_channel_voice": "General"
 }
