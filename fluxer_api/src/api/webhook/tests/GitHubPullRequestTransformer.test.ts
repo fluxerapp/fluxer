@@ -135,7 +135,7 @@ describe('GitHub Pull Request Transformer', () => {
 			};
 			const result = await transformPullRequest(payload);
 			expect(result).not.toBeNull();
-			expect(result?.description).toBe('');
+			expect(result?.description).toBeUndefined();
 		});
 	});
 	describe('transformPullRequestReview', () => {
@@ -207,7 +207,7 @@ describe('GitHub Pull Request Transformer', () => {
 			};
 			const result = await transformPullRequestReview(payload);
 			expect(result).not.toBeNull();
-			expect(result?.description).toBe('No description provided');
+			expect(result?.description).toBeUndefined();
 		});
 	});
 	describe('transformPullRequestReviewComment', () => {
@@ -279,7 +279,7 @@ describe('GitHub Pull Request Transformer', () => {
 			};
 			const result = await transformPullRequestReviewComment(payload);
 			expect(result).not.toBeNull();
-			expect(result?.description).toBe('No description provided');
+			expect(result?.description).toBeUndefined();
 		});
 	});
 });
