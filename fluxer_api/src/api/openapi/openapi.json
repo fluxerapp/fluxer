@@ -24437,6 +24437,75 @@
 				}
 			}
 		},
+		"/webhooks/{webhook_id}/{token}/instatus": {
+			"post": {
+				"operationId": "execute_instatus_webhook",
+				"summary": "Execute Instatus webhook",
+				"tags": ["Webhooks"],
+				"responses": {
+					"204": {"description": "No Content"},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"code": {"type": "string", "enum": ["RATE_LIMITED"]},
+										"message": {"type": "string"},
+										"retry_after": {"type": "number", "description": "Seconds to wait before retrying"},
+										"global": {"type": "boolean", "description": "Whether this is a global rate limit"}
+									},
+									"required": ["code", "message", "retry_after"]
+								}
+							}
+						},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"x-mint": {"metadata": {"title": "Execute Instatus webhook"}},
+				"description": "Receives and processes Instatus status page webhook events, formatting them as messages in the configured channel.",
+				"parameters": [
+					{
+						"name": "webhook_id",
+						"in": "path",
+						"required": true,
+						"schema": {"$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the webhook"
+					},
+					{"name": "token", "in": "path", "required": true, "schema": {"type": "string"}, "description": "The token"}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/InstatusWebhook"}}}
+				}
+			}
+		},
 		"/webhooks/{webhook_id}/{token}/messages/{message_id}": {
 			"get": {
 				"operationId": "get_webhook_message",
@@ -37847,6 +37916,171 @@
 				"required": ["sender"]
 			},
 			"Int64Type": {"type": "string", "format": "int64", "pattern": "^-?[0-9]+$"},
+			"InstatusWebhook": {
+				"type": "object",
+				"properties": {
+					"meta": {
+						"anyOf": [
+							{
+								"type": "object",
+								"properties": {
+									"unsubscribe": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+									"documentation": {"anyOf": [{"type": "string"}, {"type": "null"}]}
+								}
+							},
+							{"type": "null"}
+						]
+					},
+					"page": {
+						"anyOf": [
+							{
+								"type": "object",
+								"properties": {
+									"id": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+									"status_indicator": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+									"status_description": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+									"url": {"anyOf": [{"type": "string"}, {"type": "null"}]}
+								}
+							},
+							{"type": "null"}
+						]
+					},
+					"incident": {
+						"anyOf": [
+							{
+								"type": "object",
+								"properties": {
+									"id": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+									"name": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+									"url": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+									"status": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+									"backfilled": {"anyOf": [{"type": "boolean"}, {"type": "null"}]},
+									"created_at": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+									"updated_at": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+									"resolved_at": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+									"incident_updates": {
+										"anyOf": [
+											{
+												"type": "array",
+												"items": {
+													"type": "object",
+													"properties": {
+														"id": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+														"incident_id": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+														"markdown": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+														"status": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+														"created_at": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+														"updated_at": {"anyOf": [{"type": "string"}, {"type": "null"}]}
+													}
+												}
+											},
+											{"type": "null"}
+										]
+									},
+									"affected_components": {
+										"anyOf": [
+											{
+												"type": "array",
+												"items": {
+													"type": "object",
+													"properties": {
+														"id": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+														"name": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+														"status": {"anyOf": [{"type": "string"}, {"type": "null"}]}
+													}
+												}
+											},
+											{"type": "null"}
+										]
+									}
+								}
+							},
+							{"type": "null"}
+						]
+					},
+					"maintenance": {
+						"anyOf": [
+							{
+								"type": "object",
+								"properties": {
+									"id": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+									"name": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+									"url": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+									"status": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+									"maintenance_start_date": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+									"maintenance_end_date": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+									"backfilled": {"anyOf": [{"type": "boolean"}, {"type": "null"}]},
+									"created_at": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+									"updated_at": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+									"resolved_at": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+									"maintenance_updates": {
+										"anyOf": [
+											{
+												"type": "array",
+												"items": {
+													"type": "object",
+													"properties": {
+														"id": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+														"maintenance_id": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+														"markdown": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+														"created_at": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+														"updated_at": {"anyOf": [{"type": "string"}, {"type": "null"}]}
+													}
+												}
+											},
+											{"type": "null"}
+										]
+									},
+									"affected_components": {
+										"anyOf": [
+											{
+												"type": "array",
+												"items": {
+													"type": "object",
+													"properties": {
+														"id": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+														"name": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+														"status": {"anyOf": [{"type": "string"}, {"type": "null"}]}
+													}
+												}
+											},
+											{"type": "null"}
+										]
+									}
+								}
+							},
+							{"type": "null"}
+						]
+					},
+					"component_update": {
+						"anyOf": [
+							{
+								"type": "object",
+								"properties": {
+									"created_at": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+									"new_status": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+									"component_id": {"anyOf": [{"type": "string"}, {"type": "null"}]}
+								}
+							},
+							{"type": "null"}
+						]
+					},
+					"component": {
+						"anyOf": [
+							{
+								"type": "object",
+								"properties": {
+									"id": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+									"name": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+									"status": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+									"created_at": {"anyOf": [{"type": "string"}, {"type": "null"}]}
+								}
+							},
+							{"type": "null"}
+						]
+					}
+				}
+			},
 			"WebhookMessageEditRequest": {
 				"type": "object",
 				"properties": {

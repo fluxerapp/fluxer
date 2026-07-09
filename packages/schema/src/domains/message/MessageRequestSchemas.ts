@@ -22,6 +22,15 @@ import {
 import {AttachmentURLType, URLType} from '@fluxer/schema/src/primitives/UrlValidators';
 import {z} from 'zod';
 
+const RICH_EMBED_AUTHOR_NAME_MAX_LENGTH = 256 as const;
+const RICH_EMBED_MEDIA_DESCRIPTION_MAX_LENGTH = 4096 as const;
+export const RICH_EMBED_FOOTER_TEXT_MAX_LENGTH = 2048 as const;
+const RICH_EMBED_FIELD_NAME_MAX_LENGTH = 256 as const;
+export const RICH_EMBED_FIELD_VALUE_MAX_LENGTH = 1024 as const;
+export const RICH_EMBED_TITLE_MAX_LENGTH = 256 as const;
+export const RICH_EMBED_DESCRIPTION_MAX_LENGTH = 4096 as const;
+const RICH_EMBED_FIELDS_MAX = 25 as const;
+
 function omitEmbedObjectWithoutRequiredField(value: unknown, requiredField: string): unknown {
 	if (!value || typeof value !== 'object' || Array.isArray(value)) {
 		return value;
@@ -38,7 +47,7 @@ function omitEmptyString(value: unknown): unknown {
 }
 
 const RichEmbedAuthorRequestShape = z.object({
-	name: createStringType().describe('Name of the embed author'),
+	name: createStringType(1, RICH_EMBED_AUTHOR_NAME_MAX_LENGTH).describe('Name of the embed author'),
 	url: URLType.nullish().describe('URL to link from the author name'),
 	icon_url: URLType.nullish().describe('URL of the author icon'),
 });
@@ -51,7 +60,9 @@ export type RichEmbedAuthorRequest = z.infer<typeof RichEmbedAuthorRequest>;
 
 export const RichEmbedMediaRequestShape = z.object({
 	url: AttachmentURLType.describe('URL of the media (image, video, etc.)'),
-	description: createStringType(1, 4096).nullish().describe('Alt text description of the media'),
+	description: createStringType(1, RICH_EMBED_MEDIA_DESCRIPTION_MAX_LENGTH)
+		.nullish()
+		.describe('Alt text description of the media'),
 });
 export const RichEmbedMediaRequest = z.preprocess(
 	(value) => omitEmbedObjectWithoutRequiredField(value, 'url'),
@@ -61,7 +72,9 @@ export const RichEmbedMediaRequest = z.preprocess(
 export type RichEmbedMediaRequest = z.infer<typeof RichEmbedMediaRequest>;
 
 const RichEmbedFooterRequestShape = z.object({
-	text: createStringType(1, 2048).describe('Footer text (1-2048 characters)'),
+	text: createStringType(1, RICH_EMBED_FOOTER_TEXT_MAX_LENGTH).describe(
+		`Footer text (1-${RICH_EMBED_FOOTER_TEXT_MAX_LENGTH} characters)`,
+	),
 	icon_url: URLType.nullish().describe('URL of the footer icon'),
 });
 export const RichEmbedFooterRequest = z.preprocess(
@@ -72,24 +85,32 @@ export const RichEmbedFooterRequest = z.preprocess(
 export type RichEmbedFooterRequest = z.infer<typeof RichEmbedFooterRequest>;
 
 const RichEmbedFieldRequest = z.object({
-	name: createStringType().describe('Name of the field'),
-	value: createStringType(0, 1024).describe('Value of the field (0-1024 characters)'),
+	name: createStringType(1, RICH_EMBED_FIELD_NAME_MAX_LENGTH).describe('Name of the field'),
+	value: createStringType(0, RICH_EMBED_FIELD_VALUE_MAX_LENGTH).describe(
+		`Value of the field (0-${RICH_EMBED_FIELD_VALUE_MAX_LENGTH} characters)`,
+	),
 	inline: z.boolean().default(false).describe('Whether the field should display inline'),
 });
 
 export const RichEmbedRequest = z.object({
 	url: URLType.nullish().describe('URL of the embed'),
-	title: createStringType(0, 256).nullish().describe('Title of the embed (0-256 characters)'),
+	title: createStringType(0, RICH_EMBED_TITLE_MAX_LENGTH)
+		.nullish()
+		.describe(`Title of the embed (0-${RICH_EMBED_TITLE_MAX_LENGTH} characters)`),
 	color: ColorType.nullish().describe('Color code of the embed (hex integer)'),
 	timestamp: DateTimeType.nullish().describe('ISO8601 timestamp for the embed'),
 	description: z
-		.preprocess(omitEmptyString, createStringType(1, 4096).nullish())
-		.describe('Description of the embed (1-4096 characters)'),
+		.preprocess(omitEmptyString, createStringType(1, RICH_EMBED_DESCRIPTION_MAX_LENGTH).nullish())
+		.describe(`Description of the embed (1-${RICH_EMBED_DESCRIPTION_MAX_LENGTH} characters)`),
 	author: RichEmbedAuthorRequest.nullish().describe('Author information'),
 	image: RichEmbedMediaRequest.nullish().describe('Image to display in the embed'),
 	thumbnail: RichEmbedMediaRequest.nullish().describe('Thumbnail image for the embed'),
 	footer: RichEmbedFooterRequest.nullish().describe('Footer information'),
-	fields: z.array(RichEmbedFieldRequest).max(25).nullish().describe('Array of field objects (max 25)'),
+	fields: z
+		.array(RichEmbedFieldRequest)
+		.max(RICH_EMBED_FIELDS_MAX)
+		.nullish()
+		.describe(`Array of field objects (max ${RICH_EMBED_FIELDS_MAX})`),
 });
 
 export type RichEmbedRequest = z.infer<typeof RichEmbedRequest>;

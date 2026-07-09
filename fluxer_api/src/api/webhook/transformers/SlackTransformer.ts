@@ -5,7 +5,7 @@ import type {
 	WebhookMessageRequest,
 } from '@fluxer/schema/src/domains/webhook/WebhookRequestSchemas';
 import {ColorType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
-import {URLType} from '@fluxer/schema/src/primitives/UrlValidators';
+import {safeUrl} from '../../utils/StringUtils';
 
 type SlackAttachment = NonNullable<SlackWebhookRequest['attachments']>[number];
 type SlackAttachmentField = NonNullable<SlackAttachment['fields']>[number];
@@ -77,13 +77,6 @@ function buildAttachmentDescription(att: SlackAttachment): string | undefined {
 	if (parts.length === 0) return undefined;
 	const combined = parts.join('\n');
 	return combined.length > 0 ? combined : undefined;
-}
-
-function safeUrl(value: unknown): string | undefined {
-	if (typeof value !== 'string' || value.length === 0) return undefined;
-	if (!value.startsWith('http://') && !value.startsWith('https://')) return undefined;
-	const parsed = URLType.safeParse(value);
-	return parsed.success ? parsed.data : undefined;
 }
 
 function safeHexColor(value: unknown): number | undefined {

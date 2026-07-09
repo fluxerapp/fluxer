@@ -2,6 +2,7 @@
 
 import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import type {GitHubWebhook} from '@fluxer/schema/src/domains/webhook/GitHubWebhookSchemas';
+import type {InstatusWebhook} from '@fluxer/schema/src/domains/webhook/InstatusWebhookSchemas';
 import type {
 	SlackWebhookRequest,
 	WebhookCreateRequest,
@@ -133,6 +134,13 @@ interface WebhookExecuteSlackParams {
 	webhookId: WebhookID;
 	token: WebhookToken;
 	data: SlackWebhookRequest;
+	requestCache: RequestCache;
+}
+
+interface WebhookExecuteInstatusParams {
+	webhookId: WebhookID;
+	token: WebhookToken;
+	data: InstatusWebhook;
 	requestCache: RequestCache;
 }
 
@@ -300,6 +308,15 @@ export class WebhookRequestService {
 			token: params.token,
 			event: params.event,
 			delivery: params.delivery,
+			data: params.data,
+			requestCache: params.requestCache,
+		});
+	}
+
+	async executeInstatusWebhook(params: WebhookExecuteInstatusParams): Promise<void> {
+		await this.webhookService.executeInstatusWebhook({
+			webhookId: params.webhookId,
+			token: params.token,
 			data: params.data,
 			requestCache: params.requestCache,
 		});
