@@ -64,7 +64,6 @@ impl RouterService for UnfurlRouter {
                 url,
                 nsfw_mode,
                 bypass_cache,
-                cache_only: _,
                 ..
             } => {
                 if *bypass_cache {
