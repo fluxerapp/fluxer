@@ -5,7 +5,11 @@ import {useContextMenuHoverState} from '@app/features/app/hooks/useContextMenuHo
 import {isMediaOnlyEmbed} from '@app/features/channel/components/embeds/EmbedRenderUtils';
 import {MessageActionBar, MessageActionBarCore} from '@app/features/channel/components/MessageActionBar';
 import {MessageActionBottomSheet} from '@app/features/channel/components/MessageActionBottomSheet';
-import {requestDeleteMessage} from '@app/features/channel/components/MessageActionUtils';
+import {
+	requestDeleteMessage,
+	requestMessageReply,
+	startMessageEdit,
+} from '@app/features/channel/components/MessageActionUtils';
 import {MessageViewContextProvider} from '@app/features/channel/components/MessageViewContext';
 import type {Channel} from '@app/features/channel/models/Channel';
 import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
@@ -385,6 +389,26 @@ export const Message: React.FC<MessageProps> = observer((props) => {
 			handleAltClickEvent(event, message);
 		},
 		[message],
+	);
+	const handleDoubleClick = useCallback(
+		(event: React.MouseEvent) => {
+			if (
+				(previewContext && previewContext !== MessagePreviewContext.LIST_POPOUT) ||
+				message.state === MessageStates.SENDING ||
+				isEditing
+			)
+				return;
+
+			event.preventDefault();
+			if (mobileLayoutEnabled) return;
+
+			if (message.isUserMessage()) {
+				startMessageEdit(message);
+				return;
+			}
+			if (!isReplying) requestMessageReply(message);
+		},
+		[previewContext, message, channel, isEditing, mobileLayoutEnabled, behaviorOverrides?.disableContextMenu],
 	);
 	const handleAltKeyDown = useCallback(
 		(event: React.KeyboardEvent<HTMLDivElement>) => {
@@ -898,6 +922,7 @@ export const Message: React.FC<MessageProps> = observer((props) => {
 					ref={messageRef}
 					onClickCapture={handleClickCapture}
 					onClick={handleAltClick}
+					onDoubleClick={handleDoubleClick}
 					onKeyDown={handleAltKeyDown}
 					onFocus={handleFocusWithin}
 					onBlur={handleBlurWithin}
