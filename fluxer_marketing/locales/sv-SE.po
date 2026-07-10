@@ -5,12 +5,16 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fluxer-marketing\n"
 "POT-Creation-Date: 2026-06-16 00:00+0000\n"
-"PO-Revision-Date: 2026-06-16 00:00+0000\n"
+"PO-Revision-Date: 2026-07-10 14:28+0000\n"
 "Language: sv-SE\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"Last-Translator: Tarek <13603398+Taarek@users.noreply.github.com>\n"
+"Language-Team: Swedish <https://weblate.fluxer.tools/projects/fluxer/"
+"marketing/sv/>\n"
+"X-Generator: Weblate 2026.7.dev0\n"
 
 #. Compact UI label used in the home-page communities/moderation feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.communities.community_support
@@ -22,7 +26,7 @@ msgstr "Communitysupport"
 #: fluxer_marketing/generated:app.communities.featured_in_discovery
 msgctxt "app.communities.featured_in_discovery"
 msgid "Featured in discovery"
-msgstr "Visas i upptäckten"
+msgstr "Presenteras i discovery"
 
 #. Button or link label used in the home-page communities/moderation feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.communities.moderation.actions_and_tools
@@ -46,7 +50,7 @@ msgstr "Granskningsloggar för transparens"
 #: fluxer_marketing/generated:app.communities.roles_permissions_audit.granular_roles_and_permissions
 msgctxt "app.communities.roles_permissions_audit.granular_roles_and_permissions"
 msgid "Granular roles and permissions"
-msgstr "Detaljerade roller och behörigheter"
+msgstr "Granulära roller och behörigheter"
 
 #. Body copy used in the home-page communities/moderation feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.communities.roles_permissions_audit.keep_running_smoothly
@@ -58,7 +62,7 @@ msgstr "Håll din community igång smidigt med roller, behörigheter och loggar.
 #: fluxer_marketing/generated:app.communities.title
 msgctxt "app.communities.title"
 msgid "Communities"
-msgstr "Communityer"
+msgstr "Communityn"
 
 #. Short UI label or heading used in the home-page communities/moderation feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.communities.verification.label
@@ -70,7 +74,7 @@ msgstr "Communityverifiering"
 #: fluxer_marketing/generated:app.communities.verification.value_statement
 msgctxt "app.communities.verification.value_statement"
 msgid "Your community gets verified status for authenticity and trust."
-msgstr "Din community får verifierad status för äkthet och förtroende."
+msgstr "Din community får verifierad status för autenticitet och förtroende."
 
 #. Compact UI label used in the home-page communities/moderation feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.communities.verification.verified_community
@@ -2772,7 +2776,7 @@ msgstr "Meddelandeteckengräns"
 #: fluxer_marketing/generated:pricing_and_tiers.plutonium.features.message_scheduling
 msgctxt "pricing_and_tiers.plutonium.features.message_scheduling"
 msgid "Message scheduling"
-msgstr "Meddelandeplanering"
+msgstr "Schemalagda meddelanden"
 
 #. Compact UI label describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
 #: fluxer_marketing/generated:pricing_and_tiers.plutonium.features.per_community_profiles
