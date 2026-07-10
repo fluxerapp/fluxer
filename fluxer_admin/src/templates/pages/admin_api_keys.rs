@@ -95,7 +95,7 @@ fn create_form(base: &str, csrf_token: &str, acls: &[&str]) -> Markup {
                         }
                         div class="grid grid-cols-1 gap-3 md:grid-cols-2" {
                             @for acl in acls {
-                                (checkbox("acls", acl, acl, true, true))
+                                (checkbox("acls", acl, acl, false, true))
                             }
                         }
                     }
