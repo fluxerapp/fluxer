@@ -127,7 +127,7 @@ async fn admin_api_keys_post(
     }
     flash::redirect_with_flash(
         &format!("{base}/admin-api-keys"),
-        FlashData::success(format!("API key action '{action}' completed")),
+        FlashData::success(format!("API key action '{action}' completed.")),
         config.is_production(),
     )
 }

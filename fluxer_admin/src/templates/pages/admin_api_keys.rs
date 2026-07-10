@@ -23,7 +23,7 @@ fn created_key_banner(key: &CreateAdminApiKeyResponse) -> Markup {
     let key_id = &key.key_id;
     alert(
         AlertVariant::Success,
-        Some("API Key Created Successfully"),
+        Some("API Key created successfully."),
         html! {
             div class="flex flex-col gap-2" {
                 p class="text-sm text-green-700" {
