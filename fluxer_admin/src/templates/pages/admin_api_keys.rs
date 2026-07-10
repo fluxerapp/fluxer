@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::{
-    api::types::{CreateAdminApiKeyResponse, ListAdminApiKeyEntry},
+    api::types::{CreateAdminApiKeyResponse, FlashMessage, ListAdminApiKeyEntry},
     config::AdminConfig,
     middleware::auth::AuthContext,
     templates::{
@@ -62,7 +62,8 @@ fn create_form(base: &str, csrf_token: &str, acls: &[&str]) -> Markup {
                 }
             }
             form id="create-key-form" method="post"
-                action={(base) "/admin-api-keys?action=create"} {
+                action={(base) "/admin-api-keys?action=create"}
+                data-admin-result-form="true" hx-push-url="false" {
                 (csrf_input(csrf_token))
                 div class="flex flex-col gap-4" {
                     div class="flex flex-col gap-2" {
@@ -194,6 +195,7 @@ pub fn admin_api_keys_page(
     config: &AdminConfig,
     auth: &AuthContext,
     csrf_token: &str,
+    flash: Option<&FlashMessage>,
     created_key: Option<&CreateAdminApiKeyResponse>,
     keys: Option<&[ListAdminApiKeyEntry]>,
     available_acls: &[&str],
@@ -201,7 +203,7 @@ pub fn admin_api_keys_page(
     let base = &config.base_path;
     let content = html! {
         (page_header("Admin API Keys", Some("Create and manage API keys for admin access")))
-        div class="space-y-6" {
+        div class="space-y-6" hx-history=[created_key.is_some().then_some("false")] {
             @if let Some(ck) = created_key {
                 (created_key_banner(ck))
             }
@@ -214,7 +216,7 @@ pub fn admin_api_keys_page(
         auth,
         "Admin API Keys",
         "admin-api-keys",
-        None,
+        flash,
         content,
     )
 }
