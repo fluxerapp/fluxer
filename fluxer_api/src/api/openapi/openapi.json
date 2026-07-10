@@ -25771,11 +25771,11 @@
 			"ValidationErrorItem": {
 				"type": "object",
 				"properties": {
-					"field": {"type": "string", "description": "Field path that failed validation"},
+					"path": {"type": "string", "description": "Field path that failed validation"},
 					"code": {"type": "string", "description": "Machine-readable validation error code"},
 					"message": {"type": "string", "description": "Human-readable validation error message"}
 				},
-				"required": ["field", "code", "message"]
+				"required": ["path", "message"]
 			},
 			"ApplicationsMeResponse": {
 				"type": "object",
