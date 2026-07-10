@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {URLType} from '@fluxer/schema/src/primitives/UrlValidators';
 import {decode} from 'html-entities';
 import _ from 'lodash';
 
@@ -42,4 +43,11 @@ export function hasVisibleContent(value: string): boolean {
 
 export function parseString(value: string, maxLength: number) {
 	return _.truncate(decode(value).trim(), {length: maxLength});
+}
+
+export function safeUrl(value: unknown): string | undefined {
+	if (typeof value !== 'string' || value.length === 0) return undefined;
+	if (!value.startsWith('http://') && !value.startsWith('https://')) return undefined;
+	const parsed = URLType.safeParse(value);
+	return parsed.success ? parsed.data : undefined;
 }

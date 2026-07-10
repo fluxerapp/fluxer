@@ -42,6 +42,7 @@ import type {Message} from '../../models/Message';
 import type {MessageSnapshot} from '../../models/MessageSnapshot';
 import type {StickerItem} from '../../models/StickerItem';
 import {mapUserToPartialResponse} from '../../user/UserMappers';
+import {assertSafeByteSize} from '../../utils/ByteSizeUtils';
 
 class NoopNatsConnectionManager implements INatsConnectionManager {
 	async connect(): Promise<void> {}
@@ -373,7 +374,7 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 					description: attachment.description,
 					content_type: attachment.contentType,
 					content_hash: attachment.contentHash,
-					size: Number(attachment.size),
+					size: assertSafeByteSize(attachment.size, 'message attachment size'),
 					url,
 					proxy_url: url,
 					width: attachment.width,

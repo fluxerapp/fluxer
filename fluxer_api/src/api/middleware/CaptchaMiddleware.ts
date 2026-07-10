@@ -48,7 +48,7 @@ function resolveCaptchaProvider(
 	return createCaptchaProvider({mode: requestedProvider, secretKey});
 }
 
-async function verifyCaptchaToken(ctx: Context<HonoEnv>): Promise<void> {
+export async function verifyCaptchaToken(ctx: Context<HonoEnv>): Promise<void> {
 	const captchaConfig = await ctx.get('instanceConfigRepository').getEffectiveCaptchaConfig();
 	if (!captchaConfig.enabled && !(Config.dev.testModeEnabled && Config.captcha.enabled)) return;
 	const user = ctx.get('user') as User | undefined;

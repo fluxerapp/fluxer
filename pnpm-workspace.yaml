@@ -159,8 +159,23 @@ catalog:
 
 minimumReleaseAge: 1440
 
+peerDependencyRules:
+  allowedVersions:
+    react: '*'
+  ignoreMissing:
+    - webpack
+    - babel-plugin-macros
+
 overrides:
+  '@floating-ui/dom': 1.7.5
+  '@lingui/swc-plugin': 'catalog:'
+  '@rspack/cli': 'catalog:'
+  '@rspack/core': 'catalog:'
   semver: 7.7.4
+
+patchedDependencies:
+  '@hono/node-server@1.19.9': patches/@hono__node-server@1.19.9.patch
+  '@phosphor-icons/react@2.1.10': patches/@phosphor-icons__react@2.1.10.patch
 
 strictDepBuilds: true
 

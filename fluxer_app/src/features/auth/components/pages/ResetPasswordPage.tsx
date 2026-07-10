@@ -111,7 +111,7 @@ const ResetPasswordPage = observer(function ResetPasswordPage() {
 					<Trans>Reset link invalid or expired</Trans>
 				</h1>
 				<p className={styles.description} data-flx="auth.reset-password-page.description">
-					<Trans>This reset link has expired. Reset links last 24 hours. Request a new one.</Trans>
+					<Trans>This reset link has expired. Reset links last 1 hour. Please request a new one.</Trans>
 				</p>
 				<div className={styles.footer} data-flx="auth.reset-password-page.footer">
 					<AuthRouterLink to="/forgot" className={styles.link} data-flx="auth.reset-password-page.link">

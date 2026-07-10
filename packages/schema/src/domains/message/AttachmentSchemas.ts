@@ -7,6 +7,7 @@ import {
 	createBitflagInt32Type,
 	createStringType,
 	Int32Type,
+	NonNegativeSafeIntegerType,
 	SnowflakeType,
 } from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {z} from 'zod';
@@ -41,7 +42,7 @@ export const ClientUploadedAttachmentRequest = ClientAttachmentBase.extend({
 	upload_filename: createStringType(1, 4096).describe(
 		'Temporary upload key returned by the attachment upload endpoint',
 	),
-	file_size: coerceNumberFromString(Int32Type).describe('Uploaded file size in bytes'),
+	file_size: coerceNumberFromString(NonNegativeSafeIntegerType).describe('Uploaded file size in bytes'),
 	content_type: createStringType(1, 255).describe('MIME type of the uploaded file'),
 });
 

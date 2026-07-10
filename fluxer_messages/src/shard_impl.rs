@@ -58,6 +58,15 @@ const ENRICHMENT_QUERY_CONCURRENCY: usize = 16;
 const REACTION_MESSAGE_BATCH_SIZE: usize = 64;
 const ATTACHMENT_DECAY_BATCH_SIZE: usize = 128;
 const BUCKET_INDEX_PAGE_SIZE: u32 = 200;
+const JS_MAX_SAFE_INTEGER: i64 = 9_007_199_254_740_991;
+
+fn assert_safe_byte_size(value: i64) -> i64 {
+    assert!(
+        (0..=JS_MAX_SAFE_INTEGER).contains(&value),
+        "attachment size must fit a non-negative JavaScript safe integer"
+    );
+    value
+}
 
 #[cfg(feature = "scylla")]
 const MESSAGE_COLUMNS: &str = "\
@@ -1232,7 +1241,7 @@ impl MessagesShard {
             description: attachment.description.clone(),
             content_type: Some(content_type),
             content_hash: attachment.content_hash.clone(),
-            size: attachment.size.unwrap_or_default(),
+            size: assert_safe_byte_size(attachment.size.unwrap_or_default()),
             url: (!expired).then_some(url.clone()),
             proxy_url: (!expired).then_some(url),
             width: (!is_audio).then_some(attachment.width).flatten(),

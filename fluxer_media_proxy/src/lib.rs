@@ -27,7 +27,6 @@ pub mod server;
 pub mod signing;
 pub mod spool;
 pub mod storage;
-pub mod svg;
 pub mod thumbhash;
 pub mod timed_semaphore;
 pub mod upload_relay;

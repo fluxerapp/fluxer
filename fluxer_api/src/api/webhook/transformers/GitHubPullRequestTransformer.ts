@@ -4,18 +4,24 @@ import type {RichEmbedRequest} from '@fluxer/schema/src/domains/message/MessageR
 import type {GitHubWebhook} from '@fluxer/schema/src/domains/webhook/GitHubWebhookSchemas';
 import {parseString} from '../../utils/StringUtils';
 
+function parseDescription(value: string | null | undefined): string | undefined {
+	if (!value) return undefined;
+	const description = parseString(value, 350);
+	return description.length > 0 ? description : undefined;
+}
+
 export async function transformPullRequest(body: GitHubWebhook): Promise<RichEmbedRequest | null> {
 	if (!(body.pull_request && body.action && body.repository)) {
 		return null;
 	}
-	const authorIconUrl = body.pull_request.user.avatar_url;
-	const authorName = body.pull_request.user.login;
-	const authorUrl = body.pull_request.user.html_url;
+	const authorIconUrl = body.sender.avatar_url;
+	const authorName = body.sender.login;
+	const authorUrl = body.sender.html_url;
 	const repoName = body.repository.full_name;
 	const prNumber = body.pull_request.number;
 	const prTitle = body.pull_request.title;
 	const prUrl = body.pull_request.html_url;
-	const prDescription = body.pull_request.body || '';
+	const prDescription = parseDescription(body.pull_request.body);
 	let title: string;
 	let color: number;
 	switch (body.action) {
@@ -41,7 +47,7 @@ export async function transformPullRequest(body: GitHubWebhook): Promise<RichEmb
 		title: parseString(title, 70),
 		url: prUrl,
 		color,
-		description: body.action === 'opened' ? parseString(prDescription, 350) : undefined,
+		description: body.action === 'opened' ? prDescription : undefined,
 		author: {
 			name: authorName,
 			url: authorUrl,
@@ -61,14 +67,14 @@ export async function transformPullRequestReview(body: GitHubWebhook): Promise<R
 	const prNumber = body.pull_request.number;
 	const prTitle = body.pull_request.title;
 	const reviewUrl = body.review.html_url;
-	const reviewBody = body.review.body || 'No description provided';
+	const reviewBody = parseDescription(body.review.body);
 	const title = `[${repoName}] Pull request review submitted: #${prNumber} ${prTitle}`;
 	const color = 0x000000;
 	return {
 		title: parseString(title, 70),
 		url: reviewUrl,
 		color,
-		description: parseString(reviewBody, 350),
+		description: reviewBody,
 		author: {
 			name: authorName,
 			url: authorUrl,
@@ -88,14 +94,14 @@ export async function transformPullRequestReviewComment(body: GitHubWebhook): Pr
 	const prNumber = body.pull_request.number;
 	const prTitle = body.pull_request.title;
 	const commentUrl = body.comment.html_url;
-	const commentBody = body.comment.body || 'No description provided';
+	const commentBody = parseDescription(body.comment.body);
 	const title = `[${repoName}] New review comment on pull request #${prNumber}: ${prTitle}`;
 	const color = 0xc00a7f;
 	return {
 		title: parseString(title, 70),
 		url: commentUrl,
 		color,
-		description: parseString(commentBody, 350),
+		description: commentBody,
 		author: {
 			name: authorName,
 			url: authorUrl,

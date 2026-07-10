@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
-import {afterAll, beforeAll, beforeEach, describe, test} from 'vitest';
+import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
 import {clearTestEmails, createTestAccount, findLastTestEmail, listTestEmails} from '../../auth/tests/AuthTestUtils';
 import {createUserID} from '../../BrandedTypes';
 import {deleteOneOrMany, upsertOne} from '../../database/CassandraQueryExecution';
+import {getInstanceConfigRepository, getUserRepository} from '../../middleware/ServiceSingletons';
 import {AuthorizedIps} from '../../Tables';
 import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
 import {HTTP_STATUS} from '../../test/TestConstants';
@@ -175,5 +176,62 @@ describe('User authorised IPs', () => {
 			.header('x-forwarded-for', nearbyIp)
 			.expect(HTTP_STATUS.FORBIDDEN, APIErrorCodes.IP_AUTHORIZATION_REQUIRED)
 			.execute();
+	});
+	test('disabling IP authorization via config allows login immediately from a new IP', async () => {
+		const account = await createTestAccount(harness);
+		const ip = '203.0.113.99';
+
+		const instanceConfigRepository = getInstanceConfigRepository();
+		await instanceConfigRepository.setInstanceIntegrationsConfig({
+			email: {
+				disable_new_ip_authorization: true,
+			},
+		});
+
+		try {
+			const login = await createBuilderWithoutAuth<LoginResponse>(harness)
+				.post('/auth/login')
+				.body({email: account.email, password: account.password})
+				.header('x-forwarded-for', ip)
+				.expect(HTTP_STATUS.OK)
+				.execute();
+
+			expect(login.token).toBeDefined();
+
+			const isAuthorized = await getUserRepository().checkIpAuthorized(createUserID(BigInt(account.userId)), ip);
+			expect(isAuthorized).toBe(true);
+		} finally {
+			await instanceConfigRepository.setInstanceIntegrationsConfig({
+				email: {
+					disable_new_ip_authorization: false,
+				},
+			});
+		}
+	});
+	test('disabling email provider allows login immediately from a new IP', async () => {
+		const account = await createTestAccount(harness);
+		const ip = '203.0.113.100';
+
+		await getInstanceConfigRepository().setInstanceIntegrationsConfig({
+			email: {
+				enabled: false,
+				provider: 'none',
+				disable_new_ip_authorization: false,
+			},
+		});
+
+		const login = await createBuilderWithoutAuth<LoginResponse>(harness)
+			.post('/auth/login')
+			.body({email: account.email, password: account.password})
+			.header('x-forwarded-for', ip)
+			.expect(HTTP_STATUS.OK)
+			.execute();
+
+		expect(login.token).toBeDefined();
+
+		const isAuthorized = await getUserRepository().checkIpAuthorized(createUserID(BigInt(account.userId)), ip);
+		expect(isAuthorized).toBe(true);
+		const emails = await listTestEmails(harness, {recipient: account.email});
+		expect(findLastTestEmail(emails, 'ip_authorization')).toBeNull();
 	});
 });

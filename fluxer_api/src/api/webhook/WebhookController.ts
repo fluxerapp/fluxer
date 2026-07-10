@@ -12,6 +12,7 @@ import {
 import {MessageRequestSchema} from '@fluxer/schema/src/domains/message/MessageRequestSchemas';
 import {MessageResponseSchema} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {GitHubWebhook} from '@fluxer/schema/src/domains/webhook/GitHubWebhookSchemas';
+import {InstatusWebhook} from '@fluxer/schema/src/domains/webhook/InstatusWebhookSchemas';
 import {
 	SlackWebhookRequest,
 	WebhookCreateRequest,
@@ -487,6 +488,31 @@ export function WebhookController(app: HonoApp) {
 			});
 			ctx.header('Content-Type', 'text/html; charset=utf-8');
 			return ctx.body('ok', 200);
+		},
+	);
+	app.post(
+		'/webhooks/:webhook_id/:token/instatus',
+		RateLimitMiddleware(RateLimitConfigs.WEBHOOK_INSTATUS),
+		OpenAPI({
+			operationId: 'execute_instatus_webhook',
+			summary: 'Execute Instatus webhook',
+			description:
+				'Receives and processes Instatus status page webhook events, formatting them as messages in the configured channel.',
+			responseSchema: null,
+			statusCode: 204,
+			tags: ['Webhooks'],
+		}),
+		Validator('param', WebhookIdTokenParam),
+		Validator('json', InstatusWebhook),
+		async (ctx) => {
+			const {webhook_id: webhookId, token} = ctx.req.valid('param');
+			await ctx.get('webhookRequestService').executeInstatusWebhook({
+				webhookId: createWebhookID(webhookId),
+				token: createWebhookToken(token),
+				data: ctx.req.valid('json'),
+				requestCache: ctx.get('requestCache'),
+			});
+			return ctx.body(null, 204);
 		},
 	);
 	app.post('/webhooks/livekit', async (ctx) => {

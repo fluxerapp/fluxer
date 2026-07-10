@@ -627,6 +627,9 @@ fn build_integrations_update(form: &MultiValueForm) -> InstanceConfigUpdateReque
                     password: clean("integration_smtp_password"),
                     secure: Some(form.bool_value("integration_smtp_secure")),
                 }),
+                disable_new_ip_authorization: Some(
+                    form.bool_value("integration_email_disable_new_ip_authorization"),
+                ),
             }),
             bluesky: Some(InstanceBlueskyIntegrationUpdateRequest {
                 enabled: Some(form.bool_value("integration_bluesky_enabled")),

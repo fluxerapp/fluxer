@@ -36,6 +36,7 @@ import {
 	createStringType,
 	Int32Type,
 	Int64StringType,
+	NonNegativeSafeIntegerType,
 	SnowflakeStringType,
 	SnowflakeType,
 	withOpenApiType,
@@ -588,6 +589,8 @@ const InstanceIntegrationsResponse = z.object({
 			password_set: z.boolean(),
 			secure: z.boolean().nullable(),
 		}),
+		disable_new_ip_authorization: z.boolean(),
+		effective_disable_new_ip_authorization: z.boolean(),
 	}),
 	bluesky: z.object({
 		enabled: z.boolean().nullable(),
@@ -676,6 +679,7 @@ export const InstanceConfigUpdateRequest = z.object({
 							secure: z.boolean().nullish(),
 						})
 						.nullish(),
+					disable_new_ip_authorization: z.boolean().nullish(),
 				})
 				.nullish(),
 			bluesky: z
@@ -797,7 +801,7 @@ const LimitRuleSchema = z.object({
 	id: z.string().min(1).describe('Unique rule identifier'),
 	filters: LimitFilterSchema.optional().describe('Optional filters that scope the rule'),
 	limits: z
-		.record(z.string(), z.number().min(0))
+		.record(z.string(), NonNegativeSafeIntegerType)
 		.refine(
 			(limits) => {
 				const limitKeys = Object.keys(limits);
@@ -1255,7 +1259,7 @@ const AdminMessageAttachmentSchema = z.object({
 	content_type: z.string().nullable(),
 	width: Int32Type.nullable(),
 	height: Int32Type.nullable(),
-	size: Int32Type.nullable().optional(),
+	size: NonNegativeSafeIntegerType.nullable().optional(),
 	ncmec_status: NcmecSubmissionStatusEnum,
 	ncmec_report_id: createStringType(1, 256).nullable(),
 	ncmec_failure_reason: createStringType(1, 4000).nullable(),

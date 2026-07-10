@@ -124,6 +124,30 @@ const FILE_UPLOAD_DESCRIPTOR = msg({
 	message: 'File upload',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
+const SEQUENTIAL_FILE_SEND_DESCRIPTOR = msg({
+	message: 'Send file messages in order',
+	comment: 'Settings search entry label. Names the settings search entry in the settings UI.',
+});
+const SEQUENTIAL_SEND_DESCRIPTOR = msg({
+	message: 'Sequential send',
+	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
+});
+const FILE_ORDERING_DESCRIPTOR = msg({
+	message: 'File ordering',
+	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
+});
+const ORDERED_UPLOAD_DESCRIPTOR = msg({
+	message: 'Ordered upload',
+	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
+});
+const SERIAL_SEND_DESCRIPTOR = msg({
+	message: 'Serial send',
+	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
+});
+const ENSURES_FILES_ARE_SENT_IN_THE_ORDER_THEY_WERE_ADDED_DESCRIPTOR = msg({
+	message: 'Ensures file messages appear in the order you sent them',
+	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
+});
 const START_UPLOADING_ATTACHMENTS_WHEN_THEY_ARE_ADDED_DESCRIPTOR = msg({
 	message: 'Start uploading attachments as soon as they are added to the message input',
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
@@ -708,6 +732,22 @@ export const chatSettingsIndex: Array<SearchableSettingDescriptor> = [
 			NEW_COMMUNITY_MUTED_DESCRIPTOR,
 		],
 		description: HIDE_CHANNELS_YOU_VE_MUTED_FROM_COMMUNITY_SIDEBARS_DESCRIPTOR,
+		audience: 'advanced',
+		tags: ['chat'],
+	},
+	{
+		id: 'chat-settings-sequential-file-send',
+		tabType: 'advanced_settings',
+		sectionId: 'chat',
+		label: SEQUENTIAL_FILE_SEND_DESCRIPTOR,
+		keywords: [
+			SEQUENTIAL_SEND_DESCRIPTOR,
+			FILE_ORDERING_DESCRIPTOR,
+			ORDERED_UPLOAD_DESCRIPTOR,
+			SERIAL_SEND_DESCRIPTOR,
+			FILE_UPLOAD_DESCRIPTOR,
+		],
+		description: ENSURES_FILES_ARE_SENT_IN_THE_ORDER_THEY_WERE_ADDED_DESCRIPTOR,
 		audience: 'advanced',
 		tags: ['chat'],
 	},

@@ -11,7 +11,12 @@ import type {GuildMemberData} from '@fluxer/schema/src/domains/guild/GuildMember
 import {type MessageEmbed, MessageEmbedResponse} from '@fluxer/schema/src/domains/message/EmbedSchemas';
 import {type UserPartial, UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {MessageReferenceTypeSchema, MessageTypeSchema} from '@fluxer/schema/src/primitives/MessageValidators';
-import {createBitflagInt32Type, Int32Type, SnowflakeStringType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
+import {
+	createBitflagInt32Type,
+	Int32Type,
+	NonNegativeSafeIntegerType,
+	SnowflakeStringType,
+} from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {z} from 'zod';
 
 export const MessageAttachmentResponse = z.object({
@@ -21,7 +26,7 @@ export const MessageAttachmentResponse = z.object({
 	description: z.string().nullish().describe('The description of the attachment'),
 	content_type: z.string().nullish().describe('The MIME type of the attachment'),
 	content_hash: z.string().nullish().describe('The hash of the attachment content'),
-	size: Int32Type.describe('The size of the attachment in bytes'),
+	size: NonNegativeSafeIntegerType.describe('The size of the attachment in bytes'),
 	url: z.string().nullish().describe('The URL of the attachment'),
 	proxy_url: z.string().nullish().describe('The proxied URL of the attachment'),
 	width: Int32Type.nullish().describe('The width of the attachment in pixels (for images/videos)'),

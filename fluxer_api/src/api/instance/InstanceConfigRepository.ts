@@ -132,6 +132,7 @@ interface InstanceEmailIntegrationConfig {
 	from_email: string | null;
 	from_name: string | null;
 	smtp: InstanceEmailSmtpIntegrationConfig;
+	disable_new_ip_authorization: boolean | null;
 }
 
 interface InstanceBlueskyKeyIntegrationConfig {
@@ -204,6 +205,8 @@ interface InstanceIntegrationsAdminConfig {
 			password_set: boolean;
 			secure: boolean | null;
 		};
+		disable_new_ip_authorization: boolean;
+		effective_disable_new_ip_authorization: boolean;
 	};
 	bluesky: {
 		enabled: boolean | null;
@@ -454,6 +457,7 @@ const DEFAULT_INSTANCE_INTEGRATIONS_CONFIG: InstanceIntegrationsConfig = {
 			password: null,
 			secure: null,
 		},
+		disable_new_ip_authorization: null,
 	},
 	bluesky: {
 		enabled: null,
@@ -571,6 +575,7 @@ function normalizeInstanceIntegrationsConfig(value: unknown): InstanceIntegratio
 				password: normalizeSecretString(smtp.password),
 				secure: normalizeNullableBoolean(smtp.secure),
 			},
+			disable_new_ip_authorization: normalizeNullableBoolean(email.disable_new_ip_authorization),
 		},
 		bluesky: {
 			enabled: normalizeNullableBoolean(bluesky.enabled),
@@ -1334,6 +1339,8 @@ export class InstanceConfigRepository {
 					password_set: secretIsSet(integrations.email.smtp.password) || secretIsSet(Config.email.smtp?.password),
 					secure: email.smtp?.secure ?? null,
 				},
+				disable_new_ip_authorization: integrations.email.disable_new_ip_authorization ?? false,
+				effective_disable_new_ip_authorization: integrations.email.disable_new_ip_authorization || !email.enabled,
 			},
 			bluesky: {
 				enabled: integrations.bluesky.enabled,

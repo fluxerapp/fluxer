@@ -1462,12 +1462,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a4ae5f15dda3c708c0ade84bfee31ccab44a3da4f88015ed22f63732abe300c8"
 
 [[package]]
-name = "data-url"
-version = "0.3.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "be1e0bca6c3637f992fc1cc7cbc52a78c1ef6db076dbf1059c4323d6a2048376"
-
-[[package]]
 name = "deadpool"
 version = "0.12.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2026,7 +2020,6 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2 0.11.0",
- "svg-hush",
  "tempfile",
  "thiserror",
  "tokio",
@@ -5259,19 +5252,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "13c2bddecc57b384dee18652358fb23172facb8a2c51ccc10d74c157bdea3292"
 
 [[package]]
-name = "svg-hush"
-version = "0.9.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "929223e80cdcec0482207576ea09692dd71b2b559057fc172e292ecec9a97559"
-dependencies = [
- "base64",
- "data-url",
- "quick-error 2.0.1",
- "url",
- "xml",
-]
-
-[[package]]
 name = "syn"
 version = "2.0.117"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6563,12 +6543,6 @@ dependencies = [
  "libc",
  "rustix",
 ]
-
-[[package]]
-name = "xml"
-version = "1.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "636f85e5ca6488e96401b61eb7de54f4e44755c988af0f52cf90230c312a1a89"
 
 [[package]]
 name = "xmlparser"

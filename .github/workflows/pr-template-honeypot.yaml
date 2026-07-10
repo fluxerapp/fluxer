@@ -72,7 +72,7 @@ jobs:
           esac
 
           case "$author_association" in
-            FIRST_TIMER|FIRST_TIME_CONTRIBUTOR)
+            NONE|FIRST_TIMER|FIRST_TIME_CONTRIBUTOR)
               gh api \
                 --method PATCH \
                 "repos/${GITHUB_REPOSITORY}/pulls/${pr_number}" \

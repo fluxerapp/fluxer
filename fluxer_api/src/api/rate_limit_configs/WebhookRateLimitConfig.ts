@@ -48,4 +48,8 @@ export const WebhookRateLimitConfigs = {
 		bucket: 'webhook:github::webhook_id',
 		config: {limit: 200, windowMs: ms('1 minute'), exemptFromGlobal: true},
 	} as RouteRateLimitConfig,
+	WEBHOOK_INSTATUS: {
+		bucket: 'webhook:instatus::webhook_id',
+		config: {limit: 200, windowMs: ms('1 minute'), exemptFromGlobal: true},
+	} as RouteRateLimitConfig,
 } as const;

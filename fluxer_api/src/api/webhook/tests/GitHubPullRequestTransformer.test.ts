@@ -60,8 +60,8 @@ describe('GitHub Pull Request Transformer', () => {
 			expect(result?.url).toBe('https://github.com/org/repo/pull/42');
 			expect(result?.color).toBe(0x098efc);
 			expect(result?.description).toContain('amazing feature');
-			expect(result?.author?.name).toBe('prauthor');
-			expect(result?.author?.url).toBe('https://github.com/prauthor');
+			expect(result?.author?.name).toBe('testuser');
+			expect(result?.author?.url).toBe('https://github.com/testuser');
 		});
 		it('transforms a closed pull request', async () => {
 			const payload: GitHubWebhook = {
@@ -75,6 +75,7 @@ describe('GitHub Pull Request Transformer', () => {
 			expect(result?.title).toContain('Pull request closed');
 			expect(result?.color).toBe(0x000000);
 			expect(result?.description).toBeUndefined();
+			expect(result?.author?.name).toBe('testuser');
 		});
 		it('transforms a reopened pull request', async () => {
 			const payload: GitHubWebhook = {
@@ -87,6 +88,7 @@ describe('GitHub Pull Request Transformer', () => {
 			expect(result).not.toBeNull();
 			expect(result?.title).toContain('Pull request reopened');
 			expect(result?.color).toBe(0xfcbd1f);
+			expect(result?.author?.name).toBe('testuser');
 		});
 		it('returns null for unsupported action types', async () => {
 			const payload: GitHubWebhook = {
@@ -135,7 +137,7 @@ describe('GitHub Pull Request Transformer', () => {
 			};
 			const result = await transformPullRequest(payload);
 			expect(result).not.toBeNull();
-			expect(result?.description).toBe('');
+			expect(result?.description).toBeUndefined();
 		});
 	});
 	describe('transformPullRequestReview', () => {
@@ -207,7 +209,7 @@ describe('GitHub Pull Request Transformer', () => {
 			};
 			const result = await transformPullRequestReview(payload);
 			expect(result).not.toBeNull();
-			expect(result?.description).toBe('No description provided');
+			expect(result?.description).toBeUndefined();
 		});
 	});
 	describe('transformPullRequestReviewComment', () => {
@@ -279,7 +281,7 @@ describe('GitHub Pull Request Transformer', () => {
 			};
 			const result = await transformPullRequestReviewComment(payload);
 			expect(result).not.toBeNull();
-			expect(result?.description).toBe('No description provided');
+			expect(result?.description).toBeUndefined();
 		});
 	});
 });
