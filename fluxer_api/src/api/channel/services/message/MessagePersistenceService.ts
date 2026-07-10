@@ -513,7 +513,7 @@ export class MessagePersistenceService {
 			}
 			hasChanges = true;
 		}
-		if (allowEmbeds && (data.content !== undefined || data.embeds !== undefined)) {
+		if (allowEmbeds && (data.embeds !== undefined || (data.content !== undefined && message.embeds.length === 0))) {
 			const attachmentsForResolution = updatedRowData.attachments || [];
 			const resolvedEmbeds = this.embedAttachmentResolver.resolveEmbedAttachmentUrls({
 				embeds: data.embeds,
