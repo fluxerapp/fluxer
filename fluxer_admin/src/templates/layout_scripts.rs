@@ -352,6 +352,7 @@ pub const HTMX_FLASH_SCRIPT: &str = r#"
 			window.clearTimeout(hideTimer);
 			hideTimer = 0;
 		}
+		if (activeToast && !activeToast.isConnected) activeToast = null;
 		if (!activeToast) {
 			activeToast = document.createElement('div');
 			activeToast.setAttribute('role', 'status');
