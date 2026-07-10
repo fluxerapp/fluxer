@@ -152,7 +152,8 @@ fn api_key_item(base: &str, csrf_token: &str, key: &ListAdminApiKeyEntry) -> Mar
                 }
                 form method="post"
                     action={(base) "/admin-api-keys?action=revoke"}
-                    class="flex-shrink-0 self-stretch sm:self-start" {
+                    class="flex-shrink-0 self-stretch sm:self-start"
+                    data-admin-result-form="true" hx-push-url="false" {
                     (csrf_input(csrf_token))
                     input type="hidden" name="key_id" value=(key_id);
                     button type="submit"

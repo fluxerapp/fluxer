@@ -113,7 +113,7 @@ async fn admin_api_keys_post(
             if let Some(key_id) = form.clean("key_id") {
                 let result = client.revoke_api_key(&key_id).await;
                 let flash = match result.log_error("revoke API key") {
-                    Some(_) => FlashData::success("API key revoked"),
+                    Some(_) => FlashData::success("API key revoked."),
                     None => FlashData::error("Failed to revoke API key"),
                 };
                 return flash::redirect_with_flash(
