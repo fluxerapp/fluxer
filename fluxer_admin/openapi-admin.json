@@ -9718,7 +9718,7 @@
 					"acls": {
 						"type": "array",
 						"items": {"type": "string"},
-						"maxItems": 100,
+						"maxItems": 115,
 						"description": "List of access control permissions for the key"
 					}
 				},
@@ -10081,7 +10081,7 @@
 					"acls": {
 						"type": "array",
 						"items": {"type": "string"},
-						"maxItems": 100,
+						"maxItems": 115,
 						"description": "List of access control permissions for the key"
 					}
 				},
@@ -10111,7 +10111,7 @@
 					"acls": {
 						"type": "array",
 						"items": {"type": "string"},
-						"maxItems": 100,
+						"maxItems": 115,
 						"description": "List of access control permissions for the key"
 					}
 				},
