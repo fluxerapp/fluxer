@@ -622,7 +622,7 @@ async function updatePendingRegistrationUser(
 	await ctx.get('adminService').auditService.createAuditLog({
 		adminUserId: ctx.get('adminUserId'),
 		targetType: 'user',
-		targetId: BigInt(user.id),
+		targetId: user.id,
 		action: decision === 'approve' ? 'approve_registration' : 'reject_registration',
 		auditLogReason: ctx.get('auditLogReason'),
 	});
