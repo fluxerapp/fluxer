@@ -5087,7 +5087,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Approves a registration waiting for manual review by removing its pending registration trait. Requires INSTANCE_CONFIG_UPDATE permission.",
+				"description": "Approves a registration waiting for manual review by removing its pending registration trait. Requires USER_APPROVE_ACCOUNT permission.",
 				"security": [{"adminApiKey": []}],
 				"requestBody": {
 					"required": true,
@@ -5144,7 +5144,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Rejects a registration waiting for manual review and prevents the account from logging in. Requires INSTANCE_CONFIG_UPDATE permission.",
+				"description": "Rejects a registration waiting for manual review and prevents the account from logging in. Requires USER_APPROVE_ACCOUNT permission.",
 				"security": [{"adminApiKey": []}],
 				"requestBody": {
 					"required": true,

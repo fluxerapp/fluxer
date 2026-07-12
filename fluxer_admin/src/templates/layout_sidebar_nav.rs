@@ -49,6 +49,12 @@ pub const NAV_SECTIONS: &[NavSection] = &[
                 [acl::DISCOVERY_REVIEW]
             ),
             item!(
+                "Pending Registrations",
+                "/pending-users",
+                "pending",
+                [acl::USER_APPROVE_ACCOUNT]
+            ),
+            item!(
                 "Bulk Actions",
                 "/bulk-actions",
                 "bulk-actions",

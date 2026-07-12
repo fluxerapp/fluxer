@@ -342,7 +342,7 @@ fn render_pending_registration_list_response(
     flash: &FlashData,
 ) -> Response {
     render_fragment_with_toast(
-        templates::pages::instance_config::pending_registration_list(
+        templates::pages::pending_users::pending_registration_list(
             config,
             csrf_token,
             &instance_config.registration.pending_registrations,

@@ -493,13 +493,13 @@ export function InstanceConfigAdminController(app: HonoApp) {
 	app.post(
 		'/admin/instance-config/pending-registrations/approve',
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_USER_MODIFY),
-		requireAdminACL(AdminACLs.INSTANCE_CONFIG_UPDATE),
+		requireAdminACL(AdminACLs.USER_APPROVE_ACCOUNT),
 		Validator('json', PendingRegistrationActionRequest),
 		OpenAPI({
 			operationId: 'approve_pending_registration',
 			summary: 'Approve a pending registration',
 			description:
-				'Approves a registration waiting for manual review by removing its pending registration trait. Requires INSTANCE_CONFIG_UPDATE permission.',
+				'Approves a registration waiting for manual review by removing its pending registration trait. Requires USER_APPROVE_ACCOUNT permission.',
 			responseSchema: InstanceConfigResponse,
 			statusCode: 200,
 			security: 'adminApiKey',
@@ -515,13 +515,13 @@ export function InstanceConfigAdminController(app: HonoApp) {
 	app.post(
 		'/admin/instance-config/pending-registrations/reject',
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_USER_MODIFY),
-		requireAdminACL(AdminACLs.INSTANCE_CONFIG_UPDATE),
+		requireAdminACL(AdminACLs.USER_APPROVE_ACCOUNT),
 		Validator('json', PendingRegistrationActionRequest),
 		OpenAPI({
 			operationId: 'reject_pending_registration',
 			summary: 'Reject a pending registration',
 			description:
-				'Rejects a registration waiting for manual review and prevents the account from logging in. Requires INSTANCE_CONFIG_UPDATE permission.',
+				'Rejects a registration waiting for manual review and prevents the account from logging in. Requires USER_APPROVE_ACCOUNT permission.',
 			responseSchema: InstanceConfigResponse,
 			statusCode: 200,
 			security: 'adminApiKey',

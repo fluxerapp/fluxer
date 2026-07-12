@@ -54,6 +54,7 @@ import {RateLimitConfigs} from '../../RateLimitConfig';
 import type {HonoApp} from '../../types/HonoEnv';
 import {Validator} from '../../Validator';
 import {mapUserToAdminResponse} from '../models/UserTypes';
+import {getInstanceConfigRepository} from '../../middleware/ServiceSingletons';
 
 export function UserAdminController(app: HonoApp) {
 	app.get(
@@ -71,9 +72,10 @@ export function UserAdminController(app: HonoApp) {
 		}),
 		async (ctx) => {
 			const adminUser = ctx.get('user');
+			const instanceConfig = await getInstanceConfigRepository().getPendingRegistrations()
 			const cacheService = ctx.get('cacheService');
 			return ctx.json({
-				user: await mapUserToAdminResponse(adminUser, cacheService),
+				user: await mapUserToAdminResponse(adminUser, cacheService, undefined, instanceConfig.length),
 			});
 		},
 	);
