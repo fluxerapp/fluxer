@@ -7,6 +7,7 @@ import {MessageController} from './MessageController';
 import {MessageInteractionController} from './MessageInteractionController';
 import {ScheduledMessageController} from './ScheduledMessageController';
 import {StreamController} from './StreamController';
+import {ThreadController} from './ThreadController';
 import {VoiceDiagnosticsController} from './VoiceDiagnosticsController';
 import {VoicePresenceController} from './VoicePresenceController';
 
@@ -14,6 +15,7 @@ export function registerChannelControllers(app: HonoApp) {
 	ChannelController(app);
 	MessageInteractionController(app);
 	MessageController(app);
+	ThreadController(app);
 	ScheduledMessageController(app);
 	CallController(app);
 	StreamController(app);

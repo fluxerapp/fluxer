@@ -9898,6 +9898,9 @@
 					"GLOBAL_IP_TEMPORARILY_BANNED",
 					"IP_BANNED",
 					"RESIDENTIAL_PROXY_BLOCKED",
+					"THREAD_ALREADY_CREATED",
+					"THREAD_ARCHIVED",
+					"THREAD_LOCKED",
 					"TOR_BLOCKED",
 					"MAX_ANIMATED_EMOJIS",
 					"MAX_APPLICATIONS",
@@ -9906,6 +9909,7 @@
 					"MAX_EMOJIS",
 					"MAX_FAVORITE_MEMES",
 					"MAX_FRIENDS",
+					"MAX_ACTIVE_THREADS",
 					"MAX_GROUP_DM_RECIPIENTS",
 					"MAX_GROUP_DMS",
 					"GROUP_DM_RECIPIENTS_NOT_ADDABLE",
@@ -10483,7 +10487,7 @@
 										"type": {
 											"type": "integer",
 											"format": "int32",
-											"enum": [0, 1, 2, 3, 4, 998, 999],
+											"enum": [0, 1, 2, 3, 4, 11, 998, 999],
 											"description": "The type of the channel"
 										},
 										"guild_id": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/SnowflakeType"}]}
@@ -10540,7 +10544,7 @@
 											"type": {
 												"type": "integer",
 												"format": "int32",
-												"enum": [0, 1, 2, 3, 4, 998, 999],
+												"enum": [0, 1, 2, 3, 4, 11, 998, 999],
 												"description": "The type of the channel"
 											},
 											"guild_id": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/SnowflakeType"}]}
@@ -10556,7 +10560,7 @@
 												"type": {
 													"type": "integer",
 													"format": "int32",
-													"enum": [0, 1, 2, 3, 4, 998, 999],
+													"enum": [0, 1, 2, 3, 4, 11, 998, 999],
 													"description": "The type of the channel"
 												},
 												"guild_id": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/SnowflakeType"}]}
@@ -12029,7 +12033,7 @@
 										"type": {
 											"type": "integer",
 											"format": "int32",
-											"enum": [0, 1, 2, 3, 4, 998, 999],
+											"enum": [0, 1, 2, 3, 4, 11, 998, 999],
 											"description": "The type of the channel"
 										},
 										"position": {"$ref": "#/components/schemas/Int32Type"},
@@ -13522,7 +13526,7 @@
 					"type": {
 						"type": "integer",
 						"format": "int32",
-						"enum": [0, 1, 2, 3, 4, 5, 6, 7, 19],
+						"enum": [0, 1, 2, 3, 4, 5, 6, 7, 18, 19, 21],
 						"description": "The type of message"
 					},
 					"flags": {"$ref": "#/components/schemas/MessageFlags"},
@@ -13670,7 +13674,7 @@
 							"type": {
 								"type": "integer",
 								"format": "int32",
-								"enum": [0, 1, 2, 3, 4, 5, 6, 7, 19],
+								"enum": [0, 1, 2, 3, 4, 5, 6, 7, 18, 19, 21],
 								"description": "The type of message"
 							},
 							"flags": {"$ref": "#/components/schemas/MessageFlags"},
@@ -14279,7 +14283,7 @@
 					"type": {
 						"type": "integer",
 						"format": "int32",
-						"enum": [0, 1, 2, 3, 4, 5, 6, 7, 19],
+						"enum": [0, 1, 2, 3, 4, 5, 6, 7, 18, 19, 21],
 						"description": "The type of message"
 					},
 					"flags": {"$ref": "#/components/schemas/MessageFlags"}
