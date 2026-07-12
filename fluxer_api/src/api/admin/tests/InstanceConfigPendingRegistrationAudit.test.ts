@@ -47,6 +47,7 @@ describe('pending registration audit logs', () => {
 			AdminACLs.AUTHENTICATE,
 			AdminACLs.INSTANCE_CONFIG_UPDATE,
 			AdminACLs.AUDIT_LOG_VIEW,
+			AdminACLs.USER_APPROVE_ACCOUNT
 		]);
 
 		await getInstanceConfigRepository().setRegistrationConfig({mode: 'approval'});
