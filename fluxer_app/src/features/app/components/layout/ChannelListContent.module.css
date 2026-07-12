@@ -11,6 +11,10 @@
 	min-width: 0;
 }
 
+.channelListScrollerWrapperMobile {
+	max-height: calc(100% - 20px);
+}
+
 .navigationContainer {
 	width: 100%;
 	min-width: 0;

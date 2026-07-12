@@ -282,7 +282,7 @@ export const ChannelListContent = observer(({guild, scrollY}: {guild: Guild; scr
 	};
 	return (
 		<div
-			className={styles.channelListScrollerWrapper}
+			className={clsx(styles.channelListScrollerWrapper, isMobile && styles.channelListScrollerWrapperMobile)}
 			data-flx="app.channel-list-content.channel-list-scroller-wrapper"
 		>
 			<Scroller
