@@ -209,10 +209,11 @@ extract_channel_id(Event, FinalData) when
     Event =:= thread_delete;
     Event =:= thread_members_update
 ->
-    %% Thread events are visibility-scoped to their parent channel.
+    %% Thread events are visibility-scoped to their parent channel, falling back
+    %% to the thread id itself when no parent is present in the payload.
     case maps:get(<<"parent_id">>, FinalData, undefined) of
         ParentIdBin when is_binary(ParentIdBin) ->
-            guild_dispatch_decorate:parse_snowflake(<<"parent_id">>, ParentIdBin);
+            guild_dispatch_decorate:require_snowflake(<<"parent_id">>, ParentIdBin);
         _ ->
             ThreadIdBin = maps:get(<<"id">>, FinalData, undefined),
             guild_dispatch_decorate:require_snowflake(<<"id">>, ThreadIdBin)

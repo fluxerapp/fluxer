@@ -11097,6 +11097,82 @@
 				]
 			}
 		},
+		"/guilds/{guild_id}/threads/active": {
+			"get": {
+				"operationId": "list_active_guild_threads",
+				"summary": "List active guild threads",
+				"tags": ["Threads"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThreadListResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"code": {"type": "string", "enum": ["RATE_LIMITED"]},
+										"message": {"type": "string"},
+										"retry_after": {"type": "number", "description": "Seconds to wait before retrying"},
+										"global": {"type": "boolean", "description": "Whether this is a global rate limit"}
+									},
+									"required": ["code", "message", "retry_after"]
+								}
+							}
+						},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"x-mint": {"metadata": {"title": "List active guild threads"}},
+				"description": "Returns all active (non-archived) threads in the guild that the calling user can view, along with the thread member objects of the calling user for threads they have joined.",
+				"security": [{"botToken": []}, {"sessionToken": []}],
+				"parameters": [
+					{
+						"name": "guild_id",
+						"in": "path",
+						"required": true,
+						"schema": {"$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the guild"
+					}
+				]
+			}
+		},
 		"/guilds/{guild_id}/transfer-ownership": {
 			"post": {
 				"operationId": "transfer_guild_ownership",
@@ -28349,7 +28425,29 @@
 						"additionalProperties": {"type": "string"},
 						"description": "Custom nicknames for users in this channel (for group DMs)"
 					},
-					"thread_metadata": {"$ref": "#/components/schemas/ThreadMetadataResponse"},
+					"thread_metadata": {
+						"type": "object",
+						"properties": {
+							"archived": {"type": "boolean", "description": "Whether the thread is archived"},
+							"locked": {
+								"type": "boolean",
+								"description": "Whether the thread is locked; only users with MANAGE_THREADS can unarchive a locked thread"
+							},
+							"auto_archive_duration": {
+								"type": "integer",
+								"minimum": 0,
+								"maximum": 2147483647,
+								"format": "int32",
+								"description": "Duration in minutes of inactivity after which the thread is automatically archived (60, 1440, 4320, or 10080)"
+							},
+							"archive_timestamp": {
+								"anyOf": [{"type": "string", "format": "date-time"}, {"type": "null"}],
+								"description": "ISO 8601 timestamp of when the thread archive status last changed"
+							}
+						},
+						"required": ["archived", "locked", "auto_archive_duration"],
+						"description": "Thread-specific metadata; present only on thread channels"
+					},
 					"member": {"$ref": "#/components/schemas/ThreadMemberResponse"},
 					"member_count": {"$ref": "#/components/schemas/Int32Type"},
 					"message_count": {"$ref": "#/components/schemas/Int32Type"},
@@ -28391,28 +28489,6 @@
 					"Show a content warning before entering"
 				],
 				"description": "The content warning level for a guild, category, or channel"
-			},
-			"ThreadMetadataResponse": {
-				"type": "object",
-				"properties": {
-					"archived": {"type": "boolean", "description": "Whether the thread is archived"},
-					"locked": {
-						"type": "boolean",
-						"description": "Whether the thread is locked; only users with MANAGE_THREADS can unarchive a locked thread"
-					},
-					"auto_archive_duration": {
-						"type": "integer",
-						"minimum": 0,
-						"maximum": 2147483647,
-						"format": "int32",
-						"description": "Duration in minutes of inactivity after which the thread is automatically archived (60, 1440, 4320, or 10080)"
-					},
-					"archive_timestamp": {
-						"anyOf": [{"type": "string", "format": "date-time"}, {"type": "null"}],
-						"description": "ISO 8601 timestamp of when the thread archive status last changed"
-					}
-				},
-				"required": ["archived", "locked", "auto_archive_duration"]
 			},
 			"ThreadMemberResponse": {
 				"type": "object",
