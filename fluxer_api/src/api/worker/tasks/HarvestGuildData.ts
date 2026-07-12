@@ -172,9 +172,12 @@ const harvestGuildData: WorkerTaskHandler = async (payload, helpers) => {
 		await fs.promises.writeFile(path.join(contentDir, 'guild.json'), createArchiveJsonBuffer(guildJson));
 		await upd(P_META, `Harvesting messages from ${channels.length} channels`);
 		const textChannels = channels.filter((c) => GUILD_TEXT_BASED_CHANNEL_TYPES.has(c.type));
+		const threadRefs = await channelRepository.threads.listThreadRefsByGuild(guildId);
+		const threadChannels = await channelRepository.listChannels(threadRefs.map((ref) => ref.thread_id));
+		const messageableChannels = [...textChannels, ...threadChannels];
 		const pendingDownloads: Array<PendingAttachmentDownload> = [];
 		let processedChannels = 0;
-		await parallel(textChannels, CHANNEL_CONCURRENCY, async (channel) => {
+		await parallel(messageableChannels, CHANNEL_CONCURRENCY, async (channel) => {
 			const messages: Array<object> = [];
 			let beforeMessageId: MessageID | undefined;
 			let channelDownloads: Array<PendingAttachmentDownload> = [];

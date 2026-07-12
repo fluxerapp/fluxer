@@ -389,6 +389,16 @@ export class ChannelOperationsService {
 				...channelInvites.map((invite) => this.inviteRepository.delete(invite.code)),
 				...channelWebhooks.map((webhook) => this.webhookRepository.delete(webhook.id)),
 			]);
+			// Threads live outside channels_by_guild_id, so cascade them explicitly.
+			const threadRefs = await this.channelRepository.threads.listThreadRefsByParent(channelId);
+			for (const threadRef of threadRefs) {
+				const thread = await this.channelRepository.channelData.findUnique(threadRef.thread_id);
+				if (!thread) continue;
+				await this.channelUtilsService.purgeChannelAttachments(thread);
+				await this.channelRepository.messages.deleteAllChannelMessages(thread.id);
+				await deleteChannelMessageSearchDocuments(thread.id, {context: {source: 'channel_delete'}});
+				await this.channelRepository.threads.deleteThread(thread);
+			}
 			await this.channelUtilsService.purgeChannelAttachments(channel);
 			await this.channelRepository.messages.deleteAllChannelMessages(channelId);
 			await deleteChannelMessageSearchDocuments(channelId, {context: {source: 'channel_delete'}});

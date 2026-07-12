@@ -41,6 +41,7 @@ import syncDiscoveryIndex from './tasks/SyncDiscoveryIndex';
 import syncDisposableEmailDomains from './tasks/SyncDisposableEmailDomains';
 import syncFileShaBlocklists from './tasks/SyncFileShaBlocklists';
 import syncUrlBlocklists from './tasks/SyncUrlBlocklists';
+import threadAutoArchiveSweep from './tasks/ThreadAutoArchiveSweep';
 import userProcessPendingDeletion from './tasks/UserProcessPendingDeletion';
 import userProcessPendingDeletions from './tasks/UserProcessPendingDeletions';
 import type {WorkerTaskName} from './WorkerLaneConfig';
@@ -85,6 +86,7 @@ export const workerTasks: Record<WorkerTaskName, WorkerTaskHandler> = {
 	syncUrlBlocklists,
 	syncDiscoveryIndex,
 	syncDisposableEmailDomains,
+	threadAutoArchiveSweep,
 	flushUserActivityBuffer,
 	userProcessPendingDeletion,
 	userProcessPendingDeletions,

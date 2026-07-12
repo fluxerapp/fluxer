@@ -2,6 +2,7 @@
 
 import {
 	ChannelTypes,
+	isThreadChannelType,
 	MessageFlags,
 	MessageReferenceTypes,
 	MessageTypes,
@@ -11,6 +12,7 @@ import {
 import {GuildNSFWLevel, GuildOperations} from '@fluxer/constants/src/GuildConstants';
 import {RelationshipTypes, SensitiveMediaFilterLevel, UserFlags} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
+import {ThreadArchivedError} from '@fluxer/errors/src/domains/channel/ThreadArchivedError';
 import {UnknownChannelError} from '@fluxer/errors/src/domains/channel/UnknownChannelError';
 import {UnknownMessageError} from '@fluxer/errors/src/domains/channel/UnknownMessageError';
 import {CannotExecuteOnDmError} from '@fluxer/errors/src/domains/core/CannotExecuteOnDmError';
@@ -54,6 +56,7 @@ import type {AttachmentRequestData, AttachmentToProcess} from '../../AttachmentD
 import type {MessageRequest, MessageUpdateRequest} from '../../MessageTypes';
 import type {IChannelRepositoryAggregate} from '../../repositories/IChannelRepositoryAggregate';
 import type {AuthenticatedChannel} from '../AuthenticatedChannel';
+import type {ThreadService} from '../ThreadService';
 import type {MessageChannelAuthService} from './MessageChannelAuthService';
 import type {DmNsfwContext} from './MessageContentService';
 import type {MessageDispatchService} from './MessageDispatchService';
@@ -90,6 +93,7 @@ interface MessageSendServiceDeps {
 	embedAttachmentResolver: MessageEmbedAttachmentResolver;
 	limitConfigService: LimitConfigService;
 	directMessageSpamMitigationService: DirectMessageSpamMitigationService;
+	threadService: ThreadService;
 }
 
 interface SendMentionData {
@@ -212,6 +216,20 @@ export class MessageSendService {
 		return recipientIds.length === 1 ? recipientIds[0]! : null;
 	}
 
+	private async assertCanSendInThread(
+		channel: Channel,
+		checkPermission: (permission: bigint) => Promise<void>,
+		hasPermission: (permission: bigint) => Promise<boolean>,
+	): Promise<void> {
+		// SEND_MESSAGES has no effect inside threads; posting requires SEND_MESSAGES_IN_THREADS.
+		await checkPermission(Permissions.SEND_MESSAGES_IN_THREADS);
+		const metadata = channel.threadMetadata;
+		if (metadata?.archived && metadata.locked) {
+			const canManage = await hasPermission(Permissions.MANAGE_THREADS);
+			if (!canManage) throw new ThreadArchivedError();
+		}
+	}
+
 	private async checkMessageSendPermissions({
 		guild,
 		member,
@@ -254,7 +272,11 @@ export class MessageSendService {
 			if (isOperationDisabled(guild, GuildOperations.SEND_MESSAGE)) {
 				throw new FeatureTemporarilyDisabledError();
 			}
-			await checkPermission(Permissions.SEND_MESSAGES);
+			if (isThreadChannelType(channel.type)) {
+				await this.assertCanSendInThread(channel, checkPermission, hasPermission);
+			} else {
+				await checkPermission(Permissions.SEND_MESSAGES);
+			}
 			assertGuildMemberCanCommunicate(member);
 			if (data.tts) {
 				const hasTtsPermission = await hasPermission(Permissions.SEND_TTS_MESSAGES);
@@ -996,6 +1018,18 @@ export class MessageSendService {
 		const searchIndexOptions = this.getSearchIndexOptions(channel);
 		if (searchIndexOptions && !suppressDmRecipientDelivery) {
 			void this.deps.searchService.indexMessage(message, user.isBot, searchIndexOptions);
+		}
+		if (isThreadChannelType(channel.type)) {
+			await this.settlePostCreateWork(messageId, [
+				{
+					step: 'update_thread_activity',
+					promise: this.deps.threadService.handleThreadMessageSent({
+						thread: channel,
+						senderId: user.id,
+						mentionedUserIds: mentionData?.mentionUserIds ?? [],
+					}),
+				},
+			]);
 		}
 		return message;
 	}

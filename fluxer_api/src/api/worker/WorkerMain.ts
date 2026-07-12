@@ -55,6 +55,7 @@ function registerCronJobs(cron: CronScheduler): void {
 	cron.upsert('syncUrlBlocklists', 'syncUrlBlocklists', {}, '0 0 */6 * * *');
 	cron.upsert('syncFileShaBlocklists', 'syncFileShaBlocklists', {}, '0 0 */12 * * *');
 	cron.upsert('flushUserActivityBuffer', 'flushUserActivityBuffer', {}, '*/10 * * * * *');
+	cron.upsert('threadAutoArchiveSweep', 'threadAutoArchiveSweep', {}, '0 */5 * * * *');
 	Logger.info('Cron jobs registered successfully');
 }
 

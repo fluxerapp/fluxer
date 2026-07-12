@@ -78,6 +78,7 @@ const LANE_CONFIG = {
 			'syncDisposableEmailDomains',
 			'syncUrlBlocklists',
 			'syncFileShaBlocklists',
+			'threadAutoArchiveSweep',
 			'flushUserActivityBuffer',
 		] as const,
 		concurrency: 12,

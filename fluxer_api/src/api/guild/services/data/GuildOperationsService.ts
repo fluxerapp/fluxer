@@ -860,6 +860,14 @@ export class GuildOperationsService {
 		await Promise.all(webhooks.map((webhook) => this.webhookRepository.delete(webhook.id)));
 		const channels = await this.channelRepository.listGuildChannels(guildId);
 		await Promise.all(channels.map((channel) => this.channelRepository.deleteAllChannelMessages(channel.id)));
+		const threadRefs = await this.channelRepository.threads.listThreadRefsByGuild(guildId);
+		for (const threadRef of threadRefs) {
+			const thread = await this.channelRepository.channelData.findUnique(threadRef.thread_id);
+			if (!thread) continue;
+			await this.channelRepository.deleteAllChannelMessages(thread.id);
+			await this.channelService.attachments.purgeChannelAttachments(thread);
+			await this.channelRepository.threads.deleteThread(thread);
+		}
 		await deleteGuildMessageSearchDocuments(guildId, {context: {source: 'guild_delete'}});
 		await Promise.all(channels.map((channel) => this.channelService.attachments.purgeChannelAttachments(channel)));
 		const discoveryRow = await this.discoveryRepository.findByGuildId(guildId);
@@ -921,6 +929,10 @@ export class GuildOperationsService {
 					nicks: null,
 					soft_deleted: false,
 					indexed_at: null,
+					thread_metadata: null,
+					message_count: null,
+					total_message_sent: null,
+					member_count: null,
 					version: 1,
 				}),
 			);
@@ -940,7 +952,7 @@ export class GuildOperationsService {
 				guild_id: guildId,
 				role_id: guildIdToRoleId(guildId),
 				name: '@everyone',
-				permissions: DEFAULT_PERMISSIONS,
+				permissions: DEFAULT_PERMISSIONS | Permissions.CREATE_PUBLIC_THREADS | Permissions.SEND_MESSAGES_IN_THREADS,
 				position: 0,
 				hoist_position: null,
 				color: 0,
@@ -1017,7 +1029,7 @@ export class GuildOperationsService {
 		}
 		const everyonePermissions =
 			this.parseTemplatePermissionBitfield(everyoneRole?.permissions_new ?? everyoneRole?.permissions) ||
-			DEFAULT_PERMISSIONS;
+			DEFAULT_PERMISSIONS | Permissions.CREATE_PUBLIC_THREADS | Permissions.SEND_MESSAGES_IN_THREADS;
 		batch.addPrepared(
 			GuildRoles.insert({
 				guild_id: guildId,
@@ -1117,6 +1129,10 @@ export class GuildOperationsService {
 					nicks: null,
 					soft_deleted: false,
 					indexed_at: null,
+					thread_metadata: null,
+					message_count: null,
+					total_message_sent: null,
+					member_count: null,
 					version: 1,
 				}),
 			);
@@ -1167,6 +1183,10 @@ export class GuildOperationsService {
 					nicks: null,
 					soft_deleted: false,
 					indexed_at: null,
+					thread_metadata: null,
+					message_count: null,
+					total_message_sent: null,
+					member_count: null,
 					version: 1,
 				}),
 			);
