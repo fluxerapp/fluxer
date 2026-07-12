@@ -617,6 +617,27 @@
 					"type": "bigint"
 				}
 			]
+		},
+		{
+			"name": "thread_metadata",
+			"fields": [
+				{
+					"name": "archived",
+					"type": "boolean"
+				},
+				{
+					"name": "locked",
+					"type": "boolean"
+				},
+				{
+					"name": "auto_archive_duration",
+					"type": "int"
+				},
+				{
+					"name": "archive_timestamp",
+					"type": "timestamp"
+				}
+			]
 		}
 	],
 	"tables": [
@@ -3531,6 +3552,22 @@
 				{
 					"name": "content_warning_text",
 					"type": "text"
+				},
+				{
+					"name": "thread_metadata",
+					"type": "frozen<thread_metadata>"
+				},
+				{
+					"name": "message_count",
+					"type": "int"
+				},
+				{
+					"name": "total_message_sent",
+					"type": "int"
+				},
+				{
+					"name": "member_count",
+					"type": "int"
 				}
 			],
 			"primary_key": "((channel_id, soft_deleted))",
@@ -9323,6 +9360,117 @@
 			],
 			"primary_key": "((build_sha, node_name), event_id)",
 			"options": "CLUSTERING ORDER BY (event_id ASC)"
+		},
+		{
+			"name": "thread_members",
+			"columns": [
+				{
+					"name": "thread_id",
+					"type": "bigint"
+				},
+				{
+					"name": "user_id",
+					"type": "bigint"
+				},
+				{
+					"name": "join_timestamp",
+					"type": "timestamp"
+				}
+			],
+			"primary_key": "((thread_id), user_id)",
+			"options": ""
+		},
+		{
+			"name": "thread_members_by_user_id",
+			"columns": [
+				{
+					"name": "user_id",
+					"type": "bigint"
+				},
+				{
+					"name": "guild_id",
+					"type": "bigint"
+				},
+				{
+					"name": "thread_id",
+					"type": "bigint"
+				},
+				{
+					"name": "join_timestamp",
+					"type": "timestamp"
+				}
+			],
+			"primary_key": "((user_id), guild_id, thread_id)",
+			"options": ""
+		},
+		{
+			"name": "threads_by_parent_id",
+			"columns": [
+				{
+					"name": "parent_id",
+					"type": "bigint"
+				},
+				{
+					"name": "thread_id",
+					"type": "bigint"
+				},
+				{
+					"name": "archived",
+					"type": "boolean"
+				}
+			],
+			"primary_key": "((parent_id), thread_id)",
+			"options": ""
+		},
+		{
+			"name": "threads_by_guild_id",
+			"columns": [
+				{
+					"name": "guild_id",
+					"type": "bigint"
+				},
+				{
+					"name": "thread_id",
+					"type": "bigint"
+				},
+				{
+					"name": "parent_id",
+					"type": "bigint"
+				},
+				{
+					"name": "archived",
+					"type": "boolean"
+				}
+			],
+			"primary_key": "((guild_id), thread_id)",
+			"options": ""
+		},
+		{
+			"name": "thread_archive_due",
+			"columns": [
+				{
+					"name": "due_bucket",
+					"type": "int"
+				},
+				{
+					"name": "archive_due_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "thread_id",
+					"type": "bigint"
+				},
+				{
+					"name": "guild_id",
+					"type": "bigint"
+				},
+				{
+					"name": "parent_id",
+					"type": "bigint"
+				}
+			],
+			"primary_key": "((due_bucket), archive_due_at, thread_id)",
+			"options": ""
 		}
 	],
 	"indexes": [

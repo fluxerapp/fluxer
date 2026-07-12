@@ -143,6 +143,16 @@ import {
 	type InviteRow,
 	PRIVATE_CHANNEL_COLUMNS,
 	type PrivateChannelRow,
+	THREAD_ARCHIVE_DUE_COLUMNS,
+	THREAD_MEMBER_COLUMNS,
+	THREAD_MEMBERS_BY_USER_COLUMNS,
+	THREADS_BY_GUILD_COLUMNS,
+	THREADS_BY_PARENT_COLUMNS,
+	type ThreadArchiveDueRow,
+	type ThreadMemberRow,
+	type ThreadMembersByUserRow,
+	type ThreadsByGuildRow,
+	type ThreadsByParentRow,
 	WEBHOOK_COLUMNS,
 	type WebhookRow,
 } from './database/types/ChannelTypes';
@@ -573,6 +583,47 @@ export const ChannelsByGuild = defineTable<ChannelsByGuildRow, 'guild_id' | 'cha
 	name: 'channels_by_guild_id',
 	columns: CHANNELS_BY_GUILD_COLUMNS,
 	primaryKey: ['guild_id', 'channel_id'],
+});
+
+export const ThreadMembers = defineTable<ThreadMemberRow, 'thread_id' | 'user_id', 'thread_id'>({
+	name: 'thread_members',
+	columns: THREAD_MEMBER_COLUMNS,
+	primaryKey: ['thread_id', 'user_id'],
+	partitionKey: ['thread_id'],
+});
+
+export const ThreadMembersByUser = defineTable<ThreadMembersByUserRow, 'user_id' | 'guild_id' | 'thread_id', 'user_id'>(
+	{
+		name: 'thread_members_by_user_id',
+		columns: THREAD_MEMBERS_BY_USER_COLUMNS,
+		primaryKey: ['user_id', 'guild_id', 'thread_id'],
+		partitionKey: ['user_id'],
+	},
+);
+
+export const ThreadsByParent = defineTable<ThreadsByParentRow, 'parent_id' | 'thread_id', 'parent_id'>({
+	name: 'threads_by_parent_id',
+	columns: THREADS_BY_PARENT_COLUMNS,
+	primaryKey: ['parent_id', 'thread_id'],
+	partitionKey: ['parent_id'],
+});
+
+export const ThreadsByGuild = defineTable<ThreadsByGuildRow, 'guild_id' | 'thread_id', 'guild_id'>({
+	name: 'threads_by_guild_id',
+	columns: THREADS_BY_GUILD_COLUMNS,
+	primaryKey: ['guild_id', 'thread_id'],
+	partitionKey: ['guild_id'],
+});
+
+export const ThreadArchiveDue = defineTable<
+	ThreadArchiveDueRow,
+	'due_bucket' | 'archive_due_at' | 'thread_id',
+	'due_bucket'
+>({
+	name: 'thread_archive_due',
+	columns: THREAD_ARCHIVE_DUE_COLUMNS,
+	primaryKey: ['due_bucket', 'archive_due_at', 'thread_id'],
+	partitionKey: ['due_bucket'],
 });
 export const ChannelState = defineTable<ChannelStateRow, 'channel_id'>({
 	name: 'channel_state',

@@ -19,6 +19,13 @@ export interface PermissionOverwrite {
 	deny_: Nullish<bigint>;
 }
 
+export interface ThreadMetadata {
+	archived: boolean;
+	locked: boolean;
+	auto_archive_duration: number;
+	archive_timestamp: Nullish<Date>;
+}
+
 export interface ChannelRow {
 	channel_id: ChannelID;
 	guild_id: Nullish<GuildID>;
@@ -46,6 +53,10 @@ export interface ChannelRow {
 	soft_deleted: boolean;
 	indexed_at: Nullish<Date>;
 	version: number;
+	thread_metadata: Nullish<ThreadMetadata>;
+	message_count: Nullish<number>;
+	total_message_sent: Nullish<number>;
+	member_count: Nullish<number>;
 }
 
 export interface InviteRow {
@@ -133,6 +144,10 @@ export const CHANNEL_COLUMNS = [
 	'soft_deleted',
 	'indexed_at',
 	'version',
+	'thread_metadata',
+	'message_count',
+	'total_message_sent',
+	'member_count',
 ] as const satisfies ReadonlyArray<keyof ChannelRow>;
 
 export interface ChannelsByGuildRow {
@@ -143,6 +158,70 @@ export interface ChannelsByGuildRow {
 export const CHANNELS_BY_GUILD_COLUMNS = ['guild_id', 'channel_id'] as const satisfies ReadonlyArray<
 	keyof ChannelsByGuildRow
 >;
+
+export interface ThreadMemberRow {
+	thread_id: ChannelID;
+	user_id: UserID;
+	join_timestamp: Date;
+}
+
+export const THREAD_MEMBER_COLUMNS = ['thread_id', 'user_id', 'join_timestamp'] as const satisfies ReadonlyArray<
+	keyof ThreadMemberRow
+>;
+
+export interface ThreadMembersByUserRow {
+	user_id: UserID;
+	guild_id: GuildID;
+	thread_id: ChannelID;
+	join_timestamp: Date;
+}
+
+export const THREAD_MEMBERS_BY_USER_COLUMNS = [
+	'user_id',
+	'guild_id',
+	'thread_id',
+	'join_timestamp',
+] as const satisfies ReadonlyArray<keyof ThreadMembersByUserRow>;
+
+export interface ThreadsByParentRow {
+	parent_id: ChannelID;
+	thread_id: ChannelID;
+	archived: Nullish<boolean>;
+}
+
+export const THREADS_BY_PARENT_COLUMNS = ['parent_id', 'thread_id', 'archived'] as const satisfies ReadonlyArray<
+	keyof ThreadsByParentRow
+>;
+
+export interface ThreadsByGuildRow {
+	guild_id: GuildID;
+	thread_id: ChannelID;
+	parent_id: Nullish<ChannelID>;
+	archived: Nullish<boolean>;
+}
+
+export const THREADS_BY_GUILD_COLUMNS = [
+	'guild_id',
+	'thread_id',
+	'parent_id',
+	'archived',
+] as const satisfies ReadonlyArray<keyof ThreadsByGuildRow>;
+
+export interface ThreadArchiveDueRow {
+	due_bucket: number;
+	archive_due_at: Date;
+	thread_id: ChannelID;
+	guild_id: GuildID;
+	parent_id: Nullish<ChannelID>;
+}
+
+export const THREAD_ARCHIVE_DUE_COLUMNS = [
+	'due_bucket',
+	'archive_due_at',
+	'thread_id',
+	'guild_id',
+	'parent_id',
+] as const satisfies ReadonlyArray<keyof ThreadArchiveDueRow>;
 export const INVITE_COLUMNS = [
 	'code',
 	'type',

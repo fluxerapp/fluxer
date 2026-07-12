@@ -107,5 +107,9 @@ export function channelRowFromPrivateChannelSnapshot(row: PrivateChannelRow): Ch
 		soft_deleted: false,
 		indexed_at: null,
 		version: row.channel_version ?? 0,
+		thread_metadata: null,
+		message_count: null,
+		total_message_sent: null,
+		member_count: null,
 	};
 }

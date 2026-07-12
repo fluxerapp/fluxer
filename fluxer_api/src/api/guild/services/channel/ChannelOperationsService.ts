@@ -170,6 +170,10 @@ export class ChannelOperationsService {
 			soft_deleted: false,
 			indexed_at: null,
 			version: 1,
+			thread_metadata: null,
+			message_count: null,
+			total_message_sent: null,
+			member_count: null,
 		});
 		await this.dispatchChannelCreate({guildId: params.guildId, channel, requestCache: params.requestCache});
 		await this.recordAuditLog({

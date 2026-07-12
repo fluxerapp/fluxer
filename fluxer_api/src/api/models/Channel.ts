@@ -3,7 +3,7 @@
 import {type ChannelType, ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {VOICE_CHANNEL_CONNECTION_LIMIT_DEFAULT} from '@fluxer/constants/src/LimitConstants';
 import type {ChannelID, GuildID, MessageID, RoleID, UserID} from '../BrandedTypes';
-import type {ChannelRow, PermissionOverwrite} from '../database/types/ChannelTypes';
+import type {ChannelRow, PermissionOverwrite, ThreadMetadata} from '../database/types/ChannelTypes';
 import {ChannelPermissionOverwrite} from './ChannelPermissionOverwrite';
 
 export class Channel {
@@ -34,6 +34,10 @@ export class Channel {
 	readonly isSoftDeleted: boolean;
 	readonly indexedAt: Date | null;
 	readonly version: number;
+	readonly threadMetadata: ThreadMetadata | null;
+	readonly messageCount: number | null;
+	readonly totalMessageSent: number | null;
+	readonly memberCount: number | null;
 
 	constructor(row: ChannelRow) {
 		this.id = row.channel_id;
@@ -70,6 +74,10 @@ export class Channel {
 		this.isSoftDeleted = row.soft_deleted;
 		this.indexedAt = row.indexed_at ?? null;
 		this.version = row.version;
+		this.threadMetadata = row.thread_metadata ?? null;
+		this.messageCount = row.message_count ?? null;
+		this.totalMessageSent = row.total_message_sent ?? null;
+		this.memberCount = row.member_count ?? null;
 	}
 
 	toRow(): ChannelRow {
@@ -109,6 +117,10 @@ export class Channel {
 			soft_deleted: this.isSoftDeleted,
 			indexed_at: this.indexedAt,
 			version: this.version,
+			thread_metadata: this.threadMetadata,
+			message_count: this.messageCount,
+			total_message_sent: this.totalMessageSent,
+			member_count: this.memberCount,
 		};
 	}
 }

@@ -47,6 +47,10 @@ function gdmRow(overrides: Partial<ChannelRow> = {}): ChannelRow {
 		soft_deleted: false,
 		indexed_at: null,
 		version: 7,
+		thread_metadata: null,
+		message_count: null,
+		total_message_sent: null,
+		member_count: null,
 		...overrides,
 	};
 }

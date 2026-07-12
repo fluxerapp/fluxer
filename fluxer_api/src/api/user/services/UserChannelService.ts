@@ -516,6 +516,10 @@ export class UserChannelService {
 			nicks: null,
 			soft_deleted: false,
 			indexed_at: null,
+			thread_metadata: null,
+			message_count: null,
+			total_message_sent: null,
+			member_count: null,
 			version: 1,
 		};
 		const newChannel = await this.channelRepository.upsert(channelData);
