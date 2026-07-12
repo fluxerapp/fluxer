@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {isThreadChannelType} from '@fluxer/constants/src/ChannelConstants';
 import type {ChannelID, GuildID, MessageID, UserID} from '../../BrandedTypes';
 import {BatchBuilder, fetchMany, fetchManyInChunks, fetchOne, upsertOne} from '../../database/CassandraQueryExecution';
 import {Db} from '../../database/CassandraTypes';
@@ -54,7 +55,9 @@ export class ChannelDataRepository extends IChannelDataRepository {
 			Channels,
 			{initialData: oldData},
 		);
-		if (data.guild_id) {
+		// Threads are indexed in threads_by_* tables by ThreadRepository; keep them
+		// out of channels_by_guild_id so regular guild channel listings stay thread-free.
+		if (data.guild_id && !isThreadChannelType(data.type)) {
 			await upsertOne(
 				ChannelsByGuild.upsertAll({
 					guild_id: data.guild_id,

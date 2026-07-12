@@ -29,6 +29,10 @@ export class ChannelRepository extends IChannelRepository {
 		return this.repository.messageInteractions;
 	}
 
+	get threads() {
+		return this.repository.threads;
+	}
+
 	async findUnique(channelId: ChannelID): Promise<Channel | null> {
 		return this.repository.channelData.findUnique(channelId);
 	}
