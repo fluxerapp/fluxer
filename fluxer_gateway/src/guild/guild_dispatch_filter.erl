@@ -106,6 +106,10 @@ is_channel_scoped_event(message_reaction_remove_emoji) -> true;
 is_channel_scoped_event(typing_start) -> true;
 is_channel_scoped_event(channel_pins_update) -> true;
 is_channel_scoped_event(webhooks_update) -> true;
+is_channel_scoped_event(thread_create) -> true;
+is_channel_scoped_event(thread_update) -> true;
+is_channel_scoped_event(thread_delete) -> true;
+is_channel_scoped_event(thread_members_update) -> true;
 is_channel_scoped_event(_) -> false.
 
 -spec is_invite_event(event()) -> boolean().
@@ -199,6 +203,20 @@ is_bulk_update_event(channel_update_bulk) -> true;
 is_bulk_update_event(_) -> false.
 
 -spec extract_channel_id(event(), event_data()) -> channel_id().
+extract_channel_id(Event, FinalData) when
+    Event =:= thread_create;
+    Event =:= thread_update;
+    Event =:= thread_delete;
+    Event =:= thread_members_update
+->
+    %% Thread events are visibility-scoped to their parent channel.
+    case maps:get(<<"parent_id">>, FinalData, undefined) of
+        ParentIdBin when is_binary(ParentIdBin) ->
+            guild_dispatch_decorate:parse_snowflake(<<"parent_id">>, ParentIdBin);
+        _ ->
+            ThreadIdBin = maps:get(<<"id">>, FinalData, undefined),
+            guild_dispatch_decorate:require_snowflake(<<"id">>, ThreadIdBin)
+    end;
 extract_channel_id(Event, FinalData) when
     Event =:= channel_create; Event =:= channel_update; Event =:= channel_delete
 ->

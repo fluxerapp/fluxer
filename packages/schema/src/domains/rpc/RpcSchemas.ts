@@ -34,6 +34,7 @@ export const RpcGuildCollectionType = z.enum([
 	'stickers',
 	'members',
 	'voice_states',
+	'threads',
 ]);
 
 export type RpcGuildCollectionType = z.infer<typeof RpcGuildCollectionType>;
@@ -309,6 +310,7 @@ export const RpcResponseGuildCollectionData = z.object({
 	stickers: z.array(GuildStickerResponse).nullish().describe('List of custom stickers in the guild'),
 	members: z.array(GuildMemberResponse).nullish().describe('List of guild members in this chunk'),
 	voice_states: z.array(VoiceStateResponse).nullish().describe('List of guild voice states in this chunk'),
+	threads: z.array(ChannelResponse).nullish().describe('List of active threads in the guild'),
 	has_more: z.boolean().describe('Whether more data is available for this collection'),
 	next_after_user_id: SnowflakeStringType.nullish().describe('Cursor for the next member chunk'),
 });

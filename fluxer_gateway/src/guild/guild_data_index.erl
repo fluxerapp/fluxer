@@ -46,7 +46,9 @@ normalize_data(Data) when is_map(Data) ->
     ),
     Roles = guild_data_index_roles:role_list(Data0),
     Channels = guild_data_index_channels:channel_list(Data0),
-    Data0#{
+    Threads = thread_list(Data0),
+    Data1 = maps:remove(<<"threads">>, Data0),
+    Data1#{
         <<"members">> => MemberMap,
         members_normalized => MemberMap,
         members_sorted_ids => lists:sort(maps:keys(MemberMap)),
@@ -54,6 +56,7 @@ normalize_data(Data) when is_map(Data) ->
         <<"channels">> => Channels,
         <<"role_index">> => build_id_index(Roles),
         <<"channel_index">> => build_id_index(Channels),
+        <<"threads_index">> => build_id_index(Threads),
         <<"member_role_index">> =>
             guild_data_index_members:build_member_role_index(MemberMap),
         role_perms_cache =>
@@ -121,6 +124,15 @@ build_role_perms_cache(Roles) -> guild_data_index_roles:build_role_perms_cache(R
 -spec build_overwrite_perms_cache([map()]) -> map().
 build_overwrite_perms_cache(Channels) ->
     guild_data_index_channels:build_overwrite_perms_cache(Channels).
+
+%% Active threads arrive as their own collection; they are indexed separately
+%% so they never join the guild channel list that feeds guild payloads.
+-spec thread_list(map()) -> [map()].
+thread_list(Data) ->
+    case maps:get(<<"threads">>, Data, undefined) of
+        Threads when is_list(Threads) -> Threads;
+        _ -> []
+    end.
 
 -spec build_id_index([map()]) -> #{integer() => map()}.
 build_id_index(Items) ->

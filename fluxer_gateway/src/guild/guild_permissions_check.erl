@@ -240,7 +240,14 @@ find_channel_by_id(ChannelId, State) ->
         {snowflake_id:parse_maybe(ChannelId), guild_permissions_common:resolve_data_map(State)}
     of
         {ResolvedChannelId, Data} when is_integer(ResolvedChannelId), is_map(Data) ->
-            maps:get(ResolvedChannelId, guild_data_index:channel_index(Data), undefined);
+            case maps:get(ResolvedChannelId, guild_data_index:channel_index(Data), undefined) of
+                undefined ->
+                    maps:get(
+                        ResolvedChannelId, guild_state_channels:thread_index(Data), undefined
+                    );
+                Channel ->
+                    Channel
+            end;
         _ ->
             undefined
     end.

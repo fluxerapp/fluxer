@@ -8,6 +8,10 @@
     handle_channel_update/2,
     handle_channel_update_bulk/2,
     handle_channel_delete/2,
+    handle_thread_create/2,
+    handle_thread_update/2,
+    handle_thread_delete/2,
+    thread_index/1,
     handle_message_create/2,
     handle_channel_pins_update/2,
     handle_emojis_update/2,
@@ -53,6 +57,42 @@ handle_channel_delete(EventData, Data) ->
     ChannelId = maps:get(<<"id">>, EventData),
     FilteredChannels = guild_state_utils:remove_item_by_id(Channels, ChannelId),
     guild_data_index:put_channels(FilteredChannels, Data).
+
+%% Threads are held in a dedicated index so they never leak into the guild
+%% channel list that feeds guild payloads; permission checks resolve them via
+%% guild_permissions_check:find_channel_by_id/2.
+-spec thread_index(guild_data()) -> #{integer() => map()}.
+thread_index(Data) ->
+    case maps:get(<<"threads_index">>, Data, undefined) of
+        Index when is_map(Index) -> Index;
+        _ -> #{}
+    end.
+
+-spec put_thread_index(#{integer() => map()}, guild_data()) -> guild_data().
+put_thread_index(Index, Data) ->
+    Data#{<<"threads_index">> => Index}.
+
+-spec thread_id_of(event_data()) -> integer() | undefined.
+thread_id_of(EventData) ->
+    snowflake_id:parse_optional(maps:get(<<"id">>, EventData, undefined)).
+
+-spec handle_thread_create(event_data(), guild_data()) -> guild_data().
+handle_thread_create(EventData, Data) ->
+    case thread_id_of(EventData) of
+        undefined -> Data;
+        ThreadId -> put_thread_index(maps:put(ThreadId, EventData, thread_index(Data)), Data)
+    end.
+
+-spec handle_thread_update(event_data(), guild_data()) -> guild_data().
+handle_thread_update(EventData, Data) ->
+    handle_thread_create(EventData, Data).
+
+-spec handle_thread_delete(event_data(), guild_data()) -> guild_data().
+handle_thread_delete(EventData, Data) ->
+    case thread_id_of(EventData) of
+        undefined -> Data;
+        ThreadId -> put_thread_index(maps:remove(ThreadId, thread_index(Data)), Data)
+    end.
 
 -spec handle_message_create(event_data(), guild_data()) -> guild_data().
 handle_message_create(EventData, Data) ->

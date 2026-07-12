@@ -75,7 +75,13 @@ channel_event_map() ->
         <<"CHANNEL_RECIPIENT_ADD">> => channel_recipient_add,
         <<"CHANNEL_RECIPIENT_REMOVE">> => channel_recipient_remove,
         <<"CHANNEL_UPDATE">> => channel_update,
-        <<"CHANNEL_UPDATE_BULK">> => channel_update_bulk
+        <<"CHANNEL_UPDATE_BULK">> => channel_update_bulk,
+        <<"THREAD_CREATE">> => thread_create,
+        <<"THREAD_DELETE">> => thread_delete,
+        <<"THREAD_LIST_SYNC">> => thread_list_sync,
+        <<"THREAD_MEMBER_UPDATE">> => thread_member_update,
+        <<"THREAD_MEMBERS_UPDATE">> => thread_members_update,
+        <<"THREAD_UPDATE">> => thread_update
     }.
 
 -spec guild_event_map() -> #{binary() => atom()}.

@@ -79,8 +79,29 @@ maybe_apply_channel_overwrites(
 ) -> permission().
 apply_from_channel_lookup(Permissions, UserId, MemberRoles, ChannelId, GuildId, State) ->
     case guild_permissions_check:find_channel_by_id(ChannelId, State) of
-        undefined -> Permissions;
-        Channel -> apply_channel_overwrites(Permissions, UserId, MemberRoles, Channel, GuildId)
+        undefined ->
+            Permissions;
+        #{<<"type">> := 11} = Thread ->
+            apply_thread_parent_overwrites(
+                Permissions, UserId, MemberRoles, Thread, GuildId, State
+            );
+        Channel ->
+            apply_channel_overwrites(Permissions, UserId, MemberRoles, Channel, GuildId)
+    end.
+
+%% Threads carry no overwrites of their own; they inherit the permissions of
+%% their parent channel.
+-spec apply_thread_parent_overwrites(
+    permission(), user_id(), member_roles(), channel(), role_id(), guild_state()
+) -> permission().
+apply_thread_parent_overwrites(Permissions, UserId, MemberRoles, Thread, GuildId, State) ->
+    case snowflake_id:parse_maybe(maps:get(<<"parent_id">>, Thread, undefined)) of
+        ParentId when is_integer(ParentId) ->
+            maybe_apply_channel_overwrites(
+                Permissions, UserId, MemberRoles, ParentId, GuildId, State
+            );
+        _ ->
+            apply_channel_overwrites(Permissions, UserId, MemberRoles, Thread, GuildId)
     end.
 
 -spec overwrite_cache_from_data(map() | undefined) -> map().

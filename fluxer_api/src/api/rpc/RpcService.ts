@@ -1230,6 +1230,8 @@ export class RpcService {
 				return await this.handleGuildCollectionMembersRequest({guildId, requestCache, afterUserId, limit});
 			case 'voice_states':
 				return await this.handleGuildCollectionVoiceStatesRequest({guildId});
+			case 'threads':
+				return await this.handleGuildCollectionThreadsRequest({guildId, requestCache});
 			default: {
 				const exhaustiveCheck: never = collection;
 				throw new Error(`Unknown guild collection: ${String(exhaustiveCheck)}`);
@@ -1295,6 +1297,33 @@ export class RpcService {
 		return {
 			...this.createGuildCollectionResponse('roles'),
 			roles: roles.map(mapGuildRoleToResponse),
+		};
+	}
+
+	private async handleGuildCollectionThreadsRequest({
+		guildId,
+		requestCache,
+	}: {
+		guildId: GuildID;
+		requestCache: RequestCache;
+	}): Promise<RpcResponseGuildCollectionData> {
+		const refs = await this.channelRepository.threads.listThreadRefsByGuild(guildId);
+		const activeIds = refs.filter((ref) => !ref.archived).map((ref) => ref.thread_id);
+		const threads = await this.channelRepository.channelData.listChannels(activeIds);
+		const mappedThreads = await Promise.all(
+			threads.map((thread) =>
+				mapChannelToResponse({
+					channel: thread,
+					currentUserId: null,
+					userCacheService: this.userCacheService,
+					requestCache,
+				}),
+			),
+		);
+		return {
+			...this.createGuildCollectionResponse('threads'),
+			threads: mappedThreads,
+			has_more: false,
 		};
 	}
 

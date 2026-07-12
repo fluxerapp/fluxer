@@ -81,6 +81,12 @@ update_channel_event(guild_emojis_update, ED, D) ->
     guild_state_channels:handle_emojis_update(ED, D);
 update_channel_event(guild_stickers_update, ED, D) ->
     guild_state_channels:handle_stickers_update(ED, D);
+update_channel_event(thread_create, ED, D) ->
+    guild_state_channels:handle_thread_create(ED, D);
+update_channel_event(thread_update, ED, D) ->
+    guild_state_channels:handle_thread_update(ED, D);
+update_channel_event(thread_delete, ED, D) ->
+    guild_state_channels:handle_thread_delete(ED, D);
 update_channel_event(_Event, _EventData, Data) ->
     Data.
 

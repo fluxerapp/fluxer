@@ -16,6 +16,7 @@
     <<"guild">>,
     <<"roles">>,
     <<"channels">>,
+    <<"threads">>,
     <<"emojis">>,
     <<"stickers">>,
     <<"members">>,
