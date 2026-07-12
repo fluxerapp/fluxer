@@ -8,6 +8,7 @@ export const ChannelTypes = {
 	GUILD_VOICE: 2,
 	GROUP_DM: 3,
 	GUILD_CATEGORY: 4,
+	GUILD_THREAD: 11,
 	GUILD_LINK: 998,
 	DM_PERSONAL_NOTES: 999,
 } as const;
@@ -20,7 +21,23 @@ export const TEXT_BASED_CHANNEL_TYPES = new Set<number>([
 	ChannelTypes.DM,
 	ChannelTypes.DM_PERSONAL_NOTES,
 	ChannelTypes.GROUP_DM,
+	ChannelTypes.GUILD_THREAD,
 ]);
+
+const THREAD_CHANNEL_TYPES = new Set<number>([ChannelTypes.GUILD_THREAD]);
+
+export function isThreadChannelType(type: number): boolean {
+	return THREAD_CHANNEL_TYPES.has(type);
+}
+
+export const ThreadAutoArchiveDurations = {
+	ONE_HOUR: 60,
+	ONE_DAY: 1440,
+	THREE_DAYS: 4320,
+	SEVEN_DAYS: 10080,
+} as const;
+
+export const THREAD_AUTO_ARCHIVE_DURATION_DEFAULT = ThreadAutoArchiveDurations.SEVEN_DAYS;
 export const AUTOMATIC_VOICE_REGION_ID = 'automatic';
 export const ChannelOverwriteTypes = {
 	ROLE: 0,
@@ -45,7 +62,9 @@ export const MessageTypes = {
 	CHANNEL_ICON_CHANGE: 5,
 	CHANNEL_PINNED_MESSAGE: 6,
 	USER_JOIN: 7,
+	THREAD_CREATED: 18,
 	REPLY: 19,
+	THREAD_STARTER_MESSAGE: 21,
 	CLIENT_SYSTEM: 99,
 } as const;
 
@@ -56,11 +75,13 @@ const MESSAGE_TYPE_DELETABLE = {
 	[MessageTypes.REPLY]: true,
 	[MessageTypes.CHANNEL_PINNED_MESSAGE]: true,
 	[MessageTypes.USER_JOIN]: true,
+	[MessageTypes.THREAD_CREATED]: true,
 	[MessageTypes.RECIPIENT_ADD]: false,
 	[MessageTypes.RECIPIENT_REMOVE]: false,
 	[MessageTypes.CALL]: false,
 	[MessageTypes.CHANNEL_NAME_CHANGE]: false,
 	[MessageTypes.CHANNEL_ICON_CHANGE]: false,
+	[MessageTypes.THREAD_STARTER_MESSAGE]: false,
 	[MessageTypes.CLIENT_SYSTEM]: false,
 } as const satisfies Record<MessageTypeValue, boolean>;
 
@@ -175,7 +196,10 @@ export const Permissions = {
 	MANAGE_ROLES: 1n << 28n,
 	MANAGE_WEBHOOKS: 1n << 29n,
 	MANAGE_EXPRESSIONS: 1n << 30n,
+	MANAGE_THREADS: 1n << 34n,
+	CREATE_PUBLIC_THREADS: 1n << 35n,
 	USE_EXTERNAL_STICKERS: 1n << 37n,
+	SEND_MESSAGES_IN_THREADS: 1n << 38n,
 	MODERATE_MEMBERS: 1n << 40n,
 	CREATE_EXPRESSIONS: 1n << 43n,
 	PIN_MESSAGES: 1n << 51n,
@@ -214,7 +238,10 @@ export const PermissionsDescriptions: Record<keyof typeof Permissions, string> =
 	MANAGE_ROLES: 'Allows management and editing of roles',
 	MANAGE_WEBHOOKS: 'Allows management and editing of webhooks',
 	MANAGE_EXPRESSIONS: 'Allows management of guild expressions',
+	MANAGE_THREADS: 'Allows management, archiving, locking, and deletion of threads',
+	CREATE_PUBLIC_THREADS: 'Allows creating threads in text channels',
 	USE_EXTERNAL_STICKERS: 'Allows using stickers from other guilds',
+	SEND_MESSAGES_IN_THREADS: 'Allows sending messages in threads',
 	MODERATE_MEMBERS: 'Allows timing out users',
 	CREATE_EXPRESSIONS: 'Allows creating guild expressions',
 	PIN_MESSAGES: 'Allows pinning messages',
@@ -247,6 +274,7 @@ export const ElevatedPermissions =
 	Permissions.MANAGE_GUILD |
 	Permissions.MANAGE_ROLES |
 	Permissions.MANAGE_MESSAGES |
+	Permissions.MANAGE_THREADS |
 	Permissions.MANAGE_WEBHOOKS |
 	Permissions.MANAGE_EXPRESSIONS |
 	Permissions.MODERATE_MEMBERS;

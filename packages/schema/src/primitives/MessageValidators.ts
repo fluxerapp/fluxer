@@ -32,7 +32,13 @@ export const MessageTypeSchema = withOpenApiType(
 				'A system message indicating a message was pinned',
 			],
 			[MessageTypes.USER_JOIN, 'USER_JOIN', 'A system message indicating a user joined'],
+			[MessageTypes.THREAD_CREATED, 'THREAD_CREATED', 'A system message indicating a thread was created'],
 			[MessageTypes.REPLY, 'REPLY', 'A reply message'],
+			[
+				MessageTypes.THREAD_STARTER_MESSAGE,
+				'THREAD_STARTER_MESSAGE',
+				'The first message in a thread started from an existing message',
+			],
 		],
 		'The type of message',
 	),

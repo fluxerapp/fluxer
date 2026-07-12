@@ -87,6 +87,28 @@ export const VoicePresenceHeartbeatEndResponse = z.object({
 
 export type VoicePresenceHeartbeatEndResponse = z.infer<typeof VoicePresenceHeartbeatEndResponse>;
 
+const ThreadMetadataResponse = z.object({
+	archived: z.boolean().describe('Whether the thread is archived'),
+	locked: z
+		.boolean()
+		.describe('Whether the thread is locked; only users with MANAGE_THREADS can unarchive a locked thread'),
+	auto_archive_duration: Int32Type.describe(
+		'Duration in minutes of inactivity after which the thread is automatically archived (60, 1440, 4320, or 10080)',
+	),
+	archive_timestamp: z.iso
+		.datetime()
+		.nullish()
+		.describe('ISO 8601 timestamp of when the thread archive status last changed'),
+});
+
+export const ThreadMemberResponse = z.object({
+	id: SnowflakeStringType.describe('The ID of the thread'),
+	user_id: SnowflakeStringType.describe('The ID of the user'),
+	join_timestamp: z.iso.datetime().describe('ISO 8601 timestamp of when the user joined the thread'),
+});
+
+export type ThreadMemberResponse = z.infer<typeof ThreadMemberResponse>;
+
 export const ChannelResponse = z.object({
 	id: SnowflakeStringType.describe('The unique identifier (snowflake) for this channel'),
 	guild_id: SnowflakeStringType.optional().describe('The ID of the guild this channel belongs to'),
@@ -94,10 +116,14 @@ export const ChannelResponse = z.object({
 	topic: z.string().nullish().describe('The topic of the channel'),
 	url: z.url().nullish().describe('The URL associated with the channel'),
 	icon: z.string().nullish().describe('The icon hash of the channel (for group DMs)'),
-	owner_id: SnowflakeStringType.nullish().describe('The ID of the owner of the channel (for group DMs)'),
+	owner_id: SnowflakeStringType.nullish().describe(
+		'The ID of the owner of the channel (for group DMs), or of the creator (for threads)',
+	),
 	type: ChannelTypeSchema.describe('The type of the channel'),
 	position: Int32Type.optional().describe('The sorting position of the channel'),
-	parent_id: SnowflakeStringType.nullish().describe('The ID of the parent category for this channel'),
+	parent_id: SnowflakeStringType.nullish().describe(
+		'The ID of the parent category for this channel, or of the parent text channel for threads',
+	),
 	bitrate: Int32Type.nullish().describe('The bitrate of the voice channel in bits per second'),
 	user_limit: Int32Type.nullish().describe('The maximum number of users allowed in the voice channel'),
 	voice_connection_limit: Int32Type.nullish().describe(
@@ -142,9 +168,30 @@ export const ChannelResponse = z.object({
 		.record(z.string(), createStringType(1, 32))
 		.optional()
 		.describe('Custom nicknames for users in this channel (for group DMs)'),
+	thread_metadata: ThreadMetadataResponse.optional().describe(
+		'Thread-specific metadata; present only on thread channels',
+	),
+	member: ThreadMemberResponse.optional().describe(
+		"The calling user's thread member object; present only on threads the user has joined",
+	),
+	member_count: Int32Type.optional().describe('Approximate number of members in the thread; stops counting at 50'),
+	message_count: Int32Type.optional().describe('Number of messages in the thread, excluding the starter message'),
+	total_message_sent: Int32Type.optional().describe(
+		'Total number of messages ever sent in the thread; does not decrease when messages are deleted',
+	),
 });
 
 export type ChannelResponse = z.infer<typeof ChannelResponse>;
+
+export const ThreadListResponse = z.object({
+	threads: z.array(ChannelResponse).describe('The matching thread channels'),
+	members: z
+		.array(ThreadMemberResponse)
+		.describe("The calling user's thread member objects for the threads they have joined"),
+	has_more: z.boolean().describe('Whether more threads are available in subsequent pages'),
+});
+
+export type ThreadListResponse = z.infer<typeof ThreadListResponse>;
 
 export const ChannelNicknameOverrides = z
 	.record(
@@ -179,6 +226,19 @@ export interface ChannelOverwrite {
 	readonly deny: string;
 }
 
+export interface ThreadMetadata {
+	readonly archived: boolean;
+	readonly locked: boolean;
+	readonly auto_archive_duration: number;
+	readonly archive_timestamp?: string | null;
+}
+
+export interface ThreadMember {
+	readonly id: string;
+	readonly user_id: string;
+	readonly join_timestamp: string;
+}
+
 export interface Channel {
 	readonly id: string;
 	readonly guild_id?: string;
@@ -204,4 +264,9 @@ export interface Channel {
 	readonly content_warning_text?: string | null;
 	readonly rate_limit_per_user?: number;
 	readonly nicks?: Readonly<Record<string, string>>;
+	readonly thread_metadata?: ThreadMetadata;
+	readonly member?: ThreadMember;
+	readonly member_count?: number;
+	readonly message_count?: number;
+	readonly total_message_sent?: number;
 }

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
+import {ChannelTypes, ThreadAutoArchiveDurations} from '@fluxer/constants/src/ChannelConstants';
 import {CONTENT_WARNING_TEXT_MAX_LENGTH} from '@fluxer/constants/src/GuildConstants';
 import {
 	AVATAR_MAX_SIZE,
@@ -159,6 +159,51 @@ export const ChannelCreateRequest = z.discriminatedUnion('type', [
 
 export type ChannelCreateRequest = z.infer<typeof ChannelCreateRequest>;
 
+const ThreadAutoArchiveDurationSchema = createNamedLiteralUnion(
+	[
+		[ThreadAutoArchiveDurations.ONE_HOUR, 'ONE_HOUR'],
+		[ThreadAutoArchiveDurations.ONE_DAY, 'ONE_DAY'],
+		[ThreadAutoArchiveDurations.THREE_DAYS, 'THREE_DAYS'],
+		[ThreadAutoArchiveDurations.SEVEN_DAYS, 'SEVEN_DAYS'],
+	],
+	'Duration in minutes of inactivity after which the thread is automatically archived',
+);
+
+export const ThreadCreateRequest = z.object({
+	name: GeneralChannelNameType.describe('The name of the thread (1-100 characters)'),
+	auto_archive_duration: ThreadAutoArchiveDurationSchema.optional().describe(
+		'Duration in minutes of inactivity after which the thread is automatically archived. Defaults to 10080 (7 days).',
+	),
+	rate_limit_per_user: z
+		.number()
+		.int()
+		.min(CHANNEL_RATE_LIMIT_PER_USER_MIN)
+		.max(CHANNEL_RATE_LIMIT_PER_USER_MAX)
+		.nullish()
+		.describe(`Slowmode delay in seconds (${CHANNEL_RATE_LIMIT_PER_USER_MIN}-${CHANNEL_RATE_LIMIT_PER_USER_MAX})`),
+});
+
+export type ThreadCreateRequest = z.infer<typeof ThreadCreateRequest>;
+
+export const ThreadListArchivedQuery = z.object({
+	before: z.iso.datetime().optional().describe('Returns threads archived before this ISO 8601 timestamp'),
+	limit: coerceNumberFromString(z.number().int().min(1).max(100))
+		.optional()
+		.describe('Maximum number of threads to return (1-100, default 50)'),
+});
+
+export type ThreadListArchivedQuery = z.infer<typeof ThreadListArchivedQuery>;
+
+export const ThreadSearchQuery = z.object({
+	q: createStringType(1, 100).optional().describe('Returns threads whose name contains this query'),
+	archived: QueryBooleanType.optional().describe('Include archived threads in the results'),
+	limit: coerceNumberFromString(z.number().int().min(1).max(100))
+		.optional()
+		.describe('Maximum number of threads to return (1-100, default 25)'),
+});
+
+export type ThreadSearchQuery = z.infer<typeof ThreadSearchQuery>;
+
 const ChannelUpdateTextRequest = ChannelUpdateCommon.extend({
 	type: createNamedLiteral(ChannelTypes.GUILD_TEXT, 'GUILD_TEXT', 'Channel type (text channel)'),
 	name: GeneralChannelNameType.nullish().describe('The name of the channel'),
@@ -189,12 +234,26 @@ const ChannelUpdateGroupDmRequest = z.object({
 	nicks: ChannelNicknameOverrides.nullish().describe('Custom nicknames for users in this group DM'),
 });
 
+const ChannelUpdateThreadRequest = ChannelUpdateCommon.extend({
+	type: createNamedLiteral(ChannelTypes.GUILD_THREAD, 'GUILD_THREAD', 'Channel type (thread)'),
+	name: GeneralChannelNameType.nullish().describe('The name of the thread'),
+	archived: z.boolean().optional().describe('Whether the thread is archived'),
+	locked: z
+		.boolean()
+		.optional()
+		.describe('Whether the thread is locked; only users with MANAGE_THREADS can unarchive a locked thread'),
+	auto_archive_duration: ThreadAutoArchiveDurationSchema.optional().describe(
+		'Duration in minutes of inactivity after which the thread is automatically archived',
+	),
+});
+
 export const ChannelUpdateRequest = z.discriminatedUnion('type', [
 	ChannelUpdateTextRequest,
 	ChannelUpdateVoiceRequest,
 	ChannelUpdateCategoryRequest,
 	ChannelUpdateLinkRequest,
 	ChannelUpdateGroupDmRequest,
+	ChannelUpdateThreadRequest,
 ]);
 
 export type ChannelUpdateRequest = z.infer<typeof ChannelUpdateRequest>;

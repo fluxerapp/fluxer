@@ -206,6 +206,7 @@ export const ERROR_I18N_MESSAGES = {
 	'channels_and_guilds.animated_guild_banner_requires_feature':
 		'Animated community banner requires ANIMATED_BANNER feature.',
 	'channels_and_guilds.bots_cannot_create_guilds': "Bots can't create communities.",
+	'channels_and_guilds.max_active_threads': 'This community has reached the maximum number of active threads.',
 	'channels_and_guilds.single_community_cannot_create_guilds':
 		'This instance is a single community, so additional communities cannot be created.',
 	'channels_and_guilds.single_community_cannot_delete': 'The community for this instance cannot be deleted.',
@@ -267,6 +268,9 @@ export const ERROR_I18N_MESSAGES = {
 	'channels_and_guilds.system_channel_must_be_in_guild': 'System channel must be in this community.',
 	'channels_and_guilds.system_channel_must_be_text': 'System channel must be a text channel.',
 	'channels_and_guilds.temporary_invite_requires_presence': 'Temporary invite requires presence.',
+	'channels_and_guilds.thread_already_created': 'A thread has already been created for this message.',
+	'channels_and_guilds.thread_archived': 'This thread is archived.',
+	'channels_and_guilds.thread_locked': 'This thread is locked; only moderators can unarchive it.',
 	'channels_and_guilds.unclaimed_account_cannot_create_guilds':
 		'You need to complete your account setup before you can create communities.',
 	'channels_and_guilds.vanity_url_requires_feature': 'Vanity URL requires VANITY_URL feature.',
