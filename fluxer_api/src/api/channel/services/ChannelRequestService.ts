@@ -62,6 +62,14 @@ export class ChannelRequestService {
 		clientFeatures: ReadonlySet<string>;
 		requestCache: RequestCache;
 	}): Promise<ChannelResponse> {
+		if (params.data.type === ChannelTypes.GUILD_THREAD) {
+			return this.channelService.threads.updateThread({
+				userId: params.userId,
+				threadId: params.channelId,
+				data: params.data,
+				requestCache: params.requestCache,
+			});
+		}
 		const channel = await this.channelService.channelData.editChannel({
 			userId: params.userId,
 			channelId: params.channelId,
@@ -94,6 +102,14 @@ export class ChannelRequestService {
 				recipientId: params.userId,
 				requestCache: params.requestCache,
 				silent: params.silent,
+			});
+			return;
+		}
+		if (channel.type === ChannelTypes.GUILD_THREAD) {
+			await this.channelService.threads.deleteThread({
+				userId: params.userId,
+				threadId: params.channelId,
+				requestCache: params.requestCache,
 			});
 			return;
 		}

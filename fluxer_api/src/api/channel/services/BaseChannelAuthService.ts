@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {ChannelTypes, isThreadChannelType, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {CannotSendMessagesToUserError} from '@fluxer/errors/src/domains/channel/CannotSendMessagesToUserError';
 import {UnknownChannelError} from '@fluxer/errors/src/domains/channel/UnknownChannelError';
 import {AccessDeniedError} from '@fluxer/errors/src/domains/core/AccessDeniedError';
@@ -173,20 +173,28 @@ export abstract class BaseChannelAuthService {
 			userId,
 			memberData: guildMemberResult.memberData!,
 		});
+		// Threads inherit the permissions and adult-content settings of their parent
+		// channel, so permission checks and NSFW resolution run against the parent.
+		const parentChannel =
+			isThreadChannelType(channel.type) && channel.parentId
+				? await this.channelRepository.channelData.findUnique(channel.parentId)
+				: null;
+		const permissionChannelId = parentChannel ? parentChannel.id : channel.id;
 		const hasPermission = async (permission: bigint): Promise<boolean> => {
-			return await this.gatewayService.checkPermission({guildId, userId, permission, channelId: channel.id});
+			return await this.gatewayService.checkPermission({guildId, userId, permission, channelId: permissionChannelId});
 		};
 		const checkPermission = async (permission: bigint): Promise<void> => {
 			const allowed = await hasPermission(permission);
 			if (!allowed) throw new MissingPermissionsError();
 		};
 		await checkPermission(Permissions.VIEW_CHANNEL);
+		const contentWarningChannel = parentChannel ?? channel;
 		const parentCategory = await this.getParentCategoryContentWarningView({
-			channel,
+			channel: contentWarningChannel,
 			guild: guildDataResult!,
 		});
 		const requiresAgeVerification = computeEffectiveChannelNsfw(
-			channelToContentWarningView(channel),
+			channelToContentWarningView(contentWarningChannel),
 			parentCategory,
 			guildResponseToContentWarningView(guildDataResult!),
 		);
@@ -195,7 +203,8 @@ export abstract class BaseChannelAuthService {
 			!skipNsfwValidation &&
 			(channel.type === ChannelTypes.GUILD_TEXT ||
 				channel.type === ChannelTypes.GUILD_VOICE ||
-				channel.type === ChannelTypes.GUILD_LINK) &&
+				channel.type === ChannelTypes.GUILD_LINK ||
+				isThreadChannelType(channel.type)) &&
 			requiresAgeVerification
 		) {
 			const user = await this.userRepository.findUnique(userId);

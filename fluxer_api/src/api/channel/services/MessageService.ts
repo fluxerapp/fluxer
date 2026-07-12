@@ -33,6 +33,7 @@ import {MessageSearchService} from './message/MessageSearchService';
 import {MessageSendService} from './message/MessageSendService';
 import {MessageSystemService} from './message/MessageSystemService';
 import {MessageValidationService} from './message/MessageValidationService';
+import type {ThreadService} from './ThreadService';
 
 export class MessageService {
 	public readonly validation: MessageValidationService;
@@ -68,6 +69,7 @@ export class MessageService {
 		persistenceService: MessagePersistenceService,
 		limitConfigService: LimitConfigService,
 		directMessageSpamMitigationService: DirectMessageSpamMitigationService,
+		threadService: ThreadService,
 	) {
 		this.validation = new MessageValidationService(cacheService, limitConfigService);
 		this.mention = new MessageMentionService(
@@ -128,6 +130,7 @@ export class MessageService {
 			operationsHelpers,
 			limitConfigService,
 			directMessageSpamMitigationService,
+			threadService,
 		});
 		this.edit = new MessageEditService({
 			channelRepository,

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
+import {ChannelTypes, isThreadChannelType} from '@fluxer/constants/src/ChannelConstants';
+import {InvalidChannelTypeError} from '@fluxer/errors/src/domains/channel/InvalidChannelTypeError';
 import type {ChannelUpdateRequest} from '@fluxer/schema/src/domains/channel/ChannelRequestSchemas';
 import type {IRateLimitService} from '@pkgs/rate_limit/src/IRateLimitService';
 import type {ChannelID, UserID} from '../../BrandedTypes';
@@ -33,7 +34,7 @@ import type {MessagePersistenceService} from './message/MessagePersistenceServic
 type GuildChannelUpdateRequest = Exclude<
 	ChannelUpdateRequest,
 	{
-		type: typeof ChannelTypes.GROUP_DM;
+		type: typeof ChannelTypes.GROUP_DM | typeof ChannelTypes.GUILD_THREAD;
 	}
 >;
 type GuildChannelUpdatePayload = Omit<GuildChannelUpdateRequest, 'type'>;
@@ -122,6 +123,9 @@ export class ChannelDataService {
 				nicks: data.nicks,
 				requestCache,
 			});
+		}
+		if (isThreadChannelType(channel.type)) {
+			throw new InvalidChannelTypeError();
 		}
 		const guildChannelData = data as GuildChannelUpdatePayload;
 		const channelUpdateData: ChannelUpdateData = {};

@@ -34,6 +34,7 @@ import {MessageInteractionService} from './MessageInteractionService';
 import {MessageService} from './MessageService';
 import {MessagePersistenceService} from './message/MessagePersistenceService';
 import {UserMessageDeletionService} from './message/UserMessageDeletionService';
+import {ThreadService} from './ThreadService';
 
 interface SlowmodeState {
 	rateLimitPerUser: number;
@@ -49,6 +50,7 @@ export class ChannelService {
 	public readonly attachments: AttachmentUploadService;
 	public readonly groupDms: GroupDmOperationsService;
 	public readonly calls: CallService;
+	public readonly threads: ThreadService;
 	public readonly userMessageDeletion: UserMessageDeletionService;
 	private readonly rateLimitService: IRateLimitService;
 
@@ -125,6 +127,16 @@ export class ChannelService {
 			limitConfigService,
 			rateLimitService,
 		);
+		this.threads = new ThreadService(
+			channelRepository,
+			this.channelData.auth,
+			userCacheService,
+			gatewayService,
+			snowflakeService,
+			messagePersistenceService,
+			this.channelData.utils,
+			guildAuditLogService,
+		);
 		this.messages = new MessageService(
 			channelRepository,
 			userRepository,
@@ -144,6 +156,7 @@ export class ChannelService {
 			messagePersistenceService,
 			limitConfigService,
 			directMessageSpamMitigationService,
+			this.threads,
 		);
 		this.interactions = new MessageInteractionService(
 			channelRepository,

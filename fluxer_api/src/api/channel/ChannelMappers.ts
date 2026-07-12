@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
+import {ChannelTypes, THREAD_AUTO_ARCHIVE_DURATION_DEFAULT} from '@fluxer/constants/src/ChannelConstants';
 import type {
 	ChannelOverwriteResponse,
 	ChannelPartialResponse,
@@ -131,6 +131,35 @@ function serializeGuildLinkChannel(channel: Channel, ctx: ContentWarningCtx): Ch
 	};
 }
 
+function serializeThreadMetadataFields(channel: Channel) {
+	const metadata = channel.threadMetadata;
+	return {
+		thread_metadata: {
+			archived: metadata?.archived ?? false,
+			locked: metadata?.locked ?? false,
+			auto_archive_duration: metadata?.auto_archive_duration ?? THREAD_AUTO_ARCHIVE_DURATION_DEFAULT,
+			archive_timestamp: metadata?.archive_timestamp ? metadata.archive_timestamp.toISOString() : null,
+		},
+		message_count: channel.messageCount ?? 0,
+		total_message_sent: channel.totalMessageSent ?? 0,
+		member_count: channel.memberCount ?? 0,
+	};
+}
+
+function serializeThreadChannel(channel: Channel, ctx: ContentWarningCtx): ChannelResponse {
+	return {
+		...serializeBaseChannelFields(channel),
+		...serializeMessageableFields(channel),
+		guild_id: channel.guildId?.toString(),
+		name: channel.name ?? undefined,
+		parent_id: channel.parentId ? channel.parentId.toString() : null,
+		owner_id: channel.ownerId ? channel.ownerId.toString() : null,
+		...serializeContentWarningFields(channel, ctx),
+		rate_limit_per_user: channel.rateLimitPerUser,
+		...serializeThreadMetadataFields(channel),
+	};
+}
+
 function serializeDMChannel(channel: Channel): ChannelResponse {
 	return {
 		...serializeBaseChannelFields(channel),
@@ -203,6 +232,9 @@ export async function mapChannelToResponse(params: MapChannelToResponseParams): 
 			break;
 		case ChannelTypes.GUILD_CATEGORY:
 			response = serializeGuildCategoryChannel(channel, ctx);
+			break;
+		case ChannelTypes.GUILD_THREAD:
+			response = serializeThreadChannel(channel, ctx);
 			break;
 		case ChannelTypes.GUILD_LINK:
 			response = serializeGuildLinkChannel(channel, ctx);
