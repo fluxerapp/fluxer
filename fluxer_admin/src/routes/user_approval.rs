@@ -1,24 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::{
-    api::client::{ApiResultExt},
-    middleware::{
-        auth::AuthContext,
-        csrf::CsrfToken,
-    },
+    api::client::ApiResultExt,
+    middleware::{auth::AuthContext, csrf::CsrfToken},
     state::AppState,
     templates,
 };
 use axum::{
     Router,
-    extract::{State},
+    extract::State,
     response::{Html, IntoResponse, Response},
-    routing::{get},
+    routing::get,
 };
 
 pub fn router() -> Router<AppState> {
-    Router::new()
-        .route("/pending-users", get(user_approvals_page))
+    Router::new().route("/pending-users", get(user_approvals_page))
 }
 
 async fn user_approvals_page(
@@ -42,6 +38,3 @@ async fn user_approvals_page(
     );
     Html(markup.into_string()).into_response()
 }
-
-
-

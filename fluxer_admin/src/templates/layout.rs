@@ -58,7 +58,7 @@ pub fn admin_layout_ext(
         .unwrap_or(&[]);
     let base = &config.base_path;
     let asset_version = &config.build_version;
-    let csrf_token = options.csrf_token;    
+    let csrf_token = options.csrf_token;
 
     html! {
         (DOCTYPE)

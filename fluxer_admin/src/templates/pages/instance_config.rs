@@ -4,8 +4,8 @@ use crate::{
     api::types::{
         AppPublicConfigResponse, GatewayRolloutConfigResponse, InstanceConfigResponse,
         InstanceIntegrationsResponse, InstanceMediaResponse, InstancePolicyResponse,
-        InstanceRegistrationResponse, LimitConfigResponse,
-        RegistrationUrlResponse, SsoConfigResponse,
+        InstanceRegistrationResponse, LimitConfigResponse, RegistrationUrlResponse,
+        SsoConfigResponse,
     },
     config::AdminConfig,
     middleware::auth::AuthContext,

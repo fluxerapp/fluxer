@@ -2,16 +2,20 @@
 
 use crate::{
     api::types::{
-        InstanceConfigResponse,
-        InstanceRegistrationResponse, PendingRegistrationResponse,
-    }, config::AdminConfig, middleware::auth::AuthContext, templates::{
+        InstanceConfigResponse, InstanceRegistrationResponse, PendingRegistrationResponse,
+    },
+    config::AdminConfig,
+    middleware::auth::AuthContext,
+    templates::{
         components::{
-            form::csrf_input, page_container::page_header, section_card::section_card_simple, table::empty_state,
-        }, layout::admin_layout,
-    }, utils::timestamps::format_admin_timestamp,
+            form::csrf_input, page_container::page_header, section_card::section_card_simple,
+            table::empty_state,
+        },
+        layout::admin_layout,
+    },
+    utils::timestamps::format_admin_timestamp,
 };
 use maud::{Markup, html};
-
 
 pub fn pending_guilds_users_page(
     config: &AdminConfig,
@@ -20,7 +24,14 @@ pub fn pending_guilds_users_page(
     instance_config: Option<&InstanceConfigResponse>,
 ) -> Markup {
     // println!("{}", &instance_config.registration.pending_registrations.len());
-    println!("{}", &instance_config.unwrap().registration.pending_registrations.len());
+    println!(
+        "{}",
+        &instance_config
+            .unwrap()
+            .registration
+            .pending_registrations
+            .len()
+    );
 
     let content = html! {
         (page_header("Pending Registrations", Some("Review pending users awaiting approval")))

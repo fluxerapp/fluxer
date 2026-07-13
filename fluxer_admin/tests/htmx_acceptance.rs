@@ -516,7 +516,6 @@ async fn pending_registration_page_display() {
     assert!(body.contains(r#"hx-swap="outerHTML""#), "{body}");
 }
 
-
 #[tokio::test]
 async fn pending_registration_actions_swap_pending_list_fragment() {
     let app = setup().await;
