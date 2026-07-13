@@ -61,7 +61,7 @@ pub fn render_sidebar(
                                     };
                                     a href={(base) (item_path)} class=(classes) aria-current=[active.then_some("page")] data-active=[active.then_some("")] {
                                         (item.title) 
-                                        @if item.active_key == "pending" && user.pending_user_registrations.unwrap() > 0 {
+                                        @if item.active_key == "pending" && user.pending_user_registrations.unwrap_or(0) > 0 {
                                             div style=("float:right") {(badge(&user.pending_user_registrations.unwrap().to_string(), crate::templates::components::badge::BadgeVariant::Info))}
                                         }
                                     }

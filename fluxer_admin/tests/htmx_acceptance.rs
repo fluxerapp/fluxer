@@ -470,7 +470,7 @@ async fn hosted_instance_config_hides_self_host_setup_controls() {
 }
 
 #[tokio::test]
-async fn instance_config_registration_tables_show_copyable_urls_and_compact_pending_actions() {
+async fn instance_config_registration_tables_show_copyable_urls() {
     let app = setup().await;
     let body = get(&app, "/instance-config", &[]).await;
 
@@ -488,6 +488,23 @@ async fn instance_config_registration_tables_show_copyable_urls_and_compact_pend
         ),
         "{body}"
     );
+    // assert!(body.contains(r#"id="pending-registration-list""#), "{body}");
+    // assert!(body.contains(">Applicant<"), "{body}");
+    // assert!(!body.contains(">User ID<"), "{body}");
+    // assert!(!body.contains(">Link ID<"), "{body}");
+    // assert!(
+    //     body.contains(r##"hx-target="#pending-registration-list""##),
+    //     "{body}"
+    // );
+    assert!(body.contains(r#"hx-swap="outerHTML""#), "{body}");
+}
+
+#[tokio::test]
+async fn pending_registration_page_display() {
+    let app = setup().await;
+    let body = get(&app, "/pending-users", &[]).await;
+
+    assert_full_layout(&body);
     assert!(body.contains(r#"id="pending-registration-list""#), "{body}");
     assert!(body.contains(">Applicant<"), "{body}");
     assert!(!body.contains(">User ID<"), "{body}");
@@ -498,6 +515,7 @@ async fn instance_config_registration_tables_show_copyable_urls_and_compact_pend
     );
     assert!(body.contains(r#"hx-swap="outerHTML""#), "{body}");
 }
+
 
 #[tokio::test]
 async fn pending_registration_actions_swap_pending_list_fragment() {
