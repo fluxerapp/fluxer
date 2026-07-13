@@ -30058,7 +30058,7 @@ msgstr "La modalità lenta è attiva: attendi {duration} prima di inviare un alt
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:253
 msgid "Slowmode remaining"
-msgstr "Slow mode rimanente"
+msgstr "Slowmode rimanente"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:51
