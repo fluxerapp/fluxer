@@ -26,7 +26,7 @@ pub fn pending_guilds_users_page(
     // println!("{}", &instance_config.registration.pending_registrations.len());
     println!(
         "{}",
-        &instance_config
+        instance_config
             .unwrap()
             .registration
             .pending_registrations
