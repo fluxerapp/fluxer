@@ -3,6 +3,7 @@
 import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 import type {ApiTestHarness} from '../../test/ApiTestHarness';
 import {createBuilder, createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
+import {getInstanceConfigRepository} from '../../middleware/ServiceSingletons';
 import {
 	createAuthHarness,
 	createTestAccount,
@@ -523,10 +524,11 @@ describe('Auth SSO flow', () => {
 		afterEach(async () => {
 			await disableSso(harness, admin.token);
 		});
-		it('respects auto_provision flag', async () => {
+		it('respects auto_provision flag with registration closed', async () => {
 			await enableSso(harness, admin.token, {
 				auto_provision: false,
 			});
+			await getInstanceConfigRepository().setRegistrationConfig({mode: 'closed'});
 			const startData = await createBuilderWithoutAuth<SsoStartResponse>(harness)
 				.post('/auth/sso/start')
 				.body({redirect_to: '/me'})
@@ -539,6 +541,25 @@ describe('Auth SSO flow', () => {
 					state: startData.state,
 				})
 				.expect(403)
+				.execute();
+		});
+		it('allows SSO auto provisioning when registration is closed', async () => {
+			await enableSso(harness, admin.token, {
+				auto_provision: true,
+			});
+			await getInstanceConfigRepository().setRegistrationConfig({mode: 'closed'});
+			const startData = await createBuilderWithoutAuth<SsoStartResponse>(harness)
+				.post('/auth/sso/start')
+				.body({redirect_to: '/me'})
+				.execute();
+			const email = `sso-noprovision-${Date.now()}@example.com`;
+			await createBuilderWithoutAuth(harness)
+				.post('/auth/sso/complete')
+				.body({
+					code: email,
+					state: startData.state,
+				})
+				.expect(200)
 				.execute();
 		});
 	});
