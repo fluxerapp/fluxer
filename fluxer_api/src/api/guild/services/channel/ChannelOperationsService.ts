@@ -155,7 +155,7 @@ export class ChannelOperationsService {
 			nsfw: requestedNsfwOverride,
 			content_warning_level: requestedContentWarningLevel,
 			content_warning_text: requestedContentWarningText,
-			rate_limit_per_user: 0,
+			rate_limit_per_user: params.data.rate_limit_per_user ?? 0,
 			bitrate: params.data.type === ChannelTypes.GUILD_VOICE ? (params.data.bitrate ?? 64000) : null,
 			user_limit: params.data.type === ChannelTypes.GUILD_VOICE ? (params.data.user_limit ?? 0) : null,
 			voice_connection_limit:
