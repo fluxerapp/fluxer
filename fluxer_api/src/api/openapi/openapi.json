@@ -25683,7 +25683,7 @@
 					"The community for this instance cannot be deleted.",
 					"You cannot leave the community for this instance.",
 					"This instance policy change is not allowed.",
-					"Slow mode rate limited.",
+					"Slowmode rate limited.",
 					"Service unavailable.",
 					"Invalid request.",
 					"Stream key channel mismatch.",
