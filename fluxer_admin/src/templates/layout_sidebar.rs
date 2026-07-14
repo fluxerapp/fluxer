@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::{
-    acl, config::AdminConfig, middleware::auth::AuthContext, templates::components::badge::badge,
-};
+use crate::{acl, config::AdminConfig, templates::components::badge::badge};
 use maud::{Markup, PreEscaped, html};
 
 use super::layout_scripts::SIDEBAR_ACTIVE_SCROLL_SCRIPT;
@@ -13,10 +11,9 @@ pub fn render_sidebar(
     admin_acls: &[String],
     active_page: &str,
     inspected_voice_region_id: Option<&str>,
-    auth: &AuthContext,
+    pending_user_registrations: Option<i32>,
 ) -> Markup {
     let base = &config.base_path;
-    let user = auth.admin_user.as_ref().unwrap();
     html! {
         aside id="admin-sidebar" data-sidebar="" class="fixed inset-y-0 left-0 z-40 flex h-[100dvh] w-72 max-w-[85vw] -translate-x-full transform flex-col bg-neutral-900 text-white shadow-2xl transition-transform duration-200 ease-in-out lg:static lg:inset-auto lg:w-64 lg:max-w-none lg:translate-x-0 lg:shadow-none" role="navigation" aria-label="Admin navigation" tabindex="-1" {
             div class="flex items-center justify-between gap-3 border-neutral-800 border-b px-5 py-4 lg:px-6 lg:py-6" {
@@ -63,8 +60,8 @@ pub fn render_sidebar(
                                     };
                                     a href={(base) (item_path)} class=(classes) aria-current=[active.then_some("page")] data-active=[active.then_some("")] {
                                         (item.title)
-                                        @if item.active_key == "pending" && user.pending_user_registrations.unwrap_or(0) > 0 {
-                                            div style=("float:right") {(badge(&user.pending_user_registrations.unwrap().to_string(), crate::templates::components::badge::BadgeVariant::Info))}
+                                        @if item.active_key == "pending" && pending_user_registrations.unwrap_or(0) > 0 {
+                                            div class="float-right" {(badge(&pending_user_registrations.unwrap().to_string(), crate::templates::components::badge::BadgeVariant::Info))}
                                         }
                                     }
                                 }

@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::{
-    api::types::{
-        InstanceConfigResponse, InstanceRegistrationResponse, PendingRegistrationResponse,
-    },
+    api::types::PendingRegistrationResponse,
     config::AdminConfig,
     middleware::auth::AuthContext,
     templates::{
@@ -17,31 +15,21 @@ use crate::{
 };
 use maud::{Markup, html};
 
-pub fn pending_guilds_users_page(
+pub fn pending_users_page(
     config: &AdminConfig,
     auth: &AuthContext,
     csrf_token: &str,
-    instance_config: Option<&InstanceConfigResponse>,
+    registration: Option<&Vec<PendingRegistrationResponse>>,
 ) -> Markup {
-    // println!("{}", &instance_config.registration.pending_registrations.len());
-    println!(
-        "{}",
-        instance_config
-            .unwrap()
-            .registration
-            .pending_registrations
-            .len()
-    );
-
     let content = html! {
         (page_header("Pending Registrations", Some("Review pending users awaiting approval")))
         div class="space-y-10" {
-            @if let Some(instance_config) = instance_config {
+            @if let Some(registration) = registration {
                 (html! {
                         (registration_config_section(
                             config,
                             csrf_token,
-                            &instance_config.registration,
+                            registration,
                         ))
                     })
             } @else {
@@ -64,9 +52,9 @@ pub fn pending_guilds_users_page(
 fn registration_config_section(
     config: &AdminConfig,
     csrf_token: &str,
-    registration: &InstanceRegistrationResponse,
+    registration: &[PendingRegistrationResponse],
 ) -> Markup {
-    pending_registration_list(config, csrf_token, &registration.pending_registrations)
+    pending_registration_list(config, csrf_token, registration)
 }
 
 pub fn pending_registration_list(

@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::api::types::PendingRegistrationResponse;
+
 use super::client::{AdminApiClient, ApiResult};
 use super::types::{
     CreateRegistrationUrlRequest, CreateRegistrationUrlResponse, InstanceConfigResponse,
@@ -39,6 +41,11 @@ impl AdminApiClient {
     pub async fn revoke_registration_url(&self, id: &str) -> ApiResult<InstanceConfigResponse> {
         let request = RegistrationUrlActionRequest { id: id.to_owned() };
         self.post_typed("/admin/instance-config/registration-urls/revoke", &request)
+            .await
+    }
+
+    pub async fn get_pending_registrations(&self) -> ApiResult<Vec<PendingRegistrationResponse>> {
+        self.post_typed("/admin/instance-config/pending-registrations/get", &())
             .await
     }
 

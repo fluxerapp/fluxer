@@ -488,14 +488,6 @@ async fn instance_config_registration_tables_show_copyable_urls() {
         ),
         "{body}"
     );
-    // assert!(body.contains(r#"id="pending-registration-list""#), "{body}");
-    // assert!(body.contains(">Applicant<"), "{body}");
-    // assert!(!body.contains(">User ID<"), "{body}");
-    // assert!(!body.contains(">Link ID<"), "{body}");
-    // assert!(
-    //     body.contains(r##"hx-target="#pending-registration-list""##),
-    //     "{body}"
-    // );
     assert!(body.contains(r#"hx-swap="outerHTML""#), "{body}");
 }
 
