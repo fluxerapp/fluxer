@@ -449,6 +449,8 @@ const PendingRegistrationResponse = z.object({
 	client_ip: z.string().nullable(),
 });
 
+export const RegistrationResponse = z.array(PendingRegistrationResponse)
+
 const InstanceRegistrationResponse = InstanceRegistrationConfigResponse.extend({
 	urls: z.array(RegistrationUrlResponse),
 	pending_registrations: z.array(PendingRegistrationResponse),

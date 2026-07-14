@@ -5095,6 +5095,59 @@
 				}
 			}
 		},
+		"/admin/instance-config/pending-registrations/get": {
+			"post": {
+				"operationId": "get_pending_registrations",
+				"summary": "Get pending user registrations",
+				"tags": ["Admin"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/RegistrationResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Retrieves pending user registrations in in the form of an array. Requires USER_APPROVE_ACCOUNT permission.",
+				"security": [{"adminApiKey": []}]
+			}
+		},
 		"/admin/instance-config/pending-registrations/reject": {
 			"post": {
 				"operationId": "reject_pending_registration",
@@ -9718,7 +9771,7 @@
 					"acls": {
 						"type": "array",
 						"items": {"type": "string"},
-						"maxItems": 115,
+						"maxItems": 116,
 						"description": "List of access control permissions for the key"
 					}
 				},
@@ -10081,7 +10134,7 @@
 					"acls": {
 						"type": "array",
 						"items": {"type": "string"},
-						"maxItems": 115,
+						"maxItems": 116,
 						"description": "List of access control permissions for the key"
 					}
 				},
@@ -10111,7 +10164,7 @@
 					"acls": {
 						"type": "array",
 						"items": {"type": "string"},
-						"maxItems": 115,
+						"maxItems": 116,
 						"description": "List of access control permissions for the key"
 					}
 				},
@@ -12855,6 +12908,32 @@
 				"properties": {"user_id": {"$ref": "#/components/schemas/SnowflakeType"}},
 				"required": ["user_id"]
 			},
+			"RegistrationResponse": {
+				"type": "array",
+				"items": {
+					"type": "object",
+					"properties": {
+						"user_id": {"$ref": "#/components/schemas/SnowflakeType"},
+						"username": {"type": "string"},
+						"discriminator": {"type": "integer", "minimum": 0, "maximum": 9999, "format": "int32"},
+						"global_name": {"nullable": true, "type": "string"},
+						"email": {"nullable": true, "type": "string"},
+						"requested_at": {"type": "string", "format": "date-time"},
+						"registration_url_id": {"nullable": true, "type": "string"},
+						"client_ip": {"nullable": true, "type": "string"}
+					},
+					"required": [
+						"user_id",
+						"username",
+						"discriminator",
+						"global_name",
+						"email",
+						"requested_at",
+						"registration_url_id",
+						"client_ip"
+					]
+				}
+			},
 			"CreateRegistrationUrlResponse": {
 				"type": "object",
 				"properties": {
@@ -14894,7 +14973,8 @@
 					"last_active_at": {"nullable": true, "type": "string"},
 					"last_active_ip": {"nullable": true, "type": "string"},
 					"last_active_ip_reverse": {"nullable": true, "type": "string"},
-					"last_active_location": {"nullable": true, "type": "string"}
+					"last_active_location": {"nullable": true, "type": "string"},
+					"pending_user_registrations": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/Int32Type"}]}
 				},
 				"required": [
 					"id",
@@ -14934,7 +15014,8 @@
 					"last_active_at",
 					"last_active_ip",
 					"last_active_ip_reverse",
-					"last_active_location"
+					"last_active_location",
+					"pending_user_registrations"
 				]
 			},
 			"PremiumFlags": {

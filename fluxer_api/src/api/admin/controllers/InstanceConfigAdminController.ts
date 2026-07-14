@@ -7,6 +7,7 @@ import {
 	CreateRegistrationUrlRequest,
 	CreateRegistrationUrlResponse,
 	InstanceConfigResponse,
+	RegistrationResponse,
 	InstanceConfigUpdateRequest,
 	InstanceEmailSmtpTestRequest,
 	InstanceEmailSmtpTestResponse,
@@ -162,6 +163,24 @@ async function grantSetupCompleterAdminACL(ctx: Context<HonoEnv>): Promise<void>
 
 export function InstanceConfigAdminController(app: HonoApp) {
 	const instanceConfigRepository = getInstanceConfigRepository();
+	app.post(
+		'/admin/instance-config/pending-registrations/get',
+		RateLimitMiddleware(RateLimitConfigs.ADMIN_LOOKUP),
+		requireSetupSessionOrAdminACL(AdminACLs.USER_APPROVE_ACCOUNT),
+		OpenAPI({
+			operationId: 'get_pending_registrations',
+			summary: 'Get pending user registrations',
+			description:
+				'Retrieves pending user registrations in in the form of an array. Requires USER_APPROVE_ACCOUNT permission.',
+			responseSchema: RegistrationResponse,
+			statusCode: 200,
+			security: 'adminApiKey',
+			tags: 'Admin',
+		}),
+		async (ctx) => {
+			return ctx.json((await buildInstanceConfigResponse()).registration.pending_registrations);
+		},
+	);
 	app.post(
 		'/admin/instance-config/get',
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_LOOKUP),
