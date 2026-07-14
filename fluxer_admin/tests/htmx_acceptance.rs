@@ -767,7 +767,9 @@ async fn mock_api(method: Method, uri: Uri) -> Response {
         }
         (Method::POST, "/admin/jobs/get") => json_response(json!({ "job": searched_job() })),
         (Method::POST, "/admin/instance-config/get") => json_response(instance_config()),
-        (Method::POST, "/admin/instance-config/pending-registrations/get") => json_response(pending_user_registrations()),
+        (Method::POST, "/admin/instance-config/pending-registrations/get") => {
+            json_response(pending_user_registrations())
+        }
         (Method::POST, "/admin/instance-config/registration-urls/create") => json_response(json!({
             "registration_url": registration_url_fixture(),
             "code": "11111111-1111-4111-8111-111111111111",
@@ -844,7 +846,7 @@ fn user(id: &str, username: &str) -> Value {
 }
 
 fn pending_user_registrations() -> Value {
-    json!([{ 
+    json!([{
         "user_id": "2",
         "username": "example_user",
         "discriminator": 2615,
