@@ -545,7 +545,7 @@ export const ERROR_I18N_MESSAGES = {
 	'rate_limits.pronouns_changed_too_often':
 		"You've changed your pronouns too often recently. Please try again in {minutes, plural, one {# minute} other {# minutes}}.",
 	'rate_limits.rate_limited': "You're being rate limited.",
-	'rate_limits.slowmode_rate_limited': 'Slow mode rate limited.',
+	'rate_limits.slowmode_rate_limited': 'Slowmode rate limited.',
 	'rate_limits.username_changed_too_often':
 		"You've changed your username too often recently. Please try again in {minutes, plural, one {# minute} other {# minutes}}.",
 	'rate_limits.voice_activity_sharing_on_cooldown':
