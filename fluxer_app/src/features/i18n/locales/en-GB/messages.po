@@ -7764,12 +7764,12 @@ msgstr "Comma-separated"
 #. Helper text in the forward modal explaining why the optional comment field is disabled when at least one selected target has slowmode active.
 #: src/features/messaging/components/modals/ForwardModal.tsx:71
 msgid "Comments are disabled because one or more selected channels have slowmode on. The comment would be blocked by slowmode right after the forward."
-msgstr "Comments are disabled because one or more selected channels have slowmode on. The comment would be blocked by slow mode right after the forward."
+msgstr "Comments are disabled because one or more selected channels have slowmode on. The comment would be blocked by slowmode right after the forward."
 
 #. Helper text in the forward modal explaining why the optional comment field is disabled for a single selected channel with slowmode.
 #: src/features/messaging/components/modals/ForwardModal.tsx:65
 msgid "Comments are disabled because slowmode is on in {forwardChannelDisplayName}. The comment would be blocked by slowmode right after the forward."
-msgstr "Comments are disabled because slowmode is on in {forwardChannelDisplayName}. The comment would be blocked by slow mode right after the forward."
+msgstr "Comments are disabled because slowmode is on in {forwardChannelDisplayName}. The comment would be blocked by slowmode right after the forward."
 
 #. Tooltip on the disabled comment field in the forward modal when slowmode blocks comments.
 #: src/features/messaging/components/modals/ForwardModal.tsx:94
