@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-
 use axum::{
     Json, Router,
     body::{Body, to_bytes},
@@ -768,6 +767,7 @@ async fn mock_api(method: Method, uri: Uri) -> Response {
         }
         (Method::POST, "/admin/jobs/get") => json_response(json!({ "job": searched_job() })),
         (Method::POST, "/admin/instance-config/get") => json_response(instance_config()),
+        (Method::POST, "/admin/instance-config/pending-registrations/get") => json_response(pending_user_registrations()),
         (Method::POST, "/admin/instance-config/registration-urls/create") => json_response(json!({
             "registration_url": registration_url_fixture(),
             "code": "11111111-1111-4111-8111-111111111111",
@@ -800,7 +800,6 @@ fn admin_user() -> Value {
 fn searched_user() -> Value {
     user("1500000000000000001", "SearchedUser")
 }
-
 fn user(id: &str, username: &str) -> Value {
     json!({
         "id": id,
@@ -842,6 +841,19 @@ fn user(id: &str, username: &str) -> Value {
         "last_active_ip_reverse": null,
         "last_active_location": null
     })
+}
+
+fn pending_user_registrations() -> Value {
+    json!([{ 
+        "user_id": "2",
+        "username": "example_user",
+        "discriminator": 2615,
+        "global_name": null,
+        "email": "admin@example.com",
+        "requested_at": "2026-07-14T19:06:43.905Z",
+        "registration_url_id": null,
+        "client_ip": "172.19.0.1"
+    }])
 }
 
 fn searched_guild() -> Value {
