@@ -1,3 +1,4 @@
+
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
@@ -72,10 +73,13 @@ export function UserAdminController(app: HonoApp) {
 		}),
 		async (ctx) => {
 			const adminUser = ctx.get('user');
-			const instanceConfig = await getInstanceConfigRepository().getPendingRegistrations()
+			let instanceConfig = undefined;
+			if (adminUser.acls.has("USER_APPROVE_ACCOUNT")) {
+				instanceConfig = (await getInstanceConfigRepository().getPendingRegistrations()).length;
+			}
 			const cacheService = ctx.get('cacheService');
 			return ctx.json({
-				user: await mapUserToAdminResponse(adminUser, cacheService, undefined, instanceConfig.length),
+				user: await mapUserToAdminResponse(adminUser, cacheService, undefined, instanceConfig),
 			});
 		},
 	);
