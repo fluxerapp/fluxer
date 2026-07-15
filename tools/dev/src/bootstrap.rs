@@ -39,6 +39,7 @@ pub async fn post_start() -> Result<()> {
     ensure_state_dirs()?;
     ensure_writable_dev_paths()?;
     setup_gateway_config()?;
+    crate::media_proxy::ensure_dev_object_store(true, 120).await?;
     run_smoke(true, false).await
 }
 
