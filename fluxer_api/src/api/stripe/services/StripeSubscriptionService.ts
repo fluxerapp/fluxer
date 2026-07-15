@@ -28,6 +28,7 @@ import type {Currency} from '../../utils/CurrencyUtils';
 import type {RecurringBillingCycle} from '../ProductRegistry';
 import {
 	getPrimarySubscriptionItem,
+	getSubscriptionEntitlementPeriodEndUnix,
 	getSubscriptionItemPeriodEndUnix,
 	getSubscriptionPremiumPeriodEnd,
 } from '../StripeSubscriptionPeriod';
@@ -448,7 +449,7 @@ export class StripeSubscriptionService {
 		if (!this.stripe) {
 			throw new StripePaymentNotAvailableError();
 		}
-		const periodEnd = getSubscriptionItemPeriodEndUnix(item);
+		const periodEnd = getSubscriptionEntitlementPeriodEndUnix(subscription, item);
 		if (!periodEnd || periodEnd <= Math.floor(Date.now() / 1000)) {
 			throw new StripeError('Subscription is missing a future period end for scheduled billing cycle change');
 		}
@@ -478,6 +479,7 @@ export class StripeSubscriptionService {
 				});
 		const currentPhase = this.buildCurrentSchedulePhase(schedule, currentSubscription, item, periodEnd);
 		const firstInvoiceCredit = await this.buildPeriodEndCycleSwapCredit({
+			subscription: currentSubscription,
 			item,
 			currentBillingCycle,
 			targetBillingCycle,
@@ -549,7 +551,7 @@ export class StripeSubscriptionService {
 			throw new StripePaymentNotAvailableError();
 		}
 		const item = getPrimarySubscriptionItem(subscription);
-		const periodEnd = getSubscriptionItemPeriodEndUnix(item);
+		const periodEnd = getSubscriptionEntitlementPeriodEndUnix(subscription, item);
 		if (!item || !periodEnd || periodEnd <= Math.floor(Date.now() / 1000)) {
 			throw new StripeError('Subscription is missing a future period end for scheduled cancellation');
 		}
@@ -599,17 +601,22 @@ export class StripeSubscriptionService {
 	}
 
 	private async buildPeriodEndCycleSwapCredit({
+		subscription,
 		item,
 		currentBillingCycle,
 		targetBillingCycle,
 		targetPriceId,
 	}: {
+		subscription: Stripe.Subscription;
 		item: Stripe.SubscriptionItem;
 		currentBillingCycle: RecurringBillingCycle;
 		targetBillingCycle: RecurringBillingCycle;
 		targetPriceId: string;
 	}): Promise<Stripe.SubscriptionScheduleUpdateParams.Phase.AddInvoiceItem | null> {
 		if (!this.stripe || currentBillingCycle !== 'monthly' || targetBillingCycle !== 'yearly') {
+			return null;
+		}
+		if (subscription.trial_end != null && subscription.trial_end > Math.floor(Date.now() / 1000)) {
 			return null;
 		}
 		const currentAmountMinor = item.price.unit_amount;
@@ -739,7 +746,7 @@ export class StripeSubscriptionService {
 					};
 				})
 				.filter((phaseItem): phaseItem is {price: string; quantity: number} => phaseItem !== null) ?? [];
-		return {
+		const currentPhase: Stripe.SubscriptionScheduleUpdateParams.Phase = {
 			start_date: phase?.start_date ?? subscription.start_date ?? subscription.created,
 			end_date: periodEnd,
 			items:
@@ -753,6 +760,15 @@ export class StripeSubscriptionService {
 						],
 			proration_behavior: 'none',
 		};
+		const trialEnd = subscription.trial_end;
+		if (trialEnd != null && trialEnd > now) {
+			if (trialEnd >= periodEnd) {
+				currentPhase.trial = true;
+			} else {
+				currentPhase.trial_end = trialEnd;
+			}
+		}
+		return currentPhase;
 	}
 
 	async getCurrentSubscriptionPrice(userId: UserID): Promise<CurrentSubscriptionPriceResponse> {

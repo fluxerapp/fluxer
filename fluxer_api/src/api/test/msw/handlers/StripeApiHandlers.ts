@@ -74,6 +74,8 @@ interface SubscriptionScheduleParams {
 		start_date?: string;
 		end_date?: string;
 		billing_cycle_anchor?: string;
+		trial?: string;
+		trial_end?: string;
 		metadata?: Record<string, string>;
 		add_invoice_items?: Array<{
 			discountable?: string;
