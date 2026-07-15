@@ -24,6 +24,25 @@ pub const S3_BUCKETS: &[&str] = &[
     "fluxer-static",
 ];
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+enum DatabaseBackend {
+    Postgres,
+    Cassandra,
+}
+
+fn parse_database_backend(value: Option<&str>) -> Result<DatabaseBackend> {
+    match value.unwrap_or("postgres") {
+        "postgres" => Ok(DatabaseBackend::Postgres),
+        "cassandra" => Ok(DatabaseBackend::Cassandra),
+        other => bail!("unsupported FLUXER_DATABASE_BACKEND: {other}"),
+    }
+}
+
+fn database_backend() -> Result<DatabaseBackend> {
+    let value = env::var("FLUXER_DATABASE_BACKEND").ok();
+    parse_database_backend(value.as_deref())
+}
+
 pub async fn run_smoke(quick: bool, public: bool) -> Result<()> {
     let timeout = if quick { 5 } else { 120 };
     wait_tcp(
@@ -80,7 +99,9 @@ pub async fn run_smoke(quick: bool, public: bool) -> Result<()> {
     .await?;
     wait_s3_api(timeout).await?;
     if !quick {
-        verify_schema(None, None).await?;
+        if database_backend()? == DatabaseBackend::Cassandra {
+            verify_schema(None, None).await?;
+        }
         check_s3_buckets()?;
         check_config_load()?;
     }
@@ -385,7 +406,9 @@ async fn check_gateway_internal_rpc() -> Result<()> {
 }
 
 pub async fn bootstrap_schema_and_object_store() -> Result<()> {
-    apply_schema(Some(config_from_env()?)).await?;
+    if database_backend()? == DatabaseBackend::Cassandra {
+        apply_schema(Some(config_from_env()?)).await?;
+    }
     ensure_s3_buckets()
 }
 
@@ -402,6 +425,37 @@ pub async fn http_ok(url: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn database_backend_defaults_to_postgres() {
+        assert_eq!(
+            parse_database_backend(None).unwrap(),
+            DatabaseBackend::Postgres
+        );
+    }
+
+    #[test]
+    fn database_backend_accepts_canonical_values() {
+        assert_eq!(
+            parse_database_backend(Some("postgres")).unwrap(),
+            DatabaseBackend::Postgres
+        );
+        assert_eq!(
+            parse_database_backend(Some("cassandra")).unwrap(),
+            DatabaseBackend::Cassandra
+        );
+    }
+
+    #[test]
+    fn database_backend_rejects_unsupported_values() {
+        for value in ["postgresql", "pg", "scylla", "scylladb", "sqlite"] {
+            let error = parse_database_backend(Some(value)).unwrap_err();
+            assert_eq!(
+                error.to_string(),
+                format!("unsupported FLUXER_DATABASE_BACKEND: {value}")
+            );
+        }
+    }
 
     #[test]
     fn s3_env_uses_fluxer_defaults() {
