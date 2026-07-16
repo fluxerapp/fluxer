@@ -473,6 +473,75 @@ describe('StripeSubscriptionService', () => {
 			expect(stripeHandlers.spies.createdSubscriptionSchedules).toHaveLength(0);
 			expect(stripeHandlers.spies.updatedSubscriptionSchedules).toHaveLength(0);
 		});
+		test('preserves gifted trial time when scheduling a monthly-to-yearly upgrade at period end', async () => {
+			const account = await createTestAccount(harness);
+			const currentPeriodStart = Math.floor(Date.now() / 1000) - 3 * 24 * 60 * 60;
+			const trialEnd = Math.floor(Date.now() / 1000) + 60 * 24 * 60 * 60;
+			stripeHandlers = createStripeApiHandlers({
+				subscriptions: {
+					sub_test_gift_trial: {
+						price_id: MOCK_PRICES.monthlyUsd,
+						interval: 'month',
+						item_id: 'si_gift_trial_monthly',
+						current_period_start: currentPeriodStart,
+						current_period_end: trialEnd,
+						status: 'trialing',
+						trial_end: trialEnd,
+					},
+				},
+			});
+			server.use(...stripeHandlers.handlers);
+			await createBuilder(harness, account.token)
+				.post(`/test/users/${account.userId}/premium`)
+				.body({
+					stripe_subscription_id: 'sub_test_gift_trial',
+					premium_type: 1,
+					premium_billing_cycle: 'monthly',
+					premium_will_cancel: false,
+				})
+				.execute();
+			await createBuilder(harness, account.token)
+				.post('/premium/change-subscription')
+				.body({billing_cycle: 'yearly', effective_at: 'period_end'})
+				.expect(204)
+				.execute();
+			expect(stripeHandlers.spies.updatedSubscriptions).toHaveLength(0);
+			expect(stripeHandlers.spies.createdSubscriptionSchedules).toHaveLength(1);
+			expect(stripeHandlers.spies.createdSubscriptionSchedules[0]?.from_subscription).toBe('sub_test_gift_trial');
+			expect(stripeHandlers.spies.updatedSubscriptionSchedules).toHaveLength(1);
+			const scheduleUpdate = stripeHandlers.spies.updatedSubscriptionSchedules[0];
+			expect(scheduleUpdate?.params.phases?.[0]?.end_date).toBe(String(trialEnd));
+			expect(scheduleUpdate?.params.phases?.[0]?.trial).toBe('true');
+			expect(scheduleUpdate?.params.phases?.[0]?.trial_end).toBeUndefined();
+			expect(scheduleUpdate?.params.phases?.[0]?.items?.[0]?.price).toBe(MOCK_PRICES.monthlyUsd);
+			expect(scheduleUpdate?.params.phases?.[1]?.start_date).toBe(String(trialEnd));
+			expect(scheduleUpdate?.params.phases?.[1]?.billing_cycle_anchor).toBe('phase_start');
+			expect(scheduleUpdate?.params.phases?.[1]?.items?.[0]?.price).toBe(MOCK_PRICES.yearlyUsd);
+			expect(scheduleUpdate?.params.phases?.[1]?.add_invoice_items).toBeUndefined();
+			const premiumState = await createBuilder<{
+				billing: {
+					pending_subscription_change: {
+						target_billing_cycle: string;
+						effective_at: string;
+						initial_amount_minor: number | null;
+						recurring_amount_minor: number | null;
+						credit_amount_minor: number | null;
+					} | null;
+				};
+			}>(harness, account.token)
+				.get('/premium/state')
+				.expect(200)
+				.execute();
+			expect(premiumState.billing.pending_subscription_change).toEqual(
+				expect.objectContaining({
+					target_billing_cycle: 'yearly',
+					effective_at: new Date(trialEnd * 1000).toISOString(),
+					initial_amount_minor: 4999,
+					recurring_amount_minor: 4999,
+					credit_amount_minor: null,
+				}),
+			);
+		});
 		test('cancels a pending yearly upgrade without canceling the active subscription', async () => {
 			const account = await createTestAccount(harness);
 			const currentPeriodStart = Math.floor(Date.now() / 1000) - 3 * 24 * 60 * 60;
