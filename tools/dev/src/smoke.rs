@@ -80,7 +80,9 @@ pub async fn run_smoke(quick: bool, public: bool) -> Result<()> {
     .await?;
     wait_s3_api(timeout).await?;
     if !quick {
-        verify_schema(None, None).await?;
+        if cassandra_backend_enabled() {
+            verify_schema(None, None).await?;
+        }
         check_s3_buckets()?;
         check_config_load()?;
     }
@@ -385,8 +387,14 @@ async fn check_gateway_internal_rpc() -> Result<()> {
 }
 
 pub async fn bootstrap_schema_and_object_store() -> Result<()> {
-    apply_schema(Some(config_from_env()?)).await?;
+    if cassandra_backend_enabled() {
+        apply_schema(Some(config_from_env()?)).await?;
+    }
     ensure_s3_buckets()
+}
+
+fn cassandra_backend_enabled() -> bool {
+    env::var("FLUXER_DATABASE_BACKEND").as_deref() == Ok("cassandra")
 }
 
 pub async fn http_ok(url: &str) -> bool {
