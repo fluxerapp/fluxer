@@ -7,6 +7,7 @@ import {AuthBottomLink} from '@app/features/auth/flow/AuthBottomLink';
 import {AuthErrorState} from '@app/features/auth/flow/AuthErrorState';
 import {AuthLoadingState} from '@app/features/auth/flow/AuthLoadingState';
 import {AuthMinimalRegisterFormCore} from '@app/features/auth/flow/AuthMinimalRegisterFormCore';
+import {AuthRegisterFormCore} from '@app/features/auth/flow/AuthRegisterFormCore';
 import sharedStyles from '@app/features/auth/flow/AuthPageStyles.module.css';
 import {AuthRouterLink} from '@app/features/auth/flow/AuthRouterLink';
 import {AuthSsoPanel, isRuntimeSsoEnforced} from '@app/features/auth/flow/AuthSsoPanel';
@@ -168,6 +169,7 @@ const InviteRegisterPage = observer(function InviteRegisterPage() {
 		);
 	}
 	const isPublicRegistrationClosed = RuntimeConfig.registration.mode === 'closed';
+	const requiresApproval = RuntimeConfig.registration.mode === 'approval';
 	return (
 		<>
 			<DesktopDeepLinkPrompt
@@ -177,7 +179,15 @@ const InviteRegisterPage = observer(function InviteRegisterPage() {
 			/>
 			<InviteHeader invite={invite} data-flx="invite.invite-register-page.invite-header" />
 			<div className={sharedStyles.container} data-flx="invite.invite-register-page.div--4">
-				{isPublicRegistrationClosed ? null : (
+				{isPublicRegistrationClosed ? null : requiresApproval ? (
+					<AuthRegisterFormCore
+						fields={{showEmail: true, showPassword: true, showPasswordConfirmation: true}}
+						submitLabel={i18n._(CREATE_ACCOUNT_DESCRIPTOR)}
+						redirectPath="/"
+						inviteCode={code}
+						data-flx="invite.invite-register-page.auth-register-form-core"
+					/>
+				) : (
 					<AuthMinimalRegisterFormCore
 						submitLabel={i18n._(CREATE_ACCOUNT_DESCRIPTOR)}
 						redirectPath="/"
