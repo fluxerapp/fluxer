@@ -449,7 +449,8 @@ const PendingRegistrationResponse = z.object({
 	client_ip: z.string().nullable(),
 });
 
-export const RegistrationResponse = z.array(PendingRegistrationResponse)
+export const PendingRegistrationsActionResponse = z.array(PendingRegistrationResponse)
+export type PendingRegistrationsActionResponse = z.infer<typeof PendingRegistrationsActionResponse>;
 
 const InstanceRegistrationResponse = InstanceRegistrationConfigResponse.extend({
 	urls: z.array(RegistrationUrlResponse),

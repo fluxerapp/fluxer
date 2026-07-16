@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::api::types::PendingRegistrationResponse;
-
 use super::client::{AdminApiClient, ApiResult};
 use super::types::{
     CreateRegistrationUrlRequest, CreateRegistrationUrlResponse, InstanceConfigResponse,
     InstanceConfigUpdateRequest, InstanceEmailSmtpTestRequest, InstanceEmailSmtpTestResponse,
-    PendingRegistrationActionRequest, RegistrationUrlActionRequest,
+    RegistrationUrlActionRequest,
 };
 
 impl AdminApiClient {
@@ -42,38 +40,5 @@ impl AdminApiClient {
         let request = RegistrationUrlActionRequest { id: id.to_owned() };
         self.post_typed("/admin/instance-config/registration-urls/revoke", &request)
             .await
-    }
-
-    pub async fn get_pending_registrations(&self) -> ApiResult<Vec<PendingRegistrationResponse>> {
-        self.post_typed("/admin/instance-config/pending-registrations/get", &())
-            .await
-    }
-
-    pub async fn approve_pending_registration(
-        &self,
-        user_id: &str,
-    ) -> ApiResult<InstanceConfigResponse> {
-        let request = PendingRegistrationActionRequest {
-            user_id: user_id.to_owned(),
-        };
-        self.post_typed(
-            "/admin/instance-config/pending-registrations/approve",
-            &request,
-        )
-        .await
-    }
-
-    pub async fn reject_pending_registration(
-        &self,
-        user_id: &str,
-    ) -> ApiResult<InstanceConfigResponse> {
-        let request = PendingRegistrationActionRequest {
-            user_id: user_id.to_owned(),
-        };
-        self.post_typed(
-            "/admin/instance-config/pending-registrations/reject",
-            &request,
-        )
-        .await
     }
 }

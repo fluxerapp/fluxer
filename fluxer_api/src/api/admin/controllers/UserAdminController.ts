@@ -69,12 +69,12 @@ export function UserAdminController(app: HonoApp) {
 			security: 'adminApiKey',
 			tags: 'Admin',
 			description:
-				'Get profile of currently authenticated admin user. Returns admin permissions, roles, and metadata. Requires AUTHENTICATE permission.',
+				'Get profile of currently authenticated admin user. Returns admin permissions, roles, and metadata. Requires AUTHENTICATE permission. Will also return list of pending registrations if the user has the USER_APPROVE_ACCOUNT',
 		}),
 		async (ctx) => {
 			const adminUser = ctx.get('user');
 			let instanceConfig = undefined;
-			if (adminUser.acls.has("USER_APPROVE_ACCOUNT")) {
+			if (adminUser.acls.has("user:approve") || adminUser.acls.has("*")) {
 				instanceConfig = (await getInstanceConfigRepository().getPendingRegistrations()).length;
 			}
 			const cacheService = ctx.get('cacheService');

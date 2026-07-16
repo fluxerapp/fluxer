@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::api::generated::types as generated_types;
+use crate::api::types::PendingRegistrationResponse;
 
 use super::client::{AdminApiClient, ApiError, ApiResult};
 use super::types::{
     AdminUser, AdminUserMeResponse, GuildInfo, ListUserGuildsResponse, LookupUserResponse,
-    SearchUsersResponse, TerminateSessionsResponse, UserMutationResponse,
+    PendingRegistrationActionRequest, SearchUsersResponse, TerminateSessionsResponse,
+    UserMutationResponse,
 };
 
 impl AdminApiClient {
@@ -628,6 +630,32 @@ impl AdminApiClient {
             .map_err(|e| self.generated_error(e))?;
         let resp: UserMutationResponse = self.generated_value(response.into_inner())?;
         Ok(resp.user)
+    }
+    pub async fn get_pending_registrations(&self) -> ApiResult<Vec<PendingRegistrationResponse>> {
+        self.post_typed("/admin/pending-registrations/get", &())
+            .await
+    }
+
+    pub async fn approve_pending_registration(
+        &self,
+        user_id: &str,
+    ) -> ApiResult<Vec<PendingRegistrationResponse>> {
+        let request = PendingRegistrationActionRequest {
+            user_id: user_id.to_owned(),
+        };
+        self.post_typed("/admin/pending-registrations/approve", &request)
+            .await
+    }
+
+    pub async fn reject_pending_registration(
+        &self,
+        user_id: &str,
+    ) -> ApiResult<Vec<PendingRegistrationResponse>> {
+        let request = PendingRegistrationActionRequest {
+            user_id: user_id.to_owned(),
+        };
+        self.post_typed("/admin/pending-registrations/reject", &request)
+            .await
     }
 }
 
