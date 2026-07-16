@@ -2,6 +2,7 @@
 
 import {Routes} from '@app/app/Routes';
 import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {AuthBottomLink} from '@app/features/auth/flow/AuthBottomLink';
 import {AuthErrorState} from '@app/features/auth/flow/AuthErrorState';
 import {AuthLoadingState} from '@app/features/auth/flow/AuthLoadingState';
@@ -166,6 +167,7 @@ const InviteRegisterPage = observer(function InviteRegisterPage() {
 			</>
 		);
 	}
+	const isPublicRegistrationClosed = RuntimeConfig.registration.mode === 'closed';
 	return (
 		<>
 			<DesktopDeepLinkPrompt
@@ -175,12 +177,14 @@ const InviteRegisterPage = observer(function InviteRegisterPage() {
 			/>
 			<InviteHeader invite={invite} data-flx="invite.invite-register-page.invite-header" />
 			<div className={sharedStyles.container} data-flx="invite.invite-register-page.div--4">
-				<AuthMinimalRegisterFormCore
-					submitLabel={i18n._(CREATE_ACCOUNT_DESCRIPTOR)}
-					redirectPath="/"
-					inviteCode={code}
-					data-flx="invite.invite-register-page.auth-minimal-register-form-core"
-				/>
+				{isPublicRegistrationClosed ? null : (
+					<AuthMinimalRegisterFormCore
+						submitLabel={i18n._(CREATE_ACCOUNT_DESCRIPTOR)}
+						redirectPath="/"
+						inviteCode={code}
+						data-flx="invite.invite-register-page.auth-minimal-register-form-core"
+					/>
+				)}
 				<AuthBottomLink variant="login" to={loginPath} data-flx="invite.invite-register-page.auth-bottom-link" />
 			</div>
 		</>
