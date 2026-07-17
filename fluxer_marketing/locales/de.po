@@ -5,12 +5,16 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fluxer-marketing\n"
 "POT-Creation-Date: 2026-06-16 00:00+0000\n"
-"PO-Revision-Date: 2026-06-16 00:00+0000\n"
+"PO-Revision-Date: 2026-07-08 23:18+0000\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"Last-Translator: Hampus <hampus@fluxer.com>\n"
+"Language-Team: German <https://weblate.fluxer.tools/projects/fluxer/"
+"marketing/de/>\n"
+"X-Generator: Weblate 2026.7.dev0\n"
 
 #. Compact UI label used in the home-page communities/moderation feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.communities.community_support
@@ -592,7 +596,8 @@ msgstr "Hilfezentrum"
 msgctxt "company_and_resources.help.help_center_description"
 msgid "Find answers to common questions about your account, privacy, and using {product_name}."
 msgstr ""
-"Finde Antworten auf häufige Fragen zu deinem Konto, deiner Privatsphäre und der Nutzung von {product_name}."
+"Finde Antworten auf häufige Fragen zu deinem Account, deiner Privatsphäre "
+"und der Nutzung von {product_name}."
 
 #. Short UI label or heading for help-center links or descriptions in marketing navigation and resource sections. Keep it service-oriented and concise.
 #: fluxer_marketing/generated:company_and_resources.help.label
@@ -970,13 +975,13 @@ msgstr "Antworten auf häufig gestellte Fragen."
 #: fluxer_marketing/generated:content.help.category.account.title
 msgctxt "content.help.category.account.title"
 msgid "Account"
-msgstr "Konto"
+msgstr "Account"
 
 #. Help center category summary shown under the Account heading. Translate as a short descriptive sentence.
 #: fluxer_marketing/generated:content.help.category.account.description
 msgctxt "content.help.category.account.description"
 msgid "Managing personal account details."
-msgstr "Verwaltung persönlicher Kontodaten."
+msgstr "Verwaltung persönlicher Accountdaten."
 
 #. Help center category title for legal and policy articles. Translate as a compact heading; keep the ampersand only if natural.
 #: fluxer_marketing/generated:content.help.category.legal_policy.title
@@ -1075,7 +1080,7 @@ msgstr "So löschst du deine Nachrichten und andere Daten von {product_name}."
 #: fluxer_marketing/generated:content.help.article.data_export.title
 msgctxt "content.help.article.data_export.title"
 msgid "Exporting your account data"
-msgstr "Deine Kontodaten exportieren"
+msgstr "Deine Accountdaten exportieren"
 
 #. Help article summary about exporting Fluxer account data. Keep 'Fluxer' as a brand name. Preserve placeholders exactly.
 #: fluxer_marketing/generated:content.help.article.data_export.description
@@ -1088,7 +1093,7 @@ msgstr ""
 #: fluxer_marketing/generated:content.help.article.delete_account.title
 msgctxt "content.help.article.delete_account.title"
 msgid "How to delete or disable your account"
-msgstr "So löschst oder deaktivierst du dein Konto"
+msgstr "So löschst oder deaktivierst du deinen Account"
 
 #. Help article summary about deleting/disabling an account. Keep 'Fluxer' as a brand name. Preserve placeholders exactly.
 #: fluxer_marketing/generated:content.help.article.delete_account.description
@@ -1096,7 +1101,8 @@ msgctxt "content.help.article.delete_account.description"
 msgid ""
 "How to permanently delete or temporarily disable your {product_name} account, and what happens to your data."
 msgstr ""
-"So löschst du dein {product_name}-Konto dauerhaft oder deaktivierst es vorübergehend, und was mit deinen Daten geschieht."
+"So löschst du deinen {product_name}-Account dauerhaft oder deaktivierst ihn "
+"vorübergehend, und was mit deinen Daten geschieht."
 
 #. Help article title about country-specific minimum-age requirements for using the service.
 #: fluxer_marketing/generated:content.help.article.minimum_age.title
@@ -1110,7 +1116,9 @@ msgctxt "content.help.article.minimum_age.description"
 msgid ""
 "The minimum age to use {product_name} by country, how age is determined, and what happens if an account is suspected of being underage."
 msgstr ""
-"Das Mindestalter zur Nutzung von {product_name} nach Land, wie das Alter ermittelt wird und was passiert, wenn ein Konto im Verdacht steht, minderjährig zu sein."
+"Das Mindestalter zur Nutzung von {product_name} nach Land, wie das Alter "
+"ermittelt wird und was passiert, wenn ein Account im Verdacht steht, "
+"minderjährig zu sein."
 
 #. Help article title about the copyright/IP complaint process. Keep legal-sounding phrasing.
 #: fluxer_marketing/generated:content.help.article.copyright.title
@@ -1325,7 +1333,8 @@ msgstr ""
 msgctxt "donations.manage.success"
 msgid "If an account exists for that email, you'll receive a management link shortly."
 msgstr ""
-"Wenn für diese E-Mail-Adresse ein Konto vorhanden ist, erhältst du in Kürze einen Verwaltungslink."
+"Wenn für diese E-Mail-Adresse ein Account vorhanden ist, erhältst du in "
+"Kürze einen Verwaltungslink."
 
 #. Short UI label or heading in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
 #: fluxer_marketing/generated:donations.manage.title
@@ -2088,7 +2097,8 @@ msgstr "Exklusiver Merch"
 msgctxt "partner_program.perks.free_plutonium.description"
 msgid "Get free {premium_tier_name} for your account to enjoy all premium features."
 msgstr ""
-"Erhalte kostenloses {premium_tier_name} für dein Konto, um alle Premium-Funktionen zu nutzen."
+"Erhalte kostenloses {premium_tier_name} für deinen Account, um alle Premium-"
+"Funktionen zu nutzen."
 
 #. Short UI label or heading on the partner program perks section. Keep benefits concrete and appealing to creators/community owners; preserve placeholders exactly.
 #: fluxer_marketing/generated:partner_program.perks.free_plutonium.label
@@ -3096,7 +3106,7 @@ msgstr "Zugehörige Richtlinien"
 #: fluxer_marketing/generated:misc_labels.report_bugs
 msgctxt "misc_labels.report_bugs"
 msgid "Report bugs"
-msgstr "Melde Fehler"
+msgstr "Fehler melden"
 
 #. Short UI label or heading reused across marketing cards, buttons, and section headings. Translate as a standalone UI phrase that can fit multiple surfaces.
 #: fluxer_marketing/generated:misc_labels.unlimited_users
