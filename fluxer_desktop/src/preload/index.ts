@@ -4,6 +4,7 @@ import {BUILD_CHANNEL} from '@electron/common/BuildChannel';
 import {DESKTOP_BUILD_VARIANT} from '@electron/common/BuildVariant';
 import type {
 	AppMetricsSnapshot,
+	ActivityDetectionStatus,
 	ClipboardWriteFileOptions,
 	ClipboardWriteFileResult,
 	DesktopInfo,
@@ -524,6 +525,8 @@ const api: ElectronAPI = {
 	shouldPlayNotificationSound: (): Promise<boolean> => ipcRenderer.invoke('notification-sound-allowed'),
 	getStreamerModeCaptureAppStatus: (): Promise<StreamerModeCaptureAppStatus> =>
 		ipcRenderer.invoke('streamer-mode:get-capture-app-status'),
+	getDetectedActivities: (): Promise<ActivityDetectionStatus> =>
+		ipcRenderer.invoke('activity-detection:get-detected-activities'),
 	closeNotification: (id: string): void => {
 		ipcRenderer.send('close-notification', id);
 	},

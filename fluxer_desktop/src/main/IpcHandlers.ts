@@ -15,6 +15,7 @@ import type {
 	SwitchInstanceUrlOptions,
 	TrayPresenceStatus,
 } from '@electron/common/Types';
+import {getDetectedActivities} from '@electron/main/ActivityDetection';
 import {hasEnabledBlinkFeature, MIDDLE_CLICK_AUTOSCROLL_BLINK_FEATURE} from '@electron/main/ChromiumRuntime';
 import {
 	applyDesktopWindowBehaviorSettings,
@@ -249,6 +250,7 @@ export function registerIpcHandlers(): void {
 	ipcMain.handle('get-openh264-status', () => getOpenH264Status());
 	ipcMain.handle('set-openh264-enabled', (_event, enabled: unknown) => setOpenH264Enabled(Boolean(enabled)));
 	ipcMain.handle('streamer-mode:get-capture-app-status', () => getStreamerModeCaptureAppStatus());
+	ipcMain.handle('activity-detection:get-detected-activities', () => getDetectedActivities());
 	ipcMain.handle('system-idle-time-ms', (): number => {
 		return Math.max(0, powerMonitor.getSystemIdleTime() * 1000);
 	});

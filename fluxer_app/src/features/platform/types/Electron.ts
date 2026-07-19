@@ -278,6 +278,24 @@ export interface StreamerModeCaptureAppStatus {
 	processes: Array<StreamerModeCaptureProcess>;
 }
 
+export interface ActivityDetectionProcess {
+	name: string;
+	pid?: number;
+}
+
+export interface DetectedActivity {
+	name: string;
+	aliases?: Array<string>;
+	icon: string;
+	presenceAssets?: Record<string, string>;
+	processes: Array<ActivityDetectionProcess>;
+}
+
+export interface ActivityDetectionStatus {
+	detected: boolean;
+	activities: Array<DetectedActivity>;
+}
+
 export interface CpuInfo {
 	model: string;
 	speed: number;
@@ -369,6 +387,7 @@ export interface ElectronAPI {
 	showNotification: (options: NotificationOptions) => Promise<NotificationResult>;
 	shouldPlayNotificationSound?: () => Promise<boolean>;
 	getStreamerModeCaptureAppStatus?: () => Promise<StreamerModeCaptureAppStatus>;
+	getDetectedActivities?: () => Promise<ActivityDetectionStatus>;
 	closeNotification: (id: string) => void;
 	closeNotifications: (ids: Array<string>) => void;
 	onNotificationClick: (callback: (id: string, url?: string) => void) => () => void;

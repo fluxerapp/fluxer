@@ -321,6 +321,24 @@ export interface StreamerModeCaptureAppStatus {
 	processes: Array<StreamerModeCaptureProcess>;
 }
 
+export interface ActivityDetectionProcess {
+	name: string;
+	pid?: number;
+}
+
+export interface DetectedActivity {
+	name: string;
+	aliases?: Array<string>;
+	icon: string;
+	presenceAssets?: Record<string, string>;
+	processes: Array<ActivityDetectionProcess>;
+}
+
+export interface ActivityDetectionStatus {
+	detected: boolean;
+	activities: Array<DetectedActivity>;
+}
+
 export interface CpuInfo {
 	model: string;
 	speed: number;
@@ -392,6 +410,7 @@ export interface ElectronAPI {
 	desktopTroubleshootingReload?(): Promise<void>;
 	desktopTroubleshootingResetAppData?(options?: {confirm?: boolean}): Promise<void>;
 	getStreamerModeCaptureAppStatus?(): Promise<StreamerModeCaptureAppStatus>;
+	getDetectedActivities?(): Promise<ActivityDetectionStatus>;
 	popupHelpMenu?(): Promise<void>;
 	getInitialDeepLink(): Promise<string | null>;
 	onDeepLink(callback: (url: string) => void): () => void;
