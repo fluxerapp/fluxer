@@ -1034,6 +1034,9 @@ export function createWindow(options: CreateWindowOptions = {}): BrowserWindow {
 	webContents.on('will-navigate', (event, url) => {
 		if (!isTrustedOrigin(url)) {
 			event.preventDefault();
+			openExternalDeduped(url).catch((error) => {
+				log.warn('Failed to open external URL from will-navigate:', error);
+			});
 		}
 	});
 	webContents.on('did-create-window', (window, details) => {
