@@ -4,14 +4,15 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: @lingui/cli\n"
+"X-Generator: Weblate 2026.7.dev0\n"
 "Language: fi\n"
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: \n"
-"Last-Translator: \n"
-"Language-Team: \n"
-"Plural-Forms: \n"
+"PO-Revision-Date: 2026-07-09 00:18+0000\n"
+"Last-Translator: Hampus <hampus@fluxer.com>\n"
+"Language-Team: Finnish <https://weblate.fluxer.tools/projects/fluxer/app/fi/>"
+"\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
 
 #. Description text in the messages tab.
 #: src/features/user/components/modals/tabs/appearance_tab/MessagesTab.tsx:51
@@ -87,7 +88,7 @@ msgstr "{actor} lisäsi tarran {namedTarget}."
 
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:612
 msgid "{actor} banned {targetMember}."
-msgstr "{actor} esti käyttäjän {targetMember}."
+msgstr "{actor} antoi porttikiellon käyttäjälle {targetMember}."
 
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:552
 msgid "{actor} created the channel {namedTarget}."
@@ -153,7 +154,7 @@ msgstr "{actor} katkaisi käyttäjän {targetMember} puheyhteyden."
 
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:606
 msgid "{actor} kicked {targetMember}."
-msgstr "{actor} poisti käyttäjän {targetMember}."
+msgstr "{actor} potkaisi käyttäjän {targetMember}."
 
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:654
 msgid "{actor} moved {targetMember} to {channelNode}."
@@ -318,7 +319,9 @@ msgstr "{communityName} on tällä hetkellä vain {productName}-henkilöstön j�
 #. Displayed value for the voice channel participant limit slider. ∞ is the infinity symbol.
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/VoiceSettings.tsx:43
 msgid "{count, plural, =0 {∞ No limit} one {# participant} other {# participants}}"
-msgstr "{count, plural, =0 {∞ Ei rajaa} one {# osallistuja} other {# osallistujaa}}"
+msgstr ""
+"{count, plural, =0 {∞ Ei rajoitusta} one {# osallistuja} other {# "
+"osallistujaa}}"
 
 #: src/features/channel/components/embeds/attachments/TextualAttachmentPreview.tsx:121
 msgid "{count, plural, one {... (# line left)} other {... (# lines left)}}"
@@ -357,7 +360,10 @@ msgstr "{count, plural, one {# yhteisö löytyi} other {# yhteisöä löytyi}}"
 
 #: src/features/app/components/layout/GuildsLayout.tsx:730
 msgid "{count, plural, one {# community is temporarily unavailable due to a flux capacitor malfunction.} other {# communities are temporarily unavailable due to a flux capacitor malfunction.}}"
-msgstr "{count, plural, one {# yhteisö on tilapäisesti pois käytöstä aikakondensaattorin toimintahäiriön vuoksi.} other {# yhteisöä on tilapäisesti pois käytöstä aikakondensaattorin toimintahäiriön vuoksi.}}"
+msgstr ""
+"{count, plural, one {# yhteisö on tilapäisesti pois käytöstä toimintahäiriön "
+"vuoksi.} other {# yhteisöä on tilapäisesti pois käytöstä toimintahäiriön "
+"vuoksi.}}"
 
 #. Displayed value for the voice channel connection limit slider.
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/VoiceSettings.tsx:47
@@ -620,12 +626,14 @@ msgstr "{defaultDeviceLabel} ({endpointLabel})"
 #. Client info desktop build identifier line. Example: "Canary Desktop 2026.419.3". Preserve placeholders.
 #: src/features/app/components/dialogs/components/ClientInfo.tsx:38
 msgid "{desktopChannel} Desktop {desktopVersion}"
-msgstr "{desktopChannel} työpöytäversio {desktopVersion}"
+msgstr "{desktopChannel} Desktop {desktopVersion}"
 
 #. Unsaved-changes banner text in the devices tab. Counts selected devices that will be signed out.
 #: src/features/user/components/modals/tabs/DevicesTab.tsx:74
 msgid "{deviceCount, plural, one {# device selected for sign out} other {# devices selected for sign out}}"
-msgstr "{deviceCount, plural, one {# laite valittu poistumista varten} other {# laitetta valittu poistumista varten}}"
+msgstr ""
+"{deviceCount, plural, one {# laite valittu uloskirjautumista varten} other "
+"{# laitetta valittu uloskirjautumista varten}}"
 
 #. Sidebar Fluxer-home button tooltip showing how many incoming friend requests are pending. Count is interpolated.
 #: src/features/app/components/layout/sidebar_nav/FluxerButton.tsx:47
@@ -870,7 +878,7 @@ msgstr "{length} käyttäjää"
 #. Spectator count badge on a screen-share tile. {length} is the integer number of viewers. Consider pluralization on review.
 #: src/features/voice/components/voice_participant_tile/shared.ts:70
 msgid "{length} watching"
-msgstr "{length} katsoo"
+msgstr "{length, plural, one {# katsoja} other {# katsojaa}}"
 
 #: src/features/theme_studio/sections/QuickCssSection.tsx:268
 msgid "{lineCount, plural, one {# line} other {# lines}}"
@@ -989,7 +997,7 @@ msgstr "{pixPaymentMethod} voi ohittaa kortin vahvistusvaiheen, kun {paymentProv
 #. Badge label with a date in the user profile badges popout. Preserve {premiumProductFullName}, {premiumSinceFormatted}; they are inserted by code. In English, keep "subscriber since" lowercase. Other locales should use natural local capitalization.
 #: src/features/user/components/popouts/UserProfileBadges.tsx:52
 msgid "{premiumProductFullName} subscriber since {premiumSinceFormatted}"
-msgstr "{premiumProductFullName} tilaaja {premiumSinceFormatted} alkaen"
+msgstr "{premiumProductFullName}-tilaaja {premiumSinceFormatted} alkaen"
 
 #. Profile settings section title for premium badge privacy controls.
 #: src/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings.tsx:58
@@ -1004,7 +1012,7 @@ msgstr "{premiumProductName}-edut"
 #. Premium subscription card title. premiumProductName is the short paid product name.
 #: src/features/premium/utils/PremiumMessageDescriptors.ts:52
 msgid "{premiumProductName} subscription"
-msgstr "{premiumProductName} -tilaus"
+msgstr "{premiumProductName}-tilaus"
 
 #. Short label in the guild header bottom sheet. Keep it concise. Preserve {presenceCount}; it is inserted by code.
 #: src/features/guild/components/bottomsheets/GuildHeaderBottomSheet.tsx:28
@@ -1057,7 +1065,10 @@ msgstr "{productName}-sovelluksen symboli"
 #. Label in the push settings.
 #: src/features/user/components/modals/tabs/notifications_tab/PushSettings.tsx:16
 msgid "{productName} avoids sending push notifications to your mobile devices when you are at your computer. Choose how long you need to be inactive on desktop before you receive push notifications."
-msgstr "{productName} estää mobiililaitteillesi lähetettävien push-ilmoitusten lähettämisen, kun olet tietokoneesi ääressä. Valitse, kuinka kauan sinun on oltava käyttämättömänä työpöydällä, ennen kuin saat push-ilmoituksia."
+msgstr ""
+"{productName} ei lähetä push-ilmoituksia mobiililaitteeseesi, kun olet "
+"aktiivisena tietokoneella. Valitse, kuinka kauan sinun on oltava käyttämättä "
+"työpöydällä, ennen kuin saat push-ilmoituksia."
 
 #. Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.
 #: src/features/user/components/popouts/UserProfileBadges.tsx:37
@@ -1069,7 +1080,9 @@ msgstr "{productName}-buginmetsästäjä"
 #: src/features/voice/components/modals/screen_share_picker_modal/PerWindowAudioNotice.tsx:23
 #: src/features/voice/components/modals/screen_share_picker_modal/PerWindowAudioNotice.tsx:42
 msgid "{productName} cannot capture desktop audio here while excluding {productName}'s call audio."
-msgstr "{productName} ei voi tallentaa työpöydän ääntä tässä, koska se ei pysty sulkemaan pois oman puheluäänensä."
+msgstr ""
+"{productName} ei voi jakaa työpöydän ääntä siten, että itse puhelun ääni "
+"jäisi pois jaosta."
 
 #. Inline notice body on Windows. Explains that app audio is disabled because productName cannot guarantee isolated audio capture on this OS build.
 #. Inline notice body on macOS. Explains that app audio is disabled because productName cannot guarantee isolated audio capture on this OS build.
@@ -3971,7 +3984,9 @@ msgstr "Haluatko varmasti ottaa kutsut käyttöön? Tämän jälkeen käyttäjä
 #. placeholder {0}: targetUser.tag
 #: src/features/moderation/components/modals/KickMemberModal.tsx:44
 msgid "Are you sure you want to kick <0>{0}</0> from the community? They will be able to rejoin with a new invite."
-msgstr "Haluatko varmasti poistaa käyttäjän <0>{0}</0> yhteisöstä? Hän voi liittyä uudelleen uudella kutsulla."
+msgstr ""
+"Haluatko varmasti potkaista käyttäjän <0>{0}</0> yhteisöstä? Hän voi liittyä "
+"uudelleen uudella kutsulla."
 
 #: src/features/user/components/modals/tabs/chat_settings_tab/SearchEnginesTab.tsx:229
 msgid "Are you sure you want to remove <0>{engineName}</0>?"
@@ -4907,27 +4922,27 @@ msgstr "Estä"
 #. Title of the destructive ban-member modal. {tag} is the target user tag (username#tag). Destructive moderation action; keep tone direct.
 #: src/features/moderation/components/modals/BanMemberModal.tsx:51
 msgid "Ban {tag}"
-msgstr "Estä käyttäjä {tag}"
+msgstr "Anna porttikielto käyttäjälle {tag}"
 
 #. Slash-command description for /ban. Bans a member from the current community (moderation action).
 #: src/features/devtools/hooks/useCommands.ts:42
 msgid "Ban a member from this community."
-msgstr "Estä jäsenen pääsy tähän yhteisöön."
+msgstr "Anna jäsenelle porttikielto tähän yhteisöön."
 
 #. Button or menu action label in the ban details modal. Keep it concise. Keep the tone plain and specific.
 #: src/features/moderation/components/modals/BanDetailsModal.tsx:20
 msgid "Ban details"
-msgstr "Eston tiedot"
+msgstr "Porttikiellon tiedot"
 
 #. Label above the ban duration dropdown in the destructive ban-member modal.
 #: src/features/moderation/components/modals/BanMemberModal.tsx:56
 msgid "Ban duration"
-msgstr "Estä käyttäjä – kesto"
+msgstr "Porttikiellon kesto"
 
 #. placeholder {0}: renderInline(formatted, i18n)
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:604
 msgid "Ban expires at {0}."
-msgstr "Esto päättyy {0}."
+msgstr "Porttikielto päättyy {0}."
 
 #. Moderation action that bans the selected member from the community.
 #. Moderation action that bans the selected member from the community.
@@ -4937,17 +4952,17 @@ msgstr "Esto päättyy {0}."
 #: src/features/ui/action_menu/items/GuildMemberMenuItems.tsx:51
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:94
 msgid "Ban member"
-msgstr "Estä jäsen"
+msgstr "Anna porttikielto jäsenelle"
 
 #. Permission name: allows banning members from a community.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:181
 msgid "Ban members"
-msgstr "Estä jäseniä"
+msgstr "Anna porttikielto jäsenille"
 
 #. IAR modal: quick-action card title for banning the reported user (moderator-only).
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:147
 msgid "Ban this user"
-msgstr "Estä tämä käyttäjä"
+msgstr "Anna porttikielto tälle käyttäjälle"
 
 #. Section heading in the voice connection status popout for current media bitrate usage.
 #: src/features/voice/components/voice_connection_status/shared.ts:68
@@ -4963,29 +4978,29 @@ msgstr "kaistanrajoitus"
 #. IAR modal: disabled-state label on the ban card after the user is banned from this community.
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:159
 msgid "Banned"
-msgstr "Estetty"
+msgstr "Porttikielletty"
 
 #. placeholder {0}: targetUser.tag
 #: src/features/moderation/components/modals/BanMemberModal.tsx:154
 msgid "Banned {0} from the community"
-msgstr "Käyttäjä {0} on estetty yhteisöstä"
+msgstr "Käyttäjä {0} on porttikielletty yhteisöstä"
 
 #. placeholder {0}: renderInline(formatted, i18n)
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:600
 msgid "Banned at {0}."
-msgstr "Estetty klo {0}."
+msgstr "Porttikielto annettu klo {0}."
 
 #: src/features/moderation/components/modals/BanDetailsModal.tsx:104
 msgid "Banned by"
-msgstr "Estänyt"
+msgstr "Porttikiellon antaja"
 
 #: src/features/moderation/components/modals/BanDetailsModal.tsx:86
 msgid "Banned on"
-msgstr "Estetty"
+msgstr "Porttikielletty"
 
 #: src/features/guild/components/modals/guild_tabs/GuildBansTab.tsx:172
 msgid "Banned users"
-msgstr "Estetyt käyttäjät"
+msgstr "Porttikielletyt käyttäjät"
 
 #. Audit log community feature label for banner image support.
 #. Button or menu action label in the guild banner upload field. Keep it concise. Keep the tone plain and specific.
@@ -13377,7 +13392,7 @@ msgstr "Anna tuotteelle nimi, jonka pituus on 1–80 merkkiä."
 #. Placeholder in the optional reason input in the destructive ban-member modal.
 #: src/features/moderation/components/modals/BanMemberModal.tsx:111
 msgid "Enter a reason for the ban"
-msgstr "Anna syy estolle"
+msgstr "Anna syy porttikiellolle"
 
 #. Label in the inputs tab. Keep the tone plain and specific.
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx:33
@@ -14127,7 +14142,7 @@ msgstr "Viestien lähetyksen epäonnistuminen"
 
 #: src/features/moderation/components/modals/BanMemberModal.tsx:161
 msgid "Failed to ban member. Try again."
-msgstr "Jäsenen estäminen epäonnistui. Yritä uudelleen."
+msgstr "Porttikiellon antaminen jäsenelle epäonnistui. Yritä uudelleen."
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:58
@@ -14208,7 +14223,7 @@ msgstr "Tokenin luominen epäonnistui"
 
 #: src/features/moderation/components/modals/KickMemberModal.tsx:33
 msgid "Failed to kick member. Try again."
-msgstr "Jäsenen poistaminen epäonnistui. Yritä uudelleen."
+msgstr "Jäsenen potkiminen epäonnistui. Yritä uudelleen."
 
 #. Error modal title shown when leaving a community fails.
 #: src/features/guild/hooks/useLeaveGuild.tsx:35
@@ -18501,12 +18516,12 @@ msgstr "Potkaise jäsen"
 #. Permission name: allows removing members from a community.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:177
 msgid "Kick members"
-msgstr "Poista jäseniä"
+msgstr "Potkaise jäseniä"
 
 #. placeholder {0}: targetUser.tag
 #: src/features/moderation/components/modals/KickMemberModal.tsx:27
 msgid "Kicked {0} from the community"
-msgstr "Käyttäjä {0} poistettiin yhteisöstä"
+msgstr "Käyttäjä {0} potkittiin yhteisöstä"
 
 #. Label for the KLIPY GIF service toggle in the setup wizard.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:277
@@ -19063,7 +19078,7 @@ msgstr "Ladataan sovellusta {productName}."
 
 #: src/features/guild/components/modals/guild_tabs/GuildBansTab.tsx:163
 msgid "Loading banned users"
-msgstr "Ladataan estettyjä käyttäjiä"
+msgstr "Ladataan porttikiellettyjä käyttäjiä"
 
 #. Screen-reader status text shown while Discovery communities are loading.
 #: src/features/discovery/discovery/DiscoveryPage.tsx:62
@@ -19969,7 +19984,7 @@ msgstr "Jäsenen {displayName} toiminnot"
 #. Audit log entry label. A member was banned from the community.
 #: src/features/app/config/AuditLogConstants.ts:44
 msgid "Member banned"
-msgstr "Jäsen estetty"
+msgstr "Jäsen porttikielletty"
 
 #. Audit log entry label. A member was disconnected from a voice channel by a moderator.
 #: src/features/app/config/AuditLogConstants.ts:64
@@ -19979,7 +19994,7 @@ msgstr "Jäsen irtautui"
 #. Audit log entry label. A member was kicked (removed) from the community by a moderator.
 #: src/features/app/config/AuditLogConstants.ts:36
 msgid "Member kicked"
-msgstr "Jäsen poistettu"
+msgstr "Jäsen potkittu"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:338
@@ -20024,7 +20039,7 @@ msgstr "Jäsen alkaen"
 #. Audit log entry label. A previously banned member was unbanned.
 #: src/features/app/config/AuditLogConstants.ts:48
 msgid "Member unbanned"
-msgstr "Jäsenen esto poistettu"
+msgstr "Jäsenen porttikielto poistettu"
 
 #. Audit log entry label. A member profile was edited (nickname, etc).
 #: src/features/app/config/AuditLogConstants.ts:52
@@ -20767,7 +20782,10 @@ msgstr "Tässä näkyvät moderointitoimet ja yhteisön muutokset."
 #. Guild nagbar body shown when moderation actions in a community require two-factor authentication. {communityName} is the community name.
 #: src/features/app/components/layout/GuildLayout.tsx:77
 msgid "Moderation actions in {communityName} require two-factor authentication. Enable 2FA to kick, ban, timeout, or delete messages here."
-msgstr "Yhteisön {communityName} moderointitoiminnot edellyttävät kaksivaiheista todennusta. Ota kaksivaiheinen todennus käyttöön, jos haluat poistaa, estää, aikakatkaista tai poistaa viestejä täällä."
+msgstr ""
+"Yhteisön {communityName} moderointitoiminnot edellyttävät kaksivaiheista "
+"todennusta. Ota kaksivaiheinen todennus käyttöön, jos haluat potkia, "
+"porttikieltää, aikakatkaista tai poistaa viestejä täällä."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:66
@@ -21797,7 +21815,7 @@ msgstr "Ei taustakuvaa"
 
 #: src/features/guild/components/modals/guild_tabs/GuildBansTab.tsx:198
 msgid "No banned users"
-msgstr "Ei estettyjä käyttäjiä"
+msgstr "Ei porttikiellettyjä käyttäjiä"
 
 #: src/features/guild/components/modals/guild_tabs/GuildBansTab.tsx:207
 msgid "No bans found matching your search."
@@ -22278,7 +22296,7 @@ msgstr "Käyttäjää ei löydy kyseisellä käyttäjänimellä."
 
 #: src/features/guild/components/modals/guild_tabs/GuildBansTab.tsx:199
 msgid "No users are currently banned from this community."
-msgstr "Yhteisöstä ei ole tällä hetkellä estetty käyttäjiä."
+msgstr "Yhteisöstä ei ole tällä hetkellä porttikiellettyjä käyttäjiä."
 
 #: src/features/search/components/search/UserFilterSheet.tsx:126
 msgid "No users available"
@@ -23195,7 +23213,7 @@ msgstr "Avaa mallipohjan JSON"
 #. IAR modal: quick-action card description for banning the reported user.
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:151
 msgid "Open the ban dialog for this community."
-msgstr "Avaa tämän yhteisön estovalintaikkuna."
+msgstr "Avaa tämän yhteisön porttikieltovalintaikkuna."
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts:241
@@ -26514,7 +26532,9 @@ msgstr "Vaadi OAuth2-koodivaltuutus"
 
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:466
 msgid "Require two-factor authentication for moderators before they can ban, kick, timeout, or remove messages."
-msgstr "Vaadi moderaattoreilta kaksivaiheista tunnistautumista ennen kuin he voivat estää, poistaa, aikakatkaista tai poistaa viestejä."
+msgstr ""
+"Vaadi moderaattoreilta kaksivaiheista tunnistautumista ennen kuin he voivat "
+"porttikieltää, potkaista, aikakatkaista tai poistaa viestejä."
 
 #. Short label in the authentication OAUTH scopes step. Keep the tone plain and specific.
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:24
@@ -27077,7 +27097,7 @@ msgstr "Peruuta kaikki sovellukset"
 #: src/features/moderation/components/modals/BanDetailsModal.tsx:137
 #: src/features/ui/action_menu/BannedUserContextMenu.tsx:55
 msgid "Revoke ban"
-msgstr "Kumoa esto"
+msgstr "Kumoa porttikielto"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the devices tab. Keep it concise.
@@ -36504,7 +36524,7 @@ msgstr "Näytä kaikki lukemattomat"
 
 #: src/features/guild/components/modals/guild_tabs/GuildBansTab.tsx:175
 msgid "View and manage banned users."
-msgstr "Näytä ja hallinnoi estettyjä käyttäjiä."
+msgstr "Näytä ja hallinnoi porttikiellettyjä käyttäjiä."
 
 #: src/features/guild/components/modals/guild_tabs/GuildWebhooksTab.tsx:90
 msgid "View and manage every webhook configured across your community."
@@ -37905,7 +37925,7 @@ msgstr "Olet siirtämässä tämän yhteisön omistajuuden käyttäjälle <0>{0}
 #. Error message in the user banned from guild modal. Keep the tone plain and specific.
 #: src/features/moderation/components/alerts/UserBannedFromGuildModal.tsx:12
 msgid "You are banned from this community and cannot join."
-msgstr "Sinut on estetty tästä yhteisöstä, etkä voi liittyä siihen."
+msgstr "Sinut on porttikielletty tästä yhteisöstä, etkä voi liittyä siihen."
 
 #. Voice participant status tooltip for the current user. They cannot hear voice chat. Distinct from muted.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:74
@@ -38275,7 +38295,7 @@ msgstr "Sinulla ei ole oikeutta nimetä tätä emojia uudelleen. Nimi palautetti
 #. Body of the error modal shown when the user is banned from a discovery community.
 #: src/features/discovery/discovery/DiscoveryGuildCard.tsx:60
 msgid "You have been banned from this community."
-msgstr "Sinut on estetty tästä yhteisöstä."
+msgstr "Sinut on porttikielletty tästä yhteisöstä."
 
 #: src/features/channel/components/barriers/BarrierComponents.tsx:343
 msgid "You have blocked {username}. Unblock them to send messages."
@@ -38575,7 +38595,7 @@ msgstr "Olet saavuttanut asennusrajan. Poista yksi lisätäksesi toisen."
 #. Short label in the user banned from guild modal. Keep it concise. Keep the tone plain and specific.
 #: src/features/moderation/components/alerts/UserBannedFromGuildModal.tsx:8
 msgid "You're banned"
-msgstr "Sinut on estetty"
+msgstr "Sinut on porttikielletty"
 
 #. Modal body shown when an action is blocked by rate limiting. {duration} is a localized short duration such as "2 minutes".
 #: src/features/app/components/alerts/RateLimitedConfirmModal.tsx:19
@@ -38962,12 +38982,12 @@ msgstr "IP-osoitteesi on nyt valtuutettu."
 #. Error message in the user ip banned from guild modal. Keep the tone plain and specific.
 #: src/features/moderation/components/alerts/UserIpBannedFromGuildModal.tsx:12
 msgid "Your IP address is banned from this community and you cannot join."
-msgstr "IP-osoitteesi on estetty tässä yhteisössä, etkä voi liittyä."
+msgstr "IP-osoitteesi on porttikielletty tässä yhteisössä, etkä voi liittyä."
 
 #. Label in the user ip banned from guild modal. Keep the tone plain and specific.
 #: src/features/moderation/components/alerts/UserIpBannedFromGuildModal.tsx:8
 msgid "Your IP is banned"
-msgstr "IP-osoitteesi on estetty"
+msgstr "IP-osoitteesi on porttikielletty"
 
 #: src/features/app/components/dialogs/components/plutonium/SelfServeRefundSection.tsx:187
 msgid "Your last purchase is outside the refund window. Contact support for billing issues."
