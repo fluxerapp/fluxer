@@ -62,6 +62,9 @@
 	"postStartCommand": "cargo run -p fluxer-dev -- post-start && bash /workspaces/fluxer/fluxer_docs/serve.sh --daemon",
 	"customizations": {
 		"vscode": {
+			"settings": {
+				"editor.defaultFormatter": "biomejs.biome"
+			},
 			"extensions": [
 				"biomejs.biome",
 				"rust-lang.rust-analyzer",
