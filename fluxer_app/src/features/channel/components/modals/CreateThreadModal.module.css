@@ -1,0 +1,49 @@
+.content {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+.field {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.label {
+	font-size: 12px;
+	font-weight: 700;
+	letter-spacing: 0.02em;
+	text-transform: uppercase;
+	color: var(--color-text-secondary);
+}
+
+.select {
+	background: var(--color-background-secondary);
+	border: 1px solid var(--color-background-tertiary);
+	border-radius: 4px;
+	color: var(--color-text-primary);
+	font-size: 16px;
+	height: 40px;
+	padding: 0 8px;
+	width: 100%;
+	cursor: pointer;
+}
+
+.select:focus {
+	border-color: var(--color-primary-accent);
+	outline: none;
+}
+
+.sourceMessage {
+	background: var(--color-background-secondary);
+	border: 1px solid var(--color-background-tertiary);
+	border-left: 3px solid var(--color-primary-accent);
+	border-radius: 4px;
+	color: var(--color-text-muted);
+	font-size: 14px;
+	overflow: hidden;
+	padding: 8px 12px;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}

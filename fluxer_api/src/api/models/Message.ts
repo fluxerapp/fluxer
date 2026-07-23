@@ -36,6 +36,8 @@ export class Message {
 	readonly nsfwEmojis: Set<EmojiID>;
 	readonly hasReaction: boolean | null;
 	readonly version: number;
+	readonly threadId: ChannelID | null;
+	readonly threadName: string | null;
 
 	constructor(row: MessageRow) {
 		this.channelId = row.channel_id;
@@ -69,6 +71,8 @@ export class Message {
 		this.nsfwEmojis = row.nsfw_emojis ?? new Set();
 		this.hasReaction = row.has_reaction ?? null;
 		this.version = row.version;
+		this.threadId = row.thread_id ?? null;
+		this.threadName = row.thread_name ?? null;
 	}
 
 	toRow(): MessageRow {
@@ -99,6 +103,8 @@ export class Message {
 			nsfw_emojis: this.nsfwEmojis.size > 0 ? this.nsfwEmojis : null,
 			has_reaction: this.hasReaction ?? null,
 			version: this.version,
+			thread_id: this.threadId ?? null,
+			thread_name: this.threadName ?? null,
 		};
 	}
 }

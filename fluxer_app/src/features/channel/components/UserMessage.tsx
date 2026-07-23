@@ -12,6 +12,7 @@ import {CompactAuthorPrefix, CompactMessageLayout} from '@app/features/channel/c
 import {EditingMessageInput} from '@app/features/channel/components/EditingMessageInput';
 import {isMediaOnlyEmbed} from '@app/features/channel/components/embeds/EmbedRenderUtils';
 import {MessageAttachments} from '@app/features/channel/components/MessageAttachments';
+import {ThreadPreviewCard} from '@app/features/channel/components/ThreadPreviewCard';
 import {MessageAuthorInfo} from '@app/features/channel/components/MessageAuthorInfo';
 import {MessageAvatar} from '@app/features/channel/components/MessageAvatar';
 import {shouldAnimateMessageEmojiByDefault} from '@app/features/channel/components/MessageEmojiAnimationUtils';
@@ -773,6 +774,15 @@ export const UserMessage = observer(() => {
 					</AuthorHeading>
 				)}
 				<MessageAttachments data-flx="channel.user-message.message-attachments--3" />
+				{message.threadId && (
+					<ThreadPreviewCard
+						threadId={message.threadId}
+						threadName={message.threadName ?? ''}
+						guildId={channel.guildId}
+						parentChannelId={channel.id}
+						data-flx="channel.user-message.thread-preview-card"
+					/>
+				)}
 				{renderFailedFooter()}
 			</div>
 		</SpoilerSyncProvider>

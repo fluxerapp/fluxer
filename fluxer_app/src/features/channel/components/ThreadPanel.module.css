@@ -1,0 +1,78 @@
+.panel {
+	border-left: 1px solid var(--background-modifier-accent);
+	display: flex;
+	flex-direction: column;
+	min-width: 360px;
+	width: 360px;
+}
+
+.header {
+	align-items: center;
+	border-bottom: 1px solid var(--background-modifier-accent);
+	display: flex;
+	flex-shrink: 0;
+	gap: 8px;
+	height: 48px;
+	padding: 0 4px 0 16px;
+}
+
+.headerActions {
+	align-items: center;
+	display: flex;
+	flex-shrink: 0;
+	gap: 2px;
+	margin-left: auto;
+}
+
+.threadIcon {
+	color: var(--text-muted);
+	flex-shrink: 0;
+}
+
+.threadName {
+	color: var(--text-primary);
+	flex: 1;
+	font-size: 15px;
+	font-weight: 600;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.closeButton {
+	align-items: center;
+	background: none;
+	border: none;
+	border-radius: 4px;
+	color: var(--text-muted);
+	cursor: pointer;
+	display: flex;
+	flex-shrink: 0;
+	height: 28px;
+	justify-content: center;
+	padding: 0;
+	width: 28px;
+}
+
+.closeButton:hover {
+	background: var(--background-modifier-hover);
+	color: var(--text-primary);
+}
+
+.content {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	min-height: 0;
+	overflow: hidden;
+}
+
+.lockedBanner {
+	background: var(--background-modifier-accent);
+	border-bottom: 1px solid var(--background-modifier-accent);
+	color: var(--text-primary-muted);
+	flex-shrink: 0;
+	font-size: 13px;
+	padding: 10px 16px;
+}

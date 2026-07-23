@@ -46,6 +46,19 @@ export interface ChannelRow {
 	soft_deleted: boolean;
 	indexed_at: Nullish<Date>;
 	version: number;
+	thread_parent_channel_id?: Nullish<ChannelID>;
+	thread_creator_id?: Nullish<UserID>;
+	thread_creator_username?: Nullish<string>;
+	thread_state?: Nullish<number>;
+	thread_expires_at?: Nullish<Date>;
+	thread_source_message_id?: Nullish<MessageID>;
+	thread_message_count?: Nullish<number>;
+	thread_total_message_sent?: Nullish<number>;
+	thread_member_count_actual?: Nullish<number>;
+	thread_archived?: Nullish<boolean>;
+	thread_locked?: Nullish<boolean>;
+	thread_auto_archive_duration?: Nullish<number>;
+	thread_archive_timestamp?: Nullish<Date>;
 }
 
 export interface InviteRow {
@@ -133,6 +146,18 @@ export const CHANNEL_COLUMNS = [
 	'soft_deleted',
 	'indexed_at',
 	'version',
+	'thread_parent_channel_id',
+	'thread_creator_username',
+	'thread_state',
+	'thread_expires_at',
+	'thread_source_message_id',
+	'thread_message_count',
+	'thread_total_message_sent',
+	'thread_member_count_actual',
+	'thread_archived',
+	'thread_locked',
+	'thread_auto_archive_duration',
+	'thread_archive_timestamp',
 ] as const satisfies ReadonlyArray<keyof ChannelRow>;
 
 export interface ChannelsByGuildRow {
@@ -194,3 +219,49 @@ export const PRIVATE_CHANNEL_COLUMNS = [
 export const DM_STATE_COLUMNS = ['hi_user_id', 'lo_user_id', 'channel_id'] as const satisfies ReadonlyArray<
 	keyof DmStateRow
 >;
+
+export interface ThreadMemberRow {
+	thread_id: ChannelID;
+	user_id: UserID;
+	joined_at: Date;
+	notification_override: Nullish<number>;
+}
+
+export const THREAD_MEMBER_COLUMNS = [
+	'thread_id',
+	'user_id',
+	'joined_at',
+	'notification_override',
+] as const satisfies ReadonlyArray<keyof ThreadMemberRow>;
+
+export interface ThreadsByChannelRow {
+	channel_id: ChannelID;
+	thread_id: ChannelID;
+}
+
+export const THREADS_BY_CHANNEL_COLUMNS = [
+	'channel_id',
+	'thread_id',
+] as const satisfies ReadonlyArray<keyof ThreadsByChannelRow>;
+
+export interface ThreadMembersByUserRow {
+	user_id: UserID;
+	thread_id: ChannelID;
+}
+
+export const THREAD_MEMBERS_BY_USER_COLUMNS = [
+	'user_id',
+	'thread_id',
+] as const satisfies ReadonlyArray<keyof ThreadMembersByUserRow>;
+
+export interface OpenThreadRow {
+	bucket: string;
+	thread_id: ChannelID;
+	expires_at: Nullish<Date>;
+}
+
+export const OPEN_THREAD_COLUMNS = [
+	'bucket',
+	'thread_id',
+	'expires_at',
+] as const satisfies ReadonlyArray<keyof OpenThreadRow>;

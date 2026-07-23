@@ -352,3 +352,96 @@ export async function seedPrivateChannels(
 		.body(params)
 		.execute();
 }
+
+export async function createThread(
+	harness: ApiTestHarness,
+	token: string,
+	channelId: string,
+	name: string,
+	sourceMessageId?: string,
+): Promise<Record<string, unknown>> {
+	return createBuilder<Record<string, unknown>>(harness, token)
+		.post(`/channels/${channelId}/threads`)
+		.body({name, ...(sourceMessageId ? {source_message_id: sourceMessageId} : {})})
+		.execute();
+}
+
+export async function listThreads(
+	harness: ApiTestHarness,
+	token: string,
+	channelId: string,
+): Promise<Array<Record<string, unknown>>> {
+	return createBuilder<Array<Record<string, unknown>>>(harness, token)
+		.get(`/channels/${channelId}/threads`)
+		.execute();
+}
+
+export async function getThread(
+	harness: ApiTestHarness,
+	token: string,
+	channelId: string,
+	threadId: string,
+): Promise<Record<string, unknown>> {
+	return createBuilder<Record<string, unknown>>(harness, token)
+		.get(`/channels/${channelId}/threads/${threadId}`)
+		.execute();
+}
+
+export async function joinThread(
+	harness: ApiTestHarness,
+	token: string,
+	channelId: string,
+	threadId: string,
+): Promise<void> {
+	return createBuilder<void>(harness, token)
+		.post(`/channels/${channelId}/threads/${threadId}/members/@me`)
+		.expect(204)
+		.execute();
+}
+
+export async function leaveThread(
+	harness: ApiTestHarness,
+	token: string,
+	channelId: string,
+	threadId: string,
+): Promise<void> {
+	return createBuilder<void>(harness, token)
+		.delete(`/channels/${channelId}/threads/${threadId}/members/@me`)
+		.expect(204)
+		.execute();
+}
+
+export async function deleteThread(
+	harness: ApiTestHarness,
+	token: string,
+	channelId: string,
+	threadId: string,
+): Promise<void> {
+	return createBuilder<void>(harness, token)
+		.delete(`/channels/${channelId}/threads/${threadId}`)
+		.expect(204)
+		.execute();
+}
+
+export async function listThreadMessages(
+	harness: ApiTestHarness,
+	token: string,
+	threadId: string,
+): Promise<Array<Record<string, unknown>>> {
+	return createBuilder<Array<Record<string, unknown>>>(harness, token)
+		.get(`/channels/${threadId}/messages`)
+		.execute();
+}
+
+export async function updateThread(
+	harness: ApiTestHarness,
+	token: string,
+	channelId: string,
+	threadId: string,
+	body: Record<string, unknown>,
+): Promise<Record<string, unknown>> {
+	return createBuilder<Record<string, unknown>>(harness, token)
+		.patch(`/channels/${channelId}/threads/${threadId}`)
+		.body(body)
+		.execute();
+}

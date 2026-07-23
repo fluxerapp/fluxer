@@ -143,6 +143,14 @@ import {
 	type InviteRow,
 	PRIVATE_CHANNEL_COLUMNS,
 	type PrivateChannelRow,
+	THREAD_MEMBER_COLUMNS,
+	type ThreadMemberRow,
+	THREAD_MEMBERS_BY_USER_COLUMNS,
+	type ThreadMembersByUserRow,
+	THREADS_BY_CHANNEL_COLUMNS,
+	type ThreadsByChannelRow,
+	OPEN_THREAD_COLUMNS,
+	type OpenThreadRow,
 	WEBHOOK_COLUMNS,
 	type WebhookRow,
 } from './database/types/ChannelTypes';
@@ -605,6 +613,31 @@ export const DmStates = defineTable<DmStateRow, 'hi_user_id' | 'lo_user_id' | 'c
 	name: 'dm_states',
 	columns: DM_STATE_COLUMNS,
 	primaryKey: ['hi_user_id', 'lo_user_id', 'channel_id'],
+});
+export const ThreadMembers = defineTable<ThreadMemberRow, 'thread_id' | 'user_id', 'thread_id'>({
+	name: 'thread_members',
+	columns: THREAD_MEMBER_COLUMNS,
+	primaryKey: ['thread_id', 'user_id'],
+	partitionKey: ['thread_id'],
+});
+export const ThreadsByChannel = defineTable<ThreadsByChannelRow, 'channel_id' | 'thread_id', 'channel_id'>({
+	name: 'threads_by_channel_id',
+	columns: THREADS_BY_CHANNEL_COLUMNS,
+	primaryKey: ['channel_id', 'thread_id'],
+	partitionKey: ['channel_id'],
+});
+export const ThreadMembersByUser = defineTable<ThreadMembersByUserRow, 'user_id' | 'thread_id', 'user_id'>({
+	name: 'thread_members_by_user_id',
+	columns: THREAD_MEMBERS_BY_USER_COLUMNS,
+	primaryKey: ['user_id', 'thread_id'],
+	partitionKey: ['user_id'],
+});
+
+export const OpenThreads = defineTable<OpenThreadRow, 'bucket' | 'thread_id', 'bucket'>({
+	name: 'open_threads',
+	columns: OPEN_THREAD_COLUMNS,
+	primaryKey: ['bucket', 'thread_id'],
+	partitionKey: ['bucket'],
 });
 
 interface PinnedDmRow {

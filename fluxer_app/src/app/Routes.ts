@@ -47,6 +47,8 @@ export const Routes = {
 	guildMembers: (guildId: string) => `/channels/${guildId}/members`,
 	guildChannel: (guildId: string, channelId?: string) =>
 		channelId ? `/channels/${guildId}/${channelId}` : `/channels/${guildId}`,
+	guildThread: (guildId: string, channelId: string, threadId: string) =>
+		`/channels/${guildId}/${channelId}/threads/${threadId}`,
 	channelMessage: (guildId: string, channelId: string, messageId: string) =>
 		`${Routes.guildChannel(guildId, channelId)}/${messageId}`,
 	dmChannelMessage: (channelId: string, messageId: string) => `${Routes.dmChannel(channelId)}/${messageId}`,

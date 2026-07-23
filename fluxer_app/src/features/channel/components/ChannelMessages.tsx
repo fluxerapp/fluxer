@@ -12,6 +12,7 @@ import {UploadManager} from '@app/features/channel/components/UploadManager';
 import type {Channel} from '@app/features/channel/models/Channel';
 import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
 import GuildVerification from '@app/features/guild/state/GuildVerification';
+import Threads from '@app/features/channel/state/Threads';
 import {TRY_AGAIN_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as MessageCommands from '@app/features/messaging/commands/MessageCommands';
 import {useMessageListKeyboardNavigation} from '@app/features/messaging/hooks/useMessageListKeyboardNavigation';
@@ -44,7 +45,7 @@ import type {User} from '@app/features/user/models/User';
 import UserSettings from '@app/features/user/state/UserSettings';
 import Users from '@app/features/user/state/Users';
 import Window from '@app/features/window/state/Window';
-import {Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {MAX_MESSAGES_PER_CHANNEL} from '@fluxer/constants/src/LimitConstants';
 import {extractTimestamp} from '@fluxer/snowflake/src/SnowflakeUtils';
 import {msg} from '@lingui/core/macro';
@@ -76,12 +77,16 @@ const MESSAGES_FAILED_TO_LOAD_DESCRIPTOR = msg({
 });
 
 function checkPermissions(channel: Channel) {
-	const canSendMessages = Permission.can(Permissions.SEND_MESSAGES, channel);
+	const isThread = channel.type === ChannelTypes.GUILD_THREAD;
+	const sendPerm = isThread ? Permissions.SEND_MESSAGES_IN_THREADS : Permissions.SEND_MESSAGES;
+	const canSendMessages = Permission.can(sendPerm, channel);
 	const passesVerification = channel.isPrivate() || GuildVerification.canAccessGuild(channel.guildId || '');
-	const canChat = channel.isPrivate() || (canSendMessages && passesVerification);
+	const threadLocked = isThread && Threads.getThread(channel.id.toString())?.isLocked() === true;
+	const canManageThreads = threadLocked ? Permission.can(Permissions.MANAGE_THREADS, channel) : true;
+	const canChat = channel.isPrivate() || (canSendMessages && passesVerification && canManageThreads);
 	const canAttachFiles = channel.isPrivate() ? canChat : canChat && Permission.can(Permissions.ATTACH_FILES, channel);
 	const canManageMessages = Permission.can(Permissions.MANAGE_MESSAGES, channel);
-	return {canSendMessages, canChat, canAttachFiles, canManageMessages};
+	return {canSendMessages: canSendMessages && canManageThreads, canChat, canAttachFiles, canManageMessages};
 }
 
 interface MessagesStateSnapshot {
@@ -539,9 +544,13 @@ export const Messages = observer(function Messages({
 		}),
 		[channel, state.messages, state.revealedMessageId, state.messageVersion, spammerOverrideVersion],
 	);
+	const threadIsLocked = channel.type === ChannelTypes.GUILD_THREAD
+		? (Threads.getThread(channel.id.toString())?.isLocked() ?? false)
+		: false;
 	const {canChat, canAttachFiles} = useMemo(
 		() => checkPermissions(channel),
-		[channel.id, channel.guildId, state.permissionVersion],
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		[channel.id, channel.guildId, state.permissionVersion, threadIsLocked],
 	);
 	const streamMarkup = useMemo(() => {
 		if (!state.messages?.ready) return null;

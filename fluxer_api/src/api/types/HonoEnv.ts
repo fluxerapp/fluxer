@@ -21,6 +21,7 @@ import type {MessageRequestService} from '../channel/services/message/MessageReq
 import type {ScheduledMessageService} from '../channel/services/ScheduledMessageService';
 import type {StreamPreviewService} from '../channel/services/StreamPreviewService';
 import type {StreamService} from '../channel/services/StreamService';
+import type {ThreadService} from '../channel/services/ThreadService';
 import type {ConnectionRequestService} from '../connection/ConnectionRequestService';
 import type {ConnectionService} from '../connection/ConnectionService';
 import type {NcmecSubmissionService} from '../csam/NcmecSubmissionService';
@@ -121,6 +122,7 @@ export interface HonoEnv {
 		channelRequestService: ChannelRequestService;
 		messageRequestService: MessageRequestService;
 		channelRepository: IChannelRepository;
+		threadService: ThreadService;
 		connectionService: ConnectionService;
 		connectionRequestService: ConnectionRequestService;
 		blueskyOAuthService: IBlueskyOAuthService;

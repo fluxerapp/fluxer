@@ -309,6 +309,16 @@ const messageRoute = createRoute({
 		</ChannelLayout>
 	),
 });
+const threadRoute = createRoute({
+	getParentRoute: () => channelRoute,
+	id: 'thread',
+	path: '/channels/:guildId/:channelId/threads/:threadId',
+	component: () => (
+		<ChannelLayout data-flx="app.router.app-routes.channel-layout--4">
+			<ChannelIndexPage data-flx="app.router.app-routes.channel-index-page--4" />
+		</ChannelLayout>
+	),
+});
 export const appRouteTree = appLayoutRoute.addChildren([
 	notificationsRoute,
 	youRoute,
@@ -319,6 +329,6 @@ export const appRouteTree = appLayoutRoute.addChildren([
 		meRoute,
 		discoverRoute,
 		favoritesRoute.addChildren([favoritesChannelRoute]),
-		channelsRoute.addChildren([membersRoute, channelRoute.addChildren([messageRoute])]),
+		channelsRoute.addChildren([membersRoute, channelRoute.addChildren([messageRoute, threadRoute])]),
 	]),
 ]);

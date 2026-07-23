@@ -34,6 +34,12 @@ import GuildVerification from '@app/features/guild/state/GuildVerification';
 import {useMemberListVisible} from '@app/features/member/hooks/useMemberListVisible';
 import Permission from '@app/features/permissions/state/Permission';
 import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {ThreadPanel} from '@app/features/channel/components/ThreadPanel';
+import {ThreadCreationPanel} from '@app/features/channel/components/ThreadCreationPanel';
+import ThreadCreation from '@app/features/channel/state/ThreadCreation';
+import * as ThreadCommands from '@app/features/channel/commands/ThreadCommands';
+import * as NavigationCommands from '@app/features/navigation/commands/NavigationCommands';
+import {useParams} from '@app/features/platform/components/router/RouterReact';
 import ReadStates from '@app/features/read_state/state/ReadStates';
 import {Button} from '@app/features/ui/button/Button';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
@@ -166,7 +172,22 @@ const VoiceChannelJoinEmptyState = observer(function VoiceChannelJoinEmptyState(
 export const GuildChannelView = observer(({channelId, guildId}: GuildChannelViewProps) => {
 	const channel = Channels.getChannel(channelId);
 	const guild = guildId ? Guilds.getGuild(guildId) : null;
+	const {threadId} = (useParams() as {threadId?: string}) ?? {};
 	const isVoiceChannel = channel?.type === ChannelTypes.GUILD_VOICE;
+
+	useEffect(() => {
+		if (threadId && ThreadCreation.pending) {
+			ThreadCreation.close();
+		}
+		if (threadId && ThreadCreation.createdThreadId) {
+			ThreadCreation.close();
+		}
+	}, [threadId]);
+
+	useEffect(() => {
+		if (!channel || isVoiceChannel || channel.type === ChannelTypes.GUILD_CATEGORY) return;
+		void ThreadCommands.fetchList(channelId);
+	}, [channelId, channel, isVoiceChannel]);
 	const memberListDefaultHiddenForChannel = Boolean(isVoiceChannel);
 	const isMemberListVisible = useMemberListVisible({
 		channelId,
@@ -568,6 +589,27 @@ export const GuildChannelView = observer(({channelId, guildId}: GuildChannelView
 							data-flx="channel.channel-view.guild-channel-view.channel-search-results--2"
 						/>
 					</div>
+				) : ThreadCreation.pending?.channelId === channelId ? (
+					<ThreadCreationPanel
+						channelId={channelId}
+						guildId={guildId ?? ''}
+						sourceMessageId={ThreadCreation.pending.sourceMessageId}
+						sourceMessagePreview={ThreadCreation.pending.sourceMessagePreview}
+						sourceMessageAuthor={ThreadCreation.pending.sourceMessageAuthor}
+						onClose={() => ThreadCreation.close()}
+						data-flx="channel.channel-view.guild-channel-view.thread-creation-panel"
+					/>
+				) : (ThreadCreation.createdThreadId ?? threadId) ? (
+					<ThreadPanel
+						threadId={(ThreadCreation.createdThreadId ?? threadId)!}
+						onClose={() => {
+							ThreadCreation.close();
+							if (guildId && channel.id) {
+								NavigationCommands.closeThread(guildId, channel.id);
+							}
+						}}
+						data-flx="channel.channel-view.guild-channel-view.thread-panel"
+					/>
 				) : shouldRenderMemberList ? (
 					<ChannelMembers
 						channel={channel}
@@ -576,7 +618,7 @@ export const GuildChannelView = observer(({channelId, guildId}: GuildChannelView
 					/>
 				) : null
 			}
-			showMemberListDivider={shouldRenderMemberList && !isSearchActive}
+			showMemberListDivider={!threadId && !ThreadCreation.pending && !ThreadCreation.createdThreadId && shouldRenderMemberList && !isSearchActive}
 			data-flx="channel.channel-view.guild-channel-view.channel-view-scaffold"
 		/>
 	);

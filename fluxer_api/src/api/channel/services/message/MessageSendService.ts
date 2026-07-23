@@ -254,7 +254,15 @@ export class MessageSendService {
 			if (isOperationDisabled(guild, GuildOperations.SEND_MESSAGE)) {
 				throw new FeatureTemporarilyDisabledError();
 			}
-			await checkPermission(Permissions.SEND_MESSAGES);
+			await checkPermission(
+				channel.type === ChannelTypes.GUILD_THREAD ? Permissions.SEND_MESSAGES_IN_THREADS : Permissions.SEND_MESSAGES,
+			);
+			if (channel.type === ChannelTypes.GUILD_THREAD && channel.threadLocked) {
+				const canManageThreads = await hasPermission(Permissions.MANAGE_THREADS);
+				if (!canManageThreads) {
+					throw new MissingPermissionsError();
+				}
+			}
 			assertGuildMemberCanCommunicate(member);
 			if (data.tts) {
 				const hasTtsPermission = await hasPermission(Permissions.SEND_TTS_MESSAGES);
@@ -940,6 +948,9 @@ export class MessageSendService {
 			messageId,
 			mentionChannels: mentionData?.mentionChannels,
 		});
+		if (channel.type === ChannelTypes.GUILD_THREAD && mentionData?.mentionUserIds?.length) {
+			void this.autoJoinMentionedThreadMembers(channelId, mentionData.mentionUserIds);
+		}
 		if (!suppressDmRecipientDelivery) {
 			await this.settlePostCreateWork(messageId, [
 				{
@@ -1231,6 +1242,22 @@ export class MessageSendService {
 			void this.deps.searchService.updateMessageIndex(updatedMessage, searchIndexOptions);
 		}
 		return updatedMessage;
+	}
+
+	private async autoJoinMentionedThreadMembers(threadId: ChannelID, userIds: Array<UserID>): Promise<void> {
+		await Promise.allSettled(
+			userIds.map(async (userId) => {
+				const isMember = await this.deps.channelRepository.channelData.isThreadMember(threadId, userId);
+				if (!isMember) {
+					await this.deps.channelRepository.channelData.upsertThreadMember({
+						threadId,
+						userId,
+						joinedAt: new Date(),
+						notificationOverride: null,
+					});
+				}
+			}),
+		);
 	}
 
 	private async sendPersonalNoteMessage({

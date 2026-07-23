@@ -4,6 +4,7 @@ import {Routes} from '@app/app/Routes';
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {ChannelItem} from '@app/features/app/components/layout/ChannelItem';
 import channelItemStyles from '@app/features/app/components/layout/ChannelItem.module.css';
+import {ThreadItem} from '@app/features/app/components/layout/ThreadItem';
 import {ChannelItemContent} from '@app/features/app/components/layout/ChannelItemContent';
 import styles from '@app/features/app/components/layout/ChannelListContent.module.css';
 import {
@@ -25,6 +26,7 @@ import {getChannelUnreadState} from '@app/features/app/components/layout/utils/C
 import {VoiceParticipantsList} from '@app/features/app/components/layout/VoiceParticipantsList';
 import {useRovingFocusList} from '@app/features/app/hooks/useRovingFocusList';
 import Channels from '@app/features/channel/state/Channels';
+import Threads from '@app/features/channel/state/Threads';
 import * as GuildCommands from '@app/features/guild/commands/GuildCommands';
 import type {Guild} from '@app/features/guild/models/Guild';
 import {MEMBERS_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
@@ -130,6 +132,8 @@ export const ChannelListContent = observer(({guild, scrollY}: {guild: Guild; scr
 			isMembersSelected = true;
 		} else if (segment.length > 0) {
 			selectedChannelInGuildId = segment;
+			// also highlight parent channel when viewing a thread: /guildId/channelId/threads/threadId
+			// selectedChannelInGuildId is already set to channelId in this case
 		}
 	}
 	const handleMembersClick = useCallback(() => {
@@ -499,18 +503,28 @@ export const ChannelListContent = observer(({guild, scrollY}: {guild: Guild; scr
 									)}
 									{showTextChannels &&
 										visibleTextChannels.map((ch) => (
-											<ChannelItem
-												key={ch.id}
-												guild={guild}
-												channel={ch}
-												isDraggingAnything={isDraggingAnything}
-												activeDragItem={activeDragItem}
-												onChannelDrop={handleChannelDrop}
-												onDragStateChange={setActiveDragItem}
-												isSelectedByPath={selectedChannelInGuildId === ch.id}
-												isOnMembersRoute={isMembersSelected}
-												data-flx="app.channel-list-content.channel-item--2"
-											/>
+											<React.Fragment key={ch.id}>
+												<ChannelItem
+													guild={guild}
+													channel={ch}
+													isDraggingAnything={isDraggingAnything}
+													activeDragItem={activeDragItem}
+													onChannelDrop={handleChannelDrop}
+													onDragStateChange={setActiveDragItem}
+													isSelectedByPath={selectedChannelInGuildId === ch.id}
+													isOnMembersRoute={isMembersSelected}
+													data-flx="app.channel-list-content.channel-item--2"
+												/>
+												{Threads.getJoinedThreadsForChannel(ch.id).map((thread) => (
+													<ThreadItem
+														key={thread.id}
+														guild={guild}
+														thread={thread}
+														isSelectedByPath={selectedChannelInGuildId === thread.id}
+														data-flx="app.channel-list-content.thread-item"
+													/>
+												))}
+											</React.Fragment>
 										))}
 									{showVoiceChannels &&
 										visibleVoiceChannels.map((ch) => {

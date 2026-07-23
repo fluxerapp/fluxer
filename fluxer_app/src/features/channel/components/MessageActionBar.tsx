@@ -52,6 +52,7 @@ import {
 	ForwardIcon,
 	MarkAsUnreadIcon,
 	MoreIcon,
+	OpenLinkIcon,
 	PinIcon,
 	ReplyIcon,
 	RetryIcon,
@@ -62,6 +63,7 @@ import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuComma
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as PopoutCommands from '@app/features/ui/commands/PopoutCommands';
+import * as MessageCommands from '@app/features/messaging/commands/MessageCommands';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {Popout} from '@app/features/ui/popover/PopoverPopout';
 import ContextMenu from '@app/features/ui/state/ContextMenu';
@@ -70,9 +72,11 @@ import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import {canUseWindowFocusedActivationClick} from '@app/features/ui/utils/WindowFocusInteractionGuard';
 import UserSettings from '@app/features/user/state/UserSettings';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
-import {MessageStates} from '@fluxer/constants/src/ChannelConstants';
+import Threads from '@app/features/channel/state/Threads';
+import {MessageStates, MessageTypes} from '@fluxer/constants/src/ChannelConstants';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
+import {ThreadIcon} from '@app/features/ui/components/icons/ThreadIcon';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import React, {useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore} from 'react';
@@ -100,6 +104,14 @@ const UNSUPPRESS_EMBEDS_DESCRIPTOR = msg({
 const FORWARD_DESCRIPTOR = msg({
 	message: 'Forward',
 	comment: 'Tooltip on the forward button in the inline message hover action bar.',
+});
+const VIEW_THREAD_DESCRIPTOR = msg({
+	message: 'View Thread',
+	comment: 'Tooltip on the view-thread button shown in the hover action bar when a message already has a thread.',
+});
+const JUMP_DESCRIPTOR = msg({
+	message: 'Jump',
+	comment: 'Tooltip on the jump button shown on the source message inside a thread panel.',
 });
 const shiftKeyManager = (() => {
 	let isShiftPressed = false;
@@ -356,6 +368,7 @@ interface MessageActionBarCoreProps {
 		canPinMessage: boolean;
 		canForwardMessage: boolean;
 		shouldRenderSuppressEmbeds: boolean;
+		canCreateThread: boolean;
 	};
 	isSaved: boolean;
 	developerMode: boolean;
@@ -389,12 +402,38 @@ export const MessageActionBarCore: React.FC<MessageActionBarCoreProps> = observe
 			canForwardMessage,
 			shouldRenderSuppressEmbeds,
 		} = permissions;
-		const supportsInteractiveActions = useMemo(() => !isClientSystemMessage(message), [message]);
+		const supportsInteractiveActions = useMemo(() => !isClientSystemMessage(message) && message.type !== MessageTypes.THREAD_STARTER_MESSAGE, [message]);
 		const handlers = useMemo(
 			() => createMessageActionHandlers(message, {i18n, channel: permissions.channel}),
 			[message, i18n.locale, permissions.channel],
 		);
+		const handleJoinThread = useCallback(() => {
+			if (!message.threadId) return;
+			const channel = permissions.channel;
+			if (!Threads.isJoined(message.threadId)) {
+				void import('@app/features/channel/commands/ThreadCommands').then(({join}) =>
+					join(channel.id, message.threadId!),
+				);
+			}
+			if (channel.guildId) {
+				void import('@app/features/navigation/commands/NavigationCommands').then(({selectThread}) =>
+					selectThread(channel.guildId!, channel.id, message.threadId!),
+				);
+			}
+		}, [message.threadId, permissions.channel]);
+		const handleJump = useCallback(() => {
+			const channel = permissions.channel;
+			const thread = channel.type === 11 ? Threads.getThread(channel.id) : null;
+			const sourceMessageId = thread?.threadSourceMessageId?.toString();
+			const parentChannelId = thread?.threadParentChannelId;
+			if (!sourceMessageId || !parentChannelId) return;
+			void import('@app/features/navigation/commands/NavigationCommands').then(({selectChannel}) => {
+				selectChannel(channel.guildId ?? parentChannelId, parentChannelId);
+			});
+			MessageCommands.jumpToMessage({channelId: parentChannelId, messageId: sourceMessageId});
+		}, [permissions.channel]);
 		const channel = permissions.channel;
+		const isThreadSourceMessage = message.type === MessageTypes.THREAD_STARTER_MESSAGE;
 		const quickReactionEmojis = useQuickReactionEmojis(
 			channel,
 			3,
@@ -556,8 +595,21 @@ export const MessageActionBarCore: React.FC<MessageActionBarCoreProps> = observe
 				data-flx="channel.message-action-bar.message-action-bar-core.action-bar-container"
 			>
 				<div className={styles.actionBar} data-flx="channel.message-action-bar.message-action-bar-core.action-bar">
-					{message.state === MessageStates.SENT &&
-						(onlyMoreButton ? (
+					{isThreadSourceMessage && message.state === MessageStates.SENT && (
+						<MessageActionBarButton
+							icon={
+								<OpenLinkIcon
+									size={20}
+									data-flx="channel.message-action-bar.message-action-bar-core.jump-icon"
+								/>
+							}
+							label={i18n._(JUMP_DESCRIPTOR)}
+							onClick={handleJump}
+							data-flx="channel.message-action-bar.message-action-bar-core.message-action-bar-button.jump"
+						/>
+					)}
+					{!isThreadSourceMessage && message.state === MessageStates.SENT &&
+						(onlyMoreButton && !isThreadSourceMessage ? (
 							<MessageActionBarButton
 								ref={moreOptionsButtonRef}
 								icon={<MoreIcon size={20} data-flx="channel.message-action-bar.message-action-bar-core.more-icon" />}
@@ -743,6 +795,19 @@ export const MessageActionBarCore: React.FC<MessageActionBarCoreProps> = observe
 										data-flx="channel.message-action-bar.message-action-bar-core.message-action-bar-button.reply"
 									/>
 								)}
+								{message.isUserMessage() && supportsInteractiveActions && !!message.threadId && (
+									<MessageActionBarButton
+										icon={
+											<ThreadIcon
+												size={20}
+												data-flx="channel.message-action-bar.message-action-bar-core.view-thread-icon"
+											/>
+										}
+										label={i18n._(VIEW_THREAD_DESCRIPTOR)}
+										onClick={handleJoinThread}
+										data-flx="channel.message-action-bar.message-action-bar-core.message-action-bar-button.view-thread"
+									/>
+								)}
 								{message.isUserMessage() && supportsInteractiveActions && canForwardMessage && (
 									<MessageActionBarButton
 										icon={
@@ -827,7 +892,17 @@ export const MessageActionBar = observer(
 			<MessageActionBarCore
 				message={message}
 				handleDelete={handleDelete}
-				permissions={permissions}
+				permissions={{
+					channel: permissions.channel,
+					canSendMessages: permissions.canSendMessages,
+					canAddReactions: permissions.canAddReactions,
+					canEditMessage: permissions.canEditMessage,
+					canDeleteMessage: permissions.canDeleteMessage,
+					canPinMessage: permissions.canPinMessage,
+					canForwardMessage: permissions.canForwardMessage,
+					shouldRenderSuppressEmbeds: permissions.shouldRenderSuppressEmbeds,
+					canCreateThread: permissions.canCreateThread,
+				}}
 				isSaved={isSaved}
 				developerMode={developerMode}
 				onPopoutToggle={onPopoutToggle}

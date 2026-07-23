@@ -23,6 +23,7 @@ import {FLUXERBOT_ID} from '@fluxer/constants/src/AppConstants';
 import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {msg} from '@lingui/core/macro';
 import {CaretDownIcon, type IconProps, NotePencilIcon} from '@phosphor-icons/react';
+import {ThreadIcon} from '@app/features/ui/components/icons/ThreadIcon';
 
 const VOICE_MATURE_DESCRIPTOR = msg({
 	message: 'Voice (mature)',
@@ -132,6 +133,8 @@ export function getIcon(
 		}
 		case ChannelTypes.GUILD_CATEGORY:
 			return <CaretDownIcon weight="bold" data-flx="channel.channel-utils.get-icon.caret-down-icon" {...props} />;
+		case ChannelTypes.GUILD_THREAD:
+			return <ThreadIcon size={typeof props.size === 'number' ? props.size : 20} className={props.className as string | undefined} data-flx="channel.channel-utils.get-icon.thread-icon" />;
 		case ChannelTypes.DM_PERSONAL_NOTES:
 			return <NotePencilIcon weight="bold" data-flx="channel.channel-utils.get-icon.note-pencil-icon" {...props} />;
 		default:

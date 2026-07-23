@@ -1,0 +1,108 @@
+.threadItem {
+	align-items: center;
+	border-radius: 4px;
+	cursor: pointer;
+	display: flex;
+	height: 33px;
+	padding: 0 8px 0 28px;
+	position: relative;
+	user-select: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+	:global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
+		.threadItem:not(.threadItemSelected):hover {
+		background: var(--background-modifier-hover);
+	}
+
+	:global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
+		.threadItem:not(.threadItemSelected):hover
+		.name {
+		color: var(--text-chat);
+	}
+}
+
+.threadItemSelected {
+	background: var(--background-modifier-selected);
+	color: var(--text-primary);
+}
+
+.threadItemSelected .name {
+	color: var(--text-primary);
+}
+
+.connector {
+	border-bottom: 1.5px solid var(--color-background-modifier-accent, rgba(79,84,92,0.48));
+	border-left: 1.5px solid var(--color-background-modifier-accent, rgba(79,84,92,0.48));
+	border-bottom-left-radius: 4px;
+	height: calc(50% + 17px);
+	left: 15px;
+	position: absolute;
+	top: -17px;
+	width: 9px;
+}
+
+.connectorLine {
+	border-left: 1.5px solid var(--color-background-modifier-accent, rgba(79,84,92,0.48));
+	height: 50%;
+	left: 15px;
+	position: absolute;
+	top: 0;
+}
+
+.icon {
+	color: var(--color-channel-icon);
+	flex-shrink: 0;
+	margin-right: 6px;
+	opacity: 0.7;
+}
+
+.iconSelected {
+	color: var(--text-primary);
+	opacity: 1;
+}
+
+.name {
+	color: var(--text-tertiary-muted);
+	font-size: 15px;
+	font-weight: 500;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.nameSelected {
+	color: var(--text-primary);
+}
+
+.closedBadge {
+	background: var(--color-background-tertiary);
+	border-radius: 3px;
+	color: var(--color-text-muted);
+	flex-shrink: 0;
+	font-size: 10px;
+	font-weight: 700;
+	letter-spacing: 0.02em;
+	margin-left: auto;
+	padding: 1px 4px;
+	text-transform: uppercase;
+}
+
+.stateIndicator {
+	border-radius: 0 624.9375rem 624.9375rem 0;
+	flex-shrink: 0;
+	height: 8px;
+	left: 0;
+	position: absolute;
+	top: 50%;
+	transform: translateY(-50%);
+	width: 8px;
+}
+
+.stateIndicatorOpen {
+	background-color: var(--brand-primary);
+}
+
+.stateIndicatorClosed {
+	background-color: var(--background-modifier-accent);
+}

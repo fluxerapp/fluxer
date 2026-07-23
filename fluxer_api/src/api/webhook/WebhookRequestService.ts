@@ -96,6 +96,7 @@ interface WebhookExecuteParams {
 	token: WebhookToken;
 	data: WebhookExecuteMessageData;
 	wait: boolean;
+	threadId?: ChannelID;
 	requestCache: RequestCache;
 }
 
@@ -265,6 +266,7 @@ export class WebhookRequestService {
 			webhookId: params.webhookId,
 			token: params.token,
 			data: params.data,
+			threadId: params.threadId,
 			requestCache: params.requestCache,
 		});
 		if (!params.wait) {

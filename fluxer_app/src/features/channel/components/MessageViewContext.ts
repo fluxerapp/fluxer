@@ -19,6 +19,7 @@ export interface MessagePreviewPermissions {
 	canDeleteAttachment: boolean;
 	canPinMessage: boolean;
 	canForwardMessage: boolean;
+	canCreateThread: boolean;
 	canSuppressEmbeds: boolean;
 	shouldRenderSuppressEmbeds: boolean;
 }

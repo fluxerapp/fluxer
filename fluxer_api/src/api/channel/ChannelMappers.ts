@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
+import {ThreadStates} from '@fluxer/constants/src/ChannelConstants';
 import type {
 	ChannelOverwriteResponse,
 	ChannelPartialResponse,
 	ChannelResponse,
+	ThreadResponse,
 } from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import type {UserID} from '../BrandedTypes';
 import type {UserCacheService} from '../infrastructure/UserCacheService';
@@ -131,6 +133,35 @@ function serializeGuildLinkChannel(channel: Channel, ctx: ContentWarningCtx): Ch
 	};
 }
 
+function serializeGuildThreadChannel(channel: Channel, ctx: ContentWarningCtx): ThreadResponse {
+	return {
+		...serializeBaseChannelFields(channel),
+		...serializeMessageableFields(channel),
+		guild_id: channel.guildId?.toString(),
+		name: channel.name ?? undefined,
+		parent_id: channel.threadParentChannelId?.toString() ?? null,
+		permission_overwrites: serializePermissionOverwrites(channel),
+		...serializeContentWarningFields(channel, ctx),
+		rate_limit_per_user: channel.rateLimitPerUser,
+		thread_state: channel.threadState ?? ThreadStates.OPEN,
+		thread_parent_channel_id: channel.threadParentChannelId?.toString() ?? '',
+		thread_creator_id: channel.ownerId?.toString() ?? null,
+		thread_creator_username: channel.threadCreatorUsername ?? null,
+		thread_expires_at: channel.threadExpiresAt?.toISOString() ?? null,
+		thread_source_message_id: channel.threadSourceMessageId?.toString() ?? null,
+		thread_metadata: {
+			archived: channel.threadArchived,
+			locked: channel.threadLocked,
+			auto_archive_duration: ([60, 1440, 4320, 10080].includes(channel.threadAutoArchiveDuration ?? 10080)
+				? channel.threadAutoArchiveDuration
+				: 10080) as 60 | 1440 | 4320 | 10080,
+			archive_timestamp: channel.threadArchiveTimestamp?.toISOString() ?? null,
+		},
+		thread_total_message_sent: channel.threadTotalMessageSent,
+		thread_member_count_actual: channel.threadMemberCountActual,
+	};
+}
+
 function serializeDMChannel(channel: Channel): ChannelResponse {
 	return {
 		...serializeBaseChannelFields(channel),
@@ -206,6 +237,9 @@ export async function mapChannelToResponse(params: MapChannelToResponseParams): 
 			break;
 		case ChannelTypes.GUILD_LINK:
 			response = serializeGuildLinkChannel(channel, ctx);
+			break;
+		case ChannelTypes.GUILD_THREAD:
+			response = serializeGuildThreadChannel(channel, ctx);
 			break;
 		case ChannelTypes.DM:
 			response = serializeDMChannel(channel);

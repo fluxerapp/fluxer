@@ -61,3 +61,17 @@
 	height: 3rem;
 	width: 3rem;
 }
+
+.creatorButton {
+	background: none;
+	border: none;
+	color: var(--text-primary);
+	cursor: pointer;
+	font-size: inherit;
+	font-weight: 700;
+	padding: 0;
+}
+
+.creatorButton:hover {
+	text-decoration: underline;
+}

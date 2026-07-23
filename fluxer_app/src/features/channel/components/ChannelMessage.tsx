@@ -81,13 +81,13 @@ const MESSAGE_TYPE_NAMES: Record<number, string> = Object.fromEntries(
 	Object.entries(MessageTypes).map(([name, value]) => [value, name]),
 );
 const shouldApplyGroupedLayout = (message: MessageModel, _prevMessage?: MessageModel) => {
-	if (message.type !== MessageTypes.DEFAULT && message.type !== MessageTypes.REPLY) {
+	if (message.type !== MessageTypes.DEFAULT && message.type !== MessageTypes.REPLY && message.type !== MessageTypes.THREAD_STARTER_MESSAGE) {
 		return false;
 	}
 	return true;
 };
 const isDisplaySystemMessage = (message: MessageModel): boolean =>
-	message.type !== MessageTypes.DEFAULT && message.type !== MessageTypes.REPLY;
+	message.type !== MessageTypes.DEFAULT && message.type !== MessageTypes.REPLY && message.type !== MessageTypes.THREAD_STARTER_MESSAGE;
 const isActivationKey = (key: string) => key === 'Enter' || key === ' ' || key === 'Spacebar' || key === 'Space';
 const MESSAGE_ARIA_PARSER_FLAGS = getParserFlagsForContext(MarkdownContext.STANDARD_WITHOUT_JUMBO);
 const MAX_ARIA_MESSAGE_TEXT_LENGTH = 220;
@@ -737,6 +737,7 @@ export const Message: React.FC<MessageProps> = observer((props) => {
 						canDeleteAttachment: true,
 						canPinMessage: true,
 						canForwardMessage: true,
+						canCreateThread: false,
 						canSuppressEmbeds: true,
 						shouldRenderSuppressEmbeds: false,
 					}
@@ -924,6 +925,7 @@ export const Message: React.FC<MessageProps> = observer((props) => {
 									canPinMessage: true,
 									canForwardMessage: true,
 									shouldRenderSuppressEmbeds: true,
+									canCreateThread: false,
 								}}
 								isSaved={false}
 								developerMode={false}

@@ -36,6 +36,7 @@ import Users from '@app/features/user/state/Users';
 import TtsUtils from '@app/features/voice/utils/VoiceTtsUtils';
 import {
 	isMessageTypeDeletable,
+	ChannelTypes,
 	MessageFlags,
 	MessageStates,
 	MessageTypes,
@@ -169,6 +170,7 @@ export interface MessagePermissions {
 	canDeleteAttachment: boolean;
 	canPinMessage: boolean;
 	canForwardMessage: boolean;
+	canCreateThread: boolean;
 	canSuppressEmbeds: boolean;
 	shouldRenderSuppressEmbeds: boolean;
 }
@@ -214,7 +216,7 @@ function getMessagePermissionsForChannel(message: Message, channel: Channel): Me
 				Permission.can(Permissions.ADD_REACTIONS, {channelId: message.channelId}) &&
 				passesVerification &&
 				!isCurrentUserTimedOut));
-	const canEditMessage = !interactionsBlocked && !sendMessageDisabled && message.isCurrentUserAuthor();
+	const canEditMessage = !interactionsBlocked && !sendMessageDisabled && message.isCurrentUserAuthor() && message.type !== MessageTypes.THREAD_STARTER_MESSAGE;
 	const canDeleteMessage =
 		!interactionsBlocked &&
 		messageTypeDeletable &&
@@ -235,6 +237,14 @@ function getMessagePermissionsForChannel(message: Message, channel: Channel): Me
 		(message.isCurrentUserAuthor() || (!isDM && canDeleteMessage));
 	const shouldRenderSuppressEmbeds =
 		message.isUserMessage() && canSuppressEmbeds && (isEmbedsSuppressed(message) || message.embeds.length > 0);
+	const canCreateThread =
+		!isClientSystem &&
+		!interactionsBlocked &&
+		!isDM &&
+		!sendMessageDisabled &&
+		channel?.type !== ChannelTypes.GUILD_THREAD &&
+		Permission.can(Permissions.CREATE_PUBLIC_THREADS, {channelId: message.channelId}) &&
+		passesVerification;
 	return {
 		channel,
 		isDM,
@@ -245,6 +255,7 @@ function getMessagePermissionsForChannel(message: Message, channel: Channel): Me
 		canDeleteAttachment,
 		canPinMessage,
 		canForwardMessage,
+		canCreateThread,
 		canSuppressEmbeds,
 		shouldRenderSuppressEmbeds,
 	};

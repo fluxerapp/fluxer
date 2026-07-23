@@ -8,11 +8,17 @@ import styles from '@app/features/theme/styles/Message.module.css';
 import UserSettings from '@app/features/user/state/UserSettings';
 import * as DateUtils from '@app/features/user/utils/DateFormatting';
 import {useLingui} from '@lingui/react/macro';
-import type {Icon} from '@phosphor-icons/react';
+import type {IconWeight} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useMemo} from 'react';
+
+type SystemMessageIconProps = {
+	weight?: IconWeight;
+	className?: string;
+	'data-flx'?: string;
+};
 
 export const SystemMessage = observer(
 	({
@@ -22,7 +28,7 @@ export const SystemMessage = observer(
 		message,
 		messageContent,
 	}: {
-		icon: Icon;
+		icon: React.ComponentType<SystemMessageIconProps>;
 		iconWeight: 'bold' | 'fill';
 		iconClassname?: string;
 		message: Message;

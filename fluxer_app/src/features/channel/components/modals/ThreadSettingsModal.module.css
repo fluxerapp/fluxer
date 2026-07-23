@@ -1,0 +1,144 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.layout {
+	display: flex;
+	height: 550px;
+	min-height: 0;
+}
+
+.sidebar {
+	background: var(--background-secondary);
+	display: flex;
+	flex-direction: column;
+	flex-shrink: 0;
+	gap: 2px;
+	overflow-y: auto;
+	padding: 16px 8px;
+	width: 200px;
+}
+
+.sidebarGroupLabel {
+	color: var(--text-muted);
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	padding: 8px 8px 4px;
+	text-transform: uppercase;
+}
+
+.navItem {
+	align-items: center;
+	background: none;
+	border: none;
+	border-radius: 4px;
+	color: var(--text-primary-muted);
+	cursor: pointer;
+	display: flex;
+	font-size: 14px;
+	font-weight: 500;
+	gap: 8px;
+	padding: 8px 10px;
+	text-align: left;
+	width: 100%;
+}
+
+.navItem:hover {
+	background: var(--background-modifier-hover);
+	color: var(--text-primary);
+}
+
+.navItemActive {
+	background: var(--background-modifier-selected);
+	color: var(--text-primary);
+}
+
+.navItemDanger {
+	color: var(--status-danger);
+	margin-top: auto;
+}
+
+.navItemDanger:hover {
+	background: var(--status-danger);
+	color: #fff;
+}
+
+.main {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	min-height: 0;
+	overflow-y: auto;
+	padding: 24px 24px 16px;
+	position: relative;
+}
+
+.pageTitle {
+	color: var(--text-primary);
+	font-size: 20px;
+	font-weight: 700;
+	margin-bottom: 20px;
+}
+
+.fields {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+.field {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.fieldLabel {
+	color: var(--text-primary-muted);
+	font-size: 12px;
+	font-weight: 700;
+	letter-spacing: 0.02em;
+	text-transform: uppercase;
+}
+
+.select {
+	background: var(--background-tertiary);
+	border: 1px solid var(--background-modifier-accent);
+	border-radius: 4px;
+	color: var(--text-primary);
+	cursor: pointer;
+	font-size: 14px;
+	height: 40px;
+	padding: 0 8px;
+	width: 100%;
+}
+
+.select:focus {
+	border-color: var(--brand-primary);
+	outline: none;
+}
+
+.hint {
+	color: var(--text-muted);
+	font-size: 12px;
+	line-height: 1.4;
+	margin: 4px 0 0;
+	max-width: 380px;
+}
+
+.footer {
+	display: flex;
+	gap: 8px;
+	justify-content: flex-end;
+	margin-top: 24px;
+}
+
+.deletePage {
+	display: flex;
+	flex-direction: column;
+}
+
+.deleteBody {
+	color: var(--text-primary-muted);
+	font-size: 14px;
+	line-height: 1.5;
+	margin-bottom: 16px;
+}
