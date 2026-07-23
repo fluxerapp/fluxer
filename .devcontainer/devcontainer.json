@@ -69,7 +69,8 @@
 				"TypeScriptTeam.native-preview",
 				"unifiedjs.vscode-mdx",
 				"pgourlain.erlang",
-				"clinyong.vscode-css-modules"
+				"clinyong.vscode-css-modules",
+				"EditorConfig.EditorConfig"
 			]
 		}
 	}
