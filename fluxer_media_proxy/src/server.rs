@@ -1759,8 +1759,9 @@ async fn serve_stored_passthrough_stream(
         return storage_error_response(key, StorageError::StreamTooLong);
     }
     let content_type = passthrough_content_type(&head, key);
-    if is_svg_content_type(&content_type)
-        || image_extension_from_filename(key) == Some(AssetExtension::Svg)
+    if app.cfg.mode == DeploymentMode::Mp
+        && (is_svg_content_type(&content_type)
+            || image_extension_from_filename(key) == Some(AssetExtension::Svg))
     {
         let object = match app.store.read_object(bucket, key).await {
             Ok(object) => object,
