@@ -30,6 +30,7 @@ import {
 	hasHighCgnatBlastRadiusRisk,
 	isSingleIpBanCandidate,
 } from '../../risk/IpBanCgnatGuard';
+import {isIpBanExempt} from '../../risk/IpBanExemptions';
 import type {ISuspiciousIpRepository} from '../../risk/SuspiciousIpRepository';
 import {tryParseSingleIp} from '../../utils/IpRangeUtils';
 import {canonicalizeStoredPhrase} from '../../utils/PhraseBlocklistNormalization';
@@ -81,6 +82,17 @@ export class AdminBanManagementService {
 	) {
 		const {adminRepository, auditService} = this.deps;
 		const {cache: cacheService} = this.deps.apiContext.services;
+		if (isIpBanExempt(data.ip)) {
+			await auditService.createAuditLog({
+				adminUserId,
+				targetType: 'ip',
+				targetId: BigInt(0),
+				action: 'ban_ip_skipped_exempt',
+				auditLogReason,
+				metadata: new Map([['ip', data.ip]]),
+			});
+			return;
+		}
 		if (await this.shouldSkipIpBanForCgnat(data.ip)) {
 			await auditService.createAuditLog({
 				adminUserId,

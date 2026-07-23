@@ -10,6 +10,7 @@ import {AdminRepository} from '../admin/AdminRepository';
 import {Config} from '../Config';
 import {IP_BAN_REFRESH_CHANNEL} from '../constants/IpBan';
 import {Logger} from '../Logger';
+import {isIpBanExempt} from '../risk/IpBanExemptions';
 import type {HonoEnv} from '../types/HonoEnv';
 import {parseJsonRecord} from '../utils/JsonBoundaryUtils';
 import {ipBanCache} from './IpBanMiddleware';
@@ -118,6 +119,7 @@ function normalizeSignalIp(ip: string | null): AbuseSignalIp | null {
 	const parsed = parseIpAddress(ip);
 	if (!parsed) return null;
 	if (!isPublicIpAddress(parsed.normalized)) return null;
+	if (isIpBanExempt(parsed.normalized)) return null;
 	const banKey = getSameIpDecisionKey(parsed.normalized) ?? parsed.normalized;
 	return {banKey, lookupIp: parsed.normalized};
 }
@@ -322,6 +324,9 @@ async function executeAutoBan(
 	},
 ): Promise<void> {
 	if (!isPublicIpAddress(ctx.lookupIp)) {
+		return;
+	}
+	if (isIpBanExempt(ctx.lookupIp)) {
 		return;
 	}
 	try {

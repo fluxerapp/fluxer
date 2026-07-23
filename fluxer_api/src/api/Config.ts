@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {MasterConfig} from '@fluxer/config/src/MasterConfig';
+import {parseIpAddress} from '@fluxer/ip_utils/src/IpAddress';
 import {parseGeoipSourceConfig, resolveGeoipRuntimeSourceConfig} from '@pkgs/geoip/src/GeoipStartup';
 import type {APIConfig, BlueskyOAuthConfig} from './config/APIConfig';
 import type {WorkerTaskName} from './worker/WorkerLaneConfig';
@@ -49,6 +50,18 @@ function resolveTrustClientIpHeader(proxyConfig: object): boolean {
 		return configuredValue;
 	}
 	return false;
+}
+
+function normalizeIpBanExemptIps(values: Array<string>): Array<string> {
+	const normalized = new Set<string>();
+	for (const value of values) {
+		const parsed = parseIpAddress(value);
+		if (!parsed) {
+			throw new Error(`FLUXER_API_IP_BAN_EXEMPT_IPS contains an invalid IP address: ${value}`);
+		}
+		normalized.add(parsed.normalized);
+	}
+	return Array.from(normalized);
 }
 
 function mapPushProviderApps(
@@ -107,6 +120,7 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 	return {
 		nodeEnv: master.env === 'test' ? 'development' : master.env,
 		port: master.services.api.port,
+		ipBanExemptIps: normalizeIpBanExemptIps(master.services.api.ip_ban_exempt_ips),
 		cassandra: {
 			hosts: cassandraSource?.hosts.join(',') ?? '',
 			port: cassandraSource?.port ?? 9042,

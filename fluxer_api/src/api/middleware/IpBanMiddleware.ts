@@ -10,6 +10,7 @@ import type {BannedIpEntry, BannedIpKind} from '../admin/IAdminRepository';
 import {Config} from '../Config';
 import {IP_BAN_REFRESH_CHANNEL} from '../constants/IpBan';
 import {Logger} from '../Logger';
+import {isIpBanExempt} from '../risk/IpBanExemptions';
 import type {HonoEnv} from '../types/HonoEnv';
 import {parseIpBanEntry, tryParseSingleIp} from '../utils/IpRangeUtils';
 
@@ -157,6 +158,7 @@ class IpBanCache {
 	}
 
 	getMatch(ip: string): IpBanMatch | null {
+		if (isIpBanExempt(ip)) return null;
 		const parsed = tryParseSingleIp(ip);
 		if (!parsed) return null;
 		const sameIpDecisionKey = getSameIpDecisionKey(parsed.canonical);
@@ -193,10 +195,12 @@ class IpBanCache {
 	}
 
 	ban(ip: string): void {
+		if (isIpBanExempt(ip)) return;
 		this.addEntry(ip, PERMANENT_BAN_METADATA);
 	}
 
 	banTemp(ip: string, ttlSeconds: number): void {
+		if (isIpBanExempt(ip)) return;
 		const expiresAt = Number.isFinite(ttlSeconds) && ttlSeconds > 0 ? new Date(Date.now() + ttlSeconds * 1000) : null;
 		this.addEntry(ip, {kind: 'temporary_24h', expiresAt});
 	}
