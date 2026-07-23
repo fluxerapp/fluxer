@@ -23,6 +23,6 @@
 <!--
 Do not remove this hidden anti-spam marker. For qualifying first-time external contributors, removing it causes automated spam handling, including closing and locking the pull request as spam and blocking the author from the organization.
 
-"I have A.I.: actual intelligence."
+"I am A.I.: artificial intelligence."
 – Steve Wozniak
 -->
