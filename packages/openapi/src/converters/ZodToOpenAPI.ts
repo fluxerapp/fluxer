@@ -296,10 +296,12 @@ export function zodToOpenAPISchema(schema: ZodTypeAny, depth = 0): OpenAPISchema
 			return addDescription(result, schema);
 		}
 		case 'ZodNumber':
-		case 'number': {
+		case 'number':
+		case 'ZodInt':
+		case 'int': {
 			const result: OpenAPISchema = {type: 'number'};
 			const numConstraints = extractNumberConstraints(schema);
-			if (numConstraints.isInt) {
+			if (numConstraints.isInt || typeName === 'ZodInt' || typeName === 'int') {
 				result.type = 'integer';
 			}
 			if (numConstraints.minimum != null) {
@@ -313,7 +315,7 @@ export function zodToOpenAPISchema(schema: ZodTypeAny, depth = 0): OpenAPISchema
 				const v4Def = check._zod?.def;
 				const kind = getCheckKind(check);
 				if (kind === 'int' || kind === 'number_format') {
-					if (check.isInt) result.type = 'integer';
+					if (kind === 'int' || check.isInt) result.type = 'integer';
 				}
 				if (kind === 'min') {
 					const val = typeof check.value === 'number' ? check.value : check.minimum;

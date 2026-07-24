@@ -274,7 +274,7 @@ export function extractNumberConstraints(schema: ZodTypeAny): {
 	for (const check of checks) {
 		if (check.minValue != null) result.minimum = check.minValue;
 		if (check.maxValue != null) result.maximum = check.maxValue;
-		if (check.isInt === true) result.isInt = true;
+		if (check.isInt === true || getCheckKind(check) === 'int') result.isInt = true;
 		if (check.format != null) result.format = check.format;
 	}
 	return result;

@@ -65,8 +65,8 @@ export type ChangeRenderer = (
 	ctx: {entry: GuildAuditLogEntryResponse; guildId: string; i18n: I18n},
 ) => ReactNode | null;
 
-const renderInline = (value: unknown, i18nInstance: I18n, guildId?: string): ReactNode =>
-	renderValueInline(value, guildId, i18nInstance);
+const renderInline = (value: unknown, i18nInstance: I18n, guildId?: string, isIdField?: boolean): ReactNode =>
+	renderValueInline(value, guildId, i18nInstance, isIdField);
 const joinLabels = (labels: Array<string>): string => labels.join(', ');
 const normalizeStringArray = (value: unknown): Array<string> =>
 	Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [];
@@ -222,15 +222,15 @@ const formatMaxAge = (seconds: number): ReactNode => {
 	);
 };
 const GUILD_CHANGE_RENDERERS: Record<string, ChangeRenderer> = {
-	name: (change, {i18n}) => <Trans>Renamed the community to {renderInline(change.newValue, i18n)}.</Trans>,
+	name: (change, {i18n}) => <Trans>Renamed the community to {renderInline(change.newValue, i18n, undefined, false)}.</Trans>,
 	icon_hash: () => <Trans>Updated the community icon.</Trans>,
 	splash_hash: () => <Trans>Updated the invite splash.</Trans>,
 	owner_id: (change, {guildId, i18n}) => (
-		<Trans>Transferred ownership to {renderInline(change.newValue, i18n, guildId)}.</Trans>
+		<Trans>Transferred ownership to {renderInline(change.newValue, i18n, guildId, true)}.</Trans>
 	),
 	region: (change, {i18n}) => <Trans>Changed the voice region to {renderRtcRegionValue(change.newValue, i18n)}.</Trans>,
 	afk_channel_id: (change, {guildId, i18n}) => (
-		<Trans>Set the AFK channel to {renderInline(change.newValue, i18n, guildId)}.</Trans>
+		<Trans>Set the AFK channel to {renderInline(change.newValue, i18n, guildId, true)}.</Trans>
 	),
 	afk_timeout: (change, {i18n}) => {
 		const raw = safeScalarString(change.newValue, i18n);
@@ -330,7 +330,7 @@ const GUILD_CHANGE_RENDERERS: Record<string, ChangeRenderer> = {
 				<strong data-flx="guild.guild-tabs.guild-audit-log-tab-renderers.strong">Removed</strong> the vanity URL.
 			</Trans>
 		),
-		(change, {i18n}) => <Trans>Set the vanity URL to {renderInline(change.newValue, i18n)}.</Trans>,
+		(change, {i18n}) => <Trans>Set the vanity URL to {renderInline(change.newValue, i18n, undefined, false)}.</Trans>,
 	),
 	features: (change, {i18n}) => {
 		const {added, removed} = getFeatureDiff(change.oldValue, change.newValue);
@@ -362,7 +362,7 @@ const GUILD_CHANGE_RENDERERS: Record<string, ChangeRenderer> = {
 	system_channel_id: whenNewValueMissing(
 		() => <Trans>Removed the system channel.</Trans>,
 		(change, {guildId, i18n}) => (
-			<Trans>Set the system channel to {renderInline(change.newValue, i18n, guildId)}.</Trans>
+			<Trans>Set the system channel to {renderInline(change.newValue, i18n, guildId, true)}.</Trans>
 		),
 	),
 	system_channel_flags: (change, {i18n}) => {
@@ -378,7 +378,7 @@ const GUILD_CHANGE_RENDERERS: Record<string, ChangeRenderer> = {
 	rules_channel_id: whenNewValueMissing(
 		() => <Trans>Removed the rules channel.</Trans>,
 		(change, {guildId, i18n}) => (
-			<Trans>Set the rules channel to {renderInline(change.newValue, i18n, guildId)}.</Trans>
+			<Trans>Set the rules channel to {renderInline(change.newValue, i18n, guildId, true)}.</Trans>
 		),
 	),
 	disabled_operations: (change, {i18n}) => {
@@ -402,23 +402,23 @@ const GUILD_CHANGE_RENDERERS: Record<string, ChangeRenderer> = {
 };
 const CHANNEL_CHANGE_RENDERERS: Record<string, ChangeRenderer> = {
 	channel_id: (change, {guildId, i18n}) => (
-		<Trans>Set the channel ID to {renderInline(change.newValue, i18n, guildId)}.</Trans>
+		<Trans>Set the channel ID to {renderInline(change.newValue, i18n, guildId, true)}.</Trans>
 	),
 	type: (change, {i18n}) => <Trans>Set the channel type to {renderChannelTypeValue(change.newValue, i18n)}.</Trans>,
-	name: (change, {i18n}) => <Trans>Renamed the channel to {renderInline(change.newValue, i18n)}.</Trans>,
+	name: (change, {i18n}) => <Trans>Renamed the channel to {renderInline(change.newValue, i18n, undefined, false)}.</Trans>,
 	topic: whenNewValueMissing(
 		() => <Trans>Cleared the topic.</Trans>,
 		(change, {i18n}) =>
 			isEmptyString(change.newValue) ? (
 				<Trans>Cleared the topic.</Trans>
 			) : (
-				<Trans>Updated the topic to {renderInline(change.newValue, i18n)}.</Trans>
+				<Trans>Updated the topic to {renderInline(change.newValue, i18n, undefined, false)}.</Trans>
 			),
 	),
 	parent_id: whenNewValueMissing(
 		() => <Trans>Removed the channel from its category.</Trans>,
 		(change, {guildId, i18n}) => (
-			<Trans>Moved the channel to category {renderInline(change.newValue, i18n, guildId)}.</Trans>
+			<Trans>Moved the channel to category {renderInline(change.newValue, i18n, guildId, true)}.</Trans>
 		),
 	),
 	position: (change, {i18n}) => <Trans>Set the channel position to {renderInline(change.newValue, i18n)}.</Trans>,
@@ -468,14 +468,14 @@ const USER_CHANGE_RENDERERS: Record<string, ChangeRenderer> = {
 	nick: whenNewOrOldMissing(
 		(change, {i18n}) => (
 			<Trans>
-				Changed nickname from {renderInline(change.oldValue, i18n)} to {renderInline(change.newValue, i18n)}.
+				Changed nickname from {renderInline(change.oldValue, i18n, undefined, false)} to {renderInline(change.newValue, i18n, undefined, false)}.
 			</Trans>
 		),
-		(change, {i18n}) => <Trans>Set nickname to {renderInline(change.newValue, i18n)}.</Trans>,
+		(change, {i18n}) => <Trans>Set nickname to {renderInline(change.newValue, i18n, undefined, false)}.</Trans>,
 		(change, {i18n}) => (
 			<Trans>
 				<strong data-flx="guild.guild-tabs.guild-audit-log-tab-renderers.strong--2">Removed</strong> nickname{' '}
-				{renderInline(change.oldValue, i18n)}.
+				{renderInline(change.oldValue, i18n, undefined, false)}.
 			</Trans>
 		),
 		() => null,
@@ -543,7 +543,7 @@ const USER_CHANGE_RENDERERS: Record<string, ChangeRenderer> = {
 	},
 	avatar_hash: () => <Trans>Updated the avatar.</Trans>,
 	banner_hash: () => <Trans>Updated the banner.</Trans>,
-	reason: (change, {i18n}) => <Trans>Set reason to {renderInline(change.newValue, i18n)}.</Trans>,
+	reason: (change, {i18n}) => <Trans>Set reason to {renderInline(change.newValue, i18n, undefined, false)}.</Trans>,
 	prune_delete_days: (change, {i18n}) => {
 		const rawDays = safeScalarString(change.newValue, i18n);
 		const parsed = rawDays != null ? Number(rawDays) : 0;
@@ -569,12 +569,12 @@ const USER_CHANGE_RENDERERS: Record<string, ChangeRenderer> = {
 			isEmptyString(change.newValue) ? (
 				<Trans>Cleared the bio.</Trans>
 			) : (
-				<Trans>Updated the bio to {renderInline(change.newValue, i18n)}.</Trans>
+				<Trans>Updated the bio to {renderInline(change.newValue, i18n, undefined, false)}.</Trans>
 			),
 	),
 	pronouns: whenNewValueMissing(
 		() => <Trans>Cleared the pronouns.</Trans>,
-		(change, {i18n}) => <Trans>Updated the pronouns to {renderInline(change.newValue, i18n)}.</Trans>,
+		(change, {i18n}) => <Trans>Updated the pronouns to {renderInline(change.newValue, i18n, undefined, false)}.</Trans>,
 	),
 	accent_color: (change, {i18n}) => {
 		const color = formatAccentColor(change.newValue);
@@ -606,8 +606,8 @@ const USER_CHANGE_RENDERERS: Record<string, ChangeRenderer> = {
 };
 const ROLE_CHANGE_RENDERERS: Record<string, ChangeRenderer> = {
 	name: (change, {i18n}) => {
-		const oldLabel = change.oldValue != null ? renderInline(change.oldValue, i18n) : null;
-		const newLabel = change.newValue != null ? renderInline(change.newValue, i18n) : null;
+		const oldLabel = change.oldValue != null ? renderInline(change.oldValue, i18n, undefined, false) : null;
+		const newLabel = change.newValue != null ? renderInline(change.newValue, i18n, undefined, false) : null;
 		if (oldLabel && newLabel) {
 			return (
 				<Trans>
@@ -671,7 +671,7 @@ const ROLE_CHANGE_RENDERERS: Record<string, ChangeRenderer> = {
 	),
 };
 const INVITE_CHANGE_RENDERERS: Record<string, ChangeRenderer> = {
-	code: (change, {i18n}) => <Trans>Invite code is {renderInline(change.newValue, i18n)}.</Trans>,
+	code: (change, {i18n}) => <Trans>Invite code is {renderInline(change.newValue, i18n, undefined, false)}.</Trans>,
 	max_uses: (change, {i18n}) =>
 		change.newValue === 0 ? (
 			<Trans>This invite has unlimited uses.</Trans>
@@ -714,15 +714,15 @@ const INVITE_CHANGE_RENDERERS: Record<string, ChangeRenderer> = {
 	},
 };
 const EMOJI_CHANGE_RENDERERS: Record<string, ChangeRenderer> = {
-	name: (change, {i18n}) => <Trans>Renamed emoji to {renderInline(change.newValue, i18n)}.</Trans>,
+	name: (change, {i18n}) => <Trans>Renamed emoji to {renderInline(change.newValue, i18n, undefined, false)}.</Trans>,
 	animated: (change) =>
 		change.newValue === true ? <Trans>Marked emoji as animated.</Trans> : <Trans>Marked emoji as static.</Trans>,
 };
 const STICKER_CHANGE_RENDERERS: Record<string, ChangeRenderer> = {
-	name: (change, {i18n}) => <Trans>Renamed sticker to {renderInline(change.newValue, i18n)}.</Trans>,
+	name: (change, {i18n}) => <Trans>Renamed sticker to {renderInline(change.newValue, i18n, undefined, false)}.</Trans>,
 	description: whenNewValueMissing(
 		() => <Trans>Cleared the sticker description.</Trans>,
-		(change, {i18n}) => <Trans>Updated the sticker description to {renderInline(change.newValue, i18n)}.</Trans>,
+		(change, {i18n}) => <Trans>Updated the sticker description to {renderInline(change.newValue, i18n, undefined, false)}.</Trans>,
 	),
 	animated: (change) => {
 		if (change.newValue === true) {
@@ -736,14 +736,14 @@ const STICKER_CHANGE_RENDERERS: Record<string, ChangeRenderer> = {
 };
 const WEBHOOK_CHANGE_RENDERERS: Record<string, ChangeRenderer> = {
 	channel_id: whenOldValueMissing(
-		(change, {guildId, i18n}) => <Trans>Created for channel {renderInline(change.newValue, i18n, guildId)}.</Trans>,
-		(change, {guildId, i18n}) => <Trans>Moved to channel {renderInline(change.newValue, i18n, guildId)}.</Trans>,
+		(change, {guildId, i18n}) => <Trans>Created for channel {renderInline(change.newValue, i18n, guildId, true)}.</Trans>,
+		(change, {guildId, i18n}) => <Trans>Moved to channel {renderInline(change.newValue, i18n, guildId, true)}.</Trans>,
 	),
 	name: whenOldValueMissing(
-		(change, {i18n}) => <Trans>Created with name {renderInline(change.newValue, i18n)}.</Trans>,
+		(change, {i18n}) => <Trans>Created with name {renderInline(change.newValue, i18n, undefined, false)}.</Trans>,
 		(change, {i18n}) => (
 			<Trans>
-				Renamed from {renderInline(change.oldValue, i18n)} to {renderInline(change.newValue, i18n)}.
+				Renamed from {renderInline(change.oldValue, i18n, undefined, false)} to {renderInline(change.newValue, i18n, undefined, false)}.
 			</Trans>
 		),
 	),

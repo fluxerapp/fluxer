@@ -140,13 +140,18 @@ const renderMemberInline = (
 const renderBoldValue = (content: React.ReactNode): React.ReactNode => (
 	<strong data-flx="guild.guild-tabs.guild-audit-log-tab-utils.render-bold-value.strong">{content}</strong>
 );
-export const renderValueInline = (value: unknown, guildId: string | undefined, i18n: I18n): React.ReactNode => {
+export const renderValueInline = (
+	value: unknown,
+	guildId: string | undefined,
+	i18n: I18n,
+	isIdField?: boolean,
+): React.ReactNode => {
 	if (isEmptyString(value)) return renderBoldValue(i18n._(NOTHING_DESCRIPTOR));
 	const scalar = safeScalarString(value, i18n);
 	if (scalar !== null) {
 		if (typeof value === 'number') return renderBoldValue(scalar);
 		if (typeof value === 'boolean') return renderBoldValue(scalar);
-		if (typeof value === 'string' && looksLikeSnowflake(value)) {
+		if (typeof value === 'string' && (isIdField === true || (looksLikeSnowflake(value) && isIdField !== false))) {
 			if (guildId) {
 				const name = resolveIdToName(value, guildId);
 				if (name)
@@ -198,27 +203,28 @@ export const renderFallbackChangeDetail = (
 	guildId: string | undefined,
 	i18n: I18n,
 ): React.ReactNode => {
+	const isIdField = change.key.endsWith('_id');
 	const fieldLabel = formatChangeKeyLabel(change.key);
-	const fieldNode = renderValueInline(fieldLabel, guildId, i18n);
+	const fieldNode = renderValueInline(fieldLabel, guildId, i18n, false);
 	if (change.oldValue != null && change.newValue != null) {
 		return (
 			<Trans>
-				Updated {fieldNode} from {renderValueInline(change.oldValue, guildId, i18n)} to{' '}
-				{renderValueInline(change.newValue, guildId, i18n)}.
+				Updated {fieldNode} from {renderValueInline(change.oldValue, guildId, i18n, isIdField)} to{' '}
+				{renderValueInline(change.newValue, guildId, i18n, isIdField)}.
 			</Trans>
 		);
 	}
 	if (change.newValue != null) {
 		return (
 			<Trans>
-				Set {fieldNode} to {renderValueInline(change.newValue, guildId, i18n)}.
+				Set {fieldNode} to {renderValueInline(change.newValue, guildId, i18n, isIdField)}.
 			</Trans>
 		);
 	}
 	if (change.oldValue != null) {
 		return (
 			<Trans>
-				Cleared {fieldNode} (was {renderValueInline(change.oldValue, guildId, i18n)}).
+				Cleared {fieldNode} (was {renderValueInline(change.oldValue, guildId, i18n, isIdField)}).
 			</Trans>
 		);
 	}
@@ -248,7 +254,7 @@ export const renderOptionDetailSentence = (
 		return <Trans>Invited by {renderValueInline(value, guildId, i18n)}.</Trans>;
 	}
 	if (key === 'vanity_url_code') {
-		return <Trans>Vanity URL code: {renderValueInline(value, guildId, i18n)}.</Trans>;
+		return <Trans>Vanity URL code: {renderValueInline(value, guildId, i18n, false)}.</Trans>;
 	}
 	if (key === 'uses') {
 		const count = typeof value === 'number' ? value : Number(value);
@@ -285,7 +291,7 @@ export const renderOptionDetailSentence = (
 		);
 	}
 	if (key === 'name') {
-		return <Trans>Name: {renderValueInline(value, guildId, i18n)}.</Trans>;
+		return <Trans>Name: {renderValueInline(value, guildId, i18n, false)}.</Trans>;
 	}
 	if (key === 'count' || key === 'delete_count' || key === 'messages' || key === 'message_count') {
 		const count = typeof value === 'number' ? value : Number(value);
@@ -377,10 +383,11 @@ export const renderOptionDetailSentence = (
 	if (key === 'role_name') {
 		return <Trans>Role: {renderValueInline(value, guildId, i18n)}.</Trans>;
 	}
+	const isIdField = key.endsWith('_id');
 	const fallbackLabel = formatChangeKeyLabel(key);
 	return (
 		<Trans>
-			Value for {renderValueInline(fallbackLabel, guildId, i18n)}: {renderValueInline(value, guildId, i18n)}.
+			Value for {renderValueInline(fallbackLabel, guildId, i18n, false)}: {renderValueInline(value, guildId, i18n, isIdField)}.
 		</Trans>
 	);
 };
@@ -539,7 +546,7 @@ export const renderEntrySummary = (args: {
 		findChangeScalar(entry.changes, 'code', i18n) ??
 		getOptionScalar(entry, ['name', 'title', 'code'], i18n) ??
 		null;
-	const namedTarget = changedName ? renderEntityInline(changedName, guildId, i18n) : targetEntity;
+	const namedTarget = changedName ? renderBoldValue(changedName) : targetEntity;
 	const pruneDaysRaw = findChangeNewScalar(entry.changes, 'prune_delete_days', i18n);
 	const pruneDays = pruneDaysRaw ? Number(pruneDaysRaw) : null;
 	const bulkCount = getOptionNumber(entry, ['count', 'delete_count', 'messages', 'message_count'], i18n);
