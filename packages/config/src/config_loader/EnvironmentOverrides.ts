@@ -360,6 +360,7 @@ const NAMED_FLUXER_ENV_OVERRIDES: Record<string, NamedEnvOverride> = {
 	},
 	FLUXER_DISCOVERY_ENABLED: {path: ['discovery', 'enabled'], parse: parseEnvValue},
 	FLUXER_DISCOVERY_MIN_MEMBER_COUNT: {path: ['discovery', 'min_member_count'], parse: parseEnvValue},
+	FLUXER_DELETION_GRACE_PERIOD_HOURS: {path: ['deletion_grace_period_hours'], parse: parseEnvValue},
 	FLUXER_RELAX_REGISTRATION_RATE_LIMITS: {path: ['dev', 'relax_registration_rate_limits'], parse: parseEnvValue},
 	FLUXER_DISABLE_RATE_LIMITS: {path: ['dev', 'disable_rate_limits'], parse: parseEnvValue},
 	FLUXER_TEST_MODE_ENABLED: {path: ['dev', 'test_mode_enabled'], parse: parseEnvValue},

@@ -291,7 +291,7 @@ function defaultConfig(): MasterConfig {
 			min_member_count: 1,
 		},
 		attachment_decay_enabled: true,
-		deletion_grace_period_hours: 72,
+		deletion_grace_period_hours: 336,
 		inactivity_deletion_threshold_days: 365,
 	};
 }
