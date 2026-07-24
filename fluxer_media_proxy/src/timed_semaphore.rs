@@ -2,7 +2,7 @@
 
 use std::time::Instant;
 use thiserror::Error;
-use tokio::sync::{OwnedSemaphorePermit, Semaphore};
+use tokio::sync::{OwnedSemaphorePermit, Semaphore, TryAcquireError};
 
 #[derive(Debug, Error, Eq, PartialEq)]
 pub enum TimedSemaphoreError {
@@ -40,6 +40,16 @@ impl TimedSemaphore {
         } else {
             acquire.await.map_err(|_| TimedSemaphoreError::Closed)
         }
+    }
+
+    pub fn try_wait(&self) -> Result<OwnedSemaphorePermit, TimedSemaphoreError> {
+        self.inner
+            .clone()
+            .try_acquire_owned()
+            .map_err(|error| match error {
+                TryAcquireError::NoPermits => TimedSemaphoreError::RequestTimeout,
+                TryAcquireError::Closed => TimedSemaphoreError::Closed,
+            })
     }
 }
 
