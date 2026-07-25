@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import { ChannelTypes, Permissions } from '@fluxer/constants';
-import type { RouteHandler } from '../..';
+import type {Context} from 'hono';
+import type {HonoEnv} from '../../types/HonoEnv';
 
 export interface GuildEventRow {
 	id: string;
@@ -18,6 +18,8 @@ export interface GuildEventRow {
 	repeat_interval: number;
 	created_at: Date;
 	updated_at: Date;
+	attendee_count?: number;
+	is_attending?: boolean;
 }
 
 /**
@@ -28,12 +30,11 @@ export class EventController {
 	 * GET /channels/:id/events
 	 * Lists all events in a calendar channel.
 	 */
-	static listEvents: RouteHandler = async (c) => {
-		const channelId = c.req.param('id');
-		const db = c.get('db');
+	static async listEvents(c: Context<HonoEnv>): Promise<Response> {
+		const channelId = c.req.param('id') || '';
 		const user = c.get('user');
 
-		const events = await db.query<GuildEventRow>(
+		const events = await c.get('apiContext').db.query<GuildEventRow>(
 			`SELECT e.*, 
 				(SELECT COUNT(*) FROM event_attendees WHERE event_id = e.id) as attendee_count,
 				EXISTS(SELECT 1 FROM event_attendees WHERE event_id = e.id AND user_id = $2) as is_attending
@@ -44,18 +45,17 @@ export class EventController {
 		);
 
 		return c.json(events.rows);
-	};
+	}
 
 	/**
 	 * GET /channels/:id/events/:eventId
 	 */
-	static getEvent: RouteHandler = async (c) => {
-		const channelId = c.req.param('id');
-		const eventId = c.req.param('eventId');
-		const db = c.get('db');
+	static async getEvent(c: Context<HonoEnv>): Promise<Response> {
+		const channelId = c.req.param('id') || '';
+		const eventId = c.req.param('eventId') || '';
 		const user = c.get('user');
 
-		const result = await db.query<GuildEventRow>(
+		const result = await c.get('apiContext').db.query<GuildEventRow>(
 			`SELECT e.*, 
 				(SELECT COUNT(*) FROM event_attendees WHERE event_id = e.id) as attendee_count,
 				EXISTS(SELECT 1 FROM event_attendees WHERE event_id = e.id AND user_id = $3) as is_attending
@@ -69,17 +69,26 @@ export class EventController {
 		}
 
 		return c.json(result.rows[0]);
-	};
+	}
 
 	/**
 	 * POST /channels/:id/events
 	 * Creates a new event in a calendar channel.
 	 */
-	static createEvent: RouteHandler = async (c) => {
-		const channelId = c.req.param('id');
-		const db = c.get('db');
+	static async createEvent(c: Context<HonoEnv>): Promise<Response> {
+		const channelId = c.req.param('id') || '';
+		const db = c.get('apiContext').db;
 		const user = c.get('user');
-		const body = await c.req.json();
+		const body = await c.req.json<{
+			name?: string;
+			starts_at?: string;
+			ends_at?: string;
+			description?: string;
+			location_channel_id?: string;
+			location_text?: string;
+			repeat_type?: string;
+			repeat_interval?: number;
+		}>();
 
 		const {
 			name,
@@ -97,7 +106,7 @@ export class EventController {
 		}
 
 		// Fetch channel to verify guild_id
-		const channelRes = await db.query('SELECT guild_id FROM channels WHERE id = $1', [channelId]);
+		const channelRes = await db.query<{guild_id: string}>('SELECT guild_id FROM channels WHERE id = $1', [channelId]);
 		if (channelRes.rows.length === 0) {
 			return c.json({ error: 'Channel not found' }, 404);
 		}
@@ -138,17 +147,23 @@ export class EventController {
 			attendee_count: 1,
 			is_attending: true,
 		}, 201);
-	};
+	}
 
 	/**
 	 * PATCH /channels/:id/events/:eventId
 	 */
-	static updateEvent: RouteHandler = async (c) => {
-		const channelId = c.req.param('id');
-		const eventId = c.req.param('eventId');
-		const db = c.get('db');
-		const user = c.get('user');
-		const body = await c.req.json();
+	static async updateEvent(c: Context<HonoEnv>): Promise<Response> {
+		const channelId = c.req.param('id') || '';
+		const eventId = c.req.param('eventId') || '';
+		const db = c.get('apiContext').db;
+		const body = await c.req.json<{
+			name?: string;
+			description?: string;
+			location_channel_id?: string;
+			location_text?: string;
+			starts_at?: string;
+			ends_at?: string;
+		}>();
 
 		const existing = await db.query('SELECT * FROM calendar_events WHERE id = $1 AND channel_id = $2', [
 			eventId,
@@ -172,25 +187,25 @@ export class EventController {
 			[
 				eventId,
 				channelId,
-				body.name,
-				body.description,
-				body.location_channel_id,
-				body.location_text,
+				body.name ?? null,
+				body.description ?? null,
+				body.location_channel_id ?? null,
+				body.location_text ?? null,
 				body.starts_at ? new Date(body.starts_at) : null,
 				body.ends_at ? new Date(body.ends_at) : null,
 			]
 		);
 
 		return c.json(updateRes.rows[0]);
-	};
+	}
 
 	/**
 	 * DELETE /channels/:id/events/:eventId
 	 */
-	static deleteEvent: RouteHandler = async (c) => {
-		const channelId = c.req.param('id');
-		const eventId = c.req.param('eventId');
-		const db = c.get('db');
+	static async deleteEvent(c: Context<HonoEnv>): Promise<Response> {
+		const channelId = c.req.param('id') || '';
+		const eventId = c.req.param('eventId') || '';
+		const db = c.get('apiContext').db;
 
 		const res = await db.query('DELETE FROM calendar_events WHERE id = $1 AND channel_id = $2', [
 			eventId,
@@ -201,16 +216,16 @@ export class EventController {
 		}
 
 		return c.json({ success: true });
-	};
+	}
 
 	/**
 	 * PUT /channels/:id/events/:eventId/rsvp
 	 * Toggles the current user's RSVP status for the event.
 	 */
-	static toggleRsvp: RouteHandler = async (c) => {
-		const channelId = c.req.param('id');
-		const eventId = c.req.param('eventId');
-		const db = c.get('db');
+	static async toggleRsvp(c: Context<HonoEnv>): Promise<Response> {
+		const channelId = c.req.param('id') || '';
+		const eventId = c.req.param('eventId') || '';
+		const db = c.get('apiContext').db;
 		const user = c.get('user');
 
 		const check = await db.query(
@@ -240,16 +255,22 @@ export class EventController {
 		);
 
 		return c.json(eventRes.rows[0]);
-	};
+	}
 
 	/**
 	 * GET /channels/:id/events/:eventId/attendees
 	 */
-	static listAttendees: RouteHandler = async (c) => {
-		const eventId = c.req.param('eventId');
-		const db = c.get('db');
+	static async listAttendees(c: Context<HonoEnv>): Promise<Response> {
+		const eventId = c.req.param('eventId') || '';
+		const db = c.get('apiContext').db;
 
-		const result = await db.query(
+		const result = await db.query<{
+			user_id: string;
+			rsvp_at: Date;
+			username: string;
+			display_name: string | null;
+			avatar_hash: string | null;
+		}>(
 			`SELECT a.user_id, a.rsvp_at, u.username, u.display_name, u.avatar as avatar_hash
 			 FROM event_attendees a
 			 JOIN users u ON u.id = a.user_id
@@ -259,16 +280,16 @@ export class EventController {
 		);
 
 		return c.json(result.rows);
-	};
+	}
 
 	/**
 	 * GET /channels/:id/events/:eventId/export.ics
 	 * Generates a CalDAV / iCalendar (.ics) export file for external calendars.
 	 */
-	static exportIcs: RouteHandler = async (c) => {
-		const channelId = c.req.param('id');
-		const eventId = c.req.param('eventId');
-		const db = c.get('db');
+	static async exportIcs(c: Context<HonoEnv>): Promise<Response> {
+		const channelId = c.req.param('id') || '';
+		const eventId = c.req.param('eventId') || '';
+		const db = c.get('apiContext').db;
 
 		const result = await db.query<GuildEventRow>(
 			'SELECT * FROM calendar_events WHERE channel_id = $1 AND id = $2',
@@ -305,5 +326,5 @@ export class EventController {
 		c.header('Content-Type', 'text/calendar; charset=utf-8');
 		c.header('Content-Disposition', `attachment; filename="event-${e.id}.ics"`);
 		return c.text(icsContent);
-	};
+	}
 }
