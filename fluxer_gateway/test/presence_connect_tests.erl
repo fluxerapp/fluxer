@@ -28,6 +28,26 @@ session_connect_sends_cached_friend_presence_to_new_session_test() ->
     SessionPid ! stop,
     ok = gen_server:stop(PresencePid).
 
+dispatch_reaches_all_sessions_for_same_user_test() ->
+    maybe_start_presence_bus(),
+    maybe_start_presence_cache(),
+    {ok, PresencePid} = presence:start_link(presence_data([])),
+    BrowserPid = start_session_probe(PresencePid, connect_req(<<"browser-session">>)),
+    UserbotPid = start_session_probe(PresencePid, connect_req(<<"userbot-session">>)),
+    assert_session_connected(BrowserPid),
+    assert_session_connected(UserbotPid),
+    Event = #{
+        <<"id">> => <<"100">>,
+        <<"channel_id">> => <<"200">>,
+        <<"content">> => <<"inbound dm">>
+    },
+    gen_server:cast(PresencePid, {dispatch, message_create, Event}),
+    assert_probe_dispatch(BrowserPid, message_create, Event),
+    assert_probe_dispatch(UserbotPid, message_create, Event),
+    BrowserPid ! stop,
+    UserbotPid ! stop,
+    ok = gen_server:stop(PresencePid).
+
 session_connect_sends_live_friend_presence_when_cache_missing_test() ->
     maybe_start_presence_bus(),
     maybe_start_presence_cache(),

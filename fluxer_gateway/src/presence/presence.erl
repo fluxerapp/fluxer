@@ -90,6 +90,10 @@ handle_call({session_connect, Request}, {Pid, _}, State) when is_map(Request), i
     ),
     presence_broadcast:send_cached_presences_to_session(Pid, FinalState),
     {reply, Reply, FinalState};
+handle_call({has_session, SessionId, SessionPid}, _From, State) when
+    is_binary(SessionId), is_pid(SessionPid)
+->
+    {reply, presence_session:has_session(SessionId, SessionPid, State), State};
 handle_call(get_current_visible_presence, _From, State) ->
     {reply, presence_broadcast:current_visible_presence(State), State};
 handle_call({terminate_session, SessionIdHashes}, _From, State) when is_list(SessionIdHashes) ->
