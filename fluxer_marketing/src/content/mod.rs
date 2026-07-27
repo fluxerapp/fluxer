@@ -403,6 +403,15 @@ pub const HELP_ARTICLES: &[HelpArticle] = &[
         body: include_str!("../../content/help/premium/visionary.md"),
     },
     HelpArticle {
+        slug: "community-programmes",
+        aliases: &["community-programs", "partners", "partner-program"],
+        title: CONTENT_HELP_ARTICLE_COMMUNITY_PROGRAMMES_TITLE_DESCRIPTOR,
+        description: CONTENT_HELP_ARTICLE_COMMUNITY_PROGRAMMES_DESCRIPTION_DESCRIPTOR,
+        category_slug: "faqs",
+        last_updated: "2026-07-27",
+        body: include_str!("../../content/help/faqs/community-programmes.md"),
+    },
+    HelpArticle {
         slug: "attachment-expiry",
         aliases: &[
             "how-attachment-expiry-works",
