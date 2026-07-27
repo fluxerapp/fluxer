@@ -700,6 +700,7 @@ export interface ElectronAPI {
 	onDeepLink: (callback: (url: string) => void) => () => void;
 	getInitialDeepLink: () => Promise<string | null>;
 	onRpcNavigate: (callback: (path: string) => void) => () => void;
+	onRpcActivityUpdate: (callback: (activity: unknown | null) => void) => () => void;
 	autostartEnable: () => Promise<void>;
 	autostartDisable: () => Promise<void>;
 	autostartIsEnabled: () => Promise<boolean>;

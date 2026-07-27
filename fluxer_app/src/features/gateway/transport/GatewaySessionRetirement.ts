@@ -1,3 +1,4 @@
+import type {ActivityPayload} from '@app/features/gateway/types/GatewayPresenceTypes';
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {GatewayCustomStatusPayload} from '@app/features/user/state/CustomStatus';
@@ -9,6 +10,7 @@ export interface GatewayPresenceRetirementSocket {
 		afk?: boolean,
 		mobile?: boolean,
 		customStatus?: GatewayCustomStatusPayload | null,
+		activities?: readonly ActivityPayload[] | null,
 	): void;
 }
 
@@ -28,7 +30,7 @@ export function sendInvisiblePresenceForLocalSession(
 		return false;
 	}
 	try {
-		socket.updatePresence(StatusTypes.INVISIBLE, false, isMobile, null);
+		socket.updatePresence(StatusTypes.INVISIBLE, false, isMobile, null, null);
 		return true;
 	} catch (err) {
 		logger.warn(`Failed to send invisible presence before ${reason}`, err);

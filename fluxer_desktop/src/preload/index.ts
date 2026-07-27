@@ -455,6 +455,15 @@ const api: ElectronAPI = {
 			ipcRenderer.removeListener('rpc-navigate', handler);
 		};
 	},
+	onRpcActivityUpdate: (callback: (activity: unknown | null) => void): (() => void) => {
+		const handler = (_event: Electron.IpcRendererEvent, activity: unknown | null): void => {
+			callback(activity);
+		};
+		ipcRenderer.on('rpc-activity-update', handler);
+		return () => {
+			ipcRenderer.removeListener('rpc-activity-update', handler);
+		};
+	},
 	autostartEnable: (): Promise<void> => ipcRenderer.invoke('autostart-enable'),
 	autostartDisable: (): Promise<void> => ipcRenderer.invoke('autostart-disable'),
 	autostartIsEnabled: (): Promise<boolean> => ipcRenderer.invoke('autostart-is-enabled'),

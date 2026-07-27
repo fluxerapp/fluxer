@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {AccountPresenceIntent} from '@app/features/auth/state/AccountStorage';
+import type {ActivityPayload} from '@app/features/gateway/types/GatewayPresenceTypes';
 import {deferUntilModulesLoaded} from '@app/features/platform/utils/DeferUntilModulesLoaded';
 import Idle from '@app/features/ui/state/Idle';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
+import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
 import type {CustomStatus, GatewayCustomStatusPayload} from '@app/features/user/state/CustomStatus';
 import {customStatusToKey, normalizeCustomStatus, toGatewayCustomStatus} from '@app/features/user/state/CustomStatus';
 import type {StatusType} from '@fluxer/constants/src/StatusConstants';
@@ -16,6 +18,7 @@ type Presence = Readonly<{
 	afk: boolean;
 	mobile: boolean;
 	custom_status: GatewayCustomStatusPayload | null;
+	activities?: readonly ActivityPayload[] | null;
 }>;
 
 export const ACCOUNT_PRESENCE_INTENT_MAX_AGE_MS = 60 * 1000;
@@ -42,6 +45,7 @@ class LocalPresence {
 	afk: boolean = false;
 	mobile: boolean = false;
 	customStatus: CustomStatus | null = null;
+	activities: readonly ActivityPayload[] | null = null;
 	private restoredIntent: AccountPresenceIntent | null = null;
 
 	constructor() {
@@ -51,6 +55,16 @@ class LocalPresence {
 				() => MobileLayout.isMobileLayout(),
 				() => this.updatePresence(),
 			);
+			try {
+				const electronApi = getElectronAPI();
+				if (electronApi?.onRpcActivityUpdate) {
+					electronApi.onRpcActivityUpdate((activity: unknown) => {
+						this.setActivity(activity as ActivityPayload | null | readonly ActivityPayload[]);
+					});
+				}
+			} catch {
+				// Non-electron environment fallback
+			}
 		});
 	}
 
@@ -82,6 +96,25 @@ class LocalPresence {
 		this.mobile = isMobile;
 	}
 
+	setActivity(activity: ActivityPayload | null | undefined | readonly ActivityPayload[]): void {
+		if (!activity) {
+			this.activities = null;
+		} else if (Array.isArray(activity)) {
+			this.activities = activity.length > 0 ? activity : null;
+		} else {
+			this.activities = [activity as ActivityPayload];
+		}
+		this.updatePresence();
+	}
+
+	clearActivity(): void {
+		this.setActivity(null);
+	}
+
+	getActivities(): readonly ActivityPayload[] | null {
+		return this.activities;
+	}
+
 	getStatus(): StatusType {
 		return this.status;
 	}
@@ -93,6 +126,7 @@ class LocalPresence {
 			afk: this.afk,
 			mobile: this.mobile,
 			custom_status: toGatewayCustomStatus(this.customStatus),
+			activities: this.activities,
 		};
 	}
 
@@ -103,9 +137,12 @@ class LocalPresence {
 		return this.getPresence();
 	}
 
-	handleSessionChanging(options: {clearRestoredIntent?: boolean} = {}): void {
+	handleSessionChanging(options: {clearRestoredIntent?: boolean; clearActivities?: boolean} = {}): void {
 		if (options.clearRestoredIntent) {
 			this.restoredIntent = null;
+		}
+		if (options.clearActivities) {
+			this.activities = null;
 		}
 		userSettings?.markSessionChanging();
 		this.updatePresence();
@@ -135,7 +172,8 @@ class LocalPresence {
 		const hydrated = userSettings?.isHydrated() ? '1' : '0';
 		const afk = this.afk ? '1' : '0';
 		const mobile = this.mobile ? '1' : '0';
-		return `hydrated:${hydrated}|${this.status}|${customStatusToKey(this.customStatus)}|afk:${afk}|mobile:${mobile}`;
+		const actKey = this.activities && this.activities.length > 0 ? JSON.stringify(this.activities) : 'null';
+		return `hydrated:${hydrated}|${this.status}|${customStatusToKey(this.customStatus)}|afk:${afk}|mobile:${mobile}|act:${actKey}`;
 	}
 
 	private computeAfk(idleSince: number, isMobile: boolean, settings: LocalPresenceUserSettings | null): boolean {

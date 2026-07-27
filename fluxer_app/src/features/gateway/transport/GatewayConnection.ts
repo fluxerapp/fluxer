@@ -152,7 +152,7 @@ class GatewayConnection {
 					if (!presence) {
 						return;
 					}
-					this.socket?.updatePresence(presence.status, presence.afk, presence.mobile, presence.custom_status);
+					this.socket?.updatePresence(presence.status, presence.afk, presence.mobile, presence.custom_status, presence.activities);
 				},
 			);
 		});
@@ -273,6 +273,7 @@ class GatewayConnection {
 					afk: presence.afk,
 					mobile: presence.mobile,
 					custom_status: presence.custom_status,
+					activities: presence.activities,
 				},
 			}),
 			compression,
@@ -538,7 +539,7 @@ class GatewayConnection {
 
 	sendInvisiblePresenceForCurrentSession(reason: GatewaySessionRetirementReason): void {
 		sendInvisiblePresenceForLocalSession(this.socket, LocalPresence.mobile, reason, logger);
-		LocalPresence.handleSessionChanging({clearRestoredIntent: true});
+		LocalPresence.handleSessionChanging({clearRestoredIntent: true, clearActivities: true});
 	}
 
 	retireCurrentSession(reason: GatewaySessionRetirementReason): void {
@@ -558,7 +559,7 @@ class GatewayConnection {
 	}
 
 	logout(): void {
-		LocalPresence.handleSessionChanging({clearRestoredIntent: true});
+		LocalPresence.handleSessionChanging({clearRestoredIntent: true, clearActivities: true});
 		this.clearConnectionGrace();
 		this.connectionInterrupted = false;
 		this.cleanupSocket();

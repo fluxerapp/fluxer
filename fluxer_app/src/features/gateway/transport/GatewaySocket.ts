@@ -1,3 +1,4 @@
+import type {ActivityPayload} from '@app/features/gateway/types/GatewayPresenceTypes';
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import GeoIP from '@app/features/app/state/GeoIP';
@@ -72,6 +73,7 @@ export interface GatewayPresence {
 	afk: boolean;
 	mobile: boolean;
 	custom_status?: GatewayCustomStatusPayload | null;
+	activities?: readonly ActivityPayload[] | null;
 }
 
 export interface GatewayVoiceStateUpdateParams {
@@ -410,6 +412,7 @@ export class GatewaySocket extends EventEmitter<GatewaySocketEvents> {
 		afk?: boolean,
 		mobile?: boolean,
 		customStatus?: GatewayCustomStatusPayload | null,
+		activities?: readonly ActivityPayload[] | null,
 	): void {
 		if (!this.isConnected()) return;
 		this.sendPayload({
@@ -419,6 +422,7 @@ export class GatewaySocket extends EventEmitter<GatewaySocketEvents> {
 				...(afk !== undefined && {afk}),
 				...(mobile !== undefined && {mobile}),
 				...(customStatus !== undefined && {custom_status: customStatus}),
+				...(activities !== undefined && {activities}),
 			},
 		});
 	}
