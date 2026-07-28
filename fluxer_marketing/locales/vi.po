@@ -118,7 +118,7 @@ msgstr "Âm thanh tham gia tùy chỉnh"
 #: fluxer_marketing/generated:app.customization.custom_sounds.set_personalized_join_sounds
 msgctxt "app.customization.custom_sounds.set_personalized_join_sounds"
 msgid "Set personalized sounds when you join voice channels to make your presence known."
-msgstr "Đặt 'm thanh cá nh'n hóa khi bạn tham gia kênh thoại để thông báo sự hiện diện của bạn."
+msgstr "Đặt âm thanh cá nhân hóa khi bạn tham gia kênh thoại để thông báo sự hiện diện của bạn."
 
 #. Compact UI label used in the home-page customization feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.customization.custom_themes
@@ -161,7 +161,7 @@ msgstr "Sử dụng emoji động"
 #: fluxer_marketing/generated:app.messaging.description
 msgctxt "app.messaging.description"
 msgid "DM your friends, chat with groups, or build communities with channels."
-msgstr "DM bạn bè, trò chuyện nhóm hoặc x'y dựng cộng đồng với các kênh."
+msgstr "DM bạn bè, trò chuyện nhóm hoặc xây dựng cộng đồng với các kênh."
 
 #. Compact UI label used in the home-page messaging feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.messaging.features.bookmarked_messages
@@ -203,7 +203,7 @@ msgstr "DM riêng tư và trò chuyện nhóm"
 #: fluxer_marketing/generated:app.messaging.features.save_media
 msgctxt "app.messaging.features.save_media"
 msgid "Save images, videos, GIFs, and audio"
-msgstr "Lưu hình ảnh, video, GIF và 'm thanh"
+msgstr "Lưu hình ảnh, video, GIF và âm thanh"
 
 #. Compact UI label used in the home-page messaging feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.messaging.features.search.filter_options
@@ -215,7 +215,7 @@ msgstr "Lọc theo người dùng, ngày và nhiều hơn nữa"
 #: fluxer_marketing/generated:app.messaging.features.search.find_old_messages
 msgctxt "app.messaging.features.search.find_old_messages"
 msgid "Find old messages or jump between communities and channels in seconds."
-msgstr "Tìm tin nhắn cũ hoặc chuyển đổi giữa các cộng đồng và kênh trong vài gi'y."
+msgstr "Tìm tin nhắn cũ hoặc chuyển đổi giữa các cộng đồng và kênh trong vài giây."
 
 #. Short UI label or heading used in the home-page messaging feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.messaging.features.search.label
@@ -275,7 +275,7 @@ msgstr "Quản lý bạn bè và chặn"
 #: fluxer_marketing/generated:app.voice_and_video.features.mute_controls
 msgctxt "app.voice_and_video.features.mute_controls"
 msgid "Mute, deafen, and camera controls"
-msgstr "Tắt mic, tắt 'm và điều khiển camera"
+msgstr "Tắt mic, tắt âm và điều khiển camera"
 
 #. Body copy used in the home-page voice and video feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.voice_and_video.features.noise_suppression
@@ -294,7 +294,7 @@ msgstr "Chia sẻ màn hình tích hợp sẵn"
 msgctxt "app.voice_and_video.features.stream_4k_60fps"
 msgid "Stream up to 4K resolution at 60 fps so others can see you in stunning clarity."
 msgstr ""
-"Truyền phát độ ph'n giải lên đến 4K ở 60 khung hình/gi'y để mọi người có thể xem bạn với chất lượng hình ảnh tuyệt đẹp."
+"Truyền phát độ phân giải lên đến 4K ở 60 khung hình/giây để mọi người có thể xem bạn với chất lượng hình ảnh tuyệt đẹp."
 
 #. Compact UI label used in the home-page voice and video feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.voice_and_video.features.up_to_4k_video_quality
@@ -385,7 +385,7 @@ msgstr "Đã lọc theo {tag}"
 #: fluxer_marketing/generated:blog.post.how_i_built_fluxer.title
 msgctxt "blog.post.how_i_built_fluxer.title"
 msgid "How I built {product_name}, a {discord}-like chat app"
-msgstr "Tôi đã x'y dựng {product_name}, một ứng dụng chat giống {discord}, như thế nào"
+msgstr "Tôi đã xây dựng {product_name}, một ứng dụng chat giống {discord}, như thế nào"
 
 #. Blog article summary shown in cards, article pages, metadata, and feeds. Keep Fluxer as a product name, v2 as the release name, and GitHub as the product name. Preserve placeholders exactly.
 #: fluxer_marketing/generated:blog.post.mobile_clients_and_fluxer_v2.description
@@ -526,7 +526,7 @@ msgstr "Cơ hội nghề nghiệp"
 #: fluxer_marketing/generated:company_and_resources.careers.not_currently_open_notice
 msgctxt "company_and_resources.careers.not_currently_open_notice"
 msgid "These are reference pages, not active job openings."
-msgstr "Đ'y là trang tham khảo, không phải vị trí đang tuyển."
+msgstr "Đây là trang tham khảo, không phải vị trí đang tuyển."
 
 #. Button or link label on the careers and future roles pages. Use clear hiring language, avoid implying that roles are currently open unless the source says so, and preserve placeholders exactly.
 #: fluxer_marketing/generated:company_and_resources.careers.open_positions
@@ -580,14 +580,14 @@ msgstr "Nhận trợ giúp"
 #: fluxer_marketing/generated:company_and_resources.help.help_center
 msgctxt "company_and_resources.help.help_center"
 msgid "Help center"
-msgstr "Trung t'm trợ giúp"
+msgstr "Trung tâm trợ giúp"
 
 #. Body copy for help-center links or descriptions in marketing navigation and resource sections. Preserve {product_name} exactly; keep it service-oriented and concise. Preserve placeholders exactly.
 #: fluxer_marketing/generated:company_and_resources.help.help_center_description
 msgctxt "company_and_resources.help.help_center_description"
 msgid "Find answers to common questions about your account, privacy, and using {product_name}."
 msgstr ""
-"Tìm c'u trả lời cho các c'u hỏi thường gặp về tài khoản, quyền riêng tư và cách sử dụng {product_name} của bạn."
+"Tìm câu trả lời cho các câu hỏi thường gặp về tài khoản, quyền riêng tư và cách sử dụng {product_name} của bạn."
 
 #. Short UI label or heading for help-center links or descriptions in marketing navigation and resource sections. Keep it service-oriented and concise.
 #: fluxer_marketing/generated:company_and_resources.help.label
@@ -617,7 +617,7 @@ msgstr "Bài viết"
 #: fluxer_marketing/generated:company_and_resources.help.back_to_help_center
 msgctxt "company_and_resources.help.back_to_help_center"
 msgid "Back to help center"
-msgstr "Quay lại trung t'm trợ giúp"
+msgstr "Quay lại trung tâm trợ giúp"
 
 #. Section heading on the help center home page. It groups support articles by topic.
 #: fluxer_marketing/generated:company_and_resources.help.browse_by_topic
@@ -701,7 +701,7 @@ msgstr "Đóng góp trên {github}"
 #: fluxer_marketing/generated:company_and_resources.source_and_contribution.fluxer_built_in_open
 msgctxt "company_and_resources.source_and_contribution.fluxer_built_in_open"
 msgid "{product_name} is built in the open. Pick the path that fits how you like to help."
-msgstr "{product_name} được x'y dựng công khai. Chọn con đường phù hợp với cách bạn muốn giúp đỡ."
+msgstr "{product_name} được xây dựng công khai. Chọn con đường phù hợp với cách bạn muốn giúp đỡ."
 
 #. Button or link label in the open-source contribution/get-involved section. Keep the tone welcoming and concrete, and preserve email placeholders exactly.
 #: fluxer_marketing/generated:company_and_resources.source_and_contribution.get_involved
@@ -791,7 +791,7 @@ msgctxt "content.jobs.platform_engineer.description"
 msgid ""
 "Look after the systems {product_name} runs on: pipelines, databases, dashboards, on-call, and the quiet machinery that keeps everything humming."
 msgstr ""
-"Chăm sóc các hệ thống {product_name} chạy trên đó: pipeline, cơ sở dữ liệu, dashboard, trực on-call và phần hạ tầng 'm thầm phía sau."
+"Chăm sóc các hệ thống {product_name} chạy trên đó: pipeline, cơ sở dữ liệu, dashboard, trực on-call và phần hạ tầng âm thầm phía sau."
 
 #. Job title shown on careers pages. Translate as a professional infrastructure/platform engineering role title.
 #: fluxer_marketing/generated:content.jobs.platform_engineer.title
@@ -819,7 +819,7 @@ msgctxt "content.jobs.product_engineer.description"
 msgid ""
 "Build the bits people open {product_name} to use, top to bottom: web, mobile, desktop, and the services behind them."
 msgstr ""
-"X'y dựng những phần người dùng mở {product_name} để sử dụng, từ web, di động, desktop đến các dịch vụ phía sau."
+"Xây dựng những phần người dùng mở {product_name} để sử dụng, từ web, di động, desktop đến các dịch vụ phía sau."
 
 #. Job title shown on careers pages. Translate as a professional product engineering role title.
 #: fluxer_marketing/generated:content.jobs.product_engineer.title
@@ -833,7 +833,7 @@ msgctxt "content.jobs.support_specialist.description"
 msgid ""
 "Be the friendly first reply when someone hits a snag. Help users sort things out and bring the rough edges back to the team to fix."
 msgstr ""
-"Là phản hồi đầu tiên th'n thiện khi ai đó gặp trục trặc. Giúp người dùng giải quyết vấn đề và đưa các điểm còn thô về cho đội ngũ sửa."
+"Là phản hồi đầu tiên thân thiện khi ai đó gặp trục trặc. Giúp người dùng giải quyết vấn đề và đưa các điểm còn thô về cho đội ngũ sửa."
 
 #. Job title shown on careers pages. Translate as a professional customer/user support role title.
 #: fluxer_marketing/generated:content.jobs.support_specialist.title
@@ -847,7 +847,7 @@ msgctxt "content.jobs.trust_and_safety_specialist.description"
 msgid ""
 "Work through abuse reports, make fair calls, and help shape the policies and tooling that keep {product_name} somewhere people want to be."
 msgstr ""
-"Xử lý báo cáo lạm dụng, đưa ra quyết định công bằng và góp phần x'y dựng chính sách cùng công cụ để giữ {product_name} là nơi tử tế."
+"Xử lý báo cáo lạm dụng, đưa ra quyết định công bằng và góp phần xây dựng chính sách cùng công cụ để giữ {product_name} là nơi tử tế."
 
 #. Job title shown on careers pages. Translate as a professional moderation/safety operations role title.
 #: fluxer_marketing/generated:content.jobs.trust_and_safety_specialist.title
@@ -902,7 +902,7 @@ msgctxt "content.policies.privacy.description"
 msgid ""
 "How {product_name} handles personal data, what we do not do with it, and the controls and rights you have."
 msgstr ""
-"Cách {product_name} xử lý dữ liệu cá nh'n, những việc chúng tôi không làm với dữ liệu đó, cùng các quyền và tùy chọn kiểm soát của bạn."
+"Cách {product_name} xử lý dữ liệu cá nhân, những việc chúng tôi không làm với dữ liệu đó, cùng các quyền và tùy chọn kiểm soát của bạn."
 
 #. Policy page title. Translate as a formal privacy policy.
 #: fluxer_marketing/generated:content.policies.privacy.title
@@ -952,13 +952,13 @@ msgstr "Thông tin về gói {premium_tier_full_name} của chúng tôi."
 #: fluxer_marketing/generated:content.help.category.faqs.title
 msgctxt "content.help.category.faqs.title"
 msgid "FAQs"
-msgstr "C'u hỏi thường gặp"
+msgstr "Câu hỏi thường gặp"
 
 #. Help center category summary shown under the FAQs heading. Translate as a short descriptive sentence.
 #: fluxer_marketing/generated:content.help.category.faqs.description
 msgctxt "content.help.category.faqs.description"
 msgid "Answers to frequently asked questions."
-msgstr "Giải đáp các c'u hỏi thường gặp."
+msgstr "Giải đáp các câu hỏi thường gặp."
 
 #. Help center category title for account-management articles. Keep as a short noun phrase.
 #: fluxer_marketing/generated:content.help.category.account.title
@@ -970,7 +970,7 @@ msgstr "Tài khoản"
 #: fluxer_marketing/generated:content.help.category.account.description
 msgctxt "content.help.category.account.description"
 msgid "Managing personal account details."
-msgstr "Quản lý thông tin tài khoản cá nh'n."
+msgstr "Quản lý thông tin tài khoản cá nhân."
 
 #. Help center category title for legal and policy articles. Translate as a compact heading; keep the ampersand only if natural.
 #: fluxer_marketing/generated:content.help.category.legal_policy.title
@@ -1011,6 +1011,20 @@ msgid ""
 "{visionary_tier_full_name} was a limited lifetime {premium_tier_name} offering that sold out in February 2026. Learn about the numbered badge and what {visionary_tier_name} includes."
 msgstr ""
 "{visionary_tier_full_name} là gói {premium_tier_name} trọn đời số lượng giới hạn đã bán hết vào tháng 2 năm 2026. Tìm hiểu về huy hiệu có đánh số và những gì {visionary_tier_name} bao gồm."
+
+#. Help article title listing the three programmes that showcase a community on Fluxer. Keep 'Partner', 'Verified', and 'Discovery' as programme names.
+#: fluxer_marketing/generated:content.help.article.community_programmes.title
+msgctxt "content.help.article.community_programmes.title"
+msgid "Partner, Verified, and Discovery programmes"
+msgstr "Chương trình Đối tác, Xác thực và Khám phá"
+
+#. Help article summary about the Partner, Verified, and Discovery programmes. Preserve placeholders exactly.
+#: fluxer_marketing/generated:content.help.article.community_programmes.description
+msgctxt "content.help.article.community_programmes.description"
+msgid ""
+"The three ways to get your community showcased on {product_name}, what each programme requires, and how to apply."
+msgstr ""
+"Ba cách để giới thiệu cộng đồng của bạn trên {product_name}, yêu cầu của từng chương trình và cách đăng ký."
 
 #. Help article title about how file attachments eventually expire. Keep it as an explanatory phrase.
 #: fluxer_marketing/generated:content.help.article.attachment_expiry.title
@@ -1120,14 +1134,14 @@ msgstr "Cách báo cáo nghi ngờ vi phạm bản quyền hoặc sở hữu tr�
 #: fluxer_marketing/generated:content.help.article.data_retention.title
 msgctxt "content.help.article.data_retention.title"
 msgid "How long {product_name} keeps your information"
-msgstr "{product_name} lưu giữ thông tin của bạn trong bao l'u"
+msgstr "{product_name} lưu giữ thông tin của bạn trong bao lâu"
 
 #. Help article summary about retention durations and reasoning. Keep 'Fluxer' as a brand name. Preserve placeholders exactly.
 #: fluxer_marketing/generated:content.help.article.data_retention.description
 msgctxt "content.help.article.data_retention.description"
 msgid "How long {product_name} retains different types of information and why we keep it."
 msgstr ""
-"{product_name} lưu giữ các loại thông tin khác nhau trong bao l'u và lý do chúng tôi lưu giữ chúng."
+"{product_name} lưu giữ các loại thông tin khác nhau trong bao lâu và lý do chúng tôi lưu giữ chúng."
 
 #. Help article title about EU Digital Services Act dispute options. Keep 'EU DSA' as an acronym.
 #: fluxer_marketing/generated:content.help.article.dsa_dispute_resolution.title
@@ -1301,7 +1315,7 @@ msgstr "Hàng năm"
 #: fluxer_marketing/generated:donations.individual
 msgctxt "donations.individual"
 msgid "Individual"
-msgstr "Cá nh'n"
+msgstr "Cá nhân"
 
 #. Body copy in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
 #: fluxer_marketing/generated:donations.manage.description
@@ -1379,7 +1393,7 @@ msgctxt "donations.support_message"
 msgid ""
 "Help us build an independent communication platform. Your donation funds the platform's infrastructure and development."
 msgstr ""
-"Hãy giúp chúng tôi x'y dựng một nền tảng giao tiếp độc lập. Sự ủng hộ của bạn giúp duy trì hạ tầng và phát triển nền tảng."
+"Hãy giúp chúng tôi xây dựng một nền tảng giao tiếp độc lập. Sự ủng hộ của bạn giúp duy trì hạ tầng và phát triển nền tảng."
 
 #. Instruction text in the desktop Swish donation modal. The user is on a computer and should scan a QR code with the Swish mobile app. Keep it clear and easy to follow. Preserve placeholders exactly.
 #: fluxer_marketing/generated:donations.swish.instructions
@@ -1811,13 +1825,13 @@ msgstr "Tiếng Nga"
 #: fluxer_marketing/generated:languages.list.spanish_latin_america
 msgctxt "languages.list.spanish_latin_america"
 msgid "Spanish (Latin America)"
-msgstr "Tiếng T'y Ban Nha (Mỹ Latinh)"
+msgstr "Tiếng Tây Ban Nha (Mỹ Latinh)"
 
 #. Language name shown in the language picker. Use the target locale's natural name for this language, not a sentence; keep it short.
 #: fluxer_marketing/generated:languages.list.spanish_spain
 msgctxt "languages.list.spanish_spain"
 msgid "Spanish (Spain)"
-msgstr "Tiếng T'y Ban Nha (T'y Ban Nha)"
+msgstr "Tiếng Tây Ban Nha (Tây Ban Nha)"
 
 #. Language name shown in the language picker. Use the target locale's natural name for this language, not a sentence; keep it short.
 #: fluxer_marketing/generated:languages.list.swedish
@@ -1883,13 +1897,13 @@ msgstr "Bản beta công khai"
 #: fluxer_marketing/generated:beta_and_access.try_without_email
 msgctxt "beta_and_access.try_without_email"
 msgid "Try {product_name} without an email in 30 seconds"
-msgstr "Dùng thử {product_name} không cần email trong 30 gi'y"
+msgstr "Dùng thử {product_name} không cần email trong 30 giây"
 
 #. Short UI label or heading in the hero launch/roadmap badges linking to blog content. Keep it short and inviting, and preserve the product-name placeholder exactly.
 #: fluxer_marketing/generated:launch.heading
 msgctxt "launch.heading"
 msgid "The story behind {product_name}"
-msgstr "C'u chuyện về {product_name}"
+msgstr "Câu chuyện về {product_name}"
 
 #. Compact UI label in the hero launch/roadmap badges linking to blog content. Keep it short and inviting, and preserve the product-name placeholder exactly.
 #: fluxer_marketing/generated:launch.view_full_roadmap
@@ -1965,19 +1979,13 @@ msgctxt "navigation.press.press_and_brand_assets"
 msgid "Press and brand assets"
 msgstr "Báo chí và tài sản thương hiệu"
 
-#. Body copy in the partner application section. Preserve {email} and {product_name} exactly; keep the tone professional, creator-friendly, and clear about expectations. Preserve placeholders exactly.
-#: fluxer_marketing/generated:partner_program.apply.instructions_message
-msgctxt "partner_program.apply.instructions_message"
+#. Body copy in the partner application section, pointing readers to the help center guide. Keep the tone professional, creator-friendly, and clear about application expectations.
+#: fluxer_marketing/generated:partner_program.apply.guide_prompt
+msgctxt "partner_program.apply.guide_prompt"
 msgid ""
-"Send us an email at {email} with the following information to apply for the {product_name} partner program."
-msgstr "Gửi email đến {email} kèm thông tin sau để đăng ký chương trình đối tác {product_name}."
-
-#. Body copy on the partner program page. Keep the tone professional, creator-friendly, and clear about application expectations.
-#: fluxer_marketing/generated:partner_program.apply.response_time
-msgctxt "partner_program.apply.response_time"
-msgid ""
-"We are accepting partner applications for when we begin processing them. We aren't replying to applications right now, but we'll reach out as soon as we are."
-msgstr "Hiện tại chúng tôi chưa phản hồi đơn đăng ký, nhưng sẽ liên hệ ngay khi bắt đầu."
+"Our help center guide covers what we look for, what each program includes, and how to send in your application."
+msgstr ""
+"Hướng dẫn trong trung tâm trợ giúp của chúng tôi cho biết chúng tôi tìm kiếm điều gì, mỗi chương trình gồm những gì và cách gửi đơn đăng ký."
 
 #. Button or link label on the partner program page. Keep the tone professional, creator-friendly, and clear about application expectations.
 #: fluxer_marketing/generated:partner_program.become_partner.call_to_action
@@ -1990,12 +1998,6 @@ msgstr "Trở thành đối tác"
 msgctxt "partner_program.become_partner.heading"
 msgid "Become a {product_name} partner"
 msgstr "Trở thành đối tác {product_name}"
-
-#. Button or link label on the partner program page. Keep the tone professional, creator-friendly, and clear about application expectations.
-#: fluxer_marketing/generated:partner_program.become_partner.learn_more
-msgctxt "partner_program.become_partner.learn_more"
-msgid "Learn more"
-msgstr "Tìm hiểu thêm"
 
 #. Compact UI label on the partner program page. Keep the tone professional, creator-friendly, and clear about application expectations.
 #: fluxer_marketing/generated:partner_program.become_partner.ready_prompt
@@ -2033,13 +2035,13 @@ msgstr "Kiếm tiền từ nội dung"
 #: fluxer_marketing/generated:partner_program.perks.custom_vanity_url.description
 msgctxt "partner_program.perks.custom_vanity_url.description"
 msgid "Get an exclusive custom vanity URL like fluxer.gg/yourcommunity."
-msgstr "Nhận URL cá nh'n hóa độc quyền như fluxer.gg/yourcommunity."
+msgstr "Nhận URL cá nhân hóa độc quyền như fluxer.gg/yourcommunity."
 
 #. Short UI label or heading on the partner program perks section. Keep benefits concrete and appealing to creators/community owners; preserve placeholders exactly.
 #: fluxer_marketing/generated:partner_program.perks.custom_vanity_url.label
 msgctxt "partner_program.perks.custom_vanity_url.label"
 msgid "Custom vanity URL"
-msgstr "URL cá nh'n hóa"
+msgstr "URL cá nhân hóa"
 
 #. Body copy on the partner program perks section. Keep benefits concrete and appealing to creators/community owners; preserve placeholders exactly.
 #: fluxer_marketing/generated:partner_program.perks.direct_team_access.description
@@ -2100,7 +2102,7 @@ msgstr "Cộng đồng của bạn sẽ được tăng giới hạn khi cần th
 #: fluxer_marketing/generated:partner_program.perks.increased_limits.label
 msgctxt "partner_program.perks.increased_limits.label"
 msgid "Increased limits"
-msgstr "N'ng cấp giới hạn"
+msgstr "Nâng cấp giới hạn"
 
 #. Body copy on the partner program perks section. Keep benefits concrete and appealing to creators/community owners; preserve placeholders exactly.
 #: fluxer_marketing/generated:partner_program.perks.partner_badge.description
@@ -2131,30 +2133,6 @@ msgstr "Truy cập vào các kênh thoại VIP dành riêng cho cộng đồng �
 msgctxt "partner_program.perks.vip_voice_servers.label"
 msgid "VIP voice channels"
 msgstr "Kênh thoại VIP"
-
-#. Checklist item listing required information for partner applications. Preserve {product_name} exactly; keep it specific and easy to scan.
-#: fluxer_marketing/generated:partner_program.requirements.audience_description
-msgctxt "partner_program.requirements.audience_description"
-msgid "Brief description of your audience and what you do"
-msgstr "Mô tả ngắn gọn về đối tượng và hoạt động của bạn"
-
-#. Body copy listing partner application requirements. Keep it specific and easy to scan. Preserve placeholders exactly.
-#: fluxer_marketing/generated:partner_program.requirements.links_to_content
-msgctxt "partner_program.requirements.links_to_content"
-msgid "Links to your content or community ({youtube}, {twitch}, {discord}, etc.)"
-msgstr "Liên kết đến nội dung hoặc cộng đồng của bạn ({youtube}, {twitch}, {discord}, v.v.)"
-
-#. Short UI label or heading listing partner application requirements. Keep it specific and easy to scan.
-#: fluxer_marketing/generated:partner_program.requirements.name_and_username
-msgctxt "partner_program.requirements.name_and_username"
-msgid "Your name and platform username"
-msgstr "Tên và tên người dùng trên nền tảng của bạn"
-
-#. Checklist item listing required information for partner applications. Preserve {product_name} exactly; keep it specific and easy to scan. Preserve placeholders exactly.
-#: fluxer_marketing/generated:partner_program.requirements.usage_plan
-msgctxt "partner_program.requirements.usage_plan"
-msgid "How you plan to use {product_name} with your community"
-msgstr "Kế hoạch sử dụng {product_name} cho cộng đồng của bạn"
 
 #. Body copy under the partner program hero. Preserve {premium_tier_name} exactly; explain the target audience and benefits without sounding like a paid ad. Preserve placeholders exactly.
 #: fluxer_marketing/generated:partner_program.who_its_for
@@ -2213,13 +2191,13 @@ msgstr ""
 #: fluxer_marketing/generated:platform_support.mobile.install_as_app.done_desktop
 msgctxt "platform_support.mobile.install_as_app.done_desktop"
 msgid "Done! You can now open {product_name} as if it were a regular program."
-msgstr "Hoàn tất! B'y giờ bạn có thể mở {product_name} như một ứng dụng thông thường."
+msgstr "Hoàn tất! Bây giờ bạn có thể mở {product_name} như một ứng dụng thông thường."
 
 #. Body copy for mobile/PWA install guidance on the download page. Keep instructions clear, device-appropriate, and concise; preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.install_as_app.done_mobile
 msgctxt "platform_support.mobile.install_as_app.done_mobile"
 msgid "Done! You can now open {product_name} from your home screen."
-msgstr "Hoàn tất! B'y giờ bạn có thể mở {product_name} từ màn hình chính."
+msgstr "Hoàn tất! Bây giờ bạn có thể mở {product_name} từ màn hình chính."
 
 #. Compact UI label for mobile/PWA install guidance on the download page. Keep instructions clear, device-appropriate, and concise; preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.install_as_app.guides.in_chrome
@@ -2351,7 +2329,7 @@ msgstr "{testflight}"
 #: fluxer_marketing/generated:platform_support.platforms.linux.choose_distribution
 msgctxt "platform_support.platforms.linux.choose_distribution"
 msgid "Choose {linux} distribution"
-msgstr "Chọn bản ph'n phối {linux}"
+msgstr "Chọn bản phân phối {linux}"
 
 #. Short UI label or heading naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.platforms.linux.name
@@ -2603,7 +2581,7 @@ msgstr "Logo đầy đủ bao gồm tên thương hiệu. Sử dụng làm đạ
 #: fluxer_marketing/generated:press_branding.assets.usage_guidance.light_surface_guidance
 msgctxt "press_branding.assets.usage_guidance.light_surface_guidance"
 msgid "For text, icons on light surfaces, and creating depth."
-msgstr "Sử dụng cho chữ, biểu tượng trên bề mặt sáng và tạo độ s'u."
+msgstr "Sử dụng cho chữ, biểu tượng trên bề mặt sáng và tạo độ sâu."
 
 #. Body copy in the press kit and brand asset download area. Keep terminology professional for brand/logo usage guidance; preserve placeholders exactly.
 #: fluxer_marketing/generated:press_branding.assets.usage_guidance.symbol_description
