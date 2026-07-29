@@ -189,25 +189,12 @@ pub fn partners_page(i18n: &MarketingI18n, ctx: &RequestContext) -> Markup {
                             (tr(i18n, ctx, PARTNER_PROGRAM_BECOME_PARTNER_READY_PROMPT_DESCRIPTOR))
                         }
                         p class="body-lg mx-auto mb-8 max-w-3xl text-white/90 md:mb-10" {
-                            @let apply_template = i18n.template(ctx.locale, PARTNER_PROGRAM_APPLY_INSTRUCTIONS_MESSAGE_DESCRIPTOR);
-                            (message_with_links(&apply_template, &[
-                                LinkReplacement {
-                                    variable: "email",
-                                    text: "partners@fluxer.app",
-                                    href: "mailto:partners@fluxer.app",
-                                    class: "text-white underline decoration-white/50 hover:decoration-white",
-                                },
-                            ]))
+                            (tr(i18n, ctx, PARTNER_PROGRAM_APPLY_GUIDE_PROMPT_DESCRIPTOR))
                         }
-                        div class="mb-8 rounded-2xl border border-white/15 bg-white/5 p-6 text-left md:p-8" {
-                            ul class="body space-y-3 text-white/90" {
-                                (requirement_item(i18n, ctx, PARTNER_PROGRAM_REQUIREMENTS_NAME_AND_USERNAME_DESCRIPTOR))
-                                (requirement_item(i18n, ctx, PARTNER_PROGRAM_REQUIREMENTS_LINKS_TO_CONTENT_DESCRIPTOR))
-                                (requirement_item(i18n, ctx, PARTNER_PROGRAM_REQUIREMENTS_AUDIENCE_DESCRIPTION_DESCRIPTOR))
-                                (requirement_item(i18n, ctx, PARTNER_PROGRAM_REQUIREMENTS_USAGE_PLAN_DESCRIPTOR))
-                            }
+                        a class="inline-flex w-fit items-center justify-center gap-2 rounded-full bg-white px-6 py-3 font-semibold text-[#4641D9] shadow-lg transition-opacity hover:opacity-90" href=(ctx.href("/help/community-programmes")) {
+                            (tr(i18n, ctx, PARTNER_PROGRAM_BECOME_PARTNER_CALL_TO_ACTION_DESCRIPTOR))
+                            (icon(Icon::ArrowRight, "h-4 w-4 shrink-0"))
                         }
-                        p class="body-sm text-white/80" { (tr(i18n, ctx, PARTNER_PROGRAM_APPLY_RESPONSE_TIME_DESCRIPTOR)) }
                     }
                 }
             }
@@ -944,19 +931,6 @@ fn partner_perk_card(
             }
             h3 class="title-sm mb-2 text-black" { (tr(i18n, ctx, title)) }
             p class="body text-gray-600" { (tr(i18n, ctx, description)) }
-        }
-    }
-}
-
-fn requirement_item(
-    i18n: &MarketingI18n,
-    ctx: &RequestContext,
-    descriptor: MarketingMessageDescriptor,
-) -> Markup {
-    html! {
-        li class="flex items-start gap-3" {
-            (icon(Icon::Check, "mt-0.5 h-5 w-5 flex-shrink-0 text-white"))
-            span { (tr(i18n, ctx, descriptor)) }
         }
     }
 }

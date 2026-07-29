@@ -539,7 +539,7 @@ export const renderEntrySummary = (args: {
 		findChangeScalar(entry.changes, 'code', i18n) ??
 		getOptionScalar(entry, ['name', 'title', 'code'], i18n) ??
 		null;
-	const namedTarget = changedName ? renderEntityInline(changedName, guildId, i18n) : targetEntity;
+	const namedTarget = changedName ? renderBoldValue(changedName) : targetEntity;
 	const pruneDaysRaw = findChangeNewScalar(entry.changes, 'prune_delete_days', i18n);
 	const pruneDays = pruneDaysRaw ? Number(pruneDaysRaw) : null;
 	const bulkCount = getOptionNumber(entry, ['count', 'delete_count', 'messages', 'message_count'], i18n);

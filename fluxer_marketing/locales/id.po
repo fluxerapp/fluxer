@@ -1021,6 +1021,20 @@ msgid ""
 msgstr ""
 "{visionary_tier_full_name} adalah penawaran {premium_tier_name} seumur hidup dalam jumlah terbatas yang habis terjual pada Februari 2026. Pelajari tentang lencana bernomor dan apa saja yang termasuk dalam {visionary_tier_name}."
 
+#. Help article title listing the three programmes that showcase a community on Fluxer. Keep 'Partner', 'Verified', and 'Discovery' as programme names.
+#: fluxer_marketing/generated:content.help.article.community_programmes.title
+msgctxt "content.help.article.community_programmes.title"
+msgid "Partner, Verified, and Discovery programmes"
+msgstr "Program Mitra, Verifikasi, dan Penemuan"
+
+#. Help article summary about the Partner, Verified, and Discovery programmes. Preserve placeholders exactly.
+#: fluxer_marketing/generated:content.help.article.community_programmes.description
+msgctxt "content.help.article.community_programmes.description"
+msgid ""
+"The three ways to get your community showcased on {product_name}, what each programme requires, and how to apply."
+msgstr ""
+"Tiga cara menampilkan komunitasmu di {product_name}, syarat setiap program, dan cara mendaftar."
+
 #. Help article title about how file attachments eventually expire. Keep it as an explanatory phrase.
 #: fluxer_marketing/generated:content.help.article.attachment_expiry.title
 msgctxt "content.help.article.attachment_expiry.title"
@@ -1973,21 +1987,13 @@ msgctxt "navigation.press.press_and_brand_assets"
 msgid "Press and brand assets"
 msgstr "Aset pers dan merek"
 
-#. Body copy in the partner application section. Preserve {email} and {product_name} exactly; keep the tone professional, creator-friendly, and clear about expectations. Preserve placeholders exactly.
-#: fluxer_marketing/generated:partner_program.apply.instructions_message
-msgctxt "partner_program.apply.instructions_message"
+#. Body copy in the partner application section, pointing readers to the help center guide. Keep the tone professional, creator-friendly, and clear about application expectations.
+#: fluxer_marketing/generated:partner_program.apply.guide_prompt
+msgctxt "partner_program.apply.guide_prompt"
 msgid ""
-"Send us an email at {email} with the following information to apply for the {product_name} partner program."
+"Our help center guide covers what we look for, what each program includes, and how to send in your application."
 msgstr ""
-"Kirim email ke {email} dengan informasi berikut untuk mendaftar program mitra {product_name}."
-
-#. Body copy on the partner program page. Keep the tone professional, creator-friendly, and clear about application expectations.
-#: fluxer_marketing/generated:partner_program.apply.response_time
-msgctxt "partner_program.apply.response_time"
-msgid ""
-"We are accepting partner applications for when we begin processing them. We aren't replying to applications right now, but we'll reach out as soon as we are."
-msgstr ""
-"Kami belum membalas aplikasi saat ini, tetapi kami akan menghubungi Anda segera setelah kami mulai membalas."
+"Panduan di pusat bantuan kami menjelaskan apa yang kami cari, apa isi setiap program, dan cara mengirim pendaftaranmu."
 
 #. Button or link label on the partner program page. Keep the tone professional, creator-friendly, and clear about application expectations.
 #: fluxer_marketing/generated:partner_program.become_partner.call_to_action
@@ -2000,12 +2006,6 @@ msgstr "Jadi mitra"
 msgctxt "partner_program.become_partner.heading"
 msgid "Become a {product_name} partner"
 msgstr "Jadi mitra {product_name}"
-
-#. Button or link label on the partner program page. Keep the tone professional, creator-friendly, and clear about application expectations.
-#: fluxer_marketing/generated:partner_program.become_partner.learn_more
-msgctxt "partner_program.become_partner.learn_more"
-msgid "Learn more"
-msgstr "Pelajari lebih lanjut"
 
 #. Compact UI label on the partner program page. Keep the tone professional, creator-friendly, and clear about application expectations.
 #: fluxer_marketing/generated:partner_program.become_partner.ready_prompt
@@ -2139,30 +2139,6 @@ msgstr "Akses ke kanal suara VIP yang disediakan khusus untuk komunitas mitra."
 msgctxt "partner_program.perks.vip_voice_servers.label"
 msgid "VIP voice channels"
 msgstr "Kanal suara khusus VIP"
-
-#. Checklist item listing required information for partner applications. Preserve {product_name} exactly; keep it specific and easy to scan.
-#: fluxer_marketing/generated:partner_program.requirements.audience_description
-msgctxt "partner_program.requirements.audience_description"
-msgid "Brief description of your audience and what you do"
-msgstr "Deskripsi singkat audiensmu dan apa yang kamu lakukan"
-
-#. Body copy listing partner application requirements. Keep it specific and easy to scan. Preserve placeholders exactly.
-#: fluxer_marketing/generated:partner_program.requirements.links_to_content
-msgctxt "partner_program.requirements.links_to_content"
-msgid "Links to your content or community ({youtube}, {twitch}, {discord}, etc.)"
-msgstr "Tautan ke konten atau komunitasmu ({youtube}, {twitch}, {discord}, dll.)"
-
-#. Short UI label or heading listing partner application requirements. Keep it specific and easy to scan.
-#: fluxer_marketing/generated:partner_program.requirements.name_and_username
-msgctxt "partner_program.requirements.name_and_username"
-msgid "Your name and platform username"
-msgstr "Nama kamu dan username platform"
-
-#. Checklist item listing required information for partner applications. Preserve {product_name} exactly; keep it specific and easy to scan. Preserve placeholders exactly.
-#: fluxer_marketing/generated:partner_program.requirements.usage_plan
-msgctxt "partner_program.requirements.usage_plan"
-msgid "How you plan to use {product_name} with your community"
-msgstr "Cara kamu pakai {product_name} dengan komunitasmu"
 
 #. Body copy under the partner program hero. Preserve {premium_tier_name} exactly; explain the target audience and benefits without sounding like a paid ad. Preserve placeholders exactly.
 #: fluxer_marketing/generated:partner_program.who_its_for

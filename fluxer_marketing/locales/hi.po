@@ -1013,6 +1013,20 @@ msgid ""
 msgstr ""
 "{visionary_tier_full_name} एक सीमित आजीवन {premium_tier_name} ऑफ़र था जो फ़रवरी 2026 में बिक गया। नंबर वाले बैज और {visionary_tier_name} में शामिल सुविधाओं के बारे में जानें।"
 
+#. Help article title listing the three programmes that showcase a community on Fluxer. Keep 'Partner', 'Verified', and 'Discovery' as programme names.
+#: fluxer_marketing/generated:content.help.article.community_programmes.title
+msgctxt "content.help.article.community_programmes.title"
+msgid "Partner, Verified, and Discovery programmes"
+msgstr "पार्टनर, वेरिफिकेशन और डिस्कवरी प्रोग्राम"
+
+#. Help article summary about the Partner, Verified, and Discovery programmes. Preserve placeholders exactly.
+#: fluxer_marketing/generated:content.help.article.community_programmes.description
+msgctxt "content.help.article.community_programmes.description"
+msgid ""
+"The three ways to get your community showcased on {product_name}, what each programme requires, and how to apply."
+msgstr ""
+"{product_name} पर अपनी कम्युनिटी को दिखाने के तीन तरीके, हर प्रोग्राम की शर्तें, और आवेदन कैसे करें."
+
 #. Help article title about how file attachments eventually expire. Keep it as an explanatory phrase.
 #: fluxer_marketing/generated:content.help.article.attachment_expiry.title
 msgctxt "content.help.article.attachment_expiry.title"
@@ -1964,21 +1978,13 @@ msgctxt "navigation.press.press_and_brand_assets"
 msgid "Press and brand assets"
 msgstr "प्रेस और ब्रांड एसेट्स"
 
-#. Body copy in the partner application section. Preserve {email} and {product_name} exactly; keep the tone professional, creator-friendly, and clear about expectations. Preserve placeholders exactly.
-#: fluxer_marketing/generated:partner_program.apply.instructions_message
-msgctxt "partner_program.apply.instructions_message"
+#. Body copy in the partner application section, pointing readers to the help center guide. Keep the tone professional, creator-friendly, and clear about application expectations.
+#: fluxer_marketing/generated:partner_program.apply.guide_prompt
+msgctxt "partner_program.apply.guide_prompt"
 msgid ""
-"Send us an email at {email} with the following information to apply for the {product_name} partner program."
+"Our help center guide covers what we look for, what each program includes, and how to send in your application."
 msgstr ""
-"{product_name} पार्टनर प्रोग्राम के लिए आवेदन करने हेतु निम्नलिखित जानकारी के साथ हमें {email} पर ईमेल भेजें।"
-
-#. Body copy on the partner program page. Keep the tone professional, creator-friendly, and clear about application expectations.
-#: fluxer_marketing/generated:partner_program.apply.response_time
-msgctxt "partner_program.apply.response_time"
-msgid ""
-"We are accepting partner applications for when we begin processing them. We aren't replying to applications right now, but we'll reach out as soon as we are."
-msgstr ""
-"हम अभी आवेदनों का जवाब नहीं दे रहे हैं, लेकिन जैसे ही जवाब देना शुरू करेंगे, हम संपर्क करेंगे।"
+"हमारी सहायता केंद्र गाइड बताती है कि हम क्या देखते हैं, हर प्रोग्राम में क्या शामिल है, और आवेदन कैसे भेजें."
 
 #. Button or link label on the partner program page. Keep the tone professional, creator-friendly, and clear about application expectations.
 #: fluxer_marketing/generated:partner_program.become_partner.call_to_action
@@ -1991,12 +1997,6 @@ msgstr "पार्टनर बनें"
 msgctxt "partner_program.become_partner.heading"
 msgid "Become a {product_name} partner"
 msgstr "{product_name} पार्टनर बनें"
-
-#. Button or link label on the partner program page. Keep the tone professional, creator-friendly, and clear about application expectations.
-#: fluxer_marketing/generated:partner_program.become_partner.learn_more
-msgctxt "partner_program.become_partner.learn_more"
-msgid "Learn more"
-msgstr "और जानें"
 
 #. Compact UI label on the partner program page. Keep the tone professional, creator-friendly, and clear about application expectations.
 #: fluxer_marketing/generated:partner_program.become_partner.ready_prompt
@@ -2130,30 +2130,6 @@ msgstr "पार्टनर कम्युनिटी के लिए व�
 msgctxt "partner_program.perks.vip_voice_servers.label"
 msgid "VIP voice channels"
 msgstr "VIP वॉइस चैनल"
-
-#. Checklist item listing required information for partner applications. Preserve {product_name} exactly; keep it specific and easy to scan.
-#: fluxer_marketing/generated:partner_program.requirements.audience_description
-msgctxt "partner_program.requirements.audience_description"
-msgid "Brief description of your audience and what you do"
-msgstr "आपके ऑडियंस और आपके काम का संक्षिप्त विवरण"
-
-#. Body copy listing partner application requirements. Keep it specific and easy to scan. Preserve placeholders exactly.
-#: fluxer_marketing/generated:partner_program.requirements.links_to_content
-msgctxt "partner_program.requirements.links_to_content"
-msgid "Links to your content or community ({youtube}, {twitch}, {discord}, etc.)"
-msgstr "आपके कंटेंट या कम्युनिटी के लिंक ({youtube}, {twitch}, {discord}, आदि)"
-
-#. Short UI label or heading listing partner application requirements. Keep it specific and easy to scan.
-#: fluxer_marketing/generated:partner_program.requirements.name_and_username
-msgctxt "partner_program.requirements.name_and_username"
-msgid "Your name and platform username"
-msgstr "आपका नाम और प्लेटफॉर्म यूज़रनेम"
-
-#. Checklist item listing required information for partner applications. Preserve {product_name} exactly; keep it specific and easy to scan. Preserve placeholders exactly.
-#: fluxer_marketing/generated:partner_program.requirements.usage_plan
-msgctxt "partner_program.requirements.usage_plan"
-msgid "How you plan to use {product_name} with your community"
-msgstr "आप अपनी कम्युनिटी के साथ {product_name} का उपयोग कैसे करने की योजना बना रहे हैं"
 
 #. Body copy under the partner program hero. Preserve {premium_tier_name} exactly; explain the target audience and benefits without sounding like a paid ad. Preserve placeholders exactly.
 #: fluxer_marketing/generated:partner_program.who_its_for

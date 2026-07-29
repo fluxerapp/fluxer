@@ -1018,6 +1018,20 @@ msgid ""
 msgstr ""
 "Το {visionary_tier_full_name} ήταν μια περιορισμένη ισόβια προσφορά {premium_tier_name} που εξαντλήθηκε τον Φεβρουάριο 2026. Μάθετε για το αριθμημένο σήμα και τι περιλαμβάνει το {visionary_tier_name}."
 
+#. Help article title listing the three programmes that showcase a community on Fluxer. Keep 'Partner', 'Verified', and 'Discovery' as programme names.
+#: fluxer_marketing/generated:content.help.article.community_programmes.title
+msgctxt "content.help.article.community_programmes.title"
+msgid "Partner, Verified, and Discovery programmes"
+msgstr "Τα προγράμματα Συνεργάτες, Επαλήθευση και Ανακάλυψη"
+
+#. Help article summary about the Partner, Verified, and Discovery programmes. Preserve placeholders exactly.
+#: fluxer_marketing/generated:content.help.article.community_programmes.description
+msgctxt "content.help.article.community_programmes.description"
+msgid ""
+"The three ways to get your community showcased on {product_name}, what each programme requires, and how to apply."
+msgstr ""
+"Οι τρεις τρόποι να προβάλεις την κοινότητά σου στο {product_name}, τι απαιτεί κάθε πρόγραμμα και πώς κάνεις αίτηση."
+
 #. Help article title about how file attachments eventually expire. Keep it as an explanatory phrase.
 #: fluxer_marketing/generated:content.help.article.attachment_expiry.title
 msgctxt "content.help.article.attachment_expiry.title"
@@ -1975,21 +1989,13 @@ msgctxt "navigation.press.press_and_brand_assets"
 msgid "Press and brand assets"
 msgstr "Τύπος και στοιχεία επωνυμίας"
 
-#. Body copy in the partner application section. Preserve {email} and {product_name} exactly; keep the tone professional, creator-friendly, and clear about expectations. Preserve placeholders exactly.
-#: fluxer_marketing/generated:partner_program.apply.instructions_message
-msgctxt "partner_program.apply.instructions_message"
+#. Body copy in the partner application section, pointing readers to the help center guide. Keep the tone professional, creator-friendly, and clear about application expectations.
+#: fluxer_marketing/generated:partner_program.apply.guide_prompt
+msgctxt "partner_program.apply.guide_prompt"
 msgid ""
-"Send us an email at {email} with the following information to apply for the {product_name} partner program."
+"Our help center guide covers what we look for, what each program includes, and how to send in your application."
 msgstr ""
-"Στείλε μας ένα email στο {email} με τις ακόλουθες πληροφορίες για να υποβάλεις αίτηση στο πρόγραμμα συνεργατών του {product_name}."
-
-#. Body copy on the partner program page. Keep the tone professional, creator-friendly, and clear about application expectations.
-#: fluxer_marketing/generated:partner_program.apply.response_time
-msgctxt "partner_program.apply.response_time"
-msgid ""
-"We are accepting partner applications for when we begin processing them. We aren't replying to applications right now, but we'll reach out as soon as we are."
-msgstr ""
-"Δεν απαντάμε σε αιτήσεις αυτήν τη στιγμή, αλλά θα επικοινωνήσουμε μαζί σου μόλις ξεκινήσουμε."
+"Ο οδηγός μας στο κέντρο βοήθειας εξηγεί τι αναζητούμε, τι περιλαμβάνει κάθε πρόγραμμα και πώς στέλνεις την αίτησή σου."
 
 #. Button or link label on the partner program page. Keep the tone professional, creator-friendly, and clear about application expectations.
 #: fluxer_marketing/generated:partner_program.become_partner.call_to_action
@@ -2002,12 +2008,6 @@ msgstr "Γίνε συνεργάτης"
 msgctxt "partner_program.become_partner.heading"
 msgid "Become a {product_name} partner"
 msgstr "Γίνε συνεργάτης της {product_name}"
-
-#. Button or link label on the partner program page. Keep the tone professional, creator-friendly, and clear about application expectations.
-#: fluxer_marketing/generated:partner_program.become_partner.learn_more
-msgctxt "partner_program.become_partner.learn_more"
-msgid "Learn more"
-msgstr "Μάθε περισσότερα"
 
 #. Compact UI label on the partner program page. Keep the tone professional, creator-friendly, and clear about application expectations.
 #: fluxer_marketing/generated:partner_program.become_partner.ready_prompt
@@ -2145,31 +2145,6 @@ msgstr ""
 msgctxt "partner_program.perks.vip_voice_servers.label"
 msgid "VIP voice channels"
 msgstr "VIP φωνητικά κανάλια"
-
-#. Checklist item listing required information for partner applications. Preserve {product_name} exactly; keep it specific and easy to scan.
-#: fluxer_marketing/generated:partner_program.requirements.audience_description
-msgctxt "partner_program.requirements.audience_description"
-msgid "Brief description of your audience and what you do"
-msgstr "Σύντομη περιγραφή του κοινού σου και τι κάνεις"
-
-#. Body copy listing partner application requirements. Keep it specific and easy to scan. Preserve placeholders exactly.
-#: fluxer_marketing/generated:partner_program.requirements.links_to_content
-msgctxt "partner_program.requirements.links_to_content"
-msgid "Links to your content or community ({youtube}, {twitch}, {discord}, etc.)"
-msgstr ""
-"Σύνδεσμοι προς το περιεχόμενό σου ή την κοινότητά σου ({youtube}, {twitch}, {discord}, κ.λπ.)"
-
-#. Short UI label or heading listing partner application requirements. Keep it specific and easy to scan.
-#: fluxer_marketing/generated:partner_program.requirements.name_and_username
-msgctxt "partner_program.requirements.name_and_username"
-msgid "Your name and platform username"
-msgstr "Το όνομά σου και το όνομα χρήστη πλατφόρμας"
-
-#. Checklist item listing required information for partner applications. Preserve {product_name} exactly; keep it specific and easy to scan. Preserve placeholders exactly.
-#: fluxer_marketing/generated:partner_program.requirements.usage_plan
-msgctxt "partner_program.requirements.usage_plan"
-msgid "How you plan to use {product_name} with your community"
-msgstr "Πώς θα χρησιμοποιήσεις το {product_name} με την κοινότητά σου"
 
 #. Body copy under the partner program hero. Preserve {premium_tier_name} exactly; explain the target audience and benefits without sounding like a paid ad. Preserve placeholders exactly.
 #: fluxer_marketing/generated:partner_program.who_its_for

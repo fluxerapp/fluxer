@@ -353,6 +353,22 @@ crate::marketing_message!(
 );
 
 crate::marketing_message!(
+    pub const CONTENT_HELP_ARTICLE_COMMUNITY_PROGRAMMES_TITLE_DESCRIPTOR = {
+        key: "content.help.article.community_programmes.title",
+        message: "Partner, Verified, and Discovery programmes",
+        comment: "Help article title listing the three programmes that showcase a community on Fluxer. Keep 'Partner', 'Verified', and 'Discovery' as programme names.",
+    };
+);
+
+crate::marketing_message!(
+    pub const CONTENT_HELP_ARTICLE_COMMUNITY_PROGRAMMES_DESCRIPTION_DESCRIPTOR = {
+        key: "content.help.article.community_programmes.description",
+        message: "The three ways to get your community showcased on {product_name}, what each programme requires, and how to apply.",
+        comment: "Help article summary about the Partner, Verified, and Discovery programmes. Preserve placeholders exactly.",
+    };
+);
+
+crate::marketing_message!(
     pub const CONTENT_HELP_ARTICLE_ATTACHMENT_EXPIRY_TITLE_DESCRIPTOR = {
         key: "content.help.article.attachment_expiry.title",
         message: "How attachment expiry works",

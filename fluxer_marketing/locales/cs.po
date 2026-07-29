@@ -1012,6 +1012,20 @@ msgid ""
 msgstr ""
 "{visionary_tier_full_name} byla omezená doživotní nabídka {premium_tier_name}, která se vyprodala v únoru 2026. Zjistěte více o číslovaném odznaku a o tom, co {visionary_tier_name} zahrnuje."
 
+#. Help article title listing the three programmes that showcase a community on Fluxer. Keep 'Partner', 'Verified', and 'Discovery' as programme names.
+#: fluxer_marketing/generated:content.help.article.community_programmes.title
+msgctxt "content.help.article.community_programmes.title"
+msgid "Partner, Verified, and Discovery programmes"
+msgstr "Programy Partner, Ověření a Objevování"
+
+#. Help article summary about the Partner, Verified, and Discovery programmes. Preserve placeholders exactly.
+#: fluxer_marketing/generated:content.help.article.community_programmes.description
+msgctxt "content.help.article.community_programmes.description"
+msgid ""
+"The three ways to get your community showcased on {product_name}, what each programme requires, and how to apply."
+msgstr ""
+"Tři způsoby, jak zviditelnit svou komunitu na {product_name}, co každý program vyžaduje a jak se přihlásit."
+
 #. Help article title about how file attachments eventually expire. Keep it as an explanatory phrase.
 #: fluxer_marketing/generated:content.help.article.attachment_expiry.title
 msgctxt "content.help.article.attachment_expiry.title"
@@ -1961,20 +1975,13 @@ msgctxt "navigation.press.press_and_brand_assets"
 msgid "Press and brand assets"
 msgstr "Tiskové materiály a materiály značky"
 
-#. Body copy in the partner application section. Preserve {email} and {product_name} exactly; keep the tone professional, creator-friendly, and clear about expectations. Preserve placeholders exactly.
-#: fluxer_marketing/generated:partner_program.apply.instructions_message
-msgctxt "partner_program.apply.instructions_message"
+#. Body copy in the partner application section, pointing readers to the help center guide. Keep the tone professional, creator-friendly, and clear about application expectations.
+#: fluxer_marketing/generated:partner_program.apply.guide_prompt
+msgctxt "partner_program.apply.guide_prompt"
 msgid ""
-"Send us an email at {email} with the following information to apply for the {product_name} partner program."
+"Our help center guide covers what we look for, what each program includes, and how to send in your application."
 msgstr ""
-"Pošli nám e-mail na {email} s následujícími informacemi pro zažádání o partnerský program {product_name}."
-
-#. Body copy on the partner program page. Keep the tone professional, creator-friendly, and clear about application expectations.
-#: fluxer_marketing/generated:partner_program.apply.response_time
-msgctxt "partner_program.apply.response_time"
-msgid ""
-"We are accepting partner applications for when we begin processing them. We aren't replying to applications right now, but we'll reach out as soon as we are."
-msgstr "Na žádosti teď neodpovídáme, ale ozveme se, jakmile začneme."
+"Náš návod v centru nápovědy popisuje, co hledáme, co každý program zahrnuje a jak poslat přihlášku."
 
 #. Button or link label on the partner program page. Keep the tone professional, creator-friendly, and clear about application expectations.
 #: fluxer_marketing/generated:partner_program.become_partner.call_to_action
@@ -1987,12 +1994,6 @@ msgstr "Staň se partnerem"
 msgctxt "partner_program.become_partner.heading"
 msgid "Become a {product_name} partner"
 msgstr "Staň se partnerem {product_name}"
-
-#. Button or link label on the partner program page. Keep the tone professional, creator-friendly, and clear about application expectations.
-#: fluxer_marketing/generated:partner_program.become_partner.learn_more
-msgctxt "partner_program.become_partner.learn_more"
-msgid "Learn more"
-msgstr "Zjistit více"
 
 #. Compact UI label on the partner program page. Keep the tone professional, creator-friendly, and clear about application expectations.
 #: fluxer_marketing/generated:partner_program.become_partner.ready_prompt
@@ -2126,30 +2127,6 @@ msgstr "Přístup k VIP hlasovým kanálům vyhrazeným pouze pro partnerské ko
 msgctxt "partner_program.perks.vip_voice_servers.label"
 msgid "VIP voice channels"
 msgstr "VIP hlasové kanály"
-
-#. Checklist item listing required information for partner applications. Preserve {product_name} exactly; keep it specific and easy to scan.
-#: fluxer_marketing/generated:partner_program.requirements.audience_description
-msgctxt "partner_program.requirements.audience_description"
-msgid "Brief description of your audience and what you do"
-msgstr "Stručný popis tvého publika a toho, co děláš"
-
-#. Body copy listing partner application requirements. Keep it specific and easy to scan. Preserve placeholders exactly.
-#: fluxer_marketing/generated:partner_program.requirements.links_to_content
-msgctxt "partner_program.requirements.links_to_content"
-msgid "Links to your content or community ({youtube}, {twitch}, {discord}, etc.)"
-msgstr "Odkazy na tvůj obsah nebo komunitu ({youtube}, {twitch}, {discord} atd.)"
-
-#. Short UI label or heading listing partner application requirements. Keep it specific and easy to scan.
-#: fluxer_marketing/generated:partner_program.requirements.name_and_username
-msgctxt "partner_program.requirements.name_and_username"
-msgid "Your name and platform username"
-msgstr "Tvé jméno a uživatelské jméno platformy"
-
-#. Checklist item listing required information for partner applications. Preserve {product_name} exactly; keep it specific and easy to scan. Preserve placeholders exactly.
-#: fluxer_marketing/generated:partner_program.requirements.usage_plan
-msgctxt "partner_program.requirements.usage_plan"
-msgid "How you plan to use {product_name} with your community"
-msgstr "Jak plánuješ používat {product_name} pro svou komunitu"
 
 #. Body copy under the partner program hero. Preserve {premium_tier_name} exactly; explain the target audience and benefits without sounding like a paid ad. Preserve placeholders exactly.
 #: fluxer_marketing/generated:partner_program.who_its_for

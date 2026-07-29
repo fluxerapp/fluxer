@@ -1,18 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 crate::marketing_message!(
-    pub const PARTNER_PROGRAM_APPLY_INSTRUCTIONS_MESSAGE_DESCRIPTOR = {
-        key: "partner_program.apply.instructions_message",
-        message: "Send us an email at {email} with the following information to apply for the {product_name} partner program.",
-        comment: "Body copy in the partner application section. Preserve {email} and {product_name} exactly; keep the tone professional, creator-friendly, and clear about expectations. Preserve placeholders exactly.",
-    };
-);
-
-crate::marketing_message!(
-    pub const PARTNER_PROGRAM_APPLY_RESPONSE_TIME_DESCRIPTOR = {
-        key: "partner_program.apply.response_time",
-        message: "We are accepting partner applications for when we begin processing them. We aren't replying to applications right now, but we'll reach out as soon as we are.",
-        comment: "Body copy on the partner program page. Keep the tone professional, creator-friendly, and clear about application expectations.",
+    pub const PARTNER_PROGRAM_APPLY_GUIDE_PROMPT_DESCRIPTOR = {
+        key: "partner_program.apply.guide_prompt",
+        message: "Our help center guide covers what we look for, what each program includes, and how to send in your application.",
+        comment: "Body copy in the partner application section, pointing readers to the help center guide. Keep the tone professional, creator-friendly, and clear about application expectations.",
     };
 );
 
@@ -29,14 +21,6 @@ crate::marketing_message!(
         key: "partner_program.become_partner.heading",
         message: "Become a {product_name} partner",
         comment: "Hero heading on the partner program page. Preserve {product_name} exactly; keep the tone professional and creator-friendly. Preserve placeholders exactly.",
-    };
-);
-
-crate::marketing_message!(
-    pub const PARTNER_PROGRAM_BECOME_PARTNER_LEARN_MORE_DESCRIPTOR = {
-        key: "partner_program.become_partner.learn_more",
-        message: "Learn more",
-        comment: "Button or link label on the partner program page. Keep the tone professional, creator-friendly, and clear about application expectations.",
     };
 );
 
@@ -213,38 +197,6 @@ crate::marketing_message!(
         key: "partner_program.perks.vip_voice_servers.label",
         message: "VIP voice channels",
         comment: "Short UI label or heading on the partner program perks section. Keep benefits concrete and appealing to creators/community owners; preserve placeholders exactly.",
-    };
-);
-
-crate::marketing_message!(
-    pub const PARTNER_PROGRAM_REQUIREMENTS_AUDIENCE_DESCRIPTION_DESCRIPTOR = {
-        key: "partner_program.requirements.audience_description",
-        message: "Brief description of your audience and what you do",
-        comment: "Checklist item listing required information for partner applications. Preserve {product_name} exactly; keep it specific and easy to scan.",
-    };
-);
-
-crate::marketing_message!(
-    pub const PARTNER_PROGRAM_REQUIREMENTS_LINKS_TO_CONTENT_DESCRIPTOR = {
-        key: "partner_program.requirements.links_to_content",
-        message: "Links to your content or community ({youtube}, {twitch}, {discord}, etc.)",
-        comment: "Body copy listing partner application requirements. Keep it specific and easy to scan. Preserve placeholders exactly.",
-    };
-);
-
-crate::marketing_message!(
-    pub const PARTNER_PROGRAM_REQUIREMENTS_NAME_AND_USERNAME_DESCRIPTOR = {
-        key: "partner_program.requirements.name_and_username",
-        message: "Your name and platform username",
-        comment: "Short UI label or heading listing partner application requirements. Keep it specific and easy to scan.",
-    };
-);
-
-crate::marketing_message!(
-    pub const PARTNER_PROGRAM_REQUIREMENTS_USAGE_PLAN_DESCRIPTOR = {
-        key: "partner_program.requirements.usage_plan",
-        message: "How you plan to use {product_name} with your community",
-        comment: "Checklist item listing required information for partner applications. Preserve {product_name} exactly; keep it specific and easy to scan. Preserve placeholders exactly.",
     };
 );
 
