@@ -17,6 +17,7 @@ export const NativeTitlebar: React.FC<NativeTitlebarProps> = ({platform}) => {
 		if (!electronApi?.windowMaximize) return;
 		electronApi.windowMaximize();
 	};
+
 	return (
 		<div
 			role="group"
@@ -29,13 +30,11 @@ export const NativeTitlebar: React.FC<NativeTitlebarProps> = ({platform}) => {
 			<div className={styles.left} data-flx="app.native-titlebar.left">
 				<FluxerWordmark className={styles.wordmark} data-flx="app.native-titlebar.wordmark" />
 				<NativeTitlebarNav 
-					onDoubleClick={event?.preventDefault()} 
 					direction="back" 
 					data-flx="app.native-titlebar.nav"
 				/>
 				<NativeTitlebarNav 
-					onDoubleClick={event?.preventDefault()} 
-					direction="forward" 
+					direction="forward"  
 					data-flx="app.native-titlebar.nav"
 				/>
 			</div>
