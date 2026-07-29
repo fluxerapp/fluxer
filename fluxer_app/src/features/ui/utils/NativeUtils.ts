@@ -49,6 +49,8 @@ export function isCanaryDesktop(): boolean {
 
 export type NativePlatform = 'macos' | 'windows' | 'linux' | 'unknown';
 
+export type NativeTitlebarNavOptions = "back" | "forward"
+
 const normalizePlatform = (platform: string | null | undefined): NativePlatform => {
 	const value = platform?.toLowerCase() ?? '';
 	if (value.startsWith('mac')) return 'macos';
