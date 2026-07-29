@@ -18,3 +18,7 @@
 .button:hover {
     color:white;
 }
+.button:disabled {
+    opacity: 0.35;
+    cursor: default;
+}

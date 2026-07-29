@@ -7,6 +7,7 @@ export interface BrowserNavigationEntry {
 
 export interface BrowserNavigation {
 	canGoBack?: boolean;
+	canGoForward?: boolean;
 	currentEntry?: BrowserNavigationEntry | null;
 	back?: () => unknown;
 	addEventListener(type: string, listener: (event: Event) => void): void;
@@ -25,12 +26,14 @@ function isBrowserNavigation(value: unknown): value is BrowserNavigation {
 		addEventListener?: unknown;
 		back?: unknown;
 		canGoBack?: unknown;
+		canGoForward?: unknown;
 		currentEntry?: unknown;
 		removeEventListener?: unknown;
 	};
 	if (typeof navigation.addEventListener !== 'function') return false;
 	if (navigation.back !== undefined && typeof navigation.back !== 'function') return false;
 	if (navigation.canGoBack !== undefined && typeof navigation.canGoBack !== 'boolean') return false;
+	if (navigation.canGoForward !== undefined && typeof navigation.canGoForward !== 'boolean') return false;
 	if (
 		navigation.currentEntry !== undefined &&
 		navigation.currentEntry !== null &&
