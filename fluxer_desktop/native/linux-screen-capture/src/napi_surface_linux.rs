@@ -24,9 +24,21 @@ use crate::pipewire_stream::{
     daemon_reachable,
 };
 use crate::portal::{self, LiveSession, PortalError, SOURCE_TYPE_WINDOW, StreamInfo};
+use crate::x11_capture::{X11Target, X11VideoStream};
 
 fn generic_error(reason: impl Into<String>) -> napi::Error {
     napi::Error::new(Status::GenericFailure, reason.into())
+}
+
+/// Native screen capture uses xdg-desktop-portal ScreenCast, which is only
+/// usable on Wayland (KDE's portal refuses ScreenCast on X11). On X11 we capture
+/// directly from the X server instead. Treat the session as Wayland only when a
+/// Wayland display is actually present.
+fn is_wayland_session() -> bool {
+    if std::env::var_os("WAYLAND_DISPLAY").is_some_and(|value| !value.is_empty()) {
+        return true;
+    }
+    std::env::var("XDG_SESSION_TYPE").is_ok_and(|value| value.eq_ignore_ascii_case("wayland"))
 }
 
 fn invalid_arg(reason: impl Into<String>) -> napi::Error {
@@ -456,6 +468,7 @@ struct CaptureState {
     session: Option<LiveSession>,
     stream: Option<PipeWireVideoStream>,
     game_stream: Option<GameCaptureVideoStream>,
+    x11_stream: Option<X11VideoStream>,
 }
 
 struct CaptureInner {
@@ -486,6 +499,7 @@ impl ScreenCapture {
                     session: None,
                     stream: None,
                     game_stream: None,
+                    x11_stream: None,
                 }),
                 running: Arc::new(AtomicBool::new(false)),
                 capture_id: Arc::new(Mutex::new(None)),
@@ -636,11 +650,51 @@ impl ScreenCapture {
                 state.session = None;
                 state.stream = None;
                 state.game_stream = Some(game_stream);
+                state.x11_stream = None;
             }
             self.inner.running.store(true, Ordering::Release);
             return Ok(ScreenCaptureStartResult {
                 width,
                 height,
+                frame_rate: effective_fps,
+                pixel_format: "nv12".to_string(),
+            });
+        }
+
+        if !is_wayland_session() {
+            let target = if source_kind == "window" {
+                let xid = parse_source_id(&source_id).ok_or_else(|| {
+                    invalid_arg("ScreenCapture.start window sourceId must be a positive X11 window id")
+                })?;
+                X11Target::Window(xid)
+            } else if let Some(rect) = start_options.capture_rect {
+                // A caller-supplied rectangle (e.g. a single monitor resolved from
+                // its display id) captures exactly that region of the desktop.
+                X11Target::Region {
+                    x: rect.x.round().clamp(i16::MIN as f64, i16::MAX as f64) as i16,
+                    y: rect.y.round().clamp(i16::MIN as f64, i16::MAX as f64) as i16,
+                    width: rect.width,
+                    height: rect.height,
+                }
+            } else {
+                // A monitor index selects a specific display; anything else captures
+                // the whole root window.
+                X11Target::Screen(source_id.parse::<usize>().ok())
+            };
+            let (x11_stream, cap_width, cap_height) =
+                X11VideoStream::open(target, effective_fps, frame_cb, lifecycle_cb)
+                    .map_err(|e| generic_error(format!("X11 screen capture failed: {e}")))?;
+            {
+                let mut state = lock_state(&self.inner)?;
+                state.session = None;
+                state.stream = None;
+                state.game_stream = None;
+                state.x11_stream = Some(x11_stream);
+            }
+            self.inner.running.store(true, Ordering::Release);
+            return Ok(ScreenCaptureStartResult {
+                width: cap_width,
+                height: cap_height,
                 frame_rate: effective_fps,
                 pixel_format: "nv12".to_string(),
             });
@@ -687,6 +741,7 @@ impl ScreenCapture {
             state.session = Some(session);
             state.stream = Some(stream);
             state.game_stream = None;
+            state.x11_stream = None;
         }
         self.inner.running.store(true, Ordering::Release);
 
@@ -717,16 +772,18 @@ impl ScreenCapture {
         if let Ok(mut guard) = self.inner.native_frame_sink.lock() {
             guard.take();
         }
-        let (stream, game_stream, session) = {
+        let (stream, game_stream, x11_stream, session) = {
             let mut state = lock_state(&self.inner)?;
             (
                 state.stream.take(),
                 state.game_stream.take(),
+                state.x11_stream.take(),
                 state.session.take(),
             )
         };
         drop(stream);
         drop(game_stream);
+        drop(x11_stream);
         if let Some(s) = session {
             s.close();
         }
@@ -773,12 +830,18 @@ impl Drop for ScreenCapture {
         if let Ok(mut guard) = self.inner.native_frame_sink.lock() {
             guard.take();
         }
-        let (stream, game_stream, session) = match self.inner.state.lock() {
-            Ok(mut s) => (s.stream.take(), s.game_stream.take(), s.session.take()),
-            Err(_) => (None, None, None),
+        let (stream, game_stream, x11_stream, session) = match self.inner.state.lock() {
+            Ok(mut s) => (
+                s.stream.take(),
+                s.game_stream.take(),
+                s.x11_stream.take(),
+                s.session.take(),
+            ),
+            Err(_) => (None, None, None, None),
         };
         drop(stream);
         drop(game_stream);
+        drop(x11_stream);
         if let Some(s) = session {
             s.close();
         }

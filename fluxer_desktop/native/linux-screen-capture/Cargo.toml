@@ -29,6 +29,7 @@ dcv-color-primitives = "1.0"
 futures-lite = "2.6.1"
 libc = "0.2"
 pipewire = { version = "0.10.0", features = ["v0_3_33"] }
+x11rb = { version = "0.13", features = ["randr"] }
 zbus = "5.16.0"
 
 [dev-dependencies]

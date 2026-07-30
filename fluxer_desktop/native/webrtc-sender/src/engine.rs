@@ -1390,7 +1390,19 @@ impl ScreenFrameSink for BusSenderSink {
     fn enqueue(&self, frame: BusScreenFrame) -> EnqueueOutcome {
         let timestamp_us = frame.timestamp_us();
         let pending = match frame {
-            BusScreenFrame::Nv12(_) | BusScreenFrame::Bgra(_) => return EnqueueOutcome::Rejected,
+            // CPU NV12 frames come from the X11 screen-capture backend (the portal
+            // backend delivers DMABUF/GPU frames instead). Feed them through the
+            // existing software NV12 encode path.
+            BusScreenFrame::Nv12(nv12) => PendingVideoFrame::Nv12 {
+                data: nv12.data.as_slice().to_vec(),
+                width: nv12.width,
+                height: nv12.height,
+                stride_y: nv12.stride_y,
+                stride_uv: nv12.stride_uv,
+                timestamp_us,
+                enqueued_at: Instant::now(),
+            },
+            BusScreenFrame::Bgra(_) => return EnqueueOutcome::Rejected,
             #[cfg(target_os = "macos")]
             BusScreenFrame::MacCvPixelBuffer(mac_frame) => {
                 let raw = mac_frame.into_raw_pixel_buffer();
@@ -1559,6 +1571,35 @@ unsafe extern "C" fn enqueue_native_mac_cv_pixel_buffer(
     )
 }
 
+unsafe extern "C" fn enqueue_native_nv12(
+    context: *const c_void,
+    data: *const u8,
+    data_len: usize,
+    width: u32,
+    height: u32,
+    stride_y: u32,
+    stride_uv: u32,
+    timestamp_us: i64,
+) -> u32 {
+    let Some(sink) = bus_sender_sink_from_context(context) else {
+        return frame_bus::NATIVE_SCREEN_FRAME_SINK_REJECTED;
+    };
+    if data.is_null() || data_len == 0 || data_len > frame_bus::FRAME_DATA_BYTES_CAP {
+        return frame_bus::NATIVE_SCREEN_FRAME_SINK_REJECTED;
+    }
+    let bytes = unsafe { std::slice::from_raw_parts(data, data_len) }.to_vec();
+    NativeScreenFrameSinkHandle::native_outcome(sink.enqueue(BusScreenFrame::Nv12(
+        frame_bus::Nv12Frame {
+            data: frame_bus::FrameData::from_owned(bytes),
+            width,
+            height,
+            stride_y,
+            stride_uv,
+            timestamp_us,
+        },
+    )))
+}
+
 #[cfg(target_os = "linux")]
 unsafe extern "C" fn enqueue_native_dmabuf(
     context: *const c_void,
@@ -1672,7 +1713,7 @@ fn create_native_screen_frame_sink_handle(sink: Arc<BusSenderSink>) -> NativeScr
         retain: retain_bus_sender_sink,
         release: release_bus_sender_sink,
         enqueue_screen_audio: None,
-        enqueue_nv12: None,
+        enqueue_nv12: Some(enqueue_native_nv12),
         enqueue_bgra: None,
         #[cfg(target_os = "macos")]
         enqueue_mac_cv_pixel_buffer: Some(enqueue_native_mac_cv_pixel_buffer),
@@ -6193,7 +6234,9 @@ mod tests {
     }
 
     #[test]
-    fn bus_sender_sink_rejects_copied_nv12_frames() {
+    fn bus_sender_sink_accepts_copied_nv12_frames() {
+        // The X11 screen-capture backend delivers CPU NV12 frames; they must be
+        // accepted and routed through the software NV12 encode path.
         let (sender, _stats) = sender_for_tests();
         let sink = BusSenderSink {
             sender: sender.clone(),
@@ -6209,8 +6252,8 @@ mod tests {
             stride_uv: 8,
             timestamp_us: 1234,
         });
-        assert_eq!(sink.enqueue(frame), EnqueueOutcome::Rejected);
-        assert_eq!(sender.pending.len(), 0);
+        assert_eq!(sink.enqueue(frame), EnqueueOutcome::Accepted);
+        assert_eq!(sender.pending.len(), 1);
     }
 
     #[test]
@@ -6234,7 +6277,7 @@ mod tests {
     }
 
     #[test]
-    fn native_screen_frame_sink_handle_omits_copied_frame_callbacks() {
+    fn native_screen_frame_sink_handle_exposes_nv12_callback() {
         let (sender, _stats) = sender_for_tests();
         let sink = BusSenderSink {
             sender: sender.clone(),
@@ -6244,7 +6287,8 @@ mod tests {
         };
         let handle = create_native_screen_frame_sink_handle(Arc::new(sink));
         assert!(handle.is_valid());
-        assert!(handle.enqueue_nv12.is_none());
+        // CPU NV12 ingestion is wired for the X11 backend; BGRA remains unused.
+        assert!(handle.enqueue_nv12.is_some());
         assert!(handle.enqueue_bgra.is_none());
         assert!(handle.enqueue_screen_audio.is_none());
         unsafe { (handle.release)(handle.context) };

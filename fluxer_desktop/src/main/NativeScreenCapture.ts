@@ -16,7 +16,7 @@ import type {
 	NativeScreenCaptureStartResult,
 	WindowsHagsState,
 } from '@electron/common/Types';
-import {ipcMain} from 'electron';
+import {ipcMain, screen} from 'electron';
 import {getTccStatus} from './MacTcc';
 import {isValidStartOptions, normalizeScreenCaptureDimension} from './NativeScreenCaptureValidation';
 import {createNativeVoiceEngineScreenFrameSinkHandle} from './NativeVoiceEngine';
@@ -815,6 +815,70 @@ async function makeRoomForSenderSession(senderId: number): Promise<void> {
 	}
 }
 
+// On Linux/X11 the native backend captures from the X server. A whole-desktop
+// ("screen") capture would otherwise grab the entire root window spanning every
+// monitor (e.g. 5120x1440 across two displays), which exceeds the encoder's max
+// dimensions and produces a green stream. The renderer passes the Chromium
+// display id as sourceId; resolve it to that monitor's pixel rectangle so the
+// backend captures just the selected monitor. Returns the existing captureRect
+// unchanged on other platforms/source kinds.
+function resolveNativeCaptureRect(
+	options: NativeScreenCaptureStartOptions,
+): NativeScreenCaptureStartOptions['captureRect'] {
+	if (process.platform !== 'linux' || options.sourceKind !== 'screen') {
+		return options.captureRect;
+	}
+	if (options.captureRect) {
+		return options.captureRect;
+	}
+	try {
+		const displays = screen.getAllDisplays();
+		const physical = (display: Electron.Display) => {
+			const scale = display.scaleFactor > 0 ? display.scaleFactor : 1;
+			return {
+				x: Math.round(display.bounds.x * scale),
+				y: Math.round(display.bounds.y * scale),
+				width: Math.round(display.bounds.width * scale),
+				height: Math.round(display.bounds.height * scale),
+			};
+		};
+		// The renderer's sourceId is Chromium's display id, which does not match
+		// Electron's Display.id. Try the id first, then match by the requested
+		// dimensions, and finally fall back to a single monitor so we never capture
+		// the whole (multi-monitor) root, which would exceed the encoder's limits.
+		let match = displays.find((display) => String(display.id) === String(options.sourceId));
+		let how = 'id';
+		if (!match && options.width && options.height) {
+			match = displays.find((display) => {
+				const rect = physical(display);
+				return rect.width === options.width && rect.height === options.height;
+			});
+			how = 'size';
+		}
+		if (!match) {
+			match = displays.find((display) => display.id === screen.getPrimaryDisplay().id) ?? displays[0];
+			how = 'primary-fallback';
+			logger.warn('screen-share sourceId did not map to a display; capturing a single monitor', {
+				sourceId: options.sourceId,
+				requested: {width: options.width, height: options.height},
+				displays: displays.map((display) => ({id: display.id, rect: physical(display)})),
+			});
+		}
+		if (!match) {
+			return options.captureRect;
+		}
+		const rect = physical(match);
+		logger.info('Resolved Linux screen capture rect', {sourceId: options.sourceId, how, rect});
+		return rect;
+	} catch (error) {
+		logger.warn('Failed to resolve Linux screen capture rect from display id', {
+			error,
+			sourceId: options.sourceId,
+		});
+		return options.captureRect;
+	}
+}
+
 async function startNativeScreenCapture(
 	sender: Electron.WebContents,
 	options: NativeScreenCaptureStartOptions,
@@ -857,6 +921,7 @@ async function startNativeScreenCapture(
 	if (!frameSinkHandle) {
 		throw new Error('Native screen capture requires a native frame sink handle, but none is active');
 	}
+	const captureRect = resolveNativeCaptureRect(options);
 	const capture = new loadResult.addon.ScreenCapture({
 		sourceId: options.sourceId,
 		sourceKind: options.sourceKind,
@@ -868,7 +933,7 @@ async function startNativeScreenCapture(
 		colorRange: options.colorRange,
 		colorSpace: options.colorSpace,
 		showCursorClicks: options.showCursorClicks === true,
-		captureRect: options.captureRect,
+		captureRect,
 		nativeFrameSinkRequired: true,
 		frameSinkHandle,
 	});

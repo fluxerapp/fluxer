@@ -19,6 +19,8 @@ pub mod game_capture;
 pub mod pipewire_stream;
 #[cfg(target_os = "linux")]
 pub mod portal;
+#[cfg(target_os = "linux")]
+pub mod x11_capture;
 
 #[cfg(target_os = "linux")]
 mod napi_surface_linux;
