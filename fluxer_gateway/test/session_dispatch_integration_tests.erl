@@ -27,8 +27,17 @@ base_state(Opts) ->
         Opts
     ).
 
-presence_update_with_guild_id_not_buffered_test() ->
-    State0 = base_state(#{}),
+one_to_one_dm_presence_with_attached_guild_id_not_buffered_test() ->
+    State0 = base_state(#{
+        guilds => #{123 => connected},
+        channels => #{
+            100 => #{
+                <<"id">> => <<"100">>,
+                <<"type">> => 1,
+                <<"recipients">> => [#{<<"id">> => <<"2">>}]
+            }
+        }
+    }),
     Presence = #{
         <<"guild_id">> => <<"123">>,
         <<"user">> => #{<<"id">> => <<"2">>},
@@ -38,11 +47,31 @@ presence_update_with_guild_id_not_buffered_test() ->
     ?assertEqual([], maps:get(pending_presences, State1, [])),
     ?assertEqual(1, limited_deque:size(maps:get(buffer, State1))).
 
+one_to_one_dm_presence_with_unattached_guild_id_buffered_test() ->
+    State0 = base_state(#{
+        guilds => #{456 => connected},
+        channels => #{
+            100 => #{
+                <<"id">> => <<"100">>,
+                <<"type">> => 1,
+                <<"recipients">> => [#{<<"id">> => <<"2">>}]
+            }
+        }
+    }),
+    Presence = #{
+        <<"guild_id">> => <<"123">>,
+        <<"user">> => #{<<"id">> => <<"2">>},
+        <<"status">> => <<"idle">>
+    },
+    {noreply, State1} = session_dispatch:handle_dispatch(presence_update, Presence, State0),
+    ?assertEqual(1, pending_presence_count(State1)),
+    ?assertEqual(0, limited_deque:size(maps:get(buffer, State1))).
+
 presence_update_without_guild_id_buffered_for_non_relationship_test() ->
     State0 = base_state(#{}),
     Presence = #{<<"user">> => #{<<"id">> => <<"2">>}, <<"status">> => <<"online">>},
     {noreply, State1} = session_dispatch:handle_dispatch(presence_update, Presence, State0),
-    ?assertEqual(1, length(maps:get(pending_presences, State1, []))),
+    ?assertEqual(1, pending_presence_count(State1)),
     ?assertEqual(0, limited_deque:size(maps:get(buffer, State1))).
 
 presence_update_without_guild_id_not_buffered_for_relationship_test() ->
@@ -56,28 +85,43 @@ presence_update_buffered_for_outgoing_request_relationship_test() ->
     State0 = base_state(#{relationships => #{2 => 4}}),
     Presence = #{<<"user">> => #{<<"id">> => <<"2">>}, <<"status">> => <<"online">>},
     {noreply, State1} = session_dispatch:handle_dispatch(presence_update, Presence, State0),
-    ?assertEqual(1, length(maps:get(pending_presences, State1, []))),
+    ?assertEqual(1, pending_presence_count(State1)),
     ?assertEqual(0, limited_deque:size(maps:get(buffer, State1))).
 
-presence_update_not_buffered_for_incoming_request_test() ->
+presence_update_buffered_for_incoming_request_test() ->
     State0 = base_state(#{relationships => #{2 => 3}}),
     Presence = #{<<"user">> => #{<<"id">> => <<"2">>}, <<"status">> => <<"online">>},
     {noreply, State1} = session_dispatch:handle_dispatch(presence_update, Presence, State0),
-    ?assertEqual([], maps:get(pending_presences, State1, [])),
-    ?assertEqual(1, limited_deque:size(maps:get(buffer, State1))).
+    ?assertEqual(1, pending_presence_count(State1)),
+    ?assertEqual(0, limited_deque:size(maps:get(buffer, State1))).
 
-presence_update_not_buffered_after_relationship_add_test() ->
+relationship_mutations_keep_presence_buffer_valid_test() ->
     State0 = base_state(#{}),
-    Relationship = #{
+    Friend = #{
         <<"id">> => <<"2">>, <<"type">> => 1, <<"user">> => #{<<"id">> => <<"2">>}
     },
     {noreply, State1} = session_dispatch:handle_dispatch(
-        relationship_add, Relationship, State0
+        relationship_add, Friend, State0
     ),
-    Presence = #{<<"user">> => #{<<"id">> => <<"2">>}, <<"status">> => <<"online">>},
-    {noreply, State2} = session_dispatch:handle_dispatch(presence_update, Presence, State1),
+    Online = #{<<"user">> => #{<<"id">> => <<"2">>}, <<"status">> => <<"online">>},
+    {noreply, State2} = session_dispatch:handle_dispatch(presence_update, Online, State1),
     ?assertEqual(0, pending_presence_count(State2)),
-    ?assertEqual(2, limited_deque:size(maps:get(buffer, State2))).
+    Blocked = Friend#{<<"type">> => 2},
+    {noreply, State3} = session_dispatch:handle_dispatch(
+        relationship_update, Blocked, State2
+    ),
+    Offline = Online#{<<"status">> => <<"offline">>},
+    {noreply, State4} = session_dispatch:handle_dispatch(presence_update, Offline, State3),
+    ?assertEqual(1, pending_presence_count(State4)),
+    {noreply, State5} = session_dispatch:handle_dispatch(
+        relationship_add, Friend, State4
+    ),
+    ?assertEqual(0, pending_presence_count(State5)),
+    {noreply, State6} = session_dispatch:handle_dispatch(
+        relationship_remove, #{<<"id">> => <<"2">>}, State5
+    ),
+    {noreply, State7} = session_dispatch:handle_dispatch(presence_update, Offline, State6),
+    ?assertEqual(1, pending_presence_count(State7)).
 
 presence_update_skips_sync_presence_targets_test() ->
     State0 = base_state(#{relationships => #{2 => 1}}),

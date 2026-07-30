@@ -309,7 +309,8 @@ do_handle_info_misc(_Info, State) ->
 
 -spec handle_presence_rejoin_check(session_state()) -> {noreply, session_state()}.
 handle_presence_rejoin_check(State) ->
-    {noreply, session_connection:repair_presence_connection(State)}.
+    RepairedState = session_connection:repair_presence_connection(State),
+    {noreply, session_dispatch_presence:sync_presence_targets(RepairedState)}.
 
 -spec terminate(term(), session_state()) -> ok.
 terminate(Reason, State) ->
