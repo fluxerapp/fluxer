@@ -111,11 +111,10 @@ export class GuildAuditLogService {
 			const group = groups.find((g) => g.logs.includes(log));
 			if (group && group.logs.length >= 2) {
 				if (log === group.logs[0]) {
-					const newestLogId = group.logs.reduce((max, l) => (l.logId > max ? l.logId : max), group.logs[0].logId);
 					for (const groupLog of group.logs) {
 						deletedLogIds.push(groupLog.logId);
 					}
-					const batchedLog = await this.createBatchedMessageDeleteLog(guildId, group, newestLogId);
+					const batchedLog = await this.createBatchedMessageDeleteLog(guildId, group);
 					createdLogs.push(batchedLog);
 					processedLogs.push(batchedLog);
 				}
@@ -183,8 +182,11 @@ export class GuildAuditLogService {
 	private async createBatchedMessageDeleteLog(
 		guildId: GuildID,
 		group: MessageDeleteBatchGroup,
-		logId: bigint,
 	): Promise<GuildAuditLog> {
+		// Must be a fresh id: reusing one of the replaced logs would put a delete and an insert for the same
+		// primary key in one batch, and Cassandra resolves that tie in favour of the tombstone, so the entry
+		// would silently vanish from every table whose key does not include action_type.
+		const logId = await this.snowflakeService.generate();
 		const row: GuildAuditLogRow = {
 			guild_id: guildId,
 			log_id: logId,
