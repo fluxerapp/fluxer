@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use super::{
-    icons::{Icon, icon},
-    tr,
-};
+use super::tr;
 use crate::{
     i18n::{MarketingI18n, descriptors::*},
     request_context::RequestContext,
@@ -14,10 +11,8 @@ pub fn pwa_install_trigger(i18n: &MarketingI18n, ctx: &RequestContext) -> Markup
     html! {
         a
             href="#pwa-modal-backdrop"
-            id="pwa-install-button"
-            class="inline-flex items-center gap-2 rounded-xl bg-[#4641D9] px-5 py-3 font-medium text-sm text-white shadow-md transition-colors hover:bg-[#3832B8]" {
-            (icon(Icon::Devices, "h-5 w-5"))
-            (tr(i18n, ctx, PLATFORM_SUPPORT_MOBILE_INSTALL_AS_APP_TITLE_DESCRIPTOR))
+            class="body-sm text-gray-500 underline decoration-gray-300 underline-offset-2 transition hover:text-[#4641D9]" {
+            (tr(i18n, ctx, PLATFORM_SUPPORT_MOBILE_INSTALL_AS_APP_LINK_DESCRIPTOR))
         }
     }
 }

@@ -25,7 +25,6 @@ pub const BRAND_PLACEHOLDERS: &[(&str, &str)] = &[
     ("testflight", "TestFlight"),
     ("apple_silicon", "Apple Silicon"),
     ("chrome", "Chrome"),
-    ("game_capture", "Game Capture"),
     ("operator_pass", "Operator Pass"),
     ("operators", "Operators"),
     ("bug_hunter", "Bug Hunter"),

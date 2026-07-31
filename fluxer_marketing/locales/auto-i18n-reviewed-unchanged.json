@@ -257,10 +257,6 @@
 				"msgid": "Windows"
 			},
 			{
-				"msgctxt": "platform_support.platforms.windows.standard_build",
-				"msgid": "Standard"
-			},
-			{
 				"msgctxt": "press_branding.assets.label",
 				"msgid": "Logo"
 			},
@@ -357,10 +353,6 @@
 			{
 				"msgctxt": "platform_support.platforms.windows.name",
 				"msgid": "Windows"
-			},
-			{
-				"msgctxt": "platform_support.platforms.windows.standard_build",
-				"msgid": "Standard"
 			},
 			{
 				"msgctxt": "press_branding.assets.label",
@@ -731,10 +723,6 @@
 				"msgid": "Windows"
 			},
 			{
-				"msgctxt": "platform_support.platforms.windows.standard_build",
-				"msgid": "Standard"
-			},
-			{
 				"msgctxt": "press_branding.assets.label",
 				"msgid": "Logo"
 			},
@@ -857,10 +845,6 @@
 				"msgid": "Bluesky"
 			},
 			{
-				"msgctxt": "platform_support.desktop.windows_game_capture_warning.title",
-				"msgid": "{windows} {game_capture} build"
-			},
-			{
 				"msgctxt": "platform_support.platforms.android.min_version",
 				"msgid": "Android 8+"
 			},
@@ -927,10 +911,6 @@
 				"msgid": "Bluesky"
 			},
 			{
-				"msgctxt": "platform_support.desktop.windows_game_capture_warning.title",
-				"msgid": "{windows} {game_capture} build"
-			},
-			{
 				"msgctxt": "platform_support.platforms.android.min_version",
 				"msgid": "Android 8+"
 			},
@@ -977,10 +957,6 @@
 			{
 				"msgctxt": "platform_support.platforms.windows.name",
 				"msgid": "Windows"
-			},
-			{
-				"msgctxt": "platform_support.platforms.windows.standard_build",
-				"msgid": "Standard"
 			},
 			{
 				"msgctxt": "press_branding.colors.blue_da_ba_dee",
@@ -1135,20 +1111,12 @@
 				"msgid": "macOS"
 			},
 			{
-				"msgctxt": "platform_support.platforms.windows.game_capture_build",
-				"msgid": "Game Capture"
-			},
-			{
 				"msgctxt": "platform_support.platforms.windows.min_version",
 				"msgid": "Windows 10+"
 			},
 			{
 				"msgctxt": "platform_support.platforms.windows.name",
 				"msgid": "Windows"
-			},
-			{
-				"msgctxt": "platform_support.platforms.windows.standard_build",
-				"msgid": "Standard"
 			},
 			{
 				"msgctxt": "press_branding.assets.label",
@@ -1399,10 +1367,6 @@
 				"msgid": "Portable"
 			},
 			{
-				"msgctxt": "platform_support.platforms.windows.game_capture_build",
-				"msgid": "Game Capture"
-			},
-			{
 				"msgctxt": "platform_support.platforms.windows.min_version",
 				"msgid": "Windows 10+"
 			},
@@ -1499,10 +1463,6 @@
 			{
 				"msgctxt": "platform_support.platforms.windows.name",
 				"msgid": "Windows"
-			},
-			{
-				"msgctxt": "platform_support.platforms.windows.standard_build",
-				"msgid": "Standard"
 			},
 			{
 				"msgctxt": "press_branding.assets.label",
@@ -1735,10 +1695,6 @@
 				"msgid": "Windows"
 			},
 			{
-				"msgctxt": "platform_support.platforms.windows.standard_build",
-				"msgid": "Standard"
-			},
-			{
 				"msgctxt": "press_branding.assets.label",
 				"msgid": "Logo"
 			},
@@ -1883,10 +1839,6 @@
 				"msgid": "Windows"
 			},
 			{
-				"msgctxt": "platform_support.platforms.windows.standard_build",
-				"msgid": "Standard"
-			},
-			{
 				"msgctxt": "press_branding.assets.symbol_variants.label",
 				"msgid": "Symbol"
 			},
@@ -1949,20 +1901,12 @@
 				"msgid": "macOS"
 			},
 			{
-				"msgctxt": "platform_support.platforms.windows.game_capture_build",
-				"msgid": "Game Capture"
-			},
-			{
 				"msgctxt": "platform_support.platforms.windows.min_version",
 				"msgid": "Windows 10+"
 			},
 			{
 				"msgctxt": "platform_support.platforms.windows.name",
 				"msgid": "Windows"
-			},
-			{
-				"msgctxt": "platform_support.platforms.windows.standard_build",
-				"msgid": "Standard"
 			},
 			{
 				"msgctxt": "press_branding.colors.blue_da_ba_dee",

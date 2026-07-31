@@ -4,17 +4,13 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: fluxer-marketing\n"
-"POT-Creation-Date: 2026-06-16 00:00+0000\n"
-"PO-Revision-Date: 2026-07-08 23:18+0000\n"
+"POT-Creation-Date: 2026-07-31 00:00+0000\n"
+"PO-Revision-Date: 2026-07-31 00:00+0000\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=n != 1;\n"
-"Last-Translator: Hampus <hampus@fluxer.com>\n"
-"Language-Team: German <https://weblate.fluxer.tools/projects/fluxer/"
-"marketing/de/>\n"
-"X-Generator: Weblate 2026.7.dev0\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #. Compact UI label used in the home-page communities/moderation feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.communities.community_support
@@ -400,7 +396,8 @@ msgstr "Wie ich {product_name} gebaut habe, eine Chat-App ähnlich wie {discord}
 msgctxt "blog.post.mobile_clients_and_fluxer_v2.description"
 msgid ""
 "{product_name} v2 is out, mobile clients are open source, self-hosting is improving, and public development is moving back to GitHub."
-msgstr "{product_name} v2 ist da, mobile Clients sind Open Source, Self-Hosting wird verbessert und die öffentliche Entwicklung kehrt zu GitHub zurück."
+msgstr ""
+"{product_name} v2 ist da, mobile Clients sind Open Source, Self-Hosting wird verbessert und die öffentliche Entwicklung kehrt zu GitHub zurück."
 
 #. Blog article title shown in cards, article pages, metadata, and feeds. Keep Fluxer as a product name and v2 as the release name. Preserve placeholders exactly.
 #: fluxer_marketing/generated:blog.post.mobile_clients_and_fluxer_v2.title
@@ -596,8 +593,7 @@ msgstr "Hilfezentrum"
 msgctxt "company_and_resources.help.help_center_description"
 msgid "Find answers to common questions about your account, privacy, and using {product_name}."
 msgstr ""
-"Finde Antworten auf häufige Fragen zu deinem Account, deiner Privatsphäre "
-"und der Nutzung von {product_name}."
+"Finde Antworten auf häufige Fragen zu deinem Account, deiner Privatsphäre und der Nutzung von {product_name}."
 
 #. Short UI label or heading for help-center links or descriptions in marketing navigation and resource sections. Keep it service-oriented and concise.
 #: fluxer_marketing/generated:company_and_resources.help.label
@@ -1115,8 +1111,7 @@ msgctxt "content.help.article.delete_account.description"
 msgid ""
 "How to permanently delete or temporarily disable your {product_name} account, and what happens to your data."
 msgstr ""
-"So löschst du deinen {product_name}-Account dauerhaft oder deaktivierst ihn "
-"vorübergehend, und was mit deinen Daten geschieht."
+"So löschst du deinen {product_name}-Account dauerhaft oder deaktivierst ihn vorübergehend, und was mit deinen Daten geschieht."
 
 #. Help article title about country-specific minimum-age requirements for using the service.
 #: fluxer_marketing/generated:content.help.article.minimum_age.title
@@ -1130,9 +1125,7 @@ msgctxt "content.help.article.minimum_age.description"
 msgid ""
 "The minimum age to use {product_name} by country, how age is determined, and what happens if an account is suspected of being underage."
 msgstr ""
-"Das Mindestalter zur Nutzung von {product_name} nach Land, wie das Alter "
-"ermittelt wird und was passiert, wenn ein Account im Verdacht steht, "
-"minderjährig zu sein."
+"Das Mindestalter zur Nutzung von {product_name} nach Land, wie das Alter ermittelt wird und was passiert, wenn ein Account im Verdacht steht, minderjährig zu sein."
 
 #. Help article title about the copyright/IP complaint process. Keep legal-sounding phrasing.
 #: fluxer_marketing/generated:content.help.article.copyright.title
@@ -1347,8 +1340,7 @@ msgstr ""
 msgctxt "donations.manage.success"
 msgid "If an account exists for that email, you'll receive a management link shortly."
 msgstr ""
-"Wenn für diese E-Mail-Adresse ein Account vorhanden ist, erhältst du in "
-"Kürze einen Verwaltungslink."
+"Wenn für diese E-Mail-Adresse ein Account vorhanden ist, erhältst du in Kürze einen Verwaltungslink."
 
 #. Short UI label or heading in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
 #: fluxer_marketing/generated:donations.manage.title
@@ -2098,8 +2090,7 @@ msgstr "Exklusiver Merch"
 msgctxt "partner_program.perks.free_plutonium.description"
 msgid "Get free {premium_tier_name} for your account to enjoy all premium features."
 msgstr ""
-"Erhalte kostenloses {premium_tier_name} für deinen Account, um alle Premium-"
-"Funktionen zu nutzen."
+"Erhalte kostenloses {premium_tier_name} für deinen Account, um alle Premium-Funktionen zu nutzen."
 
 #. Short UI label or heading on the partner program perks section. Keep benefits concrete and appealing to creators/community owners; preserve placeholders exactly.
 #: fluxer_marketing/generated:partner_program.perks.free_plutonium.label
@@ -2163,18 +2154,21 @@ msgid ""
 msgstr ""
 "Für Creator und Community-Inhaber: kostenloses {premium_tier_name}, ein Partner-Abzeichen, eine benutzerdefinierte Vanity-URL und mehr."
 
-#. Body copy in platform availability and download support copy. Keep wording clear about desktop, web, and mobile status.
-#: fluxer_marketing/generated:platform_support.desktop.available_on_desktop_and_web
-msgctxt "platform_support.desktop.available_on_desktop_and_web"
-msgid "Available on your desktop, and on the web"
-msgstr "Verfügbar auf deinem Desktop und im Web"
-
-#. Download-page meta description and intro copy. Preserve {product_name} exactly; keep platform names conventional and make desktop/mobile availability clear. Preserve placeholders exactly.
-#: fluxer_marketing/generated:platform_support.desktop.download_desktop_intro
-msgctxt "platform_support.desktop.download_desktop_intro"
-msgid "Download {product_name} for {windows}, {macos}, and {linux}. Mobile apps are underway."
+#. Download-page meta description. Preserve {product_name} exactly; keep platform names conventional and make desktop, browser, and public mobile testing availability clear. Preserve placeholders exactly.
+#: fluxer_marketing/generated:platform_support.availability.meta_description
+msgctxt "platform_support.availability.meta_description"
+msgid ""
+"Get {product_name} for your web browser, {windows}, {linux}, and {macos}. {ios} and {android} are in public testing."
 msgstr ""
-"Lade {product_name} für {windows}, {macos} und {linux} herunter. Mobile Apps sind in Arbeit."
+"Holen Sie sich {product_name} für Ihren Webbrowser, {windows}, {linux} und {macos}. {ios} und {android} befinden sich in der öffentlichen Testphase."
+
+#. Intro copy below the download-page heading. Keep platform names conventional and make browser, desktop, and public mobile testing availability clear. Preserve placeholders exactly.
+#: fluxer_marketing/generated:platform_support.availability.summary
+msgctxt "platform_support.availability.summary"
+msgid ""
+"Available in your web browser and on {windows}, {linux}, and {macos}, with {ios} and {android} in public testing."
+msgstr ""
+"Verfügbar in Ihrem Webbrowser und auf {windows}, {linux} und {macos}, mit {ios} und {android} in der öffentlichen Testphase."
 
 #. Alt text for a desktop product screenshot. Preserve {product_name} exactly; describe the image as the desktop interface, not as a download action. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.desktop.interface_label
@@ -2194,19 +2188,13 @@ msgctxt "platform_support.desktop.use_desktop_client_mobile_soon"
 msgid "Use the desktop client (mobile coming soon)"
 msgstr "Nutze den Desktop-Client (Mobile Version bald verfügbar)"
 
-#. Short heading for a callout on the download page about the optional Windows Game Capture build. Preserve Windows Game Capture as a feature name; keep it short. Preserve placeholders exactly.
-#: fluxer_marketing/generated:platform_support.desktop.windows_game_capture_warning.title
-msgctxt "platform_support.desktop.windows_game_capture_warning.title"
-msgid "{windows} {game_capture} build"
-msgstr "{windows} {game_capture}-Build"
-
-#. Body for the Windows Game Capture callout on the download page. Preserve Windows Game Capture and Microsoft Defender as names; make clear only the Game Capture build is affected and the standard build is fine. Preserve placeholders exactly.
-#: fluxer_marketing/generated:platform_support.desktop.windows_game_capture_warning.body
-msgctxt "platform_support.desktop.windows_game_capture_warning.body"
+#. Canary-only notice below the Windows download row. Preserve Microsoft Defender and Windows as names; keep {issue_link} exactly where the linked issue number should appear and make clear the antivirus warning is temporary. Preserve placeholders exactly.
+#: fluxer_marketing/generated:platform_support.desktop.canary_windows_warning
+msgctxt "platform_support.desktop.canary_windows_warning"
 msgid ""
-"The {game_capture} build is not code-signed yet, so {microsoft_defender} may quarantine it until {microsoft} approves it. The standard {windows} build is unaffected."
+"This Canary build may be flagged by {microsoft_defender} or other antivirus software on {windows} for now. See GitHub issue {issue_link} for more details."
 msgstr ""
-"Der {game_capture}-Build ist noch nicht code-signiert, daher kann {microsoft_defender} ihn möglicherweise sperren, bis {microsoft} ihn genehmigt. Der Standard-{windows}-Build ist davon nicht betroffen."
+"Diese Canary-Version wird möglicherweise vorübergehend von {microsoft_defender} oder anderer Antivirensoftware unter {windows} erkannt. Weitere Details findest du in GitHub-Issue {issue_link}."
 
 #. Body copy for mobile/PWA install guidance on the download page. Keep instructions clear, device-appropriate, and concise; preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.install_as_app.done_desktop
@@ -2291,6 +2279,12 @@ msgstr "Tippe auf den Teilen-Button (Rechteck mit Pfeil nach oben)"
 msgctxt "platform_support.mobile.install_as_app.install_fluxer_as_app"
 msgid "Install {product_name} as an app"
 msgstr "{product_name} als App installieren"
+
+#. Secondary text-link label on the download page that opens the PWA installation guide. Keep it short and action-oriented.
+#: fluxer_marketing/generated:platform_support.mobile.install_as_app.link
+msgctxt "platform_support.mobile.install_as_app.link"
+msgid "Installing as an app"
+msgstr "Als App installieren"
 
 #. Short UI label or heading for mobile/PWA install guidance on the download page. Keep instructions clear, device-appropriate, and concise; preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.install_as_app.title
@@ -2400,12 +2394,6 @@ msgctxt "platform_support.platforms.windows.download_label"
 msgid "Download for {windows}"
 msgstr "Download für {windows}"
 
-#. Compact label for a Windows desktop build variant that includes the game capture module. Keep it short and preserve the Game Capture feature name. Preserve placeholders exactly.
-#: fluxer_marketing/generated:platform_support.platforms.windows.game_capture_build
-msgctxt "platform_support.platforms.windows.game_capture_build"
-msgid "{game_capture}"
-msgstr "{game_capture}"
-
 #. Compact UI label naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.platforms.windows.min_version
 msgctxt "platform_support.platforms.windows.min_version"
@@ -2418,29 +2406,11 @@ msgctxt "platform_support.platforms.windows.name"
 msgid "{windows}"
 msgstr "{windows}"
 
-#. Compact label for the default Windows desktop build variant without the game capture module. Keep it short for download menus.
-#: fluxer_marketing/generated:platform_support.platforms.windows.standard_build
-msgctxt "platform_support.platforms.windows.standard_build"
-msgid "Standard"
-msgstr "Standard"
-
 #. Compact UI label for a portable (no-install) desktop build that stores all data next to the executable. Keep it short.
 #: fluxer_marketing/generated:platform_support.platforms.portable
 msgctxt "platform_support.platforms.portable"
 msgid "Portable"
 msgstr "Portabel"
-
-#. Heading for the mobile section on the download page. Preserve {product_name} exactly. Preserve placeholders exactly.
-#: fluxer_marketing/generated:platform_support.mobile.on_mobile.title
-msgctxt "platform_support.mobile.on_mobile.title"
-msgid "{product_name} on the go"
-msgstr "{product_name} für unterwegs"
-
-#. Intro copy under the mobile section heading on the download page. Preserve {product_name} exactly; keep it short. Preserve placeholders exactly.
-#: fluxer_marketing/generated:platform_support.mobile.on_mobile.intro
-msgctxt "platform_support.mobile.on_mobile.intro"
-msgid "Three ways to use {product_name} on your phone right now."
-msgstr "Nutze {product_name} jetzt auf drei Arten auf deinem Handy."
 
 #. Card title for the mobile web app (PWA) option on the download page. Keep it short.
 #: fluxer_marketing/generated:platform_support.mobile.web_app.title
@@ -2448,13 +2418,13 @@ msgctxt "platform_support.mobile.web_app.title"
 msgid "Web app"
 msgstr "Web-App"
 
-#. Body copy for the mobile web app (PWA) card on the download page. Preserve {product_name} exactly; mention that it installs like a Progressive Web App. Preserve placeholders exactly.
+#. Body copy for the web app row on the download page. Preserve {product_name} exactly; mention desktop and mobile browsers and that it installs like a Progressive Web App. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.web_app.body
 msgctxt "platform_support.mobile.web_app.body"
 msgid ""
-"{product_name} runs in any mobile browser and installs to your home screen like a Progressive Web App. It is the most complete way to use {product_name} on a phone today."
+"{product_name} runs in any desktop or mobile web browser, and installs to your home screen or desktop like a Progressive Web App. It is the most complete way to use {product_name} on a phone today."
 msgstr ""
-"{product_name} läuft in jedem mobilen Browser und lässt sich wie eine Progressive Web App auf deinem Homescreen installieren. Es ist die umfassendste Art, {product_name} heute auf einem Handy zu nutzen."
+"{product_name} läuft in jedem Desktop- oder mobilen Webbrowser und lässt sich wie eine Progressive Web App auf Ihrem Startbildschirm oder Desktop installieren. Es ist die vollständigste Methode, {product_name} heute auf einem Telefon zu verwenden."
 
 #. Card title for the iOS app option on the download page. Keep the platform name conventional and short. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.ios.title
@@ -2462,13 +2432,19 @@ msgctxt "platform_support.mobile.ios.title"
 msgid "{ios} app"
 msgstr "{ios}-App"
 
-#. Body copy for the iOS app card on the download page. Preserve {premium_tier_name} exactly; make clear the iOS app is in a limited TestFlight beta with capped slots and that a public release is coming. Do not promise that subscribing grants beta access. Preserve placeholders exactly.
+#. Body copy for the iOS app row on the download page. Make clear that anyone can join through TestFlight and that the web app remains available in Safari. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.ios.body
 msgctxt "platform_support.mobile.ios.body"
 msgid ""
-"As of 15 June 2026, the {ios} app is in a limited {testflight} beta with a small group of {premium_tier_name} subscribers. {testflight} slots are limited, so the best way in for most people is to wait for the public release."
+"The {ios} app is open to everyone through {testflight}. Join the public beta now. The full {product_name} web app also works in Safari and can be added to your Home Screen."
 msgstr ""
-"Ab dem 15. Juni 2026 befindet sich die {ios}-App in einer begrenzten {testflight}-Beta mit einer kleinen Gruppe von {premium_tier_name}-Abonnenten. {testflight}-Slots sind begrenzt, daher ist der beste Weg für die meisten Leute, auf die öffentliche Veröffentlichung zu warten."
+"Die {ios}-App ist über {testflight} für alle offen. Nimm jetzt an der öffentlichen Beta teil. Die vollständige {product_name}-Web-App funktioniert auch in Safari und kann zu deinem Home-Bildschirm hinzugefügt werden."
+
+#. Button label for the public iOS beta on the download page. Preserve TestFlight as a name and keep the action short. Preserve placeholders exactly.
+#: fluxer_marketing/generated:platform_support.mobile.ios.cta
+msgctxt "platform_support.mobile.ios.cta"
+msgid "Join on {testflight}"
+msgstr "Teilnehmen auf {testflight}"
 
 #. Card title for the Android app option on the download page. Keep the platform name conventional and short. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.android.title
@@ -2487,14 +2463,6 @@ msgstr "Installiere das {android}-APK direkt aus unserem Open-Source-Repository 
 msgctxt "platform_support.mobile.android.cta"
 msgid "Download the APK"
 msgstr "APK herunterladen"
-
-#. Disclaimer under the mobile section on the download page. Make clear the native iOS and Android apps are early alphas and may be buggy, while the web app (PWA) is not an alpha. Preserve placeholders exactly.
-#: fluxer_marketing/generated:platform_support.mobile.alpha_disclaimer
-msgctxt "platform_support.mobile.alpha_disclaimer"
-msgid ""
-"The {ios} and {android} apps are early alphas. They may be missing features you expect or still have bugs, and we are working hard to fix that. The web app is not an alpha, and it stays the most complete mobile option for now."
-msgstr ""
-"Die {ios}- und {android}-Apps sind frühe Alpha-Versionen. Ihnen fehlen möglicherweise erwartete Funktionen oder sie enthalten noch Fehler, an denen wir intensiv arbeiten. Die Web-App ist keine Alpha und bleibt vorerst die umfassendste mobile Option."
 
 #. Short UI label or heading in the press kit and brand asset download area. Keep terminology professional for brand/logo usage guidance; preserve placeholders exactly.
 #: fluxer_marketing/generated:press_branding.assets.brand_colors_heading
