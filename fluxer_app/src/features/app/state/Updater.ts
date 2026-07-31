@@ -556,7 +556,7 @@ class Updater {
 		if (this.isNative && this.nativeDownloadInFlight) {
 			return;
 		}
-		if (this.isNative && this.nativeUnsupported?.reason === 'managed-package') {
+		if (this.isNative && this.nativeUnsupported?.reason === 'managed-package' && !this.updateInfo.web.available) {
 			pushUnsupportedUpdateModal('managed-package');
 			return;
 		}
