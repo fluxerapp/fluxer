@@ -560,7 +560,7 @@ class Updater {
 			pushUnsupportedUpdateModal('managed-package');
 			return;
 		}
-		if (this.isNative && this.nativeManualUpdateAvailable) {
+		if (this.isNative && this.nativeManualUpdateAvailable && !this.nativeUnsupported) {
 			this.showManualNativeUpdateModal();
 			return;
 		}
