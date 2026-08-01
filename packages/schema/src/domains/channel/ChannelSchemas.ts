@@ -203,5 +203,6 @@ export interface Channel {
 	readonly content_warning_level?: number;
 	readonly content_warning_text?: string | null;
 	readonly rate_limit_per_user?: number;
+        readonly has_voice_password?: boolean;
 	readonly nicks?: Readonly<Record<string, string>>;
 }

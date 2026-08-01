@@ -109,6 +109,7 @@ function serializeGuildVoiceChannel(channel: Channel, ctx: ContentWarningCtx): C
 		user_limit: channel.userLimit,
 		voice_connection_limit: channel.voiceConnectionLimit,
 		rtc_region: channel.rtcRegion,
+                has_voice_password: channel.voicePassword !== null && channel.voicePassword !== undefined,
 		...serializeContentWarningFields(channel, ctx),
 		rate_limit_per_user: channel.rateLimitPerUser,
 	};

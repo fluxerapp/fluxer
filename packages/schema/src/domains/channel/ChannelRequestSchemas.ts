@@ -125,6 +125,7 @@ const ChannelUpdateCommon = ChannelCommonBase.extend({
 	owner_id: SnowflakeType.nullish().describe('ID of the new owner for group DM channels'),
 	nicks: ChannelNicknameOverrides.optional().describe('Custom nicknames for users in this channel'),
 	rtc_region: createStringType(RTC_REGION_ID_MIN_LENGTH, RTC_REGION_ID_MAX_LENGTH)
+        voice_password: z.string().min(4).max(128).nullish().describe("Password for voice channels"),
 		.nullish()
 		.describe(
 			`Voice region ID for the voice channel (${RTC_REGION_ID_MIN_LENGTH}-${RTC_REGION_ID_MAX_LENGTH} characters)`,
@@ -367,3 +368,8 @@ export const StreamPreviewUploadUrlResponseSchema = z.object({
 });
 
 export type StreamPreviewUploadUrlResponseSchema = z.infer<typeof StreamPreviewUploadUrlResponseSchema>;
+
+export const ValidateVoicePasswordRequest = z.object({
+        password: z.string().min(1).max(128),
+});
+export type ValidateVoicePasswordRequest = z.infer<typeof ValidateVoicePasswordRequest>;

@@ -5,6 +5,7 @@ import {
 	ChannelUpdateRequest,
 	DeleteChannelQuery,
 	PermissionOverwriteCreateRequest,
+        ValidateVoicePasswordRequest,
 } from '@fluxer/schema/src/domains/channel/ChannelRequestSchemas';
 import {
 	ChannelResponse,
@@ -165,6 +166,33 @@ export function ChannelController(app: HonoApp) {
 			);
 		},
 	);
+        app.post(
+                '/channels/:channel_id/voice/validate-password',
+                RateLimitMiddleware(RateLimitConfigs.CHANNEL_UPDATE),
+                LoginRequired,
+                Validator('param', ChannelIdParam),
+                Validator('json', ValidateVoicePasswordRequest),
+                OpenAPI({
+                        operationId: 'validate_voice_channel_password',
+                        summary: 'Validate voice channel password',
+                        description:
+                                'Validates the password before a client joins a password-protected voice channel. Returns 204 on success. Returns 403 VOICE_CHANNEL_PASSWORD_REQUIRED if the channel has a password and none was provided, or 403 VOICE_CHANNEL_PASSWORD_INCORRECT if the password does not match.',
+                        responseSchema: null,
+                        statusCode: 204,
+                        security: ['botToken', 'bearerToken', 'sessionToken'],
+                        tags: 'Channels',
+                }),
+                async (ctx) => {
+                        const userId = ctx.get('user').id;
+                        const channelId = createChannelID(ctx.req.valid('param').channel_id);
+                        const {password} = ctx.req.valid('json');
+                        const requestCache = ctx.get('requestCache');
+                        await ctx
+                                .get('channelService')
+                                .voicePassword.validateVoiceChannelPassword({userId, channelId, password, requestCache});
+                        return ctx.body(null, 204);
+                },
+        );
 	app.delete(
 		'/channels/:channel_id',
 		RateLimitMiddleware(RateLimitConfigs.CHANNEL_DELETE),

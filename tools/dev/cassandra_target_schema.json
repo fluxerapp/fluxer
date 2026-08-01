@@ -3501,7 +3501,11 @@
 					"type": "text"
 				},
 				{
-					"name": "last_message_id",
+					"name": "voice_password",
+					"type": "text"
+				},
+				{
+					"name": "last_message_id"
 					"type": "bigint"
 				},
 				{

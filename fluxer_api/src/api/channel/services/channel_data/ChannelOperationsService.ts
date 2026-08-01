@@ -67,6 +67,7 @@ export interface ChannelUpdateData {
 		deny?: bigint;
 	}> | null;
 	rtc_region?: string | null;
+        voice_password?: string | null;
 	icon?: string | null;
 	owner_id?: bigint | null;
 	nicks?: Record<string, string | null> | null;
@@ -266,6 +267,7 @@ export class ChannelOperationsService {
 			rtc_region:
 				data.rtc_region !== undefined && channel.type === ChannelTypes.GUILD_VOICE
 					? data.rtc_region
+                        voice_password: data.voice_password !== undefined && channel.type === ChannelTypes.GUILD_VOICE ? data.voice_password : channel.voicePassword,
 					: channel.rtcRegion,
 			permission_overwrites: new Map(
 				Array.from(permissionOverwrites.entries()).map(([targetId, overwrite]) => [

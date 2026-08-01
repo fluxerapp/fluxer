@@ -34,6 +34,7 @@ import {MessageInteractionService} from './MessageInteractionService';
 import {MessageService} from './MessageService';
 import {MessagePersistenceService} from './message/MessagePersistenceService';
 import {UserMessageDeletionService} from './message/UserMessageDeletionService';
+import {VoicePasswordService} from './VoicePasswordService';
 
 interface SlowmodeState {
 	rateLimitPerUser: number;
@@ -48,6 +49,7 @@ export class ChannelService {
 	public readonly interactions: MessageInteractionService;
 	public readonly attachments: AttachmentUploadService;
 	public readonly groupDms: GroupDmOperationsService;
+        public readonly voicePassword: VoicePasswordService;
 	public readonly calls: CallService;
 	public readonly userMessageDeletion: UserMessageDeletionService;
 	private readonly rateLimitService: IRateLimitService;
@@ -174,6 +176,7 @@ export class ChannelService {
 			snowflakeService,
 			this.messages.persistence,
 			limitConfigService,
+                this.voicePassword = new VoicePasswordService(this.channelData);
 		);
 		this.calls = new CallService(
 			channelRepository,

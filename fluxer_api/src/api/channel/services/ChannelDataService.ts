@@ -176,6 +176,9 @@ export class ChannelDataService {
 		if (guildChannelData.nicks !== undefined) {
 			channelUpdateData.nicks = guildChannelData.nicks ?? null;
 		}
+                if (guildChannelData.voice_password !== undefined) {
+                        channelUpdateData.voice_password = guildChannelData.voice_password ?? null;
+                }
 		return this.operations.editChannel({
 			userId,
 			channelId,
