@@ -445,6 +445,10 @@
 			{
 				"msgctxt": "content.help.category.premium.description",
 				"msgid": "Information about our {premium_tier_full_name} offering."
+			},
+			{
+				"msgctxt": "platform_support.mobile.ios.body",
+				"msgid": "The {ios} app on {testflight} is currently limited to {premium_tier_full_name} members. Public access is coming soon. The full {product_name} web app also works in Safari and can be added to your Home Screen."
 			}
 		],
 		"es-419": [

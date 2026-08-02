@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: fluxer-marketing\n"
-"POT-Creation-Date: 2026-07-31 00:00+0000\n"
-"PO-Revision-Date: 2026-07-31 00:00+0000\n"
+"POT-Creation-Date: 2026-08-02 00:00+0000\n"
+"PO-Revision-Date: 2026-08-02 00:00+0000\n"
 "Language: fr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -2434,19 +2434,12 @@ msgctxt "platform_support.mobile.ios.title"
 msgid "{ios} app"
 msgstr "Application {ios}"
 
-#. Body copy for the iOS app row on the download page. Make clear that anyone can join through TestFlight and that the web app remains available in Safari. Preserve placeholders exactly.
+#. Body copy for the iOS app row on the download page. Make clear that TestFlight access is currently limited to Fluxer Plutonium members, that public access is coming soon, and that the web app remains available in Safari. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.ios.body
 msgctxt "platform_support.mobile.ios.body"
 msgid ""
-"The {ios} app is open to everyone through {testflight}. Join the public beta now. The full {product_name} web app also works in Safari and can be added to your Home Screen."
-msgstr ""
-"L'application {ios} est ouverte à tous via {testflight}. Rejoignez la bêta publique dès maintenant. L'application web complète {product_name} fonctionne également dans Safari et peut être ajoutée à votre écran d'accueil."
-
-#. Button label for the public iOS beta on the download page. Preserve TestFlight as a name and keep the action short. Preserve placeholders exactly.
-#: fluxer_marketing/generated:platform_support.mobile.ios.cta
-msgctxt "platform_support.mobile.ios.cta"
-msgid "Join on {testflight}"
-msgstr "Rejoindre sur {testflight}"
+"The {ios} app on {testflight} is currently limited to {premium_tier_full_name} members. Public access is coming soon. The full {product_name} web app also works in Safari and can be added to your Home Screen."
+msgstr "L'application {ios} sur {testflight} est actuellement réservée aux membres {premium_tier_full_name}. L'accès public sera bientôt disponible. L'application web complète {product_name} fonctionne également dans Safari et peut être ajoutée à votre écran d'accueil."
 
 #. Card title for the Android app option on the download page. Keep the platform name conventional and short. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.android.title

@@ -363,16 +363,8 @@ crate::marketing_message!(
 crate::marketing_message!(
     pub const PLATFORM_SUPPORT_MOBILE_IOS_BODY_DESCRIPTOR = {
         key: "platform_support.mobile.ios.body",
-        message: "The {ios} app is open to everyone through {testflight}. Join the public beta now. The full {product_name} web app also works in Safari and can be added to your Home Screen.",
-        comment: "Body copy for the iOS app row on the download page. Make clear that anyone can join through TestFlight and that the web app remains available in Safari. Preserve placeholders exactly.",
-    };
-);
-
-crate::marketing_message!(
-    pub const PLATFORM_SUPPORT_MOBILE_IOS_CTA_DESCRIPTOR = {
-        key: "platform_support.mobile.ios.cta",
-        message: "Join on {testflight}",
-        comment: "Button label for the public iOS beta on the download page. Preserve TestFlight as a name and keep the action short. Preserve placeholders exactly.",
+        message: "The {ios} app on {testflight} is currently limited to {premium_tier_full_name} members. Public access is coming soon. The full {product_name} web app also works in Safari and can be added to your Home Screen.",
+        comment: "Body copy for the iOS app row on the download page. Make clear that TestFlight access is currently limited to Fluxer Plutonium members, that public access is coming soon, and that the web app remains available in Safari. Preserve placeholders exactly.",
     };
 );
 

@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: fluxer-marketing\n"
-"POT-Creation-Date: 2026-07-31 00:00+0000\n"
-"PO-Revision-Date: 2026-07-31 00:00+0000\n"
+"POT-Creation-Date: 2026-08-02 00:00+0000\n"
+"PO-Revision-Date: 2026-08-02 00:00+0000\n"
 "Language: ja\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -2382,19 +2382,12 @@ msgctxt "platform_support.mobile.ios.title"
 msgid "{ios} app"
 msgstr "{ios} アプリ"
 
-#. Body copy for the iOS app row on the download page. Make clear that anyone can join through TestFlight and that the web app remains available in Safari. Preserve placeholders exactly.
+#. Body copy for the iOS app row on the download page. Make clear that TestFlight access is currently limited to Fluxer Plutonium members, that public access is coming soon, and that the web app remains available in Safari. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.ios.body
 msgctxt "platform_support.mobile.ios.body"
 msgid ""
-"The {ios} app is open to everyone through {testflight}. Join the public beta now. The full {product_name} web app also works in Safari and can be added to your Home Screen."
-msgstr ""
-"{ios}アプリは{testflight}を通じてどなたでもご利用いただけます。今すぐパブリックベータ版に参加しましょう。また、完全版の{product_name}ウェブアプリはSafariでも動作し、ホーム画面に追加することもできます。"
-
-#. Button label for the public iOS beta on the download page. Preserve TestFlight as a name and keep the action short. Preserve placeholders exactly.
-#: fluxer_marketing/generated:platform_support.mobile.ios.cta
-msgctxt "platform_support.mobile.ios.cta"
-msgid "Join on {testflight}"
-msgstr "{testflight}で参加"
+"The {ios} app on {testflight} is currently limited to {premium_tier_full_name} members. Public access is coming soon. The full {product_name} web app also works in Safari and can be added to your Home Screen."
+msgstr "{ios}アプリの{testflight}版は、現在{premium_tier_full_name}メンバー限定です。一般公開は近日公開予定です。Safariで利用できる{product_name}のWebアプリ版も、ホーム画面に追加できます。"
 
 #. Card title for the Android app option on the download page. Keep the platform name conventional and short. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.android.title

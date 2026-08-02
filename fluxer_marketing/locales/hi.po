@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: fluxer-marketing\n"
-"POT-Creation-Date: 2026-07-31 00:00+0000\n"
-"PO-Revision-Date: 2026-07-31 00:00+0000\n"
+"POT-Creation-Date: 2026-08-02 00:00+0000\n"
+"PO-Revision-Date: 2026-08-02 00:00+0000\n"
 "Language: hi\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -2418,19 +2418,12 @@ msgctxt "platform_support.mobile.ios.title"
 msgid "{ios} app"
 msgstr "{ios} ऐप"
 
-#. Body copy for the iOS app row on the download page. Make clear that anyone can join through TestFlight and that the web app remains available in Safari. Preserve placeholders exactly.
+#. Body copy for the iOS app row on the download page. Make clear that TestFlight access is currently limited to Fluxer Plutonium members, that public access is coming soon, and that the web app remains available in Safari. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.ios.body
 msgctxt "platform_support.mobile.ios.body"
 msgid ""
-"The {ios} app is open to everyone through {testflight}. Join the public beta now. The full {product_name} web app also works in Safari and can be added to your Home Screen."
-msgstr ""
-"{ios} ऐप {testflight} के माध्यम से सभी के लिए खुला है। अभी पब्लिक बीटा में शामिल हों। पूरा {product_name} वेब ऐप सफारी में भी काम करता है और इसे आपकी होम स्क्रीन में जोड़ा जा सकता है।"
-
-#. Button label for the public iOS beta on the download page. Preserve TestFlight as a name and keep the action short. Preserve placeholders exactly.
-#: fluxer_marketing/generated:platform_support.mobile.ios.cta
-msgctxt "platform_support.mobile.ios.cta"
-msgid "Join on {testflight}"
-msgstr "{testflight} पर शामिल हों"
+"The {ios} app on {testflight} is currently limited to {premium_tier_full_name} members. Public access is coming soon. The full {product_name} web app also works in Safari and can be added to your Home Screen."
+msgstr "{ios} ऐप {testflight} पर अभी केवल {premium_tier_full_name} सदस्यों के लिए उपलब्ध है। जल्द ही यह सभी के लिए उपलब्ध होगा। पूरा {product_name} वेब ऐप सफारी में भी काम करता है और इसे आपकी होम स्क्रीन पर जोड़ा जा सकता है।"
 
 #. Card title for the Android app option on the download page. Keep the platform name conventional and short. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.android.title

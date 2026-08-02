@@ -1838,9 +1838,6 @@ fn mobile_download_row(
             },
             details: html! {},
             actions: html! {
-                a class="inline-flex w-full items-center justify-center rounded-xl bg-[#4641D9] px-5 py-3 font-semibold text-sm text-white shadow-md transition hover:bg-[#3832B8] sm:w-auto" href="https://testflight.apple.com/join/PKZR6pK9" target="_blank" rel="noopener noreferrer" {
-                    (tr(i18n, ctx, PLATFORM_SUPPORT_MOBILE_IOS_CTA_DESCRIPTOR))
-                }
                 div class="flex flex-wrap items-center gap-x-3 gap-y-1 md:justify-end" {
                     span class="body-sm text-gray-500" { (tr(i18n, ctx, DOWNLOAD_OTHER_DOWNLOADS_DESCRIPTOR)) }
                     a class="body-sm text-gray-600 underline decoration-gray-300 underline-offset-2 transition hover:text-[#4641D9]" href=(ctx.app_url("/channels/@me")) {
