@@ -58,22 +58,32 @@ function getSchemaName(schema: ZodTypeAny): string | undefined {
 function isSchemaOptional(schema: ZodTypeAny, depth = 0): boolean {
 	if (depth > 10) return false;
 	const typeName = getZodTypeName(schema);
-	if (typeName === 'ZodOptional' || typeName === 'optional') {
+
+	if (typeName === 'ZodOptional' || typeName === 'optional' || typeName === 'ZodDefault' || typeName === 'default') {
 		return true;
 	}
-	if (typeName === 'ZodDefault' || typeName === 'default') {
-		return true;
-	}
-	if (typeName === 'ZodNullable' || typeName === 'nullable') {
+	if (typeName === 'ZodNullable' || typeName === 'nullable' || typeName === 'ZodEffects' || typeName === 'effect') {
 		const inner = getInnerType(schema);
 		if (inner) {
 			return isSchemaOptional(inner, depth + 1);
 		}
 	}
-	if (typeName === 'ZodEffects' || typeName === 'effect' || typeName === 'ZodPipeline' || typeName === 'pipe') {
-		const inner = getInnerType(schema);
+	if (typeName === 'ZodPipeline' || typeName === 'pipe') {
+		const schemaDef = getZodDefinition(schema);
+		const {out: outer, in: inner} = schemaDef;
 		if (inner) {
-			return isSchemaOptional(inner, depth + 1);
+			const innerTypeName = getZodTypeName(inner);
+			if (innerTypeName === 'ZodTransform' || innerTypeName === 'transform') {
+				const {transform: transformFunc} = getZodDefinition(inner);
+
+				// if the transformed schema ("outer") is optional OR the transform function explicitly handles the `undefined` input
+				return (
+					(outer !== undefined && isSchemaOptional(outer, depth + 1)) ||
+					(transformFunc !== undefined && transformFunc(undefined) !== undefined)
+				);
+			} else {
+				return isSchemaOptional(inner, depth + 1);
+			}
 		}
 	}
 	return false;
@@ -461,8 +471,7 @@ export function zodToOpenAPISchema(schema: ZodTypeAny, depth = 0): OpenAPISchema
 				return {type: 'object'};
 			}
 			const objectAnnotation = parseFluxerTypeAnnotation(getDescription(schema));
-			const namedObjectName =
-				objectAnnotation?.typeName === 'NamedObject' ? objectAnnotation.objectName : undefined;
+			const namedObjectName = objectAnnotation?.typeName === 'NamedObject' ? objectAnnotation.objectName : undefined;
 			if (namedObjectName && depth > 0 && namedObjectRegistry.has(namedObjectName)) {
 				return makeNamedObjectRef(namedObjectName, objectAnnotation?.fieldDescription);
 			}

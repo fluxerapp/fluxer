@@ -31532,8 +31532,7 @@
 						"anyOf": [{"type": "string"}, {"type": "null"}],
 						"description": "The voice connection ID for the member"
 					}
-				},
-				"required": ["nick", "communication_disabled_until"]
+				}
 			},
 			"GuildRoleCreateRequest": {
 				"type": "object",
