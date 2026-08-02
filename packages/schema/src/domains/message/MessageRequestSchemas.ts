@@ -101,7 +101,6 @@ export const RichEmbedRequest = z.object({
 	timestamp: DateTimeType.nullish().describe('ISO8601 timestamp for the embed'),
 	description: z
 		.preprocess(omitEmptyString, createStringType(1, RICH_EMBED_DESCRIPTION_MAX_LENGTH).nullish())
-		.optional()
 		.describe(`Description of the embed (1-${RICH_EMBED_DESCRIPTION_MAX_LENGTH} characters)`),
 	author: RichEmbedAuthorRequest.nullish().describe('Author information'),
 	image: RichEmbedMediaRequest.nullish().describe('Image to display in the embed'),
