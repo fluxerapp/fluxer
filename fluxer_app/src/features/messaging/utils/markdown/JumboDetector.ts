@@ -22,13 +22,15 @@ export function shouldRenderAsJumboEmojis(nodes: ReadonlyArray<Node>): boolean {
 		if (node.type !== NodeType.Text) {
 			return false;
 		}
-		const content = (node as TextNode).content;
-		if (UnicodeEmojis.EMOJI_NAME_RE.test(content)) {
+		let remaining = (node as TextNode).content;
+		let nameMatch = UnicodeEmojis.EMOJI_NAME_RE.exec(remaining);
+		while (nameMatch) {
 			emojiCount++;
 			if (emojiCount > MAX_JUMBO_EMOJI_COUNT) return false;
-			continue;
+			remaining = remaining.slice(nameMatch[0].length).trimStart();
+			nameMatch = UnicodeEmojis.EMOJI_NAME_RE.exec(remaining);
 		}
-		if (content.trim() !== '') return false;
+		if (remaining.trim() !== '') return false;
 	}
 	return emojiCount > 0;
 }
