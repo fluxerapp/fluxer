@@ -28,19 +28,19 @@ export const SplashScreen = observer(() => {
 	const shouldBypass = DeveloperOptions.bypassSplashScreen;
 	const interrupted = GatewayConnection.isConnectionInterrupted;
 	const isInitialized = Initialization.canNavigateToProtectedRoutes;
+	const isReady = !interrupted && isInitialized;
 	const [hasTimedOut, setHasTimedOut] = useState(false);
 
 	useEffect(() => {
-		const timer = setTimeout(() => {
-			setHasTimedOut(true);
-		}, FORCE_DISMISS_TIMEOUT_MS);
-
+		if (!isReady) {
+			setHasTimedOut(false);
+			return;
+		}
+		const timer = setTimeout(() => setHasTimedOut(true), FORCE_DISMISS_TIMEOUT_MS);
 		return () => clearTimeout(timer);
-	}, []);
+	}, [isReady]);
 
-	const isReady = (!interrupted && isInitialized) || hasTimedOut;
-
-	if (shouldBypass) return null;
+	if (shouldBypass || hasTimedOut) return null;
 	return (
 		<AnimatePresence initial={false} data-flx="app.splash-screen.animate-presence">
 			{!isReady && <SplashScreenContent mode="live" data-flx="app.splash-screen.splash-screen-content" />}
