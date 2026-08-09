@@ -80,6 +80,7 @@ export function useSplashQuotes(): ReadonlyArray<SplashQuote> {
 			{text: 'Pong!', source: 'Cookie'},
 			{text: "Every day I'm fluxin' it.", source: 'Liminalis'},
 			{text: 'I am the word', source: 'Bird'},
+			{text: 'Back in my day, we had Skype... and Fluxer.', source: 'Stormzady'},
 		];
 		quotes.push({
 			text: `Your odds of landing on this particular loading quote were 1 in ${String(quotes.length + 1)}.`,
