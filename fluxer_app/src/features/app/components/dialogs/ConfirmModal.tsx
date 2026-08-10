@@ -94,6 +94,7 @@ export const ConfirmModal = observer(
 				isEditing: false,
 				isHighlight: false,
 				disableContextMenu: true,
+				disableDoubleClick: true,
 				disableContextMenuTracking: true,
 				contextMenuOpen: false,
 			}),

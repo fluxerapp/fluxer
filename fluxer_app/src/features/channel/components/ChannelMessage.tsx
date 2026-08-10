@@ -271,6 +271,7 @@ export type MessageBehaviorOverrides = Partial<{
 	contextMenuOpen: boolean;
 	disableContextMenu: boolean;
 	disableContextMenuTracking: boolean;
+	disableDoubleClick: boolean;
 }>;
 
 interface MessageProps {
@@ -339,6 +340,7 @@ export const Message: React.FC<MessageProps> = observer((props) => {
 		behaviorOverrides?.forceUnknownMessageType ?? DeveloperOptions.forceUnknownMessageType;
 	const messageGroupSpacing =
 		behaviorOverrides?.messageGroupSpacing ?? Accessibility.getMessageGroupSpacingValue(messageDisplayCompact);
+	const disableDoubleClick = behaviorOverrides?.disableDoubleClick ?? !Accessibility.doubleClickMessageActions;
 	const authorName =
 		previewOverrides?.displayName || NicknameUtils.getNickname(message.author, channel.guildId, channel.id);
 	const messageAriaLabel = useMemo(() => {
@@ -393,6 +395,10 @@ export const Message: React.FC<MessageProps> = observer((props) => {
 	);
 	const handleDoubleClick = useCallback(
 		(event: React.MouseEvent) => {
+			if (disableDoubleClick) {
+				event.preventDefault();
+				return;
+			}
 			if (
 				(previewContext && previewContext !== MessagePreviewContext.LIST_POPOUT) ||
 				message.state === MessageStates.SENDING ||
