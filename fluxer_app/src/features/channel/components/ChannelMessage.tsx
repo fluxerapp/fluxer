@@ -6,6 +6,7 @@ import {isMediaOnlyEmbed} from '@app/features/channel/components/embeds/EmbedRen
 import {MessageActionBar, MessageActionBarCore} from '@app/features/channel/components/MessageActionBar';
 import {MessageActionBottomSheet} from '@app/features/channel/components/MessageActionBottomSheet';
 import {
+	getMessagePermissions,
 	requestDeleteMessage,
 	requestMessageReply,
 	startMessageEdit,
@@ -399,16 +400,16 @@ export const Message: React.FC<MessageProps> = observer((props) => {
 			)
 				return;
 
+			const permission = getMessagePermissions(message, channel);
+			if (!permission?.canSendMessages) return;
 			event.preventDefault();
-			if (mobileLayoutEnabled) return;
-
-			if (message.isUserMessage()) {
+			if (permission?.canEditMessage && message.isCurrentUserAuthor()) {
 				startMessageEdit(message);
 				return;
 			}
 			if (!isReplying) requestMessageReply(message);
 		},
-		[previewContext, message, channel, isEditing, mobileLayoutEnabled, behaviorOverrides?.disableContextMenu],
+		[previewContext, message, channel, isEditing, isReplying],
 	);
 	const handleAltKeyDown = useCallback(
 		(event: React.KeyboardEvent<HTMLDivElement>) => {
