@@ -1582,7 +1582,7 @@ fn pack_and_validate_windows_velopack(
     pack_dir: &Path,
     trusted_sign_file: &Path,
 ) -> Result<()> {
-    ensure_velopack_pack_supports(vpk, &["--azureTrustedSignFile", "--noPortable"])?;
+    ensure_velopack_pack_supports(vpk, &["--azureTrustedSignFile"])?;
 
     run_command(CommandSpec::new(vpk).args([
         "--yes",
@@ -1609,12 +1609,26 @@ fn pack_and_validate_windows_velopack(
         config.output_dir.to_string_lossy().as_ref(),
         "--delta",
         "BestSpeed",
-        "--noPortable",
         "--azureTrustedSignFile",
         trusted_sign_file.to_string_lossy().as_ref(),
     ]))?;
 
-    validate_velopack_output(config, version, arch)
+    validate_velopack_output(config, version, arch)?;
+    remove_velopack_portable_archives(&config.output_dir)
+}
+
+fn remove_velopack_portable_archives(output_dir: &Path) -> Result<()> {
+    for path in collect_files(output_dir)? {
+        if !extension_is(&path, "zip") {
+            continue;
+        }
+        fs::remove_file(&path).with_context(|| format!("Failed to remove {}", path.display()))?;
+        println!(
+            "Removed Velopack portable archive {}. Fluxer publishes its own portable ZIP built from the signed application tree.",
+            path.display()
+        );
+    }
+    Ok(())
 }
 
 fn ensure_velopack_pack_supports(vpk: &Path, options: &[&str]) -> Result<()> {
@@ -1632,7 +1646,7 @@ fn ensure_velopack_pack_supports(vpk: &Path, options: &[&str]) -> Result<()> {
         .collect::<Vec<_>>();
     ensure!(
         missing.is_empty(),
-        "The pinned Velopack CLI does not support {}. Windows packages are never produced unsigned, so the pin must be updated or the packaging step reworked before releasing.",
+        "The pinned Velopack CLI does not support {}. Update the pin or rework the packaging step before releasing.",
         missing.join(", ")
     );
     Ok(())
@@ -3811,6 +3825,37 @@ export const CHANNEL_DISPLAY_NAME = BUILD_CHANNEL;\n"
         let mut zip = zip::ZipArchive::new(file).unwrap();
         assert!(zip.by_name(".portable").is_ok());
         assert!(zip.by_name("resources/app.asar").is_ok());
+    }
+
+    #[test]
+    fn velopack_portable_archives_are_removed_from_the_release_directory() {
+        let temp = tempfile::tempdir().unwrap();
+        let output_dir = temp.path();
+        write_file(
+            &output_dir.join("fluxer_desktop_canary-2026.810.1-Portable.zip"),
+            "velopack",
+        );
+        write_file(
+            &output_dir.join("fluxer_desktop_canary-2026.810.1-full.nupkg"),
+            "payload",
+        );
+        write_file(
+            &output_dir.join("Fluxer Canary-2026.810.1-win-arm64.exe"),
+            "setup",
+        );
+        write_file(&output_dir.join("RELEASES"), "feed");
+
+        remove_velopack_portable_archives(output_dir).unwrap();
+
+        let remaining = collect_files(output_dir)
+            .unwrap()
+            .into_iter()
+            .filter_map(|path| file_name_string(&path).ok())
+            .collect::<BTreeSet<_>>();
+        assert!(!remaining.iter().any(|name| name.ends_with(".zip")));
+        assert!(remaining.contains("fluxer_desktop_canary-2026.810.1-full.nupkg"));
+        assert!(remaining.contains("Fluxer Canary-2026.810.1-win-arm64.exe"));
+        assert!(remaining.contains("RELEASES"));
     }
 
     #[test]
