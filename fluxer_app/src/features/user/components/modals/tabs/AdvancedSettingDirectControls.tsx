@@ -28,6 +28,7 @@ import {
 	SearchEnginesControl,
 	SequentialFileSendControl,
 	SkipMarkAllAsReadControl,
+	DoubleClickMessageActionsControl,
 	StripTrackingControl,
 	TranslatorsControl,
 	TrustAllDomainsControl,
@@ -80,6 +81,7 @@ export const DIRECT_CONTROL_ITEM_IDS = new Set([
 	'chat-settings-sequential-file-send',
 	'chat-settings-scroll-to-bottom-on-send',
 	'chat-settings-skip-mark-all-as-read-confirmation',
+	'chat-settings-double-click-message-actions',
 	'chat-settings-hide-muted-channels',
 	'voice-video-new-device-alerts',
 	'voice-video-connection-volume-controls',
@@ -120,6 +122,7 @@ export const COMPACT_SWITCH_CONTROL_ITEM_IDS = new Set([
 	'chat-settings-sequential-file-send',
 	'chat-settings-scroll-to-bottom-on-send',
 	'chat-settings-skip-mark-all-as-read-confirmation',
+	'chat-settings-double-click-message-actions',
 	'chat-settings-hide-muted-channels',
 	'voice-video-new-device-alerts',
 	'voice-video-connection-volume-controls',
@@ -254,6 +257,10 @@ export const AdvancedSettingControl = observer(({item}: {item: SearchableSetting
 		case 'chat-settings-skip-mark-all-as-read-confirmation':
 			return (
 				<SkipMarkAllAsReadControl data-flx="user.advanced-setting-direct-controls.advanced-setting-control.skip-mark-all-as-read-control" />
+			);
+		case 'chat-settings-double-click-message-actions':
+			return (
+				<DoubleClickMessageActionsControl data-flx="user.advanced-setting-direct-controls.advanced-setting-control.double-click-message-actions-control" />
 			);
 		case 'chat-settings-hide-muted-channels':
 			return (
