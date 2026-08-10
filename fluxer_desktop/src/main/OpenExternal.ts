@@ -4,7 +4,14 @@ import {APP_PROTOCOL} from '@electron/common/Constants';
 import {shell} from 'electron';
 
 const DEDUPE_WINDOW_MS = 500;
-const ALLOWED_EXTERNAL_URL_PROTOCOLS = new Set(['http:', 'https:', 'mailto:', 'tel:', `${APP_PROTOCOL}:`]);
+const ALLOWED_EXTERNAL_URL_PROTOCOLS = new Set([
+	'http:',
+	'https:',
+	'mailto:',
+	'tel:',
+	'appstream:',
+	`${APP_PROTOCOL}:`,
+]);
 const recentOpens = new Map<string, number>();
 
 function getSafeExternalUrl(url: string): string | null {

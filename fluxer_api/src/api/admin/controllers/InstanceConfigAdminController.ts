@@ -619,4 +619,11 @@ async function updatePendingRegistrationUser(
 		traits.delete(REGISTRATION_REJECTED_TRAIT);
 	}
 	await userRepository.patchUpsert(user.id, {traits: traits.size > 0 ? traits : null}, user.toRow());
+	await ctx.get('adminService').auditService.createAuditLog({
+		adminUserId: ctx.get('adminUserId'),
+		targetType: 'user',
+		targetId: user.id,
+		action: decision === 'approve' ? 'approve_registration' : 'reject_registration',
+		auditLogReason: ctx.get('auditLogReason'),
+	});
 }

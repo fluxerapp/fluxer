@@ -1118,10 +1118,6 @@ async fn download_page_renders_strips_and_cache_header() {
         "/dl/desktop/{}/win32/arm64/latest/setup?test=1",
         release_channel.segment()
     );
-    let expected_game_capture_download_url = format!(
-        "/dl/desktop/{}/win32/x64/windows-game-capture/latest/setup?test=1",
-        release_channel.segment()
-    );
     let app = build_router(config);
     let response = app
         .oneshot(
@@ -1146,8 +1142,6 @@ async fn download_page_renders_strips_and_cache_header() {
     assert!(!html.contains("/dl/desktop/source/latest"));
     assert!(html.contains(&expected_download_url));
     assert!(html.contains(&expected_other_arch_url));
-    assert!(html.contains(&expected_game_capture_download_url));
-    assert!(html.contains("Microsoft Defender may quarantine it"));
     if release_channel.is_canary() {
         assert!(html.contains("/dl/desktop/canary/linux/x64/latest/appimage?test=1"));
     } else {
@@ -1176,52 +1170,6 @@ async fn download_page_uses_channel_api_endpoint_fallback_when_configured_endpoi
     assert!(html.contains(
         "https://api.canary.fluxer.app/dl/desktop/canary/linux/x64/latest/appimage?test=1"
     ));
-}
-
-#[tokio::test]
-async fn download_page_renders_latest_sha256_from_api_metadata() {
-    let checksum = "ced8b5a045b799b7ca9954b08c77f67b140640a1abb958b99636e659e867449a";
-    let download_api = axum::Router::new().route(
-        "/dl/desktop/canary/linux/x64/latest",
-        axum::routing::get(move || async move {
-            axum::Json(serde_json::json!({
-                "version": "0.0.33",
-                "pub_date": "2026-04-23T15:53:00Z",
-                "files": {
-                    "appimage": {
-                        "url": "http://127.0.0.1/dl/desktop/canary/linux/x64/0.0.33/appimage",
-                        "sha256": checksum,
-                        "checksum_url": "http://127.0.0.1/dl/desktop/canary/linux/x64/0.0.33/appimage.sha256"
-                    }
-                }
-            }))
-        }),
-    );
-    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
-    let api_endpoint = format!("http://{}", listener.local_addr().unwrap());
-    let server = tokio::spawn(async move {
-        axum::serve(listener, download_api).await.unwrap();
-    });
-    let mut config = test_config();
-    config.release_channel = ReleaseChannel::Canary;
-    config.api_endpoint = api_endpoint;
-    let app = build_router(config);
-
-    let response = app
-        .oneshot(
-            Request::builder()
-                .uri("/download")
-                .body(Body::empty())
-                .unwrap(),
-        )
-        .await
-        .unwrap();
-    server.abort();
-    assert_eq!(response.status(), StatusCode::OK);
-    let body = response.into_body().collect().await.unwrap().to_bytes();
-    let html = String::from_utf8(body.to_vec()).unwrap();
-    assert!(html.contains(checksum));
-    assert!(html.contains("appimage.sha256"));
 }
 
 #[tokio::test]

@@ -115,6 +115,11 @@ handle_cast({dispatch, Event, Data}, State) when is_atom(Event), is_map(Data) ->
     handle_dispatch_cast(Event, Data, State);
 handle_cast(presence_rejoin, State) ->
     handle_presence_rejoin(State);
+handle_cast(reconcile_flattened_presence, State) ->
+    {noreply,
+        presence_broadcast:publish_global_presence(
+            maps:get(sessions, State), State
+        )};
 handle_cast({presence_update, Request}, State) when is_map(Request) ->
     handle_presence_update_cast(Request, State);
 handle_cast({terminate_session, SessionIdHashes}, State) when is_list(SessionIdHashes) ->
@@ -290,6 +295,28 @@ presence_rejoin_notifies_all_sessions_test() ->
 presence_rejoin_with_no_sessions_is_noop_test() ->
     State = test_state(#{}),
     ?assertEqual({noreply, State}, handle_cast(presence_rejoin, State)).
+
+reconcile_flattened_presence_uses_current_session_state_test() ->
+    State = test_state(#{}),
+    PublishedState = State#{last_published_presence => #{status => <<"offline">>}},
+    meck:new(presence_broadcast, [passthrough]),
+    meck:expect(
+        presence_broadcast,
+        publish_global_presence,
+        fun(Sessions, ReceivedState) ->
+            ?assertEqual(#{}, Sessions),
+            ?assertEqual(State, ReceivedState),
+            PublishedState
+        end
+    ),
+    try
+        ?assertEqual(
+            {noreply, PublishedState},
+            handle_cast(reconcile_flattened_presence, State)
+        )
+    after
+        meck:unload(presence_broadcast)
+    end.
 
 -spec test_state(sessions()) -> state().
 test_state(Sessions) ->

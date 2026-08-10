@@ -260,8 +260,8 @@ export const SsoStartRequest = z.object({
 export type SsoStartRequest = z.infer<typeof SsoStartRequest>;
 
 export const SsoCompleteRequest = z.object({
-	code: createStringType().describe('Authorization code from the SSO provider'),
-	state: createStringType().describe('State parameter for CSRF protection'),
+	code: createStringType(1, 4096).describe('Authorization code from the SSO provider'),
+	state: createStringType(1, 4096).describe('State parameter for CSRF protection'),
 });
 
 export type SsoCompleteRequest = z.infer<typeof SsoCompleteRequest>;

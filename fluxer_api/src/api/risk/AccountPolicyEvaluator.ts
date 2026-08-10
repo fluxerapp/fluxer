@@ -18,7 +18,6 @@ type AccountPolicyAuditLevel = 'debug' | 'info' | 'warn' | 'error';
 type AccountPolicyRiskHistoryOutcome = 'challenged';
 export type AccountPolicyContactCapability =
 	| 'captcha_exempt'
-	| 'client_gate_exempt'
 	| 'followup_risk_exempt'
 	| 'reputation_checks_exempt'
 	| 'required_actions_exempt';
@@ -48,7 +47,6 @@ const CONTACT_CAPABILITY_FACT_PATHS = new Set([
 ]);
 const CONTACT_CAPABILITIES = new Set<AccountPolicyContactCapability>([
 	'captcha_exempt',
-	'client_gate_exempt',
 	'followup_risk_exempt',
 	'reputation_checks_exempt',
 	'required_actions_exempt',

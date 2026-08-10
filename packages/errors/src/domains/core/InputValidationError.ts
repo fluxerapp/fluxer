@@ -27,13 +27,8 @@ export class InputValidationError extends BadRequestError {
 		return new InputValidationError([{path, message}]);
 	}
 
-	static createMultiple(
-		errors: Array<{
-			field: string;
-			message: string;
-		}>,
-	): InputValidationError {
-		return new InputValidationError(errors.map((e) => ({path: e.field, message: e.message})));
+	static createMultiple(errors: Array<ValidationError>): InputValidationError {
+		return new InputValidationError(errors);
 	}
 
 	static fromCode(path: string, code: ValidationErrorCode, variables?: Record<string, unknown>): InputValidationError {

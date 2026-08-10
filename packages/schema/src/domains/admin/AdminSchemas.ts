@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {
 	GIFT_CODE_DURATION_TYPE_DEFINITIONS,
 	MAX_GIFT_CODES_PER_REQUEST,
@@ -43,6 +44,8 @@ import {
 } from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {EmailType} from '@fluxer/schema/src/primitives/UserValidators';
 import {z} from 'zod';
+
+const ADMIN_ACL_COUNT = Object.keys(AdminACLs).length;
 
 const ReportStatusSchema = withOpenApiType(
 	createInt32EnumType(
@@ -846,7 +849,7 @@ export const CreateAdminApiKeyRequest = z.object({
 		.refine((value) => value.trim().length > 0, 'Name cannot be empty')
 		.describe('Display name for the API key'),
 	expires_in_days: z.number().int().min(1).max(365).optional().describe('Number of days until the key expires'),
-	acls: z.array(z.string()).max(100).describe('List of access control permissions for the key'),
+	acls: z.array(z.string()).max(ADMIN_ACL_COUNT).describe('List of access control permissions for the key'),
 });
 
 export type CreateAdminApiKeyRequest = z.infer<typeof CreateAdminApiKeyRequest>;
@@ -857,7 +860,7 @@ export const CreateAdminApiKeyResponse = z.object({
 	name: z.string().describe('Display name for the API key'),
 	created_at: z.string().describe('ISO 8601 timestamp when the key was created'),
 	expires_at: z.string().nullable().describe('ISO 8601 timestamp when the key expires, or null if no expiration'),
-	acls: z.array(z.string()).max(100).describe('List of access control permissions for the key'),
+	acls: z.array(z.string()).max(ADMIN_ACL_COUNT).describe('List of access control permissions for the key'),
 });
 
 export type CreateAdminApiKeyResponse = z.infer<typeof CreateAdminApiKeyResponse>;
@@ -869,7 +872,7 @@ export const ListAdminApiKeyResponse = z.object({
 	last_used_at: z.string().nullable().describe('ISO 8601 timestamp when the key was last used, or null if never used'),
 	expires_at: z.string().nullable().describe('ISO 8601 timestamp when the key expires, or null if no expiration'),
 	created_by_user_id: SnowflakeStringType.describe('User ID of the admin who created this key'),
-	acls: z.array(z.string()).max(100).describe('List of access control permissions for the key'),
+	acls: z.array(z.string()).max(ADMIN_ACL_COUNT).describe('List of access control permissions for the key'),
 });
 
 export type ListAdminApiKeyResponse = z.infer<typeof ListAdminApiKeyResponse>;

@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: fluxer-marketing\n"
-"POT-Creation-Date: 2026-06-16 00:00+0000\n"
-"PO-Revision-Date: 2026-06-16 00:00+0000\n"
+"POT-Creation-Date: 2026-08-02 00:00+0000\n"
+"PO-Revision-Date: 2026-08-02 00:00+0000\n"
 "Language: zh-TW\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -995,6 +995,19 @@ msgid ""
 msgstr ""
 "{visionary_tier_full_name} 是一款限量終身 {premium_tier_name} 方案，已於 2026 年 2 月售罄。了解編號徽章以及 {visionary_tier_name} 包含的內容。"
 
+#. Help article title listing the three programmes that showcase a community on Fluxer. Keep 'Partner', 'Verified', and 'Discovery' as programme names.
+#: fluxer_marketing/generated:content.help.article.community_programmes.title
+msgctxt "content.help.article.community_programmes.title"
+msgid "Partner, Verified, and Discovery programmes"
+msgstr "合作夥伴、驗證與社群探索計畫"
+
+#. Help article summary about the Partner, Verified, and Discovery programmes. Preserve placeholders exactly.
+#: fluxer_marketing/generated:content.help.article.community_programmes.description
+msgctxt "content.help.article.community_programmes.description"
+msgid ""
+"The three ways to get your community showcased on {product_name}, what each programme requires, and how to apply."
+msgstr "在 {product_name} 上展示你的社群的三種方式、各計畫的條件，以及如何申請。"
+
 #. Help article title about how file attachments eventually expire. Keep it as an explanatory phrase.
 #: fluxer_marketing/generated:content.help.article.attachment_expiry.title
 msgctxt "content.help.article.attachment_expiry.title"
@@ -1932,19 +1945,12 @@ msgctxt "navigation.press.press_and_brand_assets"
 msgid "Press and brand assets"
 msgstr "新聞與品牌資源"
 
-#. Body copy in the partner application section. Preserve {email} and {product_name} exactly; keep the tone professional, creator-friendly, and clear about expectations. Preserve placeholders exactly.
-#: fluxer_marketing/generated:partner_program.apply.instructions_message
-msgctxt "partner_program.apply.instructions_message"
+#. Body copy in the partner application section, pointing readers to the help center guide. Keep the tone professional, creator-friendly, and clear about application expectations.
+#: fluxer_marketing/generated:partner_program.apply.guide_prompt
+msgctxt "partner_program.apply.guide_prompt"
 msgid ""
-"Send us an email at {email} with the following information to apply for the {product_name} partner program."
-msgstr "請將以下資訊寄送至 {email}，申請加入 {product_name} 合作夥伴計畫。"
-
-#. Body copy on the partner program page. Keep the tone professional, creator-friendly, and clear about application expectations.
-#: fluxer_marketing/generated:partner_program.apply.response_time
-msgctxt "partner_program.apply.response_time"
-msgid ""
-"We are accepting partner applications for when we begin processing them. We aren't replying to applications right now, but we'll reach out as soon as we are."
-msgstr "我們目前暫不回覆申請，但一旦開始回覆，就會與你聯繫。"
+"Our help center guide covers what we look for, what each program includes, and how to send in your application."
+msgstr "說明中心指南說明我們重視什麼、各計畫包含哪些內容，以及如何送出申請。"
 
 #. Button or link label on the partner program page. Keep the tone professional, creator-friendly, and clear about application expectations.
 #: fluxer_marketing/generated:partner_program.become_partner.call_to_action
@@ -1957,12 +1963,6 @@ msgstr "成為合作夥伴"
 msgctxt "partner_program.become_partner.heading"
 msgid "Become a {product_name} partner"
 msgstr "成為 {product_name} 合作夥伴"
-
-#. Button or link label on the partner program page. Keep the tone professional, creator-friendly, and clear about application expectations.
-#: fluxer_marketing/generated:partner_program.become_partner.learn_more
-msgctxt "partner_program.become_partner.learn_more"
-msgid "Learn more"
-msgstr "了解更多"
 
 #. Compact UI label on the partner program page. Keep the tone professional, creator-friendly, and clear about application expectations.
 #: fluxer_marketing/generated:partner_program.become_partner.ready_prompt
@@ -2096,30 +2096,6 @@ msgctxt "partner_program.perks.vip_voice_servers.label"
 msgid "VIP voice channels"
 msgstr "VIP 語音頻道"
 
-#. Checklist item listing required information for partner applications. Preserve {product_name} exactly; keep it specific and easy to scan.
-#: fluxer_marketing/generated:partner_program.requirements.audience_description
-msgctxt "partner_program.requirements.audience_description"
-msgid "Brief description of your audience and what you do"
-msgstr "你的受眾簡介及你的內容與業務"
-
-#. Body copy listing partner application requirements. Keep it specific and easy to scan. Preserve placeholders exactly.
-#: fluxer_marketing/generated:partner_program.requirements.links_to_content
-msgctxt "partner_program.requirements.links_to_content"
-msgid "Links to your content or community ({youtube}, {twitch}, {discord}, etc.)"
-msgstr "你的內容或社群的連結（{youtube}、{twitch}、{discord} 等）"
-
-#. Short UI label or heading listing partner application requirements. Keep it specific and easy to scan.
-#: fluxer_marketing/generated:partner_program.requirements.name_and_username
-msgctxt "partner_program.requirements.name_and_username"
-msgid "Your name and platform username"
-msgstr "你的姓名和平台使用者名稱"
-
-#. Checklist item listing required information for partner applications. Preserve {product_name} exactly; keep it specific and easy to scan. Preserve placeholders exactly.
-#: fluxer_marketing/generated:partner_program.requirements.usage_plan
-msgctxt "partner_program.requirements.usage_plan"
-msgid "How you plan to use {product_name} with your community"
-msgstr "你計劃如何將 {product_name} 運用在你的社群"
-
 #. Body copy under the partner program hero. Preserve {premium_tier_name} exactly; explain the target audience and benefits without sounding like a paid ad. Preserve placeholders exactly.
 #: fluxer_marketing/generated:partner_program.who_its_for
 msgctxt "partner_program.who_its_for"
@@ -2127,17 +2103,19 @@ msgid ""
 "For creators and community owners: free {premium_tier_name}, a partner badge, a custom vanity URL, and more."
 msgstr "面向創作者和社群擁有者：免費 {premium_tier_name}、合作夥伴徽章、自訂專屬 URL，以及更多權益。"
 
-#. Body copy in platform availability and download support copy. Keep wording clear about desktop, web, and mobile status.
-#: fluxer_marketing/generated:platform_support.desktop.available_on_desktop_and_web
-msgctxt "platform_support.desktop.available_on_desktop_and_web"
-msgid "Available on your desktop, and on the web"
-msgstr "在電腦版和網頁上皆可使用"
+#. Download-page meta description. Preserve {product_name} exactly; keep platform names conventional and make desktop, browser, and public mobile testing availability clear. Preserve placeholders exactly.
+#: fluxer_marketing/generated:platform_support.availability.meta_description
+msgctxt "platform_support.availability.meta_description"
+msgid ""
+"Get {product_name} for your web browser, {windows}, {linux}, and {macos}. {ios} and {android} are in public testing."
+msgstr "立即取得適用於網頁瀏覽器、{windows}、{linux} 和 {macos} 的 {product_name}。{ios} 和 {android} 目前處於公開測試階段。"
 
-#. Download-page meta description and intro copy. Preserve {product_name} exactly; keep platform names conventional and make desktop/mobile availability clear. Preserve placeholders exactly.
-#: fluxer_marketing/generated:platform_support.desktop.download_desktop_intro
-msgctxt "platform_support.desktop.download_desktop_intro"
-msgid "Download {product_name} for {windows}, {macos}, and {linux}. Mobile apps are underway."
-msgstr "下載適用於 {windows}、{macos} 和 {linux} 的 {product_name}。行動應用程式即將推出。"
+#. Intro copy below the download-page heading. Keep platform names conventional and make browser, desktop, and public mobile testing availability clear. Preserve placeholders exactly.
+#: fluxer_marketing/generated:platform_support.availability.summary
+msgctxt "platform_support.availability.summary"
+msgid ""
+"Available in your web browser and on {windows}, {linux}, and {macos}, with {ios} and {android} in public testing."
+msgstr "可在網頁瀏覽器中使用，並支援 {windows}、{linux} 和 {macos}，其中 {ios} 和 {android} 處於公開測試階段。"
 
 #. Alt text for a desktop product screenshot. Preserve {product_name} exactly; describe the image as the desktop interface, not as a download action. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.desktop.interface_label
@@ -2157,19 +2135,13 @@ msgctxt "platform_support.desktop.use_desktop_client_mobile_soon"
 msgid "Use the desktop client (mobile coming soon)"
 msgstr "使用桌面版（行動應用程式即將推出）"
 
-#. Short heading for a callout on the download page about the optional Windows Game Capture build. Preserve Windows Game Capture as a feature name; keep it short. Preserve placeholders exactly.
-#: fluxer_marketing/generated:platform_support.desktop.windows_game_capture_warning.title
-msgctxt "platform_support.desktop.windows_game_capture_warning.title"
-msgid "{windows} {game_capture} build"
-msgstr "{windows} {game_capture} 建置版本"
-
-#. Body for the Windows Game Capture callout on the download page. Preserve Windows Game Capture and Microsoft Defender as names; make clear only the Game Capture build is affected and the standard build is fine. Preserve placeholders exactly.
-#: fluxer_marketing/generated:platform_support.desktop.windows_game_capture_warning.body
-msgctxt "platform_support.desktop.windows_game_capture_warning.body"
+#. Canary-only notice below the Windows download row. Preserve Microsoft Defender and Windows as names; keep {issue_link} exactly where the linked issue number should appear and make clear the antivirus warning is temporary. Preserve placeholders exactly.
+#: fluxer_marketing/generated:platform_support.desktop.canary_windows_warning
+msgctxt "platform_support.desktop.canary_windows_warning"
 msgid ""
-"The {game_capture} build is not code-signed yet, so {microsoft_defender} may quarantine it until {microsoft} approves it. The standard {windows} build is unaffected."
+"This Canary build may be flagged by {microsoft_defender} or other antivirus software on {windows} for now. See GitHub issue {issue_link} for more details."
 msgstr ""
-"{game_capture} 版本尚未進行程式碼簽署，因此 {microsoft_defender} 可能會將其隔離，直到 {microsoft} 核准為止。標準的 {windows} 版本不受影響。"
+"此 Canary 版本目前可能會被 {microsoft_defender} 或其他 {windows} 防毒軟體標記。請參閱 GitHub issue {issue_link} 了解更多詳情。"
 
 #. Body copy for mobile/PWA install guidance on the download page. Keep instructions clear, device-appropriate, and concise; preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.install_as_app.done_desktop
@@ -2254,6 +2226,12 @@ msgstr "按下分享按鈕（帶有向上箭頭的矩形）"
 msgctxt "platform_support.mobile.install_as_app.install_fluxer_as_app"
 msgid "Install {product_name} as an app"
 msgstr "以應用程式形式安裝 {product_name}"
+
+#. Secondary text-link label on the download page that opens the PWA installation guide. Keep it short and action-oriented.
+#: fluxer_marketing/generated:platform_support.mobile.install_as_app.link
+msgctxt "platform_support.mobile.install_as_app.link"
+msgid "Installing as an app"
+msgstr "安裝為應用程式"
 
 #. Short UI label or heading for mobile/PWA install guidance on the download page. Keep instructions clear, device-appropriate, and concise; preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.install_as_app.title
@@ -2363,12 +2341,6 @@ msgctxt "platform_support.platforms.windows.download_label"
 msgid "Download for {windows}"
 msgstr "下載 {windows} 版"
 
-#. Compact label for a Windows desktop build variant that includes the game capture module. Keep it short and preserve the Game Capture feature name. Preserve placeholders exactly.
-#: fluxer_marketing/generated:platform_support.platforms.windows.game_capture_build
-msgctxt "platform_support.platforms.windows.game_capture_build"
-msgid "{game_capture}"
-msgstr "{game_capture}"
-
 #. Compact UI label naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.platforms.windows.min_version
 msgctxt "platform_support.platforms.windows.min_version"
@@ -2381,29 +2353,11 @@ msgctxt "platform_support.platforms.windows.name"
 msgid "{windows}"
 msgstr "{windows}"
 
-#. Compact label for the default Windows desktop build variant without the game capture module. Keep it short for download menus.
-#: fluxer_marketing/generated:platform_support.platforms.windows.standard_build
-msgctxt "platform_support.platforms.windows.standard_build"
-msgid "Standard"
-msgstr "標準版"
-
 #. Compact UI label for a portable (no-install) desktop build that stores all data next to the executable. Keep it short.
 #: fluxer_marketing/generated:platform_support.platforms.portable
 msgctxt "platform_support.platforms.portable"
 msgid "Portable"
 msgstr "免安裝版"
-
-#. Heading for the mobile section on the download page. Preserve {product_name} exactly. Preserve placeholders exactly.
-#: fluxer_marketing/generated:platform_support.mobile.on_mobile.title
-msgctxt "platform_support.mobile.on_mobile.title"
-msgid "{product_name} on the go"
-msgstr "隨時隨地使用 {product_name}"
-
-#. Intro copy under the mobile section heading on the download page. Preserve {product_name} exactly; keep it short. Preserve placeholders exactly.
-#: fluxer_marketing/generated:platform_support.mobile.on_mobile.intro
-msgctxt "platform_support.mobile.on_mobile.intro"
-msgid "Three ways to use {product_name} on your phone right now."
-msgstr "立即在手機上使用 {product_name} 的三種方式。"
 
 #. Card title for the mobile web app (PWA) option on the download page. Keep it short.
 #: fluxer_marketing/generated:platform_support.mobile.web_app.title
@@ -2411,13 +2365,13 @@ msgctxt "platform_support.mobile.web_app.title"
 msgid "Web app"
 msgstr "網頁應用程式"
 
-#. Body copy for the mobile web app (PWA) card on the download page. Preserve {product_name} exactly; mention that it installs like a Progressive Web App. Preserve placeholders exactly.
+#. Body copy for the web app row on the download page. Preserve {product_name} exactly; mention desktop and mobile browsers and that it installs like a Progressive Web App. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.web_app.body
 msgctxt "platform_support.mobile.web_app.body"
 msgid ""
-"{product_name} runs in any mobile browser and installs to your home screen like a Progressive Web App. It is the most complete way to use {product_name} on a phone today."
+"{product_name} runs in any desktop or mobile web browser, and installs to your home screen or desktop like a Progressive Web App. It is the most complete way to use {product_name} on a phone today."
 msgstr ""
-"{product_name} 可在任何行動瀏覽器中運作，並可像漸進式網頁應用程式 (PWA) 一樣安裝到您的主畫面上。這是目前在手機上使用 {product_name} 的最完整方式。"
+"{product_name} 可在任何桌面或行動網頁瀏覽器中運行，並可像漸進式網頁應用程式一樣安裝到您的主畫面或桌面上。這是目前在手機上使用 {product_name} 的最完整方式。"
 
 #. Card title for the iOS app option on the download page. Keep the platform name conventional and short. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.ios.title
@@ -2425,13 +2379,12 @@ msgctxt "platform_support.mobile.ios.title"
 msgid "{ios} app"
 msgstr "{ios} App"
 
-#. Body copy for the iOS app card on the download page. Preserve {premium_tier_name} exactly; make clear the iOS app is in a limited TestFlight beta with capped slots and that a public release is coming. Do not promise that subscribing grants beta access. Preserve placeholders exactly.
+#. Body copy for the iOS app row on the download page. Make clear that TestFlight access is currently limited to Fluxer Plutonium members, that public access is coming soon, and that the web app remains available in Safari. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.ios.body
 msgctxt "platform_support.mobile.ios.body"
 msgid ""
-"As of 15 June 2026, the {ios} app is in a limited {testflight} beta with a small group of {premium_tier_name} subscribers. {testflight} slots are limited, so the best way in for most people is to wait for the public release."
-msgstr ""
-"截至 2026 年 6 月 15 日，{ios} App 處於有限的 {testflight} Beta 測試階段，僅供一小群 {premium_tier_name} 訂閱者使用。{testflight} 名額有限，因此大多數人最好的方式是等待公開發佈。"
+"The {ios} app on {testflight} is currently limited to {premium_tier_full_name} members. Public access is coming soon. The full {product_name} web app also works in Safari and can be added to your Home Screen."
+msgstr "{ios} 應用程式的 {testflight} 測試目前僅限 {premium_tier_full_name} 會員。公開測試即將開放。完整的 {product_name} 網頁應用程式也能在 Safari 中使用，並可加入主畫面。"
 
 #. Card title for the Android app option on the download page. Keep the platform name conventional and short. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.android.title
@@ -2450,14 +2403,6 @@ msgstr "直接從 {github} 上的開放原始碼儲存庫安裝 {android} APK。
 msgctxt "platform_support.mobile.android.cta"
 msgid "Download the APK"
 msgstr "下載 APK"
-
-#. Disclaimer under the mobile section on the download page. Make clear the native iOS and Android apps are early alphas and may be buggy, while the web app (PWA) is not an alpha. Preserve placeholders exactly.
-#: fluxer_marketing/generated:platform_support.mobile.alpha_disclaimer
-msgctxt "platform_support.mobile.alpha_disclaimer"
-msgid ""
-"The {ios} and {android} apps are early alphas. They may be missing features you expect or still have bugs, and we are working hard to fix that. The web app is not an alpha, and it stays the most complete mobile option for now."
-msgstr ""
-"{ios} 和 {android} App 均為早期 Alpha 版本。它們可能缺少您預期的功能，或仍存在錯誤，我們正努力修復。網頁應用程式並非 Alpha 版本，目前仍是手機上功能最完整的選項。"
 
 #. Short UI label or heading in the press kit and brand asset download area. Keep terminology professional for brand/logo usage guidance; preserve placeholders exactly.
 #: fluxer_marketing/generated:press_branding.assets.brand_colors_heading

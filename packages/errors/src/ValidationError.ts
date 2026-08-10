@@ -4,8 +4,8 @@ import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {HttpStatus} from '@fluxer/constants/src/HttpConstants';
 import {FluxerError} from '@fluxer/errors/src/FluxerError';
 
-interface FieldError {
-	field: string;
+interface PathError {
+	path: string;
 	code: string;
 	message: string;
 }
@@ -13,11 +13,11 @@ interface FieldError {
 interface ValidationErrorOptions {
 	code?: string;
 	message?: string;
-	errors: Array<FieldError>;
+	errors: Array<PathError>;
 }
 
 export class ValidationError extends FluxerError {
-	readonly errors: Array<FieldError>;
+	readonly errors: Array<PathError>;
 
 	constructor(options: ValidationErrorOptions) {
 		super({
@@ -46,13 +46,13 @@ export class ValidationError extends FluxerError {
 		);
 	}
 
-	static fromField(field: string, code: string, message: string): ValidationError {
+	static fromPath(path: string, code: string, message: string): ValidationError {
 		return new ValidationError({
-			errors: [{field, code, message}],
+			errors: [{path, code, message}],
 		});
 	}
 
-	static fromFields(errors: Array<FieldError>): ValidationError {
+	static fromPaths(errors: Array<PathError>): ValidationError {
 		return new ValidationError({errors});
 	}
 }

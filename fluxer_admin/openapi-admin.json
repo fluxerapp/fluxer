@@ -9718,7 +9718,7 @@
 					"acls": {
 						"type": "array",
 						"items": {"type": "string"},
-						"maxItems": 100,
+						"maxItems": 115,
 						"description": "List of access control permissions for the key"
 					}
 				},
@@ -10061,11 +10061,11 @@
 			"ValidationErrorItem": {
 				"type": "object",
 				"properties": {
-					"field": {"type": "string", "description": "Field path that failed validation"},
+					"path": {"type": "string", "description": "Field path that failed validation"},
 					"code": {"type": "string", "description": "Machine-readable validation error code"},
 					"message": {"type": "string", "description": "Human-readable validation error message"}
 				},
-				"required": ["field", "code", "message"]
+				"required": ["path", "message"]
 			},
 			"CreateAdminApiKeyRequest": {
 				"type": "object",
@@ -10081,7 +10081,7 @@
 					"acls": {
 						"type": "array",
 						"items": {"type": "string"},
-						"maxItems": 100,
+						"maxItems": 115,
 						"description": "List of access control permissions for the key"
 					}
 				},
@@ -10111,7 +10111,7 @@
 					"acls": {
 						"type": "array",
 						"items": {"type": "string"},
-						"maxItems": 100,
+						"maxItems": 115,
 						"description": "List of access control permissions for the key"
 					}
 				},

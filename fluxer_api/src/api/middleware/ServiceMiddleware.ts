@@ -482,7 +482,6 @@ export const ServiceMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => 
 		{
 			inviteService,
 			kvDeletionQueue: getKVAccountDeletionQueue(),
-			flutterClientGateMemberRepository: guildRepository,
 		},
 	);
 	const reportService = getReportServiceInstance();

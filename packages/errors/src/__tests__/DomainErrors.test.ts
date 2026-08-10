@@ -136,8 +136,8 @@ describe('Domain Errors', () => {
 			});
 			it('should create from multiple fields using static method', () => {
 				const error = InputValidationError.createMultiple([
-					{field: 'email', message: 'Invalid email'},
-					{field: 'password', message: 'Password too short'},
+					{path: 'email', message: 'Invalid email'},
+					{path: 'password', message: 'Password too short'},
 				]);
 				expect(error.data).toEqual({
 					errors: [

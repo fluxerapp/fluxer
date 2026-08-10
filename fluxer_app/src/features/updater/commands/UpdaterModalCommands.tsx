@@ -7,7 +7,7 @@ import type {UpdaterDownloadOption} from '@app/features/platform/types/Electron'
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import {Combobox} from '@app/features/ui/components/form/FormCombobox';
-import {openExternalUrl} from '@app/features/ui/utils/NativeUtils';
+import {openExternalUrl, isCanaryDesktop} from '@app/features/ui/utils/NativeUtils';
 import styles from '@app/features/updater/commands/UpdaterModalCommands.module.css';
 import {i18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
@@ -75,6 +75,10 @@ const MANUAL_UPDATE_BODY_DESCRIPTOR = msg({
 const SYSTEM_MANAGED_UPDATE_BODY_DESCRIPTOR = msg({
 	message: 'This install is managed by your system. Update {productName} from your software center or package manager.',
 	comment: 'Desktop updater modal body for managed package builds such as Flatpak. productName is the app name.',
+});
+const OPEN_SOFTWARE_CENTER_DESCRIPTOR = msg({
+	message: 'Open software center',
+	comment: 'Button label that opens the software center via appstream protocol.',
 });
 const OPEN_DESKTOP_DOWNLOADS_DESCRIPTOR = msg({
 	message: 'Open desktop downloads',
@@ -291,7 +295,15 @@ export function pushUnsupportedUpdateModal(
 					<ConfirmModal
 						title={i18n._(SYSTEM_MANAGED_INSTALL_DESCRIPTOR)}
 						description={i18n._(SYSTEM_MANAGED_UPDATE_BODY_DESCRIPTOR, {productName: PRODUCT_NAME})}
+						primaryText={i18n._(OPEN_SOFTWARE_CENTER_DESCRIPTOR)}
 						secondaryText={i18n._(CLOSE_DESCRIPTOR)}
+						onPrimary={() => {
+							const appstreamUrl = isCanaryDesktop()
+								? 'appstream://app.fluxer.FluxerCanary'
+								: 'appstream://app.fluxer.Fluxer';
+
+							void openExternalUrl(appstreamUrl);
+						}}
 						data-flx="updater.updater-modal-commands.push-unsupported-update-modal.confirm-modal"
 					/>
 				);

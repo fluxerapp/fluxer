@@ -313,9 +313,9 @@ export class GroupDmOperationsService {
 
 	private async syncGroupDmRecipientsForUser(userId: UserID): Promise<void> {
 		const channels = await this.userRepository.listPrivateChannels(userId);
-		const dmChannels = channels.filter((ch) => ch.type === ChannelTypes.DM || ch.type === ChannelTypes.GROUP_DM);
+		const groupDmChannels = channels.filter((ch) => ch.type === ChannelTypes.GROUP_DM);
 		const recipientsByChannel: Record<string, Array<string>> = {};
-		for (const channel of dmChannels) {
+		for (const channel of groupDmChannels) {
 			const otherRecipients = Array.from(channel.recipientIds)
 				.filter((recId) => recId !== userId)
 				.map((recId) => recId.toString());

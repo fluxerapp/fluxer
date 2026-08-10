@@ -16,10 +16,41 @@ use tokio::net::TcpListener;
 use tower::ServiceExt;
 
 const SECRET_KEY: &str = "htmx-acceptance-test-secret";
+const ADMIN_API_KEY_SECRET: &str = "fa_1900000000000000001_OneTimeSecretForAcceptance";
 
 struct TestApp {
     router: Router,
     session_cookie: String,
+}
+
+#[tokio::test]
+async fn admin_api_key_create_form_renders_the_one_time_secret() {
+    let app = setup().await;
+    let (headers, page) = get_with_headers(&app, "/admin-api-keys", &[]).await;
+    let csrf_token = csrf_cookie(&headers)
+        .unwrap_or_else(|| panic!("Admin API keys page did not set csrf_token cookie\n{page}"));
+    assert!(page.contains(r#"data-admin-result-form="true""#), "{page}");
+
+    let (status, _, response_body) = post_form_with_headers(
+        &app,
+        "/admin-api-keys?action=create",
+        &[
+            ("HX-Request", "true"),
+            ("HX-Boosted", "true"),
+            ("HX-Target", "body"),
+            (
+                "Cookie",
+                &format!("{}; csrf_token={}", app.session_cookie, csrf_token),
+            ),
+        ],
+        &format!("_csrf={csrf_token}&name=Acceptance+Key&acls=*"),
+    )
+    .await;
+
+    assert_eq!(status, StatusCode::OK, "{response_body}");
+    assert_full_layout(&response_body);
+    assert!(response_body.contains(r#"hx-history="false""#));
+    assert!(response_body.contains(ADMIN_API_KEY_SECRET));
 }
 
 #[tokio::test]
@@ -680,6 +711,15 @@ async fn spawn_mock_api() -> String {
 async fn mock_api(method: Method, uri: Uri) -> Response {
     match (method, uri.path()) {
         (Method::GET, "/admin/users/me") => json_response(json!({ "user": admin_user() })),
+        (Method::GET, "/admin/api-keys") => json_response(json!([])),
+        (Method::POST, "/admin/api-keys") => json_response(json!({
+            "key_id": "1900000000000000001",
+            "key": ADMIN_API_KEY_SECRET,
+            "name": "Acceptance key",
+            "created_at": "2026-07-10T15:00:00.000Z",
+            "expires_at": null,
+            "acls": ["*"]
+        })),
         (Method::POST, "/admin/users/search") => {
             json_response(json!({ "users": [searched_user()], "total": 1 }))
         }

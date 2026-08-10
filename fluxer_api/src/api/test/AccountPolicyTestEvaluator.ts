@@ -145,7 +145,7 @@ const CURRENT_BEHAVIOR_TEST_POLICY_DSL = {
 				fact: 'contact.domain',
 				in_set: 'contact_domain_exclusions',
 			},
-			capabilities: ['captcha_exempt', 'client_gate_exempt', 'followup_risk_exempt', 'required_actions_exempt'],
+			capabilities: ['captcha_exempt', 'followup_risk_exempt', 'required_actions_exempt'],
 		},
 		{
 			id: 'contact_domain_reputation_profile',

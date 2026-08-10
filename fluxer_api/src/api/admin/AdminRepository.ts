@@ -13,6 +13,7 @@ import type {
 	BannedUrlRow,
 } from '../database/types/AdminArchiveTypes';
 import {isAccountPolicyContactDomainReputationExempt} from '../risk/AccountPolicyService';
+import {isIpBanExempt} from '../risk/IpBanExemptions';
 import {
 	AdminAuditLogs,
 	BannedAvatarHashes,
@@ -129,6 +130,9 @@ export class AdminRepository implements IAdminRepository {
 	}
 
 	async isIpBanned(ip: string): Promise<boolean> {
+		if (isIpBanExempt(ip)) {
+			return false;
+		}
 		const candidate = tryParseSingleIp(ip);
 		if (!candidate) {
 			return false;
@@ -157,6 +161,9 @@ export class AdminRepository implements IAdminRepository {
 	}
 
 	async banIp(ip: string): Promise<void> {
+		if (isIpBanExempt(ip)) {
+			return;
+		}
 		const canonicalIp = canonicalizeBannedIpEntry(ip);
 		await upsertOne(
 			BannedIps.insert({
@@ -172,6 +179,9 @@ export class AdminRepository implements IAdminRepository {
 	async banIpTemp(ip: string, ttlSeconds: number): Promise<void> {
 		if (!Number.isInteger(ttlSeconds) || ttlSeconds <= 0) {
 			throw new RangeError('Temporary IP ban TTL must be a positive integer');
+		}
+		if (isIpBanExempt(ip)) {
+			return;
 		}
 		const canonicalIp = canonicalizeBannedIpEntry(ip);
 		await upsertOne(

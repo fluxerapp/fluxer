@@ -83,6 +83,13 @@ const ChannelCommonBase = z.object({
 		.array(ChannelOverwriteRequest)
 		.optional()
 		.describe('Permission overwrites for roles and members'),
+	rate_limit_per_user: z
+		.number()
+		.int()
+		.min(CHANNEL_RATE_LIMIT_PER_USER_MIN)
+		.max(CHANNEL_RATE_LIMIT_PER_USER_MAX)
+		.nullish()
+		.describe(`Slowmode delay in seconds (${CHANNEL_RATE_LIMIT_PER_USER_MIN}-${CHANNEL_RATE_LIMIT_PER_USER_MAX})`),
 });
 const ChannelContentWarningFields = {
 	nsfw_override: z
@@ -112,13 +119,6 @@ const ChannelUpdateCommon = ChannelCommonBase.extend({
 			'Legacy: setting true maps to nsfw_override=true; setting false maps to nsfw_override=null (inherit). Prefer nsfw_override.',
 		),
 	...ChannelContentWarningFields,
-	rate_limit_per_user: z
-		.number()
-		.int()
-		.min(CHANNEL_RATE_LIMIT_PER_USER_MIN)
-		.max(CHANNEL_RATE_LIMIT_PER_USER_MAX)
-		.nullish()
-		.describe(`Slowmode delay in seconds (${CHANNEL_RATE_LIMIT_PER_USER_MIN}-${CHANNEL_RATE_LIMIT_PER_USER_MAX})`),
 	icon: createBase64StringType(1, Math.ceil(AVATAR_MAX_SIZE * (4 / 3)))
 		.nullish()
 		.describe('Base64-encoded icon image for group DM channels'),

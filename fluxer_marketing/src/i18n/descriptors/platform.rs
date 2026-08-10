@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 crate::marketing_message!(
-    pub const PLATFORM_SUPPORT_DESKTOP_AVAILABLE_ON_DESKTOP_AND_WEB_DESCRIPTOR = {
-        key: "platform_support.desktop.available_on_desktop_and_web",
-        message: "Available on your desktop, and on the web",
-        comment: "Body copy in platform availability and download support copy. Keep wording clear about desktop, web, and mobile status.",
+    pub const PLATFORM_SUPPORT_AVAILABILITY_META_DESCRIPTION_DESCRIPTOR = {
+        key: "platform_support.availability.meta_description",
+        message: "Get {product_name} for your web browser, {windows}, {linux}, and {macos}. {ios} and {android} are in public testing.",
+        comment: "Download-page meta description. Preserve {product_name} exactly; keep platform names conventional and make desktop, browser, and public mobile testing availability clear. Preserve placeholders exactly.",
     };
 );
 
 crate::marketing_message!(
-    pub const PLATFORM_SUPPORT_DESKTOP_DOWNLOAD_DESKTOP_INTRO_DESCRIPTOR = {
-        key: "platform_support.desktop.download_desktop_intro",
-        message: "Download {product_name} for {windows}, {macos}, and {linux}. Mobile apps are underway.",
-        comment: "Download-page meta description and intro copy. Preserve {product_name} exactly; keep platform names conventional and make desktop/mobile availability clear. Preserve placeholders exactly.",
+    pub const PLATFORM_SUPPORT_AVAILABILITY_SUMMARY_DESCRIPTOR = {
+        key: "platform_support.availability.summary",
+        message: "Available in your web browser and on {windows}, {linux}, and {macos}, with {ios} and {android} in public testing.",
+        comment: "Intro copy below the download-page heading. Keep platform names conventional and make browser, desktop, and public mobile testing availability clear. Preserve placeholders exactly.",
     };
 );
 
@@ -41,18 +41,10 @@ crate::marketing_message!(
 );
 
 crate::marketing_message!(
-    pub const PLATFORM_SUPPORT_DESKTOP_WINDOWS_GAME_CAPTURE_WARNING_TITLE_DESCRIPTOR = {
-        key: "platform_support.desktop.windows_game_capture_warning.title",
-        message: "{windows} {game_capture} build",
-        comment: "Short heading for a callout on the download page about the optional Windows Game Capture build. Preserve Windows Game Capture as a feature name; keep it short. Preserve placeholders exactly.",
-    };
-);
-
-crate::marketing_message!(
-    pub const PLATFORM_SUPPORT_DESKTOP_WINDOWS_GAME_CAPTURE_WARNING_BODY_DESCRIPTOR = {
-        key: "platform_support.desktop.windows_game_capture_warning.body",
-        message: "The {game_capture} build is not code-signed yet, so {microsoft_defender} may quarantine it until {microsoft} approves it. The standard {windows} build is unaffected.",
-        comment: "Body for the Windows Game Capture callout on the download page. Preserve Windows Game Capture and Microsoft Defender as names; make clear only the Game Capture build is affected and the standard build is fine. Preserve placeholders exactly.",
+    pub const PLATFORM_SUPPORT_DESKTOP_CANARY_WINDOWS_WARNING_DESCRIPTOR = {
+        key: "platform_support.desktop.canary_windows_warning",
+        message: "This Canary build may be flagged by {microsoft_defender} or other antivirus software on {windows} for now. See GitHub issue {issue_link} for more details.",
+        comment: "Canary-only notice below the Windows download row. Preserve Microsoft Defender and Windows as names; keep {issue_link} exactly where the linked issue number should appear and make clear the antivirus warning is temporary. Preserve placeholders exactly.",
     };
 );
 
@@ -165,6 +157,14 @@ crate::marketing_message!(
         key: "platform_support.mobile.install_as_app.install_fluxer_as_app",
         message: "Install {product_name} as an app",
         comment: "Compact UI label for mobile/PWA install guidance on the download page. Keep instructions clear, device-appropriate, and concise; preserve placeholders exactly.",
+    };
+);
+
+crate::marketing_message!(
+    pub const PLATFORM_SUPPORT_MOBILE_INSTALL_AS_APP_LINK_DESCRIPTOR = {
+        key: "platform_support.mobile.install_as_app.link",
+        message: "Installing as an app",
+        comment: "Secondary text-link label on the download page that opens the PWA installation guide. Keep it short and action-oriented.",
     };
 );
 
@@ -313,14 +313,6 @@ crate::marketing_message!(
 );
 
 crate::marketing_message!(
-    pub const PLATFORM_SUPPORT_PLATFORMS_WINDOWS_GAME_CAPTURE_BUILD_DESCRIPTOR = {
-        key: "platform_support.platforms.windows.game_capture_build",
-        message: "{game_capture}",
-        comment: "Compact label for a Windows desktop build variant that includes the game capture module. Keep it short and preserve the Game Capture feature name. Preserve placeholders exactly.",
-    };
-);
-
-crate::marketing_message!(
     pub const PLATFORM_SUPPORT_PLATFORMS_WINDOWS_MIN_VERSION_DESCRIPTOR = {
         key: "platform_support.platforms.windows.min_version",
         message: "{windows} 10+",
@@ -337,34 +329,10 @@ crate::marketing_message!(
 );
 
 crate::marketing_message!(
-    pub const PLATFORM_SUPPORT_PLATFORMS_WINDOWS_STANDARD_BUILD_DESCRIPTOR = {
-        key: "platform_support.platforms.windows.standard_build",
-        message: "Standard",
-        comment: "Compact label for the default Windows desktop build variant without the game capture module. Keep it short for download menus.",
-    };
-);
-
-crate::marketing_message!(
     pub const PLATFORM_SUPPORT_PLATFORMS_PORTABLE_DESCRIPTOR = {
         key: "platform_support.platforms.portable",
         message: "Portable",
         comment: "Compact UI label for a portable (no-install) desktop build that stores all data next to the executable. Keep it short.",
-    };
-);
-
-crate::marketing_message!(
-    pub const PLATFORM_SUPPORT_MOBILE_ON_MOBILE_TITLE_DESCRIPTOR = {
-        key: "platform_support.mobile.on_mobile.title",
-        message: "{product_name} on the go",
-        comment: "Heading for the mobile section on the download page. Preserve {product_name} exactly. Preserve placeholders exactly.",
-    };
-);
-
-crate::marketing_message!(
-    pub const PLATFORM_SUPPORT_MOBILE_ON_MOBILE_INTRO_DESCRIPTOR = {
-        key: "platform_support.mobile.on_mobile.intro",
-        message: "Three ways to use {product_name} on your phone right now.",
-        comment: "Intro copy under the mobile section heading on the download page. Preserve {product_name} exactly; keep it short. Preserve placeholders exactly.",
     };
 );
 
@@ -379,8 +347,8 @@ crate::marketing_message!(
 crate::marketing_message!(
     pub const PLATFORM_SUPPORT_MOBILE_WEB_APP_BODY_DESCRIPTOR = {
         key: "platform_support.mobile.web_app.body",
-        message: "{product_name} runs in any mobile browser and installs to your home screen like a Progressive Web App. It is the most complete way to use {product_name} on a phone today.",
-        comment: "Body copy for the mobile web app (PWA) card on the download page. Preserve {product_name} exactly; mention that it installs like a Progressive Web App. Preserve placeholders exactly.",
+        message: "{product_name} runs in any desktop or mobile web browser, and installs to your home screen or desktop like a Progressive Web App. It is the most complete way to use {product_name} on a phone today.",
+        comment: "Body copy for the web app row on the download page. Preserve {product_name} exactly; mention desktop and mobile browsers and that it installs like a Progressive Web App. Preserve placeholders exactly.",
     };
 );
 
@@ -395,8 +363,8 @@ crate::marketing_message!(
 crate::marketing_message!(
     pub const PLATFORM_SUPPORT_MOBILE_IOS_BODY_DESCRIPTOR = {
         key: "platform_support.mobile.ios.body",
-        message: "As of 15 June 2026, the {ios} app is in a limited {testflight} beta with a small group of {premium_tier_name} subscribers. {testflight} slots are limited, so the best way in for most people is to wait for the public release.",
-        comment: "Body copy for the iOS app card on the download page. Preserve {premium_tier_name} exactly; make clear the iOS app is in a limited TestFlight beta with capped slots and that a public release is coming. Do not promise that subscribing grants beta access. Preserve placeholders exactly.",
+        message: "The {ios} app on {testflight} is currently limited to {premium_tier_full_name} members. Public access is coming soon. The full {product_name} web app also works in Safari and can be added to your Home Screen.",
+        comment: "Body copy for the iOS app row on the download page. Make clear that TestFlight access is currently limited to Fluxer Plutonium members, that public access is coming soon, and that the web app remains available in Safari. Preserve placeholders exactly.",
     };
 );
 
@@ -421,13 +389,5 @@ crate::marketing_message!(
         key: "platform_support.mobile.android.cta",
         message: "Download the APK",
         comment: "Button or link label on the Android app card that opens the GitHub repository where the APK is published. Keep APK as a proper name; keep it short.",
-    };
-);
-
-crate::marketing_message!(
-    pub const PLATFORM_SUPPORT_MOBILE_ALPHA_DISCLAIMER_DESCRIPTOR = {
-        key: "platform_support.mobile.alpha_disclaimer",
-        message: "The {ios} and {android} apps are early alphas. They may be missing features you expect or still have bugs, and we are working hard to fix that. The web app is not an alpha, and it stays the most complete mobile option for now.",
-        comment: "Disclaimer under the mobile section on the download page. Make clear the native iOS and Android apps are early alphas and may be buggy, while the web app (PWA) is not an alpha. Preserve placeholders exactly.",
     };
 );

@@ -137,7 +137,6 @@ describe('AccountPolicyEvaluator', () => {
 		const evaluator = createCurrentBehaviorTestAccountPolicyEvaluator();
 		const decision = evaluator.evaluateContact(createAccountPolicyContactContext(`test@${TEST_POLICY_CONTACT_DOMAIN}`));
 		expect(decision.hasCapability('captcha_exempt')).toBe(true);
-		expect(decision.hasCapability('client_gate_exempt')).toBe(true);
 		expect(decision.hasCapability('followup_risk_exempt')).toBe(true);
 		expect(decision.hasCapability('required_actions_exempt')).toBe(true);
 

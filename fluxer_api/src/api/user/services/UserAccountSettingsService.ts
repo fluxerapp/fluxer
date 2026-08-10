@@ -191,7 +191,7 @@ export class UserAccountSettingsService {
 		if (data.trusted_domains !== undefined) {
 			const domainsSet = new Set(data.trusted_domains);
 			if (domainsSet.has('*') && domainsSet.size > 1) {
-				throw ValidationError.fromField(
+				throw ValidationError.fromPath(
 					'trusted_domains',
 					'INVALID_TRUSTED_DOMAINS',
 					'Cannot combine wildcard (*) with specific domains',
@@ -219,7 +219,7 @@ export class UserAccountSettingsService {
 					data.sensitive_content_friend_dm_filter === SensitiveMediaFilterLevel.BLUR ||
 					data.sensitive_content_friend_dm_filter === SensitiveMediaFilterLevel.BLOCK;
 				if (!allowed) {
-					throw ValidationError.fromField(
+					throw ValidationError.fromPath(
 						'sensitive_content_friend_dm_filter',
 						'AGE_RESTRICTED',
 						'Non-adult users can only set friend DM filter to blur or block',
@@ -228,14 +228,14 @@ export class UserAccountSettingsService {
 				updatedRowData.sensitive_content_friend_dm_filter = data.sensitive_content_friend_dm_filter;
 			}
 			if (data.sensitive_content_non_friend_dm_filter !== undefined) {
-				throw ValidationError.fromField(
+				throw ValidationError.fromPath(
 					'sensitive_content_non_friend_dm_filter',
 					'AGE_RESTRICTED',
 					'Non-adult users cannot modify the non-friend DM content filter',
 				);
 			}
 			if (data.sensitive_content_guild_filter !== undefined) {
-				throw ValidationError.fromField(
+				throw ValidationError.fromPath(
 					'sensitive_content_guild_filter',
 					'AGE_RESTRICTED',
 					'Non-adult users cannot modify the guild content filter',
@@ -498,7 +498,7 @@ export class UserAccountSettingsService {
 function normalizeSyncedPreferencesSnapshot(value: string | null | undefined): string | null {
 	if (value == null || value === '') return null;
 	if (encodedSyncedPreferencesByteLength(value) > SYNCED_PREFERENCES_MAX_BYTES) {
-		throw ValidationError.fromField(
+		throw ValidationError.fromPath(
 			'synced_preferences',
 			'TOO_LARGE',
 			`synced_preferences exceeds ${SYNCED_PREFERENCES_MAX_BYTES} bytes`,
@@ -508,7 +508,7 @@ function normalizeSyncedPreferencesSnapshot(value: string | null | undefined): s
 	try {
 		decoded = decodeSyncedPreferences(value);
 	} catch (error) {
-		throw ValidationError.fromField(
+		throw ValidationError.fromPath(
 			'synced_preferences',
 			'INVALID_FORMAT',
 			error instanceof Error ? error.message : 'invalid synced_preferences encoding',

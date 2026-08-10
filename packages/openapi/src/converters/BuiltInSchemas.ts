@@ -207,7 +207,7 @@ export const APIErrorCodeSchema = {
 export const ValidationErrorItemSchema: OpenAPISchema = {
 	type: 'object',
 	properties: {
-		field: {
+		path: {
 			type: 'string',
 			description: 'Field path that failed validation',
 		},
@@ -220,5 +220,5 @@ export const ValidationErrorItemSchema: OpenAPISchema = {
 			description: 'Human-readable validation error message',
 		},
 	},
-	required: ['field', 'code', 'message'],
+	required: ['path', 'message'],
 };

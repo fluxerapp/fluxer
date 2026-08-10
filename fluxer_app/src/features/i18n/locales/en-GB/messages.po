@@ -660,7 +660,7 @@ msgstr "{duration} behind you"
 #. Short label in the channel and chat slowmode indicator. Keep it concise. Preserve {durationLabel}; it is inserted by code.
 #: src/features/channel/components/SlowmodeIndicator.tsx:30
 msgid "{durationLabel} slowmode"
-msgstr "{durationLabel} slow mode"
+msgstr "{durationLabel} slowmode"
 
 #. Gift duration label. PREMIUM_PRODUCT_NAME is the paid plan name.
 #: src/features/gift/utils/GiftUtils.ts:12
@@ -5642,7 +5642,7 @@ msgstr "Bypass mention suppression"
 #. Permission name: allows ignoring per-channel message rate limits.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:249
 msgid "Bypass slowmode"
-msgstr "Bypass slow mode"
+msgstr "Bypass slowmode"
 
 #. Developer option label.
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
@@ -7764,17 +7764,17 @@ msgstr "Comma-separated"
 #. Helper text in the forward modal explaining why the optional comment field is disabled when at least one selected target has slowmode active.
 #: src/features/messaging/components/modals/ForwardModal.tsx:71
 msgid "Comments are disabled because one or more selected channels have slowmode on. The comment would be blocked by slowmode right after the forward."
-msgstr "Comments are disabled because one or more selected channels have slow mode on. The comment would be blocked by slow mode right after the forward."
+msgstr "Comments are disabled because one or more selected channels have slowmode on. The comment would be blocked by slowmode right after the forward."
 
 #. Helper text in the forward modal explaining why the optional comment field is disabled for a single selected channel with slowmode.
 #: src/features/messaging/components/modals/ForwardModal.tsx:65
 msgid "Comments are disabled because slowmode is on in {forwardChannelDisplayName}. The comment would be blocked by slowmode right after the forward."
-msgstr "Comments are disabled because slow mode is on in {forwardChannelDisplayName}. The comment would be blocked by slow mode right after the forward."
+msgstr "Comments are disabled because slowmode is on in {forwardChannelDisplayName}. The comment would be blocked by slowmode right after the forward."
 
 #. Tooltip on the disabled comment field in the forward modal when slowmode blocks comments.
 #: src/features/messaging/components/modals/ForwardModal.tsx:94
 msgid "Comments are unavailable while slowmode is on."
-msgstr "Comments are unavailable while slow mode is on."
+msgstr "Comments are unavailable while slowmode is on."
 
 #. Short label in the privacy dashboard. Keep it concise.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/PrivacySafetyTabInline.tsx:25
@@ -11596,7 +11596,7 @@ msgstr "Disabled slider"
 
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:430
 msgid "Disabled slowmode."
-msgstr "Disabled slow mode."
+msgstr "Disabled slowmode."
 
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:189
 msgid "Disabled states"
@@ -15066,7 +15066,7 @@ msgstr "Force show voice connection"
 
 #: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:173
 msgid "Force slowmode active"
-msgstr "Force slow mode active"
+msgstr "Force slowmode active"
 
 #. Developer option label for rendering messages as unknown message types.
 #: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:113
@@ -28808,7 +28808,7 @@ msgstr "Set role colour to <0>{hex}</0> <1/>."
 #. placeholder {0}: renderInline(seconds, i18n)
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:432
 msgid "Set slowmode to {0} {seconds, plural, one {second} other {seconds}}."
-msgstr "Set slow mode to {0} {seconds, plural, one {second} other {seconds}}."
+msgstr "Set slowmode to {0} {seconds, plural, one {second} other {seconds}}."
 
 #. Short label in the status change bottom sheet. Keep it concise.
 #: src/features/user/components/modals/StatusChangeBottomSheet.tsx:32
@@ -30028,49 +30028,49 @@ msgstr "Slow profile load"
 #. Channel overview settings tab label, control, or validation message (name, topic, slowmode, voice region, mature content gate).
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/SlowmodeControl.tsx:44
 msgid "Slowmode"
-msgstr "Slow mode"
+msgstr "Slowmode"
 
 #. Short label in the settings dialog forward channel selection. Preserve {remaining}; it is inserted by code.
 #: src/features/app/components/dialogs/shared/ForwardChannelSelection.ts:52
 msgid "Slowmode · wait {remaining}"
-msgstr "Slow mode · wait {remaining}"
+msgstr "Slowmode · wait {remaining}"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #. Short label in the slowmode rate limited modal. Keep it concise.
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:249
 #: src/features/slowmode/components/alerts/SlowmodeRateLimitedModal.tsx:13
 msgid "Slowmode active"
-msgstr "Slow mode active"
+msgstr "Slowmode active"
 
 #. Description text in the channel and chat slowmode indicator.
 #: src/features/channel/components/SlowmodeIndicator.tsx:26
 msgid "Slowmode is enabled for this channel."
-msgstr "Slow mode is enabled for this channel."
+msgstr "Slowmode is enabled for this channel."
 
 #. Description text in the channel and chat slowmode indicator.
 #: src/features/channel/components/SlowmodeIndicator.tsx:18
 msgid "Slowmode is enabled, but you are immune."
-msgstr "Slow mode is on, but you're immune."
+msgstr "Slowmode is on, but you're immune."
 
 #. Modal body shown when slowmode blocks sending a message. {duration} is a localized short duration such as "2 minutes".
 #: src/features/slowmode/components/alerts/SlowmodeRateLimitedModal.tsx:17
 msgid "Slowmode is on — wait {duration} before sending another."
-msgstr "Slow mode is on – wait {duration} before sending another."
+msgstr "Slowmode is on – wait {duration} before sending another."
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:253
 msgid "Slowmode remaining"
-msgstr "Slow mode remaining"
+msgstr "Slowmode remaining"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:51
 msgid "Slowmode simulation"
-msgstr "Slow mode simulation"
+msgstr "Slowmode simulation"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:55
 msgid "Slowmode time remaining"
-msgstr "Slow mode time remaining"
+msgstr "Slowmode time remaining"
 
 #. IAR modal: rule description.
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:195
@@ -37060,12 +37060,12 @@ msgstr "Waiting for passkey…"
 #. Inline notice in the forward modal when slowmode is active in the selected target channel. forwardChannelDisplayName is the channel name.
 #: src/features/messaging/components/modals/ForwardModal.tsx:77
 msgid "Waiting for slowmode in {forwardChannelDisplayName} to expire."
-msgstr "Waiting for slow mode in {forwardChannelDisplayName} to expire."
+msgstr "Waiting for slowmode in {forwardChannelDisplayName} to expire."
 
 #. Inline notice in the forward modal when slowmode is active in one or more selected target channels.
 #: src/features/messaging/components/modals/ForwardModal.tsx:82
 msgid "Waiting for slowmode in one or more selected channels to expire."
-msgstr "Waiting for slow mode to expire in one or more selected channels."
+msgstr "Waiting for slowmode to expire in one or more selected channels."
 
 #. Label in the messages tab.
 #: src/features/user/components/modals/tabs/appearance_tab/MessagesTab.tsx:47
@@ -37951,7 +37951,7 @@ msgstr "You blocked {userName}. You won't be able to send messages unless you un
 #. Helper text in the upload drop modal during slowmode, when direct upload is disabled.
 #: src/features/messaging/components/modals/UploadDropModal.tsx:24
 msgid "You can add comments before uploading. Direct upload is disabled during slowmode."
-msgstr "You can add comments before uploading. Direct upload is disabled during slow mode."
+msgstr "You can add comments before uploading. Direct upload is disabled during slowmode."
 
 #. Helper text in the upload drop modal explaining the shift-to-direct-upload behavior.
 #: src/features/messaging/components/modals/UploadDropModal.tsx:28
@@ -38641,7 +38641,7 @@ msgstr "You're in preview mode"
 #. Description text in the channel and chat slowmode indicator.
 #: src/features/channel/components/SlowmodeIndicator.tsx:22
 msgid "You're in slowmode. Wait before sending another message."
-msgstr "You're in slow mode. Wait before sending another message."
+msgstr "You're in slowmode. Wait before sending another message."
 
 #. Subtitle below the connected-call header confirming the user is connected.
 #: src/features/voice/components/bottomsheets/DirectCallLobbyBottomSheet.tsx:108

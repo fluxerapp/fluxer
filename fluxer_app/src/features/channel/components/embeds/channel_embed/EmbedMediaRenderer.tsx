@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {
-	calculateEmbedImageDimensions,
-	EMBED_MEDIA_FILL_CONSTRAINTS,
+	calculateMediaDimensions,
 	type EmbedMediaRendererProps,
 	getOptimizedMediaURL,
 	getUrlHostname,
@@ -15,6 +14,7 @@ import {EmbedImage} from '@app/features/channel/components/embeds/media/EmbedIma
 import EmbedVideo from '@app/features/channel/components/embeds/media/EmbedVideo';
 import {EmbedYouTube} from '@app/features/channel/components/embeds/media/EmbedYouTube';
 import {getInlineVideoLayoutConstraints} from '@app/features/channel/components/embeds/media/VideoDimensionUtils';
+import {getEmbedMediaDimensions} from '@app/features/messaging/utils/MediaDimensionConfig';
 import {buildAnimatedImageProxyURL, buildMediaProxyURL} from '@app/features/messaging/utils/MediaProxyUtils';
 import messageStyles from '@app/features/theme/styles/Message.module.css';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
@@ -41,7 +41,7 @@ const EmbedMediaRendererInner: FC<EmbedMediaRendererProps> = observer(
 			);
 		}
 		if (isValidMedia(video)) {
-			const videoLayoutConstraints = getInlineVideoLayoutConstraints(EMBED_MEDIA_FILL_CONSTRAINTS);
+			const videoLayoutConstraints = getInlineVideoLayoutConstraints(getEmbedMediaDimensions());
 			return (
 				<FocusRing
 					within
@@ -73,7 +73,7 @@ const EmbedMediaRendererInner: FC<EmbedMediaRendererProps> = observer(
 			);
 		}
 		if (isValidMedia(image)) {
-			const {width, height} = calculateEmbedImageDimensions(image);
+			const {width, height} = calculateMediaDimensions(image);
 			const isGif = image.content_type === 'image/gif' || image.url.toLowerCase().endsWith('.gif');
 			const imageIsAnimated = (image.flags & MessageAttachmentFlags.IS_ANIMATED) === MessageAttachmentFlags.IS_ANIMATED;
 			if (isGif) {
@@ -98,7 +98,7 @@ const EmbedMediaRendererInner: FC<EmbedMediaRendererProps> = observer(
 							embedIndex={embedIndex}
 							onDelete={onDelete}
 							isPreview={isPreview}
-							layoutConstraints={EMBED_MEDIA_FILL_CONSTRAINTS}
+							layoutConstraints={getEmbedMediaDimensions()}
 							data-flx="channel.embeds.embed.embed-media-renderer-inner.embed-gif"
 						/>
 					</FocusRing>
@@ -135,7 +135,7 @@ const EmbedMediaRendererInner: FC<EmbedMediaRendererProps> = observer(
 			);
 		}
 		if (isValidMedia(thumbnail)) {
-			const {width, height} = calculateEmbedImageDimensions(thumbnail);
+			const {width, height} = calculateMediaDimensions(thumbnail);
 			const isGif = thumbnail.content_type === 'image/gif' || thumbnail.url.toLowerCase().endsWith('.gif');
 			const thumbnailIsAnimated =
 				(thumbnail.flags & MessageAttachmentFlags.IS_ANIMATED) === MessageAttachmentFlags.IS_ANIMATED;
@@ -160,7 +160,7 @@ const EmbedMediaRendererInner: FC<EmbedMediaRendererProps> = observer(
 							contentHash={thumbnail.content_hash}
 							embedIndex={embedIndex}
 							onDelete={onDelete}
-							layoutConstraints={EMBED_MEDIA_FILL_CONSTRAINTS}
+							layoutConstraints={getEmbedMediaDimensions()}
 							data-flx="channel.embeds.embed.embed-media-renderer-inner.embed-gif--2"
 						/>
 					</FocusRing>

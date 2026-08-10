@@ -98,6 +98,24 @@ describe('Guild Channel Management', () => {
 		});
 	});
 	describe('Channel Slowmode (rate_limit_per_user)', () => {
+		test('should set slowmode when creating a channel', async () => {
+			const account = await createTestAccount(harness);
+			const guild = await createGuild(harness, account.token, 'We go slow');
+			const channel = await createBuilder<ChannelResponse>(harness, account.token)
+				.post(`/guilds/${guild.id}/channels`)
+				.body({name: 'slooooow', type: ChannelTypes.GUILD_TEXT, rate_limit_per_user: 60})
+				.execute();
+			expect(channel.rate_limit_per_user).toBe(60);
+		});
+		test('should reject invalid slowmode when creating a channel', async () => {
+			const account = await createTestAccount(harness);
+			const guild = await createGuild(harness, account.token, 'Test Guild');
+			await createBuilder(harness, account.token)
+				.post(`/guilds/${guild.id}/channels`)
+				.body({name: 'too-fast-omg', type: ChannelTypes.GUILD_TEXT, rate_limit_per_user: Number.MAX_SAFE_INTEGER})
+				.expect(HTTP_STATUS.BAD_REQUEST)
+				.execute();
+		});
 		test('should set slowmode on text channel', async () => {
 			const account = await createTestAccount(harness);
 			const guild = await createGuild(harness, account.token, 'Test Guild');
