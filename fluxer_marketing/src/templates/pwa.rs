@@ -82,7 +82,7 @@ fn android_steps(i18n: &MarketingI18n, ctx: &RequestContext) -> Markup {
                 ol class="space-y-4" {
                     (step("1", html! {
                         span {
-                            a href="https://web.fluxer.app" target="_blank" rel="noopener noreferrer" class="text-gray-900 underline hover:text-gray-700" {
+                            a href=(ctx.app_url("")) target="_blank" rel="noopener noreferrer" class="text-gray-900 underline hover:text-gray-700" {
                                 (tr(i18n, ctx, APP_OPEN_OPEN_WEB_APP_DESCRIPTOR))
                             }
                             (tr(i18n, ctx, PLATFORM_SUPPORT_MOBILE_INSTALL_AS_APP_GUIDES_IN_CHROME_DESCRIPTOR))
@@ -105,7 +105,7 @@ fn ios_steps(i18n: &MarketingI18n, ctx: &RequestContext) -> Markup {
                 ol class="space-y-4" {
                     (step("1", html! {
                         span {
-                            a href="https://web.fluxer.app" target="_blank" rel="noopener noreferrer" class="text-gray-900 underline hover:text-gray-700" {
+                            a href=(ctx.app_url("")) target="_blank" rel="noopener noreferrer" class="text-gray-900 underline hover:text-gray-700" {
                                 (tr(i18n, ctx, APP_OPEN_OPEN_WEB_APP_DESCRIPTOR))
                             }
                             (tr(i18n, ctx, PLATFORM_SUPPORT_MOBILE_INSTALL_AS_APP_GUIDES_IN_SAFARI_DESCRIPTOR))
@@ -129,7 +129,7 @@ fn desktop_steps(i18n: &MarketingI18n, ctx: &RequestContext) -> Markup {
                 ol class="space-y-4" {
                     (step("1", html! {
                         span {
-                            a href="https://web.fluxer.app" target="_blank" rel="noopener noreferrer" class="text-gray-900 underline hover:text-gray-700" {
+                            a href=(ctx.app_url("")) target="_blank" rel="noopener noreferrer" class="text-gray-900 underline hover:text-gray-700" {
                                 (tr(i18n, ctx, APP_OPEN_OPEN_WEB_APP_DESCRIPTOR))
                             }
                             (tr(i18n, ctx, PLATFORM_SUPPORT_MOBILE_INSTALL_AS_APP_GUIDES_IN_CHROME_OR_ANOTHER_BROWSER_DESCRIPTOR))

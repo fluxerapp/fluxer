@@ -22,6 +22,7 @@ use std::{
 type HmacSha256 = Hmac<Sha256>;
 
 const CANARY_API_ENDPOINT: &str = "https://api.canary.fluxer.app";
+pub const CANARY_WEB_APP_ENDPOINT: &str = "https://web.canary.fluxer.app";
 const LOCALE_COOKIE_MAX_AGE_SECONDS: u64 = 60 * 60 * 24 * 365;
 const STABLE_API_ENDPOINT: &str = "https://api.fluxer.app";
 
@@ -42,7 +43,6 @@ pub struct RequestContext {
     pub current_path: String,
     pub base_path: String,
     pub base_url: String,
-    pub app_endpoint: String,
     pub api_endpoint: String,
     pub static_cdn_endpoint: String,
     pub asset_version: String,
@@ -92,7 +92,6 @@ impl RequestContext {
             current_path,
             base_path: state.config.base_path.clone(),
             base_url: state.config.base_url(),
-            app_endpoint: state.config.app_endpoint.clone(),
             api_endpoint: state.config.api_endpoint.clone(),
             static_cdn_endpoint: state.config.static_cdn_endpoint.clone(),
             asset_version: state.config.build_version.clone(),
@@ -141,7 +140,7 @@ impl RequestContext {
     }
 
     pub fn app_url(&self, path: &str) -> String {
-        format!("{}{}", self.app_endpoint, path)
+        format!("{CANARY_WEB_APP_ENDPOINT}{path}")
     }
 
     pub fn api_url(&self, path: &str) -> String {

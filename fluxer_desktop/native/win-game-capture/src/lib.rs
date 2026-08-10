@@ -17,6 +17,8 @@ mod hdr;
 #[cfg(target_os = "windows")]
 mod nv12_gpu;
 mod sources;
+#[cfg(any(target_os = "windows", test))]
+mod stall;
 #[cfg(target_os = "windows")]
 mod vulkan_layer_registry;
 #[cfg(target_os = "windows")]
@@ -46,6 +48,7 @@ use wgc_capture::WgcCaptureSession;
 
 const LIFECYCLE_QUEUE_LIMIT: usize = 8;
 const START_OPTION_UNSUPPORTED_LIMIT: usize = 4;
+const GAME_CAPTURE_HOOK_FORCE_DISABLED: bool = true;
 
 type LifecycleTsfn = Arc<
     ThreadsafeFunction<
@@ -952,7 +955,7 @@ impl ScreenCapture {
             return Err(napi::Error::from_reason("Capture already running"));
         }
 
-        if source_kind == "game" {
+        if source_kind == "game" && !GAME_CAPTURE_HOOK_FORCE_DISABLED {
             return self.start_windows_game(
                 source_id,
                 source_kind,
@@ -967,6 +970,7 @@ impl ScreenCapture {
         }
         let _ = (hook_path, hook_path_x86, injection_method);
         let target_frame_rate = frame_rate.unwrap_or(30).clamp(1, 144);
+
         let frame_interval =
             std::time::Duration::from_nanos(1_000_000_000 / target_frame_rate as u64);
 
@@ -986,10 +990,17 @@ impl ScreenCapture {
             return self.start_windows_wgc_session(session, target_frame_rate);
         }
 
-        let hwnd =
+        let hwnd = if source_kind == "game" {
+            let target = game_capture::resolve_game_capture_target(&source_id, &source_kind)
+                .map_err(|e| {
+                    napi::Error::from_reason(format!("Failed to resolve game capture target: {e}"))
+                })?;
+            windows::Win32::Foundation::HWND(target as *mut _)
+        } else {
             dxgi_capture::parse_window_source_id(&source_id, &source_kind).ok_or_else(|| {
                 napi::Error::from_reason(format!("Invalid source: {source_kind}:{source_id}"))
-            })?;
+            })?
+        };
 
         if let Some(result) = self.try_start_windows_wgc(hwnd, width, height, target_frame_rate)? {
             return Ok(result);
@@ -1263,6 +1274,11 @@ mod tests {
 #[napi(js_name = "isSupported")]
 pub fn is_supported() -> bool {
     cfg!(target_os = "windows")
+}
+
+#[napi(js_name = "isGameCaptureHookAvailable")]
+pub fn is_game_capture_hook_available() -> bool {
+    cfg!(target_os = "windows") && !GAME_CAPTURE_HOOK_FORCE_DISABLED
 }
 
 #[napi(js_name = "getAvailability")]

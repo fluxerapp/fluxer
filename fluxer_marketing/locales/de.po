@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: fluxer-marketing\n"
-"POT-Creation-Date: 2026-08-02 00:00+0000\n"
-"PO-Revision-Date: 2026-08-02 00:00+0000\n"
+"POT-Creation-Date: 2026-08-10 00:00+0000\n"
+"PO-Revision-Date: 2026-08-10 00:00+0000\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -2188,13 +2188,11 @@ msgctxt "platform_support.desktop.use_desktop_client_mobile_soon"
 msgid "Use the desktop client (mobile coming soon)"
 msgstr "Nutze den Desktop-Client (Mobile Version bald verfügbar)"
 
-#. Canary-only notice below the Windows download row. Preserve Microsoft Defender and Windows as names; keep {issue_link} exactly where the linked issue number should appear and make clear the antivirus warning is temporary. Preserve placeholders exactly.
-#: fluxer_marketing/generated:platform_support.desktop.canary_windows_warning
-msgctxt "platform_support.desktop.canary_windows_warning"
-msgid ""
-"This Canary build may be flagged by {microsoft_defender} or other antivirus software on {windows} for now. See GitHub issue {issue_link} for more details."
-msgstr ""
-"Diese Canary-Version wird möglicherweise vorübergehend von {microsoft_defender} oder anderer Antivirensoftware unter {windows} erkannt. Weitere Details findest du in GitHub-Issue {issue_link}."
+#. Notice below the Linux download row warning that the Flatpak build lags the other Linux downloads at the moment. Preserve Flatpak and Linux as names and preserve placeholders exactly.
+#: fluxer_marketing/generated:platform_support.desktop.flatpak_outdated
+msgctxt "platform_support.desktop.flatpak_outdated"
+msgid "The {flatpak} package is currently behind the other {linux} downloads."
+msgstr "Das {flatpak}-Paket hinkt derzeit den anderen {linux}-Downloads hinterher."
 
 #. Body copy for mobile/PWA install guidance on the download page. Keep instructions clear, device-appropriate, and concise; preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.install_as_app.done_desktop
@@ -2437,7 +2435,8 @@ msgstr "{ios}-App"
 msgctxt "platform_support.mobile.ios.body"
 msgid ""
 "The {ios} app on {testflight} is currently limited to {premium_tier_full_name} members. Public access is coming soon. The full {product_name} web app also works in Safari and can be added to your Home Screen."
-msgstr "Die {ios}-App über {testflight} ist derzeit auf {premium_tier_full_name}-Mitglieder beschränkt. Öffentlicher Zugang folgt in Kürze. Die vollständige {product_name}-Web-App funktioniert auch in Safari und kann zu deinem Homescreen hinzugefügt werden."
+msgstr ""
+"Die {ios}-App über {testflight} ist derzeit auf {premium_tier_full_name}-Mitglieder beschränkt. Öffentlicher Zugang folgt in Kürze. Die vollständige {product_name}-Web-App funktioniert auch in Safari und kann zu deinem Homescreen hinzugefügt werden."
 
 #. Card title for the Android app option on the download page. Keep the platform name conventional and short. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.android.title

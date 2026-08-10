@@ -23,7 +23,7 @@ use windows::Win32::System::WinRT::Direct3D11::{
 };
 use windows::Win32::System::WinRT::Graphics::Capture::IGraphicsCaptureItemInterop;
 use windows::Win32::System::WinRT::{RO_INIT_MULTITHREADED, RoInitialize};
-use windows::Win32::UI::WindowsAndMessaging::IsWindow;
+use windows::Win32::UI::WindowsAndMessaging::{IsWindow, IsWindowVisible};
 use windows::core::{BOOL, Interface};
 
 use crate::dxgi_capture::{
@@ -31,6 +31,7 @@ use crate::dxgi_capture::{
     pacing_sleep_and_next_deadline, resolve_output_size,
 };
 use crate::nv12_gpu::Nv12GpuConverter;
+use crate::stall::{NoFrameStallTracker, StallSignal};
 use crate::{
     CaptureInner, emit_lifecycle, emit_shared_texture_frame, note_media_frame_without_sink,
     resolve_frame_sink,
@@ -39,6 +40,7 @@ use crate::{
 const WGC_FRAME_POOL_BUFFERS: i32 = 2;
 const WGC_FRAME_DRAIN_LIMIT: u32 = 4;
 const WGC_MONITOR_ENUM_LIMIT: usize = 16;
+const WGC_STALL_THRESHOLD: std::time::Duration = std::time::Duration::from_millis(3000);
 
 fn ensure_winrt_initialized() {
     let result = unsafe { RoInitialize(RO_INIT_MULTITHREADED) };
@@ -78,6 +80,20 @@ impl WgcCaptureTarget {
         match self {
             Self::Window(hwnd) => unsafe { IsWindow(Some(hwnd)) }.as_bool(),
             Self::Monitor(monitor) => !monitor.is_invalid(),
+        }
+    }
+
+    fn expects_frames(self) -> bool {
+        match self {
+            Self::Window(hwnd) => unsafe { IsWindowVisible(hwnd) }.as_bool(),
+            Self::Monitor(monitor) => !monitor.is_invalid(),
+        }
+    }
+
+    fn label(self) -> &'static str {
+        match self {
+            Self::Window(_) => "window",
+            Self::Monitor(_) => "monitor",
         }
     }
 
@@ -339,6 +355,7 @@ pub fn capture_loop(inner: &Arc<CaptureInner>, frame_interval: std::time::Durati
     let capture_start = std::time::Instant::now();
     let mut next_frame_deadline = capture_start + frame_interval;
     let mut frames_dropped_coalesced: u64 = 0;
+    let mut stall_tracker = NoFrameStallTracker::new(WGC_STALL_THRESHOLD, capture_start);
 
     while inner.running.load(Ordering::Acquire) {
         if !ctx.target.is_alive() {
@@ -377,6 +394,12 @@ pub fn capture_loop(inner: &Arc<CaptureInner>, frame_interval: std::time::Durati
             capture_start,
             &mut frames_dropped_coalesced,
         );
+        let signal = stall_tracker.observe(
+            std::time::Instant::now(),
+            matches!(result, WgcFrameResult::Ok),
+            ctx.target.expects_frames(),
+        );
+        emit_stall_signal(inner, ctx.target, signal);
         match handle_frame_result(inner, &ctx, &mut wgc_state, result, &mut recreate_backoff) {
             LoopStep::Paced => {}
             LoopStep::Restart => continue,
@@ -394,6 +417,46 @@ pub fn capture_loop(inner: &Arc<CaptureInner>, frame_interval: std::time::Durati
     teardown_wgc_state(&mut wgc_state);
     inner.running.store(false, Ordering::Release);
     emit_lifecycle(inner, "closed-clean", "capture stopped");
+}
+
+fn emit_stall_signal(inner: &Arc<CaptureInner>, target: WgcCaptureTarget, signal: StallSignal) {
+    match signal {
+        StallSignal::Quiet => {}
+        StallSignal::Stalled {
+            frames_seen,
+            elapsed_ms,
+        } => {
+            emit_lifecycle(
+                inner,
+                "stalled",
+                &stall_detail(target, frames_seen, elapsed_ms),
+            );
+        }
+        StallSignal::Resumed { stalled_for_ms } => {
+            emit_lifecycle(
+                inner,
+                "diagnostic",
+                &format!(
+                    "WGC {} capture frames resumed after {stalled_for_ms}ms without a frame",
+                    target.label()
+                ),
+            );
+        }
+    }
+}
+
+fn stall_detail(target: WgcCaptureTarget, frames_seen: u64, elapsed_ms: u64) -> String {
+    let label = target.label();
+    if frames_seen == 0 {
+        return format!(
+            "WGC {label} capture stalled: the target is still alive but Windows Graphics Capture \
+             has delivered no frame in the first {elapsed_ms}ms; the stream is blank"
+        );
+    }
+    format!(
+        "WGC {label} capture stalled: no new frame for {elapsed_ms}ms after {frames_seen} frames; \
+         the target may be paused, occluded, or no longer rendering"
+    )
 }
 
 fn handle_frame_result(

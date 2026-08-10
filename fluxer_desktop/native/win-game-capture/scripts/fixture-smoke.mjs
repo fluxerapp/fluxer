@@ -27,62 +27,19 @@ const FRAME_RATE = Number.parseInt(process.env.FLUXER_WIN_GAME_CAPTURE_FIXTURE_F
 const START_TIMEOUT_MS = Number.parseInt(process.env.FLUXER_WIN_GAME_CAPTURE_FIXTURE_START_TIMEOUT_MS ?? '15000', 10);
 const FRAME_TIMEOUT_MS = Number.parseInt(process.env.FLUXER_WIN_GAME_CAPTURE_FIXTURE_FRAME_TIMEOUT_MS ?? '15000', 10);
 
+const MIN_OBSERVED_FRAMES = 3;
+
+const API_NONE = 0;
 const TRANSPORT_MEMORY = 0;
-const TRANSPORT_SHARED_TEXTURE = 1;
-
-const API_OPENGL = 1;
-const API_D3D9 = 3;
-const API_D3D10 = 4;
-const API_D3D11 = 5;
-const API_D3D12 = 6;
-const API_VULKAN = 7;
-
 const FALLBACK_NONE = 0;
-const FALLBACK_SHARED_TEXTURE_UNSUPPORTED = 1;
+const DXGI_FORMAT_UNKNOWN = 0;
+const EXPECTED_ACTIVE_STRATEGY = 'wgc';
 
 const EXPECTED_DIAGNOSTICS = {
-	'd3d9-present-fixture': {
-		apiType: API_D3D9,
-		transport: TRANSPORT_SHARED_TEXTURE,
-		fallbackReason: FALLBACK_NONE,
-		requiresDxgiFormat: true,
-	},
-	'd3d10-present-fixture': {
-		apiType: API_D3D10,
-		transport: TRANSPORT_SHARED_TEXTURE,
-		fallbackReason: FALLBACK_NONE,
-		requiresDxgiFormat: true,
-	},
-	'd3d11-present-fixture': {
-		apiType: API_D3D11,
-		transport: TRANSPORT_SHARED_TEXTURE,
-		fallbackReason: FALLBACK_NONE,
-		requiresDxgiFormat: true,
-	},
-	'd3d12-present-fixture': {
-		apiType: API_D3D12,
-		transport: TRANSPORT_SHARED_TEXTURE,
-		fallbackReason: FALLBACK_NONE,
-		requiresDxgiFormat: true,
-	},
-	'opengl-swapbuffers-fixture': {
-		apiType: API_OPENGL,
-		transportOneOf: [TRANSPORT_SHARED_TEXTURE, TRANSPORT_MEMORY],
-		fallbackReasonOneOf: [FALLBACK_NONE, FALLBACK_SHARED_TEXTURE_UNSUPPORTED],
-		requiresDxgiFormatWhenShared: true,
-	},
-	'vulkan-present-fixture': {
-		apiType: API_VULKAN,
-		transport: TRANSPORT_SHARED_TEXTURE,
-		fallbackReason: FALLBACK_NONE,
-		requiresDxgiFormat: true,
-	},
-	'i686-present-fixture': {
-		apiType: API_D3D11,
-		transport: TRANSPORT_SHARED_TEXTURE,
-		fallbackReason: FALLBACK_NONE,
-		requiresDxgiFormat: true,
-	},
+	apiType: API_NONE,
+	transport: TRANSPORT_MEMORY,
+	fallbackReason: FALLBACK_NONE,
+	dxgiFormat: DXGI_FORMAT_UNKNOWN,
 };
 
 function envFlag(name) {
@@ -216,50 +173,29 @@ function waitForHwnd(child, fixture) {
 	});
 }
 
-function frameSignature(frame) {
-	const bytes = frame.data;
-	const width = Math.max(1, frame.width);
-	const height = Math.max(1, frame.height);
-	const stride = Math.max(1, frame.strideY || (frame.format === 'bgra' ? width * 4 : width));
-	const rows = frame.format === 'bgra' ? Math.min(height, 12) : Math.min(height, 32);
-	let hash = 2166136261;
-	for (let y = 0; y < rows; y += 1) {
-		const row = y * stride;
-		const rowBytes = frame.format === 'bgra' ? Math.min(stride, width * 4, 256) : Math.min(stride, width, 256);
-		for (let x = 0; x < rowBytes; x += 4) {
-			hash ^= bytes[row + x] ?? 0;
-			hash = Math.imul(hash, 16777619) >>> 0;
-		}
-	}
-	return hash >>> 0;
+function observedFrameCount(diagnostics) {
+	if (!diagnostics) return 0;
+	const accepted = Number(diagnostics.frameSinkAccepted ?? 0);
+	const coalesced = Number(diagnostics.frameSinkCoalesced ?? 0);
+	const droppedWithoutSink = Number(diagnostics.mediaFramesDroppedWithoutSink ?? 0);
+	const total = accepted + coalesced + droppedWithoutSink;
+	return Number.isFinite(total) ? total : 0;
 }
 
-async function waitForAdvancingFrames(screenCapture, fixture) {
-	const signatures = new Set();
-	let frameCount = 0;
+async function waitForAdvancingFrames(screenCapture, fixture, stalls) {
 	let lastDiagnostics = null;
-	const onFrame = (frame) => {
-		frameCount += 1;
-		signatures.add(frameSignature(frame));
-		lastDiagnostics = screenCapture.getDiagnostics?.() ?? lastDiagnostics;
-	};
-	screenCapture.on('frame', onFrame);
 	const start = Date.now();
-	try {
-		while (Date.now() - start < FRAME_TIMEOUT_MS) {
-			lastDiagnostics = screenCapture.getDiagnostics?.() ?? lastDiagnostics;
-			const nativeFrames = Number(lastDiagnostics?.frameCounter ?? 0);
-			if (frameCount >= 3 && (signatures.size >= 2 || nativeFrames >= 3)) {
-				return {frameCount, signatures: signatures.size, diagnostics: lastDiagnostics};
-			}
-			await delay(100);
+	while (Date.now() - start < FRAME_TIMEOUT_MS) {
+		lastDiagnostics = screenCapture.getDiagnostics?.() ?? lastDiagnostics;
+		const frameCount = observedFrameCount(lastDiagnostics);
+		if (frameCount >= MIN_OBSERVED_FRAMES) {
+			return {frameCount, diagnostics: lastDiagnostics};
 		}
-		throw new Error(
-			`${fixture} capture did not deliver advancing frames within ${FRAME_TIMEOUT_MS}ms (frames=${frameCount}, signatures=${signatures.size}, diagnostics=${JSON.stringify(lastDiagnostics)})`,
-		);
-	} finally {
-		screenCapture.off('frame', onFrame);
+		await delay(100);
 	}
+	throw new Error(
+		`${fixture} capture did not deliver advancing frames within ${FRAME_TIMEOUT_MS}ms (frames=${observedFrameCount(lastDiagnostics)}, stalls=${JSON.stringify(stalls)}, diagnostics=${JSON.stringify(lastDiagnostics)})`,
+	);
 }
 
 function assertEqualDiagnostic(fixture, diagnostics, key, expected) {
@@ -268,53 +204,25 @@ function assertEqualDiagnostic(fixture, diagnostics, key, expected) {
 	}
 }
 
-function assertOneOfDiagnostic(fixture, diagnostics, key, expected) {
-	if (!expected.includes(diagnostics?.[key])) {
-		throw new Error(
-			`${fixture} expected diagnostics.${key} in [${expected.join(', ')}], got ${JSON.stringify(diagnostics)}`,
-		);
-	}
-}
-
 function assertFixtureDiagnostics(fixture, diagnostics) {
-	const expectedBase = EXPECTED_DIAGNOSTICS[fixture];
-	if (!expectedBase) return;
-	const expected = {...expectedBase};
+	const expected = {...EXPECTED_DIAGNOSTICS};
 	const apiOverride = diagnosticOverride('FLUXER_WIN_GAME_CAPTURE_EXPECT_API_TYPE', fixture);
 	const transportOverride = diagnosticOverride('FLUXER_WIN_GAME_CAPTURE_EXPECT_TRANSPORT', fixture);
 	const fallbackOverride = diagnosticOverride('FLUXER_WIN_GAME_CAPTURE_EXPECT_FALLBACK_REASON', fixture);
 	if (apiOverride !== undefined) expected.apiType = apiOverride;
-	if (transportOverride !== undefined) {
-		expected.transport = transportOverride;
-		delete expected.transportOneOf;
-		expected.requiresDxgiFormat = expected.transport === TRANSPORT_SHARED_TEXTURE;
-	}
-	if (fallbackOverride !== undefined) {
-		expected.fallbackReason = fallbackOverride;
-		delete expected.fallbackReasonOneOf;
-	}
+	if (transportOverride !== undefined) expected.transport = transportOverride;
+	if (fallbackOverride !== undefined) expected.fallbackReason = fallbackOverride;
 
+	if (diagnostics?.activeStrategy !== EXPECTED_ACTIVE_STRATEGY) {
+		throw new Error(
+			`${fixture} expected activeStrategy=${EXPECTED_ACTIVE_STRATEGY}, got ${JSON.stringify(diagnostics)}`,
+		);
+	}
 	assertEqualDiagnostic(fixture, diagnostics, 'apiType', expected.apiType);
-	if (expected.transportOneOf) {
-		assertOneOfDiagnostic(fixture, diagnostics, 'transport', expected.transportOneOf);
-	} else {
-		assertEqualDiagnostic(fixture, diagnostics, 'transport', expected.transport);
-	}
-	if (expected.fallbackReason !== undefined) {
-		assertEqualDiagnostic(fixture, diagnostics, 'fallbackReason', expected.fallbackReason);
-	} else if (expected.fallbackReasonOneOf) {
-		assertOneOfDiagnostic(fixture, diagnostics, 'fallbackReason', expected.fallbackReasonOneOf);
-	}
-	if (diagnostics?.activeStrategy !== 'game-hook') {
-		throw new Error(`${fixture} expected activeStrategy=game-hook, got ${JSON.stringify(diagnostics)}`);
-	}
-	if (
-		(expected.requiresDxgiFormat ||
-			(expected.requiresDxgiFormatWhenShared && diagnostics?.transport === TRANSPORT_SHARED_TEXTURE)) &&
-		Number(diagnostics?.dxgiFormat ?? 0) === 0
-	) {
-		throw new Error(`${fixture} expected a non-zero shared texture DXGI format, got ${JSON.stringify(diagnostics)}`);
-	}
+	assertEqualDiagnostic(fixture, diagnostics, 'transport', expected.transport);
+	assertEqualDiagnostic(fixture, diagnostics, 'fallbackReason', expected.fallbackReason);
+	assertEqualDiagnostic(fixture, diagnostics, 'dxgiFormat', expected.dxgiFormat);
+	assertEqualDiagnostic(fixture, diagnostics, 'injectionMethod', '');
 }
 
 async function runFixture(fixture) {
@@ -338,14 +246,16 @@ async function runFixture(fixture) {
 			frameRate: FRAME_RATE,
 			injectionMethod: process.env.FLUXER_WIN_GAME_CAPTURE_INJECTION_METHOD || 'auto',
 		});
+		const stalls = [];
+		screenCapture.on('stalled', (message) => stalls.push(message ?? ''));
 		let result;
 		try {
 			result = await screenCapture.start();
 			started = true;
-			const observed = await waitForAdvancingFrames(screenCapture, fixture);
+			const observed = await waitForAdvancingFrames(screenCapture, fixture, stalls);
 			assertFixtureDiagnostics(fixture, observed.diagnostics);
 			console.log(
-				`[fixture-smoke] PASS ${fixture}: start=${JSON.stringify(result)} frames=${observed.frameCount} signatures=${observed.signatures} diagnostics=${JSON.stringify(observed.diagnostics)}`,
+				`[fixture-smoke] PASS ${fixture}: start=${JSON.stringify(result)} frames=${observed.frameCount} stalls=${JSON.stringify(stalls)} diagnostics=${JSON.stringify(observed.diagnostics)}`,
 			);
 		} finally {
 			if (started) await screenCapture.stop().catch(() => {});

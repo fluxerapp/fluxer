@@ -41,10 +41,10 @@ crate::marketing_message!(
 );
 
 crate::marketing_message!(
-    pub const PLATFORM_SUPPORT_DESKTOP_CANARY_WINDOWS_WARNING_DESCRIPTOR = {
-        key: "platform_support.desktop.canary_windows_warning",
-        message: "This Canary build may be flagged by {microsoft_defender} or other antivirus software on {windows} for now. See GitHub issue {issue_link} for more details.",
-        comment: "Canary-only notice below the Windows download row. Preserve Microsoft Defender and Windows as names; keep {issue_link} exactly where the linked issue number should appear and make clear the antivirus warning is temporary. Preserve placeholders exactly.",
+    pub const PLATFORM_SUPPORT_DESKTOP_FLATPAK_OUTDATED_DESCRIPTOR = {
+        key: "platform_support.desktop.flatpak_outdated",
+        message: "The {flatpak} package is currently behind the other {linux} downloads.",
+        comment: "Notice below the Linux download row warning that the Flatpak build lags the other Linux downloads at the moment. Preserve Flatpak and Linux as names and preserve placeholders exactly.",
     };
 );
 

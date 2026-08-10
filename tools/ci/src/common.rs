@@ -1530,14 +1530,6 @@ pub(crate) fn count_files_min_depth(root: &Path, min_depth: usize) -> Result<usi
         .count())
 }
 
-pub(crate) fn first_word(value: &str) -> String {
-    value
-        .split_whitespace()
-        .next()
-        .unwrap_or_default()
-        .to_string()
-}
-
 pub(crate) fn title_case(value: &str) -> String {
     let mut chars = value.chars();
     match chars.next() {

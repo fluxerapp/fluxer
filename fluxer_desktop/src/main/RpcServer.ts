@@ -2,7 +2,6 @@
 
 import http from 'node:http';
 import {BUILD_CHANNEL} from '@electron/common/BuildChannel';
-import {DESKTOP_BUILD_VARIANT} from '@electron/common/BuildVariant';
 import {CANARY_APP_URL, STABLE_APP_URL} from '@electron/common/Constants';
 import {getCustomAppUrl} from '@electron/common/DesktopConfig';
 import {getMainWindow, showWindow} from '@electron/main/Window';
@@ -115,7 +114,6 @@ const handleHealth = (_req: http.IncomingMessage, res: http.ServerResponse) => {
 		data: {
 			status: 'ok',
 			channel: BUILD_CHANNEL,
-			build_variant: DESKTOP_BUILD_VARIANT,
 			version: app.getVersion(),
 			platform: process.platform,
 		},

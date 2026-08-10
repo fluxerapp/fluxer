@@ -75,8 +75,6 @@ on:
         required: false
       GHCR_TOKEN:
         required: false
-      FLUXER_WEBHOOK_URL:
-        required: false
 
 env:
   GHCR_OWNER: ${{ github.repository_owner }}
@@ -457,37 +455,6 @@ jobs:
             --from-literal=previousImage="" \
             --dry-run=client -o yaml \
             | kubectl apply -f -
-
-      - name: notify web app canary deploy
-        if: ${{ success() && inputs.service == 'app-proxy' && inputs.channel == 'canary' }}
-        shell: bash
-        env:
-          FLUXER_WEBHOOK_URL: ${{ secrets.FLUXER_WEBHOOK_URL }}
-          IMAGE_TAG: ${{ inputs['image-tag'] }}
-          BUILD_VERSION: ${{ inputs['build-version'] }}
-        run: |
-          set -euo pipefail
-
-          if [[ -z "${FLUXER_WEBHOOK_URL:-}" ]]; then
-            echo "FLUXER_WEBHOOK_URL is not set; skipping web app canary deploy notification."
-            exit 0
-          fi
-
-          web_app_version="${BUILD_VERSION:-$IMAGE_TAG}"
-
-          markdown_tick=$(printf '\140')
-          content=$(printf '## Canary Web App Deployed\n\nWeb app version: %s%s%s' \
-            "$markdown_tick" "$web_app_version" "$markdown_tick")
-          if [[ "$IMAGE_TAG" != "$web_app_version" ]]; then
-            content=$(printf '%s\nContainer image tag: %s%s%s' "$content" "$markdown_tick" "$IMAGE_TAG" "$markdown_tick")
-          fi
-
-          jq -n --arg content "$content" \
-            '{content: $content, allowed_mentions: {parse: []}}' \
-            | curl -fsS --retry 3 \
-                -H 'Content-Type: application/json' \
-                --data-binary @- \
-                "$FLUXER_WEBHOOK_URL"
 
       - name: recover stuck release on failure
         if: failure() || cancelled()

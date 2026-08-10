@@ -12,9 +12,6 @@ const appId = isCanary ? 'app.fluxer.canary' : 'app.fluxer';
 const iconDir = isCanary ? 'icons-canary' : 'icons-stable';
 const packageName = isCanary ? 'fluxer_desktop_canary' : 'fluxer_desktop';
 const linuxPackageName = isCanary ? 'fluxer-canary' : 'fluxer';
-const desktopBuildVariant = process.env.FLUXER_DESKTOP_BUILD_VARIANT || process.env.DESKTOP_VARIANT || 'default';
-const windowsGameCaptureModuleEnabled =
-	desktopBuildVariant === 'windows-game-capture' || process.env.FLUXER_WINDOWS_GAME_CAPTURE_MODULE_ENABLED === 'true';
 const linuxDesktopActionIds = ['open-settings', 'new-dm'];
 const linuxDesktopActionList = `${linuxDesktopActionIds.join(';')};`;
 const rpmBuildIdFilePrefix = '/usr/lib/.build-id';
@@ -57,7 +54,7 @@ const fluxerNativePackages = [
 	'@fluxer/mac-tcc',
 	'@fluxer/macos-input-hook',
 	'@fluxer/win-process-loopback',
-	...(windowsGameCaptureModuleEnabled ? ['@fluxer/win-game-capture'] : []),
+	'@fluxer/win-game-capture',
 	'@fluxer/win-clipboard',
 	'@fluxer/win-shell',
 	'@fluxer/win-toast',
@@ -87,7 +84,7 @@ const fluxerNativePackagesByPlatform = {
 	],
 	win32: [
 		'@fluxer/win-process-loopback',
-		...(windowsGameCaptureModuleEnabled ? ['@fluxer/win-game-capture'] : []),
+		'@fluxer/win-game-capture',
 		'@fluxer/win-clipboard',
 		'@fluxer/win-shell',
 		'@fluxer/win-toast',
@@ -143,18 +140,14 @@ const nativeRuntimeFilePatterns = [
 	'node_modules/@fluxer/win-process-loopback/binding.js',
 	'node_modules/@fluxer/win-process-loopback/loader-diagnostics.cjs',
 	'node_modules/@fluxer/win-process-loopback/*.node',
-	...(windowsGameCaptureModuleEnabled
-		? [
-				'node_modules/@fluxer/win-game-capture/package.json',
-				'node_modules/@fluxer/win-game-capture/index.js',
-				'node_modules/@fluxer/win-game-capture/loader-diagnostics.cjs',
-				'node_modules/@fluxer/win-game-capture/*.node',
-				'node_modules/@fluxer/win-game-capture/*.dll',
-				'node_modules/@fluxer/win-game-capture/*.exe',
-				'node_modules/@fluxer/win-game-capture/compatibility.json',
-				'node_modules/@fluxer/win-game-capture/fluxer-vulkan-layer.*.json',
-			]
-		: []),
+	'node_modules/@fluxer/win-game-capture/package.json',
+	'node_modules/@fluxer/win-game-capture/index.js',
+	'node_modules/@fluxer/win-game-capture/loader-diagnostics.cjs',
+	'node_modules/@fluxer/win-game-capture/*.node',
+	'node_modules/@fluxer/win-game-capture/*.dll',
+	'node_modules/@fluxer/win-game-capture/*.exe',
+	'node_modules/@fluxer/win-game-capture/compatibility.json',
+	'node_modules/@fluxer/win-game-capture/fluxer-vulkan-layer.*.json',
 	'node_modules/@fluxer/win-clipboard/package.json',
 	'node_modules/@fluxer/win-clipboard/index.js',
 	'node_modules/@fluxer/win-clipboard/loader-diagnostics.cjs',
@@ -221,15 +214,11 @@ const nativeRuntimeFilePatterns = [
 	'node_modules/@fluxer/webrtc-sender/*.node',
 	'node_modules/.pnpm/@fluxer+*/node_modules/@fluxer/*/loader-diagnostics.cjs',
 	'node_modules/.pnpm/@fluxer+win-process-loopback@*/node_modules/@fluxer/win-process-loopback/*.node',
-	...(windowsGameCaptureModuleEnabled
-		? [
-				'node_modules/.pnpm/@fluxer+win-game-capture@*/node_modules/@fluxer/win-game-capture/*.node',
-				'node_modules/.pnpm/@fluxer+win-game-capture@*/node_modules/@fluxer/win-game-capture/*.dll',
-				'node_modules/.pnpm/@fluxer+win-game-capture@*/node_modules/@fluxer/win-game-capture/*.exe',
-				'node_modules/.pnpm/@fluxer+win-game-capture@*/node_modules/@fluxer/win-game-capture/compatibility.json',
-				'node_modules/.pnpm/@fluxer+win-game-capture@*/node_modules/@fluxer/win-game-capture/fluxer-vulkan-layer.*.json',
-			]
-		: []),
+	'node_modules/.pnpm/@fluxer+win-game-capture@*/node_modules/@fluxer/win-game-capture/*.node',
+	'node_modules/.pnpm/@fluxer+win-game-capture@*/node_modules/@fluxer/win-game-capture/*.dll',
+	'node_modules/.pnpm/@fluxer+win-game-capture@*/node_modules/@fluxer/win-game-capture/*.exe',
+	'node_modules/.pnpm/@fluxer+win-game-capture@*/node_modules/@fluxer/win-game-capture/compatibility.json',
+	'node_modules/.pnpm/@fluxer+win-game-capture@*/node_modules/@fluxer/win-game-capture/fluxer-vulkan-layer.*.json',
 	'node_modules/.pnpm/@fluxer+win-clipboard@*/node_modules/@fluxer/win-clipboard/*.node',
 	'node_modules/.pnpm/@fluxer+win-shell@*/node_modules/@fluxer/win-shell/*.node',
 	'node_modules/.pnpm/@fluxer+win-toast@*/node_modules/@fluxer/win-toast/*.node',
@@ -308,9 +297,6 @@ const bundledDependencyExcludes = [
 	'!node_modules/xml2js/**/*',
 	'!node_modules/xmlbuilder/**/*',
 ];
-const windowsGameCapturePackageExcludes = !windowsGameCaptureModuleEnabled
-	? ['!node_modules/@fluxer/win-game-capture/**/*', '!node_modules/.pnpm/@fluxer+win-game-capture@*/**/*']
-	: [];
 const platformNativeRuntimeExcludes = platformNativeExcludes(targetPlatform, targetNativeArch);
 const platformRuntimeDependencyExcludes =
 	targetPlatform === 'darwin'
@@ -352,19 +338,32 @@ function velopackNativeFile(platform, arch) {
 	return null;
 }
 
+function pnpmStoreDirName(packageName) {
+	return packageName.replace('/', '+');
+}
+
 function platformNativeExcludes(platform, arch) {
-	if (!arch) return [];
 	const keepFluxerPackages = new Set(fluxerNativePackagesByPlatform[platform] ?? []);
+	const fluxerPackageExcludes = fluxerNativePackages
+		.filter((packageName) => !keepFluxerPackages.has(packageName))
+		.flatMap((packageName) => [
+			`!node_modules/${packageName}/**/*`,
+			`!node_modules/.pnpm/${pnpmStoreDirName(packageName)}@*/**/*`,
+		]);
+	if (platform !== 'win32') {
+		return [...fluxerPackageExcludes, '!node_modules/velopack/**/*'];
+	}
 	const keepVelopackNativeFile = velopackNativeFile(platform, arch);
+	if (!keepVelopackNativeFile) {
+		throw new Error(
+			`Cannot determine the Velopack native module for win32 without a target architecture; set ELECTRON_ARCH or pass --x64/--arm64 (received ${JSON.stringify(arch)})`,
+		);
+	}
 	return [
-		...fluxerNativePackages
-			.filter((packageName) => !keepFluxerPackages.has(packageName))
-			.map((packageName) => `!node_modules/${packageName}/**/*`),
-		...(platform === 'win32'
-			? velopackNativeFiles
-					.filter((fileName) => fileName !== keepVelopackNativeFile)
-					.map((fileName) => `!node_modules/velopack/lib/native/${fileName}`)
-			: ['!node_modules/velopack/**/*']),
+		...fluxerPackageExcludes,
+		...velopackNativeFiles
+			.filter((fileName) => fileName !== keepVelopackNativeFile)
+			.map((fileName) => `!node_modules/velopack/lib/native/${fileName}`),
 	];
 }
 
@@ -393,7 +392,6 @@ function platformTag(platform, arch) {
 }
 
 function addWindowsGameCaptureArtifacts(artifacts, tag, arch) {
-	if (!windowsGameCaptureModuleEnabled) return;
 	const add = (relativePath) => {
 		artifacts.push({
 			packageName: '@fluxer/win-game-capture',
@@ -1066,14 +1064,13 @@ module.exports = {
 		...nativeBuildArtifactExcludes,
 		...packagedRuntimeArtifactExcludes,
 		...bundledDependencyExcludes,
-		...windowsGameCapturePackageExcludes,
 		...platformNativeRuntimeExcludes,
 		...platformRuntimeDependencyExcludes,
 	],
 	extraMetadata: {
 		main: 'dist/main/index.js',
 		name: metadataName,
-		...(Boolean(process.env.VERSION) ? {version: process.env.VERSION} : {}),
+		...(process.env.VERSION ? {version: process.env.VERSION} : {}),
 		...(targetPlatform === 'linux' ? {desktopName: `${linuxPackageName}.desktop`} : {}),
 	},
 	extraResources: [
@@ -1107,14 +1104,10 @@ module.exports = {
 	asarUnpack: [
 		'**/*.node',
 		'node_modules/@fluxer/win-process-loopback/*.node',
-		...(windowsGameCaptureModuleEnabled
-			? [
-					'node_modules/@fluxer/win-game-capture/*.node',
-					'node_modules/@fluxer/win-game-capture/*.dll',
-					'node_modules/@fluxer/win-game-capture/*.exe',
-					'node_modules/@fluxer/win-game-capture/*.json',
-				]
-			: []),
+		'node_modules/@fluxer/win-game-capture/*.node',
+		'node_modules/@fluxer/win-game-capture/*.dll',
+		'node_modules/@fluxer/win-game-capture/*.exe',
+		'node_modules/@fluxer/win-game-capture/*.json',
 		'node_modules/@fluxer/win-clipboard/*.node',
 		'node_modules/@fluxer/win-shell/*.node',
 		'node_modules/@fluxer/win-toast/*.node',
@@ -1137,14 +1130,10 @@ module.exports = {
 		'node_modules/@fluxer/webauthn/*.node',
 		'node_modules/@fluxer/webauthn/*.so*',
 		'node_modules/.pnpm/@fluxer+win-process-loopback@*/node_modules/@fluxer/win-process-loopback/*.node',
-		...(windowsGameCaptureModuleEnabled
-			? [
-					'node_modules/.pnpm/@fluxer+win-game-capture@*/node_modules/@fluxer/win-game-capture/*.node',
-					'node_modules/.pnpm/@fluxer+win-game-capture@*/node_modules/@fluxer/win-game-capture/*.dll',
-					'node_modules/.pnpm/@fluxer+win-game-capture@*/node_modules/@fluxer/win-game-capture/*.exe',
-					'node_modules/.pnpm/@fluxer+win-game-capture@*/node_modules/@fluxer/win-game-capture/*.json',
-				]
-			: []),
+		'node_modules/.pnpm/@fluxer+win-game-capture@*/node_modules/@fluxer/win-game-capture/*.node',
+		'node_modules/.pnpm/@fluxer+win-game-capture@*/node_modules/@fluxer/win-game-capture/*.dll',
+		'node_modules/.pnpm/@fluxer+win-game-capture@*/node_modules/@fluxer/win-game-capture/*.exe',
+		'node_modules/.pnpm/@fluxer+win-game-capture@*/node_modules/@fluxer/win-game-capture/*.json',
 		'node_modules/.pnpm/@fluxer+win-clipboard@*/node_modules/@fluxer/win-clipboard/*.node',
 		'node_modules/.pnpm/@fluxer+win-shell@*/node_modules/@fluxer/win-shell/*.node',
 		'node_modules/.pnpm/@fluxer+win-toast@*/node_modules/@fluxer/win-toast/*.node',

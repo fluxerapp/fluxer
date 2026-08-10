@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 #define _GNU_SOURCE
+#define _DARWIN_C_SOURCE
 #define _POSIX_C_SOURCE 200809L
 
 #include "vips_shim.h"
@@ -529,13 +530,13 @@ static int fluxer_gif_setup_filter_graph(
     if (avfilter_graph_create_filter(&src_ctx, avfilter_get_by_name("buffer"),
                                      "in", src_args, NULL, graph) < 0)
         goto fail;
-    if (avfilter_graph_create_filter(&sink_ctx, avfilter_get_by_name("buffersink"),
-                                     "out", NULL, NULL, graph) < 0)
-        goto fail;
+    sink_ctx = avfilter_graph_alloc_filter(graph, avfilter_get_by_name("buffersink"), "out");
+    if (sink_ctx == NULL) goto fail;
     enum AVPixelFormat sink_fmts[] = { AV_PIX_FMT_PAL8, AV_PIX_FMT_NONE };
     if (av_opt_set_int_list(sink_ctx, "pix_fmts", sink_fmts, AV_PIX_FMT_NONE,
                             AV_OPT_SEARCH_CHILDREN) < 0)
         goto fail;
+    if (avfilter_init_dict(sink_ctx, NULL) < 0) goto fail;
 
     char descr[256];
     snprintf(descr, sizeof(descr),

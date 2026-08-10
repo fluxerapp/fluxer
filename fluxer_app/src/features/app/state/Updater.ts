@@ -126,7 +126,6 @@ class Updater {
 	currentVersion: string | null = null;
 	channel: string | null = null;
 	private desktopArch: string | null = null;
-	private desktopBuildVariant: string | null = null;
 	private isNative: boolean;
 	private backgroundCheckStarted = false;
 	private backgroundCheckInterval: number | null = null;
@@ -234,10 +233,6 @@ class Updater {
 		return getUpdaterDisplayVersion(this.snapshot);
 	}
 
-	get buildVariant(): string | null {
-		return this.desktopBuildVariant;
-	}
-
 	private transition(event: UpdaterMachineEvent): void {
 		runInAction(() => {
 			this.snapshot = transitionUpdaterMachineSnapshot(this.snapshot, event);
@@ -258,7 +253,6 @@ class Updater {
 			runInAction(() => {
 				this.currentVersion = info.desktopVersion ?? null;
 				this.channel = info.desktopChannel ?? null;
-				this.desktopBuildVariant = info.desktopBuildVariant ?? null;
 				this.desktopArch = info.desktopArch ?? info.arch ?? null;
 			});
 		} catch (error) {
