@@ -63,6 +63,7 @@ const RECENT_MENTIONS_RETENTION_DESCRIPTOR = msg({
 });
 const readonlyBehaviorOverrides = {
 	disableContextMenu: true,
+	disableDoubleClick: true,
 	prefersReducedMotion: true,
 };
 const FilterMenuContent = observer(() => {

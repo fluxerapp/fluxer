@@ -271,6 +271,7 @@ export type MessageBehaviorOverrides = Partial<{
 	contextMenuOpen: boolean;
 	disableContextMenu: boolean;
 	disableContextMenuTracking: boolean;
+	disableDoubleClick: boolean;
 }>;
 
 interface MessageProps {
@@ -393,6 +394,10 @@ export const Message: React.FC<MessageProps> = observer((props) => {
 	);
 	const handleDoubleClick = useCallback(
 		(event: React.MouseEvent) => {
+			if (behaviorOverrides?.disableDoubleClick || !Accessibility.doubleClickMessageActions) {
+				event.preventDefault();
+				return;
+			}
 			if (
 				(previewContext && previewContext !== MessagePreviewContext.LIST_POPOUT) ||
 				message.state === MessageStates.SENDING ||
@@ -409,7 +414,15 @@ export const Message: React.FC<MessageProps> = observer((props) => {
 			}
 			if (!isReplying) requestMessageReply(message);
 		},
-		[previewContext, message, channel, isEditing, isReplying],
+		[
+			previewContext,
+			message,
+			channel,
+			isEditing,
+			isReplying,
+			behaviorOverrides?.disableDoubleClick,
+			Accessibility.doubleClickMessageActions,
+		],
 	);
 	const handleAltKeyDown = useCallback(
 		(event: React.KeyboardEvent<HTMLDivElement>) => {
