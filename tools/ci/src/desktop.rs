@@ -1912,6 +1912,29 @@ fn relative_display(root: &Path, path: &Path) -> String {
         .replace('\\', "/")
 }
 
+fn percent_decode_archive_name(name: &str) -> String {
+    if !name.contains('%') {
+        return name.to_string();
+    }
+    let bytes = name.as_bytes();
+    let mut decoded = Vec::with_capacity(bytes.len());
+    let mut index = 0;
+    while index < bytes.len() {
+        if bytes[index] == b'%' && index + 2 < bytes.len() {
+            let high = (bytes[index + 1] as char).to_digit(16);
+            let low = (bytes[index + 2] as char).to_digit(16);
+            if let (Some(high), Some(low)) = (high, low) {
+                decoded.push((high * 16 + low) as u8);
+                index += 3;
+                continue;
+            }
+        }
+        decoded.push(bytes[index]);
+        index += 1;
+    }
+    String::from_utf8(decoded).unwrap_or_else(|_| name.to_string())
+}
+
 fn assert_expected_windows_pe_inventory(
     root: &Path,
     files: &[PathBuf],
@@ -1921,7 +1944,7 @@ fn assert_expected_windows_pe_inventory(
     let present = files
         .iter()
         .filter_map(|path| path.file_name().and_then(OsStr::to_str))
-        .map(ToOwned::to_owned)
+        .map(percent_decode_archive_name)
         .collect::<BTreeSet<_>>();
     let expected = expected_windows_pe_inventory(arch, main_exe);
     let missing = expected
@@ -2011,14 +2034,18 @@ fn authenticode_report(files: &[PathBuf]) -> Result<Vec<SignatureRow>> {
     fs::write(&script_path, authenticode_report_script(&list_path))
         .with_context(|| format!("Failed to write {}", script_path.display()))?;
 
-    let output = capture(CommandSpec::new("powershell").args([
-        "-NoProfile",
-        "-NonInteractive",
-        "-ExecutionPolicy",
-        "Bypass",
-        "-File",
-        script_path.to_string_lossy().as_ref(),
-    ]))?;
+    let output = capture(
+        CommandSpec::new(powershell_host())
+            .args([
+                "-NoProfile",
+                "-NonInteractive",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                script_path.to_string_lossy().as_ref(),
+            ])
+            .env_remove("PSModulePath"),
+    )?;
     ensure!(
         output.status == 0,
         "Get-AuthenticodeSignature failed with exit code {}",
@@ -2027,6 +2054,20 @@ fn authenticode_report(files: &[PathBuf]) -> Result<Vec<SignatureRow>> {
     let stdout = String::from_utf8(output.stdout)
         .context("Get-AuthenticodeSignature output was not UTF-8")?;
     parse_authenticode_report(stdout.trim())
+}
+
+fn powershell_host() -> &'static str {
+    if which_in_path("pwsh.exe").is_some() || which_in_path("pwsh").is_some() {
+        return "pwsh";
+    }
+    "powershell"
+}
+
+fn which_in_path(program: &str) -> Option<PathBuf> {
+    let path = env::var_os("PATH")?;
+    env::split_paths(&path)
+        .map(|directory| directory.join(program))
+        .find(|candidate| candidate.is_file())
 }
 
 fn authenticode_report_script(list_path: &Path) -> String {
@@ -3770,6 +3811,36 @@ export const CHANNEL_DISPLAY_NAME = BUILD_CHANNEL;\n"
         let mut zip = zip::ZipArchive::new(file).unwrap();
         assert!(zip.by_name(".portable").is_ok());
         assert!(zip.by_name("resources/app.asar").is_ok());
+    }
+
+    #[test]
+    fn percent_encoded_archive_names_match_their_decoded_inventory_entry() {
+        assert_eq!(
+            percent_decode_archive_name("Fluxer%20Canary.exe"),
+            "Fluxer Canary.exe"
+        );
+        assert_eq!(percent_decode_archive_name("Fluxer.exe"), "Fluxer.exe");
+        assert_eq!(
+            percent_decode_archive_name("win-game-capture.win32-arm64-msvc.node"),
+            "win-game-capture.win32-arm64-msvc.node"
+        );
+        assert_eq!(percent_decode_archive_name("100%.dll"), "100%.dll");
+        assert_eq!(percent_decode_archive_name("a%zz.dll"), "a%zz.dll");
+    }
+
+    #[test]
+    fn canary_nupkg_inventory_accepts_percent_encoded_main_executable() {
+        let root = Path::new("lib").join("app");
+        let files = expected_windows_pe_inventory("arm64", "Fluxer Canary.exe")
+            .into_iter()
+            .map(|name| {
+                if name == "Fluxer Canary.exe" {
+                    return root.join("Fluxer%20Canary.exe");
+                }
+                root.join(name)
+            })
+            .collect::<Vec<_>>();
+        assert_expected_windows_pe_inventory(&root, &files, "arm64", "Fluxer Canary.exe").unwrap();
     }
 
     #[test]
