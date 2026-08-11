@@ -42,7 +42,7 @@
 }
 
 .messagePreviewSpacing {
-	margin-top: var(--message-group-spacing, 0);
+	margin-top: var(--message-group-spacing, 0px);
 }
 
 .messagePreview {
@@ -874,7 +874,7 @@
 	top: 50%;
 	bottom: calc(-1 * (var(--reply-spacing) + var(--compact-reply-spine-terminal-gap)));
 	inset-inline-start: var(--compact-reply-spine-center);
-	inline-size: max(0, var(--compact-reply-spine-run));
+	inline-size: max(0px, var(--compact-reply-spine-run));
 	margin-block-start: calc(-0.5 * var(--spine-width));
 	margin-inline-start: 0;
 	border-color: var(--reply-spine-color);
@@ -983,7 +983,7 @@
 }
 
 .repliedTextContent {
-	--mention-offset-block-end: 0;
+	--mention-offset-block-end: 0px;
 	display: inline;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -1068,7 +1068,7 @@
 	justify-content: center;
 	padding-block-start: 0.15em;
 	padding-inline-start: max(
-		0,
+		0px,
 		calc(
 			(
 				var(--textarea-horizontal-padding, 1rem) +
@@ -1299,9 +1299,9 @@
 .typingAvatarContainer {
 	height: var(--typing-pill-height);
 	margin-inline: 0;
-	--avatar-stack-padding-block-start: 0;
-	--avatar-stack-padding-block-end: 0;
-	--avatar-stack-extra-height: 0;
+	--avatar-stack-padding-block-start: 0px;
+	--avatar-stack-padding-block-end: 0px;
+	--avatar-stack-extra-height: 0px;
 	--avatar-stack-outline-color: var(--background-tertiary);
 }
 

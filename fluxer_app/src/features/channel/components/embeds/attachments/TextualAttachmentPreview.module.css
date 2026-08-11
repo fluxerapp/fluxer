@@ -62,7 +62,7 @@
 .previewActionButton {
 	composes: item from '@app/features/ui/action_toolbar/ActionToolbar.module.css';
 	--action-toolbar-item-size: 1.5rem;
-	--action-toolbar-item-border-width: 0;
+	--action-toolbar-item-border-width: 0px;
 	--action-toolbar-item-radius: var(--radius-sm);
 	--action-toolbar-item-background: var(--bg-secondary);
 	--action-toolbar-item-color: var(--text-secondary);
@@ -169,7 +169,7 @@
 }
 
 .previewCode {
-	--pre-padding: 0;
+	--pre-padding: 0px;
 	margin: 0;
 	border: 0;
 	background-color: transparent;
@@ -232,7 +232,7 @@
 .expandButton {
 	composes: item from '@app/features/ui/action_toolbar/ActionToolbar.module.css';
 	--action-toolbar-item-size: 2rem;
-	--action-toolbar-item-border-width: 0;
+	--action-toolbar-item-border-width: 0px;
 	--action-toolbar-item-radius: 0.625rem;
 	--action-toolbar-item-background: var(--background-modifier-hover);
 	--action-toolbar-item-color: var(--text-secondary);
@@ -293,7 +293,7 @@
 .controlButton {
 	composes: item from '@app/features/ui/action_toolbar/ActionToolbar.module.css';
 	--action-toolbar-item-size: 2rem;
-	--action-toolbar-item-border-width: 0;
+	--action-toolbar-item-border-width: 0px;
 	--action-toolbar-item-radius: 0.5rem;
 	--action-toolbar-item-background: transparent;
 	--action-toolbar-item-color: var(--text-secondary);

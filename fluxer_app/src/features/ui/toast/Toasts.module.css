@@ -9,23 +9,23 @@
 .containerMobile {
 	right: 1rem;
 	left: 1rem;
-	top: calc(1rem + env(safe-area-inset-top, 0));
+	top: calc(1rem + env(safe-area-inset-top, 0px));
 	display: flex;
 	justify-content: center;
 }
 
 .containerDesktop {
 	transform: translateX(-50%);
-	top: calc(1.5rem + env(safe-area-inset-top, 0));
+	top: calc(1.5rem + env(safe-area-inset-top, 0px));
 	left: 50%;
 }
 
 :global(html.platform-native:not(.platform-macos) #toast-portal-root) .containerDesktop {
-	top: calc(1.5rem + env(safe-area-inset-top, 0) + var(--native-titlebar-height, 0));
+	top: calc(1.5rem + env(safe-area-inset-top, 0px) + var(--native-titlebar-height, 0px));
 }
 
 :global(html.platform-native:not(.platform-macos) #toast-portal-root) .containerMobile {
-	top: calc(1rem + env(safe-area-inset-top, 0) + var(--native-titlebar-height, 0));
+	top: calc(1rem + env(safe-area-inset-top, 0px) + var(--native-titlebar-height, 0px));
 }
 
 .toastWrapper {

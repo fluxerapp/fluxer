@@ -10,7 +10,7 @@
 	text-align: left;
 	cursor: pointer;
 	-webkit-touch-callout: none;
-	border-radius: var(--media-border-radius, 0);
+	border-radius: var(--media-border-radius, 0px);
 	overflow: hidden;
 }
 

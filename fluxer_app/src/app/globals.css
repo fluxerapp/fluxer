@@ -111,7 +111,7 @@ var {
 	--scroller-spacer-height: 1.75rem;
 	--typing-avatar-size: 0.75rem;
 	--typing-indicator-animation-size: 1rem;
-	--typing-indicator-gap: 0;
+	--typing-indicator-gap: 0px;
 	--typing-upload-column-width: calc(
 		var(--user-area-content-height) +
 		(var(--textarea-side-button-padding, 0.34375rem) * 2)
@@ -123,7 +123,7 @@ var {
 	--emoji-size-emoji: 1.5em;
 	--emoji-size-jumbo-emoji: 3rem;
 
-	--spacing-0: 0;
+	--spacing-0: 0px;
 	--spacing-1: 0.25rem;
 	--spacing-1-5: 0.375rem;
 	--spacing-2: 0.5rem;

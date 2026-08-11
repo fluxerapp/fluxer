@@ -45,7 +45,7 @@
 }
 
 .menuScroller {
-	--scroller-thumb-inline-end: 0;
+	--scroller-thumb-inline-end: 0px;
 	max-height: inherit;
 	min-height: 0;
 }
@@ -375,7 +375,7 @@
 }
 
 .submenuScroller {
-	--scroller-thumb-inline-end: 0;
+	--scroller-thumb-inline-end: 0px;
 	max-height: inherit;
 	min-height: 0;
 }

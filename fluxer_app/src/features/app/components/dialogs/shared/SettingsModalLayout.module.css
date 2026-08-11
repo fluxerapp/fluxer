@@ -615,8 +615,8 @@
 	content: '';
 	position: absolute;
 	left: 0;
-	top: var(--active-top, 0);
-	height: var(--active-height, 0);
+	top: var(--active-top, 0px);
+	height: var(--active-height, 0px);
 	width: var(--settings-sidebar-subtree-line-width);
 	background: var(--settings-sidebar-highlight);
 	border-radius: 999px;

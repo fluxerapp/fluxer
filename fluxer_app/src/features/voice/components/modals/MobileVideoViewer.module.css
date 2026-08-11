@@ -2,8 +2,8 @@
 
 .container {
 	--mobile-video-hud-edge: 0.875rem;
-	--mobile-video-hud-safe-top: calc(var(--mobile-video-hud-edge) + env(safe-area-inset-top, 0));
-	--mobile-video-hud-safe-bottom: calc(1rem + env(safe-area-inset-bottom, 0));
+	--mobile-video-hud-safe-top: calc(var(--mobile-video-hud-edge) + env(safe-area-inset-top, 0px));
+	--mobile-video-hud-safe-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
 	--mobile-video-hud-bg: rgb(0 0 0 / 0.58);
 	--mobile-video-hud-border: rgb(255 255 255 / 0.11);
 	--mobile-video-hud-button-bg: rgb(255 255 255 / 0.055);
@@ -65,11 +65,11 @@
 }
 
 .seekFeedbackBackward {
-	left: max(1.5rem, env(safe-area-inset-left, 0) + 1.5rem);
+	left: max(1.5rem, env(safe-area-inset-left, 0px) + 1.5rem);
 }
 
 .seekFeedbackForward {
-	right: max(1.5rem, env(safe-area-inset-right, 0) + 1.5rem);
+	right: max(1.5rem, env(safe-area-inset-right, 0px) + 1.5rem);
 }
 
 .hudOverlay {

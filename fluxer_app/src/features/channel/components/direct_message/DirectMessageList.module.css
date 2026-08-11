@@ -213,7 +213,7 @@
 .mobileFab {
 	position: fixed;
 	right: 1rem;
-	bottom: calc(3.75rem + env(safe-area-inset-bottom, 0) + 1rem);
+	bottom: calc(3.75rem + env(safe-area-inset-bottom, 0px) + 1rem);
 	z-index: 50;
 	display: flex;
 	height: 3.5rem;

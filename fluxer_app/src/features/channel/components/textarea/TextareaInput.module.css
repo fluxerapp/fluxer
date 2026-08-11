@@ -4,20 +4,20 @@
 	--textarea-font-size: var(--font-size, 1rem);
 	--textarea-button-height: var(--user-area-content-height);
 	--textarea-button-icon-size: 1.625rem;
-	--textarea-button-padding-x: 0;
+	--textarea-button-padding-x: 0px;
 	--textarea-button-min-width: auto;
 
 	--textarea-button-compact-height: var(--user-area-content-height);
 	--textarea-button-compact-icon-size: 1.375rem;
 
-	--textarea-container-padding-y: 0;
-	--textarea-container-padding-x: 0;
+	--textarea-container-padding-y: 0px;
+	--textarea-container-padding-x: 0px;
 	--textarea-min-height: var(--input-container-min-height);
 	--textarea-horizontal-padding: var(--chat-horizontal-padding, var(--spacing-4));
 	--textarea-content-offset: calc((var(--user-area-content-height) - var(--textarea-line-height)) / 2);
 	--textarea-upload-gap: var(--message-gutter, 1rem);
 	--textarea-side-button-padding: max(
-		0,
+		0px,
 		calc((var(--message-avatar-size, 2.5rem) - var(--textarea-button-height)) / 2)
 	);
 

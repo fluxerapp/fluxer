@@ -105,8 +105,9 @@
 	justify-content: center;
 	background: #000;
 	padding: var(--compact-call-audio-avatar-padding-top)
-		max(var(--compact-call-edge-padding), env(safe-area-inset-right, 0)) var(--compact-call-audio-avatar-padding-bottom)
-		max(var(--compact-call-edge-padding), env(safe-area-inset-left, 0));
+		max(var(--compact-call-edge-padding), env(safe-area-inset-right, 0px))
+		var(--compact-call-audio-avatar-padding-bottom)
+		max(var(--compact-call-edge-padding), env(safe-area-inset-left, 0px));
 }
 
 .audioAvatarLayoutInner {
@@ -147,7 +148,7 @@
 	display: flex;
 	flex-direction: column;
 	position: relative;
-	--voice-call-horizontal-padding: 0;
+	--voice-call-horizontal-padding: 0px;
 	container-type: size;
 	overflow: hidden;
 }
@@ -167,7 +168,7 @@
 }
 
 .layoutHostFullHeightGrid {
-	--voice-call-horizontal-padding: 0;
+	--voice-call-horizontal-padding: 0px;
 	padding-left: 0;
 	padding-right: 0;
 	padding-top: var(--compact-call-content-safe-top);
@@ -175,7 +176,7 @@
 }
 
 .layoutHostFullHeightFocus {
-	--voice-call-horizontal-padding: 0;
+	--voice-call-horizontal-padding: 0px;
 	--voice-participants-toggle-bottom: calc(var(--compact-call-control-reserve) + 0.5rem);
 	padding-left: 0;
 	padding-right: 0;
@@ -205,8 +206,8 @@
 
 .fullscreenButtonWrap {
 	position: absolute;
-	right: max(0.75rem, env(safe-area-inset-right, 0));
-	bottom: calc(0.75rem + env(safe-area-inset-bottom, 0));
+	right: max(0.75rem, env(safe-area-inset-right, 0px));
+	bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
 	z-index: 13;
 	display: flex;
 	align-items: center;
@@ -216,8 +217,8 @@
 
 .heightToggleButtonWrap {
 	position: absolute;
-	left: max(0.75rem, env(safe-area-inset-left, 0));
-	bottom: calc(0.75rem + env(safe-area-inset-bottom, 0));
+	left: max(0.75rem, env(safe-area-inset-left, 0px));
+	bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
 	z-index: 13;
 	display: flex;
 	align-items: center;

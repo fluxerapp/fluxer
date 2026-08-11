@@ -7,7 +7,7 @@
 	--sheet-transition-duration: 220ms;
 	--sheet-transition-easing: cubic-bezier(0.22, 1, 0.36, 1);
 	--sheet-top-gap: 2.125rem;
-	--sheet-viewport-offset-bottom: 0;
+	--sheet-viewport-offset-bottom: 0px;
 	position: fixed;
 	inset: 0;
 	overflow: hidden;
@@ -42,7 +42,7 @@
 	display: flex;
 	flex-direction: column;
 	width: 100%;
-	height: calc(var(--sheet-viewport-height, 100dvh) - env(safe-area-inset-top, 0) - var(--sheet-top-gap));
+	height: calc(var(--sheet-viewport-height, 100dvh) - env(safe-area-inset-top, 0px) - var(--sheet-top-gap));
 	max-height: calc(100dvh - var(--sheet-viewport-offset-bottom));
 	border-top-left-radius: 1.5rem;
 	border-top-right-radius: 1.5rem;
@@ -92,7 +92,7 @@
 	display: flex;
 	width: 100%;
 	justify-content: center;
-	padding: calc(0.75rem + env(safe-area-inset-top, 0)) 0 0.75rem;
+	padding: calc(0.75rem + env(safe-area-inset-top, 0px)) 0 0.75rem;
 	background-color: var(--sheet-surface, var(--background-secondary));
 }
 
@@ -114,7 +114,7 @@
 }
 
 .headerSafeArea {
-	padding-top: calc(0.75rem + env(safe-area-inset-top, 0));
+	padding-top: calc(0.75rem + env(safe-area-inset-top, 0px));
 }
 
 .headerPaddingSm {
@@ -217,7 +217,7 @@
 	overflow-x: hidden;
 	overscroll-behavior: contain;
 	-webkit-overflow-scrolling: touch;
-	padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0));
+	padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
 }
 
 .contentNoPadding .contentInner {
@@ -235,7 +235,7 @@
 
 .footer {
 	padding: 1rem;
-	padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0));
+	padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
 	background-color: var(--sheet-surface, var(--background-secondary));
 }
 
