@@ -991,7 +991,7 @@ fn base_document(
                 link rel="stylesheet" href=(format!("{cdn}/fonts/ibm-plex.css?v=3"));
                 link rel="stylesheet" href=(format!("{cdn}/fonts/bricolage.css?v=3"));
                 link rel="stylesheet" href=(format!("{}/static/app.css?v={}", ctx.base_path, ctx.asset_version));
-                link rel="icon" type="image/png" sizes="192x192" href=(format!("{cdn}/web/android-chrome-192x192.png"));
+                link rel="icon" type="image/x-icon" sizes="256x256" href=(format!("{cdn}/web/favicon.ico"));
                 link rel="apple-touch-icon" href=(format!("{cdn}/web/apple-touch-icon.png"));
                 @if meta.enable_htmx {
                     script src=(format!("{}/static/htmx.min.js?v={}", ctx.base_path, ctx.asset_version)) defer {}
