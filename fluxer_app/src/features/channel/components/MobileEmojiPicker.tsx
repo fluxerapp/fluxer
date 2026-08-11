@@ -4,7 +4,6 @@ import {PREMIUM_PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstant
 import {useSearchInputAutofocus} from '@app/features/app/hooks/useSearchInputAutofocus';
 import {useShouldAnimate} from '@app/features/app/hooks/useShouldAnimate';
 import {EmojiPickerCategoryList} from '@app/features/channel/components/emoji_picker/EmojiPickerCategoryList';
-import {EMOJI_SPRITE_SIZE} from '@app/features/channel/components/emoji_picker/EmojiPickerConstants';
 import {EmojiPickerSearchBar} from '@app/features/channel/components/emoji_picker/EmojiPickerSearchBar';
 import {useEmojiCategories} from '@app/features/channel/components/emoji_picker/hooks/useEmojiCategories';
 import {useVirtualRows} from '@app/features/channel/components/emoji_picker/hooks/useVirtualRows';
@@ -26,7 +25,6 @@ import {
 	shouldShowEmojiPremiumUpsell,
 } from '@app/features/expressions/utils/ExpressionPermissionUtils';
 import {getEmojiDisplayDataWithSkinTone} from '@app/features/expressions/utils/SkinToneUtils';
-import UnicodeEmojis, {EMOJI_SPRITES} from '@app/features/expressions/utils/UnicodeEmojis';
 import Permission from '@app/features/permissions/state/Permission';
 import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
 import {usePremiumUpsellData} from '@app/features/premium/hooks/usePremiumUpsellData';
@@ -80,17 +78,6 @@ export const MobileEmojiPicker = observer(
 		const getEmojiGuildId = useCallback((emoji: FlatEmoji) => emoji.guildId, []);
 		const skinTone = Emoji.skinTone;
 		const shouldAnimateEmoji = useShouldAnimate({kind: 'emoji'});
-		const spriteSheetSizes = useMemo(() => {
-			const nonDiversitySize = [
-				`${EMOJI_SPRITE_SIZE * EMOJI_SPRITES.NonDiversityPerRow}px`,
-				`${EMOJI_SPRITE_SIZE * Math.ceil(UnicodeEmojis.numNonDiversitySprites / EMOJI_SPRITES.NonDiversityPerRow)}px`,
-			].join(' ');
-			const diversitySize = [
-				`${EMOJI_SPRITE_SIZE * EMOJI_SPRITES.DiversityPerRow}px`,
-				`${EMOJI_SPRITE_SIZE * Math.ceil(UnicodeEmojis.numDiversitySprites / EMOJI_SPRITES.DiversityPerRow)}px`,
-			].join(' ');
-			return {nonDiversitySize, diversitySize};
-		}, []);
 		const searchTerm = externalSearchTerm ?? internalSearchTerm;
 		const setSearchTerm = externalSetSearchTerm ?? setInternalSearchTerm;
 		const normalizedSearchTerm = useMemo(() => normalizeEmojiSearchQuery(searchTerm), [searchTerm]);
@@ -296,7 +283,6 @@ export const MobileEmojiPicker = observer(
 											handleHover={handleHover}
 											handleSelect={handleSelect}
 											skinTone={skinTone}
-											spriteSheetSizes={spriteSheetSizes}
 											channel={channel}
 											allowAnimation={shouldAnimateEmoji}
 											gridColumns={gridColumns}
