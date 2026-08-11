@@ -1,9 +1,9 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
 .guildsLayoutContainer {
-	--layout-user-area-overlay-height: 0;
-	--layout-user-area-reserved-height: 0;
-	--layout-mobile-bottom-nav-reserved-height: 0;
+	--layout-user-area-overlay-height: 0px;
+	--layout-user-area-reserved-height: 0px;
+	--layout-mobile-bottom-nav-reserved-height: 0px;
 	position: relative;
 	display: grid;
 	grid-template-columns: var(--layout-guild-list-width) minmax(0, 1fr);
@@ -19,7 +19,7 @@
 }
 
 .guildsLayoutReserveSpace {
-	--layout-user-area-overlay-height: calc(var(--layout-user-area-height) + var(--layout-voice-connection-height, 0));
+	--layout-user-area-overlay-height: calc(var(--layout-user-area-height) + var(--layout-voice-connection-height, 0px));
 }
 
 .guildsLayoutReserveMobileBottomNav {
@@ -38,11 +38,18 @@
 }
 
 .guildListScrollerWrapper {
-	--scroller-track-block-end-inset: var(--layout-user-area-overlay-height, var(--layout-user-area-reserved-height, 0));
+	--scroller-track-block-end-inset: var(
+		--layout-user-area-overlay-height,
+		var(--layout-user-area-reserved-height, 0px)
+	);
 	grid-column: 1;
 	grid-row: 1;
 	min-height: 0;
-	height: calc(100% - var(--layout-user-area-reserved-height, 0) - var(--layout-mobile-bottom-nav-reserved-height, 0));
+	height: calc(
+		100% -
+		var(--layout-user-area-reserved-height, 0px) -
+		var(--layout-mobile-bottom-nav-reserved-height, 0px)
+	);
 	width: var(--layout-guild-list-width);
 	min-width: 0;
 	background-color: var(--background-secondary);
@@ -72,7 +79,7 @@
 	width: 100%;
 	min-width: 0;
 	padding-bottom: calc(
-		var(--layout-user-area-overlay-height, var(--layout-user-area-reserved-height, 0)) +
+		var(--layout-user-area-overlay-height, var(--layout-user-area-reserved-height, 0px)) +
 		var(--spacing-2)
 	);
 }

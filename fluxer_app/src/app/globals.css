@@ -142,8 +142,8 @@ var {
 	--layout-sidebar-width: 16.875rem;
 	--layout-header-height: 3.5rem;
 	--layout-user-area-height: var(--input-container-min-height);
-	--layout-user-area-reserved-height: 0;
-	--layout-mobile-bottom-nav-reserved-height: 0;
+	--layout-user-area-reserved-height: 0px;
+	--layout-mobile-bottom-nav-reserved-height: 0px;
 	--user-area-content-height: 2.25rem;
 	--user-area-padding-y: calc((var(--layout-user-area-height) - var(--user-area-content-height)) / 2);
 	--user-area-padding-x: var(--spacing-4);

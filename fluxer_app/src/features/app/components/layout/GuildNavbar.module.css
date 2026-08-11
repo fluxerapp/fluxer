@@ -1,10 +1,17 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
 .guildNavbarContainer {
-	--scroller-track-block-end-inset: var(--layout-user-area-overlay-height, var(--layout-user-area-reserved-height, 0));
+	--scroller-track-block-end-inset: var(
+		--layout-user-area-overlay-height,
+		var(--layout-user-area-reserved-height, 0px)
+	);
 	display: grid;
 	grid-template-rows: auto 1fr;
-	height: calc(100% - var(--layout-user-area-reserved-height, 0) - var(--layout-mobile-bottom-nav-reserved-height, 0));
+	height: calc(
+		100% -
+		var(--layout-user-area-reserved-height, 0px) -
+		var(--layout-mobile-bottom-nav-reserved-height, 0px)
+	);
 	min-height: 0;
 	width: var(--layout-sidebar-width);
 	min-width: 0;
