@@ -8,6 +8,9 @@ const requireModule = createRequire(import.meta.url);
 const VULKAN_IMPLICIT_LAYERS_REGISTRY_KEY = 'Software\\Khronos\\Vulkan\\ImplicitLayers';
 const VULKAN_REGISTRY_ROOTS = ['HKCU', 'HKLM'] as const;
 
+const FLUXER_VULKAN_LAYER_MANIFEST_FILE_NAME = /^fluxer-vulkan-layer\.win32-(?:x64|ia32|arm64)-msvc\.json$/;
+const FLUXER_VULKAN_LAYER_PACKAGE_DIRECTORY_NAMES = new Set(['win-game-capture', 'win-screen-capture']);
+
 interface VulkanLayerRegistrationState {
 	registered: boolean;
 	manifestExists: boolean;
@@ -40,10 +43,12 @@ function normalizeVulkanLayerValueName(valueName: string): string {
 	return valueName.replace(/\//g, '\\').toLowerCase();
 }
 
-function isFluxerGameCaptureVulkanLayerValue(valueName: string): boolean {
-	const normalized = normalizeVulkanLayerValueName(valueName);
-	if (!normalized.includes('\\@fluxer\\win-game-capture\\')) return false;
-	return /\\fluxer-vulkan-layer\.win32-(?:x64|ia32|arm64)-msvc\.json$/.test(normalized);
+export function isFluxerGameCaptureVulkanLayerValue(valueName: string): boolean {
+	const segments = normalizeVulkanLayerValueName(valueName).split('\\');
+	const fileName = segments.at(-1) ?? '';
+	const packageDirectoryName = segments.at(-2) ?? '';
+	if (!FLUXER_VULKAN_LAYER_MANIFEST_FILE_NAME.test(fileName)) return false;
+	return FLUXER_VULKAN_LAYER_PACKAGE_DIRECTORY_NAMES.has(packageDirectoryName);
 }
 
 function queryVulkanLayerRegistryValues(root: string): Array<string> {
@@ -71,6 +76,14 @@ function isSameVulkanLayerManifestPath(left: string, right: string): boolean {
 	return normalizeVulkanLayerValueName(left) === normalizeVulkanLayerValueName(right);
 }
 
+export function shouldRemoveStaleFluxerGameCaptureVulkanLayerValue(
+	valueName: string,
+	keepManifestPath: string | null,
+): boolean {
+	if (!isFluxerGameCaptureVulkanLayerValue(valueName)) return false;
+	return keepManifestPath === null || !isSameVulkanLayerManifestPath(valueName, keepManifestPath);
+}
+
 function removeStaleFluxerGameCaptureVulkanLayers(keepManifestPath: string | null): void {
 	if (process.platform !== 'win32') return;
 	for (const root of VULKAN_REGISTRY_ROOTS) {
@@ -82,8 +95,7 @@ function removeStaleFluxerGameCaptureVulkanLayers(keepManifestPath: string | nul
 			continue;
 		}
 		for (const valueName of valueNames) {
-			if (!isFluxerGameCaptureVulkanLayerValue(valueName)) continue;
-			if (keepManifestPath !== null && isSameVulkanLayerManifestPath(valueName, keepManifestPath)) continue;
+			if (!shouldRemoveStaleFluxerGameCaptureVulkanLayerValue(valueName, keepManifestPath)) continue;
 			try {
 				deleteVulkanLayerRegistryValue(root, valueName);
 			} catch (error) {
