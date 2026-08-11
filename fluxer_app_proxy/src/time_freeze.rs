@@ -99,11 +99,10 @@ pub fn load_time_freeze_config_for_index_source(
 
 #[cfg(feature = "time-freeze")]
 fn load_frozen_snapshot(release_channel: ReleaseChannel) -> Option<FrozenSnapshot> {
-    let snapshot = match release_channel {
-        ReleaseChannel::Stable => &*crate::frozen_snapshots::STABLE_SNAPSHOT,
-        ReleaseChannel::Canary => &*crate::frozen_snapshots::CANARY_SNAPSHOT,
-    };
-    Some(snapshot.clone())
+    match release_channel {
+        ReleaseChannel::Stable => Some(crate::frozen_snapshots::STABLE_SNAPSHOT.clone()),
+        ReleaseChannel::Canary => None,
+    }
 }
 
 #[cfg(not(feature = "time-freeze"))]
@@ -291,14 +290,15 @@ mod tests {
 
     #[cfg(feature = "time-freeze")]
     #[test]
-    fn canary_channel_has_frozen_snapshot() {
+    fn canary_channel_has_no_frozen_snapshot() {
         let config = load_time_freeze_config(ReleaseChannel::Canary, false);
-        assert!(
-            config.snapshot.is_some(),
-            "canary channel should have a frozen snapshot"
-        );
         assert_eq!(config.release_channel, ReleaseChannel::Canary);
-        assert!(should_serve_frozen(&config).is_some());
+        assert!(config.snapshot.is_none());
+        assert!(should_serve_frozen(&config).is_none());
+
+        let debug = describe_decision(&config);
+        assert_eq!(debug.decision, TimeFreezeDecision::NoSnapshot);
+        assert!(debug.snapshot_sha.is_none());
     }
 
     #[test]
@@ -340,7 +340,7 @@ mod tests {
     #[cfg(feature = "time-freeze")]
     #[test]
     fn exempt_client_gets_live_content_even_with_snapshot() {
-        let config = load_time_freeze_config(ReleaseChannel::Canary, true);
+        let config = load_time_freeze_config(ReleaseChannel::Stable, true);
         assert!(config.snapshot.is_some());
         assert!(should_serve_frozen(&config).is_none());
 
