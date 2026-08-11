@@ -5,6 +5,7 @@ import {FluxerWordmark} from '@app/features/ui/components/icons/FluxerWordmark';
 import {getElectronAPI, type NativePlatform} from '@app/features/ui/utils/NativeUtils';
 import type React from 'react';
 import {NativeWindowControls} from './NativeWindowControls';
+import { NativeTitlebarNav } from './NativeTitlebarNav';
 
 interface NativeTitlebarProps {
 	platform: NativePlatform;
@@ -16,6 +17,7 @@ export const NativeTitlebar: React.FC<NativeTitlebarProps> = ({platform}) => {
 		if (!electronApi?.windowMaximize) return;
 		electronApi.windowMaximize();
 	};
+
 	return (
 		<div
 			role="group"
@@ -27,6 +29,14 @@ export const NativeTitlebar: React.FC<NativeTitlebarProps> = ({platform}) => {
 		>
 			<div className={styles.left} data-flx="app.native-titlebar.left">
 				<FluxerWordmark className={styles.wordmark} data-flx="app.native-titlebar.wordmark" />
+				<NativeTitlebarNav 
+					direction="back" 
+					data-flx="app.native-titlebar.nav"
+				/>
+				<NativeTitlebarNav 
+					direction="forward"  
+					data-flx="app.native-titlebar.nav"
+				/>
 			</div>
 			<div className={styles.spacer} data-flx="app.native-titlebar.spacer" />
 			<NativeWindowControls data-flx="app.native-titlebar.controls" />
