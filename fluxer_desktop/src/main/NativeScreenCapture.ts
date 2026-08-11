@@ -20,12 +20,6 @@ import {ipcMain} from 'electron';
 import {getTccStatus} from './MacTcc';
 import {isValidStartOptions, normalizeScreenCaptureDimension} from './NativeScreenCaptureValidation';
 import {createNativeVoiceEngineScreenFrameSinkHandle} from './NativeVoiceEngine';
-import {
-	enableWindowsGameCaptureModuleForCurrentProcess,
-	WINDOWS_GAME_CAPTURE_DISABLED_DETAIL,
-	WINDOWS_GAME_CAPTURE_DISABLED_REASON,
-	WINDOWS_GAME_CAPTURE_MODULE_ENABLED,
-} from './WindowsGameCapturePolicy';
 
 const logger = createChildLogger('NativeScreenCapture');
 const requireModule = createRequire(import.meta.url);
@@ -150,11 +144,9 @@ interface ActiveNativeScreenSession {
 const MAX_NATIVE_SCREEN_SESSIONS_PER_SENDER = 2;
 
 const GAME_CAPTURE_DETAIL = {
-	hookDisabled: 'game-capture-hook-disabled',
 	addonError: 'game-capture-addon-error',
 } as const;
 
-const FLUXER_GAME_CAPTURE_DISABLE_HOOK = 'FLUXER_GAME_CAPTURE_DISABLE_HOOK';
 const WINDOWS_HAGS_REGISTRY_PATH = 'HKLM\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers';
 const WINDOWS_HAGS_REGISTRY_VALUE = 'HwSchMode';
 const WINDOWS_HAGS_REGISTRY_READ_TIMEOUT_MS = 1500;
@@ -162,11 +154,6 @@ const WINDOWS_HAGS_CACHE_TTL_MS = 10000;
 interface WindowsHagsDiagnostic {
 	windowsHagsState: WindowsHagsState;
 	windowsHagsDetail?: string;
-}
-
-function isGameCaptureHookDisabledByEnv(): boolean {
-	const value = process.env[FLUXER_GAME_CAPTURE_DISABLE_HOOK];
-	return typeof value === 'string' && value.length > 0;
 }
 
 let cachedLoadResult: NativeAddonLoadResult | undefined;
@@ -362,22 +349,7 @@ function loadLinuxNativeScreenCaptureAddon(): NativeAddonLoadResult {
 }
 
 function loadWindowsNativeScreenCaptureAddon(): NativeAddonLoadResult {
-	if (!WINDOWS_GAME_CAPTURE_MODULE_ENABLED) {
-		const result: NativeAddonLoadResult = {
-			platform: process.platform,
-			availability: {
-				available: false,
-				backend: 'windows-game-capture',
-				reason: WINDOWS_GAME_CAPTURE_DISABLED_REASON,
-				detail: WINDOWS_GAME_CAPTURE_DISABLED_DETAIL,
-				capabilities: {hidesCursor: true, screens: false, windows: false},
-			},
-		};
-		cachedLoadResult = result;
-		return result;
-	}
 	try {
-		enableWindowsGameCaptureModuleForCurrentProcess();
 		const addon = requireModule('@fluxer/win-game-capture') as WindowsNativeScreenCaptureModule;
 		if (addon.loadError) {
 			const detail = describeAddonLoadError(addon.loadError);
@@ -846,9 +818,6 @@ async function startNativeScreenCapture(
 	}
 	const requestedWidth = normalizeScreenCaptureDimension(options.width);
 	const requestedHeight = normalizeScreenCaptureDimension(options.height);
-	if (loadResult.platform === 'win32' && options.sourceKind === 'game' && isGameCaptureHookDisabledByEnv()) {
-		throw new Error(`Game capture hook disabled by environment (${GAME_CAPTURE_DETAIL.hookDisabled})`);
-	}
 	const captureId = options.captureId?.trim() || randomUUID();
 	if (activeSessions.has(captureId)) {
 		throw new Error('Native screen capture id is already active');
@@ -900,16 +869,22 @@ async function startNativeScreenCapture(
 			);
 		},
 	};
-	if (options.sourceKind === 'game') {
-		session.onStalled = (stallMessage) => {
-			if (session.finalized) return;
-			logger.info('Game capture reported a stall (non-fatal)', {captureId, detail: stallMessage});
-		};
-		session.onDiagnostic = (diagnosticMessage) => {
-			if (session.finalized) return;
-			logger.debug('Game capture diagnostic', {captureId, detail: diagnosticMessage});
-		};
-	}
+	session.onStalled = (stallMessage) => {
+		if (session.finalized) return;
+		logger.info('Native screen capture reported a stall (non-fatal)', {
+			captureId,
+			sourceKind: options.sourceKind,
+			detail: stallMessage,
+		});
+	};
+	session.onDiagnostic = (diagnosticMessage) => {
+		if (session.finalized) return;
+		logger.debug('Native screen capture diagnostic', {
+			captureId,
+			sourceKind: options.sourceKind,
+			detail: diagnosticMessage,
+		});
+	};
 	capture.on('error', session.onError);
 	capture.on('closed', session.onClosed);
 	if (session.onStalled) capture.on('stalled', session.onStalled);

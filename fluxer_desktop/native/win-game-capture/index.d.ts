@@ -158,6 +158,7 @@ export declare function getAvailability(): AvailabilityInfo;
 export declare function listSources(): Promise<Array<ScreenCaptureSourceDescriptor>>;
 export declare function resolveGameHookPath(): string | null;
 export declare function resolveGameHookPathX86(): string | null;
+export declare function isGameCaptureHookAvailable(): boolean;
 export declare function resolveVulkanLayerManifestPath(): string | null;
 export declare function registerVulkanLayerManifest(): boolean;
 export declare function unregisterVulkanLayerManifest(): boolean;

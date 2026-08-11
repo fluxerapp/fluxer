@@ -6,7 +6,6 @@ import DeveloperMode from '@app/features/devtools/state/DeveloperMode';
 import {UNKNOWN_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {
 	formatClientBuildInfo,
-	formatDesktopBuildVariantLabel,
 	formatReleaseChannelLabel,
 	getClientInfo,
 	getClientInfoSync,
@@ -84,12 +83,7 @@ export const ClientInfo = observer(() => {
 	const buildVersion = Config.PUBLIC_BUILD_VERSION || 'dev';
 	const desktopReleaseChannel = desktopChannel ? formatReleaseChannelLabel(desktopChannel) : null;
 	const primaryDesktopReleaseChannel = desktopReleaseChannel ?? releaseChannel;
-	const desktopBuildVariant =
-		clientInfo.desktopBuildVariant && clientInfo.desktopBuildVariant !== 'default'
-			? formatDesktopBuildVariantLabel(clientInfo.desktopBuildVariant)
-			: null;
-	const desktopVersionLabel =
-		desktopVersion && desktopBuildVariant ? `${desktopVersion} (${desktopBuildVariant})` : desktopVersion;
+	const desktopVersionLabel = desktopVersion;
 	const desktopBuildLabel = desktopVersion
 		? i18n._(DESKTOP_BUILD_DESCRIPTOR, {
 				desktopChannel: primaryDesktopReleaseChannel,

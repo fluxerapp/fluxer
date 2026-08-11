@@ -10,6 +10,7 @@ const winGameCapture = require('./index.js');
 
 const startupSupported = winGameCapture.isSupported();
 const startupAvailability = winGameCapture.getAvailability();
+const startupHookAvailable = winGameCapture.isGameCaptureHookAvailable();
 const realBindingSkip = startupSupported
 	? false
 	: 'no native binding loaded at startup (binding-less platform / unbuilt addon)';
@@ -29,6 +30,8 @@ function makeFakeBinding() {
 	const calls = [];
 	const frameSinkHandleCalls = [];
 	const priorityCalls = [];
+	const vulkanCalls = [];
+	const hookAvailable = {value: false};
 	const natives = [];
 	const diagnostics = {
 		state: 1,
@@ -195,10 +198,19 @@ function makeFakeBinding() {
 			restoreGpuSchedulingPriority: (processId) => {
 				priorityCalls.push({type: 'restore', processId});
 			},
+			isGameCaptureHookAvailable: () => hookAvailable.value,
+			registerVulkanLayerManifest: (manifestPath) => {
+				vulkanCalls.push({type: 'register', manifestPath});
+			},
+			unregisterVulkanLayerManifest: (manifestPath) => {
+				vulkanCalls.push({type: 'unregister', manifestPath});
+			},
 		},
 		calls,
 		frameSinkHandleCalls,
 		priorityCalls,
+		vulkanCalls,
+		hookAvailable,
 		natives,
 		diagnostics,
 		encoderDiagnostics,
@@ -297,9 +309,63 @@ describe('win-game-capture loader wrapper -- real native binding (built Windows 
 		assert.equal(typeof r, 'string', 'expected a Vulkan layer manifest path on a built Windows box');
 		assert.ok(existsSync(r), `Vulkan layer manifest should exist on disk: ${r}`);
 	});
+
+	test('the native binding reports hook-based game capture as unavailable', {skip: realBindingSkip}, () => {
+		assert.equal(startupHookAvailable, false, 'hook capture is force-disabled in the native crate');
+	});
+
+	test('requiring the module leaves the Vulkan implicit layer unregistered', {skip: realBindingSkip}, () => {
+		assert.equal(
+			winGameCapture.registerVulkanLayerManifest(),
+			false,
+			'the Vulkan implicit layer must not be registered while hook capture is disabled',
+		);
+		assert.equal(winGameCapture.getVulkanLayerRegistrationState().registered, false);
+	});
 });
 
 describe('win-game-capture loader wrapper -- injected fake binding', () => {
+	test('isGameCaptureHookAvailable() follows the native hook flag', {skip: injectionSkip}, () => {
+		const {binding} = makeFakeBinding();
+		winGameCapture.__setBindingForTests(binding);
+		assert.equal(winGameCapture.isGameCaptureHookAvailable(), false);
+	});
+
+	test(
+		'isGameCaptureHookAvailable() is false when the native binding predates the hook flag',
+		{skip: injectionSkip},
+		() => {
+			const {binding} = makeFakeBinding();
+			binding.isGameCaptureHookAvailable = undefined;
+			winGameCapture.__setBindingForTests(binding);
+			assert.equal(winGameCapture.isGameCaptureHookAvailable(), false);
+		},
+	);
+
+	test(
+		'registerVulkanLayerManifest() never touches the registry while hook capture is unavailable',
+		{skip: injectionSkip},
+		() => {
+			const {binding, vulkanCalls} = makeFakeBinding();
+			winGameCapture.__setBindingForTests(binding);
+			assert.equal(winGameCapture.registerVulkanLayerManifest(), false);
+			assert.deepEqual(vulkanCalls, [], 'the native registration entry point must not be called');
+		},
+	);
+
+	test(
+		'registerVulkanLayerManifest() still refuses when the hook DLL is missing for this host',
+		{skip: injectionSkip || (winGameCapture.resolveGameHookPath() !== null && 'host ships a game capture hook DLL')},
+		() => {
+			const {binding, hookAvailable, vulkanCalls} = makeFakeBinding();
+			hookAvailable.value = true;
+			winGameCapture.__setBindingForTests(binding);
+			assert.equal(winGameCapture.isGameCaptureHookAvailable(), false);
+			assert.equal(winGameCapture.registerVulkanLayerManifest(), false);
+			assert.deepEqual(vulkanCalls, []);
+		},
+	);
+
 	test(
 		'listSources() forwards sanitized screen/window sources from the native binding',
 		{skip: injectionSkip},
@@ -546,7 +612,7 @@ describe('win-game-capture loader wrapper -- injected fake binding', () => {
 	);
 
 	test(
-		'game sourceKind without a hook path fails closed without WGC/browser fallback',
+		'game sourceKind starts without a hook path because capture no longer injects',
 		{skip: injectionSkip},
 		async () => {
 			const {binding, calls} = makeFakeBinding();
@@ -558,8 +624,9 @@ describe('win-game-capture loader wrapper -- injected fake binding', () => {
 				hookDllPathX86: '',
 			});
 			capture.on('error', () => {});
-			await assert.rejects(() => capture.start(), /Game capture hook unavailable/);
-			assert.equal(calls.length, 0, 'native start must not be called when the game hook is unavailable');
+			await capture.start();
+			assert.equal(calls.length, 1, 'native start must be called for game capture without a hook');
+			assert.equal(calls[0].sourceKind, 'game');
 		},
 	);
 

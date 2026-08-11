@@ -62,17 +62,6 @@ export const DesktopFormatEnum = withOpenApiType(
 
 export type DesktopFormat = z.infer<typeof DesktopFormatEnum>;
 
-export const DesktopVariantEnum = withOpenApiType(
-	z
-		.literal('windows-game-capture')
-		.describe(
-			'fluxer:EnumValues:[{"n":"Windows Game Capture","v":"windows-game-capture","d":"Windows desktop build that includes the Windows Game Capture module"}] The desktop build variant',
-		),
-	'DesktopVariant',
-);
-
-export type DesktopVariant = z.infer<typeof DesktopVariantEnum>;
-
 const VersionString = z
 	.string()
 	.regex(/^\d+\.\d+\.\d+$/u)
@@ -107,27 +96,6 @@ export const DesktopVersionedRedirectParam = z.object({
 
 export type DesktopVersionedRedirectParam = z.infer<typeof DesktopVersionedRedirectParam>;
 
-export const DesktopVariantRedirectParam = z.object({
-	channel: DesktopChannelEnum,
-	plat: DesktopPlatformEnum,
-	arch: DesktopArchEnum,
-	variant: DesktopVariantEnum,
-	format: DesktopFormatEnum,
-});
-
-export type DesktopVariantRedirectParam = z.infer<typeof DesktopVariantRedirectParam>;
-
-export const DesktopVariantVersionedRedirectParam = z.object({
-	channel: DesktopChannelEnum,
-	plat: DesktopPlatformEnum,
-	arch: DesktopArchEnum,
-	variant: DesktopVariantEnum,
-	version: VersionString,
-	format: DesktopFormatEnum,
-});
-
-export type DesktopVariantVersionedRedirectParam = z.infer<typeof DesktopVariantVersionedRedirectParam>;
-
 const DesktopChecksumFormat = z
 	.string()
 	.regex(/^(setup|dmg|zip|appimage|deb|rpm|tar_gz|portable)\.sha256$/u)
@@ -153,27 +121,6 @@ export const DesktopVersionedChecksumRedirectParam = z.object({
 
 export type DesktopVersionedChecksumRedirectParam = z.infer<typeof DesktopVersionedChecksumRedirectParam>;
 
-export const DesktopVariantChecksumRedirectParam = z.object({
-	channel: DesktopChannelEnum,
-	plat: DesktopPlatformEnum,
-	arch: DesktopArchEnum,
-	variant: DesktopVariantEnum,
-	format: DesktopChecksumFormat,
-});
-
-export type DesktopVariantChecksumRedirectParam = z.infer<typeof DesktopVariantChecksumRedirectParam>;
-
-export const DesktopVariantVersionedChecksumRedirectParam = z.object({
-	channel: DesktopChannelEnum,
-	plat: DesktopPlatformEnum,
-	arch: DesktopArchEnum,
-	variant: DesktopVariantEnum,
-	version: VersionString,
-	format: DesktopChecksumFormat,
-});
-
-export type DesktopVariantVersionedChecksumRedirectParam = z.infer<typeof DesktopVariantVersionedChecksumRedirectParam>;
-
 export const DesktopVersionsParam = z.object({
 	channel: DesktopChannelEnum,
 	plat: DesktopPlatformEnum,
@@ -181,15 +128,6 @@ export const DesktopVersionsParam = z.object({
 });
 
 export type DesktopVersionsParam = z.infer<typeof DesktopVersionsParam>;
-
-export const DesktopVariantVersionsParam = z.object({
-	channel: DesktopChannelEnum,
-	plat: DesktopPlatformEnum,
-	arch: DesktopArchEnum,
-	variant: DesktopVariantEnum,
-});
-
-export type DesktopVariantVersionsParam = z.infer<typeof DesktopVariantVersionsParam>;
 
 export const DesktopVersionsQuery = z.object({
 	limit: z.coerce.number().int().min(1).max(100).default(25).describe('Maximum number of versions to return'),
@@ -208,9 +146,6 @@ const VersionFileResponse = z.object({
 
 export const VersionInfoResponse = z.object({
 	version: z.string().describe('Semantic version string (e.g., 1.0.0)'),
-	variant: DesktopVariantEnum.nullable()
-		.optional()
-		.describe('Desktop build variant, when this is not the default build'),
 	pub_date: z.string().describe('ISO 8601 date when this version was published'),
 	minimum_system_version: z
 		.string()
@@ -223,31 +158,6 @@ export const VersionInfoResponse = z.object({
 });
 
 export type VersionInfoResponse = z.infer<typeof VersionInfoResponse>;
-
-export const DesktopSourceChecksumResponse = z.object({
-	sha256: z
-		.string()
-		.regex(/^[a-f0-9]{64}$/u)
-		.describe('SHA-256 hash of the latest Fluxer desktop source tarball'),
-	filename: z.string().describe('Filename for the latest Fluxer desktop source tarball'),
-	url: z.string().describe('Download URL for the latest Fluxer desktop source tarball'),
-	commit: z.string().optional().describe('Git commit used to produce the source tarball'),
-	desktop_version: VersionString.optional().describe('Desktop app version stamped into the source tarball'),
-	desktop_version_source: z
-		.object({
-			channel: DesktopChannelEnum,
-			platform: DesktopPlatformEnum,
-			arch: DesktopArchEnum,
-			key: z.string().describe('Downloads bucket manifest key used to resolve the desktop version'),
-			pub_date: z.string().describe('ISO 8601 date when the referenced desktop app version was published'),
-		})
-		.optional()
-		.describe('Downloads bucket manifest used to resolve the desktop version'),
-	published_at: z.string().describe('ISO 8601 date when this source tarball was published'),
-	size: z.number().int().nonnegative().optional().describe('Source tarball size in bytes'),
-});
-
-export type DesktopSourceChecksumResponse = z.infer<typeof DesktopSourceChecksumResponse>;
 
 export const DesktopVersionsResponse = z.object({
 	versions: z.array(VersionInfoResponse).describe('Array of available versions'),

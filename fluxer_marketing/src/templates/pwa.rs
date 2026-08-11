@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use super::{
-    icons::{Icon, icon},
-    tr,
-};
+use super::tr;
 use crate::{
     i18n::{MarketingI18n, descriptors::*},
     request_context::RequestContext,
@@ -14,10 +11,8 @@ pub fn pwa_install_trigger(i18n: &MarketingI18n, ctx: &RequestContext) -> Markup
     html! {
         a
             href="#pwa-modal-backdrop"
-            id="pwa-install-button"
-            class="inline-flex items-center gap-2 rounded-xl bg-[#4641D9] px-5 py-3 font-medium text-sm text-white shadow-md transition-colors hover:bg-[#3832B8]" {
-            (icon(Icon::Devices, "h-5 w-5"))
-            (tr(i18n, ctx, PLATFORM_SUPPORT_MOBILE_INSTALL_AS_APP_TITLE_DESCRIPTOR))
+            class="body-sm text-gray-500 underline decoration-gray-300 underline-offset-2 transition hover:text-[#4641D9]" {
+            (tr(i18n, ctx, PLATFORM_SUPPORT_MOBILE_INSTALL_AS_APP_LINK_DESCRIPTOR))
         }
     }
 }
@@ -87,7 +82,7 @@ fn android_steps(i18n: &MarketingI18n, ctx: &RequestContext) -> Markup {
                 ol class="space-y-4" {
                     (step("1", html! {
                         span {
-                            a href="https://web.fluxer.app" target="_blank" rel="noopener noreferrer" class="text-gray-900 underline hover:text-gray-700" {
+                            a href=(ctx.app_url("")) target="_blank" rel="noopener noreferrer" class="text-gray-900 underline hover:text-gray-700" {
                                 (tr(i18n, ctx, APP_OPEN_OPEN_WEB_APP_DESCRIPTOR))
                             }
                             (tr(i18n, ctx, PLATFORM_SUPPORT_MOBILE_INSTALL_AS_APP_GUIDES_IN_CHROME_DESCRIPTOR))
@@ -110,7 +105,7 @@ fn ios_steps(i18n: &MarketingI18n, ctx: &RequestContext) -> Markup {
                 ol class="space-y-4" {
                     (step("1", html! {
                         span {
-                            a href="https://web.fluxer.app" target="_blank" rel="noopener noreferrer" class="text-gray-900 underline hover:text-gray-700" {
+                            a href=(ctx.app_url("")) target="_blank" rel="noopener noreferrer" class="text-gray-900 underline hover:text-gray-700" {
                                 (tr(i18n, ctx, APP_OPEN_OPEN_WEB_APP_DESCRIPTOR))
                             }
                             (tr(i18n, ctx, PLATFORM_SUPPORT_MOBILE_INSTALL_AS_APP_GUIDES_IN_SAFARI_DESCRIPTOR))
@@ -134,7 +129,7 @@ fn desktop_steps(i18n: &MarketingI18n, ctx: &RequestContext) -> Markup {
                 ol class="space-y-4" {
                     (step("1", html! {
                         span {
-                            a href="https://web.fluxer.app" target="_blank" rel="noopener noreferrer" class="text-gray-900 underline hover:text-gray-700" {
+                            a href=(ctx.app_url("")) target="_blank" rel="noopener noreferrer" class="text-gray-900 underline hover:text-gray-700" {
                                 (tr(i18n, ctx, APP_OPEN_OPEN_WEB_APP_DESCRIPTOR))
                             }
                             (tr(i18n, ctx, PLATFORM_SUPPORT_MOBILE_INSTALL_AS_APP_GUIDES_IN_CHROME_OR_ANOTHER_BROWSER_DESCRIPTOR))

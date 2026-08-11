@@ -19,7 +19,6 @@ export interface ClientInfo {
 	arch?: string;
 	desktopVersion?: string;
 	desktopChannel?: string;
-	desktopBuildVariant?: string;
 	desktopArch?: string;
 	desktopOS?: string;
 	desktopRunningUnderRosetta?: boolean;
@@ -45,13 +44,6 @@ function normalize<T>(value: T | null | undefined): T | undefined {
 export function formatReleaseChannelLabel(value: string): string {
 	const normalized = value.trim().toLowerCase();
 	return normalized.charAt(0).toUpperCase() + normalized.slice(1);
-}
-
-export function formatDesktopBuildVariantLabel(value: string): string {
-	if (value === 'windows-game-capture') {
-		return 'Windows Game Capture';
-	}
-	return value;
 }
 
 const ARCHITECTURE_PATTERNS: ReadonlyArray<{
@@ -191,7 +183,6 @@ function getDesktopContextFromInfo(desktopInfo: DesktopInfo): Partial<ClientInfo
 	return {
 		desktopVersion: normalize(desktopInfo.version),
 		desktopChannel: normalize(desktopInfo.channel),
-		desktopBuildVariant: normalize(desktopInfo.buildVariant),
 		desktopArch: normalizeArchitectureValue(desktopInfo.hardwareArch ?? desktopInfo.arch),
 		desktopOS: normalize(desktopInfo.os),
 		desktopRunningUnderRosetta: desktopInfo.runningUnderRosetta,
@@ -312,14 +303,9 @@ export function formatClientBuildInfo(info: ClientInfo, options: {unknownLabel?:
 	const desktopChannel = info.desktopChannel ? formatReleaseChannelLabel(info.desktopChannel) : null;
 	const hasDesktopBuild = Boolean(info.desktopVersion);
 	const primaryDesktopChannel = desktopChannel ?? releaseChannel;
-	const desktopBuildVariant =
-		info.desktopBuildVariant && info.desktopBuildVariant !== 'default'
-			? formatDesktopBuildVariantLabel(info.desktopBuildVariant)
-			: null;
 	const webChannelPrefix = hasDesktopBuild && primaryDesktopChannel === releaseChannel ? '' : `${releaseChannel} `;
 	const parts = [
 		info.desktopVersion ? `${primaryDesktopChannel} Desktop ${info.desktopVersion}` : '',
-		desktopBuildVariant ? `Desktop variant ${desktopBuildVariant}` : '',
 		`${webChannelPrefix}Web ${buildVersion}`,
 		osDescription,
 		shouldShowBrowserInfo ? browserInfo : '',
@@ -406,7 +392,6 @@ export async function getGatewayClientProperties(geo?: {latitude?: string | null
 		build_version: Config.PUBLIC_BUILD_VERSION ?? 'dev',
 		desktop_app_version: info.desktopVersion ?? null,
 		desktop_app_channel: info.desktopChannel ?? null,
-		desktop_app_variant: info.desktopBuildVariant ?? null,
 		desktop_arch: info.desktopArch ?? info.arch ?? null,
 		desktop_os: info.desktopOS ?? info.osName ?? null,
 		e2ee_capable: isLiveKitE2EECapable(),

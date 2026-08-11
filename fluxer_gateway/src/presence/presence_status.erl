@@ -20,16 +20,11 @@
 -spec get_current_status(sessions()) -> status().
 get_current_status(Sessions) ->
     AllStatuses = [maps:get(status, S) || S <- maps:values(Sessions)],
-    case lists:member(invisible, AllStatuses) of
-        true ->
-            invisible;
-        false ->
-            resolve_status_precedence(AllStatuses)
-    end.
+    resolve_status_precedence(AllStatuses).
 
 -spec resolve_status_precedence([status()]) -> status().
 resolve_status_precedence(AllStatuses) ->
-    StatusPrecedence = [dnd, online, idle],
+    StatusPrecedence = [dnd, online, idle, invisible],
     lists:foldl(
         fun(Status, Acc) ->
             promote_status(Status, Acc, AllStatuses)
@@ -49,12 +44,13 @@ promote_status(_Status, Acc, _AllStatuses) ->
 
 -spec get_flattened_mobile(sessions()) -> boolean().
 get_flattened_mobile(Sessions) ->
-    lists:any(
-        fun(Session) ->
-            maps:get(mobile, Session, false)
-        end,
-        maps:values(Sessions)
-    ).
+    get_current_status(Sessions) =:= online andalso
+        lists:any(fun is_online_mobile_session/1, maps:values(Sessions)).
+
+-spec is_online_mobile_session(map()) -> boolean().
+is_online_mobile_session(Session) ->
+    maps:get(status, Session, offline) =:= online andalso
+        maps:get(mobile, Session, false).
 
 -spec get_flattened_afk(sessions()) -> boolean().
 get_flattened_afk(Sessions) ->
@@ -150,10 +146,17 @@ get_current_status_dnd_over_idle_test() ->
     },
     ?assertEqual(dnd, get_current_status(Sessions)).
 
-get_current_status_invisible_test() ->
+get_current_status_visible_over_invisible_test() ->
     Sessions = #{
         <<"s1">> => #{status => invisible, afk => false, mobile => false},
         <<"s2">> => #{status => online, afk => false, mobile => false}
+    },
+    ?assertEqual(online, get_current_status(Sessions)).
+
+get_current_status_invisible_without_visible_session_test() ->
+    Sessions = #{
+        <<"s1">> => #{status => invisible, afk => false, mobile => false},
+        <<"s2">> => #{status => offline, afk => false, mobile => false}
     },
     ?assertEqual(invisible, get_current_status(Sessions)).
 
@@ -168,7 +171,46 @@ get_flattened_mobile_false_test() ->
     Sessions = #{
         <<"s1">> => #{status => online, afk => false, mobile => false}
     },
-    ?assertEqual(false, get_flattened_mobile(Sessions)).
+    ?assertEqual(false, get_flattened_mobile(Sessions)),
+    ?assertEqual(
+        false,
+        get_flattened_mobile(#{
+            <<"s1">> => #{status => idle, afk => false, mobile => true}
+        })
+    ),
+    ?assertEqual(
+        false,
+        get_flattened_mobile(#{
+            <<"s1">> => #{status => dnd, afk => false, mobile => true}
+        })
+    ),
+    ?assertEqual(
+        false,
+        get_flattened_mobile(#{
+            <<"s1">> => #{status => invisible, afk => false, mobile => true}
+        })
+    ),
+    ?assertEqual(
+        false,
+        get_flattened_mobile(#{
+            <<"s1">> => #{status => dnd, afk => false, mobile => false},
+            <<"s2">> => #{status => online, afk => false, mobile => true}
+        })
+    ),
+    ?assertEqual(
+        false,
+        get_flattened_mobile(#{
+            <<"s1">> => #{status => online, afk => false, mobile => false},
+            <<"s2">> => #{status => idle, afk => false, mobile => true}
+        })
+    ),
+    ?assertEqual(
+        true,
+        get_flattened_mobile(#{
+            <<"s1">> => #{status => online, afk => false, mobile => true},
+            <<"s2">> => #{status => invisible, afk => false, mobile => false}
+        })
+    ).
 
 get_flattened_mobile_empty_test() ->
     ?assertEqual(false, get_flattened_mobile(#{})).

@@ -367,7 +367,7 @@ base_state_for_guild_dispatch_test() ->
         collected_guild_states => []
     }.
 
-collect_ready_presences_includes_one_to_one_dm_recipients_test() ->
+collect_ready_presences_does_not_add_one_to_one_dm_as_global_target_test() ->
     {ok, CachePid} = maybe_start_presence_cache(),
     OnlineDmUser = #{
         <<"status">> => <<"online">>,
@@ -398,7 +398,7 @@ collect_ready_presences_includes_one_to_one_dm_recipients_test() ->
         maps:get(<<"id">>, maps:get(<<"user">>, P, #{}), undefined)
      || P <- Presences
     ],
-    ?assertEqual([<<"2">>], PresenceIds),
+    ?assertEqual([], PresenceIds),
     ?assertEqual(ok, gen_server:stop(CachePid)).
 
 collect_ready_presences_includes_friend_without_dm_recipients_test() ->

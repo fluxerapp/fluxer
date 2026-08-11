@@ -83,12 +83,6 @@ jobs:
     timeout-minutes: 25
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
-      windows_x64: ${{ steps.set-matrix.outputs.windows_x64 }}
-      windows_arm64: ${{ steps.set-matrix.outputs.windows_arm64 }}
-      windows_x64_default: ${{ steps.set-matrix.outputs.windows_x64_default }}
-      windows_arm64_default: ${{ steps.set-matrix.outputs.windows_arm64_default }}
-      windows_game_capture_x64: ${{ steps.set-matrix.outputs.windows_game_capture_x64 }}
-      windows_game_capture_arm64: ${{ steps.set-matrix.outputs.windows_game_capture_arm64 }}
     steps:
       - name: Checkout source
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
@@ -135,11 +129,9 @@ jobs:
       DESKTOP_PLATFORM: ${{ matrix.platform }}
       DESKTOP_ARCH: ${{ matrix.arch }}
       DESKTOP_VARIANT: ${{ matrix.desktop_variant }}
-      FLUXER_DESKTOP_BUILD_VARIANT: ${{ matrix.desktop_variant }}
       PLATFORM: ${{ matrix.platform }}
       ARCH: ${{ matrix.arch }}
       ELECTRON_ARCH: ${{ matrix.electron_arch }}
-      FLUXER_WINDOWS_GAME_CAPTURE_MODULE_ENABLED: ${{ matrix.desktop_variant == 'windows-game-capture' && 'true' || 'false' }}
     steps:
       - name: Checkout CI helpers
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
@@ -212,7 +204,7 @@ jobs:
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
           path: ${{ env.PNPM_STORE_PATH }}
-          key: ${{ runner.os }}-${{ matrix.arch }}-pnpm-store-${{ hashFiles('source/**/pnpm-lock.yaml') }}
+          key: ${{ runner.os }}-${{ matrix.arch }}-pnpm-store-${{ hashFiles('source/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-${{ matrix.arch }}-pnpm-store-
 
@@ -339,6 +331,83 @@ jobs:
           cargo run --locked --quiet --manifest-path ${{ github.workspace }}/_ci/tools/ci/Cargo.toml -- build-desktop
           --step build_app_windows
 
+      - name: Validate Windows signing inputs
+        if: matrix.platform == 'windows'
+        env:
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          AZURE_ARTIFACT_SIGNING_ENDPOINT: ${{ secrets.AZURE_ARTIFACT_SIGNING_ENDPOINT }}
+          AZURE_ARTIFACT_SIGNING_ACCOUNT_NAME: ${{ secrets.AZURE_ARTIFACT_SIGNING_ACCOUNT_NAME }}
+          AZURE_ARTIFACT_SIGNING_CERTIFICATE_PROFILE_NAME: ${{ secrets.AZURE_ARTIFACT_SIGNING_CERTIFICATE_PROFILE_NAME }}
+        run: >-
+          cargo run --locked --quiet --manifest-path ${{ github.workspace }}/_ci/tools/ci/Cargo.toml -- build-desktop
+          --step validate_windows_signing_inputs
+
+      - name: Azure login for Artifact Signing
+        if: matrix.platform == 'windows'
+        uses: azure/login@532459ea530d8321f2fb9bb10d1e0bcf23869a43
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Write Velopack Trusted Signing metadata
+        if: matrix.platform == 'windows'
+        env:
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          AZURE_ARTIFACT_SIGNING_ENDPOINT: ${{ secrets.AZURE_ARTIFACT_SIGNING_ENDPOINT }}
+          AZURE_ARTIFACT_SIGNING_ACCOUNT_NAME: ${{ secrets.AZURE_ARTIFACT_SIGNING_ACCOUNT_NAME }}
+          AZURE_ARTIFACT_SIGNING_CERTIFICATE_PROFILE_NAME: ${{ secrets.AZURE_ARTIFACT_SIGNING_CERTIFICATE_PROFILE_NAME }}
+        run: >-
+          cargo run --locked --quiet --manifest-path ${{ github.workspace }}/_ci/tools/ci/Cargo.toml -- build-desktop
+          --step write_windows_signing_metadata
+
+      - name: Resolve unpacked Windows app directory
+        id: resolve_unpacked
+        if: matrix.platform == 'windows'
+        working-directory: ${{ env.WORKDIR }}/fluxer_desktop
+        env:
+          BUILD_CHANNEL: ${{ env.BUILD_CHANNEL }}
+        run: >-
+          cargo run --locked --quiet --manifest-path ${{ github.workspace }}/_ci/tools/ci/Cargo.toml -- build-desktop
+          --step resolve_windows_unpacked_dir
+
+      - name: Sign unpacked Windows binaries with Artifact Signing
+        if: matrix.platform == 'windows'
+        uses: azure/artifact-signing-action@c7ab2a863ab5f9a846ddb8265964877ef296ee82
+        with:
+          endpoint: ${{ secrets.AZURE_ARTIFACT_SIGNING_ENDPOINT }}
+          signing-account-name: ${{ secrets.AZURE_ARTIFACT_SIGNING_ACCOUNT_NAME }}
+          certificate-profile-name: ${{ secrets.AZURE_ARTIFACT_SIGNING_CERTIFICATE_PROFILE_NAME }}
+          files-folder: ${{ steps.resolve_unpacked.outputs.unpacked_dir }}
+          files-folder-filter: exe,dll,node
+          files-folder-recurse: true
+          file-digest: SHA256
+          timestamp-rfc3161: http://timestamp.acs.microsoft.com
+          timestamp-digest: SHA256
+          exclude-environment-credential: true
+
+      - name: Verify unpacked Windows signatures
+        if: matrix.platform == 'windows'
+        working-directory: ${{ env.WORKDIR }}/fluxer_desktop
+        env:
+          BUILD_CHANNEL: ${{ env.BUILD_CHANNEL }}
+        run: >-
+          cargo run --locked --quiet --manifest-path ${{ github.workspace }}/_ci/tools/ci/Cargo.toml -- build-desktop
+          --step verify_windows_unpacked_signatures
+
+      - name: Create portable ZIP (Windows)
+        if: matrix.platform == 'windows'
+        working-directory: ${{ env.WORKDIR }}/fluxer_desktop
+        env:
+          BUILD_CHANNEL: ${{ env.BUILD_CHANNEL }}
+        run: >-
+          cargo run --locked --quiet --manifest-path ${{ github.workspace }}/_ci/tools/ci/Cargo.toml -- build-desktop
+          --step create_portable_zip_windows
+
       - name: Package Windows app with Velopack
         if: matrix.platform == 'windows'
         working-directory: ${{ env.WORKDIR }}/fluxer_desktop
@@ -370,14 +439,14 @@ jobs:
           cargo run --locked --quiet --manifest-path ${{ github.workspace }}/_ci/tools/ci/Cargo.toml -- build-desktop
           --step build_app_linux
 
-      - name: Create portable ZIP (Windows)
+      - name: Verify signed Windows artifacts
         if: matrix.platform == 'windows'
         working-directory: ${{ env.WORKDIR }}/fluxer_desktop
         env:
           BUILD_CHANNEL: ${{ env.BUILD_CHANNEL }}
         run: >-
           cargo run --locked --quiet --manifest-path ${{ github.workspace }}/_ci/tools/ci/Cargo.toml -- build-desktop
-          --step create_portable_zip_windows
+          --step verify_windows_signed_artifacts
 
       - name: Prepare artifacts (Windows)
         if: runner.os == 'Windows'
@@ -409,162 +478,17 @@ jobs:
           cargo run --locked --quiet --manifest-path ${{ github.workspace }}/_ci/tools/ci/Cargo.toml -- build-desktop
           --step generate_checksums_windows
 
-      - name: Build desktop source tarball
-        if: matrix.platform == 'linux' && matrix.arch == 'x64' && needs.meta.outputs.build_channel == 'canary'
-        run: >-
-          cargo run --locked --quiet --manifest-path ${{ github.workspace }}/_ci/tools/ci/Cargo.toml -- build-desktop
-          --step build_source_tarball
-
       - name: Upload artifacts to S3 handoff
         run: >-
           cargo run --locked --quiet --manifest-path ${{ github.workspace }}/_ci/tools/ci/Cargo.toml -- build-desktop
           --step upload_handoff
 
-  check_signing:
-    name: Check signing secrets
-    runs-on: ubuntu-24.04-arm
-    environment: desktop-releases
-    timeout-minutes: 5
-    outputs:
-      enabled: ${{ steps.check.outputs.enabled }}
-    steps:
-      - name: Checkout source
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
-
-      - name: Set up Rust toolchain (CI helpers)
-        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
-        with:
-          toolchain: "1.93.0"
-
-      - name: Check for Azure signing secrets
-        id: check
-        env:
-          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-        run: >-
-          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- build-desktop
-          --step check_signing_secrets
-
-  sign_windows:
-    name: Sign Windows artifacts (${{ matrix.arch }}, ${{ matrix.desktop_variant }})
-    if: ${{ needs.check_signing.outputs.enabled == 'true' }}
-    needs:
-      - meta
-      - matrix
-      - build
-      - check_signing
-    runs-on: blacksmith-32vcpu-windows-2025
-    environment: desktop-releases
-    timeout-minutes: 25
-    env:
-      BUILD_CHANNEL: ${{ needs.meta.outputs.build_channel }}
-      DESKTOP_HANDOFF_PREFIX: _handoff/desktop/${{ needs.meta.outputs.build_channel }}/${{ needs.meta.outputs.version }}/${{ needs.meta.outputs.source_sha }}
-      S3_ENDPOINT: https://ewr1.vultrobjects.com
-      S3_BUCKET: fluxer-downloads
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      EXPECT_WINDOWS_X64: ${{ needs.matrix.outputs.windows_x64 }}
-      EXPECT_WINDOWS_ARM64: ${{ needs.matrix.outputs.windows_arm64 }}
-      EXPECT_WINDOWS_X64_DEFAULT: ${{ needs.matrix.outputs.windows_x64_default }}
-      EXPECT_WINDOWS_ARM64_DEFAULT: ${{ needs.matrix.outputs.windows_arm64_default }}
-      EXPECT_WINDOWS_GAME_CAPTURE_X64: ${{ needs.matrix.outputs.windows_game_capture_x64 }}
-      EXPECT_WINDOWS_GAME_CAPTURE_ARM64: ${{ needs.matrix.outputs.windows_game_capture_arm64 }}
-      EXPECT_WINDOWS_ARTIFACTS: ${{ (matrix.desktop_variant == 'default' && matrix.arch == 'x64' && needs.matrix.outputs.windows_x64_default == 'true') || (matrix.desktop_variant == 'default' && matrix.arch == 'arm64' && needs.matrix.outputs.windows_arm64_default == 'true') || (matrix.desktop_variant == 'windows-game-capture' && matrix.arch == 'x64' && needs.matrix.outputs.windows_game_capture_x64 == 'true') || (matrix.desktop_variant == 'windows-game-capture' && matrix.arch == 'arm64' && needs.matrix.outputs.windows_game_capture_arm64 == 'true') }}
-      DESKTOP_VARIANT: ${{ matrix.desktop_variant }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - arch: x64
-            desktop_variant: default
-          - arch: arm64
-            desktop_variant: default
-          - arch: x64
-            desktop_variant: windows-game-capture
-          - arch: arm64
-            desktop_variant: windows-game-capture
-    steps:
-      - name: Checkout CI helpers
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
-        with:
-          ref: ${{ needs.meta.outputs.source_sha }}
-
-      - name: Set up Rust toolchain (CI helpers)
-        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
-        with:
-          toolchain: "1.93.0"
-
-      - name: Download Windows artifacts from S3 handoff
-        id: download_artifact
-        if: env.EXPECT_WINDOWS_ARTIFACTS == 'true'
-        env:
-          ARCH: ${{ matrix.arch }}
-        run: >-
-          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- build-desktop
-          --step download_windows_handoff
-
-      - name: Check whether artifacts exist for this arch
-        id: check_artifacts
-        env:
-          ARCH: ${{ matrix.arch }}
-        run: >-
-          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- build-desktop
-          --step check_windows_artifacts
-
-      - name: Azure login for Artifact Signing
-        if: steps.check_artifacts.outputs.found == 'true'
-        uses: azure/login@532459ea530d8321f2fb9bb10d1e0bcf23869a43
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
-      - name: Sign Windows executables with Artifact Signing
-        if: steps.check_artifacts.outputs.found == 'true'
-        uses: azure/artifact-signing-action@c7ab2a863ab5f9a846ddb8265964877ef296ee82
-        with:
-          endpoint: ${{ secrets.AZURE_ARTIFACT_SIGNING_ENDPOINT }}
-          signing-account-name: ${{ secrets.AZURE_ARTIFACT_SIGNING_ACCOUNT_NAME }}
-          certificate-profile-name: ${{ secrets.AZURE_ARTIFACT_SIGNING_CERTIFICATE_PROFILE_NAME }}
-          files-folder: ${{ github.workspace }}\artifacts\windows-${{ matrix.arch }}${{ matrix.desktop_variant == 'windows-game-capture' && '-windows-game-capture' || '' }}
-          files-folder-filter: exe
-          files-folder-recurse: true
-          file-digest: SHA256
-          timestamp-rfc3161: http://timestamp.acs.microsoft.com
-          timestamp-digest: SHA256
-
-      - name: Verify Authenticode signatures
-        if: steps.check_artifacts.outputs.found == 'true'
-        env:
-          ARCH: ${{ matrix.arch }}
-        run: >-
-          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- build-desktop
-          --step verify_authenticode
-
-      - name: Regenerate SHA256 checksums for signed executables
-        if: steps.check_artifacts.outputs.found == 'true'
-        env:
-          ARCH: ${{ matrix.arch }}
-        run: >-
-          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- build-desktop
-          --step regenerate_signed_checksums
-
-      - name: Re-upload signed Windows artifacts to S3 handoff
-        if: steps.check_artifacts.outputs.found == 'true'
-        env:
-          DESKTOP_PLATFORM: windows
-          DESKTOP_ARCH: ${{ matrix.arch }}
-          DESKTOP_VARIANT: ${{ matrix.desktop_variant }}
-        run: >-
-          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- build-desktop
-          --step stage_signed_windows_artifacts
-
   upload:
     name: Upload to S3
-    if: ${{ !failure() && !cancelled() }}
+    if: ${{ !cancelled() && needs.build.result == 'success' }}
     needs:
       - meta
       - build
-      - sign_windows
     runs-on: ubuntu-24.04-arm
     environment: desktop-releases
     timeout-minutes: 60
@@ -615,11 +539,6 @@ jobs:
           cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- build-desktop
           --step upload_payload
 
-      - name: Verify uploaded source tarball
-        run: >-
-          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- build-desktop
-          --step verify_source_tarball
-
       - name: Build summary
         run: >-
           cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- build-desktop
@@ -645,14 +564,6 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-      - name: Notify canary desktop webhook
-        if: ${{ success() && needs.meta.outputs.channel == 'canary' }}
-        env:
-          FLUXER_WEBHOOK_URL: ${{ secrets.FLUXER_WEBHOOK_URL }}
-        run: >-
-          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- build-desktop
-          --step notify_webhook
-
       - name: Cleanup S3 handoff
         if: ${{ success() }}
         run: >-
@@ -661,7 +572,7 @@ jobs:
 
   finalise_release:
     name: Finalise GitHub desktop release
-    if: ${{ !failure() && !cancelled() && needs.meta.outputs.test_build != 'true' }}
+    if: ${{ !cancelled() && needs.upload.result == 'success' && needs.meta.outputs.test_build != 'true' }}
     needs:
       - meta
       - upload

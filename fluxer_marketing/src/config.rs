@@ -13,7 +13,6 @@ pub struct MarketingConfig {
     pub secret_key_base: String,
     pub base_path: String,
     pub api_endpoint: String,
-    pub app_endpoint: String,
     pub static_cdn_endpoint: String,
     pub marketing_endpoint: String,
     pub geoip_db_path: String,
@@ -37,6 +36,8 @@ pub enum ReleaseChannel {
     Stable,
     Canary,
 }
+
+pub const DOWNLOAD_RELEASE_CHANNEL: ReleaseChannel = ReleaseChannel::Canary;
 
 impl MarketingConfig {
     pub fn from_env() -> Self {
@@ -65,10 +66,6 @@ impl MarketingConfig {
             api_endpoint: cfg::trim_trailing_slash(&cfg::read_env(
                 "FLUXER_API_ENDPOINT",
                 "https://api.fluxer.app",
-            )),
-            app_endpoint: cfg::trim_trailing_slash(&cfg::read_env(
-                "FLUXER_APP_ENDPOINT",
-                "https://app.fluxer.app",
             )),
             static_cdn_endpoint: cfg::trim_trailing_slash(&cfg::read_env(
                 "FLUXER_STATIC_CDN_ENDPOINT",

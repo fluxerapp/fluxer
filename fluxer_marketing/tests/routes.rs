@@ -7,7 +7,7 @@ use axum::{
 use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
 use fluxer_marketing::{
     build_router,
-    config::{MarketingConfig, ReleaseChannel},
+    config::{DOWNLOAD_RELEASE_CHANNEL, MarketingConfig, ReleaseChannel},
 };
 use http_body_util::BodyExt;
 use std::collections::{BTreeMap, BTreeSet};
@@ -22,7 +22,6 @@ fn test_config() -> MarketingConfig {
     config.marketing_endpoint = "https://fluxer.test".to_owned();
     config.base_path.clear();
     config.api_endpoint = "https://api.fluxer.test".to_owned();
-    config.app_endpoint = "https://app.fluxer.test".to_owned();
     config.build_version = "test".to_owned();
     config.geoip_db_path.clear();
     config.trust_client_ip_header = false;
@@ -537,7 +536,7 @@ async fn old_origin_marketing_redirects_are_preserved() {
     assert_eq!(response.status(), StatusCode::TEMPORARY_REDIRECT);
     assert_eq!(
         response.headers().get(header::LOCATION).unwrap(),
-        "https://app.fluxer.test/invite/"
+        "https://web.canary.fluxer.app/invite/"
     );
 
     let response = app
@@ -554,7 +553,7 @@ async fn old_origin_marketing_redirects_are_preserved() {
     assert_eq!(response.status(), StatusCode::TEMPORARY_REDIRECT);
     assert_eq!(
         response.headers().get(header::LOCATION).unwrap(),
-        "https://app.fluxer.test/invite/guild"
+        "https://web.canary.fluxer.app/invite/guild"
     );
 
     let response = app
@@ -571,7 +570,7 @@ async fn old_origin_marketing_redirects_are_preserved() {
     assert_eq!(response.status(), StatusCode::TEMPORARY_REDIRECT);
     assert_eq!(
         response.headers().get(header::LOCATION).unwrap(),
-        "https://app.fluxer.test/gift/spring"
+        "https://web.canary.fluxer.app/gift/spring"
     );
 
     let response = app
@@ -621,7 +620,7 @@ async fn old_origin_marketing_redirects_are_preserved() {
     assert_eq!(response.status(), StatusCode::TEMPORARY_REDIRECT);
     assert_eq!(
         response.headers().get(header::LOCATION).unwrap(),
-        "https://app.fluxer.test/channels/@me?source=old"
+        "https://web.canary.fluxer.app/channels/@me?source=old"
     );
 
     let response = app
@@ -654,6 +653,62 @@ async fn old_origin_marketing_redirects_are_preserved() {
         response.headers().get(header::LOCATION).unwrap(),
         "https://api.fluxer.test/.well-known/fluxer"
     );
+}
+
+#[tokio::test]
+async fn app_redirects_and_cta_links_share_the_canary_web_app_origin_on_every_channel() {
+    const CANARY_WEB_APP_ORIGIN: &str = "https://web.canary.fluxer.app";
+
+    for channel in [ReleaseChannel::Stable, ReleaseChannel::Canary] {
+        let mut config = test_config();
+        config.release_channel = channel;
+        let app = build_router(config);
+
+        for (host, uri, expected) in [
+            ("fluxer.gg", "/", format!("{CANARY_WEB_APP_ORIGIN}/invite/")),
+            (
+                "fluxer.gg",
+                "/guild",
+                format!("{CANARY_WEB_APP_ORIGIN}/invite/guild"),
+            ),
+            (
+                "fluxer.gift",
+                "/spring",
+                format!("{CANARY_WEB_APP_ORIGIN}/gift/spring"),
+            ),
+            (
+                "fluxer.app",
+                "/channels/@me?source=old",
+                format!("{CANARY_WEB_APP_ORIGIN}/channels/@me?source=old"),
+            ),
+            (
+                "fluxer.app",
+                "/channels",
+                format!("{CANARY_WEB_APP_ORIGIN}/channels"),
+            ),
+        ] {
+            let response = app
+                .clone()
+                .oneshot(
+                    Request::builder()
+                        .uri(uri)
+                        .header(header::HOST, host)
+                        .body(Body::empty())
+                        .unwrap(),
+                )
+                .await
+                .unwrap();
+            assert_eq!(response.status(), StatusCode::TEMPORARY_REDIRECT);
+            assert_eq!(
+                response.headers().get(header::LOCATION).unwrap(),
+                expected.as_str()
+            );
+        }
+
+        let html = render_path(app, "/").await;
+        assert!(html.contains(&format!("{CANARY_WEB_APP_ORIGIN}/channels/@me")));
+        assert!(!html.contains("https://app.fluxer."));
+    }
 }
 
 #[tokio::test]
@@ -1109,18 +1164,14 @@ async fn blog_host_only_redirects_to_canonical_marketing_blog_routes() {
 async fn download_page_renders_strips_and_cache_header() {
     let mut config = test_config();
     config.api_endpoint = "http://127.0.0.1:9".to_owned();
-    let release_channel = config.release_channel;
+    config.release_channel = ReleaseChannel::Stable;
     let expected_download_url = format!(
         "/dl/desktop/{}/win32/x64/latest/setup?test=1",
-        release_channel.segment()
+        DOWNLOAD_RELEASE_CHANNEL.segment()
     );
     let expected_other_arch_url = format!(
         "/dl/desktop/{}/win32/arm64/latest/setup?test=1",
-        release_channel.segment()
-    );
-    let expected_game_capture_download_url = format!(
-        "/dl/desktop/{}/win32/x64/windows-game-capture/latest/setup?test=1",
-        release_channel.segment()
+        DOWNLOAD_RELEASE_CHANNEL.segment()
     );
     let app = build_router(config);
     let response = app
@@ -1146,13 +1197,11 @@ async fn download_page_renders_strips_and_cache_header() {
     assert!(!html.contains("/dl/desktop/source/latest"));
     assert!(html.contains(&expected_download_url));
     assert!(html.contains(&expected_other_arch_url));
-    assert!(html.contains(&expected_game_capture_download_url));
-    assert!(html.contains("Microsoft Defender may quarantine it"));
-    if release_channel.is_canary() {
-        assert!(html.contains("/dl/desktop/canary/linux/x64/latest/appimage?test=1"));
-    } else {
-        assert!(html.contains("https://flathub.org/en/apps/app.fluxer.Fluxer"));
-    }
+    assert!(html.contains("/dl/desktop/canary/linux/x64/latest/appimage?test=1"));
+    assert!(!html.contains("/dl/desktop/stable/"));
+    assert!(html.contains("https://flathub.org/en/apps/app.fluxer.Fluxer"));
+    assert!(html.contains("Flatpak package is currently behind the other Linux downloads"));
+    assert!(html.contains("https://web.canary.fluxer.app/channels/@me"));
 }
 
 #[tokio::test]
@@ -1176,52 +1225,6 @@ async fn download_page_uses_channel_api_endpoint_fallback_when_configured_endpoi
     assert!(html.contains(
         "https://api.canary.fluxer.app/dl/desktop/canary/linux/x64/latest/appimage?test=1"
     ));
-}
-
-#[tokio::test]
-async fn download_page_renders_latest_sha256_from_api_metadata() {
-    let checksum = "ced8b5a045b799b7ca9954b08c77f67b140640a1abb958b99636e659e867449a";
-    let download_api = axum::Router::new().route(
-        "/dl/desktop/canary/linux/x64/latest",
-        axum::routing::get(move || async move {
-            axum::Json(serde_json::json!({
-                "version": "0.0.33",
-                "pub_date": "2026-04-23T15:53:00Z",
-                "files": {
-                    "appimage": {
-                        "url": "http://127.0.0.1/dl/desktop/canary/linux/x64/0.0.33/appimage",
-                        "sha256": checksum,
-                        "checksum_url": "http://127.0.0.1/dl/desktop/canary/linux/x64/0.0.33/appimage.sha256"
-                    }
-                }
-            }))
-        }),
-    );
-    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
-    let api_endpoint = format!("http://{}", listener.local_addr().unwrap());
-    let server = tokio::spawn(async move {
-        axum::serve(listener, download_api).await.unwrap();
-    });
-    let mut config = test_config();
-    config.release_channel = ReleaseChannel::Canary;
-    config.api_endpoint = api_endpoint;
-    let app = build_router(config);
-
-    let response = app
-        .oneshot(
-            Request::builder()
-                .uri("/download")
-                .body(Body::empty())
-                .unwrap(),
-        )
-        .await
-        .unwrap();
-    server.abort();
-    assert_eq!(response.status(), StatusCode::OK);
-    let body = response.into_body().collect().await.unwrap().to_bytes();
-    let html = String::from_utf8(body.to_vec()).unwrap();
-    assert!(html.contains(checksum));
-    assert!(html.contains("appimage.sha256"));
 }
 
 #[tokio::test]
