@@ -82,6 +82,7 @@ export class CronScheduler {
 	private readonly kvClient: IKVProvider | null;
 	private readonly definitions: Map<string, CronDefinition> = new Map();
 	private intervalId: NodeJS.Timeout | null = null;
+	private activeTick: Promise<void> | null = null;
 
 	constructor(workerService: WorkerService, logger: LoggerInterface, kvClient: IKVProvider | null = null) {
 		this.workerService = workerService;
@@ -104,18 +105,25 @@ export class CronScheduler {
 			return;
 		}
 		this.intervalId = setInterval(() => {
-			this.tick().catch((error) => {
-				this.logger.error({err: error}, 'Cron scheduler tick failed');
-			});
+			if (this.activeTick !== null) return;
+			const tick = this.tick()
+				.catch((error) => {
+					this.logger.error({err: error}, 'Cron scheduler tick failed');
+				})
+				.finally(() => {
+					if (this.activeTick === tick) this.activeTick = null;
+				});
+			this.activeTick = tick;
 		}, 1000);
 		this.logger.info(`Cron scheduler started with ${this.definitions.size} definitions`);
 	}
 
-	stop(): void {
+	async stop(): Promise<void> {
 		if (this.intervalId !== null) {
 			clearInterval(this.intervalId);
 			this.intervalId = null;
 		}
+		await this.activeTick;
 	}
 
 	private async tick(): Promise<void> {
@@ -133,7 +141,7 @@ export class CronScheduler {
 					if (!acquired) {
 						continue;
 					}
-					await this.workerService.addJob(def.taskType, def.payload, {jobKey});
+					await this.workerService.addJob(def.taskType, def.payload, {jobKey, skipLedger: true});
 					this.logger.debug({cronId: def.id, taskType: def.taskType}, 'Cron job fired');
 				} catch (error) {
 					this.logger.error({err: error, cronId: def.id, taskType: def.taskType}, 'Failed to enqueue cron job');

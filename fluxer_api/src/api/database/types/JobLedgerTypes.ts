@@ -1,6 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-export type JobStatus = 'queued' | 'running' | 'succeeded' | 'failed' | 'cancelled' | 'deadletter';
+export type JobStatus =
+	| 'queued'
+	| 'running'
+	| 'deadletter_pending'
+	| 'succeeded'
+	| 'failed'
+	| 'cancelled'
+	| 'deadletter';
 
 export interface JobByIdRow {
 	job_id: bigint;
@@ -13,12 +20,16 @@ export interface JobByIdRow {
 	result: string | null;
 	error_message: string | null;
 	created_at: Date;
+	state_changed_at: Date | null;
 	started_at: Date | null;
 	completed_at: Date | null;
 	requested_by_user_id: bigint | null;
 	audit_log_reason: string | null;
 	jet_stream_seq: string | null;
 	jet_stream_lane: string | null;
+	lease_token: string | null;
+	lease_expires_at: Date | null;
+	dlq_attempts: number;
 	attempts: number;
 	max_attempts: number;
 	run_at: Date | null;
@@ -37,12 +48,16 @@ export const JOB_BY_ID_COLUMNS = [
 	'result',
 	'error_message',
 	'created_at',
+	'state_changed_at',
 	'started_at',
 	'completed_at',
 	'requested_by_user_id',
 	'audit_log_reason',
 	'jet_stream_seq',
 	'jet_stream_lane',
+	'lease_token',
+	'lease_expires_at',
+	'dlq_attempts',
 	'attempts',
 	'max_attempts',
 	'run_at',
@@ -85,3 +100,11 @@ export const JOB_ACTIVE_COLUMNS = [
 	'created_at',
 	'started_at',
 ] as const satisfies ReadonlyArray<keyof JobActiveRow>;
+
+export interface JobActiveV2Row extends JobActiveRow {
+	shard: number;
+}
+
+export const JOB_ACTIVE_V2_COLUMNS = ['shard', ...JOB_ACTIVE_COLUMNS] as const satisfies ReadonlyArray<
+	keyof JobActiveV2Row
+>;

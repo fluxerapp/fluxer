@@ -5,7 +5,7 @@ import {fetchMany, fetchOne, fetchPage, type PagedQueryResult, upsertOne} from '
 import type {BillingCheckoutSessionRow} from '../../database/types/BillingTypes';
 import {BillingCheckoutSessions, BillingCheckoutSessionsByCustomer} from '../../Tables';
 import {mapStripeCheckoutSessionToRow} from '../mappers/StripeToBillingMapper';
-import {isExistingNewer} from './BillingRepoHelpers';
+import {BILLING_REVERSE_CHRONOLOGICAL_ORDER, isExistingNewer, restoreReferenceOrder} from './BillingRepoHelpers';
 
 const FETCH_BY_ID = BillingCheckoutSessions.selectCql({
 	where: BillingCheckoutSessions.where.eq('provider_id'),
@@ -13,6 +13,7 @@ const FETCH_BY_ID = BillingCheckoutSessions.selectCql({
 });
 const FETCH_BY_CUSTOMER = BillingCheckoutSessionsByCustomer.selectCql({
 	where: BillingCheckoutSessionsByCustomer.where.eq('customer_id'),
+	orderBy: BILLING_REVERSE_CHRONOLOGICAL_ORDER,
 });
 const FETCH_BY_PROVIDER_IDS = BillingCheckoutSessions.selectCql({
 	where: BillingCheckoutSessions.where.in('provider_id', 'provider_ids'),
@@ -42,7 +43,7 @@ export class BillingCheckoutSessionRepository {
 		}
 		const ids = refsPage.rows.map((r) => r.provider_id);
 		const rows = await fetchMany<BillingCheckoutSessionRow>(FETCH_BY_PROVIDER_IDS, {provider_ids: ids});
-		return {rows, pageState: refsPage.pageState};
+		return {rows: restoreReferenceOrder(refsPage.rows, rows), pageState: refsPage.pageState};
 	}
 
 	async upsertFromStripe(

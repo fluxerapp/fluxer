@@ -6256,6 +6256,20 @@
 			"options": ""
 		},
 		{
+			"name": "jobs_active_v2",
+			"columns": [
+				{"name": "shard", "type": "int"},
+				{"name": "job_id", "type": "bigint"},
+				{"name": "task_type", "type": "text"},
+				{"name": "status", "type": "text"},
+				{"name": "requested_by_user_id", "type": "bigint"},
+				{"name": "created_at", "type": "timestamp"},
+				{"name": "started_at", "type": "timestamp"}
+			],
+			"primary_key": "((shard), job_id)",
+			"options": "CLUSTERING ORDER BY (job_id ASC)"
+		},
+		{
 			"name": "jobs_by_day_bucket",
 			"columns": [
 				{
@@ -6352,6 +6366,22 @@
 				{
 					"name": "jet_stream_lane",
 					"type": "text"
+				},
+				{
+					"name": "lease_token",
+					"type": "text"
+				},
+				{
+					"name": "lease_expires_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "state_changed_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "dlq_attempts",
+					"type": "int"
 				},
 				{
 					"name": "attempts",

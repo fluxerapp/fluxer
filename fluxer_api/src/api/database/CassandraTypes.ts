@@ -49,11 +49,17 @@ export interface KvTableSpec<Row extends object = Record<string, unknown>> {
 	partitionKey: ReadonlyArray<ColumnName<Row>>;
 }
 
+export interface KvCondition<Row extends object = Record<string, unknown>> {
+	col: ColumnName<Row>;
+	expectedParam: string;
+	expectedValue: unknown;
+}
+
 export interface KvQueryMeta<Row extends object = Record<string, unknown>> {
 	action: KvAction;
 	table: KvTableSpec<Row>;
 	where?: ReadonlyArray<WhereExpr<Row>>;
-	orderBy?: OrderBy<Row>;
+	orderBy?: OrderBy<Row> | ReadonlyArray<OrderBy<Row>>;
 	limit?: number;
 	columns?: ReadonlyArray<ColumnName<Row>>;
 	patch?: Partial<Record<ColumnName<Row>, DbOp<unknown>>>;
@@ -62,11 +68,8 @@ export interface KvQueryMeta<Row extends object = Record<string, unknown>> {
 	ttlSeconds?: number;
 	ttlParamName?: string;
 	nowColumn?: ColumnName<Row>;
-	condition?: {
-		col: ColumnName<Row>;
-		expectedParam: string;
-		expectedValue: unknown;
-	};
+	condition?: KvCondition<Row>;
+	conditions?: ReadonlyArray<KvCondition<Row>>;
 	ifNotExists?: boolean;
 }
 
@@ -125,6 +128,11 @@ export type WhereExpr<Row extends object> =
 			kind: 'tupleGt';
 			cols: ReadonlyArray<ColumnName<Row>>;
 			params: ReadonlyArray<string>;
+	  }
+	| {
+			kind: 'tupleLt';
+			cols: ReadonlyArray<ColumnName<Row>>;
+			params: ReadonlyArray<string>;
 	  };
 export type OrderBy<Row extends object> = {
 	col: ColumnName<Row>;
@@ -139,13 +147,13 @@ export interface Table<Row extends object, PK extends ColumnName<Row>, PartKey e
 	selectCql(opts?: {
 		columns?: ReadonlyArray<ColumnName<Row>>;
 		where?: WhereExpr<Row> | ReadonlyArray<WhereExpr<Row>>;
-		orderBy?: OrderBy<Row>;
+		orderBy?: OrderBy<Row> | ReadonlyArray<OrderBy<Row>>;
 		limit?: number;
 	}): string;
 	select(opts?: {
 		columns?: ReadonlyArray<ColumnName<Row>>;
 		where?: WhereExpr<Row> | ReadonlyArray<WhereExpr<Row>>;
-		orderBy?: OrderBy<Row>;
+		orderBy?: OrderBy<Row> | ReadonlyArray<OrderBy<Row>>;
 		limit?: number;
 	}): QueryTemplate;
 	updateAllCql(): string;
@@ -156,6 +164,15 @@ export interface Table<Row extends object, PK extends ColumnName<Row>, PartKey e
 		patch: Partial<{
 			[K in Exclude<ColumnName<Row>, PK>]: DbOp<RowValue<Row, K>>;
 		}>,
+	): PreparedQuery;
+	patchByPkIf(
+		pk: Pick<Row, PK>,
+		patch: Partial<{
+			[K in Exclude<ColumnName<Row>, PK>]: DbOp<RowValue<Row, K>>;
+		}>,
+		condition:
+			| {col: ColumnName<Row>; expected: RowValue<Row, ColumnName<Row>>}
+			| ReadonlyArray<{col: ColumnName<Row>; expected: RowValue<Row, ColumnName<Row>>}>,
 	): PreparedQuery;
 	deleteCql(opts?: {where?: WhereExpr<Row> | ReadonlyArray<WhereExpr<Row>>}): string;
 	delete(opts?: {where?: WhereExpr<Row> | ReadonlyArray<WhereExpr<Row>>}): QueryTemplate;
@@ -176,6 +193,16 @@ export interface Table<Row extends object, PK extends ColumnName<Row>, PartKey e
 		}>,
 		ttlSeconds: number,
 	): PreparedQuery;
+	patchByPkWithTtlIf(
+		pk: Pick<Row, PK>,
+		patch: Partial<{
+			[K in Exclude<ColumnName<Row>, PK>]: DbOp<RowValue<Row, K>>;
+		}>,
+		ttlSeconds: number,
+		condition:
+			| {col: ColumnName<Row>; expected: RowValue<Row, ColumnName<Row>>}
+			| ReadonlyArray<{col: ColumnName<Row>; expected: RowValue<Row, ColumnName<Row>>}>,
+	): PreparedQuery;
 	patchByPkWithTtlParam(
 		pk: Pick<Row, PK>,
 		patch: Partial<{
@@ -195,6 +222,7 @@ export interface Table<Row extends object, PK extends ColumnName<Row>, PartKey e
 		gte: <K extends ColumnName<Row>>(col: K, param?: string) => WhereExpr<Row>;
 		tokenGt: <K extends ColumnName<Row>>(col: K, param: string) => WhereExpr<Row>;
 		tupleGt: <K extends ColumnName<Row>>(cols: ReadonlyArray<K>, params: ReadonlyArray<string>) => WhereExpr<Row>;
+		tupleLt: <K extends ColumnName<Row>>(cols: ReadonlyArray<K>, params: ReadonlyArray<string>) => WhereExpr<Row>;
 	};
 }
 

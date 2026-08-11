@@ -188,9 +188,11 @@ import {
 import {INSTANCE_CONFIGURATION_COLUMNS, type InstanceConfigurationRow} from './database/types/InstanceConfigTypes';
 import {
 	JOB_ACTIVE_COLUMNS,
+	JOB_ACTIVE_V2_COLUMNS,
 	JOB_BY_DAY_BUCKET_COLUMNS,
 	JOB_BY_ID_COLUMNS,
 	type JobActiveRow,
+	type JobActiveV2Row,
 	type JobByDayBucketRow,
 	type JobByIdRow,
 } from './database/types/JobLedgerTypes';
@@ -1154,10 +1156,16 @@ export const JobsByDayBucket = defineTable<JobByDayBucketRow, 'bucket_day' | 'cr
 	primaryKey: ['bucket_day', 'created_at', 'job_id'],
 	partitionKey: ['bucket_day'],
 });
-export const JobsActive = defineTable<JobActiveRow, 'job_id'>({
+export const JobsActiveLegacy = defineTable<JobActiveRow, 'job_id'>({
 	name: 'jobs_active',
 	columns: JOB_ACTIVE_COLUMNS,
 	primaryKey: ['job_id'],
+});
+export const JobsActive = defineTable<JobActiveV2Row, 'shard' | 'job_id', 'shard'>({
+	name: 'jobs_active_v2',
+	columns: JOB_ACTIVE_V2_COLUMNS,
+	primaryKey: ['shard', 'job_id'],
+	partitionKey: ['shard'],
 });
 export const AttachmentUploadTracesByKey = defineTable<AttachmentUploadTraceByKeyRow, 'upload_key'>({
 	name: 'attachment_upload_traces_by_key',

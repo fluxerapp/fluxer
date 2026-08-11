@@ -40,7 +40,7 @@ const SEARCH_REQUIRED_TASKS = new Set<string>([
 	'syncDiscoveryIndex',
 ]);
 
-function registerCronJobs(cron: CronScheduler): void {
+export function registerCronJobs(cron: CronScheduler): void {
 	cron.upsert('processAssetDeletionQueue', 'processAssetDeletionQueue', {}, '0 */5 * * * *');
 	cron.upsert('processBunnyPurgeQueue', 'processBunnyPurgeQueue', {}, '*/10 * * * * *');
 	cron.upsert('processPendingBulkMessageDeletions', 'processPendingBulkMessageDeletions', {}, '0 */10 * * * *');
@@ -50,6 +50,7 @@ function registerCronJobs(cron: CronScheduler): void {
 	cron.upsert('processInactivityDeletions', 'processInactivityDeletions', {}, '0 0 */6 * * *');
 	cron.upsert('expireAttachments', 'expireAttachments', {}, '0 0 */12 * * *');
 	cron.upsert('prunePostgresKvTtl', 'prunePostgresKvTtl', {}, '0 */5 * * * *');
+	cron.upsert('reconcileActiveJobs', 'reconcileActiveJobs', {}, '0 0 * * * *');
 	cron.upsert('syncDiscoveryIndex', 'syncDiscoveryIndex', {}, '0 */15 * * * *');
 	cron.upsert('syncDisposableEmailDomains', 'syncDisposableEmailDomains', {}, '0 */30 * * * *');
 	cron.upsert('syncUrlBlocklists', 'syncUrlBlocklists', {}, '0 0 */6 * * *');
@@ -62,6 +63,20 @@ function workerLanesRequireSearch(activeWorkerLanes: ReadonlyArray<WorkerLaneDef
 	return activeWorkerLanes.some((lane) => lane.taskTypes.some((taskType) => SEARCH_REQUIRED_TASKS.has(taskType)));
 }
 
+export function createJoinableShutdown(action: () => Promise<void>): () => Promise<void> {
+	let shutdownPromise: Promise<void> | null = null;
+	return () => {
+		shutdownPromise ??= action();
+		return shutdownPromise;
+	};
+}
+
+export async function stopWorkerRunners(runners: ReadonlyArray<{stop(): Promise<void>}>): Promise<void> {
+	const results = await Promise.allSettled(runners.map((runner) => runner.stop()));
+	const errors = results.flatMap((result) => (result.status === 'rejected' ? [result.reason] : []));
+	if (errors.length > 0) throw new AggregateError(errors, 'One or more worker runners failed to stop');
+}
+
 export async function startWorkerMain(): Promise<void> {
 	Logger.info('Starting worker backend...');
 	let cassandraInitialized = false;
@@ -72,7 +87,6 @@ export async function startWorkerMain(): Promise<void> {
 	let cron: CronScheduler | null = null;
 	const runners: Array<WorkerRunner> = [];
 	let searchInitialized = false;
-	let shuttingDown = false;
 
 	const cleanupStep = async (label: string, fn: () => Promise<void> | void): Promise<void> => {
 		try {
@@ -82,16 +96,10 @@ export async function startWorkerMain(): Promise<void> {
 		}
 	};
 
-	const shutdown = async (): Promise<void> => {
-		if (shuttingDown) {
-			return;
-		}
-		shuttingDown = true;
+	const shutdown = createJoinableShutdown(async (): Promise<void> => {
 		Logger.info('Shutting down worker backend...');
 		await cleanupStep('cron', () => cron?.stop());
-		await cleanupStep('runners', async () => {
-			await Promise.all(runners.map((runner) => runner.stop()));
-		});
+		await cleanupStep('runners', () => stopWorkerRunners(runners));
 		await cleanupStep('jetstream', async () => {
 			await jsConnectionManager?.drain();
 			jsConnectionManager = null;
@@ -130,7 +138,7 @@ export async function startWorkerMain(): Promise<void> {
 			}
 			setInjectedSnowflakeService(undefined);
 		});
-	};
+	});
 
 	try {
 		if (Config.database.backend === 'postgres') {

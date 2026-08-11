@@ -32,6 +32,7 @@ import processPendingBulkMessageDeletions from './tasks/ProcessPendingBulkMessag
 import processPremiumStateReconciliationQueue from './tasks/ProcessPremiumStateReconciliationQueue';
 import processStripeWebhook from './tasks/ProcessStripeWebhook';
 import prunePostgresKvTtl from './tasks/PrunePostgresKvTtl';
+import reconcileActiveJobs from './tasks/ReconcileActiveJobs';
 import reconcileUserPayments from './tasks/ReconcileUserPayments';
 import refreshSearchIndex from './tasks/RefreshSearchIndex';
 import revalidateUserConnections from './tasks/RevalidateUserConnections';
@@ -77,6 +78,7 @@ export const workerTasks: Record<WorkerTaskName, WorkerTaskHandler> = {
 	processPremiumStateReconciliationQueue,
 	reconcileUserPayments,
 	prunePostgresKvTtl,
+	reconcileActiveJobs,
 	refreshSearchIndex,
 	revalidateUserConnections,
 	sendScheduledMessage,

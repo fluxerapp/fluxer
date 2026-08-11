@@ -27,36 +27,41 @@ export class WorkerService implements IWorkerService<WorkerTaskName> {
 		const jobId = await this.snowflake.generate();
 		const skipLedger = options?.skipLedger === true;
 		const payloadRecord = payload as Record<string, unknown>;
-		const enrichedPayload = skipLedger ? payloadRecord : {...payloadRecord, __jobId: jobId.toString()};
+		const enqueueOptions = {
+			...(options?.runAt !== undefined && {runAt: options.runAt}),
+			...(options?.maxAttempts !== undefined && {maxAttempts: options.maxAttempts}),
+			...(options?.priority !== undefined && {priority: options.priority}),
+			...(options?.jobKey !== undefined && {jobKey: options.jobKey}),
+		};
+		if (skipLedger) {
+			const seq = await this.queue.enqueue(taskType, payloadRecord, enqueueOptions);
+			Logger.debug({taskType, jobId: jobId.toString(), seq}, 'Job queued successfully');
+			return jobId;
+		}
+		const lane = findLaneForTask(taskType);
+		await this.ledger.createJob({
+			jobId,
+			taskType,
+			payload: payloadRecord,
+			requestedByUserId: options?.requestedByUserId ?? null,
+			auditLogReason: options?.auditLogReason ?? null,
+			maxAttempts: options?.maxAttempts ?? 5,
+			runAt: options?.runAt ?? null,
+			jetStreamLane: lane,
+			jetStreamSeq: null,
+		});
+		const enrichedPayload = {...payloadRecord, __jobId: jobId.toString()};
 		try {
-			const seq = await this.queue.enqueue(taskType, enrichedPayload, {
-				...(options?.runAt !== undefined && {runAt: options.runAt}),
-				...(options?.maxAttempts !== undefined && {maxAttempts: options.maxAttempts}),
-				...(options?.priority !== undefined && {priority: options.priority}),
-				...(options?.jobKey !== undefined && {jobKey: options.jobKey}),
-			});
-			if (!skipLedger) {
-				const lane = findLaneForTask(taskType);
-				try {
-					await this.ledger.createJob({
-						jobId,
-						taskType,
-						payload: payload as Record<string, unknown>,
-						requestedByUserId: options?.requestedByUserId ?? null,
-						auditLogReason: options?.auditLogReason ?? null,
-						maxAttempts: options?.maxAttempts ?? 5,
-						runAt: options?.runAt ?? null,
-						jetStreamLane: lane,
-						jetStreamSeq: seq,
-					});
-				} catch (ledgerErr) {
-					Logger.error({err: ledgerErr, jobId: jobId.toString(), taskType}, 'Failed to write ledger row for job');
-				}
-			}
+			const seq = await this.queue.enqueue(taskType, enrichedPayload, enqueueOptions);
 			Logger.debug({taskType, jobId: jobId.toString(), seq}, 'Job queued successfully');
 			return jobId;
 		} catch (error) {
-			Logger.error({error, taskType, payload}, 'Failed to queue job');
+			try {
+				await this.ledger.markEnqueueFailed(jobId, 'Failed to publish job to the worker queue');
+			} catch (ledgerError) {
+				Logger.error({err: ledgerError, jobId: jobId.toString(), taskType}, 'Failed to mark unpublished job failed');
+			}
+			Logger.error({error, taskType}, 'Failed to queue job');
 			throw error;
 		}
 	}
@@ -65,8 +70,7 @@ export class WorkerService implements IWorkerService<WorkerTaskName> {
 		const job = await this.ledger.getJob(jobId);
 		if (!job) return false;
 		if (job.status !== 'queued' && job.status !== 'running') return false;
-		await this.ledger.requestCancel(jobId);
-		return true;
+		return this.ledger.requestCancel(jobId);
 	}
 
 	async retryDeadLetterJob(_jobId: bigint): Promise<boolean> {

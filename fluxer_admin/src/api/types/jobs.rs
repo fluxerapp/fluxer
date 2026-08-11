@@ -25,4 +25,13 @@ pub struct CancelJobResponse {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct ActiveJobsResponse {
     pub jobs: Vec<serde_json::Value>,
+    #[serde(default)]
+    pub next_page_state: Option<String>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct ActiveJobsRequest {
+    pub limit: u16,
+    pub page_state: Option<String>,
+    pub task_type: Option<String>,
 }

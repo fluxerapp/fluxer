@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {JobLedgerEntry, ListJobsRequest} from '@fluxer/schema/src/domains/admin/JobsSchemas';
+import type {ActiveJobsRequest, JobLedgerEntry, ListJobsRequest} from '@fluxer/schema/src/domains/admin/JobsSchemas';
 import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
 import type {JobByIdRow} from '../database/types/JobLedgerTypes';
 import type {IJobLedgerRepository} from './IJobLedgerRepository';
@@ -62,11 +62,16 @@ export class JobAdminService {
 		return {cancelled};
 	}
 
-	async listActiveJobs(): Promise<{
+	async listActiveJobs(req: ActiveJobsRequest): Promise<{
 		jobs: Array<JobLedgerEntry>;
+		next_page_state: string | null;
 	}> {
-		const rows = await this.ledger.listActiveJobs();
-		return {jobs: rows.map(rowToEntry)};
+		const result = await this.ledger.listActiveJobs({
+			limit: req.limit,
+			pageState: req.page_state ?? null,
+			taskType: req.task_type ?? null,
+		});
+		return {jobs: result.jobs.map(rowToEntry), next_page_state: result.nextPageState};
 	}
 }
 

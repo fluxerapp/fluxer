@@ -2,6 +2,8 @@
 
 import type {APIWorkerLaneName, APIWorkerMode} from '../config/APIConfig';
 
+export const WORKER_DLQ_PUBLISH_ATTEMPTS = 3;
+
 interface LaneSettings {
 	readonly consumerName: string;
 	readonly tasks: ReadonlyArray<string>;
@@ -73,6 +75,7 @@ const LANE_CONFIG = {
 			'processPendingBulkMessageDeletions',
 			'processPremiumStateReconciliationQueue',
 			'prunePostgresKvTtl',
+			'reconcileActiveJobs',
 			'refreshSearchIndex',
 			'syncDiscoveryIndex',
 			'syncDisposableEmailDomains',

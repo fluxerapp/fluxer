@@ -5,6 +5,22 @@ import type {ColumnName, DbOp, PatchObject, RowValue, Table} from '../../databas
 import {Db} from '../../database/CassandraTypes';
 import {buildPatchFromData} from '../../database/CassandraVersionedUpdate';
 
+export function restoreReferenceOrder<Row extends {provider_id: string}>(
+	refs: ReadonlyArray<{provider_id: string}>,
+	rows: ReadonlyArray<Row>,
+): Array<Row> {
+	const byId = new Map(rows.map((row) => [row.provider_id, row]));
+	return refs.flatMap((ref) => {
+		const row = byId.get(ref.provider_id);
+		return row ? [row] : [];
+	});
+}
+
+export const BILLING_REVERSE_CHRONOLOGICAL_ORDER = [
+	{col: 'stripe_created_at', direction: 'DESC'},
+	{col: 'provider_id', direction: 'ASC'},
+] as const;
+
 function deepEqual(a: unknown, b: unknown): boolean {
 	if (a === b) return true;
 	if (a === null || a === undefined || b === null || b === undefined) {

@@ -38,6 +38,11 @@ struct JobActionQuery {
 }
 
 #[derive(Deserialize)]
+struct ActiveJobsQuery {
+    page_state: Option<String>,
+}
+
+#[derive(Deserialize)]
 struct JobActionForm {
     audit_log_reason: Option<String>,
     #[serde(default)]
@@ -132,14 +137,15 @@ async fn jobs_list(
 async fn jobs_active_json(
     State(state): State<AppState>,
     auth: axum::Extension<AuthContext>,
+    Query(query): Query<ActiveJobsQuery>,
 ) -> Response {
     let config = state.config();
     let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
-    match client.list_active_jobs().await {
-        Ok(data) => Json(serde_json::json!(data)).into_response(),
+    match client.list_active_jobs_page(query.page_state).await {
+        Ok(data) => Json(data).into_response(),
         Err(error) => {
             tracing::warn!(%error, "admin API request failed: list active jobs");
-            Json(serde_json::json!({ "jobs": [] })).into_response()
+            Json(serde_json::json!({"jobs": [], "next_page_state": null})).into_response()
         }
     }
 }

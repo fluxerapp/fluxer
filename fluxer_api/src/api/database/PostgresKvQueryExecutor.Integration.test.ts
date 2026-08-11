@@ -84,6 +84,24 @@ describe('PostgresKvQueryExecutor', () => {
 		await expect(
 			executor.executeQuery<{['[applied]']: boolean}>(TestRows.insertIfNotExists({...row, note: 'second'})),
 		).resolves.toEqual([{'[applied]': false}]);
+		await expect(
+			executor.executeQuery<{['[applied]']: boolean}>(
+				TestRows.patchByPkIf(
+					{tenant_id: 'tenant-a', item_id: 10n},
+					{note: Db.set('second')},
+					{col: 'note', expected: 'first'},
+				),
+			),
+		).resolves.toEqual([{'[applied]': true}]);
+		await expect(
+			executor.executeQuery<{['[applied]']: boolean}>(
+				TestRows.patchByPkIf(
+					{tenant_id: 'tenant-a', item_id: 10n},
+					{note: Db.set('third')},
+					{col: 'note', expected: 'first'},
+				),
+			),
+		).resolves.toEqual([{'[applied]': false}]);
 
 		const fetched = await executor.executeQuery<TestRow>(
 			TestRows.select({
@@ -99,7 +117,42 @@ describe('PostgresKvQueryExecutor', () => {
 		expect([...fetched[0]!.tags!.values()].sort()).toEqual(['alpha', 'beta']);
 		expect(fetched[0]!.counts!.get('seen')).toBe(5n);
 		expect(fetched[0]!.local_day?.toString()).toBe('2026-01-02');
-		expect(fetched[0]!.note).toBe('first');
+		expect(fetched[0]!.note).toBe('second');
+	});
+
+	test('applies every compare-and-set condition and treats missing legacy fields as null', async () => {
+		const row: TestRow = {
+			tenant_id: 'tenant-multi-condition',
+			item_id: 1n,
+			created_at: new Date('2026-01-03T00:00:00.000Z'),
+			payload: null,
+			tags: null,
+			counts: null,
+			local_day: null,
+			note: null,
+		};
+		await executor.executeQuery(TestRows.upsertAll(row));
+		await getDefaultPostgresClient().query(
+			`UPDATE ${quoteIdentifier(kvTable)} SET row_data = row_data - 'note' WHERE table_name = $1`,
+			[logicalTableName],
+		);
+
+		await expect(
+			executor.executeQuery<{['[applied]']: boolean}>(
+				TestRows.patchByPkIf({tenant_id: row.tenant_id, item_id: row.item_id}, {note: Db.set('claimed')}, [
+					{col: 'note', expected: null},
+					{col: 'created_at', expected: row.created_at},
+				]),
+			),
+		).resolves.toEqual([{'[applied]': true}]);
+		await expect(
+			executor.executeQuery<{['[applied]']: boolean}>(
+				TestRows.patchByPkIf({tenant_id: row.tenant_id, item_id: row.item_id}, {note: Db.set('stolen')}, [
+					{col: 'note', expected: null},
+					{col: 'created_at', expected: row.created_at},
+				]),
+			),
+		).resolves.toEqual([{'[applied]': false}]);
 	});
 
 	test('filters, orders, patches, pages, and deletes logical rows', async () => {
@@ -138,6 +191,36 @@ describe('PostgresKvQueryExecutor', () => {
 			].map((query) => ({query: query.cql, params: query.params, meta: query.kvMeta})),
 		);
 
+		const boundedFirst = await executor.executeQuery<TestRow>(
+			TestRows.select({
+				where: TestRows.where.eq('tenant_id'),
+				orderBy: [
+					{col: 'created_at', direction: 'DESC'},
+					{col: 'item_id', direction: 'DESC'},
+				],
+				limit: 2,
+			}).bind({tenant_id: 'tenant-b'}),
+		);
+		expect(boundedFirst.map((row) => row.item_id)).toEqual([3n, 2n]);
+		const boundedSecond = await executor.executeQuery<TestRow>(
+			TestRows.select({
+				where: [
+					TestRows.where.eq('tenant_id'),
+					TestRows.where.tupleLt(['created_at', 'item_id'], ['cursor_created_at', 'cursor_item_id']),
+				],
+				orderBy: [
+					{col: 'created_at', direction: 'DESC'},
+					{col: 'item_id', direction: 'DESC'},
+				],
+				limit: 2,
+			}).bind({
+				tenant_id: 'tenant-b',
+				cursor_created_at: boundedFirst[1]!.created_at,
+				cursor_item_id: boundedFirst[1]!.item_id,
+			}),
+		);
+		expect(boundedSecond.map((row) => row.item_id)).toEqual([1n]);
+
 		const firstPage = await executor.executePagedQuery<TestRow>(
 			TestRows.select({
 				where: TestRows.where.eq('tenant_id'),
@@ -147,6 +230,7 @@ describe('PostgresKvQueryExecutor', () => {
 		);
 		expect(firstPage.rows.map((row) => row.item_id)).toEqual([3n, 2n]);
 		expect(firstPage.pageState).not.toBeNull();
+		await executor.executeQuery(TestRows.deleteByPk({tenant_id: 'tenant-b', item_id: 3n}));
 
 		const secondPage = await executor.executePagedQuery<TestRow>(
 			TestRows.select({
@@ -172,6 +256,94 @@ describe('PostgresKvQueryExecutor', () => {
 			TestRows.select({where: TestRows.where.eq('tenant_id')}).bind({tenant_id: 'tenant-b'}),
 		);
 		expect(remaining).toEqual([]);
+	});
+
+	test('uses stable mixed-direction keyset paging across concurrent deletion', async () => {
+		const makeRow = (itemId: bigint, createdAt: string): TestRow => ({
+			tenant_id: 'tenant-keyset',
+			item_id: itemId,
+			created_at: new Date(createdAt),
+			payload: null,
+			tags: null,
+			counts: null,
+			local_day: null,
+			note: null,
+		});
+		for (const row of [
+			makeRow(1n, '2026-03-02T00:00:00.000Z'),
+			makeRow(2n, '2026-03-02T00:00:00.000Z'),
+			makeRow(3n, '2026-03-03T00:00:00.000Z'),
+		]) {
+			await executor.executeQuery(TestRows.upsertAll(row));
+		}
+		const query = TestRows.select({
+			where: TestRows.where.eq('tenant_id'),
+			orderBy: [
+				{col: 'created_at', direction: 'DESC'},
+				{col: 'item_id', direction: 'ASC'},
+			],
+		}).bind({tenant_id: 'tenant-keyset'});
+
+		const first = await executor.executePagedQuery<TestRow>(query, {pageSize: 2});
+		expect(first.rows.map((row) => row.item_id)).toEqual([3n, 1n]);
+		expect(first.pageState).not.toBeNull();
+		await expect(
+			executor.executePagedQuery<TestRow>(
+				TestRows.select({
+					where: TestRows.where.eq('tenant_id'),
+					orderBy: [
+						{col: 'created_at', direction: 'DESC'},
+						{col: 'item_id', direction: 'ASC'},
+					],
+				}).bind({tenant_id: 'another-tenant'}),
+				{pageSize: 2, pageState: first.pageState},
+			),
+		).rejects.toThrow('page state does not match query scope');
+		await executor.executeQuery(TestRows.deleteByPk({tenant_id: 'tenant-keyset', item_id: 3n}));
+		const second = await executor.executePagedQuery<TestRow>(query, {pageSize: 2, pageState: first.pageState});
+		expect(second.rows.map((row) => row.item_id)).toEqual([2n]);
+		expect(second.pageState).toBeNull();
+	});
+
+	test('applies conditional TTL patches atomically and rejects mismatched or expired rows', async () => {
+		const row: TestRow = {
+			tenant_id: 'tenant-conditional-ttl',
+			item_id: 1n,
+			created_at: new Date('2026-02-03T00:00:00.000Z'),
+			payload: null,
+			tags: null,
+			counts: null,
+			local_day: null,
+			note: 'running',
+		};
+		await executor.executeQuery(TestRows.upsertAll(row));
+
+		await expect(
+			executor.executeQuery<{['[applied]']: boolean}>(
+				TestRows.patchByPkWithTtlIf({tenant_id: row.tenant_id, item_id: row.item_id}, {note: Db.set('deadletter')}, 1, {
+					col: 'note',
+					expected: 'running',
+				}),
+			),
+		).resolves.toEqual([{'[applied]': true}]);
+		await expect(
+			executor.executeQuery<{['[applied]']: boolean}>(
+				TestRows.patchByPkWithTtlIf({tenant_id: row.tenant_id, item_id: row.item_id}, {note: Db.set('failed')}, 1, {
+					col: 'note',
+					expected: 'running',
+				}),
+			),
+		).resolves.toEqual([{'[applied]': false}]);
+
+		await sleep(1100);
+		await expect(
+			executor.executeQuery<{['[applied]']: boolean}>(
+				TestRows.patchByPkWithTtlIf({tenant_id: row.tenant_id, item_id: row.item_id}, {note: Db.set('failed')}, 1, {
+					col: 'note',
+					expected: 'deadletter',
+				}),
+			),
+		).resolves.toEqual([{'[applied]': false}]);
 	});
 
 	test('filters expired rows and prunes them physically', async () => {

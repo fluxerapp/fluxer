@@ -2,6 +2,7 @@
 
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {
+	ActiveJobsRequest,
 	ActiveJobsResponseSchema,
 	CancelJobRequest,
 	CancelJobResponseSchema,
@@ -83,6 +84,7 @@ export function JobsAdminController(app: HonoApp) {
 		'/admin/jobs/active',
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_JOBS_VIEW),
 		requireAdminACL(AdminACLs.JOBS_VIEW),
+		Validator('json', ActiveJobsRequest),
 		OpenAPI({
 			operationId: 'list_active_jobs',
 			summary: 'List active (queued + running) jobs',
@@ -95,7 +97,7 @@ export function JobsAdminController(app: HonoApp) {
 		}),
 		async (ctx) => {
 			const adminService = ctx.get('adminService');
-			return ctx.json(await adminService.jobAdminService.listActiveJobs());
+			return ctx.json(await adminService.jobAdminService.listActiveJobs(ctx.req.valid('json')));
 		},
 	);
 }

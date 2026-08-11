@@ -3,7 +3,9 @@
 use crate::api::generated::types as generated_types;
 
 use super::client::{AdminApiClient, ApiError, ApiResult};
-use super::types::{ActiveJobsResponse, CancelJobResponse, GetJobResponse, ListJobsResponse};
+use super::types::{
+    ActiveJobsRequest, ActiveJobsResponse, CancelJobResponse, GetJobResponse, ListJobsResponse,
+};
 
 pub struct ListJobsParams {
     pub limit: u32,
@@ -78,12 +80,16 @@ impl AdminApiClient {
             .await
     }
 
-    pub async fn list_active_jobs(&self) -> ApiResult<ActiveJobsResponse> {
-        let response = self
-            .generated()
-            .list_active_jobs()
+    pub async fn list_active_jobs_page(
+        &self,
+        page_state: Option<String>,
+    ) -> ApiResult<ActiveJobsResponse> {
+        let body = ActiveJobsRequest {
+            limit: 200,
+            page_state,
+            task_type: None,
+        };
+        self.post_typed_with_reason("/admin/jobs/active", &body, None)
             .await
-            .map_err(|e| self.generated_error(e))?;
-        self.generated_value(response.into_inner())
     }
 }

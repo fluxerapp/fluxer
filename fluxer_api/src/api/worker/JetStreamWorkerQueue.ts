@@ -4,12 +4,15 @@ import {randomUUID} from 'node:crypto';
 import type {JetStreamConnectionManager} from '@pkgs/nats/src/JetStreamConnectionManager';
 import type {WorkerJobPayload} from '@pkgs/worker/src/contracts/WorkerTypes';
 import {AckPolicy, nanos, RetentionPolicy, StorageType} from 'nats';
+import {WORKER_QUEUE_MAX_AGE_MS} from '../jobs/JobSchedulingPolicy';
 import {Logger} from '../Logger';
 import type {WorkerLaneDefinition} from './WorkerLaneConfig';
 
 const STREAM_NAME = 'JOBS';
 const SUBJECT_PREFIX = 'jobs.';
-const MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+
+export {WORKER_QUEUE_MAX_AGE_MS, WORKER_QUEUE_RECOVERY_WINDOW_MS} from '../jobs/JobSchedulingPolicy';
+
 const LEGACY_CONSUMER_NAME = 'workers';
 const DLQ_STREAM_NAME = 'JOBS_DLQ';
 const DLQ_SUBJECT_PREFIX = 'dlq.';
@@ -30,17 +33,24 @@ export class JetStreamWorkerQueue {
 			return;
 		}
 		const jsm = await this.connectionManager.getJetStreamManager();
+		let info = null;
 		try {
-			await jsm.streams.info(STREAM_NAME);
+			info = await jsm.streams.info(STREAM_NAME);
 		} catch {
 			await jsm.streams.add({
 				name: STREAM_NAME,
 				subjects: [`${SUBJECT_PREFIX}>`],
 				retention: RetentionPolicy.Workqueue,
 				storage: StorageType.File,
-				max_age: nanos(MAX_AGE_MS),
+				max_age: nanos(WORKER_QUEUE_MAX_AGE_MS),
 				duplicate_window: nanos(2 * 60 * 1000),
 				num_replicas: 1,
+			});
+		}
+		if (info) {
+			await jsm.streams.update(STREAM_NAME, {
+				...info.config,
+				max_age: nanos(WORKER_QUEUE_MAX_AGE_MS),
 			});
 		}
 		this.streamReady = true;
@@ -51,8 +61,9 @@ export class JetStreamWorkerQueue {
 			return;
 		}
 		const jsm = await this.connectionManager.getJetStreamManager();
+		let info = null;
 		try {
-			await jsm.streams.info(DLQ_STREAM_NAME);
+			info = await jsm.streams.info(DLQ_STREAM_NAME);
 		} catch {
 			await jsm.streams.add({
 				name: DLQ_STREAM_NAME,
@@ -60,7 +71,15 @@ export class JetStreamWorkerQueue {
 				retention: RetentionPolicy.Limits,
 				storage: StorageType.File,
 				max_age: nanos(DLQ_MAX_AGE_MS),
+				duplicate_window: nanos(DLQ_MAX_AGE_MS),
 				num_replicas: 1,
+			});
+		}
+		if (info) {
+			await jsm.streams.update(DLQ_STREAM_NAME, {
+				...info.config,
+				max_age: nanos(DLQ_MAX_AGE_MS),
+				duplicate_window: nanos(DLQ_MAX_AGE_MS),
 			});
 		}
 		this.dlqStreamReady = true;
@@ -76,7 +95,7 @@ export class JetStreamWorkerQueue {
 			const config = {
 				durable_name: lane.consumerName,
 				ack_policy: AckPolicy.Explicit,
-				max_deliver: lane.maxDeliver,
+				max_deliver: -1,
 				ack_wait: nanos(lane.ackWaitMs),
 				max_ack_pending: lane.maxAckPending,
 				filter_subjects: filterSubjects,
@@ -179,7 +198,7 @@ export class JetStreamWorkerQueue {
 			failed_at: new Date().toISOString(),
 		});
 		await js.publish(subject, body, {
-			msgID: randomUUID(),
+			msgID: `dlq:${meta.lane}:${taskType}:${meta.originalSeq}`,
 		});
 	}
 

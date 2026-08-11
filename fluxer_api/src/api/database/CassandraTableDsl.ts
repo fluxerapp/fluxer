@@ -30,13 +30,13 @@ function assertCqlIdentifier(value: string): string {
 }
 
 function compileWhere<Row extends object>(w: WhereExpr<Row>): string {
-	if (w.kind === 'tupleGt') {
+	if (w.kind === 'tupleGt' || w.kind === 'tupleLt') {
 		if (w.cols.length !== w.params.length || w.cols.length === 0) {
-			throw new Error('tupleGt requires equal-length non-empty cols/params');
+			throw new Error(`${w.kind} requires equal-length non-empty cols/params`);
 		}
 		const cols = `(${w.cols.map((c) => assertCqlIdentifier(c as string)).join(', ')})`;
 		const params = `(${w.params.map((p) => `:${assertCqlIdentifier(p as string)}`).join(', ')})`;
-		return `${cols} > ${params}`;
+		return `${cols} ${w.kind === 'tupleGt' ? '>' : '<'} ${params}`;
 	}
 	const col = assertCqlIdentifier(w.col as string);
 	const param = assertCqlIdentifier(w.param as string);
@@ -145,7 +145,7 @@ WHERE ${pk.map((k) => `${k} = :${k}`).join(' AND ')};
 		opts: {
 			columns?: ReadonlyArray<ColumnName<Row>>;
 			where?: WhereExpr<Row> | ReadonlyArray<WhereExpr<Row>>;
-			orderBy?: OrderBy<Row>;
+			orderBy?: OrderBy<Row> | ReadonlyArray<OrderBy<Row>>;
 			limit?: number;
 		} = {},
 		limitParamName?: string,
@@ -158,7 +158,11 @@ WHERE ${pk.map((k) => `${k} = :${k}`).join(' AND ')};
 				where = ` WHERE ${clauses.map((c) => compileWhere<Row>(c)).join(' AND ')}`;
 			}
 		}
-		const orderBy = opts.orderBy != null ? ` ORDER BY ${opts.orderBy.col} ${opts.orderBy.direction ?? 'ASC'}` : '';
+		const orderItems = opts.orderBy == null ? [] : Array.isArray(opts.orderBy) ? opts.orderBy : [opts.orderBy];
+		const orderBy =
+			orderItems.length > 0
+				? ` ORDER BY ${orderItems.map((item) => `${item.col} ${item.direction ?? 'ASC'}`).join(', ')}`
+				: '';
 		const limit = typeof opts.limit === 'number' ? ` LIMIT ${limitParamName ? `:${limitParamName}` : opts.limit}` : '';
 		return `SELECT ${selectCols} FROM ${def.name}${where}${orderBy}${limit};`;
 	}
@@ -166,7 +170,7 @@ WHERE ${pk.map((k) => `${k} = :${k}`).join(' AND ')};
 		opts: {
 			columns?: ReadonlyArray<ColumnName<Row>>;
 			where?: WhereExpr<Row> | ReadonlyArray<WhereExpr<Row>>;
-			orderBy?: OrderBy<Row>;
+			orderBy?: OrderBy<Row> | ReadonlyArray<OrderBy<Row>>;
 			limit?: number;
 		} = {},
 	): string {
@@ -186,7 +190,7 @@ WHERE ${pk.map((k) => `${k} = :${k}`).join(' AND ')};
 		opts: {
 			columns?: ReadonlyArray<ColumnName<Row>>;
 			where?: WhereExpr<Row> | ReadonlyArray<WhereExpr<Row>>;
-			orderBy?: OrderBy<Row>;
+			orderBy?: OrderBy<Row> | ReadonlyArray<OrderBy<Row>>;
 			limit?: number;
 		} = {},
 	): QueryTemplate {
@@ -234,6 +238,49 @@ WHERE ${pk.map((k) => `${k} = :${k}`).join(' AND ')};
 			patch: patch as Partial<Record<ColumnName<Row>, DbOp<unknown>>>,
 			patchKeys,
 			pkColumns: pk,
+		};
+		return prepared(cql, params, kvMeta as KvQueryMeta<Record<string, unknown>>);
+	}
+	function patchByPkIf(
+		pkValues: Pick<Row, PK>,
+		patch: Partial<{
+			[K in Exclude<ColumnName<Row>, PK>]: DbOp<RowValue<Row, K>>;
+		}>,
+		condition:
+			| {col: ColumnName<Row>; expected: RowValue<Row, ColumnName<Row>>}
+			| ReadonlyArray<{col: ColumnName<Row>; expected: RowValue<Row, ColumnName<Row>>}>,
+	): PreparedQuery {
+		const patchKeys = Object.keys(patch) as Array<Exclude<ColumnName<Row>, PK>>;
+		if (patchKeys.length === 0) {
+			throw new Error(`Refusing to execute empty conditional PATCH update on table "${def.name}"`);
+		}
+		patchKeys.sort((a, b) => columns.indexOf(a) - columns.indexOf(b));
+		const conditions = Array.isArray(condition) ? condition : [condition];
+		if (conditions.length === 0) throw new Error('Conditional PATCH requires at least one condition');
+		const conditionParams = conditions.map((item) => `if_${item.col}_expected`);
+		const cql = `UPDATE ${def.name}
+SET ${patchKeys.map((c) => `${c} = :${c}`).join(', ')}
+WHERE ${pk.map((k) => `${k} = :${k}`).join(' AND ')}
+IF ${conditions.map((item, index) => `${item.col} = :${conditionParams[index]}`).join(' AND ')};
+`;
+		const params: CassandraParams = {};
+		for (const k of pk) params[k] = pkValues[k] as CassandraParam;
+		for (const c of patchKeys) params[c] = opToValue(patch[c] as DbOp<unknown>);
+		conditions.forEach((item, index) => {
+			params[conditionParams[index] as string] = item.expected as CassandraParam;
+		});
+		const conditionMeta = conditions.map((item, index) => ({
+			col: item.col,
+			expectedParam: conditionParams[index] as string,
+			expectedValue: item.expected,
+		}));
+		const kvMeta: KvQueryMeta<Row> = {
+			action: 'patch',
+			table: tableSpec,
+			patch: patch as Partial<Record<ColumnName<Row>, DbOp<unknown>>>,
+			patchKeys,
+			pkColumns: pk,
+			...(conditionMeta.length === 1 ? {condition: conditionMeta[0]} : {conditions: conditionMeta}),
 		};
 		return prepared(cql, params, kvMeta as KvQueryMeta<Record<string, unknown>>);
 	}
@@ -418,6 +465,52 @@ WHERE ${pk.map((k) => `${k} = :${k}`).join(' AND ')};
 		};
 		return prepared(cql, params, kvMeta as KvQueryMeta<Record<string, unknown>>);
 	}
+	function patchByPkWithTtlIf(
+		pkValues: Pick<Row, PK>,
+		patch: Partial<{
+			[K in Exclude<ColumnName<Row>, PK>]: DbOp<RowValue<Row, K>>;
+		}>,
+		ttlSeconds: number,
+		condition:
+			| {col: ColumnName<Row>; expected: RowValue<Row, ColumnName<Row>>}
+			| ReadonlyArray<{col: ColumnName<Row>; expected: RowValue<Row, ColumnName<Row>>}>,
+	): PreparedQuery {
+		const patchKeys = Object.keys(patch) as Array<Exclude<ColumnName<Row>, PK>>;
+		if (patchKeys.length === 0) {
+			throw new Error(`Refusing to execute empty conditional TTL PATCH update on table "${def.name}"`);
+		}
+		patchKeys.sort((a, b) => columns.indexOf(a) - columns.indexOf(b));
+		const conditions = Array.isArray(condition) ? condition : [condition];
+		if (conditions.length === 0) throw new Error('Conditional TTL PATCH requires at least one condition');
+		const conditionParams = conditions.map((item) => `if_${item.col}_expected`);
+		const cql = `UPDATE ${def.name} USING TTL :${DEFAULT_TTL_PARAM_NAME}
+SET ${patchKeys.map((c) => `${c} = :${c}`).join(', ')}
+WHERE ${pk.map((k) => `${k} = :${k}`).join(' AND ')}
+IF ${conditions.map((item, index) => `${item.col} = :${conditionParams[index]}`).join(' AND ')};
+`;
+		const params: CassandraParams = {};
+		for (const k of pk) params[k] = pkValues[k] as CassandraParam;
+		for (const c of patchKeys) params[c] = opToValue(patch[c] as DbOp<unknown>);
+		params[DEFAULT_TTL_PARAM_NAME] = ttlSeconds;
+		conditions.forEach((item, index) => {
+			params[conditionParams[index] as string] = item.expected as CassandraParam;
+		});
+		const conditionMeta = conditions.map((item, index) => ({
+			col: item.col,
+			expectedParam: conditionParams[index] as string,
+			expectedValue: item.expected,
+		}));
+		const kvMeta: KvQueryMeta<Row> = {
+			action: 'patch',
+			table: tableSpec,
+			patch: patch as Partial<Record<ColumnName<Row>, DbOp<unknown>>>,
+			patchKeys,
+			pkColumns: pk,
+			ttlParamName: DEFAULT_TTL_PARAM_NAME,
+			...(conditionMeta.length === 1 ? {condition: conditionMeta[0]} : {conditions: conditionMeta}),
+		};
+		return prepared(cql, params, kvMeta as KvQueryMeta<Record<string, unknown>>);
+	}
 	function patchByPkWithTtlParam(
 		pkValues: Pick<Row, PK>,
 		patch: Partial<{
@@ -501,6 +594,7 @@ WHERE ${pk.map((k) => `${k} = :${k}`).join(' AND ')};
 			return prepared(cql, params, kvMeta as KvQueryMeta<Record<string, unknown>>);
 		},
 		patchByPk,
+		patchByPkIf,
 		deleteCql,
 		delete: del,
 		deleteByPk,
@@ -514,6 +608,7 @@ WHERE ${pk.map((k) => `${k} = :${k}`).join(' AND ')};
 		selectCount,
 		insertWithNow,
 		patchByPkWithTtl,
+		patchByPkWithTtlIf,
 		patchByPkWithTtlParam,
 		upsertAllWithTtl,
 		upsertAllWithTtlParam,
@@ -526,6 +621,7 @@ WHERE ${pk.map((k) => `${k} = :${k}`).join(' AND ')};
 			gte: (col, param) => ({kind: 'gte', col, param: param ?? col}),
 			tokenGt: (col, param) => ({kind: 'tokenGt', col, param}),
 			tupleGt: (cols, params) => ({kind: 'tupleGt', cols, params}),
+			tupleLt: (cols, params) => ({kind: 'tupleLt', cols, params}),
 		},
 	};
 }

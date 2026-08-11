@@ -6,11 +6,12 @@ import {FeatureTemporarilyDisabledError} from '@fluxer/errors/src/domains/core/F
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
 import type {WorkerJobPayload} from '@pkgs/worker/src/contracts/WorkerTypes';
-import {ms, seconds} from 'itty-time';
+
 import {DateTime, IANAZone} from 'luxon';
 import type {ChannelID, MessageID, UserID} from '../../BrandedTypes';
 import {createMessageID} from '../../BrandedTypes';
 import type {ISnowflakeService} from '../../infrastructure/ISnowflakeService';
+import {MAX_JOB_SCHEDULE_DELAY_MS, WORKER_QUEUE_MAX_AGE_MS} from '../../jobs/JobSchedulingPolicy';
 import type {ScheduledMessagePayload} from '../../models/ScheduledMessage';
 import {ScheduledMessage} from '../../models/ScheduledMessage';
 import type {User} from '../../models/User';
@@ -19,7 +20,7 @@ import type {WorkerTaskName} from '../../worker/WorkerLaneConfig';
 import type {MessageRequest} from '../MessageTypes';
 import type {ChannelService} from './ChannelService';
 
-export const SCHEDULED_MESSAGE_TTL_SECONDS = seconds('31 days');
+export const SCHEDULED_MESSAGE_TTL_SECONDS = WORKER_QUEUE_MAX_AGE_MS / 1000;
 const DEFAULT_TIMEZONE = 'UTC';
 const WORKER_TASK_NAME = 'sendScheduledMessage';
 
@@ -135,7 +136,7 @@ export class ScheduledMessageService {
 		if (diffMs <= 0) {
 			throw InputValidationError.fromCode('scheduled_local_at', ValidationErrorCodes.SCHEDULED_TIME_MUST_BE_FUTURE);
 		}
-		if (diffMs > ms('30 days')) {
+		if (diffMs > MAX_JOB_SCHEDULE_DELAY_MS) {
 			throw InputValidationError.fromCode('scheduled_local_at', ValidationErrorCodes.SCHEDULED_MESSAGES_MAX_30_DAYS);
 		}
 		return scheduledAt;

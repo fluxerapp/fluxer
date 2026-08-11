@@ -11,6 +11,9 @@ function normalizeCql(cql: string): string {
 }
 
 function compareValues(a: unknown, b: unknown): number {
+	if (a == null && b == null) return 0;
+	if (a == null) return 1;
+	if (b == null) return -1;
 	if (typeof a === 'bigint' || typeof b === 'bigint') {
 		const av = typeof a === 'bigint' ? a : BigInt(a as number | string);
 		const bv = typeof b === 'bigint' ? b : BigInt(b as number | string);
@@ -91,20 +94,21 @@ function matchesWhere(row: Row, where: ReadonlyArray<WhereExpr<Row>> | undefined
 				if (compareValues(row[clause.col], getParam(params, clause.param)) < 0) return false;
 				break;
 			case 'tokenGt':
+				if (compareValues(row[clause.col], getParam(params, clause.param)) <= 0) return false;
 				break;
-			case 'tupleGt': {
+			case 'tupleGt':
+			case 'tupleLt': {
 				const left = clause.cols.map((column) => row[column]);
 				const right = clause.params.map((param) => getParam(params, param));
-				let greater = false;
+				let comparison = 0;
 				for (let i = 0; i < left.length; i += 1) {
 					const cmp = compareValues(left[i], right[i]);
-					if (cmp > 0) {
-						greater = true;
+					if (cmp !== 0) {
+						comparison = cmp;
 						break;
 					}
-					if (cmp < 0) break;
 				}
-				if (!greater) return false;
+				if (clause.kind === 'tupleGt' ? comparison <= 0 : comparison >= 0) return false;
 				break;
 			}
 		}
@@ -191,9 +195,10 @@ export class InMemoryCassandraQueryExecutor implements CassandraQueryExecutorFor
 				}
 				this.upsert(meta, query.params);
 				return [];
-			case 'patch':
-				this.patch(meta, query.params);
-				return [];
+			case 'patch': {
+				const applied = this.patch(meta, query.params);
+				return meta.condition || meta.conditions ? ([{'[applied]': applied}] as Array<T>) : [];
+			}
 			case 'delete':
 				this.delete(meta, query.params);
 				return [];
@@ -201,6 +206,37 @@ export class InMemoryCassandraQueryExecutor implements CassandraQueryExecutorFor
 				return [];
 		}
 		return [];
+	}
+
+	async executePagedQuery<T = Row, P extends CassandraParams = CassandraParams>(
+		query: PreparedQuery<P>,
+		options: {pageSize: number; pageState?: string | null},
+	): Promise<{rows: Array<T>; pageState: string | null}> {
+		const meta = this.meta(query);
+		if (meta.action !== 'select') throw new Error('In-memory paging only supports SELECT queries');
+		let offset = 0;
+		if (options.pageState) {
+			const decoded = JSON.parse(Buffer.from(options.pageState, 'base64url').toString('utf8')) as {
+				version?: unknown;
+				table?: unknown;
+				offset?: unknown;
+			};
+			if (decoded.version !== 1 || decoded.table !== meta.table.name || !Number.isInteger(decoded.offset)) {
+				throw new Error('Invalid in-memory Cassandra page state');
+			}
+			offset = decoded.offset as number;
+		}
+		const unboundedMeta = {...meta, limit: undefined};
+		const allRows = this.select(unboundedMeta, query.params) as Array<T>;
+		const rows = allRows.slice(offset, offset + options.pageSize);
+		const nextOffset = offset + rows.length;
+		return {
+			rows,
+			pageState:
+				nextOffset < allRows.length
+					? Buffer.from(JSON.stringify({version: 1, table: meta.table.name, offset: nextOffset})).toString('base64url')
+					: null,
+		};
 	}
 
 	async executeBatch(queries: Array<{query: string; params: object; meta?: KvQueryMeta}>): Promise<void> {
@@ -245,15 +281,23 @@ export class InMemoryCassandraQueryExecutor implements CassandraQueryExecutorFor
 		return true;
 	}
 
-	private patch(meta: KvQueryMeta, params: CassandraParams): void {
+	private patch(meta: KvQueryMeta, params: CassandraParams): boolean {
 		const table = this.table(meta);
 		const key = this.keyFromParams(meta, params);
+		const existing = table.get(key);
+		const conditions = meta.conditions ?? (meta.condition ? [meta.condition] : []);
+		for (const condition of conditions) {
+			if (!existing || compareValues(existing[condition.col], params[condition.expectedParam]) !== 0) {
+				return false;
+			}
+		}
 		const row =
-			table.get(key) ?? this.rowFromParams({...meta, table: {...meta.table, columns: meta.table.primaryKey}}, params);
+			existing ?? this.rowFromParams({...meta, table: {...meta.table, columns: meta.table.primaryKey}}, params);
 		for (const column of meta.patchKeys ?? []) {
 			row[column] = column in params ? cloneValue(params[column]) : null;
 		}
 		table.set(key, row);
+		return true;
 	}
 
 	private delete(meta: KvQueryMeta, params: CassandraParams): void {
@@ -267,13 +311,26 @@ export class InMemoryCassandraQueryExecutor implements CassandraQueryExecutorFor
 
 	private select(meta: KvQueryMeta, params: CassandraParams): Array<Row> {
 		let rows = [...this.table(meta).values()].filter((row) => matchesWhere(row, meta.where, params));
-		if (meta.orderBy) {
-			const direction = meta.orderBy.direction === 'DESC' ? -1 : 1;
-			rows = rows.sort((a, b) => compareValues(a[meta.orderBy!.col], b[meta.orderBy!.col]) * direction);
-		}
+		const orderItems = meta.orderBy
+			? Array.isArray(meta.orderBy)
+				? meta.orderBy
+				: [meta.orderBy]
+			: meta.table.primaryKey.map((col) => ({col, direction: 'ASC' as const}));
+		rows = rows.sort((left, right) => {
+			for (const item of orderItems) {
+				const direction = item.direction === 'DESC' ? -1 : 1;
+				const comparison = compareValues(left[item.col], right[item.col]) * direction;
+				if (comparison !== 0) return comparison;
+			}
+			return 0;
+		});
 		if (typeof meta.limit === 'number') {
 			rows = rows.slice(0, meta.limit);
 		}
-		return rows.map((row) => projectRow(row, meta.columns));
+		return rows.map((row) => {
+			const cassandraRow: Row = {};
+			for (const column of meta.table.columns) cassandraRow[column] = cloneValue(row[column] ?? null);
+			return projectRow(cassandraRow, meta.columns);
+		});
 	}
 }

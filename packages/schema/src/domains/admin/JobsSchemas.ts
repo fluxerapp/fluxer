@@ -3,7 +3,15 @@
 import {SnowflakeStringType, SnowflakeType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {z} from 'zod';
 
-const JobStatusEnum = z.enum(['queued', 'running', 'succeeded', 'failed', 'cancelled', 'deadletter']);
+const JobStatusEnum = z.enum([
+	'queued',
+	'running',
+	'deadletter_pending',
+	'succeeded',
+	'failed',
+	'cancelled',
+	'deadletter',
+]);
 
 export const JobLedgerEntrySchema = z.object({
 	job_id: SnowflakeStringType,
@@ -31,11 +39,16 @@ export const JobLedgerEntrySchema = z.object({
 
 export type JobLedgerEntry = z.infer<typeof JobLedgerEntrySchema>;
 
-const ListJobsCursorSchema = z.object({
-	bucket_day: z.string(),
-	created_at: z.string(),
-	job_id: SnowflakeStringType,
-});
+const ListJobsCursorSchema = z
+	.object({
+		bucket_day: z.iso.date(),
+		created_at: z.iso.datetime({offset: true}),
+		job_id: SnowflakeStringType,
+	})
+	.refine((cursor) => new Date(cursor.created_at).toISOString().slice(0, 10) === cursor.bucket_day, {
+		message: 'created_at must fall within bucket_day in UTC',
+		path: ['created_at'],
+	});
 
 export const ListJobsRequest = z.object({
 	limit: z.number().int().min(1).max(200).default(50).describe('Page size'),
@@ -73,6 +86,15 @@ export const CancelJobResponseSchema = z.object({
 	cancelled: z.boolean().describe('True if a cancel request was recorded; false if the job was already terminal.'),
 });
 
+export const ActiveJobsRequest = z.object({
+	limit: z.number().int().min(1).max(200).default(50),
+	page_state: z.string().max(16_384).nullish(),
+	task_type: z.string().optional(),
+});
+
+export type ActiveJobsRequest = z.infer<typeof ActiveJobsRequest>;
+
 export const ActiveJobsResponseSchema = z.object({
 	jobs: z.array(JobLedgerEntrySchema),
+	next_page_state: z.string().nullable(),
 });

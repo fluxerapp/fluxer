@@ -10,7 +10,7 @@ import {
 	BillingPaymentsByInvoice,
 } from '../../Tables';
 import {mapStripePaymentIntentToRow} from '../mappers/StripeToBillingMapper';
-import {isExistingNewer} from './BillingRepoHelpers';
+import {BILLING_REVERSE_CHRONOLOGICAL_ORDER, isExistingNewer, restoreReferenceOrder} from './BillingRepoHelpers';
 
 const FETCH_BY_ID = BillingPaymentIntents.selectCql({
 	where: BillingPaymentIntents.where.eq('provider_id'),
@@ -18,6 +18,7 @@ const FETCH_BY_ID = BillingPaymentIntents.selectCql({
 });
 const FETCH_BY_CUSTOMER = BillingPaymentIntentsByCustomer.selectCql({
 	where: BillingPaymentIntentsByCustomer.where.eq('customer_id'),
+	orderBy: BILLING_REVERSE_CHRONOLOGICAL_ORDER,
 });
 const FETCH_BY_PROVIDER_IDS = BillingPaymentIntents.selectCql({
 	where: BillingPaymentIntents.where.in('provider_id', 'provider_ids'),
@@ -56,7 +57,7 @@ export class BillingPaymentIntentRepository {
 		}
 		const ids = refsPage.rows.map((r) => r.provider_id);
 		const rows = await fetchMany<BillingPaymentIntentRow>(FETCH_BY_PROVIDER_IDS, {provider_ids: ids});
-		return {rows, pageState: refsPage.pageState};
+		return {rows: restoreReferenceOrder(refsPage.rows, rows), pageState: refsPage.pageState};
 	}
 
 	async findByInvoiceId(invoiceId: string): Promise<BillingPaymentIntentRow | null> {

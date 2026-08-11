@@ -10,7 +10,7 @@ import {
 	BillingRefundsByPaymentIntent,
 } from '../../Tables';
 import {mapStripeRefundToRow} from '../mappers/StripeToBillingMapper';
-import {isExistingNewer} from './BillingRepoHelpers';
+import {isExistingNewer, restoreReferenceOrder} from './BillingRepoHelpers';
 
 const FETCH_BY_ID = BillingRefunds.selectCql({
 	where: BillingRefunds.where.eq('provider_id'),
@@ -36,7 +36,8 @@ async function hydrate(
 ): Promise<Array<BillingRefundRow>> {
 	if (refs.length === 0) return [];
 	const ids = refs.map((r) => r.provider_id);
-	return fetchMany<BillingRefundRow>(FETCH_BY_PROVIDER_IDS, {provider_ids: ids});
+	const rows = await fetchMany<BillingRefundRow>(FETCH_BY_PROVIDER_IDS, {provider_ids: ids});
+	return restoreReferenceOrder(refs, rows);
 }
 
 export class BillingRefundRepository {

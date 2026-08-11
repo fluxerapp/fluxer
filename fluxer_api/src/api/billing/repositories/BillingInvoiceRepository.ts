@@ -12,7 +12,14 @@ import {
 } from '../../Tables';
 import {mapStripeInvoiceToRow} from '../mappers/StripeToBillingMapper';
 import type {BillingPaymentRepository} from './BillingPaymentRepository';
-import {buildPatchFromRow, executeBillingVersionedUpdate, isExistingNewer, rowsEquivalent} from './BillingRepoHelpers';
+import {
+	BILLING_REVERSE_CHRONOLOGICAL_ORDER,
+	buildPatchFromRow,
+	executeBillingVersionedUpdate,
+	isExistingNewer,
+	restoreReferenceOrder,
+	rowsEquivalent,
+} from './BillingRepoHelpers';
 
 const FETCH_BY_ID = BillingInvoices.selectCql({
 	where: BillingInvoices.where.eq('provider_id'),
@@ -20,9 +27,11 @@ const FETCH_BY_ID = BillingInvoices.selectCql({
 });
 const FETCH_BY_CUSTOMER_PARTITION = BillingInvoicesByCustomer.selectCql({
 	where: BillingInvoicesByCustomer.where.eq('customer_id'),
+	orderBy: BILLING_REVERSE_CHRONOLOGICAL_ORDER,
 });
 const FETCH_BY_SUBSCRIPTION_PARTITION = BillingInvoicesBySubscription.selectCql({
 	where: BillingInvoicesBySubscription.where.eq('subscription_id'),
+	orderBy: BILLING_REVERSE_CHRONOLOGICAL_ORDER,
 });
 const FETCH_BY_PROVIDER_IDS = BillingInvoices.selectCql({
 	where: BillingInvoices.where.in('provider_id', 'provider_ids'),
@@ -30,6 +39,48 @@ const FETCH_BY_PROVIDER_IDS = BillingInvoices.selectCql({
 const FETCH_CUSTOMERS_BY_USER = BillingCustomersByUserId.selectCql({
 	where: BillingCustomersByUserId.where.eq('user_id'),
 });
+
+interface InvoiceRef {
+	provider_id: string;
+	stripe_created_at: Date;
+}
+
+interface UserInvoicePartitionState {
+	customerId: string;
+	nextPageState: string | null;
+	exhausted: boolean;
+	buffer: Array<{providerId: string; stripeCreatedAt: string}>;
+}
+
+interface UserInvoicePageState {
+	version: 1;
+	partitions: Array<UserInvoicePartitionState>;
+}
+
+function decodeUserInvoicePageState(value: string): UserInvoicePageState {
+	const decoded = JSON.parse(Buffer.from(value, 'base64url').toString('utf8')) as UserInvoicePageState;
+	const validPartitions =
+		Array.isArray(decoded.partitions) &&
+		decoded.partitions.every((partition) => {
+			if (typeof partition.customerId !== 'string') return false;
+			if (partition.nextPageState !== null && typeof partition.nextPageState !== 'string') return false;
+			if (typeof partition.exhausted !== 'boolean' || !Array.isArray(partition.buffer)) return false;
+			return partition.buffer.every(
+				(ref) =>
+					typeof ref.providerId === 'string' &&
+					typeof ref.stripeCreatedAt === 'string' &&
+					Number.isFinite(new Date(ref.stripeCreatedAt).getTime()),
+			);
+		});
+	if (decoded.version !== 1 || !validPartitions) {
+		throw new Error('Invalid billing invoice user page state');
+	}
+	return decoded;
+}
+
+function encodeUserInvoicePageState(state: UserInvoicePageState): string {
+	return Buffer.from(JSON.stringify(state)).toString('base64url');
+}
 
 export class BillingInvoiceRepository {
 	constructor(private paymentsRepo: BillingPaymentRepository) {}
@@ -57,7 +108,7 @@ export class BillingInvoiceRepository {
 		}
 		const ids = refsPage.rows.map((r) => r.provider_id);
 		const rows = await fetchMany<BillingInvoiceRow>(FETCH_BY_PROVIDER_IDS, {provider_ids: ids});
-		return {rows, pageState: refsPage.pageState};
+		return {rows: restoreReferenceOrder(refsPage.rows, rows), pageState: refsPage.pageState};
 	}
 
 	async listBySubscription(
@@ -79,7 +130,7 @@ export class BillingInvoiceRepository {
 		}
 		const ids = refsPage.rows.map((r) => r.provider_id);
 		const rows = await fetchMany<BillingInvoiceRow>(FETCH_BY_PROVIDER_IDS, {provider_ids: ids});
-		return {rows, pageState: refsPage.pageState};
+		return {rows: restoreReferenceOrder(refsPage.rows, rows), pageState: refsPage.pageState};
 	}
 
 	async listByUser(
@@ -89,20 +140,69 @@ export class BillingInvoiceRepository {
 			pageState?: string | null;
 		},
 	): Promise<PagedQueryResult<BillingInvoiceRow>> {
+		const pageSize = page?.pageSize ?? 50;
 		const customerRefs = await fetchMany<{
 			provider_id: string;
 		}>(FETCH_CUSTOMERS_BY_USER, {user_id: userId});
 		if (customerRefs.length === 0) {
 			return {rows: [], pageState: null};
 		}
-		const aggregated: Array<BillingInvoiceRow> = [];
-		let lastPageState: string | null = null;
-		for (const ref of customerRefs) {
-			const result = await this.listByCustomer(ref.provider_id, page);
-			aggregated.push(...result.rows);
-			lastPageState = result.pageState;
+		const customerIds = customerRefs.map((ref) => ref.provider_id).sort();
+		const decoded = page?.pageState ? decodeUserInvoicePageState(page.pageState) : null;
+		if (
+			decoded &&
+			decoded.partitions
+				.map((partition) => partition.customerId)
+				.sort()
+				.join('\0') !== customerIds.join('\0')
+		) {
+			throw new Error('Billing invoice user page state does not match the current customer partitions');
 		}
-		return {rows: aggregated, pageState: lastPageState};
+		const partitions: Array<UserInvoicePartitionState> =
+			decoded?.partitions ??
+			customerIds.map((customerId) => ({customerId, nextPageState: null, exhausted: false, buffer: []}));
+		const fill = async (partition: UserInvoicePartitionState): Promise<void> => {
+			if (partition.buffer.length > 0 || partition.exhausted) return;
+			const refsPage = await fetchPage<InvoiceRef>(
+				FETCH_BY_CUSTOMER_PARTITION,
+				{customer_id: partition.customerId},
+				{pageSize, pageState: partition.nextPageState},
+			);
+			partition.buffer = refsPage.rows.map((ref) => ({
+				providerId: ref.provider_id,
+				stripeCreatedAt: ref.stripe_created_at.toISOString(),
+			}));
+			partition.nextPageState = refsPage.pageState;
+			partition.exhausted = refsPage.pageState === null;
+		};
+		await Promise.all(partitions.map(fill));
+		const selected: Array<{provider_id: string}> = [];
+		while (selected.length < pageSize) {
+			let selectedPartition: UserInvoicePartitionState | null = null;
+			for (const partition of partitions) {
+				const candidate = partition.buffer[0];
+				const current = selectedPartition?.buffer[0];
+				if (
+					candidate &&
+					(!current ||
+						candidate.stripeCreatedAt > current.stripeCreatedAt ||
+						(candidate.stripeCreatedAt === current.stripeCreatedAt && candidate.providerId < current.providerId))
+				) {
+					selectedPartition = partition;
+				}
+			}
+			if (!selectedPartition) break;
+			const next = selectedPartition.buffer.shift()!;
+			selected.push({provider_id: next.providerId});
+			await fill(selectedPartition);
+		}
+		const ids = selected.map((ref) => ref.provider_id);
+		const rows = ids.length === 0 ? [] : await fetchMany<BillingInvoiceRow>(FETCH_BY_PROVIDER_IDS, {provider_ids: ids});
+		const hasMore = partitions.some((partition) => partition.buffer.length > 0 || !partition.exhausted);
+		return {
+			rows: restoreReferenceOrder(selected, rows),
+			pageState: hasMore ? encodeUserInvoicePageState({version: 1, partitions}) : null,
+		};
 	}
 
 	async upsertFromStripe(

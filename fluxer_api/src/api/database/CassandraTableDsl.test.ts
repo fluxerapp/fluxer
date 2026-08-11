@@ -58,6 +58,20 @@ describe('CassandraTableDsl TTL helpers', () => {
 });
 
 describe('CassandraTableDsl select templates', () => {
+	it('compiles tuple cursors and deterministic multi-column ordering', () => {
+		const query = TtlHelperTestRows.select({
+			where: TtlHelperTestRows.where.tupleLt(['id', 'value'], ['cursor_id', 'cursor_value']),
+			orderBy: [
+				{col: 'id', direction: 'DESC'},
+				{col: 'value', direction: 'DESC'},
+			],
+			limit: 25,
+		}).bind({cursor_id: 'b', cursor_value: 'z'});
+
+		expect(query.cql).toContain('(id, value) < (:cursor_id, :cursor_value)');
+		expect(query.cql).toContain('ORDER BY id DESC, value DESC');
+	});
+
 	it('binds LIMIT values for prepared query templates', () => {
 		const shortQuery = TtlHelperTestRows.select({
 			where: TtlHelperTestRows.where.eq('id'),

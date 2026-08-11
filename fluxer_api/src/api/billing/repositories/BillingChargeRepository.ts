@@ -5,7 +5,7 @@ import {fetchMany, fetchOne, fetchPage, type PagedQueryResult, upsertOne} from '
 import type {BillingChargeRow} from '../../database/types/BillingTypes';
 import {BillingCharges, BillingChargesByCustomer} from '../../Tables';
 import {mapStripeChargeToRow} from '../mappers/StripeToBillingMapper';
-import {isExistingNewer} from './BillingRepoHelpers';
+import {BILLING_REVERSE_CHRONOLOGICAL_ORDER, isExistingNewer, restoreReferenceOrder} from './BillingRepoHelpers';
 
 const FETCH_BY_ID = BillingCharges.selectCql({
 	where: BillingCharges.where.eq('provider_id'),
@@ -13,6 +13,7 @@ const FETCH_BY_ID = BillingCharges.selectCql({
 });
 const FETCH_BY_CUSTOMER = BillingChargesByCustomer.selectCql({
 	where: BillingChargesByCustomer.where.eq('customer_id'),
+	orderBy: BILLING_REVERSE_CHRONOLOGICAL_ORDER,
 });
 const FETCH_BY_PROVIDER_IDS = BillingCharges.selectCql({
 	where: BillingCharges.where.in('provider_id', 'provider_ids'),
@@ -42,7 +43,7 @@ export class BillingChargeRepository {
 		}
 		const ids = refsPage.rows.map((r) => r.provider_id);
 		const rows = await fetchMany<BillingChargeRow>(FETCH_BY_PROVIDER_IDS, {provider_ids: ids});
-		return {rows, pageState: refsPage.pageState};
+		return {rows: restoreReferenceOrder(refsPage.rows, rows), pageState: refsPage.pageState};
 	}
 
 	async upsertFromStripe(c: Stripe.Charge): Promise<{
