@@ -204,7 +204,7 @@ jobs:
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
           path: ${{ env.PNPM_STORE_PATH }}
-          key: ${{ runner.os }}-${{ matrix.arch }}-pnpm-store-${{ hashFiles('source/**/pnpm-lock.yaml') }}
+          key: ${{ runner.os }}-${{ matrix.arch }}-pnpm-store-${{ hashFiles('source/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-${{ matrix.arch }}-pnpm-store-
 
