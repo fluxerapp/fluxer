@@ -35,11 +35,19 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 	return value !== null && typeof value === 'object' && Object.getPrototypeOf(value) === Object.prototype;
 }
 
+function isBinaryValue(value: unknown): value is Uint8Array {
+	return value instanceof Uint8Array;
+}
+
+function binaryBuffer(value: Uint8Array): Buffer {
+	return Buffer.isBuffer(value) ? value : Buffer.from(value.buffer, value.byteOffset, value.byteLength);
+}
+
 function encodeValue(value: unknown): unknown {
 	if (value === null || value === undefined) return null;
 	if (typeof value === 'bigint') return {[ENCODED_TYPE_KEY]: 'bigint', value: value.toString()};
 	if (value instanceof Date) return {[ENCODED_TYPE_KEY]: 'date', value: value.toISOString()};
-	if (Buffer.isBuffer(value)) return {[ENCODED_TYPE_KEY]: 'buffer', value: value.toString('base64')};
+	if (isBinaryValue(value)) return {[ENCODED_TYPE_KEY]: 'buffer', value: binaryBuffer(value).toString('base64')};
 	if (value instanceof Set) return {[ENCODED_TYPE_KEY]: 'set', value: [...value.values()].map(encodeValue)};
 	if (value instanceof Map) {
 		return {
@@ -156,7 +164,7 @@ function compareValues(left: unknown, right: unknown): number {
 	const l = left instanceof Date ? left.getTime() : left?.constructor?.name === 'LocalDate' ? left.toString() : left;
 	const r =
 		right instanceof Date ? right.getTime() : right?.constructor?.name === 'LocalDate' ? right.toString() : right;
-	if (Buffer.isBuffer(l) && Buffer.isBuffer(r)) return Buffer.compare(l, r);
+	if (isBinaryValue(l) && isBinaryValue(r)) return Buffer.compare(binaryBuffer(l), binaryBuffer(r));
 	if (l === r) return 0;
 	return (l as number | string) < (r as number | string) ? -1 : 1;
 }
@@ -164,7 +172,7 @@ function compareValues(left: unknown, right: unknown): number {
 function valuesEqual(left: unknown, right: unknown): boolean {
 	if (left == null && right == null) return true;
 	if (left instanceof Date && right instanceof Date) return left.getTime() === right.getTime();
-	if (Buffer.isBuffer(left) && Buffer.isBuffer(right)) return left.equals(right);
+	if (isBinaryValue(left) && isBinaryValue(right)) return binaryBuffer(left).equals(binaryBuffer(right));
 	if (left?.constructor?.name === 'LocalDate' || right?.constructor?.name === 'LocalDate') {
 		return left?.toString() === right?.toString();
 	}
@@ -234,6 +242,9 @@ function sqlComparable(
 	}
 	if (value?.constructor?.name === 'LocalDate') {
 		return {left: `row_data -> ${key} ->> 'value'`, right: bind(value.toString())};
+	}
+	if (isBinaryValue(value)) {
+		return {left: `decode(row_data -> ${key} ->> 'value', 'base64')`, right: `${bind(binaryBuffer(value))}::bytea`};
 	}
 	if (typeof value === 'number') {
 		return {left: `(row_data ->> ${key})::double precision`, right: `${bind(value)}::double precision`};
@@ -312,6 +323,7 @@ function sqlOrderByItems(items: ReadonlyArray<EffectiveOrderItem>, bind: (value:
 		return [
 			`(CASE WHEN ${node} ->> '${ENCODED_TYPE_KEY}' = 'bigint' THEN ${node} ->> 'value' END)::numeric ${direction}`,
 			`CASE WHEN ${node} ->> '${ENCODED_TYPE_KEY}' IN ('date', 'local_date') THEN ${node} ->> 'value' END ${direction}`,
+			`CASE WHEN ${node} ->> '${ENCODED_TYPE_KEY}' = 'buffer' THEN decode(${node} ->> 'value', 'base64') END ${direction}`,
 			`(CASE WHEN jsonb_typeof(${node}) = 'number' THEN ${node} #>> '{}' END)::numeric ${direction}`,
 			`CASE WHEN jsonb_typeof(${node}) IN ('string', 'boolean') THEN ${node} #>> '{}' END ${direction}`,
 		];

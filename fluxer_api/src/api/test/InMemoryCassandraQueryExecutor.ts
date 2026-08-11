@@ -6,6 +6,14 @@ import type {CassandraParams, KvQueryMeta, PreparedQuery, WhereExpr} from '../da
 
 type Row = Record<string, unknown>;
 
+function isBinaryValue(value: unknown): value is Uint8Array {
+	return value instanceof Uint8Array;
+}
+
+function binaryBuffer(value: Uint8Array): Buffer {
+	return Buffer.isBuffer(value) ? value : Buffer.from(value);
+}
+
 function normalizeCql(cql: string): string {
 	return cql.replace(/\s+/g, ' ').trim();
 }
@@ -14,6 +22,7 @@ function compareValues(a: unknown, b: unknown): number {
 	if (a == null && b == null) return 0;
 	if (a == null) return 1;
 	if (b == null) return -1;
+	if (isBinaryValue(a) && isBinaryValue(b)) return Buffer.compare(binaryBuffer(a), binaryBuffer(b));
 	if (typeof a === 'bigint' || typeof b === 'bigint') {
 		const av = typeof a === 'bigint' ? a : BigInt(a as number | string);
 		const bv = typeof b === 'bigint' ? b : BigInt(b as number | string);
@@ -29,19 +38,22 @@ function compareValues(a: unknown, b: unknown): number {
 function valuesEqual(a: unknown, b: unknown): boolean {
 	if (a == null && b == null) return true;
 	if (a instanceof Date && b instanceof Date) return a.getTime() === b.getTime();
-	if (Buffer.isBuffer(a) && Buffer.isBuffer(b)) return a.equals(b);
+	if (isBinaryValue(a) && isBinaryValue(b)) return binaryBuffer(a).equals(binaryBuffer(b));
 	return a === b;
 }
 
 function cloneValue<T>(value: T): T {
 	if (value instanceof Date) return new Date(value.getTime()) as T;
+	if (isBinaryValue(value)) return Buffer.from(value) as T;
 	if (value instanceof Set) return new Set([...value].map((entry) => cloneValue(entry))) as T;
 	if (value instanceof Map) {
 		return new Map([...value.entries()].map(([key, entry]) => [cloneValue(key), cloneValue(entry)])) as T;
 	}
 	if (Array.isArray(value)) return value.map((entry) => cloneValue(entry)) as T;
 	if (value && typeof value === 'object' && Object.getPrototypeOf(value) === Object.prototype) {
-		return {...(value as object)} as T;
+		return Object.fromEntries(
+			Object.entries(value as Record<string, unknown>).map(([key, entry]) => [key, cloneValue(entry)]),
+		) as T;
 	}
 	return value;
 }
@@ -59,7 +71,7 @@ function pkKey(meta: KvQueryMeta, row: Row): string {
 }
 
 function valueKey(value: unknown): string {
-	if (Buffer.isBuffer(value)) return `buffer:${value.toString('base64')}`;
+	if (isBinaryValue(value)) return `buffer:${binaryBuffer(value).toString('base64')}`;
 	if (value instanceof Date) return `date:${value.toISOString()}`;
 	if (typeof value === 'bigint') return `bigint:${value.toString()}`;
 	return `${typeof value}:${String(value)}`;

@@ -79,8 +79,25 @@ export interface PreparedQuery<P extends CassandraParams = CassandraParams> {
 	kvMeta?: KvQueryMeta;
 }
 
+function normalizeBinaryValue(value: unknown): unknown {
+	if (value instanceof Uint8Array) return Buffer.from(value);
+	if (Array.isArray(value)) return value.map(normalizeBinaryValue);
+	if (value instanceof Set) return new Set([...value].map(normalizeBinaryValue));
+	if (value instanceof Map) {
+		return new Map([...value].map(([key, entry]) => [normalizeBinaryValue(key), normalizeBinaryValue(entry)]));
+	}
+	if (value !== null && typeof value === 'object' && Object.getPrototypeOf(value) === Object.prototype) {
+		return Object.fromEntries(Object.entries(value).map(([key, entry]) => [key, normalizeBinaryValue(entry)]));
+	}
+	return value;
+}
+
+export function normalizeBinaryParams<P extends CassandraParams>(params: P): P {
+	return normalizeBinaryValue(params) as P;
+}
+
 export function prepared<P extends CassandraParams>(cql: string, params: P, kvMeta?: KvQueryMeta): PreparedQuery<P> {
-	return {cql, params, kvMeta};
+	return {cql, params: normalizeBinaryParams(params), kvMeta};
 }
 
 export interface QueryTemplate<P extends CassandraParams = CassandraParams> {

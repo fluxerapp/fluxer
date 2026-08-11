@@ -5,9 +5,14 @@ import {existsSync} from 'node:fs';
 import {getDefaultPostgresClient, initPostgres, quoteIdentifier, shutdownPostgres} from '@pkgs/postgres/src/Client';
 import cassandra from 'cassandra-driver';
 import {afterAll, beforeAll, describe, expect, test} from 'vitest';
+import {createUserID} from '../BrandedTypes';
+import {JOB_HISTORY_RETENTION_SECONDS, JobLedgerRepository} from '../jobs/JobLedgerRepository';
+import {AuthSessions, JobsActive, JobsActiveLegacy, JobsByDayBucket} from '../Tables';
+import {setCassandraQueryExecutorForTesting} from './CassandraQueryExecution';
 import {defineTable} from './CassandraTableDsl';
 import {Db} from './CassandraTypes';
 import {ensurePostgresKvSchema, PostgresKvQueryExecutor, pruneExpiredPostgresKvRows} from './PostgresKvQueryExecutor';
+import type {AuthSessionRow} from './types/AuthTypes';
 
 interface TestRow {
 	tenant_id: string;
@@ -18,6 +23,16 @@ interface TestRow {
 	counts: Map<string, bigint> | null;
 	local_day: cassandra.types.LocalDate | null;
 	note: string | null;
+}
+
+interface BinaryRow {
+	bucket: string;
+	value: Buffer;
+}
+
+interface Uint8ArrayRow {
+	id: string;
+	value: Uint8Array;
 }
 
 function postgresHost(): string {
@@ -35,6 +50,17 @@ const TestRows = defineTable<TestRow, 'tenant_id' | 'item_id', 'tenant_id'>({
 	columns: ['tenant_id', 'item_id', 'created_at', 'payload', 'tags', 'counts', 'local_day', 'note'],
 	primaryKey: ['tenant_id', 'item_id'],
 	partitionKey: ['tenant_id'],
+});
+const BinaryRows = defineTable<BinaryRow, 'bucket' | 'value', 'bucket'>({
+	name: `pg_kv_binary_test_${randomUUID().replaceAll('-', '_')}`,
+	columns: ['bucket', 'value'],
+	primaryKey: ['bucket', 'value'],
+	partitionKey: ['bucket'],
+});
+const Uint8ArrayRows = defineTable<Uint8ArrayRow, 'id'>({
+	name: `pg_kv_uint8_test_${randomUUID().replaceAll('-', '_')}`,
+	columns: ['id', 'value'],
+	primaryKey: ['id'],
 });
 
 describe('PostgresKvQueryExecutor', () => {
@@ -55,11 +81,13 @@ describe('PostgresKvQueryExecutor', () => {
 		const client = getDefaultPostgresClient();
 		await ensurePostgresKvSchema(client);
 		executor = new PostgresKvQueryExecutor(client);
+		setCassandraQueryExecutorForTesting(executor);
 	});
 
 	afterAll(async () => {
 		if (!initialized) return;
 		try {
+			setCassandraQueryExecutorForTesting(null);
 			await getDefaultPostgresClient().query(`DROP TABLE IF EXISTS ${quoteIdentifier(kvTable)}`);
 		} finally {
 			await shutdownPostgres();
@@ -118,6 +146,182 @@ describe('PostgresKvQueryExecutor', () => {
 		expect(fetched[0]!.counts!.get('seen')).toBe(5n);
 		expect(fetched[0]!.local_day?.toString()).toBe('2026-01-02');
 		expect(fetched[0]!.note).toBe('second');
+	});
+
+	test('selects an auth session by its Buffer primary key through the production query shape', async () => {
+		const sessionIdHash = Buffer.from([0x00, 0x2f, 0x7f, 0x80, 0xff]);
+		const row: AuthSessionRow = {
+			user_id: createUserID(1001n),
+			session_id_hash: sessionIdHash,
+			created_at: new Date('2026-08-11T20:53:07.000Z'),
+			approx_last_used_at: new Date('2026-08-11T20:53:07.000Z'),
+			client_ip: '127.0.0.1',
+			client_user_agent: 'postgres-buffer-regression',
+			client_is_desktop: true,
+			client_os: 'linux',
+			client_platform: 'desktop',
+			client_country: 'SE',
+			version: 1,
+		};
+		await executor.executeQuery(AuthSessions.upsertAll(row));
+
+		const productionQuery = AuthSessions.selectCql({
+			where: AuthSessions.where.eq('session_id_hash'),
+			limit: 1,
+		});
+		const fetched = await executor.executeQuery<AuthSessionRow>({
+			cql: productionQuery,
+			params: {session_id_hash: sessionIdHash},
+		});
+
+		expect(fetched).toHaveLength(1);
+		expect(fetched[0]).toMatchObject({user_id: row.user_id, client_user_agent: row.client_user_agent});
+		expect(fetched[0]!.session_id_hash.equals(sessionIdHash)).toBe(true);
+	});
+
+	test('compares binary values consistently for IN, range, tuple, ordering, and page cursors', async () => {
+		const low = Buffer.from([0x00]);
+		const middle = Buffer.from([0x7f]);
+		const high = Buffer.from([0xfb]);
+		for (const value of [high, low, middle]) {
+			await executor.executeQuery(BinaryRows.upsertAll({bucket: 'binary-order', value}));
+		}
+
+		const selectedByIn = await executor.executeQuery<BinaryRow>(
+			BinaryRows.select({
+				where: [BinaryRows.where.eq('bucket'), BinaryRows.where.in('value', 'values')],
+				orderBy: {col: 'value', direction: 'ASC'},
+				limit: 2,
+			}).bind({bucket: 'binary-order', values: [high, low]}),
+		);
+		expect(selectedByIn.map((row) => row.value)).toEqual([low, high]);
+
+		const selectedByRange = await executor.executeQuery<BinaryRow>(
+			BinaryRows.select({
+				where: [BinaryRows.where.eq('bucket'), BinaryRows.where.gt('value', 'after_value')],
+				orderBy: {col: 'value', direction: 'ASC'},
+				limit: 2,
+			}).bind({bucket: 'binary-order', after_value: low}),
+		);
+		expect(selectedByRange.map((row) => row.value)).toEqual([middle, high]);
+
+		const selectedByTuple = await executor.executeQuery<BinaryRow>(
+			BinaryRows.select({
+				where: BinaryRows.where.tupleGt(['bucket', 'value'], ['cursor_bucket', 'cursor_value']),
+				orderBy: {col: 'value', direction: 'ASC'},
+				limit: 2,
+			}).bind({cursor_bucket: 'binary-order', cursor_value: low}),
+		);
+		expect(selectedByTuple.map((row) => row.value)).toEqual([middle, high]);
+
+		const pagedQuery = BinaryRows.select({
+			where: BinaryRows.where.eq('bucket'),
+			orderBy: {col: 'value', direction: 'ASC'},
+		}).bind({bucket: 'binary-order'});
+		const firstPage = await executor.executePagedQuery<BinaryRow>(pagedQuery, {pageSize: 2});
+		const secondPage = await executor.executePagedQuery<BinaryRow>(pagedQuery, {
+			pageSize: 2,
+			pageState: firstPage.pageState,
+		});
+		expect(firstPage.rows.map((row) => row.value)).toEqual([low, middle]);
+		expect(secondPage.rows.map((row) => row.value)).toEqual([high]);
+	});
+
+	test('stores Uint8Array values using the canonical binary encoding', async () => {
+		const backing = new Uint8Array([0xaa, 0x00, 0x80, 0xff, 0xbb]);
+		const value = backing.subarray(1, 4);
+		await executor.executeQuery(Uint8ArrayRows.upsertAll({id: 'uint8-array', value}));
+
+		const fetched = await executor.executeQuery<Uint8ArrayRow>(
+			Uint8ArrayRows.select({where: Uint8ArrayRows.where.eq('id'), limit: 1}).bind({id: 'uint8-array'}),
+		);
+
+		expect(Buffer.isBuffer(fetched[0]!.value)).toBe(true);
+		expect(Buffer.from(fetched[0]!.value)).toEqual(Buffer.from(value));
+	});
+
+	test('preserves terminal job status, bounded authority and history TTLs, and removes active indexes', async () => {
+		const repository = new JobLedgerRepository();
+		const jobId = 9001001n;
+		await repository.createJob({
+			jobId,
+			taskType: 'postgres-terminal-invariant',
+			payload: {source: 'integration'},
+			requestedByUserId: null,
+			auditLogReason: null,
+			maxAttempts: 3,
+			runAt: null,
+			jetStreamLane: 'worker-batch',
+			jetStreamSeq: '1',
+		});
+		const created = await repository.getJob(jobId);
+		expect(created?.status).toBe('queued');
+
+		const leaseToken = 'postgres-terminal-lease';
+		const claimed = await repository.claimJob(jobId, 'worker-batch', leaseToken, new Date(), 60_000);
+		expect(claimed).toMatchObject({status: 'running', lease_token: leaseToken});
+		expect(await repository.markSucceeded(jobId, {ok: true}, leaseToken)).toBe(true);
+
+		const terminal = await repository.getJob(jobId);
+		expect(terminal).toMatchObject({status: 'succeeded', lease_token: null, lease_expires_at: null});
+		expect(terminal?.completed_at).toBeInstanceOf(Date);
+		const history = await executor.executeQuery(
+			JobsByDayBucket.select({
+				where: [
+					JobsByDayBucket.where.eq('bucket_day'),
+					JobsByDayBucket.where.eq('created_at'),
+					JobsByDayBucket.where.eq('job_id'),
+				],
+				limit: 1,
+			}).bind({
+				bucket_day: created!.created_at.toISOString().slice(0, 10),
+				created_at: created!.created_at,
+				job_id: jobId,
+			}),
+		);
+		expect(history).toMatchObject([{status: 'succeeded', job_id: jobId}]);
+
+		const active = await executor.executeQuery(
+			JobsActive.select({
+				where: [JobsActive.where.eq('shard'), JobsActive.where.eq('job_id')],
+				limit: 1,
+			}).bind({shard: Number(jobId % 64n), job_id: jobId}),
+		);
+		const legacyActive = await executor.executeQuery(
+			JobsActiveLegacy.select({where: JobsActiveLegacy.where.eq('job_id'), limit: 1}).bind({job_id: jobId}),
+		);
+		expect(active).toEqual([]);
+		expect(legacyActive).toEqual([]);
+		const physicalActive = await getDefaultPostgresClient().query<{count: string}>(
+			`SELECT count(*)::text AS count
+			 FROM ${quoteIdentifier(kvTable)}
+			 WHERE table_name = ANY($1::text[])
+			   AND row_data -> 'job_id' ->> 'value' = $2`,
+			[['jobs_active', 'jobs_active_v2'], jobId.toString()],
+		);
+		expect(physicalActive.rows[0]?.count).toBe('0');
+
+		const physical = await getDefaultPostgresClient().query<{
+			table_name: string;
+			expires_at: Date | null;
+			status: string;
+		}>(
+			`SELECT table_name, expires_at, row_data ->> 'status' AS status
+			 FROM ${quoteIdentifier(kvTable)}
+			 WHERE table_name = ANY($1::text[])
+			   AND row_data -> 'job_id' ->> 'value' = $2
+			 ORDER BY table_name`,
+			[['jobs_by_day_bucket', 'jobs_by_id'], jobId.toString()],
+		);
+		expect(physical.rows.map((row) => [row.table_name, row.status])).toEqual([
+			['jobs_by_day_bucket', 'succeeded'],
+			['jobs_by_id', 'succeeded'],
+		]);
+		const expectedExpiry = terminal!.completed_at!.getTime() + JOB_HISTORY_RETENTION_SECONDS * 1000;
+		for (const row of physical.rows) {
+			expect(row.expires_at).toBeInstanceOf(Date);
+			expect(Math.abs(row.expires_at!.getTime() - expectedExpiry)).toBeLessThanOrEqual(1000);
+		}
 	});
 
 	test('applies every compare-and-set condition and treats missing legacy fields as null', async () => {
