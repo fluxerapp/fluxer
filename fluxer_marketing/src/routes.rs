@@ -168,6 +168,7 @@ pub fn build_router(config: MarketingConfig) -> Router {
             "/static/voice-region-flags/{flag_file}",
             get(voice_region_flag_svg),
         )
+        .route("/favicon.ico", get(favicon_ico))
         .route("/robots.txt", get(robots))
         .route("/security.txt", get(security_txt))
         .route("/sitemap.xml", get(sitemap))
@@ -1053,6 +1054,11 @@ async fn voice_region_flag_svg(Path(flag_file): Path<String>) -> Response {
             .into_response(),
         None => StatusCode::NOT_FOUND.into_response(),
     }
+}
+
+async fn favicon_ico(State(state): State<AppState>) -> impl IntoResponse {
+    let cdn = state.config.static_cdn_endpoint.trim_end_matches('/');
+    Redirect::permanent(&format!("{cdn}/web/favicon.ico"))
 }
 
 async fn robots(State(state): State<AppState>) -> impl IntoResponse {
