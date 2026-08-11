@@ -994,7 +994,6 @@ fn base_document(
                 link rel="icon" type="image/x-icon" href=(format!("{cdn}/web/favicon.ico"));
                 link rel="apple-touch-icon" href=(format!("{cdn}/web/apple-touch-icon.png"));
                 link rel="icon" type="image/png" sizes="32x32" href=(format!("{cdn}/web/favicon-32x32.png"));
-                link rel="icon" type="image/png" sizes="16x16" href=(format!("{cdn}/web/favicon-16x16.png"));
                 @if meta.enable_htmx {
                     script src=(format!("{}/static/htmx.min.js?v={}", ctx.base_path, ctx.asset_version)) defer {}
                 }
