@@ -499,9 +499,9 @@ mod platform {
     ) -> Result<()> {
         let mut wide = wide_null(value);
         unsafe {
-            let prop = propvariant_from_wide_string(&mut wide);
+            let prop = ManuallyDrop::new(propvariant_from_wide_string(&mut wide));
             property_store
-                .SetValue(key as *const PROPERTYKEY, &prop as *const PROPVARIANT)
+                .SetValue(key as *const PROPERTYKEY, &*prop as *const PROPVARIANT)
                 .map_err(|err| hresult_error(label, err))
         }
     }
@@ -516,9 +516,9 @@ mod platform {
         unsafe {
             let mut guid = CLSIDFromString(PCWSTR(wide.as_ptr()))
                 .map_err(|err| hresult_error("CLSIDFromString failed", err))?;
-            let prop = propvariant_from_guid(&mut guid);
+            let prop = ManuallyDrop::new(propvariant_from_guid(&mut guid));
             property_store
-                .SetValue(key as *const PROPERTYKEY, &prop as *const PROPVARIANT)
+                .SetValue(key as *const PROPERTYKEY, &*prop as *const PROPVARIANT)
                 .map_err(|err| hresult_error(label, err))
         }
     }
