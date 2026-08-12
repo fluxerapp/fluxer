@@ -47,7 +47,7 @@ RUN cargo build --release -p fluxer_admin \
 RUN test -s target/release/build/fluxer_admin-*/out/static/app.css \
 	&& echo "Tailwind CSS compiled successfully"
 
-RUN test "$(ls target/release/build/fluxer_admin-*/out/static/fonts/*.woff2 | wc -l)" -eq 12 \
+RUN test "$(ls target/release/build/fluxer_admin-*/out/static/fonts/*.woff2 | wc -l)" -eq 16 \
 	&& ls target/release/build/fluxer_admin-*/out/static/fonts/fonts.*.css \
 	&& echo "Latin-core fonts bundled successfully"
 
