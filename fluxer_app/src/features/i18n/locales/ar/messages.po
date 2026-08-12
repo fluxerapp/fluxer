@@ -1303,11 +1303,6 @@ msgstr "شاشة {streamerDisplayName}"
 msgid "{tenSeconds} seconds"
 msgstr "{tenSeconds} ثوانٍ"
 
-#. Label in the channel and chat canary tester dm item. Preserve {testersCommunityName} and {canaryReleaseName}; they are inserted by code.
-#: src/features/channel/components/direct_message/CanaryTesterDmItem.tsx:33
-msgid "{testersCommunityName} is a community for {canaryReleaseName} users to share bug reports and feedback that helps shape upcoming releases. Join to chat with the team and other testers."
-msgstr "يُعد {testersCommunityName} مجتمعًا لمستخدمي {canaryReleaseName} لمشاركة تقارير الأخطاء والملاحظات التي تساعد في تشكيل الإصدارات القادمة. انضم للدردشة مع الفريق والمختبرين الآخرين."
-
 #. Template preview summary listing how many text channels, voice channels, categories, and roles will be imported.
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:147
 msgid "{textChannelCount} text, {voiceChannelCount} voice, {categoryCount} categories, {roleCount} roles"
@@ -2557,7 +2552,7 @@ msgstr "أضف ملفات من جهاز الكمبيوتر الخاص بك لل�
 msgid "Add friend"
 msgstr "إضافة صديق"
 
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:311
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:307
 msgid "Add friends"
 msgstr "إضافة أصدقاء"
 
@@ -3914,7 +3909,7 @@ msgid "Are you sure you want to delete <0>{0}</0>? This cannot be undone."
 msgstr "هل أنت متأكد أنك تريد حذف <0>{0}</0>؟ لا يمكن التراجع عن هذا الإجراء."
 
 #. Body of the destructive purge-personal-notes confirmation alert. Keep tone serious and explicit about irreversibility.
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:72
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:68
 msgid "Are you sure you want to delete every message in your personal notes? This will permanently remove all messages and their attachments. This action cannot be undone."
 msgstr "هل أنت متأكد أنك تريد حذف كل الرسائل في ملاحظاتك الشخصية؟ سيؤدي هذا إلى إزالة جميع الرسائل ومرفقاتها بشكل دائم. لا يمكن التراجع عن هذا الإجراء."
 
@@ -5793,11 +5788,6 @@ msgstr "لا يمكن لصق الصورة هنا"
 #: src/features/messaging/components/alerts/AttachmentPermissionDeniedModal.tsx:13
 msgid "Can't upload files here"
 msgstr "لا يمكن تحميل الملفات هنا"
-
-#. Developer / debug surface — keep terse and technical. Label in the developer Nagbar controls panel for the canary-tester CTA banner.
-#: src/features/devtools/components/NagbarControls.ts:27
-msgid "Canary tester CTA nagbar"
-msgstr "شريط إشعارات حث المستخدم على اتخاذ إجراء لاختبار Canary"
 
 #. Action label for dismissing a mass-mention warning.
 #. Button label on a scheduled message row that cancels (deletes) the scheduled send.
@@ -7908,7 +7898,7 @@ msgid "Community message notifications"
 msgstr "إشعارات رسائل المجتمع"
 
 #. Developer control label for the community MFA requirement banner.
-#: src/features/devtools/components/NagbarControls.ts:76
+#: src/features/devtools/components/NagbarControls.ts:71
 msgid "Community MFA requirement nagbar"
 msgstr "شريط تذكير بمتطلبات المصادقة متعددة العوامل للمجتمع"
 
@@ -8955,16 +8945,6 @@ msgstr "شريط إشعارات التثبيت التالف"
 msgid "Could not decode this audio file."
 msgstr "تعذر فك ترميز ملف الصوت هذا."
 
-#. Title of the error modal shown when joining the canary testers community fails. Preserve {testersCommunityName}; it is inserted by code.
-#: src/features/channel/components/direct_message/CanaryTesterDmItem.tsx:44
-msgid "Could not join {testersCommunityName}"
-msgstr "تعذر الانضمام إلى {testersCommunityName}"
-
-#. Description text in the channel and chat canary tester dm item. Preserve {testersCommunityName}; it is inserted by code.
-#: src/features/channel/components/direct_message/CanaryTesterDmItem.tsx:39
-msgid "Could not join {testersCommunityName}. Try again later."
-msgstr "تعذّر الانضمام إلى {testersCommunityName}. حاول مرة أخرى لاحقًا."
-
 #. Error shown when the setup wizard fails to load the instance configuration.
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:91
 msgid "Could not load the instance configuration. Try reloading the page."
@@ -9185,11 +9165,6 @@ msgstr "تعذّر تثبيت حزمة الرموز التعبيرية هذه. �
 #: src/features/invite/commands/InviteCommands.tsx:111
 msgid "Couldn't install this sticker pack. Try again later."
 msgstr "تعذّر تثبيت حزمة الملصقات هذه. حاول مرة أخرى لاحقًا."
-
-#. Title of the generic fallback error modal shown when joining the canary testers community fails.
-#: src/features/app/components/layout/app_layout/nagbars/CanaryTesterCtaNagbar.tsx:56
-msgid "Couldn't join {testersCommunityName}"
-msgstr "تعذر الانضمام إلى {testersCommunityName}"
 
 #. Error modal title shown when accepting a community invite fails.
 #: src/features/invite/components/alerts/InviteAcceptFailedModal.tsx:9
@@ -9637,7 +9612,7 @@ msgstr "إنشاء نموذج مجتمع"
 
 #. Accessible label for the create-DM trigger in the DM list header.
 #. Button or menu action label in the create dm modal utils helper. Keep it concise.
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:98
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:94
 #: src/features/channel/utils/CreateDMModalUtils.tsx:35
 msgid "Create DM"
 msgstr "إنشاء رسالة مباشرة"
@@ -9963,12 +9938,12 @@ msgid "Current uses:"
 msgstr "الاستخدامات الحالية:"
 
 #. Developer nagbar status: the banner is dismissed in the current real state.
-#: src/features/devtools/components/NagbarControls.ts:109
+#: src/features/devtools/components/NagbarControls.ts:104
 msgid "Currently dismissed"
 msgstr "تم إغلاقها حاليًا"
 
 #. Developer nagbar status: the banner is showing in the current real state.
-#: src/features/devtools/components/NagbarControls.ts:113
+#: src/features/devtools/components/NagbarControls.ts:108
 msgid "Currently showing"
 msgstr "يعرض حاليًا"
 
@@ -11086,7 +11061,7 @@ msgid "Desktop inactivity before mobile push"
 msgstr "وقت الخمول على سطح المكتب قبل إرسال الإشعارات إلى الهاتف المحمول."
 
 #. Developer control label for the desktop-notification banner.
-#: src/features/devtools/components/NagbarControls.ts:40
+#: src/features/devtools/components/NagbarControls.ts:35
 msgid "Desktop notification nagbar"
 msgstr "شريط إشعارات سطح المكتب"
 
@@ -11354,7 +11329,7 @@ msgstr "معاينات الرسائل المباشرة"
 #. Generic section heading / label for the direct messages area.
 #. Summary row label for the direct messages choice in the setup wizard.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:347
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:598
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:592
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:218
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:255
 msgid "Direct messages"
@@ -12661,7 +12636,7 @@ msgid "Email update required"
 msgstr "تحديث البريد الإلكتروني مطلوب"
 
 #. Developer control label for the email-verification banner.
-#: src/features/devtools/components/NagbarControls.ts:36
+#: src/features/devtools/components/NagbarControls.ts:31
 msgid "Email verification nagbar"
 msgstr "شريط تذكير التحقق من البريد الإلكتروني"
 
@@ -14954,12 +14929,12 @@ msgid "For your security, please confirm it's you to continue."
 msgstr "لأمانك، يرجى التأكيد أنك أنت للمتابعة."
 
 #. Developer nagbar override status: the banner is forced to hide.
-#: src/features/devtools/components/NagbarControls.ts:97
+#: src/features/devtools/components/NagbarControls.ts:92
 msgid "Force disabled"
 msgstr "معطل قسريًا"
 
 #. Developer nagbar override status: the banner is forced to show.
-#: src/features/devtools/components/NagbarControls.ts:93
+#: src/features/devtools/components/NagbarControls.ts:88
 msgid "Force enabled"
 msgstr "مفعل قسريًا"
 
@@ -15236,7 +15211,7 @@ msgstr "بوت ودود"
 #. Profile timezone privacy option label. Allows friends to see local time.
 #. Quick switcher tab label that lists friends.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:523
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:518
 #: src/features/connection/components/modals/EditConnectionModal.tsx:86
 #: src/features/search/utils/QuickSwitcherModalUtils.tsx:47
 #: src/features/user/components/modals/tabs/my_profile_tab/TimezoneProfileSettings.tsx:63
@@ -15625,7 +15600,7 @@ msgid "Gift inventory flow"
 msgstr "تدفق مخزون الهدايا"
 
 #. Developer control label for the gift-inventory banner.
-#: src/features/devtools/components/NagbarControls.ts:56
+#: src/features/devtools/components/NagbarControls.ts:51
 msgid "Gift inventory nagbar"
 msgstr "شريط إشعارات مخزون الهدايا"
 
@@ -17967,7 +17942,7 @@ msgid "Invites disabled"
 msgstr "الدعوات معطلة"
 
 #. Developer control label for the invites-disabled banner.
-#: src/features/devtools/components/NagbarControls.ts:72
+#: src/features/devtools/components/NagbarControls.ts:67
 msgid "Invites disabled nagbar"
 msgstr "شريط دعوات معطلة"
 
@@ -18081,13 +18056,6 @@ msgstr "انضم إلى {communityName}"
 #: src/features/app/components/layout/app_layout/nagbars/GuildMembershipCtaNagbar.tsx:24
 msgid "Join {communityName} to chat with the team and stay up to date."
 msgstr "انضم إلى {communityName} للدردشة مع الفريق والبقاء على اطلاع دائم."
-
-#. Button or menu action label in the channel and chat canary tester dm item. Keep it concise. Preserve {testersCommunityName}; it is inserted by code.
-#. CTA button label for joining the canary testers community. testersCommunityName is a community name.
-#: src/features/app/components/layout/app_layout/nagbars/CanaryTesterCtaNagbar.tsx:98
-#: src/features/channel/components/direct_message/CanaryTesterDmItem.tsx:28
-msgid "Join {testersCommunityName}"
-msgstr "انضم إلى {testersCommunityName}"
 
 #. Action button label in the add community modal. Starts the join-by-invite-code flow.
 #: src/features/guild/components/modals/add_guild_modal/shared.ts:101
@@ -20385,7 +20353,7 @@ msgstr "الرسالة: {0}."
 #. Short label in the inline. Keep it concise.
 #. Short label in the keybinds tab. Keep it concise.
 #: src/features/channel/components/ChannelChatLayout.tsx:16
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:280
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:276
 #: src/features/input/components/modals/KeyboardShortcutsCheatsheetModal.tsx:28
 #: src/features/user/components/modals/tabs/appearance_tab/AppearanceTabInline.tsx:31
 #: src/features/user/components/modals/tabs/AppearanceTab.tsx:39
@@ -21532,7 +21500,7 @@ msgstr "مجموعة جديدة"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Tooltip on the new message button at the top of the DM list.
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:94
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:90
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:159
 msgid "New message"
 msgstr "رسالة جديدة"
@@ -23075,7 +23043,7 @@ msgid "Open profile for {nickname}"
 msgstr "فتح الملف الشخصي لـ {nickname}"
 
 #. Accessible label and tooltip for the search field at the top of the DM list. Opens the quick switcher.
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:90
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:86
 msgid "Open quick switcher"
 msgstr "فتح المبدّل السريع"
 
@@ -23881,7 +23849,7 @@ msgid "Personal notes"
 msgstr "ملاحظات شخصية"
 
 #. Toast shown when triggering the purge personal notes flow on an already empty self-DM.
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:86
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:82
 msgid "Personal notes were already empty"
 msgstr "الملاحظات الشخصية فارغة بالفعل"
 
@@ -24395,12 +24363,12 @@ msgid "Premium badge"
 msgstr "شارة بريميوم"
 
 #. Developer control label for the premium-expired banner.
-#: src/features/devtools/components/NagbarControls.ts:48
+#: src/features/devtools/components/NagbarControls.ts:43
 msgid "Premium expired nagbar"
 msgstr "شريط انتهاء الاشتراك المميز"
 
 #. Developer control label for the premium grace-period banner.
-#: src/features/devtools/components/NagbarControls.ts:44
+#: src/features/devtools/components/NagbarControls.ts:39
 msgid "Premium grace period nagbar"
 msgstr "شريط إشعارات فترة السماح لـ Premium"
 
@@ -24410,7 +24378,7 @@ msgid "Premium model"
 msgstr "النموذج المميز"
 
 #. Developer control label for the premium-onboarding banner.
-#: src/features/devtools/components/NagbarControls.ts:52
+#: src/features/devtools/components/NagbarControls.ts:47
 msgid "Premium onboarding nagbar"
 msgstr "شريط التنبيه للانضمام إلى Premium"
 
@@ -24966,7 +24934,7 @@ msgstr "المشتريات غير متاحة"
 
 #. Confirm button label on the purge-personal-notes destructive alert.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:78
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:74
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:248
 msgid "Purge"
 msgstr "مسح"
@@ -24977,7 +24945,7 @@ msgid "Purge messages"
 msgstr "مسح الرسائل"
 
 #. Title of the destructive confirmation alert when wiping the personal notes self-DM. Keep tone serious.
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:68
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:64
 #: src/features/ui/action_menu/PersonalNotesContextMenu.tsx:26
 msgid "Purge personal notes"
 msgstr "مسح الملاحظات الشخصية"
@@ -24993,7 +24961,7 @@ msgid "Purge this sticker from storage and CDN"
 msgstr "حذف هذا الملصق من التخزين وCDN"
 
 #. Toast confirmation after wiping personal notes. deletedCount is the number of messages removed.
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:82
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:78
 msgid "Purged {deletedCount} messages from personal notes"
 msgstr "تم حذف {deletedCount} رسالة من الملاحظات الشخصية"
 
@@ -25129,7 +25097,7 @@ msgstr "ردود الفعل السريعة"
 
 #. Accessible label for the desktop quick switcher modal.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:484
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:479
 #: src/features/search/components/quick_switcher/QuickSwitcherModal.tsx:77
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:50
 msgid "Quick switcher"
@@ -30199,10 +30167,8 @@ msgstr "حدث خطأ ما."
 #. Body of the generic fallback error modal shown when deleting a custom emoji fails.
 #. Body of the generic fallback error modal shown when generating a shareable theme link fails.
 #. Body of the generic fallback error modal shown when joining a discovery community fails.
-#. Body of the generic fallback error modal shown when joining the canary testers community fails.
 #. Generic fallback body shown in an error modal when an action fails for an unexpected reason.
 #: src/features/app/components/alerts/CommonErrorModalDescriptors.ts:5
-#: src/features/app/components/layout/app_layout/nagbars/CanaryTesterCtaNagbar.tsx:60
 #: src/features/discovery/discovery/DiscoveryGuildCard.tsx:36
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:128
 #: src/features/theme/components/modals/ShareThemeModal.tsx:50
@@ -31774,7 +31740,7 @@ msgid "Temporary membership"
 msgstr "عضوية مؤقتة"
 
 #. Developer control label for the terms-acceptance banner.
-#: src/features/devtools/components/NagbarControls.ts:64
+#: src/features/devtools/components/NagbarControls.ts:59
 msgid "Terms acceptance nagbar"
 msgstr "شريط قبول الشروط"
 
@@ -32327,11 +32293,6 @@ msgstr "جهة خارجية"
 #: src/features/relationship/components/alerts/RelationshipErrorModalUtils.tsx:89
 msgid "This account can't be blocked."
 msgstr "لا يمكن حظر هذا الحساب."
-
-#. Body of the error modal shown when a too-new account tries to join the canary testers community.
-#: src/features/app/components/layout/app_layout/nagbars/CanaryTesterCtaNagbar.tsx:42
-msgid "This account is too new to join {testersCommunityName} yet. Try again in a little while."
-msgstr "هذا الحساب حديث جدًا للانضمام إلى {testersCommunityName} حتى الآن. حاول مرة أخرى بعد قليل."
 
 #: src/features/user/components/modals/tabs/applications_tab/ApplicationDetail.tsx:415
 msgid "This action cannot be undone. All associated data, including the bot user, will be permanently deleted."
@@ -34164,7 +34125,7 @@ msgid "Unclaimed account"
 msgstr "حساب غير مُطالَب به"
 
 #. Developer control label for the unclaimed-account banner.
-#: src/features/devtools/components/NagbarControls.ts:32
+#: src/features/devtools/components/NagbarControls.ts:27
 msgid "Unclaimed account nagbar"
 msgstr "شريط إشعارات الحساب غير المطالب به"
 
@@ -35782,27 +35743,27 @@ msgid "Uses:"
 msgstr "الاستخدامات:"
 
 #. Developer nagbar status: banner follows real account state.
-#: src/features/devtools/components/NagbarControls.ts:101
+#: src/features/devtools/components/NagbarControls.ts:96
 msgid "Using actual account state"
 msgstr "باستخدام حالة الحساب الفعلية"
 
 #. Developer nagbar status: banner follows real gift inventory state.
-#: src/features/devtools/components/NagbarControls.ts:121
+#: src/features/devtools/components/NagbarControls.ts:116
 msgid "Using actual gift inventory state"
 msgstr "باستخدام حالة مخزون الهدايا الفعلية"
 
 #. Developer nagbar status: banner follows real premium subscription state.
-#: src/features/devtools/components/NagbarControls.ts:117
+#: src/features/devtools/components/NagbarControls.ts:112
 msgid "Using actual premium state"
 msgstr "باستخدام حالة الاشتراك المميز الفعلية"
 
 #. Developer nagbar status: banner follows the real app state.
-#: src/features/devtools/components/NagbarControls.ts:125
+#: src/features/devtools/components/NagbarControls.ts:120
 msgid "Using actual state"
 msgstr "باستخدام الحالة الفعلية"
 
 #. Developer nagbar status: banner follows real email verification state.
-#: src/features/devtools/components/NagbarControls.ts:105
+#: src/features/devtools/components/NagbarControls.ts:100
 msgid "Using actual verification state"
 msgstr "باستخدام حالة التحقق الفعلية"
 
@@ -36071,10 +36032,8 @@ msgstr "تحقق من بريدك الإلكتروني قبل تعديل ملفك
 msgid "Verify your email before sending friend requests."
 msgstr "يجب عليك تفعيل بريدك الإلكتروني قبل إرسال طلبات الصداقة."
 
-#. Title of the error modal shown when an unverified account tries to join the canary testers community.
 #. Title of the error modal shown when an unverified account tries to purchase Plutonium.
 #: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:106
-#: src/features/app/components/layout/app_layout/nagbars/CanaryTesterCtaNagbar.tsx:30
 msgid "Verify your email first"
 msgstr "يرجى التحقق من بريدك الإلكتروني أولاً"
 
@@ -36537,7 +36496,7 @@ msgid "Visionary (lifetime {premiumProductName})"
 msgstr "Visionary (مدى الحياة {premiumProductName})"
 
 #. Developer control label for the Visionary two-factor-authentication banner.
-#: src/features/devtools/components/NagbarControls.ts:60
+#: src/features/devtools/components/NagbarControls.ts:55
 msgid "Visionary 2FA nagbar"
 msgstr "شريط Visionary 2FA الإعلاني"
 
@@ -36800,7 +36759,7 @@ msgid "Voice region"
 msgstr "منطقة الصوت"
 
 #. Developer control label for the voice-session-restore banner.
-#: src/features/devtools/components/NagbarControls.ts:68
+#: src/features/devtools/components/NagbarControls.ts:63
 msgid "Voice session restore nagbar"
 msgstr "شريط تذكير استعادة جلسة الصوت"
 
@@ -36947,11 +36906,6 @@ msgstr "يمتلك xdg-desktop-portal الخاص بـ Wayland أداة الان�
 #: src/features/voice/components/modals/screen_share_picker_modal/useNativePickerCopy.ts:33
 msgid "Wayland's xdg-desktop-portal owns the picker and shows every window and display together. There is no flag that filters it to windows only. Press open system picker, then choose a window there to get per-app audio."
 msgstr "يمتلك xdg-desktop-portal الخاص بـ Wayland أداة الانتقاء ويعرض كل نافذة وشاشة معًا. لا توجد علامة تصفيه للنافذة فقط. اضغط على فتح منتقي النظام، ثم اختر نافذة هناك للحصول على صوت لكل تطبيق."
-
-#. Title of the error modal shown when a flagged account is blocked from joining the canary testers community.
-#: src/features/app/components/layout/app_layout/nagbars/CanaryTesterCtaNagbar.tsx:46
-msgid "We can't add you right now"
-msgstr "لا يمكننا إضافتك الآن"
 
 #. Premium checkout error shown when card verification fails unexpectedly. productName is the app name.
 #: src/features/premium/components/pages/PremiumCallbackPage.tsx:44
@@ -38136,12 +38090,6 @@ msgstr "لم تحظر أي شخص بعد."
 msgid "You haven't created any packs yet."
 msgstr "لم تنشئ أي حزم بعد."
 
-#. Toast success shown after joining the canary testers community. {testersCommunityName} is the community name and {canaryReleaseName} is the release channel name.
-#: src/features/app/components/layout/app_layout/nagbars/CanaryTesterCtaNagbar.tsx:25
-#: src/features/channel/components/direct_message/CanaryTesterDmItem.tsx:69
-msgid "You joined {testersCommunityName}. Thanks for testing {canaryReleaseName}!"
-msgstr "لقد انضممت إلى {testersCommunityName}. شكرًا لك على اختبار {canaryReleaseName}!"
-
 #. Intro copy in the keyboard navigation modal. {productName} is the app name.
 #: src/features/input/components/modals/KeyboardModeIntroModal.tsx:26
 msgid "You just pressed Tab. Keyboard mode is now on so you can navigate {productName} without a mouse."
@@ -38276,11 +38224,6 @@ msgstr "يجب عليك التحقق من عنوان بريدك الإلكترو
 #: src/features/app/components/alerts/DmActionErrorModal.tsx:44
 msgid "You need to verify your email address before you can start a direct message."
 msgstr "يجب عليك التحقق من عنوان بريدك الإلكتروني قبل أن تتمكن من بدء رسالة مباشرة."
-
-#. Body of the error modal shown when an unverified account tries to join the canary testers community.
-#: src/features/app/components/layout/app_layout/nagbars/CanaryTesterCtaNagbar.tsx:34
-msgid "You need to verify your email before you can join {testersCommunityName}."
-msgstr "يجب عليك التحقق من بريدك الإلكتروني قبل أن تتمكن من الانضمام إلى {testersCommunityName}."
 
 #. Body of the error modal shown when the account email is unverified and the user tries to purchase Plutonium. Product name is interpolated.
 #: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:110
@@ -38476,11 +38419,6 @@ msgstr "لقد بلغت الحد الأقصى لعدد المجتمعات. غا�
 msgid "You're in the voice channel"
 msgstr "أنت في القناة الصوتية"
 
-#. Nagbar body inviting canary release users to join the testers community. {canaryReleaseName} is the release channel name and {testersCommunityName} is the community name.
-#: src/features/app/components/layout/app_layout/nagbars/CanaryTesterCtaNagbar.tsx:102
-msgid "You're on {canaryReleaseName}. Join {testersCommunityName} to submit bug reports and feedback about upcoming builds."
-msgstr "أنت تستخدم {canaryReleaseName}. انضم إلى {testersCommunityName} لإرسال تقارير الأخطاء والملاحظات حول الإصدارات القادمة."
-
 #. Plutonium subscription card tooltip shown when the user is on a grandfathered price that is no longer offered.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:37
 msgid "You're on a legacy rate no longer available to new subscribers."
@@ -38623,11 +38561,6 @@ msgstr "انتهت صلاحية جلسة {productName} الخاصة بك. سجّ
 msgid "Your account"
 msgstr "حسابك"
 
-#. Body of the error modal shown when a flagged account is blocked from joining the canary testers community.
-#: src/features/app/components/layout/app_layout/nagbars/CanaryTesterCtaNagbar.tsx:51
-msgid "Your account can't join {testersCommunityName} at the moment. Contact support if you think this is a mistake."
-msgstr "لا يمكن لحسابك الانضمام إلى {testersCommunityName} في الوقت الحالي. اتصل بالدعم إذا كنت تعتقد أن هذا خطأ."
-
 #: src/features/connection/components/pages/ConnectionCallbackPage.tsx:29
 msgid "Your account has been linked successfully. You can now close this tab and return to the app."
 msgstr "تم ربط حسابك بنجاح. يمكنك الآن إغلاق هذه النافذة والعودة إلى التطبيق."
@@ -38635,11 +38568,6 @@ msgstr "تم ربط حسابك بنجاح. يمكنك الآن إغلاق هذه
 #: src/features/app/components/dialogs/components/UnclaimedAccountAlert.tsx:26
 msgid "Your account is not yet claimed. Without an email and password, you won't be able to sign in from other devices and you could lose access to your account. Claim your account now to secure it."
 msgstr "لم يتم تفعيل حسابك بعد. بدون بريد إلكتروني وكلمة مرور، لن تتمكن من تسجيل الدخول من أجهزة أخرى وقد تفقد الوصول إلى حسابك. فعّل حسابك الآن لتأمينه."
-
-#. Title of the error modal shown when a too-new account tries to join the canary testers community.
-#: src/features/app/components/layout/app_layout/nagbars/CanaryTesterCtaNagbar.tsx:38
-msgid "Your account is too new"
-msgstr "حسابك جديد للغاية"
 
 #: src/features/channel/components/barriers/BarrierComponents.tsx:195
 msgid "Your account is too new to send messages in this community."

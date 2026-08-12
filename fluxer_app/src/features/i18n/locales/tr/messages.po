@@ -1303,11 +1303,6 @@ msgstr "{streamerDisplayName} adlı kullanıcının ekranı"
 msgid "{tenSeconds} seconds"
 msgstr "{tenSeconds} saniye"
 
-#. Label in the channel and chat canary tester dm item. Preserve {testersCommunityName} and {canaryReleaseName}; they are inserted by code.
-#: src/features/channel/components/direct_message/CanaryTesterDmItem.tsx:33
-msgid "{testersCommunityName} is a community for {canaryReleaseName} users to share bug reports and feedback that helps shape upcoming releases. Join to chat with the team and other testers."
-msgstr "{canaryReleaseName} kullanıcılarının hata raporlarını ve geri bildirimlerini paylaşarak gelecek sürümlerin şekillenmesine yardımcı olduğu bir topluluktur. Ekiple ve diğer test kullanıcılarıyla sohbet etmek için {testersCommunityName} topluluğuna katılın."
-
 #. Template preview summary listing how many text channels, voice channels, categories, and roles will be imported.
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:147
 msgid "{textChannelCount} text, {voiceChannelCount} voice, {categoryCount} categories, {roleCount} roles"
@@ -2557,7 +2552,7 @@ msgstr "Özel CSS'de referans vermek için bilgisayarınızdan dosya ekleyin (y�
 msgid "Add friend"
 msgstr "Arkadaş ekle"
 
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:311
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:307
 msgid "Add friends"
 msgstr "Arkadaş ekle"
 
@@ -3914,7 +3909,7 @@ msgid "Are you sure you want to delete <0>{0}</0>? This cannot be undone."
 msgstr "<0>{0}</0> silmek istediğinizden emin misiniz? Bu işlem geri alınamaz."
 
 #. Body of the destructive purge-personal-notes confirmation alert. Keep tone serious and explicit about irreversibility.
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:72
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:68
 msgid "Are you sure you want to delete every message in your personal notes? This will permanently remove all messages and their attachments. This action cannot be undone."
 msgstr "Kişisel notlarınızdaki tüm mesajları silmek istediğinizden emin misiniz? Bu işlem, tüm mesajları ve eklerini kalıcı olarak kaldıracaktır. Bu eylem geri alınamaz."
 
@@ -5793,11 +5788,6 @@ msgstr "Görsel buraya yapıştırılamıyor"
 #: src/features/messaging/components/alerts/AttachmentPermissionDeniedModal.tsx:13
 msgid "Can't upload files here"
 msgstr "Buraya dosya yüklenemiyor"
-
-#. Developer / debug surface — keep terse and technical. Label in the developer Nagbar controls panel for the canary-tester CTA banner.
-#: src/features/devtools/components/NagbarControls.ts:27
-msgid "Canary tester CTA nagbar"
-msgstr "Kanarya test kullanıcısı CTA nagbar'ı"
 
 #. Action label for dismissing a mass-mention warning.
 #. Button label on a scheduled message row that cancels (deletes) the scheduled send.
@@ -7908,7 +7898,7 @@ msgid "Community message notifications"
 msgstr "Topluluk mesajı bildirimleri"
 
 #. Developer control label for the community MFA requirement banner.
-#: src/features/devtools/components/NagbarControls.ts:76
+#: src/features/devtools/components/NagbarControls.ts:71
 msgid "Community MFA requirement nagbar"
 msgstr "Topluluk MFA gereksinimi bildirim çubuğu"
 
@@ -8955,16 +8945,6 @@ msgstr "Bozuk kurulum bildirim çubuğu"
 msgid "Could not decode this audio file."
 msgstr "Bu ses dosyası çözülemedi."
 
-#. Title of the error modal shown when joining the canary testers community fails. Preserve {testersCommunityName}; it is inserted by code.
-#: src/features/channel/components/direct_message/CanaryTesterDmItem.tsx:44
-msgid "Could not join {testersCommunityName}"
-msgstr "{testersCommunityName} topluluğuna katılamadı"
-
-#. Description text in the channel and chat canary tester dm item. Preserve {testersCommunityName}; it is inserted by code.
-#: src/features/channel/components/direct_message/CanaryTesterDmItem.tsx:39
-msgid "Could not join {testersCommunityName}. Try again later."
-msgstr "{testersCommunityName} topluluğuna katılamadı. Daha sonra tekrar deneyin."
-
 #. Error shown when the setup wizard fails to load the instance configuration.
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:91
 msgid "Could not load the instance configuration. Try reloading the page."
@@ -9185,11 +9165,6 @@ msgstr "Bu ifade paketi yüklenemedi. Lütfen daha sonra tekrar deneyin."
 #: src/features/invite/commands/InviteCommands.tsx:111
 msgid "Couldn't install this sticker pack. Try again later."
 msgstr "Bu çıkartma paketini yükleyemedik. Lütfen daha sonra tekrar deneyin."
-
-#. Title of the generic fallback error modal shown when joining the canary testers community fails.
-#: src/features/app/components/layout/app_layout/nagbars/CanaryTesterCtaNagbar.tsx:56
-msgid "Couldn't join {testersCommunityName}"
-msgstr "{testersCommunityName} topluluğuna katılamadı"
 
 #. Error modal title shown when accepting a community invite fails.
 #: src/features/invite/components/alerts/InviteAcceptFailedModal.tsx:9
@@ -9637,7 +9612,7 @@ msgstr "Topluluk formu oluştur"
 
 #. Accessible label for the create-DM trigger in the DM list header.
 #. Button or menu action label in the create dm modal utils helper. Keep it concise.
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:98
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:94
 #: src/features/channel/utils/CreateDMModalUtils.tsx:35
 msgid "Create DM"
 msgstr "DM oluştur"
@@ -9963,12 +9938,12 @@ msgid "Current uses:"
 msgstr "Mevcut kullanımlar:"
 
 #. Developer nagbar status: the banner is dismissed in the current real state.
-#: src/features/devtools/components/NagbarControls.ts:109
+#: src/features/devtools/components/NagbarControls.ts:104
 msgid "Currently dismissed"
 msgstr "Şu anda kapatıldı"
 
 #. Developer nagbar status: the banner is showing in the current real state.
-#: src/features/devtools/components/NagbarControls.ts:113
+#: src/features/devtools/components/NagbarControls.ts:108
 msgid "Currently showing"
 msgstr "Şu anda gösteriliyor"
 
@@ -11086,7 +11061,7 @@ msgid "Desktop inactivity before mobile push"
 msgstr "Mobil bildirimden önce masaüstü cihazında boşta kalma süresi"
 
 #. Developer control label for the desktop-notification banner.
-#: src/features/devtools/components/NagbarControls.ts:40
+#: src/features/devtools/components/NagbarControls.ts:35
 msgid "Desktop notification nagbar"
 msgstr "Masaüstü bildirim çubuğu"
 
@@ -11354,7 +11329,7 @@ msgstr "Doğrudan mesaj önizlemeleri"
 #. Generic section heading / label for the direct messages area.
 #. Summary row label for the direct messages choice in the setup wizard.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:347
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:598
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:592
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:218
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:255
 msgid "Direct messages"
@@ -12661,7 +12636,7 @@ msgid "Email update required"
 msgstr "E-posta güncellemesi gerekli"
 
 #. Developer control label for the email-verification banner.
-#: src/features/devtools/components/NagbarControls.ts:36
+#: src/features/devtools/components/NagbarControls.ts:31
 msgid "Email verification nagbar"
 msgstr "E-posta doğrulama bildirim çubuğu"
 
@@ -14954,12 +14929,12 @@ msgid "For your security, please confirm it's you to continue."
 msgstr "Güvenliğiniz için lütfen devam etmek üzere siz olduğunuzu onaylayın."
 
 #. Developer nagbar override status: the banner is forced to hide.
-#: src/features/devtools/components/NagbarControls.ts:97
+#: src/features/devtools/components/NagbarControls.ts:92
 msgid "Force disabled"
 msgstr "Devre dışı bırakmaya zorla"
 
 #. Developer nagbar override status: the banner is forced to show.
-#: src/features/devtools/components/NagbarControls.ts:93
+#: src/features/devtools/components/NagbarControls.ts:88
 msgid "Force enabled"
 msgstr "Zorla etkinleştirildi"
 
@@ -15236,7 +15211,7 @@ msgstr "Arkadaş canlısı bot"
 #. Profile timezone privacy option label. Allows friends to see local time.
 #. Quick switcher tab label that lists friends.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:523
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:518
 #: src/features/connection/components/modals/EditConnectionModal.tsx:86
 #: src/features/search/utils/QuickSwitcherModalUtils.tsx:47
 #: src/features/user/components/modals/tabs/my_profile_tab/TimezoneProfileSettings.tsx:63
@@ -15625,7 +15600,7 @@ msgid "Gift inventory flow"
 msgstr "Hediye envanteri akışı"
 
 #. Developer control label for the gift-inventory banner.
-#: src/features/devtools/components/NagbarControls.ts:56
+#: src/features/devtools/components/NagbarControls.ts:51
 msgid "Gift inventory nagbar"
 msgstr "Hediye envanteri bildirim çubuğu"
 
@@ -17967,7 +17942,7 @@ msgid "Invites disabled"
 msgstr "Davetler devre dışı bırakıldı"
 
 #. Developer control label for the invites-disabled banner.
-#: src/features/devtools/components/NagbarControls.ts:72
+#: src/features/devtools/components/NagbarControls.ts:67
 msgid "Invites disabled nagbar"
 msgstr "Davetler devre dışı bırakıldı bildirim çubuğu"
 
@@ -18081,13 +18056,6 @@ msgstr "{communityName} topluluğuna katılın"
 #: src/features/app/components/layout/app_layout/nagbars/GuildMembershipCtaNagbar.tsx:24
 msgid "Join {communityName} to chat with the team and stay up to date."
 msgstr "Ekiple sohbet etmek ve güncel kalmak için {communityName} grubuna katılın."
-
-#. Button or menu action label in the channel and chat canary tester dm item. Keep it concise. Preserve {testersCommunityName}; it is inserted by code.
-#. CTA button label for joining the canary testers community. testersCommunityName is a community name.
-#: src/features/app/components/layout/app_layout/nagbars/CanaryTesterCtaNagbar.tsx:98
-#: src/features/channel/components/direct_message/CanaryTesterDmItem.tsx:28
-msgid "Join {testersCommunityName}"
-msgstr "{testersCommunityName} grubuna katıl"
 
 #. Action button label in the add community modal. Starts the join-by-invite-code flow.
 #: src/features/guild/components/modals/add_guild_modal/shared.ts:101
@@ -20385,7 +20353,7 @@ msgstr "Mesaj: {0}."
 #. Short label in the inline. Keep it concise.
 #. Short label in the keybinds tab. Keep it concise.
 #: src/features/channel/components/ChannelChatLayout.tsx:16
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:280
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:276
 #: src/features/input/components/modals/KeyboardShortcutsCheatsheetModal.tsx:28
 #: src/features/user/components/modals/tabs/appearance_tab/AppearanceTabInline.tsx:31
 #: src/features/user/components/modals/tabs/AppearanceTab.tsx:39
@@ -21532,7 +21500,7 @@ msgstr "Yeni grup"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Tooltip on the new message button at the top of the DM list.
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:94
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:90
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:159
 msgid "New message"
 msgstr "Yeni mesaj"
@@ -23075,7 +23043,7 @@ msgid "Open profile for {nickname}"
 msgstr "{nickname} için profili aç"
 
 #. Accessible label and tooltip for the search field at the top of the DM list. Opens the quick switcher.
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:90
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:86
 msgid "Open quick switcher"
 msgstr "Hızlı değiştiriciyi aç"
 
@@ -23881,7 +23849,7 @@ msgid "Personal notes"
 msgstr "Kişisel notlar"
 
 #. Toast shown when triggering the purge personal notes flow on an already empty self-DM.
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:86
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:82
 msgid "Personal notes were already empty"
 msgstr "Kişisel notlar zaten boştu"
 
@@ -24395,12 +24363,12 @@ msgid "Premium badge"
 msgstr "Premium rozeti"
 
 #. Developer control label for the premium-expired banner.
-#: src/features/devtools/components/NagbarControls.ts:48
+#: src/features/devtools/components/NagbarControls.ts:43
 msgid "Premium expired nagbar"
 msgstr "Premium süresi doldu bildirim çubuğu"
 
 #. Developer control label for the premium grace-period banner.
-#: src/features/devtools/components/NagbarControls.ts:44
+#: src/features/devtools/components/NagbarControls.ts:39
 msgid "Premium grace period nagbar"
 msgstr "Premium ödemesiz dönem bildirim çubuğu"
 
@@ -24410,7 +24378,7 @@ msgid "Premium model"
 msgstr "Premium model"
 
 #. Developer control label for the premium-onboarding banner.
-#: src/features/devtools/components/NagbarControls.ts:52
+#: src/features/devtools/components/NagbarControls.ts:47
 msgid "Premium onboarding nagbar"
 msgstr "Premium başlangıç nagbarı"
 
@@ -24966,7 +24934,7 @@ msgstr "Satın alımlar kullanılamıyor"
 
 #. Confirm button label on the purge-personal-notes destructive alert.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:78
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:74
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:248
 msgid "Purge"
 msgstr "Temizle"
@@ -24977,7 +24945,7 @@ msgid "Purge messages"
 msgstr "Mesajları temizle"
 
 #. Title of the destructive confirmation alert when wiping the personal notes self-DM. Keep tone serious.
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:68
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:64
 #: src/features/ui/action_menu/PersonalNotesContextMenu.tsx:26
 msgid "Purge personal notes"
 msgstr "Kişisel notları temizle"
@@ -24993,7 +24961,7 @@ msgid "Purge this sticker from storage and CDN"
 msgstr "Bu çıkartmayı depolama alanından ve CDN'den temizle"
 
 #. Toast confirmation after wiping personal notes. deletedCount is the number of messages removed.
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:82
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:78
 msgid "Purged {deletedCount} messages from personal notes"
 msgstr "Kişisel notlardan {deletedCount} mesaj silindi"
 
@@ -25129,7 +25097,7 @@ msgstr "Hızlı tepkiler"
 
 #. Accessible label for the desktop quick switcher modal.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:484
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:479
 #: src/features/search/components/quick_switcher/QuickSwitcherModal.tsx:77
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:50
 msgid "Quick switcher"
@@ -30199,10 +30167,8 @@ msgstr "Bir şeyler yanlış gitti."
 #. Body of the generic fallback error modal shown when deleting a custom emoji fails.
 #. Body of the generic fallback error modal shown when generating a shareable theme link fails.
 #. Body of the generic fallback error modal shown when joining a discovery community fails.
-#. Body of the generic fallback error modal shown when joining the canary testers community fails.
 #. Generic fallback body shown in an error modal when an action fails for an unexpected reason.
 #: src/features/app/components/alerts/CommonErrorModalDescriptors.ts:5
-#: src/features/app/components/layout/app_layout/nagbars/CanaryTesterCtaNagbar.tsx:60
 #: src/features/discovery/discovery/DiscoveryGuildCard.tsx:36
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:128
 #: src/features/theme/components/modals/ShareThemeModal.tsx:50
@@ -31774,7 +31740,7 @@ msgid "Temporary membership"
 msgstr "Geçici üyelik"
 
 #. Developer control label for the terms-acceptance banner.
-#: src/features/devtools/components/NagbarControls.ts:64
+#: src/features/devtools/components/NagbarControls.ts:59
 msgid "Terms acceptance nagbar"
 msgstr "Şartlar kabulü bildirim çubuğu"
 
@@ -32327,11 +32293,6 @@ msgstr "Üçüncü taraf"
 #: src/features/relationship/components/alerts/RelationshipErrorModalUtils.tsx:89
 msgid "This account can't be blocked."
 msgstr "Bu hesap engellenemez."
-
-#. Body of the error modal shown when a too-new account tries to join the canary testers community.
-#: src/features/app/components/layout/app_layout/nagbars/CanaryTesterCtaNagbar.tsx:42
-msgid "This account is too new to join {testersCommunityName} yet. Try again in a little while."
-msgstr "{testersCommunityName} topluluğuna katılmak için bu hesap henüz çok yeni. Bir süre sonra tekrar dene."
 
 #: src/features/user/components/modals/tabs/applications_tab/ApplicationDetail.tsx:415
 msgid "This action cannot be undone. All associated data, including the bot user, will be permanently deleted."
@@ -34164,7 +34125,7 @@ msgid "Unclaimed account"
 msgstr "Sahipsiz hesap"
 
 #. Developer control label for the unclaimed-account banner.
-#: src/features/devtools/components/NagbarControls.ts:32
+#: src/features/devtools/components/NagbarControls.ts:27
 msgid "Unclaimed account nagbar"
 msgstr "Hesap talep edilmedi bildirim çubuğu"
 
@@ -35782,27 +35743,27 @@ msgid "Uses:"
 msgstr "Kullanır:"
 
 #. Developer nagbar status: banner follows real account state.
-#: src/features/devtools/components/NagbarControls.ts:101
+#: src/features/devtools/components/NagbarControls.ts:96
 msgid "Using actual account state"
 msgstr "Gerçek hesap durumu kullanılıyor"
 
 #. Developer nagbar status: banner follows real gift inventory state.
-#: src/features/devtools/components/NagbarControls.ts:121
+#: src/features/devtools/components/NagbarControls.ts:116
 msgid "Using actual gift inventory state"
 msgstr "Gerçek hediye envanteri durumu kullanılıyor"
 
 #. Developer nagbar status: banner follows real premium subscription state.
-#: src/features/devtools/components/NagbarControls.ts:117
+#: src/features/devtools/components/NagbarControls.ts:112
 msgid "Using actual premium state"
 msgstr "Gerçek premium durumu kullanılıyor"
 
 #. Developer nagbar status: banner follows the real app state.
-#: src/features/devtools/components/NagbarControls.ts:125
+#: src/features/devtools/components/NagbarControls.ts:120
 msgid "Using actual state"
 msgstr "Gerçek durum kullanılıyor"
 
 #. Developer nagbar status: banner follows real email verification state.
-#: src/features/devtools/components/NagbarControls.ts:105
+#: src/features/devtools/components/NagbarControls.ts:100
 msgid "Using actual verification state"
 msgstr "Gerçek doğrulama durumu kullanılıyor"
 
@@ -36071,10 +36032,8 @@ msgstr "Profilini düzenlemeden önce e-postanı doğrula. Yine de buradan öniz
 msgid "Verify your email before sending friend requests."
 msgstr "Arkadaşlık isteği göndermeden önce e-postanızı doğrulayın."
 
-#. Title of the error modal shown when an unverified account tries to join the canary testers community.
 #. Title of the error modal shown when an unverified account tries to purchase Plutonium.
 #: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:106
-#: src/features/app/components/layout/app_layout/nagbars/CanaryTesterCtaNagbar.tsx:30
 msgid "Verify your email first"
 msgstr "Önce e-postanı doğrula"
 
@@ -36537,7 +36496,7 @@ msgid "Visionary (lifetime {premiumProductName})"
 msgstr "Visionary (ömür boyu {premiumProductName})"
 
 #. Developer control label for the Visionary two-factor-authentication banner.
-#: src/features/devtools/components/NagbarControls.ts:60
+#: src/features/devtools/components/NagbarControls.ts:55
 msgid "Visionary 2FA nagbar"
 msgstr "Visionary 2FA bildirim çubuğu"
 
@@ -36800,7 +36759,7 @@ msgid "Voice region"
 msgstr "Ses bölgesi"
 
 #. Developer control label for the voice-session-restore banner.
-#: src/features/devtools/components/NagbarControls.ts:68
+#: src/features/devtools/components/NagbarControls.ts:63
 msgid "Voice session restore nagbar"
 msgstr "Ses oturumu geri yükleme bildirim çubuğu"
 
@@ -36947,11 +36906,6 @@ msgstr "Wayland'ın xdg-desktop-portal'ı seçiciye sahiptir ve tüm pencereleri
 #: src/features/voice/components/modals/screen_share_picker_modal/useNativePickerCopy.ts:33
 msgid "Wayland's xdg-desktop-portal owns the picker and shows every window and display together. There is no flag that filters it to windows only. Press open system picker, then choose a window there to get per-app audio."
 msgstr "Wayland'ın xdg-desktop-portal'ı seçiciye sahiptir ve her pencereyi ve ekranı birlikte gösterir. Yalnızca pencereleri filtreleyen bir işaret yok. Sistem seçiciyi açın, ardından uygulama başına ses almak için oradan bir pencere seçin."
-
-#. Title of the error modal shown when a flagged account is blocked from joining the canary testers community.
-#: src/features/app/components/layout/app_layout/nagbars/CanaryTesterCtaNagbar.tsx:46
-msgid "We can't add you right now"
-msgstr "Şu anda sizi ekleyemiyoruz"
 
 #. Premium checkout error shown when card verification fails unexpectedly. productName is the app name.
 #: src/features/premium/components/pages/PremiumCallbackPage.tsx:44
@@ -38136,12 +38090,6 @@ msgstr "Henüz kimseyi engellemedin."
 msgid "You haven't created any packs yet."
 msgstr "Henüz hiç paket oluşturmadın."
 
-#. Toast success shown after joining the canary testers community. {testersCommunityName} is the community name and {canaryReleaseName} is the release channel name.
-#: src/features/app/components/layout/app_layout/nagbars/CanaryTesterCtaNagbar.tsx:25
-#: src/features/channel/components/direct_message/CanaryTesterDmItem.tsx:69
-msgid "You joined {testersCommunityName}. Thanks for testing {canaryReleaseName}!"
-msgstr "{testersCommunityName} topluluğuna katıldınız. {canaryReleaseName} sürümünü test ettiğiniz için teşekkürler!"
-
 #. Intro copy in the keyboard navigation modal. {productName} is the app name.
 #: src/features/input/components/modals/KeyboardModeIntroModal.tsx:26
 msgid "You just pressed Tab. Keyboard mode is now on so you can navigate {productName} without a mouse."
@@ -38276,11 +38224,6 @@ msgstr "Arkadaşlık isteği göndermeden önce e-posta adresini doğrulaman ger
 #: src/features/app/components/alerts/DmActionErrorModal.tsx:44
 msgid "You need to verify your email address before you can start a direct message."
 msgstr "Doğrudan mesaj göndermeden önce e-posta adresinizi doğrulamanız gerekiyor."
-
-#. Body of the error modal shown when an unverified account tries to join the canary testers community.
-#: src/features/app/components/layout/app_layout/nagbars/CanaryTesterCtaNagbar.tsx:34
-msgid "You need to verify your email before you can join {testersCommunityName}."
-msgstr "{testersCommunityName} topluluğuna katılmadan önce e-postanızı doğrulamanız gerekiyor."
 
 #. Body of the error modal shown when the account email is unverified and the user tries to purchase Plutonium. Product name is interpolated.
 #: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:110
@@ -38476,11 +38419,6 @@ msgstr "Maksimum sayıda topluluktasın. Birinden ayrılıp tekrar dene."
 msgid "You're in the voice channel"
 msgstr "Sesli kanaldasınız"
 
-#. Nagbar body inviting canary release users to join the testers community. {canaryReleaseName} is the release channel name and {testersCommunityName} is the community name.
-#: src/features/app/components/layout/app_layout/nagbars/CanaryTesterCtaNagbar.tsx:102
-msgid "You're on {canaryReleaseName}. Join {testersCommunityName} to submit bug reports and feedback about upcoming builds."
-msgstr "{canaryReleaseName} sürümündesiniz. Yaklaşan yapılar hakkındaki hata raporlarını ve geri bildirimleri göndermek için {testersCommunityName} topluluğuna katılın."
-
 #. Plutonium subscription card tooltip shown when the user is on a grandfathered price that is no longer offered.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:37
 msgid "You're on a legacy rate no longer available to new subscribers."
@@ -38623,11 +38561,6 @@ msgstr "{productName} oturumunuzun süresi doldu. Bu uygulamaya yetki vermeye de
 msgid "Your account"
 msgstr "Hesabınız"
 
-#. Body of the error modal shown when a flagged account is blocked from joining the canary testers community.
-#: src/features/app/components/layout/app_layout/nagbars/CanaryTesterCtaNagbar.tsx:51
-msgid "Your account can't join {testersCommunityName} at the moment. Contact support if you think this is a mistake."
-msgstr "Hesabınız şu anda {testersCommunityName} topluluğuna katılamıyor. Bunun bir hata olduğunu düşünüyorsanız destek ekibiyle iletişime geçin."
-
 #: src/features/connection/components/pages/ConnectionCallbackPage.tsx:29
 msgid "Your account has been linked successfully. You can now close this tab and return to the app."
 msgstr "Hesabınız başarıyla bağlandı. Artık bu sekmeyi kapatıp uygulamaya dönebilirsiniz."
@@ -38635,11 +38568,6 @@ msgstr "Hesabınız başarıyla bağlandı. Artık bu sekmeyi kapatıp uygulamay
 #: src/features/app/components/dialogs/components/UnclaimedAccountAlert.tsx:26
 msgid "Your account is not yet claimed. Without an email and password, you won't be able to sign in from other devices and you could lose access to your account. Claim your account now to secure it."
 msgstr "Hesabınız henüz doğrulanmadı. E-posta ve parola olmadan başka cihazlardan giriş yapamazsınız ve hesabınıza erişiminizi kaybedebilirsiniz. Hesabınızı güvence altına almak için şimdi doğrulayın."
-
-#. Title of the error modal shown when a too-new account tries to join the canary testers community.
-#: src/features/app/components/layout/app_layout/nagbars/CanaryTesterCtaNagbar.tsx:38
-msgid "Your account is too new"
-msgstr "Hesabınız çok yeni"
 
 #: src/features/channel/components/barriers/BarrierComponents.tsx:195
 msgid "Your account is too new to send messages in this community."

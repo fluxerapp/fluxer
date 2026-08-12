@@ -17,7 +17,6 @@ export const NagbarType = {
 	VISIONARY_MFA: 'visionary-mfa',
 	VOICE_SESSION_RESTORE: 'voice-session-restore',
 	TERMS_ACCEPTANCE: 'terms-acceptance',
-	CANARY_TESTER_CTA: 'canary-tester-cta',
 	LINUX_INPUT_ACCESS: 'linux-input-access',
 	SOFTWARE_ENCODER: 'software-encoder',
 	STREAMER_MODE: 'streamer-mode',
@@ -51,7 +50,6 @@ export interface NagbarConditions {
 	canShowVisionaryMfa: boolean;
 	canShowVoiceSessionRestore: boolean;
 	needsTermsAcceptance: boolean;
-	canShowCanaryTesterCta: boolean;
 	canShowLinuxInputAccess: boolean;
 	canShowSoftwareEncoder: boolean;
 	canShowStreamerMode: boolean;

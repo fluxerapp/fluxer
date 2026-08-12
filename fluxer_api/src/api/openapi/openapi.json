@@ -16130,73 +16130,6 @@
 				}
 			}
 		},
-		"/users/@me/canary-tester/join": {
-			"post": {
-				"operationId": "join_canary_testers",
-				"summary": "Join the canary testers guild",
-				"tags": ["Users"],
-				"responses": {
-					"200": {
-						"description": "Success",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/SuccessResponse"}}}
-					},
-					"400": {
-						"description": "Bad Request - The request was malformed or contained invalid data",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"401": {
-						"description": "Unauthorized - Authentication is required or the token is invalid",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"403": {
-						"description": "Forbidden - You do not have permission to perform this action",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"429": {
-						"description": "Too Many Requests - You are being rate limited",
-						"content": {
-							"application/json": {
-								"schema": {
-									"type": "object",
-									"properties": {
-										"code": {"type": "string", "enum": ["RATE_LIMITED"]},
-										"message": {"type": "string"},
-										"retry_after": {"type": "number", "description": "Seconds to wait before retrying"},
-										"global": {"type": "boolean", "description": "Whether this is a global rate limit"}
-									},
-									"required": ["code", "message", "retry_after"]
-								}
-							}
-						},
-						"headers": {
-							"Retry-After": {
-								"description": "Number of seconds to wait before retrying (only on 429)",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Limit": {
-								"description": "The number of requests that can be made in the current window",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Remaining": {
-								"description": "The number of remaining requests that can be made",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Reset": {
-								"description": "Unix timestamp when the rate limit resets",
-								"schema": {"type": "integer"}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error - An unexpected error occurred",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					}
-				},
-				"x-mint": {"metadata": {"title": "Join the canary testers guild"}},
-				"description": "Adds the authenticated user to the hardcoded Fluxer Testers guild used for canary feedback. Restricted to non-bot users with verified email, an account at least 30 minutes old, no effective suspicious-activity flags, and not banned from the target guild. Rate-limited; surfaced via the canary nagbar.",
-				"security": [{"sessionToken": []}]
-			}
-		},
 		"/users/@me/channels": {
 			"get": {
 				"operationId": "list_private_channels",
@@ -25206,7 +25139,6 @@
 					"DISCRIMINATOR_REQUIRED",
 					"EMAIL_SERVICE_NOT_TESTABLE",
 					"EMAIL_VERIFICATION_REQUIRED",
-					"CANARY_TESTER_EMAIL_VERIFICATION_REQUIRED",
 					"DIRECT_MESSAGE_EMAIL_VERIFICATION_REQUIRED",
 					"FRIEND_REQUEST_EMAIL_VERIFICATION_REQUIRED",
 					"GUILD_CREATION_EMAIL_VERIFICATION_REQUIRED",
@@ -25522,7 +25454,6 @@
 					"This community isn't listed in discovery.",
 					"Discriminator is required.",
 					"Email service is temporarily unavailable. Please try again later.",
-					"Email verification is required for this action.",
 					"Email verification is required for this action.",
 					"Email verification is required for this action.",
 					"Email verification is required for this action.",

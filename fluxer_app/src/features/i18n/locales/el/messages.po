@@ -1303,11 +1303,6 @@ msgstr "Οθόνη του/της {streamerDisplayName}"
 msgid "{tenSeconds} seconds"
 msgstr "{tenSeconds} δευτερόλεπτα"
 
-#. Label in the channel and chat canary tester dm item. Preserve {testersCommunityName} and {canaryReleaseName}; they are inserted by code.
-#: src/features/channel/components/direct_message/CanaryTesterDmItem.tsx:33
-msgid "{testersCommunityName} is a community for {canaryReleaseName} users to share bug reports and feedback that helps shape upcoming releases. Join to chat with the team and other testers."
-msgstr "Η κοινότητα {testersCommunityName} είναι για τους χρήστες του {canaryReleaseName} ώστε να μοιράζονται αναφορές σφαλμάτων και σχόλια που βοηθούν στη διαμόρφωση των επερχόμενων εκδόσεων. Ελάτε να συνομιλήσετε με την ομάδα και άλλους δοκιμαστές."
-
 #. Template preview summary listing how many text channels, voice channels, categories, and roles will be imported.
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:147
 msgid "{textChannelCount} text, {voiceChannelCount} voice, {categoryCount} categories, {roleCount} roles"
@@ -2557,7 +2552,7 @@ msgstr "Προσθέστε αρχεία από τον υπολογιστή σα�
 msgid "Add friend"
 msgstr "Προσθήκη φίλου"
 
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:311
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:307
 msgid "Add friends"
 msgstr "Προσθήκη φίλων"
 
@@ -3914,7 +3909,7 @@ msgid "Are you sure you want to delete <0>{0}</0>? This cannot be undone."
 msgstr "Είστε σίγουροι ότι θέλετε να διαγράψετε το <0>{0}</0>; Αυτή η ενέργεια δεν μπορεί να αναιρεθεί."
 
 #. Body of the destructive purge-personal-notes confirmation alert. Keep tone serious and explicit about irreversibility.
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:72
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:68
 msgid "Are you sure you want to delete every message in your personal notes? This will permanently remove all messages and their attachments. This action cannot be undone."
 msgstr "Είστε σίγουροι ότι θέλετε να διαγράψετε όλα τα μηνύματα στις προσωπικές σας σημειώσεις; Αυτό θα καταργήσει οριστικά όλα τα μηνύματα και τα συνημμένα τους. Αυτή η ενέργεια δεν μπορεί να αναιρεθεί."
 
@@ -5793,11 +5788,6 @@ msgstr "Δεν είναι δυνατή η επικόλληση εικόνας ε
 #: src/features/messaging/components/alerts/AttachmentPermissionDeniedModal.tsx:13
 msgid "Can't upload files here"
 msgstr "Δεν μπορείς να ανεβάσεις αρχεία εδώ"
-
-#. Developer / debug surface — keep terse and technical. Label in the developer Nagbar controls panel for the canary-tester CTA banner.
-#: src/features/devtools/components/NagbarControls.ts:27
-msgid "Canary tester CTA nagbar"
-msgstr "Γραμμή ειδοποιήσεων για δοκιμαστές Canary CTA"
 
 #. Action label for dismissing a mass-mention warning.
 #. Button label on a scheduled message row that cancels (deletes) the scheduled send.
@@ -7908,7 +7898,7 @@ msgid "Community message notifications"
 msgstr "Ειδοποιήσεις μηνυμάτων κοινότητας"
 
 #. Developer control label for the community MFA requirement banner.
-#: src/features/devtools/components/NagbarControls.ts:76
+#: src/features/devtools/components/NagbarControls.ts:71
 msgid "Community MFA requirement nagbar"
 msgstr "Μπάρα υπενθύμισης απαίτησης MFA κοινότητας"
 
@@ -8955,16 +8945,6 @@ msgstr "Γραμμή ειδοποιήσεων για κατεστραμμένη 
 msgid "Could not decode this audio file."
 msgstr "Δεν ήταν δυνατή η αποκωδικοποίηση αυτού του αρχείου ήχου."
 
-#. Title of the error modal shown when joining the canary testers community fails. Preserve {testersCommunityName}; it is inserted by code.
-#: src/features/channel/components/direct_message/CanaryTesterDmItem.tsx:44
-msgid "Could not join {testersCommunityName}"
-msgstr "Αδυναμία συμμετοχής στο {testersCommunityName}"
-
-#. Description text in the channel and chat canary tester dm item. Preserve {testersCommunityName}; it is inserted by code.
-#: src/features/channel/components/direct_message/CanaryTesterDmItem.tsx:39
-msgid "Could not join {testersCommunityName}. Try again later."
-msgstr "Δεν ήταν δυνατή η συμμετοχή στην κοινότητα {testersCommunityName}. Δοκιμάστε ξανά αργότερα."
-
 #. Error shown when the setup wizard fails to load the instance configuration.
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:91
 msgid "Could not load the instance configuration. Try reloading the page."
@@ -9185,11 +9165,6 @@ msgstr "Δεν ήταν δυνατή η εγκατάσταση αυτού του
 #: src/features/invite/commands/InviteCommands.tsx:111
 msgid "Couldn't install this sticker pack. Try again later."
 msgstr "Δεν ήταν δυνατή η εγκατάσταση αυτού του πακέτου αυτοκόλλητων. Δοκιμάστε ξανά αργότερα."
-
-#. Title of the generic fallback error modal shown when joining the canary testers community fails.
-#: src/features/app/components/layout/app_layout/nagbars/CanaryTesterCtaNagbar.tsx:56
-msgid "Couldn't join {testersCommunityName}"
-msgstr "Αδυναμία συμμετοχής στην κοινότητα {testersCommunityName}"
 
 #. Error modal title shown when accepting a community invite fails.
 #: src/features/invite/components/alerts/InviteAcceptFailedModal.tsx:9
@@ -9637,7 +9612,7 @@ msgstr "Φόρμα δημιουργίας κοινότητας"
 
 #. Accessible label for the create-DM trigger in the DM list header.
 #. Button or menu action label in the create dm modal utils helper. Keep it concise.
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:98
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:94
 #: src/features/channel/utils/CreateDMModalUtils.tsx:35
 msgid "Create DM"
 msgstr "Δημιουργία νέας συνομιλίας"
@@ -9963,12 +9938,12 @@ msgid "Current uses:"
 msgstr "Τρέχουσες χρήσεις:"
 
 #. Developer nagbar status: the banner is dismissed in the current real state.
-#: src/features/devtools/components/NagbarControls.ts:109
+#: src/features/devtools/components/NagbarControls.ts:104
 msgid "Currently dismissed"
 msgstr "Προς το παρόν απορριφθεί"
 
 #. Developer nagbar status: the banner is showing in the current real state.
-#: src/features/devtools/components/NagbarControls.ts:113
+#: src/features/devtools/components/NagbarControls.ts:108
 msgid "Currently showing"
 msgstr "Εμφανίζεται τώρα"
 
@@ -11086,7 +11061,7 @@ msgid "Desktop inactivity before mobile push"
 msgstr "Αδράνεια στην επιφάνεια εργασίας πριν από την αποστολή ειδοποίησης στην κινητή συσκευή"
 
 #. Developer control label for the desktop-notification banner.
-#: src/features/devtools/components/NagbarControls.ts:40
+#: src/features/devtools/components/NagbarControls.ts:35
 msgid "Desktop notification nagbar"
 msgstr "Γραμμή ειδοποιήσεων για ειδοποιήσεις επιφάνειας εργασίας"
 
@@ -11354,7 +11329,7 @@ msgstr "Προεπισκοπήσεις απευθείας μηνυμάτων"
 #. Generic section heading / label for the direct messages area.
 #. Summary row label for the direct messages choice in the setup wizard.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:347
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:598
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:592
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:218
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:255
 msgid "Direct messages"
@@ -12661,7 +12636,7 @@ msgid "Email update required"
 msgstr "Απαιτείται ενημέρωση email"
 
 #. Developer control label for the email-verification banner.
-#: src/features/devtools/components/NagbarControls.ts:36
+#: src/features/devtools/components/NagbarControls.ts:31
 msgid "Email verification nagbar"
 msgstr "Μπάρα ειδοποιήσεων επαλήθευσης email"
 
@@ -14954,12 +14929,12 @@ msgid "For your security, please confirm it's you to continue."
 msgstr "Για την ασφάλειά σας, επιβεβαιώστε ότι είστε εσείς για να συνεχίσετε."
 
 #. Developer nagbar override status: the banner is forced to hide.
-#: src/features/devtools/components/NagbarControls.ts:97
+#: src/features/devtools/components/NagbarControls.ts:92
 msgid "Force disabled"
 msgstr "Αναγκαστική απενεργοποίηση"
 
 #. Developer nagbar override status: the banner is forced to show.
-#: src/features/devtools/components/NagbarControls.ts:93
+#: src/features/devtools/components/NagbarControls.ts:88
 msgid "Force enabled"
 msgstr "Ενεργοποίηση με εξαναγκασμό"
 
@@ -15236,7 +15211,7 @@ msgstr "Φιλικό bot"
 #. Profile timezone privacy option label. Allows friends to see local time.
 #. Quick switcher tab label that lists friends.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:523
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:518
 #: src/features/connection/components/modals/EditConnectionModal.tsx:86
 #: src/features/search/utils/QuickSwitcherModalUtils.tsx:47
 #: src/features/user/components/modals/tabs/my_profile_tab/TimezoneProfileSettings.tsx:63
@@ -15625,7 +15600,7 @@ msgid "Gift inventory flow"
 msgstr "Ροή αποθέματος δώρων"
 
 #. Developer control label for the gift-inventory banner.
-#: src/features/devtools/components/NagbarControls.ts:56
+#: src/features/devtools/components/NagbarControls.ts:51
 msgid "Gift inventory nagbar"
 msgstr "Γραμμή ειδοποιήσεων αποθέματος δώρων"
 
@@ -17967,7 +17942,7 @@ msgid "Invites disabled"
 msgstr "Οι προσκλήσεις απενεργοποιήθηκαν"
 
 #. Developer control label for the invites-disabled banner.
-#: src/features/devtools/components/NagbarControls.ts:72
+#: src/features/devtools/components/NagbarControls.ts:67
 msgid "Invites disabled nagbar"
 msgstr "Μπάρα ειδοποιήσεων απενεργοποιημένων προσκλήσεων"
 
@@ -18081,13 +18056,6 @@ msgstr "Συμμετοχή στο {communityName}"
 #: src/features/app/components/layout/app_layout/nagbars/GuildMembershipCtaNagbar.tsx:24
 msgid "Join {communityName} to chat with the team and stay up to date."
 msgstr "Εγγραφείτε στην κοινότητα {communityName} για να συνομιλήσετε με την ομάδα και να μείνετε ενημερωμένοι."
-
-#. Button or menu action label in the channel and chat canary tester dm item. Keep it concise. Preserve {testersCommunityName}; it is inserted by code.
-#. CTA button label for joining the canary testers community. testersCommunityName is a community name.
-#: src/features/app/components/layout/app_layout/nagbars/CanaryTesterCtaNagbar.tsx:98
-#: src/features/channel/components/direct_message/CanaryTesterDmItem.tsx:28
-msgid "Join {testersCommunityName}"
-msgstr "Συμμετοχή στο {testersCommunityName}"
 
 #. Action button label in the add community modal. Starts the join-by-invite-code flow.
 #: src/features/guild/components/modals/add_guild_modal/shared.ts:101
@@ -20385,7 +20353,7 @@ msgstr "Μήνυμα: {0}."
 #. Short label in the inline. Keep it concise.
 #. Short label in the keybinds tab. Keep it concise.
 #: src/features/channel/components/ChannelChatLayout.tsx:16
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:280
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:276
 #: src/features/input/components/modals/KeyboardShortcutsCheatsheetModal.tsx:28
 #: src/features/user/components/modals/tabs/appearance_tab/AppearanceTabInline.tsx:31
 #: src/features/user/components/modals/tabs/AppearanceTab.tsx:39
@@ -21532,7 +21500,7 @@ msgstr "Νέα ομάδα"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Tooltip on the new message button at the top of the DM list.
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:94
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:90
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:159
 msgid "New message"
 msgstr "Νέο μήνυμα"
@@ -23075,7 +23043,7 @@ msgid "Open profile for {nickname}"
 msgstr "Άνοιγμα προφίλ για {nickname}"
 
 #. Accessible label and tooltip for the search field at the top of the DM list. Opens the quick switcher.
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:90
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:86
 msgid "Open quick switcher"
 msgstr "Άνοιγμα γρήγορης εναλλαγής"
 
@@ -23881,7 +23849,7 @@ msgid "Personal notes"
 msgstr "Προσωπικές σημειώσεις"
 
 #. Toast shown when triggering the purge personal notes flow on an already empty self-DM.
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:86
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:82
 msgid "Personal notes were already empty"
 msgstr "Οι προσωπικές σημειώσεις ήταν ήδη κενές"
 
@@ -24395,12 +24363,12 @@ msgid "Premium badge"
 msgstr "Σήμα Premium"
 
 #. Developer control label for the premium-expired banner.
-#: src/features/devtools/components/NagbarControls.ts:48
+#: src/features/devtools/components/NagbarControls.ts:43
 msgid "Premium expired nagbar"
 msgstr "Μπάρα ειδοποιήσεων για λήξη Premium"
 
 #. Developer control label for the premium grace-period banner.
-#: src/features/devtools/components/NagbarControls.ts:44
+#: src/features/devtools/components/NagbarControls.ts:39
 msgid "Premium grace period nagbar"
 msgstr "Γραμμή ειδοποιήσεων περιόδου χάριτος Premium"
 
@@ -24410,7 +24378,7 @@ msgid "Premium model"
 msgstr "Μοντέλο Premium"
 
 #. Developer control label for the premium-onboarding banner.
-#: src/features/devtools/components/NagbarControls.ts:52
+#: src/features/devtools/components/NagbarControls.ts:47
 msgid "Premium onboarding nagbar"
 msgstr "Γραμμή ειδοποιήσεων ενσωμάτωσης premium"
 
@@ -24966,7 +24934,7 @@ msgstr "Οι αγορές δεν είναι διαθέσιμες"
 
 #. Confirm button label on the purge-personal-notes destructive alert.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:78
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:74
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:248
 msgid "Purge"
 msgstr "Εκκαθάριση"
@@ -24977,7 +24945,7 @@ msgid "Purge messages"
 msgstr "Εκκαθάριση μηνυμάτων"
 
 #. Title of the destructive confirmation alert when wiping the personal notes self-DM. Keep tone serious.
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:68
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:64
 #: src/features/ui/action_menu/PersonalNotesContextMenu.tsx:26
 msgid "Purge personal notes"
 msgstr "Εκκαθάριση προσωπικών σημειώσεων"
@@ -24993,7 +24961,7 @@ msgid "Purge this sticker from storage and CDN"
 msgstr "Διαγραφή αυτού του αυτοκόλλητου από τον χώρο αποθήκευσης και το CDN"
 
 #. Toast confirmation after wiping personal notes. deletedCount is the number of messages removed.
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:82
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:78
 msgid "Purged {deletedCount} messages from personal notes"
 msgstr "Διαγράφηκαν {deletedCount} μηνύματα από τις προσωπικές σημειώσεις"
 
@@ -25129,7 +25097,7 @@ msgstr "Γρήγορες αντιδράσεις"
 
 #. Accessible label for the desktop quick switcher modal.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/channel/components/direct_message/DirectMessageList.tsx:484
+#: src/features/channel/components/direct_message/DirectMessageList.tsx:479
 #: src/features/search/components/quick_switcher/QuickSwitcherModal.tsx:77
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:50
 msgid "Quick switcher"
@@ -30199,10 +30167,8 @@ msgstr "Κάτι πήγε στραβά."
 #. Body of the generic fallback error modal shown when deleting a custom emoji fails.
 #. Body of the generic fallback error modal shown when generating a shareable theme link fails.
 #. Body of the generic fallback error modal shown when joining a discovery community fails.
-#. Body of the generic fallback error modal shown when joining the canary testers community fails.
 #. Generic fallback body shown in an error modal when an action fails for an unexpected reason.
 #: src/features/app/components/alerts/CommonErrorModalDescriptors.ts:5
-#: src/features/app/components/layout/app_layout/nagbars/CanaryTesterCtaNagbar.tsx:60
 #: src/features/discovery/discovery/DiscoveryGuildCard.tsx:36
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:128
 #: src/features/theme/components/modals/ShareThemeModal.tsx:50
@@ -31774,7 +31740,7 @@ msgid "Temporary membership"
 msgstr "Προσωρινή ιδιότητα μέλους"
 
 #. Developer control label for the terms-acceptance banner.
-#: src/features/devtools/components/NagbarControls.ts:64
+#: src/features/devtools/components/NagbarControls.ts:59
 msgid "Terms acceptance nagbar"
 msgstr "Μπάρα αποδοχής όρων"
 
@@ -32327,11 +32293,6 @@ msgstr "Τρίτα μέρη"
 #: src/features/relationship/components/alerts/RelationshipErrorModalUtils.tsx:89
 msgid "This account can't be blocked."
 msgstr "Αυτός ο λογαριασμός δεν μπορεί να αποκλειστεί."
-
-#. Body of the error modal shown when a too-new account tries to join the canary testers community.
-#: src/features/app/components/layout/app_layout/nagbars/CanaryTesterCtaNagbar.tsx:42
-msgid "This account is too new to join {testersCommunityName} yet. Try again in a little while."
-msgstr "Αυτός ο λογαριασμός είναι πολύ καινούριος για να συμμετάσχει στην κοινότητα {testersCommunityName} ακόμα. Δοκιμάστε ξανά σε λίγο."
 
 #: src/features/user/components/modals/tabs/applications_tab/ApplicationDetail.tsx:415
 msgid "This action cannot be undone. All associated data, including the bot user, will be permanently deleted."
@@ -34164,7 +34125,7 @@ msgid "Unclaimed account"
 msgstr "Ανενεργός λογαριασμός"
 
 #. Developer control label for the unclaimed-account banner.
-#: src/features/devtools/components/NagbarControls.ts:32
+#: src/features/devtools/components/NagbarControls.ts:27
 msgid "Unclaimed account nagbar"
 msgstr "Μπάρα ειδοποιήσεων για μη διεκδικημένο λογαριασμό"
 
@@ -35782,27 +35743,27 @@ msgid "Uses:"
 msgstr "Χρήσεις:"
 
 #. Developer nagbar status: banner follows real account state.
-#: src/features/devtools/components/NagbarControls.ts:101
+#: src/features/devtools/components/NagbarControls.ts:96
 msgid "Using actual account state"
 msgstr "Χρήση της πραγματικής κατάστασης λογαριασμού"
 
 #. Developer nagbar status: banner follows real gift inventory state.
-#: src/features/devtools/components/NagbarControls.ts:121
+#: src/features/devtools/components/NagbarControls.ts:116
 msgid "Using actual gift inventory state"
 msgstr "Χρησιμοποιείται η πραγματική κατάσταση αποθέματος δώρων"
 
 #. Developer nagbar status: banner follows real premium subscription state.
-#: src/features/devtools/components/NagbarControls.ts:117
+#: src/features/devtools/components/NagbarControls.ts:112
 msgid "Using actual premium state"
 msgstr "Χρήση της πραγματικής κατάστασης premium"
 
 #. Developer nagbar status: banner follows the real app state.
-#: src/features/devtools/components/NagbarControls.ts:125
+#: src/features/devtools/components/NagbarControls.ts:120
 msgid "Using actual state"
 msgstr "Χρήση της πραγματικής κατάστασης"
 
 #. Developer nagbar status: banner follows real email verification state.
-#: src/features/devtools/components/NagbarControls.ts:105
+#: src/features/devtools/components/NagbarControls.ts:100
 msgid "Using actual verification state"
 msgstr "Χρήση της πραγματικής κατάστασης επαλήθευσης"
 
@@ -36071,10 +36032,8 @@ msgstr "Επαληθεύστε το email σας πριν επεξεργαστε
 msgid "Verify your email before sending friend requests."
 msgstr "Επαληθεύστε το email σας πριν στείλετε αιτήματα φιλίας."
 
-#. Title of the error modal shown when an unverified account tries to join the canary testers community.
 #. Title of the error modal shown when an unverified account tries to purchase Plutonium.
 #: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:106
-#: src/features/app/components/layout/app_layout/nagbars/CanaryTesterCtaNagbar.tsx:30
 msgid "Verify your email first"
 msgstr "Επαληθεύστε πρώτα το email σας"
 
@@ -36537,7 +36496,7 @@ msgid "Visionary (lifetime {premiumProductName})"
 msgstr "Visionary (διάρκεια ζωής {premiumProductName})"
 
 #. Developer control label for the Visionary two-factor-authentication banner.
-#: src/features/devtools/components/NagbarControls.ts:60
+#: src/features/devtools/components/NagbarControls.ts:55
 msgid "Visionary 2FA nagbar"
 msgstr "Μπάρα ειδοποιήσεων 2FA Visionary"
 
@@ -36800,7 +36759,7 @@ msgid "Voice region"
 msgstr "Περιοχή φωνής"
 
 #. Developer control label for the voice-session-restore banner.
-#: src/features/devtools/components/NagbarControls.ts:68
+#: src/features/devtools/components/NagbarControls.ts:63
 msgid "Voice session restore nagbar"
 msgstr "Γραμμή ειδοποιήσεων επαναφοράς φωνητικής συνεδρίας"
 
@@ -36947,11 +36906,6 @@ msgstr "Το xdg-desktop-portal του Wayland διαχειρίζεται την
 #: src/features/voice/components/modals/screen_share_picker_modal/useNativePickerCopy.ts:33
 msgid "Wayland's xdg-desktop-portal owns the picker and shows every window and display together. There is no flag that filters it to windows only. Press open system picker, then choose a window there to get per-app audio."
 msgstr "Το xdg-desktop-portal του Wayland διαχειρίζεται την επιλογή και εμφανίζει όλα τα παράθυρα και τις οθόνες μαζί. Δεν υπάρχει επιλογή που να φιλτράρει μόνο τα παράθυρα. Πατήστε \"Άνοιγμα επιλογέα συστήματος\" και, στη συνέχεια, επιλέξτε ένα παράθυρο για να λάβετε ήχο ανά εφαρμογή."
-
-#. Title of the error modal shown when a flagged account is blocked from joining the canary testers community.
-#: src/features/app/components/layout/app_layout/nagbars/CanaryTesterCtaNagbar.tsx:46
-msgid "We can't add you right now"
-msgstr "Δεν μπορούμε να σας προσθέσουμε αυτήν τη στιγμή"
 
 #. Premium checkout error shown when card verification fails unexpectedly. productName is the app name.
 #: src/features/premium/components/pages/PremiumCallbackPage.tsx:44
@@ -38136,12 +38090,6 @@ msgstr "Δεν έχεις μπλοκάρει κανέναν ακόμα."
 msgid "You haven't created any packs yet."
 msgstr "Δεν έχεις δημιουργήσει ακόμα πακέτα."
 
-#. Toast success shown after joining the canary testers community. {testersCommunityName} is the community name and {canaryReleaseName} is the release channel name.
-#: src/features/app/components/layout/app_layout/nagbars/CanaryTesterCtaNagbar.tsx:25
-#: src/features/channel/components/direct_message/CanaryTesterDmItem.tsx:69
-msgid "You joined {testersCommunityName}. Thanks for testing {canaryReleaseName}!"
-msgstr "Έγινες μέλος στην κοινότητα {testersCommunityName}. Ευχαριστούμε που δοκιμάζεις το {canaryReleaseName}!"
-
 #. Intro copy in the keyboard navigation modal. {productName} is the app name.
 #: src/features/input/components/modals/KeyboardModeIntroModal.tsx:26
 msgid "You just pressed Tab. Keyboard mode is now on so you can navigate {productName} without a mouse."
@@ -38276,11 +38224,6 @@ msgstr "Πρέπει να επιβεβαιώσεις τη διεύθυνση ema
 #: src/features/app/components/alerts/DmActionErrorModal.tsx:44
 msgid "You need to verify your email address before you can start a direct message."
 msgstr "Πρέπει να επαληθεύσετε τη διεύθυνση email σας πριν ξεκινήσετε μια απευθείας συνομιλία."
-
-#. Body of the error modal shown when an unverified account tries to join the canary testers community.
-#: src/features/app/components/layout/app_layout/nagbars/CanaryTesterCtaNagbar.tsx:34
-msgid "You need to verify your email before you can join {testersCommunityName}."
-msgstr "Πρέπει να επαληθεύσετε το email σας πριν μπορέσετε να συμμετάσχετε στην κοινότητα {testersCommunityName}."
 
 #. Body of the error modal shown when the account email is unverified and the user tries to purchase Plutonium. Product name is interpolated.
 #: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:110
@@ -38476,11 +38419,6 @@ msgstr "Έχετε φτάσει τον μέγιστο αριθμό κοινοτ�
 msgid "You're in the voice channel"
 msgstr "Είστε στο κανάλι φωνητικής συνομιλίας"
 
-#. Nagbar body inviting canary release users to join the testers community. {canaryReleaseName} is the release channel name and {testersCommunityName} is the community name.
-#: src/features/app/components/layout/app_layout/nagbars/CanaryTesterCtaNagbar.tsx:102
-msgid "You're on {canaryReleaseName}. Join {testersCommunityName} to submit bug reports and feedback about upcoming builds."
-msgstr "Χρησιμοποιείτε την έκδοση {canaryReleaseName}. Εγγραφείτε στην κοινότητα {testersCommunityName} για να υποβάλετε αναφορές σφαλμάτων και σχόλια σχετικά με τις επερχόμενες εκδόσεις."
-
 #. Plutonium subscription card tooltip shown when the user is on a grandfathered price that is no longer offered.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:37
 msgid "You're on a legacy rate no longer available to new subscribers."
@@ -38623,11 +38561,6 @@ msgstr "Η περίοδος λειτουργίας σας στο {productName} �
 msgid "Your account"
 msgstr "Ο λογαριασμός σας"
 
-#. Body of the error modal shown when a flagged account is blocked from joining the canary testers community.
-#: src/features/app/components/layout/app_layout/nagbars/CanaryTesterCtaNagbar.tsx:51
-msgid "Your account can't join {testersCommunityName} at the moment. Contact support if you think this is a mistake."
-msgstr "Ο λογαριασμός σας δεν μπορεί να συμμετάσχει στην κοινότητα {testersCommunityName} αυτήν τη στιγμή. Επικοινωνήστε με την υποστήριξη αν πιστεύετε ότι πρόκειται για λάθος."
-
 #: src/features/connection/components/pages/ConnectionCallbackPage.tsx:29
 msgid "Your account has been linked successfully. You can now close this tab and return to the app."
 msgstr "Ο λογαριασμός σας έχει συνδεθεί επιτυχώς. Μπορείτε τώρα να κλείσετε αυτήν την καρτέλα και να επιστρέψετε στην εφαρμογή."
@@ -38635,11 +38568,6 @@ msgstr "Ο λογαριασμός σας έχει συνδεθεί επιτυχ�
 #: src/features/app/components/dialogs/components/UnclaimedAccountAlert.tsx:26
 msgid "Your account is not yet claimed. Without an email and password, you won't be able to sign in from other devices and you could lose access to your account. Claim your account now to secure it."
 msgstr "Ο λογαριασμός σας δεν έχει διεκδικηθεί ακόμα. Χωρίς email και κωδικό πρόσβασης, δεν θα μπορείτε να συνδεθείτε από άλλες συσκευές και μπορεί να χάσετε την πρόσβαση στον λογαριασμό σας. Διεκδικήστε τον λογαριασμό σας τώρα για να τον ασφαλίσετε."
-
-#. Title of the error modal shown when a too-new account tries to join the canary testers community.
-#: src/features/app/components/layout/app_layout/nagbars/CanaryTesterCtaNagbar.tsx:38
-msgid "Your account is too new"
-msgstr "Ο λογαριασμός σας είναι πολύ καινούριος"
 
 #: src/features/channel/components/barriers/BarrierComponents.tsx:195
 msgid "Your account is too new to send messages in this community."
