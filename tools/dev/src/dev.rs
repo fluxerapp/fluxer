@@ -5,12 +5,12 @@ use crate::manifest::{
     ADMIN_PORT, ANY_HOST, API_PORT, APP_PORT, APP_PROXY_PORT, DEV_PROXY_PORT, LOOPBACK_HOST,
     MEDIA_PROXY_PORT, rust_services,
 };
+use crate::object_store::s3_endpoint;
 use crate::paths::{DESKTOP_DIR, ROOT};
 use crate::proc::{
     PNPM_INSTALL_ENV, RESTART_LIMIT, RESTART_WINDOW, RunOptions, ShutdownSignal, format_command,
     merged_env, restart_budget_exceeded, run_command, wait_http,
 };
-use crate::smoke::s3_endpoint;
 use anyhow::{Result, bail};
 use std::collections::{BTreeMap, VecDeque};
 use std::path::{Path, PathBuf};

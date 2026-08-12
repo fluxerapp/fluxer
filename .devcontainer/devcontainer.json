@@ -6,8 +6,7 @@
 	"shutdownAction": "stopCompose",
 	"remoteUser": "vscode",
 	"remoteEnv": {
-		"DOCKER_HOST": "unix:///var/run/docker.sock",
-		"KUBECONFIG": "/workspaces/fluxer/.fluxer/k8s/local-kubeconfig"
+		"DOCKER_HOST": "unix:///var/run/docker.sock"
 	},
 	"runServices": ["workspace", "postgres", "valkey", "nats", "livekit", "meilisearch", "mailpit"],
 	"forwardPorts": [

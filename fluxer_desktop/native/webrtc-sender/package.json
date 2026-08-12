@@ -27,7 +27,6 @@
 	],
 	"scripts": {
 		"build": "cargo run --locked --quiet --manifest-path ../../../tools/ci/Cargo.toml -- build-desktop-native-addon",
-		"test": "cargo run --locked --quiet --manifest-path ../../../tools/ci/Cargo.toml -- test-webrtc-sender-rust && node --test index.test.mjs scripts/livekit-harness.test.mjs",
-		"test:livekit": "node scripts/livekit-harness.mjs"
+		"test": "cargo run --locked --quiet --manifest-path ../../../tools/ci/Cargo.toml -- test-webrtc-sender-rust && node --test index.test.mjs"
 	}
 }

@@ -395,9 +395,6 @@ importers:
       knip:
         specifier: 'catalog:'
         version: 5.85.0(@types/node@25.3.0)(typescript@5.9.3)
-      tsx:
-        specifier: 'catalog:'
-        version: 4.21.0
 
   fluxer_admin:
     devDependencies:

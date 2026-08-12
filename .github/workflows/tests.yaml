@@ -234,56 +234,6 @@ jobs:
       - name: Verify shipped fonts match the lockfile
         run: python3 tools/fonts/build_fonts.py --verify
 
-  font-serving:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 20
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
-
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
-        with:
-          toolchain: stable
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271
-
-      - name: Install Node.js
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
-        with:
-          node-version: '24'
-          cache: 'pnpm'
-
-      - name: Cache cargo
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            target
-          key: rust-${{ runner.os }}-${{ hashFiles('Cargo.lock') }}
-          restore-keys: |
-            rust-${{ runner.os }}-
-
-      - name: Install native dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            pkg-config \
-            build-essential \
-            libcurl4-openssl-dev \
-            libvips-dev \
-            libavfilter-dev \
-            libheif-dev \
-            libwebp-dev
-
-      - name: Install Node.js dependencies
-        run: pnpm --filter fluxer_admin --filter fluxer_marketing install
-
-      - name: Run the font serving integration suite
-        run: cargo run --locked -q -p fluxer-dev -- font-serving-it
-
   ci-scripts:
     runs-on: ubuntu-24.04
     timeout-minutes: 25

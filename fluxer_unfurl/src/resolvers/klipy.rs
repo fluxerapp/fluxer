@@ -463,66 +463,6 @@ mod tests {
         assert!(media.thumbnail.is_none());
     }
 
-    #[tokio::test]
-    #[ignore = "hits the live KLIPY API and local media proxy"]
-    async fn live_klipy_embed_resolves_real_media() {
-        let api_key = std::env::var("FLUXER_KLIPY_API_KEY").expect("FLUXER_KLIPY_API_KEY set");
-        let media_proxy_endpoint =
-            std::env::var("FLUXER_MEDIA_PROXY_ENDPOINT").expect("FLUXER_MEDIA_PROXY_ENDPOINT set");
-        let media_proxy_secret = std::env::var("FLUXER_MEDIA_PROXY_SECRET_KEY")
-            .expect("FLUXER_MEDIA_PROXY_SECRET_KEY set");
-        let media_proxy_public_endpoint = std::env::var("FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT").ok();
-        let raw_url = std::env::var("FLUXER_KLIPY_LIVE_URL")
-            .unwrap_or_else(|_| "https://klipy.com/gifs/goatplaybanjo-chat-4".to_owned());
-
-        let resolver = KlipyResolver;
-        let original_url = Url::parse(&raw_url).expect("valid live KLIPY URL");
-        let url = resolver
-            .transform_url(&original_url)
-            .unwrap_or_else(|| original_url.clone());
-        let media_proxy = crate::media_proxy::MediaProxyClient::new_with_public_endpoint(
-            &media_proxy_endpoint,
-            &media_proxy_secret,
-            media_proxy_public_endpoint.as_deref(),
-            reqwest::Client::new(),
-        );
-        let ctx = ResolveContext {
-            url,
-            original_url: original_url.clone(),
-            http_client: reqwest::Client::new(),
-            nsfw_mode: crate::types::NsfwMode::Allow,
-            media_proxy: &media_proxy,
-            static_cdn_endpoint: "",
-            youtube_api_key: None,
-            klipy_api_key: Some(api_key),
-        };
-
-        let result = resolver.resolve(&ctx).await.expect("resolve KLIPY embed");
-        assert_eq!(result.embeds.len(), 1);
-        let embed = &result.embeds[0];
-        assert_eq!(embed.embed_type, "gifv");
-        assert_eq!(embed.url.as_deref(), Some(original_url.as_str()));
-        assert_eq!(
-            embed
-                .provider
-                .as_ref()
-                .and_then(|provider| provider.name.as_deref()),
-            Some("KLIPY")
-        );
-        let video = embed.video.as_ref().expect("video media resolved");
-        assert!(
-            video
-                .url
-                .as_deref()
-                .is_some_and(|url| url.starts_with("https://"))
-        );
-        assert!(video.width.is_some_and(|width| width > 0));
-        assert!(video.height.is_some_and(|height| height > 0));
-        assert!(video.content_type.as_deref().is_some_and(|content_type| {
-            content_type.starts_with("video/") || content_type == "image/gif"
-        }));
-    }
-
     #[test]
     fn resolve_relative_url_rejects_non_http() {
         let base = Url::parse("https://klipy.com/gifs/test").unwrap();

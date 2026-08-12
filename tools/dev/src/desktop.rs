@@ -109,18 +109,9 @@ pub fn electron_args(args: &[String]) -> Vec<String> {
     runtime_args
 }
 
-pub fn electron_command(args: &[String], headless: bool) -> Vec<String> {
+pub fn electron_command(args: &[String]) -> Vec<String> {
     let mut command = base_electron_command();
     command.extend(electron_args(args));
-    if headless
-        && cfg!(target_os = "linux")
-        && env::var_os("DISPLAY").is_none()
-        && crate::paths::which("xvfb-run").is_some()
-    {
-        let mut wrapped = vec!["xvfb-run".to_owned(), "-a".to_owned()];
-        wrapped.extend(command);
-        return wrapped;
-    }
     command
 }
 
@@ -149,28 +140,6 @@ fn disclaimed_electron_command(launcher: &Path, electron_binary: &Path) -> Vec<S
         electron_binary.to_string_lossy().into_owned(),
         ".".to_owned(),
     ]
-}
-
-pub fn smoke_build_desktop() -> Result<()> {
-    install_desktop()?;
-    build_desktop(true)?;
-    let command = electron_command(
-        &[
-            "--fluxer-debug-info".to_owned(),
-            format!("--fluxer-app-url={LOCAL_APP_URL}"),
-        ],
-        true,
-    );
-    let args: Vec<_> = command.iter().map(String::as_str).collect();
-    run_command(
-        &args,
-        RunOptions {
-            cwd: DESKTOP_DIR.as_path(),
-            env: vec![("FLUXER_SKIP_NATIVE".to_owned(), Some("true".to_owned()))],
-            ..RunOptions::default()
-        },
-    )
-    .map(drop)
 }
 
 fn packages_for_windows(args: &[String]) -> bool {
@@ -261,7 +230,7 @@ fn run_desktop_process(app_url: &str, extra_args: &[String]) -> Result<()> {
         "--fluxer-log-renderer-console".to_owned(),
     ];
     args.extend(extra_args.iter().cloned());
-    let command = electron_command(&args, false);
+    let command = electron_command(&args);
     let refs: Vec<_> = command.iter().map(String::as_str).collect();
     run_command(
         &refs,

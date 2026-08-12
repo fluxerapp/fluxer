@@ -16,7 +16,6 @@ services:
       FLUXER_POSTGRES_HOST: postgres
       FLUXER_SELF_HOSTED: "true"
       DOCKER_HOST: unix:///var/run/docker.sock
-      KUBECONFIG: /workspaces/fluxer/.fluxer/k8s/local-kubeconfig
     volumes:
       - ..:/workspaces/fluxer:cached
       - type: volume

@@ -79,8 +79,6 @@ RUN apt-get update \
 		rpm \
 		unzip \
 		webp \
-		xauth \
-		xvfb \
 		xz-utils \
 		xdg-utils \
 		zstd \
@@ -99,8 +97,6 @@ RUN apt-get update \
 		hyperfine \
 		iproute2 \
 		iputils-ping \
-		kind \
-		kubernetes-client \
 		lldb \
 		lsof \
 		ltrace \
@@ -177,7 +173,6 @@ COPY --from=seaweedfs /usr/bin/weed /usr/local/bin/weed
 USER ${USERNAME}
 
 ENV DOCKER_HOST="unix:///var/run/docker.sock" \
-	KUBECONFIG="/workspaces/fluxer/.fluxer/k8s/local-kubeconfig" \
 	PATH="/home/${USERNAME}/.cargo/bin:${PATH}" \
 	PNPM_HOME="/home/${USERNAME}/.local/share/pnpm"
 

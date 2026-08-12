@@ -35,9 +35,6 @@
 		".": {
 			"project": ["scripts/**/*.mjs"]
 		},
-		"fluxer_api": {
-			"entry": ["src/api/test/fake-ncmec/Bin.ts"]
-		},
 		"fluxer_app": {
 			"entry": ["lingui.config.js", "scripts/build-sw.mjs", "scripts/Generate*.ts"],
 			"ignoreDependencies": ["@lingui/swc-plugin"]
@@ -52,7 +49,6 @@
 				"native/*/loader-diagnostics.cjs",
 				"native/*/*.test.mjs",
 				"native/*/test/**/*.mjs",
-				"native/*/vm_tests/*.mjs",
 				"native/*/scripts/**/*.mjs"
 			],
 			"project": ["src/**/*.{ts,tsx,mjs,js}", "scripts/**/*.mjs", "native/**/*.{js,mjs,cjs,d.ts}"],

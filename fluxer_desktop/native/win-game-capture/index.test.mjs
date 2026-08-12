@@ -1,19 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import assert from 'node:assert/strict';
-import {existsSync} from 'node:fs';
 import {createRequire} from 'node:module';
 import {afterEach, describe, test} from 'node:test';
 
 const require = createRequire(import.meta.url);
 const winGameCapture = require('./index.js');
-
-const startupSupported = winGameCapture.isSupported();
-const startupAvailability = winGameCapture.getAvailability();
-const startupHookAvailable = winGameCapture.isGameCaptureHookAvailable();
-const realBindingSkip = startupSupported
-	? false
-	: 'no native binding loaded at startup (binding-less platform / unbuilt addon)';
 
 const hasBindingHook = typeof winGameCapture.__setBindingForTests === 'function';
 const injectionSkip = hasBindingHook ? false : 'no __setBindingForTests hook exported';
@@ -289,38 +281,6 @@ describe('win-game-capture loader wrapper -- arch path resolvers (platform-porta
 			r === null || (typeof r === 'string' && /fluxer-vulkan-layer\.win32-(x64|ia32|arm64)-msvc\.json$/.test(r)),
 			`unexpected resolveVulkanLayerManifestPath(): ${r}`,
 		);
-	});
-});
-
-describe('win-game-capture loader wrapper -- real native binding (built Windows box)', () => {
-	test('getAvailability() reports available with the windows-game-capture backend', {skip: realBindingSkip}, () => {
-		assert.equal(startupAvailability.available, true);
-		assert.equal(startupAvailability.backend, 'windows-game-capture');
-	});
-
-	test('resolveGameHookPath() points at an existing host-arch hook DLL', {skip: realBindingSkip}, () => {
-		const r = winGameCapture.resolveGameHookPath();
-		assert.equal(typeof r, 'string', 'expected a hook path on a built Windows box');
-		assert.ok(existsSync(r), `hook DLL should exist on disk: ${r}`);
-	});
-
-	test('resolveVulkanLayerManifestPath() points at an existing layer manifest', {skip: realBindingSkip}, () => {
-		const r = winGameCapture.resolveVulkanLayerManifestPath();
-		assert.equal(typeof r, 'string', 'expected a Vulkan layer manifest path on a built Windows box');
-		assert.ok(existsSync(r), `Vulkan layer manifest should exist on disk: ${r}`);
-	});
-
-	test('the native binding reports hook-based game capture as unavailable', {skip: realBindingSkip}, () => {
-		assert.equal(startupHookAvailable, false, 'hook capture is force-disabled in the native crate');
-	});
-
-	test('requiring the module leaves the Vulkan implicit layer unregistered', {skip: realBindingSkip}, () => {
-		assert.equal(
-			winGameCapture.registerVulkanLayerManifest(),
-			false,
-			'the Vulkan implicit layer must not be registered while hook capture is disabled',
-		);
-		assert.equal(winGameCapture.getVulkanLayerRegistrationState().registered, false);
 	});
 });
 

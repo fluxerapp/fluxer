@@ -3,7 +3,26 @@
 import crypto from 'node:crypto';
 import {XMLParser, XMLValidator} from 'fast-xml-parser';
 import {HttpResponse, http, type RequestHandler} from 'msw';
-import type {FakeNcmecFailure, FakeNcmecFileRecord, FakeNcmecReportRecord} from '../../fake-ncmec/FakeNcmecServer';
+
+type FakeNcmecFailure = 'none' | 'submit' | 'upload' | 'fileinfo' | 'finish' | 'retract' | 'unauthorized';
+
+interface FakeNcmecFileRecord {
+	fileId: string;
+	filename: string;
+	size: number;
+	md5: string;
+	submittedDetails: boolean;
+	detailsXml: string | null;
+}
+
+interface FakeNcmecReportRecord {
+	reportId: string;
+	reportXml: string;
+	files: Array<FakeNcmecFileRecord>;
+	finished: boolean;
+	retracted: boolean;
+	authUsername: string;
+}
 
 const BASE_URL = 'https://ncmec.test/ispws';
 const USERNAME = 'usr123';

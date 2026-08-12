@@ -136,7 +136,7 @@ function addFilesFromDirectory(files, packageDir, relativeDir, predicate) {
 
 function collectRuntimeArtifactPaths(packageDir) {
 	const artifacts = new Set();
-	for (const fileName of ['index.js', 'index.d.ts', 'binding.js', 'binding.d.ts', 'loader-diagnostics.cjs']) {
+	for (const fileName of ['index.js', 'index.d.ts', 'binding.js', 'binding.d.ts', 'loader-diagnostics.cjs', 'pure.cjs']) {
 		if (fs.existsSync(path.join(packageDir, fileName))) {
 			artifacts.add(fileName);
 		}
@@ -226,6 +226,7 @@ function expectedNativeRuntimeArtifacts(platform = process.platform, arch = proc
 	artifacts.push({
 		label: '@fluxer/webauthn',
 		relativePath: `webauthn.${tag}.node`,
+		runtimeFiles: ['index.js', 'loader-diagnostics.cjs', 'pure.cjs'],
 	});
 	artifacts.push({
 		label: '@fluxer/webrtc-sender',
@@ -260,6 +261,7 @@ function expectedNativeRuntimeArtifacts(platform = process.platform, arch = proc
 		artifacts.push({
 			label: '@fluxer/platform-info',
 			relativePath: `platform-info.${tag}.node`,
+			runtimeFiles: ['index.js', 'loader-diagnostics.cjs', 'pure.cjs'],
 		});
 	} else if (platform === 'win32') {
 		artifacts.push({
@@ -286,6 +288,7 @@ function expectedNativeRuntimeArtifacts(platform = process.platform, arch = proc
 		artifacts.push({
 			label: '@fluxer/platform-info',
 			relativePath: `platform-info.${tag}.node`,
+			runtimeFiles: ['index.js', 'loader-diagnostics.cjs', 'pure.cjs'],
 		});
 	} else if (platform === 'linux') {
 		artifacts.push({
@@ -319,6 +322,7 @@ function expectedNativeRuntimeArtifacts(platform = process.platform, arch = proc
 		artifacts.push({
 			label: '@fluxer/platform-info',
 			relativePath: `platform-info.${tag}.node`,
+			runtimeFiles: ['index.js', 'loader-diagnostics.cjs', 'pure.cjs'],
 		});
 	}
 	return artifacts;

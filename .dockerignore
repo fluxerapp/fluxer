@@ -27,11 +27,6 @@
 **/target/
 **/test-results.json
 /fluxer_docs/site/
-/tools/integration/integration-driver/Cargo.lock
-/tools/integration/integration-driver/target-*/
-/tools/integration/results/*.json
-/tools/integration/results/latest-summary.txt
-
 /fluxer_app/.devserver-cache.json
 /fluxer_app/pkgs/libfluxcore/
 /fluxer_app/src/features/i18n/locales/*/messages.mjs

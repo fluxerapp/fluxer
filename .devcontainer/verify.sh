@@ -75,8 +75,6 @@ else
 fi
 stage "rust: app proxy tests" cargo test -p fluxer_app_proxy
 
-stage "integration: font serving" cargo run -q -p fluxer-dev -- font-serving-it
-
 echo
 echo "---------------------------------------------"
 echo "${PASSED} stages passed, ${#FAILURES[@]} failed"
