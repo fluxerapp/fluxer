@@ -304,6 +304,12 @@ export const SettingsSection: React.FC = observer(() => {
 											background instead of staying transparent.
 										</Trans>
 									</li>
+									<li data-flx="theme-studio.theme-studio-settings-section.settings-section.li--6">
+										<Trans>
+											Text is rendered with grayscale antialiasing instead of ClearType while transparency is enabled,
+											so it will look softer.
+										</Trans>
+									</li>
 								</ul>
 							</div>
 						) : null}

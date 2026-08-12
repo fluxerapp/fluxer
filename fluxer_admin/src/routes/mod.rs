@@ -30,16 +30,24 @@ pub struct ActionQuery {
 }
 use axum::{
     Json, Router,
-    extract::{Request, State},
+    extract::{Path, Request, State},
     http::{HeaderMap, HeaderName, HeaderValue, StatusCode, header},
     middleware::{Next, from_fn, from_fn_with_state},
     response::{Html, IntoResponse, Response},
     routing::get,
 };
-use tower_http::{compression::CompressionLayer, trace::TraceLayer};
+use tower_http::{
+    compression::{
+        CompressionLayer,
+        predicate::{DefaultPredicate, NotForContentType, Predicate},
+    },
+    trace::TraceLayer,
+};
 
 const APP_CSS: &str = include_str!(concat!(env!("OUT_DIR"), "/static/app.css"));
 const HTMX_JS: &str = include_str!("../../static/htmx.min.js");
+
+const IMMUTABLE_CACHE_CONTROL: &str = "public, max-age=31536000, immutable";
 
 const STRICT_TRANSPORT_SECURITY_VALUE: &str = "max-age=31536000; includeSubDomains; preload";
 const REFERRER_POLICY_VALUE: &str = "strict-origin-when-cross-origin";
@@ -76,6 +84,7 @@ pub fn build_router(config: AdminConfig) -> Router {
         .route("/_health", get(health))
         .route("/robots.txt", get(robots_txt))
         .route("/static/app.css", get(app_css))
+        .route("/static/fonts/{file_name}", get(font_asset))
         .route("/static/htmx.min.js", get(htmx_js))
         .merge(auth::router())
         .merge(protected)
@@ -85,7 +94,10 @@ pub fn build_router(config: AdminConfig) -> Router {
             security_headers_middleware,
         ))
         .layer(from_fn(cache_headers_middleware))
-        .layer(CompressionLayer::new())
+        .layer(
+            CompressionLayer::new()
+                .compress_when(DefaultPredicate::new().and(NotForContentType::const_new("font/"))),
+        )
         .layer(TraceLayer::new_for_http())
         .with_state(state)
 }
@@ -129,9 +141,9 @@ fn build_admin_csp(config: &AdminConfig) -> String {
     [
         "default-src 'self'".to_owned(),
         "script-src 'self' 'unsafe-inline'".to_owned(),
-        format!("style-src 'self' 'unsafe-inline' {static_cdn}"),
+        "style-src 'self' 'unsafe-inline'".to_owned(),
         format!("img-src 'self' data: blob: {static_cdn} {media} https://fluxer-reports.ewr1.vultrobjects.com"),
-        format!("font-src 'self' data: {static_cdn}"),
+        "font-src 'self'".to_owned(),
         "connect-src 'self'".to_owned(),
         "object-src 'none'".to_owned(),
         "frame-src 'none'".to_owned(),
@@ -193,6 +205,20 @@ async fn app_css() -> impl IntoResponse {
     ([(header::CONTENT_TYPE, "text/css; charset=utf-8")], APP_CSS)
 }
 
+async fn font_asset(Path(file_name): Path<String>) -> Response {
+    match crate::fonts::asset(&file_name) {
+        Some((content_type, bytes)) => (
+            [
+                (header::CONTENT_TYPE, content_type),
+                (header::CACHE_CONTROL, IMMUTABLE_CACHE_CONTROL),
+            ],
+            bytes,
+        )
+            .into_response(),
+        None => StatusCode::NOT_FOUND.into_response(),
+    }
+}
+
 async fn htmx_js() -> impl IntoResponse {
     (
         [(
@@ -232,6 +258,7 @@ async fn not_found(State(state): State<AppState>) -> impl IntoResponse {
                 meta charset="utf-8";
                 meta name="viewport" content="width=device-width, initial-scale=1";
                 title { "404 - Not Found" }
+                link rel="stylesheet" href={(base) "/static/fonts/" (crate::fonts::STYLESHEET_FILE_NAME)};
                 link rel="stylesheet" href={(base) "/static/app.css"};
             }
             body class="min-h-screen bg-neutral-50 flex items-center justify-center" {

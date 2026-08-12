@@ -1856,3 +1856,102 @@ fn attribute_values(html: &str, name: &str) -> Vec<String> {
     }
     values
 }
+
+#[tokio::test]
+async fn fonts_are_served_locally_content_hashed_and_immutable() {
+    let app = build_router(test_config());
+
+    let stylesheet_path = format!(
+        "/static/fonts/{}",
+        fluxer_marketing::fonts::STYLESHEET_FILE_NAME
+    );
+    let response = app
+        .clone()
+        .oneshot(
+            Request::builder()
+                .uri(stylesheet_path.as_str())
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(
+        response.headers().get(header::CACHE_CONTROL).unwrap(),
+        "public, max-age=31536000, immutable"
+    );
+    let body = response.into_body().collect().await.unwrap().to_bytes();
+    let css = String::from_utf8(body.to_vec()).unwrap();
+
+    for fragment in css.split("url('").skip(1) {
+        let file_name = fragment.split('\'').next().unwrap();
+        let response = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .uri(format!("/static/fonts/{file_name}").as_str())
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(
+            response.status(),
+            StatusCode::OK,
+            "missing font {file_name}"
+        );
+        assert_eq!(
+            response.headers().get(header::CONTENT_TYPE).unwrap(),
+            "font/woff2"
+        );
+        assert_eq!(
+            response.headers().get(header::CACHE_CONTROL).unwrap(),
+            "public, max-age=31536000, immutable"
+        );
+    }
+
+    let response = app
+        .oneshot(
+            Request::builder()
+                .uri("/static/fonts/does-not-exist.woff2")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+}
+
+#[tokio::test]
+async fn pages_never_reference_the_static_cdn_for_fonts() {
+    let app = build_router(test_config());
+
+    for path in ["/", "/download", "/blog", "/missing"] {
+        let html = render_path(app.clone(), path).await;
+        assert!(
+            !html.contains("/fonts/ibm-plex.css"),
+            "{path} still links the CDN font stylesheets"
+        );
+        assert!(
+            html.contains("/static/fonts/"),
+            "{path} does not link the bundled font stylesheet"
+        );
+    }
+
+    let response = app
+        .oneshot(Request::builder().uri("/").body(Body::empty()).unwrap())
+        .await
+        .unwrap();
+    let csp = response
+        .headers()
+        .get(header::CONTENT_SECURITY_POLICY)
+        .unwrap()
+        .to_str()
+        .unwrap()
+        .to_owned();
+    assert!(csp.contains("font-src 'self';"), "font-src was {csp}");
+    assert!(
+        csp.contains("style-src 'self' 'unsafe-inline';"),
+        "style-src was {csp}"
+    );
+}

@@ -1,0 +1,3 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+fonttools==4.60.2
+brotli==1.2.0

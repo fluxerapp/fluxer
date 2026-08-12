@@ -52,10 +52,14 @@
 	pointer-events: auto;
 	transform: translate3d(0, var(--sheet-y), 0);
 	transition: transform var(--sheet-transition-duration) var(--sheet-transition-easing);
-	will-change: transform;
 	touch-action: manipulation;
 	outline: none;
 	box-shadow: 0 -1rem 2.5rem rgb(0 0 0 / 0.24);
+}
+
+.overlayRoot[data-dragging='true'] .container,
+.overlayRoot[data-state='closing'] .container {
+	will-change: transform;
 }
 
 .overlayRoot[data-dragging='true'] .container {

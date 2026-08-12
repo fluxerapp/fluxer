@@ -39,6 +39,105 @@ pub fn run_build_markdown_parser_wasm(args: BuildMarkdownParserWasmArgs) -> Resu
     build_markdown_parser_wasm(&app_dir)
 }
 
+const WASM_CC_ENV: &str = "CC_wasm32_unknown_unknown";
+const WASM_AR_ENV: &str = "AR_wasm32_unknown_unknown";
+
+fn apply_wasm_c_toolchain(spec: CommandSpec) -> Result<CommandSpec> {
+    if env::var_os(WASM_CC_ENV).is_some_and(|value| !value.is_empty()) {
+        return Ok(spec);
+    }
+
+    let clang = discover_wasm_clang()?;
+    println!("+ {WASM_CC_ENV}={}", clang.display());
+    let mut spec = spec.env(WASM_CC_ENV, clang.as_os_str());
+    if env::var_os(WASM_AR_ENV).is_none_or(|value| value.is_empty())
+        && let Some(archiver) = discover_wasm_ar(&clang)
+    {
+        println!("+ {WASM_AR_ENV}={}", archiver.display());
+        spec = spec.env(WASM_AR_ENV, archiver.as_os_str());
+    }
+    Ok(spec)
+}
+
+fn discover_wasm_clang() -> Result<PathBuf> {
+    discover_wasm_clang_from(wasm_clang_candidates())
+}
+
+fn wasm_clang_candidates() -> Vec<PathBuf> {
+    let mut candidates: Vec<PathBuf> = Vec::new();
+    if let Some(explicit) = env::var_os("CC").filter(|value| !value.is_empty()) {
+        candidates.push(PathBuf::from(explicit));
+    }
+    candidates.push(PathBuf::from("clang"));
+    if let Some(prefix) = homebrew_llvm_prefix() {
+        candidates.push(prefix.join("bin/clang"));
+    }
+    candidates.push(PathBuf::from("/opt/homebrew/opt/llvm/bin/clang"));
+    candidates.push(PathBuf::from("/usr/local/opt/llvm/bin/clang"));
+    candidates
+}
+
+fn discover_wasm_clang_from(candidates: Vec<PathBuf>) -> Result<PathBuf> {
+    let mut seen: Vec<PathBuf> = Vec::new();
+    for candidate in candidates {
+        if seen.contains(&candidate) {
+            continue;
+        }
+        seen.push(candidate.clone());
+        if clang_targets_wasm32(&candidate) {
+            return Ok(candidate);
+        }
+    }
+
+    Err(anyhow!(
+        "No clang with a wasm32 backend was found, so cc-rs cannot compile zstd-sys for \
+         wasm32-unknown-unknown.\nTried: {}\nOn macOS the Xcode clang has no wasm32 target; \
+         install a full LLVM and retry:\n    brew install llvm\nOr point the build at one \
+         explicitly:\n    export {WASM_CC_ENV}=/path/to/clang\n    export {WASM_AR_ENV}=/path/to/llvm-ar",
+        seen.iter()
+            .map(|path| path.display().to_string())
+            .collect::<Vec<_>>()
+            .join(", "),
+    ))
+}
+
+fn discover_wasm_ar(clang: &Path) -> Option<PathBuf> {
+    if let Some(dir) = clang.parent().filter(|dir| !dir.as_os_str().is_empty()) {
+        let sibling = dir.join("llvm-ar");
+        if sibling.is_file() {
+            return Some(sibling);
+        }
+    }
+    let path_ar = PathBuf::from("llvm-ar");
+    command_succeeds(CommandSpec::new(&path_ar).arg("--version")).then_some(path_ar)
+}
+
+fn homebrew_llvm_prefix() -> Option<PathBuf> {
+    let output = std::process::Command::new("brew")
+        .args(["--prefix", "llvm"])
+        .output()
+        .ok()?;
+    if !output.status.success() {
+        return None;
+    }
+    let prefix = String::from_utf8(output.stdout).ok()?;
+    let prefix = prefix.trim();
+    (!prefix.is_empty()).then(|| PathBuf::from(prefix))
+}
+
+fn clang_targets_wasm32(clang: &Path) -> bool {
+    let Ok(output) = std::process::Command::new(clang)
+        .arg("--print-targets")
+        .output()
+    else {
+        return false;
+    };
+    if !output.status.success() {
+        return false;
+    }
+    String::from_utf8_lossy(&output.stdout).contains("wasm32")
+}
+
 fn build_markdown_parser_wasm(app_dir: &Path) -> Result<()> {
     let rust_source_dir = app_dir.join("../packages/markdown_parser/rust");
     let bytes_path =
@@ -46,12 +145,12 @@ fn build_markdown_parser_wasm(app_dir: &Path) -> Result<()> {
     let temp = TempDir::new().context("Failed to create source temp directory")?;
     let target_dir = temp.path().join("target");
 
-    run_command(
+    run_command(apply_wasm_c_toolchain(
         CommandSpec::new("cargo")
             .args(["build", "--release", "--target", "wasm32-unknown-unknown"])
             .env("CARGO_TARGET_DIR", target_dir.to_string_lossy().as_ref())
             .current_dir(&rust_source_dir),
-    )?;
+    )?)?;
 
     let wasm_path = target_dir.join("wasm32-unknown-unknown/release/fluxer_markdown_parser.wasm");
     let wasm =
@@ -93,7 +192,7 @@ fn build_libfluxcore_wasm(app_dir: &Path) -> Result<()> {
         build = build.env("RUSTFLAGS", rustflags);
     }
 
-    run_command(build)?;
+    run_command(apply_wasm_c_toolchain(build)?)?;
     let wasm_bindgen = ensure_wasm_bindgen_cli()?;
     let temp = TempDir::new().context("Failed to create libfluxcore wasm-bindgen temp dir")?;
     let bindgen_dir = temp.path().join("bindgen");
@@ -373,6 +472,64 @@ export const MARKDOWN_PARSER_WASM_BASE64 =\n\
         assert!(patched.contains("wasm = undefined;"));
         assert!(patched.contains("async function __wbg_load(module, imports) {}"));
     }
+
+    #[test]
+    fn wasm_clang_discovery_reports_an_actionable_remedy_when_nothing_supports_wasm32() {
+        let error = discover_wasm_clang_from(vec![
+            PathBuf::from("/nonexistent/xcode/clang"),
+            PathBuf::from("/nonexistent/xcode/clang"),
+            PathBuf::from("/nonexistent/other/clang"),
+        ])
+        .expect_err("no candidate exists, so discovery must fail");
+        let message = error.to_string();
+
+        assert!(message.contains("brew install llvm"), "{message}");
+        assert!(message.contains(WASM_CC_ENV), "{message}");
+        assert!(message.contains(WASM_AR_ENV), "{message}");
+        assert!(message.contains("/nonexistent/other/clang"), "{message}");
+        assert_eq!(
+            message.matches("/nonexistent/xcode/clang").count(),
+            1,
+            "duplicate candidates must be reported once: {message}"
+        );
+    }
+
+    #[test]
+    fn wasm_clang_discovery_prefers_a_wasm32_capable_candidate_over_an_earlier_one() {
+        let temp = TempDir::new().expect("temp dir");
+        let clang = temp.path().join("clang");
+        fs::write(
+            &clang,
+            "#!/bin/sh\nif [ \"$1\" = \"--print-targets\" ]; then echo '    wasm32 - WebAssembly 32-bit'; fi\n",
+        )
+        .expect("write fake clang");
+        make_executable(&clang);
+
+        let found =
+            discover_wasm_clang_from(vec![PathBuf::from("/nonexistent/clang"), clang.clone()])
+                .expect("the fake clang advertises wasm32");
+        assert_eq!(found, clang);
+    }
+
+    #[test]
+    fn wasm_ar_is_taken_from_the_discovered_clang_toolchain() {
+        let temp = TempDir::new().expect("temp dir");
+        let clang = temp.path().join("clang");
+        let archiver = temp.path().join("llvm-ar");
+        fs::write(&clang, "").expect("write clang");
+        fs::write(&archiver, "").expect("write llvm-ar");
+
+        assert_eq!(discover_wasm_ar(&clang), Some(archiver));
+    }
+
+    #[cfg(unix)]
+    fn make_executable(path: &Path) {
+        use std::os::unix::fs::PermissionsExt;
+        fs::set_permissions(path, fs::Permissions::from_mode(0o755)).expect("chmod");
+    }
+
+    #[cfg(not(unix))]
+    fn make_executable(_path: &Path) {}
 
     #[test]
     fn libfluxcore_bindgen_dts_reset_hook_is_inserted() {

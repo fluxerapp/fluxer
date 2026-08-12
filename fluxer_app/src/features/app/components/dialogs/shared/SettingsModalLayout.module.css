@@ -10,7 +10,6 @@
 	width: 100%;
 	position: relative;
 	overflow: hidden;
-	will-change: transform;
 	--settings-edge-gutter: clamp(1rem, 3vw, 1.5rem);
 	--settings-surface-background: var(--form-surface-background);
 	--settings-panel-background: color-mix(in srgb, var(--form-surface-background) 88%, var(--background-primary));
@@ -136,7 +135,6 @@
 	display: flex;
 	height: 100%;
 	width: 200%;
-	will-change: transform;
 	-webkit-backface-visibility: hidden;
 	backface-visibility: hidden;
 }
@@ -150,7 +148,6 @@
 	display: flex;
 	flex-direction: column;
 	background: var(--background-secondary);
-	will-change: transform;
 	-webkit-overflow-scrolling: touch;
 	overscroll-behavior-y: contain;
 	contain: layout style paint;

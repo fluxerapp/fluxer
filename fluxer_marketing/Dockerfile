@@ -20,6 +20,12 @@ RUN pnpm install --frozen-lockfile --filter fluxer_marketing --config.block-exot
 COPY Cargo.lock Cargo.lock
 COPY fluxer_common fluxer_common
 COPY fluxer_marketing fluxer_marketing
+COPY packages/fonts/manifest.json packages/fonts/manifest.json
+COPY packages/fonts/NOTICE.md packages/fonts/NOTICE.md
+COPY packages/fonts/LICENSE-IBM-PLEX.txt packages/fonts/LICENSE-IBM-PLEX.txt
+COPY packages/fonts/css/locale-fallbacks.css packages/fonts/css/locale-fallbacks.css
+COPY packages/fonts/files/FluxerSans packages/fonts/files/FluxerSans
+COPY packages/fonts/files/FluxerMono packages/fonts/files/FluxerMono
 RUN printf '%s\n' \
 	'[workspace]' \
 	'members = ["fluxer_common", "fluxer_marketing"]' \

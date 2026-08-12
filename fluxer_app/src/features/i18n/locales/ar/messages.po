@@ -618,7 +618,7 @@ msgid "{defaultDeviceLabel} ({endpointLabel})"
 msgstr "{defaultDeviceLabel} ({endpointLabel})"
 
 #. Client info desktop build identifier line. Example: "Canary Desktop 2026.419.3". Preserve placeholders.
-#: src/features/app/components/dialogs/components/ClientInfo.tsx:38
+#: src/features/app/components/dialogs/components/ClientInfo.tsx:37
 msgid "{desktopChannel} Desktop {desktopVersion}"
 msgstr "{desktopChannel} لسطح المكتب {desktopVersion}"
 
@@ -1089,12 +1089,12 @@ msgid "{productName} Community Team"
 msgstr "فريق مجتمع {productName}"
 
 #. Modal body shown when a user-initiated update check fails. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:104
+#: src/features/updater/commands/UpdaterModalCommands.tsx:108
 msgid "{productName} could not reach the update service. Check your connection and try again."
 msgstr "تعذر على {productName} الوصول إلى خدمة التحديث. يرجى التحقق من اتصالك والمحاولة مرة أخرى."
 
 #. Modal body shown when starting installation of a downloaded desktop update fails. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:121
+#: src/features/updater/commands/UpdaterModalCommands.tsx:125
 msgid "{productName} could not restart into the downloaded update. Try again from the update button."
 msgstr "تعذر على {productName} إعادة التشغيل لتثبيت التحديث الذي تم تنزيله. حاول مرة أخرى من خلال النقر فوق زر التحديث."
 
@@ -1210,8 +1210,8 @@ msgstr "علامة {productName} التجارية"
 
 #. Client info web build identifier line. Example: "Canary Web 2026.518.0". Preserve placeholders.
 #. Client info web build identifier shown after the desktop build when the web and desktop channels differ. Example: "Stable Web 2026.518.0". Preserve placeholders.
-#: src/features/app/components/dialogs/components/ClientInfo.tsx:24
-#: src/features/app/components/dialogs/components/ClientInfo.tsx:33
+#: src/features/app/components/dialogs/components/ClientInfo.tsx:23
+#: src/features/app/components/dialogs/components/ClientInfo.tsx:32
 msgid "{releaseChannel} Web {buildVersion}"
 msgstr "{releaseChannel} ويب {buildVersion}"
 
@@ -1242,7 +1242,7 @@ msgid "{renderedPresenceCount} online"
 msgstr "{renderedPresenceCount} متصل"
 
 #. Short label in the channel display name state. Keep it concise. Preserve {resolvedName}; it is inserted by code.
-#: src/features/channel/state/ChannelDisplayName.ts:12
+#: src/features/channel/state/ChannelDisplayName.ts:13
 msgid "{resolvedName}'s group"
 msgstr "مجموعة {resolvedName}"
 
@@ -1961,7 +1961,7 @@ msgid "a hostname, e.g. {exampleDomain}"
 msgstr "اسم مضيف، مثل {exampleDomain}"
 
 #. Linux desktop updater modal body shown before version details and package format selector. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:126
+#: src/features/updater/commands/UpdaterModalCommands.tsx:130
 msgid "A Linux desktop update is available. Choose the package format for this system and {productName} will save it locally."
 msgstr "يتوفر تحديث لـ Fluxer على نظام التشغيل Linux. اختر تنسيق الحزمة لهذا النظام وسيحفظه {productName} محليًا."
 
@@ -1990,7 +1990,7 @@ msgstr "استطلاع"
 msgid "A redirect_uri is required when the bot scope is not the only scope."
 msgstr "يلزم توفير redirect_uri عندما لا يكون نطاق الروبوت هو النطاق الوحيد."
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:342
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:341
 msgid "A reusable component for empty states, errors, and status messages."
 msgstr "مكون قابل لإعادة الاستخدام للحالات الفارغة والأخطاء ورسائل الحالة."
 
@@ -3891,7 +3891,7 @@ msgstr "التطبيقات"
 msgid "Arabic"
 msgstr "العربية"
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:227
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:226
 msgid "Archive"
 msgstr "أرشفة"
 
@@ -4667,7 +4667,7 @@ msgid "Autoscrolling"
 msgstr "التمرير التلقائي"
 
 #. Label for the available desktop version in the Linux update modal.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:136
+#: src/features/updater/commands/UpdaterModalCommands.tsx:140
 msgid "Available"
 msgstr "متاح"
 
@@ -5243,26 +5243,6 @@ msgstr "تمويه"
 msgid "Blur strength"
 msgstr "قوة التمويه"
 
-#. Short label in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:82
-msgid "Body"
-msgstr "نص أساسي"
-
-#. Short label in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:66
-msgid "Bold"
-msgstr "عريض"
-
-#. Title in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:134
-msgid "Bold heading"
-msgstr "عنوان عريض"
-
-#. Title in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:142
-msgid "Bold title"
-msgstr "عنوان غامق"
-
 #. Folder icon option in the community-folder settings modal: a bookmark shape. Refers to the bookmark icon glyph, not the saved-message bookmarks feature.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the buttons tab. Keep it concise.
@@ -5590,7 +5570,7 @@ msgstr "أنواع الأزرار"
 msgid "Button with context menu"
 msgstr "زر مع قائمة سياقية"
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:252
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:251
 msgid "Buttons"
 msgstr "الأزرار"
 
@@ -5988,11 +5968,6 @@ msgstr "تعذر تثبيت حزمة الملصقات"
 #: src/features/auth/components/CaptchaInterceptor.tsx:14
 msgid "Captcha verification failed. Try again."
 msgstr "فشل التحقق من اختبار الكابتشا. حاول مرة أخرى."
-
-#. Short label in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:74
-msgid "Caption"
-msgstr "تسمية توضيحية"
 
 #. Section header in the Linux audio source picker. Lists capture-target options (entire system / specific apps).
 #: src/features/voice/components/AudioSourcePickerLinux.tsx:48
@@ -7179,7 +7154,7 @@ msgstr "مسح جميع التجاوزات النشطة"
 msgid "Clear all attachment mocks"
 msgstr "مسح جميع مرفقات المعاينة"
 
-#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:378
+#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:384
 msgid "Clear all token overrides"
 msgstr "مسح جميع تجاوزات الرمز المميز"
 
@@ -7215,7 +7190,7 @@ msgstr "مسح النموذج لهذه المرفقات"
 msgid "Clear nickname"
 msgstr "مسح الاسم المستعار"
 
-#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:401
+#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:407
 msgid "Clear overrides"
 msgstr "مسح التجاوزات"
 
@@ -7299,7 +7274,7 @@ msgstr "تم مسح الموضوع."
 msgid "Clearing trusted domains..."
 msgstr "جارٍ مسح النطاقات الموثوقة..."
 
-#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:359
+#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:365
 msgid "Clears quick CSS, imported themes, uploaded assets, and local file references on this device."
 msgstr "يمحو CSS السريع والسمات المستوردة والأصول التي تم تحميلها ومراجع الملفات المحلية على هذا الجهاز."
 
@@ -7341,7 +7316,7 @@ msgid "Click to claim your gift!"
 msgstr "انقر للمطالبة بهديتك!"
 
 #. Short label in the settings dialog client info.
-#: src/features/app/components/dialogs/components/ClientInfo.tsx:46
+#: src/features/app/components/dialogs/components/ClientInfo.tsx:45
 msgid "Click to copy"
 msgstr "انقر للنسخ"
 
@@ -8825,7 +8800,7 @@ msgstr "نسخ رابط الدعوة"
 #. Generic action label that copies a URL to the clipboard.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:739
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:310
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:146
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:145
 msgid "Copy link"
 msgstr "نسخ الرابط"
 
@@ -9065,7 +9040,7 @@ msgid "Couldn't change your billing cycle"
 msgstr "تعذر تغيير دورة الفوترة"
 
 #. Modal title shown when a user-initiated update check fails.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:100
+#: src/features/updater/commands/UpdaterModalCommands.tsx:104
 msgid "Couldn't check for updates"
 msgstr "تعذّر التحقق من وجود تحديثات"
 
@@ -9172,7 +9147,7 @@ msgid "Couldn't delete your messages"
 msgstr "تعذّر حذف رسائلك"
 
 #. Modal title shown when a desktop update download fails.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:108
+#: src/features/updater/commands/UpdaterModalCommands.tsx:112
 msgid "Couldn't download the desktop update"
 msgstr "تعذر تنزيل تحديث سطح المكتب"
 
@@ -9426,7 +9401,7 @@ msgid "Couldn't start the connection"
 msgstr "تعذّر بدء الاتصال"
 
 #. Modal title shown when starting installation of a downloaded desktop update fails.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:117
+#: src/features/updater/commands/UpdaterModalCommands.tsx:121
 msgid "Couldn't start the desktop update"
 msgstr "تعذر بدء تحديث سطح المكتب"
 
@@ -10302,7 +10277,7 @@ msgid "Danger button clicked."
 msgstr "تم النقر فوق زر الخطر."
 
 #. Short label in the account security tab. Keep it concise. Keep the tone plain and specific.
-#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:350
+#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:356
 #: src/features/user/components/modals/tabs/account_security_tab/AccountSecuritySections.tsx:39
 #: src/features/user/components/modals/tabs/applications_tab/ApplicationDetail.tsx:697
 msgid "Danger zone"
@@ -10669,7 +10644,7 @@ msgstr "يتم إيقاف تشغيله افتراضيًا على الهاتف ا
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:399
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:116
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:272
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:239
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:238
 #: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:49
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:154
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:190
@@ -10964,11 +10939,6 @@ msgstr "تم حذف رسائلك."
 msgid "Deleted."
 msgstr "تم الحذف."
 
-#. Label in the typography tab.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:14
-msgid "Delicate and light typography"
-msgstr "خطوط أنيقة وخفيفة"
-
 #. Status chip for a denied macOS permission.
 #: src/features/permissions/system/components/modals/MacPermissionsModal.tsx:59
 msgid "Denied"
@@ -11145,12 +11115,12 @@ msgid "Desktop update available. Choose a Linux package."
 msgstr "يتوفر تحديث لسطح المكتب. اختر حزمة لينكس."
 
 #. Modal title shown when a desktop app update has finished downloading.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:83
+#: src/features/updater/commands/UpdaterModalCommands.tsx:87
 msgid "Desktop update ready"
 msgstr "تحديث سطح المكتب جاهز"
 
 #. Desktop updater modal body. The version placeholder is the downloaded app version; productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:87
+#: src/features/updater/commands/UpdaterModalCommands.tsx:91
 msgid "Desktop version {version} has been downloaded. Restart {productName} to finish installing."
 msgstr "تم تنزيل إصدار سطح المكتب {version}. أعد تشغيل {productName} لإكمال التثبيت."
 
@@ -11753,11 +11723,9 @@ msgstr "تجاهل الإشارة"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the chat settings tab. Keep it concise.
 #. Short label in the inline. Keep it concise.
-#. Short label in the typography tab. Keep it concise.
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleEditor.tsx:175
 #: src/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabInline.tsx:14
 #: src/features/user/components/modals/tabs/ChatSettingsTab.tsx:14
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:102
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:154
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:116
 msgid "Display"
@@ -12305,7 +12273,7 @@ msgid "Due to mature content laws in {regionName}, this media is not available f
 msgstr "نظرًا لقوانين المحتوى للبالغين في {regionName}، فإن هذا الوسائط غير متوفرة من منطقتك الحالية."
 
 #: src/features/theme_studio/sections/LibrarySection.tsx:503
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:221
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:220
 msgid "Duplicate"
 msgstr "تكرار"
 
@@ -12590,7 +12558,7 @@ msgid "Edit your profile bio"
 msgstr "تعديل نبذة ملفك الشخصي"
 
 #. Button or menu action label in the index. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:40
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:39
 msgid "Editable text"
 msgstr "نص قابل للتعديل"
 
@@ -13001,7 +12969,7 @@ msgstr "تمكين انتهاء صلاحية المرفقات"
 msgid "Enable audio"
 msgstr "تفعيل الصوت"
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:172
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:171
 msgid "Enable beta feature"
 msgstr "تفعيل ميزة تجريبية"
 
@@ -13038,7 +13006,7 @@ msgstr "تفعيل وضع المطور"
 msgid "Enable email delivery"
 msgstr "تمكين تسليم البريد الإلكتروني"
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:158
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:157
 msgid "Enable extra option"
 msgstr "تفعيل خيار إضافي"
 
@@ -13660,7 +13628,7 @@ msgstr "خطأ"
 msgid "error code {code}"
 msgstr "رمز الخطأ {code}"
 
-#: src/features/messaging/components/markdown/index.tsx:39
+#: src/features/messaging/components/markdown/index.tsx:40
 msgid "Error rendering content"
 msgstr "حدث خطأ أثناء عرض المحتوى"
 
@@ -14094,11 +14062,6 @@ msgstr "قد تكون الروابط الخارجية خطيرة. كن حذرً�
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:57
 msgid "Extra large"
 msgstr "كبير جدًا"
-
-#. Short label in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:18
-msgid "Extra light"
-msgstr "خفيف جدًا"
 
 #. Report category label for a community organized around extremist content or ideology.
 #: src/features/moderation/components/report/OptionDescriptors.ts:90
@@ -14791,7 +14754,7 @@ msgstr "أول نقرة"
 msgid "First click pass-through when unfocused"
 msgstr "تمرير النقرة الأولى عند عدم التركيز"
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:112
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:111
 msgid "First option"
 msgstr "الخيار الأول"
 
@@ -14916,10 +14879,6 @@ msgstr "متابعة الرئيسي • {effectiveValue}%"
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:170
 msgid "Font"
 msgstr "الخط"
-
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:344
-msgid "Font weights"
-msgstr "أوزان الخطوط"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:9
@@ -15364,7 +15323,7 @@ msgid "From {start}"
 msgstr "منذ {start}"
 
 #. placeholder {0}: sourceGuild.name
-#: src/features/channel/components/emoji_picker/EmojiPickerInspector.tsx:104
+#: src/features/channel/components/emoji_picker/EmojiPickerInspector.tsx:102
 msgid "from <0>{0}</0>"
 msgstr "من <0>{0}</0>"
 
@@ -15460,7 +15419,7 @@ msgstr "GDPR"
 msgid "General"
 msgstr "عام"
 
-#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:325
+#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:331
 msgid "Generate a shareable link or copy your combined custom CSS."
 msgstr "أنشئ رابطًا قابلاً للمشاركة أو انسخ CSS المخصص المدمج لديك."
 
@@ -15480,11 +15439,6 @@ msgstr "إنشاء رمز جديد"
 #: src/features/auth/flow/HandoffCodeDisplay.tsx:70
 msgid "Generating code…"
 msgstr "جارٍ إنشاء الرمز…"
-
-#. Label in the typography tab.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:22
-msgid "Gentle and airy text display"
-msgstr "عرض نصي لطيف وخفيف"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:209
@@ -16266,11 +16220,6 @@ msgstr "هو"
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:45
 msgid "Header"
 msgstr "الرأس"
-
-#. Title in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:94
-msgid "Heading"
-msgstr "عنوان"
 
 #. Title in the markdown tab. Keep it concise.
 #: src/features/user/components/modals/tabs/component_gallery_tab/MarkdownTab.tsx:25
@@ -17429,7 +17378,7 @@ msgstr "جاري فهرسة القناة"
 msgid "Indicator"
 msgstr "مؤشر"
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:334
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:333
 msgid "Indicators & status"
 msgstr "المؤشرات والحالة"
 
@@ -17557,7 +17506,7 @@ msgstr "حالات الإدخال"
 msgid "Input volume"
 msgstr "مستوى صوت الإدخال"
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:260
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:259
 msgid "Inputs & text"
 msgstr "الإدخال والنص"
 
@@ -17590,7 +17539,7 @@ msgid "Install sticker pack"
 msgstr "تثبيت حزمة الملصقات"
 
 #. Label for the installed desktop version in the Linux update modal.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:132
+#: src/features/updater/commands/UpdaterModalCommands.tsx:136
 msgid "Installed"
 msgstr "مثبّت"
 
@@ -18094,15 +18043,6 @@ msgstr "هادئ الآن..."
 msgid "Italian"
 msgstr "الإيطالية"
 
-#. Short label in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:114
-msgid "Italic"
-msgstr "مائل"
-
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:392
-msgid "Italic style demonstration"
-msgstr "عرض النمط المائل"
-
 #. Country name. EU member state in the illegal-content report country dropdown.
 #: src/features/moderation/components/report/OptionDescriptors.ts:167
 msgid "Italy"
@@ -18532,10 +18472,6 @@ msgstr "اللغة"
 msgid "Language settings"
 msgstr "إعدادات اللغة"
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:285
-msgid "Language support"
-msgstr "دعم اللغة"
-
 #. Submenu label in the textarea spellcheck submenu listing manual language overrides.
 #. Subsection title for spellcheck language settings. Keep it concise.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:86
@@ -18544,9 +18480,7 @@ msgid "Languages"
 msgstr "اللغات"
 
 #. Short label in the selections tab. Keep it concise.
-#. Short label in the typography tab. Keep it concise.
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:53
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:86
 msgid "Large"
 msgstr "كبير"
 
@@ -18822,9 +18756,7 @@ msgid "Lifetime {premiumProductName}"
 msgstr "{premiumProductName} مدى الحياة"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#. Short label in the typography tab. Keep it concise.
 #: src/features/expressions/components/modals/sticker_form/StickerPreview.tsx:48
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:26
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:54
 msgid "Light"
 msgstr "فاتح"
@@ -19012,7 +18944,7 @@ msgid "Linux default"
 msgstr "افتراضي لنظام التشغيل لينكس"
 
 #. Select label for choosing the Linux desktop package format to download.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:148
+#: src/features/updater/commands/UpdaterModalCommands.tsx:152
 msgid "Linux package"
 msgstr "حزمة لينكس"
 
@@ -19613,7 +19545,7 @@ msgid "Mark top inbox channel as read"
 msgstr "وضع علامة على أعلى قناة في البريد الوارد كمقروءة"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:372
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:364
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:122
 msgid "Markdown"
 msgstr "تنسيق ماركداون"
@@ -19945,10 +19877,8 @@ msgstr "حجم الوسائط"
 
 #. Member verification level option in the community moderation settings tab. Short standalone severity label.
 #. Short label in the selections tab. Keep it concise.
-#. Short label in the typography tab. Keep it concise.
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:65
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:49
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:50
 msgid "Medium"
 msgstr "متوسط"
 
@@ -20820,7 +20750,7 @@ msgstr "المزيد"
 
 #. Short label in the index. Keep it concise.
 #. Short label in the user profile modal. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:48
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:47
 #: src/features/user/components/modals/UserProfileModal.tsx:114
 msgid "More actions"
 msgstr "المزيد من الإجراءات"
@@ -20992,10 +20922,6 @@ msgstr "المصادقة متعددة العوامل"
 #: src/features/user/components/modals/tabs/component_gallery_tab/MarkdownTab.tsx:57
 msgid "Multi-line"
 msgstr "Multi-line"
-
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:497
-msgid "Multilingual content"
-msgstr "محتوى متعدد اللغات"
 
 #. Discovery category dropdown option in the community Discovery settings tab.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:79
@@ -21653,7 +21579,7 @@ msgid "New users can't join right now. You can still create an account or sign i
 msgstr "لا يمكن للمستخدمين الجدد الانضمام الآن. لا يزال بإمكانك إنشاء حساب أو تسجيل الدخول، ثم إعادة المحاولة باستخدام هذا الرابط لاحقًا."
 
 #. Fallback version label when the available desktop version is unknown.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:144
+#: src/features/updater/commands/UpdaterModalCommands.tsx:148
 msgid "New version"
 msgstr "إصدار جديد"
 
@@ -21921,7 +21847,7 @@ msgid "No emojis found matching your search."
 msgstr "لم يتم العثور على أي رموز تعبيرية مطابقة لبحثك."
 
 #. Empty-state text in the channel and chat emoji picker.
-#: src/features/channel/components/EmojiPicker.tsx:43
+#: src/features/channel/components/EmojiPicker.tsx:41
 msgid "No emojis match that search"
 msgstr "لا توجد رموز تعبيرية مطابقة لهذا البحث"
 
@@ -22363,11 +22289,6 @@ msgstr "بلا"
 msgid "None (normal behavior)"
 msgstr "لا شيء (سلوك عادي)"
 
-#. Short label in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:106
-msgid "Normal"
-msgstr "عادي"
-
 #. Short label in the language and locale names. Keep it concise.
 #: src/features/user/utils/LocaleUtils.ts:100
 msgid "Norwegian"
@@ -22792,7 +22713,7 @@ msgid "Only you can see this message. <0>Dismiss</0>"
 msgstr "أنت فقط من يستطيع رؤية هذه الرسالة. <0>تجاهل</0>"
 
 #. Short label in the index. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:44
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:43
 msgid "Opacity"
 msgstr "الشفافية"
 
@@ -22970,7 +22891,7 @@ msgid "Open date picker"
 msgstr "فتح منتقي التاريخ"
 
 #. Button label that opens the Fluxer desktop downloads page in a browser.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:79
+#: src/features/updater/commands/UpdaterModalCommands.tsx:83
 msgid "Open desktop downloads"
 msgstr "فتح تنزيلات سطح المكتب"
 
@@ -23165,6 +23086,11 @@ msgstr "فتح المبدّل السريع"
 msgid "Open settings"
 msgstr "فتح الإعدادات"
 
+#. Button label that opens the software center via appstream protocol.
+#: src/features/updater/commands/UpdaterModalCommands.tsx:79
+msgid "Open software center"
+msgstr "فتح مركز البرامج"
+
 #. Action that opens the sticker URL in an external browser.
 #: src/features/ui/action_menu/items/StickerContextMenuItems.tsx:40
 msgid "Open sticker in browser"
@@ -23310,11 +23236,6 @@ msgstr "نظام التشغيل"
 #: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:26
 msgid "Opt into experimental per-community and per-channel unread badge controls"
 msgstr "فعّل خيار التحكم التجريبي في شارات الرسائل غير المقروءة لكل مجتمع ولكل قناة"
-
-#. Label in the typography tab.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:46
-msgid "Optimized for longer reading passages"
-msgstr "مُحسّن للمقاطع الطويلة"
 
 #: src/features/voice/components/modals/CameraPreviewModal.tsx:906
 msgid "Optimizing camera..."
@@ -23483,7 +23404,7 @@ msgstr "خارج فترة الاسترداد"
 msgid "Overlapping avatar groups showing multiple users with automatic overflow counts."
 msgstr "مجموعات صور رمزية متداخلة تعرض عدة مستخدمين مع أعداد فائضة تلقائية."
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:327
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:326
 msgid "Overlays & menus"
 msgstr "الطبقات والقوائم"
 
@@ -23885,11 +23806,6 @@ msgstr "مستوى صوت كل صوت"
 #: src/features/voice/components/modals/screen_share_picker_modal/PerWindowAudioNotice.tsx:28
 msgid "Per-window audio isn't available on this build of macOS."
 msgstr "الصوت لكل نافذة غير متاح في إصدار macOS هذا."
-
-#. Label in the typography tab.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:38
-msgid "Perfect for everyday content"
-msgstr "مثالي للمحتوى اليومي"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:86
@@ -24417,11 +24333,6 @@ msgstr "المنصب"
 msgid "Power saving"
 msgstr "توفير الطاقة"
 
-#. Short label in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:70
-msgid "Powerful and attention-grabbing"
-msgstr "قوية وتلفت الانتباه"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:111
 msgid "Pre-upload attachments"
@@ -24691,7 +24602,7 @@ msgstr "أساسي (معطّل)"
 msgid "Primary accent color"
 msgstr "لون التمييز الأساسي"
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:351
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:350
 msgid "Primary action"
 msgstr "إجراء أساسي"
 
@@ -25724,11 +25635,6 @@ msgstr "التسجيل"
 msgid "Registration is currently closed. Use a registration link from an admin to create an account."
 msgstr "التسجيل مغلق حالياً. استخدم رابط تسجيل من أحد المشرفين لإنشاء حساب."
 
-#. Short label in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:34
-msgid "Regular"
-msgstr "عادي"
-
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:226
 msgid "Regular button"
 msgstr "زر عادي"
@@ -26198,7 +26104,7 @@ msgstr "تمت إزالة حد المستخدمين."
 msgid "Removed timeout from {0}"
 msgstr "تمت إزالة المهلة من {0}"
 
-#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:381
+#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:387
 msgid "Removes every per-variable override but keeps your library and assets intact."
 msgstr "يزيل كل تجاوزات المتغيرات الفردية، ولكنه يحافظ على مكتبتك وأصولك سليمة."
 
@@ -26703,7 +26609,7 @@ msgstr "إعادة تعيين بيانات التطبيق"
 msgid "Reset app data and restart"
 msgstr "إعادة تعيين بيانات التطبيق وإعادة تشغيله"
 
-#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:356
+#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:362
 msgid "Reset custom theme data"
 msgstr "إعادة تعيين بيانات المظهر المخصص"
 
@@ -26714,7 +26620,7 @@ msgstr "هل تريد إعادة تعيين بيانات المظهر المخص
 
 #. Button or menu action label in the theme studio settings section. Keep it concise.
 #: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:76
-#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:371
+#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:377
 msgid "Reset data"
 msgstr "إعادة تعيين البيانات"
 
@@ -26854,7 +26760,7 @@ msgid "Restart {appName}"
 msgstr "أعد تشغيل {appName}"
 
 #. Button label that restarts the app to apply a desktop update. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:96
+#: src/features/updater/commands/UpdaterModalCommands.tsx:100
 msgid "Restart {productName}"
 msgstr "إعادة تشغيل {productName}"
 
@@ -28030,7 +27936,7 @@ msgstr "جارٍ البحث"
 msgid "Searching people..."
 msgstr "جارٍ البحث عن أشخاص..."
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:113
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:112
 msgid "Second option"
 msgstr "الخيار الثاني"
 
@@ -28047,7 +27953,7 @@ msgstr "ثانوي (معطّل)"
 msgid "Secondary accent color"
 msgstr "لون التمييز الثانوي"
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:355
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:354
 msgid "Secondary action"
 msgstr "إجراء ثانوي"
 
@@ -28339,7 +28245,7 @@ msgstr "التحديد: {0}"
 msgid "Selection: {0} (max {1})"
 msgstr "التحديد: {0} (الحد الأقصى {1})"
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:293
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:292
 msgid "Selections"
 msgstr "تحديدات"
 
@@ -28368,16 +28274,6 @@ msgstr "تجاوز وضع الاستضافة الذاتية"
 #: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx:36
 msgid "Self-serve refunds available within 3 days of payment, once every 30 days. Refunding a subscription cancels it. EU/EEA buyers waive the 14-day right of withdrawal at checkout to access content immediately. Use the in-app refund button instead of a chargeback. Chargebacks can permanently restrict your account. Stripe handles payment securely. We never see your full card number."
 msgstr "تتوفر عمليات استرداد الخدمة الذاتية في غضون 3 أيام من الدفع، ومرة واحدة كل 30 يومًا. يؤدي استرداد الاشتراك إلى إلغائه. يتنازل المشترون في الاتحاد الأوروبي/المنطقة الاقتصادية الأوروبية عن حق الانسحاب لمدة 14 يومًا عند الدفع للوصول إلى المحتوى فورًا. استخدم زر استرداد الأموال داخل التطبيق بدلاً من استرداد المدفوعات. يمكن أن تؤدي عمليات استرداد المدفوعات إلى تقييد حسابك بشكل دائم. تتولى Stripe معالجة الدفع بأمان. لا نرى رقم بطاقتك بالكامل أبدًا."
-
-#. Short label in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:58
-msgid "Semi bold"
-msgstr "شبه عريض"
-
-#. Short label in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:126
-msgid "Semi-bold large"
-msgstr "شبه عريض كبير"
 
 #. Button or menu action label in the share theme modal. Keep it concise.
 #. Send-message button label in the voice message composer modal.
@@ -28951,7 +28847,7 @@ msgstr "يحدد مستوى كل مؤثر صوتي. تتجاهل التجاوز�
 #. Generic action label / section header that opens settings.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:262
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:264
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:126
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:125
 msgid "Settings"
 msgstr "الإعدادات"
 
@@ -28991,9 +28887,9 @@ msgid "Several people are typing..."
 msgstr "عدة أشخاص يكتبون..."
 
 #: src/features/theme_studio/sections/QuickCssSection.tsx:225
-#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:316
+#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:322
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:279
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:133
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:132
 msgid "Share"
 msgstr "مشاركة"
 
@@ -29002,7 +28898,7 @@ msgstr "مشاركة"
 msgid "Share action."
 msgstr "مشاركة الإجراء."
 
-#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:322
+#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:328
 msgid "Share active custom theme"
 msgstr "مشاركة السمة المخصصة النشطة"
 
@@ -29035,7 +28931,7 @@ msgstr "مشاركة المصدر"
 msgid "Share the {premiumProductName} experience with your friends by purchasing a gift subscription."
 msgstr "شارك تجربة {premiumProductName} مع أصدقائك عن طريق شراء اشتراك هدية."
 
-#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:341
+#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:347
 msgid "Share theme"
 msgstr "مشاركة المظهر"
 
@@ -29963,11 +29859,6 @@ msgstr "شريط تمرير بقيم متدرجة"
 msgid "Sliders"
 msgstr "أشرطة التمرير"
 
-#. Short label in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:54
-msgid "Slightly bolder emphasis"
-msgstr "تأكيد أكثر جرأة بقليل"
-
 #. Country name. EU member state in the illegal-content report country dropdown.
 #: src/features/moderation/components/report/OptionDescriptors.ts:203
 msgid "Slovakia"
@@ -30076,9 +29967,7 @@ msgid "Slurs, dehumanizing language, or attacks on protected groups."
 msgstr "الشتائم أو اللغة المهينة أو الهجمات على الفئات المحمية."
 
 #. Short label in the selections tab. Keep it concise.
-#. Short label in the typography tab. Keep it concise.
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:45
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:78
 msgid "Small"
 msgstr "صغير"
 
@@ -30160,11 +30049,6 @@ msgstr "يلتقط بزيادات قدرها 5."
 #: src/features/user/components/settings_utils/search_index/LinkedAccountsIndex.ts:40
 msgid "Social"
 msgstr "اجتماعي"
-
-#. Label in the typography tab.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:30
-msgid "Soft and easy reading experience"
-msgstr "تجربة قراءة سلسة ومريحة"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:148
@@ -30877,7 +30761,7 @@ msgstr "مؤشرات الحالة"
 msgid "Status page"
 msgstr "صفحة الحالة"
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:341
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:340
 msgid "Status slate"
 msgstr "حالة اللوحة"
 
@@ -31291,15 +31175,6 @@ msgstr "أبلغت Stripe عن بطاقة صادرة في {countryName}. للد�
 msgid "Strong quality at moderate CPU cost. Good Chromium fallback for screen sharing."
 msgstr "جودة قوية بتكلفة معالجة معتدلة. بديل جيد لـ Chromium لمشاركة الشاشة."
 
-#. Short label in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:62
-msgid "Strong visual hierarchy"
-msgstr "تسلسل بصري قوي"
-
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:458
-msgid "Style variations"
-msgstr "أنماط مختلفة"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:130
 msgid "Styling"
@@ -31345,11 +31220,6 @@ msgstr "سيناريوهات الاشتراك"
 #: src/features/user/components/modals/tabs/component_gallery_tab/MarkdownTab.tsx:81
 msgid "Subtext"
 msgstr "نص فرعي"
-
-#. Title in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:90
-msgid "Subtitle"
-msgstr "عنوان فرعي"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:71
@@ -31935,10 +31805,8 @@ msgstr "اختبار الروابط الموسعة والتضمينات المع
 
 #. Channel type chip label for a text channel.
 #. Option label for a WebRTC content hint select.
-#. Short label in the typography tab. Keep it concise.
 #: src/features/channel/utils/ChannelUtils.tsx:51
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:150
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:42
 msgid "Text"
 msgstr "نص"
 
@@ -31972,6 +31840,10 @@ msgstr "قنوات نصية"
 #: src/features/user/components/modals/tabs/component_gallery_tab/MarkdownTab.tsx:21
 msgid "Text formatting"
 msgstr "تنسيق النص"
+
+#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:308
+msgid "Text is rendered with grayscale antialiasing instead of ClearType while transparency is enabled, so it will look softer."
+msgstr "يتم عرض النص باستخدام تنعيم متدرج الرمادي بدلاً من ClearType عند تمكين الشفافية، لذلك سيبدو أكثر نعومة."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -32161,17 +32033,17 @@ msgid "The community you're looking for may have been deleted or you may not hav
 msgstr "قد تكون المجموعة التي تبحث عنها حُذفت أو قد لا تملك صلاحية الوصول إليها."
 
 #. Modal body shown when a desktop update download fails.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:112
+#: src/features/updater/commands/UpdaterModalCommands.tsx:116
 msgid "The desktop update could not be downloaded. Try again from the update button when your connection is stable."
 msgstr "تعذر تنزيل تحديث سطح المكتب. حاول مرة أخرى من زر التحديث عندما يصبح اتصالك مستقرًا."
 
 #. Desktop updater modal body when the downloaded version is unknown. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:92
+#: src/features/updater/commands/UpdaterModalCommands.tsx:96
 msgid "The desktop update has been downloaded. Restart {productName} to finish installing."
 msgstr "تم تنزيل تحديث سطح المكتب. أعد تشغيل {productName} لإكمال التثبيت."
 
 #. Help text below the Linux package format selector in the desktop updater modal.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:152
+#: src/features/updater/commands/UpdaterModalCommands.tsx:156
 msgid "The downloaded file is saved to your computer. Install it with your normal package manager."
 msgstr "يتم حفظ الملف الذي تم تنزيله على جهاز الكمبيوتر الخاص بك. قم بتثبيته باستخدام مدير الحزم العادي."
 
@@ -32442,12 +32314,7 @@ msgstr "قد لا يقبلون الرسائل منك، أو أنكما لم تع
 msgid "They're not accepting friend requests right now."
 msgstr "لا يقبلون طلبات الصداقة في الوقت الحالي."
 
-#. Short label in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:10
-msgid "Thin"
-msgstr "رفيع"
-
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:114
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:113
 msgid "Third option"
 msgstr "الخيار الثالث"
 
@@ -32870,19 +32737,19 @@ msgid "This is one heavy message. Some reactions need to be removed before you c
 msgstr "هذه رسالة ثقيلة جدًا. يجب إزالة بعض التفاعلات قبل أن تتمكن من إضافة المزيد."
 
 #. Description text in the index.
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:36
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:35
 msgid "This is some example text in the textarea."
 msgstr "هذا نص مثال في مربع النص."
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:112
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:111
 msgid "This is the first option description"
 msgstr "هذا هو وصف الخيار الأول"
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:113
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:112
 msgid "This is the second option description"
 msgstr "هذا هو وصف الخيار الثاني"
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:114
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:113
 msgid "This is the third option description"
 msgstr "هذا هو وصف الخيار الثالث"
 
@@ -33035,8 +32902,8 @@ msgid "This removes every custom shortcut and re-enables all built-in shortcuts.
 msgstr "سيؤدي هذا إلى إزالة كل الاختصارات المخصصة وإعادة تمكين جميع الاختصارات المضمنة. لا يمكن التراجع عن هذا الإجراء."
 
 #: src/features/auth/components/pages/ResetPasswordPage.tsx:114
-msgid "This reset link has expired. Reset links last 24 hours. Request a new one."
-msgstr "انتهت صلاحية رابط إعادة التعيين هذا. تدوم روابط إعادة التعيين 24 ساعة. اطلب رابطًا جديدًا."
+msgid "This reset link has expired. Reset links last 1 hour. Please request a new one."
+msgstr "انتهت صلاحية رابط إعادة التعيين هذا. تستمر روابط إعادة التعيين لمدة ساعة واحدة. يُرجى طلب رابط جديد."
 
 #. Fallback role name in a mass-mention warning title.
 #: src/features/channel/components/MentionEveryonePopout.tsx:14
@@ -33062,36 +32929,6 @@ msgstr "هذا المفتاح معطّل ولا يمكن تبديله"
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:93
 msgid "This switch is disabled in the checked state"
 msgstr "هذا المفتاح معطّل في حالة التحديد"
-
-#. Title in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:138
-msgid "This text demonstrates bold heading styling"
-msgstr "هذا النص يوضح نمط العنوان الغامق"
-
-#. Title in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:146
-msgid "This text demonstrates bold title styling"
-msgstr "هذا النص يوضح نمط العنوان الغامق"
-
-#. Label in the typography tab.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:118
-msgid "This text demonstrates italic styling"
-msgstr "هذا النص يوضح النمط المائل"
-
-#. Label in the typography tab.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:130
-msgid "This text demonstrates large semi-bold styling"
-msgstr "هذا النص يوضح نمطًا كبيرًا وشبه غامق"
-
-#. Label in the typography tab.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:110
-msgid "This text demonstrates normal styling"
-msgstr "هذا النص يوضح النمط العادي"
-
-#. Label in the typography tab.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:122
-msgid "This text demonstrates semi-bold styling"
-msgstr "هذا النص يوضح النمط شبه الغامق"
 
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx:299
 msgid "This textarea auto-expands between 4 and 12 rows as you type."
@@ -33416,11 +33253,6 @@ msgstr "المنطقة الزمنية"
 #: src/features/messaging/utils/markdown/Plaintext.ts:56
 msgid "Tip"
 msgstr "نصيحة"
-
-#. Title in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:98
-msgid "Title"
-msgstr "العنوان"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:178
@@ -34116,10 +33948,6 @@ msgstr "اكتب لونًا (سداسي عشري، rgb()، hsl، أو اسم)، 
 msgid "Type a color (hex, rgb(), hsl(), or name) or use the picker."
 msgstr "اكتب لونًا (سداسي عشري، rgb()، hsl()، أو اسم) أو استخدم منتقي الألوان."
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:403
-msgid "Type scale"
-msgstr "حجم الخط"
-
 #. Label in the inputs tab.
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx:89
 msgid "Type your message here…"
@@ -34167,14 +33995,6 @@ msgstr "مؤشر الكتابة فقط"
 #: src/features/user/components/modals/tabs/component_gallery_tab/IndicatorsTab.tsx:251
 msgid "Typing state"
 msgstr "حالة الكتابة"
-
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:365
-msgid "Typography"
-msgstr "الخطوط"
-
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:447
-msgid "Typography scale demonstration"
-msgstr "عرض توضيحي لمقياس الخطوط"
 
 #. Developer options group for forcing UI component states.
 #: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:57
@@ -34494,7 +34314,7 @@ msgstr "خيار احتياطي عالمي. أقل جودة، لكنه يعمل 
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:755
 #: src/features/invite/components/InviteListItem.tsx:34
 #: src/features/moderation/components/modals/BanDetailsModal.tsx:114
-#: src/features/updater/commands/UpdaterModalCommands.tsx:140
+#: src/features/updater/commands/UpdaterModalCommands.tsx:144
 msgid "Unknown"
 msgstr "غير معروف"
 
@@ -34649,8 +34469,8 @@ msgstr "رموز تعبيرية غير محدودة"
 msgid "Unlimited stickers"
 msgstr "ملصقات غير محدودة"
 
-#: src/features/channel/components/EmojiPicker.tsx:163
-#: src/features/channel/components/MobileEmojiPicker.tsx:208
+#: src/features/channel/components/EmojiPicker.tsx:150
+#: src/features/channel/components/MobileEmojiPicker.tsx:195
 msgid "Unlock {lockedEmojiCount, plural, one {# custom emoji} other {# custom emojis}} from {communityCount, plural, one {# community} other {# communities}} with {PREMIUM_PRODUCT_NAME}."
 msgstr "افتح قفل {lockedEmojiCount, plural, one {# إيموجي مخصص} other {# إيموجيات مخصصة}} من {communityCount, plural, one {# مجتمع} other {# مجتمعات}} باستخدام {PREMIUM_PRODUCT_NAME}."
 
@@ -34796,7 +34616,7 @@ msgstr "قناة بلا اسم"
 #. Fallback title in an invite embed for a group DM with no name set.
 #. Short label in the channel display name state. Keep it concise.
 #: src/features/channel/components/InviteEmbed.tsx:72
-#: src/features/channel/state/ChannelDisplayName.ts:17
+#: src/features/channel/state/ChannelDisplayName.ts:18
 #: src/features/channel/utils/ChannelUtils.tsx:59
 msgid "Unnamed group"
 msgstr "مجموعة بلا اسم"
@@ -37333,7 +37153,7 @@ msgid "We've updated our policies. Review and accept them to continue."
 msgstr "لقد قمنا بتحديث سياساتنا. راجعها واقبلها للمتابعة."
 
 #. Client info web build identifier shown after the desktop build when both are present. Example: "Web 2026.518.0". Preserve placeholder.
-#: src/features/app/components/dialogs/components/ClientInfo.tsx:28
+#: src/features/app/components/dialogs/components/ClientInfo.tsx:27
 msgid "Web {buildVersion}"
 msgstr "الويب {buildVersion}"
 
@@ -37917,7 +37737,7 @@ msgid "You are editing your per-community profile. This profile will only be vis
 msgstr "أنت تعدّل ملفك الشخصي الخاص بالمنتدى. سيكون هذا الملف الشخصي مرئيًا في هذا المنتدى فقط وسيتجاوز ملفك الشخصي العام."
 
 #. Body text in the settings dialog client info.
-#: src/features/app/components/dialogs/components/ClientInfo.tsx:42
+#: src/features/app/components/dialogs/components/ClientInfo.tsx:41
 msgid "You are now a developer!"
 msgstr "أنت الآن مطوّر!"
 

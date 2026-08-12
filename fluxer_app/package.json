@@ -22,7 +22,7 @@
 		"bench:gif-picker": "vitest bench --run src/features/channel/components/pickers/gif/GifPickerStateMachine.bench.ts src/features/channel/components/pickers/gif/GifPickerGridData.bench.ts src/features/channel/components/pickers/gif/GifPickerLoadingSkeletonGridLayout.bench.ts src/features/channel/components/pickers/shared/MasonryListComputer.bench.ts",
 		"bench:messages": "vitest bench --run src/features/messaging/utils/MessageGroupingUtils.bench.ts src/features/channel/components/ChannelMessageStreamUtils.bench.ts src/features/messaging/components/markdown/MarkdownRendering.bench.ts src/features/channel/components/MessageAttachmentUtils.bench.ts src/features/messaging/utils/MessagePaginationUtils.bench.ts src/features/platform/utils/ScrollPosition.bench.ts src/features/messaging/state/ReactionStateMachine.bench.ts",
 		"test:watch": "vitest",
-		"typecheck": "pnpm wasm:codegen && pnpm generate:message-layout && pnpm generate:theme-variables && pnpm generate:masks && pnpm generate:css-types && tsgo --noEmit",
+		"typecheck": "pnpm wasm:codegen && pnpm generate:colors && pnpm generate:message-layout && pnpm generate:theme-variables && pnpm generate:masks && pnpm generate:css-types && tsgo --noEmit",
 		"typecheck:only": "tsgo --noEmit",
 		"check:message-layout": "pnpm tsx scripts/GenerateMessageLayoutCss.ts --check",
 		"generate:colors": "pnpm tsx scripts/GenerateColorSystem.ts",

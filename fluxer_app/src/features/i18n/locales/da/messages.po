@@ -618,7 +618,7 @@ msgid "{defaultDeviceLabel} ({endpointLabel})"
 msgstr "{defaultDeviceLabel} ({endpointLabel})"
 
 #. Client info desktop build identifier line. Example: "Canary Desktop 2026.419.3". Preserve placeholders.
-#: src/features/app/components/dialogs/components/ClientInfo.tsx:38
+#: src/features/app/components/dialogs/components/ClientInfo.tsx:37
 msgid "{desktopChannel} Desktop {desktopVersion}"
 msgstr "{desktopChannel} Desktop {desktopVersion}"
 
@@ -1089,12 +1089,12 @@ msgid "{productName} Community Team"
 msgstr "{productName}-fællesskabsteam"
 
 #. Modal body shown when a user-initiated update check fails. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:104
+#: src/features/updater/commands/UpdaterModalCommands.tsx:108
 msgid "{productName} could not reach the update service. Check your connection and try again."
 msgstr "{productName} kunne ikke oprette forbindelse til opdateringstjenesten. Kontroller din internetforbindelse, og prøv igen."
 
 #. Modal body shown when starting installation of a downloaded desktop update fails. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:121
+#: src/features/updater/commands/UpdaterModalCommands.tsx:125
 msgid "{productName} could not restart into the downloaded update. Try again from the update button."
 msgstr "{productName} kunne ikke genstarte og installere den downloadede opdatering. Prøv igen ved at klikke på knappen \"Opdater\"."
 
@@ -1210,8 +1210,8 @@ msgstr "{productName} ordmærke"
 
 #. Client info web build identifier line. Example: "Canary Web 2026.518.0". Preserve placeholders.
 #. Client info web build identifier shown after the desktop build when the web and desktop channels differ. Example: "Stable Web 2026.518.0". Preserve placeholders.
-#: src/features/app/components/dialogs/components/ClientInfo.tsx:24
-#: src/features/app/components/dialogs/components/ClientInfo.tsx:33
+#: src/features/app/components/dialogs/components/ClientInfo.tsx:23
+#: src/features/app/components/dialogs/components/ClientInfo.tsx:32
 msgid "{releaseChannel} Web {buildVersion}"
 msgstr "{releaseChannel} Web {buildVersion}"
 
@@ -1242,7 +1242,7 @@ msgid "{renderedPresenceCount} online"
 msgstr "{renderedPresenceCount} online"
 
 #. Short label in the channel display name state. Keep it concise. Preserve {resolvedName}; it is inserted by code.
-#: src/features/channel/state/ChannelDisplayName.ts:12
+#: src/features/channel/state/ChannelDisplayName.ts:13
 msgid "{resolvedName}'s group"
 msgstr "Gruppen med {resolvedName}"
 
@@ -1961,7 +1961,7 @@ msgid "a hostname, e.g. {exampleDomain}"
 msgstr "et værtsnavn, f.eks. {exampleDomain}"
 
 #. Linux desktop updater modal body shown before version details and package format selector. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:126
+#: src/features/updater/commands/UpdaterModalCommands.tsx:130
 msgid "A Linux desktop update is available. Choose the package format for this system and {productName} will save it locally."
 msgstr "En Linux-opdatering til skrivebordet er tilgængelig. Vælg pakkeformatet for dette system, og {productName} gemmer det lokalt."
 
@@ -1990,7 +1990,7 @@ msgstr "en afstemning"
 msgid "A redirect_uri is required when the bot scope is not the only scope."
 msgstr "En redirect_uri er påkrævet, når bot-scopet ikke er det eneste scope."
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:342
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:341
 msgid "A reusable component for empty states, errors, and status messages."
 msgstr "En genanvendelig komponent til tomme tilstande, fejl og statusmeddelelser."
 
@@ -3891,7 +3891,7 @@ msgstr "Apps"
 msgid "Arabic"
 msgstr "Arabisk"
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:227
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:226
 msgid "Archive"
 msgstr "Arkivér"
 
@@ -4667,7 +4667,7 @@ msgid "Autoscrolling"
 msgstr "Automatisk rulning"
 
 #. Label for the available desktop version in the Linux update modal.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:136
+#: src/features/updater/commands/UpdaterModalCommands.tsx:140
 msgid "Available"
 msgstr "Tilgængelig"
 
@@ -5243,26 +5243,6 @@ msgstr "Slør"
 msgid "Blur strength"
 msgstr "Sløringstyrke"
 
-#. Short label in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:82
-msgid "Body"
-msgstr "Brødtekst"
-
-#. Short label in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:66
-msgid "Bold"
-msgstr "Fed"
-
-#. Title in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:134
-msgid "Bold heading"
-msgstr "Fed overskrift"
-
-#. Title in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:142
-msgid "Bold title"
-msgstr "Fed titel"
-
 #. Folder icon option in the community-folder settings modal: a bookmark shape. Refers to the bookmark icon glyph, not the saved-message bookmarks feature.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the buttons tab. Keep it concise.
@@ -5590,7 +5570,7 @@ msgstr "Knapvarianter"
 msgid "Button with context menu"
 msgstr "Knap med genvejsmenu"
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:252
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:251
 msgid "Buttons"
 msgstr "Knapper"
 
@@ -5988,11 +5968,6 @@ msgstr "Kan ikke installere stickerpakke"
 #: src/features/auth/components/CaptchaInterceptor.tsx:14
 msgid "Captcha verification failed. Try again."
 msgstr "Captcha-verificering mislykkedes. Prøv igen."
-
-#. Short label in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:74
-msgid "Caption"
-msgstr "Billedtekst"
 
 #. Section header in the Linux audio source picker. Lists capture-target options (entire system / specific apps).
 #: src/features/voice/components/AudioSourcePickerLinux.tsx:48
@@ -7179,7 +7154,7 @@ msgstr "Ryd alle aktive tilsidesættelser"
 msgid "Clear all attachment mocks"
 msgstr "Ryd alle vedhæftede filer (test)"
 
-#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:378
+#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:384
 msgid "Clear all token overrides"
 msgstr "Ryd alle token-tilsidesættelser"
 
@@ -7215,7 +7190,7 @@ msgstr "Ryd mock for denne vedhæftning"
 msgid "Clear nickname"
 msgstr "Ryd kaldenavn"
 
-#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:401
+#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:407
 msgid "Clear overrides"
 msgstr "Ryd tilsidesættelser"
 
@@ -7299,7 +7274,7 @@ msgstr "Rydede emnet."
 msgid "Clearing trusted domains..."
 msgstr "Rydder godkendte domæner..."
 
-#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:359
+#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:365
 msgid "Clears quick CSS, imported themes, uploaded assets, and local file references on this device."
 msgstr "Rydder hurtig CSS, importerede temaer, uploadede aktiver og lokale filreferencer på denne enhed."
 
@@ -7341,7 +7316,7 @@ msgid "Click to claim your gift!"
 msgstr "Tryk for at indløse din gave!"
 
 #. Short label in the settings dialog client info.
-#: src/features/app/components/dialogs/components/ClientInfo.tsx:46
+#: src/features/app/components/dialogs/components/ClientInfo.tsx:45
 msgid "Click to copy"
 msgstr "Tryk for at kopiere"
 
@@ -8825,7 +8800,7 @@ msgstr "Kopiér invitationslink"
 #. Generic action label that copies a URL to the clipboard.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:739
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:310
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:146
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:145
 msgid "Copy link"
 msgstr "Kopiér link"
 
@@ -9065,7 +9040,7 @@ msgid "Couldn't change your billing cycle"
 msgstr "Kunne ikke ændre din faktureringscyklus"
 
 #. Modal title shown when a user-initiated update check fails.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:100
+#: src/features/updater/commands/UpdaterModalCommands.tsx:104
 msgid "Couldn't check for updates"
 msgstr "Kunne ikke søge efter opdateringer"
 
@@ -9172,7 +9147,7 @@ msgid "Couldn't delete your messages"
 msgstr "Kunne ikke slette dine beskeder"
 
 #. Modal title shown when a desktop update download fails.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:108
+#: src/features/updater/commands/UpdaterModalCommands.tsx:112
 msgid "Couldn't download the desktop update"
 msgstr "Kunne ikke downloade desktopopdateringen"
 
@@ -9426,7 +9401,7 @@ msgid "Couldn't start the connection"
 msgstr "Kunne ikke starte forbindelsen"
 
 #. Modal title shown when starting installation of a downloaded desktop update fails.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:117
+#: src/features/updater/commands/UpdaterModalCommands.tsx:121
 msgid "Couldn't start the desktop update"
 msgstr "Kunne ikke starte desktopopdateringen"
 
@@ -10302,7 +10277,7 @@ msgid "Danger button clicked."
 msgstr "Farekknap klikket."
 
 #. Short label in the account security tab. Keep it concise. Keep the tone plain and specific.
-#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:350
+#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:356
 #: src/features/user/components/modals/tabs/account_security_tab/AccountSecuritySections.tsx:39
 #: src/features/user/components/modals/tabs/applications_tab/ApplicationDetail.tsx:697
 msgid "Danger zone"
@@ -10669,7 +10644,7 @@ msgstr "Standardindstillingen er slået fra på mobil for at spare på batteri o
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:399
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:116
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:272
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:239
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:238
 #: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:49
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:154
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:190
@@ -10964,11 +10939,6 @@ msgstr "Dine beskeder er slettet."
 msgid "Deleted."
 msgstr "Slettet."
 
-#. Label in the typography tab.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:14
-msgid "Delicate and light typography"
-msgstr "Fin og let typografi"
-
 #. Status chip for a denied macOS permission.
 #: src/features/permissions/system/components/modals/MacPermissionsModal.tsx:59
 msgid "Denied"
@@ -11145,12 +11115,12 @@ msgid "Desktop update available. Choose a Linux package."
 msgstr "Skrivebordsopdatering tilgængelig. Vælg en Linux-pakke."
 
 #. Modal title shown when a desktop app update has finished downloading.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:83
+#: src/features/updater/commands/UpdaterModalCommands.tsx:87
 msgid "Desktop update ready"
 msgstr "Desktopopdatering klar"
 
 #. Desktop updater modal body. The version placeholder is the downloaded app version; productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:87
+#: src/features/updater/commands/UpdaterModalCommands.tsx:91
 msgid "Desktop version {version} has been downloaded. Restart {productName} to finish installing."
 msgstr "Desktopversion {version} er blevet downloadet. Genstart {productName} for at fuldføre installationen."
 
@@ -11753,11 +11723,9 @@ msgstr "Afvis omtale"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the chat settings tab. Keep it concise.
 #. Short label in the inline. Keep it concise.
-#. Short label in the typography tab. Keep it concise.
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleEditor.tsx:175
 #: src/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabInline.tsx:14
 #: src/features/user/components/modals/tabs/ChatSettingsTab.tsx:14
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:102
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:154
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:116
 msgid "Display"
@@ -12305,7 +12273,7 @@ msgid "Due to mature content laws in {regionName}, this media is not available f
 msgstr "På grund af lovgivning om voksenindhold i {regionName} er dette medie ikke tilgængeligt fra din nuværende region."
 
 #: src/features/theme_studio/sections/LibrarySection.tsx:503
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:221
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:220
 msgid "Duplicate"
 msgstr "Duplikér"
 
@@ -12590,7 +12558,7 @@ msgid "Edit your profile bio"
 msgstr "Rediger din profilbeskrivelse"
 
 #. Button or menu action label in the index. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:40
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:39
 msgid "Editable text"
 msgstr "Redigerbar tekst"
 
@@ -13001,7 +12969,7 @@ msgstr "Aktivér udløb af vedhæftede filer"
 msgid "Enable audio"
 msgstr "Slå lyd til"
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:172
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:171
 msgid "Enable beta feature"
 msgstr "Slå betafunktion til"
 
@@ -13038,7 +13006,7 @@ msgstr "Slå udviklertilstand til"
 msgid "Enable email delivery"
 msgstr "Aktivér e-mail-levering"
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:158
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:157
 msgid "Enable extra option"
 msgstr "Slå ekstra mulighed til"
 
@@ -13660,7 +13628,7 @@ msgstr "Fejl"
 msgid "error code {code}"
 msgstr "fejlkode {code}"
 
-#: src/features/messaging/components/markdown/index.tsx:39
+#: src/features/messaging/components/markdown/index.tsx:40
 msgid "Error rendering content"
 msgstr "Fejl ved visning af indhold"
 
@@ -14094,11 +14062,6 @@ msgstr "Eksterne links kan være farlige. Vær forsigtig."
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:57
 msgid "Extra large"
 msgstr "Ekstra stor"
-
-#. Short label in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:18
-msgid "Extra light"
-msgstr "Ekstra let"
 
 #. Report category label for a community organized around extremist content or ideology.
 #: src/features/moderation/components/report/OptionDescriptors.ts:90
@@ -14791,7 +14754,7 @@ msgstr "Første klik"
 msgid "First click pass-through when unfocused"
 msgstr "Første klik går igennem, når vinduet ikke er i fokus"
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:112
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:111
 msgid "First option"
 msgstr "Første mulighed"
 
@@ -14916,10 +14879,6 @@ msgstr "Følger master • {effectiveValue}%"
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:170
 msgid "Font"
 msgstr "Skrifttype"
-
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:344
-msgid "Font weights"
-msgstr "Skrifttypetykkelser"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:9
@@ -15364,7 +15323,7 @@ msgid "From {start}"
 msgstr "Fra {start}"
 
 #. placeholder {0}: sourceGuild.name
-#: src/features/channel/components/emoji_picker/EmojiPickerInspector.tsx:104
+#: src/features/channel/components/emoji_picker/EmojiPickerInspector.tsx:102
 msgid "from <0>{0}</0>"
 msgstr "fra <0>{0}</0>"
 
@@ -15460,7 +15419,7 @@ msgstr "GDPR"
 msgid "General"
 msgstr "Generelt"
 
-#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:325
+#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:331
 msgid "Generate a shareable link or copy your combined custom CSS."
 msgstr "Generer et link, der kan deles, eller kopier din kombinerede brugerdefinerede CSS."
 
@@ -15480,11 +15439,6 @@ msgstr "Generer ny kode"
 #: src/features/auth/flow/HandoffCodeDisplay.tsx:70
 msgid "Generating code…"
 msgstr "Genererer kode…"
-
-#. Label in the typography tab.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:22
-msgid "Gentle and airy text display"
-msgstr "Blid og luftig tekstvisning"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:209
@@ -16265,11 +16219,6 @@ msgstr "Han"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:45
 msgid "Header"
-msgstr "Overskrift"
-
-#. Title in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:94
-msgid "Heading"
 msgstr "Overskrift"
 
 #. Title in the markdown tab. Keep it concise.
@@ -17429,7 +17378,7 @@ msgstr "Indekserer kanal"
 msgid "Indicator"
 msgstr "Indikator"
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:334
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:333
 msgid "Indicators & status"
 msgstr "Indikatorer og status"
 
@@ -17557,7 +17506,7 @@ msgstr "Inputfelter"
 msgid "Input volume"
 msgstr "Indgangslydstyrke"
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:260
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:259
 msgid "Inputs & text"
 msgstr "Input og tekst"
 
@@ -17590,7 +17539,7 @@ msgid "Install sticker pack"
 msgstr "Installer stickerpakke"
 
 #. Label for the installed desktop version in the Linux update modal.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:132
+#: src/features/updater/commands/UpdaterModalCommands.tsx:136
 msgid "Installed"
 msgstr "Installeret"
 
@@ -18094,15 +18043,6 @@ msgstr "Her er stille lige nu..."
 msgid "Italian"
 msgstr "Italiensk"
 
-#. Short label in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:114
-msgid "Italic"
-msgstr "Kursiv"
-
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:392
-msgid "Italic style demonstration"
-msgstr "Demonstration af kursiv stil"
-
 #. Country name. EU member state in the illegal-content report country dropdown.
 #: src/features/moderation/components/report/OptionDescriptors.ts:167
 msgid "Italy"
@@ -18532,10 +18472,6 @@ msgstr "Sprog"
 msgid "Language settings"
 msgstr "Sprogindstillinger"
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:285
-msgid "Language support"
-msgstr "Sprogunderstøttelse"
-
 #. Submenu label in the textarea spellcheck submenu listing manual language overrides.
 #. Subsection title for spellcheck language settings. Keep it concise.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:86
@@ -18544,9 +18480,7 @@ msgid "Languages"
 msgstr "Sprog"
 
 #. Short label in the selections tab. Keep it concise.
-#. Short label in the typography tab. Keep it concise.
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:53
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:86
 msgid "Large"
 msgstr "Stor"
 
@@ -18822,9 +18756,7 @@ msgid "Lifetime {premiumProductName}"
 msgstr "Livstid {premiumProductName}"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#. Short label in the typography tab. Keep it concise.
 #: src/features/expressions/components/modals/sticker_form/StickerPreview.tsx:48
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:26
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:54
 msgid "Light"
 msgstr "Lys"
@@ -19012,7 +18944,7 @@ msgid "Linux default"
 msgstr "Linux standard"
 
 #. Select label for choosing the Linux desktop package format to download.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:148
+#: src/features/updater/commands/UpdaterModalCommands.tsx:152
 msgid "Linux package"
 msgstr "Linux-pakke"
 
@@ -19613,7 +19545,7 @@ msgid "Mark top inbox channel as read"
 msgstr "Markér øverste indbakke-kanal som læst"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:372
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:364
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:122
 msgid "Markdown"
 msgstr "Markdown"
@@ -19945,10 +19877,8 @@ msgstr "Mediastørrelse"
 
 #. Member verification level option in the community moderation settings tab. Short standalone severity label.
 #. Short label in the selections tab. Keep it concise.
-#. Short label in the typography tab. Keep it concise.
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:65
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:49
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:50
 msgid "Medium"
 msgstr "Mellem"
 
@@ -20820,7 +20750,7 @@ msgstr "Mere"
 
 #. Short label in the index. Keep it concise.
 #. Short label in the user profile modal. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:48
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:47
 #: src/features/user/components/modals/UserProfileModal.tsx:114
 msgid "More actions"
 msgstr "Flere handlinger"
@@ -20992,10 +20922,6 @@ msgstr "Multi-faktor"
 #: src/features/user/components/modals/tabs/component_gallery_tab/MarkdownTab.tsx:57
 msgid "Multi-line"
 msgstr "Multi-line"
-
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:497
-msgid "Multilingual content"
-msgstr "Flersproget indhold"
 
 #. Discovery category dropdown option in the community Discovery settings tab.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:79
@@ -21653,7 +21579,7 @@ msgid "New users can't join right now. You can still create an account or sign i
 msgstr "Nye brugere kan ikke tilmelde sig lige nu. Du kan stadig oprette en konto eller logge ind og derefter prøve dette link igen senere."
 
 #. Fallback version label when the available desktop version is unknown.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:144
+#: src/features/updater/commands/UpdaterModalCommands.tsx:148
 msgid "New version"
 msgstr "Ny version"
 
@@ -21921,7 +21847,7 @@ msgid "No emojis found matching your search."
 msgstr "Ingen emojis fundet, der matcher din søgning."
 
 #. Empty-state text in the channel and chat emoji picker.
-#: src/features/channel/components/EmojiPicker.tsx:43
+#: src/features/channel/components/EmojiPicker.tsx:41
 msgid "No emojis match that search"
 msgstr "Ingen emojis matcher søgningen"
 
@@ -22363,11 +22289,6 @@ msgstr "Ingen"
 msgid "None (normal behavior)"
 msgstr "Ingen (normal adfærd)"
 
-#. Short label in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:106
-msgid "Normal"
-msgstr "Normal"
-
 #. Short label in the language and locale names. Keep it concise.
 #: src/features/user/utils/LocaleUtils.ts:100
 msgid "Norwegian"
@@ -22792,7 +22713,7 @@ msgid "Only you can see this message. <0>Dismiss</0>"
 msgstr "Kun du kan se denne besked. <0>Afvis</0>"
 
 #. Short label in the index. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:44
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:43
 msgid "Opacity"
 msgstr "Gennemsigtighed"
 
@@ -22970,7 +22891,7 @@ msgid "Open date picker"
 msgstr "Åbn datovælger"
 
 #. Button label that opens the Fluxer desktop downloads page in a browser.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:79
+#: src/features/updater/commands/UpdaterModalCommands.tsx:83
 msgid "Open desktop downloads"
 msgstr "Åbn downloads til computer"
 
@@ -23165,6 +23086,11 @@ msgstr "Åbn hurtigskifter"
 msgid "Open settings"
 msgstr "Åbn indstillinger"
 
+#. Button label that opens the software center via appstream protocol.
+#: src/features/updater/commands/UpdaterModalCommands.tsx:79
+msgid "Open software center"
+msgstr "Åbn softwarecenter"
+
 #. Action that opens the sticker URL in an external browser.
 #: src/features/ui/action_menu/items/StickerContextMenuItems.tsx:40
 msgid "Open sticker in browser"
@@ -23310,11 +23236,6 @@ msgstr "Operativsystem"
 #: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:26
 msgid "Opt into experimental per-community and per-channel unread badge controls"
 msgstr "Slå eksperimentelle indstillinger til for at få flere kontrolmuligheder over ulæste badges på både fællesskabs- og kanalbasis"
-
-#. Label in the typography tab.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:46
-msgid "Optimized for longer reading passages"
-msgstr "Optimeret til længere tekststykker"
 
 #: src/features/voice/components/modals/CameraPreviewModal.tsx:906
 msgid "Optimizing camera..."
@@ -23483,7 +23404,7 @@ msgstr "Uden for refusionsperioden"
 msgid "Overlapping avatar groups showing multiple users with automatic overflow counts."
 msgstr "Overlappende avatar-grupper, der viser flere brugere med automatisk overløbstælling."
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:327
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:326
 msgid "Overlays & menus"
 msgstr "Overlays og menuer"
 
@@ -23885,11 +23806,6 @@ msgstr "Lydstyrke pr. lyd"
 #: src/features/voice/components/modals/screen_share_picker_modal/PerWindowAudioNotice.tsx:28
 msgid "Per-window audio isn't available on this build of macOS."
 msgstr "Lyd pr. vindue er ikke tilgængelig i denne version af macOS."
-
-#. Label in the typography tab.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:38
-msgid "Perfect for everyday content"
-msgstr "Perfekt til hverdagsindhold"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:86
@@ -24417,11 +24333,6 @@ msgstr "Stilling"
 msgid "Power saving"
 msgstr "Strømsparetilstand"
 
-#. Short label in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:70
-msgid "Powerful and attention-grabbing"
-msgstr "Kraftfuld og iøjnefaldende"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:111
 msgid "Pre-upload attachments"
@@ -24691,7 +24602,7 @@ msgstr "Primær (deaktiveret)"
 msgid "Primary accent color"
 msgstr "Primær accentfarve"
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:351
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:350
 msgid "Primary action"
 msgstr "Primær handling"
 
@@ -25724,11 +25635,6 @@ msgstr "Registrering"
 msgid "Registration is currently closed. Use a registration link from an admin to create an account."
 msgstr "Registrering er i øjeblikket lukket. Brug et registreringslink fra en administrator for at oprette en konto."
 
-#. Short label in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:34
-msgid "Regular"
-msgstr "Almindelig"
-
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:226
 msgid "Regular button"
 msgstr "Almindelig knap"
@@ -26198,7 +26104,7 @@ msgstr "Fjernede brugergrænsen."
 msgid "Removed timeout from {0}"
 msgstr "Fjernede timeout fra {0}"
 
-#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:381
+#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:387
 msgid "Removes every per-variable override but keeps your library and assets intact."
 msgstr "Fjerner alle tilsidesættelser pr. variabel, men beholder dit bibliotek og dine aktiver intakte."
 
@@ -26703,7 +26609,7 @@ msgstr "Nulstil appdata"
 msgid "Reset app data and restart"
 msgstr "Nulstil appdata, og genstart"
 
-#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:356
+#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:362
 msgid "Reset custom theme data"
 msgstr "Nulstil tilpassede temadata"
 
@@ -26714,7 +26620,7 @@ msgstr "Nulstil tilpassede temadata?"
 
 #. Button or menu action label in the theme studio settings section. Keep it concise.
 #: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:76
-#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:371
+#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:377
 msgid "Reset data"
 msgstr "Nulstil data"
 
@@ -26854,7 +26760,7 @@ msgid "Restart {appName}"
 msgstr "Genstart {appName}"
 
 #. Button label that restarts the app to apply a desktop update. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:96
+#: src/features/updater/commands/UpdaterModalCommands.tsx:100
 msgid "Restart {productName}"
 msgstr "Genstart {productName}"
 
@@ -28030,7 +27936,7 @@ msgstr "Søger"
 msgid "Searching people..."
 msgstr "Søger efter personer ..."
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:113
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:112
 msgid "Second option"
 msgstr "Anden mulighed"
 
@@ -28047,7 +27953,7 @@ msgstr "Sekundær (deaktiveret)"
 msgid "Secondary accent color"
 msgstr "Sekundær accentfarve"
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:355
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:354
 msgid "Secondary action"
 msgstr "Sekundær handling"
 
@@ -28339,7 +28245,7 @@ msgstr "Valg: {0}"
 msgid "Selection: {0} (max {1})"
 msgstr "Valg: {0} (maks. {1})"
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:293
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:292
 msgid "Selections"
 msgstr "Valg"
 
@@ -28368,16 +28274,6 @@ msgstr "Tilsidesæt selvhostet tilstand"
 #: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx:36
 msgid "Self-serve refunds available within 3 days of payment, once every 30 days. Refunding a subscription cancels it. EU/EEA buyers waive the 14-day right of withdrawal at checkout to access content immediately. Use the in-app refund button instead of a chargeback. Chargebacks can permanently restrict your account. Stripe handles payment securely. We never see your full card number."
 msgstr "Selvbetjent refusion er tilgængelig inden for 3 dage efter betaling, én gang hver 30. dag. Refusion af et abonnement annullerer det. Købere fra EU/EØS frasiger sig den 14-dages fortrydelsesret ved kassen for at få øjeblikkelig adgang til indhold. Brug refusionsknappen i appen i stedet for en tilbageførsel. Tilbageførsler kan permanent begrænse din konto. Stripe håndterer betaling sikkert. Vi ser aldrig dit fulde kortnummer."
-
-#. Short label in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:58
-msgid "Semi bold"
-msgstr "Halvfed"
-
-#. Short label in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:126
-msgid "Semi-bold large"
-msgstr "Halvfed stor"
 
 #. Button or menu action label in the share theme modal. Keep it concise.
 #. Send-message button label in the voice message composer modal.
@@ -28951,7 +28847,7 @@ msgstr "Indstiller niveauet for alle lydeffekter. Individuelle lydindstillinger 
 #. Generic action label / section header that opens settings.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:262
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:264
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:126
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:125
 msgid "Settings"
 msgstr "Indstillinger"
 
@@ -28991,9 +28887,9 @@ msgid "Several people are typing..."
 msgstr "Flere skriver..."
 
 #: src/features/theme_studio/sections/QuickCssSection.tsx:225
-#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:316
+#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:322
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:279
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:133
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:132
 msgid "Share"
 msgstr "Del"
 
@@ -29002,7 +28898,7 @@ msgstr "Del"
 msgid "Share action."
 msgstr "Del handling."
 
-#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:322
+#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:328
 msgid "Share active custom theme"
 msgstr "Del aktivt tilpasset tema"
 
@@ -29035,7 +28931,7 @@ msgstr "Del kilde"
 msgid "Share the {premiumProductName} experience with your friends by purchasing a gift subscription."
 msgstr "Del {premiumProductName}-oplevelsen med dine venner ved at købe et gaveabonnement."
 
-#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:341
+#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:347
 msgid "Share theme"
 msgstr "Del tema"
 
@@ -29963,11 +29859,6 @@ msgstr "Skyder med trin"
 msgid "Sliders"
 msgstr "Skydere"
 
-#. Short label in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:54
-msgid "Slightly bolder emphasis"
-msgstr "Lidt federe fremhævelse"
-
 #. Country name. EU member state in the illegal-content report country dropdown.
 #: src/features/moderation/components/report/OptionDescriptors.ts:203
 msgid "Slovakia"
@@ -30076,9 +29967,7 @@ msgid "Slurs, dehumanizing language, or attacks on protected groups."
 msgstr "Nedsættende sprog, dehumaniserende sprog eller angreb på beskyttede grupper."
 
 #. Short label in the selections tab. Keep it concise.
-#. Short label in the typography tab. Keep it concise.
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:45
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:78
 msgid "Small"
 msgstr "Lille"
 
@@ -30160,11 +30049,6 @@ msgstr "Snapper til intervaller på 5."
 #: src/features/user/components/settings_utils/search_index/LinkedAccountsIndex.ts:40
 msgid "Social"
 msgstr "Socialt"
-
-#. Label in the typography tab.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:30
-msgid "Soft and easy reading experience"
-msgstr "Blød og let læseoplevelse"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:148
@@ -30877,7 +30761,7 @@ msgstr "Statusindikatorer"
 msgid "Status page"
 msgstr "Statusside"
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:341
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:340
 msgid "Status slate"
 msgstr "Statusopdatering"
 
@@ -31291,15 +31175,6 @@ msgstr "Stripe rapporterede et kort udstedt i {countryName}. For at betale i den
 msgid "Strong quality at moderate CPU cost. Good Chromium fallback for screen sharing."
 msgstr "God kvalitet til moderat CPU-forbrug. God Chromium-fallback til skærmdeling."
 
-#. Short label in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:62
-msgid "Strong visual hierarchy"
-msgstr "Stærk visuelt hierarki"
-
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:458
-msgid "Style variations"
-msgstr "Stilvariationer"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:130
 msgid "Styling"
@@ -31344,11 +31219,6 @@ msgstr "Abonnementsscenarier"
 #. Short label in the markdown tab. Keep it concise.
 #: src/features/user/components/modals/tabs/component_gallery_tab/MarkdownTab.tsx:81
 msgid "Subtext"
-msgstr "Undertekst"
-
-#. Title in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:90
-msgid "Subtitle"
 msgstr "Undertekst"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
@@ -31935,10 +31805,8 @@ msgstr "Test webadresser og gengivne indlejringer"
 
 #. Channel type chip label for a text channel.
 #. Option label for a WebRTC content hint select.
-#. Short label in the typography tab. Keep it concise.
 #: src/features/channel/utils/ChannelUtils.tsx:51
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:150
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:42
 msgid "Text"
 msgstr "Tekst"
 
@@ -31972,6 +31840,10 @@ msgstr "Tekstkanaler"
 #: src/features/user/components/modals/tabs/component_gallery_tab/MarkdownTab.tsx:21
 msgid "Text formatting"
 msgstr "Tekstformatering"
+
+#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:308
+msgid "Text is rendered with grayscale antialiasing instead of ClearType while transparency is enabled, so it will look softer."
+msgstr "Tekst gengives med gråtonet antialiasing i stedet for ClearType, når gennemsigtighed er aktiveret, så den vil se blødere ud."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -32161,17 +32033,17 @@ msgid "The community you're looking for may have been deleted or you may not hav
 msgstr "Det fællesskab, du leder efter, er muligvis blevet slettet, eller også har du ikke adgang til det."
 
 #. Modal body shown when a desktop update download fails.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:112
+#: src/features/updater/commands/UpdaterModalCommands.tsx:116
 msgid "The desktop update could not be downloaded. Try again from the update button when your connection is stable."
 msgstr "Skrivebordsopdateringen kunne ikke downloades. Prøv igen via opdateringsknappen, når din forbindelse er stabil."
 
 #. Desktop updater modal body when the downloaded version is unknown. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:92
+#: src/features/updater/commands/UpdaterModalCommands.tsx:96
 msgid "The desktop update has been downloaded. Restart {productName} to finish installing."
 msgstr "Desktopopdateringen er blevet downloadet. Genstart {productName}, for at fuldføre installationen."
 
 #. Help text below the Linux package format selector in the desktop updater modal.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:152
+#: src/features/updater/commands/UpdaterModalCommands.tsx:156
 msgid "The downloaded file is saved to your computer. Install it with your normal package manager."
 msgstr "Den downloadede fil gemmes på din computer. Installer den med din normale pakkehåndtering."
 
@@ -32442,12 +32314,7 @@ msgstr "De accepterer muligvis ikke beskeder fra dig, eller I deler ikke længer
 msgid "They're not accepting friend requests right now."
 msgstr "De modtager ikke venneanmodninger lige nu."
 
-#. Short label in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:10
-msgid "Thin"
-msgstr "Tynd"
-
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:114
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:113
 msgid "Third option"
 msgstr "Tredje mulighed"
 
@@ -32870,19 +32737,19 @@ msgid "This is one heavy message. Some reactions need to be removed before you c
 msgstr "Dette er en tung besked. Nogle reaktioner skal fjernes, før du kan tilføje flere."
 
 #. Description text in the index.
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:36
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:35
 msgid "This is some example text in the textarea."
 msgstr "Dette er en eksempeltekst i tekstfeltet."
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:112
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:111
 msgid "This is the first option description"
 msgstr "Dette er den første valgmuligheds beskrivelse"
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:113
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:112
 msgid "This is the second option description"
 msgstr "Dette er den anden valgmuligheds beskrivelse"
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:114
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:113
 msgid "This is the third option description"
 msgstr "Dette er den tredje valgmuligheds beskrivelse"
 
@@ -33035,8 +32902,8 @@ msgid "This removes every custom shortcut and re-enables all built-in shortcuts.
 msgstr "Dette fjerner alle tilpassede genveje og genaktiverer alle indbyggede genveje. Dette kan ikke fortrydes."
 
 #: src/features/auth/components/pages/ResetPasswordPage.tsx:114
-msgid "This reset link has expired. Reset links last 24 hours. Request a new one."
-msgstr "Dette nulstillingslink er udløbet. Nulstillingslinks er gyldige i 24 timer. Anmod om et nyt."
+msgid "This reset link has expired. Reset links last 1 hour. Please request a new one."
+msgstr "Dette nulstillingslink er udløbet. Nulstillingslinks er gyldige i 1 time. Anmod venligst om et nyt."
 
 #. Fallback role name in a mass-mention warning title.
 #: src/features/channel/components/MentionEveryonePopout.tsx:14
@@ -33062,36 +32929,6 @@ msgstr "Denne kontakt er deaktiveret og kan ikke slås til eller fra"
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:93
 msgid "This switch is disabled in the checked state"
 msgstr "Denne kontakt er deaktiveret i den markerede tilstand"
-
-#. Title in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:138
-msgid "This text demonstrates bold heading styling"
-msgstr "Denne tekst viser fed overskrift-styling"
-
-#. Title in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:146
-msgid "This text demonstrates bold title styling"
-msgstr "Denne tekst viser fed skrift til titler"
-
-#. Label in the typography tab.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:118
-msgid "This text demonstrates italic styling"
-msgstr "Denne tekst viser kursiv skrift"
-
-#. Label in the typography tab.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:130
-msgid "This text demonstrates large semi-bold styling"
-msgstr "Denne tekst viser stor, halvfed skrift"
-
-#. Label in the typography tab.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:110
-msgid "This text demonstrates normal styling"
-msgstr "Denne tekst viser normal typografi"
-
-#. Label in the typography tab.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:122
-msgid "This text demonstrates semi-bold styling"
-msgstr "Denne tekst viser halvfed skrift"
 
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx:299
 msgid "This textarea auto-expands between 4 and 12 rows as you type."
@@ -33416,11 +33253,6 @@ msgstr "Tidszone"
 #: src/features/messaging/utils/markdown/Plaintext.ts:56
 msgid "Tip"
 msgstr "Tip"
-
-#. Title in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:98
-msgid "Title"
-msgstr "Titel"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:178
@@ -34116,10 +33948,6 @@ msgstr "Skriv en farve (hex, rgb(), hsl eller navn), eller brug farvevælgeren."
 msgid "Type a color (hex, rgb(), hsl(), or name) or use the picker."
 msgstr "Skriv en farve (hex, rgb(), hsl() eller navn), eller brug farvevælgeren."
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:403
-msgid "Type scale"
-msgstr "Skriftstørrelse"
-
 #. Label in the inputs tab.
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx:89
 msgid "Type your message here…"
@@ -34167,14 +33995,6 @@ msgstr "Kun skriveindikator"
 #: src/features/user/components/modals/tabs/component_gallery_tab/IndicatorsTab.tsx:251
 msgid "Typing state"
 msgstr "Skrivestatus"
-
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:365
-msgid "Typography"
-msgstr "Typografi"
-
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:447
-msgid "Typography scale demonstration"
-msgstr "Demonstration af typografiskala"
 
 #. Developer options group for forcing UI component states.
 #: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:57
@@ -34494,7 +34314,7 @@ msgstr "Universel fallback. Laveste kvalitet, men virker overalt."
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:755
 #: src/features/invite/components/InviteListItem.tsx:34
 #: src/features/moderation/components/modals/BanDetailsModal.tsx:114
-#: src/features/updater/commands/UpdaterModalCommands.tsx:140
+#: src/features/updater/commands/UpdaterModalCommands.tsx:144
 msgid "Unknown"
 msgstr "Ukendt"
 
@@ -34649,8 +34469,8 @@ msgstr "Ubegrænset antal emoji"
 msgid "Unlimited stickers"
 msgstr "Ubegrænset antal klistermærker"
 
-#: src/features/channel/components/EmojiPicker.tsx:163
-#: src/features/channel/components/MobileEmojiPicker.tsx:208
+#: src/features/channel/components/EmojiPicker.tsx:150
+#: src/features/channel/components/MobileEmojiPicker.tsx:195
 msgid "Unlock {lockedEmojiCount, plural, one {# custom emoji} other {# custom emojis}} from {communityCount, plural, one {# community} other {# communities}} with {PREMIUM_PRODUCT_NAME}."
 msgstr "Lås op for {lockedEmojiCount, plural, one {# brugerdefineret emoji} other {# brugerdefinerede emojis}} fra {communityCount, plural, one {# fællesskab} other {# fællesskaber}} med {PREMIUM_PRODUCT_NAME}."
 
@@ -34796,7 +34616,7 @@ msgstr "Unavngivet kanal"
 #. Fallback title in an invite embed for a group DM with no name set.
 #. Short label in the channel display name state. Keep it concise.
 #: src/features/channel/components/InviteEmbed.tsx:72
-#: src/features/channel/state/ChannelDisplayName.ts:17
+#: src/features/channel/state/ChannelDisplayName.ts:18
 #: src/features/channel/utils/ChannelUtils.tsx:59
 msgid "Unnamed group"
 msgstr "Navnløs gruppe"
@@ -37333,7 +37153,7 @@ msgid "We've updated our policies. Review and accept them to continue."
 msgstr "Vi har opdateret vores politikker. Gennemgå og accepter dem for at fortsætte."
 
 #. Client info web build identifier shown after the desktop build when both are present. Example: "Web 2026.518.0". Preserve placeholder.
-#: src/features/app/components/dialogs/components/ClientInfo.tsx:28
+#: src/features/app/components/dialogs/components/ClientInfo.tsx:27
 msgid "Web {buildVersion}"
 msgstr "Web {buildVersion}"
 
@@ -37917,7 +37737,7 @@ msgid "You are editing your per-community profile. This profile will only be vis
 msgstr "Du redigerer din profil for dette fællesskab. Denne profil vil kun være synlig her og vil overskrive din globale profil."
 
 #. Body text in the settings dialog client info.
-#: src/features/app/components/dialogs/components/ClientInfo.tsx:42
+#: src/features/app/components/dialogs/components/ClientInfo.tsx:41
 msgid "You are now a developer!"
 msgstr "Du er nu udvikler!"
 

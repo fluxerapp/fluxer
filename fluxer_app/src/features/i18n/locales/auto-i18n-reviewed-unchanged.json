@@ -1534,6 +1534,9 @@
 				"msgid": "Talk in calls and test your input."
 			},
 			{
+				"msgid": "Text is rendered with grayscale antialiasing instead of ClearType while transparency is enabled, so it will look softer."
+			},
+			{
 				"msgid": "That image could not be used. Try a different file."
 			},
 			{
@@ -1544,6 +1547,9 @@
 			},
 			{
 				"msgid": "This instance has no accounts yet. The first account you create automatically becomes the administrator. Create it now, then return here to finish setup."
+			},
+			{
+				"msgid": "This reset link has expired. Reset links last 1 hour. Please request a new one."
 			},
 			{
 				"msgid": "Unavailable"

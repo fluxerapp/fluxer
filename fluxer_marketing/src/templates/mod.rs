@@ -988,8 +988,7 @@ fn base_document(
                 }
                 title { (page_title.as_str()) }
                 link rel="preconnect" href=(cdn);
-                link rel="stylesheet" href=(format!("{cdn}/fonts/ibm-plex.css?v=3"));
-                link rel="stylesheet" href=(format!("{cdn}/fonts/bricolage.css?v=3"));
+                link rel="stylesheet" href=(format!("{}/static/fonts/{}", ctx.base_path, crate::fonts::STYLESHEET_FILE_NAME));
                 link rel="stylesheet" href=(format!("{}/static/app.css?v={}", ctx.base_path, ctx.asset_version));
                 link rel="icon" type="image/x-icon" sizes="256x256" href=(format!("{cdn}/web/favicon.ico"));
                 link rel="apple-touch-icon" href=(format!("{cdn}/web/apple-touch-icon.png"));

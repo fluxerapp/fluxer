@@ -191,7 +191,9 @@ export const BaseAvatar = React.forwardRef<HTMLDivElement, BaseAvatarProps>(
 		const statusMaskId = shouldShowCustomStatusBadge
 			? (customStatusBadgeMaskId ?? 'svg-mask-status-online')
 			: isMobileOnline
-				? `svg-mask-status-online-mobile-${size}`
+				? STATIC_AVATAR_MASK_SIZES.has(size)
+					? `svg-mask-status-online-mobile-${size}`
+					: 'svg-mask-status-online-mobile'
 				: `svg-mask-status-${renderableStatus}`;
 		const avatarViewBox = getAvatarViewBox(size);
 		const statusColor = shouldShowCustomStatusBadge

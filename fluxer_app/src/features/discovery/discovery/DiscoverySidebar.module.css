@@ -50,7 +50,10 @@
 
 .navItemDisabled {
 	cursor: not-allowed;
-	color: var(--text-tertiary-muted);
+	color: color-mix(in srgb, var(--text-tertiary-muted) 72%, transparent);
+}
+
+.navItemDisabled .comingSoonBadge {
 	opacity: 0.72;
 }
 

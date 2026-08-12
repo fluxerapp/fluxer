@@ -54,8 +54,8 @@
 	background-color: rgb(0 0 0 / 0.56);
 	border: 0.0625rem solid rgb(255 255 255 / 0.12);
 	box-shadow: var(--mobile-video-hud-shadow);
-	backdrop-filter: blur(1.75rem) saturate(150%);
-	-webkit-backdrop-filter: blur(1.75rem) saturate(150%);
+	backdrop-filter: blur(1.75rem);
+	-webkit-backdrop-filter: blur(1.75rem);
 	color: #fff;
 	font-size: 1.125rem;
 	font-weight: 700;
@@ -101,8 +101,8 @@
 	background-color: var(--mobile-video-hud-bg);
 	border: 0.0625rem solid var(--mobile-video-hud-border);
 	box-shadow: var(--mobile-video-hud-shadow);
-	backdrop-filter: blur(2.25rem) saturate(160%);
-	-webkit-backdrop-filter: blur(2.25rem) saturate(160%);
+	backdrop-filter: blur(2.25rem);
+	-webkit-backdrop-filter: blur(2.25rem);
 	color: #fff;
 	cursor: pointer;
 	transition: background-color 150ms ease;
@@ -132,8 +132,8 @@
 	background-color: var(--mobile-video-hud-bg);
 	border: 0.0625rem solid var(--mobile-video-hud-border);
 	box-shadow: var(--mobile-video-hud-shadow);
-	backdrop-filter: blur(2.25rem) saturate(160%);
-	-webkit-backdrop-filter: blur(2.25rem) saturate(160%);
+	backdrop-filter: blur(2.25rem);
+	-webkit-backdrop-filter: blur(2.25rem);
 	color: #fff;
 	cursor: pointer;
 	transition: background-color 150ms ease;
@@ -151,8 +151,8 @@
 	border: 0.0625rem solid var(--mobile-video-hud-border);
 	border-radius: 1.125rem;
 	box-shadow: var(--mobile-video-hud-shadow);
-	backdrop-filter: blur(2.25rem) saturate(160%);
-	-webkit-backdrop-filter: blur(2.25rem) saturate(160%);
+	backdrop-filter: blur(2.25rem);
+	-webkit-backdrop-filter: blur(2.25rem);
 	padding: 0.5rem 0.75rem;
 }
 

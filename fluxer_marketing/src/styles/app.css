@@ -5,8 +5,8 @@
 
 @theme {
   --font-sans: "Fluxer Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Bricolage Grotesque", "Fluxer Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --font-display: "Fluxer Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Fluxer Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   --color-fluxer: #4641d9;
   --color-fluxer-dark: #3832b8;
   --color-primary: #4641d9;

@@ -3,6 +3,7 @@
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import type {GuildReadyData} from '@app/features/gateway/types/GatewayGuildTypes';
 import {GuildRole} from '@app/features/guild/models/GuildRole';
+import {noteText} from '@app/features/theme/fonts/ScriptFontLoader';
 import {LARGE_GUILD_THRESHOLD} from '@fluxer/constants/src/GatewayConstants';
 import type {GuildSplashCardAlignmentValue} from '@fluxer/constants/src/GuildConstants';
 import {GuildFeatures, GuildNSFWLevel, GuildSplashCardAlignment} from '@fluxer/constants/src/GuildConstants';
@@ -66,6 +67,7 @@ export class Guild {
 			options?.instanceId ?? (guild instanceof Guild ? guild.instanceId : RuntimeConfig.localInstanceDomain);
 		this.id = guild.id;
 		this.name = guild.name;
+		noteText(this.name);
 		this.icon = guild.icon;
 		this.banner = this.normalizeBanner(guild);
 		this.bannerWidth = this.normalizeBannerWidth(guild);

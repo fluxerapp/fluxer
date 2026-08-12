@@ -207,7 +207,6 @@ export const MobileChannelSettingsView: React.FC<MobileChannelSettingsViewProps>
 								exit={reducedMotion ? 'center' : 'exit'}
 								transition={{duration: reducedMotion ? 0 : 0.15, ease: 'easeInOut'}}
 								className={styles.mobileContentPane}
-								style={{willChange: 'transform'}}
 								data-flx="app.mobile-channel-settings-view.mobile-content-pane"
 							>
 								<MobileSettingsList
@@ -231,7 +230,6 @@ export const MobileChannelSettingsView: React.FC<MobileChannelSettingsViewProps>
 								exit={reducedMotion ? 'center' : 'exit'}
 								transition={{duration: reducedMotion ? 0 : 0.15, ease: 'easeInOut'}}
 								className={styles.mobileContentPane}
-								style={{willChange: 'transform'}}
 								data-flx="app.mobile-channel-settings-view.mobile-content-pane--2"
 							>
 								<Scroller

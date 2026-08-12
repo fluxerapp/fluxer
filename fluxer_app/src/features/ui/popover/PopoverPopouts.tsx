@@ -166,7 +166,6 @@ const PopoutItem: React.FC<PopoutItemProps> = observer(
 		animationType = 'smooth',
 		constrainHeight = true,
 		containerClass,
-		stableTextRendering,
 		onCloseRequest,
 		returnFocusRef,
 		returnFocusOnClose = true,
@@ -372,7 +371,7 @@ const PopoutItem: React.FC<PopoutItemProps> = observer(
 						id={popoutKey}
 						ref={mergedPopoutRef}
 						role="group"
-						className={clsx(styles.popout, stableTextRendering && styles.popoutStableText, containerClass)}
+						className={clsx(styles.popout, containerClass)}
 						tabIndex={-1}
 						data-popout-key={popoutKey}
 						onMouseEnter={handleMouseEnter}

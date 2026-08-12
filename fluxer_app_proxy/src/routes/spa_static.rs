@@ -231,25 +231,37 @@ pub fn guess_mime(path: &str) -> &'static str {
     }
 }
 
+pub const CORS_ALLOW_ANY_VALUE: &str = "*";
+
+pub fn is_font_mime(mime_type: &str) -> bool {
+    matches!(
+        mime_type,
+        "font/woff" | "font/woff2" | "font/ttf" | "font/otf" | "application/vnd.ms-fontobject"
+    )
+}
+
 pub fn is_static_asset(path: &str) -> bool {
     let filename = path.rsplit('/').next().unwrap_or(path);
     filename.contains('.')
 }
 
 pub fn is_hashed_asset(path: &str) -> bool {
-    let Some(last_dot) = path.rfind('.') else {
+    let filename = path.rsplit('/').next().unwrap_or(path);
+    let Some(last_dot) = filename.rfind('.') else {
         return false;
     };
-    let prefix = &path[..last_dot];
-    for sep in ['.', '-'] {
-        if let Some(sep_pos) = prefix.rfind(sep) {
-            let hash_part = &prefix[sep_pos + 1..];
-            if hash_part.len() >= 8 && hash_part.chars().all(|c| c.is_ascii_hexdigit()) {
-                return true;
-            }
-        }
+    let stem = &filename[..last_dot];
+    if is_content_hash(stem) {
+        return true;
     }
-    false
+    ['.', '-'].iter().any(|sep| {
+        stem.rfind(*sep)
+            .is_some_and(|sep_pos| is_content_hash(&stem[sep_pos + 1..]))
+    })
+}
+
+fn is_content_hash(value: &str) -> bool {
+    value.len() >= 8 && value.chars().all(|c| c.is_ascii_hexdigit())
 }
 
 #[cfg(test)]
@@ -344,8 +356,16 @@ mod tests {
     }
 
     #[test]
+    fn hashed_asset_accepts_bare_contenthash_filenames() {
+        assert!(is_hashed_asset("assets/469e0b8f10c496a1.css"));
+        assert!(is_hashed_asset("assets/a79f1c3119cd700d.woff2"));
+        assert!(is_hashed_asset("/assets/488b87159423ca35.js"));
+    }
+
+    #[test]
     fn hashed_asset_negative() {
         assert!(!is_hashed_asset("app.js"));
         assert!(!is_hashed_asset("style.css"));
+        assert!(!is_hashed_asset("a79f1c3119cd700d/app.js"));
     }
 }

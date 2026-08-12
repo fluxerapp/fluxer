@@ -10,8 +10,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "PO-Revision-Date: 2026-07-09 00:18+0000\n"
 "Last-Translator: Hampus <hampus@fluxer.com>\n"
-"Language-Team: Finnish <https://weblate.fluxer.tools/projects/fluxer/app/fi/>"
-"\n"
+"Language-Team: Finnish <https://weblate.fluxer.tools/projects/fluxer/app/fi/>\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
 
 #. Description text in the messages tab.
@@ -319,9 +318,7 @@ msgstr "{communityName} on tällä hetkellä vain {productName}-henkilöstön j�
 #. Displayed value for the voice channel participant limit slider. ∞ is the infinity symbol.
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/VoiceSettings.tsx:43
 msgid "{count, plural, =0 {∞ No limit} one {# participant} other {# participants}}"
-msgstr ""
-"{count, plural, =0 {∞ Ei rajoitusta} one {# osallistuja} other {# "
-"osallistujaa}}"
+msgstr "{count, plural, =0 {∞ Ei rajoitusta} one {# osallistuja} other {# osallistujaa}}"
 
 #: src/features/channel/components/embeds/attachments/TextualAttachmentPreview.tsx:121
 msgid "{count, plural, one {... (# line left)} other {... (# lines left)}}"
@@ -360,10 +357,7 @@ msgstr "{count, plural, one {# yhteisö löytyi} other {# yhteisöä löytyi}}"
 
 #: src/features/app/components/layout/GuildsLayout.tsx:730
 msgid "{count, plural, one {# community is temporarily unavailable due to a flux capacitor malfunction.} other {# communities are temporarily unavailable due to a flux capacitor malfunction.}}"
-msgstr ""
-"{count, plural, one {# yhteisö on tilapäisesti pois käytöstä toimintahäiriön "
-"vuoksi.} other {# yhteisöä on tilapäisesti pois käytöstä toimintahäiriön "
-"vuoksi.}}"
+msgstr "{count, plural, one {# yhteisö on tilapäisesti pois käytöstä toimintahäiriön vuoksi.} other {# yhteisöä on tilapäisesti pois käytöstä toimintahäiriön vuoksi.}}"
 
 #. Displayed value for the voice channel connection limit slider.
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/VoiceSettings.tsx:47
@@ -624,16 +618,14 @@ msgid "{defaultDeviceLabel} ({endpointLabel})"
 msgstr "{defaultDeviceLabel} ({endpointLabel})"
 
 #. Client info desktop build identifier line. Example: "Canary Desktop 2026.419.3". Preserve placeholders.
-#: src/features/app/components/dialogs/components/ClientInfo.tsx:38
+#: src/features/app/components/dialogs/components/ClientInfo.tsx:37
 msgid "{desktopChannel} Desktop {desktopVersion}"
 msgstr "{desktopChannel} Desktop {desktopVersion}"
 
 #. Unsaved-changes banner text in the devices tab. Counts selected devices that will be signed out.
 #: src/features/user/components/modals/tabs/DevicesTab.tsx:74
 msgid "{deviceCount, plural, one {# device selected for sign out} other {# devices selected for sign out}}"
-msgstr ""
-"{deviceCount, plural, one {# laite valittu uloskirjautumista varten} other "
-"{# laitetta valittu uloskirjautumista varten}}"
+msgstr "{deviceCount, plural, one {# laite valittu uloskirjautumista varten} other {# laitetta valittu uloskirjautumista varten}}"
 
 #. Sidebar Fluxer-home button tooltip showing how many incoming friend requests are pending. Count is interpolated.
 #: src/features/app/components/layout/sidebar_nav/FluxerButton.tsx:47
@@ -1065,10 +1057,7 @@ msgstr "{productName}-sovelluksen symboli"
 #. Label in the push settings.
 #: src/features/user/components/modals/tabs/notifications_tab/PushSettings.tsx:16
 msgid "{productName} avoids sending push notifications to your mobile devices when you are at your computer. Choose how long you need to be inactive on desktop before you receive push notifications."
-msgstr ""
-"{productName} ei lähetä push-ilmoituksia mobiililaitteeseesi, kun olet "
-"aktiivisena tietokoneella. Valitse, kuinka kauan sinun on oltava käyttämättä "
-"työpöydällä, ennen kuin saat push-ilmoituksia."
+msgstr "{productName} ei lähetä push-ilmoituksia mobiililaitteeseesi, kun olet aktiivisena tietokoneella. Valitse, kuinka kauan sinun on oltava käyttämättä työpöydällä, ennen kuin saat push-ilmoituksia."
 
 #. Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.
 #: src/features/user/components/popouts/UserProfileBadges.tsx:37
@@ -1080,9 +1069,7 @@ msgstr "{productName}-buginmetsästäjä"
 #: src/features/voice/components/modals/screen_share_picker_modal/PerWindowAudioNotice.tsx:23
 #: src/features/voice/components/modals/screen_share_picker_modal/PerWindowAudioNotice.tsx:42
 msgid "{productName} cannot capture desktop audio here while excluding {productName}'s call audio."
-msgstr ""
-"{productName} ei voi jakaa työpöydän ääntä siten, että itse puhelun ääni "
-"jäisi pois jaosta."
+msgstr "{productName} ei voi jakaa työpöydän ääntä siten, että itse puhelun ääni jäisi pois jaosta."
 
 #. Inline notice body on Windows. Explains that app audio is disabled because productName cannot guarantee isolated audio capture on this OS build.
 #. Inline notice body on macOS. Explains that app audio is disabled because productName cannot guarantee isolated audio capture on this OS build.
@@ -1102,12 +1089,12 @@ msgid "{productName} Community Team"
 msgstr "{productName}-yhteisötiimi"
 
 #. Modal body shown when a user-initiated update check fails. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:104
+#: src/features/updater/commands/UpdaterModalCommands.tsx:108
 msgid "{productName} could not reach the update service. Check your connection and try again."
 msgstr "{productName} ei saanut yhteyttä päivityspalveluun. Tarkista internetyhteytesi ja yritä uudelleen."
 
 #. Modal body shown when starting installation of a downloaded desktop update fails. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:121
+#: src/features/updater/commands/UpdaterModalCommands.tsx:125
 msgid "{productName} could not restart into the downloaded update. Try again from the update button."
 msgstr "{productName}-sovellusta ei voitu käynnistää uudelleen ladatun päivityksen avulla. Yritä uudelleen päivityspainikkeesta."
 
@@ -1223,8 +1210,8 @@ msgstr "{productName} sanamerkki"
 
 #. Client info web build identifier line. Example: "Canary Web 2026.518.0". Preserve placeholders.
 #. Client info web build identifier shown after the desktop build when the web and desktop channels differ. Example: "Stable Web 2026.518.0". Preserve placeholders.
-#: src/features/app/components/dialogs/components/ClientInfo.tsx:24
-#: src/features/app/components/dialogs/components/ClientInfo.tsx:33
+#: src/features/app/components/dialogs/components/ClientInfo.tsx:23
+#: src/features/app/components/dialogs/components/ClientInfo.tsx:32
 msgid "{releaseChannel} Web {buildVersion}"
 msgstr "{releaseChannel} Web {buildVersion}"
 
@@ -1255,7 +1242,7 @@ msgid "{renderedPresenceCount} online"
 msgstr "{renderedPresenceCount} paikalla"
 
 #. Short label in the channel display name state. Keep it concise. Preserve {resolvedName}; it is inserted by code.
-#: src/features/channel/state/ChannelDisplayName.ts:12
+#: src/features/channel/state/ChannelDisplayName.ts:13
 msgid "{resolvedName}'s group"
 msgstr "Ryhmä: {resolvedName}"
 
@@ -1974,7 +1961,7 @@ msgid "a hostname, e.g. {exampleDomain}"
 msgstr "isäntänimi, esim. {exampleDomain}"
 
 #. Linux desktop updater modal body shown before version details and package format selector. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:126
+#: src/features/updater/commands/UpdaterModalCommands.tsx:130
 msgid "A Linux desktop update is available. Choose the package format for this system and {productName} will save it locally."
 msgstr "Linux-työpöytäpäivitys on saatavilla. Valitse pakettimuoto tälle järjestelmälle, niin {productName} tallentaa sen paikallisesti."
 
@@ -2003,7 +1990,7 @@ msgstr "kysely"
 msgid "A redirect_uri is required when the bot scope is not the only scope."
 msgstr "redirect_uri tarvitaan, kun bot-laajuus ei ole ainoa laajuus."
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:342
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:341
 msgid "A reusable component for empty states, errors, and status messages."
 msgstr "Uudelleenkäytettävä komponentti tyhjille tiloille, virheille ja tilaviesteille."
 
@@ -3904,7 +3891,7 @@ msgstr "Sovellukset"
 msgid "Arabic"
 msgstr "arabia"
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:227
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:226
 msgid "Archive"
 msgstr "Arkistoi"
 
@@ -3984,9 +3971,7 @@ msgstr "Haluatko varmasti ottaa kutsut käyttöön? Tämän jälkeen käyttäjä
 #. placeholder {0}: targetUser.tag
 #: src/features/moderation/components/modals/KickMemberModal.tsx:44
 msgid "Are you sure you want to kick <0>{0}</0> from the community? They will be able to rejoin with a new invite."
-msgstr ""
-"Haluatko varmasti potkaista käyttäjän <0>{0}</0> yhteisöstä? Hän voi liittyä "
-"uudelleen uudella kutsulla."
+msgstr "Haluatko varmasti potkaista käyttäjän <0>{0}</0> yhteisöstä? Hän voi liittyä uudelleen uudella kutsulla."
 
 #: src/features/user/components/modals/tabs/chat_settings_tab/SearchEnginesTab.tsx:229
 msgid "Are you sure you want to remove <0>{engineName}</0>?"
@@ -4682,7 +4667,7 @@ msgid "Autoscrolling"
 msgstr "Automaattinen vieritys"
 
 #. Label for the available desktop version in the Linux update modal.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:136
+#: src/features/updater/commands/UpdaterModalCommands.tsx:140
 msgid "Available"
 msgstr "Saatavilla"
 
@@ -5258,26 +5243,6 @@ msgstr "Sumenna"
 msgid "Blur strength"
 msgstr "Sumennuksen voimakkuus"
 
-#. Short label in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:82
-msgid "Body"
-msgstr "Leipäteksti"
-
-#. Short label in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:66
-msgid "Bold"
-msgstr "Lihavointi"
-
-#. Title in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:134
-msgid "Bold heading"
-msgstr "Lihavoitu otsikko"
-
-#. Title in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:142
-msgid "Bold title"
-msgstr "Lihavoitu otsikko"
-
 #. Folder icon option in the community-folder settings modal: a bookmark shape. Refers to the bookmark icon glyph, not the saved-message bookmarks feature.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the buttons tab. Keep it concise.
@@ -5605,7 +5570,7 @@ msgstr "Painikevariantit"
 msgid "Button with context menu"
 msgstr "Painike ja pikavalikko"
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:252
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:251
 msgid "Buttons"
 msgstr "Painikkeet"
 
@@ -6003,11 +5968,6 @@ msgstr "Tarrapakettia ei voi asentaa"
 #: src/features/auth/components/CaptchaInterceptor.tsx:14
 msgid "Captcha verification failed. Try again."
 msgstr "Captcha-varmennus epäonnistui. Yritä uudelleen."
-
-#. Short label in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:74
-msgid "Caption"
-msgstr "Kuvateksti"
 
 #. Section header in the Linux audio source picker. Lists capture-target options (entire system / specific apps).
 #: src/features/voice/components/AudioSourcePickerLinux.tsx:48
@@ -7194,7 +7154,7 @@ msgstr "Poista kaikki aktiiviset ohitukset"
 msgid "Clear all attachment mocks"
 msgstr "Tyhjennä kaikki liitteiden esikatselukuvat"
 
-#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:378
+#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:384
 msgid "Clear all token overrides"
 msgstr "Tyhjennä kaikki tunnuksen ohitukset"
 
@@ -7230,7 +7190,7 @@ msgstr "Tyhjennä liitteen testidata"
 msgid "Clear nickname"
 msgstr "Tyhjennä lempinimi"
 
-#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:401
+#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:407
 msgid "Clear overrides"
 msgstr "Tyhjennä ohitukset"
 
@@ -7314,7 +7274,7 @@ msgstr "Tyhjensi aiheen."
 msgid "Clearing trusted domains..."
 msgstr "Tyhjennetään luotettuja verkkotunnuksia..."
 
-#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:359
+#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:365
 msgid "Clears quick CSS, imported themes, uploaded assets, and local file references on this device."
 msgstr "Tyhjentää nopean CSS:n, tuodut teemat, ladatut resurssit ja paikalliset tiedostoviittaukset tällä laitteella."
 
@@ -7356,7 +7316,7 @@ msgid "Click to claim your gift!"
 msgstr "Lunasta lahjasi napauttamalla!"
 
 #. Short label in the settings dialog client info.
-#: src/features/app/components/dialogs/components/ClientInfo.tsx:46
+#: src/features/app/components/dialogs/components/ClientInfo.tsx:45
 msgid "Click to copy"
 msgstr "Kopioi napsauttamalla"
 
@@ -8840,7 +8800,7 @@ msgstr "Kopioi kutsulinkki"
 #. Generic action label that copies a URL to the clipboard.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:739
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:310
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:146
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:145
 msgid "Copy link"
 msgstr "Kopioi linkki"
 
@@ -9080,7 +9040,7 @@ msgid "Couldn't change your billing cycle"
 msgstr "Laskutusjaksoa ei voitu muuttaa"
 
 #. Modal title shown when a user-initiated update check fails.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:100
+#: src/features/updater/commands/UpdaterModalCommands.tsx:104
 msgid "Couldn't check for updates"
 msgstr "Päivitysten tarkistus epäonnistui"
 
@@ -9187,7 +9147,7 @@ msgid "Couldn't delete your messages"
 msgstr "Viestejäsi ei voitu poistaa"
 
 #. Modal title shown when a desktop update download fails.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:108
+#: src/features/updater/commands/UpdaterModalCommands.tsx:112
 msgid "Couldn't download the desktop update"
 msgstr "Työpöytäsovelluksen päivitystä ei voitu ladata"
 
@@ -9441,7 +9401,7 @@ msgid "Couldn't start the connection"
 msgstr "Yhteyden luominen epäonnistui"
 
 #. Modal title shown when starting installation of a downloaded desktop update fails.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:117
+#: src/features/updater/commands/UpdaterModalCommands.tsx:121
 msgid "Couldn't start the desktop update"
 msgstr "Työpöytäsovelluksen päivitystä ei voitu aloittaa"
 
@@ -10317,7 +10277,7 @@ msgid "Danger button clicked."
 msgstr "Varoituspainiketta napsautettiin."
 
 #. Short label in the account security tab. Keep it concise. Keep the tone plain and specific.
-#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:350
+#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:356
 #: src/features/user/components/modals/tabs/account_security_tab/AccountSecuritySections.tsx:39
 #: src/features/user/components/modals/tabs/applications_tab/ApplicationDetail.tsx:697
 msgid "Danger zone"
@@ -10684,7 +10644,7 @@ msgstr "Oletuksena pois päältä mobiililaitteilla akun keston ja datan sääst
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:399
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:116
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:272
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:239
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:238
 #: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:49
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:154
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:190
@@ -10979,11 +10939,6 @@ msgstr "Viestisi poistettu."
 msgid "Deleted."
 msgstr "Poistettu."
 
-#. Label in the typography tab.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:14
-msgid "Delicate and light typography"
-msgstr "Hienostunut ja kevyt typografia"
-
 #. Status chip for a denied macOS permission.
 #: src/features/permissions/system/components/modals/MacPermissionsModal.tsx:59
 msgid "Denied"
@@ -11160,12 +11115,12 @@ msgid "Desktop update available. Choose a Linux package."
 msgstr "Työpöytäpäivitys saatavilla. Valitse Linux-paketti."
 
 #. Modal title shown when a desktop app update has finished downloading.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:83
+#: src/features/updater/commands/UpdaterModalCommands.tsx:87
 msgid "Desktop update ready"
 msgstr "Työpöytäsovelluksen päivitys valmis"
 
 #. Desktop updater modal body. The version placeholder is the downloaded app version; productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:87
+#: src/features/updater/commands/UpdaterModalCommands.tsx:91
 msgid "Desktop version {version} has been downloaded. Restart {productName} to finish installing."
 msgstr "Työpöytäversio {version} on ladattu. Käynnistä {productName} uudelleen asennuksen viimeistelemiseksi."
 
@@ -11768,11 +11723,9 @@ msgstr "Hylkää maininta"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the chat settings tab. Keep it concise.
 #. Short label in the inline. Keep it concise.
-#. Short label in the typography tab. Keep it concise.
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleEditor.tsx:175
 #: src/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabInline.tsx:14
 #: src/features/user/components/modals/tabs/ChatSettingsTab.tsx:14
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:102
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:154
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:116
 msgid "Display"
@@ -12320,7 +12273,7 @@ msgid "Due to mature content laws in {regionName}, this media is not available f
 msgstr "Tämän median sisältö ei ole saatavilla nykyisellä alueellasi ({regionName}) aikuisviihdettä koskevien lakien vuoksi."
 
 #: src/features/theme_studio/sections/LibrarySection.tsx:503
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:221
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:220
 msgid "Duplicate"
 msgstr "Monista"
 
@@ -12605,7 +12558,7 @@ msgid "Edit your profile bio"
 msgstr "Muokkaa profiilin biografiaa"
 
 #. Button or menu action label in the index. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:40
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:39
 msgid "Editable text"
 msgstr "Muokattava teksti"
 
@@ -13016,7 +12969,7 @@ msgstr "Ota liitteiden vanheneminen käyttöön"
 msgid "Enable audio"
 msgstr "Ota ääni käyttöön"
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:172
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:171
 msgid "Enable beta feature"
 msgstr "Ota beetaominaisuus käyttöön"
 
@@ -13053,7 +13006,7 @@ msgstr "Ota kehittäjätila käyttöön"
 msgid "Enable email delivery"
 msgstr "Ota sähköpostitoimitus käyttöön"
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:158
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:157
 msgid "Enable extra option"
 msgstr "Ota lisäasetus käyttöön"
 
@@ -13675,7 +13628,7 @@ msgstr "Virhe"
 msgid "error code {code}"
 msgstr "virhekoodi {code}"
 
-#: src/features/messaging/components/markdown/index.tsx:39
+#: src/features/messaging/components/markdown/index.tsx:40
 msgid "Error rendering content"
 msgstr "Virhe sisällön näyttämisessä"
 
@@ -14109,11 +14062,6 @@ msgstr "Ulkoiset linkit voivat olla vaarallisia. Ole varovainen."
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:57
 msgid "Extra large"
 msgstr "Erittäin suuri"
-
-#. Short label in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:18
-msgid "Extra light"
-msgstr "Erittäin ohut"
 
 #. Report category label for a community organized around extremist content or ideology.
 #: src/features/moderation/components/report/OptionDescriptors.ts:90
@@ -14806,7 +14754,7 @@ msgstr "Ensimmäinen klikkaus"
 msgid "First click pass-through when unfocused"
 msgstr "Ensimmäinen napsautus menee läpi, kun ikkuna ei ole aktiivinen"
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:112
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:111
 msgid "First option"
 msgstr "Ensimmäinen vaihtoehto"
 
@@ -14931,10 +14879,6 @@ msgstr "Seuraa pääasetusta • {effectiveValue}%"
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:170
 msgid "Font"
 msgstr "Fontti"
-
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:344
-msgid "Font weights"
-msgstr "Fontin paksuudet"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:9
@@ -15379,7 +15323,7 @@ msgid "From {start}"
 msgstr "Alkaen {start}"
 
 #. placeholder {0}: sourceGuild.name
-#: src/features/channel/components/emoji_picker/EmojiPickerInspector.tsx:104
+#: src/features/channel/components/emoji_picker/EmojiPickerInspector.tsx:102
 msgid "from <0>{0}</0>"
 msgstr "lähettäjältä <0>{0}</0>"
 
@@ -15475,7 +15419,7 @@ msgstr "GDPR"
 msgid "General"
 msgstr "Yleiset"
 
-#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:325
+#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:331
 msgid "Generate a shareable link or copy your combined custom CSS."
 msgstr "Luo jaettava linkki tai kopioi yhdistetty mukautettu CSS-koodisi."
 
@@ -15495,11 +15439,6 @@ msgstr "Luo uusi koodi"
 #: src/features/auth/flow/HandoffCodeDisplay.tsx:70
 msgid "Generating code…"
 msgstr "Luodaan koodia…"
-
-#. Label in the typography tab.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:22
-msgid "Gentle and airy text display"
-msgstr "Kevyt ja ilmava tekstinäyttö"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:209
@@ -16280,11 +16219,6 @@ msgstr "Hän"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:45
 msgid "Header"
-msgstr "Otsikko"
-
-#. Title in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:94
-msgid "Heading"
 msgstr "Otsikko"
 
 #. Title in the markdown tab. Keep it concise.
@@ -17444,7 +17378,7 @@ msgstr "Kanavaa indeksoidaan"
 msgid "Indicator"
 msgstr "Ilmaisin"
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:334
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:333
 msgid "Indicators & status"
 msgstr "Ilmaisimet ja tila"
 
@@ -17572,7 +17506,7 @@ msgstr "Syöttökenttien tilat"
 msgid "Input volume"
 msgstr "Syöttöäänenvoimakkuus"
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:260
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:259
 msgid "Inputs & text"
 msgstr "Syöte ja teksti"
 
@@ -17605,7 +17539,7 @@ msgid "Install sticker pack"
 msgstr "Asenna tarrapaketti"
 
 #. Label for the installed desktop version in the Linux update modal.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:132
+#: src/features/updater/commands/UpdaterModalCommands.tsx:136
 msgid "Installed"
 msgstr "Asennettu"
 
@@ -18109,15 +18043,6 @@ msgstr "Hiljaista toistaiseksi..."
 msgid "Italian"
 msgstr "italia"
 
-#. Short label in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:114
-msgid "Italic"
-msgstr "Kursivoitu"
-
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:392
-msgid "Italic style demonstration"
-msgstr "Kursivoidun tekstin esittely"
-
 #. Country name. EU member state in the illegal-content report country dropdown.
 #: src/features/moderation/components/report/OptionDescriptors.ts:167
 msgid "Italy"
@@ -18547,10 +18472,6 @@ msgstr "Kieli"
 msgid "Language settings"
 msgstr "Kieliasetukset"
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:285
-msgid "Language support"
-msgstr "Kielituki"
-
 #. Submenu label in the textarea spellcheck submenu listing manual language overrides.
 #. Subsection title for spellcheck language settings. Keep it concise.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:86
@@ -18559,9 +18480,7 @@ msgid "Languages"
 msgstr "Kielet"
 
 #. Short label in the selections tab. Keep it concise.
-#. Short label in the typography tab. Keep it concise.
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:53
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:86
 msgid "Large"
 msgstr "Suuri"
 
@@ -18837,9 +18756,7 @@ msgid "Lifetime {premiumProductName}"
 msgstr "Elinikäinen {premiumProductName}"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#. Short label in the typography tab. Keep it concise.
 #: src/features/expressions/components/modals/sticker_form/StickerPreview.tsx:48
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:26
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:54
 msgid "Light"
 msgstr "Vaalea"
@@ -19027,7 +18944,7 @@ msgid "Linux default"
 msgstr "Linuxin oletusarvo"
 
 #. Select label for choosing the Linux desktop package format to download.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:148
+#: src/features/updater/commands/UpdaterModalCommands.tsx:152
 msgid "Linux package"
 msgstr "Linux-paketti"
 
@@ -19628,7 +19545,7 @@ msgid "Mark top inbox channel as read"
 msgstr "Merkitse ylin saapuneet-kanava luetuksi"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:372
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:364
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:122
 msgid "Markdown"
 msgstr "Markdown"
@@ -19960,10 +19877,8 @@ msgstr "Median koko"
 
 #. Member verification level option in the community moderation settings tab. Short standalone severity label.
 #. Short label in the selections tab. Keep it concise.
-#. Short label in the typography tab. Keep it concise.
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:65
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:49
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:50
 msgid "Medium"
 msgstr "Keskitaso"
 
@@ -20782,10 +20697,7 @@ msgstr "Tässä näkyvät moderointitoimet ja yhteisön muutokset."
 #. Guild nagbar body shown when moderation actions in a community require two-factor authentication. {communityName} is the community name.
 #: src/features/app/components/layout/GuildLayout.tsx:77
 msgid "Moderation actions in {communityName} require two-factor authentication. Enable 2FA to kick, ban, timeout, or delete messages here."
-msgstr ""
-"Yhteisön {communityName} moderointitoiminnot edellyttävät kaksivaiheista "
-"todennusta. Ota kaksivaiheinen todennus käyttöön, jos haluat potkia, "
-"porttikieltää, aikakatkaista tai poistaa viestejä täällä."
+msgstr "Yhteisön {communityName} moderointitoiminnot edellyttävät kaksivaiheista todennusta. Ota kaksivaiheinen todennus käyttöön, jos haluat potkia, porttikieltää, aikakatkaista tai poistaa viestejä täällä."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:66
@@ -20838,7 +20750,7 @@ msgstr "Lisää"
 
 #. Short label in the index. Keep it concise.
 #. Short label in the user profile modal. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:48
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:47
 #: src/features/user/components/modals/UserProfileModal.tsx:114
 msgid "More actions"
 msgstr "Lisää toimintoja"
@@ -21010,10 +20922,6 @@ msgstr "Monivaiheinen todennus"
 #: src/features/user/components/modals/tabs/component_gallery_tab/MarkdownTab.tsx:57
 msgid "Multi-line"
 msgstr "Multi-line"
-
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:497
-msgid "Multilingual content"
-msgstr "Monikielinen sisältö"
 
 #. Discovery category dropdown option in the community Discovery settings tab.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:79
@@ -21671,7 +21579,7 @@ msgid "New users can't join right now. You can still create an account or sign i
 msgstr "Uudet käyttäjät eivät voi liittyä juuri nyt. Voit silti luoda tilin tai kirjautua sisään ja yrittää tätä linkkiä uudelleen myöhemmin."
 
 #. Fallback version label when the available desktop version is unknown.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:144
+#: src/features/updater/commands/UpdaterModalCommands.tsx:148
 msgid "New version"
 msgstr "Uusi versio"
 
@@ -21939,7 +21847,7 @@ msgid "No emojis found matching your search."
 msgstr "Hakua vastaavia emojeita ei löytynyt."
 
 #. Empty-state text in the channel and chat emoji picker.
-#: src/features/channel/components/EmojiPicker.tsx:43
+#: src/features/channel/components/EmojiPicker.tsx:41
 msgid "No emojis match that search"
 msgstr "Haullasi ei löytynyt emojeita"
 
@@ -22381,11 +22289,6 @@ msgstr "Ei mitään"
 msgid "None (normal behavior)"
 msgstr "Ei mitään (normaali toiminta)"
 
-#. Short label in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:106
-msgid "Normal"
-msgstr "Normaali"
-
 #. Short label in the language and locale names. Keep it concise.
 #: src/features/user/utils/LocaleUtils.ts:100
 msgid "Norwegian"
@@ -22810,7 +22713,7 @@ msgid "Only you can see this message. <0>Dismiss</0>"
 msgstr "Vain sinä näet tämän viestin. <0>Hylkää</0>"
 
 #. Short label in the index. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:44
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:43
 msgid "Opacity"
 msgstr "Läpinäkyvyys"
 
@@ -22988,7 +22891,7 @@ msgid "Open date picker"
 msgstr "Avaa päivämäärävalitsin"
 
 #. Button label that opens the Fluxer desktop downloads page in a browser.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:79
+#: src/features/updater/commands/UpdaterModalCommands.tsx:83
 msgid "Open desktop downloads"
 msgstr "Avaa työpöytäversion lataussivu"
 
@@ -23183,6 +23086,11 @@ msgstr "Avaa pikavaihtaja"
 msgid "Open settings"
 msgstr "Avaa asetukset"
 
+#. Button label that opens the software center via appstream protocol.
+#: src/features/updater/commands/UpdaterModalCommands.tsx:79
+msgid "Open software center"
+msgstr "Avaa ohjelmistokeskus"
+
 #. Action that opens the sticker URL in an external browser.
 #: src/features/ui/action_menu/items/StickerContextMenuItems.tsx:40
 msgid "Open sticker in browser"
@@ -23328,11 +23236,6 @@ msgstr "Käyttöjärjestelmä"
 #: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:26
 msgid "Opt into experimental per-community and per-channel unread badge controls"
 msgstr "Ota käyttöön kokeelliset asetukset, joilla voit hallita lukemattomien viestien merkkien näkyvyyttä erikseen jokaisessa yhteisössä ja kanavassa"
-
-#. Label in the typography tab.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:46
-msgid "Optimized for longer reading passages"
-msgstr "Optimoitu pidempiin lukukappaleisiin"
 
 #: src/features/voice/components/modals/CameraPreviewModal.tsx:906
 msgid "Optimizing camera..."
@@ -23501,7 +23404,7 @@ msgstr "Palautusikkunan ulkopuolella"
 msgid "Overlapping avatar groups showing multiple users with automatic overflow counts."
 msgstr "Päällekkäiset avatar-ryhmät, joissa näkyy useita käyttäjiä automaattisella ylivuodon laskennalla."
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:327
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:326
 msgid "Overlays & menus"
 msgstr "Päällekkäisnäkymät ja valikot"
 
@@ -23903,11 +23806,6 @@ msgstr "Äänenvoimakkuus äänittäin"
 #: src/features/voice/components/modals/screen_share_picker_modal/PerWindowAudioNotice.tsx:28
 msgid "Per-window audio isn't available on this build of macOS."
 msgstr "Ikkunakohtainen ääni ei ole käytettävissä tässä macOS-versiossa."
-
-#. Label in the typography tab.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:38
-msgid "Perfect for everyday content"
-msgstr "Sopii täydellisesti jokapäiväiseen sisältöön"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:86
@@ -24435,11 +24333,6 @@ msgstr "Sijainti"
 msgid "Power saving"
 msgstr "Virransäästö"
 
-#. Short label in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:70
-msgid "Powerful and attention-grabbing"
-msgstr "Tehokas ja huomiota herättävä"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:111
 msgid "Pre-upload attachments"
@@ -24709,7 +24602,7 @@ msgstr "Ensisijainen (pois käytöstä)"
 msgid "Primary accent color"
 msgstr "Pääväri"
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:351
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:350
 msgid "Primary action"
 msgstr "Ensisijainen toiminto"
 
@@ -25742,11 +25635,6 @@ msgstr "Rekisteröinti"
 msgid "Registration is currently closed. Use a registration link from an admin to create an account."
 msgstr "Rekisteröityminen on tällä hetkellä suljettu. Luo tili käyttämällä ylläpitäjältä saatua rekisteröitymislinkkiä."
 
-#. Short label in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:34
-msgid "Regular"
-msgstr "Normaali"
-
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:226
 msgid "Regular button"
 msgstr "Tavallinen painike"
@@ -26216,7 +26104,7 @@ msgstr "Käyttäjärajoitus poistettu."
 msgid "Removed timeout from {0}"
 msgstr "Käyttäjän {0} aikakatkaisu poistettu"
 
-#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:381
+#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:387
 msgid "Removes every per-variable override but keeps your library and assets intact."
 msgstr "Poistaa kaikki muuttujakohtaiset ohitukset, mutta säilyttää kirjastosi ja resurssisi ennallaan."
 
@@ -26532,9 +26420,7 @@ msgstr "Vaadi OAuth2-koodivaltuutus"
 
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:466
 msgid "Require two-factor authentication for moderators before they can ban, kick, timeout, or remove messages."
-msgstr ""
-"Vaadi moderaattoreilta kaksivaiheista tunnistautumista ennen kuin he voivat "
-"porttikieltää, potkaista, aikakatkaista tai poistaa viestejä."
+msgstr "Vaadi moderaattoreilta kaksivaiheista tunnistautumista ennen kuin he voivat porttikieltää, potkaista, aikakatkaista tai poistaa viestejä."
 
 #. Short label in the authentication OAUTH scopes step. Keep the tone plain and specific.
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:24
@@ -26723,7 +26609,7 @@ msgstr "Nollaa sovelluksen tiedot"
 msgid "Reset app data and restart"
 msgstr "Nollaa sovelluksen tiedot ja käynnistä uudelleen"
 
-#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:356
+#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:362
 msgid "Reset custom theme data"
 msgstr "Palauta mukautetun teeman tiedot"
 
@@ -26734,7 +26620,7 @@ msgstr "Palautetaanko mukautetun teeman tiedot?"
 
 #. Button or menu action label in the theme studio settings section. Keep it concise.
 #: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:76
-#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:371
+#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:377
 msgid "Reset data"
 msgstr "Palauta tiedot"
 
@@ -26874,7 +26760,7 @@ msgid "Restart {appName}"
 msgstr "Käynnistä {appName} uudelleen"
 
 #. Button label that restarts the app to apply a desktop update. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:96
+#: src/features/updater/commands/UpdaterModalCommands.tsx:100
 msgid "Restart {productName}"
 msgstr "Käynnistä {productName} uudelleen"
 
@@ -28050,7 +27936,7 @@ msgstr "Haetaan"
 msgid "Searching people..."
 msgstr "Etsitään henkilöitä..."
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:113
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:112
 msgid "Second option"
 msgstr "Toinen vaihtoehto"
 
@@ -28067,7 +27953,7 @@ msgstr "Toissijainen (pois käytöstä)"
 msgid "Secondary accent color"
 msgstr "Toissijainen korostusväri"
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:355
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:354
 msgid "Secondary action"
 msgstr "Toissijainen toiminto"
 
@@ -28359,7 +28245,7 @@ msgstr "Valinta: {0}"
 msgid "Selection: {0} (max {1})"
 msgstr "Valinta: {0} (enintään {1})"
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:293
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:292
 msgid "Selections"
 msgstr "Valinnat"
 
@@ -28388,16 +28274,6 @@ msgstr "Itseisännöidyn tilan ohitus"
 #: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx:36
 msgid "Self-serve refunds available within 3 days of payment, once every 30 days. Refunding a subscription cancels it. EU/EEA buyers waive the 14-day right of withdrawal at checkout to access content immediately. Use the in-app refund button instead of a chargeback. Chargebacks can permanently restrict your account. Stripe handles payment securely. We never see your full card number."
 msgstr "Itsepalveluhyvitykset ovat saatavilla 3 päivän kuluessa maksusta, kerran 30 päivässä. Tilauksen hyvittäminen peruuttaa sen. EU-/ETA-alueen ostajat luopuvat 14 päivän peruuttamisoikeudesta kassalla saadakseen sisällön käyttöönsä välittömästi. Käytä sovelluksen sisäistä hyvityspainiketta takaisinmaksun sijaan. Takaisinmaksut voivat rajoittaa tiliäsi pysyvästi. Stripe käsittelee maksut turvallisesti. Emme koskaan näe koko korttinumeroasi."
-
-#. Short label in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:58
-msgid "Semi bold"
-msgstr "Puolilihavoitu"
-
-#. Short label in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:126
-msgid "Semi-bold large"
-msgstr "Puolilihava suuri"
 
 #. Button or menu action label in the share theme modal. Keep it concise.
 #. Send-message button label in the voice message composer modal.
@@ -28971,7 +28847,7 @@ msgstr "Määrittää kaikkien äänitehosteiden voimakkuuden. Yksittäisten ä�
 #. Generic action label / section header that opens settings.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:262
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:264
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:126
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:125
 msgid "Settings"
 msgstr "Asetukset"
 
@@ -29011,9 +28887,9 @@ msgid "Several people are typing..."
 msgstr "Useita kirjoittaa..."
 
 #: src/features/theme_studio/sections/QuickCssSection.tsx:225
-#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:316
+#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:322
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:279
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:133
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:132
 msgid "Share"
 msgstr "Jaa"
 
@@ -29022,7 +28898,7 @@ msgstr "Jaa"
 msgid "Share action."
 msgstr "Jaa toiminto."
 
-#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:322
+#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:328
 msgid "Share active custom theme"
 msgstr "Jaa aktiivinen mukautettu teema"
 
@@ -29055,7 +28931,7 @@ msgstr "Jaa sisältöä"
 msgid "Share the {premiumProductName} experience with your friends by purchasing a gift subscription."
 msgstr "Jaa {premiumProductName}-elämys ystäviesi kanssa ostamalla lahjatilauksen."
 
-#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:341
+#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:347
 msgid "Share theme"
 msgstr "Jaa teema"
 
@@ -29983,11 +29859,6 @@ msgstr "Liukusäädin askelarvoilla"
 msgid "Sliders"
 msgstr "Liukusäätimet"
 
-#. Short label in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:54
-msgid "Slightly bolder emphasis"
-msgstr "Hieman lihavoidumpi korostus"
-
 #. Country name. EU member state in the illegal-content report country dropdown.
 #: src/features/moderation/components/report/OptionDescriptors.ts:203
 msgid "Slovakia"
@@ -30096,9 +29967,7 @@ msgid "Slurs, dehumanizing language, or attacks on protected groups."
 msgstr "Herjaaminen, epäinhimillistävä kieli tai hyökkäykset suojeltuja ryhmiä vastaan."
 
 #. Short label in the selections tab. Keep it concise.
-#. Short label in the typography tab. Keep it concise.
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:45
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:78
 msgid "Small"
 msgstr "Pieni"
 
@@ -30180,11 +30049,6 @@ msgstr "Kohdistuu 5:n välein."
 #: src/features/user/components/settings_utils/search_index/LinkedAccountsIndex.ts:40
 msgid "Social"
 msgstr "Sosiaalinen"
-
-#. Label in the typography tab.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:30
-msgid "Soft and easy reading experience"
-msgstr "Pehmeä ja helppo lukukokemus"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:148
@@ -30897,7 +30761,7 @@ msgstr "Tilan ilmaisimet"
 msgid "Status page"
 msgstr "Tilasivu"
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:341
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:340
 msgid "Status slate"
 msgstr "Tilatila"
 
@@ -31311,15 +31175,6 @@ msgstr "Stripe ilmoitti, että kortti on myönnetty maassa {countryName}. Maksaa
 msgid "Strong quality at moderate CPU cost. Good Chromium fallback for screen sharing."
 msgstr "Hyvä laatu kohtuullisella suorittimen kuormituksella. Toimii hyvin Chromium-pohjaisissa näytönjaoissa."
 
-#. Short label in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:62
-msgid "Strong visual hierarchy"
-msgstr "Selkeä visuaalinen hierarkia"
-
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:458
-msgid "Style variations"
-msgstr "Tyylivaihtoehdot"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:130
 msgid "Styling"
@@ -31365,11 +31220,6 @@ msgstr "Tilausskenaariot"
 #: src/features/user/components/modals/tabs/component_gallery_tab/MarkdownTab.tsx:81
 msgid "Subtext"
 msgstr "Lisäteksti"
-
-#. Title in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:90
-msgid "Subtitle"
-msgstr "Alaotsikko"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:71
@@ -31955,10 +31805,8 @@ msgstr "Testaa URL-osoitteiden esikatseluja ja upotettuja sisältöjä"
 
 #. Channel type chip label for a text channel.
 #. Option label for a WebRTC content hint select.
-#. Short label in the typography tab. Keep it concise.
 #: src/features/channel/utils/ChannelUtils.tsx:51
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:150
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:42
 msgid "Text"
 msgstr "Teksti"
 
@@ -31992,6 +31840,10 @@ msgstr "Tekstikanavat"
 #: src/features/user/components/modals/tabs/component_gallery_tab/MarkdownTab.tsx:21
 msgid "Text formatting"
 msgstr "Tekstin muotoilu"
+
+#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:308
+msgid "Text is rendered with grayscale antialiasing instead of ClearType while transparency is enabled, so it will look softer."
+msgstr "Teksti renderöidään ClearType-tekstin sijaan harmaasävyisellä antialiasoinnilla läpinäkyvyyden ollessa käytössä, joten se näyttää pehmeämmältä."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -32181,17 +32033,17 @@ msgid "The community you're looking for may have been deleted or you may not hav
 msgstr "Etsimääsi yhteisöä ei ehkä enää ole tai sinulla ei ole siihen pääsyä."
 
 #. Modal body shown when a desktop update download fails.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:112
+#: src/features/updater/commands/UpdaterModalCommands.tsx:116
 msgid "The desktop update could not be downloaded. Try again from the update button when your connection is stable."
 msgstr "Työpöytäpäivitystä ei voitu ladata. Yritä uudelleen päivityspainikkeesta, kun yhteytesi on vakaa."
 
 #. Desktop updater modal body when the downloaded version is unknown. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:92
+#: src/features/updater/commands/UpdaterModalCommands.tsx:96
 msgid "The desktop update has been downloaded. Restart {productName} to finish installing."
 msgstr "Työpöytäpäivitys on ladattu. Käynnistä {productName} uudelleen asennuksen viimeistelemiseksi."
 
 #. Help text below the Linux package format selector in the desktop updater modal.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:152
+#: src/features/updater/commands/UpdaterModalCommands.tsx:156
 msgid "The downloaded file is saved to your computer. Install it with your normal package manager."
 msgstr "Ladattu tiedosto tallennetaan tietokoneellesi. Asenna se tavallisella pakettienhallintaohjelmallasi."
 
@@ -32462,12 +32314,7 @@ msgstr "He eivät ehkä hyväksy sinulta viestejä, tai teillä ei ole enää yh
 msgid "They're not accepting friend requests right now."
 msgstr "He eivät hyväksy kaveripyyntöjä juuri nyt."
 
-#. Short label in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:10
-msgid "Thin"
-msgstr "Ohut"
-
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:114
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:113
 msgid "Third option"
 msgstr "Kolmas vaihtoehto"
 
@@ -32890,19 +32737,19 @@ msgid "This is one heavy message. Some reactions need to be removed before you c
 msgstr "Tämä on todella suosittu viesti. Poista joitakin reaktioita, ennen kuin voit lisätä uusia."
 
 #. Description text in the index.
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:36
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:35
 msgid "This is some example text in the textarea."
 msgstr "Tämä on esimerkkitekstiä tekstikentässä."
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:112
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:111
 msgid "This is the first option description"
 msgstr "Tämä on ensimmäisen vaihtoehdon kuvaus"
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:113
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:112
 msgid "This is the second option description"
 msgstr "Tämä on toisen vaihtoehdon kuvaus"
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:114
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:113
 msgid "This is the third option description"
 msgstr "Tämä on kolmannen vaihtoehdon kuvaus"
 
@@ -33055,8 +32902,8 @@ msgid "This removes every custom shortcut and re-enables all built-in shortcuts.
 msgstr "Tämä poistaa kaikki mukautetut pikanäppäimet ja ottaa käyttöön kaikki sisäänrakennetut pikanäppäimet uudelleen. Tätä toimintoa ei voi kumota."
 
 #: src/features/auth/components/pages/ResetPasswordPage.tsx:114
-msgid "This reset link has expired. Reset links last 24 hours. Request a new one."
-msgstr "Tämä nollauslinkki on vanhentunut. Nollauslinkit ovat voimassa 24 tuntia. Pyydä uusi linkki."
+msgid "This reset link has expired. Reset links last 1 hour. Please request a new one."
+msgstr "Tämä palautuslinkki on vanhentunut. Palautuslinkit ovat voimassa 1 tunnin. Pyydä uusi linkki."
 
 #. Fallback role name in a mass-mention warning title.
 #: src/features/channel/components/MentionEveryonePopout.tsx:14
@@ -33082,36 +32929,6 @@ msgstr "Tämä kytkin on poissa käytöstä, eikä sitä voi vaihtaa"
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:93
 msgid "This switch is disabled in the checked state"
 msgstr "Tämä valitsin on poissa käytöstä, kun se on valittuna"
-
-#. Title in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:138
-msgid "This text demonstrates bold heading styling"
-msgstr "Tämä teksti esittelee lihavoitua otsikkotyyliä"
-
-#. Title in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:146
-msgid "This text demonstrates bold title styling"
-msgstr "Tämä teksti esittelee lihavoitua otsikkotyyliä"
-
-#. Label in the typography tab.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:118
-msgid "This text demonstrates italic styling"
-msgstr "Tämä teksti esittelee kursivointia"
-
-#. Label in the typography tab.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:130
-msgid "This text demonstrates large semi-bold styling"
-msgstr "Tämä teksti esittelee suurta puolilihavaa tyyliä"
-
-#. Label in the typography tab.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:110
-msgid "This text demonstrates normal styling"
-msgstr "Tämä teksti esittelee normaalia tyyliä"
-
-#. Label in the typography tab.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:122
-msgid "This text demonstrates semi-bold styling"
-msgstr "Tämä teksti näyttää puolilihavaa tyyliä"
 
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx:299
 msgid "This textarea auto-expands between 4 and 12 rows as you type."
@@ -33436,11 +33253,6 @@ msgstr "Aikavyöhyke"
 #: src/features/messaging/utils/markdown/Plaintext.ts:56
 msgid "Tip"
 msgstr "Vinkki"
-
-#. Title in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:98
-msgid "Title"
-msgstr "Otsikko"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:178
@@ -34136,10 +33948,6 @@ msgstr "Kirjoita väri (heksakoodi, rgb(), hsl tai nimi) tai käytä valitsinta.
 msgid "Type a color (hex, rgb(), hsl(), or name) or use the picker."
 msgstr "Kirjoita väri (heksakoodi, rgb(), hsl() tai nimi) tai käytä valitsinta."
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:403
-msgid "Type scale"
-msgstr "Tekstin koko"
-
 #. Label in the inputs tab.
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx:89
 msgid "Type your message here…"
@@ -34187,14 +33995,6 @@ msgstr "Vain kirjoitusilmaisin"
 #: src/features/user/components/modals/tabs/component_gallery_tab/IndicatorsTab.tsx:251
 msgid "Typing state"
 msgstr "Kirjoitustila"
-
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:365
-msgid "Typography"
-msgstr "Typografia"
-
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:447
-msgid "Typography scale demonstration"
-msgstr "Typografian skaalan esittely"
 
 #. Developer options group for forcing UI component states.
 #: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:57
@@ -34514,7 +34314,7 @@ msgstr "Yleinen vararatkaisu. Huonoin laatu, mutta toimii kaikkialla."
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:755
 #: src/features/invite/components/InviteListItem.tsx:34
 #: src/features/moderation/components/modals/BanDetailsModal.tsx:114
-#: src/features/updater/commands/UpdaterModalCommands.tsx:140
+#: src/features/updater/commands/UpdaterModalCommands.tsx:144
 msgid "Unknown"
 msgstr "Tuntematon"
 
@@ -34669,8 +34469,8 @@ msgstr "Rajoittamaton määrä emojeita"
 msgid "Unlimited stickers"
 msgstr "Rajoittamaton määrä tarroja"
 
-#: src/features/channel/components/EmojiPicker.tsx:163
-#: src/features/channel/components/MobileEmojiPicker.tsx:208
+#: src/features/channel/components/EmojiPicker.tsx:150
+#: src/features/channel/components/MobileEmojiPicker.tsx:195
 msgid "Unlock {lockedEmojiCount, plural, one {# custom emoji} other {# custom emojis}} from {communityCount, plural, one {# community} other {# communities}} with {PREMIUM_PRODUCT_NAME}."
 msgstr "Avaa {lockedEmojiCount, plural, one {# mukautettu emoji} other {# mukautettua emojia}} {communityCount, plural, one {# yhteisöstä} other {# yhteisöstä}} {PREMIUM_PRODUCT_NAME}-tilauksella."
 
@@ -34816,7 +34616,7 @@ msgstr "Nimetön kanava"
 #. Fallback title in an invite embed for a group DM with no name set.
 #. Short label in the channel display name state. Keep it concise.
 #: src/features/channel/components/InviteEmbed.tsx:72
-#: src/features/channel/state/ChannelDisplayName.ts:17
+#: src/features/channel/state/ChannelDisplayName.ts:18
 #: src/features/channel/utils/ChannelUtils.tsx:59
 msgid "Unnamed group"
 msgstr "Nimetön ryhmä"
@@ -37353,7 +37153,7 @@ msgid "We've updated our policies. Review and accept them to continue."
 msgstr "Olemme päivittäneet käytäntöjämme. Jatkaaksesi sinun on tarkistettava ja hyväksyttävä ne."
 
 #. Client info web build identifier shown after the desktop build when both are present. Example: "Web 2026.518.0". Preserve placeholder.
-#: src/features/app/components/dialogs/components/ClientInfo.tsx:28
+#: src/features/app/components/dialogs/components/ClientInfo.tsx:27
 msgid "Web {buildVersion}"
 msgstr "Verkko {buildVersion}"
 
@@ -37937,7 +37737,7 @@ msgid "You are editing your per-community profile. This profile will only be vis
 msgstr "Muokkaat yhteisökohtaista profiiliasi. Tämä profiili näkyy vain tässä yhteisössä ja ohittaa globaalin profiilisi."
 
 #. Body text in the settings dialog client info.
-#: src/features/app/components/dialogs/components/ClientInfo.tsx:42
+#: src/features/app/components/dialogs/components/ClientInfo.tsx:41
 msgid "You are now a developer!"
 msgstr "Olet nyt kehittäjä!"
 

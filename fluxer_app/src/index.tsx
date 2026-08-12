@@ -2,6 +2,10 @@
 
 import {installBrowserStorageAccessProtection} from '@app/features/platform/state/ProtectedWebStorage';
 import 'urlpattern-polyfill';
+import '@fluxer/fonts/css/fluxer-sans.css';
+import '@fluxer/fonts/css/fluxer-mono.css';
+import '@fluxer/fonts/css/variables.css';
+import '@fluxer/fonts/css/locale-fallbacks.css';
 import '@app/app/globals.css';
 import '@app/features/theme/styles/generated/color-system.css';
 import '@app/features/theme/styles/generated/message-layout.css';
@@ -23,6 +27,7 @@ import {
 	preloadClientInfo,
 } from '@app/features/platform/utils/ClientInfo';
 import {loadLazyModule} from '@app/features/platform/utils/LazyModuleLoader';
+import {scheduleNonLatinScriptFaces} from '@app/features/theme/fonts/ScriptFontLoader';
 import {initializeNativeVoiceEngineSelectionForStartup} from '@app/features/voice/engine/native_voice_engine/NativeVoiceEngineSelection';
 import {i18n} from '@lingui/core';
 import {I18nProvider} from '@lingui/react';
@@ -182,6 +187,7 @@ async function bootstrapApp(): Promise<void> {
 }
 
 async function bootstrap(): Promise<void> {
+	scheduleNonLatinScriptFaces();
 	await initI18n();
 	installLocaleSwitchWatchdog();
 	installSelfXssNotice();

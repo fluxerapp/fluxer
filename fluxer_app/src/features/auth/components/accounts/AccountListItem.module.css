@@ -120,8 +120,7 @@
 }
 
 .accountItem.current .accountMeta {
-	color: var(--surface-interactive-selected-color);
-	opacity: 0.8;
+	color: color-mix(in srgb, var(--surface-interactive-selected-color) 80%, transparent);
 }
 
 .instanceLabel {

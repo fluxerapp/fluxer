@@ -18,7 +18,6 @@ COPY --chown=65532:65532 fluxer_static/badges /srv/fluxer-static/badges
 COPY --chown=65532:65532 fluxer_static/desktop /srv/fluxer-static/desktop
 COPY --chown=65532:65532 fluxer_static/embeds /srv/fluxer-static/embeds
 COPY --chown=65532:65532 fluxer_static/emoji /srv/fluxer-static/emoji
-COPY --chown=65532:65532 fluxer_static/fonts /srv/fluxer-static/fonts
 COPY --chown=65532:65532 fluxer_static/libs /srv/fluxer-static/libs
 COPY --chown=65532:65532 fluxer_static/web /srv/fluxer-static/web
 

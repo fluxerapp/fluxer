@@ -110,7 +110,7 @@
 .guildNameWithBanner {
 	composes: guildName;
 	color: white;
-	filter: drop-shadow(0 0.0625rem 0.1875rem rgba(0, 0, 0, 0.9));
+	text-shadow: 0 0.0625rem 0.1875rem rgba(0, 0, 0, 0.9);
 }
 
 .caretIcon {

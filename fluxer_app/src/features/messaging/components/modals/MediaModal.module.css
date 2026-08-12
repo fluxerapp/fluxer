@@ -338,8 +338,8 @@
 	background-color: var(--media-hud-surface-bg);
 	border: 0.0625rem solid var(--media-hud-surface-border);
 	box-shadow: var(--media-hud-shadow);
-	backdrop-filter: blur(2.25rem) saturate(160%);
-	-webkit-backdrop-filter: blur(2.25rem) saturate(160%);
+	backdrop-filter: blur(2.25rem);
+	-webkit-backdrop-filter: blur(2.25rem);
 	pointer-events: auto;
 	min-width: 0;
 	max-width: calc(100% - 11.25rem);
@@ -397,8 +397,8 @@
 	background-color: var(--media-hud-surface-bg);
 	border: 0.0625rem solid var(--media-hud-surface-border);
 	box-shadow: var(--media-hud-shadow);
-	backdrop-filter: blur(2.25rem) saturate(160%);
-	-webkit-backdrop-filter: blur(2.25rem) saturate(160%);
+	backdrop-filter: blur(2.25rem);
+	-webkit-backdrop-filter: blur(2.25rem);
 	pointer-events: auto;
 	height: 100%;
 	box-sizing: border-box;
@@ -412,8 +412,8 @@
 	background-color: var(--media-hud-surface-bg);
 	border: 0.0625rem solid var(--media-hud-surface-border);
 	box-shadow: var(--media-hud-shadow);
-	backdrop-filter: blur(2.25rem) saturate(160%);
-	-webkit-backdrop-filter: blur(2.25rem) saturate(160%);
+	backdrop-filter: blur(2.25rem);
+	-webkit-backdrop-filter: blur(2.25rem);
 	pointer-events: auto;
 	height: 100%;
 	box-sizing: border-box;
@@ -617,8 +617,8 @@
 	background-color: var(--media-hud-surface-bg);
 	border: 0.0625rem solid var(--media-hud-surface-border);
 	box-shadow: var(--media-hud-shadow);
-	backdrop-filter: blur(2.25rem) saturate(160%);
-	-webkit-backdrop-filter: blur(2.25rem) saturate(160%);
+	backdrop-filter: blur(2.25rem);
+	-webkit-backdrop-filter: blur(2.25rem);
 	pointer-events: auto;
 }
 
@@ -653,8 +653,8 @@
 	border: 0.0625rem solid var(--media-hud-surface-border);
 	box-shadow: var(--media-hud-shadow);
 	padding: var(--media-hud-surface-padding) 0.75rem;
-	backdrop-filter: blur(2.25rem) saturate(160%);
-	-webkit-backdrop-filter: blur(2.25rem) saturate(160%);
+	backdrop-filter: blur(2.25rem);
+	-webkit-backdrop-filter: blur(2.25rem);
 	pointer-events: auto;
 }
 
@@ -794,8 +794,8 @@
 	background-color: var(--media-hud-surface-bg);
 	border: 0.0625rem solid var(--media-hud-surface-border);
 	box-shadow: var(--media-hud-shadow);
-	backdrop-filter: blur(2.25rem) saturate(160%);
-	-webkit-backdrop-filter: blur(2.25rem) saturate(160%);
+	backdrop-filter: blur(2.25rem);
+	-webkit-backdrop-filter: blur(2.25rem);
 	color: var(--media-hud-color-muted, rgb(255 255 255 / 0.72));
 	cursor: pointer;
 	transition:
@@ -840,8 +840,8 @@
 	background-color: var(--media-hud-surface-bg);
 	border: 0.0625rem solid var(--media-hud-surface-border);
 	box-shadow: var(--media-hud-shadow);
-	backdrop-filter: blur(2.25rem) saturate(160%);
-	-webkit-backdrop-filter: blur(2.25rem) saturate(160%);
+	backdrop-filter: blur(2.25rem);
+	-webkit-backdrop-filter: blur(2.25rem);
 	pointer-events: none;
 }
 

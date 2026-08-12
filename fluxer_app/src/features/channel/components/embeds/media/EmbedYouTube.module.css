@@ -59,8 +59,8 @@
 	border: 0.0625rem solid rgba(255, 255, 255, 0.12);
 	border-radius: 1rem;
 	background: rgba(3, 3, 4, 0.86);
-	backdrop-filter: blur(1rem) saturate(1.2);
-	-webkit-backdrop-filter: blur(1rem) saturate(1.2);
+	backdrop-filter: blur(1rem);
+	-webkit-backdrop-filter: blur(1rem);
 	box-shadow:
 		0 0.75rem 1.875rem rgba(0, 0, 0, 0.4),
 		inset 0 0.0625rem 0 rgba(255, 255, 255, 0.075);

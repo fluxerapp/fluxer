@@ -134,6 +134,13 @@ jobs:
           cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- build-app-proxy
           --step upload_assets
 
+      - name: verify bundled faces are CORS-usable from the app origin
+        run: >-
+          deploy/scripts/verify-asset-cors.sh
+          --endpoint https://fluxerstatic.com
+          --origin https://fluxer.app
+          --manifest app-dist-output/dist/assets-manifest.txt
+
   build-arm64:
     name: build app-proxy (arm64)
     needs: meta
@@ -160,6 +167,7 @@ jobs:
           build-args: |
             BUILD_VERSION=${{ needs.meta.outputs.build_version }}
             PUBLIC_ASSET_BASE_URL=https://fluxerstatic.com
+            BUNDLE_LOCAL_ASSETS=false
           cache-from: type=gha,scope=fluxer-app-proxy-arm64
           cache-to: type=gha,scope=fluxer-app-proxy-arm64,mode=max,ignore-error=true
         env:

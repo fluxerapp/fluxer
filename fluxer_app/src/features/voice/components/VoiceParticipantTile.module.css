@@ -656,7 +656,7 @@
 	display: inline;
 	font-size: inherit;
 	line-height: 1;
-	opacity: 0.76;
+	color: color-mix(in srgb, currentcolor 76%, transparent);
 }
 
 @container (max-width: 200px) {

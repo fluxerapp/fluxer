@@ -58,6 +58,9 @@ p:date-utils:
 p:errors:
   - changed-files:
     - any-glob-to-any-file: packages/errors/**/*
+p:fonts:
+  - changed-files:
+    - any-glob-to-any-file: packages/fonts/**/*
 p:geo-utils:
   - changed-files:
     - any-glob-to-any-file: packages/geo_utils/**/*

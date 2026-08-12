@@ -509,7 +509,7 @@
 	display: inline;
 	font-size: var(--message-timestamp-font-size);
 	line-height: var(--message-line-height);
-	opacity: 0.6;
+	color: color-mix(in srgb, var(--message-timestamp-color) 60%, transparent);
 	margin-inline-start: 0.15rem;
 	white-space: nowrap;
 }
@@ -947,9 +947,13 @@
 	max-width: 30%;
 	vertical-align: baseline;
 	font-weight: 500;
-	color: var(--text-primary);
+	color: color-mix(
+		in srgb,
+		var(--replied-username-color, var(--text-primary))
+			clamp(0%, calc(var(--message-replied-username-opacity) * 100%), 100%),
+		transparent
+	);
 	line-height: inherit;
-	opacity: var(--message-replied-username-opacity);
 }
 
 @media (hover: hover) {
@@ -1116,7 +1120,7 @@
 	margin-inline-start: 0.25rem;
 	position: relative;
 	top: -0.125rem;
-	color: var(--message-timestamp-color);
+	color: color-mix(in srgb, var(--message-timestamp-color) 60%, transparent);
 }
 
 .systemMessageContentWrapper {

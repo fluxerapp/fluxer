@@ -34,7 +34,6 @@
 	align-items: center;
 	height: 2.75rem;
 	min-height: 2.75rem;
-	will-change: transform;
 }
 
 .virtualMemberRow {

@@ -3,6 +3,7 @@
 pub mod config;
 pub mod content;
 pub mod downloads;
+pub mod fonts;
 pub mod geoip;
 pub mod i18n;
 pub mod invariant_text;

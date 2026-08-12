@@ -8,6 +8,7 @@ type ThemeVariableKind = 'color' | 'font' | 'dimension' | 'number' | 'shadow' | 
 interface CssSource {
 	file: string;
 	label: string;
+	generatedBy?: string;
 }
 
 interface VariableDefinition {
@@ -20,21 +21,48 @@ interface VariableDefinition {
 
 const PRIORITY_CSS_SOURCES: ReadonlyArray<CssSource> = [
 	{file: 'src/app/globals.css', label: 'globals'},
-	{file: 'src/features/theme/styles/generated/color-system.css', label: 'color-system'},
-	{file: 'src/features/theme/styles/generated/message-layout.css', label: 'message-layout'},
+	{
+		file: 'src/features/theme/styles/generated/color-system.css',
+		label: 'color-system',
+		generatedBy: 'pnpm generate:colors',
+	},
+	{
+		file: 'src/features/theme/styles/generated/message-layout.css',
+		label: 'message-layout',
+		generatedBy: 'pnpm generate:message-layout',
+	},
 ];
 const PRIORITY_SOURCE_INDEX = new Map(PRIORITY_CSS_SOURCES.map((source, index) => [source.file, index]));
 const IGNORED_SOURCE_PREFIXES = ['src/features/theme_studio/', 'src/theme/'];
 
+const BUNDLED_FONT_VARIABLES_CSS = resolve(
+	import.meta.dirname,
+	'..',
+	'..',
+	'packages',
+	'fonts',
+	'css',
+	'variables.css',
+);
+
+function bundledFontStack(name: string): string {
+	const css = readFileSync(BUNDLED_FONT_VARIABLES_CSS, 'utf8');
+	const declaration = new RegExp(`${name}:([^;]*);`).exec(css);
+	if (!declaration) {
+		throw new Error(`${name} is not declared in ${BUNDLED_FONT_VARIABLES_CSS}`);
+	}
+	return declaration[1].replace(/\s+/g, ' ').trim();
+}
+
 const EXTRA_GLOBAL_DEFAULTS: ReadonlyArray<{name: string; value: string; source: string}> = [
 	{
 		name: '--font-sans',
-		value: "'Fluxer Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+		value: bundledFontStack('--font-sans'),
 		source: 'runtime-fonts',
 	},
 	{
 		name: '--font-mono',
-		value: "'Fluxer Mono', 'Menlo', 'Monaco', 'Courier New', monospace",
+		value: bundledFontStack('--font-mono'),
 		source: 'runtime-fonts',
 	},
 	{name: '--font-size', value: '1rem', source: 'runtime-accessibility'},
@@ -121,6 +149,17 @@ function discoverCssSources(appDir: string): ReadonlyArray<CssSource> {
 		}
 	};
 	visit(srcDir);
+	const discovered = new Set(files);
+	const missing = PRIORITY_CSS_SOURCES.filter((source) => !discovered.has(source.file));
+	if (missing.length > 0) {
+		const remedies = missing.map(
+			(source) => `  ${source.file} is missing. Run \`${source.generatedBy ?? 'pnpm build'}\` first.`,
+		);
+		throw new Error(
+			`Cannot generate the theme variable manifest from a partial input.\n${remedies.join('\n')}\n` +
+				'Writing anyway would silently delete every variable those sources declare from a tracked file.',
+		);
+	}
 	return files
 		.sort((left, right) => {
 			const leftPriority = PRIORITY_SOURCE_INDEX.get(left);

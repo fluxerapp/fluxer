@@ -269,6 +269,7 @@ const UserAreaInner = observer(
 						data-flx="app.user-area.user-area-inner.popout"
 						{...openProps}
 						render={() => <UserAreaPopout data-flx="app.user-area.user-area-inner.user-area-popout" />}
+						containerClass={styles.popoutContainer}
 						position="top"
 						offsetMainAxis={12}
 					>

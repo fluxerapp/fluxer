@@ -35,7 +35,13 @@ use time::{
     OffsetDateTime,
     format_description::well_known::{Rfc2822, Rfc3339},
 };
-use tower_http::{compression::CompressionLayer, trace::TraceLayer};
+use tower_http::{
+    compression::{
+        CompressionLayer,
+        predicate::{DefaultPredicate, NotForContentType, Predicate},
+    },
+    trace::TraceLayer,
+};
 
 const APP_CSS: &str = include_str!(concat!(env!("OUT_DIR"), "/static/app.css"));
 const HTMX_JS: &str = include_str!("../static/htmx.min.js");
@@ -57,6 +63,7 @@ const STRICT_TRANSPORT_SECURITY_VALUE: &str = "max-age=31536000; includeSubDomai
 const REFERRER_POLICY_VALUE: &str = "strict-origin-when-cross-origin";
 const PERMISSIONS_POLICY_VALUE: &str = "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()";
 const X_FRAME_OPTIONS_VALUE: &str = "DENY";
+const IMMUTABLE_CACHE_CONTROL: &str = "public, max-age=31536000, immutable";
 
 #[derive(Deserialize)]
 struct LocaleForm {
@@ -162,6 +169,7 @@ pub fn build_router(config: MarketingConfig) -> Router {
         .route("/_donations/checkout", post(donation_checkout))
         .route("/_donations/request-link", post(donation_request_link))
         .route("/static/app.css", get(app_css))
+        .route("/static/fonts/{file_name}", get(font_asset))
         .route("/static/htmx.min.js", get(htmx_js))
         .route("/static/world-map-equirectangular.svg", get(world_map_svg))
         .route(
@@ -239,7 +247,10 @@ pub fn build_router(config: MarketingConfig) -> Router {
             state.clone(),
             security_headers_middleware,
         ))
-        .layer(CompressionLayer::new())
+        .layer(
+            CompressionLayer::new()
+                .compress_when(DefaultPredicate::new().and(NotForContentType::const_new("font/"))),
+        )
         .layer(TraceLayer::new_for_http())
         .with_state(state)
 }
@@ -295,9 +306,9 @@ fn build_marketing_content_security_policy(config: &MarketingConfig) -> String {
     [
         "default-src 'self'".to_owned(),
         format!("script-src 'self' {}", inline_script_csp_source()),
-        format!("style-src 'self' 'unsafe-inline' {static_cdn}"),
+        "style-src 'self' 'unsafe-inline'".to_owned(),
         format!("img-src 'self' data: blob: {static_cdn}"),
-        format!("font-src 'self' data: {static_cdn}"),
+        "font-src 'self'".to_owned(),
         format!("media-src 'self' {static_cdn}"),
         "connect-src 'self'".to_owned(),
         "frame-src 'none'".to_owned(),
@@ -1000,6 +1011,20 @@ async fn health() -> Json<serde_json::Value> {
 
 async fn app_css() -> impl IntoResponse {
     ([(header::CONTENT_TYPE, "text/css; charset=utf-8")], APP_CSS)
+}
+
+async fn font_asset(Path(file_name): Path<String>) -> Response {
+    match crate::fonts::asset(&file_name) {
+        Some((content_type, bytes)) => (
+            [
+                (header::CONTENT_TYPE, content_type),
+                (header::CACHE_CONTROL, IMMUTABLE_CACHE_CONTROL),
+            ],
+            bytes,
+        )
+            .into_response(),
+        None => StatusCode::NOT_FOUND.into_response(),
+    }
 }
 
 async fn htmx_js() -> impl IntoResponse {

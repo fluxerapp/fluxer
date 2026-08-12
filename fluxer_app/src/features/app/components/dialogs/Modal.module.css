@@ -104,10 +104,6 @@
 	overflow: hidden;
 }
 
-.layer.layerFullscreenMobile .surface {
-	will-change: transform;
-}
-
 .layer.layerCentered {
 	padding: calc(1.5rem + env(safe-area-inset-top, 0px)) calc(1rem + env(safe-area-inset-right, 0px))
 		calc(1.5rem + env(safe-area-inset-bottom, 0px)) calc(1rem + env(safe-area-inset-left, 0px));

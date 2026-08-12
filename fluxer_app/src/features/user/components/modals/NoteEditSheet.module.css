@@ -27,11 +27,6 @@
 	color: var(--brand-primary-light);
 }
 
-.saveButtonDisabled {
-	color: var(--text-tertiary);
-	opacity: 0.5;
-}
-
 .content {
 	flex: 1;
 	padding: 1rem;

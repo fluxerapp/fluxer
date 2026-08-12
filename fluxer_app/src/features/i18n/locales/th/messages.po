@@ -618,7 +618,7 @@ msgid "{defaultDeviceLabel} ({endpointLabel})"
 msgstr "{defaultDeviceLabel} ({endpointLabel})"
 
 #. Client info desktop build identifier line. Example: "Canary Desktop 2026.419.3". Preserve placeholders.
-#: src/features/app/components/dialogs/components/ClientInfo.tsx:38
+#: src/features/app/components/dialogs/components/ClientInfo.tsx:37
 msgid "{desktopChannel} Desktop {desktopVersion}"
 msgstr "{desktopChannel} เดสก์ท็อป {desktopVersion}"
 
@@ -1089,12 +1089,12 @@ msgid "{productName} Community Team"
 msgstr "ทีมชุมชน {productName}"
 
 #. Modal body shown when a user-initiated update check fails. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:104
+#: src/features/updater/commands/UpdaterModalCommands.tsx:108
 msgid "{productName} could not reach the update service. Check your connection and try again."
 msgstr "{productName} ไม่สามารถเชื่อมต่อกับบริการอัปเดตได้ โปรดตรวจสอบการเชื่อมต่อของคุณและลองใหม่อีกครั้ง"
 
 #. Modal body shown when starting installation of a downloaded desktop update fails. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:121
+#: src/features/updater/commands/UpdaterModalCommands.tsx:125
 msgid "{productName} could not restart into the downloaded update. Try again from the update button."
 msgstr "{productName} ไม่สามารถเริ่มต้นการทำงานใหม่เพื่อติดตั้งอัปเดตที่ดาวน์โหลดมาได้ โปรดลองใหม่อีกครั้งจากปุ่มอัปเดต"
 
@@ -1210,8 +1210,8 @@ msgstr "โลโก้ {productName}"
 
 #. Client info web build identifier line. Example: "Canary Web 2026.518.0". Preserve placeholders.
 #. Client info web build identifier shown after the desktop build when the web and desktop channels differ. Example: "Stable Web 2026.518.0". Preserve placeholders.
-#: src/features/app/components/dialogs/components/ClientInfo.tsx:24
-#: src/features/app/components/dialogs/components/ClientInfo.tsx:33
+#: src/features/app/components/dialogs/components/ClientInfo.tsx:23
+#: src/features/app/components/dialogs/components/ClientInfo.tsx:32
 msgid "{releaseChannel} Web {buildVersion}"
 msgstr "{releaseChannel} เว็บ {buildVersion}"
 
@@ -1242,7 +1242,7 @@ msgid "{renderedPresenceCount} online"
 msgstr "{renderedPresenceCount} ออนไลน์"
 
 #. Short label in the channel display name state. Keep it concise. Preserve {resolvedName}; it is inserted by code.
-#: src/features/channel/state/ChannelDisplayName.ts:12
+#: src/features/channel/state/ChannelDisplayName.ts:13
 msgid "{resolvedName}'s group"
 msgstr "กลุ่มของ{resolvedName}"
 
@@ -1961,7 +1961,7 @@ msgid "a hostname, e.g. {exampleDomain}"
 msgstr "ชื่อโฮสต์ เช่น {exampleDomain}"
 
 #. Linux desktop updater modal body shown before version details and package format selector. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:126
+#: src/features/updater/commands/UpdaterModalCommands.tsx:130
 msgid "A Linux desktop update is available. Choose the package format for this system and {productName} will save it locally."
 msgstr "มีการอัปเดตสำหรับ Fluxer บนระบบปฏิบัติการ Linux เลือกรูปแบบแพ็กเกจสำหรับระบบนี้ แล้ว {productName} จะบันทึกไว้ในเครื่อง"
 
@@ -1990,7 +1990,7 @@ msgstr "โพล"
 msgid "A redirect_uri is required when the bot scope is not the only scope."
 msgstr "ต้องระบุ redirect_uri เมื่อบอทไม่ใช่ขอบเขตเดียว"
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:342
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:341
 msgid "A reusable component for empty states, errors, and status messages."
 msgstr "คอมโพเนนต์ที่ใช้ซ้ำได้สำหรับสถานะว่างเปล่า ข้อผิดพลาด และข้อความสถานะ"
 
@@ -3891,7 +3891,7 @@ msgstr "แอป"
 msgid "Arabic"
 msgstr "อาหรับ"
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:227
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:226
 msgid "Archive"
 msgstr "คลัง"
 
@@ -4667,7 +4667,7 @@ msgid "Autoscrolling"
 msgstr "เลื่อนอัตโนมัติ"
 
 #. Label for the available desktop version in the Linux update modal.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:136
+#: src/features/updater/commands/UpdaterModalCommands.tsx:140
 msgid "Available"
 msgstr "พร้อมใช้งาน"
 
@@ -5243,26 +5243,6 @@ msgstr "เบลอ"
 msgid "Blur strength"
 msgstr "ระดับความเบลอ"
 
-#. Short label in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:82
-msgid "Body"
-msgstr "เนื้อหา"
-
-#. Short label in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:66
-msgid "Bold"
-msgstr "ตัวหนา"
-
-#. Title in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:134
-msgid "Bold heading"
-msgstr "หัวข้อตัวหนา"
-
-#. Title in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:142
-msgid "Bold title"
-msgstr "หัวข้อตัวหนา"
-
 #. Folder icon option in the community-folder settings modal: a bookmark shape. Refers to the bookmark icon glyph, not the saved-message bookmarks feature.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the buttons tab. Keep it concise.
@@ -5590,7 +5570,7 @@ msgstr "รูปแบบปุ่ม"
 msgid "Button with context menu"
 msgstr "ปุ่มพร้อมเมนูบริบท"
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:252
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:251
 msgid "Buttons"
 msgstr "ปุ่ม"
 
@@ -5988,11 +5968,6 @@ msgstr "ติดตั้งชุดสติกเกอร์ไม่ได
 #: src/features/auth/components/CaptchaInterceptor.tsx:14
 msgid "Captcha verification failed. Try again."
 msgstr "การยืนยันแคปต์ชาล้มเหลว โปรดลองอีกครั้ง"
-
-#. Short label in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:74
-msgid "Caption"
-msgstr "คำบรรยาย"
 
 #. Section header in the Linux audio source picker. Lists capture-target options (entire system / specific apps).
 #: src/features/voice/components/AudioSourcePickerLinux.tsx:48
@@ -7179,7 +7154,7 @@ msgstr "ล้างการตั้งค่าที่กำหนดเอ
 msgid "Clear all attachment mocks"
 msgstr "ล้างไฟล์แนบจำลองทั้งหมด"
 
-#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:378
+#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:384
 msgid "Clear all token overrides"
 msgstr "ล้างการแทนที่โทเค็นทั้งหมด"
 
@@ -7215,7 +7190,7 @@ msgstr "ล้างม็อกสำหรับไฟล์แนบนี้
 msgid "Clear nickname"
 msgstr "ล้างชื่อเล่น"
 
-#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:401
+#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:407
 msgid "Clear overrides"
 msgstr "ล้างการตั้งค่าที่กำหนดเอง"
 
@@ -7299,7 +7274,7 @@ msgstr "ล้างหัวข้อแล้ว"
 msgid "Clearing trusted domains..."
 msgstr "กำลังล้างโดเมนที่เชื่อถือได้..."
 
-#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:359
+#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:365
 msgid "Clears quick CSS, imported themes, uploaded assets, and local file references on this device."
 msgstr "ล้าง CSS ด่วน, ธีมที่นำเข้า, เนื้อหาที่อัปโหลด และการอ้างอิงไฟล์ในเครื่องบนอุปกรณ์นี้"
 
@@ -7341,7 +7316,7 @@ msgid "Click to claim your gift!"
 msgstr "คลิกเพื่อรับของขวัญของคุณ!"
 
 #. Short label in the settings dialog client info.
-#: src/features/app/components/dialogs/components/ClientInfo.tsx:46
+#: src/features/app/components/dialogs/components/ClientInfo.tsx:45
 msgid "Click to copy"
 msgstr "แตะเพื่อคัดลอก"
 
@@ -8825,7 +8800,7 @@ msgstr "คัดลอก URL คำเชิญ"
 #. Generic action label that copies a URL to the clipboard.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:739
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:310
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:146
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:145
 msgid "Copy link"
 msgstr "คัดลอกลิงก์"
 
@@ -9065,7 +9040,7 @@ msgid "Couldn't change your billing cycle"
 msgstr "เปลี่ยนรอบบิลไม่ได้"
 
 #. Modal title shown when a user-initiated update check fails.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:100
+#: src/features/updater/commands/UpdaterModalCommands.tsx:104
 msgid "Couldn't check for updates"
 msgstr "ตรวจสอบการอัปเดตไม่สำเร็จ"
 
@@ -9172,7 +9147,7 @@ msgid "Couldn't delete your messages"
 msgstr "ลบข้อความของคุณไม่ได้"
 
 #. Modal title shown when a desktop update download fails.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:108
+#: src/features/updater/commands/UpdaterModalCommands.tsx:112
 msgid "Couldn't download the desktop update"
 msgstr "ดาวน์โหลดการอัปเดตเดสก์ท็อปไม่ได้"
 
@@ -9426,7 +9401,7 @@ msgid "Couldn't start the connection"
 msgstr "ไม่สามารถเริ่มการเชื่อมต่อได้"
 
 #. Modal title shown when starting installation of a downloaded desktop update fails.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:117
+#: src/features/updater/commands/UpdaterModalCommands.tsx:121
 msgid "Couldn't start the desktop update"
 msgstr "ไม่สามารถเริ่มอัปเดตเดสก์ท็อปได้"
 
@@ -10302,7 +10277,7 @@ msgid "Danger button clicked."
 msgstr "คลิกที่ปุ่มอันตรายแล้ว"
 
 #. Short label in the account security tab. Keep it concise. Keep the tone plain and specific.
-#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:350
+#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:356
 #: src/features/user/components/modals/tabs/account_security_tab/AccountSecuritySections.tsx:39
 #: src/features/user/components/modals/tabs/applications_tab/ApplicationDetail.tsx:697
 msgid "Danger zone"
@@ -10669,7 +10644,7 @@ msgstr "ค่าเริ่มต้นคือปิดในมือถื
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:399
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:116
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:272
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:239
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:238
 #: src/features/user/components/modals/tabs/ExpressionPacksTab.tsx:49
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:154
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:190
@@ -10964,11 +10939,6 @@ msgstr "ลบข้อความของคุณแล้ว"
 msgid "Deleted."
 msgstr "ลบแล้ว"
 
-#. Label in the typography tab.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:14
-msgid "Delicate and light typography"
-msgstr "ตัวอักษรที่ดูละเอียดอ่อนและเบา"
-
 #. Status chip for a denied macOS permission.
 #: src/features/permissions/system/components/modals/MacPermissionsModal.tsx:59
 msgid "Denied"
@@ -11145,12 +11115,12 @@ msgid "Desktop update available. Choose a Linux package."
 msgstr "มีการอัปเดตเดสก์ท็อป เลือกแพ็กเกจ Linux"
 
 #. Modal title shown when a desktop app update has finished downloading.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:83
+#: src/features/updater/commands/UpdaterModalCommands.tsx:87
 msgid "Desktop update ready"
 msgstr "อัปเดตเดสก์ท็อปพร้อมใช้งานแล้ว"
 
 #. Desktop updater modal body. The version placeholder is the downloaded app version; productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:87
+#: src/features/updater/commands/UpdaterModalCommands.tsx:91
 msgid "Desktop version {version} has been downloaded. Restart {productName} to finish installing."
 msgstr "มีการดาวน์โหลดเวอร์ชันเดสก์ท็อป {version} แล้ว รีสตาร์ท {productName} เพื่อดำเนินการติดตั้งให้เสร็จสมบูรณ์"
 
@@ -11753,11 +11723,9 @@ msgstr "ปิดการกล่าวถึง"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the chat settings tab. Keep it concise.
 #. Short label in the inline. Keep it concise.
-#. Short label in the typography tab. Keep it concise.
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleEditor.tsx:175
 #: src/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabInline.tsx:14
 #: src/features/user/components/modals/tabs/ChatSettingsTab.tsx:14
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:102
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:154
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:116
 msgid "Display"
@@ -12305,7 +12273,7 @@ msgid "Due to mature content laws in {regionName}, this media is not available f
 msgstr "เนื่องจากกฎหมายเนื้อหาสำหรับผู้ใหญ่ใน {regionName} สื่อนี้จึงไม่สามารถใช้งานได้ในภูมิภาคปัจจุบันของคุณ"
 
 #: src/features/theme_studio/sections/LibrarySection.tsx:503
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:221
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:220
 msgid "Duplicate"
 msgstr "ทำซ้ำ"
 
@@ -12590,7 +12558,7 @@ msgid "Edit your profile bio"
 msgstr "แก้ไขประวัติส่วนตัว"
 
 #. Button or menu action label in the index. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:40
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:39
 msgid "Editable text"
 msgstr "ข้อความที่แก้ไขได้"
 
@@ -13001,7 +12969,7 @@ msgstr "เปิดใช้งานการหมดอายุไฟล์
 msgid "Enable audio"
 msgstr "เปิดเสียง"
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:172
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:171
 msgid "Enable beta feature"
 msgstr "เปิดใช้ฟีเจอร์เบต้า"
 
@@ -13038,7 +13006,7 @@ msgstr "เปิดโหมดนักพัฒนา"
 msgid "Enable email delivery"
 msgstr "เปิดใช้งานการส่งอีเมล"
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:158
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:157
 msgid "Enable extra option"
 msgstr "เปิดตัวเลือกเพิ่มเติม"
 
@@ -13660,7 +13628,7 @@ msgstr "เกิดข้อผิดพลาด"
 msgid "error code {code}"
 msgstr "รหัสข้อผิดพลาด {code}"
 
-#: src/features/messaging/components/markdown/index.tsx:39
+#: src/features/messaging/components/markdown/index.tsx:40
 msgid "Error rendering content"
 msgstr "แสดงเนื้อหาไม่ได้"
 
@@ -14094,11 +14062,6 @@ msgstr "ลิงก์ภายนอกอาจเป็นอันตรา
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:57
 msgid "Extra large"
 msgstr "ใหญ่พิเศษ"
-
-#. Short label in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:18
-msgid "Extra light"
-msgstr "บางพิเศษ"
 
 #. Report category label for a community organized around extremist content or ideology.
 #: src/features/moderation/components/report/OptionDescriptors.ts:90
@@ -14791,7 +14754,7 @@ msgstr "คลิกแรก"
 msgid "First click pass-through when unfocused"
 msgstr "คลิกผ่านได้แม้ไม่ได้โฟกัส"
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:112
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:111
 msgid "First option"
 msgstr "ตัวเลือกแรก"
 
@@ -14916,10 +14879,6 @@ msgstr "ติดตามหลัก • {effectiveValue}%"
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:170
 msgid "Font"
 msgstr "แบบอักษร"
-
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:344
-msgid "Font weights"
-msgstr "น้ำหนักแบบอักษร"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:9
@@ -15364,7 +15323,7 @@ msgid "From {start}"
 msgstr "ตั้งแต่ {start}"
 
 #. placeholder {0}: sourceGuild.name
-#: src/features/channel/components/emoji_picker/EmojiPickerInspector.tsx:104
+#: src/features/channel/components/emoji_picker/EmojiPickerInspector.tsx:102
 msgid "from <0>{0}</0>"
 msgstr "จาก <0>{0}</0>"
 
@@ -15460,7 +15419,7 @@ msgstr "GDPR"
 msgid "General"
 msgstr "ทั่วไป"
 
-#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:325
+#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:331
 msgid "Generate a shareable link or copy your combined custom CSS."
 msgstr "สร้างลิงก์ที่แชร์ได้ หรือคัดลอก CSS ที่กำหนดเองแบบรวมของคุณ"
 
@@ -15480,11 +15439,6 @@ msgstr "สร้างรหัสใหม่"
 #: src/features/auth/flow/HandoffCodeDisplay.tsx:70
 msgid "Generating code…"
 msgstr "กำลังสร้างรหัส…"
-
-#. Label in the typography tab.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:22
-msgid "Gentle and airy text display"
-msgstr "ข้อความที่ดูสบายตา"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:209
@@ -16266,11 +16220,6 @@ msgstr "เขา"
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:45
 msgid "Header"
 msgstr "ส่วนหัว"
-
-#. Title in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:94
-msgid "Heading"
-msgstr "หัวเรื่อง"
 
 #. Title in the markdown tab. Keep it concise.
 #: src/features/user/components/modals/tabs/component_gallery_tab/MarkdownTab.tsx:25
@@ -17429,7 +17378,7 @@ msgstr "กำลังจัดทำดัชนีช่อง"
 msgid "Indicator"
 msgstr "ตัวบ่งชี้"
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:334
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:333
 msgid "Indicators & status"
 msgstr "ตัวบ่งชี้และสถานะ"
 
@@ -17557,7 +17506,7 @@ msgstr "สถานะอินพุต"
 msgid "Input volume"
 msgstr "ระดับเสียงไมโครโฟน"
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:260
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:259
 msgid "Inputs & text"
 msgstr "การป้อนข้อมูลและข้อความ"
 
@@ -17590,7 +17539,7 @@ msgid "Install sticker pack"
 msgstr "ติดตั้งชุดสติกเกอร์"
 
 #. Label for the installed desktop version in the Linux update modal.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:132
+#: src/features/updater/commands/UpdaterModalCommands.tsx:136
 msgid "Installed"
 msgstr "ติดตั้งแล้ว"
 
@@ -18094,15 +18043,6 @@ msgstr "ตอนนี้เงียบจังเลย..."
 msgid "Italian"
 msgstr "อิตาลี"
 
-#. Short label in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:114
-msgid "Italic"
-msgstr "ตัวเอียง"
-
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:392
-msgid "Italic style demonstration"
-msgstr "ตัวอย่างสไตล์ตัวเอียง"
-
 #. Country name. EU member state in the illegal-content report country dropdown.
 #: src/features/moderation/components/report/OptionDescriptors.ts:167
 msgid "Italy"
@@ -18532,10 +18472,6 @@ msgstr "ภาษา"
 msgid "Language settings"
 msgstr "การตั้งค่าภาษา"
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:285
-msgid "Language support"
-msgstr "ภาษาที่รองรับ"
-
 #. Submenu label in the textarea spellcheck submenu listing manual language overrides.
 #. Subsection title for spellcheck language settings. Keep it concise.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:86
@@ -18544,9 +18480,7 @@ msgid "Languages"
 msgstr "ภาษา"
 
 #. Short label in the selections tab. Keep it concise.
-#. Short label in the typography tab. Keep it concise.
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:53
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:86
 msgid "Large"
 msgstr "ใหญ่"
 
@@ -18822,9 +18756,7 @@ msgid "Lifetime {premiumProductName}"
 msgstr "{premiumProductName} ตลอดชีพ"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#. Short label in the typography tab. Keep it concise.
 #: src/features/expressions/components/modals/sticker_form/StickerPreview.tsx:48
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:26
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:54
 msgid "Light"
 msgstr "สว่าง"
@@ -19012,7 +18944,7 @@ msgid "Linux default"
 msgstr "ค่าเริ่มต้นของ Linux"
 
 #. Select label for choosing the Linux desktop package format to download.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:148
+#: src/features/updater/commands/UpdaterModalCommands.tsx:152
 msgid "Linux package"
 msgstr "แพ็กเกจ Linux"
 
@@ -19613,7 +19545,7 @@ msgid "Mark top inbox channel as read"
 msgstr "ทำเครื่องหมายช่องในกล่องขาเข้าด้านบนว่าอ่านแล้ว"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:372
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:364
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:122
 msgid "Markdown"
 msgstr "มาร์กดาวน์"
@@ -19945,10 +19877,8 @@ msgstr "ขนาดสื่อ"
 
 #. Member verification level option in the community moderation settings tab. Short standalone severity label.
 #. Short label in the selections tab. Keep it concise.
-#. Short label in the typography tab. Keep it concise.
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:65
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:49
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:50
 msgid "Medium"
 msgstr "ปานกลาง"
 
@@ -20820,7 +20750,7 @@ msgstr "เพิ่มเติม"
 
 #. Short label in the index. Keep it concise.
 #. Short label in the user profile modal. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:48
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:47
 #: src/features/user/components/modals/UserProfileModal.tsx:114
 msgid "More actions"
 msgstr "เพิ่มเติม"
@@ -20992,10 +20922,6 @@ msgstr "การยืนยันตัวตนหลายชั้น"
 #: src/features/user/components/modals/tabs/component_gallery_tab/MarkdownTab.tsx:57
 msgid "Multi-line"
 msgstr "Multi-line"
-
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:497
-msgid "Multilingual content"
-msgstr "เนื้อหาหลายภาษา"
 
 #. Discovery category dropdown option in the community Discovery settings tab.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:79
@@ -21653,7 +21579,7 @@ msgid "New users can't join right now. You can still create an account or sign i
 msgstr "ผู้ใช้ใหม่ไม่สามารถเข้าร่วมได้ในขณะนี้ คุณยังสามารถสร้างบัญชีหรือลงชื่อเข้าใช้ แล้วลองใช้ลิงก์นี้อีกครั้งในภายหลังได้"
 
 #. Fallback version label when the available desktop version is unknown.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:144
+#: src/features/updater/commands/UpdaterModalCommands.tsx:148
 msgid "New version"
 msgstr "เวอร์ชันใหม่"
 
@@ -21921,7 +21847,7 @@ msgid "No emojis found matching your search."
 msgstr "ไม่พบอิโมจิที่ตรงกับการค้นหาของคุณ"
 
 #. Empty-state text in the channel and chat emoji picker.
-#: src/features/channel/components/EmojiPicker.tsx:43
+#: src/features/channel/components/EmojiPicker.tsx:41
 msgid "No emojis match that search"
 msgstr "ไม่พบอิโมจิที่ตรงกับการค้นหา"
 
@@ -22363,11 +22289,6 @@ msgstr "ไม่มี"
 msgid "None (normal behavior)"
 msgstr "ไม่มี (ลักษณะการทำงานปกติ)"
 
-#. Short label in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:106
-msgid "Normal"
-msgstr "ปกติ"
-
 #. Short label in the language and locale names. Keep it concise.
 #: src/features/user/utils/LocaleUtils.ts:100
 msgid "Norwegian"
@@ -22792,7 +22713,7 @@ msgid "Only you can see this message. <0>Dismiss</0>"
 msgstr "คุณเท่านั้นที่เห็นข้อความนี้ได้ <0>ปิด</0>"
 
 #. Short label in the index. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:44
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:43
 msgid "Opacity"
 msgstr "ความทึบ"
 
@@ -22970,7 +22891,7 @@ msgid "Open date picker"
 msgstr "เปิดปฏิทินเลือกวันที่"
 
 #. Button label that opens the Fluxer desktop downloads page in a browser.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:79
+#: src/features/updater/commands/UpdaterModalCommands.tsx:83
 msgid "Open desktop downloads"
 msgstr "เปิดหน้าดาวน์โหลดสำหรับเดสก์ท็อป"
 
@@ -23165,6 +23086,11 @@ msgstr "เปิดตัวสลับด่วน"
 msgid "Open settings"
 msgstr "เปิดการตั้งค่า"
 
+#. Button label that opens the software center via appstream protocol.
+#: src/features/updater/commands/UpdaterModalCommands.tsx:79
+msgid "Open software center"
+msgstr "เปิดศูนย์ซอฟต์แวร์"
+
 #. Action that opens the sticker URL in an external browser.
 #: src/features/ui/action_menu/items/StickerContextMenuItems.tsx:40
 msgid "Open sticker in browser"
@@ -23310,11 +23236,6 @@ msgstr "ระบบปฏิบัติการ"
 #: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:26
 msgid "Opt into experimental per-community and per-channel unread badge controls"
 msgstr "เปิดใช้งานการควบคุมจำนวนข้อความที่ยังไม่ได้อ่านในแต่ละกลุ่มและช่องทดลองใช้"
-
-#. Label in the typography tab.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:46
-msgid "Optimized for longer reading passages"
-msgstr "ปรับให้เหมาะกับการอ่านข้อความยาวๆ"
 
 #: src/features/voice/components/modals/CameraPreviewModal.tsx:906
 msgid "Optimizing camera..."
@@ -23483,7 +23404,7 @@ msgstr "เกินระยะเวลาที่ขอคืนเงิน
 msgid "Overlapping avatar groups showing multiple users with automatic overflow counts."
 msgstr "กลุ่มรูปโปรไฟล์ที่ซ้อนกันแสดงผู้ใช้หลายคนพร้อมจำนวนผู้ใช้ที่เกินมาโดยอัตโนมัติ"
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:327
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:326
 msgid "Overlays & menus"
 msgstr "การซ้อนทับและเมนู"
 
@@ -23885,11 +23806,6 @@ msgstr "ระดับเสียงแต่ละเสียง"
 #: src/features/voice/components/modals/screen_share_picker_modal/PerWindowAudioNotice.tsx:28
 msgid "Per-window audio isn't available on this build of macOS."
 msgstr "เสียงต่อหน้าต่างไม่พร้อมใช้งานบน macOS บิลด์นี้"
-
-#. Label in the typography tab.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:38
-msgid "Perfect for everyday content"
-msgstr "เหมาะสำหรับคอนเทนต์ทั่วไปในทุกวัน"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:86
@@ -24417,11 +24333,6 @@ msgstr "ตำแหน่ง"
 msgid "Power saving"
 msgstr "ประหยัดพลังงาน"
 
-#. Short label in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:70
-msgid "Powerful and attention-grabbing"
-msgstr "โดดเด่น สะดุดตา"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:111
 msgid "Pre-upload attachments"
@@ -24691,7 +24602,7 @@ msgstr "หลัก (ปิดใช้งาน)"
 msgid "Primary accent color"
 msgstr "สีหลัก"
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:351
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:350
 msgid "Primary action"
 msgstr "การดำเนินการหลัก"
 
@@ -25724,11 +25635,6 @@ msgstr "การลงทะเบียน"
 msgid "Registration is currently closed. Use a registration link from an admin to create an account."
 msgstr "ขณะนี้ปิดการลงทะเบียนอยู่ ใช้ลิงก์ลงทะเบียนจากผู้ดูแลระบบเพื่อสร้างบัญชี"
 
-#. Short label in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:34
-msgid "Regular"
-msgstr "ปกติ"
-
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:226
 msgid "Regular button"
 msgstr "ปุ่มปกติ"
@@ -26198,7 +26104,7 @@ msgstr "นำขีดจำกัดผู้ใช้ออกแล้ว"
 msgid "Removed timeout from {0}"
 msgstr "นำการจำกัดเวลาของ {0} ออกแล้ว"
 
-#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:381
+#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:387
 msgid "Removes every per-variable override but keeps your library and assets intact."
 msgstr "ลบการตั้งค่าเฉพาะตัวแปรทั้งหมด แต่ยังคงเก็บไลบรารีและเนื้อหาของคุณไว้"
 
@@ -26703,7 +26609,7 @@ msgstr "รีเซ็ตข้อมูลแอป"
 msgid "Reset app data and restart"
 msgstr "รีเซ็ตข้อมูลแอปและเริ่มใหม่"
 
-#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:356
+#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:362
 msgid "Reset custom theme data"
 msgstr "รีเซ็ตข้อมูลธีมที่กำหนดเอง"
 
@@ -26714,7 +26620,7 @@ msgstr "รีเซ็ตข้อมูลธีมที่กำหนดเ
 
 #. Button or menu action label in the theme studio settings section. Keep it concise.
 #: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:76
-#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:371
+#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:377
 msgid "Reset data"
 msgstr "รีเซ็ตข้อมูล"
 
@@ -26854,7 +26760,7 @@ msgid "Restart {appName}"
 msgstr "รีสตาร์ท {appName}"
 
 #. Button label that restarts the app to apply a desktop update. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:96
+#: src/features/updater/commands/UpdaterModalCommands.tsx:100
 msgid "Restart {productName}"
 msgstr "เริ่มระบบ {productName} ใหม่"
 
@@ -28030,7 +27936,7 @@ msgstr "กำลังค้นหา"
 msgid "Searching people..."
 msgstr "กำลังค้นหาผู้คน..."
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:113
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:112
 msgid "Second option"
 msgstr "ตัวเลือกที่สอง"
 
@@ -28047,7 +27953,7 @@ msgstr "รอง (ปิดใช้งาน)"
 msgid "Secondary accent color"
 msgstr "สีเน้นรอง"
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:355
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:354
 msgid "Secondary action"
 msgstr "การดำเนินการรอง"
 
@@ -28339,7 +28245,7 @@ msgstr "ที่เลือก: {0}"
 msgid "Selection: {0} (max {1})"
 msgstr "ที่เลือก: {0} (สูงสุด {1})"
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:293
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:292
 msgid "Selections"
 msgstr "รายการที่เลือก"
 
@@ -28368,16 +28274,6 @@ msgstr "โหมดโฮสต์เอง"
 #: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx:36
 msgid "Self-serve refunds available within 3 days of payment, once every 30 days. Refunding a subscription cancels it. EU/EEA buyers waive the 14-day right of withdrawal at checkout to access content immediately. Use the in-app refund button instead of a chargeback. Chargebacks can permanently restrict your account. Stripe handles payment securely. We never see your full card number."
 msgstr "สามารถขอคืนเงินด้วยตนเองได้ภายใน 3 วันหลังชำระเงิน และทำได้เดือนละครั้ง การคืนเงินค่าสมัครสมาชิกจะถือเป็นการยกเลิกการสมัครสมาชิก ผู้ซื้อใน EU/EEA สละสิทธิ์การถอนเงินภายใน 14 วันเมื่อชำระเงินเพื่อเข้าถึงเนื้อหาได้ทันที โปรดใช้ปุ่มคืนเงินในแอปแทนการปฏิเสธการชำระเงิน การปฏิเสธการชำระเงินอาจจำกัดบัญชีของคุณอย่างถาวร Stripe จัดการการชำระเงินอย่างปลอดภัย เราไม่เคยเห็นหมายเลขบัตรเต็มของคุณ"
-
-#. Short label in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:58
-msgid "Semi bold"
-msgstr "กึ่งตัวหนา"
-
-#. Short label in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:126
-msgid "Semi-bold large"
-msgstr "ตัวหนาปานกลาง ขนาดใหญ่"
 
 #. Button or menu action label in the share theme modal. Keep it concise.
 #. Send-message button label in the voice message composer modal.
@@ -28951,7 +28847,7 @@ msgstr "ตั้งค่าระดับเสียงสำหรับเ
 #. Generic action label / section header that opens settings.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:262
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:264
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:126
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:125
 msgid "Settings"
 msgstr "การตั้งค่า"
 
@@ -28991,9 +28887,9 @@ msgid "Several people are typing..."
 msgstr "หลายคนกำลังพิมพ์..."
 
 #: src/features/theme_studio/sections/QuickCssSection.tsx:225
-#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:316
+#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:322
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:279
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:133
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:132
 msgid "Share"
 msgstr "แชร์"
 
@@ -29002,7 +28898,7 @@ msgstr "แชร์"
 msgid "Share action."
 msgstr "แชร์"
 
-#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:322
+#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:328
 msgid "Share active custom theme"
 msgstr "แชร์ธีมที่กำหนดเอง"
 
@@ -29035,7 +28931,7 @@ msgstr "แชร์แหล่งที่มา"
 msgid "Share the {premiumProductName} experience with your friends by purchasing a gift subscription."
 msgstr "มอบประสบการณ์ {premiumProductName} ให้เพื่อนของคุณด้วยการซื้อการสมัครสมาชิกแบบของขวัญ"
 
-#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:341
+#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:347
 msgid "Share theme"
 msgstr "แชร์ธีม"
 
@@ -29963,11 +29859,6 @@ msgstr "แถบเลื่อนพร้อมค่าสเต็ป"
 msgid "Sliders"
 msgstr "แถบเลื่อน"
 
-#. Short label in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:54
-msgid "Slightly bolder emphasis"
-msgstr "เน้นข้อความให้หนาขึ้นเล็กน้อย"
-
 #. Country name. EU member state in the illegal-content report country dropdown.
 #: src/features/moderation/components/report/OptionDescriptors.ts:203
 msgid "Slovakia"
@@ -30076,9 +29967,7 @@ msgid "Slurs, dehumanizing language, or attacks on protected groups."
 msgstr "คำหยาบคาย, ภาษาที่ลดทอนความเป็นมนุษย์ หรือการโจมตีกลุ่มที่ได้รับการคุ้มครอง"
 
 #. Short label in the selections tab. Keep it concise.
-#. Short label in the typography tab. Keep it concise.
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:45
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:78
 msgid "Small"
 msgstr "เล็ก"
 
@@ -30160,11 +30049,6 @@ msgstr "ปรับเป็นช่วงละ 5"
 #: src/features/user/components/settings_utils/search_index/LinkedAccountsIndex.ts:40
 msgid "Social"
 msgstr "โซเชียล"
-
-#. Label in the typography tab.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:30
-msgid "Soft and easy reading experience"
-msgstr "อ่านง่ายสบายตา"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:148
@@ -30877,7 +30761,7 @@ msgstr "ตัวบ่งชี้สถานะ"
 msgid "Status page"
 msgstr "หน้าสถานะ"
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:341
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:340
 msgid "Status slate"
 msgstr "สถานะ"
 
@@ -31291,15 +31175,6 @@ msgstr "Stripe รายงานว่าบัตรออกใน {countryNa
 msgid "Strong quality at moderate CPU cost. Good Chromium fallback for screen sharing."
 msgstr "คุณภาพดีเยี่ยม ใช้ CPU ปานกลาง เหมาะสำหรับแชร์หน้าจอบน Chromium"
 
-#. Short label in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:62
-msgid "Strong visual hierarchy"
-msgstr "ลำดับความสำคัญของภาพที่ชัดเจน"
-
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:458
-msgid "Style variations"
-msgstr "รูปแบบตัวอักษร"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:130
 msgid "Styling"
@@ -31345,11 +31220,6 @@ msgstr "สถานการณ์การสมัครสมาชิก"
 #: src/features/user/components/modals/tabs/component_gallery_tab/MarkdownTab.tsx:81
 msgid "Subtext"
 msgstr "ข้อความรอง"
-
-#. Title in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:90
-msgid "Subtitle"
-msgstr "คำบรรยาย"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:71
@@ -31935,10 +31805,8 @@ msgstr "ทดสอบการแสดงตัวอย่าง URL แล�
 
 #. Channel type chip label for a text channel.
 #. Option label for a WebRTC content hint select.
-#. Short label in the typography tab. Keep it concise.
 #: src/features/channel/utils/ChannelUtils.tsx:51
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:150
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:42
 msgid "Text"
 msgstr "ข้อความ"
 
@@ -31972,6 +31840,10 @@ msgstr "ช่องข้อความ"
 #: src/features/user/components/modals/tabs/component_gallery_tab/MarkdownTab.tsx:21
 msgid "Text formatting"
 msgstr "จัดรูปแบบข้อความ"
+
+#: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:308
+msgid "Text is rendered with grayscale antialiasing instead of ClearType while transparency is enabled, so it will look softer."
+msgstr "ข้อความจะแสดงผลด้วยการปรับความเรียบของสีเทาแทน ClearType เมื่อเปิดใช้งานการแสดงผลโปร่งใส ดังนั้นข้อความจะดูนุ่มนวลขึ้น"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -32161,17 +32033,17 @@ msgid "The community you're looking for may have been deleted or you may not hav
 msgstr "ชุมชนที่คุณกำลังมองหาอาจถูกลบไปแล้ว หรือคุณอาจไม่ได้รับสิทธิ์เข้าถึง"
 
 #. Modal body shown when a desktop update download fails.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:112
+#: src/features/updater/commands/UpdaterModalCommands.tsx:116
 msgid "The desktop update could not be downloaded. Try again from the update button when your connection is stable."
 msgstr "ไม่สามารถดาวน์โหลดการอัปเดตเดสก์ท็อปได้ โปรดลองอีกครั้งจากปุ่มอัปเดตเมื่อการเชื่อมต่อของคุณเสถียร"
 
 #. Desktop updater modal body when the downloaded version is unknown. productName is the app name.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:92
+#: src/features/updater/commands/UpdaterModalCommands.tsx:96
 msgid "The desktop update has been downloaded. Restart {productName} to finish installing."
 msgstr "การอัปเดตสำหรับเดสก์ท็อปได้ถูกดาวน์โหลดแล้ว รีสตาร์ท {productName} เพื่อดำเนินการติดตั้งให้เสร็จสิ้น"
 
 #. Help text below the Linux package format selector in the desktop updater modal.
-#: src/features/updater/commands/UpdaterModalCommands.tsx:152
+#: src/features/updater/commands/UpdaterModalCommands.tsx:156
 msgid "The downloaded file is saved to your computer. Install it with your normal package manager."
 msgstr "ไฟล์ที่ดาวน์โหลดจะถูกบันทึกลงในคอมพิวเตอร์ของคุณ ติดตั้งด้วยตัวจัดการแพ็กเกจปกติของคุณ"
 
@@ -32442,12 +32314,7 @@ msgstr "พวกเขาอาจไม่รับข้อความจา
 msgid "They're not accepting friend requests right now."
 msgstr "ขณะนี้พวกเขาไม่รับคำขอเป็นเพื่อน"
 
-#. Short label in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:10
-msgid "Thin"
-msgstr "บาง"
-
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:114
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:113
 msgid "Third option"
 msgstr "ตัวเลือกที่ 3"
 
@@ -32870,19 +32737,19 @@ msgid "This is one heavy message. Some reactions need to be removed before you c
 msgstr "ข้อความนี้มีคนกดรีแอคเยอะมากเลย ต้องลบรีแอคบางอันออกก่อนถึงจะเพิ่มใหม่ได้นะ"
 
 #. Description text in the index.
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:36
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:35
 msgid "This is some example text in the textarea."
 msgstr "นี่คือข้อความตัวอย่างในช่องข้อความ"
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:112
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:111
 msgid "This is the first option description"
 msgstr "นี่คือคำอธิบายตัวเลือกแรก"
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:113
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:112
 msgid "This is the second option description"
 msgstr "นี่คือคำอธิบายตัวเลือกที่สอง"
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:114
+#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:113
 msgid "This is the third option description"
 msgstr "นี่คือคำอธิบายตัวเลือกที่สาม"
 
@@ -33035,8 +32902,8 @@ msgid "This removes every custom shortcut and re-enables all built-in shortcuts.
 msgstr "การดำเนินการนี้จะลบทางลัดที่กำหนดเองทั้งหมดและเปิดใช้งานทางลัดในตัวทั้งหมดอีกครั้ง การดำเนินการนี้ไม่สามารถเลิกทำได้"
 
 #: src/features/auth/components/pages/ResetPasswordPage.tsx:114
-msgid "This reset link has expired. Reset links last 24 hours. Request a new one."
-msgstr "ลิงก์รีเซ็ตนี้หมดอายุแล้ว ลิงก์รีเซ็ตมีอายุ 24 ชั่วโมง โปรดขอลิงก์ใหม่"
+msgid "This reset link has expired. Reset links last 1 hour. Please request a new one."
+msgstr "ลิงก์รีเซ็ตนี้หมดอายุแล้ว ลิงก์รีเซ็ตมีอายุ 1 ชั่วโมง โปรดขอลิงก์ใหม่"
 
 #. Fallback role name in a mass-mention warning title.
 #: src/features/channel/components/MentionEveryonePopout.tsx:14
@@ -33062,36 +32929,6 @@ msgstr "สวิตช์นี้ปิดใช้งานอยู่แล
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:93
 msgid "This switch is disabled in the checked state"
 msgstr "สวิตช์นี้จะปิดใช้งานเมื่อเลือกอยู่"
-
-#. Title in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:138
-msgid "This text demonstrates bold heading styling"
-msgstr "ข้อความนี้แสดงตัวอย่างรูปแบบหัวข้อตัวหนา"
-
-#. Title in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:146
-msgid "This text demonstrates bold title styling"
-msgstr "ข้อความนี้แสดงสไตล์ตัวหนาสำหรับชื่อเรื่อง"
-
-#. Label in the typography tab.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:118
-msgid "This text demonstrates italic styling"
-msgstr "ข้อความนี้แสดงตัวอย่างการจัดรูปแบบตัวเอียง"
-
-#. Label in the typography tab.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:130
-msgid "This text demonstrates large semi-bold styling"
-msgstr "ข้อความนี้แสดงสไตล์ตัวหนาปานกลางขนาดใหญ่"
-
-#. Label in the typography tab.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:110
-msgid "This text demonstrates normal styling"
-msgstr "ข้อความนี้แสดงสไตล์ปกติ"
-
-#. Label in the typography tab.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:122
-msgid "This text demonstrates semi-bold styling"
-msgstr "ข้อความนี้แสดงสไตล์กึ่งตัวหนา"
 
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx:299
 msgid "This textarea auto-expands between 4 and 12 rows as you type."
@@ -33416,11 +33253,6 @@ msgstr "เขตเวลา"
 #: src/features/messaging/utils/markdown/Plaintext.ts:56
 msgid "Tip"
 msgstr "เคล็ดลับ"
-
-#. Title in the typography tab. Keep it concise.
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:98
-msgid "Title"
-msgstr "ชื่อเรื่อง"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:178
@@ -34116,10 +33948,6 @@ msgstr "พิมพ์สี (hex, rgb(), hsl หรือชื่อ) หร�
 msgid "Type a color (hex, rgb(), hsl(), or name) or use the picker."
 msgstr "พิมพ์สี (hex, rgb(), hsl() หรือชื่อ) หรือใช้เครื่องมือเลือกสี"
 
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:403
-msgid "Type scale"
-msgstr "ขนาดตัวอักษร"
-
 #. Label in the inputs tab.
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx:89
 msgid "Type your message here…"
@@ -34167,14 +33995,6 @@ msgstr "เฉพาะเมื่อกำลังพิมพ์"
 #: src/features/user/components/modals/tabs/component_gallery_tab/IndicatorsTab.tsx:251
 msgid "Typing state"
 msgstr "สถานะกำลังพิมพ์"
-
-#: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:365
-msgid "Typography"
-msgstr "ลักษณะตัวอักษร"
-
-#: src/features/user/components/modals/tabs/component_gallery_tab/TypographyTab.tsx:447
-msgid "Typography scale demonstration"
-msgstr "ตัวอย่างสเกลตัวอักษร"
 
 #. Developer options group for forcing UI component states.
 #: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:57
@@ -34494,7 +34314,7 @@ msgstr "ตัวเลือกสำรองแบบครอบคลุม
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:755
 #: src/features/invite/components/InviteListItem.tsx:34
 #: src/features/moderation/components/modals/BanDetailsModal.tsx:114
-#: src/features/updater/commands/UpdaterModalCommands.tsx:140
+#: src/features/updater/commands/UpdaterModalCommands.tsx:144
 msgid "Unknown"
 msgstr "ไม่ทราบ"
 
@@ -34649,8 +34469,8 @@ msgstr "อิโมจิไม่จำกัด"
 msgid "Unlimited stickers"
 msgstr "สติกเกอร์ไม่จำกัด"
 
-#: src/features/channel/components/EmojiPicker.tsx:163
-#: src/features/channel/components/MobileEmojiPicker.tsx:208
+#: src/features/channel/components/EmojiPicker.tsx:150
+#: src/features/channel/components/MobileEmojiPicker.tsx:195
 msgid "Unlock {lockedEmojiCount, plural, one {# custom emoji} other {# custom emojis}} from {communityCount, plural, one {# community} other {# communities}} with {PREMIUM_PRODUCT_NAME}."
 msgstr "ปลดล็อก {lockedEmojiCount, plural, one {# อิโมจิที่กำหนดเอง} other {# อิโมจิที่กำหนดเอง}} จาก {communityCount, plural, one {# ชุมชน} other {# ชุมชน}} ด้วย {PREMIUM_PRODUCT_NAME}"
 
@@ -34796,7 +34616,7 @@ msgstr "ช่องที่ไม่มีชื่อ"
 #. Fallback title in an invite embed for a group DM with no name set.
 #. Short label in the channel display name state. Keep it concise.
 #: src/features/channel/components/InviteEmbed.tsx:72
-#: src/features/channel/state/ChannelDisplayName.ts:17
+#: src/features/channel/state/ChannelDisplayName.ts:18
 #: src/features/channel/utils/ChannelUtils.tsx:59
 msgid "Unnamed group"
 msgstr "กลุ่มที่ไม่มีชื่อ"
@@ -37333,7 +37153,7 @@ msgid "We've updated our policies. Review and accept them to continue."
 msgstr "เราได้อัปเดตนโยบายของเราแล้ว โปรดตรวจสอบและยอมรับเพื่อดำเนินการต่อ"
 
 #. Client info web build identifier shown after the desktop build when both are present. Example: "Web 2026.518.0". Preserve placeholder.
-#: src/features/app/components/dialogs/components/ClientInfo.tsx:28
+#: src/features/app/components/dialogs/components/ClientInfo.tsx:27
 msgid "Web {buildVersion}"
 msgstr "เว็บ {buildVersion}"
 
@@ -37917,7 +37737,7 @@ msgid "You are editing your per-community profile. This profile will only be vis
 msgstr "คุณกำลังแก้ไขโปรไฟล์เฉพาะสำหรับชุมชนนี้ โปรไฟล์นี้จะแสดงเฉพาะในชุมชนนี้เท่านั้นและจะใช้แทนโปรไฟล์ส่วนกลางของคุณ"
 
 #. Body text in the settings dialog client info.
-#: src/features/app/components/dialogs/components/ClientInfo.tsx:42
+#: src/features/app/components/dialogs/components/ClientInfo.tsx:41
 msgid "You are now a developer!"
 msgstr "ตอนนี้คุณเป็นนักพัฒนาแล้ว!"
 
