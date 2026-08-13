@@ -2346,16 +2346,18 @@ static int cb_collect_mdhd(const uint8_t *payload, size_t len, void *user) {
     trak_info *t = (trak_info *)user;
     if (len < 1) return 0;
     uint8_t version = payload[0];
+    uint32_t timescale;
     if (version == 0) {
         if (len < 16) return 0;
-        t->timescale = bmff_read_u32(payload + 12);
+        timescale = bmff_read_u32(payload + 12);
     } else if (version == 1) {
         if (len < 24) return 0;
-        t->timescale = bmff_read_u32(payload + 20);
+        timescale = bmff_read_u32(payload + 20);
     } else {
         return 0;
     }
-    if (t->timescale > 0) t->have_mdhd = 1;
+    t->timescale = timescale;
+    t->have_mdhd = timescale > 0;
     return 0;
 }
 
@@ -2452,6 +2454,7 @@ static int parse_isobmff_track_delays(const void *buf, size_t len,
     if (total_samples == 0) { free(list.traks); return -1; }
 
     uint32_t timescale = picked->timescale;
+    if (timescale == 0) { free(list.traks); return -1; }
     int *delays = (int *)malloc((size_t)total_samples * sizeof(int));
     if (delays == NULL) { free(list.traks); return -1; }
 
