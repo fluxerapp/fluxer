@@ -1319,8 +1319,7 @@ class Accessibility {
 			this.firstClickPassThroughWhenUnfocused = validated.firstClickPassThroughWhenUnfocused;
 		if (validated.scrollToBottomOnMessageSend !== undefined)
 			this.scrollToBottomOnMessageSend = validated.scrollToBottomOnMessageSend;
-		if (validated.sequentialFileSend !== undefined)
-			this.sequentialFileSend = validated.sequentialFileSend;
+		if (validated.sequentialFileSend !== undefined) this.sequentialFileSend = validated.sequentialFileSend;
 		if (validated.showNeko !== undefined && validated.showNeko !== this.showNeko) {
 			this.showNeko = validated.showNeko;
 			persistLocalShowNeko(validated.showNeko);
@@ -1463,14 +1462,7 @@ class Accessibility {
 
 	async applyZoom(level: number): Promise<void> {
 		const zoomLevel = clampZoomLevel(level);
-		const electronApi = (
-			window as {
-				electron?: {
-					setZoomFactor?: (factor: number) => void;
-				};
-			}
-		).electron;
-		applyAppZoomToDocument(zoomLevel * 100, electronApi);
+		applyAppZoomToDocument(zoomLevel * 100, window.electron);
 	}
 
 	async applyStoredZoom(): Promise<void> {

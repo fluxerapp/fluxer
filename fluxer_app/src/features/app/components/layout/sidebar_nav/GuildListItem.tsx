@@ -7,6 +7,7 @@ import {
 	type GuildReorderTarget,
 	selectGuildReorderIntent,
 } from '@app/features/app/components/layout/dnd/GuildReorderStateMachine';
+import {useDragTargetRect} from '@app/features/app/components/layout/dnd/useDragTargetRect';
 import styles from '@app/features/app/components/layout/GuildsLayout.module.css';
 import type {ScrollIndicatorSeverity} from '@app/features/app/components/layout/ScrollIndicatorOverlay';
 import {VoiceBadge, type VoiceBadgeActivity} from '@app/features/app/components/layout/sidebar_nav/VoiceBadge';
@@ -44,6 +45,7 @@ import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {KeybindHint} from '@app/features/ui/keybind_hint/KeybindHint';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
+import {getAppZoomFactor} from '@app/features/ui/utils/AppZoomUtils';
 import {isMobileExperienceEnabled} from '@app/features/ui/utils/MobileExperience';
 import type {User} from '@app/features/user/models/User';
 import UserGuildSettings from '@app/features/user/state/UserGuildSettings';
@@ -349,13 +351,18 @@ export const GuildListItem = observer(
 					: 'voice';
 		const iconUrl = AvatarUtils.getGuildIconURL(guild, false);
 		const hoverIconUrl = AvatarUtils.getGuildIconURL(guild, true);
-		const [isStaticLoaded, setIsStaticLoaded] = useState(ImageCacheUtils.hasImage(iconUrl));
-		const [isAnimatedLoaded, setIsAnimatedLoaded] = useState(ImageCacheUtils.hasImage(hoverIconUrl));
-		const [shouldPlayAnimated, setShouldPlayAnimated] = useState(false);
+		const [loadedIconUrl, setLoadedIconUrl] = useState<string | null>(() =>
+			ImageCacheUtils.hasImage(iconUrl) ? iconUrl : null,
+		);
+		const [loadedHoverIconUrl, setLoadedHoverIconUrl] = useState<string | null>(() =>
+			ImageCacheUtils.hasImage(hoverIconUrl) ? hoverIconUrl : null,
+		);
+		const isStaticLoaded = iconUrl.length > 0 && loadedIconUrl === iconUrl;
+		const isAnimatedLoaded = hoverIconUrl.length > 0 && loadedHoverIconUrl === hoverIconUrl;
 		const [dropIndicator, setDropIndicator] = useState<'top' | 'bottom' | 'combine' | null>(null);
 		const [combineSourceGuildId, setCombineSourceGuildId] = useState<string | null>(null);
 		const itemRef = useRef<HTMLElement | null>(null);
-		const dropTargetRectRef = useRef<DOMRect | null>(null);
+		const getDropTargetRect = useDragTargetRect(itemRef);
 		const setGuildDropState = useCallback(
 			(indicator: 'top' | 'bottom' | 'combine' | null, sourceGuildId: string | null) => {
 				setDropIndicator((current) => (current === indicator ? current : indicator));
@@ -364,7 +371,6 @@ export const GuildListItem = observer(
 			[],
 		);
 		const resetGuildDropState = useCallback(() => {
-			dropTargetRectRef.current = null;
 			setGuildDropState(null, null);
 		}, [setGuildDropState]);
 		const dragItemData = useMemo<GuildDragItem>(
@@ -411,12 +417,10 @@ export const GuildListItem = observer(
 						resetGuildDropState();
 						return;
 					}
-					const node = itemRef.current;
-					if (!node) return;
 					const clientOffset = monitor.getClientOffset();
 					if (!clientOffset) return;
-					const boundingRect = dropTargetRectRef.current ?? node.getBoundingClientRect();
-					dropTargetRectRef.current = boundingRect;
+					const boundingRect = getDropTargetRect();
+					if (!boundingRect) return;
 					const intent = selectGuildReorderIntent(item, dropTargetData, clientOffset, boundingRect);
 					if (!intent || intent.indicator === 'inside') {
 						resetGuildDropState();
@@ -448,7 +452,7 @@ export const GuildListItem = observer(
 					isOver: monitor.isOver({shallow: true}),
 				}),
 			}),
-			[dropTargetData, onGuildDrop, resetGuildDropState, setGuildDropState],
+			[dropTargetData, getDropTargetRect, onGuildDrop, resetGuildDropState, setGuildDropState],
 		);
 		useEffect(() => {
 			if (!isOver) {
@@ -460,14 +464,26 @@ export const GuildListItem = observer(
 		}, [preview]);
 		const contextMenuOpen = useContextMenuHoverState(itemRef, !mobileLayout.enabled);
 		useEffect(() => {
-			ImageCacheUtils.loadImage(iconUrl, () => setIsStaticLoaded(true));
-			if (isHovering || contextMenuOpen) {
-				ImageCacheUtils.loadImage(hoverIconUrl, () => setIsAnimatedLoaded(true));
+			let active = true;
+			let cleanupIconLoad: () => void = () => {};
+			if (iconUrl.length > 0 && !isStaticLoaded) {
+				cleanupIconLoad = ImageCacheUtils.loadImage(iconUrl, () => {
+					if (active) setLoadedIconUrl(iconUrl);
+				});
 			}
+			let cleanupHoverIconLoad: () => void = () => {};
+			if ((isHovering || contextMenuOpen) && hoverIconUrl.length > 0 && !isAnimatedLoaded) {
+				cleanupHoverIconLoad = ImageCacheUtils.loadImage(hoverIconUrl, () => {
+					if (active) setLoadedHoverIconUrl(hoverIconUrl);
+				});
+			}
+			return () => {
+				active = false;
+				cleanupIconLoad();
+				cleanupHoverIconLoad();
+			};
 		}, [iconUrl, hoverIconUrl, isHovering, contextMenuOpen]);
-		useEffect(() => {
-			setShouldPlayAnimated((isHovering || contextMenuOpen) && isAnimatedLoaded);
-		}, [isHovering, isAnimatedLoaded, contextMenuOpen]);
+		const shouldPlayAnimated = (isHovering || contextMenuOpen) && isAnimatedLoaded;
 		const handleSelect = () => {
 			preloadChannelNow();
 			NavigationCommands.selectGuild(guild.id, isMobileExperience ? undefined : selectedChannel);
@@ -503,11 +519,12 @@ export const GuildListItem = observer(
 			}
 		}, [handleOpenBottomSheet, isMobileExperience, isSortingList]);
 		const shouldShowHoverState = isHovering || contextMenuOpen;
-		const indicatorHeight = (() => {
-			if (isSelected) return 40;
-			if (shouldShowHoverState) return 20;
-			return 8;
-		})();
+		const indicatorHeight =
+			(() => {
+				if (isSelected) return 40;
+				if (shouldShowHoverState) return 20;
+				return 8;
+			})() * getAppZoomFactor();
 		const isActive = isSelected || shouldShowHoverState;
 		const focusableRef = useRef<HTMLDivElement | null>(null);
 		const focusRingTargetRef = useRef<HTMLDivElement | null>(null);

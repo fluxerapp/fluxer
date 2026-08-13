@@ -3,6 +3,7 @@
 import styles from '@app/features/discovery/discovery/DiscoverySidebar.module.css';
 import {COMMUNITIES_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import Navigation from '@app/features/navigation/state/Navigation';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Scroller} from '@app/features/ui/components/Scroller';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {msg} from '@lingui/core/macro';
@@ -76,7 +77,7 @@ export const DiscoverySidebar = observer(function DiscoverySidebar() {
 									data-flx="discovery.discovery.discovery-sidebar.nav-item"
 								>
 									<ItemIcon
-										size={18}
+										size={remFromPx(18)}
 										weight={item.active ? 'fill' : 'bold'}
 										className={styles.navItemIcon}
 										aria-hidden

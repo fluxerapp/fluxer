@@ -21,6 +21,7 @@ import {Combobox as FormCombobox} from '@app/features/ui/components/form/FormCom
 import {Input} from '@app/features/ui/components/form/FormInput';
 import {RadioGroup} from '@app/features/ui/radio_group/RadioGroup';
 import type {User} from '@app/features/user/models/User';
+import * as DisplayNameUtils from '@app/features/user/utils/DisplayNameUtils';
 import bannedMp4 from '@app/media/videos/banned.mp4';
 import bannedWebm from '@app/media/videos/banned.webm';
 import bannedPoster from '@app/media/videos/banned.webp';
@@ -129,6 +130,7 @@ export const BanMemberModal: React.FC<{guildId: string; targetUser: User}> = obs
 	const [banDuration, setBanDuration] = useState<number>(0);
 	const [isBanDurationCustom, setIsBanDurationCustom] = useState(false);
 	const [isBanning, setIsBanning] = useState(false);
+	const targetUserTag = DisplayNameUtils.formatTagForStreamerMode(targetUser.tag);
 	const getBanDurationOptions = useCallback(
 		(): ReadonlyArray<ComboboxOption> => [
 			{value: 0, label: i18n._(PERMANENT_DESCRIPTOR)},
@@ -151,7 +153,7 @@ export const BanMemberModal: React.FC<{guildId: string; targetUser: User}> = obs
 			await GuildCommands.banMember(guildId, targetUser.id, deleteMessageDays, reason || undefined, banDuration);
 			ToastCommands.createToast({
 				type: 'success',
-				children: <Trans>Banned {targetUser.tag} from the community</Trans>,
+				children: <Trans>Banned {targetUserTag} from the community</Trans>,
 			});
 			ModalCommands.pop();
 		} catch (error) {
@@ -168,7 +170,7 @@ export const BanMemberModal: React.FC<{guildId: string; targetUser: User}> = obs
 	return (
 		<Modal.Root size="small" centered data-flx="moderation.ban-member-modal.modal-root">
 			<Modal.Header
-				title={i18n._(BAN_DESCRIPTOR, {tag: targetUser.tag})}
+				title={i18n._(BAN_DESCRIPTOR, {tag: targetUserTag})}
 				data-flx="moderation.ban-member-modal.modal-header"
 			/>
 			<Modal.Content data-flx="moderation.ban-member-modal.modal-content">

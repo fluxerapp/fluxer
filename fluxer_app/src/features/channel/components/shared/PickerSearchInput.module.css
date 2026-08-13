@@ -53,13 +53,3 @@
 	align-items: center;
 	gap: var(--spacing-2);
 }
-
-.poweredByKlipy {
-	height: 1rem;
-	width: auto;
-	color: var(--text-primary-muted);
-	font-size: 0.75rem;
-	line-height: 1rem;
-	white-space: nowrap;
-	flex-shrink: 0;
-}

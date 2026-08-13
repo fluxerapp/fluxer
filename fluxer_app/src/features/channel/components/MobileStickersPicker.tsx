@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {PREMIUM_PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import {useSearchInputAutofocus} from '@app/features/app/hooks/useSearchInputAutofocus';
 import mobileStyles from '@app/features/channel/components/MobileEmojiPicker.module.css';
@@ -133,7 +134,8 @@ export const MobileStickersPicker = observer(
 			allUpsell.accessibleItems,
 			renderedStickers,
 		);
-		const gridColumns = useMemo(() => getMobileStickerGridColumns(viewportSize.width), [viewportSize.width]);
+		const zoomLevel = Accessibility.zoomLevel;
+		const gridColumns = useMemo(() => getMobileStickerGridColumns(viewportSize.width), [viewportSize.width, zoomLevel]);
 		const virtualRows = useVirtualRows(
 			searchTerm,
 			renderedStickers,

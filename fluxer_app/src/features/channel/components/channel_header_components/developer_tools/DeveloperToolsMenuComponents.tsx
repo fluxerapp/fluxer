@@ -10,6 +10,7 @@ import {
 import type {DeveloperOptionsState} from '@app/features/devtools/state/DeveloperOptions';
 import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
 import * as PremiumCommands from '@app/features/premium/commands/PremiumCommands';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {CheckboxItem} from '@app/features/ui/action_menu/ContextMenu';
 import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
 import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
@@ -143,7 +144,7 @@ export const BackendPremiumOverrideMenuGroup: React.FC<{label: string; hint: str
 		<MenuItem
 			icon={
 				<CrownIcon
-					size={16}
+					size={remFromPx(16)}
 					weight="fill"
 					data-flx="channel.channel-header-components.developer-tools-context-menu.backend-premium-override-menu-group.crown-icon"
 				/>
@@ -164,7 +165,7 @@ export const BackendPremiumPerksDisabledMenuGroup: React.FC<{label: string; hint
 		<MenuItem
 			icon={
 				<CrownIcon
-					size={16}
+					size={remFromPx(16)}
 					weight="fill"
 					data-flx="channel.channel-header-components.developer-tools-context-menu.backend-premium-perks-disabled-menu-group.crown-icon"
 				/>

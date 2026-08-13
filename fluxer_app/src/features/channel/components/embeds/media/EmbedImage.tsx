@@ -249,11 +249,18 @@ export const EmbedImage: FC<EmbedImageProps> = observer(
 			if (!animated || shouldAnimateImage || src.startsWith('blob:')) return src;
 			return buildStaticGifPreviewURL(src, Math.round(dimensions.width * 2), Math.round(dimensions.height * 2));
 		}, [animated, dimensions.height, dimensions.width, shouldAnimateImage, src]);
+		const staticPreviewSrc = useMemo(() => {
+			if (!animated || src.startsWith('blob:')) return src;
+			return buildStaticGifPreviewURL(src, Math.round(dimensions.width * 2), Math.round(dimensions.height * 2));
+		}, [animated, dimensions.height, dimensions.width, src]);
 		const {ref: visibilityRef, isNearViewport} = useNearViewport<HTMLDivElement>({
 			disabled: !isMobile,
 			rememberKey: effectiveSrc,
 		});
 		const shouldLoadMedia = isNearViewport && !shouldBlur;
+		const staticImageSrc = animated && !src.startsWith('blob:') ? staticPreviewSrc : effectiveSrc;
+		const animatedImageSource =
+			animated && !src.startsWith('blob:') && shouldAnimateImage && shouldLoadMedia && effectiveSrc === src ? src : '';
 		const {
 			loaded,
 			error,
@@ -262,7 +269,15 @@ export const EmbedImage: FC<EmbedImageProps> = observer(
 			ref: mediaRef,
 			onLoad: handleImageLoad,
 			onError: handleImageError,
-		} = useMediaLoading(effectiveSrc, placeholder, {enabled: shouldLoadMedia});
+		} = useMediaLoading(staticImageSrc, placeholder, {enabled: shouldLoadMedia});
+		const {
+			loaded: animatedLoaded,
+			error: animatedError,
+			cachedOnMount: animatedCachedOnMount,
+			ref: animatedMediaRef,
+			onLoad: handleAnimatedImageLoad,
+			onError: handleAnimatedImageError,
+		} = useMediaLoading(animatedImageSource, placeholder, {enabled: animatedImageSource.length > 0});
 		const defaultName = deriveDefaultNameFromMessage({
 			message,
 			attachmentId,
@@ -468,7 +483,7 @@ export const EmbedImage: FC<EmbedImageProps> = observer(
 									)}
 									<motion.img
 										alt={alt || i18n._(IMAGE_DESCRIPTOR)}
-										src={shouldLoadMedia ? effectiveSrc : undefined}
+										src={shouldLoadMedia ? staticImageSrc : undefined}
 										ref={mediaRef}
 										width={naturalWidth}
 										height={naturalHeight}
@@ -482,6 +497,25 @@ export const EmbedImage: FC<EmbedImageProps> = observer(
 										transition={{duration: cachedOnMount || Accessibility.useReducedMotion ? 0 : 0.2}}
 										data-flx="channel.embeds.media.embed-image.image-element"
 									/>
+									{animatedImageSource.length > 0 && (
+										<motion.img
+											alt=""
+											aria-hidden="true"
+											src={animatedImageSource}
+											ref={animatedMediaRef}
+											width={naturalWidth}
+											height={naturalHeight}
+											className={clsx(styles.imageElement, styles.animatedImageElement)}
+											loading={isMobile ? 'lazy' : 'eager'}
+											tabIndex={-1}
+											onLoad={handleAnimatedImageLoad}
+											onError={handleAnimatedImageError}
+											initial={{opacity: animatedCachedOnMount ? 1 : 0}}
+											animate={{opacity: animatedLoaded && !animatedError ? 1 : 0}}
+											transition={{duration: Accessibility.useReducedMotion ? 0 : 0.2}}
+											data-flx="channel.embeds.media.embed-image.animated-image-element"
+										/>
+									)}
 								</div>
 							</ImagePreviewHandler>
 							<AltTextBadge

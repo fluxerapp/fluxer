@@ -70,6 +70,32 @@
 	color: var(--text-primary-muted);
 }
 
+.topicInput {
+	--composer-placeholder-top: 0.625rem;
+	--composer-placeholder-right: 0px;
+	--composer-placeholder-left: 1rem;
+	display: flex;
+	min-width: 0;
+	flex: 1 1 0%;
+	align-self: stretch;
+	overflow: hidden;
+	padding-inline-start: 1rem;
+}
+
+:global([dir='rtl']) .topicInput {
+	--composer-placeholder-right: 1rem;
+	--composer-placeholder-left: 0px;
+}
+
+.topicInput :global([data-channel-textarea]) {
+	box-sizing: border-box;
+	flex: 1 1 0%;
+	min-width: 0;
+	min-height: 5rem;
+	max-height: 8.75rem;
+	padding-block: 0.625rem;
+}
+
 .emojiButton {
 	display: flex;
 	align-items: center;

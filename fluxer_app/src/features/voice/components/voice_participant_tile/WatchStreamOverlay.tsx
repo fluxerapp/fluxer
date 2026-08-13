@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {WATCH_STREAM_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import styles from '@app/features/voice/components/VoiceParticipantTile.module.css';
@@ -45,7 +46,7 @@ export function WatchStreamOverlay({
 					fitContent
 					leftIcon={
 						<MonitorPlayIcon
-							size={18}
+							size={remFromPx(18)}
 							weight="fill"
 							data-flx="voice.voice-participant-tile.watch-stream-overlay.monitor-play-icon"
 						/>
@@ -70,7 +71,7 @@ export function WatchStreamOverlay({
 							leftIcon={
 								<PlusIcon
 									weight="bold"
-									size={18}
+									size={remFromPx(18)}
 									data-flx="voice.voice-participant-tile.watch-stream-overlay.plus-icon"
 								/>
 							}

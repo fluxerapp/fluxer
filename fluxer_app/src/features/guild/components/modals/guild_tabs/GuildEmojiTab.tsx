@@ -25,6 +25,7 @@ import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
 import Permission from '@app/features/permissions/state/Permission';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {failureValidationErrors} from '@app/features/platform/utils/ResponseInspection';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import {Input} from '@app/features/ui/components/form/FormInput';
@@ -423,7 +424,7 @@ const GuildEmojiTab: React.FC<{guildId: string}> = observer(function GuildEmojiT
 					onChange={(e) => setSearchQuery(e.target.value)}
 					leftIcon={
 						<MagnifyingGlassIcon
-							size={16}
+							size={remFromPx(16)}
 							weight="bold"
 							data-flx="guild.guild-tabs.guild-emoji-tab.magnifying-glass-icon"
 						/>
@@ -436,7 +437,7 @@ const GuildEmojiTab: React.FC<{guildId: string}> = observer(function GuildEmojiT
 				<div className={styles.notice} data-flx="guild.guild-tabs.guild-emoji-tab.notice">
 					<p className={styles.noticeText} data-flx="guild.guild-tabs.guild-emoji-tab.notice-text">
 						<WarningCircleIcon
-							size={32}
+							size={remFromPx(32)}
 							weight="fill"
 							data-flx="guild.guild-tabs.guild-emoji-tab.warning-circle-icon"
 						/>

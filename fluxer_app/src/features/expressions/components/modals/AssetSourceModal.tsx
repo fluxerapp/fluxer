@@ -5,6 +5,7 @@ import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import type {Gif} from '@app/features/expressions/commands/GifCommands';
 import styles from '@app/features/expressions/components/modals/AssetSourceModal.module.css';
 import {GifPickerSelectModal} from '@app/features/expressions/components/modals/GifPickerSelectModal';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
@@ -89,7 +90,11 @@ export const AssetSourceModal = observer(function AssetSourceModal({
 							data-flx="expressions.asset-source-modal.card.pick-upload"
 						>
 							<div className={styles.cardIcon} data-flx="expressions.asset-source-modal.card-icon">
-								<UploadSimpleIcon size={24} weight="bold" data-flx="expressions.asset-source-modal.upload-icon" />
+								<UploadSimpleIcon
+									size={remFromPx(24)}
+									weight="bold"
+									data-flx="expressions.asset-source-modal.upload-icon"
+								/>
 							</div>
 							<div className={styles.cardLabel} data-flx="expressions.asset-source-modal.card-label">
 								{i18n._(UPLOAD_A_FILE_DESCRIPTOR)}
@@ -108,7 +113,7 @@ export const AssetSourceModal = observer(function AssetSourceModal({
 								data-flx="expressions.asset-source-modal.card.pick-gif"
 							>
 								<div className={styles.cardIcon} data-flx="expressions.asset-source-modal.card-icon--2">
-									<GifIcon size={24} weight="bold" data-flx="expressions.asset-source-modal.gif-icon" />
+									<GifIcon size={remFromPx(24)} weight="bold" data-flx="expressions.asset-source-modal.gif-icon" />
 								</div>
 								<div className={styles.cardLabel} data-flx="expressions.asset-source-modal.card-label--2">
 									{gifProviderName}

@@ -3,6 +3,7 @@
 import styles from '@app/features/app/components/dialogs/shared/PermissionComponents.module.css';
 import PermissionLayout from '@app/features/permissions/state/PermissionLayout';
 import type * as PermissionUtils from '@app/features/permissions/utils/PermissionUtils';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Switch as UISwitch} from '@app/features/ui/components/form/FormSwitch';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import {msg} from '@lingui/core/macro';
@@ -69,7 +70,11 @@ export const PermissionStateButtons: React.FC<{
 				aria-label={i18n._(DENY_DESCRIPTOR)}
 				data-flx="app.permission-components.permission-state-buttons.deny.button"
 			>
-				<XIcon weight="bold" size={16} data-flx="app.permission-components.permission-state-buttons.x-icon" />
+				<XIcon
+					weight="bold"
+					size={remFromPx(16)}
+					data-flx="app.permission-components.permission-state-buttons.x-icon"
+				/>
 			</button>
 			<div
 				className={styles.stateDivider}
@@ -83,7 +88,11 @@ export const PermissionStateButtons: React.FC<{
 				aria-label={i18n._(NEUTRAL_INHERIT_DESCRIPTOR)}
 				data-flx="app.permission-components.permission-state-buttons.neutral.button"
 			>
-				<MinusIcon weight="bold" size={16} data-flx="app.permission-components.permission-state-buttons.minus-icon" />
+				<MinusIcon
+					weight="bold"
+					size={remFromPx(16)}
+					data-flx="app.permission-components.permission-state-buttons.minus-icon"
+				/>
 			</button>
 			<div
 				className={styles.stateDivider}
@@ -97,7 +106,11 @@ export const PermissionStateButtons: React.FC<{
 				aria-label={i18n._(ALLOW_DESCRIPTOR)}
 				data-flx="app.permission-components.permission-state-buttons.allow.button"
 			>
-				<CheckIcon weight="bold" size={16} data-flx="app.permission-components.permission-state-buttons.check-icon" />
+				<CheckIcon
+					weight="bold"
+					size={remFromPx(16)}
+					data-flx="app.permission-components.permission-state-buttons.check-icon"
+				/>
 			</button>
 		</div>
 	);

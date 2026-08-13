@@ -3,6 +3,7 @@
 import * as AccessibilityCommands from '@app/features/accessibility/commands/AccessibilityCommands';
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {ShareThemeModal} from '@app/features/theme/components/modals/ShareThemeModal';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import ThemeLibrary from '@app/features/theme/state/ThemeLibrary';
 import {showThemeStudioErrorModal} from '@app/features/theme_studio/utils/ThemeStudioErrorModalUtils';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
@@ -138,7 +139,7 @@ export const TokensSection: React.FC<TokensSectionProps> = observer(({defaultVar
 						compact
 						leadingIcon={
 							<ArrowCounterClockwiseIcon
-								size={13}
+								size={remFromPx(13)}
 								weight="bold"
 								data-flx="theme-studio.tokens-section.arrow-counter-clockwise-icon"
 							/>
@@ -153,7 +154,11 @@ export const TokensSection: React.FC<TokensSectionProps> = observer(({defaultVar
 						variant="primary"
 						compact
 						leadingIcon={
-							<ShareNetworkIcon size={13} weight="bold" data-flx="theme-studio.tokens-section.share-network-icon" />
+							<ShareNetworkIcon
+								size={remFromPx(13)}
+								weight="bold"
+								data-flx="theme-studio.tokens-section.share-network-icon"
+							/>
 						}
 						onClick={handleShare}
 						data-flx="theme-studio.tokens-section.studio-button.share"

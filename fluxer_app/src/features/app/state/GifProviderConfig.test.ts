@@ -5,11 +5,11 @@ import {describe, expect, it} from 'vitest';
 import {normalizeGifProviderInfo} from './GifProviderConfig';
 
 describe('normalizeGifProviderInfo', () => {
-	it('uses KLIPY as the default GIF provider display name', () => {
+	it('uses Klipy as the default GIF provider display name', () => {
 		expect(normalizeGifProviderInfo()).toEqual({
 			name: 'klipy',
-			displayName: 'KLIPY',
-			attributionRequired: true,
+			displayName: 'Klipy',
+			attributionRequired: false,
 		});
 	});
 
@@ -21,11 +21,11 @@ describe('normalizeGifProviderInfo', () => {
 		});
 	});
 
-	it('falls back unknown provider names to KLIPY', () => {
+	it('falls back unknown provider names to Klipy', () => {
 		expect(normalizeGifProviderInfo({name: 'other'})).toEqual({
 			name: 'klipy',
-			displayName: 'KLIPY',
-			attributionRequired: true,
+			displayName: 'Klipy',
+			attributionRequired: false,
 		});
 	});
 });

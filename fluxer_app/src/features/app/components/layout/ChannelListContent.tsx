@@ -34,12 +34,14 @@ import Permission from '@app/features/permissions/state/Permission';
 import {useLocation} from '@app/features/platform/components/router/RouterReact';
 import {failureCode} from '@app/features/platform/utils/ResponseInspection';
 import ReadStates from '@app/features/read_state/state/ReadStates';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {ChannelListContextMenu} from '@app/features/ui/action_menu/ChannelListContextMenu';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
 import * as DimensionCommands from '@app/features/ui/commands/DimensionCommands';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import type {ScrollerHandle} from '@app/features/ui/components/Scroller';
 import {Scroller} from '@app/features/ui/components/Scroller';
+import {useDragAutoScroll} from '@app/features/ui/hooks/useDragAutoScroll';
 import Dimension from '@app/features/ui/state/Dimension';
 import KeyboardMode from '@app/features/ui/state/KeyboardMode';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
@@ -168,6 +170,7 @@ export const ChannelListContent = observer(({guild, scrollY}: {guild: Guild; scr
 		[channels.length, ReadStates.version, userGuildSettings, hideMutedChannels, showFadedUnreadOnMutedChannels],
 	);
 	const getChannelScrollContainer = useCallback(() => scrollerRef.current?.getScrollerNode() ?? null, [scrollerRef]);
+	useDragAutoScroll({active: isDraggingAnything, getScrollElement: getChannelScrollContainer});
 	const handleChannelDrop = useCallback(
 		(item: DragItem, result: DropResult) => {
 			if (!result) return;
@@ -331,7 +334,7 @@ export const ChannelListContent = observer(({guild, scrollY}: {guild: Guild; scr
 									<ChannelItemContent
 										icon={
 											<UsersIcon
-												size={20}
+												size={remFromPx(20)}
 												className={clsx(
 													channelItemStyles.channelItemIcon,
 													isMembersSelected
@@ -572,6 +575,7 @@ export const ChannelListContent = observer(({guild, scrollY}: {guild: Guild; scr
 			</Scroller>
 			<ScrollIndicatorOverlay
 				getScrollContainer={getChannelScrollContainer}
+				scrollContainerIdentity={guild.id}
 				dependencies={channelIndicatorDependencies}
 				label={i18n._(NEW_MESSAGES_DESCRIPTOR)}
 				data-flx="app.channel-list-content.scroll-indicator-overlay"

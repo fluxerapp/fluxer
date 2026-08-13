@@ -10,6 +10,7 @@ import {TRY_AGAIN_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescri
 import {formatBotPermissionsQuery, getAllBotPermissions} from '@app/features/permissions/utils/PermissionUtils';
 import {http} from '@app/features/platform/transport/RestTransport';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
@@ -708,7 +709,11 @@ export const ApplicationDetail: React.FC<ApplicationDetailProps> = observer(
 									onClick={handleDelete}
 									submitting={isDeleting}
 									leftIcon={
-										<TrashIcon size={16} weight="fill" data-flx="user.applications-tab.application-detail.trash-icon" />
+										<TrashIcon
+											size={remFromPx(16)}
+											weight="fill"
+											data-flx="user.applications-tab.application-detail.trash-icon"
+										/>
 									}
 									fitContent
 									data-flx="user.applications-tab.application-detail.button.delete"

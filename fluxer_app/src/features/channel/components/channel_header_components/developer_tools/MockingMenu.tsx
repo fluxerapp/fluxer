@@ -9,6 +9,7 @@ import {
 } from '@app/features/channel/components/channel_header_components/developer_tools/DeveloperToolsMenuComponents';
 import * as DeveloperOptionsCommands from '@app/features/devtools/commands/DeveloperOptionsCommands';
 import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
 import {MenuItemSlider} from '@app/features/ui/action_menu/MenuItemSlider';
 import {MenuItemSubmenu} from '@app/features/ui/action_menu/MenuItemSubmenu';
@@ -367,7 +368,7 @@ export const MockingMenu: React.FC<{onClose: () => void}> = observer(({onClose})
 					<MenuItem
 						icon={
 							<TrashIcon
-								size={16}
+								size={remFromPx(16)}
 								weight="bold"
 								data-flx="channel.channel-header-components.developer-tools-context-menu.mocking-menu.trash-icon"
 							/>
@@ -386,7 +387,7 @@ export const MockingMenu: React.FC<{onClose: () => void}> = observer(({onClose})
 								<MenuItem
 									icon={
 										<PhoneIcon
-											size={16}
+											size={remFromPx(16)}
 											weight="fill"
 											data-flx="channel.channel-header-components.developer-tools-context-menu.mocking-menu.menu-item.icon.mock-incoming-call.dm"
 										/>
@@ -399,7 +400,7 @@ export const MockingMenu: React.FC<{onClose: () => void}> = observer(({onClose})
 								<MenuItem
 									icon={
 										<UsersIcon
-											size={16}
+											size={remFromPx(16)}
 											weight="fill"
 											data-flx="channel.channel-header-components.developer-tools-context-menu.mocking-menu.menu-item.icon.mock-incoming-call.group-dm"
 										/>

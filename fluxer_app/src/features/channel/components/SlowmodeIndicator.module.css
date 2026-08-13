@@ -4,13 +4,15 @@
 	display: flex;
 	align-items: center;
 	gap: 0.1875rem;
-	height: var(--slowmode-indicator-height);
-	padding: 0 0.35rem;
-	border-radius: var(--radius-xl);
+	height: var(--composer-status-pill-height, var(--slowmode-indicator-height));
+	max-width: 100%;
+	min-width: 0;
+	padding: 0 0.5rem;
+	border-radius: var(--radius-full);
 	background-color: var(--background-tertiary);
 	border: 0.0625rem solid color-mix(in srgb, var(--background-modifier-accent) 80%, transparent);
 	color: var(--text-primary-muted);
-	font-size: 0.625rem;
+	font-size: 0.75rem;
 	line-height: 1;
 	transition:
 		color 150ms ease,
@@ -25,14 +27,19 @@
 }
 
 .time {
+	flex: 0 0 auto;
 	font-weight: 500;
 	font-family: monospace;
-	font-size: 0.625rem;
+	font-size: 0.75rem;
 	line-height: 1;
 }
 
 .label {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 	font-weight: 600;
-	font-size: 0.625rem;
+	font-size: 0.75rem;
 	line-height: 1;
 }

@@ -2,6 +2,7 @@
 
 import styles from '@app/features/channel/components/SlowmodeIndicator.module.css';
 import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import {
 	MS_PER_SECOND,
@@ -94,7 +95,7 @@ export const SlowmodeIndicator = observer(({slowmodeRemaining, slowmodeDuration,
 				className={clsx(styles.container, onCooldown && styles.cooldown)}
 				data-flx="channel.slowmode-indicator.container"
 			>
-				<ClockIcon size={10} weight="fill" data-flx="channel.slowmode-indicator.clock-icon" />
+				<ClockIcon size={remFromPx(12)} weight="fill" data-flx="channel.slowmode-indicator.clock-icon" />
 				{onCooldown ? (
 					<span className={styles.time} data-flx="channel.slowmode-indicator.time">
 						{formatSlowmodeTime(slowmodeRemaining, locale)}

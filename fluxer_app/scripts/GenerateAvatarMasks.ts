@@ -20,7 +20,7 @@ const LARGE_STATUS_CUTOUT_GUTTER_RATIO = 0.2;
 
 const STATUS_CONFIG: Record<number, StatusConfig> = {
 	16: {statusSize: 10, cutoutRadius: 5, cutoutCenter: 13},
-	20: {statusSize: 10, cutoutRadius: 5, cutoutCenter: 17},
+	20: {statusSize: 10, cutoutRadius: 6, cutoutCenter: 17},
 	24: {statusSize: 10, cutoutRadius: 7, cutoutCenter: 20},
 	32: {statusSize: 10, cutoutRadius: 8, cutoutCenter: 27},
 	36: {statusSize: 10, cutoutRadius: 8, cutoutCenter: 30},
@@ -181,16 +181,19 @@ function generateAvatarMaskStatusTyping(size: number): string {
 	const r = size / 2;
 	const status = calculateStatusGeometry(size);
 	const typingWidth = Math.round(status.size * TYPING_WIDTH_MULTIPLIER);
-	const typingHeight = status.size;
 	const typingRx = status.outerRadius;
 	const typingExtension = Math.max(0, typingWidth - status.size);
 	const typingBridgeShift = typingExtension * TYPING_BRIDGE_RIGHT_SHIFT_RATIO;
-	const x = status.cx - typingWidth / 2 + typingBridgeShift;
-	const y = status.cy - typingHeight / 2;
+	const leftCx = status.cx - typingExtension + typingBridgeShift;
+	const rightCx = status.cx + typingBridgeShift;
+	const y = status.cy - typingRx;
+	const bridgeHeight = typingRx * 2;
 	return `(
 				<>
 					<circle fill="white" cx="${r}" cy="${r}" r="${r}" />
-					<rect fill="black" x="${x}" y="${y}" width="${typingWidth}" height="${typingHeight}" rx="${typingRx}" ry="${typingRx}" />
+					<circle fill="black" cx="${rightCx}" cy="${status.cy}" r="${typingRx}" />
+					<rect fill="black" x="${leftCx}" y="${y}" width="${typingExtension}" height="${bridgeHeight}" />
+					<circle fill="black" cx="${leftCx}" cy="${status.cy}" r="${typingRx}" />
 				</>
 			)`;
 }
@@ -285,7 +288,7 @@ function generateStatusTyping(size: number): string {
 	const rx = status.outerRadius;
 	const typingExtension = Math.max(0, typingWidth - status.size);
 	const typingBridgeShift = typingExtension * TYPING_BRIDGE_RIGHT_SHIFT_RATIO;
-	const x = status.cx - typingWidth / 2 + typingBridgeShift;
+	const x = status.cx - status.size / 2 - typingExtension + typingBridgeShift;
 	const y = status.cy - typingHeight / 2;
 	return `<rect fill="white" x="${x}" y="${y}" width="${typingWidth}" height="${typingHeight}" rx="${rx}" ry="${rx}" />`;
 }
@@ -404,12 +407,17 @@ for (const size of SIZES) {
 	const offlineInnerR = Math.round(status.innerRadius * DESIGN_RULES.offline.innerRingRatio) / size;
 	const typingWidthPx = Math.round(status.size * TYPING_WIDTH_MULTIPLIER);
 	const typingExtensionPx = Math.max(0, typingWidthPx - status.size);
-	const typingBridgeShift = (typingExtensionPx * TYPING_BRIDGE_RIGHT_SHIFT_RATIO) / size;
 	const typingWidth = typingWidthPx / size;
 	const typingHeight = status.size / size;
-	const typingX = cx - typingWidth / 2 + typingBridgeShift;
+	const typingX =
+		(status.cx - status.size / 2 - typingExtensionPx + typingExtensionPx * TYPING_BRIDGE_RIGHT_SHIFT_RATIO) / size;
 	const typingY = cy - typingHeight / 2;
 	const typingRx = status.outerRadius / size;
+	const typingCutoutLeftCx =
+		(status.cx - typingExtensionPx + typingExtensionPx * TYPING_BRIDGE_RIGHT_SHIFT_RATIO) / size;
+	const typingCutoutRightCx = (status.cx + typingExtensionPx * TYPING_BRIDGE_RIGHT_SHIFT_RATIO) / size;
+	const typingCutoutY = (status.cy - status.outerRadius) / size;
+	const typingCutoutHeight = (status.outerRadius * 2) / size;
 	const cutoutPhoneWidth = (mobileStatus.phoneWidth + mobileStatus.borderWidth * 2) / size;
 	const cutoutPhoneHeight = (mobileStatus.phoneHeight + mobileStatus.borderWidth * 2) / size;
 	const cutoutPhoneX = (mobileStatus.phoneX - mobileStatus.borderWidth) / size;
@@ -449,7 +457,9 @@ for (const size of SIZES) {
 			</mask>
 			<mask id="svg-mask-avatar-status-typing-${size}" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
 				<circle fill="white" cx="0.5" cy="0.5" r="0.5" />
-				<rect fill="black" x="${formatNumber(typingX)}" y="${formatNumber(typingY)}" width="${formatNumber(typingWidth)}" height="${formatNumber(typingHeight)}" rx="${formatNumber(typingRx)}" ry="${formatNumber(typingRx)}" />
+				<circle fill="black" cx="${formatNumber(typingCutoutRightCx)}" cy="${formatNumber(cy)}" r="${formatNumber(typingRx)}" />
+				<rect fill="black" x="${formatNumber(typingCutoutLeftCx)}" y="${formatNumber(typingCutoutY)}" width="${formatNumber(typingExtensionPx / size)}" height="${formatNumber(typingCutoutHeight)}" />
+				<circle fill="black" cx="${formatNumber(typingCutoutLeftCx)}" cy="${formatNumber(cy)}" r="${formatNumber(typingRx)}" />
 			</mask>
 			<mask id="svg-mask-status-online-${size}" maskContentUnits="objectBoundingBox" viewBox="0 0 1 1">
 				<circle fill="white" cx="${formatNumber(cx)}" cy="${formatNumber(cy)}" r="${formatNumber(r)}" />

@@ -35,7 +35,7 @@ const AuthLayoutContent = observer(function AuthLayoutContent({children}: {child
 	const [splashAlignment, setSplashAlignment] = useState<GuildSplashCardAlignmentValue>(
 		GuildSplashCardAlignment.CENTER,
 	);
-	const {isNative, isMacOS, platform} = useNativePlatform();
+	const {isNative, platform} = useNativePlatform();
 	const useSystemTitleBar = useNativeTitleBar();
 	const splashUrlRef = useRef<string | null>(null);
 	const registerFormDraftsRef = useRef<Map<string, AuthRegisterFormDraft>>(new Map());
@@ -187,7 +187,7 @@ const AuthLayoutContent = observer(function AuthLayoutContent({children}: {child
 						key="auth-layout-scroller"
 						data-flx="app.auth-layout.auth-layout-content.container"
 					>
-						{isNative && !isMacOS && !useSystemTitleBar && (
+						{isNative && !useSystemTitleBar && (
 							<NativeTitlebar platform={platform} data-flx="app.auth-layout.auth-layout-content.native-titlebar" />
 						)}
 						<div

@@ -185,7 +185,8 @@
 	max-width: 100%;
 	min-width: 0;
 	contain: inline-size;
-	overflow: hidden;
+	overflow: visible;
+	--composer-status-rail-inset: var(--textarea-horizontal-padding);
 }
 
 .collapsibleSection {
@@ -200,6 +201,7 @@
 
 .textareaOuterMobile {
 	padding: 0;
+	--composer-status-rail-inset: 0px;
 }
 
 .textareaMobile {

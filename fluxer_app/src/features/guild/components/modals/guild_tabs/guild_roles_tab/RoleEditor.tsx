@@ -6,6 +6,7 @@ import type {RoleUpdate} from '@app/features/guild/components/modals/guild_tabs/
 import type {GuildRole} from '@app/features/guild/models/GuildRole';
 import PermissionLayout from '@app/features/permissions/state/PermissionLayout';
 import type * as PermissionUtils from '@app/features/permissions/utils/PermissionUtils';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import {ColorPickerField} from '@app/features/ui/components/form/ColorPickerField';
 import {Input} from '@app/features/ui/components/form/FormInput';
@@ -162,7 +163,9 @@ export const RoleEditor: React.FC<RoleEditorProps> = observer(
 										<Button
 											variant="secondary"
 											small={true}
-											leftIcon={<TrashIcon size={18} data-flx="guild.guild-tabs.guild-roles-tab.trash-icon" />}
+											leftIcon={
+												<TrashIcon size={remFromPx(18)} data-flx="guild.guild-tabs.guild-roles-tab.trash-icon" />
+											}
 											onClick={onDeleteRole}
 											disabled={selectedRoleLocked || !canManageRoles}
 											data-flx="guild.guild-tabs.guild-roles-tab.button.delete-role"
@@ -253,7 +256,7 @@ export const RoleEditor: React.FC<RoleEditorProps> = observer(
 										onChange={(e) => onPermissionSearchQueryChange(e.target.value)}
 										leftIcon={
 											<MagnifyingGlassIcon
-												size={16}
+												size={remFromPx(16)}
 												weight="bold"
 												data-flx="guild.guild-tabs.guild-roles-tab.magnifying-glass-icon"
 											/>
@@ -280,9 +283,17 @@ export const RoleEditor: React.FC<RoleEditorProps> = observer(
 												data-flx="guild.guild-tabs.guild-roles-tab.layout-button.toggle-layout-mode"
 											>
 												{PermissionLayout.isComfy ? (
-													<RowsIcon size={20} weight="bold" data-flx="guild.guild-tabs.guild-roles-tab.rows-icon" />
+													<RowsIcon
+														size={remFromPx(20)}
+														weight="bold"
+														data-flx="guild.guild-tabs.guild-roles-tab.rows-icon"
+													/>
 												) : (
-													<ListIcon size={20} weight="bold" data-flx="guild.guild-tabs.guild-roles-tab.list-icon" />
+													<ListIcon
+														size={remFromPx(20)}
+														weight="bold"
+														data-flx="guild.guild-tabs.guild-roles-tab.list-icon"
+													/>
 												)}
 											</button>
 										</Tooltip>
@@ -302,7 +313,7 @@ export const RoleEditor: React.FC<RoleEditorProps> = observer(
 												data-flx="guild.guild-tabs.guild-roles-tab.layout-button.toggle-grid-mode"
 											>
 												<GridFourIcon
-													size={20}
+													size={remFromPx(20)}
 													weight={PermissionLayout.isGrid ? 'fill' : 'bold'}
 													data-flx="guild.guild-tabs.guild-roles-tab.grid-four-icon"
 												/>

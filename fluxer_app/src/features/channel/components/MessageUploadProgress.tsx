@@ -8,6 +8,7 @@ import MessageQueue from '@app/features/messaging/state/MessageQueue';
 import {CloudUpload} from '@app/features/messaging/upload/CloudUpload';
 import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import type {MessageAttachment} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
@@ -83,7 +84,7 @@ export const MessageUploadProgress = observer(({attachment, message}: MessageUpl
 		<div style={containerStyles} data-flx="channel.message-upload-progress.div">
 			<div className={styles.container} data-flx="channel.message-upload-progress.container">
 				<div className={styles.iconContainer} data-flx="channel.message-upload-progress.icon-container">
-					<FileIcon size={32} data-flx="channel.message-upload-progress.file-icon" />
+					<FileIcon size={remFromPx(32)} data-flx="channel.message-upload-progress.file-icon" />
 				</div>
 				<div className={styles.content} data-flx="channel.message-upload-progress.content">
 					<p className={styles.fileName} data-flx="channel.message-upload-progress.file-name">
@@ -115,7 +116,7 @@ export const MessageUploadProgress = observer(({attachment, message}: MessageUpl
 						aria-label={i18n._(CANCEL_UPLOAD_DESCRIPTOR)}
 						data-flx="channel.message-upload-progress.cancel-button"
 					>
-						<XIcon size={20} weight="bold" data-flx="channel.message-upload-progress.x-icon" />
+						<XIcon size={remFromPx(20)} weight="bold" data-flx="channel.message-upload-progress.x-icon" />
 					</button>
 				</FocusRing>
 			</div>

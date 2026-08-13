@@ -1,24 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {useAnimatedMediaVideoPlayback} from '@app/features/app/hooks/useAnimatedMediaPlayback';
-import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {type AutocompleteOption, isGif} from '@app/features/channel/components/Autocomplete';
 import styles from '@app/features/channel/components/AutocompleteGif.module.css';
 import * as KlipyUtils from '@app/features/expressions/utils/KlipyUtils';
 import {GIFS_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {Scroller, type ScrollerHandle} from '@app/features/ui/components/Scroller';
-import PoweredByKlipySvg from '@app/media/images/powered-by-klipy.svg?react';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useEffect, useMemo, useRef} from 'react';
 
-const FROM_DESCRIPTOR = msg({
-	message: 'From {providerDisplayName}',
-	comment:
-		'Short label in the channel and chat autocomplete gif. Keep it concise. Preserve {providerDisplayName}; it is inserted by code.',
-});
 const NO_GIFS_FOUND_DESCRIPTOR = msg({
 	message: 'No GIFs match',
 	comment: 'Empty-state text in the channel and chat autocomplete gif.',
@@ -60,9 +53,6 @@ export const AutocompleteGif = observer(
 		getOptionId?: (index: number) => string;
 	}) => {
 		const {i18n} = useLingui();
-		const showKlipyWatermark = RuntimeConfig.gifAttributionRequired && RuntimeConfig.gifProvider === 'klipy';
-		const providerDisplayName = RuntimeConfig.gifProviderDisplayName;
-		const fromProviderText = i18n._(FROM_DESCRIPTOR, {providerDisplayName});
 		const gifs = useMemo(() => options.filter(isGif), [options]);
 		const scrollerRef = useRef<ScrollerHandle>(null);
 		useEffect(() => {
@@ -93,9 +83,6 @@ export const AutocompleteGif = observer(
 			<div className={styles.container} data-flx="channel.autocomplete-gif.container">
 				<div className={styles.heading} data-flx="channel.autocomplete-gif.heading">
 					<span data-flx="channel.autocomplete-gif.span">{i18n._(GIFS_DESCRIPTOR)}</span>
-					{showKlipyWatermark ? (
-						<PoweredByKlipySvg className={styles.attribution} data-flx="channel.autocomplete-gif.attribution" />
-					) : null}
 				</div>
 				<Scroller
 					ref={scrollerRef}
@@ -123,7 +110,7 @@ export const AutocompleteGif = observer(
 								onClick={() => onSelect(option)}
 								onMouseEnter={() => onMouseEnter(index)}
 								onMouseLeave={onMouseLeave}
-								aria-label={`${title} - ${fromProviderText}`}
+								aria-label={title}
 								role="option"
 								aria-selected={index === keyboardFocusIndex}
 								tabIndex={-1}

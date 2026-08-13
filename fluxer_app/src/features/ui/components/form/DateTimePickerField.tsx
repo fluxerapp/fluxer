@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {PASSWORD_MANAGER_IGNORE_ATTRIBUTES} from '@app/features/platform/utils/PasswordManagerAutocomplete';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import styles from '@app/features/ui/components/form/DateTimePickerField.module.css';
 import surfaceStyles from '@app/features/ui/components/form/FormSurface.module.css';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
@@ -162,7 +163,7 @@ export const DateTimePickerField: React.FC<DateTimePickerFieldProps> = (props) =
 								isDisabled={disabled}
 								data-flx="ui.form.date-time-picker-field.calendar-button"
 							>
-								<CalendarBlankIcon size={18} data-flx="ui.form.date-time-picker-field.calendar-blank-icon" />
+								<CalendarBlankIcon size={remFromPx(18)} data-flx="ui.form.date-time-picker-field.calendar-blank-icon" />
 							</Button>
 							<Popover
 								placement="bottom start"

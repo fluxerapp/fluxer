@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import styles from '@app/features/ui/components/Slider.module.css';
 import {ArrowCounterClockwiseIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
@@ -36,7 +37,7 @@ export function SliderResetIconButton({
 			data-flx={dataFlx}
 		>
 			<ArrowCounterClockwiseIcon
-				size={iconSize}
+				size={remFromPx(iconSize)}
 				weight="bold"
 				data-flx="ui.slider.slider-reset-icon-button.arrow-counter-clockwise-icon"
 			/>

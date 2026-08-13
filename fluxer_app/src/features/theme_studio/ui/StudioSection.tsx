@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {CaretRightIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
@@ -44,7 +45,11 @@ export const StudioSection: React.FC<StudioSectionProps> = ({
 						className={clsx(styles.chevron, open && styles.chevronOpen)}
 						data-flx="theme-studio.ui.studio-section.chevron"
 					>
-						<CaretRightIcon size={12} weight="bold" data-flx="theme-studio.ui.studio-section.caret-right-icon" />
+						<CaretRightIcon
+							size={remFromPx(12)}
+							weight="bold"
+							data-flx="theme-studio.ui.studio-section.caret-right-icon"
+						/>
 					</span>
 					{icon ? (
 						<span className={styles.icon} data-flx="theme-studio.ui.studio-section.icon">

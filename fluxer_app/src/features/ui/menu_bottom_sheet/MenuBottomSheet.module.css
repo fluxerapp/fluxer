@@ -9,6 +9,7 @@
 	text-align: left;
 	transition: none;
 	appearance: none;
+	outline: none;
 	-webkit-tap-highlight-color: transparent;
 }
 
@@ -198,5 +199,6 @@
 	padding: 0.5rem;
 	color: var(--text-primary);
 	appearance: none;
+	outline: none;
 	-webkit-tap-highlight-color: transparent;
 }

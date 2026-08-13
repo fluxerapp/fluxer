@@ -5,6 +5,7 @@ import * as Modal from '@app/features/app/components/dialogs/Modal';
 import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import {CLOSE_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {acceptTerms} from '@app/features/terms/commands/TermsAcceptanceCommands';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import markupStyles from '@app/features/theme/styles/Markup.module.css';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
@@ -146,7 +147,7 @@ export const TermsAcceptanceModal = observer(() => {
 					</Modal.Description>
 					<Modal.Description
 						className={markupStyles.markup}
-						style={{marginTop: 12, opacity: 0.7, fontSize: '0.85em'}}
+						style={{marginTop: remFromPx(12), opacity: 0.7, fontSize: '0.85em'}}
 						data-flx="auth.terms-acceptance-modal.modal-description--2"
 					>
 						{i18n._(UPDATED_POLICIES_AGREEMENT_DESCRIPTOR, {productName})}

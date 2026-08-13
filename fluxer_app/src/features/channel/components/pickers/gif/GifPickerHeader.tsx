@@ -4,12 +4,11 @@ import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import styles from '@app/features/channel/components/GifPicker.module.css';
 import type {GifPickerState} from '@app/features/channel/components/pickers/gif/GifPickerState';
 import {PickerSearchInput} from '@app/features/channel/components/shared/PickerSearchInput';
-import pickerSearchInputStyles from '@app/features/channel/components/shared/PickerSearchInput.module.css';
 import {GIFS_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {isIMEComposing} from '@app/features/messaging/utils/IMECompositionUtils';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
-import PoweredByKlipySvg from '@app/media/images/powered-by-klipy.svg?react';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {ArrowLeftIcon, DownloadSimpleIcon, UploadSimpleIcon} from '@phosphor-icons/react';
@@ -57,7 +56,6 @@ export const GifPickerHeader = observer(
 	}) => {
 		const {i18n} = useLingui();
 		const gifProviderName = RuntimeConfig.gifProviderDisplayName;
-		const showKlipyWatermark = RuntimeConfig.gifAttributionRequired && RuntimeConfig.gifProvider === 'klipy';
 		if (store.view !== 'default') {
 			const title = (() => {
 				if (store.view === 'trending') return i18n._(TRENDING_GIFS_DESCRIPTOR);
@@ -86,7 +84,7 @@ export const GifPickerHeader = observer(
 									data-flx="channel.pickers.gif.gif-picker-header.search-bar-back-button.go-to-default-view"
 								>
 									<ArrowLeftIcon
-										size={20}
+										size={remFromPx(20)}
 										weight="regular"
 										data-flx="channel.pickers.gif.gif-picker-header.arrow-left-icon"
 									/>
@@ -169,14 +167,6 @@ export const GifPickerHeader = observer(
 				showBackButton={!!store.searchTerm.trim()}
 				onBackButtonClick={() => store.setSearchTerm('')}
 				onKeyDown={handleKeyDown}
-				rightCustomElement={
-					showKlipyWatermark ? (
-						<PoweredByKlipySvg
-							className={pickerSearchInputStyles.poweredByKlipy}
-							data-flx="channel.pickers.gif.gif-picker-header.powered-by-klipy-svg"
-						/>
-					) : null
-				}
 				data-flx="channel.pickers.gif.gif-picker-header.picker-search-input.set-search-term"
 			/>
 		);

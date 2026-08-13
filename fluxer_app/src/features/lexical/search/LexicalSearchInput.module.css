@@ -1,0 +1,62 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.editorShell {
+	position: relative;
+	display: flex;
+	align-items: center;
+	align-self: stretch;
+	flex: 1 1 auto;
+	min-width: 0;
+	min-height: 2.25rem;
+	cursor: text;
+}
+
+.editable {
+	flex: 1 1 auto;
+	width: 100%;
+	min-width: 0;
+	min-height: 1.375rem;
+	overflow-x: auto;
+	overflow-y: hidden;
+	outline: none;
+	color: var(--search-input-text-color, var(--text-primary));
+	font-size: 0.875rem;
+	line-height: 1.375rem;
+	white-space: pre !important;
+	word-break: normal !important;
+	caret-color: var(--search-input-text-color, var(--text-primary));
+	scrollbar-width: none;
+	-webkit-user-modify: read-write-plaintext-only;
+}
+
+.editable::-webkit-scrollbar {
+	display: none;
+}
+
+.paragraph {
+	margin: 0;
+	display: block;
+	min-width: 100%;
+}
+
+.filterHost {
+	display: inline-flex;
+	vertical-align: middle;
+	white-space: normal;
+}
+
+.placeholder {
+	position: absolute;
+	top: 50%;
+	left: 0;
+	transform: translateY(-50%);
+	pointer-events: none;
+	user-select: none;
+	color: var(--search-input-placeholder-color, var(--text-secondary));
+	font-size: 0.875rem;
+	line-height: 1.375rem;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	max-width: 100%;
+}

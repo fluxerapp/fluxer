@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import styles from '@app/features/search/components/search/SearchFilterChip.module.css';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {XIcon} from '@phosphor-icons/react';
@@ -71,7 +72,7 @@ export const SearchFilterChip: React.FC<SearchFilterChipProps> = ({
 					aria-label={i18n._(REMOVE_FILTER_DESCRIPTOR)}
 					data-flx="search.search.search-filter-chip.remove-button.stop-propagation"
 				>
-					<XIcon size={12} weight="bold" data-flx="search.search.search-filter-chip.x-icon" />
+					<XIcon size={remFromPx(12)} weight="bold" data-flx="search.search.search-filter-chip.x-icon" />
 				</button>
 			)}
 		</button>

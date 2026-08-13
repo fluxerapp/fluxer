@@ -3,7 +3,7 @@
 .container {
 	position: relative;
 	--avatar-status-transition-duration: 160ms;
-	--avatar-status-transition-easing: ease-out;
+	--avatar-status-transition-easing: cubic-bezier(0.33, 1, 0.68, 1);
 }
 
 .clickable {

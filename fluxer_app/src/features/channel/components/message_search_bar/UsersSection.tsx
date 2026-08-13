@@ -3,6 +3,7 @@
 import {AutocompleteOption} from '@app/features/channel/components/message_search_bar/AutocompleteOption';
 import styles from '@app/features/channel/components/message_search_bar/MessageSearchBar.module.css';
 import Guilds from '@app/features/guild/state/Guilds';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {StatusAwareAvatar} from '@app/features/ui/components/StatusAwareAvatar';
 import type {User} from '@app/features/user/models/User';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
@@ -46,7 +47,7 @@ export const UsersSection: React.FC<UsersSectionProps> = observer(
 					>
 						<MagnifyingGlassIcon
 							weight="regular"
-							size={14}
+							size={remFromPx(14)}
 							data-flx="channel.message-search-bar.users-section.magnifying-glass-icon"
 						/>
 						{i18n._(USERS_DESCRIPTOR)}

@@ -2,6 +2,7 @@
 
 import {WATCH_STREAM_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import {Spinner} from '@app/features/ui/components/Spinner';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
@@ -143,7 +144,11 @@ export const StreamWatchHoverCard: React.FC<StreamWatchHoverCardProps> = ({
 						<Button
 							fitContent
 							leftIcon={
-								<MonitorPlayIcon size={18} weight="fill" data-flx="voice.stream-watch-hover-card.monitor-play-icon" />
+								<MonitorPlayIcon
+									size={remFromPx(18)}
+									weight="fill"
+									data-flx="voice.stream-watch-hover-card.monitor-play-icon"
+								/>
 							}
 							onClick={onWatch}
 							disabled={watchDisabled}
@@ -163,7 +168,7 @@ export const StreamWatchHoverCard: React.FC<StreamWatchHoverCardProps> = ({
 							fitContent
 							leftIcon={
 								<MonitorPlayIcon
-									size={18}
+									size={remFromPx(18)}
 									weight="fill"
 									data-flx="voice.stream-watch-hover-card.monitor-play-icon--2"
 								/>
@@ -180,7 +185,7 @@ export const StreamWatchHoverCard: React.FC<StreamWatchHoverCardProps> = ({
 							<Tooltip text={addTooltip ?? ''} data-flx="voice.stream-watch-hover-card.tooltip">
 								<Button
 									fitContent
-									leftIcon={<PlusIcon size={18} data-flx="voice.stream-watch-hover-card.plus-icon" />}
+									leftIcon={<PlusIcon size={remFromPx(18)} data-flx="voice.stream-watch-hover-card.plus-icon" />}
 									onClick={onAddStream}
 									disabled={watchDisabled}
 									className={styles.listButton}

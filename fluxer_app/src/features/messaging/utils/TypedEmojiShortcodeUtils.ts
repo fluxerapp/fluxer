@@ -3,6 +3,7 @@
 import type {Channel} from '@app/features/channel/models/Channel';
 import Emoji from '@app/features/emoji/state/Emoji';
 import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
+import * as EmojiUtils from '@app/features/expressions/utils/EmojiUtils';
 import {
 	type AvailabilityCheck,
 	checkEmojiAvailabilityWithGuildFallback,
@@ -18,6 +19,22 @@ const APP_PROTOCOL_SCHEME = 'fluxer:';
 const TRIMMED_AUTOLINK_PUNCTUATION = new Set(['.', ',', ';', ':', '!', '?']);
 
 type ShortcodeResolver = (shortcodeName: string) => string | null | undefined;
+
+export type ResolvedTypedEmoji =
+	| {
+			kind: 'standard';
+			name: string;
+			surrogate: string;
+			url: string | null;
+			display: string;
+	  }
+	| {
+			kind: 'custom';
+			emojiId: string;
+			animated: boolean;
+			display: string;
+			wire: string;
+	  };
 
 interface ResolveTypedEmojiShortcodesOptions {
 	content: string;
@@ -176,4 +193,33 @@ export function resolveTypedEmojiShortcodes({
 		}
 		return Emoji.getEmojiMarkdown(emoji);
 	});
+}
+
+export function resolveTypedEmojiToken(
+	shortcodeName: string,
+	channel: Channel | null,
+	guildIdFallback: string | null,
+	i18n: I18n,
+): ResolvedTypedEmoji | null {
+	if (UnicodeEmojis.findEmojiByShortcodeName(shortcodeName)) {
+		const emoji = UnicodeEmojis.findEmojiByShortcodeName(shortcodeName);
+		if (!emoji) return null;
+		return {
+			kind: 'standard',
+			name: emoji.uniqueName,
+			surrogate: emoji.surrogates,
+			url: EmojiUtils.getEmojiURL(emoji.surrogates),
+			display: `:${emoji.uniqueName}:`,
+		};
+	}
+	if (!CUSTOM_EMOJI_SHORTCODE_NAME_PATTERN.test(shortcodeName)) return null;
+	const emoji = Emoji.findCustomEmojiForShortcode(channel, shortcodeName, guildIdFallback);
+	if (!emoji || !isCustomEmoji(emoji) || !emoji.id || !isAvailable(i18n, emoji, channel, guildIdFallback)) return null;
+	return {
+		kind: 'custom',
+		emojiId: emoji.id,
+		animated: Boolean(emoji.animated),
+		display: `:${shortcodeName}:`,
+		wire: Emoji.getEmojiMarkdown(emoji),
+	};
 }

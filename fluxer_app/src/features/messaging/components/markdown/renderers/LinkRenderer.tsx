@@ -662,7 +662,7 @@ export const LinkRenderer = observer(function LinkRenderer({
 		return shouldDisableInteractions || isInlineReplyContext ? (
 			mention
 		) : (
-			<FocusRing key={id} data-flx="messaging.markdown.renderers.link-renderer.focus-ring--settings">
+			<FocusRing key={id} offset={-2} data-flx="messaging.markdown.renderers.link-renderer.focus-ring--settings">
 				{mention}
 			</FocusRing>
 		);
@@ -684,7 +684,7 @@ export const LinkRenderer = observer(function LinkRenderer({
 		return shouldDisableInteractions || isInlineReplyContext ? (
 			mention
 		) : (
-			<FocusRing key={id} data-flx="messaging.markdown.renderers.link-renderer.focus-ring">
+			<FocusRing key={id} offset={-2} data-flx="messaging.markdown.renderers.link-renderer.focus-ring">
 				{mention}
 			</FocusRing>
 		);
@@ -701,7 +701,7 @@ export const LinkRenderer = observer(function LinkRenderer({
 		return shouldDisableInteractions || isInlineReplyContext ? (
 			mention
 		) : (
-			<FocusRing key={id} data-flx="messaging.markdown.renderers.link-renderer.focus-ring--inaccessible">
+			<FocusRing key={id} offset={-2} data-flx="messaging.markdown.renderers.link-renderer.focus-ring--inaccessible">
 				{mention}
 			</FocusRing>
 		);
@@ -883,7 +883,7 @@ export const LinkRenderer = observer(function LinkRenderer({
 		}
 	}
 	return (
-		<FocusRing key={id} data-flx="messaging.markdown.renderers.link-renderer.focus-ring--2">
+		<FocusRing key={id} offset={-2} data-flx="messaging.markdown.renderers.link-renderer.focus-ring--2">
 			<a
 				href={url}
 				target={isInternal ? undefined : '_blank'}

@@ -8,9 +8,8 @@ import {useLingui} from '@lingui/react/macro';
 import {CopySimpleIcon, MinusIcon, SquareIcon, XIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import type React from 'react';
-import {useEffect, useLayoutEffect, useState} from 'react';
+import {useEffect, useState} from 'react';
 
-const STARTUP_NATIVE_TITLEBAR_ID = 'fluxer-startup-native-titlebar';
 const MINIMIZE_WINDOW_DESCRIPTOR = msg({
 	message: 'Minimize window',
 	comment: 'Short label in the app layout native titlebar.',
@@ -39,9 +38,6 @@ export const NativeWindowControls: React.FC<NativeWindowControlsProps> = ({
 }) => {
 	const {i18n} = useLingui();
 	const [isMaximized, setIsMaximized] = useState(false);
-	useLayoutEffect(() => {
-		document.getElementById(STARTUP_NATIVE_TITLEBAR_ID)?.remove();
-	}, []);
 	useEffect(() => {
 		const electronApi = getElectronAPI();
 		if (!electronApi) return;

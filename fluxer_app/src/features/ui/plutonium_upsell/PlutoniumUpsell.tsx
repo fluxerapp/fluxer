@@ -4,6 +4,7 @@ import {PREMIUM_PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstant
 import {GET_PREMIUM_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as PremiumModalCommands from '@app/features/premium/commands/PremiumModalCommands';
 import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import styles from '@app/features/ui/plutonium_upsell/PlutoniumUpsell.module.css';
 import {Trans, useLingui} from '@lingui/react/macro';
@@ -35,7 +36,12 @@ export const PlutoniumUpsell: React.FC<PlutoniumUpsellProps> = ({
 	}
 	return (
 		<div className={clsx(styles.upsell, className)} data-flx="ui.plutonium-upsell.plutonium-upsell.upsell">
-			<CrownIcon size={16} weight="fill" className={styles.icon} data-flx="ui.plutonium-upsell.plutonium-upsell.icon" />
+			<CrownIcon
+				size={remFromPx(16)}
+				weight="fill"
+				className={styles.icon}
+				data-flx="ui.plutonium-upsell.plutonium-upsell.icon"
+			/>
 			<div className={styles.content} data-flx="ui.plutonium-upsell.plutonium-upsell.content">
 				<div className={styles.text} data-flx="ui.plutonium-upsell.plutonium-upsell.text">
 					{children}

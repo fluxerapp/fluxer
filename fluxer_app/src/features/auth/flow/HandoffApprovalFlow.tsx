@@ -5,6 +5,7 @@ import type {DesktopHandoffInfoResponse} from '@app/features/auth/commands/Authe
 import type {DesktopHandoffMode} from '@app/features/auth/flow/auth_login_core/useDesktopHandoffFlow';
 import styles from '@app/features/auth/flow/HandoffApprovalFlow.module.css';
 import {TRY_AGAIN_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import {Input} from '@app/features/ui/components/form/FormInput';
 import {msg} from '@lingui/core/macro';
@@ -94,7 +95,7 @@ export function HandoffApprovalFlow({
 			<div className={styles.container} data-flx="auth.flow.handoff-approval-flow.container">
 				<div className={styles.warningBox} data-flx="auth.flow.handoff-approval-flow.warning-box">
 					<ShieldWarningIcon
-						size={32}
+						size={remFromPx(32)}
 						weight="fill"
 						className={styles.warningIcon}
 						data-flx="auth.flow.handoff-approval-flow.warning-icon"
@@ -241,7 +242,7 @@ export function HandoffApprovalFlow({
 		return (
 			<div className={styles.container} data-flx="auth.flow.handoff-approval-flow.container--6">
 				<CheckCircleIcon
-					size={48}
+					size={remFromPx(48)}
 					weight="fill"
 					className={styles.successIcon}
 					data-flx="auth.flow.handoff-approval-flow.success-icon"

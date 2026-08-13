@@ -44,6 +44,7 @@ export const MAX_ATTACHMENT_ALT_TEXT_LENGTH = 4096;
 export const MAX_KATEX_RENDER_SOURCE_LENGTH = 1024;
 export const MAX_KATEX_RENDER_CONTROL_SEQUENCE_COUNT = 64;
 export const MAX_CODE_HIGHLIGHT_SOURCE_LENGTH = 50_000;
+export const MAX_CODE_HIGHLIGHT_OUTPUT_LENGTH = 200_000;
 
 import {ASSET_FORMAT_POLICY} from '@fluxer/constants/src/AssetFormatPolicy';
 

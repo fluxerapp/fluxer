@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
 import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
@@ -31,7 +32,7 @@ export const PiPOverlayContextMenu = observer(function PiPOverlayContextMenu() {
 			<MenuItem
 				icon={
 					<PictureInPictureIcon
-						size={16}
+						size={remFromPx(16)}
 						weight="fill"
 						data-flx="voice.pi-p-overlay.context-menu.disable-screen-share-pip.icon"
 					/>

@@ -7,6 +7,7 @@ import type {Channel} from '@app/features/channel/models/Channel';
 import * as ChannelUtils from '@app/features/channel/utils/ChannelUtils';
 import {isGroupDmFull} from '@app/features/channel/utils/GroupDmUtils';
 import {AddFriendsToGroupModal} from '@app/features/relationship/components/modals/AddFriendsToGroupModal';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {GroupDMContextMenu} from '@app/features/ui/action_menu/GroupDMContextMenu';
 import {Button} from '@app/features/ui/button/Button';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
@@ -90,7 +91,7 @@ export const GroupDMWelcomeSection: React.FC<GroupDMWelcomeSectionProps> = obser
 					variant="secondary"
 					leftIcon={
 						<NotePencilIcon
-							size={18}
+							size={remFromPx(18)}
 							weight="bold"
 							data-flx="channel.direct-message.group-dm-welcome-section.note-pencil-icon"
 						/>
@@ -106,7 +107,7 @@ export const GroupDMWelcomeSection: React.FC<GroupDMWelcomeSectionProps> = obser
 						variant="primary"
 						leftIcon={
 							<UserPlusIcon
-								size={18}
+								size={remFromPx(18)}
 								weight="bold"
 								data-flx="channel.direct-message.group-dm-welcome-section.user-plus-icon"
 							/>

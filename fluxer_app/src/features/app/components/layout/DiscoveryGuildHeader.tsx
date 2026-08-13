@@ -2,6 +2,7 @@
 
 import styles from '@app/features/app/components/layout/DiscoveryGuildHeader.module.css';
 import guildHeaderStyles from '@app/features/app/components/layout/GuildHeader.module.css';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {CompassIcon} from '@phosphor-icons/react';
@@ -17,7 +18,7 @@ export function DiscoveryGuildHeader() {
 	return (
 		<div
 			className={clsx(guildHeaderStyles.headerContainer, guildHeaderStyles.headerContainerNoBanner)}
-			style={{height: 56}}
+			style={{height: remFromPx(56)}}
 			data-flx="app.discovery-guild-header.div"
 		>
 			<div

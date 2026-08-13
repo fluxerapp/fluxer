@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import {AudioLevelMeter} from '@app/features/user/components/modals/tabs/components/AudioLevelMeter';
 import styles from '@app/features/user/components/modals/tabs/components/MicTestSection.module.css';
@@ -29,9 +30,9 @@ export const MicTestSection: React.FC<MicTestSectionProps> = observer(({settings
 				square={true}
 				icon={
 					isTesting ? (
-						<StopIcon size={16} weight="fill" data-flx="user.mic-test-section.stop-icon" />
+						<StopIcon size={remFromPx(16)} weight="fill" data-flx="user.mic-test-section.stop-icon" />
 					) : (
-						<PlayIcon size={16} weight="fill" data-flx="user.mic-test-section.start-icon" />
+						<PlayIcon size={remFromPx(16)} weight="fill" data-flx="user.mic-test-section.start-icon" />
 					)
 				}
 				aria-label={isTesting ? 'Stop mic test' : 'Start mic test'}

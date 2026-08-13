@@ -10,6 +10,7 @@ import styles from '@app/features/guild/components/modals/guild_tabs/MemberListS
 import {UserListItem} from '@app/features/guild/components/modals/guild_tabs/UserListItem';
 import {CANCEL_DESCRIPTOR, TRY_AGAIN_IN_A_MOMENT_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {BannedUserContextMenu} from '@app/features/ui/action_menu/BannedUserContextMenu';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
@@ -183,7 +184,7 @@ const GuildBansTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 					onChange={(e) => setSearchQuery(e.target.value)}
 					leftIcon={
 						<MagnifyingGlassIcon
-							size={16}
+							size={remFromPx(16)}
 							weight="bold"
 							data-flx="guild.guild-tabs.guild-bans-tab.magnifying-glass-icon"
 						/>

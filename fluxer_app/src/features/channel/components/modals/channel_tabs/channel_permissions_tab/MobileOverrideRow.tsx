@@ -3,6 +3,7 @@
 import {DEFAULT_ROLE_COLOR_HEX, getRoleColor} from '@app/features/app/components/dialogs/shared/PermissionComponents';
 import styles from '@app/features/channel/components/modals/channel_tabs/ChannelPermissionsTab.module.css';
 import type {PermissionOverwrite} from '@app/features/channel/components/modals/channel_tabs/channel_permissions_tab/shared';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {openRoleContextMenu} from '@app/features/ui/action_menu/RoleContextMenu';
 import {Avatar} from '@app/features/ui/components/Avatar';
 import type {User} from '@app/features/user/models/User';
@@ -68,7 +69,7 @@ export const MobileOverrideRow: React.FC<MobileOverrideRowProps> = ({
 			</span>
 			<CaretRightIcon
 				className={styles.mobileOverrideChevron}
-				size={20}
+				size={remFromPx(20)}
 				weight="bold"
 				data-flx="channel.channel-tabs.channel-permissions-tab.mobile-override-chevron"
 			/>

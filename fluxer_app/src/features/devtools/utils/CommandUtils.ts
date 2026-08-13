@@ -65,6 +65,10 @@ export type ParsedCommand =
 			content: string;
 	  }
 	| {
+			type: 'saved' | 'sticker' | 'gif';
+			query: string;
+	  }
+	| {
 			type: 'unknown';
 	  };
 
@@ -96,9 +100,20 @@ export function parseCommand(content: string): ParsedCommand {
 		}
 		const userId = userMatch[1];
 		const afterMention = rest.slice(userMatch[0].length).trim();
-		const deleteMessageDays = 1;
+		const parts = afterMention.length === 0 ? [] : afterMention.split(/\s+/);
+		let deleteMessageDays = 1;
+		let reasonStart = 0;
+		const firstPart = parts[0];
+		if (firstPart !== undefined && /^[0-7]$/.test(firstPart)) {
+			deleteMessageDays = Number(firstPart);
+			reasonStart = 1;
+		} else if (firstPart !== undefined && /^\d+$/.test(firstPart)) {
+			return {type: 'unknown'};
+		}
 		const duration = 0;
-		const reason = afterMention || undefined;
+		const reasonParts = parts.slice(reasonStart);
+		const reasonText = reasonParts.join(' ').trim();
+		const reason = reasonText || undefined;
 		return {type: 'ban', userId, deleteMessageDays, duration, reason};
 	}
 	if (trimmed.startsWith('/msg ')) {
@@ -135,6 +150,13 @@ export function parseCommand(content: string): ParsedCommand {
 		}
 		return {type: 'tts', content};
 	}
+	for (const type of ['saved', 'sticker', 'gif'] as const) {
+		const prefix = `/${type}`;
+		if (trimmed === prefix || trimmed.startsWith(`${prefix} `)) {
+			const query = trimmed.slice(prefix.length).trim();
+			return {type, query};
+		}
+	}
 	return {type: 'unknown'};
 }
 
@@ -166,6 +188,12 @@ export function isCommand(content: string): boolean {
 		trimmed.startsWith('/me ') ||
 		trimmed.startsWith('/spoiler ') ||
 		trimmed.startsWith('/tts ') ||
+		trimmed === '/saved' ||
+		trimmed.startsWith('/saved ') ||
+		trimmed === '/sticker' ||
+		trimmed.startsWith('/sticker ') ||
+		trimmed === '/gif' ||
+		trimmed.startsWith('/gif ') ||
 		(trimmed.startsWith('_') && trimmed.endsWith('_') && trimmed.length > 2)
 	);
 }
@@ -322,6 +350,11 @@ export async function executeCommand(
 		}
 		case 'spoiler': {
 			break;
+		}
+		case 'saved':
+		case 'sticker':
+		case 'gif': {
+			throw new Error(`Select a ${command.type} result before submitting the command`);
 		}
 		default:
 			break;

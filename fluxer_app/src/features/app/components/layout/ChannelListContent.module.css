@@ -2,13 +2,23 @@
 
 .channelListScroller {
 	background-color: var(--background-secondary);
+	overflow-anchor: none;
 }
 
 .channelListScrollerWrapper {
+	--floating-unread-indicator-bottom-inset: calc(
+		var(--layout-user-area-overlay-height, var(--layout-user-area-reserved-height, 0px)) +
+		0.5rem
+	);
 	position: relative;
+	display: flex;
+	flex-direction: column;
+	height: 100%;
 	width: 100%;
 	min-height: 0;
 	min-width: 0;
+	max-height: 100%;
+	overflow: hidden;
 }
 
 .navigationContainer {

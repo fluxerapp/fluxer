@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import * as Modal from '@app/features/app/components/dialogs/Modal';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
@@ -448,7 +449,7 @@ export const ScreenShareEncoderControls = observer(({title}: ScreenShareEncoderC
 			compact
 			leftIcon={
 				<GearIcon
-					size={14}
+					size={remFromPx(14)}
 					weight="bold"
 					data-flx="user.advanced-settings-tab.screen-share-encoder-controls.gear-icon"
 				/>

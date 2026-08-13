@@ -43,6 +43,7 @@ import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {getNativePlatformSync, isNativeWindows} from '@app/features/ui/utils/NativeUtils';
 import {AudioPlayer} from '@app/features/voice/components/media_player/components/AudioPlayer';
 import {VideoPlayer} from '@app/features/voice/components/media_player/components/VideoPlayer';
+import {resolveDevicePixelRatio} from '@app/features/voice/DevicePixelRatio';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {untracked} from 'mobx';
@@ -286,7 +287,7 @@ const RenderReadyImage: FC<RenderReadyImageProps> = ({
 		const visibleWidth = visibleRight - visibleLeft;
 		const visibleHeight = visibleBottom - visibleTop;
 		if (imageRect.width <= 0 || imageRect.height <= 0 || visibleWidth <= 0 || visibleHeight <= 0) return false;
-		const canvasSize = getSharpCanvasSize(visibleWidth, visibleHeight, ownerWindow.devicePixelRatio || 1);
+		const canvasSize = getSharpCanvasSize(visibleWidth, visibleHeight, resolveDevicePixelRatio(ownerWindow));
 		if (!canvasSize) return false;
 		canvas.style.left = `${visibleLeft}px`;
 		canvas.style.top = `${visibleTop}px`;

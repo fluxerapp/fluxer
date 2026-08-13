@@ -461,7 +461,7 @@ export default () => {
 								priority: 55,
 								reuseExistingChunk: true,
 								enforce: true,
-								chunks: 'async',
+								chunks: (chunk) => !chunk.canBeInitial() && !isWorkerPath({chunk}),
 							},
 							livekit: {
 								test: /[\\/]node_modules[\\/](livekit-client|@livekit)[\\/]/,

@@ -2,6 +2,7 @@
 
 import styles from '@app/features/channel/components/modals/channel_tabs/ChannelPermissionsTab.module.css';
 import PermissionLayout from '@app/features/permissions/state/PermissionLayout';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -61,9 +62,17 @@ export const LayoutToggleButtons: React.FC = observer(() => {
 					data-flx="channel.channel-tabs.channel-permissions-tab.layout-button.toggle-layout-mode"
 				>
 					{PermissionLayout.isComfy ? (
-						<RowsIcon size={20} weight="bold" data-flx="channel.channel-tabs.channel-permissions-tab.rows-icon" />
+						<RowsIcon
+							size={remFromPx(20)}
+							weight="bold"
+							data-flx="channel.channel-tabs.channel-permissions-tab.rows-icon"
+						/>
 					) : (
-						<ListIcon size={20} weight="bold" data-flx="channel.channel-tabs.channel-permissions-tab.list-icon" />
+						<ListIcon
+							size={remFromPx(20)}
+							weight="bold"
+							data-flx="channel.channel-tabs.channel-permissions-tab.list-icon"
+						/>
 					)}
 				</button>
 			</Tooltip>
@@ -83,7 +92,7 @@ export const LayoutToggleButtons: React.FC = observer(() => {
 					data-flx="channel.channel-tabs.channel-permissions-tab.layout-button.toggle-grid-mode"
 				>
 					<GridFourIcon
-						size={20}
+						size={remFromPx(20)}
 						weight={PermissionLayout.isGrid ? 'fill' : 'bold'}
 						data-flx="channel.channel-tabs.channel-permissions-tab.grid-four-icon"
 					/>

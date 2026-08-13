@@ -120,9 +120,13 @@ async function resumePendingDesktopHandoffLogin(
 }
 
 async function bootstrapThemeStudio(): Promise<void> {
-	const {ThemeStudioStandaloneApp} = await loadLazyModule(
-		() => import('@app/features/theme_studio/ThemeStudioStandaloneApp'),
-	);
+	const [{ThemeStudioStandaloneApp}, {setupHttp}, {default: AccountManager}] = await Promise.all([
+		loadLazyModule(() => import('@app/features/theme_studio/ThemeStudioStandaloneApp')),
+		loadLazyModule(() => import('@app/app/SetupHttp')),
+		loadLazyModule(() => import('@app/features/auth/state/AccountManager')),
+	]);
+	await AccountManager.bootstrap();
+	setupHttp();
 	mountRoot(
 		<I18nProvider i18n={i18n}>
 			<ThemeStudioStandaloneApp data-flx="index.render-theme-studio.theme-studio-standalone-app" />

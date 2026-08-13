@@ -12,6 +12,7 @@ import * as ReactionCommands from '@app/features/messaging/commands/ReactionComm
 import {useMessageReactionsState} from '@app/features/messaging/hooks/useMessageReactionsState';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import {getEmojiNameWithColons} from '@app/features/messaging/utils/ReactionUtils';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {BottomSheet} from '@app/features/ui/bottom_sheet/BottomSheet';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
@@ -158,7 +159,9 @@ export const MessageReactionsSheet = observer(
 				return [];
 			}
 			const item: MenuItemType = {
-				icon: <TrashIcon size={20} data-flx="channel.message-reactions-sheet.reaction-menu-groups.trash-icon" />,
+				icon: (
+					<TrashIcon size={remFromPx(20)} data-flx="channel.message-reactions-sheet.reaction-menu-groups.trash-icon" />
+				),
 				label: i18n._(REMOVE_REACTION_DESCRIPTOR),
 				onClick: () => handleRemoveReactionEmoji(reactionMenuTarget),
 				danger: true,

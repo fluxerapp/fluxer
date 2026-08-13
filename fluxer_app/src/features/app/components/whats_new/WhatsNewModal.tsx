@@ -6,6 +6,7 @@ import styles from '@app/features/app/components/whats_new/WhatsNewModal.module.
 import {BLUESKY_PROVIDER_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import {SafeMarkdown} from '@app/features/messaging/components/markdown';
 import {MarkdownContext} from '@app/features/messaging/components/markdown/renderers/RendererTypes';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import markupStyles from '@app/features/theme/styles/Markup.module.css';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
@@ -154,7 +155,11 @@ export function WhatsNewModal({entry}: WhatsNewModalProps) {
 					data-flx="app.whats-new.whats-new-modal.scroll-hint.scroll-to-bottom.button"
 				>
 					<div className={styles.scrollHintCircle} data-flx="app.whats-new.whats-new-modal.scroll-hint-circle">
-						<CaretDownIcon size={16} weight="bold" data-flx="app.whats-new.whats-new-modal.caret-down-icon" />
+						<CaretDownIcon
+							size={remFromPx(16)}
+							weight="bold"
+							data-flx="app.whats-new.whats-new-modal.caret-down-icon"
+						/>
 					</div>
 				</button>
 			</div>
