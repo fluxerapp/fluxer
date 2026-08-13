@@ -9,6 +9,7 @@ import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import type {User} from '@app/features/user/models/User';
+import * as DisplayNameUtils from '@app/features/user/utils/DisplayNameUtils';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
@@ -24,13 +25,14 @@ interface RemoveTimeoutModalProps {
 export const RemoveTimeoutModal: React.FC<RemoveTimeoutModalProps> = observer(({guildId, targetUser}) => {
 	const {i18n} = useLingui();
 	const [isSubmitting, setIsSubmitting] = useState(false);
+	const targetUserTag = DisplayNameUtils.formatTagForStreamerMode(targetUser.tag);
 	const handleRemove = async () => {
 		setIsSubmitting(true);
 		try {
 			await GuildMemberCommands.timeout(guildId, targetUser.id, null);
 			ToastCommands.createToast({
 				type: 'success',
-				children: <Trans>Removed timeout from {targetUser.tag}</Trans>,
+				children: <Trans>Removed timeout from {targetUserTag}</Trans>,
 			});
 			ModalCommands.pop();
 		} catch (error) {
@@ -52,7 +54,7 @@ export const RemoveTimeoutModal: React.FC<RemoveTimeoutModalProps> = observer(({
 					<Modal.Description data-flx="moderation.remove-timeout-modal.description">
 						<Trans>
 							Removing the timeout will allow{' '}
-							<strong data-flx="moderation.remove-timeout-modal.strong">{targetUser.tag}</strong> to send messages,
+							<strong data-flx="moderation.remove-timeout-modal.strong">{targetUserTag}</strong> to send messages,
 							react, and join voice channels again.
 						</Trans>
 					</Modal.Description>

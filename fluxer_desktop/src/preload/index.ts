@@ -86,6 +86,7 @@ const ACTIVE_USE_NATIVE_TITLEBAR_RENDERER_ARG = '--fluxer-active-use-native-titl
 const CUSTOM_TITLEBAR_HEIGHT = '32px';
 const NATIVE_TITLEBAR_HEIGHT = '0px';
 const STARTUP_NATIVE_TITLEBAR_ID = 'fluxer-startup-native-titlebar';
+const THEME_STUDIO_STANDALONE_PATHNAME = '/theme-studio';
 const ZOOM_LEVEL_MIN = 0.5;
 const ZOOM_LEVEL_MAX = 2.0;
 
@@ -299,7 +300,7 @@ function getStartupPlatformClass(): string {
 }
 
 function installStartupNativeTitlebar(activeUseNativeTitleBar: boolean): void {
-	if (process.platform === 'darwin' || activeUseNativeTitleBar) return;
+	if (activeUseNativeTitleBar || window.location.pathname === THEME_STUDIO_STANDALONE_PATHNAME) return;
 	const install = (): void => {
 		if (!document.body || document.getElementById(STARTUP_NATIVE_TITLEBAR_ID)) return;
 		const titlebar = document.createElement('div');

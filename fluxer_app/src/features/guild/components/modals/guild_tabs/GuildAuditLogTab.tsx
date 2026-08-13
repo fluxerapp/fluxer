@@ -40,6 +40,7 @@ import {
 import {TRY_AGAIN_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import GuildMembers from '@app/features/member/state/GuildMembers';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import {Avatar} from '@app/features/ui/components/Avatar';
 import {Combobox, type ComboboxOption} from '@app/features/ui/components/form/FormCombobox';
@@ -337,7 +338,11 @@ const GuildAuditLogTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 						aria-hidden
 						data-flx="guild.guild-tabs.guild-audit-log-tab.render-content.action-select-icon"
 					>
-						<Icon size={18} weight="bold" data-flx="guild.guild-tabs.guild-audit-log-tab.render-content.icon" />
+						<Icon
+							size={remFromPx(18)}
+							weight="bold"
+							data-flx="guild.guild-tabs.guild-audit-log-tab.render-content.icon"
+						/>
 					</span>
 					<span
 						className={styles.actionSelectLabel}
@@ -547,7 +552,7 @@ const GuildAuditLogTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 												data-flx="guild.guild-tabs.guild-audit-log-tab.change-bullet"
 											>
 												<ChangeIcon
-													size={12}
+													size={remFromPx(12)}
 													weight="bold"
 													className={styles.changeBulletIcon}
 													data-flx="guild.guild-tabs.guild-audit-log-tab.change-bullet-icon"
@@ -582,7 +587,7 @@ const GuildAuditLogTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 											>
 												<span className={styles.icon} aria-hidden data-flx="guild.guild-tabs.guild-audit-log-tab.icon">
 													<ActionIcon
-														size={20}
+														size={remFromPx(20)}
 														weight="bold"
 														className={styles.iconGlyph}
 														data-flx="guild.guild-tabs.guild-audit-log-tab.icon-glyph"
@@ -620,7 +625,7 @@ const GuildAuditLogTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 													</div>
 												</div>
 												<CaretDownIcon
-													size={20}
+													size={remFromPx(20)}
 													weight="bold"
 													className={clsx(styles.chevron, {[styles.chevronExpanded]: isExpandedView})}
 													data-flx="guild.guild-tabs.guild-audit-log-tab.chevron"
@@ -631,7 +636,7 @@ const GuildAuditLogTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 										<div className={headerClasses} data-flx="guild.guild-tabs.guild-audit-log-tab.div--2">
 											<span className={styles.icon} aria-hidden data-flx="guild.guild-tabs.guild-audit-log-tab.icon--2">
 												<ActionIcon
-													size={20}
+													size={remFromPx(20)}
 													weight="bold"
 													className={styles.iconGlyph}
 													data-flx="guild.guild-tabs.guild-audit-log-tab.icon-glyph--2"
@@ -708,7 +713,7 @@ const GuildAuditLogTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 																		data-flx="guild.guild-tabs.guild-audit-log-tab.change-bullet--2"
 																	>
 																		<ChangeIcon
-																			size={12}
+																			size={remFromPx(12)}
 																			weight="bold"
 																			className={styles.changeBulletIcon}
 																			data-flx="guild.guild-tabs.guild-audit-log-tab.change-bullet-icon--2"

@@ -53,10 +53,10 @@ export const NewMessagesBar = observer(
 		const compactTime = DateUtils.getFormattedCompactDateTime(oldestUnreadTimestamp);
 		const shortTime = sameDay ? DateUtils.getFormattedTime(oldestUnreadTimestamp) : compactTime;
 		return (
-			<div className={styles.newMessagesBar} data-flx="channel.new-messages-bar.new-messages-bar">
+			<div className={styles.newMessagesBarBanner} data-flx="channel.new-messages-bar.new-messages-bar">
 				<button
 					type="button"
-					className={styles.newMessagesBarText}
+					className={styles.newMessagesBarBannerText}
 					onClick={onJumpToOldestUnread}
 					aria-label={i18n._(JUMP_TO_FIRST_UNREAD_MESSAGE_DESCRIPTOR)}
 					data-flx="channel.new-messages-bar.new-messages-bar-text.jump-to-oldest-unread.button"
@@ -83,7 +83,7 @@ export const NewMessagesBar = observer(
 				</button>
 				<button
 					type="button"
-					className={styles.newMessagesBarAction}
+					className={styles.newMessagesBarBannerAction}
 					onClick={onJumpToNewMessages}
 					data-flx="channel.new-messages-bar.new-messages-bar-action.jump-to-new-messages.button"
 				>

@@ -6,6 +6,7 @@ import {
 	SEARCH_SETTINGS_FIELD_LABEL_DESCRIPTOR,
 	SEARCH_SETTINGS_PLACEHOLDER_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Input} from '@app/features/ui/components/form/FormInput';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {useLingui} from '@lingui/react/macro';
@@ -91,7 +92,7 @@ export const SettingsSearch: React.FC<SettingsSearchProps> = observer(
 					aria-label={i18n._(CLEAR_SEARCH_DESCRIPTOR)}
 					data-flx="app.settings-search.clear-button"
 				>
-					<XIcon size={14} weight="bold" data-flx="app.settings-search.x-icon" />
+					<XIcon size={remFromPx(14)} weight="bold" data-flx="app.settings-search.x-icon" />
 				</button>
 			</FocusRing>
 		) : undefined;
@@ -110,7 +111,11 @@ export const SettingsSearch: React.FC<SettingsSearchProps> = observer(
 						placeholder={placeholder ?? i18n._(SEARCH_SETTINGS_PLACEHOLDER_DESCRIPTOR)}
 						aria-label={i18n._(SEARCH_SETTINGS_FIELD_LABEL_DESCRIPTOR)}
 						leftIcon={
-							<MagnifyingGlassIcon size={16} weight="bold" data-flx="app.settings-search.magnifying-glass-icon" />
+							<MagnifyingGlassIcon
+								size={remFromPx(16)}
+								weight="bold"
+								data-flx="app.settings-search.magnifying-glass-icon"
+							/>
 						}
 						rightElement={rightElement}
 						data-flx="app.settings-search.input.query-change.text"

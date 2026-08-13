@@ -17,6 +17,7 @@ import GatewayConnection from '@app/features/gateway/transport/GatewayConnection
 import {TRY_AGAIN_IN_A_MOMENT_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {KeyboardModeIntroModal} from '@app/features/input/components/modals/KeyboardModeIntroModal';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import * as TrustedDomainCommands from '@app/features/trusted_domain/commands/TrustedDomainCommands';
 import TrustedDomain from '@app/features/trusted_domain/state/TrustedDomain';
 import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
@@ -234,7 +235,7 @@ export const ToolsMenu: React.FC<{onClose: () => void}> = observer(({onClose}) =
 					<MenuItem
 						icon={
 							<PlugIcon
-								size={16}
+								size={remFromPx(16)}
 								weight="bold"
 								data-flx="channel.channel-header-components.developer-tools-context-menu.tools-menu.plug-icon"
 							/>
@@ -248,7 +249,7 @@ export const ToolsMenu: React.FC<{onClose: () => void}> = observer(({onClose}) =
 					<MenuItem
 						icon={
 							<PlugIcon
-								size={16}
+								size={remFromPx(16)}
 								weight="bold"
 								data-flx="channel.channel-header-components.developer-tools-context-menu.tools-menu.plug-icon--2"
 							/>
@@ -262,7 +263,7 @@ export const ToolsMenu: React.FC<{onClose: () => void}> = observer(({onClose}) =
 					<MenuItem
 						icon={
 							<PhoneIcon
-								size={16}
+								size={remFromPx(16)}
 								weight="fill"
 								data-flx="channel.channel-header-components.developer-tools-context-menu.tools-menu.phone-icon"
 							/>
@@ -289,7 +290,7 @@ export const ToolsMenu: React.FC<{onClose: () => void}> = observer(({onClose}) =
 					<MenuItem
 						icon={
 							<KeyboardIcon
-								size={16}
+								size={remFromPx(16)}
 								weight="fill"
 								data-flx="channel.channel-header-components.developer-tools-context-menu.tools-menu.keyboard-icon"
 							/>
@@ -328,7 +329,7 @@ export const ToolsMenu: React.FC<{onClose: () => void}> = observer(({onClose}) =
 					<MenuItem
 						icon={
 							<RobotIcon
-								size={16}
+								size={remFromPx(16)}
 								weight="fill"
 								data-flx="channel.channel-header-components.developer-tools-context-menu.tools-menu.robot-icon"
 							/>

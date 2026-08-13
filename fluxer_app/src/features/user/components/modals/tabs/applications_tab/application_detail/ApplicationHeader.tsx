@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {COPIED_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import {Input} from '@app/features/ui/components/form/FormInput';
 import styles from '@app/features/user/components/modals/tabs/applications_tab/application_detail/ApplicationDetail.module.css';
@@ -55,13 +56,13 @@ export const ApplicationHeader: React.FC<ApplicationHeaderProps> = ({name, appli
 									leftIcon={
 										idCopied ? (
 											<CheckIcon
-												size={14}
+												size={remFromPx(14)}
 												weight="bold"
 												data-flx="user.applications-tab.application-detail.application-header.check-icon"
 											/>
 										) : (
 											<CopyIcon
-												size={14}
+												size={remFromPx(14)}
 												data-flx="user.applications-tab.application-detail.application-header.copy-icon"
 											/>
 										)

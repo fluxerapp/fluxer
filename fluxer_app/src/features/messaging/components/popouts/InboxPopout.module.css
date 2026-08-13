@@ -1,19 +1,13 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
 .container {
-	--inbox-popout-block-gap: 3rem;
-	--inbox-popout-inline-gap: 1.5rem;
-	--inbox-popout-max-height: 56.25rem;
-	--inbox-popout-max-width: 37.5rem;
-	--inbox-popout-viewport-height: max(0rem, calc(100svh - var(--inbox-popout-block-gap)));
-	--inbox-popout-viewport-width: max(0rem, calc(100svw - var(--inbox-popout-inline-gap)));
-	--inbox-popout-proportional-width: max(0rem, calc(66.6667svh - 2rem));
-
 	position: relative;
 	display: flex;
-	height: min(var(--inbox-popout-max-height), var(--inbox-popout-viewport-height));
-	max-height: inherit;
-	width: min(var(--inbox-popout-max-width), var(--inbox-popout-proportional-width), var(--inbox-popout-viewport-width));
+	box-sizing: border-box;
+	min-width: 0;
+	min-height: 0;
+	max-width: calc(100dvw - 1rem);
+	max-height: calc(100dvh - 1rem);
 	flex-direction: column;
 	overflow: hidden;
 	border-radius: 0.5rem;
@@ -140,4 +134,52 @@
 .iconSmall {
 	height: 1rem;
 	width: 1rem;
+}
+
+.resizeCorner {
+	position: absolute;
+	width: 1.25rem;
+	height: 1.25rem;
+	z-index: 5;
+	border: none;
+	background: transparent;
+	padding: 0;
+	pointer-events: auto;
+	touch-action: none;
+}
+
+.resizeCorner:focus-visible {
+	outline: 0.125rem solid var(--focus-primary);
+	outline-offset: -0.125rem;
+}
+
+.resizeCornerTopLeft {
+	top: 0;
+	left: 0;
+	cursor: nwse-resize;
+}
+
+.resizeCornerTopRight {
+	top: 0;
+	right: 0;
+	cursor: nesw-resize;
+}
+
+.resizeCornerBottomLeft {
+	bottom: 0;
+	left: 0;
+	cursor: nesw-resize;
+}
+
+.resizeCornerBottomRight {
+	right: 0;
+	bottom: 0;
+	cursor: nwse-resize;
+}
+
+:global(html.inbox-popout-resizing),
+:global(html.inbox-popout-resizing) * {
+	cursor: var(--inbox-popout-resize-cursor, nwse-resize) !important;
+	user-select: none !important;
+	-webkit-user-select: none !important;
 }

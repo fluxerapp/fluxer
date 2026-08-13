@@ -42,6 +42,7 @@ import {useMemberListVisible} from '@app/features/member/hooks/useMemberListVisi
 import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
 import ReadStates from '@app/features/read_state/state/ReadStates';
 import Relationships from '@app/features/relationship/state/Relationships';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {isMobileExperienceEnabled} from '@app/features/ui/utils/MobileExperience';
@@ -99,7 +100,7 @@ export const DMChannelView = observer(({channelId}: DMChannelViewProps) => {
 		activeSearchQuery,
 		activeSearchSegments,
 	} = searchState;
-	const {hasMessagesBottomBar, onBottomBarVisibilityChange} = useMessagesBottomBarVisibility(channelId);
+	const {onBottomBarVisibilityChange} = useMessagesBottomBarVisibility(channelId);
 	const {enabled: isMobileLayout} = MobileLayout;
 	const isSearchPanelVisible = isSearchActive && !isMobileLayout;
 	useChannelSearchVisibility(channelId, isSearchPanelVisible);
@@ -375,7 +376,11 @@ export const DMChannelView = observer(({channelId}: DMChannelViewProps) => {
 										variant="secondary"
 										onClick={handleOpenCallSheet}
 										leftIcon={
-											<PhoneIcon size={16} weight="fill" data-flx="channel.channel-view.dm-channel-view.phone-icon" />
+											<PhoneIcon
+												size={remFromPx(16)}
+												weight="fill"
+												data-flx="channel.channel-view.dm-channel-view.phone-icon"
+											/>
 										}
 										data-flx="channel.channel-view.dm-channel-view.button.open-call-sheet"
 									>
@@ -472,7 +477,6 @@ export const DMChannelView = observer(({channelId}: DMChannelViewProps) => {
 				}
 				chatArea={
 					<ChannelChatLayout
-						channel={channel}
 						messages={
 							<Messages
 								key={channel.id}
@@ -500,7 +504,6 @@ export const DMChannelView = observer(({channelId}: DMChannelViewProps) => {
 								/>
 							)
 						}
-						hideBottomBar={hasMessagesBottomBar}
 						data-flx="channel.channel-view.dm-channel-view.channel-chat-layout"
 					/>
 				}

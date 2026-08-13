@@ -117,21 +117,6 @@
 	background-color: var(--search-scope-badge-hover-background);
 }
 
-.input {
-	height: 2.25rem;
-	min-height: 2.25rem;
-	flex: 1;
-	border: none;
-	background: transparent;
-	outline: none;
-	color: var(--search-input-text-color);
-	font-size: 0.875rem;
-}
-
-.input::placeholder {
-	color: var(--search-input-placeholder-color);
-}
-
 .clearButton {
 	height: 1.5rem;
 	width: 1.5rem;

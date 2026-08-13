@@ -1,14 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {DiscoveryGuildCard} from '@app/features/discovery/discovery/DiscoveryGuildCard';
 import styles from '@app/features/discovery/discovery/DiscoveryPage.module.css';
 import Discovery from '@app/features/discovery/state/Discovery';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Combobox, type ComboboxOption} from '@app/features/ui/components/form/FormCombobox';
 import {Input} from '@app/features/ui/components/form/FormInput';
 import {Scroller, type ScrollerHandle} from '@app/features/ui/components/Scroller';
 import {Spinner} from '@app/features/ui/components/Spinner';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {getNextTabIndex, getTabNavigationDirection} from '@app/features/ui/tabs/TabKeyboardNavigation';
+import {getAppZoomFactor} from '@app/features/ui/utils/AppZoomUtils';
 import {getSortedDiscoveryLanguages} from '@app/features/user/utils/LocaleUtils';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -74,6 +77,7 @@ const NO_COMMUNITIES_FOUND_DESCRIPTOR = msg({
 
 const PAGE_SIZE = 36;
 const GRID_MIN_CARD_WIDTH_PX = 280;
+const GRID_MAX_COLUMNS = 4;
 const GRID_GAP_PX = 16;
 const ESTIMATED_ROW_HEIGHT_PX = 276;
 const SEARCH_DEBOUNCE_MS = 300;
@@ -100,13 +104,15 @@ export const DiscoveryPage = observer(function DiscoveryPage() {
 	const containerRef = useRef<HTMLDivElement | null>(null);
 	const categoryTabRefs = useRef<Map<DiscoveryCategoryTabKey, HTMLButtonElement>>(new Map());
 	const [containerWidth, setContainerWidth] = useState(0);
-	const columns = useMemo(
-		() =>
-			containerWidth > 0
-				? Math.max(1, Math.floor((containerWidth + GRID_GAP_PX) / (GRID_MIN_CARD_WIDTH_PX + GRID_GAP_PX)))
-				: 0,
-		[containerWidth],
-	);
+	const zoomLevel = Accessibility.zoomLevel;
+	const columns = useMemo(() => {
+		if (containerWidth <= 0) {
+			return 0;
+		}
+		const logicalWidth = containerWidth / getAppZoomFactor();
+		const columnsThatFit = Math.floor((logicalWidth + GRID_GAP_PX) / (GRID_MIN_CARD_WIDTH_PX + GRID_GAP_PX));
+		return Math.min(GRID_MAX_COLUMNS, Math.max(1, columnsThatFit));
+	}, [containerWidth, zoomLevel]);
 	const guilds = Discovery.guilds;
 	const rowCount = columns > 0 ? Math.ceil(guilds.length / columns) : 0;
 	const hasMore = guilds.length < Discovery.total;
@@ -260,7 +266,7 @@ export const DiscoveryPage = observer(function DiscoveryPage() {
 									onChange={(e) => handleSearchChange(e.target.value)}
 									leftIcon={
 										<MagnifyingGlassIcon
-											size={16}
+											size={remFromPx(16)}
 											weight="bold"
 											aria-hidden
 											data-flx="discovery.discovery.discovery-page.magnifying-glass-icon"

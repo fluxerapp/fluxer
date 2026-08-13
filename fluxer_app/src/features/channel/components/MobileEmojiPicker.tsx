@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {PREMIUM_PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import {useSearchInputAutofocus} from '@app/features/app/hooks/useSearchInputAutofocus';
 import {useShouldAnimate} from '@app/features/app/hooks/useShouldAnimate';
@@ -165,6 +166,7 @@ export const MobileEmojiPicker = observer(
 			renderedEmojis,
 		);
 		const showFrequentlyUsedButton = frequentlyUsedEmojis.length > 0 && !normalizedSearchTerm;
+		const zoomLevel = Accessibility.zoomLevel;
 		const effectiveViewportWidth = useMemo(() => {
 			const candidateWidths = [viewportSize.width, visibleViewportWidth].filter((width) => width > 0);
 			if (candidateWidths.length === 0) {
@@ -172,7 +174,10 @@ export const MobileEmojiPicker = observer(
 			}
 			return Math.min(...candidateWidths);
 		}, [viewportSize.width, visibleViewportWidth]);
-		const gridColumns = useMemo(() => getMobileEmojiGridColumns(effectiveViewportWidth), [effectiveViewportWidth]);
+		const gridColumns = useMemo(
+			() => getMobileEmojiGridColumns(effectiveViewportWidth),
+			[effectiveViewportWidth, zoomLevel],
+		);
 		const gridWidth = useMemo(() => {
 			if (effectiveViewportWidth <= 0) {
 				return undefined;

@@ -43,6 +43,7 @@
 	height: 100%;
 	width: 100%;
 	object-fit: cover;
+	z-index: 0;
 }
 
 .mediaContainer {
@@ -62,6 +63,7 @@
 	min-height: 0.0625rem;
 	min-width: 0;
 	aspect-ratio: var(--embed-aspect-ratio, auto);
+	overflow: hidden;
 }
 
 .videoElement {
@@ -74,6 +76,21 @@
 	transition: opacity 80ms ease-out;
 	object-fit: contain;
 	pointer-events: none;
+	position: relative;
+	z-index: 1;
+}
+
+.posterElement {
+	position: absolute;
+	inset: 0;
+	display: block;
+	width: 100%;
+	height: 100%;
+	border-radius: var(--media-border-radius, 0px);
+	object-fit: contain;
+	pointer-events: none;
+	transition: opacity 80ms ease-out;
+	z-index: 2;
 }
 
 .videoOpacityHidden {
@@ -93,22 +110,9 @@
 	object-fit: contain;
 	pointer-events: none;
 	opacity: 0;
+	z-index: 4;
 }
 
 .gifFreezeFrame[data-frozen='true'] {
 	opacity: 1;
-}
-
-.klipyWatermark {
-	position: absolute;
-	bottom: 0.5rem;
-	left: 0.5rem;
-	z-index: 5;
-	pointer-events: none;
-	opacity: 0;
-}
-
-.klipyWatermark svg {
-	height: 0.75rem;
-	width: auto;
 }

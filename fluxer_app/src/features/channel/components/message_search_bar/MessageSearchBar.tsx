@@ -14,10 +14,12 @@ import {DEFAULT_SCOPE_VALUE, getScopeOptionsForChannel} from '@app/features/chan
 import type {Channel} from '@app/features/channel/models/Channel';
 import ChannelSearch, {getChannelSearchContextId} from '@app/features/channel/state/ChannelSearch';
 import {CLEAR_SEARCH_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {LexicalSearchInput} from '@app/features/lexical/search/LexicalSearchInput';
 import SelectedGuild from '@app/features/navigation/state/SelectedGuild';
 import {useParams} from '@app/features/platform/components/router/RouterReact';
 import {PASSWORD_MANAGER_IGNORE_ATTRIBUTES} from '@app/features/platform/utils/PasswordManagerAutocomplete';
 import type {MessageSearchScope, SearchFilterOption} from '@app/features/search/utils/SearchUtils';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {ContextMenuCloseProvider} from '@app/features/ui/action_menu/ContextMenu';
 import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
 import {MenuItemRadio} from '@app/features/ui/action_menu/MenuItemRadio';
@@ -185,7 +187,7 @@ export const MessageSearchBar = observer(
 			getAriaActiveDescendant,
 			handleAutocompleteSelect,
 			handleKeyDown,
-			handleInputChange,
+			handleInputValueChange,
 			handleHistoryClear,
 			handleFilterSelect,
 			handleOptionMouseEnter,
@@ -372,20 +374,20 @@ export const MessageSearchBar = observer(
 									data-flx="channel.message-search-bar.message-search-bar.scope-badge"
 								>
 									<ScopeIconComponent
-										size={8}
+										size={remFromPx(8)}
 										weight="bold"
 										data-flx="channel.message-search-bar.message-search-bar.scope-icon-component"
 									/>
 								</span>
 							</button>
 						</Tooltip>
-						<input
-							ref={setInputRefs}
-							type="text"
-							data-flx="channel.message-search-bar.message-search-bar.input.text"
-							{...PASSWORD_MANAGER_IGNORE_ATTRIBUTES}
+						<LexicalSearchInput
+							inputRef={setInputRefs}
 							value={value}
-							onChange={handleInputChange}
+							placeholder={i18n._(SEARCH_MESSAGES_PLACEHOLDER_DESCRIPTOR)}
+							role="combobox"
+							isAutocompleteOpen={isPopoutOpen}
+							onValueChange={handleInputValueChange}
 							onMouseDown={() => setSuppressAutoOpen(false)}
 							onKeyDown={handleKeyDown}
 							onFocus={() => {
@@ -400,17 +402,17 @@ export const MessageSearchBar = observer(
 									onCloseResults?.();
 								}
 							}}
-							role="combobox"
-							aria-label={i18n._(SEARCH_MESSAGES_PLACEHOLDER_DESCRIPTOR)}
-							aria-autocomplete="list"
-							aria-haspopup="listbox"
-							aria-expanded={isFocused && autocompleteType !== null}
-							aria-controls={isFocused && autocompleteType !== null ? listboxId : undefined}
-							aria-activedescendant={ariaActiveDescendant}
-							aria-keyshortcuts="ArrowDown ArrowUp Enter Escape"
-							aria-describedby={`${suggestionsStatusId} ${activeSuggestionStatusId} ${hintId}`}
-							placeholder={i18n._(SEARCH_MESSAGES_PLACEHOLDER_DESCRIPTOR)}
-							className={styles.input}
+							ariaProps={{
+								...PASSWORD_MANAGER_IGNORE_ATTRIBUTES,
+								'data-flx': 'channel.message-search-bar.message-search-bar.input.text',
+								'aria-autocomplete': 'list',
+								'aria-haspopup': 'listbox',
+								'aria-expanded': isFocused && autocompleteType !== null,
+								'aria-controls': isFocused && autocompleteType !== null ? listboxId : undefined,
+								'aria-activedescendant': ariaActiveDescendant,
+								'aria-keyshortcuts': 'ArrowDown ArrowUp Enter Escape',
+								'aria-describedby': `${suggestionsStatusId} ${activeSuggestionStatusId} ${hintId}`,
+							}}
 						/>
 						{hasValue && (
 							<button

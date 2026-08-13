@@ -53,11 +53,11 @@ const VOICE_POPOUT_WINDOW_NAME_LENGTH_MAX = 256;
 const VOICE_POPOUT_MIN_WIDTH = 360;
 const VOICE_POPOUT_MIN_HEIGHT = 240;
 const VOICE_POPOUT_WINDOWS_MAX = 8;
-const VOICE_POPOUT_TITLEBAR_HEIGHT_MAC = 28;
-const VOICE_POPOUT_TRAFFIC_LIGHT_DIAMETER = 14;
-const VOICE_POPOUT_TRAFFIC_LIGHT_POSITION = {
+const CUSTOM_TITLEBAR_HEIGHT_MAC = 32;
+const CUSTOM_TITLEBAR_TRAFFIC_LIGHT_DIAMETER = 14;
+const CUSTOM_TITLEBAR_TRAFFIC_LIGHT_POSITION = {
 	x: 12,
-	y: Math.round((VOICE_POPOUT_TITLEBAR_HEIGHT_MAC - VOICE_POPOUT_TRAFFIC_LIGHT_DIAMETER) / 2),
+	y: Math.round((CUSTOM_TITLEBAR_HEIGHT_MAC - CUSTOM_TITLEBAR_TRAFFIC_LIGHT_DIAMETER) / 2),
 };
 const trustedWebOrigins = new Set(
 	[STABLE_APP_URL, CANARY_APP_URL]
@@ -664,7 +664,7 @@ function getVoicePopoutWindowOptions(): Electron.BrowserWindowConstructorOptions
 		...getTitleBarWindowOptions(getActiveUseNativeTitleBar()),
 		minWidth: VOICE_POPOUT_MIN_WIDTH,
 		minHeight: VOICE_POPOUT_MIN_HEIGHT,
-		trafficLightPosition: isMac ? VOICE_POPOUT_TRAFFIC_LIGHT_POSITION : undefined,
+		trafficLightPosition: isMac ? CUSTOM_TITLEBAR_TRAFFIC_LIGHT_POSITION : undefined,
 		backgroundColor: getWindowBackgroundColor(false),
 		transparent: false,
 		hasShadow: getWindowHasShadow(false),
@@ -745,7 +745,7 @@ export function createWindow(options: CreateWindowOptions = {}): BrowserWindow {
 		transparent: allowTransparency,
 		hasShadow: getWindowHasShadow(allowTransparency),
 		...getTitleBarWindowOptions(useNativeTitleBar),
-		trafficLightPosition: isMac ? {x: 9, y: 9} : undefined,
+		trafficLightPosition: isMac ? CUSTOM_TITLEBAR_TRAFFIC_LIGHT_POSITION : undefined,
 		acceptFirstMouse: acceptFirstMouseOnFocus,
 		webPreferences: getSharedWebPreferences(allowTransparency, useNativeTitleBar, appUrl),
 	};
@@ -1070,7 +1070,7 @@ export function createWindow(options: CreateWindowOptions = {}): BrowserWindow {
 				title: isThemeStudioPopout ? THEME_STUDIO_POPOUT_TITLE : undefined,
 				minWidth: isThemeStudioPopout ? THEME_STUDIO_POPOUT_MIN_WIDTH : undefined,
 				minHeight: isThemeStudioPopout ? THEME_STUDIO_POPOUT_MIN_HEIGHT : undefined,
-				trafficLightPosition: isMac ? {x: 12, y: 5} : undefined,
+				trafficLightPosition: isMac ? CUSTOM_TITLEBAR_TRAFFIC_LIGHT_POSITION : undefined,
 				backgroundColor: getWindowBackgroundColor(allowPopoutTransparency),
 				transparent: allowPopoutTransparency,
 				hasShadow: getWindowHasShadow(allowPopoutTransparency),

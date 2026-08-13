@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
+
 interface VerifiedConnectionIconProps {
 	size?: number;
 	className?: string;
@@ -9,8 +11,8 @@ export function VerifiedConnectionIcon({size = 16, className}: VerifiedConnectio
 	return (
 		<svg
 			xmlns="http://www.w3.org/2000/svg"
-			width={size}
-			height={size}
+			width={remFromPx(size)}
+			height={remFromPx(size)}
 			viewBox="0 0 256 256"
 			fill="none"
 			className={className}

@@ -874,9 +874,6 @@
 				"msgid": "Jitter"
 			},
 			{
-				"msgid": "KLIPY GIFs"
-			},
-			{
 				"msgid": "Link"
 			},
 			{
@@ -1255,6 +1252,12 @@
 		],
 		"en-GB": [
 			{
+				"msgid": "<0>{targetUserTag}</0> is currently timed out. You can update their timeout duration or remove the timeout."
+			},
+			{
+				"msgid": "Add a Klipy API key to enable GIF search at runtime."
+			},
+			{
 				"msgid": "Advertise a capped decode codec to force publisher migration"
 			},
 			{
@@ -1267,16 +1270,31 @@
 				"msgid": "Approval required"
 			},
 			{
+				"msgid": "Are you sure you want to kick <0>{targetUserTag}</0> from the community? They will be able to rejoin with a new invite."
+			},
+			{
+				"msgid": "Banned {targetUserTag} from the community"
+			},
+			{
 				"msgid": "Bluesky connections"
 			},
 			{
+				"msgid": "Bold"
+			},
+			{
 				"msgid": "Branding asset preview"
+			},
+			{
+				"msgid": "Choices"
 			},
 			{
 				"msgid": "Choose how new accounts are created on this instance."
 			},
 			{
 				"msgid": "Choose the premium model"
+			},
+			{
+				"msgid": "Clear command"
 			},
 			{
 				"msgid": "Closed"
@@ -1286,6 +1304,9 @@
 			},
 			{
 				"msgid": "Combobox"
+			},
+			{
+				"msgid": "Commands"
 			},
 			{
 				"msgid": "Community model"
@@ -1310,6 +1331,12 @@
 			},
 			{
 				"msgid": "Create the administrator account"
+			},
+			{
+				"msgid": "Custom emoji {emojiName} from a community"
+			},
+			{
+				"msgid": "Custom emoji {emojiName} from {communityName}"
 			},
 			{
 				"msgid": "Decide how premium limits apply to people on this instance."
@@ -1345,6 +1372,9 @@
 				"msgid": "Entrance sounds unavailable"
 			},
 			{
+				"msgid": "Excluded search filter: {filter}"
+			},
+			{
 				"msgid": "Favicon"
 			},
 			{
@@ -1363,6 +1393,9 @@
 				"msgid": "Focus window"
 			},
 			{
+				"msgid": "Full user tag: {tag}"
+			},
+			{
 				"msgid": "Fully quit and restart {productName} so macOS applies this permission."
 			},
 			{
@@ -1375,6 +1408,9 @@
 				"msgid": "Granted"
 			},
 			{
+				"msgid": "How much of the member's recent message history to delete."
+			},
+			{
 				"msgid": "Image assets"
 			},
 			{
@@ -1384,16 +1420,25 @@
 				"msgid": "Incorrect PIN. {retriesRemaining, plural, one {# attempt} other {# attempts}} left before the security key locks."
 			},
 			{
-				"msgid": "KLIPY GIFs"
+				"msgid": "Inline code"
+			},
+			{
+				"msgid": "Italic"
 			},
 			{
 				"msgid": "Keep Neko still"
 			},
 			{
+				"msgid": "Kicked {targetUserTag} from the community"
+			},
+			{
+				"msgid": "Klipy GIFs"
+			},
+			{
 				"msgid": "Let people link their Bluesky account to their profile."
 			},
 			{
-				"msgid": "Let people search and send GIFs powered by KLIPY."
+				"msgid": "Let people search and send GIFs powered by Klipy."
 			},
 			{
 				"msgid": "Loading instance configuration"
@@ -1426,6 +1471,9 @@
 				"msgid": "Opens the Members page. Press Space or Enter to open."
 			},
 			{
+				"msgid": "Optional arguments"
+			},
+			{
 				"msgid": "Optional services"
 			},
 			{
@@ -1444,6 +1492,27 @@
 				"msgid": "Premium model"
 			},
 			{
+				"msgid": "Prevent <0>{targetUserTag}</0> from sending messages, reacting, and connecting to voice channels for the specified duration."
+			},
+			{
+				"msgid": "Prevent <0>{targetUserTag}</0> from sending messages, reacting, and joining voice channels for the specified duration."
+			},
+			{
+				"msgid": "Previous 2 days"
+			},
+			{
+				"msgid": "Previous 3 days"
+			},
+			{
+				"msgid": "Previous 4 days"
+			},
+			{
+				"msgid": "Previous 5 days"
+			},
+			{
+				"msgid": "Previous 6 days"
+			},
+			{
 				"msgid": "Product name"
 			},
 			{
@@ -1453,7 +1522,43 @@
 				"msgid": "Public registration is closed."
 			},
 			{
+				"msgid": "Reason (optional)."
+			},
+			{
 				"msgid": "Registration"
+			},
+			{
+				"msgid": "Removed timeout from {targetUserTag}"
+			},
+			{
+				"msgid": "Removing the timeout will allow <0>{targetUserTag}</0> to send messages, react, and join voice channels again."
+			},
+			{
+				"msgid": "Resize expression picker from bottom left"
+			},
+			{
+				"msgid": "Resize expression picker from bottom right"
+			},
+			{
+				"msgid": "Resize expression picker from top left"
+			},
+			{
+				"msgid": "Resize expression picker from top right"
+			},
+			{
+				"msgid": "Resize inbox from bottom left"
+			},
+			{
+				"msgid": "Resize inbox from bottom right"
+			},
+			{
+				"msgid": "Resize inbox from top left"
+			},
+			{
+				"msgid": "Resize inbox from top right"
+			},
+			{
+				"msgid": "Resize sidebar"
 			},
 			{
 				"msgid": "Review"
@@ -1469,6 +1574,9 @@
 			},
 			{
 				"msgid": "Run the instance as one community instead of many. This can only be enabled now, during setup."
+			},
+			{
+				"msgid": "Search filter: {filter}"
 			},
 			{
 				"msgid": "Security key PIN"
@@ -1540,6 +1648,12 @@
 				"msgid": "That image could not be used. Try a different file."
 			},
 			{
+				"msgid": "The member to target."
+			},
+			{
+				"msgid": "The message to send."
+			},
+			{
 				"msgid": "These options change how people use the instance. Some can only be chosen during setup."
 			},
 			{
@@ -1549,7 +1663,13 @@
 				"msgid": "This instance has no accounts yet. The first account you create automatically becomes the administrator. Create it now, then return here to finish setup."
 			},
 			{
+				"msgid": "This option is required. Please provide a value."
+			},
+			{
 				"msgid": "This reset link has expired. Reset links last 1 hour. Please request a new one."
+			},
+			{
+				"msgid": "Timed out {targetUserTag}"
 			},
 			{
 				"msgid": "Unavailable"
@@ -1573,6 +1693,9 @@
 				"msgid": "Welcome to {productName}"
 			},
 			{
+				"msgid": "What to search for."
+			},
+			{
 				"msgid": "Who can join"
 			},
 			{
@@ -1580,6 +1703,9 @@
 			},
 			{
 				"msgid": "YouTube enrichment"
+			},
+			{
+				"msgid": "Your new nickname, or leave blank to reset it."
 			},
 			{
 				"msgid": "farewell"
@@ -1597,10 +1723,16 @@
 				"msgid": "members"
 			},
 			{
+				"msgid": "not"
+			},
+			{
 				"msgid": "online"
 			},
 			{
 				"msgid": "{count, plural, =0 {∞ No limit} one {# participant} other {# participants}}"
+			},
+			{
+				"msgid": "{count, plural, one {# minute} other {# minutes}}"
 			},
 			{
 				"msgid": "{productName} application logo"
@@ -1610,6 +1742,9 @@
 			},
 			{
 				"msgid": "{productName} wordmark"
+			},
+			{
+				"msgid": "{remaining, plural, one {+# more} other {+# more}}"
 			},
 			{
 				"msgctxt": "security-settings-section",
@@ -2606,6 +2741,9 @@
 				"msgid": "{channelHeading}, {mentionCount} mentions"
 			},
 			{
+				"msgid": "{count, plural, one {# minute} other {# minutes}}"
+			},
+			{
 				"msgid": "{countLabel} minutes"
 			},
 			{
@@ -2709,9 +2847,6 @@
 			},
 			{
 				"msgid": "Fluxer"
-			},
-			{
-				"msgid": "KLIPY GIFs"
 			},
 			{
 				"msgid": "NCMEC {ncmecReportId}"
@@ -4186,6 +4321,9 @@
 			},
 			{
 				"msgid": "Inline"
+			},
+			{
+				"msgid": "Inline code"
 			},
 			{
 				"msgid": "Interface"
@@ -5994,9 +6132,6 @@
 				"msgid": "Fluxer"
 			},
 			{
-				"msgid": "KLIPY GIFs"
-			},
-			{
 				"msgid": "NCMEC {ncmecReportId}"
 			},
 			{
@@ -6342,9 +6477,6 @@
 			},
 			{
 				"msgid": "Ireland"
-			},
-			{
-				"msgid": "KLIPY GIFs"
 			},
 			{
 				"msgid": "Latvia"

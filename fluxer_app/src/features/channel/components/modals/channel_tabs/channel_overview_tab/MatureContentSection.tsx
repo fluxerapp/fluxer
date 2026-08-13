@@ -4,10 +4,7 @@ import type {FormInputs} from '@app/features/channel/components/modals/channel_t
 import type {Channel} from '@app/features/channel/models/Channel';
 import type {Guild} from '@app/features/guild/models/Guild';
 import {MATURE_CONTENT_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
-import {
-	getEffectiveChannelContentWarning,
-	resolveEffectiveChannelMatureContent,
-} from '@app/features/messaging/utils/ContentWarningUtils';
+import {getEffectiveChannelContentWarning} from '@app/features/messaging/utils/ContentWarningUtils';
 import type {ComboboxOption} from '@app/features/ui/components/form/FormCombobox';
 import {Textarea} from '@app/features/ui/components/form/FormInput';
 import {Switch} from '@app/features/ui/components/form/FormSwitch';
@@ -18,22 +15,6 @@ import {useLingui} from '@lingui/react/macro';
 import type React from 'react';
 import {Controller, type UseFormReturn} from 'react-hook-form';
 
-const CATEGORY_DESCRIPTOR = msg({
-	message: 'category',
-	comment: 'Lowercase source label for an inherited mature-content setting.',
-});
-const COMMUNITY_DESCRIPTOR = msg({
-	message: 'community',
-	comment: 'Lowercase source label for an inherited mature-content setting.',
-});
-const INHERITS_FROM_ON_DESCRIPTOR = msg({
-	message: 'Inherits from {inheritedSourceLabel}: on',
-	comment: 'Mature-content setting summary showing that the inherited setting is enabled.',
-});
-const INHERITS_FROM_OFF_DESCRIPTOR = msg({
-	message: 'Inherits from {inheritedSourceLabel}: off',
-	comment: 'Mature-content setting summary showing that the inherited setting is disabled.',
-});
 const INHERIT_DESCRIPTOR = msg({
 	message: 'Inherit',
 	comment: 'Mature-content option that uses the parent or community setting.',
@@ -81,21 +62,7 @@ export const MatureContentSection: React.FC<MatureContentSectionProps> = ({form,
 		contentWarningLevel: ContentWarningLevel.INHERIT,
 		contentWarningText: null,
 	} as typeof channel;
-	const inheritedMatureContent = resolveEffectiveChannelMatureContent(stubForInherit, guild);
 	const inheritedWarning = getEffectiveChannelContentWarning(stubForInherit, guild);
-	const inheritedSourceLabel =
-		inheritedMatureContent.source === 'parent'
-			? i18n._(CATEGORY_DESCRIPTOR)
-			: inheritedMatureContent.source === 'guild'
-				? i18n._(COMMUNITY_DESCRIPTOR)
-				: i18n._(COMMUNITY_DESCRIPTOR);
-	const inheritedDescription = inheritedMatureContent.value
-		? i18n._(INHERITS_FROM_ON_DESCRIPTOR, {
-				inheritedSourceLabel,
-			})
-		: i18n._(INHERITS_FROM_OFF_DESCRIPTOR, {
-				inheritedSourceLabel,
-			});
 	const matureContentOptions: ReadonlyArray<ComboboxOption<string>> = [
 		{
 			value: 'inherit',
@@ -121,7 +88,6 @@ export const MatureContentSection: React.FC<MatureContentSectionProps> = ({form,
 				render={({field}) => (
 					<CompactComboboxRow<string>
 						label={i18n._(MATURE_CONTENT_DESCRIPTOR)}
-						description={inheritedDescription}
 						value={overrideToKey(field.value)}
 						options={matureContentOptions}
 						onChange={(v) => field.onChange(keyToOverride(v))}

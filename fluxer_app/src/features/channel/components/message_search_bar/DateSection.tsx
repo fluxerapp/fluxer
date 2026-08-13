@@ -2,6 +2,7 @@
 
 import {AutocompleteOption} from '@app/features/channel/components/message_search_bar/AutocompleteOption';
 import styles from '@app/features/channel/components/message_search_bar/MessageSearchBar.module.css';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {MagnifyingGlassIcon} from '@phosphor-icons/react';
@@ -44,7 +45,7 @@ export const DateSection: React.FC<DateSectionProps> = observer(
 					>
 						<MagnifyingGlassIcon
 							weight="regular"
-							size={14}
+							size={remFromPx(14)}
 							data-flx="channel.message-search-bar.date-section.magnifying-glass-icon"
 						/>
 						{i18n._(DATE_OPTIONS_DESCRIPTOR)}

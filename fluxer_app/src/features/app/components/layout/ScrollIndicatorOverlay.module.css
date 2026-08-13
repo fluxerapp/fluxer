@@ -21,7 +21,7 @@
 }
 
 .indicatorSlotBottom {
-	bottom: 0.5rem;
+	bottom: var(--floating-unread-indicator-bottom-inset, 0.5rem);
 }
 
 .indicator {

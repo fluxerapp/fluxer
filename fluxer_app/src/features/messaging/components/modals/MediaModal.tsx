@@ -33,6 +33,7 @@ import {
 	VIDEO_PREVIEW_DESCRIPTOR,
 	type ZoomState,
 } from '@app/features/messaging/components/modals/media_modal/shared';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import * as MediaViewerCommands from '@app/features/ui/commands/MediaViewerCommands';
 import {Scroller} from '@app/features/ui/components/Scroller';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
@@ -41,7 +42,6 @@ import MobileLayout from '@app/features/ui/state/MobileLayout';
 import OverlayStack from '@app/features/ui/state/OverlayStack';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import {MobileVideoViewer} from '@app/features/voice/components/modals/MobileVideoViewer';
-import PoweredByKlipySvg from '@app/media/images/powered-by-klipy.svg?react';
 import {useLingui} from '@lingui/react/macro';
 import {CaretLeftIcon, CaretRightIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
@@ -72,7 +72,6 @@ export const MediaModal: FC<MediaModalProps> = observer(
 		onNext,
 		thumbnails,
 		onSelectThumbnail,
-		providerName,
 		videoSrc,
 		initialTime,
 		mediaType,
@@ -92,7 +91,6 @@ export const MediaModal: FC<MediaModalProps> = observer(
 		const bottomActionBarRef = useRef<HTMLDivElement>(null);
 		const bottomInfoBarRef = useRef<HTMLDivElement>(null);
 		const thumbnailCarouselRef = useRef<HTMLDivElement>(null);
-		const klipyAttributionRef = useRef<HTMLDivElement>(null);
 		const latestIndexRef = useRef(currentIndex ?? 0);
 		const transformFrameRef = useRef<number | null>(null);
 		const pendingPanZoomInfoRef = useRef(panZoomInfo);
@@ -109,7 +107,6 @@ export const MediaModal: FC<MediaModalProps> = observer(
 				Math.max(
 					bottomActionBarRef.current?.getBoundingClientRect().height ?? 0,
 					bottomInfoBarRef.current?.getBoundingClientRect().height ?? 0,
-					klipyAttributionRef.current?.getBoundingClientRect().height ?? 0,
 				),
 			);
 			setTopOverlayHeight((previousHeight) =>
@@ -298,17 +295,8 @@ export const MediaModal: FC<MediaModalProps> = observer(
 			if (thumbnailCarouselRef.current) observer.observe(thumbnailCarouselRef.current);
 			if (bottomActionBarRef.current) observer.observe(bottomActionBarRef.current);
 			if (bottomInfoBarRef.current) observer.observe(bottomInfoBarRef.current);
-			if (klipyAttributionRef.current) observer.observe(klipyAttributionRef.current);
 			return () => observer.disconnect();
-		}, [
-			measureOverlayHeights,
-			hasThumbnailCarousel,
-			providerName,
-			currentIndex,
-			totalAttachments,
-			isMobile,
-			isMobileVideo,
-		]);
+		}, [measureOverlayHeights, hasThumbnailCarousel, currentIndex, totalAttachments, isMobile, isMobileVideo]);
 		const shouldHideHud = enablePanZoom && !panZoomInfo.isDefault && !isHudHovered;
 		useEffect(() => {
 			thumbnailButtonRefs.current = thumbnailButtonRefs.current.slice(0, thumbnailCount);
@@ -463,15 +451,6 @@ export const MediaModal: FC<MediaModalProps> = observer(
 							<div className={styles.mediaArea} data-flx="messaging.media-modal.media-area">
 								{mediaContent}
 							</div>
-							{providerName === 'KLIPY' && (
-								<div
-									ref={klipyAttributionRef}
-									className={styles.klipyAttribution}
-									data-flx="messaging.media-modal.klipy-attribution"
-								>
-									<PoweredByKlipySvg data-flx="messaging.media-modal.powered-by-klipy-svg" />
-								</div>
-							)}
 							{currentIndex !== undefined && totalAttachments !== undefined && totalAttachments > 1 && !isMobile && (
 								<>
 									<div
@@ -494,7 +473,11 @@ export const MediaModal: FC<MediaModalProps> = observer(
 														aria-label={i18n._(PREVIOUS_ATTACHMENT_2_DESCRIPTOR)}
 														data-flx="messaging.media-modal.floating-nav-button"
 													>
-														<CaretLeftIcon size={24} weight="bold" data-flx="messaging.media-modal.caret-left-icon" />
+														<CaretLeftIcon
+															size={remFromPx(24)}
+															weight="bold"
+															data-flx="messaging.media-modal.caret-left-icon"
+														/>
 													</button>
 												</FocusRing>
 											</span>
@@ -520,7 +503,11 @@ export const MediaModal: FC<MediaModalProps> = observer(
 														aria-label={i18n._(NEXT_ATTACHMENT_2_DESCRIPTOR)}
 														data-flx="messaging.media-modal.floating-nav-button--2"
 													>
-														<CaretRightIcon size={24} weight="bold" data-flx="messaging.media-modal.caret-right-icon" />
+														<CaretRightIcon
+															size={remFromPx(24)}
+															weight="bold"
+															data-flx="messaging.media-modal.caret-right-icon"
+														/>
 													</button>
 												</FocusRing>
 											</span>

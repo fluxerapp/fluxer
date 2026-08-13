@@ -62,13 +62,81 @@
 	cursor: not-allowed;
 }
 
+.statusRail {
+	--composer-status-pill-height: 1.5rem;
+	--typing-pill-height: var(--composer-status-pill-height);
+	--slowmode-indicator-height: var(--composer-status-pill-height);
+	position: absolute;
+	inset-inline: var(--composer-status-rail-inset, 0);
+	top: 0;
+	transform: translateY(-50%);
+	z-index: 3;
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(0, auto);
+	align-items: center;
+	gap: 0.5rem;
+	min-width: 0;
+	max-width: 100%;
+	min-height: calc(var(--composer-status-pill-height) + 0.5rem);
+	padding: 0.25rem 0;
+	box-sizing: border-box;
+	pointer-events: none;
+}
+
+.statusRailInFlow {
+	position: static;
+	inset: auto;
+	transform: none;
+	z-index: auto;
+	padding-top: 0.5rem;
+}
+
+.statusRailLeft {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	min-width: 0;
+	max-width: 100%;
+	overflow: hidden;
+	pointer-events: none;
+}
+
+.statusTypingSlot {
+	display: flex;
+	min-width: 0;
+	max-width: min(24rem, 100%);
+	flex: 0 1 auto;
+	pointer-events: auto;
+}
+
+.statusRailLeftWithLeading .statusTypingSlot {
+	margin-left: auto;
+	max-width: min(22rem, 45%);
+}
+
+.statusTypingSlot > * {
+	min-width: 0;
+	max-width: 100%;
+}
+
+.statusSlowmodeSlot {
+	min-width: 0;
+	max-width: min(14rem, 35vw);
+	justify-self: end;
+	pointer-events: auto;
+}
+
 .topBarContainer {
 	position: relative;
 	z-index: 1;
-	flex-shrink: 0;
-	width: 100%;
 	max-width: 100%;
+	min-width: 0;
 	box-sizing: border-box;
+	display: flex;
+	justify-content: flex-start;
+	pointer-events: auto;
+	width: fit-content;
+	flex: 0 1 auto;
 }
 
 .barInner {
@@ -82,7 +150,39 @@
 	box-sizing: border-box;
 }
 
+.topBarContainer > * {
+	pointer-events: auto;
+}
+
+.topBarContainer > .box {
+	width: fit-content;
+	max-width: min(30rem, 100%);
+	border-radius: var(--radius-full);
+	background-color: color-mix(in srgb, var(--background-textarea) 84%, var(--background-tertiary) 16%);
+	border: 0.0625rem solid color-mix(in srgb, var(--background-modifier-accent) 82%, transparent);
+	overflow: hidden;
+}
+
+.topBarContainer .barInner {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	min-height: var(--composer-status-pill-height);
+	padding: 0 0.25rem 0 0.625rem;
+	width: 100%;
+	min-width: 0;
+}
+
+.topBarContainer .barInner > :first-child {
+	min-width: 0;
+	flex: 1 1 auto;
+}
+
 .separator {
 	height: 0.0625rem;
 	background-color: transparent;
+}
+
+.topBarContainer .separator {
+	display: none;
 }

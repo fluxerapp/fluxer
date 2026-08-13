@@ -5,6 +5,7 @@ import {getAccountAvatarUrl, getAccountDisplayName} from '@app/features/auth/com
 import styles from '@app/features/auth/components/accounts/AccountRow.module.css';
 import type {Account} from '@app/features/platform/state/AuthSession';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {MockAvatar} from '@app/features/ui/components/MockAvatar';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
@@ -131,7 +132,7 @@ export const AccountRow = observer(
 											className={styles.globeButtonCompact}
 											data-flx="auth.accounts.account-row.globe-button-compact"
 										>
-											<GlobeIcon size={12} weight="bold" data-flx="auth.accounts.account-row.globe-icon" />
+											<GlobeIcon size={remFromPx(12)} weight="bold" data-flx="auth.accounts.account-row.globe-icon" />
 										</span>
 									</Tooltip>
 								) : null}
@@ -163,7 +164,11 @@ export const AccountRow = observer(
 												className={styles.globeButtonCompact}
 												data-flx="auth.accounts.account-row.globe-button-compact--2"
 											>
-												<GlobeIcon size={12} weight="bold" data-flx="auth.accounts.account-row.globe-icon--2" />
+												<GlobeIcon
+													size={remFromPx(12)}
+													weight="bold"
+													data-flx="auth.accounts.account-row.globe-icon--2"
+												/>
 											</span>
 										</Tooltip>
 									) : null}
@@ -196,12 +201,16 @@ export const AccountRow = observer(
 					</div>
 					{isCurrent && variant !== 'manage' ? (
 						<div className={styles.checkIndicator} data-flx="auth.accounts.account-row.check-indicator">
-							<CheckIcon size={10} weight="bold" data-flx="auth.accounts.account-row.check-icon" />
+							<CheckIcon size={remFromPx(10)} weight="bold" data-flx="auth.accounts.account-row.check-icon" />
 						</div>
 					) : null}
 					{showCaretIndicator ? (
 						<div className={styles.caretIndicator} data-flx="auth.accounts.account-row.caret-indicator">
-							<CaretRightIcon size={18} weight="bold" data-flx="auth.accounts.account-row.caret-right-icon" />
+							<CaretRightIcon
+								size={remFromPx(18)}
+								weight="bold"
+								data-flx="auth.accounts.account-row.caret-right-icon"
+							/>
 						</div>
 					) : null}
 				</MainButtonComponent>
@@ -216,7 +225,7 @@ export const AccountRow = observer(
 							data-flx="auth.accounts.account-row.menu-button.menu-click"
 						>
 							<DotsThreeIcon
-								size={20}
+								size={remFromPx(20)}
 								weight="bold"
 								className={styles.menuIcon}
 								data-flx="auth.accounts.account-row.menu-icon"

@@ -1,11 +1,5 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
-.durationInputs {
-	display: flex;
-	gap: 0.75rem;
-	align-items: flex-start;
-}
-
 .hint {
 	margin: 0;
 }

@@ -2,6 +2,7 @@
 
 import GuildMembers from '@app/features/member/state/GuildMembers';
 import Permission from '@app/features/permissions/state/Permission';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import styles from '@app/features/theme/styles/Message.module.css';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import * as DateUtils from '@app/features/user/utils/DateFormatting';
@@ -46,7 +47,7 @@ export const MessageTimeoutIndicator = observer(({guildId, userId}: MessageTimeo
 				aria-label={i18n._(TIMED_OUT_DESCRIPTOR)}
 				data-flx="channel.message-timeout-indicator.message-timeout-indicator"
 			>
-				<ClockIcon size={16} weight="bold" data-flx="channel.message-timeout-indicator.clock-icon" />
+				<ClockIcon size={remFromPx(16)} weight="bold" data-flx="channel.message-timeout-indicator.clock-icon" />
 			</span>
 		</Tooltip>
 	);

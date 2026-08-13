@@ -3,6 +3,7 @@
 import {EVERYONE_MENTION, HERE_MENTION} from '@app/features/app/config/I18nDisplayConstants';
 import styles from '@app/features/channel/components/MentionEveryonePopout.module.css';
 import {isIMEComposing} from '@app/features/messaging/utils/IMECompositionUtils';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {getCurrentLocale} from '@app/features/user/utils/LocaleUtils';
 import type {I18n} from '@lingui/core';
 import {msg, ph} from '@lingui/core/macro';
@@ -151,7 +152,7 @@ export const MentionEveryonePopout = ({
 		>
 			<div className={styles.header} data-flx="channel.mention-everyone-popout.header">
 				<WarningIcon
-					size={20}
+					size={remFromPx(20)}
 					weight="fill"
 					className={styles.warningIcon}
 					data-flx="channel.mention-everyone-popout.warning-icon"

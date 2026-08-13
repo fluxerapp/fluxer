@@ -54,6 +54,7 @@ import {
 import {openExternalUrlWithWarning} from '@app/features/messaging/utils/ExternalLinkUtils';
 import {openFilePicker} from '@app/features/messaging/utils/FilePickerUtils';
 import * as NavigationCommands from '@app/features/navigation/commands/NavigationCommands';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
@@ -423,7 +424,7 @@ export const TemplateImportForm = observer(() => {
 					data-flx="guild.add-guild-modal.template-import-form.verification-notice"
 				>
 					<EnvelopeSimpleIcon
-						size={32}
+						size={remFromPx(32)}
 						weight="fill"
 						data-flx="guild.add-guild-modal.template-import-form.envelope-simple-icon"
 					/>
@@ -448,7 +449,7 @@ export const TemplateImportForm = observer(() => {
 					data-flx="guild.add-guild-modal.template-import-form.verification-notice--2"
 				>
 					<EnvelopeSimpleIcon
-						size={32}
+						size={remFromPx(32)}
 						weight="fill"
 						data-flx="guild.add-guild-modal.template-import-form.envelope-simple-icon--2"
 					/>
@@ -518,7 +519,10 @@ export const TemplateImportForm = observer(() => {
 					className={styles.openApiUrlButton}
 					data-flx="guild.add-guild-modal.template-import-form.open-api-url-button"
 				>
-					<ArrowSquareOutIcon size={16} data-flx="guild.add-guild-modal.template-import-form.arrow-square-out-icon" />
+					<ArrowSquareOutIcon
+						size={remFromPx(16)}
+						data-flx="guild.add-guild-modal.template-import-form.arrow-square-out-icon"
+					/>
 					<Trans>Open template JSON</Trans>
 				</span>
 			</Button>

@@ -3,6 +3,7 @@
 import * as Modal from '@app/features/app/components/dialogs/Modal';
 import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import styles from '@app/features/messaging/components/modals/ExternalLinkWarningModal.module.css';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import * as TrustedDomainCommands from '@app/features/trusted_domain/commands/TrustedDomainCommands';
 import {Button} from '@app/features/ui/button/Button';
 import {Checkbox} from '@app/features/ui/checkbox/Checkbox';
@@ -60,7 +61,7 @@ export const ExternalLinkWarningModal = observer(({url}: {url: string}) => {
 					<div className={styles.iconContainer} data-flx="messaging.external-link-warning-modal.icon-container">
 						<div className={styles.iconCircle} data-flx="messaging.external-link-warning-modal.icon-circle">
 							<WarningIcon
-								size={24}
+								size={remFromPx(24)}
 								className={styles.warningIcon}
 								weight="fill"
 								data-flx="messaging.external-link-warning-modal.warning-icon"
@@ -115,7 +116,11 @@ export const ExternalLinkWarningModal = observer(({url}: {url: string}) => {
 					variant="primary"
 					className={styles.button}
 					rightIcon={
-						<ArrowRightIcon size={16} weight="bold" data-flx="messaging.external-link-warning-modal.arrow-right-icon" />
+						<ArrowRightIcon
+							size={remFromPx(16)}
+							weight="bold"
+							data-flx="messaging.external-link-warning-modal.arrow-right-icon"
+						/>
 					}
 					data-flx="messaging.external-link-warning-modal.button.continue"
 				>

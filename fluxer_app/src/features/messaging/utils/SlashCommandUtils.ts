@@ -13,7 +13,7 @@ const STICKER_SEARCH_REGEX = /(^\s*)\/sticker\s*(.*)$/;
 const COMMAND_ARG_MENTION_REGEX = /(^\s*)\/(kick|ban|msg|saved)\s+@(\S*)$/;
 const COMMAND_ARG_REGEX = /(^\s*)\/(kick|ban|msg)\s+(\S*)$/;
 
-interface AutocompleteTrigger {
+export interface AutocompleteTrigger {
 	type:
 		| 'mention'
 		| 'channel'

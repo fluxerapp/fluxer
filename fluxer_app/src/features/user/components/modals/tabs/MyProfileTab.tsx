@@ -12,13 +12,11 @@ import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
 import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
 import {ExpressionPickerSheet} from '@app/features/expressions/components/modals/ExpressionPickerSheet';
 import Guilds from '@app/features/guild/state/Guilds';
+import type {LexicalRichInputHandle} from '@app/features/lexical/composer/LexicalRichInput';
 import * as GuildMemberCommands from '@app/features/member/commands/GuildMemberCommands';
 import GuildMembers from '@app/features/member/state/GuildMembers';
-import {useTextareaAutocomplete} from '@app/features/messaging/hooks/useTextareaAutocomplete';
-import {useTextareaEmojiPicker} from '@app/features/messaging/hooks/useTextareaEmojiPicker';
-import {useTextareaPaste} from '@app/features/messaging/hooks/useTextareaPaste';
-import {useTextareaSegments} from '@app/features/messaging/hooks/useTextareaSegments';
-import {applyMarkdownSegments, convertMarkdownToSegments} from '@app/features/messaging/utils/MarkdownToSegmentUtils';
+import {convertMarkdownToSegments} from '@app/features/messaging/utils/MarkdownToSegmentUtils';
+import type {MentionSegment} from '@app/features/messaging/utils/TextareaSegmentManager';
 import Permission from '@app/features/permissions/state/Permission';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
@@ -57,7 +55,6 @@ import {ProfilePreview} from '@app/features/user/components/profile/ProfilePrevi
 import type {Profile} from '@app/features/user/models/Profile';
 import Users from '@app/features/user/state/Users';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
-import {showUserErrorModal} from '@app/features/user/utils/UserErrorModalUtils';
 import {setMeaningfulFormValue} from '@app/lib/forms/MeaningfulFormValue';
 import {type RemoteFormResetReason, useRemoteFormReset} from '@app/lib/forms/RemoteFormReset';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
@@ -72,14 +69,6 @@ import {observer} from 'mobx-react-lite';
 import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {useForm} from 'react-hook-form';
 
-const YOUR_PROFILE_BIO_IS_TOO_LONG_DESCRIPTOR = msg({
-	message: 'Your profile bio is too long.',
-	comment: 'Description text in the my profile tab.',
-});
-const SHORTEN_PROFILE_BIO_AND_TRY_AGAIN_DESCRIPTOR = msg({
-	message: 'Shorten your bio and try again.',
-	comment: 'Body of the error modal shown when the profile bio exceeds the maximum length.',
-});
 const COMMUNITY_PROFILE_UPDATED_DESCRIPTOR = msg({
 	message: 'Community profile updated',
 	comment: 'Short label in the my profile tab. Keep it concise.',
@@ -214,7 +203,6 @@ interface ProfileRemoteValues {
 }
 
 const MY_PROFILE_TAB_ID = 'my_profile';
-const AUTOCOMPLETE_Z_INDEX = 10001;
 const MyProfileTabComponent = observer(function MyProfileTabComponent({
 	initialGuildId,
 }: {
@@ -245,66 +233,20 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 	}, []);
 	const avatarAsset = selectProfileAssetCustomizationState(avatarAssetSnapshot);
 	const bannerAsset = selectProfileAssetCustomizationState(bannerAssetSnapshot);
-	const bioTextareaRef = useRef<HTMLTextAreaElement | null>(null);
+	const bioComposerRef = useRef<LexicalRichInputHandle | null>(null);
 	const isPerGuildProfile = selectedGuildId !== null;
 	const profileIdentityKey = user?.id ? `${user.id}:${selectedGuildId ?? 'global'}` : null;
 	const canChangeNickname = selectedGuildId
 		? Permission.can(Permissions.CHANGE_NICKNAME, {guildId: selectedGuildId})
 		: false;
-	const {segmentManagerRef, previousValueRef, displayToActual, prepareTextChange, handleTextChange} =
-		useTextareaSegments();
 	const [bioValue, setBioValue] = useState('');
+	const [bioActualValue, setBioActualValue] = useState('');
+	const [bioSegments, setBioSegments] = useState<Array<MentionSegment>>([]);
+	const [bioHydrationKey, setBioHydrationKey] = useState(0);
 	const [isBioInitialized, setIsBioInitialized] = useState(false);
 	const originalBioRef = useRef('');
 	const originalBioFormValueRef = useRef<string | null>(null);
-	const handleBioExceedsLimit = useCallback(() => {
-		showUserErrorModal(
-			i18n._(YOUR_PROFILE_BIO_IS_TOO_LONG_DESCRIPTOR),
-			i18n._(SHORTEN_PROFILE_BIO_AND_TRY_AGAIN_DESCRIPTOR),
-		);
-	}, [i18n]);
-	const {handleEmojiSelect} = useTextareaEmojiPicker({
-		setValue: setBioValue,
-		textareaRef: bioTextareaRef,
-		segmentManagerRef,
-		previousValueRef,
-		prepareTextChange,
-		maxActualLength: user?.maxBioLength,
-		onExceedMaxLength: handleBioExceedsLimit,
-	});
-	const {
-		autocompleteQuery,
-		autocompleteOptions,
-		autocompleteType,
-		selectedIndex,
-		isAutocompleteAttached,
-		setSelectedIndex,
-		onCursorMove,
-		handleSelect,
-	} = useTextareaAutocomplete({
-		channel: null,
-		value: bioValue,
-		setValue: setBioValue,
-		textareaRef: bioTextareaRef,
-		segmentManagerRef,
-		previousValueRef,
-		prepareTextChange,
-		allowedTriggers: ['emoji'],
-		maxActualLength: user?.maxBioLength,
-		onExceedMaxLength: handleBioExceedsLimit,
-	});
-	useTextareaPaste({
-		channel: null,
-		textareaRef: bioTextareaRef,
-		segmentManagerRef,
-		setValue: setBioValue,
-		previousValueRef,
-		prepareTextChange,
-		maxMessageLength: user?.maxBioLength,
-		onPasteExceedsLimit: () => handleBioExceedsLimit(),
-	});
 	const [bioExpressionPickerOpen, setBioExpressionPickerOpen] = useState(false);
-	const bioContainerRef = useRef<HTMLDivElement | null>(null);
 	const flashTrigger = unsavedChangesState.flashTriggers[MY_PROFILE_TAB_ID] || 0;
 	const [lastFlashTrigger, setLastFlashTrigger] = useState(0);
 	const [ariaAnnouncement, setAriaAnnouncement] = useState('');
@@ -327,15 +269,22 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 	});
 	const updateBioFromMarkdown = useCallback(
 		(markdownBio: string) => {
-			segmentManagerRef.current.clear();
-			const displayBio = markdownBio
-				? applyMarkdownSegments(markdownBio, selectedGuildId, segmentManagerRef.current)
-				: '';
+			const converted = convertMarkdownToSegments(markdownBio, selectedGuildId);
+			const segments = converted.segments.map((segment) => ({
+				type: segment.type,
+				id: segment.id,
+				displayText: segment.displayText,
+				actualText: segment.actualText,
+				start: segment.start,
+				end: segment.start + segment.displayText.length,
+			}));
 			originalBioRef.current = markdownBio;
-			setBioValue(displayBio);
-			previousValueRef.current = displayBio;
+			setBioValue(converted.displayText);
+			setBioActualValue(markdownBio);
+			setBioSegments(segments);
+			setBioHydrationKey((key) => key + 1);
 		},
-		[selectedGuildId, segmentManagerRef, previousValueRef],
+		[selectedGuildId],
 	);
 	useEffect(() => {
 		if (!user?.id) return;
@@ -470,9 +419,8 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 			),
 		[],
 	);
-	const actualBio = useMemo(() => displayToActual(bioValue), [bioValue, displayToActual]);
+	const actualBio = bioActualValue;
 	const maxBioActualLength = user?.maxBioLength ?? 0;
-	const bioDisplayMaxLength = Math.max(0, bioValue.length + (maxBioActualLength - actualBio.length));
 	useEffect(() => {
 		if (!isBioInitialized) {
 			return;
@@ -486,16 +434,22 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 			isMeaningfullyDirty: isDirty,
 		});
 	}, [actualBio, form, isBioInitialized]);
-	const handleBioEmojiSelect = useCallback(
-		(emoji: FlatEmoji, shiftKey?: boolean) => {
-			const didInsert = handleEmojiSelect(emoji, shiftKey);
-			if (didInsert && !shiftKey) {
-				setBioExpressionPickerOpen(false);
-			}
-			return didInsert;
-		},
-		[handleEmojiSelect],
-	);
+	const handleBioEmojiSelect = useCallback((emoji: FlatEmoji, shiftKey?: boolean) => {
+		const composer = bioComposerRef.current;
+		if (composer == null) {
+			return false;
+		}
+		const didInsert = composer.insertEmoji(emoji);
+		if (didInsert && shiftKey !== true) {
+			setBioExpressionPickerOpen(false);
+		}
+		return didInsert;
+	}, []);
+	const handleBioChange = useCallback((display: string, segments: Array<MentionSegment>, wire: string) => {
+		setBioValue(display);
+		setBioSegments(segments);
+		setBioActualValue(wire);
+	}, []);
 	const onSubmit = useCallback(
 		async (data: FormInputs) => {
 			if (isProfileCustomizationLocked) {
@@ -940,37 +894,28 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 										data-flx="user.my-profile-tab.my-profile-tab-component.opacity-half--2"
 									>
 										<BioEditor
-											value={bioValue}
-											onChange={(newValue: string, inputType?: string) => {
-												handleTextChange(newValue, previousValueRef.current, inputType);
-												setBioValue(newValue);
-											}}
+											initialValue={bioValue}
+											initialSegments={bioSegments}
+											hydrationKey={bioHydrationKey}
+											onChange={handleBioChange}
 											onEmojiSelect={handleBioEmojiSelect}
 											placeholder={
 												isPerGuildProfile && user?.bio
 													? convertMarkdownToSegments(user.bio, selectedGuildId).displayText
 													: i18n._(DOC_I_M_FROM_THE_FUTURE_I_CAME_DESCRIPTOR)
 											}
-											displayMaxLength={bioDisplayMaxLength}
 											actualLength={actualBio.length}
 											actualMaxLength={maxBioActualLength}
 											disabled={isProfileCustomizationLocked || isPerGuildProfileCustomizationDisabled}
 											isMobile={mobileLayout.enabled}
-											errorMessage={form.formState.errors.bio?.message}
-											textareaRef={bioTextareaRef}
+											errorMessage={
+												form.formState.errors.bio != null && form.formState.errors.bio.message != null
+													? form.formState.errors.bio.message
+													: null
+											}
+											composerRef={bioComposerRef}
 											emojiPickerOpen={bioExpressionPickerOpen}
 											onEmojiPickerOpenChange={setBioExpressionPickerOpen}
-											containerRef={bioContainerRef}
-											autocompleteQuery={autocompleteQuery}
-											autocompleteOptions={autocompleteOptions}
-											autocompleteType={autocompleteType}
-											selectedIndex={selectedIndex}
-											isAutocompleteAttached={isAutocompleteAttached}
-											setSelectedIndex={setSelectedIndex}
-											onCursorMove={onCursorMove}
-											handleSelect={handleSelect}
-											autocompleteZIndex={AUTOCOMPLETE_Z_INDEX}
-											data-flx="user.my-profile-tab.my-profile-tab-component.bio-editor.text-change"
 										/>
 									</div>
 								</div>

@@ -23,6 +23,11 @@ export interface ActiveScrollIndicator {
 	indicator: ScrollIndicatorEdgeCandidate;
 }
 
+export interface ActiveScrollIndicators {
+	top: ActiveScrollIndicator | null;
+	bottom: ActiveScrollIndicator | null;
+}
+
 export interface ScrollIndicatorMeasurement {
 	scrollTop: number;
 	viewportHeight: number;
@@ -31,13 +36,11 @@ export interface ScrollIndicatorMeasurement {
 }
 
 interface ScrollIndicatorMachineInput {
-	activeIndicator?: ActiveScrollIndicator | null;
-	lastDirection?: ScrollIndicatorDirection | null;
+	activeIndicators?: ActiveScrollIndicators;
 }
 
 interface ScrollIndicatorMachineContext {
-	activeIndicator: ActiveScrollIndicator | null;
-	lastDirection: ScrollIndicatorDirection | null;
+	activeIndicators: ActiveScrollIndicators;
 }
 
 export type ScrollIndicatorMachineEvent =
@@ -162,6 +165,32 @@ export function resolveActiveScrollIndicator(
 	);
 }
 
+export function resolveActiveScrollIndicators(measurement: ScrollIndicatorMeasurement): ActiveScrollIndicators {
+	const {topIndicator, bottomIndicator} = resolveScrollIndicatorEdgeCandidates(measurement);
+	return {
+		top: topIndicator == null ? null : {direction: 'top', indicator: topIndicator},
+		bottom: bottomIndicator == null ? null : {direction: 'bottom', indicator: bottomIndicator},
+	};
+}
+
+const EMPTY_ACTIVE_SCROLL_INDICATORS: ActiveScrollIndicators = Object.freeze({top: null, bottom: null});
+
+function areActiveScrollIndicatorsEqual(left: ActiveScrollIndicators, right: ActiveScrollIndicators): boolean {
+	return (
+		areActiveScrollIndicatorsEqualAtEdge(left.top, right.top) &&
+		areActiveScrollIndicatorsEqualAtEdge(left.bottom, right.bottom)
+	);
+}
+
+function areActiveScrollIndicatorsEqualAtEdge(
+	left: ActiveScrollIndicator | null,
+	right: ActiveScrollIndicator | null,
+): boolean {
+	if (left === right) return true;
+	if (left == null || right == null) return false;
+	return left.indicator.id === right.indicator.id && left.indicator.severity === right.indicator.severity;
+}
+
 export const scrollIndicatorStateMachine = setup({
 	types: {} as {
 		context: ScrollIndicatorMachineContext;
@@ -169,30 +198,21 @@ export const scrollIndicatorStateMachine = setup({
 		input: ScrollIndicatorMachineInput;
 	},
 	guards: {
-		hasActiveIndicator: ({context}) => context.activeIndicator != null,
+		hasActiveIndicator: ({context}) => context.activeIndicators.top != null || context.activeIndicators.bottom != null,
 	},
 	actions: {
 		applyMeasurement: assign(({context, event}) => {
 			if (event.type !== 'scrollIndicator.measured') return {};
-			const activeIndicator = resolveActiveScrollIndicator(
-				event.measurement,
-				context.activeIndicator?.direction ?? context.lastDirection,
-			);
-			return {
-				activeIndicator,
-				lastDirection: activeIndicator?.direction ?? context.lastDirection,
-			};
+			const activeIndicators = resolveActiveScrollIndicators(event.measurement);
+			if (areActiveScrollIndicatorsEqual(context.activeIndicators, activeIndicators)) return {};
+			return {activeIndicators};
 		}),
-		reset: assign(() => ({
-			activeIndicator: null,
-			lastDirection: null,
-		})),
+		reset: assign(() => ({activeIndicators: EMPTY_ACTIVE_SCROLL_INDICATORS})),
 	},
 }).createMachine({
 	id: 'scrollIndicator',
 	context: ({input}) => ({
-		activeIndicator: input.activeIndicator ?? null,
-		lastDirection: input.lastDirection ?? input.activeIndicator?.direction ?? null,
+		activeIndicators: input.activeIndicators == null ? EMPTY_ACTIVE_SCROLL_INDICATORS : input.activeIndicators,
 	}),
 	initial: 'routing',
 	states: {
@@ -233,5 +253,10 @@ export function getScrollIndicatorStateValue(snapshot: ScrollIndicatorMachineSna
 }
 
 export function selectActiveScrollIndicator(snapshot: ScrollIndicatorMachineSnapshot): ActiveScrollIndicator | null {
-	return snapshot.context.activeIndicator;
+	const topIndicator = snapshot.context.activeIndicators.top;
+	return topIndicator == null ? snapshot.context.activeIndicators.bottom : topIndicator;
+}
+
+export function selectActiveScrollIndicators(snapshot: ScrollIndicatorMachineSnapshot): ActiveScrollIndicators {
+	return snapshot.context.activeIndicators;
 }

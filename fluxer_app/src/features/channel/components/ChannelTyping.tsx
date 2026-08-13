@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import styles from '@app/features/theme/styles/Typing.module.css';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -34,8 +35,8 @@ export const Typing = observer(
 			<svg
 				x={x}
 				y={y}
-				width={width}
-				height={height}
+				width={remFromPx(width)}
+				height={remFromPx(height)}
 				viewBox={`0 0 ${viewBoxWidth} ${viewBoxHeight}`}
 				className={className}
 				style={mergedStyle}

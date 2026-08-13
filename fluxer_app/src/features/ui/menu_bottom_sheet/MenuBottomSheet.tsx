@@ -2,6 +2,7 @@
 
 import {usePressable} from '@app/features/app/hooks/usePressable';
 import {GO_BACK_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {BottomSheet} from '@app/features/ui/bottom_sheet/BottomSheet';
 import {Slider} from '@app/features/ui/components/Slider';
 import styles from '@app/features/ui/menu_bottom_sheet/MenuBottomSheet.module.css';
@@ -315,7 +316,7 @@ const MenuSubmenuItem: React.FC<{
 					{item.label}
 				</span>
 				<CaretRightIcon
-					size={20}
+					size={remFromPx(20)}
 					className={styles.submenuChevron}
 					data-flx="ui.menu-bottom-sheet.menu-bottom-sheet.menu-submenu-item.submenu-chevron"
 				/>
@@ -428,7 +429,7 @@ export const MenuBottomSheet: React.FC<MenuBottomSheetProps> = observer(
 					aria-label={i18n._(GO_BACK_DESCRIPTOR)}
 					data-flx="ui.menu-bottom-sheet.menu-bottom-sheet.back-button.close-submenu"
 				>
-					<CaretLeftIcon size={20} data-flx="ui.menu-bottom-sheet.menu-bottom-sheet.caret-left-icon" />
+					<CaretLeftIcon size={remFromPx(20)} data-flx="ui.menu-bottom-sheet.menu-bottom-sheet.caret-left-icon" />
 				</button>
 			);
 			return (

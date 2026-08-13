@@ -7,6 +7,7 @@ import {
 	createRangesForSection,
 	setHighlightRanges,
 } from '@app/features/messaging/utils/CSSHighlightSearch';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {AccessibilityInlineContent} from '@app/features/user/components/modals/tabs/accessibility_tab/AccessibilityTabInline';
 import {AccountSecurityInlineTab} from '@app/features/user/components/modals/tabs/account_security_tab/AccountSecurityTabInline';
 import {AppearanceInlineContent} from '@app/features/user/components/modals/tabs/appearance_tab/AppearanceTabInline';
@@ -149,7 +150,7 @@ const SettingsSection: React.FC<SettingsSectionProps> = observer(
 							/>
 						</span>
 						<CaretRightIcon
-							size={16}
+							size={remFromPx(16)}
 							weight="bold"
 							className={clsx(styles.expandIcon, isExpanded && styles.expandIconExpanded)}
 							data-flx="app.all-settings-renderer.settings-section.expand-icon"

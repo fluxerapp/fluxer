@@ -5,6 +5,7 @@ import type {Guild} from '@app/features/guild/models/Guild';
 import Guilds from '@app/features/guild/state/Guilds';
 import type {GuildMember} from '@app/features/member/models/GuildMember';
 import GuildMembers from '@app/features/member/state/GuildMembers';
+import type {SearchSegment} from '@app/features/search/utils/SearchSegmentManager';
 import type {MessageSearchScope, SearchFilterOption} from '@app/features/search/utils/SearchUtils';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {IconProps} from '@phosphor-icons/react';
@@ -21,6 +22,143 @@ export const SCOPE_ICON_COMPONENTS: Record<MessageSearchScope, React.ComponentTy
 
 export function filterRequiresValue(filter: SearchFilterOption): boolean {
 	return Boolean(filter.requiresValue) || (filter.values?.length ?? 0) > 0;
+}
+
+export interface MessageSearchCurrentWordRequest {
+	value: string;
+	cursorPosition: number;
+}
+
+const SEARCH_TOKEN_WHITESPACE = /\s/;
+
+export function resolveMessageSearchCurrentWord({value, cursorPosition}: MessageSearchCurrentWordRequest): string {
+	const boundedCursorPosition = Math.max(0, Math.min(cursorPosition, value.length));
+	let wordStart = boundedCursorPosition;
+	while (wordStart > 0) {
+		const character = value.charAt(wordStart - 1);
+		if (SEARCH_TOKEN_WHITESPACE.test(character)) {
+			break;
+		}
+		wordStart -= 1;
+	}
+	return value.slice(wordStart, boundedCursorPosition);
+}
+
+export interface TokenInsertionResult {
+	newText: string;
+	newCursorPos: number;
+	insertedDisplay: string;
+	insertedLength: number;
+}
+
+export interface TokenInsertionInput {
+	textBeforeCursor: string;
+	textAfterCursor: string;
+	lastWordStart: number;
+	syntax: string;
+	tokenValue: string;
+	addSpaceAfter: boolean;
+}
+
+export function computeTokenInsertion({
+	textBeforeCursor,
+	textAfterCursor,
+	lastWordStart,
+	syntax,
+	tokenValue,
+	addSpaceAfter,
+}: TokenInsertionInput): TokenInsertionResult {
+	const needsQuotes = /\s/.test(tokenValue);
+	let display: string;
+	if (needsQuotes) {
+		display = `${syntax}"${tokenValue}"`;
+	} else {
+		display = `${syntax}${tokenValue}`;
+	}
+	const before = textBeforeCursor.slice(0, lastWordStart);
+	let space = '';
+	if (addSpaceAfter) {
+		space = ' ';
+	}
+	let separator = '';
+	if (!addSpaceAfter && textAfterCursor.length > 0 && !/^\s/.test(textAfterCursor)) {
+		separator = ' ';
+	}
+	return {
+		newText: [before, display, space, separator, textAfterCursor].join(''),
+		newCursorPos: (before + display).length + space.length,
+		insertedDisplay: display,
+		insertedLength: display.length + space.length + separator.length,
+	};
+}
+
+export interface SearchTokenReplacementInput {
+	value: string;
+	cursorPosition: number;
+	currentSegments: ReadonlyArray<SearchSegment>;
+	syntax: string;
+	tokenValue: string;
+	addSpaceAfter: boolean;
+	replacementSegment: Omit<SearchSegment, 'start' | 'end' | 'displayText'> | null;
+}
+
+export interface SearchTokenReplacementResult {
+	newText: string;
+	newCursorPosition: number;
+	newSegments: Array<SearchSegment>;
+}
+
+interface SearchSegmentInsertionShift {
+	replacementStart: number;
+	replacementEnd: number;
+	lengthDelta: number;
+}
+
+function shiftSearchSegmentForInsertion(
+	segment: SearchSegment,
+	{replacementStart, replacementEnd, lengthDelta}: SearchSegmentInsertionShift,
+): SearchSegment | null {
+	if (segment.end <= replacementStart) {
+		return segment;
+	}
+	if (segment.start >= replacementEnd) {
+		return {...segment, start: segment.start + lengthDelta, end: segment.end + lengthDelta};
+	}
+	return null;
+}
+
+export function replaceSearchTokenAtCursor(input: SearchTokenReplacementInput): SearchTokenReplacementResult {
+	const textBeforeCursor = input.value.slice(0, input.cursorPosition);
+	const textAfterCursor = input.value.slice(input.cursorPosition);
+	const currentWord = resolveMessageSearchCurrentWord({value: input.value, cursorPosition: input.cursorPosition});
+	const replacementStart = textBeforeCursor.length - currentWord.length;
+	const replacementEnd = input.cursorPosition;
+	const insertion = computeTokenInsertion({
+		textBeforeCursor,
+		textAfterCursor,
+		lastWordStart: replacementStart,
+		syntax: input.syntax,
+		tokenValue: input.tokenValue,
+		addSpaceAfter: input.addSpaceAfter,
+	});
+	const lengthDelta = insertion.insertedLength - (replacementEnd - replacementStart);
+	const segmentShift: SearchSegmentInsertionShift = {replacementStart, replacementEnd, lengthDelta};
+	const newSegments = input.currentSegments
+		.map((segment) => shiftSearchSegmentForInsertion(segment, segmentShift))
+		.filter((segment): segment is SearchSegment => segment !== null);
+	if (input.replacementSegment !== null) {
+		newSegments.push({
+			...input.replacementSegment,
+			displayText: insertion.insertedDisplay,
+			start: replacementStart,
+			end: replacementStart + insertion.insertedDisplay.length,
+		});
+	}
+	return {
+		newText: insertion.newText,
+		newCursorPosition: insertion.newCursorPos,
+		newSegments: newSegments.sort((left, right) => left.start - right.start),
+	};
 }
 
 export function deduplicateMembers(members: Array<GuildMember>): Array<GuildMember> {

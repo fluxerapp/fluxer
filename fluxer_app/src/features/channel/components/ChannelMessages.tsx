@@ -679,17 +679,9 @@ export const Messages = observer(function Messages({
 					</div>
 				</Scroller>
 			</div>
-			{loadErrorBar ?? jumpToPresentBar}
+			{loadErrorBar !== null ? loadErrorBar : jumpToPresentBar}
 		</div>
 	);
-});
-const getBottomBarStyle = (background: string): React.CSSProperties => ({
-	borderRadius: '0.5rem 0.5rem 0 0',
-	bottom: '-6px',
-	background,
-	paddingBottom: '6px',
-	paddingTop: 0,
-	top: 'auto',
 });
 const JumpToPresentBar = observer(function JumpToPresentBar({
 	loadingMore,
@@ -703,23 +695,19 @@ const JumpToPresentBar = observer(function JumpToPresentBar({
 	const {i18n} = useLingui();
 	const jumpIsActiveNow = loadingMore && jumpedToPresent;
 	return (
-		<button
-			type="button"
-			className={[styles.newMessagesBar, styles.jumpToPresentBar].join(' ')}
-			style={{
-				...getBottomBarStyle('var(--background-tertiary)'),
-				cursor: jumpIsActiveNow ? 'wait' : 'pointer',
-			}}
-			onClick={onJumpToPresent}
-			disabled={jumpIsActiveNow}
+		<div
+			className={[styles.newMessagesBar, styles.messageBottomPill, styles.jumpToPresentBar].join(' ')}
 			aria-busy={jumpIsActiveNow}
-			data-flx="channel.messages.jump-to-present-bar.new-messages-bar.jump-to-present.button"
+			data-flx="channel.messages.jump-to-present-bar"
 		>
 			<span className={styles.newMessagesBarText} data-flx="channel.messages.jump-to-present-bar.new-messages-bar-text">
 				{i18n._(YOU_RE_VIEWING_OLDER_MESSAGES_DESCRIPTOR)}
 			</span>
-			<span
+			<button
+				type="button"
 				className={styles.newMessagesBarAction}
+				onClick={onJumpToPresent}
+				disabled={jumpIsActiveNow}
 				data-flx="channel.messages.jump-to-present-bar.new-messages-bar-action"
 			>
 				{jumpIsActiveNow ? (
@@ -727,36 +715,35 @@ const JumpToPresentBar = observer(function JumpToPresentBar({
 				) : (
 					i18n._(JUMP_TO_PRESENT_DESCRIPTOR)
 				)}
-			</span>
-		</button>
+			</button>
+		</div>
 	);
 });
 
 function LoadErrorBar({loading, onRetry}: {loading: boolean; onRetry: () => void}) {
 	const {i18n} = useLingui();
 	return (
-		<button
-			type="button"
+		<div
 			aria-busy={loading}
-			className={styles.newMessagesBar}
-			disabled={loading}
-			onClick={onRetry}
-			style={{
-				...getBottomBarStyle('var(--status-danger)'),
-				cursor: loading ? 'wait' : 'pointer',
-			}}
-			data-flx="channel.messages.load-error-bar.new-messages-bar.retry.button"
+			className={[styles.newMessagesBar, styles.messageBottomPill, styles.loadErrorBar].join(' ')}
+			data-flx="channel.messages.load-error-bar"
 		>
 			<span className={styles.newMessagesBarText} data-flx="channel.messages.load-error-bar.new-messages-bar-text">
 				{i18n._(MESSAGES_FAILED_TO_LOAD_DESCRIPTOR)}
 			</span>
-			<span className={styles.newMessagesBarAction} data-flx="channel.messages.load-error-bar.new-messages-bar-action">
+			<button
+				type="button"
+				className={styles.newMessagesBarAction}
+				disabled={loading}
+				onClick={onRetry}
+				data-flx="channel.messages.load-error-bar.new-messages-bar-action"
+			>
 				{loading ? (
 					<Spinner size="small" data-flx="channel.messages.load-error-bar.spinner" />
 				) : (
 					i18n._(TRY_AGAIN_DESCRIPTOR)
 				)}
-			</span>
-		</button>
+			</button>
+		</div>
 	);
 }

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import styles from '@app/features/channel/components/GuildMembersPage.module.css';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import {Input} from '@app/features/ui/components/form/FormInput';
 import {msg} from '@lingui/core/macro';
@@ -63,7 +64,7 @@ export function MembersTableToolbar({
 					disabled={indexing}
 					leftIcon={
 						<MagnifyingGlassIcon
-							size={16}
+							size={remFromPx(16)}
 							weight="bold"
 							data-flx="channel.guild-members-page.members-table-view.magnifying-glass-icon"
 						/>
@@ -75,7 +76,7 @@ export function MembersTableToolbar({
 					variant="secondary"
 					leftIcon={
 						<SortAscendingIcon
-							size={16}
+							size={remFromPx(16)}
 							weight="bold"
 							data-flx="channel.guild-members-page.members-table-view.sort-ascending-icon"
 						/>

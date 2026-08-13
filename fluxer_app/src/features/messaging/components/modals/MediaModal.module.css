@@ -301,8 +301,7 @@
 .navigationOverlay,
 .thumbnailCarouselWrapper,
 .floatingNavButtonLeft,
-.floatingNavButtonRight,
-.klipyAttribution {
+.floatingNavButtonRight {
 	transition:
 		opacity 120ms ease,
 		visibility 120ms ease;
@@ -315,8 +314,7 @@
 .modalContentInner[data-media-hud-hidden='true'] .navigationOverlay,
 .modalContentInner[data-media-hud-hidden='true'] .thumbnailCarouselWrapper,
 .modalContentInner[data-media-hud-hidden='true'] .floatingNavButtonLeft,
-.modalContentInner[data-media-hud-hidden='true'] .floatingNavButtonRight,
-.modalContentInner[data-media-hud-hidden='true'] .klipyAttribution {
+.modalContentInner[data-media-hud-hidden='true'] .floatingNavButtonRight {
 	visibility: hidden;
 	opacity: 0;
 	pointer-events: none;
@@ -826,27 +824,4 @@
 
 .floatingNavButtonDisabled:active {
 	transform: none;
-}
-
-.klipyAttribution {
-	position: absolute;
-	bottom: var(--media-hud-safe-bottom);
-	right: var(--media-hud-safe-right);
-	z-index: 50;
-	display: flex;
-	align-items: center;
-	padding: 0.5rem 0.75rem;
-	border-radius: var(--media-hud-surface-radius);
-	background-color: var(--media-hud-surface-bg);
-	border: 0.0625rem solid var(--media-hud-surface-border);
-	box-shadow: var(--media-hud-shadow);
-	backdrop-filter: blur(2.25rem);
-	-webkit-backdrop-filter: blur(2.25rem);
-	pointer-events: none;
-}
-
-.klipyAttribution svg {
-	height: 1rem;
-	width: auto;
-	color: var(--text-primary-muted);
 }

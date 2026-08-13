@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import styles from '@app/features/channel/components/ScrollFillerSkeleton.module.css';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {observer} from 'mobx-react-lite';
 import {forwardRef, useMemo} from 'react';
 
@@ -27,7 +28,7 @@ const ScrollFillerSkeleton = observer(
 			<div
 				className={styles.wrapper}
 				ref={ref}
-				style={{minHeight: totalHeight}}
+				style={{minHeight: remFromPx(totalHeight)}}
 				aria-hidden="true"
 				data-flx="channel.scroll-filler-skeleton.wrapper"
 			>
@@ -41,7 +42,7 @@ const ScrollFillerSkeleton = observer(
 							key={groupIndex}
 							className={styles.messageGroup}
 							style={{
-								marginBottom: groupIndex === messages.length - 1 ? 0 : `${groupSpacing}px`,
+								marginBottom: groupIndex === messages.length - 1 ? 0 : remFromPx(groupSpacing),
 							}}
 							data-flx="channel.scroll-filler-skeleton.message-group"
 						>
@@ -72,7 +73,7 @@ const ScrollFillerSkeleton = observer(
 													className={styles.messageLine}
 													style={{
 														width: `${Math.min(98, width)}%`,
-														height: 12,
+														height: remFromPx(12),
 													}}
 													data-flx="channel.scroll-filler-skeleton.message-line"
 												/>
@@ -83,8 +84,8 @@ const ScrollFillerSkeleton = observer(
 										<div
 											className={styles.attachment}
 											style={{
-												width: Math.min(attachmentSpec[1].width, 420),
-												height: Math.min(attachmentSpec[1].height, 250),
+												width: remFromPx(Math.min(attachmentSpec[1].width, 420)),
+												height: remFromPx(Math.min(attachmentSpec[1].height, 250)),
 											}}
 											data-flx="channel.scroll-filler-skeleton.attachment"
 										/>

@@ -3,6 +3,7 @@
 import {AutocompleteOption} from '@app/features/channel/components/message_search_bar/AutocompleteOption';
 import styles from '@app/features/channel/components/message_search_bar/MessageSearchBar.module.css';
 import type {SearchValueOption} from '@app/features/search/utils/SearchUtils';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {FunnelIcon} from '@phosphor-icons/react';
@@ -42,7 +43,11 @@ export const ValuesSection: React.FC<ValuesSectionProps> = observer(
 						className={`${styles.flex} ${styles.itemsCenter} ${styles.gap2}`}
 						data-flx="channel.message-search-bar.values-section.flex"
 					>
-						<FunnelIcon weight="regular" size={14} data-flx="channel.message-search-bar.values-section.funnel-icon" />
+						<FunnelIcon
+							weight="regular"
+							size={remFromPx(14)}
+							data-flx="channel.message-search-bar.values-section.funnel-icon"
+						/>
 						{i18n._(VALUES_DESCRIPTOR)}
 					</span>
 				</div>
