@@ -13,6 +13,7 @@ interface SliderResetIconButtonProps {
 	className?: string;
 	iconSize?: number;
 	dataFlx?: string;
+	alwaysVisible?: boolean;
 }
 
 export function canResetSliderValue(value: number, factoryDefaultValue: number, disabled = false): boolean {
@@ -26,13 +27,15 @@ export function SliderResetIconButton({
 	className,
 	iconSize = 14,
 	dataFlx = 'ui.slider.slider-reset-icon-button.button',
+	alwaysVisible = false,
 }: SliderResetIconButtonProps): React.ReactElement | null {
-	if (!canReset) return null;
+	if (!canReset && !alwaysVisible) return null;
 	return (
 		<button
 			type="button"
 			className={clsx(styles.resetButton, className)}
 			onClick={onReset}
+			disabled={!canReset}
 			aria-label={ariaLabel}
 			data-flx={dataFlx}
 		>

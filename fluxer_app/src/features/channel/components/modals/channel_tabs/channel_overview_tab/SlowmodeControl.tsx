@@ -3,6 +3,7 @@
 import styles from '@app/features/channel/components/modals/channel_tabs/ChannelOverviewTab.module.css';
 import {SettingsControlRow} from '@app/features/channel/components/modals/channel_tabs/channel_overview_tab/SettingsControlRow';
 import type {FormInputs} from '@app/features/channel/components/modals/channel_tabs/channel_overview_tab/shared';
+import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
 import {formatPermissionLabel} from '@app/features/permissions/utils/PermissionUtils';
 import {RESET_SLIDER_TO_DEFAULT_VALUE_DESCRIPTOR, Slider} from '@app/features/ui/components/Slider';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
@@ -29,35 +30,27 @@ const SLOWMODE_DESCRIPTION_DESCRIPTOR = msg({
 	comment:
 		'Description under the slowmode slider in channel settings. bypassSlowmodePermissionLabel is the localized Bypass Slowmode permission name.',
 });
-const SLOWMODE_SECONDS_DESCRIPTOR = msg({
-	message: '{count, plural, one {# second} other {# seconds}}',
-	comment: 'Slowmode duration expressed in seconds, shown on the channel settings slowmode slider.',
-});
-const SLOWMODE_MINUTES_DESCRIPTOR = msg({
-	message: '{count, plural, one {# minute} other {# minutes}}',
-	comment: 'Slowmode duration expressed in minutes, shown on the channel settings slowmode slider.',
-});
-const SLOWMODE_HOURS_DESCRIPTOR = msg({
-	message: '{count, plural, one {# hour} other {# hours}}',
-	comment: 'Slowmode duration expressed in hours, shown on the channel settings slowmode slider.',
-});
-
 const SLOWMODE_STOP_SECONDS: ReadonlyArray<number> = [
 	0, 5, 10, 15, 30, 60, 120, 300, 600, 900, 1800, 3600, 7200, 21600,
 ];
-const SLOWMODE_MARKER_SECONDS: ReadonlyArray<number> = [0, 60, 3600, 21600];
+
+type SlowmodeDurationUnit = 'second' | 'minute' | 'hour';
 
 function formatSlowmodeDuration(i18n: I18n, seconds: number): string {
-	if (seconds === 0) {
+	const roundedSeconds = Math.max(0, Math.round(seconds));
+	if (roundedSeconds === 0) {
 		return i18n._(OFF_DESCRIPTOR);
 	}
-	if (seconds % SECONDS_PER_HOUR === 0) {
-		return i18n._(SLOWMODE_HOURS_DESCRIPTOR, {count: seconds / SECONDS_PER_HOUR});
+	let unit: SlowmodeDurationUnit = 'second';
+	let value = roundedSeconds;
+	if (roundedSeconds % SECONDS_PER_HOUR === 0) {
+		unit = 'hour';
+		value = roundedSeconds / SECONDS_PER_HOUR;
+	} else if (roundedSeconds % SECONDS_PER_MINUTE === 0) {
+		unit = 'minute';
+		value = roundedSeconds / SECONDS_PER_MINUTE;
 	}
-	if (seconds % SECONDS_PER_MINUTE === 0) {
-		return i18n._(SLOWMODE_MINUTES_DESCRIPTOR, {count: seconds / SECONDS_PER_MINUTE});
-	}
-	return i18n._(SLOWMODE_SECONDS_DESCRIPTOR, {count: seconds});
+	return getCachedNumberFormat(i18n.locale, {style: 'unit', unit, unitDisplay: 'long'}).format(value);
 }
 
 interface SlowmodeControlProps {
@@ -99,9 +92,7 @@ export const SlowmodeControl: React.FC<SlowmodeControlProps> = ({form}) => {
 								markers={SLOWMODE_STOP_SECONDS}
 								ariaLabel={slowmodeLabel}
 								ariaValueText={formatSlowmodeDuration(i18n, currentSeconds)}
-								onMarkerRender={(seconds) =>
-									SLOWMODE_MARKER_SECONDS.includes(seconds) ? formatSlowmodeDuration(i18n, seconds) : null
-								}
+								onMarkerRender={(seconds) => formatSlowmodeDuration(i18n, seconds)}
 								onValueRender={(seconds) => formatSlowmodeDuration(i18n, Math.round(seconds))}
 								onValueChange={(seconds) => field.onChange(Math.round(seconds))}
 								showResetButton={true}
