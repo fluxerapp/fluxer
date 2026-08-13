@@ -5,7 +5,7 @@ import {SettingsControlRow} from '@app/features/channel/components/modals/channe
 import type {FormInputs} from '@app/features/channel/components/modals/channel_tabs/channel_overview_tab/shared';
 import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
 import {formatPermissionLabel} from '@app/features/permissions/utils/PermissionUtils';
-import {RESET_SLIDER_TO_DEFAULT_VALUE_DESCRIPTOR, Slider} from '@app/features/ui/components/Slider';
+import {Slider} from '@app/features/ui/components/Slider';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {CHANNEL_RATE_LIMIT_PER_USER_MAX, CHANNEL_RATE_LIMIT_PER_USER_MIN} from '@fluxer/constants/src/LimitConstants';
 import {SECONDS_PER_HOUR, SECONDS_PER_MINUTE} from '@fluxer/date_utils/src/DateConstants';
@@ -71,7 +71,6 @@ export const SlowmodeControl: React.FC<SlowmodeControlProps> = ({form}) => {
 	const {i18n} = useLingui();
 	const slowmodeLabel = i18n._(SLOWMODE_DESCRIPTOR);
 	const bypassSlowmodePermissionLabel = formatPermissionLabel(i18n, Permissions.BYPASS_SLOWMODE);
-	const resetSliderLabel = i18n._(RESET_SLIDER_TO_DEFAULT_VALUE_DESCRIPTOR);
 	return (
 		<Controller
 			name="slowmode"
@@ -110,9 +109,6 @@ export const SlowmodeControl: React.FC<SlowmodeControlProps> = ({form}) => {
 								}}
 								onValueRender={(seconds) => formatSlowmodeDuration(i18n, Math.round(seconds))}
 								onValueChange={(seconds) => field.onChange(Math.round(seconds))}
-								showResetButton={true}
-								onReset={() => field.onChange(0)}
-								resetTooltip={resetSliderLabel}
 							/>
 						</div>
 					</SettingsControlRow>

@@ -122,6 +122,13 @@ export const localTypingStateMachine = setup({
 				};
 			}
 			if (context.remoteSendAt != null) {
+				if (context.lastRemoteSentAt == null) {
+					return {
+						lastChangeAt: event.now,
+						remoteSendAt: event.now + LOCAL_TYPING_REMOTE_SEND_DELAY_MS,
+						remotePendingVersion: context.remotePendingVersion + 1,
+					};
+				}
 				return {
 					lastChangeAt: event.now,
 				};

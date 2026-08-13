@@ -42,8 +42,7 @@ pub fn is_inline_viewable(content_type: &str) -> bool {
 }
 
 fn is_scriptable_document(mime: &str) -> bool {
-    mime.eq_ignore_ascii_case("image/svg+xml")
-        || mime.eq_ignore_ascii_case("application/pdf")
+    mime.eq_ignore_ascii_case("image/svg+xml") || mime.eq_ignore_ascii_case("application/pdf")
 }
 
 fn is_safe_quoted_filename(s: &str) -> bool {
