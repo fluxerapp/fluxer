@@ -83,7 +83,6 @@ const ChannelOverviewTab: React.FC<{channelId: string}> = observer(({channelId})
 	const isVoiceChannel = channel?.type === ChannelTypes.GUILD_VOICE;
 	const [rtcRegions, setRtcRegions] = useState<Array<ChannelRtcRegion>>([]);
 	const [isLoadingRegions, setIsLoadingRegions] = useState(false);
-	const remoteSlowmodeSeconds = channel == null ? 0 : channel.rateLimitPerUser;
 	const form = useForm<FormInputs>({
 		defaultValues: {
 			name: '',
@@ -303,7 +302,7 @@ const ChannelOverviewTab: React.FC<{channelId: string}> = observer(({channelId})
 							initialTopic={remoteValues != null && remoteValues.topic != null ? remoteValues.topic : ''}
 							onTopicExceedsLimit={handleTopicExceedsLimit}
 						/>
-						<SlowmodeControl form={form} remoteSlowmodeSeconds={remoteSlowmodeSeconds} />
+						<SlowmodeControl form={form} />
 					</div>
 				)}
 				{showVoiceSection && (
