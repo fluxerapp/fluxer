@@ -183,30 +183,9 @@
 }
 
 .newMessagesBarAction {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	gap: 0.375rem;
-	min-height: 2rem;
-	padding: 0 0.75rem;
-	border: 0;
 	border-radius: var(--radius-full);
-	background: var(--background-modifier-hover);
-	color: var(--text-primary);
-	font-size: 0.875rem;
-	font-weight: 600;
 	flex: 0 0 auto;
 	white-space: nowrap;
-	cursor: pointer;
-}
-
-.newMessagesBarAction:hover:not(:disabled) {
-	background: var(--background-modifier-active);
-}
-
-.newMessagesBarAction:disabled {
-	cursor: wait;
-	opacity: 0.7;
 }
 
 @media (max-width: 520px) {

@@ -35,8 +35,8 @@ import * as ReadStateCommands from '@app/features/read_state/commands/ReadStateC
 import ReadStates from '@app/features/read_state/state/ReadStates';
 import {shouldAutoAck} from '@app/features/read_state/utils/AutoAckPredicate';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
+import {Button} from '@app/features/ui/button/Button';
 import {Scroller} from '@app/features/ui/components/Scroller';
-import {Spinner} from '@app/features/ui/components/Spinner';
 import KeyboardMode from '@app/features/ui/state/KeyboardMode';
 import MediaViewer from '@app/features/ui/state/MediaViewer';
 import Modal from '@app/features/ui/state/Modal';
@@ -703,19 +703,18 @@ const JumpToPresentBar = observer(function JumpToPresentBar({
 			<span className={styles.newMessagesBarText} data-flx="channel.messages.jump-to-present-bar.new-messages-bar-text">
 				{i18n._(YOU_RE_VIEWING_OLDER_MESSAGES_DESCRIPTOR)}
 			</span>
-			<button
-				type="button"
+			<Button
+				variant="primary"
+				compact
+				fitContent
 				className={styles.newMessagesBarAction}
 				onClick={onJumpToPresent}
+				submitting={jumpIsActiveNow}
 				disabled={jumpIsActiveNow}
 				data-flx="channel.messages.jump-to-present-bar.new-messages-bar-action"
 			>
-				{jumpIsActiveNow ? (
-					<Spinner size="small" data-flx="channel.messages.jump-to-present-bar.spinner" />
-				) : (
-					i18n._(JUMP_TO_PRESENT_DESCRIPTOR)
-				)}
-			</button>
+				{i18n._(JUMP_TO_PRESENT_DESCRIPTOR)}
+			</Button>
 		</div>
 	);
 });
@@ -731,19 +730,18 @@ function LoadErrorBar({loading, onRetry}: {loading: boolean; onRetry: () => void
 			<span className={styles.newMessagesBarText} data-flx="channel.messages.load-error-bar.new-messages-bar-text">
 				{i18n._(MESSAGES_FAILED_TO_LOAD_DESCRIPTOR)}
 			</span>
-			<button
-				type="button"
+			<Button
+				variant="primary"
+				compact
+				fitContent
 				className={styles.newMessagesBarAction}
 				disabled={loading}
+				submitting={loading}
 				onClick={onRetry}
 				data-flx="channel.messages.load-error-bar.new-messages-bar-action"
 			>
-				{loading ? (
-					<Spinner size="small" data-flx="channel.messages.load-error-bar.spinner" />
-				) : (
-					i18n._(TRY_AGAIN_DESCRIPTOR)
-				)}
-			</button>
+				{i18n._(TRY_AGAIN_DESCRIPTOR)}
+			</Button>
 		</div>
 	);
 }
