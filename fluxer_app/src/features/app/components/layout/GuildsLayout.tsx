@@ -162,7 +162,12 @@ class DMChannelVisibilityController {
 	}
 
 	private projectVisibleChannels({currentChannels, unreadIds}: ProjectVisibleDMChannelsRequest): Array<Channel> {
-		const leavingChannels = currentChannels.filter((channel) => !unreadIds.has(channel.id));
+		const visibleChannelIds = new Set(this.orderedUnreadChannels.map(getChannelId));
+		const leavingChannels = currentChannels.filter((channel) => {
+			if (unreadIds.has(channel.id) || visibleChannelIds.has(channel.id)) return false;
+			visibleChannelIds.add(channel.id);
+			return true;
+		});
 		for (const channel of leavingChannels) this.scheduleRemoval(channel.id);
 		return [...this.orderedUnreadChannels, ...leavingChannels];
 	}
