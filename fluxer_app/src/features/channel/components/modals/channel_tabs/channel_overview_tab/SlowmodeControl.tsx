@@ -113,6 +113,7 @@ export const SlowmodeControl: React.FC<SlowmodeControlProps> = ({form, remoteSlo
 					<SettingsControlRow
 						label={slowmodeLabel}
 						description={i18n._(SLOWMODE_DESCRIPTION_DESCRIPTOR, {bypassSlowmodePermissionLabel})}
+						stacked
 						dataFlx="channel.channel-tabs.channel-overview-tab.slowmode-control"
 					>
 						<div className={styles.settingsSliderControl}>
