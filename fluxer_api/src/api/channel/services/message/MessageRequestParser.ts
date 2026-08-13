@@ -20,6 +20,7 @@ import {createLimitMatchContext} from '../../../limits/LimitMatchContextBuilder'
 import type {User} from '../../../models/User';
 import type {HonoEnv} from '../../../types/HonoEnv';
 import {parseJsonPreservingLargeIntegers} from '../../../utils/LosslessJsonParser';
+import {inputValidationErrorFromZodIssues} from '../../../Validator';
 import {type AttachmentRequestData, mergeUploadWithClientData, type UploadedAttachment} from '../../AttachmentDTOs';
 import type {IChannelRepository} from '../../IChannelRepository';
 import type {MessageRequest, MessageUpdateRequest} from '../../MessageTypes';
@@ -54,7 +55,7 @@ export async function parseMultipartMessageData(
 	options?.onPayloadParsed?.(mergedJsonData);
 	const validationResult = schema.safeParse(mergedJsonData);
 	if (!validationResult.success) {
-		throw InputValidationError.fromCode('message_data', ValidationErrorCodes.INVALID_MESSAGE_DATA);
+		throw inputValidationErrorFromZodIssues(validationResult.error.issues);
 	}
 	const data = validationResult.data as Partial<MessageRequest> &
 		Partial<MessageUpdateRequest> & {
