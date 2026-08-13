@@ -12,6 +12,7 @@ import {SECONDS_PER_HOUR, SECONDS_PER_MINUTE} from '@fluxer/date_utils/src/DateC
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
+import {formatListWithConfig} from '@pkgs/list_utils/src/ListFormatting';
 import type React from 'react';
 import {Controller, type UseFormReturn} from 'react-hook-form';
 
@@ -33,24 +34,33 @@ const SLOWMODE_DESCRIPTION_DESCRIPTOR = msg({
 const SLOWMODE_STOP_SECONDS: ReadonlyArray<number> = [
 	0, 5, 10, 15, 30, 60, 120, 300, 600, 900, 1800, 3600, 7200, 21600,
 ];
+const SLOWMODE_MARKER_SECONDS: ReadonlyArray<number> = [0, 60, 3600, 21600];
 
 type SlowmodeDurationUnit = 'second' | 'minute' | 'hour';
+
+function formatSlowmodeDurationPart(value: number, unit: SlowmodeDurationUnit, locale: string): string {
+	return getCachedNumberFormat(locale, {style: 'unit', unit, unitDisplay: 'long'}).format(value);
+}
 
 function formatSlowmodeDuration(i18n: I18n, seconds: number): string {
 	const roundedSeconds = Math.max(0, Math.round(seconds));
 	if (roundedSeconds === 0) {
 		return i18n._(OFF_DESCRIPTOR);
 	}
-	let unit: SlowmodeDurationUnit = 'second';
-	let value = roundedSeconds;
-	if (roundedSeconds % SECONDS_PER_HOUR === 0) {
-		unit = 'hour';
-		value = roundedSeconds / SECONDS_PER_HOUR;
-	} else if (roundedSeconds % SECONDS_PER_MINUTE === 0) {
-		unit = 'minute';
-		value = roundedSeconds / SECONDS_PER_MINUTE;
+	const hours = Math.floor(roundedSeconds / SECONDS_PER_HOUR);
+	const minutes = Math.floor((roundedSeconds % SECONDS_PER_HOUR) / SECONDS_PER_MINUTE);
+	const remainingSeconds = roundedSeconds % SECONDS_PER_MINUTE;
+	const parts: Array<string> = [];
+	if (hours > 0) {
+		parts.push(formatSlowmodeDurationPart(hours, 'hour', i18n.locale));
 	}
-	return getCachedNumberFormat(i18n.locale, {style: 'unit', unit, unitDisplay: 'long'}).format(value);
+	if (minutes > 0) {
+		parts.push(formatSlowmodeDurationPart(minutes, 'minute', i18n.locale));
+	}
+	if (remainingSeconds > 0) {
+		parts.push(formatSlowmodeDurationPart(remainingSeconds, 'second', i18n.locale));
+	}
+	return formatListWithConfig(parts, {locale: i18n.locale, style: 'long', type: 'unit'});
 }
 
 interface SlowmodeControlProps {
@@ -92,7 +102,12 @@ export const SlowmodeControl: React.FC<SlowmodeControlProps> = ({form}) => {
 								markers={SLOWMODE_STOP_SECONDS}
 								ariaLabel={slowmodeLabel}
 								ariaValueText={formatSlowmodeDuration(i18n, currentSeconds)}
-								onMarkerRender={(seconds) => formatSlowmodeDuration(i18n, seconds)}
+								onMarkerRender={(seconds) => {
+									if (!SLOWMODE_MARKER_SECONDS.includes(seconds)) {
+										return null;
+									}
+									return formatSlowmodeDuration(i18n, seconds);
+								}}
 								onValueRender={(seconds) => formatSlowmodeDuration(i18n, Math.round(seconds))}
 								onValueChange={(seconds) => field.onChange(Math.round(seconds))}
 								showResetButton={true}
