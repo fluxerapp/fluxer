@@ -31,15 +31,22 @@ const provisioningProfile = isCanary
 	? 'build_resources/profiles/Fluxer_Canary.provisionprofile'
 	: 'build_resources/profiles/Fluxer.provisionprofile';
 const supportedTargetArchs = ['x64', 'arm64'];
+const supportedMacTargetArchs = [...supportedTargetArchs, 'universal'];
 const electronArch = process.env.ELECTRON_ARCH;
-const cliTargetArch = supportedTargetArchs.find((arch) => process.argv.includes(`--${arch}`)) || null;
+const cliTargetArch = supportedMacTargetArchs.find((arch) => process.argv.includes(`--${arch}`)) || null;
 const targetNativeArch = electronArch || cliTargetArch;
 
-if (electronArch && !supportedTargetArchs.includes(electronArch)) {
+if (electronArch && !supportedMacTargetArchs.includes(electronArch)) {
 	throw new Error(`Unsupported ELECTRON_ARCH: ${electronArch}`);
 }
 
-const targetArchs = electronArch ? [electronArch] : supportedTargetArchs;
+if (targetNativeArch === 'universal' && targetPlatform !== 'darwin') {
+	throw new Error(`ELECTRON_ARCH=universal is only supported for macOS builds, received platform ${targetPlatform}`);
+}
+
+const targetArchs =
+	electronArch && electronArch !== 'universal' ? [electronArch] : supportedTargetArchs;
+const macTargetArchs = targetNativeArch ? [targetNativeArch] : supportedTargetArchs;
 const winTargets = [
 	{
 		target: 'dir',
@@ -1190,11 +1197,11 @@ module.exports = {
 		target: [
 			{
 				target: 'dmg',
-				arch: targetArchs,
+				arch: macTargetArchs,
 			},
 			{
 				target: 'zip',
-				arch: targetArchs,
+				arch: macTargetArchs,
 			},
 		],
 		extendInfo: {

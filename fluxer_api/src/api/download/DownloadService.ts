@@ -82,8 +82,8 @@ type FormatMapping = {
 
 const FORMAT_MAPPINGS: Record<DesktopFormat, Partial<Record<DesktopPlatform, FormatMapping>>> = {
 	setup: {win32: {ext: '.exe', arch: {x64: 'x64', arm64: 'arm64'}}},
-	dmg: {darwin: {ext: '.dmg', arch: {x64: 'x64', arm64: 'arm64'}}},
-	zip: {darwin: {ext: '.zip', arch: {x64: 'x64', arm64: 'arm64'}}},
+	dmg: {darwin: {ext: '.dmg', arch: {x64: ['universal', 'x64'], arm64: ['universal', 'arm64']}}},
+	zip: {darwin: {ext: '.zip', arch: {x64: ['universal', 'x64'], arm64: ['universal', 'arm64']}}},
 	appimage: {linux: {ext: '.AppImage', arch: {x64: 'x86_64', arm64: ['aarch64', 'arm64']}}},
 	deb: {linux: {ext: '.deb', arch: {x64: 'amd64', arm64: 'arm64'}}},
 	rpm: {linux: {ext: '.rpm', arch: {x64: 'x86_64', arm64: 'aarch64'}}},
