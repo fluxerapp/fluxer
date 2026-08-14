@@ -220,6 +220,16 @@ function platformTag(platform, arch) {
 }
 
 function expectedNativeRuntimeArtifacts(platform = process.platform, arch = process.env.ELECTRON_ARCH || process.arch) {
+	if (platform === 'darwin' && arch === 'universal') {
+		return [
+			...expectedNativeRuntimeArtifactsForArch(platform, 'arm64'),
+			...expectedNativeRuntimeArtifactsForArch(platform, 'x64'),
+		];
+	}
+	return expectedNativeRuntimeArtifactsForArch(platform, arch);
+}
+
+function expectedNativeRuntimeArtifactsForArch(platform, arch) {
 	const tag = platformTag(platform, arch);
 	if (!tag) return [];
 	const artifacts = [];
