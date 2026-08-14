@@ -21,7 +21,6 @@ const SOURCES = [
 	'https://raw.githubusercontent.com/vrittech/disposable-email/main/disposable_domains.txt',
 	'https://raw.githubusercontent.com/martenson/disposable-email-domains/master/disposable_email_blocklist.conf',
 ];
-const CURRENT_DOMAIN_PAGE_SIZE = 10000;
 const WRITE_PROGRESS_INTERVAL = 500;
 const DOMAIN_REGEX = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/;
 
@@ -120,16 +119,7 @@ function normaliseDomain(raw: string): string | null {
 
 async function loadCurrentDisposableEmailDomains(): Promise<Set<string>> {
 	const {adminRepository} = getWorkerDependencies();
-	const currentSet = new Set<string>();
-	let pageState: string | null = null;
-	do {
-		const page = await adminRepository.listDisposableEmailDomainsPage(CURRENT_DOMAIN_PAGE_SIZE, pageState);
-		for (const domain of page.domains) {
-			currentSet.add(domain);
-		}
-		pageState = page.pageState;
-	} while (pageState !== null);
-	return currentSet;
+	return new Set(await adminRepository.listDisposableEmailDomains());
 }
 
 async function throwIfCancelled(helpers: WorkerTaskHelpers): Promise<void> {

@@ -271,6 +271,9 @@ export interface MasterConfig {
 			api_key: string;
 			pull_zone_id: number;
 		};
+		blocklist_feeds: {
+			enabled?: boolean;
+		};
 		risk_integration: {
 			enabled: boolean;
 			ipinfo_api_key: string;

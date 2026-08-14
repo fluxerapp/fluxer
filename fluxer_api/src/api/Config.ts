@@ -276,6 +276,9 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 			ipinfoApiKey: master.integrations.risk_integration.ipinfo_api_key || undefined,
 			accountPolicyDsl: master.integrations.risk_integration.account_policy_dsl,
 		},
+		blocklistFeeds: {
+			enabled: master.integrations.blocklist_feeds.enabled ?? !master.instance.self_hosted,
+		},
 		captcha: {
 			enabled: master.integrations.captcha.enabled,
 			provider: master.integrations.captcha.provider,
