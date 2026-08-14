@@ -118,10 +118,7 @@ export const TypingUsers = observer(
 				className={`${messageStyles.typingContainer} ${messageStyles.typingCluster} ${messageStyles.typingClusterComposerStatus}`}
 				data-flx="channel.typing-users.div"
 			>
-				<div
-					className={`${messageStyles.typingPill} ${messageStyles.typingPillComposerStatus}`}
-					data-flx="channel.typing-users.div--2"
-				>
+				<div className={styles.composerStatus} data-flx="channel.typing-users.div--2">
 					<div className={messageStyles.typingIndicator} data-flx="channel.typing-users.div--3">
 						<Typing
 							className={styles.typing}

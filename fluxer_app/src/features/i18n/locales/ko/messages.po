@@ -355,7 +355,7 @@ msgstr "{count, plural, one {#개 북마크} other {#개 북마크}}"
 msgid "{count, plural, one {# community found} other {# communities found}}"
 msgstr "{count, plural, one {#개 커뮤니티 찾음} other {#개 커뮤니티 찾음}}"
 
-#: src/features/app/components/layout/GuildsLayout.tsx:902
+#: src/features/app/components/layout/GuildsLayout.tsx:907
 msgid "{count, plural, one {# community is temporarily unavailable due to a flux capacitor malfunction.} other {# communities are temporarily unavailable due to a flux capacitor malfunction.}}"
 msgstr "{count, plural, one {#개 커뮤니티가 플럭스 캐패시터 오작동으로 인해 일시적으로 이용할 수 없습니다.} other {#개 커뮤니티가 플럭스 캐패시터 오작동으로 인해 일시적으로 이용할 수 없습니다.}}"
 
@@ -378,8 +378,6 @@ msgstr "{count, plural, one {# 이모티콘} other {# 이모티콘}}"
 msgid "{count, plural, one {# gift} other {# gifts}}"
 msgstr "{count, plural, one {#개 선물} other {#개 선물}}"
 
-#. Slowmode duration expressed in hours, shown on the channel settings slowmode slider.
-#: src/features/channel/components/modals/channel_tabs/channel_overview_tab/SlowmodeControl.tsx:41
 #: src/features/channel/components/modals/GroupInvitesBottomSheet.tsx:139
 msgid "{count, plural, one {# hour} other {# hours}}"
 msgstr "{count, plural, one {#시간} other {#시간}}"
@@ -396,11 +394,6 @@ msgstr "{count, plural, one {#개 항목} other {#개 항목}}"
 #: src/features/user/components/modals/user_profile_modal/MutualGroupItem.tsx:26
 msgid "{count, plural, one {# member} other {# members}}"
 msgstr "{count, plural, one {#명} other {#명}}"
-
-#. Slowmode duration expressed in minutes, shown on the channel settings slowmode slider.
-#: src/features/channel/components/modals/channel_tabs/channel_overview_tab/SlowmodeControl.tsx:37
-msgid "{count, plural, one {# minute} other {# minutes}}"
-msgstr "{count, plural, one {#분} other {#분}}"
 
 #: src/features/channel/components/direct_message/DMWelcomeSection.tsx:246
 msgid "{count, plural, one {# mutual community} other {# mutual communities}}"
@@ -433,9 +426,7 @@ msgstr "{count, plural, one {#명 반응} other {#명 반응}}"
 msgid "{count, plural, one {# saved media item} other {# saved media items}}"
 msgstr "{count, plural, one {#개 저장된 미디어 항목} other {#개 저장된 미디어 항목}}"
 
-#. Slowmode duration expressed in seconds, shown on the channel settings slowmode slider.
 #: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:183
-#: src/features/channel/components/modals/channel_tabs/channel_overview_tab/SlowmodeControl.tsx:33
 msgid "{count, plural, one {# second} other {# seconds}}"
 msgstr "{count, plural, one {#초} other {#초}}"
 
@@ -666,11 +657,6 @@ msgstr "회원님보다 {duration} 빠름"
 #: src/features/user/components/popouts/UserProfileShared.tsx:71
 msgid "{duration} behind you"
 msgstr "회원님보다 {duration} 느림"
-
-#. Short label in the channel and chat slowmode indicator. Keep it concise. Preserve {durationLabel}; it is inserted by code.
-#: src/features/channel/components/SlowmodeIndicator.tsx:31
-msgid "{durationLabel} slowmode"
-msgstr "{durationLabel} 슬로우 모드"
 
 #. Gift duration label. PREMIUM_PRODUCT_NAME is the paid plan name.
 #: src/features/gift/utils/GiftUtils.ts:12
@@ -2847,7 +2833,7 @@ msgstr "관리자가 초대를 일시 중지했습니다. 지금은 참여할 �
 #. Disclosure button label in the voice connection status popout. Reveals technical bandwidth and network stats.
 #. User settings tab for power-user and experimental application preferences.
 #. Voice participant context menu submenu label for IDs and diagnostics.
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:337
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:336
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/index.tsx:28
 #: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:178
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:145
@@ -6546,8 +6532,8 @@ msgstr "채널 유형: {0}."
 
 #. Audit log entry label. Past-tense action describing that a channel was edited.
 #: src/features/app/config/AuditLogConstants.ts:16
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:207
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:226
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:206
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:225
 msgid "Channel updated"
 msgstr "채널 업데이트됨"
 
@@ -7162,7 +7148,7 @@ msgstr "첨부 모의 데이터 지우기"
 
 #. Accessible label for the button that clears the slash command being composed in the message box.
 #. Accessible label for the composer button that clears the slash command currently being composed.
-#: src/features/channel/components/LexicalChannelTextareaContent.tsx:126
+#: src/features/channel/components/LexicalChannelTextareaContent.tsx:130
 #: src/features/channel/components/SlashCommandParamBar.tsx:16
 msgid "Clear command"
 msgstr "명령 취소"
@@ -13509,7 +13495,7 @@ msgstr "SMS 코드 입력"
 msgid "Enter this code in your browser to complete sign-in."
 msgstr "브라우저에 이 코드를 입력하여 로그인을 완료하세요."
 
-#: src/features/channel/components/EditingMessageInput.tsx:359
+#: src/features/channel/components/EditingMessageInput.tsx:358
 msgid "enter to <0><1>save</1></0>"
 msgstr "Enter 키를 눌러 <0><1>저장</1></0>"
 
@@ -13650,7 +13636,7 @@ msgstr "Esc 키"
 msgid "Escape key exits keyboard mode"
 msgstr "Esc 키로 키보드 모드 종료"
 
-#: src/features/channel/components/EditingMessageInput.tsx:346
+#: src/features/channel/components/EditingMessageInput.tsx:345
 msgid "escape to <0><1>cancel</1></0>"
 msgstr "취소하려면 <0><1>Esc</1></0> 키를 누르세요"
 
@@ -22465,7 +22451,7 @@ msgstr "사물"
 #. Option label for an H.264 backup stream select.
 #: src/features/channel/components/ChannelReplyBar.tsx:62
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/MatureContentSection.tsx:26
-#: src/features/channel/components/modals/channel_tabs/channel_overview_tab/SlowmodeControl.tsx:23
+#: src/features/channel/components/modals/channel_tabs/channel_overview_tab/SlowmodeControl.tsx:24
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:97
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:139
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:123
@@ -26668,7 +26654,7 @@ msgid "Reset premium state"
 msgstr "프리미엄 상태 초기화"
 
 #. Accessible label for a button that resets a slider to its default value.
-#: src/features/ui/components/Slider.tsx:18
+#: src/features/ui/components/Slider.tsx:24
 msgid "Reset slider to default value"
 msgstr "슬라이더를 기본값으로 초기화"
 
@@ -29896,7 +29882,7 @@ msgid "slash {commandName}"
 msgstr "/{commandName}"
 
 #. Accessible label announcing the current slider value.
-#: src/features/ui/components/Slider.tsx:22
+#: src/features/ui/components/Slider.tsx:28
 msgid "Slider value"
 msgstr "슬라이더 값"
 
@@ -29968,7 +29954,7 @@ msgid "Slow profile load"
 msgstr "느린 프로필 로드"
 
 #. Channel overview settings tab label, control, or validation message (name, topic, slowmode, voice region, mature content gate).
-#: src/features/channel/components/modals/channel_tabs/channel_overview_tab/SlowmodeControl.tsx:18
+#: src/features/channel/components/modals/channel_tabs/channel_overview_tab/SlowmodeControl.tsx:19
 msgid "Slowmode"
 msgstr "슬로우 모드"
 
@@ -29984,20 +29970,35 @@ msgstr "슬로우 모드 · {remaining} 기다리기"
 msgid "Slowmode active"
 msgstr "슬로우 모드 활성화됨"
 
-#. Description text in the channel and chat slowmode indicator.
-#: src/features/channel/components/SlowmodeIndicator.tsx:27
-msgid "Slowmode is enabled for this channel."
-msgstr "이 채널은 슬로우 모드가 설정되어 있습니다."
+#. Short label in the composer slowmode indicator while the countdown runs. Keep it concise. Preserve {remaining}; it is an mm:ss or hh:mm:ss timer inserted by code.
+#: src/features/channel/components/SlowmodeIndicator.tsx:38
+msgid "Slowmode is active ({remaining})"
+msgstr "슬로우 모드 활성화 중 ({remaining})"
 
-#. Description text in the channel and chat slowmode indicator.
-#: src/features/channel/components/SlowmodeIndicator.tsx:19
-msgid "Slowmode is enabled, but you are immune."
-msgstr "슬로우 모드가 켜져 있지만, 회원님은 영향을 받지 않습니다."
+#. Short label in the composer slowmode indicator when the reader is free to send. Keep it concise.
+#: src/features/channel/components/SlowmodeIndicator.tsx:34
+msgid "Slowmode is enabled"
+msgstr "슬로우 모드 활성화됨"
 
 #. Modal body shown when slowmode blocks sending a message. {duration} is a localized short duration such as "2 minutes".
 #: src/features/slowmode/components/alerts/SlowmodeRateLimitedModal.tsx:17
 msgid "Slowmode is on — wait {duration} before sending another."
 msgstr "슬로 모드가 켜져 있습니다. {duration} 후에 다시 메시지를 보내주세요."
+
+#. Tooltip on the composer slowmode indicator when the reader is free to send. Preserve {durationLabel}; it is inserted by code.
+#: src/features/channel/components/SlowmodeIndicator.tsx:29
+msgid "Slowmode is set to {durationLabel} for this channel."
+msgstr "이 채널은 슬로우 모드가 {durationLabel}로 설정되어 있습니다."
+
+#. Tooltip on the composer slowmode indicator when the reader can bypass slowmode. Preserve {durationLabel}; it is inserted by code.
+#: src/features/channel/components/SlowmodeIndicator.tsx:19
+msgid "Slowmode is set to {durationLabel}, but you are immune."
+msgstr "슬로우 모드가 {durationLabel}로 설정되어 있지만, 당신은 면제됩니다."
+
+#. Tooltip on the composer slowmode indicator while the reader is counting down. Preserve {durationLabel}; it is inserted by code.
+#: src/features/channel/components/SlowmodeIndicator.tsx:24
+msgid "Slowmode is set to {durationLabel}. Wait before sending another message."
+msgstr "슬로우 모드가 {durationLabel}로 설정되어 있습니다. 다음 메시지를 보내기 전에 기다려 주세요."
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:253
@@ -36912,7 +36913,7 @@ msgid "Wait a moment. This window will close automatically once we receive your 
 msgstr "잠시만 기다려 주세요. 메시지 수신 시 이 창은 자동으로 닫힙니다."
 
 #. Description under the slowmode slider in channel settings. bypassSlowmodePermissionLabel is the localized Bypass Slowmode permission name.
-#: src/features/channel/components/modals/channel_tabs/channel_overview_tab/SlowmodeControl.tsx:28
+#: src/features/channel/components/modals/channel_tabs/channel_overview_tab/SlowmodeControl.tsx:29
 msgid "Wait between messages. \"{bypassSlowmodePermissionLabel}\" can bypass it."
 msgstr "메시지 사이에 대기합니다. \"{bypassSlowmodePermissionLabel}\" 권한이 있으면 이 제한을 우회할 수 있습니다."
 
@@ -38499,11 +38500,6 @@ msgstr "{username}님, 오셨군요! 함께하게 되어 반갑습니다."
 #: src/features/invite/components/modals/InvitePagePreviewModal.tsx:95
 msgid "You're in preview mode"
 msgstr "미리 보기 모드입니다"
-
-#. Description text in the channel and chat slowmode indicator.
-#: src/features/channel/components/SlowmodeIndicator.tsx:23
-msgid "You're in slowmode. Wait before sending another message."
-msgstr "슬로 모드입니다. 다음 메시지를 보내기 전에 잠시 기다려 주세요."
 
 #. Subtitle below the connected-call header confirming the user is connected.
 #: src/features/voice/components/bottomsheets/DirectCallLobbyBottomSheet.tsx:108

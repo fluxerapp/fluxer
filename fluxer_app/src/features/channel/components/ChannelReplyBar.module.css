@@ -11,8 +11,9 @@
 
 .replyTargetButton {
 	display: block;
+	justify-self: start;
 	min-width: 0;
-	width: 100%;
+	max-width: 100%;
 	cursor: pointer;
 	border: 0;
 	background: transparent;
@@ -35,7 +36,7 @@
 	align-items: center;
 	flex: 0 0 auto;
 	gap: 0.125rem;
-	min-height: var(--composer-status-pill-height, 1.5rem);
+	min-height: var(--composer-action-button-size, 2rem);
 }
 
 .mentionToggle {
@@ -43,7 +44,7 @@
 	cursor: pointer;
 	align-items: center;
 	justify-content: center;
-	height: calc(var(--composer-status-pill-height, 1.5rem) - 0.25rem);
+	height: calc(var(--composer-action-button-size, 2rem) - 0.25rem);
 	inline-size: 3.5rem;
 	flex: 0 0 3.5rem;
 	padding: 0 0.5rem;
@@ -91,20 +92,16 @@
 	flex-shrink: 0;
 	border: none;
 	background-color: transparent;
-	width: var(--composer-status-pill-height, 1.5rem);
-	height: var(--composer-status-pill-height, 1.5rem);
+	width: var(--composer-action-button-size, 2rem);
+	height: var(--composer-action-button-size, 2rem);
 	padding: 0;
-	border-radius: var(--radius-full);
 	color: var(--text-primary-muted);
 	line-height: 0;
-	transition:
-		color 200ms,
-		background-color 200ms;
+	transition: color 200ms;
 }
 
 .closeButton:hover {
 	color: var(--text-primary);
-	background-color: var(--background-modifier-hover);
 }
 
 .closeIcon {

@@ -238,21 +238,63 @@ function readSourceVariables(appDir: string): {
 	return {darkDefaults, lightDefaults, sources};
 }
 
+function findMatchingParen(text: string, openIndex: number): number {
+	let depth = 0;
+	for (let index = openIndex; index < text.length; index += 1) {
+		const character = text[index];
+		if (character === '(') depth += 1;
+		if (character === ')') {
+			depth -= 1;
+			if (depth === 0) return index;
+		}
+	}
+	return -1;
+}
+
+function splitVarArguments(inner: string): {dependency: string; fallback: string | null} {
+	let depth = 0;
+	for (let index = 0; index < inner.length; index += 1) {
+		const character = inner[index];
+		if (character === '(') depth += 1;
+		if (character === ')') depth -= 1;
+		if (character === ',' && depth === 0) {
+			return {dependency: inner.slice(0, index).trim(), fallback: inner.slice(index + 1).trim()};
+		}
+	}
+	return {dependency: inner.trim(), fallback: null};
+}
+
 function resolveVariableValue(name: string, values: ReadonlyMap<string, string>, stack = new Set<string>()): string {
 	const value = values.get(name);
 	if (!value) return '';
-	return value.replace(
-		/var\(\s*(--[a-zA-Z0-9_-]+)(?:\s*,\s*([^)]+))?\)/g,
-		(full, dependency: string, fallback?: string) => {
-			if (dependency === '--saturation-factor') return full;
-			if (stack.has(dependency)) return fallback?.trim() ?? full;
-			const dependencyValue = values.get(dependency);
-			if (!dependencyValue) return fallback?.trim() ?? full;
+	let result = '';
+	let cursor = 0;
+	while (cursor < value.length) {
+		const start = value.indexOf('var(', cursor);
+		if (start === -1) {
+			result += value.slice(cursor);
+			return result;
+		}
+		const close = findMatchingParen(value, start + 3);
+		if (close === -1) {
+			result += value.slice(cursor);
+			return result;
+		}
+		result += value.slice(cursor, start);
+		const full = value.slice(start, close + 1);
+		const {dependency, fallback} = splitVarArguments(value.slice(start + 4, close));
+		if (dependency === '--saturation-factor') {
+			result += full;
+		} else if (stack.has(dependency) || !values.get(dependency)) {
+			result += fallback ?? full;
+		} else {
 			const nextStack = new Set(stack);
 			nextStack.add(name);
-			return resolveVariableValue(dependency, values, nextStack);
-		},
-	);
+			result += resolveVariableValue(dependency, values, nextStack);
+		}
+		cursor = close + 1;
+	}
+	return result;
 }
 
 function getGroupId(name: string): string {

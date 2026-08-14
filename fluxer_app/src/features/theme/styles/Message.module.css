@@ -1073,19 +1073,6 @@
 	align-items: flex-start;
 	justify-content: center;
 	padding-block-start: 0.15em;
-	padding-inline-start: max(
-		0px,
-		calc(
-			(
-				var(--textarea-horizontal-padding, 1rem) +
-				var(--textarea-side-button-padding, 0.34375rem) +
-				(var(--textarea-button-height, 2rem) / 2) -
-				var(--chat-horizontal-padding, 1rem) -
-				(var(--message-avatar-size) / 2)
-			) *
-			2
-		)
-	);
 	user-select: none;
 	-webkit-user-select: none;
 }
@@ -1261,7 +1248,10 @@
 
 .typingCluster {
 	display: grid;
-	grid-template-columns: var(--typing-upload-column-width) minmax(0, 1fr);
+	grid-template-columns: calc(var(--textarea-button-height, 2rem) + var(--textarea-side-button-padding, 0.25rem) * 2) minmax(
+			0,
+			1fr
+		);
 	column-gap: var(--textarea-upload-gap, 0.75rem);
 	align-items: center;
 	pointer-events: none;
@@ -1338,22 +1328,8 @@
 	flex: 0 1 auto;
 }
 
-.typingPillComposerStatus {
-	height: var(--composer-status-pill-height);
-	min-height: var(--composer-status-pill-height);
-	max-width: 100%;
-	min-width: 0;
-	padding: 0 0.5rem;
-	border-radius: var(--radius-full);
-}
-
-.typingPillComposerStatus .typingIndicator,
-.typingPillComposerStatus .typingAvatarContainer {
-	height: var(--composer-status-pill-height);
-}
-
-.typingPillComposerStatus .typingText {
-	line-height: var(--composer-status-pill-height);
+.typingClusterComposerStatus .typingAvatarContainer {
+	--avatar-stack-outline-color: var(--composer-surface-color, var(--background-secondary-lighter));
 }
 
 .compactContentWrapper {

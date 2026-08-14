@@ -355,7 +355,7 @@ msgstr "{count, plural, one {# žymė} other {# žymės}}"
 msgid "{count, plural, one {# community found} other {# communities found}}"
 msgstr "{count, plural, one {# bendrija rasta} other {# bendrijų rasta}}"
 
-#: src/features/app/components/layout/GuildsLayout.tsx:902
+#: src/features/app/components/layout/GuildsLayout.tsx:907
 msgid "{count, plural, one {# community is temporarily unavailable due to a flux capacitor malfunction.} other {# communities are temporarily unavailable due to a flux capacitor malfunction.}}"
 msgstr "{count, plural, one {# bendruomenė laikinai nepasiekiama dėl srauto kondensatoriaus gedimo.} other {# bendruomenės laikinai nepasiekiamos dėl srauto kondensatoriaus gedimo.}}"
 
@@ -378,8 +378,6 @@ msgstr "{count, plural, one {# jaustukas} other {# jaustukai}}"
 msgid "{count, plural, one {# gift} other {# gifts}}"
 msgstr "{count, plural, one {# dovana} other {# dovanos}}"
 
-#. Slowmode duration expressed in hours, shown on the channel settings slowmode slider.
-#: src/features/channel/components/modals/channel_tabs/channel_overview_tab/SlowmodeControl.tsx:41
 #: src/features/channel/components/modals/GroupInvitesBottomSheet.tsx:139
 msgid "{count, plural, one {# hour} other {# hours}}"
 msgstr "{count, plural, one {# valanda} few {# valandos} other {# valandų}}"
@@ -396,11 +394,6 @@ msgstr "{count, plural, one {# elementas} other {# elementai}}"
 #: src/features/user/components/modals/user_profile_modal/MutualGroupItem.tsx:26
 msgid "{count, plural, one {# member} other {# members}}"
 msgstr "{count, plural, one {# narys} other {# nariai}}"
-
-#. Slowmode duration expressed in minutes, shown on the channel settings slowmode slider.
-#: src/features/channel/components/modals/channel_tabs/channel_overview_tab/SlowmodeControl.tsx:37
-msgid "{count, plural, one {# minute} other {# minutes}}"
-msgstr "{count, plural, one {# minutė} other {# minutės}}"
 
 #: src/features/channel/components/direct_message/DMWelcomeSection.tsx:246
 msgid "{count, plural, one {# mutual community} other {# mutual communities}}"
@@ -433,9 +426,7 @@ msgstr "{count, plural, one {# reakcija} few {# reakcijos} other {# reakcijų}}"
 msgid "{count, plural, one {# saved media item} other {# saved media items}}"
 msgstr "{count, plural, one {# išsaugotas medijos elementas} other {# išsaugoti medijos elementai}}"
 
-#. Slowmode duration expressed in seconds, shown on the channel settings slowmode slider.
 #: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:183
-#: src/features/channel/components/modals/channel_tabs/channel_overview_tab/SlowmodeControl.tsx:33
 msgid "{count, plural, one {# second} other {# seconds}}"
 msgstr "{count, plural, one {# sekundė} other {# sekundės}}"
 
@@ -666,11 +657,6 @@ msgstr "{duration} anksčiau už jus"
 #: src/features/user/components/popouts/UserProfileShared.tsx:71
 msgid "{duration} behind you"
 msgstr "{duration} už jūsų"
-
-#. Short label in the channel and chat slowmode indicator. Keep it concise. Preserve {durationLabel}; it is inserted by code.
-#: src/features/channel/components/SlowmodeIndicator.tsx:31
-msgid "{durationLabel} slowmode"
-msgstr "{durationLabel} lėtasis režimas"
 
 #. Gift duration label. PREMIUM_PRODUCT_NAME is the paid plan name.
 #: src/features/gift/utils/GiftUtils.ts:12
@@ -2847,7 +2833,7 @@ msgstr "Administratoriai pristabdė kvietimus – šiuo metu negalite prisijungt
 #. Disclosure button label in the voice connection status popout. Reveals technical bandwidth and network stats.
 #. User settings tab for power-user and experimental application preferences.
 #. Voice participant context menu submenu label for IDs and diagnostics.
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:337
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:336
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/index.tsx:28
 #: src/features/ui/action_menu/items/VoiceParticipantMenuData.tsx:178
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:145
@@ -6546,8 +6532,8 @@ msgstr "Kanalo tipas: {0}."
 
 #. Audit log entry label. Past-tense action describing that a channel was edited.
 #: src/features/app/config/AuditLogConstants.ts:16
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:207
-#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:226
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:206
+#: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:225
 msgid "Channel updated"
 msgstr "Kanalas atnaujintas"
 
@@ -7162,7 +7148,7 @@ msgstr "Išvalyti priedų maketus"
 
 #. Accessible label for the button that clears the slash command being composed in the message box.
 #. Accessible label for the composer button that clears the slash command currently being composed.
-#: src/features/channel/components/LexicalChannelTextareaContent.tsx:126
+#: src/features/channel/components/LexicalChannelTextareaContent.tsx:130
 #: src/features/channel/components/SlashCommandParamBar.tsx:16
 msgid "Clear command"
 msgstr "Panaikinti komandą"
@@ -13509,7 +13495,7 @@ msgstr "Įveskite SMS kodą"
 msgid "Enter this code in your browser to complete sign-in."
 msgstr "Įveskite šį kodą naršyklėje, kad prisijungtumėte."
 
-#: src/features/channel/components/EditingMessageInput.tsx:359
+#: src/features/channel/components/EditingMessageInput.tsx:358
 msgid "enter to <0><1>save</1></0>"
 msgstr "paspauskite \"enter\", kad <0><1>išsaugotumėte</1></0>"
 
@@ -13650,7 +13636,7 @@ msgstr "klavišas \"Esc\""
 msgid "Escape key exits keyboard mode"
 msgstr "klavišas \"Esc\" išeina iš klaviatūros režimo"
 
-#: src/features/channel/components/EditingMessageInput.tsx:346
+#: src/features/channel/components/EditingMessageInput.tsx:345
 msgid "escape to <0><1>cancel</1></0>"
 msgstr "paspauskite \"escape\", kad <0><1>atšauktumėte</1></0>"
 
@@ -22465,7 +22451,7 @@ msgstr "Objektai"
 #. Option label for an H.264 backup stream select.
 #: src/features/channel/components/ChannelReplyBar.tsx:62
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/MatureContentSection.tsx:26
-#: src/features/channel/components/modals/channel_tabs/channel_overview_tab/SlowmodeControl.tsx:23
+#: src/features/channel/components/modals/channel_tabs/channel_overview_tab/SlowmodeControl.tsx:24
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:97
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:139
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:123
@@ -26668,7 +26654,7 @@ msgid "Reset premium state"
 msgstr "Iš naujo nustatyti \"Premium\" būseną"
 
 #. Accessible label for a button that resets a slider to its default value.
-#: src/features/ui/components/Slider.tsx:18
+#: src/features/ui/components/Slider.tsx:24
 msgid "Reset slider to default value"
 msgstr "Grąžinti slankiklį į numatytąją reikšmę"
 
@@ -29896,7 +29882,7 @@ msgid "slash {commandName}"
 msgstr "/ {commandName}"
 
 #. Accessible label announcing the current slider value.
-#: src/features/ui/components/Slider.tsx:22
+#: src/features/ui/components/Slider.tsx:28
 msgid "Slider value"
 msgstr "Slankiklio reikšmė"
 
@@ -29968,7 +29954,7 @@ msgid "Slow profile load"
 msgstr "Lėtas profilio įkėlimas"
 
 #. Channel overview settings tab label, control, or validation message (name, topic, slowmode, voice region, mature content gate).
-#: src/features/channel/components/modals/channel_tabs/channel_overview_tab/SlowmodeControl.tsx:18
+#: src/features/channel/components/modals/channel_tabs/channel_overview_tab/SlowmodeControl.tsx:19
 msgid "Slowmode"
 msgstr "Lėtasis režimas"
 
@@ -29984,20 +29970,35 @@ msgstr "Lėtasis režimas · laukti {remaining}"
 msgid "Slowmode active"
 msgstr "Lėtasis režimas aktyvus"
 
-#. Description text in the channel and chat slowmode indicator.
-#: src/features/channel/components/SlowmodeIndicator.tsx:27
-msgid "Slowmode is enabled for this channel."
-msgstr "Šiame kanale įjungtas lėtasis režimas."
+#. Short label in the composer slowmode indicator while the countdown runs. Keep it concise. Preserve {remaining}; it is an mm:ss or hh:mm:ss timer inserted by code.
+#: src/features/channel/components/SlowmodeIndicator.tsx:38
+msgid "Slowmode is active ({remaining})"
+msgstr "Lėtasis režimas aktyvus ({remaining})"
 
-#. Description text in the channel and chat slowmode indicator.
-#: src/features/channel/components/SlowmodeIndicator.tsx:19
-msgid "Slowmode is enabled, but you are immune."
-msgstr "Sulėgintasis režimas įjungtas, bet jums jis negalioja."
+#. Short label in the composer slowmode indicator when the reader is free to send. Keep it concise.
+#: src/features/channel/components/SlowmodeIndicator.tsx:34
+msgid "Slowmode is enabled"
+msgstr "Lėtasis režimas įjungtas"
 
 #. Modal body shown when slowmode blocks sending a message. {duration} is a localized short duration such as "2 minutes".
 #: src/features/slowmode/components/alerts/SlowmodeRateLimitedModal.tsx:17
 msgid "Slowmode is on — wait {duration} before sending another."
 msgstr "Įjungtas lėtasis režimas – prieš siųsdami kitą palaukite {duration}."
+
+#. Tooltip on the composer slowmode indicator when the reader is free to send. Preserve {durationLabel}; it is inserted by code.
+#: src/features/channel/components/SlowmodeIndicator.tsx:29
+msgid "Slowmode is set to {durationLabel} for this channel."
+msgstr "Šiame kanale nustatytas lėtasis režimas – {durationLabel}."
+
+#. Tooltip on the composer slowmode indicator when the reader can bypass slowmode. Preserve {durationLabel}; it is inserted by code.
+#: src/features/channel/components/SlowmodeIndicator.tsx:19
+msgid "Slowmode is set to {durationLabel}, but you are immune."
+msgstr "Nustatytas lėtasis režimas – {durationLabel}, bet jūs jo nepaisote."
+
+#. Tooltip on the composer slowmode indicator while the reader is counting down. Preserve {durationLabel}; it is inserted by code.
+#: src/features/channel/components/SlowmodeIndicator.tsx:24
+msgid "Slowmode is set to {durationLabel}. Wait before sending another message."
+msgstr "Nustatytas lėtasis režimas – {durationLabel}. Palaukite prieš siųsdami kitą pranešimą."
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:253
@@ -36912,7 +36913,7 @@ msgid "Wait a moment. This window will close automatically once we receive your 
 msgstr "Palaukite. Šis langas automatiškai užsidarys, kai tik gausime jūsų žinutę."
 
 #. Description under the slowmode slider in channel settings. bypassSlowmodePermissionLabel is the localized Bypass Slowmode permission name.
-#: src/features/channel/components/modals/channel_tabs/channel_overview_tab/SlowmodeControl.tsx:28
+#: src/features/channel/components/modals/channel_tabs/channel_overview_tab/SlowmodeControl.tsx:29
 msgid "Wait between messages. \"{bypassSlowmodePermissionLabel}\" can bypass it."
 msgstr "Laikas tarp pranešimų. „{bypassSlowmodePermissionLabel}“ gali jį apeiti."
 
@@ -38499,11 +38500,6 @@ msgstr "Sveiki atvykę, {username}! Smagu, kad esate su mumis."
 #: src/features/invite/components/modals/InvitePagePreviewModal.tsx:95
 msgid "You're in preview mode"
 msgstr "Esate peržiūros režimu"
-
-#. Description text in the channel and chat slowmode indicator.
-#: src/features/channel/components/SlowmodeIndicator.tsx:23
-msgid "You're in slowmode. Wait before sending another message."
-msgstr "Įjungtas lėtasis režimas. Palaukite prieš siųsdami kitą žinutę."
 
 #. Subtitle below the connected-call header confirming the user is connected.
 #: src/features/voice/components/bottomsheets/DirectCallLobbyBottomSheet.tsx:108

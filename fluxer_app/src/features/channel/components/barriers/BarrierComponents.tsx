@@ -55,9 +55,8 @@ const BarrierBase = observer(({message, action, icon}: BarrierBaseProps) => {
 				wrapperStyles.box,
 				wrapperStyles.wrapperSides,
 				textareaStyles.textareaOuter,
-				textareaStyles.textareaOuterMinHeight,
+				textareaStyles.textareaOuterRow,
 				wrapperStyles.roundedAll,
-				wrapperStyles.bottomSpacing,
 			)}
 			data-flx="channel.barriers.barrier-components.barrier-base.div"
 		>

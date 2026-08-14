@@ -165,14 +165,13 @@ export const EditingMessageInput = observer(
 					ComponentDispatch.dispatch('INBOX_OPEN');
 					return;
 				}
-				if (event.key === 'Escape' && !event.shiftKey) {
+				if (event.key === 'Escape' && !event.shiftKey && !event.defaultPrevented && !event.nativeEvent.isComposing) {
 					event.preventDefault();
 					event.stopPropagation();
-					ComponentDispatch.dispatch('ESCAPE_PRESSED', {channelId: channel.id});
 					onCancel();
 				}
 			},
-			[actualContent, channel.id, onCancel],
+			[actualContent, onCancel],
 		);
 		useEffect(() => {
 			if (editingDisabled || hasFocusedInitiallyRef.current) {

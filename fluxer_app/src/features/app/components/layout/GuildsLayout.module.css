@@ -19,7 +19,11 @@
 }
 
 .guildsLayoutReserveSpace {
-	--layout-user-area-overlay-height: calc(var(--layout-user-area-height) + var(--layout-voice-connection-height, 0px));
+	--layout-user-area-overlay-height: calc(
+		var(--layout-user-area-height) +
+		var(--user-area-box-inset-block-end) +
+		var(--layout-voice-connection-height, 0px)
+	);
 }
 
 .guildsLayoutReserveMobileBottomNav {
@@ -181,7 +185,8 @@
 	width: calc(var(--layout-guild-list-width) + var(--layout-sidebar-width) + 0.0625rem);
 	display: flex;
 	align-items: flex-end;
-	padding: 0;
+	padding: 0 var(--footer-box-inset-inline) var(--user-area-box-inset-block-end);
+	background-color: var(--background-secondary);
 	pointer-events: none;
 	z-index: var(--z-index-elevated-1);
 }

@@ -23,20 +23,16 @@
 	flex-shrink: 0;
 	border: none;
 	background-color: transparent;
-	width: var(--composer-status-pill-height, 1.5rem);
-	height: var(--composer-status-pill-height, 1.5rem);
+	width: var(--composer-action-button-size, 2rem);
+	height: var(--composer-action-button-size, 2rem);
 	padding: 0;
-	border-radius: var(--radius-full);
 	color: var(--text-primary-muted);
 	line-height: 0;
-	transition:
-		color 200ms,
-		background-color 200ms;
+	transition: color 200ms;
 }
 
 .button:hover {
 	color: var(--text-primary);
-	background-color: var(--background-modifier-hover);
 }
 
 .icon {

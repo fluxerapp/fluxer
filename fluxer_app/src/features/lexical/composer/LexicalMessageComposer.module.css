@@ -40,7 +40,7 @@
 	left: var(--composer-placeholder-left, 0);
 	pointer-events: none;
 	user-select: none;
-	color: var(--text-primary-muted);
+	color: var(--text-tertiary-secondary);
 	font-size: var(--composer-font-size, var(--textarea-font-size, 1rem));
 	line-height: var(--composer-line-height, var(--textarea-line-height, 1.375rem));
 	overflow: hidden;

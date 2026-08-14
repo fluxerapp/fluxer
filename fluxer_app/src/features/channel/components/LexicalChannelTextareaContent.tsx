@@ -7,6 +7,10 @@ import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {Limits} from '@app/features/app/utils/UserLimits';
 import {fetchSlowmodeState} from '@app/features/channel/commands/ChannelCommands';
 import {ChannelAttachmentArea} from '@app/features/channel/components/ChannelAttachmentArea';
+import {
+	type ChannelComposerDismissalRequest,
+	requestChannelComposerAffordanceDismissal,
+} from '@app/features/channel/components/ChannelComposerDismissal';
 import {EditBar} from '@app/features/channel/components/ChannelEditBar';
 import {ReplyBar} from '@app/features/channel/components/ChannelReplyBar';
 import {ChannelStickersArea} from '@app/features/channel/components/ChannelStickersArea';
@@ -99,7 +103,6 @@ import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as PopoutCommands from '@app/features/ui/commands/PopoutCommands';
 import {SlashCommandIcon} from '@app/features/ui/components/icons/SlashCommandIcon';
-import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {openPopout} from '@app/features/ui/popover/PopoverPopout';
 import ContextMenuState from '@app/features/ui/state/ContextMenu';
 import KeyboardMode from '@app/features/ui/state/KeyboardMode';
@@ -110,7 +113,7 @@ import {openVoiceMessageComposerModal} from '@app/features/voice/components/Voic
 import {flxElementClassName} from '@app/lib/react';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
-import {PlusCircleIcon} from '@phosphor-icons/react';
+import {PlusIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState} from 'react';
@@ -127,6 +130,8 @@ const CLEAR_COMMAND_DESCRIPTOR = msg({
 	message: 'Clear command',
 	comment: 'Accessible label for the composer button that clears the slash command currently being composed.',
 });
+
+const PLUS_ICON_PROPS = {weight: 'bold'} as const;
 
 export const LexicalChannelTextareaContent = observer(
 	({
@@ -672,21 +677,88 @@ export const LexicalChannelTextareaContent = observer(
 			onMentionConfirmationNeeded: handleMentionConfirmationNeeded,
 			i18n: i18n,
 		});
+		const handleClearSlashCommand = useCallback(() => {
+			const handle = handleRef.current;
+			if (handle !== null) {
+				handle.clear();
+			}
+			setValue('');
+			clearSegments();
+			DraftCommands.deleteDraft(channel.id);
+			if (handle !== null) {
+				handle.focus();
+			}
+		}, [channel.id, clearSegments]);
+		const handleCancelEdit = useCallback(() => {
+			setValue('');
+			clearSegments();
+		}, [clearSegments]);
+		const focusComposer = useCallback(() => {
+			const handle = handleRef.current;
+			if (handle !== null) {
+				handle.focus();
+			}
+		}, []);
+		const dismissTopmostComposerAffordance = useCallback((): boolean => {
+			const editingInline = MessageEdit.getEditingMessageId(channel.id) !== null;
+			if (editingInline) {
+				MessageCommands.stopEdit(channel.id);
+				return true;
+			}
+			if (hasPendingSticker) {
+				ChannelSticker.removePendingSticker(channel.id);
+				focusComposer();
+				return true;
+			}
+			if (hasAttachments) {
+				CloudUpload.clearTextarea(channel.id);
+				focusComposer();
+				return true;
+			}
+			const slashCommandResolution = LexicalMessageCommandResolver.resolve(handleRef.current);
+			if (slashCommandResolution.status !== LexicalMessageCommandResolutionStatus.NO_COMMAND) {
+				handleClearSlashCommand();
+				return true;
+			}
+			if (editingMessageForComposer !== null && mobileLayout.enabled) {
+				MessageCommands.stopEditMobile(channel.id);
+				handleCancelEdit();
+				focusComposer();
+				return true;
+			}
+			if (replyingMessage !== null) {
+				MessageCommands.stopReply(channel.id);
+				focusComposer();
+				return true;
+			}
+			return false;
+		}, [
+			channel.id,
+			editingMessageForComposer,
+			focusComposer,
+			handleCancelEdit,
+			handleClearSlashCommand,
+			hasAttachments,
+			hasPendingSticker,
+			mobileLayout.enabled,
+			replyingMessage,
+		]);
+		useEffect(() => {
+			return ComponentDispatch.subscribe('TEXTAREA_DISMISS_AFFORDANCE', (request?: unknown) => {
+				const dismissalRequest = request as ChannelComposerDismissalRequest | undefined;
+				if (dismissalRequest?.channelId !== channel.id) {
+					return false;
+				}
+				return dismissTopmostComposerAffordance();
+			});
+		}, [channel.id, dismissTopmostComposerAffordance]);
 		const handleEscapeKey = useCallback(
 			(event: React.KeyboardEvent<HTMLElement>) => {
-				if (event.key !== 'Escape') return;
-				if (event.shiftKey) return;
-				if (hasAttachments || hasPendingSticker || replyingMessage) {
+				if (event.defaultPrevented || event.nativeEvent.isComposing) return;
+				if (event.key !== 'Escape' || event.shiftKey) return;
+				if (requestChannelComposerAffordanceDismissal(channel.id)) {
 					event.preventDefault();
-					if (hasAttachments) {
-						CloudUpload.clearTextarea(channel.id);
-					}
-					if (hasPendingSticker) {
-						ChannelSticker.removePendingSticker(channel.id);
-					}
-					if (replyingMessage) {
-						MessageCommands.stopReply(channel.id);
-					}
+					event.stopPropagation();
 					return;
 				}
 				if (isInputAreaFocused && KeyboardMode.keyboardModeEnabled) {
@@ -698,15 +770,7 @@ export const LexicalChannelTextareaContent = observer(
 					KeyboardMode.exitKeyboardMode();
 				}
 			},
-			[
-				channel.id,
-				hasAttachments,
-				hasPendingSticker,
-				replyingMessage,
-				isInputAreaFocused,
-				KeyboardMode.keyboardModeEnabled,
-				Accessibility.escapeExitsKeyboardMode,
-			],
+			[channel.id, isInputAreaFocused, KeyboardMode.keyboardModeEnabled, Accessibility.escapeExitsKeyboardMode],
 		);
 		const slotResolvers = useMemo<SlashSlotResolvers>(() => {
 			const guildId = channel.guildId;
@@ -776,18 +840,6 @@ export const LexicalChannelTextareaContent = observer(
 			}
 			MessageCommands.startEdit(channel.id, message.id, message.content);
 		}, [channel.id]);
-		const handleClearSlashCommand = useCallback(() => {
-			const handle = handleRef.current;
-			if (handle !== null) {
-				handle.clear();
-			}
-			setValue('');
-			clearSegments();
-			DraftCommands.deleteDraft(channel.id);
-			if (handle !== null) {
-				handle.focus();
-			}
-		}, [channel.id, clearSegments]);
 		useTextareaDraftAndTyping({
 			channelId: channel.id,
 			value,
@@ -808,11 +860,6 @@ export const LexicalChannelTextareaContent = observer(
 			textareaInputDisabled,
 			isFocused,
 			handleArrowUpEmpty,
-			editingMessage,
-			replyingMessage,
-			mobileLayout,
-			setValue,
-			clearSegments,
 		});
 		const messageLabel = i18n._(MESSAGE_DESCRIPTOR);
 		const messagePrefix = `${messageLabel} `;
@@ -933,10 +980,6 @@ export const LexicalChannelTextareaContent = observer(
 				resizeObserver.disconnect();
 			};
 		}, [mobileLayout.enabled]);
-		const handleCancelEdit = useCallback(() => {
-			setValue('');
-			clearSegments();
-		}, [clearSegments]);
 		const isPlusContextMenuOpen = useCallback(() => {
 			const plusButton = plusButtonRef.current;
 			const contextMenu = ContextMenuState.contextMenu;
@@ -1093,36 +1136,29 @@ export const LexicalChannelTextareaContent = observer(
 			],
 		);
 		const isSlashParamBarVisible = slashCommandState.activeSlot != null;
-		const hasStackedSections = Boolean(
-			referencedMessage ||
-				(editingMessage && mobileLayout.enabled) ||
-				uploadAttachments.length > 0 ||
-				hasPendingSticker ||
-				isSlashParamBarVisible,
-		);
 		const isMobileEditBarVisible = editingMessage && mobileLayout.enabled;
 		const isReplyBarVisible = !isMobileEditBarVisible && referencedMessage != null;
 		const presentableTypingUsers = usePresentableTypingUsers(channel);
 		const isTypingStatusVisible = !isAutocompleteVisible && presentableTypingUsers.length > 0;
 		const isSlowmodeIndicatorVisible = isSlowmodeEnabled;
 		const hasLeadingStatusContent = isMobileEditBarVisible || isReplyBarVisible || isSlashParamBarVisible;
-		const hasComposerStatusRail = isTypingStatusVisible || hasLeadingStatusContent || isSlowmodeIndicatorVisible;
 		let shouldReplyMention = false;
 		if (replyingMessage !== null && replyingMessage !== undefined) {
 			shouldReplyMention = replyingMessage.mentioning;
 		}
-		const topBarContent = isMobileEditBarVisible ? (
-			<EditBar channel={channel} onCancel={handleCancelEdit} />
-		) : (
-			referencedMessage && (
+		let topBarContent: React.ReactNode = null;
+		if (isMobileEditBarVisible) {
+			topBarContent = <EditBar channel={channel} onCancel={handleCancelEdit} />;
+		} else if (referencedMessage !== null) {
+			topBarContent = (
 				<ReplyBar
 					replyingMessageObject={referencedMessage}
 					shouldReplyMention={shouldReplyMention}
 					setShouldReplyMention={(mentioning) => MessageCommands.setReplyMentioning(channel.id, mentioning)}
 					channel={channel}
 				/>
-			)
-		);
+			);
+		}
 		const renderSection = (content: React.ReactNode, sectionClassName?: string) => (
 			<flx-channel-textarea-section className={flxElementClassName(wrapperStyles.stackSection, sectionClassName)}>
 				{content}
@@ -1130,171 +1166,155 @@ export const LexicalChannelTextareaContent = observer(
 		);
 		return (
 			<>
-				<FocusRing
-					focusTarget={editableRef}
-					ringTarget={containerRef}
-					offset={0}
-					enabled={!textareaInputDisabled && Accessibility.showTextareaFocusRing}
-					ringClassName={styles.textareaFocusRing}
+				<flx-channel-textarea
+					ref={containerRef}
+					className={flxElementClassName(
+						wrapperStyles.box,
+						wrapperStyles.composerRoot,
+						wrapperStyles.wrapperSides,
+						styles.textareaOuter,
+						mobileLayout.enabled && styles.textareaOuterMobile,
+						wrapperStyles.roundedAll,
+						textareaInputDisabled && wrapperStyles.disabled,
+						!mobileLayout.enabled && styles.textareaOuterRow,
+					)}
 				>
-					<flx-channel-textarea
-						ref={containerRef}
-						className={flxElementClassName(
-							wrapperStyles.box,
-							wrapperStyles.wrapperSides,
-							styles.textareaOuter,
-							mobileLayout.enabled && styles.textareaOuterMobile,
-							hasStackedSections ? wrapperStyles.roundedBottom : wrapperStyles.roundedAll,
-							wrapperStyles.bottomSpacing,
-							textareaInputDisabled && wrapperStyles.disabled,
-							!mobileLayout.enabled && styles.textareaOuterMinHeight,
-						)}
-					>
-						{hasComposerStatusRail && (
-							<flx-channel-textarea-status-rail className={flxElementClassName(wrapperStyles.statusRail)}>
-								<flx-channel-textarea-status-rail-left
-									className={flxElementClassName(
-										wrapperStyles.statusRailLeft,
-										hasLeadingStatusContent && wrapperStyles.statusRailLeftWithLeading,
-									)}
-								>
-									{topBarContent && (
-										<flx-channel-textarea-top-bar className={flxElementClassName(wrapperStyles.topBarContainer)}>
-											{topBarContent}
-										</flx-channel-textarea-top-bar>
-									)}
-									{slashCommandState.activeSlot != null && (
-										<flx-channel-textarea-slash-command-bar
-											className={flxElementClassName(wrapperStyles.topBarContainer)}
-										>
-											<SlashCommandParamBar
-												activeSlot={slashCommandState.activeSlot}
-												onClear={handleClearSlashCommand}
-											/>
-										</flx-channel-textarea-slash-command-bar>
-									)}
-									{isTypingStatusVisible && (
-										<flx-channel-textarea-typing-slot className={flxElementClassName(wrapperStyles.statusTypingSlot)}>
-											<TypingUsers channel={channel} withText={true} showAvatars={true} />
-										</flx-channel-textarea-typing-slot>
-									)}
-								</flx-channel-textarea-status-rail-left>
-								{isSlowmodeIndicatorVisible && (
-									<flx-channel-textarea-slowmode-slot className={flxElementClassName(wrapperStyles.statusSlowmodeSlot)}>
-										<SlowmodeIndicator
-											slowmodeRemaining={slowmodeRemaining}
-											slowmodeDuration={channel.rateLimitPerUser * 1000}
-											isImmune={isSlowmodeImmune}
-										/>
-									</flx-channel-textarea-slowmode-slot>
-								)}
-							</flx-channel-textarea-status-rail>
-						)}
-						{showAttachments &&
-							renderSection(<ChannelAttachmentArea channelId={channel.id} />, styles.collapsibleSection)}
-						{showStickers &&
-							renderSection(
-								<ChannelStickersArea channelId={channel.id} hasAttachments={hasAttachments} />,
-								styles.collapsibleSection,
+					<flx-channel-textarea-status-rail className={flxElementClassName(wrapperStyles.statusRail)}>
+						<flx-channel-textarea-status-rail-left className={flxElementClassName(wrapperStyles.statusRailLeft)}>
+							{isTypingStatusVisible && (
+								<flx-channel-textarea-typing-slot className={flxElementClassName(wrapperStyles.statusTypingSlot)}>
+									<TypingUsers channel={channel} withText={true} showAvatars={true} />
+								</flx-channel-textarea-typing-slot>
 							)}
-						{renderSection(
-							<flx-channel-textarea-box
-								className={flxElementClassName(
-									styles.mainWrapperDense,
-									textareaInputDisabled && wrapperStyles.disabled,
-								)}
-							>
-								<flx-channel-textarea-upload-column
-									className={flxElementClassName(styles.uploadButtonColumn, styles.sideButtonPadding)}
-								>
-									<TextareaButton
-										icon={slashCommandState.hasSlots ? SlashCommandIcon : PlusCircleIcon}
-										label={slashCommandState.hasSlots ? i18n._(CLEAR_COMMAND_DESCRIPTOR) : i18n._(OPEN_MENU_DESCRIPTOR)}
-										disabled={textareaInputDisabled}
-										aria-hidden={textareaInputDisabled ? true : undefined}
-										onMouseDown={slashCommandState.hasSlots ? undefined : handlePlusMenuMouseDown}
-										onClick={slashCommandState.hasSlots ? handleClearSlashCommand : handlePlusMenuClick}
-										forceHover={!slashCommandState.hasSlots && plusContextMenuOpen}
-										className={plusContextMenuOpen ? styles.plusButtonAboveBackdrop : undefined}
-										ref={plusButtonRef}
-									/>
-								</flx-channel-textarea-upload-column>
-								<flx-channel-textarea-content
-									ref={contentAreaRef}
-									className={flxElementClassName(styles.contentAreaDense)}
-								>
-									<flx-channel-textarea-composer className={flxElementClassName(lexicalStyles.composerHost)}>
-										<LexicalComposerInput
-											placeholder={placeholderText}
-											disabled={textareaInputDisabled}
-											handleRef={handleRef}
-											initialValue={initialDraftRef.current.display}
-											initialSegments={initialDraftRef.current.segments}
-											slotResolvers={slotResolvers}
-											emojiShortcodeResolver={composerEmojiResolver}
-											channelId={channel.id}
-											guildId={channel.guildId}
-											submitOnEnter={!mobileLayout.enabled}
-											className={lexicalStyles.composerEditable}
-											autocompleteOptions={autocompleteOptions}
-											autocompleteType={autocompleteType}
-											autocompleteQuery={autocompleteQuery}
-											autocompleteEnabled={!textareaInputDisabled}
-											slotMenuActive={isSlotMenu}
-											autocompleteReferenceElement={containerRef.current}
-											autocompleteListboxId={autocompleteListId}
-											onAutocompleteSelect={handleSelect}
-											onChange={handleEditorChange}
-											onCursorMove={onCursorMove}
-											onEnter={handleSubmit}
-											onArrowUp={handleArrowUpEmpty}
-											onKeyDown={handleEditorKeyDown}
-											onFocus={() => {
-												setIsFocused(true);
-												setIsInputAreaFocused(true);
-												ChannelSearch.setInputFocused(channel.id, false);
-											}}
-											onBlur={() => {
-												setIsFocused(false);
-												setIsInputAreaFocused(false);
-											}}
-											onSlashCommandStateChange={setSlashCommandState}
-										/>
-									</flx-channel-textarea-composer>
-								</flx-channel-textarea-content>
-								<TextareaButtons
-									disabled={textareaInputDisabled}
-									showAllButtons={showAllButtons}
-									showGifButton={showGifButton}
-									showMemesButton={showMemesButton}
-									showStickersButton={showStickersButton}
-									showEmojiButton={showEmojiButton}
-									showMessageSendButton={showMessageSendButton}
-									showVoiceMessageButton={false}
-									expressionPickerOpen={expressionPickerOpen}
-									selectedTab={selectedTab}
-									isMobile={mobileLayout.enabled}
-									isSlowmodeActive={isSubmissionBlockedBySlowmode}
-									isOverLimit={isOverCharacterLimit}
-									hasContent={hasMessageContent}
-									hasAttachments={uploadAttachments.length > 0}
-									expressionPickerTriggerRef={expressionPickerTriggerRef}
-									invisibleExpressionPickerTriggerRef={invisibleExpressionPickerTriggerRef}
-									onExpressionPickerToggle={handleExpressionPickerTabToggle}
-									onSubmit={handleSubmit}
-									channelId={channel.id}
+						</flx-channel-textarea-status-rail-left>
+						{isSlowmodeIndicatorVisible && (
+							<flx-channel-textarea-slowmode-slot className={flxElementClassName(wrapperStyles.statusSlowmodeSlot)}>
+								<SlowmodeIndicator
+									slowmodeRemaining={slowmodeRemaining}
+									slowmodeDuration={channel.rateLimitPerUser * 1000}
+									isImmune={isSlowmodeImmune}
 								/>
-							</flx-channel-textarea-box>,
-							styles.inputSection,
+							</flx-channel-textarea-slowmode-slot>
 						)}
-						<MessageCharacterCounter
-							currentLength={trimmedMessageContent.length}
-							maxLength={maxMessageLength}
-							canUpgrade={maxMessageLength < premiumMaxLength}
-							premiumMaxLength={premiumMaxLength}
-						/>
-					</flx-channel-textarea>
-				</FocusRing>
+					</flx-channel-textarea-status-rail>
+					{hasLeadingStatusContent && (
+						<div className={wrapperStyles.composerActionStack} data-flx="channel.textarea.composer-action-stack">
+							{topBarContent !== null && (
+								<div className={wrapperStyles.composerActionRow} data-flx="channel.textarea.composer-action-row">
+									{topBarContent}
+								</div>
+							)}
+							{slashCommandState.activeSlot !== null && (
+								<div className={wrapperStyles.composerActionRow} data-flx="channel.textarea.slash-command-action-row">
+									<SlashCommandParamBar activeSlot={slashCommandState.activeSlot} onClear={handleClearSlashCommand} />
+								</div>
+							)}
+						</div>
+					)}
+					{showAttachments &&
+						renderSection(<ChannelAttachmentArea channelId={channel.id} />, styles.collapsibleSection)}
+					{showStickers &&
+						renderSection(
+							<ChannelStickersArea channelId={channel.id} hasAttachments={hasAttachments} />,
+							styles.collapsibleSection,
+						)}
+					{renderSection(
+						<flx-channel-textarea-box
+							className={flxElementClassName(styles.mainWrapperDense, textareaInputDisabled && wrapperStyles.disabled)}
+						>
+							<flx-channel-textarea-upload-column
+								className={flxElementClassName(styles.uploadButtonColumn, styles.sideButtonPadding)}
+							>
+								<TextareaButton
+									iconProps={PLUS_ICON_PROPS}
+									icon={slashCommandState.hasSlots ? SlashCommandIcon : PlusIcon}
+									label={slashCommandState.hasSlots ? i18n._(CLEAR_COMMAND_DESCRIPTOR) : i18n._(OPEN_MENU_DESCRIPTOR)}
+									disabled={textareaInputDisabled}
+									aria-hidden={textareaInputDisabled ? true : undefined}
+									onMouseDown={slashCommandState.hasSlots ? undefined : handlePlusMenuMouseDown}
+									onClick={slashCommandState.hasSlots ? handleClearSlashCommand : handlePlusMenuClick}
+									forceHover={!slashCommandState.hasSlots && plusContextMenuOpen}
+									className={plusContextMenuOpen ? styles.plusButtonAboveBackdrop : undefined}
+									ref={plusButtonRef}
+								/>
+							</flx-channel-textarea-upload-column>
+							<flx-channel-textarea-content
+								ref={contentAreaRef}
+								className={flxElementClassName(styles.contentAreaDense)}
+							>
+								<flx-channel-textarea-composer className={flxElementClassName(lexicalStyles.composerHost)}>
+									<LexicalComposerInput
+										placeholder={placeholderText}
+										disabled={textareaInputDisabled}
+										handleRef={handleRef}
+										initialValue={initialDraftRef.current.display}
+										initialSegments={initialDraftRef.current.segments}
+										slotResolvers={slotResolvers}
+										emojiShortcodeResolver={composerEmojiResolver}
+										channelId={channel.id}
+										guildId={channel.guildId}
+										submitOnEnter={!mobileLayout.enabled}
+										focusRingTarget={containerRef}
+										focusRingEnabled={!textareaInputDisabled && Accessibility.showTextareaFocusRing}
+										className={lexicalStyles.composerEditable}
+										autocompleteOptions={autocompleteOptions}
+										autocompleteType={autocompleteType}
+										autocompleteQuery={autocompleteQuery}
+										autocompleteEnabled={!textareaInputDisabled}
+										slotMenuActive={isSlotMenu}
+										autocompleteReferenceElement={containerRef.current}
+										autocompleteListboxId={autocompleteListId}
+										onAutocompleteSelect={handleSelect}
+										onChange={handleEditorChange}
+										onCursorMove={onCursorMove}
+										onEnter={handleSubmit}
+										onArrowUp={handleArrowUpEmpty}
+										onKeyDown={handleEditorKeyDown}
+										onFocus={() => {
+											setIsFocused(true);
+											setIsInputAreaFocused(true);
+											ChannelSearch.setInputFocused(channel.id, false);
+										}}
+										onBlur={() => {
+											setIsFocused(false);
+											setIsInputAreaFocused(false);
+										}}
+										onSlashCommandStateChange={setSlashCommandState}
+									/>
+								</flx-channel-textarea-composer>
+							</flx-channel-textarea-content>
+							<TextareaButtons
+								disabled={textareaInputDisabled}
+								showAllButtons={showAllButtons}
+								showGifButton={showGifButton}
+								showMemesButton={showMemesButton}
+								showStickersButton={showStickersButton}
+								showEmojiButton={showEmojiButton}
+								showMessageSendButton={showMessageSendButton}
+								showVoiceMessageButton={false}
+								expressionPickerOpen={expressionPickerOpen}
+								selectedTab={selectedTab}
+								isMobile={mobileLayout.enabled}
+								isSlowmodeActive={isSubmissionBlockedBySlowmode}
+								isOverLimit={isOverCharacterLimit}
+								hasContent={hasMessageContent}
+								hasAttachments={uploadAttachments.length > 0}
+								expressionPickerTriggerRef={expressionPickerTriggerRef}
+								invisibleExpressionPickerTriggerRef={invisibleExpressionPickerTriggerRef}
+								onExpressionPickerToggle={handleExpressionPickerTabToggle}
+								onSubmit={handleSubmit}
+								channelId={channel.id}
+							/>
+						</flx-channel-textarea-box>,
+						styles.inputSection,
+					)}
+					<MessageCharacterCounter
+						currentLength={trimmedMessageContent.length}
+						maxLength={maxMessageLength}
+						canUpgrade={maxMessageLength < premiumMaxLength}
+						premiumMaxLength={premiumMaxLength}
+					/>
+				</flx-channel-textarea>
 				{mobileLayout.enabled && (
 					<>
 						<ExpressionPickerSheet

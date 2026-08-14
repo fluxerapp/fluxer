@@ -324,12 +324,17 @@ export const Messages = observer(function Messages({
 			ReadStateCommands.ack(channel.id, true, false);
 		}
 	}, [channel.id, state.messages?.hasMoreAfter, state.visualUnreadMessageId, scrollManager]);
-	const onEscapePressed = useCallback(() => {
-		if (scrollManager.jumpReturnToOrigin()) {
-			return;
-		}
-		onScrollToPresentAndAck();
-	}, [onScrollToPresentAndAck, scrollManager]);
+	const onEscapePressed = useCallback(
+		(payload?: unknown) => {
+			const data = payload as {channelId?: string} | undefined;
+			if (data?.channelId && data.channelId !== channel.id) return;
+			if (scrollManager.jumpReturnToOrigin()) {
+				return;
+			}
+			onScrollToPresentAndAck();
+		},
+		[channel.id, onScrollToPresentAndAck, scrollManager],
+	);
 	const onRetryLoadMessages = useCallback(() => {
 		void MessageCommands.fetchMessages(channel.id, null, null, MAX_MESSAGES_PER_CHANNEL);
 	}, [channel.id]);

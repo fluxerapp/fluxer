@@ -3,11 +3,11 @@
 .barrierLayout {
 	display: grid;
 	grid-template-columns: minmax(0, auto) minmax(0, 1fr) minmax(0, auto);
-	align-items: flex-start;
+	align-items: start;
 	position: relative;
 	min-height: var(--textarea-min-height);
 	box-sizing: border-box;
-	padding: var(--user-area-padding-y) 0;
+	padding: var(--textarea-padding-y) 0;
 	column-gap: var(--textarea-upload-gap);
 	min-width: 0;
 	width: 100%;
@@ -51,12 +51,18 @@
 
 .actionArea > button {
 	margin: 0;
+	height: var(--textarea-button-height);
+	min-height: var(--textarea-button-height);
 }
 
 .timer {
+	display: inline-flex;
+	align-items: center;
+	box-sizing: border-box;
+	height: var(--textarea-button-height);
 	border-radius: 0.375rem;
 	background-color: var(--background-secondary-alt);
-	padding: 0.375rem 0.75rem;
+	padding: 0 0.75rem;
 	font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
 	font-size: 0.875rem;
 	line-height: 1.25rem;

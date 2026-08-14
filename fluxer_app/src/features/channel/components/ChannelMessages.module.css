@@ -34,7 +34,7 @@
 
 .scrollerSpacer {
 	display: block;
-	height: var(--scroller-spacer-height);
+	height: var(--messages-bottom-clearance, var(--scroller-spacer-height));
 	pointer-events: none;
 	width: 100%;
 	flex-shrink: 0;
@@ -147,7 +147,7 @@
 
 .messageBottomPill {
 	top: auto;
-	bottom: 0.625rem;
+	bottom: calc(0.625rem + var(--composer-status-safe-area, 0px));
 }
 
 .jumpToPresentBar {

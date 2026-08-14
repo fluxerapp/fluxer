@@ -200,10 +200,7 @@ const UserAreaInner = observer(
 				clearHeight();
 			};
 		}, [hasVoiceConnection]);
-		const wrapperClassName = clsx(
-			styles.userAreaInnerWrapper,
-			hasVoiceConnection && styles.userAreaInnerWrapperHasVoiceConnection,
-		);
+		const wrapperClassName = styles.userAreaInnerWrapper;
 		const pushToTalkCombo = Keybind.getByAction('voice_push_to_talk').combo;
 		const pushToTalkHint = formatKeyCombo(pushToTalkCombo);
 		const isPushToTalkEffective = Keybind.isPushToTalkEffective();
@@ -251,18 +248,13 @@ const UserAreaInner = observer(
 			>
 				{hasVoiceConnection && (
 					<div ref={voiceConnectionRef} data-flx="app.user-area.user-area-inner.div">
-						<div className={styles.separator} aria-hidden data-flx="app.user-area.user-area-inner.separator" />
 						<div
 							className={styles.voiceConnectionWrapper}
 							data-flx="app.user-area.user-area-inner.voice-connection-wrapper"
 						>
 							<VoiceConnectionStatus data-flx="app.user-area.user-area-inner.voice-connection-status" />
 						</div>
-						<div className={styles.separator} aria-hidden data-flx="app.user-area.user-area-inner.separator--2" />
 					</div>
-				)}
-				{!hasVoiceConnection && (
-					<div className={styles.separator} aria-hidden data-flx="app.user-area.user-area-inner.separator--3" />
 				)}
 				<div className={styles.userAreaContainer} data-flx="app.user-area.user-area-inner.user-area-container">
 					<Popout
@@ -283,7 +275,7 @@ const UserAreaInner = observer(
 								tabIndex={0}
 								data-flx="app.user-area.user-area-inner.user-info"
 							>
-								<StatusAwareAvatar user={user} size={36} data-flx="app.user-area.user-area-inner.status-aware-avatar" />
+								<StatusAwareAvatar user={user} size={32} data-flx="app.user-area.user-area-inner.status-aware-avatar" />
 								<div className={styles.userInfoText} data-flx="app.user-area.user-area-inner.user-info-text">
 									<div className={styles.userName} data-flx="app.user-area.user-area-inner.user-name">
 										{displayName}

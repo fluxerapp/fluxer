@@ -164,6 +164,9 @@ export {
 	isSpecialMention,
 	isSticker,
 } from '@app/features/channel/components/AutocompleteTypes';
+
+const ATTACHED_AUTOCOMPLETE_GAP = 4;
+
 export const Autocomplete = observer(
 	({
 		type,
@@ -214,11 +217,11 @@ export const Autocomplete = observer(
 			setReferenceState(resolveReferenceElement(referenceElement));
 		}, [referenceElement]);
 		const portalHost = usePortalHost();
-		let resolvedMainAxisOffset = attached ? 0 : 8;
+		let resolvedMainAxisOffset = attached ? ATTACHED_AUTOCOMPLETE_GAP : 8;
 		if (mainAxisOffset != null) {
 			resolvedMainAxisOffset = mainAxisOffset;
 		}
-		const resolvedCrossAxisOffset = attached ? 8 : 0;
+		const resolvedCrossAxisOffset = 0;
 		const heading = resolveAutocompleteHeading(type, options, i18n);
 		const {refs, floatingStyles} = useFloating({
 			placement: 'top-start',
@@ -230,7 +233,7 @@ export const Autocomplete = observer(
 				flip({padding: 16}),
 				size({
 					apply({rects, elements}) {
-						const width = attached ? Math.max(0, rects.reference.width - 16) : rects.reference.width;
+						const width = rects.reference.width;
 						Object.assign(elements.floating.style, {
 							width: `${width}px`,
 						});

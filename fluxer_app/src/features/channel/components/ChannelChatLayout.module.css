@@ -1,6 +1,15 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
 .container {
+	--composer-surface-color: var(--background-secondary-lighter);
+	--composer-status-line-height: 1.125rem;
+	--composer-status-safe-gap: 0.5rem;
+	--composer-status-safe-area: calc(
+		var(--composer-status-line-height) +
+		var(--composer-status-safe-gap) +
+		var(--composer-status-safe-gap)
+	);
+	--messages-bottom-clearance: max(0px, calc(var(--composer-status-safe-area) - var(--composer-box-inset, 0px)));
 	display: flex;
 	flex-direction: column;
 	height: 100%;
@@ -9,7 +18,7 @@
 	max-width: 100%;
 	min-width: 0;
 	overflow: hidden;
-	background-color: var(--background-secondary-lighter);
+	background-color: var(--composer-surface-color);
 	contain: layout style;
 }
 
@@ -33,7 +42,6 @@
 	z-index: 1;
 	padding: 0;
 	overflow: visible;
-	background-color: var(--background-secondary-lighter);
 	width: 100%;
 	max-width: 100%;
 	box-sizing: border-box;

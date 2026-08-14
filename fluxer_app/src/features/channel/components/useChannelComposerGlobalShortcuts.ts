@@ -1,12 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {requestChannelComposerAffordanceDismissal} from '@app/features/channel/components/ChannelComposerDismissal';
 import type {Channel} from '@app/features/channel/models/Channel';
 import type {ComposerHandle} from '@app/features/lexical/composer/ComposerHandle';
-import * as MessageCommands from '@app/features/messaging/commands/MessageCommands';
-import type {Message} from '@app/features/messaging/models/MessagingMessage';
-import MessageEdit from '@app/features/messaging/state/MessageEdit';
 import MessageFocus from '@app/features/messaging/state/MessageFocus';
-import type {MessageReplyState} from '@app/features/messaging/state/MessageReply';
 import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
 import {canFocusTextarea, safeFocus} from '@app/features/platform/utils/InputFocusManager';
 import {isTextInputKeyEvent} from '@app/features/platform/utils/IsTextInputKeyEvent';
@@ -23,15 +20,6 @@ interface UseChannelComposerGlobalShortcutsParams {
 	textareaInputDisabled: boolean;
 	isFocused: boolean;
 	handleArrowUpEmpty: () => void;
-	editingMessage: Message | null | undefined;
-	replyingMessage: MessageReplyState | null;
-	mobileLayout: ComposerMobileLayout;
-	setValue: React.Dispatch<React.SetStateAction<string>>;
-	clearSegments: () => void;
-}
-
-interface ComposerMobileLayout {
-	enabled: boolean;
 }
 
 export function useChannelComposerGlobalShortcuts({
@@ -41,11 +29,6 @@ export function useChannelComposerGlobalShortcuts({
 	textareaInputDisabled,
 	isFocused,
 	handleArrowUpEmpty,
-	editingMessage,
-	replyingMessage,
-	mobileLayout,
-	setValue,
-	clearSegments,
 }: UseChannelComposerGlobalShortcutsParams): void {
 	useEffect(() => {
 		if (textareaInputDisabled) {
@@ -108,31 +91,19 @@ export function useChannelComposerGlobalShortcuts({
 			return;
 		}
 		const handleKeyDown = (event: KeyboardEvent) => {
-			if (event.key !== 'Escape') return;
-			if (event.shiftKey) return;
-			ComponentDispatch.dispatch('ESCAPE_PRESSED', {channelId: channel.id});
-			const isEditingInline = MessageEdit.getEditingMessageId(channel.id) != null;
-			if (isEditingInline) {
+			if (event.defaultPrevented || event.isComposing) return;
+			if (event.key !== 'Escape' || event.shiftKey) return;
+			if (requestChannelComposerAffordanceDismissal(channel.id)) {
 				event.preventDefault();
 				event.stopPropagation();
-				MessageCommands.stopEdit(channel.id);
 				return;
 			}
-			if (editingMessage && mobileLayout.enabled) {
-				event.preventDefault();
-				MessageCommands.stopEditMobile(channel.id);
-				setValue('');
-				clearSegments();
-			} else if (replyingMessage) {
-				event.preventDefault();
-				MessageCommands.stopReply(channel.id);
-			} else {
-				event.preventDefault();
-			}
+			ComponentDispatch.dispatch('ESCAPE_PRESSED', {channelId: channel.id});
+			event.preventDefault();
 		};
 		window.addEventListener('keydown', handleKeyDown);
 		return () => {
 			window.removeEventListener('keydown', handleKeyDown);
 		};
-	}, [channel.id, editingMessage, replyingMessage, mobileLayout.enabled, textareaInputDisabled, clearSegments]);
+	}, [channel.id, textareaInputDisabled]);
 }
