@@ -9,7 +9,6 @@ pub mod env;
 pub mod gateway;
 pub mod gateway_reload;
 pub mod manifest;
-pub mod marketing;
 pub mod media_external;
 pub mod media_proxy;
 pub mod object_store;

@@ -145,7 +145,6 @@
 			"!fluxer_static",
 			"!packages/fonts",
 			"!fluxer_admin/static/htmx.min.js",
-			"!fluxer_marketing/static/htmx.min.js",
 			"!fluxer_api/src/api/openapi/openapi.json"
 		],
 		"ignoreUnknown": true

@@ -71,7 +71,7 @@ stage "rust: fmt" cargo fmt --all -- --check
 if [ "$QUICK" -eq 0 ]; then
 	stage "rust: clippy (workspace)" cargo clippy --workspace --all-targets -- -D warnings
 else
-	stage "rust: clippy (servers)" cargo clippy -p fluxer_app_proxy -p fluxer_admin -p fluxer_marketing --all-targets -- -D warnings
+	stage "rust: clippy (servers)" cargo clippy -p fluxer_app_proxy -p fluxer_admin --all-targets -- -D warnings
 fi
 stage "rust: app proxy tests" cargo test -p fluxer_app_proxy
 

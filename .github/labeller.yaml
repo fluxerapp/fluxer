@@ -24,7 +24,9 @@ f:gateway:
     - any-glob-to-any-file: fluxer_gateway/**/*
 f:marketing:
   - changed-files:
-    - any-glob-to-any-file: fluxer_marketing/**/*
+    - any-glob-to-any-file:
+      - fluxer_marketing
+      - packages/i18n/marketing/**/*
 f:media_proxy:
   - changed-files:
     - any-glob-to-any-file: fluxer_media_proxy/**/*

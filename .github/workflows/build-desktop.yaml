@@ -46,6 +46,8 @@ jobs:
     runs-on: ubuntu-24.04-arm
     environment: desktop-releases
     timeout-minutes: 25
+    permissions:
+      contents: read
     outputs:
       version: ${{ steps.meta.outputs.version }}
       pub_date: ${{ steps.meta.outputs.pub_date }}
@@ -81,6 +83,8 @@ jobs:
     runs-on: ubuntu-24.04-arm
     environment: desktop-releases
     timeout-minutes: 25
+    permissions:
+      contents: read
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
@@ -107,6 +111,10 @@ jobs:
     runs-on: ${{ matrix.os }}
     environment: desktop-releases
     timeout-minutes: 60
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.matrix.outputs.matrix) }}
@@ -492,6 +500,8 @@ jobs:
     runs-on: ubuntu-24.04-arm
     environment: desktop-releases
     timeout-minutes: 60
+    permissions:
+      contents: read
     env:
       CHANNEL: ${{ needs.meta.outputs.build_channel }}
       DISPLAY_CHANNEL: ${{ needs.meta.outputs.channel }}
@@ -544,34 +554,14 @@ jobs:
           cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- build-desktop
           --step build_summary
 
-      - name: Write GitHub release desktop fragment
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: >-
-          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- release
-          publish-desktop
-          --build-version "${{ needs.meta.outputs.version }}"
-          --channel "${{ needs.meta.outputs.build_channel }}"
-          --test-build "${{ needs.meta.outputs.test_build }}"
-          --s3-prefix "${{ needs.meta.outputs.s3_prefix }}"
-          --payload-root s3_payload
-          --source-sha "${{ needs.meta.outputs.source_sha }}"
-      - name: Upload GitHub release fragment
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
-        with:
-          name: release-fragment-desktop
-          path: release-out/fragments/fluxer-release-fragment-desktop-${{ needs.meta.outputs.build_channel }}.json
-          if-no-files-found: error
-          retention-days: 14
-
       - name: Cleanup S3 handoff
         if: ${{ success() }}
         run: >-
           cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- build-desktop
           --step cleanup_handoff
 
-  finalise_release:
-    name: Finalise GitHub desktop release
+  publish_release:
+    name: Publish GitHub desktop release
     if: ${{ !cancelled() && needs.upload.result == 'success' && needs.meta.outputs.test_build != 'true' }}
     needs:
       - meta
@@ -579,6 +569,8 @@ jobs:
     runs-on: ubuntu-24.04-arm
     environment: desktop-releases
     timeout-minutes: 10
+    permissions:
+      contents: write
     steps:
       - name: Checkout source
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
@@ -589,18 +581,23 @@ jobs:
         uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
         with:
           toolchain: "1.93.0"
-      - name: Download GitHub release fragments
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
-        with:
-          pattern: release-fragment-*
-          path: release-out/fragments
-          merge-multiple: true
-
-      - name: Finalise GitHub desktop release
+      - name: Publish GitHub desktop release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: >-
-          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- release
-          finalise
-          --build-version "${{ needs.meta.outputs.version }}"
-          --source-sha "${{ needs.meta.outputs.source_sha }}"
+          CHANNEL: ${{ needs.meta.outputs.build_channel }}
+          VERSION: ${{ needs.meta.outputs.version }}
+          SOURCE_SHA: ${{ needs.meta.outputs.source_sha }}
+          RELEASE_BASELINE_SHA: ${{ vars.RELEASE_BASELINE_SHA }}
+        run: |
+          set -euo pipefail
+          release_args=(
+            release publish
+            --component "fluxer-desktop-${CHANNEL}"
+            --build-version "${VERSION}"
+            --source-sha "${SOURCE_SHA}"
+            --previous-sha "${RELEASE_BASELINE_SHA}"
+          )
+          if [[ "${CHANNEL}" == "canary" ]]; then
+            release_args+=(--prerelease)
+          fi
+          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- "${release_args[@]}"

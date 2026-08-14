@@ -11,7 +11,7 @@ use crate::proc::{
     PNPM_INSTALL_ENV, RESTART_LIMIT, RESTART_WINDOW, RunOptions, ShutdownSignal, format_command,
     merged_env, restart_budget_exceeded, run_command, wait_http,
 };
-use anyhow::{Result, bail};
+use anyhow::{Context, Result, bail};
 use std::collections::{BTreeMap, VecDeque};
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
@@ -44,12 +44,32 @@ const OBJECT_STORE_TASKS: &[&str] = &["api", "worker", "media"];
 const CLOUDFLARE_TUNNEL_TASK: &str = "cloudflare-tunnel";
 const OBJECT_STORE_STARTUP_REPAIR_TIMEOUT_SECS: u64 = 60;
 const DEFAULT_OBJECT_STORE_MONITOR_INTERVAL_SECS: u64 = 15;
+const MARKETING_MANIFEST: &str = "fluxer_marketing/Cargo.toml";
+const MARKETING_INITIALIZE_COMMAND: &str =
+    "git -c submodule.fluxer_marketing.update=checkout submodule update --init -- fluxer_marketing";
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum MarketingAvailability {
+    Unavailable,
+    Available,
+}
 
 pub async fn run_dev(task_names: &[String], cloudflare_tunnel: bool) -> Result<i32> {
-    let tasks = task_table()?;
+    let marketing_availability = marketing_availability()?;
+    if task_names.iter().any(|name| name == "marketing")
+        && marketing_availability == MarketingAvailability::Unavailable
+    {
+        bail!(
+            "The private marketing project is unavailable. Authorized maintainers can initialize it with:\n  {MARKETING_INITIALIZE_COMMAND}"
+        );
+    }
+    let tasks = task_table_for_availability(marketing_availability)?;
     let selected = if task_names.is_empty() {
         DEFAULT_TASKS
             .iter()
+            .filter(|name| {
+                **name != "marketing" || marketing_availability == MarketingAvailability::Available
+            })
             .map(|name| (*name).to_owned())
             .collect::<Vec<_>>()
     } else {
@@ -210,6 +230,12 @@ fn normalize_selected_tasks(mut selected: Vec<String>, cloudflare_tunnel: bool) 
 }
 
 pub fn task_table() -> Result<BTreeMap<&'static str, DevTask>> {
+    task_table_for_availability(marketing_availability()?)
+}
+
+fn task_table_for_availability(
+    marketing_availability: MarketingAvailability,
+) -> Result<BTreeMap<&'static str, DevTask>> {
     let self_tool = self_tool_command()?;
     let public_url = public_url();
     let marketing_endpoint = std::env::var("FLUXER_MARKETING_ENDPOINT")
@@ -369,42 +395,70 @@ pub fn task_table() -> Result<BTreeMap<&'static str, DevTask>> {
             Some("true".to_owned()),
         )],
     });
-    insert(DevTask {
-        name: "marketing",
-        args: strings(&[
-            "cargo",
-            "watch",
-            "--no-dot-ignores",
-            "-w",
-            "fluxer_marketing/src",
-            "-w",
-            "fluxer_marketing/Cargo.toml",
-            "-w",
-            "fluxer_marketing/build.rs",
-            "-w",
-            "fluxer_marketing/locales",
-            "-w",
-            "fluxer_marketing/content",
-            "-x",
-            "run -p fluxer_marketing",
-        ]),
-        cwd: ROOT.clone(),
-        env: vec![
-            ("FLUXER_APP_ENDPOINT".to_owned(), Some(public_url.clone())),
-            (
-                "FLUXER_MARKETING_BASE_PATH".to_owned(),
-                Some("/marketing".to_owned()),
-            ),
-            (
-                "FLUXER_MARKETING_ENDPOINT".to_owned(),
-                Some(marketing_endpoint),
-            ),
-            (
-                "FLUXER_STATIC_CDN_ENDPOINT".to_owned(),
-                Some(public_url.clone()),
-            ),
-        ],
-    });
+    if marketing_availability == MarketingAvailability::Available {
+        insert(DevTask {
+            name: "marketing",
+            args: strings(&[
+                "cargo",
+                "watch",
+                "--no-dot-ignores",
+                "-w",
+                "fluxer_marketing/src",
+                "-w",
+                MARKETING_MANIFEST,
+                "-w",
+                "fluxer_marketing/build.rs",
+                "-w",
+                "fluxer_marketing/content",
+                "-w",
+                "fluxer_marketing/Cargo.lock",
+                "-w",
+                "fluxer_marketing/package.json",
+                "-w",
+                "fluxer_marketing/pnpm-lock.yaml",
+                "-w",
+                "fluxer_marketing/pnpm-workspace.yaml",
+                "-w",
+                "fluxer_marketing/static",
+                "-w",
+                "Cargo.toml",
+                "-w",
+                "fluxer_common",
+                "-w",
+                "packages/fonts/manifest.json",
+                "-w",
+                "packages/fonts/NOTICE.md",
+                "-w",
+                "packages/fonts/LICENSE-IBM-PLEX.txt",
+                "-w",
+                "packages/fonts/css/locale-fallbacks.css",
+                "-w",
+                "packages/fonts/files/FluxerSans",
+                "-w",
+                "packages/fonts/files/FluxerMono",
+                "-w",
+                "packages/i18n/marketing",
+                "-x",
+                "run --manifest-path fluxer_marketing/Cargo.toml -p fluxer_marketing",
+            ]),
+            cwd: ROOT.clone(),
+            env: vec![
+                ("FLUXER_APP_ENDPOINT".to_owned(), Some(public_url.clone())),
+                (
+                    "FLUXER_MARKETING_BASE_PATH".to_owned(),
+                    Some("/marketing".to_owned()),
+                ),
+                (
+                    "FLUXER_MARKETING_ENDPOINT".to_owned(),
+                    Some(marketing_endpoint),
+                ),
+                (
+                    "FLUXER_STATIC_CDN_ENDPOINT".to_owned(),
+                    Some(public_url.clone()),
+                ),
+            ],
+        });
+    }
     insert(DevTask {
         name: "admin",
         args: strings(&[
@@ -452,6 +506,74 @@ pub fn task_table() -> Result<BTreeMap<&'static str, DevTask>> {
         env: Vec::new(),
     });
     Ok(tasks)
+}
+
+fn marketing_availability() -> Result<MarketingAvailability> {
+    let marketing_path = ROOT.join("fluxer_marketing");
+    let manifest_path = ROOT.join(MARKETING_MANIFEST);
+    if manifest_path.is_file() {
+        ensure_marketing_manifest(&manifest_path)?;
+        return Ok(MarketingAvailability::Available);
+    }
+    if marketing_path.exists() {
+        let mut entries = std::fs::read_dir(&marketing_path)
+            .with_context(|| format!("failed to inspect {}", marketing_path.display()))?;
+        if entries.next().transpose()?.is_some() {
+            bail!(
+                "The marketing path {} exists but does not contain the required Cargo.toml; remove the inconsistent checkout and run:\n  {MARKETING_INITIALIZE_COMMAND}",
+                marketing_path.display()
+            );
+        }
+    }
+    Ok(MarketingAvailability::Unavailable)
+}
+
+fn ensure_marketing_manifest(path: &Path) -> Result<()> {
+    let output = Command::new("cargo")
+        .args([
+            "metadata",
+            "--manifest-path",
+            MARKETING_MANIFEST,
+            "--locked",
+            "--offline",
+            "--no-deps",
+            "--format-version",
+            "1",
+        ])
+        .current_dir(ROOT.as_path())
+        .output()
+        .with_context(|| format!("failed to validate {}", path.display()))?;
+    if !output.status.success() {
+        bail!(
+            "The initialized private marketing manifest {} is malformed or inconsistent: {}",
+            path.display(),
+            String::from_utf8_lossy(&output.stderr).trim()
+        );
+    }
+    let metadata: serde_json::Value = serde_json::from_slice(&output.stdout)
+        .with_context(|| format!("Cargo emitted invalid metadata for {}", path.display()))?;
+    let packages = metadata["packages"]
+        .as_array()
+        .with_context(|| format!("Cargo metadata for {} is missing packages", path.display()))?;
+    let expected_manifest_path = path
+        .canonicalize()
+        .with_context(|| format!("failed to resolve {}", path.display()))?;
+    let valid_package = packages.iter().any(|package| {
+        package["name"].as_str() == Some("fluxer_marketing")
+            && package["manifest_path"]
+                .as_str()
+                .map(Path::new)
+                .and_then(|manifest_path| manifest_path.canonicalize().ok())
+                .as_deref()
+                == Some(expected_manifest_path.as_path())
+    });
+    if !valid_package {
+        bail!(
+            "The initialized private marketing manifest {} does not define the root package fluxer_marketing",
+            path.display()
+        );
+    }
+    Ok(())
 }
 
 async fn wait_for_search_backend_if_needed(selected: &[String]) -> Result<()> {
@@ -506,19 +628,32 @@ fn public_url() -> String {
 }
 
 fn ensure_js_dependencies_if_needed(selected: &[String]) -> Result<()> {
-    if !selected_needs_js_dependency_preflight(selected) {
-        return Ok(());
+    if selected_needs_js_dependency_preflight(selected) {
+        run_command(
+            &["pnpm", "install", "--frozen-lockfile"],
+            RunOptions {
+                env: PNPM_INSTALL_ENV
+                    .iter()
+                    .map(|(key, value)| ((*key).to_owned(), Some((*value).to_owned())))
+                    .collect(),
+                ..RunOptions::default()
+            },
+        )?;
     }
-    run_command(
-        &["pnpm", "install", "--frozen-lockfile"],
-        RunOptions {
-            env: PNPM_INSTALL_ENV
-                .iter()
-                .map(|(key, value)| ((*key).to_owned(), Some((*value).to_owned())))
-                .collect(),
-            ..RunOptions::default()
-        },
-    )?;
+    if selected.iter().any(|name| name == "marketing") {
+        let marketing_dir = ROOT.join("fluxer_marketing");
+        run_command(
+            &["pnpm", "install", "--frozen-lockfile"],
+            RunOptions {
+                cwd: &marketing_dir,
+                env: PNPM_INSTALL_ENV
+                    .iter()
+                    .map(|(key, value)| ((*key).to_owned(), Some((*value).to_owned())))
+                    .collect(),
+                ..RunOptions::default()
+            },
+        )?;
+    }
     Ok(())
 }
 
@@ -887,7 +1022,7 @@ mod tests {
 
     #[test]
     fn task_table_contains_recursive_binary_tasks() {
-        let tasks = task_table().unwrap();
+        let tasks = task_table_for_availability(MarketingAvailability::Available).unwrap();
         let expected_public_url = public_url();
         let expected_app_port = APP_PORT.to_string();
         let expected_admin_port = ADMIN_PORT.to_string();
@@ -1016,11 +1151,37 @@ mod tests {
                 "-w".to_owned(),
                 "fluxer_marketing/build.rs".to_owned(),
                 "-w".to_owned(),
-                "fluxer_marketing/locales".to_owned(),
-                "-w".to_owned(),
                 "fluxer_marketing/content".to_owned(),
+                "-w".to_owned(),
+                "fluxer_marketing/Cargo.lock".to_owned(),
+                "-w".to_owned(),
+                "fluxer_marketing/package.json".to_owned(),
+                "-w".to_owned(),
+                "fluxer_marketing/pnpm-lock.yaml".to_owned(),
+                "-w".to_owned(),
+                "fluxer_marketing/pnpm-workspace.yaml".to_owned(),
+                "-w".to_owned(),
+                "fluxer_marketing/static".to_owned(),
+                "-w".to_owned(),
+                "Cargo.toml".to_owned(),
+                "-w".to_owned(),
+                "fluxer_common".to_owned(),
+                "-w".to_owned(),
+                "packages/fonts/manifest.json".to_owned(),
+                "-w".to_owned(),
+                "packages/fonts/NOTICE.md".to_owned(),
+                "-w".to_owned(),
+                "packages/fonts/LICENSE-IBM-PLEX.txt".to_owned(),
+                "-w".to_owned(),
+                "packages/fonts/css/locale-fallbacks.css".to_owned(),
+                "-w".to_owned(),
+                "packages/fonts/files/FluxerSans".to_owned(),
+                "-w".to_owned(),
+                "packages/fonts/files/FluxerMono".to_owned(),
+                "-w".to_owned(),
+                "packages/i18n/marketing".to_owned(),
                 "-x".to_owned(),
-                "run -p fluxer_marketing".to_owned()
+                "run --manifest-path fluxer_marketing/Cargo.toml -p fluxer_marketing".to_owned()
             ]
         );
         assert_eq!(

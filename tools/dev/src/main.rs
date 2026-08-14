@@ -36,7 +36,6 @@ enum Command {
     RustServices(RustServicesArgs),
     Cassandra(CassandraArgs),
     Desktop(DesktopArgs),
-    Marketing(MarketingArgs),
     MediaProxy(MediaProxyArgs),
     Tunnel(TunnelArgs),
 }
@@ -134,18 +133,6 @@ enum DesktopCommand {
         #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
         args: Vec<String>,
     },
-}
-
-#[derive(Debug, Args)]
-struct MarketingArgs {
-    #[command(subcommand)]
-    command: MarketingCommand,
-}
-
-#[derive(Debug, Subcommand)]
-enum MarketingCommand {
-    PreprocessBlogImage(fluxer_dev::marketing::PreprocessBlogImageArgs),
-    PreprocessBlogVideo(fluxer_dev::marketing::PreprocessBlogVideoArgs),
 }
 
 #[derive(Debug, Args)]
@@ -270,14 +257,6 @@ async fn main() -> Result<()> {
             }
             DesktopCommand::ExecDisclaimed { program, args } => {
                 fluxer_dev::disclaim::exec_disclaimed(&program, &args)?
-            }
-        },
-        Command::Marketing(args) => match args.command {
-            MarketingCommand::PreprocessBlogImage(args) => {
-                fluxer_dev::marketing::preprocess_blog_image(args)?
-            }
-            MarketingCommand::PreprocessBlogVideo(args) => {
-                fluxer_dev::marketing::preprocess_blog_video(args)?
             }
         },
         Command::MediaProxy(args) => match args.command {

@@ -41,8 +41,6 @@
 
 /app-dist-output/
 /artifacts/
-/release-input/
-/release-out/
 /s3_payload/
 /upload_staging/
 

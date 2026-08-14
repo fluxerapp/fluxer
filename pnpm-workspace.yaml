@@ -9,7 +9,6 @@ packages:
   - '!fluxer_app/pkgs/libfluxcore'
   - fluxer_desktop
   - fluxer_admin
-  - fluxer_marketing
 
 allowBuilds:
   '@bufbuild/buf': true

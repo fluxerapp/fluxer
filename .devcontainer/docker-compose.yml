@@ -39,11 +39,6 @@ services:
         volume:
           nocopy: true
       - type: volume
-        source: fluxer-marketing-node-modules
-        target: /workspaces/fluxer/fluxer_marketing/node_modules
-        volume:
-          nocopy: true
-      - type: volume
         source: fluxer-admin-node-modules
         target: /workspaces/fluxer/fluxer_admin/node_modules
         volume:
@@ -358,7 +353,6 @@ volumes:
   fluxer-api-node-modules:
   fluxer-app-node-modules:
   fluxer-desktop-node-modules:
-  fluxer-marketing-node-modules:
   fluxer-admin-node-modules:
   package-config-node-modules:
   package-constants-node-modules:

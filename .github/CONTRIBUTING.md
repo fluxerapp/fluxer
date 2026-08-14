@@ -89,3 +89,21 @@ Submit translations through [Weblate](https://weblate.fluxer.tools), not through
 All repository activity is governed by the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 Fluxer is distributed under the [GNU Affero General Public License, version 3.0 or later](../LICENSE). By adding a DCO sign-off, you certify that you have the right to submit the contribution under that licence.
+
+## Private marketing project
+
+The marketing implementation is maintained in a private repository at the `fluxer_marketing` submodule path. The public workspace, bootstrap, checks, and development stack work without initializing it.
+
+Authorized maintainers can initialize only that submodule and install its independent dependencies:
+
+```sh
+./scripts/setup-private-marketing.sh
+pnpm --dir fluxer_marketing install --frozen-lockfile
+cargo metadata --locked --manifest-path fluxer_marketing/Cargo.toml
+```
+
+To run the private marketing service in the local development stack and direct application links to it, add this override to the ignored `config/env/local.env` file:
+
+```sh
+FLUXER_MARKETING_ENDPOINT=http://localhost:8088/marketing
+```

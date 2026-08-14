@@ -12,12 +12,7 @@
 		"tailwindcss",
 		"upng-js"
 	],
-	"ignoreFiles": [
-		"fluxer_admin/src/styles/app.css",
-		"fluxer_admin/static/htmx.min.js",
-		"fluxer_marketing/src/styles/app.css",
-		"fluxer_marketing/static/htmx.min.js"
-	],
+	"ignoreFiles": ["fluxer_admin/src/styles/app.css", "fluxer_admin/static/htmx.min.js"],
 	"ignoreIssues": {
 		"fluxer_app/scripts/build/Config.tsx": ["exports"],
 		"fluxer_app/scripts/build/rspack/static-files.mjs": ["exports"],

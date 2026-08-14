@@ -125,7 +125,7 @@ jobs:
             libwebp-dev
 
       - name: Install Node.js dependencies
-        run: pnpm --filter fluxer_admin --filter fluxer_marketing install
+        run: pnpm --filter fluxer_admin install
 
       - name: Check formatting
         run: cargo fmt --all -- --check

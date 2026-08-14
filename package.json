@@ -30,7 +30,7 @@
 		"i18n:generate": "pnpm --filter @fluxer/i18n generate:types",
 		"i18n:prune:apply": "pnpm --filter @fluxer/i18n prune:apply",
 		"i18n:prune:dry": "pnpm --filter @fluxer/i18n prune:dry",
-		"i18n:source-sync": "pnpm --filter fluxer_app i18n:extract && cargo run --quiet --manifest-path tools/marketing/update-gettext-catalogs/Cargo.toml && pnpm --filter @fluxer/i18n static:extract && pnpm i18n:compile",
+		"i18n:source-sync": "pnpm --filter fluxer_app i18n:extract && pnpm --filter @fluxer/i18n static:extract && pnpm i18n:compile",
 		"i18n:typecheck": "pnpm --filter @fluxer/errors --filter @pkgs/email typecheck",
 		"i18n:weblate-compile": "pnpm i18n:compile",
 		"knip": "cargo run -p fluxer-dev -- knip",
