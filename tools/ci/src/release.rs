@@ -37,10 +37,10 @@ struct PublishArgs {
 }
 
 #[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase")]
 struct ReleaseSummary {
     id: u64,
     tag_name: String,
+    #[serde(rename = "draft")]
     is_draft: bool,
     published_at: Option<String>,
 }
@@ -214,15 +214,11 @@ fn release_summaries() -> Result<Vec<ReleaseSummary>> {
     let output = output_text(
         CommandSpec::new("gh")
             .args(["api", "--paginate", "--slurp"])
-            .arg(format!("repos/{RELEASE_REPOSITORY}/releases?per_page=100"))
-            .args([
-                "--jq",
-                "flatten | map({id: .id, tagName: .tag_name, isDraft: .draft, publishedAt: .published_at})",
-            ]),
+            .arg(format!("repos/{RELEASE_REPOSITORY}/releases?per_page=100")),
     )?;
-    let releases: Vec<ReleaseSummary> =
+    let pages: Vec<Vec<ReleaseSummary>> =
         serde_json::from_str(&output).context("Failed to parse GitHub Release history")?;
-    Ok(releases)
+    Ok(pages.into_iter().flatten().collect())
 }
 
 fn qualified_releases(
