@@ -13,12 +13,6 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #. Compact UI label used in the home-page communities/moderation feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
-#: fluxer_marketing/generated:app.communities.community_support
-msgctxt "app.communities.community_support"
-msgid "Community support"
-msgstr "Υποστήριξη κοινότητας"
-
-#. Compact UI label used in the home-page communities/moderation feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.communities.featured_in_discovery
 msgctxt "app.communities.featured_in_discovery"
 msgid "Featured in discovery"
@@ -51,15 +45,9 @@ msgstr "Λεπτομερείς ρόλοι και δικαιώματα"
 #. Body copy used in the home-page communities/moderation feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.communities.roles_permissions_audit.keep_running_smoothly
 msgctxt "app.communities.roles_permissions_audit.keep_running_smoothly"
-msgid "Keep your community running smoothly with roles, permissions, and logs."
+msgid "Assign roles and permissions, and use the audit log to see which moderator changed what."
 msgstr ""
-"Διατήρησε την κοινότητά σου να λειτουργεί ομαλά με ρόλους, δικαιώματα και αρχεία καταγραφής."
-
-#. Short UI label or heading used in the home-page communities/moderation feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
-#: fluxer_marketing/generated:app.communities.title
-msgctxt "app.communities.title"
-msgid "Communities"
-msgstr "Κοινότητες"
+"Ανάθεσε ρόλους και δικαιώματα και χρησιμοποίησε το αρχείο καταγραφής ελέγχου για να δεις ποιος συντονιστής άλλαξε τι."
 
 #. Short UI label or heading used in the home-page communities/moderation feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.communities.verification.label
@@ -73,12 +61,6 @@ msgctxt "app.communities.verification.value_statement"
 msgid "Your community gets verified status for authenticity and trust."
 msgstr "Η κοινότητά σου αποκτά επαληθευμένη κατάσταση για αυθεντικότητα και εμπιστοσύνη."
 
-#. Compact UI label used in the home-page communities/moderation feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
-#: fluxer_marketing/generated:app.communities.verification.verified_community
-msgctxt "app.communities.verification.verified_community"
-msgid "Verified community"
-msgstr "Επαληθευμένη κοινότητα"
-
 #. Compact UI label used in the home-page customization feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.customization.animated_profile.animated_avatars_and_banners
 msgctxt "app.customization.animated_profile.animated_avatars_and_banners"
@@ -89,13 +71,8 @@ msgstr "Κινούμενα avatar και banner"
 #: fluxer_marketing/generated:app.customization.animated_profile.stand_out_animated_profile
 msgctxt "app.customization.animated_profile.stand_out_animated_profile"
 msgid "Stand out with animated profile pictures and banners to express your personality."
-msgstr "Ξεχώρισε με κινούμενες φωτογραφίες προφίλ και πανό για να εκφράσεις την προσωπικότητά σου."
-
-#. Compact UI label used in the home-page customization feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
-#: fluxer_marketing/generated:app.customization.app_icon_badges
-msgctxt "app.customization.app_icon_badges"
-msgid "See badge counts on the app icon."
-msgstr "Δες τον αριθμό των σημάτων στο εικονίδιο της εφαρμογής."
+msgstr ""
+"Ξεχώρισε με κινούμενες φωτογραφίες προφίλ και banner για να εκφράσεις την προσωπικότητά σου."
 
 #. Compact UI label used in the home-page customization feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.customization.compact_mode
@@ -109,37 +86,13 @@ msgctxt "app.customization.custom_css_themes"
 msgid "Custom CSS themes"
 msgstr "Προσαρμοσμένα θέματα CSS"
 
-#. Compact UI label used in the home-page customization feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
-#: fluxer_marketing/generated:app.customization.custom_sounds.entrance_sounds
-msgctxt "app.customization.custom_sounds.entrance_sounds"
-msgid "Custom entrance sounds"
-msgstr "Προσαρμοσμένοι ήχοι εισόδου"
-
-#. Body copy in the home-page customization feature card. Explains custom join sounds for voice channels; keep the wording concrete and avoid making it sound like an audio setting label.
-#: fluxer_marketing/generated:app.customization.custom_sounds.set_personalized_join_sounds
-msgctxt "app.customization.custom_sounds.set_personalized_join_sounds"
-msgid "Set personalized sounds when you join voice channels to make your presence known."
-msgstr ""
-"Όρισε εξατομικευμένους ήχους όταν μπαίνεις σε φωνητικά κανάλια για να κάνεις αισθητή την παρουσία σου."
-
-#. Compact UI label used in the home-page customization feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
-#: fluxer_marketing/generated:app.customization.custom_themes
-msgctxt "app.customization.custom_themes"
-msgid "Custom themes"
-msgstr "Προσαρμοσμένα θέματα"
-
-#. Compact UI label used in the home-page customization feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
-#: fluxer_marketing/generated:app.customization.global_emoji_and_sticker_access
-msgctxt "app.customization.global_emoji_and_sticker_access"
-msgid "Global emoji and sticker access"
-msgstr "Καθολική πρόσβαση σε emoji και sticker"
-
 #. Body copy used in the home-page customization feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.customization.saved_media_and_css
 msgctxt "app.customization.saved_media_and_css"
-msgid "Add custom emojis, save media for later, and style the app with custom CSS."
+msgid ""
+"Make your own emojis, keep the media you want to find again, and rewrite the whole interface with custom CSS if you want to."
 msgstr ""
-"Πρόσθεσε προσαρμοσμένα emoji, αποθήκευσε πολυμέσα για αργότερα και διαμόρφωσε την εφαρμογή με προσαρμοσμένο CSS."
+"Φτιάξε τα δικά σου emoji, κράτα τα πολυμέσα που θέλεις να ξαναβρείς και, αν θέλεις, ξαναγράψε ολόκληρη τη διεπαφή με προσαρμοσμένο CSS."
 
 #. Short UI label or heading used in the home-page customization feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.customization.title
@@ -153,23 +106,13 @@ msgctxt "app.customization.upload_custom_emojis_and_stickers"
 msgid "Upload custom emojis and stickers"
 msgstr "Ανέβασε προσαρμοσμένα emoji και sticker"
 
-#. Compact UI label used in the home-page customization feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
-#: fluxer_marketing/generated:app.customization.use_animated_emojis
-msgctxt "app.customization.use_animated_emojis"
-msgid "Use animated emojis"
-msgstr "Χρησιμοποίησε κινούμενα emoji"
-
 #. Body copy used in the home-page messaging feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.messaging.description
 msgctxt "app.messaging.description"
-msgid "DM your friends, chat with groups, or build communities with channels."
-msgstr "Κάνε DM στους φίλους σου, συνομίλησε σε ομάδες ή δημιούργησε κοινότητες με κανάλια."
-
-#. Compact UI label used in the home-page messaging feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
-#: fluxer_marketing/generated:app.messaging.features.bookmarked_messages
-msgctxt "app.messaging.features.bookmarked_messages"
-msgid "Bookmarked messages"
-msgstr "Αποθηκευμένα μηνύματα"
+msgid ""
+"Chat with friends or groups. Communities give you organized channels when a group chat has grown too large."
+msgstr ""
+"Συνομίλησε με φίλους ή ομάδες. Οι κοινότητες σού δίνουν οργανωμένα κανάλια όταν μια ομαδική συνομιλία μεγαλώσει υπερβολικά."
 
 #. Compact UI label used in the home-page messaging feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.messaging.features.file_sharing
@@ -182,13 +125,6 @@ msgstr "Κοινοποίησε αρχεία και κάνε προεπισκόπ
 msgctxt "app.messaging.features.full_markdown_support"
 msgid "Full Markdown support in messages"
 msgstr "Πλήρης υποστήριξη Markdown στα μηνύματα"
-
-#. Body copy used in the home-page messaging feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
-#: fluxer_marketing/generated:app.messaging.features.message_scheduling.description
-msgctxt "app.messaging.features.message_scheduling.description"
-msgid "Schedule messages to be sent at a specific time in the future. No {delorean} required."
-msgstr ""
-"Προγραμμάτισε μηνύματα να σταλούν σε συγκεκριμένη ώρα στο μέλλον. Δεν χρειάζεται {delorean}."
 
 #. Compact UI label used in the home-page messaging feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.messaging.features.organised_channels_for_communities
@@ -211,14 +147,15 @@ msgstr "Αποθήκευσε εικόνες, βίντεο, GIF και αρχεί
 #. Compact UI label used in the home-page messaging feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.messaging.features.search.filter_options
 msgctxt "app.messaging.features.search.filter_options"
-msgid "Filter by users, dates, and more"
-msgstr "Φιλτράρισμα ανά χρήστη, ημερομηνία και άλλα"
+msgid "Filter search by author or date"
+msgstr "Φιλτράρισμα αναζήτησης ανά συντάκτη ή ημερομηνία"
 
 #. Body copy used in the home-page messaging feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.messaging.features.search.find_old_messages
 msgctxt "app.messaging.features.search.find_old_messages"
-msgid "Find old messages or jump between communities and channels in seconds."
-msgstr "Βρες παλιά μηνύματα ή άλλαξε μεταξύ κοινοτήτων και καναλιών σε δευτερόλεπτα."
+msgid "Find old messages or jump between communities and channels from the same search box."
+msgstr ""
+"Βρες παλιά μηνύματα ή μετακινήσου ανάμεσα σε κοινότητες και κανάλια από το ίδιο πλαίσιο αναζήτησης."
 
 #. Short UI label or heading used in the home-page messaging feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.messaging.features.search.label
@@ -236,7 +173,7 @@ msgstr "Γρήγορη εναλλαγή με συντομεύσεις πληκτ
 #: fluxer_marketing/generated:app.messaging.features.search.search_and_quick_switcher
 msgctxt "app.messaging.features.search.search_and_quick_switcher"
 msgid "Search and quick switcher"
-msgstr "Αναζήτηση και γρήγορη εναλλαγή (με συντομεύσεις πληκτρολογίου)"
+msgstr "Αναζήτηση και γρήγορη εναλλαγή"
 
 #. Short UI label or heading used in the home-page messaging feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.messaging.title
@@ -257,18 +194,6 @@ msgid "Open the web app"
 msgstr "Άνοιγμα της web εφαρμογής"
 
 #. Compact UI label used in profile and identity feature copy. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
-#: fluxer_marketing/generated:app.profiles_identity.custom_identity
-msgctxt "app.profiles_identity.custom_identity"
-msgid "Custom identity"
-msgstr "Προσαρμοσμένη ταυτότητα"
-
-#. Body copy used in profile and identity feature copy. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
-#: fluxer_marketing/generated:app.profiles_identity.customise_per_community
-msgctxt "app.profiles_identity.customise_per_community"
-msgid "Customize your profile differently for each community you're part of."
-msgstr "Προσάρμοσε το προφίλ σου ξεχωριστά για κάθε κοινότητα στην οποία είσαι μέλος."
-
-#. Compact UI label used in profile and identity feature copy. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.profiles_identity.manage_friends_and_block_users
 msgctxt "app.profiles_identity.manage_friends_and_block_users"
 msgid "Manage friends and block users"
@@ -277,7 +202,7 @@ msgstr "Διαχείριση φίλων και αποκλεισμός χρηστ
 #. Compact UI label used in the home-page voice and video feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.voice_and_video.features.mute_controls
 msgctxt "app.voice_and_video.features.mute_controls"
-msgid "Mute, deafen, and camera controls"
+msgid "Mute or deafen yourself and control your camera"
 msgstr "Σίγαση, απενεργοποίηση ήχου και χειριστήρια κάμερας"
 
 #. Body copy used in the home-page voice and video feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
@@ -293,44 +218,6 @@ msgid "Built-in screen sharing"
 msgstr "Ενσωματωμένη κοινή χρήση οθόνης"
 
 #. Body copy used in the home-page voice and video feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
-#: fluxer_marketing/generated:app.voice_and_video.features.stream_4k_60fps
-msgctxt "app.voice_and_video.features.stream_4k_60fps"
-msgid "Stream up to 4K resolution at 60 fps so others can see you in stunning clarity."
-msgstr ""
-"Κάνε στρίμινγκ σε ανάλυση έως 4K στα 60 fps, ώστε οι άλλοι να σε βλέπουν με εκπληκτική ευκρίνεια."
-
-#. Compact UI label used in the home-page voice and video feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
-#: fluxer_marketing/generated:app.voice_and_video.features.up_to_4k_video_quality
-msgctxt "app.voice_and_video.features.up_to_4k_video_quality"
-msgid "Up to 4K video quality"
-msgstr "Ποιότητα βίντεο έως 4K"
-
-#. Body copy used in the home-page voice and video feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
-#: fluxer_marketing/generated:app.voice_and_video.features.video_backgrounds.description
-msgctxt "app.voice_and_video.features.video_backgrounds.description"
-msgid "Store up to 15 video backgrounds for calls. No more Downloads folder scavenger hunts."
-msgstr ""
-"Αποθήκευσε έως και 15 φόντα βίντεο για κλήσεις. Τέρμα πια η αναζήτηση στον φάκελο Downloads."
-
-#. Compact UI label used in the home-page voice and video feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
-#: fluxer_marketing/generated:app.voice_and_video.features.video_quality
-msgctxt "app.voice_and_video.features.video_quality"
-msgid "Video quality"
-msgstr "Ποιότητα βίντεο"
-
-#. Compact UI label used in the home-page voice and video feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
-#: fluxer_marketing/generated:app.voice_and_video.features.video_quality_free
-msgctxt "app.voice_and_video.features.video_quality_free"
-msgid "720p/30fps"
-msgstr "720p/30fps"
-
-#. Compact UI label used in the home-page voice and video feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
-#: fluxer_marketing/generated:app.voice_and_video.features.video_quality_premium
-msgctxt "app.voice_and_video.features.video_quality_premium"
-msgid "Up to 4K/60fps"
-msgstr "Έως 4K/60fps"
-
-#. Body copy used in the home-page voice and video feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.voice_and_video.hop_in_a_call
 msgctxt "app.voice_and_video.hop_in_a_call"
 msgid "Hop in a call with friends or share your screen to work together."
@@ -341,6 +228,36 @@ msgstr "Μπες σε μια κλήση με φίλους ή μοιράσου τ
 msgctxt "app.voice_and_video.title"
 msgid "Voice and video"
 msgstr "Φωνή και βίντεο"
+
+#. Accessible label for the marketing-site theme control. Keep it short and clear.
+#: fluxer_marketing/generated:appearance.change_theme
+msgctxt "appearance.change_theme"
+msgid "Change theme"
+msgstr "Αλλαγή θέματος"
+
+#. Compact option label for selecting the marketing site's dark theme.
+#: fluxer_marketing/generated:appearance.dark
+msgctxt "appearance.dark"
+msgid "Dark"
+msgstr "Σκούρο"
+
+#. Short heading above the marketing-site theme options.
+#: fluxer_marketing/generated:appearance.label
+msgctxt "appearance.label"
+msgid "Appearance"
+msgstr "Εμφάνιση"
+
+#. Compact option label for selecting the marketing site's light theme.
+#: fluxer_marketing/generated:appearance.light
+msgctxt "appearance.light"
+msgid "Light"
+msgstr "Ανοιχτό"
+
+#. Compact option label for following the device's light or dark theme setting.
+#: fluxer_marketing/generated:appearance.system
+msgctxt "appearance.system"
+msgid "System"
+msgstr "Συστήματος"
 
 #. Short filter label on the blog index. It clears tag filters and shows every blog post.
 #: fluxer_marketing/generated:blog.all_posts
@@ -363,7 +280,7 @@ msgstr "Πίσω στο ιστολόγιο"
 #. Blog index meta description and intro copy. Keep it concise and editorial, not sales-oriented. Preserve placeholders exactly.
 #: fluxer_marketing/generated:blog.description
 msgctxt "blog.description"
-msgid "Updates, roadmap notes, and engineering write-ups from the {product_name} team."
+msgid "Updates from the {product_name} team, including roadmap notes and engineering posts."
 msgstr "Ενημερώσεις, σημειώσεις οδικού χάρτη και τεχνικά άρθρα από την ομάδα του {product_name}."
 
 #. Short heading for RSS and Atom links on the blog index. Keep it compact.
@@ -384,19 +301,27 @@ msgctxt "blog.filtered_by_tag"
 msgid "Filtered by {tag}"
 msgstr "Φιλτραρισμένο κατά {tag}"
 
-#. Blog article title shown in cards, article pages, metadata, and feeds. Keep Fluxer and Discord recognizable as product names. Preserve placeholders exactly.
-#: fluxer_marketing/generated:blog.post.how_i_built_fluxer.title
-msgctxt "blog.post.how_i_built_fluxer.title"
-msgid "How I built {product_name}, a {discord}-like chat app"
-msgstr "Πώς έφτιαξα το {product_name}, μια εφαρμογή συνομιλίας τύπου {discord}"
+#. Blog article summary shown in cards, article pages, metadata, and feeds. Preserve {product_name} exactly.
+#: fluxer_marketing/generated:blog.post.how_i_built_fluxer_story.description
+msgctxt "blog.post.how_i_built_fluxer_story.description"
+msgid ""
+"The story behind {product_name}, from a high school project to an open source chat app used by hundreds of thousands of people."
+msgstr ""
+"Η ιστορία πίσω από το {product_name}, από μια σχολική εργασία σε μια εφαρμογή συνομιλίας ανοιχτού κώδικα που χρησιμοποιούν εκατοντάδες χιλιάδες άνθρωποι."
+
+#. Blog article title shown in cards, article pages, metadata, and feeds. Preserve {product_name} exactly.
+#: fluxer_marketing/generated:blog.post.how_i_built_fluxer_story.title
+msgctxt "blog.post.how_i_built_fluxer_story.title"
+msgid "How I built {product_name}"
+msgstr "Πώς έφτιαξα το {product_name}"
 
 #. Blog article summary shown in cards, article pages, metadata, and feeds. Keep Fluxer as a product name, v2 as the release name, and GitHub as the product name. Preserve placeholders exactly.
 #: fluxer_marketing/generated:blog.post.mobile_clients_and_fluxer_v2.description
 msgctxt "blog.post.mobile_clients_and_fluxer_v2.description"
 msgid ""
-"{product_name} v2 is out, mobile clients are open source, self-hosting is improving, and public development is moving back to GitHub."
+"{product_name} v2 is here with open source mobile apps and easier self-hosting. Contributions are open again too."
 msgstr ""
-"Το {product_name} v2 είναι διαθέσιμο, οι εφαρμογές για κινητά είναι ανοιχτού κώδικα, η αυτο-φιλοξενία βελτιώνεται και η δημόσια ανάπτυξη επιστρέφει στο GitHub."
+"Το {product_name} v2 είναι εδώ, με εφαρμογές για κινητά ανοιχτού κώδικα και ευκολότερη αυτοφιλοξενία. Και οι συνεισφορές είναι ξανά ανοιχτές."
 
 #. Blog article title shown in cards, article pages, metadata, and feeds. Keep Fluxer as a product name and v2 as the release name. Preserve placeholders exactly.
 #: fluxer_marketing/generated:blog.post.mobile_clients_and_fluxer_v2.title
@@ -408,9 +333,9 @@ msgstr "Εφαρμογές για κινητά και {product_name} v2"
 #: fluxer_marketing/generated:blog.post.roadmap_2026.description
 msgctxt "blog.post.roadmap_2026.description"
 msgid ""
-"The current 2026 roadmap for {product_name}: canary, mobile, self-hosting, federation, voice and video, and the backend reliability work behind it."
+"The 2026 roadmap for {product_name}: self-hosting, localization, federation, public publishing, integrations, private conversations, and creator payments."
 msgstr ""
-"Ο τρέχων οδικός χάρτης του {product_name} για το 2026: canary, κινητά, self-hosting, federation, φωνή και βίντεο, και η δουλειά αξιοπιστίας του backend πίσω από αυτά."
+"Ο οδικός χάρτης του {product_name} για το 2026: αυτοφιλοξενία, τοπική προσαρμογή, ομοσπονδία, δημόσια δημοσίευση, ενσωματώσεις, ιδιωτικές συνομιλίες και πληρωμές δημιουργών."
 
 #. Blog article title shown in cards, article pages, metadata, and feeds. Refers to Fluxer's 2026 product roadmap.
 #: fluxer_marketing/generated:blog.post.roadmap_2026.title
@@ -429,12 +354,6 @@ msgstr "Δοκίμασε άλλον όρο αναζήτησης ή καθάρι�
 msgctxt "blog.no_results.title"
 msgid "No posts found"
 msgstr "Δεν βρέθηκαν αναρτήσεις"
-
-#. Short metadata label on a blog article page. It precedes the article publication date.
-#: fluxer_marketing/generated:blog.published
-msgctxt "blog.published"
-msgid "Published"
-msgstr "Δημοσιεύτηκε"
 
 #. Call-to-action label on blog post cards. Keep it concise and neutral.
 #: fluxer_marketing/generated:blog.read_article
@@ -487,14 +406,8 @@ msgstr "Ετικέτες"
 #. Blog index title and meta title. Keep the product name and blog label recognizable. Preserve placeholders exactly.
 #: fluxer_marketing/generated:blog.title
 msgctxt "blog.title"
-msgid "{product_name} Blog"
+msgid "{product_name} blog"
 msgstr "Ιστολόγιο {product_name}"
-
-#. Short metadata label on a blog article page. It precedes the article update date.
-#: fluxer_marketing/generated:blog.updated
-msgctxt "blog.updated"
-msgid "Updated"
-msgstr "Ενημερώθηκε"
 
 #. Compact UI label for company/resource navigation or footer groupings. Keep labels short and recognizable for a marketing website.
 #: fluxer_marketing/generated:company_and_resources.blog
@@ -502,24 +415,18 @@ msgctxt "company_and_resources.blog"
 msgid "Blog"
 msgstr "Ιστολόγιο"
 
-#. Back-link label from an individual job page to the careers overview. Keep it short and do not imply active hiring.
-#: fluxer_marketing/generated:company_and_resources.careers.all_open_positions
-msgctxt "company_and_resources.careers.all_open_positions"
-msgid "Future roles"
-msgstr "Όλοι οι μελλοντικοί ρόλοι"
-
 #. Compact UI label on the careers and future roles pages. Use clear hiring language, avoid implying that roles are currently open unless the source says so, and preserve placeholders exactly.
 #: fluxer_marketing/generated:company_and_resources.careers.careers_at_fluxer
 msgctxt "company_and_resources.careers.careers_at_fluxer"
 msgid "Careers at {product_name}"
 msgstr "Καριέρα στο {product_name}"
 
-#. Careers hero description. Keep it plain and informational; do not turn it into an application prompt or imply active hiring.
-#: fluxer_marketing/generated:company_and_resources.careers.hero_description
-msgctxt "company_and_resources.careers.hero_description"
-msgid "We are not hiring right now. These pages are notes on roles we may open later."
+#. Careers page notice. Keep it plain and explicit that no roles are currently open.
+#: fluxer_marketing/generated:company_and_resources.careers.not_hiring_notice
+msgctxt "company_and_resources.careers.not_hiring_notice"
+msgid "We are not hiring. Any open role will be listed on this page, so check back later."
 msgstr ""
-"Δεν προσλαμβάνουμε αυτήν τη στιγμή. Αυτές οι σελίδες είναι σημειώσεις για ρόλους που μπορεί να ανοίξουμε αργότερα."
+"Δεν κάνουμε προσλήψεις αυτή τη στιγμή. Κάθε ανοιχτή θέση θα ανακοινώνεται σε αυτή τη σελίδα, οπότε έλεγξέ την ξανά αργότερα."
 
 #. Short UI label or heading on the careers and future roles pages. Use clear hiring language, avoid implying that roles are currently open unless the source says so, and preserve placeholders exactly.
 #: fluxer_marketing/generated:company_and_resources.careers.label
@@ -527,29 +434,11 @@ msgctxt "company_and_resources.careers.label"
 msgid "Careers"
 msgstr "Καριέρα"
 
-#. Small notice shown above future-role listings and on job pages. Be explicit that the roles are not open; avoid application or recruiting language.
-#: fluxer_marketing/generated:company_and_resources.careers.not_currently_open_notice
-msgctxt "company_and_resources.careers.not_currently_open_notice"
-msgid "These are reference pages, not active job openings."
-msgstr "Αυτές είναι σελίδες αναφοράς, όχι ενεργές θέσεις εργασίας."
-
-#. Button or link label on the careers and future roles pages. Use clear hiring language, avoid implying that roles are currently open unless the source says so, and preserve placeholders exactly.
-#: fluxer_marketing/generated:company_and_resources.careers.open_positions
-msgctxt "company_and_resources.careers.open_positions"
-msgid "Future roles"
-msgstr "Μελλοντικοί ρόλοι"
-
-#. Body copy under the careers page role-list heading. Keep it concise and informational; do not invite applications.
-#: fluxer_marketing/generated:company_and_resources.careers.open_positions_description
-msgctxt "company_and_resources.careers.open_positions_description"
-msgid "A short list of work we may hire for later."
-msgstr "Μια σύντομη λίστα εργασιών για τις οποίες μπορεί να προσλάβουμε αργότερα."
-
-#. Short UI label or heading on the careers and future roles pages. Use clear hiring language, avoid implying that roles are currently open unless the source says so, and preserve placeholders exactly.
-#: fluxer_marketing/generated:company_and_resources.careers.posted
-msgctxt "company_and_resources.careers.posted"
-msgid "Listed"
-msgstr "Καταχωρισμένοι"
+#. Short status label on the careers page. Be explicit that no roles are currently open.
+#: fluxer_marketing/generated:company_and_resources.careers.no_open_roles
+msgctxt "company_and_resources.careers.no_open_roles"
+msgid "No open roles"
+msgstr "Καμία ανοιχτή θέση"
 
 #. Compact UI label for company/resource navigation or footer groupings. Keep labels short and recognizable for a marketing website.
 #: fluxer_marketing/generated:company_and_resources.company
@@ -579,7 +468,7 @@ msgstr "Τεκμηρίωση"
 #: fluxer_marketing/generated:company_and_resources.help.get_help
 msgctxt "company_and_resources.help.get_help"
 msgid "Get help"
-msgstr "Λάβε βοήθεια"
+msgstr "Ζήτησε βοήθεια"
 
 #. Compact UI label for help-center links or descriptions in marketing navigation and resource sections. Keep it service-oriented and concise.
 #: fluxer_marketing/generated:company_and_resources.help.help_center
@@ -590,15 +479,15 @@ msgstr "Κέντρο βοήθειας"
 #. Body copy for help-center links or descriptions in marketing navigation and resource sections. Preserve {product_name} exactly; keep it service-oriented and concise. Preserve placeholders exactly.
 #: fluxer_marketing/generated:company_and_resources.help.help_center_description
 msgctxt "company_and_resources.help.help_center_description"
-msgid "Find answers to common questions about your account, privacy, and using {product_name}."
+msgid "Find answers about your account and privacy, or get help using {product_name}."
 msgstr ""
-"Βρες απαντήσεις σε συνήθεις ερωτήσεις σχετικά με τον λογαριασμό σου, την ιδιωτικότητα και τη χρήση του {product_name}."
+"Βρες απαντήσεις για τον λογαριασμό σου και την ιδιωτικότητα ή ζήτα βοήθεια για τη χρήση του {product_name}."
 
-#. Short UI label or heading for help-center links or descriptions in marketing navigation and resource sections. Keep it service-oriented and concise.
-#: fluxer_marketing/generated:company_and_resources.help.label
-msgctxt "company_and_resources.help.label"
-msgid "Help"
-msgstr "Βοήθεια"
+#. Compact heading for the product links in marketing navigation. Preserve {product_name} exactly.
+#: fluxer_marketing/generated:company_and_resources.fluxer
+msgctxt "company_and_resources.fluxer"
+msgid "{product_name}"
+msgstr "{product_name}"
 
 #. Placeholder text for help-center links or descriptions in marketing navigation and resource sections. Keep it service-oriented and concise.
 #: fluxer_marketing/generated:company_and_resources.help.search_placeholder
@@ -611,12 +500,6 @@ msgstr "Αναζήτηση άρθρων βοήθειας…"
 msgctxt "company_and_resources.help.all_articles"
 msgid "All help articles"
 msgstr "Όλα τα άρθρα βοήθειας"
-
-#. Short label on the help center for a list of support articles. Keep it concise.
-#: fluxer_marketing/generated:company_and_resources.help.articles
-msgctxt "company_and_resources.help.articles"
-msgid "Articles"
-msgstr "Άρθρα"
 
 #. Link label shown above help articles. It returns users to the help center home page.
 #: fluxer_marketing/generated:company_and_resources.help.back_to_help_center
@@ -634,13 +517,13 @@ msgstr "Περιήγηση ανά θέμα"
 #: fluxer_marketing/generated:company_and_resources.help.no_search_results_description
 msgctxt "company_and_resources.help.no_search_results_description"
 msgid "Try another search, or browse the topics below."
-msgstr "Δοκιμάστε άλλη αναζήτηση ή περιηγηθείτε στα παρακάτω θέματα."
+msgstr "Δοκίμασε άλλη αναζήτηση ή περιηγήσου στα παρακάτω θέματα."
 
 #. Short empty-state heading shown when a help-center search returns no articles.
 #: fluxer_marketing/generated:company_and_resources.help.no_search_results_title
 msgctxt "company_and_resources.help.no_search_results_title"
 msgid "No matching articles"
-msgstr "Δεν βρέθηκαν άρθρα"
+msgstr "Δεν βρέθηκαν σχετικά άρθρα"
 
 #. Section heading below help articles. It introduces links to nearby support articles.
 #: fluxer_marketing/generated:company_and_resources.help.related_articles
@@ -679,55 +562,24 @@ msgid "Press contact"
 msgstr "Επικοινωνία τύπου"
 
 #. Compact UI label for company/resource navigation or footer groupings. Keep labels short and recognizable for a marketing website.
-#: fluxer_marketing/generated:company_and_resources.product
-msgctxt "company_and_resources.product"
-msgid "Product"
-msgstr "Προϊόν"
-
-#. Compact UI label for company/resource navigation or footer groupings. Keep labels short and recognizable for a marketing website.
 #: fluxer_marketing/generated:company_and_resources.resources
 msgctxt "company_and_resources.resources"
 msgid "Resources"
 msgstr "Πόροι"
 
-#. Compact UI label in the open-source contribution/get-involved section. Keep the tone welcoming and concrete, and preserve email placeholders exactly.
-#: fluxer_marketing/generated:company_and_resources.source_and_contribution.code_issues_docs_reviews
-msgctxt "company_and_resources.source_and_contribution.code_issues_docs_reviews"
-msgid "Code, issues, docs, and reviews"
-msgstr "Κώδικας, θέματα, τεκμηρίωση και αναθεωρήσεις κώδικα"
-
-#. Compact UI label in the open-source contribution/get-involved section. Keep the tone welcoming and concrete, and preserve email placeholders exactly.
-#: fluxer_marketing/generated:company_and_resources.source_and_contribution.contribute_on_github
-msgctxt "company_and_resources.source_and_contribution.contribute_on_github"
-msgid "Contribute on {github}"
-msgstr "Συνεισφέρε στο {github}"
-
-#. Body copy in the open-source contribution/get-involved section. Keep the tone welcoming and concrete, and preserve email placeholders exactly.
-#: fluxer_marketing/generated:company_and_resources.source_and_contribution.fluxer_built_in_open
-msgctxt "company_and_resources.source_and_contribution.fluxer_built_in_open"
-msgid "{product_name} is built in the open. Pick the path that fits how you like to help."
-msgstr ""
-"Το {product_name} αναπτύσσεται ανοιχτά. Διάλεξε τον τρόπο που σου ταιριάζει για να βοηθήσεις."
-
-#. Button or link label in the open-source contribution/get-involved section. Keep the tone welcoming and concrete, and preserve email placeholders exactly.
-#: fluxer_marketing/generated:company_and_resources.source_and_contribution.get_involved
-msgctxt "company_and_resources.source_and_contribution.get_involved"
-msgid "Get involved"
-msgstr "Συμμετοχή"
-
-#. Compact UI label in the open-source contribution/get-involved section. Keep the tone welcoming and concrete, and preserve email placeholders exactly.
+#. Compact UI label for links to the product source code. Keep the label short and recognizable.
 #: fluxer_marketing/generated:company_and_resources.source_and_contribution.source_code
 msgctxt "company_and_resources.source_and_contribution.source_code"
 msgid "Source code"
 msgstr "Πηγαίος κώδικας"
 
-#. Body copy in the open-source contribution/get-involved section. Keep the tone welcoming and concrete, and preserve email placeholders exactly.
-#: fluxer_marketing/generated:company_and_resources.source_and_contribution.translation.llm_translation_note
-msgctxt "company_and_resources.source_and_contribution.translation.llm_translation_note"
+#. Body copy in the locale picker inviting translation contributions through Weblate. Preserve the {weblate} and {product_name} placeholders exactly.
+#: fluxer_marketing/generated:company_and_resources.source_and_contribution.translation.weblate_note
+msgctxt "company_and_resources.source_and_contribution.translation.weblate_note"
 msgid ""
-"All translations are currently LLM-generated with minimal human revision. We'd love to get real people to help us localize {product_name} into your language. To do so, email {l10n_email} and we'll be happy to accept your contributions."
+"A translation should sound natural to someone who speaks the language. Correct a phrase or start a new locale on {weblate}, and we will include it in {product_name}."
 msgstr ""
-"Όλες οι μεταφράσεις αυτή τη στιγμή παράγονται από LLM με ελάχιστη ανθρώπινη επιμέλεια. Θα θέλαμε πολύ να βοηθήσουν πραγματικοί άνθρωποι να μεταφράσουμε το {product_name} στη γλώσσα σου. Αν θέλεις να βοηθήσεις, στείλε email στο {l10n_email} και θα χαρούμε να δεχτούμε τη συνεισφορά σου."
+"Μια μετάφραση πρέπει να ακούγεται φυσική σε κάποιον που μιλάει τη γλώσσα. Διόρθωσε μια φράση ή ξεκίνα μια νέα γλώσσα στο {weblate} και θα την προσθέσουμε στο {product_name}."
 
 #. Department or policy category label on content pages. Translate as a compact noun phrase, not as a sentence.
 #: fluxer_marketing/generated:content.labels.community
@@ -735,144 +587,30 @@ msgctxt "content.labels.community"
 msgid "Community"
 msgstr "Κοινότητα"
 
-#. Department label for job listings. Translate as the software/product engineering function.
-#: fluxer_marketing/generated:content.labels.engineering
-msgctxt "content.labels.engineering"
-msgid "Engineering"
-msgstr "Μηχανική"
-
-#. Employment type label shown on careers pages. Keep it short and conventional for job listings.
-#: fluxer_marketing/generated:content.labels.full_time
-msgctxt "content.labels.full_time"
-msgid "Full-time"
-msgstr "Πλήρης απασχόληση"
-
 #. Department or policy category label on content pages. Translate as legal/compliance, not legality in general.
 #: fluxer_marketing/generated:content.labels.legal
 msgctxt "content.labels.legal"
 msgid "Legal"
 msgstr "Νομικά"
 
-#. Workplace location label for job listings. Means the role can be performed remotely.
-#: fluxer_marketing/generated:content.labels.remote
-msgctxt "content.labels.remote"
-msgid "Remote"
-msgstr "Απομακρυσμένα"
-
-#. Policy category label for security and bug-bounty content. Translate as information security.
+#. Policy category label for security reporting content. Translate as information security.
 #: fluxer_marketing/generated:content.labels.security
 msgctxt "content.labels.security"
 msgid "Security"
 msgstr "Ασφάλεια"
 
-#. Department label for customer support job listings. Translate as user/customer support.
-#: fluxer_marketing/generated:content.labels.support
-msgctxt "content.labels.support"
-msgid "Support"
-msgstr "Υποστήριξη"
-
-#. Department label for moderation/safety jobs. Keep the ampersand only if natural in the locale.
-#: fluxer_marketing/generated:content.labels.trust_and_safety
-msgctxt "content.labels.trust_and_safety"
-msgid "Trust & Safety"
-msgstr "Εμπιστοσύνη και ασφάλεια"
-
-#. Short job-card summary for the Community Lead role. Keep it warm, concrete, and concise. Preserve placeholders exactly.
-#: fluxer_marketing/generated:content.jobs.community_lead.description
-msgctxt "content.jobs.community_lead.description"
-msgid ""
-"Look after our public voice and the communities around {product_name}. Talk with people, share what's new, and bring what you hear back to the team."
-msgstr ""
-"Φρόντισε τη δημόσια φωνή μας και τις κοινότητες γύρω από το {product_name}. Μίλα με τον κόσμο, μοιράσου νέα και φέρε όσα ακούς πίσω στην ομάδα."
-
-#. Job title shown on careers pages. Translate as a professional role title.
-#: fluxer_marketing/generated:content.jobs.community_lead.title
-msgctxt "content.jobs.community_lead.title"
-msgid "Community Lead"
-msgstr "Υπεύθυνος κοινότητας"
-
-#. Short job-card summary for the Platform Engineer role. Keep infrastructure terminology precise. Preserve placeholders exactly.
-#: fluxer_marketing/generated:content.jobs.platform_engineer.description
-msgctxt "content.jobs.platform_engineer.description"
-msgid ""
-"Look after the systems {product_name} runs on: pipelines, databases, dashboards, on-call, and the quiet machinery that keeps everything humming."
-msgstr ""
-"Φρόντισε τα συστήματα όπου τρέχει το {product_name}: pipelines, βάσεις δεδομένων, dashboards, εφημερίες και την ήσυχη υποδομή που κρατά τα πάντα όρθια."
-
-#. Job title shown on careers pages. Translate as a professional infrastructure/platform engineering role title.
-#: fluxer_marketing/generated:content.jobs.platform_engineer.title
-msgctxt "content.jobs.platform_engineer.title"
-msgid "Platform Engineer"
-msgstr "Μηχανικός πλατφόρμας"
-
-#. Short job-card summary for the Privacy & Legal Counsel role. Keep legal acronyms unchanged. Preserve placeholders exactly.
-#: fluxer_marketing/generated:content.jobs.privacy_and_legal_counsel.description
-msgctxt "content.jobs.privacy_and_legal_counsel.description"
-msgid ""
-"Handle {product_name}'s legal and privacy side: GDPR, DSA, DMCA, law-enforcement requests, and the policies that go with them."
-msgstr ""
-"Χειρίσου τα νομικά και την ιδιωτικότητα του {product_name}: GDPR, DSA, DMCA, αιτήματα αρχών και τις σχετικές πολιτικές."
-
-#. Job title shown on careers pages. Translate as a professional privacy/legal counsel role title.
-#: fluxer_marketing/generated:content.jobs.privacy_and_legal_counsel.title
-msgctxt "content.jobs.privacy_and_legal_counsel.title"
-msgid "Privacy & Legal Counsel"
-msgstr "Σύμβουλος ιδιωτικότητας και νομικών"
-
-#. Short job-card summary for the Product Engineer role. Keep the approachable product-builder tone. Preserve placeholders exactly.
-#: fluxer_marketing/generated:content.jobs.product_engineer.description
-msgctxt "content.jobs.product_engineer.description"
-msgid ""
-"Build the bits people open {product_name} to use, top to bottom: web, mobile, desktop, and the services behind them."
-msgstr ""
-"Χτίσε όσα ανοίγει ο κόσμος το {product_name} για να χρησιμοποιήσει: web, mobile, desktop και τις υπηρεσίες από πίσω."
-
-#. Job title shown on careers pages. Translate as a professional product engineering role title.
-#: fluxer_marketing/generated:content.jobs.product_engineer.title
-msgctxt "content.jobs.product_engineer.title"
-msgid "Product Engineer"
-msgstr "Μηχανικός προϊόντος"
-
-#. Short job-card summary for the Support Specialist role. Keep it friendly but professional.
-#: fluxer_marketing/generated:content.jobs.support_specialist.description
-msgctxt "content.jobs.support_specialist.description"
-msgid ""
-"Be the friendly first reply when someone hits a snag. Help users sort things out and bring the rough edges back to the team to fix."
-msgstr ""
-"Γίνε η φιλική πρώτη απάντηση όταν κάτι στραβώνει. Βοήθησε τους χρήστες και φέρε στην ομάδα τα σημεία που χρειάζονται διόρθωση."
-
-#. Job title shown on careers pages. Translate as a professional customer/user support role title.
-#: fluxer_marketing/generated:content.jobs.support_specialist.title
-msgctxt "content.jobs.support_specialist.title"
-msgid "Support Specialist"
-msgstr "Ειδικός υποστήριξης"
-
-#. Short job-card summary for the Trust & Safety Specialist role. Keep moderation/safety wording fair and calm. Preserve placeholders exactly.
-#: fluxer_marketing/generated:content.jobs.trust_and_safety_specialist.description
-msgctxt "content.jobs.trust_and_safety_specialist.description"
-msgid ""
-"Work through abuse reports, make fair calls, and help shape the policies and tooling that keep {product_name} somewhere people want to be."
-msgstr ""
-"Δούλεψε πάνω σε αναφορές κακοποίησης, πάρε δίκαιες αποφάσεις και βοήθησε στις πολιτικές και τα εργαλεία που κρατούν το {product_name} ασφαλές."
-
-#. Job title shown on careers pages. Translate as a professional moderation/safety operations role title.
-#: fluxer_marketing/generated:content.jobs.trust_and_safety_specialist.title
-msgctxt "content.jobs.trust_and_safety_specialist.title"
-msgid "Trust & Safety Specialist"
-msgstr "Ειδικός εμπιστοσύνης και ασφάλειας"
-
 #. Policy page summary for the changelog. Keep policy names recognizable and legally precise.
 #: fluxer_marketing/generated:content.policies.changelog.description
 msgctxt "content.policies.changelog.description"
 msgid ""
-"A record of significant changes to our Terms of Service, Privacy Policy, and Community Guidelines."
+"A record of significant changes to our terms of service, privacy policy, and community guidelines."
 msgstr ""
 "Καταγραφή σημαντικών αλλαγών στους Όρους υπηρεσίας, την Πολιτική απορρήτου και τις Οδηγίες κοινότητας."
 
 #. Policy page title. Translate as a record of changes to legal/community policies.
 #: fluxer_marketing/generated:content.policies.changelog.title
 msgctxt "content.policies.changelog.title"
-msgid "Policy Changelog"
+msgid "Policy changelog"
 msgstr "Αλλαγές πολιτικών"
 
 #. Policy page summary for company information. Keep company name and legal framing precise. Preserve placeholders exactly.
@@ -886,61 +624,62 @@ msgstr ""
 #. Policy page title for legal company details. Translate as formal company information.
 #: fluxer_marketing/generated:content.policies.company_information.title
 msgctxt "content.policies.company_information.title"
-msgid "Company Information"
+msgid "Company information"
 msgstr "Στοιχεία εταιρείας"
 
 #. Policy page summary for community guidelines. Keep safety wording direct and neutral. Preserve placeholders exactly.
 #: fluxer_marketing/generated:content.policies.guidelines.description
 msgctxt "content.policies.guidelines.description"
-msgid "Clear standards for using {product_name}, protecting others, and keeping communities safe."
+msgid "The rules for using {product_name} safely and treating other people well."
 msgstr ""
-"Σαφή πρότυπα για τη χρήση του {product_name}, την προστασία των άλλων και την ασφάλεια των κοινοτήτων."
+"Οι κανόνες για να χρησιμοποιείς το {product_name} με ασφάλεια και να συμπεριφέρεσαι σωστά στους άλλους."
 
 #. Policy page title for community rules. Translate as formal community guidelines.
 #: fluxer_marketing/generated:content.policies.guidelines.title
 msgctxt "content.policies.guidelines.title"
-msgid "Community Guidelines"
+msgid "Community guidelines"
 msgstr "Οδηγίες κοινότητας"
 
 #. Policy page summary for the Privacy Policy. Keep data-protection terms legally precise. Preserve placeholders exactly.
 #: fluxer_marketing/generated:content.policies.privacy.description
 msgctxt "content.policies.privacy.description"
 msgid ""
-"How {product_name} handles personal data, what we do not do with it, and the controls and rights you have."
+"How {product_name} handles personal data and what we refuse to do with it. Learn about your controls and rights."
 msgstr ""
 "Πώς χειρίζεται το {product_name} τα προσωπικά δεδομένα, τι δεν κάνουμε με αυτά και ποιους ελέγχους και δικαιώματα έχεις."
 
 #. Policy page title. Translate as a formal privacy policy.
 #: fluxer_marketing/generated:content.policies.privacy.title
 msgctxt "content.policies.privacy.title"
-msgid "Privacy Policy"
+msgid "Privacy policy"
 msgstr "Πολιτική απορρήτου"
 
-#. Policy page summary for security reporting and bug bounty rules. Keep security and safe-harbor terminology precise.
+#. Policy page summary for security reporting rules. Keep security and safe-harbor terminology precise.
 #: fluxer_marketing/generated:content.policies.security.description
 msgctxt "content.policies.security.description"
-msgid "How to report security issues, what is in scope, and how safe harbor works."
+msgid ""
+"How to report security issues and check what is in scope. Read the safe harbor terms before testing."
 msgstr ""
-"Πώς να αναφέρεις ζητήματα ασφάλειας, τι είναι εντός πεδίου και πώς λειτουργεί η ασφαλής γνωστοποίηση."
+"Πώς να αναφέρεις ζητήματα ασφάλειας και πώς να δεις τι είναι εντός πεδίου. Διάβασε τους όρους ασφαλούς λιμένα πριν κάνεις δοκιμές."
 
-#. Policy page title for security vulnerability reporting. Translate as a bug bounty/security reporting page.
+#. Policy page title for security vulnerability reporting.
 #: fluxer_marketing/generated:content.policies.security.title
 msgctxt "content.policies.security.title"
-msgid "Security Bug Bounty"
-msgstr "Πρόγραμμα αναφοράς ευπαθειών"
+msgid "Security"
+msgstr "Ασφάλεια"
 
 #. Policy page summary for Terms of Service. Keep the legal agreement framing clear and neutral. Preserve placeholders exactly.
 #: fluxer_marketing/generated:content.policies.terms.description
 msgctxt "content.policies.terms.description"
 msgid ""
-"The agreement between you and {product_name}, written to explain your rights and responsibilities clearly."
+"The agreement between you and {product_name}, including account, content, payment, moderation, and legal terms."
 msgstr ""
-"Η συμφωνία ανάμεσα σε εσένα και το {product_name}, γραμμένη ώστε να εξηγεί καθαρά τα δικαιώματα και τις ευθύνες σου."
+"Η συμφωνία ανάμεσα σε εσένα και το {product_name}, με όρους για τον λογαριασμό, το περιεχόμενο, τις πληρωμές, τον συντονισμό και τα νομικά ζητήματα."
 
 #. Policy page title. Translate as formal terms of service.
 #: fluxer_marketing/generated:content.policies.terms.title
 msgctxt "content.policies.terms.title"
-msgid "Terms of Service"
+msgid "Terms of service"
 msgstr "Όροι υπηρεσίας"
 
 #. Help center category title for premium/Plutonium-related articles. Keep as a short noun phrase. Preserve placeholders exactly.
@@ -952,8 +691,8 @@ msgstr "{premium_tier_full_name}"
 #. Help center category summary shown under the Premium heading. Translate as a short descriptive sentence. Preserve placeholders exactly.
 #: fluxer_marketing/generated:content.help.category.premium.description
 msgctxt "content.help.category.premium.description"
-msgid "Information about our {premium_tier_full_name} offering."
-msgstr "Πληροφορίες σχετικά με την προσφορά {premium_tier_full_name}."
+msgid "See what {premium_tier_full_name} includes."
+msgstr "Δες τι περιλαμβάνει το {premium_tier_full_name}."
 
 #. Help center category title for frequently asked questions. Use the locale's standard abbreviation or short phrase.
 #: fluxer_marketing/generated:content.help.category.faqs.title
@@ -964,8 +703,8 @@ msgstr "Συχνές ερωτήσεις"
 #. Help center category summary shown under the FAQs heading. Translate as a short descriptive sentence.
 #: fluxer_marketing/generated:content.help.category.faqs.description
 msgctxt "content.help.category.faqs.description"
-msgid "Answers to frequently asked questions."
-msgstr "Απαντήσεις σε συχνές ερωτήσεις."
+msgid "Learn how attachment expiry and bug reports work."
+msgstr "Μάθε πώς λειτουργούν η λήξη των συνημμένων και οι αναφορές σφαλμάτων."
 
 #. Help center category title for account-management articles. Keep as a short noun phrase.
 #: fluxer_marketing/generated:content.help.category.account.title
@@ -976,26 +715,28 @@ msgstr "Λογαριασμός"
 #. Help center category summary shown under the Account heading. Translate as a short descriptive sentence.
 #: fluxer_marketing/generated:content.help.category.account.description
 msgctxt "content.help.category.account.description"
-msgid "Managing personal account details."
-msgstr "Διαχείριση στοιχείων προσωπικού λογαριασμού."
+msgid "Manage account details, exports, and deletion."
+msgstr ""
+"Διαχειρίσου τα στοιχεία του λογαριασμού σου, τις εξαγωγές δεδομένων και τη διαγραφή."
 
 #. Help center category title for legal and policy articles. Translate as a compact heading; keep the ampersand only if natural.
 #: fluxer_marketing/generated:content.help.category.legal_policy.title
 msgctxt "content.help.category.legal_policy.title"
-msgid "Legal & Policy"
-msgstr "Νομικά και πολιτικές"
+msgid "Legal and policy guides"
+msgstr "Οδηγοί για νομικά και πολιτικές"
 
 #. Help center category summary shown under the Legal & Policy heading. Translate as a short descriptive sentence; the brand 'Fluxer' stays untranslated. Preserve placeholders exactly.
 #: fluxer_marketing/generated:content.help.category.legal_policy.description
 msgctxt "content.help.category.legal_policy.description"
-msgid "View important policies pertaining to {product_name}."
-msgstr "Δείτε σημαντικές πολιτικές που αφορούν το {product_name}."
+msgid "Read about privacy, safety, copyright, and data handling."
+msgstr ""
+"Διάβασε για την ιδιωτικότητα, την ασφάλεια, τα πνευματικά δικαιώματα και τον χειρισμό δεδομένων."
 
 #. Help article title for a time-limited Plutonium promotion. Keep month/year and 'Plutonium' as proper names. Preserve placeholders exactly.
 #: fluxer_marketing/generated:content.help.article.plutonium_promotion_march_2026.title
 msgctxt "content.help.article.plutonium_promotion_march_2026.title"
 msgid "March 2026 {premium_tier_name} promotion"
-msgstr "Προσφορά {premium_tier_name} Μάρτιος 2026"
+msgstr "Προσφορά {premium_tier_name} Μαρτίου 2026"
 
 #. Help article summary describing the Plutonium promotion. Keep 'Plutonium' as a proper name. Preserve placeholders exactly.
 #: fluxer_marketing/generated:content.help.article.plutonium_promotion_march_2026.description
@@ -1008,22 +749,21 @@ msgstr ""
 #. Help article title asking about the retired Fluxer Visionary tier. Keep 'Fluxer Visionary' as a proper name. Preserve placeholders exactly.
 #: fluxer_marketing/generated:content.help.article.visionary.title
 msgctxt "content.help.article.visionary.title"
-msgid "What was {visionary_tier_full_name}?"
-msgstr "Τι ήταν το {visionary_tier_full_name};"
+msgid "The former {visionary_tier_full_name} tier"
+msgstr "Η παλιά βαθμίδα {visionary_tier_full_name}"
 
 #. Help article summary about the retired Fluxer Visionary lifetime tier. Keep 'Fluxer Visionary' and 'Plutonium' as proper names. Preserve placeholders exactly.
 #: fluxer_marketing/generated:content.help.article.visionary.description
 msgctxt "content.help.article.visionary.description"
 msgid ""
-"{visionary_tier_full_name} was a limited lifetime {premium_tier_name} offering that sold out in February 2026. Learn about the numbered badge and what {visionary_tier_name} includes."
-msgstr ""
-"Το {visionary_tier_full_name} ήταν μια περιορισμένη ισόβια προσφορά {premium_tier_name} που εξαντλήθηκε τον Φεβρουάριο 2026. Μάθετε για το αριθμημένο σήμα και τι περιλαμβάνει το {visionary_tier_name}."
+"What the sold out {visionary_tier_full_name} offer includes and how its account benefits work."
+msgstr "Τι περιλαμβάνει η προσφορά {visionary_tier_full_name} που εξαντλήθηκε και πώς λειτουργούν τα οφέλη του λογαριασμού."
 
 #. Help article title listing the three programmes that showcase a community on Fluxer. Keep 'Partner', 'Verified', and 'Discovery' as programme names.
 #: fluxer_marketing/generated:content.help.article.community_programmes.title
 msgctxt "content.help.article.community_programmes.title"
 msgid "Partner, Verified, and Discovery programmes"
-msgstr "Τα προγράμματα Συνεργάτες, Επαλήθευση και Ανακάλυψη"
+msgstr "Τα προγράμματα Partner, Verified και Discovery"
 
 #. Help article summary about the Partner, Verified, and Discovery programmes. Preserve placeholders exactly.
 #: fluxer_marketing/generated:content.help.article.community_programmes.description
@@ -1043,9 +783,9 @@ msgstr "Πώς λειτουργεί η λήξη των συνημμένων"
 #: fluxer_marketing/generated:content.help.article.attachment_expiry.description
 msgctxt "content.help.article.attachment_expiry.description"
 msgid ""
-"How we set attachment expiry, how access can extend it, and what to do before a file is removed."
+"See when attachments expire, what extends their availability, and how to keep an important file."
 msgstr ""
-"Πώς ορίζουμε τη λήξη των συνημμένων, πώς η πρόσβαση μπορεί να την παρατείνει και τι να κάνετε πριν αφαιρεθεί ένα αρχείο."
+"Δες πότε λήγουν τα συνημμένα, τι παρατείνει τη διαθεσιμότητά τους και πώς να κρατήσεις ένα σημαντικό αρχείο."
 
 #. Help article title about filing bug reports.
 #: fluxer_marketing/generated:content.help.article.report_bug.title
@@ -1056,23 +796,22 @@ msgstr "Αναφορά σφάλματος"
 #. Help article summary about filing bug reports. Keep 'GitHub' untranslated. Preserve placeholders exactly.
 #: fluxer_marketing/generated:content.help.article.report_bug.description
 msgctxt "content.help.article.report_bug.description"
-msgid ""
-"How to file clear, high-quality bug reports for the {product_name} support team or our {github}."
+msgid "How to submit a clear bug report to the {product_name} team or through {github}."
 msgstr ""
-"Πώς να υποβάλετε σαφείς και υψηλής ποιότητας αναφορές σφαλμάτων στην ομάδα υποστήριξης του {product_name} ή στο {github} μας."
+"Πώς να υποβάλεις μια σαφή αναφορά σφάλματος στην ομάδα του {product_name} ή μέσω του {github}."
 
 #. Help article title about updating a user's date of birth via support.
 #: fluxer_marketing/generated:content.help.article.change_date_of_birth.title
 msgctxt "content.help.article.change_date_of_birth.title"
 msgid "How to change your date of birth"
-msgstr "Πώς να αλλάξετε την ημερομηνία γέννησής σας"
+msgstr "Πώς να αλλάξεις την ημερομηνία γέννησής σου"
 
 #. Help article summary about updating date of birth via support. Keep 'Fluxer' as a brand name. Preserve placeholders exactly.
 #: fluxer_marketing/generated:content.help.article.change_date_of_birth.description
 msgctxt "content.help.article.change_date_of_birth.description"
-msgid "How to update your date of birth on {product_name} by contacting our support team."
+msgid "How to ask the {product_name} support team to correct your date of birth."
 msgstr ""
-"Πώς να ενημερώσετε την ημερομηνία γέννησής σας στο {product_name} επικοινωνώντας με την ομάδα υποστήριξής μας."
+"Πώς να ζητήσεις από την ομάδα υποστήριξης του {product_name} να διορθώσει την ημερομηνία γέννησής σου."
 
 #. Help article title about requesting deletion of user data.
 #: fluxer_marketing/generated:content.help.article.data_deletion.title
@@ -1083,34 +822,37 @@ msgstr "Αίτημα διαγραφής δεδομένων"
 #. Help article summary about deleting user data. Keep 'Fluxer' as a brand name. Preserve placeholders exactly.
 #: fluxer_marketing/generated:content.help.article.data_deletion.description
 msgctxt "content.help.article.data_deletion.description"
-msgid "How to delete your messages and other data from {product_name}."
-msgstr "Πώς να διαγράψετε τα μηνύματά σας και άλλα δεδομένα από το {product_name}."
+msgid "How to delete messages and request removal of other account data."
+msgstr ""
+"Πώς να διαγράψεις μηνύματα και να ζητήσεις την αφαίρεση άλλων δεδομένων του λογαριασμού σου."
 
 #. Help article title about exporting account data.
 #: fluxer_marketing/generated:content.help.article.data_export.title
 msgctxt "content.help.article.data_export.title"
 msgid "Exporting your account data"
-msgstr "Εξαγωγή των δεδομένων του λογαριασμού σας"
+msgstr "Εξαγωγή των δεδομένων του λογαριασμού σου"
 
 #. Help article summary about exporting Fluxer account data. Keep 'Fluxer' as a brand name. Preserve placeholders exactly.
 #: fluxer_marketing/generated:content.help.article.data_export.description
 msgctxt "content.help.article.data_export.description"
-msgid "How to request and download a complete export of your {product_name} data."
-msgstr "Πώς να ζητήσετε και να κατεβάσετε μια πλήρη εξαγωγή των δεδομένων σας {product_name}."
+msgid ""
+"How to request a machine-readable export of your {product_name} account data and handle it safely."
+msgstr ""
+"Πώς να ζητήσεις μια αναγνώσιμη από μηχανή εξαγωγή των δεδομένων του λογαριασμού σου στο {product_name} και πώς να τη χειριστείς με ασφάλεια."
 
 #. Help article title about deleting or disabling an account.
 #: fluxer_marketing/generated:content.help.article.delete_account.title
 msgctxt "content.help.article.delete_account.title"
 msgid "How to delete or disable your account"
-msgstr "Πώς να διαγράψετε ή να απενεργοποιήσετε τον λογαριασμό σας"
+msgstr "Πώς να διαγράψεις ή να απενεργοποιήσεις τον λογαριασμό σου"
 
 #. Help article summary about deleting/disabling an account. Keep 'Fluxer' as a brand name. Preserve placeholders exactly.
 #: fluxer_marketing/generated:content.help.article.delete_account.description
 msgctxt "content.help.article.delete_account.description"
 msgid ""
-"How to permanently delete or temporarily disable your {product_name} account, and what happens to your data."
+"How to delete or temporarily disable your {product_name} account and what happens to your data."
 msgstr ""
-"Πώς να διαγράψετε οριστικά ή να απενεργοποιήσετε προσωρινά τον λογαριασμό σας {product_name} και τι συμβαίνει με τα δεδομένα σας."
+"Πώς να διαγράψεις ή να απενεργοποιήσεις προσωρινά τον λογαριασμό σου στο {product_name} και τι συμβαίνει με τα δεδομένα σου."
 
 #. Help article title about country-specific minimum-age requirements for using the service.
 #: fluxer_marketing/generated:content.help.article.minimum_age.title
@@ -1122,9 +864,9 @@ msgstr "Απαιτήσεις ελάχιστης ηλικίας"
 #: fluxer_marketing/generated:content.help.article.minimum_age.description
 msgctxt "content.help.article.minimum_age.description"
 msgid ""
-"The minimum age to use {product_name} by country, how age is determined, and what happens if an account is suspected of being underage."
+"Who can use {product_name} under our age rules and what to do if we get your eligibility wrong."
 msgstr ""
-"Η ελάχιστη ηλικία για τη χρήση του {product_name} ανά χώρα, πώς καθορίζεται η ηλικία και τι συμβαίνει εάν υπάρχει υποψία ότι ένας λογαριασμός ανήκει σε ανήλικο."
+"Ποιοι μπορούν να χρησιμοποιούν το {product_name} σύμφωνα με τους κανόνες ηλικίας μας και τι να κάνεις αν κρίνουμε λανθασμένα ότι δεν πληροίς τις προϋποθέσεις."
 
 #. Help article title about the copyright/IP complaint process. Keep legal-sounding phrasing.
 #: fluxer_marketing/generated:content.help.article.copyright.title
@@ -1135,22 +877,22 @@ msgstr "Πολιτική καταγγελιών για πνευματικά δι
 #. Help article summary about copyright/IP complaint reporting. Keep 'Fluxer' as a brand name. Preserve placeholders exactly.
 #: fluxer_marketing/generated:content.help.article.copyright.description
 msgctxt "content.help.article.copyright.description"
-msgid "How to report suspected copyright or intellectual property violations on {product_name}."
+msgid "How to report suspected copyright or intellectual property infringement on {product_name}."
 msgstr ""
-"Πώς να αναφέρετε εικαζόμενες παραβιάσεις πνευματικών δικαιωμάτων ή πνευματικής ιδιοκτησίας στο {product_name}."
+"Πώς να αναφέρεις εικαζόμενη παραβίαση πνευματικών δικαιωμάτων ή πνευματικής ιδιοκτησίας στο {product_name}."
 
 #. Help article title about data retention durations. Keep 'Fluxer' as a brand name. Preserve placeholders exactly.
 #: fluxer_marketing/generated:content.help.article.data_retention.title
 msgctxt "content.help.article.data_retention.title"
 msgid "How long {product_name} keeps your information"
-msgstr "Για πόσο διάστημα διατηρεί τις πληροφορίες σας το {product_name}"
+msgstr "Για πόσο διάστημα διατηρεί τις πληροφορίες σου το {product_name}"
 
 #. Help article summary about retention durations and reasoning. Keep 'Fluxer' as a brand name. Preserve placeholders exactly.
 #: fluxer_marketing/generated:content.help.article.data_retention.description
 msgctxt "content.help.article.data_retention.description"
-msgid "How long {product_name} retains different types of information and why we keep it."
+msgid "How long {product_name} keeps account information, content, logs, and legal records."
 msgstr ""
-"Για πόσο διάστημα διατηρεί το {product_name} διαφορετικούς τύπους πληροφοριών και γιατί τις κρατάμε."
+"Για πόσο διάστημα διατηρεί το {product_name} στοιχεία λογαριασμού, περιεχόμενο, αρχεία καταγραφής και νομικά αρχεία."
 
 #. Help article title about EU Digital Services Act dispute options. Keep 'EU DSA' as an acronym.
 #: fluxer_marketing/generated:content.help.article.dsa_dispute_resolution.title
@@ -1162,9 +904,8 @@ msgstr "Επιλογές επίλυσης διαφορών EU DSA"
 #: fluxer_marketing/generated:content.help.article.dsa_dispute_resolution.description
 msgctxt "content.help.article.dsa_dispute_resolution.description"
 msgid ""
-"How EU users covered by the Digital Services Act can exercise their rights on {product_name}."
-msgstr ""
-"Πώς οι χρήστες της ΕΕ που καλύπτονται από τον Digital Services Act μπορούν να ασκήσουν τα δικαιώματά τους στο {product_name}."
+"How users covered by the Digital Services Act can report illegal content and challenge eligible decisions."
+msgstr "Πώς οι χρήστες που καλύπτονται από τον Νόμο περί Ψηφιακών Υπηρεσιών μπορούν να αναφέρουν παράνομο περιεχόμενο και να αμφισβητήσουν επιλέξιμες αποφάσεις."
 
 #. Help article title about region-specific access restrictions.
 #: fluxer_marketing/generated:content.help.article.regional_restrictions.title
@@ -1176,21 +917,15 @@ msgstr "Περιφερειακοί περιορισμοί"
 #: fluxer_marketing/generated:content.help.article.regional_restrictions.description
 msgctxt "content.help.article.regional_restrictions.description"
 msgid ""
-"How regional age verification laws affect your access to {product_name}, which regions are currently affected, and what restrictions apply."
+"The regional access and age restricted content rules that {product_name} currently applies."
 msgstr ""
-"Πώς οι περιφερειακοί νόμοι επαλήθευσης ηλικίας επηρεάζουν την πρόσβασή σας στο {product_name}, ποιες περιοχές επηρεάζονται αυτή τη στιγμή και ποιοι περιορισμοί ισχύουν."
-
-#. Accessible label on the small icon button next to help/policy article headings; clicking copies a deep link to that section.
-#: fluxer_marketing/generated:content.help.copy_link_to_section
-msgctxt "content.help.copy_link_to_section"
-msgid "Copy link to section"
-msgstr "Αντιγραφή συνδέσμου ενότητας"
+"Οι κανόνες περιφερειακής πρόσβασης και περιεχομένου με ηλικιακό περιορισμό που εφαρμόζει αυτή τη στιγμή το {product_name}."
 
 #. Compact UI label on donation pages and donation support cards. Keep the tone appreciative without being pushy; preserve placeholders exactly.
 #: fluxer_marketing/generated:donations.business
 msgctxt "donations.business"
-msgid "Business"
-msgstr "Επιχείρηση"
+msgid "Organization"
+msgstr "Οργανισμός"
 
 #. Button or link label on donation pages and donation support cards. Keep the tone appreciative without being pushy; preserve placeholders exactly.
 #: fluxer_marketing/generated:donations.donate.action
@@ -1208,33 +943,33 @@ msgstr "Κάνε δωρεά στο {product_name}"
 #: fluxer_marketing/generated:donations.errors.active_subscription_exists
 msgctxt "donations.errors.active_subscription_exists"
 msgid ""
-"You already have an active recurring donation. To start a different recurring donation, please cancel your current one first using the customer portal. You can make a one-time donation instead."
+"You already have an active recurring donation. Cancel it in the donor portal to start a different one, or make a one-time donation instead."
 msgstr ""
 "Έχεις ήδη μια ενεργή επαναλαμβανόμενη δωρεά. Για να ξεκινήσεις μια διαφορετική επαναλαμβανόμενη δωρεά, ακύρωσε πρώτα την τρέχουσα από την πύλη δωρητών. Μπορείς να κάνεις μια εφάπαξ δωρεά αντ' αυτού."
 
 #. Body copy in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
 #: fluxer_marketing/generated:donations.errors.generic
 msgctxt "donations.errors.generic"
-msgid "Something went wrong. Please try again."
-msgstr "Κάτι πήγε στραβά. Δοκίμασε ξανά."
+msgid "Could not complete the donation request. Try again."
+msgstr "Δεν ήταν δυνατή η ολοκλήρωση του αιτήματος δωρεάς. Δοκίμασε ξανά."
 
 #. Body copy in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
 #: fluxer_marketing/generated:donations.errors.invalid_amount
 msgctxt "donations.errors.invalid_amount"
-msgid "Amount must be between {minimum} and {maximum}"
-msgstr "Το ποσό πρέπει να είναι από {minimum} έως {maximum}"
+msgid "Amount must be between {minimum} and {maximum}."
+msgstr "Το ποσό πρέπει να είναι από {minimum} έως {maximum}."
 
 #. Compact UI label in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
 #: fluxer_marketing/generated:donations.errors.invalid_email
 msgctxt "donations.errors.invalid_email"
-msgid "Please enter a valid email address"
-msgstr "Εισάγε μια έγκυρη διεύθυνση email"
+msgid "Enter a valid email address."
+msgstr "Δώσε μια έγκυρη διεύθυνση email."
 
 #. Compact UI label in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
 #: fluxer_marketing/generated:donations.errors.network
 msgctxt "donations.errors.network"
-msgid "Network error. Please try again."
-msgstr "Σφάλμα δικτύου. Δοκίμασε ξανά."
+msgid "Could not reach the donation service. Try again later."
+msgstr "Δεν ήταν δυνατή η σύνδεση με την υπηρεσία δωρεών. Δοκίμασε ξανά αργότερα."
 
 #. Compact UI label in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
 #: fluxer_marketing/generated:donations.form.amount
@@ -1252,7 +987,7 @@ msgstr "Άλλο"
 #: fluxer_marketing/generated:donations.form.amount_placeholder
 msgctxt "donations.form.amount_placeholder"
 msgid "Enter amount ({minimum}-{maximum})"
-msgstr "Εισάγε ποσό ({minimum}-{maximum})"
+msgstr "Καταχώρισε ποσό ({minimum}-{maximum})"
 
 #. Compact UI label in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
 #: fluxer_marketing/generated:donations.form.currency
@@ -1270,7 +1005,7 @@ msgstr "Είδος δωρεάς"
 #: fluxer_marketing/generated:donations.form.email
 msgctxt "donations.form.email"
 msgid "Email"
-msgstr "E-mail"
+msgstr "Email"
 
 #. Placeholder text in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
 #: fluxer_marketing/generated:donations.form.email_placeholder
@@ -1296,23 +1031,11 @@ msgctxt "donations.form.or_label"
 msgid "Or"
 msgstr "Ή"
 
-#. Compact UI label in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
-#: fluxer_marketing/generated:donations.form.processing
-msgctxt "donations.form.processing"
-msgid "Processing…"
-msgstr "Επεξεργασία…"
-
 #. Button or link label in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
 #: fluxer_marketing/generated:donations.form.send_link
 msgctxt "donations.form.send_link"
 msgid "Send link"
 msgstr "Στείλε σύνδεσμο"
-
-#. Compact UI label in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
-#: fluxer_marketing/generated:donations.form.sending
-msgctxt "donations.form.sending"
-msgid "Sending…"
-msgstr "Αποστολή…"
 
 #. Compact UI label in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
 #: fluxer_marketing/generated:donations.form.yearly
@@ -1330,14 +1053,14 @@ msgstr "Ιδιώτης"
 #: fluxer_marketing/generated:donations.manage.description
 msgctxt "donations.manage.description"
 msgid ""
-"Enter your email to receive a link to your donor portal, where you can manage subscriptions, download invoices, and view your donation history."
+"Enter your email to receive a link to your donor portal. There you can manage recurring donations and see past payments, including downloadable invoices."
 msgstr ""
-"Εισάγε το email σου για να λάβεις έναν σύνδεσμο προς την πύλη δωρητών σου, όπου μπορείς να διαχειριστείς τις συνδρομές, να κατεβάσεις τα τιμολόγιά σου και να δεις το ιστορικό δωρεών σου."
+"Δώσε το email σου για να λάβεις έναν σύνδεσμο προς την πύλη δωρητών σου. Εκεί μπορείς να διαχειριστείς τις επαναλαμβανόμενες δωρεές σου και να δεις προηγούμενες πληρωμές, μαζί με τιμολόγια που μπορείς να κατεβάσεις."
 
 #. Body copy in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
 #: fluxer_marketing/generated:donations.manage.success
 msgctxt "donations.manage.success"
-msgid "If an account exists for that email, you'll receive a management link shortly."
+msgid "If an account exists for that email, we will send a management link shortly."
 msgstr "Εάν υπάρχει λογαριασμός με αυτό το email, θα λάβεις σύντομα έναν σύνδεσμο διαχείρισης."
 
 #. Short UI label or heading in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
@@ -1352,23 +1075,11 @@ msgctxt "donations.minimum_donation"
 msgid "Minimum donation: {minimum} in the currency you select"
 msgstr "Ελάχιστη δωρεά: {minimum} στο νόμισμα που θα επιλέξεις"
 
-#. Compact UI label on donation pages and donation support cards. Keep the tone appreciative without being pushy; preserve placeholders exactly.
-#: fluxer_marketing/generated:donations.send_one_time_gift
-msgctxt "donations.send_one_time_gift"
-msgid "Send a one-time gift"
-msgstr "Κάνε μια εφάπαξ δωρεά"
-
 #. Compact UI label in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
 #: fluxer_marketing/generated:donations.success.back_to_donate
 msgctxt "donations.success.back_to_donate"
 msgid "Back to donate"
 msgstr "Επιστροφή στις δωρεές"
-
-#. Compact UI label in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
-#: fluxer_marketing/generated:donations.success.description
-msgctxt "donations.success.description"
-msgid "Thank you for your support!"
-msgstr "Σε ευχαριστούμε για την υποστήριξή σου!"
 
 #. Body copy in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
 #: fluxer_marketing/generated:donations.success.email_notice
@@ -1381,28 +1092,30 @@ msgstr ""
 #. Body copy in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
 #: fluxer_marketing/generated:donations.success.message
 msgctxt "donations.success.message"
-msgid "Thank you for your donation! We really appreciate your support."
-msgstr "Σε ευχαριστούμε για τη δωρεά σου! Εκτιμούμε πολύ την υποστήριξή σου."
+msgid ""
+"Thank you. Your donation pays for the servers and for the people who build and run {product_name}. It keeps us answerable to the people using it rather than to an investor."
+msgstr ""
+"Σε ευχαριστούμε. Η δωρεά σου πληρώνει τους διακομιστές και τους ανθρώπους που φτιάχνουν και λειτουργούν το {product_name}. Μας κρατά υπόλογους σε όσους το χρησιμοποιούν και όχι σε κάποιον επενδυτή."
 
 #. Short UI label or heading in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
 #: fluxer_marketing/generated:donations.success.title
 msgctxt "donations.success.title"
-msgid "Thank you!"
-msgstr "Σε ευχαριστούμε!"
-
-#. Compact UI label on donation pages and donation support cards. Keep the tone appreciative without being pushy; preserve placeholders exactly.
-#: fluxer_marketing/generated:donations.support_future_development
-msgctxt "donations.support_future_development"
-msgid "Support future development"
-msgstr "Ενίσχυσε τη μελλοντική ανάπτυξη"
+msgid "Thank you"
+msgstr "Σε ευχαριστούμε"
 
 #. Body copy on donation pages and donation support cards. Keep the tone appreciative without being pushy; preserve placeholders exactly.
 #: fluxer_marketing/generated:donations.support_message
 msgctxt "donations.support_message"
 msgid ""
-"Help us build an independent communication platform. Your donation funds the platform's infrastructure and development."
+"Help keep {product_name} independent. Donations pay for hosting and development, and they are the reason nobody else gets a say in what we build."
 msgstr ""
-"Βοήθησέ μας να δημιουργήσουμε μια ανεξάρτητη πλατφόρμα επικοινωνίας. Η δωρεά σου χρηματοδοτεί την υποδομή και την ανάπτυξη της πλατφόρμας."
+"Βοήθησε να παραμείνει το {product_name} ανεξάρτητο. Οι δωρεές πληρώνουν τη φιλοξενία και την ανάπτυξη, και είναι ο λόγος που κανείς άλλος δεν έχει λόγο σε αυτό που φτιάχνουμε."
+
+#. Label for the editable amount in the Swish payment flow. Preserve the currency-code placeholder {currency} exactly.
+#: fluxer_marketing/generated:donations.swish.amount_label
+msgctxt "donations.swish.amount_label"
+msgid "Amount ({currency})"
+msgstr "Ποσό ({currency})"
 
 #. Instruction text in the desktop Swish donation modal. The user is on a computer and should scan a QR code with the Swish mobile app. Keep it clear and easy to follow. Preserve placeholders exactly.
 #: fluxer_marketing/generated:donations.swish.instructions
@@ -1442,12 +1155,6 @@ msgctxt "donations.swish.qr_failed"
 msgid "Could not load QR code. Try again later."
 msgstr "Δεν ήταν δυνατή η φόρτωση του κωδικού QR. Δοκίμασε ξανά αργότερα."
 
-#. Compact UI label in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
-#: fluxer_marketing/generated:donations.swish.qr_loading
-msgctxt "donations.swish.qr_loading"
-msgid "Loading…"
-msgstr "Φόρτωση…"
-
 #. Modal title shown on desktop devices in the Swish donation flow. The user should scan the QR code using the Swish mobile app. Preserve placeholders exactly.
 #: fluxer_marketing/generated:donations.swish.scan_title
 msgctxt "donations.swish.scan_title"
@@ -1466,27 +1173,25 @@ msgctxt "donations.swish.update_qr"
 msgid "Update QR"
 msgstr "Ενημέρωση QR"
 
-#. Body copy on donation pages and donation support cards. Keep the tone appreciative without being pushy; preserve placeholders exactly.
-#: fluxer_marketing/generated:donations.why_support
-msgctxt "donations.why_support"
-msgid ""
-"Help us build a different kind of communication platform: open source, community-funded, and built with care."
-msgstr ""
-"Βοήθησέ μας να χτίσουμε μια διαφορετική πλατφόρμα επικοινωνίας: ανοιχτού κώδικα, χρηματοδοτούμενη από την κοινότητα και φτιαγμένη με φροντίδα."
-
 #. Button or link label on the download page, download buttons, or install calls to action. Keep platform-download wording short, direct, and action-oriented; preserve placeholders exactly.
 #: fluxer_marketing/generated:download.download
 msgctxt "download.download"
 msgid "Download"
 msgstr "Λήψη"
 
+#. Understated label introducing less common desktop download choices. Keep it concise.
+#: fluxer_marketing/generated:download.advanced_downloads
+msgctxt "download.advanced_downloads"
+msgid "Advanced downloads"
+msgstr "Προχωρημένες επιλογές λήψης"
+
 #. Final call-to-action body copy on the download page. Preserve {product_name} exactly; make clear that users can either install the app or use the browser version. Preserve placeholders exactly.
 #: fluxer_marketing/generated:download.download_app_or_open_in_browser
 msgctxt "download.download_app_or_open_in_browser"
 msgid ""
-"Download the app or open {product_name} in your browser to start connecting with your communities."
+"Install the app or open {product_name} in your browser and start talking. Making an account is free and we never ask for a card."
 msgstr ""
-"Κατέβασε την εφαρμογή ή άνοιξε το {product_name} στο πρόγραμμα περιήγησής σου για να συνδεθείς με τις κοινότητές σου."
+"Εγκατέστησε την εφαρμογή ή άνοιξε το {product_name} στο πρόγραμμα περιήγησής σου και ξεκίνα να μιλάς. Η δημιουργία λογαριασμού είναι δωρεάν και δεν ζητάμε ποτέ κάρτα."
 
 #. Button or link label on the download page, download buttons, or install calls to action. Keep platform-download wording short, direct, and action-oriented; preserve placeholders exactly.
 #: fluxer_marketing/generated:download.download_fluxer
@@ -1500,23 +1205,17 @@ msgctxt "download.download_for_platform"
 msgid "Download for {platform}"
 msgstr "Λήψη για {platform}"
 
-#. Inline label that precedes a short row of alternate desktop download links (other architecture, package formats, build variants) on the download page. Keep it short.
-#: fluxer_marketing/generated:download.other_downloads
-msgctxt "download.other_downloads"
-msgid "Other downloads"
-msgstr "Άλλες λήψεις"
-
 #. Button or link label on the download page, download buttons, or install calls to action. Keep platform-download wording short, direct, and action-oriented; preserve placeholders exactly.
 #: fluxer_marketing/generated:download.open_in_browser
 msgctxt "download.open_in_browser"
 msgid "Open in browser"
 msgstr "Άνοιγμα στο πρόγραμμα περιήγησης"
 
-#. Button or link label on the download page, download buttons, or install calls to action. Keep platform-download wording short, direct, and action-oriented; preserve placeholders exactly.
+#. Credit line in the PWA installation dialog. Translate the whole sentence so the linked source can appear in the natural position. Preserve {source} exactly.
 #: fluxer_marketing/generated:download.screenshots_courtesy_of
 msgctxt "download.screenshots_courtesy_of"
-msgid "Screenshots courtesy of "
-msgstr "Στιγμιότυπα από "
+msgid "Screenshots courtesy of {source}."
+msgstr "Τα στιγμιότυπα οθόνης είναι ευγενική προσφορά του {source}."
 
 #. Compact UI label in the global marketing footer. Keep navigation labels compact and use legally precise company wording where applicable; preserve placeholders exactly.
 #: fluxer_marketing/generated:footer.bluesky_social_media
@@ -1563,16 +1262,16 @@ msgstr "{product_name}"
 #. Body copy in the global marketing footer. Keep navigation labels compact and use legally precise company wording where applicable; preserve placeholders exactly.
 #: fluxer_marketing/generated:footer.fluxer_platform_ab_swedish_limited
 msgctxt "footer.fluxer_platform_ab_swedish_limited"
-msgid "© {product_name} Platform AB (Swedish limited liability company: 559537-3993)"
+msgid "© {product_name} Platform AB (Swedish private limited company: 559537-3993)"
 msgstr "© {product_name} Platform AB (Σουηδική εταιρεία περιορισμένης ευθύνης: 559537-3993)"
 
-#. Body copy in the global marketing footer. Keep navigation labels compact and use legally precise company wording where applicable; preserve placeholders exactly.
-#: fluxer_marketing/generated:footer.help_support_an_independent_communication
-msgctxt "footer.help_support_an_independent_communication"
+#. Body copy in the global footer describing how Fluxer is funded. Preserve {product_name} and {premium_tier_name} exactly.
+#: fluxer_marketing/generated:funding_model.footer_description
+msgctxt "funding_model.footer_description"
 msgid ""
-"Support an independent communication platform. Your donation funds the platform's infrastructure and development."
+"{product_name} is funded by {premium_tier_name} subscribers and donors, without venture capital or outside investors telling us what to build."
 msgstr ""
-"Στήριξε μια ανεξάρτητη πλατφόρμα επικοινωνίας. Η δωρεά σου χρηματοδοτεί την υποδομή και την ανάπτυξη της πλατφόρμας."
+"Το {product_name} χρηματοδοτείται από τους συνδρομητές {premium_tier_name} και τους δωρητές του, χωρίς venture capital ή εξωτερικούς επενδυτές να μας λένε τι να φτιάξουμε."
 
 #. Compact UI label in the global marketing footer. Keep navigation labels compact and use legally precise company wording where applicable; preserve placeholders exactly.
 #: fluxer_marketing/generated:footer.partners
@@ -1580,11 +1279,11 @@ msgctxt "footer.partners"
 msgid "Partners"
 msgstr "Συνεργάτες"
 
-#. Compact UI label in the global marketing footer. Keep navigation labels compact and use legally precise company wording where applicable; preserve placeholders exactly.
-#: fluxer_marketing/generated:footer.plutonium_tier
-msgctxt "footer.plutonium_tier"
-msgid "{premium_tier_name} tier"
-msgstr "Πλάνο {premium_tier_name}"
+#. Footer call-to-action linking to the Plutonium page. Preserve {product_name} exactly.
+#: fluxer_marketing/generated:funding_model.see_how_fluxer_is_funded
+msgctxt "funding_model.see_how_fluxer_is_funded"
+msgid "See how {product_name} is funded"
+msgstr "Δες πώς χρηματοδοτείται το {product_name}"
 
 #. Compact UI label in the global marketing footer. Keep navigation labels compact and use legally precise company wording where applicable; preserve placeholders exactly.
 #: fluxer_marketing/generated:footer.policies
@@ -1614,7 +1313,7 @@ msgstr "Αναφορά σφάλματος"
 #: fluxer_marketing/generated:footer.roadmap
 msgctxt "footer.roadmap"
 msgid "Roadmap"
-msgstr "Χάρτης πορείας"
+msgstr "Οδικός χάρτης"
 
 #. Compact UI label in the global marketing footer. Keep navigation labels compact and use legally precise company wording where applicable; preserve placeholders exactly.
 #: fluxer_marketing/generated:footer.rss_feed
@@ -1623,10 +1322,10 @@ msgid "RSS feed"
 msgstr "Ροή RSS"
 
 #. Compact UI label in the global marketing footer. Keep navigation labels compact and use legally precise company wording where applicable; preserve placeholders exactly.
-#: fluxer_marketing/generated:footer.security_bug_bounty
-msgctxt "footer.security_bug_bounty"
-msgid "Security bug bounty"
-msgstr "Bug bounty για θέματα ασφαλείας"
+#: fluxer_marketing/generated:footer.security
+msgctxt "footer.security"
+msgid "Security"
+msgstr "Ασφάλεια"
 
 #. Compact UI label in the global marketing footer. Keep navigation labels compact and use legally precise company wording where applicable; preserve placeholders exactly.
 #: fluxer_marketing/generated:footer.source_code
@@ -1711,12 +1410,6 @@ msgstr "Δανικά"
 msgctxt "languages.list.dutch"
 msgid "Dutch"
 msgstr "Ολλανδικά"
-
-#. Language name shown in the language picker. Use the target locale's natural name for this language, not a sentence; keep it short.
-#: fluxer_marketing/generated:languages.list.english
-msgctxt "languages.list.english"
-msgid "English"
-msgstr "Αγγλικά"
 
 #. Language name shown in the language picker for British English. Use the target locale's natural name for this locale, not a sentence; keep it short.
 #: fluxer_marketing/generated:languages.list.english_uk
@@ -1878,7 +1571,7 @@ msgstr "Βιετναμέζικα"
 #: fluxer_marketing/generated:beta_and_access.beta_label
 msgctxt "beta_and_access.beta_label"
 msgid "Beta"
-msgstr "Βήτα"
+msgstr "Beta"
 
 #. Body copy in Fluxer marketing UI. Translate naturally for the target locale and preserve placeholders exactly.
 #: fluxer_marketing/generated:beta_and_access.early_access.be_first_to_try
@@ -1890,25 +1583,20 @@ msgstr "Γίνε ο πρώτος που θα δοκιμάσεις νέες λε�
 #: fluxer_marketing/generated:beta_and_access.early_access.label
 msgctxt "beta_and_access.early_access.label"
 msgid "Early access"
-msgstr "Πρώιμη πρόσβαση"
+msgstr "Πρόωρη πρόσβαση"
 
 #. Body copy in Fluxer marketing UI. Translate naturally for the target locale and preserve placeholders exactly.
 #: fluxer_marketing/generated:beta_and_access.featured_benefit_line
 msgctxt "beta_and_access.featured_benefit_line"
-msgid "All the basics you expect, plus a few things you don't."
-msgstr "Όλα τα βασικά που περιμένεις, και μερικά που δεν περιμένεις."
+msgid ""
+"Chat, calls, screen sharing and communities are free, and they stay free. {premium_tier_name} adds optional extras for the people who want them."
+msgstr "Συνομιλίες, κλήσεις, κοινή χρήση οθόνης και κοινότητες είναι δωρεάν, και θα παραμείνουν δωρεάν. Το {premium_tier_name} προσθέτει προαιρετικά έξτρα για όσους τα θέλουν."
 
 #. Compact UI label in Fluxer marketing UI. Translate naturally for the target locale and preserve placeholders exactly.
 #: fluxer_marketing/generated:beta_and_access.public_beta
 msgctxt "beta_and_access.public_beta"
 msgid "Public beta"
 msgstr "Δημόσια beta"
-
-#. Body copy in Fluxer marketing UI. Translate naturally for the target locale and preserve placeholders exactly.
-#: fluxer_marketing/generated:beta_and_access.try_without_email
-msgctxt "beta_and_access.try_without_email"
-msgid "Try {product_name} without an email in 30 seconds"
-msgstr "Δοκίμασε το {product_name} χωρίς email σε 30 δευτερόλεπτα"
 
 #. Short UI label or heading in the hero launch/roadmap badges linking to blog content. Keep it short and inviting, and preserve the product-name placeholder exactly.
 #: fluxer_marketing/generated:launch.heading
@@ -1921,6 +1609,12 @@ msgstr "Η ιστορία πίσω από το {product_name}"
 msgctxt "launch.view_full_roadmap"
 msgid "View full roadmap"
 msgstr "Προβολή πλήρους οδικού χάρτη"
+
+#. Compact label for the help link in the desktop marketing navigation.
+#: fluxer_marketing/generated:navigation.help
+msgctxt "navigation.help"
+msgid "Help"
+msgstr "Βοήθεια"
 
 #. Short UI label or heading in site navigation, mobile drawer controls, or accessibility labels. Keep it brief and unambiguous.
 #: fluxer_marketing/generated:navigation.close
@@ -1946,6 +1640,13 @@ msgctxt "navigation.copy_link_to_section"
 msgid "Copy link to section"
 msgstr "Αντιγραφή συνδέσμου ενότητας"
 
+#. Error message shown when a heading link cannot be copied automatically. Keep it concise and tell the reader how to copy the link manually.
+#: fluxer_marketing/generated:navigation.copy_link_failed
+msgctxt "navigation.copy_link_failed"
+msgid "Could not copy the link. Copy it from the browser address bar instead."
+msgstr ""
+"Δεν ήταν δυνατή η αντιγραφή του συνδέσμου. Αντίγραψέ τον από τη γραμμή διευθύνσεων του προγράμματος περιήγησης."
+
 #. Compact UI label in site navigation, mobile drawer controls, or accessibility labels. Keep it brief and unambiguous.
 #: fluxer_marketing/generated:navigation.go_home
 msgctxt "navigation.go_home"
@@ -1961,8 +1662,9 @@ msgstr "Σε αυτή τη σελίδα"
 #. Body copy on the 404 page. Keep the tone helpful and concise while making clear the page was not found.
 #: fluxer_marketing/generated:navigation.page_not_found.description
 msgctxt "navigation.page_not_found.description"
-msgid "This page doesn't exist. But there's plenty more to explore."
-msgstr "Αυτή η σελίδα δεν υπάρχει. Ωστόσο, υπάρχουν πολλά ακόμα να εξερευνήσεις."
+msgid "This page does not exist. Either it moved or a link went stale, and both are fixable."
+msgstr ""
+"Αυτή η σελίδα δεν υπάρχει. Είτε μετακινήθηκε είτε κάποιος σύνδεσμος έπαψε να ισχύει, και τα δύο διορθώνονται."
 
 #. Short UI label or heading on the 404 page. Keep the tone helpful and concise while making clear the page was not found.
 #: fluxer_marketing/generated:navigation.page_not_found.title
@@ -1970,25 +1672,19 @@ msgctxt "navigation.page_not_found.title"
 msgid "Page not found"
 msgstr "Η σελίδα δεν βρέθηκε"
 
-#. Introductory body copy on the press/brand-assets page. Keep wording professional and clear for journalists, partners, and brand-asset users.
+#. Introductory body copy on the press/brand-assets page. Keep wording professional and clear for journalists, partners, and brand-asset users. Preserve {product_name} exactly.
 #: fluxer_marketing/generated:navigation.press.download_assets_intro
 msgctxt "navigation.press.download_assets_intro"
-msgid "Download our logos, learn about our brand colors, and get in touch with our press team."
+msgid ""
+"Download the {product_name} logos and color references. Press inquiries go straight to our team."
 msgstr ""
-"Κατέβασε τα λογότυπά μας, μάθε για τα χρώματα της επωνυμίας μας και επικοινώνησε με την ομάδα τύπου μας."
-
-#. Press-page heading or summary line for brand asset downloads. Preserve {product_name} exactly; keep wording professional for journalists and partners. Preserve placeholders exactly.
-#: fluxer_marketing/generated:navigation.press.download_fluxer_assets
-msgctxt "navigation.press.download_fluxer_assets"
-msgid "Download {product_name} logos, brand assets, and get in touch with our press team"
-msgstr ""
-"Κατέβασε λογότυπα {product_name}, στοιχεία επωνυμίας και επικοινώνησε με την ομάδα τύπου μας"
+"Κατέβασε τα λογότυπα και τις χρωματικές αναφορές του {product_name}. Τα ερωτήματα του Τύπου πηγαίνουν απευθείας στην ομάδα μας."
 
 #. Compact UI label on the press/brand-assets page. Keep wording professional and clear for journalists or partners.
 #: fluxer_marketing/generated:navigation.press.press_and_brand_assets
 msgctxt "navigation.press.press_and_brand_assets"
-msgid "Press and brand assets"
-msgstr "Τύπος και στοιχεία επωνυμίας"
+msgid "Press and logo files"
+msgstr "Τύπος και αρχεία λογοτύπου"
 
 #. Body copy in the partner application section, pointing readers to the help center guide. Keep the tone professional, creator-friendly, and clear about application expectations.
 #: fluxer_marketing/generated:partner_program.apply.guide_prompt
@@ -2008,7 +1704,7 @@ msgstr "Γίνε συνεργάτης"
 #: fluxer_marketing/generated:partner_program.become_partner.heading
 msgctxt "partner_program.become_partner.heading"
 msgid "Become a {product_name} partner"
-msgstr "Γίνε συνεργάτης της {product_name}"
+msgstr "Γίνε συνεργάτης του {product_name}"
 
 #. Compact UI label on the partner program page. Keep the tone professional, creator-friendly, and clear about application expectations.
 #: fluxer_marketing/generated:partner_program.become_partner.ready_prompt
@@ -2139,7 +1835,7 @@ msgstr "Δες τα προνόμια"
 msgctxt "partner_program.perks.vip_voice_servers.description"
 msgid "Access to VIP voice servers reserved exclusively for partnered communities."
 msgstr ""
-"Πρόσβαση σε VIP φωνητικά κανάλια που προορίζονται αποκλειστικά για συνεργαζόμενες κοινότητες."
+"Πρόσβαση σε VIP διακομιστές φωνής που προορίζονται αποκλειστικά για συνεργαζόμενες κοινότητες."
 
 #. Short UI label or heading on the partner program perks section. Keep benefits concrete and appealing to creators/community owners; preserve placeholders exactly.
 #: fluxer_marketing/generated:partner_program.perks.vip_voice_servers.label
@@ -2161,7 +1857,7 @@ msgctxt "platform_support.availability.meta_description"
 msgid ""
 "Get {product_name} for your web browser, {windows}, {linux}, and {macos}. {ios} and {android} are in public testing."
 msgstr ""
-"Λάβετε το {product_name} για το πρόγραμμα περιήγησής σας, {windows}, {linux} και {macos}. Το {ios} και το {android} βρίσκονται σε δημόσια δοκιμή."
+"Απόκτησε το {product_name} για το πρόγραμμα περιήγησής σου και για {windows}, {linux} και {macos}. Το {ios} και το {android} βρίσκονται σε δημόσια δοκιμή."
 
 #. Intro copy below the download-page heading. Keep platform names conventional and make browser, desktop, and public mobile testing availability clear. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.availability.summary
@@ -2169,61 +1865,62 @@ msgctxt "platform_support.availability.summary"
 msgid ""
 "Available in your web browser and on {windows}, {linux}, and {macos}, with {ios} and {android} in public testing."
 msgstr ""
-"Διαθέσιμο στο πρόγραμμα περιήγησής σας και σε {windows}, {linux} και {macos}, με το {ios} και το {android} σε δημόσια δοκιμή."
+"Διαθέσιμο στο πρόγραμμα περιήγησής σου και σε {windows}, {linux} και {macos}, με το {ios} και το {android} σε δημόσια δοκιμή."
 
 #. Alt text for a desktop product screenshot. Preserve {product_name} exactly; describe the image as the desktop interface, not as a download action. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.desktop.interface_label
 msgctxt "platform_support.desktop.interface_label"
 msgid "{product_name} desktop interface"
-msgstr "Επιφάνεια εργασίας του {product_name}"
+msgstr "Η διεπαφή του {product_name} για υπολογιστή"
 
 #. Short UI label or heading in platform availability and download support copy. Keep wording clear about desktop, web, and mobile status.
 #: fluxer_marketing/generated:platform_support.desktop.label
 msgctxt "platform_support.desktop.label"
 msgid "Desktop"
-msgstr "Επιφάνεια εργασίας"
+msgstr "Υπολογιστής"
 
-#. Body copy in platform availability and download support copy. Keep wording clear about desktop, web, and mobile status.
-#: fluxer_marketing/generated:platform_support.desktop.use_desktop_client_mobile_soon
-msgctxt "platform_support.desktop.use_desktop_client_mobile_soon"
-msgid "Use the desktop client (mobile coming soon)"
-msgstr "Χρησιμοποίησε την εφαρμογή για επιφάνεια εργασίας (η έκδοση για κινητά έρχεται σύντομα)"
+#. Section heading for web and mobile options on the download page. Keep it concise.
+#: fluxer_marketing/generated:platform_support.mobile.label
+msgctxt "platform_support.mobile.label"
+msgid "Mobile and web"
+msgstr "Κινητά και web"
 
-#. Notice below the Linux download row warning that the Flatpak build lags the other Linux downloads at the moment. Preserve Flatpak and Linux as names and preserve placeholders exactly.
-#: fluxer_marketing/generated:platform_support.desktop.flatpak_outdated
-msgctxt "platform_support.desktop.flatpak_outdated"
-msgid "The {flatpak} package is currently behind the other {linux} downloads."
-msgstr "Το πακέτο {flatpak} είναι προς το παρόν πίσω από τις άλλες λήψεις {linux}."
+#. Compact feature label explaining that Fluxer is available in browsers and as desktop and mobile apps. Preserve {product_name} exactly.
+#: fluxer_marketing/generated:platform_support.availability.every_client
+msgctxt "platform_support.availability.every_client"
+msgid "Use {product_name} in a browser or install it on desktop and mobile"
+msgstr ""
+"Χρησιμοποίησε το {product_name} σε πρόγραμμα περιήγησης ή εγκατέστησέ το σε υπολογιστή και κινητό"
 
 #. Body copy for mobile/PWA install guidance on the download page. Keep instructions clear, device-appropriate, and concise; preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.install_as_app.done_desktop
 msgctxt "platform_support.mobile.install_as_app.done_desktop"
-msgid "Done! You can now open {product_name} as if it were a regular program."
+msgid "Done. You can now open {product_name} as if it were a regular program."
 msgstr "Έτοιμο! Τώρα μπορείς να ανοίξεις το {product_name} σαν κανονικό πρόγραμμα."
 
 #. Body copy for mobile/PWA install guidance on the download page. Keep instructions clear, device-appropriate, and concise; preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.install_as_app.done_mobile
 msgctxt "platform_support.mobile.install_as_app.done_mobile"
-msgid "Done! You can now open {product_name} from your home screen."
+msgid "Done. You can now open {product_name} from your home screen."
 msgstr "Έτοιμο! Τώρα μπορείς να ανοίξεις το {product_name} από την αρχική σου οθόνη."
 
-#. Compact UI label for mobile/PWA install guidance on the download page. Keep instructions clear, device-appropriate, and concise; preserve placeholders exactly.
+#. First PWA installation step. Translate the whole instruction so the linked web-app label can appear in the natural position. Preserve {web_app_link} and {chrome} exactly.
 #: fluxer_marketing/generated:platform_support.mobile.install_as_app.guides.in_chrome
 msgctxt "platform_support.mobile.install_as_app.guides.in_chrome"
-msgid " in {chrome}"
-msgstr " στο {chrome}"
+msgid "Open {web_app_link} in {chrome}"
+msgstr "Άνοιξε το {web_app_link} στο {chrome}"
 
-#. Body copy for mobile/PWA install guidance on the download page. Keep instructions clear, device-appropriate, and concise; preserve placeholders exactly.
+#. First desktop PWA installation step. Translate the whole instruction so the linked web-app label can appear in the natural position. Preserve {web_app_link} and {chrome} exactly.
 #: fluxer_marketing/generated:platform_support.mobile.install_as_app.guides.in_chrome_or_another_browser
 msgctxt "platform_support.mobile.install_as_app.guides.in_chrome_or_another_browser"
-msgid " in {chrome} or another browser with PWA support"
-msgstr " στο {chrome} ή σε άλλο πρόγραμμα περιήγησης με υποστήριξη PWA"
+msgid "Open {web_app_link} in {chrome} or another browser that supports PWAs"
+msgstr "Άνοιξε το {web_app_link} στο {chrome} ή σε άλλο πρόγραμμα περιήγησης που υποστηρίζει PWA"
 
-#. Compact UI label for mobile/PWA install guidance on the download page. Keep instructions clear, device-appropriate, and concise; preserve placeholders exactly.
+#. First iOS PWA installation step. Translate the whole instruction so the linked web-app label can appear in the natural position. Preserve {web_app_link} exactly.
 #: fluxer_marketing/generated:platform_support.mobile.install_as_app.guides.in_safari
 msgctxt "platform_support.mobile.install_as_app.guides.in_safari"
-msgid " in Safari"
-msgstr " στο Safari"
+msgid "Open {web_app_link} in Safari"
+msgstr "Άνοιξε το {web_app_link} στο Safari"
 
 #. Compact UI label for mobile/PWA install guidance on the download page. Keep instructions clear, device-appropriate, and concise; preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.install_as_app.guides.pwa_installation_guide
@@ -2234,7 +1931,7 @@ msgstr "Οδηγός εγκατάστασης PWA για {name}"
 #. Compact UI label for mobile/PWA install guidance on the download page. Keep instructions clear, device-appropriate, and concise; preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.install_as_app.guides.steps.press_add_to_home_screen
 msgctxt "platform_support.mobile.install_as_app.guides.steps.press_add_to_home_screen"
-msgid "Press \"Add to home screen\""
+msgid "Press \"Add to Home Screen\""
 msgstr "Πάτησε \"Προσθήκη στην αρχική οθόνη\""
 
 #. Body copy for mobile/PWA install guidance on the download page. Keep instructions clear, device-appropriate, and concise; preserve placeholders exactly.
@@ -2291,23 +1988,11 @@ msgctxt "platform_support.mobile.install_as_app.title"
 msgid "How to install as an app"
 msgstr "Πώς να εγκαταστήσεις ως εφαρμογή"
 
-#. Short UI label or heading for mobile/PWA install guidance on the download page. Keep instructions clear, device-appropriate, and concise; preserve placeholders exactly.
-#: fluxer_marketing/generated:platform_support.mobile.interface_label
-msgctxt "platform_support.mobile.interface_label"
-msgid "{product_name} mobile interface"
-msgstr "Διεπαφή {product_name} για κινητά"
-
-#. Compact UI label naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact.
-#: fluxer_marketing/generated:platform_support.platforms.android.apk
-msgctxt "platform_support.platforms.android.apk"
-msgid "APK"
-msgstr "APK"
-
 #. Compact UI label naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.platforms.android.min_version
 msgctxt "platform_support.platforms.android.min_version"
-msgid "{android} 8+"
-msgstr "{android} 8+"
+msgid "{android} 7+"
+msgstr "{android} 7+"
 
 #. Short UI label or heading naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.platforms.android.name
@@ -2324,8 +2009,8 @@ msgstr "{ios} και {ipados}"
 #. Compact UI label naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.platforms.ios.min_version
 msgctxt "platform_support.platforms.ios.min_version"
-msgid "{ios} 15+"
-msgstr "{ios} 15+"
+msgid "{ios}/{ipados} 15.6+"
+msgstr "{ios}/{ipados} 15.6+"
 
 #. Short UI label or heading naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.platforms.ios.name
@@ -2333,41 +2018,17 @@ msgctxt "platform_support.platforms.ios.name"
 msgid "{ios}"
 msgstr "{ios}"
 
-#. Compact UI label naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact. Preserve placeholders exactly.
-#: fluxer_marketing/generated:platform_support.platforms.ios.testflight
-msgctxt "platform_support.platforms.ios.testflight"
-msgid "{testflight}"
-msgstr "{testflight}"
-
-#. Compact UI label naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact. Preserve placeholders exactly.
-#: fluxer_marketing/generated:platform_support.platforms.linux.choose_distribution
-msgctxt "platform_support.platforms.linux.choose_distribution"
-msgid "Choose {linux} distribution"
-msgstr "Επίλεξε διανομή {linux}"
-
 #. Short UI label or heading naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.platforms.linux.name
 msgctxt "platform_support.platforms.linux.name"
 msgid "{linux}"
 msgstr "{linux}"
 
-#. Compact UI label naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact.
-#: fluxer_marketing/generated:platform_support.platforms.linux.recommended
-msgctxt "platform_support.platforms.linux.recommended"
-msgid "recommended"
-msgstr "προτεινόμενο"
-
 #. Compact UI label naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.platforms.macos.apple_silicon
 msgctxt "platform_support.platforms.macos.apple_silicon"
 msgid "{apple_silicon}"
 msgstr "{apple_silicon}"
-
-#. Button or link label naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact. Preserve placeholders exactly.
-#: fluxer_marketing/generated:platform_support.platforms.macos.download_label
-msgctxt "platform_support.platforms.macos.download_label"
-msgid "Download for {macos}"
-msgstr "Λήψη για {macos}"
 
 #. Compact UI label naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact.
 #: fluxer_marketing/generated:platform_support.platforms.macos.intel
@@ -2378,20 +2039,14 @@ msgstr "Intel"
 #. Compact UI label naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.platforms.macos.min_version
 msgctxt "platform_support.platforms.macos.min_version"
-msgid "{macos} 10.15+"
-msgstr "{macos} 10.15+"
+msgid "{macos} 12+"
+msgstr "{macos} 12+"
 
 #. Short UI label or heading naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.platforms.macos.name
 msgctxt "platform_support.platforms.macos.name"
 msgid "{macos}"
 msgstr "{macos}"
-
-#. Button or link label naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact. Preserve placeholders exactly.
-#: fluxer_marketing/generated:platform_support.platforms.windows.download_label
-msgctxt "platform_support.platforms.windows.download_label"
-msgid "Download for {windows}"
-msgstr "Λήψη για {windows}"
 
 #. Compact UI label naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.platforms.windows.min_version
@@ -2405,25 +2060,25 @@ msgctxt "platform_support.platforms.windows.name"
 msgid "{windows}"
 msgstr "{windows}"
 
-#. Compact UI label for a portable (no-install) desktop build that stores all data next to the executable. Keep it short.
+#. Short UI label naming the portable Windows distribution method in download UI. Keep it concise.
 #: fluxer_marketing/generated:platform_support.platforms.portable
 msgctxt "platform_support.platforms.portable"
 msgid "Portable"
-msgstr "Φορητή"
+msgstr "Φορητή έκδοση"
 
 #. Card title for the mobile web app (PWA) option on the download page. Keep it short.
 #: fluxer_marketing/generated:platform_support.mobile.web_app.title
 msgctxt "platform_support.mobile.web_app.title"
 msgid "Web app"
-msgstr "Εφαρμογή ιστού"
+msgstr "Web εφαρμογή"
 
 #. Body copy for the web app row on the download page. Preserve {product_name} exactly; mention desktop and mobile browsers and that it installs like a Progressive Web App. Preserve placeholders exactly.
-#: fluxer_marketing/generated:platform_support.mobile.web_app.body
-msgctxt "platform_support.mobile.web_app.body"
+#: fluxer_marketing/generated:platform_support.mobile.web_app.any_browser
+msgctxt "platform_support.mobile.web_app.any_browser"
 msgid ""
-"{product_name} runs in any desktop or mobile web browser, and installs to your home screen or desktop like a Progressive Web App. It is the most complete way to use {product_name} on a phone today."
+"Use {product_name} in a desktop or mobile web browser, or install it to your home screen or desktop as a Progressive Web App. The web app currently has more features than the native phone apps."
 msgstr ""
-"Το {product_name} εκτελείται σε οποιοδήποτε πρόγραμμα περιήγησης για υπολογιστή ή κινητό και εγκαθίσταται στην αρχική οθόνη ή στην επιφάνεια εργασίας σας σαν μια Προοδευτική Εφαρμογή Ιστού. Είναι ο πληρέστερος τρόπος χρήσης του {product_name} σε ένα τηλέφωνο σήμερα."
+"Χρησιμοποίησε το {product_name} σε πρόγραμμα περιήγησης στον υπολογιστή ή στο κινητό ή εγκατέστησέ το στην αρχική σου οθόνη ή στην επιφάνεια εργασίας ως Progressive Web App. Η web εφαρμογή έχει αυτή τη στιγμή περισσότερες λειτουργίες από τις εγγενείς εφαρμογές για κινητά."
 
 #. Card title for the iOS app option on the download page. Keep the platform name conventional and short. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.ios.title
@@ -2431,13 +2086,13 @@ msgctxt "platform_support.mobile.ios.title"
 msgid "{ios} app"
 msgstr "Εφαρμογή {ios}"
 
-#. Body copy for the iOS app row on the download page. Make clear that TestFlight access is currently limited to Fluxer Plutonium members, that public access is coming soon, and that the web app remains available in Safari. Preserve placeholders exactly.
+#. Body copy for the iOS app row on the download page. Make clear that the native iOS app is currently limited to Fluxer Plutonium subscribers, that broader access is coming very soon, and that the web app remains available in Safari. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.ios.body
 msgctxt "platform_support.mobile.ios.body"
 msgid ""
-"The {ios} app on {testflight} is currently limited to {premium_tier_full_name} members. Public access is coming soon. The full {product_name} web app also works in Safari and can be added to your Home Screen."
+"The native {ios} app is currently limited to {premium_tier_full_name} subscribers. Broader access is coming very soon. Meanwhile, the full {product_name} web app works in Safari and can be added to your Home Screen."
 msgstr ""
-"Η εφαρμογή {ios} στο {testflight} είναι προς το παρόν διαθέσιμη μόνο για μέλη του {premium_tier_full_name}. Η δημόσια πρόσβαση έρχεται σύντομα. Η πλήρης web εφαρμογή {product_name} λειτουργεί επίσης στο Safari και μπορεί να προστεθεί στην Αρχική σας οθόνη."
+"Η εγγενής εφαρμογή {ios} είναι προς το παρόν διαθέσιμη μόνο για συνδρομητές του {premium_tier_full_name}. Ευρύτερη πρόσβαση έρχεται πολύ σύντομα. Εν τω μεταξύ, η πλήρης web εφαρμογή του {product_name} λειτουργεί στο Safari και μπορεί να προστεθεί στην αρχική σου οθόνη."
 
 #. Card title for the Android app option on the download page. Keep the platform name conventional and short. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.android.title
@@ -2450,7 +2105,7 @@ msgstr "Εφαρμογή {android}"
 msgctxt "platform_support.mobile.android.body"
 msgid "Install the {android} APK straight from our open source repository on {github}."
 msgstr ""
-"Εγκαταστήστε το APK για {android} απευθείας από το αποθετήριο ανοιχτού κώδικα στο {github}."
+"Εγκατέστησε το APK για {android} απευθείας από το δικό μας αποθετήριο ανοιχτού κώδικα στο {github}."
 
 #. Button or link label on the Android app card that opens the GitHub repository where the APK is published. Keep APK as a proper name; keep it short.
 #: fluxer_marketing/generated:platform_support.mobile.android.cta
@@ -2461,14 +2116,28 @@ msgstr "Λήψη του APK"
 #. Short UI label or heading in the press kit and brand asset download area. Keep terminology professional for brand/logo usage guidance; preserve placeholders exactly.
 #: fluxer_marketing/generated:press_branding.assets.brand_colors_heading
 msgctxt "press_branding.assets.brand_colors_heading"
-msgid "Brand colors"
-msgstr "Χρώματα επωνυμίας"
+msgid "{product_name} colors"
+msgstr "Χρώματα {product_name}"
 
 #. Compact UI label in the press kit and brand asset download area. Keep terminology professional for brand/logo usage guidance; preserve placeholders exactly.
 #: fluxer_marketing/generated:press_branding.assets.full_color
 msgctxt "press_branding.assets.full_color"
 msgid "Full color version"
 msgstr "Έκδοση πλήρους χρώματος"
+
+#. Helper text for a press-kit checkbox controlling whether the transparent wave cutouts inside non-white Fluxer logos are filled white. Keep the instruction concise and explicit.
+#: fluxer_marketing/generated:press_branding.assets.wave_interior_fill.description
+msgctxt "press_branding.assets.wave_interior_fill.description"
+msgid ""
+"Recommended for black and color logos. Turn this off only when you want the background to show through the waves."
+msgstr ""
+"Προτείνεται για τα μαύρα και τα έγχρωμα λογότυπα. Απενεργοποίησέ το μόνο όταν θέλεις να φαίνεται το φόντο μέσα από τα κύματα."
+
+#. Checkbox label in the press kit. The Fluxer symbol contains two wave-shaped transparent cutouts; this option fills those interiors white. Keep the label concise.
+#: fluxer_marketing/generated:press_branding.assets.wave_interior_fill.label
+msgctxt "press_branding.assets.wave_interior_fill.label"
+msgid "Fill wave interiors with white"
+msgstr "Γέμισμα του εσωτερικού των κυμάτων με λευκό"
 
 #. Short UI label or heading in the press kit and brand asset download area. Keep terminology professional for brand/logo usage guidance; preserve placeholders exactly.
 #: fluxer_marketing/generated:press_branding.assets.label
@@ -2497,20 +2166,15 @@ msgstr "Λευκό λογότυπο"
 #. Body copy in the press kit and brand asset download area. Keep terminology professional for brand/logo usage guidance; preserve placeholders exactly.
 #: fluxer_marketing/generated:press_branding.assets.palette_description
 msgctxt "press_branding.assets.palette_description"
-msgid "Our carefully selected color palette that represents the {product_name} brand."
-msgstr "Η προσεκτικά επιλεγμένη χρωματική μας παλέτα που αντιπροσωπεύει το brand {product_name}."
-
-#. Compact UI label in the press kit and brand asset download area. Keep terminology professional for brand/logo usage guidance; preserve placeholders exactly.
-#: fluxer_marketing/generated:press_branding.assets.premium_quality
-msgctxt "press_branding.assets.premium_quality"
-msgid "Premium quality"
-msgstr "Κορυφαία ποιότητα"
+msgid "These are the colors used by {product_name}."
+msgstr "Αυτά είναι τα χρώματα που χρησιμοποιεί το {product_name}."
 
 #. Body copy in the press kit and brand asset download area. Keep terminology professional for brand/logo usage guidance; preserve placeholders exactly.
 #: fluxer_marketing/generated:press_branding.assets.primary_brand_color_description
 msgctxt "press_branding.assets.primary_brand_color_description"
-msgid "Our primary brand color. Use this for key brand elements and accents."
-msgstr "Το βασικό μας χρώμα. Χρησιμοποίησέ το για κεντρικά στοιχεία και τονισμούς του brand."
+msgid "This is the main {product_name} color. Use it for accents and important details."
+msgstr ""
+"Αυτό είναι το κύριο χρώμα του {product_name}. Χρησιμοποίησέ το για τονισμούς και σημαντικές λεπτομέρειες."
 
 #. Compact UI label in the press kit and brand asset download area. Keep terminology professional for brand/logo usage guidance; preserve placeholders exactly.
 #: fluxer_marketing/generated:press_branding.assets.symbol_variants.black_symbol
@@ -2539,8 +2203,8 @@ msgstr "Λευκό σύμβολο"
 #. Body copy in the press kit and brand asset download area. Keep terminology professional for brand/logo usage guidance; preserve placeholders exactly.
 #: fluxer_marketing/generated:press_branding.assets.usage_guidance.dark_surface_guidance
 msgctxt "press_branding.assets.usage_guidance.dark_surface_guidance"
-msgid "For backgrounds, text on dark surfaces, and creating contrast."
-msgstr "Για φόντα, κείμενο σε σκούρες επιφάνειες και δημιουργία αντίθεσης."
+msgid "Use on dark surfaces."
+msgstr "Για χρήση σε σκούρες επιφάνειες."
 
 #. Compact UI label in the press kit and brand asset download area. Keep terminology professional for brand/logo usage guidance; preserve placeholders exactly.
 #: fluxer_marketing/generated:press_branding.assets.usage_guidance.for_dark_backgrounds
@@ -2557,23 +2221,23 @@ msgstr "Για ανοιχτόχρωμα φόντα"
 #. Body copy in the press kit and brand asset download area. Keep terminology professional for brand/logo usage guidance; preserve placeholders exactly.
 #: fluxer_marketing/generated:press_branding.assets.usage_guidance.full_logo_description
 msgctxt "press_branding.assets.usage_guidance.full_logo_description"
-msgid "Our full logo including the wordmark. Use this as the primary representation of our brand."
+msgid "Use the full logo by default. It includes the wordmark."
 msgstr ""
-"Το πλήρες λογότυπό μας με το όνομα. Χρησιμοποίησέ το ως την κύρια αναπαράσταση του brand μας."
+"Χρησιμοποίησε το πλήρες λογότυπο από προεπιλογή. Περιλαμβάνει και το λεκτικό σήμα."
 
 #. Body copy in the press kit and brand asset download area. Keep terminology professional for brand/logo usage guidance; preserve placeholders exactly.
 #: fluxer_marketing/generated:press_branding.assets.usage_guidance.light_surface_guidance
 msgctxt "press_branding.assets.usage_guidance.light_surface_guidance"
-msgid "For text, icons on light surfaces, and creating depth."
-msgstr "Για κείμενο, εικονίδια σε ανοιχτόχρωμες επιφάνειες και δημιουργία βάθους."
+msgid "Use on light surfaces."
+msgstr "Για χρήση σε ανοιχτόχρωμες επιφάνειες."
 
 #. Body copy in the press kit and brand asset download area. Keep terminology professional for brand/logo usage guidance; preserve placeholders exactly.
 #: fluxer_marketing/generated:press_branding.assets.usage_guidance.symbol_description
 msgctxt "press_branding.assets.usage_guidance.symbol_description"
 msgid ""
-"Our standalone symbol. Use this only when our brand is clearly visible or well-established elsewhere in the context."
+"Use the symbol only when {product_name} appears nearby or the context already makes its owner clear."
 msgstr ""
-"Το αυτόνομο σύμβολό μας. Χρησιμοποίησέ το μόνο όταν το brand μας είναι ήδη εμφανές ή καθιερωμένο στο περιβάλλον."
+"Χρησιμοποίησε το σύμβολο μόνο όταν το {product_name} εμφανίζεται κοντά ή όταν το πλαίσιο καθιστά ήδη σαφές σε ποιον ανήκει."
 
 #. Brand color name in the press kit. Keep the color label recognizable and do not over-translate proper names unless natural in the locale.
 #: fluxer_marketing/generated:press_branding.colors.black
@@ -2581,11 +2245,11 @@ msgctxt "press_branding.colors.black"
 msgid "Black"
 msgstr "Μαύρο"
 
-#. Brand color name in the press kit. Keep the color label recognizable and do not over-translate proper names unless natural in the locale. Preserve placeholders exactly.
-#: fluxer_marketing/generated:press_branding.colors.blue_da_ba_dee
-msgctxt "press_branding.colors.blue_da_ba_dee"
-msgid "{blue_da_ba_dee}"
-msgstr "{blue_da_ba_dee}"
+#. Brand color name in the press kit. Keep the product name unchanged.
+#: fluxer_marketing/generated:press_branding.colors.fluxer_blue
+msgctxt "press_branding.colors.fluxer_blue"
+msgid "Fluxer blue"
+msgstr "Fluxer blue"
 
 #. Brand color name in the press kit. Keep the color label recognizable and do not over-translate proper names unless natural in the locale.
 #: fluxer_marketing/generated:press_branding.colors.white
@@ -2602,157 +2266,35 @@ msgstr "Συνήθως απαντάμε μέσα σε 24 ώρες."
 #. Press contact prompt. Here "story" means a media story, article angle, or news lead about Fluxer, not a personal history. Keep the tone professional and media-friendly; preserve placeholders exactly.
 #: fluxer_marketing/generated:press_branding.contact.story_prompt_message
 msgctxt "press_branding.contact.story_prompt_message"
-msgid "Have a story about {product_name}? We'd love to hear from you at {email}."
+msgid "If you are writing about {product_name}, email {email}. A real person reads it."
 msgstr ""
-"Έχεις θέμα ή ιδέα για άρθρο σχετικά με το {product_name}; Θα χαρούμε να μας γράψεις στο {email}."
+"Αν γράφεις για το {product_name}, στείλε email στο {email}. Το διαβάζει πραγματικός άνθρωπος."
 
-#. Compact UI label in pricing and billing UI. Keep it short, conventional for subscriptions, and preserve price/currency placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.billing.forever
-msgctxt "pricing_and_tiers.billing.forever"
-msgid "Forever"
-msgstr "Για πάντα"
-
-#. Compact UI label in pricing and billing UI. Keep it short, conventional for subscriptions, and preserve price/currency placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.billing.most_popular
-msgctxt "pricing_and_tiers.billing.most_popular"
-msgid "Most popular"
-msgstr "Πιο δημοφιλές"
-
-#. Compact UI label in pricing and billing UI. Keep it short, conventional for subscriptions, and preserve price/currency placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.billing.per_forever
-msgctxt "pricing_and_tiers.billing.per_forever"
-msgid "/forever"
-msgstr "/για πάντα"
-
-#. Compact UI label in pricing and billing UI. Keep it short, conventional for subscriptions, and preserve price/currency placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.billing.per_month
-msgctxt "pricing_and_tiers.billing.per_month"
-msgid "/mo"
-msgstr "/μήνα"
-
-#. Compact UI label in pricing and billing UI. Keep it short, conventional for subscriptions, and preserve price/currency placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.billing.per_year_full
-msgctxt "pricing_and_tiers.billing.per_year_full"
-msgid "/year"
-msgstr "/έτος"
-
-#. Compact UI label in pricing and billing UI. Keep it short, conventional for subscriptions, and preserve price/currency placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.billing.per_year_short
-msgctxt "pricing_and_tiers.billing.per_year_short"
-msgid "/yr"
-msgstr "/έτος"
-
-#. Compact UI label in pricing and billing UI. Keep it short, conventional for subscriptions, and preserve price/currency placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.billing.save_percent
-msgctxt "pricing_and_tiers.billing.save_percent"
-msgid "Save 17%"
-msgstr "Εξοικονόμηση 17%"
-
-#. Short UI label or heading in pricing comparison UI. Keep labels clear and commercially neutral; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.free.comparison_label
-msgctxt "pricing_and_tiers.free.comparison_label"
-msgid "Free vs {premium_tier_name}"
-msgstr "Δωρεάν vs {premium_tier_name}"
-
-#. Compact UI label in pricing comparison UI. Keep labels clear and commercially neutral; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.free.everything_in_free_plus
-msgctxt "pricing_and_tiers.free.everything_in_free_plus"
-msgid "Everything in Free, plus:"
-msgstr "Ό,τι στο Δωρεάν πλάνο, Συν:"
-
-#. Compact UI label in pricing comparison UI. Keep labels clear and commercially neutral; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.free.full_access_to_all_features
-msgctxt "pricing_and_tiers.free.full_access_to_all_features"
-msgid "Full access to all features"
-msgstr "Πλήρης πρόσβαση σε όλες τις λειτουργίες"
-
-#. Short UI label or heading in pricing comparison UI. Keep labels clear and commercially neutral; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.free.label
-msgctxt "pricing_and_tiers.free.label"
-msgid "Free"
-msgstr "Δωρεάν"
-
-#. Body copy describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.plutonium.benefits_note_official_instance_only
-msgctxt "pricing_and_tiers.plutonium.benefits_note_official_instance_only"
+#. Body copy in pricing UI explaining the base-currency checkout option. Preserve all currency and price placeholders exactly.
+#: fluxer_marketing/generated:pricing_and_tiers.billing.base_currency_also_available
+msgctxt "pricing_and_tiers.billing.base_currency_also_available"
 msgid ""
-"Note: {premium_tier_name} and {visionary_tier_name} benefits only apply to the official {product_name}.app instance, not third-party or self-hosted instances."
+"The same subscription is also sold in {base_currency_code}, at {base_monthly_price} a month or {base_yearly_price} for a year."
 msgstr ""
-"Σημείωση: Τα οφέλη του {premium_tier_name} και του {visionary_tier_name} ισχύουν μόνο για την επίσημη έκδοση {product_name}.app, όχι για εκδόσεις τρίτων ή αυτοφιλοξενούμενες εγκαταστάσεις."
+"Η ίδια συνδρομή πωλείται και σε {base_currency_code}, με {base_monthly_price} τον μήνα ή {base_yearly_price} τον χρόνο."
 
-#. Body copy describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.plutonium.feature_highlights
-msgctxt "pricing_and_tiers.plutonium.feature_highlights"
-msgid "500 MB uploads, 4,000-character messages, 300 bookmarks, 50 emoji packs, and much more."
-msgstr ""
-"Ανεβάσματα 500 MB, μηνύματα 4.000 χαρακτήρων, 300 σελιδοδείκτες, 50 πακέτα emoji και πολλά άλλα."
+#. Compact monthly price label in pricing UI. Preserve the monthly price placeholder exactly.
+#: fluxer_marketing/generated:pricing_and_tiers.billing.monthly_price
+msgctxt "pricing_and_tiers.billing.monthly_price"
+msgid "{monthly_price}/mo"
+msgstr "{monthly_price}/μήνα"
 
-#. Body copy describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.plutonium.features.choose_custom_4_digit_tag
-msgctxt "pricing_and_tiers.plutonium.features.choose_custom_4_digit_tag"
-msgid "Choose any available 4-digit tag from #0001 to #9999 to make your username truly unique."
-msgstr ""
-"Διάλεξε οποιοδήποτε διαθέσιμο 4-ψήφιο tag από #0001 έως #9999 για να κάνεις το όνομά σου πραγματικά μοναδικό."
+#. Compact conjunction between monthly and yearly prices.
+#: fluxer_marketing/generated:pricing_and_tiers.billing.or
+msgctxt "pricing_and_tiers.billing.or"
+msgid "or"
+msgstr "ή"
 
-#. Short UI label or heading describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.plutonium.features.custom_4_digit_username_tag
-msgctxt "pricing_and_tiers.plutonium.features.custom_4_digit_username_tag"
-msgid "Custom 4-digit username tag"
-msgstr "Προσαρμοσμένο 4-ψήφιο tag ονόματος χρήστη"
-
-#. Short UI label or heading describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.plutonium.features.custom_username_tag
-msgctxt "pricing_and_tiers.plutonium.features.custom_username_tag"
-msgid "Custom username tag"
-msgstr "Προσαρμοσμένο tag ονόματος χρήστη"
-
-#. Compact UI label describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.plutonium.features.custom_video_backgrounds
-msgctxt "pricing_and_tiers.plutonium.features.custom_video_backgrounds"
-msgid "Video backgrounds"
-msgstr "Φόντα βίντεο"
-
-#. Compact UI label describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.plutonium.features.emoji_sticker_packs
-msgctxt "pricing_and_tiers.plutonium.features.emoji_sticker_packs"
-msgid "Emoji and sticker packs"
-msgstr "Πακέτα emoji και sticker"
-
-#. Compact UI label describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.plutonium.features.file_upload_size
-msgctxt "pricing_and_tiers.plutonium.features.file_upload_size"
-msgid "File upload size"
-msgstr "Μέγεθος ανεβάσματος αρχείων"
-
-#. Compact UI label describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.plutonium.features.global_emoji_sticker_access
-msgctxt "pricing_and_tiers.plutonium.features.global_emoji_sticker_access"
-msgid "Global emoji and sticker access"
-msgstr "Καθολική πρόσβαση σε emoji και sticker"
-
-#. Compact UI label describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.plutonium.features.message_character_limit
-msgctxt "pricing_and_tiers.plutonium.features.message_character_limit"
-msgid "Message character limit"
-msgstr "Όριο χαρακτήρων μηνύματος"
-
-#. Compact UI label describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.plutonium.features.message_scheduling
-msgctxt "pricing_and_tiers.plutonium.features.message_scheduling"
-msgid "Message scheduling"
-msgstr "Προγραμματισμός μηνυμάτων"
-
-#. Compact UI label describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.plutonium.features.per_community_profiles
-msgctxt "pricing_and_tiers.plutonium.features.per_community_profiles"
-msgid "Per-community profiles"
-msgstr "Προφίλ ανά κοινότητα"
-
-#. Compact UI label describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.plutonium.features.saved_media
-msgctxt "pricing_and_tiers.plutonium.features.saved_media"
-msgid "Saved media"
-msgstr "Αποθηκευμένα πολυμέσα"
+#. Compact yearly price label in pricing UI. Preserve the yearly price placeholder exactly.
+#: fluxer_marketing/generated:pricing_and_tiers.billing.yearly_price
+msgctxt "pricing_and_tiers.billing.yearly_price"
+msgid "{yearly_price}/yr"
+msgstr "{yearly_price}/έτος"
 
 #. Compact UI label describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
 #: fluxer_marketing/generated:pricing_and_tiers.plutonium.features.webhooks_and_bot_support
@@ -2760,43 +2302,152 @@ msgctxt "pricing_and_tiers.plutonium.features.webhooks_and_bot_support"
 msgid "Webhooks and bot support"
 msgstr "Υποστήριξη webhooks και bot"
 
-#. Button or link label describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.plutonium.get_more_with_plutonium
-msgctxt "pricing_and_tiers.plutonium.get_more_with_plutonium"
-msgid "Get more with {product_name} {premium_tier_name}"
-msgstr "Κέρδισε περισσότερα με {product_name} {premium_tier_name}"
+#. Hero heading for the Plutonium page. Preserve the product and premium tier name placeholders exactly.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.full_tier_name
+msgctxt "pricing_and_tiers.plutonium.full_tier_name"
+msgid "{product_name} {premium_tier_name}"
+msgstr "{product_name} {premium_tier_name}"
 
-#. Button or link label describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.plutonium.get_plutonium
-msgctxt "pricing_and_tiers.plutonium.get_plutonium"
-msgid "Get {premium_tier_name}"
-msgstr "Πάρε {premium_tier_name}"
-
-#. Body copy describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.plutonium.higher_limits_and_early_access
-msgctxt "pricing_and_tiers.plutonium.higher_limits_and_early_access"
-msgid "Higher limits, exclusive features, and early access to new updates"
-msgstr "Υψηλότερα όρια, αποκλειστικές λειτουργίες και πρόωρη πρόσβαση σε νέες ενημερώσεις"
-
-#. Compact UI label describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.plutonium.higher_limits_everywhere
-msgctxt "pricing_and_tiers.plutonium.higher_limits_everywhere"
-msgid "Higher limits everywhere"
-msgstr "Υψηλότερα όρια παντού"
-
-#. Body copy describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.plutonium.show_off_status_badge
-msgctxt "pricing_and_tiers.plutonium.show_off_status_badge"
-msgid "Show off your {premium_tier_name} status with an exclusive badge on your profile."
-msgstr "Επίδειξε την κατάσταση {premium_tier_name} με ένα αποκλειστικό σήμα στο προφίλ σου."
-
-#. Body copy describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.plutonium.standard_pricing_available
-msgctxt "pricing_and_tiers.plutonium.standard_pricing_available"
+#. Metadata description for the Plutonium page. Preserve the premium tier, official instance host, and product name placeholders exactly.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.hero_description
+msgctxt "pricing_and_tiers.plutonium.hero_description"
 msgid ""
-"Prefer paying in standard {currency}? Also available at checkout for {monthly_price} or {yearly_price}."
+"{premium_tier_name} raises the limits on {official_instance_host} for the people who keep running into them, and adds a few ways to make your profile look like you. It is optional, and {product_name} works without it."
 msgstr ""
-"Προτιμάς να πληρώσεις σε {currency}; Διαθέσιμο και στο ταμείο για {monthly_price} ή {yearly_price}."
+"Το {premium_tier_name} ανεβάζει τα όρια στο {official_instance_host} για όσους τα συναντούν συνεχώς και προσθέτει μερικούς τρόπους να κάνεις το προφίλ σου να σου μοιάζει. Είναι προαιρετικό και το {product_name} λειτουργεί και χωρίς αυτό."
+
+#. Secondary callout at the bottom of the Plutonium hero. The {donate_link} placeholder is the only linked portion; preserve {product_name} and both placeholders exactly.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.donation_callout
+msgctxt "pricing_and_tiers.plutonium.donation_callout"
+msgid "Just want to support {product_name}'s open source development? {donate_link}."
+msgstr ""
+"Θέλεις απλώς να στηρίξεις την ανάπτυξη ανοιχτού κώδικα του {product_name}; {donate_link}."
+
+#. Linked label in the Plutonium hero donation callout. Translate as a concise donation action.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.donation_callout_link
+msgctxt "pricing_and_tiers.plutonium.donation_callout_link"
+msgid "Donate instead"
+msgstr "Κάνε δωρεά"
+
+#. Subscription call to action on the Plutonium page. Preserve the product name placeholder exactly.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.open_fluxer_to_subscribe
+msgctxt "pricing_and_tiers.plutonium.open_fluxer_to_subscribe"
+msgid "Open {product_name} to subscribe"
+msgstr "Άνοιξε το {product_name} για να γίνεις συνδρομητής"
+
+#. Feature label in the Plutonium comparison table. Keep it concise and consistent with product terminology.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.animated_avatar_and_banner
+msgctxt "pricing_and_tiers.plutonium.perks.animated_avatar_and_banner"
+msgid "Animated avatar and profile banner"
+msgstr "Κινούμενο avatar και banner προφίλ"
+
+#. Feature label in the Plutonium comparison table. Keep it concise and consistent with product terminology.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.bookmarked_messages
+msgctxt "pricing_and_tiers.plutonium.perks.bookmarked_messages"
+msgid "Messages you can bookmark"
+msgstr "Μηνύματα που μπορείς να προσθέσεις στους σελιδοδείκτες"
+
+#. Feature label in the Plutonium comparison table. Keep it concise and consistent with product terminology.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.communities
+msgctxt "pricing_and_tiers.plutonium.perks.communities"
+msgid "Communities you can join"
+msgstr "Κοινότητες στις οποίες μπορείς να συμμετέχεις"
+
+#. Feature label in the Plutonium comparison table. Keep it concise and consistent with product terminology.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.custom_themes
+msgctxt "pricing_and_tiers.plutonium.perks.custom_themes"
+msgid "Custom themes for the app"
+msgstr "Προσαρμοσμένα θέματα για την εφαρμογή"
+
+#. Feature label in the Plutonium comparison table. Keep it concise and consistent with product terminology.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.custom_username_tag
+msgctxt "pricing_and_tiers.plutonium.perks.custom_username_tag"
+msgid "Pick the 4-digit number after your username"
+msgstr "Διάλεξε τον 4ψήφιο αριθμό μετά το όνομα χρήστη σου"
+
+#. Feature label in the Plutonium comparison table. Keep it concise and consistent with product terminology.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.early_access
+msgctxt "pricing_and_tiers.plutonium.perks.early_access"
+msgid "Early access to new features"
+msgstr "Πρόωρη πρόσβαση σε νέες λειτουργίες"
+
+#. Feature label in the Plutonium comparison table. Keep it concise and consistent with product terminology.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.file_upload_size
+msgctxt "pricing_and_tiers.plutonium.perks.file_upload_size"
+msgid "Largest file you can upload"
+msgstr "Μέγιστο μέγεθος αρχείου για ανέβασμα"
+
+#. Feature label in the Plutonium comparison table. Keep it concise and consistent with product terminology.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.global_expressions
+msgctxt "pricing_and_tiers.plutonium.perks.global_expressions"
+msgid "Use custom emojis and stickers in any community"
+msgstr "Χρήση προσαρμοσμένων emoji και sticker σε κάθε κοινότητα"
+
+#. Feature label in the Plutonium comparison table. Keep it concise and consistent with product terminology.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.message_characters
+msgctxt "pricing_and_tiers.plutonium.perks.message_characters"
+msgid "Characters in a single message"
+msgstr "Χαρακτήρες σε ένα μήνυμα"
+
+#. Feature label in the Plutonium comparison table. Keep it concise and consistent with product terminology.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.per_community_profiles
+msgctxt "pricing_and_tiers.plutonium.perks.per_community_profiles"
+msgid "A separate profile for each community"
+msgstr "Ξεχωριστό προφίλ για κάθε κοινότητα"
+
+#. Feature label in the Plutonium comparison table. Keep it concise and consistent with product terminology.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.profile_badge
+msgctxt "pricing_and_tiers.plutonium.perks.profile_badge"
+msgid "Subscriber badge on your profile"
+msgstr "Σήμα συνδρομητή στο προφίλ σου"
+
+#. Feature label in the Plutonium comparison table. Keep it concise and consistent with product terminology.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.saved_media
+msgctxt "pricing_and_tiers.plutonium.perks.saved_media"
+msgid "Media items you can save"
+msgstr "Πολυμέσα που μπορείς να αποθηκεύσεις"
+
+#. Feature label in the Plutonium comparison table. Keep it concise and consistent with product terminology.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.use_animated_emojis
+msgctxt "pricing_and_tiers.plutonium.perks.use_animated_emojis"
+msgid "Use animated emojis in messages"
+msgstr "Χρήση κινούμενων emoji στα μηνύματα"
+
+#. Feature label in the Plutonium comparison table. Keep it concise and consistent with product terminology.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.video_backgrounds
+msgctxt "pricing_and_tiers.plutonium.perks.video_backgrounds"
+msgid "Video call backgrounds you can save"
+msgstr "Φόντα βιντεοκλήσης που μπορείς να αποθηκεύσεις"
+
+#. Feature label in the Plutonium comparison table. Keep it concise and consistent with product terminology.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.video_quality
+msgctxt "pricing_and_tiers.plutonium.perks.video_quality"
+msgid "Video call and screen share quality"
+msgstr "Ποιότητα βιντεοκλήσης και κοινής χρήσης οθόνης"
+
+#. Free-tier value in the Plutonium comparison table. Keep resolution and frame rate accurate.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.video_quality_free
+msgctxt "pricing_and_tiers.plutonium.perks.video_quality_free"
+msgid "Up to 720p at 30 FPS"
+msgstr "Έως 720p στα 30 FPS"
+
+#. Plutonium-tier value in the comparison table. Keep resolution and frame rate accurate.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.video_quality_plutonium
+msgctxt "pricing_and_tiers.plutonium.perks.video_quality_plutonium"
+msgid "Up to 4K at 60 FPS"
+msgstr "Έως 4K στα 60 FPS"
+
+#. Compact UI label in pricing and billing UI. Keep it short, conventional for subscriptions, and preserve price/currency placeholders exactly.
+#: fluxer_marketing/generated:pricing_and_tiers.billing.save_percent
+msgctxt "pricing_and_tiers.billing.save_percent"
+msgid "Save {yearly_savings}"
+msgstr "Εξοικονόμηση {yearly_savings}"
+
+#. Short UI label or heading in pricing comparison UI. Keep labels clear and commercially neutral; preserve placeholders exactly.
+#: fluxer_marketing/generated:pricing_and_tiers.free.label
+msgctxt "pricing_and_tiers.free.label"
+msgid "Free"
+msgstr "Δωρεάν"
 
 #. Short UI label or heading describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
 #: fluxer_marketing/generated:pricing_and_tiers.plutonium.tier_name
@@ -2804,49 +2455,25 @@ msgctxt "pricing_and_tiers.plutonium.tier_name"
 msgid "{premium_tier_name}"
 msgstr "{premium_tier_name}"
 
-#. Short UI label or heading in pricing comparison UI. Keep labels clear and commercially neutral; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.visionary.one_time_purchase.label
-msgctxt "pricing_and_tiers.visionary.one_time_purchase.label"
-msgid "One-time purchase"
-msgstr "Εφάπαξ αγορά"
+#. Button label linking to the operator documentation from the self-hosting feature card.
+#: fluxer_marketing/generated:product_positioning.self_hosting.read_the_self_hosting_guide
+msgctxt "product_positioning.self_hosting.read_the_self_hosting_guide"
+msgid "Read the self-hosting guide"
+msgstr "Διάβασε τον οδηγό αυτοφιλοξενίας"
 
-#. Short product-positioning body copy used in footer and self-hosting sections. Preserve {product_name} exactly; keep the free/open-source and self-hosting meaning clear. Preserve placeholders exactly.
-#: fluxer_marketing/generated:product_positioning.free_and_open_source
-msgctxt "product_positioning.free_and_open_source"
-msgid "{product_name} is free and open source. Anyone can self-host for free."
-msgstr "Το {product_name} είναι δωρεάν και ανοιχτού κώδικα. Μπορείς να το φιλοξενήσεις δωρεάν."
-
-#. Primary product-positioning body copy used in page metadata and hero sections. Preserve {product_name} exactly; keep the free/open-source, instant messaging, VoIP, and community meanings clear. Preserve placeholders exactly.
+#. Primary product-positioning body copy used in page metadata and hero sections. Keep the free/open-source, audience, communication-feature, and self-hosting meanings clear.
 #: fluxer_marketing/generated:product_positioning.intro
 msgctxt "product_positioning.intro"
 msgid ""
-"{product_name} is a free and open source instant messaging and VoIP chat app built for friends, groups, and communities."
+"Free and open source chat for friends, groups, and communities, with text, voice, video, screen sharing, and self-hosting."
 msgstr ""
-"Το {product_name} είναι μια δωρεάν εφαρμογή συνομιλίας ανοιχτού κώδικα για άμεσα μηνύματα και VoIP, φτιαγμένη για φίλους, ομάδες και κοινότητες."
+"Δωρεάν και ανοιχτού κώδικα συνομιλίες για φίλους, ομάδες και κοινότητες, με κείμενο, φωνή, βίντεο, κοινή χρήση οθόνης και αυτοφιλοξενία."
 
 #. Button or link label explaining Fluxer open-source licensing. Keep legal/license tokens such as AGPLv3 unchanged.
 #: fluxer_marketing/generated:product_positioning.open_source.fully_open_source_agplv3
 msgctxt "product_positioning.open_source.fully_open_source_agplv3"
 msgid "Fully open source (AGPLv3)"
 msgstr "Πλήρως ανοιχτού κώδικα (AGPLv3)"
-
-#. Button or link label explaining Fluxer open-source licensing. Keep legal/license tokens such as AGPLv3 unchanged.
-#: fluxer_marketing/generated:product_positioning.open_source.license
-msgctxt "product_positioning.open_source.license"
-msgid "Open source (AGPL-3.0)"
-msgstr "Ανοιχτού κώδικα (AGPL-3.0)"
-
-#. Compact UI label explaining self-hosting and Operator Pass expectations. Keep technical wording accurate and preserve product-name placeholders exactly.
-#: fluxer_marketing/generated:product_positioning.self_hosting.connect_from_any_client
-msgctxt "product_positioning.self_hosting.connect_from_any_client"
-msgid "Connect from any client"
-msgstr "Συνδέσου από οποιαδήποτε εφαρμογή"
-
-#. Compact UI label explaining self-hosting and Operator Pass expectations. Keep technical wording accurate and preserve product-name placeholders exactly.
-#: fluxer_marketing/generated:product_positioning.self_hosting.free_self_hosting
-msgctxt "product_positioning.self_hosting.free_self_hosting"
-msgid "Free self-hosting"
-msgstr "Δωρεάν αυτοφιλοξενία"
 
 #. Compact UI label explaining self-hosting and Operator Pass expectations. Keep technical wording accurate and preserve product-name placeholders exactly.
 #: fluxer_marketing/generated:product_positioning.self_hosting.host_your_own_instance
@@ -2860,66 +2487,25 @@ msgctxt "product_positioning.self_hosting.label"
 msgid "Self-hosting"
 msgstr "Αυτοφιλοξενία"
 
-#. Benefit label for the Operator Pass. Keep this warm and concrete: a smaller community where self-hosters can get help from each other and the Fluxer team. Preserve placeholders exactly.
-#: fluxer_marketing/generated:product_positioning.self_hosting.operator_pass.community_feedback
-msgctxt "product_positioning.self_hosting.operator_pass.community_feedback"
-msgid "Smaller {operators} community with team access"
-msgstr "Μικρότερη {operators} community με πρόσβαση στην ομάδα"
-
-#. Short UI label or heading explaining self-hosting and Operator Pass expectations. Keep technical wording accurate and preserve product-name placeholders exactly.
-#: fluxer_marketing/generated:product_positioning.self_hosting.operator_pass.label
-msgctxt "product_positioning.self_hosting.operator_pass.label"
-msgid "{operator_pass}"
-msgstr "{operator_pass}"
-
-#. Body copy explaining Operator Pass expectations. Keep it personal and warm: like donating with perks, with a smaller community where self-hosters can get help from each other and the Fluxer team. Preserve placeholders exactly.
-#: fluxer_marketing/generated:product_positioning.self_hosting.operator_pass.donating_with_perks_smaller_space
-msgctxt "product_positioning.self_hosting.operator_pass.donating_with_perks_smaller_space"
-msgid ""
-"Think of the optional {operator_pass} like donating with perks: you help keep {product_name} going and get the {operators} community, a smaller place where self-hosters and the {product_name} team can help when you get stuck, hear your ideas, and discuss feedback before it gets buried on {github}."
-msgstr ""
-"Σκεφτείτε το προαιρετικό {operator_pass} σαν δωρεά με προνόμια: βοηθάτε να συνεχίσει το {product_name} να λειτουργεί και αποκτάτε το {operators} community, έναν μικρότερο χώρο όπου χρήστες αυτοφιλοξενίας και η ομάδα του {product_name} μπορούν να σας βοηθήσουν όταν κολλήσετε, να ακούσουν τις ιδέες σας και να συζητήσουν σχόλια πριν χαθούν στο {github}."
-
 #. Body copy explaining self-hosting and Operator Pass expectations. Keep technical wording accurate and preserve product-name placeholders exactly.
 #: fluxer_marketing/generated:product_positioning.self_hosting.run_backend_on_your_hardware
 msgctxt "product_positioning.self_hosting.run_backend_on_your_hardware"
-msgid "Run the {product_name} backend on your own hardware and connect with our apps."
+msgid ""
+"Run the whole {product_name} backend on your own hardware and connect to it with the same apps we ship. There is no license key and no cut-down community edition."
 msgstr ""
-"Εκτέλεσε το backend του {product_name} στο δικό σου hardware και συνδέσου με τις εφαρμογές μας."
+"Εκτέλεσε ολόκληρο το backend του {product_name} στο δικό σου hardware και σύνδεσου σε αυτό με τις ίδιες εφαρμογές που παρέχουμε. Δεν υπάρχει κλειδί άδειας χρήσης ούτε περιορισμένη έκδοση κοινότητας."
 
 #. Compact UI label explaining self-hosting and Operator Pass expectations. Keep technical wording accurate and preserve product-name placeholders exactly.
 #: fluxer_marketing/generated:product_positioning.self_hosting.switch_between_instances
 msgctxt "product_positioning.self_hosting.switch_between_instances"
 msgid "Switch between multiple instances"
-msgstr "Εναλλαγή μεταξύ πολλαπλών εκδόσεων"
+msgstr "Εναλλαγή μεταξύ πολλαπλών εγκαταστάσεων"
 
-#. Compact UI label in security, bug bounty, or responsible disclosure sections. Keep wording precise, calm, and trustworthy; preserve placeholders exactly.
-#: fluxer_marketing/generated:security.found_security_issue
-msgctxt "security.found_security_issue"
-msgid "Found a security issue?"
-msgstr "Βρήκες κάποιο πρόβλημα ασφαλείας;"
-
-#. Body copy in security, bug bounty, or responsible disclosure sections. Keep wording precise, calm, and trustworthy; preserve placeholders exactly.
-#: fluxer_marketing/generated:security.responsible_disclosure_note
-msgctxt "security.responsible_disclosure_note"
-msgid ""
-"We appreciate responsible disclosure via our security bug bounty page. We offer {premium_tier_name} codes and {bug_hunter} badges based on severity."
-msgstr ""
-"Εκτιμούμε την υπεύθυνη αναφορά μέσω της σελίδας μας για bug bounty. Προσφέρουμε κωδικούς {premium_tier_name} και σήματα {bug_hunter} ανάλογα με τη σοβαρότητα."
-
-#. Compact UI label in security, bug bounty, or responsible disclosure sections. Keep wording precise, calm, and trustworthy; preserve placeholders exactly.
-#: fluxer_marketing/generated:security.security_bug_bounty
-msgctxt "security.security_bug_bounty"
-msgid "Security bug bounty"
-msgstr "Πρόγραμμα επιβράβευσης για σφάλματα ασφαλείας"
-
-#. Body copy in security, bug bounty, or responsible disclosure sections. Keep wording precise, calm, and trustworthy; preserve placeholders exactly.
-#: fluxer_marketing/generated:security.testers_access_from_reports
-msgctxt "security.testers_access_from_reports"
-msgid ""
-"Found a bug? Check out our bug report guide to learn how to file clear, high-quality reports."
-msgstr ""
-"Βρήκες ένα σφάλμα; Δες τον οδηγό αναφοράς σφαλμάτων για να μάθεις πώς να υποβάλεις σαφείς, υψηλής ποιότητας αναφορές."
+#. Compact accessibility label shared across marketing comparison tables. Keep it broadly reusable, concise, and consistent with the Fluxer brand voice.
+#: fluxer_marketing/generated:general.available
+msgctxt "general.available"
+msgid "Available"
+msgstr "Διαθέσιμο"
 
 #. Short UI label or heading shared across marketing pages. Keep it broadly reusable, concise, and consistent with the Fluxer brand voice.
 #: fluxer_marketing/generated:general.coming_soon.label
@@ -2927,23 +2513,23 @@ msgctxt "general.coming_soon.label"
 msgid "Coming soon"
 msgstr "Σύντομα"
 
-#. Compact UI label shared across marketing pages. Keep it broadly reusable, concise, and consistent with the Fluxer brand voice.
+#. Compact UI label shared across marketing pages. Keep it broadly reusable, concise, and consistent with the Fluxer brand voice; preserve {product_name} exactly.
 #: fluxer_marketing/generated:general.coming_soon.whats_available_today
 msgctxt "general.coming_soon.whats_available_today"
-msgid "What's available today"
-msgstr "Τι είναι διαθέσιμο σήμερα"
+msgid "Everything {product_name} does today"
+msgstr "Όλα όσα κάνει σήμερα το {product_name}"
 
 #. Default author metadata label for Fluxer-authored marketing pages when no individual author is shown. Keep Fluxer as a product name. Preserve placeholders exactly.
 #: fluxer_marketing/generated:general.fluxer_team
 msgctxt "general.fluxer_team"
-msgid "{product_name} Team"
+msgid "{product_name} team"
 msgstr "Ομάδα {product_name}"
 
-#. Compact UI label shared across marketing pages. Keep it broadly reusable, concise, and consistent with the Fluxer brand voice.
-#: fluxer_marketing/generated:general.last_updated
-msgctxt "general.last_updated"
-msgid "Last updated"
-msgstr "Τελευταία ενημέρωση"
+#. Date line shown on policy and help content. Translate the whole sentence so date placement and punctuation are natural. Preserve {date} exactly.
+#: fluxer_marketing/generated:general.last_updated_on_date
+msgctxt "general.last_updated_on_date"
+msgid "Last updated on {date}."
+msgstr "Τελευταία ενημέρωση στις {date}."
 
 #. Compact UI label shared across marketing pages. Keep it broadly reusable, concise, and consistent with the Fluxer brand voice.
 #: fluxer_marketing/generated:general.made_in_sweden
@@ -2958,28 +2544,10 @@ msgid "Not available"
 msgstr "Μη διαθέσιμο"
 
 #. Compact UI label shared across marketing pages. Keep it broadly reusable, concise, and consistent with the Fluxer brand voice.
-#: fluxer_marketing/generated:general.or
-msgctxt "general.or"
-msgid "or"
-msgstr "ή"
-
-#. Compact UI label shared across marketing pages. Keep it broadly reusable, concise, and consistent with the Fluxer brand voice.
 #: fluxer_marketing/generated:general.tagline
 msgctxt "general.tagline"
 msgid "A chat app that puts you first"
 msgstr "Μια εφαρμογή συνομιλίας που βάζει εσένα πρώτο"
-
-#. Short Operator Pass benefit label. Keep this warm and concrete: supporting Fluxer with community access as a perk.
-#: fluxer_marketing/generated:misc_labels.donating_with_perks
-msgctxt "misc_labels.donating_with_perks"
-msgid "Donating with perks"
-msgstr "Υποστηρίζοντας την πλατφόρμα Fluxer με επιπλέον προνόμια"
-
-#. Short UI label or heading reused across marketing cards, buttons, and section headings. Translate as a standalone UI phrase that can fit multiple surfaces.
-#: fluxer_marketing/generated:misc_labels.exclusive_features
-msgctxt "misc_labels.exclusive_features"
-msgid "Exclusive features"
-msgstr "Αποκλειστικές λειτουργίες"
 
 #. Short UI label or heading reused across marketing cards, buttons, and section headings. Translate as a standalone UI phrase that can fit multiple surfaces.
 #: fluxer_marketing/generated:misc_labels.feature
@@ -2988,77 +2556,22 @@ msgid "Feature"
 msgstr "Λειτουργία"
 
 #. Button or link label reused across marketing cards, buttons, and section headings. Translate as a standalone UI phrase that can fit multiple surfaces.
-#: fluxer_marketing/generated:misc_labels.get_updates
-msgctxt "misc_labels.get_updates"
-msgid "Get updates, see upcoming features, discuss suggestions, and chat with the team."
-msgstr ""
-"Λάβε ενημερώσεις, δες τις επερχόμενες λειτουργίες, συζήτησε για προτάσεις και συνομίλησε με την ομάδα."
-
-#. Button/link label for joining the official Fluxer HQ community. Preserve {product_name} exactly; translate as a short standalone call to action. Preserve placeholders exactly.
-#: fluxer_marketing/generated:misc_labels.join_fluxer_hq
-msgctxt "misc_labels.join_fluxer_hq"
-msgid "Join {product_name} HQ"
-msgstr "Γίνε μέλος του {product_name} HQ"
-
-#. Button or link label reused across marketing cards, buttons, and section headings. Translate as a standalone UI phrase that can fit multiple surfaces.
 #: fluxer_marketing/generated:misc_labels.join_multiple_devices
 msgctxt "misc_labels.join_multiple_devices"
 msgid "Join from multiple devices at once"
 msgstr "Σύνδεση από πολλές συσκευές ταυτόχρονα"
 
-#. Careers-page hero heading. Preserve {product_name} exactly; this refers to employment or future roles, not joining a user community. Preserve placeholders exactly.
-#: fluxer_marketing/generated:misc_labels.join_team_behind_fluxer
-msgctxt "misc_labels.join_team_behind_fluxer"
-msgid "Join the team behind {product_name}"
-msgstr "Γίνε μέλος της ομάδας του {product_name}"
-
-#. Button or link label reused across marketing cards, buttons, and section headings. Translate as a standalone UI phrase that can fit multiple surfaces.
-#: fluxer_marketing/generated:misc_labels.learn_more
-msgctxt "misc_labels.learn_more"
-msgid "Learn more"
-msgstr "Μάθε περισσότερα"
-
-#. Short UI label or heading reused across marketing cards, buttons, and section headings. Translate as a standalone UI phrase that can fit multiple surfaces.
-#: fluxer_marketing/generated:misc_labels.profile_badge
-msgctxt "misc_labels.profile_badge"
-msgid "Profile badge"
-msgstr "Σήμα προφίλ"
-
-#. Button or link label reused across marketing cards, buttons, and section headings. Translate as a standalone UI phrase that can fit multiple surfaces.
-#: fluxer_marketing/generated:misc_labels.read_the_guide
-msgctxt "misc_labels.read_the_guide"
-msgid "Read the guide"
-msgstr "Διάβασε τον οδηγό"
-
 #. Button or link label reused across marketing cards, buttons, and section headings. Translate as a standalone UI phrase that can fit multiple surfaces.
 #: fluxer_marketing/generated:misc_labels.ready_to_get_started
 msgctxt "misc_labels.ready_to_get_started"
-msgid "Ready to get started?"
-msgstr "Έτοιμος να ξεκινήσεις;"
+msgid "Bring your people over"
+msgstr "Φέρε τους δικούς σου ανθρώπους εδώ"
 
 #. Short UI label or heading reused across marketing cards, buttons, and section headings. Translate as a standalone UI phrase that can fit multiple surfaces.
 #: fluxer_marketing/generated:misc_labels.related_policies
 msgctxt "misc_labels.related_policies"
 msgid "Related policies"
-msgstr "Πολιτικές"
-
-#. Button or link label reused across marketing cards, buttons, and section headings. Translate as a standalone UI phrase that can fit multiple surfaces.
-#: fluxer_marketing/generated:misc_labels.report_bugs
-msgctxt "misc_labels.report_bugs"
-msgid "Report bugs"
-msgstr "Αναφορά σφαλμάτων"
-
-#. Short UI label or heading reused across marketing cards, buttons, and section headings. Translate as a standalone UI phrase that can fit multiple surfaces.
-#: fluxer_marketing/generated:misc_labels.unlimited_users
-msgctxt "misc_labels.unlimited_users"
-msgid "Unlimited users"
-msgstr "Απεριόριστοι χρήστες"
-
-#. Compact UI label in social, Bluesky, GitHub, or RSS follow sections. Keep labels recognizable, avoid dangling sentence fragments, and preserve handles/placeholders exactly.
-#: fluxer_marketing/generated:social_and_feeds.bluesky.follow_us
-msgctxt "social_and_feeds.bluesky.follow_us"
-msgid "Follow us on {bluesky}"
-msgstr "Ακολούθησέ μας στο {bluesky}"
+msgstr "Σχετικές πολιτικές"
 
 #. Short UI label or heading in social, Bluesky, GitHub, or RSS follow sections. Keep labels recognizable, avoid dangling sentence fragments, and preserve handles/placeholders exactly.
 #: fluxer_marketing/generated:social_and_feeds.bluesky.label
@@ -3067,28 +2580,10 @@ msgid "{bluesky}"
 msgstr "{bluesky}"
 
 #. Compact UI label in social, Bluesky, GitHub, or RSS follow sections. Keep labels recognizable, avoid dangling sentence fragments, and preserve handles/placeholders exactly.
-#: fluxer_marketing/generated:social_and_feeds.bluesky.rss_feed
-msgctxt "social_and_feeds.bluesky.rss_feed"
-msgid "{bluesky} RSS feed"
-msgstr "Ροή RSS του {bluesky}"
-
-#. Compact UI label in social, Bluesky, GitHub, or RSS follow sections. Keep labels recognizable, avoid dangling sentence fragments, and preserve handles/placeholders exactly.
-#: fluxer_marketing/generated:social_and_feeds.follow_fluxer
-msgctxt "social_and_feeds.follow_fluxer"
-msgid "Follow @{social_handle}"
-msgstr "Ακολούθησε το @{social_handle}"
-
-#. Compact UI label in social, Bluesky, GitHub, or RSS follow sections. Keep labels recognizable, avoid dangling sentence fragments, and preserve handles/placeholders exactly.
 #: fluxer_marketing/generated:social_and_feeds.github
 msgctxt "social_and_feeds.github"
 msgid "{github}"
 msgstr "{github}"
-
-#. Compact UI label in social, Bluesky, GitHub, or RSS follow sections. Keep labels recognizable, avoid dangling sentence fragments, and preserve handles/placeholders exactly.
-#: fluxer_marketing/generated:social_and_feeds.rss.blog_rss_feed
-msgctxt "social_and_feeds.rss.blog_rss_feed"
-msgid "Blog RSS feed"
-msgstr "Ροή RSS ιστολογίου"
 
 #. Compact UI label in social, Bluesky, GitHub, or RSS follow sections. Keep labels recognizable, avoid dangling sentence fragments, and preserve handles/placeholders exactly.
 #: fluxer_marketing/generated:social_and_feeds.rss.fluxer_blog_rss
@@ -3102,13 +2597,6 @@ msgctxt "social_and_feeds.rss.label"
 msgid "RSS feed"
 msgstr "Ροή RSS"
 
-#. Body copy in the social/follow card. It is followed by separate RSS feed links in the UI, so translate as an unfinished lead-in only if that grammar works in the target locale.
-#: fluxer_marketing/generated:social_and_feeds.stay_updated_cta
-msgctxt "social_and_feeds.stay_updated_cta"
-msgid "Stay updated on news, service status, and what's happening. You can also subscribe to our"
-msgstr ""
-"Μείνε ενήμερος για τα νέα, την κατάσταση των υπηρεσιών και τι συμβαίνει. Μπορείς επίσης να εγγραφείς"
-
 #. Section heading above the world map of voice regions. Plain, sentence case.
 #: fluxer_marketing/generated:voice_regions.map_heading
 msgctxt "voice_regions.map_heading"
@@ -3121,7 +2609,7 @@ msgctxt "voice_regions.map_intro"
 msgid ""
 "Sixteen voice regions across six continents. Voice and video calls connect through the region closest to you."
 msgstr ""
-"Δεκαέξι περιοχές φωνής σε έξι ηπείρους. Οι φωνητικές κλήσεις και οι βιντεοκλήσεις συνδέονται μέσω της πλησιέστερης σε εσάς περιοχής."
+"Δεκαέξι περιοχές φωνής σε έξι ηπείρους. Οι φωνητικές κλήσεις και οι βιντεοκλήσεις συνδέονται μέσω της περιοχής που βρίσκεται πιο κοντά σου."
 
 #. Accessible legend / alt-style sentence next to the map. Sentence case, short. Preserve placeholders exactly.
 #: fluxer_marketing/generated:voice_regions.map_legend
@@ -3135,10 +2623,10 @@ msgctxt "voice_regions.languages_heading"
 msgid "Languages"
 msgstr "Γλώσσες"
 
-#. Paragraph under the languages heading. Includes an {email} placeholder for the localization contact. Plain and factual.
+#. Paragraph under the languages heading. Includes a {weblate} placeholder for the localization platform. Plain and factual.
 #: fluxer_marketing/generated:voice_regions.languages_intro
 msgctxt "voice_regions.languages_intro"
 msgid ""
-"{product_name} is available in over thirty languages. To help translate {product_name} into your native language, write to {email}."
+"{product_name} is available in over thirty languages. To help translate {product_name} into your native language, join us on {weblate}."
 msgstr ""
-"Το {product_name} είναι διαθέσιμο σε περισσότερες από τριάντα γλώσσες. Για να βοηθήσετε στη μετάφραση του {product_name} στη μητρική σας γλώσσα, γράψτε στο {email}."
+"Το {product_name} είναι διαθέσιμο σε πάνω από τριάντα γλώσσες. Για να βοηθήσεις στη μετάφραση του {product_name} στη μητρική σου γλώσσα, έλα μαζί μας στο {weblate}."

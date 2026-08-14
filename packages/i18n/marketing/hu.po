@@ -13,12 +13,6 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #. Compact UI label used in the home-page communities/moderation feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
-#: fluxer_marketing/generated:app.communities.community_support
-msgctxt "app.communities.community_support"
-msgid "Community support"
-msgstr "Közösségi támogatás"
-
-#. Compact UI label used in the home-page communities/moderation feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.communities.featured_in_discovery
 msgctxt "app.communities.featured_in_discovery"
 msgid "Featured in discovery"
@@ -51,14 +45,8 @@ msgstr "Részletes szerepek és engedélyek"
 #. Body copy used in the home-page communities/moderation feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.communities.roles_permissions_audit.keep_running_smoothly
 msgctxt "app.communities.roles_permissions_audit.keep_running_smoothly"
-msgid "Keep your community running smoothly with roles, permissions, and logs."
-msgstr "Biztosítsd a közösséged zökkenőmentes működését szerepekkel, engedélyekkel és naplókkal."
-
-#. Short UI label or heading used in the home-page communities/moderation feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
-#: fluxer_marketing/generated:app.communities.title
-msgctxt "app.communities.title"
-msgid "Communities"
-msgstr "Közösségek"
+msgid "Assign roles and permissions, and use the audit log to see which moderator changed what."
+msgstr "Ossz ki szerepeket és engedélyeket, az auditnaplóból pedig kiderül, melyik moderátor mit módosított."
 
 #. Short UI label or heading used in the home-page communities/moderation feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.communities.verification.label
@@ -71,12 +59,6 @@ msgstr "Közösség ellenőrzése"
 msgctxt "app.communities.verification.value_statement"
 msgid "Your community gets verified status for authenticity and trust."
 msgstr "Közösséged ellenőrzött státuszt szerez a hitelesség és a bizalom érdekében."
-
-#. Compact UI label used in the home-page communities/moderation feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
-#: fluxer_marketing/generated:app.communities.verification.verified_community
-msgctxt "app.communities.verification.verified_community"
-msgid "Verified community"
-msgstr "Ellenőrzött közösség"
 
 #. Compact UI label used in the home-page customization feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.customization.animated_profile.animated_avatars_and_banners
@@ -91,12 +73,6 @@ msgid "Stand out with animated profile pictures and banners to express your pers
 msgstr "Tűnj ki animált profilképekkel és bannerekkel, fejezd ki a személyiségedet."
 
 #. Compact UI label used in the home-page customization feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
-#: fluxer_marketing/generated:app.customization.app_icon_badges
-msgctxt "app.customization.app_icon_badges"
-msgid "See badge counts on the app icon."
-msgstr "Láthatod a jelvények számát az alkalmazásikonon."
-
-#. Compact UI label used in the home-page customization feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.customization.compact_mode
 msgctxt "app.customization.compact_mode"
 msgid "Compact mode and display options"
@@ -108,37 +84,12 @@ msgctxt "app.customization.custom_css_themes"
 msgid "Custom CSS themes"
 msgstr "Egyedi CSS témák"
 
-#. Compact UI label used in the home-page customization feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
-#: fluxer_marketing/generated:app.customization.custom_sounds.entrance_sounds
-msgctxt "app.customization.custom_sounds.entrance_sounds"
-msgid "Custom entrance sounds"
-msgstr "Egyedi belépő hangok"
-
-#. Body copy in the home-page customization feature card. Explains custom join sounds for voice channels; keep the wording concrete and avoid making it sound like an audio setting label.
-#: fluxer_marketing/generated:app.customization.custom_sounds.set_personalized_join_sounds
-msgctxt "app.customization.custom_sounds.set_personalized_join_sounds"
-msgid "Set personalized sounds when you join voice channels to make your presence known."
-msgstr ""
-"Állíts be személyre szabott hangokat, hogy jelezd a jelenlétedet, amikor hangcsatornákhoz csatlakozol."
-
-#. Compact UI label used in the home-page customization feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
-#: fluxer_marketing/generated:app.customization.custom_themes
-msgctxt "app.customization.custom_themes"
-msgid "Custom themes"
-msgstr "Egyedi témák"
-
-#. Compact UI label used in the home-page customization feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
-#: fluxer_marketing/generated:app.customization.global_emoji_and_sticker_access
-msgctxt "app.customization.global_emoji_and_sticker_access"
-msgid "Global emoji and sticker access"
-msgstr "Globális emoji és matricahozzáférés"
-
 #. Body copy used in the home-page customization feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.customization.saved_media_and_css
 msgctxt "app.customization.saved_media_and_css"
-msgid "Add custom emojis, save media for later, and style the app with custom CSS."
-msgstr ""
-"Adj hozzá egyedi emojikat, ments el tartalmat későbbre, és alakítsd az alkalmazás stílusát egyedi CSS-sel."
+msgid ""
+"Make your own emojis, keep the media you want to find again, and rewrite the whole interface with custom CSS if you want to."
+msgstr "Készíts saját emojikat, tartsd meg azokat a médiafájlokat, amelyeket később újra elő akarsz venni, és ha akarod, egyedi CSS-sel írd újra az egész felületet."
 
 #. Short UI label or heading used in the home-page customization feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.customization.title
@@ -150,44 +101,26 @@ msgstr "Testreszabás"
 #: fluxer_marketing/generated:app.customization.upload_custom_emojis_and_stickers
 msgctxt "app.customization.upload_custom_emojis_and_stickers"
 msgid "Upload custom emojis and stickers"
-msgstr "Egyedi emoji és matrica feltöltés"
-
-#. Compact UI label used in the home-page customization feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
-#: fluxer_marketing/generated:app.customization.use_animated_emojis
-msgctxt "app.customization.use_animated_emojis"
-msgid "Use animated emojis"
-msgstr "Animált emojik használata"
+msgstr "Egyedi emojik és matricák feltöltése"
 
 #. Body copy used in the home-page messaging feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.messaging.description
 msgctxt "app.messaging.description"
-msgid "DM your friends, chat with groups, or build communities with channels."
-msgstr "DM-ezz a barátaiddal, csevegj csoportokkal, vagy építs közösségeket csatornákkal."
-
-#. Compact UI label used in the home-page messaging feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
-#: fluxer_marketing/generated:app.messaging.features.bookmarked_messages
-msgctxt "app.messaging.features.bookmarked_messages"
-msgid "Bookmarked messages"
-msgstr "Elmentett üzenetek"
+msgid ""
+"Chat with friends or groups. Communities give you organized channels when a group chat has grown too large."
+msgstr "Csevegj barátokkal vagy csoportokkal. A közösségek rendszerezett csatornákat kínálnak, amikor egy csoportos csevegés túl nagyra nő."
 
 #. Compact UI label used in the home-page messaging feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.messaging.features.file_sharing
 msgctxt "app.messaging.features.file_sharing"
 msgid "Share files and preview links"
-msgstr "Fájlok megosztása és linkelőnézet"
+msgstr "Fájlok megosztása és linkek előnézete"
 
 #. Compact UI label used in the home-page messaging feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.messaging.features.full_markdown_support
 msgctxt "app.messaging.features.full_markdown_support"
 msgid "Full Markdown support in messages"
-msgstr "Markdown támogatás az üzenetekben"
-
-#. Body copy used in the home-page messaging feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
-#: fluxer_marketing/generated:app.messaging.features.message_scheduling.description
-msgctxt "app.messaging.features.message_scheduling.description"
-msgid "Schedule messages to be sent at a specific time in the future. No {delorean} required."
-msgstr ""
-"Üzenetek ütemezése, hogy a jövőben egy megadott időpontban legyenek elküldve. Nem szükséges hozzá {delorean}."
+msgstr "Teljes Markdown-támogatás az üzenetekben"
 
 #. Compact UI label used in the home-page messaging feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.messaging.features.organised_channels_for_communities
@@ -199,25 +132,25 @@ msgstr "Rendszerezett csatornák közösségeknek"
 #: fluxer_marketing/generated:app.messaging.features.private_dms_and_group_chats
 msgctxt "app.messaging.features.private_dms_and_group_chats"
 msgid "Private DMs and group chats"
-msgstr "Privát DM-ek és csoportos DM-ek"
+msgstr "Privát DM-ek és csoportos csevegések"
 
 #. Body copy used in the home-page messaging feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.messaging.features.save_media
 msgctxt "app.messaging.features.save_media"
 msgid "Save images, videos, GIFs, and audio"
-msgstr "Képek, videók, GIF-ek és hangok mentése"
+msgstr "Képek, videók, GIF-ek és hangfájlok mentése"
 
 #. Compact UI label used in the home-page messaging feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.messaging.features.search.filter_options
 msgctxt "app.messaging.features.search.filter_options"
-msgid "Filter by users, dates, and more"
-msgstr "Szűrés felhasználók, dátumok és más szempontok szerint"
+msgid "Filter search by author or date"
+msgstr "Keresés szűrése szerző vagy dátum szerint"
 
 #. Body copy used in the home-page messaging feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.messaging.features.search.find_old_messages
 msgctxt "app.messaging.features.search.find_old_messages"
-msgid "Find old messages or jump between communities and channels in seconds."
-msgstr "Keress régi üzeneteket, vagy válts közösségek és csatornák között másodpercek alatt."
+msgid "Find old messages or jump between communities and channels from the same search box."
+msgstr "Keress régi üzeneteket, vagy válts közösségek és csatornák között – mindezt ugyanabból a keresőmezőből."
 
 #. Short UI label or heading used in the home-page messaging feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.messaging.features.search.label
@@ -235,7 +168,7 @@ msgstr "Gyorsváltó gyorsbillentyűkkel"
 #: fluxer_marketing/generated:app.messaging.features.search.search_and_quick_switcher
 msgctxt "app.messaging.features.search.search_and_quick_switcher"
 msgid "Search and quick switcher"
-msgstr "Keresés és gyors váltás"
+msgstr "Keresés és gyorsváltó"
 
 #. Short UI label or heading used in the home-page messaging feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.messaging.title
@@ -247,7 +180,7 @@ msgstr "Üzenetküldés"
 #: fluxer_marketing/generated:app.open.open_fluxer
 msgctxt "app.open.open_fluxer"
 msgid "Open {product_name}"
-msgstr "Nyisd meg a(z) {product_name} alkalmazást"
+msgstr "Nyisd meg a {product_name} alkalmazást"
 
 #. Button or link label used in the main navigation/open-app call to action. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.open.open_web_app
@@ -256,28 +189,16 @@ msgid "Open the web app"
 msgstr "A webalkalmazás megnyitása"
 
 #. Compact UI label used in profile and identity feature copy. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
-#: fluxer_marketing/generated:app.profiles_identity.custom_identity
-msgctxt "app.profiles_identity.custom_identity"
-msgid "Custom identity"
-msgstr "Személyre szabott identitás"
-
-#. Body copy used in profile and identity feature copy. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
-#: fluxer_marketing/generated:app.profiles_identity.customise_per_community
-msgctxt "app.profiles_identity.customise_per_community"
-msgid "Customize your profile differently for each community you're part of."
-msgstr "Testreszabhatod a profilodat minden közösségben, aminek tagja vagy."
-
-#. Compact UI label used in profile and identity feature copy. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.profiles_identity.manage_friends_and_block_users
 msgctxt "app.profiles_identity.manage_friends_and_block_users"
 msgid "Manage friends and block users"
-msgstr "Barátok kezelése és felhasználók kitiltása"
+msgstr "Barátok kezelése és felhasználók letiltása"
 
 #. Compact UI label used in the home-page voice and video feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.voice_and_video.features.mute_controls
 msgctxt "app.voice_and_video.features.mute_controls"
-msgid "Mute, deafen, and camera controls"
-msgstr "Némítás, hang ki/be és kameravezérlők"
+msgid "Mute or deafen yourself and control your camera"
+msgstr "Saját némítás, süketítés és kameravezérlés"
 
 #. Body copy used in the home-page voice and video feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.voice_and_video.features.noise_suppression
@@ -289,44 +210,7 @@ msgstr "Zajszűrés és visszhangszűrés"
 #: fluxer_marketing/generated:app.voice_and_video.features.screen_sharing
 msgctxt "app.voice_and_video.features.screen_sharing"
 msgid "Built-in screen sharing"
-msgstr "Beépített képernyőmegosztó"
-
-#. Body copy used in the home-page voice and video feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
-#: fluxer_marketing/generated:app.voice_and_video.features.stream_4k_60fps
-msgctxt "app.voice_and_video.features.stream_4k_60fps"
-msgid "Stream up to 4K resolution at 60 fps so others can see you in stunning clarity."
-msgstr ""
-"Streamelj akár 4K felbontásban, 60 fps-sel, hogy mások lenyűgöző tisztasággal lássanak téged."
-
-#. Compact UI label used in the home-page voice and video feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
-#: fluxer_marketing/generated:app.voice_and_video.features.up_to_4k_video_quality
-msgctxt "app.voice_and_video.features.up_to_4k_video_quality"
-msgid "Up to 4K video quality"
-msgstr "Akár 4K videóminőség"
-
-#. Body copy used in the home-page voice and video feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
-#: fluxer_marketing/generated:app.voice_and_video.features.video_backgrounds.description
-msgctxt "app.voice_and_video.features.video_backgrounds.description"
-msgid "Store up to 15 video backgrounds for calls. No more Downloads folder scavenger hunts."
-msgstr "Tárolj akár 15 videóhátteret hívásokhoz. Többé nem kell a Letöltések mappában kutatnod."
-
-#. Compact UI label used in the home-page voice and video feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
-#: fluxer_marketing/generated:app.voice_and_video.features.video_quality
-msgctxt "app.voice_and_video.features.video_quality"
-msgid "Video quality"
-msgstr "Videóminőség"
-
-#. Compact UI label used in the home-page voice and video feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
-#: fluxer_marketing/generated:app.voice_and_video.features.video_quality_free
-msgctxt "app.voice_and_video.features.video_quality_free"
-msgid "720p/30fps"
-msgstr "720p/30fps"
-
-#. Compact UI label used in the home-page voice and video feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
-#: fluxer_marketing/generated:app.voice_and_video.features.video_quality_premium
-msgctxt "app.voice_and_video.features.video_quality_premium"
-msgid "Up to 4K/60fps"
-msgstr "Akár 4K/60fps"
+msgstr "Beépített képernyőmegosztás"
 
 #. Body copy used in the home-page voice and video feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.voice_and_video.hop_in_a_call
@@ -339,6 +223,36 @@ msgstr "Hívj fel barátokat, vagy oszd meg a képernyődet a közös munkához.
 msgctxt "app.voice_and_video.title"
 msgid "Voice and video"
 msgstr "Hang és videó"
+
+#. Accessible label for the marketing-site theme control. Keep it short and clear.
+#: fluxer_marketing/generated:appearance.change_theme
+msgctxt "appearance.change_theme"
+msgid "Change theme"
+msgstr "Téma váltása"
+
+#. Compact option label for selecting the marketing site's dark theme.
+#: fluxer_marketing/generated:appearance.dark
+msgctxt "appearance.dark"
+msgid "Dark"
+msgstr "Sötét"
+
+#. Short heading above the marketing-site theme options.
+#: fluxer_marketing/generated:appearance.label
+msgctxt "appearance.label"
+msgid "Appearance"
+msgstr "Megjelenés"
+
+#. Compact option label for selecting the marketing site's light theme.
+#: fluxer_marketing/generated:appearance.light
+msgctxt "appearance.light"
+msgid "Light"
+msgstr "Világos"
+
+#. Compact option label for following the device's light or dark theme setting.
+#: fluxer_marketing/generated:appearance.system
+msgctxt "appearance.system"
+msgid "System"
+msgstr "Rendszer"
 
 #. Short filter label on the blog index. It clears tag filters and shows every blog post.
 #: fluxer_marketing/generated:blog.all_posts
@@ -361,7 +275,7 @@ msgstr "Vissza a bloghoz"
 #. Blog index meta description and intro copy. Keep it concise and editorial, not sales-oriented. Preserve placeholders exactly.
 #: fluxer_marketing/generated:blog.description
 msgctxt "blog.description"
-msgid "Updates, roadmap notes, and engineering write-ups from the {product_name} team."
+msgid "Updates from the {product_name} team, including roadmap notes and engineering posts."
 msgstr "Frissítések, ütemtervjegyzetek és mérnöki írások a {product_name} csapatától."
 
 #. Short heading for RSS and Atom links on the blog index. Keep it compact.
@@ -382,19 +296,25 @@ msgctxt "blog.filtered_by_tag"
 msgid "Filtered by {tag}"
 msgstr "{tag} szerint szűrve"
 
-#. Blog article title shown in cards, article pages, metadata, and feeds. Keep Fluxer and Discord recognizable as product names. Preserve placeholders exactly.
-#: fluxer_marketing/generated:blog.post.how_i_built_fluxer.title
-msgctxt "blog.post.how_i_built_fluxer.title"
-msgid "How I built {product_name}, a {discord}-like chat app"
-msgstr "Hogyan építettem fel a {product_name}-t, egy {discord}-szerű csevegőalkalmazást"
+#. Blog article summary shown in cards, article pages, metadata, and feeds. Preserve {product_name} exactly.
+#: fluxer_marketing/generated:blog.post.how_i_built_fluxer_story.description
+msgctxt "blog.post.how_i_built_fluxer_story.description"
+msgid ""
+"The story behind {product_name}, from a high school project to an open source chat app used by hundreds of thousands of people."
+msgstr "A {product_name} története egy középiskolai projekttől a több százezer ember által használt, nyílt forráskódú csevegőalkalmazásig."
+
+#. Blog article title shown in cards, article pages, metadata, and feeds. Preserve {product_name} exactly.
+#: fluxer_marketing/generated:blog.post.how_i_built_fluxer_story.title
+msgctxt "blog.post.how_i_built_fluxer_story.title"
+msgid "How I built {product_name}"
+msgstr "Hogyan építettem meg a {product_name}-t"
 
 #. Blog article summary shown in cards, article pages, metadata, and feeds. Keep Fluxer as a product name, v2 as the release name, and GitHub as the product name. Preserve placeholders exactly.
 #: fluxer_marketing/generated:blog.post.mobile_clients_and_fluxer_v2.description
 msgctxt "blog.post.mobile_clients_and_fluxer_v2.description"
 msgid ""
-"{product_name} v2 is out, mobile clients are open source, self-hosting is improving, and public development is moving back to GitHub."
-msgstr ""
-"A(z) {product_name} v2 megjelent, a mobil kliensek nyílt forráskódúak, az önálló tárhely fejlődik, és a nyilvános fejlesztés visszatér a GitHubra."
+"{product_name} v2 is here with open source mobile apps and easier self-hosting. Contributions are open again too."
+msgstr "Megérkezett a {product_name} v2: nyílt forráskódú mobilalkalmazások és egyszerűbb önálló üzemeltetés. A hozzájárulások is újra nyitva állnak."
 
 #. Blog article title shown in cards, article pages, metadata, and feeds. Keep Fluxer as a product name and v2 as the release name. Preserve placeholders exactly.
 #: fluxer_marketing/generated:blog.post.mobile_clients_and_fluxer_v2.title
@@ -406,9 +326,8 @@ msgstr "Mobil kliensek és {product_name} v2"
 #: fluxer_marketing/generated:blog.post.roadmap_2026.description
 msgctxt "blog.post.roadmap_2026.description"
 msgid ""
-"The current 2026 roadmap for {product_name}: canary, mobile, self-hosting, federation, voice and video, and the backend reliability work behind it."
-msgstr ""
-"A {product_name} aktuális 2026-os ütemterve: canary, mobil, saját hosztolás, föderáció, hang és videó, valamint az ezek mögötti backend-megbízhatósági munka."
+"The 2026 roadmap for {product_name}: self-hosting, localization, federation, public publishing, integrations, private conversations, and creator payments."
+msgstr "A {product_name} 2026-os ütemterve: önálló üzemeltetés, honosítás, föderáció, nyilvános publikálás, integrációk, privát beszélgetések és alkotói kifizetések."
 
 #. Blog article title shown in cards, article pages, metadata, and feeds. Refers to Fluxer's 2026 product roadmap.
 #: fluxer_marketing/generated:blog.post.roadmap_2026.title
@@ -427,12 +346,6 @@ msgstr "Próbálj meg másik keresőkifejezést, vagy töröld az aktuális szű
 msgctxt "blog.no_results.title"
 msgid "No posts found"
 msgstr "Nem található bejegyzés"
-
-#. Short metadata label on a blog article page. It precedes the article publication date.
-#: fluxer_marketing/generated:blog.published
-msgctxt "blog.published"
-msgid "Published"
-msgstr "Közzétéve"
 
 #. Call-to-action label on blog post cards. Keep it concise and neutral.
 #: fluxer_marketing/generated:blog.read_article
@@ -485,14 +398,8 @@ msgstr "Címkék"
 #. Blog index title and meta title. Keep the product name and blog label recognizable. Preserve placeholders exactly.
 #: fluxer_marketing/generated:blog.title
 msgctxt "blog.title"
-msgid "{product_name} Blog"
+msgid "{product_name} blog"
 msgstr "{product_name} blog"
-
-#. Short metadata label on a blog article page. It precedes the article update date.
-#: fluxer_marketing/generated:blog.updated
-msgctxt "blog.updated"
-msgid "Updated"
-msgstr "Frissítve"
 
 #. Compact UI label for company/resource navigation or footer groupings. Keep labels short and recognizable for a marketing website.
 #: fluxer_marketing/generated:company_and_resources.blog
@@ -500,24 +407,17 @@ msgctxt "company_and_resources.blog"
 msgid "Blog"
 msgstr "Blog"
 
-#. Back-link label from an individual job page to the careers overview. Keep it short and do not imply active hiring.
-#: fluxer_marketing/generated:company_and_resources.careers.all_open_positions
-msgctxt "company_and_resources.careers.all_open_positions"
-msgid "Future roles"
-msgstr "Minden jövőbeli pozíció"
-
 #. Compact UI label on the careers and future roles pages. Use clear hiring language, avoid implying that roles are currently open unless the source says so, and preserve placeholders exactly.
 #: fluxer_marketing/generated:company_and_resources.careers.careers_at_fluxer
 msgctxt "company_and_resources.careers.careers_at_fluxer"
 msgid "Careers at {product_name}"
 msgstr "Karrier a {product_name}-nél"
 
-#. Careers hero description. Keep it plain and informational; do not turn it into an application prompt or imply active hiring.
-#: fluxer_marketing/generated:company_and_resources.careers.hero_description
-msgctxt "company_and_resources.careers.hero_description"
-msgid "We are not hiring right now. These pages are notes on roles we may open later."
-msgstr ""
-"Jelenleg nem veszünk fel új embereket. Ezek az oldalak olyan szerepeket írnak le, amelyeket később megnyithatunk."
+#. Careers page notice. Keep it plain and explicit that no roles are currently open.
+#: fluxer_marketing/generated:company_and_resources.careers.not_hiring_notice
+msgctxt "company_and_resources.careers.not_hiring_notice"
+msgid "We are not hiring. Any open role will be listed on this page, so check back later."
+msgstr "Jelenleg nem toborzunk. Minden megnyíló pozíciót ezen az oldalon hirdetünk meg, ezért nézz vissza később."
 
 #. Short UI label or heading on the careers and future roles pages. Use clear hiring language, avoid implying that roles are currently open unless the source says so, and preserve placeholders exactly.
 #: fluxer_marketing/generated:company_and_resources.careers.label
@@ -525,29 +425,11 @@ msgctxt "company_and_resources.careers.label"
 msgid "Careers"
 msgstr "Karrier"
 
-#. Small notice shown above future-role listings and on job pages. Be explicit that the roles are not open; avoid application or recruiting language.
-#: fluxer_marketing/generated:company_and_resources.careers.not_currently_open_notice
-msgctxt "company_and_resources.careers.not_currently_open_notice"
-msgid "These are reference pages, not active job openings."
-msgstr "Ezek tájékoztató oldalak, nem aktív álláshirdetések."
-
-#. Button or link label on the careers and future roles pages. Use clear hiring language, avoid implying that roles are currently open unless the source says so, and preserve placeholders exactly.
-#: fluxer_marketing/generated:company_and_resources.careers.open_positions
-msgctxt "company_and_resources.careers.open_positions"
-msgid "Future roles"
-msgstr "Jövőbeli pozíciók"
-
-#. Body copy under the careers page role-list heading. Keep it concise and informational; do not invite applications.
-#: fluxer_marketing/generated:company_and_resources.careers.open_positions_description
-msgctxt "company_and_resources.careers.open_positions_description"
-msgid "A short list of work we may hire for later."
-msgstr "Rövid lista olyan munkákról, amelyekre később felvehetünk embereket."
-
-#. Short UI label or heading on the careers and future roles pages. Use clear hiring language, avoid implying that roles are currently open unless the source says so, and preserve placeholders exactly.
-#: fluxer_marketing/generated:company_and_resources.careers.posted
-msgctxt "company_and_resources.careers.posted"
-msgid "Listed"
-msgstr "Listázva"
+#. Short status label on the careers page. Be explicit that no roles are currently open.
+#: fluxer_marketing/generated:company_and_resources.careers.no_open_roles
+msgctxt "company_and_resources.careers.no_open_roles"
+msgid "No open roles"
+msgstr "Nincs nyitott pozíció"
 
 #. Compact UI label for company/resource navigation or footer groupings. Keep labels short and recognizable for a marketing website.
 #: fluxer_marketing/generated:company_and_resources.company
@@ -588,15 +470,14 @@ msgstr "Súgóközpont"
 #. Body copy for help-center links or descriptions in marketing navigation and resource sections. Preserve {product_name} exactly; keep it service-oriented and concise. Preserve placeholders exactly.
 #: fluxer_marketing/generated:company_and_resources.help.help_center_description
 msgctxt "company_and_resources.help.help_center_description"
-msgid "Find answers to common questions about your account, privacy, and using {product_name}."
-msgstr ""
-"Válaszokat találsz a fiókoddal, adatvédelemmel és a {product_name} használatával kapcsolatos gyakori kérdésekre."
+msgid "Find answers about your account and privacy, or get help using {product_name}."
+msgstr "Találj választ a fiókoddal és az adatvédelemmel kapcsolatos kérdésekre, vagy kérj segítséget a {product_name} használatához."
 
-#. Short UI label or heading for help-center links or descriptions in marketing navigation and resource sections. Keep it service-oriented and concise.
-#: fluxer_marketing/generated:company_and_resources.help.label
-msgctxt "company_and_resources.help.label"
-msgid "Help"
-msgstr "Segítség"
+#. Compact heading for the product links in marketing navigation. Preserve {product_name} exactly.
+#: fluxer_marketing/generated:company_and_resources.fluxer
+msgctxt "company_and_resources.fluxer"
+msgid "{product_name}"
+msgstr "{product_name}"
 
 #. Placeholder text for help-center links or descriptions in marketing navigation and resource sections. Keep it service-oriented and concise.
 #: fluxer_marketing/generated:company_and_resources.help.search_placeholder
@@ -609,12 +490,6 @@ msgstr "Súgócikkek keresése…"
 msgctxt "company_and_resources.help.all_articles"
 msgid "All help articles"
 msgstr "Összes súgócikk"
-
-#. Short label on the help center for a list of support articles. Keep it concise.
-#: fluxer_marketing/generated:company_and_resources.help.articles
-msgctxt "company_and_resources.help.articles"
-msgid "Articles"
-msgstr "Cikkek"
 
 #. Link label shown above help articles. It returns users to the help center home page.
 #: fluxer_marketing/generated:company_and_resources.help.back_to_help_center
@@ -677,54 +552,23 @@ msgid "Press contact"
 msgstr "Sajtókapcsolat"
 
 #. Compact UI label for company/resource navigation or footer groupings. Keep labels short and recognizable for a marketing website.
-#: fluxer_marketing/generated:company_and_resources.product
-msgctxt "company_and_resources.product"
-msgid "Product"
-msgstr "Termék"
-
-#. Compact UI label for company/resource navigation or footer groupings. Keep labels short and recognizable for a marketing website.
 #: fluxer_marketing/generated:company_and_resources.resources
 msgctxt "company_and_resources.resources"
 msgid "Resources"
 msgstr "Források"
 
-#. Compact UI label in the open-source contribution/get-involved section. Keep the tone welcoming and concrete, and preserve email placeholders exactly.
-#: fluxer_marketing/generated:company_and_resources.source_and_contribution.code_issues_docs_reviews
-msgctxt "company_and_resources.source_and_contribution.code_issues_docs_reviews"
-msgid "Code, issues, docs, and reviews"
-msgstr "Kód, hibák, dokumentáció és kódellenőrzések"
-
-#. Compact UI label in the open-source contribution/get-involved section. Keep the tone welcoming and concrete, and preserve email placeholders exactly.
-#: fluxer_marketing/generated:company_and_resources.source_and_contribution.contribute_on_github
-msgctxt "company_and_resources.source_and_contribution.contribute_on_github"
-msgid "Contribute on {github}"
-msgstr "Közreműködés a {github} oldalon"
-
-#. Body copy in the open-source contribution/get-involved section. Keep the tone welcoming and concrete, and preserve email placeholders exactly.
-#: fluxer_marketing/generated:company_and_resources.source_and_contribution.fluxer_built_in_open
-msgctxt "company_and_resources.source_and_contribution.fluxer_built_in_open"
-msgid "{product_name} is built in the open. Pick the path that fits how you like to help."
-msgstr "A {product_name} nyíltan épül. Válaszd ki a neked megfelelő módot, amellyel segíthetsz."
-
-#. Button or link label in the open-source contribution/get-involved section. Keep the tone welcoming and concrete, and preserve email placeholders exactly.
-#: fluxer_marketing/generated:company_and_resources.source_and_contribution.get_involved
-msgctxt "company_and_resources.source_and_contribution.get_involved"
-msgid "Get involved"
-msgstr "Kapcsolódj be"
-
-#. Compact UI label in the open-source contribution/get-involved section. Keep the tone welcoming and concrete, and preserve email placeholders exactly.
+#. Compact UI label for links to the product source code. Keep the label short and recognizable.
 #: fluxer_marketing/generated:company_and_resources.source_and_contribution.source_code
 msgctxt "company_and_resources.source_and_contribution.source_code"
 msgid "Source code"
 msgstr "Forráskód"
 
-#. Body copy in the open-source contribution/get-involved section. Keep the tone welcoming and concrete, and preserve email placeholders exactly.
-#: fluxer_marketing/generated:company_and_resources.source_and_contribution.translation.llm_translation_note
-msgctxt "company_and_resources.source_and_contribution.translation.llm_translation_note"
+#. Body copy in the locale picker inviting translation contributions through Weblate. Preserve the {weblate} and {product_name} placeholders exactly.
+#: fluxer_marketing/generated:company_and_resources.source_and_contribution.translation.weblate_note
+msgctxt "company_and_resources.source_and_contribution.translation.weblate_note"
 msgid ""
-"All translations are currently LLM-generated with minimal human revision. We'd love to get real people to help us localize {product_name} into your language. To do so, email {l10n_email} and we'll be happy to accept your contributions."
-msgstr ""
-"Minden fordítás jelenleg LLM-generált, minimális emberi ellenőrzéssel. Szeretnénk, ha valódi emberek segítenének nekünk a {product_name} lokalizálásában a nyelvedre. Ehhez küldj egy e-mailt a {l10n_email} címre, és örömmel fogadjuk a hozzájárulásaidat."
+"A translation should sound natural to someone who speaks the language. Correct a phrase or start a new locale on {weblate}, and we will include it in {product_name}."
+msgstr "Egy fordításnak természetesen kell hangoznia annak, aki beszéli az adott nyelvet. Javíts egy kifejezést vagy indíts új nyelvet a {weblate} oldalon, mi pedig beépítjük a {product_name}-be."
 
 #. Department or policy category label on content pages. Translate as a compact noun phrase, not as a sentence.
 #: fluxer_marketing/generated:content.labels.community
@@ -732,145 +576,31 @@ msgctxt "content.labels.community"
 msgid "Community"
 msgstr "Közösség"
 
-#. Department label for job listings. Translate as the software/product engineering function.
-#: fluxer_marketing/generated:content.labels.engineering
-msgctxt "content.labels.engineering"
-msgid "Engineering"
-msgstr "Mérnökség"
-
-#. Employment type label shown on careers pages. Keep it short and conventional for job listings.
-#: fluxer_marketing/generated:content.labels.full_time
-msgctxt "content.labels.full_time"
-msgid "Full-time"
-msgstr "Teljes munkaidő"
-
 #. Department or policy category label on content pages. Translate as legal/compliance, not legality in general.
 #: fluxer_marketing/generated:content.labels.legal
 msgctxt "content.labels.legal"
 msgid "Legal"
 msgstr "Jogi"
 
-#. Workplace location label for job listings. Means the role can be performed remotely.
-#: fluxer_marketing/generated:content.labels.remote
-msgctxt "content.labels.remote"
-msgid "Remote"
-msgstr "Távoli"
-
-#. Policy category label for security and bug-bounty content. Translate as information security.
+#. Policy category label for security reporting content. Translate as information security.
 #: fluxer_marketing/generated:content.labels.security
 msgctxt "content.labels.security"
 msgid "Security"
 msgstr "Biztonság"
 
-#. Department label for customer support job listings. Translate as user/customer support.
-#: fluxer_marketing/generated:content.labels.support
-msgctxt "content.labels.support"
-msgid "Support"
-msgstr "Ügyféltámogatás"
-
-#. Department label for moderation/safety jobs. Keep the ampersand only if natural in the locale.
-#: fluxer_marketing/generated:content.labels.trust_and_safety
-msgctxt "content.labels.trust_and_safety"
-msgid "Trust & Safety"
-msgstr "Bizalom és biztonság"
-
-#. Short job-card summary for the Community Lead role. Keep it warm, concrete, and concise. Preserve placeholders exactly.
-#: fluxer_marketing/generated:content.jobs.community_lead.description
-msgctxt "content.jobs.community_lead.description"
-msgid ""
-"Look after our public voice and the communities around {product_name}. Talk with people, share what's new, and bring what you hear back to the team."
-msgstr ""
-"Gondozd a nyilvános hangunkat és a {product_name} körüli közösségeket. Beszélgess az emberekkel, oszd meg az újdonságokat, és hozd vissza a visszajelzéseket a csapatnak."
-
-#. Job title shown on careers pages. Translate as a professional role title.
-#: fluxer_marketing/generated:content.jobs.community_lead.title
-msgctxt "content.jobs.community_lead.title"
-msgid "Community Lead"
-msgstr "Közösségi vezető"
-
-#. Short job-card summary for the Platform Engineer role. Keep infrastructure terminology precise. Preserve placeholders exactly.
-#: fluxer_marketing/generated:content.jobs.platform_engineer.description
-msgctxt "content.jobs.platform_engineer.description"
-msgid ""
-"Look after the systems {product_name} runs on: pipelines, databases, dashboards, on-call, and the quiet machinery that keeps everything humming."
-msgstr ""
-"Gondoskodj a {product_name} rendszereiről: pipeline-ok, adatbázisok, dashboardok, ügyelet és minden csendes gépezet, ami stabilan tartja a szolgáltatást."
-
-#. Job title shown on careers pages. Translate as a professional infrastructure/platform engineering role title.
-#: fluxer_marketing/generated:content.jobs.platform_engineer.title
-msgctxt "content.jobs.platform_engineer.title"
-msgid "Platform Engineer"
-msgstr "Platformmérnök"
-
-#. Short job-card summary for the Privacy & Legal Counsel role. Keep legal acronyms unchanged. Preserve placeholders exactly.
-#: fluxer_marketing/generated:content.jobs.privacy_and_legal_counsel.description
-msgctxt "content.jobs.privacy_and_legal_counsel.description"
-msgid ""
-"Handle {product_name}'s legal and privacy side: GDPR, DSA, DMCA, law-enforcement requests, and the policies that go with them."
-msgstr ""
-"Vidd a {product_name} jogi és adatvédelmi oldalát: GDPR, DSA, DMCA, hatósági megkeresések és a hozzájuk tartozó irányelvek."
-
-#. Job title shown on careers pages. Translate as a professional privacy/legal counsel role title.
-#: fluxer_marketing/generated:content.jobs.privacy_and_legal_counsel.title
-msgctxt "content.jobs.privacy_and_legal_counsel.title"
-msgid "Privacy & Legal Counsel"
-msgstr "Adatvédelmi és jogi tanácsadó"
-
-#. Short job-card summary for the Product Engineer role. Keep the approachable product-builder tone. Preserve placeholders exactly.
-#: fluxer_marketing/generated:content.jobs.product_engineer.description
-msgctxt "content.jobs.product_engineer.description"
-msgid ""
-"Build the bits people open {product_name} to use, top to bottom: web, mobile, desktop, and the services behind them."
-msgstr ""
-"Építsd meg a dolgokat, amiket az emberek a {product_name} megnyitásakor használnak, felülről lefelé: web, mobil, asztali alkalmazás és a mögöttes szolgáltatások."
-
-#. Job title shown on careers pages. Translate as a professional product engineering role title.
-#: fluxer_marketing/generated:content.jobs.product_engineer.title
-msgctxt "content.jobs.product_engineer.title"
-msgid "Product Engineer"
-msgstr "Termékmérnök"
-
-#. Short job-card summary for the Support Specialist role. Keep it friendly but professional.
-#: fluxer_marketing/generated:content.jobs.support_specialist.description
-msgctxt "content.jobs.support_specialist.description"
-msgid ""
-"Be the friendly first reply when someone hits a snag. Help users sort things out and bring the rough edges back to the team to fix."
-msgstr ""
-"Légy a barátságos első válasz, amikor valaki elakad. Segíts megoldani a gondokat, és vidd vissza a javítandó éleket a csapatnak."
-
-#. Job title shown on careers pages. Translate as a professional customer/user support role title.
-#: fluxer_marketing/generated:content.jobs.support_specialist.title
-msgctxt "content.jobs.support_specialist.title"
-msgid "Support Specialist"
-msgstr "Támogatási szakértő"
-
-#. Short job-card summary for the Trust & Safety Specialist role. Keep moderation/safety wording fair and calm. Preserve placeholders exactly.
-#: fluxer_marketing/generated:content.jobs.trust_and_safety_specialist.description
-msgctxt "content.jobs.trust_and_safety_specialist.description"
-msgid ""
-"Work through abuse reports, make fair calls, and help shape the policies and tooling that keep {product_name} somewhere people want to be."
-msgstr ""
-"Tekintsd át a visszaélésekkel kapcsolatos jelentéseket, hozz méltányos döntéseket, és segíts alakítani azokat a szabályzatokat és eszközöket, amelyek révén a(z) {product_name} olyan hellyé válik, ahol az emberek szívesen tartózkodnak."
-
-#. Job title shown on careers pages. Translate as a professional moderation/safety operations role title.
-#: fluxer_marketing/generated:content.jobs.trust_and_safety_specialist.title
-msgctxt "content.jobs.trust_and_safety_specialist.title"
-msgid "Trust & Safety Specialist"
-msgstr "Bizalom és biztonság szakértő"
-
 #. Policy page summary for the changelog. Keep policy names recognizable and legally precise.
 #: fluxer_marketing/generated:content.policies.changelog.description
 msgctxt "content.policies.changelog.description"
 msgid ""
-"A record of significant changes to our Terms of Service, Privacy Policy, and Community Guidelines."
+"A record of significant changes to our terms of service, privacy policy, and community guidelines."
 msgstr ""
 "A Felhasználási feltételek, az Adatvédelmi szabályzat és a Közösségi irányelvek fontos módosításainak naplója."
 
 #. Policy page title. Translate as a record of changes to legal/community policies.
 #: fluxer_marketing/generated:content.policies.changelog.title
 msgctxt "content.policies.changelog.title"
-msgid "Policy Changelog"
-msgstr "Irányelv-változások"
+msgid "Policy changelog"
+msgstr "Szabályzatok változásnaplója"
 
 #. Policy page summary for company information. Keep company name and legal framing precise. Preserve placeholders exactly.
 #: fluxer_marketing/generated:content.policies.company_information.description
@@ -883,61 +613,58 @@ msgstr ""
 #. Policy page title for legal company details. Translate as formal company information.
 #: fluxer_marketing/generated:content.policies.company_information.title
 msgctxt "content.policies.company_information.title"
-msgid "Company Information"
+msgid "Company information"
 msgstr "Céginformációk"
 
 #. Policy page summary for community guidelines. Keep safety wording direct and neutral. Preserve placeholders exactly.
 #: fluxer_marketing/generated:content.policies.guidelines.description
 msgctxt "content.policies.guidelines.description"
-msgid "Clear standards for using {product_name}, protecting others, and keeping communities safe."
-msgstr ""
-"Világos szabályok a {product_name} használatához, mások védelméhez és a közösségek biztonságához."
+msgid "The rules for using {product_name} safely and treating other people well."
+msgstr "A {product_name} biztonságos használatának és a másokkal szembeni tisztességes bánásmódnak a szabályai."
 
 #. Policy page title for community rules. Translate as formal community guidelines.
 #: fluxer_marketing/generated:content.policies.guidelines.title
 msgctxt "content.policies.guidelines.title"
-msgid "Community Guidelines"
+msgid "Community guidelines"
 msgstr "Közösségi irányelvek"
 
 #. Policy page summary for the Privacy Policy. Keep data-protection terms legally precise. Preserve placeholders exactly.
 #: fluxer_marketing/generated:content.policies.privacy.description
 msgctxt "content.policies.privacy.description"
 msgid ""
-"How {product_name} handles personal data, what we do not do with it, and the controls and rights you have."
-msgstr ""
-"Hogyan kezeli a {product_name} a személyes adatokat, mit nem teszünk velük, és milyen vezérlők és jogok illetnek meg."
+"How {product_name} handles personal data and what we refuse to do with it. Learn about your controls and rights."
+msgstr "Hogyan kezeli a {product_name} a személyes adatokat, és mit nem vagyunk hajlandók tenni velük. Ismerd meg a beállítási lehetőségeidet és a jogaidat."
 
 #. Policy page title. Translate as a formal privacy policy.
 #: fluxer_marketing/generated:content.policies.privacy.title
 msgctxt "content.policies.privacy.title"
-msgid "Privacy Policy"
+msgid "Privacy policy"
 msgstr "Adatvédelmi szabályzat"
 
-#. Policy page summary for security reporting and bug bounty rules. Keep security and safe-harbor terminology precise.
+#. Policy page summary for security reporting rules. Keep security and safe-harbor terminology precise.
 #: fluxer_marketing/generated:content.policies.security.description
 msgctxt "content.policies.security.description"
-msgid "How to report security issues, what is in scope, and how safe harbor works."
-msgstr ""
-"Hogyan jelents biztonsági hibákat, mi tartozik a hatókörbe, és hogyan működik a kutatói védelem."
+msgid ""
+"How to report security issues and check what is in scope. Read the safe harbor terms before testing."
+msgstr "Hogyan jelenthetsz biztonsági hibákat, és mi tartozik a hatókörbe. Tesztelés előtt olvasd el a biztonságos kikötőre (safe harbor) vonatkozó feltételeket."
 
-#. Policy page title for security vulnerability reporting. Translate as a bug bounty/security reporting page.
+#. Policy page title for security vulnerability reporting.
 #: fluxer_marketing/generated:content.policies.security.title
 msgctxt "content.policies.security.title"
-msgid "Security Bug Bounty"
-msgstr "Biztonsági hibavadász program"
+msgid "Security"
+msgstr "Biztonság"
 
 #. Policy page summary for Terms of Service. Keep the legal agreement framing clear and neutral. Preserve placeholders exactly.
 #: fluxer_marketing/generated:content.policies.terms.description
 msgctxt "content.policies.terms.description"
 msgid ""
-"The agreement between you and {product_name}, written to explain your rights and responsibilities clearly."
-msgstr ""
-"A megállapodás közted és a {product_name} között, világosan leírva a jogaidat és a felelősségeidet."
+"The agreement between you and {product_name}, including account, content, payment, moderation, and legal terms."
+msgstr "A közted és a {product_name} közötti megállapodás, amely kitér a fiókra, a tartalomra, a fizetésre, a moderálásra és a jogi feltételekre."
 
 #. Policy page title. Translate as formal terms of service.
 #: fluxer_marketing/generated:content.policies.terms.title
 msgctxt "content.policies.terms.title"
-msgid "Terms of Service"
+msgid "Terms of service"
 msgstr "Felhasználási feltételek"
 
 #. Help center category title for premium/Plutonium-related articles. Keep as a short noun phrase. Preserve placeholders exactly.
@@ -949,8 +676,8 @@ msgstr "{premium_tier_full_name}"
 #. Help center category summary shown under the Premium heading. Translate as a short descriptive sentence. Preserve placeholders exactly.
 #: fluxer_marketing/generated:content.help.category.premium.description
 msgctxt "content.help.category.premium.description"
-msgid "Information about our {premium_tier_full_name} offering."
-msgstr "Információ a {premium_tier_full_name} kínálatunkról."
+msgid "See what {premium_tier_full_name} includes."
+msgstr "Nézd meg, mit tartalmaz a {premium_tier_full_name}."
 
 #. Help center category title for frequently asked questions. Use the locale's standard abbreviation or short phrase.
 #: fluxer_marketing/generated:content.help.category.faqs.title
@@ -961,8 +688,8 @@ msgstr "GYIK"
 #. Help center category summary shown under the FAQs heading. Translate as a short descriptive sentence.
 #: fluxer_marketing/generated:content.help.category.faqs.description
 msgctxt "content.help.category.faqs.description"
-msgid "Answers to frequently asked questions."
-msgstr "Válaszok a gyakran ismételt kérdésekre."
+msgid "Learn how attachment expiry and bug reports work."
+msgstr "Ismerd meg, hogyan működik a mellékletek lejárata és a hibabejelentés."
 
 #. Help center category title for account-management articles. Keep as a short noun phrase.
 #: fluxer_marketing/generated:content.help.category.account.title
@@ -973,20 +700,20 @@ msgstr "Fiók"
 #. Help center category summary shown under the Account heading. Translate as a short descriptive sentence.
 #: fluxer_marketing/generated:content.help.category.account.description
 msgctxt "content.help.category.account.description"
-msgid "Managing personal account details."
-msgstr "Személyes fiókadatok kezelése."
+msgid "Manage account details, exports, and deletion."
+msgstr "Fiókadatok, exportálás és fióktörlés kezelése."
 
 #. Help center category title for legal and policy articles. Translate as a compact heading; keep the ampersand only if natural.
 #: fluxer_marketing/generated:content.help.category.legal_policy.title
 msgctxt "content.help.category.legal_policy.title"
-msgid "Legal & Policy"
+msgid "Legal and policy guides"
 msgstr "Jogi tudnivalók és szabályzatok"
 
 #. Help center category summary shown under the Legal & Policy heading. Translate as a short descriptive sentence; the brand 'Fluxer' stays untranslated. Preserve placeholders exactly.
 #: fluxer_marketing/generated:content.help.category.legal_policy.description
 msgctxt "content.help.category.legal_policy.description"
-msgid "View important policies pertaining to {product_name}."
-msgstr "Tekintsd meg a fontos szabályzatokat a(z) {product_name} szolgáltatással kapcsolatban."
+msgid "Read about privacy, safety, copyright, and data handling."
+msgstr "Olvass az adatvédelemről, a biztonságról, a szerzői jogokról és az adatkezelésről."
 
 #. Help article title for a time-limited Plutonium promotion. Keep month/year and 'Plutonium' as proper names. Preserve placeholders exactly.
 #: fluxer_marketing/generated:content.help.article.plutonium_promotion_march_2026.title
@@ -1005,30 +732,28 @@ msgstr ""
 #. Help article title asking about the retired Fluxer Visionary tier. Keep 'Fluxer Visionary' as a proper name. Preserve placeholders exactly.
 #: fluxer_marketing/generated:content.help.article.visionary.title
 msgctxt "content.help.article.visionary.title"
-msgid "What was {visionary_tier_full_name}?"
-msgstr "Mi volt a {visionary_tier_full_name}?"
+msgid "The former {visionary_tier_full_name} tier"
+msgstr "A korábbi {visionary_tier_full_name} csomag"
 
 #. Help article summary about the retired Fluxer Visionary lifetime tier. Keep 'Fluxer Visionary' and 'Plutonium' as proper names. Preserve placeholders exactly.
 #: fluxer_marketing/generated:content.help.article.visionary.description
 msgctxt "content.help.article.visionary.description"
 msgid ""
-"{visionary_tier_full_name} was a limited lifetime {premium_tier_name} offering that sold out in February 2026. Learn about the numbered badge and what {visionary_tier_name} includes."
-msgstr ""
-"A {visionary_tier_full_name} egy korlátozott élethosszig tartó {premium_tier_name}-ajánlat volt, amely 2026 februárjában elfogyott. Tudj meg többet a számozott jelvényről és arról, mit tartalmaz a {visionary_tier_name}."
+"What the sold out {visionary_tier_full_name} offer includes and how its account benefits work."
+msgstr "Mit tartalmaz az elfogyott {visionary_tier_full_name} ajánlat, és hogyan működnek a hozzá tartozó fiókelőnyök."
 
 #. Help article title listing the three programmes that showcase a community on Fluxer. Keep 'Partner', 'Verified', and 'Discovery' as programme names.
 #: fluxer_marketing/generated:content.help.article.community_programmes.title
 msgctxt "content.help.article.community_programmes.title"
 msgid "Partner, Verified, and Discovery programmes"
-msgstr "A Partner, Ellenőrzés és Felfedező programok"
+msgstr "Partner, Verified és Discovery programok"
 
 #. Help article summary about the Partner, Verified, and Discovery programmes. Preserve placeholders exactly.
 #: fluxer_marketing/generated:content.help.article.community_programmes.description
 msgctxt "content.help.article.community_programmes.description"
 msgid ""
 "The three ways to get your community showcased on {product_name}, what each programme requires, and how to apply."
-msgstr ""
-"Három módja annak, hogy kiemeld a közösségedet a(z) {product_name} felületén, mit vár el az egyes programok, és hogyan jelentkezhetsz."
+msgstr "Három mód arra, hogy a közösséged kiemelt helyre kerüljön a {product_name} felületén, mit várnak el az egyes programok, és hogyan jelentkezhetsz."
 
 #. Help article title about how file attachments eventually expire. Keep it as an explanatory phrase.
 #: fluxer_marketing/generated:content.help.article.attachment_expiry.title
@@ -1040,9 +765,8 @@ msgstr "Hogyan működik a mellékletek lejárata"
 #: fluxer_marketing/generated:content.help.article.attachment_expiry.description
 msgctxt "content.help.article.attachment_expiry.description"
 msgid ""
-"How we set attachment expiry, how access can extend it, and what to do before a file is removed."
-msgstr ""
-"Hogyan állítjuk be a mellékletek lejáratát, hogyan hosszabbíthatja meg a hozzáférés, és mit tegyél, mielőtt a fájlt eltávolítjuk."
+"See when attachments expire, what extends their availability, and how to keep an important file."
+msgstr "Mikor járnak le a mellékletek, mi hosszabbítja meg az elérhetőségüket, és hogyan őrizhetsz meg egy fontos fájlt."
 
 #. Help article title about filing bug reports.
 #: fluxer_marketing/generated:content.help.article.report_bug.title
@@ -1053,10 +777,8 @@ msgstr "Hiba jelentése"
 #. Help article summary about filing bug reports. Keep 'GitHub' untranslated. Preserve placeholders exactly.
 #: fluxer_marketing/generated:content.help.article.report_bug.description
 msgctxt "content.help.article.report_bug.description"
-msgid ""
-"How to file clear, high-quality bug reports for the {product_name} support team or our {github}."
-msgstr ""
-"Hogyan készíts világos, jó minőségű hibajelentéseket a(z) {product_name} támogatási csapatának vagy a(z) {github} számára."
+msgid "How to submit a clear bug report to the {product_name} team or through {github}."
+msgstr "Hogyan küldj világos hibajelentést a {product_name} csapatának vagy a {github} felületén keresztül."
 
 #. Help article title about updating a user's date of birth via support.
 #: fluxer_marketing/generated:content.help.article.change_date_of_birth.title
@@ -1067,9 +789,8 @@ msgstr "Hogyan módosíthatod a születési dátumodat"
 #. Help article summary about updating date of birth via support. Keep 'Fluxer' as a brand name. Preserve placeholders exactly.
 #: fluxer_marketing/generated:content.help.article.change_date_of_birth.description
 msgctxt "content.help.article.change_date_of_birth.description"
-msgid "How to update your date of birth on {product_name} by contacting our support team."
-msgstr ""
-"A születési dátumod frissítése a(z) {product_name} rendszerben az ügyfélszolgálatunk megkeresésével."
+msgid "How to ask the {product_name} support team to correct your date of birth."
+msgstr "Hogyan kérheted a {product_name} ügyfélszolgálatától a születési dátumod javítását."
 
 #. Help article title about requesting deletion of user data.
 #: fluxer_marketing/generated:content.help.article.data_deletion.title
@@ -1080,8 +801,8 @@ msgstr "Adatok törlésének kérése"
 #. Help article summary about deleting user data. Keep 'Fluxer' as a brand name. Preserve placeholders exactly.
 #: fluxer_marketing/generated:content.help.article.data_deletion.description
 msgctxt "content.help.article.data_deletion.description"
-msgid "How to delete your messages and other data from {product_name}."
-msgstr "Hogyan törölheted az üzeneteidet és más adataidat a(z) {product_name} szolgáltatásból."
+msgid "How to delete messages and request removal of other account data."
+msgstr "Hogyan törölheted az üzeneteket, és kérheted más fiókadataid eltávolítását."
 
 #. Help article title about exporting account data.
 #: fluxer_marketing/generated:content.help.article.data_export.title
@@ -1092,8 +813,9 @@ msgstr "Fiókadatok exportálása"
 #. Help article summary about exporting Fluxer account data. Keep 'Fluxer' as a brand name. Preserve placeholders exactly.
 #: fluxer_marketing/generated:content.help.article.data_export.description
 msgctxt "content.help.article.data_export.description"
-msgid "How to request and download a complete export of your {product_name} data."
-msgstr "Hogyan kérheted le és töltheted le a {product_name}-adataid teljes exportját."
+msgid ""
+"How to request a machine-readable export of your {product_name} account data and handle it safely."
+msgstr "Hogyan kérhetsz géppel olvasható exportot a {product_name}-fiókod adatairól, és hogyan kezelheted biztonságosan."
 
 #. Help article title about deleting or disabling an account.
 #: fluxer_marketing/generated:content.help.article.delete_account.title
@@ -1105,7 +827,7 @@ msgstr "Hogyan törölheted vagy tilthatod le a fiókodat"
 #: fluxer_marketing/generated:content.help.article.delete_account.description
 msgctxt "content.help.article.delete_account.description"
 msgid ""
-"How to permanently delete or temporarily disable your {product_name} account, and what happens to your data."
+"How to delete or temporarily disable your {product_name} account and what happens to your data."
 msgstr ""
 "Hogyan törölheted véglegesen vagy tilthatod le ideiglenesen a {product_name}-fiókodat, és mi történik az adataiddal."
 
@@ -1119,9 +841,8 @@ msgstr "Minimális életkori követelmények"
 #: fluxer_marketing/generated:content.help.article.minimum_age.description
 msgctxt "content.help.article.minimum_age.description"
 msgid ""
-"The minimum age to use {product_name} by country, how age is determined, and what happens if an account is suspected of being underage."
-msgstr ""
-"A {product_name} használatához szükséges minimális életkor országonként, hogyan állapítjuk meg az életkort, és mi történik, ha gyanús, hogy egy fiók kiskorúhoz tartozik."
+"Who can use {product_name} under our age rules and what to do if we get your eligibility wrong."
+msgstr "Ki használhatja a {product_name} szolgáltatást az életkori szabályaink szerint, és mit tehetsz, ha tévesen ítéljük meg a jogosultságodat."
 
 #. Help article title about the copyright/IP complaint process. Keep legal-sounding phrasing.
 #: fluxer_marketing/generated:content.help.article.copyright.title
@@ -1132,9 +853,8 @@ msgstr "Szerzői jogi és szellemi tulajdonjogi panaszokkal kapcsolatos szabály
 #. Help article summary about copyright/IP complaint reporting. Keep 'Fluxer' as a brand name. Preserve placeholders exactly.
 #: fluxer_marketing/generated:content.help.article.copyright.description
 msgctxt "content.help.article.copyright.description"
-msgid "How to report suspected copyright or intellectual property violations on {product_name}."
-msgstr ""
-"Hogyan jelentsd a szerzői jogok vagy szellemi tulajdon megsértésének gyanúját a(z) {product_name} szolgáltatásban."
+msgid "How to report suspected copyright or intellectual property infringement on {product_name}."
+msgstr "Hogyan jelentsd a szerzői jogok vagy a szellemi tulajdon megsértésének gyanúját a {product_name} szolgáltatásban."
 
 #. Help article title about data retention durations. Keep 'Fluxer' as a brand name. Preserve placeholders exactly.
 #: fluxer_marketing/generated:content.help.article.data_retention.title
@@ -1145,8 +865,8 @@ msgstr "Meddig tárolja a {product_name} az adataidat"
 #. Help article summary about retention durations and reasoning. Keep 'Fluxer' as a brand name. Preserve placeholders exactly.
 #: fluxer_marketing/generated:content.help.article.data_retention.description
 msgctxt "content.help.article.data_retention.description"
-msgid "How long {product_name} retains different types of information and why we keep it."
-msgstr "Meddig őrzi a {product_name} a különböző típusú adatokat, és miért tartjuk meg őket."
+msgid "How long {product_name} keeps account information, content, logs, and legal records."
+msgstr "Meddig őrzi meg a {product_name} a fiókadatokat, a tartalmakat, a naplókat és a jogi nyilvántartásokat."
 
 #. Help article title about EU Digital Services Act dispute options. Keep 'EU DSA' as an acronym.
 #: fluxer_marketing/generated:content.help.article.dsa_dispute_resolution.title
@@ -1158,9 +878,8 @@ msgstr "EU DSA szerinti vitarendezési lehetőségek"
 #: fluxer_marketing/generated:content.help.article.dsa_dispute_resolution.description
 msgctxt "content.help.article.dsa_dispute_resolution.description"
 msgid ""
-"How EU users covered by the Digital Services Act can exercise their rights on {product_name}."
-msgstr ""
-"Az EU-s felhasználók, akiket a digitális szolgáltatásokról szóló törvény (Digital Services Act) érint, hogyan érvényesíthetik jogaikat a(z) {product_name} platformon."
+"How users covered by the Digital Services Act can report illegal content and challenge eligible decisions."
+msgstr "Hogyan jelenthetik be a jogellenes tartalmakat a digitális szolgáltatásokról szóló rendelet hatálya alá tartozó felhasználók, és hogyan támadhatják meg az érintett döntéseket."
 
 #. Help article title about region-specific access restrictions.
 #: fluxer_marketing/generated:content.help.article.regional_restrictions.title
@@ -1172,21 +891,14 @@ msgstr "Regionális korlátozások"
 #: fluxer_marketing/generated:content.help.article.regional_restrictions.description
 msgctxt "content.help.article.regional_restrictions.description"
 msgid ""
-"How regional age verification laws affect your access to {product_name}, which regions are currently affected, and what restrictions apply."
-msgstr ""
-"Hogyan befolyásolják a regionális életkor-ellenőrzési törvények a(z) {product_name} elérését, mely régiókat érintenek jelenleg, és milyen korlátozások vonatkoznak."
-
-#. Accessible label on the small icon button next to help/policy article headings; clicking copies a deep link to that section.
-#: fluxer_marketing/generated:content.help.copy_link_to_section
-msgctxt "content.help.copy_link_to_section"
-msgid "Copy link to section"
-msgstr "Hivatkozás másolása a szakaszra"
+"The regional access and age restricted content rules that {product_name} currently applies."
+msgstr "A {product_name} által jelenleg alkalmazott regionális hozzáférési és korhatáros tartalomra vonatkozó szabályok."
 
 #. Compact UI label on donation pages and donation support cards. Keep the tone appreciative without being pushy; preserve placeholders exactly.
 #: fluxer_marketing/generated:donations.business
 msgctxt "donations.business"
-msgid "Business"
-msgstr "Vállalkozás"
+msgid "Organization"
+msgstr "Szervezet"
 
 #. Button or link label on donation pages and donation support cards. Keep the tone appreciative without being pushy; preserve placeholders exactly.
 #: fluxer_marketing/generated:donations.donate.action
@@ -1204,33 +916,32 @@ msgstr "Támogasd a {product_name}-et"
 #: fluxer_marketing/generated:donations.errors.active_subscription_exists
 msgctxt "donations.errors.active_subscription_exists"
 msgid ""
-"You already have an active recurring donation. To start a different recurring donation, please cancel your current one first using the customer portal. You can make a one-time donation instead."
-msgstr ""
-"Már van aktív ismétlődő adományod. Másik ismétlődő adomány elindításához először mondd le a jelenlegit az ügyfélportálon. Helyette adományozhatsz egyszeri adományt."
+"You already have an active recurring donation. Cancel it in the donor portal to start a different one, or make a one-time donation instead."
+msgstr "Már van aktív ismétlődő adományod. Másik indításához mondd le a támogatói portálon, vagy adományozz inkább egyszeri alkalommal."
 
 #. Body copy in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
 #: fluxer_marketing/generated:donations.errors.generic
 msgctxt "donations.errors.generic"
-msgid "Something went wrong. Please try again."
-msgstr "Hiba történt. Próbáld meg újra."
+msgid "Could not complete the donation request. Try again."
+msgstr "Nem sikerült teljesíteni az adományozási kérést. Próbáld meg újra."
 
 #. Body copy in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
 #: fluxer_marketing/generated:donations.errors.invalid_amount
 msgctxt "donations.errors.invalid_amount"
-msgid "Amount must be between {minimum} and {maximum}"
-msgstr "Az összegnek {minimum} és {maximum} között kell lennie"
+msgid "Amount must be between {minimum} and {maximum}."
+msgstr "Az összegnek {minimum} és {maximum} között kell lennie."
 
 #. Compact UI label in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
 #: fluxer_marketing/generated:donations.errors.invalid_email
 msgctxt "donations.errors.invalid_email"
-msgid "Please enter a valid email address"
-msgstr "Adj meg egy érvényes e-mail címet"
+msgid "Enter a valid email address."
+msgstr "Adj meg egy érvényes e-mail-címet."
 
 #. Compact UI label in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
 #: fluxer_marketing/generated:donations.errors.network
 msgctxt "donations.errors.network"
-msgid "Network error. Please try again."
-msgstr "Hálózati hiba. Próbáld meg újra."
+msgid "Could not reach the donation service. Try again later."
+msgstr "Nem sikerült elérni az adományozási szolgáltatást. Próbáld meg később újra."
 
 #. Compact UI label in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
 #: fluxer_marketing/generated:donations.form.amount
@@ -1292,23 +1003,11 @@ msgctxt "donations.form.or_label"
 msgid "Or"
 msgstr "Vagy"
 
-#. Compact UI label in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
-#: fluxer_marketing/generated:donations.form.processing
-msgctxt "donations.form.processing"
-msgid "Processing…"
-msgstr "Feldolgozás…"
-
 #. Button or link label in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
 #: fluxer_marketing/generated:donations.form.send_link
 msgctxt "donations.form.send_link"
 msgid "Send link"
 msgstr "Link küldése"
-
-#. Compact UI label in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
-#: fluxer_marketing/generated:donations.form.sending
-msgctxt "donations.form.sending"
-msgid "Sending…"
-msgstr "Küldés…"
 
 #. Compact UI label in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
 #: fluxer_marketing/generated:donations.form.yearly
@@ -1326,15 +1025,14 @@ msgstr "Magánszemély"
 #: fluxer_marketing/generated:donations.manage.description
 msgctxt "donations.manage.description"
 msgid ""
-"Enter your email to receive a link to your donor portal, where you can manage subscriptions, download invoices, and view your donation history."
-msgstr ""
-"Add meg e-mail címedet, hogy megkapd a támogatói portálod linkjét, ahol kezelheted előfizetéseidet, letöltheted számláidat és megtekintheted adományozási előzményeidet."
+"Enter your email to receive a link to your donor portal. There you can manage recurring donations and see past payments, including downloadable invoices."
+msgstr "Add meg az e-mail-címedet, és elküldjük a támogatói portálod linkjét. Ott kezelheted az ismétlődő adományaidat, és megnézheted a korábbi befizetéseidet, köztük a letölthető számlákat."
 
 #. Body copy in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
 #: fluxer_marketing/generated:donations.manage.success
 msgctxt "donations.manage.success"
-msgid "If an account exists for that email, you'll receive a management link shortly."
-msgstr "Ha létezik fiók ehhez az e-mail címhez, hamarosan kapsz egy linket a kezeléshez."
+msgid "If an account exists for that email, we will send a management link shortly."
+msgstr "Ha létezik fiók ehhez az e-mail-címhez, hamarosan küldünk egy kezelőlinket."
 
 #. Short UI label or heading in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
 #: fluxer_marketing/generated:donations.manage.title
@@ -1348,23 +1046,11 @@ msgctxt "donations.minimum_donation"
 msgid "Minimum donation: {minimum} in the currency you select"
 msgstr "Minimális adomány: {minimum} a választott pénznemben"
 
-#. Compact UI label on donation pages and donation support cards. Keep the tone appreciative without being pushy; preserve placeholders exactly.
-#: fluxer_marketing/generated:donations.send_one_time_gift
-msgctxt "donations.send_one_time_gift"
-msgid "Send a one-time gift"
-msgstr "Küldj egyszeri adományt"
-
 #. Compact UI label in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
 #: fluxer_marketing/generated:donations.success.back_to_donate
 msgctxt "donations.success.back_to_donate"
 msgid "Back to donate"
 msgstr "Vissza az adományozáshoz"
-
-#. Compact UI label in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
-#: fluxer_marketing/generated:donations.success.description
-msgctxt "donations.success.description"
-msgid "Thank you for your support!"
-msgstr "Köszönjük a támogatásodat!"
 
 #. Body copy in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
 #: fluxer_marketing/generated:donations.success.email_notice
@@ -1377,28 +1063,28 @@ msgstr ""
 #. Body copy in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
 #: fluxer_marketing/generated:donations.success.message
 msgctxt "donations.success.message"
-msgid "Thank you for your donation! We really appreciate your support."
-msgstr "Köszönjük az adományodat. Nagyra értékeljük a támogatásod."
+msgid ""
+"Thank you. Your donation pays for the servers and for the people who build and run {product_name}. It keeps us answerable to the people using it rather than to an investor."
+msgstr "Köszönjük. Az adományod fedezi a szerverek és a {product_name} építéséért és működtetéséért felelős emberek költségeit. Ezáltal a felhasználóknak tartozunk elszámolással, nem pedig egy befektetőnek."
 
 #. Short UI label or heading in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
 #: fluxer_marketing/generated:donations.success.title
 msgctxt "donations.success.title"
-msgid "Thank you!"
+msgid "Thank you"
 msgstr "Köszönjük!"
-
-#. Compact UI label on donation pages and donation support cards. Keep the tone appreciative without being pushy; preserve placeholders exactly.
-#: fluxer_marketing/generated:donations.support_future_development
-msgctxt "donations.support_future_development"
-msgid "Support future development"
-msgstr "Támogasd a jövőbeli fejlesztést"
 
 #. Body copy on donation pages and donation support cards. Keep the tone appreciative without being pushy; preserve placeholders exactly.
 #: fluxer_marketing/generated:donations.support_message
 msgctxt "donations.support_message"
 msgid ""
-"Help us build an independent communication platform. Your donation funds the platform's infrastructure and development."
-msgstr ""
-"Segíts nekünk egy független kommunikációs platform építésében. Adományoddal a platform infrastruktúráját és fejlesztését finanszírozod."
+"Help keep {product_name} independent. Donations pay for hosting and development, and they are the reason nobody else gets a say in what we build."
+msgstr "Segíts, hogy a {product_name} független maradhasson. Az adományok fedezik a tárhelyet és a fejlesztést, és ezek miatt senki másnak nincs beleszólása abba, mit építünk."
+
+#. Label for the editable amount in the Swish payment flow. Preserve the currency-code placeholder {currency} exactly.
+#: fluxer_marketing/generated:donations.swish.amount_label
+msgctxt "donations.swish.amount_label"
+msgid "Amount ({currency})"
+msgstr "Összeg ({currency})"
 
 #. Instruction text in the desktop Swish donation modal. The user is on a computer and should scan a QR code with the Swish mobile app. Keep it clear and easy to follow. Preserve placeholders exactly.
 #: fluxer_marketing/generated:donations.swish.instructions
@@ -1438,17 +1124,11 @@ msgctxt "donations.swish.qr_failed"
 msgid "Could not load QR code. Try again later."
 msgstr "A QR-kódot nem sikerült betölteni. Próbáld újra később."
 
-#. Compact UI label in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
-#: fluxer_marketing/generated:donations.swish.qr_loading
-msgctxt "donations.swish.qr_loading"
-msgid "Loading…"
-msgstr "Betöltés…"
-
 #. Modal title shown on desktop devices in the Swish donation flow. The user should scan the QR code using the Swish mobile app. Preserve placeholders exactly.
 #: fluxer_marketing/generated:donations.swish.scan_title
 msgctxt "donations.swish.scan_title"
 msgid "Scan with {swish}"
-msgstr "Beolvasás a {swish} appal"
+msgstr "Beolvasás a {swish} alkalmazással"
 
 #. Button in the mobile Swish donation modal. Updates the amount used by the direct Swish payment link. Keep it short.
 #: fluxer_marketing/generated:donations.swish.update_amount
@@ -1462,27 +1142,24 @@ msgctxt "donations.swish.update_qr"
 msgid "Update QR"
 msgstr "QR frissítése"
 
-#. Body copy on donation pages and donation support cards. Keep the tone appreciative without being pushy; preserve placeholders exactly.
-#: fluxer_marketing/generated:donations.why_support
-msgctxt "donations.why_support"
-msgid ""
-"Help us build a different kind of communication platform: open source, community-funded, and built with care."
-msgstr ""
-"Segíts egy másfajta kommunikációs platformot építeni: nyílt forráskódú, közösségi finanszírozású és gondosan megtervezett."
-
 #. Button or link label on the download page, download buttons, or install calls to action. Keep platform-download wording short, direct, and action-oriented; preserve placeholders exactly.
 #: fluxer_marketing/generated:download.download
 msgctxt "download.download"
 msgid "Download"
 msgstr "Letöltés"
 
+#. Understated label introducing less common desktop download choices. Keep it concise.
+#: fluxer_marketing/generated:download.advanced_downloads
+msgctxt "download.advanced_downloads"
+msgid "Advanced downloads"
+msgstr "További letöltési lehetőségek"
+
 #. Final call-to-action body copy on the download page. Preserve {product_name} exactly; make clear that users can either install the app or use the browser version. Preserve placeholders exactly.
 #: fluxer_marketing/generated:download.download_app_or_open_in_browser
 msgctxt "download.download_app_or_open_in_browser"
 msgid ""
-"Download the app or open {product_name} in your browser to start connecting with your communities."
-msgstr ""
-"Töltsd le az alkalmazást, vagy nyisd meg a {product_name}-et a böngésződben, és lépj kapcsolatba a közösségeiddel."
+"Install the app or open {product_name} in your browser and start talking. Making an account is free and we never ask for a card."
+msgstr "Telepítsd az alkalmazást, vagy nyisd meg a {product_name}-et a böngésződben, és kezdj el beszélgetni. A regisztráció ingyenes, és soha nem kérünk bankkártyát."
 
 #. Button or link label on the download page, download buttons, or install calls to action. Keep platform-download wording short, direct, and action-oriented; preserve placeholders exactly.
 #: fluxer_marketing/generated:download.download_fluxer
@@ -1494,25 +1171,19 @@ msgstr "Töltsd le a {product_name}-et"
 #: fluxer_marketing/generated:download.download_for_platform
 msgctxt "download.download_for_platform"
 msgid "Download for {platform}"
-msgstr "Letöltés {platform}ra"
-
-#. Inline label that precedes a short row of alternate desktop download links (other architecture, package formats, build variants) on the download page. Keep it short.
-#: fluxer_marketing/generated:download.other_downloads
-msgctxt "download.other_downloads"
-msgid "Other downloads"
-msgstr "További letöltések"
+msgstr "Letöltés: {platform}"
 
 #. Button or link label on the download page, download buttons, or install calls to action. Keep platform-download wording short, direct, and action-oriented; preserve placeholders exactly.
 #: fluxer_marketing/generated:download.open_in_browser
 msgctxt "download.open_in_browser"
 msgid "Open in browser"
-msgstr "Böngészőben megnyitás"
+msgstr "Megnyitás böngészőben"
 
-#. Button or link label on the download page, download buttons, or install calls to action. Keep platform-download wording short, direct, and action-oriented; preserve placeholders exactly.
+#. Credit line in the PWA installation dialog. Translate the whole sentence so the linked source can appear in the natural position. Preserve {source} exactly.
 #: fluxer_marketing/generated:download.screenshots_courtesy_of
 msgctxt "download.screenshots_courtesy_of"
-msgid "Screenshots courtesy of "
-msgstr "Képernyőképek: "
+msgid "Screenshots courtesy of {source}."
+msgstr "Képernyőképek forrása: {source}."
 
 #. Compact UI label in the global marketing footer. Keep navigation labels compact and use legally precise company wording where applicable; preserve placeholders exactly.
 #: fluxer_marketing/generated:footer.bluesky_social_media
@@ -1530,7 +1201,7 @@ msgstr "Közösségi irányelvek"
 #: fluxer_marketing/generated:footer.company_information
 msgctxt "footer.company_information"
 msgid "Company information"
-msgstr "Céginformáció"
+msgstr "Céginformációk"
 
 #. Compact UI label in the global marketing footer. Keep navigation labels compact and use legally precise company wording where applicable; preserve placeholders exactly.
 #: fluxer_marketing/generated:footer.connect
@@ -1559,16 +1230,15 @@ msgstr "{product_name}"
 #. Body copy in the global marketing footer. Keep navigation labels compact and use legally precise company wording where applicable; preserve placeholders exactly.
 #: fluxer_marketing/generated:footer.fluxer_platform_ab_swedish_limited
 msgctxt "footer.fluxer_platform_ab_swedish_limited"
-msgid "© {product_name} Platform AB (Swedish limited liability company: 559537-3993)"
-msgstr "© {product_name} Platform AB (svéd korlátolt felelősségű társaság 559537-3993)"
+msgid "© {product_name} Platform AB (Swedish private limited company: 559537-3993)"
+msgstr "© {product_name} Platform AB (svéd korlátolt felelősségű társaság: 559537-3993)"
 
-#. Body copy in the global marketing footer. Keep navigation labels compact and use legally precise company wording where applicable; preserve placeholders exactly.
-#: fluxer_marketing/generated:footer.help_support_an_independent_communication
-msgctxt "footer.help_support_an_independent_communication"
+#. Body copy in the global footer describing how Fluxer is funded. Preserve {product_name} and {premium_tier_name} exactly.
+#: fluxer_marketing/generated:funding_model.footer_description
+msgctxt "funding_model.footer_description"
 msgid ""
-"Support an independent communication platform. Your donation funds the platform's infrastructure and development."
-msgstr ""
-"Támogass egy független kommunikációs platformot. Az adományod a platform infrastruktúráját és fejlesztését finanszírozza."
+"{product_name} is funded by {premium_tier_name} subscribers and donors, without venture capital or outside investors telling us what to build."
+msgstr "A {product_name}-t a {premium_tier_name}-előfizetők és az adományozók finanszírozzák – kockázati tőke és olyan külső befektetők nélkül, akik megmondanák, mit építsünk."
 
 #. Compact UI label in the global marketing footer. Keep navigation labels compact and use legally precise company wording where applicable; preserve placeholders exactly.
 #: fluxer_marketing/generated:footer.partners
@@ -1576,11 +1246,11 @@ msgctxt "footer.partners"
 msgid "Partners"
 msgstr "Partnerek"
 
-#. Compact UI label in the global marketing footer. Keep navigation labels compact and use legally precise company wording where applicable; preserve placeholders exactly.
-#: fluxer_marketing/generated:footer.plutonium_tier
-msgctxt "footer.plutonium_tier"
-msgid "{premium_tier_name} tier"
-msgstr "{premium_tier_name} csomag"
+#. Footer call-to-action linking to the Plutonium page. Preserve {product_name} exactly.
+#: fluxer_marketing/generated:funding_model.see_how_fluxer_is_funded
+msgctxt "funding_model.see_how_fluxer_is_funded"
+msgid "See how {product_name} is funded"
+msgstr "Nézd meg, miből finanszírozzuk a {product_name}-t"
 
 #. Compact UI label in the global marketing footer. Keep navigation labels compact and use legally precise company wording where applicable; preserve placeholders exactly.
 #: fluxer_marketing/generated:footer.policies
@@ -1598,7 +1268,7 @@ msgstr "Sajtó"
 #: fluxer_marketing/generated:footer.privacy_policy
 msgctxt "footer.privacy_policy"
 msgid "Privacy policy"
-msgstr "Adatvédelmi irányelvek"
+msgstr "Adatvédelmi szabályzat"
 
 #. Compact UI label in the global marketing footer. Keep navigation labels compact and use legally precise company wording where applicable; preserve placeholders exactly.
 #: fluxer_marketing/generated:footer.report_a_bug
@@ -1616,13 +1286,13 @@ msgstr "Ütemterv"
 #: fluxer_marketing/generated:footer.rss_feed
 msgctxt "footer.rss_feed"
 msgid "RSS feed"
-msgstr "RSS-hírfolyam"
+msgstr "RSS-hírcsatorna"
 
 #. Compact UI label in the global marketing footer. Keep navigation labels compact and use legally precise company wording where applicable; preserve placeholders exactly.
-#: fluxer_marketing/generated:footer.security_bug_bounty
-msgctxt "footer.security_bug_bounty"
-msgid "Security bug bounty"
-msgstr "Biztonsági hibajutalmazási program"
+#: fluxer_marketing/generated:footer.security
+msgctxt "footer.security"
+msgid "Security"
+msgstr "Biztonság"
 
 #. Compact UI label in the global marketing footer. Keep navigation labels compact and use legally precise company wording where applicable; preserve placeholders exactly.
 #: fluxer_marketing/generated:footer.source_code
@@ -1708,23 +1378,17 @@ msgctxt "languages.list.dutch"
 msgid "Dutch"
 msgstr "Holland"
 
-#. Language name shown in the language picker. Use the target locale's natural name for this language, not a sentence; keep it short.
-#: fluxer_marketing/generated:languages.list.english
-msgctxt "languages.list.english"
-msgid "English"
-msgstr "Angol"
-
 #. Language name shown in the language picker for British English. Use the target locale's natural name for this locale, not a sentence; keep it short.
 #: fluxer_marketing/generated:languages.list.english_uk
 msgctxt "languages.list.english_uk"
 msgid "English (United Kingdom)"
-msgstr "angol (Egyesült Királyság)"
+msgstr "Angol (Egyesült Királyság)"
 
 #. Language name shown in the language picker. Use the target locale's natural name for this language, not a sentence; keep it short.
 #: fluxer_marketing/generated:languages.list.english_us
 msgctxt "languages.list.english_us"
 msgid "English (US)"
-msgstr "angol (Egyesült Államok)"
+msgstr "Angol (Egyesült Államok)"
 
 #. Language name shown in the language picker. Use the target locale's natural name for this language, not a sentence; keep it short.
 #: fluxer_marketing/generated:languages.list.finnish
@@ -1760,13 +1424,13 @@ msgstr "Héber"
 #: fluxer_marketing/generated:languages.list.hindi
 msgctxt "languages.list.hindi"
 msgid "Hindi"
-msgstr "hindi"
+msgstr "Hindi"
 
 #. Language name shown in the language picker. Use the target locale's natural name for this language, not a sentence; keep it short.
 #: fluxer_marketing/generated:languages.list.hungarian
 msgctxt "languages.list.hungarian"
 msgid "Hungarian"
-msgstr "magyar"
+msgstr "Magyar"
 
 #. Language name shown in the language picker. Use the target locale's natural name for this language, not a sentence; keep it short.
 #: fluxer_marketing/generated:languages.list.indonesian
@@ -1850,13 +1514,13 @@ msgstr "Svéd"
 #: fluxer_marketing/generated:languages.list.thai
 msgctxt "languages.list.thai"
 msgid "Thai"
-msgstr "thai"
+msgstr "Thai"
 
 #. Language name shown in the language picker. Use the target locale's natural name for this language, not a sentence; keep it short.
 #: fluxer_marketing/generated:languages.list.turkish
 msgctxt "languages.list.turkish"
 msgid "Turkish"
-msgstr "török"
+msgstr "Török"
 
 #. Language name shown in the language picker. Use the target locale's natural name for this language, not a sentence; keep it short.
 #: fluxer_marketing/generated:languages.list.ukrainian
@@ -1891,20 +1555,15 @@ msgstr "Korai hozzáférés"
 #. Body copy in Fluxer marketing UI. Translate naturally for the target locale and preserve placeholders exactly.
 #: fluxer_marketing/generated:beta_and_access.featured_benefit_line
 msgctxt "beta_and_access.featured_benefit_line"
-msgid "All the basics you expect, plus a few things you don't."
-msgstr "Minden alap, amit elvársz, és még néhány dolog, amire nem is számítasz."
+msgid ""
+"Chat, calls, screen sharing and communities are free, and they stay free. {premium_tier_name} adds optional extras for the people who want them."
+msgstr "A csevegés, a hívások, a képernyőmegosztás és a közösségek ingyenesek, és azok is maradnak. A {premium_tier_name} opcionális extrákat kínál azoknak, akik szeretnék."
 
 #. Compact UI label in Fluxer marketing UI. Translate naturally for the target locale and preserve placeholders exactly.
 #: fluxer_marketing/generated:beta_and_access.public_beta
 msgctxt "beta_and_access.public_beta"
 msgid "Public beta"
 msgstr "Nyilvános béta"
-
-#. Body copy in Fluxer marketing UI. Translate naturally for the target locale and preserve placeholders exactly.
-#: fluxer_marketing/generated:beta_and_access.try_without_email
-msgctxt "beta_and_access.try_without_email"
-msgid "Try {product_name} without an email in 30 seconds"
-msgstr "Próbáld ki a(z) {product_name} alkalmazást e-mail nélkül 30 másodperc alatt"
 
 #. Short UI label or heading in the hero launch/roadmap badges linking to blog content. Keep it short and inviting, and preserve the product-name placeholder exactly.
 #: fluxer_marketing/generated:launch.heading
@@ -1917,6 +1576,12 @@ msgstr "A {product_name} története"
 msgctxt "launch.view_full_roadmap"
 msgid "View full roadmap"
 msgstr "Teljes ütemterv megtekintése"
+
+#. Compact label for the help link in the desktop marketing navigation.
+#: fluxer_marketing/generated:navigation.help
+msgctxt "navigation.help"
+msgid "Help"
+msgstr "Súgó"
 
 #. Short UI label or heading in site navigation, mobile drawer controls, or accessibility labels. Keep it brief and unambiguous.
 #: fluxer_marketing/generated:navigation.close
@@ -1942,6 +1607,12 @@ msgctxt "navigation.copy_link_to_section"
 msgid "Copy link to section"
 msgstr "Szakaszlink másolása"
 
+#. Error message shown when a heading link cannot be copied automatically. Keep it concise and tell the reader how to copy the link manually.
+#: fluxer_marketing/generated:navigation.copy_link_failed
+msgctxt "navigation.copy_link_failed"
+msgid "Could not copy the link. Copy it from the browser address bar instead."
+msgstr "Nem sikerült másolni a linket. Másold ki inkább a böngésző címsávjából."
+
 #. Compact UI label in site navigation, mobile drawer controls, or accessibility labels. Keep it brief and unambiguous.
 #: fluxer_marketing/generated:navigation.go_home
 msgctxt "navigation.go_home"
@@ -1957,8 +1628,8 @@ msgstr "Ezen az oldalon"
 #. Body copy on the 404 page. Keep the tone helpful and concise while making clear the page was not found.
 #: fluxer_marketing/generated:navigation.page_not_found.description
 msgctxt "navigation.page_not_found.description"
-msgid "This page doesn't exist. But there's plenty more to explore."
-msgstr "Ez az oldal nem létezik. De rengeteg mást is felfedezhetsz."
+msgid "This page does not exist. Either it moved or a link went stale, and both are fixable."
+msgstr "Ez az oldal nem létezik. Vagy átkerült máshova, vagy egy link avult el – mindkettő orvosolható."
 
 #. Short UI label or heading on the 404 page. Keep the tone helpful and concise while making clear the page was not found.
 #: fluxer_marketing/generated:navigation.page_not_found.title
@@ -1966,25 +1637,18 @@ msgctxt "navigation.page_not_found.title"
 msgid "Page not found"
 msgstr "Az oldal nem található"
 
-#. Introductory body copy on the press/brand-assets page. Keep wording professional and clear for journalists, partners, and brand-asset users.
+#. Introductory body copy on the press/brand-assets page. Keep wording professional and clear for journalists, partners, and brand-asset users. Preserve {product_name} exactly.
 #: fluxer_marketing/generated:navigation.press.download_assets_intro
 msgctxt "navigation.press.download_assets_intro"
-msgid "Download our logos, learn about our brand colors, and get in touch with our press team."
-msgstr ""
-"Töltsd le logóinkat, tudj meg többet márkaszíneinkről, és vedd fel a kapcsolatot sajtócsapatunkkal."
-
-#. Press-page heading or summary line for brand asset downloads. Preserve {product_name} exactly; keep wording professional for journalists and partners. Preserve placeholders exactly.
-#: fluxer_marketing/generated:navigation.press.download_fluxer_assets
-msgctxt "navigation.press.download_fluxer_assets"
-msgid "Download {product_name} logos, brand assets, and get in touch with our press team"
-msgstr ""
-"Töltsd le a(z) {product_name} logóit, márkaelemeit, és vedd fel a kapcsolatot sajtócsapatunkkal"
+msgid ""
+"Download the {product_name} logos and color references. Press inquiries go straight to our team."
+msgstr "Töltsd le a {product_name} logóit és színreferenciáit. A sajtómegkeresések közvetlenül a csapatunkhoz futnak be."
 
 #. Compact UI label on the press/brand-assets page. Keep wording professional and clear for journalists or partners.
 #: fluxer_marketing/generated:navigation.press.press_and_brand_assets
 msgctxt "navigation.press.press_and_brand_assets"
-msgid "Press and brand assets"
-msgstr "Sajtó és márkaeszközök"
+msgid "Press and logo files"
+msgstr "Sajtó- és logófájlok"
 
 #. Body copy in the partner application section, pointing readers to the help center guide. Keep the tone professional, creator-friendly, and clear about application expectations.
 #: fluxer_marketing/generated:partner_program.apply.guide_prompt
@@ -2004,13 +1668,13 @@ msgstr "Légy partner"
 #: fluxer_marketing/generated:partner_program.become_partner.heading
 msgctxt "partner_program.become_partner.heading"
 msgid "Become a {product_name} partner"
-msgstr "Légy a(z) {product_name}-partner"
+msgstr "Legyél a {product_name} partnere"
 
 #. Compact UI label on the partner program page. Keep the tone professional, creator-friendly, and clear about application expectations.
 #: fluxer_marketing/generated:partner_program.become_partner.ready_prompt
 msgctxt "partner_program.become_partner.ready_prompt"
 msgid "Ready to become a partner?"
-msgstr "Készen állsz partnernek lenni?"
+msgstr "Készen állsz, hogy partner legyél?"
 
 #. Body copy on the partner program page. Keep the tone professional, creator-friendly, and clear about application expectations.
 #: fluxer_marketing/generated:partner_program.description
@@ -2053,8 +1717,7 @@ msgstr "Egyedi vanity URL"
 #: fluxer_marketing/generated:partner_program.perks.direct_team_access.description
 msgctxt "partner_program.perks.direct_team_access.description"
 msgid "Join the exclusive partners community with direct access to the {product_name} team."
-msgstr ""
-"Csatlakozz az exkluzív partnerközösséghez, közvetlen hozzáféréssel a(z) {product_name}-csapatához."
+msgstr "Csatlakozz az exkluzív partnerközösséghez, közvetlen hozzáféréssel a {product_name} csapatához."
 
 #. Short UI label or heading on the partner program perks section. Keep benefits concrete and appealing to creators/community owners; preserve placeholders exactly.
 #: fluxer_marketing/generated:partner_program.perks.direct_team_access.label
@@ -2072,7 +1735,7 @@ msgstr "Növeld a láthatóságodat a közösségi felfedezőben való kiemelés
 #: fluxer_marketing/generated:partner_program.perks.exclusive_merch.description
 msgctxt "partner_program.perks.exclusive_merch.description"
 msgid "Get exclusive {product_name} partner-only merchandise and swag."
-msgstr "Szerezz exkluzív {product_name}-partner ajándéktárgyakat és relikviákat."
+msgstr "Szerezz exkluzív, kizárólag {product_name}-partnereknek szóló ajándéktárgyakat és merch termékeket."
 
 #. Short UI label or heading on the partner program perks section. Keep benefits concrete and appealing to creators/community owners; preserve placeholders exactly.
 #: fluxer_marketing/generated:partner_program.perks.exclusive_merch.label
@@ -2084,8 +1747,7 @@ msgstr "Exkluzív merch"
 #: fluxer_marketing/generated:partner_program.perks.free_plutonium.description
 msgctxt "partner_program.perks.free_plutonium.description"
 msgid "Get free {premium_tier_name} for your account to enjoy all premium features."
-msgstr ""
-"Szerezz ingyenes {premium_tier_name} a fiókodhoz, hogy élvezhesd az összes prémium funkciót."
+msgstr "Szerezz ingyenes {premium_tier_name}-ot a fiókodhoz, hogy élvezhesd az összes prémium funkciót."
 
 #. Short UI label or heading on the partner program perks section. Keep benefits concrete and appealing to creators/community owners; preserve placeholders exactly.
 #: fluxer_marketing/generated:partner_program.perks.free_plutonium.label
@@ -2133,7 +1795,7 @@ msgstr "Előnyök megtekintése"
 #: fluxer_marketing/generated:partner_program.perks.vip_voice_servers.description
 msgctxt "partner_program.perks.vip_voice_servers.description"
 msgid "Access to VIP voice servers reserved exclusively for partnered communities."
-msgstr "Hozzáférés kizárólag partnerközösségeknek fenntartott VIP hangcsatornákhoz."
+msgstr "Hozzáférés a kizárólag partnerközösségeknek fenntartott VIP hangszerverekhez."
 
 #. Short UI label or heading on the partner program perks section. Keep benefits concrete and appealing to creators/community owners; preserve placeholders exactly.
 #: fluxer_marketing/generated:partner_program.perks.vip_voice_servers.label
@@ -2146,30 +1808,27 @@ msgstr "VIP hangcsatornák"
 msgctxt "partner_program.who_its_for"
 msgid ""
 "For creators and community owners: free {premium_tier_name}, a partner badge, a custom vanity URL, and more."
-msgstr ""
-"Alkotóknak és közösségtulajdonosoknak: ingyenes {premium_tier_name}, partnerjelvény, egyedi vanity URL és további előnyök."
+msgstr "Tartalomkészítőknek és közösségtulajdonosoknak: ingyenes {premium_tier_name}, partnerjelvény, egyedi vanity URL és további előnyök."
 
 #. Download-page meta description. Preserve {product_name} exactly; keep platform names conventional and make desktop, browser, and public mobile testing availability clear. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.availability.meta_description
 msgctxt "platform_support.availability.meta_description"
 msgid ""
 "Get {product_name} for your web browser, {windows}, {linux}, and {macos}. {ios} and {android} are in public testing."
-msgstr ""
-"Szerezd be a(z) {product_name} alkalmazást a webböngésződhöz, {windows}, {linux} és {macos} rendszerekre. A(z) {ios} és a(z) {android} nyilvános tesztelés alatt áll."
+msgstr "Szerezd be a {product_name} alkalmazást a webböngésződhöz, valamint {windows}, {linux} és {macos} rendszerre. Az {ios} és az {android} nyilvános tesztelés alatt áll."
 
 #. Intro copy below the download-page heading. Keep platform names conventional and make browser, desktop, and public mobile testing availability clear. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.availability.summary
 msgctxt "platform_support.availability.summary"
 msgid ""
 "Available in your web browser and on {windows}, {linux}, and {macos}, with {ios} and {android} in public testing."
-msgstr ""
-"Elérhető a webböngésződben és a(z) {windows}, {linux} és {macos} rendszereken, a(z) {ios} és a(z) {android} pedig nyilvános tesztelés alatt áll."
+msgstr "Elérhető a webböngésződben, valamint {windows}, {linux} és {macos} rendszeren; az {ios} és az {android} nyilvános tesztelés alatt áll."
 
 #. Alt text for a desktop product screenshot. Preserve {product_name} exactly; describe the image as the desktop interface, not as a download action. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.desktop.interface_label
 msgctxt "platform_support.desktop.interface_label"
 msgid "{product_name} desktop interface"
-msgstr "A(z) {product_name}-asztali felülete"
+msgstr "A {product_name} asztali felülete"
 
 #. Short UI label or heading in platform availability and download support copy. Keep wording clear about desktop, web, and mobile status.
 #: fluxer_marketing/generated:platform_support.desktop.label
@@ -2177,59 +1836,58 @@ msgctxt "platform_support.desktop.label"
 msgid "Desktop"
 msgstr "Asztali"
 
-#. Body copy in platform availability and download support copy. Keep wording clear about desktop, web, and mobile status.
-#: fluxer_marketing/generated:platform_support.desktop.use_desktop_client_mobile_soon
-msgctxt "platform_support.desktop.use_desktop_client_mobile_soon"
-msgid "Use the desktop client (mobile coming soon)"
-msgstr "Használd az asztali alkalmazást (mobil verzió hamarosan)"
+#. Section heading for web and mobile options on the download page. Keep it concise.
+#: fluxer_marketing/generated:platform_support.mobile.label
+msgctxt "platform_support.mobile.label"
+msgid "Mobile and web"
+msgstr "Mobil és web"
 
-#. Notice below the Linux download row warning that the Flatpak build lags the other Linux downloads at the moment. Preserve Flatpak and Linux as names and preserve placeholders exactly.
-#: fluxer_marketing/generated:platform_support.desktop.flatpak_outdated
-msgctxt "platform_support.desktop.flatpak_outdated"
-msgid "The {flatpak} package is currently behind the other {linux} downloads."
-msgstr "A {flatpak} csomag jelenleg le van maradva a többi {linux} letöltéstől."
+#. Compact feature label explaining that Fluxer is available in browsers and as desktop and mobile apps. Preserve {product_name} exactly.
+#: fluxer_marketing/generated:platform_support.availability.every_client
+msgctxt "platform_support.availability.every_client"
+msgid "Use {product_name} in a browser or install it on desktop and mobile"
+msgstr "Használd a {product_name}-t böngészőben, vagy telepítsd asztali gépre és mobilra"
 
 #. Body copy for mobile/PWA install guidance on the download page. Keep instructions clear, device-appropriate, and concise; preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.install_as_app.done_desktop
 msgctxt "platform_support.mobile.install_as_app.done_desktop"
-msgid "Done! You can now open {product_name} as if it were a regular program."
-msgstr ""
-"Kész! Mostantól megnyithatod a(z) {product_name}-alkalmazást, mintha egy rendes program lenne."
+msgid "Done. You can now open {product_name} as if it were a regular program."
+msgstr "Kész! Mostantól úgy nyithatod meg a {product_name}-t, mintha hagyományos program lenne."
 
 #. Body copy for mobile/PWA install guidance on the download page. Keep instructions clear, device-appropriate, and concise; preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.install_as_app.done_mobile
 msgctxt "platform_support.mobile.install_as_app.done_mobile"
-msgid "Done! You can now open {product_name} from your home screen."
-msgstr "Kész! Mostantól megnyithatod a(z) {product_name}-alkalmazást a kezdőképernyődről."
+msgid "Done. You can now open {product_name} from your home screen."
+msgstr "Kész! Mostantól a kezdőképernyődről nyithatod meg a {product_name}-t."
 
-#. Compact UI label for mobile/PWA install guidance on the download page. Keep instructions clear, device-appropriate, and concise; preserve placeholders exactly.
+#. First PWA installation step. Translate the whole instruction so the linked web-app label can appear in the natural position. Preserve {web_app_link} and {chrome} exactly.
 #: fluxer_marketing/generated:platform_support.mobile.install_as_app.guides.in_chrome
 msgctxt "platform_support.mobile.install_as_app.guides.in_chrome"
-msgid " in {chrome}"
-msgstr " {chrome}-ban"
+msgid "Open {web_app_link} in {chrome}"
+msgstr "{web_app_link} a {chrome} böngészőben"
 
-#. Body copy for mobile/PWA install guidance on the download page. Keep instructions clear, device-appropriate, and concise; preserve placeholders exactly.
+#. First desktop PWA installation step. Translate the whole instruction so the linked web-app label can appear in the natural position. Preserve {web_app_link} and {chrome} exactly.
 #: fluxer_marketing/generated:platform_support.mobile.install_as_app.guides.in_chrome_or_another_browser
 msgctxt "platform_support.mobile.install_as_app.guides.in_chrome_or_another_browser"
-msgid " in {chrome} or another browser with PWA support"
-msgstr " {chrome}-ban vagy más PWA-t támogató böngészőben"
+msgid "Open {web_app_link} in {chrome} or another browser that supports PWAs"
+msgstr "{web_app_link} a {chrome} vagy egy másik, PWA-kat támogató böngészőben"
 
-#. Compact UI label for mobile/PWA install guidance on the download page. Keep instructions clear, device-appropriate, and concise; preserve placeholders exactly.
+#. First iOS PWA installation step. Translate the whole instruction so the linked web-app label can appear in the natural position. Preserve {web_app_link} exactly.
 #: fluxer_marketing/generated:platform_support.mobile.install_as_app.guides.in_safari
 msgctxt "platform_support.mobile.install_as_app.guides.in_safari"
-msgid " in Safari"
-msgstr " Safariban"
+msgid "Open {web_app_link} in Safari"
+msgstr "{web_app_link} a Safari böngészőben"
 
 #. Compact UI label for mobile/PWA install guidance on the download page. Keep instructions clear, device-appropriate, and concise; preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.install_as_app.guides.pwa_installation_guide
 msgctxt "platform_support.mobile.install_as_app.guides.pwa_installation_guide"
 msgid "PWA installation guide for {name}"
-msgstr "PWA telepítési útmutató: {name}"
+msgstr "PWA-telepítési útmutató: {name}"
 
 #. Compact UI label for mobile/PWA install guidance on the download page. Keep instructions clear, device-appropriate, and concise; preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.install_as_app.guides.steps.press_add_to_home_screen
 msgctxt "platform_support.mobile.install_as_app.guides.steps.press_add_to_home_screen"
-msgid "Press \"Add to home screen\""
+msgid "Press \"Add to Home Screen\""
 msgstr "Nyomd meg a \"Hozzáadás a kezdőképernyőhöz\" gombot"
 
 #. Body copy for mobile/PWA install guidance on the download page. Keep instructions clear, device-appropriate, and concise; preserve placeholders exactly.
@@ -2260,7 +1918,7 @@ msgstr "Nyomd meg a \"Telepítés\" gombot a felugró ablakban"
 #: fluxer_marketing/generated:platform_support.mobile.install_as_app.guides.steps.press_more_menu
 msgctxt "platform_support.mobile.install_as_app.guides.steps.press_more_menu"
 msgid "Press the \"More\" (⋮) button in the top-right corner"
-msgstr "Nyomd meg a \"Több\" (⋮) gombot a jobb felső sarokban"
+msgstr "Nyomd meg a \"Továbbiak\" (⋮) gombot a jobb felső sarokban"
 
 #. Button or link label for mobile/PWA install guidance on the download page. Keep instructions clear, device-appropriate, and concise; preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.install_as_app.guides.steps.press_share_button
@@ -2286,23 +1944,11 @@ msgctxt "platform_support.mobile.install_as_app.title"
 msgid "How to install as an app"
 msgstr "Alkalmazásként való telepítés"
 
-#. Short UI label or heading for mobile/PWA install guidance on the download page. Keep instructions clear, device-appropriate, and concise; preserve placeholders exactly.
-#: fluxer_marketing/generated:platform_support.mobile.interface_label
-msgctxt "platform_support.mobile.interface_label"
-msgid "{product_name} mobile interface"
-msgstr "{product_name} mobilfelület"
-
-#. Compact UI label naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact.
-#: fluxer_marketing/generated:platform_support.platforms.android.apk
-msgctxt "platform_support.platforms.android.apk"
-msgid "APK"
-msgstr "APK"
-
 #. Compact UI label naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.platforms.android.min_version
 msgctxt "platform_support.platforms.android.min_version"
-msgid "{android} 8+"
-msgstr "{android} 8+"
+msgid "{android} 7+"
+msgstr "{android} 7+"
 
 #. Short UI label or heading naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.platforms.android.name
@@ -2319,8 +1965,8 @@ msgstr "{ios} és {ipados}"
 #. Compact UI label naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.platforms.ios.min_version
 msgctxt "platform_support.platforms.ios.min_version"
-msgid "{ios} 15+"
-msgstr "{ios} 15+"
+msgid "{ios}/{ipados} 15.6+"
+msgstr "{ios}/{ipados} 15.6+"
 
 #. Short UI label or heading naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.platforms.ios.name
@@ -2328,41 +1974,17 @@ msgctxt "platform_support.platforms.ios.name"
 msgid "{ios}"
 msgstr "{ios}"
 
-#. Compact UI label naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact. Preserve placeholders exactly.
-#: fluxer_marketing/generated:platform_support.platforms.ios.testflight
-msgctxt "platform_support.platforms.ios.testflight"
-msgid "{testflight}"
-msgstr "{testflight}"
-
-#. Compact UI label naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact. Preserve placeholders exactly.
-#: fluxer_marketing/generated:platform_support.platforms.linux.choose_distribution
-msgctxt "platform_support.platforms.linux.choose_distribution"
-msgid "Choose {linux} distribution"
-msgstr "Válassz {linux} disztribúciót"
-
 #. Short UI label or heading naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.platforms.linux.name
 msgctxt "platform_support.platforms.linux.name"
 msgid "{linux}"
 msgstr "{linux}"
 
-#. Compact UI label naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact.
-#: fluxer_marketing/generated:platform_support.platforms.linux.recommended
-msgctxt "platform_support.platforms.linux.recommended"
-msgid "recommended"
-msgstr "Ajánlott"
-
 #. Compact UI label naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.platforms.macos.apple_silicon
 msgctxt "platform_support.platforms.macos.apple_silicon"
 msgid "{apple_silicon}"
 msgstr "{apple_silicon}"
-
-#. Button or link label naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact. Preserve placeholders exactly.
-#: fluxer_marketing/generated:platform_support.platforms.macos.download_label
-msgctxt "platform_support.platforms.macos.download_label"
-msgid "Download for {macos}"
-msgstr "Letöltés {macos}-re"
 
 #. Compact UI label naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact.
 #: fluxer_marketing/generated:platform_support.platforms.macos.intel
@@ -2373,20 +1995,14 @@ msgstr "Intel"
 #. Compact UI label naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.platforms.macos.min_version
 msgctxt "platform_support.platforms.macos.min_version"
-msgid "{macos} 10.15+"
-msgstr "{macos} 10.15+"
+msgid "{macos} 12+"
+msgstr "{macos} 12+"
 
 #. Short UI label or heading naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.platforms.macos.name
 msgctxt "platform_support.platforms.macos.name"
 msgid "{macos}"
 msgstr "{macos}"
-
-#. Button or link label naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact. Preserve placeholders exactly.
-#: fluxer_marketing/generated:platform_support.platforms.windows.download_label
-msgctxt "platform_support.platforms.windows.download_label"
-msgid "Download for {windows}"
-msgstr "Letöltés {windows}-ra"
 
 #. Compact UI label naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.platforms.windows.min_version
@@ -2400,7 +2016,7 @@ msgctxt "platform_support.platforms.windows.name"
 msgid "{windows}"
 msgstr "{windows}"
 
-#. Compact UI label for a portable (no-install) desktop build that stores all data next to the executable. Keep it short.
+#. Short UI label naming the portable Windows distribution method in download UI. Keep it concise.
 #: fluxer_marketing/generated:platform_support.platforms.portable
 msgctxt "platform_support.platforms.portable"
 msgid "Portable"
@@ -2413,12 +2029,11 @@ msgid "Web app"
 msgstr "Webalkalmazás"
 
 #. Body copy for the web app row on the download page. Preserve {product_name} exactly; mention desktop and mobile browsers and that it installs like a Progressive Web App. Preserve placeholders exactly.
-#: fluxer_marketing/generated:platform_support.mobile.web_app.body
-msgctxt "platform_support.mobile.web_app.body"
+#: fluxer_marketing/generated:platform_support.mobile.web_app.any_browser
+msgctxt "platform_support.mobile.web_app.any_browser"
 msgid ""
-"{product_name} runs in any desktop or mobile web browser, and installs to your home screen or desktop like a Progressive Web App. It is the most complete way to use {product_name} on a phone today."
-msgstr ""
-"A(z) {product_name} bármely asztali vagy mobil webböngészőben fut, és úgy telepíthető a kezdőképernyődre vagy az asztalodra, mint egy Progresszív Webalkalmazás. Ez a legteljesebb módja a(z) {product_name} használatának telefonon ma."
+"Use {product_name} in a desktop or mobile web browser, or install it to your home screen or desktop as a Progressive Web App. The web app currently has more features than the native phone apps."
+msgstr "Használd a {product_name}-t asztali vagy mobil webböngészőben, vagy telepítsd a kezdőképernyődre, illetve az asztalodra progresszív webalkalmazásként. A webalkalmazás jelenleg több funkciót kínál, mint a natív mobilalkalmazások."
 
 #. Card title for the iOS app option on the download page. Keep the platform name conventional and short. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.ios.title
@@ -2426,13 +2041,12 @@ msgctxt "platform_support.mobile.ios.title"
 msgid "{ios} app"
 msgstr "{ios} alkalmazás"
 
-#. Body copy for the iOS app row on the download page. Make clear that TestFlight access is currently limited to Fluxer Plutonium members, that public access is coming soon, and that the web app remains available in Safari. Preserve placeholders exactly.
+#. Body copy for the iOS app row on the download page. Make clear that the native iOS app is currently limited to Fluxer Plutonium subscribers, that broader access is coming very soon, and that the web app remains available in Safari. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.ios.body
 msgctxt "platform_support.mobile.ios.body"
 msgid ""
-"The {ios} app on {testflight} is currently limited to {premium_tier_full_name} members. Public access is coming soon. The full {product_name} web app also works in Safari and can be added to your Home Screen."
-msgstr ""
-"Az {ios} alkalmazás a {testflight} béta verzióban jelenleg csak a {premium_tier_full_name} tagok számára érhető el. Hamarosan megnyílik a nyilvános hozzáférés. A teljes {product_name} webalkalmazás Safari böngészőben is működik, és hozzáadható a kezdőképernyőhöz."
+"The native {ios} app is currently limited to {premium_tier_full_name} subscribers. Broader access is coming very soon. Meanwhile, the full {product_name} web app works in Safari and can be added to your Home Screen."
+msgstr "A natív {ios} alkalmazás jelenleg csak a {premium_tier_full_name} előfizetői számára érhető el. Hamarosan szélesebb körben is elérhetővé válik. Addig is a teljes {product_name} webalkalmazás működik a Safariban, és hozzáadható a kezdőképernyődhöz."
 
 #. Card title for the Android app option on the download page. Keep the platform name conventional and short. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.android.title
@@ -2444,8 +2058,7 @@ msgstr "{android} alkalmazás"
 #: fluxer_marketing/generated:platform_support.mobile.android.body
 msgctxt "platform_support.mobile.android.body"
 msgid "Install the {android} APK straight from our open source repository on {github}."
-msgstr ""
-"Telepítsd a(z) {android} APK-t közvetlenül a nyílt forráskódú tárházunkból a(z) {github} oldalon."
+msgstr "Telepítsd az {android} APK-t közvetlenül a nyílt forráskódú tárházunkból a {github} oldalon."
 
 #. Button or link label on the Android app card that opens the GitHub repository where the APK is published. Keep APK as a proper name; keep it short.
 #: fluxer_marketing/generated:platform_support.mobile.android.cta
@@ -2456,14 +2069,27 @@ msgstr "Töltsd le az APK-t"
 #. Short UI label or heading in the press kit and brand asset download area. Keep terminology professional for brand/logo usage guidance; preserve placeholders exactly.
 #: fluxer_marketing/generated:press_branding.assets.brand_colors_heading
 msgctxt "press_branding.assets.brand_colors_heading"
-msgid "Brand colors"
-msgstr "Márkaszínek"
+msgid "{product_name} colors"
+msgstr "A {product_name} színei"
 
 #. Compact UI label in the press kit and brand asset download area. Keep terminology professional for brand/logo usage guidance; preserve placeholders exactly.
 #: fluxer_marketing/generated:press_branding.assets.full_color
 msgctxt "press_branding.assets.full_color"
 msgid "Full color version"
 msgstr "Színes változat"
+
+#. Helper text for a press-kit checkbox controlling whether the transparent wave cutouts inside non-white Fluxer logos are filled white. Keep the instruction concise and explicit.
+#: fluxer_marketing/generated:press_branding.assets.wave_interior_fill.description
+msgctxt "press_branding.assets.wave_interior_fill.description"
+msgid ""
+"Recommended for black and color logos. Turn this off only when you want the background to show through the waves."
+msgstr "Fekete és színes logókhoz ajánlott. Csak akkor kapcsold ki, ha azt szeretnéd, hogy a háttér átlátsszon a hullámokon."
+
+#. Checkbox label in the press kit. The Fluxer symbol contains two wave-shaped transparent cutouts; this option fills those interiors white. Keep the label concise.
+#: fluxer_marketing/generated:press_branding.assets.wave_interior_fill.label
+msgctxt "press_branding.assets.wave_interior_fill.label"
+msgid "Fill wave interiors with white"
+msgstr "Hullámok belsejének kitöltése fehérrel"
 
 #. Short UI label or heading in the press kit and brand asset download area. Keep terminology professional for brand/logo usage guidance; preserve placeholders exactly.
 #: fluxer_marketing/generated:press_branding.assets.label
@@ -2492,20 +2118,14 @@ msgstr "Fehér logó"
 #. Body copy in the press kit and brand asset download area. Keep terminology professional for brand/logo usage guidance; preserve placeholders exactly.
 #: fluxer_marketing/generated:press_branding.assets.palette_description
 msgctxt "press_branding.assets.palette_description"
-msgid "Our carefully selected color palette that represents the {product_name} brand."
-msgstr "Gondosan kiválasztott színpalettánk, amely a {product_name} márkát testesíti meg."
-
-#. Compact UI label in the press kit and brand asset download area. Keep terminology professional for brand/logo usage guidance; preserve placeholders exactly.
-#: fluxer_marketing/generated:press_branding.assets.premium_quality
-msgctxt "press_branding.assets.premium_quality"
-msgid "Premium quality"
-msgstr "Prémium minőség"
+msgid "These are the colors used by {product_name}."
+msgstr "Ezeket a színeket használja a {product_name}."
 
 #. Body copy in the press kit and brand asset download area. Keep terminology professional for brand/logo usage guidance; preserve placeholders exactly.
 #: fluxer_marketing/generated:press_branding.assets.primary_brand_color_description
 msgctxt "press_branding.assets.primary_brand_color_description"
-msgid "Our primary brand color. Use this for key brand elements and accents."
-msgstr "Elsődleges márkaszínünk. Használd ezt a fő márkajelzésekhez és kiemelésekhez."
+msgid "This is the main {product_name} color. Use it for accents and important details."
+msgstr "Ez a {product_name} fő színe. Használd kiemelésre és fontos részletekhez."
 
 #. Compact UI label in the press kit and brand asset download area. Keep terminology professional for brand/logo usage guidance; preserve placeholders exactly.
 #: fluxer_marketing/generated:press_branding.assets.symbol_variants.black_symbol
@@ -2534,8 +2154,8 @@ msgstr "Fehér szimbólum"
 #. Body copy in the press kit and brand asset download area. Keep terminology professional for brand/logo usage guidance; preserve placeholders exactly.
 #: fluxer_marketing/generated:press_branding.assets.usage_guidance.dark_surface_guidance
 msgctxt "press_branding.assets.usage_guidance.dark_surface_guidance"
-msgid "For backgrounds, text on dark surfaces, and creating contrast."
-msgstr "Háttérhez, sötét felületeken lévő szöveghez és kontraszt létrehozásához."
+msgid "Use on dark surfaces."
+msgstr "Sötét felületeken használd."
 
 #. Compact UI label in the press kit and brand asset download area. Keep terminology professional for brand/logo usage guidance; preserve placeholders exactly.
 #: fluxer_marketing/generated:press_branding.assets.usage_guidance.for_dark_backgrounds
@@ -2552,23 +2172,21 @@ msgstr "Világos hátterekhez"
 #. Body copy in the press kit and brand asset download area. Keep terminology professional for brand/logo usage guidance; preserve placeholders exactly.
 #: fluxer_marketing/generated:press_branding.assets.usage_guidance.full_logo_description
 msgctxt "press_branding.assets.usage_guidance.full_logo_description"
-msgid "Our full logo including the wordmark. Use this as the primary representation of our brand."
-msgstr ""
-"Teljes logónk, beleértve a szöveges logót is. Használd ezt márkánk elsődleges megjelenítésére."
+msgid "Use the full logo by default. It includes the wordmark."
+msgstr "Alapértelmezés szerint a teljes logót használd. Ez tartalmazza a szöveges logót is."
 
 #. Body copy in the press kit and brand asset download area. Keep terminology professional for brand/logo usage guidance; preserve placeholders exactly.
 #: fluxer_marketing/generated:press_branding.assets.usage_guidance.light_surface_guidance
 msgctxt "press_branding.assets.usage_guidance.light_surface_guidance"
-msgid "For text, icons on light surfaces, and creating depth."
-msgstr "Szöveghez, világos felületeken lévő ikonokhoz és mélység érzetének megteremtéséhez."
+msgid "Use on light surfaces."
+msgstr "Világos felületeken használd."
 
 #. Body copy in the press kit and brand asset download area. Keep terminology professional for brand/logo usage guidance; preserve placeholders exactly.
 #: fluxer_marketing/generated:press_branding.assets.usage_guidance.symbol_description
 msgctxt "press_branding.assets.usage_guidance.symbol_description"
 msgid ""
-"Our standalone symbol. Use this only when our brand is clearly visible or well-established elsewhere in the context."
-msgstr ""
-"Önálló szimbólumunk. Ezt csak akkor használd, ha márkánk egyértelműen látható vagy már jól ismert más kontextusban."
+"Use the symbol only when {product_name} appears nearby or the context already makes its owner clear."
+msgstr "A szimbólumot csak akkor használd, ha a {product_name} a közelben megjelenik, vagy ha a szövegkörnyezet már egyértelművé teszi, kihez tartozik."
 
 #. Brand color name in the press kit. Keep the color label recognizable and do not over-translate proper names unless natural in the locale.
 #: fluxer_marketing/generated:press_branding.colors.black
@@ -2576,11 +2194,11 @@ msgctxt "press_branding.colors.black"
 msgid "Black"
 msgstr "Fekete"
 
-#. Brand color name in the press kit. Keep the color label recognizable and do not over-translate proper names unless natural in the locale. Preserve placeholders exactly.
-#: fluxer_marketing/generated:press_branding.colors.blue_da_ba_dee
-msgctxt "press_branding.colors.blue_da_ba_dee"
-msgid "{blue_da_ba_dee}"
-msgstr "{blue_da_ba_dee}"
+#. Brand color name in the press kit. Keep the product name unchanged.
+#: fluxer_marketing/generated:press_branding.colors.fluxer_blue
+msgctxt "press_branding.colors.fluxer_blue"
+msgid "Fluxer blue"
+msgstr "Fluxer kék"
 
 #. Brand color name in the press kit. Keep the color label recognizable and do not over-translate proper names unless natural in the locale.
 #: fluxer_marketing/generated:press_branding.colors.white
@@ -2592,161 +2210,38 @@ msgstr "Fehér"
 #: fluxer_marketing/generated:press_branding.contact.response_time
 msgctxt "press_branding.contact.response_time"
 msgid "We typically respond within 24 hours."
-msgstr "Általában 24 órán belül szoktunk válaszolni."
+msgstr "Általában 24 órán belül válaszolunk."
 
 #. Press contact prompt. Here "story" means a media story, article angle, or news lead about Fluxer, not a personal history. Keep the tone professional and media-friendly; preserve placeholders exactly.
 #: fluxer_marketing/generated:press_branding.contact.story_prompt_message
 msgctxt "press_branding.contact.story_prompt_message"
-msgid "Have a story about {product_name}? We'd love to hear from you at {email}."
-msgstr "Van sajtótémád a {product_name}-ről? Írj nekünk: {email}."
+msgid "If you are writing about {product_name}, email {email}. A real person reads it."
+msgstr "Ha a {product_name}-ről írsz, írj a következő címre: {email}. Valódi ember olvassa."
 
-#. Compact UI label in pricing and billing UI. Keep it short, conventional for subscriptions, and preserve price/currency placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.billing.forever
-msgctxt "pricing_and_tiers.billing.forever"
-msgid "Forever"
-msgstr "örökre"
-
-#. Compact UI label in pricing and billing UI. Keep it short, conventional for subscriptions, and preserve price/currency placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.billing.most_popular
-msgctxt "pricing_and_tiers.billing.most_popular"
-msgid "Most popular"
-msgstr "Legnépszerűbb"
-
-#. Compact UI label in pricing and billing UI. Keep it short, conventional for subscriptions, and preserve price/currency placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.billing.per_forever
-msgctxt "pricing_and_tiers.billing.per_forever"
-msgid "/forever"
-msgstr "/örökké"
-
-#. Compact UI label in pricing and billing UI. Keep it short, conventional for subscriptions, and preserve price/currency placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.billing.per_month
-msgctxt "pricing_and_tiers.billing.per_month"
-msgid "/mo"
-msgstr "/hó"
-
-#. Compact UI label in pricing and billing UI. Keep it short, conventional for subscriptions, and preserve price/currency placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.billing.per_year_full
-msgctxt "pricing_and_tiers.billing.per_year_full"
-msgid "/year"
-msgstr "/év"
-
-#. Compact UI label in pricing and billing UI. Keep it short, conventional for subscriptions, and preserve price/currency placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.billing.per_year_short
-msgctxt "pricing_and_tiers.billing.per_year_short"
-msgid "/yr"
-msgstr "/év"
-
-#. Compact UI label in pricing and billing UI. Keep it short, conventional for subscriptions, and preserve price/currency placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.billing.save_percent
-msgctxt "pricing_and_tiers.billing.save_percent"
-msgid "Save 17%"
-msgstr "17% megtakarítás"
-
-#. Short UI label or heading in pricing comparison UI. Keep labels clear and commercially neutral; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.free.comparison_label
-msgctxt "pricing_and_tiers.free.comparison_label"
-msgid "Free vs {premium_tier_name}"
-msgstr "Ingyenes vs {premium_tier_name}"
-
-#. Compact UI label in pricing comparison UI. Keep labels clear and commercially neutral; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.free.everything_in_free_plus
-msgctxt "pricing_and_tiers.free.everything_in_free_plus"
-msgid "Everything in Free, plus:"
-msgstr "Minden az Ingyenes csomagban, plusz:"
-
-#. Compact UI label in pricing comparison UI. Keep labels clear and commercially neutral; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.free.full_access_to_all_features
-msgctxt "pricing_and_tiers.free.full_access_to_all_features"
-msgid "Full access to all features"
-msgstr "Teljes hozzáférés az összes funkcióhoz"
-
-#. Short UI label or heading in pricing comparison UI. Keep labels clear and commercially neutral; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.free.label
-msgctxt "pricing_and_tiers.free.label"
-msgid "Free"
-msgstr "Ingyenes"
-
-#. Body copy describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.plutonium.benefits_note_official_instance_only
-msgctxt "pricing_and_tiers.plutonium.benefits_note_official_instance_only"
+#. Body copy in pricing UI explaining the base-currency checkout option. Preserve all currency and price placeholders exactly.
+#: fluxer_marketing/generated:pricing_and_tiers.billing.base_currency_also_available
+msgctxt "pricing_and_tiers.billing.base_currency_also_available"
 msgid ""
-"Note: {premium_tier_name} and {visionary_tier_name} benefits only apply to the official {product_name}.app instance, not third-party or self-hosted instances."
-msgstr ""
-"Megjegyzés: a {premium_tier_name} és a {visionary_tier_name} előnyök csak a hivatalos {product_name}.app példányra vonatkoznak, nem harmadik féltől származó vagy saját üzemeltetésű példányokra."
+"The same subscription is also sold in {base_currency_code}, at {base_monthly_price} a month or {base_yearly_price} for a year."
+msgstr "Ugyanez az előfizetés {base_currency_code} pénznemben is megvásárolható, havi {base_monthly_price} vagy éves {base_yearly_price} áron."
 
-#. Body copy describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.plutonium.feature_highlights
-msgctxt "pricing_and_tiers.plutonium.feature_highlights"
-msgid "500 MB uploads, 4,000-character messages, 300 bookmarks, 50 emoji packs, and much more."
-msgstr ""
-"500 MB feltöltés, 4 000 karakteres üzenet, 300 könyvjelző, 50 emoji csomag, és még sok más."
+#. Compact monthly price label in pricing UI. Preserve the monthly price placeholder exactly.
+#: fluxer_marketing/generated:pricing_and_tiers.billing.monthly_price
+msgctxt "pricing_and_tiers.billing.monthly_price"
+msgid "{monthly_price}/mo"
+msgstr "{monthly_price}/hó"
 
-#. Body copy describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.plutonium.features.choose_custom_4_digit_tag
-msgctxt "pricing_and_tiers.plutonium.features.choose_custom_4_digit_tag"
-msgid "Choose any available 4-digit tag from #0001 to #9999 to make your username truly unique."
-msgstr ""
-"Válassz bármilyen elérhető 4 számjegyű címkét #0001-től #9999-ig, hogy a felhasználóneved igazán egyedi legyen."
+#. Compact conjunction between monthly and yearly prices.
+#: fluxer_marketing/generated:pricing_and_tiers.billing.or
+msgctxt "pricing_and_tiers.billing.or"
+msgid "or"
+msgstr "vagy"
 
-#. Short UI label or heading describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.plutonium.features.custom_4_digit_username_tag
-msgctxt "pricing_and_tiers.plutonium.features.custom_4_digit_username_tag"
-msgid "Custom 4-digit username tag"
-msgstr "Egyedi 4 számjegyű felhasználónév címke"
-
-#. Short UI label or heading describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.plutonium.features.custom_username_tag
-msgctxt "pricing_and_tiers.plutonium.features.custom_username_tag"
-msgid "Custom username tag"
-msgstr "Egyedi felhasználónév címke"
-
-#. Compact UI label describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.plutonium.features.custom_video_backgrounds
-msgctxt "pricing_and_tiers.plutonium.features.custom_video_backgrounds"
-msgid "Video backgrounds"
-msgstr "Videó hátterek"
-
-#. Compact UI label describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.plutonium.features.emoji_sticker_packs
-msgctxt "pricing_and_tiers.plutonium.features.emoji_sticker_packs"
-msgid "Emoji and sticker packs"
-msgstr "Emoji és matricacsomagok"
-
-#. Compact UI label describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.plutonium.features.file_upload_size
-msgctxt "pricing_and_tiers.plutonium.features.file_upload_size"
-msgid "File upload size"
-msgstr "Fájlfeltöltés mérete"
-
-#. Compact UI label describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.plutonium.features.global_emoji_sticker_access
-msgctxt "pricing_and_tiers.plutonium.features.global_emoji_sticker_access"
-msgid "Global emoji and sticker access"
-msgstr "Globális emoji és matrica hozzáférés"
-
-#. Compact UI label describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.plutonium.features.message_character_limit
-msgctxt "pricing_and_tiers.plutonium.features.message_character_limit"
-msgid "Message character limit"
-msgstr "Üzenet karakterkorlát"
-
-#. Compact UI label describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.plutonium.features.message_scheduling
-msgctxt "pricing_and_tiers.plutonium.features.message_scheduling"
-msgid "Message scheduling"
-msgstr "Üzenetek ütemezése"
-
-#. Compact UI label describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.plutonium.features.per_community_profiles
-msgctxt "pricing_and_tiers.plutonium.features.per_community_profiles"
-msgid "Per-community profiles"
-msgstr "Közösségi profilok"
-
-#. Compact UI label describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.plutonium.features.saved_media
-msgctxt "pricing_and_tiers.plutonium.features.saved_media"
-msgid "Saved media"
-msgstr "Mentett média"
+#. Compact yearly price label in pricing UI. Preserve the yearly price placeholder exactly.
+#: fluxer_marketing/generated:pricing_and_tiers.billing.yearly_price
+msgctxt "pricing_and_tiers.billing.yearly_price"
+msgid "{yearly_price}/yr"
+msgstr "{yearly_price}/év"
 
 #. Compact UI label describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
 #: fluxer_marketing/generated:pricing_and_tiers.plutonium.features.webhooks_and_bot_support
@@ -2754,43 +2249,150 @@ msgctxt "pricing_and_tiers.plutonium.features.webhooks_and_bot_support"
 msgid "Webhooks and bot support"
 msgstr "Webhook és bottámogatás"
 
-#. Button or link label describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.plutonium.get_more_with_plutonium
-msgctxt "pricing_and_tiers.plutonium.get_more_with_plutonium"
-msgid "Get more with {product_name} {premium_tier_name}"
-msgstr "Érj el többet a {product_name} {premium_tier_name} szolgáltatással"
+#. Hero heading for the Plutonium page. Preserve the product and premium tier name placeholders exactly.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.full_tier_name
+msgctxt "pricing_and_tiers.plutonium.full_tier_name"
+msgid "{product_name} {premium_tier_name}"
+msgstr "{product_name} {premium_tier_name}"
 
-#. Button or link label describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.plutonium.get_plutonium
-msgctxt "pricing_and_tiers.plutonium.get_plutonium"
-msgid "Get {premium_tier_name}"
-msgstr "Szerezd be a {premium_tier_name} csomagot"
-
-#. Body copy describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.plutonium.higher_limits_and_early_access
-msgctxt "pricing_and_tiers.plutonium.higher_limits_and_early_access"
-msgid "Higher limits, exclusive features, and early access to new updates"
-msgstr "Magasabb korlátok, exkluzív funkciók és korai hozzáférés az új frissítésekhez"
-
-#. Compact UI label describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.plutonium.higher_limits_everywhere
-msgctxt "pricing_and_tiers.plutonium.higher_limits_everywhere"
-msgid "Higher limits everywhere"
-msgstr "Mindenhol magasabb limitek"
-
-#. Body copy describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.plutonium.show_off_status_badge
-msgctxt "pricing_and_tiers.plutonium.show_off_status_badge"
-msgid "Show off your {premium_tier_name} status with an exclusive badge on your profile."
-msgstr "Mutasd meg a {premium_tier_name} státuszodat egy exkluzív jelvénnyel a profilodon."
-
-#. Body copy describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.plutonium.standard_pricing_available
-msgctxt "pricing_and_tiers.plutonium.standard_pricing_available"
+#. Metadata description for the Plutonium page. Preserve the premium tier, official instance host, and product name placeholders exactly.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.hero_description
+msgctxt "pricing_and_tiers.plutonium.hero_description"
 msgid ""
-"Prefer paying in standard {currency}? Also available at checkout for {monthly_price} or {yearly_price}."
-msgstr ""
-"Inkább {currency} pénznemben fizetnél? Fizetéskor is elérhető {monthly_price} vagy {yearly_price} áron."
+"{premium_tier_name} raises the limits on {official_instance_host} for the people who keep running into them, and adds a few ways to make your profile look like you. It is optional, and {product_name} works without it."
+msgstr "A {premium_tier_name} megemeli a korlátokat a {official_instance_host} oldalon azoknak, akik folyton beleütköznek, és néhány új módot ad arra, hogy a profilod rád hasonlítson. Opcionális, és a {product_name} nélküle is működik."
+
+#. Secondary callout at the bottom of the Plutonium hero. The {donate_link} placeholder is the only linked portion; preserve {product_name} and both placeholders exactly.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.donation_callout
+msgctxt "pricing_and_tiers.plutonium.donation_callout"
+msgid "Just want to support {product_name}'s open source development? {donate_link}."
+msgstr "Csak támogatnád a {product_name} nyílt forráskódú fejlesztését? {donate_link}."
+
+#. Linked label in the Plutonium hero donation callout. Translate as a concise donation action.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.donation_callout_link
+msgctxt "pricing_and_tiers.plutonium.donation_callout_link"
+msgid "Donate instead"
+msgstr "Adományozz inkább"
+
+#. Subscription call to action on the Plutonium page. Preserve the product name placeholder exactly.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.open_fluxer_to_subscribe
+msgctxt "pricing_and_tiers.plutonium.open_fluxer_to_subscribe"
+msgid "Open {product_name} to subscribe"
+msgstr "Nyisd meg a {product_name}-t az előfizetéshez"
+
+#. Feature label in the Plutonium comparison table. Keep it concise and consistent with product terminology.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.animated_avatar_and_banner
+msgctxt "pricing_and_tiers.plutonium.perks.animated_avatar_and_banner"
+msgid "Animated avatar and profile banner"
+msgstr "Animált profilkép és profilbanner"
+
+#. Feature label in the Plutonium comparison table. Keep it concise and consistent with product terminology.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.bookmarked_messages
+msgctxt "pricing_and_tiers.plutonium.perks.bookmarked_messages"
+msgid "Messages you can bookmark"
+msgstr "Könyvjelzővel megjelölhető üzenetek"
+
+#. Feature label in the Plutonium comparison table. Keep it concise and consistent with product terminology.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.communities
+msgctxt "pricing_and_tiers.plutonium.perks.communities"
+msgid "Communities you can join"
+msgstr "Közösségek, amelyekhez csatlakozhatsz"
+
+#. Feature label in the Plutonium comparison table. Keep it concise and consistent with product terminology.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.custom_themes
+msgctxt "pricing_and_tiers.plutonium.perks.custom_themes"
+msgid "Custom themes for the app"
+msgstr "Egyedi témák az alkalmazáshoz"
+
+#. Feature label in the Plutonium comparison table. Keep it concise and consistent with product terminology.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.custom_username_tag
+msgctxt "pricing_and_tiers.plutonium.perks.custom_username_tag"
+msgid "Pick the 4-digit number after your username"
+msgstr "Válaszd ki a felhasználóneved utáni négyjegyű számot"
+
+#. Feature label in the Plutonium comparison table. Keep it concise and consistent with product terminology.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.early_access
+msgctxt "pricing_and_tiers.plutonium.perks.early_access"
+msgid "Early access to new features"
+msgstr "Korai hozzáférés az új funkciókhoz"
+
+#. Feature label in the Plutonium comparison table. Keep it concise and consistent with product terminology.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.file_upload_size
+msgctxt "pricing_and_tiers.plutonium.perks.file_upload_size"
+msgid "Largest file you can upload"
+msgstr "Feltölthető fájlok maximális mérete"
+
+#. Feature label in the Plutonium comparison table. Keep it concise and consistent with product terminology.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.global_expressions
+msgctxt "pricing_and_tiers.plutonium.perks.global_expressions"
+msgid "Use custom emojis and stickers in any community"
+msgstr "Egyedi emojik és matricák használata bármelyik közösségben"
+
+#. Feature label in the Plutonium comparison table. Keep it concise and consistent with product terminology.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.message_characters
+msgctxt "pricing_and_tiers.plutonium.perks.message_characters"
+msgid "Characters in a single message"
+msgstr "Karakterek száma egy üzenetben"
+
+#. Feature label in the Plutonium comparison table. Keep it concise and consistent with product terminology.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.per_community_profiles
+msgctxt "pricing_and_tiers.plutonium.perks.per_community_profiles"
+msgid "A separate profile for each community"
+msgstr "Külön profil minden közösséghez"
+
+#. Feature label in the Plutonium comparison table. Keep it concise and consistent with product terminology.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.profile_badge
+msgctxt "pricing_and_tiers.plutonium.perks.profile_badge"
+msgid "Subscriber badge on your profile"
+msgstr "Előfizetői jelvény a profilodon"
+
+#. Feature label in the Plutonium comparison table. Keep it concise and consistent with product terminology.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.saved_media
+msgctxt "pricing_and_tiers.plutonium.perks.saved_media"
+msgid "Media items you can save"
+msgstr "Elmenthető médiaelemek"
+
+#. Feature label in the Plutonium comparison table. Keep it concise and consistent with product terminology.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.use_animated_emojis
+msgctxt "pricing_and_tiers.plutonium.perks.use_animated_emojis"
+msgid "Use animated emojis in messages"
+msgstr "Animált emojik használata az üzenetekben"
+
+#. Feature label in the Plutonium comparison table. Keep it concise and consistent with product terminology.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.video_backgrounds
+msgctxt "pricing_and_tiers.plutonium.perks.video_backgrounds"
+msgid "Video call backgrounds you can save"
+msgstr "Elmenthető videohívás-hátterek"
+
+#. Feature label in the Plutonium comparison table. Keep it concise and consistent with product terminology.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.video_quality
+msgctxt "pricing_and_tiers.plutonium.perks.video_quality"
+msgid "Video call and screen share quality"
+msgstr "Videohívás és képernyőmegosztás minősége"
+
+#. Free-tier value in the Plutonium comparison table. Keep resolution and frame rate accurate.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.video_quality_free
+msgctxt "pricing_and_tiers.plutonium.perks.video_quality_free"
+msgid "Up to 720p at 30 FPS"
+msgstr "Legfeljebb 720p 30 FPS-sel"
+
+#. Plutonium-tier value in the comparison table. Keep resolution and frame rate accurate.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.video_quality_plutonium
+msgctxt "pricing_and_tiers.plutonium.perks.video_quality_plutonium"
+msgid "Up to 4K at 60 FPS"
+msgstr "Legfeljebb 4K 60 FPS-sel"
+
+#. Compact UI label in pricing and billing UI. Keep it short, conventional for subscriptions, and preserve price/currency placeholders exactly.
+#: fluxer_marketing/generated:pricing_and_tiers.billing.save_percent
+msgctxt "pricing_and_tiers.billing.save_percent"
+msgid "Save {yearly_savings}"
+msgstr "Megtakarítás: {yearly_savings}"
+
+#. Short UI label or heading in pricing comparison UI. Keep labels clear and commercially neutral; preserve placeholders exactly.
+#: fluxer_marketing/generated:pricing_and_tiers.free.label
+msgctxt "pricing_and_tiers.free.label"
+msgid "Free"
+msgstr "Ingyenes"
 
 #. Short UI label or heading describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
 #: fluxer_marketing/generated:pricing_and_tiers.plutonium.tier_name
@@ -2798,49 +2400,24 @@ msgctxt "pricing_and_tiers.plutonium.tier_name"
 msgid "{premium_tier_name}"
 msgstr "{premium_tier_name}"
 
-#. Short UI label or heading in pricing comparison UI. Keep labels clear and commercially neutral; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.visionary.one_time_purchase.label
-msgctxt "pricing_and_tiers.visionary.one_time_purchase.label"
-msgid "One-time purchase"
-msgstr "Egyszeri vétel"
+#. Button label linking to the operator documentation from the self-hosting feature card.
+#: fluxer_marketing/generated:product_positioning.self_hosting.read_the_self_hosting_guide
+msgctxt "product_positioning.self_hosting.read_the_self_hosting_guide"
+msgid "Read the self-hosting guide"
+msgstr "Olvasd el az önálló üzemeltetési útmutatót"
 
-#. Short product-positioning body copy used in footer and self-hosting sections. Preserve {product_name} exactly; keep the free/open-source and self-hosting meaning clear. Preserve placeholders exactly.
-#: fluxer_marketing/generated:product_positioning.free_and_open_source
-msgctxt "product_positioning.free_and_open_source"
-msgid "{product_name} is free and open source. Anyone can self-host for free."
-msgstr "A {product_name} ingyenes és nyílt forráskódú. Bárki ingyen üzemeltetheti."
-
-#. Primary product-positioning body copy used in page metadata and hero sections. Preserve {product_name} exactly; keep the free/open-source, instant messaging, VoIP, and community meanings clear. Preserve placeholders exactly.
+#. Primary product-positioning body copy used in page metadata and hero sections. Keep the free/open-source, audience, communication-feature, and self-hosting meanings clear.
 #: fluxer_marketing/generated:product_positioning.intro
 msgctxt "product_positioning.intro"
 msgid ""
-"{product_name} is a free and open source instant messaging and VoIP chat app built for friends, groups, and communities."
-msgstr ""
-"A {product_name} egy ingyenes, nyílt forráskódú azonnali üzenetküldő és VoIP-csevegőalkalmazás, amely barátoknak, csoportoknak és közösségeknek készült."
+"Free and open source chat for friends, groups, and communities, with text, voice, video, screen sharing, and self-hosting."
+msgstr "Ingyenes és nyílt forráskódú csevegés barátoknak, csoportoknak és közösségeknek: szöveg, hang, videó, képernyőmegosztás és önálló üzemeltetés."
 
 #. Button or link label explaining Fluxer open-source licensing. Keep legal/license tokens such as AGPLv3 unchanged.
 #: fluxer_marketing/generated:product_positioning.open_source.fully_open_source_agplv3
 msgctxt "product_positioning.open_source.fully_open_source_agplv3"
 msgid "Fully open source (AGPLv3)"
 msgstr "Teljesen nyílt forráskódú (AGPLv3)"
-
-#. Button or link label explaining Fluxer open-source licensing. Keep legal/license tokens such as AGPLv3 unchanged.
-#: fluxer_marketing/generated:product_positioning.open_source.license
-msgctxt "product_positioning.open_source.license"
-msgid "Open source (AGPL-3.0)"
-msgstr "Nyílt forráskódú (AGPL-3.0)"
-
-#. Compact UI label explaining self-hosting and Operator Pass expectations. Keep technical wording accurate and preserve product-name placeholders exactly.
-#: fluxer_marketing/generated:product_positioning.self_hosting.connect_from_any_client
-msgctxt "product_positioning.self_hosting.connect_from_any_client"
-msgid "Connect from any client"
-msgstr "Csatlakozz bármely kliensről"
-
-#. Compact UI label explaining self-hosting and Operator Pass expectations. Keep technical wording accurate and preserve product-name placeholders exactly.
-#: fluxer_marketing/generated:product_positioning.self_hosting.free_self_hosting
-msgctxt "product_positioning.self_hosting.free_self_hosting"
-msgid "Free self-hosting"
-msgstr "Ingyenes önüzemeltetés"
 
 #. Compact UI label explaining self-hosting and Operator Pass expectations. Keep technical wording accurate and preserve product-name placeholders exactly.
 #: fluxer_marketing/generated:product_positioning.self_hosting.host_your_own_instance
@@ -2854,32 +2431,12 @@ msgctxt "product_positioning.self_hosting.label"
 msgid "Self-hosting"
 msgstr "Önálló üzemeltetés"
 
-#. Benefit label for the Operator Pass. Keep this warm and concrete: a smaller community where self-hosters can get help from each other and the Fluxer team. Preserve placeholders exactly.
-#: fluxer_marketing/generated:product_positioning.self_hosting.operator_pass.community_feedback
-msgctxt "product_positioning.self_hosting.operator_pass.community_feedback"
-msgid "Smaller {operators} community with team access"
-msgstr "Kisebb {operators} community közvetlen csapathozzáféréssel"
-
-#. Short UI label or heading explaining self-hosting and Operator Pass expectations. Keep technical wording accurate and preserve product-name placeholders exactly.
-#: fluxer_marketing/generated:product_positioning.self_hosting.operator_pass.label
-msgctxt "product_positioning.self_hosting.operator_pass.label"
-msgid "{operator_pass}"
-msgstr "{operator_pass}"
-
-#. Body copy explaining Operator Pass expectations. Keep it personal and warm: like donating with perks, with a smaller community where self-hosters can get help from each other and the Fluxer team. Preserve placeholders exactly.
-#: fluxer_marketing/generated:product_positioning.self_hosting.operator_pass.donating_with_perks_smaller_space
-msgctxt "product_positioning.self_hosting.operator_pass.donating_with_perks_smaller_space"
-msgid ""
-"Think of the optional {operator_pass} like donating with perks: you help keep {product_name} going and get the {operators} community, a smaller place where self-hosters and the {product_name} team can help when you get stuck, hear your ideas, and discuss feedback before it gets buried on {github}."
-msgstr ""
-"Gondolj az opcionális {operator_pass} adományozásra extrákkal: segíted a {product_name} működését, és kapsz egy {operators} közösséget, egy kisebb helyet, ahol az önálló hosztolók és a {product_name} csapata segíthet, ha elakadsz, meghallgathatják ötleteidet, és megbeszélhetitek a visszajelzéseket, mielőtt eltűnnének a {github}on."
-
 #. Body copy explaining self-hosting and Operator Pass expectations. Keep technical wording accurate and preserve product-name placeholders exactly.
 #: fluxer_marketing/generated:product_positioning.self_hosting.run_backend_on_your_hardware
 msgctxt "product_positioning.self_hosting.run_backend_on_your_hardware"
-msgid "Run the {product_name} backend on your own hardware and connect with our apps."
-msgstr ""
-"Futtasd a {product_name} backendjét a saját hardvereden, és csatlakozz az alkalmazásainkkal."
+msgid ""
+"Run the whole {product_name} backend on your own hardware and connect to it with the same apps we ship. There is no license key and no cut-down community edition."
+msgstr "Futtasd a teljes {product_name}-backendet a saját hardvereden, és csatlakozz hozzá ugyanazokkal az alkalmazásokkal, amelyeket mi is kiadunk. Nincs licenckulcs, és nincs lebutított közösségi kiadás sem."
 
 #. Compact UI label explaining self-hosting and Operator Pass expectations. Keep technical wording accurate and preserve product-name placeholders exactly.
 #: fluxer_marketing/generated:product_positioning.self_hosting.switch_between_instances
@@ -2887,33 +2444,11 @@ msgctxt "product_positioning.self_hosting.switch_between_instances"
 msgid "Switch between multiple instances"
 msgstr "Válts több példány között"
 
-#. Compact UI label in security, bug bounty, or responsible disclosure sections. Keep wording precise, calm, and trustworthy; preserve placeholders exactly.
-#: fluxer_marketing/generated:security.found_security_issue
-msgctxt "security.found_security_issue"
-msgid "Found a security issue?"
-msgstr "Biztonsági rést találtál?"
-
-#. Body copy in security, bug bounty, or responsible disclosure sections. Keep wording precise, calm, and trustworthy; preserve placeholders exactly.
-#: fluxer_marketing/generated:security.responsible_disclosure_note
-msgctxt "security.responsible_disclosure_note"
-msgid ""
-"We appreciate responsible disclosure via our security bug bounty page. We offer {premium_tier_name} codes and {bug_hunter} badges based on severity."
-msgstr ""
-"Nagyra értékeljük a felelős bejelentést a biztonsági hibavadász oldalunkon keresztül. A súlyosságtól függően {premium_tier_name} kódokat és {bug_hunter} jelvényeket kínálunk."
-
-#. Compact UI label in security, bug bounty, or responsible disclosure sections. Keep wording precise, calm, and trustworthy; preserve placeholders exactly.
-#: fluxer_marketing/generated:security.security_bug_bounty
-msgctxt "security.security_bug_bounty"
-msgid "Security bug bounty"
-msgstr "Biztonsági hibajutalmazási program"
-
-#. Body copy in security, bug bounty, or responsible disclosure sections. Keep wording precise, calm, and trustworthy; preserve placeholders exactly.
-#: fluxer_marketing/generated:security.testers_access_from_reports
-msgctxt "security.testers_access_from_reports"
-msgid ""
-"Found a bug? Check out our bug report guide to learn how to file clear, high-quality reports."
-msgstr ""
-"Hibát találtál? Nézd meg a hibajelentési útmutatónkat, hogy megtudd, hogyan készíthetsz egyértelmű, minőségi jelentéseket."
+#. Compact accessibility label shared across marketing comparison tables. Keep it broadly reusable, concise, and consistent with the Fluxer brand voice.
+#: fluxer_marketing/generated:general.available
+msgctxt "general.available"
+msgid "Available"
+msgstr "Elérhető"
 
 #. Short UI label or heading shared across marketing pages. Keep it broadly reusable, concise, and consistent with the Fluxer brand voice.
 #: fluxer_marketing/generated:general.coming_soon.label
@@ -2921,29 +2456,29 @@ msgctxt "general.coming_soon.label"
 msgid "Coming soon"
 msgstr "Hamarosan"
 
-#. Compact UI label shared across marketing pages. Keep it broadly reusable, concise, and consistent with the Fluxer brand voice.
+#. Compact UI label shared across marketing pages. Keep it broadly reusable, concise, and consistent with the Fluxer brand voice; preserve {product_name} exactly.
 #: fluxer_marketing/generated:general.coming_soon.whats_available_today
 msgctxt "general.coming_soon.whats_available_today"
-msgid "What's available today"
-msgstr "Mi érhető el ma"
+msgid "Everything {product_name} does today"
+msgstr "Minden, amit a {product_name} ma tud"
 
 #. Default author metadata label for Fluxer-authored marketing pages when no individual author is shown. Keep Fluxer as a product name. Preserve placeholders exactly.
 #: fluxer_marketing/generated:general.fluxer_team
 msgctxt "general.fluxer_team"
-msgid "{product_name} Team"
-msgstr "{product_name} csapat"
+msgid "{product_name} team"
+msgstr "A {product_name} csapata"
 
-#. Compact UI label shared across marketing pages. Keep it broadly reusable, concise, and consistent with the Fluxer brand voice.
-#: fluxer_marketing/generated:general.last_updated
-msgctxt "general.last_updated"
-msgid "Last updated"
-msgstr "Utolsó frissítés"
+#. Date line shown on policy and help content. Translate the whole sentence so date placement and punctuation are natural. Preserve {date} exactly.
+#: fluxer_marketing/generated:general.last_updated_on_date
+msgctxt "general.last_updated_on_date"
+msgid "Last updated on {date}."
+msgstr "Utoljára frissítve: {date}."
 
 #. Compact UI label shared across marketing pages. Keep it broadly reusable, concise, and consistent with the Fluxer brand voice.
 #: fluxer_marketing/generated:general.made_in_sweden
 msgctxt "general.made_in_sweden"
 msgid "Made in Sweden"
-msgstr "Svéd gyártmány"
+msgstr "Svédországban készült"
 
 #. Compact UI label shared across marketing pages. Keep it broadly reusable, concise, and consistent with the Fluxer brand voice.
 #: fluxer_marketing/generated:general.not_available
@@ -2952,28 +2487,10 @@ msgid "Not available"
 msgstr "Nem elérhető"
 
 #. Compact UI label shared across marketing pages. Keep it broadly reusable, concise, and consistent with the Fluxer brand voice.
-#: fluxer_marketing/generated:general.or
-msgctxt "general.or"
-msgid "or"
-msgstr "vagy"
-
-#. Compact UI label shared across marketing pages. Keep it broadly reusable, concise, and consistent with the Fluxer brand voice.
 #: fluxer_marketing/generated:general.tagline
 msgctxt "general.tagline"
 msgid "A chat app that puts you first"
 msgstr "Egy csevegőalkalmazás, ami téged helyez előtérbe"
-
-#. Short Operator Pass benefit label. Keep this warm and concrete: supporting Fluxer with community access as a perk.
-#: fluxer_marketing/generated:misc_labels.donating_with_perks
-msgctxt "misc_labels.donating_with_perks"
-msgid "Donating with perks"
-msgstr "A támogatásodért cserébe extra előnyökkel várunk"
-
-#. Short UI label or heading reused across marketing cards, buttons, and section headings. Translate as a standalone UI phrase that can fit multiple surfaces.
-#: fluxer_marketing/generated:misc_labels.exclusive_features
-msgctxt "misc_labels.exclusive_features"
-msgid "Exclusive features"
-msgstr "Exkluzív funkciók"
 
 #. Short UI label or heading reused across marketing cards, buttons, and section headings. Translate as a standalone UI phrase that can fit multiple surfaces.
 #: fluxer_marketing/generated:misc_labels.feature
@@ -2982,77 +2499,22 @@ msgid "Feature"
 msgstr "Funkció"
 
 #. Button or link label reused across marketing cards, buttons, and section headings. Translate as a standalone UI phrase that can fit multiple surfaces.
-#: fluxer_marketing/generated:misc_labels.get_updates
-msgctxt "misc_labels.get_updates"
-msgid "Get updates, see upcoming features, discuss suggestions, and chat with the team."
-msgstr ""
-"Értesülj a frissítésekről, nézd meg a közelgő funkciókat, beszélgess a javaslatokról, és csevegj a csapattal."
-
-#. Button/link label for joining the official Fluxer HQ community. Preserve {product_name} exactly; translate as a short standalone call to action. Preserve placeholders exactly.
-#: fluxer_marketing/generated:misc_labels.join_fluxer_hq
-msgctxt "misc_labels.join_fluxer_hq"
-msgid "Join {product_name} HQ"
-msgstr "Csatlakozz a {product_name} HQ-hoz"
-
-#. Button or link label reused across marketing cards, buttons, and section headings. Translate as a standalone UI phrase that can fit multiple surfaces.
 #: fluxer_marketing/generated:misc_labels.join_multiple_devices
 msgctxt "misc_labels.join_multiple_devices"
 msgid "Join from multiple devices at once"
 msgstr "Csatlakozz több eszközről egyszerre"
 
-#. Careers-page hero heading. Preserve {product_name} exactly; this refers to employment or future roles, not joining a user community. Preserve placeholders exactly.
-#: fluxer_marketing/generated:misc_labels.join_team_behind_fluxer
-msgctxt "misc_labels.join_team_behind_fluxer"
-msgid "Join the team behind {product_name}"
-msgstr "Csatlakozz a {product_name} csapatához"
-
-#. Button or link label reused across marketing cards, buttons, and section headings. Translate as a standalone UI phrase that can fit multiple surfaces.
-#: fluxer_marketing/generated:misc_labels.learn_more
-msgctxt "misc_labels.learn_more"
-msgid "Learn more"
-msgstr "Tudj meg többet"
-
-#. Short UI label or heading reused across marketing cards, buttons, and section headings. Translate as a standalone UI phrase that can fit multiple surfaces.
-#: fluxer_marketing/generated:misc_labels.profile_badge
-msgctxt "misc_labels.profile_badge"
-msgid "Profile badge"
-msgstr "Profiljelvény"
-
-#. Button or link label reused across marketing cards, buttons, and section headings. Translate as a standalone UI phrase that can fit multiple surfaces.
-#: fluxer_marketing/generated:misc_labels.read_the_guide
-msgctxt "misc_labels.read_the_guide"
-msgid "Read the guide"
-msgstr "Olvasd el az útmutatót"
-
 #. Button or link label reused across marketing cards, buttons, and section headings. Translate as a standalone UI phrase that can fit multiple surfaces.
 #: fluxer_marketing/generated:misc_labels.ready_to_get_started
 msgctxt "misc_labels.ready_to_get_started"
-msgid "Ready to get started?"
-msgstr "Készen állsz a kezdésre?"
+msgid "Bring your people over"
+msgstr "Hozd át az embereidet"
 
 #. Short UI label or heading reused across marketing cards, buttons, and section headings. Translate as a standalone UI phrase that can fit multiple surfaces.
 #: fluxer_marketing/generated:misc_labels.related_policies
 msgctxt "misc_labels.related_policies"
 msgid "Related policies"
 msgstr "Kapcsolódó irányelvek"
-
-#. Button or link label reused across marketing cards, buttons, and section headings. Translate as a standalone UI phrase that can fit multiple surfaces.
-#: fluxer_marketing/generated:misc_labels.report_bugs
-msgctxt "misc_labels.report_bugs"
-msgid "Report bugs"
-msgstr "Hibák jelentése"
-
-#. Short UI label or heading reused across marketing cards, buttons, and section headings. Translate as a standalone UI phrase that can fit multiple surfaces.
-#: fluxer_marketing/generated:misc_labels.unlimited_users
-msgctxt "misc_labels.unlimited_users"
-msgid "Unlimited users"
-msgstr "Korlátlan felhasználó"
-
-#. Compact UI label in social, Bluesky, GitHub, or RSS follow sections. Keep labels recognizable, avoid dangling sentence fragments, and preserve handles/placeholders exactly.
-#: fluxer_marketing/generated:social_and_feeds.bluesky.follow_us
-msgctxt "social_and_feeds.bluesky.follow_us"
-msgid "Follow us on {bluesky}"
-msgstr "Kövess minket a {bluesky}"
 
 #. Short UI label or heading in social, Bluesky, GitHub, or RSS follow sections. Keep labels recognizable, avoid dangling sentence fragments, and preserve handles/placeholders exactly.
 #: fluxer_marketing/generated:social_and_feeds.bluesky.label
@@ -3061,47 +2523,22 @@ msgid "{bluesky}"
 msgstr "{bluesky}"
 
 #. Compact UI label in social, Bluesky, GitHub, or RSS follow sections. Keep labels recognizable, avoid dangling sentence fragments, and preserve handles/placeholders exactly.
-#: fluxer_marketing/generated:social_and_feeds.bluesky.rss_feed
-msgctxt "social_and_feeds.bluesky.rss_feed"
-msgid "{bluesky} RSS feed"
-msgstr "{bluesky} RSS hírfolyam"
-
-#. Compact UI label in social, Bluesky, GitHub, or RSS follow sections. Keep labels recognizable, avoid dangling sentence fragments, and preserve handles/placeholders exactly.
-#: fluxer_marketing/generated:social_and_feeds.follow_fluxer
-msgctxt "social_and_feeds.follow_fluxer"
-msgid "Follow @{social_handle}"
-msgstr "Kövesd ezt: @{social_handle}"
-
-#. Compact UI label in social, Bluesky, GitHub, or RSS follow sections. Keep labels recognizable, avoid dangling sentence fragments, and preserve handles/placeholders exactly.
 #: fluxer_marketing/generated:social_and_feeds.github
 msgctxt "social_and_feeds.github"
 msgid "{github}"
 msgstr "{github}"
 
 #. Compact UI label in social, Bluesky, GitHub, or RSS follow sections. Keep labels recognizable, avoid dangling sentence fragments, and preserve handles/placeholders exactly.
-#: fluxer_marketing/generated:social_and_feeds.rss.blog_rss_feed
-msgctxt "social_and_feeds.rss.blog_rss_feed"
-msgid "Blog RSS feed"
-msgstr "Blog RSS hírfolyam"
-
-#. Compact UI label in social, Bluesky, GitHub, or RSS follow sections. Keep labels recognizable, avoid dangling sentence fragments, and preserve handles/placeholders exactly.
 #: fluxer_marketing/generated:social_and_feeds.rss.fluxer_blog_rss
 msgctxt "social_and_feeds.rss.fluxer_blog_rss"
 msgid "{product_name} blog RSS"
-msgstr "{product_name} blog RSS-csatorna"
+msgstr "{product_name} blog RSS-hírcsatorna"
 
 #. Short UI label or heading in social, Bluesky, GitHub, or RSS follow sections. Keep labels recognizable, avoid dangling sentence fragments, and preserve handles/placeholders exactly.
 #: fluxer_marketing/generated:social_and_feeds.rss.label
 msgctxt "social_and_feeds.rss.label"
 msgid "RSS feed"
-msgstr "RSS-csatorna"
-
-#. Body copy in the social/follow card. It is followed by separate RSS feed links in the UI, so translate as an unfinished lead-in only if that grammar works in the target locale.
-#: fluxer_marketing/generated:social_and_feeds.stay_updated_cta
-msgctxt "social_and_feeds.stay_updated_cta"
-msgid "Stay updated on news, service status, and what's happening. You can also subscribe to our"
-msgstr ""
-"Maradj naprakész a hírekkel, a szolgáltatás állapotával és az eseményekkel kapcsolatban. Feliratkozhatsz a hírfolyamunkra"
+msgstr "RSS-hírcsatorna"
 
 #. Section heading above the world map of voice regions. Plain, sentence case.
 #: fluxer_marketing/generated:voice_regions.map_heading
@@ -3114,8 +2551,7 @@ msgstr "Hangrégiók"
 msgctxt "voice_regions.map_intro"
 msgid ""
 "Sixteen voice regions across six continents. Voice and video calls connect through the region closest to you."
-msgstr ""
-"Tizenhat hangrégió hat kontinensen. A hang- és videohívások az Önhöz legközelebbi régión keresztül kapcsolódnak."
+msgstr "Tizenhat hangrégió hat kontinensen. A hang- és videohívások a hozzád legközelebbi régión keresztül kapcsolódnak."
 
 #. Accessible legend / alt-style sentence next to the map. Sentence case, short. Preserve placeholders exactly.
 #: fluxer_marketing/generated:voice_regions.map_legend
@@ -3129,10 +2565,9 @@ msgctxt "voice_regions.languages_heading"
 msgid "Languages"
 msgstr "Nyelvek"
 
-#. Paragraph under the languages heading. Includes an {email} placeholder for the localization contact. Plain and factual.
+#. Paragraph under the languages heading. Includes a {weblate} placeholder for the localization platform. Plain and factual.
 #: fluxer_marketing/generated:voice_regions.languages_intro
 msgctxt "voice_regions.languages_intro"
 msgid ""
-"{product_name} is available in over thirty languages. To help translate {product_name} into your native language, write to {email}."
-msgstr ""
-"A {product_name} több mint harminc nyelven érhető el. A {product_name} anyanyelvére történő lefordítása érdekében írjon a {email} címre."
+"{product_name} is available in over thirty languages. To help translate {product_name} into your native language, join us on {weblate}."
+msgstr "A {product_name} több mint harminc nyelven érhető el. Ha szeretnéd lefordítani a {product_name}-t az anyanyelvedre, csatlakozz hozzánk a {weblate} oldalon."

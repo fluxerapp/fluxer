@@ -13,12 +13,6 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #. Compact UI label used in the home-page communities/moderation feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
-#: fluxer_marketing/generated:app.communities.community_support
-msgctxt "app.communities.community_support"
-msgid "Community support"
-msgstr "커뮤니티 지원"
-
-#. Compact UI label used in the home-page communities/moderation feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.communities.featured_in_discovery
 msgctxt "app.communities.featured_in_discovery"
 msgid "Featured in discovery"
@@ -51,14 +45,8 @@ msgstr "세밀한 역할 및 권한"
 #. Body copy used in the home-page communities/moderation feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.communities.roles_permissions_audit.keep_running_smoothly
 msgctxt "app.communities.roles_permissions_audit.keep_running_smoothly"
-msgid "Keep your community running smoothly with roles, permissions, and logs."
-msgstr "역할, 권한, 로그를 통해 커뮤니티를 원활하게 운영하세요."
-
-#. Short UI label or heading used in the home-page communities/moderation feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
-#: fluxer_marketing/generated:app.communities.title
-msgctxt "app.communities.title"
-msgid "Communities"
-msgstr "커뮤니티"
+msgid "Assign roles and permissions, and use the audit log to see which moderator changed what."
+msgstr "역할과 권한을 부여하고, 감사 로그에서 어떤 모더레이터가 무엇을 변경했는지 확인하세요."
 
 #. Short UI label or heading used in the home-page communities/moderation feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.communities.verification.label
@@ -71,12 +59,6 @@ msgstr "커뮤니티 인증"
 msgctxt "app.communities.verification.value_statement"
 msgid "Your community gets verified status for authenticity and trust."
 msgstr "커뮤니티가 인증되어 진정성과 신뢰를 얻을 수 있어요."
-
-#. Compact UI label used in the home-page communities/moderation feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
-#: fluxer_marketing/generated:app.communities.verification.verified_community
-msgctxt "app.communities.verification.verified_community"
-msgid "Verified community"
-msgstr "인증된 커뮤니티"
 
 #. Compact UI label used in the home-page customization feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.customization.animated_profile.animated_avatars_and_banners
@@ -91,12 +73,6 @@ msgid "Stand out with animated profile pictures and banners to express your pers
 msgstr "움직이는 프로필 사진과 배너로 개성을 표현하고 돋보이세요."
 
 #. Compact UI label used in the home-page customization feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
-#: fluxer_marketing/generated:app.customization.app_icon_badges
-msgctxt "app.customization.app_icon_badges"
-msgid "See badge counts on the app icon."
-msgstr "앱 아이콘에서 배지 알림을 확인할 수 있어요."
-
-#. Compact UI label used in the home-page customization feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.customization.compact_mode
 msgctxt "app.customization.compact_mode"
 msgid "Compact mode and display options"
@@ -108,35 +84,12 @@ msgctxt "app.customization.custom_css_themes"
 msgid "Custom CSS themes"
 msgstr "맞춤 CSS 테마"
 
-#. Compact UI label used in the home-page customization feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
-#: fluxer_marketing/generated:app.customization.custom_sounds.entrance_sounds
-msgctxt "app.customization.custom_sounds.entrance_sounds"
-msgid "Custom entrance sounds"
-msgstr "맞춤 입장 사운드"
-
-#. Body copy in the home-page customization feature card. Explains custom join sounds for voice channels; keep the wording concrete and avoid making it sound like an audio setting label.
-#: fluxer_marketing/generated:app.customization.custom_sounds.set_personalized_join_sounds
-msgctxt "app.customization.custom_sounds.set_personalized_join_sounds"
-msgid "Set personalized sounds when you join voice channels to make your presence known."
-msgstr "음성 채널에 참여할 때 나만의 사운드를 설정하여 참여를 알릴 수 있어요."
-
-#. Compact UI label used in the home-page customization feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
-#: fluxer_marketing/generated:app.customization.custom_themes
-msgctxt "app.customization.custom_themes"
-msgid "Custom themes"
-msgstr "맞춤 테마"
-
-#. Compact UI label used in the home-page customization feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
-#: fluxer_marketing/generated:app.customization.global_emoji_and_sticker_access
-msgctxt "app.customization.global_emoji_and_sticker_access"
-msgid "Global emoji and sticker access"
-msgstr "전역 이모지 및 스티커 접근"
-
 #. Body copy used in the home-page customization feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.customization.saved_media_and_css
 msgctxt "app.customization.saved_media_and_css"
-msgid "Add custom emojis, save media for later, and style the app with custom CSS."
-msgstr "맞춤 이모지를 추가하고, 나중에 볼 미디어를 저장하고, 맞춤 CSS로 앱을 꾸며 보세요."
+msgid ""
+"Make your own emojis, keep the media you want to find again, and rewrite the whole interface with custom CSS if you want to."
+msgstr "직접 이모지를 만들고, 다시 찾아보고 싶은 미디어를 저장하고, 원한다면 맞춤 CSS로 인터페이스 전체를 새로 꾸며 보세요."
 
 #. Short UI label or heading used in the home-page customization feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.customization.title
@@ -150,23 +103,12 @@ msgctxt "app.customization.upload_custom_emojis_and_stickers"
 msgid "Upload custom emojis and stickers"
 msgstr "맞춤 이모지 및 스티커 업로드"
 
-#. Compact UI label used in the home-page customization feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
-#: fluxer_marketing/generated:app.customization.use_animated_emojis
-msgctxt "app.customization.use_animated_emojis"
-msgid "Use animated emojis"
-msgstr "움직이는 이모지 사용"
-
 #. Body copy used in the home-page messaging feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.messaging.description
 msgctxt "app.messaging.description"
-msgid "DM your friends, chat with groups, or build communities with channels."
-msgstr "친구에게 DM을 보내거나, 그룹으로 채팅하거나, 채널을 통해 커뮤니티를 만들어 보세요."
-
-#. Compact UI label used in the home-page messaging feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
-#: fluxer_marketing/generated:app.messaging.features.bookmarked_messages
-msgctxt "app.messaging.features.bookmarked_messages"
-msgid "Bookmarked messages"
-msgstr "북마크 메시지"
+msgid ""
+"Chat with friends or groups. Communities give you organized channels when a group chat has grown too large."
+msgstr "친구나 그룹과 채팅하세요. 그룹 채팅이 너무 커지면 커뮤니티에서 정리된 채널을 사용할 수 있어요."
 
 #. Compact UI label used in the home-page messaging feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.messaging.features.file_sharing
@@ -179,12 +121,6 @@ msgstr "파일 공유 및 링크 미리보기"
 msgctxt "app.messaging.features.full_markdown_support"
 msgid "Full Markdown support in messages"
 msgstr "메시지 Markdown 완벽 지원"
-
-#. Body copy used in the home-page messaging feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
-#: fluxer_marketing/generated:app.messaging.features.message_scheduling.description
-msgctxt "app.messaging.features.message_scheduling.description"
-msgid "Schedule messages to be sent at a specific time in the future. No {delorean} required."
-msgstr "미래의 특정 시간에 메시지를 보내도록 예약하세요. {delorean}이 필요하지 않습니다."
 
 #. Compact UI label used in the home-page messaging feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.messaging.features.organised_channels_for_communities
@@ -207,14 +143,14 @@ msgstr "이미지, 동영상, GIF, 오디오 저장"
 #. Compact UI label used in the home-page messaging feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.messaging.features.search.filter_options
 msgctxt "app.messaging.features.search.filter_options"
-msgid "Filter by users, dates, and more"
-msgstr "사용자, 날짜 등으로 필터링하기"
+msgid "Filter search by author or date"
+msgstr "작성자 또는 날짜로 검색 필터링"
 
 #. Body copy used in the home-page messaging feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.messaging.features.search.find_old_messages
 msgctxt "app.messaging.features.search.find_old_messages"
-msgid "Find old messages or jump between communities and channels in seconds."
-msgstr "오래된 메시지를 찾거나 커뮤니티와 채널 사이를 몇 초 만에 이동하세요."
+msgid "Find old messages or jump between communities and channels from the same search box."
+msgstr "같은 검색창에서 오래된 메시지를 찾거나 커뮤니티와 채널 사이를 이동하세요."
 
 #. Short UI label or heading used in the home-page messaging feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.messaging.features.search.label
@@ -253,18 +189,6 @@ msgid "Open the web app"
 msgstr "웹 앱 열기"
 
 #. Compact UI label used in profile and identity feature copy. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
-#: fluxer_marketing/generated:app.profiles_identity.custom_identity
-msgctxt "app.profiles_identity.custom_identity"
-msgid "Custom identity"
-msgstr "나만의 개성"
-
-#. Body copy used in profile and identity feature copy. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
-#: fluxer_marketing/generated:app.profiles_identity.customise_per_community
-msgctxt "app.profiles_identity.customise_per_community"
-msgid "Customize your profile differently for each community you're part of."
-msgstr "참여 중인 커뮤니티별로 프로필을 맞춤 설정해 보세요."
-
-#. Compact UI label used in profile and identity feature copy. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.profiles_identity.manage_friends_and_block_users
 msgctxt "app.profiles_identity.manage_friends_and_block_users"
 msgid "Manage friends and block users"
@@ -273,7 +197,7 @@ msgstr "친구 관리 및 사용자 차단"
 #. Compact UI label used in the home-page voice and video feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.voice_and_video.features.mute_controls
 msgctxt "app.voice_and_video.features.mute_controls"
-msgid "Mute, deafen, and camera controls"
+msgid "Mute or deafen yourself and control your camera"
 msgstr "마이크 음소거, 헤드셋 음소거, 카메라 제어"
 
 #. Body copy used in the home-page voice and video feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
@@ -289,52 +213,46 @@ msgid "Built-in screen sharing"
 msgstr "기본 화면 공유"
 
 #. Body copy used in the home-page voice and video feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
-#: fluxer_marketing/generated:app.voice_and_video.features.stream_4k_60fps
-msgctxt "app.voice_and_video.features.stream_4k_60fps"
-msgid "Stream up to 4K resolution at 60 fps so others can see you in stunning clarity."
-msgstr "최대 4K 해상도 60fps로 스트리밍하여 다른 사람들에게 놀라운 선명도로 보여줄 수 있어요."
-
-#. Compact UI label used in the home-page voice and video feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
-#: fluxer_marketing/generated:app.voice_and_video.features.up_to_4k_video_quality
-msgctxt "app.voice_and_video.features.up_to_4k_video_quality"
-msgid "Up to 4K video quality"
-msgstr "최대 4K 영상 화질"
-
-#. Body copy used in the home-page voice and video feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
-#: fluxer_marketing/generated:app.voice_and_video.features.video_backgrounds.description
-msgctxt "app.voice_and_video.features.video_backgrounds.description"
-msgid "Store up to 15 video backgrounds for calls. No more Downloads folder scavenger hunts."
-msgstr "통화용 비디오 배경을 최대 15개까지 저장할 수 있어요. 다운로드 폴더에서 찾을 필요 없이 바로 사용하세요."
-
-#. Compact UI label used in the home-page voice and video feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
-#: fluxer_marketing/generated:app.voice_and_video.features.video_quality
-msgctxt "app.voice_and_video.features.video_quality"
-msgid "Video quality"
-msgstr "비디오 품질"
-
-#. Compact UI label used in the home-page voice and video feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
-#: fluxer_marketing/generated:app.voice_and_video.features.video_quality_free
-msgctxt "app.voice_and_video.features.video_quality_free"
-msgid "720p/30fps"
-msgstr "720p/30fps"
-
-#. Compact UI label used in the home-page voice and video feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
-#: fluxer_marketing/generated:app.voice_and_video.features.video_quality_premium
-msgctxt "app.voice_and_video.features.video_quality_premium"
-msgid "Up to 4K/60fps"
-msgstr "최대 4K/60fps"
-
-#. Body copy used in the home-page voice and video feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.voice_and_video.hop_in_a_call
 msgctxt "app.voice_and_video.hop_in_a_call"
 msgid "Hop in a call with friends or share your screen to work together."
-msgstr "친구와 통화하거나 화면을 공유하여 함께 소통하세요."
+msgstr "친구와 통화하거나 화면을 공유해 함께 작업하세요."
 
 #. Short UI label or heading used in the home-page voice and video feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.voice_and_video.title
 msgctxt "app.voice_and_video.title"
 msgid "Voice and video"
-msgstr "음성 및 비디오"
+msgstr "음성 및 영상"
+
+#. Accessible label for the marketing-site theme control. Keep it short and clear.
+#: fluxer_marketing/generated:appearance.change_theme
+msgctxt "appearance.change_theme"
+msgid "Change theme"
+msgstr "테마 변경"
+
+#. Compact option label for selecting the marketing site's dark theme.
+#: fluxer_marketing/generated:appearance.dark
+msgctxt "appearance.dark"
+msgid "Dark"
+msgstr "다크"
+
+#. Short heading above the marketing-site theme options.
+#: fluxer_marketing/generated:appearance.label
+msgctxt "appearance.label"
+msgid "Appearance"
+msgstr "모양"
+
+#. Compact option label for selecting the marketing site's light theme.
+#: fluxer_marketing/generated:appearance.light
+msgctxt "appearance.light"
+msgid "Light"
+msgstr "라이트"
+
+#. Compact option label for following the device's light or dark theme setting.
+#: fluxer_marketing/generated:appearance.system
+msgctxt "appearance.system"
+msgid "System"
+msgstr "시스템"
 
 #. Short filter label on the blog index. It clears tag filters and shows every blog post.
 #: fluxer_marketing/generated:blog.all_posts
@@ -357,7 +275,7 @@ msgstr "블로그로 돌아가기"
 #. Blog index meta description and intro copy. Keep it concise and editorial, not sales-oriented. Preserve placeholders exactly.
 #: fluxer_marketing/generated:blog.description
 msgctxt "blog.description"
-msgid "Updates, roadmap notes, and engineering write-ups from the {product_name} team."
+msgid "Updates from the {product_name} team, including roadmap notes and engineering posts."
 msgstr "{product_name} 팀의 업데이트, 로드맵 노트, 엔지니어링 글입니다."
 
 #. Short heading for RSS and Atom links on the blog index. Keep it compact.
@@ -378,19 +296,27 @@ msgctxt "blog.filtered_by_tag"
 msgid "Filtered by {tag}"
 msgstr "{tag} 기준으로 필터링됨"
 
-#. Blog article title shown in cards, article pages, metadata, and feeds. Keep Fluxer and Discord recognizable as product names. Preserve placeholders exactly.
-#: fluxer_marketing/generated:blog.post.how_i_built_fluxer.title
-msgctxt "blog.post.how_i_built_fluxer.title"
-msgid "How I built {product_name}, a {discord}-like chat app"
-msgstr "{discord} 같은 채팅 앱 {product_name}를 만든 과정"
+#. Blog article summary shown in cards, article pages, metadata, and feeds. Preserve {product_name} exactly.
+#: fluxer_marketing/generated:blog.post.how_i_built_fluxer_story.description
+msgctxt "blog.post.how_i_built_fluxer_story.description"
+msgid ""
+"The story behind {product_name}, from a high school project to an open source chat app used by hundreds of thousands of people."
+msgstr ""
+"고등학교 프로젝트에서 수십만 명이 사용하는 오픈 소스 채팅 앱이 되기까지, {product_name}의 이야기입니다."
+
+#. Blog article title shown in cards, article pages, metadata, and feeds. Preserve {product_name} exactly.
+#: fluxer_marketing/generated:blog.post.how_i_built_fluxer_story.title
+msgctxt "blog.post.how_i_built_fluxer_story.title"
+msgid "How I built {product_name}"
+msgstr "제가 {product_name}를 만든 방법"
 
 #. Blog article summary shown in cards, article pages, metadata, and feeds. Keep Fluxer as a product name, v2 as the release name, and GitHub as the product name. Preserve placeholders exactly.
 #: fluxer_marketing/generated:blog.post.mobile_clients_and_fluxer_v2.description
 msgctxt "blog.post.mobile_clients_and_fluxer_v2.description"
 msgid ""
-"{product_name} v2 is out, mobile clients are open source, self-hosting is improving, and public development is moving back to GitHub."
+"{product_name} v2 is here with open source mobile apps and easier self-hosting. Contributions are open again too."
 msgstr ""
-"{product_name} v2가 출시되었으며, 모바일 클라이언트는 오픈 소스로 공개되었고, 자체 호스팅 기능이 개선되었으며, 공개 개발은 GitHub으로 돌아갑니다."
+"오픈 소스 모바일 앱과 더 쉬워진 자체 호스팅을 담은 {product_name} v2가 출시되었습니다. 기여도 다시 열렸습니다."
 
 #. Blog article title shown in cards, article pages, metadata, and feeds. Keep Fluxer as a product name and v2 as the release name. Preserve placeholders exactly.
 #: fluxer_marketing/generated:blog.post.mobile_clients_and_fluxer_v2.title
@@ -402,9 +328,9 @@ msgstr "모바일 클라이언트와 {product_name} v2"
 #: fluxer_marketing/generated:blog.post.roadmap_2026.description
 msgctxt "blog.post.roadmap_2026.description"
 msgid ""
-"The current 2026 roadmap for {product_name}: canary, mobile, self-hosting, federation, voice and video, and the backend reliability work behind it."
+"The 2026 roadmap for {product_name}: self-hosting, localization, federation, public publishing, integrations, private conversations, and creator payments."
 msgstr ""
-"{product_name}의 현재 2026년 로드맵: canary, 모바일, 셀프 호스팅, 페더레이션, 음성 및 영상, 그리고 이를 뒷받침하는 백엔드 안정성 작업입니다."
+"{product_name}의 2026년 로드맵: 자체 호스팅, 현지화, 페더레이션, 공개 퍼블리싱, 통합, 비공개 대화, 크리에이터 정산."
 
 #. Blog article title shown in cards, article pages, metadata, and feeds. Refers to Fluxer's 2026 product roadmap.
 #: fluxer_marketing/generated:blog.post.roadmap_2026.title
@@ -423,12 +349,6 @@ msgstr "다른 검색어를 시도하거나 현재 필터를 지워 보세요."
 msgctxt "blog.no_results.title"
 msgid "No posts found"
 msgstr "게시물을 찾을 수 없음"
-
-#. Short metadata label on a blog article page. It precedes the article publication date.
-#: fluxer_marketing/generated:blog.published
-msgctxt "blog.published"
-msgid "Published"
-msgstr "게시일"
 
 #. Call-to-action label on blog post cards. Keep it concise and neutral.
 #: fluxer_marketing/generated:blog.read_article
@@ -481,14 +401,8 @@ msgstr "태그"
 #. Blog index title and meta title. Keep the product name and blog label recognizable. Preserve placeholders exactly.
 #: fluxer_marketing/generated:blog.title
 msgctxt "blog.title"
-msgid "{product_name} Blog"
+msgid "{product_name} blog"
 msgstr "{product_name} 블로그"
-
-#. Short metadata label on a blog article page. It precedes the article update date.
-#: fluxer_marketing/generated:blog.updated
-msgctxt "blog.updated"
-msgid "Updated"
-msgstr "업데이트됨"
 
 #. Compact UI label for company/resource navigation or footer groupings. Keep labels short and recognizable for a marketing website.
 #: fluxer_marketing/generated:company_and_resources.blog
@@ -496,23 +410,17 @@ msgctxt "company_and_resources.blog"
 msgid "Blog"
 msgstr "블로그"
 
-#. Back-link label from an individual job page to the careers overview. Keep it short and do not imply active hiring.
-#: fluxer_marketing/generated:company_and_resources.careers.all_open_positions
-msgctxt "company_and_resources.careers.all_open_positions"
-msgid "Future roles"
-msgstr "모든 향후 채용 포지션"
-
 #. Compact UI label on the careers and future roles pages. Use clear hiring language, avoid implying that roles are currently open unless the source says so, and preserve placeholders exactly.
 #: fluxer_marketing/generated:company_and_resources.careers.careers_at_fluxer
 msgctxt "company_and_resources.careers.careers_at_fluxer"
 msgid "Careers at {product_name}"
 msgstr "{product_name} 채용"
 
-#. Careers hero description. Keep it plain and informational; do not turn it into an application prompt or imply active hiring.
-#: fluxer_marketing/generated:company_and_resources.careers.hero_description
-msgctxt "company_and_resources.careers.hero_description"
-msgid "We are not hiring right now. These pages are notes on roles we may open later."
-msgstr "현재 채용 중이 아닙니다. 이 페이지들은 나중에 열 수 있는 역할에 대한 참고입니다."
+#. Careers page notice. Keep it plain and explicit that no roles are currently open.
+#: fluxer_marketing/generated:company_and_resources.careers.not_hiring_notice
+msgctxt "company_and_resources.careers.not_hiring_notice"
+msgid "We are not hiring. Any open role will be listed on this page, so check back later."
+msgstr "현재 채용을 진행하고 있지 않습니다. 채용 공고가 열리면 이 페이지에 게시되니 나중에 다시 확인해 주세요."
 
 #. Short UI label or heading on the careers and future roles pages. Use clear hiring language, avoid implying that roles are currently open unless the source says so, and preserve placeholders exactly.
 #: fluxer_marketing/generated:company_and_resources.careers.label
@@ -520,29 +428,11 @@ msgctxt "company_and_resources.careers.label"
 msgid "Careers"
 msgstr "채용"
 
-#. Small notice shown above future-role listings and on job pages. Be explicit that the roles are not open; avoid application or recruiting language.
-#: fluxer_marketing/generated:company_and_resources.careers.not_currently_open_notice
-msgctxt "company_and_resources.careers.not_currently_open_notice"
-msgid "These are reference pages, not active job openings."
-msgstr "이 페이지는 참고용이며 현재 진행 중인 채용 공고가 아닙니다."
-
-#. Button or link label on the careers and future roles pages. Use clear hiring language, avoid implying that roles are currently open unless the source says so, and preserve placeholders exactly.
-#: fluxer_marketing/generated:company_and_resources.careers.open_positions
-msgctxt "company_and_resources.careers.open_positions"
-msgid "Future roles"
-msgstr "향후 채용 포지션"
-
-#. Body copy under the careers page role-list heading. Keep it concise and informational; do not invite applications.
-#: fluxer_marketing/generated:company_and_resources.careers.open_positions_description
-msgctxt "company_and_resources.careers.open_positions_description"
-msgid "A short list of work we may hire for later."
-msgstr "나중에 채용할 수 있는 업무의 짧은 목록입니다."
-
-#. Short UI label or heading on the careers and future roles pages. Use clear hiring language, avoid implying that roles are currently open unless the source says so, and preserve placeholders exactly.
-#: fluxer_marketing/generated:company_and_resources.careers.posted
-msgctxt "company_and_resources.careers.posted"
-msgid "Listed"
-msgstr "게시됨"
+#. Short status label on the careers page. Be explicit that no roles are currently open.
+#: fluxer_marketing/generated:company_and_resources.careers.no_open_roles
+msgctxt "company_and_resources.careers.no_open_roles"
+msgid "No open roles"
+msgstr "채용 중인 직무 없음"
 
 #. Compact UI label for company/resource navigation or footer groupings. Keep labels short and recognizable for a marketing website.
 #: fluxer_marketing/generated:company_and_resources.company
@@ -560,7 +450,7 @@ msgstr "회사 정보"
 #: fluxer_marketing/generated:company_and_resources.connect
 msgctxt "company_and_resources.connect"
 msgid "Connect"
-msgstr "연결하세요"
+msgstr "소통하기"
 
 #. Compact UI label for company/resource navigation or footer groupings. Keep labels short and recognizable for a marketing website.
 #: fluxer_marketing/generated:company_and_resources.docs
@@ -583,14 +473,14 @@ msgstr "도움말 센터"
 #. Body copy for help-center links or descriptions in marketing navigation and resource sections. Preserve {product_name} exactly; keep it service-oriented and concise. Preserve placeholders exactly.
 #: fluxer_marketing/generated:company_and_resources.help.help_center_description
 msgctxt "company_and_resources.help.help_center_description"
-msgid "Find answers to common questions about your account, privacy, and using {product_name}."
-msgstr "계정, 개인 정보 보호 및 {product_name} 사용에 대한 일반적인 질문에 대한 답변을 찾아보세요."
+msgid "Find answers about your account and privacy, or get help using {product_name}."
+msgstr "계정과 개인정보 보호에 대한 답변을 찾거나 {product_name} 사용에 도움을 받아 보세요."
 
-#. Short UI label or heading for help-center links or descriptions in marketing navigation and resource sections. Keep it service-oriented and concise.
-#: fluxer_marketing/generated:company_and_resources.help.label
-msgctxt "company_and_resources.help.label"
-msgid "Help"
-msgstr "도움말"
+#. Compact heading for the product links in marketing navigation. Preserve {product_name} exactly.
+#: fluxer_marketing/generated:company_and_resources.fluxer
+msgctxt "company_and_resources.fluxer"
+msgid "{product_name}"
+msgstr "{product_name}"
 
 #. Placeholder text for help-center links or descriptions in marketing navigation and resource sections. Keep it service-oriented and concise.
 #: fluxer_marketing/generated:company_and_resources.help.search_placeholder
@@ -604,17 +494,11 @@ msgctxt "company_and_resources.help.all_articles"
 msgid "All help articles"
 msgstr "모든 도움말 문서"
 
-#. Short label on the help center for a list of support articles. Keep it concise.
-#: fluxer_marketing/generated:company_and_resources.help.articles
-msgctxt "company_and_resources.help.articles"
-msgid "Articles"
-msgstr "문서"
-
 #. Link label shown above help articles. It returns users to the help center home page.
 #: fluxer_marketing/generated:company_and_resources.help.back_to_help_center
 msgctxt "company_and_resources.help.back_to_help_center"
 msgid "Back to help center"
-msgstr "고객 센터로 돌아가기"
+msgstr "도움말 센터로 돌아가기"
 
 #. Section heading on the help center home page. It groups support articles by topic.
 #: fluxer_marketing/generated:company_and_resources.help.browse_by_topic
@@ -671,54 +555,24 @@ msgid "Press contact"
 msgstr "언론 문의"
 
 #. Compact UI label for company/resource navigation or footer groupings. Keep labels short and recognizable for a marketing website.
-#: fluxer_marketing/generated:company_and_resources.product
-msgctxt "company_and_resources.product"
-msgid "Product"
-msgstr "제품"
-
-#. Compact UI label for company/resource navigation or footer groupings. Keep labels short and recognizable for a marketing website.
 #: fluxer_marketing/generated:company_and_resources.resources
 msgctxt "company_and_resources.resources"
 msgid "Resources"
 msgstr "자료"
 
-#. Compact UI label in the open-source contribution/get-involved section. Keep the tone welcoming and concrete, and preserve email placeholders exactly.
-#: fluxer_marketing/generated:company_and_resources.source_and_contribution.code_issues_docs_reviews
-msgctxt "company_and_resources.source_and_contribution.code_issues_docs_reviews"
-msgid "Code, issues, docs, and reviews"
-msgstr "코드, 이슈, 문서 및 코드 리뷰"
-
-#. Compact UI label in the open-source contribution/get-involved section. Keep the tone welcoming and concrete, and preserve email placeholders exactly.
-#: fluxer_marketing/generated:company_and_resources.source_and_contribution.contribute_on_github
-msgctxt "company_and_resources.source_and_contribution.contribute_on_github"
-msgid "Contribute on {github}"
-msgstr "{github}에서 기여하기"
-
-#. Body copy in the open-source contribution/get-involved section. Keep the tone welcoming and concrete, and preserve email placeholders exactly.
-#: fluxer_marketing/generated:company_and_resources.source_and_contribution.fluxer_built_in_open
-msgctxt "company_and_resources.source_and_contribution.fluxer_built_in_open"
-msgid "{product_name} is built in the open. Pick the path that fits how you like to help."
-msgstr "{product_name}은 공개적으로 개발되고 있어요. 돕고 싶은 방식에 따라 경로를 선택해 주세요."
-
-#. Button or link label in the open-source contribution/get-involved section. Keep the tone welcoming and concrete, and preserve email placeholders exactly.
-#: fluxer_marketing/generated:company_and_resources.source_and_contribution.get_involved
-msgctxt "company_and_resources.source_and_contribution.get_involved"
-msgid "Get involved"
-msgstr "참여하기"
-
-#. Compact UI label in the open-source contribution/get-involved section. Keep the tone welcoming and concrete, and preserve email placeholders exactly.
+#. Compact UI label for links to the product source code. Keep the label short and recognizable.
 #: fluxer_marketing/generated:company_and_resources.source_and_contribution.source_code
 msgctxt "company_and_resources.source_and_contribution.source_code"
 msgid "Source code"
 msgstr "소스 코드"
 
-#. Body copy in the open-source contribution/get-involved section. Keep the tone welcoming and concrete, and preserve email placeholders exactly.
-#: fluxer_marketing/generated:company_and_resources.source_and_contribution.translation.llm_translation_note
-msgctxt "company_and_resources.source_and_contribution.translation.llm_translation_note"
+#. Body copy in the locale picker inviting translation contributions through Weblate. Preserve the {weblate} and {product_name} placeholders exactly.
+#: fluxer_marketing/generated:company_and_resources.source_and_contribution.translation.weblate_note
+msgctxt "company_and_resources.source_and_contribution.translation.weblate_note"
 msgid ""
-"All translations are currently LLM-generated with minimal human revision. We'd love to get real people to help us localize {product_name} into your language. To do so, email {l10n_email} and we'll be happy to accept your contributions."
+"A translation should sound natural to someone who speaks the language. Correct a phrase or start a new locale on {weblate}, and we will include it in {product_name}."
 msgstr ""
-"모든 번역은 현재 최소한의 사람 검토를 거쳐 LLM으로 생성되고 있어요. {product_name}을 여러분의 언어로 현지화하는 데 실제 분들이 도움을 주시면 정말 좋겠어요. 참여를 원하시면 {l10n_email}로 이메일을 보내주세요. 여러분의 기여를 기쁘게 받아들일게요."
+"번역은 그 언어를 쓰는 사람에게 자연스럽게 들려야 합니다. {weblate}에서 문구를 고치거나 새로운 언어를 시작해 주시면 {product_name}에 반영하겠습니다."
 
 #. Department or policy category label on content pages. Translate as a compact noun phrase, not as a sentence.
 #: fluxer_marketing/generated:content.labels.community
@@ -726,137 +580,29 @@ msgctxt "content.labels.community"
 msgid "Community"
 msgstr "커뮤니티"
 
-#. Department label for job listings. Translate as the software/product engineering function.
-#: fluxer_marketing/generated:content.labels.engineering
-msgctxt "content.labels.engineering"
-msgid "Engineering"
-msgstr "엔지니어링"
-
-#. Employment type label shown on careers pages. Keep it short and conventional for job listings.
-#: fluxer_marketing/generated:content.labels.full_time
-msgctxt "content.labels.full_time"
-msgid "Full-time"
-msgstr "풀타임"
-
 #. Department or policy category label on content pages. Translate as legal/compliance, not legality in general.
 #: fluxer_marketing/generated:content.labels.legal
 msgctxt "content.labels.legal"
 msgid "Legal"
 msgstr "법무"
 
-#. Workplace location label for job listings. Means the role can be performed remotely.
-#: fluxer_marketing/generated:content.labels.remote
-msgctxt "content.labels.remote"
-msgid "Remote"
-msgstr "원격"
-
-#. Policy category label for security and bug-bounty content. Translate as information security.
+#. Policy category label for security reporting content. Translate as information security.
 #: fluxer_marketing/generated:content.labels.security
 msgctxt "content.labels.security"
 msgid "Security"
 msgstr "보안"
 
-#. Department label for customer support job listings. Translate as user/customer support.
-#: fluxer_marketing/generated:content.labels.support
-msgctxt "content.labels.support"
-msgid "Support"
-msgstr "지원"
-
-#. Department label for moderation/safety jobs. Keep the ampersand only if natural in the locale.
-#: fluxer_marketing/generated:content.labels.trust_and_safety
-msgctxt "content.labels.trust_and_safety"
-msgid "Trust & Safety"
-msgstr "신뢰 및 안전"
-
-#. Short job-card summary for the Community Lead role. Keep it warm, concrete, and concise. Preserve placeholders exactly.
-#: fluxer_marketing/generated:content.jobs.community_lead.description
-msgctxt "content.jobs.community_lead.description"
-msgid ""
-"Look after our public voice and the communities around {product_name}. Talk with people, share what's new, and bring what you hear back to the team."
-msgstr "{product_name}의 공개 커뮤니케이션과 주변 커뮤니티를 돌봅니다. 사람들과 대화하고, 새 소식을 전하며, 들은 내용을 팀에 전달합니다."
-
-#. Job title shown on careers pages. Translate as a professional role title.
-#: fluxer_marketing/generated:content.jobs.community_lead.title
-msgctxt "content.jobs.community_lead.title"
-msgid "Community Lead"
-msgstr "커뮤니티 리드"
-
-#. Short job-card summary for the Platform Engineer role. Keep infrastructure terminology precise. Preserve placeholders exactly.
-#: fluxer_marketing/generated:content.jobs.platform_engineer.description
-msgctxt "content.jobs.platform_engineer.description"
-msgid ""
-"Look after the systems {product_name} runs on: pipelines, databases, dashboards, on-call, and the quiet machinery that keeps everything humming."
-msgstr "{product_name}가 돌아가는 시스템을 돌봅니다. 파이프라인, 데이터베이스, 대시보드, 온콜, 그리고 뒤에서 조용히 움직이는 기반을 다룹니다."
-
-#. Job title shown on careers pages. Translate as a professional infrastructure/platform engineering role title.
-#: fluxer_marketing/generated:content.jobs.platform_engineer.title
-msgctxt "content.jobs.platform_engineer.title"
-msgid "Platform Engineer"
-msgstr "플랫폼 엔지니어"
-
-#. Short job-card summary for the Privacy & Legal Counsel role. Keep legal acronyms unchanged. Preserve placeholders exactly.
-#: fluxer_marketing/generated:content.jobs.privacy_and_legal_counsel.description
-msgctxt "content.jobs.privacy_and_legal_counsel.description"
-msgid ""
-"Handle {product_name}'s legal and privacy side: GDPR, DSA, DMCA, law-enforcement requests, and the policies that go with them."
-msgstr "{product_name}의 법무와 개인정보 영역을 담당합니다. GDPR, DSA, DMCA, 법 집행기관 요청, 관련 정책을 다룹니다."
-
-#. Job title shown on careers pages. Translate as a professional privacy/legal counsel role title.
-#: fluxer_marketing/generated:content.jobs.privacy_and_legal_counsel.title
-msgctxt "content.jobs.privacy_and_legal_counsel.title"
-msgid "Privacy & Legal Counsel"
-msgstr "개인정보 및 법무 자문"
-
-#. Short job-card summary for the Product Engineer role. Keep the approachable product-builder tone. Preserve placeholders exactly.
-#: fluxer_marketing/generated:content.jobs.product_engineer.description
-msgctxt "content.jobs.product_engineer.description"
-msgid ""
-"Build the bits people open {product_name} to use, top to bottom: web, mobile, desktop, and the services behind them."
-msgstr "사용자가 {product_name}를 열어 쓰는 부분을 웹, 모바일, 데스크톱부터 그 뒤의 서비스까지 전반적으로 만듭니다."
-
-#. Job title shown on careers pages. Translate as a professional product engineering role title.
-#: fluxer_marketing/generated:content.jobs.product_engineer.title
-msgctxt "content.jobs.product_engineer.title"
-msgid "Product Engineer"
-msgstr "프로덕트 엔지니어"
-
-#. Short job-card summary for the Support Specialist role. Keep it friendly but professional.
-#: fluxer_marketing/generated:content.jobs.support_specialist.description
-msgctxt "content.jobs.support_specialist.description"
-msgid ""
-"Be the friendly first reply when someone hits a snag. Help users sort things out and bring the rough edges back to the team to fix."
-msgstr "문제가 생긴 사용자에게 가장 먼저 따뜻하게 답합니다. 문제 해결을 돕고, 거친 부분을 팀에 전달해 고치게 합니다."
-
-#. Job title shown on careers pages. Translate as a professional customer/user support role title.
-#: fluxer_marketing/generated:content.jobs.support_specialist.title
-msgctxt "content.jobs.support_specialist.title"
-msgid "Support Specialist"
-msgstr "지원 전문가"
-
-#. Short job-card summary for the Trust & Safety Specialist role. Keep moderation/safety wording fair and calm. Preserve placeholders exactly.
-#: fluxer_marketing/generated:content.jobs.trust_and_safety_specialist.description
-msgctxt "content.jobs.trust_and_safety_specialist.description"
-msgid ""
-"Work through abuse reports, make fair calls, and help shape the policies and tooling that keep {product_name} somewhere people want to be."
-msgstr "악용 신고를 검토하고 공정하게 판단하며, {product_name}가 따뜻한 공간으로 남도록 정책과 도구를 다듬습니다."
-
-#. Job title shown on careers pages. Translate as a professional moderation/safety operations role title.
-#: fluxer_marketing/generated:content.jobs.trust_and_safety_specialist.title
-msgctxt "content.jobs.trust_and_safety_specialist.title"
-msgid "Trust & Safety Specialist"
-msgstr "신뢰 및 안전 전문가"
-
 #. Policy page summary for the changelog. Keep policy names recognizable and legally precise.
 #: fluxer_marketing/generated:content.policies.changelog.description
 msgctxt "content.policies.changelog.description"
 msgid ""
-"A record of significant changes to our Terms of Service, Privacy Policy, and Community Guidelines."
+"A record of significant changes to our terms of service, privacy policy, and community guidelines."
 msgstr "서비스 약관, 개인정보 처리방침, 커뮤니티 가이드라인의 주요 변경 기록입니다."
 
 #. Policy page title. Translate as a record of changes to legal/community policies.
 #: fluxer_marketing/generated:content.policies.changelog.title
 msgctxt "content.policies.changelog.title"
-msgid "Policy Changelog"
+msgid "Policy changelog"
 msgstr "정책 변경 내역"
 
 #. Policy page summary for company information. Keep company name and legal framing precise. Preserve placeholders exactly.
@@ -869,57 +615,58 @@ msgstr "{product_name} Platform AB의 법적 정보, 수익 구조, 문의 방�
 #. Policy page title for legal company details. Translate as formal company information.
 #: fluxer_marketing/generated:content.policies.company_information.title
 msgctxt "content.policies.company_information.title"
-msgid "Company Information"
+msgid "Company information"
 msgstr "회사 정보"
 
 #. Policy page summary for community guidelines. Keep safety wording direct and neutral. Preserve placeholders exactly.
 #: fluxer_marketing/generated:content.policies.guidelines.description
 msgctxt "content.policies.guidelines.description"
-msgid "Clear standards for using {product_name}, protecting others, and keeping communities safe."
-msgstr "{product_name} 이용, 타인 보호, 커뮤니티 안전 유지를 위한 명확한 기준입니다."
+msgid "The rules for using {product_name} safely and treating other people well."
+msgstr "{product_name}를 안전하게 이용하고 다른 사람을 존중하며 대하기 위한 규칙입니다."
 
 #. Policy page title for community rules. Translate as formal community guidelines.
 #: fluxer_marketing/generated:content.policies.guidelines.title
 msgctxt "content.policies.guidelines.title"
-msgid "Community Guidelines"
+msgid "Community guidelines"
 msgstr "커뮤니티 가이드라인"
 
 #. Policy page summary for the Privacy Policy. Keep data-protection terms legally precise. Preserve placeholders exactly.
 #: fluxer_marketing/generated:content.policies.privacy.description
 msgctxt "content.policies.privacy.description"
 msgid ""
-"How {product_name} handles personal data, what we do not do with it, and the controls and rights you have."
+"How {product_name} handles personal data and what we refuse to do with it. Learn about your controls and rights."
 msgstr "{product_name}가 개인정보를 처리하는 방식, 하지 않는 일, 사용자가 가진 제어권과 권리를 설명합니다."
 
 #. Policy page title. Translate as a formal privacy policy.
 #: fluxer_marketing/generated:content.policies.privacy.title
 msgctxt "content.policies.privacy.title"
-msgid "Privacy Policy"
+msgid "Privacy policy"
 msgstr "개인정보 처리방침"
 
-#. Policy page summary for security reporting and bug bounty rules. Keep security and safe-harbor terminology precise.
+#. Policy page summary for security reporting rules. Keep security and safe-harbor terminology precise.
 #: fluxer_marketing/generated:content.policies.security.description
 msgctxt "content.policies.security.description"
-msgid "How to report security issues, what is in scope, and how safe harbor works."
-msgstr "보안 문제 신고 방법, 적용 범위, 세이프 하버 방식을 안내합니다."
+msgid ""
+"How to report security issues and check what is in scope. Read the safe harbor terms before testing."
+msgstr "보안 문제를 신고하는 방법과 적용 범위를 확인하세요. 테스트하기 전에 세이프 하버 조건을 읽어 주세요."
 
-#. Policy page title for security vulnerability reporting. Translate as a bug bounty/security reporting page.
+#. Policy page title for security vulnerability reporting.
 #: fluxer_marketing/generated:content.policies.security.title
 msgctxt "content.policies.security.title"
-msgid "Security Bug Bounty"
-msgstr "보안 버그 바운티"
+msgid "Security"
+msgstr "보안"
 
 #. Policy page summary for Terms of Service. Keep the legal agreement framing clear and neutral. Preserve placeholders exactly.
 #: fluxer_marketing/generated:content.policies.terms.description
 msgctxt "content.policies.terms.description"
 msgid ""
-"The agreement between you and {product_name}, written to explain your rights and responsibilities clearly."
-msgstr "사용자와 {product_name} 간의 계약으로, 권리와 책임을 명확히 설명합니다."
+"The agreement between you and {product_name}, including account, content, payment, moderation, and legal terms."
+msgstr "계정, 콘텐츠, 결제, 모더레이션, 법적 조건을 포함한 사용자와 {product_name} 간의 계약입니다."
 
 #. Policy page title. Translate as formal terms of service.
 #: fluxer_marketing/generated:content.policies.terms.title
 msgctxt "content.policies.terms.title"
-msgid "Terms of Service"
+msgid "Terms of service"
 msgstr "서비스 약관"
 
 #. Help center category title for premium/Plutonium-related articles. Keep as a short noun phrase. Preserve placeholders exactly.
@@ -931,8 +678,8 @@ msgstr "{premium_tier_full_name}"
 #. Help center category summary shown under the Premium heading. Translate as a short descriptive sentence. Preserve placeholders exactly.
 #: fluxer_marketing/generated:content.help.category.premium.description
 msgctxt "content.help.category.premium.description"
-msgid "Information about our {premium_tier_full_name} offering."
-msgstr "{premium_tier_full_name} 관련 정보입니다."
+msgid "See what {premium_tier_full_name} includes."
+msgstr "{premium_tier_full_name}에 무엇이 포함되는지 확인해 보세요."
 
 #. Help center category title for frequently asked questions. Use the locale's standard abbreviation or short phrase.
 #: fluxer_marketing/generated:content.help.category.faqs.title
@@ -943,8 +690,8 @@ msgstr "자주 묻는 질문"
 #. Help center category summary shown under the FAQs heading. Translate as a short descriptive sentence.
 #: fluxer_marketing/generated:content.help.category.faqs.description
 msgctxt "content.help.category.faqs.description"
-msgid "Answers to frequently asked questions."
-msgstr "자주 묻는 질문에 대한 답변입니다."
+msgid "Learn how attachment expiry and bug reports work."
+msgstr "첨부 파일 만료와 버그 신고가 어떻게 작동하는지 알아보세요."
 
 #. Help center category title for account-management articles. Keep as a short noun phrase.
 #: fluxer_marketing/generated:content.help.category.account.title
@@ -955,20 +702,20 @@ msgstr "계정"
 #. Help center category summary shown under the Account heading. Translate as a short descriptive sentence.
 #: fluxer_marketing/generated:content.help.category.account.description
 msgctxt "content.help.category.account.description"
-msgid "Managing personal account details."
-msgstr "개인 계정 정보 관리에 대한 안내입니다."
+msgid "Manage account details, exports, and deletion."
+msgstr "계정 정보 관리, 데이터 내보내기, 계정 삭제를 안내합니다."
 
 #. Help center category title for legal and policy articles. Translate as a compact heading; keep the ampersand only if natural.
 #: fluxer_marketing/generated:content.help.category.legal_policy.title
 msgctxt "content.help.category.legal_policy.title"
-msgid "Legal & Policy"
-msgstr "법률 및 정책"
+msgid "Legal and policy guides"
+msgstr "법률 및 정책 안내"
 
 #. Help center category summary shown under the Legal & Policy heading. Translate as a short descriptive sentence; the brand 'Fluxer' stays untranslated. Preserve placeholders exactly.
 #: fluxer_marketing/generated:content.help.category.legal_policy.description
 msgctxt "content.help.category.legal_policy.description"
-msgid "View important policies pertaining to {product_name}."
-msgstr "{product_name} 관련 주요 정책을 확인하세요."
+msgid "Read about privacy, safety, copyright, and data handling."
+msgstr "개인정보 보호, 안전, 저작권 및 데이터 처리에 대해 알아보세요."
 
 #. Help article title for a time-limited Plutonium promotion. Keep month/year and 'Plutonium' as proper names. Preserve placeholders exactly.
 #: fluxer_marketing/generated:content.help.article.plutonium_promotion_march_2026.title
@@ -987,16 +734,15 @@ msgstr ""
 #. Help article title asking about the retired Fluxer Visionary tier. Keep 'Fluxer Visionary' as a proper name. Preserve placeholders exactly.
 #: fluxer_marketing/generated:content.help.article.visionary.title
 msgctxt "content.help.article.visionary.title"
-msgid "What was {visionary_tier_full_name}?"
-msgstr "{visionary_tier_full_name}란 무엇이었나요?"
+msgid "The former {visionary_tier_full_name} tier"
+msgstr "이전 {visionary_tier_full_name} 등급"
 
 #. Help article summary about the retired Fluxer Visionary lifetime tier. Keep 'Fluxer Visionary' and 'Plutonium' as proper names. Preserve placeholders exactly.
 #: fluxer_marketing/generated:content.help.article.visionary.description
 msgctxt "content.help.article.visionary.description"
 msgid ""
-"{visionary_tier_full_name} was a limited lifetime {premium_tier_name} offering that sold out in February 2026. Learn about the numbered badge and what {visionary_tier_name} includes."
-msgstr ""
-"{visionary_tier_full_name}는 2026년 2월에 매진된 한정판 평생 {premium_tier_name} 상품이었습니다. 번호가 새겨진 배지와 {visionary_tier_name}에 포함된 혜택에 대해 알아보세요."
+"What the sold out {visionary_tier_full_name} offer includes and how its account benefits work."
+msgstr "매진된 {visionary_tier_full_name}의 제공 내용과 계정 혜택이 작동하는 방식입니다."
 
 #. Help article title listing the three programmes that showcase a community on Fluxer. Keep 'Partner', 'Verified', and 'Discovery' as programme names.
 #: fluxer_marketing/generated:content.help.article.community_programmes.title
@@ -1021,8 +767,8 @@ msgstr "첨부 파일 만료의 작동 방식"
 #: fluxer_marketing/generated:content.help.article.attachment_expiry.description
 msgctxt "content.help.article.attachment_expiry.description"
 msgid ""
-"How we set attachment expiry, how access can extend it, and what to do before a file is removed."
-msgstr "첨부 파일 만료를 설정하는 방법, 접근으로 만료가 연장되는 방식, 파일이 삭제되기 전에 할 수 있는 조치에 대한 안내입니다."
+"See when attachments expire, what extends their availability, and how to keep an important file."
+msgstr "첨부 파일이 언제 만료되는지, 무엇이 이용 기간을 연장하는지, 중요한 파일을 보관하는 방법을 확인하세요."
 
 #. Help article title about filing bug reports.
 #: fluxer_marketing/generated:content.help.article.report_bug.title
@@ -1033,9 +779,8 @@ msgstr "버그 신고하기"
 #. Help article summary about filing bug reports. Keep 'GitHub' untranslated. Preserve placeholders exactly.
 #: fluxer_marketing/generated:content.help.article.report_bug.description
 msgctxt "content.help.article.report_bug.description"
-msgid ""
-"How to file clear, high-quality bug reports for the {product_name} support team or our {github}."
-msgstr "{product_name} 지원팀 또는 {github}에 명확하고 품질 높은 버그 보고서를 제출하는 방법입니다."
+msgid "How to submit a clear bug report to the {product_name} team or through {github}."
+msgstr "{product_name} 팀 또는 {github}을 통해 명확한 버그 신고를 제출하는 방법입니다."
 
 #. Help article title about updating a user's date of birth via support.
 #: fluxer_marketing/generated:content.help.article.change_date_of_birth.title
@@ -1046,8 +791,8 @@ msgstr "생년월일 변경 방법"
 #. Help article summary about updating date of birth via support. Keep 'Fluxer' as a brand name. Preserve placeholders exactly.
 #: fluxer_marketing/generated:content.help.article.change_date_of_birth.description
 msgctxt "content.help.article.change_date_of_birth.description"
-msgid "How to update your date of birth on {product_name} by contacting our support team."
-msgstr "지원팀에 문의하여 {product_name}의 생년월일을 업데이트하는 방법입니다."
+msgid "How to ask the {product_name} support team to correct your date of birth."
+msgstr "{product_name} 지원팀에 생년월일 정정을 요청하는 방법입니다."
 
 #. Help article title about requesting deletion of user data.
 #: fluxer_marketing/generated:content.help.article.data_deletion.title
@@ -1058,8 +803,8 @@ msgstr "데이터 삭제 요청"
 #. Help article summary about deleting user data. Keep 'Fluxer' as a brand name. Preserve placeholders exactly.
 #: fluxer_marketing/generated:content.help.article.data_deletion.description
 msgctxt "content.help.article.data_deletion.description"
-msgid "How to delete your messages and other data from {product_name}."
-msgstr "{product_name}에서 메시지 및 기타 데이터를 삭제하는 방법입니다."
+msgid "How to delete messages and request removal of other account data."
+msgstr "메시지를 삭제하고 다른 계정 데이터의 삭제를 요청하는 방법입니다."
 
 #. Help article title about exporting account data.
 #: fluxer_marketing/generated:content.help.article.data_export.title
@@ -1070,8 +815,9 @@ msgstr "계정 데이터 내보내기"
 #. Help article summary about exporting Fluxer account data. Keep 'Fluxer' as a brand name. Preserve placeholders exactly.
 #: fluxer_marketing/generated:content.help.article.data_export.description
 msgctxt "content.help.article.data_export.description"
-msgid "How to request and download a complete export of your {product_name} data."
-msgstr "{product_name} 데이터의 전체 내보내기를 요청하고 다운로드하는 방법입니다."
+msgid ""
+"How to request a machine-readable export of your {product_name} account data and handle it safely."
+msgstr "{product_name} 계정 데이터를 기계가 읽을 수 있는 형식으로 내보내도록 요청하고 안전하게 관리하는 방법입니다."
 
 #. Help article title about deleting or disabling an account.
 #: fluxer_marketing/generated:content.help.article.delete_account.title
@@ -1083,7 +829,7 @@ msgstr "계정 삭제 또는 비활성화 방법"
 #: fluxer_marketing/generated:content.help.article.delete_account.description
 msgctxt "content.help.article.delete_account.description"
 msgid ""
-"How to permanently delete or temporarily disable your {product_name} account, and what happens to your data."
+"How to delete or temporarily disable your {product_name} account and what happens to your data."
 msgstr "{product_name} 계정을 영구적으로 삭제하거나 일시적으로 비활성화하는 방법과 데이터에 어떤 일이 일어나는지 안내합니다."
 
 #. Help article title about country-specific minimum-age requirements for using the service.
@@ -1096,8 +842,8 @@ msgstr "최소 연령 요건"
 #: fluxer_marketing/generated:content.help.article.minimum_age.description
 msgctxt "content.help.article.minimum_age.description"
 msgid ""
-"The minimum age to use {product_name} by country, how age is determined, and what happens if an account is suspected of being underage."
-msgstr "국가별 {product_name} 이용 최소 연령, 연령 판단 방식, 미성년자로 의심되는 계정에 대한 처리 방법을 안내합니다."
+"Who can use {product_name} under our age rules and what to do if we get your eligibility wrong."
+msgstr "연령 규정에 따라 누가 {product_name}를 이용할 수 있는지, 이용 자격이 잘못 판단되었을 때 어떻게 해야 하는지 안내합니다."
 
 #. Help article title about the copyright/IP complaint process. Keep legal-sounding phrasing.
 #: fluxer_marketing/generated:content.help.article.copyright.title
@@ -1108,7 +854,7 @@ msgstr "저작권 및 지식재산권 신고 정책"
 #. Help article summary about copyright/IP complaint reporting. Keep 'Fluxer' as a brand name. Preserve placeholders exactly.
 #: fluxer_marketing/generated:content.help.article.copyright.description
 msgctxt "content.help.article.copyright.description"
-msgid "How to report suspected copyright or intellectual property violations on {product_name}."
+msgid "How to report suspected copyright or intellectual property infringement on {product_name}."
 msgstr "{product_name}에서 저작권 또는 지식재산권 침해가 의심되는 경우 신고하는 방법입니다."
 
 #. Help article title about data retention durations. Keep 'Fluxer' as a brand name. Preserve placeholders exactly.
@@ -1120,8 +866,8 @@ msgstr "{product_name}의 정보 보관 기간"
 #. Help article summary about retention durations and reasoning. Keep 'Fluxer' as a brand name. Preserve placeholders exactly.
 #: fluxer_marketing/generated:content.help.article.data_retention.description
 msgctxt "content.help.article.data_retention.description"
-msgid "How long {product_name} retains different types of information and why we keep it."
-msgstr "{product_name}가 다양한 유형의 정보를 보관하는 기간과 그 이유에 대한 안내입니다."
+msgid "How long {product_name} keeps account information, content, logs, and legal records."
+msgstr "{product_name}가 계정 정보, 콘텐츠, 로그, 법적 기록을 보관하는 기간입니다."
 
 #. Help article title about EU Digital Services Act dispute options. Keep 'EU DSA' as an acronym.
 #: fluxer_marketing/generated:content.help.article.dsa_dispute_resolution.title
@@ -1133,8 +879,8 @@ msgstr "EU DSA 분쟁 해결 옵션"
 #: fluxer_marketing/generated:content.help.article.dsa_dispute_resolution.description
 msgctxt "content.help.article.dsa_dispute_resolution.description"
 msgid ""
-"How EU users covered by the Digital Services Act can exercise their rights on {product_name}."
-msgstr "Digital Services Act의 적용을 받는 EU 사용자가 {product_name}에서 권리를 행사하는 방법입니다."
+"How users covered by the Digital Services Act can report illegal content and challenge eligible decisions."
+msgstr "Digital Services Act 적용 대상 사용자가 불법 콘텐츠를 신고하고 해당되는 결정에 이의를 제기하는 방법입니다."
 
 #. Help article title about region-specific access restrictions.
 #: fluxer_marketing/generated:content.help.article.regional_restrictions.title
@@ -1146,20 +892,14 @@ msgstr "지역별 제한"
 #: fluxer_marketing/generated:content.help.article.regional_restrictions.description
 msgctxt "content.help.article.regional_restrictions.description"
 msgid ""
-"How regional age verification laws affect your access to {product_name}, which regions are currently affected, and what restrictions apply."
-msgstr "지역별 연령 확인 법률이 {product_name} 접근에 어떤 영향을 미치는지, 현재 영향을 받는 지역과 적용되는 제한 사항에 대해 안내합니다."
-
-#. Accessible label on the small icon button next to help/policy article headings; clicking copies a deep link to that section.
-#: fluxer_marketing/generated:content.help.copy_link_to_section
-msgctxt "content.help.copy_link_to_section"
-msgid "Copy link to section"
-msgstr "섹션 링크 복사"
+"The regional access and age restricted content rules that {product_name} currently applies."
+msgstr "{product_name}가 현재 적용하고 있는 지역별 접근 제한과 연령 제한 콘텐츠 규정입니다."
 
 #. Compact UI label on donation pages and donation support cards. Keep the tone appreciative without being pushy; preserve placeholders exactly.
 #: fluxer_marketing/generated:donations.business
 msgctxt "donations.business"
-msgid "Business"
-msgstr "비즈니스"
+msgid "Organization"
+msgstr "단체"
 
 #. Button or link label on donation pages and donation support cards. Keep the tone appreciative without being pushy; preserve placeholders exactly.
 #: fluxer_marketing/generated:donations.donate.action
@@ -1177,32 +917,32 @@ msgstr "{product_name} 후원하기"
 #: fluxer_marketing/generated:donations.errors.active_subscription_exists
 msgctxt "donations.errors.active_subscription_exists"
 msgid ""
-"You already have an active recurring donation. To start a different recurring donation, please cancel your current one first using the customer portal. You can make a one-time donation instead."
-msgstr "이미 정기 후원 중이에요. 다른 정기 후원을 시작하려면 고객 포털에서 현재 후원을 먼저 취소해 주세요. 대신 일회성 후원을 하실 수 있어요."
+"You already have an active recurring donation. Cancel it in the donor portal to start a different one, or make a one-time donation instead."
+msgstr "이미 정기 후원 중이에요. 다른 정기 후원을 시작하려면 후원자 포털에서 현재 후원을 취소하시거나, 대신 일회성 후원을 하실 수 있어요."
 
 #. Body copy in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
 #: fluxer_marketing/generated:donations.errors.generic
 msgctxt "donations.errors.generic"
-msgid "Something went wrong. Please try again."
-msgstr "문제가 발생했어요. 다시 시도해 주세요."
+msgid "Could not complete the donation request. Try again."
+msgstr "후원 요청을 완료하지 못했어요. 다시 시도해 주세요."
 
 #. Body copy in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
 #: fluxer_marketing/generated:donations.errors.invalid_amount
 msgctxt "donations.errors.invalid_amount"
-msgid "Amount must be between {minimum} and {maximum}"
-msgstr "금액은 {minimum}에서 {maximum} 사이여야 해요"
+msgid "Amount must be between {minimum} and {maximum}."
+msgstr "금액은 {minimum}에서 {maximum} 사이여야 해요."
 
 #. Compact UI label in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
 #: fluxer_marketing/generated:donations.errors.invalid_email
 msgctxt "donations.errors.invalid_email"
-msgid "Please enter a valid email address"
-msgstr "유효한 이메일 주소를 입력해 주세요"
+msgid "Enter a valid email address."
+msgstr "유효한 이메일 주소를 입력해 주세요."
 
 #. Compact UI label in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
 #: fluxer_marketing/generated:donations.errors.network
 msgctxt "donations.errors.network"
-msgid "Network error. Please try again."
-msgstr "네트워크 오류가 발생했어요. 다시 시도해 주세요."
+msgid "Could not reach the donation service. Try again later."
+msgstr "후원 서비스에 연결할 수 없어요. 잠시 후 다시 시도해 주세요."
 
 #. Compact UI label in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
 #: fluxer_marketing/generated:donations.form.amount
@@ -1250,7 +990,7 @@ msgstr "사용자@email.com"
 #: fluxer_marketing/generated:donations.form.monthly
 msgctxt "donations.form.monthly"
 msgid "Monthly"
-msgstr "월별"
+msgstr "매월"
 
 #. Compact UI label in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
 #: fluxer_marketing/generated:donations.form.one_time
@@ -1264,12 +1004,6 @@ msgctxt "donations.form.or_label"
 msgid "Or"
 msgstr "또는"
 
-#. Compact UI label in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
-#: fluxer_marketing/generated:donations.form.processing
-msgctxt "donations.form.processing"
-msgid "Processing…"
-msgstr "처리 중…"
-
 #. Button or link label in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
 #: fluxer_marketing/generated:donations.form.send_link
 msgctxt "donations.form.send_link"
@@ -1277,16 +1011,10 @@ msgid "Send link"
 msgstr "링크 보내기"
 
 #. Compact UI label in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
-#: fluxer_marketing/generated:donations.form.sending
-msgctxt "donations.form.sending"
-msgid "Sending…"
-msgstr "보내는 중…"
-
-#. Compact UI label in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
 #: fluxer_marketing/generated:donations.form.yearly
 msgctxt "donations.form.yearly"
 msgid "Yearly"
-msgstr "연간"
+msgstr "매년"
 
 #. Compact UI label on donation pages and donation support cards. Keep the tone appreciative without being pushy; preserve placeholders exactly.
 #: fluxer_marketing/generated:donations.individual
@@ -1298,13 +1026,13 @@ msgstr "개인"
 #: fluxer_marketing/generated:donations.manage.description
 msgctxt "donations.manage.description"
 msgid ""
-"Enter your email to receive a link to your donor portal, where you can manage subscriptions, download invoices, and view your donation history."
-msgstr "이메일을 입력하시면 후원자 포털 링크를 보내드려요. 포털에서 구독을 관리하고, 영수증을 다운로드하고, 후원 내역을 확인할 수 있어요."
+"Enter your email to receive a link to your donor portal. There you can manage recurring donations and see past payments, including downloadable invoices."
+msgstr "이메일을 입력하시면 후원자 포털 링크를 보내드려요. 포털에서 정기 후원을 관리하고, 다운로드할 수 있는 영수증을 포함해 지난 결제 내역을 확인할 수 있어요."
 
 #. Body copy in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
 #: fluxer_marketing/generated:donations.manage.success
 msgctxt "donations.manage.success"
-msgid "If an account exists for that email, you'll receive a management link shortly."
+msgid "If an account exists for that email, we will send a management link shortly."
 msgstr "해당 이메일로 계정이 있다면 곧 관리 링크를 보내드릴게요."
 
 #. Short UI label or heading in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
@@ -1317,25 +1045,13 @@ msgstr "후원 관리"
 #: fluxer_marketing/generated:donations.minimum_donation
 msgctxt "donations.minimum_donation"
 msgid "Minimum donation: {minimum} in the currency you select"
-msgstr "최소 후원 금액: 선택한 통화 {minimum}"
-
-#. Compact UI label on donation pages and donation support cards. Keep the tone appreciative without being pushy; preserve placeholders exactly.
-#: fluxer_marketing/generated:donations.send_one_time_gift
-msgctxt "donations.send_one_time_gift"
-msgid "Send a one-time gift"
-msgstr "일회성 선물을 보내세요"
+msgstr "최소 후원 금액: 선택하신 통화 기준 {minimum}"
 
 #. Compact UI label in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
 #: fluxer_marketing/generated:donations.success.back_to_donate
 msgctxt "donations.success.back_to_donate"
 msgid "Back to donate"
 msgstr "후원 페이지로 돌아가기"
-
-#. Compact UI label in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
-#: fluxer_marketing/generated:donations.success.description
-msgctxt "donations.success.description"
-msgid "Thank you for your support!"
-msgstr "후원 감사합니다!"
 
 #. Body copy in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
 #: fluxer_marketing/generated:donations.success.email_notice
@@ -1347,27 +1063,28 @@ msgstr "곧 후원 상세 정보와 후원자 포털 링크가 담긴 확인 이
 #. Body copy in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
 #: fluxer_marketing/generated:donations.success.message
 msgctxt "donations.success.message"
-msgid "Thank you for your donation! We really appreciate your support."
-msgstr "후원해 주셔서 감사해요. 정말 큰 힘이 돼요."
+msgid ""
+"Thank you. Your donation pays for the servers and for the people who build and run {product_name}. It keeps us answerable to the people using it rather than to an investor."
+msgstr "감사합니다. 보내주신 후원금은 {product_name}의 서버 운영과 개발 및 운영 인력에게 사용됩니다. 이를 통해 저희는 투자자가 아닌, 서비스를 이용하는 여러분께 책임을 다할 수 있습니다."
 
 #. Short UI label or heading in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
 #: fluxer_marketing/generated:donations.success.title
 msgctxt "donations.success.title"
-msgid "Thank you!"
+msgid "Thank you"
 msgstr "감사합니다!"
-
-#. Compact UI label on donation pages and donation support cards. Keep the tone appreciative without being pushy; preserve placeholders exactly.
-#: fluxer_marketing/generated:donations.support_future_development
-msgctxt "donations.support_future_development"
-msgid "Support future development"
-msgstr "향후 개발 지원"
 
 #. Body copy on donation pages and donation support cards. Keep the tone appreciative without being pushy; preserve placeholders exactly.
 #: fluxer_marketing/generated:donations.support_message
 msgctxt "donations.support_message"
 msgid ""
-"Help us build an independent communication platform. Your donation funds the platform's infrastructure and development."
-msgstr "독립적인 커뮤니케이션 플랫폼 구축을 함께해요. 후원금은 플랫폼 인프라와 개발에 사용돼요."
+"Help keep {product_name} independent. Donations pay for hosting and development, and they are the reason nobody else gets a say in what we build."
+msgstr "{product_name}를 독립적으로 유지하는 데 힘을 보태 주세요. 후원금은 호스팅과 개발 비용으로 쓰이며, 저희가 무엇을 만들지에 대해 다른 누구도 간섭하지 못하는 이유입니다."
+
+#. Label for the editable amount in the Swish payment flow. Preserve the currency-code placeholder {currency} exactly.
+#: fluxer_marketing/generated:donations.swish.amount_label
+msgctxt "donations.swish.amount_label"
+msgid "Amount ({currency})"
+msgstr "금액 ({currency})"
 
 #. Instruction text in the desktop Swish donation modal. The user is on a computer and should scan a QR code with the Swish mobile app. Keep it clear and easy to follow. Preserve placeholders exactly.
 #: fluxer_marketing/generated:donations.swish.instructions
@@ -1405,12 +1122,6 @@ msgctxt "donations.swish.qr_failed"
 msgid "Could not load QR code. Try again later."
 msgstr "QR 코드를 불러올 수 없어요. 잠시 후 다시 시도해 주세요."
 
-#. Compact UI label in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
-#: fluxer_marketing/generated:donations.swish.qr_loading
-msgctxt "donations.swish.qr_loading"
-msgid "Loading…"
-msgstr "불러오는 중…"
-
 #. Modal title shown on desktop devices in the Swish donation flow. The user should scan the QR code using the Swish mobile app. Preserve placeholders exactly.
 #: fluxer_marketing/generated:donations.swish.scan_title
 msgctxt "donations.swish.scan_title"
@@ -1429,25 +1140,24 @@ msgctxt "donations.swish.update_qr"
 msgid "Update QR"
 msgstr "QR 업데이트"
 
-#. Body copy on donation pages and donation support cards. Keep the tone appreciative without being pushy; preserve placeholders exactly.
-#: fluxer_marketing/generated:donations.why_support
-msgctxt "donations.why_support"
-msgid ""
-"Help us build a different kind of communication platform: open source, community-funded, and built with care."
-msgstr "다른 종류의 커뮤니케이션 플랫폼을 만드는 데 함께해 주세요: 오픈 소스이고, 커뮤니티가 후원하며, 세심하게 만들어집니다."
-
 #. Button or link label on the download page, download buttons, or install calls to action. Keep platform-download wording short, direct, and action-oriented; preserve placeholders exactly.
 #: fluxer_marketing/generated:download.download
 msgctxt "download.download"
 msgid "Download"
 msgstr "다운로드"
 
+#. Understated label introducing less common desktop download choices. Keep it concise.
+#: fluxer_marketing/generated:download.advanced_downloads
+msgctxt "download.advanced_downloads"
+msgid "Advanced downloads"
+msgstr "고급 다운로드"
+
 #. Final call-to-action body copy on the download page. Preserve {product_name} exactly; make clear that users can either install the app or use the browser version. Preserve placeholders exactly.
 #: fluxer_marketing/generated:download.download_app_or_open_in_browser
 msgctxt "download.download_app_or_open_in_browser"
 msgid ""
-"Download the app or open {product_name} in your browser to start connecting with your communities."
-msgstr "앱을 다운로드하거나 브라우저에서 {product_name}를 열어 커뮤니티와 연결을 시작해 보세요."
+"Install the app or open {product_name} in your browser and start talking. Making an account is free and we never ask for a card."
+msgstr "앱을 설치하거나 브라우저에서 {product_name}를 열고 바로 대화를 시작하세요. 계정 만들기는 무료이며 카드 정보를 요구하지 않아요."
 
 #. Button or link label on the download page, download buttons, or install calls to action. Keep platform-download wording short, direct, and action-oriented; preserve placeholders exactly.
 #: fluxer_marketing/generated:download.download_fluxer
@@ -1461,23 +1171,17 @@ msgctxt "download.download_for_platform"
 msgid "Download for {platform}"
 msgstr "{platform}용 다운로드"
 
-#. Inline label that precedes a short row of alternate desktop download links (other architecture, package formats, build variants) on the download page. Keep it short.
-#: fluxer_marketing/generated:download.other_downloads
-msgctxt "download.other_downloads"
-msgid "Other downloads"
-msgstr "기타 다운로드"
-
 #. Button or link label on the download page, download buttons, or install calls to action. Keep platform-download wording short, direct, and action-oriented; preserve placeholders exactly.
 #: fluxer_marketing/generated:download.open_in_browser
 msgctxt "download.open_in_browser"
 msgid "Open in browser"
 msgstr "브라우저에서 열기"
 
-#. Button or link label on the download page, download buttons, or install calls to action. Keep platform-download wording short, direct, and action-oriented; preserve placeholders exactly.
+#. Credit line in the PWA installation dialog. Translate the whole sentence so the linked source can appear in the natural position. Preserve {source} exactly.
 #: fluxer_marketing/generated:download.screenshots_courtesy_of
 msgctxt "download.screenshots_courtesy_of"
-msgid "Screenshots courtesy of "
-msgstr "스크린샷 제공: "
+msgid "Screenshots courtesy of {source}."
+msgstr "스크린샷 제공: {source}."
 
 #. Compact UI label in the global marketing footer. Keep navigation labels compact and use legally precise company wording where applicable; preserve placeholders exactly.
 #: fluxer_marketing/generated:footer.bluesky_social_media
@@ -1501,7 +1205,7 @@ msgstr "회사 정보"
 #: fluxer_marketing/generated:footer.connect
 msgctxt "footer.connect"
 msgid "Connect"
-msgstr "연결하기"
+msgstr "소통하기"
 
 #. Compact UI label in the global marketing footer. Keep navigation labels compact and use legally precise company wording where applicable; preserve placeholders exactly.
 #: fluxer_marketing/generated:footer.donate
@@ -1524,15 +1228,16 @@ msgstr "{product_name}"
 #. Body copy in the global marketing footer. Keep navigation labels compact and use legally precise company wording where applicable; preserve placeholders exactly.
 #: fluxer_marketing/generated:footer.fluxer_platform_ab_swedish_limited
 msgctxt "footer.fluxer_platform_ab_swedish_limited"
-msgid "© {product_name} Platform AB (Swedish limited liability company: 559537-3993)"
-msgstr "© {product_name} Platform AB (스웨덴 유한책임회사: 559537-3993)"
+msgid "© {product_name} Platform AB (Swedish private limited company: 559537-3993)"
+msgstr "© {product_name} Platform AB (스웨덴 비상장 유한회사: 559537-3993)"
 
-#. Body copy in the global marketing footer. Keep navigation labels compact and use legally precise company wording where applicable; preserve placeholders exactly.
-#: fluxer_marketing/generated:footer.help_support_an_independent_communication
-msgctxt "footer.help_support_an_independent_communication"
+#. Body copy in the global footer describing how Fluxer is funded. Preserve {product_name} and {premium_tier_name} exactly.
+#: fluxer_marketing/generated:funding_model.footer_description
+msgctxt "funding_model.footer_description"
 msgid ""
-"Support an independent communication platform. Your donation funds the platform's infrastructure and development."
-msgstr "독립적인 커뮤니케이션 플랫폼을 지원해 주세요. 후원금은 플랫폼의 인프라와 개발에 사용돼요."
+"{product_name} is funded by {premium_tier_name} subscribers and donors, without venture capital or outside investors telling us what to build."
+msgstr ""
+"{product_name}는 {premium_tier_name} 구독자와 후원자의 지원으로 운영되며, 벤처 캐피털이나 외부 투자자가 무엇을 만들지 지시하지 않습니다."
 
 #. Compact UI label in the global marketing footer. Keep navigation labels compact and use legally precise company wording where applicable; preserve placeholders exactly.
 #: fluxer_marketing/generated:footer.partners
@@ -1540,11 +1245,11 @@ msgctxt "footer.partners"
 msgid "Partners"
 msgstr "파트너"
 
-#. Compact UI label in the global marketing footer. Keep navigation labels compact and use legally precise company wording where applicable; preserve placeholders exactly.
-#: fluxer_marketing/generated:footer.plutonium_tier
-msgctxt "footer.plutonium_tier"
-msgid "{premium_tier_name} tier"
-msgstr "{premium_tier_name} 등급"
+#. Footer call-to-action linking to the Plutonium page. Preserve {product_name} exactly.
+#: fluxer_marketing/generated:funding_model.see_how_fluxer_is_funded
+msgctxt "funding_model.see_how_fluxer_is_funded"
+msgid "See how {product_name} is funded"
+msgstr "{product_name}의 운영 자금 알아보기"
 
 #. Compact UI label in the global marketing footer. Keep navigation labels compact and use legally precise company wording where applicable; preserve placeholders exactly.
 #: fluxer_marketing/generated:footer.policies
@@ -1583,10 +1288,10 @@ msgid "RSS feed"
 msgstr "RSS 피드"
 
 #. Compact UI label in the global marketing footer. Keep navigation labels compact and use legally precise company wording where applicable; preserve placeholders exactly.
-#: fluxer_marketing/generated:footer.security_bug_bounty
-msgctxt "footer.security_bug_bounty"
-msgid "Security bug bounty"
-msgstr "보안 버그 바운티"
+#: fluxer_marketing/generated:footer.security
+msgctxt "footer.security"
+msgid "Security"
+msgstr "보안"
 
 #. Compact UI label in the global marketing footer. Keep navigation labels compact and use legally precise company wording where applicable; preserve placeholders exactly.
 #: fluxer_marketing/generated:footer.source_code
@@ -1604,7 +1309,7 @@ msgstr "상태"
 #: fluxer_marketing/generated:footer.terms_of_service
 msgctxt "footer.terms_of_service"
 msgid "Terms of service"
-msgstr "이용약관"
+msgstr "서비스 약관"
 
 #. Compact UI label in the language picker. Keep the label clear for users changing the marketing-site language.
 #: fluxer_marketing/generated:languages.change_language
@@ -1672,17 +1377,11 @@ msgctxt "languages.list.dutch"
 msgid "Dutch"
 msgstr "네덜란드어"
 
-#. Language name shown in the language picker. Use the target locale's natural name for this language, not a sentence; keep it short.
-#: fluxer_marketing/generated:languages.list.english
-msgctxt "languages.list.english"
-msgid "English"
-msgstr "영어"
-
 #. Language name shown in the language picker for British English. Use the target locale's natural name for this locale, not a sentence; keep it short.
 #: fluxer_marketing/generated:languages.list.english_uk
 msgctxt "languages.list.english_uk"
 msgid "English (United Kingdom)"
-msgstr "영어 (영국)"
+msgstr "영어(영국)"
 
 #. Language name shown in the language picker. Use the target locale's natural name for this language, not a sentence; keep it short.
 #: fluxer_marketing/generated:languages.list.english_us
@@ -1855,20 +1554,15 @@ msgstr "얼리 액세스"
 #. Body copy in Fluxer marketing UI. Translate naturally for the target locale and preserve placeholders exactly.
 #: fluxer_marketing/generated:beta_and_access.featured_benefit_line
 msgctxt "beta_and_access.featured_benefit_line"
-msgid "All the basics you expect, plus a few things you don't."
-msgstr "기본적인 기능은 물론, 기대 이상의 특별함도 만나보세요."
+msgid ""
+"Chat, calls, screen sharing and communities are free, and they stay free. {premium_tier_name} adds optional extras for the people who want them."
+msgstr "채팅, 통화, 화면 공유 및 커뮤니티는 무료이며 앞으로도 계속 무료입니다. {premium_tier_name}은 원하는 분들을 위한 추가 기능을 제공합니다."
 
 #. Compact UI label in Fluxer marketing UI. Translate naturally for the target locale and preserve placeholders exactly.
 #: fluxer_marketing/generated:beta_and_access.public_beta
 msgctxt "beta_and_access.public_beta"
 msgid "Public beta"
 msgstr "공개 베타"
-
-#. Body copy in Fluxer marketing UI. Translate naturally for the target locale and preserve placeholders exactly.
-#: fluxer_marketing/generated:beta_and_access.try_without_email
-msgctxt "beta_and_access.try_without_email"
-msgid "Try {product_name} without an email in 30 seconds"
-msgstr "30초 만에 이메일 없이 {product_name}를 사용해 보세요"
 
 #. Short UI label or heading in the hero launch/roadmap badges linking to blog content. Keep it short and inviting, and preserve the product-name placeholder exactly.
 #: fluxer_marketing/generated:launch.heading
@@ -1882,6 +1576,12 @@ msgctxt "launch.view_full_roadmap"
 msgid "View full roadmap"
 msgstr "전체 로드맵 보러 가기"
 
+#. Compact label for the help link in the desktop marketing navigation.
+#: fluxer_marketing/generated:navigation.help
+msgctxt "navigation.help"
+msgid "Help"
+msgstr "도움말"
+
 #. Short UI label or heading in site navigation, mobile drawer controls, or accessibility labels. Keep it brief and unambiguous.
 #: fluxer_marketing/generated:navigation.close
 msgctxt "navigation.close"
@@ -1892,7 +1592,7 @@ msgstr "닫기"
 #: fluxer_marketing/generated:navigation.close_navigation_menu
 msgctxt "navigation.close_navigation_menu"
 msgid "Close navigation menu"
-msgstr "내비게이션 메뉴를 닫으세요"
+msgstr "탐색 메뉴 닫기"
 
 #. Accessibility label for the mobile navigation menu toggle. Keep it brief and unambiguous.
 #: fluxer_marketing/generated:navigation.open_navigation_menu
@@ -1904,13 +1604,19 @@ msgstr "탐색 메뉴 열기"
 #: fluxer_marketing/generated:navigation.copy_link_to_section
 msgctxt "navigation.copy_link_to_section"
 msgid "Copy link to section"
-msgstr "섹션 링크를 복사하세요"
+msgstr "섹션 링크 복사"
+
+#. Error message shown when a heading link cannot be copied automatically. Keep it concise and tell the reader how to copy the link manually.
+#: fluxer_marketing/generated:navigation.copy_link_failed
+msgctxt "navigation.copy_link_failed"
+msgid "Could not copy the link. Copy it from the browser address bar instead."
+msgstr "링크를 복사할 수 없어요. 브라우저 주소 표시줄에서 직접 복사해 주세요."
 
 #. Compact UI label in site navigation, mobile drawer controls, or accessibility labels. Keep it brief and unambiguous.
 #: fluxer_marketing/generated:navigation.go_home
 msgctxt "navigation.go_home"
 msgid "Go home"
-msgstr "홈으로 이동하세요"
+msgstr "홈으로 이동"
 
 #. Compact UI label in site navigation, mobile drawer controls, or accessibility labels. Keep it brief and unambiguous.
 #: fluxer_marketing/generated:navigation.on_this_page
@@ -1921,8 +1627,8 @@ msgstr "이 페이지 내용"
 #. Body copy on the 404 page. Keep the tone helpful and concise while making clear the page was not found.
 #: fluxer_marketing/generated:navigation.page_not_found.description
 msgctxt "navigation.page_not_found.description"
-msgid "This page doesn't exist. But there's plenty more to explore."
-msgstr "이 페이지는 존재하지 않지만, 둘러볼 만한 다른 페이지가 많아요."
+msgid "This page does not exist. Either it moved or a link went stale, and both are fixable."
+msgstr "이 페이지는 존재하지 않아요. 페이지가 이동했거나 링크가 오래된 것이며, 둘 다 바로잡을 수 있어요."
 
 #. Short UI label or heading on the 404 page. Keep the tone helpful and concise while making clear the page was not found.
 #: fluxer_marketing/generated:navigation.page_not_found.title
@@ -1930,23 +1636,18 @@ msgctxt "navigation.page_not_found.title"
 msgid "Page not found"
 msgstr "페이지를 찾을 수 없어요"
 
-#. Introductory body copy on the press/brand-assets page. Keep wording professional and clear for journalists, partners, and brand-asset users.
+#. Introductory body copy on the press/brand-assets page. Keep wording professional and clear for journalists, partners, and brand-asset users. Preserve {product_name} exactly.
 #: fluxer_marketing/generated:navigation.press.download_assets_intro
 msgctxt "navigation.press.download_assets_intro"
-msgid "Download our logos, learn about our brand colors, and get in touch with our press team."
-msgstr "로고를 다운로드하고, 브랜드 색상에 대해 알아보고, 언론팀에 문의하세요."
-
-#. Press-page heading or summary line for brand asset downloads. Preserve {product_name} exactly; keep wording professional for journalists and partners. Preserve placeholders exactly.
-#: fluxer_marketing/generated:navigation.press.download_fluxer_assets
-msgctxt "navigation.press.download_fluxer_assets"
-msgid "Download {product_name} logos, brand assets, and get in touch with our press team"
-msgstr "{product_name} 로고, 브랜드 자산을 다운로드하고 언론팀에 문의하세요"
+msgid ""
+"Download the {product_name} logos and color references. Press inquiries go straight to our team."
+msgstr "{product_name} 로고와 색상 가이드를 다운로드하세요. 언론 문의는 저희 팀으로 바로 연결됩니다."
 
 #. Compact UI label on the press/brand-assets page. Keep wording professional and clear for journalists or partners.
 #: fluxer_marketing/generated:navigation.press.press_and_brand_assets
 msgctxt "navigation.press.press_and_brand_assets"
-msgid "Press and brand assets"
-msgstr "언론 자료 및 브랜드 자산"
+msgid "Press and logo files"
+msgstr "언론 및 로고 파일"
 
 #. Body copy in the partner application section, pointing readers to the help center guide. Keep the tone professional, creator-friendly, and clear about application expectations.
 #: fluxer_marketing/generated:partner_program.apply.guide_prompt
@@ -2025,7 +1726,7 @@ msgstr "팀과 직접 소통"
 #: fluxer_marketing/generated:partner_program.perks.discovery_visibility
 msgctxt "partner_program.perks.discovery_visibility"
 msgid "Get increased visibility by being featured in community discovery."
-msgstr "커뮤니티 검색에 소개되어 가시성을 높일 수 있어요."
+msgstr "커뮤니티 둘러보기에 소개되어 더 많은 사람에게 노출될 수 있어요."
 
 #. Body copy on the partner program perks section. Keep benefits concrete and appealing to creators/community owners; preserve placeholders exactly.
 #: fluxer_marketing/generated:partner_program.perks.exclusive_merch.description
@@ -2085,7 +1786,7 @@ msgstr "파트너 배지"
 #: fluxer_marketing/generated:partner_program.perks.see_perks
 msgctxt "partner_program.perks.see_perks"
 msgid "See perks"
-msgstr "혜택을 확인해 보세요"
+msgstr "혜택 보기"
 
 #. Body copy on the partner program perks section. Keep benefits concrete and appealing to creators/community owners; preserve placeholders exactly.
 #: fluxer_marketing/generated:partner_program.perks.vip_voice_servers.description
@@ -2104,7 +1805,7 @@ msgstr "VIP 음성 채널"
 msgctxt "partner_program.who_its_for"
 msgid ""
 "For creators and community owners: free {premium_tier_name}, a partner badge, a custom vanity URL, and more."
-msgstr "크리에이터와 커뮤니티 소유자를 위해: 무료 {premium_tier_name}, 파트너 배지, 맞춤형 배니티 URL 등."
+msgstr "크리에이터와 커뮤니티 소유자를 위해: 무료 {premium_tier_name}, 파트너 배지, 맞춤형 URL 등."
 
 #. Download-page meta description. Preserve {product_name} exactly; keep platform names conventional and make desktop, browser, and public mobile testing availability clear. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.availability.meta_description
@@ -2133,47 +1834,47 @@ msgctxt "platform_support.desktop.label"
 msgid "Desktop"
 msgstr "데스크톱"
 
-#. Body copy in platform availability and download support copy. Keep wording clear about desktop, web, and mobile status.
-#: fluxer_marketing/generated:platform_support.desktop.use_desktop_client_mobile_soon
-msgctxt "platform_support.desktop.use_desktop_client_mobile_soon"
-msgid "Use the desktop client (mobile coming soon)"
-msgstr "데스크톱 클라이언트를 사용해 보세요 (모바일 앱은 곧 출시 예정이에요)"
+#. Section heading for web and mobile options on the download page. Keep it concise.
+#: fluxer_marketing/generated:platform_support.mobile.label
+msgctxt "platform_support.mobile.label"
+msgid "Mobile and web"
+msgstr "모바일 및 웹"
 
-#. Notice below the Linux download row warning that the Flatpak build lags the other Linux downloads at the moment. Preserve Flatpak and Linux as names and preserve placeholders exactly.
-#: fluxer_marketing/generated:platform_support.desktop.flatpak_outdated
-msgctxt "platform_support.desktop.flatpak_outdated"
-msgid "The {flatpak} package is currently behind the other {linux} downloads."
-msgstr "{flatpak} 패키지는 현재 다른 {linux} 다운로드보다 뒤처져 있습니다."
+#. Compact feature label explaining that Fluxer is available in browsers and as desktop and mobile apps. Preserve {product_name} exactly.
+#: fluxer_marketing/generated:platform_support.availability.every_client
+msgctxt "platform_support.availability.every_client"
+msgid "Use {product_name} in a browser or install it on desktop and mobile"
+msgstr "브라우저에서 {product_name}를 사용하거나 데스크톱과 모바일에 설치하세요"
 
 #. Body copy for mobile/PWA install guidance on the download page. Keep instructions clear, device-appropriate, and concise; preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.install_as_app.done_desktop
 msgctxt "platform_support.mobile.install_as_app.done_desktop"
-msgid "Done! You can now open {product_name} as if it were a regular program."
-msgstr "완료했어요! 이제 {product_name}를 일반 프로그램처럼 열어 보세요."
+msgid "Done. You can now open {product_name} as if it were a regular program."
+msgstr "완료되었어요. 이제 {product_name}를 일반 프로그램처럼 열 수 있어요."
 
 #. Body copy for mobile/PWA install guidance on the download page. Keep instructions clear, device-appropriate, and concise; preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.install_as_app.done_mobile
 msgctxt "platform_support.mobile.install_as_app.done_mobile"
-msgid "Done! You can now open {product_name} from your home screen."
-msgstr "완료했어요! 이제 홈 화면에서 {product_name}를 열어 보세요."
+msgid "Done. You can now open {product_name} from your home screen."
+msgstr "완료되었어요. 이제 홈 화면에서 {product_name}를 열 수 있어요."
 
-#. Compact UI label for mobile/PWA install guidance on the download page. Keep instructions clear, device-appropriate, and concise; preserve placeholders exactly.
+#. First PWA installation step. Translate the whole instruction so the linked web-app label can appear in the natural position. Preserve {web_app_link} and {chrome} exactly.
 #: fluxer_marketing/generated:platform_support.mobile.install_as_app.guides.in_chrome
 msgctxt "platform_support.mobile.install_as_app.guides.in_chrome"
-msgid " in {chrome}"
-msgstr " {chrome}에서"
+msgid "Open {web_app_link} in {chrome}"
+msgstr "{web_app_link}을(를) {chrome}에서 열기"
 
-#. Body copy for mobile/PWA install guidance on the download page. Keep instructions clear, device-appropriate, and concise; preserve placeholders exactly.
+#. First desktop PWA installation step. Translate the whole instruction so the linked web-app label can appear in the natural position. Preserve {web_app_link} and {chrome} exactly.
 #: fluxer_marketing/generated:platform_support.mobile.install_as_app.guides.in_chrome_or_another_browser
 msgctxt "platform_support.mobile.install_as_app.guides.in_chrome_or_another_browser"
-msgid " in {chrome} or another browser with PWA support"
-msgstr " {chrome} 또는 PWA를 지원하는 다른 브라우저에서"
+msgid "Open {web_app_link} in {chrome} or another browser that supports PWAs"
+msgstr "{web_app_link}을(를) {chrome} 또는 PWA를 지원하는 다른 브라우저에서 열기"
 
-#. Compact UI label for mobile/PWA install guidance on the download page. Keep instructions clear, device-appropriate, and concise; preserve placeholders exactly.
+#. First iOS PWA installation step. Translate the whole instruction so the linked web-app label can appear in the natural position. Preserve {web_app_link} exactly.
 #: fluxer_marketing/generated:platform_support.mobile.install_as_app.guides.in_safari
 msgctxt "platform_support.mobile.install_as_app.guides.in_safari"
-msgid " in Safari"
-msgstr " Safari에서"
+msgid "Open {web_app_link} in Safari"
+msgstr "{web_app_link}을(를) Safari에서 열기"
 
 #. Compact UI label for mobile/PWA install guidance on the download page. Keep instructions clear, device-appropriate, and concise; preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.install_as_app.guides.pwa_installation_guide
@@ -2184,7 +1885,7 @@ msgstr "{name} PWA 설치 가이드"
 #. Compact UI label for mobile/PWA install guidance on the download page. Keep instructions clear, device-appropriate, and concise; preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.install_as_app.guides.steps.press_add_to_home_screen
 msgctxt "platform_support.mobile.install_as_app.guides.steps.press_add_to_home_screen"
-msgid "Press \"Add to home screen\""
+msgid "Press \"Add to Home Screen\""
 msgstr "\"홈 화면에 추가\"를 눌러 주세요"
 
 #. Body copy for mobile/PWA install guidance on the download page. Keep instructions clear, device-appropriate, and concise; preserve placeholders exactly.
@@ -2241,23 +1942,11 @@ msgctxt "platform_support.mobile.install_as_app.title"
 msgid "How to install as an app"
 msgstr "앱으로 설치하는 방법"
 
-#. Short UI label or heading for mobile/PWA install guidance on the download page. Keep instructions clear, device-appropriate, and concise; preserve placeholders exactly.
-#: fluxer_marketing/generated:platform_support.mobile.interface_label
-msgctxt "platform_support.mobile.interface_label"
-msgid "{product_name} mobile interface"
-msgstr "{product_name} 모바일 화면"
-
-#. Compact UI label naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact.
-#: fluxer_marketing/generated:platform_support.platforms.android.apk
-msgctxt "platform_support.platforms.android.apk"
-msgid "APK"
-msgstr "APK"
-
 #. Compact UI label naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.platforms.android.min_version
 msgctxt "platform_support.platforms.android.min_version"
-msgid "{android} 8+"
-msgstr "{android} 8 이상"
+msgid "{android} 7+"
+msgstr "{android} 7 이상"
 
 #. Short UI label or heading naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.platforms.android.name
@@ -2274,8 +1963,8 @@ msgstr "{ios} 및 {ipados}"
 #. Compact UI label naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.platforms.ios.min_version
 msgctxt "platform_support.platforms.ios.min_version"
-msgid "{ios} 15+"
-msgstr "{ios} 15 이상"
+msgid "{ios}/{ipados} 15.6+"
+msgstr "{ios}/{ipados} 15.6 이상"
 
 #. Short UI label or heading naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.platforms.ios.name
@@ -2283,41 +1972,17 @@ msgctxt "platform_support.platforms.ios.name"
 msgid "{ios}"
 msgstr "{ios}"
 
-#. Compact UI label naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact. Preserve placeholders exactly.
-#: fluxer_marketing/generated:platform_support.platforms.ios.testflight
-msgctxt "platform_support.platforms.ios.testflight"
-msgid "{testflight}"
-msgstr "{testflight}"
-
-#. Compact UI label naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact. Preserve placeholders exactly.
-#: fluxer_marketing/generated:platform_support.platforms.linux.choose_distribution
-msgctxt "platform_support.platforms.linux.choose_distribution"
-msgid "Choose {linux} distribution"
-msgstr "{linux} 배포판 선택"
-
 #. Short UI label or heading naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.platforms.linux.name
 msgctxt "platform_support.platforms.linux.name"
 msgid "{linux}"
 msgstr "{linux}"
 
-#. Compact UI label naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact.
-#: fluxer_marketing/generated:platform_support.platforms.linux.recommended
-msgctxt "platform_support.platforms.linux.recommended"
-msgid "recommended"
-msgstr "추천"
-
 #. Compact UI label naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.platforms.macos.apple_silicon
 msgctxt "platform_support.platforms.macos.apple_silicon"
 msgid "{apple_silicon}"
 msgstr "{apple_silicon}"
-
-#. Button or link label naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact. Preserve placeholders exactly.
-#: fluxer_marketing/generated:platform_support.platforms.macos.download_label
-msgctxt "platform_support.platforms.macos.download_label"
-msgid "Download for {macos}"
-msgstr "{macos} 다운로드"
 
 #. Compact UI label naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact.
 #: fluxer_marketing/generated:platform_support.platforms.macos.intel
@@ -2328,20 +1993,14 @@ msgstr "Intel"
 #. Compact UI label naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.platforms.macos.min_version
 msgctxt "platform_support.platforms.macos.min_version"
-msgid "{macos} 10.15+"
-msgstr "{macos} 10.15 이상"
+msgid "{macos} 12+"
+msgstr "{macos} 12 이상"
 
 #. Short UI label or heading naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.platforms.macos.name
 msgctxt "platform_support.platforms.macos.name"
 msgid "{macos}"
 msgstr "{macos}"
-
-#. Button or link label naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact. Preserve placeholders exactly.
-#: fluxer_marketing/generated:platform_support.platforms.windows.download_label
-msgctxt "platform_support.platforms.windows.download_label"
-msgid "Download for {windows}"
-msgstr "{windows} 다운로드"
 
 #. Compact UI label naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.platforms.windows.min_version
@@ -2355,7 +2014,7 @@ msgctxt "platform_support.platforms.windows.name"
 msgid "{windows}"
 msgstr "{windows}"
 
-#. Compact UI label for a portable (no-install) desktop build that stores all data next to the executable. Keep it short.
+#. Short UI label naming the portable Windows distribution method in download UI. Keep it concise.
 #: fluxer_marketing/generated:platform_support.platforms.portable
 msgctxt "platform_support.platforms.portable"
 msgid "Portable"
@@ -2368,12 +2027,12 @@ msgid "Web app"
 msgstr "웹 앱"
 
 #. Body copy for the web app row on the download page. Preserve {product_name} exactly; mention desktop and mobile browsers and that it installs like a Progressive Web App. Preserve placeholders exactly.
-#: fluxer_marketing/generated:platform_support.mobile.web_app.body
-msgctxt "platform_support.mobile.web_app.body"
+#: fluxer_marketing/generated:platform_support.mobile.web_app.any_browser
+msgctxt "platform_support.mobile.web_app.any_browser"
 msgid ""
-"{product_name} runs in any desktop or mobile web browser, and installs to your home screen or desktop like a Progressive Web App. It is the most complete way to use {product_name} on a phone today."
+"Use {product_name} in a desktop or mobile web browser, or install it to your home screen or desktop as a Progressive Web App. The web app currently has more features than the native phone apps."
 msgstr ""
-"{product_name}은(는) 모든 데스크톱 또는 모바일 웹 브라우저에서 실행되며, 프로그레시브 웹 앱처럼 홈 화면이나 데스크톱에 설치됩니다. 오늘날 휴대폰에서 {product_name}을(를) 사용하는 가장 완벽한 방법입니다."
+"데스크톱이나 모바일 웹 브라우저에서 {product_name}를 사용하거나, 프로그레시브 웹 앱(PWA)으로 홈 화면이나 데스크톱에 설치하세요. 현재 웹 앱이 네이티브 휴대폰 앱보다 더 많은 기능을 제공합니다."
 
 #. Card title for the iOS app option on the download page. Keep the platform name conventional and short. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.ios.title
@@ -2381,13 +2040,12 @@ msgctxt "platform_support.mobile.ios.title"
 msgid "{ios} app"
 msgstr "{ios} 앱"
 
-#. Body copy for the iOS app row on the download page. Make clear that TestFlight access is currently limited to Fluxer Plutonium members, that public access is coming soon, and that the web app remains available in Safari. Preserve placeholders exactly.
+#. Body copy for the iOS app row on the download page. Make clear that the native iOS app is currently limited to Fluxer Plutonium subscribers, that broader access is coming very soon, and that the web app remains available in Safari. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.ios.body
 msgctxt "platform_support.mobile.ios.body"
 msgid ""
-"The {ios} app on {testflight} is currently limited to {premium_tier_full_name} members. Public access is coming soon. The full {product_name} web app also works in Safari and can be added to your Home Screen."
-msgstr ""
-"{ios} 앱의 {testflight}은 현재 {premium_tier_full_name} 회원에게만 제공됩니다. 곧 일반에 공개될 예정입니다. Safari에서 전체 {product_name} 웹 앱을 사용하고 홈 화면에 추가할 수도 있습니다."
+"The native {ios} app is currently limited to {premium_tier_full_name} subscribers. Broader access is coming very soon. Meanwhile, the full {product_name} web app works in Safari and can be added to your Home Screen."
+msgstr "네이티브 {ios} 앱은 현재 {premium_tier_full_name} 구독자만 이용할 수 있습니다. 곧 더 많은 분들이 이용하실 수 있도록 확대될 예정입니다. 그동안 Safari에서 전체 {product_name} 웹 앱을 사용하고 홈 화면에 추가할 수 있습니다."
 
 #. Card title for the Android app option on the download page. Keep the platform name conventional and short. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.android.title
@@ -2410,14 +2068,28 @@ msgstr "APK 다운로드"
 #. Short UI label or heading in the press kit and brand asset download area. Keep terminology professional for brand/logo usage guidance; preserve placeholders exactly.
 #: fluxer_marketing/generated:press_branding.assets.brand_colors_heading
 msgctxt "press_branding.assets.brand_colors_heading"
-msgid "Brand colors"
-msgstr "브랜드 색상"
+msgid "{product_name} colors"
+msgstr "{product_name} 색상"
 
 #. Compact UI label in the press kit and brand asset download area. Keep terminology professional for brand/logo usage guidance; preserve placeholders exactly.
 #: fluxer_marketing/generated:press_branding.assets.full_color
 msgctxt "press_branding.assets.full_color"
 msgid "Full color version"
 msgstr "전체 색상"
+
+#. Helper text for a press-kit checkbox controlling whether the transparent wave cutouts inside non-white Fluxer logos are filled white. Keep the instruction concise and explicit.
+#: fluxer_marketing/generated:press_branding.assets.wave_interior_fill.description
+msgctxt "press_branding.assets.wave_interior_fill.description"
+msgid ""
+"Recommended for black and color logos. Turn this off only when you want the background to show through the waves."
+msgstr ""
+"블랙 및 컬러 로고에 권장합니다. 배경이 물결 사이로 비쳐 보이게 하려는 경우에만 끄세요."
+
+#. Checkbox label in the press kit. The Fluxer symbol contains two wave-shaped transparent cutouts; this option fills those interiors white. Keep the label concise.
+#: fluxer_marketing/generated:press_branding.assets.wave_interior_fill.label
+msgctxt "press_branding.assets.wave_interior_fill.label"
+msgid "Fill wave interiors with white"
+msgstr "물결 내부를 흰색으로 채우기"
 
 #. Short UI label or heading in the press kit and brand asset download area. Keep terminology professional for brand/logo usage guidance; preserve placeholders exactly.
 #: fluxer_marketing/generated:press_branding.assets.label
@@ -2429,7 +2101,7 @@ msgstr "로고"
 #: fluxer_marketing/generated:press_branding.assets.logo_variants.black_logo
 msgctxt "press_branding.assets.logo_variants.black_logo"
 msgid "Black logo"
-msgstr "검은색 로고"
+msgstr "블랙 로고"
 
 #. Compact UI label in the press kit and brand asset download area. Keep terminology professional for brand/logo usage guidance; preserve placeholders exactly.
 #: fluxer_marketing/generated:press_branding.assets.logo_variants.color_logo
@@ -2446,20 +2118,14 @@ msgstr "화이트 로고"
 #. Body copy in the press kit and brand asset download area. Keep terminology professional for brand/logo usage guidance; preserve placeholders exactly.
 #: fluxer_marketing/generated:press_branding.assets.palette_description
 msgctxt "press_branding.assets.palette_description"
-msgid "Our carefully selected color palette that represents the {product_name} brand."
-msgstr "{product_name} 브랜드를 대표하는 신중하게 고른 컬러 팔레트예요."
-
-#. Compact UI label in the press kit and brand asset download area. Keep terminology professional for brand/logo usage guidance; preserve placeholders exactly.
-#: fluxer_marketing/generated:press_branding.assets.premium_quality
-msgctxt "press_branding.assets.premium_quality"
-msgid "Premium quality"
-msgstr "프리미엄 품질"
+msgid "These are the colors used by {product_name}."
+msgstr "{product_name}가 사용하는 색상입니다."
 
 #. Body copy in the press kit and brand asset download area. Keep terminology professional for brand/logo usage guidance; preserve placeholders exactly.
 #: fluxer_marketing/generated:press_branding.assets.primary_brand_color_description
 msgctxt "press_branding.assets.primary_brand_color_description"
-msgid "Our primary brand color. Use this for key brand elements and accents."
-msgstr "대표 브랜드 색상이에요. 주요 브랜드 요소와 강조에 사용하세요."
+msgid "This is the main {product_name} color. Use it for accents and important details."
+msgstr "{product_name}의 대표 색상입니다. 강조와 중요한 세부 요소에 사용하세요."
 
 #. Compact UI label in the press kit and brand asset download area. Keep terminology professional for brand/logo usage guidance; preserve placeholders exactly.
 #: fluxer_marketing/generated:press_branding.assets.symbol_variants.black_symbol
@@ -2488,8 +2154,8 @@ msgstr "화이트 심볼"
 #. Body copy in the press kit and brand asset download area. Keep terminology professional for brand/logo usage guidance; preserve placeholders exactly.
 #: fluxer_marketing/generated:press_branding.assets.usage_guidance.dark_surface_guidance
 msgctxt "press_branding.assets.usage_guidance.dark_surface_guidance"
-msgid "For backgrounds, text on dark surfaces, and creating contrast."
-msgstr "배경, 어두운 표면의 텍스트, 대비 효과를 줄 때 사용하세요."
+msgid "Use on dark surfaces."
+msgstr "어두운 표면에 사용하세요."
 
 #. Compact UI label in the press kit and brand asset download area. Keep terminology professional for brand/logo usage guidance; preserve placeholders exactly.
 #: fluxer_marketing/generated:press_branding.assets.usage_guidance.for_dark_backgrounds
@@ -2506,21 +2172,21 @@ msgstr "밝은 배경용"
 #. Body copy in the press kit and brand asset download area. Keep terminology professional for brand/logo usage guidance; preserve placeholders exactly.
 #: fluxer_marketing/generated:press_branding.assets.usage_guidance.full_logo_description
 msgctxt "press_branding.assets.usage_guidance.full_logo_description"
-msgid "Our full logo including the wordmark. Use this as the primary representation of our brand."
-msgstr "워드마크가 포함된 전체 로고예요. 브랜드를 나타내는 기본 로고로 사용하세요."
+msgid "Use the full logo by default. It includes the wordmark."
+msgstr "기본적으로 전체 로고를 사용하세요. 워드마크가 포함되어 있습니다."
 
 #. Body copy in the press kit and brand asset download area. Keep terminology professional for brand/logo usage guidance; preserve placeholders exactly.
 #: fluxer_marketing/generated:press_branding.assets.usage_guidance.light_surface_guidance
 msgctxt "press_branding.assets.usage_guidance.light_surface_guidance"
-msgid "For text, icons on light surfaces, and creating depth."
-msgstr "텍스트, 밝은 표면의 아이콘, 깊이감을 더할 때 사용하세요."
+msgid "Use on light surfaces."
+msgstr "밝은 표면에 사용하세요."
 
 #. Body copy in the press kit and brand asset download area. Keep terminology professional for brand/logo usage guidance; preserve placeholders exactly.
 #: fluxer_marketing/generated:press_branding.assets.usage_guidance.symbol_description
 msgctxt "press_branding.assets.usage_guidance.symbol_description"
 msgid ""
-"Our standalone symbol. Use this only when our brand is clearly visible or well-established elsewhere in the context."
-msgstr "독립형 심볼이에요. 저희 브랜드가 명확하게 보이거나 이미 잘 알려진 경우에만 사용하세요."
+"Use the symbol only when {product_name} appears nearby or the context already makes its owner clear."
+msgstr "{product_name}가 가까이에 표시되거나 맥락상 소유자가 이미 명확한 경우에만 심볼을 사용하세요."
 
 #. Brand color name in the press kit. Keep the color label recognizable and do not over-translate proper names unless natural in the locale.
 #: fluxer_marketing/generated:press_branding.colors.black
@@ -2528,11 +2194,11 @@ msgctxt "press_branding.colors.black"
 msgid "Black"
 msgstr "블랙"
 
-#. Brand color name in the press kit. Keep the color label recognizable and do not over-translate proper names unless natural in the locale. Preserve placeholders exactly.
-#: fluxer_marketing/generated:press_branding.colors.blue_da_ba_dee
-msgctxt "press_branding.colors.blue_da_ba_dee"
-msgid "{blue_da_ba_dee}"
-msgstr "{blue_da_ba_dee}"
+#. Brand color name in the press kit. Keep the product name unchanged.
+#: fluxer_marketing/generated:press_branding.colors.fluxer_blue
+msgctxt "press_branding.colors.fluxer_blue"
+msgid "Fluxer blue"
+msgstr "Fluxer 블루"
 
 #. Brand color name in the press kit. Keep the color label recognizable and do not over-translate proper names unless natural in the locale.
 #: fluxer_marketing/generated:press_branding.colors.white
@@ -2549,154 +2215,34 @@ msgstr "보통 24시간 이내에 답변해 드려요."
 #. Press contact prompt. Here "story" means a media story, article angle, or news lead about Fluxer, not a personal history. Keep the tone professional and media-friendly; preserve placeholders exactly.
 #: fluxer_marketing/generated:press_branding.contact.story_prompt_message
 msgctxt "press_branding.contact.story_prompt_message"
-msgid "Have a story about {product_name}? We'd love to hear from you at {email}."
-msgstr "{product_name} 관련 기사 아이디어나 취재 주제가 있나요? {email}로 알려 주세요."
+msgid "If you are writing about {product_name}, email {email}. A real person reads it."
+msgstr "{product_name}에 대한 기사를 준비 중이시라면 {email}로 메일을 보내 주세요. 실제 담당자가 읽습니다."
 
-#. Compact UI label in pricing and billing UI. Keep it short, conventional for subscriptions, and preserve price/currency placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.billing.forever
-msgctxt "pricing_and_tiers.billing.forever"
-msgid "Forever"
-msgstr "영구"
-
-#. Compact UI label in pricing and billing UI. Keep it short, conventional for subscriptions, and preserve price/currency placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.billing.most_popular
-msgctxt "pricing_and_tiers.billing.most_popular"
-msgid "Most popular"
-msgstr "가장 인기 많음"
-
-#. Compact UI label in pricing and billing UI. Keep it short, conventional for subscriptions, and preserve price/currency placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.billing.per_forever
-msgctxt "pricing_and_tiers.billing.per_forever"
-msgid "/forever"
-msgstr "/영구"
-
-#. Compact UI label in pricing and billing UI. Keep it short, conventional for subscriptions, and preserve price/currency placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.billing.per_month
-msgctxt "pricing_and_tiers.billing.per_month"
-msgid "/mo"
-msgstr "/월"
-
-#. Compact UI label in pricing and billing UI. Keep it short, conventional for subscriptions, and preserve price/currency placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.billing.per_year_full
-msgctxt "pricing_and_tiers.billing.per_year_full"
-msgid "/year"
-msgstr "/년"
-
-#. Compact UI label in pricing and billing UI. Keep it short, conventional for subscriptions, and preserve price/currency placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.billing.per_year_short
-msgctxt "pricing_and_tiers.billing.per_year_short"
-msgid "/yr"
-msgstr "/년"
-
-#. Compact UI label in pricing and billing UI. Keep it short, conventional for subscriptions, and preserve price/currency placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.billing.save_percent
-msgctxt "pricing_and_tiers.billing.save_percent"
-msgid "Save 17%"
-msgstr "17% 절약"
-
-#. Short UI label or heading in pricing comparison UI. Keep labels clear and commercially neutral; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.free.comparison_label
-msgctxt "pricing_and_tiers.free.comparison_label"
-msgid "Free vs {premium_tier_name}"
-msgstr "무료 vs {premium_tier_name}"
-
-#. Compact UI label in pricing comparison UI. Keep labels clear and commercially neutral; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.free.everything_in_free_plus
-msgctxt "pricing_and_tiers.free.everything_in_free_plus"
-msgid "Everything in Free, plus:"
-msgstr "무료의 모든 기능, 그리고:"
-
-#. Compact UI label in pricing comparison UI. Keep labels clear and commercially neutral; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.free.full_access_to_all_features
-msgctxt "pricing_and_tiers.free.full_access_to_all_features"
-msgid "Full access to all features"
-msgstr "모든 기능 이용 가능"
-
-#. Short UI label or heading in pricing comparison UI. Keep labels clear and commercially neutral; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.free.label
-msgctxt "pricing_and_tiers.free.label"
-msgid "Free"
-msgstr "무료"
-
-#. Body copy describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.plutonium.benefits_note_official_instance_only
-msgctxt "pricing_and_tiers.plutonium.benefits_note_official_instance_only"
+#. Body copy in pricing UI explaining the base-currency checkout option. Preserve all currency and price placeholders exactly.
+#: fluxer_marketing/generated:pricing_and_tiers.billing.base_currency_also_available
+msgctxt "pricing_and_tiers.billing.base_currency_also_available"
 msgid ""
-"Note: {premium_tier_name} and {visionary_tier_name} benefits only apply to the official {product_name}.app instance, not third-party or self-hosted instances."
+"The same subscription is also sold in {base_currency_code}, at {base_monthly_price} a month or {base_yearly_price} for a year."
 msgstr ""
-"참고: {premium_tier_name} 및 {visionary_tier_name} 혜택은 공식 {product_name}.app 인스턴스에만 적용되며, 타사 또는 자체 호스팅 인스턴스에는 적용되지 않아요."
+"동일한 구독을 {base_currency_code}로도 판매하며, 월 {base_monthly_price} 또는 연 {base_yearly_price}입니다."
 
-#. Body copy describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.plutonium.feature_highlights
-msgctxt "pricing_and_tiers.plutonium.feature_highlights"
-msgid "500 MB uploads, 4,000-character messages, 300 bookmarks, 50 emoji packs, and much more."
-msgstr "500MB 업로드, 4,000자 메시지, 300개 북마크, 50개 이모지 팩 등..."
+#. Compact monthly price label in pricing UI. Preserve the monthly price placeholder exactly.
+#: fluxer_marketing/generated:pricing_and_tiers.billing.monthly_price
+msgctxt "pricing_and_tiers.billing.monthly_price"
+msgid "{monthly_price}/mo"
+msgstr "{monthly_price}/월"
 
-#. Body copy describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.plutonium.features.choose_custom_4_digit_tag
-msgctxt "pricing_and_tiers.plutonium.features.choose_custom_4_digit_tag"
-msgid "Choose any available 4-digit tag from #0001 to #9999 to make your username truly unique."
-msgstr "#0001부터 #9999까지 원하는 4자리 태그를 선택해 사용자 이름을 더욱 독특하게 만들어 보세요."
+#. Compact conjunction between monthly and yearly prices.
+#: fluxer_marketing/generated:pricing_and_tiers.billing.or
+msgctxt "pricing_and_tiers.billing.or"
+msgid "or"
+msgstr "또는"
 
-#. Short UI label or heading describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.plutonium.features.custom_4_digit_username_tag
-msgctxt "pricing_and_tiers.plutonium.features.custom_4_digit_username_tag"
-msgid "Custom 4-digit username tag"
-msgstr "커스텀 4자리 사용자 이름 태그"
-
-#. Short UI label or heading describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.plutonium.features.custom_username_tag
-msgctxt "pricing_and_tiers.plutonium.features.custom_username_tag"
-msgid "Custom username tag"
-msgstr "커스텀 사용자 이름 태그"
-
-#. Compact UI label describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.plutonium.features.custom_video_backgrounds
-msgctxt "pricing_and_tiers.plutonium.features.custom_video_backgrounds"
-msgid "Video backgrounds"
-msgstr "비디오 배경"
-
-#. Compact UI label describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.plutonium.features.emoji_sticker_packs
-msgctxt "pricing_and_tiers.plutonium.features.emoji_sticker_packs"
-msgid "Emoji and sticker packs"
-msgstr "이모지 및 스티커 팩"
-
-#. Compact UI label describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.plutonium.features.file_upload_size
-msgctxt "pricing_and_tiers.plutonium.features.file_upload_size"
-msgid "File upload size"
-msgstr "파일 업로드 크기"
-
-#. Compact UI label describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.plutonium.features.global_emoji_sticker_access
-msgctxt "pricing_and_tiers.plutonium.features.global_emoji_sticker_access"
-msgid "Global emoji and sticker access"
-msgstr "전역 이모지 및 스티커 접근"
-
-#. Compact UI label describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.plutonium.features.message_character_limit
-msgctxt "pricing_and_tiers.plutonium.features.message_character_limit"
-msgid "Message character limit"
-msgstr "메시지 글자 수"
-
-#. Compact UI label describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.plutonium.features.message_scheduling
-msgctxt "pricing_and_tiers.plutonium.features.message_scheduling"
-msgid "Message scheduling"
-msgstr "메시지 예약"
-
-#. Compact UI label describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.plutonium.features.per_community_profiles
-msgctxt "pricing_and_tiers.plutonium.features.per_community_profiles"
-msgid "Per-community profiles"
-msgstr "커뮤니티별 프로필"
-
-#. Compact UI label describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.plutonium.features.saved_media
-msgctxt "pricing_and_tiers.plutonium.features.saved_media"
-msgid "Saved media"
-msgstr "저장된 미디어"
+#. Compact yearly price label in pricing UI. Preserve the yearly price placeholder exactly.
+#: fluxer_marketing/generated:pricing_and_tiers.billing.yearly_price
+msgctxt "pricing_and_tiers.billing.yearly_price"
+msgid "{yearly_price}/yr"
+msgstr "{yearly_price}/년"
 
 #. Compact UI label describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
 #: fluxer_marketing/generated:pricing_and_tiers.plutonium.features.webhooks_and_bot_support
@@ -2704,42 +2250,151 @@ msgctxt "pricing_and_tiers.plutonium.features.webhooks_and_bot_support"
 msgid "Webhooks and bot support"
 msgstr "웹훅과 봇 지원"
 
-#. Button or link label describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.plutonium.get_more_with_plutonium
-msgctxt "pricing_and_tiers.plutonium.get_more_with_plutonium"
-msgid "Get more with {product_name} {premium_tier_name}"
-msgstr "{product_name} {premium_tier_name}으로 더 많은 기능을 이용해 보세요"
+#. Hero heading for the Plutonium page. Preserve the product and premium tier name placeholders exactly.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.full_tier_name
+msgctxt "pricing_and_tiers.plutonium.full_tier_name"
+msgid "{product_name} {premium_tier_name}"
+msgstr "{product_name} {premium_tier_name}"
 
-#. Button or link label describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.plutonium.get_plutonium
-msgctxt "pricing_and_tiers.plutonium.get_plutonium"
-msgid "Get {premium_tier_name}"
-msgstr "{premium_tier_name} 이용해 보세요"
-
-#. Body copy describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.plutonium.higher_limits_and_early_access
-msgctxt "pricing_and_tiers.plutonium.higher_limits_and_early_access"
-msgid "Higher limits, exclusive features, and early access to new updates"
-msgstr "더 높은 한도, 독점 기능, 새로운 업데이트 조기 이용"
-
-#. Compact UI label describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.plutonium.higher_limits_everywhere
-msgctxt "pricing_and_tiers.plutonium.higher_limits_everywhere"
-msgid "Higher limits everywhere"
-msgstr "모든 한도 상향"
-
-#. Body copy describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.plutonium.show_off_status_badge
-msgctxt "pricing_and_tiers.plutonium.show_off_status_badge"
-msgid "Show off your {premium_tier_name} status with an exclusive badge on your profile."
-msgstr "프로필에 독점 배지를 달아 {premium_tier_name} 멤버십을 자랑해 보세요."
-
-#. Body copy describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.plutonium.standard_pricing_available
-msgctxt "pricing_and_tiers.plutonium.standard_pricing_available"
+#. Metadata description for the Plutonium page. Preserve the premium tier, official instance host, and product name placeholders exactly.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.hero_description
+msgctxt "pricing_and_tiers.plutonium.hero_description"
 msgid ""
-"Prefer paying in standard {currency}? Also available at checkout for {monthly_price} or {yearly_price}."
-msgstr "표준 {currency}으로 결제하시겠어요? 결제 시 {monthly_price} 또는 {yearly_price}으로도 이용할 수 있어요."
+"{premium_tier_name} raises the limits on {official_instance_host} for the people who keep running into them, and adds a few ways to make your profile look like you. It is optional, and {product_name} works without it."
+msgstr ""
+"{premium_tier_name}은 한도에 자주 부딪히는 분들을 위해 {official_instance_host}의 한도를 높이고, 프로필을 자신답게 꾸밀 수 있는 방법을 몇 가지 더합니다. 선택 사항이며, 없어도 {product_name}는 잘 작동합니다."
+
+#. Secondary callout at the bottom of the Plutonium hero. The {donate_link} placeholder is the only linked portion; preserve {product_name} and both placeholders exactly.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.donation_callout
+msgctxt "pricing_and_tiers.plutonium.donation_callout"
+msgid "Just want to support {product_name}'s open source development? {donate_link}."
+msgstr "{product_name}의 오픈 소스 개발을 후원하고 싶으신가요? {donate_link}."
+
+#. Linked label in the Plutonium hero donation callout. Translate as a concise donation action.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.donation_callout_link
+msgctxt "pricing_and_tiers.plutonium.donation_callout_link"
+msgid "Donate instead"
+msgstr "대신 후원하기"
+
+#. Subscription call to action on the Plutonium page. Preserve the product name placeholder exactly.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.open_fluxer_to_subscribe
+msgctxt "pricing_and_tiers.plutonium.open_fluxer_to_subscribe"
+msgid "Open {product_name} to subscribe"
+msgstr "구독하려면 {product_name} 열기"
+
+#. Feature label in the Plutonium comparison table. Keep it concise and consistent with product terminology.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.animated_avatar_and_banner
+msgctxt "pricing_and_tiers.plutonium.perks.animated_avatar_and_banner"
+msgid "Animated avatar and profile banner"
+msgstr "움직이는 아바타 및 프로필 배너"
+
+#. Feature label in the Plutonium comparison table. Keep it concise and consistent with product terminology.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.bookmarked_messages
+msgctxt "pricing_and_tiers.plutonium.perks.bookmarked_messages"
+msgid "Messages you can bookmark"
+msgstr "북마크할 수 있는 메시지 수"
+
+#. Feature label in the Plutonium comparison table. Keep it concise and consistent with product terminology.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.communities
+msgctxt "pricing_and_tiers.plutonium.perks.communities"
+msgid "Communities you can join"
+msgstr "가입할 수 있는 커뮤니티 수"
+
+#. Feature label in the Plutonium comparison table. Keep it concise and consistent with product terminology.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.custom_themes
+msgctxt "pricing_and_tiers.plutonium.perks.custom_themes"
+msgid "Custom themes for the app"
+msgstr "앱 맞춤 테마"
+
+#. Feature label in the Plutonium comparison table. Keep it concise and consistent with product terminology.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.custom_username_tag
+msgctxt "pricing_and_tiers.plutonium.perks.custom_username_tag"
+msgid "Pick the 4-digit number after your username"
+msgstr "사용자 이름 뒤의 4자리 숫자 선택"
+
+#. Feature label in the Plutonium comparison table. Keep it concise and consistent with product terminology.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.early_access
+msgctxt "pricing_and_tiers.plutonium.perks.early_access"
+msgid "Early access to new features"
+msgstr "새로운 기능 얼리 액세스"
+
+#. Feature label in the Plutonium comparison table. Keep it concise and consistent with product terminology.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.file_upload_size
+msgctxt "pricing_and_tiers.plutonium.perks.file_upload_size"
+msgid "Largest file you can upload"
+msgstr "업로드할 수 있는 최대 파일 크기"
+
+#. Feature label in the Plutonium comparison table. Keep it concise and consistent with product terminology.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.global_expressions
+msgctxt "pricing_and_tiers.plutonium.perks.global_expressions"
+msgid "Use custom emojis and stickers in any community"
+msgstr "모든 커뮤니티에서 맞춤 이모지와 스티커 사용"
+
+#. Feature label in the Plutonium comparison table. Keep it concise and consistent with product terminology.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.message_characters
+msgctxt "pricing_and_tiers.plutonium.perks.message_characters"
+msgid "Characters in a single message"
+msgstr "메시지 한 개의 글자 수"
+
+#. Feature label in the Plutonium comparison table. Keep it concise and consistent with product terminology.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.per_community_profiles
+msgctxt "pricing_and_tiers.plutonium.perks.per_community_profiles"
+msgid "A separate profile for each community"
+msgstr "커뮤니티별 개별 프로필"
+
+#. Feature label in the Plutonium comparison table. Keep it concise and consistent with product terminology.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.profile_badge
+msgctxt "pricing_and_tiers.plutonium.perks.profile_badge"
+msgid "Subscriber badge on your profile"
+msgstr "프로필에 표시되는 구독자 배지"
+
+#. Feature label in the Plutonium comparison table. Keep it concise and consistent with product terminology.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.saved_media
+msgctxt "pricing_and_tiers.plutonium.perks.saved_media"
+msgid "Media items you can save"
+msgstr "저장할 수 있는 미디어 수"
+
+#. Feature label in the Plutonium comparison table. Keep it concise and consistent with product terminology.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.use_animated_emojis
+msgctxt "pricing_and_tiers.plutonium.perks.use_animated_emojis"
+msgid "Use animated emojis in messages"
+msgstr "메시지에서 움직이는 이모지 사용"
+
+#. Feature label in the Plutonium comparison table. Keep it concise and consistent with product terminology.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.video_backgrounds
+msgctxt "pricing_and_tiers.plutonium.perks.video_backgrounds"
+msgid "Video call backgrounds you can save"
+msgstr "저장할 수 있는 영상 통화 배경 수"
+
+#. Feature label in the Plutonium comparison table. Keep it concise and consistent with product terminology.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.video_quality
+msgctxt "pricing_and_tiers.plutonium.perks.video_quality"
+msgid "Video call and screen share quality"
+msgstr "영상 통화 및 화면 공유 품질"
+
+#. Free-tier value in the Plutonium comparison table. Keep resolution and frame rate accurate.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.video_quality_free
+msgctxt "pricing_and_tiers.plutonium.perks.video_quality_free"
+msgid "Up to 720p at 30 FPS"
+msgstr "최대 720p, 30 FPS"
+
+#. Plutonium-tier value in the comparison table. Keep resolution and frame rate accurate.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.video_quality_plutonium
+msgctxt "pricing_and_tiers.plutonium.perks.video_quality_plutonium"
+msgid "Up to 4K at 60 FPS"
+msgstr "최대 4K, 60 FPS"
+
+#. Compact UI label in pricing and billing UI. Keep it short, conventional for subscriptions, and preserve price/currency placeholders exactly.
+#: fluxer_marketing/generated:pricing_and_tiers.billing.save_percent
+msgctxt "pricing_and_tiers.billing.save_percent"
+msgid "Save {yearly_savings}"
+msgstr "{yearly_savings} 절약"
+
+#. Short UI label or heading in pricing comparison UI. Keep labels clear and commercially neutral; preserve placeholders exactly.
+#: fluxer_marketing/generated:pricing_and_tiers.free.label
+msgctxt "pricing_and_tiers.free.label"
+msgid "Free"
+msgstr "무료"
 
 #. Short UI label or heading describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
 #: fluxer_marketing/generated:pricing_and_tiers.plutonium.tier_name
@@ -2747,24 +2402,18 @@ msgctxt "pricing_and_tiers.plutonium.tier_name"
 msgid "{premium_tier_name}"
 msgstr "{premium_tier_name}"
 
-#. Short UI label or heading in pricing comparison UI. Keep labels clear and commercially neutral; preserve placeholders exactly.
-#: fluxer_marketing/generated:pricing_and_tiers.visionary.one_time_purchase.label
-msgctxt "pricing_and_tiers.visionary.one_time_purchase.label"
-msgid "One-time purchase"
-msgstr "일회성 결제"
+#. Button label linking to the operator documentation from the self-hosting feature card.
+#: fluxer_marketing/generated:product_positioning.self_hosting.read_the_self_hosting_guide
+msgctxt "product_positioning.self_hosting.read_the_self_hosting_guide"
+msgid "Read the self-hosting guide"
+msgstr "자체 호스팅 가이드 읽기"
 
-#. Short product-positioning body copy used in footer and self-hosting sections. Preserve {product_name} exactly; keep the free/open-source and self-hosting meaning clear. Preserve placeholders exactly.
-#: fluxer_marketing/generated:product_positioning.free_and_open_source
-msgctxt "product_positioning.free_and_open_source"
-msgid "{product_name} is free and open source. Anyone can self-host for free."
-msgstr "{product_name}는 무료 오픈 소스 앱이에요. 누구나 무료로 자체 호스팅할 수 있어요."
-
-#. Primary product-positioning body copy used in page metadata and hero sections. Preserve {product_name} exactly; keep the free/open-source, instant messaging, VoIP, and community meanings clear. Preserve placeholders exactly.
+#. Primary product-positioning body copy used in page metadata and hero sections. Keep the free/open-source, audience, communication-feature, and self-hosting meanings clear.
 #: fluxer_marketing/generated:product_positioning.intro
 msgctxt "product_positioning.intro"
 msgid ""
-"{product_name} is a free and open source instant messaging and VoIP chat app built for friends, groups, and communities."
-msgstr "{product_name}는 친구, 그룹, 커뮤니티를 위해 만들어진 무료 오픈 소스 인스턴트 메시징 및 VoIP 채팅 앱입니다."
+"Free and open source chat for friends, groups, and communities, with text, voice, video, screen sharing, and self-hosting."
+msgstr "친구, 그룹, 커뮤니티를 위한 무료 오픈소스 채팅. 텍스트, 음성, 영상, 화면 공유 및 자체 호스팅 기능을 제공합니다."
 
 #. Button or link label explaining Fluxer open-source licensing. Keep legal/license tokens such as AGPLv3 unchanged.
 #: fluxer_marketing/generated:product_positioning.open_source.fully_open_source_agplv3
@@ -2772,29 +2421,11 @@ msgctxt "product_positioning.open_source.fully_open_source_agplv3"
 msgid "Fully open source (AGPLv3)"
 msgstr "완전 오픈 소스 (AGPLv3)"
 
-#. Button or link label explaining Fluxer open-source licensing. Keep legal/license tokens such as AGPLv3 unchanged.
-#: fluxer_marketing/generated:product_positioning.open_source.license
-msgctxt "product_positioning.open_source.license"
-msgid "Open source (AGPL-3.0)"
-msgstr "오픈 소스 (AGPL-3.0)"
-
-#. Compact UI label explaining self-hosting and Operator Pass expectations. Keep technical wording accurate and preserve product-name placeholders exactly.
-#: fluxer_marketing/generated:product_positioning.self_hosting.connect_from_any_client
-msgctxt "product_positioning.self_hosting.connect_from_any_client"
-msgid "Connect from any client"
-msgstr "어떤 클라이언트에서든 연결"
-
-#. Compact UI label explaining self-hosting and Operator Pass expectations. Keep technical wording accurate and preserve product-name placeholders exactly.
-#: fluxer_marketing/generated:product_positioning.self_hosting.free_self_hosting
-msgctxt "product_positioning.self_hosting.free_self_hosting"
-msgid "Free self-hosting"
-msgstr "무료 자체 호스팅"
-
 #. Compact UI label explaining self-hosting and Operator Pass expectations. Keep technical wording accurate and preserve product-name placeholders exactly.
 #: fluxer_marketing/generated:product_positioning.self_hosting.host_your_own_instance
 msgctxt "product_positioning.self_hosting.host_your_own_instance"
 msgid "Host your own instance"
-msgstr "나만의 인스턴스를 호스팅해 보세요"
+msgstr "직접 인스턴스 호스팅하기"
 
 #. Short UI label or heading explaining self-hosting and Operator Pass expectations. Keep technical wording accurate and preserve product-name placeholders exactly.
 #: fluxer_marketing/generated:product_positioning.self_hosting.label
@@ -2802,31 +2433,12 @@ msgctxt "product_positioning.self_hosting.label"
 msgid "Self-hosting"
 msgstr "자체 호스팅"
 
-#. Benefit label for the Operator Pass. Keep this warm and concrete: a smaller community where self-hosters can get help from each other and the Fluxer team. Preserve placeholders exactly.
-#: fluxer_marketing/generated:product_positioning.self_hosting.operator_pass.community_feedback
-msgctxt "product_positioning.self_hosting.operator_pass.community_feedback"
-msgid "Smaller {operators} community with team access"
-msgstr "팀 액세스를 포함한 더 작은 {operators} 커뮤니티"
-
-#. Short UI label or heading explaining self-hosting and Operator Pass expectations. Keep technical wording accurate and preserve product-name placeholders exactly.
-#: fluxer_marketing/generated:product_positioning.self_hosting.operator_pass.label
-msgctxt "product_positioning.self_hosting.operator_pass.label"
-msgid "{operator_pass}"
-msgstr "{operator_pass}"
-
-#. Body copy explaining Operator Pass expectations. Keep it personal and warm: like donating with perks, with a smaller community where self-hosters can get help from each other and the Fluxer team. Preserve placeholders exactly.
-#: fluxer_marketing/generated:product_positioning.self_hosting.operator_pass.donating_with_perks_smaller_space
-msgctxt "product_positioning.self_hosting.operator_pass.donating_with_perks_smaller_space"
-msgid ""
-"Think of the optional {operator_pass} like donating with perks: you help keep {product_name} going and get the {operators} community, a smaller place where self-hosters and the {product_name} team can help when you get stuck, hear your ideas, and discuss feedback before it gets buried on {github}."
-msgstr ""
-"{operator_pass}를 혜택이 있는 기부처럼 생각해 보세요. {product_name}을 계속 운영하는 데 도움을 주고, {operators} 커뮤니티에 참여할 수 있습니다. 이곳은 셀프 호스터와 {product_name} 팀이 막혔을 때 도움을 주고, 여러분의 아이디어를 듣고, {github}에 묻히기 전에 피드백을 논의할 수 있는 더 작은 공간입니다."
-
 #. Body copy explaining self-hosting and Operator Pass expectations. Keep technical wording accurate and preserve product-name placeholders exactly.
 #: fluxer_marketing/generated:product_positioning.self_hosting.run_backend_on_your_hardware
 msgctxt "product_positioning.self_hosting.run_backend_on_your_hardware"
-msgid "Run the {product_name} backend on your own hardware and connect with our apps."
-msgstr "자체 하드웨어에서 {product_name} 백엔드를 실행하고 앱과 연결해 보세요."
+msgid ""
+"Run the whole {product_name} backend on your own hardware and connect to it with the same apps we ship. There is no license key and no cut-down community edition."
+msgstr "{product_name} 백엔드 전체를 직접 보유한 하드웨어에서 실행하고, 저희가 제공하는 것과 동일한 앱으로 연결하세요. 라이선스 키도, 기능을 줄인 커뮤니티 에디션도 없습니다."
 
 #. Compact UI label explaining self-hosting and Operator Pass expectations. Keep technical wording accurate and preserve product-name placeholders exactly.
 #: fluxer_marketing/generated:product_positioning.self_hosting.switch_between_instances
@@ -2834,32 +2446,11 @@ msgctxt "product_positioning.self_hosting.switch_between_instances"
 msgid "Switch between multiple instances"
 msgstr "여러 인스턴스 전환"
 
-#. Compact UI label in security, bug bounty, or responsible disclosure sections. Keep wording precise, calm, and trustworthy; preserve placeholders exactly.
-#: fluxer_marketing/generated:security.found_security_issue
-msgctxt "security.found_security_issue"
-msgid "Found a security issue?"
-msgstr "보안 문제를 발견하셨나요?"
-
-#. Body copy in security, bug bounty, or responsible disclosure sections. Keep wording precise, calm, and trustworthy; preserve placeholders exactly.
-#: fluxer_marketing/generated:security.responsible_disclosure_note
-msgctxt "security.responsible_disclosure_note"
-msgid ""
-"We appreciate responsible disclosure via our security bug bounty page. We offer {premium_tier_name} codes and {bug_hunter} badges based on severity."
-msgstr ""
-"보안 버그 바운티 페이지를 통한 책임 있는 공개에 감사드립니다. 심각도에 따라 {premium_tier_name} 코드와 {bug_hunter} 배지를 제공합니다."
-
-#. Compact UI label in security, bug bounty, or responsible disclosure sections. Keep wording precise, calm, and trustworthy; preserve placeholders exactly.
-#: fluxer_marketing/generated:security.security_bug_bounty
-msgctxt "security.security_bug_bounty"
-msgid "Security bug bounty"
-msgstr "보안 버그 바운티"
-
-#. Body copy in security, bug bounty, or responsible disclosure sections. Keep wording precise, calm, and trustworthy; preserve placeholders exactly.
-#: fluxer_marketing/generated:security.testers_access_from_reports
-msgctxt "security.testers_access_from_reports"
-msgid ""
-"Found a bug? Check out our bug report guide to learn how to file clear, high-quality reports."
-msgstr "버그를 발견하셨나요? 명확하고 고품질 보고서를 작성하는 방법을 알아보려면 버그 보고 가이드를 확인해 보세요."
+#. Compact accessibility label shared across marketing comparison tables. Keep it broadly reusable, concise, and consistent with the Fluxer brand voice.
+#: fluxer_marketing/generated:general.available
+msgctxt "general.available"
+msgid "Available"
+msgstr "사용 가능"
 
 #. Short UI label or heading shared across marketing pages. Keep it broadly reusable, concise, and consistent with the Fluxer brand voice.
 #: fluxer_marketing/generated:general.coming_soon.label
@@ -2867,23 +2458,23 @@ msgctxt "general.coming_soon.label"
 msgid "Coming soon"
 msgstr "출시 예정"
 
-#. Compact UI label shared across marketing pages. Keep it broadly reusable, concise, and consistent with the Fluxer brand voice.
+#. Compact UI label shared across marketing pages. Keep it broadly reusable, concise, and consistent with the Fluxer brand voice; preserve {product_name} exactly.
 #: fluxer_marketing/generated:general.coming_soon.whats_available_today
 msgctxt "general.coming_soon.whats_available_today"
-msgid "What's available today"
-msgstr "지금 사용할 수 있는 기능"
+msgid "Everything {product_name} does today"
+msgstr "지금 {product_name}에서 할 수 있는 모든 것"
 
 #. Default author metadata label for Fluxer-authored marketing pages when no individual author is shown. Keep Fluxer as a product name. Preserve placeholders exactly.
 #: fluxer_marketing/generated:general.fluxer_team
 msgctxt "general.fluxer_team"
-msgid "{product_name} Team"
+msgid "{product_name} team"
 msgstr "{product_name} 팀"
 
-#. Compact UI label shared across marketing pages. Keep it broadly reusable, concise, and consistent with the Fluxer brand voice.
-#: fluxer_marketing/generated:general.last_updated
-msgctxt "general.last_updated"
-msgid "Last updated"
-msgstr "최종 업데이트"
+#. Date line shown on policy and help content. Translate the whole sentence so date placement and punctuation are natural. Preserve {date} exactly.
+#: fluxer_marketing/generated:general.last_updated_on_date
+msgctxt "general.last_updated_on_date"
+msgid "Last updated on {date}."
+msgstr "최종 업데이트: {date}."
 
 #. Compact UI label shared across marketing pages. Keep it broadly reusable, concise, and consistent with the Fluxer brand voice.
 #: fluxer_marketing/generated:general.made_in_sweden
@@ -2898,28 +2489,10 @@ msgid "Not available"
 msgstr "사용 불가"
 
 #. Compact UI label shared across marketing pages. Keep it broadly reusable, concise, and consistent with the Fluxer brand voice.
-#: fluxer_marketing/generated:general.or
-msgctxt "general.or"
-msgid "or"
-msgstr "또는"
-
-#. Compact UI label shared across marketing pages. Keep it broadly reusable, concise, and consistent with the Fluxer brand voice.
 #: fluxer_marketing/generated:general.tagline
 msgctxt "general.tagline"
 msgid "A chat app that puts you first"
 msgstr "사용자를 최우선으로 생각하는 채팅 앱"
-
-#. Short Operator Pass benefit label. Keep this warm and concrete: supporting Fluxer with community access as a perk.
-#: fluxer_marketing/generated:misc_labels.donating_with_perks
-msgctxt "misc_labels.donating_with_perks"
-msgid "Donating with perks"
-msgstr "혜택과 함께 기부하기"
-
-#. Short UI label or heading reused across marketing cards, buttons, and section headings. Translate as a standalone UI phrase that can fit multiple surfaces.
-#: fluxer_marketing/generated:misc_labels.exclusive_features
-msgctxt "misc_labels.exclusive_features"
-msgid "Exclusive features"
-msgstr "독점 기능"
 
 #. Short UI label or heading reused across marketing cards, buttons, and section headings. Translate as a standalone UI phrase that can fit multiple surfaces.
 #: fluxer_marketing/generated:misc_labels.feature
@@ -2928,76 +2501,22 @@ msgid "Feature"
 msgstr "기능"
 
 #. Button or link label reused across marketing cards, buttons, and section headings. Translate as a standalone UI phrase that can fit multiple surfaces.
-#: fluxer_marketing/generated:misc_labels.get_updates
-msgctxt "misc_labels.get_updates"
-msgid "Get updates, see upcoming features, discuss suggestions, and chat with the team."
-msgstr "업데이트를 받고, 예정된 기능을 확인하고, 제안을 나누며 팀과 소통할 수 있어요."
-
-#. Button/link label for joining the official Fluxer HQ community. Preserve {product_name} exactly; translate as a short standalone call to action. Preserve placeholders exactly.
-#: fluxer_marketing/generated:misc_labels.join_fluxer_hq
-msgctxt "misc_labels.join_fluxer_hq"
-msgid "Join {product_name} HQ"
-msgstr "{product_name} HQ에 참여하기"
-
-#. Button or link label reused across marketing cards, buttons, and section headings. Translate as a standalone UI phrase that can fit multiple surfaces.
 #: fluxer_marketing/generated:misc_labels.join_multiple_devices
 msgctxt "misc_labels.join_multiple_devices"
 msgid "Join from multiple devices at once"
 msgstr "여러 기기에서 동시에 이용할 수 있어요"
 
-#. Careers-page hero heading. Preserve {product_name} exactly; this refers to employment or future roles, not joining a user community. Preserve placeholders exactly.
-#: fluxer_marketing/generated:misc_labels.join_team_behind_fluxer
-msgctxt "misc_labels.join_team_behind_fluxer"
-msgid "Join the team behind {product_name}"
-msgstr "{product_name} 팀에 합류하기"
-
-#. Button or link label reused across marketing cards, buttons, and section headings. Translate as a standalone UI phrase that can fit multiple surfaces.
-#: fluxer_marketing/generated:misc_labels.learn_more
-msgctxt "misc_labels.learn_more"
-msgid "Learn more"
-msgstr "더 알아보세요"
-
-#. Short UI label or heading reused across marketing cards, buttons, and section headings. Translate as a standalone UI phrase that can fit multiple surfaces.
-#: fluxer_marketing/generated:misc_labels.profile_badge
-msgctxt "misc_labels.profile_badge"
-msgid "Profile badge"
-msgstr "프로필 배지"
-
-#. Button or link label reused across marketing cards, buttons, and section headings. Translate as a standalone UI phrase that can fit multiple surfaces.
-#: fluxer_marketing/generated:misc_labels.read_the_guide
-msgctxt "misc_labels.read_the_guide"
-msgid "Read the guide"
-msgstr "가이드를 읽어 보세요"
-
 #. Button or link label reused across marketing cards, buttons, and section headings. Translate as a standalone UI phrase that can fit multiple surfaces.
 #: fluxer_marketing/generated:misc_labels.ready_to_get_started
 msgctxt "misc_labels.ready_to_get_started"
-msgid "Ready to get started?"
-msgstr "시작해 볼까요?"
+msgid "Bring your people over"
+msgstr "함께할 사람들을 데려오세요"
 
 #. Short UI label or heading reused across marketing cards, buttons, and section headings. Translate as a standalone UI phrase that can fit multiple surfaces.
 #: fluxer_marketing/generated:misc_labels.related_policies
 msgctxt "misc_labels.related_policies"
 msgid "Related policies"
 msgstr "관련 정책"
-
-#. Button or link label reused across marketing cards, buttons, and section headings. Translate as a standalone UI phrase that can fit multiple surfaces.
-#: fluxer_marketing/generated:misc_labels.report_bugs
-msgctxt "misc_labels.report_bugs"
-msgid "Report bugs"
-msgstr "버그를 신고해 주세요"
-
-#. Short UI label or heading reused across marketing cards, buttons, and section headings. Translate as a standalone UI phrase that can fit multiple surfaces.
-#: fluxer_marketing/generated:misc_labels.unlimited_users
-msgctxt "misc_labels.unlimited_users"
-msgid "Unlimited users"
-msgstr "무제한 사용자"
-
-#. Compact UI label in social, Bluesky, GitHub, or RSS follow sections. Keep labels recognizable, avoid dangling sentence fragments, and preserve handles/placeholders exactly.
-#: fluxer_marketing/generated:social_and_feeds.bluesky.follow_us
-msgctxt "social_and_feeds.bluesky.follow_us"
-msgid "Follow us on {bluesky}"
-msgstr "{bluesky}에서 팔로우해 보세요"
 
 #. Short UI label or heading in social, Bluesky, GitHub, or RSS follow sections. Keep labels recognizable, avoid dangling sentence fragments, and preserve handles/placeholders exactly.
 #: fluxer_marketing/generated:social_and_feeds.bluesky.label
@@ -3006,28 +2525,10 @@ msgid "{bluesky}"
 msgstr "{bluesky}"
 
 #. Compact UI label in social, Bluesky, GitHub, or RSS follow sections. Keep labels recognizable, avoid dangling sentence fragments, and preserve handles/placeholders exactly.
-#: fluxer_marketing/generated:social_and_feeds.bluesky.rss_feed
-msgctxt "social_and_feeds.bluesky.rss_feed"
-msgid "{bluesky} RSS feed"
-msgstr "{bluesky} RSS 피드"
-
-#. Compact UI label in social, Bluesky, GitHub, or RSS follow sections. Keep labels recognizable, avoid dangling sentence fragments, and preserve handles/placeholders exactly.
-#: fluxer_marketing/generated:social_and_feeds.follow_fluxer
-msgctxt "social_and_feeds.follow_fluxer"
-msgid "Follow @{social_handle}"
-msgstr "@{social_handle} 팔로우해 보세요"
-
-#. Compact UI label in social, Bluesky, GitHub, or RSS follow sections. Keep labels recognizable, avoid dangling sentence fragments, and preserve handles/placeholders exactly.
 #: fluxer_marketing/generated:social_and_feeds.github
 msgctxt "social_and_feeds.github"
 msgid "{github}"
 msgstr "{github}"
-
-#. Compact UI label in social, Bluesky, GitHub, or RSS follow sections. Keep labels recognizable, avoid dangling sentence fragments, and preserve handles/placeholders exactly.
-#: fluxer_marketing/generated:social_and_feeds.rss.blog_rss_feed
-msgctxt "social_and_feeds.rss.blog_rss_feed"
-msgid "Blog RSS feed"
-msgstr "블로그 RSS 피드"
 
 #. Compact UI label in social, Bluesky, GitHub, or RSS follow sections. Keep labels recognizable, avoid dangling sentence fragments, and preserve handles/placeholders exactly.
 #: fluxer_marketing/generated:social_and_feeds.rss.fluxer_blog_rss
@@ -3040,12 +2541,6 @@ msgstr "{product_name} 블로그 RSS"
 msgctxt "social_and_feeds.rss.label"
 msgid "RSS feed"
 msgstr "RSS 피드"
-
-#. Body copy in the social/follow card. It is followed by separate RSS feed links in the UI, so translate as an unfinished lead-in only if that grammar works in the target locale.
-#: fluxer_marketing/generated:social_and_feeds.stay_updated_cta
-msgctxt "social_and_feeds.stay_updated_cta"
-msgid "Stay updated on news, service status, and what's happening. You can also subscribe to our"
-msgstr "뉴스, 서비스 상태, 최신 소식을 확인하세요. RSS 피드도 구독할 수 있어요"
 
 #. Section heading above the world map of voice regions. Plain, sentence case.
 #: fluxer_marketing/generated:voice_regions.map_heading
@@ -3072,9 +2567,9 @@ msgctxt "voice_regions.languages_heading"
 msgid "Languages"
 msgstr "언어"
 
-#. Paragraph under the languages heading. Includes an {email} placeholder for the localization contact. Plain and factual.
+#. Paragraph under the languages heading. Includes a {weblate} placeholder for the localization platform. Plain and factual.
 #: fluxer_marketing/generated:voice_regions.languages_intro
 msgctxt "voice_regions.languages_intro"
 msgid ""
-"{product_name} is available in over thirty languages. To help translate {product_name} into your native language, write to {email}."
-msgstr "{product_name}는 30개 이상의 언어로 제공됩니다. {product_name}를 모국어로 번역하는 데 도움을 주려면 {email}로 연락해 주세요."
+"{product_name} is available in over thirty languages. To help translate {product_name} into your native language, join us on {weblate}."
+msgstr "{product_name}은 30개 이상의 언어로 제공됩니다. {product_name}을(를) 모국어로 번역하는 데 참여하려면 {weblate}에서 함께해 주세요."
