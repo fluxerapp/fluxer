@@ -1,11 +1,11 @@
-# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-License-Identifier: LicenseRef-Fluxer-Proprietary
 #
 # Fluxer marketing gettext catalog for en-GB.
 msgid ""
 msgstr ""
 "Project-Id-Version: fluxer-marketing\n"
-"POT-Creation-Date: 2026-08-10 00:00+0000\n"
-"PO-Revision-Date: 2026-08-10 00:00+0000\n"
+"POT-Creation-Date: 2026-08-14 00:00+0000\n"
+"PO-Revision-Date: 2026-08-14 00:00+0000\n"
 "Language: en-GB\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -2408,7 +2408,6 @@ msgctxt "platform_support.mobile.ios.title"
 msgid "{ios} app"
 msgstr "{ios} app"
 
-# auto-i18n: reviewed unchanged
 #. Body copy for the iOS app row on the download page. Make clear that TestFlight access is currently limited to Fluxer Plutonium members, that public access is coming soon, and that the web app remains available in Safari. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.ios.body
 msgctxt "platform_support.mobile.ios.body"

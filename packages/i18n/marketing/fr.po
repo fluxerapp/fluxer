@@ -1,11 +1,11 @@
-# SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-License-Identifier: LicenseRef-Fluxer-Proprietary
 #
 # Fluxer marketing gettext catalog for fr.
 msgid ""
 msgstr ""
 "Project-Id-Version: fluxer-marketing\n"
-"POT-Creation-Date: 2026-08-10 00:00+0000\n"
-"PO-Revision-Date: 2026-08-10 00:00+0000\n"
+"POT-Creation-Date: 2026-08-14 00:00+0000\n"
+"PO-Revision-Date: 2026-08-14 00:00+0000\n"
 "Language: fr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -2193,7 +2193,8 @@ msgstr "Utilise l'application de bureau (mobile bientôt disponible)"
 #: fluxer_marketing/generated:platform_support.desktop.flatpak_outdated
 msgctxt "platform_support.desktop.flatpak_outdated"
 msgid "The {flatpak} package is currently behind the other {linux} downloads."
-msgstr "Le paquet {flatpak} est actuellement en retard par rapport aux autres téléchargements {linux}."
+msgstr ""
+"Le paquet {flatpak} est actuellement en retard par rapport aux autres téléchargements {linux}."
 
 #. Body copy for mobile/PWA install guidance on the download page. Keep instructions clear, device-appropriate, and concise; preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.install_as_app.done_desktop
