@@ -897,7 +897,8 @@ msgstr "Muligheder for tvistbilæggelse under EU DSA"
 msgctxt "content.help.article.dsa_dispute_resolution.description"
 msgid ""
 "How users covered by the Digital Services Act can report illegal content and challenge eligible decisions."
-msgstr "Sådan kan brugere, der er omfattet af Digital Services Act, anmelde ulovligt indhold og anfægte berettigede afgørelser."
+msgstr ""
+"Sådan kan brugere, der er omfattet af Digital Services Act, anmelde ulovligt indhold og anfægte berettigede afgørelser."
 
 #. Help article title about region-specific access restrictions.
 #: fluxer_marketing/generated:content.help.article.regional_restrictions.title
@@ -1086,7 +1087,8 @@ msgstr ""
 msgctxt "donations.success.message"
 msgid ""
 "Thank you. Your donation pays for the servers and for the people who build and run {product_name}. It keeps us answerable to the people using it rather than to an investor."
-msgstr "Tak. Din donation betaler for serverne og for de mennesker, der bygger og driver {product_name}. Det holder os ansvarlige over for brugerne i stedet for over for en investor."
+msgstr ""
+"Tak. Din donation betaler for serverne og for de mennesker, der bygger og driver {product_name}. Det holder os ansvarlige over for brugerne i stedet for over for en investor."
 
 #. Short UI label or heading in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
 #: fluxer_marketing/generated:donations.success.title
@@ -1099,7 +1101,8 @@ msgstr "Tak"
 msgctxt "donations.support_message"
 msgid ""
 "Help keep {product_name} independent. Donations pay for hosting and development, and they are the reason nobody else gets a say in what we build."
-msgstr "Hjælp med at holde {product_name} uafhængig. Donationer betaler for hosting og udvikling, og de er grunden til, at ingen andre har indflydelse på, hvad vi bygger."
+msgstr ""
+"Hjælp med at holde {product_name} uafhængig. Donationer betaler for hosting og udvikling, og de er grunden til, at ingen andre har indflydelse på, hvad vi bygger."
 
 #. Label for the editable amount in the Swish payment flow. Preserve the currency-code placeholder {currency} exactly.
 #: fluxer_marketing/generated:donations.swish.amount_label
@@ -1578,7 +1581,8 @@ msgstr "Tidlig adgang"
 msgctxt "beta_and_access.featured_benefit_line"
 msgid ""
 "Chat, calls, screen sharing and communities are free, and they stay free. {premium_tier_name} adds optional extras for the people who want them."
-msgstr "Chat, opkald, skærmdeling og communities er gratis, og det forbliver de. {premium_tier_name} tilføjer valgfrie ekstrafunktioner til dem, der ønsker dem."
+msgstr ""
+"Chat, opkald, skærmdeling og communities er gratis, og det forbliver de. {premium_tier_name} tilføjer valgfrie ekstrafunktioner til dem, der ønsker dem."
 
 #. Compact UI label in Fluxer marketing UI. Translate naturally for the target locale and preserve placeholders exactly.
 #: fluxer_marketing/generated:beta_and_access.public_beta
@@ -1664,7 +1668,8 @@ msgstr "Side ikke fundet"
 msgctxt "navigation.press.download_assets_intro"
 msgid ""
 "Download the {product_name} logos and color references. Press inquiries go straight to our team."
-msgstr "Download {product_name}-logoerne og farverne. Presseforespørgsler sendes direkte til vores team."
+msgstr ""
+"Download {product_name}-logoerne og farverne. Presseforespørgsler sendes direkte til vores team."
 
 #. Compact UI label on the press/brand-assets page. Keep wording professional and clear for journalists or partners.
 #: fluxer_marketing/generated:navigation.press.press_and_brand_assets
@@ -2073,7 +2078,8 @@ msgstr "{ios}-app"
 msgctxt "platform_support.mobile.ios.body"
 msgid ""
 "The native {ios} app is currently limited to {premium_tier_full_name} subscribers. Broader access is coming very soon. Meanwhile, the full {product_name} web app works in Safari and can be added to your Home Screen."
-msgstr "Den native {ios}-app er i øjeblikket begrænset til abonnenter på {premium_tier_full_name}. Bredere adgang kommer meget snart. I mellemtiden fungerer den fulde {product_name}-webapp i Safari og kan føjes til din startskærm."
+msgstr ""
+"Den native {ios}-app er i øjeblikket begrænset til abonnenter på {premium_tier_full_name}. Bredere adgang kommer meget snart. I mellemtiden fungerer den fulde {product_name}-webapp i Safari og kan føjes til din startskærm."
 
 #. Card title for the Android app option on the download page. Keep the platform name conventional and short. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.android.title

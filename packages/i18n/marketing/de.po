@@ -900,7 +900,8 @@ msgstr "Optionen zur Streitbeilegung nach dem EU DSA"
 msgctxt "content.help.article.dsa_dispute_resolution.description"
 msgid ""
 "How users covered by the Digital Services Act can report illegal content and challenge eligible decisions."
-msgstr "Wie Nutzer, die unter den Digital Services Act fallen, illegale Inhalte melden und berechtigte Entscheidungen anfechten können."
+msgstr ""
+"Wie Nutzer, die unter den Digital Services Act fallen, illegale Inhalte melden und berechtigte Entscheidungen anfechten können."
 
 #. Help article title about region-specific access restrictions.
 #: fluxer_marketing/generated:content.help.article.regional_restrictions.title
@@ -1090,7 +1091,8 @@ msgstr ""
 msgctxt "donations.success.message"
 msgid ""
 "Thank you. Your donation pays for the servers and for the people who build and run {product_name}. It keeps us answerable to the people using it rather than to an investor."
-msgstr "Danke. Deine Spende finanziert die Server und die Leute, die {product_name} entwickeln und betreiben. So sind wir den Nutzern und nicht den Investoren verpflichtet."
+msgstr ""
+"Danke. Deine Spende finanziert die Server und die Leute, die {product_name} entwickeln und betreiben. So sind wir den Nutzern und nicht den Investoren verpflichtet."
 
 #. Short UI label or heading in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
 #: fluxer_marketing/generated:donations.success.title
@@ -1103,7 +1105,8 @@ msgstr "Vielen Dank!"
 msgctxt "donations.support_message"
 msgid ""
 "Help keep {product_name} independent. Donations pay for hosting and development, and they are the reason nobody else gets a say in what we build."
-msgstr "Hilf mit, {product_name} unabhängig zu halten. Spenden finanzieren Hosting und Entwicklung und sind der Grund, warum niemand sonst mitbestimmen kann, was wir bauen."
+msgstr ""
+"Hilf mit, {product_name} unabhängig zu halten. Spenden finanzieren Hosting und Entwicklung und sind der Grund, warum niemand sonst mitbestimmen kann, was wir bauen."
 
 #. Label for the editable amount in the Swish payment flow. Preserve the currency-code placeholder {currency} exactly.
 #: fluxer_marketing/generated:donations.swish.amount_label
@@ -1672,7 +1675,8 @@ msgstr "Seite nicht gefunden"
 msgctxt "navigation.press.download_assets_intro"
 msgid ""
 "Download the {product_name} logos and color references. Press inquiries go straight to our team."
-msgstr "Lade die Logos und Farbpaletten von {product_name} herunter. Presseanfragen werden direkt an unser Team weitergeleitet."
+msgstr ""
+"Lade die Logos und Farbpaletten von {product_name} herunter. Presseanfragen werden direkt an unser Team weitergeleitet."
 
 #. Compact UI label on the press/brand-assets page. Keep wording professional and clear for journalists or partners.
 #: fluxer_marketing/generated:navigation.press.press_and_brand_assets
@@ -2082,7 +2086,8 @@ msgstr "{ios}-App"
 msgctxt "platform_support.mobile.ios.body"
 msgid ""
 "The native {ios} app is currently limited to {premium_tier_full_name} subscribers. Broader access is coming very soon. Meanwhile, the full {product_name} web app works in Safari and can be added to your Home Screen."
-msgstr "Die native {ios}-App ist derzeit auf Abonnenten von {premium_tier_full_name} beschränkt. Breiterer Zugriff kommt sehr bald. In der Zwischenzeit funktioniert die vollständige {product_name}-Web-App in Safari und kann zu deinem Home-Bildschirm hinzugefügt werden."
+msgstr ""
+"Die native {ios}-App ist derzeit auf Abonnenten von {premium_tier_full_name} beschränkt. Breiterer Zugriff kommt sehr bald. In der Zwischenzeit funktioniert die vollständige {product_name}-Web-App in Safari und kann zu deinem Home-Bildschirm hinzugefügt werden."
 
 #. Card title for the Android app option on the download page. Keep the platform name conventional and short. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.android.title
@@ -2223,7 +2228,8 @@ msgstr "Für helle Oberflächen verwenden."
 msgctxt "press_branding.assets.usage_guidance.symbol_description"
 msgid ""
 "Use the symbol only when {product_name} appears nearby or the context already makes its owner clear."
-msgstr "Verwende das Symbol nur, wenn {product_name} in der Nähe steht oder der Kontext den Besitzer bereits klar macht."
+msgstr ""
+"Verwende das Symbol nur, wenn {product_name} in der Nähe steht oder der Kontext den Besitzer bereits klar macht."
 
 #. Brand color name in the press kit. Keep the color label recognizable and do not over-translate proper names unless natural in the locale.
 #: fluxer_marketing/generated:press_branding.colors.black

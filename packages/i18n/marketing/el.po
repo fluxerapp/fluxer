@@ -716,8 +716,7 @@ msgstr "Λογαριασμός"
 #: fluxer_marketing/generated:content.help.category.account.description
 msgctxt "content.help.category.account.description"
 msgid "Manage account details, exports, and deletion."
-msgstr ""
-"Διαχειρίσου τα στοιχεία του λογαριασμού σου, τις εξαγωγές δεδομένων και τη διαγραφή."
+msgstr "Διαχειρίσου τα στοιχεία του λογαριασμού σου, τις εξαγωγές δεδομένων και τη διαγραφή."
 
 #. Help center category title for legal and policy articles. Translate as a compact heading; keep the ampersand only if natural.
 #: fluxer_marketing/generated:content.help.category.legal_policy.title
@@ -757,7 +756,8 @@ msgstr "Η παλιά βαθμίδα {visionary_tier_full_name}"
 msgctxt "content.help.article.visionary.description"
 msgid ""
 "What the sold out {visionary_tier_full_name} offer includes and how its account benefits work."
-msgstr "Τι περιλαμβάνει η προσφορά {visionary_tier_full_name} που εξαντλήθηκε και πώς λειτουργούν τα οφέλη του λογαριασμού."
+msgstr ""
+"Τι περιλαμβάνει η προσφορά {visionary_tier_full_name} που εξαντλήθηκε και πώς λειτουργούν τα οφέλη του λογαριασμού."
 
 #. Help article title listing the three programmes that showcase a community on Fluxer. Keep 'Partner', 'Verified', and 'Discovery' as programme names.
 #: fluxer_marketing/generated:content.help.article.community_programmes.title
@@ -905,7 +905,8 @@ msgstr "Επιλογές επίλυσης διαφορών EU DSA"
 msgctxt "content.help.article.dsa_dispute_resolution.description"
 msgid ""
 "How users covered by the Digital Services Act can report illegal content and challenge eligible decisions."
-msgstr "Πώς οι χρήστες που καλύπτονται από τον Νόμο περί Ψηφιακών Υπηρεσιών μπορούν να αναφέρουν παράνομο περιεχόμενο και να αμφισβητήσουν επιλέξιμες αποφάσεις."
+msgstr ""
+"Πώς οι χρήστες που καλύπτονται από τον Νόμο περί Ψηφιακών Υπηρεσιών μπορούν να αναφέρουν παράνομο περιεχόμενο και να αμφισβητήσουν επιλέξιμες αποφάσεις."
 
 #. Help article title about region-specific access restrictions.
 #: fluxer_marketing/generated:content.help.article.regional_restrictions.title
@@ -1590,7 +1591,8 @@ msgstr "Πρόωρη πρόσβαση"
 msgctxt "beta_and_access.featured_benefit_line"
 msgid ""
 "Chat, calls, screen sharing and communities are free, and they stay free. {premium_tier_name} adds optional extras for the people who want them."
-msgstr "Συνομιλίες, κλήσεις, κοινή χρήση οθόνης και κοινότητες είναι δωρεάν, και θα παραμείνουν δωρεάν. Το {premium_tier_name} προσθέτει προαιρετικά έξτρα για όσους τα θέλουν."
+msgstr ""
+"Συνομιλίες, κλήσεις, κοινή χρήση οθόνης και κοινότητες είναι δωρεάν, και θα παραμείνουν δωρεάν. Το {premium_tier_name} προσθέτει προαιρετικά έξτρα για όσους τα θέλουν."
 
 #. Compact UI label in Fluxer marketing UI. Translate naturally for the target locale and preserve placeholders exactly.
 #: fluxer_marketing/generated:beta_and_access.public_beta
@@ -2222,8 +2224,7 @@ msgstr "Για ανοιχτόχρωμα φόντα"
 #: fluxer_marketing/generated:press_branding.assets.usage_guidance.full_logo_description
 msgctxt "press_branding.assets.usage_guidance.full_logo_description"
 msgid "Use the full logo by default. It includes the wordmark."
-msgstr ""
-"Χρησιμοποίησε το πλήρες λογότυπο από προεπιλογή. Περιλαμβάνει και το λεκτικό σήμα."
+msgstr "Χρησιμοποίησε το πλήρες λογότυπο από προεπιλογή. Περιλαμβάνει και το λεκτικό σήμα."
 
 #. Body copy in the press kit and brand asset download area. Keep terminology professional for brand/logo usage guidance; preserve placeholders exactly.
 #: fluxer_marketing/generated:press_branding.assets.usage_guidance.light_surface_guidance
@@ -2320,8 +2321,7 @@ msgstr ""
 #: fluxer_marketing/generated:pricing_and_tiers.plutonium.donation_callout
 msgctxt "pricing_and_tiers.plutonium.donation_callout"
 msgid "Just want to support {product_name}'s open source development? {donate_link}."
-msgstr ""
-"Θέλεις απλώς να στηρίξεις την ανάπτυξη ανοιχτού κώδικα του {product_name}; {donate_link}."
+msgstr "Θέλεις απλώς να στηρίξεις την ανάπτυξη ανοιχτού κώδικα του {product_name}; {donate_link}."
 
 #. Linked label in the Plutonium hero donation callout. Translate as a concise donation action.
 #: fluxer_marketing/generated:pricing_and_tiers.plutonium.donation_callout_link

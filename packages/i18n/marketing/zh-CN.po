@@ -2037,7 +2037,8 @@ msgstr "{ios} 应用"
 msgctxt "platform_support.mobile.ios.body"
 msgid ""
 "The native {ios} app is currently limited to {premium_tier_full_name} subscribers. Broader access is coming very soon. Meanwhile, the full {product_name} web app works in Safari and can be added to your Home Screen."
-msgstr "原生 {ios} 应用目前仅限 {premium_tier_full_name} 订阅者使用，很快就会向更多用户开放。在此期间，完整的 {product_name} 网页应用可在 Safari 中使用，并可添加到主屏幕。"
+msgstr ""
+"原生 {ios} 应用目前仅限 {premium_tier_full_name} 订阅者使用，很快就会向更多用户开放。在此期间，完整的 {product_name} 网页应用可在 Safari 中使用，并可添加到主屏幕。"
 
 #. Card title for the Android app option on the download page. Keep the platform name conventional and short. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.android.title
@@ -2251,7 +2252,8 @@ msgstr "{product_name} {premium_tier_name}"
 msgctxt "pricing_and_tiers.plutonium.hero_description"
 msgid ""
 "{premium_tier_name} raises the limits on {official_instance_host} for the people who keep running into them, and adds a few ways to make your profile look like you. It is optional, and {product_name} works without it."
-msgstr "{premium_tier_name} 为经常触及上限的用户提高 {official_instance_host} 上的各项限制，并提供一些让个人资料更有个性的方式。它是可选的，没有它 {product_name} 也一样能用。"
+msgstr ""
+"{premium_tier_name} 为经常触及上限的用户提高 {official_instance_host} 上的各项限制，并提供一些让个人资料更有个性的方式。它是可选的，没有它 {product_name} 也一样能用。"
 
 #. Secondary callout at the bottom of the Plutonium hero. The {donate_link} placeholder is the only linked portion; preserve {product_name} and both placeholders exactly.
 #: fluxer_marketing/generated:pricing_and_tiers.plutonium.donation_callout

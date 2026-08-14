@@ -301,8 +301,7 @@ msgstr "{tag} 기준으로 필터링됨"
 msgctxt "blog.post.how_i_built_fluxer_story.description"
 msgid ""
 "The story behind {product_name}, from a high school project to an open source chat app used by hundreds of thousands of people."
-msgstr ""
-"고등학교 프로젝트에서 수십만 명이 사용하는 오픈 소스 채팅 앱이 되기까지, {product_name}의 이야기입니다."
+msgstr "고등학교 프로젝트에서 수십만 명이 사용하는 오픈 소스 채팅 앱이 되기까지, {product_name}의 이야기입니다."
 
 #. Blog article title shown in cards, article pages, metadata, and feeds. Preserve {product_name} exactly.
 #: fluxer_marketing/generated:blog.post.how_i_built_fluxer_story.title
@@ -315,8 +314,7 @@ msgstr "제가 {product_name}를 만든 방법"
 msgctxt "blog.post.mobile_clients_and_fluxer_v2.description"
 msgid ""
 "{product_name} v2 is here with open source mobile apps and easier self-hosting. Contributions are open again too."
-msgstr ""
-"오픈 소스 모바일 앱과 더 쉬워진 자체 호스팅을 담은 {product_name} v2가 출시되었습니다. 기여도 다시 열렸습니다."
+msgstr "오픈 소스 모바일 앱과 더 쉬워진 자체 호스팅을 담은 {product_name} v2가 출시되었습니다. 기여도 다시 열렸습니다."
 
 #. Blog article title shown in cards, article pages, metadata, and feeds. Keep Fluxer as a product name and v2 as the release name. Preserve placeholders exactly.
 #: fluxer_marketing/generated:blog.post.mobile_clients_and_fluxer_v2.title
@@ -329,8 +327,7 @@ msgstr "모바일 클라이언트와 {product_name} v2"
 msgctxt "blog.post.roadmap_2026.description"
 msgid ""
 "The 2026 roadmap for {product_name}: self-hosting, localization, federation, public publishing, integrations, private conversations, and creator payments."
-msgstr ""
-"{product_name}의 2026년 로드맵: 자체 호스팅, 현지화, 페더레이션, 공개 퍼블리싱, 통합, 비공개 대화, 크리에이터 정산."
+msgstr "{product_name}의 2026년 로드맵: 자체 호스팅, 현지화, 페더레이션, 공개 퍼블리싱, 통합, 비공개 대화, 크리에이터 정산."
 
 #. Blog article title shown in cards, article pages, metadata, and feeds. Refers to Fluxer's 2026 product roadmap.
 #: fluxer_marketing/generated:blog.post.roadmap_2026.title
@@ -1065,7 +1062,8 @@ msgstr "곧 후원 상세 정보와 후원자 포털 링크가 담긴 확인 이
 msgctxt "donations.success.message"
 msgid ""
 "Thank you. Your donation pays for the servers and for the people who build and run {product_name}. It keeps us answerable to the people using it rather than to an investor."
-msgstr "감사합니다. 보내주신 후원금은 {product_name}의 서버 운영과 개발 및 운영 인력에게 사용됩니다. 이를 통해 저희는 투자자가 아닌, 서비스를 이용하는 여러분께 책임을 다할 수 있습니다."
+msgstr ""
+"감사합니다. 보내주신 후원금은 {product_name}의 서버 운영과 개발 및 운영 인력에게 사용됩니다. 이를 통해 저희는 투자자가 아닌, 서비스를 이용하는 여러분께 책임을 다할 수 있습니다."
 
 #. Short UI label or heading in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
 #: fluxer_marketing/generated:donations.success.title
@@ -1078,7 +1076,8 @@ msgstr "감사합니다!"
 msgctxt "donations.support_message"
 msgid ""
 "Help keep {product_name} independent. Donations pay for hosting and development, and they are the reason nobody else gets a say in what we build."
-msgstr "{product_name}를 독립적으로 유지하는 데 힘을 보태 주세요. 후원금은 호스팅과 개발 비용으로 쓰이며, 저희가 무엇을 만들지에 대해 다른 누구도 간섭하지 못하는 이유입니다."
+msgstr ""
+"{product_name}를 독립적으로 유지하는 데 힘을 보태 주세요. 후원금은 호스팅과 개발 비용으로 쓰이며, 저희가 무엇을 만들지에 대해 다른 누구도 간섭하지 못하는 이유입니다."
 
 #. Label for the editable amount in the Swish payment flow. Preserve the currency-code placeholder {currency} exactly.
 #: fluxer_marketing/generated:donations.swish.amount_label
@@ -2045,7 +2044,8 @@ msgstr "{ios} 앱"
 msgctxt "platform_support.mobile.ios.body"
 msgid ""
 "The native {ios} app is currently limited to {premium_tier_full_name} subscribers. Broader access is coming very soon. Meanwhile, the full {product_name} web app works in Safari and can be added to your Home Screen."
-msgstr "네이티브 {ios} 앱은 현재 {premium_tier_full_name} 구독자만 이용할 수 있습니다. 곧 더 많은 분들이 이용하실 수 있도록 확대될 예정입니다. 그동안 Safari에서 전체 {product_name} 웹 앱을 사용하고 홈 화면에 추가할 수 있습니다."
+msgstr ""
+"네이티브 {ios} 앱은 현재 {premium_tier_full_name} 구독자만 이용할 수 있습니다. 곧 더 많은 분들이 이용하실 수 있도록 확대될 예정입니다. 그동안 Safari에서 전체 {product_name} 웹 앱을 사용하고 홈 화면에 추가할 수 있습니다."
 
 #. Card title for the Android app option on the download page. Keep the platform name conventional and short. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.android.title
@@ -2082,8 +2082,7 @@ msgstr "전체 색상"
 msgctxt "press_branding.assets.wave_interior_fill.description"
 msgid ""
 "Recommended for black and color logos. Turn this off only when you want the background to show through the waves."
-msgstr ""
-"블랙 및 컬러 로고에 권장합니다. 배경이 물결 사이로 비쳐 보이게 하려는 경우에만 끄세요."
+msgstr "블랙 및 컬러 로고에 권장합니다. 배경이 물결 사이로 비쳐 보이게 하려는 경우에만 끄세요."
 
 #. Checkbox label in the press kit. The Fluxer symbol contains two wave-shaped transparent cutouts; this option fills those interiors white. Keep the label concise.
 #: fluxer_marketing/generated:press_branding.assets.wave_interior_fill.label
@@ -2223,8 +2222,7 @@ msgstr "{product_name}에 대한 기사를 준비 중이시라면 {email}로 메
 msgctxt "pricing_and_tiers.billing.base_currency_also_available"
 msgid ""
 "The same subscription is also sold in {base_currency_code}, at {base_monthly_price} a month or {base_yearly_price} for a year."
-msgstr ""
-"동일한 구독을 {base_currency_code}로도 판매하며, 월 {base_monthly_price} 또는 연 {base_yearly_price}입니다."
+msgstr "동일한 구독을 {base_currency_code}로도 판매하며, 월 {base_monthly_price} 또는 연 {base_yearly_price}입니다."
 
 #. Compact monthly price label in pricing UI. Preserve the monthly price placeholder exactly.
 #: fluxer_marketing/generated:pricing_and_tiers.billing.monthly_price
@@ -2438,7 +2436,8 @@ msgstr "자체 호스팅"
 msgctxt "product_positioning.self_hosting.run_backend_on_your_hardware"
 msgid ""
 "Run the whole {product_name} backend on your own hardware and connect to it with the same apps we ship. There is no license key and no cut-down community edition."
-msgstr "{product_name} 백엔드 전체를 직접 보유한 하드웨어에서 실행하고, 저희가 제공하는 것과 동일한 앱으로 연결하세요. 라이선스 키도, 기능을 줄인 커뮤니티 에디션도 없습니다."
+msgstr ""
+"{product_name} 백엔드 전체를 직접 보유한 하드웨어에서 실행하고, 저희가 제공하는 것과 동일한 앱으로 연결하세요. 라이선스 키도, 기능을 줄인 커뮤니티 에디션도 없습니다."
 
 #. Compact UI label explaining self-hosting and Operator Pass expectations. Keep technical wording accurate and preserve product-name placeholders exactly.
 #: fluxer_marketing/generated:product_positioning.self_hosting.switch_between_instances
@@ -2572,4 +2571,5 @@ msgstr "언어"
 msgctxt "voice_regions.languages_intro"
 msgid ""
 "{product_name} is available in over thirty languages. To help translate {product_name} into your native language, join us on {weblate}."
-msgstr "{product_name}은 30개 이상의 언어로 제공됩니다. {product_name}을(를) 모국어로 번역하는 데 참여하려면 {weblate}에서 함께해 주세요."
+msgstr ""
+"{product_name}은 30개 이상의 언어로 제공됩니다. {product_name}을(를) 모국어로 번역하는 데 참여하려면 {weblate}에서 함께해 주세요."

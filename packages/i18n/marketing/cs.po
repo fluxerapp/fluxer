@@ -422,7 +422,8 @@ msgstr "Kariéra ve společnosti {product_name}"
 #: fluxer_marketing/generated:company_and_resources.careers.not_hiring_notice
 msgctxt "company_and_resources.careers.not_hiring_notice"
 msgid "We are not hiring. Any open role will be listed on this page, so check back later."
-msgstr "Momentálně nenabíráme. Jakákoli otevřená pozice se objeví na této stránce, tak se sem podívej později."
+msgstr ""
+"Momentálně nenabíráme. Jakákoli otevřená pozice se objeví na této stránce, tak se sem podívej později."
 
 #. Short UI label or heading on the careers and future roles pages. Use clear hiring language, avoid implying that roles are currently open unless the source says so, and preserve placeholders exactly.
 #: fluxer_marketing/generated:company_and_resources.careers.label
@@ -626,8 +627,7 @@ msgstr "Informace o společnosti"
 #: fluxer_marketing/generated:content.policies.guidelines.description
 msgctxt "content.policies.guidelines.description"
 msgid "The rules for using {product_name} safely and treating other people well."
-msgstr ""
-"Pravidla pro bezpečné používání služby {product_name} a slušné chování k ostatním."
+msgstr "Pravidla pro bezpečné používání služby {product_name} a slušné chování k ostatním."
 
 #. Policy page title for community rules. Translate as formal community guidelines.
 #: fluxer_marketing/generated:content.policies.guidelines.title
@@ -750,7 +750,8 @@ msgstr "Bývalý tarif {visionary_tier_full_name}"
 msgctxt "content.help.article.visionary.description"
 msgid ""
 "What the sold out {visionary_tier_full_name} offer includes and how its account benefits work."
-msgstr "Co obsahuje vyprodaná nabídka {visionary_tier_full_name} a jak fungují její výhody pro účet."
+msgstr ""
+"Co obsahuje vyprodaná nabídka {visionary_tier_full_name} a jak fungují její výhody pro účet."
 
 #. Help article title listing the three programmes that showcase a community on Fluxer. Keep 'Partner', 'Verified', and 'Discovery' as programme names.
 #: fluxer_marketing/generated:content.help.article.community_programmes.title
@@ -790,8 +791,7 @@ msgstr "Nahlášení chyby"
 #: fluxer_marketing/generated:content.help.article.report_bug.description
 msgctxt "content.help.article.report_bug.description"
 msgid "How to submit a clear bug report to the {product_name} team or through {github}."
-msgstr ""
-"Jak podat srozumitelné hlášení chyby týmu {product_name} nebo přes {github}."
+msgstr "Jak podat srozumitelné hlášení chyby týmu {product_name} nebo přes {github}."
 
 #. Help article title about updating a user's date of birth via support.
 #: fluxer_marketing/generated:content.help.article.change_date_of_birth.title
@@ -828,7 +828,8 @@ msgstr "Export dat účtu"
 msgctxt "content.help.article.data_export.description"
 msgid ""
 "How to request a machine-readable export of your {product_name} account data and handle it safely."
-msgstr "Jak požádat o strojově čitelný export dat účtu {product_name} a jak s ním bezpečně nakládat."
+msgstr ""
+"Jak požádat o strojově čitelný export dat účtu {product_name} a jak s ním bezpečně nakládat."
 
 #. Help article title about deleting or disabling an account.
 #: fluxer_marketing/generated:content.help.article.delete_account.title
@@ -841,8 +842,7 @@ msgstr "Jak smazat nebo deaktivovat účet"
 msgctxt "content.help.article.delete_account.description"
 msgid ""
 "How to delete or temporarily disable your {product_name} account and what happens to your data."
-msgstr ""
-"Jak smazat nebo dočasně deaktivovat svůj účet {product_name} a co se stane s tvými daty."
+msgstr "Jak smazat nebo dočasně deaktivovat svůj účet {product_name} a co se stane s tvými daty."
 
 #. Help article title about country-specific minimum-age requirements for using the service.
 #: fluxer_marketing/generated:content.help.article.minimum_age.title
@@ -1577,7 +1577,8 @@ msgstr "Předběžný přístup"
 msgctxt "beta_and_access.featured_benefit_line"
 msgid ""
 "Chat, calls, screen sharing and communities are free, and they stay free. {premium_tier_name} adds optional extras for the people who want them."
-msgstr "Chaty, hovory, sdílení obrazovky a komunity jsou zdarma a zůstanou zdarma. {premium_tier_name} přidává volitelné doplňky pro lidi, kteří je chtějí."
+msgstr ""
+"Chaty, hovory, sdílení obrazovky a komunity jsou zdarma a zůstanou zdarma. {premium_tier_name} přidává volitelné doplňky pro lidi, kteří je chtějí."
 
 #. Compact UI label in Fluxer marketing UI. Translate naturally for the target locale and preserve placeholders exactly.
 #: fluxer_marketing/generated:beta_and_access.public_beta
@@ -1662,7 +1663,8 @@ msgstr "Stránka nenalezena"
 msgctxt "navigation.press.download_assets_intro"
 msgid ""
 "Download the {product_name} logos and color references. Press inquiries go straight to our team."
-msgstr "Stáhni si loga {product_name} a barevné reference. Dotazy pro média míří přímo k našemu týmu."
+msgstr ""
+"Stáhni si loga {product_name} a barevné reference. Dotazy pro média míří přímo k našemu týmu."
 
 #. Compact UI label on the press/brand-assets page. Keep wording professional and clear for journalists or partners.
 #: fluxer_marketing/generated:navigation.press.press_and_brand_assets
@@ -2213,7 +2215,8 @@ msgstr "Používej na světlých plochách."
 msgctxt "press_branding.assets.usage_guidance.symbol_description"
 msgid ""
 "Use the symbol only when {product_name} appears nearby or the context already makes its owner clear."
-msgstr "Symbol používej jen tehdy, když je {product_name} poblíž nebo když je z kontextu jasné, komu patří."
+msgstr ""
+"Symbol používej jen tehdy, když je {product_name} poblíž nebo když je z kontextu jasné, komu patří."
 
 #. Brand color name in the press kit. Keep the color label recognizable and do not over-translate proper names unless natural in the locale.
 #: fluxer_marketing/generated:press_branding.colors.black
@@ -2440,7 +2443,8 @@ msgstr "Přečti si návod na vlastní hosting"
 msgctxt "product_positioning.intro"
 msgid ""
 "Free and open source chat for friends, groups, and communities, with text, voice, video, screen sharing, and self-hosting."
-msgstr "Bezplatná a open-source komunikace pro přátele, skupiny a komunity s textem, hlasem, videem, sdílením obrazovky a možností vlastního hostování."
+msgstr ""
+"Bezplatná a open-source komunikace pro přátele, skupiny a komunity s textem, hlasem, videem, sdílením obrazovky a možností vlastního hostování."
 
 #. Button or link label explaining Fluxer open-source licensing. Keep legal/license tokens such as AGPLv3 unchanged.
 #: fluxer_marketing/generated:product_positioning.open_source.fully_open_source_agplv3
