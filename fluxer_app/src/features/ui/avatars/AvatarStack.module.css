@@ -7,7 +7,7 @@
 	align-items: center;
 	width: fit-content;
 	height: calc(var(--avatar-size) + (2 * var(--avatar-outline, 0.125rem)) + var(--avatar-stack-extra-height, 0.375rem));
-	padding-right: calc(max(calc(0 - var(--avatar-overlap)), 0) + var(--avatar-outline, 0.125rem));
+	padding-right: calc(max(calc(0px - var(--avatar-overlap)), 0px) + var(--avatar-outline, 0.125rem));
 	padding-block: var(--avatar-stack-padding-block-start, var(--avatar-outline, 0.125rem))
 		var(--avatar-stack-padding-block-end, 0.375rem);
 	flex-shrink: 0;

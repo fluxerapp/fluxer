@@ -9,28 +9,6 @@ on:
         type: string
         required: false
         default: ""
-      finalise-release:
-        description: "Publish the GitHub Release after this workflow completes. Set false when an orchestrator will finalise the release."
-        type: boolean
-        required: false
-        default: true
-  workflow_call:
-    inputs:
-      build-version:
-        description: "Explicit Fluxer CalVer build version (YYYY.MDD.MICRO, UTC HHMMSS without leading zeroes) to use instead of automatic UTC clock allocation"
-        type: string
-        required: false
-        default: ""
-      finalise-release:
-        description: "Publish the GitHub Release after this workflow completes. Set false when an orchestrator will finalise the release."
-        type: boolean
-        required: false
-        default: true
-      approval-required:
-        description: "Require the protected builds environment approval before this build runs."
-        type: boolean
-        required: false
-        default: true
 
 permissions:
   actions: read
@@ -40,7 +18,7 @@ permissions:
 jobs:
   approve:
     name: approve build release
-    if: ${{ format('{0}', inputs['approval-required']) != 'false' }}
+    permissions: {}
     runs-on: ubuntu-24.04
     environment: builds
     timeout-minutes: 5
@@ -50,11 +28,8 @@ jobs:
 
   image:
     needs: approve
-    if: ${{ !cancelled() && (needs.approve.result == 'success' || needs.approve.result == 'skipped') }}
     uses: ./.github/workflows/_build-image.yaml
     with:
       image: fluxer-gifs
       dockerfile: fluxer_gifs/Dockerfile
       build-version: ${{ inputs['build-version'] }}
-      finalise-release: ${{ inputs['finalise-release'] != false }}
-    secrets: inherit

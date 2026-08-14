@@ -4,11 +4,6 @@ import {createRequire} from 'node:module';
 import os from 'node:os';
 import {app, powerSaveBlocker} from 'electron';
 import log from 'electron-log';
-import {
-	enableWindowsGameCaptureModuleForCurrentProcess,
-	WINDOWS_GAME_CAPTURE_DISABLED_DETAIL,
-	WINDOWS_GAME_CAPTURE_MODULE_ENABLED,
-} from './WindowsGameCapturePolicy';
 import {retainWindowsScreenCaptureGuard, stopWindowsScreenCaptureGuard} from './WindowsScreenCaptureGuard';
 
 const STREAMING_PRIORITY = os.constants?.priority?.PRIORITY_ABOVE_NORMAL ?? -7;
@@ -127,6 +122,15 @@ function formatErrorDetail(error: unknown): string {
 	return String(error);
 }
 
+const GPU_PRIORITY_MODULE_UNAVAILABLE_DETAIL = 'Windows GPU priority native API unavailable';
+
+function gpuPriorityModuleUnavailableReason(): string {
+	if (gpuPriorityModuleLoadErrorDetail === null) return GPU_PRIORITY_MODULE_UNAVAILABLE_DETAIL;
+	const lineBreakIndex = gpuPriorityModuleLoadErrorDetail.indexOf('\n');
+	if (lineBreakIndex === -1) return gpuPriorityModuleLoadErrorDetail;
+	return gpuPriorityModuleLoadErrorDetail.slice(0, lineBreakIndex).trimEnd();
+}
+
 function resolveGpuSchedulingPriority(): WindowsGpuSchedulingPriority | null {
 	const raw = process.env[GPU_SCHEDULING_PRIORITY_ENV];
 	if (raw == null || raw.trim() === '') return 'high';
@@ -189,13 +193,7 @@ function restoreProcessPriority(): void {
 function loadWindowsGpuPriorityModule(): WindowsGpuPriorityModule | null {
 	if (process.platform !== 'win32') return null;
 	if (gpuPriorityModule !== undefined) return gpuPriorityModule;
-	if (!WINDOWS_GAME_CAPTURE_MODULE_ENABLED) {
-		gpuPriorityModuleLoadErrorDetail = WINDOWS_GAME_CAPTURE_DISABLED_DETAIL;
-		gpuPriorityModule = null;
-		return null;
-	}
 	try {
-		enableWindowsGameCaptureModuleForCurrentProcess();
 		const addon = requireModule('@fluxer/win-game-capture') as WindowsGpuPriorityModule;
 		if (addon.loadError) {
 			gpuPriorityModuleLoadErrorDetail = formatErrorDetail(addon.loadError);
@@ -405,9 +403,9 @@ function elevateGpuSchedulingPriority(webContents?: Electron.WebContents): void 
 			skippedProcessIds: [],
 			failedProcessIds: targets.slice(0, MAX_GPU_PRIORITY_DIAGNOSTIC_TARGETS).map((target) => ({
 				processId: target.processId,
-				reason: gpuPriorityModuleLoadErrorDetail ?? 'Windows GPU priority native API unavailable',
+				reason: gpuPriorityModuleUnavailableReason(),
 			})),
-			detail: gpuPriorityModuleLoadErrorDetail ?? 'Windows GPU priority native API unavailable',
+			detail: gpuPriorityModuleLoadErrorDetail ?? GPU_PRIORITY_MODULE_UNAVAILABLE_DETAIL,
 		};
 		log.debug('[StreamingPriority] Cannot elevate GPU scheduling priority; native module unavailable', {
 			priorityClass: GPU_SCHEDULING_PRIORITY,
@@ -504,9 +502,9 @@ function restoreGpuSchedulingPriority(): void {
 			restoredProcessIds: [],
 			failedProcessIds: processIds.map((processId) => ({
 				processId,
-				reason: gpuPriorityModuleLoadErrorDetail ?? 'Windows GPU priority native API unavailable',
+				reason: gpuPriorityModuleUnavailableReason(),
 			})),
-			detail: gpuPriorityModuleLoadErrorDetail ?? 'Windows GPU priority native API unavailable',
+			detail: gpuPriorityModuleLoadErrorDetail ?? GPU_PRIORITY_MODULE_UNAVAILABLE_DETAIL,
 		};
 		log.debug('[StreamingPriority] Cannot restore GPU scheduling priority; native module unavailable', {
 			processIds,

@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::common::{CommandSpec, command_succeeds, output_text, run_command};
+use crate::common::{
+    CommandSpec, command_succeeds, output_text, remove_file_if_exists, run_command,
+};
 use anyhow::{Context, Result, anyhow, bail, ensure};
 use clap::Args;
 use sha2::{Digest, Sha256};
@@ -738,6 +740,14 @@ fn build_win_game_capture_vulkan_layer(
         required,
     )?;
     let manifest_path = root.join(format!("fluxer-vulkan-layer.{}.json", arch.tag));
+    if !root.join(&layer_dll_name).exists() {
+        remove_file_if_exists(&manifest_path)?;
+        println!(
+            "[win-game-capture] no {layer_dll_name}; not emitting {} so packages never ship a manifest pointing at an absent layer",
+            manifest_path.display()
+        );
+        return Ok(());
+    }
     fs::write(&manifest_path, vulkan_layer_manifest(&layer_dll_name))
         .with_context(|| format!("Failed to write {}", manifest_path.display()))?;
     println!("[win-game-capture] emitted {}", manifest_path.display());

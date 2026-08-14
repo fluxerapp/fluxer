@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import type {PopoutResizePositionSession} from '@app/features/ui/popover/PopoutResizePositionContext';
 import {appZoomCssPx, appZoomLayoutPx} from '@app/features/ui/utils/AppZoomUtils';
 import {getAdaptivePadding} from '@app/features/ui/utils/Positioning';
 import {
@@ -14,6 +15,7 @@ import {
 	type ReferenceElement,
 	shift,
 	size,
+	type VirtualElement,
 } from '@floating-ui/react';
 import {useCallback, useLayoutEffect, useRef, useState} from 'react';
 
@@ -29,18 +31,27 @@ const ANTI_SHIFT_AUTO_UPDATE_OPTIONS = {
 
 type FloatingUpdateCallback = () => void | Promise<void>;
 
-let sharedScrollListenersAttached = false;
-let sharedViewportListenersAttached = false;
-let sharedUpdateRaf: number | null = null;
+interface FloatingUpdateRegistry {
+	ownerDocument: Document;
+	ownerWindow: Window;
+	scrollListenersAttached: boolean;
+	viewportListenersAttached: boolean;
+	updateRaf: number | null;
+	scrollCallbacks: Set<FloatingUpdateCallback>;
+	viewportCallbacks: Set<FloatingUpdateCallback>;
+	scheduledCallbacks: Set<FloatingUpdateCallback>;
+	handleScroll: () => void;
+	handleViewport: () => void;
+}
 
-const scrollUpdateCallbacks = new Set<FloatingUpdateCallback>();
-const viewportUpdateCallbacks = new Set<FloatingUpdateCallback>();
-const scheduledUpdateCallbacks = new Set<FloatingUpdateCallback>();
+const floatingUpdateRegistries = new WeakMap<Document, FloatingUpdateRegistry>();
 
 interface FloatingState {
 	x: number;
 	y: number;
 	isReady: boolean;
+	offsetX: number;
+	offsetY: number;
 }
 
 interface UseAntiShiftFloatingOptions {
@@ -63,10 +74,10 @@ function normalizePadding(padding: Padding): {top: number; right: number; bottom
 		return {top: padding, right: padding, bottom: padding, left: padding};
 	}
 	return {
-		top: padding.top ?? 0,
-		right: padding.right ?? 0,
-		bottom: padding.bottom ?? 0,
-		left: padding.left ?? 0,
+		top: padding.top == null ? 0 : padding.top,
+		right: padding.right == null ? 0 : padding.right,
+		bottom: padding.bottom == null ? 0 : padding.bottom,
+		left: padding.left == null ? 0 : padding.left,
 	};
 }
 
@@ -78,121 +89,148 @@ function clampToViewportBoundary(
 ): {x: number; y: number} {
 	const normalizedPadding = normalizePadding(padding);
 	const rect = floating.getBoundingClientRect();
-	const minX = normalizedPadding.left;
-	const minY = normalizedPadding.top;
-	const maxX = Math.max(minX, window.innerWidth - normalizedPadding.right - rect.width);
-	const maxY = Math.max(minY, window.innerHeight - normalizedPadding.bottom - rect.height);
+	const ownerWindow = floating.ownerDocument.defaultView;
+	if (ownerWindow == null) return {x, y};
+	const visualViewport = ownerWindow.visualViewport;
+	const viewportLeft = visualViewport == null ? 0 : visualViewport.offsetLeft;
+	const viewportTop = visualViewport == null ? 0 : visualViewport.offsetTop;
+	const viewportWidth = visualViewport == null ? ownerWindow.innerWidth : visualViewport.width;
+	const viewportHeight = visualViewport == null ? ownerWindow.innerHeight : visualViewport.height;
+	const minX = viewportLeft + normalizedPadding.left;
+	const minY = viewportTop + normalizedPadding.top;
+	const maxX = Math.max(minX, viewportLeft + viewportWidth - normalizedPadding.right - rect.width);
+	const maxY = Math.max(minY, viewportTop + viewportHeight - normalizedPadding.bottom - rect.height);
 	return {
 		x: clamp(x, minX, maxX),
 		y: clamp(y, minY, maxY),
 	};
 }
 
-function scheduleFloatingUpdates(callbacks: Iterable<FloatingUpdateCallback>): void {
+function scheduleFloatingUpdates(registry: FloatingUpdateRegistry, callbacks: Iterable<FloatingUpdateCallback>): void {
 	for (const callback of callbacks) {
-		scheduledUpdateCallbacks.add(callback);
+		registry.scheduledCallbacks.add(callback);
 	}
-	if (scheduledUpdateCallbacks.size === 0 || sharedUpdateRaf != null) return;
-	sharedUpdateRaf = requestAnimationFrame(() => {
-		sharedUpdateRaf = null;
-		const callbacksToRun = Array.from(scheduledUpdateCallbacks);
-		scheduledUpdateCallbacks.clear();
+	if (registry.scheduledCallbacks.size === 0 || registry.updateRaf != null) return;
+	registry.updateRaf = registry.ownerWindow.requestAnimationFrame(() => {
+		registry.updateRaf = null;
+		const callbacksToRun = Array.from(registry.scheduledCallbacks);
+		registry.scheduledCallbacks.clear();
 		for (const callback of callbacksToRun) {
 			void callback();
 		}
 	});
 }
 
-function handleSharedScrollUpdate(): void {
-	scheduleFloatingUpdates(scrollUpdateCallbacks);
+function getFloatingUpdateRegistry(ownerDocument: Document): FloatingUpdateRegistry | null {
+	const current = floatingUpdateRegistries.get(ownerDocument);
+	if (current != null) return current;
+	const ownerWindow = ownerDocument.defaultView;
+	if (ownerWindow == null) return null;
+	let registry: FloatingUpdateRegistry;
+	registry = {
+		ownerDocument,
+		ownerWindow,
+		scrollListenersAttached: false,
+		viewportListenersAttached: false,
+		updateRaf: null,
+		scrollCallbacks: new Set(),
+		viewportCallbacks: new Set(),
+		scheduledCallbacks: new Set(),
+		handleScroll: () => scheduleFloatingUpdates(registry, registry.scrollCallbacks),
+		handleViewport: () => {
+			scheduleFloatingUpdates(registry, registry.scrollCallbacks);
+			scheduleFloatingUpdates(registry, registry.viewportCallbacks);
+		},
+	};
+	floatingUpdateRegistries.set(ownerDocument, registry);
+	return registry;
 }
 
-function handleSharedViewportUpdate(): void {
-	scheduleFloatingUpdates(scrollUpdateCallbacks);
-	scheduleFloatingUpdates(viewportUpdateCallbacks);
+function ensureSharedScrollListeners(registry: FloatingUpdateRegistry): void {
+	if (registry.scrollListenersAttached) return;
+	registry.ownerDocument.addEventListener('scroll', registry.handleScroll, {capture: true, passive: true});
+	registry.scrollListenersAttached = true;
 }
 
-function ensureSharedScrollListeners(): void {
-	if (sharedScrollListenersAttached || typeof document === 'undefined') return;
-	document.addEventListener('scroll', handleSharedScrollUpdate, {capture: true, passive: true});
-	sharedScrollListenersAttached = true;
-}
-
-function ensureSharedViewportListeners(): void {
-	if (sharedViewportListenersAttached || typeof window === 'undefined') return;
-	window.addEventListener('resize', handleSharedViewportUpdate);
-	if (window.visualViewport) {
-		window.visualViewport.addEventListener('resize', handleSharedViewportUpdate);
-		window.visualViewport.addEventListener('scroll', handleSharedViewportUpdate);
+function ensureSharedViewportListeners(registry: FloatingUpdateRegistry): void {
+	if (registry.viewportListenersAttached) return;
+	registry.ownerWindow.addEventListener('resize', registry.handleViewport);
+	const visualViewport = registry.ownerWindow.visualViewport;
+	if (visualViewport != null) {
+		visualViewport.addEventListener('resize', registry.handleViewport);
+		visualViewport.addEventListener('scroll', registry.handleViewport);
 	}
-	sharedViewportListenersAttached = true;
+	registry.viewportListenersAttached = true;
 }
 
-function releaseSharedScrollListeners(): void {
-	if (!sharedScrollListenersAttached || scrollUpdateCallbacks.size > 0 || typeof document === 'undefined') return;
-	document.removeEventListener('scroll', handleSharedScrollUpdate, true);
-	sharedScrollListenersAttached = false;
+function releaseSharedScrollListeners(registry: FloatingUpdateRegistry): void {
+	if (!registry.scrollListenersAttached || registry.scrollCallbacks.size > 0) return;
+	registry.ownerDocument.removeEventListener('scroll', registry.handleScroll, true);
+	registry.scrollListenersAttached = false;
 }
 
-function releaseSharedViewportListeners(): void {
-	if (
-		!sharedViewportListenersAttached ||
-		scrollUpdateCallbacks.size > 0 ||
-		viewportUpdateCallbacks.size > 0 ||
-		typeof window === 'undefined'
-	) {
+function releaseSharedViewportListeners(registry: FloatingUpdateRegistry): void {
+	if (!registry.viewportListenersAttached || registry.scrollCallbacks.size > 0 || registry.viewportCallbacks.size > 0) {
 		return;
 	}
-	window.removeEventListener('resize', handleSharedViewportUpdate);
-	if (window.visualViewport) {
-		window.visualViewport.removeEventListener('resize', handleSharedViewportUpdate);
-		window.visualViewport.removeEventListener('scroll', handleSharedViewportUpdate);
+	registry.ownerWindow.removeEventListener('resize', registry.handleViewport);
+	const visualViewport = registry.ownerWindow.visualViewport;
+	if (visualViewport != null) {
+		visualViewport.removeEventListener('resize', registry.handleViewport);
+		visualViewport.removeEventListener('scroll', registry.handleViewport);
 	}
-	sharedViewportListenersAttached = false;
-	if (sharedUpdateRaf != null && scheduledUpdateCallbacks.size === 0) {
-		cancelAnimationFrame(sharedUpdateRaf);
-		sharedUpdateRaf = null;
+	registry.viewportListenersAttached = false;
+	if (registry.updateRaf != null && registry.scheduledCallbacks.size === 0) {
+		registry.ownerWindow.cancelAnimationFrame(registry.updateRaf);
+		registry.updateRaf = null;
+	}
+	if (!registry.scrollListenersAttached) floatingUpdateRegistries.delete(registry.ownerDocument);
+}
+
+function removeScheduledFloatingUpdate(registry: FloatingUpdateRegistry, callback: FloatingUpdateCallback): void {
+	registry.scheduledCallbacks.delete(callback);
+	if (registry.updateRaf != null && registry.scheduledCallbacks.size === 0) {
+		registry.ownerWindow.cancelAnimationFrame(registry.updateRaf);
+		registry.updateRaf = null;
 	}
 }
 
-function removeScheduledFloatingUpdate(callback: FloatingUpdateCallback): void {
-	scheduledUpdateCallbacks.delete(callback);
-	if (sharedUpdateRaf != null && scheduledUpdateCallbacks.size === 0) {
-		cancelAnimationFrame(sharedUpdateRaf);
-		sharedUpdateRaf = null;
-	}
-}
-
-function subscribeSharedScrollUpdate(callback: FloatingUpdateCallback): () => void {
-	scrollUpdateCallbacks.add(callback);
-	ensureSharedScrollListeners();
-	ensureSharedViewportListeners();
+function subscribeSharedScrollUpdate(ownerDocument: Document, callback: FloatingUpdateCallback): () => void {
+	const registry = getFloatingUpdateRegistry(ownerDocument);
+	if (registry == null) return () => {};
+	registry.scrollCallbacks.add(callback);
+	ensureSharedScrollListeners(registry);
+	ensureSharedViewportListeners(registry);
 	return () => {
-		scrollUpdateCallbacks.delete(callback);
-		removeScheduledFloatingUpdate(callback);
-		releaseSharedScrollListeners();
-		releaseSharedViewportListeners();
+		registry.scrollCallbacks.delete(callback);
+		removeScheduledFloatingUpdate(registry, callback);
+		releaseSharedScrollListeners(registry);
+		releaseSharedViewportListeners(registry);
 	};
 }
 
-function subscribeSharedViewportUpdate(callback: FloatingUpdateCallback): () => void {
-	viewportUpdateCallbacks.add(callback);
-	ensureSharedViewportListeners();
+function subscribeSharedViewportUpdate(ownerDocument: Document, callback: FloatingUpdateCallback): () => void {
+	const registry = getFloatingUpdateRegistry(ownerDocument);
+	if (registry == null) return () => {};
+	registry.viewportCallbacks.add(callback);
+	ensureSharedViewportListeners(registry);
 	return () => {
-		viewportUpdateCallbacks.delete(callback);
-		removeScheduledFloatingUpdate(callback);
-		releaseSharedViewportListeners();
+		registry.viewportCallbacks.delete(callback);
+		removeScheduledFloatingUpdate(registry, callback);
+		releaseSharedViewportListeners(registry);
 	};
 }
 
 function observeFloatingResize(floating: HTMLElement, updatePosition: () => void): () => void {
 	const cleanupCallbacks: Array<() => void> = [];
-	if (typeof ResizeObserver !== 'undefined') {
-		const resizeObserver = new ResizeObserver(updatePosition);
+	const ownerWindow = floating.ownerDocument.defaultView;
+	const ResizeObserverConstructor = ownerWindow == null ? null : ownerWindow.ResizeObserver;
+	if (ResizeObserverConstructor != null) {
+		const resizeObserver = new ResizeObserverConstructor(updatePosition);
 		resizeObserver.observe(floating);
 		cleanupCallbacks.push(() => resizeObserver.disconnect());
 	}
-	cleanupCallbacks.push(subscribeSharedViewportUpdate(updatePosition));
+	cleanupCallbacks.push(subscribeSharedViewportUpdate(floating.ownerDocument, updatePosition));
 	return () => {
 		for (const cleanup of cleanupCallbacks) {
 			cleanup();
@@ -200,23 +238,19 @@ function observeFloatingResize(floating: HTMLElement, updatePosition: () => void
 	};
 }
 
-function getNativeTitlebarInset(): number {
-	if (typeof document === 'undefined') {
-		return 0;
-	}
-	const titlebar = document.querySelector<HTMLElement>(TITLEBAR_SELECTOR);
-	if (!titlebar) {
-		return 0;
-	}
+function getNativeTitlebarInset(ownerDocument: Document): number {
+	const titlebar = ownerDocument.querySelector<HTMLElement>(TITLEBAR_SELECTOR);
+	if (titlebar == null) return 0;
 	const rect = titlebar.getBoundingClientRect();
-	if (rect.height <= 0 || rect.bottom <= 0) {
-		return 0;
-	}
-	return rect.bottom;
+	if (rect.height <= 0 || rect.bottom <= 0) return 0;
+	const ownerWindow = ownerDocument.defaultView;
+	const visualViewport = ownerWindow == null ? null : ownerWindow.visualViewport;
+	const viewportTop = visualViewport == null ? 0 : visualViewport.offsetTop;
+	return Math.max(0, rect.bottom - viewportTop);
 }
 
-function getBoundaryPadding(basePadding: number): Padding {
-	const titlebarInset = getNativeTitlebarInset();
+function getBoundaryPadding(ownerDocument: Document, basePadding: number): Padding {
+	const titlebarInset = getNativeTitlebarInset(ownerDocument);
 	if (titlebarInset <= 0) {
 		return basePadding;
 	}
@@ -246,24 +280,37 @@ export function useAntiShiftFloating(
 	const floatingRef = useRef<HTMLElement>(null);
 	const [state, setState] = useState<FloatingState>(() => {
 		const {x, y} = target ? getInitialGuess(target, placement, offsetMainAxis, offsetCrossAxis) : {x: -9999, y: -9999};
-		return {x, y, isReady: false};
+		return {x, y, isReady: false, offsetX: 0, offsetY: 0};
 	});
 	const cleanupRef = useRef<(() => void) | null>(null);
 	const isCalculatingRef = useRef(false);
 	const rafIdRef = useRef<number | null>(null);
+	const rafOwnerWindowRef = useRef<Window | null>(null);
+	const pendingUpdateRef = useRef(false);
+	const manualSessionIdRef = useRef<number | null>(null);
+	const positionRevisionRef = useRef(0);
+	const basePositionRef = useRef({x: state.x, y: state.y});
+	const manualOffsetRef = useRef({x: 0, y: 0});
+	const manualAbsolutePositionRef = useRef<{x: number; y: number} | null>(null);
+	const requestPositionUpdateRef = useRef<() => void>(() => {});
 	const updatePositionNow = useCallback(async () => {
-		if (!enabled || !target || !floatingRef.current || isCalculatingRef.current) {
+		if (!enabled || target == null || floatingRef.current == null) return;
+		if (manualSessionIdRef.current != null || isCalculatingRef.current) {
+			pendingUpdateRef.current = true;
 			return;
 		}
+		pendingUpdateRef.current = false;
 		isCalculatingRef.current = true;
+		const calculationRevision = positionRevisionRef.current;
 		try {
 			const floating = floatingRef.current;
-			if (!floating) {
-				return;
-			}
-			const adaptivePadding = enableSmartBoundary ? getAdaptivePadding() : 8;
+			if (floating == null) return;
+			const ownerDocument = floating.ownerDocument;
+			const ownerWindow = ownerDocument.defaultView;
+			if (ownerWindow == null) return;
+			const adaptivePadding = enableSmartBoundary ? getAdaptivePadding(ownerWindow) : 8;
 			const shiftPadding = Math.max(6, adaptivePadding);
-			const boundaryPadding = getBoundaryPadding(shiftPadding);
+			const boundaryPadding = getBoundaryPadding(ownerDocument, shiftPadding);
 			const middleware: Array<Middleware> = [
 				offset({mainAxis: offsetMainAxis, crossAxis: offsetCrossAxis}),
 				flip({padding: boundaryPadding}),
@@ -302,24 +349,60 @@ export function useAntiShiftFloating(
 				placement,
 				middleware,
 			});
-			const safePosition = clampToViewportBoundary(x, y, floating, boundaryPadding);
+			if (
+				calculationRevision !== positionRevisionRef.current ||
+				manualSessionIdRef.current != null ||
+				floatingRef.current !== floating
+			) {
+				pendingUpdateRef.current = true;
+				return;
+			}
+			const safeBasePosition = clampToViewportBoundary(x, y, floating, boundaryPadding);
+			const manualAbsolutePosition = manualAbsolutePositionRef.current;
+			let desiredPosition: {x: number; y: number};
+			if (manualAbsolutePosition == null) {
+				desiredPosition = {
+					x: safeBasePosition.x + manualOffsetRef.current.x,
+					y: safeBasePosition.y + manualOffsetRef.current.y,
+				};
+			} else {
+				desiredPosition = manualAbsolutePosition;
+			}
+			const safePosition = clampToViewportBoundary(desiredPosition.x, desiredPosition.y, floating, boundaryPadding);
+			const nextOffset = {
+				x: safePosition.x - safeBasePosition.x,
+				y: safePosition.y - safeBasePosition.y,
+			};
+			basePositionRef.current = safeBasePosition;
+			manualOffsetRef.current = nextOffset;
+			manualAbsolutePositionRef.current = null;
 			Object.assign(floating.style, {
 				left: appZoomCssPx(safePosition.x),
 				top: appZoomCssPx(safePosition.y),
 				visibility: 'visible',
 			});
-			setState((prev) =>
-				prev.x !== safePosition.x || prev.y !== safePosition.y || !prev.isReady
-					? {...safePosition, isReady: true}
-					: prev,
-			);
+			setState((prev) => {
+				if (
+					prev.x === safeBasePosition.x &&
+					prev.y === safeBasePosition.y &&
+					prev.isReady &&
+					prev.offsetX === nextOffset.x &&
+					prev.offsetY === nextOffset.y
+				) {
+					return prev;
+				}
+				return {...safeBasePosition, isReady: true, offsetX: nextOffset.x, offsetY: nextOffset.y};
+			});
 		} catch (error) {
 			logger.error('Error positioning floating element', error);
-			if (floatingRef.current) {
+			if (floatingRef.current != null) {
 				floatingRef.current.style.visibility = 'visible';
 			}
 		} finally {
 			isCalculatingRef.current = false;
+			if (pendingUpdateRef.current && manualSessionIdRef.current == null) {
+				requestPositionUpdateRef.current();
+			}
 		}
 	}, [
 		enabled,
@@ -332,28 +415,74 @@ export function useAntiShiftFloating(
 		constrainHeight,
 	]);
 	const updatePosition = useCallback(() => {
-		if (rafIdRef.current !== null || isCalculatingRef.current) {
-			return;
-		}
-		rafIdRef.current = requestAnimationFrame(() => {
+		pendingUpdateRef.current = true;
+		if (manualSessionIdRef.current != null || rafIdRef.current != null) return;
+		const floating = floatingRef.current;
+		if (floating == null) return;
+		const ownerWindow = floating.ownerDocument.defaultView;
+		if (ownerWindow == null) return;
+		rafOwnerWindowRef.current = ownerWindow;
+		rafIdRef.current = ownerWindow.requestAnimationFrame(() => {
 			rafIdRef.current = null;
+			rafOwnerWindowRef.current = null;
+			pendingUpdateRef.current = false;
 			void updatePositionNow();
 		});
 	}, [updatePositionNow]);
+	requestPositionUpdateRef.current = updatePosition;
+	const beginManualPositioning = useCallback((): PopoutResizePositionSession => {
+		positionRevisionRef.current += 1;
+		const sessionId = positionRevisionRef.current;
+		manualSessionIdRef.current = sessionId;
+		pendingUpdateRef.current = false;
+		if (rafIdRef.current != null && rafOwnerWindowRef.current != null) {
+			rafOwnerWindowRef.current.cancelAnimationFrame(rafIdRef.current);
+			rafIdRef.current = null;
+			rafOwnerWindowRef.current = null;
+		}
+		const baseOffset = manualOffsetRef.current;
+		const sessionBasePosition = basePositionRef.current;
+		let finished = false;
+		const publishOffset = (offset: {x: number; y: number}) => {
+			if (finished || manualSessionIdRef.current !== sessionId) return;
+			const nextOffset = {x: baseOffset.x + offset.x, y: baseOffset.y + offset.y};
+			manualOffsetRef.current = nextOffset;
+			manualAbsolutePositionRef.current = {
+				x: sessionBasePosition.x + nextOffset.x,
+				y: sessionBasePosition.y + nextOffset.y,
+			};
+			setState((prev) => {
+				if (prev.offsetX === nextOffset.x && prev.offsetY === nextOffset.y) return prev;
+				return {...prev, offsetX: nextOffset.x, offsetY: nextOffset.y};
+			});
+		};
+		return {
+			updateOffset: publishOffset,
+			finish: (offset) => {
+				if (finished || manualSessionIdRef.current !== sessionId) return;
+				publishOffset(offset);
+				finished = true;
+				manualSessionIdRef.current = null;
+				pendingUpdateRef.current = true;
+				requestPositionUpdateRef.current();
+			},
+		};
+	}, []);
 	useLayoutEffect(() => {
-		if (!enabled || !target || !floatingRef.current) {
-			setState((prev) => ({...prev, isReady: false}));
+		if (!enabled || target == null || floatingRef.current == null) {
+			setState((prev) => ({...prev, isReady: false, offsetX: 0, offsetY: 0}));
 			return;
 		}
 		if (!isReferenceConnected(target)) {
-			setState((prev) => ({...prev, isReady: false}));
+			setState((prev) => ({...prev, isReady: false, offsetX: 0, offsetY: 0}));
 			return;
 		}
+		const floating = floatingRef.current;
 		updatePosition();
 		if (shouldAutoUpdate) {
 			const cleanupCallbacks = [
-				autoUpdate(target, floatingRef.current, updatePosition, ANTI_SHIFT_AUTO_UPDATE_OPTIONS),
-				subscribeSharedScrollUpdate(updatePositionNow),
+				autoUpdate(target, floating, updatePosition, ANTI_SHIFT_AUTO_UPDATE_OPTIONS),
+				subscribeSharedScrollUpdate(floating.ownerDocument, updatePositionNow),
 			];
 			cleanupRef.current = () => {
 				for (const cleanup of cleanupCallbacks) {
@@ -364,13 +493,19 @@ export function useAntiShiftFloating(
 			cleanupRef.current = observeFloatingResize(floatingRef.current, updatePosition);
 		}
 		return () => {
-			cleanupRef.current?.();
+			positionRevisionRef.current += 1;
+			manualSessionIdRef.current = null;
+			manualOffsetRef.current = {x: 0, y: 0};
+			manualAbsolutePositionRef.current = null;
+			pendingUpdateRef.current = false;
+			if (cleanupRef.current != null) cleanupRef.current();
 			cleanupRef.current = null;
-			if (rafIdRef.current !== null) {
-				cancelAnimationFrame(rafIdRef.current);
+			if (rafIdRef.current != null && rafOwnerWindowRef.current != null) {
+				rafOwnerWindowRef.current.cancelAnimationFrame(rafIdRef.current);
 				rafIdRef.current = null;
+				rafOwnerWindowRef.current = null;
 			}
-			setState((prev) => ({...prev, isReady: false}));
+			setState((prev) => ({...prev, isReady: false, offsetX: 0, offsetY: 0}));
 		};
 	}, [enabled, target, shouldAutoUpdate, shouldObserveFloatingResize, updatePosition, updatePositionNow]);
 	return {
@@ -378,18 +513,29 @@ export function useAntiShiftFloating(
 		state,
 		style: {
 			position: 'fixed' as const,
-			left: appZoomLayoutPx(state.x),
-			top: appZoomLayoutPx(state.y),
+			left: appZoomLayoutPx(state.x + state.offsetX),
+			top: appZoomLayoutPx(state.y + state.offsetY),
 		},
 		updatePosition,
+		beginManualPositioning,
 	};
 }
 
+function getReferenceContextElement(target: ReferenceElement): Element | null {
+	if ('ownerDocument' in target) return target as Element;
+	const virtualTarget = target as VirtualElement;
+	const contextElement = virtualTarget.contextElement;
+	if (contextElement == null) return null;
+	return contextElement;
+}
+
 function isReferenceConnected(target: ReferenceElement): boolean {
-	if (typeof Element === 'undefined' || !(target instanceof Element)) {
-		return true;
-	}
-	return document.contains(target);
+	const contextElement = getReferenceContextElement(target);
+	if (contextElement == null) return true;
+	const ownerDocument = contextElement.ownerDocument;
+	const ownerWindow = ownerDocument.defaultView;
+	if (ownerWindow == null || !(contextElement instanceof ownerWindow.Element)) return true;
+	return ownerDocument.contains(contextElement);
 }
 
 function getInitialGuess(

@@ -108,7 +108,6 @@
 	color: var(--text-primary);
 	text-align: center;
 	transform-origin: center;
-	will-change: opacity, transform;
 }
 
 .welcomeWordMeasure {

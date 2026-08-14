@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {GenericErrorModal} from '@app/features/app/components/alerts/GenericErrorModal';
+import type {Channel} from '@app/features/channel/models/Channel';
 import {CANNOT_SEND_MESSAGES_IN_CHANNEL_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
+import {modal} from '@app/features/ui/commands/ModalCommands';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
@@ -51,3 +54,8 @@ export const AttachmentPermissionDeniedModal = observer(
 		);
 	},
 );
+
+export function showAttachmentPermissionDeniedModal(channel: Channel): void {
+	void channel;
+	ModalCommands.push(modal(() => <AttachmentPermissionDeniedModal />));
+}

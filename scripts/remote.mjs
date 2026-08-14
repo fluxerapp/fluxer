@@ -19,7 +19,6 @@ function usage(exitCode = 0) {
   pnpm remote pull <host> [--branch <branch>]
   pnpm remote run <host> -- <command>
   pnpm remote apply-diff <host> [-- <path>...]
-  pnpm remote test-webrtc <host>
   pnpm remote tunnel start|status|stop <host>
   pnpm remote macos-setup [--pubkey ~/.ssh/id_ed25519.pub]
 
@@ -262,18 +261,6 @@ function pullCommand(host, branch) {
 	].join(' && ');
 }
 
-function testWebrtcCommand(host) {
-	const commands = [
-		'corepack enable',
-		'pnpm install',
-		'pnpm --dir fluxer_desktop/native/webrtc-sender test',
-		'pnpm --dir fluxer_desktop typecheck',
-		'pnpm --dir fluxer_desktop build',
-		`node -e "const m=require('./fluxer_desktop/node_modules/@fluxer/webrtc-sender'); console.log(JSON.stringify({supported:m.isSupported?.(), hasVoiceEngine:typeof m.VoiceEngine==='function', loadError:m.loadError?String(m.loadError):null}))"`,
-	];
-	return host.platform === 'windows' ? commands.join('; ') : commands.join(' && ');
-}
-
 function macosSetup(args) {
 	const pubkeyPath = path.resolve(expandHome(optionValue(args, '--pubkey', '~/.ssh/id_ed25519.pub')));
 	const pubkey = existsSync(pubkeyPath) ? readFileSync(pubkeyPath, 'utf8').trim() : '<paste-your-public-ssh-key-here>';
@@ -349,12 +336,6 @@ switch (command) {
 			break;
 		}
 		sshWithInput(name, host, 'git apply --whitespace=nowarn -', diff, options);
-		break;
-	}
-	case 'test-webrtc': {
-		const name = args[1] ?? fail('test-webrtc needs a host');
-		const host = getHost(config, name);
-		ssh(name, host, testWebrtcCommand(host), options);
 		break;
 	}
 	case 'tunnel': {

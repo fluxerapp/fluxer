@@ -12,6 +12,7 @@ import UnicodeEmojis from '@app/features/expressions/utils/UnicodeEmojis';
 import Guilds from '@app/features/guild/state/Guilds';
 import {setUrlQueryParams} from '@app/features/messaging/utils/MessagingUrlUtils';
 import {usePresenceCustomStatus} from '@app/features/presence/hooks/usePresenceCustomStatus';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {EmojiTooltipContent} from '@app/features/ui/emoji_tooltip_content/EmojiTooltipContent';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {useTextOverflow} from '@app/features/ui/hooks/useTextOverflow';
@@ -299,7 +300,7 @@ export const CustomStatusDisplay = observer(
 							data-flx="app.custom-status-display.custom-status-display.placeholder.edit.button"
 						>
 							<SmileyIcon
-								size={14}
+								size={remFromPx(14)}
 								weight="regular"
 								className={styles.placeholderIcon}
 								data-flx="app.custom-status-display.custom-status-display.placeholder-icon"
@@ -397,7 +398,7 @@ export const CustomStatusDisplay = observer(
 						</div>
 						{isEmojiOnly && (
 							<PencilIcon
-								size={12}
+								size={remFromPx(12)}
 								weight="bold"
 								className={styles.editPencilIcon}
 								data-flx="app.custom-status-display.custom-status-display.edit-pencil-icon"

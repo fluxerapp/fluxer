@@ -35,7 +35,6 @@
 	"scripts": {
 		"build": "cargo run --locked --quiet --manifest-path ../../../tools/ci/Cargo.toml -- build-desktop-native-addon",
 		"test": "cargo test --manifest-path Cargo.toml && node --test index.test.mjs",
-		"test:fixtures": "node scripts/fixture-smoke.mjs",
 		"test:loader": "node --test index.test.mjs"
 	}
 }

@@ -170,14 +170,14 @@
 }
 
 .callBannerResizable .callControlBarSection {
-	padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0));
+	padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
 }
 
 .callControlBarSection {
 	position: relative;
 	display: flex;
 	justify-content: center;
-	padding: 0 1rem calc(0.875rem + env(safe-area-inset-bottom, 0));
+	padding: 0 1rem calc(0.875rem + env(safe-area-inset-bottom, 0px));
 	z-index: 2;
 	pointer-events: none;
 }

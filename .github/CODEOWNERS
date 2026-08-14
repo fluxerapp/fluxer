@@ -1,0 +1,7 @@
+/.github/CODEOWNERS @fluxerapp/developers
+/.github/workflows/ @fluxerapp/developers
+/fluxer_marketing @fluxerapp/developers
+/.gitmodules @fluxerapp/developers
+/.github/workflows/dispatch-private-marketing-build.yaml @fluxerapp/developers
+/packages/i18n/marketing/ @fluxerapp/developers
+/scripts/setup-private-marketing.sh @fluxerapp/developers

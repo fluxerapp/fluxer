@@ -3,6 +3,7 @@
 ARG BUILD_VERSION=""
 ARG PUBLIC_ASSET_BASE_URL=""
 ARG FLUXER_APP_PROXY_TIME_FREEZE_ENABLED="true"
+ARG BUNDLE_LOCAL_ASSETS="true"
 
 # ---------- Stage 1: Build the SPA (fluxer_app) ----------
 FROM node:24-bookworm-slim AS app-build
@@ -55,6 +56,9 @@ COPY packages/limits/ ./packages/limits/
 COPY packages/schema/ ./packages/schema/
 COPY packages/snowflake/ ./packages/snowflake/
 COPY packages/voice_engine_v2/ ./packages/voice_engine_v2/
+COPY packages/fonts/css/ ./packages/fonts/css/
+COPY packages/fonts/files/ ./packages/fonts/files/
+COPY packages/fonts/NOTICE.md packages/fonts/LICENSE-IBM-PLEX.txt ./packages/fonts/
 COPY packages/markdown_parser/rust/Cargo.toml ./packages/markdown_parser/rust/
 COPY packages/markdown_parser/rust/.cargo/ ./packages/markdown_parser/rust/.cargo/
 COPY packages/markdown_parser/rust/benches/parser.rs ./packages/markdown_parser/rust/benches/
@@ -77,7 +81,20 @@ RUN --mount=type=cache,target=/usr/local/cargo/registry \
 
 # Extract the full SPA asset tree for local serving by the app proxy.
 FROM alpine:3.21 AS app-assets
+ARG BUNDLE_LOCAL_ASSETS=true
+ARG PUBLIC_ASSET_BASE_URL=""
 COPY --from=app-build /usr/src/app/fluxer_app/dist /assets
+RUN if [ "${BUNDLE_LOCAL_ASSETS}" != "true" ]; then \
+		case "${PUBLIC_ASSET_BASE_URL}" in \
+		http://* | https://*) ;; \
+		*) \
+			echo "BUNDLE_LOCAL_ASSETS=false requires an absolute PUBLIC_ASSET_BASE_URL." >&2; \
+			echo "Without one, index.html links same-origin /assets/* that this image would no longer contain." >&2; \
+			exit 1 \
+			;; \
+		esac; \
+		find /assets/assets -type f ! -name 'fonts-*.txt' -delete; \
+	fi
 
 # Stage for CI to extract the full dist (docker bake app-dist target)
 FROM alpine:3.21 AS app-dist

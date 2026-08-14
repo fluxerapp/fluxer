@@ -10,12 +10,14 @@ export enum MessageTypes {
 interface TransformedUser {
 	id: string;
 	username: string;
+	globalName?: string | null;
+	guildNicknames?: Record<string, string | null>;
 	isBot?: boolean;
 	isFriend?: boolean;
 	guildIds?: Array<string>;
 	_delete?: boolean;
 	_removeGuild?: string;
-	[key: string]: string | boolean | undefined | Array<string>;
+	[key: string]: string | boolean | null | undefined | Array<string> | Record<string, string | null>;
 }
 
 interface SearchResult {
@@ -58,10 +60,45 @@ const pendingSearches: Set<string> = new Set();
 const SCORE_EXACT_PREFIX = 10;
 const SCORE_CONTAINS = 5;
 const SCORE_FUZZY = 1;
+const MAX_SEARCH_RESULTS = 100;
 const FRIEND_KEY = 'isFriend';
 const BOT_KEY = 'isBot';
 const USERNAME_KEY = 'username';
-const IGNORED_KEYS = new Set([BOT_KEY, FRIEND_KEY, USERNAME_KEY, 'guildIds']);
+const IGNORED_KEYS = new Set([BOT_KEY, FRIEND_KEY, USERNAME_KEY, 'guildIds', 'guildNicknames']);
+
+function getSearchValues(user: TransformedUser, filters?: SearchFilters): Array<string> {
+	const values: Array<string> = [];
+	if (user.username.length > 0) {
+		values.push(user.username);
+	}
+	for (const key of Object.keys(user)) {
+		if (IGNORED_KEYS.has(key) || key === '_delete' || key === '_removeGuild') {
+			continue;
+		}
+		const value = user[key];
+		if (typeof value === 'string' && value.length > 0) {
+			values.push(value);
+		}
+	}
+	const guildNicknames = user.guildNicknames;
+	if (guildNicknames == null) {
+		return values;
+	}
+	const guildId = filters == null ? null : filters.guild;
+	if (guildId != null && guildId.length > 0) {
+		const nickname = guildNicknames[guildId];
+		if (typeof nickname === 'string' && nickname.length > 0) {
+			values.push(nickname);
+		}
+		return values;
+	}
+	for (const nickname of Object.values(guildNicknames)) {
+		if (typeof nickname === 'string' && nickname.length > 0) {
+			values.push(nickname);
+		}
+	}
+	return values;
+}
 
 function escapeRegex(text: string): string {
 	return text.replace(/[-[\]/{}()*+?.\\^$|]/g, '\\$&');
@@ -91,6 +128,38 @@ function sortByMatchScore(a: SearchResult, b: SearchResult): number {
 		return 0;
 	}
 	return b.score - a.score;
+}
+
+function normalizeSearchLimit(limit: number): number {
+	if (!Number.isFinite(limit)) {
+		return 0;
+	}
+	const normalizedLimit = Math.floor(limit);
+	if (normalizedLimit <= 0) {
+		return 0;
+	}
+	return Math.min(normalizedLimit, MAX_SEARCH_RESULTS);
+}
+
+function insertSearchResult(results: Array<SearchResult>, candidate: SearchResult, limit: number): void {
+	if (results.length === 0) {
+		results.push(candidate);
+		return;
+	}
+	let insertIndex = results.length;
+	for (let index = 0; index < results.length; index += 1) {
+		if (sortByMatchScore(candidate, results[index]) < 0) {
+			insertIndex = index;
+			break;
+		}
+	}
+	if (insertIndex === results.length && results.length >= limit) {
+		return;
+	}
+	results.splice(insertIndex, 0, candidate);
+	if (results.length > limit) {
+		results.pop();
+	}
 }
 
 function shouldIncludeUser(
@@ -130,10 +199,46 @@ function postSearchResults(uuid: string, results: Array<SearchResult>, generatio
 	postMessage(message);
 }
 
+function getEmptyQueryComparator(user: TransformedUser, filters?: SearchFilters): string {
+	const guildNicknames = user.guildNicknames;
+	const guildId = filters == null ? null : filters.guild;
+	if (guildNicknames != null && guildId != null && guildId.length > 0) {
+		const nickname = guildNicknames[guildId];
+		if (typeof nickname === 'string' && nickname.length > 0) {
+			return nickname;
+		}
+	}
+	if (typeof user.globalName === 'string' && user.globalName.length > 0) {
+		return user.globalName;
+	}
+	return user.username;
+}
+
 function executeSearch(uuid: string, searchQuery: SearchQuery): void {
 	const {query, limit, filters, blacklist, whitelist, boosters, generation = 0} = searchQuery;
+	const normalizedLimit = normalizeSearchLimit(limit);
 	const results: Array<SearchResult> = [];
+	if (normalizedLimit === 0) {
+		postSearchResults(uuid, results, generation);
+		return;
+	}
 	if (query === '') {
+		userIndex.forEach((user, userId) => {
+			if (!shouldIncludeUser(userId, user, filters, blacklist, whitelist)) {
+				return;
+			}
+			insertSearchResult(
+				results,
+				{
+					id: userId,
+					username: user.username,
+					comparator: getEmptyQueryComparator(user, filters),
+					score: 0,
+					isBot: user.isBot,
+				},
+				normalizedLimit,
+			);
+		});
 		postSearchResults(uuid, results, generation);
 		return;
 	}
@@ -146,11 +251,7 @@ function executeSearch(uuid: string, searchQuery: SearchQuery): void {
 		}
 		const username = user.username;
 		let bestMatch: SearchResult | null = null;
-		for (const key of Object.keys(user)) {
-			const value = user[key];
-			if (key === BOT_KEY || key === FRIEND_KEY || !value || typeof value !== 'string') {
-				continue;
-			}
+		for (const value of getSearchValues(user, filters)) {
 			let matchResult: SearchResult | null = null;
 			if (exactPrefixRegex.test(value)) {
 				matchResult = {
@@ -182,13 +283,9 @@ function executeSearch(uuid: string, searchQuery: SearchQuery): void {
 			}
 		}
 		if (bestMatch) {
-			results.push(bestMatch);
+			insertSearchResult(results, bestMatch, normalizedLimit);
 		}
 	});
-	results.sort(sortByMatchScore);
-	if (results.length > limit) {
-		results.length = limit;
-	}
 	postSearchResults(uuid, results, generation);
 }
 
@@ -202,9 +299,24 @@ function updateUsers(users: Array<TransformedUser>): void {
 			shouldTriggerSearch = true;
 			continue;
 		}
-		const existingUser: TransformedUser = userIndex.get(userId) ?? {id: userId, username: ''};
-		const mergedUser: TransformedUser = {...existingUser, ...update};
-		const guildIdsSet = new Set<string>(existingUser.guildIds ?? []);
+		const existingUser = userIndex.get(userId);
+		if (update._removeGuild && existingUser == null) {
+			continue;
+		}
+		const baseUser: TransformedUser = existingUser == null ? {id: userId, username: ''} : existingUser;
+		const mergedUser: TransformedUser = {...baseUser, ...update};
+		if (update._removeGuild && baseUser.username.length > 0) {
+			mergedUser.username = baseUser.username;
+		}
+		const existingGuildNicknames = baseUser.guildNicknames;
+		const updateGuildNicknames = update.guildNicknames;
+		if (existingGuildNicknames != null || updateGuildNicknames != null) {
+			mergedUser.guildNicknames = {
+				...(existingGuildNicknames == null ? {} : existingGuildNicknames),
+				...(updateGuildNicknames == null ? {} : updateGuildNicknames),
+			};
+		}
+		const guildIdsSet = new Set<string>(baseUser.guildIds == null ? [] : baseUser.guildIds);
 		if (update.guildIds) {
 			for (const guildId of update.guildIds) {
 				guildIdsSet.add(guildId);
@@ -214,6 +326,12 @@ function updateUsers(users: Array<TransformedUser>): void {
 			const guildKey = update._removeGuild;
 			if (guildKey in mergedUser) {
 				delete mergedUser[guildKey];
+			}
+			if (mergedUser.guildNicknames != null) {
+				delete mergedUser.guildNicknames[guildKey];
+				if (Object.keys(mergedUser.guildNicknames).length === 0) {
+					delete mergedUser.guildNicknames;
+				}
 			}
 			delete mergedUser._removeGuild;
 			guildIdsSet.delete(guildKey);
@@ -225,7 +343,7 @@ function updateUsers(users: Array<TransformedUser>): void {
 		} else {
 			delete mergedUser.guildIds;
 		}
-		const wasFriend = Boolean(existingUser.isFriend);
+		const wasFriend = Boolean(baseUser.isFriend);
 		const isFriendNow = Boolean(mergedUser.isFriend);
 		userIndex.set(userId, mergedUser);
 		if (activeQueries.size > 0) {

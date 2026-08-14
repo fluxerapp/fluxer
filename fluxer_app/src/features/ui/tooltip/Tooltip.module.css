@@ -26,7 +26,6 @@
 	position: relative;
 	z-index: var(--z-index-tooltip);
 	pointer-events: none;
-	will-change: opacity, transform;
 	box-sizing: border-box;
 	max-width: 11.875rem;
 	border: var(--tooltip-border-width) solid var(--tooltip-active-border-color);

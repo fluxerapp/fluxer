@@ -7,6 +7,7 @@ import {showModerationErrorModal} from '@app/features/moderation/components/aler
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import type {User} from '@app/features/user/models/User';
+import * as DisplayNameUtils from '@app/features/user/utils/DisplayNameUtils';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
@@ -19,12 +20,13 @@ const KICK_DESCRIPTOR = msg({
 const logger = new Logger('KickMemberModal');
 export const KickMemberModal: React.FC<{guildId: string; targetUser: User}> = observer(({guildId, targetUser}) => {
 	const {i18n} = useLingui();
+	const targetUserTag = DisplayNameUtils.formatTagForStreamerMode(targetUser.tag);
 	const handleKick = async () => {
 		try {
 			await GuildMemberCommands.kick(guildId, targetUser.id);
 			ToastCommands.createToast({
 				type: 'success',
-				children: <Trans>Kicked {targetUser.tag} from the community</Trans>,
+				children: <Trans>Kicked {targetUserTag} from the community</Trans>,
 			});
 		} catch (error) {
 			logger.error('Failed to kick member:', error);
@@ -43,7 +45,7 @@ export const KickMemberModal: React.FC<{guildId: string; targetUser: User}> = ob
 				<div data-flx="moderation.kick-member-modal.div">
 					<Trans>
 						Are you sure you want to kick{' '}
-						<strong data-flx="moderation.kick-member-modal.strong">{targetUser.tag}</strong> from the community? They
+						<strong data-flx="moderation.kick-member-modal.strong">{targetUserTag}</strong> from the community? They
 						will be able to rejoin with a new invite.
 					</Trans>
 				</div>

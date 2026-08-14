@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import styles from '@app/features/search/components/search/HasFilterSheet.module.css';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {BottomSheet} from '@app/features/ui/bottom_sheet/BottomSheet';
 import {Button} from '@app/features/ui/button/Button';
 import {Scroller} from '@app/features/ui/components/Scroller';
@@ -167,7 +168,7 @@ export const HasFilterSheet: React.FC<HasFilterSheetProps> = ({isOpen, onClose, 
 								>
 									<div className={styles.optionLeft} data-flx="search.search.has-filter-sheet.option-left">
 										<Icon
-											size={22}
+											size={remFromPx(22)}
 											className={clsx(styles.optionIcon, isSelected && styles.optionIconSelected)}
 											weight="regular"
 											data-flx="search.search.has-filter-sheet.option-icon"
@@ -189,7 +190,7 @@ export const HasFilterSheet: React.FC<HasFilterSheetProps> = ({isOpen, onClose, 
 									</div>
 									{isSelected && (
 										<CheckIcon
-											size={20}
+											size={remFromPx(20)}
 											className={styles.checkIcon}
 											weight="bold"
 											data-flx="search.search.has-filter-sheet.check-icon"

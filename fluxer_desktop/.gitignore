@@ -1,19 +1,11 @@
-# Dependencies
-node_modules/
+/.velopack/
+/dist-electron/
 
-# Build outputs
-dist/
-dist-electron/
+/native/**/*.node
+/native/webauthn/*.so*
+/native/win-game-capture/fluxer-game-hook.*.dll
+/native/win-game-capture/fluxer-inject-helper.*.exe
+/native/win-game-capture/fluxer-vulkan-layer.*.dll
+/native/win-game-capture/fluxer-vulkan-layer.*.json
 
-
-# IDE
-.idea/
-*.swp
-*.swo
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Logs
-*.log
+/src/common/BuildChannel.ts

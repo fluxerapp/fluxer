@@ -18,12 +18,14 @@ import UserConnection from '@app/features/connection/state/UserConnection';
 import {CONNECTIONS_DESCRIPTOR, DOMAIN_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {StreamerModeGate} from '@app/features/streamer_mode/components/StreamerModeGate';
 import StreamerMode from '@app/features/streamer_mode/state/StreamerMode';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import {BlueskyIcon} from '@app/features/ui/components/icons/BlueskyIcon';
 import {UnverifiedConnectionIcon} from '@app/features/ui/components/icons/UnverifiedConnectionIcon';
 import {VerifiedConnectionIcon} from '@app/features/ui/components/icons/VerifiedConnectionIcon';
 import {Spinner} from '@app/features/ui/components/Spinner';
+import {useDragAutoScroll} from '@app/features/ui/hooks/useDragAutoScroll';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import styles from '@app/features/user/components/modals/tabs/LinkedAccountsTab.module.css';
 import {type ConnectionType, ConnectionTypes} from '@fluxer/constants/src/ConnectionConstants';
@@ -35,7 +37,7 @@ import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import type {ConnectableElement} from 'react-dnd';
-import {DndProvider, useDrag, useDrop} from 'react-dnd';
+import {DndProvider, useDrag, useDragLayer, useDrop} from 'react-dnd';
 import {getEmptyImage, HTML5Backend} from 'react-dnd-html5-backend';
 
 const THIS_CONNECTION_HAS_BEEN_VERIFIED_DESCRIPTOR = msg({
@@ -80,6 +82,19 @@ interface ConnectionCardProps {
 	onMoveConnection: (dragIndex: number, hoverIndex: number) => void;
 	onDropConnection: () => void;
 }
+
+const ConnectionDragAutoScroll: React.FC<{listRef: React.RefObject<HTMLDivElement | null>}> = ({listRef}) => {
+	const isDraggingConnection = useDragLayer(
+		(monitor) => monitor.isDragging() && monitor.getItemType() === DND_TYPES.CONNECTION,
+	);
+	const getScrollElement = useCallback(() => {
+		const list = listRef.current;
+		if (list == null) return null;
+		return list.closest<HTMLElement>('[data-fluxer-scroll-container="true"]');
+	}, [listRef]);
+	useDragAutoScroll({active: isDraggingConnection, getScrollElement});
+	return null;
+};
 
 const ConnectionCard: React.FC<ConnectionCardProps> = observer(
 	({connection, index, onDelete, onEdit, onMoveConnection, onDropConnection}) => {
@@ -160,7 +175,7 @@ const ConnectionCard: React.FC<ConnectionCardProps> = observer(
 				<BlueskyIcon size={20} data-flx="user.linked-accounts-tab.connection-card.bluesky-icon" />
 			) : (
 				<GlobeSimpleIcon
-					size={20}
+					size={remFromPx(20)}
 					className={styles.domainIcon}
 					data-flx="user.linked-accounts-tab.connection-card.domain-icon"
 				/>
@@ -182,7 +197,7 @@ const ConnectionCard: React.FC<ConnectionCardProps> = observer(
 					data-flx="user.linked-accounts-tab.connection-card.card-drag-handle"
 				>
 					<DotsSixVerticalIcon
-						size={20}
+						size={remFromPx(20)}
 						weight="bold"
 						data-flx="user.linked-accounts-tab.connection-card.dots-six-vertical-icon"
 					/>
@@ -239,7 +254,10 @@ const ConnectionCard: React.FC<ConnectionCardProps> = observer(
 							aria-label={i18n._(EDIT_DESCRIPTOR)}
 							data-flx="user.linked-accounts-tab.connection-card.action-button.edit"
 						>
-							<PencilSimpleIcon size={16} data-flx="user.linked-accounts-tab.connection-card.pencil-simple-icon" />
+							<PencilSimpleIcon
+								size={remFromPx(16)}
+								data-flx="user.linked-accounts-tab.connection-card.pencil-simple-icon"
+							/>
 						</button>
 					</Tooltip>
 					<Tooltip text={i18n._(REMOVE_DESCRIPTOR)} data-flx="user.linked-accounts-tab.connection-card.tooltip--4">
@@ -250,7 +268,7 @@ const ConnectionCard: React.FC<ConnectionCardProps> = observer(
 							aria-label={i18n._(REMOVE_DESCRIPTOR)}
 							data-flx="user.linked-accounts-tab.connection-card.action-button.delete"
 						>
-							<TrashIcon size={16} data-flx="user.linked-accounts-tab.connection-card.trash-icon" />
+							<TrashIcon size={remFromPx(16)} data-flx="user.linked-accounts-tab.connection-card.trash-icon" />
 						</button>
 					</Tooltip>
 				</div>
@@ -262,6 +280,7 @@ const LinkedAccountsTab: React.FC = observer(() => {
 	const {i18n} = useLingui();
 	const [loaded, setLoaded] = useState(false);
 	const [localOrder, setLocalOrder] = useState<ReadonlyArray<Connection> | null>(null);
+	const connectionsListRef = useRef<HTMLDivElement>(null);
 	const shouldGatePersonalDetails = StreamerMode.shouldHidePersonalInformation;
 	useEffect(() => {
 		if (shouldGatePersonalDetails) return;
@@ -389,7 +408,7 @@ const LinkedAccountsTab: React.FC = observer(() => {
 								data-flx="user.linked-accounts-tab.platform-icon-button.add-connection--2"
 							>
 								<GlobeSimpleIcon
-									size={28}
+									size={remFromPx(28)}
 									className={styles.domainIcon}
 									data-flx="user.linked-accounts-tab.domain-icon"
 								/>
@@ -412,7 +431,12 @@ const LinkedAccountsTab: React.FC = observer(() => {
 						</div>
 					) : (
 						<DndProvider backend={HTML5Backend} data-flx="user.linked-accounts-tab.dnd-provider">
-							<div className={styles.connectionsList} data-flx="user.linked-accounts-tab.connections-list">
+							<ConnectionDragAutoScroll listRef={connectionsListRef} />
+							<div
+								ref={connectionsListRef}
+								className={styles.connectionsList}
+								data-flx="user.linked-accounts-tab.connections-list"
+							>
 								{connections.map((connection, index) => (
 									<ConnectionCard
 										key={connection.id}

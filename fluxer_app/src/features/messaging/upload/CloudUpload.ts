@@ -488,7 +488,6 @@ class CloudUploadManager {
 			return {
 				...upload,
 				stage: 'uploading' as const,
-				sendingProgress: upload.sendingProgress ?? 0,
 				attachments,
 			};
 		});

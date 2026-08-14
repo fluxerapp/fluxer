@@ -24,6 +24,11 @@ RUN TAILWIND_OXIDE_VERSION="4.2.1" \
 
 COPY Cargo.lock Cargo.lock
 COPY fluxer_admin fluxer_admin
+COPY packages/fonts/manifest.json packages/fonts/manifest.json
+COPY packages/fonts/NOTICE.md packages/fonts/NOTICE.md
+COPY packages/fonts/LICENSE-IBM-PLEX.txt packages/fonts/LICENSE-IBM-PLEX.txt
+COPY packages/fonts/files/FluxerSans packages/fonts/files/FluxerSans
+COPY packages/fonts/files/FluxerMono packages/fonts/files/FluxerMono
 RUN printf '%s\n' \
 	'[workspace]' \
 	'members = ["fluxer_admin"]' \
@@ -41,6 +46,10 @@ RUN cargo build --release -p fluxer_admin \
 
 RUN test -s target/release/build/fluxer_admin-*/out/static/app.css \
 	&& echo "Tailwind CSS compiled successfully"
+
+RUN test "$(ls target/release/build/fluxer_admin-*/out/static/fonts/*.woff2 | wc -l)" -eq 16 \
+	&& ls target/release/build/fluxer_admin-*/out/static/fonts/fonts.*.css \
+	&& echo "Latin-core fonts bundled successfully"
 
 FROM debian:bookworm-slim AS runtime
 

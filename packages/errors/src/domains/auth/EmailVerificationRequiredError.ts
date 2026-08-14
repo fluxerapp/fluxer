@@ -11,12 +11,6 @@ export class EmailVerificationRequiredError extends ForbiddenError {
 	}
 }
 
-export class CanaryTesterEmailVerificationRequiredError extends EmailVerificationRequiredError {
-	constructor() {
-		super(APIErrorCodes.CANARY_TESTER_EMAIL_VERIFICATION_REQUIRED);
-	}
-}
-
 export class DirectMessageEmailVerificationRequiredError extends EmailVerificationRequiredError {
 	constructor() {
 		super(APIErrorCodes.DIRECT_MESSAGE_EMAIL_VERIFICATION_REQUIRED);

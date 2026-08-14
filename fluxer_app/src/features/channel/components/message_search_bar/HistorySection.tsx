@@ -7,6 +7,7 @@ import type {SearchHistoryEntry} from '@app/features/search/state/SearchHistory'
 import SearchHistory from '@app/features/search/state/SearchHistory';
 import {formatSearchHistoryEntryForStreamerMode} from '@app/features/search/utils/SearchPrivacyUtils';
 import type {SearchFilterOption} from '@app/features/search/utils/SearchUtils';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {ClockIcon, FunnelIcon, TrashIcon} from '@phosphor-icons/react';
@@ -76,7 +77,7 @@ export const HistorySection: React.FC<HistorySectionProps> = observer(
 						>
 							<FunnelIcon
 								weight="regular"
-								size={12}
+								size={remFromPx(12)}
 								data-flx="channel.message-search-bar.history-section.funnel-icon"
 							/>
 							{i18n._(SEARCH_FILTERS_DESCRIPTOR)}
@@ -109,7 +110,7 @@ export const HistorySection: React.FC<HistorySectionProps> = observer(
 							>
 								<ClockIcon
 									weight="regular"
-									size={12}
+									size={remFromPx(12)}
 									data-flx="channel.message-search-bar.history-section.clock-icon"
 								/>
 								{i18n._(RECENT_SEARCHES_DESCRIPTOR)}
@@ -126,7 +127,7 @@ export const HistorySection: React.FC<HistorySectionProps> = observer(
 							>
 								<TrashIcon
 									weight="regular"
-									size={10}
+									size={remFromPx(10)}
 									data-flx="channel.message-search-bar.history-section.trash-icon"
 								/>
 								{i18n._(CLEAR_DESCRIPTOR)}

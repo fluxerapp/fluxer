@@ -2,6 +2,7 @@
 
 import styles from '@app/features/guild/components/modals/guild_tabs/guild_overview_tab/GuildOverviewTab.module.css';
 import type {FormInputs} from '@app/features/guild/utils/guild_tabs/GuildOverviewTabUtils';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import {CardAlignmentControls} from '@app/features/ui/card_alignment_controls/CardAlignmentControls';
 import {GuildSplashCardAlignment} from '@fluxer/constants/src/GuildConstants';
@@ -57,7 +58,7 @@ export const GuildInviteSplashSettingsField: React.FC<{
 								data-flx="guild.guild-tabs.guild-overview-tab.fields.guild-invite-splash-settings-field.invite-page-button.preview-invite-page"
 							>
 								<EyeIcon
-									size={16}
+									size={remFromPx(16)}
 									weight="bold"
 									data-flx="guild.guild-tabs.guild-overview-tab.fields.guild-invite-splash-settings-field.eye-icon"
 								/>
@@ -73,7 +74,7 @@ export const GuildInviteSplashSettingsField: React.FC<{
 								data-flx="guild.guild-tabs.guild-overview-tab.fields.guild-invite-splash-settings-field.button.preview-invite-modal"
 							>
 								<EyeIcon
-									size={16}
+									size={remFromPx(16)}
 									weight="bold"
 									data-flx="guild.guild-tabs.guild-overview-tab.fields.guild-invite-splash-settings-field.eye-icon--2"
 								/>

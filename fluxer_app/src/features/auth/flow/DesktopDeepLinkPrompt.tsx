@@ -4,6 +4,7 @@ import {Routes} from '@app/app/Routes';
 import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import styles from '@app/features/auth/flow/DesktopDeepLinkPrompt.module.css';
 import {Platform} from '@app/features/platform/types/Platform';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import {buildAppProtocolUrl} from '@app/features/ui/utils/AppProtocol';
 import {isDesktop, openExternalUrl} from '@app/features/ui/utils/NativeUtils';
@@ -108,7 +109,7 @@ export const DesktopDeepLinkPrompt: React.FC<DesktopDeepLinkPromptProps> = ({cod
 				data-flx="auth.flow.desktop-deep-link-prompt.cta.open"
 			>
 				<ArrowSquareOutIcon
-					size={18}
+					size={remFromPx(18)}
 					weight="fill"
 					data-flx="auth.flow.desktop-deep-link-prompt.arrow-square-out-icon"
 				/>

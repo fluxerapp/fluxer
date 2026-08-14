@@ -25,6 +25,7 @@ import {StatusAwareAvatar} from '@app/features/ui/components/StatusAwareAvatar';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import KeyboardMode from '@app/features/ui/state/KeyboardMode';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
+import {getAppZoomFactor} from '@app/features/ui/utils/AppZoomUtils';
 import {isMobileExperienceEnabled} from '@app/features/ui/utils/MobileExperience';
 import type {User} from '@app/features/user/models/User';
 import UserGuildSettings from '@app/features/user/state/UserGuildSettings';
@@ -70,6 +71,8 @@ interface DMListItemProps {
 	isSelected: boolean;
 	className?: string;
 	voiceCallActive?: boolean;
+	onHoverStart: (channelId: string) => void;
+	onHoverEnd: (channelId: string) => void;
 }
 
 interface ResolvedDMListItemProps extends DMListItemProps {
@@ -94,6 +97,8 @@ const ResolvedDMListItem = observer(function ResolvedDMListItem({
 	isSelected,
 	className,
 	voiceCallActive = false,
+	onHoverStart,
+	onHoverEnd,
 	isGroupDM,
 	recipient,
 }: ResolvedDMListItemProps) {
@@ -233,6 +238,12 @@ const ResolvedDMListItem = observer(function ResolvedDMListItem({
 			handleOpenBottomSheet();
 		}
 	}, [isMobileExperience, handleOpenBottomSheet]);
+	const handleHoverStart = useCallback(() => {
+		onHoverStart(channel.id);
+	}, [channel.id, onHoverStart]);
+	const handleHoverEnd = useCallback(() => {
+		onHoverEnd(channel.id);
+	}, [channel.id, onHoverEnd]);
 	const handleContextMenu = useCallback(
 		(event: React.MouseEvent) => {
 			event.preventDefault();
@@ -259,11 +270,12 @@ const ResolvedDMListItem = observer(function ResolvedDMListItem({
 		},
 		[channel, isGroupDM, recipient, isMobileExperience],
 	);
-	const indicatorHeight = (() => {
-		if (isSelected) return 40;
-		if (isHovering) return 20;
-		return 8;
-	})();
+	const indicatorHeight =
+		(() => {
+			if (isSelected) return 40;
+			if (isHovering) return 20;
+			return 8;
+		})() * getAppZoomFactor();
 	const tooltipContent = useMemo<string | (() => React.ReactNode)>(() => {
 		if (!hasVoiceActivity) {
 			return displayName;
@@ -344,6 +356,8 @@ const ResolvedDMListItem = observer(function ResolvedDMListItem({
 							data-guild-list-focus-item="true"
 							onClick={handleSelect}
 							onContextMenu={handleContextMenu}
+							onMouseEnter={handleHoverStart}
+							onMouseLeave={handleHoverEnd}
 							onFocus={() => setIsFocused(true)}
 							onBlur={() => setIsFocused(false)}
 							ref={mergedButtonRef}

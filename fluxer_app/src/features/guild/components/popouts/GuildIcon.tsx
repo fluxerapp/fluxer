@@ -30,6 +30,12 @@ type GuildIconStyleVars = React.CSSProperties & {
 	'--guild-icon-image'?: string;
 };
 
+function resolveInitiallyLoadedImageUrl(url: string | null): string | null {
+	if (url == null) return null;
+	if (ImageCacheUtils.hasImage(url)) return url;
+	return null;
+}
+
 export const GuildIcon = observer(function GuildIcon({
 	id,
 	name,
@@ -44,40 +50,36 @@ export const GuildIcon = observer(function GuildIcon({
 	const [hoverRef, isHovering] = useHover();
 	const iconUrl = useMemo(() => (icon ? AvatarUtils.getGuildIconURL({id, icon}) : null), [id, icon]);
 	const hoverIconUrl = useMemo(() => (icon ? AvatarUtils.getGuildIconURL({id, icon}, true) : null), [id, icon]);
-	const [isStaticLoaded, setIsStaticLoaded] = useState(() => (iconUrl ? ImageCacheUtils.hasImage(iconUrl) : false));
-	const [isAnimatedLoaded, setIsAnimatedLoaded] = useState(() =>
-		hoverIconUrl ? ImageCacheUtils.hasImage(hoverIconUrl) : false,
+	const [loadedStaticUrl, setLoadedStaticUrl] = useState<string | null>(() => resolveInitiallyLoadedImageUrl(iconUrl));
+	const [loadedAnimatedUrl, setLoadedAnimatedUrl] = useState<string | null>(() =>
+		resolveInitiallyLoadedImageUrl(hoverIconUrl),
 	);
-	const [shouldPlayAnimated, setShouldPlayAnimated] = useState(false);
+	const isStaticLoaded = iconUrl != null && loadedStaticUrl === iconUrl;
+	const isAnimatedLoaded = hoverIconUrl != null && loadedAnimatedUrl === hoverIconUrl;
 	useEffect(() => {
-		setIsStaticLoaded(iconUrl ? ImageCacheUtils.hasImage(iconUrl) : false);
-		setIsAnimatedLoaded(hoverIconUrl ? ImageCacheUtils.hasImage(hoverIconUrl) : false);
-		setShouldPlayAnimated(false);
-	}, [iconUrl, hoverIconUrl]);
-	useEffect(() => {
-		if (!iconUrl || isStaticLoaded) return;
-		let cancelled = false;
-		ImageCacheUtils.loadImage(iconUrl, () => {
-			if (!cancelled) setIsStaticLoaded(true);
+		if (iconUrl == null || iconUrl.length === 0 || isStaticLoaded) return;
+		let active = true;
+		const cleanup = ImageCacheUtils.loadImage(iconUrl, () => {
+			if (active) setLoadedStaticUrl(iconUrl);
 		});
 		return () => {
-			cancelled = true;
+			active = false;
+			cleanup();
 		};
 	}, [iconUrl, isStaticLoaded]);
 	useEffect(() => {
-		if (!isHovering || !hoverIconUrl || isAnimatedLoaded) return;
-		let cancelled = false;
-		ImageCacheUtils.loadImage(hoverIconUrl, () => {
-			if (!cancelled) setIsAnimatedLoaded(true);
+		if (!isHovering || hoverIconUrl == null || hoverIconUrl.length === 0 || isAnimatedLoaded) return;
+		let active = true;
+		const cleanup = ImageCacheUtils.loadImage(hoverIconUrl, () => {
+			if (active) setLoadedAnimatedUrl(hoverIconUrl);
 		});
 		return () => {
-			cancelled = true;
+			active = false;
+			cleanup();
 		};
 	}, [isHovering, hoverIconUrl, isAnimatedLoaded]);
-	useEffect(() => {
-		setShouldPlayAnimated(Boolean(isHovering && isAnimatedLoaded));
-	}, [isHovering, isAnimatedLoaded]);
-	const activeUrl = shouldPlayAnimated && hoverIconUrl ? hoverIconUrl : iconUrl;
+	const shouldPlayAnimated = isHovering && isAnimatedLoaded;
+	const activeUrl = shouldPlayAnimated && hoverIconUrl != null ? hoverIconUrl : iconUrl;
 	const styleVars: GuildIconStyleVars = {};
 	if (sizePx != null) {
 		styleVars['--guild-icon-size'] = remFromPx(sizePx);

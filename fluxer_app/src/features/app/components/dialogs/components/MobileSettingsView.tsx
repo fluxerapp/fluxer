@@ -715,7 +715,6 @@ export const MobileSettingsView: React.FC<MobileSettingsViewProps> = observer(
 								exit="exit"
 								transition={{duration: 0.15, ease: 'easeInOut'}}
 								className={userSettingsStyles.mobileContentPane}
-								style={{willChange: 'transform'}}
 								data-flx="app.mobile-settings-view.div--6"
 							>
 								<MobileSettingsList
@@ -737,7 +736,6 @@ export const MobileSettingsView: React.FC<MobileSettingsViewProps> = observer(
 								exit="exit"
 								transition={{duration: 0.15, ease: 'easeInOut'}}
 								className={userSettingsStyles.mobileContentPane}
-								style={{willChange: 'transform'}}
 								data-flx="app.mobile-settings-view.div--7"
 							>
 								<MobileContentWithScrollSpy

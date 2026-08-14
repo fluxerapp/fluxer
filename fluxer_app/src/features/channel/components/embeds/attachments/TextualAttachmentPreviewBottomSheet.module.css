@@ -24,7 +24,7 @@
 	align-items: center;
 	gap: 0.5rem;
 	padding: 0.5rem 0.625rem;
-	padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0));
+	padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
 	border-top: 0.0625rem solid var(--border-color);
 	background-color: var(--background-secondary);
 }
@@ -68,7 +68,7 @@
 .actionButton {
 	composes: item from '@app/features/ui/action_toolbar/ActionToolbar.module.css';
 	--action-toolbar-item-size: 2.25rem;
-	--action-toolbar-item-border-width: 0;
+	--action-toolbar-item-border-width: 0px;
 	--action-toolbar-item-radius: 0.5rem;
 	--action-toolbar-item-background: transparent;
 	--action-toolbar-item-color: var(--text-secondary);

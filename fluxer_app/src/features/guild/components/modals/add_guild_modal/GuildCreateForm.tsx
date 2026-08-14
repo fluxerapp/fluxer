@@ -38,6 +38,7 @@ import {
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {openFilePicker} from '@app/features/messaging/utils/FilePickerUtils';
 import * as NavigationCommands from '@app/features/navigation/commands/NavigationCommands';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
@@ -198,7 +199,7 @@ export const GuildCreateForm = observer(() => {
 					data-flx="guild.add-guild-modal.guild-create-form.verification-notice"
 				>
 					<EnvelopeSimpleIcon
-						size={32}
+						size={remFromPx(32)}
 						weight="fill"
 						data-flx="guild.add-guild-modal.guild-create-form.envelope-simple-icon"
 					/>
@@ -223,7 +224,7 @@ export const GuildCreateForm = observer(() => {
 					data-flx="guild.add-guild-modal.guild-create-form.verification-notice--2"
 				>
 					<EnvelopeSimpleIcon
-						size={32}
+						size={remFromPx(32)}
 						weight="fill"
 						data-flx="guild.add-guild-modal.guild-create-form.envelope-simple-icon--2"
 					/>

@@ -1,5 +1,6 @@
+# yaml-language-server: $schema=https://www.schemastore.org/github-issue-forms.json
 name: Documentation
-description: Report a docs issue or suggest a docs improvement.
+description: Report incorrect, missing or unclear documentation.
 type: Task
 labels:
   - docs
@@ -7,37 +8,37 @@ body:
   - type: markdown
     attributes:
       value: |
-        Search existing issues before filing.
-        Report security issues at https://fluxer.app/security.
-        Keep AI-generated text out of bug reports, except for direct translation if English is not your native language.
+        This form covers <https://fluxer.dev> and operator documentation.
+
   - type: textarea
     id: issue
     attributes:
-      label: What needs fixing?
-      description: Describe the missing, incorrect, or unclear documentation.
+      label: Documentation defect
+      description: State what the page says and what is correct. For missing content, state what information you needed.
     validations:
       required: true
+
   - type: input
     id: location
     attributes:
       label: Location
-      description: Link the page, file, or heading if you can.
-      placeholder: https://...
+      description: Provide the page URL or file path and heading.
+      placeholder: https://fluxer.dev/gateway/overview/
     validations:
       required: false
+
   - type: textarea
     id: suggestion
     attributes:
-      label: Suggested change
-      description: Add proposed wording or a short outline if useful.
+      label: Proposed wording
+      description: Optional.
     validations:
       required: false
+
   - type: checkboxes
     id: checks
     attributes:
-      label: Checks
+      label: Acknowledgements
       options:
-        - label: I searched existing issues.
-          required: true
-        - label: I wrote this report in my own words, except for direct translation if needed.
+        - label: I searched open and closed issues.
           required: true

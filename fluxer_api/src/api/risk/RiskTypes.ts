@@ -97,7 +97,6 @@ export interface EmailSyntaxResult {
 export interface DisposableCheckResult {
 	domain: string;
 	isDisposable: boolean;
-	listSize: number;
 }
 
 export interface MxCheckResult {

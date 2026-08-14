@@ -2,6 +2,7 @@
 
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import sectionStyles from '@app/features/app/components/dialogs/shared/SettingsSection.module.css';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import styles from '@app/features/ui/accordion/Accordion.module.css';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {useScrollAnchor} from '@app/features/ui/hooks/useScrollAnchor';
@@ -131,7 +132,7 @@ export const Accordion: React.FC<AccordionProps> = observer(
 						>
 							<CaretDownIcon
 								className={clsx(styles.caret, expanded && styles.caretExpanded)}
-								size={20}
+								size={remFromPx(20)}
 								weight="bold"
 								data-flx="ui.accordion.accordion.caret"
 							/>

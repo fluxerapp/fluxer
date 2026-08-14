@@ -66,5 +66,5 @@
 	align-items: center;
 	justify-content: flex-start;
 	min-width: max-content;
-	padding: 0.5rem 0.5rem calc(0.5rem + env(safe-area-inset-bottom, 0)) 0.5rem;
+	padding: 0.5rem 0.5rem calc(0.5rem + env(safe-area-inset-bottom, 0px)) 0.5rem;
 }

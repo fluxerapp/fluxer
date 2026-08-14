@@ -2,6 +2,9 @@
 
 import ChannelSticker from '@app/features/channel/state/ChannelSticker';
 import Slowmode from '@app/features/slowmode/state/Slowmode';
+import {CHANNEL_RATE_LIMIT_PER_USER_MAX} from '@fluxer/constants/src/LimitConstants';
+
+const MAX_RETRY_AFTER_MS = CHANNEL_RATE_LIMIT_PER_USER_MAX * 1000;
 
 function clearSendScopedSticker(channelId: string): void {
 	ChannelSticker.clearPendingStickerOnMessageSend(channelId);
@@ -27,5 +30,9 @@ export function retryAfterSecondsToMs(retryAfterSeconds: number | undefined): nu
 	if (retryAfterSeconds == null || !Number.isFinite(retryAfterSeconds) || retryAfterSeconds <= 0) {
 		return 0;
 	}
-	return Math.ceil(retryAfterSeconds * 1000);
+	const retryAfterMs = Math.ceil(retryAfterSeconds * 1000);
+	if (!Number.isSafeInteger(retryAfterMs) || retryAfterMs > MAX_RETRY_AFTER_MS) {
+		return 0;
+	}
+	return retryAfterMs;
 }

@@ -2,6 +2,7 @@
 
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {VOLUME_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import KeyboardMode from '@app/features/ui/state/KeyboardMode';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
@@ -274,7 +275,7 @@ export const MediaVolumeControl = observer(function MediaVolumeControl({
 						aria-label={muteLabel}
 						data-flx="voice.media-player.media-volume-control.mute-button.mute-click"
 					>
-						<Icon size={iconSize} weight="fill" data-flx="voice.media-player.media-volume-control.icon" />
+						<Icon size={remFromPx(iconSize)} weight="fill" data-flx="voice.media-player.media-volume-control.icon" />
 					</button>
 				</FocusRing>
 			) : (
@@ -295,7 +296,11 @@ export const MediaVolumeControl = observer(function MediaVolumeControl({
 							aria-label={muteLabel}
 							data-flx="voice.media-player.media-volume-control.mute-button.mute-click--2"
 						>
-							<Icon size={iconSize} weight="fill" data-flx="voice.media-player.media-volume-control.icon--2" />
+							<Icon
+								size={remFromPx(iconSize)}
+								weight="fill"
+								data-flx="voice.media-player.media-volume-control.icon--2"
+							/>
 						</button>
 					</FocusRing>
 				</Tooltip>

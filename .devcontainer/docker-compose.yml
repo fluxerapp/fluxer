@@ -16,7 +16,6 @@ services:
       FLUXER_POSTGRES_HOST: postgres
       FLUXER_SELF_HOSTED: "true"
       DOCKER_HOST: unix:///var/run/docker.sock
-      KUBECONFIG: /workspaces/fluxer/.fluxer/k8s/local-kubeconfig
     volumes:
       - ..:/workspaces/fluxer:cached
       - type: volume
@@ -37,11 +36,6 @@ services:
       - type: volume
         source: fluxer-desktop-node-modules
         target: /workspaces/fluxer/fluxer_desktop/node_modules
-        volume:
-          nocopy: true
-      - type: volume
-        source: fluxer-marketing-node-modules
-        target: /workspaces/fluxer/fluxer_marketing/node_modules
         volume:
           nocopy: true
       - type: volume
@@ -224,6 +218,16 @@ services:
         target: /workspaces/fluxer/fluxer_app/pkgs/number_utils/node_modules
         volume:
           nocopy: true
+      - type: volume
+        source: package-voice-engine-v2-node-modules
+        target: /workspaces/fluxer/packages/voice_engine_v2/node_modules
+        volume:
+          nocopy: true
+      - type: volume
+        source: fluxer-api-postgres-node-modules
+        target: /workspaces/fluxer/fluxer_api/pkgs/postgres/node_modules
+        volume:
+          nocopy: true
       - pnpm-store:/home/vscode/.local/share/pnpm/store
       - cargo-registry:/home/vscode/.cargo/registry
       - cargo-git:/home/vscode/.cargo/git
@@ -232,20 +236,20 @@ services:
         source: ${FLUXER_DOCKER_SOCKET:-/var/run/docker.sock}
         target: /var/run/docker.sock
     ports:
-      - "8000:8000"
-      - "3000:3000"
-      - "8088:8088"
-      - "8080:8080"
-      - "8771:8771"
-      - "8082:8082"
-      - "3010:3010"
-      - "3020:3020"
-      - "8100-8125:8100-8125"
-      - "3900:8333"
-      - "8888:8888"
-      - "9333:9333"
-      - "9340:9340"
-      - "23646:23646"
+      - "${FLUXER_DEV_DOCS_PORT:-8000}:8000"
+      - "${FLUXER_DEV_RSPACK_PORT:-3000}:3000"
+      - "${FLUXER_DEV_PROXY_PORT:-8088}:8088"
+      - "${FLUXER_DEV_APP_PROXY_PORT:-8080}:8080"
+      - "${FLUXER_DEV_API_PORT:-8771}:8771"
+      - "${FLUXER_DEV_GATEWAY_PORT:-8082}:8082"
+      - "${FLUXER_DEV_MARKETING_PORT:-3010}:3010"
+      - "${FLUXER_DEV_ADMIN_PORT:-3020}:3020"
+      - "${FLUXER_DEV_RUST_SERVICE_PORTS:-8100-8125}:8100-8125"
+      - "${FLUXER_DEV_SEAWEEDFS_S3_PORT:-3900}:8333"
+      - "${FLUXER_DEV_SEAWEEDFS_FILER_PORT:-8888}:8888"
+      - "${FLUXER_DEV_SEAWEEDFS_MASTER_PORT:-9333}:9333"
+      - "${FLUXER_DEV_SEAWEEDFS_VOLUME_PORT:-9340}:9340"
+      - "${FLUXER_DEV_SEAWEEDFS_ADMIN_PORT:-23646}:23646"
     depends_on:
       - postgres
       - valkey
@@ -269,7 +273,7 @@ services:
     volumes:
       - cassandra-data:/var/lib/cassandra
     ports:
-      - "9042:9042"
+      - "${FLUXER_DEV_CASSANDRA_PORT:-9042}:9042"
 
   postgres:
     image: postgres:16-alpine
@@ -280,13 +284,13 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "${FLUXER_DEV_POSTGRES_PORT:-5432}:5432"
 
   valkey:
     image: valkey/valkey:8.1.7-alpine
     command: ["valkey-server", "--save", "", "--appendonly", "no"]
     ports:
-      - "6379:6379"
+      - "${FLUXER_DEV_VALKEY_PORT:-6379}:6379"
 
   nats:
     image: nats:2.14.2-alpine
@@ -294,8 +298,8 @@ services:
     volumes:
       - nats-data:/data
     ports:
-      - "4222:4222"
-      - "8222:8222"
+      - "${FLUXER_DEV_NATS_PORT:-4222}:4222"
+      - "${FLUXER_DEV_NATS_MONITOR_PORT:-8222}:8222"
 
   livekit:
     image: livekit/livekit-server:v1.12.0
@@ -303,9 +307,9 @@ services:
     volumes:
       - ./livekit.yaml:/etc/livekit.yaml:ro
     ports:
-      - "7880:7880"
-      - "7881:7881"
-      - "7882-7892:7882-7892/udp"
+      - "${FLUXER_DEV_LIVEKIT_PORT:-7880}:7880"
+      - "${FLUXER_DEV_LIVEKIT_TCP_PORT:-7881}:7881"
+      - "${FLUXER_DEV_LIVEKIT_UDP_PORTS:-7882-7892}:7882-7892/udp"
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:9.3.2
@@ -320,7 +324,7 @@ services:
     volumes:
       - elasticsearch-data:/usr/share/elasticsearch/data
     ports:
-      - "9200:9200"
+      - "${FLUXER_DEV_ELASTICSEARCH_PORT:-9200}:9200"
 
   meilisearch:
     image: getmeili/meilisearch:v1.12
@@ -330,7 +334,7 @@ services:
     volumes:
       - meilisearch-data:/meili_data
     ports:
-      - "7700:7700"
+      - "${FLUXER_DEV_MEILISEARCH_PORT:-7700}:7700"
 
   mailpit:
     image: axllent/mailpit:v1.30
@@ -349,7 +353,6 @@ volumes:
   fluxer-api-node-modules:
   fluxer-app-node-modules:
   fluxer-desktop-node-modules:
-  fluxer-marketing-node-modules:
   fluxer-admin-node-modules:
   package-config-node-modules:
   package-constants-node-modules:
@@ -386,6 +389,8 @@ volumes:
   fluxer-app-list-utils-node-modules:
   fluxer-app-livekit-client-node-modules:
   fluxer-app-number-utils-node-modules:
+  package-voice-engine-v2-node-modules:
+  fluxer-api-postgres-node-modules:
   cargo-registry:
   cargo-git:
   rust-target:

@@ -2,6 +2,7 @@
 
 import {onLocaleChange} from '@app/features/i18n/utils/LocaleChangeListener';
 import {deferUntilModulesLoaded} from '@app/features/platform/utils/DeferUntilModulesLoaded';
+import {noteText} from '@app/features/theme/fonts/ScriptFontLoader';
 import type {User} from '@app/features/user/models/User';
 import Users from '@app/features/user/state/Users';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
@@ -96,6 +97,7 @@ class ChannelDisplayName {
 
 	private recomputeChannel(snapshot: ChannelSnapshot): void {
 		const displayName = this.computeGroupDMDisplayName(snapshot);
+		noteText(displayName);
 		this.displayNames.set(snapshot.id, displayName);
 	}
 

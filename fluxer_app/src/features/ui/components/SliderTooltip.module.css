@@ -10,7 +10,6 @@
 	position: relative;
 	z-index: var(--z-index-tooltip);
 	pointer-events: none;
-	will-change: opacity, transform;
 	box-sizing: border-box;
 	max-width: 11.875rem;
 	border: var(--slider-tooltip-border-width) solid var(--slider-tooltip-border);

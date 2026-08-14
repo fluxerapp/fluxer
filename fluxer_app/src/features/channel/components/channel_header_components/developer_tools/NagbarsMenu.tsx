@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {getNagbarControls, type NagbarControlDefinition} from '@app/features/devtools/components/NagbarControls';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
 import {MenuItemSubmenu} from '@app/features/ui/action_menu/MenuItemSubmenu';
 import * as NagbarCommands from '@app/features/ui/commands/NagbarCommands';
@@ -54,7 +55,7 @@ export const NagbarsMenu: React.FC = observer(() => {
 					<MenuItem
 						icon={
 							<TrashIcon
-								size={16}
+								size={remFromPx(16)}
 								weight="bold"
 								data-flx="channel.channel-header-components.developer-tools-context-menu.nagbars-menu.trash-icon"
 							/>

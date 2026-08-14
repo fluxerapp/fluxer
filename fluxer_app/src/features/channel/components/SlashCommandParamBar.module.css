@@ -1,0 +1,77 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.inner {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	min-height: 2.25rem;
+	min-width: 0;
+	width: 100%;
+	padding: 0 0.375rem 0 0.75rem;
+	box-sizing: border-box;
+}
+
+.text {
+	display: flex;
+	align-items: baseline;
+	gap: 0.4375rem;
+	overflow: hidden;
+	min-width: 0;
+	flex: 1 1 auto;
+}
+
+.name {
+	font-size: 0.8125rem;
+	font-weight: 600;
+	line-height: 1.35;
+	color: var(--text-primary);
+	white-space: nowrap;
+	flex: 0 0 auto;
+}
+
+.description {
+	font-size: 0.75rem;
+	line-height: 1.35;
+	color: var(--text-primary-muted);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	min-width: 0;
+}
+
+.requiredError {
+	composes: description;
+	color: color-mix(in srgb, var(--status-danger) 68%, var(--text-primary) 32%);
+}
+
+.controls {
+	display: flex;
+	align-items: center;
+	flex: 0 0 auto;
+	margin-left: auto;
+}
+
+.button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	flex-shrink: 0;
+	border: none;
+	background-color: transparent;
+	width: var(--composer-action-button-size, 2rem);
+	height: var(--composer-action-button-size, 2rem);
+	padding: 0;
+	color: var(--text-primary-muted);
+	line-height: 0;
+}
+
+.button:hover {
+	color: var(--text-primary);
+}
+
+.icon {
+	height: 1rem;
+	width: 1rem;
+	flex: 0 0 auto;
+}

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import styles from '@app/features/ui/checkbox/Checkbox.module.css';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import KeyboardMode from '@app/features/ui/state/KeyboardMode';
@@ -86,6 +87,8 @@ export const Checkbox: React.FC<CheckboxProps> = observer(
 		const labelRef = useRef<HTMLDivElement>(null);
 		const actualSize = size === 'small' ? 18 : size;
 		const checkIconSize = Math.floor(actualSize * 0.75);
+		const actualSizeRem = remFromPx(actualSize);
+		const checkIconSizeRem = remFromPx(checkIconSize);
 		const baseId = useId();
 		const checkboxId = `${baseId}-checkbox-input`;
 		const handleChange = useCallback(
@@ -174,7 +177,7 @@ export const Checkbox: React.FC<CheckboxProps> = observer(
 						disabled && (variant === 'menu' ? styles.menuDisabled : styles.disabled),
 						className,
 					)}
-					style={{height: actualSize}}
+					style={{height: actualSizeRem}}
 					aria-hidden={true}
 					data-flx="ui.checkbox.checkbox.checkbox-wrapper"
 				>
@@ -187,13 +190,13 @@ export const Checkbox: React.FC<CheckboxProps> = observer(
 							checked && inverted && styles.checkedInverted,
 							variant === 'menu' && checked && styles.menuChecked,
 						)}
-						style={{width: actualSize, height: actualSize}}
+						style={{width: actualSizeRem, height: actualSizeRem}}
 						data-flx="ui.checkbox.checkbox.checkbox"
 					>
 						<span className={styles.checkboxIndicator} data-flx="ui.checkbox.checkbox.checkbox-indicator">
 							{checked && (
 								<CheckIcon
-									size={checkIconSize}
+									size={checkIconSizeRem}
 									weight="bold"
 									color={inverted ? 'var(--brand-primary)' : '#ffffff'}
 									className={clsx(styles.checkIcon, inverted && styles.invertedIcon)}
@@ -221,7 +224,7 @@ export const Checkbox: React.FC<CheckboxProps> = observer(
 						className,
 					)}
 					htmlFor={checkboxId}
-					style={{height: actualSize}}
+					style={{height: actualSizeRem}}
 					data-flx="ui.checkbox.checkbox.checkbox-wrapper--2"
 				>
 					<CheckboxPrimitive.Root
@@ -240,7 +243,7 @@ export const Checkbox: React.FC<CheckboxProps> = observer(
 							checked && inverted && styles.checkedInverted,
 							variant === 'menu' && checked && styles.menuChecked,
 						)}
-						style={{width: actualSize, height: actualSize}}
+						style={{width: actualSizeRem, height: actualSizeRem}}
 						aria-label={ariaLabel}
 						aria-describedby={describedByIds}
 						tabIndex={0}
@@ -253,7 +256,7 @@ export const Checkbox: React.FC<CheckboxProps> = observer(
 						>
 							{checked && (
 								<CheckIcon
-									size={checkIconSize}
+									size={checkIconSizeRem}
 									weight="bold"
 									color={inverted ? 'var(--brand-primary)' : '#ffffff'}
 									className={clsx(styles.checkIcon, inverted && styles.invertedIcon)}

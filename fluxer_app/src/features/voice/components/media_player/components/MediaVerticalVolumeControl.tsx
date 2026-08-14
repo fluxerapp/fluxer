@@ -2,6 +2,7 @@
 
 import {VOLUME_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {getExtendedDocument} from '@app/features/platform/types/Browser';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Slider} from '@app/features/ui/components/Slider';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {usePortalHost} from '@app/features/ui/overlay/PortalHostContext';
@@ -299,7 +300,11 @@ export function MediaVerticalVolumeControl({
 					aria-label={muteLabel}
 					data-flx="voice.media-player.media-vertical-volume-control.mute-button.mute-click"
 				>
-					<Icon size={iconSize} weight="fill" data-flx="voice.media-player.media-vertical-volume-control.icon" />
+					<Icon
+						size={remFromPx(iconSize)}
+						weight="fill"
+						data-flx="voice.media-player.media-vertical-volume-control.icon"
+					/>
 				</button>
 			</FocusRing>
 		</div>

@@ -3,7 +3,7 @@
 import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
 import * as ImageCacheUtils from '@app/features/messaging/utils/ImageCacheUtils';
 import {decodeThumbHashDataURL} from '@app/features/messaging/utils/ThumbHashUtils';
-import {type SyntheticEvent, useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import {type SyntheticEvent, useCallback, useLayoutEffect, useMemo, useRef, useState} from 'react';
 
 type MediaLoadingElement = HTMLImageElement | HTMLVideoElement;
 type MediaElementStatus = 'loaded' | 'error' | 'pending';
@@ -15,12 +15,34 @@ export interface MediaLoadingState {
 	cachedOnMount: boolean;
 	thumbHashURL?: string;
 	ref: (element: MediaLoadingElement | null) => void;
-	onLoad: (event?: SyntheticEvent<MediaLoadingElement>) => void;
-	onError: () => void;
+	onLoad: (event: SyntheticEvent<MediaLoadingElement>) => void;
+	onError: (event: SyntheticEvent<MediaLoadingElement>) => void;
 }
 
 interface UseMediaLoadingOptions {
 	enabled?: boolean;
+}
+
+interface MediaLoadingFlags {
+	loaded: boolean;
+	error: boolean;
+}
+
+interface MediaLoadingSourceState extends MediaLoadingFlags {
+	src: string;
+	loadEnabled: boolean;
+	cached: boolean;
+}
+
+interface MediaLoadingCacheAtMount {
+	src: string;
+	loadEnabled: boolean;
+	cached: boolean;
+}
+
+interface MediaLoadingSourceIdentity {
+	src: string;
+	loadEnabled: boolean;
 }
 
 function isImageElement(element: MediaLoadingElement): element is HTMLImageElement {
@@ -39,6 +61,60 @@ function getMediaElementStatus(element: MediaLoadingElement | null): MediaElemen
 	return element.readyState >= 2 ? 'loaded' : 'pending';
 }
 
+function mediaElementMatchesSource(element: MediaLoadingElement | null, src: string): boolean {
+	if (!element || src.length === 0) return false;
+	let resolvedSource = src;
+	try {
+		resolvedSource = new URL(src, element.ownerDocument.baseURI).href;
+	} catch {
+		resolvedSource = src;
+	}
+	const matchesResolvedSource = (value: string): boolean => {
+		if (value === src || value === resolvedSource) return true;
+		try {
+			return new URL(value, element.ownerDocument.baseURI).href === resolvedSource;
+		} catch {
+			return false;
+		}
+	};
+	const attributeSource = element.getAttribute('src');
+	if (attributeSource != null && !matchesResolvedSource(attributeSource)) return false;
+	if (element.src.length > 0 && !matchesResolvedSource(element.src)) return false;
+	if (element.currentSrc.length > 0 && !matchesResolvedSource(element.currentSrc)) return false;
+	return attributeSource != null || element.src.length > 0 || element.currentSrc.length > 0;
+}
+
+function createMediaLoadingSourceState(src: string, loadEnabled: boolean, cached: boolean): MediaLoadingSourceState {
+	return {
+		src,
+		loadEnabled,
+		cached,
+		loaded: cached,
+		error: false,
+	};
+}
+
+function resolveMediaLoadingSourceState(
+	state: MediaLoadingSourceState,
+	src: string,
+	loadEnabled: boolean,
+	cached: boolean,
+): MediaLoadingSourceState {
+	if (state.src === src && state.loadEnabled === loadEnabled) return state;
+	return createMediaLoadingSourceState(src, loadEnabled, cached);
+}
+
+function sourceIdentityMatches(
+	currentIdentity: MediaLoadingSourceIdentity,
+	expectedIdentity: MediaLoadingSourceIdentity,
+): boolean {
+	return currentIdentity.src === expectedIdentity.src && currentIdentity.loadEnabled === expectedIdentity.loadEnabled;
+}
+
+function pendingMediaLoadingState(src: string, loadEnabled: boolean): MediaLoadingSourceState {
+	return {src, loadEnabled, cached: false, loaded: false, error: false};
+}
+
 export function useMediaLoading(
 	src: string,
 	placeholder?: string,
@@ -47,85 +123,84 @@ export function useMediaLoading(
 	const {enabled = true} = options;
 	const shouldForcePlaceholder = DeveloperOptions.forceRenderPlaceholders || DeveloperOptions.forceMediaLoading;
 	const mediaElementRef = useRef<MediaLoadingElement | null>(null);
-	const [cachedOnMount] = useState(() => src.length > 0 && ImageCacheUtils.hasImage(src));
-	const [cached, setCached] = useState(() => src.length > 0 && ImageCacheUtils.hasImage(src));
-	const [loadingState, setLoadingState] = useState<Pick<MediaLoadingState, 'error' | 'loaded'>>({
-		loaded: false,
-		error: false,
-	});
+	const loadEnabled = enabled && src.length > 0 && !shouldForcePlaceholder;
+	const sourceIdentity = useMemo<MediaLoadingSourceIdentity>(() => ({src, loadEnabled}), [loadEnabled, src]);
+	const committedSourceIdentityRef = useRef(sourceIdentity);
+	const initialCached = loadEnabled && ImageCacheUtils.hasImage(src);
+	const [cacheAtMount] = useState<MediaLoadingCacheAtMount>(() => ({
+		src,
+		loadEnabled,
+		cached: initialCached,
+	}));
+	const cachedOnMount = cacheAtMount.src === src && cacheAtMount.loadEnabled === loadEnabled && cacheAtMount.cached;
+	const [sourceState, setSourceState] = useState<MediaLoadingSourceState>(() =>
+		createMediaLoadingSourceState(src, loadEnabled, initialCached),
+	);
+	const currentSourceState = resolveMediaLoadingSourceState(sourceState, src, loadEnabled, initialCached);
 	const thumbHashURL = useMemo(() => {
 		return decodeThumbHashDataURL(placeholder);
 	}, [placeholder]);
-	const rememberElementLoad = useCallback(
-		(element: MediaLoadingElement | null) => {
-			if (element && isImageElement(element)) {
-				ImageCacheUtils.rememberImage(src, element);
-			} else {
-				ImageCacheUtils.rememberImage(src);
-			}
-			setCached(true);
-			setLoadingState({loaded: true, error: false});
-		},
-		[src],
-	);
-	const applyElementStatus = useCallback(
-		(element: MediaLoadingElement | null): boolean => {
+	const ref = useCallback((element: MediaLoadingElement | null) => {
+		mediaElementRef.current = element;
+	}, []);
+	useLayoutEffect(() => {
+		committedSourceIdentityRef.current = sourceIdentity;
+		if (!loadEnabled) {
+			setSourceState(pendingMediaLoadingState(src, loadEnabled));
+			return;
+		}
+		const element = mediaElementRef.current;
+		if (mediaElementMatchesSource(element, src)) {
 			const status = getMediaElementStatus(element);
 			if (status === 'loaded') {
-				rememberElementLoad(element);
-				return true;
+				if (element != null && isImageElement(element)) ImageCacheUtils.rememberImage(src, element);
+				setSourceState({src, loadEnabled, cached: true, loaded: true, error: false});
+				return;
 			}
 			if (status === 'error') {
 				ImageCacheUtils.forgetImage(src);
-				setCached(false);
-				setLoadingState((prev) => (prev.loaded ? prev : {loaded: false, error: true}));
-				return true;
+				setSourceState({src, loadEnabled, cached: false, loaded: false, error: true});
+				return;
 			}
-			return false;
-		},
-		[rememberElementLoad, src],
-	);
-	const ref = useCallback(
-		(element: MediaLoadingElement | null) => {
-			mediaElementRef.current = element;
-			if (!enabled || src.length === 0 || shouldForcePlaceholder) return;
-			applyElementStatus(element);
-		},
-		[applyElementStatus, enabled, shouldForcePlaceholder, src],
-	);
-	useEffect(() => {
-		if (!enabled || src.length === 0) {
-			setCached(false);
-			setLoadingState((currentState) =>
-				currentState.loaded || currentState.error ? {loaded: false, error: false} : currentState,
-			);
-			return;
 		}
-		const isCached = ImageCacheUtils.hasImage(src);
-		setCached(isCached);
-		if (shouldForcePlaceholder) {
-			setLoadingState((currentState) =>
-				currentState.loaded || currentState.error ? {loaded: false, error: false} : currentState,
-			);
-			return;
-		}
-		if (applyElementStatus(mediaElementRef.current)) return;
-		setLoadingState((currentState) =>
-			currentState.loaded || currentState.error ? {loaded: false, error: false} : currentState,
-		);
-	}, [applyElementStatus, enabled, shouldForcePlaceholder, src]);
+		const cached = ImageCacheUtils.hasImage(src);
+		setSourceState(createMediaLoadingSourceState(src, loadEnabled, cached));
+	}, [loadEnabled, sourceIdentity, src]);
 	const onLoad = useCallback(
-		(event?: SyntheticEvent<MediaLoadingElement>) => {
-			const element = event?.currentTarget ?? mediaElementRef.current;
-			mediaElementRef.current = element;
-			rememberElementLoad(element);
+		(event: SyntheticEvent<MediaLoadingElement>) => {
+			const element = event.currentTarget;
+			if (!sourceIdentityMatches(committedSourceIdentityRef.current, sourceIdentity)) return;
+			if (mediaElementRef.current !== element) return;
+			if (!mediaElementMatchesSource(element, src)) return;
+			if (isImageElement(element)) ImageCacheUtils.rememberImage(src, element);
+			setSourceState({src, loadEnabled, cached: true, loaded: true, error: false});
 		},
-		[rememberElementLoad],
+		[loadEnabled, sourceIdentity, src],
 	);
-	const onError = useCallback(() => {
-		ImageCacheUtils.forgetImage(src);
-		setCached(false);
-		setLoadingState((prev) => (prev.loaded ? prev : {loaded: false, error: true}));
-	}, [src]);
-	return {...loadingState, cached, cachedOnMount, thumbHashURL, ref, onLoad, onError};
+	const onError = useCallback(
+		(event: SyntheticEvent<MediaLoadingElement>) => {
+			const element = event.currentTarget;
+			if (!sourceIdentityMatches(committedSourceIdentityRef.current, sourceIdentity)) return;
+			if (mediaElementRef.current !== element) return;
+			if (!mediaElementMatchesSource(element, src)) return;
+			ImageCacheUtils.forgetImage(src);
+			setSourceState((currentState) => {
+				if (currentState.src === src && currentState.loadEnabled === loadEnabled && currentState.loaded) {
+					return {...currentState, cached: false};
+				}
+				return {src, loadEnabled, cached: false, loaded: false, error: true};
+			});
+		},
+		[loadEnabled, sourceIdentity, src],
+	);
+	return {
+		loaded: currentSourceState.loaded,
+		error: currentSourceState.error,
+		cached: currentSourceState.cached,
+		cachedOnMount,
+		thumbHashURL,
+		ref,
+		onLoad,
+		onError,
+	};
 }

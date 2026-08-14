@@ -18,6 +18,7 @@ import type {IUserRepository} from '../../user/IUserRepository';
 import type {DirectMessageSpamMitigationService} from '../../user/services/DirectMessageSpamMitigationService';
 import type {WorkerTaskName} from '../../worker/WorkerLaneConfig';
 import type {IChannelRepositoryAggregate} from '../repositories/IChannelRepositoryAggregate';
+import type {AttachmentUploadTraceRepository} from '../repositories/message/AttachmentUploadTraceRepository';
 import {MessageAnonymizationService} from './message/MessageAnonymizationService';
 import {MessageChannelAuthService} from './message/MessageChannelAuthService';
 import {MessageDeleteService} from './message/MessageDeleteService';
@@ -66,6 +67,7 @@ export class MessageService {
 		favoriteMemeRepository: IFavoriteMemeRepository,
 		guildAuditLogService: GuildAuditLogService,
 		persistenceService: MessagePersistenceService,
+		attachmentUploadTraceRepository: AttachmentUploadTraceRepository,
 		limitConfigService: LimitConfigService,
 		directMessageSpamMitigationService: DirectMessageSpamMitigationService,
 	) {
@@ -125,6 +127,7 @@ export class MessageService {
 			processingService: this.processing,
 			dispatchService: this.dispatch,
 			embedAttachmentResolver: this.persistence.getEmbedAttachmentResolver(),
+			attachmentUploadTraceRepository,
 			operationsHelpers,
 			limitConfigService,
 			directMessageSpamMitigationService,

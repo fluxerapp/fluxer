@@ -51,6 +51,12 @@ type AvatarImagePresentation =
 			showSkeleton: true;
 	  };
 
+function resolveInitiallyLoadedImageUrl(url: string | null): string | null {
+	if (url == null) return null;
+	if (ImageCacheUtils.hasImage(url)) return url;
+	return null;
+}
+
 function resolveAvatarImagePresentation({
 	avatarUrl,
 	fallbackAvatarUrl,
@@ -149,36 +155,42 @@ const AvatarComponent = React.forwardRef<HTMLDivElement, AvatarProps>(
 			}
 		}, [hasDistinctHoverAvatar, animationAllowed, hoverAvatarUrl]);
 		const isAnimatedNeeded = hasDistinctHoverAvatar && (animationAllowed || requestedAnimatedUrl === hoverAvatarUrl);
-		const [isStaticLoaded, setIsStaticLoaded] = useState(() => ImageCacheUtils.hasImage(avatarUrl));
-		const [isAnimatedLoaded, setIsAnimatedLoaded] = useState(() =>
-			hasDistinctHoverAvatar ? ImageCacheUtils.hasImage(hoverAvatarUrl) : false,
+		const [loadedStaticUrl, setLoadedStaticUrl] = useState<string | null>(() =>
+			resolveInitiallyLoadedImageUrl(avatarUrl),
 		);
+		const [loadedAnimatedUrl, setLoadedAnimatedUrl] = useState<string | null>(() =>
+			resolveInitiallyLoadedImageUrl(hoverAvatarUrl),
+		);
+		const isStaticLoaded = avatarUrl != null && loadedStaticUrl === avatarUrl;
+		const isAnimatedLoaded = hasDistinctHoverAvatar && hoverAvatarUrl != null && loadedAnimatedUrl === hoverAvatarUrl;
 		useEffect(() => {
 			const staticLoaded = ImageCacheUtils.hasImage(avatarUrl);
 			const animatedLoaded = hasDistinctHoverAvatar ? ImageCacheUtils.hasImage(hoverAvatarUrl) : false;
-			setIsStaticLoaded(staticLoaded);
-			setIsAnimatedLoaded(animatedLoaded);
+			if (staticLoaded && loadedStaticUrl !== avatarUrl && avatarUrl != null) {
+				setLoadedStaticUrl(avatarUrl);
+			}
+			if (animatedLoaded && loadedAnimatedUrl !== hoverAvatarUrl && hoverAvatarUrl != null) {
+				setLoadedAnimatedUrl(hoverAvatarUrl);
+			}
 			if (deferImageLoad && !staticLoaded) {
 				return;
 			}
 			let active = true;
 			const cleanupStaticLoad = ImageCacheUtils.loadImage(avatarUrl, () => {
-				if (active) {
-					setIsStaticLoaded(true);
+				if (active && avatarUrl != null) {
+					setLoadedStaticUrl(avatarUrl);
 				}
 			});
-			const cleanupAnimatedLoad =
-				isAnimatedNeeded && !deferImageLoad
-					? ImageCacheUtils.loadImage(hoverAvatarUrl, () => {
-							if (active) {
-								setIsAnimatedLoaded(true);
-							}
-						})
-					: undefined;
+			let cleanupAnimatedLoad: (() => void) | undefined;
+			if (isAnimatedNeeded && !deferImageLoad && hoverAvatarUrl != null) {
+				cleanupAnimatedLoad = ImageCacheUtils.loadImage(hoverAvatarUrl, () => {
+					if (active) setLoadedAnimatedUrl(hoverAvatarUrl);
+				});
+			}
 			return () => {
 				active = false;
 				cleanupStaticLoad();
-				cleanupAnimatedLoad?.();
+				if (cleanupAnimatedLoad !== undefined) cleanupAnimatedLoad();
 			};
 		}, [avatarUrl, hoverAvatarUrl, hasDistinctHoverAvatar, isAnimatedNeeded, deferImageLoad]);
 		const shouldPlayAnimated = hasDistinctHoverAvatar && animationAllowed && isAnimatedLoaded;

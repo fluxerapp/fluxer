@@ -5,14 +5,37 @@
 	flex-direction: column;
 }
 
+.groupHeader,
+.virtualGroupRow {
+	color: var(--text-primary-muted);
+	font-weight: 600;
+	font-size: 0.875rem;
+	line-height: 1rem;
+}
+
 .groupHeader {
+	display: flex;
+	min-width: 0;
+	align-items: flex-start;
 	padding-top: 0.75rem;
 	padding-bottom: 0.25rem;
 	padding-left: 0.5rem;
 	padding-right: 0.5rem;
-	font-weight: 600;
-	font-size: 0.875rem;
-	color: var(--text-primary-muted);
+}
+
+.groupHeaderLabel {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.groupHeaderSeparator {
+	flex-shrink: 0;
+}
+
+.groupHeaderCount {
+	flex-shrink: 0;
 }
 
 .membersList {
@@ -34,7 +57,6 @@
 	align-items: center;
 	height: 2.75rem;
 	min-height: 2.75rem;
-	will-change: transform;
 }
 
 .virtualMemberRow {
@@ -50,34 +72,14 @@
 
 .virtualGroupRow {
 	display: flex;
-	height: 1.875rem;
-	min-height: 1.875rem;
-	align-items: flex-end;
-	gap: 0.375rem;
+	height: 2rem;
+	min-height: 2rem;
+	align-items: flex-start;
 	padding-left: 0.5rem;
 	padding-right: 0.5rem;
-	padding-top: 0;
-	padding-bottom: 0.1875rem;
+	padding-top: 0.75rem;
+	padding-bottom: 0.25rem;
 	box-sizing: border-box;
-	color: var(--text-primary-muted);
-	font-size: 0.8125rem;
-	font-weight: 600;
-	line-height: 1rem;
-}
-
-.virtualGroupLabel {
-	min-width: 0;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-}
-
-.virtualGroupSeparator {
-	flex-shrink: 0;
-}
-
-.virtualGroupCount {
-	flex-shrink: 0;
 }
 
 .groupSpacer {

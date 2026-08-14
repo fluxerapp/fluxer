@@ -6,6 +6,7 @@ import {
 	JOIN_CALL_DESCRIPTOR,
 	JOIN_ON_THIS_DEVICE_DESCRIPTOR,
 } from '@app/features/channel/components/channel_view/dm_channel_view/shared';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import {
 	INCOMING_CALL_ACCEPT_ACTION_DESCRIPTOR,
@@ -75,7 +76,7 @@ export const CallControls: React.FC<CallControlsProps> = ({
 						label={i18n._(INCOMING_CALL_ACCEPT_ACTION_DESCRIPTOR)}
 						icon={
 							<PhoneIcon
-								size={16}
+								size={remFromPx(16)}
 								weight="fill"
 								data-flx="channel.channel-view.dm-channel-view.render-call-controls.phone-icon"
 							/>
@@ -87,7 +88,7 @@ export const CallControls: React.FC<CallControlsProps> = ({
 						label={i18n._(INCOMING_CALL_REJECT_ACTION_DESCRIPTOR)}
 						icon={
 							<XIcon
-								size={18}
+								size={remFromPx(18)}
 								weight="bold"
 								data-flx="channel.channel-view.dm-channel-view.render-call-controls.x-icon"
 							/>
@@ -100,7 +101,7 @@ export const CallControls: React.FC<CallControlsProps> = ({
 						label={i18n._(INCOMING_CALL_IGNORE_ACTION_DESCRIPTOR)}
 						icon={
 							<BellSlashIcon
-								size={18}
+								size={remFromPx(18)}
 								weight="fill"
 								data-flx="channel.channel-view.dm-channel-view.render-call-controls.bell-slash-icon"
 							/>
@@ -117,7 +118,7 @@ export const CallControls: React.FC<CallControlsProps> = ({
 					variant="secondary"
 					leftIcon={
 						<PhoneIcon
-							size={16}
+							size={remFromPx(16)}
 							weight="fill"
 							data-flx="channel.channel-view.dm-channel-view.render-call-controls.phone-icon--2"
 						/>
@@ -131,7 +132,7 @@ export const CallControls: React.FC<CallControlsProps> = ({
 					variant="danger"
 					leftIcon={
 						<XIcon
-							size={16}
+							size={remFromPx(16)}
 							weight="bold"
 							data-flx="channel.channel-view.dm-channel-view.render-call-controls.x-icon--2"
 						/>
@@ -158,7 +159,7 @@ export const CallControls: React.FC<CallControlsProps> = ({
 					label={i18n._(JOIN_CALL_DESCRIPTOR)}
 					icon={
 						<PhoneIcon
-							size={16}
+							size={remFromPx(16)}
 							weight="fill"
 							data-flx="channel.channel-view.dm-channel-view.render-call-controls.phone-icon--3"
 						/>
@@ -175,7 +176,7 @@ export const CallControls: React.FC<CallControlsProps> = ({
 				variant="secondary"
 				leftIcon={
 					<PhoneIcon
-						size={16}
+						size={remFromPx(16)}
 						weight="fill"
 						data-flx="channel.channel-view.dm-channel-view.render-call-controls.phone-icon--4"
 					/>
@@ -195,7 +196,7 @@ export const CallControls: React.FC<CallControlsProps> = ({
 					label={i18n._(CONNECTING_2_DESCRIPTOR)}
 					icon={
 						<PhoneIcon
-							size={16}
+							size={remFromPx(16)}
 							weight="fill"
 							data-flx="channel.channel-view.dm-channel-view.render-call-controls.phone-icon--5"
 						/>
@@ -210,7 +211,7 @@ export const CallControls: React.FC<CallControlsProps> = ({
 				variant="secondary"
 				leftIcon={
 					<PhoneIcon
-						size={16}
+						size={remFromPx(16)}
 						weight="fill"
 						data-flx="channel.channel-view.dm-channel-view.render-call-controls.phone-icon--6"
 					/>
@@ -229,7 +230,7 @@ export const CallControls: React.FC<CallControlsProps> = ({
 					label={i18n._(JOIN_ON_THIS_DEVICE_DESCRIPTOR)}
 					icon={
 						<PhoneIcon
-							size={16}
+							size={remFromPx(16)}
 							weight="fill"
 							data-flx="channel.channel-view.dm-channel-view.render-call-controls.phone-icon--7"
 						/>
@@ -245,7 +246,7 @@ export const CallControls: React.FC<CallControlsProps> = ({
 				variant="secondary"
 				leftIcon={
 					<PhoneIcon
-						size={16}
+						size={remFromPx(16)}
 						weight="fill"
 						data-flx="channel.channel-view.dm-channel-view.render-call-controls.phone-icon--8"
 					/>

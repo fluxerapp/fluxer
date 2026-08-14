@@ -4,35 +4,30 @@
 	display: flex;
 	align-items: center;
 	gap: 0.1875rem;
-	height: var(--slowmode-indicator-height);
-	padding: 0 0.35rem;
-	border-radius: var(--radius-xl);
-	background-color: var(--background-tertiary);
-	border: 0.0625rem solid color-mix(in srgb, var(--background-modifier-accent) 80%, transparent);
+	height: var(--slowmode-indicator-height, 1.125rem);
+	max-width: 100%;
+	min-width: 0;
 	color: var(--text-primary-muted);
-	font-size: 0.625rem;
+	font-size: 0.75rem;
 	line-height: 1;
-	transition:
-		color 150ms ease,
-		background-color 150ms ease,
-		border-color 150ms ease;
+	transition: color 150ms ease;
 }
 
 .cooldown {
 	color: var(--status-danger);
-	background-color: color-mix(in srgb, var(--status-danger) 14%, transparent);
-	border-color: color-mix(in srgb, var(--status-danger) 45%, transparent);
-}
-
-.time {
-	font-weight: 500;
-	font-family: monospace;
-	font-size: 0.625rem;
-	line-height: 1;
 }
 
 .label {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 	font-weight: 600;
-	font-size: 0.625rem;
+	font-size: 0.75rem;
 	line-height: 1;
+	font-variant-numeric: tabular-nums;
+}
+
+.icon {
+	flex: 0 0 auto;
 }

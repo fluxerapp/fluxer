@@ -94,10 +94,9 @@
 
 .discriminator {
 	font-weight: 600;
-	color: var(--text-primary);
+	color: color-mix(in srgb, var(--text-primary) 50%, transparent);
 	font-size: 0.875rem;
 	line-height: 1.25rem;
-	opacity: 0.5;
 }
 
 .actions {

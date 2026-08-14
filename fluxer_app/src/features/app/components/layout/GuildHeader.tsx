@@ -10,10 +10,12 @@ import {GuildHeaderBottomSheet} from '@app/features/guild/components/bottomsheet
 import {GuildBadge} from '@app/features/guild/components/GuildBadge';
 import {GuildHeaderPopout} from '@app/features/guild/components/popouts/GuildHeaderPopout';
 import type {Guild} from '@app/features/guild/models/Guild';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {GuildContextMenu} from '@app/features/ui/action_menu/GuildContextMenu';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import Popout from '@app/features/ui/state/Popout';
+import {SIDEBAR_WIDTH_DEFAULT} from '@app/features/ui/state/SidebarWidth';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import {msg} from '@lingui/core/macro';
@@ -30,7 +32,6 @@ const OPEN_COMMUNITY_MENU_FOR_DESCRIPTOR = msg({
 	comment: 'Short label in the app layout guild header. Preserve {guildName}; it is inserted by code.',
 });
 const HEADER_MIN_HEIGHT = 56;
-const DEFAULT_SIDEBAR_WIDTH = 270;
 const DEFAULT_BANNER_ASPECT_RATIO = 16 / 9;
 const MAX_VIEWPORT_HEIGHT_FRACTION = 0.3;
 export const GuildHeader = observer(({guild}: {guild: Guild}) => {
@@ -56,7 +57,7 @@ export const GuildHeader = observer(({guild}: {guild: Guild}) => {
 	const headerContainerRef = useRef<HTMLElement | null>(null);
 	const mergedHeaderContainerRef = useMergeRefs([headerContainerRef, bannerHoverRef]);
 	const [containerWidth, setContainerWidth] = useState<number>(() =>
-		isMobile && typeof window !== 'undefined' ? window.innerWidth : DEFAULT_SIDEBAR_WIDTH,
+		isMobile && typeof window !== 'undefined' ? window.innerWidth : SIDEBAR_WIDTH_DEFAULT,
 	);
 	const [viewportHeight, setViewportHeight] = useState<number>(() =>
 		typeof window !== 'undefined' ? window.innerHeight : 0,
@@ -122,7 +123,7 @@ export const GuildHeader = observer(({guild}: {guild: Guild}) => {
 					!showIntegratedBanner && styles.headerContainerNoBanner,
 					!showIntegratedBanner && isOpen && styles.headerContainerActive,
 				)}
-				style={{height: showIntegratedBanner ? bannerMaxHeight : HEADER_MIN_HEIGHT}}
+				style={{height: showIntegratedBanner ? bannerMaxHeight : remFromPx(HEADER_MIN_HEIGHT)}}
 				data-flx="app.guild-header.header-container.context-menu"
 			>
 				{showIntegratedBanner && (

@@ -1,0 +1,84 @@
+# yaml-language-server: $schema=https://www.schemastore.org/github-issue-forms.json
+name: Bug report
+description: Report a reproducible defect in Fluxer.
+type: Bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Search [open and closed issues](https://github.com/fluxerapp/fluxer/issues?q=is%3Aissue) before filing a report.
+
+        Report vulnerabilities through the [private form](https://github.com/fluxerapp/fluxer/security/advisories/new) or <security@fluxer.com>. Send account and billing requests to <support@fluxer.com>.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Observed behaviour
+      description: State what happened and what you expected.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction steps
+      description: Give numbered steps starting from a fresh app or session.
+      placeholder: |
+        1. Go to ...
+        2. Select ...
+        3. Observe ...
+    validations:
+      required: true
+
+  - type: input
+    id: build
+    attributes:
+      label: Build information
+      description: >-
+        Open User Settings, scroll to the bottom of the left sidebar, and select
+        the build information. Fluxer copies it to the clipboard. On mobile,
+        select the build information at the bottom of the settings list.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Affected surface
+      multiple: true
+      options:
+        - Desktop app
+        - Web app
+        - Voice, video, or Go Live
+        - Self-hosted instance
+        - HTTP API or Gateway
+        - Documentation site
+    validations:
+      required: true
+
+  - type: input
+    id: instance
+    attributes:
+      label: Instance
+      description: For a self-hosted instance, include the release tag and database backend.
+      placeholder: fluxer.app
+    validations:
+      required: false
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Attach relevant logs, screenshots or recordings. Remove tokens, keys, private messages and other personal data. Configuration files may contain secrets.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Acknowledgements
+      options:
+        - label: I searched open and closed issues.
+          required: true
+        - label: I removed secrets and unrelated personal data from the report.
+          required: true

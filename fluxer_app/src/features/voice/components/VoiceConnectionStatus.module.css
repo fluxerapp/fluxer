@@ -5,7 +5,7 @@
 	flex-direction: column;
 	gap: var(--spacing-3);
 	margin: 0;
-	padding: var(--voice-connection-padding-y) var(--user-area-padding-x);
+	padding: var(--voice-connection-padding-y) var(--voice-connection-padding-x);
 	background-color: transparent;
 	border: none;
 	width: 100%;

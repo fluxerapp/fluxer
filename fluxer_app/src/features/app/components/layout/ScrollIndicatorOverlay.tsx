@@ -5,14 +5,14 @@ import styles from '@app/features/app/components/layout/ScrollIndicatorOverlay.m
 import {
 	type ActiveScrollIndicator,
 	createScrollIndicatorSnapshot,
-	type ScrollIndicatorDirection,
 	type ScrollIndicatorMachineEvent,
 	type ScrollIndicatorSeverity,
 	type ScrollIndicatorTargetMeasurement,
-	selectActiveScrollIndicator,
+	selectActiveScrollIndicators,
 	transitionScrollIndicatorSnapshot,
 } from '@app/features/app/components/layout/ScrollIndicatorStateMachine';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
+import {resolveVisibleScrollViewportHeight} from '@app/features/ui/utils/ScrollViewportGeometry';
 import {clsx} from 'clsx';
 import {AnimatePresence, motion} from 'framer-motion';
 import type React from 'react';
@@ -20,7 +20,43 @@ import {useCallback, useEffect, useLayoutEffect, useRef, useState} from 'react';
 
 export type {ScrollIndicatorSeverity};
 
-const SCROLL_DIRECTION_EPSILON = 0.5;
+const SCROLL_TARGET_PADDING_PX = 12;
+
+interface OwnedAnimationFrame {
+	id: number;
+	ownerWindow: Window & typeof globalThis;
+}
+
+function resolveOwnerWindow(container: HTMLElement): Window & typeof globalThis {
+	const ownerWindow = container.ownerDocument.defaultView;
+	if (ownerWindow == null) {
+		throw new Error('Scroll indicator container has no owner window');
+	}
+	return ownerWindow;
+}
+
+function cancelOwnedAnimationFrame(frame: OwnedAnimationFrame | null): void {
+	if (frame == null) return;
+	frame.ownerWindow.cancelAnimationFrame(frame.id);
+}
+
+function scrollIndicatorNodeIntoVisibleViewport(
+	container: HTMLElement,
+	node: HTMLElement,
+	direction: 'top' | 'bottom',
+	behavior: ScrollBehavior,
+): void {
+	const containerRect = container.getBoundingClientRect();
+	const nodeRect = node.getBoundingClientRect();
+	const nodeTop = container.scrollTop + nodeRect.top - containerRect.top;
+	const nodeBottom = container.scrollTop + nodeRect.bottom - containerRect.top;
+	let top = nodeTop - SCROLL_TARGET_PADDING_PX;
+	if (direction === 'bottom') {
+		top = nodeBottom + SCROLL_TARGET_PADDING_PX - resolveVisibleScrollViewportHeight(container);
+	}
+	const maximumScrollTop = Math.max(0, container.scrollHeight - container.clientHeight);
+	container.scrollTo({top: Math.min(maximumScrollTop, Math.max(0, top)), behavior});
+}
 
 interface MeasurementRect {
 	top: number;
@@ -34,12 +70,12 @@ function hasPositiveArea(rect: MeasurementRect): boolean {
 }
 
 function getMeasurableRectInsideScrollContent(node: HTMLElement, container: HTMLElement): MeasurementRect | null {
-	const nodeStyle = getComputedStyle(node);
+	const nodeStyle = resolveOwnerWindow(node).getComputedStyle(node);
 	if (nodeStyle.display === 'none' || nodeStyle.visibility === 'hidden') return null;
 	const nodeRect = node.getBoundingClientRect();
 	if (!hasPositiveArea(nodeRect)) return null;
 	for (let parent = node.parentElement; parent && parent !== container; parent = parent.parentElement) {
-		const parentStyle = getComputedStyle(parent);
+		const parentStyle = resolveOwnerWindow(parent).getComputedStyle(parent);
 		if (parentStyle.display === 'none' || parentStyle.visibility === 'hidden') return null;
 		const parentRect = parent.getBoundingClientRect();
 		if (!hasPositiveArea(parentRect)) return null;
@@ -80,90 +116,130 @@ function findScrollIndicatorNode(container: HTMLElement, id: string): HTMLElemen
 
 export const useScrollEdgeIndicators = (
 	getScrollContainer: () => HTMLElement | null,
+	scrollContainerIdentity: string,
 	dependencies: React.DependencyList = [],
 ) => {
 	const [snapshot, setSnapshot] = useState(() => createScrollIndicatorSnapshot());
-	const activeIndicator = selectActiveScrollIndicator(snapshot);
-	const preferredDirectionRef = useRef<ScrollIndicatorDirection | null>(null);
-	const lastScrollTopRef = useRef(0);
+	const activeIndicators = selectActiveScrollIndicators(snapshot);
+	const refreshFrameRef = useRef<OwnedAnimationFrame | null>(null);
+	const visibleViewportHeightRef = useRef(0);
+	const layoutInvalidatedRef = useRef(true);
 	const send = useCallback((event: ScrollIndicatorMachineEvent) => {
 		setSnapshot((previous) => transitionScrollIndicatorSnapshot(previous, event));
 	}, []);
-	const refresh = useCallback(() => {
+	const refreshNow = useCallback(() => {
 		const container = getScrollContainer();
 		if (!container) {
 			send({type: 'scrollIndicator.reset'});
 			return;
 		}
+		if (layoutInvalidatedRef.current) {
+			layoutInvalidatedRef.current = false;
+			visibleViewportHeightRef.current = resolveVisibleScrollViewportHeight(container);
+		}
 		send({
 			type: 'scrollIndicator.measured',
 			measurement: {
 				scrollTop: container.scrollTop,
-				viewportHeight: container.clientHeight,
+				viewportHeight: visibleViewportHeightRef.current,
 				targets: measureScrollIndicatorTargets(container),
-				preferredDirection: preferredDirectionRef.current,
 			},
 		});
 	}, [getScrollContainer, send]);
+	const scheduleRefresh = useCallback(
+		(invalidateLayout = false) => {
+			if (invalidateLayout) layoutInvalidatedRef.current = true;
+			const container = getScrollContainer();
+			if (container == null) {
+				refreshNow();
+				return;
+			}
+			const ownerWindow = resolveOwnerWindow(container);
+			const pendingFrame = refreshFrameRef.current;
+			if (pendingFrame != null && pendingFrame.ownerWindow === ownerWindow) return;
+			cancelOwnedAnimationFrame(pendingFrame);
+			const id = ownerWindow.requestAnimationFrame(() => {
+				refreshFrameRef.current = null;
+				refreshNow();
+			});
+			refreshFrameRef.current = {id, ownerWindow};
+		},
+		[getScrollContainer, refreshNow],
+	);
 	useLayoutEffect(() => {
-		refresh();
-	}, [refresh, ...dependencies]);
+		layoutInvalidatedRef.current = true;
+		refreshNow();
+	}, [refreshNow, scrollContainerIdentity, ...dependencies]);
 	useLayoutEffect(() => {
 		const container = getScrollContainer();
 		if (!container) return;
-		const content = container.firstElementChild instanceof HTMLElement ? container.firstElementChild : null;
+		const ownerWindow = resolveOwnerWindow(container);
+		const content = container.firstElementChild instanceof ownerWindow.HTMLElement ? container.firstElementChild : null;
 		const resizeObserver =
-			typeof ResizeObserver !== 'undefined'
-				? new ResizeObserver(() => {
-						refresh();
+			ownerWindow.ResizeObserver != null
+				? new ownerWindow.ResizeObserver((entries) => {
+						scheduleRefresh(entries.some((entry) => entry.target === container));
 					})
 				: null;
-		const mutationObserver =
-			typeof MutationObserver !== 'undefined'
-				? new MutationObserver(() => {
-						refresh();
+		const contentMutationObserver =
+			ownerWindow.MutationObserver != null
+				? new ownerWindow.MutationObserver(() => {
+						scheduleRefresh(false);
 					})
 				: null;
-		resizeObserver?.observe(container);
-		if (content) resizeObserver?.observe(content);
-		mutationObserver?.observe(container, {
-			attributes: true,
-			childList: true,
-			subtree: true,
-			attributeFilter: ['data-scroll-indicator', 'data-scroll-id', 'class', 'style'],
-		});
+		const layoutMutationObserver =
+			ownerWindow.MutationObserver != null
+				? new ownerWindow.MutationObserver(() => {
+						scheduleRefresh(true);
+					})
+				: null;
+		if (resizeObserver != null) {
+			resizeObserver.observe(container);
+			if (content != null) resizeObserver.observe(content);
+		}
+		if (contentMutationObserver != null) {
+			contentMutationObserver.observe(container, {
+				attributes: true,
+				childList: true,
+				subtree: true,
+				attributeFilter: ['data-scroll-indicator', 'data-scroll-id', 'class', 'style'],
+			});
+		}
+		for (let element: HTMLElement | null = container; element != null; element = element.parentElement) {
+			if (layoutMutationObserver != null) {
+				layoutMutationObserver.observe(element, {attributes: true, attributeFilter: ['class', 'style']});
+			}
+		}
 		return () => {
-			resizeObserver?.disconnect();
-			mutationObserver?.disconnect();
+			if (resizeObserver != null) resizeObserver.disconnect();
+			if (contentMutationObserver != null) contentMutationObserver.disconnect();
+			if (layoutMutationObserver != null) layoutMutationObserver.disconnect();
+			cancelOwnedAnimationFrame(refreshFrameRef.current);
+			refreshFrameRef.current = null;
 		};
-	}, [getScrollContainer, refresh]);
+	}, [getScrollContainer, scheduleRefresh, scrollContainerIdentity]);
 	useEffect(() => {
 		const container = getScrollContainer();
 		if (!container) return;
-		lastScrollTopRef.current = container.scrollTop;
 		const handleScroll = () => {
-			const currentScrollTop = container.scrollTop;
-			if (currentScrollTop > lastScrollTopRef.current + SCROLL_DIRECTION_EPSILON) {
-				preferredDirectionRef.current = 'bottom';
-			} else if (currentScrollTop < lastScrollTopRef.current - SCROLL_DIRECTION_EPSILON) {
-				preferredDirectionRef.current = 'top';
-			}
-			lastScrollTopRef.current = currentScrollTop;
-			refresh();
+			scheduleRefresh();
 		};
 		container.addEventListener('scroll', handleScroll, {passive: true});
 		return () => {
 			container.removeEventListener('scroll', handleScroll);
 		};
-	}, [getScrollContainer, refresh]);
+	}, [getScrollContainer, scheduleRefresh, scrollContainerIdentity]);
 	useEffect(() => {
-		const handleResize = () => refresh();
-		window.addEventListener('resize', handleResize);
+		const container = getScrollContainer();
+		if (container == null) return;
+		const ownerWindow = resolveOwnerWindow(container);
+		const handleResize = () => scheduleRefresh(true);
+		ownerWindow.addEventListener('resize', handleResize);
 		return () => {
-			window.removeEventListener('resize', handleResize);
+			ownerWindow.removeEventListener('resize', handleResize);
 		};
-	}, [refresh]);
-	return {activeIndicator, refresh};
+	}, [getScrollContainer, scheduleRefresh, scrollContainerIdentity]);
+	return {activeIndicators, refresh: refreshNow, scheduleRefresh};
 };
 
 interface FloatingScrollIndicatorProps {
@@ -201,42 +277,62 @@ const FloatingScrollIndicator = ({label, severity, onClick}: FloatingScrollIndic
 
 interface ScrollIndicatorOverlayProps {
 	getScrollContainer: () => HTMLElement | null;
+	scrollContainerIdentity: string;
 	dependencies?: React.DependencyList;
 	label: React.ReactNode;
 }
 
-export const ScrollIndicatorOverlay = ({getScrollContainer, dependencies = [], label}: ScrollIndicatorOverlayProps) => {
-	const {activeIndicator, refresh} = useScrollEdgeIndicators(getScrollContainer, dependencies);
+export const ScrollIndicatorOverlay = ({
+	getScrollContainer,
+	scrollContainerIdentity,
+	dependencies = [],
+	label,
+}: ScrollIndicatorOverlayProps) => {
+	const {activeIndicators, refresh, scheduleRefresh} = useScrollEdgeIndicators(
+		getScrollContainer,
+		scrollContainerIdentity,
+		dependencies,
+	);
 	const scrollIndicatorIntoView = (indicator: ActiveScrollIndicator) => {
 		const container = getScrollContainer();
-		const node = container ? findScrollIndicatorNode(container, indicator.indicator.id) : null;
+		if (!container) {
+			refresh();
+			return;
+		}
+		const node = findScrollIndicatorNode(container, indicator.indicator.id);
 		if (!node) {
 			refresh();
 			return;
 		}
-		node.scrollIntoView({behavior: Accessibility.useSmoothScrolling ? 'smooth' : 'auto', block: 'nearest'});
-		refresh();
-		requestAnimationFrame(refresh);
+		scrollIndicatorNodeIntoVisibleViewport(
+			container,
+			node,
+			indicator.direction,
+			Accessibility.useSmoothScrolling ? 'smooth' : 'auto',
+		);
+		scheduleRefresh();
 	};
 	return (
 		<div className={styles.scrollIndicatorLayer} data-flx="app.scroll-indicator-overlay.scroll-indicator-layer">
 			<AnimatePresence initial={false} data-flx="app.scroll-indicator-overlay.animate-presence">
-				{activeIndicator && (
-					<div
-						key={`${activeIndicator.direction}:${activeIndicator.indicator.id}:${activeIndicator.indicator.severity}`}
-						className={clsx(
-							styles.indicatorSlot,
-							activeIndicator.direction === 'top' ? styles.indicatorSlotTop : styles.indicatorSlotBottom,
-						)}
-						data-flx="app.scroll-indicator-overlay.indicator-slot"
-					>
-						<FloatingScrollIndicator
-							severity={activeIndicator.indicator.severity}
-							onClick={() => scrollIndicatorIntoView(activeIndicator)}
-							label={label}
-							data-flx="app.scroll-indicator-overlay.floating-scroll-indicator.scroll-indicator-into-view"
-						/>
-					</div>
+				{Object.values(activeIndicators).map((activeIndicator) =>
+					activeIndicator == null ? null : (
+						<div
+							key={`${activeIndicator.direction}:${activeIndicator.indicator.id}:${activeIndicator.indicator.severity}`}
+							className={clsx(
+								styles.indicatorSlot,
+								activeIndicator.direction === 'top' ? styles.indicatorSlotTop : styles.indicatorSlotBottom,
+							)}
+							data-flx="app.scroll-indicator-overlay.indicator-slot"
+						>
+							<FloatingScrollIndicator
+								severity={activeIndicator.indicator.severity}
+								onClick={() => scrollIndicatorIntoView(activeIndicator)}
+								label={label}
+								data-flx="app.scroll-indicator-overlay.floating-scroll-indicator.scroll-indicator-into-view"
+							/>
+						</div>
+					),
 				)}
 			</AnimatePresence>
 		</div>

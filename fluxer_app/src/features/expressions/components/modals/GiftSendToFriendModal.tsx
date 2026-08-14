@@ -13,6 +13,7 @@ import styles from '@app/features/expressions/components/modals/GiftSendToFriend
 import {SEARCH_FRIENDS_DESCRIPTOR, SENT_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as MessageCommands from '@app/features/messaging/commands/MessageCommands';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Input} from '@app/features/ui/components/form/FormInput';
 import {useCopyLinkHandler} from '@app/lib/copy-link';
 import * as SnowflakeUtils from '@fluxer/snowflake/src/SnowflakeUtils';
@@ -99,7 +100,7 @@ export const GiftSendToFriendModal = observer(function GiftSendToFriendModal({co
 						placeholder={i18n._(SEARCH_FRIENDS_DESCRIPTOR)}
 						leftIcon={
 							<MagnifyingGlassIcon
-								size={20}
+								size={remFromPx(20)}
 								weight="bold"
 								className={selectorStyles.searchIcon}
 								data-flx="expressions.gift-send-to-friend-modal.magnifying-glass-icon"

@@ -109,15 +109,19 @@
 .friendSubtext {
 	font-size: 0.6875rem;
 	line-height: 1rem;
-	color: var(--text-primary-muted);
+	color: color-mix(in srgb, var(--text-primary-muted) 85%, transparent);
 	font-weight: 500;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
 	margin-top: -0.0625rem;
-	opacity: 0.85;
 	width: 100%;
 	min-width: 0;
+}
+
+.friendSubtext img,
+.friendSubtext svg {
+	opacity: 0.85;
 }
 
 :global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
@@ -131,11 +135,11 @@
 }
 
 .friendStatusOffline {
-	color: var(--text-tertiary);
+	color: color-mix(in srgb, var(--text-tertiary) 85%, transparent);
 }
 
 .friendStatusOnline {
-	color: var(--text-primary-muted);
+	color: color-mix(in srgb, var(--text-primary-muted) 85%, transparent);
 }
 
 .friendActions {

@@ -36,6 +36,13 @@ interface MarkAttachmentUploadCompletedInput {
 	completedAt?: Date;
 }
 
+interface GetPendingAttachmentUploadInput {
+	uploadKey: string;
+	userId: UserID;
+	channelId: ChannelID;
+	uploadMode?: AttachmentUploadMode;
+}
+
 export class AttachmentUploadTraceRepository {
 	async getByUploadKey(uploadKey: string): Promise<AttachmentUploadTraceByKeyRow | null> {
 		return await fetchOne<AttachmentUploadTraceByKeyRow>(GET_UPLOAD_TRACE_BY_KEY_QUERY.bind({upload_key: uploadKey}));
@@ -45,6 +52,20 @@ export class AttachmentUploadTraceRepository {
 		return await fetchOne<AttachmentUploadTraceByAttachmentRow>(
 			GET_UPLOAD_TRACE_BY_ATTACHMENT_QUERY.bind({attachment_id: BigInt(attachmentId)}),
 		);
+	}
+
+	async getPendingUpload(input: GetPendingAttachmentUploadInput): Promise<AttachmentUploadTraceByKeyRow | null> {
+		const existing = await this.getByUploadKey(input.uploadKey);
+		if (
+			!existing ||
+			existing.user_id !== input.userId ||
+			existing.channel_id !== input.channelId ||
+			existing.attachment_id != null ||
+			(input.uploadMode !== undefined && existing.upload_mode !== input.uploadMode)
+		) {
+			return null;
+		}
+		return existing;
 	}
 
 	async recordRequestedUpload(input: RecordAttachmentUploadRequestInput): Promise<AttachmentUploadTraceByKeyRow> {
@@ -89,7 +110,7 @@ export class AttachmentUploadTraceRepository {
 		attachmentId: AttachmentID,
 	): Promise<AttachmentUploadTraceByAttachmentRow | null> {
 		const existing = await this.getByUploadKey(uploadKey);
-		if (!existing) {
+		if (!existing || existing.attachment_id != null) {
 			return null;
 		}
 		const now = new Date();

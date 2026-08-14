@@ -4,6 +4,7 @@ import styles from '@app/features/channel/components/embeds/attachments/TextualA
 import type {TextualAttachmentLanguageComboboxProps} from '@app/features/channel/components/embeds/attachments/TextualAttachmentPreviewUtils';
 import {useHighlightLanguageOptions} from '@app/features/code_highlighting/utils/ArboriumHighlighting';
 import {PASSWORD_MANAGER_IGNORE_ATTRIBUTES} from '@app/features/platform/utils/PasswordManagerAutocomplete';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import {Combobox as BaseCombobox} from '@base-ui/react/combobox';
@@ -109,7 +110,7 @@ export const TextualAttachmentLanguageCombobox = observer(function TextualAttach
 						data-flx="channel.embeds.attachments.textual-attachment-language-combobox.trigger"
 					>
 						<CodeIcon
-							size={18}
+							size={remFromPx(18)}
 							weight="regular"
 							data-flx="channel.embeds.attachments.textual-attachment-language-combobox.code-icon"
 						/>

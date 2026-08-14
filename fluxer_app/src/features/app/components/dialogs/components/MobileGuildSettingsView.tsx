@@ -189,7 +189,6 @@ export const MobileGuildSettingsView: React.FC<MobileGuildSettingsViewProps> = o
 								exit={reducedMotion ? 'center' : 'exit'}
 								transition={{duration: reducedMotion ? 0 : 0.15, ease: 'easeInOut'}}
 								className={userSettingsStyles.mobileContentPane}
-								style={{willChange: 'transform'}}
 								data-flx="app.mobile-guild-settings-view.div--6"
 							>
 								<MobileSettingsList
@@ -214,7 +213,6 @@ export const MobileGuildSettingsView: React.FC<MobileGuildSettingsViewProps> = o
 								exit={reducedMotion ? 'center' : 'exit'}
 								transition={{duration: reducedMotion ? 0 : 0.15, ease: 'easeInOut'}}
 								className={userSettingsStyles.mobileContentPane}
-								style={{willChange: 'transform'}}
 								data-flx="app.mobile-guild-settings-view.div--7"
 							>
 								<Scroller

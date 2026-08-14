@@ -45,7 +45,6 @@ function loadStreamingPriority({
 	currentPriority = 0,
 	elevateResult = true,
 	restoreResult = true,
-	windowsGameCaptureModuleEnabled = false,
 } = {}) {
 	const calls = {
 		elevate: [],
@@ -58,7 +57,6 @@ function loadStreamingPriority({
 		guardStop: [],
 		setPriority: [],
 		nativeModuleImports: [],
-		windowsGameCapturePolicyEnableCalls: 0,
 		logs: {debug: [], info: [], warn: []},
 	};
 
@@ -119,15 +117,6 @@ function loadStreamingPriority({
 		if (specifier === 'electron') return {app, powerSaveBlocker};
 		if (specifier === 'electron-log') return log;
 		if (specifier === './WindowsScreenCaptureGuard') return guard;
-		if (specifier === './WindowsGameCapturePolicy') {
-			return {
-				WINDOWS_GAME_CAPTURE_DISABLED_DETAIL: 'windows-game-capture-disabled-until-code-signed',
-				WINDOWS_GAME_CAPTURE_MODULE_ENABLED: windowsGameCaptureModuleEnabled,
-				enableWindowsGameCaptureModuleForCurrentProcess: () => {
-					calls.windowsGameCapturePolicyEnableCalls += 1;
-				},
-			};
-		}
 		throw new Error(`Unexpected import: ${specifier}`);
 	}
 
@@ -156,7 +145,7 @@ function loadStreamingPriority({
 }
 
 describe('StreamingPriority GPU scheduling priority', () => {
-	test('keeps streaming priority active without loading unsigned Windows game capture code', () => {
+	test('elevates GPU scheduling priority on Windows', () => {
 		const webContents = makeWebContents(2001);
 		const {calls, module} = loadStreamingPriority({
 			metrics: [
@@ -170,8 +159,14 @@ describe('StreamingPriority GPU scheduling priority', () => {
 
 		module.acquireStreamingPriority(webContents);
 
-		assert.deepEqual(calls.nativeModuleImports, []);
-		assert.deepEqual(calls.elevate, []);
+		assert.deepEqual(calls.nativeModuleImports, ['@fluxer/win-game-capture']);
+		assert.deepEqual(calls.elevate, [
+			{processId: 1000, priorityClass: 'high'},
+			{processId: 2001, priorityClass: 'high'},
+			{processId: 3001, priorityClass: 'high'},
+			{processId: 3002, priorityClass: 'high'},
+			{processId: 3003, priorityClass: 'high'},
+		]);
 		assert.deepEqual(calls.setPriority, [-7]);
 		assert.deepEqual(webContents.backgroundThrottlingAllowed, [false]);
 		assert.equal(calls.intervals.length, 1);
@@ -190,14 +185,20 @@ describe('StreamingPriority GPU scheduling priority', () => {
 				supported: true,
 				priorityClass: 'high',
 				env: GPU_SCHEDULING_PRIORITY_ENV,
-				nativeModuleStatus: 'unavailable',
-				nativeModuleLoadErrorDetail: 'windows-game-capture-disabled-until-code-signed',
+				nativeModuleStatus: 'loaded',
+				nativeModuleLoadErrorDetail: null,
 				refreshActive: true,
 				refreshIntervalMs: 20000,
 				trackedWebContents: 1,
-				elevatedProcesses: [],
+				elevatedProcesses: [
+					{processId: 1000, priorityClass: 'high'},
+					{processId: 2001, priorityClass: 'high'},
+					{processId: 3001, priorityClass: 'high'},
+					{processId: 3002, priorityClass: 'high'},
+					{processId: 3003, priorityClass: 'high'},
+				],
 				lastAcquire: {
-					status: 'native-module-unavailable',
+					status: 'succeeded',
 					priorityClass: 'high',
 					targets: [
 						{processId: 1000, reasons: ['native-main-encoder-capture']},
@@ -206,26 +207,19 @@ describe('StreamingPriority GPU scheduling priority', () => {
 						{processId: 3002, reasons: ['chromium-video-encode']},
 						{processId: 3003, reasons: ['chromium-video-capture']},
 					],
-					elevatedProcessIds: [],
+					elevatedProcessIds: [1000, 2001, 3001, 3002, 3003],
 					skippedProcessIds: [],
-					failedProcessIds: [
-						{processId: 1000, reason: 'windows-game-capture-disabled-until-code-signed'},
-						{processId: 2001, reason: 'windows-game-capture-disabled-until-code-signed'},
-						{processId: 3001, reason: 'windows-game-capture-disabled-until-code-signed'},
-						{processId: 3002, reason: 'windows-game-capture-disabled-until-code-signed'},
-						{processId: 3003, reason: 'windows-game-capture-disabled-until-code-signed'},
-					],
-					detail: 'windows-game-capture-disabled-until-code-signed',
+					failedProcessIds: [],
 				},
 				lastRestore: null,
 			},
 		});
 
 		module.acquireStreamingPriority(webContents);
-		assert.equal(calls.elevate.length, 0);
+		assert.equal(calls.elevate.length, 5);
 		assert.deepEqual(
 			normalize(module.getStreamingPriorityDiagnostics().gpuScheduling.lastAcquire.skippedProcessIds),
-			[],
+			[1000, 2001, 3001, 3002, 3003],
 		);
 
 		module.releaseStreamingPriority();
@@ -233,13 +227,19 @@ describe('StreamingPriority GPU scheduling priority', () => {
 
 		module.releaseStreamingPriority();
 		assert.deepEqual(webContents.backgroundThrottlingAllowed, [false, false, true]);
-		assert.deepEqual(calls.restore, []);
+		assert.deepEqual(calls.restore, [
+			{processId: 1000},
+			{processId: 2001},
+			{processId: 3001},
+			{processId: 3002},
+			{processId: 3003},
+		]);
 		assert.deepEqual(calls.setPriority, [-7, 0]);
 		assert.deepEqual(normalize(module.getStreamingPriorityDiagnostics().gpuScheduling.elevatedProcesses), []);
 		assert.deepEqual(normalize(module.getStreamingPriorityDiagnostics().gpuScheduling.lastRestore), {
-			status: 'no-active-priority',
-			processIds: [],
-			restoredProcessIds: [],
+			status: 'succeeded',
+			processIds: [1000, 2001, 3001, 3002, 3003],
+			restoredProcessIds: [1000, 2001, 3001, 3002, 3003],
 			failedProcessIds: [],
 		});
 		assert.deepEqual(calls.guardStop, ['streaming-priority-release']);
@@ -251,22 +251,20 @@ describe('StreamingPriority GPU scheduling priority', () => {
 
 			module.acquireStreamingPriority();
 
-			assert.deepEqual(calls.elevate, []);
+			assert.deepEqual(calls.elevate, [{processId: 1000, priorityClass: 'realtime'}]);
 			assert.equal(module.getStreamingPriorityDiagnostics().gpuScheduling.priorityClass, 'realtime');
 		}
 	});
 
-	test('loads Windows game capture GPU priority support only for the game capture build variant', () => {
+	test('loads the Windows game capture native module for GPU priority elevation', () => {
 		const webContents = makeWebContents(2001);
 		const {calls, module} = loadStreamingPriority({
-			windowsGameCaptureModuleEnabled: true,
 			metrics: [{pid: 3001, type: 'GPU'}],
 		});
 
 		module.acquireStreamingPriority(webContents);
 
 		assert.deepEqual(calls.nativeModuleImports, ['@fluxer/win-game-capture']);
-		assert.equal(calls.windowsGameCapturePolicyEnableCalls, 1);
 		assert.deepEqual(
 			calls.elevate.map((entry) => entry.processId),
 			[1000, 2001, 3001],
@@ -317,7 +315,7 @@ describe('StreamingPriority GPU scheduling priority', () => {
 
 		module.acquireStreamingPriority();
 
-		assert.deepEqual(calls.elevate, []);
+		assert.deepEqual(calls.elevate, [{processId: 1000, priorityClass: 'high'}]);
 		assert.equal(calls.logs.warn.length, 1);
 		assert.equal(calls.logs.warn[0][0], '[StreamingPriority] Ignoring invalid GPU scheduling priority override');
 	});
@@ -329,12 +327,12 @@ describe('StreamingPriority GPU scheduling priority', () => {
 		module.releaseStreamingPriority();
 
 		assert.deepEqual(calls.setPriority, []);
-		assert.deepEqual(calls.restore, []);
+		assert.deepEqual(calls.restore, [{processId: 1000}]);
 		assert.equal(module.getStreamingPriorityDiagnostics().processPriority.elevated, false);
 		assert.equal(module.getStreamingPriorityDiagnostics().processPriority.savedPriority, null);
 	});
 
-	test('records native module diagnostics when unsigned game capture is disabled', () => {
+	test('records the real native module load failure detail', () => {
 		const webContents = makeWebContents(2001);
 		const {calls, module} = loadStreamingPriority({
 			addonLoadError: new Error('native binary missing'),
@@ -344,11 +342,11 @@ describe('StreamingPriority GPU scheduling priority', () => {
 		module.acquireStreamingPriority(webContents);
 
 		assert.deepEqual(calls.elevate, []);
-		assert.deepEqual(calls.nativeModuleImports, []);
+		assert.deepEqual(calls.nativeModuleImports, ['@fluxer/win-game-capture']);
 		assert.equal(module.getStreamingPriorityDiagnostics().gpuScheduling.nativeModuleStatus, 'unavailable');
 		assert.equal(
 			module.getStreamingPriorityDiagnostics().gpuScheduling.nativeModuleLoadErrorDetail,
-			'windows-game-capture-disabled-until-code-signed',
+			'native binary missing',
 		);
 		assert.deepEqual(normalize(module.getStreamingPriorityDiagnostics().gpuScheduling.lastAcquire), {
 			status: 'native-module-unavailable',
@@ -361,15 +359,41 @@ describe('StreamingPriority GPU scheduling priority', () => {
 			elevatedProcessIds: [],
 			skippedProcessIds: [],
 			failedProcessIds: [
-				{processId: 1000, reason: 'windows-game-capture-disabled-until-code-signed'},
-				{processId: 2001, reason: 'windows-game-capture-disabled-until-code-signed'},
-				{processId: 3001, reason: 'windows-game-capture-disabled-until-code-signed'},
+				{processId: 1000, reason: 'native binary missing'},
+				{processId: 2001, reason: 'native binary missing'},
+				{processId: 3001, reason: 'native binary missing'},
 			],
-			detail: 'windows-game-capture-disabled-until-code-signed',
+			detail: 'native binary missing',
 		});
+		assert.equal(calls.logs.debug[0][0], '[StreamingPriority] Windows GPU priority module reported load error');
 		assert.equal(
-			calls.logs.debug[0][0],
+			calls.logs.debug[1][0],
 			'[StreamingPriority] Cannot elevate GPU scheduling priority; native module unavailable',
+		);
+	});
+
+	test('reduces a multi-line native load error to its first line for per-process reasons', () => {
+		const {calls, module} = loadStreamingPriority({
+			addonLoadError: new Error(
+				'@fluxer/win-game-capture native module failed to load.\nreason=native binary not found\nnativeRoot=C:/fluxer',
+			),
+		});
+
+		module.acquireStreamingPriority();
+		module.releaseStreamingPriority();
+
+		assert.deepEqual(calls.elevate, []);
+		const diagnostics = module.getStreamingPriorityDiagnostics();
+		assert.equal(
+			diagnostics.gpuScheduling.nativeModuleLoadErrorDetail,
+			'@fluxer/win-game-capture native module failed to load.\nreason=native binary not found\nnativeRoot=C:/fluxer',
+		);
+		assert.deepEqual(normalize(diagnostics.gpuScheduling.lastAcquire.failedProcessIds), [
+			{processId: 1000, reason: '@fluxer/win-game-capture native module failed to load.'},
+		]);
+		assert.equal(
+			diagnostics.gpuScheduling.lastAcquire.detail,
+			'@fluxer/win-game-capture native module failed to load.\nreason=native binary not found\nnativeRoot=C:/fluxer',
 		);
 	});
 });

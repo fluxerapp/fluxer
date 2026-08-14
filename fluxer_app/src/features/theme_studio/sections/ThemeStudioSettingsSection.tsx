@@ -7,6 +7,7 @@ import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import {useNativePlatform} from '@app/features/app/hooks/useNativePlatform';
 import {CANCEL_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {ShareThemeModal} from '@app/features/theme/components/modals/ShareThemeModal';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import Theme from '@app/features/theme/state/Theme';
 import ThemeLibrary from '@app/features/theme/state/ThemeLibrary';
 import styles from '@app/features/theme_studio/sections/ThemeStudioSettingsSection.module.css';
@@ -304,6 +305,12 @@ export const SettingsSection: React.FC = observer(() => {
 											background instead of staying transparent.
 										</Trans>
 									</li>
+									<li data-flx="theme-studio.theme-studio-settings-section.settings-section.li--6">
+										<Trans>
+											Text is rendered with grayscale antialiasing instead of ClearType while transparency is enabled,
+											so it will look softer.
+										</Trans>
+									</li>
 								</ul>
 							</div>
 						) : null}
@@ -330,7 +337,7 @@ export const SettingsSection: React.FC = observer(() => {
 								variant="primary"
 								leadingIcon={
 									<ShareNetworkIcon
-										size={13}
+										size={remFromPx(13)}
 										weight="bold"
 										data-flx="theme-studio.settings-section.share-network-icon"
 									/>
@@ -364,7 +371,9 @@ export const SettingsSection: React.FC = observer(() => {
 						<div className={styles.rowControl} data-flx="theme-studio.settings-section.row-control--5">
 							<StudioButton
 								variant="dangerSolid"
-								leadingIcon={<TrashIcon size={13} weight="bold" data-flx="theme-studio.settings-section.trash-icon" />}
+								leadingIcon={
+									<TrashIcon size={remFromPx(13)} weight="bold" data-flx="theme-studio.settings-section.trash-icon" />
+								}
 								onClick={handleResetData}
 								data-flx="theme-studio.settings-section.studio-button.reset-data"
 							>

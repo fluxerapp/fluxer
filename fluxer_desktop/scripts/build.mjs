@@ -18,20 +18,11 @@ const isProduction =
 const skipNative = process.env.FLUXER_SKIP_NATIVE === 'true';
 const embeddedBuildVersion = process.env.PUBLIC_BUILD_VERSION || process.env.BUILD_VERSION || '';
 const embeddedReleaseChannel = process.env.PUBLIC_RELEASE_CHANNEL || process.env.RELEASE_CHANNEL || '';
-const requestedDesktopBuildVariant = process.env.FLUXER_DESKTOP_BUILD_VARIANT || process.env.DESKTOP_VARIANT || '';
-const windowsGameCaptureModuleEnabled =
-	requestedDesktopBuildVariant === 'windows-game-capture' ||
-	process.env.FLUXER_WINDOWS_GAME_CAPTURE_MODULE_ENABLED === 'true';
-const embeddedDesktopBuildVariant = windowsGameCaptureModuleEnabled ? 'windows-game-capture' : 'default';
 const publicBuildDefines = {
 	'process.env.PUBLIC_BUILD_VERSION': JSON.stringify(embeddedBuildVersion),
 	'process.env.BUILD_VERSION': JSON.stringify(embeddedBuildVersion),
 	'process.env.PUBLIC_RELEASE_CHANNEL': JSON.stringify(embeddedReleaseChannel),
 	'process.env.RELEASE_CHANNEL': JSON.stringify(embeddedReleaseChannel),
-	'process.env.FLUXER_DESKTOP_BUILD_VARIANT': JSON.stringify(embeddedDesktopBuildVariant),
-	'process.env.FLUXER_WINDOWS_GAME_CAPTURE_MODULE_ENABLED': JSON.stringify(
-		windowsGameCaptureModuleEnabled ? 'true' : 'false',
-	),
 };
 const electronExternals = [
 	'electron',
@@ -145,7 +136,7 @@ function addFilesFromDirectory(files, packageDir, relativeDir, predicate) {
 
 function collectRuntimeArtifactPaths(packageDir) {
 	const artifacts = new Set();
-	for (const fileName of ['index.js', 'index.d.ts', 'binding.js', 'binding.d.ts', 'loader-diagnostics.cjs']) {
+	for (const fileName of ['index.js', 'index.d.ts', 'binding.js', 'binding.d.ts', 'loader-diagnostics.cjs', 'pure.cjs']) {
 		if (fs.existsSync(path.join(packageDir, fileName))) {
 			artifacts.add(fileName);
 		}
@@ -175,7 +166,6 @@ function isWindowsNativeRuntimeManifest(fileName) {
 }
 
 function addWinGameCaptureRuntimeArtifacts(artifacts, tag, arch) {
-	if (!windowsGameCaptureModuleEnabled) return;
 	const add = (relativePath) => {
 		artifacts.push({
 			label: '@fluxer/win-game-capture',
@@ -236,6 +226,7 @@ function expectedNativeRuntimeArtifacts(platform = process.platform, arch = proc
 	artifacts.push({
 		label: '@fluxer/webauthn',
 		relativePath: `webauthn.${tag}.node`,
+		runtimeFiles: ['index.js', 'loader-diagnostics.cjs', 'pure.cjs'],
 	});
 	artifacts.push({
 		label: '@fluxer/webrtc-sender',
@@ -270,6 +261,7 @@ function expectedNativeRuntimeArtifacts(platform = process.platform, arch = proc
 		artifacts.push({
 			label: '@fluxer/platform-info',
 			relativePath: `platform-info.${tag}.node`,
+			runtimeFiles: ['index.js', 'loader-diagnostics.cjs', 'pure.cjs'],
 		});
 	} else if (platform === 'win32') {
 		artifacts.push({
@@ -296,6 +288,7 @@ function expectedNativeRuntimeArtifacts(platform = process.platform, arch = proc
 		artifacts.push({
 			label: '@fluxer/platform-info',
 			relativePath: `platform-info.${tag}.node`,
+			runtimeFiles: ['index.js', 'loader-diagnostics.cjs', 'pure.cjs'],
 		});
 	} else if (platform === 'linux') {
 		artifacts.push({
@@ -329,6 +322,7 @@ function expectedNativeRuntimeArtifacts(platform = process.platform, arch = proc
 		artifacts.push({
 			label: '@fluxer/platform-info',
 			relativePath: `platform-info.${tag}.node`,
+			runtimeFiles: ['index.js', 'loader-diagnostics.cjs', 'pure.cjs'],
 		});
 	}
 	return artifacts;
@@ -498,14 +492,12 @@ function buildNativeAddons() {
 			commands: [['pnpm', 'build']],
 			jsEntry: 'index.js',
 		});
-		if (windowsGameCaptureModuleEnabled) {
-			buildNativeAddon({
-				label: '@fluxer/win-game-capture',
-				dirName: 'win-game-capture',
-				commands: [['pnpm', 'build']],
-				jsEntry: 'index.js',
-			});
-		}
+		buildNativeAddon({
+			label: '@fluxer/win-game-capture',
+			dirName: 'win-game-capture',
+			commands: [['pnpm', 'build']],
+			jsEntry: 'index.js',
+		});
 		buildNativeAddon({
 			label: '@fluxer/platform-info',
 			dirName: 'platform-info',

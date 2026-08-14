@@ -1,6 +1,12 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
+.label {
+	line-height: inherit;
+	vertical-align: baseline;
+	white-space: normal;
+}
+
 .channelIcon {
-	width: var(--mention-icon-size);
-	height: var(--mention-icon-size);
+	margin-inline-end: var(--mention-gap);
+	color: currentColor;
 }

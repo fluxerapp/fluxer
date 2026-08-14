@@ -3,19 +3,16 @@
 use crate::common::{
     CalverEnv, CommandSpec, append_github_env, append_github_output, append_github_path, capture,
     collect_files, command_succeeds, copy_dir_contents, count_files, count_files_min_depth,
-    download_file, download_s3_prefix, env_bool, env_string, first_word, get_s3_object_bytes,
-    join_s3_key, output_bytes, output_text, parse_bool, path_to_s3_key, remove_dir_if_exists,
-    remove_file_if_exists, require_any_env, require_env, require_home, resolve_calver, run_command,
-    runner_temp, s3_client, title_case, trim_option, upload_directory_to_s3,
-    upload_directory_to_s3_overwrite,
+    download_file, download_s3_prefix, env_bool, env_string, join_s3_key, output_bytes,
+    output_text, parse_bool, path_to_s3_key, remove_dir_if_exists, remove_file_if_exists,
+    require_any_env, require_env, require_home, resolve_calver, run_command, runner_temp,
+    s3_client, title_case, trim_option, upload_directory_to_s3, upload_directory_to_s3_overwrite,
 };
 use crate::functions::write_json_pretty;
 use anyhow::{Context, Result, anyhow, bail, ensure};
 use aws_sdk_s3::Client as S3Client;
-use chrono::{DateTime, Utc};
+use chrono::Utc;
 use clap::{Args, ValueEnum};
-use flate2::{Compression, GzBuilder, read::GzDecoder};
-use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
@@ -23,7 +20,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::env;
 use std::ffi::{OsStr, OsString};
 use std::fs::{self, File, OpenOptions};
-use std::io::{self, Cursor, Read, Write};
+use std::io::{self, Read, Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};
 use std::thread;
 use std::time::{Duration, Instant};
@@ -36,64 +33,6 @@ const PNPM_VERSION: &str = "10.29.3";
 const RUST_TOOLCHAIN: &str = "1.93.0";
 const DEFAULT_DESKTOP_VARIANT: &str = "default";
 const WINDOWS_GAME_CAPTURE_DESKTOP_VARIANT: &str = "windows-game-capture";
-
-type DesktopFormat = (&'static str, &'static str);
-type DesktopArchFormats = (&'static str, &'static [DesktopFormat]);
-type DesktopDownloadSection = (
-    &'static str,
-    &'static str,
-    &'static str,
-    &'static [DesktopArchFormats],
-);
-
-const WINDOWS_DESKTOP_FORMATS: &[DesktopFormat] =
-    &[("setup", "Setup.exe"), ("portable", "Portable ZIP")];
-const MACOS_DESKTOP_FORMATS: &[DesktopFormat] = &[("dmg", "DMG"), ("zip", "ZIP")];
-const DESKTOP_WEBHOOK_CONTENT_LIMIT: usize = 2_000;
-const LINUX_DESKTOP_FORMATS: &[DesktopFormat] = &[
-    ("appimage", "AppImage"),
-    ("deb", "DEB"),
-    ("rpm", "RPM"),
-    ("tar_gz", "tar.gz"),
-];
-const WINDOWS_DESKTOP_ARCHES: &[DesktopArchFormats] = &[
-    ("x64", WINDOWS_DESKTOP_FORMATS),
-    ("arm64", WINDOWS_DESKTOP_FORMATS),
-];
-const MACOS_DESKTOP_ARCHES: &[DesktopArchFormats] = &[
-    ("x64", MACOS_DESKTOP_FORMATS),
-    ("arm64", MACOS_DESKTOP_FORMATS),
-];
-const LINUX_DESKTOP_ARCHES: &[DesktopArchFormats] = &[
-    ("x64", LINUX_DESKTOP_FORMATS),
-    ("arm64", LINUX_DESKTOP_FORMATS),
-];
-const DESKTOP_DOWNLOAD_SECTIONS: &[DesktopDownloadSection] = &[
-    (
-        "win32",
-        DEFAULT_DESKTOP_VARIANT,
-        "Windows (`win32`)",
-        WINDOWS_DESKTOP_ARCHES,
-    ),
-    (
-        "win32",
-        WINDOWS_GAME_CAPTURE_DESKTOP_VARIANT,
-        "Windows Game Capture (`win32`)",
-        WINDOWS_DESKTOP_ARCHES,
-    ),
-    (
-        "darwin",
-        DEFAULT_DESKTOP_VARIANT,
-        "macOS (`darwin`)",
-        MACOS_DESKTOP_ARCHES,
-    ),
-    (
-        "linux",
-        DEFAULT_DESKTOP_VARIANT,
-        "Linux (`linux`)",
-        LINUX_DESKTOP_ARCHES,
-    ),
-];
 
 #[derive(Debug, Args, Clone)]
 pub struct BuildDesktopArgs {
@@ -149,30 +88,26 @@ enum DesktopStep {
     BuildAppMacos,
     VerifyBundleId,
     BuildAppWindows,
+    ValidateWindowsSigningInputs,
+    WriteWindowsSigningMetadata,
+    ResolveWindowsUnpackedDir,
+    VerifyWindowsUnpackedSignatures,
     PackageAppWindowsVelopack,
     AnalyseVelopackPaths,
     BuildAppLinux,
     CreatePortableZipWindows,
+    VerifyWindowsSignedArtifacts,
     PrepareArtifactsWindows,
     PrepareArtifactsUnix,
     NormaliseUpdaterYaml,
     GenerateChecksumsUnix,
     GenerateChecksumsWindows,
-    BuildSourceTarball,
     UploadHandoff,
-    CheckSigningSecrets,
-    DownloadWindowsHandoff,
-    CheckWindowsArtifacts,
-    VerifyAuthenticode,
-    RegenerateSignedChecksums,
-    StageSignedWindowsArtifacts,
     DownloadHandoff,
     CleanupHandoff,
     BuildPayload,
     UploadPayload,
-    VerifySourceTarball,
     BuildSummary,
-    NotifyWebhook,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -194,22 +129,8 @@ const PLATFORMS: &[Platform] = &[
     },
     Platform {
         platform: "windows",
-        arch: "x64",
-        desktop_variant: WINDOWS_GAME_CAPTURE_DESKTOP_VARIANT,
-        os: "blacksmith-32vcpu-windows-2025",
-        electron_arch: "x64",
-    },
-    Platform {
-        platform: "windows",
         arch: "arm64",
         desktop_variant: DEFAULT_DESKTOP_VARIANT,
-        os: "blacksmith-32vcpu-windows-2025",
-        electron_arch: "arm64",
-    },
-    Platform {
-        platform: "windows",
-        arch: "arm64",
-        desktop_variant: WINDOWS_GAME_CAPTURE_DESKTOP_VARIANT,
         os: "blacksmith-32vcpu-windows-2025",
         electron_arch: "arm64",
     },
@@ -287,10 +208,15 @@ pub async fn run(args: BuildDesktopArgs) -> Result<()> {
         DesktopStep::BuildAppMacos => build_app_step(DesktopBuildPlatform::Macos),
         DesktopStep::VerifyBundleId => verify_bundle_id_step(),
         DesktopStep::BuildAppWindows => build_app_step(DesktopBuildPlatform::Windows),
+        DesktopStep::ValidateWindowsSigningInputs => validate_windows_signing_inputs_step(),
+        DesktopStep::WriteWindowsSigningMetadata => write_windows_signing_metadata_step(),
+        DesktopStep::ResolveWindowsUnpackedDir => resolve_windows_unpacked_dir_step(),
+        DesktopStep::VerifyWindowsUnpackedSignatures => verify_windows_unpacked_signatures_step(),
         DesktopStep::PackageAppWindowsVelopack => package_app_windows_velopack_step(),
         DesktopStep::AnalyseVelopackPaths => analyse_velopack_paths_step(),
         DesktopStep::BuildAppLinux => build_app_step(DesktopBuildPlatform::Linux),
         DesktopStep::CreatePortableZipWindows => create_portable_zip_windows_step(),
+        DesktopStep::VerifyWindowsSignedArtifacts => verify_windows_signed_artifacts_step(),
         DesktopStep::PrepareArtifactsWindows => prepare_artifacts_windows_step(),
         DesktopStep::PrepareArtifactsUnix => prepare_artifacts_unix_step(),
         DesktopStep::NormaliseUpdaterYaml => normalise_updater_yaml_step(),
@@ -308,21 +234,12 @@ pub async fn run(args: BuildDesktopArgs) -> Result<()> {
             ArtifactChecksumKind::Extension("nupkg"),
             ArtifactChecksumKind::Extension("zip"),
         ]),
-        DesktopStep::BuildSourceTarball => build_source_tarball_step(),
         DesktopStep::UploadHandoff => upload_handoff_step(false).await,
-        DesktopStep::CheckSigningSecrets => check_signing_secrets_step(),
-        DesktopStep::DownloadWindowsHandoff => download_windows_handoff_step().await,
-        DesktopStep::CheckWindowsArtifacts => check_windows_artifacts_step(),
-        DesktopStep::VerifyAuthenticode => verify_authenticode_step(),
-        DesktopStep::RegenerateSignedChecksums => regenerate_signed_checksums_step(),
-        DesktopStep::StageSignedWindowsArtifacts => stage_signed_windows_artifacts_step().await,
         DesktopStep::DownloadHandoff => download_handoff_step().await,
         DesktopStep::CleanupHandoff => cleanup_handoff_step().await,
         DesktopStep::BuildPayload => build_payload_step(),
         DesktopStep::UploadPayload => upload_payload_step().await,
-        DesktopStep::VerifySourceTarball => verify_source_tarball_step().await,
         DesktopStep::BuildSummary => build_summary_step(),
-        DesktopStep::NotifyWebhook => notify_webhook_step().await,
     }
 }
 
@@ -439,44 +356,8 @@ fn set_matrix_step(args: &BuildDesktopArgs) -> Result<()> {
         .map(platform_json)
         .collect::<Vec<_>>()
         .join(",");
-    let windows_x64 = selected_platform(&platforms, "windows", "x64").to_string();
-    let windows_arm64 = selected_platform(&platforms, "windows", "arm64").to_string();
-    let windows_x64_default =
-        selected_platform_variant(&platforms, "windows", "x64", DEFAULT_DESKTOP_VARIANT)
-            .to_string();
-    let windows_arm64_default =
-        selected_platform_variant(&platforms, "windows", "arm64", DEFAULT_DESKTOP_VARIANT)
-            .to_string();
-    let windows_game_capture_x64 = selected_platform_variant(
-        &platforms,
-        "windows",
-        "x64",
-        WINDOWS_GAME_CAPTURE_DESKTOP_VARIANT,
-    )
-    .to_string();
-    let windows_game_capture_arm64 = selected_platform_variant(
-        &platforms,
-        "windows",
-        "arm64",
-        WINDOWS_GAME_CAPTURE_DESKTOP_VARIANT,
-    )
-    .to_string();
     let matrix = format!("{{\"include\":[{include}]}}");
-    append_github_output(&[
-        ("matrix", matrix.as_str()),
-        ("windows_x64", windows_x64.as_str()),
-        ("windows_arm64", windows_arm64.as_str()),
-        ("windows_x64_default", windows_x64_default.as_str()),
-        ("windows_arm64_default", windows_arm64_default.as_str()),
-        (
-            "windows_game_capture_x64",
-            windows_game_capture_x64.as_str(),
-        ),
-        (
-            "windows_game_capture_arm64",
-            windows_game_capture_arm64.as_str(),
-        ),
-    ])
+    append_github_output(&[("matrix", matrix.as_str())])
 }
 
 fn selected_platforms(args: &BuildDesktopArgs) -> Result<Vec<Platform>> {
@@ -486,23 +367,6 @@ fn selected_platforms(args: &BuildDesktopArgs) -> Result<Vec<Platform>> {
         .copied()
         .filter(|platform| !skip_platform(*platform, args, &skip_targets))
         .collect())
-}
-
-fn selected_platform(platforms: &[Platform], platform: &str, arch: &str) -> bool {
-    platforms
-        .iter()
-        .any(|item| item.platform == platform && item.arch == arch)
-}
-
-fn selected_platform_variant(
-    platforms: &[Platform],
-    platform: &str,
-    arch: &str,
-    desktop_variant: &str,
-) -> bool {
-    platforms.iter().any(|item| {
-        item.platform == platform && item.arch == arch && item.desktop_variant == desktop_variant
-    })
 }
 
 fn skip_target_set(args: &BuildDesktopArgs) -> Result<BTreeSet<String>> {
@@ -516,9 +380,6 @@ fn skip_target_set(args: &BuildDesktopArgs) -> Result<BTreeSet<String>> {
         "windows",
         "windows-x64",
         "windows-arm64",
-        "windows-game-capture",
-        "windows-game-capture-x64",
-        "windows-game-capture-arm64",
         "macos",
         "macos-x64",
         "macos-arm64",
@@ -556,15 +417,6 @@ fn skip_platform(
     if skip_targets.contains(platform.platform) || skip_targets.contains(platform_arch.as_str()) {
         return true;
     }
-    if platform.desktop_variant != DEFAULT_DESKTOP_VARIANT {
-        let variant_arch = format!("{}-{}", platform.desktop_variant, platform.arch);
-        if skip_targets.contains(platform.desktop_variant)
-            || skip_targets.contains(variant_arch.as_str())
-        {
-            return true;
-        }
-    }
-
     match platform.platform {
         "windows" => {
             flag(&args.skip_windows, "SKIP_WINDOWS")
@@ -632,38 +484,6 @@ fn desktop_variant_path_segment(variant: &str) -> Option<&str> {
     } else {
         Some(variant)
     }
-}
-
-fn windows_artifact_dir(arch: &str, variant: &str) -> PathBuf {
-    let mut name = format!("windows-{arch}");
-    if let Some(segment) = desktop_variant_path_segment(variant) {
-        name.push('-');
-        name.push_str(segment);
-    }
-    Path::new("artifacts").join(name)
-}
-
-fn expected_windows_artifacts(arch: &str, variant: &str) -> bool {
-    if env_string("EXPECT_WINDOWS_ARTIFACTS").is_some() {
-        return env_bool("EXPECT_WINDOWS_ARTIFACTS");
-    }
-    let env_name = match (arch, variant) {
-        ("x64", DEFAULT_DESKTOP_VARIANT) => "EXPECT_WINDOWS_X64_DEFAULT",
-        ("arm64", DEFAULT_DESKTOP_VARIANT) => "EXPECT_WINDOWS_ARM64_DEFAULT",
-        ("x64", WINDOWS_GAME_CAPTURE_DESKTOP_VARIANT) => "EXPECT_WINDOWS_GAME_CAPTURE_X64",
-        ("arm64", WINDOWS_GAME_CAPTURE_DESKTOP_VARIANT) => "EXPECT_WINDOWS_GAME_CAPTURE_ARM64",
-        ("x64", _) => "EXPECT_WINDOWS_X64",
-        _ => "EXPECT_WINDOWS_ARM64",
-    };
-    if env_string(env_name).is_some() {
-        return env_bool(env_name);
-    }
-    let fallback_env = if arch == "x64" {
-        "EXPECT_WINDOWS_X64"
-    } else {
-        "EXPECT_WINDOWS_ARM64"
-    };
-    env_bool(fallback_env)
 }
 
 fn workspace_dir() -> PathBuf {
@@ -1583,6 +1403,106 @@ fn check_macho_arch(file: &Path, expected: &str, electron_arch: &str) -> Result<
     Ok(())
 }
 
+const WINDOWS_SIGNING_ENV: &[&str] = &[
+    "AZURE_CLIENT_ID",
+    "AZURE_TENANT_ID",
+    "AZURE_SUBSCRIPTION_ID",
+    "AZURE_ARTIFACT_SIGNING_ENDPOINT",
+    "AZURE_ARTIFACT_SIGNING_ACCOUNT_NAME",
+    "AZURE_ARTIFACT_SIGNING_CERTIFICATE_PROFILE_NAME",
+];
+const VELOPACK_TRUSTED_SIGN_FILE_ENV: &str = "VELOPACK_TRUSTED_SIGN_FILE";
+const TRUSTED_SIGNING_EXCLUDED_CREDENTIALS: &[&str] = &[
+    "ManagedIdentityCredential",
+    "WorkloadIdentityCredential",
+    "SharedTokenCacheCredential",
+    "VisualStudioCredential",
+    "VisualStudioCodeCredential",
+    "AzurePowerShellCredential",
+    "AzureDeveloperCliCredential",
+    "InteractiveBrowserCredential",
+];
+
+fn validate_windows_signing_inputs_step() -> Result<()> {
+    let missing = WINDOWS_SIGNING_ENV
+        .iter()
+        .copied()
+        .filter(|name| env_string(name).is_none())
+        .collect::<Vec<_>>();
+    ensure!(
+        missing.is_empty(),
+        "Missing Windows code signing environment variables: {}. Windows releases are always signed; every Azure Trusted Signing input is mandatory and there is no unsigned fallback.",
+        missing.join(" ")
+    );
+    println!(
+        "Windows code signing inputs present: {}",
+        WINDOWS_SIGNING_ENV.join(" ")
+    );
+    Ok(())
+}
+
+#[derive(Debug, Serialize)]
+struct TrustedSigningMetadata {
+    #[serde(rename = "Endpoint")]
+    endpoint: String,
+    #[serde(rename = "CodeSigningAccountName")]
+    code_signing_account_name: String,
+    #[serde(rename = "CertificateProfileName")]
+    certificate_profile_name: String,
+    #[serde(rename = "ExcludeCredentials")]
+    exclude_credentials: Vec<&'static str>,
+}
+
+fn windows_trusted_signing_metadata_path() -> PathBuf {
+    runner_temp().join("velopack-trusted-signing.json")
+}
+
+fn write_windows_signing_metadata_step() -> Result<()> {
+    validate_windows_signing_inputs_step()?;
+    let metadata = TrustedSigningMetadata {
+        endpoint: require_env("AZURE_ARTIFACT_SIGNING_ENDPOINT")?,
+        code_signing_account_name: require_env("AZURE_ARTIFACT_SIGNING_ACCOUNT_NAME")?,
+        certificate_profile_name: require_env("AZURE_ARTIFACT_SIGNING_CERTIFICATE_PROFILE_NAME")?,
+        exclude_credentials: TRUSTED_SIGNING_EXCLUDED_CREDENTIALS.to_vec(),
+    };
+    let path = windows_trusted_signing_metadata_path();
+    write_json_pretty(&path, &metadata)?;
+    println!(
+        "Wrote Velopack Trusted Signing metadata to {} (never staged for upload).",
+        path.display()
+    );
+    append_github_env(&[(
+        VELOPACK_TRUSTED_SIGN_FILE_ENV,
+        path.to_string_lossy().as_ref(),
+    )])
+}
+
+fn resolve_windows_unpacked_dir_step() -> Result<()> {
+    let build_channel = env::var("BUILD_CHANNEL").unwrap_or_else(|_| "stable".to_string());
+    let arch = require_env("ARCH")?;
+    let config = windows_package_config(&build_channel, &arch);
+    let pack_dir = resolve_windows_unpacked_dir(&arch, &config.main_exe)?;
+    println!(
+        "Resolved unpacked Windows app directory: {}",
+        pack_dir.display()
+    );
+    append_github_output(&[("unpacked_dir", pack_dir.to_string_lossy().as_ref())])
+}
+
+fn resolve_windows_unpacked_dir(arch: &str, main_exe: &str) -> Result<PathBuf> {
+    let pack_dir = find_windows_unpacked_app(arch, main_exe)
+        .ok_or_else(|| anyhow!("Unable to find unpacked Windows app containing {main_exe}"))?;
+    let absolute = env::current_dir()
+        .context("Failed to resolve current directory")?
+        .join(pack_dir);
+    ensure!(
+        absolute.is_dir(),
+        "Unpacked Windows app directory does not exist: {}",
+        absolute.display()
+    );
+    Ok(absolute)
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct WindowsPackageConfig {
     pack_id: &'static str,
@@ -1632,6 +1552,37 @@ fn package_app_windows_velopack_step() -> Result<()> {
         )
     })?;
     let vpk = find_velopack_cli()?;
+    let trusted_sign_file = PathBuf::from(require_env(VELOPACK_TRUSTED_SIGN_FILE_ENV).context(
+        "Velopack packaging requires the Trusted Signing metadata written by the write_windows_signing_metadata step. Windows packages are never produced unsigned.",
+    )?);
+    ensure!(
+        trusted_sign_file.is_file(),
+        "Velopack Trusted Signing metadata file is missing: {}",
+        trusted_sign_file.display()
+    );
+    let packaged = pack_and_validate_windows_velopack(
+        &vpk,
+        &config,
+        &version,
+        &arch,
+        &pack_dir,
+        &trusted_sign_file,
+    );
+    let metadata_removed = remove_file_if_exists(&trusted_sign_file);
+    packaged?;
+    metadata_removed?;
+    print_directory(&config.output_dir)
+}
+
+fn pack_and_validate_windows_velopack(
+    vpk: &Path,
+    config: &WindowsPackageConfig,
+    version: &str,
+    arch: &str,
+    pack_dir: &Path,
+    trusted_sign_file: &Path,
+) -> Result<()> {
+    ensure_velopack_pack_supports(vpk, &["--azureTrustedSignFile"])?;
 
     run_command(CommandSpec::new(vpk).args([
         "--yes",
@@ -1639,7 +1590,7 @@ fn package_app_windows_velopack_step() -> Result<()> {
         "--packId",
         config.pack_id,
         "--packVersion",
-        version.as_str(),
+        version,
         "--packDir",
         pack_dir.to_string_lossy().as_ref(),
         "--mainExe",
@@ -1658,10 +1609,47 @@ fn package_app_windows_velopack_step() -> Result<()> {
         config.output_dir.to_string_lossy().as_ref(),
         "--delta",
         "BestSpeed",
+        "--azureTrustedSignFile",
+        trusted_sign_file.to_string_lossy().as_ref(),
     ]))?;
 
-    validate_velopack_output(&config, &version, &arch)?;
-    print_directory(&config.output_dir)
+    validate_velopack_output(config, version, arch)?;
+    remove_velopack_portable_archives(&config.output_dir)
+}
+
+fn remove_velopack_portable_archives(output_dir: &Path) -> Result<()> {
+    for path in collect_files(output_dir)? {
+        if !extension_is(&path, "zip") {
+            continue;
+        }
+        fs::remove_file(&path).with_context(|| format!("Failed to remove {}", path.display()))?;
+        println!(
+            "Removed Velopack portable archive {}. Fluxer publishes its own portable ZIP built from the signed application tree.",
+            path.display()
+        );
+    }
+    Ok(())
+}
+
+fn ensure_velopack_pack_supports(vpk: &Path, options: &[&str]) -> Result<()> {
+    let help = capture(CommandSpec::new(vpk).args(["pack", "--help"]))
+        .context("Failed to read `vpk pack --help` from the pinned Velopack CLI")?;
+    let text = format!(
+        "{}{}",
+        String::from_utf8_lossy(&help.stdout),
+        String::from_utf8_lossy(&help.stderr)
+    );
+    let missing = options
+        .iter()
+        .filter(|option| !text.contains(**option))
+        .copied()
+        .collect::<Vec<_>>();
+    ensure!(
+        missing.is_empty(),
+        "The pinned Velopack CLI does not support {}. Update the pin or rework the packaging step before releasing.",
+        missing.join(", ")
+    );
+    Ok(())
 }
 
 fn validate_velopack_output(
@@ -1825,17 +1813,743 @@ fn create_portable_zip_windows_step() -> Result<()> {
         println!("No unpacked Windows app found; skipping portable ZIP.");
         return Ok(());
     };
-    fs::write(pack_dir.join(".portable"), "")
-        .with_context(|| format!("Failed to write {}", pack_dir.join(".portable").display()))?;
+    let portable_marker = pack_dir.join(".portable");
+    fs::write(&portable_marker, "")
+        .with_context(|| format!("Failed to write {}", portable_marker.display()))?;
     let zip_name = format!("{}-{version}-portable-win-{arch}.zip", config.pack_title);
     let zip_path = PathBuf::from("dist-electron").join(zip_name);
     create_zip_from_dir(&pack_dir, &zip_path)?;
+    remove_file_if_exists(&portable_marker)?;
     let size_mb = fs::metadata(&zip_path)?.len() as f64 / 1024.0 / 1024.0;
     println!(
-        "Created portable ZIP: {} ({size_mb:.1} MB)",
-        zip_path.display()
+        "Created portable ZIP: {} ({size_mb:.1} MB); removed {} so installed builds are not marked portable.",
+        zip_path.display(),
+        portable_marker.display()
     );
     Ok(())
+}
+
+const FLUXER_WINDOWS_SIGNER_COMMON_NAME: &str = "Fluxer Platform AB";
+const THIRD_PARTY_PUBLISHER_ALLOWLIST: &[&str] = &[];
+const KNOWN_OPTIONAL_WINDOWS_PE_INVENTORY: &[&str] = &["fluxer-vulkan-layer.win32-ia32-msvc.dll"];
+const WINDOWS_NATIVE_ADDON_STEMS: &[&str] = &[
+    "webauthn",
+    "webrtc-sender",
+    "win-process-loopback",
+    "win-clipboard",
+    "win-shell",
+    "win-toast",
+    "windows-input-hook",
+    "platform-info",
+];
+
+fn expected_windows_pe_inventory(arch: &str, main_exe: &str) -> Vec<String> {
+    let tag = format!("win32-{arch}-msvc");
+    let mut names = vec![
+        main_exe.to_string(),
+        format!("velopack_nodeffi_win_{arch}_msvc.node"),
+        format!("win-game-capture.{tag}.node"),
+        format!("fluxer-game-hook.{tag}.dll"),
+        format!("fluxer-inject-helper.{tag}.exe"),
+        format!("fluxer-vulkan-layer.{tag}.dll"),
+    ];
+    names.extend(
+        WINDOWS_NATIVE_ADDON_STEMS
+            .iter()
+            .map(|stem| format!("{stem}.{tag}.node")),
+    );
+    if arch == "x64" {
+        names.push("fluxer-game-hook.win32-ia32-msvc.dll".to_string());
+        names.push("fluxer-inject-helper.win32-ia32-msvc.exe".to_string());
+    }
+    names.sort();
+    names.dedup();
+    names
+}
+
+fn is_pe_file(path: &Path) -> Result<bool> {
+    let mut file =
+        File::open(path).with_context(|| format!("Failed to open {}", path.display()))?;
+    let mut dos_header = [0u8; 0x40];
+    if !read_exact_or_eof(&mut file, &mut dos_header, path)? {
+        return Ok(false);
+    }
+    if &dos_header[0..2] != b"MZ" {
+        return Ok(false);
+    }
+    let e_lfanew = u32::from_le_bytes([
+        dos_header[0x3c],
+        dos_header[0x3d],
+        dos_header[0x3e],
+        dos_header[0x3f],
+    ]);
+    file.seek(SeekFrom::Start(u64::from(e_lfanew)))
+        .with_context(|| format!("Failed to seek in {}", path.display()))?;
+    let mut signature = [0u8; 4];
+    if !read_exact_or_eof(&mut file, &mut signature, path)? {
+        return Ok(false);
+    }
+    Ok(&signature == b"PE\0\0")
+}
+
+fn read_exact_or_eof(file: &mut File, buffer: &mut [u8], path: &Path) -> Result<bool> {
+    match file.read_exact(buffer) {
+        Ok(()) => Ok(true),
+        Err(error) if error.kind() == io::ErrorKind::UnexpectedEof => Ok(false),
+        Err(error) => Err(error).with_context(|| format!("Failed to read {}", path.display())),
+    }
+}
+
+fn collect_pe_files(root: &Path) -> Result<Vec<PathBuf>> {
+    let mut files = Vec::new();
+    for path in collect_files(root)? {
+        if is_pe_file(&path)? {
+            files.push(path);
+        }
+    }
+    Ok(files)
+}
+
+fn absolute_path(path: &Path) -> Result<PathBuf> {
+    if path.is_absolute() {
+        return Ok(path.to_path_buf());
+    }
+    Ok(env::current_dir()
+        .context("Failed to resolve current directory")?
+        .join(path))
+}
+
+fn relative_display(root: &Path, path: &Path) -> String {
+    path.strip_prefix(root)
+        .unwrap_or(path)
+        .to_string_lossy()
+        .replace('\\', "/")
+}
+
+fn percent_decode_archive_name(name: &str) -> String {
+    if !name.contains('%') {
+        return name.to_string();
+    }
+    let bytes = name.as_bytes();
+    let mut decoded = Vec::with_capacity(bytes.len());
+    let mut index = 0;
+    while index < bytes.len() {
+        if bytes[index] == b'%' && index + 2 < bytes.len() {
+            let high = (bytes[index + 1] as char).to_digit(16);
+            let low = (bytes[index + 2] as char).to_digit(16);
+            if let (Some(high), Some(low)) = (high, low) {
+                decoded.push((high * 16 + low) as u8);
+                index += 3;
+                continue;
+            }
+        }
+        decoded.push(bytes[index]);
+        index += 1;
+    }
+    String::from_utf8(decoded).unwrap_or_else(|_| name.to_string())
+}
+
+fn assert_expected_windows_pe_inventory(
+    root: &Path,
+    files: &[PathBuf],
+    arch: &str,
+    main_exe: &str,
+) -> Result<()> {
+    let present = files
+        .iter()
+        .filter_map(|path| path.file_name().and_then(OsStr::to_str))
+        .map(percent_decode_archive_name)
+        .collect::<BTreeSet<_>>();
+    let expected = expected_windows_pe_inventory(arch, main_exe);
+    let missing = expected
+        .iter()
+        .filter(|name| !present.contains(*name))
+        .cloned()
+        .collect::<Vec<_>>();
+    ensure!(
+        missing.is_empty(),
+        "{} is missing {} expected Windows binaries:\n{}",
+        root.display(),
+        missing.len(),
+        missing.join("\n")
+    );
+    let contradictory = contradictory_optional_windows_pe_inventory(arch, main_exe);
+    ensure!(
+        contradictory.is_empty(),
+        "KNOWN_OPTIONAL_WINDOWS_PE_INVENTORY lists {} binary/binaries that {arch} also requires, so the inventory contradicts itself:\n{}",
+        contradictory.len(),
+        contradictory.join("\n")
+    );
+    for name in KNOWN_OPTIONAL_WINDOWS_PE_INVENTORY {
+        println!(
+            "Known-optional Windows binary {name}: {}",
+            if present.contains(*name) {
+                "present"
+            } else {
+                "absent"
+            }
+        );
+    }
+    let unlisted = present
+        .iter()
+        .filter(|name| {
+            !expected.iter().any(|value| value == *name)
+                && !KNOWN_OPTIONAL_WINDOWS_PE_INVENTORY.contains(&name.as_str())
+        })
+        .cloned()
+        .collect::<Vec<_>>();
+    println!(
+        "{}: {} expected, {} unlisted PE(s) shipped by glob (Electron runtime and cross-architecture native artifacts). Every one of them is signature-classified below; none may be unsigned or signed by an unknown publisher.",
+        root.display(),
+        expected.len(),
+        unlisted.len()
+    );
+    for name in &unlisted {
+        println!("Unlisted Windows PE pending signature classification: {name}");
+    }
+    Ok(())
+}
+
+fn contradictory_optional_windows_pe_inventory(arch: &str, main_exe: &str) -> Vec<String> {
+    let expected = expected_windows_pe_inventory(arch, main_exe);
+    KNOWN_OPTIONAL_WINDOWS_PE_INVENTORY
+        .iter()
+        .filter(|name| expected.iter().any(|value| value == *name))
+        .map(|name| (*name).to_string())
+        .collect()
+}
+
+#[derive(Debug, Clone, Deserialize)]
+struct SignatureRow {
+    #[serde(rename = "Path")]
+    path: String,
+    #[serde(rename = "Status")]
+    status: String,
+    #[serde(rename = "Subject")]
+    subject: Option<String>,
+    #[serde(rename = "Thumbprint")]
+    thumbprint: Option<String>,
+    #[serde(rename = "TsSubject")]
+    ts_subject: Option<String>,
+}
+
+fn authenticode_report(files: &[PathBuf]) -> Result<Vec<SignatureRow>> {
+    let temp = TempDir::new().context("Failed to create Authenticode report temp directory")?;
+    let list_path = temp.path().join("paths.txt");
+    let mut list = String::new();
+    for file in files {
+        list.push_str(file.to_string_lossy().as_ref());
+        list.push('\n');
+    }
+    fs::write(&list_path, list)
+        .with_context(|| format!("Failed to write {}", list_path.display()))?;
+
+    let script_path = temp.path().join("authenticode-report.ps1");
+    fs::write(&script_path, authenticode_report_script(&list_path))
+        .with_context(|| format!("Failed to write {}", script_path.display()))?;
+
+    let output = capture(
+        CommandSpec::new(powershell_host())
+            .args([
+                "-NoProfile",
+                "-NonInteractive",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                script_path.to_string_lossy().as_ref(),
+            ])
+            .env_remove("PSModulePath"),
+    )?;
+    ensure!(
+        output.status == 0,
+        "Get-AuthenticodeSignature failed with exit code {}",
+        output.status
+    );
+    let stdout = String::from_utf8(output.stdout)
+        .context("Get-AuthenticodeSignature output was not UTF-8")?;
+    parse_authenticode_report(stdout.trim())
+}
+
+fn powershell_host() -> &'static str {
+    if which_in_path("pwsh.exe").is_some() || which_in_path("pwsh").is_some() {
+        return "pwsh";
+    }
+    "powershell"
+}
+
+fn which_in_path(program: &str) -> Option<PathBuf> {
+    let path = env::var_os("PATH")?;
+    env::split_paths(&path)
+        .map(|directory| directory.join(program))
+        .find(|candidate| candidate.is_file())
+}
+
+fn authenticode_report_script(list_path: &Path) -> String {
+    format!(
+        "$ErrorActionPreference = 'Stop'\n\
+[Console]::OutputEncoding = New-Object System.Text.UTF8Encoding $false\n\
+$paths = @(Get-Content -LiteralPath '{}' -Encoding UTF8 | Where-Object {{ $_ -ne '' }})\n\
+$rows = @(Get-AuthenticodeSignature -LiteralPath $paths | Select-Object \
+@{{n='Path';e={{[string]$_.Path}}}}, \
+@{{n='Status';e={{[string]$_.Status}}}}, \
+@{{n='Subject';e={{if ($_.SignerCertificate) {{ [string]$_.SignerCertificate.Subject }} else {{ $null }}}}}}, \
+@{{n='Thumbprint';e={{if ($_.SignerCertificate) {{ [string]$_.SignerCertificate.Thumbprint }} else {{ $null }}}}}}, \
+@{{n='TsSubject';e={{if ($_.TimeStamperCertificate) {{ [string]$_.TimeStamperCertificate.Subject }} else {{ $null }}}}}})\n\
+ConvertTo-Json -InputObject $rows -Depth 3 -Compress\n",
+        list_path.display()
+    )
+}
+
+fn parse_authenticode_report(json: &str) -> Result<Vec<SignatureRow>> {
+    let json = json.trim_start_matches('\u{feff}').trim();
+    ensure!(
+        !json.is_empty(),
+        "Get-AuthenticodeSignature produced no output."
+    );
+    let value: Value =
+        serde_json::from_str(json).context("Failed to parse Get-AuthenticodeSignature JSON")?;
+    let rows = match value {
+        Value::Array(items) => items,
+        single => vec![single],
+    };
+    rows.into_iter()
+        .map(|row| {
+            serde_json::from_value::<SignatureRow>(row)
+                .context("Failed to parse Get-AuthenticodeSignature row")
+        })
+        .collect()
+}
+
+fn certificate_common_name(subject: &str) -> Option<&str> {
+    subject
+        .split(", ")
+        .find_map(|component| component.strip_prefix("CN="))
+}
+
+fn assert_fluxer_signed(row: &SignatureRow) -> Result<()> {
+    ensure!(
+        row.status == "Valid",
+        "Authenticode status is {} (expected Valid)",
+        row.status
+    );
+    ensure!(
+        row.ts_subject.is_some(),
+        "Authenticode signature carries no RFC3161 timestamp"
+    );
+    let subject = row
+        .subject
+        .as_deref()
+        .ok_or_else(|| anyhow!("Authenticode signature has no signer certificate subject"))?;
+    let common_name = certificate_common_name(subject)
+        .ok_or_else(|| anyhow!("Signer subject has no CN= component: {subject}"))?;
+    ensure!(
+        common_name == FLUXER_WINDOWS_SIGNER_COMMON_NAME,
+        "Signer CN is '{common_name}', expected '{}' (thumbprint {})",
+        FLUXER_WINDOWS_SIGNER_COMMON_NAME,
+        row.thumbprint.as_deref().unwrap_or("unknown")
+    );
+    Ok(())
+}
+
+fn assert_third_party_signed(row: &SignatureRow) -> Result<()> {
+    ensure!(
+        row.status == "Valid",
+        "Authenticode status is {} (expected Valid)",
+        row.status
+    );
+    let subject = row
+        .subject
+        .as_deref()
+        .ok_or_else(|| anyhow!("Authenticode signature has no signer certificate subject"))?;
+    let common_name = certificate_common_name(subject)
+        .ok_or_else(|| anyhow!("Signer subject has no CN= component: {subject}"))?;
+    ensure!(
+        THIRD_PARTY_PUBLISHER_ALLOWLIST.contains(&common_name),
+        "Signer CN '{common_name}' is not an allowlisted third-party publisher"
+    );
+    ensure!(
+        row.ts_subject.is_some(),
+        "Authenticode signature has no RFC3161 timestamp"
+    );
+    Ok(())
+}
+
+fn assert_signed_by_known_publisher(row: &SignatureRow) -> Result<()> {
+    match assert_fluxer_signed(row) {
+        Ok(()) => Ok(()),
+        Err(fluxer_error) => assert_third_party_signed(row)
+            .map_err(|third_party_error| anyhow!("{fluxer_error}; {third_party_error}")),
+    }
+}
+
+fn same_windows_path(reported: &str, expected: &Path) -> bool {
+    fn normalise(value: &str) -> String {
+        let replaced = value.replace('/', "\\");
+        let trimmed = replaced.trim_start_matches(r"\\?\");
+        trimmed.to_ascii_lowercase()
+    }
+    normalise(reported) == normalise(expected.to_string_lossy().as_ref())
+}
+
+fn find_signtool() -> Result<PathBuf> {
+    if let Some(path) = env_string("SIGNTOOL_PATH")
+        .map(PathBuf::from)
+        .filter(|path| path.exists())
+    {
+        return Ok(path);
+    }
+    let roots = [
+        PathBuf::from(r"C:\Program Files (x86)\Windows Kits\10\bin"),
+        PathBuf::from(r"C:\Program Files\Windows Kits\10\bin"),
+    ];
+    let host_leaf = signtool_host_arch_dir();
+    let mut best: Option<((u8, [u32; 4]), PathBuf)> = None;
+    for root in &roots {
+        if !root.exists() {
+            continue;
+        }
+        for entry in WalkDir::new(root)
+            .into_iter()
+            .filter_map(std::result::Result::ok)
+            .filter(|entry| entry.file_type().is_file())
+        {
+            let path = entry.into_path();
+            if !path
+                .file_name()
+                .and_then(OsStr::to_str)
+                .is_some_and(|name| name.eq_ignore_ascii_case("signtool.exe"))
+            {
+                continue;
+            }
+            let leaf_matches_host = path
+                .parent()
+                .and_then(Path::file_name)
+                .and_then(OsStr::to_str)
+                .is_some_and(|leaf| leaf.eq_ignore_ascii_case(host_leaf));
+            let rank = (
+                u8::from(leaf_matches_host),
+                windows_sdk_version_from_path(&path),
+            );
+            if best.as_ref().is_none_or(|(current, _)| rank > *current) {
+                best = Some((rank, path));
+            }
+        }
+    }
+    let (rank, path) = best.ok_or_else(|| {
+        anyhow!(
+            "Could not find signtool.exe under {} or {}. Install the Windows SDK Signing Tools on the runner, or set SIGNTOOL_PATH to an explicit signtool.exe.",
+            roots[0].display(),
+            roots[1].display()
+        )
+    })?;
+    let (host_arch_match, sdk_version) = rank;
+    println!(
+        "Using signtool {} (SDK {}.{}.{}.{}, host architecture match: {})",
+        path.display(),
+        sdk_version[0],
+        sdk_version[1],
+        sdk_version[2],
+        sdk_version[3],
+        host_arch_match == 1
+    );
+    Ok(path)
+}
+
+fn signtool_host_arch_dir() -> &'static str {
+    match env::consts::ARCH {
+        "aarch64" => "arm64",
+        "x86" => "x86",
+        _ => "x64",
+    }
+}
+
+fn windows_sdk_version_from_path(path: &Path) -> [u32; 4] {
+    let mut best = [0u32; 4];
+    for component in path.components() {
+        let Some(text) = component.as_os_str().to_str() else {
+            continue;
+        };
+        let parts = text.split('.').collect::<Vec<_>>();
+        if parts.len() < 2 || parts.len() > 4 {
+            continue;
+        }
+        let mut version = [0u32; 4];
+        let mut parsed = true;
+        for (index, part) in parts.iter().enumerate() {
+            match part.parse::<u32>() {
+                Ok(value) => version[index] = value,
+                Err(_) => {
+                    parsed = false;
+                    break;
+                }
+            }
+        }
+        if parsed && version > best {
+            best = version;
+        }
+    }
+    best
+}
+
+fn verify_pe_signature(signtool: &Path, file: &Path) -> Result<()> {
+    let output = capture(CommandSpec::new(signtool).args([
+        "verify",
+        "/pa",
+        "/all",
+        "/tw",
+        file.to_string_lossy().as_ref(),
+    ]))?;
+    ensure!(
+        output.status == 0,
+        "signtool verify /pa /all /tw failed with exit code {}",
+        output.status
+    );
+    Ok(())
+}
+
+fn verify_windows_pe_signatures(
+    signtool: &Path,
+    label: &str,
+    root: &Path,
+    files: &[PathBuf],
+) -> Result<()> {
+    ensure!(
+        !files.is_empty(),
+        "{label}: no Windows PE files found under {}. Refusing to publish an unverified inventory.",
+        root.display()
+    );
+    let root = absolute_path(root)?;
+    let files = files
+        .iter()
+        .map(|file| absolute_path(file))
+        .collect::<Result<Vec<_>>>()?;
+    let rows = authenticode_report(&files)?;
+    let mut failures = Vec::new();
+    for file in &files {
+        let relative = relative_display(&root, file);
+        if let Err(error) = verify_pe_signature(signtool, file) {
+            failures.push(format!("{relative}: {error}"));
+            continue;
+        }
+        let Some(row) = rows
+            .iter()
+            .find(|row| same_windows_path(&row.path, file.as_path()))
+        else {
+            failures.push(format!(
+                "{relative}: Get-AuthenticodeSignature reported no row for this file"
+            ));
+            continue;
+        };
+        if let Err(error) = assert_signed_by_known_publisher(row) {
+            failures.push(format!("{relative}: {error}"));
+        }
+    }
+    ensure!(
+        failures.is_empty(),
+        "{label}: {} of {} Windows binaries are not signed by '{}':\n{}",
+        failures.len(),
+        files.len(),
+        FLUXER_WINDOWS_SIGNER_COMMON_NAME,
+        failures.join("\n")
+    );
+    println!(
+        "{label}: verified {} Windows binaries signed by '{}'.",
+        files.len(),
+        FLUXER_WINDOWS_SIGNER_COMMON_NAME
+    );
+    Ok(())
+}
+
+fn verify_windows_unpacked_signatures_step() -> Result<()> {
+    let build_channel = env::var("BUILD_CHANNEL").unwrap_or_else(|_| "stable".to_string());
+    let arch = require_env("ARCH")?;
+    let config = windows_package_config(&build_channel, &arch);
+    let pack_dir = resolve_windows_unpacked_dir(&arch, &config.main_exe)?;
+    let files = collect_pe_files(&pack_dir)?;
+    assert_expected_windows_pe_inventory(&pack_dir, &files, &arch, &config.main_exe)?;
+    ensure!(
+        files.iter().any(|file| extension_is(file, "node")),
+        "No .node addon was detected as a PE file under {}; the exe,dll,node signing filter would have been a silent no-op.",
+        pack_dir.display()
+    );
+    ensure!(
+        files.iter().any(|file| extension_is(file, "dll")),
+        "No .dll was detected as a PE file under {}; the exe,dll,node signing filter would have been a silent no-op.",
+        pack_dir.display()
+    );
+    let signtool = find_signtool()?;
+    verify_windows_pe_signatures(&signtool, "win-unpacked", &pack_dir, &files)
+}
+
+fn short_extraction_root(key: &str) -> PathBuf {
+    let drive = env::var("SystemDrive").unwrap_or_else(|_| "C:".to_string());
+    let base = PathBuf::from(format!("{}\\fxv", drive.trim_end_matches(['\\', '/'])));
+    let digest = hex::encode(Sha256::digest(key.as_bytes()));
+    base.join(&digest[..12])
+}
+
+fn extract_zip_safely(archive_path: &Path, destination: &Path) -> Result<()> {
+    let file = File::open(archive_path)
+        .with_context(|| format!("Failed to open {}", archive_path.display()))?;
+    let mut archive = zip::ZipArchive::new(file)
+        .with_context(|| format!("Failed to read zip {}", archive_path.display()))?;
+    fs::create_dir_all(destination)
+        .with_context(|| format!("Failed to create {}", destination.display()))?;
+    for index in 0..archive.len() {
+        let mut entry = archive.by_index(index)?;
+        let is_dir = entry.is_dir();
+        let relative = entry.enclosed_name().ok_or_else(|| {
+            anyhow!(
+                "Refusing to extract unsafe archive path '{}' from {}",
+                entry.name(),
+                archive_path.display()
+            )
+        })?;
+        let target = destination.join(relative);
+        if is_dir {
+            fs::create_dir_all(&target)
+                .with_context(|| format!("Failed to create {}", target.display()))?;
+            continue;
+        }
+        if let Some(parent) = target.parent() {
+            fs::create_dir_all(parent)
+                .with_context(|| format!("Failed to create {}", parent.display()))?;
+        }
+        let mut output = File::create(&target)
+            .with_context(|| format!("Failed to create {}", target.display()))?;
+        io::copy(&mut entry, &mut output)
+            .with_context(|| format!("Failed to extract {}", target.display()))?;
+    }
+    Ok(())
+}
+
+fn verify_windows_signed_artifacts_step() -> Result<()> {
+    let build_channel = env::var("BUILD_CHANNEL").unwrap_or_else(|_| "stable".to_string());
+    let arch = require_env("ARCH")?;
+    let version = require_env("VERSION")?;
+    let config = windows_package_config(&build_channel, &arch);
+
+    let nupkg = first_file_matching(&config.output_dir, |name| name.ends_with("-full.nupkg"))
+        .ok_or_else(|| {
+            anyhow!(
+                "No Velopack full nupkg found in {}",
+                config.output_dir.display()
+            )
+        })?;
+    let setup_exe = config
+        .output_dir
+        .join(format!("{}-{version}-win-{arch}.exe", config.pack_title));
+    ensure!(
+        setup_exe.is_file(),
+        "Velopack Setup.exe not found: {}",
+        setup_exe.display()
+    );
+    let portable_zip = PathBuf::from("dist-electron").join(format!(
+        "{}-{version}-portable-win-{arch}.zip",
+        config.pack_title
+    ));
+    ensure!(
+        portable_zip.is_file(),
+        "Portable ZIP not found: {}",
+        portable_zip.display()
+    );
+
+    let staged_nupkgs = collect_files(&config.output_dir)?
+        .into_iter()
+        .filter(|path| extension_is(path, "nupkg"))
+        .collect::<Vec<_>>();
+    let delta_nupkgs = staged_nupkgs
+        .iter()
+        .filter(|path| {
+            path.file_name()
+                .and_then(OsStr::to_str)
+                .is_some_and(|name| name.ends_with("-delta.nupkg"))
+        })
+        .cloned()
+        .collect::<Vec<_>>();
+    let unclassified_nupkgs = staged_nupkgs
+        .iter()
+        .filter(|path| **path != nupkg && !delta_nupkgs.contains(path))
+        .map(|path| path.display().to_string())
+        .collect::<Vec<_>>();
+    ensure!(
+        unclassified_nupkgs.is_empty(),
+        "{} stages {} nupkg(s) that are neither the verified full package nor a delta package, so they would be published unverified:\n{}",
+        config.output_dir.display(),
+        unclassified_nupkgs.len(),
+        unclassified_nupkgs.join("\n")
+    );
+
+    let unverified_zips = collect_files(&config.output_dir)?
+        .into_iter()
+        .filter(|path| extension_is(path, "zip") && *path != portable_zip)
+        .map(|path| path.display().to_string())
+        .collect::<Vec<_>>();
+    ensure!(
+        unverified_zips.is_empty(),
+        "{} stages {} zip(s) that are not the verified portable archive {}, so they would be published unverified:\n{}",
+        config.output_dir.display(),
+        unverified_zips.len(),
+        portable_zip.display(),
+        unverified_zips.join("\n")
+    );
+
+    let signtool = find_signtool()?;
+    let root = short_extraction_root(&format!("{}-{version}-{arch}", config.pack_id));
+    remove_dir_if_exists(&root)?;
+
+    let nupkg_root = root.join("n");
+    extract_zip_safely(&nupkg, &nupkg_root)?;
+    let lib_app = nupkg_root.join("lib").join("app");
+    ensure!(
+        lib_app.is_dir(),
+        "{} contains no lib/app tree.",
+        nupkg.display()
+    );
+    ensure!(
+        lib_app.join("Squirrel.exe").is_file(),
+        "{} contains no lib/app/Squirrel.exe.",
+        nupkg.display()
+    );
+    let execution_stub = format!("{}_ExecutionStub.exe", config.pack_title);
+    ensure!(
+        lib_app.join(&execution_stub).is_file(),
+        "{} contains no lib/app/{execution_stub}.",
+        nupkg.display()
+    );
+    let nupkg_files = collect_pe_files(&lib_app)?;
+    assert_expected_windows_pe_inventory(&lib_app, &nupkg_files, &arch, &config.main_exe)?;
+    verify_windows_pe_signatures(&signtool, "nupkg lib/app", &lib_app, &nupkg_files)?;
+
+    for (index, delta_nupkg) in delta_nupkgs.iter().enumerate() {
+        let delta_root = root.join(format!("d{index}"));
+        extract_zip_safely(delta_nupkg, &delta_root)?;
+        let delta_files = collect_pe_files(&delta_root)?;
+        let label = format!("delta nupkg {}", file_name_string(delta_nupkg)?);
+        if delta_files.is_empty() {
+            println!(
+                "{label}: contains no whole PE entries, only Velopack diffs; nothing to verify."
+            );
+            continue;
+        }
+        verify_windows_pe_signatures(&signtool, &label, &delta_root, &delta_files)?;
+    }
+
+    let portable_root = root.join("p");
+    extract_zip_safely(&portable_zip, &portable_root)?;
+    let portable_files = collect_pe_files(&portable_root)?;
+    assert_expected_windows_pe_inventory(&portable_root, &portable_files, &arch, &config.main_exe)?;
+    verify_windows_pe_signatures(&signtool, "portable zip", &portable_root, &portable_files)?;
+
+    let staged_installers = collect_pe_files(&config.output_dir)?;
+    ensure!(
+        staged_installers.contains(&setup_exe),
+        "Velopack output directory does not contain the renamed Setup executable {}",
+        setup_exe.display()
+    );
+    verify_windows_pe_signatures(&signtool, "setup", &config.output_dir, &staged_installers)?;
+
+    remove_dir_if_exists(&root)
 }
 
 fn prepare_artifacts_windows_step() -> Result<()> {
@@ -1967,252 +2681,6 @@ fn checksum_kind_matches(kind: ArtifactChecksumKind, name: &str) -> bool {
     }
 }
 
-fn build_source_tarball_step() -> Result<()> {
-    let workdir = require_env("WORKDIR")?;
-    let workdir = PathBuf::from(workdir);
-    let commit = require_env("SOURCE_SHA")?;
-    let short_commit = commit.chars().take(12).collect::<String>();
-    let desktop_version = require_env("VERSION")?;
-    let published_at = require_env("PUB_DATE")?;
-    let build_channel = require_env("BUILD_CHANNEL")?;
-    let s3_prefix = require_env("S3_DESKTOP_PREFIX")?;
-    let filename = format!("fluxer_desktop-source-{desktop_version}-{short_commit}.tar.gz");
-    let archive_dir = Path::new("source_staging").join("by-commit").join(&commit);
-    let required_linux_packaging = [
-        "packaging/linux/app.fluxer.Fluxer.desktop",
-        "packaging/linux/app.fluxer.Fluxer.metainfo.xml",
-        "packaging/linux/app.fluxer.Fluxer.svg",
-        "packaging/linux/app.fluxer.FluxerCanary.desktop",
-        "packaging/linux/app.fluxer.FluxerCanary.metainfo.xml",
-        "packaging/linux/app.fluxer.FluxerCanary.svg",
-    ];
-
-    ensure!(
-        workdir.join("fluxer_desktop/LICENSE").exists(),
-        "Missing fluxer_desktop/LICENSE"
-    );
-    for file in required_linux_packaging {
-        let path = workdir.join("fluxer_desktop").join(file);
-        ensure!(
-            path.exists(),
-            "Missing required packaging file {}",
-            path.display()
-        );
-    }
-    run_command(
-        CommandSpec::new("desktop-file-validate").arg(
-            workdir
-                .join("fluxer_desktop/packaging/linux/app.fluxer.Fluxer.desktop")
-                .to_string_lossy()
-                .as_ref(),
-        ),
-    )?;
-    run_command(
-        CommandSpec::new("desktop-file-validate").arg(
-            workdir
-                .join("fluxer_desktop/packaging/linux/app.fluxer.FluxerCanary.desktop")
-                .to_string_lossy()
-                .as_ref(),
-        ),
-    )?;
-    for file in [
-        "app.fluxer.Fluxer.metainfo.xml",
-        "app.fluxer.FluxerCanary.metainfo.xml",
-    ] {
-        run_command(
-            CommandSpec::new("appstreamcli").args([
-                "validate",
-                "--no-net",
-                workdir
-                    .join("fluxer_desktop/packaging/linux")
-                    .join(file)
-                    .to_string_lossy()
-                    .as_ref(),
-            ]),
-        )?;
-    }
-
-    remove_dir_if_exists(Path::new("source_staging"))?;
-    fs::create_dir_all(&archive_dir)
-        .with_context(|| format!("Failed to create {}", archive_dir.display()))?;
-
-    let source_dir = TempDir::new().context("Failed to create source temp directory")?;
-    let prefix = format!("fluxer_desktop-{desktop_version}-{commit}/");
-    let archive_bytes = output_bytes(CommandSpec::new("git").args([
-        "-C",
-        workdir.to_string_lossy().as_ref(),
-        "archive",
-        "--format=tar",
-        &format!("--prefix={prefix}"),
-        "HEAD:fluxer_desktop",
-    ]))?;
-    tar::Archive::new(Cursor::new(archive_bytes))
-        .unpack(source_dir.path())
-        .context("Failed to unpack git archive")?;
-
-    let source_root = source_dir
-        .path()
-        .join(format!("fluxer_desktop-{desktop_version}-{commit}"));
-    rewrite_package_version(&source_root.join("package.json"), &desktop_version)?;
-
-    let tar_gz_path = archive_dir.join(&filename);
-    create_deterministic_tar_gz(&source_root, &tar_gz_path, &published_at)?;
-    let archived_package_version = package_version_from_tar_gz(
-        &tar_gz_path,
-        &format!("fluxer_desktop-{desktop_version}-{commit}/package.json"),
-    )?;
-    ensure!(
-        archived_package_version == desktop_version,
-        "Archived package version {archived_package_version} did not match {desktop_version}"
-    );
-
-    let sha256 = sha256_file(&tar_gz_path)?;
-    let size = fs::metadata(&tar_gz_path)?.len();
-    fs::write(
-        archive_dir.join(format!("{filename}.sha256")),
-        format!("{sha256}  {filename}\n"),
-    )?;
-    fs::copy(
-        &tar_gz_path,
-        Path::new("source_staging").join("latest.tar.gz"),
-    )?;
-    fs::write(
-        Path::new("source_staging").join("latest.tar.gz.sha256"),
-        format!("{sha256}  {filename}\n"),
-    )?;
-
-    let latest = SourceManifest {
-        filename: filename.clone(),
-        key: format!("{s3_prefix}/source/by-commit/{commit}/{filename}"),
-        sha256,
-        commit,
-        published_at: published_at.clone(),
-        size,
-        desktop_version: desktop_version.clone(),
-        desktop_version_source: DesktopVersionSource {
-            channel: build_channel.clone(),
-            platform: "linux".to_string(),
-            arch: "x64".to_string(),
-            key: format!("{s3_prefix}/{build_channel}/linux/x64/manifest.json"),
-            pub_date: published_at,
-        },
-    };
-    write_json_pretty(Path::new("source_staging/latest.json"), &latest)?;
-
-    println!("Desktop source payload:");
-    print_tree(Path::new("source_staging"), 4)
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
-struct SourceManifest {
-    filename: String,
-    key: String,
-    sha256: String,
-    commit: String,
-    published_at: String,
-    size: u64,
-    desktop_version: String,
-    desktop_version_source: DesktopVersionSource,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
-struct DesktopVersionSource {
-    channel: String,
-    platform: String,
-    arch: String,
-    key: String,
-    pub_date: String,
-}
-
-fn rewrite_package_version(package_json: &Path, version: &str) -> Result<()> {
-    let mut package: Value = serde_json::from_str(
-        &fs::read_to_string(package_json)
-            .with_context(|| format!("Failed to read {}", package_json.display()))?,
-    )
-    .with_context(|| format!("Failed to parse {}", package_json.display()))?;
-    package["version"] = Value::String(version.to_string());
-    write_json_pretty(package_json, &package)
-}
-
-fn create_deterministic_tar_gz(
-    source_root: &Path,
-    output: &Path,
-    published_at: &str,
-) -> Result<()> {
-    let mtime = DateTime::parse_from_rfc3339(published_at)
-        .with_context(|| format!("Invalid PUB_DATE: {published_at}"))?
-        .timestamp()
-        .try_into()
-        .context("PUB_DATE timestamp did not fit u64")?;
-    let file =
-        File::create(output).with_context(|| format!("Failed to create {}", output.display()))?;
-    let encoder = GzBuilder::new()
-        .mtime(0)
-        .write(file, Compression::default());
-    let mut builder = tar::Builder::new(encoder);
-    let parent = source_root
-        .parent()
-        .ok_or_else(|| anyhow!("source root has no parent: {}", source_root.display()))?;
-    let mut paths = WalkDir::new(source_root)
-        .follow_links(false)
-        .into_iter()
-        .collect::<std::result::Result<Vec<_>, _>>()?;
-    paths.sort_by(|a, b| a.path().cmp(b.path()));
-
-    for entry in paths {
-        let path = entry.path();
-        let archive_path = path.strip_prefix(parent)?;
-        let metadata = fs::symlink_metadata(path)?;
-        let mut header = tar::Header::new_gnu();
-        header.set_mtime(mtime);
-        header.set_uid(0);
-        header.set_gid(0);
-        header.set_mode(if metadata.is_dir() { 0o755 } else { 0o644 });
-        if metadata.is_dir() {
-            header.set_entry_type(tar::EntryType::Directory);
-            header.set_size(0);
-            header.set_cksum();
-            builder.append_data(&mut header, archive_path, io::empty())?;
-        } else if metadata.file_type().is_symlink() {
-            let target = fs::read_link(path)?;
-            header.set_entry_type(tar::EntryType::Symlink);
-            header.set_size(0);
-            header.set_cksum();
-            builder.append_link(&mut header, archive_path, target)?;
-        } else if metadata.is_file() {
-            header.set_entry_type(tar::EntryType::Regular);
-            header.set_size(metadata.len());
-            header.set_cksum();
-            let mut file = File::open(path)?;
-            builder.append_data(&mut header, archive_path, &mut file)?;
-        }
-    }
-    let encoder = builder.into_inner()?;
-    encoder.finish()?;
-    Ok(())
-}
-
-fn package_version_from_tar_gz(tar_gz: &Path, package_json_path: &str) -> Result<String> {
-    let file =
-        File::open(tar_gz).with_context(|| format!("Failed to open {}", tar_gz.display()))?;
-    let decoder = GzDecoder::new(file);
-    let mut archive = tar::Archive::new(decoder);
-    for entry in archive.entries()? {
-        let mut entry = entry?;
-        if entry.path()?.to_string_lossy() == package_json_path {
-            let mut text = String::new();
-            entry.read_to_string(&mut text)?;
-            let package: Value = serde_json::from_str(&text)?;
-            return package
-                .get("version")
-                .and_then(Value::as_str)
-                .map(ToOwned::to_owned)
-                .ok_or_else(|| anyhow!("package.json in archive has no version"));
-        }
-    }
-    bail!("{package_json_path} not found in {}", tar_gz.display())
-}
-
 async fn upload_handoff_step(signed_windows_artifacts: bool) -> Result<()> {
     let client = s3_client(None).await?;
     let bucket = require_env("S3_BUCKET")?;
@@ -2237,18 +2705,6 @@ async fn upload_handoff_step(signed_windows_artifacts: bool) -> Result<()> {
     let artifact_prefix = join_s3_key(&prefix, &artifact_name);
     println!("Uploading {artifact_count} desktop artifact file(s) to {artifact_prefix}");
     upload_directory_to_s3(&client, &bucket, &artifact_prefix, staging, |_| true).await?;
-
-    let source_staging = Path::new("source_staging");
-    if !signed_windows_artifacts && source_staging.exists() {
-        let source_count = count_files(source_staging)?;
-        if source_count > 0 {
-            let source_name = format!("fluxer-desktop-{build_channel}-source-linux-x64");
-            let source_prefix = join_s3_key(&prefix, &source_name);
-            println!("Uploading {source_count} desktop source file(s) to {source_prefix}");
-            upload_directory_to_s3(&client, &bucket, &source_prefix, source_staging, |_| true)
-                .await?;
-        }
-    }
     Ok(())
 }
 
@@ -2268,101 +2724,6 @@ fn handoff_artifact_name(
         ""
     };
     format!("fluxer-desktop-{build_channel}-{platform}-{arch}{variant_suffix}{signed_suffix}")
-}
-
-fn check_signing_secrets_step() -> Result<()> {
-    if env_string("AZURE_CLIENT_ID").is_some() {
-        append_github_output(&[("enabled", "true")])
-    } else {
-        println!("::notice::Windows code signing secrets not configured - skipping signing.");
-        append_github_output(&[("enabled", "false")])
-    }
-}
-
-async fn download_windows_handoff_step() -> Result<()> {
-    let client = s3_client(None).await?;
-    let bucket = require_env("S3_BUCKET")?;
-    let prefix = require_env("DESKTOP_HANDOFF_PREFIX")?;
-    let build_channel = require_env("BUILD_CHANNEL")?;
-    let arch = require_any_env(&["DESKTOP_ARCH", "ARCH"])?;
-    let desktop_variant = desktop_variant_from_env()?;
-    let artifact_name =
-        handoff_artifact_name(&build_channel, "windows", &arch, &desktop_variant, false);
-    let target = windows_artifact_dir(&arch, &desktop_variant);
-    remove_dir_if_exists(&target)?;
-    fs::create_dir_all(&target)?;
-    let artifact_prefix = join_s3_key(&prefix, &artifact_name);
-    download_s3_prefix(&client, &bucket, &artifact_prefix, &target).await
-}
-
-fn check_windows_artifacts_step() -> Result<()> {
-    let arch = require_any_env(&["DESKTOP_ARCH", "ARCH"])?;
-    let desktop_variant = desktop_variant_from_env()?;
-    let artifact_path = windows_artifact_dir(&arch, &desktop_variant);
-    let found = artifact_path.exists() && count_files(&artifact_path)? > 0;
-    if !found && expected_windows_artifacts(&arch, &desktop_variant) {
-        bail!("Expected Windows artifacts for {arch} ({desktop_variant}), but none were found.");
-    }
-    append_github_output(&[("found", if found { "true" } else { "false" })])?;
-    if found {
-        println!("Found Windows artifacts for {arch} ({desktop_variant}).");
-    } else {
-        println!(
-            "No Windows artifacts found for {arch} ({desktop_variant}). Skipping signing for this variant."
-        );
-    }
-    Ok(())
-}
-
-fn verify_authenticode_step() -> Result<()> {
-    let arch = require_any_env(&["DESKTOP_ARCH", "ARCH"])?;
-    let desktop_variant = desktop_variant_from_env()?;
-    let artifact_path = windows_artifact_dir(&arch, &desktop_variant);
-    let files = collect_files(&artifact_path)?
-        .into_iter()
-        .filter(|path| extension_is(path, "exe"))
-        .collect::<Vec<_>>();
-    ensure!(
-        !files.is_empty(),
-        "No executable files found to verify for {arch}."
-    );
-    let signtool = find_signtool()?;
-    for file in files {
-        run_command(CommandSpec::new(&signtool).args([
-            "verify",
-            "/pa",
-            "/all",
-            file.to_string_lossy().as_ref(),
-        ]))?;
-    }
-    Ok(())
-}
-
-fn regenerate_signed_checksums_step() -> Result<()> {
-    let arch = require_any_env(&["DESKTOP_ARCH", "ARCH"])?;
-    let desktop_variant = desktop_variant_from_env()?;
-    let artifact_path = windows_artifact_dir(&arch, &desktop_variant);
-    for file in collect_files(&artifact_path)?
-        .into_iter()
-        .filter(|path| extension_is(path, "exe"))
-    {
-        let hash = sha256_file(&file)?;
-        let name = file_name_string(&file)?;
-        fs::write(file.with_file_name(format!("{name}.sha256")), &hash)?;
-        println!("Regenerated checksum for {}", file.display());
-    }
-    Ok(())
-}
-
-async fn stage_signed_windows_artifacts_step() -> Result<()> {
-    let arch = require_any_env(&["DESKTOP_ARCH", "ARCH"])?;
-    let desktop_variant = desktop_variant_from_env()?;
-    let source = windows_artifact_dir(&arch, &desktop_variant);
-    let staging = Path::new("upload_staging");
-    remove_dir_if_exists(staging)?;
-    fs::create_dir_all(staging)?;
-    copy_dir_contents(&source, staging)?;
-    upload_handoff_step(true).await
 }
 
 async fn download_handoff_step() -> Result<()> {
@@ -2433,18 +2794,6 @@ fn build_payload_step() -> Result<()> {
         write_json_pretty(&dest.join("manifest.json"), &manifest)?;
     }
 
-    let source_artifact_root = artifacts.join(format!("fluxer-desktop-{channel}-source-linux-x64"));
-    let source_artifact = if source_artifact_root.join("latest.json").exists() {
-        source_artifact_root.clone()
-    } else {
-        source_artifact_root.join("source_staging")
-    };
-    if source_artifact.join("latest.json").exists() {
-        let source_dest = payload_root.join("source");
-        fs::create_dir_all(&source_dest)?;
-        copy_dir_contents(&source_artifact, &source_dest)?;
-    }
-
     println!("Payload tree:");
     print_tree(&payload_root, 6)
 }
@@ -2454,7 +2803,6 @@ struct ArtifactIdentity {
     platform: String,
     arch: String,
     desktop_variant: String,
-    source: bool,
     signed: bool,
 }
 
@@ -2465,15 +2813,6 @@ fn parse_artifact_dir_name(base: &str, channel: &str) -> Option<ArtifactIdentity
         .strip_suffix("-signed")
         .map(|value| (value, true))
         .unwrap_or((rest, false));
-    if rest == "source-linux-x64" {
-        return Some(ArtifactIdentity {
-            platform: "linux".to_string(),
-            arch: "x64".to_string(),
-            desktop_variant: DEFAULT_DESKTOP_VARIANT.to_string(),
-            source: true,
-            signed: false,
-        });
-    }
     let (rest, desktop_variant) = rest
         .strip_suffix(&format!("-{WINDOWS_GAME_CAPTURE_DESKTOP_VARIANT}"))
         .map(|value| (value, WINDOWS_GAME_CAPTURE_DESKTOP_VARIANT))
@@ -2483,7 +2822,6 @@ fn parse_artifact_dir_name(base: &str, channel: &str) -> Option<ArtifactIdentity
         platform: platform.to_string(),
         arch: arch.to_string(),
         desktop_variant: desktop_variant.to_string(),
-        source: false,
         signed,
     })
 }
@@ -2512,9 +2850,6 @@ fn payload_artifact_dirs(
             println!("Skipping unrecognised artifact dir: {base}");
             continue;
         };
-        if identity.source {
-            continue;
-        }
 
         let key = (
             identity.platform.clone(),
@@ -2713,7 +3048,7 @@ async fn upload_payload_step() -> Result<()> {
     let s3_prefix = require_env("S3_DESKTOP_PREFIX")?;
     let bucket = require_env("S3_BUCKET")?;
     let payload_root = Path::new("s3_payload").join(&s3_prefix);
-    let overwrite_existing = should_overwrite_payload(&s3_prefix, env_bool("TEST_BUILD"));
+    let overwrite_binaries = should_overwrite_payload(&s3_prefix, env_bool("TEST_BUILD"));
 
     println!("Uploading desktop binaries and checksums first (prefix: {s3_prefix})...");
     upload_payload_directory(
@@ -2721,17 +3056,19 @@ async fn upload_payload_step() -> Result<()> {
         &bucket,
         &s3_prefix,
         &payload_root,
-        overwrite_existing,
+        overwrite_binaries,
         |relative| !is_payload_metadata_key(relative),
     )
     .await?;
-    println!("Uploading manifests and updater metadata last...");
+    println!(
+        "Uploading manifests and updater metadata last, overwriting the previous release feed..."
+    );
     upload_payload_directory(
         &client,
         &bucket,
         &s3_prefix,
         &payload_root,
-        overwrite_existing,
+        true,
         is_payload_metadata_key,
     )
     .await
@@ -2769,119 +3106,6 @@ fn is_payload_metadata_key(relative: &Path) -> bool {
         || name.starts_with("RELEASES")
         || (name.starts_with("releases") && name.ends_with(".json"))
         || (name.starts_with("assets") && name.ends_with(".json"))
-        || relative
-            .to_string_lossy()
-            .replace('\\', "/")
-            .ends_with("source/latest.json")
-}
-
-async fn verify_source_tarball_step() -> Result<()> {
-    let client = s3_client(None).await?;
-    let s3_prefix = require_env("S3_DESKTOP_PREFIX")?;
-    let manifest_path = Path::new("s3_payload")
-        .join(&s3_prefix)
-        .join("source")
-        .join("latest.json");
-    if !manifest_path.exists() {
-        println!("No desktop source tarball payload present; skipping source verification.");
-        return Ok(());
-    }
-
-    let manifest: SourceManifest = serde_json::from_str(
-        &fs::read_to_string(&manifest_path)
-            .with_context(|| format!("Failed to read {}", manifest_path.display()))?,
-    )?;
-    ensure!(
-        !manifest.filename.is_empty()
-            && !manifest.sha256.is_empty()
-            && !manifest.desktop_version.is_empty()
-            && !manifest.commit.is_empty(),
-        "Desktop source manifest is missing filename, sha256, desktop_version, or commit."
-    );
-
-    let bucket = require_env("S3_BUCKET")?;
-    let remote_base = join_s3_key(&s3_prefix, "source");
-    let remote_sha256 = first_word(&String::from_utf8(
-        get_s3_object_bytes(
-            &client,
-            &bucket,
-            &join_s3_key(
-                &remote_base,
-                &format!("by-commit/{}/{}.sha256", manifest.commit, manifest.filename),
-            ),
-        )
-        .await?
-        .to_vec(),
-    )?);
-    let latest_sha256 = first_word(&String::from_utf8(
-        get_s3_object_bytes(
-            &client,
-            &bucket,
-            &join_s3_key(&remote_base, "latest.tar.gz.sha256"),
-        )
-        .await?
-        .to_vec(),
-    )?);
-    let remote_manifest: SourceManifest = serde_json::from_slice(
-        &get_s3_object_bytes(&client, &bucket, &join_s3_key(&remote_base, "latest.json")).await?,
-    )?;
-    ensure!(
-        remote_sha256 == manifest.sha256,
-        "Remote by-commit checksum mismatch"
-    );
-    ensure!(
-        latest_sha256 == manifest.sha256,
-        "Remote latest checksum mismatch"
-    );
-    ensure!(
-        remote_manifest.sha256 == manifest.sha256,
-        "Remote manifest checksum mismatch"
-    );
-    ensure!(
-        remote_manifest.desktop_version == manifest.desktop_version,
-        "Remote manifest desktop version mismatch"
-    );
-
-    let tar_bytes = get_s3_object_bytes(
-        &client,
-        &bucket,
-        &join_s3_key(
-            &remote_base,
-            &format!("by-commit/{}/{}", manifest.commit, manifest.filename),
-        ),
-    )
-    .await?;
-    let package_version = package_version_from_tar_gz_bytes(
-        &tar_bytes,
-        &format!(
-            "fluxer_desktop-{}-{}/package.json",
-            manifest.desktop_version, manifest.commit
-        ),
-    )?;
-    ensure!(
-        package_version == manifest.desktop_version,
-        "Remote source tarball package version mismatch"
-    );
-    Ok(())
-}
-
-fn package_version_from_tar_gz_bytes(bytes: &[u8], package_json_path: &str) -> Result<String> {
-    let decoder = GzDecoder::new(Cursor::new(bytes));
-    let mut archive = tar::Archive::new(decoder);
-    for entry in archive.entries()? {
-        let mut entry = entry?;
-        if entry.path()?.to_string_lossy() == package_json_path {
-            let mut text = String::new();
-            entry.read_to_string(&mut text)?;
-            let package: Value = serde_json::from_str(&text)?;
-            return package
-                .get("version")
-                .and_then(Value::as_str)
-                .map(ToOwned::to_owned)
-                .ok_or_else(|| anyhow!("package.json in archive has no version"));
-        }
-    }
-    bail!("{package_json_path} not found in source tarball")
 }
 
 fn build_summary_step() -> Result<()> {
@@ -2918,228 +3142,6 @@ fn build_summary_step() -> Result<()> {
         "\n**Version:** {version}\n\n**S3 prefix:** {s3_prefix}/{channel}/\n\n**Redirect endpoint shape:** /dl/{s3_prefix}/{channel}/{{plat}}/{{arch}}[/{{variant}}]/{{format}}"
     )?;
     Ok(())
-}
-
-async fn notify_webhook_step() -> Result<()> {
-    let version = require_env("VERSION")?;
-    let channel = env::var("DISPLAY_CHANNEL")
-        .ok()
-        .filter(|value| !value.is_empty())
-        .or_else(|| env::var("CHANNEL").ok())
-        .unwrap_or_default();
-    let test_build = env_bool("TEST_BUILD");
-
-    if !should_notify_desktop_webhook(&channel) {
-        println!("Skipping desktop notification for channel={channel}, test_build={test_build}.");
-        return Ok(());
-    }
-
-    let webhook_url = env::var("FLUXER_WEBHOOK_URL")
-        .unwrap_or_default()
-        .trim()
-        .to_string();
-    if webhook_url.is_empty() {
-        println!("FLUXER_WEBHOOK_URL is not set; skipping desktop canary notification.");
-        return Ok(());
-    }
-
-    let messages = desktop_webhook_messages(&version, test_build, None)?;
-    let message_count = messages.len();
-    for (index, message) in messages.into_iter().enumerate() {
-        let response = Client::new()
-            .post(&webhook_url)
-            .header("User-Agent", "fluxer-ci-desktop")
-            .json(&json!({
-                "content": message,
-                "allowed_mentions": {"parse": []},
-            }))
-            .send()
-            .await
-            .context("Failed to send desktop webhook")?;
-        let status = response.status();
-        if !status.is_success() {
-            let body = response.text().await.unwrap_or_default();
-            bail!(
-                "Desktop webhook part {}/{} returned {status}: {body}",
-                index + 1,
-                message_count
-            );
-        }
-        println!(
-            "Desktop canary notification part {}/{} sent ({status}).",
-            index + 1,
-            message_count
-        );
-    }
-    Ok(())
-}
-
-fn should_notify_desktop_webhook(channel: &str) -> bool {
-    channel == "canary"
-}
-
-fn desktop_payload_root() -> PathBuf {
-    let s3_prefix = env::var("S3_DESKTOP_PREFIX").unwrap_or_else(|_| "desktop".to_string());
-    let channel = env::var("CHANNEL").unwrap_or_else(|_| "canary".to_string());
-    PathBuf::from("s3_payload").join(s3_prefix).join(channel)
-}
-
-fn desktop_manifest_formats(
-    payload_root: &Path,
-    platform: &str,
-    arch: &str,
-    desktop_variant: &str,
-) -> Result<BTreeSet<String>> {
-    let mut manifest_path = payload_root.join(platform).join(arch);
-    if let Some(segment) = desktop_variant_path_segment(desktop_variant) {
-        manifest_path = manifest_path.join(segment);
-    }
-    manifest_path = manifest_path.join("manifest.json");
-    if !manifest_path.exists() {
-        return Ok(BTreeSet::new());
-    }
-
-    let manifest: Value = serde_json::from_str(
-        &fs::read_to_string(&manifest_path)
-            .with_context(|| format!("Failed to read {}", manifest_path.display()))?,
-    )
-    .with_context(|| format!("Failed to parse {}", manifest_path.display()))?;
-    let files = manifest
-        .get("files")
-        .and_then(Value::as_object)
-        .ok_or_else(|| {
-            anyhow!(
-                "Invalid desktop manifest files object: {}",
-                manifest_path.display()
-            )
-        })?;
-    Ok(files.keys().cloned().collect())
-}
-
-fn desktop_download_url(
-    platform: &str,
-    arch: &str,
-    desktop_variant: &str,
-    version: &str,
-    format_name: &str,
-    test_build: bool,
-) -> String {
-    let test_query = if test_build { "?test=1" } else { "" };
-    let variant_segment = desktop_variant_path_segment(desktop_variant)
-        .map(|variant| format!("/{variant}"))
-        .unwrap_or_default();
-    format!(
-        "{PUBLIC_DL_BASE}/desktop/canary/{platform}/{arch}{variant_segment}/{version}/{format_name}{test_query}"
-    )
-}
-
-#[cfg(test)]
-fn desktop_download_table(
-    version: &str,
-    test_build: bool,
-    payload_root: Option<&Path>,
-) -> Result<String> {
-    Ok(desktop_download_sections(version, test_build, payload_root)?.join("\n\n"))
-}
-
-fn desktop_webhook_messages(
-    version: &str,
-    test_build: bool,
-    payload_root: Option<&Path>,
-) -> Result<Vec<String>> {
-    let title = if test_build {
-        "Canary Desktop Test Build Ready"
-    } else {
-        "Canary Desktop Build Ready"
-    };
-    let mut messages = Vec::new();
-    let mut current = format!("## {title}\n\nDesktop app version: `{version}`");
-    for section in desktop_download_sections(version, test_build, payload_root)? {
-        append_desktop_webhook_section(&mut messages, &mut current, &section)?;
-    }
-    if !current.is_empty() {
-        messages.push(current);
-    }
-    Ok(messages)
-}
-
-fn append_desktop_webhook_section(
-    messages: &mut Vec<String>,
-    current: &mut String,
-    section: &str,
-) -> Result<()> {
-    let separator = if current.is_empty() { "" } else { "\n\n" };
-    let candidate = format!("{current}{separator}{section}");
-    if candidate.chars().count() <= DESKTOP_WEBHOOK_CONTENT_LIMIT {
-        *current = candidate;
-        return Ok(());
-    }
-
-    if !current.is_empty() {
-        messages.push(std::mem::take(current));
-    }
-    ensure!(
-        section.chars().count() <= DESKTOP_WEBHOOK_CONTENT_LIMIT,
-        "Desktop webhook section exceeds {DESKTOP_WEBHOOK_CONTENT_LIMIT} characters."
-    );
-    current.push_str(section);
-    Ok(())
-}
-
-fn desktop_download_sections(
-    version: &str,
-    test_build: bool,
-    payload_root: Option<&Path>,
-) -> Result<Vec<String>> {
-    let root;
-    let payload_root = match payload_root {
-        Some(path) => path,
-        None => {
-            root = desktop_payload_root();
-            root.as_path()
-        }
-    };
-    let mut rendered_sections = Vec::new();
-    for (platform, desktop_variant, heading, arch_groups) in DESKTOP_DOWNLOAD_SECTIONS {
-        let mut rows = Vec::new();
-        for (arch, formats) in *arch_groups {
-            let available_formats =
-                desktop_manifest_formats(payload_root, platform, arch, desktop_variant)?;
-            for (format_name, label) in *formats {
-                if available_formats.contains(*format_name) {
-                    rows.push(format!(
-                        "| {arch} | {label} | {} |",
-                        desktop_download_url(
-                            platform,
-                            arch,
-                            desktop_variant,
-                            version,
-                            format_name,
-                            test_build
-                        )
-                    ));
-                }
-            }
-        }
-
-        if !rows.is_empty() {
-            let mut table = vec![
-                "| Arch | Format | URL |".to_string(),
-                "|---|---|---|".to_string(),
-            ];
-            table.extend(rows);
-            rendered_sections.push(format!("## {heading}\n\n{}", table.join("\n")));
-        }
-    }
-
-    if rendered_sections.is_empty() {
-        bail!(
-            "No desktop manifests found under {}; refusing to send an empty notification.",
-            payload_root.display()
-        );
-    }
-
-    Ok(rendered_sections)
 }
 
 fn find_dist_file<F>(dist: &Path, predicate: F) -> Option<PathBuf>
@@ -3308,33 +3310,6 @@ fn print_tree(root: &Path, max_depth: usize) -> Result<()> {
     Ok(())
 }
 
-fn find_signtool() -> Result<PathBuf> {
-    if let Some(path) = env_string("SIGNTOOL_PATH")
-        .map(PathBuf::from)
-        .filter(|path| path.exists())
-    {
-        return Ok(path);
-    }
-    let roots = [
-        PathBuf::from(r"C:\Program Files (x86)\Windows Kits\10\bin"),
-        PathBuf::from(r"C:\Program Files\Windows Kits\10\bin"),
-    ];
-    for root in roots {
-        if !root.exists() {
-            continue;
-        }
-        if let Some(path) = find_first(&root, |path| {
-            path.file_name()
-                .and_then(OsStr::to_str)
-                .is_some_and(|name| name.eq_ignore_ascii_case("signtool.exe"))
-                && path.to_string_lossy().contains("x64")
-        }) {
-            return Ok(path);
-        }
-    }
-    Ok(PathBuf::from("signtool.exe"))
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -3377,12 +3352,6 @@ mod tests {
         assert!(should_overwrite_payload("desktop-test", true));
         assert!(!should_overwrite_payload("desktop", true));
         assert!(!should_overwrite_payload("desktop-test", false));
-    }
-
-    #[test]
-    fn desktop_webhook_notifies_canary_uploads_and_tests() {
-        assert!(should_notify_desktop_webhook("canary"));
-        assert!(!should_notify_desktop_webhook("stable"));
     }
 
     #[test]
@@ -3435,10 +3404,28 @@ mod tests {
             selected,
             vec![
                 "{\"platform\":\"windows\",\"arch\":\"arm64\",\"desktop_variant\":\"default\",\"os\":\"blacksmith-32vcpu-windows-2025\",\"electron_arch\":\"arm64\"}",
-                "{\"platform\":\"windows\",\"arch\":\"arm64\",\"desktop_variant\":\"windows-game-capture\",\"os\":\"blacksmith-32vcpu-windows-2025\",\"electron_arch\":\"arm64\"}",
                 "{\"platform\":\"linux\",\"arch\":\"x64\",\"desktop_variant\":\"default\",\"os\":\"blacksmith-32vcpu-ubuntu-2404\",\"electron_arch\":\"x64\"}",
                 "{\"platform\":\"linux\",\"arch\":\"arm64\",\"desktop_variant\":\"default\",\"os\":\"blacksmith-32vcpu-ubuntu-2404-arm\",\"electron_arch\":\"arm64\"}",
             ]
+        );
+    }
+
+    #[test]
+    fn matrix_selects_one_row_per_platform_arch_by_default() {
+        let selected = selected_platforms(&matrix_args()).unwrap();
+
+        assert_eq!(selected.len(), 6);
+        assert_eq!(
+            selected
+                .iter()
+                .filter(|platform| platform.platform == "windows")
+                .count(),
+            2
+        );
+        assert!(
+            selected
+                .iter()
+                .all(|platform| platform.desktop_variant == DEFAULT_DESKTOP_VARIANT)
         );
     }
 
@@ -3457,11 +3444,25 @@ mod tests {
             selected,
             vec![
                 "{\"platform\":\"windows\",\"arch\":\"arm64\",\"desktop_variant\":\"default\",\"os\":\"blacksmith-32vcpu-windows-2025\",\"electron_arch\":\"arm64\"}",
-                "{\"platform\":\"windows\",\"arch\":\"arm64\",\"desktop_variant\":\"windows-game-capture\",\"os\":\"blacksmith-32vcpu-windows-2025\",\"electron_arch\":\"arm64\"}",
                 "{\"platform\":\"linux\",\"arch\":\"x64\",\"desktop_variant\":\"default\",\"os\":\"blacksmith-32vcpu-ubuntu-2404\",\"electron_arch\":\"x64\"}",
                 "{\"platform\":\"linux\",\"arch\":\"arm64\",\"desktop_variant\":\"default\",\"os\":\"blacksmith-32vcpu-ubuntu-2404-arm\",\"electron_arch\":\"arm64\"}",
             ]
         );
+    }
+
+    #[test]
+    fn matrix_skip_targets_drop_every_windows_row() {
+        let mut args = matrix_args();
+        args.skip_targets = Some("windows".to_string());
+
+        let selected = selected_platforms(&args).unwrap();
+
+        assert!(
+            selected
+                .iter()
+                .all(|platform| platform.platform != "windows")
+        );
+        assert_eq!(selected.len(), 4);
     }
 
     #[test]
@@ -3472,6 +3473,25 @@ mod tests {
         let error = selected_platforms(&args).unwrap_err();
 
         assert!(error.to_string().contains("Unknown desktop skip target"));
+    }
+
+    #[test]
+    fn matrix_skip_targets_reject_retired_windows_game_capture_variant() {
+        for target in [
+            WINDOWS_GAME_CAPTURE_DESKTOP_VARIANT,
+            "windows-game-capture-x64",
+            "windows-game-capture-arm64",
+        ] {
+            let mut args = matrix_args();
+            args.skip_targets = Some(target.to_string());
+
+            let error = selected_platforms(&args).unwrap_err();
+
+            assert!(
+                error.to_string().contains("Unknown desktop skip target"),
+                "{target} should no longer be a recognised skip target"
+            );
+        }
     }
 
     #[test]
@@ -3497,7 +3517,6 @@ mod tests {
         let root = temp.path();
         write_file(&root.join("canary/linux/x64/Fluxer.AppImage"), "app");
         write_file(&root.join("canary/linux/x64/manifest.json"), "{}");
-        write_file(&root.join("source/latest.json"), "{}");
         write_file(&root.join("canary/darwin/x64/releases.json"), "{}");
 
         let binaries = directory_upload_plan("desktop", root, |relative| {
@@ -3519,7 +3538,6 @@ mod tests {
             vec![
                 "desktop/canary/darwin/x64/releases.json",
                 "desktop/canary/linux/x64/manifest.json",
-                "desktop/source/latest.json",
             ]
         );
     }
@@ -3532,7 +3550,6 @@ mod tests {
                 platform: "windows".to_string(),
                 arch: "arm64".to_string(),
                 desktop_variant: DEFAULT_DESKTOP_VARIANT.to_string(),
-                source: false,
                 signed: false,
             }
         );
@@ -3546,23 +3563,16 @@ mod tests {
                 platform: "windows".to_string(),
                 arch: "x64".to_string(),
                 desktop_variant: WINDOWS_GAME_CAPTURE_DESKTOP_VARIANT.to_string(),
-                source: false,
                 signed: true,
             }
         );
         assert!(parse_artifact_dir_name("fluxer-desktop-stable-linux-x64", "canary").is_none());
-        assert!(
-            parse_artifact_dir_name("fluxer-desktop-canary-source-linux-x64", "canary")
-                .unwrap()
-                .source
-        );
         assert_eq!(
             parse_artifact_dir_name("fluxer-desktop-canary-windows-x64-signed", "canary").unwrap(),
             ArtifactIdentity {
                 platform: "windows".to_string(),
                 arch: "x64".to_string(),
                 desktop_variant: DEFAULT_DESKTOP_VARIANT.to_string(),
-                source: false,
                 signed: true,
             }
         );
@@ -3649,7 +3659,6 @@ export const CHANNEL_DISPLAY_NAME = BUILD_CHANNEL;\n"
         )
         .unwrap();
         fs::create_dir_all(artifacts.join("fluxer-desktop-canary-linux-x64")).unwrap();
-        fs::create_dir_all(artifacts.join("fluxer-desktop-canary-source-linux-x64")).unwrap();
         fs::create_dir_all(artifacts.join("unrelated")).unwrap();
 
         let selected = payload_artifact_dirs(artifacts, "canary")
@@ -3672,7 +3681,6 @@ export const CHANNEL_DISPLAY_NAME = BUILD_CHANNEL;\n"
                         platform: "linux".to_string(),
                         arch: "x64".to_string(),
                         desktop_variant: DEFAULT_DESKTOP_VARIANT.to_string(),
-                        source: false,
                         signed: false,
                     },
                 ),
@@ -3682,7 +3690,6 @@ export const CHANNEL_DISPLAY_NAME = BUILD_CHANNEL;\n"
                         platform: "windows".to_string(),
                         arch: "x64".to_string(),
                         desktop_variant: DEFAULT_DESKTOP_VARIANT.to_string(),
-                        source: false,
                         signed: true,
                     },
                 ),
@@ -3692,7 +3699,6 @@ export const CHANNEL_DISPLAY_NAME = BUILD_CHANNEL;\n"
                         platform: "windows".to_string(),
                         arch: "x64".to_string(),
                         desktop_variant: WINDOWS_GAME_CAPTURE_DESKTOP_VARIANT.to_string(),
-                        source: false,
                         signed: true,
                     },
                 ),
@@ -3822,90 +3828,76 @@ export const CHANNEL_DISPLAY_NAME = BUILD_CHANNEL;\n"
     }
 
     #[test]
-    fn deterministic_tarball_rewrites_and_reads_package_version() {
+    fn velopack_portable_archives_are_removed_from_the_release_directory() {
         let temp = tempfile::tempdir().unwrap();
-        let source_root = temp.path().join("fluxer_desktop-2026.520.1-abcdef");
+        let output_dir = temp.path();
         write_file(
-            &source_root.join("package.json"),
-            r#"{"name":"fluxer","version":"0.0.0"}"#,
+            &output_dir.join("fluxer_desktop_canary-2026.810.1-Portable.zip"),
+            "velopack",
         );
-        rewrite_package_version(&source_root.join("package.json"), "2026.520.1").unwrap();
-        let archive = temp.path().join("source.tar.gz");
+        write_file(
+            &output_dir.join("fluxer_desktop_canary-2026.810.1-full.nupkg"),
+            "payload",
+        );
+        write_file(
+            &output_dir.join("Fluxer Canary-2026.810.1-win-arm64.exe"),
+            "setup",
+        );
+        write_file(&output_dir.join("RELEASES"), "feed");
 
-        create_deterministic_tar_gz(&source_root, &archive, "2026-05-20T01:02:03Z").unwrap();
+        remove_velopack_portable_archives(output_dir).unwrap();
 
+        let remaining = collect_files(output_dir)
+            .unwrap()
+            .into_iter()
+            .filter_map(|path| file_name_string(&path).ok())
+            .collect::<BTreeSet<_>>();
+        assert!(!remaining.iter().any(|name| name.ends_with(".zip")));
+        assert!(remaining.contains("fluxer_desktop_canary-2026.810.1-full.nupkg"));
+        assert!(remaining.contains("Fluxer Canary-2026.810.1-win-arm64.exe"));
+        assert!(remaining.contains("RELEASES"));
+    }
+
+    #[test]
+    fn percent_encoded_archive_names_match_their_decoded_inventory_entry() {
         assert_eq!(
-            package_version_from_tar_gz(&archive, "fluxer_desktop-2026.520.1-abcdef/package.json")
-                .unwrap(),
-            "2026.520.1"
+            percent_decode_archive_name("Fluxer%20Canary.exe"),
+            "Fluxer Canary.exe"
         );
-        assert_eq!(sha256_file(&archive).unwrap().len(), 64);
+        assert_eq!(percent_decode_archive_name("Fluxer.exe"), "Fluxer.exe");
+        assert_eq!(
+            percent_decode_archive_name("win-game-capture.win32-arm64-msvc.node"),
+            "win-game-capture.win32-arm64-msvc.node"
+        );
+        assert_eq!(percent_decode_archive_name("100%.dll"), "100%.dll");
+        assert_eq!(percent_decode_archive_name("a%zz.dll"), "a%zz.dll");
     }
 
     #[test]
-    fn desktop_download_table_uses_manifest_files() {
-        let temp = tempfile::tempdir().unwrap();
-        let manifest_dir = temp.path().join("win32").join("x64");
-        fs::create_dir_all(&manifest_dir).unwrap();
-        fs::write(
-            manifest_dir.join("manifest.json"),
-            r#"{"files":{"setup":"Fluxer.exe","portable":"Fluxer.zip"}}"#,
-        )
-        .unwrap();
-        let variant_manifest_dir = temp
-            .path()
-            .join("win32")
-            .join("x64")
-            .join(WINDOWS_GAME_CAPTURE_DESKTOP_VARIANT);
-        fs::create_dir_all(&variant_manifest_dir).unwrap();
-        fs::write(
-            variant_manifest_dir.join("manifest.json"),
-            r#"{"files":{"setup":"Fluxer Game Capture.exe"}}"#,
-        )
-        .unwrap();
-
-        let table = desktop_download_table("2026.520.1", true, Some(temp.path())).unwrap();
-        assert!(table.contains("## Windows (`win32`)"));
-        assert!(table.contains("## Windows Game Capture (`win32`)"));
-        assert!(table.contains("| Arch | Format | URL |"));
-        assert!(table.contains("|---|---|---|"));
-        assert!(table.contains("| x64 | Setup.exe | https://api.fluxer.app/dl/desktop/canary/win32/x64/2026.520.1/setup?test=1 |"));
-        assert!(table.contains("| x64 | Portable ZIP | https://api.fluxer.app/dl/desktop/canary/win32/x64/2026.520.1/portable?test=1 |"));
-        assert!(table.contains("| x64 | Setup.exe | https://api.fluxer.app/dl/desktop/canary/win32/x64/windows-game-capture/2026.520.1/setup?test=1 |"));
-        assert!(!table.contains("SHA-256"));
-    }
-
-    #[test]
-    fn desktop_webhook_messages_split_under_receiver_limit() {
-        let temp = tempfile::tempdir().unwrap();
-        let manifest = r#"{"files":{"setup":"Fluxer.exe","portable":"Fluxer.zip","dmg":"Fluxer.dmg","zip":"Fluxer.zip","appimage":"Fluxer.AppImage","deb":"Fluxer.deb","rpm":"Fluxer.rpm","tar_gz":"Fluxer.tar.gz"}}"#;
-        for (platform, desktop_variant, _, arch_groups) in DESKTOP_DOWNLOAD_SECTIONS {
-            for (arch, _) in *arch_groups {
-                let mut manifest_dir = temp.path().join(platform).join(arch);
-                if let Some(segment) = desktop_variant_path_segment(desktop_variant) {
-                    manifest_dir = manifest_dir.join(segment);
+    fn canary_nupkg_inventory_accepts_percent_encoded_main_executable() {
+        let root = Path::new("lib").join("app");
+        let files = expected_windows_pe_inventory("arm64", "Fluxer Canary.exe")
+            .into_iter()
+            .map(|name| {
+                if name == "Fluxer Canary.exe" {
+                    return root.join("Fluxer%20Canary.exe");
                 }
-                write_file(&manifest_dir.join("manifest.json"), manifest);
+                root.join(name)
+            })
+            .collect::<Vec<_>>();
+        assert_expected_windows_pe_inventory(&root, &files, "arm64", "Fluxer Canary.exe").unwrap();
+    }
+
+    #[test]
+    fn known_optional_windows_pe_inventory_never_repeats_a_required_binary() {
+        for arch in ["x64", "arm64"] {
+            for main_exe in ["Fluxer.exe", "Fluxer Canary.exe"] {
+                assert_eq!(
+                    contradictory_optional_windows_pe_inventory(arch, main_exe),
+                    Vec::<String>::new(),
+                    "{arch}/{main_exe} declares a binary as both required and known-optional"
+                );
             }
         }
-
-        let messages =
-            desktop_webhook_messages("2026.614.181201", true, Some(temp.path())).unwrap();
-        assert!(messages.len() > 1);
-        assert!(
-            messages
-                .iter()
-                .all(|message| message.chars().count() <= DESKTOP_WEBHOOK_CONTENT_LIMIT)
-        );
-
-        let combined = messages.join("\n\n");
-        assert!(combined.starts_with("## Canary Desktop Test Build Ready"));
-        assert!(combined.contains("Desktop app version: `2026.614.181201`"));
-        assert!(combined.contains("## Windows (`win32`)"));
-        assert!(combined.contains("## Windows Game Capture (`win32`)"));
-        assert!(combined.contains("## macOS (`darwin`)"));
-        assert!(combined.contains("## Linux (`linux`)"));
-        assert!(combined.contains("| Arch | Format | URL |"));
-        assert!(!combined.contains("SHA-256"));
     }
 }

@@ -765,6 +765,7 @@ class VoiceSettings {
 	}
 
 	getBackgroundImageId(): string {
+		if (!areVoiceBackgroundsAvailable()) return NONE_BACKGROUND_ID;
 		return this.backgroundImageId;
 	}
 
@@ -1118,10 +1119,6 @@ class VoiceSettings {
 			if (backgroundImages.length > 3) {
 				backgroundImages = backgroundImages.slice(0, 3);
 			}
-		}
-		if (!areVoiceBackgroundsAvailable()) {
-			backgroundImages = [];
-			backgroundImageId = NONE_BACKGROUND_ID;
 		}
 		if (backgroundImageId !== NONE_BACKGROUND_ID && backgroundImageId !== BLUR_BACKGROUND_ID) {
 			const imageExists = backgroundImages.some((img: BackgroundImage) => img.id === backgroundImageId);

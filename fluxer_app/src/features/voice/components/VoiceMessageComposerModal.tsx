@@ -4,6 +4,7 @@ import {showGenericErrorModal} from '@app/features/app/components/alerts/Generic
 import * as Modal from '@app/features/app/components/dialogs/Modal';
 import {SOMETHING_WENT_WRONG_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {AudioWaveform, computePeaks} from '@app/features/voice/components/AudioWaveform';
@@ -579,9 +580,17 @@ export const VoiceMessageComposerModal: React.FC<VoiceMessageComposerModalProps>
 								>
 									<span className={styles.buttonInner} data-flx="voice.voice-message-composer-modal.button-inner">
 										{isPlaying ? (
-											<PauseIcon size={14} weight="fill" data-flx="voice.voice-message-composer-modal.pause-icon" />
+											<PauseIcon
+												size={remFromPx(14)}
+												weight="fill"
+												data-flx="voice.voice-message-composer-modal.pause-icon"
+											/>
 										) : (
-											<PlayIcon size={14} weight="fill" data-flx="voice.voice-message-composer-modal.play-icon" />
+											<PlayIcon
+												size={remFromPx(14)}
+												weight="fill"
+												data-flx="voice.voice-message-composer-modal.play-icon"
+											/>
 										)}
 										{isPlaying ? i18n._(PAUSE_DESCRIPTOR) : i18n._(PLAY_DESCRIPTOR)}
 									</span>
@@ -594,7 +603,7 @@ export const VoiceMessageComposerModal: React.FC<VoiceMessageComposerModalProps>
 								>
 									<span className={styles.buttonInner} data-flx="voice.voice-message-composer-modal.button-inner--2">
 										<ArrowCounterClockwiseIcon
-											size={14}
+											size={remFromPx(14)}
 											weight="bold"
 											data-flx="voice.voice-message-composer-modal.arrow-counter-clockwise-icon"
 										/>
@@ -622,7 +631,7 @@ export const VoiceMessageComposerModal: React.FC<VoiceMessageComposerModalProps>
 						data-flx="voice.voice-message-composer-modal.stop-button"
 					>
 						<span className={styles.buttonInner} data-flx="voice.voice-message-composer-modal.button-inner--3">
-							<StopIcon size={14} weight="fill" data-flx="voice.voice-message-composer-modal.stop-icon" />
+							<StopIcon size={remFromPx(14)} weight="fill" data-flx="voice.voice-message-composer-modal.stop-icon" />
 							{i18n._(STOP_BUTTON_DESCRIPTOR)}
 						</span>
 					</Button>
@@ -635,7 +644,7 @@ export const VoiceMessageComposerModal: React.FC<VoiceMessageComposerModalProps>
 					>
 						<span className={styles.buttonInner} data-flx="voice.voice-message-composer-modal.button-inner--4">
 							<PaperPlaneRightIcon
-								size={14}
+								size={remFromPx(14)}
 								weight="fill"
 								data-flx="voice.voice-message-composer-modal.paper-plane-right-icon"
 							/>
@@ -649,7 +658,11 @@ export const VoiceMessageComposerModal: React.FC<VoiceMessageComposerModalProps>
 						data-flx="voice.voice-message-composer-modal.retry-button"
 					>
 						<span className={styles.buttonInner} data-flx="voice.voice-message-composer-modal.button-inner--5">
-							<MicrophoneIcon size={14} weight="fill" data-flx="voice.voice-message-composer-modal.microphone-icon" />
+							<MicrophoneIcon
+								size={remFromPx(14)}
+								weight="fill"
+								data-flx="voice.voice-message-composer-modal.microphone-icon"
+							/>
 							{i18n._(RECORD_BUTTON_DESCRIPTOR)}
 						</span>
 					</Button>

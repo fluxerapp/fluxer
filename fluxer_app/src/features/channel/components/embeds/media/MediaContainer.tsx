@@ -8,6 +8,7 @@ import {
 	DOWNLOAD_DESCRIPTOR,
 	REMOVE_FROM_FAVORITES_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
@@ -123,7 +124,7 @@ export const MediaContainer = observer(
 											data-flx="channel.embeds.media.media-container.button.delete-click"
 										>
 											<TrashIcon
-												size={18}
+												size={remFromPx(18)}
 												weight="bold"
 												className={mediaStyles.actionIcon}
 												data-flx="channel.embeds.media.media-container.trash-icon"
@@ -147,7 +148,7 @@ export const MediaContainer = observer(
 											data-flx="channel.embeds.media.media-container.button.download-click"
 										>
 											<DownloadSimpleIcon
-												size={18}
+												size={remFromPx(18)}
 												weight="bold"
 												className={mediaStyles.actionIcon}
 												data-flx="channel.embeds.media.media-container.download-simple-icon"
@@ -174,7 +175,7 @@ export const MediaContainer = observer(
 											data-flx="channel.embeds.media.media-container.button.favorite-click"
 										>
 											<StarIcon
-												size={18}
+												size={remFromPx(18)}
 												weight={isFavorited ? 'fill' : 'bold'}
 												className={mediaStyles.actionIcon}
 												data-flx="channel.embeds.media.media-container.star-icon"

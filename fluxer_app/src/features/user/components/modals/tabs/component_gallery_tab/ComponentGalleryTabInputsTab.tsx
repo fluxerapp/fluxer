@@ -7,6 +7,7 @@ import {
 } from '@app/features/app/components/dialogs/shared/SettingsTabLayout';
 import {EXAMPLE_EMAIL, EXAMPLE_USERNAME_MENTION} from '@app/features/app/config/I18nDisplayConstants';
 import {PASSWORD_DESCRIPTOR, USERNAME_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import {ColorPickerField} from '@app/features/ui/components/form/ColorPickerField';
 import {Input, Textarea} from '@app/features/ui/components/form/FormInput';
@@ -221,7 +222,7 @@ export const InputsTab: React.FC<InputsTabProps> = observer(
 								placeholder={i18n._(SEARCH_FOR_ANYTHING_DESCRIPTOR)}
 								leftIcon={
 									<MagnifyingGlassIcon
-										size={16}
+										size={remFromPx(16)}
 										weight="bold"
 										data-flx="user.component-gallery-tab.inputs-tab.magnifying-glass-icon"
 									/>
@@ -233,7 +234,7 @@ export const InputsTab: React.FC<InputsTabProps> = observer(
 							<Input
 								label={i18n._(USER_PROFILE_DESCRIPTOR)}
 								placeholder={i18n._(ENTER_USERNAME_DESCRIPTOR)}
-								leftIcon={<UserIcon size={16} data-flx="user.component-gallery-tab.inputs-tab.user-icon" />}
+								leftIcon={<UserIcon size={remFromPx(16)} data-flx="user.component-gallery-tab.inputs-tab.user-icon" />}
 								value={inputValue3}
 								onChange={(e) => setInputValue3(e.target.value)}
 								data-flx="user.component-gallery-tab.inputs-tab.input--3"

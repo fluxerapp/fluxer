@@ -49,7 +49,9 @@ export function handleGuildCreate(data: GuildReadyData, _context: GatewayHandler
 	GuildAvailability.setGuildAvailable(data.id);
 	Guilds.handleGuildCreate(data);
 	GuildCount.handleGuildCreate(data);
-	MemberSidebar.handleGuildCreate(data.id);
+	if (!isSync) {
+		MemberSidebar.handleGuildCreate(data.id);
+	}
 	if (!data.unavailable) {
 		Channels.handleGuildCreate(data);
 	}

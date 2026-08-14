@@ -7,6 +7,7 @@ import {useMaybeMessageViewContext} from '@app/features/channel/components/Messa
 import {PAUSE_DESCRIPTOR, PLAY_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {buildMediaProxyURL} from '@app/features/messaging/utils/MediaProxyUtils';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {MediaContextMenu} from '@app/features/ui/action_menu/MediaContextMenu';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
@@ -326,9 +327,17 @@ const VoiceMessagePlayer: React.FC<VoiceMessagePlayerProps> = observer(
 							data-flx="channel.embeds.media.voice-message-player.play-button-icon"
 						>
 							{state.isPlaying ? (
-								<PauseIcon size={16} weight="fill" data-flx="channel.embeds.media.voice-message-player.pause-icon" />
+								<PauseIcon
+									size={remFromPx(16)}
+									weight="fill"
+									data-flx="channel.embeds.media.voice-message-player.pause-icon"
+								/>
 							) : (
-								<PlayIcon size={16} weight="fill" data-flx="channel.embeds.media.voice-message-player.play-icon" />
+								<PlayIcon
+									size={remFromPx(16)}
+									weight="fill"
+									data-flx="channel.embeds.media.voice-message-player.play-icon"
+								/>
 							)}
 						</motion.div>
 					</AnimatePresence>

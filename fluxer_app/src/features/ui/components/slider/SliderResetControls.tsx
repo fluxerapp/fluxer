@@ -67,6 +67,7 @@ export function SliderResetControls({
 					canReset={canReset}
 					onReset={onReset}
 					ariaLabel={inlineLabel}
+					alwaysVisible={true}
 					dataFlx="ui.slider.slider-reset-controls.reset-button"
 					data-flx="ui.slider.slider-reset-controls.slider-reset-icon-button"
 				/>

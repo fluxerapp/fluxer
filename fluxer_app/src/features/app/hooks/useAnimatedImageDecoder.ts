@@ -23,6 +23,12 @@ export interface AnimatedImageDecoderState {
 	naturalHeight: number;
 }
 
+interface DecoderSourceIdentity {
+	src: string | null;
+	canvas: HTMLCanvasElement | null;
+	maxCachedFrames: number | undefined;
+}
+
 export interface AnimatedImageFrameAdvanceState {
 	frameIndex: number;
 	frameCount: number;
@@ -37,23 +43,140 @@ export interface AnimatedImageFrameAdvanceResult {
 
 const DEFAULT_FRAME_DURATION_MS = 100;
 const DEFAULT_MAX_CACHED_FRAMES = 24;
+const MAX_CACHED_FRAME_BYTES = 64 * 1024 * 1024;
+const MAXIMUM_FRAME_TIMER_DELAY_MS = 2_147_000_000;
+const MAX_ANIMATED_IMAGE_ENCODED_BYTES = 16 * 1024 * 1024;
+const MAX_ANIMATED_IMAGE_RESPONSE_CHUNKS = 4096;
+const ANIMATED_IMAGE_REQUEST_TIMEOUT_MS = 30_000;
+
+function createIdleDecoderState(): AnimatedImageDecoderState {
+	return {
+		supported: getImageDecoderConstructor() !== null,
+		loaded: false,
+		error: false,
+		naturalWidth: 0,
+		naturalHeight: 0,
+	};
+}
+
+function sameDecoderSourceIdentity(current: DecoderSourceIdentity, next: DecoderSourceIdentity): boolean {
+	return current.src === next.src && current.canvas === next.canvas && current.maxCachedFrames === next.maxCachedFrames;
+}
 
 interface CachedAnimatedImageFrame {
 	image: CanvasImageSource;
 	width: number;
 	height: number;
+	byteSize: number;
 	durationMs: number;
 	close: () => void;
 }
 
+interface AnimatedImageResponseData {
+	type: string;
+	encodedBytes: Uint8Array;
+}
+
 const guessMimeFromUrl = (url: string): string => {
-	const lower = url.split('?')[0]?.toLowerCase() ?? '';
+	const path = url.split('?')[0];
+	const lower = path === undefined ? '' : path.toLowerCase();
 	if (lower.endsWith('.webp')) return 'image/webp';
 	if (lower.endsWith('.gif')) return 'image/gif';
 	if (lower.endsWith('.apng') || lower.endsWith('.png')) return 'image/png';
 	if (lower.endsWith('.avif')) return 'image/avif';
 	return 'image/webp';
 };
+
+function resolveMimeFromResponse(contentType: string | null, source: string): string {
+	if (contentType === null) return guessMimeFromUrl(source);
+	const separator = contentType.indexOf(';');
+	const mediaType = separator < 0 ? contentType : contentType.slice(0, separator);
+	const normalized = mediaType.trim().toLowerCase();
+	return normalized.length === 0 ? guessMimeFromUrl(source) : normalized;
+}
+
+function decodedFrameByteSize(width: number, height: number): number | null {
+	if (!Number.isSafeInteger(width) || !Number.isSafeInteger(height)) return null;
+	if (width <= 0 || height <= 0) return null;
+	const byteSize = width * height * 4;
+	if (!Number.isSafeInteger(byteSize)) return null;
+	return byteSize;
+}
+
+function frameDurationMs(durationMicroseconds: number | null | undefined): number {
+	if (durationMicroseconds === null || durationMicroseconds === undefined) return DEFAULT_FRAME_DURATION_MS;
+	if (!Number.isFinite(durationMicroseconds) || durationMicroseconds <= 0) return DEFAULT_FRAME_DURATION_MS;
+	return Math.min(MAXIMUM_FRAME_TIMER_DELAY_MS, Math.max(16, durationMicroseconds / 1000));
+}
+
+function cancelResponseBody(response: Response): void {
+	const body = response.body;
+	if (body == null) return;
+	try {
+		void body.cancel().catch(() => {});
+	} catch {}
+}
+
+function closeVideoFrame(image: VideoFrame): void {
+	try {
+		image.close();
+	} catch {}
+}
+
+async function readBoundedResponseBytes(response: Response): Promise<Uint8Array> {
+	const body = response.body;
+	if (body == null) throw new Error('Animated image response did not provide a body');
+	const contentLength = response.headers.get('content-length');
+	if (contentLength !== null) {
+		const maximumContentLengthDigits = Number.MAX_SAFE_INTEGER.toString().length;
+		if (
+			contentLength.length === 0 ||
+			contentLength.length > maximumContentLengthDigits ||
+			!/^[0-9]+$/.test(contentLength)
+		) {
+			cancelResponseBody(response);
+			throw new Error('Animated image response has an invalid Content-Length header');
+		}
+		const declaredBytes = Number(contentLength);
+		if (!Number.isSafeInteger(declaredBytes) || declaredBytes > MAX_ANIMATED_IMAGE_ENCODED_BYTES) {
+			cancelResponseBody(response);
+			throw new Error('Animated image response exceeded its byte limit');
+		}
+	}
+	const reader = body.getReader();
+	const chunks: Array<Uint8Array> = [];
+	let totalBytes = 0;
+	try {
+		while (true) {
+			const result = await reader.read();
+			if (result.done) break;
+			const chunk = result.value;
+			if (chunk == null) continue;
+			if (chunks.length >= MAX_ANIMATED_IMAGE_RESPONSE_CHUNKS) {
+				throw new Error('Animated image response exceeded its chunk limit');
+			}
+			totalBytes += chunk.byteLength;
+			if (totalBytes > MAX_ANIMATED_IMAGE_ENCODED_BYTES) {
+				throw new Error('Animated image response exceeded its byte limit');
+			}
+			chunks.push(chunk);
+		}
+	} catch (error) {
+		try {
+			await reader.cancel();
+		} catch {}
+		throw error;
+	} finally {
+		reader.releaseLock();
+	}
+	const bytes = new Uint8Array(totalBytes);
+	let offset = 0;
+	for (const chunk of chunks) {
+		bytes.set(chunk, offset);
+		offset += chunk.byteLength;
+	}
+	return bytes;
+}
 
 function normalizeRepetitionCount(repetitionCount: number): number {
 	if (repetitionCount === Infinity) return Infinity;
@@ -63,18 +186,21 @@ function normalizeRepetitionCount(repetitionCount: number): number {
 
 async function createCachedAnimatedImageFrame(
 	image: VideoFrame,
+	byteSize: number,
 	durationMs: number,
+	ownerWindow: Window,
 ): Promise<CachedAnimatedImageFrame> {
 	const width = image.displayWidth;
 	const height = image.displayHeight;
-	if (typeof createImageBitmap === 'function') {
+	if (typeof ownerWindow.createImageBitmap === 'function') {
 		try {
-			const bitmap = await createImageBitmap(image as unknown as ImageBitmapSource);
-			image.close();
+			const bitmap = await ownerWindow.createImageBitmap(image as unknown as ImageBitmapSource);
+			closeVideoFrame(image);
 			return {
 				image: bitmap,
 				width,
 				height,
+				byteSize,
 				durationMs,
 				close: () => bitmap.close(),
 			};
@@ -84,6 +210,7 @@ async function createCachedAnimatedImageFrame(
 		image: image as unknown as CanvasImageSource,
 		width,
 		height,
+		byteSize,
 		durationMs,
 		close: () => image.close(),
 	};
@@ -113,13 +240,9 @@ export function useAnimatedImageDecoder({
 	canvas,
 	maxCachedFrames = DEFAULT_MAX_CACHED_FRAMES,
 }: UseAnimatedImageDecoderOptions): AnimatedImageDecoderState {
-	const [state, setState] = useState<AnimatedImageDecoderState>(() => ({
-		supported: getImageDecoderConstructor() !== null,
-		loaded: false,
-		error: false,
-		naturalWidth: 0,
-		naturalHeight: 0,
-	}));
+	const sourceIdentity: DecoderSourceIdentity = {src, canvas, maxCachedFrames};
+	const [state, setState] = useState<AnimatedImageDecoderState>(createIdleDecoderState);
+	const [stateIdentity, setStateIdentity] = useState<DecoderSourceIdentity>(sourceIdentity);
 	const runnerRef = useRef<{
 		kick: () => void;
 		pause: () => void;
@@ -127,10 +250,19 @@ export function useAnimatedImageDecoder({
 	} | null>(null);
 	const playingRef = useRef(playing);
 	playingRef.current = playing;
+	const stateIsCurrent = sameDecoderSourceIdentity(stateIdentity, sourceIdentity);
+	const visibleState = stateIsCurrent ? state : createIdleDecoderState();
 	useEffect(() => {
+		setStateIdentity(sourceIdentity);
 		const Ctor = getImageDecoderConstructor();
+		setState(createIdleDecoderState);
 		if (!Ctor || !src || !canvas) {
 			if (!Ctor) setState((prev) => ({...prev, supported: false}));
+			return;
+		}
+		const ownerWindow = canvas.ownerDocument.defaultView;
+		if (ownerWindow == null) {
+			setState((prev) => ({...prev, error: true, supported: false}));
 			return;
 		}
 		const ctx = canvas.getContext('2d', {alpha: true});
@@ -143,6 +275,7 @@ export function useAnimatedImageDecoder({
 			: DEFAULT_MAX_CACHED_FRAMES;
 		const runner = {cancelled: false, kick: () => {}, pause: () => {}};
 		runnerRef.current = runner;
+		const fetchController = new ownerWindow.AbortController();
 		let decoder: FluxerImageDecoderInstance | null = null;
 		let frameCount = Number.POSITIVE_INFINITY;
 		let repetitionCount = 0;
@@ -151,18 +284,54 @@ export function useAnimatedImageDecoder({
 		let timer: number | null = null;
 		let resolveTimer: (() => void) | null = null;
 		let advancing = false;
+		let cachedFrameBytes = 0;
 		const frameCache = new Map<number, CachedAnimatedImageFrame>();
-		setState((prev) => ({...prev, loaded: false, error: false, supported: true}));
+		const isCurrentRunner = () => !runner.cancelled && runnerRef.current === runner;
+		const publishState = (
+			nextState: AnimatedImageDecoderState | ((previous: AnimatedImageDecoderState) => AnimatedImageDecoderState),
+		) => {
+			if (!isCurrentRunner()) return;
+			setState(nextState);
+		};
+		const closeFrameCache = () => {
+			for (const frame of frameCache.values()) {
+				try {
+					frame.close();
+				} catch {}
+			}
+			frameCache.clear();
+			cachedFrameBytes = 0;
+		};
+		const closeDecoder = () => {
+			if (decoder == null) return;
+			try {
+				decoder.close();
+			} catch {}
+			decoder = null;
+		};
+		const failRunner = () => {
+			if (runner.cancelled) return;
+			publishState((prev) => ({...prev, error: true}));
+			runner.cancelled = true;
+			try {
+				fetchController.abort();
+			} catch {}
+			clearTimer();
+			closeFrameCache();
+			closeDecoder();
+		};
+		publishState((prev) => ({...prev, loaded: false, error: false, supported: true}));
 		const clearTimer = () => {
 			if (timer != null) {
-				window.clearTimeout(timer);
+				ownerWindow.clearTimeout(timer);
 				timer = null;
 			}
-			resolveTimer?.();
+			const resolve = resolveTimer;
 			resolveTimer = null;
+			if (resolve != null) resolve();
 		};
-		const draw = (frame: CachedAnimatedImageFrame) => {
-			if (runner.cancelled) return;
+		const draw = (frame: CachedAnimatedImageFrame): boolean => {
+			if (!isCurrentRunner()) return false;
 			const w = frame.width;
 			const h = frame.height;
 			if (canvas.width !== w) canvas.width = w;
@@ -170,38 +339,63 @@ export function useAnimatedImageDecoder({
 			try {
 				ctx.clearRect(0, 0, w, h);
 				ctx.drawImage(frame.image, 0, 0, w, h);
-			} catch {}
+				return true;
+			} catch {
+				return false;
+			}
 		};
-		const getFrame = async (index: number) => {
+		const getFrame = async (index: number): Promise<CachedAnimatedImageFrame | null> => {
 			const cached = frameCache.get(index);
 			if (cached) {
 				frameCache.delete(index);
 				frameCache.set(index, cached);
 				return cached;
 			}
-			if (!decoder) return null;
+			const activeDecoder = decoder;
+			if (activeDecoder == null) return null;
+			let decodedImage: VideoFrame | null = null;
 			try {
-				const result = await decoder.decode({frameIndex: index, completeFramesOnly: true});
-				if (runner.cancelled) {
-					result.image.close();
+				const result = await activeDecoder.decode({frameIndex: index, completeFramesOnly: true});
+				decodedImage = result.image;
+				if (!isCurrentRunner()) {
+					closeVideoFrame(decodedImage);
+					decodedImage = null;
 					return null;
 				}
-				const durationMs = (result.image.duration ?? DEFAULT_FRAME_DURATION_MS * 1000) / 1000;
-				const entry = await createCachedAnimatedImageFrame(result.image, durationMs);
-				if (runner.cancelled) {
+				const byteSize = decodedFrameByteSize(decodedImage.displayWidth, decodedImage.displayHeight);
+				if (byteSize == null || byteSize > MAX_CACHED_FRAME_BYTES) {
+					closeVideoFrame(decodedImage);
+					decodedImage = null;
+					failRunner();
+					return null;
+				}
+				const durationMs = frameDurationMs(decodedImage.duration);
+				const entry = await createCachedAnimatedImageFrame(decodedImage, byteSize, durationMs, ownerWindow);
+				decodedImage = null;
+				if (!isCurrentRunner()) {
 					entry.close();
 					return null;
 				}
 				frameCache.set(index, entry);
-				while (frameCache.size > normalizedMaxCachedFrames) {
+				cachedFrameBytes += entry.byteSize;
+				while (frameCache.size > normalizedMaxCachedFrames || cachedFrameBytes > MAX_CACHED_FRAME_BYTES) {
 					const oldestIndex = frameCache.keys().next().value;
 					if (oldestIndex === undefined) break;
 					const oldest = frameCache.get(oldestIndex);
 					frameCache.delete(oldestIndex);
-					oldest?.close();
+					if (oldest != null) {
+						cachedFrameBytes -= oldest.byteSize;
+						try {
+							oldest.close();
+						} catch {}
+					}
 				}
 				return entry;
 			} catch {
+				if (decodedImage != null) {
+					closeVideoFrame(decodedImage);
+				}
+				failRunner();
 				return null;
 			}
 		};
@@ -221,11 +415,14 @@ export function useAnimatedImageDecoder({
 					if (!frame || runner.cancelled || !playingRef.current) return;
 					frameIndex = next.frameIndex;
 					completedRepetitions = next.completedRepetitions;
-					draw(frame);
+					if (!draw(frame)) {
+						failRunner();
+						return;
+					}
 					await new Promise<void>((resolve) => {
 						clearTimer();
 						resolveTimer = resolve;
-						timer = window.setTimeout(
+						timer = ownerWindow.setTimeout(
 							() => {
 								timer = null;
 								resolveTimer = null;
@@ -247,31 +444,89 @@ export function useAnimatedImageDecoder({
 		runner.pause = () => {
 			clearTimer();
 		};
+		const loadAnimatedImage = async (): Promise<AnimatedImageResponseData | null> => {
+			let response: Response | null = null;
+			let timeout: number | null = null;
+			const operation = (async (): Promise<AnimatedImageResponseData | null> => {
+				const fetchedResponse = await ownerWindow.fetch(src, {
+					cache: 'force-cache',
+					credentials: 'omit',
+					redirect: 'error',
+					referrerPolicy: 'no-referrer',
+					signal: fetchController.signal,
+				});
+				response = fetchedResponse;
+				if (!fetchedResponse.ok || fetchedResponse.body == null) {
+					cancelResponseBody(fetchedResponse);
+					throw new Error('Animated image request failed');
+				}
+				const type = resolveMimeFromResponse(fetchedResponse.headers.get('content-type'), src);
+				const isSupported = await Ctor.isTypeSupported(type).catch(() => false);
+				if (!isCurrentRunner()) return null;
+				if (!isSupported) {
+					cancelResponseBody(fetchedResponse);
+					return null;
+				}
+				const encodedBytes = await readBoundedResponseBytes(fetchedResponse);
+				return {type, encodedBytes};
+			})();
+			const timeoutPromise = new Promise<never>((_resolve, reject) => {
+				timeout = ownerWindow.setTimeout(() => {
+					try {
+						fetchController.abort();
+					} catch {}
+					if (response != null) cancelResponseBody(response);
+					reject(new Error('Animated image request timed out'));
+				}, ANIMATED_IMAGE_REQUEST_TIMEOUT_MS);
+			});
+			try {
+				return await Promise.race([operation, timeoutPromise]);
+			} finally {
+				if (timeout != null) ownerWindow.clearTimeout(timeout);
+			}
+		};
 		const start = async () => {
 			try {
-				const response = await fetch(src, {cache: 'force-cache'});
-				if (runner.cancelled) return;
-				if (!response.ok || !response.body) {
-					setState((prev) => ({...prev, error: true}));
+				const animatedImage = await loadAnimatedImage();
+				if (!isCurrentRunner()) return;
+				if (animatedImage == null) {
+					publishState((prev) => ({...prev, supported: false}));
+					runner.cancelled = true;
 					return;
 				}
-				const type = response.headers.get('content-type') ?? guessMimeFromUrl(src);
-				const isSupported = await Ctor.isTypeSupported(type).catch(() => false);
-				if (!isSupported) {
-					setState((prev) => ({...prev, supported: false}));
-					return;
+				const {type, encodedBytes} = animatedImage;
+				const decoderBuffer = new ArrayBuffer(encodedBytes.byteLength);
+				new Uint8Array(decoderBuffer).set(encodedBytes);
+				const decoderBody = new ownerWindow.Response(decoderBuffer).body;
+				if (decoderBody == null) throw new Error('Animated image decoder body was unavailable');
+				const createdDecoder = new Ctor({data: decoderBody, type, preferAnimation: true});
+				decoder = createdDecoder;
+				await createdDecoder.completed;
+				if (!isCurrentRunner()) return;
+				const activeDecoder = decoder;
+				if (activeDecoder == null) throw new Error('Animated image decoder was closed before completion');
+				const track = activeDecoder.tracks.selectedTrack;
+				if (track == null || !Number.isSafeInteger(track.frameCount) || track.frameCount < 1) {
+					throw new Error('Animated image decoder returned an invalid frame count');
 				}
-				if (runner.cancelled) return;
-				decoder = new Ctor({data: response.body, type, preferAnimation: true});
-				await decoder.completed;
-				if (runner.cancelled) return;
-				const track = decoder.tracks.selectedTrack;
-				frameCount = track?.frameCount ?? 1;
-				repetitionCount = track?.repetitionCount ?? 0;
+				frameCount = track.frameCount;
+				if (track.repetitionCount === undefined) {
+					repetitionCount = 0;
+				} else if (
+					track.repetitionCount !== Infinity &&
+					(!Number.isSafeInteger(track.repetitionCount) || track.repetitionCount < 0)
+				) {
+					throw new Error('Animated image decoder returned an invalid repetition count');
+				} else {
+					repetitionCount = track.repetitionCount;
+				}
 				const first = await getFrame(0);
-				if (!first || runner.cancelled) return;
-				draw(first);
-				setState({
+				if (!first || !isCurrentRunner()) return;
+				if (!draw(first)) {
+					failRunner();
+					return;
+				}
+				publishState({
 					supported: true,
 					loaded: true,
 					error: false,
@@ -282,27 +537,32 @@ export function useAnimatedImageDecoder({
 					void advance();
 				}
 			} catch {
-				if (!runner.cancelled) setState((prev) => ({...prev, error: true}));
+				if (!isCurrentRunner()) return;
+				failRunner();
 			}
 		};
 		void start();
 		return () => {
 			runner.cancelled = true;
+			try {
+				fetchController.abort();
+			} catch {}
 			clearTimer();
-			frameCache.forEach((frame) => frame.close());
-			frameCache.clear();
-			decoder?.close();
+			closeFrameCache();
+			closeDecoder();
 			if (runnerRef.current === runner) runnerRef.current = null;
 		};
 	}, [canvas, maxCachedFrames, src]);
 	useEffect(() => {
+		const runner = runnerRef.current;
+		if (runner == null) return;
 		if (playing) {
-			runnerRef.current?.kick();
+			runner.kick();
 			return;
 		}
-		runnerRef.current?.pause();
+		runner.pause();
 	}, [playing]);
-	return state;
+	return visibleState;
 }
 
 export interface DecodedImageFrames {
@@ -393,7 +653,9 @@ async function decodeAllFramesViaImageDecoder(
 	try {
 		await decoder.completed;
 		const track = decoder.tracks.selectedTrack;
-		const count = Math.max(1, track?.frameCount ?? 1);
+		const trackFrameCount =
+			track == null || !Number.isSafeInteger(track.frameCount) || track.frameCount < 1 ? 1 : track.frameCount;
+		const count = Math.max(1, trackFrameCount);
 		const frames: Array<ImageData> = [];
 		const delays: Array<number> = [];
 		let width = 0;
@@ -412,7 +674,8 @@ async function decodeAllFramesViaImageDecoder(
 				drawVideoFrameToCanvas(ctx, image);
 				const data = ctx.getImageData(0, 0, w, h);
 				frames.push(new ImageData(new Uint8ClampedArray(data.data), w, h));
-				delays.push((image.duration ?? 0) / 1000);
+				const duration = image.duration;
+				delays.push(duration === null || duration === undefined ? 0 : duration / 1000);
 			} finally {
 				image.close();
 			}

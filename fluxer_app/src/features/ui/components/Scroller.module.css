@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
 .scrollerWrap {
-	--scroller-track-size: 0.5rem;
+	--scroller-track-size: var(--scroller-track-size-override, 0.5rem);
 	position: relative;
 	display: flex;
 	min-height: 0;
@@ -60,7 +60,7 @@
 }
 
 .regular {
-	--scroller-track-size: 1rem;
+	--scroller-track-size: var(--scroller-track-size-override, 1rem);
 }
 
 .horizontal.scrollerWrap {

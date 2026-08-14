@@ -17,6 +17,7 @@ import {COPY_LINK_DESCRIPTOR, OPEN_LINK_DESCRIPTOR} from '@app/features/i18n/uti
 import {useMessageReactions as useMessageReactionsSnapshot} from '@app/features/messaging/hooks/useMessageReactionStore';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import {getEmojiNameWithColons, toReactionEmoji} from '@app/features/messaging/utils/ReactionUtils';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {CopyLinkIcon, OpenLinkIcon} from '@app/features/ui/action_menu/ContextMenuIcons';
 import * as TextCopyCommands from '@app/features/ui/commands/TextCopyCommands';
 import type {MenuGroupType} from '@app/features/ui/menu_bottom_sheet/MenuBottomSheet';
@@ -149,7 +150,7 @@ export const MessageActionBottomSheet: React.FC<MessageActionBottomSheetProps> =
 						className={quickReactionStyles.button}
 						data-flx="channel.message-action-bottom-sheet.button.add-reaction"
 					>
-						<PlusIcon size={24} weight="bold" data-flx="channel.message-action-bottom-sheet.plus-icon" />
+						<PlusIcon size={remFromPx(24)} weight="bold" data-flx="channel.message-action-bottom-sheet.plus-icon" />
 					</button>
 				</div>
 			</div>

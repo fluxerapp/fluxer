@@ -60,6 +60,23 @@ function findUserData(element: HTMLElement): {userId?: string; guildId?: string;
 	return {};
 }
 
+function isEditableContextMenuTarget(target: HTMLElement): boolean {
+	let current: HTMLElement | null = target;
+	while (current != null) {
+		const contentEditable = current.getAttribute('contenteditable')?.toLowerCase();
+		if (
+			contentEditable === '' ||
+			contentEditable === 'true' ||
+			contentEditable === 'plaintext-only' ||
+			current.isContentEditable
+		) {
+			return true;
+		}
+		current = current.parentElement;
+	}
+	return false;
+}
+
 export function handleContextMenu(e: MouseEvent): void {
 	const target = e.target as HTMLElement;
 	const {userId, guildId, channelId} = findUserData(target);
@@ -139,7 +156,7 @@ export function handleContextMenu(e: MouseEvent): void {
 		}
 		node = node.parentElement;
 	}
-	if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+	if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || isEditableContextMenuTarget(target)) {
 		return;
 	}
 	if (selectedText) {

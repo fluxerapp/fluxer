@@ -247,10 +247,10 @@
 	--media-hud-color-muted: rgb(255 255 255 / 0.72);
 	--media-hud-button-bg: transparent;
 	--media-hud-button-bg-hover: rgb(255 255 255 / 0.14);
-	--media-hud-safe-top: calc(var(--media-hud-top-offset, 1rem) + env(safe-area-inset-top, 0));
-	--media-hud-safe-left: calc(var(--media-hud-inline-offset, 1rem) + env(safe-area-inset-left, 0));
-	--media-hud-safe-right: calc(var(--media-hud-inline-offset, 1rem) + env(safe-area-inset-right, 0));
-	--media-hud-safe-bottom: calc(var(--media-hud-bottom-offset, 1.125rem) + env(safe-area-inset-bottom, 0));
+	--media-hud-safe-top: calc(var(--media-hud-top-offset, 1rem) + env(safe-area-inset-top, 0px));
+	--media-hud-safe-left: calc(var(--media-hud-inline-offset, 1rem) + env(safe-area-inset-left, 0px));
+	--media-hud-safe-right: calc(var(--media-hud-inline-offset, 1rem) + env(safe-area-inset-right, 0px));
+	--media-hud-safe-bottom: calc(var(--media-hud-bottom-offset, 1.125rem) + env(safe-area-inset-bottom, 0px));
 	--media-fit-safe-inset-block: max(
 		calc(var(--media-hud-safe-top) + var(--media-top-overlay-height, 3rem) + var(--media-overlay-gap, 0.75rem)),
 		calc(var(--media-hud-safe-bottom) + var(--media-bottom-overlay-height, 3rem) + var(--media-overlay-gap, 0.75rem))
@@ -259,7 +259,7 @@
 	--media-fit-max-width: max(0px, calc(100dvw - (2 * var(--media-fit-safe-inset-inline))));
 	--media-fit-max-height: max(0px, calc(100dvh - (2 * var(--media-fit-safe-inset-block))));
 	--media-content-inner-gap: 0.75rem;
-	--media-content-inner-padding: 0;
+	--media-content-inner-padding: 0px;
 	position: relative;
 	display: flex;
 	flex-direction: column;
@@ -275,8 +275,8 @@
 
 @media (max-width: 768px) {
 	.modalContentInner {
-		--media-content-inner-gap: 0;
-		--media-content-inner-padding: 0;
+		--media-content-inner-gap: 0px;
+		--media-content-inner-padding: 0px;
 	}
 }
 
@@ -301,8 +301,7 @@
 .navigationOverlay,
 .thumbnailCarouselWrapper,
 .floatingNavButtonLeft,
-.floatingNavButtonRight,
-.klipyAttribution {
+.floatingNavButtonRight {
 	transition:
 		opacity 120ms ease,
 		visibility 120ms ease;
@@ -315,8 +314,7 @@
 .modalContentInner[data-media-hud-hidden='true'] .navigationOverlay,
 .modalContentInner[data-media-hud-hidden='true'] .thumbnailCarouselWrapper,
 .modalContentInner[data-media-hud-hidden='true'] .floatingNavButtonLeft,
-.modalContentInner[data-media-hud-hidden='true'] .floatingNavButtonRight,
-.modalContentInner[data-media-hud-hidden='true'] .klipyAttribution {
+.modalContentInner[data-media-hud-hidden='true'] .floatingNavButtonRight {
 	visibility: hidden;
 	opacity: 0;
 	pointer-events: none;
@@ -338,8 +336,8 @@
 	background-color: var(--media-hud-surface-bg);
 	border: 0.0625rem solid var(--media-hud-surface-border);
 	box-shadow: var(--media-hud-shadow);
-	backdrop-filter: blur(2.25rem) saturate(160%);
-	-webkit-backdrop-filter: blur(2.25rem) saturate(160%);
+	backdrop-filter: blur(2.25rem);
+	-webkit-backdrop-filter: blur(2.25rem);
 	pointer-events: auto;
 	min-width: 0;
 	max-width: calc(100% - 11.25rem);
@@ -397,8 +395,8 @@
 	background-color: var(--media-hud-surface-bg);
 	border: 0.0625rem solid var(--media-hud-surface-border);
 	box-shadow: var(--media-hud-shadow);
-	backdrop-filter: blur(2.25rem) saturate(160%);
-	-webkit-backdrop-filter: blur(2.25rem) saturate(160%);
+	backdrop-filter: blur(2.25rem);
+	-webkit-backdrop-filter: blur(2.25rem);
 	pointer-events: auto;
 	height: 100%;
 	box-sizing: border-box;
@@ -412,8 +410,8 @@
 	background-color: var(--media-hud-surface-bg);
 	border: 0.0625rem solid var(--media-hud-surface-border);
 	box-shadow: var(--media-hud-shadow);
-	backdrop-filter: blur(2.25rem) saturate(160%);
-	-webkit-backdrop-filter: blur(2.25rem) saturate(160%);
+	backdrop-filter: blur(2.25rem);
+	-webkit-backdrop-filter: blur(2.25rem);
 	pointer-events: auto;
 	height: 100%;
 	box-sizing: border-box;
@@ -617,8 +615,8 @@
 	background-color: var(--media-hud-surface-bg);
 	border: 0.0625rem solid var(--media-hud-surface-border);
 	box-shadow: var(--media-hud-shadow);
-	backdrop-filter: blur(2.25rem) saturate(160%);
-	-webkit-backdrop-filter: blur(2.25rem) saturate(160%);
+	backdrop-filter: blur(2.25rem);
+	-webkit-backdrop-filter: blur(2.25rem);
 	pointer-events: auto;
 }
 
@@ -653,8 +651,8 @@
 	border: 0.0625rem solid var(--media-hud-surface-border);
 	box-shadow: var(--media-hud-shadow);
 	padding: var(--media-hud-surface-padding) 0.75rem;
-	backdrop-filter: blur(2.25rem) saturate(160%);
-	-webkit-backdrop-filter: blur(2.25rem) saturate(160%);
+	backdrop-filter: blur(2.25rem);
+	-webkit-backdrop-filter: blur(2.25rem);
 	pointer-events: auto;
 }
 
@@ -774,11 +772,11 @@
 }
 
 .floatingNavButtonLeft {
-	left: max(0.375rem, env(safe-area-inset-left, 0));
+	left: max(0.375rem, env(safe-area-inset-left, 0px));
 }
 
 .floatingNavButtonRight {
-	right: max(0.375rem, env(safe-area-inset-right, 0));
+	right: max(0.375rem, env(safe-area-inset-right, 0px));
 }
 
 .floatingNavButton {
@@ -794,8 +792,8 @@
 	background-color: var(--media-hud-surface-bg);
 	border: 0.0625rem solid var(--media-hud-surface-border);
 	box-shadow: var(--media-hud-shadow);
-	backdrop-filter: blur(2.25rem) saturate(160%);
-	-webkit-backdrop-filter: blur(2.25rem) saturate(160%);
+	backdrop-filter: blur(2.25rem);
+	-webkit-backdrop-filter: blur(2.25rem);
 	color: var(--media-hud-color-muted, rgb(255 255 255 / 0.72));
 	cursor: pointer;
 	transition:
@@ -826,27 +824,4 @@
 
 .floatingNavButtonDisabled:active {
 	transform: none;
-}
-
-.klipyAttribution {
-	position: absolute;
-	bottom: var(--media-hud-safe-bottom);
-	right: var(--media-hud-safe-right);
-	z-index: 50;
-	display: flex;
-	align-items: center;
-	padding: 0.5rem 0.75rem;
-	border-radius: var(--media-hud-surface-radius);
-	background-color: var(--media-hud-surface-bg);
-	border: 0.0625rem solid var(--media-hud-surface-border);
-	box-shadow: var(--media-hud-shadow);
-	backdrop-filter: blur(2.25rem) saturate(160%);
-	-webkit-backdrop-filter: blur(2.25rem) saturate(160%);
-	pointer-events: none;
-}
-
-.klipyAttribution svg {
-	height: 1rem;
-	width: auto;
-	color: var(--text-primary-muted);
 }

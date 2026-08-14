@@ -9,6 +9,12 @@ import Emoji from '@app/features/emoji/state/Emoji';
 import {checkEmojiAvailabilityWithGuildFallback} from '@app/features/expressions/utils/ExpressionPermissionUtils';
 import ChannelMemberCount from '@app/features/guild/state/ChannelMemberCount';
 import Guilds from '@app/features/guild/state/Guilds';
+import type {ComposerHandle} from '@app/features/lexical/composer/ComposerHandle';
+import {
+	type LexicalMessageCommandResolution,
+	LexicalMessageCommandResolutionStatus,
+	LexicalMessageCommandResolver,
+} from '@app/features/lexical/composer/LexicalMessageCommand';
 import GuildMembers from '@app/features/member/state/GuildMembers';
 import MemberSidebar from '@app/features/member/state/MemberSidebar';
 import * as DraftCommands from '@app/features/messaging/commands/DraftCommands';
@@ -60,6 +66,7 @@ interface UseTextareaSubmitOptions {
 	value: string;
 	setValue: React.Dispatch<React.SetStateAction<string>>;
 	displayToActual: (text: string) => string;
+	composerHandleRef?: React.RefObject<ComposerHandle | null>;
 	clearSegments: () => void;
 	isSlowmodeActive: boolean;
 	editingMessage: Message | null;
@@ -70,7 +77,9 @@ interface UseTextareaSubmitOptions {
 		content: string,
 		hasAttachments: boolean,
 		stickersOrTts?: Array<MessageStickerItem> | boolean,
-	) => void;
+		favoriteMemeIdOrStickers?: string | Array<MessageStickerItem>,
+		maybeFavoriteMemeId?: string,
+	) => boolean;
 	onMentionConfirmationNeeded?: (info: MentionConfirmationInfo) => void;
 	i18n: I18n;
 }
@@ -175,12 +184,50 @@ export function getResolvedMentionCount({
 }: MentionCountResolutionParams): number {
 	const authoritativeCounts = getAuthoritativeMentionCounts(guildId, channelId);
 	if (mentionType === '@everyone') {
-		return authoritativeCounts?.memberCount ?? Guilds.getGuild(guildId)?.memberCount ?? fallbackCount;
+		if (authoritativeCounts !== null) {
+			return authoritativeCounts.memberCount;
+		}
+		const guild = Guilds.getGuild(guildId);
+		if (guild !== undefined) {
+			return guild.memberCount;
+		}
+		return fallbackCount;
 	}
 	if (mentionType === '@here') {
-		return authoritativeCounts?.onlineCount ?? fallbackCount;
+		if (authoritativeCounts !== null) {
+			return authoritativeCounts.onlineCount;
+		}
+		return fallbackCount;
 	}
 	return fallbackCount;
+}
+
+function shouldBlockSubmissionForSlowmode(
+	isSlowmodeActive: boolean,
+	editingMessage: Message | null,
+	parsedCommand: CommandUtils.ParsedCommand | null,
+	lexicalCommand: LexicalMessageCommandResolution | null,
+	hasReplaceCommand: boolean,
+): boolean {
+	if (!isSlowmodeActive || editingMessage !== null) {
+		return false;
+	}
+	if (hasReplaceCommand) {
+		return false;
+	}
+	if (lexicalCommand !== null) {
+		if (lexicalCommand.status === LexicalMessageCommandResolutionStatus.NO_COMMAND) {
+			return true;
+		}
+		if (lexicalCommand.status === LexicalMessageCommandResolutionStatus.INVALID_COMMAND) {
+			return false;
+		}
+		return CommandUtils.doesCommandSendCurrentChannelMessage(lexicalCommand.command);
+	}
+	if (parsedCommand === null || parsedCommand.type === 'unknown') {
+		return parsedCommand === null;
+	}
+	return CommandUtils.doesCommandSendCurrentChannelMessage(parsedCommand);
 }
 
 export function shouldShowMentionConfirmation(params: MentionCountResolutionParams): boolean {
@@ -193,6 +240,7 @@ export const useTextareaSubmit = ({
 	value,
 	setValue,
 	displayToActual,
+	composerHandleRef,
 	clearSegments,
 	isSlowmodeActive,
 	editingMessage,
@@ -352,7 +400,8 @@ export const useTextareaSubmit = ({
 	const ttsCommandEnabled = Accessibility.enableTTSCommand;
 	const checkCustomEmojiAvailability = useCallback(
 		(content: string): boolean => {
-			const channel = Channels.getChannel(channelId) ?? null;
+			const storedChannel = Channels.getChannel(channelId);
+			const channel = storedChannel === undefined ? null : storedChannel;
 			CUSTOM_EMOJI_MARKDOWN_PATTERN.lastIndex = 0;
 			let match: RegExpExecArray | null = null;
 			while ((match = CUSTOM_EMOJI_MARKDOWN_PATTERN.exec(content))) {
@@ -377,9 +426,11 @@ export const useTextareaSubmit = ({
 	);
 	const resolveTypedEmojiContent = useCallback(
 		(content: string): string => {
+			const storedChannel = Channels.getChannel(channelId);
+			const channel = storedChannel === undefined ? null : storedChannel;
 			return resolveTypedEmojiShortcodes({
 				content,
-				channel: Channels.getChannel(channelId) ?? null,
+				channel,
 				guildIdFallback: guildId,
 				i18n,
 			});
@@ -387,14 +438,35 @@ export const useTextareaSubmit = ({
 		[channelId, guildId, i18n],
 	);
 	const onSubmit = useCallback(async () => {
-		const actualContent = displayToActual(value).trim();
+		let composerHandle: ComposerHandle | null = null;
+		if (composerHandleRef !== undefined) {
+			composerHandle = composerHandleRef.current;
+		}
+		let lexicalCommand: LexicalMessageCommandResolution | null = null;
+		let actualContent = displayToActual(value).trim();
+		if (composerHandle !== null) {
+			lexicalCommand = LexicalMessageCommandResolver.resolve(composerHandle);
+			actualContent = composerHandle.getWireValue().trim();
+		}
 		const resolvedContent = resolveTypedEmojiContent(actualContent);
-		const parsedCommand = CommandUtils.isCommand(actualContent) ? CommandUtils.parseCommand(actualContent) : null;
+		let parsedCommand: CommandUtils.ParsedCommand | null = null;
+		if (lexicalCommand === null) {
+			parsedCommand = CommandUtils.isCommand(actualContent) ? CommandUtils.parseCommand(actualContent) : null;
+		} else if (lexicalCommand.status === LexicalMessageCommandResolutionStatus.VALID_COMMAND) {
+			parsedCommand = lexicalCommand.command;
+		}
+		const replaceCommand = ReplaceCommandUtils.parseReplaceCommand(actualContent);
 		if (
-			isSlowmodeActive &&
-			!editingMessage &&
-			(!parsedCommand || CommandUtils.doesCommandSendCurrentChannelMessage(parsedCommand))
-		) {
+			shouldBlockSubmissionForSlowmode(
+				isSlowmodeActive,
+				editingMessage,
+				parsedCommand,
+				lexicalCommand,
+				replaceCommand !== null,
+			)
+		)
+			return;
+		if (lexicalCommand !== null && lexicalCommand.status === LexicalMessageCommandResolutionStatus.INVALID_COMMAND) {
 			return;
 		}
 		if (editingMessage && isMobileEditMode) {
@@ -450,7 +522,6 @@ export const useTextareaSubmit = ({
 		if (!hasVisibleMessageContent(resolvedContent) && uploadAttachmentsLength === 0 && !hasPendingSticker) {
 			return;
 		}
-		const replaceCommand = ReplaceCommandUtils.parseReplaceCommand(actualContent);
 		if (replaceCommand) {
 			const lastMessage = Messages.getLastEditableMessage(channelId);
 			if (lastMessage) {
@@ -471,25 +542,33 @@ export const useTextareaSubmit = ({
 			TypingUtils.clear(channelId);
 			return;
 		}
-		const sendWithPendingSticker = (content: string, hasAttachments: boolean, tts?: boolean) => {
+		const sendWithPendingSticker = (content: string, hasAttachments: boolean, tts?: boolean): boolean => {
 			const pendingSticker = ChannelSticker.getPendingSticker(channelId);
 			const stickerItems = pendingSticker ? [pendingSticker.toJSON()] : undefined;
+			let didSend = false;
 			if (tts) {
-				handleSendMessage(content, hasAttachments, true);
+				didSend = handleSendMessage(content, hasAttachments, true, stickerItems);
 			} else if (stickerItems) {
-				handleSendMessage(content, hasAttachments, stickerItems);
+				didSend = handleSendMessage(content, hasAttachments, stickerItems);
 			} else {
-				handleSendMessage(content, hasAttachments);
+				didSend = handleSendMessage(content, hasAttachments);
 			}
-			if (pendingSticker) {
+			if (didSend && pendingSticker) {
 				ChannelStickerCommands.removePendingSticker(channelId);
 			}
+			return didSend;
 		};
 		if (parsedCommand) {
 			if (parsedCommand.type !== 'unknown') {
 				if (!ttsCommandEnabled && parsedCommand.type === 'tts') {
 				} else if (parsedCommand.type === 'me' || parsedCommand.type === 'spoiler') {
-					const transformedContent = CommandUtils.transformWrappingCommands(resolveTypedEmojiContent(actualContent));
+					let transformedContent = resolveTypedEmojiContent(actualContent);
+					if (lexicalCommand !== null) {
+						const commandContent = resolveTypedEmojiContent(parsedCommand.content);
+						transformedContent = parsedCommand.type === 'me' ? `_${commandContent}_` : `||${commandContent}||`;
+					} else {
+						transformedContent = CommandUtils.transformWrappingCommands(transformedContent);
+					}
 					if (checkCustomEmojiAvailability(transformedContent)) {
 						return;
 					}
@@ -508,7 +587,11 @@ export const useTextareaSubmit = ({
 					}
 				} else {
 					try {
-						await CommandUtils.executeCommand(parsedCommand, channelId, guildId ?? undefined, i18n);
+						let commandGuildId: string | undefined;
+						if (guildId !== null) {
+							commandGuildId = guildId;
+						}
+						await CommandUtils.executeCommand(parsedCommand, channelId, commandGuildId, i18n);
 						setValue('');
 						clearSegments();
 						DraftCommands.deleteDraft(channelId);
@@ -541,6 +624,7 @@ export const useTextareaSubmit = ({
 		value,
 		uploadAttachmentsLength,
 		displayToActual,
+		composerHandleRef,
 		clearSegments,
 		editingMessage,
 		isMobileEditMode,

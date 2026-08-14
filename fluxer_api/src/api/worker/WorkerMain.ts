@@ -41,21 +41,27 @@ const SEARCH_REQUIRED_TASKS = new Set<string>([
 ]);
 
 function registerCronJobs(cron: CronScheduler): void {
-	cron.upsert('processAssetDeletionQueue', 'processAssetDeletionQueue', {}, '0 */5 * * * *');
-	cron.upsert('processBunnyPurgeQueue', 'processBunnyPurgeQueue', {}, '*/10 * * * * *');
-	cron.upsert('processPendingBulkMessageDeletions', 'processPendingBulkMessageDeletions', {}, '0 */10 * * * *');
-	cron.upsert('userProcessPendingDeletions', 'userProcessPendingDeletions', {}, '0 * * * * *');
-	cron.upsert('processPremiumStateReconciliationQueue', 'processPremiumStateReconciliationQueue', {}, '0 * * * * *');
-	cron.upsert('processExpiredPremiumSweep', 'processExpiredPremiumSweep', {}, '0 0 * * * *');
-	cron.upsert('processInactivityDeletions', 'processInactivityDeletions', {}, '0 0 */6 * * *');
-	cron.upsert('expireAttachments', 'expireAttachments', {}, '0 0 */12 * * *');
-	cron.upsert('prunePostgresKvTtl', 'prunePostgresKvTtl', {}, '0 */5 * * * *');
-	cron.upsert('syncDiscoveryIndex', 'syncDiscoveryIndex', {}, '0 */15 * * * *');
-	cron.upsert('syncDisposableEmailDomains', 'syncDisposableEmailDomains', {}, '0 */30 * * * *');
-	cron.upsert('syncUrlBlocklists', 'syncUrlBlocklists', {}, '0 0 */6 * * *');
-	cron.upsert('syncFileShaBlocklists', 'syncFileShaBlocklists', {}, '0 0 */12 * * *');
-	cron.upsert('flushUserActivityBuffer', 'flushUserActivityBuffer', {}, '*/10 * * * * *');
-	Logger.info('Cron jobs registered successfully');
+	cron.upsert('processAssetDeletionQueue', 'processAssetDeletionQueue', {}, '0 */5 * * * *', {ledger: false});
+	cron.upsert('processBunnyPurgeQueue', 'processBunnyPurgeQueue', {}, '*/10 * * * * *', {ledger: false});
+	cron.upsert('processPendingBulkMessageDeletions', 'processPendingBulkMessageDeletions', {}, '0 */10 * * * *', {
+		ledger: false,
+	});
+	cron.upsert('userProcessPendingDeletions', 'userProcessPendingDeletions', {}, '0 * * * * *', {ledger: false});
+	cron.upsert('processPremiumStateReconciliationQueue', 'processPremiumStateReconciliationQueue', {}, '0 * * * * *', {
+		ledger: false,
+	});
+	cron.upsert('processExpiredPremiumSweep', 'processExpiredPremiumSweep', {}, '0 0 * * * *', {ledger: false});
+	cron.upsert('processInactivityDeletions', 'processInactivityDeletions', {}, '0 0 */6 * * *', {ledger: false});
+	cron.upsert('expireAttachments', 'expireAttachments', {}, '0 0 */12 * * *', {ledger: false});
+	cron.upsert('prunePostgresKvTtl', 'prunePostgresKvTtl', {}, '0 */5 * * * *', {ledger: false});
+	cron.upsert('syncDiscoveryIndex', 'syncDiscoveryIndex', {}, '0 */15 * * * *', {ledger: false});
+	if (Config.blocklistFeeds.enabled) {
+		cron.upsert('syncDisposableEmailDomains', 'syncDisposableEmailDomains', {}, '0 0 */6 * * *', {ledger: true});
+		cron.upsert('syncUrlBlocklists', 'syncUrlBlocklists', {}, '0 0 */6 * * *', {ledger: true});
+		cron.upsert('syncFileShaBlocklists', 'syncFileShaBlocklists', {}, '0 0 */12 * * *', {ledger: true});
+	}
+	cron.upsert('flushUserActivityBuffer', 'flushUserActivityBuffer', {}, '*/10 * * * * *', {ledger: false});
+	Logger.info({blocklistFeeds: Config.blocklistFeeds.enabled}, 'Cron jobs registered successfully');
 }
 
 function workerLanesRequireSearch(activeWorkerLanes: ReadonlyArray<WorkerLaneDefinition>): boolean {
@@ -191,10 +197,16 @@ export async function startWorkerMain(): Promise<void> {
 		setInjectedWorkerService(workerService);
 		dependencies = await initializeWorkerDependencies(snowflakeService);
 		setWorkerDependencies(dependencies);
-		const didClaimEmailSync = await dependencies.kvClient.setnx('sync:email_domains:initialized', '1');
-		if (didClaimEmailSync) {
-			Logger.info('Triggering initial disposable email domain sync');
-			await workerService.addJob('syncDisposableEmailDomains', {});
+		if (Config.blocklistFeeds.enabled) {
+			const didClaimEmailSync = await dependencies.kvClient.setnx(
+				'sync:email_domains:initialized',
+				'1',
+				ms('6 hours') / 1000,
+			);
+			if (didClaimEmailSync) {
+				Logger.info('Triggering initial disposable email domain sync');
+				await workerService.addJob('syncDisposableEmailDomains', {});
+			}
 		}
 		cron = new CronScheduler(workerService, Logger, dependencies.kvClient);
 		registerCronJobs(cron);

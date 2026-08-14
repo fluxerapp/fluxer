@@ -148,8 +148,7 @@
 .optionDescription {
 	font-size: 0.8125rem;
 	line-height: 1rem;
-	color: var(--text-primary-muted);
-	opacity: 0.8;
+	color: color-mix(in srgb, var(--text-primary-muted) 80%, transparent);
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;

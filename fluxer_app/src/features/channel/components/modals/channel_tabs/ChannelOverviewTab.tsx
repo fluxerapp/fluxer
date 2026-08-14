@@ -5,63 +5,42 @@ import {EXAMPLE_GENERAL_CHANNEL_NAME, EXAMPLE_URL} from '@app/features/app/confi
 import {useFormSubmit} from '@app/features/app/hooks/useFormSubmit';
 import type {ChannelRtcRegion} from '@app/features/channel/commands/ChannelCommands';
 import * as ChannelCommands from '@app/features/channel/commands/ChannelCommands';
-import {Autocomplete, getAutocompleteOptionId} from '@app/features/channel/components/Autocomplete';
 import {showChannelErrorModal} from '@app/features/channel/components/alerts/ChannelErrorModalUtils';
 import {VoiceRegionsLoadFailedModal} from '@app/features/channel/components/alerts/VoiceRegionsLoadFailedModal';
 import styles from '@app/features/channel/components/modals/channel_tabs/ChannelOverviewTab.module.css';
+import {
+	ChannelOverviewTopicEditor,
+	type ChannelOverviewTopicEditorHandle,
+} from '@app/features/channel/components/modals/channel_tabs/channel_overview_tab/ChannelOverviewTopicEditor';
 import {MatureContentSection} from '@app/features/channel/components/modals/channel_tabs/channel_overview_tab/MatureContentSection';
 import {RtcRegionSelect} from '@app/features/channel/components/modals/channel_tabs/channel_overview_tab/RtcRegionSelect';
-import {
-	SlowmodeControl,
-	useSlowmodeOptions,
-} from '@app/features/channel/components/modals/channel_tabs/channel_overview_tab/SlowmodeControl';
+import {SlowmodeControl} from '@app/features/channel/components/modals/channel_tabs/channel_overview_tab/SlowmodeControl';
 import {
 	CHANNEL_OVERVIEW_TAB_ID,
 	type FormInputs,
-	getNearestBitrate,
-	MAX_TOPIC_LENGTH,
-	SETTINGS_AUTOCOMPLETE_Z_INDEX,
-	TOPIC_AUTOCOMPLETE_TRIGGERS,
 } from '@app/features/channel/components/modals/channel_tabs/channel_overview_tab/shared';
 import {
 	VoiceConnectionLimitControl,
 	VoiceSettings,
 } from '@app/features/channel/components/modals/channel_tabs/channel_overview_tab/VoiceSettings';
 import Channels from '@app/features/channel/state/Channels';
-import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
-import {ExpressionPickerSheet} from '@app/features/expressions/components/modals/ExpressionPickerSheet';
-import {ExpressionPickerPopout} from '@app/features/expressions/components/popouts/ExpressionPickerPopout';
 import Guilds from '@app/features/guild/state/Guilds';
-import {useMarkdownKeybinds} from '@app/features/messaging/hooks/useMarkdownKeybinds';
-import {useTextareaAutocomplete} from '@app/features/messaging/hooks/useTextareaAutocomplete';
-import {useTextareaAutocompleteKeyboard} from '@app/features/messaging/hooks/useTextareaAutocompleteKeyboard';
-import {useTextareaEmojiPicker} from '@app/features/messaging/hooks/useTextareaEmojiPicker';
-import {useTextareaPaste} from '@app/features/messaging/hooks/useTextareaPaste';
-import {useTextareaSegments} from '@app/features/messaging/hooks/useTextareaSegments';
-import {applyMarkdownSegments} from '@app/features/messaging/utils/MarkdownToSegmentUtils';
 import Permission from '@app/features/permissions/state/Permission';
-import {CharacterCounter} from '@app/features/ui/character_counter/CharacterCounter';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import * as UnsavedChangesCommands from '@app/features/ui/commands/UnsavedChangesCommands';
 import {Form} from '@app/features/ui/components/form/Form';
-import {Input, Textarea} from '@app/features/ui/components/form/FormInput';
-import FocusRing from '@app/features/ui/focus_ring/FocusRing';
-import {Popout} from '@app/features/ui/popover/PopoverPopout';
-import MobileLayout from '@app/features/ui/state/MobileLayout';
-import {setMeaningfulFormValue} from '@app/lib/forms/MeaningfulFormValue';
+import {Input} from '@app/features/ui/components/form/FormInput';
 import {useRemoteFormReset} from '@app/lib/forms/RemoteFormReset';
 import {ChannelTypes, GUILD_TEXT_BASED_CHANNEL_TYPES, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {ContentWarningLevel} from '@fluxer/constants/src/GuildConstants';
 import {VOICE_CHANNEL_CONNECTION_LIMIT_DEFAULT} from '@fluxer/constants/src/LimitConstants';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
-import {SmileyIcon} from '@phosphor-icons/react';
-import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {useCallback, useEffect, useId, useMemo, useRef, useState} from 'react';
+import {useCallback, useEffect, useRef, useState} from 'react';
 import {useForm} from 'react-hook-form';
 
 const CHANNEL_TOPIC_IS_TOO_LONG_DESCRIPTOR = msg({
@@ -93,25 +72,9 @@ const URL_DESCRIPTOR = msg({
 	comment:
 		'Channel overview settings tab label, control, or validation message (name, topic, slowmode, voice region, mature content gate).',
 });
-const TOPIC_DESCRIPTOR = msg({
-	message: 'Topic',
-	comment:
-		'Channel overview settings tab label, control, or validation message (name, topic, slowmode, voice region, mature content gate).',
-});
-const ADD_A_TOPIC_TO_THIS_CHANNEL_DESCRIPTOR = msg({
-	message: 'Add a topic to this channel',
-	comment:
-		'Channel overview settings tab label, control, or validation message (name, topic, slowmode, voice region, mature content gate).',
-});
-const INSERT_EMOJI_DESCRIPTOR = msg({
-	message: 'Insert emoji',
-	comment:
-		'Channel overview settings tab label, control, or validation message (name, topic, slowmode, voice region, mature content gate).',
-});
 const ChannelOverviewTab: React.FC<{channelId: string}> = observer(({channelId}) => {
 	const {i18n} = useLingui();
 	const channel = Channels.getChannel(channelId);
-	const mobileLayout = MobileLayout;
 	const guildId = channel?.guildId ?? null;
 	const guild = guildId ? Guilds.getGuild(guildId) : null;
 	const canUpdateRtcRegion =
@@ -120,7 +83,6 @@ const ChannelOverviewTab: React.FC<{channelId: string}> = observer(({channelId})
 	const isVoiceChannel = channel?.type === ChannelTypes.GUILD_VOICE;
 	const [rtcRegions, setRtcRegions] = useState<Array<ChannelRtcRegion>>([]);
 	const [isLoadingRegions, setIsLoadingRegions] = useState(false);
-	const slowmodeOptions = useSlowmodeOptions();
 	const form = useForm<FormInputs>({
 		defaultValues: {
 			name: '',
@@ -145,7 +107,7 @@ const ChannelOverviewTab: React.FC<{channelId: string}> = observer(({channelId})
 				nsfw_override: channel.nsfwOverride,
 				content_warning_level: channel.contentWarningLevel ?? ContentWarningLevel.INHERIT,
 				content_warning_text: channel.contentWarningText ?? '',
-				bitrate: channel.bitrate ? getNearestBitrate(Math.round(channel.bitrate / 1000)) : 64,
+				bitrate: channel.bitrate ? Math.round(channel.bitrate / 1000) : 64,
 				user_limit: channel.userLimit ?? 0,
 				voice_connection_limit: channel.voiceConnectionLimit ?? VOICE_CHANNEL_CONNECTION_LIMIT_DEFAULT,
 				rtc_region: channel.rtcRegion ?? null,
@@ -190,22 +152,7 @@ const ChannelOverviewTab: React.FC<{channelId: string}> = observer(({channelId})
 			form.setValue('rtc_region', null, {shouldDirty: false, shouldTouch: false});
 		}
 	}, [canUpdateRtcRegion, form, isVoiceChannel, rtcRegions]);
-	useEffect(() => {
-		form.register('topic');
-		return () => {
-			form.unregister('topic');
-		};
-	}, [form]);
-	const topicTextareaRef = useRef<HTMLTextAreaElement | null>(null);
-	const {segmentManagerRef, previousValueRef, displayToActual, prepareTextChange, handleTextChange, clearSegments} =
-		useTextareaSegments();
-	const [topicValue, setTopicValue] = useState('');
-	const [isTopicInitialized, setIsTopicInitialized] = useState(false);
-	const originalTopicRef = useRef('');
-	const [topicExpressionPickerOpen, setTopicExpressionPickerOpen] = useState(false);
-	const [isTopicFieldFocused, setIsTopicFieldFocused] = useState(false);
-	const topicAutocompleteListId = useId();
-	useMarkdownKeybinds(isTopicFieldFocused);
+	const topicEditorRef = useRef<ChannelOverviewTopicEditorHandle | null>(null);
 	const handleTopicExceedsLimit = useCallback(() => {
 		showChannelErrorModal({
 			title: i18n._(CHANNEL_TOPIC_IS_TOO_LONG_DESCRIPTOR),
@@ -213,103 +160,12 @@ const ChannelOverviewTab: React.FC<{channelId: string}> = observer(({channelId})
 			dataFlx: 'channel.channel-tabs.channel-overview-tab.topic-too-long.generic-error-modal',
 		});
 	}, [i18n]);
-	const {handleEmojiSelect: insertTopicEmoji} = useTextareaEmojiPicker({
-		setValue: setTopicValue,
-		textareaRef: topicTextareaRef,
-		segmentManagerRef,
-		previousValueRef,
-		prepareTextChange,
-		channelId,
-		maxActualLength: MAX_TOPIC_LENGTH,
-		onExceedMaxLength: handleTopicExceedsLimit,
-	});
-	const {
-		autocompleteQuery: topicAutocompleteQuery,
-		autocompleteOptions: topicAutocompleteOptions,
-		autocompleteType: topicAutocompleteType,
-		selectedIndex: topicSelectedIndex,
-		isAutocompleteAttached: topicIsAutocompleteAttached,
-		setSelectedIndex: topicSetSelectedIndex,
-		onCursorMove: topicOnCursorMove,
-		handleSelect: topicHandleSelect,
-	} = useTextareaAutocomplete({
-		channel: channel ?? null,
-		value: topicValue,
-		setValue: setTopicValue,
-		textareaRef: topicTextareaRef,
-		segmentManagerRef,
-		previousValueRef,
-		prepareTextChange,
-		allowedTriggers: TOPIC_AUTOCOMPLETE_TRIGGERS,
-		maxActualLength: MAX_TOPIC_LENGTH,
-		onExceedMaxLength: handleTopicExceedsLimit,
-	});
-	useTextareaPaste({
-		channel: channel ?? null,
-		textareaRef: topicTextareaRef,
-		segmentManagerRef,
-		setValue: setTopicValue,
-		previousValueRef,
-		prepareTextChange,
-		maxMessageLength: MAX_TOPIC_LENGTH,
-		onPasteExceedsLimit: () => handleTopicExceedsLimit(),
-	});
-	const topicContainerRef = useRef<HTMLDivElement>(null);
-	const {handleKeyDown: handleTopicKeyDown} = useTextareaAutocompleteKeyboard({
-		isAutocompleteAttached: topicIsAutocompleteAttached,
-		autocompleteOptions: topicAutocompleteOptions,
-		selectedIndex: topicSelectedIndex,
-		setSelectedIndex: topicSetSelectedIndex,
-		handleSelect: topicHandleSelect,
-	});
-	const topicActiveAutocompleteOptionId =
-		topicIsAutocompleteAttached && topicAutocompleteOptions[topicSelectedIndex]
-			? getAutocompleteOptionId(topicAutocompleteListId, topicSelectedIndex)
-			: undefined;
-	const handleTopicEmojiSelect = useCallback(
-		(emoji: FlatEmoji, shiftKey?: boolean) => {
-			const didInsert = insertTopicEmoji(emoji, shiftKey);
-			if (didInsert && !shiftKey) {
-				setTopicExpressionPickerOpen(false);
-			}
-			return didInsert;
-		},
-		[insertTopicEmoji],
-	);
-	const actualTopic = useMemo(() => displayToActual(topicValue), [displayToActual, topicValue]);
-	const topicDisplayMaxLength = Math.max(0, topicValue.length + (MAX_TOPIC_LENGTH - actualTopic.length));
-	const syncTopicFromMarkdown = useCallback(
-		(markdown: string | null | undefined) => {
-			setIsTopicInitialized(false);
-			clearSegments();
-			const rawTopic = markdown ?? '';
-			const displayTopic = rawTopic ? applyMarkdownSegments(rawTopic, guildId, segmentManagerRef.current) : '';
-			originalTopicRef.current = rawTopic;
-			previousValueRef.current = displayTopic;
-			setTopicValue(displayTopic);
-			form.setValue('topic', rawTopic, {shouldDirty: false, shouldTouch: false});
-			setIsTopicInitialized(true);
-		},
-		[clearSegments, form, guildId, previousValueRef, segmentManagerRef],
-	);
-	useEffect(() => {
-		if (!isTopicInitialized) return;
-		const isDirty = actualTopic !== originalTopicRef.current;
-		setMeaningfulFormValue({
-			setValue: form.setValue,
-			name: 'topic',
-			currentValue: actualTopic,
-			cleanValue: originalTopicRef.current,
-			isMeaningfullyDirty: isDirty,
-		});
-	}, [actualTopic, form, isTopicInitialized]);
-	const applyRemoteValues = useCallback(
-		(values: FormInputs) => {
-			syncTopicFromMarkdown(values.topic ?? '');
-			setTopicExpressionPickerOpen(false);
-		},
-		[syncTopicFromMarkdown],
-	);
+	const applyRemoteValues = useCallback((values: FormInputs) => {
+		const topicEditor = topicEditorRef.current;
+		if (topicEditor != null) {
+			topicEditor.syncFromMarkdown(values.topic);
+		}
+	}, []);
 	const {resetToRemoteValues, commitRemoteValues} = useRemoteFormReset<FormInputs>({
 		form,
 		identityKey: channelId,
@@ -438,148 +294,15 @@ const ChannelOverviewTab: React.FC<{channelId: string}> = observer(({channelId})
 				)}
 				{showMessagingSection && (
 					<div className={styles.settingsGroup} data-flx="channel.channel-tabs.channel-overview-tab.settings-group--2">
-						{topicIsAutocompleteAttached && (
-							<Autocomplete
-								type={topicAutocompleteType}
-								onSelect={topicHandleSelect}
-								selectedIndex={topicSelectedIndex}
-								options={topicAutocompleteOptions}
-								setSelectedIndex={topicSetSelectedIndex}
-								referenceElement={topicContainerRef.current}
-								query={topicAutocompleteQuery}
-								zIndex={SETTINGS_AUTOCOMPLETE_Z_INDEX}
-								listboxId={topicAutocompleteListId}
-								data-flx="channel.channel-tabs.channel-overview-tab.autocomplete.topic-handle-select"
-							/>
-						)}
-						<div ref={topicContainerRef} data-flx="channel.channel-tabs.channel-overview-tab.div--2">
-							<Textarea
-								ref={topicTextareaRef}
-								label={i18n._(TOPIC_DESCRIPTOR)}
-								placeholder={i18n._(ADD_A_TOPIC_TO_THIS_CHANNEL_DESCRIPTOR)}
-								maxLength={topicDisplayMaxLength}
-								minRows={3}
-								maxRows={6}
-								showCharacterCount={true}
-								value={topicValue}
-								onChange={(event) => {
-									const newValue = event.target.value;
-									const nativeEvent = event.nativeEvent as InputEvent;
-									handleTextChange(
-										newValue,
-										previousValueRef.current,
-										typeof nativeEvent.inputType === 'string' ? nativeEvent.inputType : undefined,
-									);
-									setTopicValue(newValue);
-								}}
-								onFocus={() => setIsTopicFieldFocused(true)}
-								onBlur={() => setIsTopicFieldFocused(false)}
-								onKeyDown={handleTopicKeyDown}
-								onKeyUp={topicOnCursorMove}
-								onClick={topicOnCursorMove}
-								error={form.formState.errors.topic?.message}
-								aria-autocomplete="list"
-								aria-controls={topicIsAutocompleteAttached ? topicAutocompleteListId : undefined}
-								aria-expanded={topicIsAutocompleteAttached}
-								aria-haspopup="listbox"
-								aria-activedescendant={topicActiveAutocompleteOptionId}
-								innerActionButton={
-									mobileLayout.enabled ? (
-										<FocusRing offset={-2} data-flx="channel.channel-tabs.channel-overview-tab.focus-ring">
-											<button
-												type="button"
-												onClick={() => setTopicExpressionPickerOpen(true)}
-												className={clsx(
-													styles.emojiButton,
-													topicExpressionPickerOpen ? styles.emojiButtonActive : styles.emojiButtonInactive,
-												)}
-												aria-label={i18n._(INSERT_EMOJI_DESCRIPTOR)}
-												aria-haspopup="dialog"
-												aria-expanded={topicExpressionPickerOpen}
-												data-flx="channel.channel-tabs.channel-overview-tab.emoji-button.set-topic-expression-picker-open"
-											>
-												<SmileyIcon
-													size={20}
-													weight="fill"
-													data-flx="channel.channel-tabs.channel-overview-tab.smiley-icon"
-												/>
-											</button>
-										</FocusRing>
-									) : (
-										<Popout
-											position="bottom-end"
-											animationType="none"
-											offsetMainAxis={8}
-											offsetCrossAxis={-32}
-											onOpen={() => setTopicExpressionPickerOpen(true)}
-											onClose={() => setTopicExpressionPickerOpen(false)}
-											returnFocusRef={topicTextareaRef}
-											render={({onClose}) => (
-												<ExpressionPickerPopout
-													channelId={channelId}
-													onEmojiSelect={(emoji, shift) => {
-														const didInsert = handleTopicEmojiSelect(emoji, shift);
-														if (didInsert && !shift) onClose();
-													}}
-													onClose={onClose}
-													visibleTabs={['emojis']}
-													data-flx="channel.channel-tabs.channel-overview-tab.expression-picker-popout"
-												/>
-											)}
-											data-flx="channel.channel-tabs.channel-overview-tab.popout"
-										>
-											<FocusRing offset={-2} data-flx="channel.channel-tabs.channel-overview-tab.focus-ring--2">
-												<button
-													type="button"
-													className={clsx(
-														styles.emojiButton,
-														topicExpressionPickerOpen ? styles.emojiButtonActive : styles.emojiButtonInactive,
-													)}
-													aria-label={i18n._(INSERT_EMOJI_DESCRIPTOR)}
-													aria-haspopup="dialog"
-													aria-expanded={topicExpressionPickerOpen}
-													data-flx="channel.channel-tabs.channel-overview-tab.emoji-button"
-												>
-													<SmileyIcon
-														size={20}
-														weight="fill"
-														data-flx="channel.channel-tabs.channel-overview-tab.smiley-icon--2"
-													/>
-												</button>
-											</FocusRing>
-										</Popout>
-									)
-								}
-								characterCountTooltip={() => (
-									<CharacterCounter
-										currentLength={actualTopic.length}
-										maxLength={MAX_TOPIC_LENGTH}
-										canUpgrade={false}
-										premiumMaxLength={MAX_TOPIC_LENGTH}
-										onUpgradeClick={() => undefined}
-										data-flx="channel.channel-tabs.channel-overview-tab.character-counter"
-									/>
-								)}
-								data-flx="channel.channel-tabs.channel-overview-tab.textarea.topic-on-cursor-move"
-							/>
-						</div>
-						{mobileLayout.enabled && (
-							<ExpressionPickerSheet
-								isOpen={topicExpressionPickerOpen}
-								onClose={() => setTopicExpressionPickerOpen(false)}
-								onEmojiSelect={(emoji, shiftKey) => {
-									handleTopicEmojiSelect(emoji, shiftKey);
-								}}
-								visibleTabs={['emojis']}
-								channelId={channelId}
-								data-flx="channel.channel-tabs.channel-overview-tab.expression-picker-sheet"
-							/>
-						)}
-						<SlowmodeControl
+						<ChannelOverviewTopicEditor
+							ref={topicEditorRef}
+							channel={channel}
+							guildId={guildId}
 							form={form}
-							slowmodeOptions={slowmodeOptions}
-							data-flx="channel.channel-tabs.channel-overview-tab.slowmode-control"
+							initialTopic={remoteValues != null && remoteValues.topic != null ? remoteValues.topic : ''}
+							onTopicExceedsLimit={handleTopicExceedsLimit}
 						/>
+						<SlowmodeControl form={form} />
 					</div>
 				)}
 				{showVoiceSection && (

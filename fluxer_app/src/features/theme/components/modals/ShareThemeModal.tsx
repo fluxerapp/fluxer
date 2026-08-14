@@ -18,6 +18,7 @@ import {http} from '@app/features/platform/transport/RestTransport';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {failureCode} from '@app/features/platform/utils/ResponseInspection';
 import styles from '@app/features/theme/components/modals/ShareThemeModal.module.css';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import {Input} from '@app/features/ui/components/form/FormInput';
@@ -175,7 +176,7 @@ export const ShareThemeModal = observer(({themeCss}: {themeCss: string}) => {
 						placeholder={i18n._(SEARCH_FRIENDS_DESCRIPTOR)}
 						leftIcon={
 							<MagnifyingGlassIcon
-								size={20}
+								size={remFromPx(20)}
 								weight="bold"
 								className={selectorStyles.searchIcon}
 								data-flx="theme.share-theme-modal.magnifying-glass-icon"

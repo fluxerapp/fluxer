@@ -20,7 +20,7 @@ import {useLingui} from '@lingui/react/macro';
 import {ArrowBendUpLeftIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
-import {useCallback} from 'react';
+import {type CSSProperties, useCallback} from 'react';
 
 const ORIGINAL_MESSAGE_WAS_DELETED_DESCRIPTOR = msg({
 	message: 'Original message was deleted',
@@ -196,9 +196,14 @@ export const ReplyPreview = observer(
 				>
 					<span
 						className={styles.repliedUsername}
-						style={{
-							color: GuildMembers.getMember(resolvedGuildId ?? '', referencedMessage.author.id)?.getColorString(),
-						}}
+						style={
+							{
+								'--replied-username-color': GuildMembers.getMember(
+									resolvedGuildId ?? '',
+									referencedMessage.author.id,
+								)?.getColorString(),
+							} as CSSProperties
+						}
 						data-user-id={referencedMessage.author.id}
 						data-guild-id={resolvedGuildId}
 						data-flx="channel.reply-preview.replied-username"

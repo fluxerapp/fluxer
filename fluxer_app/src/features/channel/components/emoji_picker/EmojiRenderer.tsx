@@ -3,7 +3,7 @@
 import styles from '@app/features/channel/components/EmojiPicker.module.css';
 import {
 	EMOJI_PICKER_CUSTOM_EMOJI_SIZE,
-	EMOJI_SPRITE_SIZE,
+	getEmojiSpriteSheetLayout,
 	getSpriteSheetBackground,
 } from '@app/features/channel/components/emoji_picker/EmojiPickerConstants';
 import type {Channel} from '@app/features/channel/models/Channel';
@@ -11,7 +11,7 @@ import * as EmojiPickerCommands from '@app/features/emoji/commands/EmojiPickerCo
 import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
 import {checkEmojiAvailability} from '@app/features/expressions/utils/ExpressionPermissionUtils';
 import {getEmojiDisplayDataWithSkinTone} from '@app/features/expressions/utils/SkinToneUtils';
-import {EMOJI_SPRITES} from '@app/features/expressions/utils/UnicodeEmojis';
+import UnicodeEmojis, {EMOJI_SPRITES} from '@app/features/expressions/utils/UnicodeEmojis';
 import {setUrlQueryParams} from '@app/features/messaging/utils/MessagingUrlUtils';
 import {EmojiContextMenuItems} from '@app/features/ui/action_menu/items/EmojiContextMenuItems';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
@@ -27,7 +27,6 @@ interface EmojiRendererProps {
 	handleHover: (emoji: FlatEmoji | null) => void;
 	handleSelect: (emoji: FlatEmoji, shiftKey?: boolean) => void;
 	skinTone: string;
-	spriteSheetSizes: {nonDiversitySize: string; diversitySize: string};
 	channel: Channel | null;
 	shouldAnimate: boolean;
 	isHighlighted?: boolean;
@@ -41,7 +40,6 @@ export const EmojiRenderer = React.forwardRef<HTMLButtonElement, EmojiRendererPr
 			handleHover,
 			handleSelect,
 			skinTone,
-			spriteSheetSizes,
 			channel,
 			shouldAnimate,
 			isHighlighted = false,
@@ -169,12 +167,12 @@ export const EmojiRenderer = React.forwardRef<HTMLButtonElement, EmojiRendererPr
 			);
 		}
 		const perRow = hasDiversity ? EMOJI_SPRITES.DiversityPerRow : EMOJI_SPRITES.NonDiversityPerRow;
-		const x = -(index % perRow) * EMOJI_SPRITE_SIZE;
-		const y = -Math.floor(index / perRow) * EMOJI_SPRITE_SIZE;
+		const rows = Math.ceil(
+			(hasDiversity ? UnicodeEmojis.numDiversitySprites : UnicodeEmojis.numNonDiversitySprites) / perRow,
+		);
 		const spriteStyle = {
 			backgroundImage: getSpriteSheetBackground(hasDiversity ? skinTone : ''),
-			backgroundPosition: `${x}px ${y}px`,
-			backgroundSize: hasDiversity ? spriteSheetSizes.diversitySize : spriteSheetSizes.nonDiversitySize,
+			...getEmojiSpriteSheetLayout(index, perRow, rows),
 		};
 		return renderButton(
 			<div

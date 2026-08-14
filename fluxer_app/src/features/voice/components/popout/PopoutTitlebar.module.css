@@ -5,7 +5,7 @@
 	align-items: center;
 	flex: 0 0 auto;
 	height: 32px;
-	padding: 0 0 0 var(--spacing-3);
+	padding-left: var(--spacing-3);
 	gap: var(--spacing-2);
 	background: var(--background-secondary);
 	-webkit-app-region: drag;
@@ -13,17 +13,7 @@
 }
 
 .titlebarMac {
-	height: 28px;
-	padding-left: 80px;
-}
-
-.titlebarMac .actions button {
-	width: 2.25rem;
-}
-
-.titlebarMac .actions button svg {
-	width: 0.875rem;
-	height: 0.875rem;
+	padding-left: calc(var(--macos-traffic-light-inset) + env(safe-area-inset-left));
 }
 
 .title {

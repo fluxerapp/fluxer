@@ -2,23 +2,6 @@
 
 Run your own Fluxer instance with Docker Compose. This guide takes you from a fresh server to a working self-hosted instance with the web app, API, gateway, admin dashboard, media uploads, search, storage, and voice signaling behind one public hostname.
 
-## What you'll run
-
-The self-hosted stack is one Docker Compose project:
-
-- **Caddy** terminates public HTTP(S) or receives traffic from a Cloudflare Tunnel.
-- **App proxy** serves the Fluxer web client and injects instance bootstrap data.
-- **API** handles accounts, auth, communities, messages, uploads, admin APIs, and instance discovery.
-- **Admin dashboard** is required and is served at `/admin`.
-- **Gateway** handles WebSocket sessions, presence, dispatch, push fanout, and realtime events.
-- **Messages service** builds message responses and serves message history.
-- **Media proxy** handles attachment upload relay, media metadata, thumbnails, and object reads.
-- **Static proxy** serves Fluxer fonts, icons, emoji, badges, default avatars, and voice client assets from the same hostname.
-- **LiveKit** handles voice and video signaling and WebRTC media.
-- **Postgres**, **Valkey**, **NATS**, **Meilisearch**, and **SeaweedFS** provide data, cache, events, search, and S3-compatible object storage.
-
-The app bundle is served by the self-host app-proxy image; shared static assets are served by the standalone `static-proxy` container. The stack does not depend on Fluxer's public static asset host.
-
 ## Requirements
 
 - A Linux server or VM that can run Docker Engine.
@@ -204,59 +187,7 @@ docker compose logs -f api
 
 The first start can take several minutes while images download and services initialize. `seaweedfs-init` exits after creating object-storage buckets; that is expected.
 
-## Step 7: Verify the instance
-
-Set your domain in the shell:
-
-```bash
-export FLUXER_DOMAIN=chat.example.com
-```
-
-Check every public HTTP entry point:
-
-```bash
-for path in /_health /api/_health /gateway/_health /media/_health /admin/_health; do
-  curl -fsS -o /tmp/fluxer-check -w "$path %{http_code}\n" "https://$FLUXER_DOMAIN$path"
-done
-```
-
-Expected result:
-
-```text
-/_health 200
-/api/_health 200
-/gateway/_health 200
-/media/_health 200
-/admin/_health 200
-```
-
-Check instance discovery:
-
-```bash
-curl -fsS "https://$FLUXER_DOMAIN/api/.well-known/fluxer" | jq '.features.self_hosted, .endpoints.admin, .endpoints.gateway, .endpoints.media, .endpoints.static_cdn'
-```
-
-You should see `true`, an admin URL ending in `/admin`, a gateway URL ending in `/gateway`, a media URL ending in `/media`, and a static asset URL equal to the instance origin.
-
-Check the web app, admin login page, app bundle, and static asset container:
-
-```bash
-curl -fsSI "https://$FLUXER_DOMAIN" | sed -n '1,8p'
-curl -fsSI "https://$FLUXER_DOMAIN/admin/login" | sed -n '1,8p'
-
-asset=$(curl -fsS "https://$FLUXER_DOMAIN" | grep -o 'src="[^"]*/assets/[^"]*"' | head -n1 | cut -d'"' -f2)
-case "$asset" in
-  http*) curl -fsSI "$asset" | sed -n '1,8p' ;;
-  /*) curl -fsSI "https://$FLUXER_DOMAIN$asset" | sed -n '1,8p' ;;
-esac
-
-curl -fsSI "https://$FLUXER_DOMAIN/fonts/ibm-plex.css?v=3" | sed -n '1,8p'
-curl -fsSI "https://$FLUXER_DOMAIN/web/favicon-32x32.png" | sed -n '1,8p'
-```
-
-If you are using Cloudflare Tunnel and see HTTP `530`, the tunnel connector is not currently connected or the public hostname route points at the wrong service.
-
-## Step 8: Create the owner account
+## Step 7: Create the owner account
 
 Open the web app:
 

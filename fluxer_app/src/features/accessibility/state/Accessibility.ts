@@ -1470,14 +1470,7 @@ class Accessibility {
 
 	async applyZoom(level: number): Promise<void> {
 		const zoomLevel = clampZoomLevel(level);
-		const electronApi = (
-			window as {
-				electron?: {
-					setZoomFactor?: (factor: number) => void;
-				};
-			}
-		).electron;
-		applyAppZoomToDocument(zoomLevel * 100, electronApi);
+		applyAppZoomToDocument(zoomLevel * 100, window.electron);
 	}
 
 	async applyStoredZoom(): Promise<void> {

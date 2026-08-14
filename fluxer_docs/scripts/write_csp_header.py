@@ -16,9 +16,7 @@ class InlineScriptParser(html.parser.HTMLParser):
         self._parts: list[str] = []
         self.scripts: list[str] = []
 
-    def handle_starttag(
-        self, tag: str, attrs: list[tuple[str, str | None]]
-    ) -> None:
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         if tag.lower() != "script":
             return
         if any(name.lower() == "src" for name, _ in attrs):
@@ -63,9 +61,9 @@ def main() -> None:
         [
             "default-src 'self'",
             f"script-src 'self' {script_sources}",
-            "style-src 'self' 'unsafe-inline' https://fluxerstatic.com",
+            "style-src 'self' 'unsafe-inline'",
             "img-src 'self' data:",
-            "font-src 'self' data: https://fluxerstatic.com",
+            "font-src 'none'",
             "connect-src 'self' https://api.github.com",
             "worker-src 'self'",
             "frame-src 'none'",

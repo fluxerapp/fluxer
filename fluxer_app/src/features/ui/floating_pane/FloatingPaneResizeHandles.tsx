@@ -30,12 +30,13 @@ const HANDLES: ReadonlyArray<HandleSpec> = [
 
 export interface FloatingPaneResizeHandlesProps {
 	createResizeHandler: (edge: ResizeEdge) => (event: React.PointerEvent<HTMLButtonElement>) => void;
-	label?: string;
+	label: string | null;
 }
 
 export function FloatingPaneResizeHandles({createResizeHandler, label}: FloatingPaneResizeHandlesProps) {
 	const {i18n} = useLingui();
-	const resolvedLabel = label ?? i18n._(RESIZE_HANDLE_LABEL);
+	let resolvedLabel = i18n._(RESIZE_HANDLE_LABEL);
+	if (label != null) resolvedLabel = label;
 	const handlerByEdge = useMemo(() => {
 		const entries = {} as Record<ResizeEdge, (event: React.PointerEvent<HTMLButtonElement>) => void>;
 		for (const {edge} of HANDLES) {

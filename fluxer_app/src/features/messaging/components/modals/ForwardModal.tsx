@@ -1,37 +1,29 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import * as Modal from '@app/features/app/components/dialogs/Modal';
-import {
-	getChannelSlowmodeState,
-	getForwardChannelCategoryName,
-	getForwardChannelDisplayName,
-	getForwardChannelGuildName,
-	useForwardChannelSelection,
-} from '@app/features/app/components/dialogs/shared/ForwardChannelSelection';
+import type {ForwardChannelOption} from '@app/features/app/components/dialogs/shared/ForwardChannelIndex';
+import {useForwardChannelSelection} from '@app/features/app/components/dialogs/shared/ForwardChannelSelection';
 import selectorStyles from '@app/features/app/components/dialogs/shared/SelectorModalStyles.module.css';
 import {GroupDMAvatar} from '@app/features/app/components/shared/GroupDMAvatar';
 import {Limits} from '@app/features/app/utils/UserLimits';
-import {Autocomplete, getAutocompleteOptionId} from '@app/features/channel/components/Autocomplete';
 import {MessageCharacterCounter} from '@app/features/channel/components/MessageCharacterCounter';
 import type {Channel} from '@app/features/channel/models/Channel';
 import Channels from '@app/features/channel/state/Channels';
+import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
 import {ExpressionPickerSheet} from '@app/features/expressions/components/modals/ExpressionPickerSheet';
 import {ExpressionPickerPopout} from '@app/features/expressions/components/popouts/ExpressionPickerPopout';
+import {LexicalRichInput, type LexicalRichInputHandle} from '@app/features/lexical/composer/LexicalRichInput';
 import * as MessageCommands from '@app/features/messaging/commands/MessageCommands';
 import {MessageForwardFailedModal} from '@app/features/messaging/components/alerts/MessageForwardFailedModal';
 import {showMessagingErrorModal} from '@app/features/messaging/components/alerts/MessagingErrorModalUtils';
 import modalStyles from '@app/features/messaging/components/modals/ForwardModal.module.css';
 import {shouldNavigateAfterForward} from '@app/features/messaging/components/modals/ForwardModalUtils';
-import {useTextareaAutocomplete} from '@app/features/messaging/hooks/useTextareaAutocomplete';
-import {useTextareaEmojiPicker} from '@app/features/messaging/hooks/useTextareaEmojiPicker';
-import {useTextareaPaste} from '@app/features/messaging/hooks/useTextareaPaste';
-import {useTextareaSegments} from '@app/features/messaging/hooks/useTextareaSegments';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import {focusChannelTextareaAfterNavigation} from '@app/features/messaging/utils/ChannelTextareaFocusUtils';
-import {isIMEComposing} from '@app/features/messaging/utils/IMECompositionUtils';
+import type {MentionSegment} from '@app/features/messaging/utils/TextareaSegmentManager';
 import * as NavigationCommands from '@app/features/navigation/commands/NavigationCommands';
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import {TextareaAutosize} from '@app/features/platform/utils/AutoResizingTextarea';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import {Checkbox} from '@app/features/ui/checkbox/Checkbox';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
@@ -123,45 +115,100 @@ export interface ForwardModalSuccess {
 	shouldNavigate: boolean;
 }
 
+interface ForwardMediaCapability {
+	hasAttachments: boolean;
+	hasEmbeds: boolean;
+}
+
+function resolveForwardMediaCapability(
+	mediaSelection: MessageCommands.ForwardMediaSelection | undefined,
+): ForwardMediaCapability | undefined {
+	if (mediaSelection === undefined) {
+		return undefined;
+	}
+	let hasAttachments = false;
+	if (mediaSelection.attachmentIds !== undefined) {
+		hasAttachments = mediaSelection.attachmentIds.length > 0;
+	}
+	let hasEmbeds = false;
+	if (mediaSelection.embedIndices !== undefined) {
+		hasEmbeds = mediaSelection.embedIndices.length > 0;
+	}
+	return {hasAttachments, hasEmbeds};
+}
+
+function resolveForwardSourceChannel(
+	sourceChannel: Channel | null | undefined,
+	messageChannelId: string,
+): Channel | null {
+	if (sourceChannel != null) {
+		return sourceChannel;
+	}
+	const storedChannel = Channels.getChannel(messageChannelId);
+	if (storedChannel == null) {
+		return null;
+	}
+	return storedChannel;
+}
+
+function resolveForwardReferenceGuildId(channel: Channel | null, message: Message): string | null {
+	if (channel != null && channel.guildId != null) {
+		return channel.guildId;
+	}
+	if (message.guildId != null) {
+		return message.guildId;
+	}
+	return null;
+}
+
+function focusForwardComment(handle: LexicalRichInputHandle | null): void {
+	if (handle != null) {
+		handle.focus();
+	}
+}
+
+function insertForwardEmoji(handle: LexicalRichInputHandle | null, emoji: FlatEmoji): boolean {
+	if (handle == null) {
+		return false;
+	}
+	return handle.insertEmoji(emoji);
+}
+
+const EMPTY_FORWARD_COMMENT_SEGMENTS: ReadonlyArray<MentionSegment> = Object.freeze([]);
+
 export const ForwardModal = observer(
 	({message, mediaSelection, onForwardSuccess, sourceChannel, user}: ForwardModalProps) => {
 		const {i18n} = useLingui();
-		const mediaSelectionCapability = useMemo(
-			() =>
-				mediaSelection
-					? {
-							hasAttachments: Boolean(mediaSelection.attachmentIds?.length),
-							hasEmbeds: Boolean(mediaSelection.embedIndices?.length),
-						}
-					: undefined,
-			[mediaSelection],
-		);
+		const mediaSelectionCapability = useMemo(() => resolveForwardMediaCapability(mediaSelection), [mediaSelection]);
 		const {
 			filteredChannels,
 			handleToggleChannel,
-			isChannelDisabled,
-			getChannelDisableReason,
+			isChannelSelectionDisabled,
 			searchQuery,
 			selectedChannelIds,
 			setSearchQuery,
 			maxSelections,
-			selectedChannels,
-			slowmodeEnabledSelectedChannels,
+			slowmodeActiveSelectedChannelOptions,
+			slowmodeEnabledSelectedChannelOptions,
 		} = useForwardChannelSelection({
 			excludedChannelId: message.channelId,
 			message,
 			mediaSelection: mediaSelectionCapability,
 		});
 		const [optionalMessage, setOptionalMessage] = useState('');
+		const [actualOptionalMessage, setActualOptionalMessage] = useState('');
 		const [isForwarding, setIsForwarding] = useState(false);
 		const [expressionPickerOpen, setExpressionPickerOpen] = useState(false);
-		const autocompleteListId = useId();
-		const textareaRef = useRef<HTMLTextAreaElement>(null);
 		const containerRef = useRef<HTMLDivElement>(null);
+		const [containerElement, setContainerElement] = useState<HTMLDivElement | null>(null);
+		const setContainerNode = useCallback((node: HTMLDivElement | null) => {
+			containerRef.current = node;
+			setContainerElement(node);
+		}, []);
+		const richInputRef = useRef<LexicalRichInputHandle>(null);
+		const commentNoticeId = useId();
 		const premiumMaxLength = Limits.getPremiumValue('max_message_length', MAX_MESSAGE_LENGTH_PREMIUM);
-		const mobileLayout = MobileLayout;
-		const {segmentManagerRef, previousValueRef, displayToActual, prepareTextChange, handleTextChange} =
-			useTextareaSegments();
+		const isMobileLayout = MobileLayout.enabled;
 		const handleOptionalMessageExceedsLimit = useCallback(() => {
 			showMessagingErrorModal({
 				title: i18n._(MESSAGE_IS_TOO_LONG_DESCRIPTOR),
@@ -169,94 +216,78 @@ export const ForwardModal = observer(
 				dataFlx: 'messaging.forward-modal.optional-message-too-long.generic-error-modal',
 			});
 		}, [i18n]);
-		const {handleEmojiSelect} = useTextareaEmojiPicker({
-			setValue: setOptionalMessage,
-			textareaRef,
-			segmentManagerRef,
-			previousValueRef,
-			prepareTextChange,
-			maxActualLength: user.maxMessageLength,
-			onExceedMaxLength: handleOptionalMessageExceedsLimit,
-		});
-		const channel = sourceChannel ?? Channels.getChannel(message.channelId) ?? null;
-		const {
-			autocompleteQuery,
-			autocompleteOptions,
-			autocompleteType,
-			selectedIndex,
-			isAutocompleteAttached,
-			setSelectedIndex,
-			onCursorMove,
-			handleSelect,
-		} = useTextareaAutocomplete({
-			channel,
-			value: optionalMessage,
-			setValue: setOptionalMessage,
-			textareaRef,
-			segmentManagerRef,
-			previousValueRef,
-			prepareTextChange,
-			maxActualLength: user.maxMessageLength,
-			onExceedMaxLength: handleOptionalMessageExceedsLimit,
-		});
-		useTextareaPaste({
-			channel,
-			textareaRef,
-			segmentManagerRef,
-			setValue: setOptionalMessage,
-			previousValueRef,
-			prepareTextChange,
-			maxMessageLength: user.maxMessageLength,
-			onPasteExceedsLimit: () => handleOptionalMessageExceedsLimit(),
-		});
-		const actualOptionalMessage = useMemo(() => displayToActual(optionalMessage), [displayToActual, optionalMessage]);
-		const optionalMessageDisplayMaxLength = useMemo(() => {
-			return Math.max(0, optionalMessage.length + (user.maxMessageLength - actualOptionalMessage.length));
-		}, [actualOptionalMessage.length, user.maxMessageLength, optionalMessage.length]);
-		const slowmodeCoolingDownSelectedChannels = selectedChannels.filter(
-			(selectedChannel) => getChannelSlowmodeState(selectedChannel).isCoolingDown,
-		);
-		const isSendBlockedBySlowmode = slowmodeCoolingDownSelectedChannels.length > 0;
-		const isCommentBlockedBySlowmode = slowmodeEnabledSelectedChannels.length > 0;
+		const channel = resolveForwardSourceChannel(sourceChannel, message.channelId);
+		const handleCommentChange = useCallback((display: string, _segments: Array<MentionSegment>, wire: string) => {
+			setOptionalMessage(display);
+			setActualOptionalMessage(wire);
+		}, []);
+		const isCommentOverLimit = actualOptionalMessage.length > user.maxMessageLength;
+		const isSendBlockedBySlowmode = slowmodeActiveSelectedChannelOptions.length > 0;
+		const isCommentBlockedBySlowmode = slowmodeEnabledSelectedChannelOptions.length > 0;
 		const isCommentComposerDisabled = isCommentBlockedBySlowmode;
-		const activeAutocompleteOptionId =
-			isAutocompleteAttached && autocompleteOptions[selectedIndex]
-				? getAutocompleteOptionId(autocompleteListId, selectedIndex)
-				: undefined;
 		const commentBlockedNotice = useMemo(() => {
 			if (!isCommentBlockedBySlowmode) {
 				return null;
 			}
-			if (slowmodeEnabledSelectedChannels.length === 1) {
+			if (slowmodeEnabledSelectedChannelOptions.length === 1) {
 				return i18n._(COMMENTS_ARE_DISABLED_BECAUSE_SLOWMODE_IS_ON_IN_DESCRIPTOR, {
-					forwardChannelDisplayName: getForwardChannelDisplayName(slowmodeEnabledSelectedChannels[0], i18n),
+					forwardChannelDisplayName: slowmodeEnabledSelectedChannelOptions[0].displayName,
 				});
 			}
 			return i18n._(COMMENTS_ARE_DISABLED_BECAUSE_ONE_OR_MORE_SELECTED_DESCRIPTOR);
-		}, [i18n.locale, isCommentBlockedBySlowmode, slowmodeEnabledSelectedChannels]);
+		}, [i18n.locale, isCommentBlockedBySlowmode, slowmodeEnabledSelectedChannelOptions]);
 		const sendBlockedNotice = useMemo(() => {
 			if (!isSendBlockedBySlowmode) return null;
-			if (slowmodeCoolingDownSelectedChannels.length === 1) {
+			if (slowmodeActiveSelectedChannelOptions.length === 1) {
 				return i18n._(WAITING_FOR_SLOWMODE_IN_TO_EXPIRE_DESCRIPTOR, {
-					forwardChannelDisplayName: getForwardChannelDisplayName(slowmodeCoolingDownSelectedChannels[0], i18n),
+					forwardChannelDisplayName: slowmodeActiveSelectedChannelOptions[0].displayName,
 				});
 			}
 			return i18n._(WAITING_FOR_SLOWMODE_IN_ONE_OR_MORE_SELECTED_DESCRIPTOR);
-		}, [i18n.locale, isSendBlockedBySlowmode, slowmodeCoolingDownSelectedChannels]);
+		}, [i18n.locale, isSendBlockedBySlowmode, slowmodeActiveSelectedChannelOptions]);
+		let commentNotice = sendBlockedNotice;
+		if (commentBlockedNotice != null) {
+			commentNotice = commentBlockedNotice;
+		}
+		let commentNoticeDescriptionId: string | undefined;
+		if (commentNotice != null) {
+			commentNoticeDescriptionId = commentNoticeId;
+		}
+		let commentPlaceholder = i18n._(ADD_A_COMMENT_OPTIONAL_DESCRIPTOR);
+		if (isCommentComposerDisabled) {
+			commentPlaceholder = i18n._(COMMENTS_ARE_UNAVAILABLE_WHILE_SLOWMODE_IS_ON_DESCRIPTOR);
+		}
+		const isCommentCounterVisible = actualOptionalMessage.length > user.maxMessageLength * 0.8;
 		const handleForward = async (skipNavigation = false) => {
-			if (selectedChannelIds.size === 0 || isForwarding || isSendBlockedBySlowmode) return;
+			if (selectedChannelIds.size === 0) return;
+			if (isForwarding) return;
+			if (isSendBlockedBySlowmode) return;
+			if (!isCommentComposerDisabled && isCommentOverLimit) {
+				handleOptionalMessageExceedsLimit();
+				return;
+			}
 			setIsForwarding(true);
 			try {
-				const actualMessage = !isCommentComposerDisabled && optionalMessage.trim() ? actualOptionalMessage : undefined;
+				let actualMessage: string | undefined;
+				if (!isCommentComposerDisabled && optionalMessage.trim().length > 0) {
+					actualMessage = actualOptionalMessage;
+				}
+				const guildId = resolveForwardReferenceGuildId(channel, message);
+				let attachmentIds: ReadonlyArray<string> | undefined;
+				let embedIndices: ReadonlyArray<number> | undefined;
+				if (mediaSelection !== undefined) {
+					attachmentIds = mediaSelection.attachmentIds;
+					embedIndices = mediaSelection.embedIndices;
+				}
 				const forwardedChannelIds = Array.from(selectedChannelIds);
 				const forwarded = await MessageCommands.forward(
 					forwardedChannelIds,
 					{
 						message_id: message.id,
 						channel_id: message.channelId,
-						guild_id: channel?.guildId ?? message.guildId ?? null,
-						attachment_ids: mediaSelection?.attachmentIds,
-						embed_indices: mediaSelection?.embedIndices,
+						guild_id: guildId,
+						attachment_ids: attachmentIds,
+						embed_indices: embedIndices,
 					},
 					actualMessage,
 				);
@@ -269,12 +300,19 @@ export const ForwardModal = observer(
 				});
 				ModalCommands.pop();
 				const shouldNavigate = shouldNavigateAfterForward(skipNavigation, forwardedChannelIds.length);
-				onForwardSuccess?.({forwardedChannelIds, shouldNavigate});
+				if (onForwardSuccess !== undefined) {
+					onForwardSuccess({forwardedChannelIds, shouldNavigate});
+				}
 				if (shouldNavigate) {
 					const forwardedChannelId = forwardedChannelIds[0];
+					if (forwardedChannelId == null) return;
 					const forwardedChannel = Channels.getChannel(forwardedChannelId);
 					if (forwardedChannel) {
-						NavigationCommands.selectChannel(forwardedChannel.guildId ?? undefined, forwardedChannelId);
+						let forwardedGuildId: string | undefined;
+						if (forwardedChannel.guildId != null) {
+							forwardedGuildId = forwardedChannel.guildId;
+						}
+						NavigationCommands.selectChannel(forwardedGuildId, forwardedChannelId);
 						focusChannelTextareaAfterNavigation(forwardedChannelId);
 					}
 				}
@@ -296,7 +334,7 @@ export const ForwardModal = observer(
 					<NotePencilIcon
 						className={selectorStyles.itemIcon}
 						weight="fill"
-						size={iconSize}
+						size={remFromPx(iconSize)}
 						data-flx="messaging.forward-modal.get-channel-icon.note-pencil-icon"
 					/>
 				);
@@ -331,7 +369,7 @@ export const ForwardModal = observer(
 					<SpeakerHighIcon
 						className={selectorStyles.itemIcon}
 						weight="fill"
-						size={iconSize}
+						size={remFromPx(iconSize)}
 						data-flx="messaging.forward-modal.get-channel-icon.speaker-high-icon"
 					/>
 				);
@@ -340,7 +378,7 @@ export const ForwardModal = observer(
 				<HashIcon
 					className={selectorStyles.itemIcon}
 					weight="bold"
-					size={iconSize}
+					size={remFromPx(iconSize)}
 					data-flx="messaging.forward-modal.get-channel-icon.hash-icon"
 				/>
 			);
@@ -381,15 +419,12 @@ export const ForwardModal = observer(
 								</div>
 							) : (
 								<div className={selectorStyles.itemList} data-flx="messaging.forward-modal.div--4">
-									{filteredChannels.map((ch: Channel | null) => {
-										if (!ch) return null;
+									{filteredChannels.map((option: ForwardChannelOption) => {
+										const ch = option.channel;
 										const isSelected = selectedChannelIds.has(ch.id);
-										const isDisabledForSelection = isChannelDisabled(ch.id);
+										const isDisabledForSelection = isChannelSelectionDisabled(option);
 										const isDisabled = isDisabledForSelection && !isSelected;
-										const disableReason = getChannelDisableReason(ch);
-										const displayName = getForwardChannelDisplayName(ch);
-										const categoryName = getForwardChannelCategoryName(ch);
-										const guildName = getForwardChannelGuildName(ch);
+										const {categoryName, disableReason, displayName, guildName} = option;
 										return (
 											<FocusRing
 												key={ch.id}
@@ -452,142 +487,61 @@ export const ForwardModal = observer(
 					</div>
 				</Modal.Content>
 				<div className={modalStyles.inputAreaContainer} data-flx="messaging.forward-modal.div--8">
-					{isAutocompleteAttached && (
-						<Autocomplete
-							type={autocompleteType}
-							onSelect={handleSelect}
-							selectedIndex={selectedIndex}
-							options={autocompleteOptions}
-							setSelectedIndex={setSelectedIndex}
-							referenceElement={containerRef.current}
-							zIndex={20000}
-							query={autocompleteQuery}
-							listboxId={autocompleteListId}
-							data-flx="messaging.forward-modal.autocomplete.select"
-						/>
-					)}
-					<div
-						ref={containerRef}
-						className={modalStyles.messageInputContainer}
-						data-flx="messaging.forward-modal.div--9"
-					>
-						<TextareaAutosize
-							className={clsx(modalStyles.messageInput, modalStyles.messageInputBase)}
-							maxLength={optionalMessageDisplayMaxLength}
-							ref={textareaRef}
-							value={optionalMessage}
-							disabled={isCommentComposerDisabled}
-							onChange={(e) => {
-								const newValue = e.target.value;
-								const nativeEvent = e.nativeEvent as InputEvent;
-								handleTextChange(
-									newValue,
-									previousValueRef.current,
-									typeof nativeEvent.inputType === 'string' ? nativeEvent.inputType : undefined,
-								);
-								setOptionalMessage(newValue);
-							}}
-							onKeyDown={(e) => {
-								onCursorMove();
-								if (isIMEComposing(e)) {
-									return;
-								}
-								if (isAutocompleteAttached) {
-									if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-										e.preventDefault();
-										setSelectedIndex((prevIndex) => {
-											const newIndex = e.key === 'ArrowUp' ? prevIndex - 1 : prevIndex + 1;
-											return (newIndex + autocompleteOptions.length) % autocompleteOptions.length;
-										});
-									} else if ((e.key === 'Tab' || e.key === 'Enter') && !e.shiftKey) {
-										e.preventDefault();
-										const selectedOption = autocompleteOptions[selectedIndex];
-										if (selectedOption) {
-											handleSelect(selectedOption);
-										}
-									}
-								}
-							}}
-							placeholder={
-								isCommentComposerDisabled
-									? i18n._(COMMENTS_ARE_UNAVAILABLE_WHILE_SLOWMODE_IS_ON_DESCRIPTOR)
-									: i18n._(ADD_A_COMMENT_OPTIONAL_DESCRIPTOR)
-							}
-							aria-autocomplete="list"
-							aria-controls={isAutocompleteAttached ? autocompleteListId : undefined}
-							aria-expanded={isAutocompleteAttached}
-							aria-haspopup="listbox"
-							aria-activedescendant={activeAutocompleteOptionId}
-							data-flx="messaging.forward-modal.textarea-autosize.text-change"
-						/>
-						<MessageCharacterCounter
-							currentLength={actualOptionalMessage.length}
-							maxLength={user.maxMessageLength}
-							canUpgrade={user.maxMessageLength < premiumMaxLength}
-							premiumMaxLength={premiumMaxLength}
-							data-flx="messaging.forward-modal.message-character-counter"
-						/>
-						{commentBlockedNotice && (
-							<div className={modalStyles.slowmodeNotice} data-flx="messaging.forward-modal.div--10">
-								{commentBlockedNotice}
-							</div>
-						)}
-						{sendBlockedNotice && !commentBlockedNotice && (
-							<div className={modalStyles.slowmodeNotice} data-flx="messaging.forward-modal.div--11">
-								{sendBlockedNotice}
-							</div>
-						)}
-						<div className={modalStyles.messageInputActions} data-flx="messaging.forward-modal.div--12">
-							{mobileLayout.enabled ? (
-								<FocusRing offset={-2} data-flx="messaging.forward-modal.focus-ring--2">
-									<button
-										type="button"
-										onClick={() => setExpressionPickerOpen(true)}
-										disabled={isCommentBlockedBySlowmode}
-										className={clsx(
-											modalStyles.emojiPickerButton,
-											expressionPickerOpen && modalStyles.emojiPickerButtonActive,
-										)}
-										aria-label={i18n._(OPEN_EMOJI_PICKER_DESCRIPTOR)}
-										aria-haspopup="dialog"
-										aria-expanded={expressionPickerOpen}
-										data-flx="messaging.forward-modal.button.set-expression-picker-open"
-									>
-										<SmileyIcon
-											className={modalStyles.emojiIcon}
-											weight="fill"
-											data-flx="messaging.forward-modal.smiley-icon"
-										/>
-									</button>
-								</FocusRing>
-							) : (
-								<Popout
-									position="top-end"
-									animationType="none"
-									offsetMainAxis={8}
-									offsetCrossAxis={0}
-									onOpen={() => setExpressionPickerOpen(true)}
-									onClose={() => setExpressionPickerOpen(false)}
-									returnFocusRef={textareaRef}
-									render={({onClose}) => (
-										<ExpressionPickerPopout
-											channelId={message.channelId}
-											onEmojiSelect={(emoji, shiftKey) => {
-												const didInsert = handleEmojiSelect(emoji, shiftKey);
-												if (didInsert && !shiftKey) {
-													onClose();
-												}
-											}}
-											onClose={onClose}
-											visibleTabs={['emojis']}
-											data-flx="messaging.forward-modal.expression-picker-popout"
-										/>
-									)}
-									data-flx="messaging.forward-modal.popout"
+					<FocusRing within ringTarget={containerRef} offset={-2} enabled={!isCommentComposerDisabled}>
+						<div
+							ref={setContainerNode}
+							className={clsx(
+								modalStyles.messageInputContainer,
+								isCommentComposerDisabled && modalStyles.messageInputContainerDisabled,
+								commentNotice != null && modalStyles.messageInputContainerWithNotice,
+								isCommentCounterVisible && modalStyles.messageInputContainerWithCounter,
+							)}
+							data-flx="messaging.forward-modal.div--9"
+						>
+							<LexicalRichInput
+								richInputRef={richInputRef}
+								initialValue=""
+								initialSegments={EMPTY_FORWARD_COMMENT_SEGMENTS}
+								className={modalStyles.richInput}
+								channel={channel}
+								disabled={isCommentComposerDisabled}
+								markdown={true}
+								singleLine={false}
+								size="form"
+								autocompleteAnchor={containerElement}
+								maxLength={user.maxMessageLength}
+								onExceedMaxLength={handleOptionalMessageExceedsLimit}
+								ariaLabel={i18n._(ADD_A_COMMENT_OPTIONAL_DESCRIPTOR)}
+								ariaDescribedBy={commentNoticeDescriptionId}
+								placeholder={commentPlaceholder}
+								onChange={handleCommentChange}
+								onSubmit={() => {
+									void handleForward(false);
+								}}
+								i18n={i18n}
+							/>
+							<MessageCharacterCounter
+								currentLength={actualOptionalMessage.length}
+								maxLength={user.maxMessageLength}
+								canUpgrade={user.maxMessageLength < premiumMaxLength}
+								premiumMaxLength={premiumMaxLength}
+								data-flx="messaging.forward-modal.message-character-counter"
+							/>
+							{commentNotice != null && (
+								<div
+									id={commentNoticeId}
+									className={modalStyles.slowmodeNotice}
+									data-flx="messaging.forward-modal.div--10"
 								>
-									<FocusRing offset={-2} data-flx="messaging.forward-modal.focus-ring--3">
+									{commentNotice}
+								</div>
+							)}
+							<div className={modalStyles.messageInputActions} data-flx="messaging.forward-modal.div--12">
+								{isMobileLayout ? (
+									<FocusRing offset={-2} data-flx="messaging.forward-modal.focus-ring--2">
 										<button
 											type="button"
+											onClick={() => setExpressionPickerOpen(true)}
 											disabled={isCommentBlockedBySlowmode}
 											className={clsx(
 												modalStyles.emojiPickerButton,
@@ -596,19 +550,70 @@ export const ForwardModal = observer(
 											aria-label={i18n._(OPEN_EMOJI_PICKER_DESCRIPTOR)}
 											aria-haspopup="dialog"
 											aria-expanded={expressionPickerOpen}
-											data-flx="messaging.forward-modal.button--2"
+											data-flx="messaging.forward-modal.button.set-expression-picker-open"
 										>
 											<SmileyIcon
 												className={modalStyles.emojiIcon}
 												weight="fill"
-												data-flx="messaging.forward-modal.smiley-icon--2"
+												data-flx="messaging.forward-modal.smiley-icon"
 											/>
 										</button>
 									</FocusRing>
-								</Popout>
-							)}
+								) : (
+									<Popout
+										position="top-end"
+										animationType="none"
+										offsetMainAxis={8}
+										offsetCrossAxis={0}
+										onOpen={() => setExpressionPickerOpen(true)}
+										onClose={() => {
+											setExpressionPickerOpen(false);
+											focusForwardComment(richInputRef.current);
+										}}
+										render={({onClose}) => (
+											<ExpressionPickerPopout
+												channelId={message.channelId}
+												onEmojiSelect={(emoji, shiftKey) => {
+													const didInsert = insertForwardEmoji(richInputRef.current, emoji);
+													if (didInsert) {
+														focusForwardComment(richInputRef.current);
+													}
+													if (didInsert && shiftKey !== true) {
+														onClose();
+													}
+												}}
+												onClose={onClose}
+												visibleTabs={['emojis']}
+												data-flx="messaging.forward-modal.expression-picker-popout"
+											/>
+										)}
+										data-flx="messaging.forward-modal.popout"
+									>
+										<FocusRing offset={-2} data-flx="messaging.forward-modal.focus-ring--3">
+											<button
+												type="button"
+												disabled={isCommentBlockedBySlowmode}
+												className={clsx(
+													modalStyles.emojiPickerButton,
+													expressionPickerOpen && modalStyles.emojiPickerButtonActive,
+												)}
+												aria-label={i18n._(OPEN_EMOJI_PICKER_DESCRIPTOR)}
+												aria-haspopup="dialog"
+												aria-expanded={expressionPickerOpen}
+												data-flx="messaging.forward-modal.button--2"
+											>
+												<SmileyIcon
+													className={modalStyles.emojiIcon}
+													weight="fill"
+													data-flx="messaging.forward-modal.smiley-icon--2"
+												/>
+											</button>
+										</FocusRing>
+									</Popout>
+								)}
+							</div>
 						</div>
-					</div>
+					</FocusRing>
 				</div>
 				<Modal.Footer data-flx="messaging.forward-modal.modal-footer">
 					<Button variant="secondary" onClick={() => ModalCommands.pop()} data-flx="messaging.forward-modal.button.pop">
@@ -616,7 +621,12 @@ export const ForwardModal = observer(
 					</Button>
 					<Button
 						onClick={(event: MouseEvent<HTMLButtonElement>) => handleForward(event.shiftKey)}
-						disabled={selectedChannelIds.size === 0 || isForwarding || isSendBlockedBySlowmode}
+						disabled={
+							selectedChannelIds.size === 0 ||
+							isForwarding ||
+							isSendBlockedBySlowmode ||
+							(!isCommentComposerDisabled && isCommentOverLimit)
+						}
 						data-flx="messaging.forward-modal.button.forward"
 					>
 						{i18n._(SEND_SELECTED_COUNT_DESCRIPTOR, {
@@ -625,17 +635,16 @@ export const ForwardModal = observer(
 						})}
 					</Button>
 				</Modal.Footer>
-				{mobileLayout.enabled && (
+				{isMobileLayout && (
 					<ExpressionPickerSheet
 						isOpen={expressionPickerOpen}
 						onClose={() => setExpressionPickerOpen(false)}
 						channelId={message.channelId}
 						onEmojiSelect={(emoji, shiftKey) => {
-							const didInsert = handleEmojiSelect(emoji, shiftKey);
-							if (didInsert && !shiftKey) {
+							const didInsert = insertForwardEmoji(richInputRef.current, emoji);
+							if (didInsert && shiftKey !== true) {
 								setExpressionPickerOpen(false);
 							}
-							return didInsert;
 						}}
 						visibleTabs={['emojis']}
 						selectedTab="emojis"

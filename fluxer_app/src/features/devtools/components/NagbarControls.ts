@@ -24,11 +24,6 @@ const SCHEDULED_MAINTENANCE_NAGBAR_DESCRIPTOR = msg({
 	comment:
 		'Developer / debug surface — keep terse and technical. Label in the developer Nagbar controls panel for the scheduled-maintenance banner.',
 });
-const CANARY_TESTER_CTA_NAGBAR_DESCRIPTOR = msg({
-	message: 'Canary tester CTA nagbar',
-	comment:
-		'Developer / debug surface — keep terse and technical. Label in the developer Nagbar controls panel for the canary-tester CTA banner.',
-});
 const UNCLAIMED_ACCOUNT_NAGBAR_DESCRIPTOR = msg({
 	message: 'Unclaimed account nagbar',
 	comment: 'Developer control label for the unclaimed-account banner.',
@@ -364,18 +359,6 @@ export const getNagbarControls = (): Array<NagbarControlDefinition> => [
 		useActualDisabled: (state) => !state.forceVoiceSessionRestore && !state.forceHideVoiceSessionRestore,
 		forceShowDisabled: (state) => state.forceVoiceSessionRestore,
 		forceHideDisabled: (state) => state.forceHideVoiceSessionRestore,
-	},
-	{
-		key: 'forceCanaryTesterCta',
-		label: CANARY_TESTER_CTA_NAGBAR_DESCRIPTOR,
-		forceKey: 'forceCanaryTesterCta',
-		forceHideKey: 'forceHideCanaryTesterCta',
-		resetKeys: ['forceCanaryTesterCta'],
-		status: (state) =>
-			state.forceCanaryTesterCta ? FORCE_ENABLED : state.forceHideCanaryTesterCta ? FORCE_DISABLED : USING_ACTUAL_STATE,
-		useActualDisabled: (state) => !state.forceCanaryTesterCta && !state.forceHideCanaryTesterCta,
-		forceShowDisabled: (state) => state.forceCanaryTesterCta,
-		forceHideDisabled: (state) => state.forceHideCanaryTesterCta,
 	},
 	{
 		key: 'forceInvitesDisabled',
