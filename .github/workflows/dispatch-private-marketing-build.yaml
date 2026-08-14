@@ -15,7 +15,9 @@ on:
       - packages/fonts/css/locale-fallbacks.css
       - packages/fonts/files/FluxerSans/**
       - packages/fonts/files/FluxerMono/**
+      - packages/fonts/marketing/**
       - packages/i18n/marketing/**
+      - fluxer_static/marketing/branding/**
       - .github/workflows/dispatch-private-marketing-build.yaml
 
 permissions:
