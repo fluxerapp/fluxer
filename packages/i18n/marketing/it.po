@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: fluxer-marketing\n"
-"POT-Creation-Date: 2026-08-14 00:00+0000\n"
-"PO-Revision-Date: 2026-08-14 00:00+0000\n"
+"POT-Creation-Date: 2026-08-15 00:00+0000\n"
+"PO-Revision-Date: 2026-08-15 00:00+0000\n"
 "Language: it\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -479,7 +479,8 @@ msgstr "Centro assistenza"
 #: fluxer_marketing/generated:company_and_resources.help.help_center_description
 msgctxt "company_and_resources.help.help_center_description"
 msgid "Find answers about your account and privacy, or get help using {product_name}."
-msgstr "Trova risposte sul tuo account e sulla privacy, oppure ricevi aiuto nell'uso di {product_name}."
+msgstr ""
+"Trova risposte sul tuo account e sulla privacy, oppure ricevi aiuto nell'uso di {product_name}."
 
 #. Compact heading for the product links in marketing navigation. Preserve {product_name} exactly.
 #: fluxer_marketing/generated:company_and_resources.fluxer
@@ -616,7 +617,8 @@ msgstr "Registro delle modifiche alle policy"
 msgctxt "content.policies.company_information.description"
 msgid ""
 "Legal details for {product_name} Platform AB, including how we make money and how to contact us."
-msgstr "Dettagli legali su {product_name} Platform AB, tra cui come guadagniamo e come contattarci."
+msgstr ""
+"Dettagli legali su {product_name} Platform AB, tra cui come guadagniamo e come contattarci."
 
 #. Policy page title for legal company details. Translate as formal company information.
 #: fluxer_marketing/generated:content.policies.company_information.title
@@ -751,7 +753,8 @@ msgstr "Il precedente piano {visionary_tier_full_name}"
 msgctxt "content.help.article.visionary.description"
 msgid ""
 "What the sold out {visionary_tier_full_name} offer includes and how its account benefits work."
-msgstr "Cosa include l'offerta sold out di {visionary_tier_full_name} e come funzionano i relativi vantaggi per l'account."
+msgstr ""
+"Cosa include l'offerta sold out di {visionary_tier_full_name} e come funzionano i relativi vantaggi per l'account."
 
 #. Help article title listing the three programmes that showcase a community on Fluxer. Keep 'Partner', 'Verified', and 'Discovery' as programme names.
 #: fluxer_marketing/generated:content.help.article.community_programmes.title
@@ -1087,7 +1090,8 @@ msgstr ""
 msgctxt "donations.success.message"
 msgid ""
 "Thank you. Your donation pays for the servers and for the people who build and run {product_name}. It keeps us answerable to the people using it rather than to an investor."
-msgstr "Grazie. La tua donazione finanzia i server e le persone che costruiscono e gestiscono {product_name}. Ci rende responsabili nei confronti delle persone che lo usano, piuttosto che nei confronti di un investitore."
+msgstr ""
+"Grazie. La tua donazione finanzia i server e le persone che costruiscono e gestiscono {product_name}. Ci rende responsabili nei confronti delle persone che lo usano, piuttosto che nei confronti di un investitore."
 
 #. Short UI label or heading in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
 #: fluxer_marketing/generated:donations.success.title
@@ -1100,7 +1104,8 @@ msgstr "Grazie!"
 msgctxt "donations.support_message"
 msgid ""
 "Help keep {product_name} independent. Donations pay for hosting and development, and they are the reason nobody else gets a say in what we build."
-msgstr "Aiuta a mantenere {product_name} indipendente. Le donazioni coprono i costi di hosting e sviluppo, e sono il motivo per cui nessun altro ha voce in capitolo su ciò che costruiamo."
+msgstr ""
+"Aiuta a mantenere {product_name} indipendente. Le donazioni coprono i costi di hosting e sviluppo, e sono il motivo per cui nessun altro ha voce in capitolo su ciò che costruiamo."
 
 #. Label for the editable amount in the Swish payment flow. Preserve the currency-code placeholder {currency} exactly.
 #: fluxer_marketing/generated:donations.swish.amount_label
@@ -1667,7 +1672,8 @@ msgstr "Pagina non trovata"
 msgctxt "navigation.press.download_assets_intro"
 msgid ""
 "Download the {product_name} logos and color references. Press inquiries go straight to our team."
-msgstr "Scarica i loghi e i riferimenti cromatici di {product_name}. Le richieste stampa arrivano direttamente al nostro team."
+msgstr ""
+"Scarica i loghi e i riferimenti cromatici di {product_name}. Le richieste stampa arrivano direttamente al nostro team."
 
 #. Compact UI label on the press/brand-assets page. Keep wording professional and clear for journalists or partners.
 #: fluxer_marketing/generated:navigation.press.press_and_brand_assets
@@ -1742,7 +1748,8 @@ msgstr "Vanity URL personalizzato"
 #: fluxer_marketing/generated:partner_program.perks.direct_team_access.description
 msgctxt "partner_program.perks.direct_team_access.description"
 msgid "Join the exclusive partners community with direct access to the {product_name} team."
-msgstr "Unisciti alla comunità esclusiva dei partner con accesso diretto al team di {product_name}."
+msgstr ""
+"Unisciti alla comunità esclusiva dei partner con accesso diretto al team di {product_name}."
 
 #. Short UI label or heading on the partner program perks section. Keep benefits concrete and appealing to creators/community owners; preserve placeholders exactly.
 #: fluxer_marketing/generated:partner_program.perks.direct_team_access.label
@@ -1772,7 +1779,8 @@ msgstr "Merch esclusivo"
 #: fluxer_marketing/generated:partner_program.perks.free_plutonium.description
 msgctxt "partner_program.perks.free_plutonium.description"
 msgid "Get free {premium_tier_name} for your account to enjoy all premium features."
-msgstr "Ottieni {premium_tier_name} gratis sul tuo account per goderti tutte le funzionalità premium."
+msgstr ""
+"Ottieni {premium_tier_name} gratis sul tuo account per goderti tutte le funzionalità premium."
 
 #. Short UI label or heading on the partner program perks section. Keep benefits concrete and appealing to creators/community owners; preserve placeholders exactly.
 #: fluxer_marketing/generated:partner_program.perks.free_plutonium.label
@@ -2218,7 +2226,8 @@ msgstr "Da usare su superfici chiare."
 msgctxt "press_branding.assets.usage_guidance.symbol_description"
 msgid ""
 "Use the symbol only when {product_name} appears nearby or the context already makes its owner clear."
-msgstr "Usa il simbolo solo quando {product_name} appare nelle vicinanze o il contesto ne rende già chiaro il proprietario."
+msgstr ""
+"Usa il simbolo solo quando {product_name} appare nelle vicinanze o il contesto ne rende già chiaro il proprietario."
 
 #. Brand color name in the press kit. Keep the color label recognizable and do not over-translate proper names unless natural in the locale.
 #: fluxer_marketing/generated:press_branding.colors.black
@@ -2607,4 +2616,5 @@ msgstr "Lingue"
 msgctxt "voice_regions.languages_intro"
 msgid ""
 "{product_name} is available in over thirty languages. To help translate {product_name} into your native language, join us on {weblate}."
-msgstr "{product_name} è disponibile in oltre trenta lingue. Per aiutare a tradurre {product_name} nella tua lingua madre, unisciti a noi su {weblate}."
+msgstr ""
+"{product_name} è disponibile in oltre trenta lingue. Per aiutare a tradurre {product_name} nella tua lingua madre, unisciti a noi su {weblate}."

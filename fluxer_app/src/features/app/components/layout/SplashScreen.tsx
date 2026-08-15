@@ -20,6 +20,7 @@ import {useCallback, useEffect, useRef, useState} from 'react';
 
 const PROBLEMS_DELAY = 10000;
 const STATUS_PAGE_DISPLAY_DELAY = 5000;
+const FORCE_DISMISS_TIMEOUT_MS = 3000;
 
 type SplashScreenMode = 'live' | 'outage';
 
@@ -28,7 +29,18 @@ export const SplashScreen = observer(() => {
 	const interrupted = GatewayConnection.isConnectionInterrupted;
 	const isInitialized = Initialization.canNavigateToProtectedRoutes;
 	const isReady = !interrupted && isInitialized;
-	if (shouldBypass) return null;
+	const [hasTimedOut, setHasTimedOut] = useState(false);
+
+	useEffect(() => {
+		if (!isReady) {
+			setHasTimedOut(false);
+			return;
+		}
+		const timer = setTimeout(() => setHasTimedOut(true), FORCE_DISMISS_TIMEOUT_MS);
+		return () => clearTimeout(timer);
+	}, [isReady]);
+
+	if (shouldBypass || hasTimedOut) return null;
 	return (
 		<AnimatePresence initial={false} data-flx="app.splash-screen.animate-presence">
 			{!isReady && <SplashScreenContent mode="live" data-flx="app.splash-screen.splash-screen-content" />}
@@ -196,6 +208,7 @@ const SplashScreenContent = observer(({mode}: SplashScreenContentProps) => {
 			data-flx="app.splash-screen.splash-screen-content.splash-overlay--2"
 			{...splashMotion}
 			className={styles.splashOverlay}
+			style={{pointerEvents: isReady ? 'none' : 'auto'}}
 		>
 			<NativeDragRegion
 				className={styles.topDragRegion}

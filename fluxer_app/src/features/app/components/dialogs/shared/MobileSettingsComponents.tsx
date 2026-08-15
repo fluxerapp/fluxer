@@ -366,7 +366,7 @@ export const MobileSettingsList = observer(function MobileSettingsList<T extends
 			)}
 			{additionalContent && (
 				<div
-					className={styles.additionalContent}
+					className={styles.extraContent}
 					data-flx="app.mobile-settings-components.mobile-settings-list.additional-content"
 				>
 					{additionalContent}

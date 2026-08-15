@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: fluxer-marketing\n"
-"POT-Creation-Date: 2026-08-14 00:00+0000\n"
-"PO-Revision-Date: 2026-08-14 00:00+0000\n"
+"POT-Creation-Date: 2026-08-15 00:00+0000\n"
+"PO-Revision-Date: 2026-08-15 00:00+0000\n"
 "Language: zh-TW\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -2024,7 +2024,8 @@ msgstr "網頁應用程式"
 msgctxt "platform_support.mobile.web_app.any_browser"
 msgid ""
 "Use {product_name} in a desktop or mobile web browser, or install it to your home screen or desktop as a Progressive Web App. The web app currently has more features than the native phone apps."
-msgstr "在桌機或行動裝置的網頁瀏覽器中使用 {product_name}，或以 Progressive Web App 的形式安裝到主畫面或桌面。網頁應用程式目前的功能比原生手機應用程式更完整。"
+msgstr ""
+"在桌機或行動裝置的網頁瀏覽器中使用 {product_name}，或以 Progressive Web App 的形式安裝到主畫面或桌面。網頁應用程式目前的功能比原生手機應用程式更完整。"
 
 #. Card title for the iOS app option on the download page. Keep the platform name conventional and short. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.ios.title
@@ -2037,7 +2038,8 @@ msgstr "{ios} 應用程式"
 msgctxt "platform_support.mobile.ios.body"
 msgid ""
 "The native {ios} app is currently limited to {premium_tier_full_name} subscribers. Broader access is coming very soon. Meanwhile, the full {product_name} web app works in Safari and can be added to your Home Screen."
-msgstr "原生 {ios} 應用程式目前僅限 {premium_tier_full_name} 訂閱者使用，很快就會更廣泛地開放。在此之前，完整的 {product_name} 網頁應用程式可在 Safari 中使用，並可加入主畫面。"
+msgstr ""
+"原生 {ios} 應用程式目前僅限 {premium_tier_full_name} 訂閱者使用，很快就會更廣泛地開放。在此之前，完整的 {product_name} 網頁應用程式可在 Safari 中使用，並可加入主畫面。"
 
 #. Card title for the Android app option on the download page. Keep the platform name conventional and short. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.android.title
@@ -2251,7 +2253,8 @@ msgstr "{product_name} {premium_tier_name}"
 msgctxt "pricing_and_tiers.plutonium.hero_description"
 msgid ""
 "{premium_tier_name} raises the limits on {official_instance_host} for the people who keep running into them, and adds a few ways to make your profile look like you. It is optional, and {product_name} works without it."
-msgstr "{premium_tier_name} 為經常碰到上限的人提高 {official_instance_host} 上的各項限制，並提供更多讓個人檔案更像你的方式。它是選用的，沒有它 {product_name} 一樣能用。"
+msgstr ""
+"{premium_tier_name} 為經常碰到上限的人提高 {official_instance_host} 上的各項限制，並提供更多讓個人檔案更像你的方式。它是選用的，沒有它 {product_name} 一樣能用。"
 
 #. Secondary callout at the bottom of the Plutonium hero. The {donate_link} placeholder is the only linked portion; preserve {product_name} and both placeholders exactly.
 #: fluxer_marketing/generated:pricing_and_tiers.plutonium.donation_callout

@@ -455,11 +455,11 @@
 	}
 }
 
-.addGuildButton {
+.createGuildButton {
 	composes: guildListItem;
 }
 
-.addGuildButtonIcon {
+.createGuildButtonIcon {
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -478,11 +478,11 @@
 
 @media (hover: hover) and (pointer: fine) {
 	:global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
-		.addGuildButton:hover
-		.addGuildButtonIcon,
+		.createGuildButton:hover
+		.createGuildButtonIcon,
 	:global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
-		.addGuildButtonIcon:hover,
-	.addGuildButton.contextMenuHover .addGuildButtonIcon {
+		.createGuildButtonIcon:hover,
+	.createGuildButton.contextMenuHover .createGuildButtonIcon {
 		border-color: var(--text-primary);
 	}
 }

@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: fluxer-marketing\n"
-"POT-Creation-Date: 2026-08-14 00:00+0000\n"
-"PO-Revision-Date: 2026-08-14 00:00+0000\n"
+"POT-Creation-Date: 2026-08-15 00:00+0000\n"
+"PO-Revision-Date: 2026-08-15 00:00+0000\n"
 "Language: ru\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -90,7 +90,8 @@ msgstr "Пользовательские CSS-темы"
 msgctxt "app.customization.saved_media_and_css"
 msgid ""
 "Make your own emojis, keep the media you want to find again, and rewrite the whole interface with custom CSS if you want to."
-msgstr "Создавай свои эмодзи, сохраняй медиа, которые захочешь найти снова, и при желании переписывай весь интерфейс своим CSS."
+msgstr ""
+"Создавай свои эмодзи, сохраняй медиа, которые захочешь найти снова, и при желании переписывай весь интерфейс своим CSS."
 
 #. Short UI label or heading used in the home-page customization feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.customization.title
@@ -109,7 +110,8 @@ msgstr "Загружай пользовательские эмодзи и сти
 msgctxt "app.messaging.description"
 msgid ""
 "Chat with friends or groups. Communities give you organized channels when a group chat has grown too large."
-msgstr "Общайся с друзьями или в группах. А когда групповой чат разрастается, сообщества дают упорядоченные каналы."
+msgstr ""
+"Общайся с друзьями или в группах. А когда групповой чат разрастается, сообщества дают упорядоченные каналы."
 
 #. Compact UI label used in the home-page messaging feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.messaging.features.file_sharing
@@ -421,7 +423,8 @@ msgstr "Карьера в {product_name}"
 #: fluxer_marketing/generated:company_and_resources.careers.not_hiring_notice
 msgctxt "company_and_resources.careers.not_hiring_notice"
 msgid "We are not hiring. Any open role will be listed on this page, so check back later."
-msgstr "Сейчас мы не нанимаем. Все открытые вакансии будут появляться на этой странице, так что заглядывай позже."
+msgstr ""
+"Сейчас мы не нанимаем. Все открытые вакансии будут появляться на этой странице, так что заглядывай позже."
 
 #. Short UI label or heading on the careers and future roles pages. Use clear hiring language, avoid implying that roles are currently open unless the source says so, and preserve placeholders exactly.
 #: fluxer_marketing/generated:company_and_resources.careers.label
@@ -749,7 +752,8 @@ msgstr "Бывший тариф {visionary_tier_full_name}"
 msgctxt "content.help.article.visionary.description"
 msgid ""
 "What the sold out {visionary_tier_full_name} offer includes and how its account benefits work."
-msgstr "Что включает в себя распроданный {visionary_tier_full_name} и как работают преимущества для аккаунта."
+msgstr ""
+"Что включает в себя распроданный {visionary_tier_full_name} и как работают преимущества для аккаунта."
 
 #. Help article title listing the three programmes that showcase a community on Fluxer. Keep 'Partner', 'Verified', and 'Discovery' as programme names.
 #: fluxer_marketing/generated:content.help.article.community_programmes.title
@@ -789,8 +793,7 @@ msgstr "Как сообщить об ошибке"
 #: fluxer_marketing/generated:content.help.article.report_bug.description
 msgctxt "content.help.article.report_bug.description"
 msgid "How to submit a clear bug report to the {product_name} team or through {github}."
-msgstr ""
-"Как отправить понятный отчёт об ошибке команде {product_name} или через {github}."
+msgstr "Как отправить понятный отчёт об ошибке команде {product_name} или через {github}."
 
 #. Help article title about updating a user's date of birth via support.
 #: fluxer_marketing/generated:content.help.article.change_date_of_birth.title
@@ -827,7 +830,8 @@ msgstr "Экспорт данных аккаунта"
 msgctxt "content.help.article.data_export.description"
 msgid ""
 "How to request a machine-readable export of your {product_name} account data and handle it safely."
-msgstr "Как запросить машиночитаемый экспорт данных своего аккаунта {product_name} и безопасно с ним обращаться."
+msgstr ""
+"Как запросить машиночитаемый экспорт данных своего аккаунта {product_name} и безопасно с ним обращаться."
 
 #. Help article title about deleting or disabling an account.
 #: fluxer_marketing/generated:content.help.article.delete_account.title
@@ -893,7 +897,8 @@ msgstr "Варианты разрешения споров согласно EU D
 msgctxt "content.help.article.dsa_dispute_resolution.description"
 msgid ""
 "How users covered by the Digital Services Act can report illegal content and challenge eligible decisions."
-msgstr "Как пользователи, подпадающие под действие Закона о цифровых услугах, могут сообщать о незаконном контенте и оспаривать соответствующие решения."
+msgstr ""
+"Как пользователи, подпадающие под действие Закона о цифровых услугах, могут сообщать о незаконном контенте и оспаривать соответствующие решения."
 
 #. Help article title about region-specific access restrictions.
 #: fluxer_marketing/generated:content.help.article.regional_restrictions.title
@@ -1082,7 +1087,8 @@ msgstr ""
 msgctxt "donations.success.message"
 msgid ""
 "Thank you. Your donation pays for the servers and for the people who build and run {product_name}. It keeps us answerable to the people using it rather than to an investor."
-msgstr "Спасибо. Твоё пожертвование оплачивает серверы и работу людей, которые создают и поддерживают {product_name}. Благодаря этому мы отчитываемся перед теми, кто им пользуется, а не перед инвестором."
+msgstr ""
+"Спасибо. Твоё пожертвование оплачивает серверы и работу людей, которые создают и поддерживают {product_name}. Благодаря этому мы отчитываемся перед теми, кто им пользуется, а не перед инвестором."
 
 #. Short UI label or heading in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
 #: fluxer_marketing/generated:donations.success.title
@@ -1095,7 +1101,8 @@ msgstr "Спасибо!"
 msgctxt "donations.support_message"
 msgid ""
 "Help keep {product_name} independent. Donations pay for hosting and development, and they are the reason nobody else gets a say in what we build."
-msgstr "Помоги сохранить независимость {product_name}. Пожертвования оплачивают хостинг и разработку, и именно поэтому никто со стороны не решает, что мы создаём."
+msgstr ""
+"Помоги сохранить независимость {product_name}. Пожертвования оплачивают хостинг и разработку, и именно поэтому никто со стороны не решает, что мы создаём."
 
 #. Label for the editable amount in the Swish payment flow. Preserve the currency-code placeholder {currency} exactly.
 #: fluxer_marketing/generated:donations.swish.amount_label
@@ -1248,7 +1255,8 @@ msgstr "{product_name}"
 #: fluxer_marketing/generated:footer.fluxer_platform_ab_swedish_limited
 msgctxt "footer.fluxer_platform_ab_swedish_limited"
 msgid "© {product_name} Platform AB (Swedish private limited company: 559537-3993)"
-msgstr "© {product_name} Platform AB (шведская частная компания с ограниченной ответственностью: 559537-3993)"
+msgstr ""
+"© {product_name} Platform AB (шведская частная компания с ограниченной ответственностью: 559537-3993)"
 
 #. Body copy in the global footer describing how Fluxer is funded. Preserve {product_name} and {premium_tier_name} exactly.
 #: fluxer_marketing/generated:funding_model.footer_description
@@ -1575,7 +1583,8 @@ msgstr "Ранний доступ"
 msgctxt "beta_and_access.featured_benefit_line"
 msgid ""
 "Chat, calls, screen sharing and communities are free, and they stay free. {premium_tier_name} adds optional extras for the people who want them."
-msgstr "Звонки, чаты, демонстрация экрана и сообщества бесплатны и останутся такими. {premium_tier_name} добавляет дополнительные возможности для тех, кто их хочет."
+msgstr ""
+"Звонки, чаты, демонстрация экрана и сообщества бесплатны и останутся такими. {premium_tier_name} добавляет дополнительные возможности для тех, кто их хочет."
 
 #. Compact UI label in Fluxer marketing UI. Translate naturally for the target locale and preserve placeholders exactly.
 #: fluxer_marketing/generated:beta_and_access.public_beta
@@ -1647,7 +1656,8 @@ msgstr "На этой странице"
 #: fluxer_marketing/generated:navigation.page_not_found.description
 msgctxt "navigation.page_not_found.description"
 msgid "This page does not exist. Either it moved or a link went stale, and both are fixable."
-msgstr "Такой страницы не существует. Либо она переехала, либо ссылка устарела, и то и другое поправимо."
+msgstr ""
+"Такой страницы не существует. Либо она переехала, либо ссылка устарела, и то и другое поправимо."
 
 #. Short UI label or heading on the 404 page. Keep the tone helpful and concise while making clear the page was not found.
 #: fluxer_marketing/generated:navigation.page_not_found.title
@@ -1660,7 +1670,8 @@ msgstr "Страница не найдена"
 msgctxt "navigation.press.download_assets_intro"
 msgid ""
 "Download the {product_name} logos and color references. Press inquiries go straight to our team."
-msgstr "Скачай логотипы и фирменные цвета {product_name}. Запросы для прессы попадают напрямую нашей команде."
+msgstr ""
+"Скачай логотипы и фирменные цвета {product_name}. Запросы для прессы попадают напрямую нашей команде."
 
 #. Compact UI label on the press/brand-assets page. Keep wording professional and clear for journalists or partners.
 #: fluxer_marketing/generated:navigation.press.press_and_brand_assets
@@ -2070,7 +2081,8 @@ msgstr "Приложение для {ios}"
 msgctxt "platform_support.mobile.ios.body"
 msgid ""
 "The native {ios} app is currently limited to {premium_tier_full_name} subscribers. Broader access is coming very soon. Meanwhile, the full {product_name} web app works in Safari and can be added to your Home Screen."
-msgstr "Нативное приложение {ios} пока доступно только подписчикам {premium_tier_full_name}. Скоро доступ станет шире. А пока полное веб-приложение {product_name} работает в Safari и его можно добавить на главный экран."
+msgstr ""
+"Нативное приложение {ios} пока доступно только подписчикам {premium_tier_full_name}. Скоро доступ станет шире. А пока полное веб-приложение {product_name} работает в Safari и его можно добавить на главный экран."
 
 #. Card title for the Android app option on the download page. Keep the platform name conventional and short. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.android.title
@@ -2212,7 +2224,8 @@ msgstr "Используй на светлых поверхностях."
 msgctxt "press_branding.assets.usage_guidance.symbol_description"
 msgid ""
 "Use the symbol only when {product_name} appears nearby or the context already makes its owner clear."
-msgstr "Используй символ, только если рядом есть {product_name} или если из контекста уже понятно, кому он принадлежит."
+msgstr ""
+"Используй символ, только если рядом есть {product_name} или если из контекста уже понятно, кому он принадлежит."
 
 #. Brand color name in the press kit. Keep the color label recognizable and do not over-translate proper names unless natural in the locale.
 #: fluxer_marketing/generated:press_branding.colors.black
@@ -2294,7 +2307,8 @@ msgstr ""
 #: fluxer_marketing/generated:pricing_and_tiers.plutonium.donation_callout
 msgctxt "pricing_and_tiers.plutonium.donation_callout"
 msgid "Just want to support {product_name}'s open source development? {donate_link}."
-msgstr "Просто хочешь поддержать разработку {product_name} с открытым исходным кодом? {donate_link}."
+msgstr ""
+"Просто хочешь поддержать разработку {product_name} с открытым исходным кодом? {donate_link}."
 
 #. Linked label in the Plutonium hero donation callout. Translate as a concise donation action.
 #: fluxer_marketing/generated:pricing_and_tiers.plutonium.donation_callout_link
@@ -2439,7 +2453,8 @@ msgstr "Читать руководство по самостоятельном�
 msgctxt "product_positioning.intro"
 msgid ""
 "Free and open source chat for friends, groups, and communities, with text, voice, video, screen sharing, and self-hosting."
-msgstr "Бесплатный чат с открытым исходным кодом для друзей, групп и сообществ, с текстом, голосом, видео, демонстрацией экрана и самостоятельным хостингом."
+msgstr ""
+"Бесплатный чат с открытым исходным кодом для друзей, групп и сообществ, с текстом, голосом, видео, демонстрацией экрана и самостоятельным хостингом."
 
 #. Button or link label explaining Fluxer open-source licensing. Keep legal/license tokens such as AGPLv3 unchanged.
 #: fluxer_marketing/generated:product_positioning.open_source.fully_open_source_agplv3
@@ -2600,4 +2615,5 @@ msgstr "Языки"
 msgctxt "voice_regions.languages_intro"
 msgid ""
 "{product_name} is available in over thirty languages. To help translate {product_name} into your native language, join us on {weblate}."
-msgstr "{product_name} доступен более чем на тридцати языках. Чтобы помочь перевести {product_name} на твой родной язык, присоединяйся к нам на {weblate}."
+msgstr ""
+"{product_name} доступен более чем на тридцати языках. Чтобы помочь перевести {product_name} на твой родной язык, присоединяйся к нам на {weblate}."

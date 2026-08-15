@@ -78,6 +78,7 @@ message AccessibilitySettings {
   optional bool dim_strikethrough_text = 62;
   optional bool sequential_file_send = 63;
   optional bool double_click_message_actions = 64;
+  optional bool mobile_splash_zoom_animation = 64;
 }
 
 message AccessibilityOverrides {

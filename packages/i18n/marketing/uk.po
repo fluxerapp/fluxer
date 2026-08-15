@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: fluxer-marketing\n"
-"POT-Creation-Date: 2026-08-14 00:00+0000\n"
-"PO-Revision-Date: 2026-08-14 00:00+0000\n"
+"POT-Creation-Date: 2026-08-15 00:00+0000\n"
+"PO-Revision-Date: 2026-08-15 00:00+0000\n"
 "Language: uk\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -753,7 +753,8 @@ msgstr "Колишній рівень {visionary_tier_full_name}"
 msgctxt "content.help.article.visionary.description"
 msgid ""
 "What the sold out {visionary_tier_full_name} offer includes and how its account benefits work."
-msgstr "Що включає розпроданий {visionary_tier_full_name} та як працюють його переваги для облікового запису."
+msgstr ""
+"Що включає розпроданий {visionary_tier_full_name} та як працюють його переваги для облікового запису."
 
 #. Help article title listing the three programmes that showcase a community on Fluxer. Keep 'Partner', 'Verified', and 'Discovery' as programme names.
 #: fluxer_marketing/generated:content.help.article.community_programmes.title
@@ -898,7 +899,8 @@ msgstr "Варіанти вирішення спорів згідно з EU DSA"
 msgctxt "content.help.article.dsa_dispute_resolution.description"
 msgid ""
 "How users covered by the Digital Services Act can report illegal content and challenge eligible decisions."
-msgstr "Як користувачі, на яких поширюється дія Закону про цифрові послуги, можуть повідомляти про незаконний контент та оскаржувати відповідні рішення."
+msgstr ""
+"Як користувачі, на яких поширюється дія Закону про цифрові послуги, можуть повідомляти про незаконний контент та оскаржувати відповідні рішення."
 
 #. Help article title about region-specific access restrictions.
 #: fluxer_marketing/generated:content.help.article.regional_restrictions.title

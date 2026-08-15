@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: fluxer-marketing\n"
-"POT-Creation-Date: 2026-08-14 00:00+0000\n"
-"PO-Revision-Date: 2026-08-14 00:00+0000\n"
+"POT-Creation-Date: 2026-08-15 00:00+0000\n"
+"PO-Revision-Date: 2026-08-15 00:00+0000\n"
 "Language: ja\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -46,8 +46,7 @@ msgstr "きめ細やかなロールと権限"
 #: fluxer_marketing/generated:app.communities.roles_permissions_audit.keep_running_smoothly
 msgctxt "app.communities.roles_permissions_audit.keep_running_smoothly"
 msgid "Assign roles and permissions, and use the audit log to see which moderator changed what."
-msgstr ""
-"ロールと権限を割り当て、監査ログでどのモデレーターが何を変更したかを確認できます。"
+msgstr "ロールと権限を割り当て、監査ログでどのモデレーターが何を変更したかを確認できます。"
 
 #. Short UI label or heading used in the home-page communities/moderation feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.communities.verification.label
@@ -90,8 +89,7 @@ msgstr "カスタムCSSテーマ"
 msgctxt "app.customization.saved_media_and_css"
 msgid ""
 "Make your own emojis, keep the media you want to find again, and rewrite the whole interface with custom CSS if you want to."
-msgstr ""
-"独自の絵文字を作り、あとで見返したいメディアを保存し、必要ならカスタムCSSでインターフェース全体を書き換えられます。"
+msgstr "独自の絵文字を作り、あとで見返したいメディアを保存し、必要ならカスタムCSSでインターフェース全体を書き換えられます。"
 
 #. Short UI label or heading used in the home-page customization feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.customization.title
@@ -110,8 +108,7 @@ msgstr "カスタム絵文字とスタンプのアップロード"
 msgctxt "app.messaging.description"
 msgid ""
 "Chat with friends or groups. Communities give you organized channels when a group chat has grown too large."
-msgstr ""
-"友だちやグループとチャットできます。グループチャットが大きくなりすぎたときは、コミュニティの整理されたチャンネルが役立ちます。"
+msgstr "友だちやグループとチャットできます。グループチャットが大きくなりすぎたときは、コミュニティの整理されたチャンネルが役立ちます。"
 
 #. Compact UI label used in the home-page messaging feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.messaging.features.file_sharing
@@ -153,8 +150,7 @@ msgstr "投稿者や日付で検索を絞り込み"
 #: fluxer_marketing/generated:app.messaging.features.search.find_old_messages
 msgctxt "app.messaging.features.search.find_old_messages"
 msgid "Find old messages or jump between communities and channels from the same search box."
-msgstr ""
-"同じ検索ボックスから、古いメッセージを探したり、コミュニティやチャンネル間を移動したりできます。"
+msgstr "同じ検索ボックスから、古いメッセージを探したり、コミュニティやチャンネル間を移動したりできます。"
 
 #. Short UI label or heading used in the home-page messaging feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.messaging.features.search.label
@@ -305,8 +301,7 @@ msgstr "{tag}で絞り込み中"
 msgctxt "blog.post.how_i_built_fluxer_story.description"
 msgid ""
 "The story behind {product_name}, from a high school project to an open source chat app used by hundreds of thousands of people."
-msgstr ""
-"高校のプロジェクトから、数十万人が利用するオープンソースのチャットアプリになるまでの{product_name}の物語。"
+msgstr "高校のプロジェクトから、数十万人が利用するオープンソースのチャットアプリになるまでの{product_name}の物語。"
 
 #. Blog article title shown in cards, article pages, metadata, and feeds. Preserve {product_name} exactly.
 #: fluxer_marketing/generated:blog.post.how_i_built_fluxer_story.title
@@ -319,8 +314,7 @@ msgstr "私が{product_name}を作るまで"
 msgctxt "blog.post.mobile_clients_and_fluxer_v2.description"
 msgid ""
 "{product_name} v2 is here with open source mobile apps and easier self-hosting. Contributions are open again too."
-msgstr ""
-"{product_name} v2 が登場し、モバイルアプリがオープンソースになり、セルフホスティングも簡単になりました。コントリビューションの受け付けも再開しています。"
+msgstr "{product_name} v2 が登場し、モバイルアプリがオープンソースになり、セルフホスティングも簡単になりました。コントリビューションの受け付けも再開しています。"
 
 #. Blog article title shown in cards, article pages, metadata, and feeds. Keep Fluxer as a product name and v2 as the release name. Preserve placeholders exactly.
 #: fluxer_marketing/generated:blog.post.mobile_clients_and_fluxer_v2.title
@@ -424,8 +418,7 @@ msgstr "{product_name}の採用情報"
 #: fluxer_marketing/generated:company_and_resources.careers.not_hiring_notice
 msgctxt "company_and_resources.careers.not_hiring_notice"
 msgid "We are not hiring. Any open role will be listed on this page, so check back later."
-msgstr ""
-"現在、募集は行っていません。募集を開始した際はこのページに掲載しますので、またご確認ください。"
+msgstr "現在、募集は行っていません。募集を開始した際はこのページに掲載しますので、またご確認ください。"
 
 #. Short UI label or heading on the careers and future roles pages. Use clear hiring language, avoid implying that roles are currently open unless the source says so, and preserve placeholders exactly.
 #: fluxer_marketing/generated:company_and_resources.careers.label
@@ -479,8 +472,7 @@ msgstr "ヘルプセンター"
 #: fluxer_marketing/generated:company_and_resources.help.help_center_description
 msgctxt "company_and_resources.help.help_center_description"
 msgid "Find answers about your account and privacy, or get help using {product_name}."
-msgstr ""
-"アカウント、プライバシー、{product_name}の使い方に関するよくある質問の回答を確認できます。"
+msgstr "アカウント、プライバシー、{product_name}の使い方に関するよくある質問の回答を確認できます。"
 
 #. Compact heading for the product links in marketing navigation. Preserve {product_name} exactly.
 #: fluxer_marketing/generated:company_and_resources.fluxer
@@ -641,8 +633,7 @@ msgstr "コミュニティガイドライン"
 msgctxt "content.policies.privacy.description"
 msgid ""
 "How {product_name} handles personal data and what we refuse to do with it. Learn about your controls and rights."
-msgstr ""
-"{product_name}が個人データをどのように扱い、どのような利用は決して行わないかを説明します。利用者が使える管理機能と権利についても確認できます。"
+msgstr "{product_name}が個人データをどのように扱い、どのような利用は決して行わないかを説明します。利用者が使える管理機能と権利についても確認できます。"
 
 #. Policy page title. Translate as a formal privacy policy.
 #: fluxer_marketing/generated:content.policies.privacy.title
@@ -655,8 +646,7 @@ msgstr "プライバシーポリシー"
 msgctxt "content.policies.security.description"
 msgid ""
 "How to report security issues and check what is in scope. Read the safe harbor terms before testing."
-msgstr ""
-"セキュリティ問題の報告方法と対象範囲を確認できます。テストを行う前にセーフハーバー条項をお読みください。"
+msgstr "セキュリティ問題の報告方法と対象範囲を確認できます。テストを行う前にセーフハーバー条項をお読みください。"
 
 #. Policy page title for security vulnerability reporting.
 #: fluxer_marketing/generated:content.policies.security.title
@@ -669,8 +659,7 @@ msgstr "セキュリティ"
 msgctxt "content.policies.terms.description"
 msgid ""
 "The agreement between you and {product_name}, including account, content, payment, moderation, and legal terms."
-msgstr ""
-"あなたと{product_name}の間の契約です。アカウント、コンテンツ、支払い、モデレーション、法的条件について定めています。"
+msgstr "あなたと{product_name}の間の契約です。アカウント、コンテンツ、支払い、モデレーション、法的条件について定めています。"
 
 #. Policy page title. Translate as formal terms of service.
 #: fluxer_marketing/generated:content.policies.terms.title
@@ -777,8 +766,7 @@ msgstr "添付ファイルの有効期限の仕組み"
 msgctxt "content.help.article.attachment_expiry.description"
 msgid ""
 "See when attachments expire, what extends their availability, and how to keep an important file."
-msgstr ""
-"添付ファイルがいつ期限切れになるか、何によって保存期間が延びるか、そして大切なファイルを残す方法を解説します。"
+msgstr "添付ファイルがいつ期限切れになるか、何によって保存期間が延びるか、そして大切なファイルを残す方法を解説します。"
 
 #. Help article title about filing bug reports.
 #: fluxer_marketing/generated:content.help.article.report_bug.title
@@ -790,8 +778,7 @@ msgstr "バグの報告方法"
 #: fluxer_marketing/generated:content.help.article.report_bug.description
 msgctxt "content.help.article.report_bug.description"
 msgid "How to submit a clear bug report to the {product_name} team or through {github}."
-msgstr ""
-"{product_name}チームまたは{github}を通じて、わかりやすいバグレポートを提出する方法。"
+msgstr "{product_name}チームまたは{github}を通じて、わかりやすいバグレポートを提出する方法。"
 
 #. Help article title about updating a user's date of birth via support.
 #: fluxer_marketing/generated:content.help.article.change_date_of_birth.title
@@ -828,8 +815,7 @@ msgstr "アカウントデータのエクスポート"
 msgctxt "content.help.article.data_export.description"
 msgid ""
 "How to request a machine-readable export of your {product_name} account data and handle it safely."
-msgstr ""
-"{product_name}アカウントデータの機械可読なエクスポートをリクエストし、安全に取り扱う方法。"
+msgstr "{product_name}アカウントデータの機械可読なエクスポートをリクエストし、安全に取り扱う方法。"
 
 #. Help article title about deleting or disabling an account.
 #: fluxer_marketing/generated:content.help.article.delete_account.title
@@ -855,8 +841,7 @@ msgstr "最低年齢の要件"
 msgctxt "content.help.article.minimum_age.description"
 msgid ""
 "Who can use {product_name} under our age rules and what to do if we get your eligibility wrong."
-msgstr ""
-"当社の年齢ルールで{product_name}を利用できるのは誰か、そして利用資格の判定に誤りがあった場合の対応について解説します。"
+msgstr "当社の年齢ルールで{product_name}を利用できるのは誰か、そして利用資格の判定に誤りがあった場合の対応について解説します。"
 
 #. Help article title about the copyright/IP complaint process. Keep legal-sounding phrasing.
 #: fluxer_marketing/generated:content.help.article.copyright.title
@@ -880,8 +865,7 @@ msgstr "{product_name}による情報の保持期間"
 #: fluxer_marketing/generated:content.help.article.data_retention.description
 msgctxt "content.help.article.data_retention.description"
 msgid "How long {product_name} keeps account information, content, logs, and legal records."
-msgstr ""
-"{product_name}がアカウント情報、コンテンツ、ログ、法的記録を保持する期間について。"
+msgstr "{product_name}がアカウント情報、コンテンツ、ログ、法的記録を保持する期間について。"
 
 #. Help article title about EU Digital Services Act dispute options. Keep 'EU DSA' as an acronym.
 #: fluxer_marketing/generated:content.help.article.dsa_dispute_resolution.title
@@ -907,8 +891,7 @@ msgstr "地域別の制限"
 msgctxt "content.help.article.regional_restrictions.description"
 msgid ""
 "The regional access and age restricted content rules that {product_name} currently applies."
-msgstr ""
-"{product_name}が現在適用している地域別のアクセス制限と、年齢制限コンテンツのルールについて。"
+msgstr "{product_name}が現在適用している地域別のアクセス制限と、年齢制限コンテンツのルールについて。"
 
 #. Compact UI label on donation pages and donation support cards. Keep the tone appreciative without being pushy; preserve placeholders exactly.
 #: fluxer_marketing/generated:donations.business
@@ -933,8 +916,7 @@ msgstr "{product_name}に寄付"
 msgctxt "donations.errors.active_subscription_exists"
 msgid ""
 "You already have an active recurring donation. Cancel it in the donor portal to start a different one, or make a one-time donation instead."
-msgstr ""
-"すでに有効な定期寄付があります。別の定期寄付を開始するには、寄付者ポータルで現在の寄付をキャンセルしてください。代わりに一度きりの寄付をすることもできます。"
+msgstr "すでに有効な定期寄付があります。別の定期寄付を開始するには、寄付者ポータルで現在の寄付をキャンセルしてください。代わりに一度きりの寄付をすることもできます。"
 
 #. Body copy in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
 #: fluxer_marketing/generated:donations.errors.generic
@@ -958,8 +940,7 @@ msgstr "有効なメールアドレスを入力してください。"
 #: fluxer_marketing/generated:donations.errors.network
 msgctxt "donations.errors.network"
 msgid "Could not reach the donation service. Try again later."
-msgstr ""
-"寄付サービスに接続できませんでした。しばらくしてからもう一度お試しください。"
+msgstr "寄付サービスに接続できませんでした。しばらくしてからもう一度お試しください。"
 
 #. Compact UI label in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
 #: fluxer_marketing/generated:donations.form.amount
@@ -1044,8 +1025,7 @@ msgstr "個人"
 msgctxt "donations.manage.description"
 msgid ""
 "Enter your email to receive a link to your donor portal. There you can manage recurring donations and see past payments, including downloadable invoices."
-msgstr ""
-"メールアドレスを入力すると、寄付者ポータルへのリンクが届きます。ポータルでは、定期寄付の管理や、ダウンロードできる請求書を含む過去の支払いの確認ができます。"
+msgstr "メールアドレスを入力すると、寄付者ポータルへのリンクが届きます。ポータルでは、定期寄付の管理や、ダウンロードできる請求書を含む過去の支払いの確認ができます。"
 
 #. Body copy in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
 #: fluxer_marketing/generated:donations.manage.success
@@ -1083,7 +1063,8 @@ msgstr "まもなく、寄付の詳細と寄付者ポータルへのリンクが
 msgctxt "donations.success.message"
 msgid ""
 "Thank you. Your donation pays for the servers and for the people who build and run {product_name}. It keeps us answerable to the people using it rather than to an investor."
-msgstr "ありがとうございます。いただいたご寄付は、{product_name}を構築・運営する人々やサーバーの維持に使われます。これにより、私たちは投資家ではなく、サービス利用者に対して責任を負い続けることができます。"
+msgstr ""
+"ありがとうございます。いただいたご寄付は、{product_name}を構築・運営する人々やサーバーの維持に使われます。これにより、私たちは投資家ではなく、サービス利用者に対して責任を負い続けることができます。"
 
 #. Short UI label or heading in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
 #: fluxer_marketing/generated:donations.success.title
@@ -1096,7 +1077,8 @@ msgstr "ありがとうございます"
 msgctxt "donations.support_message"
 msgid ""
 "Help keep {product_name} independent. Donations pay for hosting and development, and they are the reason nobody else gets a say in what we build."
-msgstr "{product_name}を独立したサービスに保つためにご支援ください。ご寄付はホスティングと開発の費用に充てられ、私たちが何を作るかについて他の誰も口出しできない理由となっています。"
+msgstr ""
+"{product_name}を独立したサービスに保つためにご支援ください。ご寄付はホスティングと開発の費用に充てられ、私たちが何を作るかについて他の誰も口出しできない理由となっています。"
 
 #. Label for the editable amount in the Swish payment flow. Preserve the currency-code placeholder {currency} exactly.
 #: fluxer_marketing/generated:donations.swish.amount_label
@@ -1175,8 +1157,7 @@ msgstr "詳細なダウンロード"
 msgctxt "download.download_app_or_open_in_browser"
 msgid ""
 "Install the app or open {product_name} in your browser and start talking. Making an account is free and we never ask for a card."
-msgstr ""
-"アプリをインストールするか、ブラウザで{product_name}を開いて、話し始めましょう。アカウントの作成は無料で、カード情報をお聞きすることはありません。"
+msgstr "アプリをインストールするか、ブラウザで{product_name}を開いて、話し始めましょう。アカウントの作成は無料で、カード情報をお聞きすることはありません。"
 
 #. Button or link label on the download page, download buttons, or install calls to action. Keep platform-download wording short, direct, and action-oriented; preserve placeholders exactly.
 #: fluxer_marketing/generated:download.download_fluxer
@@ -1575,8 +1556,7 @@ msgstr "早期アクセス"
 msgctxt "beta_and_access.featured_benefit_line"
 msgid ""
 "Chat, calls, screen sharing and communities are free, and they stay free. {premium_tier_name} adds optional extras for the people who want them."
-msgstr ""
-"チャット、通話、画面共有、コミュニティは無料で、これからも無料です。{premium_tier_name}は、さらに機能を追加したい方向けのオプションです。"
+msgstr "チャット、通話、画面共有、コミュニティは無料で、これからも無料です。{premium_tier_name}は、さらに機能を追加したい方向けのオプションです。"
 
 #. Compact UI label in Fluxer marketing UI. Translate naturally for the target locale and preserve placeholders exactly.
 #: fluxer_marketing/generated:beta_and_access.public_beta
@@ -1630,8 +1610,7 @@ msgstr "セクションリンクをコピーする"
 #: fluxer_marketing/generated:navigation.copy_link_failed
 msgctxt "navigation.copy_link_failed"
 msgid "Could not copy the link. Copy it from the browser address bar instead."
-msgstr ""
-"リンクをコピーできませんでした。ブラウザのアドレスバーからコピーしてください。"
+msgstr "リンクをコピーできませんでした。ブラウザのアドレスバーからコピーしてください。"
 
 #. Compact UI label in site navigation, mobile drawer controls, or accessibility labels. Keep it brief and unambiguous.
 #: fluxer_marketing/generated:navigation.go_home
@@ -1649,8 +1628,7 @@ msgstr "このページの内容"
 #: fluxer_marketing/generated:navigation.page_not_found.description
 msgctxt "navigation.page_not_found.description"
 msgid "This page does not exist. Either it moved or a link went stale, and both are fixable."
-msgstr ""
-"このページは存在しません。移動したか、リンクが古くなったかのどちらかで、どちらも直せます。"
+msgstr "このページは存在しません。移動したか、リンクが古くなったかのどちらかで、どちらも直せます。"
 
 #. Short UI label or heading on the 404 page. Keep the tone helpful and concise while making clear the page was not found.
 #: fluxer_marketing/generated:navigation.page_not_found.title
@@ -1766,8 +1744,7 @@ msgstr "限定グッズ"
 #: fluxer_marketing/generated:partner_program.perks.free_plutonium.description
 msgctxt "partner_program.perks.free_plutonium.description"
 msgid "Get free {premium_tier_name} for your account to enjoy all premium features."
-msgstr ""
-"アカウントで{premium_tier_name}を無料でご利用いただき、すべてのプレミアム機能をお楽しみいただけます。"
+msgstr "アカウントで{premium_tier_name}を無料でご利用いただき、すべてのプレミアム機能をお楽しみいただけます。"
 
 #. Short UI label or heading on the partner program perks section. Keep benefits concrete and appealing to creators/community owners; preserve placeholders exactly.
 #: fluxer_marketing/generated:partner_program.perks.free_plutonium.label
@@ -1867,8 +1844,7 @@ msgstr "モバイルとウェブ"
 #: fluxer_marketing/generated:platform_support.availability.every_client
 msgctxt "platform_support.availability.every_client"
 msgid "Use {product_name} in a browser or install it on desktop and mobile"
-msgstr ""
-"ブラウザで{product_name}を使うことも、デスクトップやモバイルにインストールすることもできます"
+msgstr "ブラウザで{product_name}を使うことも、デスクトップやモバイルにインストールすることもできます"
 
 #. Body copy for mobile/PWA install guidance on the download page. Keep instructions clear, device-appropriate, and concise; preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.install_as_app.done_desktop
@@ -2082,8 +2058,7 @@ msgstr "{android}アプリ"
 #: fluxer_marketing/generated:platform_support.mobile.android.body
 msgctxt "platform_support.mobile.android.body"
 msgid "Install the {android} APK straight from our open source repository on {github}."
-msgstr ""
-"{github}のオープンソースリポジトリから直接{android} APKをインストールしてください。"
+msgstr "{github}のオープンソースリポジトリから直接{android} APKをインストールしてください。"
 
 #. Button or link label on the Android app card that opens the GitHub repository where the APK is published. Keep APK as a proper name; keep it short.
 #: fluxer_marketing/generated:platform_support.mobile.android.cta
@@ -2108,8 +2083,7 @@ msgstr "フルカラー"
 msgctxt "press_branding.assets.wave_interior_fill.description"
 msgid ""
 "Recommended for black and color logos. Turn this off only when you want the background to show through the waves."
-msgstr ""
-"黒とカラーのロゴに推奨されます。波の部分から背景を透かせたい場合のみオフにしてください。"
+msgstr "黒とカラーのロゴに推奨されます。波の部分から背景を透かせたい場合のみオフにしてください。"
 
 #. Checkbox label in the press kit. The Fluxer symbol contains two wave-shaped transparent cutouts; this option fills those interiors white. Keep the label concise.
 #: fluxer_marketing/generated:press_branding.assets.wave_interior_fill.label
@@ -2212,8 +2186,7 @@ msgstr "明るい背景で使用してください。"
 msgctxt "press_branding.assets.usage_guidance.symbol_description"
 msgid ""
 "Use the symbol only when {product_name} appears nearby or the context already makes its owner clear."
-msgstr ""
-"{product_name}が近くに表示されている場合や、文脈から所有者が明らかな場合にのみ、シンボルを使用してください。"
+msgstr "{product_name}が近くに表示されている場合や、文脈から所有者が明らかな場合にのみ、シンボルを使用してください。"
 
 #. Brand color name in the press kit. Keep the color label recognizable and do not over-translate proper names unless natural in the locale.
 #: fluxer_marketing/generated:press_branding.colors.black
@@ -2243,16 +2216,14 @@ msgstr "通常24時間以内に返信します。"
 #: fluxer_marketing/generated:press_branding.contact.story_prompt_message
 msgctxt "press_branding.contact.story_prompt_message"
 msgid "If you are writing about {product_name}, email {email}. A real person reads it."
-msgstr ""
-"{product_name}について記事を書かれる方は、{email}までメールをお送りください。実際に担当者が目を通します。"
+msgstr "{product_name}について記事を書かれる方は、{email}までメールをお送りください。実際に担当者が目を通します。"
 
 #. Body copy in pricing UI explaining the base-currency checkout option. Preserve all currency and price placeholders exactly.
 #: fluxer_marketing/generated:pricing_and_tiers.billing.base_currency_also_available
 msgctxt "pricing_and_tiers.billing.base_currency_also_available"
 msgid ""
 "The same subscription is also sold in {base_currency_code}, at {base_monthly_price} a month or {base_yearly_price} for a year."
-msgstr ""
-"同じサブスクリプションは{base_currency_code}でも販売しており、月額{base_monthly_price}または年額{base_yearly_price}です。"
+msgstr "同じサブスクリプションは{base_currency_code}でも販売しており、月額{base_monthly_price}または年額{base_yearly_price}です。"
 
 #. Compact monthly price label in pricing UI. Preserve the monthly price placeholder exactly.
 #: fluxer_marketing/generated:pricing_and_tiers.billing.monthly_price

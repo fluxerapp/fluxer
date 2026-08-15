@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: fluxer-marketing\n"
-"POT-Creation-Date: 2026-08-14 00:00+0000\n"
-"PO-Revision-Date: 2026-08-14 00:00+0000\n"
+"POT-Creation-Date: 2026-08-15 00:00+0000\n"
+"PO-Revision-Date: 2026-08-15 00:00+0000\n"
 "Language: tr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -46,7 +46,8 @@ msgstr "Ayrıntılı roller ve yetkiler"
 #: fluxer_marketing/generated:app.communities.roles_permissions_audit.keep_running_smoothly
 msgctxt "app.communities.roles_permissions_audit.keep_running_smoothly"
 msgid "Assign roles and permissions, and use the audit log to see which moderator changed what."
-msgstr "Roller ve yetkiler ata; hangi moderatörün neyi değiştirdiğini görmek için denetim kaydını kullan."
+msgstr ""
+"Roller ve yetkiler ata; hangi moderatörün neyi değiştirdiğini görmek için denetim kaydını kullan."
 
 #. Short UI label or heading used in the home-page communities/moderation feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.communities.verification.label
@@ -109,7 +110,8 @@ msgstr "Özel emojiler ve çıkartmalar yükle"
 msgctxt "app.messaging.description"
 msgid ""
 "Chat with friends or groups. Communities give you organized channels when a group chat has grown too large."
-msgstr "Arkadaşlarınla veya gruplarla sohbet et. Bir grup sohbeti fazla büyüdüğünde topluluklar sana düzenli kanallar sunar."
+msgstr ""
+"Arkadaşlarınla veya gruplarla sohbet et. Bir grup sohbeti fazla büyüdüğünde topluluklar sana düzenli kanallar sunar."
 
 #. Compact UI label used in the home-page messaging feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.messaging.features.file_sharing
@@ -421,7 +423,8 @@ msgstr "{product_name} kariyerleri"
 #: fluxer_marketing/generated:company_and_resources.careers.not_hiring_notice
 msgctxt "company_and_resources.careers.not_hiring_notice"
 msgid "We are not hiring. Any open role will be listed on this page, so check back later."
-msgstr "Şu anda işe alım yapmıyoruz. Açılan her pozisyon bu sayfada listelenecek, o yüzden daha sonra tekrar bak."
+msgstr ""
+"Şu anda işe alım yapmıyoruz. Açılan her pozisyon bu sayfada listelenecek, o yüzden daha sonra tekrar bak."
 
 #. Short UI label or heading on the careers and future roles pages. Use clear hiring language, avoid implying that roles are currently open unless the source says so, and preserve placeholders exactly.
 #: fluxer_marketing/generated:company_and_resources.careers.label
@@ -475,8 +478,7 @@ msgstr "Yardım merkezi"
 #: fluxer_marketing/generated:company_and_resources.help.help_center_description
 msgctxt "company_and_resources.help.help_center_description"
 msgid "Find answers about your account and privacy, or get help using {product_name}."
-msgstr ""
-"Hesabın ve gizliliğinle ilgili yanıtları bul veya {product_name}'ı kullanırken yardım al."
+msgstr "Hesabın ve gizliliğinle ilgili yanıtları bul veya {product_name}'ı kullanırken yardım al."
 
 #. Compact heading for the product links in marketing navigation. Preserve {product_name} exactly.
 #: fluxer_marketing/generated:company_and_resources.fluxer
@@ -626,8 +628,7 @@ msgstr "Şirket bilgileri"
 #: fluxer_marketing/generated:content.policies.guidelines.description
 msgctxt "content.policies.guidelines.description"
 msgid "The rules for using {product_name} safely and treating other people well."
-msgstr ""
-"{product_name}'ı güvenle kullanmanın ve başkalarına iyi davranmanın kuralları."
+msgstr "{product_name}'ı güvenle kullanmanın ve başkalarına iyi davranmanın kuralları."
 
 #. Policy page title for community rules. Translate as formal community guidelines.
 #: fluxer_marketing/generated:content.policies.guidelines.title
@@ -750,7 +751,8 @@ msgstr "Eski {visionary_tier_full_name} paketi"
 msgctxt "content.help.article.visionary.description"
 msgid ""
 "What the sold out {visionary_tier_full_name} offer includes and how its account benefits work."
-msgstr "Tükenen {visionary_tier_full_name} teklifinin neleri içerdiği ve hesap avantajlarının nasıl çalıştığı."
+msgstr ""
+"Tükenen {visionary_tier_full_name} teklifinin neleri içerdiği ve hesap avantajlarının nasıl çalıştığı."
 
 #. Help article title listing the three programmes that showcase a community on Fluxer. Keep 'Partner', 'Verified', and 'Discovery' as programme names.
 #: fluxer_marketing/generated:content.help.article.community_programmes.title
@@ -803,8 +805,7 @@ msgstr "Doğum tarihini nasıl değiştirirsin"
 #: fluxer_marketing/generated:content.help.article.change_date_of_birth.description
 msgctxt "content.help.article.change_date_of_birth.description"
 msgid "How to ask the {product_name} support team to correct your date of birth."
-msgstr ""
-"{product_name} destek ekibinden doğum tarihini düzeltmesini nasıl istersin."
+msgstr "{product_name} destek ekibinden doğum tarihini düzeltmesini nasıl istersin."
 
 #. Help article title about requesting deletion of user data.
 #: fluxer_marketing/generated:content.help.article.data_deletion.title
@@ -883,7 +884,8 @@ msgstr "{product_name} bilgilerini ne kadar süreyle saklıyor"
 #: fluxer_marketing/generated:content.help.article.data_retention.description
 msgctxt "content.help.article.data_retention.description"
 msgid "How long {product_name} keeps account information, content, logs, and legal records."
-msgstr "{product_name}'ın hesap bilgilerini, içerikleri, günlükleri ve hukuki kayıtları ne kadar süreyle sakladığı."
+msgstr ""
+"{product_name}'ın hesap bilgilerini, içerikleri, günlükleri ve hukuki kayıtları ne kadar süreyle sakladığı."
 
 #. Help article title about EU Digital Services Act dispute options. Keep 'EU DSA' as an acronym.
 #: fluxer_marketing/generated:content.help.article.dsa_dispute_resolution.title
@@ -896,7 +898,8 @@ msgstr "EU DSA uyuşmazlık çözüm seçenekleri"
 msgctxt "content.help.article.dsa_dispute_resolution.description"
 msgid ""
 "How users covered by the Digital Services Act can report illegal content and challenge eligible decisions."
-msgstr "Dijital Hizmetler Yasası kapsamındaki kullanıcıların yasa dışı içeriği nasıl bildirebileceği ve uygun kararlara nasıl itiraz edebileceği."
+msgstr ""
+"Dijital Hizmetler Yasası kapsamındaki kullanıcıların yasa dışı içeriği nasıl bildirebileceği ve uygun kararlara nasıl itiraz edebileceği."
 
 #. Help article title about region-specific access restrictions.
 #: fluxer_marketing/generated:content.help.article.regional_restrictions.title
@@ -909,8 +912,7 @@ msgstr "Bölgesel kısıtlamalar"
 msgctxt "content.help.article.regional_restrictions.description"
 msgid ""
 "The regional access and age restricted content rules that {product_name} currently applies."
-msgstr ""
-"{product_name}'ın şu anda uyguladığı bölgesel erişim ve yaş sınırlı içerik kuralları."
+msgstr "{product_name}'ın şu anda uyguladığı bölgesel erişim ve yaş sınırlı içerik kuralları."
 
 #. Compact UI label on donation pages and donation support cards. Keep the tone appreciative without being pushy; preserve placeholders exactly.
 #: fluxer_marketing/generated:donations.business
@@ -1086,7 +1088,8 @@ msgstr ""
 msgctxt "donations.success.message"
 msgid ""
 "Thank you. Your donation pays for the servers and for the people who build and run {product_name}. It keeps us answerable to the people using it rather than to an investor."
-msgstr "Teşekkürler. Bağışın, sunucuların ve {product_name}'ı geliştirip çalıştıran kişilerin masraflarını karşılıyor. Bu sayede bir yatırımcıya değil, uygulamayı kullanan insanlara karşı sorumlu kalıyoruz."
+msgstr ""
+"Teşekkürler. Bağışın, sunucuların ve {product_name}'ı geliştirip çalıştıran kişilerin masraflarını karşılıyor. Bu sayede bir yatırımcıya değil, uygulamayı kullanan insanlara karşı sorumlu kalıyoruz."
 
 #. Short UI label or heading in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
 #: fluxer_marketing/generated:donations.success.title
@@ -1099,7 +1102,8 @@ msgstr "Teşekkürler"
 msgctxt "donations.support_message"
 msgid ""
 "Help keep {product_name} independent. Donations pay for hosting and development, and they are the reason nobody else gets a say in what we build."
-msgstr "{product_name}'ı bağımsız tutmaya yardım et. Bağışlar barındırma ve geliştirme masraflarını karşılar; ne geliştireceğimize başka kimsenin karışmamasının nedeni de budur."
+msgstr ""
+"{product_name}'ı bağımsız tutmaya yardım et. Bağışlar barındırma ve geliştirme masraflarını karşılar; ne geliştireceğimize başka kimsenin karışmamasının nedeni de budur."
 
 #. Label for the editable amount in the Swish payment flow. Preserve the currency-code placeholder {currency} exactly.
 #: fluxer_marketing/generated:donations.swish.amount_label
@@ -1578,7 +1582,8 @@ msgstr "Erken erişim"
 msgctxt "beta_and_access.featured_benefit_line"
 msgid ""
 "Chat, calls, screen sharing and communities are free, and they stay free. {premium_tier_name} adds optional extras for the people who want them."
-msgstr "Sohbet, aramalar, ekran paylaşımı ve topluluklar ücretsizdir ve ücretsiz kalacaktır. {premium_tier_name}, isteyenler için isteğe bağlı ekstralar sunar."
+msgstr ""
+"Sohbet, aramalar, ekran paylaşımı ve topluluklar ücretsizdir ve ücretsiz kalacaktır. {premium_tier_name}, isteyenler için isteğe bağlı ekstralar sunar."
 
 #. Compact UI label in Fluxer marketing UI. Translate naturally for the target locale and preserve placeholders exactly.
 #: fluxer_marketing/generated:beta_and_access.public_beta
@@ -1663,7 +1668,8 @@ msgstr "Sayfa bulunamadı"
 msgctxt "navigation.press.download_assets_intro"
 msgid ""
 "Download the {product_name} logos and color references. Press inquiries go straight to our team."
-msgstr "{product_name} logolarını ve renk referanslarını indir. Basın soruları doğrudan ekibimize ulaşır."
+msgstr ""
+"{product_name} logolarını ve renk referanslarını indir. Basın soruları doğrudan ekibimize ulaşır."
 
 #. Compact UI label on the press/brand-assets page. Keep wording professional and clear for journalists or partners.
 #: fluxer_marketing/generated:navigation.press.press_and_brand_assets
@@ -2071,7 +2077,8 @@ msgstr "{ios} uygulaması"
 msgctxt "platform_support.mobile.ios.body"
 msgid ""
 "The native {ios} app is currently limited to {premium_tier_full_name} subscribers. Broader access is coming very soon. Meanwhile, the full {product_name} web app works in Safari and can be added to your Home Screen."
-msgstr "Yerel {ios} uygulaması şu anda yalnızca {premium_tier_full_name} aboneleriyle sınırlı. Daha geniş erişim çok yakında geliyor. Bu arada tam {product_name} web uygulaması Safari'de çalışıyor ve ana ekranına eklenebiliyor."
+msgstr ""
+"Yerel {ios} uygulaması şu anda yalnızca {premium_tier_full_name} aboneleriyle sınırlı. Daha geniş erişim çok yakında geliyor. Bu arada tam {product_name} web uygulaması Safari'de çalışıyor ve ana ekranına eklenebiliyor."
 
 #. Card title for the Android app option on the download page. Keep the platform name conventional and short. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.android.title
@@ -2212,7 +2219,8 @@ msgstr "Açık yüzeylerde kullan."
 msgctxt "press_branding.assets.usage_guidance.symbol_description"
 msgid ""
 "Use the symbol only when {product_name} appears nearby or the context already makes its owner clear."
-msgstr "Sembolü yalnızca yakında {product_name} adı görünüyorsa veya bağlam sahibini zaten açıkça gösteriyorsa kullan."
+msgstr ""
+"Sembolü yalnızca yakında {product_name} adı görünüyorsa veya bağlam sahibini zaten açıkça gösteriyorsa kullan."
 
 #. Brand color name in the press kit. Keep the color label recognizable and do not over-translate proper names unless natural in the locale.
 #: fluxer_marketing/generated:press_branding.colors.black
@@ -2295,7 +2303,8 @@ msgstr ""
 #: fluxer_marketing/generated:pricing_and_tiers.plutonium.donation_callout
 msgctxt "pricing_and_tiers.plutonium.donation_callout"
 msgid "Just want to support {product_name}'s open source development? {donate_link}."
-msgstr "Sadece {product_name}'ın açık kaynaklı gelişimini desteklemek mi istiyorsun? {donate_link}."
+msgstr ""
+"Sadece {product_name}'ın açık kaynaklı gelişimini desteklemek mi istiyorsun? {donate_link}."
 
 #. Linked label in the Plutonium hero donation callout. Translate as a concise donation action.
 #: fluxer_marketing/generated:pricing_and_tiers.plutonium.donation_callout_link
@@ -2440,7 +2449,8 @@ msgstr "Kendi sunucunda barındırma rehberini oku"
 msgctxt "product_positioning.intro"
 msgid ""
 "Free and open source chat for friends, groups, and communities, with text, voice, video, screen sharing, and self-hosting."
-msgstr "Arkadaşların, grupların ve toplulukların için metin, sesli ve görüntülü görüşme, ekran paylaşımı ve kendi sunucunda barındırma özellikleriyle ücretsiz ve açık kaynaklı sohbet."
+msgstr ""
+"Arkadaşların, grupların ve toplulukların için metin, sesli ve görüntülü görüşme, ekran paylaşımı ve kendi sunucunda barındırma özellikleriyle ücretsiz ve açık kaynaklı sohbet."
 
 #. Button or link label explaining Fluxer open-source licensing. Keep legal/license tokens such as AGPLv3 unchanged.
 #: fluxer_marketing/generated:product_positioning.open_source.fully_open_source_agplv3
@@ -2601,4 +2611,5 @@ msgstr "Diller"
 msgctxt "voice_regions.languages_intro"
 msgid ""
 "{product_name} is available in over thirty languages. To help translate {product_name} into your native language, join us on {weblate}."
-msgstr "{product_name} otuzdan fazla dilde mevcut. {product_name}'ı ana diline çevirmemize yardımcı olmak için {weblate} üzerinden bize katıl."
+msgstr ""
+"{product_name} otuzdan fazla dilde mevcut. {product_name}'ı ana diline çevirmemize yardımcı olmak için {weblate} üzerinden bize katıl."

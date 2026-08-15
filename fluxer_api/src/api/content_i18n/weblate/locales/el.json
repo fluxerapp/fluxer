@@ -1,12 +1,12 @@
 {
-	"billing.eu_withdrawal_waiver_checkout": "Αν είμαι καταναλωτής ΕΕ/ΕΟΧ, συναινώ ρητά στην άμεση παροχή του ψηφιακού περιεχομένου του πλάνου {premium_tier_name} του {product_name} και αναγνωρίζω ότι χάνω το νόμιμο δικαίωμα υπαναχώρησης μόλις παρασχεθεί η πρόσβαση. Αυτό δεν επηρεάζει άλλα υποχρεωτικά δικαιώματα των καταναλωτών. Ανατρέξτε στους [Όρους Παροχής Υπηρεσιών]({terms_url}).",
-	"bulk_message_deletion.complete": "Ολοκληρώσαμε τη διαγραφή των μηνυμάτων σου. Αφαιρέσαμε {message_count, plural, =0 {0 μηνύματα} one {# μήνυμα} other {# μηνύματα}} από {channel_count, plural, =0 {0 τοποθεσίες} one {# τοποθεσία} other {# τοποθεσίες}}.",
-	"content.virus_detected": "Αυτό το αρχείο επισημάνθηκε ως δυνητικά μη ασφαλές και έχει αφαιρεθεί.",
-	"guild.bulk_create.emoji_limit": "Επιτεύχθηκε το μέγιστο όριο emoji ({limit}).",
-	"guild.bulk_create.sticker_limit": "Έφτασε το μέγιστο όριο αυτοκόλλητων ({limit}).",
-	"guild.bulk_create.unknown_error": "Άγνωστο σφάλμα.",
-	"guild.default_category_text": "Κανάλια κειμένου",
-	"guild.default_category_voice": "Φωνητικά κανάλια",
-	"guild.default_channel_text": "γενικό",
-	"guild.default_channel_voice": "Γενικό"
+    "billing.eu_withdrawal_waiver_checkout": "Αν είμαι καταναλωτής ΕΕ/ΕΟΧ, συναινώ ρητά στην άμεση παροχή του ψηφιακού περιεχομένου του πλάνου {premium_tier_name} του {product_name} και αναγνωρίζω ότι χάνω το νόμιμο δικαίωμα υπαναχώρησης μόλις παρασχεθεί η πρόσβαση. Αυτό δεν επηρεάζει άλλα υποχρεωτικά δικαιώματα των καταναλωτών. Ανατρέξτε στους [Όρους Παροχής Υπηρεσιών]({terms_url}).",
+    "bulk_message_deletion.complete": "Ολοκληρώσαμε τη διαγραφή των μηνυμάτων σου. Αφαιρέσαμε {message_count, plural, =0 {0 μηνύματα} one {# μήνυμα} other {# μηνύματα}} από {channel_count, plural, =0 {0 τοποθεσίες} one {# τοποθεσία} other {# τοποθεσίες}}.",
+    "content.virus_detected": "Αυτό το αρχείο επισημάνθηκε ως δυνητικά μη ασφαλές και έχει αφαιρεθεί.",
+    "guild.bulk_create.emoji_limit": "Επιτεύχθηκε το μέγιστο όριο emoji ({limit}).",
+    "guild.bulk_create.sticker_limit": "Έφτασε το μέγιστο όριο αυτοκόλλητων ({limit}).",
+    "guild.bulk_create.unknown_error": "Άγνωστο σφάλμα.",
+    "guild.default_category_text": "Κανάλια κειμένου",
+    "guild.default_category_voice": "Φωνητικά κανάλια",
+    "guild.default_channel_text": "γενικό",
+    "guild.default_channel_voice": "Γενικό"
 }

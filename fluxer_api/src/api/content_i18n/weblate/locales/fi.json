@@ -1,12 +1,12 @@
 {
-	"billing.eu_withdrawal_waiver_checkout": "Jos olen EU/ETA-kuluttaja, annan nimenomaisen suostumukseni sille, että {product_name}-tuotteen {premium_tier_name} digitaalinen sisältö toimitetaan välittömästi, ja hyväksyn, että menetän lakisääteisen peruutusoikeuteni, kun pääsy on myönnetty. Tämä ei vaikuta muihin pakollisiin kuluttajaoikeuksiin. Katso [käyttöehdot]({terms_url}).",
-	"bulk_message_deletion.complete": "Olemme poistaneet viestisi. Poistimme {message_count, plural, =0 {0 viestiä} one {# viestin} other {# viestiä}} {channel_count, plural, =0 {0 paikasta} one {# paikasta} other {# paikasta}}.",
-	"content.virus_detected": "Tiedosto merkittiin mahdollisesti vaaralliseksi ja se on poistettu.",
-	"guild.bulk_create.emoji_limit": "Enimmäismäärä emoji-kuvakkeita on saavutettu ({limit}).",
-	"guild.bulk_create.sticker_limit": "Saavutettu enimmäismäärä tarroja ({limit}).",
-	"guild.bulk_create.unknown_error": "Tuntematon virhe.",
-	"guild.default_category_text": "Tekstikanavat",
-	"guild.default_category_voice": "Äänikanavat",
-	"guild.default_channel_text": "yleinen",
-	"guild.default_channel_voice": "Yleinen"
+    "billing.eu_withdrawal_waiver_checkout": "Jos olen EU/ETA-kuluttaja, annan nimenomaisen suostumukseni sille, että {product_name}-tuotteen {premium_tier_name} digitaalinen sisältö toimitetaan välittömästi, ja hyväksyn, että menetän lakisääteisen peruutusoikeuteni, kun pääsy on myönnetty. Tämä ei vaikuta muihin pakollisiin kuluttajaoikeuksiin. Katso [käyttöehdot]({terms_url}).",
+    "bulk_message_deletion.complete": "Olemme poistaneet viestisi. Poistimme {message_count, plural, =0 {0 viestiä} one {# viestin} other {# viestiä}} {channel_count, plural, =0 {0 paikasta} one {# paikasta} other {# paikasta}}.",
+    "content.virus_detected": "Tiedosto merkittiin mahdollisesti vaaralliseksi ja se on poistettu.",
+    "guild.bulk_create.emoji_limit": "Enimmäismäärä emoji-kuvakkeita on saavutettu ({limit}).",
+    "guild.bulk_create.sticker_limit": "Saavutettu enimmäismäärä tarroja ({limit}).",
+    "guild.bulk_create.unknown_error": "Tuntematon virhe.",
+    "guild.default_category_text": "Tekstikanavat",
+    "guild.default_category_voice": "Äänikanavat",
+    "guild.default_channel_text": "yleinen",
+    "guild.default_channel_voice": "Yleinen"
 }

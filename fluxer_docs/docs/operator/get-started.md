@@ -2,6 +2,9 @@
 
 Run your own Fluxer instance with Docker Compose. This guide takes you from a fresh server to a working self-hosted instance with the web app, API, gateway, admin dashboard, media uploads, search, storage, and voice signaling behind one public hostname.
 
+!!! info "Desktop client support is coming very soon"
+    The desktop client cannot connect to self-hosted instances yet, so reach your instance through the web app in the meantime. Support is actively being worked on and lands very soon. You can track the progress in [issue #1088](https://github.com/fluxerapp/fluxer/issues/1088#issuecomment-4951728735).
+
 ## Requirements
 
 - A Linux server or VM that can run Docker Engine.

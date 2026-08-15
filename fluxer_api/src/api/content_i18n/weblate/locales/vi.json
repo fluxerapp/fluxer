@@ -1,12 +1,12 @@
 {
-	"billing.eu_withdrawal_waiver_checkout": "Nếu tôi là người tiêu dùng EU/EEA, tôi đồng ý rõ ràng rằng nội dung kỹ thuật số {product_name} {premium_tier_name} được cung cấp ngay lập tức và thừa nhận rằng tôi mất quyền hủy bỏ theo luật định sau khi có quyền truy cập. Điều này không ảnh hưởng đến các quyền lợi người tiêu dùng bắt buộc khác. Xem [Điều khoản dịch vụ]({terms_url}).",
-	"bulk_message_deletion.complete": "Chúng tôi đã xóa xong tin nhắn của bạn. Đã xóa {message_count, plural, =0 {0 tin nhắn} other {# tin nhắn}} khỏi {channel_count, plural, =0 {0 nơi} other {# nơi}}.",
-	"content.virus_detected": "Tệp đó bị gắn cờ là có khả năng không an toàn và đã bị xóa.",
-	"guild.bulk_create.emoji_limit": "Đã đạt đến số lượng biểu tượng cảm xúc tối đa ({limit}).",
-	"guild.bulk_create.sticker_limit": "Đã đạt đến số lượng tối đa nhãn dán ({limit}).",
-	"guild.bulk_create.unknown_error": "Đã xảy ra lỗi không xác định.",
-	"guild.default_category_text": "Kênh văn bản",
-	"guild.default_category_voice": "Kênh thoại",
-	"guild.default_channel_text": "chung",
-	"guild.default_channel_voice": "Chung"
+    "billing.eu_withdrawal_waiver_checkout": "Nếu tôi là người tiêu dùng EU/EEA, tôi đồng ý rõ ràng rằng nội dung kỹ thuật số {product_name} {premium_tier_name} được cung cấp ngay lập tức và thừa nhận rằng tôi mất quyền hủy bỏ theo luật định sau khi có quyền truy cập. Điều này không ảnh hưởng đến các quyền lợi người tiêu dùng bắt buộc khác. Xem [Điều khoản dịch vụ]({terms_url}).",
+    "bulk_message_deletion.complete": "Chúng tôi đã xóa xong tin nhắn của bạn. Đã xóa {message_count, plural, =0 {0 tin nhắn} other {# tin nhắn}} khỏi {channel_count, plural, =0 {0 nơi} other {# nơi}}.",
+    "content.virus_detected": "Tệp đó bị gắn cờ là có khả năng không an toàn và đã bị xóa.",
+    "guild.bulk_create.emoji_limit": "Đã đạt đến số lượng biểu tượng cảm xúc tối đa ({limit}).",
+    "guild.bulk_create.sticker_limit": "Đã đạt đến số lượng tối đa nhãn dán ({limit}).",
+    "guild.bulk_create.unknown_error": "Đã xảy ra lỗi không xác định.",
+    "guild.default_category_text": "Kênh văn bản",
+    "guild.default_category_voice": "Kênh thoại",
+    "guild.default_channel_text": "chung",
+    "guild.default_channel_voice": "Chung"
 }

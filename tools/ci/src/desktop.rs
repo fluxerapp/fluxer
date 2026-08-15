@@ -32,6 +32,7 @@ const PUBLIC_DL_BASE: &str = "https://api.fluxer.app/dl";
 const PNPM_VERSION: &str = "10.29.3";
 const RUST_TOOLCHAIN: &str = "1.93.0";
 const DEFAULT_DESKTOP_VARIANT: &str = "default";
+pub(crate) const MACOS_UNIVERSAL_ARCH: &str = "universal";
 const WINDOWS_GAME_CAPTURE_DESKTOP_VARIANT: &str = "windows-game-capture";
 
 #[derive(Debug, Args, Clone)]
@@ -52,10 +53,6 @@ pub struct BuildDesktopArgs {
     skip_windows_arm64: Option<String>,
     #[arg(long)]
     skip_macos: Option<String>,
-    #[arg(long)]
-    skip_macos_x64: Option<String>,
-    #[arg(long)]
-    skip_macos_arm64: Option<String>,
     #[arg(long)]
     skip_linux: Option<String>,
     #[arg(long)]
@@ -136,17 +133,10 @@ const PLATFORMS: &[Platform] = &[
     },
     Platform {
         platform: "macos",
-        arch: "x64",
+        arch: MACOS_UNIVERSAL_ARCH,
         desktop_variant: DEFAULT_DESKTOP_VARIANT,
         os: "fluxer-desktop-macos-arm64",
-        electron_arch: "x64",
-    },
-    Platform {
-        platform: "macos",
-        arch: "arm64",
-        desktop_variant: DEFAULT_DESKTOP_VARIANT,
-        os: "fluxer-desktop-macos-arm64",
-        electron_arch: "arm64",
+        electron_arch: MACOS_UNIVERSAL_ARCH,
     },
     Platform {
         platform: "linux",
@@ -381,8 +371,7 @@ fn skip_target_set(args: &BuildDesktopArgs) -> Result<BTreeSet<String>> {
         "windows-x64",
         "windows-arm64",
         "macos",
-        "macos-x64",
-        "macos-arm64",
+        "macos-universal",
         "linux",
         "linux-x64",
         "linux-arm64",
@@ -424,11 +413,7 @@ fn skip_platform(
                 || (platform.arch == "arm64"
                     && flag(&args.skip_windows_arm64, "SKIP_WINDOWS_ARM64"))
         }
-        "macos" => {
-            flag(&args.skip_macos, "SKIP_MACOS")
-                || (platform.arch == "x64" && flag(&args.skip_macos_x64, "SKIP_MACOS_X64"))
-                || (platform.arch == "arm64" && flag(&args.skip_macos_arm64, "SKIP_MACOS_ARM64"))
-        }
+        "macos" => flag(&args.skip_macos, "SKIP_MACOS"),
         "linux" => {
             flag(&args.skip_linux, "SKIP_LINUX")
                 || (platform.arch == "x64" && flag(&args.skip_linux_x64, "SKIP_LINUX_X64"))
@@ -1325,13 +1310,7 @@ fn verify_bundle_id_step() -> Result<()> {
         "Unexpected provisioning profile app id: {profile_app_id}"
     );
 
-    let expected_macho_arch = if electron_arch == "arm64" {
-        "arm64"
-    } else {
-        "x86_64"
-    };
-    let native_rels = macos_native_runtime_rels(&electron_arch);
-    for rel in native_rels {
+    for (rel, expected_macho_arch) in macos_native_runtime_targets(&electron_arch) {
         let native_file = app
             .join("Contents")
             .join("Resources")
@@ -1344,7 +1323,7 @@ fn verify_bundle_id_step() -> Result<()> {
             native_file.display()
         );
         println!("Found native runtime artifact: {}", native_file.display());
-        check_macho_arch(&native_file, expected_macho_arch, &electron_arch)?;
+        check_macho_arch(&native_file, expected_macho_arch)?;
     }
 
     run_command(CommandSpec::new("codesign").args([
@@ -1368,7 +1347,17 @@ fn verify_bundle_id_step() -> Result<()> {
     ]))
 }
 
-fn macos_native_runtime_rels(electron_arch: &str) -> Vec<String> {
+fn macos_native_runtime_targets(electron_arch: &str) -> Vec<(String, &'static str)> {
+    if electron_arch == MACOS_UNIVERSAL_ARCH {
+        let mut targets = macos_native_runtime_targets("arm64");
+        targets.extend(macos_native_runtime_targets("x64"));
+        return targets;
+    }
+    let expected_macho_arch = if electron_arch == "arm64" {
+        "arm64"
+    } else {
+        "x86_64"
+    };
     [
         "@fluxer/webauthn/webauthn",
         "@fluxer/mac-app-audio/mac-app-audio",
@@ -1379,11 +1368,16 @@ fn macos_native_runtime_rels(electron_arch: &str) -> Vec<String> {
         "@fluxer/platform-info/platform-info",
     ]
     .into_iter()
-    .map(|prefix| format!("{prefix}.darwin-{electron_arch}.node"))
+    .map(|prefix| {
+        (
+            format!("{prefix}.darwin-{electron_arch}.node"),
+            expected_macho_arch,
+        )
+    })
     .collect()
 }
 
-fn check_macho_arch(file: &Path, expected: &str, electron_arch: &str) -> Result<()> {
+fn check_macho_arch(file: &Path, expected: &str) -> Result<()> {
     let archs =
         output_text(CommandSpec::new("lipo").args(["-archs", file.to_string_lossy().as_ref()]))?;
     println!("Mach-O archs for {}: {archs}", file.display());
@@ -1394,9 +1388,7 @@ fn check_macho_arch(file: &Path, expected: &str, electron_arch: &str) -> Result<
         file.display()
     );
     ensure!(
-        !(electron_arch == "x64"
-            && arch_list.contains(&"x86_64h")
-            && !arch_list.contains(&"x86_64")),
+        !(expected == "x86_64" && arch_list.contains(&"x86_64h") && !arch_list.contains(&"x86_64")),
         "{} is x86_64h-only; x64 desktop artifacts must use baseline x86_64",
         file.display()
     );
@@ -2618,7 +2610,7 @@ fn is_unix_upload_artifact(name: &str) -> bool {
 
 fn normalise_updater_yaml_step() -> Result<()> {
     if env::var("PLATFORM").unwrap_or_default() == "macos"
-        && env::var("ARCH").unwrap_or_default() == "arm64"
+        && env::var("ARCH").unwrap_or_default() == MACOS_UNIVERSAL_ARCH
     {
         let source = Path::new("upload_staging/latest-mac.yml");
         let target = Path::new("upload_staging/latest-mac-arm64.yml");
@@ -2768,30 +2760,32 @@ fn build_payload_step() -> Result<()> {
                 continue;
             }
         };
-        let mut dest = payload_root
-            .join(&channel)
-            .join(platform)
-            .join(&identity.arch);
-        if let Some(segment) = desktop_variant_path_segment(&identity.desktop_variant) {
-            dest = dest.join(segment);
+        for published_arch in published_arches(platform, &identity.arch) {
+            let mut dest = payload_root
+                .join(&channel)
+                .join(platform)
+                .join(published_arch);
+            if let Some(segment) = desktop_variant_path_segment(&identity.desktop_variant) {
+                dest = dest.join(segment);
+            }
+            fs::create_dir_all(&dest)?;
+            copy_dir_contents(&dir, &dest)?;
+            let manifest = build_desktop_manifest(
+                &dest,
+                &PayloadManifestInput {
+                    channel: channel.clone(),
+                    platform: platform.to_string(),
+                    arch: published_arch.to_string(),
+                    desktop_variant: identity.desktop_variant.clone(),
+                    version: version.clone(),
+                    pub_date: pub_date.clone(),
+                },
+            )?;
+            if platform == "darwin" {
+                write_macos_releases(&dest, &s3_prefix, &channel, &manifest)?;
+            }
+            write_json_pretty(&dest.join("manifest.json"), &manifest)?;
         }
-        fs::create_dir_all(&dest)?;
-        copy_dir_contents(&dir, &dest)?;
-        let manifest = build_desktop_manifest(
-            &dest,
-            &PayloadManifestInput {
-                channel: channel.clone(),
-                platform: platform.to_string(),
-                arch: identity.arch.clone(),
-                desktop_variant: identity.desktop_variant.clone(),
-                version: version.clone(),
-                pub_date: pub_date.clone(),
-            },
-        )?;
-        if platform == "darwin" {
-            write_macos_releases(&dest, &s3_prefix, &channel, &manifest)?;
-        }
-        write_json_pretty(&dest.join("manifest.json"), &manifest)?;
     }
 
     println!("Payload tree:");
@@ -3000,6 +2994,17 @@ fn manifest_file_entry(kind: &str, file: &Path) -> Result<DesktopManifestFile> {
     } else {
         println!("No checksum file found for {kind}: {}", file.display());
         Ok(DesktopManifestFile::Name(filename))
+    }
+}
+
+fn published_arches(platform: &str, arch: &str) -> Vec<&'static str> {
+    if platform == "darwin" && arch == MACOS_UNIVERSAL_ARCH {
+        return vec!["x64", "arm64"];
+    }
+    match arch {
+        "x64" => vec!["x64"],
+        "arm64" => vec!["arm64"],
+        other => panic!("Unsupported desktop arch: {other}"),
     }
 }
 
@@ -3332,8 +3337,6 @@ mod tests {
             skip_windows_x64: Some("false".to_string()),
             skip_windows_arm64: Some("false".to_string()),
             skip_macos: Some("false".to_string()),
-            skip_macos_x64: Some("false".to_string()),
-            skip_macos_arm64: Some("false".to_string()),
             skip_linux: Some("false".to_string()),
             skip_linux_x64: Some("false".to_string()),
             skip_linux_arm64: Some("false".to_string()),
@@ -3414,7 +3417,7 @@ mod tests {
     fn matrix_selects_one_row_per_platform_arch_by_default() {
         let selected = selected_platforms(&matrix_args()).unwrap();
 
-        assert_eq!(selected.len(), 6);
+        assert_eq!(selected.len(), 5);
         assert_eq!(
             selected
                 .iter()
@@ -3462,7 +3465,7 @@ mod tests {
                 .iter()
                 .all(|platform| platform.platform != "windows")
         );
-        assert_eq!(selected.len(), 4);
+        assert_eq!(selected.len(), 3);
     }
 
     #[test]

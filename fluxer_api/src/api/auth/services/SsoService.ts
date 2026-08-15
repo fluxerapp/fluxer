@@ -529,7 +529,9 @@ export class SsoService {
 					isAdult: true,
 				}),
 			);
-			await this.kvActivityTracker.updateActivity(user.id, now);
+			void this.kvActivityTracker.updateActivity(user.id, now).catch((error: unknown) => {
+				this.logger.warn({error, userId: user.id}, 'Failed to update real-time user activity');
+			});
 			return user;
 		} catch (error) {
 			if (!userCreated) {

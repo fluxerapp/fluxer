@@ -1,12 +1,12 @@
 {
-	"billing.eu_withdrawal_waiver_checkout": "Jei esu ES/EEE vartotojas, aiškiai sutinku, kad {product_name} {premium_tier_name} skaitmeninis turinys būtų suteiktas nedelsiant ir pripažįstu, kad, suteikus prieigą, netenku teisės atsisakyti sutarties. Tai neturi įtakos kitoms privalomoms vartotojų teisėms. Žr. [Paslaugų teikimo sąlygas]({terms_url}).",
-	"bulk_message_deletion.complete": "Baigėme trinti tavo žinutes. Pašalinome {message_count, plural, =0 {0 žinučių} one {# žinutę} few {# žinutes} many {# žinutės} other {# žinučių}} iš {channel_count, plural, =0 {0 vietų} one {# vietos} few {# vietų} many {# vietos} other {# vietų}}.",
-	"content.virus_detected": "Failas buvo pažymėtas kaip galimai nesaugus ir pašalintas.",
-	"guild.bulk_create.emoji_limit": "Pasiektas didžiausias leistinų emoji skaičius ({limit}).",
-	"guild.bulk_create.sticker_limit": "Pasiektas maksimalus lipdukų skaičius ({limit}).",
-	"guild.bulk_create.unknown_error": "Nežinoma klaida.",
-	"guild.default_category_text": "Teksto kanalai",
-	"guild.default_category_voice": "Balso kanalai",
-	"guild.default_channel_text": "bendras",
-	"guild.default_channel_voice": "Bendras"
+    "billing.eu_withdrawal_waiver_checkout": "Jei esu ES/EEE vartotojas, aiškiai sutinku, kad {product_name} {premium_tier_name} skaitmeninis turinys būtų suteiktas nedelsiant ir pripažįstu, kad, suteikus prieigą, netenku teisės atsisakyti sutarties. Tai neturi įtakos kitoms privalomoms vartotojų teisėms. Žr. [Paslaugų teikimo sąlygas]({terms_url}).",
+    "bulk_message_deletion.complete": "Baigėme trinti tavo žinutes. Pašalinome {message_count, plural, =0 {0 žinučių} one {# žinutę} few {# žinutes} many {# žinutės} other {# žinučių}} iš {channel_count, plural, =0 {0 vietų} one {# vietos} few {# vietų} many {# vietos} other {# vietų}}.",
+    "content.virus_detected": "Failas buvo pažymėtas kaip galimai nesaugus ir pašalintas.",
+    "guild.bulk_create.emoji_limit": "Pasiektas didžiausias leistinų emoji skaičius ({limit}).",
+    "guild.bulk_create.sticker_limit": "Pasiektas maksimalus lipdukų skaičius ({limit}).",
+    "guild.bulk_create.unknown_error": "Nežinoma klaida.",
+    "guild.default_category_text": "Teksto kanalai",
+    "guild.default_category_voice": "Balso kanalai",
+    "guild.default_channel_text": "bendras",
+    "guild.default_channel_voice": "Bendras"
 }

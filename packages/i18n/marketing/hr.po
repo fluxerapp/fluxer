@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: fluxer-marketing\n"
-"POT-Creation-Date: 2026-08-14 00:00+0000\n"
-"PO-Revision-Date: 2026-08-14 00:00+0000\n"
+"POT-Creation-Date: 2026-08-15 00:00+0000\n"
+"PO-Revision-Date: 2026-08-15 00:00+0000\n"
 "Language: hr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -752,7 +752,8 @@ msgstr "Što je bio {visionary_tier_full_name}?"
 msgctxt "content.help.article.visionary.description"
 msgid ""
 "What the sold out {visionary_tier_full_name} offer includes and how its account benefits work."
-msgstr "Što je uključivala rasprodana ponuda {visionary_tier_full_name} i kako funkcioniraju njezine pogodnosti za račun."
+msgstr ""
+"Što je uključivala rasprodana ponuda {visionary_tier_full_name} i kako funkcioniraju njezine pogodnosti za račun."
 
 #. Help article title listing the three programmes that showcase a community on Fluxer. Keep 'Partner', 'Verified', and 'Discovery' as programme names.
 #: fluxer_marketing/generated:content.help.article.community_programmes.title
@@ -896,7 +897,8 @@ msgstr "Mogućnosti rješavanja sporova prema EU DSA"
 msgctxt "content.help.article.dsa_dispute_resolution.description"
 msgid ""
 "How users covered by the Digital Services Act can report illegal content and challenge eligible decisions."
-msgstr "Kako korisnici obuhvaćeni Zakonom o digitalnim uslugama mogu prijaviti nezakonit sadržaj i osporiti prihvatljive odluke."
+msgstr ""
+"Kako korisnici obuhvaćeni Zakonom o digitalnim uslugama mogu prijaviti nezakonit sadržaj i osporiti prihvatljive odluke."
 
 #. Help article title about region-specific access restrictions.
 #: fluxer_marketing/generated:content.help.article.regional_restrictions.title
@@ -1579,7 +1581,8 @@ msgstr "Rani pristup"
 msgctxt "beta_and_access.featured_benefit_line"
 msgid ""
 "Chat, calls, screen sharing and communities are free, and they stay free. {premium_tier_name} adds optional extras for the people who want them."
-msgstr "Razgovori, pozivi, dijeljenje zaslona i zajednice su besplatni i ostat će besplatni. {premium_tier_name} dodaje dodatne opcije za one koji ih žele."
+msgstr ""
+"Razgovori, pozivi, dijeljenje zaslona i zajednice su besplatni i ostat će besplatni. {premium_tier_name} dodaje dodatne opcije za one koji ih žele."
 
 #. Compact UI label in Fluxer marketing UI. Translate naturally for the target locale and preserve placeholders exactly.
 #: fluxer_marketing/generated:beta_and_access.public_beta
@@ -2074,7 +2077,8 @@ msgstr "{ios} aplikacija"
 msgctxt "platform_support.mobile.ios.body"
 msgid ""
 "The native {ios} app is currently limited to {premium_tier_full_name} subscribers. Broader access is coming very soon. Meanwhile, the full {product_name} web app works in Safari and can be added to your Home Screen."
-msgstr "Nativna {ios} aplikacija trenutno je dostupna samo pretplatnicima {premium_tier_full_name}. Šira dostupnost stiže vrlo brzo. U međuvremenu, cijela web-aplikacija {product_name} radi u Safariju i može se dodati na početni zaslon."
+msgstr ""
+"Nativna {ios} aplikacija trenutno je dostupna samo pretplatnicima {premium_tier_full_name}. Šira dostupnost stiže vrlo brzo. U međuvremenu, cijela web-aplikacija {product_name} radi u Safariju i može se dodati na početni zaslon."
 
 #. Card title for the Android app option on the download page. Keep the platform name conventional and short. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.android.title

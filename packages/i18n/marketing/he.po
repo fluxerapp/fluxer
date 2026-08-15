@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: fluxer-marketing\n"
-"POT-Creation-Date: 2026-08-14 00:00+0000\n"
-"PO-Revision-Date: 2026-08-14 00:00+0000\n"
+"POT-Creation-Date: 2026-08-15 00:00+0000\n"
+"PO-Revision-Date: 2026-08-15 00:00+0000\n"
 "Language: he\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -637,7 +637,8 @@ msgstr "כללי הקהילה"
 msgctxt "content.policies.privacy.description"
 msgid ""
 "How {product_name} handles personal data and what we refuse to do with it. Learn about your controls and rights."
-msgstr "איך {product_name} מטפל במידע אישי ומה אנחנו מסרבים לעשות איתו. כאן אפשר ללמוד על האפשרויות והזכויות שלך."
+msgstr ""
+"איך {product_name} מטפל במידע אישי ומה אנחנו מסרבים לעשות איתו. כאן אפשר ללמוד על האפשרויות והזכויות שלך."
 
 #. Policy page title. Translate as a formal privacy policy.
 #: fluxer_marketing/generated:content.policies.privacy.title
@@ -650,7 +651,8 @@ msgstr "מדיניות הפרטיות"
 msgctxt "content.policies.security.description"
 msgid ""
 "How to report security issues and check what is in scope. Read the safe harbor terms before testing."
-msgstr "איך לדווח על בעיות אבטחה ומה נמצא בתחום. כדאי לקרוא את תנאי ההגנה (safe harbor) לפני שמתחילים בבדיקות."
+msgstr ""
+"איך לדווח על בעיות אבטחה ומה נמצא בתחום. כדאי לקרוא את תנאי ההגנה (safe harbor) לפני שמתחילים בבדיקות."
 
 #. Policy page title for security vulnerability reporting.
 #: fluxer_marketing/generated:content.policies.security.title
@@ -845,8 +847,7 @@ msgstr "דרישות גיל מינימום"
 msgctxt "content.help.article.minimum_age.description"
 msgid ""
 "Who can use {product_name} under our age rules and what to do if we get your eligibility wrong."
-msgstr ""
-"מי יכול להשתמש ב-{product_name} לפי כללי הגיל שלנו ומה לעשות אם טעינו לגבי הזכאות שלך."
+msgstr "מי יכול להשתמש ב-{product_name} לפי כללי הגיל שלנו ומה לעשות אם טעינו לגבי הזכאות שלך."
 
 #. Help article title about the copyright/IP complaint process. Keep legal-sounding phrasing.
 #: fluxer_marketing/generated:content.help.article.copyright.title
@@ -883,7 +884,8 @@ msgstr "אפשרויות יישוב סכסוכים לפי EU DSA"
 msgctxt "content.help.article.dsa_dispute_resolution.description"
 msgid ""
 "How users covered by the Digital Services Act can report illegal content and challenge eligible decisions."
-msgstr "איך משתמשים שחוק השירותים הדיגיטליים חל עליהם יכולים לדווח על תוכן לא חוקי ולערער על החלטות רלוונטיות."
+msgstr ""
+"איך משתמשים שחוק השירותים הדיגיטליים חל עליהם יכולים לדווח על תוכן לא חוקי ולערער על החלטות רלוונטיות."
 
 #. Help article title about region-specific access restrictions.
 #: fluxer_marketing/generated:content.help.article.regional_restrictions.title
@@ -896,8 +898,7 @@ msgstr "הגבלות אזוריות"
 msgctxt "content.help.article.regional_restrictions.description"
 msgid ""
 "The regional access and age restricted content rules that {product_name} currently applies."
-msgstr ""
-"כללי הגישה האזורית והתוכן המוגבל בגיל ש-{product_name} מחיל כיום."
+msgstr "כללי הגישה האזורית והתוכן המוגבל בגיל ש-{product_name} מחיל כיום."
 
 #. Compact UI label on donation pages and donation support cards. Keep the tone appreciative without being pushy; preserve placeholders exactly.
 #: fluxer_marketing/generated:donations.business
@@ -1071,7 +1072,8 @@ msgstr "יישלח אימייל אישור בהקדם עם פרטים על הת�
 msgctxt "donations.success.message"
 msgid ""
 "Thank you. Your donation pays for the servers and for the people who build and run {product_name}. It keeps us answerable to the people using it rather than to an investor."
-msgstr "תודה. התרומה שלך מממנת את השרתים ואת האנשים שבונים ומפעילים את {product_name}. כך אנחנו נשארים מחויבים למי שמשתמש בו, ולא למשקיע."
+msgstr ""
+"תודה. התרומה שלך מממנת את השרתים ואת האנשים שבונים ומפעילים את {product_name}. כך אנחנו נשארים מחויבים למי שמשתמש בו, ולא למשקיע."
 
 #. Short UI label or heading in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
 #: fluxer_marketing/generated:donations.success.title
@@ -1084,7 +1086,8 @@ msgstr "תודה"
 msgctxt "donations.support_message"
 msgid ""
 "Help keep {product_name} independent. Donations pay for hosting and development, and they are the reason nobody else gets a say in what we build."
-msgstr "עזרו לשמור על {product_name} עצמאי. תרומות משלמות על אירוח ופיתוח, והן הסיבה שאף אחד אחר לא קובע מה אנחנו בונים."
+msgstr ""
+"עזרו לשמור על {product_name} עצמאי. תרומות משלמות על אירוח ופיתוח, והן הסיבה שאף אחד אחר לא קובע מה אנחנו בונים."
 
 #. Label for the editable amount in the Swish payment flow. Preserve the currency-code placeholder {currency} exactly.
 #: fluxer_marketing/generated:donations.swish.amount_label
@@ -1163,7 +1166,8 @@ msgstr "הורדות מתקדמות"
 msgctxt "download.download_app_or_open_in_browser"
 msgid ""
 "Install the app or open {product_name} in your browser and start talking. Making an account is free and we never ask for a card."
-msgstr "התקינו את האפליקציה או פתחו את {product_name} בדפדפן והתחילו לדבר. פתיחת חשבון היא בחינם ואנחנו אף פעם לא מבקשים כרטיס אשראי."
+msgstr ""
+"התקינו את האפליקציה או פתחו את {product_name} בדפדפן והתחילו לדבר. פתיחת חשבון היא בחינם ואנחנו אף פעם לא מבקשים כרטיס אשראי."
 
 #. Button or link label on the download page, download buttons, or install calls to action. Keep platform-download wording short, direct, and action-oriented; preserve placeholders exactly.
 #: fluxer_marketing/generated:download.download_fluxer
@@ -1562,7 +1566,8 @@ msgstr "גישה מוקדמת"
 msgctxt "beta_and_access.featured_benefit_line"
 msgid ""
 "Chat, calls, screen sharing and communities are free, and they stay free. {premium_tier_name} adds optional extras for the people who want them."
-msgstr "צ'אט, שיחות, שיתוף מסך וקהילות הם בחינם, והם יישארו בחינם. {premium_tier_name} מוסיף תוספות אופציונליות למי שרוצה אותן."
+msgstr ""
+"צ'אט, שיחות, שיתוף מסך וקהילות הם בחינם, והם יישארו בחינם. {premium_tier_name} מוסיף תוספות אופציונליות למי שרוצה אותן."
 
 #. Compact UI label in Fluxer marketing UI. Translate naturally for the target locale and preserve placeholders exactly.
 #: fluxer_marketing/generated:beta_and_access.public_beta
@@ -1647,7 +1652,8 @@ msgstr "הדף לא נמצא"
 msgctxt "navigation.press.download_assets_intro"
 msgid ""
 "Download the {product_name} logos and color references. Press inquiries go straight to our team."
-msgstr "הורידו את קובצי הלוגו ואת מפרטי הצבעים של {product_name}. פניות עיתונאים מגיעות ישירות לצוות שלנו."
+msgstr ""
+"הורידו את קובצי הלוגו ואת מפרטי הצבעים של {product_name}. פניות עיתונאים מגיעות ישירות לצוות שלנו."
 
 #. Compact UI label on the press/brand-assets page. Keep wording professional and clear for journalists or partners.
 #: fluxer_marketing/generated:navigation.press.press_and_brand_assets
@@ -2053,7 +2059,8 @@ msgstr "אפליקציית {ios}"
 msgctxt "platform_support.mobile.ios.body"
 msgid ""
 "The native {ios} app is currently limited to {premium_tier_full_name} subscribers. Broader access is coming very soon. Meanwhile, the full {product_name} web app works in Safari and can be added to your Home Screen."
-msgstr "האפליקציה המקורית של {ios} מוגבלת כרגע למנויי {premium_tier_full_name}. גישה רחבה יותר תגיע בקרוב מאוד. בינתיים, אפליקציית האינטרנט המלאה של {product_name} פועלת ב-Safari וניתן להוסיף אותה למסך הבית שלך."
+msgstr ""
+"האפליקציה המקורית של {ios} מוגבלת כרגע למנויי {premium_tier_full_name}. גישה רחבה יותר תגיע בקרוב מאוד. בינתיים, אפליקציית האינטרנט המלאה של {product_name} פועלת ב-Safari וניתן להוסיף אותה למסך הבית שלך."
 
 #. Card title for the Android app option on the download page. Keep the platform name conventional and short. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.android.title
@@ -2446,7 +2453,8 @@ msgstr "אירוח עצמי"
 msgctxt "product_positioning.self_hosting.run_backend_on_your_hardware"
 msgid ""
 "Run the whole {product_name} backend on your own hardware and connect to it with the same apps we ship. There is no license key and no cut-down community edition."
-msgstr "הריצו את כל ה-backend של {product_name} על החומרה שלכם והתחברו אליו עם אותן אפליקציות שאנחנו מספקים. אין מפתח רישיון ואין גרסת קהילה מצומצמת."
+msgstr ""
+"הריצו את כל ה-backend של {product_name} על החומרה שלכם והתחברו אליו עם אותן אפליקציות שאנחנו מספקים. אין מפתח רישיון ואין גרסת קהילה מצומצמת."
 
 #. Compact UI label explaining self-hosting and Operator Pass expectations. Keep technical wording accurate and preserve product-name placeholders exactly.
 #: fluxer_marketing/generated:product_positioning.self_hosting.switch_between_instances
@@ -2580,4 +2588,5 @@ msgstr "שפות"
 msgctxt "voice_regions.languages_intro"
 msgid ""
 "{product_name} is available in over thirty languages. To help translate {product_name} into your native language, join us on {weblate}."
-msgstr "{product_name} זמין בלמעלה משלושים שפות. כדי לעזור לתרגם את {product_name} לשפת האם שלך, הצטרפו אלינו ב-{weblate}."
+msgstr ""
+"{product_name} זמין בלמעלה משלושים שפות. כדי לעזור לתרגם את {product_name} לשפת האם שלך, הצטרפו אלינו ב-{weblate}."

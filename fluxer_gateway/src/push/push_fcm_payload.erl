@@ -64,15 +64,14 @@ build_notification_message(DeviceToken, Payload) ->
     ),
     Data = build_notification_data(Payload, Title, Body, Tag, ImageUrl),
     Group = resolve_notification_group(maps:get(<<"data">>, Payload, #{}), Tag),
-    AndroidNotification = build_android_notification(Tag, ImageUrl, Group),
+    AndroidNotification = build_android_notification(Tag, ImageUrl),
     wrap_notification_message(DeviceToken, NotificationBody, Data, AndroidNotification, Group).
 
--spec build_android_notification(binary(), binary() | undefined, binary()) -> map().
-build_android_notification(Tag, ImageUrl, Group) ->
+-spec build_android_notification(binary(), binary() | undefined) -> map().
+build_android_notification(Tag, ImageUrl) ->
     maybe_put(<<"image">>, ImageUrl, #{
         <<"channel_id">> => <<"fluxer_default_push">>,
         <<"tag">> => Tag,
-        <<"group">> => Group,
         <<"click_action">> => <<"FLUXER_MESSAGE">>
     }).
 
@@ -345,7 +344,6 @@ build_message_includes_android_chat_notification_fields_test() ->
     AndroidNotification = maps:get(<<"notification">>, maps:get(<<"android">>, Message)),
     ?assertEqual(<<"fluxer_default_push">>, maps:get(<<"channel_id">>, AndroidNotification)),
     ?assertEqual(<<"channel:123:456">>, maps:get(<<"tag">>, AndroidNotification)),
-    ?assertEqual(<<"channel:123">>, maps:get(<<"group">>, AndroidNotification)),
     Android = maps:get(<<"android">>, Message),
     ?assertEqual(<<"channel:123">>, maps:get(<<"collapse_key">>, Android)),
     ?assertEqual(

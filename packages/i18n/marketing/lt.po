@@ -4,8 +4,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: fluxer-marketing\n"
-"POT-Creation-Date: 2026-08-14 00:00+0000\n"
-"PO-Revision-Date: 2026-08-14 00:00+0000\n"
+"POT-Creation-Date: 2026-08-15 00:00+0000\n"
+"PO-Revision-Date: 2026-08-15 00:00+0000\n"
 "Language: lt\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -58,7 +58,8 @@ msgstr "Bendruomenės patvirtinimas"
 #: fluxer_marketing/generated:app.communities.verification.value_statement
 msgctxt "app.communities.verification.value_statement"
 msgid "Your community gets verified status for authenticity and trust."
-msgstr "Tavo bendruomenė gauna patvirtintą statusą, liudijantį jos autentiškumą ir keliantį pasitikėjimą."
+msgstr ""
+"Tavo bendruomenė gauna patvirtintą statusą, liudijantį jos autentiškumą ir keliantį pasitikėjimą."
 
 #. Compact UI label used in the home-page customization feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.customization.animated_profile.animated_avatars_and_banners
@@ -110,7 +111,8 @@ msgstr "Įkelk pasirinktinius emoji ir lipdukus"
 msgctxt "app.messaging.description"
 msgid ""
 "Chat with friends or groups. Communities give you organized channels when a group chat has grown too large."
-msgstr "Bendrauk su draugais ar grupėmis. Kai grupės pokalbis išauga per didelis, bendruomenės suteikia tvarkingus kanalus."
+msgstr ""
+"Bendrauk su draugais ar grupėmis. Kai grupės pokalbis išauga per didelis, bendruomenės suteikia tvarkingus kanalus."
 
 #. Compact UI label used in the home-page messaging feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
 #: fluxer_marketing/generated:app.messaging.features.file_sharing
@@ -422,7 +424,8 @@ msgstr "Karjera {product_name}"
 #: fluxer_marketing/generated:company_and_resources.careers.not_hiring_notice
 msgctxt "company_and_resources.careers.not_hiring_notice"
 msgid "We are not hiring. Any open role will be listed on this page, so check back later."
-msgstr "Šiuo metu darbuotojų neieškome. Visos laisvos pozicijos bus skelbiamos šiame puslapyje, tad užsuk vėliau."
+msgstr ""
+"Šiuo metu darbuotojų neieškome. Visos laisvos pozicijos bus skelbiamos šiame puslapyje, tad užsuk vėliau."
 
 #. Short UI label or heading on the careers and future roles pages. Use clear hiring language, avoid implying that roles are currently open unless the source says so, and preserve placeholders exactly.
 #: fluxer_marketing/generated:company_and_resources.careers.label
@@ -627,8 +630,7 @@ msgstr "Įmonės informacija"
 #: fluxer_marketing/generated:content.policies.guidelines.description
 msgctxt "content.policies.guidelines.description"
 msgid "The rules for using {product_name} safely and treating other people well."
-msgstr ""
-"Taisyklės, kaip saugiai naudotis {product_name} ir gerai elgtis su kitais žmonėmis."
+msgstr "Taisyklės, kaip saugiai naudotis {product_name} ir gerai elgtis su kitais žmonėmis."
 
 #. Policy page title for community rules. Translate as formal community guidelines.
 #: fluxer_marketing/generated:content.policies.guidelines.title
@@ -655,7 +657,8 @@ msgstr "Privatumo politika"
 msgctxt "content.policies.security.description"
 msgid ""
 "How to report security issues and check what is in scope. Read the safe harbor terms before testing."
-msgstr "Kaip pranešti apie saugumo problemas ir pasitikrinti, kas patenka į apimtį. Prieš testuodamas perskaityk safe harbor sąlygas."
+msgstr ""
+"Kaip pranešti apie saugumo problemas ir pasitikrinti, kas patenka į apimtį. Prieš testuodamas perskaityk safe harbor sąlygas."
 
 #. Policy page title for security vulnerability reporting.
 #: fluxer_marketing/generated:content.policies.security.title
@@ -668,7 +671,8 @@ msgstr "Saugumas"
 msgctxt "content.policies.terms.description"
 msgid ""
 "The agreement between you and {product_name}, including account, content, payment, moderation, and legal terms."
-msgstr "Susitarimas tarp tavęs ir {product_name}, apimantis paskyros, turinio, mokėjimų, moderavimo ir teisines sąlygas."
+msgstr ""
+"Susitarimas tarp tavęs ir {product_name}, apimantis paskyros, turinio, mokėjimų, moderavimo ir teisines sąlygas."
 
 #. Policy page title. Translate as formal terms of service.
 #: fluxer_marketing/generated:content.policies.terms.title
@@ -749,7 +753,8 @@ msgstr "Buvęs {visionary_tier_full_name} lygis"
 msgctxt "content.help.article.visionary.description"
 msgid ""
 "What the sold out {visionary_tier_full_name} offer includes and how its account benefits work."
-msgstr "Kas įtraukta į išparduotą {visionary_tier_full_name} pasiūlymą ir kaip veikia jo paskyros privalumai."
+msgstr ""
+"Kas įtraukta į išparduotą {visionary_tier_full_name} pasiūlymą ir kaip veikia jo paskyros privalumai."
 
 #. Help article title listing the three programmes that showcase a community on Fluxer. Keep 'Partner', 'Verified', and 'Discovery' as programme names.
 #: fluxer_marketing/generated:content.help.article.community_programmes.title
@@ -776,8 +781,7 @@ msgstr "Kaip veikia priedų galiojimo terminas"
 msgctxt "content.help.article.attachment_expiry.description"
 msgid ""
 "See when attachments expire, what extends their availability, and how to keep an important file."
-msgstr ""
-"Kada nustoja galioti priedai, kas pratęsia jų prieinamumą ir kaip išsaugoti svarbų failą."
+msgstr "Kada nustoja galioti priedai, kas pratęsia jų prieinamumą ir kaip išsaugoti svarbų failą."
 
 #. Help article title about filing bug reports.
 #: fluxer_marketing/generated:content.help.article.report_bug.title
@@ -789,8 +793,7 @@ msgstr "Pranešimas apie klaidą"
 #: fluxer_marketing/generated:content.help.article.report_bug.description
 msgctxt "content.help.article.report_bug.description"
 msgid "How to submit a clear bug report to the {product_name} team or through {github}."
-msgstr ""
-"Kaip pateikti aiškų pranešimą apie klaidą {product_name} komandai arba per {github}."
+msgstr "Kaip pateikti aiškų pranešimą apie klaidą {product_name} komandai arba per {github}."
 
 #. Help article title about updating a user's date of birth via support.
 #: fluxer_marketing/generated:content.help.article.change_date_of_birth.title
@@ -827,7 +830,8 @@ msgstr "Paskyros duomenų eksportas"
 msgctxt "content.help.article.data_export.description"
 msgid ""
 "How to request a machine-readable export of your {product_name} account data and handle it safely."
-msgstr "Kaip užsisakyti kompiuteriui nuskaitomą {product_name} paskyros duomenų eksportą ir saugiai su juo elgtis."
+msgstr ""
+"Kaip užsisakyti kompiuteriui nuskaitomą {product_name} paskyros duomenų eksportą ir saugiai su juo elgtis."
 
 #. Help article title about deleting or disabling an account.
 #: fluxer_marketing/generated:content.help.article.delete_account.title
@@ -880,7 +884,8 @@ msgstr "Kiek laiko {product_name} saugo tavo informaciją"
 #: fluxer_marketing/generated:content.help.article.data_retention.description
 msgctxt "content.help.article.data_retention.description"
 msgid "How long {product_name} keeps account information, content, logs, and legal records."
-msgstr "Kiek laiko {product_name} saugo paskyros informaciją, turinį, žurnalus ir teisinius įrašus."
+msgstr ""
+"Kiek laiko {product_name} saugo paskyros informaciją, turinį, žurnalus ir teisinius įrašus."
 
 #. Help article title about EU Digital Services Act dispute options. Keep 'EU DSA' as an acronym.
 #: fluxer_marketing/generated:content.help.article.dsa_dispute_resolution.title
@@ -893,7 +898,8 @@ msgstr "EU DSA ginčų sprendimo galimybės"
 msgctxt "content.help.article.dsa_dispute_resolution.description"
 msgid ""
 "How users covered by the Digital Services Act can report illegal content and challenge eligible decisions."
-msgstr "Kaip naudotojai, kuriems taikomas Digital Services Act, gali pranešti apie neteisėtą turinį ir apskųsti tinkamus sprendimus."
+msgstr ""
+"Kaip naudotojai, kuriems taikomas Digital Services Act, gali pranešti apie neteisėtą turinį ir apskųsti tinkamus sprendimus."
 
 #. Help article title about region-specific access restrictions.
 #: fluxer_marketing/generated:content.help.article.regional_restrictions.title
@@ -1082,7 +1088,8 @@ msgstr ""
 msgctxt "donations.success.message"
 msgid ""
 "Thank you. Your donation pays for the servers and for the people who build and run {product_name}. It keeps us answerable to the people using it rather than to an investor."
-msgstr "Ačiū. Tavo auka apmoka serverius ir žmones, kurie kuria ir prižiūri {product_name}. Taip liekame atskaitingi jį naudojantiems žmonėms, o ne investuotojui."
+msgstr ""
+"Ačiū. Tavo auka apmoka serverius ir žmones, kurie kuria ir prižiūri {product_name}. Taip liekame atskaitingi jį naudojantiems žmonėms, o ne investuotojui."
 
 #. Short UI label or heading in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
 #: fluxer_marketing/generated:donations.success.title
@@ -1095,7 +1102,8 @@ msgstr "Ačiū!"
 msgctxt "donations.support_message"
 msgid ""
 "Help keep {product_name} independent. Donations pay for hosting and development, and they are the reason nobody else gets a say in what we build."
-msgstr "Padėk išlaikyti {product_name} nepriklausomą. Aukos apmoka talpinimą ir plėtrą, todėl niekas kitas neturi įtakos tam, ką kuriame."
+msgstr ""
+"Padėk išlaikyti {product_name} nepriklausomą. Aukos apmoka talpinimą ir plėtrą, todėl niekas kitas neturi įtakos tam, ką kuriame."
 
 #. Label for the editable amount in the Swish payment flow. Preserve the currency-code placeholder {currency} exactly.
 #: fluxer_marketing/generated:donations.swish.amount_label
@@ -1575,7 +1583,8 @@ msgstr "Ankstyvoji prieiga"
 msgctxt "beta_and_access.featured_benefit_line"
 msgid ""
 "Chat, calls, screen sharing and communities are free, and they stay free. {premium_tier_name} adds optional extras for the people who want them."
-msgstr "Pokalbiai, skambučiai, ekrano bendrinimas ir bendruomenės yra nemokami ir tokie išlieka. {premium_tier_name} prideda papildomų funkcijų tiems, kurie jų nori."
+msgstr ""
+"Pokalbiai, skambučiai, ekrano bendrinimas ir bendruomenės yra nemokami ir tokie išlieka. {premium_tier_name} prideda papildomų funkcijų tiems, kurie jų nori."
 
 #. Compact UI label in Fluxer marketing UI. Translate naturally for the target locale and preserve placeholders exactly.
 #: fluxer_marketing/generated:beta_and_access.public_beta
@@ -1647,7 +1656,8 @@ msgstr "Šiame puslapyje"
 #: fluxer_marketing/generated:navigation.page_not_found.description
 msgctxt "navigation.page_not_found.description"
 msgid "This page does not exist. Either it moved or a link went stale, and both are fixable."
-msgstr "Šio puslapio nėra. Jis arba buvo perkeltas, arba nuoroda paseno, ir abu dalykus galima pataisyti."
+msgstr ""
+"Šio puslapio nėra. Jis arba buvo perkeltas, arba nuoroda paseno, ir abu dalykus galima pataisyti."
 
 #. Short UI label or heading on the 404 page. Keep the tone helpful and concise while making clear the page was not found.
 #: fluxer_marketing/generated:navigation.page_not_found.title
@@ -1660,7 +1670,8 @@ msgstr "Puslapis nerastas"
 msgctxt "navigation.press.download_assets_intro"
 msgid ""
 "Download the {product_name} logos and color references. Press inquiries go straight to our team."
-msgstr "Atsisiųsk {product_name} logotipus ir spalvų aprašus. Klausimai spaudai keliauja tiesiai mūsų komandai."
+msgstr ""
+"Atsisiųsk {product_name} logotipus ir spalvų aprašus. Klausimai spaudai keliauja tiesiai mūsų komandai."
 
 #. Compact UI label on the press/brand-assets page. Keep wording professional and clear for journalists or partners.
 #: fluxer_marketing/generated:navigation.press.press_and_brand_assets
@@ -2070,7 +2081,8 @@ msgstr "{ios} programa"
 msgctxt "platform_support.mobile.ios.body"
 msgid ""
 "The native {ios} app is currently limited to {premium_tier_full_name} subscribers. Broader access is coming very soon. Meanwhile, the full {product_name} web app works in Safari and can be added to your Home Screen."
-msgstr "Savoji {ios} programa šiuo metu pasiekiama tik {premium_tier_full_name} prenumeratoriams. Platesnė prieiga bus atverta labai greitai. Tuo tarpu visavertė {product_name} žiniatinklio programa veikia „Safari“ naršyklėje ir ją galima pridėti prie pagrindinio ekrano."
+msgstr ""
+"Savoji {ios} programa šiuo metu pasiekiama tik {premium_tier_full_name} prenumeratoriams. Platesnė prieiga bus atverta labai greitai. Tuo tarpu visavertė {product_name} žiniatinklio programa veikia „Safari“ naršyklėje ir ją galima pridėti prie pagrindinio ekrano."
 
 #. Card title for the Android app option on the download page. Keep the platform name conventional and short. Preserve placeholders exactly.
 #: fluxer_marketing/generated:platform_support.mobile.android.title
@@ -2211,7 +2223,8 @@ msgstr "Naudok ant šviesių paviršių."
 msgctxt "press_branding.assets.usage_guidance.symbol_description"
 msgid ""
 "Use the symbol only when {product_name} appears nearby or the context already makes its owner clear."
-msgstr "Naudok simbolį tik tada, kai šalia yra {product_name} arba kai kontekstas jau aiškiai nurodo jo savininką."
+msgstr ""
+"Naudok simbolį tik tada, kai šalia yra {product_name} arba kai kontekstas jau aiškiai nurodo jo savininką."
 
 #. Brand color name in the press kit. Keep the color label recognizable and do not over-translate proper names unless natural in the locale.
 #: fluxer_marketing/generated:press_branding.colors.black
@@ -2438,7 +2451,8 @@ msgstr "Skaityk savarankiško talpinimo vadovą"
 msgctxt "product_positioning.intro"
 msgid ""
 "Free and open source chat for friends, groups, and communities, with text, voice, video, screen sharing, and self-hosting."
-msgstr "Nemokama ir atvirojo kodo pokalbių programa draugams, grupėms ir bendruomenėms, su teksto, balso, vaizdo, ekrano bendrinimo funkcijomis ir galimybe savarankiškai talpinti."
+msgstr ""
+"Nemokama ir atvirojo kodo pokalbių programa draugams, grupėms ir bendruomenėms, su teksto, balso, vaizdo, ekrano bendrinimo funkcijomis ir galimybe savarankiškai talpinti."
 
 #. Button or link label explaining Fluxer open-source licensing. Keep legal/license tokens such as AGPLv3 unchanged.
 #: fluxer_marketing/generated:product_positioning.open_source.fully_open_source_agplv3
@@ -2463,7 +2477,8 @@ msgstr "Savarankiškas talpinimas"
 msgctxt "product_positioning.self_hosting.run_backend_on_your_hardware"
 msgid ""
 "Run the whole {product_name} backend on your own hardware and connect to it with the same apps we ship. There is no license key and no cut-down community edition."
-msgstr "Paleisk visą {product_name} serverinę dalį savo įrangoje ir prisijunk prie jos tomis pačiomis programomis, kurias platiname. Nereikia licencijos rakto, nėra ir apkarpytos bendruomenės versijos."
+msgstr ""
+"Paleisk visą {product_name} serverinę dalį savo įrangoje ir prisijunk prie jos tomis pačiomis programomis, kurias platiname. Nereikia licencijos rakto, nėra ir apkarpytos bendruomenės versijos."
 
 #. Compact UI label explaining self-hosting and Operator Pass expectations. Keep technical wording accurate and preserve product-name placeholders exactly.
 #: fluxer_marketing/generated:product_positioning.self_hosting.switch_between_instances
@@ -2598,4 +2613,5 @@ msgstr "Kalbos"
 msgctxt "voice_regions.languages_intro"
 msgid ""
 "{product_name} is available in over thirty languages. To help translate {product_name} into your native language, join us on {weblate}."
-msgstr "{product_name} pasiekiamas daugiau nei trisdešimtyje kalbų. Jei nori padėti išversti {product_name} į savo gimtąją kalbą, prisijunk prie mūsų {weblate} platformoje."
+msgstr ""
+"{product_name} pasiekiamas daugiau nei trisdešimtyje kalbų. Jei nori padėti išversti {product_name} į savo gimtąją kalbą, prisijunk prie mūsų {weblate} platformoje."
