@@ -10,6 +10,7 @@ pub struct RuntimeCspSources {
     pub media_endpoint: Option<String>,
     pub s3_public_endpoint: Option<String>,
     pub s3_uploads_bucket: Option<String>,
+    pub branding_image_origins: Vec<String>,
 }
 
 const FRAME_SOURCES: &[&str] = &[
@@ -119,6 +120,9 @@ fn build_csp_directives(
     let mut img = vec!["'self'".to_owned(), "blob:".to_owned(), "data:".to_owned()];
     extend_from(&mut img, config.img_src.as_deref(), IMAGE_SOURCES);
     extend_runtime_sources(&mut img, runtime_sources, true, true);
+    for origin in &runtime_sources.branding_image_origins {
+        push_endpoint_source(&mut img, Some(origin));
+    }
     directives.push(format!("img-src {}", img.join(" ")));
 
     let mut media = vec!["'self'".to_owned(), "blob:".to_owned()];
@@ -178,6 +182,20 @@ fn extend_runtime_sources(
     if include_media {
         push_endpoint_source(target, runtime_sources.media_endpoint.as_deref());
     }
+}
+
+pub fn http_origin(raw: &str) -> Option<String> {
+    let url = Url::parse(raw.trim()).ok()?;
+    let scheme = url.scheme();
+    if scheme != "http" && scheme != "https" {
+        return None;
+    }
+    let host = url.host_str()?;
+    let port = url
+        .port()
+        .map(|port| format!(":{port}"))
+        .unwrap_or_default();
+    Some(format!("{scheme}://{host}{port}"))
 }
 
 fn push_endpoint_source(target: &mut Vec<String>, endpoint: Option<&str>) {

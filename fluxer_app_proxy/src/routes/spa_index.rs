@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::bootstrap::{build_bootstrap_script, inject_bootstrap};
-use crate::csp::{RuntimeCspSources, build_csp, generate_nonce};
+use crate::csp::{RuntimeCspSources, build_csp, generate_nonce, http_origin};
 use crate::discovery_cache::DiscoveryResponse;
 use crate::geoip::build_geoip_response;
 use crate::invite_meta::{
@@ -186,7 +186,40 @@ fn build_runtime_csp_sources(state: &AppState, discovery: &DiscoveryResponse) ->
         media_endpoint: discovery_endpoint(discovery, "media"),
         s3_public_endpoint: state.config.s3_public_endpoint.clone(),
         s3_uploads_bucket: Some(state.config.s3_uploads_bucket.clone()),
+        branding_image_origins: branding_image_origins(discovery),
     }
+}
+
+const BRANDING_IMAGE_KEYS: &[&str] = &[
+    "icon_url",
+    "symbol_url",
+    "logo_url",
+    "wordmark_url",
+    "favicon_url",
+];
+
+fn branding_image_origins(discovery: &DiscoveryResponse) -> Vec<String> {
+    let Some(branding) = discovery
+        .data
+        .get("app_public")
+        .and_then(|app_public| app_public.get("branding"))
+    else {
+        return Vec::new();
+    };
+    let mut origins: Vec<String> = Vec::new();
+    for key in BRANDING_IMAGE_KEYS {
+        let Some(origin) = branding
+            .get(*key)
+            .and_then(|value| value.as_str())
+            .and_then(http_origin)
+        else {
+            continue;
+        };
+        if !origins.contains(&origin) {
+            origins.push(origin);
+        }
+    }
+    origins
 }
 
 fn discovery_endpoint(discovery: &DiscoveryResponse, key: &str) -> Option<String> {

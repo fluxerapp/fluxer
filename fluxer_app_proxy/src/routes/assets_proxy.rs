@@ -118,6 +118,7 @@ pub async fn proxy_assets(
             media_endpoint: None,
             s3_public_endpoint: None,
             s3_uploads_bucket: None,
+            branding_image_origins: Vec::new(),
         },
     );
     if let Ok(value) = HeaderValue::from_str(&asset_csp) {
