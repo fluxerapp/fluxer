@@ -168,16 +168,27 @@ function calculateKeywordMatchScore(keywords: Array<string>, word: string): numb
 
 function calculateMatchScore(item: SearchableSettingItem, queryWords: Array<string>): number {
 	let score = 0;
+
 	const labelLower = item.label.toLowerCase();
 	const descriptionLower = item.description?.toLowerCase() ?? '';
-	const keywordsLower = [...item.keywords, ...(item.tags ?? [])].map((k) => k.toLowerCase());
+	const keywordsLower = [...item.keywords, ...(item.tags ?? [])].map((value) => value.toLowerCase());
+
 	for (const word of queryWords) {
-		score += calculateTextMatchScore(labelLower, word, 100, 50, 25);
-		score += calculateKeywordMatchScore(keywordsLower, word);
+		let wordScore = calculateTextMatchScore(labelLower, word, 100, 50, 25);
+
+		wordScore += calculateKeywordMatchScore(keywordsLower, word);
+
 		if (descriptionLower.includes(word)) {
-			score += 10;
+			wordScore += 10;
 		}
+
+		if (wordScore === 0) {
+			return 0;
+		}
+
+		score += wordScore;
 	}
+
 	return score;
 }
 
