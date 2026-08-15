@@ -60,6 +60,7 @@ export const ClaimAccountModal = observer(() => {
 	const [stage, setStage] = useState<Stage>('collect');
 	const [ticket, setTicket] = useState<string | null>(null);
 	const [originalProof, setOriginalProof] = useState<string | null>(null);
+	const [emailToken, setEmailToken] = useState<string | null>(null);
 	const [resendNewAt, setResendNewAt] = useState<Date | null>(null);
 	const [submittingAction, setSubmittingAction] = useState<boolean>(false);
 	const [now, setNow] = useState<number>(Date.now());
@@ -88,7 +89,7 @@ export const ClaimAccountModal = observer(() => {
 		if (!activeProof) {
 			throw new Error('Missing original proof token');
 		}
-		const result = await UserCommands.requestEmailChangeNew(activeTicket!, data.email, activeProof);
+		const result = await UserCommands.requestEmailChangeNew(activeTicket!, data.email, activeProof, data.newPassword);
 		setResendNewAt(result.resend_available_at ? new Date(result.resend_available_at) : null);
 		form.setValue('verificationCode', '');
 		form.clearErrors('verificationCode');
@@ -99,9 +100,14 @@ export const ClaimAccountModal = observer(() => {
 		if (!ticket || !originalProof) return;
 		setSubmittingAction(true);
 		try {
-			const {email_token} = await UserCommands.verifyEmailChangeNew(ticket, data.verificationCode, originalProof);
+			let activeEmailToken = emailToken;
+			if (!activeEmailToken) {
+				const verified = await UserCommands.verifyEmailChangeNew(ticket, data.verificationCode, originalProof);
+				activeEmailToken = verified.email_token;
+				setEmailToken(activeEmailToken);
+			}
 			await UserCommands.update({
-				email_token,
+				email_token: activeEmailToken,
 				new_password: data.newPassword,
 			});
 			ToastCommands.createToast({type: 'success', children: i18n._(ACCOUNT_CLAIMED_SUCCESSFULLY_DESCRIPTOR)});

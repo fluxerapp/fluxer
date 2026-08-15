@@ -136,6 +136,9 @@ export type EmailChangeVerifyOriginalRequest = z.infer<typeof EmailChangeVerifyO
 export const EmailChangeRequestNewRequest = EmailChangeTicketRequest.extend({
 	new_email: EmailType.describe('New email address to switch to'),
 	original_proof: createStringType().describe('Proof token obtained from verifying the original email'),
+	new_password: PasswordType.optional().describe(
+		'Password the caller intends to set, rejected here instead of after the code is sent',
+	),
 });
 
 export type EmailChangeRequestNewRequest = z.infer<typeof EmailChangeRequestNewRequest>;

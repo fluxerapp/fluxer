@@ -35114,7 +35114,8 @@
 				"properties": {
 					"ticket": {"type": "string", "description": "Email change ticket identifier"},
 					"new_email": {"$ref": "#/components/schemas/EmailType"},
-					"original_proof": {"type": "string", "description": "Proof token obtained from verifying the original email"}
+					"original_proof": {"type": "string", "description": "Proof token obtained from verifying the original email"},
+					"new_password": {"$ref": "#/components/schemas/PasswordType"}
 				},
 				"required": ["ticket", "new_email", "original_proof"]
 			},

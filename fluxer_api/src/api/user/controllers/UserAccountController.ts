@@ -224,7 +224,7 @@ export function UserAccountController(app: HonoApp) {
 			const body = ctx.req.valid('json');
 			const result = await ctx
 				.get('emailChangeService')
-				.requestNewEmail(user, body.ticket, body.new_email, body.original_proof);
+				.requestNewEmail(user, body.ticket, body.new_email, body.original_proof, body.new_password);
 			return ctx.json(result);
 		},
 	);

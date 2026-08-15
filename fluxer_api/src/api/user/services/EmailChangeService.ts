@@ -13,6 +13,7 @@ import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidat
 import {ms} from 'itty-time';
 import type {ApiContext} from '../../ApiContext';
 import {EMAIL_CLEARABLE_SUSPICIOUS_ACTIVITY_FLAGS} from '../../auth/AuthEmail';
+import * as AuthPassword from '../../auth/AuthPassword';
 import type {User} from '../../models/User';
 import type {EmailChangeRepository} from '../repositories/auth/EmailChangeRepository';
 
@@ -158,6 +159,7 @@ export class EmailChangeService {
 		ticket: string,
 		newEmail: string,
 		originalProof: string,
+		newPassword?: string,
 	): Promise<RequestNewEmailResult> {
 		const {email, emailDnsValidation, users, rateLimit} = this.apiContext.services;
 		const row = await getActiveChangeTicketForUser(this.repo, ticket, user.id);
@@ -181,6 +183,9 @@ export class EmailChangeService {
 		const existing = await users.findByEmail(trimmedEmail.toLowerCase());
 		if (existing && existing.id !== user.id) {
 			throw InputValidationError.fromCode('new_email', ValidationErrorCodes.EMAIL_ALREADY_IN_USE);
+		}
+		if (newPassword != null && (await AuthPassword.isPasswordPwned(this.apiContext, newPassword))) {
+			throw InputValidationError.fromCode('new_password', ValidationErrorCodes.PASSWORD_IS_TOO_COMMON);
 		}
 		assertChangeCooldown(row.new_code_sent_at, this.RESEND_COOLDOWN_MS);
 		await checkChangeRateLimit(rateLimit, {

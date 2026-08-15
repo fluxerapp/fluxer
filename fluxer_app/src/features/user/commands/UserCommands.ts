@@ -158,8 +158,14 @@ function requestNewEmailBody(
 	ticket: string,
 	newEmail: string,
 	originalProof: string,
-): {ticket: string; new_email: string; original_proof: string} {
-	return {ticket, new_email: newEmail, original_proof: originalProof};
+	newPassword?: string,
+): {ticket: string; new_email: string; original_proof: string; new_password?: string} {
+	return {
+		ticket,
+		new_email: newEmail,
+		original_proof: originalProof,
+		...(newPassword != null ? {new_password: newPassword} : {}),
+	};
 }
 
 function verifyNewEmailBody(
@@ -365,11 +371,12 @@ export async function requestEmailChangeNew(
 	ticket: string,
 	newEmail: string,
 	originalProof: string,
+	newPassword?: string,
 ): Promise<EmailChangeRequestNewResponse> {
 	try {
 		logger.debug('Requesting new email code');
 		const response = await http.post<EmailChangeRequestNewResponse>(Endpoints.USER_EMAIL_CHANGE_REQUEST_NEW, {
-			body: requestNewEmailBody(ticket, newEmail, originalProof),
+			body: requestNewEmailBody(ticket, newEmail, originalProof, newPassword),
 		});
 		return response.body;
 	} catch (error) {
