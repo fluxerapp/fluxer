@@ -135,8 +135,8 @@ function renderGroupStatusDot(status: StatusType, size: number, isTyping?: boole
 					</div>
 				) : (
 					<svg
-						width={layout.innerStatusWidth}
-						height={layout.innerStatusHeight}
+						width={remFromPx(layout.innerStatusWidth)}
+						height={remFromPx(layout.innerStatusHeight)}
 						viewBox="0 0 1 1"
 						aria-hidden
 						data-flx="app.group-dm-avatar.render-group-status-dot.svg"
