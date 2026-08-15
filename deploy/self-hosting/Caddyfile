@@ -42,6 +42,10 @@
 		reverse_proxy static-proxy:8080
 	}
 
+	handle /.well-known/fluxer {
+		reverse_proxy api:8080
+	}
+
 	handle {
 		reverse_proxy app-proxy:8080
 	}
