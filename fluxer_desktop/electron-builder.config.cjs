@@ -1183,6 +1183,7 @@ module.exports = {
 	},
 	mac: {
 		category: 'public.app-category.social-networking',
+		x64ArchFiles: '**/@fluxer/**/*.node',
 		minimumSystemVersion: macOSMinimumSystemVersion,
 		icon: `build_resources/${iconDir}/_compiled/AppIcon.icns`,
 		darkModeSupport: true,
