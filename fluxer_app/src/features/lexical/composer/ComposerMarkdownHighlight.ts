@@ -19,11 +19,14 @@ import {$isComposerStandardEmojiNode} from '@app/features/lexical/composer/nodes
 import {$isSlashSlotNode} from '@app/features/lexical/composer/nodes/SlashSlotNode';
 import {$createSyntaxMarkerNode, $isSyntaxMarkerNode} from '@app/features/lexical/composer/nodes/SyntaxMarkerNode';
 import {
+	$createNodeSelection,
 	$createTextNode,
 	$getNodeByKey,
 	$getSelection,
 	$isLineBreakNode,
+	$isNodeSelection,
 	$isRangeSelection,
+	$setSelection,
 	type LexicalEditor,
 	type LexicalNode,
 	ParagraphNode,
@@ -205,8 +208,21 @@ function $reconcileLine(
 	const selectionKeys = $isRangeSelection(currentSelection)
 		? {anchor: currentSelection.anchor.key, focus: currentSelection.focus.key}
 		: null;
+	const nodeSelectionKeys = $isNodeSelection(currentSelection)
+		? currentSelection.getNodes().map((node) => node.getKey())
+		: null;
 	const selection = $captureSelectionOffsets();
 	$applyDescriptors(line, desired);
+	if (nodeSelectionKeys != null) {
+		if (nodeSelectionKeys.every((key) => $getNodeByKey(key)?.isAttached() === true)) {
+			const restored = $createNodeSelection();
+			for (const key of nodeSelectionKeys) {
+				restored.add(key);
+			}
+			$setSelection(restored);
+		}
+		return;
+	}
 	const anchorNode = selectionKeys == null ? null : $getNodeByKey(selectionKeys.anchor);
 	const focusNode = selectionKeys == null ? null : $getNodeByKey(selectionKeys.focus);
 	const selectionNodesSurvived =
