@@ -23,6 +23,7 @@ interface CachedLookupResult {
 interface PublicInternetRequestUrlPolicyOptions {
 	dnsCacheTtlMs?: number;
 	lookupHost?: (hostname: string) => Promise<Array<string>>;
+	allowPrivateAddresses?: boolean;
 }
 
 const BLOCKED_IPV4_SUBNETS: Array<BlockedSubnet> = [
@@ -175,6 +176,7 @@ export function createPublicInternetRequestUrlPolicy(
 			? options.dnsCacheTtlMs
 			: DEFAULT_DNS_CACHE_TTL_MS;
 	const lookupHost = options?.lookupHost ?? defaultLookupHost;
+	const allowPrivateAddresses = options?.allowPrivateAddresses === true;
 	const dnsCache = new Map<string, CachedLookupResult>();
 	async function resolveHostname(hostname: string): Promise<Array<string>> {
 		const now = Date.now();
@@ -198,7 +200,7 @@ export function createPublicInternetRequestUrlPolicy(
 			throw createBlockedRequestError(url, context, 'Hostname is empty');
 		}
 		if (isIP(normalizedHostname)) {
-			if (isBlockedIpAddress(normalizedHostname)) {
+			if (!allowPrivateAddresses && isBlockedIpAddress(normalizedHostname)) {
 				throw createBlockedRequestError(url, context, 'IP address is in an internal or special-use range');
 			}
 			return;
@@ -209,6 +211,9 @@ export function createPublicInternetRequestUrlPolicy(
 		const resolvedAddresses = await resolveHostname(normalizedHostname);
 		if (resolvedAddresses.length === 0) {
 			throw createBlockedRequestError(url, context, 'Hostname resolved to no IP addresses');
+		}
+		if (allowPrivateAddresses) {
+			return;
 		}
 		for (const address of resolvedAddresses) {
 			if (isBlockedIpAddress(address)) {

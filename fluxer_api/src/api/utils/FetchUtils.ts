@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createHttpClient} from '@pkgs/http_client/src/HttpClient';
-import type {HttpClient, RequestOptions, StreamResponse} from '@pkgs/http_client/src/HttpClientTypes';
+import type {HttpClient, RequestOptions, RequestUrlPolicy, StreamResponse} from '@pkgs/http_client/src/HttpClientTypes';
 import {createPublicInternetRequestUrlPolicy} from '@pkgs/http_client/src/PublicInternetRequestUrlPolicy';
 
 const requestUrlPolicy = createPublicInternetRequestUrlPolicy();
@@ -9,27 +9,35 @@ const client: HttpClient = createHttpClient({
 	userAgent: 'fluxer-api',
 	requestUrlPolicy,
 });
-const redirectScopedClients = new Map<number, HttpClient>();
+const scopedClients = new Map<RequestUrlPolicy, Map<number, HttpClient>>();
 
-interface SendRequestOptions {
+export interface SendRequestOptions {
 	maxRedirects?: number;
+	requestUrlPolicy?: RequestUrlPolicy;
 }
 
 function getHttpClientForRequest(options?: SendRequestOptions): HttpClient {
-	if (!options?.maxRedirects) {
+	const policy = options?.requestUrlPolicy ?? requestUrlPolicy;
+	const maxRedirects = options?.maxRedirects ?? 0;
+	if (policy === requestUrlPolicy && maxRedirects === 0) {
 		return client;
 	}
-	const existingClient = redirectScopedClients.get(options.maxRedirects);
+	let clientsForPolicy = scopedClients.get(policy);
+	if (!clientsForPolicy) {
+		clientsForPolicy = new Map<number, HttpClient>();
+		scopedClients.set(policy, clientsForPolicy);
+	}
+	const existingClient = clientsForPolicy.get(maxRedirects);
 	if (existingClient) {
 		return existingClient;
 	}
-	const redirectScopedClient = createHttpClient({
+	const scopedClient = createHttpClient({
 		userAgent: 'fluxer-api',
-		maxRedirects: options.maxRedirects,
-		requestUrlPolicy,
+		...(maxRedirects > 0 ? {maxRedirects} : {}),
+		requestUrlPolicy: policy,
 	});
-	redirectScopedClients.set(options.maxRedirects, redirectScopedClient);
-	return redirectScopedClient;
+	clientsForPolicy.set(maxRedirects, scopedClient);
+	return scopedClient;
 }
 
 export async function sendRequest(opts: RequestOptions, options?: SendRequestOptions) {

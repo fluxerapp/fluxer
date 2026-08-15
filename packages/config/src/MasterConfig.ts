@@ -155,6 +155,7 @@ export interface MasterConfig {
 	auth: {
 		sudo_mode_secret: string;
 		connection_initiation_secret: string;
+		sso_allow_private_addresses: boolean;
 		passkeys: {
 			rp_name: string;
 			rp_id: string;

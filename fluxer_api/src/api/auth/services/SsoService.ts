@@ -33,6 +33,7 @@ import {
 } from '../../instance/InstanceConfigRepository';
 import {
 	deriveSsoRedirectUri,
+	getSsoRequestUrlPolicy,
 	isTestSsoProvider,
 	validateSsoPublicOutboundUrl,
 } from '../../instance/SsoConfigValidation';
@@ -653,13 +654,16 @@ export class SsoService {
 			return cached.jwks;
 		}
 		const fetchJwks = async (): Promise<JSONWebKeySet> => {
-			const response = await FetchUtils.sendRequest({
-				url: jwksUrl,
-				method: 'GET',
-				headers: {Accept: 'application/json'},
-				timeout: ms('5 seconds'),
-				serviceName: 'sso_jwks',
-			});
+			const response = await FetchUtils.sendRequest(
+				{
+					url: jwksUrl,
+					method: 'GET',
+					headers: {Accept: 'application/json'},
+					timeout: ms('5 seconds'),
+					serviceName: 'sso_jwks',
+				},
+				{requestUrlPolicy: getSsoRequestUrlPolicy()},
+			);
 			if (response.status < 200 || response.status >= 300) {
 				throw new Error(`Failed to fetch JWKS: HTTP ${response.status}`);
 			}
@@ -746,16 +750,19 @@ export class SsoService {
 	}
 
 	private async fetchUserInfo(userInfoUrl: string, accessToken: string): Promise<Record<string, unknown>> {
-		const resp = await FetchUtils.sendRequest({
-			url: userInfoUrl,
-			method: 'GET',
-			headers: {
-				Authorization: `Bearer ${accessToken}`,
-				Accept: 'application/json',
+		const resp = await FetchUtils.sendRequest(
+			{
+				url: userInfoUrl,
+				method: 'GET',
+				headers: {
+					Authorization: `Bearer ${accessToken}`,
+					Accept: 'application/json',
+				},
+				timeout: ms('15 seconds'),
+				serviceName: 'sso_user_info',
 			},
-			timeout: ms('15 seconds'),
-			serviceName: 'sso_user_info',
-		});
+			{requestUrlPolicy: getSsoRequestUrlPolicy()},
+		);
 		if (resp.status < 200 || resp.status >= 300) {
 			throw InputValidationError.fromCode('access_token', ValidationErrorCodes.FAILED_TO_FETCH_SSO_USER_INFO);
 		}
@@ -807,14 +814,17 @@ export class SsoService {
 			Accept: 'application/json',
 			'Content-Type': 'application/x-www-form-urlencoded',
 		};
-		const resp = await FetchUtils.sendRequest({
-			url: config.tokenUrl ?? '',
-			method: 'POST',
-			headers,
-			body,
-			timeout: ms('15 seconds'),
-			serviceName: 'sso_token_exchange',
-		});
+		const resp = await FetchUtils.sendRequest(
+			{
+				url: config.tokenUrl ?? '',
+				method: 'POST',
+				headers,
+				body,
+				timeout: ms('15 seconds'),
+				serviceName: 'sso_token_exchange',
+			},
+			{requestUrlPolicy: getSsoRequestUrlPolicy()},
+		);
 		if (resp.status < 200 || resp.status >= 300) {
 			throw InputValidationError.fromCode('code', ValidationErrorCodes.INVALID_SSO_AUTHORIZATION_CODE);
 		}

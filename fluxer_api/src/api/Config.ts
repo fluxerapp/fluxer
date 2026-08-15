@@ -364,6 +364,7 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 		auth: {
 			sudoModeSecret: master.auth.sudo_mode_secret,
 			connectionInitiationSecret: master.auth.connection_initiation_secret,
+			ssoAllowPrivateAddresses: master.auth.sso_allow_private_addresses,
 			passkeys: {
 				rpName: master.auth.passkeys.rp_name,
 				rpId: master.auth.passkeys.rp_id,
