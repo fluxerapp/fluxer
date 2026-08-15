@@ -1080,6 +1080,7 @@ fn instance_config() -> Value {
             "scope": null,
             "allowed_domains": [],
             "auto_provision": false,
+            "auto_redirect": false,
             "redirect_uri": "https://admin.example.test/oauth2_callback"
         },
         "gateway_rollout": {

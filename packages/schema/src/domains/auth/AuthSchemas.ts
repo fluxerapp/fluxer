@@ -126,6 +126,7 @@ export const SudoVerificationSchema = z.object({
 export const SsoStatusResponse = z.object({
 	enabled: z.boolean().describe('Whether SSO is enabled for this instance'),
 	enforced: z.boolean().describe('Whether SSO is required for all users'),
+	auto_redirect: z.boolean().describe('Whether SSO should start automatically from the login page'),
 	display_name: z.string().nullable().describe('Display name of the SSO provider'),
 	redirect_uri: z.string().describe('OAuth redirect URI for SSO'),
 });

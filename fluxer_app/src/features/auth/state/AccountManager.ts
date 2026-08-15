@@ -2,6 +2,7 @@
 
 import {Routes} from '@app/app/Routes';
 import type {UserData} from '@app/features/auth/state/AccountStorage';
+import {LOCAL_SSO_LOGIN_PATH} from '@app/features/auth/utils/AutoSsoRedirect';
 import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
 import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
 import * as NotificationUtils from '@app/features/notification/utils/NotificationUtils';
@@ -160,7 +161,7 @@ class AccountManager {
 	async logout(): Promise<void> {
 		await this.leaveActiveVoiceChannel('logout');
 		await SessionManager.logout();
-		RouterUtils.replaceWith('/login');
+		RouterUtils.replaceWith(LOCAL_SSO_LOGIN_PATH);
 	}
 }
 

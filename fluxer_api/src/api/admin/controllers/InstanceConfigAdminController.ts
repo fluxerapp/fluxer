@@ -79,6 +79,7 @@ async function buildInstanceConfigResponse(): Promise<InstanceConfigResponse> {
 			scope: ssoConfig.scope,
 			allowed_domains: ssoConfig.allowedEmailDomains,
 			auto_provision: ssoConfig.autoProvision,
+			auto_redirect: ssoConfig.autoRedirect,
 			redirect_uri: deriveSsoRedirectUri(Config.endpoints.webApp),
 		},
 		gateway_rollout: gatewayRollout,
@@ -228,6 +229,7 @@ export function InstanceConfigAdminController(app: HonoApp) {
 						readOptionalField(sso, 'allowed_domains'),
 					),
 					autoProvision: mergeOptionalField(current.autoProvision, readOptionalField(sso, 'auto_provision')),
+					autoRedirect: mergeOptionalField(current.autoRedirect, readOptionalField(sso, 'auto_redirect')),
 				};
 				const validated = await normalizeAndValidateSsoConfig(next, {
 					testModeEnabled: Config.dev.testModeEnabled,
@@ -246,6 +248,7 @@ export function InstanceConfigAdminController(app: HonoApp) {
 					scope: next.scope,
 					allowedEmailDomains: validated.allowedEmailDomains,
 					autoProvision: next.autoProvision,
+					autoRedirect: next.autoRedirect,
 					redirectUri: null,
 				});
 			}

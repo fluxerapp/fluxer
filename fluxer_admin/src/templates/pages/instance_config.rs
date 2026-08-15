@@ -1388,6 +1388,7 @@ fn sso_config_section(base: &str, csrf_token: &str, sso: &SsoConfigResponse) -> 
                         (checkbox("sso_enabled", "true", "Enable SSO", sso.enabled, true))
                         (checkbox("sso_enforced", "true", "Require SSO (disables local password login and registration)", sso.enforced, true))
                         (checkbox("sso_auto_provision", "true", "Automatically provision users on first SSO login", sso.auto_provision, true))
+                        (checkbox("sso_auto_redirect", "true", "Automatically redirect unauthenticated users to SSO", sso.auto_redirect, true))
                     }
                     div class="grid grid-cols-1 gap-4 sm:grid-cols-2" {
                         (text_input("sso_display_name", "Display Name", sso.display_name.as_deref().unwrap_or(""), "Example Identity Provider"))

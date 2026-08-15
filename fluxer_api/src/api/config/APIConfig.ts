@@ -298,6 +298,9 @@ export interface APIConfig {
 		setup: {
 			configured: boolean;
 		};
+		sso: {
+			autoRedirect: boolean;
+		};
 	};
 	abusePolicy: {
 		inboundPhoneCountryCodes: Array<string>;

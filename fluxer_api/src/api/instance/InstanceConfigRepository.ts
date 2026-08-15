@@ -766,6 +766,7 @@ export interface InstanceSsoConfig {
 	scope: string | null;
 	allowedEmailDomains: Array<string>;
 	autoProvision: boolean;
+	autoRedirect: boolean;
 	redirectUri: string | null;
 }
 
@@ -1555,6 +1556,7 @@ export class InstanceConfigRepository {
 		const clientSecret = read('sso_client_secret');
 		const enabled = configs.get('sso_enabled') === 'true';
 		const enforcedRaw = configs.get('sso_enforced');
+		const autoRedirectRaw = configs.get('sso_auto_redirect');
 		return {
 			enabled,
 			enforced: enforcedRaw == null ? enabled : enforcedRaw === 'true',
@@ -1570,6 +1572,7 @@ export class InstanceConfigRepository {
 			scope: read('sso_scope'),
 			allowedEmailDomains: allowedDomains,
 			autoProvision: configs.get('sso_auto_provision') !== 'false',
+			autoRedirect: autoRedirectRaw == null ? Config.instance.sso.autoRedirect : autoRedirectRaw === 'true',
 			redirectUri: null,
 		};
 	}
@@ -1610,6 +1613,7 @@ export class InstanceConfigRepository {
 			['sso_scope', next.scope ?? ''],
 			['sso_allowed_domains', JSON.stringify(allowedEmailDomains)],
 			['sso_auto_provision', next.autoProvision ? 'true' : 'false'],
+			['sso_auto_redirect', next.autoRedirect ? 'true' : 'false'],
 			['sso_redirect_uri', ''],
 		];
 		if (config.clientSecret !== undefined) {

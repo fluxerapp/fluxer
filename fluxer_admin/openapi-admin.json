@@ -12398,6 +12398,7 @@
 							"scope": {"nullable": true, "type": "string"},
 							"allowed_domains": {"type": "array", "items": {"type": "string"}, "maxItems": 100},
 							"auto_provision": {"type": "boolean"},
+							"auto_redirect": {"type": "boolean"},
 							"redirect_uri": {"nullable": true, "type": "string"}
 						},
 						"required": [
@@ -12414,6 +12415,7 @@
 							"scope",
 							"allowed_domains",
 							"auto_provision",
+							"auto_redirect",
 							"redirect_uri"
 						]
 					},
@@ -12938,7 +12940,8 @@
 							"client_secret": {"nullable": true, "type": "string"},
 							"scope": {"nullable": true, "type": "string"},
 							"allowed_domains": {"type": "array", "items": {"type": "string"}, "maxItems": 100},
-							"auto_provision": {"type": "boolean"}
+							"auto_provision": {"type": "boolean"},
+							"auto_redirect": {"type": "boolean"}
 						}
 					},
 					"app_public": {

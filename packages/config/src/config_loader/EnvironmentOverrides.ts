@@ -184,6 +184,7 @@ const NAMED_FLUXER_ENV_OVERRIDES: Record<string, NamedEnvOverride> = {
 	},
 	FLUXER_SUDO_MODE_SECRET: {path: ['auth', 'sudo_mode_secret']},
 	FLUXER_CONNECTION_INITIATION_SECRET: {path: ['auth', 'connection_initiation_secret']},
+	FLUXER_SSO_AUTO_REDIRECT: {path: ['instance', 'sso', 'auto_redirect'], parse: parseEnvValue},
 	FLUXER_VAPID_PUBLIC_KEY: {path: ['auth', 'vapid', 'public_key']},
 	FLUXER_VAPID_PRIVATE_KEY: {path: ['auth', 'vapid', 'private_key']},
 	FLUXER_VAPID_EMAIL: {path: ['auth', 'vapid', 'email']},

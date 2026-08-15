@@ -29,6 +29,11 @@ import {
 	type LoginSuccessPayload,
 	startSsoLogin,
 } from '@app/features/auth/state/AuthFlow';
+import {
+	isLocalSsoRedirectBypass,
+	shouldAutoStartSso,
+	shouldPreferSsoStep,
+} from '@app/features/auth/utils/AutoSsoRedirect';
 import {NEED_ACCOUNT_DESCRIPTOR, SIGN_IN_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
 import {useLocation} from '@app/features/platform/components/router/RouterReact';
@@ -42,7 +47,7 @@ import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import clsx from 'clsx';
 import {observer} from 'mobx-react-lite';
-import {cloneElement, type ReactElement, type ReactNode, useCallback, useEffect, useMemo, useState} from 'react';
+import {cloneElement, type ReactElement, type ReactNode, useCallback, useEffect, useMemo, useRef, useState} from 'react';
 
 const SESSION_EXPIRED_SIGN_IN_AGAIN_DESCRIPTOR = msg({
 	message: 'Session expired for {identifier}. Sign in again.',
@@ -118,9 +123,17 @@ export const AuthLoginLayout = observer(function AuthLoginLayout({
 	const accounts = AccountManager.orderedAccounts;
 	const hasStoredAccounts = accounts.length > 0;
 	const ssoConfig = RuntimeConfig.sso;
+	const localSsoRedirectBypass = isLocalSsoRedirectBypass(location.search);
 	const isSsoEnforced = Boolean(ssoConfig?.enabled && ssoConfig.enforced);
+	const preferSsoStep = shouldPreferSsoStep({
+		enabled: Boolean(ssoConfig?.enabled),
+		autoRedirect: Boolean(ssoConfig?.auto_redirect),
+		localBypass: localSsoRedirectBypass,
+		desktopHandoff,
+	});
 	const ssoDisplayName = ssoConfig?.display_name ?? 'Single Sign-On';
 	const [isStartingSso, setIsStartingSso] = useState(false);
+	const autoSsoRedirectAttempted = useRef(false);
 	const handoffAccounts =
 		desktopHandoff && excludeCurrentUser ? accounts.filter((a) => a.userId !== currentUserId) : accounts;
 	const hasHandoffAccounts = handoffAccounts.length > 0;
@@ -238,6 +251,21 @@ export const AuthLoginLayout = observer(function AuthLoginLayout({
 			setIsStartingSso(false);
 		}
 	}, [ssoConfig?.enabled, ssoRedirectPath, i18n]);
+	useEffect(() => {
+		if (
+			!shouldAutoStartSso({
+				enabled: Boolean(ssoConfig?.enabled),
+				autoRedirect: Boolean(ssoConfig?.auto_redirect),
+				localBypass: localSsoRedirectBypass,
+				desktopHandoff,
+				alreadyAttempted: autoSsoRedirectAttempted.current,
+			})
+		) {
+			return;
+		}
+		autoSsoRedirectAttempted.current = true;
+		void handleStartSso();
+	}, [desktopHandoff, handleStartSso, localSsoRedirectBypass, ssoConfig?.auto_redirect, ssoConfig?.enabled]);
 	const styledRegisterLink = useMemo(() => {
 		const {className: linkClassName} = registerLink.props as {className?: string};
 		return cloneElement(registerLink, {
@@ -247,11 +275,11 @@ export const AuthLoginLayout = observer(function AuthLoginLayout({
 	const authLoginStep: AuthLoginStep = useMemo(() => {
 		if (desktopHandoff && handoff.mode === 'selecting') return 'desktop_handoff_account';
 		if (desktopHandoff && isApprovalFlowMode(handoff.mode)) return 'desktop_handoff_approval';
-		if (isSsoEnforced) return 'sso';
+		if (isSsoEnforced || preferSsoStep) return 'sso';
 		if (showAccountSelector && hasStoredAccounts && !desktopHandoff) return 'account';
 		if (ipAuthChallenge) return 'ip_authorization';
 		return 'credentials';
-	}, [desktopHandoff, handoff.mode, hasStoredAccounts, ipAuthChallenge, isSsoEnforced, showAccountSelector]);
+	}, [desktopHandoff, handoff.mode, hasStoredAccounts, ipAuthChallenge, isSsoEnforced, preferSsoStep, showAccountSelector]);
 	const hasExtraTopContent = extraTopContent !== undefined && extraTopContent !== null;
 	const startedFromAccountSelector = hasStoredAccounts && !desktopHandoff && !initialEmail;
 	const showSplitLogo =
@@ -275,7 +303,14 @@ export const AuthLoginLayout = observer(function AuthLoginLayout({
 			);
 		}
 		if (authLoginStep === 'sso') {
-			return <AuthSsoPanel redirectPath={ssoRedirectPath} dataFlx="auth.flow.auth-login-layout.sso-panel" />;
+			return (
+				<AuthSsoPanel
+					redirectPath={ssoRedirectPath}
+					submitting={isStartingSso}
+					error={switchError}
+					dataFlx="auth.flow.auth-login-layout.sso-panel"
+				/>
+			);
 		}
 		if (authLoginStep === 'account') {
 			return (

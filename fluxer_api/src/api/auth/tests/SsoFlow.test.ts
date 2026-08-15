@@ -28,6 +28,7 @@ interface SsoCompleteResponse {
 interface SsoStatusResponse {
 	enabled: boolean;
 	enforced: boolean;
+	auto_redirect: boolean;
 	display_name?: string;
 	redirect_uri: string;
 }
@@ -695,13 +696,22 @@ describe('Auth SSO flow', () => {
 			const status1 = await createBuilderWithoutAuth<SsoStatusResponse>(harness).get('/auth/sso/status').execute();
 			expect(status1.enabled).toBe(false);
 			expect(status1.enforced).toBe(false);
+			expect(status1.auto_redirect).toBe(false);
 			await enableSso(harness, admin.token, {
 				display_name: 'Test SSO Provider',
 			});
 			const status2 = await createBuilderWithoutAuth<SsoStatusResponse>(harness).get('/auth/sso/status').execute();
 			expect(status2.enabled).toBe(true);
 			expect(status2.enforced).toBe(true);
+			expect(status2.auto_redirect).toBe(false);
 			expect(status2.display_name).toBe('Test SSO Provider');
+			await disableSso(harness, admin.token);
+		});
+		it('reports automatic SSO redirect when admin SSO config enables it', async () => {
+			await enableSso(harness, admin.token, {auto_redirect: true});
+			const status = await createBuilderWithoutAuth<SsoStatusResponse>(harness).get('/auth/sso/status').execute();
+			expect(status.enabled).toBe(true);
+			expect(status.auto_redirect).toBe(true);
 			await disableSso(harness, admin.token);
 		});
 		it('reports optional SSO separately from enforced SSO', async () => {
