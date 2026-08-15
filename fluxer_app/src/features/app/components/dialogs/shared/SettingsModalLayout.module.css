@@ -10,7 +10,6 @@
 	width: 100%;
 	position: relative;
 	overflow: hidden;
-	will-change: transform;
 	--settings-edge-gutter: clamp(1rem, 3vw, 1.5rem);
 	--settings-surface-background: var(--form-surface-background);
 	--settings-panel-background: color-mix(in srgb, var(--form-surface-background) 88%, var(--background-primary));
@@ -136,7 +135,6 @@
 	display: flex;
 	height: 100%;
 	width: 200%;
-	will-change: transform;
 	-webkit-backface-visibility: hidden;
 	backface-visibility: hidden;
 }
@@ -150,7 +148,6 @@
 	display: flex;
 	flex-direction: column;
 	background: var(--background-secondary);
-	will-change: transform;
 	-webkit-overflow-scrolling: touch;
 	overscroll-behavior-y: contain;
 	contain: layout style paint;
@@ -293,10 +290,6 @@
 	min-height: 0;
 }
 
-.sidebarNavWrapper > div {
-	padding-inline-end: 0;
-}
-
 .sidebarNav {
 	flex: 1;
 	margin-inline-end: -0.5rem;
@@ -379,7 +372,7 @@
 }
 
 .sidebarItemSelected,
-.sidebarItem:focus:not(.sidebarItemDanger) {
+.sidebarItem.sidebarItemFocused:not(.sidebarItemDanger) {
 	background: var(--settings-sidebar-selected-background);
 	color: var(--settings-selected-color);
 }
@@ -425,7 +418,7 @@
 .sidebarItemSelected .sidebarItemChevron,
 .sidebarItem[aria-expanded='true'] .sidebarItemChevron,
 .sidebarItem:hover:not(.sidebarItemSelected) .sidebarItemChevron,
-.sidebarItem:focus-visible .sidebarItemChevron {
+.sidebarItem.sidebarItemFocused .sidebarItemChevron {
 	opacity: 1;
 }
 
@@ -434,7 +427,7 @@
 }
 
 .sidebarItemSelected .sidebarItemChevron,
-.sidebarItem:focus:not(.sidebarItemDanger) .sidebarItemChevron {
+.sidebarItem.sidebarItemFocused:not(.sidebarItemDanger) .sidebarItemChevron {
 	color: var(--settings-selected-color);
 }
 
@@ -443,7 +436,7 @@
 }
 
 .sidebarItemSelected .sidebarItemIcon,
-.sidebarItem:focus:not(.sidebarItemDanger) .sidebarItemIcon {
+.sidebarItem.sidebarItemFocused:not(.sidebarItemDanger) .sidebarItemIcon {
 	color: var(--settings-sidebar-highlight);
 }
 

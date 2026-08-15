@@ -24,6 +24,7 @@ class ChannelSearchContext {
 	activeSearchQuery: string = '';
 	activeSearchSegments: Array<SearchSegment> = [];
 	isSearchActive = false;
+	isInputFocused = false;
 	searchRefreshKey = 0;
 	machineSnapshot: SearchMachineSnapshot = createSearchMachineSnapshot();
 	scrollPosition = 0;
@@ -80,6 +81,11 @@ class ChannelSearch {
 	setIsSearchActive(contextId: string, value: boolean): void {
 		const context = this.getContext(contextId);
 		context.isSearchActive = value;
+	}
+
+	setInputFocused(contextId: string, focused: boolean): void {
+		const context = this.getContext(contextId);
+		context.isInputFocused = focused;
 	}
 
 	closeSearch(contextId: string): void {

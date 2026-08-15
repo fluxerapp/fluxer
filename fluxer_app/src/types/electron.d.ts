@@ -4,8 +4,6 @@ import type {VoiceEngineV2BridgeApi} from '@fluxer/voice_engine_v2/bridge';
 import type {AuthenticationResponseJSON, RegistrationResponseJSON} from '@simplewebauthn/browser';
 
 export type InputMonitoringPermissionStatus = 'granted' | 'denied' | 'not-determined' | 'unsupported';
-export type DesktopBuildVariant = 'default' | 'windows-game-capture';
-
 export interface DesktopSource {
 	id: string;
 	name: string;
@@ -20,7 +18,6 @@ export interface DesktopSource {
 export interface DesktopInfo {
 	version: string;
 	channel: 'stable' | 'canary';
-	buildVariant: DesktopBuildVariant;
 	arch: string;
 	hardwareArch: string;
 	runningUnderRosetta: boolean;
@@ -352,7 +349,6 @@ export interface AppMetricsSnapshot {
 export interface ElectronAPI {
 	platform: 'darwin' | 'win32' | 'linux' | string;
 	buildChannel: 'stable' | 'canary';
-	buildVariant: DesktopBuildVariant;
 	openExternal(url: string): Promise<void>;
 	downloadFile(url: string, suggestedName: string): Promise<DownloadResult>;
 	onUpdaterEvent(callback: (event: UpdaterEvent) => void): () => void;

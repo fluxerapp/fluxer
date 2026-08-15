@@ -5,6 +5,7 @@ import {isLimitToggleEnabled} from '@app/features/app/utils/LimitUtils';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as PremiumModalCommands from '@app/features/premium/commands/PremiumModalCommands';
 import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {CheckboxItem, MenuGroupLabel} from '@app/features/ui/action_menu/ContextMenu';
 import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
 import {MenuItemRadio} from '@app/features/ui/action_menu/MenuItemRadio';
@@ -170,7 +171,7 @@ const PremiumBadge = () => (
 	>
 		<CrownSimpleIcon
 			weight="fill"
-			size={12}
+			size={remFromPx(12)}
 			data-flx="voice.stream-settings-menu-content.premium-badge.crown-simple-icon"
 		/>
 	</span>

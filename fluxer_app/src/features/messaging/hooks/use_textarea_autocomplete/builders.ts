@@ -14,9 +14,9 @@ import {
 	filterStickersForAutocomplete,
 } from '@app/features/expressions/utils/ExpressionPermissionUtils';
 import type {GuildMember} from '@app/features/member/models/GuildMember';
-import GuildMembers from '@app/features/member/state/GuildMembers';
 import type {User} from '@app/features/user/models/User';
 import Users from '@app/features/user/state/Users';
+import * as DisplayNameUtils from '@app/features/user/utils/DisplayNameUtils';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import type {I18n} from '@lingui/core';
 import {matchSorter} from 'match-sorter';
@@ -38,7 +38,7 @@ function toLowerSearchText(value: string | null | undefined): string {
 }
 
 export function getMemberDisplayName(member: GuildMember): string {
-	return firstDisplayText(member.nick, member.user?.displayName, member.user?.username, member.user?.id);
+	return DisplayNameUtils.getUntruncatedGuildMemberNickname(member);
 }
 
 export function getUserDisplayName(user: User): string {
@@ -61,8 +61,8 @@ export function parseMentionQuery(query: string): ParsedMentionQuery {
 		};
 	}
 	return {
-		usernameQuery: query['slice'](0, hashIndex),
-		tagQuery: query['slice'](hashIndex + 1),
+		usernameQuery: query.slice(0, hashIndex),
+		tagQuery: query.slice(hashIndex + 1),
 		hasTagSeparator: true,
 	};
 }
@@ -109,6 +109,58 @@ export function filterDMUsers(
 	}));
 }
 
+function matchGuildMembers(membersToUse: Array<GuildMember>, parsedQuery: ParsedMentionQuery): Array<GuildMember> {
+	if (parsedQuery.hasTagSeparator) {
+		const usernameQueryLower = parsedQuery.usernameQuery.toLowerCase();
+		const tagQueryLower = parsedQuery.tagQuery === null ? '' : parsedQuery.tagQuery.toLowerCase();
+		return membersToUse.filter((member) => {
+			const nick = toLowerSearchText(member.nick);
+			const username = toLowerSearchText(member.user.username);
+			const display = toLowerSearchText(getMemberDisplayName(member));
+			const discriminator = firstDisplayText(member.user.discriminator).toLowerCase();
+			const matchesUsername =
+				usernameQueryLower.length === 0 ||
+				username.startsWith(usernameQueryLower) ||
+				display.startsWith(usernameQueryLower) ||
+				nick.startsWith(usernameQueryLower);
+			const matchesTag = tagQueryLower.length === 0 || discriminator.startsWith(tagQueryLower);
+			return matchesUsername && matchesTag;
+		});
+	}
+	const trimmedUsername = parsedQuery.usernameQuery.trim();
+	if (trimmedUsername.length === 0) {
+		return membersToUse;
+	}
+	return matchSorter(membersToUse, trimmedUsername, {
+		keys: [(member) => getMemberDisplayName(member), 'nick', 'user.globalName', 'user.username', 'user.tag'],
+	});
+}
+
+function sortGuildMembers(members: Array<GuildMember>, stableOrder?: Map<string, number>): Array<GuildMember> {
+	if (stableOrder && stableOrder.size > 0) {
+		const NEW_RANK = Number.MAX_SAFE_INTEGER;
+		return [...members].sort((a, b) => {
+			const aRankValue = stableOrder.get(a.user.id);
+			const bRankValue = stableOrder.get(b.user.id);
+			const aRank = aRankValue === undefined ? NEW_RANK : aRankValue;
+			const bRank = bRankValue === undefined ? NEW_RANK : bRankValue;
+			if (aRank !== bRank) return aRank - bRank;
+			return getMemberDisplayName(a).toLowerCase().localeCompare(getMemberDisplayName(b).toLowerCase());
+		});
+	}
+	return [...members].sort((a, b) =>
+		getMemberDisplayName(a).toLowerCase().localeCompare(getMemberDisplayName(b).toLowerCase()),
+	);
+}
+
+export function searchGuildMembers(
+	membersToUse: Array<GuildMember>,
+	parsedQuery: ParsedMentionQuery,
+	limit: number,
+): Array<GuildMember> {
+	return sortGuildMembers(matchGuildMembers(membersToUse, parsedQuery)).slice(0, limit);
+}
+
 export function filterGuildMembers(
 	membersToUse: Array<GuildMember>,
 	parsedQuery: ParsedMentionQuery,
@@ -123,46 +175,9 @@ export function filterGuildMembers(
 	const filteredByAccess = shouldCheckAccess
 		? membersToUse.filter((member) => canViewChannel(member.user.id))
 		: membersToUse;
-	const trimmedUsername = parsedQuery.usernameQuery.trim();
 	const limit = MENTION_RESULT_LIMIT;
-	let matchedMembers: typeof filteredByAccess;
-	if (parsedQuery.hasTagSeparator) {
-		const usernameQueryLower = parsedQuery.usernameQuery.toLowerCase();
-		const tagQueryLower = parsedQuery.tagQuery?.toLowerCase() ?? '';
-		matchedMembers = filteredByAccess.filter((member) => {
-			const nick = toLowerSearchText(member.nick);
-			const username = toLowerSearchText(member.user?.username);
-			const display = toLowerSearchText(getMemberDisplayName(member));
-			const discriminator = firstDisplayText(member.user?.discriminator);
-			const matchesUsername =
-				usernameQueryLower.length === 0 ||
-				username.startsWith(usernameQueryLower) ||
-				display.startsWith(usernameQueryLower) ||
-				nick.startsWith(usernameQueryLower);
-			const matchesTag = tagQueryLower.length === 0 || discriminator.startsWith(tagQueryLower);
-			return matchesUsername && matchesTag;
-		});
-	} else if (trimmedUsername.length === 0) {
-		matchedMembers = filteredByAccess;
-	} else {
-		matchedMembers = matchSorter(filteredByAccess, trimmedUsername, {
-			keys: [(member) => getMemberDisplayName(member), 'nick', 'user.globalName', 'user.username', 'user.tag'],
-		});
-	}
-	let sorted: Array<GuildMember>;
-	if (stableOrder && stableOrder.size > 0) {
-		const NEW_RANK = Number.MAX_SAFE_INTEGER;
-		sorted = [...matchedMembers].sort((a, b) => {
-			const ra = stableOrder.get(a.user.id) ?? NEW_RANK;
-			const rb = stableOrder.get(b.user.id) ?? NEW_RANK;
-			if (ra !== rb) return ra - rb;
-			return getMemberDisplayName(a).toLowerCase().localeCompare(getMemberDisplayName(b).toLowerCase());
-		});
-	} else {
-		sorted = [...matchedMembers].sort((a, b) =>
-			getMemberDisplayName(a).toLowerCase().localeCompare(getMemberDisplayName(b).toLowerCase()),
-		);
-	}
+	const matchedMembers = matchGuildMembers(filteredByAccess, parsedQuery);
+	const sorted = sortGuildMembers(matchedMembers, stableOrder);
 	return sorted.slice(0, limit).map((member) => ({
 		type: 'mention' as const,
 		kind: 'member' as const,
@@ -188,43 +203,23 @@ export interface CommandArgContext {
 	stableOrder?: Map<string, number>;
 }
 
-export function unionMembers(
-	worker: ReadonlyArray<GuildMember>,
-	cached: ReadonlyArray<GuildMember>,
-): Array<GuildMember> {
-	const seen = new Set<string>();
-	const merged: Array<GuildMember> = [];
-	for (const member of worker) {
-		if (!seen.has(member.user.id)) {
-			seen.add(member.user.id);
-			merged.push(member);
-		}
-	}
-	for (const member of cached) {
-		if (!seen.has(member.user.id)) {
-			seen.add(member.user.id);
-			merged.push(member);
-		}
-	}
-	return merged;
-}
-
 export function buildCommandArgOptions(ctx: CommandArgContext): Array<AutocompleteOption> {
 	const parsedQuery = parseMentionQuery(ctx.matchedText ?? '');
-	if (ctx.commandName === 'msg') {
-		if (!ctx.channel.guildId) {
-			const users = ctx.channel.recipientIds
-				.map((id) => Users.getUser(id))
-				.filter((user): user is NonNullable<typeof user> => user != null);
-			return filterDMUsers(users, parsedQuery);
+	if (!ctx.channel.guildId) {
+		if (ctx.commandName !== 'msg') {
+			return [];
 		}
-		const membersToUse = unionMembers(ctx.memberSearchResults, GuildMembers.getMembers(ctx.channel.guildId ?? ''));
-		return filterGuildMembers(membersToUse, parsedQuery, true, ctx.canViewChannel, ctx.stableOrder);
+		const users = ctx.channel.recipientIds
+			.map((id) => Users.getUser(id))
+			.filter((user): user is NonNullable<typeof user> => user != null);
+		return filterDMUsers(users, parsedQuery);
 	}
-	const permission = ctx.commandName === 'kick' ? Permissions.KICK_MEMBERS : Permissions.BAN_MEMBERS;
-	const membersToUse = unionMembers(ctx.memberSearchResults, GuildMembers.getMembers(ctx.channel.guildId ?? ''));
-	const filteredMembers = membersToUse.filter((member) => ctx.canManageUser(member.user.id, permission));
-	return filterGuildMembers(filteredMembers, parsedQuery, false, ctx.canViewChannel, ctx.stableOrder);
+	if (ctx.commandName === 'ban' || ctx.commandName === 'kick') {
+		const permission = ctx.commandName === 'kick' ? Permissions.KICK_MEMBERS : Permissions.BAN_MEMBERS;
+		const manageableMembers = ctx.memberSearchResults.filter((member) => ctx.canManageUser(member.user.id, permission));
+		return filterGuildMembers(manageableMembers, parsedQuery, false, ctx.canViewChannel, ctx.stableOrder);
+	}
+	return filterGuildMembers(ctx.memberSearchResults, parsedQuery, true, ctx.canViewChannel, ctx.stableOrder);
 }
 
 export interface EmojiReactionContext {

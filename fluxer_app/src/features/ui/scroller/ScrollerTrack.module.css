@@ -12,8 +12,8 @@
 }
 
 .vertical {
-	inset-block-start: var(--scroller-track-block-start-inset, 0);
-	inset-block-end: var(--scroller-track-block-end-inset, 0);
+	inset-block-start: var(--scroller-track-block-start-inset, 0px);
+	inset-block-end: var(--scroller-track-block-end-inset, 0px);
 	inset-inline-end: 0;
 	width: var(--scroller-track-size);
 }

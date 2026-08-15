@@ -1,7 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import styles from '@app/features/ui/components/Slider.module.css';
-import {buildMarkerState, clamp, snapValueToMarker} from '@app/features/ui/components/slider/SliderMath';
+import {
+	buildMarkerState,
+	clamp,
+	scaleValueEquidistant,
+	snapValueToMarker,
+	unscaleValueEquidistant,
+} from '@app/features/ui/components/slider/SliderMath';
 import {SliderResetControls} from '@app/features/ui/components/slider/SliderResetControls';
 import {SliderTooltipPortal} from '@app/features/ui/components/slider/SliderTooltipPortal';
 import type {SliderProps} from '@app/features/ui/components/slider/SliderTypes';
@@ -26,6 +32,10 @@ const SLIDER_VALUE_DESCRIPTOR = msg({
 
 function getSingleValue(value: number | ReadonlyArray<number>): number {
 	return typeof value === 'number' ? value : (value[0] ?? 0);
+}
+
+function isPointerInteractionReason(reason: string): boolean {
+	return reason === 'track-press' || reason === 'drag';
 }
 
 export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
@@ -90,6 +100,29 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
 			[markerState, stickToMarkers],
 		);
 		const value = normalizeValue(rawValue);
+		const usesEquidistantScale = equidistant && markerState.sortedMarkers.length > 1;
+		const visualPercent = usesEquidistantScale ? scaleValueEquidistant(markerState.sortedMarkers, value) : undefined;
+		const resolveBaseValue = useCallback(
+			(newValue: number | ReadonlyArray<number>, reason: string) => {
+				const baseValue = getSingleValue(newValue);
+				if (!usesEquidistantScale || !isPointerInteractionReason(reason)) {
+					return normalizeValue(baseValue);
+				}
+				const basePercent = ((baseValue - baseMin) / (baseMax - baseMin)) * 100;
+				return normalizeValue(unscaleValueEquidistant(markerState.sortedMarkers, basePercent));
+			},
+			[baseMax, baseMin, markerState.sortedMarkers, normalizeValue, usesEquidistantScale],
+		);
+		const indicatorStyle = useMemo(() => {
+			if (visualPercent === undefined) return fillStyles;
+			return orientation === 'vertical'
+				? {...fillStyles, height: `${visualPercent}%`}
+				: {...fillStyles, width: `${visualPercent}%`};
+		}, [fillStyles, orientation, visualPercent]);
+		const thumbStyle = useMemo(() => {
+			if (visualPercent === undefined) return undefined;
+			return orientation === 'vertical' ? {bottom: `${visualPercent}%`} : {insetInlineStart: `${visualPercent}%`};
+		}, [orientation, visualPercent]);
 		const isAtFactoryDefault = factoryDefaultValue !== undefined && value === factoryDefaultValue;
 		const canReset = showResetButton && !isAtFactoryDefault && !disabled;
 		const inlineResetLabel = resetTooltip ?? i18n._(RESET_SLIDER_TO_DEFAULT_VALUE_DESCRIPTOR);
@@ -130,20 +163,20 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
 			[asValueChanges, controlledValue, onValueChange],
 		);
 		const handleBaseValueChange = useCallback(
-			(newValue: number | ReadonlyArray<number>) => {
-				commitControlledValue(normalizeValue(getSingleValue(newValue)));
+			(newValue: number | ReadonlyArray<number>, eventDetails: BaseSlider.Root.ChangeEventDetails) => {
+				commitControlledValue(resolveBaseValue(newValue, eventDetails.reason));
 			},
-			[commitControlledValue, normalizeValue],
+			[commitControlledValue, resolveBaseValue],
 		);
 		const handleBaseValueCommitted = useCallback(
-			(newValue: number | ReadonlyArray<number>) => {
-				const nextValue = normalizeValue(getSingleValue(newValue));
+			(newValue: number | ReadonlyArray<number>, eventDetails: BaseSlider.Root.CommitEventDetails) => {
+				const nextValue = resolveBaseValue(newValue, eventDetails.reason);
 				if (asValueChanges) {
 					onValueChange?.(nextValue);
 				}
 				endPointerInteraction();
 			},
-			[asValueChanges, endPointerInteraction, normalizeValue, onValueChange],
+			[asValueChanges, endPointerInteraction, onValueChange, resolveBaseValue],
 		);
 		const handleControlPointerDownCapture = useCallback(
 			(event: React.PointerEvent<HTMLDivElement>) => {
@@ -274,7 +307,7 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
 					<BaseSlider.Track className={styles.track} style={barStyles} data-flx="ui.slider.base-slider.track">
 						<BaseSlider.Indicator
 							className={styles.barFill}
-							style={fillStyles}
+							style={indicatorStyle}
 							data-flx="ui.slider.base-slider.indicator"
 						/>
 						{children}
@@ -282,6 +315,7 @@ export const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
 							ref={thumbRef}
 							inputRef={thumbInputRef}
 							className={styles.grabber}
+							style={thumbStyle}
 							aria-label={ariaLabelledBy ? undefined : sliderLabel}
 							aria-labelledby={ariaLabelledBy}
 							getAriaValueText={ariaValueText ? () => ariaValueText : undefined}

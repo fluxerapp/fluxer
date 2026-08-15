@@ -339,7 +339,7 @@
 	flex-direction: column;
 	height: 100%;
 	background-color: var(--background-secondary);
-	padding: 0 1rem calc(env(safe-area-inset-bottom, 0) + 1rem);
+	padding: 0 1rem calc(env(safe-area-inset-bottom, 0px) + 1rem);
 }
 
 .mobileSearchContainer {

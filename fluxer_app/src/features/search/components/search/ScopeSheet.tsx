@@ -3,6 +3,7 @@
 import type {ScopeValueOption} from '@app/features/channel/components/SearchScopeOptions';
 import styles from '@app/features/search/components/search/ScopeSheet.module.css';
 import type {MessageSearchScope} from '@app/features/search/utils/SearchUtils';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {BottomSheet} from '@app/features/ui/bottom_sheet/BottomSheet';
 import {Scroller} from '@app/features/ui/components/Scroller';
 import {msg} from '@lingui/core/macro';
@@ -84,7 +85,7 @@ export const ScopeSheet: React.FC<ScopeSheetProps> = ({
 								>
 									<div className={styles.optionLeft} data-flx="search.search.scope-sheet.option-left">
 										<Icon
-											size={22}
+											size={remFromPx(22)}
 											className={clsx(styles.optionIcon, isSelected && styles.optionIconSelected)}
 											weight="regular"
 											data-flx="search.search.scope-sheet.option-icon"
@@ -108,7 +109,7 @@ export const ScopeSheet: React.FC<ScopeSheetProps> = ({
 									</div>
 									{isSelected && (
 										<CheckIcon
-											size={20}
+											size={remFromPx(20)}
 											className={styles.checkIcon}
 											weight="bold"
 											data-flx="search.search.scope-sheet.check-icon"

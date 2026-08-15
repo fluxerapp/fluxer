@@ -1,0 +1,44 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.customEmoji {
+	display: inline-block;
+	height: 1.375em;
+	width: auto;
+	max-height: 1.375em;
+	vertical-align: bottom;
+	object-fit: contain;
+	margin: 0 0.0625rem;
+}
+
+.plainText {
+	color: inherit;
+	font: inherit;
+	white-space: pre-wrap;
+}
+
+.literal {
+	font-family: var(--font-mono, ui-monospace, monospace);
+	font-size: 0.85em;
+	background-color: var(--background-secondary-alt, var(--background-secondary));
+	border-radius: 0.1875rem;
+	padding: 0 0.1875rem;
+}
+
+.spoiler {
+	background-color: var(--background-modifier-active, rgba(0, 0, 0, 0.15));
+	border-radius: 0.1875rem;
+	box-decoration-break: clone;
+	-webkit-box-decoration-break: clone;
+}
+
+.srOnly {
+	position: absolute;
+	width: 0.0625rem;
+	height: 0.0625rem;
+	padding: 0;
+	margin: -0.0625rem;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
+}

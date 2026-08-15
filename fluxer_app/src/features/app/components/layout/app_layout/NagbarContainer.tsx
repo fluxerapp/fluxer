@@ -2,7 +2,6 @@
 
 import {type NagbarState, NagbarType} from '@app/features/app/components/layout/app_layout/AppLayoutTypes';
 import styles from '@app/features/app/components/layout/app_layout/NagbarContainer.module.css';
-import {CanaryTesterCtaNagbar} from '@app/features/app/components/layout/app_layout/nagbars/CanaryTesterCtaNagbar';
 import {CorruptedInstallationNagbar} from '@app/features/app/components/layout/app_layout/nagbars/CorruptedInstallationNagbar';
 import {DesktopDownloadNagbar} from '@app/features/app/components/layout/app_layout/nagbars/DesktopDownloadNagbar';
 import {DesktopNotificationNagbar} from '@app/features/app/components/layout/app_layout/nagbars/DesktopNotificationNagbar';
@@ -152,14 +151,6 @@ export const NagbarContainer: React.FC<NagbarContainerProps> = observer(({nagbar
 								key={nagbar.type}
 								isMobile={mobileLayout.enabled}
 								data-flx="app.app-layout.nagbar-container.voice-session-restore-nagbar"
-							/>
-						);
-					case NagbarType.CANARY_TESTER_CTA:
-						return (
-							<CanaryTesterCtaNagbar
-								key={nagbar.type}
-								isMobile={mobileLayout.enabled}
-								data-flx="app.app-layout.nagbar-container.canary-tester-cta-nagbar"
 							/>
 						);
 					case NagbarType.LINUX_INPUT_ACCESS:

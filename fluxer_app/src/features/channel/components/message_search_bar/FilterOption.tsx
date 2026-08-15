@@ -3,6 +3,7 @@
 import styles from '@app/features/channel/components/message_search_bar/MessageSearchBar.module.css';
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
 import type {SearchFilterOption} from '@app/features/search/utils/SearchUtils';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {FunnelIcon, PlusIcon} from '@phosphor-icons/react';
@@ -112,7 +113,7 @@ export const FiltersSection: React.FC<FiltersSectionProps> = observer(
 					>
 						<FunnelIcon
 							weight="regular"
-							size={12}
+							size={remFromPx(12)}
 							data-flx="channel.message-search-bar.filter-option.filters-section.funnel-icon"
 						/>
 						{title || i18n._(SEARCH_FILTERS_DESCRIPTOR)}

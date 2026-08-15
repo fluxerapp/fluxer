@@ -2,6 +2,7 @@
 
 import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
 import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
+import {isNativeVoiceEngineSelected} from '@app/features/voice/engine/native_voice_engine/NativeVoiceEngineSelection';
 import {
 	markScreenShareCaptureActive,
 	markScreenShareCaptureEnded,
@@ -199,6 +200,7 @@ export interface NativeEngineScreenCapture {
 }
 
 export async function isNativeScreenCaptureAvailable(): Promise<boolean> {
+	if (!isNativeVoiceEngineSelected()) return false;
 	const electronApi = getElectronAPI();
 	const api = electronApi?.nativeScreenCapture ?? getNativeScreenCaptureApi();
 	if (!api) return false;

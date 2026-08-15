@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::common::{CommandSpec, command_succeeds, output_text, run_command};
+use crate::common::{
+    CommandSpec, command_succeeds, output_text, remove_file_if_exists, run_command,
+};
+use crate::desktop::MACOS_UNIVERSAL_ARCH;
 use anyhow::{Context, Result, anyhow, bail, ensure};
 use clap::Args;
 use sha2::{Digest, Sha256};
@@ -356,9 +359,23 @@ fn ensure_pkg_config(requirement: &PkgConfigRequirement) -> Result<()> {
 fn build_rust_node_addon(addon_root: &Path, addon: &DesktopNativeAddon) -> Result<BuiltNodeAddon> {
     let platform = current_platform();
     let arch = electron_arch();
-    let tag = platform_tag(&platform, &arch)?;
-    let target = rust_target_for_platform(&platform, &arch)?;
-    let target_root = cargo_target_root_for_build(addon_root, &platform)?;
+    if platform == "darwin" && arch == MACOS_UNIVERSAL_ARCH {
+        let arm64 = build_rust_node_addon_for_arch(addon_root, addon, &platform, "arm64")?;
+        build_rust_node_addon_for_arch(addon_root, addon, &platform, "x64")?;
+        return Ok(arm64);
+    }
+    build_rust_node_addon_for_arch(addon_root, addon, &platform, &arch)
+}
+
+fn build_rust_node_addon_for_arch(
+    addon_root: &Path,
+    addon: &DesktopNativeAddon,
+    platform: &str,
+    arch: &str,
+) -> Result<BuiltNodeAddon> {
+    let tag = platform_tag(platform, arch)?;
+    let target = rust_target_for_platform(platform, arch)?;
+    let target_root = cargo_target_root_for_build(addon_root, platform)?;
     let mut args = vec![
         OsString::from("build"),
         OsString::from("--release"),
@@ -394,10 +411,7 @@ fn build_rust_node_addon(addon_root: &Path, addon: &DesktopNativeAddon) -> Resul
     let source = target_root
         .join(&target)
         .join("release")
-        .join(cargo_dynamic_library_file_name(
-            addon.crate_name,
-            &platform,
-        )?);
+        .join(cargo_dynamic_library_file_name(addon.crate_name, platform)?);
     let out_file = addon_root.join(format!("{}.{}.node", addon.node_file_stem, tag));
     ensure!(
         source.exists(),
@@ -416,8 +430,8 @@ fn build_rust_node_addon(addon_root: &Path, addon: &DesktopNativeAddon) -> Resul
         "expected {} to exist after copy",
         out_file.display()
     );
-    sign_macos_node_addon(&out_file, &platform)?;
-    assert_no_redistributable_runtime_imports(&out_file, &platform)?;
+    sign_macos_node_addon(&out_file, platform)?;
+    assert_no_redistributable_runtime_imports(&out_file, platform)?;
     Ok(BuiltNodeAddon {
         out_file,
         source,
@@ -738,6 +752,14 @@ fn build_win_game_capture_vulkan_layer(
         required,
     )?;
     let manifest_path = root.join(format!("fluxer-vulkan-layer.{}.json", arch.tag));
+    if !root.join(&layer_dll_name).exists() {
+        remove_file_if_exists(&manifest_path)?;
+        println!(
+            "[win-game-capture] no {layer_dll_name}; not emitting {} so packages never ship a manifest pointing at an absent layer",
+            manifest_path.display()
+        );
+        return Ok(());
+    }
     fs::write(&manifest_path, vulkan_layer_manifest(&layer_dll_name))
         .with_context(|| format!("Failed to write {}", manifest_path.display()))?;
     println!("[win-game-capture] emitted {}", manifest_path.display());

@@ -2,6 +2,7 @@
 
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import Keybind from '@app/features/input/state/InputKeybind';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {RetryIcon} from '@app/features/ui/action_menu/ContextMenuIcons';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
@@ -142,7 +143,13 @@ export const CustomKeybindsList: React.FC<{searchQuery: string}> = observer(({se
 						small
 						type="button"
 						onClick={handleAdd}
-						leftIcon={<PlusIcon size={14} weight="bold" data-flx="user.keybinds-tab.custom-keybinds-list.plus-icon" />}
+						leftIcon={
+							<PlusIcon
+								size={remFromPx(14)}
+								weight="bold"
+								data-flx="user.keybinds-tab.custom-keybinds-list.plus-icon"
+							/>
+						}
 						data-flx="user.keybinds-tab.custom-keybinds-list.button.add"
 					>
 						<Trans>Add shortcut</Trans>

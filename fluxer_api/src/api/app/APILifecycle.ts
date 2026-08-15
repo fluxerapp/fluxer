@@ -13,11 +13,7 @@ import type {ILogger} from '../ILogger';
 import {JobLedgerRepository} from '../jobs/JobLedgerRepository';
 import {startAbuseReplicationSubscriber, stopAbuseReplicationSubscriber} from '../middleware/AbusiveIpAutoBanner';
 import {ipBanCache} from '../middleware/IpBanMiddleware';
-import {
-	getRiskCacheManagerInstance,
-	initializeServiceSingletons,
-	shutdownReportService,
-} from '../middleware/ServiceMiddleware';
+import {initializeServiceSingletons, shutdownReportService} from '../middleware/ServiceMiddleware';
 import {
 	ensureVoiceResourcesInitialized,
 	getKVClient,
@@ -40,57 +36,6 @@ import {JetStreamWorkerQueue} from '../worker/JetStreamWorkerQueue';
 import {WorkerService} from '../worker/WorkerService';
 
 let jsConnectionManager: JetStreamConnectionManager | null = null;
-let riskCacheRefreshInterval: NodeJS.Timeout | null = null;
-let riskCacheRefreshInFlight = false;
-
-const RISK_CACHE_REFRESH_INTERVAL_MS = 5 * 60 * 1000;
-
-async function refreshRiskCache(logger: ILogger, source: 'startup' | 'interval'): Promise<void> {
-	if (riskCacheRefreshInFlight) {
-		return;
-	}
-	riskCacheRefreshInFlight = true;
-	try {
-		const result = await getRiskCacheManagerInstance().refresh();
-		if (result.subtaskErrors.length > 0) {
-			logger.warn({source, errors: result.subtaskErrors}, 'Risk cache refresh completed with errors');
-			return;
-		}
-		logger.info(
-			{
-				source,
-				disposableDomainCount: result.disposableDomainCount,
-			},
-			source === 'startup' ? 'Risk cache initialized on API startup' : 'Risk cache refresh complete on API',
-		);
-	} catch (error) {
-		if (source === 'startup') {
-			logger.warn({error}, 'Risk cache initialisation failed on API startup');
-			return;
-		}
-		logger.warn({error}, 'Periodic risk cache refresh failed on API');
-	} finally {
-		riskCacheRefreshInFlight = false;
-	}
-}
-
-function startRiskCacheRefreshLoop(logger: ILogger): void {
-	if (riskCacheRefreshInterval) {
-		return;
-	}
-	riskCacheRefreshInterval = setInterval(() => {
-		void refreshRiskCache(logger, 'interval');
-	}, RISK_CACHE_REFRESH_INTERVAL_MS);
-}
-
-function stopRiskCacheRefreshLoop(): void {
-	if (!riskCacheRefreshInterval) {
-		return;
-	}
-	clearInterval(riskCacheRefreshInterval);
-	riskCacheRefreshInterval = null;
-}
-
 export function createInitializer(config: APIConfig, logger: ILogger): () => Promise<void> {
 	return async (): Promise<void> => {
 		try {
@@ -171,8 +116,6 @@ export function createInitializer(config: APIConfig, logger: ILogger): () => Pro
 			logger.info('Profile substring blocklist cache initialized');
 			await initializeServiceSingletons();
 			logger.info('Service singletons initialized');
-			await refreshRiskCache(logger, 'startup');
-			startRiskCacheRefreshLoop(logger);
 			if (!config.dev.testModeEnabled) {
 				jsConnectionManager = new JetStreamConnectionManager({
 					url: config.nats.jetStreamUrl,
@@ -284,12 +227,6 @@ export function createShutdown(logger: ILogger): () => Promise<void> {
 			logger.info('Search service shut down');
 		} catch (error) {
 			logger.error({error}, 'Error shutting down search service');
-		}
-		try {
-			stopRiskCacheRefreshLoop();
-			logger.info('Risk cache refresh loop shut down');
-		} catch (error) {
-			logger.error({error}, 'Error shutting down risk cache refresh loop');
 		}
 		try {
 			ipBanCache.shutdown();

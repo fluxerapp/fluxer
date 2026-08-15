@@ -64,15 +64,14 @@ build_notification_message(DeviceToken, Payload) ->
     ),
     Data = build_notification_data(Payload, Title, Body, Tag, ImageUrl),
     Group = resolve_notification_group(maps:get(<<"data">>, Payload, #{}), Tag),
-    AndroidNotification = build_android_notification(Tag, ImageUrl, Group),
+    AndroidNotification = build_android_notification(Tag, ImageUrl),
     wrap_notification_message(DeviceToken, NotificationBody, Data, AndroidNotification, Group).
 
--spec build_android_notification(binary(), binary() | undefined, binary()) -> map().
-build_android_notification(Tag, ImageUrl, Group) ->
+-spec build_android_notification(binary(), binary() | undefined) -> map().
+build_android_notification(Tag, ImageUrl) ->
     maybe_put(<<"image">>, ImageUrl, #{
         <<"channel_id">> => <<"fluxer_default_push">>,
         <<"tag">> => Tag,
-        <<"group">> => Group,
         <<"click_action">> => <<"FLUXER_MESSAGE">>
     }).
 

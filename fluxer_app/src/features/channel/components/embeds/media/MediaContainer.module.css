@@ -2,9 +2,9 @@
 
 .mediaContainer {
 	position: relative;
-	border-radius: var(--media-border-radius, 0);
+	border-radius: var(--media-border-radius, 0px);
 	overflow: hidden;
-	clip-path: inset(0 round var(--media-border-radius, 0));
+	clip-path: inset(0 round var(--media-border-radius, 0px));
 }
 
 .mediaHoverAction {

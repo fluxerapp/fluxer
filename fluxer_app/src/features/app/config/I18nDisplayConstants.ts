@@ -10,7 +10,6 @@ export const DESKTOP_PRODUCT_NAME = `${PRODUCT_NAME} Desktop`;
 export const PRODUCT_API_NAME = `${PRODUCT_NAME} API`;
 export const PRODUCT_HQ_COMMUNITY_NAME = `${PRODUCT_NAME} HQ`;
 export const CANARY_RELEASE_CHANNEL_NAME = `${PRODUCT_NAME} Canary`;
-export const CANARY_TESTERS_COMMUNITY_NAME = `${PRODUCT_NAME} Testers`;
 export const VOICE_PROVIDER_NAME = 'LiveKit';
 export const PAYMENT_PROVIDER_NAME = 'Stripe';
 export const BLUESKY_PROVIDER_NAME = 'Bluesky';

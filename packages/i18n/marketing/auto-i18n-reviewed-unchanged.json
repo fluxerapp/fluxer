@@ -1,0 +1,2451 @@
+{
+  "version": 1,
+  "locales": {
+    "ar": [
+      {
+        "msgctxt": "donations.form.email_placeholder",
+        "msgid": "your@email.com"
+      },
+      {
+        "msgctxt": "footer.bluesky_social_media",
+        "msgid": "Bluesky"
+      },
+      {
+        "msgctxt": "platform_support.platforms.android.name",
+        "msgid": "Android"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.min_version",
+        "msgid": "{ios}/{ipados} 15.6+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.name",
+        "msgid": "iOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.testflight",
+        "msgid": "TestFlight"
+      },
+      {
+        "msgctxt": "platform_support.platforms.linux.name",
+        "msgid": "Linux"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.apple_silicon",
+        "msgid": "Apple Silicon"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.intel",
+        "msgid": "Intel"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.name",
+        "msgid": "macOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.windows.name",
+        "msgid": "Windows"
+      },
+      {
+        "msgctxt": "social_and_feeds.bluesky.label",
+        "msgid": "Bluesky"
+      },
+      {
+        "msgctxt": "social_and_feeds.github",
+        "msgid": "GitHub"
+      }
+    ],
+    "bg": [
+      {
+        "msgctxt": "footer.bluesky_social_media",
+        "msgid": "Bluesky"
+      },
+      {
+        "msgctxt": "platform_support.platforms.android.min_version",
+        "msgid": "Android 8+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.android.name",
+        "msgid": "Android"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.min_version",
+        "msgid": "iOS 15+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.min_version",
+        "msgid": "{ios}/{ipados} 15.6+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.name",
+        "msgid": "iOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.testflight",
+        "msgid": "TestFlight"
+      },
+      {
+        "msgctxt": "platform_support.platforms.linux.name",
+        "msgid": "Linux"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.apple_silicon",
+        "msgid": "Apple Silicon"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.intel",
+        "msgid": "Intel"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.min_version",
+        "msgid": "macOS 10.15+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.name",
+        "msgid": "macOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.windows.min_version",
+        "msgid": "Windows 10+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.windows.name",
+        "msgid": "Windows"
+      },
+      {
+        "msgctxt": "social_and_feeds.bluesky.label",
+        "msgid": "Bluesky"
+      },
+      {
+        "msgctxt": "social_and_feeds.github",
+        "msgid": "GitHub"
+      }
+    ],
+    "cs": [
+      {
+        "msgctxt": "beta_and_access.beta_label",
+        "msgid": "Beta"
+      },
+      {
+        "msgctxt": "company_and_resources.blog",
+        "msgid": "Blog"
+      },
+      {
+        "msgctxt": "footer.bluesky_social_media",
+        "msgid": "Bluesky"
+      },
+      {
+        "msgctxt": "platform_support.platforms.android.min_version",
+        "msgid": "Android 8+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.android.name",
+        "msgid": "Android"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.min_version",
+        "msgid": "iOS 15+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.min_version",
+        "msgid": "{ios}/{ipados} 15.6+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.name",
+        "msgid": "iOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.testflight",
+        "msgid": "TestFlight"
+      },
+      {
+        "msgctxt": "platform_support.platforms.linux.name",
+        "msgid": "Linux"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.apple_silicon",
+        "msgid": "Apple Silicon"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.intel",
+        "msgid": "Intel"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.min_version",
+        "msgid": "macOS 10.15+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.name",
+        "msgid": "macOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.windows.min_version",
+        "msgid": "Windows 10+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.windows.name",
+        "msgid": "Windows"
+      },
+      {
+        "msgctxt": "press_branding.colors.blue_da_ba_dee",
+        "msgid": "Blue Da Ba Dee"
+      },
+      {
+        "msgctxt": "social_and_feeds.bluesky.label",
+        "msgid": "Bluesky"
+      },
+      {
+        "msgctxt": "social_and_feeds.github",
+        "msgid": "GitHub"
+      }
+    ],
+    "da": [
+      {
+        "msgctxt": "beta_and_access.beta_label",
+        "msgid": "Beta"
+      },
+      {
+        "msgctxt": "company_and_resources.blog",
+        "msgid": "Blog"
+      },
+      {
+        "msgctxt": "footer.bluesky_social_media",
+        "msgid": "Bluesky"
+      },
+      {
+        "msgctxt": "footer.status",
+        "msgid": "Status"
+      },
+      {
+        "msgctxt": "platform_support.platforms.android.min_version",
+        "msgid": "Android 8+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.android.name",
+        "msgid": "Android"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.min_version",
+        "msgid": "iOS 15+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.min_version",
+        "msgid": "{ios}/{ipados} 15.6+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.name",
+        "msgid": "iOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.testflight",
+        "msgid": "TestFlight"
+      },
+      {
+        "msgctxt": "platform_support.platforms.linux.name",
+        "msgid": "Linux"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.apple_silicon",
+        "msgid": "Apple Silicon"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.intel",
+        "msgid": "Intel"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.min_version",
+        "msgid": "macOS 10.15+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.name",
+        "msgid": "macOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.portable",
+        "msgid": "Portable"
+      },
+      {
+        "msgctxt": "platform_support.platforms.windows.min_version",
+        "msgid": "Windows 10+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.windows.name",
+        "msgid": "Windows"
+      },
+      {
+        "msgctxt": "press_branding.assets.label",
+        "msgid": "Logo"
+      },
+      {
+        "msgctxt": "press_branding.assets.symbol_variants.label",
+        "msgid": "Symbol"
+      },
+      {
+        "msgctxt": "social_and_feeds.bluesky.label",
+        "msgid": "Bluesky"
+      },
+      {
+        "msgctxt": "social_and_feeds.github",
+        "msgid": "GitHub"
+      }
+    ],
+    "de": [
+      {
+        "msgctxt": "beta_and_access.beta_label",
+        "msgid": "Beta"
+      },
+      {
+        "msgctxt": "company_and_resources.blog",
+        "msgid": "Blog"
+      },
+      {
+        "msgctxt": "footer.bluesky_social_media",
+        "msgid": "Bluesky"
+      },
+      {
+        "msgctxt": "footer.roadmap",
+        "msgid": "Roadmap"
+      },
+      {
+        "msgctxt": "footer.status",
+        "msgid": "Status"
+      },
+      {
+        "msgctxt": "languages.list.hindi",
+        "msgid": "Hindi"
+      },
+      {
+        "msgctxt": "platform_support.desktop.label",
+        "msgid": "Desktop"
+      },
+      {
+        "msgctxt": "platform_support.mobile.install_as_app.guides.in_chrome",
+        "msgid": " in Chrome"
+      },
+      {
+        "msgctxt": "platform_support.platforms.android.min_version",
+        "msgid": "Android 8+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.android.name",
+        "msgid": "Android"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.min_version",
+        "msgid": "iOS 15+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.min_version",
+        "msgid": "{ios}/{ipados} 15.6+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.name",
+        "msgid": "iOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.testflight",
+        "msgid": "TestFlight"
+      },
+      {
+        "msgctxt": "platform_support.platforms.linux.name",
+        "msgid": "Linux"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.apple_silicon",
+        "msgid": "Apple Silicon"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.intel",
+        "msgid": "Intel"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.min_version",
+        "msgid": "macOS 10.15+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.name",
+        "msgid": "macOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.windows.min_version",
+        "msgid": "Windows 10+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.windows.name",
+        "msgid": "Windows"
+      },
+      {
+        "msgctxt": "press_branding.assets.label",
+        "msgid": "Logo"
+      },
+      {
+        "msgctxt": "press_branding.assets.symbol_variants.label",
+        "msgid": "Symbol"
+      },
+      {
+        "msgctxt": "press_branding.colors.blue_da_ba_dee",
+        "msgid": "Blue Da Ba Dee"
+      },
+      {
+        "msgctxt": "social_and_feeds.bluesky.label",
+        "msgid": "Bluesky"
+      },
+      {
+        "msgctxt": "social_and_feeds.github",
+        "msgid": "GitHub"
+      }
+    ],
+    "el": [
+      {
+        "msgctxt": "footer.bluesky_social_media",
+        "msgid": "Bluesky"
+      },
+      {
+        "msgctxt": "platform_support.platforms.android.min_version",
+        "msgid": "Android 8+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.android.name",
+        "msgid": "Android"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.min_version",
+        "msgid": "iOS 15+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.min_version",
+        "msgid": "{ios}/{ipados} 15.6+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.name",
+        "msgid": "iOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.testflight",
+        "msgid": "TestFlight"
+      },
+      {
+        "msgctxt": "platform_support.platforms.linux.name",
+        "msgid": "Linux"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.apple_silicon",
+        "msgid": "Apple Silicon"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.intel",
+        "msgid": "Intel"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.min_version",
+        "msgid": "macOS 10.15+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.name",
+        "msgid": "macOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.windows.min_version",
+        "msgid": "Windows 10+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.windows.name",
+        "msgid": "Windows"
+      },
+      {
+        "msgctxt": "press_branding.colors.blue_da_ba_dee",
+        "msgid": "Blue Da Ba Dee"
+      },
+      {
+        "msgctxt": "social_and_feeds.bluesky.label",
+        "msgid": "Bluesky"
+      },
+      {
+        "msgctxt": "social_and_feeds.github",
+        "msgid": "GitHub"
+      }
+    ],
+    "en-GB": [
+      {
+        "msgctxt": "beta_and_access.featured_benefit_line",
+        "msgid": "Chat, calls, screen sharing and communities are free, and they stay free. {premium_tier_name} adds optional extras for the people who want them."
+      },
+      {
+        "msgctxt": "content.help.article.data_deletion.description",
+        "msgid": "How to delete messages and request removal of other account data."
+      },
+      {
+        "msgctxt": "content.help.article.dsa_dispute_resolution.description",
+        "msgid": "How users covered by the Digital Services Act can report illegal content and challenge eligible decisions."
+      },
+      {
+        "msgctxt": "content.help.article.visionary.description",
+        "msgid": "What the sold out {visionary_tier_full_name} offer includes and how its account benefits work."
+      },
+      {
+        "msgctxt": "content.help.category.legal_policy.description",
+        "msgid": "Read about privacy, safety, copyright, and data handling."
+      },
+      {
+        "msgctxt": "content.help.category.premium.description",
+        "msgid": "Information about our {premium_tier_full_name} offering."
+      },
+      {
+        "msgctxt": "donations.success.message",
+        "msgid": "Thank you. Your donation pays for the servers and for the people who build and run {product_name}. It keeps us answerable to the people using it rather than to an investor."
+      },
+      {
+        "msgctxt": "donations.support_message",
+        "msgid": "Help keep {product_name} independent. Donations pay for hosting and development, and they are the reason nobody else gets a say in what we build."
+      },
+      {
+        "msgctxt": "download.screenshots_courtesy_of",
+        "msgid": "Screenshots courtesy of {source}."
+      },
+      {
+        "msgctxt": "general.coming_soon.whats_available_today",
+        "msgid": "Everything {product_name} does today"
+      },
+      {
+        "msgctxt": "platform_support.mobile.install_as_app.guides.in_chrome",
+        "msgid": "Open {web_app_link} in {chrome}"
+      },
+      {
+        "msgctxt": "platform_support.mobile.install_as_app.guides.in_chrome_or_another_browser",
+        "msgid": "Open {web_app_link} in {chrome} or another browser that supports PWAs"
+      },
+      {
+        "msgctxt": "platform_support.mobile.install_as_app.guides.in_safari",
+        "msgid": "Open {web_app_link} in Safari"
+      },
+      {
+        "msgctxt": "platform_support.mobile.ios.body",
+        "msgid": "The native {ios} app is currently limited to {premium_tier_full_name} subscribers. Broader access is coming very soon. Meanwhile, the full {product_name} web app works in Safari and can be added to your Home Screen."
+      },
+      {
+        "msgctxt": "platform_support.mobile.ios.body",
+        "msgid": "The {ios} app on {testflight} is currently limited to {premium_tier_full_name} members. Public access is coming soon. The full {product_name} web app also works in Safari and can be added to your Home Screen."
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.min_version",
+        "msgid": "{ios}/{ipados} 15.6+"
+      },
+      {
+        "msgctxt": "press_branding.assets.usage_guidance.symbol_description",
+        "msgid": "Use the symbol only when {product_name} appears nearby or the context already makes its owner clear."
+      },
+      {
+        "msgctxt": "pricing_and_tiers.billing.save_percent",
+        "msgid": "Save {yearly_savings}"
+      },
+      {
+        "msgctxt": "product_positioning.intro",
+        "msgid": "Free and open source chat for friends, groups, and communities, with text, voice, video, screen sharing, and self-hosting."
+      },
+      {
+        "msgctxt": "voice_regions.languages_intro",
+        "msgid": "{product_name} is available in over thirty languages. To help translate {product_name} into your native language, join us on {weblate}."
+      }
+    ],
+    "es-419": [
+      {
+        "msgctxt": "beta_and_access.beta_label",
+        "msgid": "Beta"
+      },
+      {
+        "msgctxt": "company_and_resources.blog",
+        "msgid": "Blog"
+      },
+      {
+        "msgctxt": "footer.bluesky_social_media",
+        "msgid": "Bluesky"
+      },
+      {
+        "msgctxt": "platform_support.platforms.android.min_version",
+        "msgid": "Android 8+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.android.name",
+        "msgid": "Android"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.min_version",
+        "msgid": "iOS 15+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.min_version",
+        "msgid": "{ios}/{ipados} 15.6+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.name",
+        "msgid": "iOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.testflight",
+        "msgid": "TestFlight"
+      },
+      {
+        "msgctxt": "platform_support.platforms.linux.name",
+        "msgid": "Linux"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.apple_silicon",
+        "msgid": "Apple Silicon"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.intel",
+        "msgid": "Intel"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.min_version",
+        "msgid": "macOS 10.15+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.name",
+        "msgid": "macOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.windows.min_version",
+        "msgid": "Windows 10+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.windows.name",
+        "msgid": "Windows"
+      },
+      {
+        "msgctxt": "social_and_feeds.bluesky.label",
+        "msgid": "Bluesky"
+      },
+      {
+        "msgctxt": "social_and_feeds.github",
+        "msgid": "GitHub"
+      }
+    ],
+    "es-ES": [
+      {
+        "msgctxt": "beta_and_access.beta_label",
+        "msgid": "Beta"
+      },
+      {
+        "msgctxt": "company_and_resources.blog",
+        "msgid": "Blog"
+      },
+      {
+        "msgctxt": "footer.bluesky_social_media",
+        "msgid": "Bluesky"
+      },
+      {
+        "msgctxt": "platform_support.platforms.android.min_version",
+        "msgid": "Android 8+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.android.name",
+        "msgid": "Android"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.min_version",
+        "msgid": "iOS 15+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.min_version",
+        "msgid": "{ios}/{ipados} 15.6+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.name",
+        "msgid": "iOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.testflight",
+        "msgid": "TestFlight"
+      },
+      {
+        "msgctxt": "platform_support.platforms.linux.name",
+        "msgid": "Linux"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.apple_silicon",
+        "msgid": "Apple Silicon"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.intel",
+        "msgid": "Intel"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.min_version",
+        "msgid": "macOS 10.15+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.name",
+        "msgid": "macOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.portable",
+        "msgid": "Portable"
+      },
+      {
+        "msgctxt": "platform_support.platforms.windows.min_version",
+        "msgid": "Windows 10+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.windows.name",
+        "msgid": "Windows"
+      },
+      {
+        "msgctxt": "social_and_feeds.bluesky.label",
+        "msgid": "Bluesky"
+      },
+      {
+        "msgctxt": "social_and_feeds.github",
+        "msgid": "GitHub"
+      }
+    ],
+    "fi": [
+      {
+        "msgctxt": "footer.bluesky_social_media",
+        "msgid": "Bluesky"
+      },
+      {
+        "msgctxt": "platform_support.platforms.android.min_version",
+        "msgid": "Android 8+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.android.name",
+        "msgid": "Android"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.min_version",
+        "msgid": "iOS 15+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.min_version",
+        "msgid": "{ios}/{ipados} 15.6+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.name",
+        "msgid": "iOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.testflight",
+        "msgid": "TestFlight"
+      },
+      {
+        "msgctxt": "platform_support.platforms.linux.name",
+        "msgid": "Linux"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.apple_silicon",
+        "msgid": "Apple Silicon"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.intel",
+        "msgid": "Intel"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.min_version",
+        "msgid": "macOS 10.15+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.name",
+        "msgid": "macOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.windows.min_version",
+        "msgid": "Windows 10+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.windows.name",
+        "msgid": "Windows"
+      },
+      {
+        "msgctxt": "press_branding.assets.label",
+        "msgid": "Logo"
+      },
+      {
+        "msgctxt": "press_branding.colors.blue_da_ba_dee",
+        "msgid": "Blue Da Ba Dee"
+      },
+      {
+        "msgctxt": "social_and_feeds.bluesky.label",
+        "msgid": "Bluesky"
+      },
+      {
+        "msgctxt": "social_and_feeds.github",
+        "msgid": "GitHub"
+      }
+    ],
+    "fr": [
+      {
+        "msgctxt": "company_and_resources.help.articles",
+        "msgid": "Articles"
+      },
+      {
+        "msgctxt": "footer.bluesky_social_media",
+        "msgid": "Bluesky"
+      },
+      {
+        "msgctxt": "platform_support.platforms.android.min_version",
+        "msgid": "Android 8+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.android.name",
+        "msgid": "Android"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.min_version",
+        "msgid": "iOS 15+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.min_version",
+        "msgid": "{ios}/{ipados} 15.6+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.name",
+        "msgid": "iOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.testflight",
+        "msgid": "TestFlight"
+      },
+      {
+        "msgctxt": "platform_support.platforms.linux.name",
+        "msgid": "Linux"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.apple_silicon",
+        "msgid": "Apple Silicon"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.intel",
+        "msgid": "Intel"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.min_version",
+        "msgid": "macOS 10.15+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.name",
+        "msgid": "macOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.portable",
+        "msgid": "Portable"
+      },
+      {
+        "msgctxt": "platform_support.platforms.windows.min_version",
+        "msgid": "Windows 10+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.windows.name",
+        "msgid": "Windows"
+      },
+      {
+        "msgctxt": "press_branding.assets.label",
+        "msgid": "Logo"
+      },
+      {
+        "msgctxt": "press_branding.colors.blue_da_ba_dee",
+        "msgid": "Blue Da Ba Dee"
+      },
+      {
+        "msgctxt": "social_and_feeds.bluesky.label",
+        "msgid": "Bluesky"
+      },
+      {
+        "msgctxt": "social_and_feeds.github",
+        "msgid": "GitHub"
+      }
+    ],
+    "he": [
+      {
+        "msgctxt": "donations.form.email_placeholder",
+        "msgid": "your@email.com"
+      },
+      {
+        "msgctxt": "platform_support.platforms.android.min_version",
+        "msgid": "{android} 8+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.min_version",
+        "msgid": "{ios}/{ipados} 15.6+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.name",
+        "msgid": "iOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.testflight",
+        "msgid": "TestFlight"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.apple_silicon",
+        "msgid": "Apple Silicon"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.intel",
+        "msgid": "Intel"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.min_version",
+        "msgid": "macOS 10.15+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.name",
+        "msgid": "macOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.windows.min_version",
+        "msgid": "Windows 10+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.windows.name",
+        "msgid": "Windows"
+      }
+    ],
+    "hi": [
+      {
+        "msgctxt": "footer.bluesky_social_media",
+        "msgid": "Bluesky"
+      },
+      {
+        "msgctxt": "platform_support.platforms.android.min_version",
+        "msgid": "Android 8+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.android.name",
+        "msgid": "Android"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.min_version",
+        "msgid": "iOS 15+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.min_version",
+        "msgid": "{ios}/{ipados} 15.6+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.name",
+        "msgid": "iOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.testflight",
+        "msgid": "TestFlight"
+      },
+      {
+        "msgctxt": "platform_support.platforms.linux.name",
+        "msgid": "Linux"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.apple_silicon",
+        "msgid": "Apple Silicon"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.min_version",
+        "msgid": "macOS 10.15+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.name",
+        "msgid": "macOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.windows.min_version",
+        "msgid": "Windows 10+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.windows.name",
+        "msgid": "Windows"
+      }
+    ],
+    "hr": [
+      {
+        "msgctxt": "beta_and_access.beta_label",
+        "msgid": "Beta"
+      },
+      {
+        "msgctxt": "company_and_resources.blog",
+        "msgid": "Blog"
+      },
+      {
+        "msgctxt": "footer.bluesky_social_media",
+        "msgid": "Bluesky"
+      },
+      {
+        "msgctxt": "platform_support.platforms.android.min_version",
+        "msgid": "Android 8+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.android.name",
+        "msgid": "Android"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.min_version",
+        "msgid": "iOS 15+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.min_version",
+        "msgid": "{ios}/{ipados} 15.6+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.name",
+        "msgid": "iOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.testflight",
+        "msgid": "TestFlight"
+      },
+      {
+        "msgctxt": "platform_support.platforms.linux.name",
+        "msgid": "Linux"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.apple_silicon",
+        "msgid": "Apple Silicon"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.intel",
+        "msgid": "Intel"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.min_version",
+        "msgid": "macOS 10.15+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.name",
+        "msgid": "macOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.windows.min_version",
+        "msgid": "Windows 10+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.windows.name",
+        "msgid": "Windows"
+      },
+      {
+        "msgctxt": "social_and_feeds.bluesky.label",
+        "msgid": "Bluesky"
+      },
+      {
+        "msgctxt": "social_and_feeds.github",
+        "msgid": "GitHub"
+      }
+    ],
+    "hu": [
+      {
+        "msgctxt": "company_and_resources.blog",
+        "msgid": "Blog"
+      },
+      {
+        "msgctxt": "footer.bluesky_social_media",
+        "msgid": "Bluesky"
+      },
+      {
+        "msgctxt": "platform_support.platforms.android.min_version",
+        "msgid": "Android 8+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.android.name",
+        "msgid": "Android"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.min_version",
+        "msgid": "iOS 15+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.min_version",
+        "msgid": "{ios}/{ipados} 15.6+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.name",
+        "msgid": "iOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.testflight",
+        "msgid": "TestFlight"
+      },
+      {
+        "msgctxt": "platform_support.platforms.linux.name",
+        "msgid": "Linux"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.apple_silicon",
+        "msgid": "Apple Silicon"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.intel",
+        "msgid": "Intel"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.min_version",
+        "msgid": "macOS 10.15+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.name",
+        "msgid": "macOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.windows.min_version",
+        "msgid": "Windows 10+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.windows.name",
+        "msgid": "Windows"
+      },
+      {
+        "msgctxt": "press_branding.colors.blue_da_ba_dee",
+        "msgid": "Blue Da Ba Dee"
+      },
+      {
+        "msgctxt": "social_and_feeds.bluesky.label",
+        "msgid": "Bluesky"
+      },
+      {
+        "msgctxt": "social_and_feeds.github",
+        "msgid": "GitHub"
+      }
+    ],
+    "id": [
+      {
+        "msgctxt": "beta_and_access.beta_label",
+        "msgid": "Beta"
+      },
+      {
+        "msgctxt": "footer.bluesky_social_media",
+        "msgid": "Bluesky"
+      },
+      {
+        "msgctxt": "languages.list.hindi",
+        "msgid": "Hindi"
+      },
+      {
+        "msgctxt": "languages.list.thai",
+        "msgid": "Thai"
+      },
+      {
+        "msgctxt": "platform_support.platforms.android.min_version",
+        "msgid": "Android 8+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.android.name",
+        "msgid": "Android"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.min_version",
+        "msgid": "iOS 15+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.min_version",
+        "msgid": "{ios}/{ipados} 15.6+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.name",
+        "msgid": "iOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.testflight",
+        "msgid": "TestFlight"
+      },
+      {
+        "msgctxt": "platform_support.platforms.linux.name",
+        "msgid": "Linux"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.apple_silicon",
+        "msgid": "Apple Silicon"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.intel",
+        "msgid": "Intel"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.min_version",
+        "msgid": "macOS 10.15+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.name",
+        "msgid": "macOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.windows.min_version",
+        "msgid": "Windows 10+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.windows.name",
+        "msgid": "Windows"
+      },
+      {
+        "msgctxt": "press_branding.colors.blue_da_ba_dee",
+        "msgid": "Blue Da Ba Dee"
+      },
+      {
+        "msgctxt": "social_and_feeds.bluesky.label",
+        "msgid": "Bluesky"
+      },
+      {
+        "msgctxt": "social_and_feeds.github",
+        "msgid": "GitHub"
+      }
+    ],
+    "it": [
+      {
+        "msgctxt": "beta_and_access.beta_label",
+        "msgid": "Beta"
+      },
+      {
+        "msgctxt": "company_and_resources.blog",
+        "msgid": "Blog"
+      },
+      {
+        "msgctxt": "content.help.category.account.title",
+        "msgid": "Account"
+      },
+      {
+        "msgctxt": "footer.bluesky_social_media",
+        "msgid": "Bluesky"
+      },
+      {
+        "msgctxt": "platform_support.desktop.label",
+        "msgid": "Desktop"
+      },
+      {
+        "msgctxt": "platform_support.platforms.android.min_version",
+        "msgid": "Android 8+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.android.name",
+        "msgid": "Android"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.min_version",
+        "msgid": "iOS 15+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.min_version",
+        "msgid": "{ios}/{ipados} 15.6+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.name",
+        "msgid": "iOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.testflight",
+        "msgid": "TestFlight"
+      },
+      {
+        "msgctxt": "platform_support.platforms.linux.name",
+        "msgid": "Linux"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.apple_silicon",
+        "msgid": "Apple Silicon"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.intel",
+        "msgid": "Intel"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.min_version",
+        "msgid": "macOS 10.15+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.name",
+        "msgid": "macOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.windows.min_version",
+        "msgid": "Windows 10+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.windows.name",
+        "msgid": "Windows"
+      },
+      {
+        "msgctxt": "press_branding.assets.label",
+        "msgid": "Logo"
+      },
+      {
+        "msgctxt": "press_branding.colors.blue_da_ba_dee",
+        "msgid": "Blue Da Ba Dee"
+      },
+      {
+        "msgctxt": "product_positioning.open_source.license",
+        "msgid": "Open source (AGPL-3.0)"
+      },
+      {
+        "msgctxt": "social_and_feeds.bluesky.label",
+        "msgid": "Bluesky"
+      },
+      {
+        "msgctxt": "social_and_feeds.github",
+        "msgid": "GitHub"
+      }
+    ],
+    "ja": [
+      {
+        "msgctxt": "footer.bluesky_social_media",
+        "msgid": "Bluesky"
+      },
+      {
+        "msgctxt": "platform_support.platforms.android.name",
+        "msgid": "Android"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.name",
+        "msgid": "iOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.testflight",
+        "msgid": "TestFlight"
+      },
+      {
+        "msgctxt": "platform_support.platforms.linux.name",
+        "msgid": "Linux"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.apple_silicon",
+        "msgid": "Apple Silicon"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.intel",
+        "msgid": "Intel"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.name",
+        "msgid": "macOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.windows.name",
+        "msgid": "Windows"
+      },
+      {
+        "msgctxt": "press_branding.colors.blue_da_ba_dee",
+        "msgid": "Blue Da Ba Dee"
+      },
+      {
+        "msgctxt": "social_and_feeds.bluesky.label",
+        "msgid": "Bluesky"
+      },
+      {
+        "msgctxt": "social_and_feeds.github",
+        "msgid": "GitHub"
+      }
+    ],
+    "ko": [
+      {
+        "msgctxt": "footer.bluesky_social_media",
+        "msgid": "Bluesky"
+      },
+      {
+        "msgctxt": "platform_support.platforms.android.name",
+        "msgid": "Android"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.min_version",
+        "msgid": "{ios}/{ipados} 15.6+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.name",
+        "msgid": "iOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.testflight",
+        "msgid": "TestFlight"
+      },
+      {
+        "msgctxt": "platform_support.platforms.linux.name",
+        "msgid": "Linux"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.apple_silicon",
+        "msgid": "Apple Silicon"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.intel",
+        "msgid": "Intel"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.name",
+        "msgid": "macOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.windows.name",
+        "msgid": "Windows"
+      },
+      {
+        "msgctxt": "social_and_feeds.bluesky.label",
+        "msgid": "Bluesky"
+      },
+      {
+        "msgctxt": "social_and_feeds.github",
+        "msgid": "GitHub"
+      }
+    ],
+    "lt": [
+      {
+        "msgctxt": "beta_and_access.beta_label",
+        "msgid": "Beta"
+      },
+      {
+        "msgctxt": "footer.bluesky_social_media",
+        "msgid": "Bluesky"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.min_version",
+        "msgid": "iOS 15+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.min_version",
+        "msgid": "{ios}/{ipados} 15.6+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.name",
+        "msgid": "iOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.testflight",
+        "msgid": "TestFlight"
+      },
+      {
+        "msgctxt": "platform_support.platforms.linux.name",
+        "msgid": "Linux"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.apple_silicon",
+        "msgid": "Apple Silicon"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.intel",
+        "msgid": "Intel"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.min_version",
+        "msgid": "macOS 10.15+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.name",
+        "msgid": "macOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.windows.min_version",
+        "msgid": "Windows 10+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.windows.name",
+        "msgid": "Windows"
+      },
+      {
+        "msgctxt": "social_and_feeds.bluesky.label",
+        "msgid": "Bluesky"
+      },
+      {
+        "msgctxt": "social_and_feeds.github",
+        "msgid": "GitHub"
+      }
+    ],
+    "nl": [
+      {
+        "msgctxt": "company_and_resources.product",
+        "msgid": "Product"
+      },
+      {
+        "msgctxt": "footer.bluesky_social_media",
+        "msgid": "Bluesky"
+      },
+      {
+        "msgctxt": "footer.partners",
+        "msgid": "Partners"
+      },
+      {
+        "msgctxt": "footer.status",
+        "msgid": "Status"
+      },
+      {
+        "msgctxt": "languages.list.hindi",
+        "msgid": "Hindi"
+      },
+      {
+        "msgctxt": "partner_program.label",
+        "msgid": "Partners"
+      },
+      {
+        "msgctxt": "platform_support.mobile.install_as_app.guides.in_chrome",
+        "msgid": "Open {web_app_link} in {chrome}"
+      },
+      {
+        "msgctxt": "platform_support.mobile.install_as_app.guides.in_safari",
+        "msgid": " in Safari"
+      },
+      {
+        "msgctxt": "platform_support.mobile.install_as_app.guides.in_safari",
+        "msgid": "Open {web_app_link} in Safari"
+      },
+      {
+        "msgctxt": "platform_support.platforms.android.min_version",
+        "msgid": "Android 8+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.android.name",
+        "msgid": "Android"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.min_version",
+        "msgid": "iOS 15+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.min_version",
+        "msgid": "{ios}/{ipados} 15.6+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.name",
+        "msgid": "iOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.testflight",
+        "msgid": "TestFlight"
+      },
+      {
+        "msgctxt": "platform_support.platforms.linux.name",
+        "msgid": "Linux"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.apple_silicon",
+        "msgid": "Apple Silicon"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.intel",
+        "msgid": "Intel"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.min_version",
+        "msgid": "macOS 10.15+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.name",
+        "msgid": "macOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.portable",
+        "msgid": "Portable"
+      },
+      {
+        "msgctxt": "platform_support.platforms.windows.min_version",
+        "msgid": "Windows 10+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.windows.name",
+        "msgid": "Windows"
+      },
+      {
+        "msgctxt": "press_branding.assets.label",
+        "msgid": "Logo"
+      },
+      {
+        "msgctxt": "press_branding.colors.blue_da_ba_dee",
+        "msgid": "Blue Da Ba Dee"
+      },
+      {
+        "msgctxt": "product_positioning.open_source.license",
+        "msgid": "Open source (AGPL-3.0)"
+      },
+      {
+        "msgctxt": "social_and_feeds.bluesky.label",
+        "msgid": "Bluesky"
+      },
+      {
+        "msgctxt": "social_and_feeds.github",
+        "msgid": "GitHub"
+      }
+    ],
+    "no": [
+      {
+        "msgctxt": "beta_and_access.beta_label",
+        "msgid": "Beta"
+      },
+      {
+        "msgctxt": "content.help.category.premium.title",
+        "msgid": "Premium"
+      },
+      {
+        "msgctxt": "footer.bluesky_social_media",
+        "msgid": "Bluesky"
+      },
+      {
+        "msgctxt": "footer.status",
+        "msgid": "Status"
+      },
+      {
+        "msgctxt": "languages.list.hindi",
+        "msgid": "Hindi"
+      },
+      {
+        "msgctxt": "platform_support.platforms.android.min_version",
+        "msgid": "Android 8+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.android.name",
+        "msgid": "Android"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.min_version",
+        "msgid": "iOS 15+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.min_version",
+        "msgid": "{ios}/{ipados} 15.6+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.name",
+        "msgid": "iOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.testflight",
+        "msgid": "TestFlight"
+      },
+      {
+        "msgctxt": "platform_support.platforms.linux.name",
+        "msgid": "Linux"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.apple_silicon",
+        "msgid": "Apple Silicon"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.intel",
+        "msgid": "Intel"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.min_version",
+        "msgid": "macOS 10.15+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.name",
+        "msgid": "macOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.windows.min_version",
+        "msgid": "Windows 10+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.windows.name",
+        "msgid": "Windows"
+      },
+      {
+        "msgctxt": "press_branding.assets.label",
+        "msgid": "Logo"
+      },
+      {
+        "msgctxt": "press_branding.assets.symbol_variants.label",
+        "msgid": "Symbol"
+      },
+      {
+        "msgctxt": "press_branding.colors.blue_da_ba_dee",
+        "msgid": "Blue Da Ba Dee"
+      },
+      {
+        "msgctxt": "social_and_feeds.bluesky.label",
+        "msgid": "Bluesky"
+      },
+      {
+        "msgctxt": "social_and_feeds.github",
+        "msgid": "GitHub"
+      }
+    ],
+    "pl": [
+      {
+        "msgctxt": "beta_and_access.beta_label",
+        "msgid": "Beta"
+      },
+      {
+        "msgctxt": "company_and_resources.blog",
+        "msgid": "Blog"
+      },
+      {
+        "msgctxt": "footer.bluesky_social_media",
+        "msgid": "Bluesky"
+      },
+      {
+        "msgctxt": "platform_support.platforms.android.min_version",
+        "msgid": "Android 8+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.android.name",
+        "msgid": "Android"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.min_version",
+        "msgid": "iOS 15+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.min_version",
+        "msgid": "{ios}/{ipados} 15.6+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.name",
+        "msgid": "iOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.testflight",
+        "msgid": "TestFlight"
+      },
+      {
+        "msgctxt": "platform_support.platforms.linux.name",
+        "msgid": "Linux"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.apple_silicon",
+        "msgid": "Apple Silicon"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.intel",
+        "msgid": "Intel"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.min_version",
+        "msgid": "macOS 10.15+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.name",
+        "msgid": "macOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.windows.min_version",
+        "msgid": "Windows 10+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.windows.name",
+        "msgid": "Windows"
+      },
+      {
+        "msgctxt": "press_branding.colors.blue_da_ba_dee",
+        "msgid": "Blue Da Ba Dee"
+      },
+      {
+        "msgctxt": "social_and_feeds.bluesky.label",
+        "msgid": "Bluesky"
+      },
+      {
+        "msgctxt": "social_and_feeds.github",
+        "msgid": "GitHub"
+      }
+    ],
+    "pt-BR": [
+      {
+        "msgctxt": "beta_and_access.beta_label",
+        "msgid": "Beta"
+      },
+      {
+        "msgctxt": "footer.bluesky_social_media",
+        "msgid": "Bluesky"
+      },
+      {
+        "msgctxt": "platform_support.platforms.android.min_version",
+        "msgid": "Android 8+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.android.name",
+        "msgid": "Android"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.min_version",
+        "msgid": "iOS 15+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.min_version",
+        "msgid": "{ios}/{ipados} 15.6+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.name",
+        "msgid": "iOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.testflight",
+        "msgid": "TestFlight"
+      },
+      {
+        "msgctxt": "platform_support.platforms.linux.name",
+        "msgid": "Linux"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.apple_silicon",
+        "msgid": "Apple Silicon"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.intel",
+        "msgid": "Intel"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.min_version",
+        "msgid": "macOS 10.15+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.name",
+        "msgid": "macOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.windows.min_version",
+        "msgid": "Windows 10+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.windows.name",
+        "msgid": "Windows"
+      },
+      {
+        "msgctxt": "press_branding.colors.blue_da_ba_dee",
+        "msgid": "Blue Da Ba Dee"
+      },
+      {
+        "msgctxt": "social_and_feeds.bluesky.label",
+        "msgid": "Bluesky"
+      },
+      {
+        "msgctxt": "social_and_feeds.github",
+        "msgid": "GitHub"
+      }
+    ],
+    "ro": [
+      {
+        "msgctxt": "beta_and_access.beta_label",
+        "msgid": "Beta"
+      },
+      {
+        "msgctxt": "company_and_resources.blog",
+        "msgid": "Blog"
+      },
+      {
+        "msgctxt": "content.help.category.premium.title",
+        "msgid": "Premium"
+      },
+      {
+        "msgctxt": "footer.bluesky_social_media",
+        "msgid": "Bluesky"
+      },
+      {
+        "msgctxt": "platform_support.platforms.android.min_version",
+        "msgid": "Android 8+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.android.name",
+        "msgid": "Android"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.min_version",
+        "msgid": "iOS 15+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.min_version",
+        "msgid": "{ios}/{ipados} 15.6+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.name",
+        "msgid": "iOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.testflight",
+        "msgid": "TestFlight"
+      },
+      {
+        "msgctxt": "platform_support.platforms.linux.name",
+        "msgid": "Linux"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.apple_silicon",
+        "msgid": "Apple Silicon"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.intel",
+        "msgid": "Intel"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.min_version",
+        "msgid": "macOS 10.15+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.name",
+        "msgid": "macOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.windows.min_version",
+        "msgid": "Windows 10+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.windows.name",
+        "msgid": "Windows"
+      },
+      {
+        "msgctxt": "press_branding.assets.label",
+        "msgid": "Logo"
+      },
+      {
+        "msgctxt": "press_branding.colors.blue_da_ba_dee",
+        "msgid": "Blue Da Ba Dee"
+      },
+      {
+        "msgctxt": "social_and_feeds.bluesky.label",
+        "msgid": "Bluesky"
+      },
+      {
+        "msgctxt": "social_and_feeds.github",
+        "msgid": "GitHub"
+      }
+    ],
+    "ru": [
+      {
+        "msgctxt": "footer.bluesky_social_media",
+        "msgid": "Bluesky"
+      },
+      {
+        "msgctxt": "platform_support.platforms.android.min_version",
+        "msgid": "Android 8+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.android.name",
+        "msgid": "Android"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.min_version",
+        "msgid": "iOS 15+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.min_version",
+        "msgid": "{ios}/{ipados} 15.6+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.name",
+        "msgid": "iOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.testflight",
+        "msgid": "TestFlight"
+      },
+      {
+        "msgctxt": "platform_support.platforms.linux.name",
+        "msgid": "Linux"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.apple_silicon",
+        "msgid": "Apple Silicon"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.intel",
+        "msgid": "Intel"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.min_version",
+        "msgid": "macOS 10.15+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.name",
+        "msgid": "macOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.windows.min_version",
+        "msgid": "Windows 10+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.windows.name",
+        "msgid": "Windows"
+      },
+      {
+        "msgctxt": "press_branding.colors.blue_da_ba_dee",
+        "msgid": "Blue Da Ba Dee"
+      },
+      {
+        "msgctxt": "social_and_feeds.bluesky.label",
+        "msgid": "Bluesky"
+      },
+      {
+        "msgctxt": "social_and_feeds.github",
+        "msgid": "GitHub"
+      }
+    ],
+    "sv-SE": [
+      {
+        "msgctxt": "beta_and_access.beta_label",
+        "msgid": "Beta"
+      },
+      {
+        "msgctxt": "footer.bluesky_social_media",
+        "msgid": "Bluesky"
+      },
+      {
+        "msgctxt": "footer.status",
+        "msgid": "Status"
+      },
+      {
+        "msgctxt": "platform_support.platforms.android.min_version",
+        "msgid": "Android 8+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.android.name",
+        "msgid": "Android"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.min_version",
+        "msgid": "iOS 15+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.min_version",
+        "msgid": "{ios}/{ipados} 15.6+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.name",
+        "msgid": "iOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.testflight",
+        "msgid": "TestFlight"
+      },
+      {
+        "msgctxt": "platform_support.platforms.linux.name",
+        "msgid": "Linux"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.apple_silicon",
+        "msgid": "Apple Silicon"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.intel",
+        "msgid": "Intel"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.min_version",
+        "msgid": "macOS 10.15+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.name",
+        "msgid": "macOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.windows.min_version",
+        "msgid": "Windows 10+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.windows.name",
+        "msgid": "Windows"
+      },
+      {
+        "msgctxt": "press_branding.assets.symbol_variants.label",
+        "msgid": "Symbol"
+      },
+      {
+        "msgctxt": "press_branding.colors.blue_da_ba_dee",
+        "msgid": "Blue Da Ba Dee"
+      },
+      {
+        "msgctxt": "social_and_feeds.bluesky.label",
+        "msgid": "Bluesky"
+      },
+      {
+        "msgctxt": "social_and_feeds.github",
+        "msgid": "GitHub"
+      }
+    ],
+    "th": [
+      {
+        "msgctxt": "footer.bluesky_social_media",
+        "msgid": "Bluesky"
+      },
+      {
+        "msgctxt": "platform_support.platforms.android.min_version",
+        "msgid": "Android 8+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.android.name",
+        "msgid": "Android"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.min_version",
+        "msgid": "iOS 15+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.min_version",
+        "msgid": "{ios}/{ipados} 15.6+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.name",
+        "msgid": "iOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.testflight",
+        "msgid": "TestFlight"
+      },
+      {
+        "msgctxt": "platform_support.platforms.linux.name",
+        "msgid": "Linux"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.apple_silicon",
+        "msgid": "Apple Silicon"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.intel",
+        "msgid": "Intel"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.min_version",
+        "msgid": "macOS 10.15+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.name",
+        "msgid": "macOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.windows.min_version",
+        "msgid": "Windows 10+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.windows.name",
+        "msgid": "Windows"
+      },
+      {
+        "msgctxt": "press_branding.colors.blue_da_ba_dee",
+        "msgid": "Blue Da Ba Dee"
+      }
+    ],
+    "tr": [
+      {
+        "msgctxt": "beta_and_access.beta_label",
+        "msgid": "Beta"
+      },
+      {
+        "msgctxt": "company_and_resources.blog",
+        "msgid": "Blog"
+      },
+      {
+        "msgctxt": "footer.bluesky_social_media",
+        "msgid": "Bluesky"
+      },
+      {
+        "msgctxt": "platform_support.platforms.android.min_version",
+        "msgid": "Android 8+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.android.name",
+        "msgid": "Android"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.min_version",
+        "msgid": "iOS 15+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.min_version",
+        "msgid": "{ios}/{ipados} 15.6+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.name",
+        "msgid": "iOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.testflight",
+        "msgid": "TestFlight"
+      },
+      {
+        "msgctxt": "platform_support.platforms.linux.name",
+        "msgid": "Linux"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.apple_silicon",
+        "msgid": "Apple Silicon"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.intel",
+        "msgid": "Intel"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.min_version",
+        "msgid": "macOS 10.15+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.name",
+        "msgid": "macOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.windows.min_version",
+        "msgid": "Windows 10+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.windows.name",
+        "msgid": "Windows"
+      },
+      {
+        "msgctxt": "press_branding.assets.label",
+        "msgid": "Logo"
+      },
+      {
+        "msgctxt": "press_branding.colors.blue_da_ba_dee",
+        "msgid": "Blue Da Ba Dee"
+      },
+      {
+        "msgctxt": "social_and_feeds.bluesky.label",
+        "msgid": "Bluesky"
+      },
+      {
+        "msgctxt": "social_and_feeds.github",
+        "msgid": "GitHub"
+      }
+    ],
+    "uk": [
+      {
+        "msgctxt": "footer.bluesky_social_media",
+        "msgid": "Bluesky"
+      },
+      {
+        "msgctxt": "platform_support.platforms.android.min_version",
+        "msgid": "Android 8+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.android.name",
+        "msgid": "Android"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.min_version",
+        "msgid": "iOS 15+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.min_version",
+        "msgid": "{ios}/{ipados} 15.6+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.name",
+        "msgid": "iOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.testflight",
+        "msgid": "TestFlight"
+      },
+      {
+        "msgctxt": "platform_support.platforms.linux.name",
+        "msgid": "Linux"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.apple_silicon",
+        "msgid": "Apple Silicon"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.intel",
+        "msgid": "Intel"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.min_version",
+        "msgid": "macOS 10.15+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.name",
+        "msgid": "macOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.windows.min_version",
+        "msgid": "Windows 10+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.windows.name",
+        "msgid": "Windows"
+      },
+      {
+        "msgctxt": "press_branding.colors.blue_da_ba_dee",
+        "msgid": "Blue Da Ba Dee"
+      },
+      {
+        "msgctxt": "social_and_feeds.bluesky.label",
+        "msgid": "Bluesky"
+      },
+      {
+        "msgctxt": "social_and_feeds.github",
+        "msgid": "GitHub"
+      }
+    ],
+    "vi": [
+      {
+        "msgctxt": "company_and_resources.blog",
+        "msgid": "Blog"
+      },
+      {
+        "msgctxt": "footer.bluesky_social_media",
+        "msgid": "Bluesky"
+      },
+      {
+        "msgctxt": "platform_support.platforms.android.min_version",
+        "msgid": "Android 8+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.android.name",
+        "msgid": "Android"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.min_version",
+        "msgid": "iOS 15+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.min_version",
+        "msgid": "{ios}/{ipados} 15.6+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.name",
+        "msgid": "iOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.testflight",
+        "msgid": "TestFlight"
+      },
+      {
+        "msgctxt": "platform_support.platforms.linux.name",
+        "msgid": "Linux"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.apple_silicon",
+        "msgid": "Apple Silicon"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.intel",
+        "msgid": "Intel"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.min_version",
+        "msgid": "macOS 10.15+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.name",
+        "msgid": "macOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.windows.min_version",
+        "msgid": "Windows 10+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.windows.name",
+        "msgid": "Windows"
+      },
+      {
+        "msgctxt": "social_and_feeds.bluesky.label",
+        "msgid": "Bluesky"
+      },
+      {
+        "msgctxt": "social_and_feeds.github",
+        "msgid": "GitHub"
+      }
+    ],
+    "zh-CN": [
+      {
+        "msgctxt": "footer.bluesky_social_media",
+        "msgid": "Bluesky"
+      },
+      {
+        "msgctxt": "platform_support.platforms.android.min_version",
+        "msgid": "Android 8+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.android.name",
+        "msgid": "Android"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.min_version",
+        "msgid": "iOS 15+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.min_version",
+        "msgid": "{ios}/{ipados} 15.6+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.name",
+        "msgid": "iOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.testflight",
+        "msgid": "TestFlight"
+      },
+      {
+        "msgctxt": "platform_support.platforms.linux.name",
+        "msgid": "Linux"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.apple_silicon",
+        "msgid": "Apple Silicon"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.intel",
+        "msgid": "Intel"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.min_version",
+        "msgid": "macOS 10.15+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.name",
+        "msgid": "macOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.windows.min_version",
+        "msgid": "Windows 10+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.windows.name",
+        "msgid": "Windows"
+      },
+      {
+        "msgctxt": "social_and_feeds.bluesky.label",
+        "msgid": "Bluesky"
+      },
+      {
+        "msgctxt": "social_and_feeds.github",
+        "msgid": "GitHub"
+      }
+    ],
+    "zh-TW": [
+      {
+        "msgctxt": "footer.bluesky_social_media",
+        "msgid": "Bluesky"
+      },
+      {
+        "msgctxt": "platform_support.platforms.android.min_version",
+        "msgid": "Android 8+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.android.name",
+        "msgid": "Android"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.min_version",
+        "msgid": "iOS 15+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.min_version",
+        "msgid": "{ios}/{ipados} 15.6+"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.name",
+        "msgid": "iOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.ios.testflight",
+        "msgid": "TestFlight"
+      },
+      {
+        "msgctxt": "platform_support.platforms.linux.name",
+        "msgid": "Linux"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.apple_silicon",
+        "msgid": "Apple Silicon"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.intel",
+        "msgid": "Intel"
+      },
+      {
+        "msgctxt": "platform_support.platforms.macos.name",
+        "msgid": "macOS"
+      },
+      {
+        "msgctxt": "platform_support.platforms.windows.name",
+        "msgid": "Windows"
+      },
+      {
+        "msgctxt": "social_and_feeds.bluesky.label",
+        "msgid": "Bluesky"
+      },
+      {
+        "msgctxt": "social_and_feeds.github",
+        "msgid": "GitHub"
+      }
+    ]
+  }
+}

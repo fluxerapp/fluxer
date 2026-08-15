@@ -42,7 +42,7 @@
 }
 
 .messagePreviewSpacing {
-	margin-top: var(--message-group-spacing, 0);
+	margin-top: var(--message-group-spacing, 0px);
 }
 
 .messagePreview {
@@ -509,7 +509,7 @@
 	display: inline;
 	font-size: var(--message-timestamp-font-size);
 	line-height: var(--message-line-height);
-	opacity: 0.6;
+	color: color-mix(in srgb, var(--message-timestamp-color) 60%, transparent);
 	margin-inline-start: 0.15rem;
 	white-space: nowrap;
 }
@@ -874,7 +874,7 @@
 	top: 50%;
 	bottom: calc(-1 * (var(--reply-spacing) + var(--compact-reply-spine-terminal-gap)));
 	inset-inline-start: var(--compact-reply-spine-center);
-	inline-size: max(0, var(--compact-reply-spine-run));
+	inline-size: max(0px, var(--compact-reply-spine-run));
 	margin-block-start: calc(-0.5 * var(--spine-width));
 	margin-inline-start: 0;
 	border-color: var(--reply-spine-color);
@@ -947,9 +947,13 @@
 	max-width: 30%;
 	vertical-align: baseline;
 	font-weight: 500;
-	color: var(--text-primary);
+	color: color-mix(
+		in srgb,
+		var(--replied-username-color, var(--text-primary))
+			clamp(0%, calc(var(--message-replied-username-opacity) * 100%), 100%),
+		transparent
+	);
 	line-height: inherit;
-	opacity: var(--message-replied-username-opacity);
 }
 
 @media (hover: hover) {
@@ -983,7 +987,9 @@
 }
 
 .repliedTextContent {
-	--mention-offset-block-end: 0;
+	--markup-restricted-inline-icon-baseline-shift: -0.125em;
+	--markup-restricted-inline-emoji-size: var(--reply-height);
+	--markup-restricted-inline-emoji-baseline-shift: bottom;
 	display: inline;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -1000,15 +1006,15 @@
 }
 
 .repliedTextContent :global(.emoji) {
-	width: var(--reply-height);
-	height: var(--reply-height);
+	width: var(--markup-restricted-inline-emoji-size);
+	height: var(--markup-restricted-inline-emoji-size);
 	min-height: 0;
-	margin-bottom: 0;
-	vertical-align: text-bottom;
+	margin-block: 0;
+	vertical-align: var(--markup-restricted-inline-emoji-baseline-shift);
 }
 
 .repliedTextContent :global(.emoji:not(img)) {
-	font-size: var(--reply-height);
+	font-size: var(--markup-restricted-inline-emoji-size);
 	line-height: 1;
 }
 
@@ -1067,19 +1073,6 @@
 	align-items: flex-start;
 	justify-content: center;
 	padding-block-start: 0.15em;
-	padding-inline-start: max(
-		0,
-		calc(
-			(
-				var(--textarea-horizontal-padding, 1rem) +
-				var(--textarea-side-button-padding, 0.34375rem) +
-				(var(--textarea-button-height, 2rem) / 2) -
-				var(--chat-horizontal-padding, 1rem) -
-				(var(--message-avatar-size) / 2)
-			) *
-			2
-		)
-	);
 	user-select: none;
 	-webkit-user-select: none;
 }
@@ -1116,7 +1109,7 @@
 	margin-inline-start: 0.25rem;
 	position: relative;
 	top: -0.125rem;
-	color: var(--message-timestamp-color);
+	color: color-mix(in srgb, var(--message-timestamp-color) 60%, transparent);
 }
 
 .systemMessageContentWrapper {
@@ -1255,7 +1248,10 @@
 
 .typingCluster {
 	display: grid;
-	grid-template-columns: var(--typing-upload-column-width) minmax(0, 1fr);
+	grid-template-columns: calc(var(--textarea-button-height, 2rem) + var(--textarea-side-button-padding, 0.25rem) * 2) minmax(
+			0,
+			1fr
+		);
 	column-gap: var(--textarea-upload-gap, 0.75rem);
 	align-items: center;
 	pointer-events: none;
@@ -1278,7 +1274,6 @@
 	grid-column: 1 / -1;
 	justify-self: flex-start;
 	margin-inline-start: 0;
-	transform: translateY(50%);
 }
 
 :global(.theme-light) .typingPill {
@@ -1299,9 +1294,9 @@
 .typingAvatarContainer {
 	height: var(--typing-pill-height);
 	margin-inline: 0;
-	--avatar-stack-padding-block-start: 0;
-	--avatar-stack-padding-block-end: 0;
-	--avatar-stack-extra-height: 0;
+	--avatar-stack-padding-block-start: 0px;
+	--avatar-stack-padding-block-end: 0px;
+	--avatar-stack-extra-height: 0px;
 	--avatar-stack-outline-color: var(--background-tertiary);
 }
 
@@ -1320,8 +1315,21 @@
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
-	font-size: 0.625rem;
+	font-size: 0.75rem;
 	line-height: var(--typing-pill-height);
+}
+
+.typingClusterComposerStatus {
+	display: inline-flex;
+	grid-template-columns: none;
+	column-gap: 0;
+	width: auto;
+	max-width: 100%;
+	flex: 0 1 auto;
+}
+
+.typingClusterComposerStatus .typingAvatarContainer {
+	--avatar-stack-outline-color: var(--composer-surface-color, var(--background-secondary-lighter));
 }
 
 .compactContentWrapper {

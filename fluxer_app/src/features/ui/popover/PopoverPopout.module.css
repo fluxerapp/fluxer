@@ -6,11 +6,7 @@
 	pointer-events: auto;
 	transition: none;
 	-webkit-app-region: no-drag;
-	filter: drop-shadow(0 0.5rem 1rem var(--popout-shadow));
-}
-
-.popoutStableText {
-	filter: none;
+	border-radius: var(--popout-radius, 0.5rem);
 	box-shadow: 0 0.5rem 1rem var(--popout-shadow);
 }
 

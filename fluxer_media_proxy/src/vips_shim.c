@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 #define _GNU_SOURCE
+#define _DARWIN_C_SOURCE
 #define _POSIX_C_SOURCE 200809L
 
 #include "vips_shim.h"
@@ -529,13 +530,13 @@ static int fluxer_gif_setup_filter_graph(
     if (avfilter_graph_create_filter(&src_ctx, avfilter_get_by_name("buffer"),
                                      "in", src_args, NULL, graph) < 0)
         goto fail;
-    if (avfilter_graph_create_filter(&sink_ctx, avfilter_get_by_name("buffersink"),
-                                     "out", NULL, NULL, graph) < 0)
-        goto fail;
+    sink_ctx = avfilter_graph_alloc_filter(graph, avfilter_get_by_name("buffersink"), "out");
+    if (sink_ctx == NULL) goto fail;
     enum AVPixelFormat sink_fmts[] = { AV_PIX_FMT_PAL8, AV_PIX_FMT_NONE };
     if (av_opt_set_int_list(sink_ctx, "pix_fmts", sink_fmts, AV_PIX_FMT_NONE,
                             AV_OPT_SEARCH_CHILDREN) < 0)
         goto fail;
+    if (avfilter_init_dict(sink_ctx, NULL) < 0) goto fail;
 
     char descr[256];
     snprintf(descr, sizeof(descr),
@@ -2345,16 +2346,18 @@ static int cb_collect_mdhd(const uint8_t *payload, size_t len, void *user) {
     trak_info *t = (trak_info *)user;
     if (len < 1) return 0;
     uint8_t version = payload[0];
+    uint32_t timescale;
     if (version == 0) {
         if (len < 16) return 0;
-        t->timescale = bmff_read_u32(payload + 12);
+        timescale = bmff_read_u32(payload + 12);
     } else if (version == 1) {
         if (len < 24) return 0;
-        t->timescale = bmff_read_u32(payload + 20);
+        timescale = bmff_read_u32(payload + 20);
     } else {
         return 0;
     }
-    if (t->timescale > 0) t->have_mdhd = 1;
+    t->timescale = timescale;
+    t->have_mdhd = timescale > 0;
     return 0;
 }
 
@@ -2451,6 +2454,7 @@ static int parse_isobmff_track_delays(const void *buf, size_t len,
     if (total_samples == 0) { free(list.traks); return -1; }
 
     uint32_t timescale = picked->timescale;
+    if (timescale == 0) { free(list.traks); return -1; }
     int *delays = (int *)malloc((size_t)total_samples * sizeof(int));
     if (delays == NULL) { free(list.traks); return -1; }
 

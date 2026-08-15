@@ -1,0 +1,52 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.handle {
+	position: absolute;
+	top: 0;
+	bottom: var(--layout-user-area-overlay-height, var(--layout-user-area-reserved-height, 0px));
+	left: var(--layout-sidebar-width);
+	width: 0.375rem;
+	transform: translateX(-50%);
+	z-index: 3;
+	cursor: col-resize;
+	touch-action: none;
+	background-color: transparent;
+	-webkit-user-select: none;
+	user-select: none;
+	--sidebar-resize-handle-color: color-mix(in srgb, var(--background-secondary-lighter) 65%, var(--text-primary) 35%);
+}
+
+.indicator {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 50%;
+	width: 0.375rem;
+	transform: translateX(-50%) scaleX(0.333333);
+	transform-origin: center;
+	border-radius: var(--radius-full);
+	background-color: var(--sidebar-resize-handle-color);
+	opacity: 0;
+	pointer-events: none;
+	transition:
+		transform 160ms ease,
+		opacity 160ms ease;
+}
+
+.handle:hover .indicator,
+.handle:focus-visible .indicator {
+	transform: translateX(-50%) scaleX(0.666667);
+	opacity: 0.92;
+}
+
+:global(html.sidebar-resizing) .indicator {
+	transform: translateX(-50%) scaleX(1);
+	opacity: 1;
+}
+
+:global(html.sidebar-resizing),
+:global(html.sidebar-resizing) * {
+	cursor: col-resize !important;
+	user-select: none !important;
+	-webkit-user-select: none !important;
+}

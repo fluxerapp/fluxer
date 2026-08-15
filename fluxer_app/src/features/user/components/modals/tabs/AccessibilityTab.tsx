@@ -10,6 +10,7 @@ import {Channel} from '@app/features/channel/models/Channel';
 import Channels from '@app/features/channel/state/Channels';
 import {SCREEN_READER_DESCRIPTOR, TEXT_TO_SPEECH_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {Message as MessageModel} from '@app/features/messaging/models/MessagingMessage';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import type {ComboboxOption} from '@app/features/ui/components/form/FormCombobox';
 import {Switch} from '@app/features/ui/components/form/FormSwitch';
@@ -320,13 +321,13 @@ export const AccessibilityTtsTabContent: React.FC = observer(() => {
 					leftIcon={
 						isSpeaking ? (
 							<PauseIcon
-								size={16}
+								size={remFromPx(16)}
 								weight="fill"
 								data-flx="user.accessibility-tab.accessibility-tts-tab-content.pause-icon"
 							/>
 						) : (
 							<PlayIcon
-								size={16}
+								size={remFromPx(16)}
 								weight="fill"
 								data-flx="user.accessibility-tab.accessibility-tts-tab-content.play-icon"
 							/>

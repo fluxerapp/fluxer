@@ -96,6 +96,11 @@ interface DecodedVideoDimensions {
 	height: number;
 }
 
+interface PosterCacheAtMount {
+	src: string | null;
+	cached: boolean;
+}
+
 const MobileVideoOverlay: FC<{
 	thumbHashURL?: string;
 	posterSrc: string | null;
@@ -160,7 +165,7 @@ const MobileVideoOverlay: FC<{
 						}}
 						icon={
 							<PlayIcon
-								size={28}
+								size={remFromPx(28)}
 								aria-hidden="true"
 								data-flx="channel.embeds.media.embed-video.mobile-video-overlay.play-icon"
 							/>
@@ -212,8 +217,16 @@ const EmbedVideo: FC<EmbedVideoProps> = observer(
 		const {ref: visibilityRef, isNearViewport} = useNearViewport<HTMLDivElement>({
 			rememberKey: posterSrc ?? effectiveSrc,
 		});
-		const [posterCachedOnMount] = useState(() => (posterSrc ? ImageCacheUtils.hasImage(posterSrc) : false));
-		const [posterLoaded, setPosterLoaded] = useState(posterCachedOnMount);
+		const [posterCacheAtMount] = useState<PosterCacheAtMount>(() => ({
+			src: posterSrc,
+			cached: posterSrc ? ImageCacheUtils.hasImage(posterSrc) : false,
+		}));
+		const posterCachedOnMount = posterCacheAtMount.src === posterSrc && posterCacheAtMount.cached;
+		const [loadedPosterSrc, setLoadedPosterSrc] = useState<string | null>(() => {
+			if (posterSrc && ImageCacheUtils.hasImage(posterSrc)) return posterSrc;
+			return null;
+		});
+		const posterLoaded = posterSrc !== null && loadedPosterSrc === posterSrc;
 		const [hasPlayed, setHasPlayed] = useState(false);
 		const [isPlayingInline, setIsPlayingInline] = useState(false);
 		const [decodedVideoDimensions, setDecodedVideoDimensions] = useState<DecodedVideoDimensions | null>(null);
@@ -336,18 +349,27 @@ const EmbedVideo: FC<EmbedVideoProps> = observer(
 			if (DeveloperOptions.forceRenderPlaceholders || DeveloperOptions.forceMediaLoading) {
 				return;
 			}
-			ImageCacheUtils.loadImage(
+			if (loadedPosterSrc === posterSrc) return;
+			let active = true;
+			const cleanup = ImageCacheUtils.loadImage(
 				posterSrc,
 				() => {
-					setPosterLoaded(true);
+					if (!active) return;
+					setLoadedPosterSrc(posterSrc);
 					const image = ImageCacheUtils.getImage(posterSrc);
-					if (image && image.naturalWidth > 0 && image.naturalHeight > 0) {
+					if (active && image && image.naturalWidth > 0 && image.naturalHeight > 0) {
 						setPosterNaturalDimensions({src: posterSrc, width: image.naturalWidth, height: image.naturalHeight});
 					}
 				},
-				() => setPosterLoaded(false),
+				() => {
+					if (active) setLoadedPosterSrc((currentSource) => (currentSource === posterSrc ? null : currentSource));
+				},
 			);
-		}, [posterSrc, shouldLoadMedia]);
+			return () => {
+				active = false;
+				cleanup();
+			};
+		}, [loadedPosterSrc, posterSrc, shouldLoadMedia]);
 		const handleMobileTap = useCallback(() => {
 			const videoItems = attachmentsToViewerItems(mediaAttachments, {filterType: 'video'});
 			if (videoItems.length > 0) {
@@ -574,10 +596,14 @@ const EmbedVideo: FC<EmbedVideoProps> = observer(
 									data-flx="channel.embeds.media.embed-video.inline-mute-button.toggle-mute"
 								>
 									{VideoVolume.isMuted ? (
-										<SpeakerXIcon size={16} weight="fill" data-flx="channel.embeds.media.embed-video.speaker-x-icon" />
+										<SpeakerXIcon
+											size={remFromPx(16)}
+											weight="fill"
+											data-flx="channel.embeds.media.embed-video.speaker-x-icon"
+										/>
 									) : (
 										<SpeakerHighIcon
-											size={16}
+											size={remFromPx(16)}
 											weight="fill"
 											data-flx="channel.embeds.media.embed-video.speaker-high-icon"
 										/>

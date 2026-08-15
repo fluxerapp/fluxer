@@ -21,12 +21,14 @@ import {
 	getTotalRowsFromLayout,
 } from '@app/features/member/utils/MemberListLayout';
 import {buildMemberListRangeWindow} from '@app/features/member/utils/MemberListRangeUtils';
+import * as PermissionUtils from '@app/features/permissions/utils/PermissionUtils';
 import TypingIndicator from '@app/features/typing/state/TypingIndicator';
 import {OwnerCrownIcon} from '@app/features/ui/action_menu/ContextMenuIcons';
 import {StatusAwareAvatar} from '@app/features/ui/components/StatusAwareAvatar';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
+import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {MEMBER_LIST_RANGE_MAX_SPAN} from '@fluxer/constants/src/GatewayConstants';
 import {GuildFeatures, GuildOperations} from '@fluxer/constants/src/GuildConstants';
 import {isOfflineStatus} from '@fluxer/constants/src/StatusConstants';
@@ -281,7 +283,7 @@ const LazyMemberListGroup = observer(
 					className={styles.memberGroupHeader}
 					data-flx="channel.channel-details-bottom-sheet-member-list.lazy-member-list-group.member-group-header"
 				>
-					{groupName} — {group.count}
+					{groupName}—{group.count}
 				</div>
 				<div
 					className={styles.memberGroupList}
@@ -328,10 +330,13 @@ const LazyGuildMemberList = observer(
 		const avatarDeferTimerRef = useRef<number | null>(null);
 		const [deferAvatarLoad, setDeferAvatarLoad] = useState(false);
 		const memberListUpdatesDisabled = (guild.disabledOperations & GuildOperations.MEMBER_LIST_UPDATES) !== 0;
+		const currentUserId = Authentication.currentUserId;
+		const lacksMemberViewPermission =
+			currentUserId != null && !PermissionUtils.can(Permissions.VIEW_CHANNEL_MEMBERS, currentUserId, channel.toJSON());
 		const {subscribe} = useMemberListSubscription({
 			guildId: guild.id,
 			channelId: channel.id,
-			enabled: enabled && !memberListUpdatesDisabled,
+			enabled: enabled && !memberListUpdatesDisabled && !lacksMemberViewPermission,
 		});
 		const memberListState = MemberSidebar.getList(guild.id, channel.id);
 		const isLoading = !memberListState || memberListState.items.size === 0;
@@ -371,7 +376,7 @@ const LazyGuildMemberList = observer(
 			}, AVATAR_DEFER_AFTER_SCROLL_IDLE_MS);
 		}, []);
 		useEffect(() => {
-			if (!enabled || memberListUpdatesDisabled) {
+			if (!enabled || memberListUpdatesDisabled || lacksMemberViewPermission) {
 				return;
 			}
 			const listContainer = listContainerRef.current;
@@ -416,7 +421,27 @@ const LazyGuildMemberList = observer(
 					avatarDeferTimerRef.current = null;
 				}
 			};
-		}, [enabled, memberListUpdatesDisabled, updateSubscribedRange, markAvatarLoadingDeferred]);
+		}, [
+			enabled,
+			memberListUpdatesDisabled,
+			lacksMemberViewPermission,
+			updateSubscribedRange,
+			markAvatarLoadingDeferred,
+		]);
+		if (lacksMemberViewPermission) {
+			return (
+				<div
+					className={styles.memberListFallbackContainer}
+					data-flx="channel.channel-details-bottom-sheet-member-list.lazy-guild-member-list.member-list-fallback-container"
+				>
+					<MemberListUnavailableFallback
+						className={styles.memberListFallback}
+						variant="permission_denied"
+						data-flx="channel.channel-details-bottom-sheet-member-list.lazy-guild-member-list.member-list-fallback"
+					/>
+				</div>
+			);
+		}
 		if (memberListUpdatesDisabled) {
 			return (
 				<div

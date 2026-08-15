@@ -11,6 +11,7 @@ import {
 	CREATE_COMMUNITY_DESCRIPTOR,
 	JOIN_COMMUNITY_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {THE_OTHER_PLATFORM} from '@fluxer/constants/src/ExternalPlatformConstants';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {DownloadSimpleIcon, HouseIcon, LinkIcon} from '@phosphor-icons/react';
@@ -52,20 +53,27 @@ export const LandingView = observer(({onViewChange}: {onViewChange: (view: AddGu
 				<div className={styles.actionButtons} data-flx="guild.add-guild-modal.landing-view.action-buttons">
 					<ActionButton
 						onClick={() => onViewChange('create_guild')}
-						icon={<HouseIcon size={24} data-flx="guild.add-guild-modal.landing-view.house-icon" />}
+						icon={<HouseIcon size={remFromPx(24)} data-flx="guild.add-guild-modal.landing-view.house-icon" />}
 						label={i18n._(CREATE_COMMUNITY_DESCRIPTOR)}
 						data-flx="guild.add-guild-modal.landing-view.action-button.view-change"
 					/>
 					<ActionButton
 						onClick={() => onViewChange('join_guild')}
-						icon={<LinkIcon size={24} weight="bold" data-flx="guild.add-guild-modal.landing-view.link-icon" />}
+						icon={
+							<LinkIcon size={remFromPx(24)} weight="bold" data-flx="guild.add-guild-modal.landing-view.link-icon" />
+						}
 						label={i18n._(JOIN_COMMUNITY_DESCRIPTOR)}
 						data-flx="guild.add-guild-modal.landing-view.action-button.view-change--2"
 					/>
 				</div>
 				<ActionButton
 					onClick={() => onViewChange('import_template')}
-					icon={<DownloadSimpleIcon size={24} data-flx="guild.add-guild-modal.landing-view.download-simple-icon" />}
+					icon={
+						<DownloadSimpleIcon
+							size={remFromPx(24)}
+							data-flx="guild.add-guild-modal.landing-view.download-simple-icon"
+						/>
+					}
 					label={i18n._(IMPORT_THE_OTHER_PLATFORM_TEMPLATE_DESCRIPTOR, {theOtherPlatform: THE_OTHER_PLATFORM})}
 					data-flx="guild.add-guild-modal.landing-view.action-button.view-change--3"
 				/>

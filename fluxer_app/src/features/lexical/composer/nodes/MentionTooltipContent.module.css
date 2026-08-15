@@ -1,0 +1,23 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.card {
+	--mention-tooltip-surface: var(--settings-surface-background, var(--form-surface-background));
+	--mention-tooltip-border: var(--settings-border-color, var(--background-modifier-accent));
+	--mention-tooltip-shadow: 0 0.5rem 1rem rgb(0 0 0 / 0.22);
+	display: flex;
+	align-items: center;
+	gap: 0.625rem;
+	max-width: 18rem;
+	padding: 0.5rem 0.625rem;
+	background: var(--mention-tooltip-surface);
+	color: var(--text-primary);
+	border-radius: 0.5rem;
+	border: 0.0625rem solid var(--mention-tooltip-border);
+	box-shadow: var(--mention-tooltip-shadow);
+	user-select: text;
+	-webkit-user-select: text;
+}
+
+:global(.theme-light) .card {
+	--mention-tooltip-shadow: 0 0.5rem 1rem rgb(0 0 0 / 0.12);
+}

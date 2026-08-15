@@ -1,8 +1,7 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
 .container {
-	border-color: var(--background-header-secondary);
-	background-color: var(--background-secondary-lighter);
+	border-color: var(--composer-divider-color, var(--background-modifier-accent));
 	padding: 0.5rem 1rem;
 	width: fit-content;
 }
@@ -13,7 +12,7 @@
 }
 
 .standalone {
-	border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+	border-radius: var(--radius-lg);
 	border-width: 0.0625rem;
 	border-style: solid;
 }

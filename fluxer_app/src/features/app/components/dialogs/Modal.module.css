@@ -68,8 +68,8 @@
 }
 
 .layer.layerFullscreenMobile {
-	--fullscreen-pad-y: 0;
-	--fullscreen-pad-x: 0;
+	--fullscreen-pad-y: 0px;
+	--fullscreen-pad-x: 0px;
 	padding: 0 !important;
 }
 
@@ -104,13 +104,9 @@
 	overflow: hidden;
 }
 
-.layer.layerFullscreenMobile .surface {
-	will-change: transform;
-}
-
 .layer.layerCentered {
-	padding: calc(1.5rem + env(safe-area-inset-top, 0)) calc(1rem + env(safe-area-inset-right, 0))
-		calc(1.5rem + env(safe-area-inset-bottom, 0)) calc(1rem + env(safe-area-inset-left, 0));
+	padding: calc(1.5rem + env(safe-area-inset-top, 0px)) calc(1rem + env(safe-area-inset-right, 0px))
+		calc(1.5rem + env(safe-area-inset-bottom, 0px)) calc(1rem + env(safe-area-inset-left, 0px));
 }
 
 .root.centeredOnMobile {
@@ -417,8 +413,8 @@
 
 .insetCloseButtonContainer {
 	position: absolute;
-	top: calc(0.75rem + env(safe-area-inset-top, 0));
-	right: calc(0.75rem + env(safe-area-inset-right, 0));
+	top: calc(0.75rem + env(safe-area-inset-top, 0px));
+	right: calc(0.75rem + env(safe-area-inset-right, 0px));
 	z-index: 10;
 	pointer-events: auto;
 }

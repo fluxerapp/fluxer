@@ -4,6 +4,7 @@ import {LongPressable} from '@app/features/app/components/LongPressable';
 import {usePressable} from '@app/features/app/hooks/usePressable';
 import styles from '@app/features/guild/components/modals/guild_tabs/MemberListStyles.module.css';
 import {MORE_OPTIONS_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import {useLingui} from '@lingui/react/macro';
@@ -108,7 +109,7 @@ export const UserListItem: React.FC<UserListItemProps> = observer(
 				{isMobile ? (
 					<CaretRightIcon
 						weight="bold"
-						size={20}
+						size={remFromPx(20)}
 						className={styles.chevron}
 						data-flx="guild.guild-tabs.user-list-item.chevron"
 					/>

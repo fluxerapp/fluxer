@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {observer} from 'mobx-react-lite';
 import qrCode from 'qrcode';
 import {useEffect, useRef} from 'react';
@@ -50,6 +51,10 @@ export const QRCodeCanvas = observer(({data, size = 100}: {data: string; size?: 
 		}
 	}, [data, size]);
 	return (
-		<canvas ref={canvasRef} style={{borderRadius: 10, backgroundColor: 'white'}} data-flx="ui.qr-code-canvas.canvas" />
+		<canvas
+			ref={canvasRef}
+			style={{borderRadius: remFromPx(10), backgroundColor: 'white'}}
+			data-flx="ui.qr-code-canvas.canvas"
+		/>
 	);
 });

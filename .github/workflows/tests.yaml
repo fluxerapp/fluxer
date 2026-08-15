@@ -125,7 +125,7 @@ jobs:
             libwebp-dev
 
       - name: Install Node.js dependencies
-        run: pnpm --filter fluxer_admin --filter fluxer_marketing install
+        run: pnpm --filter fluxer_admin install
 
       - name: Check formatting
         run: cargo fmt --all -- --check
@@ -215,6 +215,24 @@ jobs:
         run: >-
           cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- ci
           --step knip
+
+  fonts:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: "3.13"
+
+      - name: Install font tooling
+        run: python3 -m pip install -r tools/fonts/requirements.txt
+
+      - name: Verify shipped fonts match the lockfile
+        run: python3 tools/fonts/build_fonts.py --verify
 
   ci-scripts:
     runs-on: ubuntu-24.04

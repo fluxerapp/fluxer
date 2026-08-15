@@ -7,10 +7,13 @@ import {http} from '@app/features/platform/transport/RestTransport';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import Slowmode from '@app/features/slowmode/state/Slowmode';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
+import {CHANNEL_RATE_LIMIT_PER_USER_MAX} from '@fluxer/constants/src/LimitConstants';
 import type {Channel, ChannelSlowmodeStateResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import type {Invite} from '@fluxer/schema/src/domains/invite/InviteSchemas';
 
 const logger = new Logger('Channels');
+const MAX_CONCURRENT_SLOWMODE_STATE_REQUESTS = 32;
+const SLOWMODE_STATE_REQUEST_TIMEOUT_MS = 15_000;
 
 export interface ChannelRtcRegion {
 	id: string;
@@ -71,7 +74,8 @@ function isPrivateChannel(channelId: string): boolean {
 }
 
 function shouldOptimisticallyRemove(channelId: string, options?: RemoveChannelOptions): boolean {
-	return options?.optimistic ?? isPrivateChannel(channelId);
+	if (options !== undefined && options.optimistic !== undefined) return options.optimistic;
+	return isPrivateChannel(channelId);
 }
 
 function deleteChannelQuery(
@@ -87,8 +91,28 @@ function deleteChannelQuery(
 
 function syncSlowmodeTimestamp(channelId: string, data: ChannelSlowmodeStateResponse): void {
 	const {rate_limit_per_user, retry_after_ms, can_bypass} = data;
+	if (typeof can_bypass !== 'boolean') {
+		logger.warn(`Ignoring invalid slowmode bypass state for channel ${channelId}`);
+		return;
+	}
+	if (
+		!Number.isSafeInteger(rate_limit_per_user) ||
+		rate_limit_per_user < 0 ||
+		rate_limit_per_user > CHANNEL_RATE_LIMIT_PER_USER_MAX
+	) {
+		logger.warn(`Ignoring invalid slowmode rate limit for channel ${channelId}`);
+		return;
+	}
 	if (rate_limit_per_user <= 0 || can_bypass) {
 		Slowmode.clearChannel(channelId);
+		return;
+	}
+	if (
+		!Number.isSafeInteger(retry_after_ms) ||
+		retry_after_ms < 0 ||
+		retry_after_ms > CHANNEL_RATE_LIMIT_PER_USER_MAX * 1000
+	) {
+		logger.warn(`Ignoring invalid slowmode retry window for channel ${channelId}`);
 		return;
 	}
 	if (retry_after_ms <= 0) {
@@ -98,9 +122,16 @@ function syncSlowmodeTimestamp(channelId: string, data: ChannelSlowmodeStateResp
 	Slowmode.updateSlowmodeRemaining(channelId, retry_after_ms);
 }
 
-async function requestSlowmodeState(channelId: string): Promise<ChannelSlowmodeStateResponse | null> {
-	const response = await http.get<ChannelSlowmodeStateResponse>(Endpoints.CHANNEL_SLOWMODE(channelId));
+async function requestSlowmodeState(
+	channelId: string,
+	signal: AbortSignal,
+): Promise<ChannelSlowmodeStateResponse | null> {
+	const response = await http.get<ChannelSlowmodeStateResponse>(Endpoints.CHANNEL_SLOWMODE(channelId), {
+		signal,
+		timeoutMs: SLOWMODE_STATE_REQUEST_TIMEOUT_MS,
+	});
 	const data = response.body;
+	if (signal.aborted) return null;
 	if (!data) return null;
 	syncSlowmodeTimestamp(channelId, data);
 	return data;
@@ -155,8 +186,9 @@ export async function remove(
 		Channels.removeChannelOptimistically(channelId);
 	}
 	try {
+		const deleteMessages = options === undefined ? undefined : options.deleteMessages;
 		await http.delete(Endpoints.CHANNEL(channelId), {
-			query: deleteChannelQuery(silent, options?.deleteMessages),
+			query: deleteChannelQuery(silent, deleteMessages),
 		});
 		if (removeOptimistically) {
 			Channels.clearOptimisticallyRemovedChannel(channelId);
@@ -206,22 +238,44 @@ export async function fetchChannelInvites(channelId: string): Promise<Array<Invi
 	}
 }
 
-const inFlightSlowmodeFetches = new Map<string, Promise<ChannelSlowmodeStateResponse | null>>();
+interface SlowmodeFetchEntry {
+	promise: Promise<ChannelSlowmodeStateResponse | null>;
+}
+
+const inFlightSlowmodeFetches = new Map<string, SlowmodeFetchEntry>();
 
 export function fetchSlowmodeState(channelId: string): Promise<ChannelSlowmodeStateResponse | null> {
 	const existing = inFlightSlowmodeFetches.get(channelId);
-	if (existing) return existing;
-	const promise = (async () => {
-		try {
-			return await requestSlowmodeState(channelId);
-		} catch (error) {
-			logger.error(`Failed to fetch slowmode state for channel ${channelId}:`, error);
+	if (existing !== undefined) return existing.promise;
+	if (inFlightSlowmodeFetches.size >= MAX_CONCURRENT_SLOWMODE_STATE_REQUESTS) {
+		logger.warn(`Skipping slowmode state fetch for channel ${channelId}; request capacity is full`);
+		return Promise.resolve(null);
+	}
+	const abortController = new AbortController();
+	let timeoutId = 0;
+	const operation = Promise.resolve()
+		.then(() => requestSlowmodeState(channelId, abortController.signal))
+		.catch((error: unknown) => {
+			if (!abortController.signal.aborted) {
+				logger.error(`Failed to fetch slowmode state for channel ${channelId}:`, error);
+			}
 			return null;
-		} finally {
+		});
+	const promise = new Promise<ChannelSlowmodeStateResponse | null>((resolve) => {
+		timeoutId = window.setTimeout(() => {
+			abortController.abort();
+			resolve(null);
+		}, SLOWMODE_STATE_REQUEST_TIMEOUT_MS);
+		operation.then(resolve, () => resolve(null));
+	}).finally(() => {
+		window.clearTimeout(timeoutId);
+		const current = inFlightSlowmodeFetches.get(channelId);
+		if (current !== undefined && current.promise === promise) {
 			inFlightSlowmodeFetches.delete(channelId);
 		}
-	})();
-	inFlightSlowmodeFetches.set(channelId, promise);
+	});
+	const entry: SlowmodeFetchEntry = {promise};
+	inFlightSlowmodeFetches.set(channelId, entry);
 	return promise;
 }
 

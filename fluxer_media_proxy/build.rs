@@ -11,7 +11,7 @@ fn main() {
     build
         .file("src/vips_shim.c")
         .include("src")
-        .flag_if_supported("-std=c11");
+        .flag_if_supported("-std=gnu11");
 
     let mut link_paths: Vec<PathBuf> = Vec::new();
     let mut link_files: Vec<PathBuf> = Vec::new();

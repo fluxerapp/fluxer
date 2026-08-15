@@ -19,13 +19,46 @@ import {
 	STICKERS_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
+import type {ResizeEdge} from '@app/features/ui/floating_pane/FloatingPaneMath';
+import {useResizablePane} from '@app/features/ui/hooks/useResizablePane';
 import {getNextTabIndex, getTabNavigationDirection} from '@app/features/ui/tabs/TabKeyboardNavigation';
-import type {I18n} from '@lingui/core';
+import type {I18n, MessageDescriptor} from '@lingui/core';
+import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import React, {useCallback, useContext, useEffect, useMemo, useRef, useState} from 'react';
 import ReactDOM from 'react-dom';
+
+const RESIZE_EXPRESSION_PICKER_TOP_LEFT_DESCRIPTOR = msg({
+	message: 'Resize expression picker from top left',
+	comment: 'Accessible label for the top-left resize handle on the expression picker popout.',
+});
+const RESIZE_EXPRESSION_PICKER_TOP_RIGHT_DESCRIPTOR = msg({
+	message: 'Resize expression picker from top right',
+	comment: 'Accessible label for the top-right resize handle on the expression picker popout.',
+});
+const RESIZE_EXPRESSION_PICKER_BOTTOM_LEFT_DESCRIPTOR = msg({
+	message: 'Resize expression picker from bottom left',
+	comment: 'Accessible label for the bottom-left resize handle on the expression picker popout.',
+});
+const RESIZE_EXPRESSION_PICKER_BOTTOM_RIGHT_DESCRIPTOR = msg({
+	message: 'Resize expression picker from bottom right',
+	comment: 'Accessible label for the bottom-right resize handle on the expression picker popout.',
+});
+
+const EXPRESSION_PICKER_DEFAULT_SIZE = {width: 578, height: 690};
+const EXPRESSION_PICKER_MIN_SIZE = {width: 360, height: 360};
+const EXPRESSION_PICKER_VIEWPORT_PADDING = 16;
+const EXPRESSION_PICKER_RESIZING_CLASS = 'expression-picker-resizing';
+const EXPRESSION_PICKER_RESIZE_CURSOR_PROPERTY = '--expression-picker-resize-cursor';
+
+interface ResizeHandleSpec {
+	edge: ResizeEdge;
+	className: string;
+	label: MessageDescriptor;
+}
 
 interface ExpressionPickerHeaderContextType {
 	headerPortalElement: HTMLDivElement | null;
@@ -37,9 +70,7 @@ export const useExpressionPickerHeaderPortal = () => {
 };
 export const ExpressionPickerHeaderPortal = ({children}: {children: React.ReactNode}) => {
 	const context = useExpressionPickerHeaderPortal();
-	if (!context?.headerPortalElement) {
-		return null;
-	}
+	if (context == null || context.headerPortalElement == null) return null;
 	return ReactDOM.createPortal(children, context.headerPortalElement);
 };
 
@@ -117,6 +148,29 @@ interface ExpressionPickerPopoutProps {
 	onTabChange?: (tab: ExpressionPickerTabType) => void;
 }
 
+const RESIZE_HANDLES: ReadonlyArray<ResizeHandleSpec> = [
+	{
+		edge: 'top-left',
+		className: styles.resizeCornerTopLeft,
+		label: RESIZE_EXPRESSION_PICKER_TOP_LEFT_DESCRIPTOR,
+	},
+	{
+		edge: 'top-right',
+		className: styles.resizeCornerTopRight,
+		label: RESIZE_EXPRESSION_PICKER_TOP_RIGHT_DESCRIPTOR,
+	},
+	{
+		edge: 'bottom-left',
+		className: styles.resizeCornerBottomLeft,
+		label: RESIZE_EXPRESSION_PICKER_BOTTOM_LEFT_DESCRIPTOR,
+	},
+	{
+		edge: 'bottom-right',
+		className: styles.resizeCornerBottomRight,
+		label: RESIZE_EXPRESSION_PICKER_BOTTOM_RIGHT_DESCRIPTOR,
+	},
+];
+
 export const ExpressionPickerPopout = observer(
 	({
 		channelId,
@@ -133,11 +187,14 @@ export const ExpressionPickerPopout = observer(
 				(category) => visibleTabs.includes(category.type) && (category.type !== 'gifs' || RuntimeConfig.gifEnabled),
 			);
 		}, [i18n.locale, visibleTabs, RuntimeConfig.gifEnabled]);
-		const [internalSelectedTab, setInternalSelectedTab] = useState<ExpressionPickerTabType>(
-			() => categories[0]?.type || 'emojis',
-		);
+		const [internalSelectedTab, setInternalSelectedTab] = useState<ExpressionPickerTabType>(() => {
+			const firstCategory = categories[0];
+			return firstCategory == null ? 'emojis' : firstCategory.type;
+		});
 		const storeSelectedTab = ExpressionPicker.selectedTab;
-		const selectedTab = storeSelectedTab ?? controlledSelectedTab ?? internalSelectedTab;
+		let selectedTab = internalSelectedTab;
+		if (controlledSelectedTab != null) selectedTab = controlledSelectedTab;
+		if (storeSelectedTab != null) selectedTab = storeSelectedTab;
 		const setSelectedTab = useCallback(
 			(tab: ExpressionPickerTabType) => {
 				if (tab === selectedTab) {
@@ -159,6 +216,14 @@ export const ExpressionPickerPopout = observer(
 		const selectedCategory = categories.find((category) => category.type === selectedTab) || categories[0];
 		const containerRef = useRef<HTMLDivElement>(null);
 		const tabRefs = useRef<Map<ExpressionPickerTabType, HTMLButtonElement>>(new Map());
+		const {size, getHandleProps} = useResizablePane(containerRef, {
+			storageKey: 'fluxer:ui:expression-picker-size',
+			defaultSize: EXPRESSION_PICKER_DEFAULT_SIZE,
+			minSize: EXPRESSION_PICKER_MIN_SIZE,
+			viewportPadding: EXPRESSION_PICKER_VIEWPORT_PADDING,
+			resizingClassName: EXPRESSION_PICKER_RESIZING_CLASS,
+			cursorProperty: EXPRESSION_PICKER_RESIZE_CURSOR_PROPERTY,
+		});
 		useEffect(() => {
 			if (containerRef.current) {
 				const firstInput = containerRef.current.querySelector('input[type="text"]') as HTMLInputElement | null;
@@ -186,10 +251,16 @@ export const ExpressionPickerPopout = observer(
 				if (nextIndex == null) return;
 				event.preventDefault();
 				event.stopPropagation();
-				const nextTab = categories[nextIndex]?.type;
-				if (!nextTab) return;
+				const nextCategory = categories[nextIndex];
+				if (nextCategory == null) return;
+				const nextTab = nextCategory.type;
 				setSelectedTab(nextTab);
-				requestAnimationFrame(() => tabRefs.current.get(nextTab)?.focus());
+				const ownerWindow = event.currentTarget.ownerDocument.defaultView;
+				if (ownerWindow == null) return;
+				ownerWindow.requestAnimationFrame(() => {
+					const nextTabElement = tabRefs.current.get(nextTab);
+					if (nextTabElement != null) nextTabElement.focus();
+				});
 			},
 			[categories, setSelectedTab],
 		);
@@ -204,6 +275,7 @@ export const ExpressionPickerPopout = observer(
 				<div
 					ref={containerRef}
 					className={clsx(styles.container, showTabs ? styles.containerWithTabs : styles.containerNoTabs)}
+					style={{width: remFromPx(size.width), height: remFromPx(size.height)}}
 					data-flx="expressions.expression-picker-popout.container"
 				>
 					<div className={styles.header} data-flx="expressions.expression-picker-popout.header">
@@ -253,6 +325,16 @@ export const ExpressionPickerPopout = observer(
 					<div className={styles.content} data-flx="expressions.expression-picker-popout.content">
 						{selectedCategory.renderComponent({channelId, onSelect: handleEmojiSelect, onClose})}
 					</div>
+					{RESIZE_HANDLES.map(({edge, className, label}) => (
+						<button
+							key={edge}
+							type="button"
+							aria-label={i18n._(label)}
+							aria-keyshortcuts="ArrowLeft ArrowRight ArrowUp ArrowDown Home End Enter Backspace Delete"
+							className={clsx(styles.resizeCorner, className)}
+							{...getHandleProps(edge)}
+						/>
+					))}
 				</div>
 			</ExpressionPickerHeaderContext.Provider>
 		);

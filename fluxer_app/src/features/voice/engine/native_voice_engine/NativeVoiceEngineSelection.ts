@@ -55,7 +55,10 @@ let nativeSupportPromise: Promise<boolean> | null = null;
 let nativePrewarmPromise: Promise<void> | null = null;
 let nativeCapabilitiesSnapshot: VoiceEngineV2BridgeCapabilities | null = null;
 
+const NATIVE_VOICE_ENGINE_FORCE_DISABLED: boolean = true;
+
 function isNativeVoiceEngineRequired(): boolean {
+	if (NATIVE_VOICE_ENGINE_FORCE_DISABLED) return false;
 	return isElectronPlatform();
 }
 

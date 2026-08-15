@@ -15,6 +15,7 @@ import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuComma
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
+import {getAppZoomFactor} from '@app/features/ui/utils/AppZoomUtils';
 import {FAVORITES_GUILD_ID} from '@fluxer/constants/src/AppConstants';
 import {useLingui} from '@lingui/react/macro';
 import {StarIcon} from '@phosphor-icons/react';
@@ -62,11 +63,12 @@ export const FavoritesButton = observer(({className}: FavoritesButtonProps = {})
 		));
 	};
 	const shouldShowHoverState = isHovering || contextMenuOpen;
-	const indicatorHeight = (() => {
-		if (isSelected) return 40;
-		if (shouldShowHoverState) return 20;
-		return 8;
-	})();
+	const indicatorHeight =
+		(() => {
+			if (isSelected) return 40;
+			if (shouldShowHoverState) return 20;
+			return 8;
+		})() * getAppZoomFactor();
 	const isActive = shouldShowHoverState || isSelected;
 	if (!Accessibility.showFavorites) {
 		return null;

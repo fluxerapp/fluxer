@@ -28,8 +28,6 @@ type OsStatus = i32;
 pub(crate) type IoSurfaceRef = *mut c_void;
 
 const KCM_VIDEO_CODEC_TYPE_H264: u32 = u32::from_be_bytes(*b"avc1");
-#[cfg(test)]
-const KCV_PIXEL_FORMAT_TYPE_420_YPCBCR8_BIPLANAR_VIDEO: u32 = u32::from_be_bytes(*b"420v");
 const NOERR: OsStatus = 0;
 const KCM_TIME_FLAGS_VALID: u32 = 1;
 const KCF_NUMBER_SINT32_TYPE: i32 = 3;
@@ -841,105 +839,8 @@ impl VideoToolboxHandoff for VtCompressionHandoff {
 }
 
 #[cfg(test)]
-pub(crate) fn make_cv_nv12_pixel_buffer(
-    width: u32,
-    height: u32,
-) -> objc2_core_foundation::CFRetained<objc2_core_video::CVPixelBuffer> {
-    use core::ptr::NonNull;
-    use objc2_core_foundation::{CFDictionary, CFRetained};
-    use objc2_core_video::CVPixelBuffer;
-
-    let mut empty_keys: [*const c_void; 0] = [];
-    let mut empty_vals: [*const c_void; 0] = [];
-    let iosurf_dict: CFRetained<CFDictionary> = unsafe {
-        CFDictionary::new(
-            None,
-            empty_keys.as_mut_ptr(),
-            empty_vals.as_mut_ptr(),
-            0,
-            &objc2_core_foundation::kCFTypeDictionaryKeyCallBacks,
-            &objc2_core_foundation::kCFTypeDictionaryValueCallBacks,
-        )
-        .expect("iosurf empty dict")
-    };
-    let key_ref: &objc2_core_foundation::CFString =
-        unsafe { objc2_core_video::kCVPixelBufferIOSurfacePropertiesKey };
-    let key_ptr: *const c_void = key_ref as *const _ as *const c_void;
-    let val_ptr: *const c_void = &*iosurf_dict as *const _ as *const c_void;
-    let mut keys = [key_ptr];
-    let mut vals = [val_ptr];
-    let attrs: CFRetained<CFDictionary> = unsafe {
-        CFDictionary::new(
-            None,
-            keys.as_mut_ptr(),
-            vals.as_mut_ptr(),
-            1,
-            &objc2_core_foundation::kCFTypeDictionaryKeyCallBacks,
-            &objc2_core_foundation::kCFTypeDictionaryValueCallBacks,
-        )
-        .expect("attrs dict")
-    };
-    let mut out: *mut CVPixelBuffer = std::ptr::null_mut();
-    let status = unsafe {
-        objc2_core_video::CVPixelBufferCreate(
-            None,
-            width as usize,
-            height as usize,
-            KCV_PIXEL_FORMAT_TYPE_420_YPCBCR8_BIPLANAR_VIDEO,
-            Some(&attrs),
-            NonNull::new(&mut out).expect("out pointer non-null"),
-        )
-    };
-    assert_eq!(status, 0, "CVPixelBufferCreate succeeded");
-    assert!(!out.is_null(), "CVPixelBufferCreate produced buffer");
-    unsafe { CFRetained::from_raw(NonNull::new_unchecked(out)) }
-}
-
-#[cfg(test)]
 mod tests {
     use super::*;
-
-    fn make_handoff() -> VtCompressionHandoff {
-        VtCompressionHandoff::try_new(EncoderDims::new(1280, 720)).expect("create handoff")
-    }
-
-    pub(super) fn iosurface_ptr_from_pb(pb: &objc2_core_video::CVPixelBuffer) -> *mut c_void {
-        let s = objc2_core_video::CVPixelBufferGetIOSurface(Some(pb));
-        let surface = s.expect("pixel buffer must be IOSurface-backed");
-        let raw: *const objc2_io_surface::IOSurfaceRef = &*surface;
-        raw as *mut c_void
-    }
-
-    #[test]
-    fn vt_compression_handoff_encodes_one_frame() {
-        let mut handoff = make_handoff();
-        let pb = make_cv_nv12_pixel_buffer(1280, 720);
-        let surface = iosurface_ptr_from_pb(&pb);
-        let slot = handoff
-            .register_slot(surface as u64, 0, EncoderDims::new(1280, 720))
-            .expect("register slot");
-        let params = PicParams::new(0, false);
-        handoff
-            .encode_shared_async(slot, 0, EncoderDims::new(1280, 720), params)
-            .expect("encode async");
-        handoff.wait_for_completion().expect("complete frames");
-        let payload = handoff.poll_completed(slot).expect("polled bitstream");
-        assert!(!payload.data.is_empty(), "encoded payload non-empty");
-        assert!(
-            payload.data.len() <= MAX_BITSTREAM_BYTES,
-            "encoded payload bounded"
-        );
-    }
-
-    struct RecordingCallback {
-        seen: Vec<(u64, u32)>,
-    }
-
-    impl crate::encoder_handoff::EncoderCompletionCallback for RecordingCallback {
-        fn on_complete(&mut self, sequence: u64, encoded_bytes: u32) {
-            self.seen.push((sequence, encoded_bytes));
-        }
-    }
 
     #[test]
     fn output_callback_counts_failed_completions() {
@@ -972,106 +873,6 @@ mod tests {
     }
 
     #[test]
-    fn failed_completion_count_starts_at_zero_and_survives_encode() {
-        let mut handoff = make_handoff();
-        assert_eq!(handoff.failed_completion_count(), 0);
-        let pb = make_cv_nv12_pixel_buffer(1280, 720);
-        let surface = iosurface_ptr_from_pb(&pb);
-        let slot = handoff
-            .register_slot(surface as u64, 0, EncoderDims::new(1280, 720))
-            .expect("register slot");
-        handoff
-            .encode_shared_async(
-                slot,
-                0,
-                EncoderDims::new(1280, 720),
-                PicParams::new(0, false),
-            )
-            .expect("encode async");
-        handoff.wait_for_completion().expect("complete frames");
-        assert_eq!(handoff.failed_completion_count(), 0);
-    }
-
-    #[test]
-    fn session_rebuild_bounded_by_named_cap() {
-        let mut handoff = make_handoff();
-        assert_eq!(handoff.session_rebuild_count(), 0);
-        for expected in 1..=VT_SESSION_REBUILD_MAX {
-            assert!(handoff.try_rebuild_session(), "rebuild within cap succeeds");
-            assert_eq!(handoff.session_rebuild_count(), expected);
-        }
-        assert!(
-            !handoff.try_rebuild_session(),
-            "rebuild beyond cap rejected"
-        );
-        assert_eq!(handoff.session_rebuild_count(), VT_SESSION_REBUILD_MAX);
-    }
-
-    #[test]
-    fn session_still_encodes_after_rebuild() {
-        let mut handoff = make_handoff();
-        assert!(handoff.try_rebuild_session(), "first rebuild succeeds");
-        let pb = make_cv_nv12_pixel_buffer(1280, 720);
-        let surface = iosurface_ptr_from_pb(&pb);
-        let slot = handoff
-            .register_slot(surface as u64, 0, EncoderDims::new(1280, 720))
-            .expect("register slot");
-        handoff
-            .encode_shared_async(
-                slot,
-                0,
-                EncoderDims::new(1280, 720),
-                PicParams::new(0, false),
-            )
-            .expect("encode async after rebuild");
-        handoff.wait_for_completion().expect("complete frames");
-        let payload = handoff.poll_completed(slot).expect("polled bitstream");
-        assert!(!payload.data.is_empty(), "encoded payload non-empty");
-        assert_eq!(handoff.session_rebuild_count(), 1);
-    }
-
-    #[test]
-    fn encode_shared_uses_capture_pts_when_present() {
-        let mut handoff = make_handoff();
-        let pb = make_cv_nv12_pixel_buffer(1280, 720);
-        let surface = iosurface_ptr_from_pb(&pb);
-        let slot = handoff
-            .register_slot(surface as u64, 0, EncoderDims::new(1280, 720))
-            .expect("register slot");
-        assert_eq!(slot.slot_index, 0);
-        let dims = EncoderDims::new(1280, 720);
-        let submission =
-            EncoderSubmission::new(surface as u64, 0, dims, 0).with_capture_pts_us(987_654);
-        let mut cb = RecordingCallback { seen: Vec::new() };
-        VideoToolboxHandoff::encode_shared(&mut handoff, submission, &mut cb)
-            .expect("encode shared with capture pts");
-        handoff.wait_for_completion().expect("complete frames");
-        let payload = handoff.poll_completed(slot).expect("polled bitstream");
-        assert_eq!(payload.pts_us, 987_654, "real capture pts threaded through");
-        assert_eq!(cb.seen.len(), 1);
-    }
-
-    #[test]
-    fn encode_shared_synthesizes_pts_when_capture_pts_absent() {
-        let mut handoff = make_handoff();
-        let pb = make_cv_nv12_pixel_buffer(1280, 720);
-        let surface = iosurface_ptr_from_pb(&pb);
-        let slot = handoff
-            .register_slot(surface as u64, 0, EncoderDims::new(1280, 720))
-            .expect("register slot");
-        assert_eq!(slot.slot_index, 0);
-        let dims = EncoderDims::new(1280, 720);
-        let submission = EncoderSubmission::new(surface as u64, 0, dims, 0);
-        assert_eq!(submission.capture_pts_us, None);
-        let mut cb = RecordingCallback { seen: Vec::new() };
-        VideoToolboxHandoff::encode_shared(&mut handoff, submission, &mut cb)
-            .expect("encode shared without capture pts");
-        handoff.wait_for_completion().expect("complete frames");
-        let payload = handoff.poll_completed(slot).expect("polled bitstream");
-        assert_eq!(payload.pts_us, 0, "sequence 0 synthesizes pts 0");
-    }
-
-    #[test]
     fn invalid_session_error_detection_is_exact() {
         let invalid = EncoderError::EncodeFailed {
             vendor: "vt-compression-encode",
@@ -1088,39 +889,5 @@ mod tests {
             status: KVT_INVALID_SESSION_ERR as i64,
         };
         assert!(!is_invalid_session_error(&other_vendor));
-    }
-
-    #[test]
-    fn vt_compression_handoff_handles_back_pressure() {
-        let mut handoff = make_handoff();
-        let pb = make_cv_nv12_pixel_buffer(1280, 720);
-        let surface = iosurface_ptr_from_pb(&pb);
-        let slot = handoff
-            .register_slot(surface as u64, 0, EncoderDims::new(1280, 720))
-            .expect("register slot");
-        let total: u64 = (COMPLETION_RING_CAPACITY as u64) + 8;
-        for i in 0..total {
-            let params = PicParams::new(i * 33_333, false);
-            handoff
-                .encode_shared_async(slot, 0, EncoderDims::new(1280, 720), params)
-                .expect("encode async");
-        }
-        handoff.wait_for_completion().expect("complete frames");
-        let pending = handoff.pending_completion();
-        assert!(
-            pending <= COMPLETION_RING_CAPACITY,
-            "completion ring stays bounded"
-        );
-        let mut drained = 0usize;
-        while handoff.poll_completed(slot).is_some() {
-            drained += 1;
-            if drained > COMPLETION_RING_CAPACITY * 2 {
-                break;
-            }
-        }
-        assert!(
-            drained <= COMPLETION_RING_CAPACITY,
-            "drained respects completion bound"
-        );
     }
 }

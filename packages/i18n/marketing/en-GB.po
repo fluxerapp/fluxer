@@ -1,0 +1,2607 @@
+# SPDX-License-Identifier: LicenseRef-Fluxer-Proprietary
+#
+# Fluxer marketing gettext catalog for en-GB.
+msgid ""
+msgstr ""
+"Project-Id-Version: fluxer-marketing\n"
+"POT-Creation-Date: 2026-08-15 00:00+0000\n"
+"PO-Revision-Date: 2026-08-15 00:00+0000\n"
+"Language: en-GB\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#. Compact UI label used in the home-page communities/moderation feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
+#: fluxer_marketing/generated:app.communities.featured_in_discovery
+msgctxt "app.communities.featured_in_discovery"
+msgid "Featured in discovery"
+msgstr "Featured in discovery"
+
+#. Button or link label used in the home-page communities/moderation feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
+#: fluxer_marketing/generated:app.communities.moderation.actions_and_tools
+msgctxt "app.communities.moderation.actions_and_tools"
+msgid "Moderation actions and tools"
+msgstr "Moderation actions and tools"
+
+#. Compact UI label used in the home-page communities/moderation feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
+#: fluxer_marketing/generated:app.communities.moderation.tools
+msgctxt "app.communities.moderation.tools"
+msgid "Moderation tools"
+msgstr "Moderation tools"
+
+#. Compact UI label used in the home-page communities/moderation feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
+#: fluxer_marketing/generated:app.communities.roles_permissions_audit.audit_logs
+msgctxt "app.communities.roles_permissions_audit.audit_logs"
+msgid "Audit logs for transparency"
+msgstr "Audit logs for transparency"
+
+#. Compact UI label used in the home-page communities/moderation feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
+#: fluxer_marketing/generated:app.communities.roles_permissions_audit.granular_roles_and_permissions
+msgctxt "app.communities.roles_permissions_audit.granular_roles_and_permissions"
+msgid "Granular roles and permissions"
+msgstr "Granular roles and permissions"
+
+#. Body copy used in the home-page communities/moderation feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
+#: fluxer_marketing/generated:app.communities.roles_permissions_audit.keep_running_smoothly
+msgctxt "app.communities.roles_permissions_audit.keep_running_smoothly"
+msgid "Assign roles and permissions, and use the audit log to see which moderator changed what."
+msgstr "Assign roles and permissions, and use the audit log to see which moderator changed what."
+
+#. Short UI label or heading used in the home-page communities/moderation feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
+#: fluxer_marketing/generated:app.communities.verification.label
+msgctxt "app.communities.verification.label"
+msgid "Community verification"
+msgstr "Community verification"
+
+#. Body copy used in the home-page communities/moderation feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
+#: fluxer_marketing/generated:app.communities.verification.value_statement
+msgctxt "app.communities.verification.value_statement"
+msgid "Your community gets verified status for authenticity and trust."
+msgstr "Your community gets verified status for authenticity and trust."
+
+#. Compact UI label used in the home-page customization feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
+#: fluxer_marketing/generated:app.customization.animated_profile.animated_avatars_and_banners
+msgctxt "app.customization.animated_profile.animated_avatars_and_banners"
+msgid "Animated avatars and banners"
+msgstr "Animated avatars and banners"
+
+#. Body copy used in the home-page customization feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
+#: fluxer_marketing/generated:app.customization.animated_profile.stand_out_animated_profile
+msgctxt "app.customization.animated_profile.stand_out_animated_profile"
+msgid "Stand out with animated profile pictures and banners to express your personality."
+msgstr "Stand out with animated profile pictures and banners to express your personality."
+
+#. Compact UI label used in the home-page customization feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
+#: fluxer_marketing/generated:app.customization.compact_mode
+msgctxt "app.customization.compact_mode"
+msgid "Compact mode and display options"
+msgstr "Compact mode and display options"
+
+#. Compact UI label used in the home-page customization feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
+#: fluxer_marketing/generated:app.customization.custom_css_themes
+msgctxt "app.customization.custom_css_themes"
+msgid "Custom CSS themes"
+msgstr "Custom CSS themes"
+
+#. Body copy used in the home-page customization feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
+#: fluxer_marketing/generated:app.customization.saved_media_and_css
+msgctxt "app.customization.saved_media_and_css"
+msgid ""
+"Make your own emojis, keep the media you want to find again, and rewrite the whole interface with custom CSS if you want to."
+msgstr ""
+"Make your own emojis, keep the media you want to find again, and rewrite the whole interface with custom CSS if you want to."
+
+#. Short UI label or heading used in the home-page customization feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
+#: fluxer_marketing/generated:app.customization.title
+msgctxt "app.customization.title"
+msgid "Customization"
+msgstr "Customisation"
+
+#. Compact UI label used in the home-page customization feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
+#: fluxer_marketing/generated:app.customization.upload_custom_emojis_and_stickers
+msgctxt "app.customization.upload_custom_emojis_and_stickers"
+msgid "Upload custom emojis and stickers"
+msgstr "Upload custom emojis and stickers"
+
+#. Body copy used in the home-page messaging feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
+#: fluxer_marketing/generated:app.messaging.description
+msgctxt "app.messaging.description"
+msgid ""
+"Chat with friends or groups. Communities give you organized channels when a group chat has grown too large."
+msgstr ""
+"Chat with friends or groups. Communities give you organised channels when a group chat has grown too large."
+
+#. Compact UI label used in the home-page messaging feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
+#: fluxer_marketing/generated:app.messaging.features.file_sharing
+msgctxt "app.messaging.features.file_sharing"
+msgid "Share files and preview links"
+msgstr "Share files and preview links"
+
+#. Compact UI label used in the home-page messaging feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
+#: fluxer_marketing/generated:app.messaging.features.full_markdown_support
+msgctxt "app.messaging.features.full_markdown_support"
+msgid "Full Markdown support in messages"
+msgstr "Full Markdown support in messages"
+
+#. Compact UI label used in the home-page messaging feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
+#: fluxer_marketing/generated:app.messaging.features.organised_channels_for_communities
+msgctxt "app.messaging.features.organised_channels_for_communities"
+msgid "Organized channels for communities"
+msgstr "Organised channels for communities"
+
+#. Compact UI label used in the home-page messaging feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
+#: fluxer_marketing/generated:app.messaging.features.private_dms_and_group_chats
+msgctxt "app.messaging.features.private_dms_and_group_chats"
+msgid "Private DMs and group chats"
+msgstr "Private DMs and group chats"
+
+#. Body copy used in the home-page messaging feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
+#: fluxer_marketing/generated:app.messaging.features.save_media
+msgctxt "app.messaging.features.save_media"
+msgid "Save images, videos, GIFs, and audio"
+msgstr "Save images, videos, GIFs, and audio"
+
+#. Compact UI label used in the home-page messaging feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
+#: fluxer_marketing/generated:app.messaging.features.search.filter_options
+msgctxt "app.messaging.features.search.filter_options"
+msgid "Filter search by author or date"
+msgstr "Filter search by author or date"
+
+#. Body copy used in the home-page messaging feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
+#: fluxer_marketing/generated:app.messaging.features.search.find_old_messages
+msgctxt "app.messaging.features.search.find_old_messages"
+msgid "Find old messages or jump between communities and channels from the same search box."
+msgstr "Find old messages or jump between communities and channels from the same search box."
+
+#. Short UI label or heading used in the home-page messaging feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
+#: fluxer_marketing/generated:app.messaging.features.search.label
+msgctxt "app.messaging.features.search.label"
+msgid "Search message history"
+msgstr "Search message history"
+
+#. Body copy used in the home-page messaging feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
+#: fluxer_marketing/generated:app.messaging.features.search.quick_switcher_shortcuts
+msgctxt "app.messaging.features.search.quick_switcher_shortcuts"
+msgid "Quick switcher with keyboard shortcuts"
+msgstr "Quick switcher with keyboard shortcuts"
+
+#. Compact UI label used in the home-page messaging feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
+#: fluxer_marketing/generated:app.messaging.features.search.search_and_quick_switcher
+msgctxt "app.messaging.features.search.search_and_quick_switcher"
+msgid "Search and quick switcher"
+msgstr "Search and quick switcher"
+
+#. Short UI label or heading used in the home-page messaging feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
+#: fluxer_marketing/generated:app.messaging.title
+msgctxt "app.messaging.title"
+msgid "Messaging"
+msgstr "Messaging"
+
+#. Button or link label used in the main navigation/open-app call to action. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
+#: fluxer_marketing/generated:app.open.open_fluxer
+msgctxt "app.open.open_fluxer"
+msgid "Open {product_name}"
+msgstr "Open {product_name}"
+
+#. Button or link label used in the main navigation/open-app call to action. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
+#: fluxer_marketing/generated:app.open.open_web_app
+msgctxt "app.open.open_web_app"
+msgid "Open the web app"
+msgstr "Open the web app"
+
+#. Compact UI label used in profile and identity feature copy. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
+#: fluxer_marketing/generated:app.profiles_identity.manage_friends_and_block_users
+msgctxt "app.profiles_identity.manage_friends_and_block_users"
+msgid "Manage friends and block users"
+msgstr "Manage friends and block users"
+
+#. Compact UI label used in the home-page voice and video feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
+#: fluxer_marketing/generated:app.voice_and_video.features.mute_controls
+msgctxt "app.voice_and_video.features.mute_controls"
+msgid "Mute or deafen yourself and control your camera"
+msgstr "Mute or deafen yourself and control your camera"
+
+#. Body copy used in the home-page voice and video feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
+#: fluxer_marketing/generated:app.voice_and_video.features.noise_suppression
+msgctxt "app.voice_and_video.features.noise_suppression"
+msgid "Noise suppression and echo cancellation"
+msgstr "Noise suppression and echo cancellation"
+
+#. Compact UI label used in the home-page voice and video feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
+#: fluxer_marketing/generated:app.voice_and_video.features.screen_sharing
+msgctxt "app.voice_and_video.features.screen_sharing"
+msgid "Built-in screen sharing"
+msgstr "Built-in screen sharing"
+
+#. Body copy used in the home-page voice and video feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
+#: fluxer_marketing/generated:app.voice_and_video.hop_in_a_call
+msgctxt "app.voice_and_video.hop_in_a_call"
+msgid "Hop in a call with friends or share your screen to work together."
+msgstr "Hop in a call with friends or share your screen to work together."
+
+#. Short UI label or heading used in the home-page voice and video feature card. Keep it concise, natural, and consistent with product terminology; preserve placeholders exactly.
+#: fluxer_marketing/generated:app.voice_and_video.title
+msgctxt "app.voice_and_video.title"
+msgid "Voice and video"
+msgstr "Voice and video"
+
+#. Accessible label for the marketing-site theme control. Keep it short and clear.
+#: fluxer_marketing/generated:appearance.change_theme
+msgctxt "appearance.change_theme"
+msgid "Change theme"
+msgstr "Change theme"
+
+#. Compact option label for selecting the marketing site's dark theme.
+#: fluxer_marketing/generated:appearance.dark
+msgctxt "appearance.dark"
+msgid "Dark"
+msgstr "Dark"
+
+#. Short heading above the marketing-site theme options.
+#: fluxer_marketing/generated:appearance.label
+msgctxt "appearance.label"
+msgid "Appearance"
+msgstr "Appearance"
+
+#. Compact option label for selecting the marketing site's light theme.
+#: fluxer_marketing/generated:appearance.light
+msgctxt "appearance.light"
+msgid "Light"
+msgstr "Light"
+
+#. Compact option label for following the device's light or dark theme setting.
+#: fluxer_marketing/generated:appearance.system
+msgctxt "appearance.system"
+msgid "System"
+msgstr "System"
+
+#. Short filter label on the blog index. It clears tag filters and shows every blog post.
+#: fluxer_marketing/generated:blog.all_posts
+msgctxt "blog.all_posts"
+msgid "All posts"
+msgstr "All posts"
+
+#. Compact link label for the Atom feed on the blog index. Keep the feed protocol name in conventional form.
+#: fluxer_marketing/generated:blog.atom_feed
+msgctxt "blog.atom_feed"
+msgid "Atom feed"
+msgstr "Atom feed"
+
+#. Back-link label on a blog article page. It returns readers to the blog index.
+#: fluxer_marketing/generated:blog.back_to_blog
+msgctxt "blog.back_to_blog"
+msgid "Back to blog"
+msgstr "Back to blog"
+
+#. Blog index meta description and intro copy. Keep it concise and editorial, not sales-oriented. Preserve placeholders exactly.
+#: fluxer_marketing/generated:blog.description
+msgctxt "blog.description"
+msgid "Updates from the {product_name} team, including roadmap notes and engineering posts."
+msgstr "Updates from the {product_name} team, including roadmap notes and engineering posts."
+
+#. Short heading for RSS and Atom links on the blog index. Keep it compact.
+#: fluxer_marketing/generated:blog.feeds
+msgctxt "blog.feeds"
+msgid "Feeds"
+msgstr "Feeds"
+
+#. Fallback source label inside a blog bookmark card when the linked page has no readable source or publisher. Keep it short and neutral.
+#: fluxer_marketing/generated:blog.linked_article
+msgctxt "blog.linked_article"
+msgid "Linked article"
+msgstr "Linked article"
+
+#. Blog index status text shown when a tag filter is active. Preserve {tag}; it is the visible tag name. Preserve placeholders exactly.
+#: fluxer_marketing/generated:blog.filtered_by_tag
+msgctxt "blog.filtered_by_tag"
+msgid "Filtered by {tag}"
+msgstr "Filtered by {tag}"
+
+#. Blog article summary shown in cards, article pages, metadata, and feeds. Preserve {product_name} exactly.
+#: fluxer_marketing/generated:blog.post.how_i_built_fluxer_story.description
+msgctxt "blog.post.how_i_built_fluxer_story.description"
+msgid ""
+"The story behind {product_name}, from a high school project to an open source chat app used by hundreds of thousands of people."
+msgstr ""
+"The story behind {product_name}, from a high school project to an open source chat app used by hundreds of thousands of people."
+
+#. Blog article title shown in cards, article pages, metadata, and feeds. Preserve {product_name} exactly.
+#: fluxer_marketing/generated:blog.post.how_i_built_fluxer_story.title
+msgctxt "blog.post.how_i_built_fluxer_story.title"
+msgid "How I built {product_name}"
+msgstr "How I built {product_name}"
+
+#. Blog article summary shown in cards, article pages, metadata, and feeds. Keep Fluxer as a product name, v2 as the release name, and GitHub as the product name. Preserve placeholders exactly.
+#: fluxer_marketing/generated:blog.post.mobile_clients_and_fluxer_v2.description
+msgctxt "blog.post.mobile_clients_and_fluxer_v2.description"
+msgid ""
+"{product_name} v2 is here with open source mobile apps and easier self-hosting. Contributions are open again too."
+msgstr ""
+"{product_name} v2 is here with open source mobile apps and easier self-hosting. Contributions are open again too."
+
+#. Blog article title shown in cards, article pages, metadata, and feeds. Keep Fluxer as a product name and v2 as the release name. Preserve placeholders exactly.
+#: fluxer_marketing/generated:blog.post.mobile_clients_and_fluxer_v2.title
+msgctxt "blog.post.mobile_clients_and_fluxer_v2.title"
+msgid "Mobile clients and {product_name} v2"
+msgstr "Mobile clients and {product_name} v2"
+
+#. Blog article summary shown in cards, article pages, metadata, and feeds. Keep Fluxer as a product name and canary as the release-channel name. Preserve placeholders exactly.
+#: fluxer_marketing/generated:blog.post.roadmap_2026.description
+msgctxt "blog.post.roadmap_2026.description"
+msgid ""
+"The 2026 roadmap for {product_name}: self-hosting, localization, federation, public publishing, integrations, private conversations, and creator payments."
+msgstr ""
+"The 2026 roadmap for {product_name}: self-hosting, localisation, federation, public publishing, integrations, private conversations, and creator payments."
+
+#. Blog article title shown in cards, article pages, metadata, and feeds. Refers to Fluxer's 2026 product roadmap.
+#: fluxer_marketing/generated:blog.post.roadmap_2026.title
+msgctxt "blog.post.roadmap_2026.title"
+msgid "Roadmap 2026"
+msgstr "Roadmap 2026"
+
+#. Empty-state body on the blog index when search and tag filters find no posts.
+#: fluxer_marketing/generated:blog.no_results.description
+msgctxt "blog.no_results.description"
+msgid "Try another search term or clear the current filters."
+msgstr "Try another search term or clear the current filters."
+
+#. Empty-state heading on the blog index when search and tag filters find no posts.
+#: fluxer_marketing/generated:blog.no_results.title
+msgctxt "blog.no_results.title"
+msgid "No posts found"
+msgstr "No posts found"
+
+#. Call-to-action label on blog post cards. Keep it concise and neutral.
+#: fluxer_marketing/generated:blog.read_article
+msgctxt "blog.read_article"
+msgid "Read article"
+msgstr "Read article"
+
+#. Section heading under a blog article showing other posts readers may open next.
+#: fluxer_marketing/generated:blog.related_posts
+msgctxt "blog.related_posts"
+msgid "Related posts"
+msgstr "Related posts"
+
+#. Compact link label for the RSS feed on the blog index. Keep the feed protocol name in conventional form.
+#: fluxer_marketing/generated:blog.rss_feed
+msgctxt "blog.rss_feed"
+msgid "RSS feed"
+msgstr "RSS feed"
+
+#. Button label for the blog search form. Keep it short and action-oriented.
+#: fluxer_marketing/generated:blog.search.button
+msgctxt "blog.search.button"
+msgid "Search"
+msgstr "Search"
+
+#. Placeholder text in the blog search input. Keep it concise and clearly scoped to blog posts.
+#: fluxer_marketing/generated:blog.search.placeholder
+msgctxt "blog.search.placeholder"
+msgid "Search blog posts…"
+msgstr "Search blog posts…"
+
+#. Section heading on the blog index when a search query or tag filter is active.
+#: fluxer_marketing/generated:blog.search.results
+msgctxt "blog.search.results"
+msgid "Search results"
+msgstr "Search results"
+
+#. Blog tag label for product updates and announcements. Keep it short because it appears in filter chips and metadata.
+#: fluxer_marketing/generated:blog.tag.news
+msgctxt "blog.tag.news"
+msgid "News"
+msgstr "News"
+
+#. Short label for the list of blog tags. Keep it compact.
+#: fluxer_marketing/generated:blog.tags
+msgctxt "blog.tags"
+msgid "Tags"
+msgstr "Tags"
+
+#. Blog index title and meta title. Keep the product name and blog label recognizable. Preserve placeholders exactly.
+#: fluxer_marketing/generated:blog.title
+msgctxt "blog.title"
+msgid "{product_name} blog"
+msgstr "{product_name} blog"
+
+#. Compact UI label for company/resource navigation or footer groupings. Keep labels short and recognizable for a marketing website.
+#: fluxer_marketing/generated:company_and_resources.blog
+msgctxt "company_and_resources.blog"
+msgid "Blog"
+msgstr "Blog"
+
+#. Compact UI label on the careers and future roles pages. Use clear hiring language, avoid implying that roles are currently open unless the source says so, and preserve placeholders exactly.
+#: fluxer_marketing/generated:company_and_resources.careers.careers_at_fluxer
+msgctxt "company_and_resources.careers.careers_at_fluxer"
+msgid "Careers at {product_name}"
+msgstr "Careers at {product_name}"
+
+#. Careers page notice. Keep it plain and explicit that no roles are currently open.
+#: fluxer_marketing/generated:company_and_resources.careers.not_hiring_notice
+msgctxt "company_and_resources.careers.not_hiring_notice"
+msgid "We are not hiring. Any open role will be listed on this page, so check back later."
+msgstr "We are not hiring. Any open role will be listed on this page, so check back later."
+
+#. Short UI label or heading on the careers and future roles pages. Use clear hiring language, avoid implying that roles are currently open unless the source says so, and preserve placeholders exactly.
+#: fluxer_marketing/generated:company_and_resources.careers.label
+msgctxt "company_and_resources.careers.label"
+msgid "Careers"
+msgstr "Careers"
+
+#. Short status label on the careers page. Be explicit that no roles are currently open.
+#: fluxer_marketing/generated:company_and_resources.careers.no_open_roles
+msgctxt "company_and_resources.careers.no_open_roles"
+msgid "No open roles"
+msgstr "No open roles"
+
+#. Compact UI label for company/resource navigation or footer groupings. Keep labels short and recognizable for a marketing website.
+#: fluxer_marketing/generated:company_and_resources.company
+msgctxt "company_and_resources.company"
+msgid "Company"
+msgstr "Company"
+
+#. Compact UI label for company/resource navigation or footer groupings. Keep labels short and recognizable for a marketing website.
+#: fluxer_marketing/generated:company_and_resources.company_info
+msgctxt "company_and_resources.company_info"
+msgid "Company info"
+msgstr "Company info"
+
+#. Compact UI label for company/resource navigation or footer groupings. Keep labels short and recognizable for a marketing website.
+#: fluxer_marketing/generated:company_and_resources.connect
+msgctxt "company_and_resources.connect"
+msgid "Connect"
+msgstr "Connect"
+
+#. Compact UI label for company/resource navigation or footer groupings. Keep labels short and recognizable for a marketing website.
+#: fluxer_marketing/generated:company_and_resources.docs
+msgctxt "company_and_resources.docs"
+msgid "Docs"
+msgstr "Docs"
+
+#. Button or link label for help-center links or descriptions in marketing navigation and resource sections. Keep it service-oriented and concise.
+#: fluxer_marketing/generated:company_and_resources.help.get_help
+msgctxt "company_and_resources.help.get_help"
+msgid "Get help"
+msgstr "Get help"
+
+#. Compact UI label for help-center links or descriptions in marketing navigation and resource sections. Keep it service-oriented and concise.
+#: fluxer_marketing/generated:company_and_resources.help.help_center
+msgctxt "company_and_resources.help.help_center"
+msgid "Help center"
+msgstr "Help centre"
+
+#. Body copy for help-center links or descriptions in marketing navigation and resource sections. Preserve {product_name} exactly; keep it service-oriented and concise. Preserve placeholders exactly.
+#: fluxer_marketing/generated:company_and_resources.help.help_center_description
+msgctxt "company_and_resources.help.help_center_description"
+msgid "Find answers about your account and privacy, or get help using {product_name}."
+msgstr "Find answers about your account and privacy, or get help using {product_name}."
+
+#. Compact heading for the product links in marketing navigation. Preserve {product_name} exactly.
+#: fluxer_marketing/generated:company_and_resources.fluxer
+msgctxt "company_and_resources.fluxer"
+msgid "{product_name}"
+msgstr "{product_name}"
+
+#. Placeholder text for help-center links or descriptions in marketing navigation and resource sections. Keep it service-oriented and concise.
+#: fluxer_marketing/generated:company_and_resources.help.search_placeholder
+msgctxt "company_and_resources.help.search_placeholder"
+msgid "Search help articles…"
+msgstr "Search help articles…"
+
+#. Section heading on the help center home page. It introduces the complete list of imported support articles.
+#: fluxer_marketing/generated:company_and_resources.help.all_articles
+msgctxt "company_and_resources.help.all_articles"
+msgid "All help articles"
+msgstr "All help articles"
+
+#. Link label shown above help articles. It returns users to the help center home page.
+#: fluxer_marketing/generated:company_and_resources.help.back_to_help_center
+msgctxt "company_and_resources.help.back_to_help_center"
+msgid "Back to help center"
+msgstr "Back to help centre"
+
+#. Section heading on the help center home page. It groups support articles by topic.
+#: fluxer_marketing/generated:company_and_resources.help.browse_by_topic
+msgctxt "company_and_resources.help.browse_by_topic"
+msgid "Browse by topic"
+msgstr "Browse by topic"
+
+#. Short empty-state description shown when a help-center search returns no articles.
+#: fluxer_marketing/generated:company_and_resources.help.no_search_results_description
+msgctxt "company_and_resources.help.no_search_results_description"
+msgid "Try another search, or browse the topics below."
+msgstr "Try another search, or browse the topics below."
+
+#. Short empty-state heading shown when a help-center search returns no articles.
+#: fluxer_marketing/generated:company_and_resources.help.no_search_results_title
+msgctxt "company_and_resources.help.no_search_results_title"
+msgid "No matching articles"
+msgstr "No matching articles"
+
+#. Section heading below help articles. It introduces links to nearby support articles.
+#: fluxer_marketing/generated:company_and_resources.help.related_articles
+msgctxt "company_and_resources.help.related_articles"
+msgid "Related articles"
+msgstr "Related articles"
+
+#. Accessible label for the help-center search form.
+#: fluxer_marketing/generated:company_and_resources.help.search
+msgctxt "company_and_resources.help.search"
+msgid "Search help articles"
+msgstr "Search help articles"
+
+#. Submit button label for the help-center search form. Keep it short.
+#: fluxer_marketing/generated:company_and_resources.help.search_button
+msgctxt "company_and_resources.help.search_button"
+msgid "Search"
+msgstr "Search"
+
+#. Section heading shown above help-center article results after a user searches.
+#: fluxer_marketing/generated:company_and_resources.help.search_results
+msgctxt "company_and_resources.help.search_results"
+msgid "Search results"
+msgstr "Search results"
+
+#. Short UI label or heading for company/resource navigation or footer groupings. Keep labels short and recognizable for a marketing website.
+#: fluxer_marketing/generated:company_and_resources.press.label
+msgctxt "company_and_resources.press.label"
+msgid "Press"
+msgstr "Press"
+
+#. Compact UI label for company/resource navigation or footer groupings. Keep labels short and recognizable for a marketing website.
+#: fluxer_marketing/generated:company_and_resources.press.press_contact
+msgctxt "company_and_resources.press.press_contact"
+msgid "Press contact"
+msgstr "Press contact"
+
+#. Compact UI label for company/resource navigation or footer groupings. Keep labels short and recognizable for a marketing website.
+#: fluxer_marketing/generated:company_and_resources.resources
+msgctxt "company_and_resources.resources"
+msgid "Resources"
+msgstr "Resources"
+
+#. Compact UI label for links to the product source code. Keep the label short and recognizable.
+#: fluxer_marketing/generated:company_and_resources.source_and_contribution.source_code
+msgctxt "company_and_resources.source_and_contribution.source_code"
+msgid "Source code"
+msgstr "Source code"
+
+#. Body copy in the locale picker inviting translation contributions through Weblate. Preserve the {weblate} and {product_name} placeholders exactly.
+#: fluxer_marketing/generated:company_and_resources.source_and_contribution.translation.weblate_note
+msgctxt "company_and_resources.source_and_contribution.translation.weblate_note"
+msgid ""
+"A translation should sound natural to someone who speaks the language. Correct a phrase or start a new locale on {weblate}, and we will include it in {product_name}."
+msgstr ""
+"A translation should sound natural to someone who speaks the language. Correct a phrase or start a new locale on {weblate}, and we will include it in {product_name}."
+
+#. Department or policy category label on content pages. Translate as a compact noun phrase, not as a sentence.
+#: fluxer_marketing/generated:content.labels.community
+msgctxt "content.labels.community"
+msgid "Community"
+msgstr "Community"
+
+#. Department or policy category label on content pages. Translate as legal/compliance, not legality in general.
+#: fluxer_marketing/generated:content.labels.legal
+msgctxt "content.labels.legal"
+msgid "Legal"
+msgstr "Legal"
+
+#. Policy category label for security reporting content. Translate as information security.
+#: fluxer_marketing/generated:content.labels.security
+msgctxt "content.labels.security"
+msgid "Security"
+msgstr "Security"
+
+#. Policy page summary for the changelog. Keep policy names recognizable and legally precise.
+#: fluxer_marketing/generated:content.policies.changelog.description
+msgctxt "content.policies.changelog.description"
+msgid ""
+"A record of significant changes to our terms of service, privacy policy, and community guidelines."
+msgstr ""
+"A record of significant changes to our terms of service, privacy policy, and community guidelines."
+
+#. Policy page title. Translate as a record of changes to legal/community policies.
+#: fluxer_marketing/generated:content.policies.changelog.title
+msgctxt "content.policies.changelog.title"
+msgid "Policy changelog"
+msgstr "Policy changelog"
+
+#. Policy page summary for company information. Keep company name and legal framing precise. Preserve placeholders exactly.
+#: fluxer_marketing/generated:content.policies.company_information.description
+msgctxt "content.policies.company_information.description"
+msgid ""
+"Legal details for {product_name} Platform AB, including how we make money and how to contact us."
+msgstr ""
+"Legal details for {product_name} Platform AB, including how we make money and how to contact us."
+
+#. Policy page title for legal company details. Translate as formal company information.
+#: fluxer_marketing/generated:content.policies.company_information.title
+msgctxt "content.policies.company_information.title"
+msgid "Company information"
+msgstr "Company information"
+
+#. Policy page summary for community guidelines. Keep safety wording direct and neutral. Preserve placeholders exactly.
+#: fluxer_marketing/generated:content.policies.guidelines.description
+msgctxt "content.policies.guidelines.description"
+msgid "The rules for using {product_name} safely and treating other people well."
+msgstr "The rules for using {product_name} safely and treating other people well."
+
+#. Policy page title for community rules. Translate as formal community guidelines.
+#: fluxer_marketing/generated:content.policies.guidelines.title
+msgctxt "content.policies.guidelines.title"
+msgid "Community guidelines"
+msgstr "Community guidelines"
+
+#. Policy page summary for the Privacy Policy. Keep data-protection terms legally precise. Preserve placeholders exactly.
+#: fluxer_marketing/generated:content.policies.privacy.description
+msgctxt "content.policies.privacy.description"
+msgid ""
+"How {product_name} handles personal data and what we refuse to do with it. Learn about your controls and rights."
+msgstr ""
+"How {product_name} handles personal data and what we refuse to do with it. Learn about your controls and rights."
+
+#. Policy page title. Translate as a formal privacy policy.
+#: fluxer_marketing/generated:content.policies.privacy.title
+msgctxt "content.policies.privacy.title"
+msgid "Privacy policy"
+msgstr "Privacy policy"
+
+#. Policy page summary for security reporting rules. Keep security and safe-harbor terminology precise.
+#: fluxer_marketing/generated:content.policies.security.description
+msgctxt "content.policies.security.description"
+msgid ""
+"How to report security issues and check what is in scope. Read the safe harbor terms before testing."
+msgstr ""
+"How to report security issues and check what is in scope. Read the safe harbour terms before testing."
+
+#. Policy page title for security vulnerability reporting.
+#: fluxer_marketing/generated:content.policies.security.title
+msgctxt "content.policies.security.title"
+msgid "Security"
+msgstr "Security"
+
+#. Policy page summary for Terms of Service. Keep the legal agreement framing clear and neutral. Preserve placeholders exactly.
+#: fluxer_marketing/generated:content.policies.terms.description
+msgctxt "content.policies.terms.description"
+msgid ""
+"The agreement between you and {product_name}, including account, content, payment, moderation, and legal terms."
+msgstr ""
+"The agreement between you and {product_name}, including account, content, payment, moderation, and legal terms."
+
+#. Policy page title. Translate as formal terms of service.
+#: fluxer_marketing/generated:content.policies.terms.title
+msgctxt "content.policies.terms.title"
+msgid "Terms of service"
+msgstr "Terms of service"
+
+#. Help center category title for premium/Plutonium-related articles. Keep as a short noun phrase. Preserve placeholders exactly.
+#: fluxer_marketing/generated:content.help.category.premium.title
+msgctxt "content.help.category.premium.title"
+msgid "{premium_tier_full_name}"
+msgstr "{premium_tier_full_name}"
+
+#. Help center category summary shown under the Premium heading. Translate as a short descriptive sentence. Preserve placeholders exactly.
+#: fluxer_marketing/generated:content.help.category.premium.description
+msgctxt "content.help.category.premium.description"
+msgid "See what {premium_tier_full_name} includes."
+msgstr "See what {premium_tier_full_name} includes."
+
+#. Help center category title for frequently asked questions. Use the locale's standard abbreviation or short phrase.
+#: fluxer_marketing/generated:content.help.category.faqs.title
+msgctxt "content.help.category.faqs.title"
+msgid "FAQs"
+msgstr "FAQs"
+
+#. Help center category summary shown under the FAQs heading. Translate as a short descriptive sentence.
+#: fluxer_marketing/generated:content.help.category.faqs.description
+msgctxt "content.help.category.faqs.description"
+msgid "Learn how attachment expiry and bug reports work."
+msgstr "Learn how attachment expiry and bug reports work."
+
+#. Help center category title for account-management articles. Keep as a short noun phrase.
+#: fluxer_marketing/generated:content.help.category.account.title
+msgctxt "content.help.category.account.title"
+msgid "Account"
+msgstr "Account"
+
+#. Help center category summary shown under the Account heading. Translate as a short descriptive sentence.
+#: fluxer_marketing/generated:content.help.category.account.description
+msgctxt "content.help.category.account.description"
+msgid "Manage account details, exports, and deletion."
+msgstr "Manage account details, exports, and deletion."
+
+#. Help center category title for legal and policy articles. Translate as a compact heading; keep the ampersand only if natural.
+#: fluxer_marketing/generated:content.help.category.legal_policy.title
+msgctxt "content.help.category.legal_policy.title"
+msgid "Legal and policy guides"
+msgstr "Legal and policy guides"
+
+#. Help center category summary shown under the Legal & Policy heading. Translate as a short descriptive sentence; the brand 'Fluxer' stays untranslated. Preserve placeholders exactly.
+#: fluxer_marketing/generated:content.help.category.legal_policy.description
+msgctxt "content.help.category.legal_policy.description"
+msgid "Read about privacy, safety, copyright, and data handling."
+msgstr "Read about privacy, safety, copyright, and data handling."
+
+#. Help article title for a time-limited Plutonium promotion. Keep month/year and 'Plutonium' as proper names. Preserve placeholders exactly.
+#: fluxer_marketing/generated:content.help.article.plutonium_promotion_march_2026.title
+msgctxt "content.help.article.plutonium_promotion_march_2026.title"
+msgid "March 2026 {premium_tier_name} promotion"
+msgstr "March 2026 {premium_tier_name} promotion"
+
+#. Help article summary describing the Plutonium promotion. Keep 'Plutonium' as a proper name. Preserve placeholders exactly.
+#: fluxer_marketing/generated:content.help.article.plutonium_promotion_march_2026.description
+msgctxt "content.help.article.plutonium_promotion_march_2026.description"
+msgid ""
+"A limited-time promotion offering a free 7-day {premium_tier_name} trial for new users and gift codes for existing {premium_tier_name} subscribers."
+msgstr ""
+"A limited-time promotion offering a free 7-day {premium_tier_name} trial for new users and gift codes for existing {premium_tier_name} subscribers."
+
+#. Help article title asking about the retired Fluxer Visionary tier. Keep 'Fluxer Visionary' as a proper name. Preserve placeholders exactly.
+#: fluxer_marketing/generated:content.help.article.visionary.title
+msgctxt "content.help.article.visionary.title"
+msgid "The former {visionary_tier_full_name} tier"
+msgstr "The former {visionary_tier_full_name} tier"
+
+#. Help article summary about the retired Fluxer Visionary lifetime tier. Keep 'Fluxer Visionary' and 'Plutonium' as proper names. Preserve placeholders exactly.
+#: fluxer_marketing/generated:content.help.article.visionary.description
+msgctxt "content.help.article.visionary.description"
+msgid ""
+"What the sold out {visionary_tier_full_name} offer includes and how its account benefits work."
+msgstr ""
+"What the sold out {visionary_tier_full_name} offer includes and how its account benefits work."
+
+#. Help article title listing the three programmes that showcase a community on Fluxer. Keep 'Partner', 'Verified', and 'Discovery' as programme names.
+#: fluxer_marketing/generated:content.help.article.community_programmes.title
+msgctxt "content.help.article.community_programmes.title"
+msgid "Partner, Verified, and Discovery programmes"
+msgstr "Partner, Verified, and Discovery programmes"
+
+#. Help article summary about the Partner, Verified, and Discovery programmes. Preserve placeholders exactly.
+#: fluxer_marketing/generated:content.help.article.community_programmes.description
+msgctxt "content.help.article.community_programmes.description"
+msgid ""
+"The three ways to get your community showcased on {product_name}, what each programme requires, and how to apply."
+msgstr ""
+"The three ways to get your community showcased on {product_name}, what each programme requires, and how to apply."
+
+#. Help article title about how file attachments eventually expire. Keep it as an explanatory phrase.
+#: fluxer_marketing/generated:content.help.article.attachment_expiry.title
+msgctxt "content.help.article.attachment_expiry.title"
+msgid "How attachment expiry works"
+msgstr "How attachment expiry works"
+
+#. Help article summary describing attachment expiry behaviour.
+#: fluxer_marketing/generated:content.help.article.attachment_expiry.description
+msgctxt "content.help.article.attachment_expiry.description"
+msgid ""
+"See when attachments expire, what extends their availability, and how to keep an important file."
+msgstr ""
+"See when attachments expire, what extends their availability, and how to keep an important file."
+
+#. Help article title about filing bug reports.
+#: fluxer_marketing/generated:content.help.article.report_bug.title
+msgctxt "content.help.article.report_bug.title"
+msgid "Reporting a bug"
+msgstr "Reporting a bug"
+
+#. Help article summary about filing bug reports. Keep 'GitHub' untranslated. Preserve placeholders exactly.
+#: fluxer_marketing/generated:content.help.article.report_bug.description
+msgctxt "content.help.article.report_bug.description"
+msgid "How to submit a clear bug report to the {product_name} team or through {github}."
+msgstr "How to submit a clear bug report to the {product_name} team or through {github}."
+
+#. Help article title about updating a user's date of birth via support.
+#: fluxer_marketing/generated:content.help.article.change_date_of_birth.title
+msgctxt "content.help.article.change_date_of_birth.title"
+msgid "How to change your date of birth"
+msgstr "How to change your date of birth"
+
+#. Help article summary about updating date of birth via support. Keep 'Fluxer' as a brand name. Preserve placeholders exactly.
+#: fluxer_marketing/generated:content.help.article.change_date_of_birth.description
+msgctxt "content.help.article.change_date_of_birth.description"
+msgid "How to ask the {product_name} support team to correct your date of birth."
+msgstr "How to ask the {product_name} support team to correct your date of birth."
+
+#. Help article title about requesting deletion of user data.
+#: fluxer_marketing/generated:content.help.article.data_deletion.title
+msgctxt "content.help.article.data_deletion.title"
+msgid "Requesting data deletion"
+msgstr "Requesting data deletion"
+
+#. Help article summary about deleting user data. Keep 'Fluxer' as a brand name. Preserve placeholders exactly.
+#: fluxer_marketing/generated:content.help.article.data_deletion.description
+msgctxt "content.help.article.data_deletion.description"
+msgid "How to delete messages and request removal of other account data."
+msgstr "How to delete messages and request removal of other account data."
+
+#. Help article title about exporting account data.
+#: fluxer_marketing/generated:content.help.article.data_export.title
+msgctxt "content.help.article.data_export.title"
+msgid "Exporting your account data"
+msgstr "Exporting your account data"
+
+#. Help article summary about exporting Fluxer account data. Keep 'Fluxer' as a brand name. Preserve placeholders exactly.
+#: fluxer_marketing/generated:content.help.article.data_export.description
+msgctxt "content.help.article.data_export.description"
+msgid ""
+"How to request a machine-readable export of your {product_name} account data and handle it safely."
+msgstr ""
+"How to request a machine-readable export of your {product_name} account data and handle it safely."
+
+#. Help article title about deleting or disabling an account.
+#: fluxer_marketing/generated:content.help.article.delete_account.title
+msgctxt "content.help.article.delete_account.title"
+msgid "How to delete or disable your account"
+msgstr "How to delete or disable your account"
+
+#. Help article summary about deleting/disabling an account. Keep 'Fluxer' as a brand name. Preserve placeholders exactly.
+#: fluxer_marketing/generated:content.help.article.delete_account.description
+msgctxt "content.help.article.delete_account.description"
+msgid ""
+"How to delete or temporarily disable your {product_name} account and what happens to your data."
+msgstr ""
+"How to delete or temporarily disable your {product_name} account and what happens to your data."
+
+#. Help article title about country-specific minimum-age requirements for using the service.
+#: fluxer_marketing/generated:content.help.article.minimum_age.title
+msgctxt "content.help.article.minimum_age.title"
+msgid "Minimum age requirements"
+msgstr "Minimum age requirements"
+
+#. Help article summary about minimum age policies. Keep 'Fluxer' as a brand name. Preserve placeholders exactly.
+#: fluxer_marketing/generated:content.help.article.minimum_age.description
+msgctxt "content.help.article.minimum_age.description"
+msgid ""
+"Who can use {product_name} under our age rules and what to do if we get your eligibility wrong."
+msgstr ""
+"Who can use {product_name} under our age rules and what to do if we get your eligibility wrong."
+
+#. Help article title about the copyright/IP complaint process. Keep legal-sounding phrasing.
+#: fluxer_marketing/generated:content.help.article.copyright.title
+msgctxt "content.help.article.copyright.title"
+msgid "Copyright and intellectual property complaints policy"
+msgstr "Copyright and intellectual property complaints policy"
+
+#. Help article summary about copyright/IP complaint reporting. Keep 'Fluxer' as a brand name. Preserve placeholders exactly.
+#: fluxer_marketing/generated:content.help.article.copyright.description
+msgctxt "content.help.article.copyright.description"
+msgid "How to report suspected copyright or intellectual property infringement on {product_name}."
+msgstr "How to report suspected copyright or intellectual property infringement on {product_name}."
+
+#. Help article title about data retention durations. Keep 'Fluxer' as a brand name. Preserve placeholders exactly.
+#: fluxer_marketing/generated:content.help.article.data_retention.title
+msgctxt "content.help.article.data_retention.title"
+msgid "How long {product_name} keeps your information"
+msgstr "How long {product_name} keeps your information"
+
+#. Help article summary about retention durations and reasoning. Keep 'Fluxer' as a brand name. Preserve placeholders exactly.
+#: fluxer_marketing/generated:content.help.article.data_retention.description
+msgctxt "content.help.article.data_retention.description"
+msgid "How long {product_name} keeps account information, content, logs, and legal records."
+msgstr "How long {product_name} keeps account information, content, logs, and legal records."
+
+#. Help article title about EU Digital Services Act dispute options. Keep 'EU DSA' as an acronym.
+#: fluxer_marketing/generated:content.help.article.dsa_dispute_resolution.title
+msgctxt "content.help.article.dsa_dispute_resolution.title"
+msgid "EU DSA dispute resolution options"
+msgstr "EU DSA dispute resolution options"
+
+#. Help article summary about EU DSA dispute options. Keep 'Fluxer' as a brand name and 'Digital Services Act' as a legal term. Preserve placeholders exactly.
+#: fluxer_marketing/generated:content.help.article.dsa_dispute_resolution.description
+msgctxt "content.help.article.dsa_dispute_resolution.description"
+msgid ""
+"How users covered by the Digital Services Act can report illegal content and challenge eligible decisions."
+msgstr ""
+"How users covered by the Digital Services Act can report illegal content and challenge eligible decisions."
+
+#. Help article title about region-specific access restrictions.
+#: fluxer_marketing/generated:content.help.article.regional_restrictions.title
+msgctxt "content.help.article.regional_restrictions.title"
+msgid "Regional restrictions"
+msgstr "Regional restrictions"
+
+#. Help article summary about regional access restrictions. Keep 'Fluxer' as a brand name. Preserve placeholders exactly.
+#: fluxer_marketing/generated:content.help.article.regional_restrictions.description
+msgctxt "content.help.article.regional_restrictions.description"
+msgid ""
+"The regional access and age restricted content rules that {product_name} currently applies."
+msgstr ""
+"The regional access and age restricted content rules that {product_name} currently applies."
+
+#. Compact UI label on donation pages and donation support cards. Keep the tone appreciative without being pushy; preserve placeholders exactly.
+#: fluxer_marketing/generated:donations.business
+msgctxt "donations.business"
+msgid "Organization"
+msgstr "Organisation"
+
+#. Button or link label on donation pages and donation support cards. Keep the tone appreciative without being pushy; preserve placeholders exactly.
+#: fluxer_marketing/generated:donations.donate.action
+msgctxt "donations.donate.action"
+msgid "Donate"
+msgstr "Donate"
+
+#. Short UI label or heading on donation pages and donation support cards. Keep the tone appreciative without being pushy; preserve placeholders exactly.
+#: fluxer_marketing/generated:donations.donate.label
+msgctxt "donations.donate.label"
+msgid "Donate to {product_name}"
+msgstr "Donate to {product_name}"
+
+#. Body copy in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
+#: fluxer_marketing/generated:donations.errors.active_subscription_exists
+msgctxt "donations.errors.active_subscription_exists"
+msgid ""
+"You already have an active recurring donation. Cancel it in the donor portal to start a different one, or make a one-time donation instead."
+msgstr ""
+"You already have an active recurring donation. Cancel it in the donor portal to start a different one, or make a one-time donation instead."
+
+#. Body copy in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
+#: fluxer_marketing/generated:donations.errors.generic
+msgctxt "donations.errors.generic"
+msgid "Could not complete the donation request. Try again."
+msgstr "Could not complete the donation request. Try again."
+
+#. Body copy in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
+#: fluxer_marketing/generated:donations.errors.invalid_amount
+msgctxt "donations.errors.invalid_amount"
+msgid "Amount must be between {minimum} and {maximum}."
+msgstr "Amount must be between {minimum} and {maximum}."
+
+#. Compact UI label in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
+#: fluxer_marketing/generated:donations.errors.invalid_email
+msgctxt "donations.errors.invalid_email"
+msgid "Enter a valid email address."
+msgstr "Enter a valid email address."
+
+#. Compact UI label in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
+#: fluxer_marketing/generated:donations.errors.network
+msgctxt "donations.errors.network"
+msgid "Could not reach the donation service. Try again later."
+msgstr "Could not reach the donation service. Try again later."
+
+#. Compact UI label in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
+#: fluxer_marketing/generated:donations.form.amount
+msgctxt "donations.form.amount"
+msgid "Amount"
+msgstr "Amount"
+
+#. Compact UI label in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
+#: fluxer_marketing/generated:donations.form.amount_other
+msgctxt "donations.form.amount_other"
+msgid "Other"
+msgstr "Other"
+
+#. Placeholder text in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
+#: fluxer_marketing/generated:donations.form.amount_placeholder
+msgctxt "donations.form.amount_placeholder"
+msgid "Enter amount ({minimum}-{maximum})"
+msgstr "Enter amount ({minimum}-{maximum})"
+
+#. Compact UI label in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
+#: fluxer_marketing/generated:donations.form.currency
+msgctxt "donations.form.currency"
+msgid "Currency"
+msgstr "Currency"
+
+#. Compact UI label in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
+#: fluxer_marketing/generated:donations.form.donation_type
+msgctxt "donations.form.donation_type"
+msgid "Donation type"
+msgstr "Donation type"
+
+#. Compact UI label in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
+#: fluxer_marketing/generated:donations.form.email
+msgctxt "donations.form.email"
+msgid "Email"
+msgstr "Email"
+
+#. Placeholder text in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
+#: fluxer_marketing/generated:donations.form.email_placeholder
+msgctxt "donations.form.email_placeholder"
+msgid "your@email.com"
+msgstr "your@email.com"
+
+#. Compact UI label in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
+#: fluxer_marketing/generated:donations.form.monthly
+msgctxt "donations.form.monthly"
+msgid "Monthly"
+msgstr "Monthly"
+
+#. Compact UI label in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
+#: fluxer_marketing/generated:donations.form.one_time
+msgctxt "donations.form.one_time"
+msgid "One-time"
+msgstr "One-time"
+
+#. Short UI label or heading in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
+#: fluxer_marketing/generated:donations.form.or_label
+msgctxt "donations.form.or_label"
+msgid "Or"
+msgstr "Or"
+
+#. Button or link label in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
+#: fluxer_marketing/generated:donations.form.send_link
+msgctxt "donations.form.send_link"
+msgid "Send link"
+msgstr "Send link"
+
+#. Compact UI label in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
+#: fluxer_marketing/generated:donations.form.yearly
+msgctxt "donations.form.yearly"
+msgid "Yearly"
+msgstr "Yearly"
+
+#. Compact UI label on donation pages and donation support cards. Keep the tone appreciative without being pushy; preserve placeholders exactly.
+#: fluxer_marketing/generated:donations.individual
+msgctxt "donations.individual"
+msgid "Individual"
+msgstr "Individual"
+
+#. Body copy in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
+#: fluxer_marketing/generated:donations.manage.description
+msgctxt "donations.manage.description"
+msgid ""
+"Enter your email to receive a link to your donor portal. There you can manage recurring donations and see past payments, including downloadable invoices."
+msgstr ""
+"Enter your email to receive a link to your donor portal. There you can manage recurring donations and see past payments, including downloadable invoices."
+
+#. Body copy in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
+#: fluxer_marketing/generated:donations.manage.success
+msgctxt "donations.manage.success"
+msgid "If an account exists for that email, we will send a management link shortly."
+msgstr "If an account exists for that email, we will send a management link shortly."
+
+#. Short UI label or heading in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
+#: fluxer_marketing/generated:donations.manage.title
+msgctxt "donations.manage.title"
+msgid "Manage your donations"
+msgstr "Manage your donations"
+
+#. Body copy on donation pages and donation support cards. Keep the tone appreciative without being pushy; preserve placeholders exactly.
+#: fluxer_marketing/generated:donations.minimum_donation
+msgctxt "donations.minimum_donation"
+msgid "Minimum donation: {minimum} in the currency you select"
+msgstr "Minimum donation: {minimum} in the currency you select"
+
+#. Compact UI label in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
+#: fluxer_marketing/generated:donations.success.back_to_donate
+msgctxt "donations.success.back_to_donate"
+msgid "Back to donate"
+msgstr "Back to donate"
+
+#. Body copy in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
+#: fluxer_marketing/generated:donations.success.email_notice
+msgctxt "donations.success.email_notice"
+msgid ""
+"You will receive a confirmation email shortly with details about your donation and a link to your donor portal."
+msgstr ""
+"You will receive a confirmation email shortly with details about your donation and a link to your donor portal."
+
+#. Body copy in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
+#: fluxer_marketing/generated:donations.success.message
+msgctxt "donations.success.message"
+msgid ""
+"Thank you. Your donation pays for the servers and for the people who build and run {product_name}. It keeps us answerable to the people using it rather than to an investor."
+msgstr ""
+"Thank you. Your donation pays for the servers and for the people who build and run {product_name}. It keeps us answerable to the people using it rather than to an investor."
+
+#. Short UI label or heading in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
+#: fluxer_marketing/generated:donations.success.title
+msgctxt "donations.success.title"
+msgid "Thank you"
+msgstr "Thank you"
+
+#. Body copy on donation pages and donation support cards. Keep the tone appreciative without being pushy; preserve placeholders exactly.
+#: fluxer_marketing/generated:donations.support_message
+msgctxt "donations.support_message"
+msgid ""
+"Help keep {product_name} independent. Donations pay for hosting and development, and they are the reason nobody else gets a say in what we build."
+msgstr ""
+"Help keep {product_name} independent. Donations pay for hosting and development, and they are the reason nobody else gets a say in what we build."
+
+#. Label for the editable amount in the Swish payment flow. Preserve the currency-code placeholder {currency} exactly.
+#: fluxer_marketing/generated:donations.swish.amount_label
+msgctxt "donations.swish.amount_label"
+msgid "Amount ({currency})"
+msgstr "Amount ({currency})"
+
+#. Instruction text in the desktop Swish donation modal. The user is on a computer and should scan a QR code with the Swish mobile app. Keep it clear and easy to follow. Preserve placeholders exactly.
+#: fluxer_marketing/generated:donations.swish.instructions
+msgctxt "donations.swish.instructions"
+msgid "Open the {swish} app on your phone and scan this QR code to donate."
+msgstr "Open the {swish} app on your phone and scan this QR code to donate."
+
+#. Instruction text in the mobile Swish donation modal. The user is already on a phone or tablet, so the flow opens the Swish app directly instead of showing a QR code. Preserve placeholders exactly.
+#: fluxer_marketing/generated:donations.swish.mobile_instructions
+msgctxt "donations.swish.mobile_instructions"
+msgid "Tap the button below to open {swish} on this device and complete your donation."
+msgstr "Tap the button below to open {swish} on this device and complete your donation."
+
+#. Primary button label in the mobile Swish donation modal. Opens the Swish payment app directly. Keep it short. Preserve placeholders exactly.
+#: fluxer_marketing/generated:donations.swish.open_action
+msgctxt "donations.swish.open_action"
+msgid "Open {swish}"
+msgstr "Open {swish}"
+
+#. Modal title shown on mobile devices in the Swish donation flow. The user can open the Swish app directly from this page. Preserve placeholders exactly.
+#: fluxer_marketing/generated:donations.swish.open_title
+msgctxt "donations.swish.open_title"
+msgid "Open {swish}"
+msgstr "Open {swish}"
+
+#. Compact UI label in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
+#: fluxer_marketing/generated:donations.swish.qr_alt
+msgctxt "donations.swish.qr_alt"
+msgid "{swish} QR code"
+msgstr "{swish} QR code"
+
+#. Body copy in the donation flow. Prioritize clarity, trust, and form usability; preserve amount, currency, email, and status placeholders exactly.
+#: fluxer_marketing/generated:donations.swish.qr_failed
+msgctxt "donations.swish.qr_failed"
+msgid "Could not load QR code. Try again later."
+msgstr "Could not load QR code. Try again later."
+
+#. Modal title shown on desktop devices in the Swish donation flow. The user should scan the QR code using the Swish mobile app. Preserve placeholders exactly.
+#: fluxer_marketing/generated:donations.swish.scan_title
+msgctxt "donations.swish.scan_title"
+msgid "Scan with {swish}"
+msgstr "Scan with {swish}"
+
+#. Button in the mobile Swish donation modal. Updates the amount used by the direct Swish payment link. Keep it short.
+#: fluxer_marketing/generated:donations.swish.update_amount
+msgctxt "donations.swish.update_amount"
+msgid "Update amount"
+msgstr "Update amount"
+
+#. Button in the desktop Swish donation modal. Updates the QR code for the amount typed into the amount field. Keep it short.
+#: fluxer_marketing/generated:donations.swish.update_qr
+msgctxt "donations.swish.update_qr"
+msgid "Update QR"
+msgstr "Update QR"
+
+#. Button or link label on the download page, download buttons, or install calls to action. Keep platform-download wording short, direct, and action-oriented; preserve placeholders exactly.
+#: fluxer_marketing/generated:download.download
+msgctxt "download.download"
+msgid "Download"
+msgstr "Download"
+
+#. Understated label introducing less common desktop download choices. Keep it concise.
+#: fluxer_marketing/generated:download.advanced_downloads
+msgctxt "download.advanced_downloads"
+msgid "Advanced downloads"
+msgstr "Advanced downloads"
+
+#. Final call-to-action body copy on the download page. Preserve {product_name} exactly; make clear that users can either install the app or use the browser version. Preserve placeholders exactly.
+#: fluxer_marketing/generated:download.download_app_or_open_in_browser
+msgctxt "download.download_app_or_open_in_browser"
+msgid ""
+"Install the app or open {product_name} in your browser and start talking. Making an account is free and we never ask for a card."
+msgstr ""
+"Install the app or open {product_name} in your browser and start talking. Making an account is free and we never ask for a card."
+
+#. Button or link label on the download page, download buttons, or install calls to action. Keep platform-download wording short, direct, and action-oriented; preserve placeholders exactly.
+#: fluxer_marketing/generated:download.download_fluxer
+msgctxt "download.download_fluxer"
+msgid "Download {product_name}"
+msgstr "Download {product_name}"
+
+#. Button or link label on the download page, download buttons, or install calls to action. Keep platform-download wording short, direct, and action-oriented; preserve placeholders exactly.
+#: fluxer_marketing/generated:download.download_for_platform
+msgctxt "download.download_for_platform"
+msgid "Download for {platform}"
+msgstr "Download for {platform}"
+
+#. Button or link label on the download page, download buttons, or install calls to action. Keep platform-download wording short, direct, and action-oriented; preserve placeholders exactly.
+#: fluxer_marketing/generated:download.open_in_browser
+msgctxt "download.open_in_browser"
+msgid "Open in browser"
+msgstr "Open in browser"
+
+#. Credit line in the PWA installation dialog. Translate the whole sentence so the linked source can appear in the natural position. Preserve {source} exactly.
+#: fluxer_marketing/generated:download.screenshots_courtesy_of
+msgctxt "download.screenshots_courtesy_of"
+msgid "Screenshots courtesy of {source}."
+msgstr "Screenshots courtesy of {source}."
+
+#. Compact UI label in the global marketing footer. Keep navigation labels compact and use legally precise company wording where applicable; preserve placeholders exactly.
+#: fluxer_marketing/generated:footer.bluesky_social_media
+msgctxt "footer.bluesky_social_media"
+msgid "{bluesky}"
+msgstr "{bluesky}"
+
+#. Compact UI label in the global marketing footer. Keep navigation labels compact and use legally precise company wording where applicable; preserve placeholders exactly.
+#: fluxer_marketing/generated:footer.community_guidelines
+msgctxt "footer.community_guidelines"
+msgid "Community guidelines"
+msgstr "Community guidelines"
+
+#. Compact UI label in the global marketing footer. Keep navigation labels compact and use legally precise company wording where applicable; preserve placeholders exactly.
+#: fluxer_marketing/generated:footer.company_information
+msgctxt "footer.company_information"
+msgid "Company information"
+msgstr "Company information"
+
+#. Compact UI label in the global marketing footer. Keep navigation labels compact and use legally precise company wording where applicable; preserve placeholders exactly.
+#: fluxer_marketing/generated:footer.connect
+msgctxt "footer.connect"
+msgid "Connect"
+msgstr "Connect"
+
+#. Compact UI label in the global marketing footer. Keep navigation labels compact and use legally precise company wording where applicable; preserve placeholders exactly.
+#: fluxer_marketing/generated:footer.donate
+msgctxt "footer.donate"
+msgid "Donate"
+msgstr "Donate"
+
+#. Button or link label in the global marketing footer. Keep navigation labels compact and use legally precise company wording where applicable; preserve placeholders exactly.
+#: fluxer_marketing/generated:footer.download
+msgctxt "footer.download"
+msgid "Download"
+msgstr "Download"
+
+#. Compact UI label in the global marketing footer. Keep navigation labels compact and use legally precise company wording where applicable; preserve placeholders exactly.
+#: fluxer_marketing/generated:footer.fluxer
+msgctxt "footer.fluxer"
+msgid "{product_name}"
+msgstr "{product_name}"
+
+#. Body copy in the global marketing footer. Keep navigation labels compact and use legally precise company wording where applicable; preserve placeholders exactly.
+#: fluxer_marketing/generated:footer.fluxer_platform_ab_swedish_limited
+msgctxt "footer.fluxer_platform_ab_swedish_limited"
+msgid "© {product_name} Platform AB (Swedish private limited company: 559537-3993)"
+msgstr "© {product_name} Platform AB (Swedish private limited company: 559537-3993)"
+
+#. Body copy in the global footer describing how Fluxer is funded. Preserve {product_name} and {premium_tier_name} exactly.
+#: fluxer_marketing/generated:funding_model.footer_description
+msgctxt "funding_model.footer_description"
+msgid ""
+"{product_name} is funded by {premium_tier_name} subscribers and donors, without venture capital or outside investors telling us what to build."
+msgstr ""
+"{product_name} is funded by {premium_tier_name} subscribers and donors, without venture capital or outside investors telling us what to build."
+
+#. Compact UI label in the global marketing footer. Keep navigation labels compact and use legally precise company wording where applicable; preserve placeholders exactly.
+#: fluxer_marketing/generated:footer.partners
+msgctxt "footer.partners"
+msgid "Partners"
+msgstr "Partners"
+
+#. Footer call-to-action linking to the Plutonium page. Preserve {product_name} exactly.
+#: fluxer_marketing/generated:funding_model.see_how_fluxer_is_funded
+msgctxt "funding_model.see_how_fluxer_is_funded"
+msgid "See how {product_name} is funded"
+msgstr "See how {product_name} is funded"
+
+#. Compact UI label in the global marketing footer. Keep navigation labels compact and use legally precise company wording where applicable; preserve placeholders exactly.
+#: fluxer_marketing/generated:footer.policies
+msgctxt "footer.policies"
+msgid "Policies"
+msgstr "Policies"
+
+#. Compact UI label in the global marketing footer. Keep navigation labels compact and use legally precise company wording where applicable; preserve placeholders exactly.
+#: fluxer_marketing/generated:footer.press
+msgctxt "footer.press"
+msgid "Press"
+msgstr "Press"
+
+#. Compact UI label in the global marketing footer. Keep navigation labels compact and use legally precise company wording where applicable; preserve placeholders exactly.
+#: fluxer_marketing/generated:footer.privacy_policy
+msgctxt "footer.privacy_policy"
+msgid "Privacy policy"
+msgstr "Privacy policy"
+
+#. Compact UI label in the global marketing footer. Keep navigation labels compact and use legally precise company wording where applicable; preserve placeholders exactly.
+#: fluxer_marketing/generated:footer.report_a_bug
+msgctxt "footer.report_a_bug"
+msgid "Report a bug"
+msgstr "Report a bug"
+
+#. Compact UI label in the global marketing footer. Keep navigation labels compact and use legally precise company wording where applicable; preserve placeholders exactly.
+#: fluxer_marketing/generated:footer.roadmap
+msgctxt "footer.roadmap"
+msgid "Roadmap"
+msgstr "Roadmap"
+
+#. Compact UI label in the global marketing footer. Keep navigation labels compact and use legally precise company wording where applicable; preserve placeholders exactly.
+#: fluxer_marketing/generated:footer.rss_feed
+msgctxt "footer.rss_feed"
+msgid "RSS feed"
+msgstr "RSS feed"
+
+#. Compact UI label in the global marketing footer. Keep navigation labels compact and use legally precise company wording where applicable; preserve placeholders exactly.
+#: fluxer_marketing/generated:footer.security
+msgctxt "footer.security"
+msgid "Security"
+msgstr "Security"
+
+#. Compact UI label in the global marketing footer. Keep navigation labels compact and use legally precise company wording where applicable; preserve placeholders exactly.
+#: fluxer_marketing/generated:footer.source_code
+msgctxt "footer.source_code"
+msgid "Source code"
+msgstr "Source code"
+
+#. Compact UI label in the global marketing footer. Keep navigation labels compact and use legally precise company wording where applicable; preserve placeholders exactly.
+#: fluxer_marketing/generated:footer.status
+msgctxt "footer.status"
+msgid "Status"
+msgstr "Status"
+
+#. Compact UI label in the global marketing footer. Keep navigation labels compact and use legally precise company wording where applicable; preserve placeholders exactly.
+#: fluxer_marketing/generated:footer.terms_of_service
+msgctxt "footer.terms_of_service"
+msgid "Terms of service"
+msgstr "Terms of service"
+
+#. Compact UI label in the language picker. Keep the label clear for users changing the marketing-site language.
+#: fluxer_marketing/generated:languages.change_language
+msgctxt "languages.change_language"
+msgid "Change language"
+msgstr "Change language"
+
+#. Compact UI label in the language picker. Keep the label clear for users changing the marketing-site language.
+#: fluxer_marketing/generated:languages.choose_your_language
+msgctxt "languages.choose_your_language"
+msgid "Choose your language"
+msgstr "Choose your language"
+
+#. Short UI label or heading in the language picker. Keep the label clear for users changing the marketing-site language.
+#: fluxer_marketing/generated:languages.language_label
+msgctxt "languages.language_label"
+msgid "Language"
+msgstr "Language"
+
+#. Language name shown in the language picker. Use the target locale's natural name for this language, not a sentence; keep it short.
+#: fluxer_marketing/generated:languages.list.arabic
+msgctxt "languages.list.arabic"
+msgid "Arabic"
+msgstr "Arabic"
+
+#. Language name shown in the language picker. Use the target locale's natural name for this language, not a sentence; keep it short.
+#: fluxer_marketing/generated:languages.list.bulgarian
+msgctxt "languages.list.bulgarian"
+msgid "Bulgarian"
+msgstr "Bulgarian"
+
+#. Language name shown in the language picker. Use the target locale's natural name for this language, not a sentence; keep it short.
+#: fluxer_marketing/generated:languages.list.chinese_simplified
+msgctxt "languages.list.chinese_simplified"
+msgid "Chinese (Simplified)"
+msgstr "Chinese (Simplified)"
+
+#. Language name shown in the language picker. Use the target locale's natural name for this language, not a sentence; keep it short.
+#: fluxer_marketing/generated:languages.list.chinese_traditional
+msgctxt "languages.list.chinese_traditional"
+msgid "Chinese (Traditional)"
+msgstr "Chinese (Traditional)"
+
+#. Language name shown in the language picker. Use the target locale's natural name for this language, not a sentence; keep it short.
+#: fluxer_marketing/generated:languages.list.croatian
+msgctxt "languages.list.croatian"
+msgid "Croatian"
+msgstr "Croatian"
+
+#. Language name shown in the language picker. Use the target locale's natural name for this language, not a sentence; keep it short.
+#: fluxer_marketing/generated:languages.list.czech
+msgctxt "languages.list.czech"
+msgid "Czech"
+msgstr "Czech"
+
+#. Language name shown in the language picker. Use the target locale's natural name for this language, not a sentence; keep it short.
+#: fluxer_marketing/generated:languages.list.danish
+msgctxt "languages.list.danish"
+msgid "Danish"
+msgstr "Danish"
+
+#. Language name shown in the language picker. Use the target locale's natural name for this language, not a sentence; keep it short.
+#: fluxer_marketing/generated:languages.list.dutch
+msgctxt "languages.list.dutch"
+msgid "Dutch"
+msgstr "Dutch"
+
+#. Language name shown in the language picker for British English. Use the target locale's natural name for this locale, not a sentence; keep it short.
+#: fluxer_marketing/generated:languages.list.english_uk
+msgctxt "languages.list.english_uk"
+msgid "English (United Kingdom)"
+msgstr "English (United Kingdom)"
+
+#. Language name shown in the language picker. Use the target locale's natural name for this language, not a sentence; keep it short.
+#: fluxer_marketing/generated:languages.list.english_us
+msgctxt "languages.list.english_us"
+msgid "English (US)"
+msgstr "English (US)"
+
+#. Language name shown in the language picker. Use the target locale's natural name for this language, not a sentence; keep it short.
+#: fluxer_marketing/generated:languages.list.finnish
+msgctxt "languages.list.finnish"
+msgid "Finnish"
+msgstr "Finnish"
+
+#. Language name shown in the language picker. Use the target locale's natural name for this language, not a sentence; keep it short.
+#: fluxer_marketing/generated:languages.list.french
+msgctxt "languages.list.french"
+msgid "French"
+msgstr "French"
+
+#. Language name shown in the language picker. Use the target locale's natural name for this language, not a sentence; keep it short.
+#: fluxer_marketing/generated:languages.list.german
+msgctxt "languages.list.german"
+msgid "German"
+msgstr "German"
+
+#. Language name shown in the language picker. Use the target locale's natural name for this language, not a sentence; keep it short.
+#: fluxer_marketing/generated:languages.list.greek
+msgctxt "languages.list.greek"
+msgid "Greek"
+msgstr "Greek"
+
+#. Language name shown in the language picker. Use the target locale's natural name for this language, not a sentence; keep it short.
+#: fluxer_marketing/generated:languages.list.hebrew
+msgctxt "languages.list.hebrew"
+msgid "Hebrew"
+msgstr "Hebrew"
+
+#. Language name shown in the language picker. Use the target locale's natural name for this language, not a sentence; keep it short.
+#: fluxer_marketing/generated:languages.list.hindi
+msgctxt "languages.list.hindi"
+msgid "Hindi"
+msgstr "Hindi"
+
+#. Language name shown in the language picker. Use the target locale's natural name for this language, not a sentence; keep it short.
+#: fluxer_marketing/generated:languages.list.hungarian
+msgctxt "languages.list.hungarian"
+msgid "Hungarian"
+msgstr "Hungarian"
+
+#. Language name shown in the language picker. Use the target locale's natural name for this language, not a sentence; keep it short.
+#: fluxer_marketing/generated:languages.list.indonesian
+msgctxt "languages.list.indonesian"
+msgid "Indonesian"
+msgstr "Indonesian"
+
+#. Language name shown in the language picker. Use the target locale's natural name for this language, not a sentence; keep it short.
+#: fluxer_marketing/generated:languages.list.italian
+msgctxt "languages.list.italian"
+msgid "Italian"
+msgstr "Italian"
+
+#. Language name shown in the language picker. Use the target locale's natural name for this language, not a sentence; keep it short.
+#: fluxer_marketing/generated:languages.list.japanese
+msgctxt "languages.list.japanese"
+msgid "Japanese"
+msgstr "Japanese"
+
+#. Language name shown in the language picker. Use the target locale's natural name for this language, not a sentence; keep it short.
+#: fluxer_marketing/generated:languages.list.korean
+msgctxt "languages.list.korean"
+msgid "Korean"
+msgstr "Korean"
+
+#. Language name shown in the language picker. Use the target locale's natural name for this language, not a sentence; keep it short.
+#: fluxer_marketing/generated:languages.list.lithuanian
+msgctxt "languages.list.lithuanian"
+msgid "Lithuanian"
+msgstr "Lithuanian"
+
+#. Language name shown in the language picker. Use the target locale's natural name for this language, not a sentence; keep it short.
+#: fluxer_marketing/generated:languages.list.norwegian
+msgctxt "languages.list.norwegian"
+msgid "Norwegian"
+msgstr "Norwegian"
+
+#. Language name shown in the language picker. Use the target locale's natural name for this language, not a sentence; keep it short.
+#: fluxer_marketing/generated:languages.list.polish
+msgctxt "languages.list.polish"
+msgid "Polish"
+msgstr "Polish"
+
+#. Language name shown in the language picker. Use the target locale's natural name for this language, not a sentence; keep it short.
+#: fluxer_marketing/generated:languages.list.portuguese_brazil
+msgctxt "languages.list.portuguese_brazil"
+msgid "Portuguese (Brazil)"
+msgstr "Portuguese (Brazil)"
+
+#. Language name shown in the language picker. Use the target locale's natural name for this language, not a sentence; keep it short.
+#: fluxer_marketing/generated:languages.list.romanian
+msgctxt "languages.list.romanian"
+msgid "Romanian"
+msgstr "Romanian"
+
+#. Language name shown in the language picker. Use the target locale's natural name for this language, not a sentence; keep it short.
+#: fluxer_marketing/generated:languages.list.russian
+msgctxt "languages.list.russian"
+msgid "Russian"
+msgstr "Russian"
+
+#. Language name shown in the language picker. Use the target locale's natural name for this language, not a sentence; keep it short.
+#: fluxer_marketing/generated:languages.list.spanish_latin_america
+msgctxt "languages.list.spanish_latin_america"
+msgid "Spanish (Latin America)"
+msgstr "Spanish (Latin America)"
+
+#. Language name shown in the language picker. Use the target locale's natural name for this language, not a sentence; keep it short.
+#: fluxer_marketing/generated:languages.list.spanish_spain
+msgctxt "languages.list.spanish_spain"
+msgid "Spanish (Spain)"
+msgstr "Spanish (Spain)"
+
+#. Language name shown in the language picker. Use the target locale's natural name for this language, not a sentence; keep it short.
+#: fluxer_marketing/generated:languages.list.swedish
+msgctxt "languages.list.swedish"
+msgid "Swedish"
+msgstr "Swedish"
+
+#. Language name shown in the language picker. Use the target locale's natural name for this language, not a sentence; keep it short.
+#: fluxer_marketing/generated:languages.list.thai
+msgctxt "languages.list.thai"
+msgid "Thai"
+msgstr "Thai"
+
+#. Language name shown in the language picker. Use the target locale's natural name for this language, not a sentence; keep it short.
+#: fluxer_marketing/generated:languages.list.turkish
+msgctxt "languages.list.turkish"
+msgid "Turkish"
+msgstr "Turkish"
+
+#. Language name shown in the language picker. Use the target locale's natural name for this language, not a sentence; keep it short.
+#: fluxer_marketing/generated:languages.list.ukrainian
+msgctxt "languages.list.ukrainian"
+msgid "Ukrainian"
+msgstr "Ukrainian"
+
+#. Language name shown in the language picker. Use the target locale's natural name for this language, not a sentence; keep it short.
+#: fluxer_marketing/generated:languages.list.vietnamese
+msgctxt "languages.list.vietnamese"
+msgid "Vietnamese"
+msgstr "Vietnamese"
+
+#. Short UI label or heading in Fluxer marketing UI. Translate naturally for the target locale and preserve placeholders exactly.
+#: fluxer_marketing/generated:beta_and_access.beta_label
+msgctxt "beta_and_access.beta_label"
+msgid "Beta"
+msgstr "Beta"
+
+#. Body copy in Fluxer marketing UI. Translate naturally for the target locale and preserve placeholders exactly.
+#: fluxer_marketing/generated:beta_and_access.early_access.be_first_to_try
+msgctxt "beta_and_access.early_access.be_first_to_try"
+msgid "Be the first to try new features before they're released to everyone else."
+msgstr "Be the first to try new features before they're released to everyone else."
+
+#. Short UI label or heading in Fluxer marketing UI. Translate naturally for the target locale and preserve placeholders exactly.
+#: fluxer_marketing/generated:beta_and_access.early_access.label
+msgctxt "beta_and_access.early_access.label"
+msgid "Early access"
+msgstr "Early access"
+
+#. Body copy in Fluxer marketing UI. Translate naturally for the target locale and preserve placeholders exactly.
+#: fluxer_marketing/generated:beta_and_access.featured_benefit_line
+msgctxt "beta_and_access.featured_benefit_line"
+msgid ""
+"Chat, calls, screen sharing and communities are free, and they stay free. {premium_tier_name} adds optional extras for the people who want them."
+msgstr ""
+"Chat, calls, screen sharing and communities are free, and they stay free. {premium_tier_name} adds optional extras for the people who want them."
+
+#. Compact UI label in Fluxer marketing UI. Translate naturally for the target locale and preserve placeholders exactly.
+#: fluxer_marketing/generated:beta_and_access.public_beta
+msgctxt "beta_and_access.public_beta"
+msgid "Public beta"
+msgstr "Public beta"
+
+#. Short UI label or heading in the hero launch/roadmap badges linking to blog content. Keep it short and inviting, and preserve the product-name placeholder exactly.
+#: fluxer_marketing/generated:launch.heading
+msgctxt "launch.heading"
+msgid "The story behind {product_name}"
+msgstr "The story behind {product_name}"
+
+#. Compact UI label in the hero launch/roadmap badges linking to blog content. Keep it short and inviting, and preserve the product-name placeholder exactly.
+#: fluxer_marketing/generated:launch.view_full_roadmap
+msgctxt "launch.view_full_roadmap"
+msgid "View full roadmap"
+msgstr "View full roadmap"
+
+#. Compact label for the help link in the desktop marketing navigation.
+#: fluxer_marketing/generated:navigation.help
+msgctxt "navigation.help"
+msgid "Help"
+msgstr "Help"
+
+#. Short UI label or heading in site navigation, mobile drawer controls, or accessibility labels. Keep it brief and unambiguous.
+#: fluxer_marketing/generated:navigation.close
+msgctxt "navigation.close"
+msgid "Close"
+msgstr "Close"
+
+#. Short UI label or heading in site navigation, mobile drawer controls, or accessibility labels. Keep it brief and unambiguous.
+#: fluxer_marketing/generated:navigation.close_navigation_menu
+msgctxt "navigation.close_navigation_menu"
+msgid "Close navigation menu"
+msgstr "Close navigation menu"
+
+#. Accessibility label for the mobile navigation menu toggle. Keep it brief and unambiguous.
+#: fluxer_marketing/generated:navigation.open_navigation_menu
+msgctxt "navigation.open_navigation_menu"
+msgid "Open navigation menu"
+msgstr "Open navigation menu"
+
+#. ARIA label for the small link icon shown beside policy and job content headings. It copies a direct URL to that section; keep it concise.
+#: fluxer_marketing/generated:navigation.copy_link_to_section
+msgctxt "navigation.copy_link_to_section"
+msgid "Copy link to section"
+msgstr "Copy link to section"
+
+#. Error message shown when a heading link cannot be copied automatically. Keep it concise and tell the reader how to copy the link manually.
+#: fluxer_marketing/generated:navigation.copy_link_failed
+msgctxt "navigation.copy_link_failed"
+msgid "Could not copy the link. Copy it from the browser address bar instead."
+msgstr "Could not copy the link. Copy it from the browser address bar instead."
+
+#. Compact UI label in site navigation, mobile drawer controls, or accessibility labels. Keep it brief and unambiguous.
+#: fluxer_marketing/generated:navigation.go_home
+msgctxt "navigation.go_home"
+msgid "Go home"
+msgstr "Go home"
+
+#. Compact UI label in site navigation, mobile drawer controls, or accessibility labels. Keep it brief and unambiguous.
+#: fluxer_marketing/generated:navigation.on_this_page
+msgctxt "navigation.on_this_page"
+msgid "On this page"
+msgstr "On this page"
+
+#. Body copy on the 404 page. Keep the tone helpful and concise while making clear the page was not found.
+#: fluxer_marketing/generated:navigation.page_not_found.description
+msgctxt "navigation.page_not_found.description"
+msgid "This page does not exist. Either it moved or a link went stale, and both are fixable."
+msgstr "This page does not exist. Either it moved or a link went stale, and both are fixable."
+
+#. Short UI label or heading on the 404 page. Keep the tone helpful and concise while making clear the page was not found.
+#: fluxer_marketing/generated:navigation.page_not_found.title
+msgctxt "navigation.page_not_found.title"
+msgid "Page not found"
+msgstr "Page not found"
+
+#. Introductory body copy on the press/brand-assets page. Keep wording professional and clear for journalists, partners, and brand-asset users. Preserve {product_name} exactly.
+#: fluxer_marketing/generated:navigation.press.download_assets_intro
+msgctxt "navigation.press.download_assets_intro"
+msgid ""
+"Download the {product_name} logos and color references. Press inquiries go straight to our team."
+msgstr ""
+"Download the {product_name} logos and colour references. Press enquiries go straight to our team."
+
+#. Compact UI label on the press/brand-assets page. Keep wording professional and clear for journalists or partners.
+#: fluxer_marketing/generated:navigation.press.press_and_brand_assets
+msgctxt "navigation.press.press_and_brand_assets"
+msgid "Press and logo files"
+msgstr "Press and logo files"
+
+#. Body copy in the partner application section, pointing readers to the help center guide. Keep the tone professional, creator-friendly, and clear about application expectations.
+#: fluxer_marketing/generated:partner_program.apply.guide_prompt
+msgctxt "partner_program.apply.guide_prompt"
+msgid ""
+"Our help center guide covers what we look for, what each program includes, and how to send in your application."
+msgstr ""
+"Our help centre guide covers what we look for, what each programme includes, and how to send in your application."
+
+#. Button or link label on the partner program page. Keep the tone professional, creator-friendly, and clear about application expectations.
+#: fluxer_marketing/generated:partner_program.become_partner.call_to_action
+msgctxt "partner_program.become_partner.call_to_action"
+msgid "Become a partner"
+msgstr "Become a partner"
+
+#. Hero heading on the partner program page. Preserve {product_name} exactly; keep the tone professional and creator-friendly. Preserve placeholders exactly.
+#: fluxer_marketing/generated:partner_program.become_partner.heading
+msgctxt "partner_program.become_partner.heading"
+msgid "Become a {product_name} partner"
+msgstr "Become a {product_name} partner"
+
+#. Compact UI label on the partner program page. Keep the tone professional, creator-friendly, and clear about application expectations.
+#: fluxer_marketing/generated:partner_program.become_partner.ready_prompt
+msgctxt "partner_program.become_partner.ready_prompt"
+msgid "Ready to become a partner?"
+msgstr "Ready to become a partner?"
+
+#. Body copy on the partner program page. Keep the tone professional, creator-friendly, and clear about application expectations.
+#: fluxer_marketing/generated:partner_program.description
+msgctxt "partner_program.description"
+msgid "Exclusive perks and benefits for content creators and large community owners."
+msgstr "Exclusive perks and benefits for content creators and large community owners."
+
+#. Short UI label or heading on the partner program page. Keep the tone professional, creator-friendly, and clear about application expectations.
+#: fluxer_marketing/generated:partner_program.label
+msgctxt "partner_program.label"
+msgid "Partners"
+msgstr "Partners"
+
+#. Body copy on the partner program perks section. Keep benefits concrete and appealing to creators/community owners; preserve placeholders exactly.
+#: fluxer_marketing/generated:partner_program.perks.creator_monetization.description
+msgctxt "partner_program.perks.creator_monetization.description"
+msgid "Early access to creator monetization features with lower platform fees than non-partners."
+msgstr "Early access to creator monetisation features with lower platform fees than non-partners."
+
+#. Short UI label or heading on the partner program perks section. Keep benefits concrete and appealing to creators/community owners; preserve placeholders exactly.
+#: fluxer_marketing/generated:partner_program.perks.creator_monetization.label
+msgctxt "partner_program.perks.creator_monetization.label"
+msgid "Creator monetization"
+msgstr "Creator monetisation"
+
+#. Body copy on the partner program perks section. Keep benefits concrete and appealing to creators/community owners; preserve placeholders exactly.
+#: fluxer_marketing/generated:partner_program.perks.custom_vanity_url.description
+msgctxt "partner_program.perks.custom_vanity_url.description"
+msgid "Get an exclusive custom vanity URL like fluxer.gg/yourcommunity."
+msgstr "Get an exclusive custom vanity URL like fluxer.gg/yourcommunity."
+
+#. Short UI label or heading on the partner program perks section. Keep benefits concrete and appealing to creators/community owners; preserve placeholders exactly.
+#: fluxer_marketing/generated:partner_program.perks.custom_vanity_url.label
+msgctxt "partner_program.perks.custom_vanity_url.label"
+msgid "Custom vanity URL"
+msgstr "Custom vanity URL"
+
+#. Body copy on the partner program perks section. Keep benefits concrete and appealing to creators/community owners; preserve placeholders exactly.
+#: fluxer_marketing/generated:partner_program.perks.direct_team_access.description
+msgctxt "partner_program.perks.direct_team_access.description"
+msgid "Join the exclusive partners community with direct access to the {product_name} team."
+msgstr "Join the exclusive partners community with direct access to the {product_name} team."
+
+#. Short UI label or heading on the partner program perks section. Keep benefits concrete and appealing to creators/community owners; preserve placeholders exactly.
+#: fluxer_marketing/generated:partner_program.perks.direct_team_access.label
+msgctxt "partner_program.perks.direct_team_access.label"
+msgid "Direct team access"
+msgstr "Direct team access"
+
+#. Body copy on the partner program perks section. Keep benefits concrete and appealing to creators/community owners; preserve placeholders exactly.
+#: fluxer_marketing/generated:partner_program.perks.discovery_visibility
+msgctxt "partner_program.perks.discovery_visibility"
+msgid "Get increased visibility by being featured in community discovery."
+msgstr "Get increased visibility by being featured in community discovery."
+
+#. Body copy on the partner program perks section. Keep benefits concrete and appealing to creators/community owners; preserve placeholders exactly.
+#: fluxer_marketing/generated:partner_program.perks.exclusive_merch.description
+msgctxt "partner_program.perks.exclusive_merch.description"
+msgid "Get exclusive {product_name} partner-only merchandise and swag."
+msgstr "Get exclusive {product_name} partner-only merchandise and swag."
+
+#. Short UI label or heading on the partner program perks section. Keep benefits concrete and appealing to creators/community owners; preserve placeholders exactly.
+#: fluxer_marketing/generated:partner_program.perks.exclusive_merch.label
+msgctxt "partner_program.perks.exclusive_merch.label"
+msgid "Exclusive merch"
+msgstr "Exclusive merch"
+
+#. Body copy on the partner program perks section. Keep benefits concrete and appealing to creators/community owners; preserve placeholders exactly.
+#: fluxer_marketing/generated:partner_program.perks.free_plutonium.description
+msgctxt "partner_program.perks.free_plutonium.description"
+msgid "Get free {premium_tier_name} for your account to enjoy all premium features."
+msgstr "Get free {premium_tier_name} for your account to enjoy all premium features."
+
+#. Short UI label or heading on the partner program perks section. Keep benefits concrete and appealing to creators/community owners; preserve placeholders exactly.
+#: fluxer_marketing/generated:partner_program.perks.free_plutonium.label
+msgctxt "partner_program.perks.free_plutonium.label"
+msgid "Free {premium_tier_name}"
+msgstr "Free {premium_tier_name}"
+
+#. Short UI label or heading on the partner program perks section. Keep benefits concrete and appealing to creators/community owners; preserve placeholders exactly.
+#: fluxer_marketing/generated:partner_program.perks.heading
+msgctxt "partner_program.perks.heading"
+msgid "Partner perks"
+msgstr "Partner perks"
+
+#. Body copy on the partner program perks section. Keep benefits concrete and appealing to creators/community owners; preserve placeholders exactly.
+#: fluxer_marketing/generated:partner_program.perks.increased_limits.description
+msgctxt "partner_program.perks.increased_limits.description"
+msgid "Your community receives increased limits when you need them."
+msgstr "Your community receives increased limits when you need them."
+
+#. Short UI label or heading on the partner program perks section. Keep benefits concrete and appealing to creators/community owners; preserve placeholders exactly.
+#: fluxer_marketing/generated:partner_program.perks.increased_limits.label
+msgctxt "partner_program.perks.increased_limits.label"
+msgid "Increased limits"
+msgstr "Increased limits"
+
+#. Body copy on the partner program perks section. Keep benefits concrete and appealing to creators/community owners; preserve placeholders exactly.
+#: fluxer_marketing/generated:partner_program.perks.partner_badge.description
+msgctxt "partner_program.perks.partner_badge.description"
+msgid "Display an exclusive partner badge on your profile to stand out."
+msgstr "Display an exclusive partner badge on your profile to stand out."
+
+#. Short UI label or heading on the partner program perks section. Keep benefits concrete and appealing to creators/community owners; preserve placeholders exactly.
+#: fluxer_marketing/generated:partner_program.perks.partner_badge.label
+msgctxt "partner_program.perks.partner_badge.label"
+msgid "Partner badge"
+msgstr "Partner badge"
+
+#. Compact UI label on the partner program perks section. Keep benefits concrete and appealing to creators/community owners; preserve placeholders exactly.
+#: fluxer_marketing/generated:partner_program.perks.see_perks
+msgctxt "partner_program.perks.see_perks"
+msgid "See perks"
+msgstr "See perks"
+
+#. Body copy on the partner program perks section. Keep benefits concrete and appealing to creators/community owners; preserve placeholders exactly.
+#: fluxer_marketing/generated:partner_program.perks.vip_voice_servers.description
+msgctxt "partner_program.perks.vip_voice_servers.description"
+msgid "Access to VIP voice servers reserved exclusively for partnered communities."
+msgstr "Access to VIP voice servers reserved exclusively for partnered communities."
+
+#. Short UI label or heading on the partner program perks section. Keep benefits concrete and appealing to creators/community owners; preserve placeholders exactly.
+#: fluxer_marketing/generated:partner_program.perks.vip_voice_servers.label
+msgctxt "partner_program.perks.vip_voice_servers.label"
+msgid "VIP voice channels"
+msgstr "VIP voice channels"
+
+#. Body copy under the partner program hero. Preserve {premium_tier_name} exactly; explain the target audience and benefits without sounding like a paid ad. Preserve placeholders exactly.
+#: fluxer_marketing/generated:partner_program.who_its_for
+msgctxt "partner_program.who_its_for"
+msgid ""
+"For creators and community owners: free {premium_tier_name}, a partner badge, a custom vanity URL, and more."
+msgstr ""
+"For creators and community owners: free {premium_tier_name}, a partner badge, a custom vanity URL, and more."
+
+#. Download-page meta description. Preserve {product_name} exactly; keep platform names conventional and make desktop, browser, and public mobile testing availability clear. Preserve placeholders exactly.
+#: fluxer_marketing/generated:platform_support.availability.meta_description
+msgctxt "platform_support.availability.meta_description"
+msgid ""
+"Get {product_name} for your web browser, {windows}, {linux}, and {macos}. {ios} and {android} are in public testing."
+msgstr ""
+"Get {product_name} for your web browser, {windows}, {linux}, and {macos}. {ios} and {android} are in public testing."
+
+#. Intro copy below the download-page heading. Keep platform names conventional and make browser, desktop, and public mobile testing availability clear. Preserve placeholders exactly.
+#: fluxer_marketing/generated:platform_support.availability.summary
+msgctxt "platform_support.availability.summary"
+msgid ""
+"Available in your web browser and on {windows}, {linux}, and {macos}, with {ios} and {android} in public testing."
+msgstr ""
+"Available in your web browser and on {windows}, {linux}, and {macos}, with {ios} and {android} in public testing."
+
+#. Alt text for a desktop product screenshot. Preserve {product_name} exactly; describe the image as the desktop interface, not as a download action. Preserve placeholders exactly.
+#: fluxer_marketing/generated:platform_support.desktop.interface_label
+msgctxt "platform_support.desktop.interface_label"
+msgid "{product_name} desktop interface"
+msgstr "{product_name} desktop interface"
+
+#. Short UI label or heading in platform availability and download support copy. Keep wording clear about desktop, web, and mobile status.
+#: fluxer_marketing/generated:platform_support.desktop.label
+msgctxt "platform_support.desktop.label"
+msgid "Desktop"
+msgstr "Desktop"
+
+#. Section heading for web and mobile options on the download page. Keep it concise.
+#: fluxer_marketing/generated:platform_support.mobile.label
+msgctxt "platform_support.mobile.label"
+msgid "Mobile and web"
+msgstr "Mobile and web"
+
+#. Compact feature label explaining that Fluxer is available in browsers and as desktop and mobile apps. Preserve {product_name} exactly.
+#: fluxer_marketing/generated:platform_support.availability.every_client
+msgctxt "platform_support.availability.every_client"
+msgid "Use {product_name} in a browser or install it on desktop and mobile"
+msgstr "Use {product_name} in a browser or install it on desktop and mobile"
+
+#. Body copy for mobile/PWA install guidance on the download page. Keep instructions clear, device-appropriate, and concise; preserve placeholders exactly.
+#: fluxer_marketing/generated:platform_support.mobile.install_as_app.done_desktop
+msgctxt "platform_support.mobile.install_as_app.done_desktop"
+msgid "Done. You can now open {product_name} as if it were a regular program."
+msgstr "Done. You can now open {product_name} as if it were a regular program."
+
+#. Body copy for mobile/PWA install guidance on the download page. Keep instructions clear, device-appropriate, and concise; preserve placeholders exactly.
+#: fluxer_marketing/generated:platform_support.mobile.install_as_app.done_mobile
+msgctxt "platform_support.mobile.install_as_app.done_mobile"
+msgid "Done. You can now open {product_name} from your home screen."
+msgstr "Done. You can now open {product_name} from your home screen."
+
+#. First PWA installation step. Translate the whole instruction so the linked web-app label can appear in the natural position. Preserve {web_app_link} and {chrome} exactly.
+#: fluxer_marketing/generated:platform_support.mobile.install_as_app.guides.in_chrome
+msgctxt "platform_support.mobile.install_as_app.guides.in_chrome"
+msgid "Open {web_app_link} in {chrome}"
+msgstr "Open {web_app_link} in {chrome}"
+
+#. First desktop PWA installation step. Translate the whole instruction so the linked web-app label can appear in the natural position. Preserve {web_app_link} and {chrome} exactly.
+#: fluxer_marketing/generated:platform_support.mobile.install_as_app.guides.in_chrome_or_another_browser
+msgctxt "platform_support.mobile.install_as_app.guides.in_chrome_or_another_browser"
+msgid "Open {web_app_link} in {chrome} or another browser that supports PWAs"
+msgstr "Open {web_app_link} in {chrome} or another browser that supports PWAs"
+
+#. First iOS PWA installation step. Translate the whole instruction so the linked web-app label can appear in the natural position. Preserve {web_app_link} exactly.
+#: fluxer_marketing/generated:platform_support.mobile.install_as_app.guides.in_safari
+msgctxt "platform_support.mobile.install_as_app.guides.in_safari"
+msgid "Open {web_app_link} in Safari"
+msgstr "Open {web_app_link} in Safari"
+
+#. Compact UI label for mobile/PWA install guidance on the download page. Keep instructions clear, device-appropriate, and concise; preserve placeholders exactly.
+#: fluxer_marketing/generated:platform_support.mobile.install_as_app.guides.pwa_installation_guide
+msgctxt "platform_support.mobile.install_as_app.guides.pwa_installation_guide"
+msgid "PWA installation guide for {name}"
+msgstr "PWA installation guide for {name}"
+
+#. Compact UI label for mobile/PWA install guidance on the download page. Keep instructions clear, device-appropriate, and concise; preserve placeholders exactly.
+#: fluxer_marketing/generated:platform_support.mobile.install_as_app.guides.steps.press_add_to_home_screen
+msgctxt "platform_support.mobile.install_as_app.guides.steps.press_add_to_home_screen"
+msgid "Press \"Add to Home Screen\""
+msgstr "Press \"Add to Home Screen\""
+
+#. Body copy for mobile/PWA install guidance on the download page. Keep instructions clear, device-appropriate, and concise; preserve placeholders exactly.
+#: fluxer_marketing/generated:platform_support.mobile.install_as_app.guides.steps.press_add_upper_right
+msgctxt "platform_support.mobile.install_as_app.guides.steps.press_add_upper_right"
+msgid "Press \"Add\" in the upper-right corner"
+msgstr "Press \"Add\" in the upper-right corner"
+
+#. Compact UI label for mobile/PWA install guidance on the download page. Keep instructions clear, device-appropriate, and concise; preserve placeholders exactly.
+#: fluxer_marketing/generated:platform_support.mobile.install_as_app.guides.steps.press_install_app
+msgctxt "platform_support.mobile.install_as_app.guides.steps.press_install_app"
+msgid "Press \"Install app\""
+msgstr "Press \"Install app\""
+
+#. Button or link label for mobile/PWA install guidance on the download page. Keep instructions clear, device-appropriate, and concise; preserve placeholders exactly.
+#: fluxer_marketing/generated:platform_support.mobile.install_as_app.guides.steps.press_install_button_address_bar
+msgctxt "platform_support.mobile.install_as_app.guides.steps.press_install_button_address_bar"
+msgid "Press the install button (downward-pointing arrow on monitor) in the address bar"
+msgstr "Press the install button (downward-pointing arrow on monitor) in the address bar"
+
+#. Body copy for mobile/PWA install guidance on the download page. Keep instructions clear, device-appropriate, and concise; preserve placeholders exactly.
+#: fluxer_marketing/generated:platform_support.mobile.install_as_app.guides.steps.press_install_in_popup
+msgctxt "platform_support.mobile.install_as_app.guides.steps.press_install_in_popup"
+msgid "Press \"Install\" in the popup that appears"
+msgstr "Press \"Install\" in the popup that appears"
+
+#. Body copy for mobile/PWA install guidance on the download page. Keep instructions clear, device-appropriate, and concise; preserve placeholders exactly.
+#: fluxer_marketing/generated:platform_support.mobile.install_as_app.guides.steps.press_more_menu
+msgctxt "platform_support.mobile.install_as_app.guides.steps.press_more_menu"
+msgid "Press the \"More\" (⋮) button in the top-right corner"
+msgstr "Press the \"More\" (⋮) button in the top-right corner"
+
+#. Button or link label for mobile/PWA install guidance on the download page. Keep instructions clear, device-appropriate, and concise; preserve placeholders exactly.
+#: fluxer_marketing/generated:platform_support.mobile.install_as_app.guides.steps.press_share_button
+msgctxt "platform_support.mobile.install_as_app.guides.steps.press_share_button"
+msgid "Press the share button (rectangle with upward-pointing arrow)"
+msgstr "Press the share button (rectangle with upward-pointing arrow)"
+
+#. Compact UI label for mobile/PWA install guidance on the download page. Keep instructions clear, device-appropriate, and concise; preserve placeholders exactly.
+#: fluxer_marketing/generated:platform_support.mobile.install_as_app.install_fluxer_as_app
+msgctxt "platform_support.mobile.install_as_app.install_fluxer_as_app"
+msgid "Install {product_name} as an app"
+msgstr "Install {product_name} as an app"
+
+#. Secondary text-link label on the download page that opens the PWA installation guide. Keep it short and action-oriented.
+#: fluxer_marketing/generated:platform_support.mobile.install_as_app.link
+msgctxt "platform_support.mobile.install_as_app.link"
+msgid "Installing as an app"
+msgstr "Installing as an app"
+
+#. Short UI label or heading for mobile/PWA install guidance on the download page. Keep instructions clear, device-appropriate, and concise; preserve placeholders exactly.
+#: fluxer_marketing/generated:platform_support.mobile.install_as_app.title
+msgctxt "platform_support.mobile.install_as_app.title"
+msgid "How to install as an app"
+msgstr "How to install as an app"
+
+#. Compact UI label naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact. Preserve placeholders exactly.
+#: fluxer_marketing/generated:platform_support.platforms.android.min_version
+msgctxt "platform_support.platforms.android.min_version"
+msgid "{android} 7+"
+msgstr "{android} 7+"
+
+#. Short UI label or heading naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact. Preserve placeholders exactly.
+#: fluxer_marketing/generated:platform_support.platforms.android.name
+msgctxt "platform_support.platforms.android.name"
+msgid "{android}"
+msgstr "{android}"
+
+#. Compact UI label naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact. Preserve placeholders exactly.
+#: fluxer_marketing/generated:platform_support.platforms.ios.ios_ipados
+msgctxt "platform_support.platforms.ios.ios_ipados"
+msgid "{ios} and {ipados}"
+msgstr "{ios} and {ipados}"
+
+#. Compact UI label naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact. Preserve placeholders exactly.
+#: fluxer_marketing/generated:platform_support.platforms.ios.min_version
+msgctxt "platform_support.platforms.ios.min_version"
+msgid "{ios}/{ipados} 15.6+"
+msgstr "{ios}/{ipados} 15.6+"
+
+#. Short UI label or heading naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact. Preserve placeholders exactly.
+#: fluxer_marketing/generated:platform_support.platforms.ios.name
+msgctxt "platform_support.platforms.ios.name"
+msgid "{ios}"
+msgstr "{ios}"
+
+#. Short UI label or heading naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact. Preserve placeholders exactly.
+#: fluxer_marketing/generated:platform_support.platforms.linux.name
+msgctxt "platform_support.platforms.linux.name"
+msgid "{linux}"
+msgstr "{linux}"
+
+#. Compact UI label naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact. Preserve placeholders exactly.
+#: fluxer_marketing/generated:platform_support.platforms.macos.apple_silicon
+msgctxt "platform_support.platforms.macos.apple_silicon"
+msgid "{apple_silicon}"
+msgstr "{apple_silicon}"
+
+#. Compact UI label naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact.
+#: fluxer_marketing/generated:platform_support.platforms.macos.intel
+msgctxt "platform_support.platforms.macos.intel"
+msgid "Intel"
+msgstr "Intel"
+
+#. Compact UI label naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact. Preserve placeholders exactly.
+#: fluxer_marketing/generated:platform_support.platforms.macos.min_version
+msgctxt "platform_support.platforms.macos.min_version"
+msgid "{macos} 12+"
+msgstr "{macos} 12+"
+
+#. Short UI label or heading naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact. Preserve placeholders exactly.
+#: fluxer_marketing/generated:platform_support.platforms.macos.name
+msgctxt "platform_support.platforms.macos.name"
+msgid "{macos}"
+msgstr "{macos}"
+
+#. Compact UI label naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact. Preserve placeholders exactly.
+#: fluxer_marketing/generated:platform_support.platforms.windows.min_version
+msgctxt "platform_support.platforms.windows.min_version"
+msgid "{windows} 10+"
+msgstr "{windows} 10+"
+
+#. Short UI label or heading naming a platform, installer, architecture, or minimum version in download UI. Keep platform names conventional and labels compact. Preserve placeholders exactly.
+#: fluxer_marketing/generated:platform_support.platforms.windows.name
+msgctxt "platform_support.platforms.windows.name"
+msgid "{windows}"
+msgstr "{windows}"
+
+#. Short UI label naming the portable Windows distribution method in download UI. Keep it concise.
+#: fluxer_marketing/generated:platform_support.platforms.portable
+msgctxt "platform_support.platforms.portable"
+msgid "Portable"
+msgstr "Portable"
+
+#. Card title for the mobile web app (PWA) option on the download page. Keep it short.
+#: fluxer_marketing/generated:platform_support.mobile.web_app.title
+msgctxt "platform_support.mobile.web_app.title"
+msgid "Web app"
+msgstr "Web app"
+
+#. Body copy for the web app row on the download page. Preserve {product_name} exactly; mention desktop and mobile browsers and that it installs like a Progressive Web App. Preserve placeholders exactly.
+#: fluxer_marketing/generated:platform_support.mobile.web_app.any_browser
+msgctxt "platform_support.mobile.web_app.any_browser"
+msgid ""
+"Use {product_name} in a desktop or mobile web browser, or install it to your home screen or desktop as a Progressive Web App. The web app currently has more features than the native phone apps."
+msgstr ""
+"Use {product_name} in a desktop or mobile web browser, or install it to your home screen or desktop as a Progressive Web App. The web app currently has more features than the native phone apps."
+
+#. Card title for the iOS app option on the download page. Keep the platform name conventional and short. Preserve placeholders exactly.
+#: fluxer_marketing/generated:platform_support.mobile.ios.title
+msgctxt "platform_support.mobile.ios.title"
+msgid "{ios} app"
+msgstr "{ios} app"
+
+#. Body copy for the iOS app row on the download page. Make clear that the native iOS app is currently limited to Fluxer Plutonium subscribers, that broader access is coming very soon, and that the web app remains available in Safari. Preserve placeholders exactly.
+#: fluxer_marketing/generated:platform_support.mobile.ios.body
+msgctxt "platform_support.mobile.ios.body"
+msgid ""
+"The native {ios} app is currently limited to {premium_tier_full_name} subscribers. Broader access is coming very soon. Meanwhile, the full {product_name} web app works in Safari and can be added to your Home Screen."
+msgstr ""
+"The native {ios} app is currently limited to {premium_tier_full_name} subscribers. Broader access is coming very soon. Meanwhile, the full {product_name} web app works in Safari and can be added to your Home Screen."
+
+#. Card title for the Android app option on the download page. Keep the platform name conventional and short. Preserve placeholders exactly.
+#: fluxer_marketing/generated:platform_support.mobile.android.title
+msgctxt "platform_support.mobile.android.title"
+msgid "{android} app"
+msgstr "{android} app"
+
+#. Body copy for the Android app card on the download page. Keep APK and GitHub as proper names; make clear the install file lives in the open source repository. Preserve placeholders exactly.
+#: fluxer_marketing/generated:platform_support.mobile.android.body
+msgctxt "platform_support.mobile.android.body"
+msgid "Install the {android} APK straight from our open source repository on {github}."
+msgstr "Install the {android} APK straight from our open source repository on {github}."
+
+#. Button or link label on the Android app card that opens the GitHub repository where the APK is published. Keep APK as a proper name; keep it short.
+#: fluxer_marketing/generated:platform_support.mobile.android.cta
+msgctxt "platform_support.mobile.android.cta"
+msgid "Download the APK"
+msgstr "Download the APK"
+
+#. Short UI label or heading in the press kit and brand asset download area. Keep terminology professional for brand/logo usage guidance; preserve placeholders exactly.
+#: fluxer_marketing/generated:press_branding.assets.brand_colors_heading
+msgctxt "press_branding.assets.brand_colors_heading"
+msgid "{product_name} colors"
+msgstr "{product_name} colours"
+
+#. Compact UI label in the press kit and brand asset download area. Keep terminology professional for brand/logo usage guidance; preserve placeholders exactly.
+#: fluxer_marketing/generated:press_branding.assets.full_color
+msgctxt "press_branding.assets.full_color"
+msgid "Full color version"
+msgstr "Full colour version"
+
+#. Helper text for a press-kit checkbox controlling whether the transparent wave cutouts inside non-white Fluxer logos are filled white. Keep the instruction concise and explicit.
+#: fluxer_marketing/generated:press_branding.assets.wave_interior_fill.description
+msgctxt "press_branding.assets.wave_interior_fill.description"
+msgid ""
+"Recommended for black and color logos. Turn this off only when you want the background to show through the waves."
+msgstr ""
+"Recommended for black and colour logos. Turn this off only when you want the background to show through the waves."
+
+#. Checkbox label in the press kit. The Fluxer symbol contains two wave-shaped transparent cutouts; this option fills those interiors white. Keep the label concise.
+#: fluxer_marketing/generated:press_branding.assets.wave_interior_fill.label
+msgctxt "press_branding.assets.wave_interior_fill.label"
+msgid "Fill wave interiors with white"
+msgstr "Fill wave interiors with white"
+
+#. Short UI label or heading in the press kit and brand asset download area. Keep terminology professional for brand/logo usage guidance; preserve placeholders exactly.
+#: fluxer_marketing/generated:press_branding.assets.label
+msgctxt "press_branding.assets.label"
+msgid "Logo"
+msgstr "Logo"
+
+#. Compact UI label in the press kit and brand asset download area. Keep terminology professional for brand/logo usage guidance; preserve placeholders exactly.
+#: fluxer_marketing/generated:press_branding.assets.logo_variants.black_logo
+msgctxt "press_branding.assets.logo_variants.black_logo"
+msgid "Black logo"
+msgstr "Black logo"
+
+#. Compact UI label in the press kit and brand asset download area. Keep terminology professional for brand/logo usage guidance; preserve placeholders exactly.
+#: fluxer_marketing/generated:press_branding.assets.logo_variants.color_logo
+msgctxt "press_branding.assets.logo_variants.color_logo"
+msgid "Color logo"
+msgstr "Colour logo"
+
+#. Compact UI label in the press kit and brand asset download area. Keep terminology professional for brand/logo usage guidance; preserve placeholders exactly.
+#: fluxer_marketing/generated:press_branding.assets.logo_variants.white_logo
+msgctxt "press_branding.assets.logo_variants.white_logo"
+msgid "White logo"
+msgstr "White logo"
+
+#. Body copy in the press kit and brand asset download area. Keep terminology professional for brand/logo usage guidance; preserve placeholders exactly.
+#: fluxer_marketing/generated:press_branding.assets.palette_description
+msgctxt "press_branding.assets.palette_description"
+msgid "These are the colors used by {product_name}."
+msgstr "These are the colours used by {product_name}."
+
+#. Body copy in the press kit and brand asset download area. Keep terminology professional for brand/logo usage guidance; preserve placeholders exactly.
+#: fluxer_marketing/generated:press_branding.assets.primary_brand_color_description
+msgctxt "press_branding.assets.primary_brand_color_description"
+msgid "This is the main {product_name} color. Use it for accents and important details."
+msgstr "This is the main {product_name} colour. Use it for accents and important details."
+
+#. Compact UI label in the press kit and brand asset download area. Keep terminology professional for brand/logo usage guidance; preserve placeholders exactly.
+#: fluxer_marketing/generated:press_branding.assets.symbol_variants.black_symbol
+msgctxt "press_branding.assets.symbol_variants.black_symbol"
+msgid "Black symbol"
+msgstr "Black symbol"
+
+#. Compact UI label in the press kit and brand asset download area. Keep terminology professional for brand/logo usage guidance; preserve placeholders exactly.
+#: fluxer_marketing/generated:press_branding.assets.symbol_variants.color_symbol
+msgctxt "press_branding.assets.symbol_variants.color_symbol"
+msgid "Color symbol"
+msgstr "Colour symbol"
+
+#. Short UI label or heading in the press kit and brand asset download area. Keep terminology professional for brand/logo usage guidance; preserve placeholders exactly.
+#: fluxer_marketing/generated:press_branding.assets.symbol_variants.label
+msgctxt "press_branding.assets.symbol_variants.label"
+msgid "Symbol"
+msgstr "Symbol"
+
+#. Compact UI label in the press kit and brand asset download area. Keep terminology professional for brand/logo usage guidance; preserve placeholders exactly.
+#: fluxer_marketing/generated:press_branding.assets.symbol_variants.white_symbol
+msgctxt "press_branding.assets.symbol_variants.white_symbol"
+msgid "White symbol"
+msgstr "White symbol"
+
+#. Body copy in the press kit and brand asset download area. Keep terminology professional for brand/logo usage guidance; preserve placeholders exactly.
+#: fluxer_marketing/generated:press_branding.assets.usage_guidance.dark_surface_guidance
+msgctxt "press_branding.assets.usage_guidance.dark_surface_guidance"
+msgid "Use on dark surfaces."
+msgstr "Use on dark surfaces."
+
+#. Compact UI label in the press kit and brand asset download area. Keep terminology professional for brand/logo usage guidance; preserve placeholders exactly.
+#: fluxer_marketing/generated:press_branding.assets.usage_guidance.for_dark_backgrounds
+msgctxt "press_branding.assets.usage_guidance.for_dark_backgrounds"
+msgid "For dark backgrounds"
+msgstr "For dark backgrounds"
+
+#. Compact UI label in the press kit and brand asset download area. Keep terminology professional for brand/logo usage guidance; preserve placeholders exactly.
+#: fluxer_marketing/generated:press_branding.assets.usage_guidance.for_light_backgrounds
+msgctxt "press_branding.assets.usage_guidance.for_light_backgrounds"
+msgid "For light backgrounds"
+msgstr "For light backgrounds"
+
+#. Body copy in the press kit and brand asset download area. Keep terminology professional for brand/logo usage guidance; preserve placeholders exactly.
+#: fluxer_marketing/generated:press_branding.assets.usage_guidance.full_logo_description
+msgctxt "press_branding.assets.usage_guidance.full_logo_description"
+msgid "Use the full logo by default. It includes the wordmark."
+msgstr "Use the full logo by default. It includes the wordmark."
+
+#. Body copy in the press kit and brand asset download area. Keep terminology professional for brand/logo usage guidance; preserve placeholders exactly.
+#: fluxer_marketing/generated:press_branding.assets.usage_guidance.light_surface_guidance
+msgctxt "press_branding.assets.usage_guidance.light_surface_guidance"
+msgid "Use on light surfaces."
+msgstr "Use on light surfaces."
+
+#. Body copy in the press kit and brand asset download area. Keep terminology professional for brand/logo usage guidance; preserve placeholders exactly.
+#: fluxer_marketing/generated:press_branding.assets.usage_guidance.symbol_description
+msgctxt "press_branding.assets.usage_guidance.symbol_description"
+msgid ""
+"Use the symbol only when {product_name} appears nearby or the context already makes its owner clear."
+msgstr ""
+"Use the symbol only when {product_name} appears nearby or the context already makes its owner clear."
+
+#. Brand color name in the press kit. Keep the color label recognizable and do not over-translate proper names unless natural in the locale.
+#: fluxer_marketing/generated:press_branding.colors.black
+msgctxt "press_branding.colors.black"
+msgid "Black"
+msgstr "Black"
+
+#. Brand color name in the press kit. Keep the product name unchanged.
+#: fluxer_marketing/generated:press_branding.colors.fluxer_blue
+msgctxt "press_branding.colors.fluxer_blue"
+msgid "Fluxer blue"
+msgstr "Fluxer blue"
+
+#. Brand color name in the press kit. Keep the color label recognizable and do not over-translate proper names unless natural in the locale.
+#: fluxer_marketing/generated:press_branding.colors.white
+msgctxt "press_branding.colors.white"
+msgid "White"
+msgstr "White"
+
+#. Short press contact reassurance. Keep it professional and concrete; this is about reply timing, not support availability.
+#: fluxer_marketing/generated:press_branding.contact.response_time
+msgctxt "press_branding.contact.response_time"
+msgid "We typically respond within 24 hours."
+msgstr "We typically respond within 24 hours."
+
+#. Press contact prompt. Here "story" means a media story, article angle, or news lead about Fluxer, not a personal history. Keep the tone professional and media-friendly; preserve placeholders exactly.
+#: fluxer_marketing/generated:press_branding.contact.story_prompt_message
+msgctxt "press_branding.contact.story_prompt_message"
+msgid "If you are writing about {product_name}, email {email}. A real person reads it."
+msgstr "If you are writing about {product_name}, email {email}. A real person reads it."
+
+#. Body copy in pricing UI explaining the base-currency checkout option. Preserve all currency and price placeholders exactly.
+#: fluxer_marketing/generated:pricing_and_tiers.billing.base_currency_also_available
+msgctxt "pricing_and_tiers.billing.base_currency_also_available"
+msgid ""
+"The same subscription is also sold in {base_currency_code}, at {base_monthly_price} a month or {base_yearly_price} for a year."
+msgstr ""
+"The same subscription is also sold in {base_currency_code}, at {base_monthly_price} a month or {base_yearly_price} for a year."
+
+#. Compact monthly price label in pricing UI. Preserve the monthly price placeholder exactly.
+#: fluxer_marketing/generated:pricing_and_tiers.billing.monthly_price
+msgctxt "pricing_and_tiers.billing.monthly_price"
+msgid "{monthly_price}/mo"
+msgstr "{monthly_price}/mo"
+
+#. Compact conjunction between monthly and yearly prices.
+#: fluxer_marketing/generated:pricing_and_tiers.billing.or
+msgctxt "pricing_and_tiers.billing.or"
+msgid "or"
+msgstr "or"
+
+#. Compact yearly price label in pricing UI. Preserve the yearly price placeholder exactly.
+#: fluxer_marketing/generated:pricing_and_tiers.billing.yearly_price
+msgctxt "pricing_and_tiers.billing.yearly_price"
+msgid "{yearly_price}/yr"
+msgstr "{yearly_price}/yr"
+
+#. Compact UI label describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.features.webhooks_and_bot_support
+msgctxt "pricing_and_tiers.plutonium.features.webhooks_and_bot_support"
+msgid "Webhooks and bot support"
+msgstr "Webhooks and bot support"
+
+#. Hero heading for the Plutonium page. Preserve the product and premium tier name placeholders exactly.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.full_tier_name
+msgctxt "pricing_and_tiers.plutonium.full_tier_name"
+msgid "{product_name} {premium_tier_name}"
+msgstr "{product_name} {premium_tier_name}"
+
+#. Metadata description for the Plutonium page. Preserve the premium tier, official instance host, and product name placeholders exactly.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.hero_description
+msgctxt "pricing_and_tiers.plutonium.hero_description"
+msgid ""
+"{premium_tier_name} raises the limits on {official_instance_host} for the people who keep running into them, and adds a few ways to make your profile look like you. It is optional, and {product_name} works without it."
+msgstr ""
+"{premium_tier_name} raises the limits on {official_instance_host} for the people who keep running into them, and adds a few ways to make your profile look like you. It is optional, and {product_name} works without it."
+
+#. Secondary callout at the bottom of the Plutonium hero. The {donate_link} placeholder is the only linked portion; preserve {product_name} and both placeholders exactly.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.donation_callout
+msgctxt "pricing_and_tiers.plutonium.donation_callout"
+msgid "Just want to support {product_name}'s open source development? {donate_link}."
+msgstr "Just want to support {product_name}'s open source development? {donate_link}."
+
+#. Linked label in the Plutonium hero donation callout. Translate as a concise donation action.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.donation_callout_link
+msgctxt "pricing_and_tiers.plutonium.donation_callout_link"
+msgid "Donate instead"
+msgstr "Donate instead"
+
+#. Subscription call to action on the Plutonium page. Preserve the product name placeholder exactly.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.open_fluxer_to_subscribe
+msgctxt "pricing_and_tiers.plutonium.open_fluxer_to_subscribe"
+msgid "Open {product_name} to subscribe"
+msgstr "Open {product_name} to subscribe"
+
+#. Feature label in the Plutonium comparison table. Keep it concise and consistent with product terminology.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.animated_avatar_and_banner
+msgctxt "pricing_and_tiers.plutonium.perks.animated_avatar_and_banner"
+msgid "Animated avatar and profile banner"
+msgstr "Animated avatar and profile banner"
+
+#. Feature label in the Plutonium comparison table. Keep it concise and consistent with product terminology.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.bookmarked_messages
+msgctxt "pricing_and_tiers.plutonium.perks.bookmarked_messages"
+msgid "Messages you can bookmark"
+msgstr "Messages you can bookmark"
+
+#. Feature label in the Plutonium comparison table. Keep it concise and consistent with product terminology.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.communities
+msgctxt "pricing_and_tiers.plutonium.perks.communities"
+msgid "Communities you can join"
+msgstr "Communities you can join"
+
+#. Feature label in the Plutonium comparison table. Keep it concise and consistent with product terminology.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.custom_themes
+msgctxt "pricing_and_tiers.plutonium.perks.custom_themes"
+msgid "Custom themes for the app"
+msgstr "Custom themes for the app"
+
+#. Feature label in the Plutonium comparison table. Keep it concise and consistent with product terminology.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.custom_username_tag
+msgctxt "pricing_and_tiers.plutonium.perks.custom_username_tag"
+msgid "Pick the 4-digit number after your username"
+msgstr "Pick the 4-digit number after your username"
+
+#. Feature label in the Plutonium comparison table. Keep it concise and consistent with product terminology.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.early_access
+msgctxt "pricing_and_tiers.plutonium.perks.early_access"
+msgid "Early access to new features"
+msgstr "Early access to new features"
+
+#. Feature label in the Plutonium comparison table. Keep it concise and consistent with product terminology.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.file_upload_size
+msgctxt "pricing_and_tiers.plutonium.perks.file_upload_size"
+msgid "Largest file you can upload"
+msgstr "Largest file you can upload"
+
+#. Feature label in the Plutonium comparison table. Keep it concise and consistent with product terminology.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.global_expressions
+msgctxt "pricing_and_tiers.plutonium.perks.global_expressions"
+msgid "Use custom emojis and stickers in any community"
+msgstr "Use custom emojis and stickers in any community"
+
+#. Feature label in the Plutonium comparison table. Keep it concise and consistent with product terminology.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.message_characters
+msgctxt "pricing_and_tiers.plutonium.perks.message_characters"
+msgid "Characters in a single message"
+msgstr "Characters in a single message"
+
+#. Feature label in the Plutonium comparison table. Keep it concise and consistent with product terminology.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.per_community_profiles
+msgctxt "pricing_and_tiers.plutonium.perks.per_community_profiles"
+msgid "A separate profile for each community"
+msgstr "A separate profile for each community"
+
+#. Feature label in the Plutonium comparison table. Keep it concise and consistent with product terminology.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.profile_badge
+msgctxt "pricing_and_tiers.plutonium.perks.profile_badge"
+msgid "Subscriber badge on your profile"
+msgstr "Subscriber badge on your profile"
+
+#. Feature label in the Plutonium comparison table. Keep it concise and consistent with product terminology.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.saved_media
+msgctxt "pricing_and_tiers.plutonium.perks.saved_media"
+msgid "Media items you can save"
+msgstr "Media items you can save"
+
+#. Feature label in the Plutonium comparison table. Keep it concise and consistent with product terminology.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.use_animated_emojis
+msgctxt "pricing_and_tiers.plutonium.perks.use_animated_emojis"
+msgid "Use animated emojis in messages"
+msgstr "Use animated emojis in messages"
+
+#. Feature label in the Plutonium comparison table. Keep it concise and consistent with product terminology.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.video_backgrounds
+msgctxt "pricing_and_tiers.plutonium.perks.video_backgrounds"
+msgid "Video call backgrounds you can save"
+msgstr "Video call backgrounds you can save"
+
+#. Feature label in the Plutonium comparison table. Keep it concise and consistent with product terminology.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.video_quality
+msgctxt "pricing_and_tiers.plutonium.perks.video_quality"
+msgid "Video call and screen share quality"
+msgstr "Video call and screen share quality"
+
+#. Free-tier value in the Plutonium comparison table. Keep resolution and frame rate accurate.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.video_quality_free
+msgctxt "pricing_and_tiers.plutonium.perks.video_quality_free"
+msgid "Up to 720p at 30 FPS"
+msgstr "Up to 720p at 30 FPS"
+
+#. Plutonium-tier value in the comparison table. Keep resolution and frame rate accurate.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.perks.video_quality_plutonium
+msgctxt "pricing_and_tiers.plutonium.perks.video_quality_plutonium"
+msgid "Up to 4K at 60 FPS"
+msgstr "Up to 4K at 60 FPS"
+
+#. Compact UI label in pricing and billing UI. Keep it short, conventional for subscriptions, and preserve price/currency placeholders exactly.
+#: fluxer_marketing/generated:pricing_and_tiers.billing.save_percent
+msgctxt "pricing_and_tiers.billing.save_percent"
+msgid "Save {yearly_savings}"
+msgstr "Save {yearly_savings}"
+
+#. Short UI label or heading in pricing comparison UI. Keep labels clear and commercially neutral; preserve placeholders exactly.
+#: fluxer_marketing/generated:pricing_and_tiers.free.label
+msgctxt "pricing_and_tiers.free.label"
+msgid "Free"
+msgstr "Free"
+
+#. Short UI label or heading describing the Plutonium paid tier. Keep the tier name unchanged unless the locale normally transliterates product tier names; preserve placeholders exactly.
+#: fluxer_marketing/generated:pricing_and_tiers.plutonium.tier_name
+msgctxt "pricing_and_tiers.plutonium.tier_name"
+msgid "{premium_tier_name}"
+msgstr "{premium_tier_name}"
+
+#. Button label linking to the operator documentation from the self-hosting feature card.
+#: fluxer_marketing/generated:product_positioning.self_hosting.read_the_self_hosting_guide
+msgctxt "product_positioning.self_hosting.read_the_self_hosting_guide"
+msgid "Read the self-hosting guide"
+msgstr "Read the self-hosting guide"
+
+#. Primary product-positioning body copy used in page metadata and hero sections. Keep the free/open-source, audience, communication-feature, and self-hosting meanings clear.
+#: fluxer_marketing/generated:product_positioning.intro
+msgctxt "product_positioning.intro"
+msgid ""
+"Free and open source chat for friends, groups, and communities, with text, voice, video, screen sharing, and self-hosting."
+msgstr ""
+"Free and open source chat for friends, groups, and communities, with text, voice, video, screen sharing, and self-hosting."
+
+#. Button or link label explaining Fluxer open-source licensing. Keep legal/license tokens such as AGPLv3 unchanged.
+#: fluxer_marketing/generated:product_positioning.open_source.fully_open_source_agplv3
+msgctxt "product_positioning.open_source.fully_open_source_agplv3"
+msgid "Fully open source (AGPLv3)"
+msgstr "Fully open source (AGPLv3)"
+
+#. Compact UI label explaining self-hosting and Operator Pass expectations. Keep technical wording accurate and preserve product-name placeholders exactly.
+#: fluxer_marketing/generated:product_positioning.self_hosting.host_your_own_instance
+msgctxt "product_positioning.self_hosting.host_your_own_instance"
+msgid "Host your own instance"
+msgstr "Host your own instance"
+
+#. Short UI label or heading explaining self-hosting and Operator Pass expectations. Keep technical wording accurate and preserve product-name placeholders exactly.
+#: fluxer_marketing/generated:product_positioning.self_hosting.label
+msgctxt "product_positioning.self_hosting.label"
+msgid "Self-hosting"
+msgstr "Self-hosting"
+
+#. Body copy explaining self-hosting and Operator Pass expectations. Keep technical wording accurate and preserve product-name placeholders exactly.
+#: fluxer_marketing/generated:product_positioning.self_hosting.run_backend_on_your_hardware
+msgctxt "product_positioning.self_hosting.run_backend_on_your_hardware"
+msgid ""
+"Run the whole {product_name} backend on your own hardware and connect to it with the same apps we ship. There is no license key and no cut-down community edition."
+msgstr ""
+"Run the whole {product_name} backend on your own hardware and connect to it with the same apps we ship. There is no licence key and no cut-down community edition."
+
+#. Compact UI label explaining self-hosting and Operator Pass expectations. Keep technical wording accurate and preserve product-name placeholders exactly.
+#: fluxer_marketing/generated:product_positioning.self_hosting.switch_between_instances
+msgctxt "product_positioning.self_hosting.switch_between_instances"
+msgid "Switch between multiple instances"
+msgstr "Switch between multiple instances"
+
+#. Compact accessibility label shared across marketing comparison tables. Keep it broadly reusable, concise, and consistent with the Fluxer brand voice.
+#: fluxer_marketing/generated:general.available
+msgctxt "general.available"
+msgid "Available"
+msgstr "Available"
+
+#. Short UI label or heading shared across marketing pages. Keep it broadly reusable, concise, and consistent with the Fluxer brand voice.
+#: fluxer_marketing/generated:general.coming_soon.label
+msgctxt "general.coming_soon.label"
+msgid "Coming soon"
+msgstr "Coming soon"
+
+#. Compact UI label shared across marketing pages. Keep it broadly reusable, concise, and consistent with the Fluxer brand voice; preserve {product_name} exactly.
+#: fluxer_marketing/generated:general.coming_soon.whats_available_today
+msgctxt "general.coming_soon.whats_available_today"
+msgid "Everything {product_name} does today"
+msgstr "Everything {product_name} does today"
+
+#. Default author metadata label for Fluxer-authored marketing pages when no individual author is shown. Keep Fluxer as a product name. Preserve placeholders exactly.
+#: fluxer_marketing/generated:general.fluxer_team
+msgctxt "general.fluxer_team"
+msgid "{product_name} team"
+msgstr "{product_name} team"
+
+#. Date line shown on policy and help content. Translate the whole sentence so date placement and punctuation are natural. Preserve {date} exactly.
+#: fluxer_marketing/generated:general.last_updated_on_date
+msgctxt "general.last_updated_on_date"
+msgid "Last updated on {date}."
+msgstr "Last updated on {date}."
+
+#. Compact UI label shared across marketing pages. Keep it broadly reusable, concise, and consistent with the Fluxer brand voice.
+#: fluxer_marketing/generated:general.made_in_sweden
+msgctxt "general.made_in_sweden"
+msgid "Made in Sweden"
+msgstr "Made in Sweden"
+
+#. Compact UI label shared across marketing pages. Keep it broadly reusable, concise, and consistent with the Fluxer brand voice.
+#: fluxer_marketing/generated:general.not_available
+msgctxt "general.not_available"
+msgid "Not available"
+msgstr "Not available"
+
+#. Compact UI label shared across marketing pages. Keep it broadly reusable, concise, and consistent with the Fluxer brand voice.
+#: fluxer_marketing/generated:general.tagline
+msgctxt "general.tagline"
+msgid "A chat app that puts you first"
+msgstr "A chat app that puts you first"
+
+#. Short UI label or heading reused across marketing cards, buttons, and section headings. Translate as a standalone UI phrase that can fit multiple surfaces.
+#: fluxer_marketing/generated:misc_labels.feature
+msgctxt "misc_labels.feature"
+msgid "Feature"
+msgstr "Feature"
+
+#. Button or link label reused across marketing cards, buttons, and section headings. Translate as a standalone UI phrase that can fit multiple surfaces.
+#: fluxer_marketing/generated:misc_labels.join_multiple_devices
+msgctxt "misc_labels.join_multiple_devices"
+msgid "Join from multiple devices at once"
+msgstr "Join from multiple devices at once"
+
+#. Button or link label reused across marketing cards, buttons, and section headings. Translate as a standalone UI phrase that can fit multiple surfaces.
+#: fluxer_marketing/generated:misc_labels.ready_to_get_started
+msgctxt "misc_labels.ready_to_get_started"
+msgid "Bring your people over"
+msgstr "Bring your people over"
+
+#. Short UI label or heading reused across marketing cards, buttons, and section headings. Translate as a standalone UI phrase that can fit multiple surfaces.
+#: fluxer_marketing/generated:misc_labels.related_policies
+msgctxt "misc_labels.related_policies"
+msgid "Related policies"
+msgstr "Related policies"
+
+#. Short UI label or heading in social, Bluesky, GitHub, or RSS follow sections. Keep labels recognizable, avoid dangling sentence fragments, and preserve handles/placeholders exactly.
+#: fluxer_marketing/generated:social_and_feeds.bluesky.label
+msgctxt "social_and_feeds.bluesky.label"
+msgid "{bluesky}"
+msgstr "{bluesky}"
+
+#. Compact UI label in social, Bluesky, GitHub, or RSS follow sections. Keep labels recognizable, avoid dangling sentence fragments, and preserve handles/placeholders exactly.
+#: fluxer_marketing/generated:social_and_feeds.github
+msgctxt "social_and_feeds.github"
+msgid "{github}"
+msgstr "{github}"
+
+#. Compact UI label in social, Bluesky, GitHub, or RSS follow sections. Keep labels recognizable, avoid dangling sentence fragments, and preserve handles/placeholders exactly.
+#: fluxer_marketing/generated:social_and_feeds.rss.fluxer_blog_rss
+msgctxt "social_and_feeds.rss.fluxer_blog_rss"
+msgid "{product_name} blog RSS"
+msgstr "{product_name} blog RSS"
+
+#. Short UI label or heading in social, Bluesky, GitHub, or RSS follow sections. Keep labels recognizable, avoid dangling sentence fragments, and preserve handles/placeholders exactly.
+#: fluxer_marketing/generated:social_and_feeds.rss.label
+msgctxt "social_and_feeds.rss.label"
+msgid "RSS feed"
+msgstr "RSS feed"
+
+#. Section heading above the world map of voice regions. Plain, sentence case.
+#: fluxer_marketing/generated:voice_regions.map_heading
+msgctxt "voice_regions.map_heading"
+msgid "Voice regions"
+msgstr "Voice regions"
+
+#. Paragraph under the map heading. State facts; no marketing language. Sentence case.
+#: fluxer_marketing/generated:voice_regions.map_intro
+msgctxt "voice_regions.map_intro"
+msgid ""
+"Sixteen voice regions across six continents. Voice and video calls connect through the region closest to you."
+msgstr ""
+"Sixteen voice regions across six continents. Voice and video calls connect through the region closest to you."
+
+#. Accessible legend / alt-style sentence next to the map. Sentence case, short. Preserve placeholders exactly.
+#: fluxer_marketing/generated:voice_regions.map_legend
+msgctxt "voice_regions.map_legend"
+msgid "Each dot is a {product_name} voice region."
+msgstr "Each dot is a {product_name} voice region."
+
+#. Section heading above the list of supported languages. Sentence case; one short noun.
+#: fluxer_marketing/generated:voice_regions.languages_heading
+msgctxt "voice_regions.languages_heading"
+msgid "Languages"
+msgstr "Languages"
+
+#. Paragraph under the languages heading. Includes a {weblate} placeholder for the localization platform. Plain and factual.
+#: fluxer_marketing/generated:voice_regions.languages_intro
+msgctxt "voice_regions.languages_intro"
+msgid ""
+"{product_name} is available in over thirty languages. To help translate {product_name} into your native language, join us on {weblate}."
+msgstr ""
+"{product_name} is available in over thirty languages. To help translate {product_name} into your native language, join us on {weblate}."

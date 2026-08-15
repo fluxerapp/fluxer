@@ -15,6 +15,11 @@
 	z-index: var(--z-index-titlebar);
 }
 
+.titlebar[data-platform='macos'] {
+	padding-left: calc(var(--macos-traffic-light-inset) + env(safe-area-inset-left));
+	padding-right: calc(var(--spacing-3) + env(safe-area-inset-right));
+}
+
 :global(html.platform-native:not(.window-focused)) .titlebar,
 :global(html.platform-native.window-focus-activation-guard) .titlebar {
 	pointer-events: auto;
@@ -29,9 +34,11 @@
 }
 
 .wordmark {
-	height: 0.875rem;
+	display: block;
+	height: 0.8125rem;
 	width: auto;
 	color: var(--text-primary-muted);
+	overflow: visible;
 }
 
 .spacer {

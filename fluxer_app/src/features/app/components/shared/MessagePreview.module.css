@@ -41,7 +41,7 @@
 
 .actionButton {
 	composes: item textItem from '@app/features/ui/action_toolbar/ActionToolbar.module.css';
-	--action-toolbar-item-border-width: 0;
+	--action-toolbar-item-border-width: 0px;
 	--action-toolbar-item-radius: 0.25rem;
 	--action-toolbar-item-background: var(--background-primary);
 	--action-toolbar-item-color: var(--text-primary-muted);
@@ -54,7 +54,7 @@
 .actionIconButton {
 	composes: item from '@app/features/ui/action_toolbar/ActionToolbar.module.css';
 	--action-toolbar-item-size: 1.5rem;
-	--action-toolbar-item-border-width: 0;
+	--action-toolbar-item-border-width: 0px;
 	--action-toolbar-item-radius: 0.25rem;
 	--action-toolbar-item-background: var(--background-primary);
 	--action-toolbar-item-color: var(--text-primary-muted);

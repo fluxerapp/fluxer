@@ -3,23 +3,25 @@
 import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
 
 export const LOCAL_TYPING_REMOTE_SEND_DELAY_MS = 1500;
-export const LOCAL_TYPING_REMOTE_REFRESH_MS = 10000 * 0.8;
+export const LOCAL_TYPING_REMOTE_REFRESH_MS = 8000;
+export const LOCAL_TYPING_IDLE_RESET_MS = 10000;
 
 export interface LocalTypingMachineInput {
 	channelId?: string | null;
 	localTyping?: boolean;
 	remoteCooldownChannelId?: string | null;
 	remoteCooldownUntil?: number | null;
-	remotePending?: boolean;
 	remotePendingVersion?: number;
 }
 
 export interface LocalTypingMachineContext {
 	channelId: string | null;
 	localTyping: boolean;
+	lastChangeAt: number;
 	remoteCooldownChannelId: string | null;
 	remoteCooldownUntil: number | null;
-	remotePending: boolean;
+	lastRemoteSentAt: number | null;
+	remoteSendAt: number | null;
 	remotePendingVersion: number;
 }
 
@@ -38,6 +40,11 @@ export type LocalTypingMachineEvent =
 			channelId: string;
 			now: number;
 			pendingVersion: number;
+	  }
+	| {
+			type: 'localTyping.idleElapsed';
+			channelId: string;
+			now: number;
 	  };
 
 export interface LocalTypingModel {
@@ -47,21 +54,49 @@ export interface LocalTypingModel {
 	remotePendingVersion: number;
 	remoteCooldownChannelId: string | null;
 	remoteCooldownUntil: number | null;
+	remoteSendAt: number | null;
 	remoteSendDelayMs: number;
+	localIdleAt: number | null;
 }
 
 export type LocalTypingSnapshot = SnapshotFrom<typeof localTypingStateMachine>;
 
-function canScheduleRemoteSend(context: LocalTypingMachineContext, channelId: string, now: number): boolean {
-	return (
-		context.remoteCooldownChannelId !== channelId ||
-		context.remoteCooldownUntil == null ||
-		context.remoteCooldownUntil <= now
-	);
+function initialLocalTypingContext(input: LocalTypingMachineInput = {}): LocalTypingMachineContext {
+	return {
+		channelId: input.channelId == null ? null : input.channelId,
+		localTyping: input.localTyping == null ? false : input.localTyping,
+		lastChangeAt: 0,
+		remoteCooldownChannelId: input.remoteCooldownChannelId == null ? null : input.remoteCooldownChannelId,
+		remoteCooldownUntil: input.remoteCooldownUntil == null ? null : input.remoteCooldownUntil,
+		lastRemoteSentAt: null,
+		remoteSendAt: null,
+		remotePendingVersion: input.remotePendingVersion == null ? 0 : input.remotePendingVersion,
+	};
 }
 
-function matchesActiveChannel(context: LocalTypingMachineContext, channelId: string): boolean {
-	return context.localTyping && context.channelId === channelId;
+function resetLocalTypingContext(context: LocalTypingMachineContext): LocalTypingMachineContext {
+	return {
+		channelId: null,
+		localTyping: false,
+		lastChangeAt: 0,
+		remoteCooldownChannelId: context.remoteCooldownChannelId,
+		remoteCooldownUntil: context.remoteCooldownUntil,
+		lastRemoteSentAt: null,
+		remoteSendAt: null,
+		remotePendingVersion: context.remotePendingVersion,
+	};
+}
+
+function isRemoteCooldownActive(context: LocalTypingMachineContext, channelId: string, now: number): boolean {
+	const cooldownUntil = context.remoteCooldownUntil == null ? 0 : context.remoteCooldownUntil;
+	return context.remoteCooldownChannelId === channelId && cooldownUntil > now;
+}
+
+function desiredLocalIdleAt(context: LocalTypingMachineContext): number | null {
+	if (!context.localTyping || context.channelId == null) {
+		return null;
+	}
+	return context.lastChangeAt + LOCAL_TYPING_IDLE_RESET_MS;
 }
 
 export const localTypingStateMachine = setup({
@@ -75,50 +110,80 @@ export const localTypingStateMachine = setup({
 			if (event.type !== 'localTyping.started') {
 				return {};
 			}
-			const shouldScheduleRemote = canScheduleRemoteSend(context, event.channelId, event.now);
+			if (!context.localTyping || context.channelId !== event.channelId) {
+				const shouldScheduleRemote = !isRemoteCooldownActive(context, event.channelId, event.now);
+				return {
+					channelId: event.channelId,
+					localTyping: true,
+					lastChangeAt: event.now,
+					lastRemoteSentAt: null,
+					remoteSendAt: shouldScheduleRemote ? event.now + LOCAL_TYPING_REMOTE_SEND_DELAY_MS : null,
+					remotePendingVersion: shouldScheduleRemote ? context.remotePendingVersion + 1 : context.remotePendingVersion,
+				};
+			}
+			if (context.remoteSendAt != null) {
+				if (context.lastRemoteSentAt == null) {
+					return {
+						lastChangeAt: event.now,
+						remoteSendAt: event.now + LOCAL_TYPING_REMOTE_SEND_DELAY_MS,
+						remotePendingVersion: context.remotePendingVersion + 1,
+					};
+				}
+				return {
+					lastChangeAt: event.now,
+				};
+			}
+			if (context.lastRemoteSentAt != null && event.now > context.lastRemoteSentAt) {
+				return {
+					lastChangeAt: event.now,
+					remoteSendAt: context.lastRemoteSentAt + LOCAL_TYPING_REMOTE_REFRESH_MS,
+					remotePendingVersion: context.remotePendingVersion + 1,
+				};
+			}
+			const shouldScheduleRemote = !isRemoteCooldownActive(context, event.channelId, event.now);
 			return {
-				channelId: event.channelId,
-				localTyping: true,
-				remotePending: shouldScheduleRemote,
+				lastChangeAt: event.now,
+				remoteSendAt: shouldScheduleRemote ? event.now + LOCAL_TYPING_REMOTE_SEND_DELAY_MS : null,
 				remotePendingVersion: shouldScheduleRemote ? context.remotePendingVersion + 1 : context.remotePendingVersion,
 			};
 		}),
 		stopLocalTyping: assign(({context, event}) => {
-			if (event.type !== 'localTyping.stopped' || !matchesActiveChannel(context, event.channelId)) {
+			if (event.type !== 'localTyping.stopped' || !context.localTyping || context.channelId !== event.channelId) {
 				return {};
 			}
-			return {
-				channelId: null,
-				localTyping: false,
-				remotePending: false,
-			};
+			return resetLocalTypingContext(context);
 		}),
 		markRemoteSent: assign(({context, event}) => {
 			if (
 				event.type !== 'localTyping.remoteSent' ||
+				!context.localTyping ||
 				context.channelId !== event.channelId ||
-				context.remotePendingVersion !== event.pendingVersion ||
-				!context.remotePending
+				context.remotePendingVersion !== event.pendingVersion
 			) {
 				return {};
 			}
 			return {
-				remotePending: false,
 				remoteCooldownChannelId: event.channelId,
 				remoteCooldownUntil: event.now + LOCAL_TYPING_REMOTE_REFRESH_MS,
+				lastRemoteSentAt: event.now,
+				remoteSendAt: null,
 			};
+		}),
+		markIdleElapsed: assign(({context, event}) => {
+			if (
+				event.type !== 'localTyping.idleElapsed' ||
+				!context.localTyping ||
+				context.channelId !== event.channelId ||
+				event.now - context.lastChangeAt < LOCAL_TYPING_IDLE_RESET_MS
+			) {
+				return {};
+			}
+			return resetLocalTypingContext(context);
 		}),
 	},
 }).createMachine({
 	id: 'localTyping',
-	context: ({input}) => ({
-		channelId: input.channelId ?? null,
-		localTyping: input.localTyping ?? false,
-		remoteCooldownChannelId: input.remoteCooldownChannelId ?? null,
-		remoteCooldownUntil: input.remoteCooldownUntil ?? null,
-		remotePending: input.remotePending ?? false,
-		remotePendingVersion: input.remotePendingVersion ?? 0,
-	}),
+	context: ({input}) => initialLocalTypingContext(input),
 	initial: 'ready',
 	states: {
 		ready: {
@@ -126,6 +191,7 @@ export const localTypingStateMachine = setup({
 				'localTyping.started': {actions: 'startLocalTyping'},
 				'localTyping.stopped': {actions: 'stopLocalTyping'},
 				'localTyping.remoteSent': {actions: 'markRemoteSent'},
+				'localTyping.idleElapsed': {actions: 'markIdleElapsed'},
 			},
 		},
 	},
@@ -146,10 +212,12 @@ export function selectLocalTypingModel(snapshot: LocalTypingSnapshot): LocalTypi
 	return {
 		channelId: snapshot.context.channelId,
 		localTyping: snapshot.context.localTyping,
-		remotePending: snapshot.context.remotePending,
+		remotePending: snapshot.context.remoteSendAt != null,
 		remotePendingVersion: snapshot.context.remotePendingVersion,
 		remoteCooldownChannelId: snapshot.context.remoteCooldownChannelId,
 		remoteCooldownUntil: snapshot.context.remoteCooldownUntil,
+		remoteSendAt: snapshot.context.remoteSendAt,
 		remoteSendDelayMs: LOCAL_TYPING_REMOTE_SEND_DELAY_MS,
+		localIdleAt: desiredLocalIdleAt(snapshot.context),
 	};
 }

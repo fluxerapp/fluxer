@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import styles from '@app/features/ui/card_alignment_controls/CardAlignmentControls.module.css';
 import type {TooltipPosition} from '@app/features/ui/tooltip/Tooltip';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
@@ -91,7 +92,7 @@ export const CardAlignmentControls: React.FC<CardAlignmentControlsProps> = ({
 					>
 						{Icon ? (
 							<Icon
-								size={18}
+								size={remFromPx(18)}
 								weight={isActive ? 'bold' : 'regular'}
 								data-flx="ui.card-alignment-controls.card-alignment-controls.icon"
 							/>

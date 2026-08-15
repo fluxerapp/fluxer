@@ -60,8 +60,6 @@ import {CassandraHistoricalOutcomeRepository} from '../risk/HistoricalOutcomeRep
 import {buildIpInfoCache, buildIpInfoRequestAuditLogger} from '../risk/IpInfoCacheFactory';
 import {CassandraRegistrationEventsRepository} from '../risk/RegistrationEventsRepository';
 import {CassandraRiskAssessmentRepository} from '../risk/RiskAssessmentRepository';
-import {buildRiskCacheLoaders} from '../risk/RiskCacheLoaders';
-import {RiskCacheManager} from '../risk/RiskCacheManager';
 import {createRiskToolbox} from '../risk/RiskToolboxFactory';
 import {CassandraSuspiciousIpRepository} from '../risk/SuspiciousIpRepository';
 import {RpcService} from '../rpc/RpcService';
@@ -192,24 +190,6 @@ export function shutdownReportService(): void {
 	}
 }
 
-let _riskCacheManager: RiskCacheManager | null = null;
-
-function getRiskCacheManager(): RiskCacheManager {
-	if (!_riskCacheManager) {
-		_riskCacheManager = new RiskCacheManager({
-			logger: Logger,
-			...buildRiskCacheLoaders({
-				adminRepository: getAdminRepository(),
-			}),
-		});
-	}
-	return _riskCacheManager;
-}
-
-export function getRiskCacheManagerInstance(): RiskCacheManager {
-	return getRiskCacheManager();
-}
-
 let _inboundSmsChallengeService: InboundSmsChallengeService | null = null;
 
 function getInboundSmsChallengeService(): InboundSmsChallengeService {
@@ -311,13 +291,12 @@ function getRegistrationRiskEvaluator(): IRegistrationRiskEvaluator {
 		_registrationRiskEvaluator = noopRegistrationRiskEvaluator;
 		return _registrationRiskEvaluator;
 	}
-	const cacheManager = getRiskCacheManager();
 	const ipInfoService = getIpInfoService();
 	const ipInfoChecker = Config.risk.ipinfoApiKey ? createIpInfoChecker({ipInfoService}) : undefined;
 	const cacheService = getCacheService();
 	const reverseDnsLookup = createReverseDnsLookup({cacheService});
 	const toolbox = createRiskToolbox({
-		disposableDomainsRef: cacheManager.disposableDomainsRef,
+		adminRepository: getAdminRepository(),
 		ipInfoChecker,
 		reverseDnsLookup,
 		ipInfoService,

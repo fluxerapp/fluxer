@@ -10,6 +10,7 @@ import {
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
 import {PanZoomSurface} from '@app/features/messaging/components/modals/media_modal/pan_zoom/PanZoomSurface';
 import type {ZoomState} from '@app/features/messaging/components/modals/media_modal/shared';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {
 	clampMediaTime,
 	getBufferedPercentage,
@@ -445,7 +446,7 @@ export const MobileVideoViewer = observer(function MobileVideoViewer({
 								aria-label={i18n._(CLOSE_DESCRIPTOR)}
 								data-flx="voice.mobile-video-viewer.top-bar-button.close"
 							>
-								<XIcon size={20} weight="bold" data-flx="voice.mobile-video-viewer.x-icon" />
+								<XIcon size={remFromPx(20)} weight="bold" data-flx="voice.mobile-video-viewer.x-icon" />
 							</button>
 							{onMenuOpen && (
 								<button
@@ -455,7 +456,11 @@ export const MobileVideoViewer = observer(function MobileVideoViewer({
 									aria-label={i18n._(MORE_OPTIONS_DESCRIPTOR)}
 									data-flx="voice.mobile-video-viewer.top-bar-button.menu-open"
 								>
-									<DotsThreeIcon size={20} weight="bold" data-flx="voice.mobile-video-viewer.dots-three-icon" />
+									<DotsThreeIcon
+										size={remFromPx(20)}
+										weight="bold"
+										data-flx="voice.mobile-video-viewer.dots-three-icon"
+									/>
 								</button>
 							)}
 						</div>
@@ -468,9 +473,17 @@ export const MobileVideoViewer = observer(function MobileVideoViewer({
 								data-flx="voice.mobile-video-viewer.mute-button.toggle-mute"
 							>
 								{VideoVolume.isMuted ? (
-									<SpeakerXIcon size={18} weight="fill" data-flx="voice.mobile-video-viewer.speaker-x-icon" />
+									<SpeakerXIcon
+										size={remFromPx(18)}
+										weight="fill"
+										data-flx="voice.mobile-video-viewer.speaker-x-icon"
+									/>
 								) : (
-									<SpeakerHighIcon size={18} weight="fill" data-flx="voice.mobile-video-viewer.speaker-high-icon" />
+									<SpeakerHighIcon
+										size={remFromPx(18)}
+										weight="fill"
+										data-flx="voice.mobile-video-viewer.speaker-high-icon"
+									/>
 								)}
 							</button>
 							<div className={styles.controlsBar} data-flx="voice.mobile-video-viewer.controls-bar">
@@ -482,9 +495,9 @@ export const MobileVideoViewer = observer(function MobileVideoViewer({
 									data-flx="voice.mobile-video-viewer.play-pause-button"
 								>
 									{isPlaying ? (
-										<PauseIcon size={20} weight="fill" data-flx="voice.mobile-video-viewer.pause-icon" />
+										<PauseIcon size={remFromPx(20)} weight="fill" data-flx="voice.mobile-video-viewer.pause-icon" />
 									) : (
-										<PlayIcon size={20} weight="fill" data-flx="voice.mobile-video-viewer.play-icon" />
+										<PlayIcon size={remFromPx(20)} weight="fill" data-flx="voice.mobile-video-viewer.play-icon" />
 									)}
 								</button>
 								<div

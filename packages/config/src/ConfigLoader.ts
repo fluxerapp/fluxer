@@ -231,6 +231,7 @@ function defaultConfig(): MasterConfig {
 				api_key: '',
 				pull_zone_id: 0,
 			},
+			blocklist_feeds: {},
 			risk_integration: {
 				enabled: false,
 				ipinfo_api_key: '',

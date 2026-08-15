@@ -5,6 +5,7 @@ import {SettingsTabSection} from '@app/features/app/components/dialogs/shared/Se
 import Translation from '@app/features/messaging/state/Translation';
 import ReverseImageSearch from '@app/features/search/state/ReverseImageSearch';
 import SearchEngine from '@app/features/search/state/SearchEngine';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
@@ -326,7 +327,7 @@ const EngineSection: React.FC<EngineSectionProps> = observer(
 											data-flx="user.chat-settings-tab.search-engines-tab.engine-section.remove-button.remove-custom-engine"
 										>
 											<TrashIcon
-												size={16}
+												size={remFromPx(16)}
 												weight="fill"
 												data-flx="user.chat-settings-tab.search-engines-tab.engine-section.trash-icon"
 											/>
@@ -337,7 +338,7 @@ const EngineSection: React.FC<EngineSectionProps> = observer(
 						</SwitchGroup>
 					)}
 					<div
-						className={styles.addButtonContainer}
+						className={styles.newEngineButtonContainer}
 						data-flx="user.chat-settings-tab.search-engines-tab.engine-section.add-button-container"
 					>
 						<Button

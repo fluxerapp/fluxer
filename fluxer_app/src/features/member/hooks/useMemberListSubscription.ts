@@ -1,22 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
-import {
-	createMemberListSubscriptionSnapshot,
-	INITIAL_MEMBER_LIST_SUBSCRIPTION_RANGE,
-	type MemberListRanges,
-	type MemberListSubscriptionMachineEvent,
-	selectMemberListSubscriptionModel,
-	transitionMemberListSubscriptionSnapshot,
-} from '@app/features/member/state/MemberListSubscriptionStateMachine';
 import MemberSidebar from '@app/features/member/state/MemberSidebar';
 import {
-	areNormalizedMemberListRangesCovered,
+	areNormalizedMemberListRangesEqual,
+	type MemberListRanges,
+	type NormalizedMemberListRanges,
 	normalizeMemberListRanges,
 } from '@app/features/member/utils/MemberListRangeUtils';
-import Window from '@app/features/window/state/Window';
+import {Logger} from '@app/features/platform/utils/AppLogger';
+import {MEMBER_LIST_RANGE_MAX_SPAN} from '@fluxer/constants/src/GatewayConstants';
 import {reaction} from 'mobx';
-import {useCallback, useEffect, useRef, useSyncExternalStore} from 'react';
+import {useCallback, useEffect, useRef, useState} from 'react';
 
 interface UseMemberListSubscriptionOptions {
 	guildId: string;
@@ -25,21 +20,20 @@ interface UseMemberListSubscriptionOptions {
 }
 
 interface UseMemberListSubscriptionResult {
-	subscribe: (ranges: Array<[number, number]>) => void;
-	unsubscribe: () => void;
-	isPaused: boolean;
+	subscribe: (ranges: MemberListRanges) => void;
 }
 
-function subscribeToWindowFocus(onChange: () => void): () => void {
-	return reaction(
-		() => Window.focused,
-		() => onChange(),
-	);
+interface MemberListSubscriptionControl {
+	handleDesiredRanges: (changed: boolean) => void;
+	verifyHydration: () => void;
 }
 
-function getWindowFocusSnapshot(): boolean {
-	return Window.focused;
-}
+type MemberListSubscriptionPhase = 'offline' | 'hydrating' | 'settled' | 'freshSession';
+
+const INITIAL_MEMBER_LIST_SUBSCRIPTION_RANGES = normalizeMemberListRanges([[0, MEMBER_LIST_RANGE_MAX_SPAN]]);
+const MEMBER_LIST_RECOVERY_DELAY_MS = 3000;
+const MEMBER_LIST_MAX_RECOVERY_ATTEMPTS = 2;
+const logger = new Logger('useMemberListSubscription');
 
 let nextMemberListSubscriptionOwnerId = 0;
 
@@ -48,304 +42,280 @@ function createMemberListSubscriptionOwnerId(): string {
 	return `member-list-subscription:${nextMemberListSubscriptionOwnerId}`;
 }
 
+function resolveDesiredRanges(ranges: MemberListRanges): NormalizedMemberListRanges {
+	const normalizedRanges = normalizeMemberListRanges(ranges);
+	return normalizedRanges.length > 0 ? normalizedRanges : INITIAL_MEMBER_LIST_SUBSCRIPTION_RANGES;
+}
+
 export function useMemberListSubscription({
 	guildId,
 	channelId,
 	enabled,
 }: UseMemberListSubscriptionOptions): UseMemberListSubscriptionResult {
-	const isWindowFocused = useSyncExternalStore(subscribeToWindowFocus, getWindowFocusSnapshot, getWindowFocusSnapshot);
-	const isPaused = enabled && !isWindowFocused;
-	const subscriptionSnapshotRef = useRef(
-		createMemberListSubscriptionSnapshot({
-			enabled,
-			paused: enabled && !Window.focused,
-			desiredRanges: [INITIAL_MEMBER_LIST_SUBSCRIPTION_RANGE],
-		}),
-	);
-	const lastSessionVersionRef = useRef(MemberSidebar.sessionVersion);
-	const lastGatewayReadyRef = useRef(GatewayConnection.isReady);
-	const hadChannelListRef = useRef(MemberSidebar.getList(guildId, channelId) !== undefined);
-	const retryTimerRef = useRef<number | null>(null);
-	const ownerIdRef = useRef(createMemberListSubscriptionOwnerId());
-	const ownerId = ownerIdRef.current;
-	const readSubscriptionModel = useCallback(
-		() => selectMemberListSubscriptionModel(subscriptionSnapshotRef.current),
-		[],
-	);
-	const sendSubscriptionEvent = useCallback((event: MemberListSubscriptionMachineEvent) => {
-		subscriptionSnapshotRef.current = transitionMemberListSubscriptionSnapshot(subscriptionSnapshotRef.current, event);
-		return selectMemberListSubscriptionModel(subscriptionSnapshotRef.current);
-	}, []);
-	const clearRetryTimer = useCallback(() => {
-		if (retryTimerRef.current != null) {
-			window.clearTimeout(retryTimerRef.current);
-			retryTimerRef.current = null;
-		}
-	}, []);
-	const attemptSubscribe = useCallback(
-		(ranges: MemberListRanges, forceSubscriptionUpdate = false) => {
-			const normalizedRanges = normalizeMemberListRanges(ranges);
-			const subscriptionModel = readSubscriptionModel();
-			if (!enabled || !subscriptionModel.isActive) {
+	const [ownerId] = useState(createMemberListSubscriptionOwnerId);
+	const desiredRangesRef = useRef<NormalizedMemberListRanges>(INITIAL_MEMBER_LIST_SUBSCRIPTION_RANGES);
+	const controlRef = useRef<MemberListSubscriptionControl | null>(null);
+
+	const subscribe = useCallback(
+		(ranges: MemberListRanges) => {
+			if (!enabled) {
+				return;
+			}
+			const nextDesiredRanges = resolveDesiredRanges(ranges);
+			const desiredRangesChanged = !areNormalizedMemberListRangesEqual(desiredRangesRef.current, nextDesiredRanges);
+			desiredRangesRef.current = nextDesiredRanges;
+			const control = controlRef.current;
+			if (control != null) {
+				control.handleDesiredRanges(desiredRangesChanged);
+				if (!desiredRangesChanged) {
+					control.verifyHydration();
+				}
 				return;
 			}
 			if (!MemberSidebar.isActiveMemberListSubscriptionOwner(guildId, channelId, ownerId)) {
+				MemberSidebar.claimMemberListSubscription(guildId, channelId, ownerId);
+			}
+			MemberSidebar.subscribeToChannel(guildId, channelId, desiredRangesRef.current, ownerId);
+		},
+		[guildId, channelId, enabled, ownerId],
+	);
+
+	useEffect(() => {
+		desiredRangesRef.current = INITIAL_MEMBER_LIST_SUBSCRIPTION_RANGES;
+	}, [guildId, channelId]);
+
+	useEffect(() => {
+		if (!enabled) {
+			return;
+		}
+		let disposed = false;
+		let reconciliationScheduled = false;
+		let retryTimer: number | null = null;
+		let hydrationGeneration = 0;
+		let freshSessionResetId: string | null = null;
+		let recoveryAttemptCount = 0;
+		let phase: MemberListSubscriptionPhase = 'offline';
+
+		function clearRetryTimer(): void {
+			if (retryTimer == null) {
 				return;
 			}
-			const currentSubscribedRanges = MemberSidebar.getSubscribedRanges(guildId, channelId);
-			const localStoreCoversDesiredRange = areNormalizedMemberListRangesCovered(
-				normalizedRanges,
-				currentSubscribedRanges,
-			);
-			const lastSubscriptionCoversDesiredRange = areNormalizedMemberListRangesCovered(
-				normalizedRanges,
-				subscriptionModel.subscribedRanges,
-			);
+			window.clearTimeout(retryTimer);
+			retryTimer = null;
+		}
+
+		function gatewayAvailable(): boolean {
+			return GatewayConnection.isReady && GatewayConnection.isConnected && GatewayConnection.sessionId != null;
+		}
+
+		function ownsSubscription(): boolean {
+			return MemberSidebar.isActiveMemberListSubscriptionOwner(guildId, channelId, ownerId);
+		}
+
+		function hasHydratedDesiredRanges(): boolean {
+			return MemberSidebar.hasHydratedRanges(guildId, channelId, desiredRangesRef.current);
+		}
+
+		function beginRecoveryDemand(): void {
+			clearRetryTimer();
+			hydrationGeneration += 1;
+			recoveryAttemptCount = 0;
+		}
+
+		function replaceStaleSession(): void {
+			clearRetryTimer();
 			if (
-				!forceSubscriptionUpdate &&
-				subscriptionModel.isSubscribed &&
-				localStoreCoversDesiredRange &&
-				lastSubscriptionCoversDesiredRange
+				disposed ||
+				recoveryAttemptCount >= MEMBER_LIST_MAX_RECOVERY_ATTEMPTS ||
+				phase === 'freshSession' ||
+				!ownsSubscription()
 			) {
 				return;
 			}
-			MemberSidebar.subscribeToChannel(guildId, channelId, normalizedRanges, forceSubscriptionUpdate, ownerId);
-			sendSubscriptionEvent({
-				type: 'memberListSubscription.subscriptionApplied',
-				ranges: normalizedRanges,
-			});
-		},
-		[guildId, channelId, enabled, ownerId, readSubscriptionModel, sendSubscriptionEvent],
-	);
-	const flushPendingSubscribe = useCallback(() => {
-		const {isActive, pendingRanges} = readSubscriptionModel();
-		if (!isActive) {
-			return;
-		}
-		if (!pendingRanges) {
-			return;
-		}
-		sendSubscriptionEvent({type: 'memberListSubscription.pendingFlushed'});
-		attemptSubscribe(pendingRanges);
-	}, [attemptSubscribe, readSubscriptionModel, sendSubscriptionEvent]);
-	const queueSubscribe = useCallback(
-		(ranges: MemberListRanges) => {
-			const normalizedRanges = normalizeMemberListRanges(ranges);
-			const model = sendSubscriptionEvent({
-				type: 'memberListSubscription.rangesRequested',
-				ranges: normalizedRanges,
-			});
-			if (!model.isActive) {
+			const socket = GatewayConnection.socket;
+			if (!gatewayAvailable() || socket == null) {
+				phase = 'offline';
 				return;
 			}
-			flushPendingSubscribe();
-		},
-		[flushPendingSubscribe, sendSubscriptionEvent],
-	);
-	const subscribe = useCallback(
-		(ranges: MemberListRanges) => {
-			queueSubscribe(ranges);
-		},
-		[queueSubscribe],
-	);
-	const clearSubscription = useCallback(
-		(updateGateway: boolean) => {
-			clearRetryTimer();
-			const wasSubscribed = readSubscriptionModel().isSubscribed;
-			const ownsSubscription = MemberSidebar.isActiveMemberListSubscriptionOwner(guildId, channelId, ownerId);
-			const hasLocalSubscription = ownsSubscription && MemberSidebar.getSubscribedRanges(guildId, channelId).length > 0;
-			sendSubscriptionEvent({type: 'memberListSubscription.subscriptionCleared'});
-			if (wasSubscribed || hasLocalSubscription) {
-				if (updateGateway) {
-					MemberSidebar.unsubscribeFromChannel(guildId, channelId, true, ownerId);
-				} else {
-					MemberSidebar.releaseMemberListSubscription(guildId, channelId, ownerId);
-				}
+			freshSessionResetId = GatewayConnection.sessionId;
+			if (freshSessionResetId == null) {
+				phase = 'offline';
+				return;
 			}
-		},
-		[guildId, channelId, ownerId, clearRetryTimer, readSubscriptionModel, sendSubscriptionEvent],
-	);
-	const unsubscribe = useCallback(() => {
-		clearSubscription(true);
-	}, [clearSubscription]);
-	const releaseSubscription = useCallback(() => {
-		clearSubscription(false);
-	}, [clearSubscription]);
-	const pauseSubscription = useCallback(() => {
-		clearRetryTimer();
-		const model = readSubscriptionModel();
-		const ownsSubscription = MemberSidebar.isActiveMemberListSubscriptionOwner(guildId, channelId, ownerId);
-		const hasLocalSubscription = ownsSubscription && MemberSidebar.getSubscribedRanges(guildId, channelId).length > 0;
-		sendSubscriptionEvent({type: 'memberListSubscription.paused'});
-		if (model.isSubscribed || hasLocalSubscription) {
-			MemberSidebar.releaseMemberListSubscription(guildId, channelId, ownerId);
+			recoveryAttemptCount += 1;
+			phase = 'freshSession';
+			logger.warn('Member list hydration stalled; replacing the stale Gateway session', {guildId, channelId});
+			socket.reset(true);
 		}
-	}, [guildId, channelId, ownerId, clearRetryTimer, readSubscriptionModel, sendSubscriptionEvent]);
-	const resubscribe = useCallback(() => {
-		const {desiredRanges} = readSubscriptionModel();
-		if (desiredRanges.length > 0) {
-			attemptSubscribe(desiredRanges, true);
+
+		function scheduleSessionReplacement(): void {
+			if (recoveryAttemptCount >= MEMBER_LIST_MAX_RECOVERY_ATTEMPTS || retryTimer != null) {
+				return;
+			}
+			const scheduledGeneration = hydrationGeneration;
+			retryTimer = window.setTimeout(() => {
+				retryTimer = null;
+				if (scheduledGeneration !== hydrationGeneration) {
+					return;
+				}
+				replaceStaleSession();
+			}, MEMBER_LIST_RECOVERY_DELAY_MS);
 		}
-	}, [attemptSubscribe, readSubscriptionModel]);
-	useEffect(() => {
-		sendSubscriptionEvent({
-			type: 'memberListSubscription.reset',
-			desiredRanges: [INITIAL_MEMBER_LIST_SUBSCRIPTION_RANGE],
-		});
-		lastSessionVersionRef.current = MemberSidebar.sessionVersion;
-		lastGatewayReadyRef.current = GatewayConnection.isReady;
-		hadChannelListRef.current = MemberSidebar.getList(guildId, channelId) !== undefined;
-		clearRetryTimer();
-	}, [guildId, channelId, clearRetryTimer, sendSubscriptionEvent]);
-	useEffect(() => {
-		if (!enabled) {
-			unsubscribe();
-			sendSubscriptionEvent({type: 'memberListSubscription.disabled'});
-			return;
+
+		function verifyHydration(): void {
+			if (disposed || !ownsSubscription()) {
+				return;
+			}
+			if (phase === 'freshSession') {
+				return;
+			}
+			if (hasHydratedDesiredRanges()) {
+				clearRetryTimer();
+				recoveryAttemptCount = 0;
+				freshSessionResetId = null;
+				phase = 'settled';
+				return;
+			}
+			if (phase === 'settled' || phase === 'hydrating') {
+				phase = 'hydrating';
+				scheduleSessionReplacement();
+			}
 		}
-		sendSubscriptionEvent({type: 'memberListSubscription.enabled'});
+
+		function sendDesiredRequest(): void {
+			clearRetryTimer();
+			if (disposed || !gatewayAvailable()) {
+				phase = 'offline';
+				return;
+			}
+			if (!ownsSubscription()) {
+				MemberSidebar.claimMemberListSubscription(guildId, channelId, ownerId);
+			}
+			if (!MemberSidebar.retryChannelSubscription(guildId, channelId, desiredRangesRef.current, ownerId)) {
+				phase = 'offline';
+				return;
+			}
+			phase = 'hydrating';
+			verifyHydration();
+		}
+
+		function handleDesiredRanges(changed: boolean): void {
+			if (disposed) {
+				return;
+			}
+			const wasOwner = ownsSubscription();
+			if (!wasOwner) {
+				MemberSidebar.claimMemberListSubscription(guildId, channelId, ownerId);
+			}
+			const reclaimedOwnership = !wasOwner && ownsSubscription();
+			if (changed || reclaimedOwnership) {
+				beginRecoveryDemand();
+			}
+			if (!gatewayAvailable()) {
+				phase = 'offline';
+				return;
+			}
+			if (!ownsSubscription()) {
+				return;
+			}
+			MemberSidebar.updateChannelSubscriptionRangesLocally(guildId, channelId, desiredRangesRef.current, ownerId);
+			if (!changed && !reclaimedOwnership) {
+				return;
+			}
+			if (phase === 'freshSession') {
+				return;
+			}
+			sendDesiredRequest();
+		}
+
+		function reconcileSubscription(): void {
+			if (disposed || !gatewayAvailable()) {
+				return;
+			}
+			if (
+				phase === 'freshSession' &&
+				freshSessionResetId != null &&
+				GatewayConnection.sessionId === freshSessionResetId
+			) {
+				return;
+			}
+			freshSessionResetId = null;
+			if (!ownsSubscription()) {
+				if (MemberSidebar.hasActiveMemberListSubscription()) {
+					return;
+				}
+				MemberSidebar.claimMemberListSubscription(guildId, channelId, ownerId);
+			}
+			sendDesiredRequest();
+		}
+
+		function scheduleReconciliation(): void {
+			if (disposed || reconciliationScheduled) {
+				return;
+			}
+			reconciliationScheduled = true;
+			queueMicrotask(() => {
+				try {
+					reconcileSubscription();
+				} finally {
+					reconciliationScheduled = false;
+				}
+			});
+		}
+
+		const control: MemberListSubscriptionControl = {handleDesiredRanges, verifyHydration};
+		controlRef.current = control;
 		const disposeSessionReaction = reaction(
 			() => MemberSidebar.sessionVersion,
-			(newVersion) => {
-				if (newVersion !== lastSessionVersionRef.current) {
-					lastSessionVersionRef.current = newVersion;
-					sendSubscriptionEvent({type: 'memberListSubscription.subscriptionCleared'});
-					if (readSubscriptionModel().isActive) {
-						MemberSidebar.claimMemberListSubscription(guildId, channelId, ownerId);
-						resubscribe();
+			() => scheduleReconciliation(),
+		);
+		const disposeSubscriptionGenerationReaction = reaction(
+			() => MemberSidebar.memberListSubscriptionGeneration,
+			() => scheduleReconciliation(),
+		);
+		const disposeGatewayAvailabilityReaction = reaction(
+			() => GatewayConnection.isReady && GatewayConnection.isConnected,
+			(isAvailable) => {
+				if (!isAvailable) {
+					clearRetryTimer();
+					MemberSidebar.handleGatewayDisconnected();
+					if (phase !== 'freshSession') {
+						phase = 'offline';
 					}
+					return;
+				}
+				scheduleReconciliation();
+			},
+		);
+		const disposeListPresenceReaction = reaction(
+			() => MemberSidebar.getList(guildId, channelId) != null,
+			(hasList) => {
+				if (!hasList) {
+					scheduleReconciliation();
 				}
 			},
 		);
-		const disposeGatewayReadyReaction = reaction(
-			() => GatewayConnection.isReady,
-			(isReady) => {
-				const wasReady = lastGatewayReadyRef.current;
-				lastGatewayReadyRef.current = isReady;
-				if (!enabled) {
-					return;
-				}
-				if (isReady && !wasReady && readSubscriptionModel().isActive) {
-					MemberSidebar.claimMemberListSubscription(guildId, channelId, ownerId);
-					attemptSubscribe(readSubscriptionModel().desiredRanges, true);
-				}
-			},
-		);
-		const disposeGuildListReaction = reaction(
-			() => MemberSidebar.getList(guildId, channelId) !== undefined,
-			(hasChannelList) => {
-				const hadChannelList = hadChannelListRef.current;
-				hadChannelListRef.current = hasChannelList;
-				if (hadChannelList && !hasChannelList) {
-					sendSubscriptionEvent({type: 'memberListSubscription.subscriptionCleared'});
-				}
-				if (!hasChannelList && enabled && readSubscriptionModel().isActive) {
-					MemberSidebar.claimMemberListSubscription(guildId, channelId, ownerId);
-					resubscribe();
-				}
-			},
-		);
-		return () => {
-			disposeSessionReaction();
-			disposeGatewayReadyReaction();
-			disposeGuildListReaction();
-		};
-	}, [
-		guildId,
-		channelId,
-		enabled,
-		resubscribe,
-		unsubscribe,
-		attemptSubscribe,
-		ownerId,
-		readSubscriptionModel,
-		sendSubscriptionEvent,
-	]);
-	useEffect(() => {
-		return () => {
-			releaseSubscription();
-		};
-	}, [guildId, channelId, releaseSubscription]);
-	useEffect(() => {
-		if (!enabled) {
-			return;
-		}
-		if (isWindowFocused) {
-			MemberSidebar.claimMemberListSubscription(guildId, channelId, ownerId);
-			sendSubscriptionEvent({type: 'memberListSubscription.resumed'});
-			resubscribe();
-			return;
-		}
-		pauseSubscription();
-	}, [guildId, channelId, enabled, isWindowFocused, ownerId, pauseSubscription, resubscribe, sendSubscriptionEvent]);
-	useEffect(() => {
-		if (!enabled || !isWindowFocused) {
-			return;
-		}
-		const scheduleRetry = () => {
-			clearRetryTimer();
-			const {retryDelayMs} = readSubscriptionModel();
-			retryTimerRef.current = window.setTimeout(() => {
-				retryTimerRef.current = null;
-				if (!readSubscriptionModel().isActive) {
-					return;
-				}
-				if (!MemberSidebar.isActiveMemberListSubscriptionOwner(guildId, channelId, ownerId)) {
-					return;
-				}
-				const list = MemberSidebar.getList(guildId, channelId);
-				if (list && list.items.size > 0) {
-					sendSubscriptionEvent({type: 'memberListSubscription.retrySucceeded'});
-					return;
-				}
-				attemptSubscribe(readSubscriptionModel().desiredRanges, true);
-				sendSubscriptionEvent({type: 'memberListSubscription.retryBackedOff'});
-				scheduleRetry();
-			}, retryDelayMs);
-		};
-		const disposeRetryReaction = reaction(
-			() => {
-				const list = MemberSidebar.getList(guildId, channelId);
-				return list != null && list.items.size > 0;
-			},
-			(hasData) => {
-				if (hasData) {
-					clearRetryTimer();
-					sendSubscriptionEvent({type: 'memberListSubscription.retrySucceeded'});
-				} else if (MemberSidebar.isActiveMemberListSubscriptionOwner(guildId, channelId, ownerId)) {
-					scheduleRetry();
-				} else {
-					clearRetryTimer();
-				}
-			},
+		const disposeHydrationReaction = reaction(
+			() => MemberSidebar.hasHydratedRanges(guildId, channelId, desiredRangesRef.current),
+			() => verifyHydration(),
 			{fireImmediately: true},
 		);
+		scheduleReconciliation();
+
 		return () => {
-			disposeRetryReaction();
+			disposed = true;
+			if (controlRef.current === control) {
+				controlRef.current = null;
+			}
 			clearRetryTimer();
+			disposeSessionReaction();
+			disposeSubscriptionGenerationReaction();
+			disposeGatewayAvailabilityReaction();
+			disposeListPresenceReaction();
+			disposeHydrationReaction();
+			MemberSidebar.releaseMemberListSubscription(guildId, channelId, ownerId);
 		};
-	}, [
-		guildId,
-		channelId,
-		enabled,
-		isWindowFocused,
-		attemptSubscribe,
-		clearRetryTimer,
-		ownerId,
-		readSubscriptionModel,
-		sendSubscriptionEvent,
-	]);
-	useEffect(() => {
-		const {isActive, isSubscribed, desiredRanges} = readSubscriptionModel();
-		if (
-			enabled &&
-			isWindowFocused &&
-			isActive &&
-			!isSubscribed &&
-			MemberSidebar.isActiveMemberListSubscriptionOwner(guildId, channelId, ownerId)
-		) {
-			queueSubscribe(desiredRanges);
-		}
-	}, [guildId, channelId, enabled, isWindowFocused, ownerId, queueSubscribe, readSubscriptionModel]);
-	return {subscribe, unsubscribe, isPaused};
+	}, [guildId, channelId, enabled, ownerId]);
+
+	return {subscribe};
 }

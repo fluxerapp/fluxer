@@ -4,6 +4,7 @@ import {AutocompleteOption} from '@app/features/channel/components/message_searc
 import styles from '@app/features/channel/components/message_search_bar/MessageSearchBar.module.css';
 import type {Channel} from '@app/features/channel/models/Channel';
 import * as ChannelUtils from '@app/features/channel/utils/ChannelUtils';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {MagnifyingGlassIcon} from '@phosphor-icons/react';
@@ -41,7 +42,7 @@ export const ChannelsSection: React.FC<ChannelsSectionProps> = observer(
 					>
 						<MagnifyingGlassIcon
 							weight="regular"
-							size={14}
+							size={remFromPx(14)}
 							data-flx="channel.message-search-bar.channels-section.magnifying-glass-icon"
 						/>
 						{i18n._(CHANNELS_DESCRIPTOR)}

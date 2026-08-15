@@ -56,8 +56,8 @@
 .skipLink:focus-visible {
 	position: absolute;
 	z-index: var(--z-index-toast);
-	inset-block-start: calc(0.5rem + var(--skip-link-titlebar-offset, 0));
-	inset-inline-start: calc(0.5rem + var(--skip-link-traffic-lights-offset, 0));
+	inset-block-start: calc(0.5rem + var(--skip-link-titlebar-offset, 0px));
+	inset-inline-start: calc(0.5rem + var(--skip-link-traffic-lights-offset, 0px));
 	width: auto;
 	height: auto;
 	margin: 0;

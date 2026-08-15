@@ -2,6 +2,7 @@
 
 .container {
 	position: absolute;
-	right: 0.5rem;
-	bottom: 0.5rem;
+	right: var(--composer-box-padding-inline, 0px);
+	bottom: calc(100% + var(--composer-status-safe-gap, 0.5rem));
+	z-index: 4;
 }

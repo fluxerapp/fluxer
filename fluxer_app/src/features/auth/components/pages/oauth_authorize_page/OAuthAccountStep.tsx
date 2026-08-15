@@ -5,6 +5,7 @@ import styles from '@app/features/auth/components/pages/OAuthAuthorizePage.modul
 import {useAccountSwitcherLogic} from '@app/features/auth/utils/AccountSwitcherModalUtils';
 import {CANCEL_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import type {Account} from '@app/features/platform/state/AuthSession';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -104,7 +105,9 @@ export const OAuthAccountStep: React.FC<OAuthAccountStepProps> = observer(({clie
 			<Button
 				type="button"
 				variant="secondary"
-				leftIcon={<PlusIcon size={18} weight="bold" data-flx="auth.o-auth-authorize-page.account-step.plus-icon" />}
+				leftIcon={
+					<PlusIcon size={remFromPx(18)} weight="bold" data-flx="auth.o-auth-authorize-page.account-step.plus-icon" />
+				}
 				onClick={handleAddAccount}
 				disabled={isBusy}
 				fitContainer

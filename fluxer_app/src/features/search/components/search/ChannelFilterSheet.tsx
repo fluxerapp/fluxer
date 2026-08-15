@@ -5,6 +5,7 @@ import Channels from '@app/features/channel/state/Channels';
 import * as ChannelUtils from '@app/features/channel/utils/ChannelUtils';
 import {PASSWORD_MANAGER_IGNORE_ATTRIBUTES} from '@app/features/platform/utils/PasswordManagerAutocomplete';
 import styles from '@app/features/search/components/search/ChannelFilterSheet.module.css';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {BottomSheet} from '@app/features/ui/bottom_sheet/BottomSheet';
 import {Button} from '@app/features/ui/button/Button';
 import {Scroller} from '@app/features/ui/components/Scroller';
@@ -78,7 +79,7 @@ export const ChannelFilterSheet: React.FC<ChannelFilterSheetProps> = observer(
 							data-flx="search.search.channel-filter-sheet.search-input-wrapper"
 						>
 							<MagnifyingGlassIcon
-								size={20}
+								size={remFromPx(20)}
 								className={styles.searchIcon}
 								weight="regular"
 								data-flx="search.search.channel-filter-sheet.search-icon"
@@ -102,7 +103,7 @@ export const ChannelFilterSheet: React.FC<ChannelFilterSheetProps> = observer(
 									onClick={() => setSearchTerm('')}
 									data-flx="search.search.channel-filter-sheet.clear-button.set-search-term"
 								>
-									<XIcon size={18} weight="bold" data-flx="search.search.channel-filter-sheet.x-icon" />
+									<XIcon size={remFromPx(18)} weight="bold" data-flx="search.search.channel-filter-sheet.x-icon" />
 								</button>
 							)}
 						</div>
@@ -147,7 +148,7 @@ export const ChannelFilterSheet: React.FC<ChannelFilterSheetProps> = observer(
 											</div>
 											{isSelected && (
 												<CheckIcon
-													size={20}
+													size={remFromPx(20)}
 													className={styles.checkIcon}
 													weight="bold"
 													data-flx="search.search.channel-filter-sheet.check-icon"

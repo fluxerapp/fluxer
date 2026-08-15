@@ -1,10 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Routes} from '@app/app/Routes';
+import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {useActiveNagbars, useNagbarConditions} from '@app/features/app/components/layout/app_layout/AppLayoutHooks';
 import {NagbarContainer} from '@app/features/app/components/layout/app_layout/NagbarContainer';
 import {TopNagbarContext} from '@app/features/app/components/layout/app_layout/TopNagbarContext';
 import styles from '@app/features/app/components/layout/GuildsLayout.module.css';
+import {
+	DM_LIST_REMOVAL_DELAY_MS,
+	DMListAnimatedRow,
+	type DMListRow,
+	useFrameBatchedDMListRows,
+} from '@app/features/app/components/layout/guilds_layout/GuildListDMAnimation';
 import {OutlineFrame} from '@app/features/app/components/layout/OutlineFrame';
 import {ScrollIndicatorOverlay} from '@app/features/app/components/layout/ScrollIndicatorOverlay';
 import {AddGuildButton} from '@app/features/app/components/layout/sidebar_nav/AddGuildButton';
@@ -13,7 +20,6 @@ import {DownloadButton} from '@app/features/app/components/layout/sidebar_nav/Do
 import {FavoritesButton} from '@app/features/app/components/layout/sidebar_nav/FavoritesButton';
 import {FluxerButton} from '@app/features/app/components/layout/sidebar_nav/FluxerButton';
 import {GuildFolderItem} from '@app/features/app/components/layout/sidebar_nav/GuildFolderItem';
-import {DMListItem} from '@app/features/app/components/layout/sidebar_nav/GuildListDMItem';
 import {GuildListItem} from '@app/features/app/components/layout/sidebar_nav/GuildListItem';
 import {HelpButton} from '@app/features/app/components/layout/sidebar_nav/HelpButton';
 import {DND_TYPES, type GuildDragItem, type GuildDropResult} from '@app/features/app/components/layout/types/DndTypes';
@@ -38,11 +44,15 @@ import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
 import ReadStates from '@app/features/read_state/state/ReadStates';
 import * as DimensionCommands from '@app/features/ui/commands/DimensionCommands';
 import {Scroller, type ScrollerHandle} from '@app/features/ui/components/Scroller';
+import {useHoverDeferredOrderedItems} from '@app/features/ui/hooks/UseHoverDeferredOrderedItems';
+import {useDragAutoScroll} from '@app/features/ui/hooks/useDragAutoScroll';
+import {useListScrollAnchor} from '@app/features/ui/hooks/useScrollAnchor';
 import Dimension from '@app/features/ui/state/Dimension';
 import KeyboardMode from '@app/features/ui/state/KeyboardMode';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import Nagbar from '@app/features/ui/state/Nagbar';
 import SidebarPreferences from '@app/features/ui/state/SidebarPreferences';
+import SidebarWidth from '@app/features/ui/state/SidebarWidth';
 import WhatsNew from '@app/features/ui/state/WhatsNew';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import * as UserSettingsCommands from '@app/features/user/commands/UserSettingsCommands';
@@ -60,7 +70,7 @@ import {ExclamationMarkIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import {useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState} from 'react';
 import {useDrop} from 'react-dnd';
 
 const NEW_DESCRIPTOR = msg({
@@ -71,12 +81,26 @@ const NEW_DESCRIPTOR = msg({
 const isSelectedPath = (pathname: string, path: string) => {
 	return pathname.startsWith(path);
 };
-const DM_LIST_REMOVAL_DELAY_MS = 750;
 const UNAVAILABLE_INDICATOR_DEBOUNCE_MS = 1500;
 const GUILD_LIST_FOCUSABLE_SELECTOR = '[data-guild-list-focus-item="true"]';
 const WHEEL_LINE_HEIGHT_PX = 16;
 const DOM_DELTA_LINE = 1;
 const DOM_DELTA_PAGE = 2;
+const getChannelId = (channel: Channel): string => channel.id;
+const EMPTY_CHANNELS: ReadonlyArray<Channel> = Object.freeze([]);
+
+interface GuildsLayoutSidebarStyle extends React.CSSProperties {
+	'--layout-sidebar-width': string;
+}
+
+function resolveGuildsLayoutSidebarStyle(
+	mobileEnabled: boolean,
+	sidebarWidth: string | null,
+): React.CSSProperties | undefined {
+	if (mobileEnabled || sidebarWidth == null || sidebarWidth === '') return undefined;
+	const style: GuildsLayoutSidebarStyle = {'--layout-sidebar-width': sidebarWidth};
+	return style;
+}
 
 function getResizeObserverEntryBlockSize(entry: ResizeObserverEntry): number {
 	const borderBoxSize = entry.borderBoxSize;
@@ -84,8 +108,7 @@ function getResizeObserverEntryBlockSize(entry: ResizeObserverEntry): number {
 	return firstBorderBoxSize?.blockSize ?? entry.contentRect.height;
 }
 
-const getUnreadDMChannels = (): Array<Channel> => {
-	const dmChannels = Channels.dmChannels;
+const getUnreadDMChannels = (dmChannels: ReadonlyArray<Channel>): Array<Channel> => {
 	const out: Array<Channel> = [];
 	for (let i = 0; i < dmChannels.length; i++) {
 		if (ReadStates.hasUnread(dmChannels[i].id)) out.push(dmChannels[i]);
@@ -93,11 +116,108 @@ const getUnreadDMChannels = (): Array<Channel> => {
 	return out;
 };
 
+interface DMChannelVisibilityControllerState {
+	readonly removalDelayMs: number;
+	readonly removalTimers: React.MutableRefObject<Map<string, number>>;
+	readonly orderedUnreadChannels: ReadonlyArray<Channel>;
+	readonly setVisibleChannels: React.Dispatch<React.SetStateAction<ReadonlyArray<Channel>>>;
+	readonly unreadChannels: ReadonlyArray<Channel>;
+	readonly unreadIdsRef: React.MutableRefObject<ReadonlySet<string>>;
+}
+
+interface ProjectVisibleDMChannelsRequest {
+	readonly currentChannels: ReadonlyArray<Channel>;
+	readonly unreadIds: ReadonlySet<string>;
+}
+
+class DMChannelVisibilityController {
+	private readonly removalDelayMs: number;
+	private readonly removalTimers: React.MutableRefObject<Map<string, number>>;
+	private readonly orderedUnreadChannels: ReadonlyArray<Channel>;
+	private readonly setVisibleChannels: React.Dispatch<React.SetStateAction<ReadonlyArray<Channel>>>;
+	private readonly unreadChannels: ReadonlyArray<Channel>;
+	private readonly unreadIdsRef: React.MutableRefObject<ReadonlySet<string>>;
+
+	public constructor({
+		removalDelayMs,
+		removalTimers,
+		orderedUnreadChannels,
+		setVisibleChannels,
+		unreadChannels,
+		unreadIdsRef,
+	}: DMChannelVisibilityControllerState) {
+		this.removalDelayMs = removalDelayMs;
+		this.removalTimers = removalTimers;
+		this.orderedUnreadChannels = orderedUnreadChannels;
+		this.setVisibleChannels = setVisibleChannels;
+		this.unreadChannels = unreadChannels;
+		this.unreadIdsRef = unreadIdsRef;
+	}
+
+	public synchronize(): void {
+		this.setVisibleChannels((currentChannels) =>
+			this.projectVisibleChannels({currentChannels, unreadIds: this.unreadIdsRef.current}),
+		);
+		for (const channel of this.unreadChannels) this.cancelRemoval(channel.id);
+	}
+
+	private projectVisibleChannels({currentChannels, unreadIds}: ProjectVisibleDMChannelsRequest): Array<Channel> {
+		const visibleChannelIds = new Set(this.orderedUnreadChannels.map(getChannelId));
+		const leavingChannels = currentChannels.filter((channel) => {
+			if (unreadIds.has(channel.id) || visibleChannelIds.has(channel.id)) return false;
+			visibleChannelIds.add(channel.id);
+			return true;
+		});
+		for (const channel of leavingChannels) this.scheduleRemoval(channel.id);
+		return [...this.orderedUnreadChannels, ...leavingChannels];
+	}
+
+	private scheduleRemoval(channelId: string): void {
+		if (this.removalTimers.current.has(channelId)) return;
+		const timer = window.setTimeout(() => this.removeChannel(channelId), this.removalDelayMs);
+		this.removalTimers.current.set(channelId, timer);
+	}
+
+	private removeChannel(channelId: string): void {
+		this.cancelRemoval(channelId);
+		if (this.unreadIdsRef.current.has(channelId)) return;
+		this.setVisibleChannels((channels) => channels.filter((channel) => channel.id !== channelId));
+	}
+
+	public completeRemoval(channelId: string): void {
+		this.removeChannel(channelId);
+	}
+
+	private cancelRemoval(channelId: string): void {
+		const timer = this.removalTimers.current.get(channelId);
+		if (timer == null) return;
+		window.clearTimeout(timer);
+		this.removalTimers.current.delete(channelId);
+	}
+}
+
+interface ClearHoveredChannelRequest {
+	readonly currentChannelId: string | null;
+	readonly endedChannelId: string;
+}
+
+function clearHoveredChannelId({currentChannelId, endedChannelId}: ClearHoveredChannelRequest): string | null {
+	if (currentChannelId === endedChannelId) return null;
+	return currentChannelId;
+}
+
 function getOrganizedItemKey(item: OrganizedItem): string {
 	if (item.type === 'folder') {
 		return `folder-${item.folder.id}`;
 	}
 	return item.guild.id;
+}
+
+function getGuildListAnchorKeyForItem(item: OrganizedItem): string {
+	if (item.type === 'folder') {
+		return `folder-${item.folder.id}`;
+	}
+	return `guild-${item.guild.id}`;
 }
 
 function buildGuildNavigationIndexMap(organizedItems: ReadonlyArray<OrganizedItem>): Map<string, number> {
@@ -138,10 +258,12 @@ function getWheelScrollDeltaY(event: WheelEvent | React.WheelEvent<HTMLDivElemen
 }
 
 function isWheelEventOverElement(event: WheelEvent, element: HTMLElement): boolean {
-	if (event.target instanceof Node && element.contains(event.target)) {
+	const ownerDocument = element.ownerDocument;
+	const ownerWindow = ownerDocument.defaultView;
+	if (ownerWindow != null && event.target instanceof ownerWindow.Node && element.contains(event.target)) {
 		return true;
 	}
-	const pointElement = document.elementFromPoint(event.clientX, event.clientY);
+	const pointElement = ownerDocument.elementFromPoint(event.clientX, event.clientY);
 	return pointElement !== null && element.contains(pointElement);
 }
 
@@ -318,11 +440,26 @@ const GuildList = observer(() => {
 	const guildNavigationIndexes = useMemo(() => buildGuildNavigationIndexMap(organizedItems), [organizedItems]);
 	const unavailableGuilds = GuildAvailability.unavailableGuilds;
 	const unavailableCount = unavailableGuilds.size;
-	const unreadDMChannels = getUnreadDMChannels();
-	let unreadDMChannelIds = '';
-	for (let i = 0; i < unreadDMChannels.length; i++) {
-		unreadDMChannelIds += i === 0 ? unreadDMChannels[i].id : `,${unreadDMChannels[i].id}`;
-	}
+	const readVersion = ReadStates.version;
+	const dmChannels = Channels.dmChannels;
+	const unreadDMChannels = useMemo(() => getUnreadDMChannels(dmChannels), [dmChannels, readVersion]);
+	const unreadDMChannelIdSet = useMemo(() => {
+		const ids = new Set<string>();
+		for (let index = 0; index < unreadDMChannels.length; index++) {
+			ids.add(unreadDMChannels[index].id);
+		}
+		return ids;
+	}, [unreadDMChannels]);
+	const unreadDMChannelIdSetRef = useRef<ReadonlySet<string>>(unreadDMChannelIdSet);
+	unreadDMChannelIdSetRef.current = unreadDMChannelIdSet;
+	const unreadDMChannelIds = useMemo(() => unreadDMChannels.map(getChannelId).join(','), [unreadDMChannels]);
+	const [hoveredInlineDMChannelId, setHoveredInlineDMChannelId] = useState<string | null>(null);
+	const orderedUnreadDMChannels = useHoverDeferredOrderedItems({
+		items: unreadDMChannels,
+		getKey: getChannelId,
+		isHoveringDynamicItem: hoveredInlineDMChannelId != null,
+		releaseToken: readVersion,
+	});
 	const scrollRef = useRef<ScrollerHandle>(null);
 	const pendingScrollTopRef = useRef<number | null>(null);
 	const scrollPersistRafRef = useRef<number | null>(null);
@@ -332,12 +469,12 @@ const GuildList = observer(() => {
 	const unavailableIndicatorHideTimer = useRef<NodeJS.Timeout | null>(null);
 	const hasUnavailableGuilds = visibleUnavailableCount > 0;
 	const guildReadVersion = GuildReadState.version;
-	const readVersion = ReadStates.version;
 	const guildIndicatorDependencies = useMemo(
 		() => [guilds.length, guildReadVersion, readVersion, unreadDMChannelIds],
 		[guilds.length, guildReadVersion, readVersion, unreadDMChannelIds],
 	);
 	const getGuildScrollContainer = useCallback(() => scrollRef.current?.getScrollerNode() ?? null, []);
+	useDragAutoScroll({active: isDragging, getScrollElement: getGuildScrollContainer});
 	const scrollGuildListByWheel = useCallback((event: WheelEvent | React.WheelEvent<HTMLDivElement>) => {
 		const scrollNode = scrollRef.current?.getScrollerNode();
 		if (!scrollNode) return false;
@@ -351,7 +488,7 @@ const GuildList = observer(() => {
 		scrollNode.scrollTop = nextScrollTop;
 		return true;
 	}, []);
-	const [visibleDMChannels, setVisibleDMChannels] = useState(unreadDMChannels);
+	const [visibleDMChannels, setVisibleDMChannels] = useState<ReadonlyArray<Channel>>(orderedUnreadDMChannels);
 	const directMessagesDisabled = RuntimeConfig.directMessagesDisabled;
 	let pinnedCallChannel: Channel | null = null;
 	if (!directMessagesDisabled && MediaEngine.connected) {
@@ -368,19 +505,76 @@ const GuildList = observer(() => {
 		}
 	}
 	const inlineDmsCollapsed = SidebarPreferences.inlineDmsCollapsed;
-	const baseDMChannels = inlineDmsCollapsed || directMessagesDisabled ? [] : visibleDMChannels;
-	const filteredDMChannels = pinnedCallChannel
-		? baseDMChannels.filter((channel) => channel.id !== pinnedCallChannel.id)
-		: baseDMChannels;
-	const hasVisibleDMChannels = filteredDMChannels.length > 0 || Boolean(pinnedCallChannel);
+	let baseDMChannels: ReadonlyArray<Channel>;
+	if (inlineDmsCollapsed || directMessagesDisabled) {
+		baseDMChannels = EMPTY_CHANNELS;
+	} else {
+		baseDMChannels = visibleDMChannels;
+	}
+	const filteredDMChannels = useMemo(() => {
+		if (pinnedCallChannel != null) {
+			return baseDMChannels.filter((channel) => channel.id !== pinnedCallChannel.id);
+		}
+		return baseDMChannels;
+	}, [baseDMChannels, pinnedCallChannel]);
+	const targetDMListRows = useMemo<Array<DMListRow>>(() => {
+		const rows: Array<DMListRow> = [];
+		if (pinnedCallChannel != null) {
+			rows.push({type: 'channel', channel: pinnedCallChannel, voiceCallActive: true, pendingRemoval: false});
+		}
+		for (let index = 0; index < filteredDMChannels.length; index++) {
+			const channel = filteredDMChannels[index];
+			rows.push({
+				type: 'channel',
+				channel,
+				voiceCallActive: false,
+				pendingRemoval: !unreadDMChannelIdSet.has(channel.id),
+			});
+		}
+		return rows;
+	}, [filteredDMChannels, pinnedCallChannel, unreadDMChannelIdSet]);
+	const visibleDMListRows = useFrameBatchedDMListRows(targetDMListRows);
+	const {
+		getAnchorRef: getGuildListAnchorRef,
+		handleResize: handleGuildListAnchorResize,
+		handleScroll: handleGuildListAnchorScroll,
+		stabilize: stabilizeGuildListAnchor,
+	} = useListScrollAnchor({scrollerRef: scrollRef});
+	const hasVisibleDMChannels = targetDMListRows.length > 0 || visibleDMListRows.length > 0;
 	const shouldShowTopDivider = (guilds.length > 0 || hasUnavailableGuilds) && !hasVisibleDMChannels;
 	const shouldShowEmptyStateDivider = !hasVisibleDMChannels && !hasUnavailableGuilds && guilds.length === 0;
 	const shouldRenderGuildListItems = hasUnavailableGuilds || organizedItems.length > 0;
+	useLayoutEffect(() => {
+		stabilizeGuildListAnchor();
+	}, [
+		hasUnavailableGuilds,
+		hasVisibleDMChannels,
+		organizedItems,
+		shouldRenderGuildListItems,
+		stabilizeGuildListAnchor,
+		visibleDMListRows,
+		visibleUnavailableCount,
+	]);
 	const selectedGuildIndex = useMemo(
 		() => getSelectedGuildNavigationIndex(location.pathname, guildNavigationIndexes),
 		[location.pathname, guildNavigationIndexes],
 	);
-	const removalTimers = useRef<Map<string, NodeJS.Timeout>>(new Map());
+	const removalTimers = useRef<Map<string, number>>(new Map());
+	const dmVisibilityControllerRef = useRef<DMChannelVisibilityController | null>(null);
+	let dmRemovalDelayMs = DM_LIST_REMOVAL_DELAY_MS;
+	if (Accessibility.useReducedMotion) dmRemovalDelayMs = 0;
+	const handleInlineDMHoverStart = useCallback((channelId: string) => {
+		setHoveredInlineDMChannelId(channelId);
+	}, []);
+	const handleInlineDMHoverEnd = useCallback((channelId: string) => {
+		setHoveredInlineDMChannelId((currentChannelId) =>
+			clearHoveredChannelId({currentChannelId, endedChannelId: channelId}),
+		);
+	}, []);
+	const handleInlineDMRemovalAnimationComplete = useCallback((channelId: string) => {
+		const controller = dmVisibilityControllerRef.current;
+		if (controller != null) controller.completeRemoval(channelId);
+	}, []);
 	const guildListNavigationRef = useRovingFocusList<HTMLDivElement>({
 		focusableSelector: GUILD_LIST_FOCUSABLE_SELECTOR,
 		orientation: 'vertical',
@@ -390,38 +584,22 @@ const GuildList = observer(() => {
 		manageTabIndex: true,
 	});
 	useEffect(() => {
-		const unreadIds = new Set<string>();
-		for (let i = 0; i < unreadDMChannels.length; i++) unreadIds.add(unreadDMChannels[i].id);
-		setVisibleDMChannels((current) => {
-			const leftover: Array<Channel> = [];
-			for (let i = 0; i < current.length; i++) {
-				const channel = current[i];
-				if (!unreadIds.has(channel.id)) leftover.push(channel);
-			}
-			for (let i = 0; i < leftover.length; i++) {
-				const channel = leftover[i];
-				if (!removalTimers.current.has(channel.id)) {
-					const timer = setTimeout(() => {
-						removalTimers.current.delete(channel.id);
-						setVisibleDMChannels((latest) => latest.filter((latestChannel) => latestChannel.id !== channel.id));
-					}, DM_LIST_REMOVAL_DELAY_MS);
-					removalTimers.current.set(channel.id, timer);
-				}
-			}
-			const next: Array<Channel> = new Array(unreadDMChannels.length + leftover.length);
-			for (let i = 0; i < unreadDMChannels.length; i++) next[i] = unreadDMChannels[i];
-			for (let i = 0; i < leftover.length; i++) next[unreadDMChannels.length + i] = leftover[i];
-			return next;
+		const controller = new DMChannelVisibilityController({
+			removalDelayMs: dmRemovalDelayMs,
+			removalTimers,
+			orderedUnreadChannels: orderedUnreadDMChannels,
+			setVisibleChannels: setVisibleDMChannels,
+			unreadChannels: unreadDMChannels,
+			unreadIdsRef: unreadDMChannelIdSetRef,
 		});
-		for (let i = 0; i < unreadDMChannels.length; i++) {
-			const channel = unreadDMChannels[i];
-			const timer = removalTimers.current.get(channel.id);
-			if (timer) {
-				clearTimeout(timer);
-				removalTimers.current.delete(channel.id);
-			}
-		}
-	}, [unreadDMChannelIds]);
+		dmVisibilityControllerRef.current = controller;
+		controller.synchronize();
+	}, [dmRemovalDelayMs, orderedUnreadDMChannels, unreadDMChannels]);
+	useEffect(() => {
+		if (hoveredInlineDMChannelId == null) return;
+		const hoveredRow = visibleDMListRows.find((row) => row.channel.id === hoveredInlineDMChannelId);
+		if (hoveredRow == null || hoveredRow.pendingRemoval) setHoveredInlineDMChannelId(null);
+	}, [hoveredInlineDMChannelId, visibleDMListRows]);
 	useEffect(() => {
 		if (unavailableCount > 0) {
 			if (unavailableIndicatorHideTimer.current) {
@@ -439,31 +617,15 @@ const GuildList = observer(() => {
 	}, [unavailableCount]);
 	useEffect(() => {
 		return () => {
+			dmVisibilityControllerRef.current = null;
 			if (unavailableIndicatorHideTimer.current) {
 				clearTimeout(unavailableIndicatorHideTimer.current);
 				unavailableIndicatorHideTimer.current = null;
 			}
-			removalTimers.current.forEach((timer) => clearTimeout(timer));
+			removalTimers.current.forEach((timer) => window.clearTimeout(timer));
 			removalTimers.current.clear();
 		};
 	}, []);
-	const renderDMListItems = (channels: Array<Channel>) =>
-		channels.map((channel) => {
-			const isSelected = isSelectedPath(location.pathname, Routes.dmChannel(channel.id));
-			return (
-				<div
-					key={channel.id}
-					className={styles.dmListItemWrapper}
-					data-flx="app.guilds-layout.render-dm-list-items.dm-list-item-wrapper"
-				>
-					<DMListItem
-						channel={channel}
-						isSelected={isSelected}
-						data-flx="app.guilds-layout.render-dm-list-items.dm-list-item"
-					/>
-				</div>
-			);
-		});
 	const handleGuildDrop = useCallback(
 		(item: GuildDragItem, result: GuildDropResult) => {
 			const sourceKey = item.id;
@@ -611,17 +773,21 @@ const GuildList = observer(() => {
 	const handleDragStateChange = useCallback((item: GuildDragItem | null) => {
 		setIsDragging(item !== null);
 	}, []);
-	const handleScroll = useCallback((event: React.UIEvent<HTMLDivElement>) => {
-		const scrollTop = event.currentTarget.scrollTop;
-		pendingScrollTopRef.current = scrollTop;
-		if (scrollPersistRafRef.current != null) return;
-		scrollPersistRafRef.current = requestAnimationFrame(() => {
-			scrollPersistRafRef.current = null;
-			const pendingScrollTop = pendingScrollTopRef.current;
-			if (pendingScrollTop == null) return;
-			DimensionCommands.updateGuildListScroll(pendingScrollTop);
-		});
-	}, []);
+	const handleScroll = useCallback(
+		(event: React.UIEvent<HTMLDivElement>) => {
+			handleGuildListAnchorScroll(event.currentTarget);
+			const scrollTop = event.currentTarget.scrollTop;
+			pendingScrollTopRef.current = scrollTop;
+			if (scrollPersistRafRef.current != null) return;
+			scrollPersistRafRef.current = requestAnimationFrame(() => {
+				scrollPersistRafRef.current = null;
+				const pendingScrollTop = pendingScrollTopRef.current;
+				if (pendingScrollTop == null) return;
+				DimensionCommands.updateGuildListScroll(pendingScrollTop);
+			});
+		},
+		[handleGuildListAnchorScroll],
+	);
 	const handleWheel = useCallback(
 		(event: React.WheelEvent<HTMLDivElement>) => {
 			if (!isDragging || event.defaultPrevented) return;
@@ -634,19 +800,23 @@ const GuildList = observer(() => {
 	);
 	useEffect(() => {
 		if (!isDragging) return;
+		const scrollNode = getGuildScrollContainer();
+		if (scrollNode == null) return;
+		const ownerWindow = scrollNode.ownerDocument.defaultView;
+		if (ownerWindow == null) return;
 		const handleWindowWheel = (event: WheelEvent) => {
-			const scrollNode = scrollRef.current?.getScrollerNode();
-			if (!scrollNode || !isWheelEventOverElement(event, scrollNode)) return;
+			const currentScrollNode = getGuildScrollContainer();
+			if (currentScrollNode == null || !isWheelEventOverElement(event, currentScrollNode)) return;
 			if (!scrollGuildListByWheel(event)) return;
 			if (event.cancelable) {
 				event.preventDefault();
 			}
 		};
-		window.addEventListener('wheel', handleWindowWheel, {capture: true, passive: false});
+		ownerWindow.addEventListener('wheel', handleWindowWheel, {capture: true, passive: false});
 		return () => {
-			window.removeEventListener('wheel', handleWindowWheel, true);
+			ownerWindow.removeEventListener('wheel', handleWindowWheel, true);
 		};
-	}, [isDragging, scrollGuildListByWheel]);
+	}, [getGuildScrollContainer, isDragging, scrollGuildListByWheel]);
 	useEffect(() => {
 		return () => {
 			if (scrollPersistRafRef.current != null) {
@@ -673,6 +843,7 @@ const GuildList = observer(() => {
 				className={styles.guildListScrollContainer}
 				showTrack={false}
 				onScroll={handleScroll}
+				onResize={handleGuildListAnchorResize}
 				onWheel={handleWheel}
 				key="guild-list-scroller"
 				data-flx="app.guilds-layout.guild-list.guild-list-scroll-container"
@@ -686,37 +857,43 @@ const GuildList = observer(() => {
 						<FluxerButton data-flx="app.guilds-layout.guild-list.fluxer-button" />
 						<FavoritesButton data-flx="app.guilds-layout.guild-list.favorites-button" />
 						<div className={styles.dmListSection} data-flx="app.guilds-layout.guild-list.dm-list-section">
-							{pinnedCallChannel && (
-								<div
-									className={styles.dmListItemWrapper}
-									key={`pinned-call-${pinnedCallChannel.id}`}
-									data-flx="app.guilds-layout.guild-list.dm-list-item-wrapper"
-								>
-									<DMListItem
-										channel={pinnedCallChannel}
-										isSelected={isSelectedPath(location.pathname, Routes.dmChannel(pinnedCallChannel.id))}
-										voiceCallActive
-										data-flx="app.guilds-layout.guild-list.dm-list-item"
-									/>
-								</div>
-							)}
-							{renderDMListItems(filteredDMChannels)}
+							{visibleDMListRows.map((row, index) => (
+								<DMListAnimatedRow
+									key={row.channel.id}
+									channel={row.channel}
+									isLast={index === visibleDMListRows.length - 1}
+									isSelected={isSelectedPath(location.pathname, Routes.dmChannel(row.channel.id))}
+									pendingRemoval={row.pendingRemoval}
+									reducedMotion={Accessibility.useReducedMotion}
+									onHoverStart={handleInlineDMHoverStart}
+									onHoverEnd={handleInlineDMHoverEnd}
+									onRemovalAnimationComplete={handleInlineDMRemovalAnimationComplete}
+									scrollAnchorRef={getGuildListAnchorRef(`dm-${row.channel.id}`)}
+									voiceCallActive={row.voiceCallActive}
+								/>
+							))}
 						</div>
 						{hasVisibleDMChannels && (
 							<div className={styles.guildDivider} data-flx="app.guilds-layout.guild-list.guild-divider" />
 						)}
 					</div>
 					<div
+						ref={getGuildListAnchorRef('guild-section')}
 						className={styles.guildListGuildsSection}
 						data-flx="app.guilds-layout.guild-list.guild-list-guilds-section"
 					>
 						{shouldShowTopDivider && (
-							<div className={styles.guildDivider} data-flx="app.guilds-layout.guild-list.guild-divider--2" />
+							<div
+								ref={getGuildListAnchorRef('guild-divider')}
+								className={styles.guildDivider}
+								data-flx="app.guilds-layout.guild-list.guild-divider--2"
+							/>
 						)}
 						{shouldRenderGuildListItems && (
 							<div className={styles.guildListItems} data-flx="app.guilds-layout.guild-list.guild-list-items">
 								{hasUnavailableGuilds && (
 									<div
+										ref={getGuildListAnchorRef('guild-outage-indicator')}
 										className={styles.guildListItemSlot}
 										key="guild-outage-indicator"
 										data-flx="app.guilds-layout.guild-list.guild-list-item-slot"
@@ -764,6 +941,7 @@ const GuildList = observer(() => {
 												);
 												return (
 													<div
+														ref={getGuildListAnchorRef(getGuildListAnchorKeyForItem(item))}
 														className={styles.guildListItemSlot}
 														key={getOrganizedItemKey(item)}
 														data-flx="app.guilds-layout.guild-list.guild-list-item-slot--2"
@@ -784,6 +962,7 @@ const GuildList = observer(() => {
 											}
 											return (
 												<div
+													ref={getGuildListAnchorRef(getGuildListAnchorKeyForItem(item))}
 													className={styles.guildListItemSlot}
 													key={item.guild.id}
 													data-flx="app.guilds-layout.guild-list.guild-list-item-slot--3"
@@ -827,6 +1006,7 @@ const GuildList = observer(() => {
 			</Scroller>
 			<ScrollIndicatorOverlay
 				getScrollContainer={getGuildScrollContainer}
+				scrollContainerIdentity="guild-list"
 				dependencies={guildIndicatorDependencies}
 				label={i18n._(NEW_DESCRIPTOR)}
 				data-flx="app.guilds-layout.guild-list.scroll-indicator-overlay"
@@ -945,6 +1125,7 @@ export const GuildsLayout = observer(({children}: {children: React.ReactNode}) =
 				shouldReserveUserAreaSpace && styles.guildsLayoutReserveSpace,
 				showBottomNav && styles.guildsLayoutReserveMobileBottomNav,
 			)}
+			style={resolveGuildsLayoutSidebarStyle(mobileLayout.enabled, SidebarWidth.cssValue)}
 			data-flx="app.guilds-layout.guilds-layout"
 		>
 			{!isVoiceCallFullscreenActive && (!mobileLayout.enabled || showGuildListOnMobile) && (
@@ -963,6 +1144,7 @@ export const GuildsLayout = observer(({children}: {children: React.ReactNode}) =
 					<OutlineFrame
 						className={clsx(styles.outlineFrame, isVoiceCallFullscreenActive && styles.outlineFrameFullscreen)}
 						sidebarDivider={!isVoiceCallFullscreenActive && shouldShowSidebarDivider}
+						sidebarResizeHandle={!isVoiceCallFullscreenActive && shouldShowSidebarDivider}
 						nagbar={
 							!isVoiceCallFullscreenActive && activeNagbars.length > 0 ? (
 								<div className={styles.nagbarStack} data-flx="app.guilds-layout.nagbar-stack">

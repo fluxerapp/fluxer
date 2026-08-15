@@ -7,6 +7,7 @@ import {WellKnownFluxerResponse} from '@fluxer/schema/src/domains/instance/Insta
 import type {Hono} from 'hono';
 import {Config} from '../Config';
 import type {GifService} from '../gif/GifService';
+import type {IGifProvider} from '../gif/IGifProvider';
 import type {LimitConfigService} from '../limits/LimitConfigService';
 import {RateLimitMiddleware} from '../middleware/RateLimitMiddleware';
 import {OpenAPI} from '../middleware/ResponseTypeMiddleware';
@@ -24,7 +25,18 @@ function buildDiscoveryStaticInput(
 ): DiscoveryStaticInput {
 	const apiClientEndpoint = Config.endpoints.apiClient;
 	const apiPublicEndpoint = Config.endpoints.apiPublic;
-	const gifProvider = gifService?.getProvider();
+	let gifProvider: IGifProvider | undefined;
+	if (gifService !== undefined) {
+		gifProvider = gifService.getProvider();
+	}
+	let gifProviderName = 'klipy';
+	let gifDisplayName = 'Klipy';
+	let gifAttributionRequired = false;
+	if (gifProvider !== undefined) {
+		gifProviderName = gifProvider.meta.name;
+		gifDisplayName = gifProvider.meta.displayName;
+		gifAttributionRequired = gifProvider.meta.attributionRequired;
+	}
 	return {
 		apiCodeVersion: API_CODE_VERSION,
 		endpoints: {
@@ -53,9 +65,9 @@ function buildDiscoveryStaticInput(
 			emails_enabled: runtime.emailEnabled,
 		},
 		gif: {
-			provider: gifProvider?.meta.name ?? 'klipy',
-			display_name: gifProvider?.meta.displayName ?? 'KLIPY',
-			attribution_required: gifProvider?.meta.attributionRequired ?? true,
+			provider: gifProviderName,
+			display_name: gifDisplayName,
+			attribution_required: gifAttributionRequired,
 		},
 		push: {
 			public_vapid_key: Config.push.publicVapidKey ?? null,

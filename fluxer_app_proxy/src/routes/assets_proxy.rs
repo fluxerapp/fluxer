@@ -11,7 +11,7 @@ use axum::{
 use std::path::Path as FsPath;
 use std::time::Duration;
 
-use super::spa_static::{guess_mime, is_hashed_asset};
+use super::spa_static::{CORS_ALLOW_ANY_VALUE, guess_mime, is_font_mime, is_hashed_asset};
 
 const ASSET_REQUEST_TIMEOUT: Duration = Duration::from_secs(15);
 const MAX_ASSET_SIZE_BYTES: u64 = 100 * 1024 * 1024;
@@ -109,6 +109,7 @@ pub async fn proxy_assets(
         response_headers.insert(name.clone(), value.clone());
     }
     set_known_asset_content_type(&mut response_headers, &path);
+    set_font_cors(&mut response_headers);
 
     let asset_csp = build_asset_csp(
         &state.config.csp,
@@ -160,8 +161,15 @@ async fn serve_local_asset(static_dir: &str, relative_path: &str) -> Response {
     };
 
     let mut response = content.into_response();
-    if let Ok(value) = HeaderValue::from_str(guess_mime(relative_path)) {
+    let mime_type = guess_mime(relative_path);
+    if let Ok(value) = HeaderValue::from_str(mime_type) {
         response.headers_mut().insert(header::CONTENT_TYPE, value);
+    }
+    if is_font_mime(mime_type) {
+        response.headers_mut().insert(
+            header::ACCESS_CONTROL_ALLOW_ORIGIN,
+            HeaderValue::from_static(CORS_ALLOW_ANY_VALUE),
+        );
     }
     let cache_control = if is_hashed_asset(relative_path) {
         "public, max-age=31536000, immutable"
@@ -173,6 +181,20 @@ async fn serve_local_asset(static_dir: &str, relative_path: &str) -> Response {
         HeaderValue::from_static(cache_control),
     );
     response
+}
+
+fn set_font_cors(headers: &mut HeaderMap) {
+    let is_font = headers
+        .get(header::CONTENT_TYPE)
+        .and_then(|value| value.to_str().ok())
+        .map(|value| value.split(';').next().unwrap_or(value).trim())
+        .is_some_and(is_font_mime);
+    if is_font {
+        headers.insert(
+            header::ACCESS_CONTROL_ALLOW_ORIGIN,
+            HeaderValue::from_static(CORS_ALLOW_ANY_VALUE),
+        );
+    }
 }
 
 fn set_known_asset_content_type(headers: &mut HeaderMap, path: &str) {
@@ -222,6 +244,78 @@ mod tests {
                 .get(header::CONTENT_TYPE)
                 .and_then(|value| value.to_str().ok()),
             Some("application/wasm")
+        );
+    }
+
+    #[test]
+    fn proxied_font_gains_cors_when_upstream_omits_it() {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            header::CONTENT_TYPE,
+            HeaderValue::from_static("application/octet-stream"),
+        );
+
+        set_known_asset_content_type(&mut headers, "0018072843a46dc4.woff2");
+        set_font_cors(&mut headers);
+
+        assert_eq!(
+            headers
+                .get(header::ACCESS_CONTROL_ALLOW_ORIGIN)
+                .and_then(|value| value.to_str().ok()),
+            Some("*")
+        );
+    }
+
+    #[test]
+    fn proxied_font_cors_overrides_a_narrower_upstream_value() {
+        let mut headers = HeaderMap::new();
+        headers.insert(header::CONTENT_TYPE, HeaderValue::from_static("font/woff2"));
+        headers.insert(
+            header::ACCESS_CONTROL_ALLOW_ORIGIN,
+            HeaderValue::from_static("https://example.invalid"),
+        );
+
+        set_font_cors(&mut headers);
+
+        assert_eq!(
+            headers
+                .get(header::ACCESS_CONTROL_ALLOW_ORIGIN)
+                .and_then(|value| value.to_str().ok()),
+            Some("*")
+        );
+    }
+
+    #[test]
+    fn proxied_font_cors_tolerates_a_content_type_parameter() {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            header::CONTENT_TYPE,
+            HeaderValue::from_static("font/woff2; charset=binary"),
+        );
+
+        set_font_cors(&mut headers);
+
+        assert_eq!(
+            headers
+                .get(header::ACCESS_CONTROL_ALLOW_ORIGIN)
+                .and_then(|value| value.to_str().ok()),
+            Some("*")
+        );
+    }
+
+    #[test]
+    fn proxied_non_font_keeps_upstream_cors_untouched() {
+        let mut headers = HeaderMap::new();
+        headers.insert(
+            header::CONTENT_TYPE,
+            HeaderValue::from_static("application/javascript; charset=utf-8"),
+        );
+
+        set_font_cors(&mut headers);
+
+        assert!(
+            headers.get(header::ACCESS_CONTROL_ALLOW_ORIGIN).is_none(),
+            "non-font assets are same-origin and must not gain a wildcard"
         );
     }
 

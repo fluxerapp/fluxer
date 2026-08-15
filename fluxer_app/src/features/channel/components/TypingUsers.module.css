@@ -5,9 +5,19 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	color: var(--text-primary);
+	color: var(--text-primary-muted);
 }
 
 .username {
 	font-weight: 600;
+}
+
+.composerStatus {
+	display: inline-flex;
+	align-items: center;
+	height: var(--typing-pill-height, 1.125rem);
+	max-width: 100%;
+	min-width: 0;
+	color: var(--text-primary-muted);
+	pointer-events: auto;
 }

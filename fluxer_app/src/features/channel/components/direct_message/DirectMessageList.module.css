@@ -1,10 +1,13 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
 .dmListContainer {
-	--scroller-track-block-end-inset: var(--layout-user-area-overlay-height, var(--layout-user-area-reserved-height, 0));
+	--scroller-track-block-end-inset: var(
+		--layout-user-area-overlay-height,
+		var(--layout-user-area-reserved-height, 0px)
+	);
 	display: grid;
 	grid-template-rows: auto 1fr auto;
-	height: calc(100% - var(--layout-user-area-reserved-height, 0));
+	height: calc(100% - var(--layout-user-area-reserved-height, 0px));
 	min-height: 0;
 	width: var(--layout-sidebar-width);
 	min-width: 0;
@@ -210,7 +213,7 @@
 .mobileFab {
 	position: fixed;
 	right: 1rem;
-	bottom: calc(3.75rem + env(safe-area-inset-bottom, 0) + 1rem);
+	bottom: calc(3.75rem + env(safe-area-inset-bottom, 0px) + 1rem);
 	z-index: 50;
 	display: flex;
 	height: 3.5rem;
@@ -237,7 +240,7 @@
 }
 
 .desktopBottomSpacer {
-	height: calc(var(--layout-user-area-overlay-height, var(--layout-user-area-reserved-height, 0)) + var(--spacing-2));
+	height: calc(var(--layout-user-area-overlay-height, var(--layout-user-area-reserved-height, 0px)) + var(--spacing-2));
 	flex: 0 0 auto;
 }
 
@@ -554,11 +557,15 @@
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
-	color: var(--text-primary-muted);
+	color: color-mix(in srgb, var(--text-primary-muted) 85%, transparent);
 	font-size: 0.6875rem;
 	line-height: 1rem;
 	font-weight: 500;
 	margin-top: -0.0625rem;
+}
+
+.dmItemSubtext img,
+.dmItemSubtext svg {
 	opacity: 0.85;
 }
 
@@ -587,7 +594,7 @@
 
 .dmItemSubtextItalic {
 	font-style: italic;
-	opacity: 0.7;
+	color: color-mix(in srgb, currentcolor 70%, transparent);
 }
 
 .dmItemPreviewMarkdown {
@@ -617,9 +624,12 @@
 
 .dmItemSelected .dmItemSubtext,
 .dmItemSelected .dmItemMembersSubtext,
-.dmItemSelected .dmItemTimestamp,
 .dmItemMobileSelected .dmItemSubtext,
-.dmItemMobileSelected .dmItemMembersSubtext,
+.dmItemMobileSelected .dmItemMembersSubtext {
+	color: color-mix(in srgb, var(--surface-interactive-selected-color) 85%, transparent);
+}
+
+.dmItemSelected .dmItemTimestamp,
 .dmItemMobileSelected .dmItemTimestamp {
 	color: var(--surface-interactive-selected-color);
 }
@@ -710,7 +720,10 @@
 }
 
 .contextMenuActive .dmItemSubtext,
-.contextMenuActive .dmItemMembersSubtext,
+.contextMenuActive .dmItemMembersSubtext {
+	color: color-mix(in srgb, var(--text-primary) 85%, transparent);
+}
+
 .contextMenuActive .dmItemTimestamp {
 	color: var(--text-primary);
 }

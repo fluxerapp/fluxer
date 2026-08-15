@@ -5,6 +5,7 @@ import type {GuildMember} from '@app/features/member/models/GuildMember';
 import GuildMembers from '@app/features/member/state/GuildMembers';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import Relationships from '@app/features/relationship/state/Relationships';
+import type {User} from '@app/features/user/models/User';
 import Users from '@app/features/user/state/Users';
 import {RelationshipTypes} from '@fluxer/constants/src/UserConstants';
 import {makeAutoObservable} from 'mobx';
@@ -31,12 +32,14 @@ export interface MemberSearchFilters {
 export interface TransformedMember {
 	id: string;
 	username: string;
+	globalName?: string | null;
+	guildNicknames?: Record<string, string | null>;
 	isBot?: boolean;
 	isFriend?: boolean;
 	guildIds?: Array<string>;
 	_delete?: boolean;
 	_removeGuild?: string;
-	[key: string]: string | boolean | undefined | Array<string>;
+	[key: string]: string | boolean | null | undefined | Array<string> | Record<string, string | null>;
 }
 
 export type QueryBlacklist = Set<string>;
@@ -88,6 +91,7 @@ const DEFAULT_LIMIT = 10;
 const BACKGROUND_FETCH_DEDUP_WINDOW_MS = 750;
 
 let worker: Worker | null = null;
+const searchContexts = new Set<SearchContext>();
 
 function updateMembers(members: Array<TransformedMember>): void {
 	if (!worker) {
@@ -105,29 +109,42 @@ function updateMembers(members: Array<TransformedMember>): void {
 
 function isFriendRelationship(userId: string): boolean {
 	const relationship = Relationships.getRelationship(userId);
-	return relationship?.type === RelationshipTypes.FRIEND;
+	if (relationship == null) {
+		return false;
+	}
+	return relationship.type === RelationshipTypes.FRIEND;
 }
 
-function applyFriendFlag(member: TransformedMember): void {
-	member.isFriend = isFriendRelationship(member.id);
+function getTransformedUser(user: User): TransformedMember {
+	return {
+		id: user.id,
+		username: `${user.username}#${user.discriminator}`,
+		globalName: user.globalName,
+		isBot: user.bot,
+		isFriend: isFriendRelationship(user.id),
+		guildIds: [],
+		guildNicknames: {},
+	};
 }
 
 function getTransformedMember(memberRecord: GuildMember, guildId?: string): TransformedMember | null {
 	const user = memberRecord.user;
-	const member: TransformedMember = {
-		id: user.id,
-		username: `${user.username}#${user.discriminator}`,
-		guildIds: [],
-	};
-	if (user.bot) {
-		member.isBot = true;
+	const member = getTransformedUser(user);
+	if (guildId == null || guildId.length === 0) {
+		return member;
 	}
-	if (guildId) {
-		member[guildId] = true;
-		member.guildIds = [guildId];
-	}
-	applyFriendFlag(member);
+	member[guildId] = true;
+	member.guildIds = [guildId];
+	member.guildNicknames = {[guildId]: memberRecord.nick};
 	return member;
+}
+
+function getMemberRemoval(memberId: string, guildId: string): TransformedMember {
+	return {
+		id: memberId,
+		username: '',
+		_removeGuild: guildId,
+	};
 }
 
 function updateMembersList(members: Array<GuildMember>, guildId?: string): Array<TransformedMember> {
@@ -150,6 +167,7 @@ export class SearchContext {
 	private _latestGeneration: number;
 	private _nextGeneration: number;
 	private readonly _handleMessages: (event: MessageEvent<WorkerMessage>) => void;
+	private _attachedWorker: Worker | null = null;
 
 	constructor(callback: (results: Array<TransformedMember>) => void, limit: number = DEFAULT_LIMIT) {
 		this._uuid = crypto.randomUUID();
@@ -168,34 +186,61 @@ export class SearchContext {
 			if (resultsMessage.uuid !== this._uuid) {
 				return;
 			}
-			if (resultsMessage.generation < this._latestGeneration) {
-				return;
-			}
-			if (this._currentQuery !== false) {
+			const isLatestGeneration = resultsMessage.generation === this._latestGeneration;
+			if (isLatestGeneration && this._currentQuery !== false) {
 				this._callback(resultsMessage.payload);
 			}
-			if (this._currentQuery != null) {
+			const currentQuery = this._currentQuery;
+			if (currentQuery !== null && currentQuery !== false && currentQuery.generation === resultsMessage.generation) {
 				this._currentQuery = null;
+				this._setNextQuery();
 			}
-			this._setNextQuery();
 		};
-		if (worker) {
-			worker.addEventListener('message', this._handleMessages);
-		}
+		searchContexts.add(this);
+		this.attachToWorker(worker);
 	}
 
 	destroy(): void {
-		if (worker) {
-			worker.removeEventListener('message', this._handleMessages);
-		}
 		this.clearQuery();
+		searchContexts.delete(this);
+		this.attachToWorker(null);
+	}
+
+	attachToWorker(nextWorker: Worker | null): void {
+		if (this._attachedWorker === nextWorker) {
+			return;
+		}
+		if (this._attachedWorker != null) {
+			this._attachedWorker.removeEventListener('message', this._handleMessages);
+		}
+		this._attachedWorker = nextWorker;
+		if (nextWorker == null) {
+			return;
+		}
+		nextWorker.addEventListener('message', this._handleMessages);
+		if (this._currentQuery === false) {
+			nextWorker.postMessage({
+				uuid: this._uuid,
+				type: MemberSearchWorkerMessageTypes.QUERY_CLEAR,
+			} as QueryClearMessage);
+			return;
+		}
+		if (this._currentQuery != null) {
+			nextWorker.postMessage({
+				uuid: this._uuid,
+				type: MemberSearchWorkerMessageTypes.QUERY_SET,
+				payload: this._currentQuery,
+			} as QuerySetMessage);
+			return;
+		}
+		this._setNextQuery();
 	}
 
 	clearQuery(): void {
 		this._currentQuery = false;
 		this._nextQuery = null;
-		if (worker) {
-			worker.postMessage({
+		if (this._attachedWorker != null) {
+			this._attachedWorker.postMessage({
 				uuid: this._uuid,
 				type: MemberSearchWorkerMessageTypes.QUERY_CLEAR,
 			} as QueryClearMessage);
@@ -232,8 +277,8 @@ export class SearchContext {
 		}
 		this._currentQuery = this._nextQuery;
 		this._nextQuery = null;
-		if (worker) {
-			worker.postMessage({
+		if (this._attachedWorker != null) {
+			this._attachedWorker.postMessage({
 				uuid: this._uuid,
 				type: MemberSearchWorkerMessageTypes.QUERY_SET,
 				payload: this._currentQuery,
@@ -264,7 +309,11 @@ class MemberSearch {
 				},
 			);
 			this.sendInitialMembers();
+			for (const context of searchContexts) {
+				context.attachToWorker(worker);
+			}
 		} catch (err) {
+			this.initialized = false;
 			this.logger.error('Failed to initialize worker:', err);
 		}
 	}
@@ -274,6 +323,9 @@ class MemberSearch {
 			return;
 		}
 		const allMembers: Array<TransformedMember> = [];
+		for (const user of Users.usersList) {
+			allMembers.push(getTransformedUser(user));
+		}
 		const guilds = Guilds.getGuilds();
 		for (const guild of guilds) {
 			const members = GuildMembers.getMembers(guild.id);
@@ -305,15 +357,11 @@ class MemberSearch {
 	handleGuildDelete(guildId: string): void {
 		if (!worker) return;
 		const members = GuildMembers.getMembers(guildId);
-		const transformedMembers = updateMembersList(members, guildId);
-		updateMembers(
-			transformedMembers.map((m) => ({
-				id: m.id,
-				username: m.username,
-				isBot: m.isBot,
-				_removeGuild: guildId,
-			})),
-		);
+		const removals: Array<TransformedMember> = [];
+		for (const member of members) {
+			removals.push(getMemberRemoval(member.user.id, guildId));
+		}
+		updateMembers(removals);
 	}
 
 	handleMemberAdd(guildId: string, memberId: string): void {
@@ -336,6 +384,20 @@ class MemberSearch {
 		}
 	}
 
+	handleMemberRemove(guildId: string, memberId: string): void {
+		if (!worker) return;
+		const member = GuildMembers.getMember(guildId, memberId);
+		if (member != null) {
+			const transformedMember = getTransformedMember(member, guildId);
+			if (transformedMember != null) {
+				transformedMember._removeGuild = guildId;
+				updateMembers([transformedMember]);
+			}
+			return;
+		}
+		updateMembers([getMemberRemoval(memberId, guildId)]);
+	}
+
 	handleMembersChunk(guildId: string, members: Array<GuildMember>): void {
 		if (!worker) return;
 		const transformedMembers = updateMembersList(members, guildId);
@@ -344,8 +406,10 @@ class MemberSearch {
 
 	handleUserUpdate(userId: string): void {
 		if (!worker) return;
+		const user = Users.getUser(userId);
+		if (user == null) return;
+		const allMembers: Array<TransformedMember> = [getTransformedUser(user)];
 		const guilds = Guilds.getGuilds();
-		const allMembers: Array<TransformedMember> = [];
 		for (const guild of guilds) {
 			const member = GuildMembers.getMember(guild.id, userId);
 			if (member) {
@@ -355,17 +419,16 @@ class MemberSearch {
 				}
 			}
 		}
-		if (allMembers.length > 0) {
-			updateMembers(allMembers);
-		}
+		updateMembers(allMembers);
 	}
 
 	handleFriendshipChange(userId: string, isFriend: boolean): void {
 		if (!worker) return;
 		const user = Users.getUser(userId);
 		if (!user) return;
-		const username = `${user.username}#${user.discriminator}`;
-		updateMembers([{id: userId, username, isFriend}]);
+		const transformedUser = getTransformedUser(user);
+		transformedUser.isFriend = isFriend;
+		updateMembers([transformedUser]);
 	}
 
 	getSearchContext(
@@ -380,9 +443,13 @@ class MemberSearch {
 
 	private terminate(): void {
 		if (worker) {
+			for (const context of searchContexts) {
+				context.attachToWorker(null);
+			}
 			worker.terminate();
 			worker = null;
 		}
+		this.initialized = false;
 	}
 
 	cleanup(): void {
@@ -392,7 +459,7 @@ class MemberSearch {
 	}
 
 	async fetchMembersInBackground(query: string, guildIds: Array<string>, priorityGuildId?: string): Promise<void> {
-		const trimmed = query['trim']();
+		const trimmed = query.trim();
 		if (!trimmed) {
 			return;
 		}
@@ -410,7 +477,7 @@ class MemberSearch {
 			if (!guild) {
 				return false;
 			}
-			return !GuildMembers.isGuildFullyLoaded(guildId);
+			return true;
 		});
 		if (eligibleGuildIds.length === 0) {
 			return;

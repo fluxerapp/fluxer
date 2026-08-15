@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {ARBORIUM_GRAMMAR_LOADERS} from '@app/features/code_highlighting/utils/ArboriumGrammars';
+import {highlightCodeInWorker} from '@app/features/code_highlighting/utils/ArboriumHighlightWorkerClient';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {MAX_CODE_HIGHLIGHT_SOURCE_LENGTH} from '@fluxer/constants/src/LimitConstants';
 import {useEffect, useMemo, useState} from 'react';
@@ -127,8 +127,22 @@ const LANGUAGE_ALIAS_MAP: Record<string, string> = {
 	yml: 'yaml',
 	zshell: 'zsh',
 };
-const MAX_CACHE_ENTRIES = 500;
-const highlightCache = new Map<string, Promise<string>>();
+const MAX_CACHE_ENTRIES = 128;
+const MAX_CACHED_SOURCE_LENGTH = 16 * 1024;
+const MAX_CACHED_OUTPUT_LENGTH = 32 * 1024;
+const MAX_CACHE_BYTES = 4 * 1024 * 1024;
+const MAX_HIGHLIGHT_LANGUAGE_LENGTH = 128;
+
+interface HighlightCacheEntry {
+	promise: Promise<string | null>;
+	retainedBytes: number;
+	subscribers: number;
+	settled: boolean;
+	abortController: AbortController;
+}
+
+const highlightCache = new Map<string, HighlightCacheEntry>();
+let highlightCacheBytes = 0;
 
 let arboriumModule: ArboriumModule | null = null;
 let arboriumPromise: Promise<ArboriumModule> | null = null;
@@ -145,33 +159,12 @@ function loadArborium(): Promise<ArboriumModule> {
 				import('@arborium/arborium/themes/github-light.css'),
 				import('@app/features/code_highlighting/utils/ArboriumThemeBridge.css'),
 			]);
-			const hostWasmUrl = new URL('@arborium/arborium/arborium_host_bg.wasm', import.meta.url);
-			arborium.setConfig({
-				resolveHostJs: () => import('@arborium/arborium/arborium_host.js'),
-				resolveHostWasm: () => fetch(hostWasmUrl),
-				resolveJs: ({language}) => {
-					const loader = ARBORIUM_GRAMMAR_LOADERS[language];
-					if (!loader) {
-						throw new Error(`No bundled arborium grammar for language '${language}'`);
-					}
-					return loader.loadJs();
-				},
-				resolveWasm: ({language}) => {
-					const loader = ARBORIUM_GRAMMAR_LOADERS[language];
-					if (!loader) {
-						throw new Error(`No bundled arborium grammar for language '${language}'`);
-					}
-					return fetch(loader.wasmUrl);
-				},
-				logger: {
-					debug: (...args: Array<unknown>) => logger.debug(...args),
-					warn: (...args: Array<unknown>) => logger.warn(...args),
-					error: (...args: Array<unknown>) => logger.error(...args),
-				},
-			});
 			arboriumModule = arborium;
 			return arborium;
-		})();
+		})().catch((error) => {
+			arboriumPromise = null;
+			throw error;
+		});
 	}
 	return arboriumPromise;
 }
@@ -228,13 +221,15 @@ function buildHighlightLanguageOptions(arborium: ArboriumModule): Array<Highligh
 
 function ensureOptionsBuilt(): void {
 	if (!arboriumModule) {
-		void loadArborium().then(() => {
-			if (!arboriumModule) {
-				return;
-			}
-			HIGHLIGHT_LANGUAGE_OPTIONS = buildHighlightLanguageOptions(arboriumModule);
-			notifyOptionsListeners();
-		});
+		void loadArborium()
+			.then(() => {
+				if (!arboriumModule) {
+					return;
+				}
+				HIGHLIGHT_LANGUAGE_OPTIONS = buildHighlightLanguageOptions(arboriumModule);
+				notifyOptionsListeners();
+			})
+			.catch((error) => logger.error('Failed to load Arborium language options', error));
 		return;
 	}
 	if (HIGHLIGHT_LANGUAGE_OPTIONS.length <= 3) {
@@ -256,31 +251,128 @@ export function useHighlightLanguageOptions(): ReadonlyArray<HighlightLanguageOp
 }
 
 function getCacheKey(language: string, source: string): string {
-	return `${language}${source}`;
+	return `${language.length}:${language}\u0000${source}`;
+}
+
+function removeHighlightCacheEntry(cacheKey: string, entry: HighlightCacheEntry): void {
+	if (highlightCache.get(cacheKey) !== entry) {
+		return;
+	}
+	highlightCache.delete(cacheKey);
+	highlightCacheBytes -= entry.retainedBytes;
+	if (!entry.settled && entry.subscribers === 0) {
+		entry.abortController.abort();
+	}
 }
 
 function trimHighlightCache(): void {
-	if (highlightCache.size <= MAX_CACHE_ENTRIES) {
-		return;
+	while (highlightCache.size > MAX_CACHE_ENTRIES || highlightCacheBytes > MAX_CACHE_BYTES) {
+		const firstEntry = highlightCache.entries().next().value as [string, HighlightCacheEntry] | undefined;
+		if (!firstEntry) {
+			return;
+		}
+		removeHighlightCacheEntry(firstEntry[0], firstEntry[1]);
 	}
-	const firstKey = highlightCache.keys().next().value;
-	if (!firstKey) {
-		return;
-	}
-	highlightCache.delete(firstKey);
 }
 
-function loadHighlightedHtml(arborium: ArboriumModule, language: string, source: string): Promise<string> {
-	const cacheKey = getCacheKey(language, source);
-	const cached = highlightCache.get(cacheKey);
-	if (cached) {
-		return cached;
+function touchHighlightCacheEntry(cacheKey: string, entry: HighlightCacheEntry): void {
+	highlightCache.delete(cacheKey);
+	highlightCache.set(cacheKey, entry);
+}
+
+function releaseHighlightCacheConsumer(cacheKey: string, entry: HighlightCacheEntry): void {
+	if (entry.subscribers <= 0) {
+		throw new Error('Arborium highlight cache consumer count underflowed');
 	}
-	const highlightedHtmlPromise = arborium.highlight(language, source).catch((error) => {
-		highlightCache.delete(cacheKey);
-		throw error;
-	});
-	highlightCache.set(cacheKey, highlightedHtmlPromise);
+	entry.subscribers -= 1;
+	if (entry.subscribers === 0 && !entry.settled) {
+		entry.abortController.abort();
+		removeHighlightCacheEntry(cacheKey, entry);
+	}
+}
+
+function subscribeToHighlightCacheEntry(cacheKey: string, entry: HighlightCacheEntry, signal?: AbortSignal): void {
+	if (entry.settled) {
+		return;
+	}
+	entry.subscribers++;
+	let released = false;
+	const release = (): void => {
+		if (released) {
+			return;
+		}
+		released = true;
+		if (signal !== undefined) {
+			signal.removeEventListener('abort', release);
+		}
+		releaseHighlightCacheConsumer(cacheKey, entry);
+	};
+	if (signal !== undefined) {
+		signal.addEventListener('abort', release, {once: true});
+		if (signal.aborted) {
+			release();
+			return;
+		}
+	}
+	void entry.promise.then(release, release);
+}
+
+function isSignalAborted(signal: AbortSignal | undefined): boolean {
+	if (signal === undefined) {
+		return false;
+	}
+	return signal.aborted;
+}
+
+function loadHighlightedHtml(language: string, source: string, signal?: AbortSignal): Promise<string | null> {
+	if (isSignalAborted(signal)) {
+		return Promise.resolve(null);
+	}
+	if (source.length > MAX_CACHED_SOURCE_LENGTH) {
+		if (signal === undefined) {
+			return highlightCodeInWorker(language, source);
+		}
+		return highlightCodeInWorker(language, source, {signal});
+	}
+	const cacheKey = getCacheKey(language, source);
+	const cachedEntry = highlightCache.get(cacheKey);
+	if (cachedEntry) {
+		touchHighlightCacheEntry(cacheKey, cachedEntry);
+		subscribeToHighlightCacheEntry(cacheKey, cachedEntry, signal);
+		return cachedEntry.promise;
+	}
+	const entry: HighlightCacheEntry = {
+		promise: Promise.resolve(null),
+		retainedBytes: source.length * 2,
+		subscribers: 0,
+		settled: false,
+		abortController: new AbortController(),
+	};
+	const highlightedHtmlPromise = highlightCodeInWorker(language, source, {signal: entry.abortController.signal})
+		.then((highlightedHtml) => {
+			entry.settled = true;
+			if (highlightCache.get(cacheKey) !== entry) {
+				return highlightedHtml;
+			}
+			if (highlightedHtml === null || highlightedHtml.length > MAX_CACHED_OUTPUT_LENGTH) {
+				removeHighlightCacheEntry(cacheKey, entry);
+				return highlightedHtml;
+			}
+			const nextRetainedBytes = (source.length + highlightedHtml.length) * 2;
+			highlightCacheBytes += nextRetainedBytes - entry.retainedBytes;
+			entry.retainedBytes = nextRetainedBytes;
+			trimHighlightCache();
+			return highlightedHtml;
+		})
+		.catch((error) => {
+			entry.settled = true;
+			removeHighlightCacheEntry(cacheKey, entry);
+			throw error;
+		});
+	entry.promise = highlightedHtmlPromise;
+	highlightCache.set(cacheKey, entry);
+	highlightCacheBytes += entry.retainedBytes;
+	subscribeToHighlightCacheEntry(cacheKey, entry, signal);
 	trimHighlightCache();
 	return highlightedHtmlPromise;
 }
@@ -300,7 +392,7 @@ export function escapeCodeHtml(value: string): string {
 
 export function normalizeHighlightLanguage(language?: string | null): string | null {
 	const languageToken = getLanguageToken(language);
-	if (!languageToken) {
+	if (!languageToken || languageToken.length > MAX_HIGHLIGHT_LANGUAGE_LENGTH) {
 		return null;
 	}
 	const aliasedLanguage = LANGUAGE_ALIAS_MAP[languageToken];
@@ -328,38 +420,48 @@ export function isSupportedHighlightLanguage(language?: string | null): boolean 
 	return normalizeHighlightLanguage(language) !== null;
 }
 
-function resolveHighlightLanguage(
-	arborium: ArboriumModule,
-	language?: string | null,
-	source?: string | null,
-): string | null {
+function resolveHighlightLanguage(language?: string | null): string | null {
 	const languageToken = getLanguageToken(language);
 	if (!languageToken) {
 		return null;
 	}
 	if (languageToken === AUTO_DETECT_LANGUAGE_CODE) {
-		const detectedLanguage = source ? arborium.detectLanguage(source) : null;
-		return normalizeHighlightLanguage(detectedLanguage);
+		return AUTO_DETECT_LANGUAGE_CODE;
 	}
 	return normalizeHighlightLanguage(languageToken);
 }
 
-export async function highlightCodeHtml(language?: string | null, source?: string | null): Promise<string> {
+export async function highlightCodeHtml(
+	language?: string | null,
+	source?: string | null,
+	signal?: AbortSignal,
+): Promise<string> {
 	if (!source) {
 		return '';
 	}
-	if (source.length > MAX_CODE_HIGHLIGHT_SOURCE_LENGTH) {
-		return escapeCodeHtml(source);
-	}
-	const arborium = await loadArborium();
-	const resolvedLanguage = resolveHighlightLanguage(arborium, language, source);
-	if (!resolvedLanguage || resolvedLanguage === PLAIN_TEXT_LANGUAGE) {
+	if (source.length >= MAX_CODE_HIGHLIGHT_SOURCE_LENGTH) {
 		return escapeCodeHtml(source);
 	}
 	try {
-		return await loadHighlightedHtml(arborium, resolvedLanguage, source);
+		const languageToken = getLanguageToken(language);
+		if (!languageToken || languageToken === PLAIN_TEXT_LANGUAGE) {
+			return escapeCodeHtml(source);
+		}
+		if (languageToken.length > MAX_HIGHLIGHT_LANGUAGE_LENGTH) {
+			return escapeCodeHtml(source);
+		}
+		if (languageToken !== AUTO_DETECT_LANGUAGE_CODE) {
+			await loadArborium();
+		}
+		const resolvedLanguage = resolveHighlightLanguage(language);
+		if (!resolvedLanguage || resolvedLanguage === PLAIN_TEXT_LANGUAGE) {
+			return escapeCodeHtml(source);
+		}
+		const highlightedHtml = await loadHighlightedHtml(resolvedLanguage, source, signal);
+		return highlightedHtml === null ? escapeCodeHtml(source) : highlightedHtml;
 	} catch (error) {
-		logger.error(`Failed to highlight code with Arborium for language "${resolvedLanguage}"`, error);
+		const languageForLog = language == null ? '' : language;
+		logger.error(`Failed to highlight code with Arborium for language "${languageForLog}"`, error);
 		return escapeCodeHtml(source);
 	}
 }
@@ -369,19 +471,22 @@ export function useArboriumHighlightedHtml(language?: string | null, source?: st
 	const [highlightedHtml, setHighlightedHtml] = useState(escapedHtml);
 	useEffect(() => {
 		let cancelled = false;
+		const controller = new AbortController();
 		setHighlightedHtml(escapedHtml);
 		if (!source) {
+			controller.abort();
 			return () => {
 				cancelled = true;
 			};
 		}
-		void highlightCodeHtml(language, source).then((html) => {
+		void highlightCodeHtml(language, source, controller.signal).then((html) => {
 			if (!cancelled) {
 				setHighlightedHtml(html);
 			}
 		});
 		return () => {
 			cancelled = true;
+			controller.abort();
 		};
 	}, [escapedHtml, language, source]);
 	return highlightedHtml;

@@ -1,8 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import fs from 'node:fs';
+import path from 'node:path';
 import {sources} from '@rspack/core';
 
 const STATIC_CDN_ENDPOINT_PLACEHOLDER = '{{STATIC_CDN_ENDPOINT}}';
+
+const FONT_LICENSE_FILES = [
+	{source: 'NOTICE.md', asset: 'assets/fonts-NOTICE.txt'},
+	{source: 'LICENSE-IBM-PLEX.txt', asset: 'assets/fonts-LICENSE-IBM-PLEX.txt'},
+];
 
 function resolveStaticCdnEndpoint(staticCdnEndpoint) {
 	const value = staticCdnEndpoint?.trim().replace(/\/+$/, '');
@@ -78,6 +85,22 @@ function generateRobotsTxt() {
 export class StaticFilesPlugin {
 	constructor(options = {}) {
 		this.staticCdnEndpoint = options.staticCdnEndpoint;
+		this.fontsDir = options.fontsDir;
+	}
+
+	emitFontLicenses(compilation) {
+		if (!this.fontsDir) {
+			return;
+		}
+		for (const {source, asset} of FONT_LICENSE_FILES) {
+			const sourcePath = path.join(this.fontsDir, source);
+			if (!fs.existsSync(sourcePath)) {
+				throw new Error(
+					`StaticFilesPlugin: ${sourcePath} is missing. The bundled fonts may not be redistributed without it.`,
+				);
+			}
+			compilation.emitAsset(asset, new sources.RawSource(fs.readFileSync(sourcePath)));
+		}
 	}
 
 	apply(compiler) {
@@ -94,6 +117,7 @@ export class StaticFilesPlugin {
 						new sources.RawSource(generateBrowserConfig(this.staticCdnEndpoint)),
 					);
 					compilation.emitAsset('robots.txt', new sources.RawSource(generateRobotsTxt()));
+					this.emitFontLicenses(compilation);
 				},
 			);
 		});

@@ -6,6 +6,7 @@ import {makeAutoObservable} from 'mobx';
 
 class ChatInputSettingsStore {
 	convertEmoticons = false;
+	renderComposerAsPlainText = false;
 
 	constructor() {
 		makeAutoObservable(this, {}, {autoBind: true});

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import styles from '@app/features/voice/components/media_player/MediaPlayButton.module.css';
@@ -61,7 +62,7 @@ export function MediaFullscreenButton({
 				aria-label={label}
 				data-flx="voice.media-player.media-fullscreen-button.button.click"
 			>
-				<Icon size={iconSize} weight="bold" data-flx="voice.media-player.media-fullscreen-button.icon" />
+				<Icon size={remFromPx(iconSize)} weight="bold" data-flx="voice.media-player.media-fullscreen-button.icon" />
 			</button>
 		</FocusRing>
 	);

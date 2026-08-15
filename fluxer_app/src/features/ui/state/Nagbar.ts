@@ -39,7 +39,6 @@ export interface NagbarSettings {
 	forceCorruptedInstallation: boolean;
 	forceScheduledMaintenance: boolean;
 	forceVoiceSessionRestore: boolean;
-	forceCanaryTesterCta: boolean;
 	forceGuildMfaRequirement: boolean;
 	forceHideOffline: boolean;
 	forceHideEmailVerification: boolean;
@@ -60,7 +59,6 @@ export interface NagbarSettings {
 	forceHideCorruptedInstallation: boolean;
 	forceHideScheduledMaintenance: boolean;
 	forceHideVoiceSessionRestore: boolean;
-	forceHideCanaryTesterCta: boolean;
 	forceHideGuildMfaRequirement: boolean;
 }
 
@@ -87,7 +85,6 @@ export class Nagbar implements NagbarSettings {
 	guildMfaRequirementDismissed: Record<string, boolean> = {};
 	guildMembershipCtaDismissed = false;
 	visionaryMfaDismissed = false;
-	canaryTesterCtaDismissalVersion = 0;
 	scheduledMaintenanceDismissalVersion = 0;
 	claimAccountModalShownThisSession = false;
 	forceOffline = false;
@@ -109,7 +106,6 @@ export class Nagbar implements NagbarSettings {
 	forceCorruptedInstallation = false;
 	forceScheduledMaintenance = false;
 	forceVoiceSessionRestore = false;
-	forceCanaryTesterCta = false;
 	forceGuildMfaRequirement = false;
 	forceHideOffline = false;
 	forceHideEmailVerification = false;
@@ -130,7 +126,6 @@ export class Nagbar implements NagbarSettings {
 	forceHideCorruptedInstallation = false;
 	forceHideScheduledMaintenance = false;
 	forceHideVoiceSessionRestore = false;
-	forceHideCanaryTesterCta = false;
 	forceHideGuildMfaRequirement = false;
 
 	constructor() {
@@ -297,10 +292,6 @@ export class Nagbar implements NagbarSettings {
 		return this.forceHideGuildMembershipCta;
 	}
 
-	bumpCanaryTesterCtaDismissed(): void {
-		this.canaryTesterCtaDismissalVersion++;
-	}
-
 	bumpScheduledMaintenanceDismissed(): void {
 		this.scheduledMaintenanceDismissalVersion++;
 	}
@@ -384,7 +375,6 @@ export class Nagbar implements NagbarSettings {
 		this.forceCorruptedInstallation = false;
 		this.forceScheduledMaintenance = false;
 		this.forceVoiceSessionRestore = false;
-		this.forceCanaryTesterCta = false;
 		this.forceGuildMfaRequirement = false;
 		this.forceHideOffline = false;
 		this.forceHideEmailVerification = false;
@@ -405,7 +395,6 @@ export class Nagbar implements NagbarSettings {
 		this.forceHideCorruptedInstallation = false;
 		this.forceHideScheduledMaintenance = false;
 		this.forceHideVoiceSessionRestore = false;
-		this.forceHideCanaryTesterCta = false;
 		this.forceHideGuildMfaRequirement = false;
 	}
 

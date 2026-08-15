@@ -11,6 +11,7 @@ interface CronDefinition {
 	taskType: WorkerTaskName;
 	payload: WorkerJobPayload;
 	cronExpression: string;
+	ledger: boolean;
 	lastFired: number;
 }
 
@@ -89,12 +90,19 @@ export class CronScheduler {
 		this.kvClient = kvClient;
 	}
 
-	upsert(id: string, taskType: WorkerTaskName, payload: WorkerJobPayload, cronExpression: string): void {
+	upsert(
+		id: string,
+		taskType: WorkerTaskName,
+		payload: WorkerJobPayload,
+		cronExpression: string,
+		options: {ledger: boolean},
+	): void {
 		this.definitions.set(id, {
 			id,
 			taskType,
 			payload,
 			cronExpression,
+			ledger: options.ledger,
 			lastFired: 0,
 		});
 	}
@@ -133,7 +141,7 @@ export class CronScheduler {
 					if (!acquired) {
 						continue;
 					}
-					await this.workerService.addJob(def.taskType, def.payload, {jobKey});
+					await this.workerService.addJob(def.taskType, def.payload, {jobKey, skipLedger: !def.ledger});
 					this.logger.debug({cronId: def.id, taskType: def.taskType}, 'Cron job fired');
 				} catch (error) {
 					this.logger.error({err: error, cronId: def.id, taskType: def.taskType}, 'Failed to enqueue cron job');

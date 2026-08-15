@@ -53,6 +53,7 @@ import {assertGuildMemberCanCommunicate} from '../../../utils/GuildCommunication
 import type {AttachmentRequestData, AttachmentToProcess} from '../../AttachmentDTOs';
 import type {MessageRequest, MessageUpdateRequest} from '../../MessageTypes';
 import type {IChannelRepositoryAggregate} from '../../repositories/IChannelRepositoryAggregate';
+import type {AttachmentUploadTraceRepository} from '../../repositories/message/AttachmentUploadTraceRepository';
 import type {AuthenticatedChannel} from '../AuthenticatedChannel';
 import type {MessageChannelAuthService} from './MessageChannelAuthService';
 import type {DmNsfwContext} from './MessageContentService';
@@ -88,6 +89,7 @@ interface MessageSendServiceDeps {
 	dispatchService: MessageDispatchService;
 	operationsHelpers: MessageOperationsHelpers;
 	embedAttachmentResolver: MessageEmbedAttachmentResolver;
+	attachmentUploadTraceRepository: AttachmentUploadTraceRepository;
 	limitConfigService: LimitConfigService;
 	directMessageSpamMitigationService: DirectMessageSpamMitigationService;
 }
@@ -204,6 +206,17 @@ export class MessageSendService {
 		return processed.length > 0 ? processed : undefined;
 	}
 
+	private resolveWebhookAttachmentUploadUserId(
+		webhook: Webhook,
+		attachments?: Array<AttachmentRequestData>,
+	): UserID | undefined {
+		const uploadUserId = webhook.creatorId ?? undefined;
+		if (uploadUserId === undefined && this.attachmentsToProcess(attachments) !== undefined) {
+			throw InputValidationError.fromCode('attachments', ValidationErrorCodes.INVALID_MESSAGE_DATA);
+		}
+		return uploadUserId;
+	}
+
 	private getOneToOneDmRecipientId(channel: Channel, senderId: UserID): UserID | null {
 		if (channel.guildId || channel.type !== ChannelTypes.DM) {
 			return null;
@@ -241,10 +254,14 @@ export class MessageSendService {
 			hasPermission(Permissions.ATTACH_FILES),
 		]);
 		const hasFavoriteMeme = data.favorite_meme_id != null;
+		const hasUploadedAttachments = this.attachmentsToProcess(data.attachments) !== undefined;
 		if (data.embeds && data.embeds.length > 0 && !canEmbedLinks) {
 			throw new MissingPermissionsError();
 		}
-		if (hasFavoriteMeme && (!canEmbedLinks || !canAttachFiles)) {
+		if (hasFavoriteMeme && !canEmbedLinks) {
+			throw new MissingPermissionsError();
+		}
+		if ((hasFavoriteMeme || hasUploadedAttachments) && !canAttachFiles) {
 			throw new MissingPermissionsError();
 		}
 		if (guild) {
@@ -369,6 +386,7 @@ export class MessageSendService {
 		await this.ensureAttachmentsExist({
 			attachments: data.attachments,
 			user,
+			channelId,
 			guildFeatures: guild?.features ?? null,
 		});
 	}
@@ -435,6 +453,7 @@ export class MessageSendService {
 		await this.ensureAttachmentsExist({
 			attachments: data.attachments,
 			user,
+			channelId,
 			guildFeatures: null,
 		});
 	}
@@ -481,10 +500,12 @@ export class MessageSendService {
 	private async ensureAttachmentsExist({
 		attachments,
 		user,
+		channelId,
 		guildFeatures,
 	}: {
 		attachments?: Array<AttachmentRequestData>;
 		user: User;
+		channelId: ChannelID;
 		guildFeatures: Iterable<string> | null;
 	}): Promise<void> {
 		if (!attachments || attachments.length === 0) return;
@@ -494,6 +515,18 @@ export class MessageSendService {
 		for (let index = 0; index < attachments.length; index++) {
 			const attachment = attachments[index];
 			if (!('upload_filename' in attachment) || !attachment.upload_filename) continue;
+			const pendingUpload = await this.deps.attachmentUploadTraceRepository.getPendingUpload({
+				uploadKey: attachment.upload_filename,
+				userId: user.id,
+				channelId,
+			});
+			if (!pendingUpload) {
+				throw InputValidationError.fromCode(
+					`attachments.${index}.upload_filename`,
+					ValidationErrorCodes.UPLOADED_ATTACHMENT_NOT_FOUND,
+					{filename: attachment.filename},
+				);
+			}
 			const metadata = await this.deps.storageService.getObjectMetadata(
 				Config.s3.buckets.uploads,
 				attachment.upload_filename,
@@ -832,6 +865,7 @@ export class MessageSendService {
 		await this.ensureAttachmentsExist({
 			attachments: data.attachments,
 			user,
+			channelId,
 			guildFeatures: guild?.features ?? null,
 		});
 		const {attachmentsToProcess, favoriteMemeAttachment} = await this.prepareMessageAttachments({
@@ -920,6 +954,7 @@ export class MessageSendService {
 			flags: this.deps.validationService.calculateMessageFlags(data),
 			embeds: data.embeds,
 			attachments: attachmentsToProcess,
+			attachmentUploadUserId: user.id,
 			processedAttachments: favoriteMemeAttachment ? [favoriteMemeAttachment] : undefined,
 			stickerIds: data.sticker_ids ? data.sticker_ids.flatMap((stickerId) => createStickerID(stickerId)) : undefined,
 			messageReference,
@@ -1139,6 +1174,7 @@ export class MessageSendService {
 			flags: this.deps.validationService.calculateMessageFlags(data),
 			embeds: data.embeds,
 			attachments: this.attachmentsToProcess(data.attachments),
+			attachmentUploadUserId: this.resolveWebhookAttachmentUploadUserId(webhook, data.attachments),
 			messageReference,
 			messageSnapshots,
 			guildId: channel.guildId,
@@ -1220,6 +1256,7 @@ export class MessageSendService {
 			data,
 			channel,
 			guild,
+			attachmentUploadUserId: this.resolveWebhookAttachmentUploadUserId(webhook, data.attachments),
 			allowEmbeds: true,
 		});
 		await this.deps.dispatchService.dispatchMessageUpdate({channel, message: updatedMessage, requestCache});
@@ -1268,6 +1305,7 @@ export class MessageSendService {
 		await this.ensureAttachmentsExist({
 			attachments: data.attachments,
 			user,
+			channelId,
 			guildFeatures: null,
 		});
 		const {attachmentsToProcess, favoriteMemeAttachment} = await this.prepareMessageAttachments({
@@ -1292,6 +1330,7 @@ export class MessageSendService {
 			flags: data.flags ? data.flags & SENDABLE_MESSAGE_FLAGS : 0,
 			embeds: data.embeds,
 			attachments: attachmentsToProcess,
+			attachmentUploadUserId: user.id,
 			processedAttachments: favoriteMemeAttachment ? [favoriteMemeAttachment] : undefined,
 			messageReference,
 			messageSnapshots,

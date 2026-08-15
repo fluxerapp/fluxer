@@ -19,6 +19,7 @@ import {
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
@@ -226,9 +227,13 @@ const GiftCard: React.FC<GiftCardProps> = observer(({gift, isExpanded, onToggle,
 										onClick={handleCopy}
 										leftIcon={
 											copied ? (
-												<CheckIcon size={16} weight="bold" data-flx="user.gift-inventory-tab.gift-card.check-icon" />
+												<CheckIcon
+													size={remFromPx(16)}
+													weight="bold"
+													data-flx="user.gift-inventory-tab.gift-card.check-icon"
+												/>
 											) : (
-												<CopyIcon size={16} data-flx="user.gift-inventory-tab.gift-card.copy-icon" />
+												<CopyIcon size={remFromPx(16)} data-flx="user.gift-inventory-tab.gift-card.copy-icon" />
 											)
 										}
 										data-flx="user.gift-inventory-tab.gift-card.button.copy"
@@ -267,7 +272,7 @@ const GiftCard: React.FC<GiftCardProps> = observer(({gift, isExpanded, onToggle,
 									onClick={handleShare}
 									leftIcon={
 										<ShareNetworkIcon
-											size={16}
+											size={remFromPx(16)}
 											weight="bold"
 											data-flx="user.gift-inventory-tab.gift-card.share-network-icon"
 										/>

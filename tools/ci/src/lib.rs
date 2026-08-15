@@ -12,7 +12,6 @@ mod functions;
 mod gateway;
 mod release;
 mod schema;
-mod static_bucket;
 
 use anyhow::Result;
 use clap::{Parser, Subcommand};
@@ -38,10 +37,8 @@ enum Command {
     CiScripts(ci_workflow::CiScriptsArgs),
     CleanSchemaGeneratedFiles(schema::CleanSchemaGeneratedFilesArgs),
     Gateway(gateway::GatewayArgs),
-    RepairStaticAssetMetadata(static_bucket::RepairStaticAssetMetadataArgs),
     Release(release::ReleaseArgs),
     ResolveCalver(calver::ResolveCalverArgs),
-    SyncStaticBucket(static_bucket::SyncStaticBucketArgs),
     TestWebrtcSenderRust(desktop_native::TestWebrtcSenderRustArgs),
 }
 
@@ -60,12 +57,8 @@ pub async fn run() -> Result<()> {
         Command::CiScripts(args) => ci_workflow::run_ci_scripts(args).await,
         Command::CleanSchemaGeneratedFiles(args) => schema::run_clean_generated_files(args),
         Command::Gateway(args) => gateway::run_gateway(args),
-        Command::RepairStaticAssetMetadata(args) => {
-            static_bucket::repair_asset_metadata(args).await
-        }
         Command::Release(args) => release::run(args).await,
         Command::ResolveCalver(args) => calver::run(args),
-        Command::SyncStaticBucket(args) => static_bucket::run(args).await,
         Command::TestWebrtcSenderRust(args) => desktop_native::run_test_webrtc_sender_rust(args),
     }
 }

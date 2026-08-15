@@ -41,6 +41,7 @@ class Presence {
 	private remotePresenceCountVersionByGuild = observable.map<string, number>();
 	private customStatuses = new Map<string, CustomStatus | null>();
 	statuses = new Map<string, StatusType>();
+	private mobilePresenceUserIds = new Map<string, true>();
 	presenceVersion = 0;
 	private statusListeners: Map<string, Set<StatusListener>> = new Map();
 
@@ -51,6 +52,7 @@ class Presence {
 			| 'presences'
 			| 'remotePresenceCountsByGuild'
 			| 'remotePresenceCountVersionByGuild'
+			| 'mobilePresenceUserIds'
 			| 'suppressVersionBump'
 		>(
 			this,
@@ -59,6 +61,7 @@ class Presence {
 				presences: false,
 				remotePresenceCountsByGuild: false,
 				remotePresenceCountVersionByGuild: false,
+				mobilePresenceUserIds: observable.shallow,
 				suppressVersionBump: false,
 			},
 			{autoBind: true},
@@ -155,7 +158,7 @@ class Presence {
 		if (userId === Authentication.currentUserId) {
 			return MobileLayout.isMobileLayout();
 		}
-		return this.presences.get(userId)?.mobile ?? false;
+		return this.mobilePresenceUserIds.has(userId);
 	}
 
 	getCustomStatus(userId: string): CustomStatus | null {
@@ -266,6 +269,7 @@ class Presence {
 		this.remotePresenceCountVersionByGuild.clear();
 		this.statuses.clear();
 		this.customStatuses.clear();
+		this.mobilePresenceUserIds.clear();
 		this.bumpPresenceVersion();
 		this.statuses.set(user.id, localStatus);
 		this.customStatuses.set(user.id, localCustomStatus);
@@ -304,6 +308,7 @@ class Presence {
 		this.remotePresenceCountVersionByGuild.clear();
 		this.statuses.clear();
 		this.customStatuses.clear();
+		this.mobilePresenceUserIds.clear();
 		this.bumpPresenceVersion();
 		for (const userId of previousUserIds) {
 			this.notifyStatusListeners(userId, StatusTypes.OFFLINE, false);
@@ -548,11 +553,16 @@ class Presence {
 	private updateStatusFromPresence(userId: string, presence: FlattenedPresence): void {
 		const oldStatus = this.statuses.get(userId) ?? StatusTypes.OFFLINE;
 		const newStatus = presence.status ?? StatusTypes.OFFLINE;
-		const newMobile = presence.mobile ?? false;
 		const statusChanged = oldStatus !== newStatus;
 		if (statusChanged) {
 			this.statuses.set(userId, newStatus);
 		}
+		if (presence.mobile) {
+			this.mobilePresenceUserIds.set(userId, true);
+		} else {
+			this.mobilePresenceUserIds.delete(userId);
+		}
+		const newMobile = this.mobilePresenceUserIds.has(userId);
 		this.notifyStatusListeners(userId, newStatus, newMobile);
 	}
 
@@ -563,6 +573,7 @@ class Presence {
 			this.removePresenceCounts(presence);
 		}
 		this.presences.delete(userId);
+		this.mobilePresenceUserIds.delete(userId);
 		this.customStatuses.delete(userId);
 		this.bumpPresenceVersion();
 		const oldStatus = this.statuses.get(userId);

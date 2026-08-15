@@ -5,7 +5,7 @@ import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import Messages from '@app/features/messaging/state/MessagingMessages';
 import {makeAutoObservable} from 'mobx';
 
-interface MessageReplyState {
+export interface MessageReplyState {
 	messageId: string;
 	mentioning: boolean;
 	snapshot: Message;

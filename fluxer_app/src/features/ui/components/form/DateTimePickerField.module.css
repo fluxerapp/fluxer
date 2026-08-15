@@ -289,8 +289,7 @@
 }
 
 .rdpOutside .rdpDayButton {
-	color: var(--text-primary-muted);
-	opacity: 0.4;
+	color: color-mix(in srgb, var(--text-primary-muted) 40%, transparent);
 }
 
 .rdpDisabled .rdpDayButton {

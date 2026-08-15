@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import {
 	AdvancedSettingControl,
@@ -85,7 +86,7 @@ export const AdvancedSettingRow = observer(
 					) : canOpen ? (
 						<Button
 							variant="secondary"
-							rightIcon={<ArrowRightIcon size={14} data-flx="user.advanced-settings-tab.arrow-right-icon" />}
+							rightIcon={<ArrowRightIcon size={remFromPx(14)} data-flx="user.advanced-settings-tab.arrow-right-icon" />}
 							onClick={() => onOpen(item)}
 							data-flx="user.advanced-settings-tab.button.open-source"
 						>

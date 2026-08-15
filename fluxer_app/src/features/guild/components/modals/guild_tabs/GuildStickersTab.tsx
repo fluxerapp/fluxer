@@ -24,6 +24,7 @@ import {openFilePicker} from '@app/features/messaging/utils/FilePickerUtils';
 import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
 import Permission from '@app/features/permissions/state/Permission';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import {Input} from '@app/features/ui/components/form/FormInput';
@@ -238,7 +239,7 @@ const GuildStickersTab: React.FC<{guildId: string}> = observer(function GuildSti
 					onChange={(e) => setSearchQuery(e.target.value)}
 					leftIcon={
 						<MagnifyingGlassIcon
-							size={16}
+							size={remFromPx(16)}
 							weight="bold"
 							data-flx="guild.guild-tabs.guild-stickers-tab.magnifying-glass-icon"
 						/>

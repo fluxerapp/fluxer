@@ -1,19 +1,12 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
 .wrapperSides {
-	margin-left: 0;
-	margin-right: 0;
-	width: 100%;
 	max-width: 100%;
 	box-sizing: border-box;
 }
 
 .box {
 	position: relative;
-	background-color: var(--background-secondary-lighter);
-	border: none;
-	transition: border-color 0.2s ease;
-	margin-bottom: 0;
 	max-width: 100%;
 	box-sizing: border-box;
 }
@@ -28,15 +21,11 @@
 }
 
 .stackSection + .stackSection {
-	border-top: 0.0625rem solid var(--user-area-divider-color);
-}
-
-.box:focus-within {
-	border-top: none;
+	border-top: 0.0625rem solid var(--composer-divider-color, var(--user-area-divider-color));
 }
 
 .roundedAll {
-	border-radius: 0;
+	border-radius: var(--composer-box-radius, 0px);
 }
 
 .roundedTop {
@@ -44,17 +33,8 @@
 	border-top-right-radius: 0;
 }
 
-.roundedBottom {
-	border-bottom-left-radius: 0;
-	border-bottom-right-radius: 0;
-}
-
 .noBottomBorder {
 	border-bottom-width: 0;
-}
-
-.bottomSpacing {
-	margin-bottom: 0;
 }
 
 .disabled {
@@ -62,13 +42,107 @@
 	cursor: not-allowed;
 }
 
-.topBarContainer {
-	position: relative;
-	z-index: 1;
-	flex-shrink: 0;
+.composerRoot {
+	--composer-action-button-size: 2rem;
+	--composer-divider-color: var(--floating-surface-ring-color-strong);
+}
+
+.composerRoot::before {
+	content: '';
+	position: absolute;
+	bottom: calc(100% + var(--composer-box-inset, 0px));
+	inset-inline: calc(-1 * var(--composer-box-inset-inline, 0px));
+	height: max(0px, calc(var(--composer-status-safe-area) - var(--composer-box-inset, 0px)));
+	background: linear-gradient(
+		to bottom,
+		transparent 0%,
+		color-mix(in srgb, var(--composer-surface-color) 42%, transparent) 34%,
+		color-mix(in srgb, var(--composer-surface-color) 82%, transparent) 66%,
+		var(--composer-surface-color) 100%
+	);
+	pointer-events: none;
+}
+
+.statusRail {
+	--typing-pill-height: var(--composer-status-line-height, 1.125rem);
+	--slowmode-indicator-height: var(--composer-status-line-height, 1.125rem);
+	position: absolute;
+	inset-inline: var(--composer-box-padding-inline, 0px);
+	bottom: calc(100% + var(--composer-status-safe-gap, 0.5rem));
+	z-index: 3;
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(0, auto);
+	align-items: center;
+	gap: 0.5rem;
+	min-width: 0;
+	max-width: 100%;
+	height: var(--composer-status-line-height, 1.125rem);
+	box-sizing: border-box;
+	text-shadow:
+		0 0 0.1875rem var(--composer-surface-color),
+		0 0 0.5rem var(--composer-surface-color);
+	pointer-events: none;
+}
+
+.statusRailLeft {
+	display: flex;
+	align-items: center;
+	min-width: 0;
+	max-width: 100%;
+	overflow: hidden;
+	pointer-events: none;
+}
+
+.statusTypingSlot {
+	display: flex;
+	min-width: 0;
+	max-width: min(24rem, 100%);
+	flex: 0 1 auto;
+	pointer-events: auto;
+}
+
+.statusTypingSlot > * {
+	min-width: 0;
+	max-width: 100%;
+}
+
+.statusSlowmodeSlot {
+	min-width: 0;
+	max-width: min(14rem, 35vw);
+	justify-self: end;
+	pointer-events: auto;
+}
+
+.composerActionStack {
+	display: flex;
+	flex: 0 0 auto;
+	flex-direction: column;
+	margin-inline: calc(-1 * var(--composer-box-padding-inline, 0px));
+	min-width: 0;
+	width: auto;
+	overflow: hidden;
+	box-sizing: border-box;
+	border-bottom: 0.0625rem solid var(--composer-divider-color, var(--background-modifier-accent));
+	border-radius: var(--composer-box-radius, 0px) var(--composer-box-radius, 0px) 0 0;
+	background-color: color-mix(in srgb, var(--background-textarea) 84%, var(--background-tertiary) 16%);
+}
+
+.composerActionRow {
+	display: flex;
+	min-width: 0;
 	width: 100%;
 	max-width: 100%;
 	box-sizing: border-box;
+}
+
+.composerActionRow + .composerActionRow {
+	border-top: 0.0625rem solid color-mix(in srgb, var(--background-modifier-accent) 72%, transparent);
+}
+
+.composerActionRow > * {
+	width: 100%;
+	max-width: 100%;
+	background-color: transparent;
 }
 
 .barInner {
@@ -85,4 +159,13 @@
 .separator {
 	height: 0.0625rem;
 	background-color: transparent;
+}
+
+.composerActionRow .barInner {
+	min-height: 2.25rem;
+	padding-inline: 0.75rem 0.375rem;
+}
+
+.composerActionRow .separator {
+	display: none;
 }

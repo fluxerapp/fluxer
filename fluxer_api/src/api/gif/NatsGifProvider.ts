@@ -21,8 +21,8 @@ const DEFAULT_GIF_SERVICE_TIMEOUT_MS = 12_000;
 const DEFAULT_GIF_SERVICE_REGISTER_SHARE_TIMEOUT_MS = 3_000;
 const GIF_PROVIDER_META: GifProviderMeta = {
 	name: 'klipy',
-	displayName: 'KLIPY',
-	attributionRequired: true,
+	displayName: 'Klipy',
+	attributionRequired: false,
 };
 const KLIPY_SHARE_ORIGIN = 'https://klipy.com';
 const KLIPY_SHARE_HOSTS = new Set(['klipy.com', 'www.klipy.com']);

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
+import {noteText} from '@app/features/theme/fonts/ScriptFontLoader';
 import UserPinnedDM from '@app/features/user/state/UserPinnedDM';
 import Users from '@app/features/user/state/Users';
 import {ChannelTypes, GUILD_TEXT_BASED_CHANNEL_TYPES, Permissions} from '@fluxer/constants/src/ChannelConstants';
@@ -87,6 +88,7 @@ export class Channel {
 		this.id = channel.id;
 		this.guildId = channel.guild_id;
 		this.name = channel.name;
+		noteText(this.name);
 		this.topic = channel.topic ?? null;
 		this.url = channel.url ?? null;
 		this.icon = channel.icon ?? null;

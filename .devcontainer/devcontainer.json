@@ -6,8 +6,7 @@
 	"shutdownAction": "stopCompose",
 	"remoteUser": "vscode",
 	"remoteEnv": {
-		"DOCKER_HOST": "unix:///var/run/docker.sock",
-		"KUBECONFIG": "/workspaces/fluxer/.fluxer/k8s/local-kubeconfig"
+		"DOCKER_HOST": "unix:///var/run/docker.sock"
 	},
 	"runServices": ["workspace", "postgres", "valkey", "nats", "livekit", "meilisearch", "mailpit"],
 	"forwardPorts": [
@@ -59,7 +58,7 @@
 		}
 	},
 	"postCreateCommand": "sudo chown -R vscode:vscode /workspaces/fluxer/target && find /workspaces/fluxer -maxdepth 4 -type d -name node_modules -prune -exec sudo chown -R vscode:vscode {} + && sudo chown -R vscode:vscode /home/vscode/.local/share/pnpm && cargo run -p fluxer-dev -- bootstrap",
-	"postStartCommand": "cargo run -p fluxer-dev -- post-start && bash /workspaces/fluxer/fluxer_docs/serve.sh --daemon",
+	"postStartCommand": "bash /workspaces/fluxer/.devcontainer/fix-docker-socket.sh && cargo run -p fluxer-dev -- post-start && bash /workspaces/fluxer/fluxer_docs/serve.sh --daemon",
 	"customizations": {
 		"vscode": {
 			"extensions": [

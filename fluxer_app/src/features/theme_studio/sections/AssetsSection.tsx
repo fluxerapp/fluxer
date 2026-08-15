@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import ThemeLibrary from '@app/features/theme/state/ThemeLibrary';
 import {createThemeAssetReference, createThemeLocalFileReference} from '@app/features/theme/utils/ThemeCssUtils';
 import {showThemeStudioErrorModal} from '@app/features/theme_studio/utils/ThemeStudioErrorModalUtils';
@@ -125,7 +126,11 @@ export const AssetsSection: React.FC = observer(() => {
 					variant="secondary"
 					compact
 					leadingIcon={
-						<UploadSimpleIcon size={13} weight="bold" data-flx="theme-studio.assets-section.upload-simple-icon" />
+						<UploadSimpleIcon
+							size={remFromPx(13)}
+							weight="bold"
+							data-flx="theme-studio.assets-section.upload-simple-icon"
+						/>
 					}
 					onClick={() => assetInputRef.current?.click()}
 					data-flx="theme-studio.assets-section.studio-button.click"
@@ -136,7 +141,9 @@ export const AssetsSection: React.FC = observer(() => {
 					<StudioButton
 						variant="secondary"
 						compact
-						leadingIcon={<FilePlusIcon size={13} weight="bold" data-flx="theme-studio.assets-section.file-plus-icon" />}
+						leadingIcon={
+							<FilePlusIcon size={remFromPx(13)} weight="bold" data-flx="theme-studio.assets-section.file-plus-icon" />
+						}
 						onClick={handleAddLocalFiles}
 						data-flx="theme-studio.assets-section.studio-button.add-local-files"
 					>
@@ -158,7 +165,9 @@ export const AssetsSection: React.FC = observer(() => {
 					{ThemeLibrary.assets.length === 0 ? (
 						<div className={styles.empty} data-flx="theme-studio.assets-section.empty">
 							<StudioEmptyState
-								icon={<ImageIcon size={20} weight="duotone" data-flx="theme-studio.assets-section.image-icon" />}
+								icon={
+									<ImageIcon size={remFromPx(20)} weight="duotone" data-flx="theme-studio.assets-section.image-icon" />
+								}
 								title={i18n._(NO_UPLOADED_ASSETS_DESCRIPTOR)}
 								description={i18n._(DROP_IMAGES_FONTS_OR_OTHER_FILES_HERE_TO_DESCRIPTOR)}
 								data-flx="theme-studio.assets-section.studio-empty-state"
@@ -172,7 +181,11 @@ export const AssetsSection: React.FC = observer(() => {
 									<StudioListItem
 										key={asset.id}
 										leading={
-											<ImageIcon size={16} weight="duotone" data-flx="theme-studio.assets-section.image-icon--2" />
+											<ImageIcon
+												size={remFromPx(16)}
+												weight="duotone"
+												data-flx="theme-studio.assets-section.image-icon--2"
+											/>
 										}
 										label={asset.name}
 										codeBody={reference}
@@ -184,7 +197,11 @@ export const AssetsSection: React.FC = observer(() => {
 													onClick={() => handleCopyReference(reference)}
 													data-flx="theme-studio.assets-section.studio-icon-button.copy-reference"
 												>
-													<CopyIcon size={14} weight="bold" data-flx="theme-studio.assets-section.copy-icon" />
+													<CopyIcon
+														size={remFromPx(14)}
+														weight="bold"
+														data-flx="theme-studio.assets-section.copy-icon"
+													/>
 												</StudioIconButton>
 												<StudioIconButton
 													compact
@@ -200,7 +217,11 @@ export const AssetsSection: React.FC = observer(() => {
 													}}
 													data-flx="theme-studio.assets-section.studio-icon-button"
 												>
-													<TrashIcon size={14} weight="bold" data-flx="theme-studio.assets-section.trash-icon" />
+													<TrashIcon
+														size={remFromPx(14)}
+														weight="bold"
+														data-flx="theme-studio.assets-section.trash-icon"
+													/>
 												</StudioIconButton>
 											</>
 										}
@@ -219,7 +240,11 @@ export const AssetsSection: React.FC = observer(() => {
 						<div className={styles.empty} data-flx="theme-studio.assets-section.empty--2">
 							<StudioEmptyState
 								icon={
-									<FilePlusIcon size={20} weight="duotone" data-flx="theme-studio.assets-section.file-plus-icon--2" />
+									<FilePlusIcon
+										size={remFromPx(20)}
+										weight="duotone"
+										data-flx="theme-studio.assets-section.file-plus-icon--2"
+									/>
 								}
 								title={i18n._(NO_LOCAL_FILES_REFERENCED_DESCRIPTOR)}
 								description={
@@ -239,7 +264,7 @@ export const AssetsSection: React.FC = observer(() => {
 										key={file.id}
 										leading={
 											<FilePlusIcon
-												size={16}
+												size={remFromPx(16)}
 												weight="duotone"
 												data-flx="theme-studio.assets-section.file-plus-icon--3"
 											/>
@@ -254,7 +279,11 @@ export const AssetsSection: React.FC = observer(() => {
 													onClick={() => handleCopyReference(reference)}
 													data-flx="theme-studio.assets-section.studio-icon-button.copy-reference--2"
 												>
-													<CopyIcon size={14} weight="bold" data-flx="theme-studio.assets-section.copy-icon--2" />
+													<CopyIcon
+														size={remFromPx(14)}
+														weight="bold"
+														data-flx="theme-studio.assets-section.copy-icon--2"
+													/>
 												</StudioIconButton>
 												<StudioIconButton
 													compact
@@ -270,7 +299,11 @@ export const AssetsSection: React.FC = observer(() => {
 													}}
 													data-flx="theme-studio.assets-section.studio-icon-button--2"
 												>
-													<TrashIcon size={14} weight="bold" data-flx="theme-studio.assets-section.trash-icon--2" />
+													<TrashIcon
+														size={remFromPx(14)}
+														weight="bold"
+														data-flx="theme-studio.assets-section.trash-icon--2"
+													/>
 												</StudioIconButton>
 											</>
 										}

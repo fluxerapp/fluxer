@@ -338,8 +338,8 @@
 }
 
 .gridLayoutWrapperCompact {
-	padding: max(clamp(0.25rem, 1.6cqh, 0.4rem), var(--compact-call-content-safe-top, 0)) 0
-		max(clamp(0.35rem, 2cqh, 0.65rem), var(--compact-call-content-safe-bottom, 0));
+	padding: max(clamp(0.25rem, 1.6cqh, 0.4rem), var(--compact-call-content-safe-top, 0px)) 0
+		max(clamp(0.35rem, 2cqh, 0.65rem), var(--compact-call-content-safe-bottom, 0px));
 }
 
 .focusLayoutContainer {
@@ -415,11 +415,11 @@
 	--focus-expanded-mini-section-width: min(96cqw, 105rem);
 	--focus-expanded-mini-section-padding-inline: clamp(0.5rem, 1.2vw, 1.25rem);
 	--focus-expanded-mini-content-width: max(
-		0,
+		0px,
 		calc(var(--focus-expanded-mini-section-width) - (2 * var(--focus-expanded-mini-section-padding-inline)))
 	);
 	--focus-expanded-mini-column-width: max(
-		0,
+		0px,
 		calc(
 			(
 				var(--focus-expanded-mini-content-width) -
@@ -530,7 +530,7 @@
 	position: absolute;
 	left: 0;
 	right: 0;
-	bottom: var(--voice-focus-members-row-bottom, 0);
+	bottom: var(--voice-focus-members-row-bottom, 0px);
 	width: 100%;
 	height: var(--voice-focus-members-row-height, 7.25rem);
 	display: flex;
@@ -804,10 +804,10 @@
 
 .focusLayoutContentFullscreen {
 	padding: 0;
-	--content-padding: 0;
-	--voice-focus-control-clearance: 0;
-	--voice-focus-members-row-height: 0;
-	--voice-focus-members-row-bottom: 0;
+	--content-padding: 0px;
+	--voice-focus-control-clearance: 0px;
+	--voice-focus-members-row-height: 0px;
+	--voice-focus-members-row-bottom: 0px;
 }
 
 .focusLayoutContentFullscreen .focusLayoutMainWrapper {
@@ -855,7 +855,7 @@
 }
 
 .focusLayoutContentAppFullscreen {
-	--voice-focus-control-clearance: calc(4.5rem + env(safe-area-inset-bottom, 0));
+	--voice-focus-control-clearance: calc(4.5rem + env(safe-area-inset-bottom, 0px));
 	--voice-focus-members-row-height: clamp(5.375rem, 13cqh, 7rem);
 	--voice-focus-members-row-bottom: var(--voice-focus-control-clearance);
 	--voice-focus-members-toggle-bottom: calc(var(--voice-focus-control-clearance) + 0.5rem);
@@ -879,7 +879,7 @@
 	left: 0;
 	right: 0;
 	bottom: 0;
-	height: calc(var(--voice-focus-members-row-bottom, 0) + var(--voice-focus-members-row-height, 7.25rem) + 2.5rem);
+	height: calc(var(--voice-focus-members-row-bottom, 0px) + var(--voice-focus-members-row-height, 7.25rem) + 2.5rem);
 	z-index: 1;
 	pointer-events: none;
 	background: linear-gradient(to top, rgb(0 0 0 / 0.7) 0%, rgb(0 0 0 / 0.55) 45%, rgb(0 0 0 / 0) 100%);
@@ -1072,7 +1072,7 @@
 .voiceEdgeFadeTop::before {
 	--voice-edge-gradient: var(--voice-header-gradient);
 	top: 0;
-	bottom: calc(0 - var(--voice-edge-gradient-extension));
+	bottom: calc(0px - var(--voice-edge-gradient-extension));
 	z-index: -1;
 }
 
@@ -1218,11 +1218,11 @@
 	.controlBarContainer {
 		--voice-control-horizontal-padding: 1rem;
 		--voice-control-top-padding: 0.5rem;
-		--voice-control-bottom-padding: calc(0.75rem + env(safe-area-inset-bottom, 0));
+		--voice-control-bottom-padding: calc(0.75rem + env(safe-area-inset-bottom, 0px));
 	}
 
 	.fullscreenButtonWrap {
-		bottom: calc(0.75rem + env(safe-area-inset-bottom, 0));
+		bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
 		right: 1rem;
 	}
 }
@@ -1250,7 +1250,7 @@
 	width: 100%;
 	background-color: #000;
 	--voice-focus-safe-top: 4rem;
-	--voice-focus-safe-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0));
+	--voice-focus-safe-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
 }
 
 .rootFocused .mainContent {
@@ -1356,13 +1356,13 @@
 }
 
 .mainContentGrid {
-	--voice-call-horizontal-padding: 0;
+	--voice-call-horizontal-padding: 0px;
 }
 
 .mainContentFocusFullscreen {
-	--voice-call-horizontal-padding: 0;
-	--voice-call-safe-top-padding: 0;
-	--voice-call-safe-bottom-padding: 0;
+	--voice-call-horizontal-padding: 0px;
+	--voice-call-safe-top-padding: 0px;
+	--voice-call-safe-bottom-padding: 0px;
 	position: relative;
 	inset: auto;
 	height: 100%;
@@ -1406,7 +1406,7 @@
 	background: transparent;
 	--voice-control-horizontal-padding: 1.5rem;
 	--voice-control-top-padding: 0.5rem;
-	--voice-control-bottom-padding: calc(0.75rem + env(safe-area-inset-bottom, 0));
+	--voice-control-bottom-padding: calc(0.75rem + env(safe-area-inset-bottom, 0px));
 	padding-left: var(--voice-control-horizontal-padding);
 	padding-right: var(--voice-control-horizontal-padding);
 	padding-top: var(--voice-control-top-padding);
@@ -1417,7 +1417,7 @@
 .fullscreenButtonWrap {
 	position: absolute;
 	right: clamp(1rem, 2vw, 2rem);
-	bottom: calc(0.75rem + env(safe-area-inset-bottom, 0));
+	bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
 	z-index: 35;
 	display: flex;
 	align-items: center;

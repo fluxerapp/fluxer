@@ -27,7 +27,7 @@
 	bottom: 0;
 	z-index: 2000;
 	background-color: var(--brand-primary);
-	padding-bottom: env(safe-area-inset-bottom, 0);
+	padding-bottom: env(safe-area-inset-bottom, 0px);
 	box-shadow: 0 -0.5rem 1.25rem rgba(0, 0, 0, 0.25);
 	box-sizing: border-box;
 }

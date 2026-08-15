@@ -4,18 +4,33 @@ import styles from '@app/features/guild/components/modals/guild_tabs/GuildRolesT
 import {RoleItem} from '@app/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleItem';
 import {
 	applyRoleUpdate,
+	ROLE_DND_TYPE,
 	type RoleUpdate,
 } from '@app/features/guild/components/modals/guild_tabs/guild_roles_tab/shared';
 import type {RoleMovePreview} from '@app/features/guild/components/modals/guild_tabs/RoleMoveOperation';
 import type {GuildRole} from '@app/features/guild/models/GuildRole';
 import {ROLES_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
+import {useDragAutoScroll} from '@app/features/ui/hooks/useDragAutoScroll';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {ArrowsDownUpIcon, PlusIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {DndProvider} from 'react-dnd';
+import {useCallback, useRef} from 'react';
+import {DndProvider, useDragLayer} from 'react-dnd';
 import {HTML5Backend} from 'react-dnd-html5-backend';
+
+const RoleDragAutoScroll: React.FC<{listRef: React.RefObject<HTMLDivElement | null>}> = ({listRef}) => {
+	const isDraggingRole = useDragLayer((monitor) => monitor.isDragging() && monitor.getItemType() === ROLE_DND_TYPE);
+	const getScrollElement = useCallback(() => {
+		const list = listRef.current;
+		if (list == null) return null;
+		return list.closest<HTMLElement>('[data-fluxer-scroll-container="true"]');
+	}, [listRef]);
+	useDragAutoScroll({active: isDraggingRole, getScrollElement});
+	return null;
+};
 
 interface RoleSidebarProps {
 	roles: Array<GuildRole>;
@@ -68,18 +83,24 @@ export const RoleSidebar: React.FC<RoleSidebarProps> = observer(
 		onHoistDrop,
 	}) => {
 		const {i18n} = useLingui();
+		const listRef = useRef<HTMLDivElement>(null);
 		if (hoistOrderMode) {
 			return (
 				<div data-flx="guild.guild-tabs.guild-roles-tab.sidebar-content.div">
 					<div
 						className={styles.leftTitle}
-						style={{padding: '6px 8px'}}
+						style={{padding: `${remFromPx(6)} ${remFromPx(8)}`}}
 						data-flx="guild.guild-tabs.guild-roles-tab.sidebar-content.left-title"
 					>
 						<Trans>Hoist order</Trans>
 					</div>
 					<div
-						style={{padding: '0 8px 8px 8px', display: 'flex', gap: '8px', flexDirection: 'column'}}
+						style={{
+							padding: `0 ${remFromPx(8)} ${remFromPx(8)} ${remFromPx(8)}`,
+							display: 'flex',
+							gap: remFromPx(8),
+							flexDirection: 'column',
+						}}
 						data-flx="guild.guild-tabs.guild-roles-tab.sidebar-content.div--2"
 					>
 						<Button
@@ -102,10 +123,14 @@ export const RoleSidebar: React.FC<RoleSidebarProps> = observer(
 							</Button>
 						)}
 					</div>
-					<div style={{padding: '0 8px 8px 8px'}} data-flx="guild.guild-tabs.guild-roles-tab.sidebar-content.div--3">
+					<div
+						ref={listRef}
+						style={{padding: `0 ${remFromPx(8)} ${remFromPx(8)} ${remFromPx(8)}`}}
+						data-flx="guild.guild-tabs.guild-roles-tab.sidebar-content.div--3"
+					>
 						<p
 							className={styles.subtleText}
-							style={{marginBottom: '8px'}}
+							style={{marginBottom: remFromPx(8)}}
 							data-flx="guild.guild-tabs.guild-roles-tab.sidebar-content.subtle-text"
 						>
 							<Trans>Drag roles to customize the order they appear in the member list.</Trans>
@@ -114,6 +139,7 @@ export const RoleSidebar: React.FC<RoleSidebarProps> = observer(
 							backend={HTML5Backend}
 							data-flx="guild.guild-tabs.guild-roles-tab.sidebar-content.dnd-provider"
 						>
+							<RoleDragAutoScroll listRef={listRef} />
 							{hoistedRoles.map((role, index) => {
 								const roleWithUpdates = applyRoleUpdate(role, roleUpdates.get(role.id));
 								return (
@@ -149,20 +175,29 @@ export const RoleSidebar: React.FC<RoleSidebarProps> = observer(
 			<div data-flx="guild.guild-tabs.guild-roles-tab.sidebar-content.div--4">
 				<div
 					className={styles.leftTitle}
-					style={{padding: '6px 8px'}}
+					style={{padding: `${remFromPx(6)} ${remFromPx(8)}`}}
 					data-flx="guild.guild-tabs.guild-roles-tab.sidebar-content.left-title--2"
 				>
 					{i18n._(ROLES_DESCRIPTOR)}
 				</div>
 				<div
-					style={{padding: '0 8px 8px 8px', display: 'flex', gap: '8px', flexDirection: 'column'}}
+					style={{
+						padding: `0 ${remFromPx(8)} ${remFromPx(8)} ${remFromPx(8)}`,
+						display: 'flex',
+						gap: remFromPx(8),
+						flexDirection: 'column',
+					}}
 					data-flx="guild.guild-tabs.guild-roles-tab.sidebar-content.div--5"
 				>
 					<Button
 						variant="secondary"
 						small={true}
 						leftIcon={
-							<PlusIcon size={18} weight="bold" data-flx="guild.guild-tabs.guild-roles-tab.sidebar-content.plus-icon" />
+							<PlusIcon
+								size={remFromPx(18)}
+								weight="bold"
+								data-flx="guild.guild-tabs.guild-roles-tab.sidebar-content.plus-icon"
+							/>
 						}
 						onClick={onCreateRole}
 						disabled={!canManageRoles}
@@ -176,7 +211,7 @@ export const RoleSidebar: React.FC<RoleSidebarProps> = observer(
 							small={true}
 							leftIcon={
 								<ArrowsDownUpIcon
-									size={18}
+									size={remFromPx(18)}
 									weight="bold"
 									data-flx="guild.guild-tabs.guild-roles-tab.sidebar-content.arrows-down-up-icon"
 								/>
@@ -188,11 +223,16 @@ export const RoleSidebar: React.FC<RoleSidebarProps> = observer(
 						</Button>
 					)}
 				</div>
-				<div style={{padding: '0 8px 8px 8px'}} data-flx="guild.guild-tabs.guild-roles-tab.sidebar-content.div--6">
+				<div
+					ref={listRef}
+					style={{padding: `0 ${remFromPx(8)} ${remFromPx(8)} ${remFromPx(8)}`}}
+					data-flx="guild.guild-tabs.guild-roles-tab.sidebar-content.div--6"
+				>
 					<DndProvider
 						backend={HTML5Backend}
 						data-flx="guild.guild-tabs.guild-roles-tab.sidebar-content.dnd-provider--2"
 					>
+						<RoleDragAutoScroll listRef={listRef} />
 						{roles.map((role: GuildRole, index) => {
 							const roleWithUpdates = applyRoleUpdate(role, roleUpdates.get(role.id));
 							return (

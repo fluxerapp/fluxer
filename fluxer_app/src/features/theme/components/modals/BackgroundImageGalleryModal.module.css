@@ -66,7 +66,7 @@
 	--action-toolbar-item-size: 2rem;
 	--action-toolbar-item-background: rgba(0, 0, 0, 0.6);
 	--action-toolbar-item-color: white;
-	--action-toolbar-item-border-width: 0;
+	--action-toolbar-item-border-width: 0px;
 }
 
 .actionButton:hover {
@@ -284,7 +284,7 @@
 	--action-toolbar-item-size: 2rem;
 	--action-toolbar-item-background: rgba(0, 0, 0, 0.6);
 	--action-toolbar-item-color: white;
-	--action-toolbar-item-border-width: 0;
+	--action-toolbar-item-border-width: 0px;
 	position: absolute;
 	top: 0.5rem;
 	right: 0.5rem;

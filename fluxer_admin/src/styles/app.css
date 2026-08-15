@@ -5,7 +5,7 @@
 
 @theme {
   --font-sans: "Fluxer Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Fluxer Sans", ui-sans-serif, system-ui, sans-serif;
   --color-brand-primary: hsl(242 70% 55%);
   --color-brand-primary-dark: hsl(242 70% 47%);
   --color-brand-primary-rgb: 93 79 192;
@@ -13,7 +13,6 @@
 
 :root {
   --brand-primary: hsl(242 70% 55%);
-  --font-bricolage: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
   --focus-ring-color: hsl(242 70% 55% / 0.45);
   --focus-ring-offset: #ffffff;
 }

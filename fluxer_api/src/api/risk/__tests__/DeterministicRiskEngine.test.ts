@@ -54,7 +54,6 @@ function createToolbox(
 		checkDomainDisposable: async ({domain}) => ({
 			domain,
 			isDisposable: false,
-			listSize: 0,
 		}),
 		checkMx: async ({domain}) => ({
 			domain,

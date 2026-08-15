@@ -68,12 +68,12 @@
 	gap: 0.25rem;
 }
 
-.addRoleButton {
+.assignRoleButton {
 	cursor: pointer;
 	transition: color 150ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.addRoleButtonIcon {
+.assignRoleButtonIcon {
 	display: flex;
 	height: 1rem;
 	width: 1rem;
@@ -83,8 +83,8 @@
 	cursor: pointer;
 }
 
-.addRoleButtonIcon:hover,
-.addRoleButtonIcon[data-context-menu-open='true'] {
+.assignRoleButtonIcon:hover,
+.assignRoleButtonIcon[data-context-menu-open='true'] {
 	color: var(--text-primary);
 }
 

@@ -22,6 +22,7 @@ import {createDownloadHandler} from '@app/features/messaging/utils/FileDownloadU
 import {buildMediaProxyURL, stripMediaProxyParams} from '@app/features/messaging/utils/MediaProxyUtils';
 import Permission from '@app/features/permissions/state/Permission';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {
 	CopyLinkIcon,
 	CopyMediaIcon,
@@ -823,7 +824,10 @@ export function useMediaMenuData(props: MediaMenuDataProps, options: MediaMenuDa
 					{
 						id: mediaMenuItemIds.editAltText,
 						icon: (
-							<PencilSimpleIcon size={20} data-flx="ui.action-menu.items.media-menu-data.groups.pencil-simple-icon" />
+							<PencilSimpleIcon
+								size={remFromPx(20)}
+								data-flx="ui.action-menu.items.media-menu-data.groups.pencil-simple-icon"
+							/>
 						),
 						label: i18n._(EDIT_ALT_TEXT_DESCRIPTOR),
 						onClick: handleEditAltText,

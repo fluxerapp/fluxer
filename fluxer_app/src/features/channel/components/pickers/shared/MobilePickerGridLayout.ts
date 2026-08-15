@@ -2,6 +2,7 @@
 
 import {EMOJIS_PER_ROW} from '@app/features/channel/components/emoji_picker/EmojiPickerConstants';
 import {STICKERS_PER_ROW_MOBILE} from '@app/features/channel/components/sticker_picker/StickerPickerConstants';
+import {getAppZoomFactor} from '@app/features/ui/utils/AppZoomUtils';
 
 const MOBILE_LIST_INLINE_PADDING = 8;
 const MOBILE_EMOJI_MIN_CELL_WIDTH = 32;
@@ -12,7 +13,7 @@ function getAvailableGridWidth(containerWidth: number): number {
 	if (containerWidth <= 0) {
 		return 0;
 	}
-	return Math.max(0, containerWidth - MOBILE_LIST_INLINE_PADDING);
+	return Math.max(0, containerWidth / getAppZoomFactor() - MOBILE_LIST_INLINE_PADDING);
 }
 
 function getPreferredGridColumns(params: {

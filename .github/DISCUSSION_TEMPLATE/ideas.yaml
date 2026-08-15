@@ -1,34 +1,41 @@
+# yaml-language-server: $schema=https://www.schemastore.org/github-discussion.json
+
 body:
   - type: markdown
     attributes:
       value: |
-        Search existing discussions before posting.
-        Report security issues at https://fluxer.app/security.
+        Search existing discussions before posting a feature proposal.
+
+        Report vulnerabilities through the [private form](https://github.com/fluxerapp/fluxer/security/advisories/new) or <security@fluxer.com>.
+
   - type: textarea
     id: problem
     attributes:
-      label: Problem
-      description: What problem are you trying to solve, and for whom?
+      label: Current problem
+      description: State what you are trying to do and what prevents it.
     validations:
       required: true
+
   - type: textarea
     id: proposal
     attributes:
-      label: Proposal
-      description: What should change?
+      label: Proposed change
+      description: State the expected behaviour.
     validations:
       required: true
+
   - type: textarea
     id: notes
     attributes:
-      label: Notes
-      description: Add constraints, tradeoffs, screenshots, or links.
+      label: Additional information
+      description: Optional. Include constraints, trade-offs, related discussions, screenshots or mockups.
     validations:
       required: false
+
   - type: checkboxes
     id: checks
     attributes:
-      label: Checks
+      label: Acknowledgements
       options:
         - label: I searched existing discussions.
           required: true

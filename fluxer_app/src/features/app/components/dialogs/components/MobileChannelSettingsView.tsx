@@ -7,6 +7,8 @@ import {
 	MobileSettingsDangerItem,
 	MobileSettingsList,
 } from '@app/features/app/components/dialogs/shared/MobileSettingsComponents';
+import {resolveSettingsTitle} from '@app/features/app/components/dialogs/shared/SettingsContentPresentation';
+import {usePreservedScrollerPosition} from '@app/features/app/components/dialogs/shared/UsePreservedScrollerPosition';
 import {ChannelDeleteModal} from '@app/features/channel/components/modals/ChannelDeleteModal';
 import type {Channel} from '@app/features/channel/models/Channel';
 import {DELETE_CATEGORY_DESCRIPTOR} from '@app/features/channel/utils/ChannelMessageDescriptors';
@@ -15,7 +17,7 @@ import channelStyles from '@app/features/guild/components/modals/GuildSettingsMo
 import Permission from '@app/features/permissions/state/Permission';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
-import {Scroller, type ScrollerHandle} from '@app/features/ui/components/Scroller';
+import {Scroller} from '@app/features/ui/components/Scroller';
 import styles from '@app/features/user/components/modals/UserSettingsModal.module.css';
 import type {
 	ChannelSettingsTab,
@@ -30,7 +32,7 @@ import {TrashIcon} from '@phosphor-icons/react';
 import {AnimatePresence, motion} from 'framer-motion';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {type UIEvent, useCallback, useEffect, useRef} from 'react';
+import {useCallback} from 'react';
 
 const DELETE_CHANNEL_DESCRIPTOR = msg({
 	message: 'Delete channel',
@@ -102,19 +104,10 @@ export const MobileChannelSettingsView: React.FC<MobileChannelSettingsViewProps>
 		});
 		const showMobileList = mobileNav.isRootView;
 		const showMobileContent = !mobileNav.isRootView;
-		const listScrollPositionRef = useRef(0);
-		const listScrollerRef = useRef<ScrollerHandle | null>(null);
-		const handleListScroll = useCallback((event: UIEvent<HTMLDivElement>) => {
-			listScrollPositionRef.current = event.currentTarget.scrollTop;
-		}, []);
-		useEffect(() => {
-			if (!showMobileList) return;
-			const scroller = listScrollerRef.current;
-			if (!scroller) return;
-			const target = listScrollPositionRef.current;
-			if (target === 0) return;
-			scroller.scrollTo({to: target, animate: false});
-		}, [showMobileList]);
+		const {scrollerRef: listScrollerRef, handleScroll: handleListScroll} = usePreservedScrollerPosition(showMobileList);
+		const currentTabLabel = currentTab ? currentTab.label : null;
+		const currentViewTitle = mobileNav.currentView ? mobileNav.currentView.title : null;
+		const mobileTitle = resolveSettingsTitle(currentTabLabel, currentViewTitle);
 		const dangerAction = canManageChannel ? (
 			<MobileSettingsDangerItem
 				icon={TrashIcon}
@@ -177,7 +170,8 @@ export const MobileChannelSettingsView: React.FC<MobileChannelSettingsViewProps>
 								data-flx="app.mobile-channel-settings-view.mobile-header-content--2"
 							>
 								<MobileHeaderWithBanner
-									title={currentTab.label || mobileNav.currentView?.title}
+									pageLinkHref={null}
+									title={mobileTitle}
 									onBack={handleBack}
 									showUnsavedBanner={showUnsavedBanner}
 									flashBanner={flashBanner}
@@ -207,7 +201,6 @@ export const MobileChannelSettingsView: React.FC<MobileChannelSettingsViewProps>
 								exit={reducedMotion ? 'center' : 'exit'}
 								transition={{duration: reducedMotion ? 0 : 0.15, ease: 'easeInOut'}}
 								className={styles.mobileContentPane}
-								style={{willChange: 'transform'}}
 								data-flx="app.mobile-channel-settings-view.mobile-content-pane"
 							>
 								<MobileSettingsList
@@ -231,7 +224,6 @@ export const MobileChannelSettingsView: React.FC<MobileChannelSettingsViewProps>
 								exit={reducedMotion ? 'center' : 'exit'}
 								transition={{duration: reducedMotion ? 0 : 0.15, ease: 'easeInOut'}}
 								className={styles.mobileContentPane}
-								style={{willChange: 'transform'}}
 								data-flx="app.mobile-channel-settings-view.mobile-content-pane--2"
 							>
 								<Scroller

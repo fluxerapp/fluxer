@@ -2,6 +2,7 @@
 
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {SettingsModalHeader} from '@app/features/app/components/dialogs/components/SettingsModalHeader';
+import {resolveSettingsTitle} from '@app/features/app/components/dialogs/shared/SettingsContentPresentation';
 import {
 	SettingsModalDesktopContent,
 	SettingsModalDesktopScroll,
@@ -117,6 +118,11 @@ export const DesktopChannelSettingsView: React.FC<DesktopChannelSettingsViewProp
 		const useOverride = SettingsSidebar.useOverride;
 		const activeTabPanelId = selectedTab ? `channel-settings-tabpanel-${selectedTab}` : undefined;
 		const activeTabId = selectedTab ? `channel-settings-tab-${selectedTab}` : undefined;
+		const fallbackSettingsTitle = i18n._(
+			isCategory ? CATEGORY_SETTINGS_LABEL_DESCRIPTOR : CHANNEL_SETTINGS_LABEL_DESCRIPTOR,
+		);
+		const currentTabLabel = currentTab ? currentTab.label : null;
+		const settingsTitle = resolveSettingsTitle(currentTabLabel, fallbackSettingsTitle);
 		const scrollKey = useMemo(
 			() => `channel-settings-${channel.id}-${selectedTab ?? 'none'}`,
 			[channel.id, selectedTab],
@@ -263,10 +269,8 @@ export const DesktopChannelSettingsView: React.FC<DesktopChannelSettingsViewProp
 					data-flx="app.desktop-channel-settings-view.settings-modal-desktop-content"
 				>
 					<SettingsModalHeader
-						title={
-							currentTab?.label ||
-							i18n._(isCategory ? CATEGORY_SETTINGS_LABEL_DESCRIPTOR : CHANNEL_SETTINGS_LABEL_DESCRIPTOR)
-						}
+						title={settingsTitle}
+						pageLinkHref={null}
 						showUnsavedBanner={showUnsavedBanner}
 						flashBanner={flashBanner}
 						tabData={tabData}

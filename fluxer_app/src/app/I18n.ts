@@ -5,6 +5,7 @@ import AppStorage from '@app/features/platform/state/PersistentStorage';
 import {getNativeLocaleIdentifier} from '@app/features/platform/types/Platform';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {loadLazyModule} from '@app/features/platform/utils/LazyModuleLoader';
+import {noteLocale} from '@app/features/theme/fonts/ScriptFontLoader';
 import {type I18n, i18n, type Messages} from '@lingui/core';
 import {createAtom, runInAction} from 'mobx';
 
@@ -172,6 +173,7 @@ function activateLocale(localeCode: LocaleCode, messages: Messages): void {
 	if (typeof document !== 'undefined') {
 		document.documentElement.lang = localeCode;
 	}
+	noteLocale(localeCode);
 	AppStorage.setItem('locale', localeCode);
 }
 

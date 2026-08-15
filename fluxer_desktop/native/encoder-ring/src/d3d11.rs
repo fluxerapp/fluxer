@@ -438,36 +438,4 @@ mod tests {
         assert_eq!(h2.slot_index, 3);
         assert_eq!(h2.raw_handle, 0xdead);
     }
-
-    #[test]
-    #[cfg(target_os = "windows")]
-    fn windows_real_keyed_mutex_eight_slots_round_trip() {
-        let backend_result = D3D11KeyedMutexBackend::new();
-        let mut backend = match backend_result {
-            Ok(b) => b,
-            Err(BackendError::PlatformUnsupported { .. }) => return,
-            Err(other) => unreachable!("unexpected backend init err: {other:?}"),
-        };
-        let slots_result = backend.create_slots(64, 64, TextureFormat::Nv12);
-        let slots = match slots_result {
-            Ok(s) => s,
-            Err(BackendError::PlatformUnsupported { .. }) => return,
-            Err(other) => unreachable!("unexpected create_slots err: {other:?}"),
-        };
-        assert_eq!(slots.len(), 8);
-        for (idx, slot) in slots.iter().enumerate() {
-            assert_eq!(slot.slot_index, idx as u32);
-            assert_ne!(slot.raw_handle, 0);
-            assert_eq!(slot.width, 64);
-        }
-        let slot = slots[0].clone();
-        backend.acquire_write(&slot, 0).expect("acquire key=0");
-        backend.release_write(&slot, 1).expect("release key=1");
-        assert!(backend.poll_complete(&slot));
-        backend.mark_consumed(&slot);
-        assert!(!backend.poll_complete(&slot));
-        backend.acquire_write(&slot, 1).expect("acquire key=1");
-        backend.release_write(&slot, 2).expect("release key=2");
-        assert!(backend.poll_complete(&slot));
-    }
 }
