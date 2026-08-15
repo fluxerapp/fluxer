@@ -295,10 +295,7 @@ export class MessagePersistenceService {
 			return null;
 		}
 		const uploadUserId = params.attachmentUploadUserId;
-		assert(
-			uploadUserId !== undefined,
-			'Attachment upload actor must be resolved before processing new attachments',
-		);
+		assert(uploadUserId !== undefined, 'Attachment upload actor must be resolved before processing new attachments');
 		return this.attachmentService.computeAttachments({
 			message: {
 				id: params.messageId,
@@ -528,7 +525,8 @@ export class MessagePersistenceService {
 			}
 			hasChanges = true;
 		}
-		if (allowEmbeds && (data.embeds !== undefined || (data.content !== undefined && message.embeds.length === 0))) {
+		const embedsExplicitlyProvided = data.embeds !== undefined;
+		if (allowEmbeds && (embedsExplicitlyProvided || data.content !== undefined)) {
 			const attachmentsForResolution = updatedRowData.attachments || [];
 			const resolvedEmbeds = this.embedAttachmentResolver.resolveEmbedAttachmentUrls({
 				embeds: data.embeds,
@@ -546,7 +544,15 @@ export class MessagePersistenceService {
 				nsfwMode: isNSFWAllowed ? 'allow' : 'block',
 				isBugHunterBot: params.isBugHunterBot,
 			});
-			updatedRowData.embeds = initialEmbeds;
+			if (embedsExplicitlyProvided) {
+				updatedRowData.embeds = initialEmbeds;
+			} else {
+				const preservedEmbeds = message.embeds
+					.map((embed) => embed.toMessageEmbed())
+					.filter((embed) => embed.type === 'rich');
+				const nextEmbeds = [...preservedEmbeds, ...(initialEmbeds ?? [])];
+				updatedRowData.embeds = nextEmbeds.length > 0 ? nextEmbeds : null;
+			}
 			hasUncachedUrls = embedUrls;
 			hasChanges = true;
 		}

@@ -18,7 +18,6 @@ import type {IGatewayService} from '../../infrastructure/IGatewayService';
 import type {MediaProxyNsfwMode} from '../../infrastructure/IMediaService';
 import {Logger} from '../../Logger';
 import type {Channel} from '../../models/Channel';
-import {Embed} from '../../models/Embed';
 import {Message} from '../../models/Message';
 import {deleteMessageSearchDocuments} from '../../search/MessageSearchIndexCleanup';
 import * as UnfurlerUtils from '../../utils/UnfurlerUtils';
@@ -368,13 +367,15 @@ async function updateMessageEmbeds(
 	orderedEmbeds: Array<MessageEmbed>,
 ): Promise<Message | null> {
 	const existingEmbeds = (freshMessage.embeds ?? []).map((embed) => embed.toMessageEmbed());
-	if (areEmbedsEquivalent(existingEmbeds, orderedEmbeds)) {
+	const preservedEmbeds = existingEmbeds.filter((embed) => embed.type === 'rich');
+	const nextEmbeds = [...preservedEmbeds, ...orderedEmbeds];
+	if (areEmbedsEquivalent(existingEmbeds, nextEmbeds)) {
 		Logger.debug({messageId: freshMessage.id.toString()}, 'Embeds unchanged, skipping update');
 		return freshMessage;
 	}
 	const messageWithEmbeds = new Message({
 		...freshMessage.toRow(),
-		embeds: orderedEmbeds.length > 0 ? orderedEmbeds : null,
+		embeds: nextEmbeds.length > 0 ? nextEmbeds : null,
 	});
 	await channelRepository.updateEmbeds(messageWithEmbeds);
 	return messageWithEmbeds;
@@ -382,7 +383,6 @@ async function updateMessageEmbeds(
 
 interface DispatchEmbedUpdateParams {
 	latestMessage: Message;
-	orderedEmbeds: Array<MessageEmbed>;
 	channel: Channel;
 	guildId: GuildID | null;
 	gatewayService: IGatewayService;
@@ -390,15 +390,13 @@ interface DispatchEmbedUpdateParams {
 
 async function dispatchEmbedUpdate({
 	latestMessage,
-	orderedEmbeds,
 	channel,
 	guildId,
 	gatewayService,
 }: DispatchEmbedUpdateParams): Promise<void> {
-	const embedObjects = orderedEmbeds.length > 0 ? orderedEmbeds.map((e) => new Embed(e)) : latestMessage.embeds;
 	const messageWithUpdatedEmbeds = new Message({
 		...latestMessage.toRow(),
-		embeds: embedObjects.map((e) => e.toMessageEmbed()),
+		embeds: latestMessage.embeds.map((e) => e.toMessageEmbed()),
 	});
 	const messageData = await buildBroadcastMessageData({
 		channel,
@@ -512,7 +510,6 @@ const extractEmbeds: WorkerTaskHandler = async (payload, helpers) => {
 			if (!(latestMessage.flags & MessageFlags.SUPPRESS_EMBEDS)) {
 				await dispatchEmbedUpdate({
 					latestMessage,
-					orderedEmbeds,
 					channel,
 					guildId,
 					gatewayService,
