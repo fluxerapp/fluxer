@@ -9,6 +9,120 @@ use serde_json::Value;
 
 const RELEASE_REPOSITORY: &str = "fluxerapp/fluxer";
 const RELEASE_COMPARE_URL: &str = "https://github.com/fluxerapp/fluxer/compare";
+const DESKTOP_DOWNLOAD_URL: &str = "https://api.fluxer.app/dl/desktop";
+
+struct DesktopDownload {
+    arch: &'static str,
+    label: &'static str,
+    format: &'static str,
+}
+
+struct DesktopPlatform {
+    name: &'static str,
+    slug: &'static str,
+    downloads: &'static [DesktopDownload],
+}
+
+const DESKTOP_PLATFORMS: &[DesktopPlatform] = &[
+    DesktopPlatform {
+        name: "Windows",
+        slug: "win32",
+        downloads: &[
+            DesktopDownload {
+                arch: "x64",
+                label: "Setup.exe",
+                format: "setup",
+            },
+            DesktopDownload {
+                arch: "x64",
+                label: "Portable ZIP",
+                format: "portable",
+            },
+            DesktopDownload {
+                arch: "arm64",
+                label: "Setup.exe",
+                format: "setup",
+            },
+            DesktopDownload {
+                arch: "arm64",
+                label: "Portable ZIP",
+                format: "portable",
+            },
+        ],
+    },
+    DesktopPlatform {
+        name: "macOS",
+        slug: "darwin",
+        downloads: &[
+            DesktopDownload {
+                arch: "x64",
+                label: "DMG",
+                format: "dmg",
+            },
+            DesktopDownload {
+                arch: "x64",
+                label: "ZIP",
+                format: "zip",
+            },
+            DesktopDownload {
+                arch: "arm64",
+                label: "DMG",
+                format: "dmg",
+            },
+            DesktopDownload {
+                arch: "arm64",
+                label: "ZIP",
+                format: "zip",
+            },
+        ],
+    },
+    DesktopPlatform {
+        name: "Linux",
+        slug: "linux",
+        downloads: &[
+            DesktopDownload {
+                arch: "x64",
+                label: "AppImage",
+                format: "appimage",
+            },
+            DesktopDownload {
+                arch: "x64",
+                label: "DEB",
+                format: "deb",
+            },
+            DesktopDownload {
+                arch: "x64",
+                label: "RPM",
+                format: "rpm",
+            },
+            DesktopDownload {
+                arch: "x64",
+                label: "tar.gz",
+                format: "tar_gz",
+            },
+            DesktopDownload {
+                arch: "arm64",
+                label: "AppImage",
+                format: "appimage",
+            },
+            DesktopDownload {
+                arch: "arm64",
+                label: "DEB",
+                format: "deb",
+            },
+            DesktopDownload {
+                arch: "arm64",
+                label: "RPM",
+                format: "rpm",
+            },
+            DesktopDownload {
+                arch: "arm64",
+                label: "tar.gz",
+                format: "tar_gz",
+            },
+        ],
+    },
+];
 
 #[derive(Debug, Args, Clone)]
 pub struct ReleaseArgs {
@@ -157,7 +271,12 @@ fn publish(args: PublishArgs) -> Result<()> {
         }
     };
 
-    let body = release_body(&previous_sha, &source_sha);
+    let body = release_body(
+        &args.component,
+        &args.build_version,
+        &previous_sha,
+        &source_sha,
+    );
     if summaries.iter().any(|release| release.tag_name == tag) {
         verify_existing_release(&tag, &title, &body, &source_sha, args.prerelease)?;
         println!("Release {tag} already exists with the expected state.");
@@ -363,10 +482,51 @@ fn release_title(component: &str, version: &str) -> String {
     format!("{component} {version}")
 }
 
-fn release_body(previous_sha: &str, source_sha: &str) -> String {
-    format!(
+fn release_body(component: &str, version: &str, previous_sha: &str, source_sha: &str) -> String {
+    let changes = format!(
         "Changes: [`{}..{}`]({RELEASE_COMPARE_URL}/{previous_sha}..{source_sha})",
         &previous_sha[..7],
         &source_sha[..7]
+    );
+    match desktop_channel(component) {
+        Some(channel) => format!(
+            "{changes}\n\n{}",
+            desktop_download_sections(channel, version)
+        ),
+        None => changes,
+    }
+}
+
+fn desktop_channel(component: &str) -> Option<&str> {
+    component.strip_prefix("fluxer-desktop-")
+}
+
+fn desktop_download_sections(channel: &str, version: &str) -> String {
+    DESKTOP_PLATFORMS
+        .iter()
+        .map(|platform| desktop_download_section(channel, version, platform))
+        .collect::<Vec<_>>()
+        .join("\n\n")
+}
+
+fn desktop_download_section(channel: &str, version: &str, platform: &DesktopPlatform) -> String {
+    let rows = platform
+        .downloads
+        .iter()
+        .map(|download| {
+            format!(
+                "| {arch} | {label} | {DESKTOP_DOWNLOAD_URL}/{channel}/{slug}/{arch}/{version}/{format} |",
+                arch = download.arch,
+                label = download.label,
+                slug = platform.slug,
+                format = download.format,
+            )
+        })
+        .collect::<Vec<_>>()
+        .join("\n");
+    format!(
+        "## {name} (`{slug}`)\n\n| Arch | Format | URL |\n|---|---|---|\n{rows}",
+        name = platform.name,
+        slug = platform.slug,
     )
 }
