@@ -38,11 +38,18 @@ describe('FilenameType', () => {
 			expect(result.data).toBe('path_to_file.txt');
 		}
 	});
-	it('replaces double dots with underscores', () => {
+	it('collapses repeated dots into a single dot', () => {
 		const result = FilenameType.safeParse('..file..txt');
 		expect(result.success).toBe(true);
 		if (result.success) {
-			expect(result.data).not.toContain('..');
+			expect(result.data).toBe('.file.txt');
+		}
+	});
+	it('keeps the extension when the name contains repeated dots', () => {
+		const result = FilenameType.safeParse('video..mp4');
+		expect(result.success).toBe(true);
+		if (result.success) {
+			expect(result.data).toBe('video.mp4');
 		}
 	});
 	it('handles Windows reserved names by prefixing', () => {

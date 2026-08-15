@@ -59,7 +59,7 @@ export function normalizeFilename(value: string): string {
 	let normalized = normalizeString(value);
 	normalized = normalized.replaceAll(String.fromCharCode(0), '');
 	normalized = normalized.replace(/[/\\]/g, '_');
-	normalized = normalized.replace(/\.{2,}/g, '_');
+	normalized = normalized.replace(/\.{2,}/g, '.');
 	while (normalized.includes('..')) {
 		normalized = normalized.replace(/\.\./g, '_');
 	}
