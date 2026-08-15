@@ -412,10 +412,7 @@ fn extract_escaped_url(text: &str, start: usize) -> Option<UrlInfo<'_>> {
         if byte_at(text, pos) == b'>' {
             let url = &text[start..pos];
             pos += 1;
-            while pos < text.len() && byte_at(text, pos) != b')' {
-                pos += advance_one(text, pos);
-            }
-            if pos >= text.len() {
+            if pos >= text.len() || byte_at(text, pos) != b')' {
                 return None;
             }
             return Some(UrlInfo {
@@ -1410,7 +1407,34 @@ pub fn max_inline_scan() -> usize {
 
 #[cfg(test)]
 mod tests {
-    use super::has_valid_code_fence_language;
+    use super::{extract_escaped_url, has_valid_code_fence_language};
+
+    #[test]
+    fn escaped_url_accepts_paren_immediately_after_destination() {
+        let info = extract_escaped_url("https://example.com>) trailing", 0).expect("valid");
+        assert_eq!(info.url, "https://example.com");
+        assert!(info.escaped);
+        assert_eq!(info.advance_by, "https://example.com>)".len());
+    }
+
+    #[test]
+    fn escaped_url_rejects_content_between_destination_and_paren() {
+        assert!(extract_escaped_url("https://example.com> and more)", 0).is_none());
+        assert!(extract_escaped_url("https://example.com> )", 0).is_none());
+        assert!(extract_escaped_url("https://example.com>text)", 0).is_none());
+    }
+
+    #[test]
+    fn escaped_url_rejects_missing_paren() {
+        assert!(extract_escaped_url("https://example.com>", 0).is_none());
+        assert!(extract_escaped_url("https://example.com", 0).is_none());
+    }
+
+    #[test]
+    fn escaped_url_keeps_paren_inside_destination() {
+        let info = extract_escaped_url("https://example.com/a.yaml)>)", 0).expect("valid");
+        assert_eq!(info.url, "https://example.com/a.yaml)");
+    }
 
     #[test]
     fn rejects_leading_whitespace() {
