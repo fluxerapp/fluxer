@@ -17,6 +17,7 @@ export const MEILISEARCH_INDEX_DEFINITIONS: Record<FluxerSearchIndexName, Meilis
 		searchableAttributes: ['content', 'embedContent'],
 		filterableAttributes: [
 			'id',
+			'createdAt',
 			'channelId',
 			'guildId',
 			'authorId',

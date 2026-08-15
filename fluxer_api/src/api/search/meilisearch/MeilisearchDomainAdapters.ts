@@ -14,6 +14,7 @@ import type {
 	SearchableUser,
 	UserSearchFilters,
 } from '@fluxer/schema/src/contracts/search/SearchDocumentTypes';
+import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 import type {MeilisearchClient} from './MeilisearchClient';
 import {
 	compactMeiliFilters,
@@ -43,6 +44,10 @@ const HAS_FIELD_MAP: Record<string, string> = {
 
 interface MeilisearchAdapterOptions {
 	client: MeilisearchClient;
+}
+
+function snowflakeSeconds(snowflake: string): number {
+	return Math.floor(snowflakeToDate(BigInt(snowflake)).getTime() / 1000);
 }
 
 function buildMessageFilters(filters: MessageSearchFilters): Array<MeilisearchFilter | undefined> {
@@ -109,8 +114,8 @@ function buildMessageFilters(filters: MessageSearchFilters): Array<MeilisearchFi
 	if (filters.excludeAttachmentExtensions && filters.excludeAttachmentExtensions.length > 0) {
 		clauses.push(...meiliExcludeAny('attachmentExtensions', filters.excludeAttachmentExtensions));
 	}
-	if (filters.maxId != null) clauses.push(meiliRangeFilter('id', {lt: filters.maxId}));
-	if (filters.minId != null) clauses.push(meiliRangeFilter('id', {gt: filters.minId}));
+	if (filters.maxId != null) clauses.push(meiliRangeFilter('createdAt', {lt: snowflakeSeconds(filters.maxId)}));
+	if (filters.minId != null) clauses.push(meiliRangeFilter('createdAt', {gt: snowflakeSeconds(filters.minId)}));
 	return compactMeiliFilters(clauses);
 }
 
