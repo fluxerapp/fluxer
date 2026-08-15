@@ -389,8 +389,10 @@ function normalizeArch(arch) {
 	if (arch === 'x64' || arch === 'arm64') {
 		return arch;
 	}
+	if (arch === 'universal') return 'universal';
 	if (arch === 1) return 'x64';
 	if (arch === 3) return 'arm64';
+	if (arch === 4) return 'universal';
 	return electronArch || process.arch;
 }
 
@@ -420,6 +422,16 @@ function addWindowsGameCaptureArtifacts(artifacts, tag, arch) {
 }
 
 function expectedNativeRuntimeArtifacts(platform, arch) {
+	if (platform === 'darwin' && arch === 'universal') {
+		return [
+			...expectedNativeRuntimeArtifactsForArch(platform, 'arm64'),
+			...expectedNativeRuntimeArtifactsForArch(platform, 'x64'),
+		];
+	}
+	return expectedNativeRuntimeArtifactsForArch(platform, arch);
+}
+
+function expectedNativeRuntimeArtifactsForArch(platform, arch) {
 	const tag = platformTag(platform, arch);
 	if (!tag) return [];
 	const artifacts = [];
@@ -590,6 +602,12 @@ async function fileExists(filePath) {
 		});
 }
 
+function darwinMachOArchFromLabel(label) {
+	if (label.includes('darwin-arm64')) return 'arm64';
+	if (label.includes('darwin-x64')) return 'x86_64';
+	return null;
+}
+
 function expectedDarwinMachOArch(arch) {
 	if (arch === 'x64') return 'x86_64';
 	if (arch === 'arm64') return 'arm64';
@@ -620,17 +638,20 @@ async function darwinMachOLoadCommands(filePath) {
 
 async function verifyDarwinNativeArchitectures(platform, arch, entries, stage) {
 	if (platform !== 'darwin') return;
+	const isUniversal = arch === 'universal';
 	const expectedArch = expectedDarwinMachOArch(arch);
-	if (!expectedArch) return;
+	if (!expectedArch && !isUniversal) return;
 	const mismatches = [];
 	for (const entry of entries) {
 		if (!(await fileExists(entry.path))) continue;
+		const entryExpectedArch = isUniversal ? darwinMachOArchFromLabel(entry.label) : expectedArch;
+		if (!entryExpectedArch) continue;
 		const archs = await darwinMachOArchitectures(entry.path);
 		const fileTypes = await darwinMachOFileTypes(entry.path);
-		if (!archs.includes(expectedArch)) {
-			mismatches.push(`${entry.label}: has ${archs.join(', ') || '<none>'}; expected ${expectedArch}`);
+		if (!archs.includes(entryExpectedArch)) {
+			mismatches.push(`${entry.label}: has ${archs.join(', ') || '<none>'}; expected ${entryExpectedArch}`);
 		}
-		if (arch === 'x64' && archs.includes('x86_64h') && !archs.includes('x86_64')) {
+		if (entryExpectedArch === 'x86_64' && archs.includes('x86_64h') && !archs.includes('x86_64')) {
 			mismatches.push(`${entry.label}: has x86_64h only; expected baseline x86_64 for Intel compatibility`);
 		}
 		if (fileTypes.length === 0 || fileTypes.some((fileType) => fileType !== 'BUNDLE' && fileType !== 'DYLIB')) {
