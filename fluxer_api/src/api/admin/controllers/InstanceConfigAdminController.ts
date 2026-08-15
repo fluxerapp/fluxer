@@ -619,6 +619,9 @@ async function updatePendingRegistrationUser(
 		traits.delete(REGISTRATION_REJECTED_TRAIT);
 	}
 	await userRepository.patchUpsert(user.id, {traits: traits.size > 0 ? traits : null}, user.toRow());
+	if (decision === 'approve') {
+		await ctx.get('singleCommunityService').joinStockCommunity(user.id, ctx.get('requestCache'));
+	}
 	await ctx.get('adminService').auditService.createAuditLog({
 		adminUserId: ctx.get('adminUserId'),
 		targetType: 'user',
