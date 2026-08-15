@@ -111,6 +111,9 @@ impl ByteCoalescer {
                 .coalescer_waiter
                 .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
             loop {
+                let notified = slot.notify.notified();
+                tokio::pin!(notified);
+                notified.as_mut().enable();
                 if let Some(result) = slot.state.lock().as_ref().cloned() {
                     return result;
                 }
@@ -119,14 +122,14 @@ impl ByteCoalescer {
                     if now >= deadline {
                         return Err(CoalescerError::RequestTimeout);
                     }
-                    if tokio::time::timeout_at(deadline.into(), slot.notify.notified())
+                    if tokio::time::timeout_at(deadline.into(), notified)
                         .await
                         .is_err()
                     {
                         return Err(CoalescerError::RequestTimeout);
                     }
                 } else {
-                    slot.notify.notified().await;
+                    notified.await;
                 }
             }
         }
@@ -229,5 +232,107 @@ mod tests {
         let observed = counter.load(Ordering::SeqCst);
         assert!(observed > 0);
         assert!(observed <= total);
+    }
+
+    #[tokio::test]
+    async fn cancelled_leader_does_not_poison_the_key() {
+        let coalescer = Arc::new(ByteCoalescer::new());
+        let leader = coalescer.clone();
+        let task = tokio::spawn(async move {
+            let _ = leader
+                .run_once("poison-key", || async {
+                    sleep(Duration::from_secs(60)).await;
+                    Ok(b"never".to_vec())
+                })
+                .await;
+        });
+        sleep(Duration::from_millis(20)).await;
+        task.abort();
+        let _ = task.await;
+
+        let result = coalescer
+            .run_once_until(
+                "poison-key",
+                Some(Instant::now() + Duration::from_secs(2)),
+                || async { Ok(b"recovered".to_vec()) },
+            )
+            .await;
+        assert_eq!(
+            b"recovered".as_ref(),
+            result
+                .expect("cancelled leader left the key poisoned in in_flight")
+                .as_ref()
+        );
+    }
+
+    #[tokio::test]
+    async fn waiters_are_released_when_the_leader_is_cancelled() {
+        let coalescer = Arc::new(ByteCoalescer::new());
+        let leader = coalescer.clone();
+        let task = tokio::spawn(async move {
+            let _ = leader
+                .run_once("released-key", || async {
+                    sleep(Duration::from_secs(60)).await;
+                    Ok(b"never".to_vec())
+                })
+                .await;
+        });
+        sleep(Duration::from_millis(20)).await;
+
+        let waiter_coalescer = coalescer.clone();
+        let waiter = tokio::spawn(async move {
+            waiter_coalescer
+                .run_once_until(
+                    "released-key",
+                    Some(Instant::now() + Duration::from_secs(60)),
+                    || async { Ok(b"should-not-run".to_vec()) },
+                )
+                .await
+        });
+        sleep(Duration::from_millis(20)).await;
+        task.abort();
+        let _ = task.await;
+
+        let released = tokio::time::timeout(Duration::from_secs(2), waiter).await;
+        assert!(
+            released.is_ok(),
+            "waiter was not released when the leader was cancelled"
+        );
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 8)]
+    async fn waiters_never_miss_a_completion_notification() {
+        for round in 0..1000u32 {
+            let coalescer = Arc::new(ByteCoalescer::new());
+            let key = format!("race-{round}");
+            let leader_key = key.clone();
+            let leader = coalescer.clone();
+            let lead = tokio::spawn(async move {
+                let _ = leader
+                    .run_once(leader_key, || async { Ok(b"done".to_vec()) })
+                    .await;
+            });
+            let mut waiters = Vec::new();
+            for _ in 0..4 {
+                let waiter_coalescer = coalescer.clone();
+                let waiter_key = key.clone();
+                waiters.push(tokio::spawn(async move {
+                    waiter_coalescer
+                        .run_once_until(
+                            waiter_key,
+                            Some(Instant::now() + Duration::from_secs(10)),
+                            || async { Ok(b"waiter-ran-work".to_vec()) },
+                        )
+                        .await
+                }));
+            }
+            let _ = lead.await;
+            for waiter in waiters {
+                assert!(
+                    !matches!(waiter.await, Ok(Err(CoalescerError::RequestTimeout))),
+                    "waiter missed the completion notification in round {round}"
+                );
+            }
+        }
     }
 }
