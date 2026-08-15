@@ -4,7 +4,7 @@ import Channels from '@app/features/channel/state/Channels';
 import type {MessageSearchParams} from '@app/features/search/utils/SearchUtils';
 import Users from '@app/features/user/state/Users';
 import {MS_PER_DAY, MS_PER_HOUR, MS_PER_MINUTE, MS_PER_SECOND} from '@fluxer/date_utils/src/DateConstants';
-import {fromTimestamp} from '@fluxer/snowflake/src/SnowflakeUtils';
+import {fromTimestamp, isProbablyAValidSnowflake} from '@fluxer/snowflake/src/SnowflakeUtils';
 import {DateTime} from 'luxon';
 
 export interface ParserContext {
@@ -279,6 +279,9 @@ const tryResolveUser = (tag: string, hints?: SearchHints): string | null => {
 	const trimmedTag = tag.trim();
 	if (!trimmedTag) {
 		return null;
+	}
+	if (isProbablyAValidSnowflake(trimmedTag)) {
+		return trimmedTag;
 	}
 	if (isCurrentUserToken(trimmedTag)) {
 		return getCurrentUserId();
