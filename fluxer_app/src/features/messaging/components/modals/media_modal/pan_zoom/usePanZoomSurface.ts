@@ -450,6 +450,16 @@ export function usePanZoomSurface(options: UsePanZoomSurfaceOptions): PanZoomSur
 			event.preventDefault();
 			stopAnimations();
 			const currentScale = scale.get();
+			if (!event.ctrlKey && !panDisabledRef.current && currentScale > minScaleRef.current + ZOOM_STATE_EPSILON) {
+				const pannedPoint = clampPanForScale(
+					{x: x.get() - event.deltaX, y: y.get() - event.deltaY},
+					currentScale,
+					metrics,
+				);
+				x.set(pannedPoint.x);
+				y.set(pannedPoint.y);
+				return;
+			}
 			const nextScale = clampScale(
 				currentScale * getWheelZoomFactor(event.deltaY, event.ctrlKey),
 				minScaleRef.current,
@@ -472,6 +482,7 @@ export function usePanZoomSurface(options: UsePanZoomSurfaceOptions): PanZoomSur
 			getViewportRelativePoint,
 			maxScaleRef,
 			minScaleRef,
+			panDisabledRef,
 			scale,
 			stopAnimations,
 			wheelEnabled,
