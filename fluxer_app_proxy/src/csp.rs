@@ -17,6 +17,7 @@ const FRAME_SOURCES: &[&str] = &[
     "https://www.youtube.com/s/player/",
     "https://hcaptcha.com",
     "https://*.hcaptcha.com",
+    "https://challenges.cloudflare.com",
 ];
 
 const IMAGE_SOURCES: &[&str] = &[
@@ -38,6 +39,7 @@ const SCRIPT_SOURCES: &[&str] = &[
     "https://*.fluxer.app",
     "https://hcaptcha.com",
     "https://*.hcaptcha.com",
+    "https://challenges.cloudflare.com",
 ];
 
 const STYLE_SOURCES: &[&str] = &[
@@ -62,6 +64,7 @@ const CONNECT_SOURCES: &[&str] = &[
     "https://fluxer-uploads.ewr1.vultrobjects.com",
     "https://hcaptcha.com",
     "https://*.hcaptcha.com",
+    "https://challenges.cloudflare.com",
     "https://fluxerstatus.com",
     "https://fluxer.media",
     "http://127.0.0.1:21863",
