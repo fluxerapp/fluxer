@@ -152,6 +152,7 @@
     "bots.bot_user_not_found": "Utilizatorul bot nu a fost găsit.",
     "bots.invalid_response_type_for_non_bot": "Tipul de răspuns trebuie să fie cod pentru domenii care nu sunt de bot.",
     "bots.not_a_bot_application": "Această aplicație nu este un bot.",
+    "bots.search_scope_unavailable": "Boții pot căuta doar într-o singură comunitate sau într-un singur canal.",
     "calls_and_voice.call_already_exists": "Un apel este deja în desfășurare pe acest canal.",
     "calls_and_voice.cannot_modify_voice_state": "Nu poți modifica starea vocală.",
     "calls_and_voice.invalid_or_restricted_rtc_region": "Regiune RTC invalidă sau restricționată: {region}.",

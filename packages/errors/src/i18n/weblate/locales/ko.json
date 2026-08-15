@@ -152,6 +152,7 @@
     "bots.bot_user_not_found": "봇 사용자를 찾을 수 없어요.",
     "bots.invalid_response_type_for_non_bot": "봇이 아닌 범위에는 응답 유형이 코드여야 해요.",
     "bots.not_a_bot_application": "이 애플리케이션은 봇이 아니에요.",
+    "bots.search_scope_unavailable": "봇은 커뮤니티 하나 또는 채널 하나 안에서만 검색할 수 있어요.",
     "calls_and_voice.call_already_exists": "이 채널에서 이미 통화가 진행 중이에요.",
     "calls_and_voice.cannot_modify_voice_state": "음성 상태를 수정할 수 없어요.",
     "calls_and_voice.invalid_or_restricted_rtc_region": "유효하지 않거나 제한된 RTC 지역이에요: {region}.",

@@ -152,6 +152,7 @@
     "bots.bot_user_not_found": "找不到機器人使用者。",
     "bots.invalid_response_type_for_non_bot": "非機器人範圍的回應類型必須是授權碼。",
     "bots.not_a_bot_application": "此應用程式不是機器人。",
+    "bots.search_scope_unavailable": "機器人只能在單一社群或頻道內搜尋。",
     "calls_and_voice.call_already_exists": "此頻道已有通話正在進行中。",
     "calls_and_voice.cannot_modify_voice_state": "你無法修改語音狀態。",
     "calls_and_voice.invalid_or_restricted_rtc_region": "無效或受限制的 RTC 地區：{region}。",

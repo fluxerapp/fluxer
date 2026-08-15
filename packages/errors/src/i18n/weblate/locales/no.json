@@ -152,6 +152,7 @@
     "bots.bot_user_not_found": "Bot-bruker ble ikke funnet.",
     "bots.invalid_response_type_for_non_bot": "Svartypen må være kode for ikke-bot-omfang.",
     "bots.not_a_bot_application": "Denne applikasjonen er ikke en bot.",
+    "bots.search_scope_unavailable": "Botter kan bare søke innenfor ett community eller én kanal.",
     "calls_and_voice.call_already_exists": "En samtale er allerede i gang i denne kanalen.",
     "calls_and_voice.cannot_modify_voice_state": "Du kan ikke endre talestatus.",
     "calls_and_voice.invalid_or_restricted_rtc_region": "Ugyldig eller begrenset RTC-region: {region}.",

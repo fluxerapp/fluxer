@@ -152,6 +152,7 @@
     "bots.bot_user_not_found": "Bottikäyttäjää ei löytynyt.",
     "bots.invalid_response_type_for_non_bot": "Vastaustyypin on oltava koodi muille kuin botin käyttöoikeuksille.",
     "bots.not_a_bot_application": "Tämä sovellus ei ole botti.",
+    "bots.search_scope_unavailable": "Botit voivat hakea vain yhden yhteisön tai kanavan sisältä.",
     "calls_and_voice.call_already_exists": "Puhelu on jo käynnissä tässä kanavassa.",
     "calls_and_voice.cannot_modify_voice_state": "Et voi muokata äänitilaa.",
     "calls_and_voice.invalid_or_restricted_rtc_region": "Virheellinen tai rajoitettu RTC-alue: {region}.",

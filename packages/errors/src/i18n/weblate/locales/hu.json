@@ -152,6 +152,7 @@
     "bots.bot_user_not_found": "A bot felhasználó nem található.",
     "bots.invalid_response_type_for_non_bot": "A válasz típusának kódnak kell lennie a nem bot hatókörökhöz.",
     "bots.not_a_bot_application": "Ez az alkalmazás nem bot.",
+    "bots.search_scope_unavailable": "A botok csak egyetlen közösségen vagy csatornán belül kereshetnek.",
     "calls_and_voice.call_already_exists": "Már folyamatban van egy hívás ezen a csatornán.",
     "calls_and_voice.cannot_modify_voice_state": "Nem módosíthatod a hangbeállításokat.",
     "calls_and_voice.invalid_or_restricted_rtc_region": "Érvénytelen vagy korlátozott RTC régió: {region}.",

@@ -152,6 +152,7 @@
     "bots.bot_user_not_found": "No se encontró el usuario del bot.",
     "bots.invalid_response_type_for_non_bot": "El tipo de respuesta debe ser código para ámbitos que no son de bot.",
     "bots.not_a_bot_application": "Esta aplicación no es un bot.",
+    "bots.search_scope_unavailable": "Los bots solo pueden buscar dentro de una sola comunidad o canal.",
     "calls_and_voice.call_already_exists": "Ya hay una llamada en curso en este canal.",
     "calls_and_voice.cannot_modify_voice_state": "No puedes modificar el estado de voz.",
     "calls_and_voice.invalid_or_restricted_rtc_region": "Región RTC inválida o restringida: {region}.",

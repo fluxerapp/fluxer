@@ -152,6 +152,7 @@
     "bots.bot_user_not_found": "ボットユーザーが見つかりません。",
     "bots.invalid_response_type_for_non_bot": "ボット以外のスコープの場合、応答タイプはコードである必要があります。",
     "bots.not_a_bot_application": "このアプリケーションはボットではありません。",
+    "bots.search_scope_unavailable": "ボットは単一のコミュニティまたはチャンネル内でのみ検索できます。",
     "calls_and_voice.call_already_exists": "このチャンネルではすでに通話中です。",
     "calls_and_voice.cannot_modify_voice_state": "ボイスの状態は変更できません。",
     "calls_and_voice.invalid_or_restricted_rtc_region": "無効または制限されたRTCリージョンです: {region}。",

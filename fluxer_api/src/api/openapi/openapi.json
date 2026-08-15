@@ -14978,7 +14978,7 @@
 					}
 				},
 				"x-mint": {"metadata": {"title": "Search messages"}},
-				"description": "Searches for messages across guilds and channels accessible to the authenticated user.",
+				"description": "Searches for messages across guilds and channels accessible to the authenticated user. Bots must supply a context guild or channel and may only use the current scope.",
 				"security": [{"sessionToken": []}],
 				"requestBody": {
 					"required": true,

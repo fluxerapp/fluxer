@@ -152,6 +152,7 @@
     "bots.bot_user_not_found": "Không tìm thấy người dùng bot.",
     "bots.invalid_response_type_for_non_bot": "Loại phản hồi phải là mã cho các phạm vi không phải bot.",
     "bots.not_a_bot_application": "Ứng dụng này không phải là bot.",
+    "bots.search_scope_unavailable": "Bot chỉ có thể tìm kiếm trong một cộng đồng hoặc một kênh duy nhất.",
     "calls_and_voice.call_already_exists": "Có một cuộc gọi đang diễn ra trong kênh này.",
     "calls_and_voice.cannot_modify_voice_state": "Bạn không thể sửa đổi trạng thái thoại.",
     "calls_and_voice.invalid_or_restricted_rtc_region": "Vùng RTC không hợp lệ hoặc bị hạn chế: {region}.",

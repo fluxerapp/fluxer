@@ -152,6 +152,7 @@
     "bots.bot_user_not_found": "Uživatel bota nebyl nalezen.",
     "bots.invalid_response_type_for_non_bot": "Typ odpovědi musí být autorizační kód pro jiné rozsahy než pro boty.",
     "bots.not_a_bot_application": "Tato aplikace není bot.",
+    "bots.search_scope_unavailable": "Boti mohou vyhledávat pouze v rámci jedné komunity nebo jednoho kanálu.",
     "calls_and_voice.call_already_exists": "V tomto kanálu už se volá.",
     "calls_and_voice.cannot_modify_voice_state": "Nemůžeš měnit hlasový stav.",
     "calls_and_voice.invalid_or_restricted_rtc_region": "Neplatná nebo omezená RTC oblast: {region}.",

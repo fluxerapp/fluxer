@@ -24,7 +24,12 @@ import {MessageSearchResponseMapper} from '../../search/MessageSearchResponseMap
 import {searchExistingMessages} from '../../search/MessageSearchResultReconciler';
 import type {IUserRepository} from '../../user/IUserRepository';
 import {canUserAccessNsfwContent} from '../../utils/AgeUtils';
+import {mapWithConcurrency} from '../../utils/ConcurrencyUtils';
 import type {WorkerTaskName} from '../../worker/WorkerLaneConfig';
+
+const GUILD_FANOUT_CONCURRENCY = 16;
+const PERMISSION_CHECK_CONCURRENCY = 64;
+const CHANNEL_INDEX_JOB_ENQUEUE_CONCURRENCY = 16;
 
 export class GuildSearchService {
 	private readonly responseMapper: MessageSearchResponseMapper;
@@ -95,15 +100,13 @@ export class GuildSearchService {
 			const channel = channelMap.get(id.toString())!;
 			return !(channel.isNsfw && !canIncludeNsfw);
 		});
-		const permissionResults = await Promise.all(
-			nsfwFilteredIds.map((channelId) =>
-				this.gatewayService.checkPermission({
-					guildId,
-					userId,
-					channelId,
-					permission: Permissions.VIEW_CHANNEL | Permissions.READ_MESSAGE_HISTORY,
-				}),
-			),
+		const permissionResults = await mapWithConcurrency(nsfwFilteredIds, PERMISSION_CHECK_CONCURRENCY, (channelId) =>
+			this.gatewayService.checkPermission({
+				guildId,
+				userId,
+				channelId,
+				permission: Permissions.VIEW_CHANNEL | Permissions.READ_MESSAGE_HISTORY,
+			}),
 		);
 		const validChannelIds: Array<ChannelID> = [];
 		for (let i = 0; i < nsfwFilteredIds.length; i++) {
@@ -133,18 +136,16 @@ export class GuildSearchService {
 			})
 			.map((id) => id.toString());
 		if (channelsToIndex.length > 0) {
-			await Promise.all(
-				channelsToIndex.map((channelId) =>
-					this.workerService.addJob(
-						'indexChannelMessages',
-						{
-							channelId,
-						},
-						{
-							jobKey: `indexChannelMessages-${channelId}`,
-							maxAttempts: 3,
-						},
-					),
+			await mapWithConcurrency(channelsToIndex, CHANNEL_INDEX_JOB_ENQUEUE_CONCURRENCY, (channelId) =>
+				this.workerService.addJob(
+					'indexChannelMessages',
+					{
+						channelId,
+					},
+					{
+						jobKey: `indexChannelMessages-${channelId}`,
+						maxAttempts: 3,
+					},
 				),
 			);
 			return {indexing: true};
@@ -267,16 +268,14 @@ export class GuildSearchService {
 	}
 
 	private async queueIndexingChannels(channelIds: Iterable<string>): Promise<void> {
-		await Promise.all(
-			Array.from(channelIds).map((channelId) =>
-				this.workerService.addJob(
-					'indexChannelMessages',
-					{channelId},
-					{
-						jobKey: `indexChannelMessages-${channelId}`,
-						maxAttempts: 3,
-					},
-				),
+		await mapWithConcurrency(Array.from(channelIds), CHANNEL_INDEX_JOB_ENQUEUE_CONCURRENCY, (channelId) =>
+			this.workerService.addJob(
+				'indexChannelMessages',
+				{channelId},
+				{
+					jobKey: `indexChannelMessages-${channelId}`,
+					maxAttempts: 3,
+				},
 			),
 		);
 	}
@@ -290,42 +289,36 @@ export class GuildSearchService {
 		const accessibleChannels = new Map<string, Channel>();
 		const unindexedChannelIds = new Set<string>();
 		const guildNsfwLevels = new Map<string, number>();
-		const [guildDataResults, guildChannelsResults, viewableChannelsResults] = await Promise.all([
-			Promise.all(guildIds.map((guildId) => this.gatewayService.getGuildData({guildId, userId}))),
-			Promise.all(guildIds.map((guildId) => this.channelRepository.listGuildChannels(guildId))),
-			Promise.all(guildIds.map((guildId) => this.gatewayService.getViewableChannels({guildId, userId}))),
-		]);
-		for (let i = 0; i < guildIds.length; i++) {
-			const guildData = guildDataResults[i];
-			if (guildData) {
-				guildNsfwLevels.set(guildIds[i]!.toString(), guildData.nsfw_level);
-			}
-		}
 		const permissionChecks: Array<{
 			channel: Channel;
 			guildId: GuildID;
 		}> = [];
-		for (let i = 0; i < guildIds.length; i++) {
-			const guildChannels = guildChannelsResults[i]!;
-			if (guildChannels.length === 0) {
-				continue;
+		await mapWithConcurrency(guildIds, GUILD_FANOUT_CONCURRENCY, async (guildId) => {
+			const [guildData, guildChannels, viewableChannels] = await Promise.all([
+				this.gatewayService.getGuildData({guildId, userId}),
+				this.channelRepository.listGuildChannels(guildId),
+				this.gatewayService.getViewableChannels({guildId, userId}),
+			]);
+			if (guildData) {
+				guildNsfwLevels.set(guildId.toString(), guildData.nsfw_level);
 			}
-			const viewableChannelIds = new Set(viewableChannelsResults[i]!.map((channelId) => channelId.toString()));
+			const viewableChannelIds = new Set(viewableChannels.map((channelId) => channelId.toString()));
 			for (const channel of guildChannels) {
 				if (viewableChannelIds.has(channel.id.toString())) {
-					permissionChecks.push({channel, guildId: guildIds[i]!});
+					permissionChecks.push({channel, guildId});
 				}
 			}
-		}
-		const permissionResults = await Promise.all(
-			permissionChecks.map(({channel, guildId}) =>
+		});
+		const permissionResults = await mapWithConcurrency(
+			permissionChecks,
+			PERMISSION_CHECK_CONCURRENCY,
+			({channel, guildId}) =>
 				this.gatewayService.checkPermission({
 					guildId,
 					userId,
 					channelId: channel.id,
 					permission: Permissions.VIEW_CHANNEL | Permissions.READ_MESSAGE_HISTORY,
 				}),
-			),
 		);
 		for (let i = 0; i < permissionChecks.length; i++) {
 			if (!permissionResults[i]) {

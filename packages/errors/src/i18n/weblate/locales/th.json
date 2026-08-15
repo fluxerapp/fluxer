@@ -152,6 +152,7 @@
     "bots.bot_user_not_found": "ไม่พบผู้ใช้บอท",
     "bots.invalid_response_type_for_non_bot": "ประเภทการตอบกลับต้องเป็นโค้ดสำหรับขอบเขตที่ไม่ใช่บอท",
     "bots.not_a_bot_application": "แอปพลิเคชันนี้ไม่ใช่บอท",
+    "bots.search_scope_unavailable": "บอทสามารถค้นหาได้เฉพาะภายในคอมมูนิตี้เดียวหรือช่องเดียวเท่านั้น",
     "calls_and_voice.call_already_exists": "มีการโทรอยู่ในช่องนี้แล้ว",
     "calls_and_voice.cannot_modify_voice_state": "แก้ไขสถานะเสียงไม่ได้",
     "calls_and_voice.invalid_or_restricted_rtc_region": "ภูมิภาค RTC ไม่ถูกต้องหรือถูกจำกัด: {region}",

@@ -152,6 +152,7 @@
     "bots.bot_user_not_found": "Korisnik bota nije pronađen.",
     "bots.invalid_response_type_for_non_bot": "Vrsta odgovora mora biti kod za opsege koji nisu botovi.",
     "bots.not_a_bot_application": "Ova aplikacija nije bot.",
+    "bots.search_scope_unavailable": "Botovi mogu pretraživati samo unutar jedne zajednice ili jednog kanala.",
     "calls_and_voice.call_already_exists": "Poziv je već u tijeku u ovom kanalu.",
     "calls_and_voice.cannot_modify_voice_state": "Ne možeš mijenjati stanje glasa.",
     "calls_and_voice.invalid_or_restricted_rtc_region": "Nevažeća ili ograničena RTC regija: {region}.",

@@ -152,6 +152,7 @@
     "bots.bot_user_not_found": "Roboto naudotojas nerastas.",
     "bots.invalid_response_type_for_non_bot": "Atsakymo tipas ne robotų teisėms turi būti kodas.",
     "bots.not_a_bot_application": "Ši programa nėra robotas.",
+    "bots.search_scope_unavailable": "Botai gali ieškoti tik vienoje bendruomenėje arba viename kanale.",
     "calls_and_voice.call_already_exists": "Šiame kanale jau vyksta skambutis.",
     "calls_and_voice.cannot_modify_voice_state": "Negali keisti balso būsenos.",
     "calls_and_voice.invalid_or_restricted_rtc_region": "Neteisingas arba apribotas RTC regionas: {region}.",

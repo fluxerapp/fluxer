@@ -23,6 +23,7 @@ import type {Channel} from '../models/Channel';
 import {getMessageSearchService} from '../SearchFactory';
 import type {IUserRepository} from '../user/IUserRepository';
 import {canUserAccessNsfwContent} from '../utils/AgeUtils';
+import {mapWithConcurrency} from '../utils/ConcurrencyUtils';
 import type {WorkerTaskName} from '../worker/WorkerLaneConfig';
 import {buildMessageSearchFilters} from './BuildMessageSearchFilters';
 import {channelNeedsReindexing} from './ChannelIndexingUtils';
@@ -269,22 +270,4 @@ export class GlobalSearchService {
 		}
 		return canUserAccessNsfwContent(user);
 	}
-}
-
-async function mapWithConcurrency<T, TResult>(
-	items: ReadonlyArray<T>,
-	concurrency: number,
-	mapper: (item: T, index: number) => Promise<TResult>,
-): Promise<Array<TResult>> {
-	const results = new Array<TResult>(items.length);
-	let nextIndex = 0;
-	async function worker(): Promise<void> {
-		for (;;) {
-			const index = nextIndex++;
-			if (index >= items.length) return;
-			results[index] = await mapper(items[index]!, index);
-		}
-	}
-	await Promise.all(Array.from({length: Math.min(concurrency, items.length)}, () => worker()));
-	return results;
 }

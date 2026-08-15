@@ -152,6 +152,7 @@
     "bots.bot_user_not_found": "Не найден бот-пользователь.",
     "bots.invalid_response_type_for_non_bot": "Тип ответа должен быть code для областей, не связанных с ботами.",
     "bots.not_a_bot_application": "Это приложение не является ботом.",
+    "bots.search_scope_unavailable": "Боты могут искать только в пределах одного сообщества или канала.",
     "calls_and_voice.call_already_exists": "В этом канале уже идёт звонок.",
     "calls_and_voice.cannot_modify_voice_state": "Ты не можешь изменить голосовое состояние.",
     "calls_and_voice.invalid_or_restricted_rtc_region": "Ограниченный или недействительный RTC-регион: {region}.",
