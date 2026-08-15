@@ -285,6 +285,7 @@ services:
     depends_on:
       api: {condition: service_healthy}
       caddy: {condition: service_started}
+      postgres: {condition: service_healthy}
 
   snowflakes:
     <<: *fluxer-service
@@ -323,6 +324,7 @@ services:
       FLUXER_SVC_SHARD_ID: "0"
     depends_on:
       nats: {condition: service_started}
+      postgres: {condition: service_healthy}
 
   gifs:
     <<: *fluxer-service
