@@ -58,7 +58,6 @@
 		"@fluxer/win-game-capture": "file:./native/win-game-capture",
 		"@fluxer/win-process-loopback": "file:./native/win-process-loopback",
 		"@fluxer/windows-input-hook": "file:./native/windows-input-hook",
-		"electron-log": "5.4.3",
-		"node-mac-permissions": "2.5.0"
+		"electron-log": "5.4.3"
 	}
 }

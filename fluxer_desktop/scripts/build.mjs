@@ -31,7 +31,6 @@ const electronExternals = [
 	'velopack',
 	'@fluxer/webauthn',
 	'@fluxer/webrtc-sender',
-	'node-mac-permissions',
 	'hunspell-asm',
 ];
 const pathAliasPlugin = {
