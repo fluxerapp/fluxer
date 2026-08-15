@@ -7818,7 +7818,7 @@ msgstr "コミュニティ作成者"
 #. Moderation voice menu label. Makes a member unable to hear others in this community voice chat. Distinct from community mute.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:147
 msgid "Community deafen"
-msgstr "コミュニティでのミュート"
+msgstr "コミュニティ側スピーカーミュート"
 
 #. Title of the developer-mode community debug modal.
 #. Title of the developer-mode community debug modal.
@@ -7906,7 +7906,7 @@ msgstr "コミュニティのMFA必須設定ナグバー"
 #. Moderation voice menu label. Mutes a member's microphone in this community voice chat.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:122
 msgid "Community mute"
-msgstr "コミュニティのミュート"
+msgstr "コミュニティミュート"
 
 #. Label for the single community name input in the setup wizard.
 #. Label of the community name input in the create-community form.
@@ -10389,32 +10389,32 @@ msgstr "アカウントを停止"
 #. Voice action label. Turns off what the user hears in voice chat. Distinct from microphone mute.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:82
 msgid "Deafen"
-msgstr "ミュート"
+msgstr "スピーカーミュート"
 
 #. Voice menu action that deafens every device or session so this user cannot hear voice chat.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:139
 msgid "Deafen all devices"
-msgstr "すべてのデバイスをミュート"
+msgstr "すべてのデバイスをスピーカーミュート"
 
 #. Voice menu action. Deafens one active device or session so it stops hearing voice audio. Distinct from muting its microphone.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:134
 msgid "Deafen device"
-msgstr "デバイスをミュート"
+msgstr "デバイスをスピーカーミュート"
 
 #. Permission name: allows moderators to deafen other voice participants.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:290
 msgid "Deafen members"
-msgstr "メンバーをミュートにする"
+msgstr "メンバーをスピーカーミュートにする"
 
 #. Settings label for the keyboard shortcut that toggles voice deafen. Deafen controls hearing voice chat, not microphone mute.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:157
 msgid "Deafen shortcut"
-msgstr "Deafenのショートカット"
+msgstr "スピーカーミュートのショートカット"
 
 #. Voice control label. Turns off what the current user hears in voice chat. Distinct from microphone mute.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:126
 msgid "Deafen yourself"
-msgstr "自分の音声をミュート"
+msgstr "自分をスピーカーミュート"
 
 #. Accessible label for the deafened voice badge shown on an avatar.
 #. Voice chat status label. The user cannot hear voice chat. Distinct from muted.
@@ -10426,7 +10426,7 @@ msgstr "聴覚なし"
 #. Voice chat status label. A moderator deafened the user in this community, so they cannot hear voice chat.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:57
 msgid "Deafened by moderators"
-msgstr "モデレーターによりミュートされています"
+msgstr "モデレーターによりスピーカーミュートされています"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the settings dialog mobile settings view.
@@ -33371,7 +33371,7 @@ msgstr "コントロールを切り替える"
 #. Keyboard shortcut label. Toggles voice deafen, which controls whether the user hears voice chat. Distinct from microphone mute.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:152
 msgid "Toggle deafen"
-msgstr "ミュートを切り替え"
+msgstr "スピーカーミュートを切り替え"
 
 #. Native View menu item that opens or closes Chromium developer tools.
 #: src/features/platform/utils/DesktopLocaleBridge.ts:54

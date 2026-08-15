@@ -91,7 +91,7 @@ msgstr "{actor} a banni {targetMember}."
 
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:552
 msgid "{actor} created the channel {namedTarget}."
-msgstr "{actor} a créé le canal {namedTarget}."
+msgstr "{actor} a créé le salon {namedTarget}."
 
 #. placeholder {0}: channelNode ? <> for {channelNode}</> : null
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:695
@@ -124,7 +124,7 @@ msgstr "{actor} a supprimé plusieurs messages{0}."
 
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:564
 msgid "{actor} deleted the channel {namedTarget}."
-msgstr "{actor} a supprimé le canal {namedTarget}."
+msgstr "{actor} a supprimé le salon {namedTarget}."
 
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:746
 msgid "{actor} deleted the emoji {namedTarget}."
@@ -207,7 +207,7 @@ msgstr "{actor} a mis à jour les autorisations de la chaîne pour {targetEntity
 
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:588
 msgid "{actor} updated channel permissions for {targetEntity}."
-msgstr "{actor} a mis à jour les autorisations du canal pour {targetEntity}."
+msgstr "{actor} a mis à jour les autorisations du salon pour {targetEntity}."
 
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:630
 msgid "{actor} updated roles for {targetMember}."
@@ -215,7 +215,7 @@ msgstr "{actor} a mis à jour les rôles de {targetMember}."
 
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:558
 msgid "{actor} updated the channel {namedTarget}."
-msgstr "{actor} a mis à jour le canal {namedTarget}."
+msgstr "{actor} a mis à jour le salon {namedTarget}."
 
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:549
 msgid "{actor} updated the community settings."
@@ -295,7 +295,7 @@ msgstr "{channelHeading}, {mentionCount} mentions"
 #. Short label in the channel layout. Keep it concise. Preserve {channelName}; it is inserted by code.
 #: src/features/channel/components/ChannelLayout.tsx:17
 msgid "{channelName} channel"
-msgstr "Canal {channelName}"
+msgstr "Salon {channelName}"
 
 #: src/features/theme_studio/sections/QuickCssSection.tsx:271
 msgid "{characterCount, plural, one {# character} other {# characters}}"
@@ -1382,17 +1382,17 @@ msgstr "{username} a ajouté quelqu'un au groupe."
 #. System message in a group DM when a member changes the group icon.
 #: src/features/messaging/utils/SystemMessageUtils.tsx:130
 msgid "{username} changed the channel icon."
-msgstr "{username} a changé l'icône du canal."
+msgstr "{username} a changé l'icône du salon."
 
 #. System message in a group DM when a member renames the channel. newName is the new channel name.
 #: src/features/messaging/utils/SystemMessageUtils.tsx:122
 msgid "{username} changed the channel name to {newName}."
-msgstr "{username} a changé le nom du canal en {newName}."
+msgstr "{username} a changé le nom du salon en {newName}."
 
 #. System message in a group DM when a member renames the channel and the new name is not available locally.
 #: src/features/messaging/utils/SystemMessageUtils.tsx:126
 msgid "{username} changed the channel name."
-msgstr "{username} a modifié le nom du canal."
+msgstr "{username} a modifié le nom du salon."
 
 #. System message in a group DM when a member removes themself from the group.
 #: src/features/messaging/utils/SystemMessageUtils.tsx:109
@@ -1402,7 +1402,7 @@ msgstr "{username} a quitté le groupe."
 #. System message shown inline in a channel when a user pins a message. username is the actor.
 #: src/features/messaging/utils/SystemMessageUtils.tsx:96
 msgid "{username} pinned a message to this channel."
-msgstr "{username} a épinglé un message sur ce canal."
+msgstr "{username} a épinglé un message dans ce salon."
 
 #. System message in a group DM when one member removes another. username is the actor, userName is the removed user.
 #: src/features/messaging/utils/SystemMessageUtils.tsx:113
@@ -1458,15 +1458,15 @@ msgstr "<0/> a ajouté quelqu'un au groupe."
 
 #: src/features/channel/components/ChannelIconChangeMessage.tsx:21
 msgid "<0/> changed the channel icon."
-msgstr "<0/> a changé l'icône du canal."
+msgstr "<0/> a changé l'icône du salon."
 
 #: src/features/channel/components/ChannelNameChangeMessage.tsx:36
 msgid "<0/> changed the channel name to {nameComponent}."
-msgstr "<0/> a changé le nom du canal en {nameComponent}."
+msgstr "<0/> a changé le nom du salon en {nameComponent}."
 
 #: src/features/channel/components/ChannelNameChangeMessage.tsx:47
 msgid "<0/> changed the channel name."
-msgstr "<0/> a changé le nom du canal."
+msgstr "<0/> a changé le nom du salon."
 
 #: src/features/channel/components/RecipientRemoveMessage.tsx:26
 msgid "<0/> has left the group."
@@ -1474,7 +1474,7 @@ msgstr "<0/> a quitté le groupe."
 
 #: src/features/channel/components/PinSystemMessage.tsx:44
 msgid "<0/> pinned <1>a message</1> to this channel. See <2>all pinned messages</2>."
-msgstr "<0/> a épinglé <1>un message</1> sur ce canal. Voir <2>tous les messages épinglés</2>."
+msgstr "<0/> a épinglé <1>un message</1> dans ce salon. Voir <2>tous les messages épinglés</2>."
 
 #: src/features/channel/components/RecipientRemoveMessage.tsx:37
 msgid "<0/> removed <1/> from the group."
@@ -2270,7 +2270,7 @@ msgstr "appel en cours"
 #. Short label in the text to speech. Keep it concise.
 #: src/features/user/components/modals/tabs/notifications_tab/TextToSpeech.tsx:25
 msgid "Active channel only"
-msgstr "Canal actif uniquement"
+msgstr "Salon actif uniquement"
 
 #. Description text in the sounds. Preserve {overrideCount}; it is inserted by code.
 #: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabSounds.tsx:75
@@ -2426,7 +2426,7 @@ msgstr "Ajoutez un tag et appuyez sur Entrée"
 
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/ChannelOverviewTopicEditor.tsx:35
 msgid "Add a topic to this channel"
-msgstr "Ajouter un sujet à ce canal"
+msgstr "Ajouter un sujet à ce salon"
 
 #. Button or menu action label in the language tab. Keep it concise.
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:137
@@ -2858,7 +2858,7 @@ msgstr "Les fonctionnalités Aero Snap et Snap Layouts peuvent cesser de fonctio
 #. Label in the idle settings section.
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/IdleSettingsSection.tsx:24
 msgid "AFK / idle channel"
-msgstr "Canal AFK / inactif"
+msgstr "Salon AFK / inactif"
 
 #. Short label in the idle settings section. Keep it concise.
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/IdleSettingsSection.tsx:32
@@ -3302,7 +3302,7 @@ msgstr "Toujours afficher le contenu masqué"
 #. Description text in the display tab. Preserve {manageMessagesPermissionLabel}; it is inserted by code. Keep the tone plain and specific.
 #: src/features/user/components/modals/tabs/chat_settings_tab/DisplayTab.tsx:34
 msgid "Always show spoiler content in channels where you have the \"{manageMessagesPermissionLabel}\" permission"
-msgstr "Toujours afficher le contenu masqué dans les canaux où vous avez la permission \" {manageMessagesPermissionLabel} \""
+msgstr "Toujours afficher le contenu masqué dans les salons où vous avez la permission \" {manageMessagesPermissionLabel} \""
 
 #. Developer / debug surface — keep terse and technical. Tooltip / description for forcing the profile-data warning indicator.
 #: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:17
@@ -3906,17 +3906,17 @@ msgstr "Voulez-vous vraiment supprimer le rôle <0>{0}</0> ? Tous les membres qu
 
 #: src/features/ui/action_menu/items/CategoryMenuItems.tsx:349
 msgid "Are you sure you want to delete the category \"{categoryName}\"? All {channelCount, plural, one {# channel} other {# channels}} inside will be moved to the top of the channel list."
-msgstr "Voulez-vous vraiment supprimer la catégorie \" {categoryName} \" ? Tous les {channelCount, plural, one {# canal} other {# canaux}} qu'elle contient seront déplacés en haut de la liste des canaux."
+msgstr "Voulez-vous vraiment supprimer la catégorie \"{categoryName}\" ? Tous les {channelCount, plural, one {# salon} other {# salons}} qu'elle contient seront déplacés en haut de la liste des salons."
 
 #. Confirm dialog body before deleting a category that contains multiple channels.
 #: src/features/ui/action_menu/items/CategoryMenuData.tsx:56
 msgid "Are you sure you want to delete the category \"{categoryName}\"? All {channelCount} channels inside will be moved to the top of the channel list."
-msgstr "Voulez-vous vraiment supprimer la catégorie \" {categoryName} \" ? Tous les {channelCount} canaux qu'elle contient seront déplacés en haut de la liste des canaux."
+msgstr "Voulez-vous vraiment supprimer la catégorie \" {categoryName} \" ? Tous les {channelCount} salons qu'elle contient seront déplacés en haut de la liste des salons."
 
 #. Confirm dialog body before deleting a category that contains one channel.
 #: src/features/ui/action_menu/items/CategoryMenuData.tsx:51
 msgid "Are you sure you want to delete the category \"{categoryName}\"? The channel inside will be moved to the top of the channel list."
-msgstr "Voulez-vous vraiment supprimer la catégorie \" {categoryName} \" ? Le canal qu'elle contient sera déplacé en haut de la liste des canaux."
+msgstr "Voulez-vous vraiment supprimer la catégorie \"{categoryName}\" ? Le salon qu'elle contient sera déplacé en haut de la liste des salons."
 
 #. Confirm dialog body before deleting an empty channel category.
 #: src/features/ui/action_menu/items/CategoryMenuItems.tsx:66
@@ -3934,7 +3934,7 @@ msgstr "Voulez-vous vraiment supprimer cette pièce jointe ? Cette action est ir
 
 #: src/features/guild/components/modals/GuildDeleteModal.tsx:47
 msgid "Are you sure you want to delete this community? This action cannot be undone. All channels, messages, and settings will be permanently deleted."
-msgstr "Voulez-vous vraiment supprimer cette communauté ? Cette action est irréversible. Tous les canaux, messages et paramètres seront définitivement supprimés."
+msgstr "Voulez-vous vraiment supprimer cette communauté ? Cette action est irréversible. Tous les salons, messages et paramètres seront définitivement supprimés."
 
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:150
 msgid "Are you sure you want to delete this passkey?"
@@ -4605,7 +4605,7 @@ msgstr "Supprimer automatiquement les paramètres de suivi des URL dans les mess
 
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:346
 msgid "Automatically screen messages for explicit content in channels not marked for mature content."
-msgstr "Filtrer automatiquement les messages contenant du contenu explicite dans les canaux non marqués comme réservés aux contenus matures."
+msgstr "Filtrer automatiquement les messages contenant du contenu explicite dans les salons non marqués comme réservés aux contenus matures."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:23
@@ -5701,7 +5701,7 @@ msgstr "Caméra masquée"
 #. Error shown when enabling the camera is rejected because the channel already has the maximum number of users sharing video. {voiceChannelCameraUserLimit} is the configured cap.
 #: src/features/voice/engine/media_engine_facade/shared.ts:39
 msgid "Camera limit reached — up to {voiceChannelCameraUserLimit} people can share video in this channel."
-msgstr "Nombre maximal de participants à la diffusion vidéo atteint : jusqu’à {voiceChannelCameraUserLimit} personnes peuvent partager une vidéo dans ce canal."
+msgstr "Nombre maximal de participants à la diffusion vidéo atteint : jusqu’à {voiceChannelCameraUserLimit} personnes peuvent partager une vidéo dans ce salon."
 
 #. Accessible status label while a voice participant camera feed is starting before video is renderable.
 #: src/features/voice/components/voice_participant_tile/shared.ts:48
@@ -6321,7 +6321,7 @@ msgstr "Les modifications s'appliquent instantanément au client en direct."
 #: src/features/app/components/layout/ChannelItem.tsx:87
 #: src/features/channel/components/channel_textarea/shared.ts:11
 msgid "channel"
-msgstr "canal"
+msgstr "salon"
 
 #. Audit log target-type filter label. Filters entries that target a channel.
 #. Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).
@@ -6345,7 +6345,7 @@ msgstr "Chaîne {id}"
 #. Permission category for viewing or entering channels.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:145
 msgid "Channel access"
-msgstr "Accès aux canaux"
+msgstr "Accès aux salons"
 
 #. Title of the alert shown when clicking a message link the user does not have permission to view.
 #: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:110
@@ -6354,12 +6354,12 @@ msgstr "Accès à la chaîne refusé"
 
 #: src/features/channel/components/modals/channel_tabs/ChannelPermissionsTab.tsx:314
 msgid "Channel access updated"
-msgstr "Accès au canal mis à jour"
+msgstr "Accès au salon mis à jour"
 
 #. Tooltip on the channel header overflow menu button that opens a list of channel actions.
 #: src/features/channel/components/channel_header/shared.ts:39
 msgid "Channel actions"
-msgstr "Actions du canal"
+msgstr "Actions du salon"
 
 #. Toast confirming a channel was added to the favorites list.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:791
@@ -6385,7 +6385,7 @@ msgstr "Chaîne créée"
 #. Title of the developer-mode channel debug modal (distinct from the action label that opens it).
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:546
 msgid "Channel debug"
-msgstr "Débogage du canal"
+msgstr "Débogage du salon"
 
 #. Audit log entry label. Past-tense action describing that a channel was deleted.
 #. Toast confirming a channel was successfully deleted.
@@ -6404,12 +6404,12 @@ msgstr "Sections des détails de la chaîne"
 #: src/features/ui/action_menu/items/ChannelMenuData.tsx:108
 #: src/features/ui/action_menu/items/dm_menu_data/shared.ts:37
 msgid "Channel ID copied"
-msgstr "ID du canal copié"
+msgstr "ID du salon copié"
 
 #. Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:47
 msgid "Channel ID copied to clipboard"
-msgstr "ID du canal copié dans le presse-papiers"
+msgstr "ID du salon copié dans le presse-papiers"
 
 #. Short label in the messaging mention renderer. Keep it concise.
 #. Type chip suffix in tooltips for inline rendered channel mentions. Lowercase because it follows the channel name.
@@ -6430,34 +6430,34 @@ msgstr "Lien de la chaîne copié"
 #: src/features/user/components/modals/tabs/AppearanceTab.tsx:47
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:25
 msgid "Channel list"
-msgstr "Liste des canaux"
+msgstr "Liste des salons"
 
 #. Label in the interface tab.
 #: src/features/user/components/modals/tabs/appearance_tab/InterfaceTab.tsx:50
 msgid "Channel list typing indicator mode"
-msgstr "Mode d'affichage des indicateurs de saisie dans la liste des canaux"
+msgstr "Mode d'affichage des indicateurs de saisie dans la liste des salons"
 
 #. Label in the interface tab.
 #: src/features/user/components/modals/tabs/appearance_tab/InterfaceTab.tsx:46
 msgid "Channel list typing indicators"
-msgstr "Indicateurs de saisie dans la liste des canaux"
+msgstr "Indicateurs de saisie dans la liste des salons"
 
 #. Permission category for managing channels and channel settings.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:153
 msgid "Channel management"
-msgstr "Gestion des canaux"
+msgstr "Gestion des salons"
 
 #. Channel overview settings tab label, control, or validation message (name, topic, slowmode, voice region, mature content gate).
 #. Short label in the channel duplicate modal. Keep it concise.
 #: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:60
 #: src/features/channel/components/modals/ChannelDuplicateModal.tsx:32
 msgid "Channel name"
-msgstr "Nom du canal"
+msgstr "Nom du salon"
 
 #. Short label in the rename channel modal. Keep it concise.
 #: src/features/channel/components/modals/RenameChannelModal.tsx:24
 msgid "Channel nickname"
-msgstr "Surnom du canal"
+msgstr "Surnom du salon"
 
 #. Short label in the channel bottom sheet. Keep it concise.
 #: src/features/channel/components/bottomsheets/ChannelBottomSheet.tsx:18
@@ -6477,7 +6477,7 @@ msgstr "Remplacement de salon ajouté"
 #. Audit log entry label. A channel permission override was removed for a role or member.
 #: src/features/app/config/AuditLogConstants.ts:32
 msgid "Channel overwrite removed"
-msgstr "Remplacement de permission de canal supprimé"
+msgstr "Exception de permission de salon supprimée"
 
 #. Audit log entry label. A channel permission override was edited for a role or member.
 #: src/features/app/config/AuditLogConstants.ts:28
@@ -6487,12 +6487,12 @@ msgstr "Remplacement de salon mis à jour"
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:48
 msgid "Channel permission overrides"
-msgstr "Remplacements des autorisations du canal"
+msgstr "Remplacements des autorisations du salon"
 
 #. Developer debug modal tab showing the raw channel data record.
 #: src/features/devtools/components/debug/ChannelDebugModal.tsx:11
 msgid "Channel record"
-msgstr "Enregistrement du canal"
+msgstr "Enregistrement du salon"
 
 #. Toast confirming a channel was removed from the favorites list.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:787
@@ -6502,7 +6502,7 @@ msgstr "Chaîne retirée des favoris"
 #. Root label for channel settings modal and settings search paths.
 #: src/features/user/components/settings_utils/ChannelSettingsConstants.ts:93
 msgid "Channel settings"
-msgstr "Paramètres du canal"
+msgstr "Paramètres du salon"
 
 #: src/features/channel/components/modals/channel_tabs/ChannelPermissionsTab.tsx:497
 msgid "Channel synced with parent category"
@@ -6511,24 +6511,24 @@ msgstr "Salon synchronisé avec la catégorie parente"
 #. Channel overview settings tab label, control, or validation message (name, topic, slowmode, voice region, mature content gate).
 #: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:46
 msgid "Channel topic is too long."
-msgstr "Le sujet du canal est trop long."
+msgstr "Le sujet du salon est trop long."
 
 #. Short label in the channel create modal. Keep it concise.
 #: src/features/channel/components/modals/ChannelCreateModal.tsx:25
 msgid "Channel type"
-msgstr "Type de canal"
+msgstr "Type de salon"
 
 #. Short label in the channel create modal. Keep it concise.
 #: src/features/channel/components/modals/ChannelCreateModal.tsx:29
 msgid "Channel type selection"
-msgstr "Sélection du type de canal"
+msgstr "Sélection du type de salon"
 
 #. placeholder {0}: renderValueInline(label, guildId, i18n)
 #. placeholder {0}: renderValueInline(value, guildId, i18n)
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:237
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:239
 msgid "Channel type: {0}."
-msgstr "Type de canal : {0}."
+msgstr "Type de salon : {0}."
 
 #. Audit log entry label. Past-tense action describing that a channel was edited.
 #: src/features/app/config/AuditLogConstants.ts:16
@@ -6817,7 +6817,7 @@ msgstr "Choisissez comment le fil de discussion se déplace après l’envoi d�
 #. Settings section description. One-line summary of what the settings section controls.
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:238
 msgid "Choose how messages are displayed in chat channels."
-msgstr "Choisissez comment les messages s'affichent dans les canaux de discussion."
+msgstr "Choisissez comment les messages s'affichent dans les salons de discussion."
 
 #. Setup wizard registration step body.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:150
@@ -7040,7 +7040,7 @@ msgstr "Validez votre compte pour rejoindre ce salon vocal."
 #. Toast / error shown when an unclaimed (guest) account tries to join a voice channel they do not own.
 #: src/features/voice/engine/media_engine_facade/shared.ts:9
 msgid "Claim your account to join voice channels you don't own."
-msgstr "Revendiquez votre compte pour rejoindre les canaux vocaux dont vous n'êtes pas propriétaire."
+msgstr "Revendiquez votre compte pour rejoindre les salons vocaux dont vous n'êtes pas propriétaire."
 
 #. Billing tooltip shown when an unclaimed account cannot start premium checkout. premiumProductFullName is the full paid product name.
 #. Plutonium upsell CTA tooltip shown to guests/unclaimed accounts: claiming the account is required before purchase. Product name is interpolated.
@@ -7620,7 +7620,7 @@ msgstr "Réduire la catégorie"
 #. Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:117
 msgid "Collapse channel topic"
-msgstr "Réduire le sujet du canal"
+msgstr "Réduire le sujet du salon"
 
 #. Tooltip / aria label on a voice participant tile button that collapses expanded device tiles for one user.
 #. Voice menu action that collapses expanded device tiles back into a single tile.
@@ -7735,7 +7735,7 @@ msgstr "Commandes"
 #. Helper text in the forward modal explaining why the optional comment field is disabled when at least one selected target has slowmode active.
 #: src/features/messaging/components/modals/ForwardModal.tsx:63
 msgid "Comments are disabled because one or more selected channels have slowmode on. The comment would be blocked by slowmode right after the forward."
-msgstr "Les commentaires sont désactivés car un ou plusieurs des canaux sélectionnés ont le mode lent activé. Le commentaire serait bloqué par le mode lent juste après le transfert."
+msgstr "Les commentaires sont désactivés car un ou plusieurs des salons sélectionnés ont le mode lent activé. Le commentaire serait bloqué par le mode lent juste après le transfert."
 
 #. Helper text in the forward modal explaining why the optional comment field is disabled for a single selected channel with slowmode.
 #: src/features/messaging/components/modals/ForwardModal.tsx:57
@@ -8111,7 +8111,7 @@ msgstr "Configurer"
 
 #: src/features/channel/components/modals/channel_tabs/channel_permissions_tab/PermissionEditorPanel.tsx:85
 msgid "Configure base access for this channel"
-msgstr "Configurer l'accès de base pour ce canal"
+msgstr "Configurer l'accès de base pour ce salon"
 
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthPermissionsStep.tsx:56
 msgid "Configure bot permissions"
@@ -8187,7 +8187,7 @@ msgstr "Confirmer"
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAppearanceControls.tsx:21
 #: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:15
 msgid "Confirm before joining voice channels"
-msgstr "Confirmer avant de rejoindre les canaux vocaux"
+msgstr "Confirmer avant de rejoindre les salons vocaux"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label in the keyboard tab. Keep it concise.
@@ -8237,7 +8237,7 @@ msgstr "Confirmation"
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:43
 msgid "Confirmation or double-click for community voice joins"
-msgstr "Confirmation ou double-clic pour rejoindre les canaux vocaux de la communauté."
+msgstr "Confirmation ou double-clic pour rejoindre les salons vocaux de la communauté."
 
 #: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindRow.tsx:154
 msgid "Conflicts with {conflictLabel}"
@@ -8553,7 +8553,7 @@ msgstr "Gérer les commandes vocales et la narration pour le contenu entrant."
 #. Settings section description. One-line summary of what the settings section controls.
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:414
 msgid "Control unread indicator behavior for muted channels in channel lists."
-msgstr "Gérer le comportement de l'indicateur de messages non lus pour les canaux mis en sourdine dans les listes de canaux."
+msgstr "Gérer le comportement de l'indicateur de messages non lus pour les salons mis en sourdine dans les listes de salons."
 
 #. Settings section description. One-line summary of what the settings section controls.
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:115
@@ -8675,7 +8675,7 @@ msgstr "Copier l'ID de la catégorie"
 #. Developer-mode action that copies a channel snowflake/ID to the clipboard.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:397
 msgid "Copy channel ID"
-msgstr "Copier l'identifiant du canal"
+msgstr "Copier l'identifiant du salon"
 
 #. Action that copies a deep link to the selected channel.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
@@ -9108,7 +9108,7 @@ msgstr "Impossible de supprimer cette catégorie"
 #. Title of the generic fallback error modal shown when deleting a channel fails.
 #: src/features/app/components/alerts/ChannelDeleteFailedModal.tsx:42
 msgid "Couldn't delete this channel"
-msgstr "Impossible de supprimer ce canal"
+msgstr "Impossible de supprimer ce salon"
 
 #. Title of the generic fallback error modal shown when deleting a custom emoji fails.
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:124
@@ -9135,7 +9135,7 @@ msgstr "Impossible de télécharger la mise à jour de bureau"
 #. Title of the error modal shown when duplicating a channel fails.
 #: src/features/ui/action_menu/items/ChannelMenuData.tsx:140
 msgid "Couldn't duplicate this channel"
-msgstr "Impossible de dupliquer ce canal"
+msgstr "Impossible de dupliquer ce salon"
 
 #. Title of the generic fallback error modal shown when ending the Plutonium grace period fails.
 #: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:36
@@ -9419,7 +9419,7 @@ msgstr "Impossible de modifier le texte alternatif"
 #. Error modal title shown when saving channel permission changes fails.
 #: src/features/channel/components/alerts/ChannelPermissionsUpdateFailedModal.tsx:9
 msgid "Couldn't update channel permissions"
-msgstr "Impossible de mettre à jour les autorisations du canal"
+msgstr "Impossible de mettre à jour les autorisations du salon"
 
 #. Error modal title shown when toggling whether other communities can clone this server's emojis fails.
 #: src/features/guild/components/alerts/CloneSettingUpdateFailedModal.tsx:9
@@ -9718,17 +9718,17 @@ msgstr "Créez votre première application pour commencer avec l'{apiName}."
 #. Permission description in the role/permission editor for the Manage Channels permission. Covers channel and category lifecycle operations.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:33
 msgid "Create, edit, or delete channels and categories."
-msgstr "Créer, modifier ou supprimer des canaux et des catégories."
+msgstr "Créer, modifier ou supprimer des salons et des catégories."
 
 #. Permission description in the role/permission editor for the Manage Roles permission. Notes the standard role-hierarchy rule and that it also gates channel permission overwrites.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:28
 msgid "Create, edit, or delete roles below your highest role. Also allows editing channel permission overwrites."
-msgstr "Créer, modifier ou supprimer des rôles inférieurs à votre rôle le plus élevé. Permet également de modifier les remplacements d'autorisations de canal."
+msgstr "Créer, modifier ou supprimer des rôles inférieurs à votre rôle le plus élevé. Permet également de modifier les remplacements d'autorisations de salon."
 
 #. Permission description in the channel-scoped permissions editor for the Manage Webhooks permission. Scoped to a single channel.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:123
 msgid "Create, edit, or delete webhooks for this channel."
-msgstr "Créer, modifier ou supprimer des webhooks pour ce canal."
+msgstr "Créer, modifier ou supprimer des webhooks pour ce salon."
 
 #. Permission description in the role/permission editor for the Manage Webhooks permission, community-wide scope. Refers to outbound integration webhooks.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:58
@@ -9773,7 +9773,7 @@ msgstr "Créé par {userName}"
 #. placeholder {0}: renderInline(change.newValue, i18n, guildId)
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:739
 msgid "Created for channel {0}."
-msgstr "Créé pour le canal {0}."
+msgstr "Créé pour le salon {0}."
 
 #. placeholder {0}: renderInline(formatted, i18n)
 #. placeholder {0}: renderValueInline(formatted, guildId, i18n)
@@ -9907,7 +9907,7 @@ msgstr "Devise"
 #. Notification sound setting label. Controls the sound for incoming messages in the currently focused channel.
 #: src/features/notification/utils/SoundLabels.ts:11
 msgid "Current channel message notifications"
-msgstr "Notifications des messages du canal actuel"
+msgstr "Notifications des messages du salon actuel"
 
 #. Message search scope menu item. Limits search to the current community.
 #: src/features/channel/components/SearchScopeOptions.ts:49
@@ -10438,7 +10438,7 @@ msgstr "Débogage"
 #. Developer-mode action that opens the channel debug panel.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:401
 msgid "Debug channel"
-msgstr "Déboguer le canal"
+msgstr "Déboguer le salon"
 
 #. Developer-mode action that opens the community debug modal.
 #. Developer-mode action that opens the community debug modal.
@@ -10705,7 +10705,7 @@ msgstr "Supprimer la catégorie"
 #: src/features/app/components/dialogs/components/MobileChannelSettingsView.tsx:37
 #: src/features/channel/utils/ChannelMessageDescriptors.ts:29
 msgid "Delete channel"
-msgstr "Supprimer le canal"
+msgstr "Supprimer le salon"
 
 #. Button or menu action label in the guild delete modal. Keep it concise. Keep the tone plain and specific.
 #. Destructive footer button in community settings. Opens the delete-community confirmation.
@@ -10881,7 +10881,7 @@ msgstr "Supprimer votre compte"
 #. Confirmation modal title for the destructive "delete all my messages in this channel" action.
 #: src/features/channel/hooks/useDeleteMyMessagesInChannel.tsx:17
 msgid "Delete your messages in this channel?"
-msgstr "Supprimer vos messages dans ce canal ?"
+msgstr "Supprimer vos messages dans ce salon ?"
 
 #. Confirmation modal title for the destructive "delete all my messages in this community" action.
 #: src/features/guild/hooks/useDeleteMyMessagesInGuild.tsx:16
@@ -11121,7 +11121,7 @@ msgstr "Les modifications de la transparence de la fenêtre du bureau seront app
 #. Short label in the system welcome section. Keep it concise.
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/SystemWelcomeSection.tsx:24
 msgid "Destination channel"
-msgstr "Canal de destination"
+msgstr "Salon de destination"
 
 #: src/features/messaging/components/modals/ExternalLinkWarningModal.tsx:81
 msgid "Destination URL:"
@@ -11192,7 +11192,7 @@ msgstr "Outils de développement"
 #. Body of the developer-tools info alert. Refers to the staff badge button in the channel header.
 #: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:126
 msgid "Developer tools are available from the staff badge in the channel header."
-msgstr "Les outils de développement sont accessibles depuis le badge du personnel dans l'en-tête du canal."
+msgstr "Les outils de développement sont accessibles depuis le badge du personnel dans l'en-tête du salon."
 
 #: src/features/channel/components/channel_header_components/DeveloperToolsContextMenu.tsx:26
 msgid "Developer tools unavailable"
@@ -11499,7 +11499,7 @@ msgstr "Désactivé (non coché)"
 #. placeholder {0}: renderInline(joinLabels(removed), i18n)
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:374
 msgid "Disabled {0} for the system channel."
-msgstr "{0} désactivé pour le canal système."
+msgstr "{0} désactivé pour le salon système."
 
 #. placeholder {0}: renderInline(joinLabels(added), i18n)
 #. placeholder {0}: renderInline(joinLabels(removedLabels), i18n)
@@ -11767,7 +11767,7 @@ msgstr "Mise à l'échelle de l'affichage"
 #. Tab label in the screen-share picker. Lists shareable monitors / displays.
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:129
 msgid "Displays"
-msgstr "Affiche"
+msgstr "Écrans"
 
 #. IAR modal: rule description.
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:303
@@ -11777,7 +11777,7 @@ msgstr "Distribue des logiciels malveillants, vole des identifiants ou envoie de
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:182
 msgid "DM"
-msgstr "DM"
+msgstr "MP"
 
 #. IAR modal: quick-action card title.
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:447
@@ -11968,7 +11968,7 @@ msgstr "Ne plus afficher"
 #. Label in the interface tab.
 #: src/features/user/components/modals/tabs/appearance_tab/InterfaceTab.tsx:42
 msgid "Don't show typing indicators in the channel list"
-msgstr "Ne pas afficher les indicateurs de saisie dans la liste des canaux"
+msgstr "Ne pas afficher les indicateurs de saisie dans la liste des salons"
 
 #: src/features/auth/state/NewDeviceMonitoring.tsx:51
 msgid "Don't suggest {deviceName} again"
@@ -12159,7 +12159,7 @@ msgstr "Faites glisser et déposez les fichiers d'emoji ici"
 #. Permission description in the role/permission editor for the Move Members permission. The target channel must already be accessible to the member being moved.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:108
 msgid "Drag members between channels they can access."
-msgstr "Faites glisser les membres entre les canaux auxquels ils ont accès."
+msgstr "Faites glisser les membres entre les salons auxquels ils ont accès."
 
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:136
 msgid "Drag roles to customize the order they appear in the member list."
@@ -12260,7 +12260,7 @@ msgstr "Dupliquer"
 #: src/features/channel/components/modals/ChannelDuplicateModal.tsx:28
 #: src/features/ui/action_menu/items/ChannelMenuData.tsx:136
 msgid "Duplicate channel"
-msgstr "Dupliquer le canal"
+msgstr "Dupliquer le salon"
 
 #. Field label in the voice connection status popout. Shows how long the current voice session has been connected.
 #: src/features/voice/components/voice_connection_status/shared.ts:76
@@ -12452,7 +12452,7 @@ msgstr "Modifier ou supprimer les émojis et autocollants créés par d'autres m
 #. Permission description in the channel-scoped permissions editor for the Manage Permissions permission. "Overwrites" are per-channel permission overrides.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:118
 msgid "Edit overwrites for roles and members in this channel."
-msgstr "Modifier les remplacements pour les rôles et les membres dans ce canal."
+msgstr "Modifier les remplacements pour les rôles et les membres dans ce salon."
 
 #: src/features/app/components/floating/UserAreaPopout.tsx:747
 #: src/features/app/components/pages/YouPage.tsx:151
@@ -13670,7 +13670,7 @@ msgstr "Uniformise le volume de votre micro. Désactivé lorsque la suppression 
 #. Short label in the text to speech. Keep it concise.
 #: src/features/user/components/modals/tabs/notifications_tab/TextToSpeech.tsx:17
 msgid "Every channel"
-msgstr "Tous les canaux"
+msgstr "Tous les salons"
 
 #. Profile timezone privacy option label. Allows anyone who can view the full profile to see local time.
 #: src/features/connection/components/modals/EditConnectionModal.tsx:79
@@ -13692,7 +13692,7 @@ msgstr "Tout"
 #. Hint shown beside -in: (negation). Sentence case, no trailing punctuation.
 #: src/features/search/utils/SearchUtils.ts:121
 msgid "exclude a channel"
-msgstr "exclure un canal"
+msgstr "exclure un salon"
 
 #. Hint shown beside -ext: (negation). Sentence case, no trailing punctuation.
 #: src/features/search/utils/SearchUtils.ts:153
@@ -13782,7 +13782,7 @@ msgstr "Développer la catégorie"
 #. Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:122
 msgid "Expand channel topic"
-msgstr "Développer le sujet du canal"
+msgstr "Développer le sujet du salon"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts:229
@@ -14121,7 +14121,7 @@ msgstr "Échec du recadrage de l'icône. Veuillez réessayer."
 #. Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:112
 msgid "Failed to delete channel"
-msgstr "Échec de la suppression du canal"
+msgstr "Échec de la suppression du salon"
 
 #. Toast / inline error in the camera preview modal when enabling the camera fails.
 #: src/features/voice/components/modals/CameraPreviewModal.tsx:64
@@ -14592,7 +14592,7 @@ msgstr "Filtrer par action"
 #. Title of the mobile in: (channel) filter sheet in message search. Title Case.
 #: src/features/search/components/search/ChannelFilterSheet.tsx:22
 msgid "Filter by channel"
-msgstr "Filtrer par canal"
+msgstr "Filtrer par salon"
 
 #. Title of the mobile content-type (has:) filter sheet in message search.
 #: src/features/search/components/search/HasFilterSheet.tsx:81
@@ -14965,7 +14965,7 @@ msgstr "Forcer le contenu sensible"
 
 #: src/features/channel/components/channel_header_components/developer_tools/ToolsMenu.tsx:276
 msgid "Force move to AFK channel"
-msgstr "Forcer le déplacement vers le canal AFK"
+msgstr "Forcer le déplacement vers le salon AFK"
 
 #. Developer tools checkbox label. permissionName is a permission constant display name.
 #: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:44
@@ -15463,12 +15463,12 @@ msgstr "Recevoir un nouveau code"
 #. Label in the notifications.
 #: src/features/user/components/modals/tabs/notifications_tab/Notifications.tsx:43
 msgid "Get notified when you receive messages. You may need to allow notifications for {productName} in your device settings. For per-channel/per-community controls, open notification settings from a community's menu."
-msgstr "Recevez des notifications lorsque vous recevez des messages. Vous devrez peut-être autoriser les notifications pour {productName} dans les réglages de votre appareil. Pour les contrôles par canal/par communauté, ouvrez les réglages de notification depuis le menu d'une communauté."
+msgstr "Recevez des notifications lorsque vous recevez des messages. Vous devrez peut-être autoriser les notifications pour {productName} dans les réglages de votre appareil. Pour les contrôles par salon/par communauté, ouvrez les réglages de notification depuis le menu d'une communauté."
 
 #. Label in the notifications.
 #: src/features/user/components/modals/tabs/notifications_tab/Notifications.tsx:48
 msgid "Get notified when you receive messages. You may need to allow notifications in your browser settings. For per-channel/per-community controls, right-click a community icon and open notification settings."
-msgstr "Recevez des notifications lorsque vous recevez des messages. Vous devrez peut-être autoriser les notifications dans les paramètres de votre navigateur. Pour les contrôles par canal/communauté, faites un clic droit sur l'icône d'une communauté et ouvrez les paramètres de notification."
+msgstr "Recevez des notifications lorsque vous recevez des messages. Vous devrez peut-être autoriser les notifications dans les paramètres de votre navigateur. Pour les contrôles par salon/communauté, faites un clic droit sur l'icône d'une communauté et ouvrez les paramètres de notification."
 
 #. Nagbar body encouraging web users to download the desktop app. productName is the app name.
 #: src/features/app/components/layout/app_layout/nagbars/DesktopDownloadNagbar.tsx:16
@@ -16330,7 +16330,7 @@ msgstr "Masquer les avatars"
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:479
 msgid "Hide channels you've muted from community sidebars"
-msgstr "Masquer les canaux masqués des barres latérales de la communauté"
+msgstr "Masquer les salons masqués des barres latérales de la communauté"
 
 #. Tooltip and aria label on the compact call-view chat pill button when the chat panel is currently visible. Activating it hides chat so the call view fills the space.
 #: src/features/voice/components/compact_voice_call_view/CompactCallHeightToggleButton.tsx:21
@@ -16394,12 +16394,12 @@ msgstr "Masquer les chaînes mises en sourdine"
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:137
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:459
 msgid "Hide muted channels by default"
-msgstr "Masquer les canaux mis en sourdine par défaut"
+msgstr "Masquer les salons mis en sourdine par défaut"
 
 #. Confirmation prompt in advanced settings.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:141
 msgid "Hide muted channels by default?"
-msgstr "Masquer les canaux mis en sourdine par défaut ?"
+msgstr "Masquer les salons mis en sourdine par défaut ?"
 
 #. Short label for an advanced stream privacy preference.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:47
@@ -16887,7 +16887,7 @@ msgstr "Ignorer les médias entrants"
 #. Permission description in the role/permission editor for the Bypass Slowmode permission. Slowmode is the per-channel cooldown between messages.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:88
 msgid "Ignore per-channel message rate limits."
-msgstr "Ignorer les limites de fréquence des messages par canal."
+msgstr "Ignorer les limites de fréquence des messages par salon."
 
 #. Confirm button label on the override-mention-preference alert.
 #: src/features/channel/components/ChannelReplyBar.tsx:42
@@ -17023,7 +17023,7 @@ msgstr "Images"
 
 #: src/features/messaging/components/alerts/AttachmentPermissionDeniedModal.tsx:38
 msgid "Images pasted from your clipboard are sent as attachments, and you don't have permission to attach files in this channel."
-msgstr "Les images collées depuis votre presse-papiers sont envoyées en tant que pièces jointes, et vous n'avez pas l'autorisation de joindre des fichiers dans ce canal."
+msgstr "Les images collées depuis votre presse-papiers sont envoyées en tant que pièces jointes, et vous n'avez pas l'autorisation de joindre des fichiers dans ce salon."
 
 #. IAR modal: rule label.
 #. Report category label for a user impersonating another person or brand.
@@ -17178,12 +17178,12 @@ msgstr "En appel sur un autre appareil"
 #. Section header in the mobile channel search channel picker. Filters by channel.
 #: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:157
 msgid "In channel"
-msgstr "Dans le canal"
+msgstr "Dans le salon"
 
 #. Label in the display tab.
 #: src/features/user/components/modals/tabs/chat_settings_tab/DisplayTab.tsx:30
 msgid "In channels I moderate"
-msgstr "Dans les canaux que je modère"
+msgstr "Dans les salons que je modère"
 
 #: src/features/channel/components/ChannelWelcomeSection.tsx:56
 msgid "In the beginning, there was nothing. Then, there was {channelDisplayName}. And it was good."
@@ -18170,12 +18170,12 @@ msgstr "Aller à"
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts:57
 msgid "Jump between unread channels"
-msgstr "Passer d'un canal non lu à l'autre"
+msgstr "Passer d'un salon non lu à l'autre"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts:61
 msgid "Jump between unread channels with mentions"
-msgstr "Passer d'un canal non lu à l'autre avec des mentions"
+msgstr "Passer d'un salon non lu à l'autre avec des mentions"
 
 #: src/features/auth/flow/DesktopDeepLinkPrompt.tsx:100
 msgid "Jump straight to the app to continue."
@@ -18214,12 +18214,12 @@ msgstr "Aller au message de {displayName}, envoyé le {formattedDate}"
 #. Label in the keybinds tab action dropdown. Distinguishes previous from next.
 #: src/features/user/components/modals/tabs/keybinds_tab/AssignableActionOptions.ts:46
 msgid "Jump to next unread channel"
-msgstr "Aller au prochain canal non lu"
+msgstr "Aller au prochain salon non lu"
 
 #. Label in the keybinds tab action dropdown. Distinguishes previous from next.
 #: src/features/user/components/modals/tabs/keybinds_tab/AssignableActionOptions.ts:54
 msgid "Jump to next unread channel with mentions"
-msgstr "Aller au prochain canal non lu avec des mentions"
+msgstr "Aller au prochain salon non lu avec des mentions"
 
 #. Accessible label of the ellipsis button in the pagination bar that reveals the page-number input.
 #. Placeholder text in the pagination jump input on the community members page.
@@ -18236,12 +18236,12 @@ msgstr "Aller aux messages récents"
 #. Label in the keybinds tab action dropdown. Distinguishes previous from next.
 #: src/features/user/components/modals/tabs/keybinds_tab/AssignableActionOptions.ts:42
 msgid "Jump to previous unread channel"
-msgstr "Aller au canal non lu précédent"
+msgstr "Aller au salon non lu précédent"
 
 #. Label in the keybinds tab action dropdown. Distinguishes previous from next.
 #: src/features/user/components/modals/tabs/keybinds_tab/AssignableActionOptions.ts:50
 msgid "Jump to previous unread channel with mentions"
-msgstr "Aller au canal non lu précédent avec des mentions"
+msgstr "Aller au salon non lu précédent avec des mentions"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts:65
@@ -18251,7 +18251,7 @@ msgstr "Rejoindre l'appel en cours"
 #. Fallback accessible label for an inline channel mention when the target name is not known.
 #: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:97
 msgid "Jump to the linked channel"
-msgstr "Accéder au canal lié"
+msgstr "Accéder au salon lié"
 
 #. Fallback accessible label for an inline message link when the target channel is not known.
 #: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:89
@@ -18648,7 +18648,7 @@ msgstr "Autoriser les bots de cette communauté à vous envoyer des messages dir
 #. Description text in the text to speech.
 #: src/features/user/components/modals/tabs/notifications_tab/TextToSpeech.tsx:21
 msgid "Let every incoming message be spoken, regardless of which channel is open."
-msgstr "Lire à voix haute chaque message entrant, quel que soit le canal ouvert."
+msgstr "Lire à voix haute chaque message entrant, quel que soit le salon ouvert."
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:38
@@ -18673,12 +18673,12 @@ msgstr "Permettez aux utilisateurs de rechercher et d'envoyer des GIFs grâce à
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:193
 msgid "Let screen readers announce new messages as they arrive in the open channel"
-msgstr "Permettre aux lecteurs d'écran d'annoncer les nouveaux messages dès leur arrivée dans le canal ouvert"
+msgstr "Permettre aux lecteurs d'écran d'annoncer les nouveaux messages dès leur arrivée dans le salon ouvert"
 
 #. Label in the accessibility tab.
 #: src/features/user/components/modals/tabs/AccessibilityTab.tsx:48
 msgid "Let screen readers announce new messages as they arrive in the open channel. Notification sounds are unaffected."
-msgstr "Les lecteurs d'écran annoncent les nouveaux messages dès leur arrivée dans le canal ouvert. Les sons de notification ne sont pas affectés."
+msgstr "Les lecteurs d'écran annoncent les nouveaux messages dès leur arrivée dans le salon ouvert. Les sons de notification ne sont pas affectés."
 
 #. Helper text for the "Off" explicit content filter option in the community moderation settings tab. Means leave moderation to members.
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:102
@@ -19331,7 +19331,7 @@ msgstr "Gérer le salon"
 #. Permission name: allows creating, editing, or deleting channels.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:173
 msgid "Manage channels"
-msgstr "Gérer les canaux"
+msgstr "Gérer les salons"
 
 #. Permission name: allows editing global community settings.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:165
@@ -19355,11 +19355,11 @@ msgstr "Gérer les packs d'expressions"
 
 #: src/features/channel/components/modals/channel_tabs/ChannelWebhooksTab.tsx:93
 msgid "Manage incoming webhooks that can post messages into this channel."
-msgstr "Gérez les webhooks entrants qui peuvent publier des messages dans ce canal."
+msgstr "Gérez les webhooks entrants qui peuvent publier des messages dans ce salon."
 
 #: src/features/channel/components/modals/channel_tabs/ChannelInvitesTab.tsx:194
 msgid "Manage invite links for this channel."
-msgstr "Gérez les liens d’invitation pour ce canal."
+msgstr "Gérez les liens d’invitation pour ce salon."
 
 #. Permission name: allows deleting other members' messages.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:217
@@ -19475,7 +19475,7 @@ msgstr "Marquer comme non lu"
 #: src/features/input/state/input_keybind/shared.ts:145
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:58
 msgid "Mark channel as read"
-msgstr "Marquer le canal comme lu"
+msgstr "Marquer le salon comme lu"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts:141
@@ -19485,7 +19485,7 @@ msgstr "Marquer la communauté comme lue"
 #. Description text in the inbox commands.
 #: src/features/inbox/commands/InboxCommands.tsx:23
 msgid "Mark every unread channel as read."
-msgstr "Marquer tous les canaux non lus comme lus."
+msgstr "Marquer tous les salons non lus comme lus."
 
 #. Action that marks every channel inside the folder as read.
 #: src/features/ui/action_menu/GuildFolderContextMenu.tsx:18
@@ -19507,7 +19507,7 @@ msgstr "Marquer comme lu"
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts:161
 msgid "Mark top inbox channel as read"
-msgstr "Marquer le canal de la boîte de réception supérieure comme lu"
+msgstr "Marquer le salon de la boîte de réception supérieure comme lu"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:364
@@ -20383,7 +20383,7 @@ msgstr "Échec du chargement des messages"
 #. Label in the sensitive content tab.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab.tsx:40
 msgid "Messages in community channels"
-msgstr "Messages dans les canaux de communauté"
+msgstr "Messages dans les salons de communauté"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:138
@@ -20861,7 +20861,7 @@ msgstr "Rôle déplacé à la position {0}."
 #. placeholder {0}: renderInline(change.newValue, i18n, guildId)
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:740
 msgid "Moved to channel {0}."
-msgstr "Déplacé vers le canal {0}."
+msgstr "Déplacé vers le salon {0}."
 
 #. Discovery category dropdown option in the community Discovery settings tab. "TV" is the abbreviation for television.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:105
@@ -21083,7 +21083,7 @@ msgstr "Désactivé par les modérateurs"
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:467
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:69
 msgid "Muted channels"
-msgstr "Canaux masqués"
+msgstr "Salons masqués"
 
 #. Community sidebar tooltip showing when the per-community mute will expire. Date/time is interpolated.
 #: src/features/app/components/layout/sidebar_nav/GuildListItem.tsx:78
@@ -21301,7 +21301,7 @@ msgstr "Raconter"
 #. Label in the text to speech.
 #: src/features/user/components/modals/tabs/notifications_tab/TextToSpeech.tsx:29
 msgid "Narrates only the channel you're viewing. Narration follows you between channels."
-msgstr "Ne lit que le canal que vous consultez. La narration vous suit d'un canal à l'autre."
+msgstr "Ne lit que le salon que vous consultez. La narration vous suit d'un salon à l'autre."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:146
@@ -21458,11 +21458,11 @@ msgstr "Nouvelles communautés uniquement"
 
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:640
 msgid "New communities you join will automatically have muted channels hidden. Would you also like to apply this setting to all your existing communities?"
-msgstr "Les nouveaux groupes que vous rejoignez auront automatiquement leurs canaux masqués mis en sourdine. Souhaitez-vous également appliquer ce paramètre à tous vos groupes existants ?"
+msgstr "Les nouveaux groupes que vous rejoignez auront automatiquement leurs salons masqués mis en sourdine. Souhaitez-vous également appliquer ce paramètre à tous vos groupes existants ?"
 
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:671
 msgid "New communities you join will no longer have muted channels hidden automatically. Would you also like to show muted channels in all your existing communities?"
-msgstr "Les canaux mis en sourdine des nouvelles communautés que vous rejoindrez ne seront plus masqués automatiquement. Souhaitez-vous également afficher les canaux mis en sourdine dans toutes vos communautés existantes ?"
+msgstr "Les salons mis en sourdine des nouvelles communautés que vous rejoindrez ne seront plus masqués automatiquement. Souhaitez-vous également afficher les salons mis en sourdine dans toutes vos communautés existantes ?"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:475
@@ -21736,12 +21736,12 @@ msgstr "Aucune modification à enregistrer"
 #: src/features/expressions/components/modals/AddFavoriteChannelModal.tsx:48
 #: src/features/search/components/search/ChannelFilterSheet.tsx:120
 msgid "No channels available"
-msgstr "Aucun canal disponible"
+msgstr "Aucun salon disponible"
 
 #: src/features/messaging/components/modals/ForwardModal.tsx:418
 #: src/features/search/components/search/ChannelFilterSheet.tsx:120
 msgid "No channels found"
-msgstr "Aucun canal trouvé"
+msgstr "Aucun salon trouvé"
 
 #. Empty-state text in the discovery page.
 #: src/features/discovery/discovery/DiscoveryPage.tsx:73
@@ -22115,7 +22115,7 @@ msgstr "Aucun sticker pour l'instant"
 #. Empty-state text in the system welcome section.
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/SystemWelcomeSection.tsx:16
 msgid "No system channel"
-msgstr "Aucun canal système"
+msgstr "Aucun salon système"
 
 #. Screen-reader fragment indicating the message has no text body. Lowercase because it appears inside a longer sentence.
 #: src/features/channel/components/ChannelMessage.tsx:71
@@ -22414,12 +22414,12 @@ msgstr "Notifications"
 #. Description text in the channel and chat autocomplete mention. Keep the tone plain and specific.
 #: src/features/channel/components/AutocompleteMention.tsx:31
 msgid "Notify everyone online who has permission to view this channel."
-msgstr "Notifier tous les membres en ligne qui ont l'autorisation de voir ce canal."
+msgstr "Notifier tous les membres en ligne qui ont l'autorisation de voir ce salon."
 
 #. Description text in the channel and chat autocomplete mention. Keep the tone plain and specific.
 #: src/features/channel/components/AutocompleteMention.tsx:27
 msgid "Notify everyone who has permission to view this channel."
-msgstr "Notifier tous les membres autorisés à voir ce canal."
+msgstr "Notifier tous les membres autorisés à voir ce salon."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:95
@@ -22429,7 +22429,7 @@ msgstr "Notifier en cas de réponse"
 #. Description text in the channel and chat autocomplete mention. Keep the tone plain and specific.
 #: src/features/channel/components/AutocompleteMention.tsx:35
 msgid "Notify users with this role who have permission to view this channel."
-msgstr "Notifier les utilisateurs ayant ce rôle et autorisés à voir ce canal."
+msgstr "Notifier les utilisateurs ayant ce rôle et autorisés à voir ce salon."
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/modals/tabs/applications_tab/application_detail/OAuthBuilderSection.tsx:84
@@ -22827,7 +22827,7 @@ msgstr "Ouvrir la modale de captcha"
 #. Accessible label for the channel header title button in a community channel.
 #: src/features/channel/components/channel_header/shared.ts:14
 msgid "Open channel details for {channelName}"
-msgstr "Ouvrir les détails du canal {channelName}"
+msgstr "Ouvrir les détails du salon {channelName}"
 
 #. Context-menu action that opens a voice channel's embedded chat view without connecting to voice.
 #. Tooltip and accessible label for the chat icon shown beside a voice channel in the channel list.
@@ -23199,7 +23199,7 @@ msgstr "Système d'exploitation"
 #. Settings search entry description. One-line summary of what the setting controls.
 #: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:26
 msgid "Opt into experimental per-community and per-channel unread badge controls"
-msgstr "Activez les paramètres expérimentaux de contrôle des badges d’éléments non lus par communauté et par canal"
+msgstr "Activez les paramètres expérimentaux de contrôle des badges d’éléments non lus par communauté et par salon"
 
 #: src/features/voice/components/modals/CameraPreviewModal.tsx:910
 msgid "Optimizing camera..."
@@ -23804,7 +23804,7 @@ msgstr "Suppression définitive"
 #. Confirmation modal description warning that every message the caller has sent across every channel in this community will be deleted. Cannot be undone.
 #: src/features/guild/hooks/useDeleteMyMessagesInGuild.tsx:20
 msgid "Permanently delete every message you've sent here, across every channel. Can't be undone."
-msgstr "Supprimer définitivement tous les messages que vous avez envoyés ici, dans tous les canaux. Cette action est irréversible."
+msgstr "Supprimer définitivement tous les messages que vous avez envoyés ici, dans tous les salons. Cette action est irréversible."
 
 #. Confirm-step copy in the data-deletion modal explaining the destructive operation.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:121
@@ -24041,7 +24041,7 @@ msgstr "Épinglez des messages ici pour que tout le monde puisse les voir."
 #. Body of the confirmation alert shown when pinning a message.
 #: src/features/channel/components/MessageActionUtils.tsx:60
 msgid "Pin this message to the channel for everyone to see."
-msgstr "Épingler ce message au canal pour que tout le monde puisse le voir."
+msgstr "Épingler ce message au salon pour que tout le monde puisse le voir."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Voice stats field label (mobile lobby). Shows current latency in ms.
@@ -26086,11 +26086,11 @@ msgstr "A retiré la chaîne de sa catégorie."
 
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:379
 msgid "Removed the rules channel."
-msgstr "A supprimé le canal des règles."
+msgstr "A supprimé le salon des règles."
 
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:363
 msgid "Removed the system channel."
-msgstr "A supprimé le canal système."
+msgstr "A supprimé le salon système."
 
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:669
 msgid "Removed the unicode emoji."
@@ -26133,7 +26133,7 @@ msgstr "Renommer :{emojiName}:"
 #. Permission description in the channel-scoped permissions editor for the Manage Channel permission. "This channel" refers to the channel currently being edited.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:113
 msgid "Rename and edit this channel's settings."
-msgstr "Renommer et modifier les paramètres de ce canal."
+msgstr "Renommer et modifier les paramètres de ce salon."
 
 #. Action that opens the rename flow for the selected channel category.
 #: src/features/ui/action_menu/FavoritesCategoryContextMenu.tsx:23
@@ -26143,7 +26143,7 @@ msgstr "Renommer la catégorie"
 #. Short label in the rename channel modal. Keep it concise.
 #: src/features/channel/components/modals/RenameChannelModal.tsx:16
 msgid "Rename channel form"
-msgstr "Formulaire de renommage du canal"
+msgstr "Formulaire de renommage du salon"
 
 #. Title for the small popout used to rename a custom emoji.
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:283
@@ -26173,7 +26173,7 @@ msgstr "Sticker renommé en {0}."
 #. placeholder {0}: renderInline(change.newValue, i18n)
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:408
 msgid "Renamed the channel to {0}."
-msgstr "a renommé le canal en {0}."
+msgstr "a renommé le salon en {0}."
 
 #. placeholder {0}: renderInline(change.newValue, i18n)
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:225
@@ -26405,7 +26405,7 @@ msgstr "Exiger la 2FA pour les actions de modération"
 #. Short label for an advanced voice-channel navigation preference.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAppearanceControls.tsx:17
 msgid "Require double-click to join voice channels"
-msgstr "Demander un double-clic pour rejoindre les canaux vocaux"
+msgstr "Demander un double-clic pour rejoindre les salons vocaux"
 
 #. Label in the bot profile section.
 #: src/features/user/components/modals/tabs/applications_tab/application_detail/BotProfileSection.tsx:80
@@ -27742,7 +27742,7 @@ msgstr "Rechercher des chaînes"
 #. Placeholder text in the channel picker search input of the forward modal.
 #: src/features/messaging/components/modals/ForwardModal.tsx:82
 msgid "Search channels or DMs"
-msgstr "Rechercher des canaux ou des messages directs"
+msgstr "Rechercher des salons ou des messages directs"
 
 #. Accessible label and placeholder for the community search field in the Discovery page.
 #: src/features/discovery/discovery/DiscoveryPage.tsx:45
@@ -27801,7 +27801,7 @@ msgstr "Rechercher quelque chose..."
 #: src/features/search/components/bottomsheets/QuickSwitcherBottomSheet.tsx:39
 #: src/features/search/components/quick_switcher/QuickSwitcherModal.tsx:81
 msgid "Search for channels, people, or communities"
-msgstr "Rechercher des canaux, des personnes ou des communautés"
+msgstr "Rechercher des salons, des personnes ou des communautés"
 
 #. Generic search-input placeholder for filtering the current friends list.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:194
@@ -28082,12 +28082,12 @@ msgstr "Voir à quoi ressemble votre invitation pour les visiteurs."
 #. Permission description in the role/permission editor for the View Channel Members permission at community scope. Covers all channels in the community.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:98
 msgid "See the member list for channels in this community."
-msgstr "Voir la liste des membres des canaux de cette communauté."
+msgstr "Voir la liste des membres des salons de cette communauté."
 
 #. Permission description in the channel-scoped permissions editor for the View Channel Members permission. Scoped to a single channel.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:128
 msgid "See the member list for this channel."
-msgstr "Voir la liste des membres de ce canal."
+msgstr "Voir la liste des membres de ce salon."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:121
@@ -28118,7 +28118,7 @@ msgstr "Sélectionner un salon"
 #. Placeholder in the notification overrides picker. The user picks a channel or category to add a per-target notification override.
 #: src/features/guild/components/modals/GuildNotificationSettingsModal.tsx:122
 msgid "Select a channel or category"
-msgstr "Sélectionner un canal ou une catégorie"
+msgstr "Sélectionner un salon ou une catégorie"
 
 #. Form field label or placeholder for selecting a community.
 #: src/features/expressions/components/modals/AddFavoriteChannelModal.tsx:36
@@ -28756,7 +28756,7 @@ msgstr "Définir le statut"
 #. placeholder {0}: renderInline(change.newValue, i18n, guildId)
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:233
 msgid "Set the AFK channel to {0}."
-msgstr "Définir le canal AFK sur {0}."
+msgstr "Définir le salon AFK sur {0}."
 
 #. placeholder {0}: renderInline(change.newValue, i18n)
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:239
@@ -28771,12 +28771,12 @@ msgstr "Définir le débit binaire sur {0}."
 #. placeholder {0}: renderInline(change.newValue, i18n, guildId)
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:405
 msgid "Set the channel ID to {0}."
-msgstr "Définir l'ID du canal sur {0}."
+msgstr "Définir l'ID du salon sur {0}."
 
 #. placeholder {0}: renderInline(change.newValue, i18n)
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:424
 msgid "Set the channel position to {0}."
-msgstr "Définir la position du canal sur {0}."
+msgstr "Définir la position du salon sur {0}."
 
 #. placeholder {0}: renderChannelTypeValue(change.newValue, i18n)
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:407
@@ -28811,7 +28811,7 @@ msgstr "Définir le salon des règles sur {0}."
 #. placeholder {0}: renderInline(change.newValue, i18n, guildId)
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:365
 msgid "Set the system channel to {0}."
-msgstr "Définir le canal système sur {0}."
+msgstr "Définir le salon système sur {0}."
 
 #. placeholder {0}: renderInline(change.newValue, i18n)
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:670
@@ -29157,7 +29157,7 @@ msgstr "Afficher un avertissement de contenu"
 #. Channel overview settings tab label, control, or validation message (name, topic, slowmode, voice region, mature content gate).
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/MatureContentSection.tsx:40
 msgid "Show a content warning in this channel"
-msgstr "Afficher un avertissement de contenu dans ce canal"
+msgstr "Afficher un avertissement de contenu dans ce salon"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/NotificationsIndex.ts:38
@@ -29411,7 +29411,7 @@ msgstr "Afficher les messages les plus pertinents en premier"
 #. Toggle label that shows muted channels in the channel list.
 #: src/features/ui/action_menu/items/BulkSettingsMenuItems.tsx:41
 msgid "Show muted channels"
-msgstr "Afficher les canaux masqués"
+msgstr "Afficher les salons masqués"
 
 #. Toggle label in the mobile video settings bottom sheet. Controls whether the local camera tile is visible.
 #. Voice display preference checkbox that controls whether the current user sees their own camera tile.
@@ -29558,7 +29558,7 @@ msgstr "Afficher l'icône dans la barre d'état"
 #. Label in the interface tab.
 #: src/features/user/components/modals/tabs/appearance_tab/InterfaceTab.tsx:26
 msgid "Show typing indicator with user avatars in the channel list"
-msgstr "Afficher l'indicateur de saisie avec les avatars des utilisateurs dans la liste des canaux"
+msgstr "Afficher l'indicateur de saisie avec les avatars des utilisateurs dans la liste des salons"
 
 #. Setting label that shows an unread badge while the inline DM list is collapsed.
 #: src/features/ui/action_menu/FluxerButtonContextMenu.tsx:34
@@ -29568,7 +29568,7 @@ msgstr "Afficher le nombre de MP non lus lorsque réduit"
 #. Label in the channel list tab.
 #: src/features/user/components/modals/tabs/appearance_tab/ChannelListTab.tsx:11
 msgid "Show unread indicator on muted channels"
-msgstr "Afficher l'indicateur de messages non lus sur les canaux mis en sourdine"
+msgstr "Afficher l'indicateur de messages non lus sur les salons mis en sourdine"
 
 #. Label in the avatar uploader.
 #: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:61
@@ -30680,7 +30680,7 @@ msgstr "Animation d'étoiles"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:83
 msgid "Starred channels"
-msgstr "Canaux favoris"
+msgstr "Salons favoris"
 
 #. Primary button in the required-action modal. Starts the selected verification path.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:158
@@ -31049,7 +31049,7 @@ msgstr "Arrêter"
 #. Confirmation prompt in advanced settings.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:153
 msgid "Stop hiding muted channels by default?"
-msgstr "Arrêter de masquer les canaux mis en sourdine par défaut ?"
+msgstr "Arrêter de masquer les salons mis en sourdine par défaut ?"
 
 #. IAR modal: quick-action card description.
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:411
@@ -31387,7 +31387,7 @@ msgstr "Repassez à {localizedCurrencyLabel} si vous préférez le prix localis�
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts:45
 msgid "Switch between channels"
-msgstr "Changer de canal"
+msgstr "Changer de salon"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts:41
@@ -31442,7 +31442,7 @@ msgstr "Passer à la facturation mensuelle ?"
 #. Label in the keybinds tab action dropdown. Distinguishes previous from next.
 #: src/features/user/components/modals/tabs/keybinds_tab/AssignableActionOptions.ts:30
 msgid "Switch to next channel"
-msgstr "Passer au canal suivant"
+msgstr "Passer au salon suivant"
 
 #. Label in the keybinds tab action dropdown. Distinguishes previous from next.
 #: src/features/user/components/modals/tabs/keybinds_tab/AssignableActionOptions.ts:22
@@ -31457,7 +31457,7 @@ msgstr "Passer à la communauté ou aux messages privés suivants"
 #. Label in the keybinds tab action dropdown. Distinguishes previous from next.
 #: src/features/user/components/modals/tabs/keybinds_tab/AssignableActionOptions.ts:26
 msgid "Switch to previous channel"
-msgstr "Passer au canal précédent"
+msgstr "Passer au salon précédent"
 
 #. Label in the keybinds tab action dropdown. Distinguishes previous from next.
 #: src/features/user/components/modals/tabs/keybinds_tab/AssignableActionOptions.ts:18
@@ -31516,7 +31516,7 @@ msgstr "Passer à…"
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts:313
 msgid "Switch voice channel"
-msgstr "Changer de canal vocal"
+msgstr "Changer de salon vocal"
 
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:208
 msgid "Switches"
@@ -31874,7 +31874,7 @@ msgstr "Texte (mature)"
 #. Generic channel-type token used inside a wider delete confirmation string.
 #: src/features/ui/action_menu/items/ChannelMenuItems.tsx:83
 msgid "text channel"
-msgstr "canal textuel"
+msgstr "salon textuel"
 
 #. Generic label for a text channel type.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:230
@@ -32149,7 +32149,7 @@ msgstr "Le nom a été restauré à sa valeur précédente. Veuillez réessayer 
 
 #: src/features/channel/components/modals/ChannelDuplicateModal.tsx:63
 msgid "The new channel will reuse the permissions from <0>{channelLabel}</0>."
-msgstr "Le nouveau canal réutilisera les autorisations de <0>{channelLabel}</0>."
+msgstr "Le nouveau salon réutilisera les autorisations de <0>{channelLabel}</0>."
 
 #: src/features/channel/components/modals/ChannelDuplicateModal.tsx:58
 msgid "The new voice channel will reuse the permissions, user limit, and bitrate from <0>{channelLabel}</0>."
@@ -32304,7 +32304,7 @@ msgstr "Thèmes"
 
 #: src/features/invite/components/modals/InviteModal.tsx:176
 msgid "There are no channels available to create an invite for."
-msgstr "Aucun canal n'est disponible pour créer une invitation."
+msgstr "Aucun salon n'est disponible pour créer une invitation."
 
 #: src/features/guild/components/RoleManagement.tsx:380
 msgid "There are no roles to assign in this community at this time, but you can create a new role in <0>{rolesSettingsPath}</0>."
@@ -32312,7 +32312,7 @@ msgstr "Il n'y a aucun rôle à attribuer dans cette communauté pour le moment,
 
 #: src/features/channel/components/modals/channel_tabs/ChannelWebhooksTab.tsx:190
 msgid "There are no webhooks configured for this channel. Create a webhook to allow external applications to post messages."
-msgstr "Aucun webhook n'est configuré pour ce canal. Créez un webhook pour permettre aux applications externes de publier des messages."
+msgstr "Aucun webhook n'est configuré pour ce salon. Créez un webhook pour permettre aux applications externes de publier des messages."
 
 #. Plutonium gift checkout guidance for Türkiye. Notes that no local wallet method is currently available; card is the main option.
 #: src/features/app/components/dialogs/components/plutonium/PricingContextPanel.tsx:74
@@ -32331,7 +32331,7 @@ msgstr "Une fois lancée, cette action est irréversible. Nous vous enverrons un
 
 #: src/features/channel/components/modals/channel_tabs/ChannelInvitesTab.tsx:271
 msgid "There was an error loading the invite links for this channel. Try again."
-msgstr "Une erreur est survenue lors du chargement des liens d'invitation pour ce canal. Veuillez réessayer."
+msgstr "Une erreur est survenue lors du chargement des liens d'invitation pour ce salon. Veuillez réessayer."
 
 #: src/features/guild/components/modals/guild_tabs/GuildInvitesTab.tsx:114
 msgid "There was an error loading the invites. Try again."
@@ -32344,7 +32344,7 @@ msgstr "Une erreur est survenue lors du chargement des autocollants. Veuillez r�
 
 #: src/features/channel/components/modals/channel_tabs/ChannelWebhooksTab.tsx:155
 msgid "There was an error loading the webhooks for this channel. Try again."
-msgstr "Une erreur est survenue lors du chargement des webhooks pour ce canal. Veuillez réessayer."
+msgstr "Une erreur est survenue lors du chargement des webhooks pour ce salon. Veuillez réessayer."
 
 #. Error message in the guild webhooks tab.
 #: src/features/guild/components/modals/guild_tabs/GuildWebhooksTab.tsx:29
@@ -32457,7 +32457,7 @@ msgstr "Cette catégorie n’existe plus. Elle a peut-être déjà été supprim
 #: src/features/channel/components/modals/ChannelDuplicateModal.tsx:24
 #: src/features/ui/action_menu/items/ChannelMenuItems.tsx:87
 msgid "this channel"
-msgstr "ce canal"
+msgstr "ce salon"
 
 #: src/features/channel/components/modals/channel_tabs/ChannelWebhooksTab.tsx:118
 msgid "This channel does not support webhooks."
@@ -32481,17 +32481,17 @@ msgstr "Ce salon n'est pas désigné pour le contenu mature. Le contenu mature n
 #. placeholder {0}: parentChannel?.name
 #: src/features/channel/components/modals/channel_tabs/channel_permissions_tab/SyncWithParentBanner.tsx:47
 msgid "This channel is not synced with the parent category <0>{0}</0>."
-msgstr "Ce canal n'est pas synchronisé avec la catégorie parente <0>{0}</0>."
+msgstr "Ce salon n'est pas synchronisé avec la catégorie parente <0>{0}</0>."
 
 #. placeholder {0}: parentChannel?.name
 #: src/features/channel/components/modals/channel_tabs/channel_permissions_tab/SyncWithParentBanner.tsx:39
 msgid "This channel is synced with the parent category <0>{0}</0>."
-msgstr "Ce canal est synchronisé avec la catégorie parente <0>{0}</0>."
+msgstr "Ce salon est synchronisé avec la catégorie parente <0>{0}</0>."
 
 #. Body of the error modal shown when the channel no longer exists.
 #: src/features/app/components/alerts/ChannelDeleteFailedModal.tsx:34
 msgid "This channel no longer exists. It may have already been deleted."
-msgstr "Ce canal n’existe plus. Il a peut-être déjà été supprimé."
+msgstr "Ce salon n’existe plus. Il a peut-être déjà été supprimé."
 
 #. Description text in the theme studio settings section.
 #: src/features/theme_studio/sections/ThemeStudioSettingsSection.tsx:73
@@ -32820,7 +32820,7 @@ msgstr "Cette limite est configurée par l'administrateur de votre instance."
 #. Body in the channel gate modal for a mature link channel when no custom warning is set.
 #: src/features/channel/components/modals/ChannelAccessGateModal.tsx:86
 msgid "This link channel is marked for mature content and may open material that may be inappropriate for some users."
-msgstr "Ce canal de lien est marqué pour un contenu mature et peut ouvrir du matériel qui pourrait être inapproprié pour certains utilisateurs."
+msgstr "Ce salon de lien est marqué pour un contenu mature et peut ouvrir du matériel qui pourrait être inapproprié pour certains utilisateurs."
 
 #. Body of the link-unavailable alert.
 #: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:134
@@ -32896,7 +32896,7 @@ msgstr "Cette option est requise. Veuillez fournir une valeur."
 #. Voice participant status tooltip shown when channel permissions or voice suppression prevent another participant from speaking.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:52
 msgid "This participant can't speak in this channel"
-msgstr "Ce participant ne peut pas parler dans ce canal"
+msgstr "Ce participant ne peut pas parler dans ce salon"
 
 #. Voice participant status tooltip for another user. They cannot hear voice chat. Distinct from muted.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:78
@@ -33111,22 +33111,22 @@ msgstr "Ceci modifiera le message programmé existant au lieu de l'envoyer immé
 #. Warning text before notifying every member in the current channel.
 #: src/features/channel/components/MentionEveryonePopout.tsx:93
 msgid "This will notify <0>{memberCount}</0> members in this channel. Are you sure you want to do this?"
-msgstr "Cela va avertir <0>{memberCount}</0> membres dans ce canal. Voulez-vous vraiment faire cela ?"
+msgstr "Cela va avertir <0>{memberCount}</0> membres dans ce salon. Voulez-vous vraiment faire cela ?"
 
 #. Warning text before notifying every member with a role in the current channel.
 #: src/features/channel/components/MentionEveryonePopout.tsx:77
 msgid "This will notify <0>{memberCount}</0> members with the <1>{roleLabel}</1> in this channel. Are you sure you want to do this?"
-msgstr "Cela va avertir <0>{memberCount}</0> membres avec le rôle <1>{roleLabel}</1> dans ce canal. Voulez-vous vraiment faire cela ?"
+msgstr "Cela va avertir <0>{memberCount}</0> membres avec le rôle <1>{roleLabel}</1> dans ce salon. Voulez-vous vraiment faire cela ?"
 
 #. Warning text before notifying online members in the current channel with @here.
 #: src/features/channel/components/MentionEveryonePopout.tsx:104
 msgid "This will notify up to <0>{memberCount}</0> online members in this channel. Are you sure you want to do this?"
-msgstr "Ceci avertira jusqu'à <0>{memberCount}</0> membres en ligne dans ce canal. Voulez-vous vraiment faire cela ?"
+msgstr "Ceci avertira jusqu'à <0>{memberCount}</0> membres en ligne dans ce salon. Voulez-vous vraiment faire cela ?"
 
 #. Confirmation modal description warning that every message the caller has sent in this channel will be deleted. Cannot be undone.
 #: src/features/channel/hooks/useDeleteMyMessagesInChannel.tsx:26
 msgid "This will permanently delete every message you have ever sent in this channel. This cannot be undone."
-msgstr "Tous les messages que vous avez envoyés dans ce canal seront définitivement supprimés. Cette action est irréversible."
+msgstr "Tous les messages que vous avez envoyés dans ce salon seront définitivement supprimés. Cette action est irréversible."
 
 #. Confirmation modal description warning that every message the caller has sent in a DM or group DM conversation will be deleted. Cannot be undone.
 #: src/features/channel/hooks/useDeleteMyMessagesInChannel.tsx:31
@@ -35071,7 +35071,7 @@ msgstr "Importer une bannière personnalisée pour cette communauté"
 
 #: src/features/user/components/modals/tabs/components/EntranceSoundSection.tsx:444
 msgid "Upload a custom sound that plays automatically when you join a voice channel. Maximum duration: {maxDurationSeconds} seconds. Max file size: {maxSizeLabel}."
-msgstr "Téléchargez un son personnalisé qui est automatiquement lu lorsque vous rejoignez un canal vocal. Durée maximale : {maxDurationSeconds} secondes. Taille maximale du fichier : {maxSizeLabel}."
+msgstr "Téléchargez un son personnalisé qui est automatiquement lu lorsque vous rejoignez un salon vocal. Durée maximale : {maxDurationSeconds} secondes. Taille maximale du fichier : {maxSizeLabel}."
 
 #. Card label in the asset source modal for uploading an image from the device. Keep it concise.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
@@ -35703,17 +35703,17 @@ msgstr "ID utilisateur copié dans le presse-papiers"
 #. Notification sound setting label. Sound played when another user joins the voice channel.
 #: src/features/notification/utils/SoundLabels.ts:24
 msgid "User joins channel"
-msgstr "L'utilisateur rejoint le canal"
+msgstr "L'utilisateur rejoint le salon"
 
 #. Notification sound setting label. Sound played when another user leaves the voice channel.
 #: src/features/notification/utils/SoundLabels.ts:28
 msgid "User leaves channel"
-msgstr "L'utilisateur quitte le canal"
+msgstr "L'utilisateur quitte le salon"
 
 #. Notification sound setting label. Sound played when a user is moved between voice channels.
 #: src/features/notification/utils/SoundLabels.ts:32
 msgid "User moved channel"
-msgstr "Utilisateur a déplacé le canal"
+msgstr "Utilisateur a déplacé le salon"
 
 #. Reason chip in the unaddable recipients alert when the user record is missing.
 #. Title of the error modal shown when the recipient of a DM no longer exists.
@@ -35833,7 +35833,7 @@ msgstr "Utilisations"
 #. Label in the notifications.
 #: src/features/user/components/modals/tabs/notifications_tab/Notifications.tsx:38
 msgid "Uses the OS notification center. For per-channel/per-community controls, right-click a community icon and open notification settings."
-msgstr "Utilise le centre de notifications du système d'exploitation. Pour les contrôles par canal/communauté, faites un clic droit sur l'icône d'une communauté et ouvrez les paramètres de notification."
+msgstr "Utilise le centre de notifications du système d'exploitation. Pour les contrôles par salon/communauté, faites un clic droit sur l'icône d'une communauté et ouvrez les paramètres de notification."
 
 #: src/features/invite/components/InviteListItem.tsx:232
 msgid "Uses:"
@@ -36361,7 +36361,7 @@ msgstr "Voir le journal d'activité"
 
 #: src/features/guild/components/modals/guild_tabs/GuildInvitesTab.tsx:56
 msgid "View all invites for this community. To create a new invite, go to a channel and use the invite button."
-msgstr "Voir toutes les invitations pour cette communauté. Pour créer une nouvelle invitation, accédez à un canal et utilisez le bouton d'invitation."
+msgstr "Voir toutes les invitations pour cette communauté. Pour créer une nouvelle invitation, accédez à un salon et utilisez le bouton d'invitation."
 
 #. Tooltip on the overflow indicator for a member row that has more roles than fit inline.
 #: src/features/channel/components/guild_members_page/MemberTableRow.tsx:80
@@ -36418,7 +36418,7 @@ msgstr "Voir le salon"
 #. Permission name: allows seeing the member list for a channel.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:261
 msgid "View channel members"
-msgstr "Voir les membres du canal"
+msgstr "Voir les membres du salon"
 
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:298
 msgid "View codes"
@@ -36744,7 +36744,7 @@ msgstr "Salon vocal"
 #: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:23
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:402
 msgid "Voice channel confirmation"
-msgstr "Confirmation du canal vocal"
+msgstr "Confirmation du salon vocal"
 
 #. Title of the modal shown when a voice channel has reached its participant cap.
 #: src/features/voice/components/alerts/VoiceChannelFullModal.tsx:8
@@ -36754,7 +36754,7 @@ msgstr "Salon vocal plein"
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #: src/features/user/components/settings_utils/search_index/AppearanceIndex.ts:19
 msgid "Voice channel join behavior"
-msgstr "Comportement de la participation au canal vocal"
+msgstr "Comportement de la participation au salon vocal"
 
 #. Quick switcher section header for voice channel results.
 #. Quick switcher section header listing voice channel candidates.
@@ -36939,7 +36939,7 @@ msgstr "En attente de l'expiration du mode lent dans {forwardChannelDisplayName}
 #. Inline notice in the forward modal when slowmode is active in one or more selected target channels.
 #: src/features/messaging/components/modals/ForwardModal.tsx:74
 msgid "Waiting for slowmode in one or more selected channels to expire."
-msgstr "En attente de l'expiration du mode lent dans un ou plusieurs canaux sélectionnés."
+msgstr "En attente de l'expiration du mode lent dans un ou plusieurs salons sélectionnés."
 
 #. Label in the messages tab.
 #: src/features/user/components/modals/tabs/appearance_tab/MessagesTab.tsx:47
@@ -37176,7 +37176,7 @@ msgstr "Nous avons du mal à nous connecter au continuum espace-temps. Vérifiez
 #. Body copy under the indexing heading explaining why search results are not yet available.
 #: src/features/channel/components/channel_search_results/ChannelSearchResultsShared.tsx:65
 msgid "We're indexing this channel for the first time. This may take a moment. Results will appear here when ready."
-msgstr "Nous indexons ce canal pour la première fois. Cela peut prendre un instant. Les résultats s'afficheront ici dès qu'ils seront prêts."
+msgstr "Nous indexons ce salon pour la première fois. Cela peut prendre un instant. Les résultats s'afficheront ici dès qu'ils seront prêts."
 
 #: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:526
 msgid "We're indexing this channel for the first time. This might take a little while..."
@@ -37458,7 +37458,7 @@ msgstr "Lorsque cette option est activée, les membres d'autres communautés peu
 #. Description text in the channel and chat active now sidebar.
 #: src/features/channel/components/active_now/ActiveNowSidebar.tsx:16
 msgid "When friends are active in voice channels, their activity will appear here."
-msgstr "Lorsque vos amis sont actifs dans les canaux vocaux, leur activité s'affiche ici."
+msgstr "Lorsque vos amis sont actifs dans les salons vocaux, leur activité s'affiche ici."
 
 #. Label in the display tab.
 #: src/features/user/components/modals/tabs/chat_settings_tab/DisplayTab.tsx:51
@@ -37473,7 +37473,7 @@ msgstr "Lorsque les aperçus sont activés, {productName} télécharge occasionn
 #. Explanation of screen-share preview uploads in a guild voice channel. productName is the app name; JPEG is an image format name.
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:205
 msgid "When previews are enabled, {productName} uploads occasional JPEG frames from your screen share so people with permission to connect to this voice channel can see a thumbnail before they watch."
-msgstr "Lorsque les aperçus sont activés, {productName} télécharge occasionnellement des images JPEG de votre partage d’écran afin que les personnes autorisées à se connecter à ce canal vocal puissent voir une vignette avant de regarder."
+msgstr "Lorsque les aperçus sont activés, {productName} télécharge occasionnellement des images JPEG de votre partage d’écran afin que les personnes autorisées à se connecter à ce salon vocal puissent voir une vignette avant de regarder."
 
 #. Explanation of screen-share preview uploads in a one-to-one DM call. productName is the app name; JPEG is an image format name.
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:217
@@ -37842,7 +37842,7 @@ msgstr "Vous pouvez également modifier ce paramètre pour chaque communauté en
 
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/MessageHistoryThresholdContent.tsx:116
 msgid "You can also create per-category or per-channel permission overrides to grant <0>{EVERYONE_MENTION}</0> full access to rules or announcement channels, for example."
-msgstr "Vous pouvez également créer des remplacements d'autorisations par catégorie ou par canal pour accorder à <0>{EVERYONE_MENTION}</0> un accès complet aux canaux de règles ou d'annonces, par exemple."
+msgstr "Vous pouvez également créer des remplacements d'autorisations par catégorie ou par salon pour accorder à <0>{EVERYONE_MENTION}</0> un accès complet aux salons de règles ou d'annonces, par exemple."
 
 #: src/features/auth/components/modals/AccountDeleteModal.tsx:50
 msgid "You can cancel the deletion process within 14 days"
@@ -37904,7 +37904,7 @@ msgstr "Vous ne pouvez pas ajouter de nouvelles réactions tant que vous êtes e
 #. Description text in the attachment permission denied modal. Keep the tone plain and specific.
 #: src/features/messaging/components/alerts/AttachmentPermissionDeniedModal.tsx:20
 msgid "You can't attach files in this channel."
-msgstr "Vous ne pouvez pas joindre de fichiers dans ce canal."
+msgstr "Vous ne pouvez pas joindre de fichiers dans ce salon."
 
 #. Error message in the user profile modal.
 #: src/features/user/components/modals/UserProfileModal.tsx:106
@@ -37939,7 +37939,7 @@ msgstr "Vous ne pouvez pas modifier ce message."
 #. Inline tooltip on a disabled permission checkbox when the editor would be granting a permission they themselves do not hold in this channel.
 #: src/features/channel/components/modals/channel_tabs/ChannelPermissionsTab.tsx:54
 msgid "You can't grant a permission you don't have in this channel."
-msgstr "Vous ne pouvez pas accorder une autorisation que vous n'avez pas dans ce canal."
+msgstr "Vous ne pouvez pas accorder une autorisation que vous n'avez pas dans ce salon."
 
 #. Body of the error modal when installing an emoji pack via invite is rejected for missing permissions.
 #: src/features/invite/commands/InviteCommands.tsx:91
@@ -38002,7 +38002,7 @@ msgstr "Vous ne pouvez pas vous envoyer de demande d'ami."
 #. Permission-denied message shown when the current user cannot send messages in the current channel. Keep the tone calm and factual.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:185
 msgid "You can't send messages in this channel."
-msgstr "Vous ne pouvez pas envoyer de messages dans ce canal."
+msgstr "Vous ne pouvez pas envoyer de messages dans ce salon."
 
 #: src/features/channel/components/barriers/BarrierComponents.tsx:312
 msgid "You can't send messages in this community."
@@ -38013,7 +38013,7 @@ msgstr "Vous ne pouvez pas envoyer de messages dans cette communauté."
 #: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:65
 #: src/features/voice/components/VoiceControlBar.tsx:141
 msgid "You can't share your screen in this channel"
-msgstr "Vous ne pouvez pas partager votre écran dans ce canal"
+msgstr "Vous ne pouvez pas partager votre écran dans ce salon"
 
 #. Voice control tooltip shown when channel permissions prevent the current user from speaking.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:48
@@ -38042,7 +38042,7 @@ msgstr "Vous ne pouvez pas réactiver votre micro car un modérateur vous a mis 
 #. Tooltip on the disabled upload file item when the user lacks Attach Files permission. Calm, factual tone.
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx:19
 msgid "You can't upload files in this channel."
-msgstr "Vous ne pouvez pas envoyer de fichiers dans ce canal."
+msgstr "Vous ne pouvez pas envoyer de fichiers dans ce salon."
 
 #. Error message in the channel and chat member list unavailable fallback.
 #: src/features/channel/components/shared/MemberListUnavailableFallback.tsx:8
@@ -38052,7 +38052,7 @@ msgstr "Vous ne pouvez pas voir les membres"
 #. Description text in the channel and chat member list unavailable fallback. Keep the tone plain and specific.
 #: src/features/channel/components/shared/MemberListUnavailableFallback.tsx:16
 msgid "You can't view the members of this channel in this community"
-msgstr "Vous ne pouvez pas voir les membres de ce canal dans cette communauté"
+msgstr "Vous ne pouvez pas voir les membres de ce salon dans cette communauté"
 
 #: src/features/guild/components/modals/GuildOwnershipWarningModal.tsx:36
 msgid "You cannot delete your account while you own communities. Transfer ownership of the following communities first:"
@@ -38099,12 +38099,12 @@ msgstr "Vous avez changé votre tag alors que vous étiez abonné à {PREMIUM_PR
 #. Body of the access-denied alert for clicked message links.
 #: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:114
 msgid "You do not have access to the channel where this message was sent."
-msgstr "Vous n'avez pas accès au canal où ce message a été envoyé."
+msgstr "Vous n'avez pas accès au salon où ce message a été envoyé."
 
 #. Community layout empty-state body shown when the user has joined the community but cannot see any channels.
 #: src/features/app/components/layout/GuildLayout.tsx:113
 msgid "You don't have access to any channels in this community."
-msgstr "Vous n'avez accès à aucun canal dans cette communauté."
+msgstr "Vous n'avez accès à aucun salon dans cette communauté."
 
 #. Description text in the theme studio settings section.
 #. Description text in the theme studio tokens section. Keep the tone plain and specific.
@@ -38126,7 +38126,7 @@ msgstr "Vous n’avez pas l’autorisation de supprimer cette catégorie."
 #. Body of the error modal shown when the user lacks permission to delete a channel.
 #: src/features/app/components/alerts/ChannelDeleteFailedModal.tsx:22
 msgid "You don't have permission to delete this channel."
-msgstr "Vous n'avez pas l'autorisation de supprimer ce canal."
+msgstr "Vous n'avez pas l'autorisation de supprimer ce salon."
 
 #. Body of the error modal shown when the user lacks permission to delete a custom emoji.
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:144
@@ -38246,12 +38246,12 @@ msgstr "Vous devez avoir accès à votre adresse e-mail actuelle pour la modifie
 #. Forward dialog error shown when the forwarded message has attachments and the user lacks Attach Files in the target channel.
 #: src/features/app/components/dialogs/shared/ForwardChannelIndex.ts:31
 msgid "You need the \"{attachFilesPermissionLabel}\" permission to attach files in this channel"
-msgstr "Vous avez besoin de la permission \" {attachFilesPermissionLabel} \" pour joindre des fichiers dans ce canal"
+msgstr "Vous avez besoin de la permission \" {attachFilesPermissionLabel} \" pour joindre des fichiers dans ce salon"
 
 #. Forward dialog error shown when the forwarded message contains embeds and the user lacks Embed Links in the target channel.
 #: src/features/app/components/dialogs/shared/ForwardChannelIndex.ts:26
 msgid "You need the \"{embedLinksPermissionLabel}\" permission to embed links in this channel"
-msgstr "Vous avez besoin de la permission \" {embedLinksPermissionLabel} \" pour intégrer des liens dans ce canal"
+msgstr "Vous avez besoin de la permission \" {embedLinksPermissionLabel} \" pour intégrer des liens dans ce salon"
 
 #. Inline tooltip on disabled permission checkboxes in the channel permissions tab when the user lacks Manage Channel. manageChannelsPermissionLabel is the localized permission name.
 #: src/features/channel/components/modals/channel_tabs/ChannelPermissionsTab.tsx:44
@@ -38270,7 +38270,7 @@ msgstr "Vous avez besoin de l'autorisation \" {manageRolesPermissionLabel} \" 
 
 #: src/features/channel/components/modals/channel_tabs/ChannelWebhooksTab.tsx:128
 msgid "You need the \"{manageWebhooksPermissionLabel}\" permission to view and edit webhooks for this channel."
-msgstr "Vous avez besoin de l’autorisation « {manageWebhooksPermissionLabel} » pour afficher et modifier les webhooks de ce canal."
+msgstr "Vous avez besoin de l’autorisation « {manageWebhooksPermissionLabel} » pour afficher et modifier les webhooks de ce salon."
 
 #: src/features/guild/components/modals/guild_tabs/GuildWebhooksTab.tsx:99
 msgid "You need the \"{manageWebhooksPermissionLabel}\" permission to view and edit webhooks for this community."
@@ -38289,7 +38289,7 @@ msgstr "Vous avez besoin de l'autorisation \" {permissionLabel} \" pour utilis
 #. Forward dialog error shown when the user lacks the Send Messages permission in the target channel. Permission name is interpolated.
 #: src/features/app/components/dialogs/shared/ForwardChannelIndex.ts:21
 msgid "You need the \"{sendMessagesPermissionLabel}\" permission to send messages in this channel"
-msgstr "Vous avez besoin de l'autorisation \" {sendMessagesPermissionLabel} \" pour envoyer des messages dans ce canal"
+msgstr "Vous avez besoin de l'autorisation \" {sendMessagesPermissionLabel} \" pour envoyer des messages dans ce salon"
 
 #: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:207
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:432
@@ -38888,7 +38888,7 @@ msgstr "Votre modification de facturation en attente a été annulée."
 
 #: src/features/expressions/components/FavoritesWelcomeSection.tsx:32
 msgid "Your personal space for quick access to channels, DMs, and groups you love. Press the star on any channel to add it here."
-msgstr "Votre espace personnel pour accéder rapidement aux canaux, messages privés et groupes que vous aimez. Appuyez sur l'étoile de n'importe quel canal pour l'ajouter ici."
+msgstr "Votre espace personnel pour accéder rapidement aux salons, messages privés et groupes que vous aimez. Appuyez sur l'étoile de n'importe quel salon pour l'ajouter ici."
 
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelInfoHeader.tsx:130
 msgid "Your private space"
