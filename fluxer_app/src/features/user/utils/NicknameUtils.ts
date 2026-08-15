@@ -5,6 +5,7 @@ import GuildMembers from '@app/features/member/state/GuildMembers';
 import SelectedGuild from '@app/features/navigation/state/SelectedGuild';
 import Relationships from '@app/features/relationship/state/Relationships';
 import StreamerMode from '@app/features/streamer_mode/state/StreamerMode';
+import {noteText} from '@app/features/theme/fonts/ScriptFontLoader';
 import type {User} from '@app/features/user/models/User';
 
 export interface UserDisplayNameLike {
@@ -33,7 +34,11 @@ export function formatUserTagForStreamerMode(user: Pick<User, 'tag' | 'username'
 }
 
 export function getDisplayName(user: UserDisplayNameLike): string {
-	return formatNameForStreamerMode(user.displayName || user.globalName || user.global_name || user.username || '');
+	const name = formatNameForStreamerMode(
+		user.displayName || user.globalName || user.global_name || user.username || '',
+	);
+	noteText(name);
+	return name;
 }
 
 export function getNickname(user: User, guildId?: string | null, channelId?: string): string {
@@ -55,5 +60,7 @@ export function getNickname(user: User, guildId?: string | null, channelId?: str
 			name = channel.nicks[user.id];
 		}
 	}
-	return formatNameForStreamerMode(name);
+	const resolved = formatNameForStreamerMode(name);
+	noteText(resolved);
+	return resolved;
 }

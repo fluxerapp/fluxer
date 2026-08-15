@@ -278,7 +278,20 @@ export class AttachmentUploadService {
 		await this.getUploadPermissionAndLimit({userId, channelId});
 		const bucket = Config.s3.buckets.uploads;
 		return Promise.all(
-			uploads.map(async ({upload_filename, upload_id}) => {
+			uploads.map(async ({upload_filename, upload_id}, index) => {
+				const pendingUpload = await this.attachmentUploadTraceRepository.getPendingUpload({
+					uploadKey: upload_filename,
+					userId,
+					channelId,
+					uploadMode: 'presigned_multipart',
+				});
+				if (!pendingUpload) {
+					throw InputValidationError.fromCode(
+						`uploads.${index}.upload_filename`,
+						ValidationErrorCodes.UPLOADED_ATTACHMENT_NOT_FOUND,
+						{filename: upload_filename},
+					);
+				}
 				const parts = await runAttachmentStorageOperation(() =>
 					this.storageService.listParts({
 						bucket,

@@ -54,7 +54,11 @@ use windows_sys::Win32::{
             MEMORY_MAPPED_VIEW_ADDRESS, MapViewOfFile, PAGE_READWRITE, UnmapViewOfFile,
             VirtualAllocEx, VirtualFreeEx,
         },
-        SystemInformation::{IMAGE_FILE_MACHINE, IMAGE_FILE_MACHINE_UNKNOWN},
+        SystemInformation::{
+            IMAGE_FILE_MACHINE, IMAGE_FILE_MACHINE_AMD64, IMAGE_FILE_MACHINE_ARM,
+            IMAGE_FILE_MACHINE_ARM64, IMAGE_FILE_MACHINE_ARMNT, IMAGE_FILE_MACHINE_I386,
+            IMAGE_FILE_MACHINE_IA64, IMAGE_FILE_MACHINE_UNKNOWN,
+        },
         Threading::{
             CreateEventW, CreateMutexW, CreateRemoteThread, GetCurrentProcessId, IsWow64Process,
             IsWow64Process2, OpenProcess, PROCESS_CREATE_THREAD, PROCESS_QUERY_INFORMATION,
@@ -294,13 +298,19 @@ impl GameCaptureSession {
             InjectionPolicy::Allow => false,
         };
 
-        let target_is_32_bit = target_process_is_32_bit(target_pid)?;
+        let target_machine = target_process_machine(target_pid)?;
+        let target_is_32_bit = machine_is_32_bit(target_machine)?;
         let selected_hook_path = if target_is_32_bit {
             hook_path_x86.ok_or(
                 "target game process is 32-bit but no 32-bit game capture hook DLL was provided",
             )?
-        } else {
+        } else if target_machine == HOST_MACHINE {
             hook_path
+        } else {
+            return Err(format!(
+                "target game process architecture (IMAGE_FILE_MACHINE 0x{target_machine:04x}) \
+                 differs from the host architecture and no matching game capture hook DLL ships for it"
+            ));
         };
 
         let (capture_width, capture_height) = window_capture_size(target_hwnd)?;
@@ -485,6 +495,15 @@ struct Injected {
 }
 
 const HOST_IS_32_BIT: bool = cfg!(target_pointer_width = "32");
+const HOST_MACHINE: IMAGE_FILE_MACHINE = if cfg!(target_arch = "x86_64") {
+    IMAGE_FILE_MACHINE_AMD64
+} else if cfg!(target_arch = "aarch64") {
+    IMAGE_FILE_MACHINE_ARM64
+} else if cfg!(target_arch = "x86") {
+    IMAGE_FILE_MACHINE_I386
+} else {
+    IMAGE_FILE_MACHINE_UNKNOWN
+};
 
 fn inject(
     method: InjectionMethod,
@@ -816,7 +835,10 @@ fn parse_screen_ordinal(source_id: &str) -> Option<usize> {
     token.parse::<usize>().ok()
 }
 
-fn resolve_game_capture_target(source_id: &str, source_kind: &str) -> Result<HWND, String> {
+pub(crate) fn resolve_game_capture_target(
+    source_id: &str,
+    source_kind: &str,
+) -> Result<HWND, String> {
     if let Some(hwnd) = parse_hwnd_source_id(source_id) {
         return Ok(hwnd);
     }
@@ -883,7 +905,7 @@ fn target_process_id(hwnd: HWND) -> Result<u32, String> {
     }
 }
 
-fn target_process_is_32_bit(target_pid: u32) -> Result<bool, String> {
+fn target_process_machine(target_pid: u32) -> Result<IMAGE_FILE_MACHINE, String> {
     let process = unsafe {
         OpenProcess(
             PROCESS_QUERY_LIMITED_INFORMATION | PROCESS_QUERY_INFORMATION,
@@ -897,7 +919,12 @@ fn target_process_is_32_bit(target_pid: u32) -> Result<bool, String> {
     let mut native_machine: IMAGE_FILE_MACHINE = IMAGE_FILE_MACHINE_UNKNOWN;
     let ok = unsafe { IsWow64Process2(process.raw(), &mut process_machine, &mut native_machine) };
     if ok != 0 {
-        return Ok(process_machine != IMAGE_FILE_MACHINE_UNKNOWN);
+        let effective_machine = if process_machine == IMAGE_FILE_MACHINE_UNKNOWN {
+            native_machine
+        } else {
+            process_machine
+        };
+        return Ok(effective_machine);
     }
 
     let mut is_wow64: windows_sys::core::BOOL = 0;
@@ -905,7 +932,21 @@ fn target_process_is_32_bit(target_pid: u32) -> Result<bool, String> {
     if ok == 0 {
         return Err("failed to query target process bitness".into());
     }
-    Ok(is_wow64 != 0)
+    if is_wow64 != 0 {
+        return Ok(IMAGE_FILE_MACHINE_I386);
+    }
+    Ok(HOST_MACHINE)
+}
+
+fn machine_is_32_bit(machine: IMAGE_FILE_MACHINE) -> Result<bool, String> {
+    match machine {
+        IMAGE_FILE_MACHINE_I386 | IMAGE_FILE_MACHINE_ARM | IMAGE_FILE_MACHINE_ARMNT => Ok(true),
+        IMAGE_FILE_MACHINE_AMD64 | IMAGE_FILE_MACHINE_ARM64 | IMAGE_FILE_MACHINE_IA64 => Ok(false),
+        _ => Err(format!(
+            "unsupported target process architecture (IMAGE_FILE_MACHINE 0x{machine:04x}); \
+             cannot pick a game capture hook DLL for it"
+        )),
+    }
 }
 
 fn window_capture_size(hwnd: HWND) -> Result<(u32, u32), String> {
@@ -1696,5 +1737,23 @@ mod tests {
             ),
             None
         );
+    }
+
+    #[test]
+    fn emulated_x64_target_on_arm64_host_is_not_classified_as_32_bit() {
+        assert_eq!(machine_is_32_bit(IMAGE_FILE_MACHINE_AMD64), Ok(false));
+        assert_eq!(machine_is_32_bit(IMAGE_FILE_MACHINE_ARM64), Ok(false));
+    }
+
+    #[test]
+    fn wow64_guest_machines_are_classified_as_32_bit() {
+        assert_eq!(machine_is_32_bit(IMAGE_FILE_MACHINE_I386), Ok(true));
+        assert_eq!(machine_is_32_bit(IMAGE_FILE_MACHINE_ARMNT), Ok(true));
+        assert_eq!(machine_is_32_bit(IMAGE_FILE_MACHINE_ARM), Ok(true));
+    }
+
+    #[test]
+    fn unknown_target_machine_fails_loudly_instead_of_guessing_bitness() {
+        assert!(machine_is_32_bit(IMAGE_FILE_MACHINE_UNKNOWN).is_err());
     }
 }

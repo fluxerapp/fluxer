@@ -156,14 +156,14 @@ mod tests {
 
     #[test]
     fn inject_bootstrap_replaces_static_cdn_endpoint_placeholder() {
-        let html = r#"<html><head><link href="{{STATIC_CDN_ENDPOINT}}/fonts/app.css">{{FLUXER_BOOTSTRAP}}</head></html>"#;
+        let html = r#"<html><head><link href="{{STATIC_CDN_ENDPOINT}}/web/favicon-32x32.png">{{FLUXER_BOOTSTRAP}}</head></html>"#;
         let result = inject_bootstrap(
             html,
             "nonce",
             "<script>boot</script>",
             "https://cdn.example.test/",
         );
-        assert!(result.contains(r#"href="https://cdn.example.test/fonts/app.css""#));
+        assert!(result.contains(r#"href="https://cdn.example.test/web/favicon-32x32.png""#));
         assert!(!result.contains("{{STATIC_CDN_ENDPOINT}}"));
     }
 

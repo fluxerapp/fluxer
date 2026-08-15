@@ -4,6 +4,7 @@ import {EXAMPLE_INSTANCE_DOMAIN} from '@app/features/app/config/I18nDisplayConst
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import styles from '@app/features/auth/flow/InstanceSelector.module.css';
 import AppStorage from '@app/features/platform/state/PersistentStorage';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import {Input} from '@app/features/ui/components/form/FormInput';
 import {Spinner} from '@app/features/ui/components/Spinner';
@@ -214,7 +215,7 @@ export const InstanceSelector = observer(function InstanceSelector({
 				<CheckCircleIcon
 					weight="fill"
 					className={styles.statusSuccess}
-					size={18}
+					size={remFromPx(18)}
 					data-flx="auth.flow.instance-selector.status-icon.status-success"
 				/>
 			);
@@ -224,7 +225,7 @@ export const InstanceSelector = observer(function InstanceSelector({
 				<WarningCircleIcon
 					weight="fill"
 					className={styles.statusError}
-					size={18}
+					size={remFromPx(18)}
 					data-flx="auth.flow.instance-selector.status-icon.status-error"
 				/>
 			);
@@ -242,7 +243,9 @@ export const InstanceSelector = observer(function InstanceSelector({
 					onFocus={handleInputFocus}
 					placeholder={placeholder}
 					disabled={disabled}
-					leftIcon={<GlobeIcon size={18} weight="regular" data-flx="auth.flow.instance-selector.globe-icon" />}
+					leftIcon={
+						<GlobeIcon size={remFromPx(18)} weight="regular" data-flx="auth.flow.instance-selector.globe-icon" />
+					}
 					rightElement={
 						<div className={styles.inputActions} data-flx="auth.flow.instance-selector.input-actions">
 							{statusIcon}
@@ -256,7 +259,7 @@ export const InstanceSelector = observer(function InstanceSelector({
 									data-flx="auth.flow.instance-selector.dropdown-toggle.button"
 								>
 									<CaretDownIcon
-										size={16}
+										size={remFromPx(16)}
 										weight="bold"
 										className={clsx(styles.caretIcon, showDropdown && styles.caretIconOpen)}
 										data-flx="auth.flow.instance-selector.caret-icon"
@@ -284,7 +287,7 @@ export const InstanceSelector = observer(function InstanceSelector({
 										data-flx="auth.flow.instance-selector.dropdown-item.select-recent.button"
 									>
 										<GlobeIcon
-											size={16}
+											size={remFromPx(16)}
 											weight="regular"
 											className={styles.instanceIcon}
 											data-flx="auth.flow.instance-selector.instance-icon"
@@ -304,7 +307,11 @@ export const InstanceSelector = observer(function InstanceSelector({
 											aria-label={i18n._(REMOVE_FROM_RECENT_INSTANCES_DESCRIPTOR, {domain: instance.domain})}
 											data-flx="auth.flow.instance-selector.remove-button.remove-recent"
 										>
-											<TrashIcon size={14} weight="regular" data-flx="auth.flow.instance-selector.trash-icon" />
+											<TrashIcon
+												size={remFromPx(14)}
+												weight="regular"
+												data-flx="auth.flow.instance-selector.trash-icon"
+											/>
 										</button>
 									</button>
 								</li>

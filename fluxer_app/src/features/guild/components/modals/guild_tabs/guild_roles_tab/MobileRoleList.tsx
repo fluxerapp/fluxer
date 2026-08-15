@@ -8,6 +8,7 @@ import {
 } from '@app/features/guild/components/modals/guild_tabs/guild_roles_tab/shared';
 import type {GuildRole} from '@app/features/guild/models/GuildRole';
 import {ROLES_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {openRoleContextMenu} from '@app/features/ui/action_menu/RoleContextMenu';
 import {Button} from '@app/features/ui/button/Button';
 import {Trans, useLingui} from '@lingui/react/macro';
@@ -37,7 +38,9 @@ export const MobileRoleList: React.FC<MobileRoleListProps> = observer(
 						<Button
 							variant="secondary"
 							small={true}
-							leftIcon={<PlusIcon size={18} weight="bold" data-flx="guild.guild-tabs.guild-roles-tab.plus-icon" />}
+							leftIcon={
+								<PlusIcon size={remFromPx(18)} weight="bold" data-flx="guild.guild-tabs.guild-roles-tab.plus-icon" />
+							}
 							onClick={onCreateRole}
 							disabled={!canManageRoles}
 							data-flx="guild.guild-tabs.guild-roles-tab.button.create-role"
@@ -74,7 +77,7 @@ export const MobileRoleList: React.FC<MobileRoleListProps> = observer(
 									)}
 									<CaretRightIcon
 										className={styles.mobileRoleChevron}
-										size={20}
+										size={remFromPx(20)}
 										weight="bold"
 										data-flx="guild.guild-tabs.guild-roles-tab.mobile-role-chevron"
 									/>

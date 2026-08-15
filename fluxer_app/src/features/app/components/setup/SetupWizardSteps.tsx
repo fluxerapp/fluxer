@@ -275,12 +275,12 @@ const SERVICES_NONE_DESCRIPTOR = msg({
 	comment: 'Message shown when no optional services are available in the setup wizard.',
 });
 const SERVICE_GIF_LABEL_DESCRIPTOR = msg({
-	message: 'KLIPY GIFs',
-	comment: 'Label for the KLIPY GIF service toggle in the setup wizard.',
+	message: 'Klipy GIFs',
+	comment: 'Label for the Klipy GIF service toggle in the setup wizard.',
 });
 const SERVICE_GIF_DESC_DESCRIPTOR = msg({
-	message: 'Let people search and send GIFs powered by KLIPY.',
-	comment: 'Description for the KLIPY GIF service toggle in the setup wizard.',
+	message: 'Let people search and send GIFs powered by Klipy.',
+	comment: 'Description for the Klipy GIF service toggle in the setup wizard.',
 });
 const SERVICE_YOUTUBE_LABEL_DESCRIPTOR = msg({
 	message: 'YouTube enrichment',
@@ -559,7 +559,7 @@ export const AdminAccountStep = observer(({theme}: {theme: ThemeType}) => {
 	const {i18n} = useLingui();
 	return (
 		<section className={styles.step} data-flx="app.self-hosted-setup-wizard-gate.admin-account-step">
-			<div className={styles.adminForm} data-flx="app.self-hosted-setup-wizard-gate.admin-form">
+			<div className={styles.accountSetupForm} data-flx="app.self-hosted-setup-wizard-gate.admin-form">
 				<AuthRegisterFormCore
 					fields={{
 						showEmail: true,
@@ -888,7 +888,7 @@ const GIF_SETUP_TITLE_DESCRIPTOR = msg({
 	comment: 'Setup wizard title for GIF integration credentials.',
 });
 const GIF_SETUP_BODY_DESCRIPTOR = msg({
-	message: 'Add a KLIPY API key to enable GIF search at runtime.',
+	message: 'Add a Klipy API key to enable GIF search at runtime.',
 	comment: 'Setup wizard body for GIF integration credentials.',
 });
 const YOUTUBE_SETUP_TITLE_DESCRIPTOR = msg({

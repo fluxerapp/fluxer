@@ -67,7 +67,7 @@ env_gateway_base_config() ->
         <<"port">> => env_int("FLUXER_GATEWAY_PORT", 8771),
         <<"gateway_role">> => env_optional_binary("FLUXER_GATEWAY_ROLE"),
         <<"rpc_auth_token">> => env_binary("FLUXER_GATEWAY_RPC_AUTH_TOKEN", <<>>),
-        <<"push_enabled">> => env_bool("FLUXER_GATEWAY_PUSH_ENABLED", false),
+        <<"push_enabled">> => env_bool("FLUXER_GATEWAY_PUSH_ENABLED", true),
         <<"logger_level">> => env_binary("FLUXER_GATEWAY_LOGGER_LEVEL", <<"info">>),
         <<"api_rpc_endpoint">> => env_optional_binary("FLUXER_GATEWAY_API_RPC_ENDPOINT"),
         <<"cluster_enabled">> => env_bool("FLUXER_GATEWAY_CLUSTER_ENABLED", false),

@@ -1,9 +1,9 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
 .guildsLayoutContainer {
-	--layout-user-area-overlay-height: 0;
-	--layout-user-area-reserved-height: 0;
-	--layout-mobile-bottom-nav-reserved-height: 0;
+	--layout-user-area-overlay-height: 0px;
+	--layout-user-area-reserved-height: 0px;
+	--layout-mobile-bottom-nav-reserved-height: 0px;
 	position: relative;
 	display: grid;
 	grid-template-columns: var(--layout-guild-list-width) minmax(0, 1fr);
@@ -19,7 +19,11 @@
 }
 
 .guildsLayoutReserveSpace {
-	--layout-user-area-overlay-height: calc(var(--layout-user-area-height) + var(--layout-voice-connection-height, 0));
+	--layout-user-area-overlay-height: calc(
+		var(--layout-user-area-height) +
+		var(--user-area-box-inset-block-end) +
+		var(--layout-voice-connection-height, 0px)
+	);
 }
 
 .guildsLayoutReserveMobileBottomNav {
@@ -38,11 +42,22 @@
 }
 
 .guildListScrollerWrapper {
-	--scroller-track-block-end-inset: var(--layout-user-area-overlay-height, var(--layout-user-area-reserved-height, 0));
+	--scroller-track-block-end-inset: var(
+		--layout-user-area-overlay-height,
+		var(--layout-user-area-reserved-height, 0px)
+	);
+	--floating-unread-indicator-bottom-inset: calc(
+		var(--layout-user-area-overlay-height, var(--layout-user-area-reserved-height, 0px)) +
+		0.5rem
+	);
 	grid-column: 1;
 	grid-row: 1;
 	min-height: 0;
-	height: calc(100% - var(--layout-user-area-reserved-height, 0) - var(--layout-mobile-bottom-nav-reserved-height, 0));
+	height: calc(
+		100% -
+		var(--layout-user-area-reserved-height, 0px) -
+		var(--layout-mobile-bottom-nav-reserved-height, 0px)
+	);
 	width: var(--layout-guild-list-width);
 	min-width: 0;
 	background-color: var(--background-secondary);
@@ -55,9 +70,14 @@
 	width: 100%;
 	min-width: 0;
 	background-color: var(--background-secondary);
+	overflow-anchor: none;
 	--guild-badge-surface: var(--background-secondary);
 	padding-top: var(--spacing-1);
 	padding-bottom: var(--spacing-2);
+	scroll-padding-bottom: calc(
+		var(--layout-user-area-overlay-height, var(--layout-user-area-reserved-height, 0px)) +
+		var(--spacing-2)
+	);
 }
 
 .guildListContent {
@@ -72,7 +92,7 @@
 	width: 100%;
 	min-width: 0;
 	padding-bottom: calc(
-		var(--layout-user-area-overlay-height, var(--layout-user-area-reserved-height, 0)) +
+		var(--layout-user-area-overlay-height, var(--layout-user-area-reserved-height, 0px)) +
 		var(--spacing-2)
 	);
 }
@@ -165,7 +185,8 @@
 	width: calc(var(--layout-guild-list-width) + var(--layout-sidebar-width) + 0.0625rem);
 	display: flex;
 	align-items: flex-end;
-	padding: 0;
+	padding: 0 var(--footer-box-inset-inline) var(--user-area-box-inset-block-end);
+	background-color: var(--background-secondary);
 	pointer-events: none;
 	z-index: var(--z-index-elevated-1);
 }
@@ -212,7 +233,7 @@
 		color 70ms ease-out;
 	container-type: size;
 	--initials-font-size: clamp(0.85rem, 45cqi, 1.35rem);
-	--initials-letter-spacing: 0;
+	--initials-letter-spacing: 0px;
 	--initials-scale: 1;
 }
 
@@ -273,13 +294,13 @@
 
 .guildIcon[data-initials-length='medium'] .guildIconInitials {
 	--initials-font-size: clamp(0.85rem, 38cqi, 1.11rem);
-	--initials-letter-spacing: 0;
+	--initials-letter-spacing: 0px;
 	--initials-scale: 0.92;
 }
 
 .guildIcon[data-initials-length='long'] .guildIconInitials {
 	--initials-font-size: clamp(0.85rem, 32cqi, 0.87rem);
-	--initials-letter-spacing: 0;
+	--initials-letter-spacing: 0px;
 	--initials-scale: 0.78;
 }
 
@@ -316,10 +337,11 @@
 }
 
 .dmListSection {
+	position: relative;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	gap: var(--guild-list-item-gap);
+	gap: 0;
 	min-height: 0;
 	width: 100%;
 }
@@ -370,7 +392,28 @@
 	composes: guildListItem;
 }
 
-.dmListItemWrapper {
+.dmListRow {
+	position: relative;
+	height: calc(var(--guild-list-item-box-size) + var(--guild-list-item-gap));
+	width: 100%;
+	flex-shrink: 0;
+	overflow: visible;
+	z-index: 0;
+}
+
+.dmListRow[data-pending-removal='true'] {
+	z-index: 3;
+	pointer-events: none;
+}
+
+.dmListRow[data-last-row='true'] {
+	height: var(--guild-list-item-box-size);
+}
+
+.dmListItemBox {
+	position: absolute;
+	inset-block-start: 0;
+	inset-inline-start: 0;
 	height: var(--guild-list-item-box-size);
 	width: 100%;
 	display: flex;
@@ -412,11 +455,11 @@
 	}
 }
 
-.addGuildButton {
+.createGuildButton {
 	composes: guildListItem;
 }
 
-.addGuildButtonIcon {
+.createGuildButtonIcon {
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -435,11 +478,11 @@
 
 @media (hover: hover) and (pointer: fine) {
 	:global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
-		.addGuildButton:hover
-		.addGuildButtonIcon,
+		.createGuildButton:hover
+		.createGuildButtonIcon,
 	:global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
-		.addGuildButtonIcon:hover,
-	.addGuildButton.contextMenuHover .addGuildButtonIcon {
+		.createGuildButtonIcon:hover,
+	.createGuildButton.contextMenuHover .createGuildButtonIcon {
 		border-color: var(--text-primary);
 	}
 }
@@ -566,7 +609,7 @@
 }
 
 .outlineFrame {
-	--outline-radius: 0;
+	--outline-radius: 0px;
 }
 
 .outlineFrameFullscreen {
@@ -575,31 +618,24 @@
 	background: #000;
 }
 
-:global(html.platform-native:not(.platform-macos)) .guildsLayoutContainer {
+:global(html.platform-native) .guildsLayoutContainer {
 	padding-top: var(--native-titlebar-height);
 }
 
-:global(html.platform-native:not(.platform-macos)) .guildsLayoutFullscreen {
+:global(html.platform-native) .guildsLayoutFullscreen {
 	padding-top: 0;
 }
 
-:global(html.platform-native.platform-macos) .guildListScrollContainer {
-	padding-top: var(--native-titlebar-height);
-}
-
-:global(html:not(.platform-native)) .outlineFrame,
-:global(html.platform-native.platform-macos) .outlineFrame {
+:global(html:not(.platform-native)) .outlineFrame {
 	border-top: none;
 }
 
-:global(html.platform-native:not(.platform-macos)) .outlineFrame {
+:global(html.platform-native) .outlineFrame {
 	border-top: 0.0625rem solid var(--user-area-divider-color);
 	--outline-radius: clamp(0.5rem, 1.2vw, 0.875rem);
 }
 
-:global(html:not(.platform-native)) .outlineFrameFullscreen,
-:global(html.platform-native.platform-macos) .outlineFrameFullscreen,
-:global(html.platform-native:not(.platform-macos)) .outlineFrameFullscreen {
+:global(html.platform-native) .outlineFrame.outlineFrameFullscreen {
 	border: none;
 }
 

@@ -7,6 +7,7 @@ import wrapperStyles from '@app/features/channel/components/textarea/InputWrappe
 import textareaStyles from '@app/features/channel/components/textarea/TextareaInput.module.css';
 import {CLAIM_ACCOUNT_DESCRIPTOR, VERIFY_EMAIL_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {unblockUser} from '@app/features/relationship/utils/RelationshipActionUtils';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
@@ -54,9 +55,8 @@ const BarrierBase = observer(({message, action, icon}: BarrierBaseProps) => {
 				wrapperStyles.box,
 				wrapperStyles.wrapperSides,
 				textareaStyles.textareaOuter,
-				textareaStyles.textareaOuterMinHeight,
+				textareaStyles.textareaOuterRow,
 				wrapperStyles.roundedAll,
-				wrapperStyles.bottomSpacing,
 			)}
 			data-flx="channel.barriers.barrier-components.barrier-base.div"
 		>
@@ -133,7 +133,7 @@ export const UnclaimedAccountBarrier = observer(({onAction}: BarrierProps) => {
 			message={<Trans>You need to claim your account to send messages in this community.</Trans>}
 			icon={
 				<ShieldWarningIcon
-					size={18}
+					size={remFromPx(18)}
 					weight="fill"
 					data-flx="channel.barriers.barrier-components.unclaimed-account-barrier.shield-warning-icon"
 				/>
@@ -161,7 +161,7 @@ export const UnverifiedEmailBarrier = observer(({onAction}: BarrierProps) => {
 			message={<Trans>You need to verify your email to send messages in this community.</Trans>}
 			icon={
 				<EnvelopeSimpleIcon
-					size={18}
+					size={remFromPx(18)}
 					weight="fill"
 					data-flx="channel.barriers.barrier-components.unverified-email-barrier.envelope-simple-icon"
 				/>
@@ -195,7 +195,7 @@ export const AccountTooNewBarrier = observer(({initialTimeRemaining = 5 * 60 * 1
 			message={<Trans>Your account is too new to send messages in this community.</Trans>}
 			icon={
 				<ClockIcon
-					size={18}
+					size={remFromPx(18)}
 					weight="fill"
 					data-flx="channel.barriers.barrier-components.account-too-new-barrier.clock-icon"
 				/>
@@ -218,7 +218,7 @@ export const NotMemberLongEnoughBarrier = observer(({initialTimeRemaining = 10 *
 			message={<Trans>You haven't been a member of this community long enough to send messages.</Trans>}
 			icon={
 				<ClockIcon
-					size={18}
+					size={remFromPx(18)}
 					weight="fill"
 					data-flx="channel.barriers.barrier-components.not-member-long-enough-barrier.clock-icon"
 				/>
@@ -241,7 +241,7 @@ export const NoPhoneNumberBarrier = observer(({onAction}: BarrierProps) => {
 			message={<Trans>You need to verify a phone number to send messages in this community.</Trans>}
 			icon={
 				<PhoneIcon
-					size={18}
+					size={remFromPx(18)}
 					weight="fill"
 					data-flx="channel.barriers.barrier-components.no-phone-number-barrier.phone-icon"
 				/>
@@ -272,7 +272,7 @@ export const SendMessageDisabledBarrier = observer(() => {
 			message={<Trans>Messaging is temporarily paused in this community.</Trans>}
 			icon={
 				<WarningCircleIcon
-					size={18}
+					size={remFromPx(18)}
 					weight="fill"
 					data-flx="channel.barriers.barrier-components.send-message-disabled-barrier.warning-circle-icon"
 				/>
@@ -287,7 +287,11 @@ export const TimeoutBarrier = observer(({initialTimeRemaining = 0}: TimedBarrier
 		<BarrierBase
 			message={<Trans>You're timed out. Messaging, reactions, and voice are paused until the timeout expires.</Trans>}
 			icon={
-				<TimerIcon size={18} weight="fill" data-flx="channel.barriers.barrier-components.timeout-barrier.timer-icon" />
+				<TimerIcon
+					size={remFromPx(18)}
+					weight="fill"
+					data-flx="channel.barriers.barrier-components.timeout-barrier.timer-icon"
+				/>
 			}
 			action={
 				initialTimeRemaining > 0 ? (
@@ -306,7 +310,11 @@ export const DefaultBarrier = observer(() => {
 		<BarrierBase
 			message={<Trans>You can't send messages in this community.</Trans>}
 			icon={
-				<InfoIcon size={18} weight="fill" data-flx="channel.barriers.barrier-components.default-barrier.info-icon" />
+				<InfoIcon
+					size={remFromPx(18)}
+					weight="fill"
+					data-flx="channel.barriers.barrier-components.default-barrier.info-icon"
+				/>
 			}
 			action={null}
 			data-flx="channel.barriers.barrier-components.default-barrier.barrier-base"
@@ -319,7 +327,11 @@ export const SystemDmBarrier = observer(() => {
 		<BarrierBase
 			message={i18n._(SYSTEM_ANNOUNCEMENTS_FROM_STAFF_DESCRIPTOR, {productName: PRODUCT_NAME})}
 			icon={
-				<InfoIcon size={18} weight="fill" data-flx="channel.barriers.barrier-components.system-dm-barrier.info-icon" />
+				<InfoIcon
+					size={remFromPx(18)}
+					weight="fill"
+					data-flx="channel.barriers.barrier-components.system-dm-barrier.info-icon"
+				/>
 			}
 			action={null}
 			data-flx="channel.barriers.barrier-components.system-dm-barrier.barrier-base"
@@ -343,7 +355,7 @@ export const BlockedUserBarrier = observer(({userId, username, onAction}: Blocke
 			message={<Trans>You have blocked {username}. Unblock them to send messages.</Trans>}
 			icon={
 				<ProhibitIcon
-					size={18}
+					size={remFromPx(18)}
 					weight="fill"
 					data-flx="channel.barriers.barrier-components.blocked-user-barrier.prohibit-icon"
 				/>
@@ -368,7 +380,7 @@ export const UnclaimedDMBarrier = observer(({onAction}: BarrierProps) => {
 			message={<Trans>You need to claim your account to send direct messages.</Trans>}
 			icon={
 				<ShieldWarningIcon
-					size={18}
+					size={remFromPx(18)}
 					weight="fill"
 					data-flx="channel.barriers.barrier-components.unclaimed-dm-barrier.shield-warning-icon"
 				/>

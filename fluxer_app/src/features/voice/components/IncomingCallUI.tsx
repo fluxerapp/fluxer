@@ -5,6 +5,7 @@ import {GroupDMAvatar} from '@app/features/app/components/shared/GroupDMAvatar';
 import type {Channel} from '@app/features/channel/models/Channel';
 import * as ChannelUtils from '@app/features/channel/utils/ChannelUtils';
 import {INCOMING_CALL_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {BottomSheet} from '@app/features/ui/bottom_sheet/BottomSheet';
 import {Avatar as UserAvatar} from '@app/features/ui/components/Avatar';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
@@ -178,7 +179,7 @@ const Header: React.FC<HeaderProps> = ({label, icon, ...rest}) => {
 		<div className={styles.header} data-flx="voice.incoming-call-ui.header.header" {...rest}>
 			{icon ?? (
 				<PhoneIncomingIcon
-					size={14}
+					size={remFromPx(14)}
 					weight="fill"
 					className={styles.headerIcon}
 					data-flx="voice.incoming-call-ui.header.header-icon"
@@ -282,10 +283,10 @@ const CircleButton: React.FC<CircleButtonProps> = ({variant, children, className
 		>
 			{children ??
 				(variant === 'accept' ? (
-					<PhoneIcon size={28} weight="fill" data-flx="voice.incoming-call-ui.circle-button.phone-icon" />
+					<PhoneIcon size={remFromPx(28)} weight="fill" data-flx="voice.incoming-call-ui.circle-button.phone-icon" />
 				) : (
 					<PhoneIcon
-						size={28}
+						size={remFromPx(28)}
 						weight="fill"
 						className={styles.circleButtonIconRotated}
 						data-flx="voice.incoming-call-ui.circle-button.circle-button-icon-rotated"

@@ -573,6 +573,84 @@ async fn creating_registration_url_swaps_copyable_url_list_fragment() {
     assert!(toast.contains("Registration URL created"), "{toast}");
 }
 
+#[tokio::test]
+async fn fonts_are_served_locally_content_hashed_and_immutable() {
+    let app = setup().await;
+
+    let stylesheet_path = format!(
+        "/static/fonts/{}",
+        fluxer_admin::fonts::STYLESHEET_FILE_NAME
+    );
+    let (headers, css) = get_with_headers(&app, &stylesheet_path, &[]).await;
+    assert_eq!(
+        headers.get(header::CACHE_CONTROL).unwrap(),
+        "public, max-age=31536000, immutable"
+    );
+
+    for fragment in css.split("url('").skip(1) {
+        let file_name = fragment.split('\'').next().unwrap();
+        let response = app
+            .router
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .uri(format!("/static/fonts/{file_name}"))
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(
+            response.status(),
+            StatusCode::OK,
+            "missing font {file_name}"
+        );
+        assert_eq!(
+            response.headers().get(header::CONTENT_TYPE).unwrap(),
+            "font/woff2"
+        );
+        assert_eq!(
+            response.headers().get(header::CACHE_CONTROL).unwrap(),
+            "public, max-age=31536000, immutable"
+        );
+    }
+
+    let response = app
+        .router
+        .clone()
+        .oneshot(
+            Request::builder()
+                .uri("/static/fonts/does-not-exist.woff2")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+}
+
+#[tokio::test]
+async fn rendered_heads_never_reference_the_static_cdn_for_fonts() {
+    let app = setup().await;
+
+    let (headers, page) = get_with_headers(&app, "/users", &[]).await;
+    assert!(
+        !page.contains("/fonts/ibm-plex.css"),
+        "the admin layout still links the CDN font stylesheets"
+    );
+    assert!(page.contains("/static/fonts/"), "{page}");
+
+    let csp = headers
+        .get(header::CONTENT_SECURITY_POLICY)
+        .and_then(|value| value.to_str().ok())
+        .expect("missing CSP");
+    assert!(csp.contains("font-src 'self';"), "font-src was {csp}");
+    assert!(
+        csp.contains("style-src 'self' 'unsafe-inline';"),
+        "style-src was {csp}"
+    );
+}
+
 struct SearchCase {
     path: &'static str,
     result_target: &'static str,

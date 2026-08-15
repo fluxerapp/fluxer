@@ -48,7 +48,6 @@ interface PopoutProps {
 	animationType?: PopoutAnimationType;
 	constrainHeight?: boolean;
 	containerClass?: string;
-	stableTextRendering?: boolean;
 	preventInvert?: boolean;
 	hoverDelay?: number;
 	hoverCloseDelay?: number;
@@ -93,7 +92,6 @@ export const openPopout = (target: HTMLElement, props: OpenPopoutOptions, key: s
 		constrainHeight: props.constrainHeight,
 		clickPos,
 		containerClass: props.containerClass,
-		stableTextRendering: props.stableTextRendering,
 		preventInvert: props.preventInvert,
 		onOpen: props.onOpen,
 		onClose: props.onClose,

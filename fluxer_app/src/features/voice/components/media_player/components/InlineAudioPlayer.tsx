@@ -8,6 +8,7 @@ import {
 	PLAY_DESCRIPTOR,
 	REMOVE_FROM_FAVORITES_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import {MediaPlaybackRate} from '@app/features/voice/components/media_player/components/MediaPlaybackRate';
@@ -231,9 +232,17 @@ export function InlineAudioPlayer({
 							data-flx="voice.media-player.inline-audio-player.play-button-icon"
 						>
 							{state.isPlaying ? (
-								<PauseIcon size={20} weight="fill" data-flx="voice.media-player.inline-audio-player.pause-icon" />
+								<PauseIcon
+									size={remFromPx(20)}
+									weight="fill"
+									data-flx="voice.media-player.inline-audio-player.pause-icon"
+								/>
 							) : (
-								<PlayIcon size={20} weight="fill" data-flx="voice.media-player.inline-audio-player.play-icon" />
+								<PlayIcon
+									size={remFromPx(20)}
+									weight="fill"
+									data-flx="voice.media-player.inline-audio-player.play-icon"
+								/>
 							)}
 						</motion.div>
 					</AnimatePresence>
@@ -337,9 +346,17 @@ export function InlineAudioPlayer({
 							/>
 						)}
 						{state.isPlaying ? (
-							<PauseIcon size={20} weight="fill" data-flx="voice.media-player.inline-audio-player.pause-icon--2" />
+							<PauseIcon
+								size={remFromPx(20)}
+								weight="fill"
+								data-flx="voice.media-player.inline-audio-player.pause-icon--2"
+							/>
 						) : (
-							<PlayIcon size={20} weight="fill" data-flx="voice.media-player.inline-audio-player.play-icon--2" />
+							<PlayIcon
+								size={remFromPx(20)}
+								weight="fill"
+								data-flx="voice.media-player.inline-audio-player.play-icon--2"
+							/>
 						)}
 					</button>
 				</FocusRing>
@@ -420,7 +437,7 @@ export function InlineAudioPlayer({
 									data-flx="voice.media-player.inline-audio-player.action-button.favorite-click"
 								>
 									<StarIcon
-										size={18}
+										size={remFromPx(18)}
 										weight={isFavorited ? 'fill' : 'regular'}
 										data-flx="voice.media-player.inline-audio-player.star-icon"
 									/>
@@ -444,7 +461,7 @@ export function InlineAudioPlayer({
 									data-flx="voice.media-player.inline-audio-player.action-button.download-click"
 								>
 									<DownloadSimpleIcon
-										size={18}
+										size={remFromPx(18)}
 										weight="bold"
 										data-flx="voice.media-player.inline-audio-player.download-simple-icon"
 									/>

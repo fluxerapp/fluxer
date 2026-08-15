@@ -33,6 +33,7 @@ import * as InviteUtils from '@app/features/invite/utils/InviteUtils';
 import * as MessageCommands from '@app/features/messaging/commands/MessageCommands';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import StreamerMode from '@app/features/streamer_mode/state/StreamerMode';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import {Combobox} from '@app/features/ui/components/form/FormCombobox';
 import {Input} from '@app/features/ui/components/form/FormInput';
@@ -166,7 +167,7 @@ const InviteModalUnavailable = observer(function InviteModalUnavailable() {
 			<Modal.Header title={i18n._(INVITE_FRIENDS_DESCRIPTOR)} data-flx="invite.invite-modal.modal-header" />
 			<Modal.Content className={styles.noChannelContent} data-flx="invite.invite-modal.no-channel-content">
 				<WarningIcon
-					size={48}
+					size={remFromPx(48)}
 					weight="fill"
 					className={styles.noChannelIcon}
 					data-flx="invite.invite-modal.no-channel-icon"
@@ -353,7 +354,7 @@ const InviteModalContent = observer(function InviteModalContent({
 								placeholder={i18n._(SEARCH_FRIENDS_DESCRIPTOR)}
 								leftIcon={
 									<MagnifyingGlassIcon
-										size={20}
+										size={remFromPx(20)}
 										weight="bold"
 										className={selectorStyles.searchIcon}
 										data-flx="invite.invite-modal.magnifying-glass-icon"
@@ -393,7 +394,7 @@ const InviteModalContent = observer(function InviteModalContent({
 								data-flx="invite.invite-modal.recipient-list"
 							/>
 						) : (
-							<div className={styles.advancedView} data-flx="invite.invite-modal.advanced-view">
+							<div className={styles.detailedView} data-flx="invite.invite-modal.advanced-view">
 								<Combobox
 									label={i18n._(EXPIRE_AFTER_DESCRIPTOR)}
 									options={maxAgeOptions}

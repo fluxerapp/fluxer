@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
-.addFriendContainer {
+.friendRequestContainer {
 	position: relative;
 	display: flex;
 	flex-direction: column;
@@ -58,7 +58,7 @@
 }
 
 @media (max-width: 480px) {
-	.addFriendContainer {
+	.friendRequestContainer {
 		padding: 1rem;
 		padding-bottom: calc(1rem + 3rem);
 	}

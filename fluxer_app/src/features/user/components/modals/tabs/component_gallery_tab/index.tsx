@@ -18,7 +18,6 @@ import {IndicatorsTab} from '@app/features/user/components/modals/tabs/component
 import {MarkdownTab} from '@app/features/user/components/modals/tabs/component_gallery_tab/MarkdownTab';
 import {OverlaysTab} from '@app/features/user/components/modals/tabs/component_gallery_tab/OverlaysTab';
 import {SelectionsTab} from '@app/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab';
-import {TypographyTabContent} from '@app/features/user/components/modals/tabs/component_gallery_tab/TypographyTab';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {
@@ -359,13 +358,6 @@ const ComponentGalleryTab: React.FC = () => {
 						]}
 						data-flx="user.component-gallery-tab.status-slate"
 					/>
-				</GalleryAccordionSection>
-				<GalleryAccordionSection
-					id="typography"
-					title={<Trans>Typography</Trans>}
-					data-flx="user.component-gallery-tab.typography"
-				>
-					<TypographyTabContent data-flx="user.component-gallery-tab.typography-tab-content" />
 				</GalleryAccordionSection>
 				<GalleryAccordionSection
 					id="markdown"

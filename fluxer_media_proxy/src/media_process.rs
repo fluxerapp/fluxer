@@ -2862,6 +2862,33 @@ mod tests {
         std::fs::read(&out).ok()
     }
 
+    fn ffmpeg_gen_rotated_mp4(display_rotation: &str, source_args: &[&str]) -> Option<Vec<u8>> {
+        let dir = tempfile::tempdir().ok()?;
+        let source = dir.path().join("source.mp4");
+        let out = dir.path().join("rotated.mp4");
+        let source_status = std::process::Command::new("ffmpeg")
+            .args(["-nostdin", "-loglevel", "error", "-y"])
+            .args(source_args)
+            .arg(source.to_str()?)
+            .status()
+            .ok()?;
+        if !source_status.success() {
+            return None;
+        }
+        let rotate_status = std::process::Command::new("ffmpeg")
+            .args(["-nostdin", "-loglevel", "error", "-y", "-noautorotate"])
+            .args(["-display_rotation", display_rotation])
+            .args(["-i", source.to_str()?])
+            .args(["-c", "copy", "-f", "mp4"])
+            .arg(out.to_str()?)
+            .status()
+            .ok()?;
+        if !rotate_status.success() {
+            return None;
+        }
+        std::fs::read(&out).ok()
+    }
+
     fn png_dimensions(bytes: &[u8]) -> Option<(u32, u32)> {
         if bytes.len() < 24 || &bytes[..8] != b"\x89PNG\r\n\x1a\n" || &bytes[12..16] != b"IHDR" {
             return None;
@@ -2936,19 +2963,19 @@ mod tests {
             "sub-square pixel video should grow height to its display size"
         );
 
-        let rotated = ffmpeg_gen_mp4(&[
-            "-noautorotate",
-            "-display_rotation",
+        let rotated = ffmpeg_gen_rotated_mp4(
             "90",
-            "-f",
-            "lavfi",
-            "-i",
-            "testsrc=size=640x480:rate=10:duration=1",
-            "-pix_fmt",
-            "yuv420p",
-            "-f",
-            "mp4",
-        ])
+            &[
+                "-f",
+                "lavfi",
+                "-i",
+                "testsrc=size=640x480:rate=10:duration=1",
+                "-pix_fmt",
+                "yuv420p",
+                "-f",
+                "mp4",
+            ],
+        )
         .expect("rotated fixture");
         let thumb =
             extract_video_thumbnail(&rotated, AssetExtension::Png).expect("rotated thumbnail");
@@ -2958,19 +2985,19 @@ mod tests {
             "rotation-metadata video should present in its display (portrait) orientation"
         );
 
-        let rotated_counterclockwise = ffmpeg_gen_mp4(&[
-            "-noautorotate",
-            "-display_rotation",
+        let rotated_counterclockwise = ffmpeg_gen_rotated_mp4(
             "-90",
-            "-f",
-            "lavfi",
-            "-i",
-            "testsrc=size=640x480:rate=10:duration=1",
-            "-pix_fmt",
-            "yuv420p",
-            "-f",
-            "mp4",
-        ])
+            &[
+                "-f",
+                "lavfi",
+                "-i",
+                "testsrc=size=640x480:rate=10:duration=1",
+                "-pix_fmt",
+                "yuv420p",
+                "-f",
+                "mp4",
+            ],
+        )
         .expect("counterclockwise rotated fixture");
         let thumb = extract_video_thumbnail(&rotated_counterclockwise, AssetExtension::Png)
             .expect("counterclockwise rotated thumbnail");
@@ -2980,21 +3007,21 @@ mod tests {
             "either quarter-turn direction should swap dimensions"
         );
 
-        let rotated_anamorphic = ffmpeg_gen_mp4(&[
-            "-noautorotate",
-            "-display_rotation",
+        let rotated_anamorphic = ffmpeg_gen_rotated_mp4(
             "90",
-            "-f",
-            "lavfi",
-            "-i",
-            "testsrc=size=320x180:rate=10:duration=1",
-            "-vf",
-            "setsar=2/1",
-            "-pix_fmt",
-            "yuv420p",
-            "-f",
-            "mp4",
-        ])
+            &[
+                "-f",
+                "lavfi",
+                "-i",
+                "testsrc=size=320x180:rate=10:duration=1",
+                "-vf",
+                "setsar=2/1",
+                "-pix_fmt",
+                "yuv420p",
+                "-f",
+                "mp4",
+            ],
+        )
         .expect("rotated anamorphic fixture");
         let thumb = extract_video_thumbnail(&rotated_anamorphic, AssetExtension::Png)
             .expect("rotated anamorphic thumbnail");
@@ -3028,19 +3055,19 @@ mod tests {
 
     #[test]
     fn video_metadata_placeholder_and_dimensions_are_display_corrected() {
-        let Some(rotated) = ffmpeg_gen_mp4(&[
-            "-noautorotate",
-            "-display_rotation",
+        let Some(rotated) = ffmpeg_gen_rotated_mp4(
             "90",
-            "-f",
-            "lavfi",
-            "-i",
-            "testsrc=size=640x480:rate=10:duration=1",
-            "-pix_fmt",
-            "yuv420p",
-            "-f",
-            "mp4",
-        ]) else {
+            &[
+                "-f",
+                "lavfi",
+                "-i",
+                "testsrc=size=640x480:rate=10:duration=1",
+                "-pix_fmt",
+                "yuv420p",
+                "-f",
+                "mp4",
+            ],
+        ) else {
             eprintln!("skipping: ffmpeg CLI not available");
             return;
         };

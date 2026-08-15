@@ -111,7 +111,7 @@ export const MESSAGE_LAYOUT_SPEC = {
 		gap: '0.25rem',
 		usernameGap: '0.45rem',
 	},
-	gutter: '1rem',
+	gutter: '0.75rem',
 	spacingY: '0.125rem',
 	lineHeight: '1.375rem',
 	containerGap: '0.25rem',

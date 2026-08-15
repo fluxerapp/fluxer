@@ -5,6 +5,7 @@ import {Endpoints} from '@app/features/app/constants/Endpoints';
 import * as DraftCommands from '@app/features/messaging/commands/DraftCommands';
 import * as MessageCommands from '@app/features/messaging/commands/MessageCommands';
 import {FileSizeTooLargeModal} from '@app/features/messaging/components/alerts/FileSizeTooLargeModal';
+import {MessageSendFailedModal} from '@app/features/messaging/components/alerts/MessageSendFailedModal';
 import {MessageSendTooQuickModal} from '@app/features/messaging/components/alerts/MessageSendTooQuickModal';
 import type {
 	ScheduledAttachment,
@@ -25,7 +26,7 @@ import {
 import * as MessageSubmitUtils from '@app/features/messaging/utils/MessageSubmitUtils';
 import {MatureContentRejectedModal} from '@app/features/moderation/components/alerts/MatureContentRejectedModal';
 import {http} from '@app/features/platform/transport/RestTransport';
-import type {HttpError} from '@app/features/platform/types/EndpointError';
+import {HttpError} from '@app/features/platform/types/EndpointError';
 import type {RestResponse} from '@app/features/platform/types/TransportTypes';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as SlowmodeCommands from '@app/features/slowmode/commands/SlowmodeCommands';
@@ -67,6 +68,7 @@ interface ApiErrorBody {
 	code?: number | string;
 	retry_after?: number;
 	message?: string;
+	details?: unknown;
 }
 
 export interface ScheduleMessageParams {
@@ -252,7 +254,7 @@ export async function scheduleMessage(i18n: I18n, params: ScheduleMessageParams)
 	} catch (error) {
 		handleScheduleError(
 			i18n,
-			error as HttpError,
+			error,
 			params.channelId,
 			prepared.nonce,
 			params.content,
@@ -367,12 +369,43 @@ async function scheduleMultipartMessage(
 }
 
 const getApiErrorBody = (error: HttpError): ApiErrorBody | undefined => {
-	return typeof error?.body === 'object' && error.body !== null ? (error.body as ApiErrorBody) : undefined;
+	return typeof error.body === 'object' && error.body !== null ? (error.body as ApiErrorBody) : undefined;
 };
+
+function parseNestedRetryAfterSeconds(body: ApiErrorBody | undefined): number | undefined {
+	if (body === undefined || typeof body.details !== 'object' || body.details === null || Array.isArray(body.details)) {
+		return undefined;
+	}
+	const details = body.details as Record<string, unknown>;
+	const retry = details.retry;
+	if (typeof retry !== 'object' || retry === null || Array.isArray(retry)) return undefined;
+	const afterSeconds = (retry as Record<string, unknown>).after_seconds;
+	if (typeof afterSeconds !== 'number' || !Number.isFinite(afterSeconds) || afterSeconds <= 0) return undefined;
+	return afterSeconds;
+}
+
+function resolveRetryAfterSeconds(error: HttpError): number | undefined {
+	const body = getApiErrorBody(error);
+	const nestedRetryAfter = parseNestedRetryAfterSeconds(body);
+	if (nestedRetryAfter !== undefined) return nestedRetryAfter;
+	const bodyRetryAfter = body === undefined ? undefined : body.retry_after;
+	if (typeof bodyRetryAfter === 'number' && Number.isFinite(bodyRetryAfter) && bodyRetryAfter > 0) {
+		return bodyRetryAfter;
+	}
+	const responseHeaders: Record<string, string> | undefined = error.responseHeaders;
+	const header = responseHeaders === undefined ? undefined : responseHeaders['retry-after'];
+	if (header === undefined || header.trim() === '') return undefined;
+	const numeric = Number(header);
+	if (Number.isFinite(numeric) && numeric > 0) return numeric;
+	const deadline = Date.parse(header);
+	if (!Number.isFinite(deadline)) return undefined;
+	const remainingSeconds = (deadline - Date.now()) / 1000;
+	return remainingSeconds > 0 ? remainingSeconds : undefined;
+}
 
 function handleScheduleError(
 	i18n: I18n,
-	error: HttpError,
+	error: unknown,
 	channelId: string,
 	nonce: string,
 	content: string,
@@ -381,13 +414,35 @@ function handleScheduleError(
 	hadAttachments?: boolean,
 ): void {
 	restoreDraftAfterScheduleFailure(channelId, nonce, content, messageReference, replyMentioning, hadAttachments);
+	if (!(error instanceof HttpError)) {
+		ModalCommands.push(
+			modal(() => (
+				<MessageSendFailedModal
+					hasAttachments={hadAttachments}
+					data-flx="messaging.scheduled-message-commands.handle-schedule-error.message-send-failed-modal--request"
+				/>
+			)),
+		);
+		return;
+	}
 	if (isRateLimitError(error)) {
 		handleScheduleRateLimit(i18n, error);
 		return;
 	}
 	if (isSlowmodeError(error)) {
-		const retryAfterBody = getApiErrorBody(error)?.retry_after;
-		const retryAfterMs = SlowmodeCommands.retryAfterSecondsToMs(retryAfterBody);
+		const retryAfterSeconds = resolveRetryAfterSeconds(error);
+		const retryAfterMs = SlowmodeCommands.retryAfterSecondsToMs(retryAfterSeconds);
+		if (retryAfterMs <= 0) {
+			ModalCommands.push(
+				modal(() => (
+					<MessageSendFailedModal
+						hasAttachments={hadAttachments}
+						data-flx="messaging.scheduled-message-commands.handle-schedule-error.message-send-failed-modal"
+					/>
+				)),
+			);
+			return;
+		}
 		const retryAfter = Math.ceil(retryAfterMs / 1000);
 		SlowmodeCommands.updateSlowmodeRemaining(channelId, retryAfterMs);
 		ModalCommands.push(
@@ -424,10 +479,19 @@ function handleScheduleError(
 		);
 		return;
 	}
+	ModalCommands.push(
+		modal(() => (
+			<MessageSendFailedModal
+				hasAttachments={hadAttachments}
+				data-flx="messaging.scheduled-message-commands.handle-schedule-error.message-send-failed-modal--http"
+			/>
+		)),
+	);
 }
 
 function handleScheduleRateLimit(_i18n: I18n, error: HttpError): void {
-	const retryAfterSeconds = getApiErrorBody(error)?.retry_after ?? 0;
+	const retryAfterSecondsValue = resolveRetryAfterSeconds(error);
+	const retryAfterSeconds = retryAfterSecondsValue === undefined ? undefined : Math.ceil(retryAfterSecondsValue);
 	ModalCommands.push(
 		modal(() => (
 			<MessageSendTooQuickModal
@@ -441,11 +505,15 @@ function handleScheduleRateLimit(_i18n: I18n, error: HttpError): void {
 }
 
 function isRateLimitError(error: HttpError): boolean {
-	return error?.status === 429;
+	if (error.status !== 429) return false;
+	return !isSlowmodeError(error);
 }
 
 function isSlowmodeError(error: HttpError): boolean {
-	return error?.status === 400 && getApiErrorBody(error)?.code === APIErrorCodes.SLOWMODE_RATE_LIMITED;
+	if (error.status !== 400 && error.status !== 429) return false;
+	const body = getApiErrorBody(error);
+	if (body === undefined) return false;
+	return body.code === APIErrorCodes.SLOWMODE_RATE_LIMITED;
 }
 
 function isFeatureDisabledError(error: HttpError): boolean {

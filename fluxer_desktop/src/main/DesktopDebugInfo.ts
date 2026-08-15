@@ -249,20 +249,12 @@ function formatReleaseChannelLabel(value: string): string {
 	return normalized.charAt(0).toUpperCase() + normalized.slice(1);
 }
 
-function formatBuildVariantLabel(value: DesktopInfo['buildVariant']): string {
-	if (value === 'windows-game-capture') {
-		return 'Windows Game Capture';
-	}
-	return '';
-}
-
 function getBuildString(desktopInfo: DesktopInfo): string {
 	const buildVersion = process.env.PUBLIC_BUILD_VERSION || process.env.BUILD_VERSION || desktopInfo.version || 'dev';
 	const releaseChannel = formatReleaseChannelLabel(
 		process.env.PUBLIC_RELEASE_CHANNEL || process.env.RELEASE_CHANNEL || desktopInfo.channel,
 	);
-	const buildVariant = formatBuildVariantLabel(desktopInfo.buildVariant);
-	return `${releaseChannel} Desktop${buildVariant ? ` ${buildVariant}` : ''} ${buildVersion}`;
+	return `${releaseChannel} Desktop ${buildVersion}`;
 }
 
 function safeGetLocale(): string {

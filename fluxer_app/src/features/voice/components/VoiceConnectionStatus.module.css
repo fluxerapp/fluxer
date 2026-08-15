@@ -5,7 +5,7 @@
 	flex-direction: column;
 	gap: var(--spacing-3);
 	margin: 0;
-	padding: var(--voice-connection-padding-y) var(--user-area-padding-x);
+	padding: var(--voice-connection-padding-y) var(--voice-connection-padding-x);
 	background-color: transparent;
 	border: none;
 	width: 100%;
@@ -364,7 +364,7 @@
 	min-width: 0;
 }
 
-.advancedStatsAccordion {
+.detailedStatsAccordion {
 	display: flex;
 	flex-direction: column;
 	gap: var(--spacing-2);
@@ -373,7 +373,7 @@
 	border-top: 0.0625rem solid var(--background-modifier-accent);
 }
 
-.advancedStatsButton {
+.detailedStatsButton {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
@@ -389,11 +389,11 @@
 }
 
 :global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
-	.advancedStatsButton:hover {
+	.detailedStatsButton:hover {
 	color: var(--text-secondary);
 }
 
-.advancedStatsButtonText {
+.detailedStatsButtonText {
 	min-width: 0;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -405,7 +405,7 @@
 	color: inherit;
 }
 
-.advancedStatsCaret {
+.detailedStatsCaret {
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -413,12 +413,12 @@
 	color: inherit;
 }
 
-.advancedStatsContent {
+.detailedStatsContent {
 	min-width: 0;
 	overflow: hidden;
 }
 
-.advancedStatsInner {
+.detailedStatsInner {
 	display: flex;
 	flex-direction: column;
 	gap: var(--spacing-3);

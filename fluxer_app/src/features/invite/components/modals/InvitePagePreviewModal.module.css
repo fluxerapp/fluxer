@@ -28,7 +28,7 @@
 
 .previewPillContainer {
 	position: absolute;
-	top: calc(1rem + env(safe-area-inset-top, 0));
+	top: calc(1rem + env(safe-area-inset-top, 0px));
 	left: 50%;
 	transform: translateX(-50%);
 	z-index: 20;
@@ -92,7 +92,7 @@
 
 .alignmentControlsContainer {
 	position: absolute;
-	bottom: calc(1.5rem + env(safe-area-inset-bottom, 0));
+	bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
 	left: 50%;
 	transform: translateX(-50%);
 	z-index: 20;

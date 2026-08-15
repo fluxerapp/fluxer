@@ -35,6 +35,7 @@ import {
 	findViewerItemIndex,
 } from '@app/features/messaging/utils/MediaViewerItemUtils';
 import {useSpoilerState} from '@app/features/messaging/utils/SpoilerUtils';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import styles from '@app/features/theme/styles/AttachmentGridItem.module.css';
 import type {MediaType} from '@app/features/ui/action_menu/items/MediaMenuData';
 import {MediaContextMenu} from '@app/features/ui/action_menu/MediaContextMenu';
@@ -447,7 +448,7 @@ export const AttachmentGridItem: FC<AttachmentGridItemProps> = observer(
 									data-flx="channel.embeds.attachments.attachment-grid-item.play-button"
 								>
 									<PlayIcon
-										size={28}
+										size={remFromPx(28)}
 										weight="fill"
 										aria-hidden="true"
 										data-flx="channel.embeds.attachments.attachment-grid-item.play-icon"

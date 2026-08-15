@@ -21,6 +21,7 @@ import {
 	INCOMING_FRIEND_REQUEST_STATUS_DESCRIPTOR,
 	OUTGOING_FRIEND_REQUEST_STATUS_DESCRIPTOR,
 } from '@app/features/relationship/utils/RelationshipMessageDescriptors';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {StartVideoCallMenuItem, StartVoiceCallMenuItem} from '@app/features/ui/action_menu/items/CallMenuItems';
 import {RemoveFriendMenuItem} from '@app/features/ui/action_menu/items/RelationshipMenuItems';
 import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
@@ -283,7 +284,7 @@ export const FriendListItem: React.FC<FriendListItemProps> = observer((props) =>
 						icon: (
 							<CheckIcon
 								weight="bold"
-								size={20}
+								size={remFromPx(20)}
 								data-flx="channel.friends.friend-list-item.get-friend-actions.check-icon"
 							/>
 						),
@@ -293,7 +294,11 @@ export const FriendListItem: React.FC<FriendListItemProps> = observer((props) =>
 					},
 					{
 						icon: (
-							<XIcon weight="bold" size={20} data-flx="channel.friends.friend-list-item.get-friend-actions.x-icon" />
+							<XIcon
+								weight="bold"
+								size={remFromPx(20)}
+								data-flx="channel.friends.friend-list-item.get-friend-actions.x-icon"
+							/>
 						),
 						tooltip: i18n._(IGNORE_FRIEND_REQUEST_ACTION_DESCRIPTOR),
 						onClick: ignoreIncomingFriendRequest,
@@ -304,7 +309,11 @@ export const FriendListItem: React.FC<FriendListItemProps> = observer((props) =>
 				return [
 					{
 						icon: (
-							<XIcon weight="bold" size={20} data-flx="channel.friends.friend-list-item.get-friend-actions.x-icon--2" />
+							<XIcon
+								weight="bold"
+								size={remFromPx(20)}
+								data-flx="channel.friends.friend-list-item.get-friend-actions.x-icon--2"
+							/>
 						),
 						tooltip: i18n._(CANCEL_DESCRIPTOR),
 						onClick: cancelOutgoingFriendRequest,

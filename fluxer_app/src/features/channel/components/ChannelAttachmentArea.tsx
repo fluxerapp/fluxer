@@ -19,8 +19,9 @@ import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
 import * as MediaViewerCommands from '@app/features/ui/commands/MediaViewerCommands';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
-import {Scroller} from '@app/features/ui/components/Scroller';
+import {Scroller, type ScrollerHandle} from '@app/features/ui/components/Scroller';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
+import {useDragAutoScroll} from '@app/features/ui/hooks/useDragAutoScroll';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import {MessageAttachmentFlags} from '@fluxer/constants/src/ChannelConstants';
@@ -592,6 +593,13 @@ export const ChannelAttachmentArea = observer(({channelId}: {channelId: string})
 	const forceJumpFrameRef = useRef<number | null>(null);
 	const channelIdRef = useRef(channelId);
 	const [isDragging, setIsDragging] = useState(false);
+	const scrollerRef = useRef<ScrollerHandle>(null);
+	const getScrollElement = useCallback(() => {
+		const scroller = scrollerRef.current;
+		if (scroller == null) return null;
+		return scroller.getScrollerNode();
+	}, []);
+	useDragAutoScroll({active: isDragging, axis: 'horizontal', getScrollElement});
 	channelIdRef.current = channelId;
 	const handleAttachmentDrop = useCallback(
 		(item: AttachmentDragItem, result: AttachmentDropResult) => {
@@ -683,6 +691,7 @@ export const ChannelAttachmentArea = observer(({channelId}: {channelId: string})
 	return (
 		<>
 			<Scroller
+				ref={scrollerRef}
 				key="channel-attachment-scroller"
 				orientation="horizontal"
 				fade={false}

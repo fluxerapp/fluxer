@@ -3,7 +3,6 @@ members = [
 	"fluxer_admin",
 	"fluxer_app_proxy",
 	"fluxer_common",
-	"fluxer_marketing",
 	"fluxer_media_proxy",
 	"fluxer_gifs",
 	"fluxer_svc",
@@ -13,12 +12,12 @@ members = [
 	"tools/content/update-frozen-snapshot",
 	"tools/dev",
 	"tools/i18n_auto",
-	"tools/marketing/update-gettext-catalogs",
 	"fluxer_users",
 	"fluxer_unfurl",
 	"packages/markdown_parser/rust",
 ]
 exclude = [
+	"fluxer_marketing",
 	"packages/markdown_parser/rust/fuzz",
 	"fluxer_desktop/native/webrtc-sender/vendor/tract-linalg-0.19.16",
 	"fluxer_desktop/native/webrtc-sender/vendor/tract-linalg-0.23.1",

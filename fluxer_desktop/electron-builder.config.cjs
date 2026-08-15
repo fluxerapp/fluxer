@@ -12,9 +12,6 @@ const appId = isCanary ? 'app.fluxer.canary' : 'app.fluxer';
 const iconDir = isCanary ? 'icons-canary' : 'icons-stable';
 const packageName = isCanary ? 'fluxer_desktop_canary' : 'fluxer_desktop';
 const linuxPackageName = isCanary ? 'fluxer-canary' : 'fluxer';
-const desktopBuildVariant = process.env.FLUXER_DESKTOP_BUILD_VARIANT || process.env.DESKTOP_VARIANT || 'default';
-const windowsGameCaptureModuleEnabled =
-	desktopBuildVariant === 'windows-game-capture' || process.env.FLUXER_WINDOWS_GAME_CAPTURE_MODULE_ENABLED === 'true';
 const linuxDesktopActionIds = ['open-settings', 'new-dm'];
 const linuxDesktopActionList = `${linuxDesktopActionIds.join(';')};`;
 const rpmBuildIdFilePrefix = '/usr/lib/.build-id';
@@ -34,15 +31,22 @@ const provisioningProfile = isCanary
 	? 'build_resources/profiles/Fluxer_Canary.provisionprofile'
 	: 'build_resources/profiles/Fluxer.provisionprofile';
 const supportedTargetArchs = ['x64', 'arm64'];
+const supportedMacTargetArchs = [...supportedTargetArchs, 'universal'];
 const electronArch = process.env.ELECTRON_ARCH;
-const cliTargetArch = supportedTargetArchs.find((arch) => process.argv.includes(`--${arch}`)) || null;
+const cliTargetArch = supportedMacTargetArchs.find((arch) => process.argv.includes(`--${arch}`)) || null;
 const targetNativeArch = electronArch || cliTargetArch;
 
-if (electronArch && !supportedTargetArchs.includes(electronArch)) {
+if (electronArch && !supportedMacTargetArchs.includes(electronArch)) {
 	throw new Error(`Unsupported ELECTRON_ARCH: ${electronArch}`);
 }
 
-const targetArchs = electronArch ? [electronArch] : supportedTargetArchs;
+if (targetNativeArch === 'universal' && targetPlatform !== 'darwin') {
+	throw new Error(`ELECTRON_ARCH=universal is only supported for macOS builds, received platform ${targetPlatform}`);
+}
+
+const targetArchs =
+	electronArch && electronArch !== 'universal' ? [electronArch] : supportedTargetArchs;
+const macTargetArchs = targetNativeArch ? [targetNativeArch] : supportedTargetArchs;
 const winTargets = [
 	{
 		target: 'dir',
@@ -57,7 +61,7 @@ const fluxerNativePackages = [
 	'@fluxer/mac-tcc',
 	'@fluxer/macos-input-hook',
 	'@fluxer/win-process-loopback',
-	...(windowsGameCaptureModuleEnabled ? ['@fluxer/win-game-capture'] : []),
+	'@fluxer/win-game-capture',
 	'@fluxer/win-clipboard',
 	'@fluxer/win-shell',
 	'@fluxer/win-toast',
@@ -87,7 +91,7 @@ const fluxerNativePackagesByPlatform = {
 	],
 	win32: [
 		'@fluxer/win-process-loopback',
-		...(windowsGameCaptureModuleEnabled ? ['@fluxer/win-game-capture'] : []),
+		'@fluxer/win-game-capture',
 		'@fluxer/win-clipboard',
 		'@fluxer/win-shell',
 		'@fluxer/win-toast',
@@ -143,18 +147,14 @@ const nativeRuntimeFilePatterns = [
 	'node_modules/@fluxer/win-process-loopback/binding.js',
 	'node_modules/@fluxer/win-process-loopback/loader-diagnostics.cjs',
 	'node_modules/@fluxer/win-process-loopback/*.node',
-	...(windowsGameCaptureModuleEnabled
-		? [
-				'node_modules/@fluxer/win-game-capture/package.json',
-				'node_modules/@fluxer/win-game-capture/index.js',
-				'node_modules/@fluxer/win-game-capture/loader-diagnostics.cjs',
-				'node_modules/@fluxer/win-game-capture/*.node',
-				'node_modules/@fluxer/win-game-capture/*.dll',
-				'node_modules/@fluxer/win-game-capture/*.exe',
-				'node_modules/@fluxer/win-game-capture/compatibility.json',
-				'node_modules/@fluxer/win-game-capture/fluxer-vulkan-layer.*.json',
-			]
-		: []),
+	'node_modules/@fluxer/win-game-capture/package.json',
+	'node_modules/@fluxer/win-game-capture/index.js',
+	'node_modules/@fluxer/win-game-capture/loader-diagnostics.cjs',
+	'node_modules/@fluxer/win-game-capture/*.node',
+	'node_modules/@fluxer/win-game-capture/*.dll',
+	'node_modules/@fluxer/win-game-capture/*.exe',
+	'node_modules/@fluxer/win-game-capture/compatibility.json',
+	'node_modules/@fluxer/win-game-capture/fluxer-vulkan-layer.*.json',
 	'node_modules/@fluxer/win-clipboard/package.json',
 	'node_modules/@fluxer/win-clipboard/index.js',
 	'node_modules/@fluxer/win-clipboard/loader-diagnostics.cjs',
@@ -207,11 +207,13 @@ const nativeRuntimeFilePatterns = [
 	'node_modules/@fluxer/linux-input-hook/*.node',
 	'node_modules/@fluxer/platform-info/package.json',
 	'node_modules/@fluxer/platform-info/index.js',
+	'node_modules/@fluxer/platform-info/pure.cjs',
 	'node_modules/@fluxer/platform-info/loader-diagnostics.cjs',
 	'node_modules/@fluxer/platform-info/*.node',
 	'node_modules/@fluxer/webauthn/package.json',
 	'node_modules/@fluxer/webauthn/index.js',
 	'node_modules/@fluxer/webauthn/index.d.ts',
+	'node_modules/@fluxer/webauthn/pure.cjs',
 	'node_modules/@fluxer/webauthn/loader-diagnostics.cjs',
 	'node_modules/@fluxer/webauthn/*.node',
 	'node_modules/@fluxer/webauthn/*.so*',
@@ -220,16 +222,13 @@ const nativeRuntimeFilePatterns = [
 	'node_modules/@fluxer/webrtc-sender/index.d.ts',
 	'node_modules/@fluxer/webrtc-sender/*.node',
 	'node_modules/.pnpm/@fluxer+*/node_modules/@fluxer/*/loader-diagnostics.cjs',
+	'node_modules/.pnpm/@fluxer+*/node_modules/@fluxer/*/pure.cjs',
 	'node_modules/.pnpm/@fluxer+win-process-loopback@*/node_modules/@fluxer/win-process-loopback/*.node',
-	...(windowsGameCaptureModuleEnabled
-		? [
-				'node_modules/.pnpm/@fluxer+win-game-capture@*/node_modules/@fluxer/win-game-capture/*.node',
-				'node_modules/.pnpm/@fluxer+win-game-capture@*/node_modules/@fluxer/win-game-capture/*.dll',
-				'node_modules/.pnpm/@fluxer+win-game-capture@*/node_modules/@fluxer/win-game-capture/*.exe',
-				'node_modules/.pnpm/@fluxer+win-game-capture@*/node_modules/@fluxer/win-game-capture/compatibility.json',
-				'node_modules/.pnpm/@fluxer+win-game-capture@*/node_modules/@fluxer/win-game-capture/fluxer-vulkan-layer.*.json',
-			]
-		: []),
+	'node_modules/.pnpm/@fluxer+win-game-capture@*/node_modules/@fluxer/win-game-capture/*.node',
+	'node_modules/.pnpm/@fluxer+win-game-capture@*/node_modules/@fluxer/win-game-capture/*.dll',
+	'node_modules/.pnpm/@fluxer+win-game-capture@*/node_modules/@fluxer/win-game-capture/*.exe',
+	'node_modules/.pnpm/@fluxer+win-game-capture@*/node_modules/@fluxer/win-game-capture/compatibility.json',
+	'node_modules/.pnpm/@fluxer+win-game-capture@*/node_modules/@fluxer/win-game-capture/fluxer-vulkan-layer.*.json',
 	'node_modules/.pnpm/@fluxer+win-clipboard@*/node_modules/@fluxer/win-clipboard/*.node',
 	'node_modules/.pnpm/@fluxer+win-shell@*/node_modules/@fluxer/win-shell/*.node',
 	'node_modules/.pnpm/@fluxer+win-toast@*/node_modules/@fluxer/win-toast/*.node',
@@ -308,9 +307,6 @@ const bundledDependencyExcludes = [
 	'!node_modules/xml2js/**/*',
 	'!node_modules/xmlbuilder/**/*',
 ];
-const windowsGameCapturePackageExcludes = !windowsGameCaptureModuleEnabled
-	? ['!node_modules/@fluxer/win-game-capture/**/*', '!node_modules/.pnpm/@fluxer+win-game-capture@*/**/*']
-	: [];
 const platformNativeRuntimeExcludes = platformNativeExcludes(targetPlatform, targetNativeArch);
 const platformRuntimeDependencyExcludes =
 	targetPlatform === 'darwin'
@@ -352,19 +348,32 @@ function velopackNativeFile(platform, arch) {
 	return null;
 }
 
+function pnpmStoreDirName(packageName) {
+	return packageName.replace('/', '+');
+}
+
 function platformNativeExcludes(platform, arch) {
-	if (!arch) return [];
 	const keepFluxerPackages = new Set(fluxerNativePackagesByPlatform[platform] ?? []);
+	const fluxerPackageExcludes = fluxerNativePackages
+		.filter((packageName) => !keepFluxerPackages.has(packageName))
+		.flatMap((packageName) => [
+			`!node_modules/${packageName}/**/*`,
+			`!node_modules/.pnpm/${pnpmStoreDirName(packageName)}@*/**/*`,
+		]);
+	if (platform !== 'win32') {
+		return [...fluxerPackageExcludes, '!node_modules/velopack/**/*'];
+	}
 	const keepVelopackNativeFile = velopackNativeFile(platform, arch);
+	if (!keepVelopackNativeFile) {
+		throw new Error(
+			`Cannot determine the Velopack native module for win32 without a target architecture; set ELECTRON_ARCH or pass --x64/--arm64 (received ${JSON.stringify(arch)})`,
+		);
+	}
 	return [
-		...fluxerNativePackages
-			.filter((packageName) => !keepFluxerPackages.has(packageName))
-			.map((packageName) => `!node_modules/${packageName}/**/*`),
-		...(platform === 'win32'
-			? velopackNativeFiles
-					.filter((fileName) => fileName !== keepVelopackNativeFile)
-					.map((fileName) => `!node_modules/velopack/lib/native/${fileName}`)
-			: ['!node_modules/velopack/**/*']),
+		...fluxerPackageExcludes,
+		...velopackNativeFiles
+			.filter((fileName) => fileName !== keepVelopackNativeFile)
+			.map((fileName) => `!node_modules/velopack/lib/native/${fileName}`),
 	];
 }
 
@@ -380,8 +389,10 @@ function normalizeArch(arch) {
 	if (arch === 'x64' || arch === 'arm64') {
 		return arch;
 	}
+	if (arch === 'universal') return 'universal';
 	if (arch === 1) return 'x64';
 	if (arch === 3) return 'arm64';
+	if (arch === 4) return 'universal';
 	return electronArch || process.arch;
 }
 
@@ -393,7 +404,6 @@ function platformTag(platform, arch) {
 }
 
 function addWindowsGameCaptureArtifacts(artifacts, tag, arch) {
-	if (!windowsGameCaptureModuleEnabled) return;
 	const add = (relativePath) => {
 		artifacts.push({
 			packageName: '@fluxer/win-game-capture',
@@ -412,6 +422,16 @@ function addWindowsGameCaptureArtifacts(artifacts, tag, arch) {
 }
 
 function expectedNativeRuntimeArtifacts(platform, arch) {
+	if (platform === 'darwin' && arch === 'universal') {
+		return [
+			...expectedNativeRuntimeArtifactsForArch(platform, 'arm64'),
+			...expectedNativeRuntimeArtifactsForArch(platform, 'x64'),
+		];
+	}
+	return expectedNativeRuntimeArtifactsForArch(platform, arch);
+}
+
+function expectedNativeRuntimeArtifactsForArch(platform, arch) {
 	const tag = platformTag(platform, arch);
 	if (!tag) return [];
 	const artifacts = [];
@@ -582,6 +602,12 @@ async function fileExists(filePath) {
 		});
 }
 
+function darwinMachOArchFromLabel(label) {
+	if (label.includes('darwin-arm64')) return 'arm64';
+	if (label.includes('darwin-x64')) return 'x86_64';
+	return null;
+}
+
 function expectedDarwinMachOArch(arch) {
 	if (arch === 'x64') return 'x86_64';
 	if (arch === 'arm64') return 'arm64';
@@ -612,17 +638,20 @@ async function darwinMachOLoadCommands(filePath) {
 
 async function verifyDarwinNativeArchitectures(platform, arch, entries, stage) {
 	if (platform !== 'darwin') return;
+	const isUniversal = arch === 'universal';
 	const expectedArch = expectedDarwinMachOArch(arch);
-	if (!expectedArch) return;
+	if (!expectedArch && !isUniversal) return;
 	const mismatches = [];
 	for (const entry of entries) {
 		if (!(await fileExists(entry.path))) continue;
+		const entryExpectedArch = isUniversal ? darwinMachOArchFromLabel(entry.label) : expectedArch;
+		if (!entryExpectedArch) continue;
 		const archs = await darwinMachOArchitectures(entry.path);
 		const fileTypes = await darwinMachOFileTypes(entry.path);
-		if (!archs.includes(expectedArch)) {
-			mismatches.push(`${entry.label}: has ${archs.join(', ') || '<none>'}; expected ${expectedArch}`);
+		if (!archs.includes(entryExpectedArch)) {
+			mismatches.push(`${entry.label}: has ${archs.join(', ') || '<none>'}; expected ${entryExpectedArch}`);
 		}
-		if (arch === 'x64' && archs.includes('x86_64h') && !archs.includes('x86_64')) {
+		if (entryExpectedArch === 'x86_64' && archs.includes('x86_64h') && !archs.includes('x86_64')) {
 			mismatches.push(`${entry.label}: has x86_64h only; expected baseline x86_64 for Intel compatibility`);
 		}
 		if (fileTypes.length === 0 || fileTypes.some((fileType) => fileType !== 'BUNDLE' && fileType !== 'DYLIB')) {
@@ -1066,14 +1095,13 @@ module.exports = {
 		...nativeBuildArtifactExcludes,
 		...packagedRuntimeArtifactExcludes,
 		...bundledDependencyExcludes,
-		...windowsGameCapturePackageExcludes,
 		...platformNativeRuntimeExcludes,
 		...platformRuntimeDependencyExcludes,
 	],
 	extraMetadata: {
 		main: 'dist/main/index.js',
 		name: metadataName,
-		...(Boolean(process.env.VERSION) ? {version: process.env.VERSION} : {}),
+		...(process.env.VERSION ? {version: process.env.VERSION} : {}),
 		...(targetPlatform === 'linux' ? {desktopName: `${linuxPackageName}.desktop`} : {}),
 	},
 	extraResources: [
@@ -1107,14 +1135,10 @@ module.exports = {
 	asarUnpack: [
 		'**/*.node',
 		'node_modules/@fluxer/win-process-loopback/*.node',
-		...(windowsGameCaptureModuleEnabled
-			? [
-					'node_modules/@fluxer/win-game-capture/*.node',
-					'node_modules/@fluxer/win-game-capture/*.dll',
-					'node_modules/@fluxer/win-game-capture/*.exe',
-					'node_modules/@fluxer/win-game-capture/*.json',
-				]
-			: []),
+		'node_modules/@fluxer/win-game-capture/*.node',
+		'node_modules/@fluxer/win-game-capture/*.dll',
+		'node_modules/@fluxer/win-game-capture/*.exe',
+		'node_modules/@fluxer/win-game-capture/*.json',
 		'node_modules/@fluxer/win-clipboard/*.node',
 		'node_modules/@fluxer/win-shell/*.node',
 		'node_modules/@fluxer/win-toast/*.node',
@@ -1137,14 +1161,10 @@ module.exports = {
 		'node_modules/@fluxer/webauthn/*.node',
 		'node_modules/@fluxer/webauthn/*.so*',
 		'node_modules/.pnpm/@fluxer+win-process-loopback@*/node_modules/@fluxer/win-process-loopback/*.node',
-		...(windowsGameCaptureModuleEnabled
-			? [
-					'node_modules/.pnpm/@fluxer+win-game-capture@*/node_modules/@fluxer/win-game-capture/*.node',
-					'node_modules/.pnpm/@fluxer+win-game-capture@*/node_modules/@fluxer/win-game-capture/*.dll',
-					'node_modules/.pnpm/@fluxer+win-game-capture@*/node_modules/@fluxer/win-game-capture/*.exe',
-					'node_modules/.pnpm/@fluxer+win-game-capture@*/node_modules/@fluxer/win-game-capture/*.json',
-				]
-			: []),
+		'node_modules/.pnpm/@fluxer+win-game-capture@*/node_modules/@fluxer/win-game-capture/*.node',
+		'node_modules/.pnpm/@fluxer+win-game-capture@*/node_modules/@fluxer/win-game-capture/*.dll',
+		'node_modules/.pnpm/@fluxer+win-game-capture@*/node_modules/@fluxer/win-game-capture/*.exe',
+		'node_modules/.pnpm/@fluxer+win-game-capture@*/node_modules/@fluxer/win-game-capture/*.json',
 		'node_modules/.pnpm/@fluxer+win-clipboard@*/node_modules/@fluxer/win-clipboard/*.node',
 		'node_modules/.pnpm/@fluxer+win-shell@*/node_modules/@fluxer/win-shell/*.node',
 		'node_modules/.pnpm/@fluxer+win-toast@*/node_modules/@fluxer/win-toast/*.node',
@@ -1184,6 +1204,7 @@ module.exports = {
 	},
 	mac: {
 		category: 'public.app-category.social-networking',
+		x64ArchFiles: '**/@fluxer/**/*.node',
 		minimumSystemVersion: macOSMinimumSystemVersion,
 		icon: `build_resources/${iconDir}/_compiled/AppIcon.icns`,
 		darkModeSupport: true,
@@ -1198,11 +1219,11 @@ module.exports = {
 		target: [
 			{
 				target: 'dmg',
-				arch: targetArchs,
+				arch: macTargetArchs,
 			},
 			{
 				target: 'zip',
-				arch: targetArchs,
+				arch: macTargetArchs,
 			},
 		],
 		extendInfo: {

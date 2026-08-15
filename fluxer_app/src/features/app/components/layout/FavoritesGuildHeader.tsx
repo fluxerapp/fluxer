@@ -6,6 +6,7 @@ import styles from '@app/features/app/components/layout/FavoritesGuildHeader.mod
 import guildHeaderStyles from '@app/features/app/components/layout/GuildHeader.module.css';
 import {GuildHeaderShell} from '@app/features/app/components/layout/GuildHeaderShell';
 import {FAVORITES_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {FavoritesGuildContextMenu} from '@app/features/ui/action_menu/FavoritesGuildContextMenu';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
@@ -43,7 +44,7 @@ export const FavoritesGuildHeader = observer(() => {
 				guildHeaderStyles.headerContainerNoBanner,
 				isOpen && guildHeaderStyles.headerContainerActive,
 			)}
-			style={{height: 56}}
+			style={{height: remFromPx(56)}}
 			data-flx="app.favorites-guild-header.div"
 		>
 			<GuildHeaderShell

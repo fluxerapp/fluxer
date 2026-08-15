@@ -1,6 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {type ClassValue, clsx} from 'clsx';
 import type React from 'react';
+
+export const FLX_ELEMENT_CLASS_NAME = 'flx-element';
+
+export function flxElementClassName(...values: Array<ClassValue>): string {
+	return clsx(FLX_ELEMENT_CLASS_NAME, ...values);
+}
 
 const FORWARD_REF_TYPE = Symbol.for('react.forward_ref');
 const MEMO_TYPE = Symbol.for('react.memo');

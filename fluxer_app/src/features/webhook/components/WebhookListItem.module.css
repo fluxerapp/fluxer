@@ -12,7 +12,7 @@
 	align-items: center;
 	justify-content: space-between;
 	width: 100%;
-	min-height: var(--input-container-min-height);
+	min-height: var(--list-row-min-height);
 	padding: 0 var(--input-container-padding);
 	background: transparent;
 	border: none;

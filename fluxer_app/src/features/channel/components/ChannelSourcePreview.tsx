@@ -10,6 +10,7 @@ import {GuildIcon} from '@app/features/guild/components/popouts/GuildIcon';
 import Guilds from '@app/features/guild/state/Guilds';
 import {DIRECT_MESSAGE_DESCRIPTOR, PERSONAL_NOTES_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {Link} from '@app/features/platform/components/router/RouterReact';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {MentionBadge} from '@app/features/ui/components/MentionBadge';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import Users from '@app/features/user/state/Users';
@@ -79,7 +80,7 @@ function renderAvatarImage(props: {url: string; label: string; size: number}): R
 	return (
 		<div
 			className={styles.avatar}
-			style={{width: size, height: size, backgroundImage: `url(${url})`}}
+			style={{width: remFromPx(size), height: remFromPx(size), backgroundImage: `url(${url})`}}
 			role="img"
 			aria-label={label}
 			data-flx="channel.channel-source-preview.render-avatar-image.avatar"
@@ -97,7 +98,7 @@ function renderAvatarFallback(props: {
 	return (
 		<div
 			className={styles.avatar}
-			style={{width: size, height: size, backgroundColor: background}}
+			style={{width: remFromPx(size), height: remFromPx(size), backgroundColor: background}}
 			role="img"
 			aria-label={label}
 			data-flx="channel.channel-source-preview.render-avatar-fallback.avatar"

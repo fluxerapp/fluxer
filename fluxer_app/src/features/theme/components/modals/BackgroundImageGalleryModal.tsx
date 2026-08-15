@@ -19,6 +19,7 @@ import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as PremiumModalCommands from '@app/features/premium/commands/PremiumModalCommands';
 import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import styles from '@app/features/theme/components/modals/BackgroundImageGalleryModal.module.css';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import * as BackgroundImageDB from '@app/features/theme/utils/BackgroundImageDB';
 import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
 import {Button} from '@app/features/ui/button/Button';
@@ -297,7 +298,7 @@ const BackgroundItem: React.FC<BackgroundItemProps> = React.memo(
 						>
 							{Icon && (
 								<Icon
-									size={24}
+									size={remFromPx(24)}
 									weight={isSelected ? 'fill' : 'regular'}
 									className={styles.backgroundItemIcon}
 									data-flx="theme.background-image-gallery-modal.background-item.background-item-icon"
@@ -334,7 +335,7 @@ const BackgroundItem: React.FC<BackgroundItemProps> = React.memo(
 								data-flx="theme.background-image-gallery-modal.background-item.error-container"
 							>
 								<WarningCircleIcon
-									size={24}
+									size={remFromPx(24)}
 									weight="fill"
 									className={styles.errorIcon}
 									data-flx="theme.background-image-gallery-modal.background-item.error-icon"
@@ -395,7 +396,7 @@ const BackgroundItem: React.FC<BackgroundItemProps> = React.memo(
 										data-flx="theme.background-image-gallery-modal.background-item.delete-button"
 									>
 										<TrashIcon
-											size={16}
+											size={remFromPx(16)}
 											weight="bold"
 											className={styles.deleteButtonIcon}
 											data-flx="theme.background-image-gallery-modal.background-item.delete-button-icon"
@@ -412,7 +413,7 @@ const BackgroundItem: React.FC<BackgroundItemProps> = React.memo(
 						data-flx="theme.background-image-gallery-modal.background-item.selected-badge"
 					>
 						<CheckIcon
-							size={16}
+							size={remFromPx(16)}
 							weight="bold"
 							className={styles.selectedIcon}
 							data-flx="theme.background-image-gallery-modal.background-item.selected-icon"
@@ -757,7 +758,7 @@ const BackgroundImageGalleryModal: React.FC = observer(() => {
 						<div className={styles.dragOverlay} data-flx="theme.background-image-gallery-modal.drag-overlay">
 							<div className={styles.dragContent} data-flx="theme.background-image-gallery-modal.drag-content">
 								<PlusIcon
-									size={48}
+									size={remFromPx(48)}
 									weight="bold"
 									className={styles.dragIcon}
 									data-flx="theme.background-image-gallery-modal.drag-icon"
@@ -803,7 +804,7 @@ const BackgroundImageGalleryModal: React.FC = observer(() => {
 													data-flx="theme.background-image-gallery-modal.action-button.stop-propagation"
 												>
 													<ArrowsClockwiseIcon
-														size={16}
+														size={remFromPx(16)}
 														weight="bold"
 														className={styles.actionButtonIcon}
 														data-flx="theme.background-image-gallery-modal.action-button-icon"
@@ -827,7 +828,7 @@ const BackgroundImageGalleryModal: React.FC = observer(() => {
 													data-flx="theme.background-image-gallery-modal.action-button.pick-gif-click"
 												>
 													<GifIcon
-														size={16}
+														size={remFromPx(16)}
 														weight="bold"
 														className={styles.actionButtonIcon}
 														data-flx="theme.background-image-gallery-modal.action-button-icon--gif"
@@ -851,7 +852,7 @@ const BackgroundImageGalleryModal: React.FC = observer(() => {
 													data-flx="theme.background-image-gallery-modal.action-button.stop-propagation--2"
 												>
 													<TrashIcon
-														size={16}
+														size={remFromPx(16)}
 														weight="bold"
 														className={styles.actionButtonIcon}
 														data-flx="theme.background-image-gallery-modal.action-button-icon--2"
@@ -881,7 +882,7 @@ const BackgroundImageGalleryModal: React.FC = observer(() => {
 										data-flx="theme.background-image-gallery-modal.upload-placeholder-content"
 									>
 										<PlusIcon
-											size={48}
+											size={remFromPx(48)}
 											weight="regular"
 											className={styles.uploadIcon}
 											data-flx="theme.background-image-gallery-modal.upload-icon"
@@ -963,7 +964,7 @@ const BackgroundImageGalleryModal: React.FC = observer(() => {
 							<div className={styles.premiumHeader} data-flx="theme.background-image-gallery-modal.premium-header">
 								<CrownIcon
 									weight="fill"
-									size={18}
+									size={remFromPx(18)}
 									className={styles.premiumIcon}
 									data-flx="theme.background-image-gallery-modal.premium-icon"
 								/>

@@ -37,10 +37,9 @@
 .dismissButton {
 	background: none;
 	border: none;
-	color: inherit;
+	color: color-mix(in srgb, currentcolor 80%, transparent);
 	font: inherit;
 	font-weight: 600;
 	padding: 0.5rem 1rem;
 	cursor: pointer;
-	opacity: 0.8;
 }

@@ -1,49 +1,78 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Limits} from '@app/features/app/utils/UserLimits';
-import {Autocomplete} from '@app/features/channel/components/Autocomplete';
 import editingStyles from '@app/features/channel/components/EditingMessageInput.module.css';
 import {MessageCharacterCounter} from '@app/features/channel/components/MessageCharacterCounter';
 import wrapperStyles from '@app/features/channel/components/textarea/InputWrapper.module.css';
 import {TextareaButton} from '@app/features/channel/components/textarea/TextareaButton';
 import styles from '@app/features/channel/components/textarea/TextareaInput.module.css';
-import {TextareaInputField} from '@app/features/channel/components/textarea/TextareaInputField';
 import type {Channel} from '@app/features/channel/models/Channel';
+import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
 import {ExpressionPickerSheet} from '@app/features/expressions/components/modals/ExpressionPickerSheet';
 import {ExpressionPickerPopout} from '@app/features/expressions/components/popouts/ExpressionPickerPopout';
 import GuildVerification, {VerificationFailureReason} from '@app/features/guild/state/GuildVerification';
 import {
 	CANNOT_SEND_MESSAGES_IN_CHANNEL_DESCRIPTOR,
+	EDIT_MESSAGE_DESCRIPTOR,
 	EMOJIS_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
-import {useMarkdownFormattingShortcut, useMarkdownKeybinds} from '@app/features/messaging/hooks/useMarkdownKeybinds';
-import {useTextareaAutocomplete} from '@app/features/messaging/hooks/useTextareaAutocomplete';
-import {useTextareaEmojiPicker} from '@app/features/messaging/hooks/useTextareaEmojiPicker';
-import {useTextareaPaste} from '@app/features/messaging/hooks/useTextareaPaste';
-import {useTextareaSegments} from '@app/features/messaging/hooks/useTextareaSegments';
+import Keybind from '@app/features/input/state/InputKeybind';
+import {LexicalRichInput, type LexicalRichInputHandle} from '@app/features/lexical/composer/LexicalRichInput';
+import {doesEventMatchShortcut, useMarkdownKeybinds} from '@app/features/messaging/hooks/useMarkdownKeybinds';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import MessageEdit from '@app/features/messaging/state/MessageEdit';
-import TextareaSelection from '@app/features/messaging/state/TextareaSelection';
 import {applyMarkdownSegments} from '@app/features/messaging/utils/MarkdownToSegmentUtils';
-import {
-	captureTextareaSelection,
-	focusTextareaWithSelection,
-} from '@app/features/messaging/utils/TextareaSelectionUtils';
+import type {MentionSegment} from '@app/features/messaging/utils/TextareaSegmentManager';
+import {TextareaSegmentManager} from '@app/features/messaging/utils/TextareaSegmentManager';
 import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
 import * as PopoutCommands from '@app/features/ui/commands/PopoutCommands';
-import {Scroller, type ScrollerHandle} from '@app/features/ui/components/Scroller';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {openPopout} from '@app/features/ui/popover/PopoverPopout';
 import KeyboardMode from '@app/features/ui/state/KeyboardMode';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
-import Users from '@app/features/user/state/Users';
-import {MAX_MESSAGE_LENGTH_NON_PREMIUM, MAX_MESSAGE_LENGTH_PREMIUM} from '@fluxer/constants/src/LimitConstants';
+import {MAX_MESSAGE_LENGTH_PREMIUM} from '@fluxer/constants/src/LimitConstants';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {SmileyIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {useCallback, useEffect, useId, useMemo, useRef, useState} from 'react';
+import {useCallback, useEffect, useRef, useState} from 'react';
+
+const EDITING_ALLOWED_TRIGGERS = ['emoji', 'mention', 'channel'] as const;
+
+interface EditingFocusRequest {
+	requestedChannelId: string | null;
+	enterKeyboardMode: boolean | null;
+	channelId: string;
+	messageId: string;
+	editingDisabled: boolean;
+	composer: LexicalRichInputHandle | null;
+}
+
+function focusEditingInput(request: EditingFocusRequest): boolean | null {
+	if (
+		request.requestedChannelId != null &&
+		request.requestedChannelId !== '' &&
+		request.requestedChannelId !== request.channelId
+	) {
+		return null;
+	}
+	if (request.editingDisabled) {
+		return false;
+	}
+	if (!MessageEdit.isEditing(request.channelId, request.messageId)) {
+		return false;
+	}
+	if (request.enterKeyboardMode === true) {
+		KeyboardMode.enterKeyboardMode(true);
+	} else {
+		KeyboardMode.exitKeyboardMode();
+	}
+	if (request.composer != null) {
+		request.composer.focus();
+	}
+	return true;
+}
 
 export const EditingMessageInput = observer(
 	({
@@ -58,273 +87,199 @@ export const EditingMessageInput = observer(
 		onSubmit: (actualContent?: string) => void;
 	}) => {
 		const {i18n} = useLingui();
-		const currentUser = Users.getCurrentUser();
-		const maxMessageLength = currentUser?.maxMessageLength ?? MAX_MESSAGE_LENGTH_NON_PREMIUM;
+		const maxMessageLength = Limits.getMaxMessageLength();
 		const premiumMaxLength = Limits.getPremiumValue('max_message_length', MAX_MESSAGE_LENGTH_PREMIUM);
-		const [value, setValue] = useState(() => {
-			const persistedDraft =
-				MessageEdit.getEditingContent(channel.id, message.id) ?? MessageEdit.getDraftContent(message.id);
-			return persistedDraft ?? message.content;
+		const [initial] = useState(() => {
+			let wire = MessageEdit.getEditingContent(channel.id, message.id);
+			if (wire == null) {
+				wire = MessageEdit.getDraftContent(message.id);
+			}
+			if (wire == null) {
+				wire = message.content;
+			}
+			const segments = new TextareaSegmentManager();
+			const display = applyMarkdownSegments(wire, channel.guildId, segments);
+			return {display, segments: segments.getSegmentsCopy(), wire};
 		});
-		const textareaRef = useRef<HTMLTextAreaElement>(null);
-		const [expressionPickerOpen, setExpressionPickerOpen] = useState(false);
-		const autocompleteListId = useId();
-		const hasInitializedRef = useRef(false);
+		const [actualContent, setActualContent] = useState(initial.wire);
+		const composerRef = useRef<LexicalRichInputHandle | null>(null);
 		const containerRef = useRef<HTMLDivElement>(null);
-		const scrollerRef = useRef<ScrollerHandle>(null);
-		const mobileLayout = MobileLayout;
+		const editableRef = useRef<HTMLElement | null>(null);
 		const expressionPickerTriggerRef = useRef<HTMLButtonElement>(null);
+		const [expressionPickerOpen, setExpressionPickerOpen] = useState(false);
 		const [isFocused, setIsFocused] = useState(false);
-		useMarkdownKeybinds(isFocused);
-		const [textareaHeight, setTextareaHeight] = useState(0);
-		const hasScrolledInitiallyRef = useRef(false);
-		const shouldStickToBottomRef = useRef(true);
 		const hasFocusedInitiallyRef = useRef(false);
+		const mobileLayout = MobileLayout;
+		useMarkdownKeybinds(isFocused, {preserveEditableFocusActions: false});
 		const editingDisabled =
 			channel.guildId != null &&
 			GuildVerification.getFailureReason(channel.guildId) === VerificationFailureReason.TIMED_OUT;
-		const placeholderText = editingDisabled ? i18n._(CANNOT_SEND_MESSAGES_IN_CHANNEL_DESCRIPTOR) : '';
-		const rememberTextareaSelection = useCallback(() => {
-			const textarea = textareaRef.current;
-			if (!textarea) {
+		let placeholderText = '';
+		if (editingDisabled) {
+			placeholderText = i18n._(CANNOT_SEND_MESSAGES_IN_CHANNEL_DESCRIPTOR);
+		}
+		useEffect(() => {
+			const container = containerRef.current;
+			if (container == null) {
+				editableRef.current = null;
 				return;
 			}
-			if (!MessageEdit.isEditing(channel.id, message.id)) {
+			const editable = container.querySelector<HTMLElement>('[data-channel-textarea]');
+			if (editable == null) {
+				editableRef.current = null;
 				return;
 			}
-			TextareaSelection.setEditingSelection(channel.id, message.id, captureTextareaSelection(textarea));
-		}, [channel.id, message.id]);
-		const focusEditingTextarea = useCallback(
-			(fallbackPosition?: number) => {
-				const textarea = textareaRef.current;
-				if (!textarea) {
-					return;
-				}
-				focusTextareaWithSelection(
-					textarea,
-					TextareaSelection.getEditingSelection(channel.id, message.id),
-					fallbackPosition,
-				);
+			editableRef.current = editable;
+		}, []);
+		const handleChange = useCallback(
+			(_display: string, _segments: Array<MentionSegment>, wire: string) => {
+				setActualContent(wire);
+				MessageEdit.setEditingContent(channel.id, message.id, wire);
 			},
 			[channel.id, message.id],
 		);
-		const handleScroll = useCallback(() => {
-			const distance = scrollerRef.current?.getDistanceFromBottom?.();
-			if (distance == null) return;
-			shouldStickToBottomRef.current = distance <= 8;
+		const handleEmojiSelect = useCallback((emoji: FlatEmoji) => {
+			const composer = composerRef.current;
+			if (composer != null) {
+				composer.insertEmoji(emoji);
+			}
 		}, []);
-		const {segmentManagerRef, previousValueRef, displayToActual, prepareTextChange, handleTextChange} =
-			useTextareaSegments();
-		const handleFormattingShortcut = useMarkdownFormattingShortcut({
-			textareaRef,
-			value,
-			setValue,
-			handleTextChange,
-			previousValueRef,
-		});
-		const handleTextareaKeyDown = useCallback(
-			(event: React.KeyboardEvent<HTMLTextAreaElement>) => {
-				handleFormattingShortcut(event);
+		const handleSubmit = useCallback(() => {
+			if (editingDisabled || actualContent.length > maxMessageLength) {
+				return;
+			}
+			onSubmit(actualContent);
+		}, [actualContent, editingDisabled, maxMessageLength, onSubmit]);
+		const handleKeyDown = useCallback(
+			(event: React.KeyboardEvent<HTMLElement>) => {
 				if (event.defaultPrevented) {
 					return;
 				}
-				if (event.key === 'Escape') {
+				const composer = composerRef.current;
+				const selection = composer == null ? null : composer.getSelection();
+				const hasSelectionRange = selection != null && selection.start !== selection.end;
+				const inboxCombo = Keybind.getByAction('chat_toggle_inbox').combo;
+				if (doesEventMatchShortcut(event, inboxCombo) && !hasSelectionRange && actualContent.trim().length === 0) {
+					event.preventDefault();
+					event.stopPropagation();
+					ComponentDispatch.dispatch('INBOX_OPEN');
+					return;
+				}
+				if (event.key === 'Escape' && !event.shiftKey && !event.defaultPrevented && !event.nativeEvent.isComposing) {
 					event.preventDefault();
 					event.stopPropagation();
 					onCancel();
 				}
 			},
-			[handleFormattingShortcut, onCancel],
+			[actualContent, onCancel],
 		);
-		const {handleEmojiSelect} = useTextareaEmojiPicker({
-			setValue,
-			textareaRef,
-			segmentManagerRef,
-			previousValueRef,
-			prepareTextChange,
-		});
-		const actualContent = useMemo(() => displayToActual(value), [displayToActual, value]);
-		const {
-			autocompleteQuery,
-			autocompleteOptions,
-			autocompleteType,
-			selectedIndex,
-			isAutocompleteAttached,
-			setSelectedIndex,
-			onCursorMove,
-			handleSelect,
-		} = useTextareaAutocomplete({
-			channel,
-			value,
-			setValue,
-			textareaRef,
-			segmentManagerRef,
-			previousValueRef,
-			prepareTextChange,
-			allowedTriggers: ['emoji', 'emojiReaction', 'mention', 'channel'],
-		});
-		useTextareaPaste({
-			channel,
-			textareaRef,
-			segmentManagerRef,
-			setValue,
-			previousValueRef,
-			prepareTextChange,
-			disabled: editingDisabled,
-		});
 		useEffect(() => {
-			if (editingDisabled) return;
-			const textarea = textareaRef.current;
-			if (!textarea) return;
-			const rememberActiveTextareaSelection = () => {
-				if (document.activeElement !== textarea) return;
-				rememberTextareaSelection();
-			};
-			textarea.addEventListener('blur', rememberTextareaSelection);
-			textarea.addEventListener('input', rememberActiveTextareaSelection);
-			textarea.addEventListener('keyup', rememberActiveTextareaSelection);
-			textarea.addEventListener('mouseup', rememberActiveTextareaSelection);
-			textarea.addEventListener('select', rememberActiveTextareaSelection);
-			document.addEventListener('selectionchange', rememberActiveTextareaSelection);
-			return () => {
-				rememberTextareaSelection();
-				textarea.removeEventListener('blur', rememberTextareaSelection);
-				textarea.removeEventListener('input', rememberActiveTextareaSelection);
-				textarea.removeEventListener('keyup', rememberActiveTextareaSelection);
-				textarea.removeEventListener('mouseup', rememberActiveTextareaSelection);
-				textarea.removeEventListener('select', rememberActiveTextareaSelection);
-				document.removeEventListener('selectionchange', rememberActiveTextareaSelection);
-			};
-		}, [editingDisabled, rememberTextareaSelection]);
-		useEffect(() => {
-			if (editingDisabled) {
+			if (editingDisabled || hasFocusedInitiallyRef.current) {
 				return;
 			}
-			if (hasFocusedInitiallyRef.current) {
-				textareaRef.current?.focus();
-				return;
-			}
-			if (!hasInitializedRef.current && value) {
-				hasInitializedRef.current = true;
-				const displayText = applyMarkdownSegments(value, channel.guildId, segmentManagerRef.current);
-				setValue(displayText);
-				previousValueRef.current = displayText;
-				hasFocusedInitiallyRef.current = true;
-				requestAnimationFrame(() => {
-					focusEditingTextarea(displayText.length);
-				});
-			} else {
-				hasFocusedInitiallyRef.current = true;
-				focusEditingTextarea();
-			}
-		}, [editingDisabled, value, channel.guildId, segmentManagerRef, previousValueRef, focusEditingTextarea]);
+			hasFocusedInitiallyRef.current = true;
+			requestAnimationFrame(() => {
+				const composer = composerRef.current;
+				if (composer != null) {
+					composer.focus();
+				}
+			});
+		}, [editingDisabled]);
 		useEffect(() => {
 			if (!editingDisabled) {
 				return;
 			}
-			textareaRef.current?.blur();
+			const container = containerRef.current;
+			const active = document.activeElement;
+			if (container != null && active instanceof HTMLElement && container.contains(active)) {
+				active.blur();
+			}
 			PopoutCommands.close(`editing-expression-picker-${channel.id}`);
 			setExpressionPickerOpen(false);
 		}, [channel.id, editingDisabled]);
 		useEffect(() => {
-			if (hasScrolledInitiallyRef.current) return;
-			if (!scrollerRef.current) return;
-			if (textareaHeight <= 0) return;
-			scrollerRef.current.scrollToBottom({animate: false});
-			hasScrolledInitiallyRef.current = true;
-			shouldStickToBottomRef.current = true;
-		}, [textareaHeight]);
-		useEffect(() => {
-			if (hasInitializedRef.current) {
-				MessageEdit.setEditingContent(channel.id, message.id, actualContent);
-			}
-		}, [channel.id, message.id, actualContent]);
-		useEffect(() => {
 			const unsubscribe = ComponentDispatch.subscribe('FOCUS_TEXTAREA', (payload?: unknown) => {
-				const {channelId, enterKeyboardMode} = (payload ?? {}) as {channelId?: string; enterKeyboardMode?: boolean};
-				if (channelId && channelId !== channel.id) return;
-				if (editingDisabled) return false;
-				if (!MessageEdit.isEditing(channel.id, message.id)) return false;
-				if (enterKeyboardMode) {
-					KeyboardMode.enterKeyboardMode(true);
-				} else {
-					KeyboardMode.exitKeyboardMode();
+				const data = payload as {channelId?: string; enterKeyboardMode?: boolean} | undefined;
+				let requestedChannelId: string | null = null;
+				let enterKeyboardMode: boolean | null = null;
+				if (data != null) {
+					if (data.channelId != null) {
+						requestedChannelId = data.channelId;
+					}
+					if (data.enterKeyboardMode != null) {
+						enterKeyboardMode = data.enterKeyboardMode;
+					}
 				}
-				focusEditingTextarea();
-				return true;
+				return focusEditingInput({
+					requestedChannelId,
+					enterKeyboardMode,
+					channelId: channel.id,
+					messageId: message.id,
+					editingDisabled,
+					composer: composerRef.current,
+				});
 			});
 			return unsubscribe;
-		}, [channel.id, editingDisabled, focusEditingTextarea, message.id]);
-		const handleSubmit = useCallback(() => {
-			if (editingDisabled) {
-				return;
-			}
-			if (actualContent.length > maxMessageLength) {
-				return;
-			}
-			onSubmit(actualContent);
-		}, [actualContent, editingDisabled, onSubmit, maxMessageLength]);
+		}, [channel.id, editingDisabled, message.id]);
 		const handleExpressionPickerToggle = useCallback(() => {
 			if (editingDisabled) {
 				return;
 			}
 			const triggerElement = expressionPickerTriggerRef.current;
-			if (!triggerElement) return;
+			if (triggerElement == null) {
+				return;
+			}
 			const popoutKey = `editing-expression-picker-${channel.id}`;
-			const isOpen = expressionPickerOpen;
-			if (isOpen) {
+			if (expressionPickerOpen) {
 				PopoutCommands.close(popoutKey);
 				setExpressionPickerOpen(false);
-			} else {
-				openPopout(
-					triggerElement,
-					{
-						render: ({onClose}) => (
-							<ExpressionPickerPopout
-								channelId={channel.id}
-								onEmojiSelect={handleEmojiSelect}
-								onClose={onClose}
-								visibleTabs={['emojis']}
-								data-flx="channel.editing-message-input.handle-expression-picker-toggle.expression-picker-popout"
-							/>
-						),
-						position: 'top-end',
-						animationType: 'none',
-						offsetCrossAxis: 16,
-						onOpen: () => setExpressionPickerOpen(true),
-						onClose: () => setExpressionPickerOpen(false),
-						returnFocusRef: textareaRef,
-					},
-					popoutKey,
-				);
+				return;
 			}
-		}, [channel.id, editingDisabled, expressionPickerOpen, handleEmojiSelect, textareaRef]);
+			openPopout(
+				triggerElement,
+				{
+					render: ({onClose}) => (
+						<ExpressionPickerPopout
+							channelId={channel.id}
+							onEmojiSelect={handleEmojiSelect}
+							onClose={onClose}
+							visibleTabs={['emojis']}
+						/>
+					),
+					position: 'top-end',
+					animationType: 'none',
+					offsetCrossAxis: 16,
+					onOpen: () => setExpressionPickerOpen(true),
+					onClose: () => setExpressionPickerOpen(false),
+					returnFocusRef: editableRef,
+				},
+				popoutKey,
+			);
+		}, [channel.id, editingDisabled, expressionPickerOpen, handleEmojiSelect]);
 		useEffect(() => {
 			const unsubscribe = ComponentDispatch.subscribe('EDITING_EXPRESSION_PICKER_TAB_TOGGLE', (payload?: unknown) => {
 				const data = payload as {channelId?: string; messageId?: string; tab?: string} | undefined;
-				if (!data || data.channelId !== channel.id || data.messageId !== message.id || data.tab !== 'emojis') return;
+				if (data == null || data.channelId !== channel.id || data.messageId !== message.id || data.tab !== 'emojis') {
+					return;
+				}
 				handleExpressionPickerToggle();
 			});
 			return unsubscribe;
 		}, [channel.id, handleExpressionPickerToggle, message.id]);
-		const showAutocomplete = !editingDisabled && isAutocompleteAttached;
-		const displayValue = editingDisabled ? '' : value;
-		const displayContentLength = editingDisabled ? 0 : actualContent.length;
+		let expressionPickerButtonRef: React.Ref<HTMLButtonElement> | undefined;
+		if (!mobileLayout.enabled) {
+			expressionPickerButtonRef = expressionPickerTriggerRef;
+		}
+		let handleExpressionPickerButtonClick = handleExpressionPickerToggle;
+		if (mobileLayout.enabled) {
+			handleExpressionPickerButtonClick = () => setExpressionPickerOpen(true);
+		}
+		let displayContentLength = actualContent.length;
+		if (editingDisabled) {
+			displayContentLength = 0;
+		}
 		return (
 			<>
-				{showAutocomplete && (
-					<Autocomplete
-						type={autocompleteType}
-						onSelect={handleSelect}
-						selectedIndex={selectedIndex}
-						options={autocompleteOptions}
-						setSelectedIndex={setSelectedIndex}
-						referenceElement={containerRef.current}
-						query={autocompleteQuery}
-						listboxId={autocompleteListId}
-						data-flx="channel.editing-message-input.autocomplete.select"
-					/>
-				)}
 				<FocusRing within={true} offset={-2} data-flx="channel.editing-message-input.focus-ring">
 					<div
 						ref={containerRef}
@@ -336,66 +291,42 @@ export const EditingMessageInput = observer(
 							data-flx="channel.editing-message-input.main-wrapper-editing"
 						>
 							<div className={styles.contentAreaEditing} data-flx="channel.editing-message-input.content-area-editing">
-								<Scroller
-									ref={scrollerRef}
-									fade={true}
-									className={editingStyles.scroller}
-									key="editing-message-input-scroller"
-									onScroll={handleScroll}
-									data-flx="channel.editing-message-input.scroller"
-								>
-									<div className={editingStyles.flexColumnContainer} data-flx="channel.editing-message-input.div">
-										<span
-											key={textareaHeight}
-											className={editingStyles.hiddenSpan}
-											data-flx="channel.editing-message-input.span"
-										/>
-										<TextareaInputField
-											channelId={channel.id}
-											disabled={editingDisabled}
-											isMobile={mobileLayout.enabled}
-											value={displayValue}
-											placeholder={placeholderText}
-											textareaRef={textareaRef}
-											scrollerRef={scrollerRef}
-											shouldStickToBottomRef={shouldStickToBottomRef}
-											isFocused={isFocused}
-											isAutocompleteAttached={showAutocomplete}
-											autocompleteListId={autocompleteListId}
-											autocompleteOptions={autocompleteOptions}
-											selectedIndex={selectedIndex}
-											onFocus={() => setIsFocused(true)}
-											onBlur={() => setIsFocused(false)}
-											onChange={(newValue, inputType, hint) => {
-												handleTextChange(newValue, previousValueRef.current, inputType, hint);
-												setValue(newValue);
-											}}
-											onHeightChange={setTextareaHeight}
-											onCursorMove={onCursorMove}
-											onArrowUp={() => {}}
-											onEnter={handleSubmit}
-											onAutocompleteSelect={handleSelect}
-											setSelectedIndex={setSelectedIndex}
-											onKeyDown={handleTextareaKeyDown}
-											data-flx="channel.editing-message-input.textarea-input-field.text-change"
-										/>
-									</div>
-								</Scroller>
+								<LexicalRichInput
+									initialValue={initial.display}
+									initialSegments={initial.segments}
+									placeholder={placeholderText}
+									disabled={editingDisabled}
+									channel={channel}
+									allowedTriggers={[...EDITING_ALLOWED_TRIGGERS]}
+									markdown={true}
+									singleLine={!mobileLayout.enabled}
+									size="chat"
+									className={editingStyles.editor}
+									autocompleteAnchor={containerRef.current}
+									ariaLabel={i18n._(EDIT_MESSAGE_DESCRIPTOR)}
+									richInputRef={composerRef}
+									onChange={handleChange}
+									onSubmit={handleSubmit}
+									onKeyDown={handleKeyDown}
+									onFocus={() => setIsFocused(true)}
+									onBlur={() => setIsFocused(false)}
+									i18n={i18n}
+								/>
 							</div>
 							<div
 								className={styles.buttonContainerEditing}
 								data-flx="channel.editing-message-input.button-container-editing"
 							>
 								<TextareaButton
-									ref={mobileLayout.enabled ? undefined : expressionPickerTriggerRef}
+									ref={expressionPickerButtonRef}
 									icon={SmileyIcon}
 									iconProps={{weight: 'fill'}}
 									label={i18n._(EMOJIS_DESCRIPTOR)}
 									isSelected={expressionPickerOpen}
-									onClick={mobileLayout.enabled ? () => setExpressionPickerOpen(true) : handleExpressionPickerToggle}
+									compact={true}
 									disabled={editingDisabled}
 									data-expression-picker-tab="emojis"
-									compact={true}
+									onClick={handleExpressionPickerButtonClick}
 									data-flx="channel.editing-message-input.textarea-button.set-expression-picker-open"
 								/>
 							</div>
@@ -409,18 +340,12 @@ export const EditingMessageInput = observer(
 						/>
 					</div>
 				</FocusRing>
-				<div className={editingStyles.footer} data-flx="channel.editing-message-input.div--2">
-					<div data-flx="channel.editing-message-input.div--3">
+				<div className={editingStyles.footer} data-flx="channel.editing-message-input.footer">
+					<div data-flx="channel.editing-message-input.hints">
 						<Trans>
 							escape to{' '}
 							<FocusRing offset={-2} data-flx="channel.editing-message-input.focus-ring--2">
-								<button
-									type="button"
-									className={editingStyles.footerLink}
-									onClick={onCancel}
-									key="cancel"
-									data-flx="channel.editing-message-input.button.cancel"
-								>
+								<button type="button" className={editingStyles.footerLink} onClick={onCancel} key="cancel">
 									cancel
 								</button>
 							</FocusRing>
@@ -428,7 +353,7 @@ export const EditingMessageInput = observer(
 						<div
 							aria-hidden={true}
 							className={editingStyles.separator}
-							data-flx="channel.editing-message-input.div--4"
+							data-flx="channel.editing-message-input.separator"
 						/>
 						<Trans>
 							enter to{' '}
@@ -439,7 +364,6 @@ export const EditingMessageInput = observer(
 									onClick={handleSubmit}
 									disabled={editingDisabled}
 									key="save"
-									data-flx="channel.editing-message-input.button.submit"
 								>
 									save
 								</button>

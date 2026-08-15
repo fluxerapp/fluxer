@@ -6,12 +6,10 @@
 	gap: 0;
 	width: 100%;
 	background-color: var(--panel-control-bg);
+	border-radius: var(--footer-box-radius);
+	box-shadow: inset 0 0 0 0.0625rem var(--floating-surface-ring-color);
+	overflow: hidden;
 	position: relative;
-}
-
-.separator {
-	height: 0.0625rem;
-	background-color: var(--user-area-divider-color);
 }
 
 .userAreaContainer {
@@ -19,24 +17,20 @@
 	align-items: center;
 	gap: var(--spacing-3);
 	margin: 0;
-	padding: var(--user-area-padding-y) var(--user-area-padding-x);
+	padding-block: var(--user-area-padding-y);
+	padding-inline: var(--user-area-avatar-lead) var(--user-area-padding-x);
 	box-sizing: border-box;
 	background-color: transparent;
 	width: 100%;
 	min-height: var(--layout-user-area-height);
 }
 
-.userAreaInnerWrapperHasVoiceConnection {
-	min-height: var(--layout-user-area-height);
-}
-
-.userAreaInnerWrapperHasVoiceConnection .userAreaContainer {
-	border-top: 0;
+.popoutContainer {
+	--popout-radius: 0.375rem;
 }
 
 .voiceConnectionWrapper {
-	border-bottom: 0;
-	border-top: 0;
+	border-bottom: 0.0625rem solid var(--floating-surface-ring-color-strong);
 }
 
 .userInfo {
@@ -46,11 +40,12 @@
 	flex: 1;
 	min-width: 0;
 	cursor: pointer;
-	padding: 0 var(--spacing-2);
+	padding: 0;
 	margin: 0;
 	border-radius: var(--radius-md);
 	height: var(--user-area-content-height);
 	position: relative;
+	isolation: isolate;
 	transition: color var(--transition-normal);
 	outline: none;
 }
@@ -94,14 +89,18 @@
 
 .userStatus {
 	font-size: 0.6875rem;
-	line-height: 1rem;
-	color: var(--text-primary-muted);
+	line-height: 0.875rem;
+	color: color-mix(in srgb, var(--text-primary-muted) 85%, transparent);
 	font-weight: 500;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
 	max-width: 100%;
 	margin-top: -0.0625rem;
+}
+
+.userStatus img,
+.userStatus svg {
 	opacity: 0.85;
 }
 

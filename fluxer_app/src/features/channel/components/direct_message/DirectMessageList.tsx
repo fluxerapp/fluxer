@@ -7,10 +7,6 @@ import {PREMIUM_PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstant
 import {useRovingFocusList} from '@app/features/app/hooks/useRovingFocusList';
 import {PersonalNotesPurgeFailedModal} from '@app/features/channel/components/alerts/PersonalNotesPurgeFailedModal';
 import {CreateDMBottomSheet} from '@app/features/channel/components/bottomsheets/CreateDMBottomSheet';
-import {
-	CanaryTesterDmItemDesktop,
-	CanaryTesterDmItemMobile,
-} from '@app/features/channel/components/direct_message/CanaryTesterDmItem';
 import styles from '@app/features/channel/components/direct_message/DirectMessageList.module.css';
 import {getDmRouteChannelId} from '@app/features/channel/components/direct_message/DMListHelpers';
 import {DMListItem} from '@app/features/channel/components/direct_message/DMListItem';
@@ -384,7 +380,6 @@ export const DMList = observer(() => {
 								</LongPressable>
 							</FocusRing>
 						)}
-						<CanaryTesterDmItemMobile data-flx="channel.direct-message.dm-list.canary-tester-dm-item-mobile" />
 						{showMobilePlutoniumButton && (
 							<FocusRing offset={-2} data-flx="channel.direct-message.dm-list.focus-ring--4">
 								<button
@@ -556,7 +551,6 @@ export const DMList = observer(() => {
 							</div>
 						</ClickableItem>
 					)}
-					<CanaryTesterDmItemDesktop data-flx="channel.direct-message.dm-list.canary-tester-dm-item-desktop" />
 					{showPremiumFeatures && (
 						<ClickableItem
 							onClick={() => PremiumModalCommands.open()}

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import styles from '@app/features/voice/components/AudioWaveform.module.css';
+import {resolveDevicePixelRatio} from '@app/features/voice/DevicePixelRatio';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {clsx} from 'clsx';
@@ -114,7 +115,7 @@ export const AudioWaveform: React.FC<AudioWaveformProps> = ({
 	const renderCanvas = useCallback(() => {
 		const canvas = canvasRef.current;
 		if (!canvas || !peaks) return;
-		const dpr = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1;
+		const dpr = resolveDevicePixelRatio(canvas.ownerDocument.defaultView);
 		const rect = canvas.getBoundingClientRect();
 		const widthPx = Math.max(1, Math.round(rect.width * dpr));
 		const heightPx = Math.max(1, Math.round(rect.height * dpr));
@@ -154,10 +155,13 @@ export const AudioWaveform: React.FC<AudioWaveformProps> = ({
 	}, [renderCanvas]);
 
 	useEffect(() => {
-		if (typeof window === 'undefined') return;
+		const canvas = canvasRef.current;
+		if (canvas == null) return;
+		const ownerWindow = canvas.ownerDocument.defaultView;
+		if (!ownerWindow) return;
 		const handle = () => renderCanvas();
-		window.addEventListener('resize', handle);
-		return () => window.removeEventListener('resize', handle);
+		ownerWindow.addEventListener('resize', handle);
+		return () => ownerWindow.removeEventListener('resize', handle);
 	}, [renderCanvas]);
 
 	const beginDrag = useCallback(

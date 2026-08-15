@@ -327,7 +327,7 @@ const CONFIG: Config = {
 				{name: '--guild-list-foreground', position: 0.38},
 				{name: '--background-header-secondary', position: 0.5},
 				{name: '--background-header-primary', position: 0.5},
-				{name: '--background-textarea', position: 0.68},
+				{name: '--background-textarea', position: 0.3},
 				{name: '--background-header-primary-hover', position: 0.85},
 			],
 		},
@@ -344,7 +344,7 @@ const CONFIG: Config = {
 				{name: '--guild-list-foreground', position: 0.38},
 				{name: '--background-header-secondary', position: 0.5},
 				{name: '--background-header-primary', position: 0.5},
-				{name: '--background-textarea', position: 0.68},
+				{name: '--background-textarea', position: 0.3},
 				{name: '--background-header-primary-hover', position: 0.85},
 			],
 		},
@@ -410,7 +410,7 @@ const CONFIG: Config = {
 				{name: '--guild-list-foreground', position: 0.38},
 				{name: '--background-header-secondary', position: 0.5},
 				{name: '--background-header-primary', position: 0.5},
-				{name: '--background-textarea', position: 0.68},
+				{name: '--background-textarea', position: 0.3},
 				{name: '--background-header-primary-hover', position: 0.85},
 			],
 		},
@@ -438,8 +438,8 @@ const CONFIG: Config = {
 				name: '--panel-control-bg',
 				value: `color-mix(
 in srgb,
-var(--background-secondary-alt) 80%,
-hsl(258, calc(10% * var(--saturation-factor)), 2%) 20%
+var(--background-secondary-alt) 90%,
+hsl(258, calc(10% * var(--saturation-factor)), 2%) 10%
 )`,
 			},
 			{name: '--panel-control-border', family: 'neutralDark', saturation: 30, lightness: 65, alpha: 0.45},
@@ -744,8 +744,8 @@ hsl(258, calc(10% * var(--saturation-factor)), 0%) 10%
 				name: '--panel-control-bg',
 				value: `color-mix(
 in srgb,
-var(--background-secondary-alt) 80%,
-hsl(220, calc(13% * var(--saturation-factor)), 2%) 20%
+var(--background-secondary-alt) 90%,
+hsl(220, calc(13% * var(--saturation-factor)), 2%) 10%
 )`,
 			},
 			{name: '--panel-control-border', family: 'legacyDark', saturation: 30, lightness: 65, alpha: 0.45},

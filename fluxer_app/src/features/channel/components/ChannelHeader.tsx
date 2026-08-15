@@ -50,6 +50,7 @@ import {
 	REMOVE_FROM_FAVORITES_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
+import type {LexicalSearchInputHandle} from '@app/features/lexical/search/LexicalSearchInput';
 import {useCanFitMemberList} from '@app/features/member/hooks/useMemberListVisible';
 import MemberList from '@app/features/member/state/MemberList';
 import * as FavoritesCommands from '@app/features/messaging/commands/FavoritesCommands';
@@ -201,7 +202,7 @@ export const ChannelHeader = observer(
 				onVoiceCallChromePinChange?.(false);
 			};
 		}, [onVoiceCallChromePinChange]);
-		const searchInputRef = useRef<HTMLInputElement>(null);
+		const searchInputRef = useRef<LexicalSearchInputHandle>(null);
 		const isSearchResultsVisible = isSearchResultsOpen ?? isSearchActive;
 		const dmNameRef = useRef<HTMLSpanElement>(null);
 		const groupDMNameRef = useRef<HTMLSpanElement>(null);

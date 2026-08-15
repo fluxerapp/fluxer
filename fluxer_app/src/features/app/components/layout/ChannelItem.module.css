@@ -71,9 +71,9 @@
 
 .typingAvatars {
 	height: 1.25rem;
-	--avatar-stack-padding-block-start: 0;
-	--avatar-stack-padding-block-end: 0;
-	--avatar-stack-extra-height: 0;
+	--avatar-stack-padding-block-start: 0px;
+	--avatar-stack-padding-block-end: 0px;
+	--avatar-stack-extra-height: 0px;
 	--avatar-stack-outline-color: var(--background-secondary);
 }
 

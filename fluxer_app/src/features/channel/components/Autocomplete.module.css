@@ -2,14 +2,14 @@
 
 .container {
 	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
 	background-color: var(--background-primary);
 	z-index: 2;
 }
 
 .containerAttached {
-	border-radius: 0.5rem 0.5rem 0 0;
+	border: 0.0625rem solid var(--background-modifier-accent);
+	border-radius: 0.5rem;
+	box-shadow: 0 0.5rem 1rem rgb(0 0 0 / 0.24);
 }
 
 .containerDetached {
@@ -22,4 +22,13 @@
 	flex-direction: column;
 	gap: 0.25rem;
 	padding: 0.5rem 0;
+}
+
+.sectionHeading {
+	padding: 0.25rem 0.75rem;
+	font-weight: 600;
+	color: var(--text-primary-muted);
+	font-size: 0.75rem;
+	text-transform: uppercase;
+	letter-spacing: 0;
 }

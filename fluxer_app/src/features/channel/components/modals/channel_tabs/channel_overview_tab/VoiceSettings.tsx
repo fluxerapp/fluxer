@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import styles from '@app/features/channel/components/modals/channel_tabs/ChannelOverviewTab.module.css';
+import {SettingsControlRow} from '@app/features/channel/components/modals/channel_tabs/channel_overview_tab/SettingsControlRow';
 import {
-	BITRATE_OPTIONS,
+	BITRATE_KBPS_MARKERS,
+	BITRATE_KBPS_MAX,
+	BITRATE_KBPS_MIN,
 	type FormInputs,
-	getNearestBitrate,
 } from '@app/features/channel/components/modals/channel_tabs/channel_overview_tab/shared';
-import type {ComboboxOption} from '@app/features/ui/components/form/FormCombobox';
 import {RESET_SLIDER_TO_DEFAULT_VALUE_DESCRIPTOR, Slider} from '@app/features/ui/components/Slider';
-import {CompactComboboxRow} from '@app/features/user/components/modals/tabs/components/CompactComboboxRow';
 import {
 	VOICE_CHANNEL_CONNECTION_LIMIT_DEFAULT,
 	VOICE_CHANNEL_CONNECTION_LIMIT_MAX,
@@ -17,7 +17,6 @@ import {
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import type React from 'react';
-import {useEffect, useMemo} from 'react';
 import {Controller, type UseFormReturn} from 'react-hook-form';
 
 const PARTICIPANT_LIMIT_LABEL_DESCRIPTOR = msg({
@@ -49,38 +48,8 @@ const CONNECTION_LIMIT_VALUE_DESCRIPTOR = msg({
 	comment: 'Displayed value for the voice channel connection limit slider.',
 });
 
-const resolveVoiceBitrateInput = (
-	inputValue: string,
-	options: ReadonlyArray<ComboboxOption<number>>,
-): number | undefined => {
-	const normalized = inputValue.trim().toLowerCase();
-	if (!normalized) return undefined;
-	const numericMatch = normalized.match(/([0-9]+(?:\.[0-9]+)?)/);
-	if (!numericMatch) return undefined;
-	const parsedValue = Number(numericMatch[1]);
-	if (!Number.isFinite(parsedValue)) return undefined;
-	const valueInKbps = normalized.includes('mbps') ? parsedValue * 1000 : parsedValue;
-	let nearest = options[0]?.value;
-	let nearestDistance = Number.POSITIVE_INFINITY;
-	for (const option of options) {
-		const distance = Math.abs(option.value - valueInKbps);
-		if (distance < nearestDistance) {
-			nearest = option.value;
-			nearestDistance = distance;
-		}
-	}
-	return nearest;
-};
-
 interface VoiceSettingsProps {
 	form: UseFormReturn<FormInputs>;
-}
-
-interface SettingsControlRowProps {
-	label: string;
-	description?: string;
-	dataFlx: string;
-	children: React.ReactNode;
 }
 
 const formatIntegerValue = (value: number): string => String(Math.round(value));
@@ -95,51 +64,42 @@ const formatConnectionLimitMarker = (value: number): string | null => {
 	return formatIntegerValue(value);
 };
 
-const SettingsControlRow: React.FC<SettingsControlRowProps> = ({label, description, dataFlx, children}) => {
-	return (
-		<div className={styles.settingsControlRow} data-flx={`${dataFlx}.row`}>
-			<div className={styles.settingsControlText} data-flx={`${dataFlx}.text`}>
-				<div className={styles.settingsControlTitleRow} data-flx={`${dataFlx}.title-row`}>
-					<span className={styles.settingsControlLabel} data-flx={`${dataFlx}.label`}>
-						{label}
-					</span>
-				</div>
-				{description != null && (
-					<p className={styles.settingsControlDescription} data-flx={`${dataFlx}.description`}>
-						{description}
-					</p>
-				)}
-			</div>
-			{children}
-		</div>
-	);
-};
-
-const VoiceBitrateSelectField: React.FC<{
+const VoiceBitrateSlider: React.FC<{
 	value: number | undefined;
 	onChange: (value: number) => void;
 }> = ({value, onChange}) => {
 	const {i18n} = useLingui();
-	const options: ReadonlyArray<ComboboxOption<number>> = useMemo(
-		() => BITRATE_OPTIONS.map((kilobits) => ({value: kilobits, label: i18n._(KBPS_DESCRIPTOR, {kilobits})})),
-		[i18n.locale],
-	);
-	const currentValue = typeof value === 'number' ? value : BITRATE_OPTIONS[1];
-	const selectedValue = getNearestBitrate(currentValue);
-	useEffect(() => {
-		if (currentValue !== selectedValue) onChange(selectedValue);
-	}, [currentValue, onChange, selectedValue]);
+	const voiceQualityLabel = i18n._(VOICE_QUALITY_DESCRIPTOR);
+	const resetSliderLabel = i18n._(RESET_SLIDER_TO_DEFAULT_VALUE_DESCRIPTOR);
+	let currentValue = value;
+	if (typeof currentValue !== 'number') {
+		currentValue = 64;
+	}
 	return (
-		<CompactComboboxRow<number>
-			label={i18n._(VOICE_QUALITY_DESCRIPTOR)}
-			value={selectedValue}
-			options={options}
-			onChange={onChange}
-			autoSelectValueFromInput={resolveVoiceBitrateInput}
-			controlWidth="small"
-			dataFlx="channel.channel-tabs.channel-overview-tab.form-select.voice-quality"
-			data-flx="channel.channel-tabs.channel-overview-tab.voice-settings.voice-bitrate-select-field.compact-select-row.change"
-		/>
+		<SettingsControlRow
+			label={voiceQualityLabel}
+			dataFlx="channel.channel-tabs.channel-overview-tab.voice-settings.voice-bitrate-slider"
+		>
+			<div className={styles.settingsSliderControl}>
+				<Slider
+					value={currentValue}
+					defaultValue={currentValue}
+					factoryDefaultValue={64}
+					minValue={BITRATE_KBPS_MIN}
+					maxValue={BITRATE_KBPS_MAX}
+					step={1}
+					markers={[...BITRATE_KBPS_MARKERS]}
+					ariaLabel={voiceQualityLabel}
+					ariaValueText={i18n._(KBPS_DESCRIPTOR, {kilobits: Math.round(currentValue)})}
+					onMarkerRender={formatIntegerValue}
+					onValueRender={(kilobits) => i18n._(KBPS_DESCRIPTOR, {kilobits: Math.round(kilobits)})}
+					onValueChange={(kilobits) => onChange(Math.round(kilobits))}
+					showResetButton={true}
+					onReset={() => onChange(64)}
+					resetTooltip={resetSliderLabel}
+				/>
+			</div>
+		</SettingsControlRow>
 	);
 };
 
@@ -153,13 +113,7 @@ export const VoiceSettings: React.FC<VoiceSettingsProps> = ({form}) => {
 				<Controller
 					name="bitrate"
 					control={form.control}
-					render={({field}) => (
-						<VoiceBitrateSelectField
-							value={field.value}
-							onChange={field.onChange}
-							data-flx="channel.channel-tabs.channel-overview-tab.voice-settings.voice-bitrate-select-field.change"
-						/>
-					)}
+					render={({field}) => <VoiceBitrateSlider value={field.value} onChange={field.onChange} />}
 					data-flx="channel.channel-tabs.channel-overview-tab.controller--2"
 				/>
 			</div>
@@ -173,7 +127,6 @@ export const VoiceSettings: React.FC<VoiceSettingsProps> = ({form}) => {
 							<SettingsControlRow
 								label={participantLimitLabel}
 								dataFlx="channel.channel-tabs.channel-overview-tab.participant-limit"
-								data-flx="channel.channel-tabs.channel-overview-tab.voice-settings.settings-control-row.participant-limit"
 							>
 								<div
 									className={styles.settingsSliderControl}
@@ -224,7 +177,6 @@ export const VoiceConnectionLimitControl: React.FC<VoiceSettingsProps> = ({form}
 							label={connectionLimitLabel}
 							description={connectionLimitDescription}
 							dataFlx="channel.channel-tabs.channel-overview-tab.voice-connection-limit"
-							data-flx="channel.channel-tabs.channel-overview-tab.voice-settings.voice-connection-limit-control.settings-control-row"
 						>
 							<div
 								className={styles.settingsSliderControl}

@@ -89,14 +89,18 @@
 
 .memberCustomStatus {
 	max-width: 100%;
-	color: var(--text-primary-muted);
+	color: color-mix(in srgb, var(--text-primary-muted) 85%, transparent);
 	font-size: 0.6875rem;
 	line-height: 0.875rem;
 	font-weight: 500;
-	opacity: 0.85;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
+}
+
+.memberCustomStatus img,
+.memberCustomStatus svg {
+	opacity: 0.85;
 }
 
 :global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))

@@ -90,8 +90,13 @@ const DEV_MESSAGE_DELAY = 3000;
 const LOCAL_SEND_RATE_LIMIT_MAX_SENDS = 5;
 const LOCAL_SEND_RATE_LIMIT_WINDOW_MS = 2000;
 const LOCAL_SEND_RATE_LIMIT_BLOCK_MS = 3000;
+const LOCAL_SEND_RATE_LIMIT_TRACKED_CHANNELS_MAX = 128;
+const LOCAL_SEND_RESERVATION_TTL_MS = 30 * 1000;
+const LOCAL_SEND_RESERVATIONS_MAX = 128;
 const LOCAL_SEND_RATE_LIMIT_MODAL_KEY_PREFIX = 'message-local-send-rate-limit';
 const TEXTAREA_ATTACHMENT_UPLOAD_CACHE_TTL_MS = 5 * 60 * 1000;
+const MESSAGE_SEND_RATE_LIMIT_MAX_AUTOMATIC_RETRIES = 2;
+const MESSAGE_SEND_RATE_LIMIT_MAX_AUTOMATIC_DELAY_MS = 30 * 1000;
 
 interface BaseMessagePayload {
 	channelId: string;
@@ -100,6 +105,7 @@ interface BaseMessagePayload {
 interface SendMessagePayload extends BaseMessagePayload {
 	type: 'send';
 	nonce: string;
+	rateLimitRetryCount?: number;
 	content: string;
 	hasAttachments?: boolean;
 	preparedAttachments?: Array<ApiAttachmentMetadata>;
@@ -115,6 +121,7 @@ interface SendMessagePayload extends BaseMessagePayload {
 interface EditMessagePayload extends BaseMessagePayload {
 	type: 'edit';
 	messageId: string;
+	rateLimitRetryCount?: number;
 	content?: string;
 	allowedMentions?: AllowedMentions;
 	flags?: number;
@@ -136,6 +143,7 @@ export interface ApiErrorBody {
 	code?: number | string;
 	retry_after?: number;
 	message?: string;
+	details?: unknown;
 }
 
 interface PresignedAttachmentUploadSinglepartResponse {
@@ -213,8 +221,75 @@ function createAbortError(): DOMException {
 }
 
 const getApiErrorBody = (error: HttpError): ApiErrorBody | undefined => {
-	return typeof error?.body === 'object' && error.body !== null ? (error.body as ApiErrorBody) : undefined;
+	return typeof error.body === 'object' && error.body !== null ? (error.body as ApiErrorBody) : undefined;
 };
+
+interface MessageRateLimitRetry {
+	retryAfterSeconds: number | null;
+	automaticRetryDelayMs: number | null;
+}
+
+function parsePositiveRetryAfterSeconds(value: unknown): number | null {
+	if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) return null;
+	return value;
+}
+
+function parseRetryAfterHeaderSeconds(value: string | undefined): number | null {
+	if (value === undefined || value.trim() === '') return null;
+	const numeric = Number(value);
+	if (Number.isFinite(numeric) && numeric > 0) return numeric;
+	const deadline = Date.parse(value);
+	if (!Number.isFinite(deadline)) return null;
+	const remainingSeconds = (deadline - Date.now()) / 1000;
+	return remainingSeconds > 0 ? remainingSeconds : null;
+}
+
+function parseNestedRetryAfterSeconds(body: ApiErrorBody | undefined): number | null {
+	if (body === undefined || typeof body.details !== 'object' || body.details === null || Array.isArray(body.details)) {
+		return null;
+	}
+	const details = body.details as Record<string, unknown>;
+	const retry = details.retry;
+	if (typeof retry !== 'object' || retry === null || Array.isArray(retry)) return null;
+	const afterSeconds = (retry as Record<string, unknown>).after_seconds;
+	if (typeof afterSeconds !== 'number' || !Number.isFinite(afterSeconds) || afterSeconds <= 0) return null;
+	return afterSeconds;
+}
+
+function readRateLimitHeader(error: HttpError, name: string): string | undefined {
+	return error.responseHeaders[name.toLowerCase()];
+}
+
+function resolveMessageRateLimitRetry(error: HttpError): MessageRateLimitRetry {
+	const body = getApiErrorBody(error);
+	const candidates: Array<number> = [];
+	const nestedRetryAfter = parseNestedRetryAfterSeconds(body);
+	if (nestedRetryAfter !== null) candidates.push(nestedRetryAfter);
+	const bodyRetryAfter = body === undefined ? undefined : body.retry_after;
+	const parsedBodyRetryAfter = parsePositiveRetryAfterSeconds(bodyRetryAfter);
+	if (parsedBodyRetryAfter !== null) candidates.push(parsedBodyRetryAfter);
+	const parsedHeaderRetryAfter = parseRetryAfterHeaderSeconds(readRateLimitHeader(error, 'retry-after'));
+	if (parsedHeaderRetryAfter !== null) candidates.push(parsedHeaderRetryAfter);
+	const resetAfterHeader = readRateLimitHeader(error, 'x-ratelimit-reset-after');
+	if (resetAfterHeader !== undefined) {
+		const parsedResetAfter = parsePositiveRetryAfterSeconds(Number(resetAfterHeader));
+		if (parsedResetAfter !== null) candidates.push(parsedResetAfter);
+	}
+	if (candidates.length === 0) {
+		return {retryAfterSeconds: null, automaticRetryDelayMs: null};
+	}
+	const rawRetryAfter = Math.max(...candidates);
+	const retryAfterSeconds = Math.ceil(rawRetryAfter);
+	const retryAfterMs = Math.ceil(rawRetryAfter * 1000);
+	if (!Number.isSafeInteger(retryAfterSeconds) || !Number.isSafeInteger(retryAfterMs)) {
+		return {retryAfterSeconds: null, automaticRetryDelayMs: null};
+	}
+	let automaticRetryDelayMs: number | null = null;
+	if (retryAfterMs <= MESSAGE_SEND_RATE_LIMIT_MAX_AUTOMATIC_DELAY_MS) {
+		automaticRetryDelayMs = retryAfterMs;
+	}
+	return {retryAfterSeconds, automaticRetryDelayMs};
+}
 const isAbortError = (error: unknown): boolean => {
 	return error instanceof DOMException && error.name === 'AbortError';
 };
@@ -230,7 +305,8 @@ function isSendPayload(payload: MessageQueuePayload): payload is SendMessagePayl
 }
 
 function isRateLimitError(error: HttpError): boolean {
-	return error?.status === 429;
+	if (error.status !== 429) return false;
+	return !isSlowmodeError(error);
 }
 
 function getRequestErrorOutcomeStatus(error: HttpError): MessageQueueRequestOutcomeStatus {
@@ -239,7 +315,10 @@ function getRequestErrorOutcomeStatus(error: HttpError): MessageQueueRequestOutc
 }
 
 function isSlowmodeError(error: HttpError): boolean {
-	return error?.status === 400 && getApiErrorBody(error)?.code === APIErrorCodes.SLOWMODE_RATE_LIMITED;
+	if (error.status !== 400 && error.status !== 429) return false;
+	const body = getApiErrorBody(error);
+	if (body === undefined) return false;
+	return body.code === APIErrorCodes.SLOWMODE_RATE_LIMITED;
 }
 
 function isFeatureDisabledError(error: HttpError): boolean {
@@ -292,7 +371,7 @@ export class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Messag
 	private readonly textareaAttachmentUploads = new Map<number, TextareaAttachmentUpload>();
 	private readonly textareaAttachmentUploadDisposers = new Map<string, () => void>();
 	private readonly localSendLimiters = new Map<string, MessageLocalSendRateLimitState>();
-	private readonly localSendReservations = new Set<string>();
+	private readonly localSendReservations = new Map<string, number>();
 
 	constructor(maxSize = DEFAULT_MAX_SIZE) {
 		super({logger, defaultRetryAfter: 100});
@@ -311,21 +390,57 @@ export class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Messag
 		return this.queueLength >= this.maxSize;
 	}
 
+	override enqueue(
+		message: MessageQueuePayload,
+		success: (result?: RestResponse<Message>, error?: unknown) => void,
+	): void {
+		if (!this.isFull()) {
+			super.enqueue(message, success);
+			return;
+		}
+		const error = new Error(`Message queue capacity of ${this.maxSize} entries was reached`);
+		logger.error('Rejected message queue entry because capacity was reached', error);
+		if (message.type === 'send') {
+			this.handleSendError(message.channelId, message.nonce, error, i18n, message.hasAttachments);
+		} else {
+			ModalCommands.push(
+				modal(() => <MessageEditFailedModal data-flx="messaging.message-queue.message-edit-failed-modal--capacity" />),
+			);
+		}
+		try {
+			success(undefined, error);
+		} catch (callbackError) {
+			logger.error('Message queue rejection callback failed', callbackError);
+		}
+	}
+
 	reserveLocalSend(channelId: string, nonce: string): boolean {
 		const reservationKey = this.getLocalSendReservationKey(channelId, nonce);
-		if (this.localSendReservations.has(reservationKey)) {
-			return true;
+		const now = Date.now();
+		this.pruneExpiredLocalSendReservations(now);
+		const existingExpiry = this.localSendReservations.get(reservationKey);
+		if (existingExpiry !== undefined) {
+			if (existingExpiry > now) return true;
+			this.localSendReservations.delete(reservationKey);
 		}
 		if (!this.consumeLocalSendAllowance(channelId)) {
 			return false;
 		}
-		this.localSendReservations.add(reservationKey);
+		while (this.localSendReservations.size >= LOCAL_SEND_RESERVATIONS_MAX) {
+			const oldestReservationKey = this.localSendReservations.keys().next().value;
+			if (oldestReservationKey === undefined) break;
+			this.localSendReservations.delete(oldestReservationKey);
+		}
+		this.localSendReservations.set(reservationKey, now + LOCAL_SEND_RESERVATION_TTL_MS);
 		return true;
 	}
 
 	consumeLocalSendReservation(channelId: string, nonce: string): boolean {
-		if (this.localSendReservations.delete(this.getLocalSendReservationKey(channelId, nonce))) {
-			return true;
+		const reservationKey = this.getLocalSendReservationKey(channelId, nonce);
+		const expiresAt = this.localSendReservations.get(reservationKey);
+		if (expiresAt !== undefined) {
+			this.localSendReservations.delete(reservationKey);
+			if (expiresAt > Date.now()) return true;
 		}
 		return this.consumeLocalSendAllowance(channelId);
 	}
@@ -357,16 +472,34 @@ export class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Messag
 	}
 
 	private consumeLocalSendAllowance(channelId: string): boolean {
+		const now = Date.now();
 		const previous = this.localSendLimiters.get(channelId);
+		let windowStartedAt: number | null = null;
+		let sentCount = 0;
+		let blockedUntil: number | null = null;
+		if (previous !== undefined) {
+			windowStartedAt = previous.windowStartedAt;
+			sentCount = previous.sentCount;
+			blockedUntil = previous.blockedUntil;
+		}
 		const decision = resolveMessageLocalSendRateLimitDecision({
-			windowStartedAt: previous?.windowStartedAt ?? null,
-			sentCount: previous?.sentCount ?? 0,
-			blockedUntil: previous?.blockedUntil ?? null,
-			now: Date.now(),
+			windowStartedAt,
+			sentCount,
+			blockedUntil,
+			now,
 			maxSends: LOCAL_SEND_RATE_LIMIT_MAX_SENDS,
 			windowMs: LOCAL_SEND_RATE_LIMIT_WINDOW_MS,
 			blockMs: LOCAL_SEND_RATE_LIMIT_BLOCK_MS,
 		});
+		this.localSendLimiters.delete(channelId);
+		if (this.localSendLimiters.size >= LOCAL_SEND_RATE_LIMIT_TRACKED_CHANNELS_MAX) {
+			this.removeExpiredLocalSendLimiters(now);
+		}
+		while (this.localSendLimiters.size >= LOCAL_SEND_RATE_LIMIT_TRACKED_CHANNELS_MAX) {
+			const oldestChannelId = this.localSendLimiters.keys().next().value;
+			if (oldestChannelId === undefined) break;
+			this.localSendLimiters.delete(oldestChannelId);
+		}
 		this.localSendLimiters.set(channelId, decision.next);
 		switch (decision.type) {
 			case 'allow':
@@ -403,6 +536,21 @@ export class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Messag
 		return `${channelId}:${nonce}`;
 	}
 
+	private removeExpiredLocalSendLimiters(now: number): void {
+		for (const [channelId, state] of this.localSendLimiters) {
+			const windowExpired =
+				state.windowStartedAt === null || now - state.windowStartedAt >= LOCAL_SEND_RATE_LIMIT_WINDOW_MS;
+			const blockExpired = state.blockedUntil === null || now >= state.blockedUntil;
+			if (windowExpired && blockExpired) this.localSendLimiters.delete(channelId);
+		}
+	}
+
+	private pruneExpiredLocalSendReservations(now: number): void {
+		for (const [reservationKey, expiresAt] of this.localSendReservations) {
+			if (expiresAt <= now) this.localSendReservations.delete(reservationKey);
+		}
+	}
+
 	cancelRequest(nonce: string): void {
 		logger.info('Cancel message send:', nonce);
 		const messageUpload = CloudUpload.getMessageUpload(nonce);
@@ -437,7 +585,8 @@ export class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Messag
 			if (completion.retry === null) {
 				return completion.result;
 			}
-			const delay = completion.retry.retryAfter ?? this.defaultRetryAfter;
+			const retryAfter = completion.retry.retryAfter;
+			const delay = retryAfter === undefined ? this.defaultRetryAfter : retryAfter;
 			logger.info(`Pausing immediate send retry for ${delay}ms due to retry request`);
 			await new Promise<void>((resolve) => window.setTimeout(resolve, delay));
 		}
@@ -874,7 +1023,7 @@ export class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Messag
 			case 'retryRateLimit': {
 				const rateLimitOutcome = outcome as {status: 'rateLimit'; error: HttpError};
 				logger.error(`Failed to send message to channel ${channelId}:`, rateLimitOutcome.error);
-				this.handleSendRateLimit(rateLimitOutcome.error, completed);
+				this.handleSendRateLimit(payload, rateLimitOutcome.error, completed);
 				return;
 			}
 			case 'completeFailure': {
@@ -1179,13 +1328,23 @@ export class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Messag
 	}
 
 	private handleSendRateLimit(
+		payload: SendMessagePayload,
 		error: HttpError,
 		completed: (err: RetryError | null, result?: RestResponse<Message>, error?: unknown) => void,
 	): void {
-		const retryAfterSeconds = getApiErrorBody(error)?.retry_after ?? 0;
-		const retryAfterMs = retryAfterSeconds > 0 ? retryAfterSeconds * 1000 : undefined;
-		completed({retryAfter: retryAfterMs}, undefined, error);
-		this.handleRateLimitError(retryAfterSeconds);
+		const retry = resolveMessageRateLimitRetry(error);
+		const retryCount = payload.rateLimitRetryCount === undefined ? 0 : payload.rateLimitRetryCount;
+		if (retry.automaticRetryDelayMs !== null && retryCount < MESSAGE_SEND_RATE_LIMIT_MAX_AUTOMATIC_RETRIES) {
+			payload.rateLimitRetryCount = retryCount + 1;
+			completed({retryAfter: retry.automaticRetryDelayMs}, undefined, error);
+			return;
+		}
+		MessageCommands.sendError(payload.channelId, payload.nonce);
+		if (payload.hasAttachments) {
+			this.restoreFailedMessage(payload.channelId, payload.nonce);
+		}
+		completed(null, undefined, error);
+		this.handleRateLimitError(retry.retryAfterSeconds);
 	}
 
 	private handleSendError(
@@ -1265,7 +1424,21 @@ export class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Messag
 				)),
 			);
 		} else if (error instanceof HttpError && isSlowmodeError(error)) {
-			const retryAfterMs = SlowmodeCommands.retryAfterSecondsToMs(getApiErrorBody(error)?.retry_after);
+			const retry = resolveMessageRateLimitRetry(error);
+			const retryAfterMs = SlowmodeCommands.retryAfterSecondsToMs(
+				retry.retryAfterSeconds === null ? undefined : retry.retryAfterSeconds,
+			);
+			if (retryAfterMs <= 0) {
+				ModalCommands.push(
+					modal(() => (
+						<MessageSendFailedModal
+							hasAttachments={hasAttachments}
+							data-flx="messaging.message-queue.message-send-failed-modal--invalid-slowmode-retry"
+						/>
+					)),
+				);
+				return;
+			}
 			const retryAfter = Math.ceil(retryAfterMs / 1000);
 			if (channelId) {
 				SlowmodeCommands.updateSlowmodeRemaining(channelId, retryAfterMs);
@@ -1304,15 +1477,25 @@ export class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Messag
 		}
 	}
 
-	private handleRateLimitError(retryAfter: number, onRetry?: () => void): void {
+	private handleRateLimitError(retryAfter: number | null, onRetry?: () => void): void {
 		ModalCommands.push(
-			modal(() => (
-				<MessageSendTooQuickModal
-					retryAfter={retryAfter}
-					onRetry={onRetry}
-					data-flx="messaging.message-queue.message-send-too-quick-modal"
-				/>
-			)),
+			modal(() => {
+				if (retryAfter === null) {
+					return (
+						<MessageSendTooQuickModal
+							onRetry={onRetry}
+							data-flx="messaging.message-queue.message-send-too-quick-modal"
+						/>
+					);
+				}
+				return (
+					<MessageSendTooQuickModal
+						retryAfter={retryAfter}
+						onRetry={onRetry}
+						data-flx="messaging.message-queue.message-send-too-quick-modal"
+					/>
+				);
+			}),
 		);
 	}
 
@@ -1334,14 +1517,21 @@ export class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Messag
 			logger.debug(`Successfully edited message ${messageId} in channel ${channelId}`);
 			completed(null, response);
 		} catch (error) {
-			const responseErr = error as HttpError;
 			logger.error(`Failed to edit message ${messageId} in channel ${channelId}:`, error);
+			if (!(error instanceof HttpError)) {
+				ModalCommands.push(
+					modal(() => <MessageEditFailedModal data-flx="messaging.message-queue.message-edit-failed-modal--request" />),
+				);
+				completed(null, undefined, error);
+				return;
+			}
+			const responseErr = error;
 			const outcomeDecision = resolveMessageQueueRequestOutcomeDecision({
 				status: getRequestErrorOutcomeStatus(responseErr),
 			});
 			switch (outcomeDecision.type) {
 				case 'retryRateLimit':
-					this.handleEditRateLimit(responseErr, completed);
+					this.handleEditRateLimit(payload, responseErr, completed);
 					break;
 				case 'completeFailure':
 				case 'completeSuccess':
@@ -1377,13 +1567,19 @@ export class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Messag
 	}
 
 	private handleEditRateLimit(
+		payload: EditMessagePayload,
 		error: HttpError,
 		completed: (err: RetryError | null, result?: RestResponse<Message>, error?: unknown) => void,
 	): void {
-		const retryAfterSeconds = getApiErrorBody(error)?.retry_after ?? 0;
-		const retryAfterMs = retryAfterSeconds > 0 ? retryAfterSeconds * 1000 : undefined;
-		completed({retryAfter: retryAfterMs}, undefined, error);
-		this.handleEditRateLimitError(retryAfterSeconds);
+		const retry = resolveMessageRateLimitRetry(error);
+		const retryCount = payload.rateLimitRetryCount === undefined ? 0 : payload.rateLimitRetryCount;
+		if (retry.automaticRetryDelayMs !== null && retryCount < MESSAGE_SEND_RATE_LIMIT_MAX_AUTOMATIC_RETRIES) {
+			payload.rateLimitRetryCount = retryCount + 1;
+			completed({retryAfter: retry.automaticRetryDelayMs}, undefined, error);
+			return;
+		}
+		completed(null, undefined, error);
+		this.handleEditRateLimitError(retry.retryAfterSeconds);
 	}
 
 	private showEditErrorModal(error: HttpError): void {
@@ -1402,15 +1598,25 @@ export class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Messag
 		}
 	}
 
-	private handleEditRateLimitError(retryAfter: number, onRetry?: () => void): void {
+	private handleEditRateLimitError(retryAfter: number | null, onRetry?: () => void): void {
 		ModalCommands.push(
-			modal(() => (
-				<MessageEditTooQuickModal
-					retryAfter={retryAfter}
-					onRetry={onRetry}
-					data-flx="messaging.message-queue.message-edit-too-quick-modal"
-				/>
-			)),
+			modal(() => {
+				if (retryAfter === null) {
+					return (
+						<MessageEditTooQuickModal
+							onRetry={onRetry}
+							data-flx="messaging.message-queue.message-edit-too-quick-modal"
+						/>
+					);
+				}
+				return (
+					<MessageEditTooQuickModal
+						retryAfter={retryAfter}
+						onRetry={onRetry}
+						data-flx="messaging.message-queue.message-edit-too-quick-modal"
+					/>
+				);
+			}),
 		);
 	}
 }

@@ -82,6 +82,7 @@ export interface MasterConfig {
 	services: {
 		api: {
 			port: number;
+			ip_ban_exempt_ips: Array<string>;
 			presigned_attachment_uploads_enabled: boolean;
 			unfurl_ignored_hosts: Array<string>;
 			embeds: {
@@ -269,6 +270,9 @@ export interface MasterConfig {
 			purge_enabled: boolean;
 			api_key: string;
 			pull_zone_id: number;
+		};
+		blocklist_feeds: {
+			enabled?: boolean;
 		};
 		risk_integration: {
 			enabled: boolean;

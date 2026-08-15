@@ -7,7 +7,7 @@ use fluxer_dev::cassandra::{
 };
 use fluxer_dev::desktop::{
     build_desktop, install_desktop, package_desktop, run_desktop, run_desktop_canary,
-    smoke_build_desktop, typecheck_desktop,
+    typecheck_desktop,
 };
 use fluxer_dev::env::merge_default_env_with_current;
 use fluxer_dev::manifest::{DEV_PROXY_PORT, LOCAL_APP_URL};
@@ -34,14 +34,10 @@ enum Command {
     Proxy(ProxyArgs),
     Dev(DevArgs),
     RustServices(RustServicesArgs),
-    Smoke(SmokeArgs),
     Cassandra(CassandraArgs),
     Desktop(DesktopArgs),
-    LocalK8s(LocalK8sArgs),
-    Marketing(MarketingArgs),
     MediaProxy(MediaProxyArgs),
     Tunnel(TunnelArgs),
-    NativeVoiceIt(fluxer_dev::native_voice_it::NativeVoiceItArgs),
 }
 
 #[derive(Debug, Args)]
@@ -81,14 +77,6 @@ struct RustServicesArgs {
 }
 
 #[derive(Debug, Args)]
-struct SmokeArgs {
-    #[arg(long)]
-    quick: bool,
-    #[arg(long)]
-    public: bool,
-}
-
-#[derive(Debug, Args)]
 struct CassandraArgs {
     #[command(subcommand)]
     command: CassandraCommand,
@@ -119,7 +107,6 @@ enum DesktopCommand {
         skip_native: bool,
     },
     Typecheck,
-    SmokeBuild,
     Package {
         #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
         builder_args: Vec<String>,
@@ -149,48 +136,13 @@ enum DesktopCommand {
 }
 
 #[derive(Debug, Args)]
-struct LocalK8sArgs {
-    #[command(subcommand)]
-    command: LocalK8sCommand,
-}
-
-#[derive(Debug, Subcommand)]
-enum LocalK8sCommand {
-    CreateCluster,
-    Kubectl {
-        #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
-        args: Vec<String>,
-    },
-    Helm {
-        #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
-        args: Vec<String>,
-    },
-    HotpatchSmoke,
-    HandoffRolloutSmoke,
-}
-
-#[derive(Debug, Args)]
-struct MarketingArgs {
-    #[command(subcommand)]
-    command: MarketingCommand,
-}
-
-#[derive(Debug, Subcommand)]
-enum MarketingCommand {
-    PreprocessBlogImage(fluxer_dev::marketing::PreprocessBlogImageArgs),
-    PreprocessBlogVideo(fluxer_dev::marketing::PreprocessBlogVideoArgs),
-}
-
-#[derive(Debug, Args)]
 struct MediaProxyArgs {
     #[command(subcommand)]
     command: MediaProxyCommand,
 }
 
 #[derive(Debug, Subcommand)]
-#[allow(clippy::large_enum_variant)]
 enum MediaProxyCommand {
-    BeeGifBench,
     Doctor {
         #[arg(long)]
         repair: bool,
@@ -199,13 +151,8 @@ enum MediaProxyCommand {
         #[arg(long)]
         path: Option<String>,
     },
-    SeaweedfsIntegration {
-        #[arg(long)]
-        isolated_store: bool,
-    },
     RustStressSmoke,
-    StressCompare(fluxer_dev::media_stress::StressCompareArgs),
-    SignExternalUrl(fluxer_dev::media_stress::SignExternalUrlArgs),
+    SignExternalUrl(fluxer_dev::media_external::SignExternalUrlArgs),
 }
 
 #[derive(Debug, Args)]
@@ -236,21 +183,6 @@ enum TunnelCommand {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    if std::env::args_os()
-        .next()
-        .and_then(|path| {
-            std::path::PathBuf::from(path)
-                .file_name()
-                .map(|name| name.to_owned())
-        })
-        .as_deref()
-        == Some(std::ffi::OsStr::new("docker"))
-    {
-        std::process::exit(fluxer_dev::local_k8s::run_docker_wrapper(
-            std::env::args_os().skip(1),
-        ));
-    }
-
     let cli = Cli::parse();
     if !matches!(
         cli.command,
@@ -284,7 +216,6 @@ async fn main() -> Result<()> {
         Command::RustServices(args) => {
             std::process::exit(fluxer_dev::rust_services::run_rust_services(&args.services).await?)
         }
-        Command::Smoke(args) => fluxer_dev::smoke::run_smoke(args.quick, args.public).await?,
         Command::Cassandra(args) => match args.command {
             CassandraCommand::Diff { output } => {
                 let diff = compute_diff(None).await?;
@@ -307,7 +238,6 @@ async fn main() -> Result<()> {
             DesktopCommand::Install => install_desktop()?,
             DesktopCommand::Build { skip_native } => build_desktop(skip_native)?,
             DesktopCommand::Typecheck => typecheck_desktop()?,
-            DesktopCommand::SmokeBuild => smoke_build_desktop()?,
             DesktopCommand::Package { builder_args } => package_desktop(&builder_args)?,
             DesktopCommand::Run {
                 app_url,
@@ -329,25 +259,7 @@ async fn main() -> Result<()> {
                 fluxer_dev::disclaim::exec_disclaimed(&program, &args)?
             }
         },
-        Command::LocalK8s(args) => match args.command {
-            LocalK8sCommand::CreateCluster => fluxer_dev::local_k8s::create_cluster().await?,
-            LocalK8sCommand::Kubectl { args } => fluxer_dev::local_k8s::run_kubectl_cli(&args)?,
-            LocalK8sCommand::Helm { args } => fluxer_dev::local_k8s::run_helm_cli(&args)?,
-            LocalK8sCommand::HotpatchSmoke => fluxer_dev::local_k8s::run_hotpatch_smoke().await?,
-            LocalK8sCommand::HandoffRolloutSmoke => {
-                fluxer_dev::local_k8s::run_handoff_rollout_smoke().await?
-            }
-        },
-        Command::Marketing(args) => match args.command {
-            MarketingCommand::PreprocessBlogImage(args) => {
-                fluxer_dev::marketing::preprocess_blog_image(args)?
-            }
-            MarketingCommand::PreprocessBlogVideo(args) => {
-                fluxer_dev::marketing::preprocess_blog_video(args)?
-            }
-        },
         Command::MediaProxy(args) => match args.command {
-            MediaProxyCommand::BeeGifBench => fluxer_dev::media_proxy::run_bee_gif_bench().await?,
             MediaProxyCommand::Doctor {
                 repair,
                 base_url,
@@ -356,20 +268,13 @@ async fn main() -> Result<()> {
                 fluxer_dev::media_proxy::run_dev_media_doctor(repair, &base_url, path.as_deref())
                     .await?;
             }
-            MediaProxyCommand::SeaweedfsIntegration { isolated_store } => {
-                fluxer_dev::media_proxy::run_seaweedfs_media_proxy_integration(isolated_store)
-                    .await?;
-            }
             MediaProxyCommand::RustStressSmoke => {
                 fluxer_dev::media_proxy::run_rust_stress_smoke()?;
-            }
-            MediaProxyCommand::StressCompare(args) => {
-                std::process::exit(fluxer_dev::media_stress::run_stress_compare(args).await?)
             }
             MediaProxyCommand::SignExternalUrl(args) => {
                 println!(
                     "{}",
-                    fluxer_dev::media_stress::sign_external_url(
+                    fluxer_dev::media_external::sign_external_url(
                         &args.secret_key,
                         &args.server_url,
                         &args.upstream
@@ -391,7 +296,6 @@ async fn main() -> Result<()> {
                 fluxer_dev::tunnel::run_cloudflare_tunnel(token, token_file).await?,
             ),
         },
-        Command::NativeVoiceIt(args) => fluxer_dev::native_voice_it::run(args).await?,
     }
     Ok(())
 }

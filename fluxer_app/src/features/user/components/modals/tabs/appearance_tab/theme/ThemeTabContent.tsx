@@ -2,6 +2,7 @@
 
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
 import * as ThemePreferenceCommands from '@app/features/theme/commands/ThemePreferenceCommands';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import Theme from '@app/features/theme/state/Theme';
 import * as ThemeStudioCommands from '@app/features/theme_studio/commands/ThemeStudioCommands';
 import {Button} from '@app/features/ui/button/Button';
@@ -146,7 +147,7 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = observer(
 						isLight: !systemPrefersDark,
 						icon: (
 							<ArrowsCounterClockwiseIcon
-								size={12}
+								size={remFromPx(12)}
 								data-flx="user.appearance-tab.theme.theme-tab-content.theme-options.arrows-counter-clockwise-icon"
 							/>
 						),

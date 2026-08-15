@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
 import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
 import {MenuItemSubmenu} from '@app/features/ui/action_menu/MenuItemSubmenu';
@@ -51,7 +52,7 @@ export const SettingsContextMenu: React.FC<SettingsContextMenuProps> = observer(
 						key={tab.type}
 						icon={
 							<IconComponent
-								size={16}
+								size={remFromPx(16)}
 								weight={tab.iconWeight ?? 'fill'}
 								data-flx="ui.action-menu.settings-context-menu.render-settings-menu-item.icon-component"
 							/>

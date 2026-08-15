@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {isIMEComposing} from '@app/features/messaging/utils/IMECompositionUtils';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Input} from '@app/features/ui/components/form/FormInput';
 import {Scroller} from '@app/features/ui/components/Scroller';
 import styles from '@app/features/ui/popover/searchable_list_popout/SearchableListPopout.module.css';
@@ -257,7 +258,7 @@ export function SearchableListPopout({
 					onKeyDown={handleInputKeyDown}
 					leftIcon={
 						<MagnifyingGlassIcon
-							size={16}
+							size={remFromPx(16)}
 							weight="bold"
 							data-flx="ui.popover.searchable-list-popout.searchable-list-popout.magnifying-glass-icon"
 						/>

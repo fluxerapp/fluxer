@@ -2,6 +2,7 @@
 
 import type {GatewayHandlerContext} from '@app/features/gateway/events/EventRouter';
 import GuildMembers from '@app/features/member/state/GuildMembers';
+import MemberSearch from '@app/features/member/state/MemberSearch';
 import Permission from '@app/features/permissions/state/Permission';
 import Presence from '@app/features/presence/state/Presence';
 import Users from '@app/features/user/state/Users';
@@ -14,6 +15,7 @@ interface GuildMemberRemovePayload {
 
 export function handleGuildMemberRemove(data: GuildMemberRemovePayload, _context: GatewayHandlerContext): void {
 	Users.handleUserUpdate(data.user);
+	MemberSearch.handleMemberRemove(data.guild_id, data.user.id);
 	GuildMembers.handleMemberRemove(data.guild_id, data.user.id);
 	Permission.handleGuildMemberUpdate(data.user.id);
 	Presence.handleGuildMemberRemove(data.guild_id, data.user.id);

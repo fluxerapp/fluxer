@@ -1,8 +1,14 @@
-:root {
-	--md-text-font: 'Fluxer Sans';
-	--md-code-font: 'Fluxer Mono';
-	--fluxer-display: 'Bricolage Grotesque', var(--md-text-font-family);
+body {
+	--md-text-font-family:
+		system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+		'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+	--md-code-font-family:
+		ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', 'Roboto Mono', 'Courier New', monospace;
 
+	--fluxer-display: var(--md-text-font-family);
+}
+
+:root {
 	--md-primary-fg-color: #4641d9;
 	--md-primary-fg-color--light: #5b56e0;
 	--md-primary-fg-color--dark: #3832b8;

@@ -77,6 +77,7 @@ impl ByteCoalescer {
             self.in_flight.lock().remove(&key);
             result
         } else {
+            drop(work);
             crate::metrics::GLOBAL
                 .coalescer_waiter
                 .fetch_add(1, std::sync::atomic::Ordering::Relaxed);

@@ -449,7 +449,7 @@ export const AddRoleButton: React.FC<{
 				<FocusRing offset={-2} data-flx="guild.role-management.add-role-button.focus-ring">
 					<button
 						type="button"
-						className={clsx(styles.addRoleButton, styles.addRoleButtonIcon)}
+						className={clsx(styles.assignRoleButton, styles.assignRoleButtonIcon)}
 						onClick={handleClick}
 						aria-label={i18n._(ADD_ROLE_DESCRIPTOR)}
 						data-flx="guild.role-management.add-role-button.add-role-button.click"

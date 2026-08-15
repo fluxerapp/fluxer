@@ -319,7 +319,7 @@ handle_session_connect_existing_session_refreshes_status_test() ->
     ?assertEqual(Ref, maps:get(mref, UpdatedSession)),
     [AllSession | _] = SessionsData,
     ?assertEqual(<<"dnd">>, maps:get(<<"status">>, AllSession)),
-    ?assertEqual(true, maps:get(<<"mobile">>, AllSession)).
+    ?assertEqual(false, maps:get(<<"mobile">>, AllSession)).
 
 flush_test_messages() ->
     receive

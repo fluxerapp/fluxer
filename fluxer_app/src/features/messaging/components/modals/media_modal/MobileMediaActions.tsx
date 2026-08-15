@@ -22,6 +22,7 @@ import {
 	ROTATE_ANTICLOCKWISE_DESCRIPTOR,
 	ROTATE_CLOCKWISE_DESCRIPTOR,
 } from '@app/features/messaging/components/modals/media_modal/shared';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {
 	MenuBottomSheet,
 	type MenuGroupType,
@@ -69,7 +70,7 @@ interface MobileMediaActionsProps {
 	rootRef?: Ref<HTMLDivElement>;
 }
 
-const iconSize = 20;
+const iconSize = remFromPx(20);
 
 function compactGroups(groups: Array<MenuGroupType>): Array<MenuGroupType> {
 	return groups.filter((group) => group.items.length > 0);
@@ -363,7 +364,13 @@ export const MobileMediaActions: FC<MobileMediaActionsProps> = observer(
 					data-flx="messaging.media-modal.mobile-media-actions.action-bar"
 				>
 					<ControlButton
-						icon={<XIcon size={22} weight="bold" data-flx="messaging.media-modal.mobile-media-actions.close-icon" />}
+						icon={
+							<XIcon
+								size={remFromPx(22)}
+								weight="bold"
+								data-flx="messaging.media-modal.mobile-media-actions.close-icon"
+							/>
+						}
 						label={i18n._(CLOSE_MODAL_DESCRIPTOR)}
 						onClick={onClose}
 						variant="danger"
@@ -372,7 +379,7 @@ export const MobileMediaActions: FC<MobileMediaActionsProps> = observer(
 					<ControlButton
 						icon={
 							<DotsThreeIcon
-								size={26}
+								size={remFromPx(26)}
 								weight="bold"
 								data-flx="messaging.media-modal.mobile-media-actions.more-options-icon"
 							/>

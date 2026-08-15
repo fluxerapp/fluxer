@@ -32,6 +32,7 @@ import {
 	SIGN_OUT_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
@@ -269,7 +270,7 @@ const BreadcrumbTitle: React.FC<BreadcrumbTitleProps> = ({parentLabel, currentLa
 			{parentLabel}
 		</button>
 		<CaretRightIcon
-			size={16}
+			size={remFromPx(16)}
 			weight="bold"
 			className={styles.breadcrumbChevron}
 			aria-hidden="true"

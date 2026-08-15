@@ -51,7 +51,6 @@ import {deriveUsernameFromDisplayName} from '../utils/UsernameSuggestionUtils';
 import * as AuthPassword from './AuthPassword';
 import * as AuthSession from './AuthSession';
 import * as AuthUtility from './AuthUtility';
-import {assertFlutterClientRegistrationAllowed} from './FlutterClientGate';
 import type {IRegistrationRiskEvaluator} from './services/IRegistrationRiskEvaluator';
 
 const DEFAULT_MINIMUM_AGE = 13;
@@ -133,7 +132,6 @@ export async function register(
 		riskAssessmentRepository,
 		riskHistoryRepository,
 	} = deps;
-	assertFlutterClientRegistrationAllowed(request, data.email ?? null);
 	const appPublicConfig = await instanceConfigRepository.getAppPublicConfig();
 	const emailEnabled = await instanceConfigRepository.isEmailEnabled();
 	const requiresTermsConsent = shouldRequireHostedLegalConsent(config) || appPublicConfig.legal.terms_url !== null;

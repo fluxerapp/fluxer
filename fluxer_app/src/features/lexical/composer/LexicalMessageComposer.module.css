@@ -1,0 +1,183 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.editable {
+	min-height: var(--composer-line-height, var(--textarea-line-height, 1.375rem));
+	max-height: 50svh;
+	overflow-y: auto;
+	overflow-x: hidden;
+	outline: none;
+	padding: 0;
+	margin: 0;
+	color: var(--text-chat);
+	font-size: var(--composer-font-size, var(--textarea-font-size, 1rem));
+	line-height: var(--composer-line-height, var(--textarea-line-height, 1.375rem));
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+	word-break: break-word;
+	caret-color: var(--text-chat);
+	scrollbar-gutter: stable;
+}
+
+.richInputHost {
+	position: relative;
+	min-width: 0;
+}
+
+.formSize {
+	--composer-font-size: 0.875rem;
+	--composer-line-height: 1.25rem;
+	--composer-placeholder-white-space: normal;
+}
+
+.paragraph {
+	margin: 0;
+}
+
+.placeholder {
+	position: absolute;
+	top: var(--composer-placeholder-top, 0);
+	right: var(--composer-placeholder-right, 0);
+	left: var(--composer-placeholder-left, 0);
+	pointer-events: none;
+	user-select: none;
+	color: var(--text-tertiary-secondary);
+	font-size: var(--composer-font-size, var(--textarea-font-size, 1rem));
+	line-height: var(--composer-line-height, var(--textarea-line-height, 1.375rem));
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: var(--composer-placeholder-white-space, nowrap);
+	overflow-wrap: anywhere;
+	max-width: none;
+}
+
+.marker {
+	opacity: 0.45;
+}
+
+.bold {
+	font-weight: 700;
+}
+
+.italic {
+	font-style: italic;
+}
+
+.underline {
+	text-decoration: underline;
+}
+
+.strike {
+	text-decoration: line-through;
+}
+
+.code {
+	font-family: var(--font-mono, ui-monospace, monospace);
+	color: var(--text-code);
+}
+
+.editable code {
+	font-family: var(--font-mono, ui-monospace, monospace);
+	font-size: 0.85em;
+	line-height: inherit;
+	padding: 0;
+	margin: 0;
+	border: 0;
+	border-radius: 0;
+	background: none;
+	color: var(--text-code);
+	white-space: inherit;
+}
+
+.mentionHost {
+	--markup-inline-icon-baseline-shift: -0.125em;
+	display: inline;
+	white-space: normal;
+}
+
+.emojiHost {
+	display: inline-block;
+	vertical-align: bottom;
+}
+
+.command {
+	font-weight: 700;
+	color: var(--text-chat);
+}
+
+.slashSlot {
+	--slash-slot-border-color: var(--background-modifier-accent);
+	display: inline-flex;
+	align-items: center;
+	box-sizing: border-box;
+	max-width: 100%;
+	overflow: hidden;
+	margin: 0 0.0625rem;
+	padding: 0 0.4375rem 0 0;
+	vertical-align: baseline;
+	border: 0.0625rem solid var(--slash-slot-border-color);
+	border-radius: 0.375rem;
+	background-color: var(--background-tertiary);
+	color: var(--text-chat);
+	font-size: 0.8125em;
+	line-height: var(--composer-line-height, var(--textarea-line-height, 1.375rem));
+	caret-color: var(--text-chat);
+	white-space: pre;
+	word-break: normal;
+	overflow-wrap: normal;
+}
+
+.slashSlot::before {
+	content: attr(data-slot-name);
+	display: flex;
+	align-items: center;
+	align-self: stretch;
+	flex: 0 0 auto;
+	margin-right: 0.4375rem;
+	padding: 0 0.4375rem;
+	border-right: 0.0625rem solid var(--slash-slot-border-color);
+	background-color: color-mix(in srgb, var(--background-textarea) 60%, var(--background-tertiary) 40%);
+	color: var(--text-primary-muted);
+	font-size: 1em;
+	font-weight: 600;
+	white-space: nowrap;
+	user-select: none;
+}
+
+.slashSlotPlaceholder {
+	display: inline-block;
+	min-width: 0.625rem;
+	align-self: center;
+}
+
+.slashSlotSeparator {
+	white-space: pre;
+}
+
+.slashSlot[data-slot-validity='invalid'] {
+	--slash-slot-border-color: var(--status-danger);
+}
+
+.slashSlot[data-slot-validity='invalid']::before {
+	background-color: color-mix(in srgb, var(--status-danger) 15%, var(--background-tertiary));
+	color: color-mix(in srgb, var(--status-danger) 70%, var(--text-primary));
+}
+
+.slashSlot[data-slot-focused='true'] {
+	--slash-slot-border-color: color-mix(in srgb, var(--text-primary-muted) 40%, transparent);
+}
+
+.slashSlot[data-slot-validity='invalid'][data-slot-focused='true'] {
+	--slash-slot-border-color: var(--status-danger);
+}
+
+.optionalHint {
+	display: inline;
+	margin-left: 0.0625rem;
+	padding: 0 0.125rem;
+	color: color-mix(in srgb, var(--text-primary-muted) 70%, transparent);
+	font-size: 0.8125em;
+	font-weight: 500;
+	user-select: none;
+	white-space: nowrap;
+	pointer-events: none;
+}

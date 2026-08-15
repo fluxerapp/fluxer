@@ -7,6 +7,7 @@ import {
 	PRODUCT_NAME,
 } from '@app/features/app/config/I18nDisplayConstants';
 import {OPEN_SETTINGS_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import {Spinner} from '@app/features/ui/components/Spinner';
 import styles from '@app/features/voice/components/modals/ScreenSharePickerModal.module.css';
@@ -66,7 +67,7 @@ export function ScreenSharePickerDisplayPermissionPrompt({
 	return (
 		<div className={styles.state} data-flx="voice.screen-share-picker-modal.screen-recording-permission.state">
 			<MonitorIcon
-				size={42}
+				size={remFromPx(42)}
 				className={styles.stateIcon}
 				data-flx="voice.screen-share-picker-modal.screen-share-picker-display-permission-prompt.state-icon"
 			/>

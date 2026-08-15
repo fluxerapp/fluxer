@@ -3,7 +3,6 @@
 import {createRequire} from 'node:module';
 import os from 'node:os';
 import {BUILD_CHANNEL} from '@electron/common/BuildChannel';
-import {DESKTOP_BUILD_VARIANT} from '@electron/common/BuildVariant';
 import type {
 	AppMetricsSnapshot,
 	CpuInfo,
@@ -139,7 +138,6 @@ export async function getDesktopInfo(options: DesktopInfoOptions = {}): Promise<
 	return {
 		version: app.getVersion(),
 		channel: BUILD_CHANNEL,
-		buildVariant: DESKTOP_BUILD_VARIANT,
 		arch: process.arch,
 		hardwareArch,
 		runningUnderRosetta,

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {convertToCodePoints} from '@app/features/expressions/utils/EmojiCodepointUtils';
+import {REM_BASE_PX, remFromPx} from '@app/features/theme/layout/RemFromPx';
 import sprite1f3fb2x from '@app/media/images/emoji-sprites/spritesheet-1f3fb@2x.png';
 import sprite1f3fb1x from '@app/media/images/emoji-sprites/spritesheet-1f3fb.png';
 import sprite1f3fc2x from '@app/media/images/emoji-sprites/spritesheet-1f3fc@2x.png';
@@ -13,14 +14,45 @@ import sprite1f3ff2x from '@app/media/images/emoji-sprites/spritesheet-1f3ff@2x.
 import sprite1f3ff1x from '@app/media/images/emoji-sprites/spritesheet-1f3ff.png';
 import spriteDefault2x from '@app/media/images/emoji-sprites/spritesheet-emoji@2x.png';
 import spriteDefault1x from '@app/media/images/emoji-sprites/spritesheet-emoji.png';
+import type {CSSProperties} from 'react';
 
 export const EMOJI_CLAP = '\u{1F44F}';
-export const EMOJI_SPRITE_SIZE = 32;
+const EMOJI_SPRITE_SIZE = 32;
 export const EMOJI_ROW_HEIGHT = 48;
 export const EMOJI_PICKER_CUSTOM_EMOJI_SIZE = 48;
 export const CATEGORY_HEADER_HEIGHT = 32;
 export const EMOJIS_PER_ROW = 9;
+const EMOJIS_PER_ROW_MIN = 5;
 export const OVERSCAN_ROWS = 5;
+
+const EMOJI_GRID_INLINE_PADDING = 16;
+const EMOJI_GRID_MIN_CELL_WIDTH = EMOJI_ROW_HEIGHT;
+
+function getRemScale(): number {
+	if (typeof document === 'undefined') return 1;
+	const rootFontSize = Number.parseFloat(getComputedStyle(document.documentElement).fontSize);
+	if (Number.isFinite(rootFontSize) && rootFontSize > 0) {
+		return rootFontSize / REM_BASE_PX;
+	}
+	return 1;
+}
+
+export function getEmojiGridColumns(containerWidth: number): number {
+	if (containerWidth <= 0) return EMOJIS_PER_ROW;
+	const remScale = getRemScale();
+	const availableWidth = Math.max(0, containerWidth - EMOJI_GRID_INLINE_PADDING * remScale);
+	const columns = Math.floor(availableWidth / (EMOJI_GRID_MIN_CELL_WIDTH * remScale));
+	return Math.max(EMOJIS_PER_ROW_MIN, columns);
+}
+
+export const getEmojiSpriteSheetLayout = (index: number, perRow: number, rows: number): CSSProperties => {
+	const column = index % perRow;
+	const row = Math.floor(index / perRow);
+	return {
+		backgroundPosition: `${remFromPx(-column * EMOJI_SPRITE_SIZE)} ${remFromPx(-row * EMOJI_SPRITE_SIZE)}`,
+		backgroundSize: `${remFromPx(perRow * EMOJI_SPRITE_SIZE)} ${remFromPx(rows * EMOJI_SPRITE_SIZE)}`,
+	};
+};
 
 interface SpriteSheetOptions {
 	retina?: boolean;

@@ -3,10 +3,11 @@
 .container {
 	position: relative;
 	display: grid;
-	height: 31.125rem;
-	width: 31.125rem;
-	max-height: 100dvh;
-	max-width: 100dvw;
+	box-sizing: border-box;
+	min-width: 0;
+	min-height: 0;
+	max-height: calc(100dvh - 1rem);
+	max-width: calc(100dvw - 1rem);
 	overflow: hidden;
 	border-radius: 0.5rem;
 	border: 0.0625rem solid var(--background-modifier-accent);
@@ -84,4 +85,52 @@
 	grid-template-rows: 1fr auto;
 	overflow: hidden;
 	background-color: var(--background-primary);
+}
+
+.resizeCorner {
+	position: absolute;
+	width: 1.25rem;
+	height: 1.25rem;
+	z-index: 5;
+	border: none;
+	background: transparent;
+	padding: 0;
+	pointer-events: auto;
+	touch-action: none;
+}
+
+.resizeCorner:focus-visible {
+	outline: 0.125rem solid var(--focus-primary);
+	outline-offset: -0.125rem;
+}
+
+.resizeCornerTopLeft {
+	top: 0;
+	left: 0;
+	cursor: nwse-resize;
+}
+
+.resizeCornerTopRight {
+	top: 0;
+	right: 0;
+	cursor: nesw-resize;
+}
+
+.resizeCornerBottomLeft {
+	bottom: 0;
+	left: 0;
+	cursor: nesw-resize;
+}
+
+.resizeCornerBottomRight {
+	right: 0;
+	bottom: 0;
+	cursor: nwse-resize;
+}
+
+:global(html.expression-picker-resizing),
+:global(html.expression-picker-resizing) * {
+	cursor: var(--expression-picker-resize-cursor, nwse-resize) !important;
+	user-select: none !important;
+	-webkit-user-select: none !important;
 }

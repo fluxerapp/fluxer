@@ -2,6 +2,7 @@
 
 import {ColorPickerPopover} from '@app/features/app/components/floating/ColorPickerPopover';
 import {PASSWORD_MANAGER_IGNORE_ATTRIBUTES} from '@app/features/platform/utils/PasswordManagerAutocomplete';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import styles from '@app/features/ui/components/form/ColorPickerField.module.css';
 import surfaceStyles from '@app/features/ui/components/form/FormSurface.module.css';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
@@ -259,7 +260,7 @@ export const ColorPickerField: React.FC<ColorPickerFieldProps> = observer((props
 								data-flx="ui.form.color-picker-field.swatch"
 							>
 								<EyedropperIcon
-									size={18}
+									size={remFromPx(18)}
 									weight="fill"
 									style={{color: iconOnSwatch === 'white' ? '#FFFFFF' : '#000000'}}
 									className={styles.swatchIcon}

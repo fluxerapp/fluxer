@@ -25,3 +25,28 @@
 	font-size: 0.875rem;
 	color: var(--text-primary-muted);
 }
+
+.editor {
+	--composer-placeholder-top: 0.625rem;
+	--composer-placeholder-right: 0px;
+	--composer-placeholder-left: 1rem;
+	flex: 1 1 0%;
+	min-width: 0;
+	padding-inline-start: 1rem;
+}
+
+:global([dir='rtl']) .editor {
+	--composer-placeholder-right: 1rem;
+	--composer-placeholder-left: 0px;
+}
+
+.editor [data-channel-textarea] {
+	box-sizing: border-box;
+	min-height: 6.25rem;
+	max-height: 6.25rem;
+	padding: 0.625rem 0;
+}
+
+.characterCountContainer {
+	text-align: center;
+}

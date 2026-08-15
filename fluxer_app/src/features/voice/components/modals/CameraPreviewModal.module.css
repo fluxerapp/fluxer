@@ -122,7 +122,7 @@
 
 .errorDetail {
 	font-size: 0.75rem;
-	opacity: 0.75;
+	color: color-mix(in srgb, currentcolor 75%, transparent);
 }
 
 .liveLabel {

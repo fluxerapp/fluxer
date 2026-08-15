@@ -6,6 +6,7 @@ import {CLEAR_SEARCH_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDes
 import MessageFocus from '@app/features/messaging/state/MessageFocus';
 import {isTextInputKeyEvent} from '@app/features/platform/utils/IsTextInputKeyEvent';
 import QuickSwitcher from '@app/features/search/state/QuickSwitcher';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Input} from '@app/features/ui/components/form/FormInput';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import ContextMenu from '@app/features/ui/state/ContextMenu';
@@ -167,7 +168,11 @@ export const PickerSearchInput = React.forwardRef<HTMLInputElement, PickerSearch
 							aria-label={i18n._(CLEAR_SEARCH_DESCRIPTOR)}
 							data-flx="channel.picker-search-input.back-button"
 						>
-							<ArrowLeftIcon size={20} weight="regular" data-flx="channel.picker-search-input.arrow-left-icon" />
+							<ArrowLeftIcon
+								size={remFromPx(20)}
+								weight="regular"
+								data-flx="channel.picker-search-input.arrow-left-icon"
+							/>
 						</button>
 					</FocusRing>
 				)}
@@ -182,7 +187,7 @@ export const PickerSearchInput = React.forwardRef<HTMLInputElement, PickerSearch
 					data-autofocus=""
 					leftIcon={
 						<MagnifyingGlassIcon
-							size={18}
+							size={remFromPx(18)}
 							weight="regular"
 							data-flx="channel.picker-search-input.magnifying-glass-icon"
 						/>
@@ -201,7 +206,7 @@ export const PickerSearchInput = React.forwardRef<HTMLInputElement, PickerSearch
 									aria-label={i18n._(CLEAR_SEARCH_DESCRIPTOR)}
 									data-flx="channel.picker-search-input.clear-button"
 								>
-									<XIcon size={18} weight="bold" data-flx="channel.picker-search-input.x-icon" />
+									<XIcon size={remFromPx(18)} weight="bold" data-flx="channel.picker-search-input.x-icon" />
 								</button>
 							) : null}
 						</div>

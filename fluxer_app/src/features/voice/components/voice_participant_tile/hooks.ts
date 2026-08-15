@@ -21,6 +21,7 @@ import {
 	type StreamPreviewUploadUrlCacheEntryLike,
 } from '@app/features/voice/components/voice_participant_tile/StreamPreviewUploadPolicy';
 import {logger} from '@app/features/voice/components/voice_participant_tile/shared';
+import {resolveDevicePixelRatio} from '@app/features/voice/DevicePixelRatio';
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
 import ScreenSharePublicationMigration from '@app/features/voice/engine/ScreenSharePublicationMigration';
 import {useStoreVersion} from '@app/features/voice/engine/Store';
@@ -125,13 +126,13 @@ export function useNativeCameraSubscriptionQuality<T extends HTMLElement>(
 		}
 		const element = ref.current;
 		if (!element) return;
-		const ownerWindow = element.ownerDocument.defaultView ?? window;
+		const ownerWindow = element.ownerDocument.defaultView;
 		const measure = (): void => {
-			const ratio = ownerWindow.devicePixelRatio > 0 ? ownerWindow.devicePixelRatio : 1;
+			const ratio = resolveDevicePixelRatio(ownerWindow);
 			setQuality(pickCameraSubscriptionQuality(element.clientWidth * ratio, element.clientHeight * ratio));
 		};
 		measure();
-		if (typeof ownerWindow.ResizeObserver === 'undefined') return;
+		if (ownerWindow == null || typeof ownerWindow.ResizeObserver === 'undefined') return;
 		const observer = new ownerWindow.ResizeObserver(measure);
 		observer.observe(element);
 		return () => observer.disconnect();

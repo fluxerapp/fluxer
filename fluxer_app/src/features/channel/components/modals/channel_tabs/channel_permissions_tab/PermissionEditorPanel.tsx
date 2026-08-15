@@ -9,6 +9,7 @@ import styles from '@app/features/channel/components/modals/channel_tabs/Channel
 import {LayoutToggleButtons} from '@app/features/channel/components/modals/channel_tabs/channel_permissions_tab/LayoutToggleButtons';
 import type {PermissionOverwrite} from '@app/features/channel/components/modals/channel_tabs/channel_permissions_tab/shared';
 import type * as PermissionUtils from '@app/features/permissions/utils/PermissionUtils';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import {Input} from '@app/features/ui/components/form/FormInput';
 import {msg} from '@lingui/core/macro';
@@ -93,7 +94,9 @@ export const PermissionEditorPanel: React.FC<PermissionEditorPanelProps> = ({
 					<Button
 						variant="secondary"
 						small={true}
-						leftIcon={<TrashIcon size={18} data-flx="channel.channel-tabs.channel-permissions-tab.trash-icon" />}
+						leftIcon={
+							<TrashIcon size={remFromPx(18)} data-flx="channel.channel-tabs.channel-permissions-tab.trash-icon" />
+						}
 						onClick={onDeleteOverride}
 						disabled={!canManageChannels || !canManageRoles}
 						data-flx="channel.channel-tabs.channel-permissions-tab.button.delete-override"
@@ -123,7 +126,7 @@ export const PermissionEditorPanel: React.FC<PermissionEditorPanelProps> = ({
 					onChange={(e) => setPermissionSearchQuery(e.target.value)}
 					leftIcon={
 						<MagnifyingGlassIcon
-							size={16}
+							size={remFromPx(16)}
 							weight="bold"
 							data-flx="channel.channel-tabs.channel-permissions-tab.magnifying-glass-icon"
 						/>

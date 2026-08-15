@@ -17,6 +17,7 @@ import {
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as GuildMemberCommands from '@app/features/member/commands/GuildMemberCommands';
 import GuildMembers from '@app/features/member/state/GuildMembers';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Checkbox} from '@app/features/ui/checkbox/Checkbox';
 import {Combobox} from '@app/features/ui/components/form/FormCombobox';
 import {Switch} from '@app/features/ui/components/form/FormSwitch';
@@ -490,7 +491,7 @@ export const GuildNotificationSettingsModal = observer(({guildId}: {guildId: str
 												>
 													{isCategory ? (
 														<FolderIcon
-															size={20}
+															size={remFromPx(20)}
 															className={styles.channelIcon}
 															data-flx="guild.guild-notification-settings-modal.channel-icon"
 														/>
@@ -527,7 +528,11 @@ export const GuildNotificationSettingsModal = observer(({guildId}: {guildId: str
 													aria-label={i18n._(REMOVE_OVERRIDE_BUTTON_ARIA_DESCRIPTOR)}
 													data-flx="guild.guild-notification-settings-modal.remove-button.remove-override"
 												>
-													<XIcon size={14} weight="bold" data-flx="guild.guild-notification-settings-modal.x-icon" />
+													<XIcon
+														size={remFromPx(14)}
+														weight="bold"
+														data-flx="guild.guild-notification-settings-modal.x-icon"
+													/>
 												</button>
 											</div>
 											<div

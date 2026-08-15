@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
+
 interface BlueskyIconProps {
 	size?: number;
 	className?: string;
@@ -9,8 +11,8 @@ export function BlueskyIcon({size = 16, className}: BlueskyIconProps) {
 	return (
 		<svg
 			xmlns="http://www.w3.org/2000/svg"
-			width={size}
-			height={size}
+			width={remFromPx(size)}
+			height={remFromPx(size)}
 			viewBox="0 0 600 530"
 			fill="#1185fe"
 			className={className}

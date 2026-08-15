@@ -6,6 +6,7 @@ import {showGuildErrorModal} from '@app/features/guild/components/alerts/GuildEr
 import styles from '@app/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.module.css';
 import {TRY_AGAIN_IN_A_MOMENT_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import {Form} from '@app/features/ui/components/form/Form';
@@ -334,7 +335,11 @@ const GuildDiscoveryTab: React.FC<{guildId: string}> = ({guildId}) => {
 				<div className={styles.warning} data-flx="guild.guild-tabs.guild-discovery-tab.warning">
 					<div className={styles.warningContent} data-flx="guild.guild-tabs.guild-discovery-tab.warning-content">
 						<div className={styles.warningIcon} data-flx="guild.guild-tabs.guild-discovery-tab.warning-icon">
-							<WarningIcon size={20} weight="fill" data-flx="guild.guild-tabs.guild-discovery-tab.warning-icon--2" />
+							<WarningIcon
+								size={remFromPx(20)}
+								weight="fill"
+								data-flx="guild.guild-tabs.guild-discovery-tab.warning-icon--2"
+							/>
 						</div>
 						<div className={styles.warningBody} data-flx="guild.guild-tabs.guild-discovery-tab.warning-body">
 							<p className={styles.warningTitle} data-flx="guild.guild-tabs.guild-discovery-tab.warning-title">
@@ -368,7 +373,11 @@ const GuildDiscoveryTab: React.FC<{guildId: string}> = ({guildId}) => {
 				<div className={styles.info} data-flx="guild.guild-tabs.guild-discovery-tab.info">
 					<div className={styles.infoContent} data-flx="guild.guild-tabs.guild-discovery-tab.info-content">
 						<div className={styles.infoIcon} data-flx="guild.guild-tabs.guild-discovery-tab.info-icon">
-							<InfoIcon size={20} weight="fill" data-flx="guild.guild-tabs.guild-discovery-tab.info-icon--2" />
+							<InfoIcon
+								size={remFromPx(20)}
+								weight="fill"
+								data-flx="guild.guild-tabs.guild-discovery-tab.info-icon--2"
+							/>
 						</div>
 						<p className={styles.infoText} data-flx="guild.guild-tabs.guild-discovery-tab.info-text">
 							<Trans>
@@ -383,7 +392,11 @@ const GuildDiscoveryTab: React.FC<{guildId: string}> = ({guildId}) => {
 				<div className={styles.info} data-flx="guild.guild-tabs.guild-discovery-tab.info--2">
 					<div className={styles.infoContent} data-flx="guild.guild-tabs.guild-discovery-tab.info-content--2">
 						<div className={styles.infoIcon} data-flx="guild.guild-tabs.guild-discovery-tab.info-icon--3">
-							<InfoIcon size={20} weight="fill" data-flx="guild.guild-tabs.guild-discovery-tab.info-icon--4" />
+							<InfoIcon
+								size={remFromPx(20)}
+								weight="fill"
+								data-flx="guild.guild-tabs.guild-discovery-tab.info-icon--4"
+							/>
 						</div>
 						<p className={styles.infoText} data-flx="guild.guild-tabs.guild-discovery-tab.info-text--2">
 							<Trans>

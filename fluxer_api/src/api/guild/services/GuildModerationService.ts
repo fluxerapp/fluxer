@@ -20,6 +20,7 @@ import {Logger} from '../../Logger';
 import type {RequestCache} from '../../middleware/RequestCacheMiddleware';
 import type {GuildBan} from '../../models/GuildBan';
 import {hasHighCgnatBlastRadiusRisk, isSingleIpBanCandidate} from '../../risk/IpBanCgnatGuard';
+import {isIpBanExempt} from '../../risk/IpBanExemptions';
 import type {IUserRepository} from '../../user/IUserRepository';
 import type {WorkerTaskName} from '../../worker/WorkerLaneConfig';
 import type {GuildAuditLogService} from '../GuildAuditLogService';
@@ -79,7 +80,7 @@ export class GuildModerationService {
 				days: deleteMessageDays,
 			});
 		}
-		const targetIp = targetUser.lastActiveIp || null;
+		const targetIp = isIpBanExempt(targetUser.lastActiveIp) ? null : targetUser.lastActiveIp || null;
 		const targetEmail = targetUser.email?.toLowerCase() || null;
 		let expiresAt: Date | null = null;
 		if (banDurationSeconds && banDurationSeconds > 0) {
@@ -216,6 +217,9 @@ export class GuildModerationService {
 		userIp: string | null | undefined,
 		bannedIp: string | null | undefined,
 	): Promise<boolean> {
+		if (isIpBanExempt(userIp)) {
+			return false;
+		}
 		if (!userIp || !bannedIp || !isSingleIpBanCandidate(bannedIp)) {
 			return true;
 		}

@@ -116,7 +116,7 @@ const Thumbnail: FC<ThumbnailProps> = observer(
 							onClick={onPlay}
 							icon={
 								<PlayIcon
-									size={28}
+									size={remFromPx(28)}
 									aria-hidden="true"
 									data-flx="channel.embeds.media.embed-you-tube.thumbnail.play-icon"
 								/>
@@ -128,7 +128,7 @@ const Thumbnail: FC<ThumbnailProps> = observer(
 							onClick={onOpenInNewTab}
 							icon={
 								<ArrowSquareOutIcon
-									size={24}
+									size={remFromPx(24)}
 									aria-hidden="true"
 									data-flx="channel.embeds.media.embed-you-tube.thumbnail.arrow-square-out-icon"
 								/>
@@ -147,23 +147,27 @@ export const EmbedYouTube: FC<EmbedYouTubeProps> = observer(({embed, width = YOU
 	const [hasInteracted, setHasInteracted] = useState(false);
 	const posterSrc = embed.thumbnail?.proxy_url || '';
 	const {ref: visibilityRef, isNearViewport} = useNearViewport<HTMLDivElement>({rememberKey: posterSrc});
-	const [posterCachedOnMount] = useState(() => ImageCacheUtils.hasImage(posterSrc));
-	const [posterLoaded, setPosterLoaded] = useState(posterCachedOnMount);
+	const [posterCacheAtMount] = useState(() => ({src: posterSrc, cached: ImageCacheUtils.hasImage(posterSrc)}));
+	const posterCachedOnMount = posterCacheAtMount.src === posterSrc && posterCacheAtMount.cached;
+	const [loadedPosterSrc, setLoadedPosterSrc] = useState<string | null>(() => {
+		if (posterSrc.length > 0 && ImageCacheUtils.hasImage(posterSrc)) return posterSrc;
+		return null;
+	});
+	const posterLoaded = posterSrc.length > 0 && loadedPosterSrc === posterSrc;
 	useEffect(() => {
 		if (!isNearViewport) return;
-		if (posterSrc) {
-			if (ImageCacheUtils.hasImage(posterSrc)) {
-				setPosterLoaded(true);
-				return;
-			}
-			setPosterLoaded(false);
-			ImageCacheUtils.loadImage(
-				posterSrc,
-				() => setPosterLoaded(true),
-				() => setPosterLoaded(false),
-			);
+		if (posterSrc.length === 0 || loadedPosterSrc === posterSrc) return;
+		if (ImageCacheUtils.hasImage(posterSrc)) {
+			setLoadedPosterSrc(posterSrc);
+			return;
 		}
-	}, [isNearViewport, posterSrc]);
+		const cleanup = ImageCacheUtils.loadImage(
+			posterSrc,
+			() => setLoadedPosterSrc(posterSrc),
+			() => setLoadedPosterSrc((currentSource) => (currentSource === posterSrc ? null : currentSource)),
+		);
+		return cleanup;
+	}, [isNearViewport, loadedPosterSrc, posterSrc]);
 	const handleInitialPlay = useCallback((event: React.MouseEvent | React.KeyboardEvent) => {
 		event.stopPropagation();
 		setHasInteracted(true);

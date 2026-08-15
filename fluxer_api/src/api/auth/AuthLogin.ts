@@ -37,7 +37,6 @@ import * as AuthMfa from './AuthMfa';
 import * as AuthPassword from './AuthPassword';
 import * as AuthSession from './AuthSession';
 import * as AuthUtility from './AuthUtility';
-import {assertFlutterClientLoginAllowed, type FlutterClientGateMemberRepository} from './FlutterClientGate';
 
 function createRequestCache(): RequestCache {
 	const userPartials = new Map();
@@ -73,7 +72,6 @@ interface LoginMfaWebAuthnParams {
 export interface LoginDependencies {
 	inviteService: InviteService | null;
 	kvDeletionQueue: KVAccountDeletionQueueService;
-	flutterClientGateMemberRepository: FlutterClientGateMemberRepository;
 }
 
 interface LoginTokenResult {
@@ -219,7 +217,7 @@ export async function login(
 	{data, request}: LoginParams,
 ): Promise<LoginResult> {
 	const {users, cache, rateLimit, email, config} = ctx.services;
-	const {inviteService, kvDeletionQueue, flutterClientGateMemberRepository} = deps;
+	const {inviteService, kvDeletionQueue} = deps;
 	const skipRateLimits = config.dev.testModeEnabled || config.dev.disableRateLimits;
 	const emailRateLimit = await rateLimit.checkLimit({
 		identifier: `login:email:${data.email}`,
@@ -259,7 +257,6 @@ export async function login(
 			{path: 'password', code: ValidationErrorCodes.INVALID_EMAIL_OR_PASSWORD},
 		]);
 	}
-	await assertFlutterClientLoginAllowed(request, user, flutterClientGateMemberRepository);
 	let currentUser = await AuthUtility.handleBanStatus(ctx, user);
 	if ((currentUser.flags & UserFlags.DISABLED) !== 0n && !currentUser.tempBannedUntil) {
 		const updatedFlags = currentUser.flags & ~UserFlags.DISABLED;
@@ -380,7 +377,6 @@ const MFA_USER_ATTEMPTS_WINDOW = seconds('15 minutes');
 
 export async function loginMfaTotp(
 	ctx: ApiContext,
-	deps: Pick<LoginDependencies, 'flutterClientGateMemberRepository'>,
 	{code, ticket, request}: LoginMfaTotpParams,
 ): Promise<LoginTokenResult> {
 	const {users, cache} = ctx.services;
@@ -393,7 +389,6 @@ export async function loginMfaTotp(
 		throw new UnknownUserError();
 	}
 	AuthUtility.assertNonBotUser(ctx, user);
-	await assertFlutterClientLoginAllowed(request, user, deps.flutterClientGateMemberRepository);
 	if (!user.totpSecret || !user.authenticatorTypes?.has(UserAuthenticatorTypes.TOTP)) {
 		throw InputValidationError.fromCode('code', ValidationErrorCodes.TOTP_NOT_ENABLED);
 	}
@@ -429,7 +424,6 @@ export async function loginMfaTotp(
 
 export async function loginMfaWebAuthn(
 	ctx: ApiContext,
-	deps: Pick<LoginDependencies, 'flutterClientGateMemberRepository'>,
 	{response, challenge, ticket, request}: LoginMfaWebAuthnParams,
 ): Promise<LoginTokenResult> {
 	const {users, cache} = ctx.services;
@@ -442,7 +436,6 @@ export async function loginMfaWebAuthn(
 		throw new UnknownUserError();
 	}
 	AuthUtility.assertNonBotUser(ctx, user);
-	await assertFlutterClientLoginAllowed(request, user, deps.flutterClientGateMemberRepository);
 	await AuthMfa.verifyWebAuthnAuthentication(ctx, user.id, response, challenge, 'mfa', ticket);
 	await cache.delete(`mfa-ticket:${ticket}`);
 	const [token] = await AuthSession.createAuthSession(ctx, {user, request});

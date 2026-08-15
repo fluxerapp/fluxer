@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import styles from '@app/features/user/components/modals/tabs/appearance_tab/ThemeTab.module.css';
 import type {ThemeType} from '@fluxer/constants/src/UserConstants';
@@ -74,7 +75,7 @@ export const ThemeButton = observer(
 								<CheckIcon
 									weight="bold"
 									className={styles.themeButtonCheckmarkIcon}
-									size={12}
+									size={remFromPx(12)}
 									data-flx="user.appearance-tab.theme.theme-button.theme-button-checkmark-icon"
 								/>
 							</div>

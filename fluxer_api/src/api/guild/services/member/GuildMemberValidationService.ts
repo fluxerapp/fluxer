@@ -15,6 +15,7 @@ import {guildIdToRoleId} from '../../../BrandedTypes';
 import {Logger} from '../../../Logger';
 import type {GuildMember} from '../../../models/GuildMember';
 import {hasHighCgnatBlastRadiusRisk, isSingleIpBanCandidate} from '../../../risk/IpBanCgnatGuard';
+import {isIpBanExempt} from '../../../risk/IpBanExemptions';
 import type {IUserRepository} from '../../../user/IUserRepository';
 import type {IGuildRepositoryAggregate} from '../../repositories/IGuildRepositoryAggregate';
 
@@ -107,6 +108,9 @@ export class GuildMemberValidationService {
 		userIp: string | null | undefined,
 		bannedIp: string | null | undefined,
 	): Promise<boolean> {
+		if (isIpBanExempt(userIp)) {
+			return false;
+		}
 		if (!userIp || !bannedIp || !isSingleIpBanCandidate(bannedIp)) {
 			return true;
 		}

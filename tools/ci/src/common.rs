@@ -5,7 +5,6 @@ use aws_config::{BehaviorVersion, Region, retry::RetryConfig};
 use aws_sdk_s3::Client as S3Client;
 use aws_sdk_s3::error::ProvideErrorMetadata;
 use aws_sdk_s3::primitives::ByteStream;
-use aws_sdk_s3::types::MetadataDirective;
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as BASE64;
 use chrono::{DateTime, Datelike, NaiveDate, NaiveDateTime, TimeZone, Timelike, Utc};
@@ -597,55 +596,6 @@ pub(crate) async fn upload_s3_plan_overwrite(
     Ok(stats)
 }
 
-pub(crate) async fn upload_s3_plan_sync(
-    client: &S3Client,
-    bucket: &str,
-    plan: Vec<S3UploadPlanItem>,
-) -> Result<S3UploadStats> {
-    ensure_unique_s3_keys(&plan)?;
-    let existing_objects = existing_s3_objects_for_plan(client, bucket, &plan).await?;
-    let mut to_upload = Vec::new();
-    let mut skipped_existing = 0_usize;
-    for item in plan {
-        match existing_objects.get(&item.key) {
-            Some(remote) if s3_object_matches_local(&item, remote)? => skipped_existing += 1,
-            _ => to_upload.push(item),
-        }
-    }
-
-    let concurrency = s3_write_concurrency();
-    let semaphore = Arc::new(Semaphore::new(concurrency));
-    let bucket = bucket.to_string();
-    let mut tasks = JoinSet::new();
-    for item in to_upload {
-        let permit = semaphore
-            .clone()
-            .acquire_owned()
-            .await
-            .context("S3 upload semaphore closed")?;
-        let client = client.clone();
-        let bucket = bucket.clone();
-        tasks.spawn(async move {
-            let _permit = permit;
-            put_file_to_s3_overwrite(&client, &bucket, &item)
-                .await
-                .with_context(|| format!("Failed sync upload for s3://{}/{}", bucket, item.key))?;
-            Ok::<_, anyhow::Error>(())
-        });
-    }
-
-    let mut stats = S3UploadStats {
-        skipped_existing,
-        ..Default::default()
-    };
-    while let Some(result) = tasks.join_next().await {
-        result.context("S3 upload task failed")??;
-        stats.uploaded += 1;
-    }
-
-    Ok(stats)
-}
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct S3ObjectMetadata {
     pub(crate) e_tag: Option<String>,
@@ -750,22 +700,6 @@ fn ensure_existing_s3_object_matches_local(
         local.md5_hex
     );
     Ok(())
-}
-
-fn s3_object_matches_local(item: &S3UploadPlanItem, remote: &S3ObjectMetadata) -> Result<bool> {
-    let local = s3_file_identity(&item.path)?;
-    if let Some(remote_size) = remote.size
-        && (remote_size < 0 || remote_size as u64 != local.size)
-    {
-        return Ok(false);
-    }
-    let Some(e_tag) = remote.e_tag.as_deref() else {
-        return Ok(false);
-    };
-    let Some(remote_md5) = s3_etag_md5(e_tag) else {
-        return Ok(false);
-    };
-    Ok(remote_md5 == local.md5_hex)
 }
 
 fn s3_file_identity(path: &Path) -> Result<S3FileIdentity> {
@@ -1181,125 +1115,6 @@ pub(crate) async fn list_s3_keys(
         .collect())
 }
 
-pub(crate) async fn delete_s3_objects(
-    client: &S3Client,
-    bucket: &str,
-    keys: &[String],
-) -> Result<usize> {
-    let mut deleted = 0_usize;
-    for key in keys {
-        delete_s3_object(client, bucket, key).await?;
-        deleted += 1;
-    }
-    Ok(deleted)
-}
-
-async fn delete_s3_object(client: &S3Client, bucket: &str, key: &str) -> Result<()> {
-    println!("Deleting s3://{bucket}/{key}");
-    let attempts = s3_retry_attempts();
-    for attempt in 1..=attempts {
-        match client.delete_object().bucket(bucket).key(key).send().await {
-            Ok(_) => return Ok(()),
-            Err(error) => {
-                let code = error
-                    .as_service_error()
-                    .and_then(|error| error.code())
-                    .map(ToOwned::to_owned);
-                let status = error
-                    .raw_response()
-                    .map(|response| response.status().as_u16());
-                if is_retryable_s3_error(code.as_deref(), status) && attempt < attempts {
-                    sleep_before_s3_retry(
-                        "delete",
-                        &format!("s3://{bucket}/{key}"),
-                        attempt,
-                        attempts,
-                        code.as_deref(),
-                        status,
-                    )
-                    .await;
-                    continue;
-                }
-                let summary = s3_error_summary(code.as_deref(), status);
-                return Err(error)
-                    .with_context(|| format!("Failed to delete s3://{bucket}/{key}{summary}"));
-            }
-        }
-    }
-    unreachable!("S3 retry attempts are always greater than zero")
-}
-
-pub(crate) async fn replace_s3_object_metadata(
-    client: &S3Client,
-    bucket: &str,
-    key: &str,
-    content_type: Option<&str>,
-    cache_control: Option<&str>,
-) -> Result<()> {
-    println!("Replacing metadata for s3://{bucket}/{key}");
-    let attempts = s3_retry_attempts();
-    for attempt in 1..=attempts {
-        let mut request = client
-            .copy_object()
-            .bucket(bucket)
-            .key(key)
-            .copy_source(s3_copy_source(bucket, key))
-            .metadata_directive(MetadataDirective::Replace);
-        if let Some(content_type) = content_type {
-            request = request.content_type(content_type);
-        }
-        if let Some(cache_control) = cache_control {
-            request = request.cache_control(cache_control);
-        }
-        match request.send().await {
-            Ok(_) => return Ok(()),
-            Err(error) => {
-                let code = error
-                    .as_service_error()
-                    .and_then(|error| error.code())
-                    .map(ToOwned::to_owned);
-                let status = error
-                    .raw_response()
-                    .map(|response| response.status().as_u16());
-                if is_retryable_s3_error(code.as_deref(), status) && attempt < attempts {
-                    sleep_before_s3_retry(
-                        "metadata replace",
-                        &format!("s3://{bucket}/{key}"),
-                        attempt,
-                        attempts,
-                        code.as_deref(),
-                        status,
-                    )
-                    .await;
-                    continue;
-                }
-                let summary = s3_error_summary(code.as_deref(), status);
-                return Err(error).with_context(|| {
-                    format!("Failed to replace metadata for s3://{bucket}/{key}{summary}")
-                });
-            }
-        }
-    }
-    unreachable!("S3 retry attempts are always greater than zero")
-}
-
-fn s3_copy_source(bucket: &str, key: &str) -> String {
-    format!("{bucket}/{}", percent_encode_s3_copy_source_key(key))
-}
-
-fn percent_encode_s3_copy_source_key(key: &str) -> String {
-    let mut encoded = String::with_capacity(key.len());
-    for byte in key.bytes() {
-        match byte {
-            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' | b'/' => {
-                encoded.push(byte as char)
-            }
-            _ => encoded.push_str(&format!("%{byte:02X}")),
-        }
-    }
-    encoded
-}
-
 async fn list_s3_objects(
     client: &S3Client,
     bucket: &str,
@@ -1528,14 +1343,6 @@ pub(crate) fn count_files_min_depth(root: &Path, min_depth: usize) -> Result<usi
         .into_iter()
         .filter(|entry| entry.file_type().is_file())
         .count())
-}
-
-pub(crate) fn first_word(value: &str) -> String {
-    value
-        .split_whitespace()
-        .next()
-        .unwrap_or_default()
-        .to_string()
 }
 
 pub(crate) fn title_case(value: &str) -> String {
@@ -1803,14 +1610,6 @@ mod tests {
             Some("text/css; charset=utf-8")
         );
         assert_eq!(s3_content_type_for_key("assets/blob.unknown"), None);
-    }
-
-    #[test]
-    fn s3_copy_source_percent_encodes_key_bytes_but_keeps_slashes() {
-        assert_eq!(
-            s3_copy_source("bucket", "assets/chunk name+1.js"),
-            "bucket/assets/chunk%20name%2B1.js"
-        );
     }
 
     #[test]

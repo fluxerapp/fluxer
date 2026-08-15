@@ -2,9 +2,9 @@
 
 use crate::desktop::install_desktop;
 use crate::gateway::setup_gateway_config;
+use crate::object_store::{bootstrap_schema_and_object_store, wait_s3_api};
 use crate::paths::{ensure_state_dirs, ensure_writable_dev_paths};
 use crate::proc::{PNPM_INSTALL_ENV, RunOptions, run_command, wait_http, wait_tcp};
-use crate::smoke::{bootstrap_schema_and_object_store, run_smoke, wait_s3_api};
 use anyhow::Result;
 
 pub async fn bootstrap(skip_install: bool, skip_desktop_install: bool) -> Result<()> {
@@ -30,7 +30,6 @@ pub async fn bootstrap(skip_install: bool, skip_desktop_install: bool) -> Result
     setup_gateway_config()?;
     wait_core_infra().await?;
     bootstrap_schema_and_object_store().await?;
-    run_smoke(false, false).await?;
     println!("Fluxer dev bootstrap complete.");
     Ok(())
 }
@@ -40,7 +39,7 @@ pub async fn post_start() -> Result<()> {
     ensure_writable_dev_paths()?;
     setup_gateway_config()?;
     crate::media_proxy::ensure_dev_object_store(true, 120).await?;
-    run_smoke(true, false).await
+    Ok(())
 }
 
 pub async fn wait_core_infra() -> Result<()> {

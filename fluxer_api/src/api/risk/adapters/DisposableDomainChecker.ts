@@ -1,21 +1,22 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {IAdminRepository} from '../../admin/IAdminRepository';
 import type {DisposableCheckResult} from '../RiskTypes';
 
 interface DisposableDomainCheckerContext {
-	disposableDomainsRef: {
-		readonly current: ReadonlySet<string>;
-	};
+	adminRepository: Pick<IAdminRepository, 'isEmailDomainSuspicious' | 'isEmailDomainDisposable'>;
 }
 
 export function createDisposableDomainChecker(ctx: DisposableDomainCheckerContext) {
 	return async function checkDomainDisposable(args: {domain: string}): Promise<DisposableCheckResult> {
 		const domain = args.domain.toLowerCase().trim();
-		const set = ctx.disposableDomainsRef.current;
+		const [suspicious, disposable] = await Promise.all([
+			ctx.adminRepository.isEmailDomainSuspicious(domain),
+			ctx.adminRepository.isEmailDomainDisposable(domain),
+		]);
 		return {
 			domain,
-			isDisposable: set.has(domain),
-			listSize: set.size,
+			isDisposable: suspicious || disposable,
 		};
 	};
 }

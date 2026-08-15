@@ -8,6 +8,7 @@ import type {GuildRole} from '@app/features/guild/models/GuildRole';
 import Guilds from '@app/features/guild/state/Guilds';
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
 import GuildMembers from '@app/features/member/state/GuildMembers';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import * as ColorUtils from '@app/features/theme/utils/ColorUtils';
 import {ContextMenuCloseProvider, MenuItem} from '@app/features/ui/action_menu/ContextMenu';
 import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
@@ -439,7 +440,7 @@ export const MemberTableRow: React.FC<MemberTableRowProps> = observer(
 					>
 						<DotsThreeVerticalIcon
 							weight="bold"
-							size={18}
+							size={remFromPx(18)}
 							data-flx="channel.guild-members-page.member-table-row.dots-three-vertical-icon"
 						/>
 					</button>

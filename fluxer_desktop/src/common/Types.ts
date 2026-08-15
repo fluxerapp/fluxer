@@ -14,12 +14,9 @@ export interface LinuxAppearanceSnapshot {
 	accent: {r: number; g: number; b: number} | null;
 }
 
-export type DesktopBuildVariant = 'default' | 'windows-game-capture';
-
 export interface DesktopInfo {
 	version: string;
 	channel: 'stable' | 'canary';
-	buildVariant: DesktopBuildVariant;
 	arch: string;
 	hardwareArch: string;
 	runningUnderRosetta: boolean;
@@ -532,7 +529,7 @@ export interface NativeScreenCaptureLifecycleMessage {
 	source?: NativeScreenCaptureLifecycleSource;
 }
 
-export type NativeScreenCaptureStrategy = 'game-hook' | 'dxgi-duplication' | 'window-gdi' | string;
+export type NativeScreenCaptureStrategy = 'game-hook' | 'wgc' | 'dxgi-duplication' | 'window-gdi' | string;
 
 export interface NativeScreenCaptureDiagnostics {
 	state?: number;
@@ -650,7 +647,6 @@ export type TrayActionPayload =
 export interface ElectronAPI {
 	platform: NodeJS.Platform;
 	buildChannel: 'stable' | 'canary';
-	buildVariant: DesktopBuildVariant;
 	getDesktopInfo: () => Promise<DesktopInfo>;
 	getGpuInfo: () => Promise<GpuInfo>;
 	getOpenH264Status: () => Promise<OpenH264Status>;

@@ -299,7 +299,6 @@ function VoiceParticipantPopoutRow({entry, guildId, channelId}: VoiceParticipant
 				/>
 			)}
 			position="left-start"
-			stableTextRendering
 			animationType="profile-slide"
 			constrainHeight={false}
 			freezePosition

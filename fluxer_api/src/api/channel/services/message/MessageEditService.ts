@@ -66,11 +66,22 @@ export class MessageEditService {
 			userId,
 			channelId,
 		});
-		const [canEmbedLinks, canMentionEveryone] = await Promise.all([
+		const hasNewAttachments =
+			data.attachments?.some(
+				(attachment) =>
+					'upload_filename' in attachment &&
+					typeof attachment.upload_filename === 'string' &&
+					attachment.upload_filename.length > 0,
+			) ?? false;
+		const [canEmbedLinks, canMentionEveryone, canAttachFiles] = await Promise.all([
 			hasPermission(Permissions.EMBED_LINKS),
 			hasPermission(Permissions.MENTION_EVERYONE),
+			hasPermission(Permissions.ATTACH_FILES),
 		]);
 		if (data.embeds && data.embeds.length > 0 && !canEmbedLinks) {
+			throw new MissingPermissionsError();
+		}
+		if (hasNewAttachments && !canAttachFiles) {
 			throw new MissingPermissionsError();
 		}
 		if (isOperationDisabled(guild, GuildOperations.SEND_MESSAGE)) {
@@ -155,6 +166,7 @@ export class MessageEditService {
 				channel,
 				guild,
 				member,
+				attachmentUploadUserId: userId,
 				allowEmbeds: canEmbedLinks,
 				isBot: user?.isBot,
 				isBugHunterBot,

@@ -12,6 +12,7 @@ import {
 } from '@app/features/channel/components/channel_header_components/developer_tools/DeveloperToolsShared';
 import {getNagbarControls} from '@app/features/devtools/components/NagbarControls';
 import * as PremiumCommands from '@app/features/premium/commands/PremiumCommands';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
 import {MenuItemSubmenu} from '@app/features/ui/action_menu/MenuItemSubmenu';
 import * as NagbarCommands from '@app/features/ui/commands/NagbarCommands';
@@ -90,7 +91,7 @@ export const DeveloperStateSummaryMenu: React.FC = observer(() => {
 				disabled
 				icon={
 					<WarningCircleIcon
-						size={16}
+						size={remFromPx(16)}
 						weight="fill"
 						data-flx="channel.channel-header-components.developer-tools-context-menu.developer-state-summary-menu.warning-circle-icon"
 					/>
@@ -110,7 +111,7 @@ export const DeveloperStateSummaryMenu: React.FC = observer(() => {
 							entries={developerEntries}
 							icon={() => (
 								<TrashIcon
-									size={16}
+									size={remFromPx(16)}
 									weight="bold"
 									data-flx="channel.channel-header-components.developer-tools-context-menu.developer-state-summary-menu.trash-icon"
 								/>
@@ -121,7 +122,7 @@ export const DeveloperStateSummaryMenu: React.FC = observer(() => {
 							entries={nagbarEntries}
 							icon={() => (
 								<BellRingingIcon
-									size={16}
+									size={remFromPx(16)}
 									weight="fill"
 									data-flx="channel.channel-header-components.developer-tools-context-menu.developer-state-summary-menu.bell-ringing-icon"
 								/>
@@ -149,7 +150,7 @@ export const DeveloperStateSummaryMenu: React.FC = observer(() => {
 			<MenuItem
 				icon={
 					<TrashIcon
-						size={16}
+						size={remFromPx(16)}
 						weight="bold"
 						data-flx="channel.channel-header-components.developer-tools-context-menu.developer-state-summary-menu.trash-icon--2"
 					/>

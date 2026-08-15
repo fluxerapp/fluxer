@@ -68,7 +68,7 @@ export const HelpButton = observer(() => {
 	const shouldShowHoverState = isHovering || contextMenuOpen;
 	return (
 		<div
-			className={clsx(guildStyles.addGuildButton, contextMenuOpen && guildStyles.contextMenuHover)}
+			className={clsx(guildStyles.createGuildButton, contextMenuOpen && guildStyles.contextMenuHover)}
 			data-flx="app.sidebar-nav.help-button.div"
 		>
 			<Tooltip
@@ -101,7 +101,7 @@ export const HelpButton = observer(() => {
 					>
 						<motion.div
 							ref={iconRef}
-							className={guildStyles.addGuildButtonIcon}
+							className={guildStyles.createGuildButtonIcon}
 							animate={{borderRadius: shouldShowHoverState ? '30%' : '50%'}}
 							initial={{borderRadius: shouldShowHoverState ? '30%' : '50%'}}
 							transition={{duration: Accessibility.useReducedMotion ? 0 : 0.07, ease: 'easeOut'}}

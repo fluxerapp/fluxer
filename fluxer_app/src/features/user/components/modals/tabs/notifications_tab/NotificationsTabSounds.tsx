@@ -4,6 +4,7 @@ import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {CUSTOM_SOUND_MAX_SIZE_LABEL} from '@app/features/app/config/I18nDisplayConstants';
 import type * as CustomSoundDB from '@app/features/notification/utils/CustomSoundDB';
 import {type SoundType, SoundType as SoundTypes} from '@app/features/notification/utils/SoundUtils';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Accordion} from '@app/features/ui/accordion/Accordion';
 import {Switch} from '@app/features/ui/components/form/FormSwitch';
 import {Slider} from '@app/features/ui/components/Slider';
@@ -205,7 +206,7 @@ export const Sounds: React.FC<SoundsProps> = observer(
 							data-flx="user.notifications-tab.sounds.icon-button.upload-click"
 						>
 							<UploadIcon
-								size={16}
+								size={remFromPx(16)}
 								className={styles.uploadIcon}
 								data-flx="user.notifications-tab.sounds.upload-icon"
 							/>
@@ -220,7 +221,7 @@ export const Sounds: React.FC<SoundsProps> = observer(
 								data-flx="user.notifications-tab.sounds.icon-button.custom-sound-delete"
 							>
 								<TrashIcon
-									size={16}
+									size={remFromPx(16)}
 									className={styles.deleteIcon}
 									data-flx="user.notifications-tab.sounds.delete-icon"
 								/>
@@ -335,7 +336,11 @@ export const Sounds: React.FC<SoundsProps> = observer(
 									transition={soundListTransition}
 									data-flx="user.notifications-tab.sounds.reveal-chevron"
 								>
-									<CaretDownIcon size={16} weight="bold" data-flx="user.notifications-tab.sounds.caret-down-icon" />
+									<CaretDownIcon
+										size={remFromPx(16)}
+										weight="bold"
+										data-flx="user.notifications-tab.sounds.caret-down-icon"
+									/>
 								</motion.span>
 							</button>
 						</div>
@@ -382,7 +387,7 @@ export const Sounds: React.FC<SoundsProps> = observer(
 												data-flx="user.notifications-tab.sounds.sound-toggle-button.toggle-sound"
 											>
 												<SoundToggleIcon
-													size={14}
+													size={remFromPx(14)}
 													weight="fill"
 													data-flx="user.notifications-tab.sounds.sound-toggle-icon"
 												/>

@@ -52,7 +52,7 @@ async function cleanupRuntimeStateOnCrash(): Promise<void> {
 
 export const ErrorFallback: React.FC<ErrorFallbackProps> = ({error}) => {
 	const {i18n} = useLingui();
-	const {platform, isNative, isMacOS} = useNativePlatform();
+	const {platform, isNative} = useNativePlatform();
 	const useSystemTitleBar = useNativeTitleBar();
 	const [updateAvailable, setUpdateAvailable] = useState(false);
 	const [isUpdating, setIsUpdating] = useState(false);
@@ -111,7 +111,7 @@ export const ErrorFallback: React.FC<ErrorFallbackProps> = ({error}) => {
 	}, [stackTraceText]);
 	return (
 		<div className={errorFallbackStyles.errorFallbackContainer} data-flx="app.error-fallback.div">
-			{isNative && !isMacOS && !useSystemTitleBar && (
+			{isNative && !useSystemTitleBar && (
 				<NativeTitlebar platform={platform} data-flx="app.error-fallback.native-titlebar" />
 			)}
 			<FluxerIcon className={errorFallbackStyles.errorFallbackIcon} data-flx="app.error-fallback.fluxer-icon" />

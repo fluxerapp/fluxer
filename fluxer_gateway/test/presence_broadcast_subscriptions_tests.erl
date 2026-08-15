@@ -26,7 +26,7 @@ gdm_subscription_add_remove_test() ->
     State2 = presence_broadcast_subscriptions:sync_group_dm_subscriptions(#{}, State1),
     ?assertEqual(false, maps:is_key(10, maps:get(subscriptions, State2, #{}))).
 
-one_to_one_dm_recipients_get_subscriptions_test() ->
+only_group_dm_recipients_get_global_subscriptions_test() ->
     maybe_start_presence_bus(),
     maybe_start_presence_cache(),
     SessionState = #{
@@ -47,7 +47,7 @@ one_to_one_dm_recipients_get_subscriptions_test() ->
             }
         }
     },
-    DmRecipients = presence_targets:dm_recipients_from_state(SessionState),
+    GroupDmRecipients = presence_targets:group_dm_recipients_from_state(SessionState),
     BaseState = #{
         user_id => 1,
         is_bot => false,
@@ -58,20 +58,21 @@ one_to_one_dm_recipients_get_subscriptions_test() ->
         group_dm_recipients => #{}
     },
     State1 = presence_broadcast_subscriptions:sync_group_dm_subscriptions(
-        DmRecipients, BaseState
+        GroupDmRecipients, BaseState
     ),
     Subscriptions = maps:get(subscriptions, State1),
-    ?assertEqual(true, maps:get(100, maps:get(gdm_channels, maps:get(2, Subscriptions)))),
+    ?assertEqual(false, maps:is_key(2, Subscriptions)),
     ?assertEqual(true, maps:get(200, maps:get(gdm_channels, maps:get(3, Subscriptions)))),
     ?assertEqual(true, maps:get(200, maps:get(gdm_channels, maps:get(4, Subscriptions)))),
-    StateAfterDmClose = presence_broadcast_subscriptions:sync_group_dm_subscriptions(
-        maps:remove(100, DmRecipients), State1
+    StateAfterGroupDmClose = presence_broadcast_subscriptions:sync_group_dm_subscriptions(
+        maps:remove(200, GroupDmRecipients), State1
     ),
-    SubsAfterClose = maps:get(subscriptions, StateAfterDmClose),
+    SubsAfterClose = maps:get(subscriptions, StateAfterGroupDmClose),
     ?assertEqual(false, maps:is_key(2, SubsAfterClose)),
-    ?assertEqual(true, maps:is_key(3, SubsAfterClose)).
+    ?assertEqual(false, maps:is_key(3, SubsAfterClose)),
+    ?assertEqual(false, maps:is_key(4, SubsAfterClose)).
 
-initial_subscriptions_include_one_to_one_dm_recipients_test() ->
+one_to_one_dm_does_not_create_global_subscription_test() ->
     maybe_start_presence_bus(),
     SessionState = #{
         user_id => 1,
@@ -90,11 +91,11 @@ initial_subscriptions_include_one_to_one_dm_recipients_test() ->
         user_data => #{},
         subscriptions => #{},
         friends => #{},
-        group_dm_recipients => presence_targets:dm_recipients_from_state(SessionState)
+        group_dm_recipients => presence_targets:group_dm_recipients_from_state(SessionState)
     },
     State1 = presence_broadcast_subscriptions:ensure_initial_global_subscriptions(State),
     Subscriptions = maps:get(subscriptions, State1),
-    ?assertEqual(true, maps:get(100, maps:get(gdm_channels, maps:get(2, Subscriptions)))).
+    ?assertEqual(#{}, Subscriptions).
 
 map_from_ids_test() ->
     ?assertEqual(#{}, presence_broadcast_subscriptions:map_from_ids([])),

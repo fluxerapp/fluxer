@@ -48,17 +48,6 @@
 	color: var(--text-primary);
 }
 
-.discriminator {
-	white-space: normal;
-	word-break: break-word;
-	overflow-wrap: break-word;
-	font-weight: 600;
-	font-size: 1.5rem;
-	line-height: 1.25;
-	color: var(--text-primary);
-	opacity: 0.5;
-}
-
 .welcomeText {
 	text-align: center;
 	font-size: 1.125rem;

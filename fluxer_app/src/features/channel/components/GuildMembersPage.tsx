@@ -6,6 +6,7 @@ import styles from '@app/features/channel/components/GuildMembersPage.module.css
 import {MembersTableView} from '@app/features/channel/components/guild_members_page/MembersTableView';
 import Guilds from '@app/features/guild/state/Guilds';
 import {MEMBERS_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {useFluxerDocumentTitle} from '@app/features/window/hooks/useFluxerDocumentTitle';
 import {useLingui} from '@lingui/react/macro';
 import {UsersIcon} from '@phosphor-icons/react';
@@ -29,7 +30,7 @@ export const GuildMembersPage: React.FC<GuildMembersPageProps> = observer(({guil
 			>
 				<UsersIcon
 					className={styles.headerIcon}
-					size={20}
+					size={remFromPx(20)}
 					data-flx="channel.guild-members-page.header-left-content.header-icon"
 				/>
 				<span className={styles.headerLabel} data-flx="channel.guild-members-page.header-left-content.header-label">

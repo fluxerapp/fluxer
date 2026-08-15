@@ -16,7 +16,7 @@
 	flex-direction: column;
 	gap: 1rem;
 	padding: 1rem;
-	padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0));
+	padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
 }
 
 .description {

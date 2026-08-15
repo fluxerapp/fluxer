@@ -7,8 +7,10 @@
 	background-color: var(--background-primary);
 	border: 0.0625rem solid var(--background-modifier-accent);
 	border-radius: 0.25rem;
-	filter: drop-shadow(0 0.125rem 0 var(--menu-edge)) drop-shadow(0 0.25rem 0.5rem var(--menu-shadow))
-		drop-shadow(0 0.5rem 1rem var(--menu-shadow-lg));
+	box-shadow:
+		0 0.125rem 0 var(--menu-edge),
+		0 0.25rem 0.5rem var(--menu-shadow),
+		0 0.5rem 1rem var(--menu-shadow-lg);
 	width: 13.75rem;
 	max-height: 20rem;
 	display: flex;
