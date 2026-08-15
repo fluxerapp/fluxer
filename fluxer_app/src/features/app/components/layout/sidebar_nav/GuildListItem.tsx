@@ -37,6 +37,7 @@ import * as ImageCacheUtils from '@app/features/messaging/utils/ImageCacheUtils'
 import * as NavigationCommands from '@app/features/navigation/commands/NavigationCommands';
 import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
 import Permission from '@app/features/permissions/state/Permission';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {GuildContextMenu} from '@app/features/ui/action_menu/GuildContextMenu';
 import {AvatarStack} from '@app/features/ui/avatars/AvatarStack';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
@@ -45,7 +46,6 @@ import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {KeybindHint} from '@app/features/ui/keybind_hint/KeybindHint';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
-import {getAppZoomFactor} from '@app/features/ui/utils/AppZoomUtils';
 import {isMobileExperienceEnabled} from '@app/features/ui/utils/MobileExperience';
 import type {User} from '@app/features/user/models/User';
 import UserGuildSettings from '@app/features/user/state/UserGuildSettings';
@@ -519,12 +519,13 @@ export const GuildListItem = observer(
 			}
 		}, [handleOpenBottomSheet, isMobileExperience, isSortingList]);
 		const shouldShowHoverState = isHovering || contextMenuOpen;
-		const indicatorHeight =
+		const indicatorHeight = remFromPx(
 			(() => {
 				if (isSelected) return 40;
 				if (shouldShowHoverState) return 20;
 				return 8;
-			})() * getAppZoomFactor();
+			})(),
+		);
 		const isActive = isSelected || shouldShowHoverState;
 		const focusableRef = useRef<HTMLDivElement | null>(null);
 		const focusRingTargetRef = useRef<HTMLDivElement | null>(null);

@@ -16,6 +16,7 @@ import * as ChannelUtils from '@app/features/channel/utils/ChannelUtils';
 import {MENTION_COUNT_ARIA_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as NavigationCommands from '@app/features/navigation/commands/NavigationCommands';
 import ReadStates from '@app/features/read_state/state/ReadStates';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {DMContextMenu} from '@app/features/ui/action_menu/DMContextMenu';
 import {GroupDMContextMenu} from '@app/features/ui/action_menu/GroupDMContextMenu';
 import {AvatarStack} from '@app/features/ui/avatars/AvatarStack';
@@ -25,7 +26,6 @@ import {StatusAwareAvatar} from '@app/features/ui/components/StatusAwareAvatar';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import KeyboardMode from '@app/features/ui/state/KeyboardMode';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
-import {getAppZoomFactor} from '@app/features/ui/utils/AppZoomUtils';
 import {isMobileExperienceEnabled} from '@app/features/ui/utils/MobileExperience';
 import type {User} from '@app/features/user/models/User';
 import UserGuildSettings from '@app/features/user/state/UserGuildSettings';
@@ -270,12 +270,13 @@ const ResolvedDMListItem = observer(function ResolvedDMListItem({
 		},
 		[channel, isGroupDM, recipient, isMobileExperience],
 	);
-	const indicatorHeight =
+	const indicatorHeight = remFromPx(
 		(() => {
 			if (isSelected) return 40;
 			if (isHovering) return 20;
 			return 8;
-		})() * getAppZoomFactor();
+		})(),
+	);
 	const tooltipContent = useMemo<string | (() => React.ReactNode)>(() => {
 		if (!hasVoiceActivity) {
 			return displayName;

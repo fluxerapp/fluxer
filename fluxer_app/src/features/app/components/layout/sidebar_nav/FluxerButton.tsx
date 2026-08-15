@@ -13,6 +13,7 @@ import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
 import {useLocation} from '@app/features/platform/components/router/RouterReact';
 import ReadStates from '@app/features/read_state/state/ReadStates';
 import Relationships from '@app/features/relationship/state/Relationships';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {FluxerButtonContextMenu} from '@app/features/ui/action_menu/FluxerButtonContextMenu';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
 import {FluxerSymbol} from '@app/features/ui/components/icons/FluxerSymbol';
@@ -21,7 +22,6 @@ import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import SidebarPreferences from '@app/features/ui/state/SidebarPreferences';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
-import {getAppZoomFactor} from '@app/features/ui/utils/AppZoomUtils';
 import {ME} from '@fluxer/constants/src/AppConstants';
 import {RelationshipTypes} from '@fluxer/constants/src/UserConstants';
 import {msg} from '@lingui/core/macro';
@@ -117,12 +117,13 @@ export const FluxerButton = observer(() => {
 			/>
 		));
 	}, []);
-	const indicatorHeight =
+	const indicatorHeight = remFromPx(
 		(() => {
 			if (isSelected) return 40;
 			if (isHovering) return 20;
 			return 8;
-		})() * getAppZoomFactor();
+		})(),
+	);
 	const isActive = isHovering || isSelected;
 	if (RuntimeConfig.directMessagesDisabled) {
 		return null;

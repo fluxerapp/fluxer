@@ -21,6 +21,7 @@ import GuildReadState from '@app/features/guild/state/GuildReadState';
 import {truncateInitials} from '@app/features/guild/utils/GuildInitialsUtils';
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
 import {useLocation} from '@app/features/platform/components/router/RouterReact';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import Theme from '@app/features/theme/state/Theme';
 import {GuildFolderContextMenu} from '@app/features/ui/action_menu/GuildFolderContextMenu';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
@@ -28,7 +29,6 @@ import {MentionBadgeAnimated} from '@app/features/ui/components/MentionBadge';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
-import {getAppZoomFactor} from '@app/features/ui/utils/AppZoomUtils';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
 import {useVoiceGatewayStateVersion} from '@app/features/voice/engine/v2/VoiceEngineV2AppVoiceStateAdapter';
@@ -408,12 +408,13 @@ export const GuildFolderItem = observer((props: GuildFolderItemProps) => {
 		[folder, guilds],
 	);
 	const shouldShowHoverState = isHovering;
-	const indicatorHeight =
+	const indicatorHeight = remFromPx(
 		(() => {
 			if (isSelected) return 40;
 			if (shouldShowHoverState) return 20;
 			return 8;
-		})() * getAppZoomFactor();
+		})(),
+	);
 	const prefersReducedMotion = Accessibility.useReducedMotion;
 	const firstFourGuilds = guilds.slice(0, 4);
 	const showCollapsedIcon = shouldShowCollapsedFolderIcon(folder.flags);

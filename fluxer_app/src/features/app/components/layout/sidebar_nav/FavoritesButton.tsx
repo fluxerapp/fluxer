@@ -10,12 +10,12 @@ import {FAVORITES_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescri
 import * as NavigationCommands from '@app/features/navigation/commands/NavigationCommands';
 import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
 import {useLocation} from '@app/features/platform/components/router/RouterReact';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {FavoritesGuildContextMenu} from '@app/features/ui/action_menu/FavoritesGuildContextMenu';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
-import {getAppZoomFactor} from '@app/features/ui/utils/AppZoomUtils';
 import {FAVORITES_GUILD_ID} from '@fluxer/constants/src/AppConstants';
 import {useLingui} from '@lingui/react/macro';
 import {StarIcon} from '@phosphor-icons/react';
@@ -63,12 +63,13 @@ export const FavoritesButton = observer(({className}: FavoritesButtonProps = {})
 		));
 	};
 	const shouldShowHoverState = isHovering || contextMenuOpen;
-	const indicatorHeight =
+	const indicatorHeight = remFromPx(
 		(() => {
 			if (isSelected) return 40;
 			if (shouldShowHoverState) return 20;
 			return 8;
-		})() * getAppZoomFactor();
+		})(),
+	);
 	const isActive = shouldShowHoverState || isSelected;
 	if (!Accessibility.showFavorites) {
 		return null;
