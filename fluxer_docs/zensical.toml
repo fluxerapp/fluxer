@@ -105,8 +105,6 @@ nav = [
 # Read more: https://zensical.org/docs/customization/#additional-css
 #
 extra_css = [
-  "https://fluxerstatic.com/fonts/ibm-plex.css?v=3",
-  "https://fluxerstatic.com/fonts/bricolage.css?v=3",
   "stylesheets/fluxer.css",
 ]
 
@@ -145,6 +143,7 @@ extra_css = [
 # - https://developer.mozilla.org/en-US/docs/Glossary/Favicon
 #
 favicon = "assets/favicon.svg"
+
 font = false
 
 # Zensical supports more than 60 different languages. This means that the
@@ -340,14 +339,14 @@ logo = "assets/logo.svg"
 # - https://zensical.org/docs/setup/colors/
 # ----------------------------------------------------------------------------
 [[project.theme.palette]]
-scheme = "default"
-toggle.icon = "lucide/sun"
-toggle.name = "Switch to dark mode"
-
-[[project.theme.palette]]
 scheme = "slate"
 toggle.icon = "lucide/moon"
 toggle.name = "Switch to light mode"
+
+[[project.theme.palette]]
+scheme = "default"
+toggle.icon = "lucide/sun"
+toggle.name = "Switch to dark mode"
 
 # ----------------------------------------------------------------------------
 # The "extra" section contains miscellaneous settings.

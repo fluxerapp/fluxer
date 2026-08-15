@@ -108,7 +108,6 @@
 	color: var(--text-primary);
 	text-align: center;
 	transform-origin: center;
-	will-change: opacity, transform;
 }
 
 .welcomeWordMeasure {
@@ -164,11 +163,11 @@
 	line-height: 1.55;
 }
 
-.adminForm {
+.accountSetupForm {
 	width: 100%;
 }
 
-.adminForm > form {
+.accountSetupForm > form {
 	margin-top: 0;
 	gap: 0.875rem;
 }

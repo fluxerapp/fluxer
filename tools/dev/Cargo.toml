@@ -8,24 +8,20 @@ license.workspace = true
 anyhow = "1.0.102"
 axum = "0.8.9"
 base64 = "0.22.1"
-chrono = "0.4.45"
 clap = { version = "4.6.1", features = ["derive", "env"] }
-futures-util = "0.3.32"
 hmac = "0.13.0"
 hyper = { version = "1.10.1", features = ["http1", "server"] }
 hyper-util = { version = "0.1.20", features = ["tokio"] }
 image = { version = "0.25.10", default-features = false, features = ["gif", "jpeg", "png", "webp"] }
 libc = "0.2.186"
 regex = "1.12"
-reqwest = { version = "0.13.4", default-features = false, features = ["json", "rustls", "stream"] }
+reqwest = { version = "0.13.4", default-features = false, features = ["rustls", "stream"] }
 scylla = { version = "1.6.0", features = ["chrono-04"] }
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.150"
 sha2 = "0.11.0"
-tempfile = "3.27.0"
 tokio = { version = "1.52.3", features = ["fs", "io-util", "macros", "net", "process", "rt-multi-thread", "signal", "time"] }
-tokio-tungstenite = { version = "0.29.0", features = ["rustls-tls-native-roots"] }
 url = "2.5.8"
-urlencoding = "2.1.3"
 
 [dev-dependencies]
+tempfile = "3.27.0"

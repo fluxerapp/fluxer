@@ -2,7 +2,7 @@
 
 import {getSameIpDecisionKey} from '@fluxer/ip_utils/src/IpAddress';
 import {createUserID} from '../BrandedTypes';
-import {deleteOneOrMany, fetchMany, fetchOne, fetchPage, upsertOne} from '../database/CassandraQueryExecution';
+import {deleteOneOrMany, fetchMany, fetchOne, upsertOne} from '../database/CassandraQueryExecution';
 import type {
 	AdminAuditLogRow,
 	BannedAvatarHashRow,
@@ -13,6 +13,7 @@ import type {
 	BannedUrlRow,
 } from '../database/types/AdminArchiveTypes';
 import {isAccountPolicyContactDomainReputationExempt} from '../risk/AccountPolicyService';
+import {isIpBanExempt} from '../risk/IpBanExemptions';
 import {
 	AdminAuditLogs,
 	BannedAvatarHashes,
@@ -29,13 +30,7 @@ import {
 } from '../Tables';
 import {parseIpBanEntry, tryParseSingleIp} from '../utils/IpRangeUtils';
 import {canonicalizeStoredPhrase} from '../utils/PhraseBlocklistNormalization';
-import type {
-	AdminAuditLog,
-	BannedIpEntry,
-	BannedIpKind,
-	DisposableEmailDomainPage,
-	IAdminRepository,
-} from './IAdminRepository';
+import type {AdminAuditLog, BannedIpEntry, BannedIpKind, IAdminRepository} from './IAdminRepository';
 
 const FETCH_AUDIT_LOG_BY_ID_QUERY = AdminAuditLogs.select({
 	where: AdminAuditLogs.where.eq('log_id'),
@@ -50,8 +45,6 @@ const IS_EMAIL_BANNED_QUERY = BannedEmails.select({
 const IS_EMAIL_DOMAIN_SUSPICIOUS_QUERY = SuspiciousEmailDomains.select({
 	where: SuspiciousEmailDomains.where.eq('domain'),
 });
-const createLoadSuspiciousEmailDomainsQuery = (limit?: number) =>
-	limit ? SuspiciousEmailDomains.select({limit}) : SuspiciousEmailDomains.select();
 const IS_EMAIL_DOMAIN_DISPOSABLE_QUERY = DisposableEmailDomains.select({
 	where: DisposableEmailDomains.where.eq('domain'),
 });
@@ -129,6 +122,9 @@ export class AdminRepository implements IAdminRepository {
 	}
 
 	async isIpBanned(ip: string): Promise<boolean> {
+		if (isIpBanExempt(ip)) {
+			return false;
+		}
 		const candidate = tryParseSingleIp(ip);
 		if (!candidate) {
 			return false;
@@ -157,6 +153,9 @@ export class AdminRepository implements IAdminRepository {
 	}
 
 	async banIp(ip: string): Promise<void> {
+		if (isIpBanExempt(ip)) {
+			return;
+		}
 		const canonicalIp = canonicalizeBannedIpEntry(ip);
 		await upsertOne(
 			BannedIps.insert({
@@ -172,6 +171,9 @@ export class AdminRepository implements IAdminRepository {
 	async banIpTemp(ip: string, ttlSeconds: number): Promise<void> {
 		if (!Number.isInteger(ttlSeconds) || ttlSeconds <= 0) {
 			throw new RangeError('Temporary IP ban TTL must be a positive integer');
+		}
+		if (isIpBanExempt(ip)) {
+			return;
 		}
 		const canonicalIp = canonicalizeBannedIpEntry(ip);
 		await upsertOne(
@@ -263,13 +265,6 @@ export class AdminRepository implements IAdminRepository {
 		await deleteOneOrMany(SuspiciousEmailDomains.deleteByPk({domain: domainLower}));
 	}
 
-	async listSuspiciousEmailDomains(limit?: number): Promise<Array<string>> {
-		const rows = await fetchMany<{
-			domain: string;
-		}>(createLoadSuspiciousEmailDomainsQuery(limit).bind({}));
-		return rows.map((row) => row.domain);
-	}
-
 	async isEmailDomainDisposable(domain: string): Promise<boolean> {
 		const domainLower = domain.toLowerCase();
 		if (isAccountPolicyContactDomainReputationExempt(domainLower)) return false;
@@ -294,19 +289,6 @@ export class AdminRepository implements IAdminRepository {
 			domain: string;
 		}>(createLoadDisposableEmailDomainsQuery(limit).bind({}));
 		return rows.map((row) => row.domain);
-	}
-
-	async listDisposableEmailDomainsPage(limit: number, pageState?: string | null): Promise<DisposableEmailDomainPage> {
-		const page = await fetchPage<{
-			domain: string;
-		}>(createLoadDisposableEmailDomainsQuery().bind({}), undefined, {
-			pageSize: limit,
-			pageState,
-		});
-		return {
-			domains: page.rows.map((row) => row.domain),
-			pageState: page.pageState,
-		};
 	}
 
 	async isPhraseBanned(phrase: string): Promise<boolean> {

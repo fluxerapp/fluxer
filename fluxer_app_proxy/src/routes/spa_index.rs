@@ -19,12 +19,13 @@ use axum::{
 use std::path::Path;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
-use super::spa_static::{guess_mime, is_hashed_asset, is_static_asset};
+use super::spa_static::{
+    CORS_ALLOW_ANY_VALUE, guess_mime, is_font_mime, is_hashed_asset, is_static_asset,
+};
 
 const ACCEPT_CH_VALUE: &str = "DPR, Sec-CH-DPR, Sec-CH-Width, Save-Data, ECT, Downlink";
 const CRITICAL_CH_VALUE: &str = "Sec-CH-DPR, Sec-CH-Width, Save-Data";
 const DEV_NO_STORE_CACHE_CONTROL: &str = "no-store, no-cache, must-revalidate, max-age=0";
-const CORS_ALLOW_ANY_VALUE: &str = "*";
 
 pub async fn spa_catch_all(
     State(state): State<AppState>,
@@ -89,13 +90,6 @@ async fn serve_static_file(static_dir: &str, request_path: &str) -> Response {
         HeaderValue::from_static(cache_control),
     );
     response
-}
-
-fn is_font_mime(mime_type: &str) -> bool {
-    matches!(
-        mime_type,
-        "font/woff" | "font/woff2" | "font/ttf" | "font/otf" | "application/vnd.ms-fontobject"
-    )
 }
 
 async fn serve_spa_index(state: &AppState, headers: &HeaderMap, request_path: &str) -> Response {

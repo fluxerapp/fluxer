@@ -4,6 +4,9 @@
 	--markup-spoiler-hidden-bg: color-mix(in srgb, currentColor 16%, transparent);
 	--markup-spoiler-hidden-bg-hover: color-mix(in srgb, currentColor 24%, transparent);
 	--markup-spoiler-hidden-border: color-mix(in srgb, currentColor 10%, transparent);
+	--markup-inline-icon-baseline-shift: -0.125em;
+	--markup-inline-emoji-size: var(--emoji-size-emoji);
+	--markup-inline-emoji-baseline-shift: -0.4em;
 	font-size: inherit;
 	line-height: 1.5;
 	color: inherit;
@@ -108,7 +111,7 @@
 }
 
 .markup .link {
-	color: var(--text-link);
+	color: var(--text-link) !important;
 	text-decoration: var(--link-decoration, none);
 	transition:
 		color var(--transition-fast),
@@ -121,7 +124,12 @@
 :global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
 	.markup
 	.link:hover {
-	color: var(--text-link);
+	color: var(--text-link) !important;
+	text-decoration: underline;
+}
+
+.markup .link[data-context-menu-open='true'] {
+	color: var(--text-link) !important;
 	text-decoration: underline;
 }
 
@@ -201,6 +209,19 @@
 .markup .link code.inline,
 .inlineFormat .link code.inline {
 	color: inherit;
+}
+
+.markup :global(.emoji:not(.jumboable)) {
+	width: var(--markup-inline-emoji-size);
+	height: var(--markup-inline-emoji-size);
+	min-height: 0;
+	margin-block: 0;
+	vertical-align: var(--markup-inline-emoji-baseline-shift);
+}
+
+.markup :global(.emoji:not(.jumboable):not(img)) {
+	font-size: var(--markup-inline-emoji-size);
+	line-height: 1;
 }
 
 .markup .codeContainer {
@@ -505,42 +526,45 @@
 
 .markup .mention,
 .inlineFormat .mention {
-	--mention-border-color: var(--markup-mention-border);
-	--mention-gap: 0.2em;
-	--mention-icon-size: 0.9em;
-	display: inline-flex;
-	align-items: center;
-	gap: var(--mention-gap);
-	max-width: 100%;
+	--mention-gap: 0.125em;
+	--mention-icon-size: 1em;
+	--mention-color: var(--text-link);
+	display: inline;
 	box-sizing: border-box;
-	border-radius: var(--radius-sm);
-	padding: 0 0.25em;
-	margin-bottom: var(--mention-offset-block-end, 0.125rem);
+	border-radius: 0.1875rem;
+	padding-block: 0;
+	padding-inline: 0.125rem;
+	margin: 0;
 	font-weight: 500;
 	unicode-bidi: plaintext;
-	color: var(--markup-mention-text);
+	color: var(--mention-color) !important;
 	background-color: var(--markup-mention-fill);
 	border: 0;
-	box-shadow: inset 0 0 0 0.0625rem var(--mention-border-color);
+	box-shadow: none;
 	transition:
 		background-color var(--transition-fast),
-		color var(--transition-fast),
-		box-shadow var(--transition-fast);
-	font-size: 90%;
+		color var(--transition-fast);
+	font-size: inherit;
 	line-height: inherit;
-	vertical-align: middle;
+	text-decoration: none;
+	vertical-align: baseline;
 	white-space: nowrap;
+	box-decoration-break: clone;
+	-webkit-box-decoration-break: clone;
 }
 
 .markup .mention svg,
 .markup .mention img,
 .inlineFormat .mention svg,
 .inlineFormat .mention img {
-	display: block;
-	width: var(--mention-icon-size);
-	height: var(--mention-icon-size);
-	flex: 0 0 var(--mention-icon-size);
-	margin: 0;
+	display: inline-block;
+	inline-size: var(--mention-icon-size);
+	block-size: var(--mention-icon-size);
+	min-inline-size: var(--mention-icon-size);
+	min-block-size: var(--mention-icon-size);
+	max-inline-size: var(--mention-icon-size);
+	max-block-size: var(--mention-icon-size);
+	vertical-align: var(--markup-inline-icon-baseline-shift);
 }
 
 .markup .mention.interactive,
@@ -553,25 +577,16 @@
 	.mention.interactive:hover,
 :global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
 	.inlineFormat
-	.mention.interactive:hover {
+	.mention.interactive:hover,
+.markup .mention.interactive[aria-expanded='true'],
+.inlineFormat .mention.interactive[aria-expanded='true'],
+.markup .mention.interactive[data-context-menu-open='true'],
+.inlineFormat .mention.interactive[data-context-menu-open='true'],
+.markup .mention.interactive.mentionActive,
+.inlineFormat .mention.interactive.mentionActive {
 	background-color: var(--markup-interactive-hover-fill);
-	color: var(--markup-interactive-hover-text);
-}
-
-@supports (background-color: color-mix(in srgb, #000 50%, transparent)) {
-	.markup .mention,
-	.inlineFormat .mention {
-		--mention-border-color: color-mix(in srgb, var(--markup-mention-border) 75%, transparent);
-	}
-
-	:global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
-		.markup
-		.mention.interactive:hover,
-	:global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
-		.inlineFormat
-		.mention.interactive:hover {
-		--mention-border-color: color-mix(in srgb, var(--markup-interactive-hover-fill) 60%, transparent);
-	}
+	color: var(--text-link) !important;
+	text-decoration: none;
 }
 
 .markup .timestamp {
@@ -795,14 +810,26 @@
 
 .markup.inlineFormat,
 .markup .inlineFormat {
+	--markup-inline-icon-baseline-shift: var(--markup-restricted-inline-icon-baseline-shift);
+	--markup-inline-emoji-size: var(--markup-restricted-inline-emoji-size);
+	--markup-inline-emoji-baseline-shift: var(--markup-restricted-inline-emoji-baseline-shift);
 	display: inline;
 	white-space: normal;
 }
 
-.markup.inlineFormat :global(.emoji),
-.markup .inlineFormat :global(.emoji) {
-	font-size: 85%;
-	margin-bottom: 0.0625rem;
+.markup.inlineFormat :global(.emoji:not(.jumboable)),
+.markup .inlineFormat :global(.emoji:not(.jumboable)) {
+	width: var(--markup-inline-emoji-size);
+	height: var(--markup-inline-emoji-size);
+	min-height: 0;
+	margin-block: 0;
+	vertical-align: var(--markup-inline-emoji-baseline-shift);
+}
+
+.markup.inlineFormat :global(.emoji:not(.jumboable):not(img)),
+.markup .inlineFormat :global(.emoji:not(.jumboable):not(img)) {
+	font-size: var(--markup-inline-emoji-size);
+	line-height: 1;
 }
 
 .markup.inlineFormat h1,

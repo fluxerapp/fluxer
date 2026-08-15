@@ -23,6 +23,7 @@ import {isStockCommunityGuild} from '@app/features/guild/utils/GuildCommunityUti
 import {openMessageHistoryThresholdSettings} from '@app/features/guild/utils/guild_tabs/GuildOverviewTabUtils';
 import {BACK_TO_SETTINGS_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import Permission from '@app/features/permissions/state/Permission';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
@@ -246,7 +247,7 @@ export const DesktopGuildSettingsView: React.FC<DesktopGuildSettingsViewProps> =
 																		{i18n._(MEMBERS_PAGE_ACTION_DESCRIPTOR)}
 																	</span>
 																	<ArrowSquareOutIcon
-																		size={16}
+																		size={remFromPx(16)}
 																		weight="bold"
 																		className={styles.externalTabIcon}
 																		aria-hidden="true"

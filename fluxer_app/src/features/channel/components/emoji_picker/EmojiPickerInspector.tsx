@@ -3,13 +3,13 @@
 import {useShouldAnimate} from '@app/features/app/hooks/useShouldAnimate';
 import styles from '@app/features/channel/components/EmojiPicker.module.css';
 import {
-	EMOJI_SPRITE_SIZE,
+	getEmojiSpriteSheetLayout,
 	getSpriteSheetBackground,
 } from '@app/features/channel/components/emoji_picker/EmojiPickerConstants';
 import Emoji from '@app/features/emoji/state/Emoji';
 import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
 import {getEmojiDisplayDataWithSkinTone} from '@app/features/expressions/utils/SkinToneUtils';
-import {EMOJI_SPRITES} from '@app/features/expressions/utils/UnicodeEmojis';
+import UnicodeEmojis, {EMOJI_SPRITES} from '@app/features/expressions/utils/UnicodeEmojis';
 import Guilds from '@app/features/guild/state/Guilds';
 import {isFirefoxBrowser} from '@app/features/ui/utils/NativeUtils';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
@@ -46,15 +46,13 @@ export const EmojiPickerInspector = observer(({hoveredEmoji}: EmojiPickerInspect
 		const index = hasDiversity ? emoji.diversityIndex : emoji.index;
 		if (index === undefined) return {url: emoji.url, useImg: true};
 		const perRow = hasDiversity ? EMOJI_SPRITES.DiversityPerRow : EMOJI_SPRITES.NonDiversityPerRow;
-		const x = -(index % perRow) * EMOJI_SPRITE_SIZE;
-		const y = -Math.floor(index / perRow) * EMOJI_SPRITE_SIZE;
+		const rows = Math.ceil(
+			(hasDiversity ? UnicodeEmojis.numDiversitySprites : UnicodeEmojis.numNonDiversitySprites) / perRow,
+		);
 		return {
 			style: {
 				backgroundImage: getSpriteSheetBackground(hasDiversity ? skinTone : ''),
-				backgroundPosition: `${x}px ${y}px`,
-				backgroundSize: hasDiversity
-					? `${EMOJI_SPRITE_SIZE * EMOJI_SPRITES.DiversityPerRow}px`
-					: `${EMOJI_SPRITE_SIZE * EMOJI_SPRITES.NonDiversityPerRow}px`,
+				...getEmojiSpriteSheetLayout(index, perRow, rows),
 			},
 			useImg: false,
 		};

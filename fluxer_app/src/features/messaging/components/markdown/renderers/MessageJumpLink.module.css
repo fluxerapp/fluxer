@@ -1,52 +1,61 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
 .jumpLinkButton.jumpLinkButton.jumpLinkButton {
-	--mention-divider-size: 0.6em;
+	--jump-link-gap: var(--mention-gap);
+	--jump-link-divider-trailing-gap: 0.125em;
+	--mention-divider-size: 0.7em;
 	appearance: none;
 	-webkit-appearance: none;
 	margin: 0;
-	margin-bottom: var(--mention-offset-block-end, 0.125rem);
-	display: inline-flex;
-	align-items: center;
+	display: inline-grid;
+	grid-auto-flow: column;
+	grid-auto-columns: max-content;
+	align-items: baseline;
+	column-gap: var(--jump-link-gap);
 	font: inherit;
-	font-size: 90%;
+	font-size: inherit;
 	font-weight: 500;
 	line-height: inherit;
 	text-align: start;
 	text-decoration: none;
+	color: var(--text-link);
+	background-color: var(--markup-jump-link-fill);
+	vertical-align: baseline;
+	white-space: nowrap;
 }
 
 .part {
-	display: inline-flex;
-	align-items: center;
-	gap: var(--mention-gap);
+	display: inline-grid;
+	grid-auto-flow: column;
+	grid-auto-columns: max-content;
+	align-items: baseline;
+	column-gap: var(--jump-link-gap);
 	min-width: 0;
 	line-height: inherit;
 	white-space: nowrap;
 }
 
 .icon.icon.icon {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	width: var(--mention-icon-size);
-	height: var(--mention-icon-size);
+	display: block;
+	inline-size: var(--mention-icon-size);
+	block-size: var(--mention-icon-size);
 	min-inline-size: var(--mention-icon-size);
 	min-block-size: var(--mention-icon-size);
 	max-inline-size: var(--mention-icon-size);
 	max-block-size: var(--mention-icon-size);
+	align-self: center;
 	color: inherit;
-	flex: 0 0 var(--mention-icon-size);
 	margin: 0;
 	overflow: hidden;
 }
 
 .guildIcon {
+	--jump-link-guild-icon-image: none;
 	display: grid;
 	place-items: center;
 	border-radius: 624.9375rem;
 	background-color: var(--background-modifier-selected);
-	background-image: var(--jump-link-guild-icon-image, none);
+	background-image: var(--jump-link-guild-icon-image);
 	background-position: center;
 	background-size: cover;
 	color: var(--text-primary);
@@ -68,14 +77,16 @@
 }
 
 .divider {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	width: var(--mention-icon-size);
-	height: var(--mention-icon-size);
-	flex: 0 0 var(--mention-icon-size);
+	display: grid;
+	place-items: center;
+	inline-size: var(--mention-divider-size);
+	block-size: var(--mention-icon-size);
+	align-self: center;
+	margin: 0;
+	margin-inline-end: var(--jump-link-divider-trailing-gap);
 	color: inherit;
-	opacity: 0.7;
+	opacity: 0.64;
+	line-height: 0;
 }
 
 .jumpLinkButton.jumpLinkButton .divider > svg {
@@ -94,4 +105,17 @@
 
 .noAccess {
 	color: inherit;
+}
+
+:global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
+	button.jumpLinkButton.jumpLinkButton.jumpLinkButton:hover {
+	color: var(--text-link);
+	background-color: var(--markup-jump-link-hover-fill);
+	text-decoration: none;
+}
+
+button.jumpLinkButton.jumpLinkButton.jumpLinkButton[data-context-menu-open='true'] {
+	color: var(--text-link);
+	background-color: var(--markup-jump-link-hover-fill);
+	text-decoration: none;
 }

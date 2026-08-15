@@ -20,6 +20,7 @@ import {
 	ScrollRegion,
 	shouldAnimateMessageJump,
 } from '@app/features/platform/utils/scroll_manager/shared';
+import {getRemScaleForDocument} from '@app/features/theme/layout/RemFromPx';
 import Dimension from '@app/features/ui/state/Dimension';
 import KeyboardMode from '@app/features/ui/state/KeyboardMode';
 import {JumpTypes} from '@fluxer/constants/src/JumpConstants';
@@ -178,6 +179,18 @@ export class ScrollManager {
 
 	scrollGetState(): ScrollerState {
 		return this.ref.current?.getScrollerState() ?? DEFAULT_SCROLLER_STATE;
+	}
+
+	private placeholderHeightGet(): number {
+		const scrollerHandle = this.ref.current;
+		if (scrollerHandle == null) {
+			return this.props.placeholderHeight;
+		}
+		const scrollerNode = scrollerHandle.getScrollerNode();
+		if (scrollerNode == null) {
+			return this.props.placeholderHeight;
+		}
+		return this.props.placeholderHeight * getRemScaleForDocument(scrollerNode.ownerDocument);
 	}
 
 	pinIsAtBottomFor(state: ScrollerState = this.scrollGetState()): boolean {
@@ -484,7 +497,8 @@ export class ScrollManager {
 
 	scrollIsInPlaceholderRegion(state: ScrollerState): ScrollRegion {
 		const {scrollTop, offsetHeight, scrollHeight} = state;
-		const {messages, placeholderHeight} = this.props;
+		const {messages} = this.props;
+		const placeholderHeight = this.placeholderHeightGet();
 		if (messages.hasMoreBefore && scrollTop < placeholderHeight && scrollHeight > offsetHeight) {
 			return ScrollRegion.Top;
 		}
@@ -496,7 +510,8 @@ export class ScrollManager {
 
 	loadGetOffsetToTrigger(edge: 'top' | 'bottom', state: ScrollerState): number {
 		const {scrollHeight, offsetHeight} = state;
-		const {messages, hasUnreads, placeholderHeight} = this.props;
+		const {messages, hasUnreads} = this.props;
+		const placeholderHeight = this.placeholderHeightGet();
 		if (edge === 'top') {
 			if (!messages.hasMoreBefore) {
 				return 0;
@@ -539,7 +554,7 @@ export class ScrollManager {
 		}
 		const {scrollTop, offsetHeight, scrollHeight} = state;
 		const prev = this.cachePreviousScrollTop;
-		const {placeholderHeight} = this.props;
+		const placeholderHeight = this.placeholderHeightGet();
 		this.cachePreviousScrollTop = scrollTop;
 		if (prev == null) return;
 		const region = this.scrollIsInPlaceholderRegion(state);
@@ -908,7 +923,7 @@ export class ScrollManager {
 		if (targetId != null) {
 			this.scrollToMessage(targetId, false);
 		} else if (restorePendingInitialScrollTop != null) {
-			const targetScroll = restorePendingInitialScrollTop + this.props.placeholderHeight;
+			const targetScroll = restorePendingInitialScrollTop + this.placeholderHeightGet();
 			this.scrollTo(targetScroll, false, this.scrollHandle);
 		} else if (!this.restoreHadSavedPosition && this.props.hasUnreads) {
 			this.scrollToBelowUnreadDivider();
@@ -1061,7 +1076,8 @@ export class ScrollManager {
 	private dimensionPersist(callback?: () => void): void {
 		if (this.lifecycleIsDisposed) return;
 		if (this.jumpIsActiveNow() || !this.lifecycleIsInitialized()) return;
-		const {channel, placeholderHeight} = this.props;
+		const {channel} = this.props;
+		const placeholderHeight = this.placeholderHeightGet();
 		if (this.pinIsAtBottomNow()) {
 			Dimension.updateChannelDimensions(channel.id, 1, 1, 0, callback);
 		} else {

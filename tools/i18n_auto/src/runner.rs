@@ -119,7 +119,7 @@ impl RuntimeConfig {
         let (locales_dir, catalog_layout) = match catalog {
             CatalogName::App => (locales_dir(&app_dir), CatalogLayout::NestedMessages),
             CatalogName::Marketing => (
-                repo_root.join("fluxer_marketing").join("locales"),
+                repo_root.join("packages/i18n/marketing"),
                 CatalogLayout::FlatPo,
             ),
             CatalogName::Errors => (
@@ -277,7 +277,7 @@ struct RawTranslateArgs {
     catalog: Option<CatalogName>,
     #[arg(
         long,
-        help = "Deprecated alias for --catalog marketing; use fluxer_marketing/locales flat gettext catalogs"
+        help = "Deprecated alias for --catalog marketing; use packages/i18n/marketing flat gettext catalogs"
     )]
     marketing: bool,
     #[arg(

@@ -6,6 +6,7 @@ import {CAMERA_DESCRIPTOR, SOMETHING_WENT_WRONG_DESCRIPTOR} from '@app/features/
 import Permission from '@app/features/permissions/state/Permission';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import BackgroundImageGalleryModal from '@app/features/theme/components/modals/BackgroundImageGalleryModal';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
@@ -849,7 +850,10 @@ const CameraPreviewModalContent = observer((props: CameraPreviewModalProps) => {
 								variant="primary"
 								onClick={handleOpenBackgroundGallery}
 								leftIcon={
-									<ImageIcon size={16} data-flx="voice.camera-preview-modal.camera-preview-modal-content.image-icon" />
+									<ImageIcon
+										size={remFromPx(16)}
+										data-flx="voice.camera-preview-modal.camera-preview-modal-content.image-icon"
+									/>
 								}
 								data-flx="voice.camera-preview-modal.camera-preview-modal-content.button.open-background-gallery"
 							>
@@ -970,7 +974,10 @@ const CameraPreviewModalContent = observer((props: CameraPreviewModalProps) => {
 						<Button
 							onClick={handleEnableCamera}
 							leftIcon={
-								<CameraIcon size={16} data-flx="voice.camera-preview-modal.camera-preview-modal-content.camera-icon" />
+								<CameraIcon
+									size={remFromPx(16)}
+									data-flx="voice.camera-preview-modal.camera-preview-modal-content.camera-icon"
+								/>
 							}
 							data-flx="voice.camera-preview-modal.camera-preview-modal-content.button.enable-camera"
 						>
@@ -991,7 +998,7 @@ const CameraPreviewModalContent = observer((props: CameraPreviewModalProps) => {
 								onClick={undefined}
 								leftIcon={
 									<CameraIcon
-										size={16}
+										size={remFromPx(16)}
 										data-flx="voice.camera-preview-modal.camera-preview-modal-content.camera-icon--2"
 									/>
 								}

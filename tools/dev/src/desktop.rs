@@ -109,18 +109,9 @@ pub fn electron_args(args: &[String]) -> Vec<String> {
     runtime_args
 }
 
-pub fn electron_command(args: &[String], headless: bool) -> Vec<String> {
+pub fn electron_command(args: &[String]) -> Vec<String> {
     let mut command = base_electron_command();
     command.extend(electron_args(args));
-    if headless
-        && cfg!(target_os = "linux")
-        && env::var_os("DISPLAY").is_none()
-        && crate::paths::which("xvfb-run").is_some()
-    {
-        let mut wrapped = vec!["xvfb-run".to_owned(), "-a".to_owned()];
-        wrapped.extend(command);
-        return wrapped;
-    }
     command
 }
 
@@ -151,29 +142,41 @@ fn disclaimed_electron_command(launcher: &Path, electron_binary: &Path) -> Vec<S
     ]
 }
 
-pub fn smoke_build_desktop() -> Result<()> {
-    install_desktop()?;
-    build_desktop(true)?;
-    let command = electron_command(
-        &[
-            "--fluxer-debug-info".to_owned(),
-            format!("--fluxer-app-url={LOCAL_APP_URL}"),
-        ],
-        true,
-    );
-    let args: Vec<_> = command.iter().map(String::as_str).collect();
-    run_command(
-        &args,
-        RunOptions {
-            cwd: DESKTOP_DIR.as_path(),
-            env: vec![("FLUXER_SKIP_NATIVE".to_owned(), Some("true".to_owned()))],
-            ..RunOptions::default()
-        },
-    )
-    .map(drop)
+fn packages_for_windows(args: &[String]) -> bool {
+    if args.iter().any(|arg| arg == "--win") {
+        return true;
+    }
+    if args.iter().any(|arg| arg == "--mac" || arg == "--linux") {
+        return false;
+    }
+    cfg!(target_os = "windows")
+}
+
+fn host_electron_arch() -> Result<&'static str> {
+    match env::consts::ARCH {
+        "x86_64" => Ok("x64"),
+        "aarch64" => Ok("arm64"),
+        other => bail!(
+            "cannot package the desktop app for Windows on host architecture {other}; set ELECTRON_ARCH to x64 or arm64"
+        ),
+    }
+}
+
+fn packaging_env(args: &[String]) -> Result<Vec<(String, Option<String>)>> {
+    if !packages_for_windows(args)
+        || env::var_os("ELECTRON_ARCH").is_some()
+        || args.iter().any(|arg| arg == "--x64" || arg == "--arm64")
+    {
+        return Ok(Vec::new());
+    }
+    Ok(vec![(
+        "ELECTRON_ARCH".to_owned(),
+        Some(host_electron_arch()?.to_owned()),
+    )])
 }
 
 pub fn package_desktop(args: &[String]) -> Result<()> {
+    let env = packaging_env(args)?;
     build_desktop(false)?;
     let mut builder_args = vec![
         "pnpm".to_owned(),
@@ -189,6 +192,7 @@ pub fn package_desktop(args: &[String]) -> Result<()> {
         &refs,
         RunOptions {
             cwd: DESKTOP_DIR.as_path(),
+            env,
             ..RunOptions::default()
         },
     )
@@ -226,7 +230,7 @@ fn run_desktop_process(app_url: &str, extra_args: &[String]) -> Result<()> {
         "--fluxer-log-renderer-console".to_owned(),
     ];
     args.extend(extra_args.iter().cloned());
-    let command = electron_command(&args, false);
+    let command = electron_command(&args);
     let refs: Vec<_> = command.iter().map(String::as_str).collect();
     run_command(
         &refs,

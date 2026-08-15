@@ -4,9 +4,9 @@
 	position: relative;
 	height: 100%;
 	width: 100%;
-	border: 0.0625rem solid var(--user-area-divider-color);
+	border: var(--outline-frame-border-width, 0.0625rem) solid var(--user-area-divider-color);
 	border-top: none;
-	border-top-left-radius: var(--outline-radius, 0);
+	border-top-left-radius: var(--outline-radius, 0px);
 	background: var(--background-secondary-lighter);
 	overflow: hidden;
 	display: flex;

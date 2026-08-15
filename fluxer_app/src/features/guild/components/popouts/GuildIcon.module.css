@@ -20,7 +20,7 @@
 	transition: background-image 0.3s ease-in-out;
 	container-type: inline-size;
 	--initials-font-size: clamp(0.85rem, 45cqi, 1.35rem);
-	--initials-letter-spacing: 0;
+	--initials-letter-spacing: 0px;
 	--initials-scale: 1;
 	--initials-scale-cap: 1;
 }
@@ -45,13 +45,13 @@
 .container[data-initials-length='medium'] .initials {
 	--initials-font-size: clamp(0.85rem, 38cqi, 1.11rem);
 	--initials-scale: 0.92;
-	--initials-letter-spacing: 0;
+	--initials-letter-spacing: 0px;
 }
 
 .container[data-initials-length='long'] .initials {
 	--initials-font-size: clamp(0.85rem, 32cqi, 0.87rem);
 	--initials-scale: 0.78;
-	--initials-letter-spacing: 0;
+	--initials-letter-spacing: 0px;
 }
 
 .container[data-reduced-motion='true'] {

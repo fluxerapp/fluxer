@@ -5,6 +5,7 @@ import {
 	SettingsTabContent,
 	SettingsTabSection,
 } from '@app/features/app/components/dialogs/shared/SettingsTabLayout';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
@@ -146,7 +147,7 @@ export const OverlaysTab: React.FC<OverlaysTabProps> = observer(({openContextMen
 						<Button
 							leftIcon={
 								<DotsThreeOutlineIcon
-									size={16}
+									size={remFromPx(16)}
 									data-flx="user.component-gallery-tab.overlays-tab.dots-three-outline-icon"
 								/>
 							}
@@ -159,7 +160,7 @@ export const OverlaysTab: React.FC<OverlaysTabProps> = observer(({openContextMen
 							square
 							icon={
 								<DotsThreeOutlineIcon
-									size={16}
+									size={remFromPx(16)}
 									data-flx="user.component-gallery-tab.overlays-tab.dots-three-outline-icon--2"
 								/>
 							}

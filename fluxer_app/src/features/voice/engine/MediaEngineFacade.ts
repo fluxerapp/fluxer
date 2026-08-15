@@ -4414,6 +4414,10 @@ class MediaEngineFacade extends Store {
 		options?: DeviceScreenShareCaptureOptions,
 		publishOptions?: TrackPublishOptions,
 	): Promise<void> {
+		if (!isNativeVoiceEngineSelected()) {
+			await voiceEngineV2AppScreenShareExecutionAdapter.startDeviceScreenShare(this.room, options, publishOptions);
+			return;
+		}
 		await voiceEngineV2AppScreenShareExecutionAdapter.startNativeDeviceScreenShare(
 			await this.getNativeDeviceScreenShareCaptureOptions(options),
 			{
@@ -4512,6 +4516,13 @@ class MediaEngineFacade extends Store {
 		options?: ScreenShareCaptureOptions,
 		publishOptions?: TrackPublishOptions,
 	): Promise<boolean> {
+		if (!isNativeVoiceEngineSelected()) {
+			return voiceEngineV2AppScreenShareExecutionAdapter.replaceActiveDisplayScreenShare(
+				this.room,
+				options,
+				publishOptions,
+			);
+		}
 		return voiceEngineV2AppScreenShareExecutionAdapter.replaceActiveNativeDisplayScreenShareFromActiveSource(
 			options,
 			publishOptions,
@@ -4522,6 +4533,13 @@ class MediaEngineFacade extends Store {
 		options?: DeviceScreenShareCaptureOptions,
 		publishOptions?: TrackPublishOptions,
 	): Promise<boolean> {
+		if (!isNativeVoiceEngineSelected()) {
+			return voiceEngineV2AppScreenShareExecutionAdapter.replaceActiveDeviceScreenShare(
+				this.room,
+				options,
+				publishOptions,
+			);
+		}
 		return voiceEngineV2AppScreenShareExecutionAdapter.replaceActiveNativeDeviceScreenShare(
 			await this.getNativeDeviceScreenShareCaptureOptions(options),
 			publishOptions,

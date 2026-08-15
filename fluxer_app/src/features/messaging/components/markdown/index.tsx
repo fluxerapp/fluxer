@@ -8,6 +8,7 @@ import {
 import {getParserFlagsForContext} from '@app/features/messaging/utils/markdown/MarkdownParserFlags';
 import {WasmParser} from '@app/features/messaging/utils/markdown/parser/WasmParser';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {noteText} from '@app/features/theme/fonts/ScriptFontLoader';
 import markupStyles from '@app/features/theme/styles/Markup.module.css';
 import {useLingui} from '@lingui/react';
 import {Trans} from '@lingui/react/macro';
@@ -48,6 +49,7 @@ function parseMarkdown(
 	content: string,
 	options: MarkdownParseOptions = {context: MarkdownContext.STANDARD_WITHOUT_JUMBO},
 ): React.ReactNode {
+	noteText(content);
 	try {
 		const flags = getParserFlagsForContext(options.context);
 		const parser = new WasmParser(content, flags);

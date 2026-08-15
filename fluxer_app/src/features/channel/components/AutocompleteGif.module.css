@@ -25,12 +25,6 @@
 	color: var(--text-primary);
 }
 
-.attribution {
-	height: 1rem;
-	width: auto;
-	color: var(--text-tertiary);
-}
-
 .scroller {
 	display: flex;
 	flex-direction: row;

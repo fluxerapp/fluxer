@@ -6,5 +6,3 @@ export const FLUXERBOT_ID = '0';
 export const ME = '@me';
 export const FAVORITES_GUILD_ID = '@favorites';
 export const DEFAULT_ACCENT_COLOR = '#4641D9';
-export const CANARY_TESTERS_GUILD_ID = '1427764661718740994';
-export const CANARY_TESTER_MIN_ACCOUNT_AGE_MS = 30 * 60 * 1000;

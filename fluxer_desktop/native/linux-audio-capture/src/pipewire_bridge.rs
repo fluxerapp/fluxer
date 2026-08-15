@@ -290,34 +290,6 @@ mod tests {
     }
 
     #[test]
-    fn daemon_unreachable_returns_none_from_open() {
-        let bridge = PipeWireBridge::open();
-        if let Some(b) = bridge {
-            let _ = b.inventory();
-            b.release();
-        }
-    }
-
-    #[test]
-    fn direct_open_returns_none_or_cleans_up() {
-        let direct = PipeWireDirectCapture::open();
-        if let Some(d) = direct {
-            d.stop();
-        }
-    }
-
-    #[test]
-    fn integration_smoke_apply_release_cycle_is_safe() {
-        let Some(bridge) = PipeWireBridge::open() else {
-            return;
-        };
-        bridge.apply(RoutingRule::default());
-        std::thread::sleep(Duration::from_millis(20));
-        bridge.release();
-        let _ = bridge.inventory();
-    }
-
-    #[test]
     fn virtual_sink_props_match_legacy_contract() {
         let props = build_virtual_sink_props();
         let dict = props.dict();

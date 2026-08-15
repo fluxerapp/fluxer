@@ -8,10 +8,15 @@ import {getGroupDMAccentColor} from '@app/features/channel/utils/GroupDMColorUti
 import {cdnUrl} from '@app/features/messaging/utils/MessagingUrlUtils';
 import Presence from '@app/features/presence/state/Presence';
 import TransientPresence from '@app/features/presence/state/TransientPresence';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import type {AvatarStatusLayout} from '@app/features/ui/components/AvatarStatusLayout';
 import {getAvatarStatusLayout} from '@app/features/ui/components/AvatarStatusLayout';
 import baseAvatarStyles from '@app/features/ui/components/BaseAvatar.module.css';
-import {TYPING_BRIDGE_RIGHT_SHIFT_RATIO} from '@app/features/ui/constants/TypingConstants';
+import {
+	TYPING_BRIDGE_RIGHT_SHIFT_RATIO,
+	TYPING_DOT_GAP_RATIO,
+	TYPING_DOT_SIZE_RATIO,
+} from '@app/features/ui/constants/TypingConstants';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import Users from '@app/features/user/state/Users';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
@@ -72,11 +77,11 @@ function renderGroupStatusDot(status: StatusType, size: number, isTyping?: boole
 			<div
 				className={styles.statusDot}
 				style={{
-					right: bubbleRight,
-					bottom: bubbleBottom,
-					width: bubbleWidth,
-					height: bubbleHeight,
-					borderRadius: bubbleHeight / 2,
+					right: remFromPx(bubbleRight),
+					bottom: remFromPx(bubbleBottom),
+					width: remFromPx(bubbleWidth),
+					height: remFromPx(bubbleHeight),
+					borderRadius: remFromPx(bubbleHeight / 2),
 					display: 'flex',
 					alignItems: 'center',
 					justifyContent: 'center',
@@ -99,14 +104,26 @@ function renderGroupStatusDot(status: StatusType, size: number, isTyping?: boole
 						}}
 						data-flx="app.group-dm-avatar.render-group-status-dot.div"
 					>
-						<div className={baseAvatarStyles.typingDots} data-flx="app.group-dm-avatar.render-group-status-dot.div--2">
+						<div
+							className={baseAvatarStyles.typingDots}
+							style={{
+								gap: remFromPx(
+									Math.round(Math.min(layout.innerTypingWidth, layout.innerTypingHeight) * TYPING_DOT_GAP_RATIO),
+								),
+							}}
+							data-flx="app.group-dm-avatar.render-group-status-dot.div--2"
+						>
 							{[0, 0.25, 0.5].map((delay, i) => (
 								<div
 									key={i}
 									className={baseAvatarStyles.typingDot}
 									style={{
-										width: Math.min(layout.innerStatusWidth, layout.innerStatusHeight) * 0.25,
-										height: Math.min(layout.innerStatusWidth, layout.innerStatusHeight) * 0.25,
+										width: remFromPx(
+											Math.round(Math.min(layout.innerTypingWidth, layout.innerTypingHeight) * TYPING_DOT_SIZE_RATIO),
+										),
+										height: remFromPx(
+											Math.round(Math.min(layout.innerTypingWidth, layout.innerTypingHeight) * TYPING_DOT_SIZE_RATIO),
+										),
 										backgroundColor: 'white',
 										borderRadius: '50%',
 										animationDelay: `${delay}s`,
@@ -265,7 +282,11 @@ export const GroupDMAvatar: React.FC<GroupDMAvatarProps> = observer(
 					? renderGroupStatusDot(statusForIndicator, size, shouldShowTypingIndicator, i18n)
 					: null;
 			return (
-				<div className={styles.container} style={{width: size, height: size}} data-flx="app.group-dm-avatar.container">
+				<div
+					className={styles.container}
+					style={{width: remFromPx(size), height: remFromPx(size)}}
+					data-flx="app.group-dm-avatar.container"
+				>
 					<svg
 						viewBox={`0 0 ${size} ${size}`}
 						className={styles.iconImageContainer}
@@ -321,8 +342,8 @@ export const GroupDMAvatar: React.FC<GroupDMAvatarProps> = observer(
 				<div
 					className={styles.defaultIconContainer}
 					style={{
-						width: size,
-						height: size,
+						width: remFromPx(size),
+						height: remFromPx(size),
 						backgroundColor: accentColor,
 					}}
 					data-flx="app.group-dm-avatar.default-icon-container"
@@ -330,7 +351,7 @@ export const GroupDMAvatar: React.FC<GroupDMAvatarProps> = observer(
 					<UsersIcon
 						weight="fill"
 						className={styles.defaultIcon}
-						style={{width: size * 0.5, height: size * 0.5}}
+						style={{width: remFromPx(size * 0.5), height: remFromPx(size * 0.5)}}
 						data-flx="app.group-dm-avatar.default-icon"
 					/>
 					{statusDot}
@@ -353,7 +374,7 @@ export const GroupDMAvatar: React.FC<GroupDMAvatarProps> = observer(
 		return (
 			<div
 				className={styles.multiAvatarContainer}
-				style={{width: clusterSize, height: clusterSize}}
+				style={{width: remFromPx(clusterSize), height: remFromPx(clusterSize)}}
 				data-flx="app.group-dm-avatar.multi-avatar-container"
 			>
 				<svg

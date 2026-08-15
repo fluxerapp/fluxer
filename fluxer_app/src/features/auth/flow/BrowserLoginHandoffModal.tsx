@@ -7,6 +7,7 @@ import * as AuthenticationCommands from '@app/features/auth/commands/Authenticat
 import styles from '@app/features/auth/flow/BrowserLoginHandoffModal.module.css';
 import {HandoffCodeDisplay} from '@app/features/auth/flow/HandoffCodeDisplay';
 import type {LoginSuccessPayload} from '@app/features/auth/state/AuthFlow';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
@@ -250,7 +251,7 @@ const BrowserLoginHandoffModal = observer(
 						data-flx="auth.flow.browser-login-handoff-modal.button.open-browser"
 					>
 						<ArrowSquareOutIcon
-							size={16}
+							size={remFromPx(16)}
 							weight="bold"
 							data-flx="auth.flow.browser-login-handoff-modal.arrow-square-out-icon"
 						/>

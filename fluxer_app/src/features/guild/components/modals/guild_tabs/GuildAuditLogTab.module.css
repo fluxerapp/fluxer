@@ -179,7 +179,7 @@
 	align-items: center;
 	justify-content: space-between;
 	width: 100%;
-	min-height: var(--input-container-min-height);
+	min-height: var(--list-row-min-height);
 	padding: 0 var(--input-container-padding);
 	background: transparent;
 	border: none;
@@ -405,7 +405,7 @@
 .discrim {
 	font-size: 0.75rem;
 	line-height: 1rem;
-	opacity: 0.6;
+	color: color-mix(in srgb, currentcolor 60%, transparent);
 	margin-left: 0.125rem;
 }
 

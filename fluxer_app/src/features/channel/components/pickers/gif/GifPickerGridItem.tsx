@@ -23,6 +23,7 @@ import {
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
 import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {modal, push} from '@app/features/ui/commands/ModalCommands';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
@@ -482,7 +483,7 @@ export const GifPickerGridItem = observer(function GifPickerGridItem({
 										/>
 									) : (
 										<StarIcon
-											size={18}
+											size={remFromPx(18)}
 											weight={isFavorited ? 'fill' : 'bold'}
 											className={isFavorited ? styles.favoriteButtonActiveIcon : styles.favoriteButtonIcon}
 											data-flx="channel.pickers.gif.gif-picker-grid-item.favorite-button"

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {EXAMPLE_CALLBACK_URL} from '@app/features/app/config/I18nDisplayConstants';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import {Input} from '@app/features/ui/components/form/FormInput';
 import {Switch} from '@app/features/ui/components/form/FormSwitch';
@@ -147,7 +148,7 @@ export const ApplicationInfoSection: React.FC<ApplicationInfoSectionProps> = ({
 									data-flx="user.applications-tab.application-detail.application-info-section.redirect-remove-button.remove-redirect"
 								>
 									<XIcon
-										size={18}
+										size={remFromPx(18)}
 										weight="bold"
 										data-flx="user.applications-tab.application-detail.application-info-section.x-icon"
 									/>
@@ -158,7 +159,7 @@ export const ApplicationInfoSection: React.FC<ApplicationInfoSectionProps> = ({
 					<Button
 						variant="primary"
 						fitContent
-						className={styles.addRedirectButton}
+						className={styles.createRedirectButton}
 						onClick={onAddRedirect}
 						data-flx="user.applications-tab.application-detail.application-info-section.add-redirect-button"
 					>

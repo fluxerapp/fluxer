@@ -7,6 +7,7 @@ import {
 	type GuildReorderTarget,
 	selectGuildReorderIntent,
 } from '@app/features/app/components/layout/dnd/GuildReorderStateMachine';
+import {useDragTargetRect} from '@app/features/app/components/layout/dnd/useDragTargetRect';
 import type {ScrollIndicatorSeverity} from '@app/features/app/components/layout/ScrollIndicatorOverlay';
 import styles from '@app/features/app/components/layout/sidebar_nav/GuildFolderItem.module.css';
 import {GuildListItem} from '@app/features/app/components/layout/sidebar_nav/GuildListItem';
@@ -27,6 +28,7 @@ import {MentionBadgeAnimated} from '@app/features/ui/components/MentionBadge';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
+import {getAppZoomFactor} from '@app/features/ui/utils/AppZoomUtils';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
 import {useVoiceGatewayStateVersion} from '@app/features/voice/engine/v2/VoiceEngineV2AppVoiceStateAdapter';
@@ -205,12 +207,11 @@ export const GuildFolderItem = observer((props: GuildFolderItemProps) => {
 	const itemRef = useRef<HTMLElement | null>(null);
 	const mobileLayout = MobileLayout;
 	const [dropIndicator, setDropIndicator] = useState<'top' | 'bottom' | 'inside' | null>(null);
-	const dropTargetRectRef = useRef<DOMRect | null>(null);
+	const getDropTargetRect = useDragTargetRect(itemRef);
 	const setFolderDropIndicator = useCallback((indicator: 'top' | 'bottom' | 'inside' | null) => {
 		setDropIndicator((current) => (current === indicator ? current : indicator));
 	}, []);
 	const resetFolderDropIndicator = useCallback(() => {
-		dropTargetRectRef.current = null;
 		setFolderDropIndicator(null);
 	}, [setFolderDropIndicator]);
 	const derivedFolderName = useMemo(() => {
@@ -323,12 +324,10 @@ export const GuildFolderItem = observer((props: GuildFolderItemProps) => {
 					resetFolderDropIndicator();
 					return;
 				}
-				const node = itemRef.current;
-				if (!node) return;
 				const clientOffset = monitor.getClientOffset();
 				if (!clientOffset) return;
-				const boundingRect = dropTargetRectRef.current ?? node.getBoundingClientRect();
-				dropTargetRectRef.current = boundingRect;
+				const boundingRect = getDropTargetRect();
+				if (!boundingRect) return;
 				const intent = selectGuildReorderIntent(item, dropTargetData, clientOffset, boundingRect);
 				if (!intent || intent.indicator === 'combine') {
 					resetFolderDropIndicator();
@@ -360,7 +359,7 @@ export const GuildFolderItem = observer((props: GuildFolderItemProps) => {
 				isOver: monitor.isOver({shallow: true}),
 			}),
 		}),
-		[dropTargetData, onGuildDrop, resetFolderDropIndicator, setFolderDropIndicator],
+		[dropTargetData, getDropTargetRect, onGuildDrop, resetFolderDropIndicator, setFolderDropIndicator],
 	);
 	useEffect(() => {
 		if (!isOver) resetFolderDropIndicator();
@@ -409,11 +408,12 @@ export const GuildFolderItem = observer((props: GuildFolderItemProps) => {
 		[folder, guilds],
 	);
 	const shouldShowHoverState = isHovering;
-	const indicatorHeight = (() => {
-		if (isSelected) return 40;
-		if (shouldShowHoverState) return 20;
-		return 8;
-	})();
+	const indicatorHeight =
+		(() => {
+			if (isSelected) return 40;
+			if (shouldShowHoverState) return 20;
+			return 8;
+		})() * getAppZoomFactor();
 	const prefersReducedMotion = Accessibility.useReducedMotion;
 	const firstFourGuilds = guilds.slice(0, 4);
 	const showCollapsedIcon = shouldShowCollapsedFolderIcon(folder.flags);

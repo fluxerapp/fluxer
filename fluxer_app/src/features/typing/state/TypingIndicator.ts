@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {Message} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
-import {action, makeAutoObservable} from 'mobx';
+import {action, makeAutoObservable, observable} from 'mobx';
 
 type TypingEntry = Readonly<{
 	expiresAt: number;
@@ -11,7 +11,12 @@ type TypingEntriesByChannel = Record<string, Record<string, TypingEntry>>;
 type TypingUsersCacheEntry = Readonly<{
 	users: ReadonlyArray<string>;
 	expiresAt: number | null;
+	version: number;
 }>;
+
+export interface LocalTypingResetOwner {
+	reset(): void;
+}
 
 export const TYPING_INDICATOR_TIMEOUT_MS = 10000;
 const EMPTY_TYPING_USERS: ReadonlyArray<string> = Object.freeze([]);
@@ -20,14 +25,21 @@ class TypingIndicator {
 	remoteTypingUsersByChannel: TypingEntriesByChannel = {};
 	localTypingUsersByChannel: TypingEntriesByChannel = {};
 	private typingUsersCacheByChannel: Record<string, TypingUsersCacheEntry | undefined> = {};
+	private typingUsersVersionByChannel = new Map<string, number>();
 	private expiryTimerId: NodeJS.Timeout | null = null;
+	private localTypingResetOwner: LocalTypingResetOwner | null = null;
 
 	constructor() {
-		makeAutoObservable<this, 'typingUsersCacheByChannel' | 'expiryTimerId'>(
+		makeAutoObservable<
+			this,
+			'typingUsersCacheByChannel' | 'typingUsersVersionByChannel' | 'expiryTimerId' | 'localTypingResetOwner'
+		>(
 			this,
 			{
 				expiryTimerId: false,
+				localTypingResetOwner: false,
 				typingUsersCacheByChannel: false,
+				typingUsersVersionByChannel: observable.shallow,
 			},
 			{autoBind: true},
 		);
@@ -35,8 +47,10 @@ class TypingIndicator {
 
 	getTypingUsers(channelId: string): ReadonlyArray<string> {
 		const now = Date.now();
+		const storedVersion = this.typingUsersVersionByChannel.get(channelId);
+		const version = storedVersion == null ? 0 : storedVersion;
 		const cached = this.typingUsersCacheByChannel[channelId];
-		if (cached && (cached.expiresAt === null || cached.expiresAt > now)) {
+		if (cached && cached.version === version && (cached.expiresAt === null || cached.expiresAt > now)) {
 			return cached.users;
 		}
 		const {expiresAt, users} = this.collectTypingUsers(channelId, now);
@@ -44,6 +58,7 @@ class TypingIndicator {
 		this.typingUsersCacheByChannel[channelId] = {
 			expiresAt,
 			users: typedUsers,
+			version,
 		};
 		return typedUsers;
 	}
@@ -105,7 +120,6 @@ class TypingIndicator {
 
 	private upsertTypingEntry(entriesByChannel: TypingEntriesByChannel, channelId: string, userId: string): void {
 		const now = Date.now();
-		this.removeExpiredTypingEntries(now);
 		if (!entriesByChannel[channelId]) {
 			entriesByChannel[channelId] = {};
 		}
@@ -116,7 +130,7 @@ class TypingIndicator {
 			expiresAt: now + TYPING_INDICATOR_TIMEOUT_MS,
 		};
 		if (!wasVisible) {
-			this.invalidateTypingUsers(channelId);
+			this.invalidateTypingUsers(channelId, now);
 		}
 		this.scheduleNextExpiryTimer(now);
 	}
@@ -130,8 +144,9 @@ class TypingIndicator {
 		if (Object.keys(channelUsers).length === 0) {
 			delete entriesByChannel[channelId];
 		}
-		this.invalidateTypingUsers(channelId);
-		this.scheduleNextExpiryTimer(Date.now());
+		const now = Date.now();
+		this.invalidateTypingUsers(channelId, now);
+		this.scheduleNextExpiryTimer(now);
 	}
 
 	private removeExpiredTypingEntries(now: number): void {
@@ -153,7 +168,7 @@ class TypingIndicator {
 				delete entriesByChannel[channelId];
 			}
 			if (removed) {
-				this.invalidateTypingUsers(channelId);
+				this.invalidateTypingUsers(channelId, now);
 			}
 		}
 	}
@@ -198,8 +213,24 @@ class TypingIndicator {
 		this.expiryTimerId = null;
 	}
 
-	private invalidateTypingUsers(channelId: string): void {
+	private hasActiveTypingUsers(channelId: string, now: number): boolean {
+		const hasActiveEntry = (entries: Record<string, TypingEntry> | undefined) =>
+			entries !== undefined && Object.values(entries).some((entry) => entry.expiresAt > now);
+		return (
+			hasActiveEntry(this.remoteTypingUsersByChannel[channelId]) ||
+			hasActiveEntry(this.localTypingUsersByChannel[channelId])
+		);
+	}
+
+	private invalidateTypingUsers(channelId: string, now: number): void {
 		delete this.typingUsersCacheByChannel[channelId];
+		if (!this.hasActiveTypingUsers(channelId, now)) {
+			this.typingUsersVersionByChannel.delete(channelId);
+			return;
+		}
+		const currentVersion = this.typingUsersVersionByChannel.get(channelId);
+		const nextVersion = currentVersion == null ? 1 : currentVersion + 1;
+		this.typingUsersVersionByChannel.set(channelId, nextVersion);
 	}
 
 	@action
@@ -210,10 +241,22 @@ class TypingIndicator {
 
 	@action
 	reset(): void {
+		const resetOwner = this.localTypingResetOwner;
+		if (resetOwner != null) {
+			resetOwner.reset();
+		}
 		this.clearExpiryTimer();
 		this.remoteTypingUsersByChannel = {};
 		this.localTypingUsersByChannel = {};
 		this.typingUsersCacheByChannel = {};
+		this.typingUsersVersionByChannel.clear();
+	}
+
+	registerLocalTypingResetOwner(owner: LocalTypingResetOwner): void {
+		if (this.localTypingResetOwner != null) {
+			throw new Error('Local typing reset owner is already registered');
+		}
+		this.localTypingResetOwner = owner;
 	}
 
 	@action

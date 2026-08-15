@@ -101,7 +101,7 @@
 	.sections {
 		column-width: auto;
 		column-count: 1;
-		padding: calc(0.75rem + env(safe-area-inset-top, 0)) 0.75rem 0.75rem;
+		padding: calc(0.75rem + env(safe-area-inset-top, 0px)) 0.75rem 0.75rem;
 	}
 
 	.shortcutRow {

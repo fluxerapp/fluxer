@@ -1,0 +1,59 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.toolbar {
+	display: flex;
+	align-items: center;
+	gap: 0.125rem;
+	padding: 0.1875rem;
+	border-radius: 0.5rem;
+	background: var(--settings-surface-background, var(--background-floating, var(--background-secondary)));
+	border: 0.0625rem solid var(--settings-border-color, var(--background-modifier-accent));
+	box-shadow: 0 0.25rem 0.75rem rgb(0 0 0 / 0.24);
+	user-select: none;
+	-webkit-user-select: none;
+}
+
+.button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 1.75rem;
+	height: 1.75rem;
+	padding: 0;
+	border: none;
+	border-radius: 0.3125rem;
+	background: transparent;
+	color: var(--interactive-normal);
+	cursor: pointer;
+	transition:
+		background-color var(--transition-fast, 100ms),
+		color var(--transition-fast, 100ms);
+}
+
+.button:focus-visible {
+	outline: 0.125rem solid var(--focus-ring-color, var(--focus-primary));
+	outline-offset: 0.0625rem;
+}
+
+@media (forced-colors: active) {
+	.button:focus-visible {
+		outline-color: Highlight;
+	}
+}
+
+@media (hover: hover) {
+	.button:hover {
+		background: var(--background-modifier-hover);
+		color: var(--interactive-hover, var(--text-primary));
+	}
+}
+
+.button.buttonActive {
+	background: var(--background-modifier-selected);
+	color: var(--text-primary);
+}
+
+.icon {
+	width: 1.125rem;
+	height: 1.125rem;
+}

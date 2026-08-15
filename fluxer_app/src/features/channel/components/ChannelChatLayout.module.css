@@ -1,6 +1,15 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
 .container {
+	--composer-surface-color: var(--background-secondary-lighter);
+	--composer-status-line-height: 1.125rem;
+	--composer-status-safe-gap: 0.5rem;
+	--composer-status-safe-area: calc(
+		var(--composer-status-line-height) +
+		var(--composer-status-safe-gap) +
+		var(--composer-status-safe-gap)
+	);
+	--messages-bottom-clearance: max(0px, calc(var(--composer-status-safe-area) - var(--composer-box-inset, 0px)));
 	display: flex;
 	flex-direction: column;
 	height: 100%;
@@ -9,7 +18,7 @@
 	max-width: 100%;
 	min-width: 0;
 	overflow: hidden;
-	background-color: var(--background-secondary-lighter);
+	background-color: var(--composer-surface-color);
 	contain: layout style;
 }
 
@@ -24,46 +33,6 @@
 	contain: strict;
 }
 
-.typingArea {
-	flex-shrink: 0;
-	position: relative;
-	height: 0;
-	overflow: visible;
-	z-index: 2;
-}
-
-.typingContent {
-	position: absolute;
-	left: var(--textarea-horizontal-padding);
-	right: var(--textarea-horizontal-padding);
-	bottom: 0;
-	pointer-events: none;
-	font-size: 0.75rem;
-	line-height: 1rem;
-	display: flex;
-	justify-content: space-between;
-	align-items: flex-end;
-	gap: 0.35rem;
-}
-
-.typingLeft {
-	flex: 1;
-	display: flex;
-	align-items: center;
-	justify-content: flex-start;
-	min-width: 0;
-	order: 1;
-}
-
-.slowmodePin {
-	position: absolute;
-	right: var(--textarea-horizontal-padding);
-	bottom: 0;
-	transform: translateY(50%);
-	pointer-events: auto;
-	z-index: 1;
-}
-
 .textareaArea {
 	flex: 0 1 auto;
 	min-height: 0;
@@ -72,8 +41,7 @@
 	position: relative;
 	z-index: 1;
 	padding: 0;
-	overflow: hidden;
-	background-color: var(--background-secondary-lighter);
+	overflow: visible;
 	width: 100%;
 	max-width: 100%;
 	box-sizing: border-box;

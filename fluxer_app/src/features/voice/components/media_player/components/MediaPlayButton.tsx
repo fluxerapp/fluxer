@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {PAUSE_DESCRIPTOR, PLAY_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import styles from '@app/features/voice/components/media_player/MediaPlayButton.module.css';
@@ -62,7 +63,7 @@ export function MediaPlayButton({
 				disabled={disabled}
 				data-flx="voice.media-player.media-play-button.button.click"
 			>
-				<Icon size={actualIconSize} weight="fill" data-flx="voice.media-player.media-play-button.icon" />
+				<Icon size={remFromPx(actualIconSize)} weight="fill" data-flx="voice.media-player.media-play-button.icon" />
 			</button>
 		</FocusRing>
 	);

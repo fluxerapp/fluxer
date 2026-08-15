@@ -5,6 +5,7 @@ import Guilds from '@app/features/guild/state/Guilds';
 import GuildMembers from '@app/features/member/state/GuildMembers';
 import {PASSWORD_MANAGER_IGNORE_ATTRIBUTES} from '@app/features/platform/utils/PasswordManagerAutocomplete';
 import styles from '@app/features/search/components/search/UserFilterSheet.module.css';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {BottomSheet} from '@app/features/ui/bottom_sheet/BottomSheet';
 import {Button} from '@app/features/ui/button/Button';
 import {Avatar} from '@app/features/ui/components/Avatar';
@@ -85,7 +86,7 @@ export const UserFilterSheet: React.FC<UserFilterSheetProps> = observer(
 					<div className={styles.searchContainer} data-flx="search.search.user-filter-sheet.search-container">
 						<div className={styles.searchInputWrapper} data-flx="search.search.user-filter-sheet.search-input-wrapper">
 							<MagnifyingGlassIcon
-								size={20}
+								size={remFromPx(20)}
 								className={styles.searchIcon}
 								weight="regular"
 								data-flx="search.search.user-filter-sheet.search-icon"
@@ -109,7 +110,7 @@ export const UserFilterSheet: React.FC<UserFilterSheetProps> = observer(
 									onClick={() => setSearchTerm('')}
 									data-flx="search.search.user-filter-sheet.clear-button.set-search-term"
 								>
-									<XIcon size={18} weight="bold" data-flx="search.search.user-filter-sheet.x-icon" />
+									<XIcon size={remFromPx(18)} weight="bold" data-flx="search.search.user-filter-sheet.x-icon" />
 								</button>
 							)}
 						</div>
@@ -156,7 +157,7 @@ export const UserFilterSheet: React.FC<UserFilterSheetProps> = observer(
 											</div>
 											{isSelected && (
 												<CheckIcon
-													size={20}
+													size={remFromPx(20)}
 													className={styles.checkIcon}
 													weight="bold"
 													data-flx="search.search.user-filter-sheet.check-icon"

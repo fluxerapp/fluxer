@@ -8,12 +8,15 @@ ARG USER_GID=1000
 ARG NODE_MAJOR=24
 ARG ELP_VERSION=2026-02-27
 ARG HELM_VERSION=4.2.0
+ARG PNPM_VERSION=10.29.3
+ARG WASM_BINDGEN_VERSION=0.2.122
 
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update \
 	&& apt-get install -y --no-install-recommends \
 		bash \
+		brotli \
 		build-essential \
 		ca-certificates \
 		clang \
@@ -76,8 +79,6 @@ RUN apt-get update \
 		rpm \
 		unzip \
 		webp \
-		xauth \
-		xvfb \
 		xz-utils \
 		xdg-utils \
 		zstd \
@@ -96,8 +97,6 @@ RUN apt-get update \
 		hyperfine \
 		iproute2 \
 		iputils-ping \
-		kind \
-		kubernetes-client \
 		lldb \
 		lsof \
 		ltrace \
@@ -126,8 +125,7 @@ RUN apt-get update \
 RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_MAJOR}.x | bash - \
 	&& apt-get install -y --no-install-recommends nodejs \
 	&& rm -rf /var/lib/apt/lists/* \
-	&& corepack enable \
-	&& corepack prepare pnpm@10.29.3 --activate
+	&& corepack enable
 
 RUN ARCH="$(dpkg --print-architecture)" \
 	&& case "$ARCH" in \
@@ -142,6 +140,12 @@ RUN ARCH="$(dpkg --print-architecture)" \
 	&& rm -rf /tmp/helm.tgz "/tmp/linux-${HELM_ARCH}"
 
 RUN python3 -m pip install --break-system-packages --no-cache-dir awscli cqlsh
+
+COPY tools/fonts/requirements.txt /tmp/fluxer-fonts-requirements.txt
+RUN python3 -m pip install --break-system-packages --no-cache-dir -r /tmp/fluxer-fonts-requirements.txt \
+	&& rm /tmp/fluxer-fonts-requirements.txt \
+	&& pyftsubset --help >/dev/null \
+	&& python3 -c "import fontTools, brotli"
 
 RUN if ! command -v rebar3 >/dev/null 2>&1; then \
 		curl -fsSL https://s3.amazonaws.com/rebar3/rebar3 -o /usr/local/bin/rebar3 \
@@ -169,13 +173,19 @@ COPY --from=seaweedfs /usr/bin/weed /usr/local/bin/weed
 USER ${USERNAME}
 
 ENV DOCKER_HOST="unix:///var/run/docker.sock" \
-	KUBECONFIG="/workspaces/fluxer/.fluxer/k8s/local-kubeconfig" \
 	PATH="/home/${USERNAME}/.cargo/bin:${PATH}" \
 	PNPM_HOME="/home/${USERNAME}/.local/share/pnpm"
 
+ENV CC_wasm32_unknown_unknown="clang" \
+	AR_wasm32_unknown_unknown="llvm-ar"
+
 RUN curl -fsSL https://sh.rustup.rs | sh -s -- -y --profile default --component clippy,rustfmt \
 	&& rustup target add wasm32-unknown-unknown \
-	&& cargo install cargo-watch --locked
+	&& cargo install cargo-watch --locked \
+	&& cargo install wasm-bindgen-cli --version "${WASM_BINDGEN_VERSION}" --locked
+
+RUN corepack prepare "pnpm@${PNPM_VERSION}" --activate \
+	&& pnpm --version
 
 RUN sudo apt-get update \
 	&& sudo apt-get install -y --no-install-recommends python3-venv \

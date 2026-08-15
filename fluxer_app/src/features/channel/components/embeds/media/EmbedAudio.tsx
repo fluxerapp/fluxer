@@ -10,6 +10,7 @@ import {useDeleteAttachment} from '@app/features/messaging/hooks/useDeleteAttach
 import {useMediaFavorite} from '@app/features/messaging/hooks/useMediaFavorite';
 import {createDownloadHandler} from '@app/features/messaging/utils/FileDownloadUtils';
 import {buildMediaProxyURL} from '@app/features/messaging/utils/MediaProxyUtils';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import messageStyles from '@app/features/theme/styles/Message.module.css';
 import {MediaContextMenu} from '@app/features/ui/action_menu/MediaContextMenu';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
@@ -149,7 +150,7 @@ const EmbedAudio: FC<EmbedAudioProps> = observer(
 							aria-label={i18n._(DELETE_ATTACHMENT_DESCRIPTOR)}
 							data-flx="channel.embeds.media.embed-audio.delete-button.delete-click"
 						>
-							<TrashIcon size={16} weight="bold" data-flx="channel.embeds.media.embed-audio.trash-icon" />
+							<TrashIcon size={remFromPx(16)} weight="bold" data-flx="channel.embeds.media.embed-audio.trash-icon" />
 						</button>
 					</Tooltip>
 				)}

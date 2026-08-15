@@ -40,6 +40,7 @@ import {ScopeSheet} from '@app/features/search/components/search/ScopeSheet';
 import {SearchFilterChip} from '@app/features/search/components/search/SearchFilterChip';
 import {SortModeSheet} from '@app/features/search/components/search/SortModeSheet';
 import {UserFilterSheet} from '@app/features/search/components/search/UserFilterSheet';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import styles from '@app/features/theme/styles/ChannelSearchBottomSheet.module.css';
 import {
 	CloseIcon,
@@ -796,7 +797,13 @@ export const ChannelSearchBottomSheet: React.FC<ChannelSearchBottomSheetProps> =
 									<SearchFilterChip
 										label={i18n._(IN_DESCRIPTOR)}
 										value={getInChannelLabel()}
-										icon={<HashIcon size={14} weight="bold" data-flx="channel.channel-search-bottom-sheet.hash-icon" />}
+										icon={
+											<HashIcon
+												size={remFromPx(14)}
+												weight="bold"
+												data-flx="channel.channel-search-bottom-sheet.hash-icon"
+											/>
+										}
 										onPress={() => setChannelSheetOpen(true)}
 										onRemove={inChannelIds.length > 0 ? () => setInChannelIds([]) : undefined}
 										isActive={inChannelIds.length > 0}

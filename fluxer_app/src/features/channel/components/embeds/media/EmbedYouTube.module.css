@@ -54,10 +54,10 @@
 	pointer-events: auto;
 	display: flex;
 	align-items: center;
-	gap: 0.125rem;
-	padding: 0.25rem;
+	gap: 0.0625rem;
+	padding: 0.1875rem;
 	border: 0.0625rem solid rgba(255, 255, 255, 0.12);
-	border-radius: 1rem;
+	border-radius: 0.875rem;
 	background: rgba(3, 3, 4, 0.86);
 	backdrop-filter: blur(1rem) saturate(1.2);
 	-webkit-backdrop-filter: blur(1rem) saturate(1.2);
@@ -67,21 +67,21 @@
 }
 
 .buttonGroup button {
-	border-radius: 0.8125rem;
+	border-radius: 0.6875rem;
 	cursor: pointer;
 }
 
 .buttonGroup button > div {
-	height: 2.125rem;
-	width: 2.125rem;
-	border-radius: 0.6875rem;
+	height: 2rem;
+	width: 2rem;
+	border-radius: 0.625rem;
 	background: transparent;
 	color: rgba(255, 255, 255, 0.9);
 }
 
 .buttonGroup button > div svg {
-	width: 1.3125rem;
-	height: 1.3125rem;
+	width: 1.125rem;
+	height: 1.125rem;
 }
 
 :global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))

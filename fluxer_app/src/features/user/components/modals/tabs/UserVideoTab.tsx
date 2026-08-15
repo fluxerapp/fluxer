@@ -13,6 +13,7 @@ import {isLimitToggleEnabled} from '@app/features/app/utils/LimitUtils';
 import {GET_PREMIUM_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
 import * as PremiumModalCommands from '@app/features/premium/commands/PremiumModalCommands';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
@@ -288,7 +289,7 @@ export const VideoTab: React.FC<VideoTabProps> = observer(
 							<div className={styles.premiumHeader} data-flx="user.video-tab.premium-header">
 								<CrownIcon
 									weight="fill"
-									size={18}
+									size={remFromPx(18)}
 									className={styles.premiumIcon}
 									data-flx="user.video-tab.premium-icon"
 								/>
@@ -326,7 +327,7 @@ export const VideoTab: React.FC<VideoTabProps> = observer(
 						<div className={styles.frameRateNote} data-flx="user.video-tab.frame-rate-note">
 							<CrownIcon
 								weight="fill"
-								size={14}
+								size={remFromPx(14)}
 								className={styles.frameRateIcon}
 								data-flx="user.video-tab.frame-rate-icon"
 							/>
@@ -346,7 +347,9 @@ export const VideoTab: React.FC<VideoTabProps> = observer(
 					<Button
 						variant="secondary"
 						fitContent
-						leftIcon={<GearIcon size={16} weight="bold" data-flx="user.video-tab.advanced-settings.gear-icon" />}
+						leftIcon={
+							<GearIcon size={remFromPx(16)} weight="bold" data-flx="user.video-tab.advanced-settings.gear-icon" />
+						}
 						onClick={handleOpenAdvancedVideoSettings}
 						data-flx="user.video-tab.button.open-advanced-video-settings"
 					>

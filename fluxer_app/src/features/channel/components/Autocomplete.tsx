@@ -4,24 +4,33 @@ import {useListNavigation} from '@app/features/app/hooks/useListNavigation';
 import styles from '@app/features/channel/components/Autocomplete.module.css';
 import {AutocompleteChannel} from '@app/features/channel/components/AutocompleteChannel';
 import {AutocompleteCommand} from '@app/features/channel/components/AutocompleteCommand';
+import {AutocompleteCommandChoice} from '@app/features/channel/components/AutocompleteCommandChoice';
+import {AutocompleteCommandOptionalAdd} from '@app/features/channel/components/AutocompleteCommandOptionalAdd';
 import {AutocompleteEmoji} from '@app/features/channel/components/AutocompleteEmoji';
 import {AutocompleteGif} from '@app/features/channel/components/AutocompleteGif';
 import {AutocompleteMeme} from '@app/features/channel/components/AutocompleteMeme';
 import {AutocompleteMention} from '@app/features/channel/components/AutocompleteMention';
 import {AutocompleteSticker} from '@app/features/channel/components/AutocompleteSticker';
-import type {Channel} from '@app/features/channel/models/Channel';
-import type {Command} from '@app/features/devtools/hooks/useCommands';
-import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
-import type {Gif} from '@app/features/expressions/commands/GifCommands';
-import type {FavoriteMeme} from '@app/features/expressions/models/FavoriteMeme';
-import type {GuildSticker} from '@app/features/expressions/models/GuildSticker';
-import type {GuildRole} from '@app/features/guild/models/GuildRole';
-import type {GuildMember} from '@app/features/member/models/GuildMember';
+import {
+	type AutocompleteOption,
+	type AutocompleteType,
+	getAutocompleteOptionId,
+	isMentionMember,
+	isMentionRole,
+	isMentionUser,
+} from '@app/features/channel/components/AutocompleteTypes';
+import {
+	MEDIA_DESCRIPTOR,
+	MEMBERS_DESCRIPTOR,
+	MENTIONS_DESCRIPTOR,
+	ROLES_DESCRIPTOR,
+	STICKERS_DESCRIPTOR,
+} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {isIMEComposing} from '@app/features/messaging/utils/IMECompositionUtils';
 import {Scroller, type ScrollerHandle} from '@app/features/ui/components/Scroller';
 import {usePortalHost} from '@app/features/ui/overlay/PortalHostContext';
-import type {User} from '@app/features/user/models/User';
 import {autoUpdate, FloatingPortal, flip, offset, size, useFloating} from '@floating-ui/react';
+import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
@@ -32,41 +41,132 @@ const SUGGESTIONS_DESCRIPTOR = msg({
 	message: 'Suggestions',
 	comment: 'Short label in the channel and chat autocomplete. Keep it concise.',
 });
+const CHANNELS_DESCRIPTOR = msg({
+	message: 'Channels',
+	comment: 'Section heading in the channel and chat autocomplete for channel suggestions.',
+});
+const COMMANDS_DESCRIPTOR = msg({
+	message: 'Commands',
+	comment: 'Section heading in the channel and chat autocomplete for command suggestions.',
+});
+const CHOICES_DESCRIPTOR = msg({
+	message: 'Choices',
+	comment: 'Section heading in the channel and chat autocomplete for slash-command argument choices.',
+});
+const OPTIONAL_ARGUMENTS_DESCRIPTOR = msg({
+	message: 'Optional arguments',
+	comment: 'Section heading in the channel and chat autocomplete for adding optional slash-command arguments.',
+});
+const USERS_DESCRIPTOR = msg({
+	message: 'Users',
+	comment: 'Section heading in the channel and chat autocomplete for user suggestions.',
+});
+
+function resolveMentionAutocompleteHeading(options: Array<AutocompleteOption>, i18n: I18n): string {
+	if (options.some(isMentionMember)) {
+		return i18n._(MEMBERS_DESCRIPTOR);
+	}
+	if (options.some(isMentionUser)) {
+		return i18n._(USERS_DESCRIPTOR);
+	}
+	if (options.some(isMentionRole)) {
+		return i18n._(ROLES_DESCRIPTOR);
+	}
+	return i18n._(MENTIONS_DESCRIPTOR);
+}
+
+function resolveAutocompleteHeading(
+	type: AutocompleteType,
+	options: Array<AutocompleteOption>,
+	i18n: I18n,
+): string | null {
+	switch (type) {
+		case 'mention':
+			return resolveMentionAutocompleteHeading(options, i18n);
+		case 'channel':
+			return i18n._(CHANNELS_DESCRIPTOR);
+		case 'command':
+			return i18n._(COMMANDS_DESCRIPTOR);
+		case 'commandChoice':
+			return i18n._(CHOICES_DESCRIPTOR);
+		case 'commandOptionalAdd':
+			return i18n._(OPTIONAL_ARGUMENTS_DESCRIPTOR);
+		case 'meme':
+			return i18n._(MEDIA_DESCRIPTOR);
+		case 'sticker':
+			return i18n._(STICKERS_DESCRIPTOR);
+		default:
+			return null;
+	}
+}
+
+function renderAutocompleteHeading(heading: string | null): React.ReactNode {
+	if (heading == null) {
+		return null;
+	}
+	return (
+		<div className={styles.sectionHeading} aria-hidden={true} data-flx="channel.autocomplete.section-heading">
+			{heading}
+		</div>
+	);
+}
+
+function resolveListboxId(listboxId: string | undefined, generatedListboxId: string): string {
+	if (listboxId === undefined) {
+		return generatedListboxId;
+	}
+	return listboxId;
+}
+
+function resolveKeyboardFocusIndex(externalIndex: number | undefined, internalIndex: number): number {
+	if (externalIndex === undefined) {
+		return internalIndex;
+	}
+	return externalIndex;
+}
+
+function resolveReferenceElement(referenceElement: HTMLElement | null | undefined): HTMLElement | null {
+	if (referenceElement === undefined) {
+		return null;
+	}
+	return referenceElement;
+}
+
+function resolvePortalRoot(portalHost: HTMLElement | null): HTMLElement | undefined {
+	if (portalHost === null) {
+		return undefined;
+	}
+	return portalHost;
+}
+
+function resolveZIndex(zIndex: number | undefined): number | undefined {
+	if (zIndex === undefined) {
+		return undefined;
+	}
+	return zIndex;
+}
 
 type ScrollerWithScrollableElement = ScrollerHandle & {
 	getScrollableElement?: () => HTMLElement | null;
 };
-export type AutocompleteOption =
-	| {type: 'mention'; kind: 'member'; member: GuildMember}
-	| {type: 'mention'; kind: 'user'; user: User}
-	| {type: 'mention'; kind: 'role'; role: GuildRole}
-	| {type: 'mention'; kind: '@everyone' | '@here'}
-	| {type: 'channel'; channel: Channel}
-	| {type: 'emoji'; emoji: FlatEmoji}
-	| {type: 'command'; command: Command}
-	| {type: 'meme'; meme: FavoriteMeme}
-	| {type: 'gif'; gif: Gif}
-	| {type: 'sticker'; sticker: GuildSticker};
-export type AutocompleteType = 'mention' | 'channel' | 'emoji' | 'command' | 'meme' | 'gif' | 'sticker';
 
-export function getAutocompleteOptionId(listboxId: string, index: number): string {
-	return `${listboxId}-option-${index}`;
-}
+export type {AutocompleteOption, AutocompleteType} from '@app/features/channel/components/AutocompleteTypes';
+export {
+	getAutocompleteOptionId,
+	isChannel,
+	isCommand,
+	isEmoji,
+	isGif,
+	isMeme,
+	isMentionMember,
+	isMentionRole,
+	isMentionUser,
+	isSpecialMention,
+	isSticker,
+} from '@app/features/channel/components/AutocompleteTypes';
 
-export const isMentionMember = (o: AutocompleteOption): o is {type: 'mention'; kind: 'member'; member: GuildMember} =>
-	o.type === 'mention' && o.kind === 'member';
-export const isMentionUser = (o: AutocompleteOption): o is {type: 'mention'; kind: 'user'; user: User} =>
-	o.type === 'mention' && o.kind === 'user';
-export const isMentionRole = (o: AutocompleteOption): o is {type: 'mention'; kind: 'role'; role: GuildRole} =>
-	o.type === 'mention' && o.kind === 'role';
-export const isSpecialMention = (o: AutocompleteOption): o is {type: 'mention'; kind: '@everyone' | '@here'} =>
-	o.type === 'mention' && (o.kind === '@everyone' || o.kind === '@here');
-export const isChannel = (o: AutocompleteOption): o is {type: 'channel'; channel: Channel} => o.type === 'channel';
-export const isEmoji = (o: AutocompleteOption): o is {type: 'emoji'; emoji: FlatEmoji} => o.type === 'emoji';
-export const isCommand = (o: AutocompleteOption): o is {type: 'command'; command: Command} => o.type === 'command';
-export const isMeme = (o: AutocompleteOption): o is {type: 'meme'; meme: FavoriteMeme} => o.type === 'meme';
-export const isGif = (o: AutocompleteOption): o is {type: 'gif'; gif: Gif} => o.type === 'gif';
-export const isSticker = (o: AutocompleteOption): o is {type: 'sticker'; sticker: GuildSticker} => o.type === 'sticker';
+const ATTACHED_AUTOCOMPLETE_GAP = 4;
+
 export const Autocomplete = observer(
 	({
 		type,
@@ -78,6 +178,7 @@ export const Autocomplete = observer(
 		zIndex,
 		attached = false,
 		listboxId,
+		mainAxisOffset,
 	}: {
 		type: AutocompleteType;
 		onSelect: (option: AutocompleteOption) => void;
@@ -89,10 +190,11 @@ export const Autocomplete = observer(
 		query?: string;
 		attached?: boolean;
 		listboxId?: string;
+		mainAxisOffset?: number;
 	}) => {
 		const {i18n} = useLingui();
 		const generatedListboxId = useId();
-		const resolvedListboxId = listboxId ?? generatedListboxId;
+		const resolvedListboxId = resolveListboxId(listboxId, generatedListboxId);
 		const getOptionId = useCallback(
 			(index: number) => getAutocompleteOptionId(resolvedListboxId, index),
 			[resolvedListboxId],
@@ -109,24 +211,31 @@ export const Autocomplete = observer(
 			initialIndex: 0,
 			loop: true,
 		});
-		const keyboardFocusIndex = externalSelectedIndex ?? internalKeyboardFocusIndex;
-		const [referenceState, setReferenceState] = useState<HTMLElement | null>(referenceElement ?? null);
+		const keyboardFocusIndex = resolveKeyboardFocusIndex(externalSelectedIndex, internalKeyboardFocusIndex);
+		const [referenceState, setReferenceState] = useState<HTMLElement | null>(resolveReferenceElement(referenceElement));
 		useEffect(() => {
-			setReferenceState(referenceElement ?? null);
+			setReferenceState(resolveReferenceElement(referenceElement));
 		}, [referenceElement]);
 		const portalHost = usePortalHost();
+		let resolvedMainAxisOffset = attached ? ATTACHED_AUTOCOMPLETE_GAP : 8;
+		if (mainAxisOffset != null) {
+			resolvedMainAxisOffset = mainAxisOffset;
+		}
+		const resolvedCrossAxisOffset = 0;
+		const heading = resolveAutocompleteHeading(type, options, i18n);
 		const {refs, floatingStyles} = useFloating({
 			placement: 'top-start',
 			open: true,
 			whileElementsMounted: autoUpdate,
 			elements: {reference: referenceState},
 			middleware: [
-				offset(attached ? 0 : 8),
+				offset({mainAxis: resolvedMainAxisOffset, crossAxis: resolvedCrossAxisOffset}),
 				flip({padding: 16}),
 				size({
 					apply({rects, elements}) {
+						const width = rects.reference.width;
 						Object.assign(elements.floating.style, {
-							width: `${rects.reference.width}px`,
+							width: `${width}px`,
 						});
 					},
 					padding: 16,
@@ -203,10 +312,16 @@ export const Autocomplete = observer(
 				scroller.scrollIntoViewNode({node, padding: margin});
 				return;
 			}
-			const scrollerEl =
-				scroller?.getScrollableElement?.() ||
-				node.closest('[data-scrollable], .overflow-y-auto, .overflow-y-scroll') ||
-				node.parentElement;
+			let scrollerEl: HTMLElement | null = null;
+			if (scroller != null && typeof scroller.getScrollableElement === 'function') {
+				scrollerEl = scroller.getScrollableElement();
+			}
+			if (scrollerEl == null) {
+				scrollerEl = node.closest('[data-scrollable], .overflow-y-auto, .overflow-y-scroll');
+			}
+			if (scrollerEl == null) {
+				scrollerEl = node.parentElement;
+			}
 			if (scrollerEl && scrollerEl instanceof HTMLElement) {
 				const sRect = scrollerEl.getBoundingClientRect();
 				const nRect = node.getBoundingClientRect();
@@ -222,16 +337,16 @@ export const Autocomplete = observer(
 			node.scrollIntoView({block: 'nearest'});
 		}, []);
 		useEffect(() => {
-			const node = rowRefs.current[keyboardFocusIndex] ?? null;
+			const node = rowRefs.current[keyboardFocusIndex];
 			if (!node) return;
 			const raf = requestAnimationFrame(() => scrollChildIntoView(node, 32));
 			return () => cancelAnimationFrame(raf);
 		}, [keyboardFocusIndex, options.length, scrollChildIntoView]);
 		return (
-			<FloatingPortal root={portalHost ?? undefined} data-flx="channel.autocomplete.floating-portal">
+			<FloatingPortal root={resolvePortalRoot(portalHost)} data-flx="channel.autocomplete.floating-portal">
 				<div
 					ref={refs.setFloating}
-					style={{...floatingStyles, zIndex: zIndex ?? undefined}}
+					style={{...floatingStyles, zIndex: resolveZIndex(zIndex)}}
 					className={`${styles.container} ${attached ? styles.containerAttached : styles.containerDetached}`}
 					onKeyDown={handleKeyDown}
 					role="listbox"
@@ -258,6 +373,7 @@ export const Autocomplete = observer(
 							key="autocomplete-scroller"
 							data-flx="channel.autocomplete.scroller"
 						>
+							{renderAutocompleteHeading(heading)}
 							{type === 'mention' ? (
 								<AutocompleteMention
 									onSelect={onSelect}
@@ -293,6 +409,28 @@ export const Autocomplete = observer(
 									rowRefs={rowRefs}
 									getOptionId={getOptionId}
 									data-flx="channel.autocomplete.autocomplete-command.select"
+								/>
+							) : type === 'commandChoice' ? (
+								<AutocompleteCommandChoice
+									onSelect={onSelect}
+									keyboardFocusIndex={keyboardFocusIndex}
+									hoverIndex={hoverIndexForRender}
+									options={options}
+									onMouseEnter={handleMouseEnter}
+									onMouseLeave={handleMouseLeave}
+									rowRefs={rowRefs}
+									getOptionId={getOptionId}
+								/>
+							) : type === 'commandOptionalAdd' ? (
+								<AutocompleteCommandOptionalAdd
+									onSelect={onSelect}
+									keyboardFocusIndex={keyboardFocusIndex}
+									hoverIndex={hoverIndexForRender}
+									options={options}
+									onMouseEnter={handleMouseEnter}
+									onMouseLeave={handleMouseLeave}
+									rowRefs={rowRefs}
+									getOptionId={getOptionId}
 								/>
 							) : type === 'meme' ? (
 								<AutocompleteMeme

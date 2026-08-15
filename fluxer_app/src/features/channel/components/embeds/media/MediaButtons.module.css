@@ -7,8 +7,8 @@
 
 .overlayButton {
 	composes: item roundItem from '@app/features/ui/action_toolbar/ActionToolbar.module.css';
-	--action-toolbar-item-size: 3.5rem;
-	--action-toolbar-item-border-width: 0;
+	--action-toolbar-item-size: 2rem;
+	--action-toolbar-item-border-width: 0px;
 	--action-toolbar-item-background: rgba(0, 0, 0, 0.75);
 	--action-toolbar-item-color: var(--text-on-brand-primary);
 }

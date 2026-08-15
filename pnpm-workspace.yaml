@@ -9,7 +9,6 @@ packages:
   - '!fluxer_app/pkgs/libfluxcore'
   - fluxer_desktop
   - fluxer_admin
-  - fluxer_marketing
 
 allowBuilds:
   '@bufbuild/buf': true
@@ -46,6 +45,9 @@ catalog:
   '@floating-ui/react-dom': 2.1.7
   '@hcaptcha/react-hcaptcha': 2.0.2
   '@hono/node-server': 1.19.9
+  '@lexical/history': 0.48.0
+  '@lexical/react': 0.48.0
+  '@lexical/utils': 0.48.0
   '@lingui/cli': 5.9.2
   '@lingui/core': 5.9.2
   '@lingui/react': 5.9.2
@@ -55,7 +57,6 @@ catalog:
   '@messageformat/core': 3.4.0
   '@messageformat/parser': 5.1.1
   '@phosphor-icons/react': 2.1.10
-  '@protontech/tidy-url': 1.18.5
   '@radix-ui/react-checkbox': 1.3.3
   '@radix-ui/react-radio-group': 1.3.8
   '@radix-ui/react-switch': 1.2.6
@@ -103,6 +104,7 @@ catalog:
   itty-time: 2.0.2
   jose: 6.1.3
   katex: 0.16.33
+  lexical: 0.48.0
   knip: 5.85.0
   libphonenumber-js: 1.12.41
   livekit-server-sdk: 2.15.0
@@ -141,6 +143,7 @@ catalog:
   sharp: 0.34.5
   stripe: 22.0.2
   tailwindcss: 4.2.1
+  tiny-invariant: 1.3.3
   tempy: 3.2.0
   thumbhash: 0.1.1
   transliteration: 2.6.1

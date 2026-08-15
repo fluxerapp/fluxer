@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import styles from '@app/features/ui/components/Slider.module.css';
 import {ArrowCounterClockwiseIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
@@ -12,6 +13,7 @@ interface SliderResetIconButtonProps {
 	className?: string;
 	iconSize?: number;
 	dataFlx?: string;
+	alwaysVisible?: boolean;
 }
 
 export function canResetSliderValue(value: number, factoryDefaultValue: number, disabled = false): boolean {
@@ -25,18 +27,20 @@ export function SliderResetIconButton({
 	className,
 	iconSize = 14,
 	dataFlx = 'ui.slider.slider-reset-icon-button.button',
+	alwaysVisible = false,
 }: SliderResetIconButtonProps): React.ReactElement | null {
-	if (!canReset) return null;
+	if (!canReset && !alwaysVisible) return null;
 	return (
 		<button
 			type="button"
 			className={clsx(styles.resetButton, className)}
 			onClick={onReset}
+			disabled={!canReset}
 			aria-label={ariaLabel}
 			data-flx={dataFlx}
 		>
 			<ArrowCounterClockwiseIcon
-				size={iconSize}
+				size={remFromPx(iconSize)}
 				weight="bold"
 				data-flx="ui.slider.slider-reset-icon-button.arrow-counter-clockwise-icon"
 			/>

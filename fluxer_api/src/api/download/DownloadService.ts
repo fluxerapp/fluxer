@@ -8,7 +8,6 @@ import type {
 	DesktopChannel,
 	DesktopFormat,
 	DesktopPlatform,
-	DesktopVariant,
 } from '@fluxer/schema/src/domains/download/DownloadSchemas';
 import {Config} from '../Config';
 import type {IStorageService} from '../infrastructure/IStorageService';
@@ -46,7 +45,6 @@ function isUnsatisfiableRangeError(error: unknown): boolean {
 }
 const DESKTOP_BUCKET_PREFIX = 'desktop';
 const DESKTOP_TEST_BUCKET_PREFIX = 'desktop-test';
-const DESKTOP_SOURCE_MANIFEST_KEY = `${DESKTOP_BUCKET_PREFIX}/source/latest.json`;
 const DEFAULT_API_CLIENT_BASE_URL = 'https://api.fluxer.app';
 
 function desktopBucketPrefix(test?: boolean): string {
@@ -57,14 +55,9 @@ function desktopArtifactPrefix(params: {
 	channel: DesktopChannel;
 	plat: DesktopPlatform;
 	arch: DesktopArch;
-	variant?: DesktopVariant;
 	test?: boolean;
 }): string | null {
-	if (params.variant && params.plat !== 'win32') {
-		return null;
-	}
-	const base = `${desktopBucketPrefix(params.test)}/${params.channel}/${params.plat}/${params.arch}`;
-	return params.variant ? `${base}/${params.variant}` : base;
+	return `${desktopBucketPrefix(params.test)}/${params.channel}/${params.plat}/${params.arch}`;
 }
 
 type DesktopManifestFileEntry =
@@ -77,7 +70,6 @@ type DesktopManifest = {
 	channel: DesktopChannel;
 	platform: DesktopPlatform;
 	arch: DesktopArch;
-	variant?: DesktopVariant | null;
 	version: string;
 	pub_date: string;
 	minimum_system_version?: string | null;
@@ -90,8 +82,8 @@ type FormatMapping = {
 
 const FORMAT_MAPPINGS: Record<DesktopFormat, Partial<Record<DesktopPlatform, FormatMapping>>> = {
 	setup: {win32: {ext: '.exe', arch: {x64: 'x64', arm64: 'arm64'}}},
-	dmg: {darwin: {ext: '.dmg', arch: {x64: 'x64', arm64: 'arm64'}}},
-	zip: {darwin: {ext: '.zip', arch: {x64: 'x64', arm64: 'arm64'}}},
+	dmg: {darwin: {ext: '.dmg', arch: {x64: ['universal', 'x64'], arm64: ['universal', 'arm64']}}},
+	zip: {darwin: {ext: '.zip', arch: {x64: ['universal', 'x64'], arm64: ['universal', 'arm64']}}},
 	appimage: {linux: {ext: '.AppImage', arch: {x64: 'x86_64', arm64: ['aarch64', 'arm64']}}},
 	deb: {linux: {ext: '.deb', arch: {x64: 'amd64', arm64: 'arm64'}}},
 	rpm: {linux: {ext: '.rpm', arch: {x64: 'x86_64', arm64: 'aarch64'}}},
@@ -111,7 +103,6 @@ type VersionFile = {
 };
 type VersionInfo = {
 	version: string;
-	variant?: DesktopVariant | null;
 	pub_date: string;
 	minimum_system_version?: string | null;
 	files: Record<string, VersionFile>;
@@ -121,26 +112,6 @@ export type DesktopChecksumFile = {
 	sha256: string;
 	body: string;
 };
-type DesktopSourceManifest = {
-	filename: string;
-	key: string;
-	sha256: string;
-	commit?: string;
-	desktop_version?: string;
-	desktop_version_source?: {
-		channel: DesktopChannel;
-		platform: DesktopPlatform;
-		arch: DesktopArch;
-		key: string;
-		pub_date: string;
-	};
-	published_at: string;
-	size?: number;
-};
-type DesktopSourceInfo = DesktopSourceManifest & {
-	url: string;
-};
-
 function isDesktopManifestFileEntry(value: unknown): value is DesktopManifestFileEntry {
 	if (typeof value === 'string') {
 		return true;
@@ -154,7 +125,6 @@ function isDesktopManifest(value: unknown): value is DesktopManifest {
 		(value.channel === 'stable' || value.channel === 'canary') &&
 		(value.platform === 'win32' || value.platform === 'darwin' || value.platform === 'linux') &&
 		(value.arch === 'x64' || value.arch === 'arm64') &&
-		(value.variant === undefined || value.variant === null || value.variant === 'windows-game-capture') &&
 		typeof value.version === 'string' &&
 		typeof value.pub_date === 'string' &&
 		(value.minimum_system_version === undefined ||
@@ -164,37 +134,11 @@ function isDesktopManifest(value: unknown): value is DesktopManifest {
 	);
 }
 
-function isDesktopSourceManifest(value: unknown): value is DesktopSourceManifest {
-	if (!isJsonRecord(value)) return false;
-	return (
-		typeof value.filename === 'string' &&
-		typeof value.key === 'string' &&
-		typeof value.sha256 === 'string' &&
-		(value.commit === undefined || typeof value.commit === 'string') &&
-		(value.desktop_version === undefined || typeof value.desktop_version === 'string') &&
-		(value.desktop_version_source === undefined || isDesktopVersionSource(value.desktop_version_source)) &&
-		typeof value.published_at === 'string' &&
-		(value.size === undefined || typeof value.size === 'number')
-	);
-}
-
-function isDesktopVersionSource(value: unknown): value is DesktopSourceManifest['desktop_version_source'] {
-	if (!isJsonRecord(value)) return false;
-	return (
-		(value.channel === 'stable' || value.channel === 'canary') &&
-		(value.platform === 'win32' || value.platform === 'darwin' || value.platform === 'linux') &&
-		(value.arch === 'x64' || value.arch === 'arm64') &&
-		typeof value.key === 'string' &&
-		typeof value.pub_date === 'string'
-	);
-}
-
 interface LatestFilenameLookupParams {
 	channel: DesktopChannel;
 	plat: DesktopPlatform;
 	arch: DesktopArch;
 	format: DesktopFormat;
-	variant?: DesktopVariant;
 	test?: boolean;
 }
 
@@ -205,42 +149,11 @@ interface ManifestFilenameResolutionParams extends LatestFilenameLookupParams {
 export class DownloadService {
 	constructor(private readonly storageService: IStorageService) {}
 
-	async getLatestDesktopSourceInfo(params: {baseUrl?: string} = {}): Promise<DesktopSourceInfo | null> {
-		const manifest = await this.readDesktopSourceManifest();
-		if (!manifest) {
-			return null;
-		}
-		let size = manifest.size;
-		try {
-			const metadata = await this.storageService.getObjectMetadata(Config.s3.buckets.downloads, manifest.key);
-			if (!metadata) {
-				return null;
-			}
-			size = size ?? metadata.contentLength;
-		} catch (error) {
-			if (error instanceof S3ServiceException && (error.name === 'NoSuchKey' || error.name === 'NotFound')) {
-				return null;
-			}
-			throw error;
-		}
-		return {
-			...manifest,
-			...(size === undefined ? {} : {size}),
-			url: `${this.buildBaseUrl(params.baseUrl)}${DESKTOP_REDIRECT_PREFIX}/source/latest`,
-		};
-	}
-
-	async resolveLatestDesktopSourceKey(): Promise<string | null> {
-		const info = await this.getLatestDesktopSourceInfo();
-		return info?.key ?? null;
-	}
-
 	async resolveLatestDesktopKey(params: {
 		channel: DesktopChannel;
 		plat: DesktopPlatform;
 		arch: DesktopArch;
 		format: DesktopFormat;
-		variant?: DesktopVariant;
 		test?: boolean;
 	}): Promise<string | null> {
 		const prefix = desktopArtifactPrefix(params);
@@ -267,7 +180,6 @@ export class DownloadService {
 				arch: params.arch,
 				format: params.format,
 				filename,
-				variant: params.variant,
 				test: params.test,
 			});
 			if (!resolvedFilename) {
@@ -278,7 +190,6 @@ export class DownloadService {
 				plat: params.plat,
 				arch: params.arch,
 				filename: resolvedFilename,
-				variant: params.variant,
 				test: params.test,
 			});
 		} catch (error) {
@@ -293,7 +204,6 @@ export class DownloadService {
 		channel: DesktopChannel;
 		plat: DesktopPlatform;
 		arch: DesktopArch;
-		variant?: DesktopVariant;
 		baseUrl?: string;
 		test?: boolean;
 	}): Promise<VersionInfo | null> {
@@ -324,7 +234,6 @@ export class DownloadService {
 		channel: DesktopChannel;
 		plat: DesktopPlatform;
 		arch: DesktopArch;
-		variant?: DesktopVariant;
 		limit: number;
 		before?: string | null;
 		after?: string | null;
@@ -457,7 +366,6 @@ export class DownloadService {
 							channel: params.channel,
 							plat: params.plat,
 							arch: params.arch,
-							variant: params.variant,
 							version,
 							format,
 							baseUrl: params.baseUrl,
@@ -469,7 +377,6 @@ export class DownloadService {
 									channel: params.channel,
 									plat: params.plat,
 									arch: params.arch,
-									variant: params.variant,
 									version,
 									format,
 									baseUrl: params.baseUrl,
@@ -480,7 +387,6 @@ export class DownloadService {
 				}
 				versions.push({
 					version,
-					...(params.variant ? {variant: params.variant} : {}),
 					pub_date: entry.pub_date.toISOString(),
 					files,
 				});
@@ -498,7 +404,6 @@ export class DownloadService {
 		channel: DesktopChannel;
 		plat: DesktopPlatform;
 		arch: DesktopArch;
-		variant?: DesktopVariant;
 		version: string;
 		format: DesktopFormat;
 		test?: boolean;
@@ -544,7 +449,6 @@ export class DownloadService {
 		plat: DesktopPlatform;
 		arch: DesktopArch;
 		format: DesktopFormat;
-		variant?: DesktopVariant;
 		test?: boolean;
 	}): Promise<DesktopChecksumFile | null> {
 		const version = await this.getLatestDesktopVersion(params);
@@ -564,7 +468,6 @@ export class DownloadService {
 		channel: DesktopChannel;
 		plat: DesktopPlatform;
 		arch: DesktopArch;
-		variant?: DesktopVariant;
 		version: string;
 		format: DesktopFormat;
 		test?: boolean;
@@ -592,11 +495,9 @@ export class DownloadService {
 			return null;
 		}
 		const rewrittenKey = params.test ? this.rewriteToTestBucketKey(key) : key;
-		const keysToTry = [rewrittenKey];
 		const normalizedKey = this.normalizePlatformArchKey(rewrittenKey);
-		if (normalizedKey) {
-			keysToTry.push(normalizedKey);
-		}
+		const candidateKeys = [rewrittenKey, normalizedKey];
+		const keysToTry = Array.from(new Set(candidateKeys.filter((candidate): candidate is string => candidate !== null)));
 		for (const candidateKey of keysToTry) {
 			try {
 				const metadata = await this.storageService.getObjectMetadata(Config.s3.buckets.downloads, candidateKey);
@@ -669,14 +570,12 @@ export class DownloadService {
 		channel: DesktopChannel;
 		plat: DesktopPlatform;
 		arch: DesktopArch;
-		variant?: DesktopVariant;
 		version: string;
 		format: DesktopFormat;
 		baseUrl?: string;
 		test?: boolean;
 	}): string {
-		const variantSegment = params.variant ? `/${params.variant}` : '';
-		const url = `${this.buildBaseUrl(params.baseUrl)}${DOWNLOAD_PREFIX}/desktop/${params.channel}/${params.plat}/${params.arch}${variantSegment}/${params.version}/${params.format}`;
+		const url = `${this.buildBaseUrl(params.baseUrl)}${DOWNLOAD_PREFIX}/desktop/${params.channel}/${params.plat}/${params.arch}/${params.version}/${params.format}`;
 		return params.test ? `${url}?test=1` : url;
 	}
 
@@ -684,14 +583,12 @@ export class DownloadService {
 		channel: DesktopChannel;
 		plat: DesktopPlatform;
 		arch: DesktopArch;
-		variant?: DesktopVariant;
 		version: string;
 		format: DesktopFormat;
 		baseUrl?: string;
 		test?: boolean;
 	}): string {
-		const variantSegment = params.variant ? `/${params.variant}` : '';
-		const url = `${this.buildBaseUrl(params.baseUrl)}${DOWNLOAD_PREFIX}/desktop/${params.channel}/${params.plat}/${params.arch}${variantSegment}/${params.version}/${params.format}.sha256`;
+		const url = `${this.buildBaseUrl(params.baseUrl)}${DOWNLOAD_PREFIX}/desktop/${params.channel}/${params.plat}/${params.arch}/${params.version}/${params.format}.sha256`;
 		return params.test ? `${url}?test=1` : url;
 	}
 
@@ -722,63 +619,8 @@ export class DownloadService {
 		return parseJsonUnknown(text);
 	}
 
-	private async readDesktopSourceManifest(): Promise<DesktopSourceManifest | null> {
-		let manifest: unknown | null;
-		try {
-			manifest = await this.readJsonObjectFromStorage(DESKTOP_SOURCE_MANIFEST_KEY);
-		} catch (error) {
-			if (error instanceof S3ServiceException && (error.name === 'NoSuchKey' || error.name === 'NotFound')) {
-				return null;
-			}
-			throw error;
-		}
-		if (!isDesktopSourceManifest(manifest)) {
-			return null;
-		}
-		if (
-			!this.isSafeDesktopSourceKey(manifest.key) ||
-			!this.isValidSha256(manifest.sha256) ||
-			(manifest.desktop_version !== undefined && !this.isValidVersion(manifest.desktop_version)) ||
-			(manifest.desktop_version_source !== undefined &&
-				!this.isValidDesktopVersionSource(manifest.desktop_version_source)) ||
-			manifest.filename.trim().length === 0 ||
-			manifest.published_at.trim().length === 0
-		) {
-			return null;
-		}
-		return manifest;
-	}
-
-	private isSafeDesktopSourceKey(key: string): boolean {
-		if (!key.startsWith(`${DESKTOP_BUCKET_PREFIX}/source/by-commit/`)) {
-			return false;
-		}
-		const normalized = posix.normalize(key);
-		if (normalized !== key || normalized.startsWith('..') || normalized.includes('\0')) {
-			return false;
-		}
-		return key.endsWith('.tar.gz');
-	}
-
 	private isValidSha256(value: string): boolean {
 		return /^[a-f0-9]{64}$/u.test(value);
-	}
-
-	private isValidVersion(value: string): boolean {
-		return /^\d+\.\d+\.\d+$/u.test(value);
-	}
-
-	private isValidDesktopVersionSource(source: DesktopSourceManifest['desktop_version_source']): boolean {
-		if (!source) {
-			return false;
-		}
-		return (
-			source.channel === 'canary' &&
-			source.platform === 'linux' &&
-			source.arch === 'x64' &&
-			source.key === 'desktop/canary/linux/x64/manifest.json' &&
-			source.pub_date.trim().length > 0
-		);
 	}
 
 	private async resolveManifestFilename(params: ManifestFilenameResolutionParams): Promise<string | null> {
@@ -792,7 +634,6 @@ export class DownloadService {
 				channel: params.channel,
 				plat: params.plat,
 				arch: params.arch,
-				variant: params.variant,
 				filename: manifestFilename,
 				test: params.test,
 			}))
@@ -1038,7 +879,6 @@ export class DownloadService {
 			plat: params.plat,
 			arch: params.arch,
 			filename,
-			variant: params.variant,
 			test: params.test,
 		});
 	}
@@ -1047,7 +887,6 @@ export class DownloadService {
 		channel: DesktopChannel;
 		plat: DesktopPlatform;
 		arch: DesktopArch;
-		variant?: DesktopVariant;
 		version: string;
 		format: DesktopFormat;
 		test?: boolean;
@@ -1079,7 +918,6 @@ export class DownloadService {
 				arch: params.arch,
 				format: params.format,
 				filename,
-				variant: params.variant,
 				test: params.test,
 			});
 			if (!resolvedFilename) {
@@ -1090,7 +928,6 @@ export class DownloadService {
 				plat: params.plat,
 				arch: params.arch,
 				filename: resolvedFilename,
-				variant: params.variant,
 				test: params.test,
 			});
 		} catch (error) {
@@ -1106,7 +943,6 @@ export class DownloadService {
 			channel: DesktopChannel;
 			plat: DesktopPlatform;
 			arch: DesktopArch;
-			variant?: DesktopVariant;
 			baseUrl?: string;
 			test?: boolean;
 		},
@@ -1125,7 +961,6 @@ export class DownloadService {
 				arch: params.arch,
 				format,
 				filename: manifestFilename,
-				variant: params.variant,
 				test: params.test,
 			});
 			if (!resolvedFilename) {
@@ -1143,7 +978,6 @@ export class DownloadService {
 					arch: params.arch,
 					format,
 					filename: resolvedFilename,
-					variant: params.variant,
 					test: params.test,
 				})
 			) {
@@ -1156,7 +990,6 @@ export class DownloadService {
 				entry,
 				manifestFilename,
 				resolvedFilename,
-				variant: params.variant,
 				test: params.test,
 			});
 			files[format] = {
@@ -1164,7 +997,6 @@ export class DownloadService {
 					channel: params.channel,
 					plat: params.plat,
 					arch: params.arch,
-					variant: params.variant,
 					version: manifest.version,
 					format,
 					baseUrl: params.baseUrl,
@@ -1176,7 +1008,6 @@ export class DownloadService {
 							channel: params.channel,
 							plat: params.plat,
 							arch: params.arch,
-							variant: params.variant,
 							version: manifest.version,
 							format,
 							baseUrl: params.baseUrl,
@@ -1191,7 +1022,6 @@ export class DownloadService {
 		const minimumSystemVersion = manifest.minimum_system_version ?? null;
 		return {
 			version: manifest.version,
-			...(params.variant ? {variant: params.variant} : {}),
 			pub_date: manifest.pub_date,
 			...(minimumSystemVersion ? {minimum_system_version: minimumSystemVersion} : {}),
 			files,
@@ -1202,7 +1032,6 @@ export class DownloadService {
 		channel: DesktopChannel;
 		plat: DesktopPlatform;
 		arch: DesktopArch;
-		variant?: DesktopVariant;
 		baseUrl?: string;
 		test?: boolean;
 	}): Promise<VersionInfo | null> {
@@ -1210,7 +1039,6 @@ export class DownloadService {
 			channel: params.channel,
 			plat: params.plat,
 			arch: params.arch,
-			variant: params.variant,
 			limit: 1,
 			baseUrl: params.baseUrl,
 			test: params.test,
@@ -1222,7 +1050,6 @@ export class DownloadService {
 		channel: DesktopChannel;
 		plat: DesktopPlatform;
 		arch: DesktopArch;
-		variant?: DesktopVariant;
 		entry: DesktopManifestFileEntry;
 		manifestFilename: string;
 		resolvedFilename: string;
@@ -1238,7 +1065,6 @@ export class DownloadService {
 			channel: params.channel,
 			plat: params.plat,
 			arch: params.arch,
-			variant: params.variant,
 			filename: params.resolvedFilename,
 			test: params.test,
 		});
@@ -1270,7 +1096,6 @@ export class DownloadService {
 		channel: DesktopChannel;
 		plat: DesktopPlatform;
 		arch: DesktopArch;
-		variant?: DesktopVariant;
 		filename: string;
 		test?: boolean;
 	}): Promise<boolean> {
@@ -1293,7 +1118,6 @@ export class DownloadService {
 		channel: DesktopChannel;
 		plat: DesktopPlatform;
 		arch: DesktopArch;
-		variant?: DesktopVariant;
 		filename: string;
 		test?: boolean;
 	}): string | null {

@@ -2,6 +2,7 @@
 
 import type {ChannelSearchSortMode} from '@app/features/channel/hooks/useChannelSearch';
 import styles from '@app/features/search/components/search/SortModeSheet.module.css';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {BottomSheet} from '@app/features/ui/bottom_sheet/BottomSheet';
 import type {MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
@@ -107,7 +108,7 @@ export const SortModeSheet: React.FC<SortModeSheetProps> = ({isOpen, onClose, se
 							>
 								<div className={styles.optionLeft} data-flx="search.search.sort-mode-sheet.option-left">
 									<Icon
-										size={22}
+										size={remFromPx(22)}
 										className={clsx(styles.optionIcon, isSelected && styles.optionIconSelected)}
 										weight="regular"
 										data-flx="search.search.sort-mode-sheet.option-icon"
@@ -129,7 +130,7 @@ export const SortModeSheet: React.FC<SortModeSheetProps> = ({isOpen, onClose, se
 								</div>
 								{isSelected && (
 									<CheckIcon
-										size={20}
+										size={remFromPx(20)}
 										className={styles.checkIcon}
 										weight="bold"
 										data-flx="search.search.sort-mode-sheet.check-icon"

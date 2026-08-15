@@ -9,7 +9,10 @@
 	height: var(--textarea-button-height);
 	padding: 0;
 	color: var(--text-primary-muted);
-	transition: color var(--transition-normal);
+	border-radius: var(--radius-md);
+	transition:
+		color var(--transition-normal),
+		background-color var(--transition-normal);
 	cursor: pointer;
 	background: transparent;
 	border: none;
@@ -20,6 +23,7 @@
 .button:hover:not(:disabled),
 .button.contextMenuHover:not(:disabled) {
 	color: var(--text-primary);
+	background-color: var(--background-modifier-hover);
 }
 
 .button:disabled {

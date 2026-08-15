@@ -15,6 +15,7 @@ import {TypingUtils} from '@app/features/typing/utils/TypingUtils';
 import {modal, push as pushModal} from '@app/features/ui/commands/ModalCommands';
 import Users from '@app/features/user/state/Users';
 import {MessageStates, MessageTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {CHANNEL_RATE_LIMIT_PER_USER_MAX} from '@fluxer/constants/src/LimitConstants';
 import type {
 	AllowedMentions,
 	MessageAttachment,
@@ -37,12 +38,20 @@ export type SendMessageFunction = (
 	stickersOrTts?: Array<MessageStickerItem> | boolean,
 	favoriteMemeIdOrStickers?: string | Array<MessageStickerItem>,
 	maybeFavoriteMemeId?: string,
-) => void;
+) => boolean;
 
 function isBlockedBySlowmode(channel: Channel): boolean {
 	if (!channel.guildId) return false;
-	const rateLimitPerUser = channel.rateLimitPerUser || 0;
-	if (rateLimitPerUser <= 0) return false;
+	const rateLimitPerUser = channel.rateLimitPerUser;
+	if (
+		rateLimitPerUser === undefined ||
+		rateLimitPerUser === null ||
+		!Number.isSafeInteger(rateLimitPerUser) ||
+		rateLimitPerUser <= 0 ||
+		rateLimitPerUser > CHANNEL_RATE_LIMIT_PER_USER_MAX
+	) {
+		return false;
+	}
 	if (Permission.can(Permissions.BYPASS_SLOWMODE, channel)) return false;
 	const remainingMs = Slowmode.getSlowmodeRemaining(channel.id, rateLimitPerUser);
 	if (remainingMs <= 0) return false;
@@ -81,10 +90,10 @@ export const useMessageSubmission = ({channel, referencedMessage, replyingMessag
 					? favoriteMemeIdOrStickers
 					: undefined;
 			const currentUser = Users.getCurrentUser();
-			if (!channel || !currentUser) return;
-			if (isBlockedBySlowmode(channel)) return;
+			if (!channel || !currentUser) return false;
+			if (isBlockedBySlowmode(channel)) return false;
 			const nonce = SnowflakeUtils.fromTimestamp(Date.now());
-			if (!MessageCommands.reserveSend(channel.id, nonce)) return;
+			if (!MessageCommands.reserveSend(channel.id, nonce)) return false;
 			const messageReference = MessageSubmitUtils.prepareMessageReference(channel.id, referencedMessage);
 			TypingUtils.clear(channel.id);
 			DraftCommands.deleteDraft(channel.id);
@@ -138,6 +147,7 @@ export const useMessageSubmission = ({channel, referencedMessage, replyingMessag
 				}
 			});
 			ComponentDispatch.dispatch('MESSAGE_SENT', {channelId: channel.id});
+			return true;
 		},
 		[channel?.id, i18n, referencedMessage, replyingMessage],
 	);

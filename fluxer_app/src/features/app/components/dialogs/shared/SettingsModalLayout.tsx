@@ -3,6 +3,7 @@
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import styles from '@app/features/app/components/dialogs/shared/SettingsModalLayout.module.css';
 import {SETTINGS_SECTIONS_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Scroller, type ScrollerHandle} from '@app/features/ui/components/Scroller';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {
@@ -343,7 +344,7 @@ export const SettingsModalSidebarItem: React.FC<SettingsModalSidebarItemProps> =
 			<>
 				<IconComponent
 					className={styles.sidebarItemIcon}
-					size={20}
+					size={remFromPx(20)}
 					weight={iconWeight}
 					data-flx="app.settings-modal-layout.settings-modal-sidebar-item.sidebar-item-icon"
 				/>
@@ -356,7 +357,7 @@ export const SettingsModalSidebarItem: React.FC<SettingsModalSidebarItemProps> =
 				{expandable && (
 					<CaretRightIcon
 						className={styles.sidebarItemChevron}
-						size={16}
+						size={remFromPx(16)}
 						weight="bold"
 						aria-hidden="true"
 						data-flx="app.settings-modal-layout.settings-modal-sidebar-item.sidebar-item-chevron"
@@ -365,7 +366,11 @@ export const SettingsModalSidebarItem: React.FC<SettingsModalSidebarItemProps> =
 			</>
 		);
 		return (
-			<FocusRing offset={-2} data-flx="app.settings-modal-layout.settings-modal-sidebar-item.focus-ring">
+			<FocusRing
+				offset={-2}
+				focusClassName={styles.sidebarItemFocused}
+				data-flx="app.settings-modal-layout.settings-modal-sidebar-item.focus-ring"
+			>
 				{isTabRole ? (
 					<button
 						data-flx="app.settings-modal-layout.settings-modal-sidebar-item.button"

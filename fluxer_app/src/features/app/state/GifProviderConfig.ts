@@ -17,12 +17,12 @@ export interface GifProviderInfoInput {
 type KnownGifProvider = 'klipy' | 'tenor';
 
 const GIF_PROVIDER_DISPLAY_NAMES: Record<KnownGifProvider, string> = {
-	klipy: 'KLIPY',
+	klipy: 'Klipy',
 	tenor: 'Tenor',
 };
 
 const GIF_PROVIDER_DEFAULT_ATTRIBUTION: Record<KnownGifProvider, boolean> = {
-	klipy: true,
+	klipy: false,
 	tenor: false,
 };
 

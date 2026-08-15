@@ -67,7 +67,7 @@
 	user-select: none;
 	-webkit-user-select: none;
 	overflow: hidden;
-	border-radius: var(--media-border-radius, 0);
+	border-radius: var(--media-border-radius, 0px);
 }
 
 .blurInner {
@@ -97,7 +97,7 @@
 	border: 0;
 	padding: 0;
 	cursor: pointer;
-	border-radius: var(--media-border-radius, 0);
+	border-radius: var(--media-border-radius, 0px);
 }
 
 .mobileContainer {
@@ -105,7 +105,7 @@
 	height: 100%;
 	width: 100%;
 	background: #000;
-	border-radius: var(--media-border-radius, 0);
+	border-radius: var(--media-border-radius, 0px);
 	overflow: hidden;
 }
 
@@ -118,7 +118,7 @@
 .videoPlayerBlock {
 	display: block;
 	width: 100%;
-	border-radius: var(--media-border-radius, 0);
+	border-radius: var(--media-border-radius, 0px);
 	overflow: hidden;
 }
 

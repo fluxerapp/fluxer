@@ -77,14 +77,14 @@ jobs:
           GH_TOKEN: ${{ steps.create-token.outputs.token }}
         run: |
           set -euo pipefail
-          if [[ -z "$(git status --porcelain -- fluxer_app/src/features/i18n/locales packages/errors/src/i18n fluxer_api/pkgs/email/src/email_i18n fluxer_api/src/api/content_i18n)" ]]; then
+          if [[ -z "$(git status --porcelain -- fluxer_app/src/features/i18n/locales packages/i18n/marketing packages/errors/src/i18n fluxer_api/pkgs/email/src/email_i18n fluxer_api/src/api/content_i18n)" ]]; then
             echo "No generated catalog changes."
             exit 0
           fi
 
           git config user.name "fluxer-ci[bot]"
           git config user.email "${{ vars.FLUXER_CI_APP_USER_ID }}+fluxer-ci[bot]@users.noreply.github.com"
-          git add fluxer_app/src/features/i18n/locales packages/errors/src/i18n fluxer_api/pkgs/email/src/email_i18n fluxer_api/src/api/content_i18n
+          git add fluxer_app/src/features/i18n/locales packages/i18n/marketing packages/errors/src/i18n fluxer_api/pkgs/email/src/email_i18n fluxer_api/src/api/content_i18n
           git commit -m "i18n: compile Weblate catalogs"
           git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
           git push origin "HEAD:$WEBLATE_BRANCH"

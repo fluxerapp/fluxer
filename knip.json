@@ -12,12 +12,7 @@
 		"tailwindcss",
 		"upng-js"
 	],
-	"ignoreFiles": [
-		"fluxer_admin/src/styles/app.css",
-		"fluxer_admin/static/htmx.min.js",
-		"fluxer_marketing/src/styles/app.css",
-		"fluxer_marketing/static/htmx.min.js"
-	],
+	"ignoreFiles": ["fluxer_admin/src/styles/app.css", "fluxer_admin/static/htmx.min.js"],
 	"ignoreIssues": {
 		"fluxer_app/scripts/build/Config.tsx": ["exports"],
 		"fluxer_app/scripts/build/rspack/static-files.mjs": ["exports"],
@@ -35,9 +30,6 @@
 		".": {
 			"project": ["scripts/**/*.mjs"]
 		},
-		"fluxer_api": {
-			"entry": ["src/api/test/fake-ncmec/Bin.ts"]
-		},
 		"fluxer_app": {
 			"entry": ["lingui.config.js", "scripts/build-sw.mjs", "scripts/Generate*.ts"],
 			"ignoreDependencies": ["@lingui/swc-plugin"]
@@ -52,7 +44,6 @@
 				"native/*/loader-diagnostics.cjs",
 				"native/*/*.test.mjs",
 				"native/*/test/**/*.mjs",
-				"native/*/vm_tests/*.mjs",
 				"native/*/scripts/**/*.mjs"
 			],
 			"project": ["src/**/*.{ts,tsx,mjs,js}", "scripts/**/*.mjs", "native/**/*.{js,mjs,cjs,d.ts}"],

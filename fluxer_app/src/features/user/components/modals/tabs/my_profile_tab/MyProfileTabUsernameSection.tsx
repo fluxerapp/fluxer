@@ -5,6 +5,7 @@ import {LimitResolver} from '@app/features/app/utils/LimitResolverAdapter';
 import {isLimitToggleEnabled} from '@app/features/app/utils/LimitUtils';
 import * as PremiumModalCommands from '@app/features/premium/commands/PremiumModalCommands';
 import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
@@ -113,7 +114,11 @@ export const UsernameSection = observer(({isClaimed, isEmailVerified, user}: Use
 							aria-label={i18n._(GET_TO_CUSTOMIZE_YOUR_TAG_DESCRIPTOR, {premiumProductName: PREMIUM_PRODUCT_NAME})}
 							data-flx="user.my-profile-tab.username-section.premium-button.open"
 						>
-							<CrownIcon weight="fill" size={18} data-flx="user.my-profile-tab.username-section.crown-icon" />
+							<CrownIcon
+								weight="fill"
+								size={remFromPx(18)}
+								data-flx="user.my-profile-tab.username-section.crown-icon"
+							/>
 						</button>
 					</Tooltip>
 				)}

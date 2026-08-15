@@ -109,10 +109,10 @@ handle_sync_dm_recipients(#{
     <<"recipients_by_channel">> := RecipientsByChannel
 }) ->
     UserId = validation:snowflake_or_throw(<<"user_id">>, UserIdBin),
-    NormalizedRecipients = normalize_recipients(RecipientsByChannel),
+    _ = normalize_recipients(RecipientsByChannel),
     case lookup_owner_presence(UserId) of
         {ok, Pid} ->
-            gen_server:cast(Pid, {sync_group_dm_recipients, NormalizedRecipients}),
+            gen_server:cast(Pid, presence_rejoin),
             true;
         {error, not_found} ->
             true;

@@ -91,6 +91,7 @@ function defaultConfig(): MasterConfig {
 		services: {
 			api: {
 				port: 8080,
+				ip_ban_exempt_ips: [],
 				presigned_attachment_uploads_enabled: false,
 				unfurl_ignored_hosts: [],
 				embeds: {
@@ -230,6 +231,7 @@ function defaultConfig(): MasterConfig {
 				api_key: '',
 				pull_zone_id: 0,
 			},
+			blocklist_feeds: {},
 			risk_integration: {
 				enabled: false,
 				ipinfo_api_key: '',
@@ -290,7 +292,7 @@ function defaultConfig(): MasterConfig {
 			min_member_count: 1,
 		},
 		attachment_decay_enabled: true,
-		deletion_grace_period_hours: 72,
+		deletion_grace_period_hours: 336,
 		inactivity_deletion_threshold_days: 365,
 	};
 }

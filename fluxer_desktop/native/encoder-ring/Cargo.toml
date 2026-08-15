@@ -36,12 +36,6 @@ bindgen-sdk = ["dep:bindgen"]
 [dev-dependencies]
 criterion = "0.8"
 
-[target.'cfg(target_os = "macos")'.dev-dependencies]
-objc2 = "0.6"
-objc2-core-video = {version = "0.3", features = ["CVPixelBuffer", "CVPixelBufferIOSurface", "CVImageBuffer", "CVBuffer", "CVPixelFormatDescription", "CVReturn", "CVBase", "objc2-io-surface"]}
-objc2-core-foundation = {version = "0.3", features = ["CFDictionary", "CFNumber", "CFString", "CFBase"]}
-objc2-io-surface = {version = "0.3", features = ["IOSurfaceRef", "objc2-core-foundation"]}
-
 [[bench]]
 name = "ring"
 harness = false

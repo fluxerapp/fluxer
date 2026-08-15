@@ -21,6 +21,7 @@ import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import SidebarPreferences from '@app/features/ui/state/SidebarPreferences';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
+import {getAppZoomFactor} from '@app/features/ui/utils/AppZoomUtils';
 import {ME} from '@fluxer/constants/src/AppConstants';
 import {RelationshipTypes} from '@fluxer/constants/src/UserConstants';
 import {msg} from '@lingui/core/macro';
@@ -116,11 +117,12 @@ export const FluxerButton = observer(() => {
 			/>
 		));
 	}, []);
-	const indicatorHeight = (() => {
-		if (isSelected) return 40;
-		if (isHovering) return 20;
-		return 8;
-	})();
+	const indicatorHeight =
+		(() => {
+			if (isSelected) return 40;
+			if (isHovering) return 20;
+			return 8;
+		})() * getAppZoomFactor();
 	const isActive = isHovering || isSelected;
 	if (RuntimeConfig.directMessagesDisabled) {
 		return null;

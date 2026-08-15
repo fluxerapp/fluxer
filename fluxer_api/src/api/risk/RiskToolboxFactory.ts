@@ -2,6 +2,7 @@
 
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import type {IpInfoService} from '@pkgs/geoip/src/IpInfoService';
+import type {IAdminRepository} from '../admin/IAdminRepository';
 import {createDisposableDomainChecker} from './adapters/DisposableDomainChecker';
 import {createDnsMxChecker, type MxResolver, NodeDnsMxResolver} from './adapters/DnsMxChecker';
 import {createDomainAgeChecker} from './adapters/DomainAgeChecker';
@@ -13,13 +14,12 @@ import {analyzeRegistrationTiming} from './adapters/RegistrationTimingAnalyzer';
 import {analyzeUserAgent} from './adapters/UserAgentAnalyzer';
 import {createVelocityAdapter, type IRegistrationEventsRepository} from './adapters/VelocityAdapter';
 import type {IRiskHistoryRepository} from './HistoricalOutcomeRepository';
-import type {ReadonlyRiskCacheRef} from './RiskCacheManager';
 import type {RiskToolbox} from './RiskToolbox';
 import type {IpInfoAnonymousResult, ReverseDnsResult} from './RiskTypes';
 import type {ISuspiciousIpRepository} from './SuspiciousIpRepository';
 
 interface RiskToolboxFactoryOptions {
-	disposableDomainsRef: ReadonlyRiskCacheRef<ReadonlySet<string>>;
+	adminRepository: Pick<IAdminRepository, 'isEmailDomainSuspicious' | 'isEmailDomainDisposable'>;
 	ipInfoChecker?: (ip: string) => Promise<IpInfoAnonymousResult>;
 	reverseDnsLookup?: (ip: string) => Promise<ReverseDnsResult>;
 	ipInfoService: IpInfoService;
@@ -32,7 +32,7 @@ interface RiskToolboxFactoryOptions {
 }
 
 export function createRiskToolbox(opts: RiskToolboxFactoryOptions): RiskToolbox {
-	const checkDomainDisposable = createDisposableDomainChecker({disposableDomainsRef: opts.disposableDomainsRef});
+	const checkDomainDisposable = createDisposableDomainChecker({adminRepository: opts.adminRepository});
 	const lookupGeoIpCity = createGeoIpCityAdapter({ipInfoService: opts.ipInfoService});
 	const lookupGeoIpAsn = createGeoIpAsnAdapter({ipInfoService: opts.ipInfoService});
 	const checkMx = createDnsMxChecker({

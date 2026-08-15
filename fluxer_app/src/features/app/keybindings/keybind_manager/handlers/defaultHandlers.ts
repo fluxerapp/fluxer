@@ -11,6 +11,7 @@ import {
 	YOU_CAN_T_UNMUTE_YOURSELF_BECAUSE_A_MODERATOR_DESCRIPTOR,
 } from '@app/features/app/keybindings/keybind_manager/shared';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
+import {requestChannelComposerAffordanceDismissal} from '@app/features/channel/components/ChannelComposerDismissal';
 import {CreateDMModal} from '@app/features/channel/components/modals/CreateDMModal';
 import Channels from '@app/features/channel/state/Channels';
 import * as VoiceStateCommands from '@app/features/devtools/commands/VoiceStateCommands';
@@ -325,8 +326,9 @@ export function registerDefaultKeybindHandlers(host: HandlerHost, i18n: I18n): v
 		if (type !== 'press') return;
 		const channelId = host.currentChannelId;
 		if (!channelId) return;
+		if (requestChannelComposerAffordanceDismissal(channelId)) return;
 		if (ReadStates.hasUnread(channelId)) {
-			ComponentDispatch.dispatch('ESCAPE_PRESSED');
+			ComponentDispatch.dispatch('ESCAPE_PRESSED', {channelId});
 		}
 	});
 	host.register('chat_mark_guild_read', ({type}) => {

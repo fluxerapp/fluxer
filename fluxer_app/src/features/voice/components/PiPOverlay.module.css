@@ -8,7 +8,7 @@
 	width: 20rem;
 	min-width: 15rem;
 	max-width: min(45rem, calc(100vw - 2.5rem));
-	max-height: calc(100svh - var(--native-titlebar-height, 0) - 2.5rem);
+	max-height: calc(100svh - var(--native-titlebar-height, 0px) - 2.5rem);
 	aspect-ratio: 16 / 9;
 	border-radius: 0.75rem;
 	overflow: hidden;

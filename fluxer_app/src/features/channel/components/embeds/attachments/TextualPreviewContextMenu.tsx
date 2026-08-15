@@ -2,6 +2,7 @@
 
 import type {TextualPreviewContextMenuProps} from '@app/features/channel/components/embeds/attachments/TextualAttachmentPreviewUtils';
 import {DOWNLOAD_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {CheckboxItem} from '@app/features/ui/action_menu/ContextMenu';
 import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
 import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
@@ -26,7 +27,7 @@ export const TextualPreviewContextMenu = observer(function TextualPreviewContext
 			<MenuItem
 				icon={
 					<DownloadSimpleIcon
-						size={16}
+						size={remFromPx(16)}
 						weight="regular"
 						data-flx="channel.embeds.attachments.textual-preview-context-menu.download-simple-icon"
 					/>

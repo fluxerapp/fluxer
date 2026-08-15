@@ -230,7 +230,7 @@
 	background-color: var(--settings-border-color, var(--background-modifier-accent));
 }
 
-.additionalContent {
+.extraContent {
 	margin-top: 2rem;
 }
 

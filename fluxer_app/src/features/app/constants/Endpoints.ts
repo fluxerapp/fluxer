@@ -114,7 +114,6 @@ export const Endpoints = {
 	GUILD_WEBHOOKS: (guildId: string) => `/guilds/${guildId}/webhooks`,
 	GUILD_AUDIT_LOGS: (guildId: string) => `/guilds/${guildId}/audit-logs`,
 	INVITE: (code: string) => `/invites/${code}`,
-	CANARY_TESTER_JOIN: '/users/@me/canary-tester/join',
 	GIFT: (code: string) => `/gifts/${code}`,
 	GIFT_REDEEM: (code: string) => `/gifts/${code}/redeem`,
 	USER_GIFTS: '/users/@me/gifts',

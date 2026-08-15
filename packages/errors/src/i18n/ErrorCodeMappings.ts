@@ -93,7 +93,6 @@ export const ErrorCodeToI18nKey = {
 	[APIErrorCodes.DISCRIMINATOR_REQUIRED]: 'usernames_and_tags.discriminator_required',
 	[APIErrorCodes.EMAIL_SERVICE_NOT_TESTABLE]: 'email.email_service_not_testable',
 	[APIErrorCodes.EMAIL_VERIFICATION_REQUIRED]: 'account.email_verification_required',
-	[APIErrorCodes.CANARY_TESTER_EMAIL_VERIFICATION_REQUIRED]: 'account.email_verification_required',
 	[APIErrorCodes.DIRECT_MESSAGE_EMAIL_VERIFICATION_REQUIRED]: 'account.email_verification_required',
 	[APIErrorCodes.FRIEND_REQUEST_EMAIL_VERIFICATION_REQUIRED]: 'account.email_verification_required',
 	[APIErrorCodes.GUILD_CREATION_EMAIL_VERIFICATION_REQUIRED]: 'account.email_verification_required',

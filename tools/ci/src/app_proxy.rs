@@ -17,6 +17,7 @@ use std::path::{Path, PathBuf};
 
 const DEFAULT_PUBLIC_ASSET_BASE_URL: &str = "https://fluxerstatic.com";
 const DEFAULT_APP_PROXY_TIME_FREEZE_ENABLED: &str = "true";
+const DEFAULT_APP_PROXY_BUNDLE_LOCAL_ASSETS: &str = "false";
 const DEFAULT_STATIC_BUCKET: &str = "fluxer-static";
 const DEFAULT_S3_ENDPOINT: &str = "https://ewr1.vultrobjects.com";
 const IMMUTABLE_ASSET_CACHE_CONTROL: &str = "public, max-age=31536000, immutable";
@@ -138,6 +139,11 @@ fn build_and_extract_command() -> Result<CommandSpec> {
             "FLUXER_APP_PROXY_TIME_FREEZE_ENABLED",
             env::var("FLUXER_APP_PROXY_TIME_FREEZE_ENABLED")
                 .unwrap_or_else(|_| DEFAULT_APP_PROXY_TIME_FREEZE_ENABLED.to_string()),
+        )
+        .env(
+            "BUNDLE_LOCAL_ASSETS",
+            env::var("BUNDLE_LOCAL_ASSETS")
+                .unwrap_or_else(|_| DEFAULT_APP_PROXY_BUNDLE_LOCAL_ASSETS.to_string()),
         )
         .env(
             "CACHE_FROM",
@@ -414,6 +420,28 @@ mod tests {
             OsString::from("FLUXER_APP_PROXY_TIME_FREEZE_ENABLED"),
             OsString::from(DEFAULT_APP_PROXY_TIME_FREEZE_ENABLED)
         )));
+    }
+
+    #[test]
+    fn hosted_bake_trims_the_local_asset_tree_by_default() {
+        assert_eq!(DEFAULT_APP_PROXY_BUNDLE_LOCAL_ASSETS, "false");
+    }
+
+    #[test]
+    fn dockerfile_guards_the_trim_on_an_absolute_asset_base_url() {
+        let dockerfile = include_str!("../../../fluxer_app_proxy/Dockerfile");
+        let trim = dockerfile
+            .split("FROM alpine:3.21 AS app-assets")
+            .nth(1)
+            .expect("app-assets stage");
+        assert!(
+            trim.contains("ARG PUBLIC_ASSET_BASE_URL"),
+            "the app-assets stage must redeclare PUBLIC_ASSET_BASE_URL to be able to check it"
+        );
+        assert!(
+            trim.contains("http://* | https://*"),
+            "the trim must assert an absolute PUBLIC_ASSET_BASE_URL before deleting anything"
+        );
     }
 
     #[test]

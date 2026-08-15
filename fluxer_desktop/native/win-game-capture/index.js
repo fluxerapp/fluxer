@@ -6,7 +6,6 @@ const {join, sep} = require('node:path');
 const {createNativeLoadError, loadNativeBinding} = require('./loader-diagnostics.cjs');
 
 const MODULE_NAME = '@fluxer/win-game-capture';
-const WINDOWS_GAME_CAPTURE_MODULE_ENV = 'FLUXER_WINDOWS_GAME_CAPTURE_MODULE_ENABLED';
 
 function resolveNativeRoot() {
 	const asarSegment = `${sep}app.asar${sep}`;
@@ -30,14 +29,7 @@ let binding = null;
 let loadError = null;
 const nativeRoot = resolveNativeRoot();
 
-if (process.platform === 'win32' && process.env[WINDOWS_GAME_CAPTURE_MODULE_ENV] !== 'true') {
-	loadError = createNativeLoadError({
-		moduleName: MODULE_NAME,
-		nativeRoot,
-		packageDir: __dirname,
-		reason: 'Windows game capture is disabled in this build',
-	});
-} else if (process.platform === 'win32') {
+if (process.platform === 'win32') {
 	const fileName = nativeFileName(process.arch);
 	if (!fileName) {
 		loadError = createNativeLoadError({
@@ -117,8 +109,15 @@ function resolveVulkanLayerManifestPath(root = nativeRoot) {
 	return existsSync(manifestPath) ? manifestPath : null;
 }
 
+function isGameCaptureHookAvailable(root = nativeRoot) {
+	if (typeof binding?.isGameCaptureHookAvailable !== 'function') return false;
+	if (binding.isGameCaptureHookAvailable() !== true) return false;
+	return resolveGameHookPath(root) !== null;
+}
+
 function registerVulkanLayerManifest(root = nativeRoot) {
 	if (!binding?.registerVulkanLayerManifest) return false;
+	if (!isGameCaptureHookAvailable(root)) return false;
 	const manifestPath = resolveVulkanLayerManifestPath(root);
 	if (!manifestPath) return false;
 	binding.registerVulkanLayerManifest(manifestPath);
@@ -148,14 +147,6 @@ function getVulkanLayerRegistrationState(root = nativeRoot) {
 	} catch (error) {
 		console.warn('[win-game-capture] getVulkanLayerRegistrationState failed:', error?.message || error);
 		return {registered: false, manifestExists: Boolean(manifestPath), dllExists: false, manifestPath};
-	}
-}
-
-if (process.platform === 'win32' && binding) {
-	try {
-		registerVulkanLayerManifest();
-	} catch (error) {
-		console.warn('[win-game-capture] registerVulkanLayerManifest failed:', error?.message || error);
 	}
 }
 
@@ -219,9 +210,6 @@ class ScreenCapture extends EventEmitter {
 
 	async start() {
 		if (this.started || this.stopped) return undefined;
-		if (this.sourceKind === 'game' && !this.hookDllPath) {
-			throw new Error(`Game capture hook unavailable for ${process.platform}-${process.arch}`);
-		}
 		this.started = true;
 		try {
 			if (this.frameSinkHandle != null) {
@@ -453,6 +441,7 @@ module.exports = {
 	getAvailability,
 	resolveGameHookPath,
 	resolveGameHookPathX86,
+	isGameCaptureHookAvailable,
 	resolveVulkanLayerManifestPath,
 	registerVulkanLayerManifest,
 	unregisterVulkanLayerManifest,

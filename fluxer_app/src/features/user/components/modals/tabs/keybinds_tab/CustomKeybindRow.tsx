@@ -6,6 +6,7 @@ import Keybind, {
 	type KeybindCommand,
 	type KeyCombo,
 } from '@app/features/input/state/InputKeybind';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {MoreOptionsVerticalIcon} from '@app/features/ui/action_menu/ContextMenuIcons';
 import {MenuGroup} from '@app/features/ui/action_menu/MenuGroup';
 import {MenuItem} from '@app/features/ui/action_menu/MenuItem';
@@ -69,7 +70,7 @@ export const CustomKeybindRow = observer(
 			ContextMenuCommands.openFromEvent(event, ({onClose}) => (
 				<MenuGroup data-flx="user.keybinds-tab.open-row-menu.menu-group">
 					<MenuItem
-						icon={<TrashIcon size={16} data-flx="user.keybinds-tab.open-row-menu.trash-icon" />}
+						icon={<TrashIcon size={remFromPx(16)} data-flx="user.keybinds-tab.open-row-menu.trash-icon" />}
 						danger
 						onClick={() => {
 							onClose();
@@ -143,7 +144,7 @@ export const CustomKeybindRow = observer(
 						data-flx="user.keybinds-tab.custom-keybind-row.conflict-warning"
 					>
 						<WarningIcon
-							size={14}
+							size={remFromPx(14)}
 							weight="fill"
 							className={styles.conflictIcon}
 							aria-hidden

@@ -411,7 +411,10 @@ export default () => {
 					},
 				],
 			}),
-			staticFilesPlugin({staticCdnEndpoint: normalizedStaticCdnEndpoint}),
+			staticFilesPlugin({
+				staticCdnEndpoint: normalizedStaticCdnEndpoint,
+				fontsDir: path.join(MONOREPO_ROOT, 'packages', 'fonts'),
+			}),
 			new DefinePlugin({
 				__FLUXER_PRECACHE_MANIFEST__: JSON.stringify([]),
 				__FLUXER_SW_VERSION__: JSON.stringify(publicValues.PUBLIC_BUILD_VERSION || 'dev'),
@@ -458,7 +461,7 @@ export default () => {
 								priority: 55,
 								reuseExistingChunk: true,
 								enforce: true,
-								chunks: 'async',
+								chunks: (chunk) => !chunk.canBeInitial() && !isWorkerPath({chunk}),
 							},
 							livekit: {
 								test: /[\\/]node_modules[\\/](livekit-client|@livekit)[\\/]/,

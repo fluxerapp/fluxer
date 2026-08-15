@@ -5,6 +5,8 @@
 
 -export([
     friend_ids_from_state/1,
+    group_dm_recipients_from_state/1,
+    group_dm_channel_recipient_ids/2,
     dm_recipients_from_state/1,
     dm_channel_recipient_ids/2,
     map_from_ids/1
@@ -24,13 +26,11 @@ friend_ids_from_state(State) ->
 -spec accumulate_friend_id(term(), term(), [user_id()]) -> [user_id()].
 accumulate_friend_id(UserId, 1, Acc) when is_integer(UserId) ->
     [UserId | Acc];
-accumulate_friend_id(UserId, 3, Acc) when is_integer(UserId) ->
-    [UserId | Acc];
 accumulate_friend_id(_UserId, _Type, Acc) ->
     Acc.
 
--spec dm_recipients_from_state(state()) -> #{channel_id() => #{user_id() => true}}.
-dm_recipients_from_state(State) ->
+-spec group_dm_recipients_from_state(state()) -> #{channel_id() => #{user_id() => true}}.
+group_dm_recipients_from_state(State) ->
     UserId = maps:get(user_id, State, undefined),
     Channels = maps:get(channels, State, #{}),
     maps:fold(
@@ -41,11 +41,15 @@ dm_recipients_from_state(State) ->
         Channels
     ).
 
+-spec dm_recipients_from_state(state()) -> #{channel_id() => #{user_id() => true}}.
+dm_recipients_from_state(State) ->
+    group_dm_recipients_from_state(State).
+
 -spec accumulate_dm_channel(term(), term(), user_id() | undefined, map()) -> map().
 accumulate_dm_channel(ChannelId, Channel, UserId, Acc) when
     is_integer(ChannelId), is_map(Channel)
 ->
-    case is_dm_channel_type(maps:get(<<"type">>, Channel, 0)) of
+    case is_group_dm_channel_type(maps:get(<<"type">>, Channel, 0)) of
         true ->
             RecipientIds = extract_recipient_ids(Channel),
             Acc#{ChannelId => map_from_ids([Rid || Rid <- RecipientIds, Rid =/= UserId])};
@@ -55,21 +59,24 @@ accumulate_dm_channel(ChannelId, Channel, UserId, Acc) when
 accumulate_dm_channel(_ChannelId, _Channel, _UserId, Acc) ->
     Acc.
 
--spec is_dm_channel_type(term()) -> boolean().
-is_dm_channel_type(1) -> true;
-is_dm_channel_type(3) -> true;
-is_dm_channel_type(_) -> false.
+-spec is_group_dm_channel_type(term()) -> boolean().
+is_group_dm_channel_type(3) -> true;
+is_group_dm_channel_type(_) -> false.
 
--spec dm_channel_recipient_ids(term(), user_id() | undefined) -> [user_id()].
-dm_channel_recipient_ids(Channel, SelfUserId) when is_map(Channel) ->
-    case is_dm_channel_type(maps:get(<<"type">>, Channel, 0)) of
+-spec group_dm_channel_recipient_ids(term(), user_id() | undefined) -> [user_id()].
+group_dm_channel_recipient_ids(Channel, SelfUserId) when is_map(Channel) ->
+    case is_group_dm_channel_type(maps:get(<<"type">>, Channel, 0)) of
         true ->
             [Rid || Rid <- extract_recipient_ids(Channel), Rid =/= SelfUserId];
         false ->
             []
     end;
-dm_channel_recipient_ids(_Channel, _SelfUserId) ->
+group_dm_channel_recipient_ids(_Channel, _SelfUserId) ->
     [].
+
+-spec dm_channel_recipient_ids(term(), user_id() | undefined) -> [user_id()].
+dm_channel_recipient_ids(Channel, SelfUserId) ->
+    group_dm_channel_recipient_ids(Channel, SelfUserId).
 
 -spec extract_recipient_ids(map()) -> [user_id()].
 extract_recipient_ids(Channel) ->
@@ -130,7 +137,7 @@ friend_ids_from_state_filters_relationship_types_test() ->
             }
     },
     Ids = lists:sort(friend_ids_from_state(State)),
-    ?assertEqual([10, 11], Ids).
+    ?assertEqual([10], Ids).
 
 friend_ids_from_state_empty_test() ->
     State = #{relationships => #{}},
@@ -140,7 +147,7 @@ friend_ids_from_state_missing_key_test() ->
     State = #{},
     ?assertEqual([], friend_ids_from_state(State)).
 
-dm_recipients_from_state_test() ->
+group_dm_recipients_from_state_test() ->
     State = #{
         user_id => 1,
         channels => #{
@@ -148,10 +155,10 @@ dm_recipients_from_state_test() ->
             200 => api_channel(<<"200">>, 0, [<<"4">>])
         }
     },
-    Result = dm_recipients_from_state(State),
+    Result = group_dm_recipients_from_state(State),
     ?assertEqual(#{100 => #{2 => true, 3 => true}}, Result).
 
-dm_recipients_from_state_includes_one_to_one_dms_test() ->
+group_dm_recipients_from_state_excludes_one_to_one_dms_test() ->
     State = #{
         user_id => 1,
         channels => #{
@@ -160,16 +167,10 @@ dm_recipients_from_state_includes_one_to_one_dms_test() ->
             300 => api_channel(<<"300">>, 0, [<<"5">>])
         }
     },
-    Result = dm_recipients_from_state(State),
-    ?assertEqual(
-        #{
-            100 => #{2 => true},
-            200 => #{3 => true, 4 => true}
-        },
-        Result
-    ).
+    Result = group_dm_recipients_from_state(State),
+    ?assertEqual(#{200 => #{3 => true, 4 => true}}, Result).
 
-dm_recipients_excludes_self_test() ->
+group_dm_recipients_excludes_self_test() ->
     State = #{
         user_id => 2,
         channels => #{
@@ -177,17 +178,17 @@ dm_recipients_excludes_self_test() ->
             200 => api_channel(<<"200">>, 1, [<<"2">>, <<"7">>])
         }
     },
-    Result = dm_recipients_from_state(State),
-    ?assertEqual(#{100 => #{3 => true}, 200 => #{7 => true}}, Result).
+    Result = group_dm_recipients_from_state(State),
+    ?assertEqual(#{100 => #{3 => true}}, Result).
 
-dm_recipients_supports_recipient_ids_field_test() ->
+group_dm_recipients_supports_recipient_ids_field_test() ->
     State = #{
         user_id => 1,
         channels => #{
-            100 => #{<<"type">> => 1, <<"recipient_ids">> => [<<"2">>]}
+            100 => #{<<"type">> => 3, <<"recipient_ids">> => [<<"2">>]}
         }
     },
-    Result = dm_recipients_from_state(State),
+    Result = group_dm_recipients_from_state(State),
     ?assertEqual(#{100 => #{2 => true}}, Result).
 
 api_channel(IdBin, Type, RecipientIdBins) ->

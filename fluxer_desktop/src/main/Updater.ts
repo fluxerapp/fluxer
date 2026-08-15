@@ -2,7 +2,6 @@
 
 import {createRequire} from 'node:module';
 import {BUILD_CHANNEL} from '@electron/common/BuildChannel';
-import {DESKTOP_BUILD_VARIANT} from '@electron/common/BuildVariant';
 import {isPortableMode} from '@electron/common/UserDataPath';
 import {destroyDesktopTray} from '@electron/main/DesktopTray';
 import {isFlatpakRuntime} from '@electron/main/LinuxSandbox';
@@ -72,9 +71,7 @@ function getDesktopDownloadArch(arch: NodeJS.Architecture): DesktopDownloadArch 
 
 const DESKTOP_DOWNLOAD_ARCH = getDesktopDownloadArch(process.arch);
 const UPDATE_API_ENDPOINT = BUILD_CHANNEL === 'canary' ? 'https://api.canary.fluxer.app' : 'https://api.fluxer.app';
-const UPDATE_VARIANT_SEGMENT =
-	process.platform === 'win32' && DESKTOP_BUILD_VARIANT !== 'default' ? `/${DESKTOP_BUILD_VARIANT}` : '';
-const UPDATE_BASE_URL = `${UPDATE_API_ENDPOINT}/dl/desktop/${BUILD_CHANNEL}/${process.platform}/${DESKTOP_DOWNLOAD_ARCH}${UPDATE_VARIANT_SEGMENT}`;
+const UPDATE_BASE_URL = `${UPDATE_API_ENDPOINT}/dl/desktop/${BUILD_CHANNEL}/${process.platform}/${DESKTOP_DOWNLOAD_ARCH}`;
 const DOWNLOAD_PAGE_URL =
 	BUILD_CHANNEL === 'canary' ? 'https://canary.fluxer.app/download' : 'https://fluxer.app/download';
 

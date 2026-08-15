@@ -3,14 +3,13 @@
 import {execFileSync} from 'node:child_process';
 import {createRequire} from 'node:module';
 import log from 'electron-log';
-import {
-	enableWindowsGameCaptureModuleForCurrentProcess,
-	WINDOWS_GAME_CAPTURE_MODULE_ENABLED,
-} from './WindowsGameCapturePolicy';
 
 const requireModule = createRequire(import.meta.url);
 const VULKAN_IMPLICIT_LAYERS_REGISTRY_KEY = 'Software\\Khronos\\Vulkan\\ImplicitLayers';
 const VULKAN_REGISTRY_ROOTS = ['HKCU', 'HKLM'] as const;
+
+const FLUXER_VULKAN_LAYER_MANIFEST_FILE_NAME = /^fluxer-vulkan-layer\.win32-(?:x64|ia32|arm64)-msvc\.json$/;
+const FLUXER_VULKAN_LAYER_PACKAGE_DIRECTORY_NAMES = new Set(['win-game-capture', 'win-screen-capture']);
 
 interface VulkanLayerRegistrationState {
 	registered: boolean;
@@ -21,6 +20,7 @@ interface VulkanLayerRegistrationState {
 
 type WindowsGameCaptureModule = {
 	loadError?: Error | null;
+	isGameCaptureHookAvailable?: () => boolean;
 	registerVulkanLayerManifest?: () => boolean;
 	unregisterVulkanLayerManifest?: () => boolean;
 	resolveVulkanLayerManifestPath?: () => string | null;
@@ -39,10 +39,16 @@ function parseRegistryValueNames(stdout: string): Array<string> {
 	return valueNames;
 }
 
-function isFluxerGameCaptureVulkanLayerValue(valueName: string): boolean {
-	const normalized = valueName.replace(/\//g, '\\').toLowerCase();
-	if (!normalized.includes('\\@fluxer\\win-game-capture\\')) return false;
-	return /\\fluxer-vulkan-layer\.win32-(?:x64|ia32|arm64)-msvc\.json$/.test(normalized);
+function normalizeVulkanLayerValueName(valueName: string): string {
+	return valueName.replace(/\//g, '\\').toLowerCase();
+}
+
+export function isFluxerGameCaptureVulkanLayerValue(valueName: string): boolean {
+	const segments = normalizeVulkanLayerValueName(valueName).split('\\');
+	const fileName = segments.at(-1) ?? '';
+	const packageDirectoryName = segments.at(-2) ?? '';
+	if (!FLUXER_VULKAN_LAYER_MANIFEST_FILE_NAME.test(fileName)) return false;
+	return FLUXER_VULKAN_LAYER_PACKAGE_DIRECTORY_NAMES.has(packageDirectoryName);
 }
 
 function queryVulkanLayerRegistryValues(root: string): Array<string> {
@@ -66,13 +72,40 @@ function deleteVulkanLayerRegistryValue(root: string, valueName: string): void {
 	});
 }
 
-function removeStaleFluxerGameCaptureVulkanLayers(): void {
+function isSameVulkanLayerManifestPath(left: string, right: string): boolean {
+	return normalizeVulkanLayerValueName(left) === normalizeVulkanLayerValueName(right);
+}
+
+export function shouldRemoveStaleFluxerGameCaptureVulkanLayerValue(
+	valueName: string,
+	keepManifestPath: string | null,
+): boolean {
+	if (!isFluxerGameCaptureVulkanLayerValue(valueName)) return false;
+	return keepManifestPath === null || !isSameVulkanLayerManifestPath(valueName, keepManifestPath);
+}
+
+function removeStaleFluxerGameCaptureVulkanLayers(keepManifestPath: string | null): void {
 	if (process.platform !== 'win32') return;
 	for (const root of VULKAN_REGISTRY_ROOTS) {
-		const valueNames = queryVulkanLayerRegistryValues(root);
+		let valueNames: Array<string>;
+		try {
+			valueNames = queryVulkanLayerRegistryValues(root);
+		} catch (error) {
+			log.warn('[VulkanGameCaptureLayer] Failed to enumerate Vulkan implicit layer registry values', {root, error});
+			continue;
+		}
 		for (const valueName of valueNames) {
-			if (!isFluxerGameCaptureVulkanLayerValue(valueName)) continue;
-			deleteVulkanLayerRegistryValue(root, valueName);
+			if (!shouldRemoveStaleFluxerGameCaptureVulkanLayerValue(valueName, keepManifestPath)) continue;
+			try {
+				deleteVulkanLayerRegistryValue(root, valueName);
+			} catch (error) {
+				log.warn('[VulkanGameCaptureLayer] Failed to remove stale Fluxer Vulkan layer registry value', {
+					root,
+					valueName,
+					error,
+				});
+				continue;
+			}
 			log.info('[VulkanGameCaptureLayer] Removed stale Fluxer Vulkan layer registry value', {root, valueName});
 		}
 	}
@@ -80,31 +113,35 @@ function removeStaleFluxerGameCaptureVulkanLayers(): void {
 
 function loadWindowsGameCaptureModule(): WindowsGameCaptureModule | null {
 	if (process.platform !== 'win32') return null;
-	if (!WINDOWS_GAME_CAPTURE_MODULE_ENABLED) return null;
-	enableWindowsGameCaptureModuleForCurrentProcess();
-	const addon = requireModule('@fluxer/win-game-capture') as WindowsGameCaptureModule;
-	if (addon.loadError) {
-		log.warn('[VulkanGameCaptureLayer] Native game capture addon unavailable', addon.loadError);
+	try {
+		const addon = requireModule('@fluxer/win-game-capture') as WindowsGameCaptureModule;
+		if (addon.loadError) {
+			log.warn('[VulkanGameCaptureLayer] Native game capture addon unavailable', addon.loadError);
+			return null;
+		}
+		return addon;
+	} catch (error) {
+		log.warn('[VulkanGameCaptureLayer] Failed to load the native game capture addon', error);
 		return null;
 	}
-	return addon;
 }
 
 export function initializeWindowsVulkanGameCaptureLayer(): void {
 	if (process.platform !== 'win32') return;
+	const addon = loadWindowsGameCaptureModule();
+	if (!addon || addon.isGameCaptureHookAvailable?.() !== true) {
+		removeStaleFluxerGameCaptureVulkanLayers(null);
+		log.info('[VulkanGameCaptureLayer] Vulkan implicit layer left unregistered; hook-based game capture is disabled');
+		return;
+	}
 	try {
-		if (!WINDOWS_GAME_CAPTURE_MODULE_ENABLED) {
-			removeStaleFluxerGameCaptureVulkanLayers();
-			log.info('[VulkanGameCaptureLayer] Native game capture disabled until Windows binaries are code signed');
-			return;
-		}
-		const addon = loadWindowsGameCaptureModule();
-		if (!addon) return;
+		const manifestPath = addon.resolveVulkanLayerManifestPath?.() ?? null;
+		removeStaleFluxerGameCaptureVulkanLayers(manifestPath);
 		const registered = addon.registerVulkanLayerManifest?.() ?? false;
 		const state = addon.getVulkanLayerRegistrationState?.() ?? null;
 		log.info('[VulkanGameCaptureLayer] Vulkan implicit layer registration checked', {
 			registered,
-			manifestPath: addon.resolveVulkanLayerManifestPath?.() ?? null,
+			manifestPath,
 			state,
 		});
 	} catch (error) {
@@ -114,19 +151,15 @@ export function initializeWindowsVulkanGameCaptureLayer(): void {
 
 export function unregisterWindowsVulkanGameCaptureLayer(): void {
 	if (process.platform !== 'win32') return;
+	const addon = loadWindowsGameCaptureModule();
 	try {
-		if (!WINDOWS_GAME_CAPTURE_MODULE_ENABLED) {
-			removeStaleFluxerGameCaptureVulkanLayers();
-			return;
-		}
-		const addon = loadWindowsGameCaptureModule();
-		if (!addon) return;
-		const unregistered = addon.unregisterVulkanLayerManifest?.() ?? false;
+		const unregistered = addon?.unregisterVulkanLayerManifest?.() ?? false;
 		log.info('[VulkanGameCaptureLayer] Vulkan implicit layer unregistration attempted', {
 			unregistered,
-			manifestPath: addon.resolveVulkanLayerManifestPath?.() ?? null,
+			manifestPath: addon?.resolveVulkanLayerManifestPath?.() ?? null,
 		});
 	} catch (error) {
 		log.warn('[VulkanGameCaptureLayer] Failed to unregister Vulkan implicit layer', error);
 	}
+	removeStaleFluxerGameCaptureVulkanLayers(null);
 }

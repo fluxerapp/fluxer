@@ -3,6 +3,7 @@
 import * as AccessibilityCommands from '@app/features/accessibility/commands/AccessibilityCommands';
 import Accessibility from '@app/features/accessibility/state/Accessibility';
 import {ComponentDispatch} from '@app/features/platform/utils/ComponentBus';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Switch} from '@app/features/ui/components/form/FormSwitch';
 import {RadioGroup, type RadioOption} from '@app/features/ui/radio_group/RadioGroup';
 import Notification, {TTSNotificationMode} from '@app/features/ui/state/Notification';
@@ -97,7 +98,7 @@ export const TextToSpeech = observer(() => {
 			/>
 			<div className={styles.helperCallout} data-flx="user.notifications-tab.text-to-speech.helper-callout">
 				<InfoIcon
-					size={16}
+					size={remFromPx(16)}
 					weight="fill"
 					className={styles.helperIcon}
 					data-flx="user.notifications-tab.text-to-speech.helper-icon"

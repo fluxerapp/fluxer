@@ -4,6 +4,7 @@ import * as Modal from '@app/features/app/components/dialogs/Modal';
 import {useCursorAtEnd} from '@app/features/app/hooks/useCursorAtEnd';
 import {useFormSubmit} from '@app/features/app/hooks/useFormSubmit';
 import {CHANGE_NICKNAME_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
@@ -122,7 +123,7 @@ export const BaseChangeNicknameModal: React.FC<BaseChangeNicknameModalProps> = o
 												aria-label={i18n._(CLEAR_NICKNAME_DESCRIPTOR)}
 												data-flx="user.base-change-nickname-modal.clear-button.set-value"
 											>
-												<XIcon size={16} weight="bold" data-flx="user.base-change-nickname-modal.x-icon" />
+												<XIcon size={remFromPx(16)} weight="bold" data-flx="user.base-change-nickname-modal.x-icon" />
 											</button>
 										</FocusRing>
 									) : undefined

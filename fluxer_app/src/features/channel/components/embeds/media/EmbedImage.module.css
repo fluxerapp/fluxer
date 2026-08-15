@@ -10,7 +10,7 @@
 	text-align: left;
 	cursor: pointer;
 	-webkit-touch-callout: none;
-	border-radius: var(--media-border-radius, 0);
+	border-radius: var(--media-border-radius, 0px);
 	overflow: hidden;
 }
 
@@ -125,6 +125,11 @@
 	max-height: 100%;
 	object-fit: cover;
 	border-radius: var(--media-border-radius);
+}
+
+.animatedImageElement {
+	position: absolute;
+	inset: 0;
 }
 
 .opacityHidden {

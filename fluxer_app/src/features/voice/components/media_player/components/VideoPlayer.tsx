@@ -4,6 +4,7 @@ import Accessibility from '@app/features/accessibility/state/Accessibility';
 import * as ImageCacheUtils from '@app/features/messaging/utils/ImageCacheUtils';
 import {decodeThumbHashDataURL} from '@app/features/messaging/utils/ThumbHashUtils';
 import {observeResize} from '@app/features/platform/utils/SharedResizeObserver';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {MediaFullscreenButton} from '@app/features/voice/components/media_player/components/MediaFullscreenButton';
 import {MediaPipButton} from '@app/features/voice/components/media_player/components/MediaPipButton';
@@ -168,25 +169,38 @@ export const VideoPlayer = observer(function VideoPlayer({
 	const renderSnapshotRef = useRef(createVideoPlayerRenderSnapshot());
 	const restoreFocusAfterFullscreenRef = useRef<HTMLElement | null>(null);
 	const doubleClickPlaybackWasPausedRef = useRef<boolean | null>(null);
-	const [posterLoaded, setPosterLoaded] = useState(poster ? ImageCacheUtils.hasImage(poster) : false);
+	const [loadedPosterSrc, setLoadedPosterSrc] = useState<string | null>(() => {
+		if (poster && ImageCacheUtils.hasImage(poster)) return poster;
+		return null;
+	});
+	const posterLoaded = poster != null && loadedPosterSrc === poster;
 	const thumbHashURL = useMemo(() => {
 		return decodeThumbHashDataURL(placeholder);
 	}, [placeholder]);
 	useEffect(() => {
 		if (!poster) {
-			setPosterLoaded(false);
 			return;
 		}
+		if (loadedPosterSrc === poster) return;
 		if (ImageCacheUtils.hasImage(poster)) {
-			setPosterLoaded(true);
+			setLoadedPosterSrc(poster);
 			return;
 		}
-		ImageCacheUtils.loadImage(
+		let active = true;
+		const cleanup = ImageCacheUtils.loadImage(
 			poster,
-			() => setPosterLoaded(true),
-			() => setPosterLoaded(false),
+			() => {
+				if (active) setLoadedPosterSrc(poster);
+			},
+			() => {
+				if (active) setLoadedPosterSrc((currentSource) => (currentSource === poster ? null : currentSource));
+			},
 		);
-	}, [poster]);
+		return () => {
+			active = false;
+			cleanup();
+		};
+	}, [loadedPosterSrc, poster]);
 	const [volume, setVolumeState] = useState(VideoVolume.volume);
 	const [isMuted, setIsMutedState] = useState(VideoVolume.isMuted);
 	const {mediaRef, state, play, toggle, seekRelative, setPlaybackRate} = useMediaPlayer({
@@ -531,7 +545,7 @@ export const VideoPlayer = observer(function VideoPlayer({
 								aria-hidden="true"
 								data-flx="voice.media-player.video-player.play-overlay-button"
 							>
-								<PlayIcon size={24} weight="fill" data-flx="voice.media-player.video-player.play-icon" />
+								<PlayIcon size={remFromPx(24)} weight="fill" data-flx="voice.media-player.video-player.play-icon" />
 							</span>
 						</button>
 					</FocusRing>
@@ -555,9 +569,9 @@ export const VideoPlayer = observer(function VideoPlayer({
 							data-flx="voice.media-player.video-player.play-pause-indicator"
 						>
 							{showPlayPauseIndicator === 'play' ? (
-								<PlayIcon size={24} weight="fill" data-flx="voice.media-player.video-player.play-icon--2" />
+								<PlayIcon size={remFromPx(24)} weight="fill" data-flx="voice.media-player.video-player.play-icon--2" />
 							) : (
-								<PauseIcon size={24} weight="fill" data-flx="voice.media-player.video-player.pause-icon" />
+								<PauseIcon size={remFromPx(24)} weight="fill" data-flx="voice.media-player.video-player.pause-icon" />
 							)}
 						</motion.div>
 					)}

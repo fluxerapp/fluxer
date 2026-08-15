@@ -54,7 +54,6 @@ export interface Popout {
 	animationType?: PopoutAnimationType;
 	constrainHeight?: boolean;
 	containerClass?: string;
-	stableTextRendering?: boolean;
 	onOpen?: () => void;
 	onClose?: () => void;
 	onCloseRequest?: (event?: Event) => boolean;

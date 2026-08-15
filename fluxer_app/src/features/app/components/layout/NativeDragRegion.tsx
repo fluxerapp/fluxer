@@ -15,15 +15,16 @@ type NativeDragRegionProps = Omit<React.HTMLAttributes<HTMLElement>, 'style'> & 
 export const NativeDragRegion = React.forwardRef<HTMLElement, NativeDragRegionProps>(
 	function NativeDragRegionInner(props, ref) {
 		const {as, disabled = false, className, ...rest} = props;
-		const Component = (as ?? 'div') as ElementType;
-		return (
-			<Component
-				ref={ref as React.Ref<HTMLElement>}
-				className={clsx(className, !disabled && styles.nativeDragRegion)}
-				data-flx="app.native-drag-region.native-drag-region-inner.native-drag-region"
-				{...rest}
-			/>
-		);
+		let Component: ElementType = 'div';
+		if (as != null) {
+			Component = as;
+		}
+		return React.createElement(Component, {
+			...rest,
+			ref: ref as React.Ref<HTMLElement>,
+			className: clsx(className, !disabled && styles.nativeDragRegion),
+			'data-flx': 'app.native-drag-region.native-drag-region-inner.native-drag-region',
+		});
 	},
 );
 

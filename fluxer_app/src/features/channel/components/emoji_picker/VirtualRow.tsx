@@ -28,7 +28,6 @@ interface VirtualRowRendererProps {
 	handleHover: (emoji: FlatEmoji | null, row?: number, column?: number) => void;
 	handleSelect: (emoji: FlatEmoji, shiftKey?: boolean) => void;
 	skinTone: string;
-	spriteSheetSizes: {nonDiversitySize: string; diversitySize: string};
 	channel: Channel | null;
 	shouldAnimate: boolean;
 	gridColumns?: number;
@@ -47,7 +46,6 @@ const VirtualRowRenderer: React.FC<VirtualRowRendererProps> = React.memo(
 		handleHover,
 		handleSelect,
 		skinTone,
-		spriteSheetSizes,
 		channel,
 		shouldAnimate,
 		gridColumns = 9,
@@ -175,7 +173,6 @@ const VirtualRowRenderer: React.FC<VirtualRowRendererProps> = React.memo(
 								handleHover={(e) => handleHover(e, emojiRowIndex, colIndex)}
 								handleSelect={handleSelect}
 								skinTone={skinTone}
-								spriteSheetSizes={spriteSheetSizes}
 								channel={channel}
 								shouldAnimate={shouldAnimate}
 								isHighlighted={shouldHighlight}
@@ -203,7 +200,6 @@ interface VirtualizedRowProps {
 	handleHover: (emoji: FlatEmoji | null, row?: number, column?: number) => void;
 	handleSelect: (emoji: FlatEmoji, shiftKey?: boolean) => void;
 	skinTone: string;
-	spriteSheetSizes: {nonDiversitySize: string; diversitySize: string};
 	channel: Channel | null;
 	allowAnimation: boolean;
 	gridColumns?: number;
@@ -222,7 +218,6 @@ export const VirtualizedRow: React.FC<VirtualizedRowProps> = observer(
 		handleHover,
 		handleSelect,
 		skinTone,
-		spriteSheetSizes,
 		channel,
 		allowAnimation,
 		gridColumns,
@@ -287,7 +282,6 @@ export const VirtualizedRow: React.FC<VirtualizedRowProps> = observer(
 					handleHover={handleHover}
 					handleSelect={handleSelect}
 					skinTone={skinTone}
-					spriteSheetSizes={spriteSheetSizes}
 					channel={channel}
 					shouldAnimate={allowAnimation && isInViewport}
 					gridColumns={gridColumns}

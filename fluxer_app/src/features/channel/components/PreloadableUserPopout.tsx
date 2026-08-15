@@ -254,7 +254,6 @@ export const PreloadableUserPopout = React.forwardRef<
 					/>
 				)}
 				position={position}
-				stableTextRendering
 				animationType={profilePopoutAnimationType}
 				constrainHeight={false}
 				freezePosition

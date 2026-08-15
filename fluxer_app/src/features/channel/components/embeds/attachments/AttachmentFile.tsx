@@ -10,6 +10,7 @@ import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import {shouldPreviewAttachment} from '@app/features/messaging/utils/AttachmentPreviewUtils';
 import {downloadFile} from '@app/features/messaging/utils/FileDownloadUtils';
 import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import attachmentFileStyles from '@app/features/theme/styles/AttachmentFile.module.css';
 import messageStyles from '@app/features/theme/styles/Message.module.css';
 import {MediaContextMenu} from '@app/features/ui/action_menu/MediaContextMenu';
@@ -58,6 +59,7 @@ export const AttachmentFile = observer(({attachment, message, isPreview}: Attach
 	const {name: fileNameWithoutExt, extension: fileExt} = splitFilename(fileName);
 	const showTextPreview = !isPreview && shouldPreviewAttachment(attachment);
 	const getFileTypeIcon = () => {
+		const size = remFromPx(32);
 		const imageTypes = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'ico'];
 		const textTypes = ['txt', 'rtf', 'md', 'log'];
 		const archiveTypes = ['zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'xz'];
@@ -91,65 +93,74 @@ export const AttachmentFile = observer(({attachment, message, isPreview}: Attach
 		if (imageTypes.includes(fileExtension))
 			return (
 				<FileImageIcon
-					size={32}
+					size={size}
 					data-flx="channel.embeds.attachments.attachment-file.get-file-type-icon.file-image-icon"
 				/>
 			);
 		if (fileExtension === 'pdf')
 			return (
-				<FilePdfIcon size={32} data-flx="channel.embeds.attachments.attachment-file.get-file-type-icon.file-pdf-icon" />
+				<FilePdfIcon
+					size={size}
+					data-flx="channel.embeds.attachments.attachment-file.get-file-type-icon.file-pdf-icon"
+				/>
 			);
 		if (textTypes.includes(fileExtension))
 			return (
 				<FileTextIcon
-					size={32}
+					size={size}
 					data-flx="channel.embeds.attachments.attachment-file.get-file-type-icon.file-text-icon"
 				/>
 			);
 		if (documentTypes.includes(fileExtension))
 			return (
 				<FileTextIcon
-					size={32}
+					size={size}
 					data-flx="channel.embeds.attachments.attachment-file.get-file-type-icon.file-text-icon--2"
 				/>
 			);
 		if (archiveTypes.includes(fileExtension))
 			return (
 				<FileArchiveIcon
-					size={32}
+					size={size}
 					data-flx="channel.embeds.attachments.attachment-file.get-file-type-icon.file-archive-icon"
 				/>
 			);
 		if (audioTypes.includes(fileExtension))
 			return (
 				<FileAudioIcon
-					size={32}
+					size={size}
 					data-flx="channel.embeds.attachments.attachment-file.get-file-type-icon.file-audio-icon"
 				/>
 			);
 		if (videoTypes.includes(fileExtension))
 			return (
 				<FileVideoIcon
-					size={32}
+					size={size}
 					data-flx="channel.embeds.attachments.attachment-file.get-file-type-icon.file-video-icon"
 				/>
 			);
 		if (codeTypes.includes(fileExtension))
 			return (
 				<FileCodeIcon
-					size={32}
+					size={size}
 					data-flx="channel.embeds.attachments.attachment-file.get-file-type-icon.file-code-icon"
 				/>
 			);
 		if (excelTypes.includes(fileExtension))
 			return (
-				<FileXlsIcon size={32} data-flx="channel.embeds.attachments.attachment-file.get-file-type-icon.file-xls-icon" />
+				<FileXlsIcon
+					size={size}
+					data-flx="channel.embeds.attachments.attachment-file.get-file-type-icon.file-xls-icon"
+				/>
 			);
 		if (presentationTypes.includes(fileExtension))
 			return (
-				<FilePptIcon size={32} data-flx="channel.embeds.attachments.attachment-file.get-file-type-icon.file-ppt-icon" />
+				<FilePptIcon
+					size={size}
+					data-flx="channel.embeds.attachments.attachment-file.get-file-type-icon.file-ppt-icon"
+				/>
 			);
-		return <FileIcon size={32} data-flx="channel.embeds.attachments.attachment-file.get-file-type-icon.file-icon" />;
+		return <FileIcon size={size} data-flx="channel.embeds.attachments.attachment-file.get-file-type-icon.file-icon" />;
 	};
 	let containerStyles: React.CSSProperties;
 	if (isMobile) {
@@ -225,7 +236,11 @@ export const AttachmentFile = observer(({attachment, message, isPreview}: Attach
 					aria-label={i18n._(DELETE_ATTACHMENT_DESCRIPTOR)}
 					data-flx="channel.embeds.attachments.attachment-file.button.delete"
 				>
-					<TrashIcon size={16} weight="bold" data-flx="channel.embeds.attachments.attachment-file.trash-icon" />
+					<TrashIcon
+						size={remFromPx(16)}
+						weight="bold"
+						data-flx="channel.embeds.attachments.attachment-file.trash-icon"
+					/>
 				</button>
 			)}
 			{showTextPreview ? (
@@ -276,7 +291,7 @@ export const AttachmentFile = observer(({attachment, message, isPreview}: Attach
 								data-flx="channel.embeds.attachments.attachment-file.div--4"
 							>
 								<WarningCircleIcon
-									size={20}
+									size={remFromPx(20)}
 									weight="bold"
 									data-flx="channel.embeds.attachments.attachment-file.warning-circle-icon"
 								/>
@@ -292,7 +307,7 @@ export const AttachmentFile = observer(({attachment, message, isPreview}: Attach
 							data-flx="channel.embeds.attachments.attachment-file.button.download"
 						>
 							<DownloadSimpleIcon
-								size={20}
+								size={remFromPx(20)}
 								weight="bold"
 								data-flx="channel.embeds.attachments.attachment-file.download-simple-icon"
 							/>

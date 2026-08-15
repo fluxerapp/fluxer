@@ -13,10 +13,6 @@ path = "src/lib.rs"
 name = "fluxer-media-proxy"
 path = "src/main.rs"
 
-[[bin]]
-name = "fluxer-media-proxy-s3-fixture"
-path = "src/bin/s3_fixture.rs"
-
 [[bench]]
 name = "core"
 harness = false

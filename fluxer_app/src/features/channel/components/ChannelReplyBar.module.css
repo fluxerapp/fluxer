@@ -4,14 +4,16 @@
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
-	font-size: 0.875rem;
+	font-size: 0.8125rem;
+	line-height: 1.25;
 	color: var(--text-primary);
 }
 
 .replyTargetButton {
 	display: block;
+	justify-self: start;
 	min-width: 0;
-	width: 100%;
+	max-width: 100%;
 	cursor: pointer;
 	border: 0;
 	background: transparent;
@@ -20,28 +22,40 @@
 	font-family: inherit;
 }
 
+.authorName {
+	font-weight: 600;
+}
+
 .replyTargetButton:hover .authorName,
 .replyTargetButton:focus-visible .authorName {
 	text-decoration: underline;
 }
 
-.authorName {
-	font-weight: 600;
-}
-
 .controls {
 	display: flex;
 	align-items: center;
+	flex: 0 0 auto;
+	gap: 0.125rem;
+	min-height: var(--composer-action-button-size, 2rem);
 }
 
 .mentionToggle {
 	display: flex;
 	cursor: pointer;
 	align-items: center;
-	padding: 0.5rem 0.75rem;
+	justify-content: center;
+	height: calc(var(--composer-action-button-size, 2rem) - 0.25rem);
+	inline-size: 3.5rem;
+	flex: 0 0 3.5rem;
+	padding: 0 0.5rem;
+	border: 0;
+	border-radius: var(--radius-full);
+	background: transparent;
+	font-family: inherit;
 	font-weight: 600;
-	font-size: 0.875rem;
+	font-size: 0.75rem;
 	text-transform: uppercase;
+	white-space: nowrap;
 }
 
 .mentionToggleOn {
@@ -59,9 +73,9 @@
 }
 
 .mentionIcon {
-	margin-right: 0.25rem;
-	height: 1.25rem;
-	width: 1.25rem;
+	margin-right: 0.1875rem;
+	height: 1rem;
+	width: 1rem;
 }
 
 .divider {
@@ -71,11 +85,16 @@
 }
 
 .closeButton {
+	display: flex;
+	align-items: center;
+	justify-content: center;
 	cursor: pointer;
 	flex-shrink: 0;
 	border: none;
 	background-color: transparent;
-	padding: 0.5rem 0 0.5rem 1rem;
+	width: var(--composer-action-button-size, 2rem);
+	height: var(--composer-action-button-size, 2rem);
+	padding: 0;
 	color: var(--text-primary-muted);
 	line-height: 0;
 	transition: color 200ms;
@@ -86,10 +105,6 @@
 }
 
 .closeIcon {
-	height: 1.25rem;
-	width: 1.25rem;
-}
-
-.topBorder {
-	box-shadow: inset 0 0.0625rem 0 var(--user-area-divider-color);
+	height: 1rem;
+	width: 1rem;
 }

@@ -1,0 +1,15 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.composerHost {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	width: 100%;
+}
+
+.composerEditable {
+	width: 100%;
+	min-width: 0;
+	max-width: 100%;
+}

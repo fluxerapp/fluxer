@@ -16,28 +16,6 @@
 	color: #fff;
 }
 
-.notFoundItem {
-	margin-left: 0.5rem;
-	margin-right: 0.5rem;
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
-	border-radius: 0.375rem;
-	padding: 0.375rem 0.5rem;
-	color: var(--text-tertiary);
-	opacity: 0.5;
-}
-
-.notFoundIcon {
-	height: 1.25rem;
-	width: 1.25rem;
-}
-
-.notFoundText {
-	flex: 1;
-	font-size: 0.875rem;
-}
-
 .favoriteItemContainer {
 	position: relative;
 }
@@ -220,7 +198,7 @@
 	display: none;
 }
 
-.addButton {
+.categoryAddButton {
 	display: flex;
 	height: 1rem;
 	width: 1rem;
@@ -238,11 +216,11 @@
 }
 
 :global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
-	.addButton:hover {
+	.categoryAddButton:hover {
 	color: var(--text-primary);
 }
 
-.addButtonIcon {
+.categoryAddButtonIcon {
 	height: 1rem;
 	width: 1rem;
 }

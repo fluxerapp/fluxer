@@ -267,7 +267,6 @@ const SpectatorRow = observer(function SpectatorRow({
 				/>
 			)}
 			position="left-start"
-			stableTextRendering
 			animationType="profile-slide"
 			constrainHeight={false}
 			freezePosition

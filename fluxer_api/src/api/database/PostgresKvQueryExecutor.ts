@@ -561,14 +561,14 @@ WHERE NOT $6`,
 
 	private async patch(meta: KvQueryMeta, params: CassandraParams, db: PostgresQueryable): Promise<void> {
 		const key = rowKeyFromParams(meta, params);
-		const existing = await this.getRow(meta, key, db);
-		const base = existing ?? paramsRow(params, (meta.pkColumns ?? meta.table.primaryKey) as ReadonlyArray<string>);
+		const stored = await this.getStoredRow(meta, key, db);
+		const base = stored?.row ?? paramsRow(params, (meta.pkColumns ?? meta.table.primaryKey) as ReadonlyArray<string>);
 		const next = {...base};
 		for (const column of meta.patchKeys ?? []) {
 			next[column] = column in params ? params[column] : null;
 		}
 		const ttl = ttlExpiresAt(meta, params);
-		const expiresAt = ttl === undefined ? await this.getExpiresAt(meta, key, db) : ttl;
+		const expiresAt = ttl === undefined ? (stored?.expiresAt ?? null) : ttl;
 		await db.query(
 			`INSERT INTO ${this.table} (table_name, partition_key, row_key, row_data, expires_at, updated_at)
 VALUES ($1, $2, $3, $4::jsonb, $5, now())
@@ -592,20 +592,20 @@ DO UPDATE SET partition_key = EXCLUDED.partition_key, row_data = EXCLUDED.row_da
 		]);
 	}
 
-	private async getRow(meta: KvQueryMeta, key: string, db: PostgresQueryable): Promise<Row | null> {
-		const result = await db.query<StoredRow>(
-			`SELECT row_key, row_data FROM ${this.table} WHERE table_name = $1 AND row_key = $2 AND (expires_at IS NULL OR expires_at > now()) LIMIT 1`,
+	private async getStoredRow(
+		meta: KvQueryMeta,
+		key: string,
+		db: PostgresQueryable,
+	): Promise<{row: Row; expiresAt: Date | null} | null> {
+		const result = await db.query<StoredRow & {expires_at: Date | null}>(
+			`SELECT row_key, row_data, expires_at FROM ${this.table} WHERE table_name = $1 AND row_key = $2 AND (expires_at IS NULL OR expires_at > now()) LIMIT 1`,
 			[meta.table.name, key],
 		);
 		const row = result.rows[0];
-		return row ? decodeRow(row.row_data) : null;
+		return row ? {row: decodeRow(row.row_data), expiresAt: row.expires_at ?? null} : null;
 	}
 
-	private async getExpiresAt(meta: KvQueryMeta, key: string, db: PostgresQueryable): Promise<Date | null> {
-		const result = await db.query<{expires_at: Date | null}>(
-			`SELECT expires_at FROM ${this.table} WHERE table_name = $1 AND row_key = $2 AND (expires_at IS NULL OR expires_at > now()) LIMIT 1`,
-			[meta.table.name, key],
-		);
-		return result.rows[0]?.expires_at ?? null;
+	private async getRow(meta: KvQueryMeta, key: string, db: PostgresQueryable): Promise<Row | null> {
+		return (await this.getStoredRow(meta, key, db))?.row ?? null;
 	}
 }

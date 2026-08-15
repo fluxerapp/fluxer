@@ -5,6 +5,7 @@ import styles from '@app/features/auth/flow/IpAuthorizationScreen.module.css';
 import type {IpAuthorizationChallenge, LoginSuccessPayload} from '@app/features/auth/state/AuthFlow';
 import {TRY_AGAIN_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
@@ -101,10 +102,14 @@ const IpAuthorizationScreen = ({challenge, onAuthorized, onBack}: IpAuthorizatio
 		<div className={styles.container} data-flx="auth.flow.ip-authorization-screen.container">
 			<div className={styles.icon} data-flx="auth.flow.ip-authorization-screen.icon">
 				{pollingState === 'error' ? (
-					<WarningCircleIcon size={48} weight="fill" data-flx="auth.flow.ip-authorization-screen.warning-circle-icon" />
+					<WarningCircleIcon
+						size={remFromPx(48)}
+						weight="fill"
+						data-flx="auth.flow.ip-authorization-screen.warning-circle-icon"
+					/>
 				) : (
 					<EnvelopeSimpleIcon
-						size={48}
+						size={remFromPx(48)}
 						weight="fill"
 						data-flx="auth.flow.ip-authorization-screen.envelope-simple-icon"
 					/>

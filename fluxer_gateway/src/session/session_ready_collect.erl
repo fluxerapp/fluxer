@@ -52,14 +52,14 @@ collect_ready_presences(State, _CollectedGuilds) ->
 -spec collect_presence_targets(session_state(), user_id()) -> [user_id()].
 collect_presence_targets(State, CurrentUserId) when is_map(State) ->
     FIds = presence_targets:friend_ids_from_state(State),
-    DmMap = presence_targets:dm_recipients_from_state(State),
+    GroupDmMap = presence_targets:group_dm_recipients_from_state(State),
     TargetMap0 = add_presence_target_ids(FIds, CurrentUserId, #{}),
     TargetMap = maps:fold(
         fun(_Cid, Recipients, Acc) ->
             add_presence_target_map(Recipients, CurrentUserId, Acc)
         end,
         TargetMap0,
-        DmMap
+        GroupDmMap
     ),
     maps:keys(TargetMap).
 
@@ -350,7 +350,7 @@ collect_presence_targets_deduplicates_before_fetch_test() ->
             }
         }
     },
-    ?assertEqual([2, 3, 5], lists:sort(collect_presence_targets(State, 1))).
+    ?assertEqual([2, 5], lists:sort(collect_presence_targets(State, 1))).
 
 collect_ready_users_collects_directly_into_dedup_map_test() ->
     UserA = #{<<"id">> => <<"10">>, <<"username">> => <<"a">>},

@@ -70,6 +70,32 @@
 	color: var(--text-primary-muted);
 }
 
+.topicInput {
+	--composer-placeholder-top: 0.625rem;
+	--composer-placeholder-right: 0px;
+	--composer-placeholder-left: 1rem;
+	display: flex;
+	min-width: 0;
+	flex: 1 1 0%;
+	align-self: stretch;
+	overflow: hidden;
+	padding-inline-start: 1rem;
+}
+
+:global([dir='rtl']) .topicInput {
+	--composer-placeholder-right: 1rem;
+	--composer-placeholder-left: 0px;
+}
+
+.topicInput :global([data-channel-textarea]) {
+	box-sizing: border-box;
+	flex: 1 1 0%;
+	min-width: 0;
+	min-height: 5rem;
+	max-height: 8.75rem;
+	padding-block: 0.625rem;
+}
+
 .emojiButton {
 	display: flex;
 	align-items: center;
@@ -183,6 +209,12 @@
 	padding: 0.25rem 0;
 }
 
+.settingsControlRowStacked {
+	flex-direction: column;
+	align-items: stretch;
+	gap: 0.75rem;
+}
+
 .settingsControlText {
 	display: flex;
 	min-width: 0;
@@ -217,6 +249,24 @@
 	flex: 1 1 18rem;
 	min-width: 14rem;
 	padding-top: 0.125rem;
+}
+
+.settingsControlRowStacked .settingsControlText,
+.settingsControlRowStacked .settingsSliderControl {
+	width: 100%;
+}
+
+.settingsControlRowStacked .settingsControlText {
+	flex: none;
+}
+
+.settingsControlRowStacked .settingsControlDescription {
+	padding-right: 0;
+}
+
+.settingsControlRowStacked .settingsSliderControl {
+	flex: none;
+	min-width: 0;
 }
 
 .selectField {

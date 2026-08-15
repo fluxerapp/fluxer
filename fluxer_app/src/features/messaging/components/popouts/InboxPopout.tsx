@@ -9,12 +9,16 @@ import {RecentMentionsContent} from '@app/features/messaging/components/popouts/
 import {SavedMessagesContent} from '@app/features/messaging/components/popouts/SavedMessagesContent';
 import {ScheduledMessagesContent} from '@app/features/messaging/components/popouts/ScheduledMessagesContent';
 import ReadStates from '@app/features/read_state/state/ReadStates';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
+import type {ResizeEdge} from '@app/features/ui/floating_pane/FloatingPaneMath';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import FocusRingScope from '@app/features/ui/focus_ring/FocusRingScope';
+import {RESIZABLE_PANE_DEFAULT_VIEWPORT_PADDING, useResizablePane} from '@app/features/ui/hooks/useResizablePane';
 import {getNextTabIndex, getTabNavigationDirection} from '@app/features/ui/tabs/TabKeyboardNavigation';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import UserGuildSettings from '@app/features/user/state/UserGuildSettings';
 import Users from '@app/features/user/state/Users';
+import type {MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {AtIcon, BellIcon, BookmarkSimpleIcon, CheckIcon, ClockIcon} from '@phosphor-icons/react';
@@ -47,6 +51,33 @@ const MARK_ALL_INBOX_CHANNELS_AS_READ_DESCRIPTOR = msg({
 	message: 'Mark all inbox channels as read',
 	comment: 'Accessible label and tooltip for the mark-all-as-read button in the inbox popout.',
 });
+const RESIZE_INBOX_TOP_LEFT_DESCRIPTOR = msg({
+	message: 'Resize inbox from top left',
+	comment: 'Accessible label for the top-left resize handle on the inbox popout.',
+});
+const RESIZE_INBOX_TOP_RIGHT_DESCRIPTOR = msg({
+	message: 'Resize inbox from top right',
+	comment: 'Accessible label for the top-right resize handle on the inbox popout.',
+});
+const RESIZE_INBOX_BOTTOM_LEFT_DESCRIPTOR = msg({
+	message: 'Resize inbox from bottom left',
+	comment: 'Accessible label for the bottom-left resize handle on the inbox popout.',
+});
+const RESIZE_INBOX_BOTTOM_RIGHT_DESCRIPTOR = msg({
+	message: 'Resize inbox from bottom right',
+	comment: 'Accessible label for the bottom-right resize handle on the inbox popout.',
+});
+
+const INBOX_POPOUT_DEFAULT_SIZE = {width: 600, height: 900};
+const INBOX_POPOUT_MIN_SIZE = {width: 440, height: 400};
+const INBOX_POPOUT_RESIZING_CLASS = 'inbox-popout-resizing';
+const INBOX_POPOUT_RESIZE_CURSOR_PROPERTY = '--inbox-popout-resize-cursor';
+const INBOX_RESIZE_HANDLES: ReadonlyArray<{edge: ResizeEdge; className: string; label: MessageDescriptor}> = [
+	{edge: 'top-left', className: styles.resizeCornerTopLeft, label: RESIZE_INBOX_TOP_LEFT_DESCRIPTOR},
+	{edge: 'top-right', className: styles.resizeCornerTopRight, label: RESIZE_INBOX_TOP_RIGHT_DESCRIPTOR},
+	{edge: 'bottom-left', className: styles.resizeCornerBottomLeft, label: RESIZE_INBOX_BOTTOM_LEFT_DESCRIPTOR},
+	{edge: 'bottom-right', className: styles.resizeCornerBottomRight, label: RESIZE_INBOX_BOTTOM_RIGHT_DESCRIPTOR},
+];
 
 interface TabConfig {
 	key: InboxTab;
@@ -56,9 +87,18 @@ interface TabConfig {
 
 export const InboxPopout = observer(({initialTab}: {initialTab?: InboxTab} = {}) => {
 	const {i18n} = useLingui();
-	const activeTab = initialTab ?? Inbox.selectedTab;
+	let activeTab = Inbox.selectedTab;
+	if (initialTab != null) activeTab = initialTab;
 	const [headerActions, setHeaderActions] = useState<React.ReactNode>(null);
 	const containerRef = useRef<HTMLDivElement | null>(null);
+	const {size, getHandleProps} = useResizablePane(containerRef, {
+		storageKey: 'fluxer:ui:inbox-popout-size',
+		defaultSize: INBOX_POPOUT_DEFAULT_SIZE,
+		minSize: INBOX_POPOUT_MIN_SIZE,
+		viewportPadding: RESIZABLE_PANE_DEFAULT_VIEWPORT_PADDING,
+		resizingClassName: INBOX_POPOUT_RESIZING_CLASS,
+		cursorProperty: INBOX_POPOUT_RESIZE_CURSOR_PROPERTY,
+	});
 	const readStateVersion = ReadStates.version;
 	const settingsVersion = UserGuildSettings.version;
 	const unreadChannels = useMemo(() => getUnreadChannels(), [readStateVersion, settingsVersion]);
@@ -84,7 +124,9 @@ export const InboxPopout = observer(({initialTab}: {initialTab?: InboxTab} = {})
 		label: i18n._(SCHEDULED_DESCRIPTOR),
 		icon: <ClockIcon className={styles.iconSmall} data-flx="messaging.inbox-popout.icon-small--4" />,
 	};
-	const showScheduledTab = Users.getCurrentUser()?.isStaff() ?? false;
+	const currentUser = Users.getCurrentUser();
+	let showScheduledTab = false;
+	if (currentUser != null) showScheduledTab = currentUser.isStaff();
 	const tabs = showScheduledTab ? [...baseTabs, scheduledTab] : baseTabs;
 	const normalizedActiveTab = tabs.some((tab) => tab.key === activeTab) ? activeTab : tabs[0].key;
 	const setActiveTab = useCallback((tab: InboxTab) => {
@@ -92,7 +134,15 @@ export const InboxPopout = observer(({initialTab}: {initialTab?: InboxTab} = {})
 	}, []);
 	const focusTab = useCallback((tab: InboxTab) => {
 		InboxCommands.setTab(tab);
-		window.requestAnimationFrame(() => document.getElementById(tab)?.focus());
+		const container = containerRef.current;
+		if (container == null) return;
+		const ownerDocument = container.ownerDocument;
+		const ownerWindow = ownerDocument.defaultView;
+		if (ownerWindow == null) return;
+		ownerWindow.requestAnimationFrame(() => {
+			const tabElement = ownerDocument.getElementById(tab);
+			if (tabElement != null) tabElement.focus();
+		});
 	}, []);
 	const handleMarkAllRead = useCallback(() => {
 		InboxCommands.markAllInboxChannelsAsRead(i18n);
@@ -201,6 +251,7 @@ export const InboxPopout = observer(({initialTab}: {initialTab?: InboxTab} = {})
 			<div
 				className={clsx(styles.container, styles.containerWithSidebar)}
 				ref={containerRef}
+				style={{width: remFromPx(size.width), height: remFromPx(size.height)}}
 				data-flx="messaging.inbox-popout.container"
 			>
 				<nav
@@ -252,6 +303,16 @@ export const InboxPopout = observer(({initialTab}: {initialTab?: InboxTab} = {})
 				<div className={styles.mainPanel} data-flx="messaging.inbox-popout.main-panel">
 					{content}
 				</div>
+				{INBOX_RESIZE_HANDLES.map(({edge, className, label}) => (
+					<button
+						key={edge}
+						type="button"
+						aria-label={i18n._(label)}
+						aria-keyshortcuts="ArrowLeft ArrowRight ArrowUp ArrowDown Home End Enter Backspace Delete"
+						className={clsx(styles.resizeCorner, className)}
+						{...getHandleProps(edge)}
+					/>
+				))}
 			</div>
 		</FocusRingScope>
 	);

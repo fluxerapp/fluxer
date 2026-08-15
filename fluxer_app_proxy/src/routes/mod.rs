@@ -17,7 +17,13 @@ use axum::{
     routing::get,
 };
 use rand::RngExt;
-use tower_http::{compression::CompressionLayer, trace::TraceLayer};
+use tower_http::{
+    compression::{
+        CompressionLayer,
+        predicate::{DefaultPredicate, NotForContentType, Predicate},
+    },
+    trace::TraceLayer,
+};
 
 const STRICT_TRANSPORT_SECURITY_VALUE: &str = "max-age=31536000; includeSubDomains; preload";
 const REFERRER_POLICY_VALUE: &str = "strict-origin-when-cross-origin";
@@ -52,7 +58,10 @@ pub fn build_router(state: AppState) -> Router {
             state.clone(),
             security_headers_middleware,
         ))
-        .layer(CompressionLayer::new())
+        .layer(
+            CompressionLayer::new()
+                .compress_when(DefaultPredicate::new().and(NotForContentType::const_new("font/"))),
+        )
         .layer(TraceLayer::new_for_http())
         .with_state(state)
 }

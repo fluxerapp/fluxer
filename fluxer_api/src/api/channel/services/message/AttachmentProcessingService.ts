@@ -12,7 +12,7 @@ import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponse
 import {isSupportedMediaContentType} from '@pkgs/mime_utils/src/ContentTypeUtils';
 import type {IVirusScanService} from '@pkgs/virus_scan/src/IVirusScanService';
 import {temporaryFile} from 'tempy';
-import {createAttachmentID} from '../../../BrandedTypes';
+import {createAttachmentID, type UserID} from '../../../BrandedTypes';
 import {Config} from '../../../Config';
 import type {MessageAttachment} from '../../../database/types/MessageTypes';
 import {contentModerationService, type ModerationContext} from '../../../infrastructure/ContentModerationService';
@@ -54,6 +54,7 @@ interface ProcessAttachmentParams {
 	message: Message;
 	attachment: AttachmentToProcess;
 	index: number;
+	uploadUserId: UserID;
 	channel?: Channel;
 	guild?: GuildResponse | null;
 	member?: GuildMemberResponse | null;
@@ -88,6 +89,7 @@ export class AttachmentProcessingService {
 	async computeAttachments(params: {
 		message: Message;
 		attachments: Array<AttachmentToProcess>;
+		uploadUserId: UserID;
 		channel?: Channel;
 		guild?: GuildResponse | null;
 		member?: GuildMemberResponse | null;
@@ -105,6 +107,7 @@ export class AttachmentProcessingService {
 					message: params.message,
 					attachment,
 					index,
+					uploadUserId: params.uploadUserId,
 					channel: params.channel,
 					guild: params.guild,
 					member: params.member,
@@ -132,25 +135,29 @@ export class AttachmentProcessingService {
 				}
 			}),
 		);
-		await Promise.all(
-			results.map(async (result) => {
-				const bound = await this.attachmentUploadTraceRepository.bindAttachment(
+		const bindingResults = await Promise.all(
+			results.map(async (result, index) => ({
+				index,
+				result,
+				bound: await this.attachmentUploadTraceRepository.bindAttachment(
 					result.copyOperation.sourceKey,
 					result.attachment.attachment_id,
-				);
-				if (!bound) {
-					Logger.warn(
-						{
-							attachmentId: result.attachment.attachment_id.toString(),
-							uploadKey: result.copyOperation.sourceKey,
-						},
-						'Missing attachment upload trace while binding processed attachment',
-					);
-				}
-			}),
+				),
+			})),
 		);
 		for (const result of results) {
 			void this.deleteUploadObject(result.copyOperation.sourceBucket, result.copyOperation.sourceKey);
+		}
+		const unboundResult = bindingResults.find(({bound}) => bound === null);
+		if (unboundResult) {
+			for (const result of results) {
+				this.deleteUploadObject(result.copyOperation.destinationBucket, result.copyOperation.destinationKey);
+			}
+			throw InputValidationError.fromCode(
+				`attachments.${unboundResult.index}.upload_filename`,
+				ValidationErrorCodes.UPLOADED_ATTACHMENT_NOT_FOUND,
+				{filename: unboundResult.result.attachment.filename},
+			);
 		}
 		const processedAttachments: Array<MessageAttachment> = results.map((result, index) => {
 			const finalObject = copyResults[index];
@@ -171,6 +178,18 @@ export class AttachmentProcessingService {
 
 	private async processAttachment(params: ProcessAttachmentParams): Promise<ProcessedAttachment> {
 		const {message, attachment, index, nsfwMode} = params;
+		const pendingUpload = await this.attachmentUploadTraceRepository.getPendingUpload({
+			uploadKey: attachment.upload_filename,
+			userId: params.uploadUserId,
+			channelId: message.channelId,
+		});
+		if (!pendingUpload) {
+			throw InputValidationError.fromCode(
+				`attachments.${index}.upload_filename`,
+				ValidationErrorCodes.UPLOADED_ATTACHMENT_NOT_FOUND,
+				{filename: attachment.filename},
+			);
+		}
 		const uploadedFile = await this.storageService.getObjectMetadata(
 			Config.s3.buckets.uploads,
 			attachment.upload_filename,

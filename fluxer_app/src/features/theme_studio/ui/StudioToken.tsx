@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {ColorPickerPopover} from '@app/features/app/components/floating/ColorPickerPopover';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import type {ThemeVariableKind} from '@app/features/user/components/modals/tabs/appearance_tab/theme/ThemeConstants';
 import {
@@ -131,7 +132,7 @@ export const StudioTokenColor: React.FC<StudioTokenColorProps> = ({
 						data-flx="theme-studio.ui.studio-token.studio-token-color.reset-button.change"
 					>
 						<ArrowCounterClockwiseIcon
-							size={13}
+							size={remFromPx(13)}
 							weight="bold"
 							data-flx="theme-studio.ui.studio-token.studio-token-color.arrow-counter-clockwise-icon"
 						/>
@@ -223,7 +224,7 @@ export const StudioTokenFont: React.FC<StudioTokenFontProps> = ({
 						data-flx="theme-studio.ui.studio-token.studio-token-font.reset-button.change"
 					>
 						<ArrowCounterClockwiseIcon
-							size={13}
+							size={remFromPx(13)}
 							weight="bold"
 							data-flx="theme-studio.ui.studio-token.studio-token-font.arrow-counter-clockwise-icon"
 						/>
@@ -332,7 +333,7 @@ export const StudioTokenValue: React.FC<StudioTokenValueProps> = ({
 						data-flx="theme-studio.ui.studio-token.studio-token-value.reset-button.change"
 					>
 						<ArrowCounterClockwiseIcon
-							size={13}
+							size={remFromPx(13)}
 							weight="bold"
 							data-flx="theme-studio.ui.studio-token.studio-token-value.arrow-counter-clockwise-icon"
 						/>

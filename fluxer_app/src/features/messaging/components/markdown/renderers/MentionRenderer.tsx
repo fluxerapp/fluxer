@@ -2,10 +2,12 @@
 
 import * as LinkChannelCommands from '@app/features/channel/commands/LinkChannelCommands';
 import {PreloadableUserPopout} from '@app/features/channel/components/PreloadableUserPopout';
+import type {Channel} from '@app/features/channel/models/Channel';
 import Channels from '@app/features/channel/state/Channels';
 import * as ChannelUtils from '@app/features/channel/utils/ChannelUtils';
 import Guilds from '@app/features/guild/state/Guilds';
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
+import {MentionLabel} from '@app/features/messaging/components/markdown/renderers/MentionLabel';
 import type {RendererProps} from '@app/features/messaging/components/markdown/renderers/RendererTypes';
 import {GuildNavKind, MentionKind} from '@app/features/messaging/utils/markdown/parser/Enums';
 import type {MentionNode} from '@app/features/messaging/utils/markdown/parser/Nodes';
@@ -17,6 +19,7 @@ import * as ColorUtils from '@app/features/theme/utils/ColorUtils';
 import {ChannelContextMenu} from '@app/features/ui/action_menu/ChannelContextMenu';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
+import {useContextMenuTrigger} from '@app/features/ui/hooks/useContextMenuTrigger';
 import Users from '@app/features/user/state/Users';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
@@ -37,6 +40,68 @@ const CHANNEL_LINK_DESCRIPTOR = msg({
 	message: 'channel link',
 	comment: 'Short label in the messaging mention renderer. Keep it concise.',
 });
+
+interface InteractiveChannelMentionProps {
+	channel: Channel;
+	roleDescription: string;
+}
+
+function InteractiveChannelMention({channel, roleDescription}: InteractiveChannelMentionProps): React.ReactElement {
+	const {isOpen, withTracking} = useContextMenuTrigger();
+	const activate = () => {
+		if (LinkChannelCommands.openLinkChannel(channel)) {
+			return;
+		}
+		const guildId = channel.guildId;
+		if (guildId == null) {
+			throw new Error('Interactive channel mentions must belong to a guild');
+		}
+		NavigationCommands.selectChannel(guildId, channel.id);
+	};
+	return (
+		<FocusRing offset={-2} data-flx="messaging.markdown.renderers.mention-renderer.focus-ring--2">
+			<span
+				role="button"
+				tabIndex={0}
+				className={clsx(markupStyles.mention, markupStyles.interactive)}
+				aria-haspopup="menu"
+				aria-expanded={isOpen}
+				aria-roledescription={roleDescription}
+				onClick={(event) => {
+					event.stopPropagation();
+					activate();
+				}}
+				onKeyDown={(event) => {
+					if (!isKeyboardActivationKey(event.key)) return;
+					event.preventDefault();
+					event.stopPropagation();
+					activate();
+				}}
+				onContextMenu={(event) => {
+					event.preventDefault();
+					event.stopPropagation();
+					ContextMenuCommands.openFromEvent(
+						event,
+						({onClose}) => (
+							<ChannelContextMenu
+								channel={channel}
+								onClose={onClose}
+								data-flx="messaging.markdown.renderers.mention-renderer.channel-context-menu"
+							/>
+						),
+						withTracking(),
+					);
+				}}
+				data-flx="messaging.markdown.renderers.mention-renderer.button.stop-propagation--2"
+			>
+				<MentionLabel icon={ChannelUtils.getIcon(channel, {className: mentionRendererStyles.channelIcon})}>
+					{channel.name}
+				</MentionLabel>
+			</span>
+		</FocusRing>
+	);
+}
+
 export const MentionRenderer = observer(function MentionRenderer({
 	node,
 	id,
@@ -60,7 +125,7 @@ export const MentionRenderer = observer(function MentionRenderer({
 			}
 			const genericMention = (
 				<span key={id} className={markupStyles.mention} data-flx="messaging.markdown.renderers.mention-renderer.span">
-					@{name || kind.id}
+					<MentionLabel>@{name || kind.id}</MentionLabel>
 				</span>
 			);
 			if (!user) {
@@ -73,7 +138,7 @@ export const MentionRenderer = observer(function MentionRenderer({
 						className={markupStyles.mention}
 						data-flx="messaging.markdown.renderers.mention-renderer.span--2"
 					>
-						@{name || user.displayName}
+						<MentionLabel>@{name || user.displayName}</MentionLabel>
 					</span>
 				);
 			}
@@ -86,7 +151,7 @@ export const MentionRenderer = observer(function MentionRenderer({
 					position="right-start"
 					data-flx="messaging.markdown.renderers.mention-renderer.preloadable-user-popout"
 				>
-					<FocusRing data-flx="messaging.markdown.renderers.mention-renderer.focus-ring">
+					<FocusRing offset={-2} data-flx="messaging.markdown.renderers.mention-renderer.focus-ring">
 						<span
 							role="button"
 							tabIndex={0}
@@ -99,7 +164,7 @@ export const MentionRenderer = observer(function MentionRenderer({
 							}}
 							data-flx="messaging.markdown.renderers.mention-renderer.button.stop-propagation"
 						>
-							@{name || user.displayName}
+							<MentionLabel>@{name || user.displayName}</MentionLabel>
 						</span>
 					</FocusRing>
 				</PreloadableUserPopout>
@@ -117,13 +182,13 @@ export const MentionRenderer = observer(function MentionRenderer({
 						className={markupStyles.mention}
 						data-flx="messaging.markdown.renderers.mention-renderer.span--3"
 					>
-						@{i18n._(UNKNOWN_ROLE_DESCRIPTOR)}
+						<MentionLabel>@{i18n._(UNKNOWN_ROLE_DESCRIPTOR)}</MentionLabel>
 					</span>
 				);
 			}
 			const style = role.color
 				? ({
-						color: ColorUtils.int2rgb(role.color),
+						'--mention-color': ColorUtils.int2rgb(role.color),
 						backgroundColor: ColorUtils.int2rgba(role.color, 0.1),
 						boxShadow: `inset 0 0 0 1px ${ColorUtils.int2rgba(role.color, 0.3)}`,
 					} as React.CSSProperties)
@@ -135,7 +200,7 @@ export const MentionRenderer = observer(function MentionRenderer({
 					style={style}
 					data-flx="messaging.markdown.renderers.mention-renderer.span--4"
 				>
-					@{role.name}
+					<MentionLabel>@{role.name}</MentionLabel>
 				</span>
 			);
 		}
@@ -147,8 +212,11 @@ export const MentionRenderer = observer(function MentionRenderer({
 					className={markupStyles.mention}
 					data-flx="messaging.markdown.renderers.mention-renderer.span--5"
 				>
-					{ChannelUtils.getIcon({type: ChannelTypes.GUILD_TEXT}, {className: mentionRendererStyles.channelIcon})}
-					{i18n._(UNKNOWN_CHANNEL_DESCRIPTOR)}
+					<MentionLabel
+						icon={ChannelUtils.getIcon({type: ChannelTypes.GUILD_TEXT}, {className: mentionRendererStyles.channelIcon})}
+					>
+						{i18n._(UNKNOWN_CHANNEL_DESCRIPTOR)}
+					</MentionLabel>
 				</span>
 			);
 			const channel = Channels.getChannel(kind.id);
@@ -160,8 +228,11 @@ export const MentionRenderer = observer(function MentionRenderer({
 							className={markupStyles.mention}
 							data-flx="messaging.markdown.renderers.mention-renderer.span--6"
 						>
-							{ChannelUtils.getIcon(fallbackMention, {className: mentionRendererStyles.channelIcon})}
-							{fallbackMention.name}
+							<MentionLabel
+								icon={ChannelUtils.getIcon(fallbackMention, {className: mentionRendererStyles.channelIcon})}
+							>
+								{fallbackMention.name}
+							</MentionLabel>
 						</span>
 					);
 				}
@@ -188,52 +259,13 @@ export const MentionRenderer = observer(function MentionRenderer({
 						className={markupStyles.mention}
 						data-flx="messaging.markdown.renderers.mention-renderer.span--8"
 					>
-						{ChannelUtils.getIcon(channel, {className: mentionRendererStyles.channelIcon})}
-						{channel.name}
+						<MentionLabel icon={ChannelUtils.getIcon(channel, {className: mentionRendererStyles.channelIcon})}>
+							{channel.name}
+						</MentionLabel>
 					</span>
 				);
 			}
-			const activate = () => {
-				if (LinkChannelCommands.openLinkChannel(channel)) {
-					return;
-				}
-				NavigationCommands.selectChannel(channel.guildId!, channel.id);
-			};
-			return (
-				<FocusRing key={id} data-flx="messaging.markdown.renderers.mention-renderer.focus-ring--2">
-					<span
-						role="button"
-						tabIndex={0}
-						className={clsx(markupStyles.mention, markupStyles.interactive)}
-						aria-roledescription={i18n._(CHANNEL_LINK_DESCRIPTOR)}
-						onClick={(e) => {
-							e.stopPropagation();
-							activate();
-						}}
-						onKeyDown={(e) => {
-							if (!isKeyboardActivationKey(e.key)) return;
-							e.preventDefault();
-							e.stopPropagation();
-							activate();
-						}}
-						onContextMenu={(event) => {
-							event.preventDefault();
-							event.stopPropagation();
-							ContextMenuCommands.openFromEvent(event, ({onClose}) => (
-								<ChannelContextMenu
-									channel={channel}
-									onClose={onClose}
-									data-flx="messaging.markdown.renderers.mention-renderer.channel-context-menu"
-								/>
-							));
-						}}
-						data-flx="messaging.markdown.renderers.mention-renderer.button.stop-propagation--2"
-					>
-						{ChannelUtils.getIcon(channel, {className: mentionRendererStyles.channelIcon})}
-						{channel.name}
-					</span>
-				</FocusRing>
-			);
+			return <InteractiveChannelMention key={id} channel={channel} roleDescription={i18n._(CHANNEL_LINK_DESCRIPTOR)} />;
 		}
 		case MentionKind.Everyone: {
 			return (
@@ -242,7 +274,7 @@ export const MentionRenderer = observer(function MentionRenderer({
 					className={markupStyles.mention}
 					data-flx="messaging.markdown.renderers.mention-renderer.span--9"
 				>
-					@everyone
+					<MentionLabel>@everyone</MentionLabel>
 				</span>
 			);
 		}
@@ -253,7 +285,7 @@ export const MentionRenderer = observer(function MentionRenderer({
 					className={markupStyles.mention}
 					data-flx="messaging.markdown.renderers.mention-renderer.span--10"
 				>
-					@here
+					<MentionLabel>@here</MentionLabel>
 				</span>
 			);
 		}
@@ -270,7 +302,7 @@ export const MentionRenderer = observer(function MentionRenderer({
 					className={markupStyles.mention}
 					data-flx="messaging.markdown.renderers.mention-renderer.span--11"
 				>
-					{commandName}
+					<MentionLabel>{commandName}</MentionLabel>
 				</span>
 			);
 		}
@@ -302,7 +334,7 @@ export const MentionRenderer = observer(function MentionRenderer({
 					className={markupStyles.mention}
 					data-flx="messaging.markdown.renderers.mention-renderer.span--12"
 				>
-					{content}
+					<MentionLabel>{content}</MentionLabel>
 				</span>
 			);
 		}

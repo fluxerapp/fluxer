@@ -1,5 +1,18 @@
+# yaml-language-server: $schema=https://www.schemastore.org/github-issue-config.json
 blank_issues_enabled: false
 contact_links:
-  - name: Ideas and feature requests
+  - name: Account and billing support
+    url: https://fluxer.app/help
+    about: Find account help and support contact details.
+  - name: Feature proposals
     url: https://github.com/orgs/fluxerapp/discussions
-    about: Suggest an improvement or new capability.
+    about: Propose a feature in a discussion.
+  - name: Security vulnerabilities
+    url: https://github.com/fluxerapp/fluxer/security/advisories/new
+    about: Submit a private vulnerability report.
+  - name: Translations
+    url: https://weblate.fluxer.tools
+    about: Improve an existing locale or start a new one.
+  - name: Self-hosting support
+    url: https://fluxer.dev
+    about: Read the operator documentation, then open a discussion if the problem remains.

@@ -31,6 +31,7 @@ import {buildAnimatedImageProxyURL} from '@app/features/messaging/utils/MediaPro
 import {buildMessageEmbedCopyText} from '@app/features/messaging/utils/MessageCopyTextUtils';
 import {canonicalizeMediaUrl, extractSpoileredUrls, useSpoilerState} from '@app/features/messaging/utils/SpoilerUtils';
 import Permission from '@app/features/permissions/state/Permission';
+import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import messageStyles from '@app/features/theme/styles/Message.module.css';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
@@ -142,7 +143,7 @@ export const Embed: FC<EmbedProps> = observer(({embed, message, embedIndex, cont
 				aria-label={i18n._(SUPPRESS_EMBEDS_DESCRIPTOR)}
 				data-flx="channel.embeds.embed.render-suppress-button.suppress-button.suppress-embeds"
 			>
-				<XIcon size={16} weight="bold" data-flx="channel.embeds.embed.render-suppress-button.x-icon" />
+				<XIcon size={remFromPx(16)} weight="bold" data-flx="channel.embeds.embed.render-suppress-button.x-icon" />
 			</button>
 		);
 	};
@@ -250,6 +251,7 @@ export const Embed: FC<EmbedProps> = observer(({embed, message, embedIndex, cont
 						embedURL={embed.url}
 						videoProxyURL={embed.video.proxy_url}
 						videoURL={embed.video.url}
+						thumbnailProxyURL={thumbnail.proxy_url}
 						naturalWidth={embed.video.width}
 						naturalHeight={embed.video.height}
 						placeholder={thumbnail.placeholder}
@@ -334,7 +336,7 @@ export const Embed: FC<EmbedProps> = observer(({embed, message, embedIndex, cont
 					aria-label={i18n._(SUPPRESS_EMBEDS_DESCRIPTOR)}
 					data-flx="channel.embeds.embed.suppress-button.suppress-embeds"
 				>
-					<XIcon size={16} weight="bold" data-flx="channel.embeds.embed.x-icon" />
+					<XIcon size={remFromPx(16)} weight="bold" data-flx="channel.embeds.embed.x-icon" />
 				</button>
 			)}
 			{embed.type === MessageEmbedTypes.BLUESKY ? (

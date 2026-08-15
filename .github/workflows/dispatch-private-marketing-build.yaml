@@ -1,0 +1,220 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+name: Dispatch private marketing build
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - fluxer_marketing
+      - Cargo.toml
+      - fluxer_common/**
+      - packages/fonts/manifest.json
+      - packages/fonts/NOTICE.md
+      - packages/fonts/LICENSE-IBM-PLEX.txt
+      - packages/fonts/css/locale-fallbacks.css
+      - packages/fonts/files/FluxerSans/**
+      - packages/fonts/files/FluxerMono/**
+      - packages/fonts/marketing/**
+      - packages/i18n/marketing/**
+      - fluxer_static/marketing/branding/**
+      - .github/workflows/dispatch-private-marketing-build.yaml
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: private-marketing-dispatch
+  cancel-in-progress: false
+
+jobs:
+  metadata:
+    name: resolve exact private build metadata
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      parent_sha: ${{ steps.inputs.outputs.parent_sha }}
+      gitlink_sha: ${{ steps.inputs.outputs.gitlink_sha }}
+      build_version: ${{ steps.inputs.outputs.build_version }}
+      correlation_id: ${{ steps.inputs.outputs.correlation_id }}
+    steps:
+      - name: Resolve trusted build inputs
+        id: inputs
+        env:
+          EVENT_AFTER: ${{ github.event.after }}
+          GH_TOKEN: ${{ github.token }}
+          PARENT_SHA: ${{ github.sha }}
+          PUBLIC_REPOSITORY: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+        run: |
+          set -euo pipefail
+          [[ "$GITHUB_EVENT_NAME" == "push" ]]
+          [[ "$GITHUB_REF" == "refs/heads/main" ]]
+          [[ "$PUBLIC_REPOSITORY" == "fluxerapp/fluxer" ]]
+          [[ "$PARENT_SHA" =~ ^[0-9a-f]{40}$ ]]
+          [[ "$EVENT_AFTER" == "$PARENT_SHA" ]]
+          [[ "$RUN_ID" =~ ^[1-9][0-9]*$ ]]
+          [[ "$RUN_ATTEMPT" =~ ^[1-9][0-9]*$ ]]
+          (( 10#$RUN_ATTEMPT <= 10 ))
+
+          main_sha="$(gh api "repos/$PUBLIC_REPOSITORY/git/ref/heads/main" --jq .object.sha)"
+          [[ "$main_sha" =~ ^[0-9a-f]{40}$ ]]
+          main_comparison="$(gh api "repos/$PUBLIC_REPOSITORY/compare/$PARENT_SHA...$main_sha")"
+          main_status="$(jq -r .status <<<"$main_comparison")"
+          [[ "$main_status" == "identical" || "$main_status" == "ahead" ]]
+          [[ "$(jq -r .merge_base_commit.sha <<<"$main_comparison")" == "$PARENT_SHA" ]]
+
+          commit="$(gh api "repos/$PUBLIC_REPOSITORY/git/commits/$PARENT_SHA")"
+          [[ "$(jq -r .sha <<<"$commit")" == "$PARENT_SHA" ]]
+          tree_sha="$(jq -r .tree.sha <<<"$commit")"
+          [[ "$tree_sha" =~ ^[0-9a-f]{40}$ ]]
+          entry="$(
+            gh api "repos/$PUBLIC_REPOSITORY/git/trees/$tree_sha" |
+              jq -cer '[.tree[] | select(.path == "fluxer_marketing")] | if length == 1 then .[0] else error("expected exactly one marketing gitlink") end'
+          )"
+          mode="$(jq -r .mode <<<"$entry")"
+          type="$(jq -r .type <<<"$entry")"
+          gitlink_sha="$(jq -r .sha <<<"$entry")"
+          path="$(jq -r .path <<<"$entry")"
+          if [[ "$mode" != "160000" || "$type" != "commit" || "$path" != "fluxer_marketing" || ! "$gitlink_sha" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::Public parent does not contain a valid fluxer_marketing gitlink."
+            exit 1
+          fi
+
+          run="$(gh api "repos/$PUBLIC_REPOSITORY/actions/runs/$RUN_ID")"
+          [[ "$(jq -r .id <<<"$run")" == "$RUN_ID" ]]
+          [[ "$(jq -r .run_attempt <<<"$run")" == "$RUN_ATTEMPT" ]]
+          [[ "$(jq -r .event <<<"$run")" == "push" ]]
+          [[ "$(jq -r .head_sha <<<"$run")" == "$PARENT_SHA" ]]
+          run_created_at="$(jq -r .created_at <<<"$run")"
+          [[ "$run_created_at" =~ ^[1-9][0-9]{3}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$ ]]
+          run_created_epoch="$(date -u -d "$run_created_at" +%s)"
+          [[ "$run_created_epoch" =~ ^[1-9][0-9]*$ ]]
+          build_epoch=$((run_created_epoch + 10#$RUN_ATTEMPT - 1))
+          read -r year month day time_segment <<<"$(date -u -d "@$build_epoch" '+%Y %m %d %H%M%S')"
+          month="$((10#$month))"
+          micro="$((10#$time_segment))"
+          build_version="$year.$month$day.$micro"
+          [[ "$build_version" =~ ^[1-9][0-9]{3}\.[1-9][0-9]{2,3}\.([0-9]|[1-9][0-9]{0,5})$ ]]
+          correlation_id="public-${RUN_ID}-${RUN_ATTEMPT}"
+          [[ "$correlation_id" =~ ^[A-Za-z0-9._:-]{1,64}$ ]]
+          {
+            echo "parent_sha=$PARENT_SHA"
+            echo "gitlink_sha=$gitlink_sha"
+            echo "build_version=$build_version"
+            echo "correlation_id=$correlation_id"
+          } >>"$GITHUB_OUTPUT"
+
+  dispatch:
+    name: dispatch exact private build
+    needs: metadata
+    runs-on: ubuntu-24.04
+    timeout-minutes: 65
+    environment: private-marketing-dispatch
+    permissions: {}
+    steps:
+      - name: Validate trusted build inputs
+        env:
+          DISPATCH_ENABLED: ${{ vars.MARKETING_DISPATCH_ENABLED }}
+          EXPECTED_PARENT_SHA: ${{ github.sha }}
+          EXPECTED_CORRELATION_ID: public-${{ github.run_id }}-${{ github.run_attempt }}
+          PARENT_SHA: ${{ needs.metadata.outputs.parent_sha }}
+          GITLINK_SHA: ${{ needs.metadata.outputs.gitlink_sha }}
+          BUILD_VERSION: ${{ needs.metadata.outputs.build_version }}
+          CORRELATION_ID: ${{ needs.metadata.outputs.correlation_id }}
+        run: |
+          set -euo pipefail
+          [[ "$GITHUB_EVENT_NAME" == "push" ]]
+          [[ "$GITHUB_REF" == "refs/heads/main" ]]
+          [[ "$GITHUB_REPOSITORY" == "fluxerapp/fluxer" ]]
+          [[ "$PARENT_SHA" == "$EXPECTED_PARENT_SHA" ]]
+          [[ "$PARENT_SHA" =~ ^[0-9a-f]{40}$ ]]
+          [[ "$GITLINK_SHA" =~ ^[0-9a-f]{40}$ ]]
+          [[ "$BUILD_VERSION" =~ ^[1-9][0-9]{3}\.[1-9][0-9]{2,3}\.([0-9]|[1-9][0-9]{0,5})$ ]]
+          [[ "$CORRELATION_ID" == "$EXPECTED_CORRELATION_ID" ]]
+          [[ "$CORRELATION_ID" =~ ^[A-Za-z0-9._:-]{1,64}$ ]]
+          if [[ "$DISPATCH_ENABLED" != "true" ]]; then
+            echo "::error::Private marketing dispatch is intentionally disabled until the package cutover guard completes."
+            exit 1
+          fi
+
+      - name: Create private dispatch token
+        id: private-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1
+        with:
+          client-id: ${{ vars.FLUXER_CI_APP_ID }}
+          private-key: ${{ secrets.FLUXER_CI_APP_KEY }}
+          owner: fluxerapp
+          repositories: marketing
+          permission-actions: write
+
+      - name: Dispatch exact private build
+        env:
+          GH_TOKEN: ${{ steps.private-token.outputs.token }}
+          PARENT_SHA: ${{ needs.metadata.outputs.parent_sha }}
+          GITLINK_SHA: ${{ needs.metadata.outputs.gitlink_sha }}
+          BUILD_VERSION: ${{ needs.metadata.outputs.build_version }}
+          CORRELATION_ID: ${{ needs.metadata.outputs.correlation_id }}
+        run: |
+          set -euo pipefail
+          gh api --method POST repos/fluxerapp/marketing/actions/workflows/build-marketing.yaml/dispatches \
+            --field ref=main \
+            --field "inputs[parent_sha]=$PARENT_SHA" \
+            --field "inputs[gitlink_sha]=$GITLINK_SHA" \
+            --field "inputs[build_version]=$BUILD_VERSION" \
+            --field "inputs[correlation_id]=$CORRELATION_ID"
+
+      - name: Wait for private build conclusion
+        env:
+          GH_TOKEN: ${{ steps.private-token.outputs.token }}
+          PARENT_SHA: ${{ needs.metadata.outputs.parent_sha }}
+          GITLINK_SHA: ${{ needs.metadata.outputs.gitlink_sha }}
+          BUILD_VERSION: ${{ needs.metadata.outputs.build_version }}
+          CORRELATION_ID: ${{ needs.metadata.outputs.correlation_id }}
+        run: |
+          set -euo pipefail
+          expected_title="marketing-build correlation=$CORRELATION_ID parent=$PARENT_SHA gitlink=$GITLINK_SHA version=$BUILD_VERSION"
+          deadline=$((SECONDS + 3600))
+          run_id=""
+          while (( SECONDS < deadline )); do
+            runs="$(gh api "repos/fluxerapp/marketing/actions/workflows/build-marketing.yaml/runs?event=workflow_dispatch&per_page=100" --jq '[.workflow_runs[] | {id, event, display_title, status, conclusion}]')"
+            matches="$(jq --arg title "$expected_title" '[.[] | select(.event == "workflow_dispatch" and .display_title == $title)]' <<<"$runs")"
+            count="$(jq 'length' <<<"$matches")"
+            if [[ "$count" == "1" ]]; then
+              run_id="$(jq -r '.[0].id' <<<"$matches")"
+              break
+            fi
+            if [[ "$count" != "0" ]]; then
+              echo "::error::Private build correlation matched multiple workflow runs."
+              exit 1
+            fi
+            sleep 10
+          done
+          if [[ -z "$run_id" ]]; then
+            echo "::error::Timed out waiting for the private build dispatch to appear."
+            exit 1
+          fi
+          while (( SECONDS < deadline )); do
+            runs="$(gh api "repos/fluxerapp/marketing/actions/workflows/build-marketing.yaml/runs?event=workflow_dispatch&per_page=100" --jq '[.workflow_runs[] | {id, event, display_title, status, conclusion}]')"
+            matches="$(jq --arg title "$expected_title" '[.[] | select(.event == "workflow_dispatch" and .display_title == $title)]' <<<"$runs")"
+            if [[ "$(jq 'length' <<<"$matches")" != "1" || "$(jq -r '.[0].id' <<<"$matches")" != "$run_id" ]]; then
+              echo "::error::Private build correlation is missing or ambiguous."
+              exit 1
+            fi
+            run="$(jq '.[0]' <<<"$matches")"
+            status="$(jq -r '.status' <<<"$run")"
+            conclusion="$(jq -r '.conclusion // empty' <<<"$run")"
+            if [[ "$status" == "completed" ]]; then
+              if [[ "$conclusion" != "success" ]]; then
+                echo "::error::Private marketing build concluded with $conclusion."
+                exit 1
+              fi
+              echo "Private marketing build completed successfully."
+              exit 0
+            fi
+            sleep 15
+          done
+          echo "::error::Timed out waiting for the private marketing build."
+          exit 1

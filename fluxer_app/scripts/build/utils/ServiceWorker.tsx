@@ -12,6 +12,8 @@ interface PrecacheEntry {
 
 const PRECACHE_ROOT_FILES = ['index.html', 'manifest.json', 'browserconfig.xml', 'robots.txt', 'version.json'];
 
+const NEVER_PRECACHED_EXTENSIONS = ['.woff', '.woff2', '.ttf', '.otf', '.eot'];
+
 async function fileRevision(filePath: string): Promise<string> {
 	const stat = await fs.stat(filePath);
 	return `${stat.size}:${Math.trunc(stat.mtimeMs)}`;
@@ -22,6 +24,10 @@ function isLocalAssetUrl(value: string): boolean {
 		return false;
 	}
 	if (value.startsWith('//')) {
+		return false;
+	}
+	const pathname = value.split(/[?#]/, 1)[0].toLowerCase();
+	if (NEVER_PRECACHED_EXTENSIONS.some((extension) => pathname.endsWith(extension))) {
 		return false;
 	}
 	return value.startsWith('/assets/') || PRECACHE_ROOT_FILES.some((file) => value === `/${file}`);
