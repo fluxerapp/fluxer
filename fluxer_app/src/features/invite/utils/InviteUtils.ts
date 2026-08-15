@@ -22,6 +22,9 @@ const OFFICIAL_INVITE_URL_BASES = Object.freeze([
 const INVITE_CONFIG: CodeLinkUtils.CodeLinkConfig = {
 	path: 'invite',
 	get urlBases() {
+		if (RuntimeConfig.isSelfHosted()) {
+			return [RuntimeConfig.inviteUrlBase];
+		}
 		return [RuntimeConfig.inviteUrlBase, ...OFFICIAL_INVITE_URL_BASES];
 	},
 };
