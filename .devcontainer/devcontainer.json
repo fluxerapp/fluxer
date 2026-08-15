@@ -61,6 +61,9 @@
 	"postStartCommand": "bash /workspaces/fluxer/.devcontainer/fix-docker-socket.sh && cargo run -p fluxer-dev -- post-start && bash /workspaces/fluxer/fluxer_docs/serve.sh --daemon",
 	"customizations": {
 		"vscode": {
+			"settings": {
+				"editor.defaultFormatter": "biomejs.biome"
+			},
 			"extensions": [
 				"biomejs.biome",
 				"rust-lang.rust-analyzer",
@@ -68,7 +71,8 @@
 				"TypeScriptTeam.native-preview",
 				"unifiedjs.vscode-mdx",
 				"pgourlain.erlang",
-				"clinyong.vscode-css-modules"
+				"clinyong.vscode-css-modules",
+				"EditorConfig.EditorConfig"
 			]
 		}
 	}
