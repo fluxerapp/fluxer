@@ -236,6 +236,12 @@ export async function resolveBlueskyOAuthService(
 				_blueskyOAuthConfigSignature = signature;
 				return service;
 			})
+			.catch((error) => {
+				Logger.error({error}, 'Bluesky OAuth signing keys were rejected – disabling Bluesky OAuth.');
+				_blueskyOAuthService = getDisabledBlueskyOAuthService();
+				_blueskyOAuthConfigSignature = signature;
+				return _blueskyOAuthService;
+			})
 			.finally(() => {
 				_blueskyOAuthInitializationPromise = null;
 				_blueskyOAuthInitializationSignature = null;
