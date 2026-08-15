@@ -334,7 +334,7 @@ export const MessageReactions = observer(
 								<button
 									ref={addReactionButtonRef}
 									type="button"
-									className={clsx(styles.addReactionButton, emojiPickerOpen && styles.addReactionButtonActive)}
+									className={clsx(styles.reactionPickerButton, emojiPickerOpen && styles.reactionPickerButtonActive)}
 									aria-label={i18n._(ADD_REACTION_DESCRIPTOR)}
 									aria-haspopup="dialog"
 									aria-expanded={emojiPickerOpen}
@@ -376,7 +376,7 @@ export const MessageReactions = observer(
 								<button
 									ref={addReactionButtonRef}
 									type="button"
-									className={clsx(styles.addReactionButton, emojiPickerOpen && styles.addReactionButtonActive)}
+									className={clsx(styles.reactionPickerButton, emojiPickerOpen && styles.reactionPickerButtonActive)}
 									aria-label={i18n._(ADD_REACTION_DESCRIPTOR)}
 									aria-haspopup="dialog"
 									aria-expanded={emojiPickerOpen}

@@ -338,7 +338,7 @@ const EngineSection: React.FC<EngineSectionProps> = observer(
 						</SwitchGroup>
 					)}
 					<div
-						className={styles.addButtonContainer}
+						className={styles.newEngineButtonContainer}
 						data-flx="user.chat-settings-tab.search-engines-tab.engine-section.add-button-container"
 					>
 						<Button

@@ -37,7 +37,7 @@ export const DiscoveryButton = observer(() => {
 		return null;
 	}
 	return (
-		<div className={guildStyles.addGuildButton} data-flx="app.sidebar-nav.discovery-button.div">
+		<div className={guildStyles.createGuildButton} data-flx="app.sidebar-nav.discovery-button.div">
 			<Tooltip
 				position="right"
 				size="large"
@@ -62,7 +62,7 @@ export const DiscoveryButton = observer(() => {
 					>
 						<motion.div
 							ref={iconRef}
-							className={guildStyles.addGuildButtonIcon}
+							className={guildStyles.createGuildButtonIcon}
 							animate={{borderRadius: isHovering || isSelected ? '30%' : '50%'}}
 							initial={{borderRadius: isHovering || isSelected ? '30%' : '50%'}}
 							transition={{duration: Accessibility.useReducedMotion ? 0 : 0.07, ease: 'easeOut'}}

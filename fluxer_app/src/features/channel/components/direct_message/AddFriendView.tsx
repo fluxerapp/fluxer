@@ -12,7 +12,10 @@ export const AddFriendView = observer(() => {
 	const {i18n} = useLingui();
 	const showVerificationSlateOnly = Users.currentUser?.verified === false;
 	return (
-		<div className={styles.addFriendContainer} data-flx="channel.direct-message.add-friend-view.add-friend-container">
+		<div
+			className={styles.friendRequestContainer}
+			data-flx="channel.direct-message.add-friend-view.add-friend-container"
+		>
 			<div className={styles.card} data-flx="channel.direct-message.add-friend-view.card">
 				{showVerificationSlateOnly ? (
 					<AddFriendForm data-flx="channel.direct-message.add-friend-view.add-friend-form" />
