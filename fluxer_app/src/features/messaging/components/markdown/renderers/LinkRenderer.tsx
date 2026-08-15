@@ -24,6 +24,7 @@ import * as InviteUtils from '@app/features/invite/utils/InviteUtils';
 import jumpLinkStyles from '@app/features/messaging/components/markdown/renderers/MessageJumpLink.module.css';
 import {MarkdownContext, type RendererProps} from '@app/features/messaging/components/markdown/renderers/RendererTypes';
 import {ExternalLinkWarningModal} from '@app/features/messaging/components/modals/ExternalLinkWarningModal';
+import {openExternalUrlWithWarning} from '@app/features/messaging/utils/ExternalLinkUtils';
 import {goToMessage} from '@app/features/messaging/utils/MessageNavigator';
 import type {LinkNode} from '@app/features/messaging/utils/markdown/parser/Nodes';
 import * as NavigationCommands from '@app/features/navigation/commands/NavigationCommands';
@@ -898,6 +899,14 @@ export const LinkRenderer = observer(function LinkRenderer({
 						e.preventDefault();
 						void openExternalUrl(url);
 					}
+				}}
+				onAuxClick={(e) => {
+					if (e.button !== 1 || isInternal) {
+						return;
+					}
+					e.preventDefault();
+					e.stopPropagation();
+					openExternalUrlWithWarning(url);
 				}}
 				className={markupStyles.link}
 				data-flx="messaging.markdown.renderers.link-renderer.a"
