@@ -12,6 +12,7 @@ import AdvancedSettings from '@app/features/user/state/AdvancedSettings';
 import UserGuildSettings from '@app/features/user/state/UserGuildSettings';
 import {ME} from '@fluxer/constants/src/AppConstants';
 import {GUILD_TEXT_BASED_CHANNEL_TYPES} from '@fluxer/constants/src/ChannelConstants';
+import {MessageNotifications} from '@fluxer/constants/src/NotificationConstants';
 import type {ChannelId, GuildId} from '@fluxer/schema/src/branded/WireIds';
 import {makeAutoObservable, observable, reaction, runInAction} from 'mobx';
 
@@ -52,6 +53,7 @@ function isChannelMutedForUnread(channel: ContributeChannel): boolean {
 
 function resolveUnreadBadgesLevel(channel: ContributeChannel): number | null {
 	if (channel.isPrivate()) return null;
+	if (isChannelMutedForUnread(channel)) return MessageNotifications.NO_MESSAGES;
 	return UserGuildSettings.resolvedGuildUnreadBadgesLevel({
 		id: channel.id,
 		guildId: channel.guildId ?? undefined,
