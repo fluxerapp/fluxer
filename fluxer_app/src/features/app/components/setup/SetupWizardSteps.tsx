@@ -559,7 +559,7 @@ export const AdminAccountStep = observer(({theme}: {theme: ThemeType}) => {
 	const {i18n} = useLingui();
 	return (
 		<section className={styles.step} data-flx="app.self-hosted-setup-wizard-gate.admin-account-step">
-			<div className={styles.adminForm} data-flx="app.self-hosted-setup-wizard-gate.admin-form">
+			<div className={styles.accountSetupForm} data-flx="app.self-hosted-setup-wizard-gate.admin-form">
 				<AuthRegisterFormCore
 					fields={{
 						showEmail: true,

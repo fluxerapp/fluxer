@@ -394,7 +394,7 @@ const InviteModalContent = observer(function InviteModalContent({
 								data-flx="invite.invite-modal.recipient-list"
 							/>
 						) : (
-							<div className={styles.advancedView} data-flx="invite.invite-modal.advanced-view">
+							<div className={styles.detailedView} data-flx="invite.invite-modal.advanced-view">
 								<Combobox
 									label={i18n._(EXPIRE_AFTER_DESCRIPTOR)}
 									options={maxAgeOptions}

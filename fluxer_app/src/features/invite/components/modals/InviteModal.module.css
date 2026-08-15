@@ -121,7 +121,7 @@
 	text-decoration: underline;
 }
 
-.advancedView {
+.detailedView {
 	display: flex;
 	flex-direction: column;
 	gap: var(--spacing-4);

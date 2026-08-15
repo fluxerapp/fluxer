@@ -581,7 +581,7 @@ const FavoriteCategoryItem = observer(
 							>
 								<button
 									type="button"
-									className={favoritesChannelListStyles.addButton}
+									className={favoritesChannelListStyles.categoryAddButton}
 									aria-label={i18n._(ADD_CHANNEL_DESCRIPTOR)}
 									onClick={(e) => {
 										e.stopPropagation();
@@ -591,7 +591,7 @@ const FavoriteCategoryItem = observer(
 								>
 									<PlusIcon
 										weight="bold"
-										className={favoritesChannelListStyles.addButtonIcon}
+										className={favoritesChannelListStyles.categoryAddButtonIcon}
 										data-flx="app.favorites-channel-list-content.favorite-category-item.plus-icon"
 									/>
 								</button>

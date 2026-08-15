@@ -198,7 +198,7 @@
 	display: none;
 }
 
-.addButton {
+.categoryAddButton {
 	display: flex;
 	height: 1rem;
 	width: 1rem;
@@ -216,11 +216,11 @@
 }
 
 :global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
-	.addButton:hover {
+	.categoryAddButton:hover {
 	color: var(--text-primary);
 }
 
-.addButtonIcon {
+.categoryAddButtonIcon {
 	height: 1rem;
 	width: 1rem;
 }

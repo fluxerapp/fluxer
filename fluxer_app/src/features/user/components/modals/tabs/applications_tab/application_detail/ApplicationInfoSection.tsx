@@ -159,7 +159,7 @@ export const ApplicationInfoSection: React.FC<ApplicationInfoSectionProps> = ({
 					<Button
 						variant="primary"
 						fitContent
-						className={styles.addRedirectButton}
+						className={styles.createRedirectButton}
 						onClick={onAddRedirect}
 						data-flx="user.applications-tab.application-detail.application-info-section.add-redirect-button"
 					>
