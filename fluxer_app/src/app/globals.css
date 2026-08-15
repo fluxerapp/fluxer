@@ -516,7 +516,7 @@ img::before {
 	}
 }
 
-@media (max-width: 840px) {
+@media (max-width: 840px) and (hover: none) and (pointer: coarse) {
 	:root {
 		--user-select: none;
 	}

@@ -357,7 +357,7 @@ export type SetUserAclsRequest = z.infer<typeof SetUserAclsRequest>;
 
 export const SetUserTraitsRequest = z.object({
 	user_id: SnowflakeType.describe('ID of the user to set traits for'),
-	traits: z.array(createStringType(1, 64)).max(100).describe('List of traits to assign to the user'),
+	traits: z.array(createStringType(1, 128)).max(100).describe('List of traits to assign to the user'),
 });
 
 export type SetUserTraitsRequest = z.infer<typeof SetUserTraitsRequest>;
