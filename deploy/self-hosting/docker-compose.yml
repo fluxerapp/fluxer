@@ -176,13 +176,29 @@ services:
       - /bin/sh
       - -c
       - >
-        for i in $$(seq 1 60); do
-          echo "s3.bucket.create -name fluxer" | weed shell -master=seaweedfs:9333 >/dev/null 2>&1 && break || sleep 2;
+        buckets="fluxer fluxer-uploads fluxer-downloads fluxer-reports fluxer-harvests";
+        missing="$$buckets";
+        for attempt in $$(seq 1 60); do
+          if ! nc -z seaweedfs 9333 2>/dev/null; then
+            sleep 2;
+            continue;
+          fi;
+          listed=$$(echo "s3.bucket.list" | timeout 10 weed shell -master=seaweedfs:9333 2>&1);
+          missing="";
+          for b in $$buckets; do
+            echo "$$listed" | grep -q "^[[:space:]]*$$b[[:space:]]" || missing="$${missing:+$$missing }$$b";
+          done;
+          if [ -z "$$missing" ]; then
+            echo "buckets ready";
+            exit 0;
+          fi;
+          for b in $$missing; do
+            echo "s3.bucket.create -name $$b" | timeout 10 weed shell -master=seaweedfs:9333 >/dev/null 2>&1;
+          done;
+          sleep 2;
         done;
-        for b in fluxer fluxer-uploads fluxer-downloads fluxer-reports fluxer-harvests; do
-          echo "s3.bucket.create -name $$b" | weed shell -master=seaweedfs:9333 || true;
-        done;
-        echo "buckets ready";
+        echo "seaweedfs-init could not verify buckets: $$missing" >&2;
+        exit 1;
 
   livekit:
     image: livekit/livekit-server:v1.12.0
