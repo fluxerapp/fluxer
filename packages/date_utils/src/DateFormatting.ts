@@ -70,7 +70,7 @@ export function getFormattedCompactDateTime(
 	hour12?: boolean,
 ): string {
 	const date = parseDate(timestamp);
-	const datePart = getDateFormatter('en-US', {month: 'numeric', day: 'numeric', year: '2-digit'}).format(date);
+	const datePart = getDateFormatter(locale, {month: 'numeric', day: 'numeric', year: '2-digit'}).format(date);
 	const timePart = getDateFormatter(locale, {
 		hour: 'numeric',
 		minute: '2-digit',
