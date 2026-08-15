@@ -29,7 +29,7 @@ class FakeMeilisearchClient implements MeilisearchClient {
 			this.indexExists = true;
 			return this.nextTask() as TResponse;
 		}
-		if (method === 'PUT' && path.includes('/settings/')) {
+		if ((method === 'PUT' || method === 'PATCH') && path.includes('/settings/')) {
 			return this.nextTask() as TResponse;
 		}
 		if (method === 'POST' && path.endsWith('/documents')) {
@@ -75,8 +75,12 @@ describe('MeilisearchMessageAdapter', () => {
 			'PUT /indexes/messages/settings/searchable-attributes',
 			'PUT /indexes/messages/settings/filterable-attributes',
 			'PUT /indexes/messages/settings/sortable-attributes',
+			'PATCH /indexes/messages/settings/pagination',
 		]);
-		expect(client.waitedTaskUids).toEqual([1, 2, 3, 4]);
+		expect(client.waitedTaskUids).toEqual([1, 2, 3, 4, 5]);
+		expect(client.requests.find((request) => request.path.endsWith('/settings/pagination'))?.body).toEqual({
+			maxTotalHits: 10000,
+		});
 	});
 
 	it('builds Meilisearch search requests from message filters', async () => {
@@ -127,6 +131,6 @@ describe('MeilisearchMessageAdapter', () => {
 
 		expect(client.waitedTaskUids).toEqual([]);
 		await adapter.refreshIndex();
-		expect(client.waitedTaskUids).toEqual([4]);
+		expect(client.waitedTaskUids).toEqual([5]);
 	});
 });

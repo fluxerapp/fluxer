@@ -7,6 +7,7 @@ import {joinMeiliFilters} from './MeilisearchFilterUtils';
 import type {MeilisearchIndexDefinition} from './MeilisearchIndexDefinitions';
 
 const MAX_SEARCH_LIMIT = 1000;
+const MAX_TOTAL_HITS = 10000;
 
 interface MeilisearchIndexAdapterOptions<TFilters> {
 	client: MeilisearchClient;
@@ -57,9 +58,10 @@ export class MeilisearchIndexAdapter<
 			await this.waitForTask(task.taskUid);
 		}
 		await Promise.all([
-			this.applySetting('searchable-attributes', this.indexDefinition.searchableAttributes),
-			this.applySetting('filterable-attributes', this.indexDefinition.filterableAttributes),
-			this.applySetting('sortable-attributes', this.indexDefinition.sortableAttributes),
+			this.applySetting('PUT', 'searchable-attributes', this.indexDefinition.searchableAttributes),
+			this.applySetting('PUT', 'filterable-attributes', this.indexDefinition.filterableAttributes),
+			this.applySetting('PUT', 'sortable-attributes', this.indexDefinition.sortableAttributes),
+			this.applySetting('PATCH', 'pagination', {maxTotalHits: MAX_TOTAL_HITS}),
 		]);
 		this.initialized = true;
 	}
@@ -177,9 +179,13 @@ export class MeilisearchIndexAdapter<
 		}
 	}
 
-	private async applySetting(setting: string, value: Array<string>): Promise<void> {
+	private async applySetting(
+		method: 'PUT' | 'PATCH',
+		setting: string,
+		value: Array<string> | {maxTotalHits: number},
+	): Promise<void> {
 		const task = await this.client.request<MeilisearchTask>(
-			'PUT',
+			method,
 			`/indexes/${encodeURIComponent(this.indexDefinition.uid)}/settings/${setting}`,
 			value,
 		);
