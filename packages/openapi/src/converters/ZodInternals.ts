@@ -74,6 +74,8 @@ interface ZodInternalDefinition {
 	getter?: () => ZodTypeAny;
 	pattern?: RegExp;
 	transform?: (input: unknown) => unknown;
+	check?: string;
+	format?: string;
 }
 
 interface ZodInternalSchema {

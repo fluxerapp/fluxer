@@ -258,6 +258,7 @@ export function extractStringConstraints(schema: ZodTypeAny): {
 	if (stringProperties._regex != null) result.pattern = stringProperties._regex.source;
 	return result;
 }
+const INTEGER_NUMBER_FORMATS = new Set(['safeint', 'int32', 'uint32']);
 export function extractNumberConstraints(schema: ZodTypeAny): {
 	minimum?: number;
 	maximum?: number;
@@ -276,6 +277,13 @@ export function extractNumberConstraints(schema: ZodTypeAny): {
 		if (check.maxValue != null) result.maximum = check.maxValue;
 		if (check.isInt === true) result.isInt = true;
 		if (check.format != null) result.format = check.format;
+	}
+	const definition = getZodDefinition(schema);
+	if (definition.check === 'number_format' && definition.format != null) {
+		result.format = definition.format;
+		if (INTEGER_NUMBER_FORMATS.has(definition.format)) {
+			result.isInt = true;
+		}
 	}
 	return result;
 }
