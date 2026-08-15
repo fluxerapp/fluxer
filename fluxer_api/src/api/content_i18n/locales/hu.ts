@@ -9,7 +9,7 @@ const CONTENT_I18N_HU_MESSAGES = defineContentI18nLocaleMessages({
 	"guild.bulk_create.emoji_limit": "A maximális emoji szám elérve ({limit}).",
 	"guild.bulk_create.sticker_limit": "A maximális matricák száma elérve ({limit}).",
 	"guild.bulk_create.unknown_error": "Ismeretlen hiba.",
-	"guild.default_category_text": "Szöveges csatornák",
+	"guild.default_category_text": "Szöveges Csatornák",
 	"guild.default_category_voice": "Hangcsatornák",
 	"guild.default_channel_text": "általános",
 	"guild.default_channel_voice": "Általános"

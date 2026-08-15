@@ -156,6 +156,7 @@ const ERROR_I18N_ZH_CN_MESSAGES = defineErrorI18nLocaleMessages({
 	"bots.bot_user_not_found": "未找到机器人用户。",
 	"bots.invalid_response_type_for_non_bot": "非机器人范围的响应类型必须是代码。",
 	"bots.not_a_bot_application": "此应用不是机器人。",
+	"bots.search_scope_unavailable": "机器人只能在单个社区或频道内搜索。",
 	"calls_and_voice.call_already_exists": "此频道已有通话正在进行中。",
 	"calls_and_voice.cannot_modify_voice_state": "你无法修改语音状态。",
 	"calls_and_voice.invalid_or_restricted_rtc_region": "无效或受限的 RTC 区域：{region}。",

@@ -156,6 +156,7 @@ const ERROR_I18N_AR_MESSAGES = defineErrorI18nLocaleMessages({
 	"bots.bot_user_not_found": "لم يتم العثور على مستخدم البوت.",
 	"bots.invalid_response_type_for_non_bot": "يجب أن يكون نوع الاستجابة رمزًا للنطاقات غير البوت.",
 	"bots.not_a_bot_application": "هذا التطبيق ليس بوتًا.",
+	"bots.search_scope_unavailable": "لا يمكن للبوتات البحث إلا داخل مجتمع واحد أو قناة واحدة.",
 	"calls_and_voice.call_already_exists": "مكالمة جارية بالفعل في هذه القناة.",
 	"calls_and_voice.cannot_modify_voice_state": "لا يمكنك تغيير حالة الصوت.",
 	"calls_and_voice.invalid_or_restricted_rtc_region": "منطقة RTC غير صالحة أو مقيدة: {region}.",

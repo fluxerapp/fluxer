@@ -156,6 +156,7 @@ const ERROR_I18N_UK_MESSAGES = defineErrorI18nLocaleMessages({
 	"bots.bot_user_not_found": "Користувача бота не знайдено.",
 	"bots.invalid_response_type_for_non_bot": "Тип відповіді має бути кодом для дозволів, що не стосуються ботів.",
 	"bots.not_a_bot_application": "Цей застосунок не є ботом.",
+	"bots.search_scope_unavailable": "Боти можуть шукати лише в межах однієї спільноти або одного каналу.",
 	"calls_and_voice.call_already_exists": "У цьому каналі вже триває голосовий виклик.",
 	"calls_and_voice.cannot_modify_voice_state": "Ти не можеш змінювати стан голосу.",
 	"calls_and_voice.invalid_or_restricted_rtc_region": "Недійсний або обмежений RTC-регіон: {region}.",

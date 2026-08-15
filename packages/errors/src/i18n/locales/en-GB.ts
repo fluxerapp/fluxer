@@ -156,6 +156,7 @@ const ERROR_I18N_EN_GB_MESSAGES = defineErrorI18nLocaleMessages({
 	"bots.bot_user_not_found": "Bot user wasn't found.",
 	"bots.invalid_response_type_for_non_bot": "Response type must be code for non-bot scopes.",
 	"bots.not_a_bot_application": "This application isn't a bot.",
+	"bots.search_scope_unavailable": "Bots can only search within a single community or channel.",
 	"calls_and_voice.call_already_exists": "A call is already in progress in this channel.",
 	"calls_and_voice.cannot_modify_voice_state": "You can't modify voice state.",
 	"calls_and_voice.invalid_or_restricted_rtc_region": "Invalid or restricted RTC region: {region}.",
