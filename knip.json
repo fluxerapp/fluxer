@@ -44,8 +44,7 @@
 				"native/*/index.{js,d.ts}",
 				"native/*/loader-diagnostics.cjs",
 				"native/*/*.test.mjs",
-				"native/*/test/**/*.mjs",
-				"native/*/scripts/**/*.mjs"
+				"native/*/test/**/*.mjs"
 			],
 			"project": ["src/**/*.{ts,tsx,mjs,js}", "scripts/**/*.mjs", "native/**/*.{js,mjs,cjs,d.ts}"],
 			"ignoreDependencies": ["electron-builder"]

@@ -11,7 +11,7 @@ const client: HttpClient = createHttpClient({
 });
 const scopedClients = new Map<RequestUrlPolicy, Map<number, HttpClient>>();
 
-export interface SendRequestOptions {
+interface SendRequestOptions {
 	maxRedirects?: number;
 	requestUrlPolicy?: RequestUrlPolicy;
 }
