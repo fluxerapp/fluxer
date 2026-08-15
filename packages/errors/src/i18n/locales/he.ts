@@ -518,6 +518,7 @@ const ERROR_I18N_HE_MESSAGES = defineErrorI18nLocaleMessages({
 	"urls.invalid_url_or_attachment_reference": "פורמט כתובת אתר לא חוקי או הפניה לקובץ מצורף.",
 	"urls.unfurl_stream_too_large": "התגובה לתצוגה המקדימה של הקישור גדולה מדי מכדי לעבד אותה.",
 	"urls.url_length_invalid": "כתובת האתר חייבת להיות באורך של {min} עד {max} תווים.",
+	"urls.url_not_publicly_routable": "כתובת האתר חייבת להצביע על כתובת IP ציבורית הנגישה מהאינטרנט.",
 	"usernames_and_tags.discriminator_invalid_format": "המזהה חייב להיות באורך של {min}–{max} ספרות.",
 	"usernames_and_tags.discriminator_out_of_range": "המזהה חייב להיות בין {min} ל־{max}.",
 	"usernames_and_tags.discriminator_required": "המזהה נדרש.",

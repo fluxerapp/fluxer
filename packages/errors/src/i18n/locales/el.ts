@@ -518,6 +518,7 @@ const ERROR_I18N_EL_MESSAGES = defineErrorI18nLocaleMessages({
 	"urls.invalid_url_or_attachment_reference": "Άκυρη μορφή URL ή αναφορά συνημμένου.",
 	"urls.unfurl_stream_too_large": "Η απόκριση της προεπισκόπησης του συνδέσμου είναι πολύ μεγάλη για να υπολογιστεί.",
 	"urls.url_length_invalid": "Το URL πρέπει να είναι μεταξύ {min} και {max} χαρακτήρων.",
+	"urls.url_not_publicly_routable": "Το URL πρέπει να παραπέμπει σε δημόσια διεύθυνση IP, προσβάσιμη από το διαδίκτυο.",
 	"usernames_and_tags.discriminator_invalid_format": "Το διακριτικό πρέπει να είναι {min}–{max} ψηφίων.",
 	"usernames_and_tags.discriminator_out_of_range": "Το διακριτικό πρέπει να είναι μεταξύ {min} και {max}.",
 	"usernames_and_tags.discriminator_required": "Το διακριτικό είναι υποχρεωτικό.",

@@ -518,6 +518,7 @@ const ERROR_I18N_HR_MESSAGES = defineErrorI18nLocaleMessages({
 	"urls.invalid_url_or_attachment_reference": "Nevažeći format URL-a ili referenca privitka.",
 	"urls.unfurl_stream_too_large": "Odgovor za pregled poveznice je prevelik za obradu.",
 	"urls.url_length_invalid": "URL mora biti između {min} i {max} znakova.",
+	"urls.url_not_publicly_routable": "URL mora upućivati na javnu IP adresu dostupnu s interneta.",
 	"usernames_and_tags.discriminator_invalid_format": "Diskriminator mora biti {min}–{max} znamenki.",
 	"usernames_and_tags.discriminator_out_of_range": "Diskriminator mora biti između {min} i {max}.",
 	"usernames_and_tags.discriminator_required": "Diskriminator je obavezan.",

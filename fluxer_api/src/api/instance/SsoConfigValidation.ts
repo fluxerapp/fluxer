@@ -102,7 +102,7 @@ export async function validateSsoPublicOutboundUrl(rawUrl: string, fieldName: st
 			redirectCount: 0,
 		});
 	} catch {
-		throw InputValidationError.fromCode(fieldName, ValidationErrorCodes.INVALID_URL_FORMAT);
+		throw InputValidationError.fromCode(fieldName, ValidationErrorCodes.URL_NOT_PUBLICLY_ROUTABLE);
 	}
 	// Return the caller's exact input rather than parsedUrl.toString(), which would normalize
 	// the URL (e.g. appending a trailing slash) and break exact-match comparisons such as the

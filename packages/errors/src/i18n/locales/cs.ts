@@ -518,6 +518,7 @@ const ERROR_I18N_CS_MESSAGES = defineErrorI18nLocaleMessages({
 	"urls.invalid_url_or_attachment_reference": "Neplatný formát adresy URL nebo odkaz přílohy.",
 	"urls.unfurl_stream_too_large": "Odpověď na náhled odkazu je příliš velká a nelze ji zpracovat.",
 	"urls.url_length_invalid": "Adresa URL musí být dlouhá {min} až {max} znaků.",
+	"urls.url_not_publicly_routable": "Adresa URL musí odkazovat na veřejnou IP adresu dostupnou z internetu.",
 	"usernames_and_tags.discriminator_invalid_format": "Diskriminátor musí obsahovat {min}–{max} číslic.",
 	"usernames_and_tags.discriminator_out_of_range": "Diskriminátor musí být mezi {min} a {max}.",
 	"usernames_and_tags.discriminator_required": "Diskriminátor je vyžadován.",

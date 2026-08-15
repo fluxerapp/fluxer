@@ -439,6 +439,7 @@ export const ErrorCodeToI18nKey = {
 	[ValidationErrorCodes.UNRESOLVED_ATTACHMENT_URL]: 'attachments_and_uploads.unresolved_attachment_url',
 	[ValidationErrorCodes.UPLOADED_ATTACHMENT_NOT_FOUND]: 'attachments_and_uploads.uploaded_attachment_not_found',
 	[ValidationErrorCodes.URL_LENGTH_INVALID]: 'urls.url_length_invalid',
+	[ValidationErrorCodes.URL_NOT_PUBLICLY_ROUTABLE]: 'urls.url_not_publicly_routable',
 	[ValidationErrorCodes.ACCENT_COLOR_CHANGED_TOO_MANY_TIMES]: 'rate_limits.accent_color_changed_too_often',
 	[ValidationErrorCodes.AVATAR_CHANGED_TOO_MANY_TIMES]: 'rate_limits.avatar_changed_too_often',
 	[ValidationErrorCodes.BANNER_CHANGED_TOO_MANY_TIMES]: 'rate_limits.banner_changed_too_often',

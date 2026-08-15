@@ -518,6 +518,7 @@ const ERROR_I18N_TR_MESSAGES = defineErrorI18nLocaleMessages({
 	"urls.invalid_url_or_attachment_reference": "Geçersiz URL biçimi veya ek bilgisi.",
 	"urls.unfurl_stream_too_large": "Bağlantı önizleme yanıtı işlemek için çok büyük.",
 	"urls.url_length_invalid": "URL {min} ile {max} karakter arasında olmalı.",
+	"urls.url_not_publicly_routable": "URL, internet üzerinden erişilebilen genel bir IP adresine çözümlenmeli.",
 	"usernames_and_tags.discriminator_invalid_format": "Etiket {min}-{max} basamaklı olmalı.",
 	"usernames_and_tags.discriminator_out_of_range": "Etiket {min} ile {max} arasında olmalı.",
 	"usernames_and_tags.discriminator_required": "Etiket gerekli.",

@@ -602,6 +602,7 @@ export const ERROR_I18N_MESSAGES = {
 	'urls.invalid_url_format': 'Invalid URL format.',
 	'urls.invalid_url_or_attachment_reference': 'Invalid URL format or attachment reference.',
 	'urls.url_length_invalid': 'URL must be between {min} and {max} characters.',
+	'urls.url_not_publicly_routable': 'URL must resolve to a publicly routable address.',
 	'urls.unfurl_stream_too_large': 'The link preview response is too large to process.',
 	'usernames_and_tags.discriminator_invalid_format': 'Discriminator must be {min}–{max} digits.',
 	'usernames_and_tags.discriminator_out_of_range': 'Discriminator must be between {min} and {max}.',

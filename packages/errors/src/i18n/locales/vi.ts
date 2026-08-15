@@ -518,6 +518,7 @@ const ERROR_I18N_VI_MESSAGES = defineErrorI18nLocaleMessages({
 	"urls.invalid_url_or_attachment_reference": "Định dạng URL hoặc tham chiếu tệp đính kèm không hợp lệ.",
 	"urls.unfurl_stream_too_large": "Phản hồi xem trước liên kết quá lớn để xử lý.",
 	"urls.url_length_invalid": "URL phải có độ dài từ {min} đến {max} ký tự.",
+	"urls.url_not_publicly_routable": "URL phải phân giải thành một địa chỉ IP công khai truy cập được từ internet.",
 	"usernames_and_tags.discriminator_invalid_format": "Discriminator phải có {min}–{max} chữ số.",
 	"usernames_and_tags.discriminator_out_of_range": "Discriminator phải từ {min} đến {max}.",
 	"usernames_and_tags.discriminator_required": "Discriminator là bắt buộc.",

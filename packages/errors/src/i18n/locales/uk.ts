@@ -518,6 +518,7 @@ const ERROR_I18N_UK_MESSAGES = defineErrorI18nLocaleMessages({
 	"urls.invalid_url_or_attachment_reference": "Неправильний формат URL або посилання на вкладення.",
 	"urls.unfurl_stream_too_large": "Відповідь на посилання занадто велика, щоб її обробити.",
 	"urls.url_length_invalid": "URL має містити від {min} до {max} символів.",
+	"urls.url_not_publicly_routable": "URL має вказувати на публічну IP-адресу, доступну з інтернету.",
 	"usernames_and_tags.discriminator_invalid_format": "Дискримінатор має складатися з {min}–{max} цифр.",
 	"usernames_and_tags.discriminator_out_of_range": "Дискримінатор має бути між {min} та {max}.",
 	"usernames_and_tags.discriminator_required": "Дискримінатор обов'язковий.",

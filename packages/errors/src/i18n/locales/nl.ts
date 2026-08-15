@@ -518,6 +518,7 @@ const ERROR_I18N_NL_MESSAGES = defineErrorI18nLocaleMessages({
 	"urls.invalid_url_or_attachment_reference": "Ongeldig URL-formaat of ongeldige bijlageverwijzing.",
 	"urls.unfurl_stream_too_large": "De reactie voor de koppeling kan niet worden verwerkt omdat deze te groot is.",
 	"urls.url_length_invalid": "URL moet tussen {min} en {max} tekens lang zijn.",
+	"urls.url_not_publicly_routable": "URL moet verwijzen naar een openbaar IP-adres dat bereikbaar is via internet.",
 	"usernames_and_tags.discriminator_invalid_format": "Discriminator moet uit {min}–{max} cijfers bestaan.",
 	"usernames_and_tags.discriminator_out_of_range": "Discriminator moet tussen {min} en {max} zijn.",
 	"usernames_and_tags.discriminator_required": "Discriminator is vereist.",

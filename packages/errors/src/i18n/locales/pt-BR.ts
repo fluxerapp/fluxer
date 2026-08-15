@@ -518,6 +518,7 @@ const ERROR_I18N_PT_BR_MESSAGES = defineErrorI18nLocaleMessages({
 	"urls.invalid_url_or_attachment_reference": "Formato de URL ou referência de anexo inválido.",
 	"urls.unfurl_stream_too_large": "A resposta da pré-visualização do link é muito grande para ser processada.",
 	"urls.url_length_invalid": "A URL deve ter entre {min} e {max} caracteres.",
+	"urls.url_not_publicly_routable": "A URL deve apontar para um endereço IP público acessível pela internet.",
 	"usernames_and_tags.discriminator_invalid_format": "O discriminador deve ter {min}–{max} dígitos.",
 	"usernames_and_tags.discriminator_out_of_range": "O discriminador deve estar entre {min} e {max}.",
 	"usernames_and_tags.discriminator_required": "O discriminador é obrigatório.",

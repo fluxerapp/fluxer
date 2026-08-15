@@ -518,6 +518,7 @@ const ERROR_I18N_FI_MESSAGES = defineErrorI18nLocaleMessages({
 	"urls.invalid_url_or_attachment_reference": "Virheellinen URL-osoite tai liitteen viittaus.",
 	"urls.unfurl_stream_too_large": "Linkin esikatsausvastauksen koko on liian suuri, jotta sitä voitaisiin käsitellä.",
 	"urls.url_length_invalid": "URL-osoitteen on oltava {min}-{max} merkkiä pitkä.",
+	"urls.url_not_publicly_routable": "URL-osoitteen on osoitettava julkiseen, internetistä tavoitettavaan IP-osoitteeseen.",
 	"usernames_and_tags.discriminator_invalid_format": "Erottimen on oltava {min}-{max} numeroa.",
 	"usernames_and_tags.discriminator_out_of_range": "Erottimen on oltava {min}-{max}.",
 	"usernames_and_tags.discriminator_required": "Erotin on pakollinen.",

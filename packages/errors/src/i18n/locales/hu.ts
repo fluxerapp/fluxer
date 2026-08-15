@@ -518,6 +518,7 @@ const ERROR_I18N_HU_MESSAGES = defineErrorI18nLocaleMessages({
 	"urls.invalid_url_or_attachment_reference": "Érvénytelen URL formátum vagy melléklet hivatkozás.",
 	"urls.unfurl_stream_too_large": "A hivatkozás előnézetének válasza túl nagy a feldolgozáshoz.",
 	"urls.url_length_invalid": "Az URL {min}–{max} karakter hosszú lehet.",
+	"urls.url_not_publicly_routable": "Az URL-nek nyilvános, interneten elérhető IP-címre kell mutatnia.",
 	"usernames_and_tags.discriminator_invalid_format": "A diszkriminátor {min}–{max} számjegyű lehet.",
 	"usernames_and_tags.discriminator_out_of_range": "A diszkriminátor {min} és {max} közötti lehet.",
 	"usernames_and_tags.discriminator_required": "A diszkriminátor megadása kötelező.",
