@@ -16,6 +16,7 @@ pub mod reports;
 pub mod system;
 mod system_actions;
 mod user_actions;
+pub mod user_approval;
 mod user_tabs;
 pub mod users;
 pub mod voice;
@@ -65,6 +66,7 @@ pub fn build_router(config: AdminConfig) -> Router {
         .merge(applications::router())
         .merge(codes::router())
         .merge(discovery::router())
+        .merge(user_approval::router())
         .merge(jobs::router())
         .merge(messages::router())
         .merge(system::router())

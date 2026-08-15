@@ -1,3 +1,4 @@
+
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
@@ -54,6 +55,7 @@ import {RateLimitConfigs} from '../../RateLimitConfig';
 import type {HonoApp} from '../../types/HonoEnv';
 import {Validator} from '../../Validator';
 import {mapUserToAdminResponse} from '../models/UserTypes';
+import {getInstanceConfigRepository} from '../../middleware/ServiceSingletons';
 
 export function UserAdminController(app: HonoApp) {
 	app.get(
@@ -67,13 +69,17 @@ export function UserAdminController(app: HonoApp) {
 			security: 'adminApiKey',
 			tags: 'Admin',
 			description:
-				'Get profile of currently authenticated admin user. Returns admin permissions, roles, and metadata. Requires AUTHENTICATE permission.',
+				'Get profile of currently authenticated admin user. Returns admin permissions, roles, and metadata. Requires AUTHENTICATE permission. Will also return list of pending registrations if the user has the USER_APPROVE_ACCOUNT',
 		}),
 		async (ctx) => {
 			const adminUser = ctx.get('user');
+			let instanceConfig = undefined;
+			if (adminUser.acls.has("user:approve") || adminUser.acls.has("*")) {
+				instanceConfig = (await getInstanceConfigRepository().getPendingRegistrations()).length;
+			}
 			const cacheService = ctx.get('cacheService');
 			return ctx.json({
-				user: await mapUserToAdminResponse(adminUser, cacheService),
+				user: await mapUserToAdminResponse(adminUser, cacheService, undefined, instanceConfig),
 			});
 		},
 	);

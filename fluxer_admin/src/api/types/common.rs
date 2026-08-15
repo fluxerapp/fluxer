@@ -116,6 +116,7 @@ pub struct AdminUser {
     pub last_active_ip: Option<String>,
     pub last_active_ip_reverse: Option<String>,
     pub last_active_location: Option<String>,
+    pub pending_user_registrations: Option<i32>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]

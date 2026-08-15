@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::{acl, config::AdminConfig};
+use crate::{acl, config::AdminConfig, templates::components::badge::badge};
 use maud::{Markup, PreEscaped, html};
 
 use super::layout_scripts::SIDEBAR_ACTIVE_SCROLL_SCRIPT;
@@ -11,6 +11,7 @@ pub fn render_sidebar(
     admin_acls: &[String],
     active_page: &str,
     inspected_voice_region_id: Option<&str>,
+    pending_user_registrations: Option<i32>,
 ) -> Markup {
     let base = &config.base_path;
     html! {
@@ -59,6 +60,9 @@ pub fn render_sidebar(
                                     };
                                     a href={(base) (item_path)} class=(classes) aria-current=[active.then_some("page")] data-active=[active.then_some("")] {
                                         (item.title)
+                                        @if item.active_key == "pending" && pending_user_registrations.unwrap_or(0) > 0 {
+                                            div class="float-right" {(badge(&pending_user_registrations.unwrap().to_string(), crate::templates::components::badge::BadgeVariant::Info))}
+                                        }
                                     }
                                 }
                             }

@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-
 use axum::{
     Json, Router,
     body::{Body, to_bytes},
@@ -470,7 +469,7 @@ async fn hosted_instance_config_hides_self_host_setup_controls() {
 }
 
 #[tokio::test]
-async fn instance_config_registration_tables_show_copyable_urls_and_compact_pending_actions() {
+async fn instance_config_registration_tables_show_copyable_urls() {
     let app = setup().await;
     let body = get(&app, "/instance-config", &[]).await;
 
@@ -488,6 +487,15 @@ async fn instance_config_registration_tables_show_copyable_urls_and_compact_pend
         ),
         "{body}"
     );
+    assert!(body.contains(r#"hx-swap="outerHTML""#), "{body}");
+}
+
+#[tokio::test]
+async fn pending_registration_page_display() {
+    let app = setup().await;
+    let body = get(&app, "/pending-users", &[]).await;
+
+    assert_full_layout(&body);
     assert!(body.contains(r#"id="pending-registration-list""#), "{body}");
     assert!(body.contains(">Applicant<"), "{body}");
     assert!(!body.contains(">User ID<"), "{body}");
@@ -837,6 +845,9 @@ async fn mock_api(method: Method, uri: Uri) -> Response {
         }
         (Method::POST, "/admin/jobs/get") => json_response(json!({ "job": searched_job() })),
         (Method::POST, "/admin/instance-config/get") => json_response(instance_config()),
+        (Method::POST, "/admin/pending-registrations/get") => {
+            json_response(pending_user_registrations())
+        }
         (Method::POST, "/admin/instance-config/registration-urls/create") => json_response(json!({
             "registration_url": registration_url_fixture(),
             "code": "11111111-1111-4111-8111-111111111111",
@@ -845,12 +856,8 @@ async fn mock_api(method: Method, uri: Uri) -> Response {
         (Method::POST, "/admin/instance-config/registration-urls/revoke") => {
             json_response(instance_config_without_registration_urls())
         }
-        (Method::POST, "/admin/instance-config/pending-registrations/approve") => {
-            json_response(instance_config_without_pending_registrations())
-        }
-        (Method::POST, "/admin/instance-config/pending-registrations/reject") => {
-            json_response(instance_config_without_pending_registrations())
-        }
+        (Method::POST, "/admin/pending-registrations/approve") => json_response(json!([])),
+        (Method::POST, "/admin/pending-registrations/reject") => json_response(json!([])),
         (Method::POST, "/admin/limit-config/get") => json_response(limit_config()),
         _ => (StatusCode::NOT_FOUND, Json(json!({ "error": "not found" }))).into_response(),
     }
@@ -869,7 +876,6 @@ fn admin_user() -> Value {
 fn searched_user() -> Value {
     user("1500000000000000001", "SearchedUser")
 }
-
 fn user(id: &str, username: &str) -> Value {
     json!({
         "id": id,
@@ -911,6 +917,19 @@ fn user(id: &str, username: &str) -> Value {
         "last_active_ip_reverse": null,
         "last_active_location": null
     })
+}
+
+fn pending_user_registrations() -> Value {
+    json!([{
+        "user_id": "2",
+        "username": "example_user",
+        "discriminator": 2615,
+        "global_name": null,
+        "email": "admin@example.com",
+        "requested_at": "2026-07-14T19:06:43.905Z",
+        "registration_url_id": null,
+        "client_ip": "172.19.0.1"
+    }])
 }
 
 fn searched_guild() -> Value {
@@ -1132,12 +1151,6 @@ fn pending_registration_fixture() -> Value {
         "registration_url_id": "11111111-1111-4111-8111-111111111111",
         "client_ip": "203.0.113.24"
     })
-}
-
-fn instance_config_without_pending_registrations() -> Value {
-    let mut config = instance_config();
-    config["registration"]["pending_registrations"] = json!([]);
-    config
 }
 
 fn instance_config_without_registration_urls() -> Value {

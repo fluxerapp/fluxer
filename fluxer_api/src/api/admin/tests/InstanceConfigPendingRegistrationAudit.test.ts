@@ -47,6 +47,7 @@ describe('pending registration audit logs', () => {
 			AdminACLs.AUTHENTICATE,
 			AdminACLs.INSTANCE_CONFIG_UPDATE,
 			AdminACLs.AUDIT_LOG_VIEW,
+			AdminACLs.USER_APPROVE_ACCOUNT
 		]);
 
 		await getInstanceConfigRepository().setRegistrationConfig({mode: 'approval'});
@@ -64,7 +65,7 @@ describe('pending registration audit logs', () => {
 			.execute();
 
 		await createBuilder(harness, admin.token)
-			.post(`/admin/instance-config/pending-registrations/${decision}`)
+			.post(`/admin/pending-registrations/${decision}`)
 			.header('X-Audit-Log-Reason', 'Registration review')
 			.body({user_id: pending.user_id})
 			.execute();

@@ -271,13 +271,13 @@ pub async fn instance_config_post(
         },
         "approve_pending_registration" => match form.clean("user_id") {
             Some(user_id) => match client.approve_pending_registration(&user_id).await {
-                Ok(instance_config) => {
+                Ok(registrations) => {
                     let flash = FlashData::success("Registration approved");
                     if htmx::targets(&headers, "pending-registration-list") {
                         return render_pending_registration_list_response(
                             config,
                             &csrf.0.0,
-                            &instance_config,
+                            registrations,
                             &flash,
                         );
                     }
@@ -292,13 +292,13 @@ pub async fn instance_config_post(
         },
         "reject_pending_registration" => match form.clean("user_id") {
             Some(user_id) => match client.reject_pending_registration(&user_id).await {
-                Ok(instance_config) => {
+                Ok(registrations) => {
                     let flash = FlashData::success("Registration rejected");
                     if htmx::targets(&headers, "pending-registration-list") {
                         return render_pending_registration_list_response(
                             config,
                             &csrf.0.0,
-                            &instance_config,
+                            registrations,
                             &flash,
                         );
                     }
@@ -338,14 +338,14 @@ fn render_registration_url_list_response(
 fn render_pending_registration_list_response(
     config: &AdminConfig,
     csrf_token: &str,
-    instance_config: &crate::api::types::InstanceConfigResponse,
+    registration: Vec<crate::api::types::PendingRegistrationResponse>,
     flash: &FlashData,
 ) -> Response {
     render_fragment_with_toast(
-        templates::pages::instance_config::pending_registration_list(
+        templates::pages::pending_users::pending_registration_list(
             config,
             csrf_token,
-            &instance_config.registration.pending_registrations,
+            &registration,
         ),
         flash,
     )

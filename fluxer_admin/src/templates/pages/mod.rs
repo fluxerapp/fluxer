@@ -24,6 +24,7 @@ pub mod jobs_list_helpers;
 pub mod limit_config;
 pub mod login;
 pub mod messages_page;
+pub mod pending_users;
 pub mod profile_substring_bans;
 pub mod report_detail;
 pub mod reports_list;

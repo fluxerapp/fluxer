@@ -40,6 +40,7 @@ export async function mapUserToAdminResponse(
 	user: User,
 	cacheService?: ICacheService,
 	acls?: ReadonlySet<string>,
+	pendingRegistrationsCount?: number,
 ): Promise<UserAdminResponse> {
 	const canViewEmail = !acls || hasAcl(acls, AdminACLs.USER_VIEW_EMAIL);
 	const canViewDob = !acls || hasAcl(acls, AdminACLs.USER_VIEW_DOB);
@@ -95,5 +96,6 @@ export async function mapUserToAdminResponse(
 		last_active_ip: canViewIp ? (user.lastActiveIp ?? null) : null,
 		last_active_ip_reverse: canViewIp ? lastActiveIpReverse : null,
 		last_active_location: canViewIp ? lastActiveLocation : null,
+		pending_user_registrations: pendingRegistrationsCount ?? null,
 	};
 }

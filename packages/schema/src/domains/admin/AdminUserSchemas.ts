@@ -70,6 +70,7 @@ export const UserAdminResponseSchema = z.object({
 	last_active_ip: z.string().nullable(),
 	last_active_ip_reverse: z.string().nullable(),
 	last_active_location: z.string().nullable(),
+	pending_user_registrations: Int32Type.nullable(),
 });
 
 export type UserAdminResponse = z.infer<typeof UserAdminResponseSchema>;

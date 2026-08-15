@@ -10,20 +10,16 @@ import {
 	InstanceConfigUpdateRequest,
 	InstanceEmailSmtpTestRequest,
 	InstanceEmailSmtpTestResponse,
-	PendingRegistrationActionRequest,
 	RegistrationUrlActionRequest,
 } from '@fluxer/schema/src/domains/admin/AdminSchemas';
 import {GatewayRolloutConfigSchema} from '@fluxer/schema/src/domains/admin/GatewayRolloutSchemas';
 import {SmtpEmailProvider} from '@pkgs/email/src/SmtpEmailProvider';
 import type {Context} from 'hono';
 import {createMiddleware} from 'hono/factory';
-import {createUserID} from '../../BrandedTypes';
 import {Config} from '../../Config';
 import {
 	type InstanceBrandingConfig,
-	type InstancePolicyConfig,
-	REGISTRATION_PENDING_APPROVAL_TRAIT,
-	REGISTRATION_REJECTED_TRAIT,
+	type InstancePolicyConfig
 } from '../../instance/InstanceConfigRepository';
 import {deriveSsoRedirectUri, normalizeAndValidateSsoConfig} from '../../instance/SsoConfigValidation';
 import {requireAdminACL} from '../../middleware/AdminMiddleware';
@@ -490,50 +486,6 @@ export function InstanceConfigAdminController(app: HonoApp) {
 			return ctx.json(await buildInstanceConfigResponse());
 		},
 	);
-	app.post(
-		'/admin/instance-config/pending-registrations/approve',
-		RateLimitMiddleware(RateLimitConfigs.ADMIN_USER_MODIFY),
-		requireAdminACL(AdminACLs.INSTANCE_CONFIG_UPDATE),
-		Validator('json', PendingRegistrationActionRequest),
-		OpenAPI({
-			operationId: 'approve_pending_registration',
-			summary: 'Approve a pending registration',
-			description:
-				'Approves a registration waiting for manual review by removing its pending registration trait. Requires INSTANCE_CONFIG_UPDATE permission.',
-			responseSchema: InstanceConfigResponse,
-			statusCode: 200,
-			security: 'adminApiKey',
-			tags: 'Admin',
-		}),
-		async (ctx) => {
-			const userId = ctx.req.valid('json').user_id;
-			await updatePendingRegistrationUser(ctx, userId, 'approve');
-			await instanceConfigRepository.removePendingRegistration(userId);
-			return ctx.json(await buildInstanceConfigResponse());
-		},
-	);
-	app.post(
-		'/admin/instance-config/pending-registrations/reject',
-		RateLimitMiddleware(RateLimitConfigs.ADMIN_USER_MODIFY),
-		requireAdminACL(AdminACLs.INSTANCE_CONFIG_UPDATE),
-		Validator('json', PendingRegistrationActionRequest),
-		OpenAPI({
-			operationId: 'reject_pending_registration',
-			summary: 'Reject a pending registration',
-			description:
-				'Rejects a registration waiting for manual review and prevents the account from logging in. Requires INSTANCE_CONFIG_UPDATE permission.',
-			responseSchema: InstanceConfigResponse,
-			statusCode: 200,
-			security: 'adminApiKey',
-			tags: 'Admin',
-		}),
-		async (ctx) => {
-			const userId = ctx.req.valid('json').user_id;
-			await updatePendingRegistrationUser(ctx, userId, 'reject');
-			await instanceConfigRepository.removePendingRegistration(userId);
-			return ctx.json(await buildInstanceConfigResponse());
-		},
-	);
 }
 
 async function applyInstancePolicyUpdate(
@@ -601,29 +553,3 @@ async function applyInstancePolicyUpdate(
 	}
 }
 
-async function updatePendingRegistrationUser(
-	ctx: Context<HonoEnv>,
-	userId: string,
-	decision: 'approve' | 'reject',
-): Promise<void> {
-	const userRepository = ctx.get('userRepository');
-	const user = await userRepository.findUnique(createUserID(BigInt(userId)));
-	if (!user) {
-		return;
-	}
-	const traits = new Set(user.traits);
-	traits.delete(REGISTRATION_PENDING_APPROVAL_TRAIT);
-	if (decision === 'reject') {
-		traits.add(REGISTRATION_REJECTED_TRAIT);
-	} else {
-		traits.delete(REGISTRATION_REJECTED_TRAIT);
-	}
-	await userRepository.patchUpsert(user.id, {traits: traits.size > 0 ? traits : null}, user.toRow());
-	await ctx.get('adminService').auditService.createAuditLog({
-		adminUserId: ctx.get('adminUserId'),
-		targetType: 'user',
-		targetId: user.id,
-		action: decision === 'approve' ? 'approve_registration' : 'reject_registration',
-		auditLogReason: ctx.get('auditLogReason'),
-	});
-}

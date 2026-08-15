@@ -17,6 +17,7 @@ import {InstanceConfigAdminController} from './InstanceConfigAdminController';
 import {JobsAdminController} from './JobsAdminController';
 import {LimitConfigAdminController} from './LimitConfigAdminController';
 import {MessageAdminController} from './MessageAdminController';
+import {PendingRegistrationsAdminController} from './PendingRegistrationsAdminController';
 import {ReportAdminController} from './ReportAdminController';
 import {SearchAdminController} from './SearchAdminController';
 import {SystemAdminController} from './SystemAdminController';
@@ -49,4 +50,5 @@ export function registerAdminControllers(app: HonoApp) {
 	SystemDmAdminController(app);
 	SystemAdminController(app);
 	JobsAdminController(app);
+	PendingRegistrationsAdminController(app);
 }

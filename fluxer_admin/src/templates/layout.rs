@@ -59,6 +59,11 @@ pub fn admin_layout_ext(
     let base = &config.base_path;
     let asset_version = &config.build_version;
     let csrf_token = options.csrf_token;
+    let pending_users_count = auth
+        .admin_user
+        .as_ref()
+        .and_then(|u| u.pending_user_registrations)
+        .filter(|&n| n > 0);
 
     html! {
         (DOCTYPE)
@@ -81,7 +86,7 @@ pub fn admin_layout_ext(
             body class="min-h-screen overflow-hidden bg-neutral-50" hx-boost="true" {
                 a href="#main-content" class="skip-link" { "Skip to main content" }
                 div class="flex h-[100dvh]" {
-                    (render_sidebar(config, admin_acls, active_page, options.inspected_voice_region_id))
+                    (render_sidebar(config, admin_acls, active_page, options.inspected_voice_region_id, pending_users_count))
                     div data-sidebar-overlay="" class="pointer-events-none fixed inset-0 z-30 bg-black/50 opacity-0 transition-opacity duration-200 ease-in-out lg:hidden" aria-hidden="true" {}
                     div class="flex h-[100dvh] w-full flex-1 flex-col overflow-y-auto" {
                         (render_header(config, auth, csrf_token))

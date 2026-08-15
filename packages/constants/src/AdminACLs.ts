@@ -83,6 +83,7 @@ export const AdminACLs = {
 	REPORT_VIEW_REPORTER_PII: 'report:view:reporter_pii',
 	SYSTEM_DM_SEND: 'system_dm:send',
 	SYSTEM_HEAP_SNAPSHOT: 'system:heap_snapshot',
+	USER_APPROVE_ACCOUNT: 'user:approve',
 	USER_CANCEL_BULK_MESSAGE_DELETION: 'user:cancel:bulk_message_deletion',
 	USER_DELETE: 'user:delete',
 	USER_DISABLE_SUSPICIOUS: 'user:disable:suspicious',
