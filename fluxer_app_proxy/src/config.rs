@@ -87,17 +87,50 @@ impl ReleaseChannel {
 
 #[derive(Clone, Debug, Default)]
 pub struct CspConfig {
-    pub default_src: Option<Vec<String>>,
-    pub connect_src: Option<Vec<String>>,
-    pub img_src: Option<Vec<String>>,
-    pub media_src: Option<Vec<String>>,
-    pub font_src: Option<Vec<String>>,
-    pub script_src: Option<Vec<String>>,
-    pub style_src: Option<Vec<String>>,
-    pub frame_src: Option<Vec<String>>,
-    pub worker_src: Option<Vec<String>>,
-    pub manifest_src: Option<Vec<String>>,
+    pub extra_default_src: Option<Vec<String>>,
+    pub extra_connect_src: Option<Vec<String>>,
+    pub extra_img_src: Option<Vec<String>>,
+    pub extra_media_src: Option<Vec<String>>,
+    pub extra_font_src: Option<Vec<String>>,
+    pub extra_script_src: Option<Vec<String>>,
+    pub extra_style_src: Option<Vec<String>>,
+    pub extra_frame_src: Option<Vec<String>>,
+    pub extra_worker_src: Option<Vec<String>>,
+    pub extra_manifest_src: Option<Vec<String>>,
     pub report_uri: Option<String>,
+}
+
+impl CspConfig {
+    pub fn from_env() -> Self {
+        Self {
+            extra_default_src: read_csp_sources("FLUXER_CSP_EXTRA_DEFAULT_SRC"),
+            extra_connect_src: read_csp_sources("FLUXER_CSP_EXTRA_CONNECT_SRC"),
+            extra_img_src: read_csp_sources("FLUXER_CSP_EXTRA_IMG_SRC"),
+            extra_media_src: read_csp_sources("FLUXER_CSP_EXTRA_MEDIA_SRC"),
+            extra_font_src: read_csp_sources("FLUXER_CSP_EXTRA_FONT_SRC"),
+            extra_script_src: read_csp_sources("FLUXER_CSP_EXTRA_SCRIPT_SRC"),
+            extra_style_src: read_csp_sources("FLUXER_CSP_EXTRA_STYLE_SRC"),
+            extra_frame_src: read_csp_sources("FLUXER_CSP_EXTRA_FRAME_SRC"),
+            extra_worker_src: read_csp_sources("FLUXER_CSP_EXTRA_WORKER_SRC"),
+            extra_manifest_src: read_csp_sources("FLUXER_CSP_EXTRA_MANIFEST_SRC"),
+            report_uri: cfg::non_empty_env("FLUXER_CSP_REPORT_URI"),
+        }
+    }
+}
+
+fn read_csp_sources(name: &str) -> Option<Vec<String>> {
+    let sources: Vec<String> = cfg::read_env(name, "")
+        .split([',', ' ', '\t', '\n'])
+        .map(str::trim)
+        .filter(|source| !source.is_empty())
+        .map(str::to_owned)
+        .collect();
+
+    if sources.is_empty() {
+        None
+    } else {
+        Some(sources)
+    }
 }
 
 impl AppProxyConfig {
@@ -169,7 +202,7 @@ impl AppProxyConfig {
             bootstrap_api_public_endpoint: cfg::non_empty_env(
                 "PUBLIC_BOOTSTRAP_API_PUBLIC_ENDPOINT",
             ),
-            csp: CspConfig::default(),
+            csp: CspConfig::from_env(),
             geoip_source,
             geoip_s3_config,
             trust_client_ip_header: cfg::read_bool_env(
@@ -305,9 +338,11 @@ mod tests {
     }
 
     #[test]
-    fn csp_config_default_has_no_overrides() {
+    fn csp_config_default_has_no_extra_sources() {
         let c = CspConfig::default();
-        assert!(c.default_src.is_none() && c.script_src.is_none() && c.report_uri.is_none());
+        assert!(
+            c.extra_default_src.is_none() && c.extra_script_src.is_none() && c.report_uri.is_none()
+        );
     }
 
     #[test]

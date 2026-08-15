@@ -97,7 +97,7 @@ fn build_csp_directives(
     let mut directives = Vec::with_capacity(14);
 
     let mut default = vec!["'self'".to_owned()];
-    extend_from(&mut default, config.default_src.as_deref(), &[]);
+    extend_from(&mut default, config.extra_default_src.as_deref(), &[]);
     directives.push(format!("default-src {}", default.join(" ")));
 
     let mut script = vec![
@@ -108,17 +108,21 @@ fn build_csp_directives(
     if let Some(n) = nonce {
         script.insert(1, format!("'nonce-{n}'"));
     }
-    extend_from(&mut script, config.script_src.as_deref(), SCRIPT_SOURCES);
+    extend_from(
+        &mut script,
+        config.extra_script_src.as_deref(),
+        SCRIPT_SOURCES,
+    );
     extend_runtime_sources(&mut script, runtime_sources, true, false);
     directives.push(format!("script-src {}", script.join(" ")));
 
     let mut style = vec!["'self'".to_owned(), "'unsafe-inline'".to_owned()];
-    extend_from(&mut style, config.style_src.as_deref(), STYLE_SOURCES);
+    extend_from(&mut style, config.extra_style_src.as_deref(), STYLE_SOURCES);
     extend_runtime_sources(&mut style, runtime_sources, true, true);
     directives.push(format!("style-src {}", style.join(" ")));
 
     let mut img = vec!["'self'".to_owned(), "blob:".to_owned(), "data:".to_owned()];
-    extend_from(&mut img, config.img_src.as_deref(), IMAGE_SOURCES);
+    extend_from(&mut img, config.extra_img_src.as_deref(), IMAGE_SOURCES);
     extend_runtime_sources(&mut img, runtime_sources, true, true);
     for origin in &runtime_sources.branding_image_origins {
         push_endpoint_source(&mut img, Some(origin));
@@ -126,34 +130,42 @@ fn build_csp_directives(
     directives.push(format!("img-src {}", img.join(" ")));
 
     let mut media = vec!["'self'".to_owned(), "blob:".to_owned()];
-    extend_from(&mut media, config.media_src.as_deref(), MEDIA_SOURCES);
+    extend_from(&mut media, config.extra_media_src.as_deref(), MEDIA_SOURCES);
     extend_runtime_sources(&mut media, runtime_sources, true, true);
     directives.push(format!("media-src {}", media.join(" ")));
 
     let mut font = vec!["'self'".to_owned(), "data:".to_owned()];
-    extend_from(&mut font, config.font_src.as_deref(), FONT_SOURCES);
+    extend_from(&mut font, config.extra_font_src.as_deref(), FONT_SOURCES);
     extend_runtime_sources(&mut font, runtime_sources, true, true);
     directives.push(format!("font-src {}", font.join(" ")));
 
     let mut connect = vec!["'self'".to_owned(), "data:".to_owned()];
-    extend_from(&mut connect, config.connect_src.as_deref(), CONNECT_SOURCES);
+    extend_from(
+        &mut connect,
+        config.extra_connect_src.as_deref(),
+        CONNECT_SOURCES,
+    );
     extend_runtime_sources(&mut connect, runtime_sources, true, true);
     extend_runtime_s3_sources(&mut connect, runtime_sources);
     directives.push(format!("connect-src {}", connect.join(" ")));
 
     let mut frame = vec!["'self'".to_owned()];
-    extend_from(&mut frame, config.frame_src.as_deref(), FRAME_SOURCES);
+    extend_from(&mut frame, config.extra_frame_src.as_deref(), FRAME_SOURCES);
     directives.push(format!("frame-src {}", frame.join(" ")));
 
     let mut worker = vec!["'self'".to_owned(), "blob:".to_owned()];
-    extend_from(&mut worker, config.worker_src.as_deref(), WORKER_SOURCES);
+    extend_from(
+        &mut worker,
+        config.extra_worker_src.as_deref(),
+        WORKER_SOURCES,
+    );
     extend_runtime_sources(&mut worker, runtime_sources, true, false);
     directives.push(format!("worker-src {}", worker.join(" ")));
 
     let mut manifest = vec!["'self'".to_owned()];
     extend_from(
         &mut manifest,
-        config.manifest_src.as_deref(),
+        config.extra_manifest_src.as_deref(),
         MANIFEST_SOURCES,
     );
     extend_runtime_sources(&mut manifest, runtime_sources, true, false);
@@ -243,11 +255,15 @@ fn s3_uploads_bucket_origin(runtime_sources: &RuntimeCspSources) -> Option<Strin
     Some(format!("{scheme}://{host}{port}"))
 }
 
-fn extend_from(target: &mut Vec<String>, overrides: Option<&[String]>, defaults: &[&str]) {
-    if let Some(sources) = overrides {
-        target.extend(sources.iter().cloned());
-    } else {
-        target.extend(defaults.iter().map(|s| (*s).to_owned()));
+fn extend_from(target: &mut Vec<String>, extra: Option<&[String]>, defaults: &[&str]) {
+    target.extend(defaults.iter().map(|s| (*s).to_owned()));
+
+    for source in extra.into_iter().flatten() {
+        let source = source.trim();
+        if source.is_empty() || target.iter().any(|existing| existing == source) {
+            continue;
+        }
+        target.push(source.to_owned());
     }
 }
 
