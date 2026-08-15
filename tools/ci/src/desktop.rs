@@ -1310,13 +1310,7 @@ fn verify_bundle_id_step() -> Result<()> {
         "Unexpected provisioning profile app id: {profile_app_id}"
     );
 
-    let expected_macho_arch = if electron_arch == "arm64" {
-        "arm64"
-    } else {
-        "x86_64"
-    };
-    let native_rels = macos_native_runtime_rels(&electron_arch);
-    for rel in native_rels {
+    for (rel, expected_macho_arch) in macos_native_runtime_targets(&electron_arch) {
         let native_file = app
             .join("Contents")
             .join("Resources")
@@ -1329,7 +1323,7 @@ fn verify_bundle_id_step() -> Result<()> {
             native_file.display()
         );
         println!("Found native runtime artifact: {}", native_file.display());
-        check_macho_arch(&native_file, expected_macho_arch, &electron_arch)?;
+        check_macho_arch(&native_file, expected_macho_arch)?;
     }
 
     run_command(CommandSpec::new("codesign").args([
@@ -1353,7 +1347,17 @@ fn verify_bundle_id_step() -> Result<()> {
     ]))
 }
 
-fn macos_native_runtime_rels(electron_arch: &str) -> Vec<String> {
+fn macos_native_runtime_targets(electron_arch: &str) -> Vec<(String, &'static str)> {
+    if electron_arch == MACOS_UNIVERSAL_ARCH {
+        let mut targets = macos_native_runtime_targets("arm64");
+        targets.extend(macos_native_runtime_targets("x64"));
+        return targets;
+    }
+    let expected_macho_arch = if electron_arch == "arm64" {
+        "arm64"
+    } else {
+        "x86_64"
+    };
     [
         "@fluxer/webauthn/webauthn",
         "@fluxer/mac-app-audio/mac-app-audio",
@@ -1364,11 +1368,16 @@ fn macos_native_runtime_rels(electron_arch: &str) -> Vec<String> {
         "@fluxer/platform-info/platform-info",
     ]
     .into_iter()
-    .map(|prefix| format!("{prefix}.darwin-{electron_arch}.node"))
+    .map(|prefix| {
+        (
+            format!("{prefix}.darwin-{electron_arch}.node"),
+            expected_macho_arch,
+        )
+    })
     .collect()
 }
 
-fn check_macho_arch(file: &Path, expected: &str, electron_arch: &str) -> Result<()> {
+fn check_macho_arch(file: &Path, expected: &str) -> Result<()> {
     let archs =
         output_text(CommandSpec::new("lipo").args(["-archs", file.to_string_lossy().as_ref()]))?;
     println!("Mach-O archs for {}: {archs}", file.display());
@@ -1379,9 +1388,7 @@ fn check_macho_arch(file: &Path, expected: &str, electron_arch: &str) -> Result<
         file.display()
     );
     ensure!(
-        !(electron_arch == "x64"
-            && arch_list.contains(&"x86_64h")
-            && !arch_list.contains(&"x86_64")),
+        !(expected == "x86_64" && arch_list.contains(&"x86_64h") && !arch_list.contains(&"x86_64")),
         "{} is x86_64h-only; x64 desktop artifacts must use baseline x86_64",
         file.display()
     );
