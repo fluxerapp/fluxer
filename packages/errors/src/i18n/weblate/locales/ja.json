@@ -514,6 +514,7 @@
     "urls.invalid_url_or_attachment_reference": "URLの形式または添付ファイルの参照が無効です。",
     "urls.unfurl_stream_too_large": "リンクプレビューの応答が大きすぎて処理できません。",
     "urls.url_length_invalid": "URLは{min}～{max}文字である必要があります。",
+    "urls.url_not_publicly_routable": "URLはインターネットから到達可能なパブリックIPアドレスに解決される必要があります。",
     "usernames_and_tags.discriminator_invalid_format": "識別子は{min}–{max}桁である必要があります。",
     "usernames_and_tags.discriminator_out_of_range": "識別子は{min}～{max}である必要があります。",
     "usernames_and_tags.discriminator_required": "識別子が必要です。",

@@ -514,6 +514,7 @@
     "urls.invalid_url_or_attachment_reference": "صيغة الرابط غير صالحة أو مرجع المرفق غير صالح.",
     "urls.unfurl_stream_too_large": "استجابة معاينة الرابط كبيرة جدًا بحيث لا يمكن معالجتها.",
     "urls.url_length_invalid": "يجب أن يكون الرابط بين {min} و {max} حرفًا.",
+    "urls.url_not_publicly_routable": "يجب أن يشير الرابط إلى عنوان IP عام يمكن الوصول إليه عبر الإنترنت.",
     "usernames_and_tags.discriminator_invalid_format": "يجب أن يكون المعرّف {min}–{max} رقمًا.",
     "usernames_and_tags.discriminator_out_of_range": "يجب أن يكون المعرّف بين {min} و {max}.",
     "usernames_and_tags.discriminator_required": "المعرّف مطلوب.",

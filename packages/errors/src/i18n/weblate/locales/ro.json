@@ -514,6 +514,7 @@
     "urls.invalid_url_or_attachment_reference": "Formatul URL este invalid sau referința atașamentului este invalidă.",
     "urls.unfurl_stream_too_large": "Răspunsul pentru previzualizarea linkului este prea mare pentru a fi procesat.",
     "urls.url_length_invalid": "URL-ul trebuie să aibă între {min} și {max} caractere.",
+    "urls.url_not_publicly_routable": "URL-ul trebuie să indice o adresă IP publică, accesibilă de pe internet.",
     "usernames_and_tags.discriminator_invalid_format": "Discriminatorul trebuie să conțină {min}–{max} cifre.",
     "usernames_and_tags.discriminator_out_of_range": "Discriminatorul trebuie să fie între {min} și {max}.",
     "usernames_and_tags.discriminator_required": "Discriminatorul este obligatoriu.",

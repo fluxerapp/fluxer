@@ -514,6 +514,7 @@
     "urls.invalid_url_or_attachment_reference": "Format d'URL invalide ou référence de pièce jointe invalide.",
     "urls.unfurl_stream_too_large": "La réponse de prévisualisation du lien est trop volumineuse pour être traitée.",
     "urls.url_length_invalid": "L'URL doit comporter entre {min} et {max} caractères.",
+    "urls.url_not_publicly_routable": "L'URL doit pointer vers une adresse IP publique accessible depuis Internet.",
     "usernames_and_tags.discriminator_invalid_format": "Le discriminateur doit comporter {min}–{max} chiffres.",
     "usernames_and_tags.discriminator_out_of_range": "Le discriminateur doit se situer entre {min} et {max}.",
     "usernames_and_tags.discriminator_required": "Le discriminateur est obligatoire.",

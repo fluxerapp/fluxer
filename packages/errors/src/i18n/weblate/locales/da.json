@@ -514,6 +514,7 @@
     "urls.invalid_url_or_attachment_reference": "Ugyldigt URL-format eller reference til vedhæftet fil.",
     "urls.unfurl_stream_too_large": "Svarstørrelsen for link-previewen er for stor til at blive behandlet.",
     "urls.url_length_invalid": "URL'en skal være mellem {min} og {max} tegn.",
+    "urls.url_not_publicly_routable": "URL'en skal pege på en offentlig IP-adresse, der kan tilgås fra internettet.",
     "usernames_and_tags.discriminator_invalid_format": "Discriminatoren skal være på {min}–{max} cifre.",
     "usernames_and_tags.discriminator_out_of_range": "Discriminatoren skal være fra {min} til {max}.",
     "usernames_and_tags.discriminator_required": "Discriminator er påkrævet.",

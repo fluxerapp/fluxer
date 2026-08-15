@@ -514,6 +514,7 @@
     "urls.invalid_url_or_attachment_reference": "Ogiltigt URL-format eller bilagereferens.",
     "urls.unfurl_stream_too_large": "Länkkörutsvarets storlek överstiger gränsen och kan inte visas.",
     "urls.url_length_invalid": "URL:en måste vara mellan {min} och {max} tecken.",
+    "urls.url_not_publicly_routable": "URL:en måste peka på en publik IP-adress som är nåbar från internet.",
     "usernames_and_tags.discriminator_invalid_format": "Diskriminatorn måste vara {min}–{max} siffror.",
     "usernames_and_tags.discriminator_out_of_range": "Diskriminatorn måste ligga mellan {min} och {max}.",
     "usernames_and_tags.discriminator_required": "Diskriminator är obligatorisk.",

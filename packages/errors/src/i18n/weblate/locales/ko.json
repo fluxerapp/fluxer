@@ -514,6 +514,7 @@
     "urls.invalid_url_or_attachment_reference": "URL 형식 또는 첨부 파일 참조가 잘못되었어요.",
     "urls.unfurl_stream_too_large": "링크 미리보기 응답이 너무 커서 처리할 수 없습니다.",
     "urls.url_length_invalid": "URL은 {min}자 이상 {max}자 이하여야 해요.",
+    "urls.url_not_publicly_routable": "URL은 인터넷에서 접근할 수 있는 공인 IP 주소를 가리켜야 해요.",
     "usernames_and_tags.discriminator_invalid_format": "식별자는 {min}–{max}자리여야 해요.",
     "usernames_and_tags.discriminator_out_of_range": "식별자는 {min}에서 {max} 사이여야 해요.",
     "usernames_and_tags.discriminator_required": "식별자가 필요해요.",

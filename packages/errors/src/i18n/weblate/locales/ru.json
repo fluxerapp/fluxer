@@ -514,6 +514,7 @@
     "urls.invalid_url_or_attachment_reference": "Неверный формат URL или ссылка на вложение.",
     "urls.unfurl_stream_too_large": "Ответ на запрос ссылки слишком велик для обработки.",
     "urls.url_length_invalid": "URL должен содержать от {min} до {max} символов.",
+    "urls.url_not_publicly_routable": "URL должен указывать на публичный IP-адрес, доступный из интернета.",
     "usernames_and_tags.discriminator_invalid_format": "Дискриминатор должен состоять из {min}–{max} цифр.",
     "usernames_and_tags.discriminator_out_of_range": "Дискриминатор должен быть в диапазоне от {min} до {max}.",
     "usernames_and_tags.discriminator_required": "Дискриминатор обязателен.",

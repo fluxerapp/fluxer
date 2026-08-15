@@ -514,6 +514,7 @@
     "urls.invalid_url_or_attachment_reference": "Formato URL o riferimento allegato non valido.",
     "urls.unfurl_stream_too_large": "La risposta per la generazione dell'anteprima del collegamento è troppo grande per essere elaborata.",
     "urls.url_length_invalid": "L'URL deve essere compreso tra {min} e {max} caratteri.",
+    "urls.url_not_publicly_routable": "L'URL deve puntare a un indirizzo IP pubblico raggiungibile da internet.",
     "usernames_and_tags.discriminator_invalid_format": "Il discriminatore deve essere compreso tra {min} e {max} cifre.",
     "usernames_and_tags.discriminator_out_of_range": "Il discriminatore deve essere compreso tra {min} e {max}.",
     "usernames_and_tags.discriminator_required": "Il discriminatore è obbligatorio.",

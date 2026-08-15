@@ -514,6 +514,7 @@
     "urls.invalid_url_or_attachment_reference": "Невалиден URL формат или препратка към прикачен файл.",
     "urls.unfurl_stream_too_large": "Отговорът от връзката за предварителния преглед е твърде голям, за да бъде обработен.",
     "urls.url_length_invalid": "URL адресът трябва да е между {min} и {max} знака.",
+    "urls.url_not_publicly_routable": "URL адресът трябва да сочи към публичен IP адрес, достъпен през интернет.",
     "usernames_and_tags.discriminator_invalid_format": "Дискриминаторът трябва да е между {min}–{max} цифри.",
     "usernames_and_tags.discriminator_out_of_range": "Дискриминаторът трябва да е между {min}–{max}.",
     "usernames_and_tags.discriminator_required": "Дискриминаторът е задължителен.",

@@ -514,6 +514,7 @@
 	"urls.invalid_url_or_attachment_reference": "Invalid URL format or attachment reference.",
 	"urls.unfurl_stream_too_large": "The link preview response is too large to process.",
 	"urls.url_length_invalid": "URL must be between {min} and {max} characters.",
+	"urls.url_not_publicly_routable": "URL must resolve to a publicly routable address.",
 	"usernames_and_tags.discriminator_invalid_format": "Discriminator must be {min}–{max} digits.",
 	"usernames_and_tags.discriminator_out_of_range": "Discriminator must be between {min} and {max}.",
 	"usernames_and_tags.discriminator_required": "Discriminator is required.",

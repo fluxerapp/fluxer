@@ -514,6 +514,7 @@
     "urls.invalid_url_or_attachment_reference": "無效的 URL 格式或附件連結。",
     "urls.unfurl_stream_too_large": "連結預覽的回應內容過大，無法處理。",
     "urls.url_length_invalid": "URL 必須介於 {min} 到 {max} 個字元之間。",
+    "urls.url_not_publicly_routable": "URL 必須解析到可從網際網路存取的公開 IP 位址。",
     "usernames_and_tags.discriminator_invalid_format": "識別碼必須是 {min}–{max} 位數字。",
     "usernames_and_tags.discriminator_out_of_range": "識別碼必須介於 {min} 到 {max} 之間。",
     "usernames_and_tags.discriminator_required": "識別碼為必填。",

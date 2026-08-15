@@ -514,6 +514,7 @@
     "urls.invalid_url_or_attachment_reference": "अमान्य URL फॉर्मेट या अटैचमेंट रेफरेंस.",
     "urls.unfurl_stream_too_large": "लिंक पूर्वावलोकन प्रतिक्रिया को संसाधित करने के लिए बहुत बड़ी है।",
     "urls.url_length_invalid": "URL {min} और {max} कैरेक्टर के बीच होना चाहिए.",
+    "urls.url_not_publicly_routable": "URL ऐसे IP पते पर रिज़ॉल्व होना चाहिए जो इंटरनेट से सार्वजनिक रूप से पहुँच योग्य हो.",
     "usernames_and_tags.discriminator_invalid_format": "डिस्क्रिमिनेटर {min}–{max} डिजिट का होना चाहिए.",
     "usernames_and_tags.discriminator_out_of_range": "डिस्क्रिमिनेटर {min} और {max} के बीच होना चाहिए.",
     "usernames_and_tags.discriminator_required": "डिस्क्रिमिनेटर ज़रूरी है।",

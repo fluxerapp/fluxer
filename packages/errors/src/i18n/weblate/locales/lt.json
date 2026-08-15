@@ -514,6 +514,7 @@
     "urls.invalid_url_or_attachment_reference": "Netinkamas URL formatas arba priedo nuoroda.",
     "urls.unfurl_stream_too_large": "Atsiprašome, negalime apdoroti šios nuorodos peržiūros, nes ji yra per didelė.",
     "urls.url_length_invalid": "URL turi būti {min}–{max} simbolių.",
+    "urls.url_not_publicly_routable": "URL turi nurodyti viešą, internete pasiekiamą IP adresą.",
     "usernames_and_tags.discriminator_invalid_format": "Diskriminatorius turi būti {min}–{max} skaitmenų.",
     "usernames_and_tags.discriminator_out_of_range": "Diskriminatorius turi būti {min}–{max}.",
     "usernames_and_tags.discriminator_required": "Diskriminatorius privalomas.",

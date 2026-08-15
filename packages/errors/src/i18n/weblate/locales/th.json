@@ -514,6 +514,7 @@
     "urls.invalid_url_or_attachment_reference": "รูปแบบ URL หรือการอ้างอิงไฟล์แนบไม่ถูกต้อง.",
     "urls.unfurl_stream_too_large": "การตอบกลับตัวอย่างลิงก์มีขนาดใหญ่เกินไป จึงไม่สามารถประมวลผลได้",
     "urls.url_length_invalid": "URL ต้องมีความยาวระหว่าง {min} ถึง {max} ตัวอักษร.",
+    "urls.url_not_publicly_routable": "URL ต้องชี้ไปยังที่อยู่ IP สาธารณะที่เข้าถึงได้จากอินเทอร์เน็ต",
     "usernames_and_tags.discriminator_invalid_format": "Discriminator ต้องเป็นตัวเลข {min}–{max} หลัก.",
     "usernames_and_tags.discriminator_out_of_range": "Discriminator ต้องอยู่ระหว่าง {min} ถึง {max}.",
     "usernames_and_tags.discriminator_required": "ต้องระบุ Discriminator.",

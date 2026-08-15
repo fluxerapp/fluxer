@@ -514,6 +514,7 @@
     "urls.invalid_url_or_attachment_reference": "Format URL atau referensi lampiran tidak valid.",
     "urls.unfurl_stream_too_large": "Respons pratinjau tautan terlalu besar untuk diproses.",
     "urls.url_length_invalid": "URL harus antara {min} dan {max} karakter.",
+    "urls.url_not_publicly_routable": "URL harus mengarah ke alamat IP publik yang dapat diakses dari internet.",
     "usernames_and_tags.discriminator_invalid_format": "Diskriminator harus {min}–{max} digit.",
     "usernames_and_tags.discriminator_out_of_range": "Diskriminator harus antara {min} dan {max}.",
     "usernames_and_tags.discriminator_required": "Diskriminator diperlukan.",

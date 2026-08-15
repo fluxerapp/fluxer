@@ -514,6 +514,7 @@
     "urls.invalid_url_or_attachment_reference": "Nieprawidłowy format URL lub odniesienie do załącznika.",
     "urls.unfurl_stream_too_large": "Odpowiedź na żądanie podglądu linku jest zbyt duża, aby ją przetworzyć.",
     "urls.url_length_invalid": "URL musi mieć od {min} do {max} znaków.",
+    "urls.url_not_publicly_routable": "URL musi wskazywać na publicznie dostępny adres IP.",
     "usernames_and_tags.discriminator_invalid_format": "Dyskryminator musi składać się z od {min} do {max} cyfr.",
     "usernames_and_tags.discriminator_out_of_range": "Dyskryminator musi mieścić się w przedziale od {min} do {max}.",
     "usernames_and_tags.discriminator_required": "Wymagany dyskryminator.",
