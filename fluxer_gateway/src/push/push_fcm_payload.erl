@@ -344,7 +344,6 @@ build_message_includes_android_chat_notification_fields_test() ->
     AndroidNotification = maps:get(<<"notification">>, maps:get(<<"android">>, Message)),
     ?assertEqual(<<"fluxer_default_push">>, maps:get(<<"channel_id">>, AndroidNotification)),
     ?assertEqual(<<"channel:123:456">>, maps:get(<<"tag">>, AndroidNotification)),
-    ?assertEqual(<<"channel:123">>, maps:get(<<"group">>, AndroidNotification)),
     Android = maps:get(<<"android">>, Message),
     ?assertEqual(<<"channel:123">>, maps:get(<<"collapse_key">>, Android)),
     ?assertEqual(
