@@ -550,6 +550,7 @@ export const MessageContextMenu: React.FC<MessageContextMenuProps> = observer(
 					{showAddReaction && addReactionItem && (
 						<MenuItemSubmenu
 							label={addReactionItem.label}
+							onTriggerSelect={handleOpenEmojiPickerAction}
 							render={() => (
 								<>
 									{submenuReactionEmojis.length > 0 && (

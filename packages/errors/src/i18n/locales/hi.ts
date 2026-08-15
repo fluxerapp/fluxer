@@ -156,6 +156,7 @@ const ERROR_I18N_HI_MESSAGES = defineErrorI18nLocaleMessages({
 	"bots.bot_user_not_found": "बॉट यूज़र नहीं मिला।",
 	"bots.invalid_response_type_for_non_bot": "नॉन-बॉट स्कोप के लिए रिस्पॉन्स टाइप कोड होना चाहिए।",
 	"bots.not_a_bot_application": "यह एप्लीकेशन बॉट नहीं है।",
+	"bots.search_scope_unavailable": "बॉट केवल एक ही कम्युनिटी या चैनल के भीतर खोज सकते हैं।",
 	"calls_and_voice.call_already_exists": "इस चैनल में पहले से ही एक कॉल चल रही है।",
 	"calls_and_voice.cannot_modify_voice_state": "आप वॉइस स्टेट को बदल नहीं सकते।",
 	"calls_and_voice.invalid_or_restricted_rtc_region": "अमान्य या प्रतिबंधित RTC रीजन: {region}.",

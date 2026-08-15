@@ -6,7 +6,7 @@ const CONTENT_I18N_SV_SE_MESSAGES = defineContentI18nLocaleMessages({
 	"billing.eu_withdrawal_waiver_checkout": "Om jag är en EU/EES-konsument samtycker jag uttryckligen till att {product_name} {premium_tier_name} digitalt innehåll tillhandahålls omedelbart och bekräftar att jag förlorar min lagstadgade ångerrätt när åtkomst ges. Detta påverkar inte andra tvingande konsumenträttigheter. Se [användarvillkoren]({terms_url}).",
 	"bulk_message_deletion.complete": "Vi har raderat dina meddelanden. Vi tog bort {message_count, plural, =0 {0 meddelanden} one {# meddelande} other {# meddelanden}} från {channel_count, plural, =0 {0 platser} one {# plats} other {# platser}}.",
 	"content.virus_detected": "Filen flaggades som potentiellt osäker och har tagits bort.",
-	"guild.bulk_create.emoji_limit": "Maximalt antal emojisar nått ({limit}).",
+	"guild.bulk_create.emoji_limit": "Maximalt antal emojis nått ({limit}).",
 	"guild.bulk_create.sticker_limit": "Maximalt antal klistermärken nått ({limit}).",
 	"guild.bulk_create.unknown_error": "Okänt fel.",
 	"guild.default_category_text": "Textkanaler",

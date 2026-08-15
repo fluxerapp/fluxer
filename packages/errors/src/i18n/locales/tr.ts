@@ -156,6 +156,7 @@ const ERROR_I18N_TR_MESSAGES = defineErrorI18nLocaleMessages({
 	"bots.bot_user_not_found": "Bot kullanıcısı bulunamadı.",
 	"bots.invalid_response_type_for_non_bot": "Bot olmayan kapsamlar için yanıt türü kod olmalı.",
 	"bots.not_a_bot_application": "Bu uygulama bir bot değil.",
+	"bots.search_scope_unavailable": "Botlar yalnızca tek bir toplulukta veya kanalda arama yapabilir.",
 	"calls_and_voice.call_already_exists": "Bu kanalda zaten bir arama devam ediyor.",
 	"calls_and_voice.cannot_modify_voice_state": "Ses durumunu değiştiremezsin.",
 	"calls_and_voice.invalid_or_restricted_rtc_region": "Geçersiz veya kısıtlı RTC bölgesi: {region}.",

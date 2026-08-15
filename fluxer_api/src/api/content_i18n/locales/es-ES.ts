@@ -7,7 +7,7 @@ const CONTENT_I18N_ES_ES_MESSAGES = defineContentI18nLocaleMessages({
 	"bulk_message_deletion.complete": "Hemos terminado de eliminar tus mensajes. Hemos eliminado {message_count, plural, =0 {0 mensajes} one {# mensaje} other {# mensajes}} de {channel_count, plural, =0 {0 sitios} one {# sitio} other {# sitios}}.",
 	"content.virus_detected": "Ese archivo se ha marcado como potencialmente inseguro y se ha eliminado.",
 	"guild.bulk_create.emoji_limit": "Se ha alcanzado el límite máximo de emojis ({limit}).",
-	"guild.bulk_create.sticker_limit": "Se ha alcanzado el límite máximo de pegatinas ({limit}).",
+	"guild.bulk_create.sticker_limit": "Se ha alcanzado el límite máximo de stickers ({limit}).",
 	"guild.bulk_create.unknown_error": "Error desconocido.",
 	"guild.default_category_text": "Canales de texto",
 	"guild.default_category_voice": "Canales de voz",

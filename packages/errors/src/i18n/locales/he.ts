@@ -156,6 +156,7 @@ const ERROR_I18N_HE_MESSAGES = defineErrorI18nLocaleMessages({
 	"bots.bot_user_not_found": "משתמש הבוט לא נמצא.",
 	"bots.invalid_response_type_for_non_bot": "סוג התגובה חייב להיות 'code' עבור הרשאות שאינן של בוטים.",
 	"bots.not_a_bot_application": "יישום זה אינו בוט.",
+	"bots.search_scope_unavailable": "בוטים יכולים לחפש רק בתוך קהילה אחת או ערוץ אחד.",
 	"calls_and_voice.call_already_exists": "שיחה כבר מתקיימת בערוץ זה.",
 	"calls_and_voice.cannot_modify_voice_state": "לא ניתן לשנות את המצב הקולי.",
 	"calls_and_voice.invalid_or_restricted_rtc_region": "אזור RTC לא חוקי או מוגבל: {region}.",

@@ -156,6 +156,7 @@ const ERROR_I18N_SV_SE_MESSAGES = defineErrorI18nLocaleMessages({
 	"bots.bot_user_not_found": "Botanvändaren hittades inte.",
 	"bots.invalid_response_type_for_non_bot": "Svarstypen måste vara kod för omfång som inte är botar.",
 	"bots.not_a_bot_application": "Denna applikation är inte en bot.",
+	"bots.search_scope_unavailable": "Bots kan bara söka inom en enda community eller kanal.",
 	"calls_and_voice.call_already_exists": "Det pågår redan ett samtal i den här kanalen.",
 	"calls_and_voice.cannot_modify_voice_state": "Du kan inte ändra röststatus.",
 	"calls_and_voice.invalid_or_restricted_rtc_region": "Ogiltig eller begränsad RTC-region: {region}.",

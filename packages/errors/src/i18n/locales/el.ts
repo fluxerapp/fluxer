@@ -156,6 +156,7 @@ const ERROR_I18N_EL_MESSAGES = defineErrorI18nLocaleMessages({
 	"bots.bot_user_not_found": "Ο χρήστης bot δεν βρέθηκε.",
 	"bots.invalid_response_type_for_non_bot": "Ο τύπος απόκρισης πρέπει να είναι code για πεδία εκτός bot.",
 	"bots.not_a_bot_application": "Αυτή η εφαρμογή δεν είναι bot.",
+	"bots.search_scope_unavailable": "Τα bot μπορούν να κάνουν αναζήτηση μόνο σε μία κοινότητα ή σε ένα κανάλι.",
 	"calls_and_voice.call_already_exists": "Υπάρχει ήδη μια κλήση σε αυτό το κανάλι.",
 	"calls_and_voice.cannot_modify_voice_state": "Δεν μπορείς να τροποποιήσεις την κατάσταση φωνής.",
 	"calls_and_voice.invalid_or_restricted_rtc_region": "Μη έγκυρη ή μη διαθέσιμη περιοχή RTC: {region}.",

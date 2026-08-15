@@ -156,6 +156,7 @@ const ERROR_I18N_NL_MESSAGES = defineErrorI18nLocaleMessages({
 	"bots.bot_user_not_found": "Bot-gebruiker is niet gevonden.",
 	"bots.invalid_response_type_for_non_bot": "Responstype moet 'code' zijn voor niet-bot-bereiken.",
 	"bots.not_a_bot_application": "Deze applicatie is geen bot.",
+	"bots.search_scope_unavailable": "Bots kunnen alleen binnen één community of kanaal zoeken.",
 	"calls_and_voice.call_already_exists": "Er is al een oproep bezig in dit kanaal.",
 	"calls_and_voice.cannot_modify_voice_state": "Je kunt de spraakstatus niet wijzigen.",
 	"calls_and_voice.invalid_or_restricted_rtc_region": "Ongeldige of beperkte RTC-regio: {region}.",

@@ -156,6 +156,7 @@ const ERROR_I18N_ID_MESSAGES = defineErrorI18nLocaleMessages({
 	"bots.bot_user_not_found": "Pengguna bot tidak ditemukan.",
 	"bots.invalid_response_type_for_non_bot": "Jenis respons harus berupa kode untuk cakupan non-bot.",
 	"bots.not_a_bot_application": "Aplikasi ini bukan bot.",
+	"bots.search_scope_unavailable": "Bot hanya bisa mencari di dalam satu komunitas atau kanal.",
 	"calls_and_voice.call_already_exists": "Panggilan sudah berlangsung di kanal ini.",
 	"calls_and_voice.cannot_modify_voice_state": "Kamu tidak dapat mengubah status suara.",
 	"calls_and_voice.invalid_or_restricted_rtc_region": "Wilayah RTC tidak valid atau dibatasi: {region}.",

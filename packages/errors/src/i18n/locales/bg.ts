@@ -156,6 +156,7 @@ const ERROR_I18N_BG_MESSAGES = defineErrorI18nLocaleMessages({
 	"bots.bot_user_not_found": "Потребителят на бота не е намерен.",
 	"bots.invalid_response_type_for_non_bot": "Типът на отговор трябва да е код за обхвати, различни от бот.",
 	"bots.not_a_bot_application": "Това приложение не е бот.",
+	"bots.search_scope_unavailable": "Ботовете могат да търсят само в рамките на една общност или един канал.",
 	"calls_and_voice.call_already_exists": "Вече има активно обаждане в този канал.",
 	"calls_and_voice.cannot_modify_voice_state": "Не можеш да променяш гласовото си състояние.",
 	"calls_and_voice.invalid_or_restricted_rtc_region": "Невалиден или ограничен RTC регион: {region}.",
