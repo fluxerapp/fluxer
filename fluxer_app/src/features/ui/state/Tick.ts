@@ -20,9 +20,9 @@ class TickRegistryImpl {
 			this.stop();
 		});
 		reaction(
-			() => Window.focused,
-			(focused) => {
-				if (focused) this.start();
+			() => Window.visible,
+			(visible) => {
+				if (visible) this.start();
 				else this.stop();
 			},
 			{fireImmediately: true},
@@ -30,7 +30,7 @@ class TickRegistryImpl {
 	}
 
 	private start(): void {
-		if (!this.observed || !Window.focused || this.intervalId !== null) return;
+		if (!this.observed || !Window.visible || this.intervalId !== null) return;
 		this.tick();
 		this.intervalId = window.setInterval(() => this.tick(), 1000);
 	}
