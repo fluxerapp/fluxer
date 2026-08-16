@@ -120,6 +120,69 @@ describe('Discovery Search and Join', () => {
 			expect(found!.category_type).toBe(DiscoveryCategories.GAMING);
 			expect(found!.verification_level).toBe(GuildVerificationLevel.LOW);
 		});
+		test('should report category counts that ignore the selected category filter', async () => {
+			const admin = await createTestAccount(harness);
+			await setUserACLs(harness, admin, ['admin:authenticate', 'discovery:review']);
+			const gamingOwner = await createTestAccount(harness);
+			const gamingGuild = await createGuild(harness, gamingOwner.token, 'Counted Gaming Guild');
+			await setGuildMemberCount(harness, gamingGuild.id, 10);
+			await applyAndApprove(
+				harness,
+				gamingOwner.token,
+				admin.token,
+				gamingGuild.id,
+				'A gaming community for counting',
+				DiscoveryCategories.GAMING,
+			);
+			const musicOwner = await createTestAccount(harness);
+			const musicGuild = await createGuild(harness, musicOwner.token, 'Counted Music Guild');
+			await setGuildMemberCount(harness, musicGuild.id, 10);
+			await applyAndApprove(
+				harness,
+				musicOwner.token,
+				admin.token,
+				musicGuild.id,
+				'A music community for counting',
+				DiscoveryCategories.MUSIC,
+			);
+
+			const searcher = await createTestAccount(harness);
+			const filtered = await createBuilder<DiscoveryGuildListResponse>(harness, searcher.token)
+				.get(`/discovery/guilds?category=${DiscoveryCategories.GAMING}`)
+				.expect(HTTP_STATUS.OK)
+				.execute();
+
+			expect(filtered.guilds.every((guild) => guild.category_type === DiscoveryCategories.GAMING)).toBe(true);
+			const gamingCount = filtered.category_counts.find((entry) => entry.category_type === DiscoveryCategories.GAMING);
+			const musicCount = filtered.category_counts.find((entry) => entry.category_type === DiscoveryCategories.MUSIC);
+			expect(gamingCount?.count).toBeGreaterThanOrEqual(1);
+			expect(musicCount?.count).toBeGreaterThanOrEqual(1);
+		});
+
+		test('should expose the guild banner hash in search results', async () => {
+			const owner = await createTestAccount(harness);
+			const guild = await createGuild(harness, owner.token, 'Bannered Guild');
+			await setGuildMemberCount(harness, guild.id, 10);
+			const admin = await createTestAccount(harness);
+			await setUserACLs(harness, admin, ['admin:authenticate', 'discovery:review']);
+			await applyAndApprove(
+				harness,
+				owner.token,
+				admin.token,
+				guild.id,
+				'A community with a banner',
+				DiscoveryCategories.GAMING,
+			);
+			const searcher = await createTestAccount(harness);
+			const results = await createBuilder<DiscoveryGuildListResponse>(harness, searcher.token)
+				.get('/discovery/guilds')
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			const found = results.guilds.find((entry) => entry.id === guild.id);
+			expect(found).toBeDefined();
+			expect(found).toHaveProperty('banner');
+		});
+
 		test('should not return pending guilds in search results', async () => {
 			const owner = await createTestAccount(harness);
 			const guild = await createGuild(harness, owner.token, 'Pending Guild');

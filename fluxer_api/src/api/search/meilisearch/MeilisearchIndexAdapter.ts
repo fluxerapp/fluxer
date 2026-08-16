@@ -23,6 +23,7 @@ interface MeilisearchSearchResponse<TResult> {
 	totalHits?: number;
 	limit?: number;
 	offset?: number;
+	facetDistribution?: Record<string, Record<string, number>>;
 }
 
 export class MeilisearchIndexAdapter<
@@ -139,6 +140,7 @@ export class MeilisearchIndexAdapter<
 		const limit = Math.min(Math.max(requestedLimit, 0), MAX_SEARCH_LIMIT);
 		const offset = options?.offset ?? (options?.page ? (options.page - 1) * (options.hitsPerPage ?? 25) : 0);
 		const filter = joinMeiliFilters(this.buildFilters(filters));
+		const facets = options?.facets;
 		const result = await this.client.request<MeilisearchSearchResponse<TResult>>(
 			'POST',
 			`/indexes/${encodeURIComponent(this.indexDefinition.uid)}/search`,
@@ -150,11 +152,13 @@ export class MeilisearchIndexAdapter<
 				sort: this.buildSort?.(filters),
 				attributesToSearchOn: this.indexDefinition.searchableAttributes,
 				showRankingScore: false,
+				...(facets && facets.length > 0 ? {facets} : {}),
 			},
 		);
 		return {
 			hits: result.hits,
 			total: result.totalHits ?? result.estimatedTotalHits ?? result.hits.length,
+			...(result.facetDistribution ? {facetCounts: result.facetDistribution} : {}),
 		};
 	}
 

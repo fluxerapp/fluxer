@@ -6,12 +6,16 @@ export interface SearchOptions {
 	limit?: number;
 	offset?: number;
 	cursor?: Array<string>;
+	facets?: Array<string>;
 }
+
+export type SearchFacetCounts = Readonly<Record<string, Readonly<Record<string, number>>>>;
 
 export interface SearchResult<TResult> {
 	hits: Array<TResult>;
 	total: number;
 	cursor?: Array<string>;
+	facetCounts?: SearchFacetCounts;
 }
 
 export interface ISearchAdapter<TFilters, TResult> {

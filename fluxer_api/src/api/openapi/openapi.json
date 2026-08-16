@@ -29747,6 +29747,7 @@
 								"id": {"type": "string", "pattern": "^(0|[1-9][0-9]*)$", "description": "Guild ID"},
 								"name": {"type": "string", "description": "Guild name"},
 								"icon": {"anyOf": [{"type": "string"}, {"type": "null"}], "description": "Guild icon hash"},
+								"banner": {"anyOf": [{"type": "string"}, {"type": "null"}], "description": "Guild banner hash"},
 								"description": {
 									"anyOf": [{"type": "string"}, {"type": "null"}],
 									"description": "Discovery description"
@@ -29775,9 +29776,21 @@
 						},
 						"description": "Discovery guild results"
 					},
-					"total": {"type": "number", "description": "Total number of matching guilds"}
+					"total": {"type": "number", "description": "Total number of matching guilds"},
+					"category_counts": {
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"category_type": {"type": "number", "description": "Discovery category type"},
+								"count": {"type": "number", "description": "Number of matching guilds in this category"}
+							},
+							"required": ["category_type", "count"]
+						},
+						"description": "Match counts per category for the current filters, ignoring the category filter"
+					}
 				},
-				"required": ["guilds", "total"]
+				"required": ["guilds", "total", "category_counts"]
 			},
 			"DonationCheckoutResponse": {
 				"type": "object",

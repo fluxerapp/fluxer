@@ -2,6 +2,7 @@
 
 import type {
 	ISearchAdapter as SchemaISearchAdapter,
+	SearchOptions as SchemaSearchOptions,
 	SearchResult as SchemaSearchResult,
 } from '@fluxer/schema/src/contracts/search/SearchAdapterTypes';
 import type {GuildSearchFilters, SearchableGuild} from '@fluxer/schema/src/contracts/search/SearchDocumentTypes';
@@ -18,9 +19,6 @@ export interface IGuildSearchService extends SchemaISearchAdapter<GuildSearchFil
 	searchGuilds(
 		query: string,
 		filters: GuildSearchFilters,
-		options?: {
-			limit?: number;
-			offset?: number;
-		},
+		options?: SchemaSearchOptions,
 	): Promise<SchemaSearchResult<SearchableGuild>>;
 }

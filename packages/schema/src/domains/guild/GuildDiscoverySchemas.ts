@@ -80,6 +80,7 @@ const DiscoveryGuildResponse = z.object({
 	id: SnowflakeStringType.describe('Guild ID'),
 	name: z.string().describe('Guild name'),
 	icon: z.string().nullish().describe('Guild icon hash'),
+	banner: z.string().nullish().describe('Guild banner hash'),
 	description: z.string().nullish().describe('Discovery description'),
 	category_type: z.number().describe('Discovery category type'),
 	primary_language: z.string().nullish().describe('Primary community language'),
@@ -90,9 +91,17 @@ const DiscoveryGuildResponse = z.object({
 	verification_level: z.number().describe('Verification level'),
 });
 
+const DiscoveryCategoryCountResponse = z.object({
+	category_type: z.number().describe('Discovery category type'),
+	count: z.number().describe('Number of matching guilds in this category'),
+});
+
 export const DiscoveryGuildListResponse = z.object({
 	guilds: z.array(DiscoveryGuildResponse).describe('Discovery guild results'),
 	total: z.number().describe('Total number of matching guilds'),
+	category_counts: z
+		.array(DiscoveryCategoryCountResponse)
+		.describe('Match counts per category for the current filters, ignoring the category filter'),
 });
 
 export type DiscoveryGuildListResponse = z.infer<typeof DiscoveryGuildListResponse>;

@@ -10,11 +10,16 @@ import type {ElasticsearchIndexDefinition} from '../ElasticsearchIndexDefinition
 const ELASTICSEARCH_MAX_RESULT_WINDOW = 10000;
 const DEEP_PAGINATION_BATCH_SIZE = 1000;
 const MAX_SEARCH_LIMIT = 1000;
+const FACET_TERM_LIMIT = 200;
 
 interface ElasticsearchSearchHit<TResult> {
 	_source?: TResult;
 	_id?: string;
 	sort?: SortResults;
+}
+
+interface ElasticsearchTermsAggregation {
+	buckets?: Array<{key: string | number; doc_count: number}>;
 }
 
 interface ElasticsearchSearchResponse<TResult> {
@@ -26,6 +31,7 @@ interface ElasticsearchSearchResponse<TResult> {
 			  };
 		hits: Array<ElasticsearchSearchHit<TResult>>;
 	};
+	aggregations?: Record<string, ElasticsearchTermsAggregation>;
 }
 
 type ElasticsearchBaseSearchRequest = Omit<SearchRequest, 'from' | 'search_after' | 'size' | 'track_total_hits'>;
@@ -265,6 +271,7 @@ export class ElasticsearchIndexAdapter<
 					},
 				]
 			: [{match_all: {}}];
+		const facets = options?.facets;
 		const searchParams: ElasticsearchBaseSearchRequest = {
 			index: this.indexDefinition.indexName,
 			query: {
@@ -273,6 +280,11 @@ export class ElasticsearchIndexAdapter<
 					filter: filterClauses.length > 0 ? filterClauses : undefined,
 				},
 			},
+			...(facets && facets.length > 0
+				? {
+						aggs: Object.fromEntries(facets.map((facet) => [facet, {terms: {field: facet, size: FACET_TERM_LIMIT}}])),
+					}
+				: {}),
 		};
 		const defaultSort: SortCombinations = {id: {order: 'desc'}};
 		const effectiveSort: NonNullable<SearchRequest['sort']> =
@@ -357,11 +369,28 @@ export class ElasticsearchIndexAdapter<
 	}
 
 	private toSearchResult(result: ElasticsearchSearchResponse<TResult>): SearchResult<TResult> {
+		const facetCounts = this.toFacetCounts(result.aggregations);
 		return {
 			hits: this.mapHits(result.hits.hits),
 			total: this.getTotalHits(result),
 			cursor: result.hits.hits.at(-1)?.sort?.map((value) => String(value)),
+			...(facetCounts ? {facetCounts} : {}),
 		};
+	}
+
+	private toFacetCounts(
+		aggregations: Record<string, ElasticsearchTermsAggregation> | undefined,
+	): Record<string, Record<string, number>> | undefined {
+		if (!aggregations) {
+			return undefined;
+		}
+		const counts: Record<string, Record<string, number>> = {};
+		for (const [facet, aggregation] of Object.entries(aggregations)) {
+			counts[facet] = Object.fromEntries(
+				(aggregation.buckets ?? []).map((bucket) => [String(bucket.key), bucket.doc_count]),
+			);
+		}
+		return counts;
 	}
 
 	private mapHits(hits: Array<ElasticsearchSearchHit<TResult>>): Array<TResult> {

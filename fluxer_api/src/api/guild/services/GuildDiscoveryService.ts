@@ -98,13 +98,20 @@ export abstract class IGuildDiscoveryService {
 	}): Promise<{
 		guilds: Array<DiscoveryGuildResult>;
 		total: number;
+		category_counts: Array<DiscoveryCategoryCount>;
 	}>;
+}
+
+interface DiscoveryCategoryCount {
+	category_type: number;
+	count: number;
 }
 
 interface DiscoveryGuildResult {
 	id: string;
 	name: string;
 	icon: string | null;
+	banner: string | null;
 	description: string | null;
 	category_type: number;
 	primary_language: string | null;
@@ -113,6 +120,25 @@ interface DiscoveryGuildResult {
 	online_count: number;
 	features: Array<string>;
 	verification_level: number;
+}
+
+const DISCOVERY_CATEGORY_FACET = 'discoveryCategory';
+
+function toDiscoveryCategoryCounts(
+	counts: Readonly<Record<string, number>> | undefined,
+): Array<DiscoveryCategoryCount> {
+	if (!counts) {
+		return [];
+	}
+	const entries: Array<DiscoveryCategoryCount> = [];
+	for (const [key, count] of Object.entries(counts)) {
+		const categoryType = Number.parseInt(key, 10);
+		if (!Number.isInteger(categoryType) || count <= 0) {
+			continue;
+		}
+		entries.push({category_type: categoryType, count});
+	}
+	return entries.sort((left, right) => left.category_type - right.category_type);
 }
 
 export class GuildDiscoveryService extends IGuildDiscoveryService {
@@ -377,6 +403,7 @@ export class GuildDiscoveryService extends IGuildDiscoveryService {
 	}): Promise<{
 		guilds: Array<DiscoveryGuildResult>;
 		total: number;
+		category_counts: Array<DiscoveryCategoryCount>;
 	}> {
 		if (!this.guildSearchService) {
 			throw new FeatureTemporarilyDisabledError();
@@ -393,14 +420,23 @@ export class GuildDiscoveryService extends IGuildDiscoveryService {
 			sortBy,
 			sortOrder: 'desc',
 		};
-		const results = await this.guildSearchService.searchGuilds(params.query ?? '', filters, {
-			limit: params.limit,
-			offset: params.offset,
-		});
+		const categoryFacetFilters: GuildSearchFilters = {...filters, discoveryCategory: undefined};
+		const [results, categoryFacets] = await Promise.all([
+			this.guildSearchService.searchGuilds(params.query ?? '', filters, {
+				limit: params.limit,
+				offset: params.offset,
+			}),
+			this.guildSearchService.searchGuilds(params.query ?? '', categoryFacetFilters, {
+				limit: 0,
+				facets: [DISCOVERY_CATEGORY_FACET],
+			}),
+		]);
+		const categoryCounts = toDiscoveryCategoryCounts(categoryFacets.facetCounts?.[DISCOVERY_CATEGORY_FACET]);
 		const guilds: Array<DiscoveryGuildResult> = results.hits.map((hit) => ({
 			id: hit.id,
 			name: hit.name,
 			icon: hit.iconHash,
+			banner: hit.bannerHash,
 			description: hit.discoveryDescription,
 			category_type: hit.discoveryCategory ?? 0,
 			primary_language: hit.discoveryPrimaryLanguage ?? null,
@@ -429,7 +465,7 @@ export class GuildDiscoveryService extends IGuildDiscoveryService {
 				);
 			}
 		}
-		return {guilds, total};
+		return {guilds, total, category_counts: categoryCounts};
 	}
 
 	private async addDiscoverableFeature(guildId: GuildID): Promise<void> {

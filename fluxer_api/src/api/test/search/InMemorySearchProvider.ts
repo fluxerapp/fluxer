@@ -163,11 +163,32 @@ class InMemorySearchServiceBase<TFilters, TDocument extends SearchableDocument> 
 				return trimmed.length === 0 || stringArrayContainsText(this.collectText(doc).filter(isString), trimmed);
 			})
 			.sort((left, right) => this.sortDocuments(left, right, filters, query));
+		const facets = options?.facets;
 		return {
 			hits: paginate(hits, options),
 			total: hits.length,
+			...(facets && facets.length > 0 ? {facetCounts: countFacets(hits, facets)} : {}),
 		};
 	}
+}
+
+function countFacets<TDocument>(docs: Array<TDocument>, facets: Array<string>): Record<string, Record<string, number>> {
+	const counts: Record<string, Record<string, number>> = {};
+	for (const facet of facets) {
+		const facetCounts: Record<string, number> = {};
+		for (const doc of docs) {
+			const value = (doc as Record<string, unknown>)[facet];
+			if (value == null) {
+				continue;
+			}
+			for (const entry of Array.isArray(value) ? value : [value]) {
+				const key = String(entry);
+				facetCounts[key] = (facetCounts[key] ?? 0) + 1;
+			}
+		}
+		counts[facet] = facetCounts;
+	}
+	return counts;
 }
 
 function isString(value: string | null): value is string {
@@ -452,7 +473,7 @@ class InMemoryGuildSearchService
 		await this.deleteDocuments(guildIds.map((id) => id.toString()));
 	}
 
-	searchGuilds(query: string, filters: GuildSearchFilters, options?: {limit?: number; offset?: number}) {
+	searchGuilds(query: string, filters: GuildSearchFilters, options?: SearchOptions) {
 		return this.search(query, filters, options);
 	}
 }

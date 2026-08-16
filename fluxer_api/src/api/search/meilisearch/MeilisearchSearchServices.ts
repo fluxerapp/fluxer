@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {SearchResult as SchemaSearchResult} from '@fluxer/schema/src/contracts/search/SearchAdapterTypes';
+import type {
+	SearchOptions as SchemaSearchOptions,
+	SearchResult as SchemaSearchResult,
+} from '@fluxer/schema/src/contracts/search/SearchAdapterTypes';
 import type {
 	AuditLogSearchFilters,
 	GuildMemberSearchFilters,
@@ -171,10 +174,7 @@ export class MeilisearchGuildSearchService
 	searchGuilds(
 		query: string,
 		filters: GuildSearchFilters,
-		options?: {
-			limit?: number;
-			offset?: number;
-		},
+		options?: SchemaSearchOptions,
 	): Promise<SchemaSearchResult<SearchableGuild>> {
 		return this.search(query, filters, options);
 	}
