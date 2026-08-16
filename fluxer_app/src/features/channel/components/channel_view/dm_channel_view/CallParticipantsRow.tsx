@@ -129,6 +129,7 @@ export const CallParticipantsRow = observer(
 			return () => resizeObserver.disconnect();
 		}, [participants.length]);
 		const avatarSize = layoutMetrics.avatarSize;
+		const scaledAvatarSize = avatarSize / getAppRemScale();
 		const callRippleStyle = useMemo(
 			() =>
 				({
@@ -175,7 +176,7 @@ export const CallParticipantsRow = observer(
 								>
 									<AvatarWithPresence
 										user={user}
-										size={avatarSize / getAppRemScale()}
+										size={scaledAvatarSize}
 										speaking={participantEntry?.speaking}
 										muted={participantEntry?.selfMute}
 										deafened={participantEntry?.selfDeaf}

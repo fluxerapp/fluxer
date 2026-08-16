@@ -1,9 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {getRemScaleForDocument} from '@app/features/theme/layout/RemFromPx';
-
-const cachedRemScales = new WeakMap<Document, number>();
-const clearRemScaleCacheRafIds = new WeakMap<Document, number>();
+import {clearRemScaleCache, getRemScaleForDocument} from '@app/features/theme/layout/RemFromPx';
 
 export interface AppZoomPoint {
 	x: number;
@@ -24,41 +21,12 @@ function getDefaultDocument(): Document | null {
 	return document;
 }
 
-function scheduleRemScaleCacheClear(ownerDocument: Document): void {
-	const ownerWindow = ownerDocument.defaultView;
-	if (ownerWindow == null || typeof ownerWindow.requestAnimationFrame !== 'function') {
-		cachedRemScales.delete(ownerDocument);
-		return;
-	}
-	if (clearRemScaleCacheRafIds.has(ownerDocument)) return;
-	const rafId = ownerWindow.requestAnimationFrame(() => {
-		clearRemScaleCacheRafIds.delete(ownerDocument);
-		cachedRemScales.delete(ownerDocument);
-	});
-	clearRemScaleCacheRafIds.set(ownerDocument, rafId);
-}
-
-export function clearAppZoomCache(ownerDocument: Document | null = getDefaultDocument()): void {
-	if (ownerDocument == null) return;
-	cachedRemScales.delete(ownerDocument);
-	const ownerWindow = ownerDocument.defaultView;
-	if (ownerWindow == null) return;
-	const remScaleRafId = clearRemScaleCacheRafIds.get(ownerDocument);
-	if (remScaleRafId == null) return;
-	if (typeof ownerWindow.cancelAnimationFrame === 'function') {
-		ownerWindow.cancelAnimationFrame(remScaleRafId);
-	}
-	clearRemScaleCacheRafIds.delete(ownerDocument);
+export function clearAppZoomCache(): void {
+	clearRemScaleCache();
 }
 
 export function getAppRemScale(ownerDocument: Document | null = getDefaultDocument()): number {
-	if (ownerDocument == null) return 1;
-	const cachedRemScale = cachedRemScales.get(ownerDocument);
-	if (cachedRemScale != null) return cachedRemScale;
-	const remScale = getRemScaleForDocument(ownerDocument);
-	cachedRemScales.set(ownerDocument, remScale);
-	scheduleRemScaleCacheClear(ownerDocument);
-	return remScale;
+	return getRemScaleForDocument(ownerDocument);
 }
 
 export function applyAppZoomToDocument(zoomPercent: number, electronApi?: AppZoomElectronApi | null): void {

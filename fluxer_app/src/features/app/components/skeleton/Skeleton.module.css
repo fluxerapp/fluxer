@@ -1,11 +1,5 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
-@property --skeleton-shimmer-position {
-	syntax: '<percentage>';
-	inherits: true;
-	initial-value: -150%;
-}
-
 .skeleton {
 	--skeleton-opacity: var(--skeleton-opacity-default, 0.45);
 	--skeleton-width: 100%;
@@ -13,13 +7,13 @@
 	background-color: var(--background-modifier-accent);
 	background-image: linear-gradient(
 		105deg,
-		transparent 46%,
+		transparent 0%,
 		color-mix(in srgb, var(--text-primary) 7%, transparent) 50%,
-		transparent 54%
+		transparent 100%
 	);
-	background-size: 200vw 100%;
-	background-position: var(--skeleton-shimmer-position) 0;
-	background-attachment: fixed;
+	background-size: 200% 100%;
+	background-position: -50% 0;
+	animation: skeleton-shimmer 3.2s linear infinite;
 	opacity: var(--skeleton-opacity);
 	pointer-events: none;
 	user-select: none;
@@ -30,35 +24,25 @@
 	max-width: 100%;
 }
 
-:global(html):has(.skeleton) {
-	animation: skeleton-shimmer 3.2s ease-in-out infinite;
-}
-
 @keyframes skeleton-shimmer {
 	from {
-		--skeleton-shimmer-position: -150%;
+		background-position: -50% 0;
 	}
 
 	to {
-		--skeleton-shimmer-position: 150%;
+		background-position: 150% 0;
 	}
 }
 
 @media (prefers-reduced-motion: reduce) {
-	:global(html):has(.skeleton) {
-		animation: none;
-	}
-
 	.skeleton {
+		animation: none;
 		background-image: none;
 	}
 }
 
-:global(html.reduced-motion):has(.skeleton) {
-	animation: none;
-}
-
 :global(html.reduced-motion) .skeleton {
+	animation: none;
 	background-image: none;
 }
 

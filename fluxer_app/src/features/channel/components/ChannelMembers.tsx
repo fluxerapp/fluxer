@@ -95,6 +95,41 @@ function measureMemberGroupHeadingWidthPx(element: HTMLElement | null): number {
 	return Math.round((right - left) / getRemScaleForDocument(element.ownerDocument));
 }
 
+function createGroupHeadingRegistrar(groupHeadingWidths: Map<string, number>): (node: HTMLDivElement | null) => void {
+	return (node) => {
+		if (node == null) {
+			return;
+		}
+		const groupId = node.dataset.memberGroupId;
+		if (groupId == null) {
+			return;
+		}
+		const widthPx = measureMemberGroupHeadingWidthPx(node);
+		if (widthPx !== SKELETON_UNMEASURED_WIDTH_PX) {
+			groupHeadingWidths.set(groupId, widthPx);
+		}
+	};
+}
+
+interface GroupHeadingWidthTracking {
+	contentKey: string;
+	groupHeadingWidths: Map<string, number>;
+	registerGroupHeading: (node: HTMLDivElement | null) => void;
+}
+
+function useGroupHeadingWidthTracking(contentKey: string): GroupHeadingWidthTracking {
+	const trackingRef = useRef<GroupHeadingWidthTracking | null>(null);
+	if (trackingRef.current == null || trackingRef.current.contentKey !== contentKey) {
+		const groupHeadingWidths = trackingRef.current?.groupHeadingWidths ?? new Map<string, number>();
+		trackingRef.current = {
+			contentKey,
+			groupHeadingWidths,
+			registerGroupHeading: createGroupHeadingRegistrar(groupHeadingWidths),
+		};
+	}
+	return trackingRef.current;
+}
+
 interface MemberListGroupHeaderContentProps {
 	name: string;
 	count: number;
@@ -129,13 +164,14 @@ interface GroupDMMemberListGroupProps {
 	group: GroupDMMemberGroup;
 	channelId: string;
 	ownerId: string | null;
-	onHeadingRef: (groupId: string, node: HTMLDivElement | null) => void;
+	onHeadingRef: (node: HTMLDivElement | null) => void;
 }
 
 const GroupDMMemberListGroup = observer(({group, channelId, ownerId, onHeadingRef}: GroupDMMemberListGroupProps) => (
 	<div className={styles.groupContainer} data-flx="channel.channel-members.group-dm-member-list-group.group-container">
 		<div
-			ref={(node) => onHeadingRef(group.id, node)}
+			ref={onHeadingRef}
+			data-member-group-id={group.id}
 			className={styles.groupHeader}
 			data-flx="channel.channel-members.group-dm-member-list-group.group-header"
 		>
@@ -196,13 +232,7 @@ const LazyMemberList = observer(function LazyMemberList({guild, channel}: LazyMe
 	const groups = memberListState?.groups ?? [];
 	const populatedGroups = useMemo(() => groups.filter((group) => group.count > 0), [groups]);
 	const memberGroupCountsKey = populatedGroups.map((group) => `${group.id}:${group.count}`).join(',');
-	const groupHeadingWidthsRef = useRef(new Map<string, number>());
-	const registerGroupHeading = useCallback((groupId: string, node: HTMLDivElement | null) => {
-		const widthPx = measureMemberGroupHeadingWidthPx(node);
-		if (widthPx !== SKELETON_UNMEASURED_WIDTH_PX) {
-			groupHeadingWidthsRef.current.set(groupId, widthPx);
-		}
-	}, []);
+	const {groupHeadingWidths, registerGroupHeading} = useGroupHeadingWidthTracking(memberGroupCountsKey);
 	const memberSurfaceKind =
 		channel.type === ChannelTypes.GUILD_VOICE ? SkeletonMemberSurfaceKind.GUILD_VOICE : SkeletonMemberSurfaceKind.GUILD;
 	const rememberedMemberGroups = getRememberedSkeletonMemberGroups(channel.id, memberSurfaceKind);
@@ -255,7 +285,7 @@ const LazyMemberList = observer(function LazyMemberList({guild, channel}: LazyMe
 				memberSurfaceKind,
 				populatedGroups.map((group) => ({
 					rowCount: group.count,
-					headingWidthPx: groupHeadingWidthsRef.current.get(group.id) ?? SKELETON_UNMEASURED_WIDTH_PX,
+					headingWidthPx: groupHeadingWidths.get(group.id) ?? SKELETON_UNMEASURED_WIDTH_PX,
 				})),
 			);
 		},
@@ -511,7 +541,8 @@ const LazyMemberList = observer(function LazyMemberList({guild, channel}: LazyMe
 					virtualRows.push(
 						<div
 							key={`group-${rowIndex}-${group.id}`}
-							ref={(node) => registerGroupHeading(group.id, node)}
+							ref={registerGroupHeading}
+							data-member-group-id={group.id}
 							className={clsx(styles.virtualRow, styles.virtualGroupRow)}
 							style={rowStyle}
 							role="button"
@@ -533,7 +564,8 @@ const LazyMemberList = observer(function LazyMemberList({guild, channel}: LazyMe
 					virtualRows.push(
 						<div
 							key={`group-${rowIndex}-${group.id}`}
-							ref={(node) => registerGroupHeading(group.id, node)}
+							ref={registerGroupHeading}
+							data-member-group-id={group.id}
 							className={clsx(styles.virtualRow, styles.virtualGroupRow)}
 							style={rowStyle}
 							data-flx="channel.channel-members.lazy-member-list.virtual-row.group"
@@ -633,25 +665,21 @@ const GroupDMChannelMembers = observer(function GroupDMChannelMembers({channel}:
 	const allUserIds = currentUserId ? [currentUserId, ...channel.recipientIds] : channel.recipientIds;
 	const users = allUserIds.map((id) => Users.getUser(id)).filter((user): user is User => user != null);
 	const memberGroups = MemberListUtils.getGroupDMMemberGroups(users);
-	const memberGroupCountsKey = memberGroups.map((group) => `${group.id}:${group.count}`).join(',');
-	const groupHeadingWidthsRef = useRef(new Map<string, number>());
-	const registerGroupHeading = useCallback((groupId: string, node: HTMLDivElement | null) => {
-		const widthPx = measureMemberGroupHeadingWidthPx(node);
-		if (widthPx !== SKELETON_UNMEASURED_WIDTH_PX) {
-			groupHeadingWidthsRef.current.set(groupId, widthPx);
-		}
-	}, []);
+	const memberGroupContentKey = memberGroups
+		.map((group) => `${group.id}:${group.displayName}:${group.count}`)
+		.join(',');
+	const {groupHeadingWidths, registerGroupHeading} = useGroupHeadingWidthTracking(memberGroupContentKey);
 	useSkeletonLayoutReport(() => {
 		reportSkeletonMemberLayout(
 			channel.id,
 			SkeletonMemberSurfaceKind.GROUP_DM,
 			memberGroups.map((group) => ({
 				rowCount: group.count,
-				headingWidthPx: groupHeadingWidthsRef.current.get(group.id) ?? SKELETON_UNMEASURED_WIDTH_PX,
+				headingWidthPx: groupHeadingWidths.get(group.id) ?? SKELETON_UNMEASURED_WIDTH_PX,
 				subtextFlags: group.users.map((user) => hasVisibleCompactMemberCustomStatus(Presence.getCustomStatus(user.id))),
 			})),
 		);
-	}, `${channel.id}|${memberGroupCountsKey}`);
+	}, `${channel.id}|${memberGroupContentKey}`);
 	return (
 		<OutlineFrame hideTopBorder data-flx="channel.channel-members.outline-frame">
 			<MemberListContainer channelId={channel.id} data-flx="channel.channel-members.member-list-container">

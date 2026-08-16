@@ -32,6 +32,7 @@ import {startDesktopLocaleBridge} from '@app/features/platform/utils/DesktopLoca
 import {PremiumCheckoutReturnWatcher} from '@app/features/premium/components/PremiumCheckoutReturnWatcher';
 import {QUICK_SWITCHER_PORTAL_ID} from '@app/features/search/components/quick_switcher/QuickSwitcherConstants';
 import {useCustomThemeStyle} from '@app/features/theme/hooks/useCustomThemeStyle';
+import {useRemScaleTracking} from '@app/features/theme/hooks/useRemScaleTracking';
 import {useThemeCssVariables} from '@app/features/theme/hooks/useThemeCssVariables';
 import Theme from '@app/features/theme/state/Theme';
 import ThemeLibrary from '@app/features/theme/state/ThemeLibrary';
@@ -169,6 +170,7 @@ export const AppWrapper = observer(({children}: AppWrapperProps) => {
 	}, [isNative, firstClickPassThroughWhenUnfocused]);
 	useDesktopAllowTransparency(isNative);
 	useWindowEventListeners({preventDocumentScroll: !isNative});
+	useRemScaleTracking();
 	usePlatformClasses(platform, isNative);
 	useThemeCssVariables({
 		effectiveTheme: Theme.effectiveTheme,

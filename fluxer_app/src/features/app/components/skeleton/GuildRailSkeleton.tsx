@@ -24,6 +24,7 @@ import {
 	CompassIcon,
 	DownloadSimpleIcon,
 	type Icon,
+	type IconWeight,
 	PlusIcon,
 	QuestionMarkIcon,
 	StarIcon,
@@ -118,7 +119,15 @@ const InlineDMPlaceholder = ({selected, unread}: {readonly selected: boolean; re
 	</flx-app-guild-rail-skeleton-item>
 );
 
-const RailActionButton = ({icon: Icon, selected = false}: {readonly icon: Icon; readonly selected?: boolean}) => (
+const RailActionButton = ({
+	icon: Icon,
+	selected = false,
+	weight = 'bold',
+}: {
+	readonly icon: Icon;
+	readonly selected?: boolean;
+	readonly weight?: IconWeight;
+}) => (
 	<flx-app-guild-rail-skeleton-item
 		className={flxElementClassName(styles.item)}
 		data-selected={selectedAttribute(selected)}
@@ -129,7 +138,7 @@ const RailActionButton = ({icon: Icon, selected = false}: {readonly icon: Icon; 
 			data-flx="app.skeleton.guild-rail-skeleton.rail-action-button.action-icon"
 		>
 			<Icon
-				weight="bold"
+				weight={weight}
 				className={styles.actionIconGlyph}
 				data-flx="app.skeleton.guild-rail-skeleton.rail-action-button.icon"
 			/>
@@ -578,6 +587,7 @@ export const GuildRailSkeleton: React.FC<GuildRailSkeletonProps> = ({
 						{discoveryVisible && (
 							<RailActionButton
 								icon={CompassIcon}
+								weight="fill"
 								selected={isDiscoverySelected}
 								data-flx="app.skeleton.guild-rail-skeleton.rail-action-button"
 							/>
