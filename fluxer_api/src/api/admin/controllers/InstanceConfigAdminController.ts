@@ -91,7 +91,6 @@ async function buildInstanceConfigResponse(): Promise<InstanceConfigResponse> {
 		app_public: appPublic,
 		policy: {
 			single_community_enabled: policy.single_community_enabled,
-			single_community_locked: policy.single_community_locked,
 			single_community_guild_id: policy.single_community_guild_id,
 			direct_messages_disabled: policy.direct_messages_disabled,
 			direct_messages_locked: policy.direct_messages_locked,
@@ -551,20 +550,19 @@ async function applyInstancePolicyUpdate(
 		policy.single_community_enabled !== current.single_community_enabled
 	) {
 		if (policy.single_community_enabled) {
-			if (appPublic.setup.configured || current.single_community_locked) {
+			if (appPublic.setup.configured && current.single_community_guild_id == null) {
 				throw new InstancePolicyTransitionNotAllowedError();
 			}
 			const adminUser = await ctx.get('userRepository').findUnique(ctx.get('adminUserId'));
 			if (!adminUser) {
 				throw new InstancePolicyTransitionNotAllowedError();
 			}
-			await ctx.get('singleCommunityService').createStockCommunity({
+			await ctx.get('singleCommunityService').ensureStockCommunity({
 				owner: adminUser,
 				name: policy.single_community_name?.trim() || appPublic.branding.product_name,
 			});
 		} else {
 			patch.single_community_enabled = false;
-			patch.single_community_locked = true;
 		}
 	}
 	if (

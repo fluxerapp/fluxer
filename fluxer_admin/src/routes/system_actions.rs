@@ -216,7 +216,11 @@ pub async fn instance_config_post(
             Err(message) => FlashData::error(message),
         },
         "disable_single_community" => {
-            let update = build_disable_single_community_update();
+            let update = build_single_community_update(false);
+            instance_config_result(client.update_instance_config(&update).await)
+        }
+        "enable_single_community" => {
+            let update = build_single_community_update(true);
             instance_config_result(client.update_instance_config(&update).await)
         }
         "create_registration_url" => match build_create_registration_url_request(&form) {
@@ -696,14 +700,14 @@ fn build_smtp_test_request(form: &MultiValueForm) -> Result<InstanceEmailSmtpTes
     })
 }
 
-fn build_disable_single_community_update() -> InstanceConfigUpdateRequest {
+fn build_single_community_update(enabled: bool) -> InstanceConfigUpdateRequest {
     InstanceConfigUpdateRequest {
         gateway_rollout: None,
         registration: None,
         sso: None,
         app_public: None,
         policy: Some(InstancePolicyUpdateRequest {
-            single_community_enabled: Some(false),
+            single_community_enabled: Some(enabled),
             single_community_name: None,
             direct_messages_disabled: None,
             premium_mode: None,

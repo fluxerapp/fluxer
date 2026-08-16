@@ -208,18 +208,14 @@ fn single_community_form(base: &str, csrf_token: &str, policy: &InstancePolicyRe
             div class="flex flex-wrap items-center gap-2" {
                 h3 class="text-sm font-semibold text-neutral-900" { "Single community" }
                 (badge(status.0, status.1))
-                @if policy.single_community_locked {
-                    (badge("Locked", BadgeVariant::Warning))
-                }
             }
             @if let Some(guild_id) = policy.single_community_guild_id.as_deref() {
                 p class="break-all text-xs text-neutral-500" { "Community guild ID: " (guild_id) }
             }
-            @if policy.single_community_enabled && !policy.single_community_locked {
+            @if policy.single_community_enabled {
                 p class="text-sm text-neutral-500" {
-                    "This instance funnels every member into a single community. Disabling it is \
-                     permanent: single-community mode can only be enabled again from the \
-                     self-host setup wizard, never from this panel."
+                    "This instance funnels every member into a single community. You can turn this \
+                     off and on again from here. The community itself is kept either way."
                 }
                 form method="post" action={(base) "/instance-config?action=disable_single_community"} {
                     (csrf_input(csrf_token))
@@ -227,15 +223,21 @@ fn single_community_form(base: &str, csrf_token: &str, policy: &InstancePolicyRe
                         (danger_button("Disable single-community mode"))
                     }))
                 }
-            } @else if policy.single_community_enabled {
+            } @else if policy.single_community_guild_id.is_some() {
                 p class="text-sm text-neutral-500" {
-                    "Single-community mode is enabled and locked for this instance. It cannot be \
-                     changed from the admin panel."
+                    "Single-community mode is off. Turning it on again reuses the community above \
+                     if it still exists, otherwise a new one is created."
+                }
+                form method="post" action={(base) "/instance-config?action=enable_single_community"} {
+                    (csrf_input(csrf_token))
+                    (form_actions(html! {
+                        (submit_button("Enable single-community mode"))
+                    }))
                 }
             } @else {
                 p class="text-sm text-neutral-500" {
-                    "Single-community mode is off. It can only be turned on from the self-host \
-                     setup wizard, not from this panel."
+                    "Single-community mode is off. It can only be turned on for the first time \
+                     from the self-host setup wizard."
                 }
             }
         }

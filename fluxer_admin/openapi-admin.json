@@ -12543,7 +12543,6 @@
 						"type": "object",
 						"properties": {
 							"single_community_enabled": {"type": "boolean"},
-							"single_community_locked": {"type": "boolean"},
 							"single_community_guild_id": {"nullable": true, "type": "string"},
 							"direct_messages_disabled": {"type": "boolean"},
 							"direct_messages_locked": {"type": "boolean"},
@@ -12578,7 +12577,6 @@
 						},
 						"required": [
 							"single_community_enabled",
-							"single_community_locked",
 							"single_community_guild_id",
 							"direct_messages_disabled",
 							"direct_messages_locked",

@@ -77,7 +77,6 @@ export type InstancePremiumMode = 'mirror' | 'everyone';
 
 export interface InstancePolicyConfig {
 	single_community_enabled: boolean;
-	single_community_locked: boolean;
 	single_community_guild_id: string | null;
 	direct_messages_disabled: boolean;
 	direct_messages_locked: boolean;
@@ -396,7 +395,6 @@ function normalizeAppPublicConfig(value: unknown): InstanceAppPublicConfig {
 
 const DEFAULT_INSTANCE_POLICY_CONFIG: InstancePolicyConfig = {
 	single_community_enabled: false,
-	single_community_locked: false,
 	single_community_guild_id: null,
 	direct_messages_disabled: false,
 	direct_messages_locked: false,
@@ -420,7 +418,6 @@ function normalizeInstancePolicyConfig(value: unknown): InstancePolicyConfig {
 	}
 	return {
 		single_community_enabled: value.single_community_enabled === true,
-		single_community_locked: value.single_community_locked === true,
 		single_community_guild_id: normalizeNullableString(value.single_community_guild_id),
 		direct_messages_disabled: value.direct_messages_disabled === true,
 		direct_messages_locked: value.direct_messages_locked === true,

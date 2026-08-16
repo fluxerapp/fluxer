@@ -24,8 +24,6 @@ pub struct InstanceConfigResponse {
 pub struct InstancePolicyResponse {
     #[serde(default)]
     pub single_community_enabled: bool,
-    #[serde(default)]
-    pub single_community_locked: bool,
     pub single_community_guild_id: Option<String>,
     #[serde(default)]
     pub direct_messages_disabled: bool,
@@ -45,7 +43,6 @@ impl Default for InstancePolicyResponse {
     fn default() -> Self {
         Self {
             single_community_enabled: false,
-            single_community_locked: false,
             single_community_guild_id: None,
             direct_messages_disabled: false,
             direct_messages_locked: false,

@@ -508,7 +508,6 @@ const AppPublicConfigUpdateRequest = z.object({
 
 const InstancePolicyResponse = z.object({
 	single_community_enabled: z.boolean(),
-	single_community_locked: z.boolean(),
 	single_community_guild_id: z.string().nullable(),
 	direct_messages_disabled: z.boolean(),
 	direct_messages_locked: z.boolean(),
