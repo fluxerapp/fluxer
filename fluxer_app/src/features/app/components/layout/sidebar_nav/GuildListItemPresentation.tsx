@@ -8,6 +8,7 @@ import type {GuildListIndicatorBarTarget} from '@app/features/app/components/lay
 import type {GuildListItemDragAndDrop} from '@app/features/app/components/layout/sidebar_nav/UseGuildListItemDragAndDrop';
 import {VoiceBadge, type VoiceBadgeActivity} from '@app/features/app/components/layout/sidebar_nav/VoiceBadge';
 import {DropPlacement} from '@app/features/app/components/layout/types/DndTypes';
+import {useMergeRefs} from '@app/features/app/hooks/useMergeRefs';
 import type {Guild} from '@app/features/guild/models/Guild';
 import Guilds from '@app/features/guild/state/Guilds';
 import {
@@ -27,7 +28,7 @@ import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import {ExclamationMarkIcon, PauseIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import type React from 'react';
-import {useMemo} from 'react';
+import {forwardRef, useMemo} from 'react';
 import invariant from 'tiny-invariant';
 
 const GuildListItemIcon = createAnimeFlxElement('flx-app-guild-list-item-icon');
@@ -267,42 +268,77 @@ export interface GuildListItemPresentationProps {
 	readonly onLongPress: () => void;
 }
 
-export function GuildListItemPresentation(props: GuildListItemPresentationProps) {
-	const rawInitials = getInitialsFromName(props.guild.name);
+type GuildListItemPresentationDomProps = Omit<
+	React.HTMLAttributes<HTMLElement>,
+	'onClick' | 'onContextMenu' | 'onKeyDown'
+>;
+
+export const GuildListItemPresentation = forwardRef<
+	HTMLElement,
+	GuildListItemPresentationProps & GuildListItemPresentationDomProps
+>(function GuildListItemPresentation(
+	{
+		backgroundImage,
+		canManageGuild,
+		contextMenuOpen,
+		dragAndDrop,
+		focusRingTargetRef,
+		guild,
+		guildARIALabel,
+		hasVoiceActivity,
+		iconBorderRadius,
+		indicatorTarget,
+		isSelected,
+		isSortingList,
+		mentionCount,
+		onClick,
+		onContextMenu,
+		onKeyDown,
+		onLongPress,
+		showGuildIndicator,
+		surfaceRef,
+		voiceBadgeActivity,
+		...domProps
+	},
+	forwardedRef,
+) {
+	const rootRef = useMergeRefs([surfaceRef, forwardedRef]);
+	const rawInitials = getInitialsFromName(guild.name);
 	const initialsLength = resolveInitialsLength(rawInitials);
-	const dropIndicator = resolveDropIndicator(props.dragAndDrop);
+	const dropIndicator = resolveDropIndicator(dragAndDrop);
 	const motion = resolveGuildListItemMotion(Accessibility.useReducedMotion);
-	const draggingCursor = resolveDraggingCursor(props.dragAndDrop);
+	const draggingCursor = resolveDraggingCursor(dragAndDrop);
 	const guildIconStyle = useMemo(
-		() => resolveGuildIconStyle(props.backgroundImage, draggingCursor),
-		[props.backgroundImage, draggingCursor],
+		() => resolveGuildIconStyle(backgroundImage, draggingCursor),
+		[backgroundImage, draggingCursor],
 	);
-	const guildIconTarget = useMemo(() => ({borderRadius: props.iconBorderRadius}), [props.iconBorderRadius]);
+	const guildIconTarget = useMemo(() => ({borderRadius: iconBorderRadius}), [iconBorderRadius]);
 	return (
 		<LongPressable
+			{...domProps}
 			className={clsx(
 				styles.guildListItem,
 				styles.guildListReorderTarget,
-				props.contextMenuOpen && styles.contextMenuHover,
+				contextMenuOpen && styles.contextMenuHover,
 				dropIndicator === Edge.TOP && styles.dropIndicatorTop,
 				dropIndicator === Edge.BOTTOM && styles.dropIndicatorBottom,
 				dropIndicator === DropPlacement.COMBINE && styles.dropIndicatorCombine,
 			)}
-			aria-label={props.guildARIALabel}
-			onClick={props.onClick}
-			onContextMenu={props.onContextMenu}
-			onKeyDown={props.onKeyDown}
-			ref={props.surfaceRef}
+			aria-label={guildARIALabel}
+			onClick={onClick}
+			onContextMenu={onContextMenu}
+			onKeyDown={onKeyDown}
+			ref={rootRef}
 			role="button"
 			tabIndex={0}
 			data-guild-list-focus-item="true"
-			onLongPress={props.onLongPress}
+			onLongPress={onLongPress}
 			disabled={false}
 			data-flx="app.sidebar-nav.guild-list-item-presentation.guild-list-item.click"
-			{...ariaCurrentPage(props.isSelected)}
+			{...ariaCurrentPage(isSelected)}
 		>
 			<AnimePresence data-flx="app.sidebar-nav.guild-list-item-presentation.anime-presence">
-				{!props.isSortingList && props.showGuildIndicator && (
+				{!isSortingList && showGuildIndicator && (
 					<flx-app-guild-list-item-indicator
 						className={flxElementClassName(styles.guildIndicator)}
 						data-flx="app.sidebar-nav.guild-list-item-presentation.guild-indicator"
@@ -310,7 +346,7 @@ export function GuildListItemPresentation(props: GuildListItemPresentationProps)
 						<AnimeSpan
 							className={styles.guildIndicatorBar}
 							from={false}
-							to={props.indicatorTarget}
+							to={indicatorTarget}
 							leave={motion.indicatorLeave}
 							tween={{duration: motion.indicatorTweenDuration, ease: [0.25, 0.1, 0.25, 1]}}
 							data-flx="app.sidebar-nav.guild-list-item-presentation.guild-indicator-bar"
@@ -323,12 +359,12 @@ export function GuildListItemPresentation(props: GuildListItemPresentationProps)
 				data-flx="app.sidebar-nav.guild-list-item-presentation.relative"
 			>
 				<GuildListItemIcon
-					ref={props.focusRingTargetRef}
+					ref={focusRingTargetRef}
 					tabIndex={-1}
 					className={clsx(
 						styles.guildIcon,
-						props.guild.icon == null && styles.guildIconNoImage,
-						props.isSelected && styles.guildIconSelected,
+						guild.icon == null && styles.guildIconNoImage,
+						isSelected && styles.guildIconSelected,
 					)}
 					to={guildIconTarget}
 					from={false}
@@ -337,7 +373,7 @@ export function GuildListItemPresentation(props: GuildListItemPresentationProps)
 					style={guildIconStyle}
 					data-flx="app.sidebar-nav.guild-list-item-presentation.guild-icon"
 				>
-					{props.guild.icon == null && (
+					{guild.icon == null && (
 						<span
 							className={styles.guildIconInitials}
 							data-flx="app.sidebar-nav.guild-list-item-presentation.guild-icon-initials"
@@ -347,15 +383,15 @@ export function GuildListItemPresentation(props: GuildListItemPresentationProps)
 					)}
 				</GuildListItemIcon>
 				<GuildListItemBadges
-					guild={props.guild}
-					mentionCount={props.mentionCount}
-					canManageGuild={props.canManageGuild}
-					hasVoiceActivity={props.hasVoiceActivity}
-					voiceBadgeActivity={props.voiceBadgeActivity}
+					guild={guild}
+					mentionCount={mentionCount}
+					canManageGuild={canManageGuild}
+					hasVoiceActivity={hasVoiceActivity}
+					voiceBadgeActivity={voiceBadgeActivity}
 					data-flx="app.sidebar-nav.guild-list-item-presentation.guild-list-item-badges"
 				/>
 			</flx-app-guild-list-item-frame>
-			{renderCombinePreview(props.guild, props.dragAndDrop, dropIndicator)}
+			{renderCombinePreview(guild, dragAndDrop, dropIndicator)}
 		</LongPressable>
 	);
-}
+});
